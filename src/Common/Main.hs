@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Common.Main where
+module Main where
 
 import Common.Strategy
 import Common.Transformation

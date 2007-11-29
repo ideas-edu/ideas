@@ -9,15 +9,22 @@
 # otherwise:  EXE = 
 EXE = $(shell ghc-pkg list | grep -q Win32 && echo .exe)
 
+# Define directories to store results
+BINDIR = bin
+OUTDIR = out
+DOCDIR = doc
+HPCDIR = hpc
+
 default: solver
 
 all: solver doc markup
 
-SOURCES = src/*.hs src/Logic/*.hs src/Logic/Solver/*.hs src/Matrix/*.hs
+SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs
 
 solver: bin/solver$(EXE)
 
 bin/solver$(EXE): $(SOURCES)
+	mkdir -p $(BINDIR) $(OUTDIR)
 	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Main.hs
 
 checks:
@@ -29,7 +36,7 @@ run:
 # Cygwin only
 runwin:
 	ghcii.sh -isrc -odir out -hidir out src/Main.hs
-	
+
 doc: doc/index.html
 
 doc/index.html: $(SOURCES) doc/prologue
@@ -37,10 +44,10 @@ doc/index.html: $(SOURCES) doc/prologue
 
 hpc/bin/solver$(EXE): $(SOURCES)
 	ghc -fhpc --make -hpcdir hpc/out -isrc -odir hpc/out -hidir hpc/out -o hpc/bin/solver$(EXE) src/Checks.hs
-	
+
 hpc/bin/solver.tix: hpc/bin/solver$(EXE)
 	cd hpc/bin; rm -f solver.tix; ./solver$(EXE); cd ../..
-	
+
 report: hpc/bin/solver.tix
 	hpc report -hpcdir=hpc/out hpc/bin/solver$(EXE)
 
@@ -48,7 +55,7 @@ markup: hpc/doc/hpc_index.html
 
 hpc/doc/hpc_index.html: hpc/bin/solver.tix
 	hpc markup --hpcdir=hpc/out --destdir=hpc/doc hpc/bin/solver$(EXE)
-	
+
 clean:
 	rm -rf bin/*
 	rm -rf out/*

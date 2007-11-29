@@ -7,17 +7,17 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Main (main) where
+module Common.Checks (main) where
 
-import Strategy
-import Logic
-import Matrix
+import Common.Strategy
+import Domain.Logic
+import Domain.LinearAlgebra
 
 main :: IO ()
 main = do
    putStrLn "\n...checking strategy combinators"
-   Strategy.checks
+   Common.Strategy.checks
    putStrLn "\n...checking logic domain"
-   Logic.checks
+   Domain.Logic.checks
    putStrLn "\n...checking matrix domain"
-   Matrix.checks
+   Domain.LinearAlgebra.checks

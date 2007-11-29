@@ -26,94 +26,108 @@ logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAn
 	     , ruleComplOr, ruleComplAnd
              ]
 
+-- needs to be changed: fields from the Rule data type are ignored by this definition
 logicRuleInContext :: Rule Logic -> Rule LogicInContext
-logicRuleInContext r = makeRule (name r) (maybeLoc . fmap (apply r))
+logicRuleInContext r = makeSimpleRule (name r) (maybeLoc . fmap (apply r))
 
 -- local logic variables
 x, y, z :: Logic
 x:y:z:_ = map makeVarInt [0..]
 
 ruleComplOr :: LogicRule
-ruleComplOr = makePatternRule "ComplOr"
-   $   (x :||: Not x)  |-  T
-   ++  (Not x :||: x)  |-  T
-
+ruleComplOr = makeRuleList "ComplOr"
+   [ (x :||: Not x)  |-  T
+   , (Not x :||: x)  |-  T
+   ]
+   
 ruleComplAnd :: LogicRule
-ruleComplAnd = makePatternRule "ComplAnd"
-   $  (x :&&: Not x)  |-  F
-   ++ (Not x :&&: x)  |-  F
+ruleComplAnd = makeRuleList "ComplAnd"
+   [ (x :&&: Not x)  |-  F
+   , (Not x :&&: x)  |-  F
+   ]
 
 ruleDefImpl :: LogicRule
-ruleDefImpl = makePatternRule "DefImpl" $
+ruleDefImpl = makeRule "DefImpl" $
    (x :->: y)  |-  (Not x :||: y)
    
 ruleDefEquiv :: LogicRule
-ruleDefEquiv = makePatternRule "DefEquiv" $
+ruleDefEquiv = makeRule "DefEquiv" $
    (x :<->: y)  |-  ((x :&&: y) :||: (Not x :&&: Not y))
    
 ruleFalseInEquiv :: LogicRule
-ruleFalseInEquiv = makePatternRule "FalseInEquiv"
-   $  (F :<->: x)  |-  (Not x)
-   ++ (x :<->: F)  |-  (Not x)
+ruleFalseInEquiv = makeRuleList "FalseInEquiv"
+   [ (F :<->: x)  |-  (Not x)
+   , (x :<->: F)  |-  (Not x)
+   ]
    
 ruleTrueInEquiv :: LogicRule
-ruleTrueInEquiv = makePatternRule "TrueInEquiv"
-   $  (T :<->: x)  |-  x
-   ++ (x :<->: T)  |-  x
+ruleTrueInEquiv = makeRuleList "TrueInEquiv"
+   [ (T :<->: x)  |-  x
+   , (x :<->: T)  |-  x
+   ]
 
 ruleFalseInImpl :: LogicRule
-ruleFalseInImpl = makePatternRule "FalseInImpl"
-   $  (F :->: x)  |-  T
-   ++ (x :->: F)  |- (Not x)
+ruleFalseInImpl = makeRuleList "FalseInImpl"
+   [ (F :->: x)  |-  T
+   , (x :->: F)  |- (Not x)
+   ]
    
 ruleTrueInImpl :: LogicRule
-ruleTrueInImpl = makePatternRule "TrueInImpl"
-   $   (T :->: x)  |-  x
-   ++  (x :->: T)  |-  T
+ruleTrueInImpl = makeRuleList "TrueInImpl"
+   [  (T :->: x)  |-  x
+   ,  (x :->: T)  |-  T
+   ]
         
 ruleFalseZeroOr :: LogicRule
-ruleFalseZeroOr = makePatternRule "FalseZeroOr"
-   $  (F :||: x)  |-  x
-   ++ (x :||: F)  |-  x
+ruleFalseZeroOr = makeRuleList "FalseZeroOr"
+   [ (F :||: x)  |-  x
+   , (x :||: F)  |-  x
+   ]
   
 ruleTrueZeroOr :: LogicRule
-ruleTrueZeroOr = makePatternRule "TrueZeroOr"
-   $  (T :||: x)  |-  T
-   ++ (x :||: T)  |-  T
+ruleTrueZeroOr = makeRuleList "TrueZeroOr"
+   [ (T :||: x)  |-  T
+   , (x :||: T)  |-  T
+   ]
 
 ruleTrueZeroAnd :: LogicRule
-ruleTrueZeroAnd = makePatternRule "TrueZeroAnd"
-   $  (T :&&: x)  |-  x
-   ++ (x :&&: T)  |-  x
+ruleTrueZeroAnd = makeRuleList "TrueZeroAnd"
+   [ (T :&&: x)  |-  x
+   , (x :&&: T)  |-  x
+   ]
 
 ruleFalseZeroAnd :: LogicRule
-ruleFalseZeroAnd = makePatternRule "FalseZeroAnd"
-   $  (F :&&: x)  |-  F
-   ++ (x :&&: F)  |-  F
+ruleFalseZeroAnd = makeRuleList "FalseZeroAnd"
+   [ (F :&&: x)  |-  F
+   , (x :&&: F)  |-  F
+   ]
 
 ruleDeMorganOr :: LogicRule
-ruleDeMorganOr = makePatternRule "DeMorganOr" $
+ruleDeMorganOr = makeRule "DeMorganOr" $
    (Not (x :||: y))  |-  (Not x :&&: Not y)
 
 ruleDeMorganAnd :: LogicRule
-ruleDeMorganAnd = makePatternRule "DeMorganAnd" $
+ruleDeMorganAnd = makeRule "DeMorganAnd" $
    (Not (x :&&: y))  |-  (Not x :||: Not y)
 
 ruleNotBoolConst :: LogicRule
-ruleNotBoolConst = makePatternRule "NotBoolConst"
-   $  (Not T)  |-  F
-   ++ (Not F)  |-  T
+ruleNotBoolConst = makeRuleList "NotBoolConst"
+   [ (Not T)  |-  F
+   , (Not F)  |-  T
+   ]
 
 ruleNotNot :: LogicRule
-ruleNotNot = makePatternRule "NotNot" $ 
+ruleNotNot = makeRule "NotNot" $ 
    (Not (Not x))  |-  x
 
 ruleAndOverOr :: LogicRule
-ruleAndOverOr = makePatternRule "AndOverOr"
-   $  (x :&&: (y :||: z))  |-  ((x :&&: y) :||: (x :&&: z))
-   ++ ((x :||: y) :&&: z)  |-  ((x :&&: z) :||: (y :&&: z))
+ruleAndOverOr = makeRuleList "AndOverOr"
+   [ (x :&&: (y :||: z))  |-  ((x :&&: y) :||: (x :&&: z))
+   , ((x :||: y) :&&: z)  |-  ((x :&&: z) :||: (y :&&: z))
+   ]
 
 ruleOrOverAnd :: LogicRule
-ruleOrOverAnd = makePatternRule "OrOverAnd"
-   $  (x :||: (y :&&: z))  |-  ((x :||: y) :&&: (x :||: z))
-   ++ ((x :&&: y) :||: z)  |-  ((x :||: z) :&&: (y :||: z))
+ruleOrOverAnd = makeRuleList "OrOverAnd"
+   [ (x :||: (y :&&: z))  |-  ((x :||: y) :&&: (x :||: z))
+   , ((x :&&: y) :||: z)  |-  ((x :||: z) :&&: (y :||: z))
+   ]

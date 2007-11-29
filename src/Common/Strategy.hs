@@ -80,7 +80,7 @@ try :: IsStrategy s => s a -> Strategy a
 try p = p |> succeed
 
 check :: (a -> Bool) -> Strategy a
-check p = toStrategy (makeRule "Check" $ \a -> if p a then Just a else Nothing)
+check p = toStrategy (minorRule $ makeSimpleRule "Check" $ \a -> if p a then Just a else Nothing)
 
 notS :: IsStrategy s => s a -> Strategy a
 notS s = check (\a -> not $ applicable (toStrategy s) a)

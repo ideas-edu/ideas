@@ -33,11 +33,11 @@ move MoveUp    = moveUp
 move MoveDown  = moveDown
 
 ruleMoveLeft, ruleMoveRight, ruleMoveDown, ruleMoveUp, ruleMoveTop :: Move a => Rule a
-ruleMoveLeft  = makeRule "MoveLeft"  moveLeft
-ruleMoveRight = makeRule "MoveRight" moveRight
-ruleMoveUp    = makeRule "MoveUp"    moveUp
-ruleMoveDown  = makeRule "MoveDown"  moveDown
-ruleMoveTop   = makeRule "MoveTop"   (Just . moveTop)
+ruleMoveLeft  = minorRule $ makeSimpleRule "MoveLeft"  moveLeft
+ruleMoveRight = minorRule $ makeSimpleRule "MoveRight" moveRight
+ruleMoveUp    = minorRule $ makeSimpleRule "MoveUp"    moveUp
+ruleMoveDown  = minorRule $ makeSimpleRule "MoveDown"  moveDown
+ruleMoveTop   = minorRule $ makeSimpleRule "MoveTop"   (Just . moveTop)
 
 instance Arbitrary Movement where
    arbitrary   = oneof $ map return movements

@@ -8,10 +8,11 @@
 --
 -----------------------------------------------------------------------------
 module Common.Transformation 
-   ( Apply(..), applyM, applicable, applyList, applyListM, applyListD
-   , Rule(..), makeRule, makePatternRule, (|-), combineRules, Transformation
+   ( Apply(..), applyM, applicable, applyList, applyListM, applyListD, minorRule
+   , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation
    ) where
 
+import qualified Data.Set as S
 import Data.List
 import Data.Char
 import Data.Maybe
@@ -55,9 +56,14 @@ instance Apply Transformation where
    apply (Function f) = f
    apply (Pattern  p) = applyPattern p
 
--- cbeck that rhs does not contain free vars
-(|-) :: Unifiable a => a -> a -> [Transformation a]
-p |- q = [Pattern $ generalizeAll (p, q)]
+-- | Constructs a transformation based on two terms (a left-hand side and a
+-- | right-hand side). The terms must be unifiable. It is checked that no
+-- | free variables appear in the right-hand side term.
+(|-) :: Unifiable a => a -> a -> Transformation a
+p |- q | S.null frees = Pattern $ generalizeAll (p, q)
+       | otherwise    = error $ "Transformation: free variables in transformation"
+ where
+   frees = getVars q S.\\ getVars p
 
 applyPattern :: Unifiable a => ForAll (a, a) -> a -> Maybe a
 applyPattern pair a = do
@@ -77,11 +83,16 @@ data Rule a = Rule
    }
 
 -- | Smart constructor
-makeRule :: String -> (a -> Maybe a) -> Rule a
-makeRule n f = Rule n [Function f] False False
+makeRuleList :: String -> [Transformation a] -> Rule a
+makeRuleList n ts = Rule n ts False False
 
-makePatternRule :: String -> [Transformation a] -> Rule a
-makePatternRule n ts = Rule n ts False False
+-- | Smart constructor
+makeRule :: String -> Transformation a -> Rule a
+makeRule n ts = makeRuleList n [ts]
+
+-- | Smart constructor
+makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
+makeSimpleRule n f = makeRule n (Function f)
 
 -- | Combine a list of rules. Select the first rule that is applicable (is such a rule exists)
 combineRules :: [Rule a] -> Rule a
@@ -91,6 +102,9 @@ combineRules rs = Rule
    , isBuggyRule     = any isBuggyRule rs
    , isMinorRule     = all isMinorRule rs
    }
+
+minorRule :: Rule a -> Rule a 
+minorRule r = r {isMinorRule = True}
    
 instance Show (Rule a) where
    show = name

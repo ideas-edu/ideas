@@ -53,7 +53,7 @@ propSound sys =
 
 -- elementary equations operations
 ruleExchange :: Int -> Int -> Rule [a]
-ruleExchange i j = makeRule "Exchange" (f i j)
+ruleExchange i j = makeSimpleRule "Exchange" (f i j)
  where
    f i j xs
       | i == j    = Just xs
@@ -64,7 +64,7 @@ ruleExchange i j = makeRule "Exchange" (f i j)
            in Just (begin++[y]++middle++[x]++end)
       
 ruleEqAdd :: Num a => Int -> Int -> a -> Rule (LinearSystem a)
-ruleEqAdd i j a = makeRule "EqAdd" f
+ruleEqAdd i j a = makeSimpleRule "EqAdd" f
  where
    f xs =
       let (begin, this:end) = splitAt i xs
@@ -72,14 +72,14 @@ ruleEqAdd i j a = makeRule "EqAdd" f
       in Just (begin++[combineWith (+) this (fmap (toLinearExpr a*) exprj)]++end)
 
 ruleStandardForm :: Num a => Rule (Equation (LinearExpr a))
-ruleStandardForm = makeRule "StandardForm" f
+ruleStandardForm = makeSimpleRule "StandardForm" f
  where
    f eq = do 
       guard (not (inStandardForm eq))
       return (toStandardForm eq)
 
 ruleSubVar :: Fractional a => Rule (LinearSystem a)
-ruleSubVar = makeRule "SubVar" f 
+ruleSubVar = makeSimpleRule "SubVar" f 
  where
    f xs = case [ i | i <- [0 .. length xs-1], applicable (ruleSubVarIndex i) xs ] of
              hd:_ -> apply (ruleSubVarIndex hd) xs
@@ -87,7 +87,7 @@ ruleSubVar = makeRule "SubVar" f
 
 -- split rule in two?
 ruleSubVarIndex :: Fractional a => Int -> Rule (LinearSystem a)
-ruleSubVarIndex i = makeRule "ruleSubVarIndex" f
+ruleSubVarIndex i = makeSimpleRule "ruleSubVarIndex" f
  where
    f xs = 
       let (before, (lhs :==: rhs):after) = splitAt i xs
@@ -102,7 +102,7 @@ ruleSubVarIndex i = makeRule "ruleSubVarIndex" f
             _ -> Nothing
 
 ruleFreeVarsToRight :: Num a => Rule (LinearSystem a)
-ruleFreeVarsToRight = makeRule "FreeVarsToRight" f
+ruleFreeVarsToRight = makeSimpleRule "FreeVarsToRight" f
  where
    f xs = 
       let vars = [ head ys | ys <- map (getVars . getLHS) xs, not (null ys) ]
@@ -125,7 +125,7 @@ toStandardFormS :: Fractional a => Strategy (EqsInContext a)
 toStandardFormS = repeatS (liftRule $ liftRuleToList ruleStandardForm)
 
 firstVarNonZero :: Rule (EqsInContext a)
-firstVarNonZero = makeRule "_FirstVarNonZero" $ \c -> do
+firstVarNonZero = minorRule $ makeSimpleRule "_FirstVarNonZero" $ \c -> do
     let remaining_equations  =  drop (covered c) (equations c)
     let minVar               =  minimum (getVarEquations remaining_equations)
     i                        <- findIndex ((minVar `elem`) . getVarEquation) remaining_equations
@@ -135,7 +135,7 @@ eliminateVarBelow :: Fractional a => Strategy (EqsInContext a)
 eliminateVarBelow  = repeatS (eliminateVar <*> rEqAdd)
 
 eliminateVar :: Fractional a => Rule (EqsInContext a)
-eliminateVar = makeRule "_EliminateVar" $ \c -> do
+eliminateVar = minorRule $ makeSimpleRule "_EliminateVar" $ \c -> do
    let coef = coefficientOf (minvar c) (getLHS (equations c !! cureq c))
    let remaining_equations = drop (covered c + 1) (equations c)
    let coefsBelow = map (coefficientOf (minvar c) . getLHS) remaining_equations
@@ -144,7 +144,7 @@ eliminateVar = makeRule "_EliminateVar" $ \c -> do
    return c {eqnr = i + covered c + 1, value = v}
 
 ruleCoverTop :: Fractional a => Rule (EqsInContext a)
-ruleCoverTop = makeRule "CoverTop" f
+ruleCoverTop = makeSimpleRule "CoverTop" f
  where
    f c = return c {cureq = cureq c + 1,covered = covered c + 1}
 
@@ -167,11 +167,11 @@ instance Eq a => Eq (EqsInContext a) where
   x==y = equations x == equations y
 
 rEqExchange :: Fractional a => Rule (EqsInContext a)
-rEqExchange = makeRule "EqExchange" $ selectArgs $ \c -> 
+rEqExchange = makeSimpleRule "EqExchange" $ selectArgs $ \c -> 
    ruleExchange (cureq c) (eqnr c)
 
 rEqAdd :: Fractional a => Rule (EqsInContext a)
-rEqAdd = makeRule "EqAdd" $ selectArgs $ \c -> 
+rEqAdd = makeSimpleRule "EqAdd" $ selectArgs $ \c -> 
     ruleEqAdd (eqnr c) (cureq c) (value c)
 
 selectArgs :: (EqsInContext a -> Rule (LinearSystem a)) -> EqsInContext a -> Maybe (EqsInContext a)
@@ -180,7 +180,7 @@ selectArgs f c = do
    return c {equations = new}
 
 liftRuleToList :: Rule a -> Rule [a]
-liftRuleToList r = makeRule (name r) f 
+liftRuleToList r = makeSimpleRule (name r) f 
  where
    f xs = let rs = map (`ruleOnIndex` r) [0 .. length xs-1]
           in apply (combineRules rs) xs
@@ -199,7 +199,7 @@ liftRule = liftRuleG $ LP get set
 
       
 liftRuleG :: LiftPair a b -> Rule a -> Rule b
-liftRuleG lp r = makeRule (name r) f  
+liftRuleG lp r = makeSimpleRule (name r) f  
  where
    f x = do
       this <- getter lp x

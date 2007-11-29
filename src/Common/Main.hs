@@ -7,13 +7,13 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Main where
+module Common.Main where
 
-import Strategy
-import Transformation
-import Interpreter
-import Logic
-import Matrix
+import Common.Strategy
+import Common.Transformation
+import Common.Interpreter
+import Domain.Logic
+import Domain.LinearAlgebra
 import System.Environment
 import Data.Char
                        
@@ -47,7 +47,7 @@ matrixInterpreter = Interpreter
    , equivalence   = \x y -> applyD toReducedEchelon x == applyD toReducedEchelon y
    , finalProperty = inRowReducedEchelonForm . matrix
    , ruleset       = matrixRules
-   , term          = Matrix.inContext defaultMatrix
+   , term          = Domain.LinearAlgebra.inContext defaultMatrix
    , strategy      = toReducedEchelon
    }
 
@@ -56,7 +56,7 @@ runLogic = runInterpreter logicInterpreter
 
 logicInterpreter :: Interpreter LogicInContext
 logicInterpreter = Interpreter
-   { parser        = Logic.inContext . fst . parseLogic
+   { parser        = Domain.Logic.inContext . fst . parseLogic
    , prettyPrinter = ppLogicInContext
    , equivalence   = \x y -> noContext x `eqLogic` noContext y
    , finalProperty = isDNF . noContext

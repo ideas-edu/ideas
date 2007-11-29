@@ -8,7 +8,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module History 
+module Common.History 
    ( HistoryT, History
    , evalHistory, runHistory, execHistory, evalHistoryT, runHistoryT, execHistoryT
    , undo, redo, mark, undoMarked, redoMarked

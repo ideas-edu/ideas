@@ -7,18 +7,18 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Interpreter 
+module Common.Interpreter 
    ( Interpreter(..), runInterpreter
    ) where
 
 import Data.Char
 import Data.List
 import Control.Monad.State
-import History
-import Transformation
-import Strategy
-import Move
-import Utils
+import Common.History
+import Common.Transformation
+import Common.Strategy
+import Common.Move
+import Common.Utils
 {- import Test.QuickCheck
 
 checkInterpreter :: (Show a, Eq a, Move a, Arbitrary a) => Interpreter a -> IO ()

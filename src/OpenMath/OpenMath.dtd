@@ -1,0 +1,146 @@
+<?xml encoding="UTF-8"?>
+
+<!-- RELAX NG Schema for OpenMath 2 -->
+
+<!ENTITY % cdbase "
+  cdbase CDATA #IMPLIED">
+
+<!-- attributes common to all elements -->
+
+<!ENTITY % common.attributes "
+  id ID #IMPLIED">
+
+<!-- attributes common to all elements that construct compount OM objects. -->
+
+<!ENTITY % compound.attributes "
+  %common.attributes;
+  %cdbase;">
+
+<!-- Elements which can appear inside an OpenMath object -->
+
+<!ENTITY % omel "OMS|OMV|OMI|OMB|OMSTR|OMF|OMA|OMBIND|OME|OMATTR|OMR">
+
+<!-- OpenMath object constructor -->
+
+<!ELEMENT OMOBJ (%omel;)>
+<!ATTLIST OMOBJ
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %compound.attributes;
+  version CDATA #IMPLIED>
+
+<!ENTITY % attvar "OMATTR">
+
+<!-- things which can be variables -->
+
+<!ENTITY % omvar "OMV|%attvar;">
+
+<!-- symbol -->
+
+<!ELEMENT OMS EMPTY>
+<!ATTLIST OMS
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;
+  name NMTOKEN #REQUIRED
+  cd NMTOKEN #REQUIRED
+  %cdbase;>
+
+<!-- variable -->
+
+<!ELEMENT OMV EMPTY>
+<!ATTLIST OMV
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;
+  name NMTOKEN #REQUIRED>
+
+<!-- integer -->
+
+<!ELEMENT OMI (#PCDATA)>
+<!ATTLIST OMI
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;>
+
+<!-- byte array -->
+
+<!ELEMENT OMB (#PCDATA)>
+<!ATTLIST OMB
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;>
+
+<!-- string -->
+
+<!ELEMENT OMSTR (#PCDATA)>
+<!ATTLIST OMSTR
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;>
+
+<!-- IEEE floating point number -->
+
+<!ELEMENT OMF EMPTY>
+<!ATTLIST OMF
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;
+  dec CDATA #IMPLIED
+  hex CDATA #IMPLIED>
+
+<!-- apply constructor -->
+
+<!ELEMENT OMA (%omel;)+>
+<!ATTLIST OMA
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %compound.attributes;>
+
+<!-- binding constructor  -->
+
+<!ELEMENT OMBIND ((%omel;),OMBVAR,(%omel;))>
+<!ATTLIST OMBIND
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %compound.attributes;>
+
+<!-- variables used in binding constructor -->
+
+<!ELEMENT OMBVAR (%omvar;)+>
+<!ATTLIST OMBVAR
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;>
+
+<!-- error constructor -->
+
+<!ELEMENT OME (OMS,(%omel;|OMFOREIGN)*)>
+<!ATTLIST OME
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;>
+
+<!-- attribution constructor and attribute pair constructor -->
+
+<!ELEMENT OMATTR (OMATP,(%omel;))>
+<!ATTLIST OMATTR
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %compound.attributes;>
+
+<!ELEMENT OMATP (OMS,(%omel;|OMFOREIGN))+>
+<!ATTLIST OMATP
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %compound.attributes;>
+
+<!-- foreign constructor -->
+
+<!ELEMENT OMFOREIGN ANY>
+<!ATTLIST OMFOREIGN
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %compound.attributes;
+  encoding CDATA #IMPLIED>
+
+<!--
+Any elements not in the om namespace
+(valid om is allowed as a descendant)
+-->
+
+<!-- reference constructor -->
+
+<!ELEMENT OMR EMPTY>
+<!ATTLIST OMR
+  xmlns CDATA #FIXED 'http://www.openmath.org/OpenMath'
+  %common.attributes;
+  href CDATA #REQUIRED>
+
+  

@@ -28,40 +28,39 @@ bin/solver$(EXE): $(SOURCES)
 	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
 
 checks:
-	cd src/Common; runhaskell Checks.hs; cd ..
+	cd src/Common; runhaskell -i.. Checks.hs; cd ..
 
 run:
-	ghci -isrc -odir out -hidir out src/Main.hs
+	ghci -isrc -odir out -hidir out src/Common/Main.hs
 
 # Cygwin only
 runwin:
-	ghcii.sh -isrc -odir out -hidir out src/Main.hs
+	ghcii.sh -isrc -odir out -hidir out src/Common/Main.hs
 
-doc: doc/index.html
+doc:	doc/index.html
 
-doc/index.html: $(SOURCES) doc/prologue
-	haddock -o doc -s "../%F" -p doc/prologue --html $(SOURCES)
+doc/index.html: $(SOURCES) src/Common/prologue
+	mkdir -p $(DOCDIR)
+	haddock -o doc -s "../%F" -p src/Common/prologue --html $(SOURCES)
 
 hpc/bin/solver$(EXE): $(SOURCES)
-	ghc -fhpc --make -hpcdir hpc/out -isrc -odir hpc/out -hidir hpc/out -o hpc/bin/solver$(EXE) src/Checks.hs
+	mkdir -p $(HPCDIR)/out $(HPCDIR)/bin
+	ghc -fhpc --make -hpcdir hpc/out -isrc -odir hpc/out -hidir hpc/out -o hpc/bin/solver$(EXE) src/Common/Checks.hs
 
 hpc/bin/solver.tix: hpc/bin/solver$(EXE)
 	cd hpc/bin; rm -f solver.tix; ./solver$(EXE); cd ../..
 
 report: hpc/bin/solver.tix
-	hpc report -hpcdir=hpc/out hpc/bin/solver$(EXE)
+	hpc report --hpcdir=hpc/out hpc/bin/solver$(EXE)
 
 markup: hpc/doc/hpc_index.html
 
 hpc/doc/hpc_index.html: hpc/bin/solver.tix
+	mkdir -p $(HPCDIR)/doc
 	hpc markup --hpcdir=hpc/out --destdir=hpc/doc hpc/bin/solver$(EXE)
 
 clean:
-	rm -rf bin/*
-	rm -rf out/*
-	rm -rf doc/*.html
-	rm -rf doc/*.gif
-	rm -rf doc/haddock.*
-	rm -rf hpc/bin/*
-	rm -rf hpc/out/*
-	rm -rf hpc/doc/*
+	rm -rf bin
+	rm -rf out
+	rm -rf doc
+	rm -rf hpc

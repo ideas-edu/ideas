@@ -1,12 +1,12 @@
-module Matrix.LinearSystem where
+module Domain.LinearAlgebra.LinearSystem where
 
-import Matrix.Domain (Matrix, makeMatrix, rows)
-import Matrix.Equation
-import Matrix.LinearExpr
+import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
+import Domain.LinearAlgebra.Equation
+import Domain.LinearAlgebra.LinearExpr
 import Data.List
 import Data.Maybe
 import Control.Monad
-import Utils
+import Common.Utils
 
 type LinearSystem a = Equations (LinearExpr a)
 

@@ -7,15 +7,15 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Matrix.Checks (checks, defaultMatrix) where
+module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
 
-import Matrix.Domain
-import Matrix.Context
-import Matrix.Strategies
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.Context
+import Domain.LinearAlgebra.Strategies
 import Test.QuickCheck
 import Control.Monad
-import Transformation
-import Utils
+import Common.Transformation
+import Common.Utils
 import Data.List
 
 -----------------------------------------------------------

@@ -1,15 +1,15 @@
-module Matrix
-   ( module Matrix.Domain
-   , module Matrix.Context
-   , module Matrix.Parser
-   , module Matrix.Rules
-   , module Matrix.Strategies
-   , module Matrix.Checks
+module Domain.LinearAlgebra
+   ( module Domain.LinearAlgebra.Matrix
+   , module Domain.LinearAlgebra.Context
+   , module Domain.LinearAlgebra.Parser
+   , module Domain.LinearAlgebra.Rules
+   , module Domain.LinearAlgebra.Strategies
+   , module Domain.LinearAlgebra.Checks
    ) where
    
-import Matrix.Domain
-import Matrix.Context 
-import Matrix.Parser
-import Matrix.Rules
-import Matrix.Strategies
-import Matrix.Checks
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.Context 
+import Domain.LinearAlgebra.Parser
+import Domain.LinearAlgebra.Rules
+import Domain.LinearAlgebra.Strategies
+import Domain.LinearAlgebra.Checks

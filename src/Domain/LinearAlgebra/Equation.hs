@@ -1,4 +1,4 @@
-module Matrix.Equation where
+module Domain.LinearAlgebra.Equation where
 
 import Test.QuickCheck
 import Control.Monad

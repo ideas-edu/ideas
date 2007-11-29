@@ -1,9 +1,9 @@
-module Matrix.LinearExpr 
+module Domain.LinearAlgebra.LinearExpr 
    ( LinearExpr, var, isVar, getVars, isConstant, getConstant, renameVariables
    , substVar, coefficientOf, toLinearExpr, splitLinearExpr, evalLinearExpr, scaleLinearExpr
    ) where
 
-import Utils
+import Common.Utils
 import Data.List
 import qualified Data.Map as M
 import GHC.Real

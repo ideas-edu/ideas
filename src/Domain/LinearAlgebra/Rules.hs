@@ -7,11 +7,11 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Matrix.Rules where
+module Domain.LinearAlgebra.Rules where
 
-import Matrix.Domain
-import Matrix.Context
-import Transformation
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.Context
+import Common.Transformation
 import Control.Monad
 import Data.List
 

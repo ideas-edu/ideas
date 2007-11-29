@@ -7,10 +7,10 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Matrix.Context where
+module Domain.LinearAlgebra.Context where
 
-import Matrix.Domain
-import Move
+import Domain.LinearAlgebra.Matrix
+import Common.Move
 import Control.Monad
 
 data MatrixInContext a = MIC

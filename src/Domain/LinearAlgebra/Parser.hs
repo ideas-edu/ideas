@@ -7,13 +7,13 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Matrix.Parser (parseMatrix, ppMatrixInContext, ppMatrix) where
+module Domain.LinearAlgebra.Parser (parseMatrix, ppMatrixInContext, ppMatrix) where
 
 import UU.Parsing
 import UU.Scanner (Pos)
-import Matrix.Domain
-import Matrix.Context
-import Utils
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.Context
+import Common.Utils
 
 -----------------------------------------------------------
 --- Parser

@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Matrix.Domain 
+module Domain.LinearAlgebra.Matrix 
    ( Matrix, Row, Column, makeMatrix
    , rows, row, columns, column, dimensions, entry
    , switchRows, scaleRow, addRow

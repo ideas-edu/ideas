@@ -7,11 +7,11 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Matrix.Strategies where
+module Domain.LinearAlgebra.Strategies where
 
-import Matrix.Context
-import Matrix.Rules
-import Strategy
+import Domain.LinearAlgebra.Context
+import Domain.LinearAlgebra.Rules
+import Common.Strategy
 
 toReducedEchelon :: Fractional a => Strategy (MatrixInContext a)
 toReducedEchelon = toEchelon <*> reduceMatrix

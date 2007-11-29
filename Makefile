@@ -25,10 +25,10 @@ solver: bin/solver$(EXE)
 
 bin/solver$(EXE): $(SOURCES)
 	mkdir -p $(BINDIR) $(OUTDIR)
-	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Main.hs
+	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
 
 checks:
-	cd src; runhaskell Checks.hs; cd ..
+	cd src/Common; runhaskell Checks.hs; cd ..
 
 run:
 	ghci -isrc -odir out -hidir out src/Main.hs

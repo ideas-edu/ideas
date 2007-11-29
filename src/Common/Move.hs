@@ -7,9 +7,9 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Move where
+module Common.Move where
 
-import Transformation
+import Common.Transformation
 import Test.QuickCheck
 import Data.List
 import Data.Maybe

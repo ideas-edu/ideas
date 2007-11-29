@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Utils where
+module Common.Utils where
 
 import Data.Char
 import Data.List

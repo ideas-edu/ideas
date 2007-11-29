@@ -1,5 +1,5 @@
 {-# OPTIONS -XMultiParamTypeClasses -XFlexibleInstances -fglasgow-exts #-}
-module Unification 
+module Common.Unification 
    ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@), lookupVar, dom
    , HasVars(..), MakeVar(..), BiSubstitutable(..), Substitutable(..), {-BiUnifiable(..),-} Unifiable(..)
    , (|->), match, unifyList

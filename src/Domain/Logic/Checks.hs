@@ -7,17 +7,17 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic.Checks (checks) where
+module Domain.Logic.Checks (checks) where
 
-import Strategy hiding (checks)
-import Transformation
-import Utils
-import Move
-import Logic.Domain
-import Logic.Zipper
-import Logic.Strategies
-import Logic.Parser
-import Logic.Rules
+import Common.Strategy hiding (checks)
+import Common.Transformation
+import Common.Utils
+import Common.Move
+import Domain.Logic.Formula
+import Domain.Logic.Zipper
+import Domain.Logic.Strategies
+import Domain.Logic.Parser
+import Domain.Logic.Rules
 import Test.QuickCheck
 import Control.Monad
 import Data.Char

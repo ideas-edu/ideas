@@ -7,18 +7,18 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic
-   ( module Logic.Domain
-   , module Logic.Zipper
-   , module Logic.Parser
-   , module Logic.Strategies
-   , module Logic.Rules
-   , module Logic.Checks
+module Domain.Logic
+   ( module Domain.Logic.Formula
+   , module Domain.Logic.Zipper
+   , module Domain.Logic.Parser
+   , module Domain.Logic.Strategies
+   , module Domain.Logic.Rules
+   , module Domain.Logic.Checks
    ) where
    
-import Logic.Domain
-import Logic.Zipper
-import Logic.Parser
-import Logic.Strategies
-import Logic.Rules
-import Logic.Checks
+import Domain.Logic.Formula
+import Domain.Logic.Zipper
+import Domain.Logic.Parser
+import Domain.Logic.Strategies
+import Domain.Logic.Rules
+import Domain.Logic.Checks

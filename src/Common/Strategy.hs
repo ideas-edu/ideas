@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Strategy 
+module Common.Strategy 
    ( Strategy, IsStrategy(..)
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
@@ -15,9 +15,9 @@ module Strategy
    , checks
    ) where
 
-import Transformation
-import Move
-import Utils
+import Common.Transformation
+import Common.Move
+import Common.Utils
 import Test.QuickCheck hiding (check, label)
 import Control.Monad
 import Control.Arrow

@@ -7,7 +7,9 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic.Parser (parseLogic, ppLogic, ppLogicPrio, ppLogicInContext,myShowMessages) where
+module Domain.Logic.Parser 
+   ( parseLogic, ppLogic, ppLogicPrio, ppLogicInContext,myShowMessages
+   ) where
 
 import UU.Parsing
 import UU.Parsing.CharParser
@@ -16,12 +18,12 @@ import UU.Pretty
   -- for the combinators used in myShowMessages
   -- Should maybe be simplified?
 
-import Logic.Domain
-import Logic.Zipper
+import Domain.Logic.Formula
+import Domain.Logic.Zipper
 --import Logic.Solver.LogicDutchResources
-import Logic.Solver.LogicPretty
+--import Logic.Solver.LogicPretty
 import Data.Char
-import Logic.Solver.LogicEnglishResources
+import Domain.Logic.Solver.LogicEnglishResources
   -- for myShowMessages
 
 -----------------------------------------------------------

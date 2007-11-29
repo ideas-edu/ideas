@@ -8,10 +8,10 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic.Zipper where
+module Domain.Logic.Zipper where
 
-import Move
-import Logic.Domain
+import Common.Move
+import Domain.Logic.Formula
 
 data Cxt = Top
          | ImplL Cxt Logic

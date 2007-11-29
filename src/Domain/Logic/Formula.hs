@@ -8,10 +8,10 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic.Domain where
+module Domain.Logic.Formula where
 
-import Unification
-import Utils
+import Common.Unification
+import Common.Utils
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S

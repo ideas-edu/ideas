@@ -8,13 +8,13 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic.Rules where
+module Domain.Logic.Rules where
 
 import qualified Data.Set as S
-import Logic.Domain
-import Logic.Zipper
-import Transformation
-import Unification
+import Domain.Logic.Formula
+import Domain.Logic.Zipper
+import Common.Transformation
+import Common.Unification
 
 type LogicRule = Rule Logic  
 

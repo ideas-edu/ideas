@@ -7,11 +7,11 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Logic.Strategies where
+module Domain.Logic.Strategies where
 
-import Logic.Zipper
-import Logic.Rules
-import Strategy
+import Domain.Logic.Zipper
+import Domain.Logic.Rules
+import Common.Strategy
 
 eliminateConstants :: Strategy LogicInContext
 eliminateConstants = repeatS $ somewhere $

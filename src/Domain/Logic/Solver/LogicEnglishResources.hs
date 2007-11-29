@@ -1,4 +1,4 @@
-module Logic.Solver.LogicEnglishResources where
+module Domain.Logic.Solver.LogicEnglishResources where
 
 
 -- Used in LogicSolver: ------------------------------------------------ 

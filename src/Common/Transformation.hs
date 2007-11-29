@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Transformation 
+module Common.Transformation 
    ( Apply(..), applyM, applicable, applyList, applyListM, applyListD
    , Rule(..), makeRule, makePatternRule, (|-), combineRules, Transformation
    ) where
@@ -17,7 +17,7 @@ import Data.Char
 import Data.Maybe
 import Test.QuickCheck
 import Control.Monad
-import Unification
+import Common.Unification
 
 class Apply t where
    apply  :: t a -> a -> Maybe a

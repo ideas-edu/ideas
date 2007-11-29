@@ -1,9 +1,9 @@
-module OMToMatrix where
+module OpenMath.OMToMatrix where
 
 import Text.XML.HaXml.Xml2Haskell
-import OpenMath
+import OpenMath.OpenMath
 import Data.Maybe
-import Matrix
+import Domain.LinearAlgebra
 
 xml2matrix :: Read a => String -> Matrix a
 xml2matrix = omobj2matrix . fromJust . readXml

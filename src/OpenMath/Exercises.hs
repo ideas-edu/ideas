@@ -1,12 +1,12 @@
-module Exercises where
+module OpenMath.Exercises where
 
-import Transformation
-import Matrix (Matrix, makeMatrix, rows, columns)
-import Strategy
-import Utils
-import Matrix.Equation
-import Matrix.LinearExpr
-import Matrix.LinearSystem
+import Common.Transformation
+import Domain.LinearAlgebra (Matrix, makeMatrix, rows, columns)
+import Common.Strategy
+import Common.Utils
+import Domain.LinearAlgebra.Equation
+import Domain.LinearAlgebra.LinearExpr
+import Domain.LinearAlgebra.LinearSystem
 
 import Data.List
 import Data.Char

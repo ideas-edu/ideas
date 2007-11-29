@@ -1,4 +1,4 @@
-module OpenMath where
+module OpenMath.OpenMath where
 
 import Text.XML.HaXml.Xml2Haskell
 import Text.XML.HaXml.OneOfN

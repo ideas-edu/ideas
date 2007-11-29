@@ -1,7 +1,7 @@
-module Main where
+module OpenMath.LAServer where
 
-import Matrix
-import OMToMatrix
+import Domain.LinearAlgebra
+import OpenMath.OMToMatrix
 import System.IO
 import Text.XML.HaXml.Haskell2Xml
 

@@ -1,0 +1,150 @@
+body {
+		background-color: #CCCC99;
+		background-image: url(/feedback/css/background.jpg);
+		position: relative;
+}
+h1 {
+	background-image: url(/feedback/ouheader.jpg);
+	color: #FFFFFF;
+	text-align: center;
+	font-variant: small-caps;
+	font-size: 200%;
+	font-weight: 900;
+  	letter-spacing: 0.1em;
+  	line-height: 3;
+  	font-family: "Book Antiqua", Georgia, Palatino, Times, "Times New Roman", serif;
+  	margin-bottom: 0px;
+  	margin-top: 10px;
+  	margin-left: 20px;
+  	margin-right: 20px;
+}
+
+h2, h3 {
+	font-family: "Book Antiqua", Georgia, Palatino, Times, "Times New Roman", serif;
+	margin-left: 20px;
+	margin-top: 30px;
+}
+
+#opgave {
+	background-color: #CCCC99;
+	padding: 10px;
+	width: 100%;
+	height: 30px;
+	margin-left: 20px;
+}
+
+#feedback {
+	background-color: #CCCC99;
+	padding: 10px;
+	width: 100%;
+	height: 300px;
+	margin-left: 20px;
+}
+
+#afleiding {
+	background-color: #CCCC99;
+	padding: 10px;
+	width: auto;
+	height: auto;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+.kolom {
+	width: 50%;
+	position: relative;
+}
+
+.minibutton {
+	display: inline; 
+	float: right;
+	margin-right: 5px;
+	background-color: #CCCC99;
+	position: relative;
+}
+
+/* #klaarbutton {
+	display: inline; 
+	float: right;
+	margin-right: 5px;
+	background-color: #CCCC99;
+	position: relative;
+}*/
+
+#controleerbutton {
+	display: inline; 
+	float: right;
+	margin-right: 0px;
+	background-color: #CCCC99;
+	position: relative;
+}
+
+/* #herstelbutton {
+	display: inline; 
+	float: right;
+	margin-right: 5px;
+	background-color: #CCCC99;
+	position: relative;
+}*/
+
+.helpbutton {
+	display: inline; 
+	float: right;
+	background-image: url(http://ideas.cs.uu.nl/feedback/css/background.jpg);
+	position: relative;
+}
+
+.menu {
+	margin-bottom: 20px;
+	display: inline; 
+	float: right;
+	margin-right: 20px;
+	background-color: #CCCC99;
+	position: relative;
+}
+
+.helpgebied {
+	position: absolute;
+	background-color: #CCCC99;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #999966;
+	padding: 20px;
+	top: 160px;
+	right: 20px;
+	width: 50%;
+	clear: both;
+}
+
+textarea {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	margin-left: 20px;
+	margin-right: auto;
+	width: 100%;
+	padding: 5px;
+	display: block;
+	background-color: #FFFFFF;
+}
+
+
+.links {
+	position: absolute;
+	top: 140px;
+	width: 45%
+}
+
+.rechts {
+	position: absolute;
+	top: 140px;
+	right: 0px;
+	width: 45%;
+}
+
+.zichtbaar {
+	display: block;
+}
+
+.onzichtbaar {
+	display: none;
+}

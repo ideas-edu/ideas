@@ -1,8 +1,7 @@
-{-# OPTIONS -XMultiParamTypeClasses -XFlexibleInstances -fglasgow-exts #-}
 module Common.Unification 
    ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@), lookupVar, dom
-   , HasVars(..), MakeVar(..), BiSubstitutable(..), Substitutable(..), {-BiUnifiable(..),-} Unifiable(..)
-   , (|->), match, unifyList
+   , HasVars(..), MakeVar(..), Substitutable(..), Unifiable(..)
+   , (|->), match, unifyList, substitutePair
    , ForAll, generalize, generalizeAll, instantiate, instantiateWith, unsafeInstantiate, unsafeInstantiateWith
    ) where
 
@@ -50,16 +49,10 @@ class MakeVar a where
     -- default method
     makeVarInt = makeVar . ('_':) . show
    
-class (MakeVar a, HasVars sa) => BiSubstitutable a sa where
-   biSubstitute :: Substitution a -> sa -> sa
+class (HasVars a, MakeVar a) => Substitutable a where
+   (|->) :: Substitution a -> a -> a -- substitution
 
-class BiSubstitutable a a => Substitutable a where
-   substitute :: Substitution a -> a -> a
-
---class BiUnifiable a sa where
---   biUnify :: sa -> sa -> Maybe (Substitution a)
-   
-class (Substitutable a{-, BiUnifiable a a-}) => Unifiable a where
+class Substitutable a => Unifiable a where
    unify :: a -> a -> Maybe (Substitution a)
    
 instance HasVars a => HasVars [a] where
@@ -67,40 +60,7 @@ instance HasVars a => HasVars [a] where
    
 instance (HasVars a, HasVars b) => HasVars (a, b) where
    getVars (x, y) = getVars x `S.union` getVars y
-
--- default instance
---instance (HasVars a, Substitutable a) => BiSubstitutable a a where
---   biSubstitute = substitute
-
-instance (BiSubstitutable a b, BiSubstitutable a c) => BiSubstitutable a (b, c) where
-   biSubstitute s (x, y) = (biSubstitute s x, biSubstitute s y) 
-   
-instance BiSubstitutable a b => BiSubstitutable a [b] where
-   biSubstitute = map . biSubstitute
- 
--- default instance
-{- instance Unifiable a => BiUnifiable a a where
-   biUnify = unify
-  
-instance (BiUnifiable a b, BiSubstitutable a b, BiUnifiable a c, BiSubstitutable a c) => BiUnifiable a (b, c) where
-   biUnify (b1, c1) (b2, c2) = do 
-      s1 <- biUnify b1 b2
-      s2 <- biUnify (s1 |-> c1) (s1 |-> c2)
-      return (s1 @@@ s2)
-      
-instance (BiUnifiable a b, BiSubstitutable a b) => BiUnifiable a [b] where
-   biUnify xs ys = do 
-      guard (length xs == length ys)
-      foldr combine (return emptySubst) (zip xs ys)
-    where
-      combine (a, b) msub = do
-        s1 <- msub
-        s2 <- biUnify (s1 |-> a) b
-        return (s1 @@@ s2) -}
               
-(|->) :: BiSubstitutable a sa => Substitution a -> sa -> sa
-(|->) = biSubstitute
-
 unifyList :: Unifiable a => [a] -> [a] -> Maybe (Substitution a)
 unifyList xs ys = do 
       guard (length xs == length ys)
@@ -110,6 +70,9 @@ unifyList xs ys = do
         s1 <- msub
         s2 <- unify (s1 |-> a) b
         return (s1 @@@ s2)
+
+substitutePair :: (Substitutable a) => Substitution a -> (a, a) -> (a, a)
+substitutePair sub (a, b) = (sub |-> a, sub |-> b)
 
 match :: Unifiable a => a -> a -> Maybe (Substitution a)
 match a b = do
@@ -127,27 +90,18 @@ generalizeAll :: HasVars a => a -> ForAll a
 generalizeAll a = ForAll (getVars a) a
 
 instantiate :: Substitutable a => Int -> ForAll a -> (a, Int)
-instantiate unique (ForAll s a) = (substitute sub a, unique + length vars)
+instantiate = instantiateWith (|->)
+
+instantiateWith :: MakeVar b => (Substitution b -> a -> a) -> Int -> ForAll a -> (a, Int)
+instantiateWith f unique (ForAll s a) = (f sub a, unique + length vars)
  where 
    vars = S.toList s
    sub  = listToSubst $ zip vars (map makeVarInt [unique..])
-
-instantiateWith :: BiSubstitutable b a => (Int -> b) -> Int -> ForAll a -> (a, Int)
-instantiateWith f unique (ForAll s a) = (biSubstitute sub a, unique + length vars)
- where 
-   vars = S.toList s
-   sub  = listToSubst $ zip vars (map f [unique..])
       
 -- Use a magic number for instantiation
 unsafeInstantiate :: Substitutable a => ForAll a -> a
-unsafeInstantiate = fst . instantiate 12345
+unsafeInstantiate = unsafeInstantiateWith (|->)
 
 -- Use a magic number for instantiation
-unsafeInstantiateWith :: BiSubstitutable b a => (Int -> b) -> ForAll a -> a
+unsafeInstantiateWith :: MakeVar b => (Substitution b -> a -> a) -> ForAll a -> a
 unsafeInstantiateWith f = fst . instantiateWith f 12345
-
-instance HasVars a => HasVars (ForAll a) where
-   getVars (ForAll s a) = getVars a S.\\ s
-
-instance BiSubstitutable a b => BiSubstitutable a (ForAll b) where
-   biSubstitute s (ForAll xs a) = ForAll xs (biSubstitute (removeDom xs s) a)

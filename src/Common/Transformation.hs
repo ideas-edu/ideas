@@ -68,7 +68,7 @@ p |- q | S.null frees = Pattern $ generalizeAll (p, q)
 applyPattern :: Unifiable a => ForAll (a, a) -> a -> Maybe a
 applyPattern pair a = do
    mkVar <- return (makeVarInt `asTypeOf` \_ -> a)
-   (lhs, rhs) <- return $ unsafeInstantiateWith mkVar pair
+   (lhs, rhs) <- return $ unsafeInstantiateWith substitutePair pair
    sub <-  match lhs a
    return (sub |-> rhs)
 

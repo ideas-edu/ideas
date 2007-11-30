@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Checks (checks) where
 
-import Common.Strategy hiding (checks)
+import Common.Strategy
 import Common.Transformation
 import Common.Utils
 import Common.Move
@@ -85,6 +85,8 @@ propStratDNF logic =
       case apply toDNF (inContext logic) of
          Just this -> isDNF (noContext this)
          _ -> False
+ 
+qqq = Not (Var "r" :<->: Var "p")
                 
 -----------------------------------------------------------
 --- QuickCheck generators

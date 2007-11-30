@@ -1,4 +1,3 @@
-{-# OPTIONS -XMultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
@@ -130,11 +129,8 @@ instance MakeVar Logic where
    makeVar = Var
    
 instance Substitutable Logic where 
-   substitute sub = foldLogic (var, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
+   (|->) sub = foldLogic (var, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
        where var x = fromMaybe (Var x) (lookupVar x sub)
-
-instance BiSubstitutable Logic Logic where
-   biSubstitute = substitute
-
+       
 instance Unifiable Logic where
    unify = unifyLogic

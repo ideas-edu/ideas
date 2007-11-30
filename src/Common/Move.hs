@@ -21,11 +21,12 @@ class Move a where
    moveTop x = maybe x moveTop (moveUp x)
 
 data Movement = MoveLeft | MoveRight | MoveUp | MoveDown
-   deriving (Show, Eq, Ord)
-   
-movements :: [Movement]
-movements = [MoveLeft, MoveRight, MoveUp, MoveDown]
-   
+   deriving (Show, Eq, Ord, Enum, Bounded)
+
+-- | Reachable locations (with Left/Right/Down)
+reachable :: Move a => a -> [a]
+reachable a = a : [ c | Just b <- map ($ a) [moveLeft, moveRight, moveDown], c <- reachable b ]
+
 move :: Move a => Movement -> a -> Maybe a
 move MoveLeft  = moveLeft
 move MoveRight = moveRight
@@ -40,8 +41,8 @@ ruleMoveDown  = minorRule $ makeSimpleRule "MoveDown"  moveDown
 ruleMoveTop   = minorRule $ makeSimpleRule "MoveTop"   (Just . moveTop)
 
 instance Arbitrary Movement where
-   arbitrary   = oneof $ map return movements
-   coarbitrary = variant . fromMaybe (-1) . flip elemIndex movements
+   arbitrary   = oneof $ map return [minBound..]
+   coarbitrary = variant . fromMaybe (-1) . flip elemIndex [minBound..]
 
 {- propM1, propM2, propM3, propM4 :: LogicInContext -> Property
 propM1 x = isJust my ==> my==Just x

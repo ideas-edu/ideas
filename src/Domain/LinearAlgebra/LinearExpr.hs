@@ -1,11 +1,14 @@
 module Domain.LinearAlgebra.LinearExpr 
    ( LinearExpr, var, isVar, getVars, isConstant, getConstant, renameVariables
-   , substVar, coefficientOf, toLinearExpr, splitLinearExpr, evalLinearExpr, scaleLinearExpr
+   , coefficientOf, toLinearExpr, splitLinearExpr, evalLinearExpr, scaleLinearExpr
    ) where
 
 import Common.Utils
+import Common.Unification
 import Data.List
+import Data.Maybe
 import qualified Data.Map as M
+import qualified Data.Set as S
 import GHC.Real
 import Test.QuickCheck
 import Control.Monad
@@ -45,15 +48,23 @@ instance Fractional a => Fractional (LinearExpr a) where
 -- not introduce zero coefficients
 instance Functor LinearExpr where
    fmap f (LE xs a) = LE (M.map f xs) (f a)
-      
+
+instance HasVars (LinearExpr a) where
+   getVars (LE xs _) = M.keysSet xs
+
+instance Num a => MakeVar (LinearExpr a) where
+   makeVar = var
+
+instance Num a => Substitutable (LinearExpr a) where
+   sub |-> e@(LE xs c) = 
+      let op v a b = toLinearExpr a * fromMaybe (var v) (lookupVar v sub) + b
+      in M.foldWithKey op (toLinearExpr c) xs
+
 scaleLinearExpr :: Num a => a -> LinearExpr a -> LinearExpr a
 scaleLinearExpr a (LE xs c) = linearExpr (M.map (*a) xs) (c*a)
 
 var :: Num a => String -> LinearExpr a
 var x = LE (M.singleton x 1) 0
-
-getVars :: LinearExpr a -> [String]
-getVars (LE xs _) = M.keys xs
 
 getConstant :: LinearExpr a -> a
 getConstant (LE _ c) = c
@@ -65,24 +76,19 @@ splitLinearExpr :: Num a => (String -> Bool) -> LinearExpr a -> (LinearExpr a, L
 splitLinearExpr p (LE xs c) = (LE ys c, LE zs 0)
  where (ys, zs) = M.partitionWithKey (\k _ -> p k) xs
 
--- substitution
-substVar :: Num a => String -> LinearExpr a -> LinearExpr a -> LinearExpr a 
-substVar var a e@(LE xs c) =
-   toLinearExpr (coefficientOf var e) * a + LE (M.delete var xs) c
-
 coefficientOf :: Num a => String -> LinearExpr a  -> a
 coefficientOf s (LE xs b) = M.findWithDefault 0 s xs
 
 isVar :: Num a => LinearExpr a -> Maybe String
-isVar e = case getVars e of 
+isVar e = case S.toList (getVars e) of 
              [v] | getConstant e == 0 && coefficientOf v e == 1
                 -> return v
              _  -> Nothing
 
 isConstant :: LinearExpr a -> Maybe a
 isConstant e
-   | null (getVars e) = return (getConstant e)
-   | otherwise        = Nothing
+   | noVars e  = return (getConstant e)
+   | otherwise = Nothing
 
 evalLinearExpr :: Num a => (String -> a) -> LinearExpr a -> a
 evalLinearExpr f (LE xs a) =

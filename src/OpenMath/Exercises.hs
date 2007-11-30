@@ -4,10 +4,12 @@ import Common.Transformation
 import Domain.LinearAlgebra (Matrix, makeMatrix, rows, columns)
 import Common.Strategy
 import Common.Utils
+import Common.Unification
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
 
+import qualified Data.Set as S
 import Data.List
 import Data.Char
 import Data.Maybe
@@ -27,8 +29,9 @@ x === y = f x == f y
 propConv1 :: LinearSystem Int -> Bool
 propConv1 x = matrixToSystem (systemToMatrix y) === y
  where
-   y   = map (fmap (renameVariables (fromJust . (`lookup` sub)))) (map (fmap $ fmap toRational) x)
-   sub = zip (getVarEquations x) variables
+   y   = map (fmap g) (map (fmap $ fmap toRational) x)
+   sub = zip (getVarsList x) variables
+   g   = renameVariables (fromJust . (`lookup` sub))
 
 propConv2 :: Matrix Int -> Property
 propConv2 x = 
@@ -44,11 +47,11 @@ propSound sys =
  where
    sysRat = map (fmap $ fmap toRational) sys
    solved = filter (not . evalEquation) . equations . applyD toGeneralSolution . inContext $ sysRat
-   vars   = map (head . getVars . getLHS) solved
-   frees  = nub (getVarEquations sys ++ getVarEquations solved) \\ vars
-   sub1   = zip frees (drop 10 (map fromIntegral primes))
+   vars   = getVars (map getLHS solved)
+   frees  = getVars (sys, solved) S.\\ vars
+   sub1   = zip (S.toList frees) (drop 10 (map fromIntegral primes))
+   sub2   = zip (S.toList vars) values
    values = map (evalLinearExpr (fun sub1) . getRHS) solved
-   sub2   = zip vars values
    fun s  = fromJust . (`lookup` s)
 
 -- elementary equations operations
@@ -91,21 +94,21 @@ ruleSubVarIndex i = makeSimpleRule "ruleSubVarIndex" f
  where
    f xs = 
       let (before, (lhs :==: rhs):after) = splitAt i xs
-      in case getVars lhs of
-            [v] | getConstant lhs == 0 && (v `elem` getVarEquations (before++after) || con/=1) -> 
+      in case S.toList (getVars lhs) of
+            [v] | getConstant lhs == 0 && (v `S.member` getVars (before, after) || con/=1) ->
                Just $ subst before ++ [new] ++ subst after
              where 
                con    = coefficientOf v lhs
                newrhs = toLinearExpr (1/con) * rhs
                new    = var v :==: newrhs
-               subst  = subVarEquations v newrhs
+               subst  = substEquations (singletonSubst v newrhs)
             _ -> Nothing
 
 ruleFreeVarsToRight :: Num a => Rule (LinearSystem a)
 ruleFreeVarsToRight = makeSimpleRule "FreeVarsToRight" f
  where
    f xs = 
-      let vars = [ head ys | ys <- map (getVars . getLHS) xs, not (null ys) ]
+      let vars = [ head ys | ys <- map (S.toList . getVars . getLHS) xs, not (null ys) ]
           change eq =
              let (e1, e2) = splitLinearExpr (`notElem` vars) (getLHS eq) -- constant ends up in e1
              in e2 :==: getRHS eq - e1
@@ -127,8 +130,8 @@ toStandardFormS = repeatS (liftRule $ liftRuleToList ruleStandardForm)
 firstVarNonZero :: Rule (EqsInContext a)
 firstVarNonZero = minorRule $ makeSimpleRule "_FirstVarNonZero" $ \c -> do
     let remaining_equations  =  drop (covered c) (equations c)
-    let minVar               =  minimum (getVarEquations remaining_equations)
-    i                        <- findIndex ((minVar `elem`) . getVarEquation) remaining_equations
+    let minVar               =  S.findMin (getVars remaining_equations)
+    i                        <- findIndex (S.member minVar . getVars) remaining_equations
     return c {minvar = minVar, eqnr = covered c + i}
 
 eliminateVarBelow :: Fractional a => Strategy (EqsInContext a)
@@ -197,7 +200,6 @@ liftRule = liftRuleG $ LP get set
    get = return . equations
    set new c = c {equations = new}
 
-      
 liftRuleG :: LiftPair a b -> Rule a -> Rule b
 liftRuleG lp r = makeSimpleRule (name r) f  
  where

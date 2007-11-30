@@ -1,5 +1,6 @@
 module Domain.LinearAlgebra.Equation where
 
+import Common.Unification
 import Test.QuickCheck
 import Control.Monad
 
@@ -15,7 +16,10 @@ instance Functor Equation where
    
 instance Show a => Show (Equation a) where
    show (x :==: y) = show x ++ " == " ++ show y
-  
+
+instance HasVars a => HasVars (Equation a) where
+   getVars (x :==: y) = getVars (x, y)
+ 
 getLHS, getRHS :: Equation a -> a
 getLHS (x :==: _) = x
 getRHS (_ :==: y) = y
@@ -25,6 +29,12 @@ evalEquation = evalEquationWith id
 
 evalEquationWith :: Eq b => (a -> b) -> Equation a -> Bool
 evalEquationWith f (x :==: y) = f x == f y
+
+substEquation :: Substitutable a => Substitution a -> Equation a -> Equation a
+substEquation sub (x :==: y) = (sub |-> x) :==: (sub |-> y)
+
+substEquations :: Substitutable a => Substitution a -> Equations a -> Equations a
+substEquations sub = map (substEquation sub)
 
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
 combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2

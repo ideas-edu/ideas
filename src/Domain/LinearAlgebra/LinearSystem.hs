@@ -4,9 +4,11 @@ import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Data.List
+import qualified Data.Set as S
 import Data.Maybe
 import Control.Monad
 import Common.Utils
+import Common.Unification
 
 type LinearSystem a = Equations (LinearExpr a)
 
@@ -17,19 +19,7 @@ invalidSystem :: Eq a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
 
 invalidEquation :: Eq a => Equation (LinearExpr a) -> Bool
-invalidEquation eq@(lhs :==: rhs) = null (getVarEquation eq) && getConstant lhs /= getConstant rhs
-
-getVarEquation :: Equation (LinearExpr a) -> [String]
-getVarEquation (x :==: y) = getVars x `union` getVars y
-
-getVarEquations :: LinearSystem a -> [String]
-getVarEquations = foldr (union . getVarEquation) []
-
-subVarEquation :: Num a => String -> LinearExpr a -> Equation (LinearExpr a) -> Equation (LinearExpr a)
-subVarEquation var a = fmap (substVar var a)
-
-subVarEquations :: Num a => String -> LinearExpr a -> Equations (LinearExpr a) -> Equations (LinearExpr a)
-subVarEquations var a = map (subVarEquation var a)
+invalidEquation eq@(lhs :==: rhs) = noVars eq && getConstant lhs /= getConstant rhs
 
 getSolution :: Num a => LinearSystem a -> Maybe [(String, LinearExpr a)]
 getSolution xs = do
@@ -37,15 +27,15 @@ getSolution xs = do
    guard (null (vars `intersect` frees))
    mapM make xs
  where
-   vars  = concatMap (getVars . getLHS) xs
-   frees = concatMap (getVars . getRHS) xs
+   vars  = concatMap (getVarsList . getLHS) xs
+   frees = concatMap (getVarsList . getRHS) xs
    make (lhs :==: rhs) = do
       v <- isVar lhs
       return (v, rhs)
       
 -- No constant on the left, no variables on the right
 inStandardForm :: Num a => Equation (LinearExpr a) -> Bool
-inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && null (getVars rhs)
+inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && noVars rhs
 
 toStandardForm :: Num a => Equation (LinearExpr a) -> Equation (LinearExpr a)
 toStandardForm (lhs :==: rhs) =
@@ -60,7 +50,7 @@ inSolvedForm xs = invalidSystem xs || isJust (getSolution xs)
 systemToMatrix :: Num a => LinearSystem a -> Matrix a
 systemToMatrix system = makeMatrix (map (makeRow . toStandardForm) system)
  where
-   vars = sort (getVarEquations system)
+   vars = getVarsList system
    makeRow (lhs :==: rhs) =
       map (`coefficientOf` lhs) vars ++ [getConstant rhs]
 

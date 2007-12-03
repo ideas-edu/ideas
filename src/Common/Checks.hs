@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Common.Checks (main) where
+module Main (main) where
 
 import Common.RegExp
 import Domain.Logic

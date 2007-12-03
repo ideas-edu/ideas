@@ -61,6 +61,6 @@ logicInterpreter = Interpreter
    , equivalence   = \x y -> noContext x `eqLogic` noContext y
    , finalProperty = isDNF . noContext
    , ruleset       = map logicRuleInContext logicRules
-   , strategy      = toDNF
+   , strategy      = unlabel toDNF
    , term          = parser logicInterpreter "x/\\ (~y || ~(~z /\\ x))"
    }  

@@ -15,7 +15,7 @@ import Common.Strategy
 
 eliminateConstants :: Strategy LogicInContext
 eliminateConstants = repeatS $ somewhere $
-   altList $ map (toStrategy . logicRuleInContext) rules
+   altList $ map logicRuleInContext rules
  where 
    rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
            , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
@@ -36,5 +36,9 @@ eliminateNots = repeatS $ somewhere $
 orToTop :: Strategy LogicInContext
 orToTop = repeatS $ somewhere $ logicRuleInContext ruleAndOverOr
 
-toDNF :: Strategy LogicInContext
-toDNF = eliminateConstants <*> eliminateImplEquiv <*> eliminateNots <*> orToTop
+toDNF :: NamedStrategy LogicInContext
+toDNF =  label "Bring to dnf"
+      $  label "Eliminate constants"                 eliminateConstants
+     <*> label "Eliminate implications/equivalences" eliminateImplEquiv
+     <*> label "Eliminate nots"                      eliminateNots 
+     <*> label "Move ors to top"                     orToTop

@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
@@ -8,7 +9,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Strategy 
-   ( Strategy, IsStrategy(..)
+   ( Strategy, NamedStrategy, AnonymousStrategy, IsStrategy(..), unlabel, LiftStrategy(..)
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
    , intermediates, intermediatesList, check
@@ -28,82 +29,136 @@ import Data.Char
 -----------------------------------------------------------
 --- Data type
 
+-- | A strategy without any sub-strategies
 newtype Strategy a = S { unS :: RE.RegExp (Rule a) }
  deriving Show
 
-data NamedStrategy a = NS String (Either (RE.RegExp (NamedStrategy a)) (Strategy a))
+-- | An AnonymousStrategy is a strategy with sub-strategies, but without 
+-- | a top-level name. Use "label" to turn an AnonymousStrategy into a
+-- | NamedStrategy.
+newtype AnonymousStrategy a = AS (RE.RegExp (NamedStrategy a))
+ deriving Show
+
+-- | A NamedStrategy is a strategy with sub-strategies and a top-level name.
+newtype NamedStrategy a = NS (String, Either (AnonymousStrategy a) (Strategy a))
+ deriving Show
+ 
+-----------------------------------------------------------
+--- Strategy type classes
+
+{- Apply -}
+instance Apply Strategy where
+   apply strategy = safeHead . runStrategy strategy
 
 instance Apply NamedStrategy where
-   apply = apply . unlabelStrategy
+   apply = apply . toStrategy
 
-instance IsStrategy NamedStrategy where
-   toStrategy = unlabelStrategy
+instance Apply AnonymousStrategy where 
+   apply = apply . toStrategy
 
-unlabelStrategy :: NamedStrategy a -> Strategy a
-unlabelStrategy (NS _ s) = either (S . RE.join . fmap (unS . toStrategy)) id s
- 
-labelStrategy :: String -> Strategy a -> NamedStrategy a
-labelStrategy x = NS x . Right
-
------------------------------------------------------------
---- Strategy type class
-
-class Apply s => IsStrategy s where
-   toStrategy :: s a -> Strategy a
+{- ToStrategy -}
+class Apply f => IsStrategy f where
+   toStrategy :: f a -> Strategy a
+   label      :: String -> f a -> NamedStrategy a
+   
+instance IsStrategy Rule where
+   toStrategy = S . RE.symbol
+   label l    = label l . toStrategy
 
 instance IsStrategy Strategy where
    toStrategy = id
+   label l s  = NS (l, Right s)
    
-instance IsStrategy Rule where
-   toStrategy = S . RE.Step
+instance IsStrategy AnonymousStrategy where
+   toStrategy (AS f) = S $ RE.join $ fmap (unS . unlabel) f
+   label l as        = NS (l, Left as)
+   
+instance IsStrategy NamedStrategy where
+   toStrategy (NS (_, f)) = either toStrategy toStrategy f
+   label l = label l . AS . RE.symbol
+
+{- LiftStrategy -}
+class (IsStrategy f, IsStrategy g, RE.IsRegExp g) => LiftStrategy f g | f -> g where
+   liftStrategy :: f a -> g a
+
+instance LiftStrategy Rule Strategy where
+  liftStrategy = toStrategy
+  
+instance LiftStrategy Strategy Strategy where
+  liftStrategy = id
+
+instance LiftStrategy NamedStrategy AnonymousStrategy where
+  liftStrategy = AS . RE.symbol
+
+instance LiftStrategy AnonymousStrategy AnonymousStrategy where
+  liftStrategy = id
 
 -----------------------------------------------------------
 --- Smart constructors
 
+unlabel :: NamedStrategy a -> Strategy a
+unlabel = toStrategy 
+
 infixr 5 <*>
 infixr 4 |>, <|>
- 
-(<*>), (<|>), (|>) :: (IsStrategy s, IsStrategy t) => s a -> t a -> Strategy a
-p <*> q = S $ unS (toStrategy p) RE.<*> unS (toStrategy q)
-p <|> q = S $ unS (toStrategy p) RE.<|> unS (toStrategy q)
+
+instance RE.IsRegExp Strategy where
+   S p <*> S q = S $ p RE.<*> q
+   S p <|> S q = S $ p RE.<|> q
+   star (S p)  = S $ RE.star p
+   succeed     = S $ RE.succeed
+   emptyset    = S $ RE.emptyset
+
+instance RE.IsRegExp AnonymousStrategy where
+   AS p <*> AS q = AS $ p RE.<*> q
+   AS p <|> AS q = AS $ p RE.<|> q
+   star (AS p)   = AS $ RE.star p
+   succeed       = AS $ RE.succeed
+   emptyset      = AS $ RE.emptyset
+
+(<*>), (<|>) :: (LiftStrategy f s, LiftStrategy g s) => f a -> g a -> s a
+p <*> q = liftStrategy p RE.<*> liftStrategy q
+p <|> q	= liftStrategy p RE.<|> liftStrategy q
+  
+(|>) :: (LiftStrategy f Strategy, LiftStrategy g Strategy) => f a -> g a -> Strategy a
 p  |> q = p <|> (notS p <*> q)
 
 succeed, failS :: Strategy a
-succeed = S RE.Succeed
-failS   = S RE.Fail
+succeed = S RE.succeed
+failS   = S RE.emptyset
 
-seqList, altList :: IsStrategy s => [s a] -> Strategy a
-seqList = foldr (<*>) succeed
-altList = foldr (<|>) failS
+seqList, altList :: LiftStrategy f s => [f a] -> s a
+seqList = foldr ((RE.<*>) . liftStrategy) RE.succeed
+altList = foldr ((RE.<|>) . liftStrategy) RE.emptyset
 
 -- greedy!
-repeatS :: IsStrategy s => s a -> Strategy a
+repeatS :: LiftStrategy f Strategy => f a -> Strategy a
 repeatS p = repeatS_ng p <*> notS p
 
-repeatS_ng :: IsStrategy s => s a -> Strategy a
-repeatS_ng = S . RE.star . unS . toStrategy
+repeatS_ng :: LiftStrategy f Strategy => f a -> Strategy a
+repeatS_ng = S . RE.star . unS . liftStrategy
 
-try :: IsStrategy s => s a -> Strategy a
+try :: LiftStrategy f Strategy => f a -> Strategy a
 try p = p |> succeed
 
 check :: (a -> Bool) -> Strategy a
 check p = toStrategy (minorRule $ makeSimpleRule "Check" $ \a -> if p a then Just a else Nothing)
 
-notS :: IsStrategy s => s a -> Strategy a
-notS s = check (\a -> not $ applicable (toStrategy s) a)
+notS :: LiftStrategy f Strategy => f a -> Strategy a
+notS s = check (\a -> not $ applicable s a)
 
-exhaustive :: IsStrategy s => [s a] -> Strategy a
-exhaustive = repeatS . altList . map toStrategy
+exhaustive :: LiftStrategy f Strategy => [f a] -> Strategy a
+exhaustive = repeatS . altList
 
 -- | Poor man's solution: think harder about the Move type class, and currently, 
 -- the strategy succeeds with at most 1 result, which is undesirable
-somewhere :: (IsStrategy s, Move a) => s a -> Strategy a
+somewhere :: (LiftStrategy f Strategy, Move a) => f a -> Strategy a
 somewhere p = ruleMoveTop <*> ruleMoveSomewhere <*> p <*> ruleMoveTop
  where
    ruleMoveSomewhere = minorRule $ makeSimpleRule "Somewhere" $ safeHead . filter (applicable p) . reachable
 
 -- top/down
-somewhereTD :: (IsStrategy s, Move a) => s a -> Strategy a
+somewhereTD :: (LiftStrategy f Strategy, Move a) => f a -> Strategy a
 somewhereTD p = somewhere p
 
 -----------------------------------------------------------
@@ -113,16 +168,12 @@ runStrategy :: Strategy a -> a -> [a]
 runStrategy strategy a =
    [ a | isSucceed strategy ] ++
    [ result | (rule, rest) <- firsts strategy, b <- applyM rule a, result <- runStrategy rest b ]
-
-instance Apply Strategy where
-   apply strategy = safeHead . runStrategy strategy
          
 isSucceed :: Strategy a -> Bool
 isSucceed = RE.isSucceed . unS
 
 isFail :: Strategy a -> Bool
-isFail (S RE.Fail) = True
-isFail _           = False
+isFail (S p) = RE.isEmptySet p
 
 firsts :: Strategy a -> [(Rule a, Strategy a)]
 firsts = map (second S) . RE.firsts . unS

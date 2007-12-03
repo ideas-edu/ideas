@@ -1,7 +1,7 @@
 module Common.Unification 
    ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@), lookupVar, dom, noVars
    , HasVars(..), MakeVar(..), Substitutable(..), Unifiable(..)
-   , (|->), match, unifyList, substitutePair
+   , match, unifyList, substitutePair
    , ForAll, generalize, generalizeAll, instantiate, instantiateWith, unsafeInstantiate, unsafeInstantiateWith
    ) where
 

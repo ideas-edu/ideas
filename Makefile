@@ -1,4 +1,4 @@
-.PHONY: all checks solver doc run report markup clean
+.PHONY: all checks solver doc run report markup clean test
 
 # On Windows machines (under cygwin), ghc automatically puts the .exe suffix after
 # all executables it generates. This gives some problems when we have to call this
@@ -7,13 +7,27 @@
 #
 # on Windows: EXE = .exe
 # otherwise:  EXE = 
-EXE = $(shell ghc-pkg list | grep -q Win32 && echo .exe)
+
+WINDOWS = $(shell ghc-pkg list | grep -q Win32 && echo yes || echo no)
+
+ifeq ($(WINDOWS), yes)
+EXE  = .exe
+GHCI = ghcii.sh
+else
+EXE  = 
+GHCI = ghci
+endif
 
 # Define directories to store results
 BINDIR = bin
 OUTDIR = out
 DOCDIR = doc
 HPCDIR = hpc
+
+test:
+	# Windows OS: $(WINDOWS) 
+	# Executable suffix: $(EXE) 
+	# GHC interpreter: $(GHCI)
 
 default: solver
 
@@ -23,19 +37,20 @@ SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs src/Domain/Logic
 
 solver: bin/solver$(EXE)
 
-bin/solver$(EXE): $(SOURCES)
-	mkdir -p $(BINDIR) $(OUTDIR)
+$(BINDIR):
+	mkdir -p $(BINDIR)
+
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
+	
+bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
 	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
 
-checks:
+checks: $(BINDIR) $(OUTDIR)
 	cd src/Common; runhaskell -i.. Checks.hs; cd ..
 
-run:
-	ghci -isrc -odir out -hidir out src/Common/Main.hs
-
-# Cygwin only
-runwin:
-	ghcii.sh -isrc -odir out -hidir out src/Common/Main.hs
+run: $(BINDIR) $(OUTDIR)
+	$(GHCI) -isrc -odir out -hidir out 
 
 doc:	doc/index.html
 

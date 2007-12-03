@@ -11,6 +11,7 @@
 module Domain.Logic.Zipper where
 
 import Common.Move
+import Common.Transformation
 import Domain.Logic.Formula
 
 data Cxt = Top
@@ -89,5 +90,5 @@ noContext loc@(Loc ctx it) =
 inContext :: Logic -> LogicInContext
 inContext x = Loc Top x
      
-maybeLoc :: Loc (Maybe a) -> Maybe (Loc a)
-maybeLoc (Loc c ma) = fmap (Loc c) ma
+liftLogicRule :: Rule Logic -> Rule LogicInContext
+liftLogicRule = liftRule $ LiftPair (\(Loc _ y) -> Just y) (\y (Loc x _) -> Loc x y)

@@ -50,7 +50,7 @@ propRuleTopLevel rule logic =
 
 propRuleSomewhere :: LogicRule -> Logic -> Property
 propRuleSomewhere rule logic =
-   let strat = somewhere (logicRuleInContext rule) 
+   let strat = somewhere (liftLogicRule rule) 
        lic   = inContext logic
    in applicable strat lic ==>
          logic `eqLogic` noContext (applyD strat lic)

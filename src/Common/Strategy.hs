@@ -48,7 +48,7 @@ newtype NamedStrategy a = NS (String, Either (AnonymousStrategy a) (Strategy a))
 
 {- Apply -}
 instance Apply Strategy where
-   apply strategy = safeHead . runStrategy strategy
+   applyAll = runStrategy
 
 instance Apply NamedStrategy where
    apply = apply . toStrategy
@@ -167,7 +167,7 @@ somewhereTD p = somewhere p
 runStrategy :: Strategy a -> a -> [a]
 runStrategy strategy a =
    [ a | isSucceed strategy ] ++
-   [ result | (rule, rest) <- firsts strategy, b <- applyM rule a, result <- runStrategy rest b ]
+   [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
          
 isSucceed :: Strategy a -> Bool
 isSucceed = RE.isSucceed . unS
@@ -179,7 +179,7 @@ firsts :: Strategy a -> [(Rule a, Strategy a)]
 firsts = map (second S) . RE.firsts . unS
 
 nextRule :: Strategy a -> a -> [(Rule a, a, Strategy a)]
-nextRule strategy a = [ (r, b, s) | (r, s) <- firsts strategy, b <- applyM r a ]
+nextRule strategy a = [ (r, b, s) | (r, s) <- firsts strategy, b <- applyAll r a ]
 
 nextRulesWith :: (Rule a -> Bool) -> Strategy a -> a -> [([Rule a], a, Strategy a)]
 nextRulesWith p strategy a = concatMap f (nextRule strategy a)

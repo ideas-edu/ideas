@@ -116,16 +116,16 @@ ruleFreeVarsToRight = makeSimpleRule "FreeVarsToRight" f
 
 -- toEchelon strategy
 toGeneralSolution :: Fractional a => Strategy (EqsInContext a)
-toGeneralSolution = toStandardFormS <*> toEchelon <*> liftRule ruleFreeVarsToRight <*> echelonToSolution
+toGeneralSolution = toStandardFormS <*> toEchelon <*> liftSystemRule ruleFreeVarsToRight <*> echelonToSolution
 
 echelonToSolution :: Fractional a => Strategy (EqsInContext a)
-echelonToSolution = repeatS (liftRule ruleSubVar <*> liftRule ruleFreeVarsToRight)
+echelonToSolution = repeatS (liftSystemRule ruleSubVar <*> liftSystemRule ruleFreeVarsToRight)
 
 toEchelon :: Fractional a => Strategy (EqsInContext a)
 toEchelon = repeatS (firstVarNonZero <*> rEqExchange <*> eliminateVarBelow <*> ruleCoverTop)
 
 toStandardFormS :: Fractional a => Strategy (EqsInContext a)
-toStandardFormS = repeatS (liftRule $ liftRuleToList ruleStandardForm)
+toStandardFormS = repeatS (liftSystemRule $ liftRuleToList ruleStandardForm)
 
 firstVarNonZero :: Rule (EqsInContext a)
 firstVarNonZero = minorRule $ makeSimpleRule "_FirstVarNonZero" $ \c -> do
@@ -189,26 +189,16 @@ liftRuleToList r = makeSimpleRule (name r) f
           in apply (combineRules rs) xs
 
 ruleOnIndex :: Int -> Rule a -> Rule [a]
-ruleOnIndex i = liftRuleG (LP get set) 
+ruleOnIndex i = liftRule (LiftPair get set) 
  where
    get     = safeHead . drop i 
    set new = zipWith (\j -> if i==j then const new else id) [0..]
 
-liftRule :: Rule (LinearSystem a) -> Rule (EqsInContext a)
-liftRule = liftRuleG $ LP get set
+liftSystemRule :: Rule (LinearSystem a) -> Rule (EqsInContext a)
+liftSystemRule = liftRule $ LiftPair get set
  where
    get = return . equations
    set new c = c {equations = new}
-
-liftRuleG :: LiftPair a b -> Rule a -> Rule b
-liftRuleG lp r = makeSimpleRule (name r) f  
- where
-   f x = do
-      this <- getter lp x
-      new  <- apply r this
-      return (setter lp new x)
-
-data LiftPair a b = LP { getter :: b -> Maybe a, setter :: a -> b -> b }
 
 -----------------------------------------------------
 -- 9.1 Oplossen van lineaire vergelijkingen

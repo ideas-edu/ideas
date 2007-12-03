@@ -8,8 +8,9 @@
 --
 -----------------------------------------------------------------------------
 module Common.Transformation 
-   ( Apply(..), applyM, applicable, applyList, applyListM, applyListD, minorRule
+   ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation
+   , LiftPair(..), liftRule
    ) where
 
 import qualified Data.Set as S
@@ -17,31 +18,37 @@ import Data.List
 import Data.Char
 import Data.Maybe
 import Test.QuickCheck
+import Common.Utils
 import Control.Monad
 import Common.Unification
 
 class Apply t where
-   apply  :: t a -> a -> Maybe a
-   applyD :: t a -> a -> a         -- with value as default
+   apply    :: t a -> a -> Maybe a
+   applyAll :: t a -> a -> [a] 
    -- default definitions
-   --   (minimal complete definition: apply or applyD)
-   apply  ta a = Just (applyD ta a)
-   applyD ta a = fromMaybe a (apply ta a)
+   apply    ta = safeHead . applyAll ta
+   applyAll ta = maybe [] return . apply ta
+
+applicable :: Apply t => t a -> a -> Bool
+applicable ta = isJust . apply ta
+
+applyD :: Apply t => t a -> a -> a
+applyD ta a = fromMaybe a (apply ta a)
 
 applyM :: (Apply t, Monad m) => t a -> a -> m a
 applyM ta a = maybe (fail "applyM") return (apply ta a)
-
-applicable :: Apply t =>t a -> a -> Bool
-applicable ta = isJust . apply ta
-
+ 
 applyList :: Apply t => [t a] -> a -> Maybe a
-applyList = applyListM
+applyList xs a = foldl (\ma t -> join $ fmap (apply t) ma) (Just a) xs
 
-applyListM :: (Apply t, Monad m) => [t a] -> a -> m a
-applyListM ts a = foldl (\ma t -> ma >>= applyM t) (return a) ts
+applyListAll :: Apply t => [t a] -> a -> [a]
+applyListAll xs a = foldl (\ma t -> concatMap (applyAll t) ma) [a] xs
 
 applyListD :: Apply t => [t a] -> a -> a
-applyListD ts a = foldl (flip applyD) a ts
+applyListD xs a = foldl (\a t -> applyD t a) a xs
+
+applyListM :: (Apply t, Monad m) => [t a] -> a -> m a
+applyListM xs a = foldl (\ma t -> ma >>= applyM t) (return a) xs
 
 -----------------------------------------------------------
 --- Transformations
@@ -117,6 +124,19 @@ instance Ord (Rule a) where
      
 instance Apply Rule where
    apply r a = msum . map (`apply` a) . transformations $ r
+
+-----------------------------------------------------------
+--- Lifting rules
+
+data LiftPair a b = LiftPair { getter :: b -> Maybe a, setter :: a -> b -> b }
+
+liftRule :: LiftPair a b -> Rule a -> Rule b
+liftRule lp r = r {transformations = [Function f]}
+ where
+   f x = do
+      this <- getter lp x
+      new  <- apply r this
+      return (setter lp new x)
 
 -----------------------------------------------------------
 --- QuickCheck generator

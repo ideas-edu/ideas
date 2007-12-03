@@ -26,10 +26,6 @@ logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAn
 	     , ruleComplOr, ruleComplAnd
              ]
 
--- needs to be changed: fields from the Rule data type are ignored by this definition
-logicRuleInContext :: Rule Logic -> Rule LogicInContext
-logicRuleInContext r = makeSimpleRule (name r) (maybeLoc . fmap (apply r))
-
 -- local logic variables
 x, y, z :: Logic
 x:y:z:_ = map makeVarInt [0..]

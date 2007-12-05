@@ -32,6 +32,9 @@ giveStep = undefined
 feedback :: Assignment a -> String -> Feedback a
 feedback = undefined
 
+stepsRemaining :: Assignment a -> a -> Int
+stepsRemaining = undefined
+
 data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)
                 | Correct     (Doc a) Bool
@@ -39,3 +42,11 @@ data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
 data Doc a = DocText String
            | DocDomain a
            | DocConcat [Doc a]
+           
+instance Show a => Show (Doc a)
+
+showDoc :: Assignment a -> Doc a -> String
+showDoc = undefined
+
+showDocWith :: (a -> String) -> Doc a -> String
+showDocWith = undefined

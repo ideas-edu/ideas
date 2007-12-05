@@ -67,14 +67,15 @@ main =
         onClicked hintButton $
             do
                 currentAssignment <- readIORef assignmentState
---                case giveHint logicAssignment currentAssignment of
---                    (doc, rule) -> textBufferSetText feedbackBuffer "test"
-                textBufferSetText feedbackBuffer "hint"
+                case giveHint logicAssignment currentAssignment of
+                    (doc, rule) -> textBufferSetText feedbackBuffer (show rule ++ show doc)
 
         onClicked stepButton $
             do 
                 currentAssignment <- readIORef assignmentState
-                textBufferSetText feedbackBuffer "step"
+                case giveStep logicAssignment currentAssignment of
+                    (doc, subterm, newterm) -> 
+                            textBufferSetText feedbackBuffer (show doc ++ " to rewrite subterm " ++ show subterm ++ " resulting in " ++ show newterm)
 
         onClicked undoButton $
             do 

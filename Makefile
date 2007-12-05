@@ -24,12 +24,12 @@ OUTDIR = out
 DOCDIR = doc
 HPCDIR = hpc
 
+default: solver
+
 test:
 	# Windows OS: $(WINDOWS) 
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
-
-default: solver
 
 all: solver doc markup
 

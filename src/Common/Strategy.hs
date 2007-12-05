@@ -12,7 +12,7 @@ module Common.Strategy
    ( Strategy, NamedStrategy, AnonymousStrategy, IsStrategy(..), unlabel, LiftStrategy(..)
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
-   , intermediates, intermediatesList, check
+   , intermediates, intermediatesList, check, traceStrategy
    ) where
 
 import Common.Transformation
@@ -25,6 +25,7 @@ import Control.Arrow
 import Data.Maybe
 import Data.List
 import Data.Char
+import Debug.Trace
 
 -----------------------------------------------------------
 --- Data type
@@ -168,7 +169,16 @@ runStrategy :: Strategy a -> a -> [a]
 runStrategy strategy a =
    [ a | isSucceed strategy ] ++
    [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
-         
+
+traceStrategy :: Show a => Strategy a -> a -> [a]
+traceStrategy strategy a = trace (show a) $ 
+   [ trace (replicate 50 '-') a | isSucceed strategy ] ++
+   [ result 
+   | (rule, rest) <- firsts strategy
+   , b <- applyAll rule a
+   , result <- trace ("   ==> [" ++ show rule ++ "]") $ traceStrategy rest b 
+   ]
+            
 isSucceed :: Strategy a -> Bool
 isSucceed = RE.isSucceed . unS
 

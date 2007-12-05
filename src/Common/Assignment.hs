@@ -29,7 +29,7 @@ giveHint = undefined
 giveStep :: Assignment a -> a -> (Doc a, a, a)
 giveStep = undefined
 
-feedback :: Assignment a -> String -> Feedback a
+feedback :: Assignment a -> a -> String -> Feedback a
 feedback = undefined
 
 stepsRemaining :: Assignment a -> a -> Int

@@ -14,6 +14,9 @@ module Main where
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 
+-- To keep the state and pass it to the event handlers (that are in IO)
+import Data.IORef
+
 -- Equations model
 import Common.Assignment
 import Common.Transformation
@@ -47,15 +50,41 @@ main =
         entryBuffer <- textViewGetBuffer entryView 
         feedbackBuffer <- textViewGetBuffer feedbackView 
 
+        -- initialize assignment
+        let initialAssignment = parser logicAssignment $ "x/\\ (~y || ~(~z /\\ x))"
+        textBufferSetText assignmentBuffer (prettyPrinter logicAssignment $ initialAssignment)
+        textBufferSetText entryBuffer (prettyPrinter logicAssignment $ initialAssignment)
+
+        assignmentState <- newIORef initialAssignment
+
         -- bind events
         onDelete window deleteEvent
         onDestroy window destroyEvent
 
-        onClicked submitButton $ 
-            do  textBufferSetText feedbackBuffer "Hallo!"
+        onClicked readyButton $ 
+            do  textBufferSetText feedbackBuffer "ready"
 
-        -- initialize assignment
-        -- .A
+        onClicked hintButton $
+            do
+                currentAssignment <- readIORef assignmentState
+--                case giveHint logicAssignment currentAssignment of
+--                    (doc, rule) -> textBufferSetText feedbackBuffer "test"
+                textBufferSetText feedbackBuffer "hint"
+
+        onClicked stepButton $
+            do 
+                currentAssignment <- readIORef assignmentState
+                textBufferSetText feedbackBuffer "step"
+
+        onClicked undoButton $
+            do 
+                currentAssignment <- readIORef assignmentState
+                textBufferSetText feedbackBuffer "undo"
+
+        onClicked submitButton $
+            do 
+                currentAssignment <- readIORef assignmentState
+                textBufferSetText feedbackBuffer "submit"
 
         -- show widgets and run GUI
         widgetShowAll window

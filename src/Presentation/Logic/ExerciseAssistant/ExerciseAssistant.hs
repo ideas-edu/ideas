@@ -16,24 +16,26 @@ import Graphics.UI.Gtk.Glade
 
 -- Equations model
 -- import LogicDutchResources
-import LogicEnglishResources()
-import LogicFeedBack(feedback)
-import LogicGenerator()
-import LogicParser()
+-- import LogicEnglishResources()
+-- import LogicFeedBack(feedback)
+-- import LogicGenerator()
+-- import LogicParser()
 
 main :: IO ()
 main =
-    do windowXmlM <- xmlNew "ExerciseAssistant.glade"
+    do initGUI
+       windowXmlM <- xmlNew "bin/exerciseassistant.glade"
        let windowXml = case windowXmlM of
             (Just windowXml) -> windowXml
-            Nothing -> error "Can't find the glade file \"ExerciseAssistant.glade\" in the current directory"
+            Nothing -> error "Can't find the glade file \"exerciseassistant.glade\" in the bin subdirectory of the current directory"
        window <- xmlGetWidget windowXml castToWindow "window"
        onDelete window deleteEvent
        onDestroy window destroyEvent
+       widgetShowAll window
+       mainGUI
 
 deleteEvent :: Event -> IO Bool
 deleteEvent = const (return False)
 
 destroyEvent :: IO ()
 destroyEvent = do mainQuit
-

@@ -46,6 +46,12 @@ $(OUTDIR):
 bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
 	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
 
+solvergui: bin/solvergui$(EXE)
+
+bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade src/Presentation/Logic/ExerciseAssistant/exerciseassistant.gladep
+	ghc --make -O -isrc -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs
+	cp src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade bin/
+
 checks: $(BINDIR) $(OUTDIR)
 	cd src/Common; runhaskell -i.. Checks.hs; cd ..
 

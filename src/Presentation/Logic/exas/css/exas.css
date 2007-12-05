@@ -1,0 +1,227 @@
+body {
+	background-color: #CCCC99;
+	background-image: url(/exas/css/background.jpg);
+	position: relative;
+}
+
+p {
+	margin-left: 20px;
+}
+
+table {
+	margin-left: 20px;
+}
+
+h1 {
+	background-image: url(/exas/css/ouheader.jpg);
+	color: #FFFFFF;
+	text-align: center;
+	font-variant: small-caps;
+	font-size: 200%;
+	font-weight: 900;
+  	letter-spacing: 0.1em;
+  	line-height: 3;
+  	font-family: "Book Antiqua", Georgia, Palatino, Times, "Times New Roman", serif;
+  	margin-bottom: 0px;
+  	margin-top: 0px;
+  	margin-left: 20px;
+  	margin-right: 20px;
+}
+
+h2, h3, h4 {
+	font-family: "Book Antiqua", Georgia, Palatino, Times, "Times New Roman", serif;
+	margin-left: 20px;
+	margin-top: 20px;
+	margin-bottom: 0px;
+}
+
+form {
+	margin-left: 60px;
+}
+
+input, select, label {
+	margin-right: 40px;
+	margin-top: 5px;
+	margin-bottom: 20px;
+}
+
+select {
+	width: 150px;
+}
+
+#opgave {
+	background-color: #FFFFFF;
+	padding: 10px;
+	width: 100%;
+	height: 30px;
+	margin-left: 20px;
+	font-size: xx-large;
+	border-style: solid;
+	border-width: 1px;
+	font-family: Arial, sans-serif;
+}
+
+#feedback {
+	background-color: #CCCC99;
+	padding: 10px;
+	width: auto;
+	height: 500px;
+	margin-left: 20px;
+	margin-right: 20px;
+	overflow: scroll;
+	contentEditable: true;
+	font-family: Arial, sans-serif;
+}
+
+#afleiding {
+	background-color: #FFFFFF;
+	padding: 10px;
+	width: auto;
+	height: auto;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+#afleiding {
+	font-family: Arial, sans-serif;
+	font-size: medium;
+	font-weight: bold;
+}
+
+#werk {
+	font-family: Arial, sans-serif;
+	font-size: medium;
+	font-weight: bold;
+	position: relative;
+	top: -10px;
+}
+
+.kolom {
+	width: 50%;
+	position: relative;
+}
+
+.minibutton {
+	display: inline; 
+	float: right;
+	margin-right: 0px;
+	background-color: #CCCC99;
+	position: relative;
+	top: -30px;
+	right: -30px;
+}
+
+#controleerbutton {
+	display: inline; 
+	float: right;
+	margin-right: 0px;
+	background-color: #CCCC99;
+	position: relative;
+	border-width: thick;
+	top: -30px;
+	right: -30px;
+}
+
+#toetsenbord {
+	margin-left: 20px;
+	margin-right: -30px;
+	margin-top: -50px;
+	float: right;
+}
+
+#keyboard  {
+	margin-left: 20px;
+	margin-top: -35px;
+	padding-left: 5px;
+	padding-right: 5px;
+	border-style: solid;
+	border-width: 1px;
+	float: left;
+}
+
+.toets {
+	display: inline; 
+	float: right;
+	margin: 0px;
+	width: 25px;	
+	height: 25px;
+	background-color: #FFFFFF;
+	position: relative;
+}
+
+#toetsenbordtitel {
+	background-color: #CCCC99;
+	margin-bottom: 1px;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.helpbutton {
+	display: inline; 
+	float: right;
+	background-image: url(/exas/css/background.jpg);
+	position: relative;
+}
+
+.menu {
+	margin-bottom: 20px;
+	display: inline; 
+	float: right;
+	margin-right: 20px;
+	background-color: #CCCC99;
+	position: relative;
+	font-size: x-small;
+	top: 0px;
+}
+
+.helpgebied {
+	position: absolute;
+	background-color: #CCCC99;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #999966;
+	padding: 20px;
+	top: 160px;
+	right: 20px;
+	width: 40%;
+	clear: both;
+	font-family: Arial, sans-serif;
+	contentEditable: true;
+}
+
+textarea {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	margin-left: 20px;
+	margin-right: auto;
+	width: 100%;
+	padding: 5px;
+	display: block;
+	background-color: #FFFFFF;
+}
+
+
+.links {
+	position: absolute;
+	top: 140px;
+	width: 45%
+}
+
+.rechts {
+	position: absolute;
+	top: 140px;
+	right: 0px;
+	width: 45%;
+}
+
+.zichtbaar {
+	display: block;
+}
+
+.onzichtbaar {
+	display: none;
+}
+
+.clear {
+	clear: both;
+}

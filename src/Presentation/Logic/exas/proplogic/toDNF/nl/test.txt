@@ -1,0 +1,20 @@
+Gegenereerde vergelijkingen:
+s -> (p <-> r)
+
+
+Gegenereerde vergelijkingen:
+~((p /\ r) -> (r /\ p))
+
+
+Gegenereerde vergelijkingen:
+t -> (q <-> t)
+
+
+Gegenereerde vergelijkingen:
+~((q || q) || (q -> t))
+
+
+Gegenereerde vergelijkingen:
+s <-> (q /\ s)
+
+

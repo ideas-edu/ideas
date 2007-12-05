@@ -4,10 +4,10 @@ Johan Jeuring and Harrie Passier
 ------------------------------------------------------------------}
 
 
-module Logic.Solver.LogicGenerator where
+module Domain.Logic.Solver.LogicGenerator where
 
-import Logic
-import Logic.Solver.LogicIndicator
+import Domain.Logic
+-- import Domain.Logic.Solver.LogicIndicator
 import Control.Monad
 import Test.QuickCheck hiding (defaultConfig)
 import System.Random
@@ -26,8 +26,8 @@ suitableFormulaWith config stdGen
  where
    logic    = generateLogic stdGen
    suitable =  not (isDNF logic)
-            && countEquivalences logic < 2
-            && countBinaryOperators logic <= 3
+--            && countEquivalences logic < 2
+--            && countBinaryOperators logic <= 3
 
 generateLogic :: StdGen -> Logic
 generateLogic = generateLogicWith defaultConfig

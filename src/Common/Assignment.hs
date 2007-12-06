@@ -114,6 +114,9 @@ infixr 5 <>
 (<>) :: Doc a -> Doc a -> Doc a
 D xs <> D ys = D (xs ++ ys)
 
+docs :: [Doc a] -> Doc a
+docs = foldr (<>) emptyDoc
+
 text :: String -> Doc a
 text s = D [Text s]
 

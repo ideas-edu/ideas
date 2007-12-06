@@ -10,7 +10,7 @@
 module Common.Transformation 
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation
-   , LiftPair(..), liftRule
+   , LiftPair(..), liftRule, idRule, emptyRule
    ) where
 
 import qualified Data.Set as S
@@ -112,6 +112,13 @@ combineRules rs = Rule
 
 minorRule :: Rule a -> Rule a 
 minorRule r = r {isMinorRule = True}
+  
+-- | Identity rule 
+idRule :: Rule a
+idRule = makeSimpleRule "Identity" return
+   
+emptyRule :: Rule a
+emptyRule = makeSimpleRule "Empty" (const Nothing)
    
 instance Show (Rule a) where
    show = name

@@ -16,6 +16,9 @@ import Data.Maybe
 import Control.Monad
 import Test.QuickCheck
    
+import Debug.Trace
+import GHC.Real
+   
 main = do
    quickCheck propSolvedForm
    quickCheck propSound
@@ -202,28 +205,6 @@ liftSystemRule = liftRule $ LiftPair get set
 
 -----------------------------------------------------
 -- 9.1 Oplossen van lineaire vergelijkingen
-{-
-testStep1 = applyD firstVarNonZero (inContext ex1b)
-testStep2 = applyD (getRule "EqExchange") testStep1
-testStep3 = applyD eliminateVarBelow testStep2
-testStep4 = applyD (getRule "CoverTop") testStep3
-testStep5 = applyD firstVarNonZero testStep4
-testStep6 = applyD (getRule "EqExchange") testStep5
-testStep7 = applyD  eliminateVarBelow testStep6
-testStep8 = applyD (getRule "CoverTop") testStep7
-testStep9 = applyD firstVarNonZero testStep8
-testStep10 = applyD (getRule "EqExchange") testStep9
-testStep11 = applyD  eliminateVarBelow testStep10
-
-testStrategy1 = applyD toEchelon (inContext ex1a)
-ex1atest = testStrategy1 == inContext ex1asolution
-
-testStrategy2 = applyD toEchelon (inContext ex1b)
-ex1btest = testStrategy2 == inContext ex1bsolution
-
-testStrategy3 = applyD toEchelon (inContext ex2a)
-
-q = equations $ applyD toGeneralSolution (inContext ex1a) -}
 
 default (Rational)
 
@@ -232,6 +213,9 @@ x2 = var "x2"
 x3 = var "x3"
 x4 = var "x4"
 x5 = var "x5"
+z1 = var "z1"
+z2 = var "z2"
+z3 = var "z3"
 
 ex1a = 
    [   x1 + 2*x2 + 3*x3 - x4   :==:  0 
@@ -292,3 +276,395 @@ ex2d =
    , 6*x1 - x2 - 5*x3   :==: 0
    , 7*x1 - 3*x2 - 4*x3 :==: 1
    ]
+   
+ex3a = 
+   [ z1    + i*z2 + z3       :==: 1
+   ,           z2 + (i+1)*z3 :==: 0
+   , -i*z1 +   z2            :==: 0
+   ]
+   
+ex3b lam = 
+   [ (1 - lam)*z1 - 2*z2 :==: 0
+   , 5*z1 + (3- lam) *z2 :==: 0
+   ]
+
+ex3b1 = ex3b (2+3*i)
+ex3b2 = ex3b (2-3*i)
+
+ex3c :: LinearExpr Rational -> LinearSystem Rational
+ex3c lam = 
+   [ lam*z1 - z2 :==: 0
+   , lam*z2 + z3 :==: 0
+   , z1 + lam*z3 :==: 0
+   ]
+
+ex3c1 = ex3c 1
+ex3c2 = ex3c (e #^ (2 * pi_ / 3))
+ex3c3 = ex3c (e #^ (-2 * pi_ / 3))
+
+i, e, pi_ :: LinearExpr Rational
+i = undefined
+e = undefined
+pi_ = undefined
+(#^) = undefined
+
+ex1a' :: LinearSystem MyNum
+ex1a' = 
+   [   x1 + 2*x2 + 3*x3 - x4   :==:  0 
+   , 2*x1 + 3*x2 - x3 + 3*x4   :==:  0
+   , 4*x4 + 6*x2 + x3 + 2*x4   :==:  0
+   ]
+
+{- (/), fromRational, (+), (*), negate -}
+{- EXTRA: constants (i,e,pi), powera -}
+data MyNum = Con Rational | Var String | MyNum :+ MyNum | MyNum :* MyNum | MyNum :/ MyNum | Neg MyNum
+ deriving (Show, Eq, Ord)
+
+infix 1 ~=
+x ~= y = let (a, b) = numFraction x
+             (c, d) = numFraction y 
+         in simpl (a * d) == simpl (b * c)
+
+instance Fractional MyNum where
+   (/) = (:/)
+   fromRational = Con
+   recip n = 1 / n
+
+instance Num MyNum where
+   (+) = (:+)
+   (*) = (:*)
+   n - m = n + negate m
+   negate = Neg
+   fromInteger = fromRational . fromInteger
+   
+   -- Not supported by this instance
+   abs    = error "Not supported: abs"   
+   signum = error "Not supported: signum"
+
+{- sumNum, productNum :: MyNum -> [MyNum]
+sumNum (a :+ b) = sumNum a ++ sumNum b
+sumNum x = [x]
+productNum (a :* b) = productNum a ++ productNum b
+productNum x = [x] -}
+
+simpl :: MyNum -> MyNum
+simpl x = 
+   let vs = numVars x
+       v  = minimum vs
+       (a, b) = numSplit v x
+       con = simpl (simpl2 b)
+       var = simpl2 (Var v :* simpl (simpl2 a))
+   in if null vs then simpl2 x else 
+      case con of 
+         Con 0 -> var
+         _     -> var :+ con
+
+simpl2 :: MyNum -> MyNum
+simpl2 = simpl4 . simpl3
+
+simpl3 :: MyNum -> MyNum -- push Negs inside
+simpl3 this = 
+   case this of
+      Neg a -> case a of
+                  Var _  -> this
+                  Con x  -> Con (negate x)
+                  b :+ c -> simpl3 (Neg b) :+ simpl3 (Neg c)
+                  b :* c -> simpl3 (Neg b) :* simpl3 c
+                  b :/ c -> simpl3 (Neg b) :/ simpl3 c
+                  Neg b -> simpl3 b
+      a :+ b -> simpl3 a :+ simpl3 b
+      a :* b -> simpl3 a :* simpl3 b
+      a :/ b -> simpl3 a :/ simpl3 b
+      _ -> this
+      
+simpl4 :: MyNum -> MyNum
+simpl4 this = 
+   case this of
+      a :+ b -> case (simpl4 a, simpl4 b) of
+                   (Con x, Con y) -> Con (x+y)
+                   (Con 0, c) -> c
+                   (c, Con 0) -> c
+                   (c :+ d, e) -> c :+ (d :+ e)
+                   (c, d) -> c :+ d
+      a :* b -> case (simpl4 a, simpl4 b) of
+                   (Con x, Con y) -> Con (x*y)
+                   (Con 0, c) -> Con 0
+                   (c, Con 0) -> Con 0
+                   (Con 1, c) -> c
+                   (c, Con 1) -> c
+                   (c :* d, e) -> c :* (d :* e)
+                   (c, d) -> c :* d
+      a :/ b -> case (simpl4 a, simpl4 b) of
+                   (Con x, Con y) -> Con (x/y)
+                   (Con 0, c) -> Con 0
+                   (c, Con 1) -> c
+                   (c, d) -> c :/ d
+      _ -> this
+        
+numVars :: MyNum -> [String]
+numVars this = 
+   case this of
+      Var y  -> [y]
+      Con x  -> []
+      a :+ b -> numVars a ++ numVars b
+      a :* b -> numVars a ++ numVars b
+      Neg a  -> numVars a
+      a :/ b -> numVars a ++ numVars b
+      
+numFraction :: MyNum -> (MyNum, MyNum)
+numFraction this =
+   case this of
+      Var _  -> (this, Con 1)
+      Con _  -> (this, Con 1)
+      a :+ b -> let (a1, a2) = numFraction a
+                    (b1, b2) = numFraction b
+                in ((a1:*b2) :+ (b1:*a2), a2 :* b2)
+      a :* b -> let (a1, a2) = numFraction a
+                    (b1, b2) = numFraction b
+                in (a1:*b1, a2:*b2)
+      Neg a  ->  let (a1, a2) = numFraction a
+                in (Neg a1, a2)
+      a :/ b -> let (a1, a2) = numFraction a
+                    (b1, b2) = numFraction b
+                in (a1:*b2, a2:*b1)
+
+numSplit :: String -> MyNum -> (MyNum, MyNum)
+numSplit x this =
+   case this of
+      Var y | x==y -> (Con 1, Con 0)
+      a :+ b -> let (a1, a2) = numSplit x a
+                    (b1, b2) = numSplit x b
+                in (a1 :+ b1, a2 :+ b2)
+      a :* b -> let (a1, a2) = numSplit x a
+                    (b1, b2) = numSplit x b
+                in ((a1 :* b) :+ (a2 :* b1), a2 :* b2)
+      Neg a  -> let (a1, a2) = numSplit x a
+                in (Neg a1, Neg a2)
+      _ :/ _ -> error "(:/) in numSplit"
+      _ -> (Con 0, this)
+
+fracSound :: (String -> Rational) -> MyNum -> Bool
+fracSound f n = lhs == rhs 
+ where (x, y) = numFraction n
+       lhs = evalNum f n
+       rhs = evalNum f x / evalNum f y
+   
+splitSound :: (String -> Rational) -> MyNum -> Bool
+splitSound f n = evalNum f n == evalNum f ((x :* Var "x") :+ y)
+ where (x, y) = numSplit "x" n
+
+simplSound :: (String -> Rational) -> MyNum -> Bool
+simplSound f n = evalNum f x == evalNum f (simpl x)
+ where (x, y) = numFraction n
+
+simplSound2 :: (String -> Rational) -> MyNum -> Bool
+simplSound2 f n = evalNum f x == evalNum f (simpl2 x)
+ where (x, y) = numFraction n
+ 
+evalNum :: (String -> Rational) -> MyNum -> Rational
+evalNum f this = 
+   case this of
+      Var y  -> f y
+      Con x  -> x
+      a :+ b -> evalNum f a + evalNum f b
+      a :* b -> evalNum f a * evalNum f b
+      Neg a  -> negate (evalNum f a)
+      a :/ b -> evalNum f a / evalNum f b
+   
+sizeNum :: MyNum -> Int
+sizeNum this = 
+   case this of
+      Var y  -> 1
+      Con x  -> 1
+      a :+ b -> 1 + sizeNum a + sizeNum b
+      a :* b -> 1 + sizeNum a + sizeNum b
+      Neg a  -> 1 + sizeNum a
+      a :/ b -> 1 + sizeNum a + sizeNum  b
+      
+instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
+   arbitrary = liftM2 (/) arb arb
+    where arb = do x <- arbInt ; return (fromIntegral x)
+
+arbInt :: Gen Int
+arbInt = do x <- arbitrary; return (abs x + 1)
+
+isZero, notZero :: MyNum -> Bool
+notZero = not . isZero
+isZero (Con n)  = n==0
+isZero (Var _)  = False
+isZero (n :+ m) = n ~= negate m
+isZero (n :* m) = isZero n || isZero m
+isZero (n :/ m) = isZero n
+isZero (Neg n)  = isZero n
+{-
+somewh :: (MyNum -> Maybe MyNum) -> MyNum -> Maybe MyNum
+somewh f this = f this `mplus` 
+   case this of
+      a :+ b -> fmap (:+ b) (somewh f a) `mplus` fmap (a :+) (somewh f b)
+      a :* b -> fmap (:* b) (somewh f a) `mplus` fmap (a :*) (somewh f b)
+      a :/ b -> fmap (:/ b) (somewh f a) `mplus` fmap (a :/) (somewh f b)
+      Neg a  -> fmap Neg (somewh f a)
+      _      -> Nothing -}
+{-
+numS :: Strategy MyNum
+numS =  exhaustive (map liftNumRule $ negRules ++ simplerRules)
+    <*> repeatS (liftNumRule r16) -- distribute plus over times
+    <*> order
+    
+         -- [r1,r2,r3,r4,r9,r10,r11,r12] -- simplification
+         -- ++ [r5,r6,r7,r8] -- (linear) rewrite
+         -- ++ [r16,r17,r18] -- non-linear distribution 
+         
+ where
+   simplerRules = [r1,r2,r3]
+   negRules = [r4,r11,r17,r18] -- push negations inward
+   
+   order = makeSimpleRule "Order" $ \x -> return $ 
+      foldr1 (:+) $ sort (map (\y -> foldr1 (:*) $ sort $ productNum y) $ sumNum x)
+   
+   r1 = makeSimpleRule "PlusUnit" f where
+           f (Con 0 :+ x) = return x
+           f (x :+ Con 0) = return x
+           f _            = Nothing
+   r2 = makeSimpleRule "TimesZero" f where
+           f (Con 0 :* x) = return $ Con 0
+           f (x :* Con 0) = return $ Con 0
+           f _            = Nothing
+   r3 = makeSimpleRule "TimesUnit" f where
+           f (Con 1 :* x) = return x
+           f (x :* Con 1) = return x
+           f _            = Nothing
+   r4 = makeSimpleRule "ConstantPropagation" f where
+           f (Con x :+ Con y) = return $ Con (x+y)
+           f (Con x :* Con y) = return $ Con (x*y)
+           f (Con x :/ Con y) = return $ Con (x/y)
+           f (Neg (Con x))    = return $ Con (negate x)
+           f _                = Nothing 
+   r5 = makeSimpleRule "TransPlus" f where
+           f ((a :+ b) :+ c) = return $ a :+ (b :+ c)
+           f _               = Nothing
+   r6 = makeSimpleRule "TransTimes" f where
+           f ((a :* b) :* c) = return $ a :* (b :* c)
+           f _               = Nothing
+   r7 = makeSimpleRule "CommPlus" f where          
+           f (x :+ (y :+ z)) | y<x = return (y :+ (x :+ z)) 
+                             | otherwise = Nothing
+           f (x :+ y)        | y<x = return (y :+ x)
+           f _                     = Nothing
+   r8 = makeSimpleRule "CommTimes" f where
+           f (x :* (y :* z)) | y<x = return (y :* (x :* z))
+                             | otherwise = Nothing
+           f (x :* y)        | y<x = return (y :* x)
+           
+           f _                     = Nothing
+   r9 = makeSimpleRule "ConPlus" f where
+           f (Con x :+ (Con y :+ z)) = return $ Con (x+y) :+ z
+           f _                       = Nothing            
+   r10 = makeSimpleRule "ConTimes" f where
+           f (Con x :* (Con y :* z)) = return $ Con (x*y) :* z
+           f _                       = Nothing 
+   r11 = makeSimpleRule "NegNeg" f where
+           f (Neg (Neg x)) = return x
+           f _             = Nothing    
+   r12 = makeSimpleRule "Div" f where
+           f (x :/ y) | x==y = return (Con 1)
+           f _               = Nothing       
+   r13 = makeSimpleRule "SameDiv" f where
+           f ((x :/ z1) :+ (y :/ z2))        | z1==z2 = return $ (x:+y) :/ z1
+           f ((x :/ z1) :+ ((y :/ z2) :+ u)) | z1==z2 = return $ ((x:+y) :/ z1) :+ u
+           f _                                        = Nothing   
+   r14 = makeSimpleRule "DivOne" f where
+           f (x :/ Con 1) = return x
+           f _            = Nothing 
+   r15 = makeSimpleRule "ZeroDiv" f where
+           f (Con 0 :/ x) = return $ Con 0
+           f _            = Nothing 
+   r16 = makeSimpleRule "TimesOverPlus" f where
+           f (x :* (y :+ z)) = return $ (x :* y) :+ (x :* z) 
+           f ((x :+ y) :* z) = return $ (x :* z) :+ (y :* z) 
+           f _               = Nothing
+   r17 = makeSimpleRule "NegPlus" f where
+           f (Neg (x :+ y)) = return $ Neg x :+ Neg y
+           f _              = Nothing   
+   r18 = makeSimpleRule "NegTimes" f where
+           f (Neg (x :* y)) = return $ Neg x :* y
+           f _              = Nothing   
+                                                                                      
+liftNumRule :: Rule MyNum -> Rule MyNum
+liftNumRule r = makeSimpleRule (name r) (somewh $ apply r)
+
+simplify :: MyNum -> MyNum
+simplify = head . runStrategy numS -}
+
+instance Arbitrary MyNum where
+   arbitrary = sized (\n -> arbNum n)
+   coarbitrary (Con (n :% m)) = variant 0 . coarbitrary n . coarbitrary m
+   coarbitrary (n :+ m)       = variant 1 . coarbitrary n . coarbitrary m
+   coarbitrary (n :* m)       = variant 2 . coarbitrary n . coarbitrary m
+   coarbitrary (n :/ m)       = variant 3 . coarbitrary n . coarbitrary m
+   coarbitrary (Neg n)        = variant 4 . coarbitrary n
+
+arbNum :: Int -> Gen MyNum
+arbNum 0 = oneof [liftM fromInteger arbitrary, return $ Var "x"]
+arbNum n = oneof [arbNum 0, liftM2 (:+) rec rec, liftM2 (:*) rec rec, liftM2 (:/) rec recNZ, liftM Neg rec]
+ where 
+   rec   = arbNum   (n `div` 2)
+   recNZ = arbNumNZ (n `div` 2)
+
+-- non-zero value
+arbNumNZ :: Int -> Gen MyNum
+arbNumNZ 0 = oneof [liftM fromIntegral arbIntNZ, return $ Var "x"]
+arbNumNZ n = oneof [arbNumNZ 0, liftM2 (:*) recNZ recNZ, liftM2 (:/) recNZ recNZ, liftM Neg recNZ]
+ where
+   rec   = arbNum   (n `div` 2)
+   recNZ = arbNumNZ (n `div` 2)
+     
+arbIntNZ :: Gen Int
+arbIntNZ = do
+   n <- arbitrary
+   if n==0 then arbIntNZ else return n     
+      
+checks :: IO ()
+checks = do
+   putStrLn "[1]"
+   quickCheck $ communtative (+)
+   quickCheck $ associative (+)
+   quickCheck $ unit (+) 0
+   quickCheck $ communtative (*)
+   quickCheck $ associative (*)
+   quickCheck $ unit (*) 1
+   quickCheck $ zero (*) 0
+   quickCheck $ rightUnit (/) 1
+   quickCheck $ \x -> notZero x ==> leftZero (/) 0 x
+
+   putStrLn "[2]"
+   quickCheck $ \x -> negate (negate x) ~= x
+   quickCheck $ \x -> (notZero x) ==> x/x ~= 1
+
+   --distribution rules
+   putStrLn "[3]"
+   quickCheck $ \x y   -> negate x + y ~= y - x
+   quickCheck $ \x y   -> x + negate y ~= x - y
+   quickCheck $ \x y z -> (notZero z) ==> (x/z) + (y/z) ~= (x+y)/z 
+   quickCheck $ \x y z -> (x+y) * z ~= (x*z) + (y*z)
+   quickCheck $ \x y z -> x * (y+z) ~= (x*y) + (x*z)
+   quickCheck $ \x y   -> (negate x) * y ~= negate (x*y)
+   quickCheck $ \x y   -> x * (negate y) ~= negate (x*y)
+   quickCheck $ \x y   -> negate (x+y) ~= negate x + negate y
+
+   quickCheck $ \x y z -> (notZero y) ==> (x/y) * z ~= (x*z)/y
+   quickCheck $ \x y z -> (notZero z) ==> x * (y/z) ~= (x*y)/z
+   quickCheck $ \x y   -> (notZero y) ==> (negate x)/y ~= negate (x/y) 
+   quickCheck $ \x y   -> (notZero y) ==> x/(negate y) ~= negate (x/y) 
+   quickCheck $ \x y z -> (notZero y && notZero z) ==> x/(y*z) ~= (x/y)/z
+   quickCheck $ \x y z -> (notZero y && notZero z) ==> x/(y/z) ~= (x*z) / y
+   quickCheck $ \x y   -> (notZero y) ==> x/y ~= x * (1/y)
+
+communtative op x y  = op x y ~= op y x
+associative op x y z = op x (op y z) ~= op (op x y) z 
+leftUnit op e x      = op e x ~= x
+rightUnit op e x     = op x e ~= x
+unit op e x          = leftUnit op e x && rightUnit op e x
+leftZero op e x      = op e x ~= 0
+rightZero op e x     = op x e ~= 0
+zero op e x          = leftZero op e x && rightZero op e x

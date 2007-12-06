@@ -8,23 +8,15 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser 
-   ( parseLogic, ppLogic, ppLogicPrio, ppLogicInContext,myShowMessages
+   ( parseLogic, ppLogic, ppLogicPrio, ppLogicInContext
    ) where
 
 import UU.Parsing
 import UU.Parsing.CharParser
 import UU.Scanner
-import UU.Pretty
-  -- for the combinators used in myShowMessages
-  -- Should maybe be simplified?
-
 import Domain.Logic.Formula
 import Domain.Logic.Zipper
---import Logic.Solver.LogicDutchResources
---import Logic.Solver.LogicPretty
 import Data.Char
-import Domain.Logic.Solver.LogicEnglishResources
-  -- for myShowMessages
 
 -----------------------------------------------------------
 --- Parser
@@ -66,32 +58,6 @@ pAnySymInf xs = foldr1 (<|>) (map pSymInf xs)
 
 pSymInf a       =  pCostSym   1000 a a
 pSymLow a       =  pCostSym      1 a a
-
--- hack to reuse the Equations code: formula is inserted in a list to get a list instead of a formula
-
-myShowMessages :: (Eq s, Show s) => [Message s Pos] -> Logic -> String -> String
-myShowMessages  messages formula entered = concatMap (\message -> myShowMessage message formula entered) 
-                                                       (removeDuplicatelines messages)
-  where removeDuplicatelines [] = []
-        removeDuplicatelines (message:messages) = 
-          message:removeDuplicatelines (filter (\m -> getLine m /= getLine message) messages)
-        
-        getLine (Msg _ (Pos line _ _) _) = line
-
-myShowMessage ::  (Eq s, Show s) => Message s Pos -> Logic -> String -> String
-myShowMessage (Msg expecting position action) formula entered =
-  let (Pos line column filename) = position     
-  in disp (    text error_in_lineText >#< pp line >|< text ": 1" 
-          >-<  text did_you_maybe_meanText 
-          >-<  ppLogic formula
-          >#<  text "\n"
-          )
-          40
-          ""
-  where   safeindex :: [a] -> Int -> a
-          safeindex  l  =  \i -> if i > length l 
-                                   then error ("myShowMessage l>i") 
-                                   else l!!(i-1) 
                                    
 -----------------------------------------------------------
 --- Pretty-Printer

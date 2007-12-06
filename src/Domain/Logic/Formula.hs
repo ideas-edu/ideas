@@ -118,6 +118,27 @@ conjunctions T          = []
 conjunctions (p :&&: q) = conjunctions p ++ conjunctions q
 conjunctions logic      = [logic]
 
+-- | Count the number of implicationsations :: Logic -> Int
+countImplications :: Logic -> Int
+countImplications = foldLogic (const 0, \x y -> x+y+1, (+), (+), (+), id, 0, 0)
+ 
+-- | Count the number of equivalences
+countEquivalences :: Logic -> Int
+countEquivalences = foldLogic (const 0, (+), \x y -> x+y+1, (+), (+), id, 0, 0)
+
+-- | Count the number of binary operators
+countBinaryOperators :: Logic -> Int
+countBinaryOperators = foldLogic (const 0, binop, binop, binop, binop, id, 0, 0)
+ where binop x y = x + y + 1
+
+-- | Count the number of double negations 
+countDoubleNegations :: Logic -> Int
+countDoubleNegations = fst . foldLogic (const zero, bin, bin, bin, bin, notf, zero, zero)
+ where
+   zero = (0, False)
+   bin (n, _) (m, _) = (n+m, False)
+   notf (n, b) = if b then (n+1, False) else (n, True)
+
 -- | Function varsLogic returns the variables that appear in a Logic expression.
 varsLogic :: Logic -> [String]
 varsLogic = foldLogic (return, union, union, union, union, id, [], [])      

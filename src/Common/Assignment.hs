@@ -3,20 +3,31 @@ module Common.Assignment where
 
 import Common.Transformation
 import Common.Strategy
+import Common.Utils
 import System.Random
 import Test.QuickCheck
-
-data Language = English | Dutch
 
 data Assignment a = Assignment
    { parser        :: String -> Either (Doc a, Maybe a) a
    , prettyPrinter :: a -> String
    , equivalence   :: a -> a -> Bool
+   , equality      :: a -> a -> Bool -- syntactic equality
    , finalProperty :: a -> Bool
    , ruleset       :: [Rule a]
    , strategy      :: Strategy a
    , generator     :: Gen a
-   , language      :: Language
+   , configuration :: Configuration
+   }
+
+data Language = English | Dutch
+
+data Configuration = Configuration
+   { language :: Language
+   }
+
+defaultConfiguration :: Configuration
+defaultConfiguration = Configuration
+   { language = English
    }
    
 randomTerm :: Assignment a -> IO a
@@ -39,7 +50,7 @@ giveHint x a =
 giveHints :: Assignment a -> a -> [(Doc a, Rule a)]
 giveHints x = map g . nextRulesWith (not . isMinorRule) (strategy x)
  where
-   g (rs, a, s) = (toDoc (name (last rs)), last rs) -- ignores rest strategy
+   g (rs, a, s) = (text (name (last rs)), last rs) -- ignores rest strategy
    
 -- | Returns a text, a sub-expression that can be rewritten, and the result
 -- | of the rewriting
@@ -52,7 +63,7 @@ giveStep x a =
 giveSteps :: Assignment a -> a -> [(Doc a, a, a)]
 giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (strategy x) a
  where
-   g (rs, b, s) = (toDoc (name (last rs)), applyListD (init rs) a, b) -- ignores rest strategy
+   g (rs, b, _) = (text (name (last rs)), applyListD (init rs) a, b)
 
 feedback :: Assignment a -> a -> String -> Feedback a
 feedback x a txt =
@@ -60,11 +71,15 @@ feedback x a txt =
       Left (msg, suggestion) -> 
          SyntaxError msg suggestion
       Right new
-         | equivalence x a new -> 
-              Correct (toDoc "Well done!") True -- strategy not yet considered
+         | not (equivalence x a new) -> 
+              Incorrect (text "Incorrect") Nothing -- no suggestion yet
          | otherwise -> 
-              Incorrect (toDoc "Incorrect") Nothing -- no suggestion yet
-
+              let paths = nextRulesWith (not . isMinorRule) (strategy x) a 
+                  check = equality x new . snd3
+              in case filter check paths of
+                    (rs, _, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) True
+                    _    -> Correct (text "Equivalent, but not a known rule. Please retry.") False
+         
 stepsRemaining :: Assignment a -> a -> Int
 stepsRemaining x a = 
    case intermediates (strategy x) a of
@@ -77,7 +92,7 @@ data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 
 newtype Doc a = D [DocItem a]
 
-data DocItem a = Text String | Domain a
+data DocItem a = Text String | Term a | DocRule (Rule a)
            
 instance Show a => Show (Doc a) where
    show = showDocWith show
@@ -91,11 +106,19 @@ showDoc = showDocWith . prettyPrinter
 showDocWith :: (a -> String) -> Doc a -> String
 showDocWith f (D xs) = concatMap g xs
  where
-   g (Text s)   = s
-   g (Domain a) = f a 
-   
-class IsDoc a where
-   toDoc :: a -> Doc b
+   g (Text s) = s
+   g (Term a) = f a 
 
-instance IsDoc String where
-   toDoc s = D [Text s]
+infixr 5 <>
+
+(<>) :: Doc a -> Doc a -> Doc a
+D xs <> D ys = D (xs ++ ys)
+
+text :: String -> Doc a
+text s = D [Text s]
+
+term :: a -> Doc a
+term a = D [Term a]
+
+rule :: Rule a -> Doc a
+rule r = D [DocRule r]

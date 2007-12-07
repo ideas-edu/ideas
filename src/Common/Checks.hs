@@ -10,14 +10,14 @@
 module Main (main) where
 
 import Common.RegExp
-import Domain.Logic
-import Domain.LinearAlgebra
+import qualified Domain.Logic.Checks as Logic
+import qualified Domain.LinearAlgebra.Checks as LA
 
 main :: IO ()
 main = do
    putStrLn "\n...checking regular expression combinators"
    Common.RegExp.checks
    putStrLn "\n...checking logic domain"
-   Domain.Logic.checks
-   putStrLn "\n...checking matrix domain"
-   Domain.LinearAlgebra.checks
+   Logic.checks
+   putStrLn "\n...checking linear algebra domain"
+   LA.checks

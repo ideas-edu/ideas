@@ -9,9 +9,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
 
-import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.Context
-import Domain.LinearAlgebra.Strategies
+import Domain.LinearAlgebra
 import Test.QuickCheck
 import Control.Monad
 import Common.Transformation

@@ -13,12 +13,7 @@ import Common.Strategy
 import Common.Transformation
 import Common.Utils
 import Common.Move
-import Domain.Logic.Formula
-import Domain.Logic.Zipper
-import Domain.Logic.Strategies
-import Domain.Logic.Parser
-import Domain.Logic.Rules
-import Domain.Logic.Generator
+import Domain.Logic
 import Test.QuickCheck
 import Control.Monad
 import Data.Char
@@ -30,7 +25,7 @@ import Data.Maybe
 
 checks :: IO ()
 checks = do
-   mapM_ checkRule logicRules
+   mapM_ (checkRule eqLogic) logicRules
    quickCheck propRuleNames
    thoroughCheck $ checkParserPretty parseLogic ppLogic
    thoroughCheck $ checkParserPretty parseLogicPars ppLogicPars
@@ -39,26 +34,7 @@ checks = do
    thoroughCheck propCtxPP
    thoroughCheck propContext
    quickCheck propStratDNF
-
--- correctness logic rules
-checkRule :: LogicRule -> IO ()
-checkRule rule = do
-   putStrLn $ "[" ++ name rule ++ "]"
-   quickCheck (propRuleTopLevel rule)
-   quickCheck (propRuleSomewhere rule)
    
-propRuleTopLevel :: LogicRule -> Logic -> Property
-propRuleTopLevel rule logic =
-   applicable rule logic ==>
-      logic `eqLogic` applyD rule logic
-
-propRuleSomewhere :: LogicRule -> Logic -> Property
-propRuleSomewhere rule logic =
-   let strat = somewhere (liftLogicRule rule) 
-       lic   = inContext logic
-   in applicable strat lic ==>
-         logic `eqLogic` noContext (applyD strat lic)
-      
 -- all rule names are distinct
 propRuleNames :: Bool
 propRuleNames = length xs == length (nub xs)

@@ -14,7 +14,6 @@ module Domain.Logic
    , module Domain.Logic.Parser
    , module Domain.Logic.Strategies
    , module Domain.Logic.Rules
-   , module Domain.Logic.Checks
    , dnfAssignment
    ) where
    
@@ -24,7 +23,6 @@ import Domain.Logic.Zipper
 import Domain.Logic.Parser
 import Domain.Logic.Strategies
 import Domain.Logic.Rules
-import Domain.Logic.Checks
 
 import Common.Assignment
 import Common.Strategy

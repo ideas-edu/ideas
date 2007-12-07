@@ -11,6 +11,7 @@ module Common.Transformation
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation
    , LiftPair(..), liftRule, idRule, emptyRule
+   , smartGen, checkRule, propRule
    ) where
 
 import qualified Data.Set as S
@@ -147,7 +148,28 @@ liftRule lp r = r {transformations = [Function f]}
 
 -----------------------------------------------------------
 --- QuickCheck generator
+
+checkRule :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
+checkRule eq rule = do
+   putStr $ "[" ++ name rule ++ "] "
+   quickCheck (propRule eq rule)
    
+propRule :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> Property
+propRule eq rule = 
+   forAll (smartGen rule) $ \a ->
+      applicable rule a ==> (a `eq` applyD rule a)
+
+smartGen :: (Arbitrary a, Substitutable a) => Rule a -> Gen a
+smartGen rule = 
+   let normal = (2*total - length pairs, arbitrary)
+       total = length (transformations rule)
+       pairs = [ x | p@(Pattern x) <- transformations rule ]
+       special p = let ((lhs, _), unique) = instantiateWith substitutePair 1000 p
+                   in do list <- vector (unique - 1000) 
+                         let sub = listToSubst $ zip (map (('_':) . show) [1000..]) list
+                         return (sub |-> lhs)
+   in frequency $ normal : zip (repeat 1) (map special pairs)
+          
 instance Arbitrary a => Arbitrary (Rule a) where
    arbitrary     = liftM4 Rule arbName arbitrary arbitrary arbitrary
    coarbitrary r = coarbitrary (map ord $ name r) . coarbitrary (transformations r)

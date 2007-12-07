@@ -15,6 +15,7 @@ import Common.Interpreter
 import Common.Assignment
 import Domain.Logic
 import Domain.LinearAlgebra
+import Domain.LinearAlgebra.Checks (defaultMatrix)
 import System.Environment
 import Data.Char
                        

@@ -291,7 +291,7 @@ ex3b lam =
 ex3b1 = ex3b (2+3*i)
 ex3b2 = ex3b (2-3*i)
 
-ex3c :: LinearExpr Rational -> LinearSystem Rational
+ex3c :: LinearExpr SimpleNum -> LinearSystem SimpleNum
 ex3c lam = 
    [ lam*z1 - z2 :==: 0
    , lam*z2 + z3 :==: 0
@@ -299,22 +299,63 @@ ex3c lam =
    ]
 
 ex3c1 = ex3c 1
-ex3c2 = ex3c (e #^ (2 * pi_ / 3))
-ex3c3 = ex3c (e #^ (-2 * pi_ / 3))
+ex3c2 = ex3c (e ) -- #^ (2 * pi_ / 3))
+ex3c3 = ex3c (e ) -- #^ (-2 * pi_ / 3))
 
-i, e, pi_ :: LinearExpr Rational
+ex4 lam = 
+   [ x1 - 2 * x3 :==: lam + 4
+   , -2 * x1 + lam * x2 + 7 * x3 :==: -14
+   , -1 * x1 + lam * x2 + 6*x3 :==: lam - 12
+   ]
+
+ex5 lam = 
+   [ x1 + 2*x2 + 3*x3 - 6*x4 :==: -1
+   , 2*x1 + x2 + 9*x4 :==: 2 + lam
+   , -3*x1 - 3*x2 - 3*x3 - 3*x4 :==: 1 + lam
+   ] 
+
+i, e, pi_ :: LinearExpr SimpleNum
 i = undefined
-e = undefined
+e = toLinearExpr $ SN (Var "e")
 pi_ = undefined
 (#^) = undefined
+lamvar = toLinearExpr $ SN (Var "Lambda")
 
-ex1a' :: LinearSystem MyNum
+testje  = traceStrategy toGeneralSolution (inContext ex1a') -- '
+testje2 = traceStrategy toGeneralSolution (inContext ex3c2)
+testje3 = traceStrategy toGeneralSolution (inContext $ ex4 lamvar)
+testje4 = traceStrategy toGeneralSolution (inContext $ ex5 lamvar)
+
+ex1a' :: LinearSystem SimpleNum
 ex1a' = 
    [   x1 + 2*x2 + 3*x3 - x4   :==:  0 
    , 2*x1 + 3*x2 - x3 + 3*x4   :==:  0
    , 4*x4 + 6*x2 + x3 + 2*x4   :==:  0
    ]
 
+-- in normal form
+newtype SimpleNum = SN MyNum deriving (Show, Eq, Ord)
+
+instance Num SimpleNum where
+   SN a + SN b = SN $ nf $ a + b
+   SN a * SN b = SN $ nf $ a * b
+   n - m = n + negate m
+   negate (SN a) = SN $ nf $ Neg a
+   fromInteger = SN . nf . fromInteger
+   
+instance Fractional SimpleNum where
+   SN a / SN b = SN $ nf $ a / b
+   fromRational = SN . nf . fromRational
+   recip n = 1 / n 
+   
+nf :: MyNum -> MyNum
+nf x = let (x1, x2) = numFraction x in
+       case (simpl x1, simpl x2) of 
+          (Con a, Con b) -> Con (a/b)
+          (Con 0, _)     -> Con 0
+          (a, Con 1)     -> a
+          (a, b)         -> a / b
+   
 {- (/), fromRational, (+), (*), negate -}
 {- EXTRA: constants (i,e,pi), powera -}
 data MyNum = Con Rational | Var String | MyNum :+ MyNum | MyNum :* MyNum | MyNum :/ MyNum | Neg MyNum
@@ -659,6 +700,7 @@ checks = do
    quickCheck $ \x y z -> (notZero y && notZero z) ==> x/(y*z) ~= (x/y)/z
    quickCheck $ \x y z -> (notZero y && notZero z) ==> x/(y/z) ~= (x*z) / y
    quickCheck $ \x y   -> (notZero y) ==> x/y ~= x * (1/y)
+   quickCheck $ \x y z -> x * (y/z) ~= (x*y)/(x*z)
 
 communtative op x y  = op x y ~= op y x
 associative op x y z = op x (op y z) ~= op (op x y) z 

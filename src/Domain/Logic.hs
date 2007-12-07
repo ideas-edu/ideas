@@ -33,10 +33,10 @@ import System.Random
 
 dnfAssignment :: Assignment LogicInContext
 dnfAssignment = Assignment
-   { parser        = \s -> case parseLogic s of
+   { parser        = \s -> case parseLogicPars s of
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs), Just (inContext p))
-   , prettyPrinter = ppLogic . noContext
+   , prettyPrinter = ppLogicPars . noContext
    , equivalence   = \x y -> noContext x `eqLogic` noContext y
    , equality      = (==)
    , finalProperty = isDNF . noContext

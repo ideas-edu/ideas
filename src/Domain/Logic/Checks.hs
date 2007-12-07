@@ -32,7 +32,10 @@ checks :: IO ()
 checks = do
    mapM_ checkRule logicRules
    quickCheck propRuleNames
-   thoroughCheck propParsePP
+   thoroughCheck $ checkParserPretty parseLogic ppLogic
+   thoroughCheck $ checkParserPretty parseLogicPars ppLogicPars
+   thoroughCheck $ checkParserPretty parseLogic ppLogicPars
+   quickCheck propPretty
    thoroughCheck propCtxPP
    thoroughCheck propContext
    quickCheck propStratDNF
@@ -67,11 +70,18 @@ propContext dir loc =
    let newloc = move dir loc 
    in isJust newloc ==> noContext loc == noContext (fromJust newloc)
          
--- parser/pretty-printer
-propParsePP :: Logic -> Bool
-propParsePP p = null msgs && p == q
- where (q, msgs) = parseLogic (ppLogic p)
+-- check combination of parser and pretty-printer
+checkParserPretty :: Eq a => (String -> (a, [b])) -> (a -> String) -> a -> Bool
+checkParserPretty parser pretty p = null msgs && p == q
+ where (q, msgs) = parser (pretty p)
 
+propPretty :: Logic -> Bool
+propPretty p = x1 == x2 && length y1  <= length y2
+ where 
+   f pp     = partition (`notElem` "()") (pp p)
+   (x1, y1) = f ppLogic
+   (x2, y2) = f ppLogicPars
+ 
 -- pretty-printer zipper
 propCtxPP :: LogicInContext -> Bool
 propCtxPP ctx = ppLogic (noContext ctx) ~= ppLogicInContext ctx

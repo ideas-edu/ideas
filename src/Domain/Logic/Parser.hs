@@ -8,7 +8,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser 
-   ( parseLogic, ppLogic, ppLogicPrio, ppLogicInContext
+   ( parseLogic, parseLogicPars, ppLogic, ppLogicPrio, ppLogicInContext, ppLogicPars
    ) where
 
 import UU.Parsing
@@ -21,33 +21,54 @@ import Data.Char
 -----------------------------------------------------------
 --- Parser
 
+-- | Parser for logic formulas that respects all associativity and priority laws 
+-- | of the constructors
 parseLogic  :: String -> (Logic, [Message Char Pos])
-parseLogic input = (result, messages)
+parseLogic = runParser pLogic
  where
-   steps    = parseString pLogic (filter (not . isSpace) input)
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
+   pLogic       =  pChainr  ((:<->:) <$  eqvSym)  disjunction 
+   disjunction  =  pChainr  ((:||:)  <$  orSym )  conjunction 
+   conjunction  =  pChainr  ((:&&:)  <$  andSym)  implication 
+   implication  =  pChainr  ((:->:)  <$  impSym)  basic
+   basic        =  basicWith pLogic
 
-fstPair             :: Pair a b -> a
-fstPair (Pair a b)  =  a
+-- | Parser for logic formulas that insists on more parentheses: "and" and "or" are associative, 
+-- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
+-- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
+-- | parentheses are permitted
+parseLogicPars  :: String -> (Logic, [Message Char Pos])
+parseLogicPars = runParser pLogic
+ where
+   basic     =  basicWith pLogic
+   pLogic    =  flip ($) <$> basic <*> opt composed id
+   composed  =  flip (:<->:) <$ eqvSym <*> basic
+            <|> flip (:->:)  <$ impSym <*> basic
+            <|> (\xs p -> foldr1 (:&&:) (p:xs)) <$> pList1_gr (andSym *> basic)
+            <|> (\xs p -> foldr1 (:||:) (p:xs)) <$> pList1_gr (orSym *> basic)
 
-pLogic       =  pChainr  ((:<->:) <$  eqvSym)  disjunction 
-disjunction  =  pChainr  ((:||:)  <$  orSym )  conjunction 
-conjunction  =  pChainr  ((:&&:)  <$  andSym)  implication 
-implication  =  pChainr  ((:->:)  <$  impSym)  basic       
-
-basic = Var <$> pvarid
-     <|> pparens pLogic
-     <|> T <$ pSym 'T'
-     <|> F <$ pSym 'F'
-     <|> Not <$ notSym <*> basic 
-
+basicWith :: CharParser Logic -> CharParser Logic
+basicWith p  =  Var <$> pvarid
+            <|> pparens p
+            <|> T <$ pSym 'T'
+            <|> F <$ pSym 'F'
+            <|> Not <$ notSym <*> basicWith p 
+                
 andSym = pToks "/\\"
 orSym  = pToks "||" 
 impSym = pToks "->"
 eqvSym = pToks "<->"
 notSym = pToks "~"
 
+fstPair :: Pair a b -> a
+fstPair (Pair a b)  =  a
+
+runParser  :: CharParser a -> String -> (a, [Message Char Pos])
+runParser pLogic input = (result, messages)
+ where
+   steps    = parseString pLogic (filter (not . isSpace) input)
+   result   = fstPair (evalSteps steps)
+   messages = getMsgs steps
+   
 pparens :: CharParser a -> CharParser a
 pparens = pPacked (pSymLow '(') (pSymLow ')')  
 
@@ -66,11 +87,12 @@ ppLogic :: Logic -> String
 ppLogic = ppLogicPrio 0
         
 ppLogicPrio :: Int -> Logic -> String
-ppLogicPrio n p = foldLogic (const, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, const "T", const "F") p n
+ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, var "T", var "F") p n ""
  where
-   binop prio op p q n = parIf (n > prio) (unwords [p (prio+1), op, q prio])
-   nott p n = "~" ++ p 4
-   parIf b s = if b then "(" ++ s ++ ")" else s
+   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
+   var       = const . (++)
+   nott p n  = ("~"++) . p 4
+   parIf b f = if b then ("("++) . f . (")"++) else f
    
 ppLogicInContext :: LogicInContext -> String
 ppLogicInContext = ppLogicInContextPrio 0
@@ -91,3 +113,16 @@ ppLogicInContextPrio prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noC
    getPrio (EquivR _ _) = 0
    getPrio (ImplL  _ _) = 4
    getPrio (ImplR  _ _) = 3
+
+-- | Pretty printer that produces extra parentheses: also see parseLogicPars
+ppLogicPars :: Logic -> String
+ppLogicPars = ppLogicParsCode 0
+        
+-- | Implementation uses the well-known trick for fast string concatenation
+ppLogicParsCode :: Int -> Logic -> String
+ppLogicParsCode n p = foldLogic (var, binop 3 "->", binop 3 "<->", binop 1 "/\\", binop 2 "||", nott, var "T", var "F") p n ""
+ where
+   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p 3 . ((" "++op++" ")++) . q prio)
+   var       = const . (++)
+   nott  p n = ("~"++) . p 3
+   parIf b f = if b then ("("++) . f . (")"++) else f

@@ -28,7 +28,7 @@ import Domain.Logic.Checks
 
 import Common.Assignment
 import Common.Strategy
-
+import Control.Monad
 import System.Random
 
 dnfAssignment :: Assignment LogicInContext
@@ -43,6 +43,6 @@ dnfAssignment = Assignment
    , ruleset       = map liftLogicRule logicRules
    , strategy      = unlabel toDNF
    , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
-                     in return $ inContext $ suitableLogic check (mkStdGen 28)
+                     in liftM inContext (suitableLogic check)
    , configuration = defaultConfiguration
    }

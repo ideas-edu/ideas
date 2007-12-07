@@ -18,6 +18,7 @@ import Domain.Logic.Zipper
 import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
+import Domain.Logic.Generator
 import Test.QuickCheck
 import Control.Monad
 import Data.Char
@@ -89,27 +90,7 @@ propStratDNF logic =
 qqq = Not (Var "r" :<->: Var "p")
                 
 -----------------------------------------------------------
---- QuickCheck generators
-
-instance Arbitrary Logic where
-   arbitrary = sized arbLogic
-   coarbitrary logic = 
-      case logic of
-         Var x     -> variant 0 . coarbitrary (map ord x)
-         p :->: q  -> variant 1 . coarbitrary p . coarbitrary q
-         p :<->: q -> variant 2 . coarbitrary p . coarbitrary q
-         p :&&: q  -> variant 3 . coarbitrary p . coarbitrary q
-         p :||: q  -> variant 4 . coarbitrary p . coarbitrary q
-         Not p     -> variant 5 . coarbitrary p
-         T         -> variant 6  
-         F         -> variant 7 
-
-arbLogic :: Int -> Gen Logic
-arbLogic 0 = oneof $ map return [Var "p", Var "q", Var "r", F, T]
-arbLogic n = oneof [arbLogic 0, op2 (:->:), op2 (:<->:), op2 (:&&:), op2 (:||:), op1 Not]
- where
-   op1 f = liftM  f (arbLogic (n `div` 2))
-   op2 f = liftM2 f (arbLogic (n `div` 2)) (arbLogic (n `div` 2))
+--- QuickCheck generator
    
 instance Arbitrary Cxt where
    arbitrary = sized arbCtx
@@ -131,8 +112,8 @@ arbCtx 0 = return Top
 arbCtx n = oneof [ op2l ImplL, op2r ImplR, op2l EquivL, op2r EquivR, op2l AndL, op2r AndR, op2l OrL, op2r OrR, op1 NotD ]
  where
    op1  f = liftM  f (arbCtx (n `div` 2))
-   op2l f = liftM2 f (arbCtx (n `div` 2)) (arbLogic (n `div` 2))
-   op2r f = liftM2 f (arbLogic (n `div` 2)) (arbCtx (n `div` 2))
+   op2l f = liftM2 f (arbCtx (n `div` 2)) arbitrary
+   op2r f = liftM2 f arbitrary (arbCtx (n `div` 2))
    
 instance Arbitrary a => Arbitrary (Loc a) where
    arbitrary = liftM2 Loc arbitrary arbitrary

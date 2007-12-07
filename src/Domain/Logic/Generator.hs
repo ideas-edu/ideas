@@ -5,30 +5,31 @@ module Domain.Logic.Generator
 
 import Domain.Logic.Formula
 import Control.Monad
+import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
 import System.Random
 
-suitableLogic :: (Logic -> Bool) -> StdGen -> Logic
+suitableLogic :: (Logic -> Bool) -> Gen Logic
 suitableLogic p = makeSuitable p generateLogic
             
-suitableLogicWith :: (Logic -> Bool) ->  LogicGenConfig -> StdGen -> Logic
+suitableLogicWith :: (Logic -> Bool) ->  LogicGenConfig -> Gen Logic
 suitableLogicWith p config = makeSuitable p (generateLogicWith config)
 
-makeSuitable :: (Logic -> Bool) -> (StdGen -> Logic) -> StdGen -> Logic
-makeSuitable p f gen
-   | p logic   = logic 
-   | otherwise = makeSuitable p f (fst $ split gen)
- where logic = f gen 
+makeSuitable :: (Logic -> Bool) -> Gen Logic -> Gen Logic
+makeSuitable p gen = do
+   formula <- gen
+   if p formula
+      then return formula 
+      else makeSuitable p gen
 
-generateLogic :: StdGen -> Logic
+generateLogic :: Gen Logic
 generateLogic = generateLogicWith defaultConfig
    
-generateLogicWith :: LogicGenConfig -> StdGen -> Logic
-generateLogicWith config stdGen =
-   generate 0 stdGen (arbLogic config)
+generateLogicWith :: LogicGenConfig -> Gen Logic
+generateLogicWith = arbLogic
    
 data LogicGenConfig = LogicGenConfig
-   { maxDepth      :: Int
+   { maxSize       :: Int
    , differentVars :: Int
    , freqConstant  :: Int
    , freqVariable  :: Int
@@ -42,7 +43,7 @@ data LogicGenConfig = LogicGenConfig
 
 defaultConfig :: LogicGenConfig
 defaultConfig = LogicGenConfig
-   { maxDepth      = 4
+   { maxSize       = 2
    , differentVars = 3
    , freqConstant  = 1
    , freqVariable  = 2
@@ -58,8 +59,8 @@ freqLeaf config = freqConstant config + freqVariable config
 
 arbLogic :: LogicGenConfig -> Gen Logic
 arbLogic config
-   | maxDepth config == 0 = arbLogicLeaf config
-   | otherwise            = arbLogicBin  config
+   | maxSize config == 0 = arbLogicLeaf config
+   | otherwise           = arbLogicBin  config
 
 arbLogicLeaf :: LogicGenConfig -> Gen Logic
 arbLogicLeaf config = frequency
@@ -77,9 +78,25 @@ arbLogicBin config = frequency
    , (freqNot   config, op1 Not)
    ]
  where
-   rec   = arbLogic config {maxDepth = maxDepth config - 1}
+   rec   = arbLogic config {maxSize = maxSize config `div` 2}
    op1 f = liftM  f rec
    op2 f = liftM2 f rec rec
 
 variableList :: [String]
 variableList = ["p", "q", "r", "s", "t"] ++ [ "x" ++ show n | n <- [0..] ]
+
+-----------------------------------------------------------
+--- QuickCheck generator
+
+instance Arbitrary Logic where
+   arbitrary = sized $ \n -> arbLogic defaultConfig {maxSize = n}
+   coarbitrary logic = 
+      case logic of
+         Var x     -> variant 0 . coarbitrary (map ord x)
+         p :->: q  -> variant 1 . coarbitrary p . coarbitrary q
+         p :<->: q -> variant 2 . coarbitrary p . coarbitrary q
+         p :&&: q  -> variant 3 . coarbitrary p . coarbitrary q
+         p :||: q  -> variant 4 . coarbitrary p . coarbitrary q
+         Not p     -> variant 5 . coarbitrary p
+         T         -> variant 6  
+         F         -> variant 7

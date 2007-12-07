@@ -115,10 +115,10 @@ minorRule r = r {isMinorRule = True}
   
 -- | Identity rule 
 idRule :: Rule a
-idRule = makeSimpleRule "Identity" return
+idRule = minorRule $ makeSimpleRule "Identity" return
    
 emptyRule :: Rule a
-emptyRule = makeSimpleRule "Empty" (const Nothing)
+emptyRule = minorRule $ makeSimpleRule "Empty" (const Nothing)
    
 instance Show (Rule a) where
    show = name

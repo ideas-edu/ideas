@@ -31,7 +31,7 @@ test:
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
 
-all: solver doc markup
+all: solver solvergui doc markup
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs
 

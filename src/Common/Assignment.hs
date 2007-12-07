@@ -50,7 +50,7 @@ giveHint x a =
 giveHints :: Assignment a -> a -> [(Doc a, Rule a)]
 giveHints x = map g . nextRulesWith (not . isMinorRule) (strategy x)
  where
-   g (rs, a, s) = (text (name (last rs)), last rs) -- ignores rest strategy
+   g (rs, a, s) = (rule (last rs), last rs) -- ignores rest strategy
    
 -- | Returns a text, a sub-expression that can be rewritten, and the result
 -- | of the rewriting
@@ -63,7 +63,7 @@ giveStep x a =
 giveSteps :: Assignment a -> a -> [(Doc a, a, a)]
 giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (strategy x) a
  where
-   g (rs, b, _) = (text (name (last rs)), applyListD (init rs) a, b)
+   g (rs, b, _) = (rule (last rs), applyListD (init rs) a, b)
 
 feedback :: Assignment a -> a -> String -> Feedback a
 feedback x a txt =
@@ -106,9 +106,10 @@ showDoc = showDocWith . prettyPrinter
 showDocWith :: (a -> String) -> Doc a -> String
 showDocWith f (D xs) = concatMap g xs
  where
-   g (Text s) = s
-   g (Term a) = f a 
-
+   g (Text s)    = s
+   g (Term a)    = f a 
+   g (DocRule r) = name r
+   
 infixr 5 <>
 
 (<>) :: Doc a -> Doc a -> Doc a

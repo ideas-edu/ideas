@@ -22,7 +22,8 @@ import Common.Assignment
 import Common.Transformation
 import Common.Strategy
 import Domain.Logic
-import Domain.Logic.Solver.LogicGenerator
+
+import Control.Monad
 
 main :: IO ()
 main =
@@ -51,9 +52,9 @@ main =
         feedbackBuffer <- textViewGetBuffer feedbackView 
 
         -- initialize assignment
-        let initialAssignment = parser logicAssignment $ "x/\\ (~y || ~(~z /\\ x))"
-        textBufferSetText assignmentBuffer (prettyPrinter logicAssignment $ initialAssignment)
-        textBufferSetText entryBuffer (prettyPrinter logicAssignment $ initialAssignment)
+        initialAssignment <- randomTerm dnfAssignment
+        textBufferSetText assignmentBuffer (prettyPrinter dnfAssignment $ initialAssignment)
+        textBufferSetText entryBuffer (prettyPrinter dnfAssignment $ initialAssignment)
 
         assignmentState <- newIORef initialAssignment
 
@@ -67,15 +68,18 @@ main =
         onClicked hintButton $
             do
                 currentAssignment <- readIORef assignmentState
-                case giveHint logicAssignment currentAssignment of
-                    (doc, rule) -> textBufferSetText feedbackBuffer (show rule ++ show doc)
+                case giveHint dnfAssignment currentAssignment of
+                    (doc, rule) -> textBufferSetText feedbackBuffer (show rule ++ ";" ++ show doc)
 
         onClicked stepButton $
             do 
                 currentAssignment <- readIORef assignmentState
-                case giveStep logicAssignment currentAssignment of
+                case giveStep dnfAssignment currentAssignment of
                     (doc, subterm, newterm) -> 
-                            textBufferSetText feedbackBuffer (show doc ++ " to rewrite subterm " ++ show subterm ++ " resulting in " ++ show newterm)
+                       textBufferSetText feedbackBuffer $ 
+                       "Use " ++ show doc ++ "\nto rewrite subterm\n" ++ 
+                       prettyPrinter dnfAssignment subterm ++ "\nresulting in\n" ++
+                       prettyPrinter dnfAssignment newterm
 
         onClicked undoButton $
             do 
@@ -85,8 +89,21 @@ main =
         onClicked submitButton $
             do 
                 currentAssignment <- readIORef assignmentState
-                textBufferSetText feedbackBuffer "submit"
-
+                txt <- get entryBuffer textBufferText
+                case feedback dnfAssignment currentAssignment txt of
+                   SyntaxError doc msug -> 
+                      textBufferSetText feedbackBuffer $ 
+                         show doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter dnfAssignment a) msug
+                   Incorrect doc msug ->
+                      textBufferSetText feedbackBuffer $ 
+                         show doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter dnfAssignment a) msug
+                   Correct doc ok -> do
+                      textBufferSetText feedbackBuffer $
+                         show doc ++ "\n" ++ if ok then "ok" else "unknown rule"
+                      when ok $ do
+                        textBufferSetText assignmentBuffer txt
+                        writeIORef assignmentState (either undefined id $ parser dnfAssignment txt) -- REWRITE !
+        
         -- show widgets and run GUI
         widgetShowAll window
         mainGUI
@@ -96,16 +113,3 @@ deleteEvent = const (return False)
 
 destroyEvent :: IO ()
 destroyEvent = do mainQuit
-
-
-logicAssignment :: Assignment LogicInContext
-logicAssignment = Assignment
-   { parser        = Domain.Logic.inContext . fst . parseLogic
-   , prettyPrinter = ppLogicInContext
-   , equivalence   = \x y -> noContext x `eqLogic` noContext y
-   , finalProperty = isDNF . noContext
-   , ruleset       = map liftLogicRule logicRules
-   , strategy      = unlabel toDNF
-   , generator     = fmap Domain.Logic.inContext $ arbLogic defaultConfig
-   , language      = English
-   }  

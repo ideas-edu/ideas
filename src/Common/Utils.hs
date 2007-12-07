@@ -13,10 +13,16 @@ import Data.Char
 import Data.List
 import Test.QuickCheck
 import Control.Monad
+import System.Random
 import qualified Data.Map as M
 
 thoroughCheck :: Testable a => a -> IO ()
 thoroughCheck = check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
+
+generateStd :: Gen a -> IO a
+generateStd gen = do 
+   stdgen <- newStdGen
+   return (generate 100 stdgen gen)
 
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]

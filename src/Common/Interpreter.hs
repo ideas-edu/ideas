@@ -7,9 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Common.Interpreter 
-   ( Interpreter(..), runInterpreter
-   ) where
+module Common.Interpreter (runInterpreter) where
 
 import Data.Char
 import Data.List
@@ -20,40 +18,19 @@ import Common.Transformation
 import Common.Strategy
 import Common.Move
 import Common.Utils
-{- import Test.QuickCheck
-
-checkInterpreter :: (Show a, Eq a, Move a, Arbitrary a) => Interpreter a -> IO ()
-checkInterpreter interpr = do
-   quickCheck (propParsePrettyPrint interpr)
-
- where
--- parser/pretty-printer
-propParsePrettyPrint :: (Arbitrary a, Eq a) => Interpreter a -> a -> Bool
-propParsePrettyPrint interpr p = p == q
- where q = parser interpr (prettyPrinter interpr p) -}
-
-data Interpreter a = Interpreter
-   { parser        :: String -> a
-   , prettyPrinter :: a -> String
-   , equivalence   :: a -> a -> Bool
-   , finalProperty :: a -> Bool
-   , ruleset       :: [Rule a]
-   , strategy      :: Strategy a
-   , term          :: a
-   }
+import Common.Assignment
 
 type M a  = HistoryT (St a) IO
 data St a = St { currentTerm :: a, currentStrategy :: Strategy a  }
 
-runInterpreter :: (Eq a, Move a) => Interpreter a -> IO ()
-runInterpreter interpr = 
-   evalHistoryT (mark >> step) start
- where   
-   start = St
-      { currentTerm     = term interpr
+runInterpreter :: Move a => Assignment a -> IO ()
+runInterpreter interpr = do
+   ct <- generateStd (generator interpr)
+   evalHistoryT (mark >> step) $ St
+      { currentTerm     = ct
       , currentStrategy = strategy interpr
       }
-
+ where
    step = do
       -- present the current term
       current <- gets currentTerm 
@@ -127,22 +104,29 @@ runInterpreter interpr =
          ':':this -> liftIO (putStrLn $ "ERROR: unknown command " ++ show this) >> step         
          _ -> do
             strat <- gets currentStrategy
-            let new  = parser interpr cmd
-                list = filter ((==new) . snd3) $ take 1000 $ intermediates strat current
-            case list of
-               (rules, _, newStrategy):_ 
-                  | null rules ->
-                       liftIO $ putStrLn "WARNING: same term"
-                  | otherwise -> do
-                     liftIO $ do
-                        putStrLn "You probably applied the following rules:"
-                        putStrLn $ "   " ++ commaList (reverse $ map name $ filter checkRuleName rules) ++ "\n"
-                     modify $ \s -> s {currentTerm = new, currentStrategy = newStrategy}
-                     mark
-               _ -> do
-                  liftIO $ putStrLn "I don't know which rule was applied"
-                  modify $ \s -> s {currentTerm = new, currentStrategy = failS}
-                  mark
+            case parser interpr cmd of
+               Left (doc, msug) -> liftIO $ do
+                  putStrLn "ERROR: syntax error"
+                  putStrLn (showDoc interpr doc)
+                  case msug of
+                     Just a -> putStrLn $ "Did you mean " ++ prettyPrinter interpr a
+                     _      -> return ()
+               Right new -> do
+                  let list = filter (equality interpr new . snd3) $ take 1000 $ intermediates strat current
+                  case list of
+                     (rules, _, newStrategy):_ 
+                        | null rules ->
+                             liftIO $ putStrLn "WARNING: same term"
+                        | otherwise -> do
+                           liftIO $ do
+                              putStrLn "You probably applied the following rules:"
+                              putStrLn $ "   " ++ commaList (reverse $ map name $ filter checkRuleName rules) ++ "\n"
+                           modify $ \s -> s {currentTerm = new, currentStrategy = newStrategy}
+                           mark
+                     _ -> do
+                        liftIO $ putStrLn "I don't know which rule was applied"
+                        modify $ \s -> s {currentTerm = new, currentStrategy = failS}
+                        mark
             step
    
    moveWith rule = modify (\s -> s {currentTerm = applyD rule (currentTerm s)}) >> step
@@ -160,6 +144,4 @@ runInterpreter interpr =
             return Nothing
             
 checkRuleName :: Rule a -> Bool
-checkRuleName rule = 
-   let s = name rule
-   in not (null s) && not (take 1 s=="_") && not ("Move" `isPrefixOf` s) && "Check" /= s
+checkRuleName = not . isMinorRule

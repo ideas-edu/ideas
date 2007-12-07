@@ -12,6 +12,7 @@ module Main where
 import Common.Strategy
 import Common.Transformation
 import Common.Interpreter
+import Common.Assignment
 import Domain.Logic
 import Domain.LinearAlgebra
 import System.Environment
@@ -38,29 +39,22 @@ main = do
 
 
 runMatrix :: IO ()
-runMatrix = runInterpreter matrixInterpreter
+runMatrix = runInterpreter redEchelonAssignment
 
-matrixInterpreter :: Interpreter (MatrixInContext Rational)
-matrixInterpreter = Interpreter
-   { parser        = error "no parser"
+redEchelonAssignment :: Assignment (MatrixInContext Rational)
+redEchelonAssignment = Assignment 
+   { parser        = const $ Left (text "Sorry, no parser available", Nothing)
    , prettyPrinter = ppMatrixInContext
    , equivalence   = \x y -> applyD toReducedEchelon x == applyD toReducedEchelon y
+   , equality      = (==)
    , finalProperty = inRowReducedEchelonForm . matrix
    , ruleset       = matrixRules
-   , term          = Domain.LinearAlgebra.inContext defaultMatrix
+   , generator     = return $ Domain.LinearAlgebra.inContext defaultMatrix
    , strategy      = toReducedEchelon
+   , configuration = defaultConfiguration
    }
 
 runLogic :: IO ()
-runLogic = runInterpreter logicInterpreter
-
-logicInterpreter :: Interpreter LogicInContext
-logicInterpreter = Interpreter
-   { parser        = Domain.Logic.inContext . fst . parseLogic
-   , prettyPrinter = ppLogicInContext
-   , equivalence   = \x y -> noContext x `eqLogic` noContext y
-   , finalProperty = isDNF . noContext
-   , ruleset       = map liftLogicRule logicRules
-   , strategy      = unlabel toDNF
-   , term          = parser logicInterpreter "x/\\ (~y || ~(~z /\\ x))"
-   }  
+runLogic = runInterpreter dnfAssignment
+   { prettyPrinter = ppLogicInContext
+   }

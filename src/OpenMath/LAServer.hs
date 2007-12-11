@@ -3,6 +3,7 @@ module OpenMath.LAServer where
 import Domain.LinearAlgebra
 import OpenMath.OMToMatrix
 import System.IO
+import Common.Transformation
 import Text.XML.HaXml.Haskell2Xml
 
 data Request a = Request (Matrix a) (Matrix a) StrategyID Location
@@ -53,5 +54,9 @@ fromReply = show
 
 ----------------------------
 
-laServer :: Request a -> Reply a
-laServer (Request term answer strategy location) = Ok
+laServer :: Request Int -> Reply Int
+laServer (Request term answer strategy location)
+   | fmap toRational answer == correct = Ok
+   | otherwise = Incorrect term "Incorrect: try again." strategy location
+ where
+   correct = matrix $ applyD toReducedEchelon $ inContext $ fmap toRational term

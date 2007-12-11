@@ -33,6 +33,7 @@ instance Functor RegExp where
       case regexp of
          p :*: q  -> fmap f p :*: fmap f q
          p :|: q  -> fmap f p :|: fmap f q
+         Star p   -> Star (fmap f p)
          Symbol a -> Symbol (f a)
          Succeed  -> Succeed
          EmptySet -> EmptySet

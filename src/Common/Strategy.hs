@@ -12,7 +12,7 @@ module Common.Strategy
    ( Strategy, NamedStrategy, AnonymousStrategy, IsStrategy(..), unlabel, LiftStrategy(..)
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
-   , intermediates, intermediatesList, check, traceStrategy, runStrategyRules
+   , intermediates, intermediatesList, check, traceStrategy, runStrategyRules, mapStrategy
    ) where
 
 import Common.Transformation
@@ -223,3 +223,6 @@ runStrategyRules strategy a =
 -- returns a strategy without the Succeed alternative
 nonSucceed :: Strategy a -> Strategy a
 nonSucceed = S . RE.nonSucceed . unS
+
+mapStrategy :: (Rule a -> Rule b) -> Strategy a -> Strategy b
+mapStrategy f (S regexp) = S (fmap f regexp)

@@ -12,7 +12,7 @@ module Common.Strategy
    ( Strategy, NamedStrategy, AnonymousStrategy, IsStrategy(..), unlabel, LiftStrategy(..)
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
-   , intermediates, intermediatesList, check, traceStrategy
+   , intermediates, intermediatesList, check, traceStrategy, runStrategyRules
    ) where
 
 import Common.Transformation
@@ -213,6 +213,12 @@ intermediatesList strategy a = takeWhile (not . null) (iterate (concatMap next) 
  where
    start = [([], a, strategy)]
    next (rs, a, s) = [ (r:rs, b, ns) | (r, b, ns) <- nextRule s a ]
+
+-- variation of runStrategy: TODO, merge
+runStrategyRules :: Strategy a -> a -> [([Rule a], a)]
+runStrategyRules strategy a =
+   [ ([], a) | isSucceed strategy ] ++
+   [ (rule:rs, final) | (rule, rest) <- firsts strategy, b <- applyAll rule a, (rs, final) <- runStrategyRules rest b ]
 
 -- returns a strategy without the Succeed alternative
 nonSucceed :: Strategy a -> Strategy a

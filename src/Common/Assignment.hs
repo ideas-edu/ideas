@@ -77,18 +77,18 @@ feedback x a txt =
               let paths = nextRulesWith (not . isMinorRule) (strategy x) a 
                   check = equality x new . snd3
               in case filter check paths of
-                    (rs, _, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) True
-                    _    -> Correct (text "Equivalent, but not a known rule. Please retry.") False
+                    (rs, _, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
+                    _    -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
          
 stepsRemaining :: Assignment a -> a -> Int
 stepsRemaining x a = 
-   case intermediates (strategy x) a of
-      (rs, _, _):_ -> length (filter (not . isMinorRule) rs)
-      _            -> 0
+   case runStrategyRules (strategy x) a of
+      (rs, _):_ -> length (filter (not . isMinorRule) rs)
+      _         -> 0
 
 data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)
-                | Correct     (Doc a) Bool
+                | Correct     (Doc a) (Maybe (Rule a)) {- The rule that was applied -}
                 
 newtype Doc a = D [DocItem a]
 

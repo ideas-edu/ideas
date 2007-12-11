@@ -16,6 +16,7 @@ import Graphics.UI.Gtk.Glade
 
 -- To keep the state and pass it to the event handlers (that are in IO)
 import Data.IORef
+import Data.Maybe
 
 -- Equations model
 import Common.Assignment
@@ -26,37 +27,42 @@ import Domain.Logic
 import Control.Monad
 
 main :: IO ()
-main =
+main = runAssignment dnfAssignment
+
+runAssignment :: Assignment a -> IO ()
+runAssignment assignment = 
     do  initGUI
 
         -- read Glade file (FIXME hardcoded path)
         windowXmlM <- xmlNew "bin/exerciseassistant.glade"
         let windowXml = case windowXmlM of
-             (Just windowXml) -> windowXml
+             Just windowXml -> windowXml
              Nothing -> error "Can't find the glade file \"exerciseassistant.glade\" in the bin subdirectory of the current directory"
-        window <- xmlGetWidget windowXml castToWindow "window"
+        window         <- xmlGetWidget windowXml castToWindow   "window"
         assignmentView <- xmlGetWidget windowXml castToTextView "assignmentView"
         derivationView <- xmlGetWidget windowXml castToTextView "derivationView"
-        entryView <- xmlGetWidget windowXml castToTextView "entryView"
-        feedbackView <- xmlGetWidget windowXml castToTextView "feedbackView"
-        readyButton <- xmlGetWidget windowXml castToButton "readyButton"
-        hintButton <- xmlGetWidget windowXml castToButton "hintButton"
-        stepButton <- xmlGetWidget windowXml castToButton "stepButton"
-        undoButton <- xmlGetWidget windowXml castToButton "undoButton"
-        submitButton <- xmlGetWidget windowXml castToButton "submitButton"
+        entryView      <- xmlGetWidget windowXml castToTextView "entryView"
+        feedbackView   <- xmlGetWidget windowXml castToTextView "feedbackView"
+        readyButton    <- xmlGetWidget windowXml castToButton   "readyButton"
+        hintButton     <- xmlGetWidget windowXml castToButton   "hintButton"
+        stepButton     <- xmlGetWidget windowXml castToButton   "stepButton"
+        undoButton     <- xmlGetWidget windowXml castToButton   "undoButton"
+        submitButton   <- xmlGetWidget windowXml castToButton   "submitButton"
 
         -- get buffers from views
         assignmentBuffer <- textViewGetBuffer assignmentView 
         derivationBuffer <- textViewGetBuffer derivationView
-        entryBuffer <- textViewGetBuffer entryView 
-        feedbackBuffer <- textViewGetBuffer feedbackView 
+        entryBuffer      <- textViewGetBuffer entryView 
+        feedbackBuffer   <- textViewGetBuffer feedbackView 
 
         -- initialize assignment
-        initialAssignment <- randomTerm dnfAssignment
-        textBufferSetText assignmentBuffer (prettyPrinter dnfAssignment $ initialAssignment)
-        textBufferSetText entryBuffer (prettyPrinter dnfAssignment $ initialAssignment)
+        initialAssignment <- randomTerm assignment
+        textBufferSetText assignmentBuffer (prettyPrinter assignment $ initialAssignment)
+        textBufferSetText entryBuffer (prettyPrinter assignment $ initialAssignment)
+        textBufferSetText feedbackBuffer (show (stepsRemaining assignment initialAssignment) ++ " steps remaining")
 
-        assignmentState <- newIORef initialAssignment
+        derivationState <- newIORef (Start initialAssignment)
+        updateDerivation derivationBuffer (prettyPrinter assignment) derivationState
 
         -- bind events
         onDelete window deleteEvent
@@ -67,42 +73,47 @@ main =
 
         onClicked hintButton $
             do
-                currentAssignment <- readIORef assignmentState
-                case giveHint dnfAssignment currentAssignment of
-                    (doc, rule) -> textBufferSetText feedbackBuffer (show rule ++ ";" ++ show doc)
+                derivation <- readIORef derivationState
+                case giveHint assignment (current derivation) of
+                    (doc, rule) -> textBufferSetText feedbackBuffer (show rule ++ ";" ++ showDoc assignment doc)
 
         onClicked stepButton $
             do 
-                currentAssignment <- readIORef assignmentState
-                case giveStep dnfAssignment currentAssignment of
+                derivation <- readIORef derivationState
+                case giveStep assignment (current derivation) of
                     (doc, subterm, newterm) -> 
                        textBufferSetText feedbackBuffer $ 
-                       "Use " ++ show doc ++ "\nto rewrite subterm\n" ++ 
-                       prettyPrinter dnfAssignment subterm ++ "\nresulting in\n" ++
-                       prettyPrinter dnfAssignment newterm
+                       "Use " ++ showDoc assignment doc ++ "\nto rewrite subterm\n" ++ 
+                       prettyPrinter assignment subterm ++ "\nresulting in\n" ++
+                       prettyPrinter assignment newterm
 
         onClicked undoButton $
             do 
-                currentAssignment <- readIORef assignmentState
+                currentAssignment <- readIORef derivationState
                 textBufferSetText feedbackBuffer "undo"
 
         onClicked submitButton $
             do 
-                currentAssignment <- readIORef assignmentState
+                derivation <- readIORef derivationState
                 txt <- get entryBuffer textBufferText
-                case feedback dnfAssignment currentAssignment txt of
+                case feedback assignment (current derivation) txt of
                    SyntaxError doc msug -> 
                       textBufferSetText feedbackBuffer $ 
-                         show doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter dnfAssignment a) msug
+                         showDoc assignment doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter assignment a) msug
                    Incorrect doc msug ->
                       textBufferSetText feedbackBuffer $ 
-                         show doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter dnfAssignment a) msug
-                   Correct doc ok -> do
+                         showDoc assignment doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter assignment a) msug
+                   Correct doc singleRule -> do
+                      let new = either undefined id $ parser assignment txt -- REWRITE !
                       textBufferSetText feedbackBuffer $
-                         show doc ++ "\n" ++ if ok then "ok" else "unknown rule"
-                      when ok $ do
+                         showDoc assignment doc ++ "\n" ++ 
+                            if isJust singleRule 
+                            then show (stepsRemaining assignment new) ++ " steps remaining"
+                            else "unknown rule"
+                      when (isJust singleRule) $ do
                         textBufferSetText assignmentBuffer txt
-                        writeIORef assignmentState (either undefined id $ parser dnfAssignment txt) -- REWRITE !
+                        writeIORef derivationState $ Step derivation (fromJust singleRule) new
+                        updateDerivation derivationBuffer (prettyPrinter assignment) derivationState
         
         -- show widgets and run GUI
         widgetShowAll window
@@ -113,3 +124,19 @@ deleteEvent = const (return False)
 
 destroyEvent :: IO ()
 destroyEvent = do mainQuit
+
+-- move to Common
+data Derivation a = Start a | Step (Derivation a) (Rule a) a -- snoc list for fast access to current term
+
+current :: Derivation a -> a
+current (Start a)    = a
+current (Step _ _ a) = a
+
+showDerivation :: (a -> String) -> Derivation a -> String
+showDerivation f (Start a)    = f a
+showDerivation f (Step d r a) = showDerivation f d ++ "\n   => [" ++ name r ++ "]\n" ++ f a
+
+updateDerivation :: TextBufferClass w => w -> (a -> String) -> IORef (Derivation a) -> IO ()
+updateDerivation buffer pp ref = do
+   derivation <- readIORef ref
+   textBufferSetText buffer $ showDerivation pp derivation

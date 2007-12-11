@@ -8,6 +8,9 @@ import Common.Unification
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.Checks
+import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext)
+import qualified Domain.LinearAlgebra.Context as Matrix
 
 import qualified Data.Set as S
 import Data.List
@@ -202,6 +205,22 @@ liftSystemRule = liftRule $ LiftPair get set
  where
    get = return . equations
    set new c = c {equations = new}
+
+liftLeft :: Strategy a -> Strategy (Either a b)
+liftLeft = mapStrategy $ liftRule $ 
+   LiftPair (either Just (const Nothing)) (\a -> either (const $ Left a) Right)
+
+liftRight :: Strategy b -> Strategy (Either a b)
+liftRight = mapStrategy $ liftRule $ 
+   LiftPair (either (const Nothing) Just) (\a -> either Left (const $ Right a))
+
+translation :: String -> (a -> Maybe b) -> Rule (Either a b)
+translation s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
+
+equationsToMatrix :: Fractional a => Strategy (Either (LinearSystem a)(MatrixInContext a))
+equationsToMatrix = translation "SystemToMatrix" (Just . Matrix.inContext . systemToMatrix) <*> liftRight toReducedEchelon
+
+mytest = applyD equationsToMatrix (Left ex1a)
 
 -----------------------------------------------------
 -- 9.1 Oplossen van lineaire vergelijkingen

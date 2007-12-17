@@ -5,11 +5,13 @@ import OpenMath.OMToMatrix
 import System.IO
 import Common.Transformation
 import Text.XML.HaXml.Haskell2Xml
+import Data.Char
 
 data Request a = Request (Matrix a) (Matrix a) StrategyID Location
    deriving Show
 
 data Reply a = Ok 
+             | ParseError
              | Incorrect (Matrix a) MDQuestion StrategyID Location
    deriving Show
 
@@ -22,35 +24,101 @@ main = do
    xml <- hGetContents stdin
    respond xml
 
-----------------------------
-
--- A first attempt: can this be generated with HaXml?
 {-
-instance Haskell2Xml a => Haskell2Xml (Request a) where
-   toHType (Request term answer strategy location) = 
-      Tuple [toHType term, toHType answer, toHType strategy, toHType location]
-   toContents (Request term answer strategy location) = 
-      [CElem (Elem "request" [] (toContents term ++ toContents answer ++ toContents strategy ++ toContents location))]
-   fromContents [CElem (Elem "request" [] cs)] =
-      let (term,     cs1) = fromContents cs
-          (answer,   cs2) = fromContents cs1
-          (strategy, cs3) = fromContents cs2
-          (location,  []) = fromContents cs3
-      in (Request term answer strategy location, []) -}
+q = do 
+   input <- readFile "c:\\Documents and Settings\\bhr\\desktop\\request"
+   putStrLn input
+   let req = toRequest input
+   putStrLn (show req)
+   let repl = fromReply $ laServer req
+   putStrLn repl
+   writeFile "reply" repl -}
   
 ----------------------------
 
 respond :: String -> IO ()
-respond = putStrLn . fromReply . laServer . toRequest
+respond = putStrLn . fromReply . maybe ParseError laServer . toRequest
 
--- TODO
-toRequest :: String -> Request Int
-toRequest _ = Request mymatrix mymatrix "sid" []
- where mymatrix = makeMatrix [[0,1],[1,0]]
+toRequest :: String -> Maybe (Request Int)
+toRequest = fmap fst . pRequest
  
--- TODO
 fromReply :: Reply Int -> String
-fromReply = show
+fromReply reply =
+   case reply of
+      Ok -> "<reply result=\"ok\"/>"
+      ParseError -> "<reply result=\"parse error\"/>"
+      Incorrect m question sid loc -> unlines
+         [ "<reply><term>"
+         , matrix2xml m
+         , "</term><question>"
+         , question
+         , "</question><strategy>"
+         , sid
+         , "</strategy><location>"
+         , show loc
+         , "</location></reply>"
+         ]
+      
+----------------------------
+-- Top-level XML Parser
+
+type Parser a = String -> Maybe (a, String)
+
+pRequest :: Parser (Request Int)
+pRequest = betweenTags "request" $ \xs -> do
+   (a, xs) <- betweenTags "term" pOmObj xs
+   (b, xs) <- betweenTags "answer" pOmObj xs
+   (c, xs) <- betweenTags "strategy" pStrategy xs
+   (d, xs) <- betweenTags "location" pLocation xs
+   return (Request a b c d, xs)
+
+pOmObj :: Parser (Matrix Int)
+pOmObj xs = do 
+   m <- xml2matrix ys
+   return (m, zs)
+ where (ys, zs) = rec xs 
+       rec xs@(hd:tl) 
+          | "</OMOBJ>" `isPrefixOf` xs = splitAt 8 xs 
+          | otherwise                  = let (a, b) = rec tl
+                                         in (hd:a, b)
+
+pStrategy :: Parser StrategyID
+pStrategy xs
+   | null ys   = Nothing
+   | otherwise = Just (ys, zs)
+ where (ys, zs) = break (not . isAlphaNum) xs
+
+pLocation :: Parser Location
+pLocation xs =
+   case reads xs of
+      [(loc, rest)] -> return (loc, rest)
+      _             -> Nothing
+
+betweenTags :: String -> Parser a -> Parser a 
+betweenTags tag p xs = do
+   xs <- spaces xs
+   (_, xs) <- openTag tag xs
+   xs <- spaces xs
+   (a, xs) <- p xs
+   xs <- spaces xs
+   (_, xs) <- closeTag tag xs
+   xs <- spaces xs
+   return (a, xs)
+ where 
+   spaces = return . dropWhile isSpace
+   
+openTag :: String -> Parser ()
+openTag tag xs
+   | angled tag `isPrefixOf` xs = Just ((), drop (length tag+2) xs)
+   | otherwise                  = Nothing
+
+closeTag :: String -> Parser ()
+closeTag tag xs
+   | angled ("/"++tag) `isPrefixOf` xs = Just ((), drop (length tag+3) xs)
+   | otherwise                         = Nothing
+   
+angled :: String -> String
+angled s = "<" ++ s ++ ">"
 
 ----------------------------
 

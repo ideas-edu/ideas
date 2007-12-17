@@ -8,7 +8,7 @@ import Common.Unification
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.Checks
+import Domain.LinearAlgebra.Checks ()
 import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext)
 import qualified Domain.LinearAlgebra.Context as Matrix
 
@@ -719,7 +719,7 @@ checks = do
    quickCheck $ \x y z -> (notZero y && notZero z) ==> x/(y*z) ~= (x/y)/z
    quickCheck $ \x y z -> (notZero y && notZero z) ==> x/(y/z) ~= (x*z) / y
    quickCheck $ \x y   -> (notZero y) ==> x/y ~= x * (1/y)
-   quickCheck $ \x y z -> x * (y/z) ~= (x*y)/(x*z)
+   quickCheck $ \x y z u -> (notZero y && notZero u) ==> (x/y) * (z/u) ~= (x*z) / (y*u)
 
 communtative op x y  = op x y ~= op y x
 associative op x y z = op x (op y z) ~= op (op x y) z 

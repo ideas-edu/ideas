@@ -3,10 +3,11 @@ module OpenMath.OMToMatrix where
 import Text.XML.HaXml.Xml2Haskell
 import OpenMath.OpenMath
 import Data.Maybe
+import Control.Monad
 import Domain.LinearAlgebra
 
-xml2matrix :: Read a => String -> Matrix a
-xml2matrix = omobj2matrix . fromJust . readXml
+xml2matrix :: Read a => String -> Maybe (Matrix a)
+xml2matrix input = readXml input >>= omobj2matrix
 
 matrix2xml :: Show a => Matrix a -> String
 matrix2xml = showXml . matrix2omobj
@@ -16,23 +17,29 @@ From OMOBJ, the data type for OpenMath documents in Haskell
 to a Matrix data type.
 ----------------------------------------------------------------}
 
-omobj2matrix :: Read a => OMOBJ -> Matrix a
+omobj2matrix :: Read a => OMOBJ -> Maybe (Matrix a)
 omobj2matrix omobj = 
   case omobj of
     OMOBJOMA _ (OMA _ (NonEmpty (_:oma_s))) -> oma_s2matrix oma_s
+    _ -> Nothing
     
-oma_s2matrix :: Read a => [OMA_] -> Matrix a
-oma_s2matrix oma_s = makeMatrix (map oma_2row oma_s)
+oma_s2matrix :: Read a => [OMA_] -> Maybe (Matrix a)
+oma_s2matrix oma_s = do
+   xs <- mapM oma_2row oma_s
+   guard (isRectangular xs)
+   return (makeMatrix xs)
 
-oma_2row :: Read a => OMA_ -> [a]
+oma_2row :: Read a => OMA_ -> Maybe [a]
 oma_2row oma_ = 
   case oma_ of
-    OMA_OMA (OMA _ (NonEmpty (_:oma_omis))) -> map oma_omi2a oma_omis
+    OMA_OMA (OMA _ (NonEmpty (_:oma_omis))) -> mapM oma_omi2a oma_omis
+    _ -> Nothing
 
-oma_omi2a :: Read a => OMA_ -> a     
+oma_omi2a :: Read a => OMA_ -> Maybe a     
 oma_omi2a oma_ =
   case oma_ of
-    OMA_OMI (OMI _ s) -> read s
+    OMA_OMI (OMI _ s) -> case reads s of [(a, [])] -> Just a; _ -> Nothing
+    _ -> Nothing
 
 {----------------------------------------------------------------
 From a Matrix data type
@@ -80,9 +87,9 @@ A simple test.
 
 test2 = do 
    input <- readFile "twoxtwomatrix.xml"
-   let m1  = xml2matrix input :: Matrix Int
+   let m1  = fromJust $ xml2matrix input :: Matrix Int
        xml = matrix2xml m1
-       m2  = xml2matrix xml :: Matrix Int
+       m2  = fromJust $ xml2matrix xml :: Matrix Int
    print m1
    putStrLn xml
    print m2

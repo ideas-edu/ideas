@@ -2,10 +2,9 @@ module OpenMath.LAServer where
 
 import Domain.LinearAlgebra
 import OpenMath.OMToMatrix
-import System.IO
 import Common.Transformation
-import Text.XML.HaXml.Haskell2Xml
 import Data.Char
+import Data.List
 
 data Request a = Request (Matrix a) (Matrix a) StrategyID Location
    deriving Show
@@ -19,25 +18,19 @@ type StrategyID = String
 type Location   = [Int]
 type MDQuestion = String
 
-main :: IO ()
-main = do
-   xml <- hGetContents stdin
-   respond xml
-
-{-
 q = do 
-   input <- readFile "c:\\Documents and Settings\\bhr\\desktop\\request"
+   input <- readFile "request"
    putStrLn input
-   let req = toRequest input
+   let Just req = toRequest input
    putStrLn (show req)
    let repl = fromReply $ laServer req
    putStrLn repl
-   writeFile "reply" repl -}
+   writeFile "reply" repl 
   
 ----------------------------
 
-respond :: String -> IO ()
-respond = putStrLn . fromReply . maybe ParseError laServer . toRequest
+respond :: String -> String
+respond = fromReply . maybe ParseError laServer . toRequest
 
 toRequest :: String -> Maybe (Request Int)
 toRequest = fmap fst . pRequest
@@ -70,6 +63,7 @@ pRequest = betweenTags "request" $ \xs -> do
    (b, xs) <- betweenTags "answer" pOmObj xs
    (c, xs) <- betweenTags "strategy" pStrategy xs
    (d, xs) <- betweenTags "location" pLocation xs
+   let m = makeMatrix [[0,1],[1,0]]
    return (Request a b c d, xs)
 
 pOmObj :: Parser (Matrix Int)

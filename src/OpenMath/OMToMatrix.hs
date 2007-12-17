@@ -38,7 +38,7 @@ oma_2row oma_ =
 oma_omi2a :: Read a => OMA_ -> Maybe a     
 oma_omi2a oma_ =
   case oma_ of
-    OMA_OMI (OMI _ s) -> case reads s of [(a, [])] -> Just a; _ -> Nothing
+    OMA_OMI (OMI _ s) -> case reads s of [(a, _)] -> Just a; _ -> Nothing
     _ -> Nothing
 
 {----------------------------------------------------------------
@@ -86,7 +86,7 @@ A simple test.
 ----------------------------------------------------------------}
 
 test2 = do 
-   input <- readFile "twoxtwomatrix.xml"
+   input <- readFile "src/Openmath/twoxtwomatrix.xml"
    let m1  = fromJust $ xml2matrix input :: Matrix Int
        xml = matrix2xml m1
        m2  = fromJust $ xml2matrix xml :: Matrix Int

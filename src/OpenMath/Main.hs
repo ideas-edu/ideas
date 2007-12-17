@@ -3,6 +3,7 @@ module Main (main) where
 import OpenMath.LAServer
 import Network.CGI
 import System.Environment
+import Common.Logging
 
 main :: IO ()
 main = do 
@@ -14,8 +15,15 @@ main = do
       
 cgiMain :: CGI CGIResult
 cgiMain = do 
-   input <- getInput "matrix"                -- read matrix xml string 
+   input <- getInput "matrix"            -- read matrix xml string 
    setHeader "Content-type" "text/plain" -- return plain text
    case input of
-      Just xml -> output (respond xml)
       Nothing  -> output ("Invalid request.")
+      Just xml -> do 
+         addr <- remoteAddr -- the IP address of the remote host making the request
+         let answer = respond xml
+         logMsg $ unlines [addr, xml, answer]
+         output answer 
+
+logMsg :: String -> CGI ()
+logMsg = liftIO . logMessageWith defaultLogConfig {logFile = "laservice.log"}

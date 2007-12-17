@@ -50,7 +50,7 @@ bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
 solvergui: bin/solvergui$(EXE)
 
 bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade src/Presentation/Logic/ExerciseAssistant/exerciseassistant.gladep
-	ghc --make -O -isrc -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs
+	ghc --make -O -isrc -isrc/Presentation/Logic/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs
 	cp src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade bin/
 
 checks: $(BINDIR) $(OUTDIR)
@@ -82,7 +82,7 @@ hpc/doc/hpc_index.html: hpc/bin/solver.tix
 	hpc markup --hpcdir=hpc/out --destdir=hpc/doc hpc/bin/solver$(EXE)
 
 cgi:	$(BINDIR) $(OUTDIR) 
-	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/laservice.cgi src/OpenMath/LAService.hs
+	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/laservice.cgi src/OpenMath/Main.hs
 
 cgi-install: cgi
 	sudo cp $(BINDIR)/laservice.cgi $(CGIDIR)

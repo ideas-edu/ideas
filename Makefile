@@ -34,7 +34,7 @@ test:
 
 all: solver solvergui doc markup
 
-SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs
+SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs src/Presentation/Logic/ExerciseAssistant/*.hs
 
 solver: bin/solver$(EXE)
 

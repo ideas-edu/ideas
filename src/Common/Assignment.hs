@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 module Common.Assignment where
 
 import Common.Transformation
@@ -6,6 +7,8 @@ import Common.Utils
 import Common.Unification
 import System.Random
 import Test.QuickCheck
+
+data PackedAssignment = forall a . Pack { unpack :: Assignment a }
 
 data Assignment a = Assignment
    { shortTitle    :: String

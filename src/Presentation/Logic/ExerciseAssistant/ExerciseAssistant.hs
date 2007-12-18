@@ -17,30 +17,40 @@ import Session
 import Common.Transformation
 import Common.Strategy
 import Domain.Logic
+import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import Control.Monad
 
-main :: IO ()
-main = runAssignment dnfAssignment
+domains :: [PackedAssignment]
+domains = [Pack dnfAssignment, Pack reduceMatrixAssignment]
 
-runAssignment :: Assignment a -> IO ()
-runAssignment assignment = 
+main :: IO ()
+main = 
     do  initGUI
 
         -- read Glade file (FIXME hardcoded path)
         windowXmlM <- xmlNew "bin/exerciseassistant.glade"
-        let windowXml = case windowXmlM of
+        let fromXml f = xmlGetWidget windowXml f
+            windowXml = case windowXmlM of
              Just windowXml -> windowXml
              Nothing -> error "Can't find the glade file \"exerciseassistant.glade\" in the bin subdirectory of the current directory"
-        window         <- xmlGetWidget windowXml castToWindow   "window"
-        assignmentView <- xmlGetWidget windowXml castToTextView "assignmentView"
-        derivationView <- xmlGetWidget windowXml castToTextView "derivationView"
-        entryView      <- xmlGetWidget windowXml castToTextView "entryView"
-        feedbackView   <- xmlGetWidget windowXml castToTextView "feedbackView"
-        readyButton    <- xmlGetWidget windowXml castToButton   "readyButton"
-        hintButton     <- xmlGetWidget windowXml castToButton   "hintButton"
-        stepButton     <- xmlGetWidget windowXml castToButton   "stepButton"
-        undoButton     <- xmlGetWidget windowXml castToButton   "undoButton"
-        submitButton   <- xmlGetWidget windowXml castToButton   "submitButton"
+            
+        window         <- fromXml castToWindow      "window"
+        assignmentView <- fromXml castToTextView    "assignmentView"
+        derivationView <- fromXml castToTextView    "derivationView"
+        entryView      <- fromXml castToTextView    "entryView"
+        feedbackView   <- fromXml castToTextView    "feedbackView"
+        readyButton    <- fromXml castToButton      "readyButton"
+        hintButton     <- fromXml castToButton      "hintButton"
+        stepButton     <- fromXml castToButton      "stepButton"
+        undoButton     <- fromXml castToButton      "undoButton"
+        submitButton   <- fromXml castToButton      "submitButton"
+        newButton      <- fromXml castToButton      "newButton"
+        domainBox      <- fromXml castToComboBox    "domainBox"
+        progressBar    <- fromXml castToProgressBar "progressBar"
+        progressLabel  <- fromXml castToLabel       "progressLabel"
+
+        mapM_ (\(Pack a) -> comboBoxAppendText domainBox (shortTitle a)) domains
+        comboBoxSetActive  domainBox 0
 
         -- get buffers from views
         assignmentBuffer <- textViewGetBuffer assignmentView 
@@ -49,85 +59,59 @@ runAssignment assignment =
         feedbackBuffer   <- textViewGetBuffer feedbackView 
 
         -- initialize assignment
-        session <- newSession assignment
-        initialAssignment <- currentTerm session
-        textBufferSetText assignmentBuffer (prettyPrinter assignment $ initialAssignment)
-        textBufferSetText entryBuffer (prettyPrinter assignment $ initialAssignment)
-        textBufferSetText feedbackBuffer (show (stepsRemaining assignment initialAssignment) ++ " steps remaining")
+        session <- makeSession (head domains)
         
-        updateDerivation derivationBuffer session
+        let updateAll = do
+               txt <- currentText session
+               textBufferSetText assignmentBuffer txt
+               textBufferSetText entryBuffer txt
+               der <- derivationText session
+               textBufferSetText derivationBuffer der
+               (x, y) <- progressPair session
+               labelSetText progressLabel (show x ++ "/" ++ show y)
+               progressBarSetFraction progressBar (if y==0 then 1 else fromIntegral x / fromIntegral y)
+                
+        textBufferSetText feedbackBuffer "Welcome to the Exercise Assistant!" 
+        updateAll
 
         -- bind events
-        onDelete window deleteEvent
-        onDestroy window destroyEvent
+        onDelete  window $ \_ -> return False
+        onDestroy window mainQuit
 
-        onClicked readyButton $ 
-            do  textBufferSetText feedbackBuffer "ready"
+        onChanged domainBox $ do
+           index <- comboBoxGetActive domainBox
+           newAssignment (domains !! fromMaybe 0 index) session
+           updateAll
 
-        onClicked hintButton $
-            do
-                result     <- giveHintSession session
-                case result of
-                    (doc, rule) -> textBufferSetText feedbackBuffer (show rule ++ ";" ++ showDoc assignment doc)
+        onClicked newButton $ do
+           newTerm session
+           updateAll
 
-        onClicked stepButton $
-            do 
-                result     <- giveStepSession session
-                case result  of
-                    (doc, subterm, newterm) -> 
-                       textBufferSetText feedbackBuffer $ 
-                       "Use " ++ showDoc assignment doc ++ "\nto rewrite subterm\n" ++ 
-                       prettyPrinter assignment subterm ++ "\nresulting in\n" ++
-                       prettyPrinter assignment newterm
-
-        onClicked undoButton $
-            do  txt1 <- get entryBuffer textBufferText
-                txt2 <- get assignmentBuffer textBufferText
-                if txt1 == txt2
-                 then do
-                   derivationUndo session
-                   updateDerivation derivationBuffer session
-                   textBufferSetText feedbackBuffer "undo"
-                   term <- currentTerm session
-                   textBufferSetText assignmentBuffer (prettyPrinter assignment term)
-                   textBufferSetText entryBuffer (prettyPrinter assignment term)
-                 else do
-                   textBufferSetText entryBuffer txt2
-
-        onClicked submitButton $
-            do 
-                txt        <- get entryBuffer textBufferText
-                result     <- feedbackSession session txt
-                case result of
-                   SyntaxError doc msug -> 
-                      textBufferSetText feedbackBuffer $ 
-                         showDoc assignment doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter assignment a) msug
-                   Incorrect doc msug ->
-                      textBufferSetText feedbackBuffer $ 
-                         showDoc assignment doc ++ maybe "" (\a -> "\nDid you mean " ++ prettyPrinter assignment a) msug
-                   Correct doc singleRule -> do
-                      let new = either undefined id $ parser assignment txt -- REWRITE !
-                      textBufferSetText feedbackBuffer $
-                         showDoc assignment doc ++ "\n" ++ 
-                            if isJust singleRule 
-                            then show (stepsRemaining assignment new) ++ " steps remaining"
-                            else "unknown rule"
-                      when (isJust singleRule) $ do
-                        textBufferSetText assignmentBuffer txt
-                        derivationStep session (fromJust singleRule) new
-                        updateDerivation derivationBuffer session
+        onClicked readyButton $ do
+           txt <- readyText session
+           textBufferSetText feedbackBuffer txt
+           
+        onClicked hintButton $ do
+           txt <- hintText session
+           textBufferSetText feedbackBuffer txt
+           
+        onClicked stepButton $ do
+           txt <- stepText session
+           textBufferSetText feedbackBuffer txt
+        
+        onClicked undoButton $ do
+           txt1 <- get entryBuffer textBufferText
+           txt2 <- get assignmentBuffer textBufferText
+           if txt1 == txt2 
+              then undo session >> updateAll
+              else textBufferSetText entryBuffer txt2
+           
+        onClicked submitButton $ do
+           cur       <- get entryBuffer textBufferText
+           (txt, ok) <- submitText cur session
+           textBufferSetText feedbackBuffer txt
+           when ok updateAll
         
         -- show widgets and run GUI
         widgetShowAll window
         mainGUI
-
-deleteEvent :: Event -> IO Bool
-deleteEvent = const (return False)
-
-destroyEvent :: IO ()
-destroyEvent = do mainQuit
-
-updateDerivation :: TextBufferClass w => w -> Session a -> IO ()
-updateDerivation buffer session = do
-   txt <- getDerivationText session
-   textBufferSetText buffer txt

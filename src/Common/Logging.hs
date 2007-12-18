@@ -33,7 +33,7 @@ logMessageWith config msg =
    try n time 
       | n==0      = putStrLn $ "Log failed at " ++ show time
       | otherwise = do 
-              appendFile (logFile config) text
+              appendFile (logFile config) (text ++ "\n")
               when (logTracing config) $ 
                  putStrLn $ "Log succeeded at " ++ show time
            `catch` \_ -> do

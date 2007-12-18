@@ -16,7 +16,6 @@ import Common.Transformation
 import Common.Utils
 import Data.List
 import Common.Assignment
-import Debug.Trace
 
 -----------------------------------------------------------
 --- QuickCheck properties
@@ -78,14 +77,6 @@ arbSolution m = do
 -----------------------
 -- Assignments: temporarily
 
-filterGen :: (a -> Bool) -> Gen a -> Gen a
-filterGen p gen = do
-   a <- gen
-   if p a then return a else filterGen p gen
-
-q = quickCheck $ forAll (generator reduceMatrixAssignment) $ \m -> trace (show m) True
--- checkAssignment reduceMatrixAssignment
-
 reduceMatrixAssignment :: Assignment (MatrixInContext Rational)
 reduceMatrixAssignment = makeAssignment
    { shortTitle    = "Reduce to Echelon form"
@@ -94,11 +85,7 @@ reduceMatrixAssignment = makeAssignment
    , equivalence   = \x y -> applyD toReducedEchelon (inContext $ matrix x) == applyD toReducedEchelon (inContext $ matrix y)
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm . matrix
-   , generator     = let rec _ = do m <- liftM (inContext . fmap fromInteger) $ sized $ \_ -> arbSizedMatrix (4, 3)
-                                    if finalProperty reduceMatrixAssignment m then 
-                                          trace ("REC" ++ show m) $ rec () else return m
-                     in liftM (inContext . fmap fromInteger) $
-                        {- filterGen (not . inRowReducedEchelonForm)-} (arbSizedMatrix (4, 3))
+   , generator     = liftM (inContext . fmap fromInteger) (arbSizedMatrix (4, 3))
    , strategy      = toReducedEchelon
    }
 

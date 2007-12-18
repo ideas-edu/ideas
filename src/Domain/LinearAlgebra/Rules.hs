@@ -29,11 +29,11 @@ matrixRules =
         ruleRowScale (curRow c) (value c)
    , makeSimpleRule "RowAdd" $ selectArgs $ \c -> 
         ruleRowAdd (curRow c) (rowR c) (value c)
-   , makeSimpleRule "CoverTop" $ \c ->
+   , minorRule $ makeSimpleRule "CoverTop" $ \c ->
         return c {covered = covered c + 1}
-   , makeSimpleRule "SetColumnJ" $ \c ->
+   , minorRule $ makeSimpleRule "SetColumnJ" $ \c ->
         return c {columnJ = curColumn c}
-   , makeSimpleRule "SetRowR" $ \c ->
+   , minorRule $ makeSimpleRule "SetRowR" $ \c ->
         return c {rowR = curRow c}
    ]
  where
@@ -90,10 +90,20 @@ ruleMakeZero = minorRule $ makeSimpleRule "_MakeZero" $ \c -> do
    return c {curRow = i + covered c + 1, rowR = covered c, value = v}
    
 ruleRowExchange :: Int -> Int -> Rule (Matrix a)
-ruleRowExchange i j = makeSimpleRule "RowExchange" (return . switchRows i j)
+ruleRowExchange i j = makeSimpleRule "RowExchange" $ \m -> do
+   guard (i /= j)
+   return (switchRows i j m)
                                                                             
 ruleRowScale :: Num a => Int -> a -> Rule (Matrix a)
-ruleRowScale i k = makeSimpleRule "RowScale" (return . scaleRow i k)
+ruleRowScale i k = makeSimpleRule "RowScale" $ \m -> do
+   guard (k /= 0 && validRow i m)
+   return (scaleRow i k m)
 
 ruleRowAdd :: Num a => Int -> Int -> a -> Rule (Matrix a)
-ruleRowAdd i j k = makeSimpleRule "RowAdd" (return . addRow i j k)
+ruleRowAdd i j k = makeSimpleRule "RowAdd" $ \m -> do
+   guard (k /= 0 && i /= j && validRow i m && validRow j m)
+   return (addRow i j k m)
+
+-- local helper function
+validRow :: Int -> Matrix a -> Bool
+validRow i m = i >= 0 && i < fst (dimensions m)

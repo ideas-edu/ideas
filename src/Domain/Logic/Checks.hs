@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
@@ -9,11 +10,13 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Checks (checks) where
 
+import Common.Assignment
 import Common.Strategy
 import Common.Transformation
 import Common.Utils
 import Common.Move
 import Domain.Logic
+import Common.Unification
 import Test.QuickCheck
 import Control.Monad
 import Data.Char
@@ -27,14 +30,18 @@ checks :: IO ()
 checks = do
    mapM_ (checkRule eqLogic) logicRules
    quickCheck propRuleNames
-   thoroughCheck $ checkParserPretty parseLogic ppLogic
-   thoroughCheck $ checkParserPretty parseLogicPars ppLogicPars
-   thoroughCheck $ checkParserPretty parseLogic ppLogicPars
+   thoroughCheck $ checkParserPretty (==) (f parseLogic) ppLogic
+   thoroughCheck $ checkParserPretty eqAssociative (f parseLogicPars) ppLogicPars
+   thoroughCheck $ checkParserPretty eqAssociative (f parseLogic) ppLogicPars
    quickCheck propPretty
    thoroughCheck propCtxPP
    thoroughCheck propContext
    quickCheck propStratDNF
-   
+ where
+   f p x | null errs = Right y
+         | otherwise = Left (errs, Just y)
+    where (y, errs) = p x 
+    
 -- all rule names are distinct
 propRuleNames :: Bool
 propRuleNames = length xs == length (nub xs)
@@ -46,17 +53,10 @@ propContext dir loc =
    let newloc = move dir loc 
    in isJust newloc ==> noContext loc == noContext (fromJust newloc)
          
--- check combination of parser and pretty-printer
-checkParserPretty :: Eq a => (String -> (a, [b])) -> (a -> String) -> a -> Bool
-checkParserPretty parser pretty p = null msgs && p == q
- where (q, msgs) = parser (pretty p)
-
 propPretty :: Logic -> Bool
-propPretty p = x1 == x2 && length y1  <= length y2
- where 
-   f pp     = partition (`notElem` "()") (pp p)
-   (x1, y1) = f ppLogic
-   (x2, y2) = f ppLogicPars
+propPretty p = 
+   let f pp = filter (`notElem` "()") (pp p)
+   in f ppLogic == f ppLogicPars
  
 -- pretty-printer zipper
 propCtxPP :: LogicInContext -> Bool
@@ -72,12 +72,10 @@ propStratDNF logic =
       case apply toDNF (inContext logic) of
          Just this -> isDNF (noContext this)
          _ -> False
- 
-qqq = Not (Var "r" :<->: Var "p")
                 
 -----------------------------------------------------------
 --- QuickCheck generator
-   
+
 instance Arbitrary Cxt where
    arbitrary = sized arbCtx
    coarbitrary ctx =

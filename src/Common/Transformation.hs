@@ -11,7 +11,7 @@ module Common.Transformation
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation
    , LiftPair(..), liftRule, idRule, emptyRule
-   , smartGen, checkRule, propRule
+   , smartGen, checkRule, checkRuleSmart, propRule
    ) where
 
 import qualified Data.Set as S
@@ -149,14 +149,19 @@ liftRule lp r = r {transformations = [Function f]}
 -----------------------------------------------------------
 --- QuickCheck generator
 
-checkRule :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
+checkRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
 checkRule eq rule = do
    putStr $ "[" ++ name rule ++ "] "
-   quickCheck (propRule eq rule)
+   quickCheck (propRule arbitrary eq rule)
+
+checkRuleSmart :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
+checkRuleSmart eq rule = do
+   putStr $ "[" ++ name rule ++ "] "
+   quickCheck (propRule (smartGen rule) eq rule)
    
-propRule :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> Property
-propRule eq rule = 
-   forAll (smartGen rule) $ \a ->
+propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> Property
+propRule gen eq rule = 
+   forAll gen $ \a ->
       applicable rule a ==> (a `eq` applyD rule a)
 
 smartGen :: (Arbitrary a, Substitutable a) => Rule a -> Gen a

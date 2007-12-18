@@ -1,5 +1,5 @@
 module Common.Unification 
-   ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@), lookupVar, dom, noVars
+   ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@), lookupVar, dom, domList, noVars
    , HasVars(..), MakeVar(..), Substitutable(..), Unifiable(..)
    , match, unifyList, substitutePair
    , ForAll, generalize, generalizeAll, instantiate, instantiateWith, unsafeInstantiate, unsafeInstantiateWith
@@ -36,6 +36,9 @@ lookupVar s = M.lookup s . unS
 
 dom :: Substitution a -> S.Set String
 dom = M.keysSet . unS
+
+domList :: Substitution a -> [String]
+domList = M.keys . unS
 
 removeDom :: S.Set String -> Substitution a -> Substitution a
 removeDom s (S a) = S (M.filterWithKey (\k _ -> S.member k s) a)

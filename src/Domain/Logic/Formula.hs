@@ -31,7 +31,7 @@ data Logic = Var String
            | T                            -- true
            | F                            -- false
  deriving (Show, Eq, Ord)
- 
+
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.
 type LogicAlg a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a, a, a)
@@ -143,6 +143,38 @@ countDoubleNegations = fst . foldLogic (const zero, bin, bin, bin, bin, notf, ze
 varsLogic :: Logic -> [String]
 varsLogic = foldLogic (return, union, union, union, union, id, [], [])      
 
+test = associativityAnd $ (Var "a" :||: Var "b") :||: (Var "c" :||: Var "d" :||: Var "e")
+
+associativityAnd, associativityOr :: Logic -> [Logic]
+associativityAnd = associativity conjunctions (:&&:) [T]
+associativityOr  = associativity disjunctions (:||:) [F]
+
+-- Helper function (polymorphic, domain independent)
+associativity :: (a -> [a]) -> (a -> a -> a) -> [a] -> a -> [a]
+associativity f op nil = rec . f
+ where
+   rec ps
+      | n == 0    = nil
+      | n == 1    = ps
+      | otherwise = concatMap f [1 .. n-1]
+    where
+      n = length ps
+      f i = let (xs, ys) = splitAt i ps
+            in [ x `op` y | x <- rec xs, y <- rec ys ]
+
+eqAssociative :: Logic -> Logic -> Bool
+eqAssociative p q =
+   case (p, q) of
+      (Var x, Var y)             -> x==y
+      (p1 :->: p2,  q1 :->:  q2) -> eqAssociative p1 q1 && eqAssociative p2 q2
+      (p1 :<->: p2, q1 :<->: q2) -> eqAssociative p1 q1 && eqAssociative p2 q2
+      (_ :&&: _,  _ :&&:  _) -> and $ zipWith eqAssociative (conjunctions p) (conjunctions q)
+      (_ :||: _,  _ :||:  _) -> and $ zipWith eqAssociative (disjunctions p) (disjunctions q)
+      (Not p1,      Not q1     ) -> eqAssociative p1 q1
+      (T,           T          ) -> True
+      (F,           F          ) -> True
+      _ -> False
+         
 instance HasVars Logic where
    getVars = S.fromList . varsLogic
 

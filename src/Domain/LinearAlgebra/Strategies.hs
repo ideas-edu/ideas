@@ -20,7 +20,7 @@ toEchelon :: Fractional a => Strategy (MatrixInContext a)
 toEchelon = repeatS (setVariableJ <*> swapNonZero <*> zerosInJ <*> coverup)
  where
    setVariableJ = ruleMoveToColJ <*> getRule "SetColumnJ"
-   swapNonZero  = ruleNonZeroR   <*> getRule "RowExchange"
+   swapNonZero  = ruleNonZeroR   <*> try (getRule "RowExchange")
    zerosInJ     = repeatS (ruleMakeZero <*> getRule "RowAdd")
    coverup      = getRule "CoverTop"
    

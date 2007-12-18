@@ -1,5 +1,5 @@
 module Domain.Logic.Generator 
-   ( generateLogic, generateLogicWith, suitableLogic, suitableLogicWith, makeSuitable
+   ( generateLogic, generateLogicWith
    , LogicGenConfig(..), defaultConfig
    ) where
 
@@ -8,19 +8,6 @@ import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
 import System.Random
-
-suitableLogic :: (Logic -> Bool) -> Gen Logic
-suitableLogic p = makeSuitable p generateLogic
-            
-suitableLogicWith :: (Logic -> Bool) ->  LogicGenConfig -> Gen Logic
-suitableLogicWith p config = makeSuitable p (generateLogicWith config)
-
-makeSuitable :: (Logic -> Bool) -> Gen Logic -> Gen Logic
-makeSuitable p gen = do
-   formula <- gen
-   if p formula
-      then return formula 
-      else makeSuitable p gen
 
 generateLogic :: Gen Logic
 generateLogic = generateLogicWith defaultConfig

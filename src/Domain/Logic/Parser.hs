@@ -122,7 +122,7 @@ ppLogicPars = ppLogicParsCode 0
 ppLogicParsCode :: Int -> Logic -> String
 ppLogicParsCode n p = foldLogic (var, binop 3 "->", binop 3 "<->", binop 1 "/\\", binop 2 "||", nott, var "T", var "F") p n ""
  where
-   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p 3 . ((" "++op++" ")++) . q prio)
+   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    nott  p n = ("~"++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f

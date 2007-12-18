@@ -8,7 +8,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Matrix 
-   ( Matrix, Row, Column, makeMatrix
+   ( Matrix, Row, Column, isRectangular, makeMatrix, mapWithPos
    , rows, row, columns, column, dimensions, entry
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
@@ -29,15 +29,19 @@ type Column a = [a]
 instance Functor Matrix where 
    fmap f (M rows) = M (map (map f) rows)
 
+-- Check whether the table is rectangular
+isRectangular :: [[a]] -> Bool
+isRectangular xss =
+   case map length xss of
+      []   -> True
+      n:ns -> all (==n) ns
+
 -- Constructor function that checks whether the table is rectangular
 makeMatrix :: [Row a] -> Matrix a
 makeMatrix rows
    | null (concat rows) = M []
-   | otherwise = 
-        case map length rows of
-           []                  -> M rows
-           n:ns | all (==n) ns -> M rows 
-                | otherwise    -> error "makeMatrix: not rectangular"
+   | isRectangular rows = M rows
+   | otherwise          = error "makeMatrix: not rectangular"
 
 rows :: Matrix a -> [Row a]
 rows (M rows) = rows

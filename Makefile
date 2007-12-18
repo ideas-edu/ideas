@@ -85,7 +85,7 @@ cgi:	$(BINDIR) $(OUTDIR)
 	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/laservice.cgi src/OpenMath/Main.hs
 
 cgi-install: cgi
-	sudo cp $(BINDIR)/laservice.cgi $(CGIDIR)
+	cp $(BINDIR)/laservice.cgi $(CGIDIR)
 
 clean:
 	rm -rf bin

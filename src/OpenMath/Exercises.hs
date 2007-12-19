@@ -380,6 +380,10 @@ nf x = let (x1, x2) = numFraction x in
 data MyNum = Con Rational | Var String | MyNum :+ MyNum | MyNum :* MyNum | MyNum :/ MyNum | Neg MyNum
  deriving (Show, Eq, Ord)
 
+infixr 2 :*
+infixr 3 :/
+infixr 4 :+
+
 infix 1 ~=
 x ~= y = let (a, b) = numFraction x
              (c, d) = numFraction y 

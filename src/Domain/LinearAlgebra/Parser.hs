@@ -7,19 +7,42 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Parser (parseMatrix, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix) where
+module Domain.LinearAlgebra.Parser 
+   ( parseMatrix, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix
+   , parseSystem
+   ) where
 
 import UU.Parsing
 import UU.Scanner (Pos)
 import UU.Parsing.CharParser
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Context
+import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.LinearExpr
+import Domain.LinearAlgebra.Equation
 import Common.Utils
 import Common.Assignment
 import Data.List
 import Data.Char
 import GHC.Real
 
+parseSystem :: String -> Either (Doc a, Maybe (LinearSystem Rational)) (LinearSystem Rational)
+parseSystem input = 
+ case runParser (pSystem pRational) input of
+    (sys, [])   -> Right sys
+    (sys, errs) -> Left (text (show errs), Just sys) 
+ 
+pSystem :: Num a => CharParser a -> CharParser (LinearSystem a)
+pSystem p = pListSep (pSym '\n') pEquation
+ where
+   pEquation = (:==:) <$> pTerm <* pToks "==" <*> pTerm
+   pTerm  = pChainr ((+) <$ pSym '+') pAtomS
+   pAtomS = pSpace *> pAtom <* pSpace
+   pAtom  = flip ($) <$> pCon <* pSpace <*> opt ((*) <$ pSym '*' <* pSpace <*> pVar) id <|> pVar
+   pVar   = (\x xs -> var (x:xs)) <$> 'a' <..> 'z' <*> pList ('a' <..> 'z' <|> '0' <..> '9')
+   pCon   = toLinearExpr <$> p
+   pSpace = pList (pAnySym " \t")
+ 
 -----------------------------------------------------------
 --- Parser
 

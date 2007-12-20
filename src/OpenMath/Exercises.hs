@@ -1,15 +1,19 @@
+{-# OPTIONS -XGeneralizedNewtypeDeriving #-}
 module OpenMath.Exercises where
+
+import Common.Transformation
 
 import Common.Transformation
 import Domain.LinearAlgebra (Matrix, makeMatrix, rows, columns)
 import Common.Strategy
 import Common.Utils
 import Common.Unification
+import Common.Assignment
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Checks ()
-import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext)
+import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext, parseSystem)
 import qualified Domain.LinearAlgebra.Context as Matrix
 
 import qualified Data.Set as S
@@ -18,8 +22,7 @@ import Data.Char
 import Data.Maybe
 import Control.Monad
 import Test.QuickCheck
-   
-import Debug.Trace
+-- import Debug.Trace
 import GHC.Real
    
 main = do
@@ -27,6 +30,34 @@ main = do
    quickCheck propSound
    quickCheck propConv1
    quickCheck propConv2
+
+equationsAssignment :: Assignment (EqsInContext Rational)
+equationsAssignment = makeAssignment
+   { shortTitle    = "Solve linear equations"
+   , parser        = either (\(x,y) -> Left (x, fmap inContext y)) (Right . inContext) . parseSystem
+   , prettyPrinter = showLinSystem . equations
+   , equivalence   = \x y -> let f = getSolution . equations . applyD toGeneralSolution 
+                             in f x == f y
+   , finalProperty = inSolvedForm . equations
+   , strategy      = toGeneralSolution
+   }
+  
+q = checkAssignment equationsAssignment 
+   
+showLinSystem :: LinearSystem Rational -> String
+showLinSystem = unlines . map (show . fmap (fmap MyRational))
+
+newtype MyRational = MyRational Rational
+  deriving (Eq, Num)
+   
+instance Show MyRational where
+   show (MyRational (x :% y))
+      | y==1      = show x
+      | otherwise = show x ++ "/" ++ show y
+   
+instance (Arbitrary a, Num a) => Arbitrary (EqsInContext a) where
+   arbitrary   = liftM inContext arbitrary
+   coarbitrary = coarbitrary . equations
 
 (===) :: Fractional a => LinearSystem a -> LinearSystem a -> Bool
 x === y = f x == f y
@@ -59,7 +90,7 @@ propSound sys =
    sub2   = zip (S.toList vars) values
    values = map (evalLinearExpr (fun sub1) . getRHS) solved
    fun s  = fromJust . (`lookup` s)
-
+    
 -- elementary equations operations
 ruleExchange :: Int -> Int -> Rule [a]
 ruleExchange i j = makeSimpleRule "Exchange" (f i j)
@@ -219,8 +250,6 @@ translation s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
 
 equationsToMatrix :: Fractional a => Strategy (Either (LinearSystem a)(MatrixInContext a))
 equationsToMatrix = translation "SystemToMatrix" (Just . Matrix.inContext . systemToMatrix) <*> liftRight toReducedEchelon
-
-mytest = applyD equationsToMatrix (Left ex1a)
 
 -----------------------------------------------------
 -- 9.1 Oplossen van lineaire vergelijkingen

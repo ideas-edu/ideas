@@ -23,7 +23,7 @@ BINDIR = bin
 OUTDIR = out
 DOCDIR = doc
 HPCDIR = hpc
-CGIDIR = /var/www/cgi-bin/
+CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 
 default: solver
 
@@ -81,11 +81,13 @@ hpc/doc/hpc_index.html: hpc/bin/solver.tix
 	mkdir -p $(HPCDIR)/doc
 	hpc markup --hpcdir=hpc/out --destdir=hpc/doc hpc/bin/solver$(EXE)
 
-cgi:	$(BINDIR) $(OUTDIR) 
+cgi:	$(BINDIR)/laservice.cgi
+
+$(BINDIR)/laservice.cgi: $(BINDIR) $(OUTDIR) 
 	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/laservice.cgi src/OpenMath/Main.hs
 
-cgi-install: cgi
-	cp $(BINDIR)/laservice.cgi $(CGIDIR)
+cgi-install: $(BINDIR)/laservice.cgi
+	scp $(BINDIR)/laservice.cgi $(CGIDIR)
 
 clean:
 	rm -rf bin

@@ -13,6 +13,7 @@ module Common.Strategy
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
    , intermediates, intermediatesList, check, traceStrategy, runStrategyRules, mapStrategy
+   , StrategyLocation, strategyName, subStrategies, subStrategy, subStrategyOrRule, nextLocation
    ) where
 
 import Common.Transformation
@@ -37,7 +38,7 @@ newtype Strategy a = S { unS :: RE.RegExp (Rule a) }
 -- | An AnonymousStrategy is a strategy with sub-strategies, but without 
 -- | a top-level name. Use "label" to turn an AnonymousStrategy into a
 -- | NamedStrategy.
-newtype AnonymousStrategy a = AS (RE.RegExp (NamedStrategy a))
+newtype AnonymousStrategy a = AS { unAS :: RE.RegExp (NamedStrategy a) }
  deriving Show
 
 -- | A NamedStrategy is a strategy with sub-strategies and a top-level name.
@@ -226,3 +227,57 @@ nonSucceed = S . RE.nonSucceed . unS
 
 mapStrategy :: (Rule a -> Rule b) -> Strategy a -> Strategy b
 mapStrategy f (S regexp) = S (fmap f regexp)
+
+-----------------------------------------------------------
+--- Substrategies
+
+type StrategyLocation = [Int]
+
+strategyName :: NamedStrategy a -> String
+strategyName (NS (name, _)) = name
+
+subStrategies :: NamedStrategy a -> [(StrategyLocation, NamedStrategy a)]
+subStrategies = rec [] 
+ where
+   rec loc ns@(NS (_, s)) = (loc, ns) : 
+      case s of
+         Left (AS re) -> concat $ RE.collectSymbols $ combine rec loc re
+         Right _      -> []
+
+subStrategy :: StrategyLocation -> NamedStrategy a -> Maybe (NamedStrategy a)
+subStrategy loc = maybe Nothing (either Just (const Nothing)) . subStrategyOrRule loc
+
+subStrategyOrRule :: StrategyLocation -> NamedStrategy a -> Maybe (Either (NamedStrategy a) (Rule a))
+subStrategyOrRule [] ns = Just (Left ns)
+subStrategyOrRule (i:is) (NS (_, s)) = 
+   case s of
+      Left (AS re) -> 
+         case drop i (RE.collectSymbols re) of
+            hd:_ -> subStrategyOrRule is hd
+            _    -> Nothing
+      Right (S re) -> 
+         case drop i (RE.collectSymbols re) of 
+            hd:_ | null is -> Just (Right hd)
+            _    -> Nothing
+
+withIndices :: NamedStrategy a -> RE.RegExp ([Int], Rule a)
+withIndices = rec [] 
+ where
+   rec is (NS (_, s)) = 
+      case s of
+         Left (AS re) -> RE.join (combine rec is re)
+         Right (S re) -> combine (,) is re
+            
+firstLocation :: a -> NamedStrategy a -> Maybe StrategyLocation
+firstLocation a ns = safeHead
+   [ is | ((is, r), _) <- RE.firsts (withIndices ns), applicable r a ]
+
+nextLocation :: a -> NamedStrategy a -> StrategyLocation -> Maybe StrategyLocation
+nextLocation a ns old = 
+   let f new = take (g new + 1) new
+       g = length . takeWhile id . zipWith (==) old
+   in fmap f (firstLocation a ns)
+   
+-- local helper-function
+combine :: ([Int] -> a -> b) -> [Int] -> RE.RegExp a -> RE.RegExp b
+combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex

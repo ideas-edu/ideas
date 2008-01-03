@@ -1,7 +1,7 @@
 module Common.RegExp 
    ( RegExp, IsRegExp(..), symbol
-   , collectSteps, join, isSucceed, isEmptySet, firsts, nonSucceed
-   , language, member, checks
+   , collectSymbols, join, isSucceed, isEmptySet, firsts, nonSucceed
+   , language, member, checks, withIndex
    ) where
 
 import Common.Utils
@@ -76,12 +76,12 @@ instance IsRegExp RegExp where
 symbol :: a -> RegExp a
 symbol = Symbol
      
-collectSteps :: RegExp a -> [a]
-collectSteps regexp = 
+collectSymbols :: RegExp a -> [a]
+collectSymbols regexp = 
    case regexp of
-      p :*: q  -> collectSteps p ++ collectSteps q
-      p :|: q  -> collectSteps p ++ collectSteps q
-      Star p   -> collectSteps p
+      p :*: q  -> collectSymbols p ++ collectSymbols q
+      p :|: q  -> collectSymbols p ++ collectSymbols q
+      Star p   -> collectSymbols p
       Symbol a -> [a]
       _        -> []
                  
@@ -119,7 +119,24 @@ firsts regexp =
       p :*: q  -> map (second (<*> q)) (firsts p) ++ if isSucceed p then firsts q else []
       Star p   -> map (second (<*> regexp)) (firsts p)
       _        -> []
-              
+
+withIndex :: RegExp a -> RegExp (Int, a)
+withIndex = snd . rec 0
+ where
+   rec n regexp =
+      case regexp of  
+         p :*: q  -> let (n1, a) = rec n  p
+                         (n2, b) = rec n1 q
+                     in (n2, a :*: b)
+         p :|: q  -> let (n1, a) = rec n  p
+                         (n2, b) = rec n1 q
+                     in (n2, a :|: b)
+         Star p   -> let (n1, a) = rec n p
+                     in (n1, Star a)
+         Symbol a -> (n+1, Symbol (n, a))
+         Succeed  -> (n, Succeed)
+         EmptySet -> (n, EmptySet)
+                          
 language :: RegExp a -> [[a]]
 language regexp = 
    case regexp of
@@ -153,7 +170,7 @@ join regexp =
       Symbol a -> a
       Succeed  -> succeed
       EmptySet -> emptyset
-            
+          
 --------------------------------------------------------
 -- QuickCheck generator
 

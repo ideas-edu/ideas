@@ -11,7 +11,7 @@
 module Common.Transformation 
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation, makeTrans
-   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, appM, appM2, appM3
+   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3
    , smartGen, checkRule, checkRuleSmart, propRule
    ) where
 
@@ -120,22 +120,14 @@ combineRules rs = Rule
 minorRule :: Rule a -> Rule a 
 minorRule r = r {isMinorRule = True}
 
-app  :: (a -> x) ->                         (x ->           Transformation a) -> Transformation a
-app2 :: (a -> x) -> (a -> y) ->             (x -> y ->      Transformation a) -> Transformation a
-app3 :: (a -> x) -> (a -> y) -> (a -> z) -> (x -> y -> z -> Transformation a) -> Transformation a
+app  :: (x ->           Transformation a) -> (a -> Maybe (x))       -> Transformation a
+app2 :: (x -> y ->      Transformation a) -> (a -> Maybe (x, y))    -> Transformation a
+app3 :: (x -> y -> z -> Transformation a) -> (a -> Maybe (x, y, z)) -> Transformation a
 
-app  a1       = appM  (Just . a1)
-app2 a1 a2    = appM2 (Just . a1) (Just . a2)
-app3 a1 a2 a3 = appM3 (Just . a1) (Just . a2) (Just . a3)
- 
-appM  :: (a -> Maybe x) ->                                     (x ->           Transformation a) -> Transformation a
-appM2 :: (a -> Maybe x) -> (a -> Maybe y) ->                   (x -> y ->      Transformation a) -> Transformation a
-appM3 :: (a -> Maybe x) -> (a -> Maybe y) -> (a -> Maybe z) -> (x -> y -> z -> Transformation a) -> Transformation a
+app  f g = App g f
+app2 f g = App g $ uncurry  f
+app3 f g = App g $ uncurry3 f
 
-appM  a1       f = App a1 $ \a -> f a
-appM2 a1 a2    f = App a1 $ \a -> App a2 $ \b -> f a b
-appM3 a1 a2 a3 f = App a1 $ \a -> App a2 $ \b -> App a3 $ \c -> f a b c
-  
 -- | Identity rule 
 idRule :: Rule a
 idRule = minorRule $ makeSimpleRule "Identity" return

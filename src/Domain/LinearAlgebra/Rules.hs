@@ -21,16 +21,15 @@ matrixRules =
    [ruleSwapNonZero, ruleMakeZero, ruleCoverTop, ruleSetColumnJ, ruleNormalize, ruleSweep]
 
 ruleSwapNonZero :: Num a => Rule (MatrixInContext a)
-ruleSwapNonZero = makeRule "SwapNonZero" $ appM2 arg1 arg2 rowExchange
+ruleSwapNonZero = makeRule "SwapNonZero" (app2 rowExchange args)
  where
-   arg1 c = return (covered c)
-   arg2 c = do
+   args c = do
       let col = column (columnJ c) (subMatrix c)
       i <- findIndex (/= 0) col
-      return (i + covered c)
+      return (covered c, i + covered c)
 
 ruleMakeZero :: Fractional a => Rule (MatrixInContext a)
-ruleMakeZero = makeRule "MakeZero" $ appM args (uncurry3 rowAdd)
+ruleMakeZero = makeRule "MakeZero" (app3 rowAdd args)
  where
    args c = do
       let col = drop 1 $ column (columnJ c) (subMatrix c)
@@ -49,7 +48,7 @@ ruleCoverTop = minorRule $ makeSimpleRule "CoverTop" $ \c ->
    return c {covered = covered c + 1}
 
 ruleNormalize :: Fractional a => Rule (MatrixInContext a)
-ruleNormalize = makeRule "Normalize" $ appM args (uncurry rowScale)
+ruleNormalize = makeRule "Normalize" (app2 rowScale args)
  where
    args c = do  
       i  <- findIndex (maybe False (/= 1) . pivot) (rows $ matrix c)
@@ -57,7 +56,7 @@ ruleNormalize = makeRule "Normalize" $ appM args (uncurry rowScale)
       return (i, 1 / pv)
    
 ruleSweep :: Fractional a => Rule (MatrixInContext a)
-ruleSweep = makeRule "Sweep" $ appM args (uncurry3 rowAdd)
+ruleSweep = makeRule "Sweep" (app3 rowAdd args)
  where
    args c = safeHead $ sweeps $ matrix c
 

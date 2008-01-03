@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-} 
 -----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
@@ -9,8 +10,8 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
-   , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation
-   , LiftPair(..), liftRule, idRule, emptyRule
+   , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation, makeTrans
+   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, appM, appM2, appM3
    , smartGen, checkRule, checkRuleSmart, propRule
    ) where
 
@@ -59,10 +60,12 @@ infix  6 |-
 data Transformation a
    = Function (a -> Maybe a)
    | Unifiable a => Pattern (ForAll (a, a))
+   | forall b . App (a -> Maybe b) (b -> Transformation a)
    
 instance Apply Transformation where
    apply (Function f) = f
    apply (Pattern  p) = applyPattern p
+   apply (App f g   ) = \a -> f a >>= \b -> apply (g b) a
 
 -- | Constructs a transformation based on two terms (a left-hand side and a
 -- | right-hand side). The terms must be unifiable. It is checked that no
@@ -79,6 +82,9 @@ applyPattern pair a = do
    (lhs, rhs) <- return $ unsafeInstantiateWith substitutePair pair
    sub <-  match lhs a
    return (sub |-> rhs)
+
+makeTrans :: (a -> Maybe a) -> Transformation a
+makeTrans = Function
 
 -----------------------------------------------------------
 --- Rules
@@ -113,6 +119,22 @@ combineRules rs = Rule
 
 minorRule :: Rule a -> Rule a 
 minorRule r = r {isMinorRule = True}
+
+app  :: (a -> x) ->                         (x ->           Transformation a) -> Transformation a
+app2 :: (a -> x) -> (a -> y) ->             (x -> y ->      Transformation a) -> Transformation a
+app3 :: (a -> x) -> (a -> y) -> (a -> z) -> (x -> y -> z -> Transformation a) -> Transformation a
+
+app  a1       = appM  (Just . a1)
+app2 a1 a2    = appM2 (Just . a1) (Just . a2)
+app3 a1 a2 a3 = appM3 (Just . a1) (Just . a2) (Just . a3)
+ 
+appM  :: (a -> Maybe x) ->                                     (x ->           Transformation a) -> Transformation a
+appM2 :: (a -> Maybe x) -> (a -> Maybe y) ->                   (x -> y ->      Transformation a) -> Transformation a
+appM3 :: (a -> Maybe x) -> (a -> Maybe y) -> (a -> Maybe z) -> (x -> y -> z -> Transformation a) -> Transformation a
+
+appM  a1       f = App a1 $ \a -> f a
+appM2 a1 a2    f = App a1 $ \a -> App a2 $ \b -> f a b
+appM3 a1 a2 a3 f = App a1 $ \a -> App a2 $ \b -> App a3 $ \c -> f a b c
   
 -- | Identity rule 
 idRule :: Rule a
@@ -182,7 +204,8 @@ instance Arbitrary a => Arbitrary (Rule a) where
 instance Arbitrary a => Arbitrary (Transformation a) where
    arbitrary = oneof [liftM Function arbitrary]
    coarbitrary (Function f) = variant 0 . coarbitrary f
-   coarbitrary (Pattern _)  = variant 0
+   coarbitrary (Pattern _)  = variant 1
+   coarbitrary (App _ _)    = variant 2
 
 -- generates sufficiently long names
 arbName :: Gen String

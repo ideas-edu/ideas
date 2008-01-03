@@ -12,6 +12,7 @@ module Domain.LinearAlgebra.Matrix
    , rows, row, columns, column, dimensions, entry
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
+   , nonZeroRow, pivot, isPivotColumn
    ) where
 
 import Data.Maybe

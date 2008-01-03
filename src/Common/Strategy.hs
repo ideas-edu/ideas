@@ -228,6 +228,9 @@ nonSucceed = S . RE.nonSucceed . unS
 mapStrategy :: (Rule a -> Rule b) -> Strategy a -> Strategy b
 mapStrategy f (S regexp) = S (fmap f regexp)
 
+applyS :: (a -> b) -> (b -> Strategy a) -> Strategy a
+applyS f g = undefined
+
 -----------------------------------------------------------
 --- Substrategies
 

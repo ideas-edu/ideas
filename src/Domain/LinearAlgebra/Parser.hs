@@ -92,13 +92,13 @@ ppMatrixInContext m = ppStringMatrix (ppFocus m) ++ "\n" ++ ppEnv m
 ppEnv :: Show a => MatrixInContext a -> String
 ppEnv m = "[" ++ commaList list ++ "]"
  where f s g = s ++ "=" ++ show (g m)
-       list  = [f "covered" covered, f "columnJ" columnJ, f "rowR" rowR, f "value" value]
+       list  = [f "covered" covered, f "columnJ" columnJ]
 
 ppFocus :: Show a => MatrixInContext a -> Matrix String
 ppFocus c = mapWithPos f (matrix c)
- where f (i, j) a
-          | curRow c==i && curColumn c==j = "[" ++ show a ++ "]"
-          | otherwise                     = show a
+ where f p a
+          | focus c==p = "[" ++ show a ++ "]"
+          | otherwise  = show a
      
 ppMatrix :: Show a => Matrix a -> String
 ppMatrix = ppMatrixWith show

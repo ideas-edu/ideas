@@ -15,6 +15,7 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Checks ()
 import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext, parseSystem)
 import qualified Domain.LinearAlgebra.Context as Matrix
+import qualified Common.Strategy as Strategy
 
 import qualified Data.Set as S
 import Data.List
@@ -40,6 +41,7 @@ equationsAssignment = makeAssignment
                              in f x == f y
    , finalProperty = inSolvedForm . equations
    , strategy      = toGeneralSolution
+   , generator     = liftM inContext (vector 3)
    }
   
 q = checkAssignment equationsAssignment 
@@ -92,54 +94,45 @@ propSound sys =
    fun s  = fromJust . (`lookup` s)
     
 -- elementary equations operations
-ruleExchange :: Int -> Int -> Rule [a]
-ruleExchange i j = makeSimpleRule "Exchange" (f i j)
- where
-   f i j xs
-      | i == j    = Just xs
-      | i >  j    = f j i xs
-      | otherwise =
-           let (begin, x:rest) = splitAt i xs
-               (middle, y:end) = splitAt (j-i-1) rest
-           in Just (begin++[y]++middle++[x]++end)
+exchange :: Int -> Int -> Transformation [a]
+exchange i j 
+   | i >  j    = exchange j i
+   | otherwise = makeTrans $ \xs -> do
+        guard (i/=j)
+        let (begin, x:rest) = splitAt i xs
+            (middle, y:end) = splitAt (j-i-1) rest
+        return $ begin++[y]++middle++[x]++end
       
-ruleEqAdd :: Num a => Int -> Int -> a -> Rule (LinearSystem a)
-ruleEqAdd i j a = makeSimpleRule "EqAdd" f
- where
-   f xs =
-      let (begin, this:end) = splitAt i xs
-          exprj = xs!!j
-      in Just (begin++[combineWith (+) this (fmap (toLinearExpr a*) exprj)]++end)
+addEquations :: Num a => Int -> Int -> a -> Transformation (LinearSystem a)
+addEquations i j a = makeTrans $ \xs -> do
+   guard (i/=j)
+   let (begin, this:end) = splitAt i xs
+       exprj = xs!!j
+   return $ begin++[combineWith (+) this (fmap (toLinearExpr a*) exprj)]++end
 
-ruleStandardForm :: Num a => Rule (Equation (LinearExpr a))
-ruleStandardForm = makeSimpleRule "StandardForm" f
- where
-   f eq = do 
-      guard (not (inStandardForm eq))
-      return (toStandardForm eq)
+equationToStandardForm :: Num a => Transformation (Equation (LinearExpr a))
+equationToStandardForm = makeTrans $ \eq -> do
+   guard (not (inStandardForm eq))
+   return (toStandardForm eq)
 
 ruleSubVar :: Fractional a => Rule (LinearSystem a)
 ruleSubVar = makeSimpleRule "SubVar" f 
  where
-   f xs = case [ i | i <- [0 .. length xs-1], applicable (ruleSubVarIndex i) xs ] of
-             hd:_ -> apply (ruleSubVarIndex hd) xs
-             _    -> Nothing
+   f xs = safeHead [ ys | i <- [0 .. length xs-1], ys <- applyAll (ruleSubVarIndex i) xs ]
 
 -- split rule in two?
-ruleSubVarIndex :: Fractional a => Int -> Rule (LinearSystem a)
-ruleSubVarIndex i = makeSimpleRule "ruleSubVarIndex" f
- where
-   f xs = 
-      let (before, (lhs :==: rhs):after) = splitAt i xs
-      in case S.toList (getVars lhs) of
-            [v] | getConstant lhs == 0 && (v `S.member` getVars (before, after) || con/=1) ->
-               Just $ subst before ++ [new] ++ subst after
-             where 
-               con    = coefficientOf v lhs
-               newrhs = toLinearExpr (1/con) * rhs
-               new    = var v :==: newrhs
-               subst  = substEquations (singletonSubst v newrhs)
-            _ -> Nothing
+ruleSubVarIndex :: Fractional a => Int -> Transformation (LinearSystem a)
+ruleSubVarIndex i = makeTrans $ \xs ->
+   let (before, (lhs :==: rhs):after) = splitAt i xs
+   in case S.toList (getVars lhs) of
+         [v] | getConstant lhs == 0 && (v `S.member` getVars (before, after) || con/=1) ->
+            Just $ subst before ++ [new] ++ subst after
+          where 
+            con    = coefficientOf v lhs
+            newrhs = toLinearExpr (1/con) * rhs
+            new    = var v :==: newrhs
+            subst  = substEquations (singletonSubst v newrhs)
+         _ -> Nothing
 
 ruleFreeVarsToRight :: Num a => Rule (LinearSystem a)
 ruleFreeVarsToRight = makeSimpleRule "FreeVarsToRight" f
@@ -151,69 +144,69 @@ ruleFreeVarsToRight = makeSimpleRule "FreeVarsToRight" f
              in e2 :==: getRHS eq - e1
       in Just (map change xs)
 
+------------------------------------------------------------------
 -- toEchelon strategy
+
 toGeneralSolution :: Fractional a => Strategy (EqsInContext a)
-toGeneralSolution = toStandardFormS <*> toEchelon <*> liftSystemRule ruleFreeVarsToRight <*> echelonToSolution
+toGeneralSolution = bringToStandardForm <*> toEchelon <*> determineFreeVars <*> echelonToSolution
+ where
+   bringToStandardForm = repeatS ruleToStandardForm
+   toEchelon           = repeatS (Strategy.check (not . null . remaining) <*> try ruleExchange <*> repeatS ruleEliminateVar <*> ruleCoverTop)
+   determineFreeVars   = liftSystemRule ruleFreeVarsToRight
+   echelonToSolution   = repeatS (liftSystemRule ruleSubVar <*> liftSystemRule ruleFreeVarsToRight)
 
-echelonToSolution :: Fractional a => Strategy (EqsInContext a)
-echelonToSolution = repeatS (liftSystemRule ruleSubVar <*> liftSystemRule ruleFreeVarsToRight)
+ruleToStandardForm :: Num a => Rule (EqsInContext a)
+ruleToStandardForm = liftSystemRule $ liftRuleToList $ makeRule "ToStandardForm" equationToStandardForm 
 
-toEchelon :: Fractional a => Strategy (EqsInContext a)
-toEchelon = repeatS (firstVarNonZero <*> rEqExchange <*> eliminateVarBelow <*> ruleCoverTop)
-
-toStandardFormS :: Fractional a => Strategy (EqsInContext a)
-toStandardFormS = repeatS (liftSystemRule $ liftRuleToList ruleStandardForm)
-
-firstVarNonZero :: Rule (EqsInContext a)
-firstVarNonZero = minorRule $ makeSimpleRule "_FirstVarNonZero" $ \c -> do
-    let remaining_equations  =  drop (covered c) (equations c)
-    let minVar               =  S.findMin (getVars remaining_equations)
-    i                        <- findIndex (S.member minVar . getVars) remaining_equations
-    return c {minvar = minVar, eqnr = covered c + i}
-
-eliminateVarBelow :: Fractional a => Strategy (EqsInContext a)
-eliminateVarBelow  = repeatS (eliminateVar <*> rEqAdd)
-
-eliminateVar :: Fractional a => Rule (EqsInContext a)
-eliminateVar = minorRule $ makeSimpleRule "_EliminateVar" $ \c -> do
-   let coef = coefficientOf (minvar c) (getLHS (equations c !! cureq c))
-   let remaining_equations = drop (covered c + 1) (equations c)
-   let coefsBelow = map (coefficientOf (minvar c) . getLHS) remaining_equations
-   i <- findIndex (/= 0) coefsBelow
-   let v = negate (coefficientOf (minvar c) (getLHS (remaining_equations !! i))) / coef
-   return c {eqnr = i + covered c + 1, value = v}
+ruleEliminateVar :: Fractional a => Rule (EqsInContext a)
+ruleEliminateVar = makeRule "Eliminate Variable" $ app3 (\x y z -> liftSystemTrans $ addEquations x y z) args
+ where
+   args c = do 
+      mv <- minvar c
+      let hd:rest = remaining c
+          getCoef = coefficientOf mv . getLHS
+      (i, coef) <- safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
+      let v = negate coef / getCoef hd
+      return (i + covered c + 1, covered c, v)
 
 ruleCoverTop :: Fractional a => Rule (EqsInContext a)
-ruleCoverTop = makeSimpleRule "CoverTop" f
- where
-   f c = return c {cureq = cureq c + 1,covered = covered c + 1}
+ruleCoverTop = minorRule $ makeSimpleRule "CoverTop" $ \c ->
+   return c {covered = covered c + 1}
 
 -- Context for toEchelon strategy
 
 data EqsInContext a = EIC
    { equations  ::  LinearSystem a
-   , minvar     ::  String
    , covered    ::  Int
-   , cureq      ::  Int
-   , eqnr       ::  Int 
-   , value      ::  a
    }
  deriving Show
 
-inContext :: Num a => LinearSystem a -> EqsInContext a
-inContext e = EIC e "" 0 0 0 0
+-- | The equations that remain to be solved
+remaining :: EqsInContext a -> Equations (LinearExpr a)
+remaining c = drop (covered c) (equations c)
+
+-- | The minimal variable in the remaining equations
+minvar :: EqsInContext a -> Maybe String
+minvar c | S.null set = Nothing
+         | otherwise  = Just (S.findMin set)
+ where
+   set = getVars (remaining c) 
+   
+inContext :: LinearSystem a -> EqsInContext a
+inContext e = EIC e 0
 
 instance Eq a => Eq (EqsInContext a) where
   x==y = equations x == equations y
 
-rEqExchange :: Fractional a => Rule (EqsInContext a)
-rEqExchange = makeSimpleRule "EqExchange" $ selectArgs $ \c -> 
-   ruleExchange (cureq c) (eqnr c)
-
-rEqAdd :: Fractional a => Rule (EqsInContext a)
-rEqAdd = makeSimpleRule "EqAdd" $ selectArgs $ \c -> 
-    ruleEqAdd (eqnr c) (cureq c) (value c)
-
+ruleExchange :: Rule (EqsInContext a)
+ruleExchange = makeRule "Exchange" $ app2 (\x y -> liftSystemTrans $ exchange x y) args
+ where
+   args c = do
+       let eqs = remaining c
+       mv <- minvar c
+       i  <- findIndex (S.member mv . getVars) eqs
+       return (covered c, covered c + i)
+       
 selectArgs :: (EqsInContext a -> Rule (LinearSystem a)) -> EqsInContext a -> Maybe (EqsInContext a)
 selectArgs f c = do
    new <- apply (f c) (equations c)
@@ -231,11 +224,24 @@ ruleOnIndex i = liftRule (LiftPair get set)
    get     = safeHead . drop i 
    set new = zipWith (\j -> if i==j then const new else id) [0..]
 
+transOnIndex :: Int -> Transformation a -> Transformation [a]
+transOnIndex i f = makeTrans $ \as -> 
+   case splitAt i as of
+      (xs, y:ys) -> do 
+         new <- apply f y 
+         return $ xs ++ [new] ++ ys 
+      _          -> Nothing
+   
 liftSystemRule :: Rule (LinearSystem a) -> Rule (EqsInContext a)
 liftSystemRule = liftRule $ LiftPair get set
  where
    get = return . equations
    set new c = c {equations = new}
+
+liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (EqsInContext a)
+liftSystemTrans f = makeTrans $ \c -> do
+   new <- apply f (equations c) 
+   return c {equations = new}
 
 liftLeft :: Strategy a -> Strategy (Either a b)
 liftLeft = mapStrategy $ liftRule $ 

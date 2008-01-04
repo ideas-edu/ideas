@@ -92,7 +92,10 @@ match a b = do
    
 data ForAll a = ForAll (S.Set String) a
    deriving Show
-   
+
+instance Functor ForAll where
+   fmap f (ForAll s a) = ForAll s (f a)
+  
 generalize :: [String] -> a -> ForAll a
 generalize xs a = ForAll (S.fromList xs) a
 

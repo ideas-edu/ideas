@@ -11,7 +11,7 @@
 module Common.Transformation 
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation, makeTrans
-   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3
+   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule
    , smartGen, checkRule, checkRuleSmart, propRule
    ) where
 
@@ -127,6 +127,22 @@ app3 :: (x -> y -> z -> Transformation a) -> (a -> Maybe (x, y, z)) -> Transform
 app  f g = App g f
 app2 f g = App g $ uncurry  f
 app3 f g = App g $ uncurry3 f
+
+-- | Returns the inverse of a rule: only rules that use unifications (i.e., that are constructed
+-- | with (|-)), have a computable inverse.
+inverseRule :: Rule a -> Maybe (Rule a)
+inverseRule r = do
+   ts <- mapM inverseTrans (transformations r)
+   return r
+      { name = name r ++ " [inverse]"
+      , transformations = ts
+      }
+ where
+   inverseTrans :: Transformation a -> Maybe (Transformation a)
+   inverseTrans trans = 
+      case trans of
+         Pattern pair -> return $ Pattern $ fmap (\(lhs, rhs) -> (rhs, lhs)) pair
+         _ -> Nothing
 
 -- | Identity rule 
 idRule :: Rule a

@@ -78,7 +78,7 @@ rowExchange i j = matrixTrans $ \m -> do
    return (switchRows i j m)
                                                                             
 rowScale :: Num a => Int -> a -> Transformation (MatrixInContext a)
-rowScale i k = matrixTrans$ \m -> do
+rowScale i k = matrixTrans $ \m -> do
    guard (k /= 0 && validRow i m)
    return (scaleRow i k m)
 

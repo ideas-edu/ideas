@@ -15,7 +15,7 @@ main = do
       
 cgiMain :: CGI CGIResult
 cgiMain = do 
-   input <- getInput "matrix"            -- read matrix xml string 
+   input <- getInput "input"             -- read matrix xml string 
    setHeader "Content-type" "text/plain" -- return plain text
    case input of
       Nothing  -> output ("Invalid request.")

@@ -32,9 +32,11 @@ test:
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
 
-all: solver solvergui doc markup
+all: solver solvergui doc markup cgi
 
-SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs src/Presentation/Logic/ExerciseAssistant/*.hs
+SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
+	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
+	  src/Presentation/Logic/ExerciseAssistant/*.hs src/OpenMath/*.hs
 
 solver: bin/solver$(EXE)
 
@@ -83,7 +85,7 @@ hpc/doc/hpc_index.html: hpc/bin/solver.tix
 
 cgi:	$(BINDIR)/laservice.cgi
 
-$(BINDIR)/laservice.cgi: $(BINDIR) $(OUTDIR) 
+$(BINDIR)/laservice.cgi: $(BINDIR) $(OUTDIR) $(SOURCES)
 	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/laservice.cgi src/OpenMath/Main.hs
 
 cgi-install: $(BINDIR)/laservice.cgi

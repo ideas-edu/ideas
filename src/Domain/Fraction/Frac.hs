@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.Fraction.Expr where
+module Domain.Fraction.Frac where
 
 import Common.Unification
 import Common.Utils
@@ -19,49 +19,48 @@ import qualified Data.Set as S
 infixl 7 :*:, :/: 
 infixl 6 :+:, :-:
 
--- | The data type Expr is the abstract syntax for the domain
+-- | The data type Frac is the abstract syntax for the domain
 -- | of arithmetic expressions.
-data Expr a =  Var String              -- variable
-            |  Lit a                   -- literal
-            |  Expr a :*: Expr a       -- multiplication
-            |  Expr a :/: Expr a       -- fraction
-            |  Expr a :+: Expr a       -- addition
-            |  Expr a :-: Expr a       -- substraction
+data Frac =  Var String          -- variable
+          |  Lit Rational        -- literal
+          |  Frac :*: Frac       -- multiplication
+          |  Frac :/: Frac       -- fraction
+          |  Frac :+: Frac       -- addition
+          |  Frac :-: Frac       -- substraction
  deriving (Show, Eq, Ord)
 
-type ExprRat = Expr Rational
 
--- | The type ExprAlg is the algebra for the data type Expr
--- | Used in the fold for Expr.
-type ExprAlg a b = (String -> a,
-                    b -> a,
-                    a -> a -> a, 
-                    a -> a -> a, 
-                    a -> a -> a,
-                    a -> a -> a)                  
+-- | The type FracAlg is the algebra for the data type Frac
+-- | Used in the fold for Frac.
+type FracAlg a = (String -> a,
+                  Rational -> a,
+                  a -> a -> a, 
+                  a -> a -> a, 
+                  a -> a -> a,
+                  a -> a -> a)                  
 
--- | foldExpr is the standard folfd for Expr.
-foldExpr :: ExprAlg b a -> Expr a -> b
-foldExpr (var, lit, mul, frac, add, sub) = rec
+-- | foldFrac is the standard folfd for Frac.
+foldFrac :: FracAlg a -> Frac -> a
+foldFrac (var, lit, mul, div, add, sub) = rec
  where
-   rec expr = 
-      case expr of
+   rec frac = 
+      case frac of
          Var x    -> var x
          Lit x    -> lit x
          x :*: y  -> rec x `mul`  rec y
-         x :/: y  -> rec x `frac` rec y
+         x :/: y  -> rec x `div`  rec y
          x :+: y  -> rec x `add`  rec y
          x :-: y  -> rec x `sub`  rec y
               
--- | evalExpr takes a function that gives a expression value to a variable,
--- | and a Expr expression, and evaluates the expression.
-evalExpr :: Fractional a => (String -> a) -> Expr a -> a
-evalExpr env = foldExpr (env, id, (*), (/), (+), (-))
+-- | evalFrac takes a function that gives a expression value to a variable,
+-- | and a Frac expression, and evaluates the expression.
+evalFrac :: (String -> Rational) -> Frac -> Rational
+evalFrac env = foldFrac (env, id, (*), (/), (+), (-))
 
 -- | Function to unify to fraction formulas: a returned substitution maps 
 -- | variables (String) to fraction formulas 
-unifyExpr :: Eq a => Expr a -> Expr a -> Maybe (Substitution (Expr a))
-unifyExpr x y = 
+unifyFrac :: Frac -> Frac -> Maybe (Substitution Frac)
+unifyFrac x y = 
    case (x, y) of
       (Var v, Var w) | v == w -> return emptySubst
       (Var v, _)              -> return (singletonSubst v y)
@@ -74,32 +73,32 @@ unifyExpr x y =
       _ -> Nothing
 
 
--- | eqExpr determines whether or not two Expr expression are arithmetically 
+-- | eqFrac determines whether or not two Frac expression are arithmetically 
 -- | equal, by evaluating the expressions on all valuations.
-eqExpr :: Fractional a => Expr a -> Expr a -> Bool
-eqExpr = (~=)
+eqFrac :: Frac -> Frac -> Bool
+eqFrac = (~=)
 
--- | Function varsExpr returns the variables that appear in a Expr expression.
-varsExpr :: Expr a -> [String]
-varsExpr = foldExpr (return, (\x -> []), union, union, union, union)
+-- | Function varsFrac returns the variables that appear in a Frac expression.
+varsFrac :: Frac -> [String]
+varsFrac = foldFrac (return, (\x -> []), union, union, union, union)
 
-instance HasVars (Expr a) where
-   getVars = S.fromList . varsExpr
+instance HasVars Frac where
+   getVars = S.fromList . varsFrac
 
-instance MakeVar (Expr a) where
+instance MakeVar Frac where
    makeVar = Var
 
-instance Substitutable (Expr a) where 
-   (|->) sub = foldExpr (var, Lit, (:*:), (:/:), (:+:), (:-:))
+instance Substitutable Frac where 
+   (|->) sub = foldFrac (var, Lit, (:*:), (:/:), (:+:), (:-:))
        where var x = fromMaybe (Var x) (lookupVar x sub)
 
-instance Eq a => Unifiable (Expr a) where
-   unify = unifyExpr
+instance Unifiable Frac where
+   unify = unifyFrac
 
 infix 1 ~=
 x ~= y = normalise x == normalise y
 
-normalise :: Fractional a => Expr a -> Expr a
+normalise :: Frac -> Frac
 normalise x = 
    let vs = S.toList $ getVars x
        v  = minimum vs
@@ -111,7 +110,7 @@ normalise x =
          Lit 0 -> var
          _     -> var :+: lit
    
-simplify :: Fractional a => Expr a -> Expr a
+simplify :: Frac -> Frac
 simplify this = 
    case this of
       a :+: b -> case (simplify a, simplify b) of
@@ -140,7 +139,7 @@ simplify this =
                    (c, d) -> c :-: d
       _ -> this
 
-exprSplit :: Fractional a => String -> Expr a -> (Expr a, Expr a)
+exprSplit :: String -> Frac -> (Frac, Frac)
 exprSplit x this =
    case this of
       Var y | x==y -> (Lit 1, Lit 0)
@@ -167,5 +166,14 @@ exprSplit x this =
                  in (p :+: q, r)
       _ -> (Lit 0, this)
 
-e1 = Var "x" :/: Lit 3 :+: Lit 2 :*: Var "x" :+: Lit (9::Rational)
-e2 = Lit 2 :*: Var "x" :+: Var "x" :/: Lit 3 :+: Lit (9::Rational)
+e1 = Var "x" :/: Lit 3 :+: Lit 2 :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
+e2 = Lit (7%3) :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
+
+isSimplified :: Frac -> Bool
+isSimplified e = all (==1) $ countLit e : map (countVar e) (varsFrac e) 
+
+countVar :: Frac -> String -> Int
+countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+), (+)) f
+
+countLit :: Frac -> Int
+countLit = foldFrac (const 0, \x -> 1, (*), (*), (+), (+))

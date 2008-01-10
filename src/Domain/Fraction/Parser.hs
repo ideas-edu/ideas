@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Maintainer  :  bastiaan.heeren@ou.nl
+-- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
 -- Portability :  portable (depends on UU parsing library)
 --
@@ -8,114 +8,105 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Fraction.Parser 
-   ( parseExpr, ppExpr, ppExprPrio, ppExprInContext
+   ( parseFrac, ppFrac, ppFracPrio, ppFracInContext, ppFracPars
    ) where
 
 import UU.Parsing
 import UU.Parsing.CharParser
 import UU.Scanner
-import UU.Pretty
-
-import Domain.Fraction.Expr
+import Domain.Fraction.Frac
 import Domain.Fraction.Zipper
 import Data.Char
+import Ratio
 
 -----------------------------------------------------------
 --- Parser
 
-parseExpr  :: String -> (Expr, [Message Char Pos])
-parseExpr input = (result, messages)
+-- | Parser for logic formulas that respects all associativity and priority laws 
+-- | of the constructors
+parseFrac  :: String -> (Frac, [Message Char Pos])
+parseFrac = runParser pFrac
  where
-   steps    = parseString pExpr (filter (not . isSpace) input)
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
+   pFrac   =  pChainl ((:+:) <$ addSym <|> (:-:) <$ subSym) pFrac'
+   pFrac'  =  pChainl ((:*:) <$ mulSym <|> (:/:) <$ divSym) pFrac'' 
+   pFrac'' =  Var <$> pVar <|> Lit <$> pRat <|> pparens pFrac
 
-fstPair             :: Pair a b -> a
+pNat :: CharParser Integer
+pNat = read <$> pList1 ('0' <..> '9')
+
+pRat :: CharParser Rational
+pRat = (\x _ y -> x%y) <$> pNat <*> pSym '%' <*> pNat
+
+mulSym = pSym '*'
+divSym = pSym '/' 
+addSym = pSym '+'
+subSym = pSym '-'
+
+fstPair :: Pair a b -> a
 fstPair (Pair a b)  =  a
 
-pExpr       =  pChainr  ((:<->:) <$  eqvSym)  disjunction 
-disjunction  =  pChainr  ((:||:)  <$  orSym )  conjunction 
-conjunction  =  pChainr  ((:&&:)  <$  andSym)  implication 
-implication  =  pChainr  ((:->:)  <$  impSym)  basic       
-
-basic = Var <$> pvarid
-     <|> pparens pExpr
-     <|> T <$ pSym 'T'
-     <|> F <$ pSym 'F'
-     <|> Not <$ notSym <*> basic 
-
-andSym = pToks "/\\"
-orSym  = pToks "||" 
-impSym = pToks "->"
-eqvSym = pToks "<->"
-notSym = pToks "~"
-
+runParser  :: CharParser a -> String -> (a, [Message Char Pos])
+runParser pFrac input = (result, messages)
+ where
+   steps    = parseString pFrac (filter (not . isSpace) input)
+   result   = fstPair (evalSteps steps)
+   messages = getMsgs steps
+   
 pparens :: CharParser a -> CharParser a
 pparens = pPacked (pSymLow '(') (pSymLow ')')  
 
-pvarid  :: CharParser String
-pvarid = pList1 (pAnySymInf ['a'..'z'])    
+pVar :: CharParser String
+pVar = pList1 (pAnySymInf ['a'..'z'])    
 
 pAnySymInf xs = foldr1 (<|>) (map pSymInf xs)
 
 pSymInf a       =  pCostSym   1000 a a
 pSymLow a       =  pCostSym      1 a a
-
--- hack to reuse the Equations code: formula is inserted in a list to get a list instead of a formula
-
-myShowMessages :: (Eq s, Show s) => [Message s Pos] -> Expr -> String -> String
-myShowMessages  messages formula entered = concatMap (\message -> myShowMessage message formula entered) 
-                                                       (removeDuplicatelines messages)
-  where removeDuplicatelines [] = []
-        removeDuplicatelines (message:messages) = 
-          message:removeDuplicatelines (filter (\m -> getLine m /= getLine message) messages)
-        
-        getLine (Msg _ (Pos line _ _) _) = line
-
-myShowMessage ::  (Eq s, Show s) => Message s Pos -> Expr -> String -> String
-myShowMessage (Msg expecting position action) formula entered =
-  let (Pos line column filename) = position     
-  in disp (    text error_in_lineText >#< pp line >|< text ": 1" 
-          >-<  text did_you_maybe_meanText 
-          >-<  ppExpr formula
-          >#<  text "\n"
-          )
-          40
-          ""
-  where   safeindex :: [a] -> Int -> a
-          safeindex  l  =  \i -> if i > length l 
-                                   then error ("myShowMessage l>i") 
-                                   else l!!(i-1) 
                                    
 -----------------------------------------------------------
 --- Pretty-Printer
 
-ppExpr :: Expr -> String
-ppExpr = ppExprPrio 0
+ppFrac :: Frac -> String
+ppFrac = ppFracPrio 0
         
-ppExprPrio :: Int -> Expr -> String
-ppExprPrio n p = foldExpr (const, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, const "T", const "F") p n
+ppFracPrio :: Int -> Frac -> String
+ppFracPrio n p = foldFrac (var, lit, binop 7 "*", binop 7 "/", binop 6 "+", binop 6 "-") p n ""
  where
-   binop prio op p q n = parIf (n > prio) (unwords [p (prio+1), op, q prio])
-   nott p n = "~" ++ p 4
-   parIf b s = if b then "(" ++ s ++ ")" else s
+   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
+   var       = const . (++)
+   lit       = const . (++) . show
+   nott p n  = ("~"++) . p 4
+   parIf b f = if b then ("("++) . f . (")"++) else f
    
-ppExprInContext :: ExprInContext -> String
-ppExprInContext = ppExprInContextPrio 0
+ppFracInContext :: FracInContext -> String
+ppFracInContext = ppFracInContextPrio 0
 
 -- hack
-ppExprInContextPrio :: Int -> ExprInContext -> String
-ppExprInContextPrio prio (Loc ctx logic) = concatMap f . ppExprPrio prio . noContext $ Loc ctx (Var "*")
+ppFracInContextPrio :: Int -> FracInContext -> String
+ppFracInContextPrio prio (Loc ctx logic) = concatMap f . ppFracPrio prio . noContext $ Loc ctx (Var "*")
  where
-   f '*' = "[ " ++ ppExprPrio (getPrio ctx) logic ++ " ]"
+   f '*' = "[ " ++ ppFracPrio (getPrio ctx) logic ++ " ]"
    f c   = [c]
    getPrio Top          = prio
-   getPrio (NotD     _) = 5
-   getPrio (AndL   _ _) = 3
-   getPrio (AndR   _ _) = 2
-   getPrio (OrL    _ _) = 2
-   getPrio (OrR    _ _) = 1
-   getPrio (EquivL _ _) = 1
-   getPrio (EquivR _ _) = 0
-   getPrio (ImplL  _ _) = 4
-   getPrio (ImplR  _ _) = 3
+   getPrio (AddL _ _) = 6
+   getPrio (AddR _ _) = 6
+   getPrio (SubL _ _) = 6
+   getPrio (SubR _ _) = 6
+   getPrio (DivL _ _) = 7
+   getPrio (DivR _ _) = 7
+   getPrio (MulL _ _) = 7
+   getPrio (MulR _ _) = 7
+
+-- | Pretty printer that produces extra parentheses: also see parseFracPars
+ppFracPars :: Frac -> String
+ppFracPars = ppFracParsCode 0
+        
+-- | Implementation uses the well-known trick for fast string concatenation
+ppFracParsCode :: Int -> Frac -> String
+ppFracParsCode n p = foldFrac (var, lit, binop 7 "*", binop 7 "/", binop 6 "+", binop 6 "-") p n ""
+ where
+   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
+   var       = const . (++)
+   lit       = const . (++) . show
+   nott  p n = ("~"++) . p 3
+   parIf b f = if b then ("("++) . f . (")"++) else f

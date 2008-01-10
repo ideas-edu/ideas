@@ -7,22 +7,23 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Checks (checks) where
+module Domain.Fraction.Checks (checks) where
 
 import Common.Strategy
 import Common.Transformation
 import Common.Utils
 import Common.Move
-import Domain.Logic.Formula
-import Domain.Logic.Zipper
-import Domain.Logic.Strategies
-import Domain.Logic.Parser
-import Domain.Logic.Rules
+import Domain.Fraction.Frac
+import Domain.Fraction.Zipper
+import Domain.Fraction.Strategies
+import Domain.Fraction.Parser
+import Domain.Fraction.Rules
 import Test.QuickCheck
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import Ratio
 
 -----------------------------------------------------------
 --- QuickCheck properties

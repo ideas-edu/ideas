@@ -1,133 +1,79 @@
 {-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
 -- |
--- Maintainer  :  bastiaan.heeren@ou.nl
+-- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Rules where
+module Domain.Fraction.Rules where
 
 import qualified Data.Set as S
-import Domain.Logic.Formula
-import Domain.Logic.Zipper
+import Domain.Fraction.Frac
+import Domain.Fraction.Zipper
 import Common.Transformation
 import Common.Unification
 
-type LogicRule = Rule Logic  
+type FracRule = Rule Frac
 
-logicRules :: [LogicRule]
-logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
-             , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
-             , ruleDefImpl, ruleDefEquiv
-             , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-	     , ruleComplOr, ruleComplAnd
+fracRules :: [FracRule]
+fracRules = [ ruleAddZero, ruleSubZero
              ]
 
--- needs to be changed: fields from the Rule data type are ignored by this definition
-logicRuleInContext :: Rule Logic -> Rule LogicInContext
-logicRuleInContext r = makeSimpleRule (name r) (maybeLoc . fmap (apply r))
-
--- local logic variables
-x, y, z :: Logic
+-- local frac variables
+x, y, z :: Frac
 x:y:z:_ = map makeVarInt [0..]
 
-ruleComplOr :: LogicRule
-ruleComplOr = makeRuleList "ComplOr"
-   [ (x :||: Not x)  |-  T
-   , (Not x :||: x)  |-  T
+ruleAddZero :: FracRule
+ruleAddZero = makeRuleList "AddZero"
+   [ (x :+: Lit 0)  |-  x
+   , (Lit 0 :+: x)  |-  x
    ]
    
-ruleComplAnd :: LogicRule
-ruleComplAnd = makeRuleList "ComplAnd"
-   [ (x :&&: Not x)  |-  F
-   , (Not x :&&: x)  |-  F
+ruleSubZero :: FracRule
+ruleSubZero = makeRuleList "SubZero"
+   [ (x :-: Lit 0)  |-  x
+   , (Lit 0 :+: x)  |-  x
    ]
 
-ruleDefImpl :: LogicRule
-ruleDefImpl = makeRule "DefImpl" $
-   (x :->: y)  |-  (Not x :||: y)
-   
-ruleDefEquiv :: LogicRule
-ruleDefEquiv = makeRule "DefEquiv" $
-   (x :<->: y)  |-  ((x :&&: y) :||: (Not x :&&: Not y))
-   
-ruleFalseInEquiv :: LogicRule
-ruleFalseInEquiv = makeRuleList "FalseInEquiv"
-   [ (F :<->: x)  |-  (Not x)
-   , (x :<->: F)  |-  (Not x)
-   ]
-   
-ruleTrueInEquiv :: LogicRule
-ruleTrueInEquiv = makeRuleList "TrueInEquiv"
-   [ (T :<->: x)  |-  x
-   , (x :<->: T)  |-  x
+ruleMulZero :: FracRule
+ruleMulZero = makeRule "MulZero"
+   [ (x :*: Lit 0)  |-  Lit 0
+   , (Lit 0 :*: x)  |-  Lit 0
    ]
 
-ruleFalseInImpl :: LogicRule
-ruleFalseInImpl = makeRuleList "FalseInImpl"
-   [ (F :->: x)  |-  T
-   , (x :->: F)  |- (Not x)
+ruleMulOne :: FracRule
+ruleMulOne = makeRule "MulOne"
+   [ (x :*: Lit 1)  |-  x
+   , (Lit 1 :*: x)  |-  x
    ]
-   
-ruleTrueInImpl :: LogicRule
-ruleTrueInImpl = makeRuleList "TrueInImpl"
-   [  (T :->: x)  |-  x
-   ,  (x :->: T)  |-  T
+
+ruleDivOne :: FracRule
+ruleDivOne = makeRule "DivOne"
+   [ (x :/: Lit 1)  |-  x
+   , (Lit 1 :/: x)  |-  x
    ]
-        
-ruleFalseZeroOr :: LogicRule
-ruleFalseZeroOr = makeRuleList "FalseZeroOr"
-   [ (F :||: x)  |-  x
-   , (x :||: F)  |-  x
-   ]
+
+ruleDivReciprocal :: FracRule
+ruleDivReciprocal = makeRule "DivReciprocal" $
+   (x :/: (y :/: z)) |- ((x :*: z) :/: y)
+
+ruleAdd :: FracRule
+ruleAdd = makeRule "Add" $
+   (Lit x :+: Lit y)  |-  Lit (x+y)
+ 
+ruleSub :: FracRule
+ruleSub = makeRule "Sub" $
+   (Lit x :-: Lit y)  |-  Lit (x-y)
+
+ruleDiv :: FracRule
+ruleDiv = makeRule "Div" $
+   (Lit x :/: Lit y)  |-  Lit (x/y) --check y non zero
+
+ruleMul :: FracRule
+ruleMul = makeRule "Mul" $
+   (Lit x :*: Lit y)  |-  Lit (x*y)
   
-ruleTrueZeroOr :: LogicRule
-ruleTrueZeroOr = makeRuleList "TrueZeroOr"
-   [ (T :||: x)  |-  T
-   , (x :||: T)  |-  T
-   ]
-
-ruleTrueZeroAnd :: LogicRule
-ruleTrueZeroAnd = makeRuleList "TrueZeroAnd"
-   [ (T :&&: x)  |-  x
-   , (x :&&: T)  |-  x
-   ]
-
-ruleFalseZeroAnd :: LogicRule
-ruleFalseZeroAnd = makeRuleList "FalseZeroAnd"
-   [ (F :&&: x)  |-  F
-   , (x :&&: F)  |-  F
-   ]
-
-ruleDeMorganOr :: LogicRule
-ruleDeMorganOr = makeRule "DeMorganOr" $
-   (Not (x :||: y))  |-  (Not x :&&: Not y)
-
-ruleDeMorganAnd :: LogicRule
-ruleDeMorganAnd = makeRule "DeMorganAnd" $
-   (Not (x :&&: y))  |-  (Not x :||: Not y)
-
-ruleNotBoolConst :: LogicRule
-ruleNotBoolConst = makeRuleList "NotBoolConst"
-   [ (Not T)  |-  F
-   , (Not F)  |-  T
-   ]
-
-ruleNotNot :: LogicRule
-ruleNotNot = makeRule "NotNot" $ 
-   (Not (Not x))  |-  x
-
-ruleAndOverOr :: LogicRule
-ruleAndOverOr = makeRuleList "AndOverOr"
-   [ (x :&&: (y :||: z))  |-  ((x :&&: y) :||: (x :&&: z))
-   , ((x :||: y) :&&: z)  |-  ((x :&&: z) :||: (y :&&: z))
-   ]
-
-ruleOrOverAnd :: LogicRule
-ruleOrOverAnd = makeRuleList "OrOverAnd"
-   [ (x :||: (y :&&: z))  |-  ((x :||: y) :&&: (x :||: z))
-   , ((x :&&: y) :||: z)  |-  ((x :||: z) :&&: (y :||: z))
-   ]
+-- todo:  distribution, negate, 

@@ -2,7 +2,7 @@ module Domain.Fraction.Assignments where
 
 import Domain.Fraction.Zipper
 import Domain.Fraction.Generator
-import Domain.Fraction.Formula
+import Domain.Fraction.Frac
 import Domain.Fraction.Strategies
 import Domain.Fraction.Parser
 import Domain.Fraction.Rules
@@ -19,8 +19,10 @@ import System.Random
 * max. ?? stappen
 -}
 
-dnfAssignment :: Assignment FracInContext
-dnfAssignment = Assignment
+{-
+
+simplAssignment :: Assignment FracInContext
+simplAssignment = Assignment
    { shortTitle    = "Fractions" 
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right (inContext p)
@@ -30,13 +32,13 @@ dnfAssignment = Assignment
    , equality      = \x y -> noContext x == noContext y
    , finalProperty = isSimplified . noContext
    , ruleset       = map liftFracRule fracRules
-   , strategy      = unlabel toNF
+   , strategy      = unlabel toSimple
    , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
                      in liftM inContext generateFrac -- (suitableFrac check)
    , suitableTerm  = \p -> countEquivalences (noContext p) < 2 && countBinaryOperators (noContext p) <= 3
    , configuration = defaultConfiguration
    }
-
+-}
 
 {-
 dnfAssignment :: Assignment FracInContext

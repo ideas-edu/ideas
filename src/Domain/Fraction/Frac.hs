@@ -177,3 +177,26 @@ countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+),
 
 countLit :: Frac -> Int
 countLit = foldFrac (const 0, \x -> 1, (*), (*), (+), (+))
+
+instance Fractional Frac where
+  (/)           = (:/:)
+  fromRational  = Lit
+  recip n       = 1 /n
+
+instance Num Frac where
+  (+)          = (:+:)
+  (-)          = (:-:)
+  (*)          = (:*:)
+  negate x     = (Lit 0 :-: x)
+  fromInteger  = fromRational. fromInteger
+  abs          = error "Not supported: abs"
+  signum       = error "Not supported: signum"
+
+isZero, notZero :: Frac -> Bool
+notZero = not . isZero
+isZero (Lit n)   = n == 0
+isZero (Var _)   = False
+isZero (n :+: m) = n ~= negate m
+isZero (n :*: m) = isZero n || isZero m
+isZero (n :/: m) = isZero n
+isZero (n :-: m) = n ~= m

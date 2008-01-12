@@ -19,42 +19,50 @@ import Common.Unification
 type FracRule = Rule Frac
 
 fracRules :: [FracRule]
-fracRules = [ ruleAddZero, ruleSubZero
-             ]
+fracRules = [ ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
+            , ruleDivOne, ruleDivZero, ruleDivReciprocal
+            , ruleAdd, ruleSub, ruleDiv, ruleMul, ruleAssAdd
+            , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul            
+            ]
 
 -- local frac variables
 x, y, z :: Frac
 x:y:z:_ = map makeVarInt [0..]
 
-ruleAddZero :: FracRule
-ruleAddZero = makeRuleList "AddZero"
+a, b :: Rational
+a = 2
+b = 2
+
+ruleUnitAdd :: FracRule
+ruleUnitAdd = makeRuleList "UnitAdd"
    [ (x :+: Lit 0)  |-  x
    , (Lit 0 :+: x)  |-  x
    ]
    
 ruleSubZero :: FracRule
-ruleSubZero = makeRuleList "SubZero"
-   [ (x :-: Lit 0)  |-  x
-   , (Lit 0 :+: x)  |-  x
-   ]
+ruleSubZero = makeRule "SubZero" $
+   (x :-: Lit 0)  |-  x
 
 ruleMulZero :: FracRule
-ruleMulZero = makeRule "MulZero"
+ruleMulZero = makeRuleList "MulZero"
    [ (x :*: Lit 0)  |-  Lit 0
    , (Lit 0 :*: x)  |-  Lit 0
    ]
 
-ruleMulOne :: FracRule
-ruleMulOne = makeRule "MulOne"
+ruleUnitMul :: FracRule
+ruleUnitMul = makeRuleList "MulOne"
    [ (x :*: Lit 1)  |-  x
    , (Lit 1 :*: x)  |-  x
    ]
 
 ruleDivOne :: FracRule
-ruleDivOne = makeRule "DivOne"
-   [ (x :/: Lit 1)  |-  x
-   , (Lit 1 :/: x)  |-  x
-   ]
+ruleDivOne = makeRule "DivOne" $
+   (x :/: Lit 1)  |-  x
+
+ruleDivZero :: FracRule
+ruleDivZero = makeRule "DivZero" $
+   (Lit 0 :/: x)  |-  Lit 0
+     where 
 
 ruleDivReciprocal :: FracRule
 ruleDivReciprocal = makeRule "DivReciprocal" $
@@ -62,18 +70,42 @@ ruleDivReciprocal = makeRule "DivReciprocal" $
 
 ruleAdd :: FracRule
 ruleAdd = makeRule "Add" $
-   (Lit x :+: Lit y)  |-  Lit (x+y)
+   (Lit a :+: Lit b)  |-  Lit (a+b)
  
 ruleSub :: FracRule
 ruleSub = makeRule "Sub" $
-   (Lit x :-: Lit y)  |-  Lit (x-y)
+   (Lit a :-: Lit b)  |-  Lit (a-b)
 
 ruleDiv :: FracRule
 ruleDiv = makeRule "Div" $
-   (Lit x :/: Lit y)  |-  Lit (x/y) --check y non zero
+   (Lit a :/: Lit b)  |-  Lit (a/b) --check y non zero
 
 ruleMul :: FracRule
 ruleMul = makeRule "Mul" $
-   (Lit x :*: Lit y)  |-  Lit (x*y)
+   (Lit a :*: Lit b)  |-  Lit (a*b)
   
 -- todo:  distribution, negate, 
+
+ruleAssAdd :: FracRule
+ruleAssAdd = makeRule "AssAdd" $
+   (x :+: (y :+: z)) |- ((x :+: y) :+: z)
+
+ruleAssMul :: FracRule
+ruleAssMul = makeRule "AssMul" $
+   x :*: (y :*: z) |- (x :*: y) :*: z
+
+ruleCommAdd :: FracRule
+ruleCommAdd = makeRule "CommAdd" $
+   (x :+: y) |- (y :+: x)
+
+ruleCommMul :: FracRule
+ruleCommMul = makeRule "CommMul" $
+   x :*: y |- y :*: x
+
+ruleDistMul :: FracRule
+ruleDistMul = makeRuleList "DistMul" 
+   [ x :*: (y :+: z) |- (x :*: y :+: x :*: z)
+   , (x :+: y) :*: z |- (x :*: z :+: y :*: z)
+   , x :*: (y :-: z) |- (x :*: y :-: x :*: z)
+   , (x :-: y) :*: z |- (x :*: z :-: y :*: z)
+   ]

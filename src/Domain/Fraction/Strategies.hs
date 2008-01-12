@@ -7,12 +7,13 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Strategies where
+module Domain.Fraction.Strategies where
 
-import Domain.Logic.Zipper
-import Domain.Logic.Rules
+import Domain.Fraction.Zipper
+import Domain.Fraction.Rules
 import Common.Strategy
 
+{-
 eliminateConstants :: Strategy LogicInContext
 eliminateConstants = repeatS $ somewhere $
    altList $ map liftLogicRule rules
@@ -42,3 +43,4 @@ toDNF =  label "Bring to dnf"
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv
      <*> label "Eliminate nots"                      eliminateNots 
      <*> label "Move ors to top"                     orToTop
+-}

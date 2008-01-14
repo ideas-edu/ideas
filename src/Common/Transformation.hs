@@ -12,7 +12,7 @@ module Common.Transformation
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation, makeTrans
    , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule
-   , smartGen, checkRule, checkRuleSmart, propRule
+   , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional
    ) where
 
 import qualified Data.Set as S
@@ -184,15 +184,25 @@ checkRule eq rule = do
    putStr $ "[" ++ name rule ++ "] "
    quickCheck (propRule arbitrary eq rule)
 
+checkRuleConditional :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> (a -> Bool) -> IO ()
+checkRuleConditional eq rule condition = do
+   putStr $ "[" ++ name rule ++ "] "
+   quickCheck (propRuleConditional arbitrary eq rule condition)
+
 checkRuleSmart :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
 checkRuleSmart eq rule = do
    putStr $ "[" ++ name rule ++ "] "
    quickCheck (propRule (smartGen rule) eq rule)
    
-propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> Property
-propRule gen eq rule = 
+propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> (a -> Bool) -> Property
+propRule gen eq rule condition = 
    forAll gen $ \a ->
       applicable rule a ==> (a `eq` applyD rule a)
+
+propRuleConditional :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> (a -> Bool) -> Property
+propRuleConditional gen eq rule condition = 
+   forAll gen $ \a ->
+      condition a ==> applicable rule a ==> (a `eq` applyD rule a)
 
 smartGen :: (Arbitrary a, Substitutable a) => Rule a -> Gen a
 smartGen rule = 

@@ -65,7 +65,7 @@ arbFracNZ config
                                  , liftM2 (:-:) recNZ recNZ
                                  ]
                          where
-                           rec   = arbFrac config {maxSize = (n `div` 2)}
+--                           rec   = arbFrac config {maxSize = (n `div` 2)}
                            recNZ = arbFracNZ config {maxSize = (n `div` 2)}
                            n     = maxSize config
 

@@ -14,6 +14,7 @@ module Domain.Fraction
    , module Domain.Fraction.Strategies
    , module Domain.Fraction.Rules
    , module Domain.Fraction.Assignments
+   , module Domain.Fraction.Generator
    ) where
    
 import Domain.Fraction.Frac
@@ -22,3 +23,4 @@ import Domain.Fraction.Parser
 import Domain.Fraction.Strategies
 import Domain.Fraction.Rules
 import Domain.Fraction.Assignments
+import Domain.Fraction.Generator

@@ -107,3 +107,5 @@ arbCtx n = oneof [ op2l MulL, op2r MulR, op2l DivL, op2r DivR, op2l AddL
 instance Arbitrary a => Arbitrary (Loc a) where
    arbitrary = liftM2 Loc arbitrary arbitrary
    coarbitrary (Loc a b) = coarbitrary a . coarbitrary b
+
+

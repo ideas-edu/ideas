@@ -22,11 +22,11 @@ fracRules :: [FracRule]
 fracRules = fracRulesDivZero ++ fracRulesOther
 
 fracRulesDivZero :: [FracRule]
-fracRulesDivZero = [ ruleDivZero, ruleDivReciprocal, ruleDiv ]
+fracRulesDivZero = [ ruleDivZero, ruleDivReciprocal, ruleDiv, ruleAssAdd ]
 
 fracRulesOther :: [FracRule]
 fracRulesOther = [ ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
-                 , ruleDivOne, ruleAdd, ruleSub, ruleMul, ruleAssAdd
+                 , ruleDivOne, ruleAdd, ruleSub, ruleMul
                  , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul            
                  ]
 

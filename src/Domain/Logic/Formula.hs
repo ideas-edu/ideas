@@ -77,7 +77,6 @@ unifyLogic p q =
 
 -- | eqLogic determines whether or not two Logic expression are logically 
 -- | equal, by evaluating the logic expressions on all valuations.
-eqLogic :: Logic -> Logic -> Bool
 eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs
  where 
    xs = varsLogic p `union` varsLogic q

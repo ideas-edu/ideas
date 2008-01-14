@@ -8,17 +8,17 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Fraction
-   ( module Domain.Fraction.Expr
+   ( module Domain.Fraction.Frac
    , module Domain.Fraction.Zipper
    , module Domain.Fraction.Parser
    , module Domain.Fraction.Strategies
    , module Domain.Fraction.Rules
-   , module Domain.Fraction.Checks
+   , module Domain.Fraction.Assignments
    ) where
    
-import Domain.Fraction.Formula
+import Domain.Fraction.Frac
 import Domain.Fraction.Zipper
 import Domain.Fraction.Parser
 import Domain.Fraction.Strategies
 import Domain.Fraction.Rules
-import Domain.Fraction.Checks
+import Domain.Fraction.Assignments

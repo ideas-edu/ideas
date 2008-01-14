@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Maintainer  :  bastiaan.heeren@ou.nl
+-- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
@@ -28,7 +28,7 @@ import Ratio
 
 checks :: IO ()
 checks = do
-   mapM_ (checkRule eqFrac) fracRules
+   mapM_ (checkRule eqFrac) fracRulesOther
    quickCheck propRuleNames
 {-   thoroughCheck $ checkParserPretty (==) (f parseFrac) ppFrac
    thoroughCheck $ checkParserPretty eqAssociative (f parseFracPars) ppFracPars

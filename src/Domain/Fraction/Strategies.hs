@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Maintainer  :  bastiaan.heeren@ou.nl
+-- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --

@@ -19,11 +19,17 @@ import Common.Unification
 type FracRule = Rule Frac
 
 fracRules :: [FracRule]
-fracRules = [ ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
-            , ruleDivOne, ruleDivZero, ruleDivReciprocal
-            , ruleAdd, ruleSub, ruleDiv, ruleMul, ruleAssAdd
-            , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul            
-            ]
+fracRules = fracRulesDivZero ++ fracRulesOther
+
+fracRulesDivZero :: [FracRule]
+fracRulesDivZero = [ ruleDivZero, ruleDivReciprocal, ruleDiv ]
+
+fracRulesOther :: [FracRule]
+fracRulesOther = [ ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
+                 , ruleDivOne, ruleAdd, ruleSub, ruleMul, ruleAssAdd
+                 , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul            
+                 ]
+
 
 -- local frac variables
 x, y, z :: Frac
@@ -50,7 +56,7 @@ ruleMulZero = makeRuleList "MulZero"
    ]
 
 ruleUnitMul :: FracRule
-ruleUnitMul = makeRuleList "MulOne"
+ruleUnitMul = makeRuleList "UnitMul"
    [ (x :*: Lit 1)  |-  x
    , (Lit 1 :*: x)  |-  x
    ]

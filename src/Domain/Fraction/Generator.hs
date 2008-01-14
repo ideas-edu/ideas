@@ -16,7 +16,7 @@ generateFrac :: Gen Frac
 generateFrac = generateFracWith defaultConfig
    
 generateFracWith :: FracGenConfig -> Gen Frac
-generateFracWith = arbFrac
+generateFracWith = arbFracNZ
    
 data FracGenConfig = FracGenConfig
    { maxSize       :: Int
@@ -46,50 +46,55 @@ freqLeaf :: FracGenConfig -> Int
 freqLeaf config = freqConstant config + freqVariable config
 
 arbFrac :: FracGenConfig -> Gen Frac
-arbFrac config
-   | maxSize config == 0 = arbFracLeaf config
-   | otherwise           = arbFracBin  config
+arbFrac config 
+   | maxSize config == 0 = oneof [liftM fromRational arbitrary, return $ Var "x"]
+   | otherwise           = oneof [ arbFrac config {maxSize = 0}, liftM2 (:+:) rec rec, liftM2 (:*:) rec rec
+                                 , liftM2 (:/:) rec recNZ, liftM2 (:-:) rec rec
+                                 ]
+                         where 
+                           rec   = arbFrac config {maxSize = (n `div` 2)}
+                           recNZ = arbFracNZ config {maxSize = (n `div` 2)}
+                           n     = maxSize config
 
-arbFracLeaf :: FracGenConfig -> Gen Frac
-arbFracLeaf config = frequency
-   [ (freqConstant config, oneof [liftM fromRational arbitrary])
-   , (freqVariable config, oneof [ return (Var x) | x <- take (differentVars config) variableList])
-   ]
+-- non-zero value
+arbFracNZ :: FracGenConfig -> Gen Frac
+arbFracNZ config
+   | maxSize config == 0 = oneof [liftM fromRational arbRatioNZ, return $ Var "x"]
+   | otherwise           = oneof [ arbFracNZ config {maxSize = 0}, liftM2 (:*:) recNZ recNZ
+                                 , liftM2 (:/:) recNZ recNZ, liftM2 (:+:) recNZ recNZ 
+                                 , liftM2 (:-:) recNZ recNZ
+                                 ]
+                         where
+                           rec   = arbFrac config {maxSize = (n `div` 2)}
+                           recNZ = arbFracNZ config {maxSize = (n `div` 2)}
+                           n     = maxSize config
 
-arbFracBin :: FracGenConfig -> Gen Frac
-arbFracBin config = frequency
-   [ (freqLeaf config, arbFracLeaf config)
-   , (freqMul  config, op2 (:*:))
-   , (freqDiv  config, op2 (:/:))
-   , (freqAdd  config, op2 (:+:))
-   , (freqSub  config, op2 (:-:))
-   ]
- where
-   rec   = arbFrac config {maxSize = maxSize config `div` 2}
---   op1 f = liftM  f rec
-   op2 f = liftM2 f rec rec
-
-variableList :: [String]
-variableList = ["x", "y", "z"] ++ [ "x" ++ show n | n <- [0..] ]
+arbRatioNZ :: Gen Rational
+arbRatioNZ = do
+   n' <- arbitrary
+   d' <- arbitrary
+   let d = if d' == 0 then 1 else d'
+   let n = if n' == 0 then 1 else n'
+   return (n % d)
 
 -----------------------------------------------------------
 --- QuickCheck generator
 
 instance Arbitrary Frac where
    arbitrary = sized $ \n -> arbFrac defaultConfig {maxSize = n}
-   coarbitrary frac = 
-      case frac of
-         Var x    -> variant 0 . coarbitrary (map ord x)
-         Lit x    -> variant 1 . coarbitrary x
-         x :*: y  -> variant 1 . coarbitrary x . coarbitrary y
-         x :/: y  -> variant 2 . coarbitrary x . coarbitrary y
-         x :+: y  -> variant 3 . coarbitrary x . coarbitrary y
-         x :-: y  -> variant 4 . coarbitrary x . coarbitrary y
+   coarbitrary (Var x)       = variant 0 . coarbitrary (map ord x)
+   coarbitrary (Lit x)       = variant 1 . coarbitrary x
+   coarbitrary (x :*: y)     = variant 1 . coarbitrary x . coarbitrary y
+   coarbitrary (x :/: y)     = variant 2 . coarbitrary x . coarbitrary y
+   coarbitrary (x :+: y)     = variant 3 . coarbitrary x . coarbitrary y
+   coarbitrary (x :-: y)     = variant 4 . coarbitrary x . coarbitrary y
+
 
 instance Arbitrary Rational where
     arbitrary = do
         n <- arbitrary
         d' <- arbitrary
-        let d =  if d' == 0 then 1 else d'
+        let d = if d' == 0 then 1 else d'
         return (n % d)
     coarbitrary = undefined
+

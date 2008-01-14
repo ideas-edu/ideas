@@ -28,7 +28,7 @@ import Ratio
 
 checks :: IO ()
 checks = do
-   mapM_ (checkRule eqFrac) fracRulesOther
+   mapM_ (checkRule eqFrac) fracRules
    quickCheck propRuleNames
 {-   thoroughCheck $ checkParserPretty (==) (f parseFrac) ppFrac
    thoroughCheck $ checkParserPretty eqAssociative (f parseFracPars) ppFracPars

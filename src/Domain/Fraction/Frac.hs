@@ -98,6 +98,8 @@ instance Unifiable Frac where
 infix 1 ~=
 x ~= y = normalise x == normalise y
 
+
+-- Ugly hack to get to Maybe, needs to be `restyled'
 normalise :: Frac -> Frac
 normalise x = 
    let vs = S.toList $ getVars x
@@ -107,10 +109,33 @@ normalise x =
        var = simplify (Var v :*: normalise (simplify a))
    in if null vs then simplify x else 
       case lit of 
-         Lit 0 -> var
-         _     -> var :+: lit
+        Lit 0 -> var
+        _     -> var :+: lit
+
+normaliseMaybe :: Frac -> Maybe Frac
+normaliseMaybe x = do 
+  let vs = S.toList $ getVars x
+      v  = minimum vs
+      (a, b) = exprSplit v x
+  lit <- getSLits b
+  var <- getSVar a v
+  normz x vs lit var
+
+normz x vs lit var  = if null vs then simplifyMaybe x else 
+                          case lit of 
+                            Lit 0 -> Just var
+                            _     -> Just $ var :+: lit
+
+getSLits :: Frac -> Maybe Frac
+getSLits f = do n <- simplifyMaybe f
+                normaliseMaybe n
+
+getSVar :: Frac -> String -> Maybe Frac
+getSVar f v = do s <- simplifyMaybe f
+                 n <- normaliseMaybe s
+                 simplifyMaybe (Var v :*: n)
    
-simplify :: Frac -> Frac
+simplify :: Frac ->  Frac
 simplify this = 
    case this of
       a :+: b -> case (simplify a, simplify b) of
@@ -128,7 +153,7 @@ simplify this =
                    (c :*: d, e) -> c :*: (d :*: e)
                    (c, d) -> c :*: d
       a :/: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Lit (x/y)
+                   (Lit x, Lit y) -> if y==0 then Lit x else Lit (x/y)
                    (Lit 0, c) -> Lit 0
                    (c, Lit 1) -> c
                    (c, d) -> c :/: d
@@ -138,6 +163,35 @@ simplify this =
                    (c :-: d, e) -> c :-: (d :+: e)
                    (c, d) -> c :-: d
       _ -> this
+
+simplifyMaybe :: Frac -> Maybe Frac
+simplifyMaybe this = 
+   case this of
+      a :+: b -> case (simplify a, simplify b) of
+                   (Lit x, Lit y) -> Just $ Lit (x+y)
+                   (Lit 0, c) -> Just c
+                   (c, Lit 0) -> Just c
+                   (c :+: d, e) -> Just $ c :+: (d :+: e)
+                   (c, d) -> Just $ c :+: d
+      a :*: b -> case (simplify a, simplify b) of
+                   (Lit x, Lit y) -> Just $ Lit (x*y)
+                   (Lit 0, c) -> Just $ Lit 0
+                   (c, Lit 0) -> Just $ Lit 0
+                   (Lit 1, c) -> Just c
+                   (c, Lit 1) -> Just c
+                   (c :*: d, e) -> Just $ c :*: (d :*: e)
+                   (c, d) -> Just $ c :*: d
+      a :/: b -> case (simplify a, simplify b) of
+                   (Lit x, Lit y) -> if y==0 then Nothing else Just $ Lit (x/y)
+                   (Lit 0, c) -> Just $ Lit 0
+                   (c, Lit 1) -> Just c
+                   (c, d) -> Just $ c :/: d
+      a :-: b -> case (simplify a, simplify b) of
+                   (Lit x, Lit y) -> Just $ Lit (x-y)
+                   (c, Lit 0) -> Just c
+                   (c :-: d, e) -> Just $ c :-: (d :+: e)
+                   (c, d) -> Just $ c :-: d
+      _ -> Just this
 
 exprSplit :: String -> Frac -> (Frac, Frac)
 exprSplit x this =
@@ -165,9 +219,6 @@ exprSplit x this =
                               _     -> a2 :/: b2
                  in (p :+: q, r)
       _ -> (Lit 0, this)
-
-e1 = Var "x" :/: Lit 3 :+: Lit 2 :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
-e2 = Lit (7%3) :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
 
 isSimplified :: Frac -> Bool
 isSimplified e = all (==1) $ countLit e : map (countVar e) (varsFrac e) 
@@ -200,3 +251,12 @@ isZero (n :+: m) = n ~= negate m
 isZero (n :*: m) = isZero n || isZero m
 isZero (n :/: m) = isZero n
 isZero (n :-: m) = n ~= m
+
+
+
+e1 = Var "x" :/: Lit 3 :+: Lit 2 :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
+e2 = Lit (7%3) :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
+
+-- quickcheck generated frac which fails ruleDivReciprocal due to the
+-- fact that it becomes a quadratic function, which can't be normalised by normalise
+e = (Var "x" :+: Lit (3%2)) :/: (Var "x" :/: Var "x")

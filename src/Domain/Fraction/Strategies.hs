@@ -13,6 +13,9 @@ import Domain.Fraction.Zipper
 import Domain.Fraction.Rules
 import Common.Strategy
 
+toSimple :: NamedStrategy FracInContext
+toSimple = undefined
+
 {-
 eliminateConstants :: Strategy LogicInContext
 eliminateConstants = repeatS $ somewhere $

@@ -96,44 +96,19 @@ instance Unifiable Frac where
    unify = unifyFrac
 
 infix 1 ~=
-x ~= y = normalise x == normalise y
+x ~= y = normaliseM x == normaliseM y
 
-
--- Ugly hack to get to Maybe, needs to be `restyled'
 normalise :: Frac -> Frac
 normalise x = 
    let vs = S.toList $ getVars x
        v  = minimum vs
-       (a, b) = exprSplit v x
+       (a, b) = fracSplit v x
        lit = normalise (simplify b)
        var = simplify (Var v :*: normalise (simplify a))
    in if null vs then simplify x else 
       case lit of 
         Lit 0 -> var
         _     -> var :+: lit
-
-normaliseMaybe :: Frac -> Maybe Frac
-normaliseMaybe x = do 
-  let vs = S.toList $ getVars x
-      v  = minimum vs
-      (a, b) = exprSplit v x
-  lit <- getSLits b
-  var <- getSVar a v
-  normz x vs lit var
-
-normz x vs lit var  = if null vs then simplifyMaybe x else 
-                          case lit of 
-                            Lit 0 -> Just var
-                            _     -> Just $ var :+: lit
-
-getSLits :: Frac -> Maybe Frac
-getSLits f = do n <- simplifyMaybe f
-                normaliseMaybe n
-
-getSVar :: Frac -> String -> Maybe Frac
-getSVar f v = do s <- simplifyMaybe f
-                 n <- normaliseMaybe s
-                 simplifyMaybe (Var v :*: n)
    
 simplify :: Frac ->  Frac
 simplify this = 
@@ -153,7 +128,7 @@ simplify this =
                    (c :*: d, e) -> c :*: (d :*: e)
                    (c, d) -> c :*: d
       a :/: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> if y==0 then Lit x else Lit (x/y)
+                   (Lit x, Lit y) -> if y==0 then error "Div by zero" else Lit (x/y)
                    (Lit 0, c) -> Lit 0
                    (c, Lit 1) -> c
                    (c, d) -> c :/: d
@@ -164,50 +139,70 @@ simplify this =
                    (c, d) -> c :-: d
       _ -> this
 
-simplifyMaybe :: Frac -> Maybe Frac
-simplifyMaybe this = 
+simplifyM :: Frac -> Maybe Frac
+simplifyM this = do
    case this of
-      a :+: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Just $ Lit (x+y)
-                   (Lit 0, c) -> Just c
-                   (c, Lit 0) -> Just c
-                   (c :+: d, e) -> Just $ c :+: (d :+: e)
-                   (c, d) -> Just $ c :+: d
-      a :*: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Just $ Lit (x*y)
-                   (Lit 0, c) -> Just $ Lit 0
-                   (c, Lit 0) -> Just $ Lit 0
-                   (Lit 1, c) -> Just c
-                   (c, Lit 1) -> Just c
-                   (c :*: d, e) -> Just $ c :*: (d :*: e)
-                   (c, d) -> Just $ c :*: d
-      a :/: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> if y==0 then Nothing else Just $ Lit (x/y)
-                   (Lit 0, c) -> Just $ Lit 0
-                   (c, Lit 1) -> Just c
-                   (c, d) -> Just $ c :/: d
-      a :-: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Just $ Lit (x-y)
-                   (c, Lit 0) -> Just c
-                   (c :-: d, e) -> Just $ c :-: (d :+: e)
-                   (c, d) -> Just $ c :-: d
+      a :+: b -> do a' <- simplifyM a
+                    b' <- simplifyM b
+                    case (a', b') of
+                      (Lit x, Lit y) -> Just $ Lit (x+y)
+                      (Lit 0, c) -> Just c
+                      (c, Lit 0) -> Just c
+                      (c :+: d, e) -> Just $ c :+: (d :+: e)
+                      (c, d) -> Just $ c :+: d
+      a :*: b -> do a' <- simplifyM a
+                    b' <- simplifyM b
+                    case (a', b') of
+                      (Lit x, Lit y) -> Just $ Lit (x*y)
+                      (Lit 0, c) -> Just $ Lit 0
+                      (c, Lit 0) -> Just $ Lit 0
+                      (Lit 1, c) -> Just c
+                      (c, Lit 1) -> Just c
+                      (c :*: d, e) -> Just $ c :*: (d :*: e)
+                      (c, d) -> Just $ c :*: d
+      a :/: b -> do a' <- simplifyM a
+                    b' <- simplifyM b
+                    case (a', b') of
+                      (Lit x, Lit y) -> if y==0 then Nothing else Just $ Lit (x/y)
+                      (Lit 0, c) -> Just $ Lit 0
+                      (c, Lit 1) -> Just c
+                      (c, d) -> Just $ c :/: d
+      a :-: b -> do a' <- simplifyM a
+                    b' <- simplifyM b
+                    case (a', b') of
+                      (Lit x, Lit y) -> Just $ Lit (x-y)
+                      (c, Lit 0) -> Just c
+                      (c :-: d, e) -> Just $ c :-: (d :+: e)
+                      (c, d) -> Just $ c :-: d
       _ -> Just this
 
-exprSplit :: String -> Frac -> (Frac, Frac)
-exprSplit x this =
+
+normaliseM' :: Frac -> [String] -> Maybe Frac
+normaliseM' f []     = simplifyM f  -- no variables left, so only constants
+normaliseM' f (v:vs) = do let (a, b) = fracSplit v f
+                          a' <- simplifyM a
+                          b' <- normaliseM' b vs
+                          return (Var v :*: a' :+: b')
+
+normaliseM :: Frac -> Maybe Frac
+normaliseM f = do fn <- normaliseM' f (S.toList $ getVars f)
+                  simplifyM fn
+
+fracSplit :: String -> Frac -> (Frac, Frac)
+fracSplit x this =
    case this of
       Var y | x==y -> (Lit 1, Lit 0)
-      a :+: b -> let (a1, a2) = exprSplit x a
-                     (b1, b2) = exprSplit x b
+      a :+: b -> let (a1, a2) = fracSplit x a
+                     (b1, b2) = fracSplit x b
                  in (a1 :+: b1, a2 :+: b2)
-      a :*: b -> let (a1, a2) = exprSplit x a
-                     (b1, b2) = exprSplit x b
+      a :*: b -> let (a1, a2) = fracSplit x a
+                     (b1, b2) = fracSplit x b
                  in (a1 :*: b2 :+: a2 :*: b1, a2 :*: b2)
-      a :-: b -> let (a1, a2) = exprSplit x a
-                     (b1, b2) = exprSplit x b
+      a :-: b -> let (a1, a2) = fracSplit x a
+                     (b1, b2) = fracSplit x b
                  in (a1 :-: b1, a2 :-: b2)
-      a :/: b -> let (a1, a2) = exprSplit x a
-                     (b1, b2) = exprSplit x b      
+      a :/: b -> let (a1, a2) = fracSplit x a
+                     (b1, b2) = fracSplit x b      
                      p = case b2 of
                               Lit 0 -> Lit 0
                               _     -> a1 :/: b2

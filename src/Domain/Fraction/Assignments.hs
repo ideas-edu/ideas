@@ -12,15 +12,6 @@ import Common.Strategy
 import Control.Monad
 import System.Random
 
-{- generator
-* max. 1 equivalentie
-* min. 4 stappen
-* geen T/F in formule
-* max. ?? stappen
--}
-
-{-
-
 simplAssignment :: Assignment FracInContext
 simplAssignment = Assignment
    { shortTitle    = "Fractions" 
@@ -33,12 +24,11 @@ simplAssignment = Assignment
    , finalProperty = isSimplified . noContext
    , ruleset       = map liftFracRule fracRules
    , strategy      = unlabel toSimple
-   , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
-                     in liftM inContext generateFrac -- (suitableFrac check)
-   , suitableTerm  = \p -> countEquivalences (noContext p) < 2 && countBinaryOperators (noContext p) <= 3
+   , generator     = liftM inContext generateFrac
+   , suitableTerm  = \f -> (normaliseM $ noContext f) /= Nothing
    , configuration = defaultConfiguration
    }
--}
+
 
 {-
 dnfAssignment :: Assignment FracInContext

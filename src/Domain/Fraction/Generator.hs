@@ -32,9 +32,9 @@ data FracGenConfig = FracGenConfig
 
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
-   { maxSize       = 2
-   , differentVars = 3
-   , freqConstant  = 1
+   { maxSize       = 3
+   , differentVars = 2
+   , freqConstant  = 4
    , freqVariable  = 2
    , freqMul       = 2
    , freqDiv       = 2

@@ -4,7 +4,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (todo)
+-- (todo)e
 --
 -----------------------------------------------------------------------------
 module Domain.Fraction.Strategies where
@@ -14,36 +14,30 @@ import Domain.Fraction.Rules
 import Common.Strategy
 
 toSimple :: NamedStrategy FracInContext
-toSimple = undefined
+toSimple =  label "Simplify expression"
+         $  label "Eliminate zero's" eliminateZeros
+        <*> label "Eliminate divsions and mulitplications" eliminateDivMul
+        <*> label "Find common denominator and do addition/substraction" eliminateAddSub
 
-{-
-eliminateConstants :: Strategy LogicInContext
-eliminateConstants = repeatS $ somewhere $
-   altList $ map liftLogicRule rules
- where 
-   rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
-           , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
-           , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-           ]
+eliminateZeros :: Strategy FracInContext
+eliminateZeros = repeatS $ somewhere $
+                 liftFracRule ruleDivZero
+             <|> liftFracRule ruleMulZero
+             <|> liftFracRule ruleUnitAdd
+             <|> liftFracRule ruleSubZero
 
-eliminateImplEquiv :: Strategy LogicInContext
-eliminateImplEquiv = repeatS $ somewhere $
-          liftLogicRule ruleDefImpl
-      <|> liftLogicRule ruleDefEquiv
-      
-eliminateNots :: Strategy LogicInContext
-eliminateNots = repeatS $ somewhere $ 
-          liftLogicRule ruleDeMorganAnd
-      <|> liftLogicRule ruleDeMorganOr
-      <|> liftLogicRule ruleNotNot
-      
-orToTop :: Strategy LogicInContext
-orToTop = repeatS $ somewhere $ liftLogicRule ruleAndOverOr
 
-toDNF :: NamedStrategy LogicInContext
-toDNF =  label "Bring to dnf"
-      $  label "Eliminate constants"                 eliminateConstants
-     <*> label "Eliminate implications/equivalences" eliminateImplEquiv
-     <*> label "Eliminate nots"                      eliminateNots 
-     <*> label "Move ors to top"                     orToTop
--}
+eliminateDivMul :: Strategy FracInContext
+eliminateDivMul = repeatS $ somewhere $ 
+                  liftFracRule ruleDivZero
+              <|> liftFracRule ruleUnitMul
+              <|> liftFracRule ruleDiv
+              <|> liftFracRule ruleMul
+              <|> liftFracRule ruleDistMul
+              <|> liftFracRule ruleDivReciprocal
+
+eliminateAddSub :: Strategy FracInContext
+eliminateAddSub = repeatS $ somewhere $
+                  liftFracRule ruleAdd
+              <|> liftFracRule ruleSub
+              <|> liftFracRule ruleMulOne -- to get same denominator

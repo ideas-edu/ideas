@@ -21,6 +21,7 @@ infixl 6 :+:, :-:
 
 -- | The data type Frac is the abstract syntax for the domain
 -- | of arithmetic expressions.
+-- Perhaps expand with Neg and Mixed for mixed numbers: Mix Int Rational
 data Frac =  Var String          -- variable
           |  Lit Rational        -- literal
           |  Frac :*: Frac       -- multiplication

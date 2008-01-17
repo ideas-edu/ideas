@@ -19,10 +19,11 @@ import Common.Unification
 type FracRule = Rule Frac
 
 fracRules :: [FracRule]
-fracRules = [ ruleDivZero, ruleDiv, ruleAssAdd, ruleDivReciprocal
+fracRules = [ ruleDivZero, ruleAssAdd, ruleDivReciprocal
             , ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
-            , ruleDivOne, ruleAdd, ruleSub, ruleMul
-            , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul            
+            , ruleDivOne, ruleMulOne
+            , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul
+            , ruleAdd, ruleSub, ruleMul, ruleDiv
             ]
 
 -- local frac variables
@@ -30,8 +31,8 @@ x, y, z :: Frac
 x:y:z:_ = map makeVarInt [0..]
 
 a, b :: Rational
-a = 2
-b = 2
+a = 1
+b = 1
 
 ruleUnitAdd :: FracRule
 ruleUnitAdd = makeRuleList "UnitAdd"
@@ -55,6 +56,12 @@ ruleUnitMul = makeRuleList "UnitMul"
    , (Lit 1 :*: x)  |-  x
    ]
 
+ruleMulOne :: FracRule
+ruleMulOne = makeRuleList "MulOne"
+   [ x |- (x :*: Lit 1)
+   , x |- (Lit 1 :*: x)
+   ]
+
 ruleDivOne :: FracRule
 ruleDivOne = makeRule "DivOne" $
    (x :/: Lit 1)  |-  x
@@ -62,11 +69,11 @@ ruleDivOne = makeRule "DivOne" $
 ruleDivZero :: FracRule
 ruleDivZero = makeRule "DivZero" $
    (Lit 0 :/: x)  |-  Lit 0
-     where 
 
 ruleDivReciprocal :: FracRule
 ruleDivReciprocal = makeRule "DivReciprocal" $
    (x :/: (y :/: z)) |- ((x :*: z) :/: y)
+
 
 ruleAdd :: FracRule
 ruleAdd = makeRule "Add" $
@@ -83,7 +90,8 @@ ruleDiv = makeRule "Div" $
 ruleMul :: FracRule
 ruleMul = makeRule "Mul" $
    (Lit a :*: Lit b)  |-  Lit (a*b)
-  
+
+
 -- todo:  distribution, negate, 
 
 ruleAssAdd :: FracRule

@@ -35,7 +35,7 @@ pNat :: CharParser Integer
 pNat = read <$> pList1 ('0' <..> '9')
 
 pRat :: CharParser Rational
-pRat = (\x _ y -> x%y) <$> pNat <*> pSym '%' <*> pNat
+pRat = (\x _ y -> x%y) <$> pNat <*> pSym '%' <*> pNat <|> (\x -> x%1) <$> pNat
 
 mulSym = pSym '*'
 divSym = pSym '/' 
@@ -89,13 +89,13 @@ ppFracInContextPrio prio (Loc ctx logic) = concatMap f . ppFracPrio prio . noCon
    f c   = [c]
    getPrio Top          = prio
    getPrio (AddL _ _) = 6
-   getPrio (AddR _ _) = 6
-   getPrio (SubL _ _) = 6
+   getPrio (AddR _ _) = 5
+   getPrio (SubL _ _) = 5
    getPrio (SubR _ _) = 6
    getPrio (DivL _ _) = 7
-   getPrio (DivR _ _) = 7
+   getPrio (DivR _ _) = 6
    getPrio (MulL _ _) = 7
-   getPrio (MulR _ _) = 7
+   getPrio (MulR _ _) = 6
 
 -- | Pretty printer that produces extra parentheses: also see parseFracPars
 ppFracPars :: Frac -> String
@@ -103,10 +103,12 @@ ppFracPars = ppFracParsCode 0
         
 -- | Implementation uses the well-known trick for fast string concatenation
 ppFracParsCode :: Int -> Frac -> String
-ppFracParsCode n p = foldFrac (var, lit, binop 7 "*", binop 7 "/", binop 6 "+", binop 6 "-") p n ""
+ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", binop 3 "-") p n ""
  where
-   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
+   binop prio op p q n = parIf True (p prio . ((" "++op++" ")++) . q prio)
+--   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
    nott  p n = ("~"++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f
+

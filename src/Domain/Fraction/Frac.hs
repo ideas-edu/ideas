@@ -247,7 +247,7 @@ fracSplit x this =
       _ -> (Lit 0, this)
 
 isSimplified :: Frac -> Bool
-isSimplified e = all (==1) $ countLit e : map (countVar e) (varsFrac e) 
+isSimplified e = all (<=1) $ countLit e : map (countVar e) (varsFrac e) 
 
 countVar :: Frac -> String -> Int
 countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+), (+)) f

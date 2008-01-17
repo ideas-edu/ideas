@@ -16,7 +16,7 @@ generateFrac :: Gen Frac
 generateFrac = generateFracWith defaultConfig
    
 generateFracWith :: FracGenConfig -> Gen Frac
-generateFracWith = arbFracNZ
+generateFracWith = arbFrac
    
 data FracGenConfig = FracGenConfig
    { maxSize       :: Int
@@ -32,7 +32,7 @@ data FracGenConfig = FracGenConfig
 
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
-   { maxSize       = 1
+   { maxSize       = 3
    , differentVars = 2
    , freqConstant  = 4
    , freqVariable  = 1
@@ -67,6 +67,7 @@ arbFracNZ config
                          where
 --                           rec   = arbFrac config {maxSize = (n `div` 2)}
                            recNZ = arbFracNZ config {maxSize = (n `div` 2)}
+                           recNV = liftM fromRational arbRatioNZ
                            n     = maxSize config
 
 arbRatioNZ :: Gen Rational

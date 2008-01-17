@@ -22,7 +22,7 @@ type FracRule = Rule Frac
 fracRules :: [FracRule]
 fracRules = [ ruleDivZero, ruleAssAdd, ruleDivReciprocal
             , ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
-            , ruleDivOne, ruleCommonDenom
+            , ruleDivOne, ruleCommonDenom, ruleMulVar, ruleSubVar
             , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul
             , ruleAdd, ruleSub, ruleMul, ruleDiv
             ]
@@ -37,9 +37,17 @@ ruleUnitAdd = makeRuleList "UnitAdd"
    , (Lit 0 :+: x)  |-  x
    ]
    
+ruleMulVar :: FracRule
+ruleMulVar = makeRule "MulVar" $
+   (x :+: x) |- x :*: Lit 2
+
 ruleSubZero :: FracRule
 ruleSubZero = makeRule "SubZero" $
    (x :-: Lit 0)  |-  x
+
+ruleSubVar :: FracRule
+ruleSubVar = makeRule "SubVar" $
+   (x :-: x) |- Lit 0
 
 ruleMulZero :: FracRule
 ruleMulZero = makeRuleList "MulZero"
@@ -56,13 +64,19 @@ ruleUnitMul = makeRuleList "UnitMul"
 ruleCommonDenom :: FracRule
 ruleCommonDenom = makeSimpleRule "CommonDenom" f
  where
-   f (Lit a :/: Lit b) = return $ Lit ((na*db)%(da*db)) :/: Lit ((nb*da)%(da*db))
-     where
+  f (Lit a :+: Lit b) = return $ Lit ((na*db)%(da*db)) :+: Lit ((nb*da)%(da*db))
+    where
        na = numerator a 
        nb = numerator b
        da = denominator a
        db = denominator b
-   f _                         = Nothing
+  f (Lit a :-: Lit b) = return $ Lit ((na*db)%(da*db)) :-: Lit ((nb*da)%(da*db)) 
+    where
+       na = numerator a 
+       nb = numerator b
+       da = denominator a
+       db = denominator b
+  f _                 = Nothing
 
 
 ruleDivOne :: FracRule
@@ -77,12 +91,16 @@ ruleDivReciprocal :: FracRule
 ruleDivReciprocal = makeRule "DivReciprocal" $
    (x :/: (y :/: z)) |- ((x :*: z) :/: y)
 
+ruleDivSame :: FracRule
+ruleDivSame = makeRule "DivSame" $
+   (x :/: x) |- Lit 1
+
 ruleAdd :: FracRule
 ruleAdd = makeSimpleRule "Add" f
  where
    f (Lit a :+: Lit b) = return $ Lit (a+b)
    f _                 = Nothing
- 
+
 ruleSub :: FracRule
 ruleSub = makeSimpleRule "Sub" f
  where
@@ -119,8 +137,29 @@ ruleCommMul = makeRule "CommMul" $
 
 ruleDistMul :: FracRule
 ruleDistMul = makeRuleList "DistMul" 
-   [ x :*: (y :+: z) |- (x :*: y :+: x :*: z)
-   , (x :+: y) :*: z |- (x :*: z :+: y :*: z)
-   , x :*: (y :-: z) |- (x :*: y :-: x :*: z)
-   , (x :-: y) :*: z |- (x :*: z :-: y :*: z)
+   [ (x :*: y :+: x :*: z) |- x :*: (y :+: z)
+   , (x :*: y :+: z :*: x) |- x :*: (y :+: z)
+   , (y :*: x :+: x :*: z) |- x :*: (y :+: z)
+   , (y :*: x :+: z :*: x) |- x :*: (y :+: z)
+
+   , (x :/: y :+: x :*: z) |- x :*: (Lit 1 :/: y :+: z)
+   , (x :/: y :+: z :*: x) |- x :*: (Lit 1 :/: y :+: z)
+
+   , (x :*: y :+: x :/: z) |- x :*: (Lit 1 :/: z :+: y)
+   , (x :*: y :+: x :/: z) |- x :*: (Lit 1 :/: z :+: y)
+
+   , (x :/: y :+: x :/: z) |- x :*: (Lit 1 :/: y :+: Lit 1 :/: z)
+--
+   , (x :*: y :-: x :*: z) |- x :*: (y :-: z)
+   , (x :*: y :-: z :*: x) |- x :*: (y :-: z)
+   , (y :*: x :-: x :*: z) |- x :*: (y :-: z)
+   , (y :*: x :-: z :*: x) |- x :*: (y :-: z)
+
+   , (x :/: y :-: x :*: z) |- x :*: (Lit 1 :/: y :-: z)
+   , (x :/: y :-: z :*: x) |- x :*: (Lit 1 :/: y :-: z)
+
+   , (x :*: y :-: x :/: z) |- x :*: (Lit 1 :/: z :-: y)
+   , (x :*: y :-: x :/: z) |- x :*: (Lit 1 :/: z :-: y)
+
+   , (x :/: y :-: x :/: z) |- x :*: (Lit 1 :/: y :-: Lit 1 :/: z)
    ]

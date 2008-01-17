@@ -29,12 +29,15 @@ eliminateZeros = repeatS $ somewhere $
 
 eliminateDivMul :: Strategy FracInContext
 eliminateDivMul = repeatS $ somewhere $ 
-                  liftFracRule ruleDivZero
-              <|> liftFracRule ruleUnitMul
+                  liftFracRule ruleUnitMul
               <|> liftFracRule ruleDiv
               <|> liftFracRule ruleMul
               <|> liftFracRule ruleDistMul
+              <|> liftFracRule ruleDivSame
               <|> liftFracRule ruleDivReciprocal
+              <|> liftFracRule ruleMulVar
+              <|> liftFracRule ruleSubVar
+
 
 eliminateAddSub :: Strategy FracInContext
 eliminateAddSub = repeatS $ somewhere $

@@ -15,13 +15,14 @@ import Domain.Fraction.Frac
 import Domain.Fraction.Zipper
 import Common.Transformation
 import Common.Unification
+import Ratio
 
 type FracRule = Rule Frac
 
 fracRules :: [FracRule]
 fracRules = [ ruleDivZero, ruleAssAdd, ruleDivReciprocal
             , ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
-            , ruleDivOne, ruleMulOne
+            , ruleDivOne, ruleCommonDenom
             , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul
             , ruleAdd, ruleSub, ruleMul, ruleDiv
             ]
@@ -29,10 +30,6 @@ fracRules = [ ruleDivZero, ruleAssAdd, ruleDivReciprocal
 -- local frac variables
 x, y, z :: Frac
 x:y:z:_ = map makeVarInt [0..]
-
-a, b :: Rational
-a = 1
-b = 1
 
 ruleUnitAdd :: FracRule
 ruleUnitAdd = makeRuleList "UnitAdd"
@@ -56,11 +53,17 @@ ruleUnitMul = makeRuleList "UnitMul"
    , (Lit 1 :*: x)  |-  x
    ]
 
-ruleMulOne :: FracRule
-ruleMulOne = makeRuleList "MulOne"
-   [ x |- (x :*: Lit 1)
-   , x |- (Lit 1 :*: x)
-   ]
+ruleCommonDenom :: FracRule
+ruleCommonDenom = makeSimpleRule "CommonDenom" f
+ where
+   f (Lit a :/: Lit b) = return $ Lit ((na*db)%(da*db)) :/: Lit ((nb*da)%(da*db))
+     where
+       na = numerator a 
+       nb = numerator b
+       da = denominator a
+       db = denominator b
+   f _                         = Nothing
+
 
 ruleDivOne :: FracRule
 ruleDivOne = makeRule "DivOne" $
@@ -74,25 +77,29 @@ ruleDivReciprocal :: FracRule
 ruleDivReciprocal = makeRule "DivReciprocal" $
    (x :/: (y :/: z)) |- ((x :*: z) :/: y)
 
-
 ruleAdd :: FracRule
-ruleAdd = makeRule "Add" $
-   (Lit a :+: Lit b)  |-  Lit (a+b)
+ruleAdd = makeSimpleRule "Add" f
+ where
+   f (Lit a :+: Lit b) = return $ Lit (a+b)
+   f _                 = Nothing
  
 ruleSub :: FracRule
-ruleSub = makeRule "Sub" $
-   (Lit a :-: Lit b)  |-  Lit (a-b)
+ruleSub = makeSimpleRule "Sub" f
+ where
+   f (Lit a :-: Lit b) = return $ Lit (a-b)
+   f _                 = Nothing
 
 ruleDiv :: FracRule
-ruleDiv = makeRule "Div" $
-   (Lit a :/: Lit b)  |-  Lit (a/b) --check y non zero
+ruleDiv = makeSimpleRule "Div" f
+ where
+   f (Lit a :/: Lit b) = return $ Lit (a/b)  --check non zero
+   f _                 = Nothing
 
 ruleMul :: FracRule
-ruleMul = makeRule "Mul" $
-   (Lit a :*: Lit b)  |-  Lit (a*b)
-
-
--- todo:  distribution, negate, 
+ruleMul = makeSimpleRule "Mul" f
+ where
+   f (Lit a :*: Lit b) = return $ Lit (a*b)
+   f _                 = Nothing
 
 ruleAssAdd :: FracRule
 ruleAssAdd = makeRule "AssAdd" $

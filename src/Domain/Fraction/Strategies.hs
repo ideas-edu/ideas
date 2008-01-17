@@ -40,4 +40,4 @@ eliminateAddSub :: Strategy FracInContext
 eliminateAddSub = repeatS $ somewhere $
                   liftFracRule ruleAdd
               <|> liftFracRule ruleSub
-              <|> liftFracRule ruleMulOne -- to get same denominator
+              <|> liftFracRule ruleCommonDenom -- to get same denominator

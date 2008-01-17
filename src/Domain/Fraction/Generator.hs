@@ -32,10 +32,10 @@ data FracGenConfig = FracGenConfig
 
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
-   { maxSize       = 3
+   { maxSize       = 1
    , differentVars = 2
    , freqConstant  = 4
-   , freqVariable  = 2
+   , freqVariable  = 1
    , freqMul       = 2
    , freqDiv       = 2
    , freqAdd       = 3
@@ -75,7 +75,7 @@ arbRatioNZ = do
    d' <- arbitrary
    let d = if d' == 0 then 1 else d'
    let n = if n' == 0 then 1 else n'
-   return (n % d)
+   return $ abs (n%d)
 
 -----------------------------------------------------------
 --- QuickCheck generator
@@ -95,6 +95,6 @@ instance Arbitrary Rational where
         n <- arbitrary
         d' <- arbitrary
         let d = if d' == 0 then 1 else d'
-        return (n % d)
+        return $ abs (n % d)
     coarbitrary = undefined
 

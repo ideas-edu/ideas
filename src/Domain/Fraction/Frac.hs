@@ -97,7 +97,9 @@ instance Unifiable Frac where
    unify = unifyFrac
 
 infix 1 ~=
-x ~= y = normaliseM x == normaliseM y
+x ~= y = let (a, b) = numFraction x
+             (c, d) = numFraction y
+         in normaliseM (a * d) == normaliseM (b * c)
 
 normalise :: Frac -> Frac
 normalise x = 
@@ -189,6 +191,34 @@ normaliseM :: Frac -> Maybe Frac
 normaliseM f = do fn <- normaliseM' f (S.toList $ getVars f)
                   simplifyM fn
 
+nf :: Frac -> Maybe Frac
+nf f = do let (n, d) = numFraction f 
+          n' <- normaliseM n
+          d' <- normaliseM d
+          case (n', d') of 
+            (Lit a, Lit b) -> return (Lit (a/b))
+            (Lit 0, _)     -> return (Lit 0)
+            (a, Lit 1)     -> return a
+            (a, b)         -> return (a / b)
+
+numFraction :: Frac -> (Frac, Frac)
+numFraction this =
+   case this of
+      Var _   -> (this, Lit 1)
+      Lit _   -> (this, Lit 1)
+      a :+: b -> let (a1, a2) = numFraction a
+                     (b1, b2) = numFraction b
+                 in ((a1:*:b2) :+: (b1:*:a2), a2 :*: b2)
+      a :*: b -> let (a1, a2) = numFraction a
+                     (b1, b2) = numFraction b
+                 in (a1:*:b1, a2:*:b2)
+      a :-: b -> let (a1, a2) = numFraction a
+                     (b1, b2) = numFraction b
+                 in ((a1:*:b2) :-: (b1:*:a2), a2 :*: b2)
+      a :/: b -> let (a1, a2) = numFraction a
+                     (b1, b2) = numFraction b
+                 in (a1:*:b2, a2:*:b1)
+
 fracSplit :: String -> Frac -> (Frac, Frac)
 fracSplit x this =
    case this of
@@ -256,3 +286,5 @@ e2 = Lit (7%3) :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
 -- quickcheck generated frac which fails ruleDivReciprocal due to the
 -- fact that it becomes a quadratic function, which can't be normalised by normalise
 e = (Var "x" :+: Lit (3%2)) :/: (Var "x" :/: Var "x")
+
+f = (Lit (2%1) :*: Lit (3%1) :+: Var "x" :*: Var "x") :-: Lit (1%1) :/: (Lit (3%2) :-: (Lit (3%1) :-: Var "x"))

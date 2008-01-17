@@ -18,14 +18,15 @@ simplAssignment = Assignment
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs), Just (inContext p))
-   , prettyPrinter = ppFracPars . noContext
+   , prettyPrinter = ppFrac . noContext
    , equivalence   = \x y -> noContext x ~= noContext y
    , equality      = \x y -> noContext x == noContext y
    , finalProperty = isSimplified . noContext
    , ruleset       = map liftFracRule fracRules
    , strategy      = unlabel toSimple
    , generator     = liftM inContext generateFrac
-   , suitableTerm  = \f -> (normaliseM $ noContext f) /= Nothing
+   , suitableTerm  = \f -> (normaliseM $ noContext f) /= Nothing 
+                           && not (isSimplified $ noContext f)
    , configuration = defaultConfiguration
    }
 

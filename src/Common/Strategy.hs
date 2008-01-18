@@ -13,8 +13,8 @@ module Common.Strategy
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
    , intermediates, intermediatesList, check, traceStrategy, runStrategyRules, mapStrategy
-   , StrategyLocation, strategyName, subStrategies, subStrategy, subStrategyOrRule, nextLocation
-   , repeatNS, reportLocations
+   , StrategyLocation, strategyName, subStrategies, subStrategy, subStrategyOrRule
+   , repeatNS, reportLocations, firstLocation
    ) where
 
 import Common.Transformation
@@ -269,7 +269,8 @@ format2 list = unlines $ map format list
    format (x, y) = make wx x ++ "   " ++ y
 
 subStrategy :: StrategyLocation -> NamedStrategy a -> Maybe (NamedStrategy a)
-subStrategy loc = maybe Nothing (either Just (const Nothing)) . subStrategyOrRule loc
+subStrategy loc = fmap (either id f) . subStrategyOrRule loc
+ where f r = label (name r) (toStrategy r)
 
 subStrategyOrRule :: StrategyLocation -> NamedStrategy a -> Maybe (Either (NamedStrategy a) (Rule a))
 subStrategyOrRule [] ns = Just (Left ns)

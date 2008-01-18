@@ -1,124 +1,66 @@
-module OpenMath.LAServer where
+module OpenMath.LAServer (respond) where
 
 import Domain.LinearAlgebra
-import OpenMath.OMToMatrix
+import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
+import OpenMath.StrategyTable
+import OpenMath.Request
+import OpenMath.Reply
 import Common.Transformation
-import Data.Char
-import Data.List
+import Common.Strategy
+import Common.Assignment hiding (Incorrect)
+import Data.Maybe
 
-data Request a = Request (Matrix a) (Matrix a) StrategyID Location
-   deriving Show
+respond :: Maybe String -> String
+respond = xmlReply . maybe requestError (either parseError (laServer . fst) . pRequest)
 
-data Reply a = Ok 
-             | ParseError
-             | Incorrect (Matrix a) MDQuestion StrategyID Location
-   deriving Show
+replyError :: String -> String -> Reply
+replyError kind = Error . ReplyError kind
 
-type StrategyID = String
-type Location   = [Int]
-type MDQuestion = String
+parseError :: String -> Reply
+parseError   = replyError "parse error"
 
-q = do 
-   input <- readFile "request"
-   putStrLn input
-   let Just req = toRequest input
-   putStrLn (show req)
-   let repl = fromReply $ laServer req
-   putStrLn repl
-   writeFile "reply" repl 
-  
-----------------------------
+requestError :: Reply
+requestError = replyError "request error" "no request found in \"input\""
 
-respond :: String -> String
-respond = fromReply . maybe ParseError laServer . toRequest
-
-toRequest :: String -> Maybe (Request Int)
-toRequest = fmap fst . pRequest
- 
-fromReply :: Reply Int -> String
-fromReply reply =
-   case reply of
-      Ok -> "<reply result=\"ok\"/>"
-      ParseError -> "<reply result=\"parse error\"/>"
-      Incorrect m question sid loc -> unlines
-         [ "<reply><term>"
-         , matrix2xml m
-         , "</term><question>"
-         , question
-         , "</question><strategy>"
-         , sid
-         , "</strategy><location>"
-         , show loc
-         , "</location></reply>"
-         ]
+laServer :: Request -> Reply
+laServer req = 
+   case subStrategy (req_Location req) toReducedEchelon of
+      Nothing -> 
+         replyError "location error" "invalid location for strategy"
+      Just subStrategy -> 
+         case applyAll toReducedEchelon (inContext $ req_Term req) of
+            [] -> replyError "strategy error" "not able to compute an expected answer"
+            answers@(expected:_)
+               | fmap inContext (req_Answer req) `elem` (map Just answers) ->
+                    Ok $ ReplyOk
+                       { repOk_Strategy = req_Strategy req
+                       , repOk_Location = nextLocation (fromJust $ req_Answer req) (req_Location req)
+                       , repOk_Steps    = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ req_Answer req)
+                       } 
+               | otherwise ->
+                    Incorrect $ ReplyIncorrect
+                       { repInc_Strategy   = req_Strategy req
+                       , repInc_Location   = req_Location req ++ subTask (req_Term req) subStrategy
+                       , repInc_Expected   = matrix expected
+                       , repInc_Steps      = stepsRemaining reduceMatrixAssignment (inContext $ req_Term req)
+                       , repInc_Equivalent = case req_Answer req of
+                                                Nothing -> False
+                                                Just m  -> equivalence reduceMatrixAssignment expected (inContext m)
+                       }
+                       
+subTask :: Matrix Rational -> NamedStrategy (MatrixInContext Rational) -> Location
+subTask term subStrategy = 
+   case firstLocation (inContext term) subStrategy of
+      Just (i:_) -> [i] -- one-level only
+      _          -> []
       
-----------------------------
--- Top-level XML Parser
-
-type Parser a = String -> Maybe (a, String)
-
-pRequest :: Parser (Request Int)
-pRequest = betweenTags "request" $ \xs -> do
-   (a, xs) <- betweenTags "term" pOmObj xs
-   (b, xs) <- betweenTags "answer" pOmObj xs
-   (c, xs) <- betweenTags "strategy" pStrategy xs
-   (d, xs) <- betweenTags "location" pLocation xs
-   let m = makeMatrix [[0,1],[1,0]]
-   return (Request a b c d, xs)
-
-pOmObj :: Parser (Matrix Int)
-pOmObj xs = do 
-   m <- xml2matrix ys
-   return (m, zs)
- where (ys, zs) = rec xs 
-       rec xs@(hd:tl) 
-          | "</OMOBJ>" `isPrefixOf` xs = splitAt 8 xs 
-          | otherwise                  = let (a, b) = rec tl
-                                         in (hd:a, b)
-
-pStrategy :: Parser StrategyID
-pStrategy xs
-   | null ys   = Nothing
-   | otherwise = Just (ys, zs)
- where (ys, zs) = break (not . isAlphaNum) xs
-
-pLocation :: Parser Location
-pLocation xs =
-   case reads xs of
-      [(loc, rest)] -> return (loc, rest)
-      _             -> Nothing
-
-betweenTags :: String -> Parser a -> Parser a 
-betweenTags tag p xs = do
-   xs <- spaces xs
-   (_, xs) <- openTag tag xs
-   xs <- spaces xs
-   (a, xs) <- p xs
-   xs <- spaces xs
-   (_, xs) <- closeTag tag xs
-   xs <- spaces xs
-   return (a, xs)
- where 
-   spaces = return . dropWhile isSpace
-   
-openTag :: String -> Parser ()
-openTag tag xs
-   | angled tag `isPrefixOf` xs = Just ((), drop (length tag+2) xs)
-   | otherwise                  = Nothing
-
-closeTag :: String -> Parser ()
-closeTag tag xs
-   | angled ("/"++tag) `isPrefixOf` xs = Just ((), drop (length tag+3) xs)
-   | otherwise                         = Nothing
-   
-angled :: String -> String
-angled s = "<" ++ s ++ ">"
-
-----------------------------
-
-laServer :: Request Int -> Reply Int
-laServer (Request term answer strategy location)
-   | fmap toRational answer == correct = Ok
-   | otherwise = Incorrect term "Incorrect: try again." strategy location
+nextLocation :: Matrix Rational -> Location -> Location
+nextLocation term loc = 
+   case firstLocation (inContext term) toReducedEchelon of
+      Just new -> rec loc new
+      Nothing  -> loc
  where
-   correct = matrix $ applyD toReducedEchelon $ inContext $ fmap toRational term
+   rec (i:is) (j:js)
+      | i == j    = j : rec is js 
+      | otherwise = [j]
+   rec _ js       = take 1 js

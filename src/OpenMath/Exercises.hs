@@ -12,7 +12,7 @@ import Common.Assignment
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.Checks ()
+import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext, parseSystem)
 import qualified Domain.LinearAlgebra.Context as Matrix
 import qualified Common.Strategy as Strategy
@@ -32,6 +32,12 @@ main = do
    quickCheck propConv1
    quickCheck propConv2
 
+opgave6b :: Assignment (MatrixInContext Rational)
+opgave6b = reduceMatrixAssignment
+   { shortTitle = "Opgave 9.6 (b)"
+   , generator  = return (Matrix.inContext ex6b)
+   }
+
 equationsAssignment :: Assignment (EqsInContext Rational)
 equationsAssignment = makeAssignment
    { shortTitle    = "Solve linear equations"
@@ -43,8 +49,6 @@ equationsAssignment = makeAssignment
    , strategy      = toGeneralSolution
    , generator     = liftM inContext (vector 3)
    }
-  
-q = checkAssignment equationsAssignment 
    
 showLinSystem :: LinearSystem Rational -> String
 showLinSystem = unlines . map (show . fmap (fmap MyRational))
@@ -78,7 +82,8 @@ propConv2 x =
       ==> systemToMatrix (matrixToSystem x) == x
  
 propSolvedForm :: LinearSystem Int -> Bool
-propSolvedForm = inSolvedForm  . equations . applyD toGeneralSolution . inContext . (map $ fmap $ fmap toRational)
+propSolvedForm = isSolved  . equations . applyD toGeneralSolution . inContext . (map $ fmap $ fmap toRational)
+ where isSolved = inSolvedForm . filter (\(lhs :==: rhs) -> lhs /= rhs)
 
 propSound :: LinearSystem Int -> Property
 propSound sys = 
@@ -254,8 +259,8 @@ liftRight = mapStrategy $ liftRule $
 translation :: String -> (a -> Maybe b) -> Rule (Either a b)
 translation s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
 
-equationsToMatrix :: Fractional a => Strategy (Either (LinearSystem a)(MatrixInContext a))
-equationsToMatrix = translation "SystemToMatrix" (Just . Matrix.inContext . systemToMatrix) <*> liftRight toReducedEchelon
+--equationsToMatrix :: Fractional a => Strategy (Either (LinearSystem a)(MatrixInContext a))
+--equationsToMatrix = translation "SystemToMatrix" (Just . Matrix.inContext . systemToMatrix) <*> liftRight toReducedEchelon
 
 -----------------------------------------------------
 -- 9.1 Oplossen van lineaire vergelijkingen
@@ -353,8 +358,8 @@ ex3c lam =
    ]
 
 ex3c1 = ex3c 1
-ex3c2 = ex3c (e ) -- #^ (2 * pi_ / 3))
-ex3c3 = ex3c (e ) -- #^ (-2 * pi_ / 3))
+ex3c2 = ex3c (e ) --  #^ (2 * pi_ / 3))
+ex3c3 = ex3c (e ) --  #^ (-2 * pi_ / 3))
 
 ex4 lam = 
    [ x1 - 2 * x3 :==: lam + 4
@@ -368,11 +373,14 @@ ex5 lam =
    , -3*x1 - 3*x2 - 3*x3 - 3*x4 :==: 1 + lam
    ] 
 
+ex6a = makeMatrix [[0,1,1,0], [1,2,3,0],[3,1,1,0]]
+ex6b = makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
+
 i, e, pi_ :: LinearExpr SimpleNum
 i = undefined
 e = toLinearExpr $ SN (Var "e")
 pi_ = undefined
-(#^) = undefined
+-- (#^) = undefined
 lamvar = toLinearExpr $ SN (Var "Lambda")
 
 testje  = traceStrategy toGeneralSolution (inContext ex1a') -- '

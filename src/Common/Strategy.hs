@@ -14,6 +14,7 @@ module Common.Strategy
    , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
    , intermediates, intermediatesList, check, traceStrategy, runStrategyRules, mapStrategy
    , StrategyLocation, strategyName, subStrategies, subStrategy, subStrategyOrRule, nextLocation
+   , repeatNS, reportLocations
    ) where
 
 import Common.Transformation
@@ -137,8 +138,12 @@ altList = foldr ((RE.<|>) . liftStrategy) RE.emptyset
 repeatS :: LiftStrategy f Strategy => f a -> Strategy a
 repeatS p = repeatS_ng p <*> notS p
 
-repeatS_ng :: LiftStrategy f Strategy => f a -> Strategy a
-repeatS_ng = S . RE.star . unS . liftStrategy
+-- | Poor man's solution: how to negate a named strategy?
+repeatNS :: AnonymousStrategy a -> AnonymousStrategy a
+repeatNS s = repeatS_ng s <*> label "_repeatNS" (notS s)
+
+repeatS_ng :: LiftStrategy f s => f a -> s a
+repeatS_ng = RE.star . liftStrategy
 
 try :: LiftStrategy f Strategy => f a -> Strategy a
 try p = p |> succeed
@@ -146,7 +151,7 @@ try p = p |> succeed
 check :: (a -> Bool) -> Strategy a
 check p = toStrategy (minorRule $ makeSimpleRule "Check" $ \a -> if p a then Just a else Nothing)
 
-notS :: LiftStrategy f Strategy => f a -> Strategy a
+notS :: Apply f => f a -> Strategy a
 notS s = check (\a -> not $ applicable s a)
 
 exhaustive :: LiftStrategy f Strategy => [f a] -> Strategy a
@@ -239,13 +244,29 @@ type StrategyLocation = [Int]
 strategyName :: NamedStrategy a -> String
 strategyName (NS (name, _)) = name
 
-subStrategies :: NamedStrategy a -> [(StrategyLocation, NamedStrategy a)]
+subStrategies :: NamedStrategy a -> [(StrategyLocation, Either (NamedStrategy a) (Rule a))]
 subStrategies = rec [] 
  where
-   rec loc ns@(NS (_, s)) = (loc, ns) : 
+   rec loc ns@(NS (_, s)) = (loc, Left ns) : 
       case s of
          Left (AS re) -> concat $ RE.collectSymbols $ combine rec loc re
-         Right _      -> []
+         Right (S re) -> zipWith (\i r -> (loc++[i], Right r)) [0..] (filter (not . isMinorRule) $ RE.collectSymbols re)
+
+{- Domain.LinearAlgebra> Common.Strategy.reportLocations Domain.LinearAlgebra.toReducedEchelon -}
+reportLocations :: NamedStrategy a -> IO ()
+reportLocations = putStrLn . format2 . map f . subStrategies
+ where
+   f (loc, Left (NS (s, _))) = (g loc, s)
+   f (loc, Right r)          = (g loc, name r ++ " (rule)")
+   g loc = replicate (2*length loc) ' ' ++ show loc
+
+format2 :: [(String, String)] -> String
+format2 list = unlines $ map format list
+ where
+   wx     = width (map fst list)
+   width  = maximum . map length
+   make i = take i . (++repeat ' ')
+   format (x, y) = make wx x ++ "   " ++ y
 
 subStrategy :: StrategyLocation -> NamedStrategy a -> Maybe (NamedStrategy a)
 subStrategy loc = maybe Nothing (either Just (const Nothing)) . subStrategyOrRule loc

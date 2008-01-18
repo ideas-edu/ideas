@@ -71,6 +71,16 @@ instance Move LogicInContext where
       case it of
          Not a -> Just (Loc (NotD (ctx)) a)
          _     -> Nothing
+
+instance Uniplate Logic where
+   uniplate p =
+      case p of 
+         p :->: q  -> ([p, q], \[a, b] -> a :->:  b)
+         p :<->: q -> ([p, q], \[a, b] -> a :<->: b)
+         p :&&: q  -> ([p, q], \[a, b] -> a :&&:  b)
+         p :||: q  -> ([p, q], \[a, b] -> a :||:  b)
+         Not p     -> ([p], \[a] -> Not a)
+         _         -> ([], \[] -> p)
          
 noContext :: LogicInContext -> Logic
 noContext loc@(Loc ctx it) = 

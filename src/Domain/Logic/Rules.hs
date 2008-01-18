@@ -127,3 +127,9 @@ ruleOrOverAnd = makeRuleList "OrOverAnd"
    [ (x :||: (y :&&: z))  |-  ((x :||: y) :&&: (x :||: z))
    , ((x :&&: y) :||: z)  |-  ((x :||: z) :&&: (y :||: z))
    ]
+   
+buggy :: LogicRule
+buggy = makeSimpleRule "buggy" f
+ where
+   f (p :->: q) | p /= q = Just (q :->: p)
+   f _          = Nothing

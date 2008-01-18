@@ -17,6 +17,7 @@ import Common.Transformation
 import Common.Utils
 import Data.List
 import Common.Assignment
+import Common.Strategy
 
 -----------------------------------------------------------
 --- QuickCheck properties
@@ -29,7 +30,7 @@ checks = do
 
 propEchelon :: Matrix Int -> Bool
 propEchelon =
-   inRowEchelonForm . matrix . applyD toEchelon . inContext . fmap toRational
+   inRowEchelonForm . matrix . applyD forwardPass . inContext . fmap toRational
 
 propReducedEchelon :: Matrix Int -> Bool
 propReducedEchelon = 
@@ -110,7 +111,7 @@ reduceMatrixAssignment = makeAssignment
                         (sol, m2) <- arbSolution m1
                         m3        <- simplifyMatrix sol m2
                         return $ inContext $ fmap fromSmallInt m3
-   , strategy      = toReducedEchelon
+   , strategy      = unlabel toReducedEchelon
    }
 
 instance RealFrac a => Arbitrary (MatrixInContext a) where

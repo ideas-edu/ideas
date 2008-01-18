@@ -14,11 +14,19 @@ import Domain.LinearAlgebra.Rules
 import Common.Strategy
 import Common.Transformation
 
-toReducedEchelon :: Fractional a => Strategy (MatrixInContext a)
-toReducedEchelon = toEchelon <*> reduceMatrix
+toReducedEchelon :: Fractional a => NamedStrategy (MatrixInContext a)
+toReducedEchelon = label "Gaussian elimination" $ 
+   forwardPass <*> backwardPass
 
-toEchelon :: Fractional a => Strategy (MatrixInContext a)
-toEchelon = repeatS (ruleSetColumnJ <*> try ruleSwapNonZero <*> repeatS ruleMakeZero <*> ruleCoverTop)
-   
-reduceMatrix :: Fractional a => Strategy (MatrixInContext a)
-reduceMatrix = repeatS ruleNormalize <*> repeatS ruleSweep
+forwardPass :: Fractional a => NamedStrategy (MatrixInContext a)
+forwardPass = label "Forward pass" $ 
+   repeatNS  $    label "Find j-th column"      ruleFindColumnJ 
+             <*>  label "Exchange rows"         (try ruleExchangeNonZero)
+             <*>  label "Scale row"             (try ruleScaleToOne)
+             <*>  label "Zeros in j-th column"  (repeatS ruleZerosFP)
+             <*>  label "Cover up top row"      ruleCoverRow
+  
+backwardPass :: Fractional a => NamedStrategy (MatrixInContext a)
+backwardPass = label "Backward pass" $ 
+   repeatNS  $    label "Uncover row"  ruleUncoverRow
+             <*>  label "Sweep"        (repeatS ruleZerosBP)

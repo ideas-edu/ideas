@@ -18,56 +18,56 @@ import Data.List
 
 matrixRules :: Fractional a => [Rule (MatrixInContext a)]
 matrixRules = 
-   [ruleSwapNonZero, ruleMakeZero, ruleCoverTop, ruleSetColumnJ, ruleNormalize, ruleSweep]
+   [ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
+   , ruleZerosFP, ruleZerosBP, ruleCoverRow, ruleUncoverRow
+   ]
 
-ruleSwapNonZero :: Num a => Rule (MatrixInContext a)
-ruleSwapNonZero = makeRule "SwapNonZero" (app2 rowExchange args)
+ruleFindColumnJ :: Num a => Rule (MatrixInContext a)
+ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
+   let cols = columns (subMatrix c)
+   i <- findIndex nonZero cols
+   return c {columnJ = i}
+   
+ruleExchangeNonZero :: Num a => Rule (MatrixInContext a)
+ruleExchangeNonZero = makeRule "ExchangeNonZero" (app2 rowExchange args)
  where
    args c = do
       let col = column (columnJ c) (subMatrix c)
       i <- findIndex (/= 0) col
       return (covered c, i + covered c)
 
-ruleMakeZero :: Fractional a => Rule (MatrixInContext a)
-ruleMakeZero = makeRule "MakeZero" (app3 rowAdd args)
+ruleScaleToOne :: Fractional a => Rule (MatrixInContext a)
+ruleScaleToOne = makeRule "ScaleToOne" (app2 rowScale args)
+ where
+   args c = do
+      let pv = entry (0, columnJ c) (subMatrix c)
+      return (covered c, 1 / pv)
+
+ruleZerosFP :: Fractional a => Rule (MatrixInContext a)
+ruleZerosFP = makeRule "Introduce zeros (forward pass)" (app3 rowAdd args)
  where
    args c = do
       let col = drop 1 $ column (columnJ c) (subMatrix c)
       i <- findIndex (/= 0) col
-      let v = negate (col!!i) / entry (0, columnJ c) (subMatrix c)
+      let v = negate (col!!i)
       return (i + covered c + 1, covered c, v)
-
-ruleSetColumnJ :: Num a => Rule (MatrixInContext a)
-ruleSetColumnJ = minorRule $ makeSimpleRule "SetColumnJ" $ \c -> do
-   let cols = columns (subMatrix c)
-   i <- findIndex nonZeroRow cols
-   return c {columnJ = i}
-
-ruleCoverTop :: Rule (MatrixInContext a)
-ruleCoverTop = minorRule $ makeSimpleRule "CoverTop" $ \c ->
-   return c {covered = covered c + 1}
-
-ruleNormalize :: Fractional a => Rule (MatrixInContext a)
-ruleNormalize = makeRule "Normalize" (app2 rowScale args)
- where
-   args c = do  
-      i  <- findIndex (maybe False (/= 1) . pivot) (rows $ matrix c)
-      pv <- pivot (row i $ matrix c)
-      return (i, 1 / pv)
    
-ruleSweep :: Fractional a => Rule (MatrixInContext a)
-ruleSweep = makeRule "Sweep" (app3 rowAdd args)
+ruleZerosBP :: Fractional a => Rule (MatrixInContext a)
+ruleZerosBP = makeRule "Introduce zeros (backward pass)" (app3 rowAdd args)
  where
-   args c = safeHead $ sweeps $ matrix c
+   args c = do
+      let ri = row 0 (subMatrix c)
+          j  = length $ takeWhile (==0) ri
+          col = column j (matrix c)
+      k <- findIndex (/= 0) col
+      let v = negate (col!!k)
+      return (k, covered c, v)
 
--- local helper function
-sweeps :: Fractional a => Matrix a -> [(Int, Int, a)]
-sweeps matrix = 
-   [ (i, j , negate v) | (j, s) <- indexed, isNormalized s, (i, r) <- indexed, i < j
-               , let v = r !! length (takeWhile (==0) s), v /= 0 ]
- where
-   indexed = reverse $ zip [0..] $ rows matrix -- !!! REVERSE IS IMPORANT HERE
-   isNormalized = (== Just 1) . pivot
+ruleCoverRow :: Rule (MatrixInContext a)
+ruleCoverRow = minorRule $ makeRule "CoverRow" $ changeCover (+1)
+
+ruleUncoverRow :: Rule (MatrixInContext a)
+ruleUncoverRow = minorRule $ makeRule "UncoverRow" $ changeCover (\x -> x-1)
 
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
@@ -79,7 +79,7 @@ rowExchange i j = matrixTrans $ \m -> do
                                                                             
 rowScale :: Num a => Int -> a -> Transformation (MatrixInContext a)
 rowScale i k = matrixTrans $ \m -> do
-   guard (k /= 0 && validRow i m)
+   guard (k `notElem` [0, 1] && validRow i m)
    return (scaleRow i k m)
 
 rowAdd :: Num a => Int -> Int -> a -> Transformation (MatrixInContext a)
@@ -87,6 +87,12 @@ rowAdd i j k = matrixTrans $ \m -> do
    guard (k /= 0 && i /= j && validRow i m && validRow j m)
    return (addRow i j k m)
 
+changeCover :: (Int -> Int) -> Transformation (MatrixInContext a)
+changeCover f = makeTrans $ \c -> do
+   let new = f (covered c)
+   guard (new >= 0 && new <= fst (dimensions (matrix c)))
+   return c {covered = new}
+   
 matrixTrans :: (Matrix a -> Maybe (Matrix a)) -> Transformation (MatrixInContext a)
 matrixTrans f = makeTrans $ \c -> do
    new <- f (matrix c)

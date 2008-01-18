@@ -12,7 +12,7 @@ module Domain.LinearAlgebra.Matrix
    , rows, row, columns, column, dimensions, entry
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
-   , nonZeroRow, pivot, isPivotColumn
+   , nonZero, pivot, isPivotColumn
    ) where
 
 import Data.Maybe
@@ -158,21 +158,21 @@ isUpperTriangular = and . zipWith check [0..] . rows
 
 inRowEchelonForm :: Num a => Matrix a -> Bool
 inRowEchelonForm (M rows) =
-   null (filter nonZeroRow (dropWhile nonZeroRow rows)) &&
-   increasing (map (length . takeWhile (==0)) (filter nonZeroRow rows))
+   null (filter nonZero (dropWhile nonZero rows)) &&
+   increasing (map (length . takeWhile (==0)) (filter nonZero rows))
  where
    increasing (x:ys@(y:_)) = x < y && increasing ys
    increasing _ = True
 
-nonZeroRow :: Num a => Row a -> Bool
-nonZeroRow = any (/=0)
+nonZero :: Num a => [a] -> Bool
+nonZero = any (/=0)
 
 -- or row canonical form
 inRowReducedEchelonForm :: Num a => Matrix a -> Bool
 inRowReducedEchelonForm m@(M rows) =
    inRowEchelonForm m && 
    all (==1) (catMaybes $ map pivot rows) &&
-   all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZeroRow rows)
+   all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZero rows)
 
 pivot :: Num a => Row a -> Maybe a
 pivot r = case dropWhile (==0) r of

@@ -16,7 +16,7 @@ generateFrac :: Gen Frac
 generateFrac = generateFracWith defaultConfig
    
 generateFracWith :: FracGenConfig -> Gen Frac
-generateFracWith = arbFrac
+generateFracWith = arbFracNoVars
    
 data FracGenConfig = FracGenConfig
    { maxSize       :: Int
@@ -32,7 +32,7 @@ data FracGenConfig = FracGenConfig
 
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
-   { maxSize       = 3
+   { maxSize       = 5
    , differentVars = 2
    , freqConstant  = 4
    , freqVariable  = 1
@@ -45,11 +45,22 @@ defaultConfig = FracGenConfig
 freqLeaf :: FracGenConfig -> Int
 freqLeaf config = freqConstant config + freqVariable config
 
-arbFrac :: FracGenConfig -> Gen Frac
-arbFrac config 
-   | maxSize config == 0 = oneof [liftM fromRational arbitrary, return $ Var "x"]
+arbFracNoVars :: FracGenConfig -> Gen Frac
+arbFracNoVars config 
+   | maxSize config == 0 = liftM fromRational arbitrary
    | otherwise           = oneof [ arbFrac config {maxSize = 0}, liftM2 (:+:) rec rec, liftM2 (:*:) rec rec
                                  , liftM2 (:/:) rec recNZ, liftM2 (:-:) rec rec
+                                 ]
+                         where 
+                           rec   = arbFrac config {maxSize = (n `div` 2)}
+                           recNZ = arbFracNZ config {maxSize = (n `div` 2)}
+                           n     = maxSize config
+
+arbFrac :: FracGenConfig -> Gen Frac
+arbFrac config 
+   | maxSize config == 0 = liftM fromRational arbitrary
+   | otherwise           = oneof [ arbFrac config {maxSize = 0}, liftM2 (:+:) rec rec, liftM2 (:*:) rec rec
+                                 , liftM2 (:/:) rec recNZ, liftM2 (:-:) rec rec, return $ Var "x"
                                  ]
                          where 
                            rec   = arbFrac config {maxSize = (n `div` 2)}
@@ -59,10 +70,10 @@ arbFrac config
 -- non-zero value
 arbFracNZ :: FracGenConfig -> Gen Frac
 arbFracNZ config
-   | maxSize config == 0 = oneof [liftM fromRational arbRatioNZ, return $ Var "x"]
+   | maxSize config == 0 = liftM fromRational arbRatioNZ
    | otherwise           = oneof [ arbFracNZ config {maxSize = 0}, liftM2 (:*:) recNZ recNZ
                                  , liftM2 (:/:) recNZ recNZ, liftM2 (:+:) recNZ recNZ 
-                                 , liftM2 (:-:) recNZ recNZ
+                                 , liftM2 (:-:) recNZ recNZ, return $ Var "x"
                                  ]
                          where
 --                           rec   = arbFrac config {maxSize = (n `div` 2)}

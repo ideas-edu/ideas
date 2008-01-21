@@ -1,12 +1,11 @@
 module OpenMath.Reply 
-   ( Reply(..), xmlReply
+   ( Reply(..), replyInXML
    , ReplyOk(..), ReplyIncorrect(..), ReplyError(..)
    ) where
 
 import OpenMath.StrategyTable
-import OpenMath.OMToMatrix
-import Domain.LinearAlgebra
-import Data.List
+import OpenMath.ObjectParser
+import OpenMath.XML
 
 ------------------------------------------------------------------------
 -- Data types for replies
@@ -25,7 +24,7 @@ data ReplyOk = ReplyOk
 data ReplyIncorrect = ReplyIncorrect
    { repInc_Strategy   :: StrategyID
    , repInc_Location   :: Location
-   , repInc_Expected   :: Matrix Rational
+   , repInc_Expected   :: Expr
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
    }
@@ -40,58 +39,39 @@ data ReplyError = ReplyError
 ------------------------------------------------------------------------
 -- Conversion functions to XML
  
-xmlReply :: Reply -> String
-xmlReply reply =
-   case reply of
-      Ok r        -> xmlReplyOk r
-      Incorrect r -> xmlReplyIncorrect r 
-      Error r     -> xmlReplyError r
+replyInXML :: Reply -> String
+replyInXML = showXML . replyToXML
 
-xmlReplyOk :: ReplyOk -> String
-xmlReplyOk r = xmlResult "ok" $ xmlList
-   [ ("strategy", repOk_Strategy r)
-   , ("location", show $ repOk_Location r)
-   , ("steps",    show $ repOk_Steps r)
+replyToXML :: Reply -> XML
+replyToXML reply =
+   case reply of
+      Ok r        -> replyOkToXML r
+      Incorrect r -> replyIncorrectToXML r 
+      Error r     -> replyErrorToXML r
+
+replyOkToXML :: ReplyOk -> XML
+replyOkToXML r = xmlResult "ok" $ xmlList
+   [ ("strategy", Text $ repOk_Strategy r)
+   , ("location", Text $ show $ repOk_Location r)
+   , ("steps",    Text $ show $ repOk_Steps r)
    ]
 
 -- For now, show a matrix with integers
-xmlReplyIncorrect :: ReplyIncorrect -> String
-xmlReplyIncorrect r = xmlResult "incorrect" $ xmlList
-   [ ("strategy",   repInc_Strategy r)
-   , ("location",   show $ repInc_Location r)
-   , ("expected",   matrix2xml $ fmap round $ repInc_Expected r)
-   , ("steps",      show $ repInc_Steps r)
-   , ("equivalent", show $ repInc_Equivalent r)
+replyIncorrectToXML :: ReplyIncorrect -> XML
+replyIncorrectToXML r = xmlResult "incorrect" $ xmlList
+   [ ("strategy",   Text $ repInc_Strategy r)
+   , ("location",   Text $ show $ repInc_Location r)
+   , ("expected",   exprToXML $ repInc_Expected r)
+   , ("steps",      Text $ show $ repInc_Steps r)
+   , ("equivalent", Text $ show $ repInc_Equivalent r)
    ]
 
-xmlReplyError :: ReplyError -> String
-xmlReplyError r = xmlResult (repErr_Kind r) [repErr_Message r]
+replyErrorToXML :: ReplyError -> XML
+replyErrorToXML r = xmlResult (repErr_Kind r) [Text $ repErr_Message r]
 
-xmlResult :: String -> [String] -> String
-xmlResult result = unlines . tagAttr "reply" [("result", result)]
+xmlResult :: String -> [XML] -> XML
+xmlResult result = Tag "reply" [("result", result)]
 
-xmlList :: [(String, String)] -> [String]
-xmlList = concatMap f
- where f (x, y) = tag x [y]
- 
--------------------------------------------------------------------------
--- Formatting utility functions
-
-type Attrs = [(String, String)]
-
-tag :: String -> [String] -> [String]
-tag t = tagAttr t []
-
-tagAttr :: String -> Attrs -> [String] -> [String]
-tagAttr t attrs xs = [openTagAttr t attrs] ++ indent 3 xs ++ [closeTag t]
-
-openTag, closeTag :: String -> String
-openTag  t = "<"  ++ t ++ ">"
-closeTag t = openTag ("/" ++ t)
-
-openTagAttr :: String -> Attrs -> String
-openTagAttr t attrs = openTag (concat $ intersperse " " $ t : map f attrs)
- where f (x, y) = x ++ "=" ++ show y
- 
-indent :: Int -> [String] -> [String]
-indent n = map (replicate n ' '++)
+xmlList :: [(String, XML)] -> [XML]
+xmlList = map f
+ where f (x, y) = Tag x [] [y]

@@ -2,8 +2,10 @@
 module OpenMath.XML 
    ( XML(..), Attr, AttrList
    , parseXML, parseXMLs, showXML
+   , children, extract
    ) where
 
+import Common.Utils (trim)
 import Control.Monad.Error
 import Data.Char
 import Data.Maybe
@@ -63,7 +65,7 @@ tokenizeXML input =
                           _ -> fail "expected a '/' or '>' when scanning an opening tag"
       _          -> do let (xs, ys) = break (=='<') input
                        xmls <- tokenizeXML ys
-                       return $ [TokenText xs | any (not . isSpace) xs ] ++ xmls
+                       return $ [ TokenText (trim xs) | any (not . isSpace) xs ] ++ xmls
 
 getAttrs :: String -> Either String (AttrList, String)
 getAttrs xs = 
@@ -138,3 +140,16 @@ tagWithAttrs f t attrs = f (concat $ intersperse " " $ t : map g attrs)
  
 indent :: Int -> [String] -> [String]
 indent n = map (replicate n ' '++)
+
+----------------------------------------------------------------
+-- XML utility functions
+
+children :: XML -> [XML]
+children (Tag _ _ xs) = xs
+children _            = []
+
+extract :: String -> XML -> Maybe [XML]
+extract n xml =
+   case [ xs | Tag m _ xs <- children xml, n==m ] of
+      [hd] -> return hd
+      _    -> Nothing

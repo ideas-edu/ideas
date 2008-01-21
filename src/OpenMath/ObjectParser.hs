@@ -1,8 +1,9 @@
 module OpenMath.ObjectParser 
-   ( Expr(..), parseExpr, showExpr, xmlToExpr, exprToXML
+   ( Expr(..), IsExpr(..), parseExpr, showExpr, xmlToExpr, exprToXML
    ) where
 
 import Data.Char
+import Data.Ratio
 import OpenMath.XML
 
 ----------------------------------------------------------
@@ -17,6 +18,41 @@ data Expr = Con Int | Var String
 -- internal representation for OM objects (close to XML)
 data OMOBJ = OMI Int | OMV String | OMS String String | OMA [OMOBJ]
    deriving Show
+
+----------------------------------------------------------
+-- Type class for conversions to and from the Expr datatype
+
+class IsExpr a where
+   toExpr   :: a -> Expr
+   fromExpr :: Expr -> Maybe a
+
+instance IsExpr Int where
+   toExpr = Con
+   fromExpr (Con n) = Just n
+   fromExpr _       = Nothing
+
+instance IsExpr Integer where
+   toExpr   = Con . fromIntegral
+   fromExpr = fmap (toInteger :: Int -> Integer) . fromExpr 
+  
+instance (Integral a, IsExpr a) => IsExpr (Ratio a) where
+   toExpr r
+      | j == 1    = toExpr i
+      | otherwise = toExpr i :/: toExpr j
+    where (i, j) = (numerator r, denominator r)
+   fromExpr expr = 
+      case expr of 
+         e1 :/: e2 -> do
+            a <- fromExpr e1
+            b <- fromExpr e2
+            return (a/b)
+         _ -> do
+            a <- fromExpr expr
+            return (toRatio a)
+
+-- local helper function
+toRatio :: Integral a => a -> Ratio a
+toRatio = fromIntegral
 
 ----------------------------------------------------------
 -- Parser and pretty printer for OpenMath objects
@@ -116,6 +152,9 @@ expr2omobj expr =
       
 binop :: String -> String -> Expr -> Expr -> OMOBJ
 binop cd name x y = OMA [OMS cd name, expr2omobj x, expr2omobj y]
+
+----------------------------------------------------------
+-- Test function
 
 check :: IO ()
 check = do

@@ -5,19 +5,20 @@ import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import OpenMath.StrategyTable
 import OpenMath.Request
 import OpenMath.Reply
+import OpenMath.ObjectParser
 import Common.Transformation
 import Common.Strategy
 import Common.Assignment hiding (Incorrect)
 import Data.Maybe
 
 respond :: Maybe String -> String
-respond = xmlReply . maybe requestError (either parseError (laServer . fst) . pRequest)
+respond = replyInXML . maybe requestError (either parseError laServer . pRequest)
 
 replyError :: String -> String -> Reply
 replyError kind = Error . ReplyError kind
 
 parseError :: String -> Reply
-parseError   = replyError "parse error"
+parseError = replyError "parse error"
 
 requestError :: Reply
 requestError = replyError "request error" "no request found in \"input\""
@@ -28,24 +29,24 @@ laServer req =
       Nothing -> 
          replyError "location error" "invalid location for strategy"
       Just subStrategy -> 
-         case applyAll toReducedEchelon (inContext $ req_Term req) of
+         case applyAll toReducedEchelon (inContext $ fromJust $ fromExpr $ req_Term req) of
             [] -> replyError "strategy error" "not able to compute an expected answer"
             answers@(expected:_)
-               | fmap inContext (req_Answer req) `elem` (map Just answers) ->
+               | fmap (inContext . fromJust . fromExpr) (req_Answer req) `elem` (map Just answers) ->
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
-                       , repOk_Location = nextLocation (fromJust $ req_Answer req) (req_Location req)
-                       , repOk_Steps    = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ req_Answer req)
+                       , repOk_Location = nextLocation (fromJust $ fromExpr $ fromJust $ req_Answer req) (req_Location req)
+                       , repOk_Steps    = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ fromExpr $ fromJust $ req_Answer req)
                        } 
                | otherwise ->
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
-                       , repInc_Location   = req_Location req ++ subTask (req_Term req) subStrategy
-                       , repInc_Expected   = matrix expected
-                       , repInc_Steps      = stepsRemaining reduceMatrixAssignment (inContext $ req_Term req)
+                       , repInc_Location   = req_Location req ++ subTask (fromJust $ fromExpr $ req_Term req) subStrategy
+                       , repInc_Expected   = toExpr $ matrix expected
+                       , repInc_Steps      = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ fromExpr $ req_Term req)
                        , repInc_Equivalent = case req_Answer req of
                                                 Nothing -> False
-                                                Just m  -> equivalence reduceMatrixAssignment expected (inContext m)
+                                                Just m  -> equivalence reduceMatrixAssignment expected (inContext $ fromJust $ fromExpr m)
                        }
                        
 subTask :: Matrix Rational -> NamedStrategy (MatrixInContext Rational) -> Location

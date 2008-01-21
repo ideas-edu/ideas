@@ -18,8 +18,10 @@ import Domain.Fraction.Rules
 
 import Common.Assignment
 import Common.Strategy
+import Common.Transformation
 import Control.Monad
 import System.Random
+import Data.Maybe
 
 simplAssignment :: Assignment FracInContext
 simplAssignment = Assignment
@@ -30,11 +32,10 @@ simplAssignment = Assignment
    , prettyPrinter = ppFracPars . noContext
    , equivalence   = \x y -> noContext x ~= noContext y
    , equality      = \x y -> noContext x == noContext y
-   , finalProperty = isSimplified . noContext
+   , finalProperty = \x -> noContext x == noContext (fromJust $ apply toSimple x)
    , ruleset       = map liftFracRule fracRules
    , strategy      = unlabel toSimple
    , generator     = liftM inContext generateFrac
-   , suitableTerm  = \f -> (nf $ noContext f) /= Nothing 
-                           && not (isSimplified $ noContext f)
+   , suitableTerm  = \t -> not $ finalProperty simplAssignment t && nf (noContext t) /= Nothing
    , configuration = defaultConfiguration
    }

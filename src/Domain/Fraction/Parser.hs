@@ -29,17 +29,13 @@ parseFrac = runParser pFrac
  where
    pFrac   =  pChainl ((:+:) <$ addSym <|> (:-:) <$ subSym) pFrac'
    pFrac'  =  pChainl ((:*:) <$ mulSym <|> (:/:) <$ divSym) pFrac'' 
-   pFrac'' =  Var <$> pVar <|> Lit <$> pRat <|> pparens pFrac
+   pFrac'' =  Var <$> pVar <|> Con <$> (pNat <|> pNeg) <|> pparens pFrac
 
 pNat :: CharParser Integer
 pNat = read <$> pList1 ('0' <..> '9')
 
 pNeg :: CharParser Integer
-pNeg = pparens $ (\_ x -> negate x) <$> subSym <*> pNat
-
-pRat :: CharParser Rational
-pRat =     (\x _ y -> x%y) <$> (pNat <|> pNeg) <*> pSym '%' <*> pNat 
-       <|> (\x -> x%1) <$> (pNat <|> pNeg)
+pNeg = (\_ x -> negate x) <$> subSym <*> pNat
 
 mulSym = pSym '*'
 divSym = pSym '/' 

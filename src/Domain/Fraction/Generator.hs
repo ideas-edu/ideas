@@ -59,7 +59,7 @@ freqLeaf config = freqConstant config + freqVariable config
 -- no variables
 arbFracNoVars :: FracGenConfig -> Gen Frac
 arbFracNoVars config 
-   | maxSize config == 0 = liftM fromRational arbitrary
+   | maxSize config == 0 = liftM fromInteger arbitrary
    | otherwise           = oneof [ arbFracNoVars config {maxSize = 0}
                                  , liftM2 (:+:) rec rec
                                  , liftM2 (:*:) rec rec
@@ -74,7 +74,7 @@ arbFracNoVars config
 -- non zero and non var value
 arbFracNoVarsNZ :: FracGenConfig -> Gen Frac
 arbFracNoVarsNZ config 
-   | maxSize config == 0 = liftM fromRational arbRatioNZ
+   | maxSize config == 0 = liftM fromInteger arbIntNZ
    | otherwise           = oneof [ arbFracNoVarsNZ config {maxSize = 0}
                                  , liftM2 (:+:) rec rec
                                  , liftM2 (:*:) rec rec
@@ -86,27 +86,28 @@ arbFracNoVarsNZ config
 
 arbFrac :: FracGenConfig -> Gen Frac
 arbFrac config 
-   | maxSize config == 0 = liftM fromRational arbitrary
+   | maxSize config == 0 = liftM fromInteger arbitrary
    | otherwise           = oneof [ arbFrac config {maxSize = 0}
                                  , liftM2 (:+:) rec rec
-                                 , liftM2 (:*:) rec const  -- no higher order
-                                 , liftM2 (:/:) rec nz
+                                 , liftM2 (:*:) rec nv  -- no higher order
+                                 , liftM2 (:/:) rec const
                                  , liftM2 (:-:) rec rec
                                  , return $ Var "x"
                                  ]
                          where 
                            rec   = arbFrac config {maxSize = (n `div` 2)}
                            nz    = arbFracNZ config {maxSize = (n `div` 2)}
+                           nv    = arbFracNoVars config {maxSize = (n `div` 2)}
                            n     = maxSize config
-                           const = arbFracNoVars config {maxSize = (n `div` 2)}
+                           const = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
 
 -- non-zero value
 arbFracNZ :: FracGenConfig -> Gen Frac
 arbFracNZ config
-   | maxSize config == 0 = liftM fromRational arbRatioNZ
+   | maxSize config == 0 = liftM fromInteger arbIntNZ
    | otherwise           = oneof [ arbFracNZ config {maxSize = 0}
                                  , liftM2 (:*:) const nz
-                                 , liftM2 (:/:) nz nz
+                                 , liftM2 (:/:) nz const
                                  , liftM2 (:+:) nz nz 
                                  , return $ Var "x"
                                  ]
@@ -115,31 +116,21 @@ arbFracNZ config
                            n     = maxSize config
                            const = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
 
-arbRatioNZ :: Gen Rational
-arbRatioNZ = do
-   n' <- arbitrary
-   d' <- arbitrary
-   let d = if d' == 0 then 1 else d'
-   let n = if n' == 0 then 1 else n'
-   return $ (n%d)
+arbIntNZ :: Gen Integer
+arbIntNZ = do
+   x' <- arbitrary
+   let x = if x' == 0 then 1 else x'
+   return x
 
 -----------------------------------------------------------
 --- QuickCheck generator
 
 instance Arbitrary Frac where
-   arbitrary = sized $ \n -> arbFracNoVars defaultConfig {maxSize = n}
+   arbitrary = sized $ \n -> arbFrac defaultConfig {maxSize = n}
    coarbitrary (Var x)       = variant 0 . coarbitrary (map ord x)
-   coarbitrary (Lit x)       = variant 1 . coarbitrary x
+   coarbitrary (Con x)       = variant 1 . coarbitrary x
    coarbitrary (x :*: y)     = variant 1 . coarbitrary x . coarbitrary y
    coarbitrary (x :/: y)     = variant 2 . coarbitrary x . coarbitrary y
    coarbitrary (x :+: y)     = variant 3 . coarbitrary x . coarbitrary y
    coarbitrary (x :-: y)     = variant 4 . coarbitrary x . coarbitrary y
-
-instance Arbitrary Rational where
-    arbitrary = do
-        n <- arbitrary
-        d' <- arbitrary
-        let d = if d' == 0 then 1 else d'
-        return $ (n % d)
-    coarbitrary = undefined
 

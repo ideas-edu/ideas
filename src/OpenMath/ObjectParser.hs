@@ -1,0 +1,127 @@
+module OpenMath.ObjectParser 
+   ( Expr(..), parseExpr, showExpr, xmlToExpr, exprToXML
+   ) where
+
+import Data.Char
+import OpenMath.XML
+
+----------------------------------------------------------
+-- Open Math data types
+
+-- abstract representation for OM objects
+data Expr = Con Int | Var String 
+          | Expr :*: Expr | Expr :+: Expr | Expr :-: Expr | Expr :/: Expr 
+          | Matrix [[Expr]]
+   deriving Show
+
+-- internal representation for OM objects (close to XML)
+data OMOBJ = OMI Int | OMV String | OMS String String | OMA [OMOBJ]
+   deriving Show
+
+----------------------------------------------------------
+-- Parser and pretty printer for OpenMath objects
+
+parseExpr :: String -> Either String Expr
+parseExpr input = parseXML input >>= xmlToExpr
+
+showExpr :: Expr -> String
+showExpr = showXML . exprToXML
+
+xmlToExpr :: XML -> Either String Expr
+xmlToExpr xml = xml2omobj xml >>= omobj2expr
+
+exprToXML :: Expr -> XML
+exprToXML = omobj2xml . expr2omobj
+
+----------------------------------------------------------
+-- Four conversion functions: XML <-> OMOBJ <-> Expr
+
+xml2omobj :: XML -> Either String OMOBJ
+xml2omobj xml =
+   case xml of  
+      Tag "OMOBJ" _ [this] -> rec this
+      _                    -> fail "expected a OMOBJ tag"
+ where
+   rec xml =
+      case xml of
+         Tag "OMA" [] xs -> do
+            xs <- mapM rec xs 
+            return (OMA xs)
+         Tag "OMS" attrs [] -> 
+            case lookup "cd" attrs of
+               Just cd ->
+                  case lookup "name" attrs of
+                     Just name  -> return (OMS cd name)
+                     Nothing -> fail "OMS tag without name attribute" 
+               _ -> fail "OMS tag without cd attribute"
+         Tag "OMI" [] [Text s] -> 
+            case reads s of
+               [(i, xs)] | all isSpace xs -> return (OMI i)
+               _ -> fail "invalid integer in OMI"
+         Tag "OMV" attrs [] ->
+            case lookup "name" attrs of
+               Just s  -> return (OMV s)
+               Nothing -> fail "OMV tag without name attribute"
+         Tag tag _ _ -> fail $ "unknown tag " ++ show tag
+
+omobj2xml :: OMOBJ -> XML
+omobj2xml = header . return . rec
+ where
+   header = Tag "OMOBJ" attrs
+   attrs  = [ ("xmlns"  , "http://www.openmath.org/OpenMath")
+            , ("version", "2.0")
+            , ("cdbase" , "http://www.openmath.org/cd")
+            ]
+   rec omobj =
+      case omobj of
+         OMI i  -> Tag "OMI" [] [Text (show i)]
+         OMV v  -> Tag "OMV" [("name", v)] []
+         OMA xs -> Tag "OMA" [] (map rec xs)
+         OMS cd name -> Tag "OMS" [("cd", cd), ("name", name)] []
+
+binaryOps :: [(String, Expr -> Expr -> Expr)]
+binaryOps = [ ("times", (:*:)), ("plus" , (:+:)), ("minus", (:-:)), ("divide", (:/:)) ]
+
+omobj2expr :: OMOBJ -> Either String Expr
+omobj2expr omobj =
+   case omobj of
+      OMI i -> return (Con i)
+      OMV v -> return (Var v)
+      OMA (OMS _ "matrix":rows) -> do
+         let f (OMA (OMS _ "matrixrow":elems)) = mapM omobj2expr elems
+             f _ = fail "invalid matrix row"
+         es <- mapM f rows
+         return (Matrix es)
+      OMA [OMS _ op, x, y] -> 
+         case lookup op binaryOps of
+            Just f  -> do
+               e1 <- omobj2expr x
+               e2 <- omobj2expr y
+               return (f e1 e2)
+            Nothing -> fail $ "unknown binary operator " ++ show op
+      _ -> fail $ "unknown omobj: " ++ show omobj
+
+expr2omobj :: Expr -> OMOBJ
+expr2omobj expr =
+   case expr of 
+      Con i     -> OMI i
+      Var v     -> OMV v
+      x :*: y   -> binop "arith1" "times"  x y
+      x :+: y   -> binop "arith1" "plus"   x y
+      x :-: y   -> binop "arith1" "minus"  x y
+      x :/: y   -> binop "arith1" "divide" x y
+      Matrix xs ->
+         let f ys = OMA (OMS "linalg2" "matrixrow" : map expr2omobj ys)
+         in OMA (OMS "linalg2" "matrix" : map f xs)
+      
+binop :: String -> String -> Expr -> Expr -> OMOBJ
+binop cd name x y = OMA [OMS cd name, expr2omobj x, expr2omobj y]
+
+check :: IO ()
+check = do
+   input <- readFile "src/OpenMath/omobj2" 
+   let Right expr = parseExpr input 
+   print expr
+   let new = showXML $ omobj2xml $ expr2omobj expr
+   putStrLn new
+   print $ parseExpr new

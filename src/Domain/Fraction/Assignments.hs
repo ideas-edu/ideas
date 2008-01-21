@@ -1,3 +1,12 @@
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- (todo)e
+--
+-----------------------------------------------------------------------------
 module Domain.Fraction.Assignments where
 
 import Domain.Fraction.Zipper
@@ -14,7 +23,7 @@ import System.Random
 
 simplAssignment :: Assignment FracInContext
 simplAssignment = Assignment
-   { shortTitle    = "Fractions" 
+   { shortTitle    = "Simplifying fractions" 
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs), Just (inContext p))
@@ -29,24 +38,3 @@ simplAssignment = Assignment
                            && not (isSimplified $ noContext f)
    , configuration = defaultConfiguration
    }
-
-
-{-
-dnfAssignment :: Assignment FracInContext
-dnfAssignment = Assignment
-   { shortTitle    = "Proposition to DNF" 
-   , parser        = \s -> case parseFracPars s of
-                              (p, [])   -> Right (inContext p)
-                              (p, msgs) -> Left  (text (show msgs), Just (inContext p))
-   , prettyPrinter = ppFracPars . noContext
-   , equivalence   = \x y -> noContext x ~= noContext y
-   , equality      = \x y -> noContext x == noContext y
-   , finalProperty = isDNF . noContext
-   , ruleset       = map liftFracRule logicRules
-   , strategy      = unlabel toDNF
-   , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
-                     in liftM inContext generateFrac -- (suitableFrac check)
-   , suitableTerm  = \p -> countEquivalences (noContext p) < 2 && countBinaryOperators (noContext p) <= 3
-   , configuration = defaultConfiguration
-   }
--}

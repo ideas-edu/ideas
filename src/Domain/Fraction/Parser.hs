@@ -8,8 +8,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Fraction.Parser 
-   ( parseFrac, ppFrac, ppFracPrio, ppFracInContext, ppFracPars
-   ) where
+   ( parseFrac, ppFrac, ppFracPrio, ppFracInContext, ppFracPars )
+   where
 
 import UU.Parsing
 import UU.Parsing.CharParser
@@ -34,8 +34,12 @@ parseFrac = runParser pFrac
 pNat :: CharParser Integer
 pNat = read <$> pList1 ('0' <..> '9')
 
+pNeg :: CharParser Integer
+pNeg = pparens $ (\_ x -> negate x) <$> subSym <*> pNat
+
 pRat :: CharParser Rational
-pRat = (\x _ y -> x%y) <$> pNat <*> pSym '%' <*> pNat <|> (\x -> x%1) <$> pNat
+pRat =     (\x _ y -> x%y) <$> (pNat <|> pNeg) <*> pSym '%' <*> pNat 
+       <|> (\x -> x%1) <$> (pNat <|> pNeg)
 
 mulSym = pSym '*'
 divSym = pSym '/' 

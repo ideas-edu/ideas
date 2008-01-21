@@ -101,47 +101,6 @@ x ~= y = let (a, b) = numFraction x
              (c, d) = numFraction y
          in normaliseM (a * d) == normaliseM (b * c)
 
-normalise :: Frac -> Frac
-normalise x = 
-   let vs = S.toList $ getVars x
-       v  = minimum vs
-       (a, b) = fracSplit v x
-       lit = normalise (simplify b)
-       var = simplify (Var v :*: normalise (simplify a))
-   in if null vs then simplify x else 
-      case lit of 
-        Lit 0 -> var
-        _     -> var :+: lit
-   
-simplify :: Frac ->  Frac
-simplify this = 
-   case this of
-      a :+: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Lit (x+y)
-                   (Lit 0, c) -> c
-                   (c, Lit 0) -> c
-                   (c :+: d, e) -> c :+: (d :+: e)
-                   (c, d) -> c :+: d
-      a :*: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Lit (x*y)
-                   (Lit 0, c) -> Lit 0
-                   (c, Lit 0) -> Lit 0
-                   (Lit 1, c) -> c
-                   (c, Lit 1) -> c
-                   (c :*: d, e) -> c :*: (d :*: e)
-                   (c, d) -> c :*: d
-      a :/: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> if y==0 then error "Div by zero" else Lit (x/y)
-                   (Lit 0, c) -> Lit 0
-                   (c, Lit 1) -> c
-                   (c, d) -> c :/: d
-      a :-: b -> case (simplify a, simplify b) of
-                   (Lit x, Lit y) -> Lit (x-y)
-                   (c, Lit 0) -> c
-                   (c :-: d, e) -> c :-: (d :+: e)
-                   (c, d) -> c :-: d
-      _ -> this
-
 simplifyM :: Frac -> Maybe Frac
 simplifyM this = do
    case this of
@@ -196,7 +155,7 @@ nf f = do let (n, d) = numFraction f
           n' <- normaliseM n
           d' <- normaliseM d
           case (n', d') of 
-            (Lit a, Lit b) -> return (Lit (a/b))
+            (Lit a, Lit b) -> if b==0 then Nothing else return (Lit (a/b))
             (Lit 0, _)     -> return (Lit 0)
             (a, Lit 1)     -> return a
             (a, b)         -> return (a / b)
@@ -277,14 +236,3 @@ isZero (n :+: m) = n ~= negate m
 isZero (n :*: m) = isZero n || isZero m
 isZero (n :/: m) = isZero n
 isZero (n :-: m) = n ~= m
-
-
-
-e1 = Var "x" :/: Lit 3 :+: Lit 2 :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
-e2 = Lit (7%3) :*: Var "x" :+: Lit (9::Rational) :+: Var "y"
-
--- quickcheck generated frac which fails ruleDivReciprocal due to the
--- fact that it becomes a quadratic function, which can't be normalised by normalise
-e = (Var "x" :+: Lit (3%2)) :/: (Var "x" :/: Var "x")
-
-f = (Lit (2%1) :*: Lit (3%1) :+: Var "x" :*: Var "x") :-: Lit (1%1) :/: (Lit (3%2) :-: (Lit (3%1) :-: Var "x"))

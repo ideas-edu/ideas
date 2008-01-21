@@ -1,5 +1,13 @@
 {-# OPTIONS -fglasgow-exts #-}
-
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- (todo)
+--
+-----------------------------------------------------------------------------
 module Domain.Fraction.Generator 
    ( generateFrac, generateFracWith
    , FracGenConfig(..), defaultConfig
@@ -16,7 +24,7 @@ generateFrac :: Gen Frac
 generateFrac = generateFracWith defaultConfig
    
 generateFracWith :: FracGenConfig -> Gen Frac
-generateFracWith = arbFracNoVars
+generateFracWith = arbFrac
    
 data FracGenConfig = FracGenConfig
    { maxSize       :: Int
@@ -32,7 +40,7 @@ data FracGenConfig = FracGenConfig
 
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
-   { maxSize       = 5
+   { maxSize       = 3
    , differentVars = 2
    , freqConstant  = 4
    , freqVariable  = 1
@@ -45,41 +53,67 @@ defaultConfig = FracGenConfig
 freqLeaf :: FracGenConfig -> Int
 freqLeaf config = freqConstant config + freqVariable config
 
+
+-- Needs to be redesigned to take freq. variables into account
+
+-- no variables
 arbFracNoVars :: FracGenConfig -> Gen Frac
 arbFracNoVars config 
    | maxSize config == 0 = liftM fromRational arbitrary
-   | otherwise           = oneof [ arbFrac config {maxSize = 0}, liftM2 (:+:) rec rec, liftM2 (:*:) rec rec
-                                 , liftM2 (:/:) rec recNZ, liftM2 (:-:) rec rec
+   | otherwise           = oneof [ arbFracNoVars config {maxSize = 0}
+                                 , liftM2 (:+:) rec rec
+                                 , liftM2 (:*:) rec rec
+                                 , liftM2 (:/:) rec nz
+                                 , liftM2 (:-:) rec rec
                                  ]
                          where 
-                           rec   = arbFrac config {maxSize = (n `div` 2)}
-                           recNZ = arbFracNZ config {maxSize = (n `div` 2)}
+                           rec   = arbFracNoVars config {maxSize = (n `div` 2)}
+                           nz    = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
+                           n     = maxSize config
+
+-- non zero and non var value
+arbFracNoVarsNZ :: FracGenConfig -> Gen Frac
+arbFracNoVarsNZ config 
+   | maxSize config == 0 = liftM fromRational arbRatioNZ
+   | otherwise           = oneof [ arbFracNoVarsNZ config {maxSize = 0}
+                                 , liftM2 (:+:) rec rec
+                                 , liftM2 (:*:) rec rec
+                                 , liftM2 (:/:) rec rec
+                                 ]
+                         where 
+                           rec   = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
                            n     = maxSize config
 
 arbFrac :: FracGenConfig -> Gen Frac
 arbFrac config 
    | maxSize config == 0 = liftM fromRational arbitrary
-   | otherwise           = oneof [ arbFrac config {maxSize = 0}, liftM2 (:+:) rec rec, liftM2 (:*:) rec rec
-                                 , liftM2 (:/:) rec recNZ, liftM2 (:-:) rec rec, return $ Var "x"
+   | otherwise           = oneof [ arbFrac config {maxSize = 0}
+                                 , liftM2 (:+:) rec rec
+                                 , liftM2 (:*:) rec const  -- no higher order
+                                 , liftM2 (:/:) rec nz
+                                 , liftM2 (:-:) rec rec
+                                 , return $ Var "x"
                                  ]
                          where 
                            rec   = arbFrac config {maxSize = (n `div` 2)}
-                           recNZ = arbFracNZ config {maxSize = (n `div` 2)}
+                           nz    = arbFracNZ config {maxSize = (n `div` 2)}
                            n     = maxSize config
+                           const = arbFracNoVars config {maxSize = (n `div` 2)}
 
 -- non-zero value
 arbFracNZ :: FracGenConfig -> Gen Frac
 arbFracNZ config
    | maxSize config == 0 = liftM fromRational arbRatioNZ
-   | otherwise           = oneof [ arbFracNZ config {maxSize = 0}, liftM2 (:*:) recNZ recNZ
-                                 , liftM2 (:/:) recNZ recNZ, liftM2 (:+:) recNZ recNZ 
-                                 , liftM2 (:-:) recNZ recNZ, return $ Var "x"
+   | otherwise           = oneof [ arbFracNZ config {maxSize = 0}
+                                 , liftM2 (:*:) const nz
+                                 , liftM2 (:/:) nz nz
+                                 , liftM2 (:+:) nz nz 
+                                 , return $ Var "x"
                                  ]
                          where
---                           rec   = arbFrac config {maxSize = (n `div` 2)}
-                           recNZ = arbFracNZ config {maxSize = (n `div` 2)}
-                           recNV = liftM fromRational arbRatioNZ
+                           nz    = arbFracNZ config {maxSize = (n `div` 2)}
                            n     = maxSize config
+                           const = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
 
 arbRatioNZ :: Gen Rational
 arbRatioNZ = do
@@ -87,13 +121,13 @@ arbRatioNZ = do
    d' <- arbitrary
    let d = if d' == 0 then 1 else d'
    let n = if n' == 0 then 1 else n'
-   return $ abs (n%d)
+   return $ (n%d)
 
 -----------------------------------------------------------
 --- QuickCheck generator
 
 instance Arbitrary Frac where
-   arbitrary = sized $ \n -> arbFrac defaultConfig {maxSize = n}
+   arbitrary = sized $ \n -> arbFracNoVars defaultConfig {maxSize = n}
    coarbitrary (Var x)       = variant 0 . coarbitrary (map ord x)
    coarbitrary (Lit x)       = variant 1 . coarbitrary x
    coarbitrary (x :*: y)     = variant 1 . coarbitrary x . coarbitrary y
@@ -101,12 +135,11 @@ instance Arbitrary Frac where
    coarbitrary (x :+: y)     = variant 3 . coarbitrary x . coarbitrary y
    coarbitrary (x :-: y)     = variant 4 . coarbitrary x . coarbitrary y
 
-
 instance Arbitrary Rational where
     arbitrary = do
         n <- arbitrary
         d' <- arbitrary
         let d = if d' == 0 then 1 else d'
-        return $ abs (n % d)
+        return $ (n % d)
     coarbitrary = undefined
 

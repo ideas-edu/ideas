@@ -16,8 +16,8 @@ import Common.Strategy
 toSimple :: NamedStrategy FracInContext
 toSimple =  label "Simplify expression"
          $  label "Eliminate zero's" eliminateZeros
-        <*> label "Eliminate divsions and mulitplications" eliminateDivMul
-        <*> label "Find common denominator and do addition/substraction" eliminateAddSub
+        <*> label "Eliminate units" eliminateUnits
+        <*> label "Do calculation" calculate
 
 eliminateZeros :: Strategy FracInContext
 eliminateZeros = repeatS $ somewhere $
@@ -27,20 +27,20 @@ eliminateZeros = repeatS $ somewhere $
              <|> liftFracRule ruleSubZero
 
 
-eliminateDivMul :: Strategy FracInContext
-eliminateDivMul = repeatS $ somewhere $ 
-                  liftFracRule ruleUnitMul
-              <|> liftFracRule ruleDiv
-              <|> liftFracRule ruleMul
-              <|> liftFracRule ruleDistMul
-              <|> liftFracRule ruleDivSame
-              <|> liftFracRule ruleDivReciprocal
-              <|> liftFracRule ruleMulVar
-              <|> liftFracRule ruleSubVar
+eliminateUnits :: Strategy FracInContext
+eliminateUnits = repeatS $ somewhere $ 
+                 liftFracRule ruleUnitMul
+             <|> liftFracRule ruleDivOne
+             <|> liftFracRule ruleDistMul
+             <|> liftFracRule ruleDivSame
+             <|> liftFracRule ruleDivReciprocal
+             <|> liftFracRule ruleMulVar
+             <|> liftFracRule ruleSubVar
 
 
-eliminateAddSub :: Strategy FracInContext
-eliminateAddSub = repeatS $ somewhere $
-                  liftFracRule ruleAdd
-              <|> liftFracRule ruleSub
-              <|> liftFracRule ruleCommonDenom -- to get same denominator
+calculate :: Strategy FracInContext
+calculate = repeatS $ somewhere $
+            liftFracRule ruleDiv
+        <|> liftFracRule ruleMul
+        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleAdd
+        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleSub

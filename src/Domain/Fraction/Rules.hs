@@ -110,7 +110,8 @@ ruleSub = makeSimpleRule "Sub" f
 ruleDiv :: FracRule
 ruleDiv = makeSimpleRule "Div" f
  where
-   f (Lit a :/: Lit b) = return $ Lit (a/b)  --check non zero
+   f (Lit a :/: Lit b) | b/=0 = return $ Lit (a/b)  --check non zero
+                       | otherwise  = Nothing
    f _                 = Nothing
 
 ruleMul :: FracRule
@@ -145,8 +146,7 @@ ruleDistMul = makeRuleList "DistMul"
    , (x :/: y :+: x :*: z) |- x :*: (Lit 1 :/: y :+: z)
    , (x :/: y :+: z :*: x) |- x :*: (Lit 1 :/: y :+: z)
 
-   , (x :*: y :+: x :/: z) |- x :*: (Lit 1 :/: z :+: y)
-   , (x :*: y :+: x :/: z) |- x :*: (Lit 1 :/: z :+: y)
+   , (x :*: y :+: x :/: z) |- x :*: (y :+: Lit 1 :/: z)
 
    , (x :/: y :+: x :/: z) |- x :*: (Lit 1 :/: y :+: Lit 1 :/: z)
 --
@@ -158,8 +158,7 @@ ruleDistMul = makeRuleList "DistMul"
    , (x :/: y :-: x :*: z) |- x :*: (Lit 1 :/: y :-: z)
    , (x :/: y :-: z :*: x) |- x :*: (Lit 1 :/: y :-: z)
 
-   , (x :*: y :-: x :/: z) |- x :*: (Lit 1 :/: z :-: y)
-   , (x :*: y :-: x :/: z) |- x :*: (Lit 1 :/: z :-: y)
+   , (x :*: y :-: x :/: z) |- x :*: (y :-: Lit 1 :/: z)
 
    , (x :/: y :-: x :/: z) |- x :*: (Lit 1 :/: y :-: Lit 1 :/: z)
    ]

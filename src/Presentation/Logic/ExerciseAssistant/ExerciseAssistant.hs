@@ -20,9 +20,12 @@ import Domain.Logic
 import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import Control.Monad
 import OpenMath.Exercises hiding (main)
+import Domain.Fraction
 
 domains :: [PackedAssignment]
-domains = [Pack dnfAssignment, Pack reduceMatrixAssignment, Pack equationsAssignment]
+domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment
+          , Pack equationsAssignment, Pack simplAssignment
+          ]
 
 main :: IO ()
 main = 

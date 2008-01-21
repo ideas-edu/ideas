@@ -18,7 +18,7 @@ replyError :: String -> String -> Reply
 replyError kind = Error . ReplyError kind
 
 parseError :: String -> Reply
-parseError = replyError "parse error"
+parseError   = replyError "parse error"
 
 requestError :: Reply
 requestError = replyError "request error" "no request found in \"input\""

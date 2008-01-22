@@ -51,7 +51,7 @@ redEchelonAssignment = Assignment
    , finalProperty = inRowReducedEchelonForm . matrix
    , ruleset       = matrixRules
    , generator     = return $ Domain.LinearAlgebra.inContext defaultMatrix
-   , strategy      = unlabel toReducedEchelon
+   , strategy      = toReducedEchelon
    , configuration = defaultConfiguration
    }
 

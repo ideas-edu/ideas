@@ -28,7 +28,7 @@ runInterpreter interpr = do
    ct <- generateStd (generator interpr)
    evalHistoryT (mark >> step) $ St
       { currentTerm     = ct
-      , currentStrategy = strategy interpr
+      , currentStrategy = unlabel (strategy interpr)
       }
  where
    step = do

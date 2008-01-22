@@ -111,7 +111,7 @@ reduceMatrixAssignment = makeAssignment
                         (sol, m2) <- arbSolution m1
                         m3        <- simplifyMatrix sol m2
                         return $ inContext $ fmap fromSmallInt m3
-   , strategy      = unlabel toReducedEchelon
+   , strategy      = toReducedEchelon
    }
 
 instance RealFrac a => Arbitrary (MatrixInContext a) where

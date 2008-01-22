@@ -22,7 +22,7 @@ import Data.List
 import Data.Char
 import Data.Maybe
 import Control.Monad
-import Test.QuickCheck
+import Test.QuickCheck hiding (label)
 -- import Debug.Trace
 import GHC.Real
    
@@ -46,7 +46,7 @@ equationsAssignment = makeAssignment
    , equivalence   = \x y -> let f = getSolution . equations . applyD toGeneralSolution 
                              in f x == f y
    , finalProperty = inSolvedForm . equations
-   , strategy      = toGeneralSolution
+   , strategy      = label "Solve linear equations" toGeneralSolution
    , generator     = liftM inContext (vector 3)
    }
    

@@ -30,7 +30,7 @@ dnfAssignment = Assignment
    , equality      = \x y -> noContext x == noContext y
    , finalProperty = isDNF . noContext
    , ruleset       = map liftLogicRule logicRules
-   , strategy      = unlabel toDNF
+   , strategy      = toDNF
    , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
                      in liftM inContext generateLogic -- (suitableLogic check)
    , suitableTerm  = \p -> countEquivalences (noContext p) < 2 && countBinaryOperators (noContext p) <= 3

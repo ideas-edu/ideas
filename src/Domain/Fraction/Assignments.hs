@@ -34,7 +34,7 @@ simplAssignment = Assignment
    , equality      = \x y -> noContext x == noContext y
    , finalProperty = \x -> noContext x == noContext (fromJust $ apply toSimple x)
    , ruleset       = map liftFracRule fracRules
-   , strategy      = unlabel toSimple
+   , strategy      = toSimple
    , generator     = liftM inContext generateFrac
    , suitableTerm  = \t -> not $ finalProperty simplAssignment t && nf (noContext t) /= Nothing
    , configuration = defaultConfiguration

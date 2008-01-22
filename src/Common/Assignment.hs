@@ -6,7 +6,7 @@ import Common.Strategy
 import Common.Utils
 import Common.Unification
 import System.Random
-import Test.QuickCheck
+import Test.QuickCheck hiding (label)
 
 data PackedAssignment = forall a . Pack { unpack :: Assignment a }
 
@@ -18,7 +18,7 @@ data Assignment a = Assignment
    , equality      :: a -> a -> Bool -- syntactic equality
    , finalProperty :: a -> Bool
    , ruleset       :: [Rule a]
-   , strategy      :: Strategy a
+   , strategy      :: NamedStrategy a
    , generator     :: Gen a
    , suitableTerm  :: a -> Bool
    , configuration :: Configuration
@@ -34,7 +34,7 @@ makeAssignment = Assignment
    , equality      = (==)
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = succeed
+   , strategy      = label "Succeed" succeed
    , generator     = arbitrary
    , suitableTerm  = const True
    , configuration = defaultConfiguration
@@ -75,7 +75,7 @@ giveHint x a =
 
 -- | Returns a text and the rule that is applicable
 giveHints :: Assignment a -> a -> [(Doc a, Rule a)]
-giveHints x = map g . nextRulesWith (not . isMinorRule) (strategy x)
+giveHints x = map g . nextRulesWith (not . isMinorRule) (unlabel $ strategy x)
  where
    g (rs, a, s) = (rule (last rs), last rs) -- ignores rest strategy
    
@@ -88,7 +88,7 @@ giveStep x a =
       _    -> (emptyDoc, a, a)
 
 giveSteps :: Assignment a -> a -> [(Doc a, a, a)]
-giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (strategy x) a
+giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (unlabel $ strategy x) a
  where
    g (rs, b, _) = (rule (last rs), applyListD (init rs) a, b)
 
@@ -101,7 +101,7 @@ feedback x a txt =
          | not (equivalence x a new) -> 
               Incorrect (text "Incorrect") Nothing -- no suggestion yet
          | otherwise -> 
-              let paths = nextRulesWith (not . isMinorRule) (strategy x) a 
+              let paths = nextRulesWith (not . isMinorRule) (unlabel $ strategy x) a 
                   check = equality x new . snd3
               in case filter check paths of
                     (rs, _, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
@@ -109,7 +109,7 @@ feedback x a txt =
          
 stepsRemaining :: Assignment a -> a -> Int
 stepsRemaining x a = 
-   case runStrategyRules (strategy x) a of
+   case runStrategyRules (unlabel $ strategy x) a of
       (rs, _):_ -> length (filter (not . isMinorRule) rs)
       _         -> 0
 

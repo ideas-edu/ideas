@@ -89,8 +89,8 @@
             <property name="use_underline">True</property>
           </widget>
           <packing>
-            <property name="x">190</property>
-            <property name="y">280</property>
+            <property name="x">10</property>
+            <property name="y">315</property>
           </packing>
         </child>
         <child>
@@ -223,7 +223,6 @@
             <property name="width_request">150</property>
             <property name="height_request">20</property>
             <property name="visible">True</property>
-            <property name="fraction">0.5</property>
           </widget>
           <packing>
             <property name="x">330</property>
@@ -255,6 +254,20 @@
           <packing>
             <property name="x">490</property>
             <property name="y">165</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkButton" id="applyButton">
+            <property name="width_request">50</property>
+            <property name="height_request">25</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="label" translatable="yes">Apply</property>
+            <property name="use_underline">True</property>
+          </widget>
+          <packing>
+            <property name="x">190</property>
+            <property name="y">280</property>
           </packing>
         </child>
       </widget>

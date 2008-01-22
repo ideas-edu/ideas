@@ -67,30 +67,24 @@ randomTermWith stdgen a
    term = generate 100 stdgen (generator a)
 
 -- | Returns a text and the rule that is applicable
-giveHint :: Assignment a -> a -> (Doc a, Rule a)
-giveHint x a =
-   case giveHints x a of
-      hd:_ -> hd
-      _    -> (emptyDoc, idRule)
+giveHint :: Assignment a -> a -> Maybe (Doc a, Rule a)
+giveHint x = safeHead . giveHints x
 
 -- | Returns a text and the rule that is applicable
 giveHints :: Assignment a -> a -> [(Doc a, Rule a)]
-giveHints x = map g . nextRulesWith (not . isMinorRule) (unlabel $ strategy x)
+giveHints x = map g . giveSteps x
  where
-   g (rs, a, s) = (rule (last rs), last rs) -- ignores rest strategy
+   g (x, y, _, _) = (x, y)
    
 -- | Returns a text, a sub-expression that can be rewritten, and the result
 -- | of the rewriting
-giveStep :: Assignment a -> a -> (Doc a, a, a)
-giveStep x a = 
-   case giveSteps x a of
-      hd:_ -> hd
-      _    -> (emptyDoc, a, a)
+giveStep :: Assignment a -> a -> Maybe (Doc a, Rule a, a, a)
+giveStep x = safeHead . giveSteps x
 
-giveSteps :: Assignment a -> a -> [(Doc a, a, a)]
+giveSteps :: Assignment a -> a -> [(Doc a, Rule a, a, a)]
 giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (unlabel $ strategy x) a
  where
-   g (rs, b, _) = (rule (last rs), applyListD (init rs) a, b)
+   g (rs, b, _) = (rule (last rs), last rs, applyListD (init rs) a, b)
 
 feedback :: Assignment a -> a -> String -> Feedback a
 feedback x a txt =
@@ -105,7 +99,9 @@ feedback x a txt =
                   check = equality x new . snd3
               in case filter check paths of
                     (rs, _, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
-                    _    -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
+                    _ | equality x a new -> 
+                         Correct (text "You have submitted the current term.") Nothing
+                    _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
          
 stepsRemaining :: Assignment a -> a -> Int
 stepsRemaining x a = 

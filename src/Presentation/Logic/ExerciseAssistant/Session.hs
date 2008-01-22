@@ -2,7 +2,7 @@
 module Session 
    ( PackedAssignment(..), Assignment(..)
    , Session, makeSession, newTerm, newAssignment, progressPair, undo, submitText
-   , currentText, derivationText, readyText, hintText, stepText
+   , currentText, derivationText, readyText, hintText, stepText, applyStep
    ) where
 
 import Common.Assignment
@@ -88,18 +88,32 @@ readyText = logMsg "Ready" $ withState $ \a d ->
 
 hintText :: Session -> IO String
 hintText = logMsg "Hint" $ withState $ \a d -> 
-   let (doc, rule) =  giveHint a (current d)
-   in return $ "Use rule " ++ showDoc a doc
+   case giveHint a (current d) of 
+      Nothing -> 
+         return "Sorry, no hint available" 
+      Just (doc, rule) ->
+         return $ "Use rule " ++ showDoc a doc
 
 stepText :: Session -> IO String
 stepText = logMsg "Step" $ withState $ \a d -> 
-   let (doc, before, after) =  giveStep a (current d)
-   in return $ unlines 
-         [ "Use rule " ++ showDoc a doc ++ " to rewrite the term"
-         , prettyPrinter a before 
-         , "into"
-         , prettyPrinter a after
-         ]
+   case giveStep a (current d) of
+      Nothing -> 
+         return "Sorry, no hint available"
+      Just (doc, _, before, after) ->
+         return $ unlines 
+            [ "Use rule " ++ showDoc a doc ++ " to rewrite the term into:"
+            , prettyPrinter a after
+            ]
+
+applyStep :: Session -> IO (String, Bool)
+applyStep = logCurrent "Apply" $ \(Session _ ref) -> do
+   St a d <- readIORef ref
+   case giveStep a (current d) of
+      Nothing -> 
+         return ("No more steps left to do", False)
+      Just (_, rule, _, new) -> do
+         writeIORef ref $ St a (Step d rule new)
+         return ("Successfully applied rule " ++ name rule, True)
 
 --------------------------------------------------
 -- Derivations

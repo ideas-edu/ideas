@@ -23,7 +23,7 @@ import OpenMath.Exercises hiding (main)
 import Domain.Fraction
 
 domains :: [PackedAssignment]
-domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment
+domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment, Pack opgave6b
           , Pack equationsAssignment, Pack simplAssignment
           ]
 
@@ -46,6 +46,7 @@ main =
         readyButton    <- fromXml castToButton      "readyButton"
         hintButton     <- fromXml castToButton      "hintButton"
         stepButton     <- fromXml castToButton      "stepButton"
+        applyButton    <- fromXml castToButton      "applyButton"
         undoButton     <- fromXml castToButton      "undoButton"
         submitButton   <- fromXml castToButton      "submitButton"
         newButton      <- fromXml castToButton      "newButton"
@@ -102,6 +103,11 @@ main =
         onClicked stepButton $ do
            txt <- stepText session
            textBufferSetText feedbackBuffer txt
+        
+        onClicked applyButton $ do
+           (txt, ok) <- applyStep session
+           textBufferSetText feedbackBuffer txt
+           when ok updateAll
         
         onClicked undoButton $ do
            txt1 <- get entryBuffer textBufferText

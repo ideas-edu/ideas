@@ -97,7 +97,8 @@ ruleAdd = makeSimpleRule "Add" f
 ruleAddFrac :: FracRule
 ruleAddFrac = makeSimpleRule "AddFrac" f
  where
-   f (Con x :/: Con y :+: Con v :/: Con w) = return $ Con (x+v) :/: Con w
+   f (Con x :/: Con y :+: Con v :/: Con w) | y==w = return $ Con (x+v) :/: Con w
+                                           | otherwise = Nothing
    f _                 = Nothing
 
 ruleSub :: FracRule
@@ -109,7 +110,8 @@ ruleSub = makeSimpleRule "Sub" f
 ruleSubFrac :: FracRule
 ruleSubFrac = makeSimpleRule "SubFrac" f
  where
-   f (Con x :/: Con y :-: Con v :/: Con w) = return $ Con (x-v) :/: Con w
+   f (Con x :/: Con y :-: Con v :/: Con w) | y==w = return $ Con (x-v) :/: Con w
+                                           | otherwise = Nothing
    f _                 = Nothing
 
 ruleMul :: FracRule

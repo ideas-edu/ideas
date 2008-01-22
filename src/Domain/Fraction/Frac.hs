@@ -126,7 +126,6 @@ simplifyM this = do
                     b' <- simplifyM b
                     case (a', b') of
                       (c, Con 0) -> Nothing
---                      (Con x, Con y) -> if y==0 then Nothing else Just $ Con (x/y)
                       (Con 0, c) -> Just $ Con 0
                       (c, Con 1) -> Just c
                       (c, d) -> Just $ c :/: d
@@ -157,10 +156,9 @@ nf f = do let (n, d) = numFraction f
           d' <- normaliseM d
           case (n', d') of 
             (_, Con 0)     -> Nothing
---            (Con a, Con b) -> if b==0 then Nothing else return (Con (a/b))
             (Con 0, _)     -> return (Con 0)
             (a, Con 1)     -> return a
-            (a, b)         -> return (a / b)
+            (a, b)         -> return (a :/: b)
 
 numFraction :: Frac -> (Frac, Frac)
 numFraction this =
@@ -213,17 +211,12 @@ countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+),
 countCon :: Frac -> Int
 countCon = foldFrac (const 0, \x -> 1, (*), (*), (+), (+))
 
-instance Fractional Frac where
-  (/)           = (:/:)
-  fromRational  = \ x -> (Con (numerator x) :/: Con (denominator x))
-  recip n       = 1 / n
-
 instance Num Frac where
   (+)          = (:+:)
   (-)          = (:-:)
   (*)          = (:*:)
   negate x     = (Con 0 :-: x)
-  fromInteger  = fromRational. fromInteger
+  fromInteger  = Con
   abs          = error "Not supported: abs"
   signum       = error "Not supported: signum"
 

@@ -70,9 +70,10 @@ ppFrac :: Frac -> String
 ppFrac = ppFracPrio 0
         
 ppFracPrio :: Int -> Frac -> String
-ppFracPrio n p = foldFrac (var, lit, binop 7 "*", binop 7 "/", binop 6 "+", binop 6 "-") p n ""
+ppFracPrio n p = foldFrac (var, lit, binop 7 "*", div 7 "/", binop 6 "+", binop 6 "-") p n ""
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
+   div prio op p q n = parIf (n > prio) (p (prio+1) . (op++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
    nott p n  = ("~"++) . p 4
@@ -106,7 +107,6 @@ ppFracParsCode :: Int -> Frac -> String
 ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", binop 3 "-") p n ""
  where
    binop prio op p q n = parIf True (p prio . ((" "++op++" ")++) . q prio)
---   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
    nott  p n = ("~"++) . p 3

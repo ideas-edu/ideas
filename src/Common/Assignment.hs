@@ -6,7 +6,7 @@ import Common.Strategy
 import Common.Utils
 import Common.Unification
 import System.Random
-import Test.QuickCheck hiding (label)
+import Test.QuickCheck hiding (label, arguments)
 
 data PackedAssignment = forall a . Pack { unpack :: Assignment a }
 
@@ -84,7 +84,14 @@ giveStep x = safeHead . giveSteps x
 giveSteps :: Assignment a -> a -> [(Doc a, Rule a, a, a)]
 giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (unlabel $ strategy x) a
  where
-   g (rs, b, _) = (rule (last rs), last rs, applyListD (init rs) a, b)
+   g (rs, new, _) = 
+      let r   = last rs
+          old = applyListD (init rs) a
+          doc = text "Use rule " <> rule (last rs) <> 
+                case arguments r old of
+                   Just args -> text "\n   with arguments " <> text args
+                   Nothing   -> emptyDoc
+      in (doc, r, old, new)
 
 feedback :: Assignment a -> a -> String -> Feedback a
 feedback x a txt =

@@ -92,16 +92,17 @@ hintText = logMsg "Hint" $ withState $ \a d ->
       Nothing -> 
          return "Sorry, no hint available" 
       Just (doc, rule) ->
-         return $ "Use rule " ++ showDoc a doc
+         return $ showDoc a doc
 
 stepText :: Session -> IO String
 stepText = logMsg "Step" $ withState $ \a d -> 
    case giveStep a (current d) of
       Nothing -> 
          return "Sorry, no hint available"
-      Just (doc, _, before, after) ->
+      Just (doc, rule, before, after) ->
          return $ unlines 
-            [ "Use rule " ++ showDoc a doc ++ " to rewrite the term into:"
+            [ "Use rule " ++ name rule
+            , "   to rewrite the term into:"
             , prettyPrinter a after
             ]
 

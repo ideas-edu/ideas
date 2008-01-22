@@ -12,14 +12,14 @@ module Common.Transformation
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation, makeTrans
    , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule
-   , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional
+   , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional, arguments
    ) where
 
 import qualified Data.Set as S
 import Data.List
 import Data.Char
 import Data.Maybe
-import Test.QuickCheck
+import Test.QuickCheck hiding (arguments)
 import Common.Utils
 import Control.Monad
 import Common.Unification
@@ -60,7 +60,7 @@ infix  6 |-
 data Transformation a
    = Function (a -> Maybe a)
    | Unifiable a => Pattern (ForAll (a, a))
-   | forall b . App (a -> Maybe b) (b -> Transformation a)
+   | forall b . Show b => App (a -> Maybe b) (b -> Transformation a)
    
 instance Apply Transformation where
    apply (Function f) = f
@@ -120,13 +120,19 @@ combineRules rs = Rule
 minorRule :: Rule a -> Rule a 
 minorRule r = r {isMinorRule = True}
 
-app  :: (x ->           Transformation a) -> (a -> Maybe (x))       -> Transformation a
-app2 :: (x -> y ->      Transformation a) -> (a -> Maybe (x, y))    -> Transformation a
-app3 :: (x -> y -> z -> Transformation a) -> (a -> Maybe (x, y, z)) -> Transformation a
+app  :: Show x => (x ->           Transformation a) -> (a -> Maybe x)         -> Transformation a
+app2 :: Show (x, y) => (x -> y ->      Transformation a) -> (a -> Maybe (x, y))    -> Transformation a
+app3 :: Show (x, y, z) => (x -> y -> z -> Transformation a) -> (a -> Maybe (x, y, z)) -> Transformation a
 
 app  f g = App g f
 app2 f g = App g $ uncurry  f
 app3 f g = App g $ uncurry3 f
+
+arguments :: Rule a -> a -> Maybe String
+arguments rule a =
+   case transformations rule of
+      [App f g] -> fmap show (f a)
+      _ -> Nothing
 
 -- | Returns the inverse of a rule: only rules that use unifications (i.e., that are constructed
 -- | with (|-)), have a computable inverse.

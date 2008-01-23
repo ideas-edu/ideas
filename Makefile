@@ -36,7 +36,8 @@ all: solver solvergui doc markup cgi
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
-	  src/Presentation/Logic/ExerciseAssistant/*.hs src/OpenMath/*.hs
+	  src/Presentation/Logic/ExerciseAssistant/*.hs src/OpenMath/*.hs \
+	  src/Domain/Fraction/*.hs
 
 solver: bin/solver$(EXE)
 

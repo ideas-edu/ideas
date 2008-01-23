@@ -11,6 +11,7 @@ module Domain.Fraction.Frac where
 
 import Common.Unification
 import Common.Utils
+import Common.Transformation
 import Data.List
 import Data.Maybe
 import Ratio
@@ -27,7 +28,7 @@ data Frac =  Var String          -- variable
           |  Frac :*: Frac       -- multiplication
           |  Frac :/: Frac       -- fraction
           |  Frac :+: Frac       -- addition
-          |  Frac :-: Frac       -- substraction
+          |  Frac :-: Frac       -- subtraction
  deriving (Show, Eq, Ord)
 
 
@@ -128,6 +129,7 @@ simplifyM this = do
                       (c, Con 0) -> Nothing
                       (Con 0, c) -> Just $ Con 0
                       (c, Con 1) -> Just c
+                      (c, Con (-1)) -> Just $ Con (-1) :*: c
                       (c, d) -> Just $ c :/: d
       a :-: b -> do a' <- simplifyM a
                     b' <- simplifyM b

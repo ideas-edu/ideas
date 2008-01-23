@@ -20,7 +20,7 @@ import Ratio
 type FracRule = Rule Frac
 
 fracRules :: [FracRule]
-fracRules = [ ruleDivZero, ruleAssAdd, ruleDivReciprocal
+fracRules = [ ruleDivZero, ruleAssAdd, ruleGCD
             , ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
             , ruleDivOne, ruleCommonDenom, ruleMulVar, ruleSubVar
             , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul
@@ -68,21 +68,30 @@ ruleCommonDenom = makeSimpleRule "CommonDenom" f
                                                      :+: Con (v*y) :/: Con (y*w)
   f (Con x :/: Con y :-: Con v :/: Con w) = return $ Con (x*w) :/: Con (y*w) 
                                                      :-: Con (v*y) :/: Con (y*w)
-  f (Con x :+: Con v :/: Con w) = return $ Con (x*w) :/: Con (w) :+: Con (v) :/: Con (w)
-  f (Con x :/: Con y :+: Con v) = return $ Con (x) :/: Con (y) :+: Con (v*y) :/: Con (y)
+  f (Con x :+: Con v :/: Con w) = return $ Con (x*w) :/: Con w :+: Con v :/: Con w
+  f (Con x :/: Con y :+: Con v) = return $ Con x :/: Con y :+: Con (v*y) :/: Con y
+  f (Con x :-: Con v :/: Con w) = return $ Con (x*w) :/: Con w :-: Con v :/: Con w
+  f (Con x :/: Con y :-: Con v) = return $ Con x :/: Con y :-: Con (v*y) :/: Con y
   f _                 = Nothing
 
+ruleGCD :: FracRule
+ruleGCD = makeSimpleRule "GCD" f
+ where
+  f (Con x :/: Con y) | a==1      = Nothing
+                      | otherwise = return $ Con (x `div` a) :/: Con (y `div` a)
+    where
+      a = gcd x y
+  f _ = Nothing
+
 ruleDivOne :: FracRule
-ruleDivOne = makeRule "DivOne" $
-   (x :/: Con 1)  |-  x
+ruleDivOne = makeRuleList "DivOne" 
+   [ (x :/: Con 1)   |-  x
+   , (x :/: Con (-1))  |-  Con (-1) :*: x
+   ]
 
 ruleDivZero :: FracRule
 ruleDivZero = makeRule "DivZero" $
    (Con 0 :/: x)  |-  Con 0
-
-ruleDivReciprocal :: FracRule
-ruleDivReciprocal = makeRule "DivReciprocal" $
-   (x :/: (y :/: z)) |- ((x :*: z) :/: y)
 
 ruleDivSame :: FracRule
 ruleDivSame = makeRule "DivSame" $
@@ -94,6 +103,9 @@ ruleAdd = makeSimpleRule "Add" f
    f (Con a :+: Con b) = return $ Con (a+b)
    f _                 = Nothing
 
+
+-- something reeeeaaally weird going on here:
+--   rule only fires AFTER ruleCommonDenom
 ruleAddFrac :: FracRule
 ruleAddFrac = makeSimpleRule "AddFrac" f
  where
@@ -119,12 +131,16 @@ ruleMul = makeSimpleRule "Mul" f
  where
    f (Con a :*: Con b) = return $ Con (a*b)
    f ((Con x :/: Con y) :*: (Con v :/: Con w)) = return $ Con (x*v) :/: Con (y*w)
+   f ((x :/: y) :*: v) = return $ (x :*: v) :/: y
+   f (v :*: (x :/: y)) = return $ (x :*: v) :/: y
    f _                 = Nothing
 
 ruleDiv :: FracRule
 ruleDiv = makeSimpleRule "Div" f
  where
    f ((Con x :/: Con y) :/: (Con v :/: Con w)) = return $ Con (x*w) :/: Con (y*v)
+   f ((x :/: y) :/: v) = return $ x :/: (y :*: v)
+   f (x :/: (y :/: v)) = return $ (x :*: v) :/: y
    f _                 = Nothing
 
 ruleAssAdd :: FracRule

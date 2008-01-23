@@ -37,10 +37,14 @@ eliminateUnits = repeatS $ somewhere $
 calculate :: Strategy FracInContext
 calculate = somewhere $
             liftFracRule ruleMul
---        <|> liftFracRule ruleDivReciprocal
         <|> liftFracRule ruleDiv
         <|> liftFracRule ruleAdd
-        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleAddFrac
-        <|> liftFracRule ruleSubVar
         <|> liftFracRule ruleSub
-        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleSubFrac
+        <|> liftFracRule ruleGCD
+        <|> liftFracRule ruleDistMul
+        <|> calcFrac
+
+calcFrac :: Strategy FracInContext
+calcFrac =  liftFracRule ruleCommonDenom 
+        <*> (liftFracRule ruleAddFrac <|> liftFracRule ruleSubFrac)
+        <*> liftFracRule ruleGCD

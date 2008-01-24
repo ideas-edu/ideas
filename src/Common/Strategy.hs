@@ -162,7 +162,7 @@ exhaustive = repeatS . altList
 somewhere :: (LiftStrategy f Strategy, Move a) => f a -> Strategy a
 somewhere p = ruleMoveTop <*> ruleMoveSomewhere <*> p <*> ruleMoveTop
  where
-   ruleMoveSomewhere = minorRule $ makeSimpleRule "Somewhere" $ safeHead . filter (applicable p) . reachable
+   ruleMoveSomewhere = minorRule $ makeSimpleRuleList "Somewhere" ${-  safeHead . filter (applicable p) -}  reachable
 
 -- top/down
 somewhereTD :: (LiftStrategy f Strategy, Move a) => f a -> Strategy a

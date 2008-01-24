@@ -10,7 +10,8 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
-   , Rule(..), makeRule, makeRuleList, makeSimpleRule, (|-), combineRules, Transformation, makeTrans
+   , Rule(..), makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList, (|-), combineRules
+   , Transformation, makeTrans, makeTransList
    , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule
    , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional, arguments
    ) where
@@ -58,14 +59,16 @@ applyListM xs a = foldl (\ma t -> ma >>= applyM t) (return a) xs
 infix  6 |- 
 
 data Transformation a
-   = Function (a -> Maybe a)
+   = Function (a -> [a])
    | Unifiable a => Pattern (ForAll (a, a))
    | forall b . Show b => App (a -> Maybe b) (b -> Transformation a)
    
 instance Apply Transformation where
-   apply (Function f) = f
-   apply (Pattern  p) = applyPattern p
-   apply (App f g   ) = \a -> f a >>= \b -> apply (g b) a
+   applyAll (Function f) = f
+   applyAll (Pattern  p) = maybe [] return . applyPattern p
+   applyAll (App f g   ) = \a -> case f a of
+                                   Nothing -> []
+                                   Just b  -> applyAll (g b) a
 
 -- | Constructs a transformation based on two terms (a left-hand side and a
 -- | right-hand side). The terms must be unifiable. It is checked that no
@@ -84,7 +87,10 @@ applyPattern pair a = do
    return (sub |-> rhs)
 
 makeTrans :: (a -> Maybe a) -> Transformation a
-makeTrans = Function
+makeTrans f = makeTransList (maybe [] return . f)
+
+makeTransList :: (a -> [a]) -> Transformation a
+makeTransList = Function
 
 -----------------------------------------------------------
 --- Rules
@@ -106,7 +112,11 @@ makeRule n ts = makeRuleList n [ts]
 
 -- | Smart constructor
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
-makeSimpleRule n f = makeRule n (Function f)
+makeSimpleRule n f = makeSimpleRuleList n  (maybe [] return . f)
+
+-- | Smart constructor
+makeSimpleRuleList :: String -> (a -> [a]) -> Rule a
+makeSimpleRuleList n f = makeRule n (Function f)
 
 -- | Combine a list of rules. Select the first rule that is applicable (is such a rule exists)
 combineRules :: [Rule a] -> Rule a
@@ -177,10 +187,10 @@ data LiftPair a b = LiftPair { getter :: b -> Maybe a, setter :: a -> b -> b }
 liftRule :: LiftPair a b -> Rule a -> Rule b
 liftRule lp r = r {transformations = [Function f]}
  where
-   f x = do
-      this <- getter lp x
-      new  <- apply r this
-      return (setter lp new x)
+   f x =
+      case getter lp x of
+         Nothing   -> []
+         Just this -> [ setter lp new x | new  <- applyAll r this ]
 
 -----------------------------------------------------------
 --- QuickCheck generator

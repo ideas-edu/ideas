@@ -177,7 +177,7 @@ instance Ord (Rule a) where
    r1 `compare` r2 = name r1 `compare` name r2
      
 instance Apply Rule where
-   apply r a = msum . map (`apply` a) . transformations $ r
+   applyAll r a = concatMap (`applyAll` a) (transformations r)
 
 -----------------------------------------------------------
 --- Lifting rules

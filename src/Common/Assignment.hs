@@ -93,20 +93,22 @@ giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (unlabel $ strategy x)
                    Nothing   -> emptyDoc
       in (doc, r, old, new)
 
-feedback :: Assignment a -> a -> String -> Feedback a
-feedback x a txt =
+-- | The strategy in the assignment should reflect the current position in the 
+-- | strategy, which might not be the original (complete) strategy.
+feedback :: Assignment a -> [a] -> String -> Feedback a
+feedback x as txt =
    case parser x txt of
       Left (msg, suggestion) -> 
          SyntaxError msg suggestion
       Right new
-         | not (equivalence x a new) -> 
+         | not (equivalence x (last as) new) -> 
               Incorrect (text "Incorrect") Nothing -- no suggestion yet
          | otherwise -> 
-              let paths = nextRulesWith (not . isMinorRule) (unlabel $ strategy x) a 
-                  check = equality x new . snd3
+              let paths = nextRulesForSequenceWith (not . isMinorRule) (unlabel $ strategy x) as
+                  check = equality x new . snd
               in case filter check paths of
-                    (rs, _, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
-                    _ | equality x a new -> 
+                    (rs, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
+                    _ | equality x (last as) new -> 
                          Correct (text "You have submitted the current term.") Nothing
                     _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
          

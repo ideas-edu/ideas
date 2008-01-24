@@ -11,7 +11,7 @@
 module Common.Strategy 
    ( Strategy, NamedStrategy, AnonymousStrategy, IsStrategy(..), unlabel, LiftStrategy(..)
    , (<*>), (<|>), (|>), succeed, failS, seqList, altList, repeatS, try, exhaustive, somewhere, somewhereTD
-   , runStrategy, nextRule, nextRulesWith, isSucceed, isFail, trackRule, trackRulesWith
+   , runStrategy, nextRule, nextRulesWith, nextRulesForSequenceWith, isSucceed, isFail, trackRule, trackRulesWith
    , intermediates, intermediatesList, check, traceStrategy, runStrategyRules, mapStrategy
    , StrategyLocation, strategyName, subStrategies, subStrategy, subStrategyOrRule
    , repeatNS, reportLocations, firstLocation
@@ -162,7 +162,7 @@ exhaustive = repeatS . altList
 somewhere :: (LiftStrategy f Strategy, Move a) => f a -> Strategy a
 somewhere p = ruleMoveTop <*> ruleMoveSomewhere <*> p <*> ruleMoveTop
  where
-   ruleMoveSomewhere = minorRule $ makeSimpleRuleList "Somewhere" ${-  safeHead . filter (applicable p) -}  reachable
+   ruleMoveSomewhere = minorRule $ makeSimpleRuleList "Somewhere" ${-  safeHead .  filter (applicable p) . -} reachable
 
 -- top/down
 somewhereTD :: (LiftStrategy f Strategy, Move a) => f a -> Strategy a
@@ -201,6 +201,17 @@ nextRulesWith :: (Rule a -> Bool) -> Strategy a -> a -> [([Rule a], a, Strategy 
 nextRulesWith p strategy a = concatMap f (nextRule strategy a)
  where f (r, b, s) | p r       = [([r], b, s)]
                    | otherwise = [ (r:rs, c, t) | (rs, c, t) <- nextRulesWith p s b ] 
+
+nextRulesForSequenceWith :: (Rule a -> Bool) -> Strategy a -> [a] -> [([Rule a], a)]
+nextRulesForSequenceWith p strategy as = 
+   case as of
+      []     -> []
+      [a]    -> let f (x, y, z) = (x, y)
+                in map f (nextRulesWith p strategy a)
+      a:rest -> [ (rs1++rs2, c)
+                | (rs1, b, s) <- nextRulesWith p strategy a
+                , (rs2, c)    <- nextRulesForSequenceWith p s rest 
+                ]
 
 trackRule :: Rule a -> Strategy a -> Strategy a
 trackRule rule = 

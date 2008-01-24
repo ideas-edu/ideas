@@ -52,7 +52,7 @@ undo = logCurrent "Undo" $ \(Session _ ref) ->
 submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    St a d <- readIORef ref
-   case feedback a (current d) txt of
+   case feedback a (terms d) txt of
       SyntaxError doc msug -> 
          let msg = "Parse error:\n" ++ showDoc a doc ++ maybe "" (\x -> "\nDid you mean " ++ prettyPrinter a x) msug
          in return (msg, False)
@@ -128,6 +128,11 @@ current (Step _ _ a) = a
 initial :: Derivation a -> a
 initial (Start a)    = a
 initial (Step d _ _) = initial d
+
+-- | to do: make this function efficient (accumulating parameter)
+terms :: Derivation a -> [a]
+terms (Start a) = [a]
+terms (Step d _ a) = terms d ++ [a]
 
 showDerivation :: (a -> String) -> Derivation a -> String
 showDerivation f (Start a)    = f a

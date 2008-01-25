@@ -10,6 +10,9 @@ import OpenMath.ObjectParser
 type StrategyID = String
 type Location   = [Int]
 
+versionNr :: String
+versionNr = "0.1.0"
+
 -- not yet used
 strategyTable :: [(String, Assignment Expr)]
 strategyTable =

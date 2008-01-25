@@ -7,9 +7,10 @@ import OpenMath.Request
 import OpenMath.Reply
 import OpenMath.ObjectParser
 import Common.Transformation
-import Common.Strategy
+import Common.Strategy hiding (not)
 import Common.Assignment hiding (Incorrect)
 import Data.Maybe
+import Data.Char
 
 respond :: Maybe String -> String
 respond = replyInXML . maybe requestError (either parseError laServer . pRequest)
@@ -23,13 +24,19 @@ parseError   = replyError "parse error"
 requestError :: Reply
 requestError = replyError "request error" "no request found in \"input\""
 
+(~=) :: String -> String -> Bool
+xs ~= ys = let f = map toLower . filter (not . isSpace)
+           in f xs == f ys 
+
 laServer :: Request -> Reply
-laServer req = 
+laServer req | not (req_Strategy req ~= "Gaussian elimination") =  -- Quick and dirty check!
+   replyError "request error" "unknown strategy"
+laServer req =
    case subStrategy (req_Location req) toReducedEchelon of
       Nothing -> 
          replyError "location error" "invalid location for strategy"
       Just subStrategy -> 
-         case applyAll toReducedEchelon (inContext $ fromJust $ fromExpr $ req_Term req) of
+         case applyAll subStrategy (inContext $ fromJust $ fromExpr $ req_Term req) of
             [] -> replyError "strategy error" "not able to compute an expected answer"
             answers@(expected:_)
                | fmap (inContext . fromJust . fromExpr) (req_Answer req) `elem` (map Just answers) ->

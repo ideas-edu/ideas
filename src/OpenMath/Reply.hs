@@ -70,7 +70,7 @@ replyErrorToXML :: ReplyError -> XML
 replyErrorToXML r = xmlResult (repErr_Kind r) [Text $ repErr_Message r]
 
 xmlResult :: String -> [XML] -> XML
-xmlResult result = Tag "reply" [("result", result)]
+xmlResult result = Tag "reply" [("result", result), ("version", versionNr)]
 
 xmlList :: [(String, XML)] -> [XML]
 xmlList = map f

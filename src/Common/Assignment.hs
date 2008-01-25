@@ -2,7 +2,7 @@
 module Common.Assignment where
 
 import Common.Transformation
-import Common.Strategy
+import Common.Strategy hiding (not)
 import Common.Utils
 import Common.Unification
 import System.Random
@@ -18,7 +18,7 @@ data Assignment a = Assignment
    , equality      :: a -> a -> Bool -- syntactic equality
    , finalProperty :: a -> Bool
    , ruleset       :: [Rule a]
-   , strategy      :: NamedStrategy a
+   , strategy      :: LabeledStrategy a
    , generator     :: Gen a
    , suitableTerm  :: a -> Bool
    , configuration :: Configuration

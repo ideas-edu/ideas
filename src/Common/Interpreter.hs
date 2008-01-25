@@ -12,10 +12,10 @@ module Common.Interpreter (runInterpreter) where
 import Data.Char
 import Data.List
 import Data.Maybe
-import Control.Monad.State
 import Common.History
 import Common.Transformation
-import Common.Strategy
+import Control.Monad.State
+import Common.Strategy hiding (not)
 import Common.Move
 import Common.Utils
 import Common.Assignment
@@ -125,7 +125,7 @@ runInterpreter interpr = do
                            mark
                      _ -> do
                         liftIO $ putStrLn "I don't know which rule was applied"
-                        modify $ \s -> s {currentTerm = new, currentStrategy = failS}
+                        modify $ \s -> s {currentTerm = new, currentStrategy = Common.Strategy.fail}
                         mark
             step
    

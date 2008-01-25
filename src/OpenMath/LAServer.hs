@@ -49,7 +49,7 @@ laServer req =
                                                 Just m  -> equivalence reduceMatrixAssignment expected (inContext $ fromJust $ fromExpr m)
                        }
                        
-subTask :: Matrix Rational -> NamedStrategy (MatrixInContext Rational) -> Location
+subTask :: Matrix Rational -> LabeledStrategy (MatrixInContext Rational) -> Location
 subTask term subStrategy = 
    case firstLocation (inContext term) subStrategy of
       Just (i:_) -> [i] -- one-level only

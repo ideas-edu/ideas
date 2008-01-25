@@ -1,11 +1,11 @@
 {-# OPTIONS -XGeneralizedNewtypeDeriving #-}
 module OpenMath.Exercises where
 
-import Common.Transformation
 
+import Prelude hiding (repeat)
 import Common.Transformation
 import Domain.LinearAlgebra (Matrix, makeMatrix, rows, columns)
-import Common.Strategy
+import Common.Strategy hiding (not)
 import Common.Utils
 import Common.Unification
 import Common.Assignment
@@ -18,7 +18,7 @@ import qualified Domain.LinearAlgebra.Context as Matrix
 import qualified Common.Strategy as Strategy
 
 import qualified Data.Set as S
-import Data.List
+import Data.List hiding (repeat)
 import Data.Char
 import Data.Maybe
 import Control.Monad
@@ -155,10 +155,10 @@ ruleFreeVarsToRight = makeSimpleRule "FreeVarsToRight" f
 toGeneralSolution :: Fractional a => Strategy (EqsInContext a)
 toGeneralSolution = bringToStandardForm <*> toEchelon <*> determineFreeVars <*> echelonToSolution
  where
-   bringToStandardForm = repeatS ruleToStandardForm
-   toEchelon           = repeatS (Strategy.check (not . null . remaining) <*> try ruleExchange <*> repeatS ruleEliminateVar <*> ruleCoverTop)
+   bringToStandardForm = repeat ruleToStandardForm
+   toEchelon           = repeat (Strategy.check (not . null . remaining) <*> try ruleExchange <*> repeat ruleEliminateVar <*> ruleCoverTop)
    determineFreeVars   = liftSystemRule ruleFreeVarsToRight
-   echelonToSolution   = repeatS (liftSystemRule ruleSubVar <*> liftSystemRule ruleFreeVarsToRight)
+   echelonToSolution   = repeat (liftSystemRule ruleSubVar <*> liftSystemRule ruleFreeVarsToRight)
 
 ruleToStandardForm :: Num a => Rule (EqsInContext a)
 ruleToStandardForm = liftSystemRule $ liftRuleToList $ makeRule "ToStandardForm" equationToStandardForm 
@@ -614,7 +614,7 @@ somewh f this = f this `mplus`
 {-
 numS :: Strategy MyNum
 numS =  exhaustive (map liftNumRule $ negRules ++ simplerRules)
-    <*> repeatS (liftNumRule r16) -- distribute plus over times
+    <*> repeat (liftNumRule r16) -- distribute plus over times
     <*> order
     
          -- [r1,r2,r3,r4,r9,r10,r11,r12] -- simplification

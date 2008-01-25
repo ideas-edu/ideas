@@ -9,25 +9,26 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction.Strategies where
 
+import Prelude hiding (repeat)
 import Domain.Fraction.Zipper
 import Domain.Fraction.Rules
 import Common.Strategy
 
-toSimple :: NamedStrategy FracInContext
-toSimple = label "Simplify expression" $ repeatNS $
+toSimple :: LabeledStrategy FracInContext
+toSimple = label "Simplify expression" $ repeat $
            label "Eliminate zero's" eliminateZeros
        <*> label "Eliminate units"  eliminateUnits
        <*> label "Do calculation"   calculate
 
 eliminateZeros :: Strategy FracInContext
-eliminateZeros = repeatS $ somewhere $
+eliminateZeros = repeat $ somewhere $
                  liftFracRule ruleDivZero
              <|> liftFracRule ruleMulZero
              <|> liftFracRule ruleUnitAdd
              <|> liftFracRule ruleSubZero
 
 eliminateUnits :: Strategy FracInContext
-eliminateUnits = repeatS $ somewhere $ 
+eliminateUnits = repeat $ somewhere $ 
                  liftFracRule ruleUnitMul
              <|> liftFracRule ruleDivOne
              <|> liftFracRule ruleDivSame

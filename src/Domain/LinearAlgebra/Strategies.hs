@@ -9,24 +9,25 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Strategies where
 
+import Prelude hiding (repeat)
 import Domain.LinearAlgebra.Context
 import Domain.LinearAlgebra.Rules
 import Common.Strategy
 import Common.Transformation
 
-toReducedEchelon :: Fractional a => NamedStrategy (MatrixInContext a)
+toReducedEchelon :: Fractional a => LabeledStrategy (MatrixInContext a)
 toReducedEchelon = label "Gaussian elimination" $ 
    forwardPass <*> backwardPass
 
-forwardPass :: Fractional a => NamedStrategy (MatrixInContext a)
+forwardPass :: Fractional a => LabeledStrategy (MatrixInContext a)
 forwardPass = label "Forward pass" $ 
-   repeatNS  $    label "Find j-th column"      ruleFindColumnJ 
-             <*>  label "Exchange rows"         (try ruleExchangeNonZero)
-             <*>  label "Scale row"             (try ruleScaleToOne)
-             <*>  label "Zeros in j-th column"  (repeatS ruleZerosFP)
-             <*>  label "Cover up top row"      ruleCoverRow
+   repeat  $    label "Find j-th column"      ruleFindColumnJ 
+           <*>  label "Exchange rows"         (try ruleExchangeNonZero)
+           <*>  label "Scale row"             (try ruleScaleToOne)
+           <*>  label "Zeros in j-th column"  (repeat ruleZerosFP)
+           <*>  label "Cover up top row"      ruleCoverRow
   
-backwardPass :: Fractional a => NamedStrategy (MatrixInContext a)
+backwardPass :: Fractional a => LabeledStrategy (MatrixInContext a)
 backwardPass = label "Backward pass" $ 
-   repeatNS  $    label "Uncover row"  ruleUncoverRow
-             <*>  label "Sweep"        (repeatS ruleZerosBP)
+   repeat  $    label "Uncover row"  ruleUncoverRow
+           <*>  label "Sweep"        (repeat ruleZerosBP)

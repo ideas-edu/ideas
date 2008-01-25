@@ -9,13 +9,14 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Strategies where
 
+import Prelude hiding (repeat)
 import Domain.Logic.Zipper
 import Domain.Logic.Rules
 import Common.Strategy
 
 eliminateConstants :: Strategy LogicInContext
-eliminateConstants = repeatS $ somewhere $
-   altList $ map liftLogicRule rules
+eliminateConstants = repeat $ somewhere $
+   alternatives $ map liftLogicRule rules
  where 
    rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
            , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
@@ -23,20 +24,20 @@ eliminateConstants = repeatS $ somewhere $
            ]
 
 eliminateImplEquiv :: Strategy LogicInContext
-eliminateImplEquiv = repeatS $ somewhere $
+eliminateImplEquiv = repeat $ somewhere $
           liftLogicRule ruleDefImpl
       <|> liftLogicRule ruleDefEquiv
       
 eliminateNots :: Strategy LogicInContext
-eliminateNots = repeatS $ somewhere $ 
+eliminateNots = repeat $ somewhere $ 
           liftLogicRule ruleDeMorganAnd
       <|> liftLogicRule ruleDeMorganOr
       <|> liftLogicRule ruleNotNot
       
 orToTop :: Strategy LogicInContext
-orToTop = repeatS $ somewhere $ liftLogicRule ruleAndOverOr
+orToTop = repeat $ somewhere $ liftLogicRule ruleAndOverOr
 
-toDNF :: NamedStrategy LogicInContext
+toDNF :: LabeledStrategy LogicInContext
 toDNF =  label "Bring to dnf"
       $  label "Eliminate constants"                 eliminateConstants
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv

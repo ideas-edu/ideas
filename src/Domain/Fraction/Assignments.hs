@@ -17,7 +17,6 @@ import Domain.Fraction.Parser
 import Domain.Fraction.Rules
 
 import Common.Assignment
-import Common.Strategy
 import Common.Transformation
 import Control.Monad
 import System.Random

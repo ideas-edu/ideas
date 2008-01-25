@@ -56,5 +56,5 @@ exprAssignment a = Assignment
 exprLiftPair :: IsExpr a => LiftPair a Expr
 exprLiftPair = LiftPair fromExpr (flip const)
 
-changeStrategy :: LiftPair a b -> NamedStrategy a -> NamedStrategy b
+changeStrategy :: LiftPair a b -> LabeledStrategy a -> LabeledStrategy b
 changeStrategy pair s = label (strategyName s) $ mapStrategy (liftRule pair) (unlabel s)

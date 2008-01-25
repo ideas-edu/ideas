@@ -1,23 +1,17 @@
 module Common.RegExp 
-   ( RegExp, IsRegExp(..), symbol
-   , collectSymbols, join, isSucceed, isEmptySet, firsts, nonSucceed
+   ( RegExp, (<*>), (<|>), star, succeed, fail, symbol
+   , collectSymbols, join, isSucceed, isFail, firsts, nonSucceed
    , language, member, checks, withIndex
    ) where
 
+import Prelude hiding (fail)
 import Common.Utils
-import Control.Monad hiding (join)
-import Control.Arrow
+import Control.Monad (liftM, liftM2)
+import Control.Arrow (second)
 import Test.QuickCheck 
 
 infixr 5 <*>
 infixr 4 <|>
-
-class IsRegExp f where
-   (<*>)    :: f a -> f a -> f a
-   (<|>)    :: f a -> f a -> f a
-   star     :: f a -> f a
-   succeed  :: f a
-   emptyset :: f a
 
 data RegExp a
    = RegExp a :*: RegExp a
@@ -25,7 +19,7 @@ data RegExp a
    | Star (RegExp a)
    | Symbol a
    | Succeed 
-   | EmptySet
+   | Fail
  deriving Show
  
 instance Functor RegExp where
@@ -36,45 +30,47 @@ instance Functor RegExp where
          Star p   -> Star (fmap f p)
          Symbol a -> Symbol (f a)
          Succeed  -> Succeed
-         EmptySet -> EmptySet
+         Fail     -> Fail
 
-instance IsRegExp RegExp where
+-- smart constructor
+(<*>) :: RegExp a -> RegExp a -> RegExp a
+p <*> q = 
+   case (p, q) of
+      (Fail, _)    -> Fail
+      (_, Fail)    -> Fail
+      (Succeed, _) -> q
+      (_, Succeed) -> p
+      _            -> p :*: q
 
-   -- smart constructor
-   p <*> q = 
-      case (p, q) of
-         (EmptySet, _) -> EmptySet
-         (_, EmptySet) -> EmptySet
-         (Succeed, _)  -> q
-         (_, Succeed)  -> p
-         _             -> p :*: q
+-- smart constructor
+(<|>) :: RegExp a -> RegExp a -> RegExp a
+p <|> q = 
+   case (p, q) of
+      (Fail, _) -> q
+      (_, Fail) -> p
+      _ | isSucceed p || isSucceed q -> 
+             case nonSucceed p <|> nonSucceed q of 
+                Fail -> Succeed
+                new  -> Succeed :|: new
+        | otherwise -> p :|: q
 
-   -- smart constructor
-   p <|> q = 
-      case (p, q) of
-         (EmptySet, _) -> q
-         (_, EmptySet) -> p
-         _ | isSucceed p || isSucceed q -> 
-                case nonSucceed p <|> nonSucceed q of 
-                   EmptySet -> Succeed
-                   new      -> Succeed :|: new
-           | otherwise -> p :|: q
-   
-   -- smart constructor    
-   star p = 
-      case p of
-         Star _   -> p
-         Succeed  -> p
-         EmptySet -> succeed 
-         _        -> Star (nonSucceed p)
-            
-   succeed  = Succeed
-   emptyset = EmptySet
+-- smart constructor             
+star :: RegExp a -> RegExp a
+star p = 
+   case p of
+      Star _  -> p
+      Succeed -> p
+      Fail    -> succeed 
+      _       -> Star (nonSucceed p)
 
--- | symbol is not part of the IsRegExp type class because not all
--- functors (in which we are interested) implement this function
 symbol :: a -> RegExp a
 symbol = Symbol
+         
+succeed :: RegExp a
+succeed  = Succeed
+
+fail :: RegExp a
+fail = Fail
      
 collectSymbols :: RegExp a -> [a]
 collectSymbols regexp = 
@@ -94,9 +90,9 @@ isSucceed regexp =
       Succeed -> True
       _ -> False
 
-isEmptySet :: RegExp a -> Bool
-isEmptySet EmptySet = True
-isEmptySet _        = False
+isFail :: RegExp a -> Bool
+isFail Fail = True
+isFail _    = False
 
 -- regular expression without the Succeed alternative
 nonSucceed :: RegExp a -> RegExp a
@@ -108,7 +104,7 @@ nonSucceed regexp =
                  in nsp <|> nsq <|> (nsp <*> nsq)
       p :|: q -> nonSucceed p <|> nonSucceed q
       Star p  -> p <*> Star p
-      Succeed -> emptyset
+      Succeed -> fail
       _       -> regexp
 
 firsts :: RegExp a -> [(a, RegExp a)]
@@ -135,7 +131,7 @@ withIndex = snd . rec 0
                      in (n1, Star a)
          Symbol a -> (n+1, Symbol (n, a))
          Succeed  -> (n, Succeed)
-         EmptySet -> (n, EmptySet)
+         Fail     -> (n, Fail)
                           
 language :: RegExp a -> [[a]]
 language regexp = 
@@ -145,7 +141,7 @@ language regexp =
       Star p   -> [] : language (p <*> regexp)
       Symbol a -> [[a]]
       Succeed  -> [[]]
-      EmptySet -> []
+      Fail     -> []
       
 member :: Eq a => RegExp a -> [a] -> Bool
 member regexp = not . null . filter null . rec regexp
@@ -159,7 +155,7 @@ member regexp = not . null . filter null . rec regexp
                         y:ys | y==a -> [ys]
                         _           -> []
          Succeed  -> [xs]
-         EmptySet -> []
+         Fail     -> []
 
 join :: RegExp (RegExp a) -> RegExp a
 join regexp =
@@ -169,7 +165,7 @@ join regexp =
       Star p   -> star (join p)
       Symbol a -> a
       Succeed  -> succeed
-      EmptySet -> emptyset
+      Fail     -> fail
           
 --------------------------------------------------------
 -- QuickCheck generator
@@ -183,11 +179,11 @@ instance Arbitrary a => Arbitrary (RegExp a) where
          Star p   -> variant 2 . coarbitrary p
          Symbol a -> variant 3 . coarbitrary a
          Succeed  -> variant 4
-         EmptySet -> variant 5
+         Fail     -> variant 5
    
 -- Use smart constructors here
 arbAnnRegExp :: Arbitrary a => Int -> Gen (RegExp a)
-arbAnnRegExp 0 = oneof [ liftM symbol arbitrary, return succeed, return emptyset ]
+arbAnnRegExp 0 = oneof [ liftM symbol arbitrary, return succeed, return fail ]
 arbAnnRegExp n = oneof [ liftM2 (<*>) rec rec, liftM2 (<|>) rec rec
                        , arbAnnRegExp 0, liftM star rec
                        ]
@@ -208,7 +204,7 @@ propSplitSucceed p = p === if isSucceed p then succeed <|> new else new
  where new = nonSucceed p
 
 propFirsts :: RegExp Int -> Bool
-propFirsts p = nonSucceed p === foldr op emptyset (firsts p)
+propFirsts p = nonSucceed p === foldr op fail (firsts p)
  where op (a, q) r = (symbol a <*> q) <|> r
 
 infixl 1 ===
@@ -238,7 +234,7 @@ checks = do
    quickCheck $ associative (<|>)
    quickCheck $ commutative (<|>)
    quickCheck $ idempotent  (<|>)
-   quickCheck $ unit (<|>) emptyset
+   quickCheck $ unit (<|>) fail
    quickCheck $ associative (<*>)
    quickCheck $ unit (<*>) succeed
 

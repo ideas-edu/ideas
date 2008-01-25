@@ -11,7 +11,7 @@
 module Domain.Logic.Checks (checks) where
 
 import Common.Assignment
-import Common.Strategy
+import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Utils
 import Common.Move

@@ -8,7 +8,7 @@ import Domain.Logic.Parser
 import Domain.Logic.Rules
 
 import Common.Assignment
-import Common.Strategy
+import Common.Strategy hiding (not)
 import Control.Monad
 import System.Random
 

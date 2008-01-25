@@ -88,7 +88,7 @@ readyText = logMsg "Ready" $ withState $ \a d ->
 
 hintText :: Session -> IO String
 hintText = logMsg "Hint" $ withState $ \a d -> 
-   case giveHint a (current d) of 
+   case giveHint a (terms d) of 
       Nothing -> 
          return "Sorry, no hint available" 
       Just (doc, rule) ->
@@ -96,7 +96,7 @@ hintText = logMsg "Hint" $ withState $ \a d ->
 
 stepText :: Session -> IO String
 stepText = logMsg "Step" $ withState $ \a d -> 
-   case giveStep a (current d) of
+   case giveStep a (terms d) of
       Nothing -> 
          return "Sorry, no hint available"
       Just (doc, rule, before, after) ->
@@ -109,7 +109,7 @@ stepText = logMsg "Step" $ withState $ \a d ->
 applyStep :: Session -> IO (String, Bool)
 applyStep = logCurrent "Apply" $ \(Session _ ref) -> do
    St a d <- readIORef ref
-   case giveStep a (current d) of
+   case giveStep a (terms d) of
       Nothing -> 
          return ("No more steps left to do", False)
       Just (_, rule, _, new) -> do

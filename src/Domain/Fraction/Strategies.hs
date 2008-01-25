@@ -42,9 +42,14 @@ calculate = somewhere $
         <|> liftFracRule ruleSub
         <|> liftFracRule ruleGCD
         <|> liftFracRule ruleDistMul
-        <|> calcFrac
+        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleAddFrac
+        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleSubFrac
+--       <|> calcFrac
 
+
+{-
 calcFrac :: Strategy FracInContext
 calcFrac =  liftFracRule ruleCommonDenom 
         <*> (liftFracRule ruleAddFrac <|> liftFracRule ruleSubFrac)
         <*> liftFracRule ruleGCD
+-}

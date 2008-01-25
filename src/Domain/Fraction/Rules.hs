@@ -64,10 +64,12 @@ ruleUnitMul = makeRuleList "UnitMul"
 ruleCommonDenom :: FracRule
 ruleCommonDenom = makeSimpleRule "CommonDenom" f
  where
-  f (Con x :/: Con y :+: Con v :/: Con w) = return $ Con (x*w) :/: Con (y*w) 
-                                                     :+: Con (v*y) :/: Con (y*w)
-  f (Con x :/: Con y :-: Con v :/: Con w) = return $ Con (x*w) :/: Con (y*w) 
-                                                     :-: Con (v*y) :/: Con (y*w)
+  f (Con x :/: Con y :+: Con v :/: Con w) | y/=w = return $ Con (x*w) :/: Con (y*w) 
+                                                            :+: Con (v*y) :/: Con (y*w)
+                                          | otherwise = Nothing
+  f (Con x :/: Con y :-: Con v :/: Con w) | y/=w = return $ Con (x*w) :/: Con (y*w) 
+                                                            :-: Con (v*y) :/: Con (y*w)
+                                          | otherwise = Nothing
   f (Con x :+: Con v :/: Con w) = return $ Con (x*w) :/: Con w :+: Con v :/: Con w
   f (Con x :/: Con y :+: Con v) = return $ Con x :/: Con y :+: Con (v*y) :/: Con y
   f (Con x :-: Con v :/: Con w) = return $ Con (x*w) :/: Con w :-: Con v :/: Con w

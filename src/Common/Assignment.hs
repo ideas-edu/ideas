@@ -67,27 +67,27 @@ randomTermWith stdgen a
    term = generate 100 stdgen (generator a)
 
 -- | Returns a text and the rule that is applicable
-giveHint :: Assignment a -> a -> Maybe (Doc a, Rule a)
+giveHint :: Assignment a -> [a] -> Maybe (Doc a, Rule a)
 giveHint x = safeHead . giveHints x
 
 -- | Returns a text and the rule that is applicable
-giveHints :: Assignment a -> a -> [(Doc a, Rule a)]
+giveHints :: Assignment a -> [a] -> [(Doc a, Rule a)]
 giveHints x = map g . giveSteps x
  where
    g (x, y, _, _) = (x, y)
    
 -- | Returns a text, a sub-expression that can be rewritten, and the result
 -- | of the rewriting
-giveStep :: Assignment a -> a -> Maybe (Doc a, Rule a, a, a)
+giveStep :: Assignment a -> [a] -> Maybe (Doc a, Rule a, a, a)
 giveStep x = safeHead . giveSteps x
 
-giveSteps :: Assignment a -> a -> [(Doc a, Rule a, a, a)]
-giveSteps x a = map g $ nextRulesWith (not . isMinorRule) (unlabel $ strategy x) a
+giveSteps :: Assignment a -> [a] -> [(Doc a, Rule a, a, a)]
+giveSteps x as = map g $ nextRulesForSequenceWith (not . isMinorRule) (unlabel $ strategy x) as
  where
-   g (rs, new, _) = 
+   g (rs, new) = 
       let r   = last rs
-          old = applyListD (init rs) a
-          doc = text "Use rule " <> rule (last rs) <> 
+          old = applyListD (init rs) (last as)
+          doc = text "Use rule " <> rule r <> 
                 case arguments r old of
                    Just args -> text "\n   with arguments " <> text args
                    Nothing   -> emptyDoc

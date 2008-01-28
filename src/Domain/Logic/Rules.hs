@@ -27,8 +27,11 @@ logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAn
 	     , ruleIdempOr, ruleIdempAnd
 	     , ruleAbsorpOr, ruleAbsorpAnd
 	     , ruleCommOr, ruleCommAnd
-	     , buggyRuleCommImp, buggyRuleAssImp
              ]
+
+logicBuggyRules :: [LogicRule]
+logicBuggyRules = [ buggyRuleCommImp, buggyRuleAssImp
+                 ]
 
 -- local logic variables
 x, y, z :: Logic
@@ -166,39 +169,39 @@ ruleCommAnd = makeRule "CommAnd" $
 
 
 buggyRuleCommImp :: LogicRule
-buggyRuleCommImp = makeRule "CommImp" $
+buggyRuleCommImp = buggyRule $ makeRule "CommImp" $
     (x :->: y)  |-  (y :->: x) 
 
     
 buggyRuleAssImp :: LogicRule
-buggyRuleAssImp = makeRuleList "AssImp"
+buggyRuleAssImp = buggyRule $ makeRuleList "AssImp"
    [ (x :->: (y :->: z))  |-  ((x :->: y) :->: z)
    , ((x :->: y) :->: z)  |-  (x :->: (y :->: z))
    ]
     
 buggyRuleIdemImp :: LogicRule
-buggyRuleIdemImp = makeRule "IdemImp" $
+buggyRuleIdemImp = buggyRule $ makeRule "IdemImp" $
     (x :->: x)  |-  x 
     
 buggyRuleIdemEqui :: LogicRule
-buggyRuleIdemEqui = makeRule "IdemEqui"  $
+buggyRuleIdemEqui = buggyRule $ makeRule "IdemEqui"  $
     (x :<->: x)  |-  x 
     
 buggyRuleEquivElim :: LogicRule
-buggyRuleEquivElim = makeRuleList "BuggyEquivElim"
-    [ (x :<->: y) |- (x :&&: y) :||: Not (x :&&: y) 
-    , (x :<->: y) |- (x :||: y) :&&: (Not x :||: Not y)
-    , (x :<->: y) |- (x :&&: y) :||: (Not x :&&:  y)
-    , (x :<->: y) |- (x :&&: y) :||: ( x :&&: Not y) 
-    , (x :<->: y) |- (x :&&: y) :&&: (Not x :&&: Not y)
+buggyRuleEquivElim = buggyRule $ makeRuleList "BuggyEquivElim"
+    [ (x :<->: y) |- ((x :&&: y) :||: Not (x :&&: y))
+    , (x :<->: y) |- ((x :||: y) :&&: (Not x :||: Not y))
+    , (x :<->: y) |- ((x :&&: y) :||: (Not x :&&:  y))
+    , (x :<->: y) |- ((x :&&: y) :||: ( x :&&: Not y))
+    , (x :<->: y) |- ((x :&&: y) :&&: (Not x :&&: Not y))
     ]
     
 buggyRuleImplElim :: LogicRule
-buggyRuleImplElim = makeRule "BuggyImplElim" $
+buggyRuleImplElim = buggyRule $ makeRule "BuggyImplElim" $
     (x :->: y) |- Not (x :||: y) 
     
 buggyRuleDeMorgan :: LogicRule
-buggyRuleDeMorgan = makeRuleList "BuggyDeMorgan"
+buggyRuleDeMorgan = buggyRule $ makeRuleList "BuggyDeMorgan"
     [ (Not (x :&&: y)) |-  (Not x :||: y)
     , (Not (x :&&: y)) |-  (x :||: Not y)
     , (Not (x :&&: y)) |- (Not (Not x :||: Not y))
@@ -207,114 +210,25 @@ buggyRuleDeMorgan = makeRuleList "BuggyDeMorgan"
     , (Not (x :||: y)) |- (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
     ]
 buggyRuleNotOverImpl :: LogicRule
-buggyRuleNotOverImpl = makeRule "BuggyNotOverImpl" $
+buggyRuleNotOverImpl = buggyRule $ makeRule "BuggyNotOverImpl" $
     (Not(x :->: y)) |- (Not x :->: Not y)   
     
 buggyRuleParenth :: LogicRule
-buggyRuleParenth = makeRuleList "BuggyParenth"
+buggyRuleParenth = buggyRule $ makeRuleList "BuggyParenth"
     [ (Not (x :&&: y)) |-  (Not x :&&: y)
     , (Not (x :||: y)) |-  (Not x :||: y)
-    , (Not (x :<->: y) |- (Not(x :&&: y) :||: (Not x :&&: Not y))
-    , (Not(Not p :&&: q)) |- (p :&&: q) 
-    , (Not(Not p :||: q)) |- (p :||: q)
-    , (Not(Not p :->: q)) |- (p :->: q)
-    , (Not(Not p :<->: q)) |- (p :<->: q)
+    , (Not (x :<->: y)) |- (Not(x :&&: y) :||: (Not x :&&: Not y))
+    , (Not(Not x :&&: y)) |- (x :&&: y) 
+    , (Not(Not x :||: y)) |- (x :||: y)
+    , (Not(Not x :->: y)) |- (x :->: y)
+    , (Not(Not x :<->: y)) |- (x :<->: y)
     ]
     
 buggyRuleAssoc :: LogicRule
-buggyRuleAssoc = makeRuleList "BuggyAssoc"
+buggyRuleAssoc = buggyRule $ makeRuleList "BuggyAssoc"
     [ (x :||: (y :&&: z)) |- ((x :||: y) :&&: z)
     , ((x :||: y) :&&: z) |- (x :||: (y :&&: z))
     , ((x :&&: y) :||: z) |- (x :&&: (y :||: z))
     , (x :&&: (y :||: z)) |- ((x :&&: y) :||: z)
     ]
-=======
-   
-   
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> .theirs

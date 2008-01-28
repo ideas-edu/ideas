@@ -232,7 +232,8 @@ nextRulesForSequenceWith p strategy as =
                 in map f (nextRulesWith p strategy a)
       a:rest -> [ (rs1++rs2, c)
                 | (rs1, b, s) <- nextRulesWith p strategy a
-                , (rs2, c)    <- nextRulesForSequenceWith p s rest 
+--                , (rs2, c)    <- if b==(head rest) then nextRulesForSequenceWith p s rest else (rs1, b) -- ugly should be [] of rs1
+                , (rs2, c)    <- nextRulesForSequenceWith p s rest
                 ]
 
 trackRule :: Rule a -> Strategy a -> Strategy a

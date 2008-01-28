@@ -24,12 +24,13 @@ eliminateConstants = repeat $ somewhere $
            ]
 	   
 eliminateConstantsDWA :: Strategy LogicInContext
-eliminateConstantsDWA = repeatS $ somewhere $
-   altList $ map liftLogicRule rules
+eliminateConstantsDWA = repeat $ somewhere $
+   alternatives $ map liftLogicRule rules
  where 
    rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
            , ruleFalseZeroAnd, ruleNotBoolConst
            ]
+
 eliminateImplEquiv :: Strategy LogicInContext
 eliminateImplEquiv = repeat $ somewhere $
           liftLogicRule ruleDefImpl

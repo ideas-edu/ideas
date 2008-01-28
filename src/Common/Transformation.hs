@@ -12,7 +12,7 @@ module Common.Transformation
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList, (|-), combineRules
    , Transformation, makeTrans, makeTransList
-   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule
+   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule, buggyRule
    , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional, arguments
    ) where
 
@@ -129,6 +129,9 @@ combineRules rs = Rule
 
 minorRule :: Rule a -> Rule a 
 minorRule r = r {isMinorRule = True}
+
+buggyRule :: Rule a -> Rule a 
+buggyRule r = r {isBuggyRule = True}
 
 app  :: Show x => (x ->           Transformation a) -> (a -> Maybe x)         -> Transformation a
 app2 :: Show (x, y) => (x -> y ->      Transformation a) -> (a -> Maybe (x, y))    -> Transformation a

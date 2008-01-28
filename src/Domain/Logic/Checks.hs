@@ -29,6 +29,7 @@ import Data.Maybe
 checks :: IO ()
 checks = do
    mapM_ (checkRule eqLogic) logicRules
+   mapM_ (checkRule (\x y -> not (eqLogic x y))) logicBuggyRules
    quickCheck propRuleNames
    thoroughCheck $ checkParserPretty (==) (f parseLogic) ppLogic
    thoroughCheck $ checkParserPretty eqAssociative (f parseLogicPars) ppLogicPars

@@ -162,11 +162,7 @@ ruleCommAnd = makeRule "CommAnd" $
     (x :&&: y)  |-  (y :&&: x)
     
     
-buggy :: LogicRule
-buggy = makeSimpleRule "buggy" f
- where
-   f (p :->: q) | p /= q = Just (q :->: p)
-   f _          = Nothing
+
 
 
 buggyRuleCommImp :: LogicRule

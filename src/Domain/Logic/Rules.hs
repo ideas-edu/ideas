@@ -166,11 +166,11 @@ ruleCommAnd = makeRule "CommAnd" $
     
     
 
-
+-- Buggy rules:
 
 buggyRuleCommImp :: LogicRule
 buggyRuleCommImp = buggyRule $ makeRule "CommImp" $
-    (x :->: y)  |-  (y :->: x) 
+    (x :->: y)  |-  (y :->: x) --this does not hold: T->T => T->x
 
     
 buggyRuleAssImp :: LogicRule

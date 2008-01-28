@@ -24,6 +24,10 @@ logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAn
              , ruleDefImpl, ruleDefEquiv
              , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
 	     , ruleComplOr, ruleComplAnd
+	     , ruleIdempOr, ruleIdempAnd
+	     , ruleAbsorpOr, ruleAbsorpAnd
+	     , ruleCommOr, ruleCommAnd
+	     , buggyRuleCommImp, buggyRuleAssImp
              ]
 
 -- local logic variables
@@ -128,8 +132,193 @@ ruleOrOverAnd = makeRuleList "OrOverAnd"
    , ((x :&&: y) :||: z)  |-  ((x :||: z) :&&: (y :||: z))
    ]
    
+ruleIdempOr :: LogicRule
+ruleIdempOr = makeRule "IdempOr" $
+    (x :||: x)  |-  x
+   
+    
+ruleIdempAnd :: LogicRule
+ruleIdempAnd = makeRule "IdempAnd" $
+    (x :&&: x)  |-  x
+    
+    
+ruleAbsorpOr :: LogicRule
+ruleAbsorpOr = makeRule "AbsorpOr" $
+    (x :||: (x :&&: y))  |-  x
+    
+    
+ruleAbsorpAnd :: LogicRule
+ruleAbsorpAnd = makeRule "AbsorpAnd" $
+    (x :&&: (x :||: y))  |-  x 
+    
+    
+ruleCommOr :: LogicRule
+ruleCommOr = makeRule "CommOr" $
+    (x :||: y)  |-  (y :||: x) 
+    
+    
+ruleCommAnd :: LogicRule
+ruleCommAnd = makeRule "CommAnd" $
+    (x :&&: y)  |-  (y :&&: x)
+    
+    
 buggy :: LogicRule
 buggy = makeSimpleRule "buggy" f
  where
    f (p :->: q) | p /= q = Just (q :->: p)
    f _          = Nothing
+
+
+buggyRuleCommImp :: LogicRule
+buggyRuleCommImp = makeRule "CommImp" $
+    (x :->: y)  |-  (y :->: x) 
+
+    
+buggyRuleAssImp :: LogicRule
+buggyRuleAssImp = makeRuleList "AssImp"
+   [ (x :->: (y :->: z))  |-  ((x :->: y) :->: z)
+   , ((x :->: y) :->: z)  |-  (x :->: (y :->: z))
+   ]
+    
+buggyRuleIdemImp :: LogicRule
+buggyRuleIdemImp = makeRule "IdemImp" $
+    (x :->: x)  |-  x 
+    
+buggyRuleIdemEqui :: LogicRule
+buggyRuleIdemEqui = makeRule "IdemEqui"  $
+    (x :<->: x)  |-  x 
+    
+buggyRuleEquivElim :: LogicRule
+buggyRuleEquivElim = makeRuleList "BuggyEquivElim"
+    [ (x :<->: y) |- (x :&&: y) :||: Not (x :&&: y) 
+    , (x :<->: y) |- (x :||: y) :&&: (Not x :||: Not y)
+    , (x :<->: y) |- (x :&&: y) :||: (Not x :&&:  y)
+    , (x :<->: y) |- (x :&&: y) :||: ( x :&&: Not y) 
+    , (x :<->: y) |- (x :&&: y) :&&: (Not x :&&: Not y)
+    ]
+    
+buggyRuleImplElim :: LogicRule
+buggyRuleImplElim = makeRule "BuggyImplElim" $
+    (x :->: y) |- Not (x :||: y) 
+    
+buggyRuleDeMorgan :: LogicRule
+buggyRuleDeMorgan = makeRuleList "BuggyDeMorgan"
+    [ (Not (x :&&: y)) |-  (Not x :||: y)
+    , (Not (x :&&: y)) |-  (x :||: Not y)
+    , (Not (x :&&: y)) |- (Not (Not x :||: Not y))
+    , (Not (x :||: y)) |-  (Not x :&&: y)
+    , (Not (x :||: y)) |-  (x :&&: Not y)
+    , (Not (x :||: y)) |- (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
+    ]
+buggyRuleNotOverImpl :: LogicRule
+buggyRuleNotOverImpl = makeRule "BuggyNotOverImpl" $
+    (Not(x :->: y)) |- (Not x :->: Not y)   
+    
+buggyRuleParenth :: LogicRule
+buggyRuleParenth = makeRuleList "BuggyParenth"
+    [ (Not (x :&&: y)) |-  (Not x :&&: y)
+    , (Not (x :||: y)) |-  (Not x :||: y)
+    , (Not (x :<->: y) |- (Not(x :&&: y) :||: (Not x :&&: Not y))
+    , (Not(Not p :&&: q)) |- (p :&&: q) 
+    , (Not(Not p :||: q)) |- (p :||: q)
+    , (Not(Not p :->: q)) |- (p :->: q)
+    , (Not(Not p :<->: q)) |- (p :<->: q)
+    ]
+    
+buggyRuleAssoc :: LogicRule
+buggyRuleAssoc = makeRuleList "BuggyAssoc"
+    [ (x :||: (y :&&: z)) |- ((x :||: y) :&&: z)
+    , ((x :||: y) :&&: z) |- (x :||: (y :&&: z))
+    , ((x :&&: y) :||: z) |- (x :&&: (y :||: z))
+    , (x :&&: (y :||: z)) |- ((x :&&: y) :||: z)
+    ]
+=======
+   
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> .theirs

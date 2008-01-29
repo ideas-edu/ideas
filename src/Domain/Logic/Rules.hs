@@ -31,7 +31,7 @@ logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAn
 
 logicBuggyRules :: [LogicRule]
 logicBuggyRules = [ buggyRuleCommImp, buggyRuleAssImp
-                 ]
+                  ]
 
 -- local logic variables
 x, y, z :: Logic

@@ -23,13 +23,24 @@ import Data.Char
 import Data.List
 import Data.Maybe
 
+import qualified Common.RegExp as RE
+import qualified Common.Strategy as S
 -----------------------------------------------------------
 --- QuickCheck properties
+
+-- some temporary ad-hoc rules to test behaviour of bottomUp combinator
+{- 
+w = runStrategyRules (bottomUp r) prop
+prop = inContext (Not (Not (Not (Var "p"))))
+r =  liftLogicRule ruleNotNot
+fr = fix $ \this -> once this <|> (S.not (once fr) <*> r)
+fr1 = once (once (once r |> r) |> r) |> r
+fr2 = once fr |> r
+re = noLabels fr -}
 
 checks :: IO ()
 checks = do
    mapM_ (checkRule eqLogic) logicRules
-   mapM_ (checkRule (\x y -> not (eqLogic x y))) logicBuggyRules
    quickCheck propRuleNames
    thoroughCheck $ checkParserPretty (==) (f parseLogic) ppLogic
    thoroughCheck $ checkParserPretty eqAssociative (f parseLogicPars) ppLogicPars

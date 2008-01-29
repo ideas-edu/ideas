@@ -18,9 +18,11 @@ import Data.Maybe
 
 class Move a where
    moveLeft, moveRight, moveUp, moveDown :: a -> Maybe a
+   movesDown :: a -> [a]
    moveTop :: a -> a
    -- default definition
    moveTop x = maybe x moveTop (moveUp x)
+   movesDown x = catMaybes [moveLeft x, moveRight x, moveDown x]
 
 data Movement = MoveLeft | MoveRight | MoveUp | MoveDown
    deriving (Show, Eq, Ord, Enum, Bounded)
@@ -41,6 +43,9 @@ ruleMoveRight = minorRule $ makeSimpleRule "MoveRight" moveRight
 ruleMoveUp    = minorRule $ makeSimpleRule "MoveUp"    moveUp
 ruleMoveDown  = minorRule $ makeSimpleRule "MoveDown"  moveDown
 ruleMoveTop   = minorRule $ makeSimpleRule "MoveTop"   (Just . moveTop)
+ruleMovesDown = minorRule $ makeSimpleRuleList "MovesDown" movesDown
+
+ruleMovesDown :: Move a => Rule a
 
 instance Arbitrary Movement where
    arbitrary   = oneof $ map return [minBound..]

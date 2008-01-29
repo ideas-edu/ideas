@@ -1,6 +1,6 @@
-module Common.RegExp 
-   ( RegExp, (<*>), (<|>), star, succeed, fail, symbol
-   , collectSymbols, join, isSucceed, isFail, firsts, nonSucceed
+module Common.RegExp
+   ( RegExp, (<*>), (<|>), star, fix, succeed, fail, symbol
+   , collectSymbols, join, isSucceed, firsts, nonSucceed
    , language, member, checks, withIndex
    ) where
 
@@ -16,21 +16,34 @@ infixr 4 <|>
 data RegExp a
    = RegExp a :*: RegExp a
    | RegExp a :|: RegExp a
-   | Star (RegExp a)
+   | Fix Int (RegExp a)
+   | Var Int
    | Symbol a
    | Succeed 
    | Fail
  deriving Show
- 
+
 instance Functor RegExp where
    fmap f regexp =
       case regexp of
          p :*: q  -> fmap f p :*: fmap f q
          p :|: q  -> fmap f p :|: fmap f q
-         Star p   -> Star (fmap f p)
+         Fix i p  -> Fix i (fmap f p) 
+         Var i    -> Var i
          Symbol a -> Symbol (f a)
          Succeed  -> Succeed
          Fail     -> Fail
+
+join :: RegExp (RegExp a) -> RegExp a
+join regexp =
+   case regexp of
+      p :*: q  -> join p <*> join q
+      p :|: q  -> join p <|> join q
+      Fix i p  -> Fix i (join p)
+      Var i    -> Var i
+      Symbol a -> a
+      Succeed  -> succeed
+      Fail     -> fail
 
 -- smart constructor
 (<*>) :: RegExp a -> RegExp a -> RegExp a
@@ -54,14 +67,11 @@ p <|> q =
                 new  -> Succeed :|: new
         | otherwise -> p :|: q
 
--- smart constructor             
-star :: RegExp a -> RegExp a
-star p = 
-   case p of
-      Star _  -> p
-      Succeed -> p
-      Fail    -> succeed 
-      _       -> Star (nonSucceed p)
+fix :: (RegExp a -> RegExp a) -> RegExp a
+fix f = 
+   let p = f (Var i)
+       i = maximum (-1 : getFixVars p) + 1
+   in Fix i p
 
 symbol :: a -> RegExp a
 symbol = Symbol
@@ -71,28 +81,50 @@ succeed  = Succeed
 
 fail :: RegExp a
 fail = Fail
-     
+
+-- little cheat: the nonSucceed part
+star :: RegExp a -> RegExp a
+star p = fix $ \this -> (nonSucceed p <*> this) <|> succeed
+
+getFixVars :: RegExp a -> [Int]
+getFixVars regexp =
+   case regexp of
+      p :*: q  -> getFixVars p ++ getFixVars q
+      p :|: q  -> getFixVars p ++ getFixVars q
+      Fix i p  -> i : getFixVars p
+      _        -> []
+
+replaceFixVar :: Int -> RegExp a -> RegExp a -> RegExp a
+replaceFixVar i new = rec
+ where
+   rec regexp =
+      case regexp of
+         p :*: q  -> rec p <*> rec q
+         p :|: q  -> rec p <|> rec q
+         Fix j p | i /= j -> Fix j (rec p)
+         Var j   | i == j -> new
+         _        -> regexp
+      
+unfoldFix :: Int -> RegExp a -> RegExp a
+unfoldFix i p = replaceFixVar i (Fix i p) p
+
 collectSymbols :: RegExp a -> [a]
 collectSymbols regexp = 
    case regexp of
       p :*: q  -> collectSymbols p ++ collectSymbols q
       p :|: q  -> collectSymbols p ++ collectSymbols q
-      Star p   -> collectSymbols p
+      Fix i p  -> collectSymbols p
       Symbol a -> [a]
       _        -> []
-                 
+  
 isSucceed :: RegExp a -> Bool
 isSucceed regexp =
    case regexp of
       p :*: q -> isSucceed p && isSucceed q
       p :|: q -> isSucceed p || isSucceed q
-      Star p  -> True
+      Fix i p -> isSucceed p
       Succeed -> True
       _ -> False
-
-isFail :: RegExp a -> Bool
-isFail Fail = True
-isFail _    = False
 
 -- regular expression without the Succeed alternative
 nonSucceed :: RegExp a -> RegExp a
@@ -103,7 +135,7 @@ nonSucceed regexp =
                      nsq = nonSucceed q
                  in nsp <|> nsq <|> (nsp <*> nsq)
       p :|: q -> nonSucceed p <|> nonSucceed q
-      Star p  -> p <*> Star p
+      Fix i p -> nonSucceed (unfoldFix i p)
       Succeed -> fail
       _       -> regexp
 
@@ -113,7 +145,7 @@ firsts regexp =
       Symbol r -> [(r, succeed)]
       p :|: q  -> firsts p ++ firsts q
       p :*: q  -> map (second (<*> q)) (firsts p) ++ if isSucceed p then firsts q else []
-      Star p   -> map (second (<*> regexp)) (firsts p)
+      Fix i p  -> firsts (unfoldFix i p)
       _        -> []
 
 withIndex :: RegExp a -> RegExp (Int, a)
@@ -127,22 +159,23 @@ withIndex = snd . rec 0
          p :|: q  -> let (n1, a) = rec n  p
                          (n2, b) = rec n1 q
                      in (n2, a :|: b)
-         Star p   -> let (n1, a) = rec n p
-                     in (n1, Star a)
+         Fix i p  -> let (n1, a) = rec n p
+                     in (n1, Fix i a)
+         Var i    -> (n, Var i)
          Symbol a -> (n+1, Symbol (n, a))
          Succeed  -> (n, Succeed)
          Fail     -> (n, Fail)
-                          
+                       
 language :: RegExp a -> [[a]]
 language regexp = 
    case regexp of
       p :*: q  -> [ xs ++ ys | xs <- language p, ys <- language q ]
       p :|: q  -> language p ++ language q
-      Star p   -> [] : language (p <*> regexp)
+      Fix i p  -> language (unfoldFix i p)
       Symbol a -> [[a]]
       Succeed  -> [[]]
       Fail     -> []
-      
+
 member :: Eq a => RegExp a -> [a] -> Bool
 member regexp = not . null . filter null . rec regexp
  where
@@ -150,23 +183,13 @@ member regexp = not . null . filter null . rec regexp
       case regexp of
          p :*: q  -> [ zs | ys <- rec p xs, zs <- rec q ys ]
          p :|: q  -> rec p xs ++ rec q xs
-         Star p   -> xs : rec (p <*> regexp) xs
+         Fix i p  -> rec (unfoldFix i p) xs
          Symbol a -> case xs of
                         y:ys | y==a -> [ys]
                         _           -> []
          Succeed  -> [xs]
          Fail     -> []
-
-join :: RegExp (RegExp a) -> RegExp a
-join regexp =
-   case regexp of
-      p :*: q  -> join p <*> join q
-      p :|: q  -> join p <|> join q
-      Star p   -> star (join p)
-      Symbol a -> a
-      Succeed  -> succeed
-      Fail     -> fail
-          
+      
 --------------------------------------------------------
 -- QuickCheck generator
 
@@ -176,24 +199,29 @@ instance Arbitrary a => Arbitrary (RegExp a) where
       case regexp of
          p :*: q  -> variant 0 . coarbitrary p . coarbitrary q
          p :|: q  -> variant 1 . coarbitrary p . coarbitrary q
-         Star p   -> variant 2 . coarbitrary p
-         Symbol a -> variant 3 . coarbitrary a
-         Succeed  -> variant 4
-         Fail     -> variant 5
-   
+         Fix i p  -> variant 2 . coarbitrary i . coarbitrary p
+         Var i    -> variant 3 . coarbitrary i
+         Symbol a -> variant 4 . coarbitrary a
+         Succeed  -> variant 5
+         Fail     -> variant 6
+
 -- Use smart constructors here
 arbAnnRegExp :: Arbitrary a => Int -> Gen (RegExp a)
 arbAnnRegExp 0 = oneof [ liftM symbol arbitrary, return succeed, return fail ]
 arbAnnRegExp n = oneof [ liftM2 (<*>) rec rec, liftM2 (<|>) rec rec
-                       , arbAnnRegExp 0, liftM star rec
+                       , arbAnnRegExp 0, liftM star rec -- , liftM fix (bla (n `div` 2))
                        ]
  where rec = arbAnnRegExp (n `div` 2)
- 
+
+bla :: Arbitrary a => Int -> Gen (RegExp a -> RegExp a)
+bla n = promote f
+ where f re = coarbitrary re (arbAnnRegExp n)
+
 --------------------------------------------------------
 -- QuickCheck properties                                                                 
 
 propSound :: RegExp Int -> Property
-propSound p = not (null xs) ==> collect (length xs) $ all (member p) xs
+propSound p = not (null xs) ==> {- collect (length xs) $ -} all (member p) xs
  where xs = take 20 $ language p
 
 propNonSucceed :: RegExp Int -> Bool
@@ -206,6 +234,19 @@ propSplitSucceed p = p === if isSucceed p then succeed <|> new else new
 propFirsts :: RegExp Int -> Bool
 propFirsts p = nonSucceed p === foldr op fail (firsts p)
  where op (a, q) r = (symbol a <*> q) <|> r
+
+propJoin :: RegExp Int -> Bool
+propJoin p = join (fmap symbol p) === p
+          
+propMap :: (Int -> Int) -> (Int -> Int) -> RegExp Int -> Bool
+propMap f g p = fmap f (fmap g p) === fmap (f . g) p
+
+propFix :: RegExp Int -> Property
+propFix this@(Fix i p) = property (unfoldFix i p === this)
+propFix _              = False ==> True
+
+propSucceed :: RegExp Int -> Bool
+propSucceed p = isSucceed p == member p []
 
 infixl 1 ===
  
@@ -226,44 +267,19 @@ propStar         p    =  star p === succeed <|> (p <*> star p)
 
 checks :: IO ()
 checks = do
+   -- let thoroughCheck p = verboseCheck p
    thoroughCheck propSound
    thoroughCheck propNonSucceed
    thoroughCheck propSplitSucceed
    thoroughCheck propFirsts
+   quickCheck propMap
+   quickCheck propJoin
+   quickCheck propFix
    quickCheck propStar
+   quickCheck propSucceed
    quickCheck $ associative (<|>)
    quickCheck $ commutative (<|>)
    quickCheck $ idempotent  (<|>)
    quickCheck $ unit (<|>) fail
    quickCheck $ associative (<*>)
    quickCheck $ unit (<*>) succeed
-
-{-
-firstsLoc :: RegExp a -> [(a, Location)]
-firstsLoc regexp = undefined
-      
-prop :: RegExp Int -> Bool
-prop regexp = length list1 == length list2 && all check (zip list1 list2)
- where
-   list1 = order (firsts regexp)
-   list2 = order (firstsLoc regexp)
-   order = map (first head . unzip) . groupBy eqFst . sortBy ordFst . take 5
-   ordFst = \x y -> fst x `compare` fst y
-   eqFst  = \x y -> fst x == fst y
-   check ((a, p), (b, locs)) = a == b && (altList p === altList (map (`toLocation` regexp) locs)) 
-   
-   altList = foldr (<|>) Fail
-
-toLocation :: Location -> RegExp a -> RegExp a
-toLocation 0 regexp = regexp
-toLocation n regexp =
-   case regexp of
-      p :*: q -> undefined
-      p :|: q -> let i = length (collectSteps p) 
-                 in 
-      Star p  -> toLocation n p :*: regexp
-      Step a  -> if n==1 then Succeed else Fail
-      _       -> Fail
-      -}
-      {-
-type Location = Int -}

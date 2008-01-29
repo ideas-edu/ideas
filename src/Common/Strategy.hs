@@ -25,10 +25,10 @@ module Common.Strategy
      -- ** Traversal combinators
    , somewhere, topDown, bottomUp
      -- * REST
-   , runStrategy, nextRule, nextRulesWith, nextRulesForSequenceWith, isSucceed, isFail, trackRule, trackRulesWith
+   , runStrategy, nextRule, nextRulesWith, nextRulesForSequenceWith, isSucceed, trackRule, trackRulesWith
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy
-   , StrategyLocation
-   , firstLocation, subStrategy, reportLocations
+   , StrategyLocation, fix
+   , firstLocation, subStrategy, reportLocations, once
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -167,19 +167,23 @@ exhaustive = repeat . alternatives
 
 -- Traversal combinators --------------------------------------------
 
+fix :: (Strategy a -> Strategy a) -> Strategy a
+fix f = S $ RE.fix $ unS . f . S
 
--- | Poor man's solution: think harder about the Move type class, and currently, 
--- the strategy succeeds with at most 1 result, which is undesirable
+once :: (IsStrategy f, Move a) => f a -> Strategy a
+once s = ruleMovesDown <*> s <*> ruleMoveUp
+
 somewhere :: (IsStrategy f, Move a) => f a -> Strategy a
-somewhere p = ruleMoveTop <*> ruleMoveSomewhere <*> p <*> ruleMoveTop
- where
-   ruleMoveSomewhere = minorRule $ makeSimpleRuleList "Somewhere" ${-  safeHead .  filter (applicable p) . -} reachable
+somewhere s = fix $ \this -> s <|> once this
 
 topDown :: (IsStrategy f, Move a) => f a -> Strategy a
-topDown p = somewhere p
+topDown s = fix $ \this -> s |> once this
 
+-- The ideal implementation does not yet work: there appears to be a strange
+-- interplay between the fixpoint operator (with variables) and the not combinator
 bottomUp :: (IsStrategy f, Move a) => f a -> Strategy a
-bottomUp p = somewhere p
+bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
+--bottomUp s = fix $ \this -> once this |> s
 
 -----------------------------------------------------------
 --- Evaluation
@@ -204,9 +208,6 @@ noLabels = RE.join . fmap (either RE.symbol (noLabels . unlabel)) . unS
 
 isSucceed :: Strategy a -> Bool
 isSucceed = RE.isSucceed . noLabels
-
-isFail :: Strategy a -> Bool
-isFail = RE.isFail . noLabels
 
 firsts :: Strategy a -> [(Rule a, Strategy a)]
 firsts = concatMap f . RE.firsts . unS

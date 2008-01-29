@@ -93,8 +93,8 @@ runInterpreter interpr = do
             strat <- gets currentStrategy
             let newStrategy = trackRulesWith checkRuleName therule strat current
             modify $ \s -> s {currentTerm = applyD therule current, currentStrategy = newStrategy}
-            when (isFail newStrategy) $
-               liftIO $ putStrLn $ "WARNING: Deviated from strategy (type :undo)"
+            --when (isFail newStrategy) $
+            --   liftIO $ putStrLn $ "WARNING: Deviated from strategy (type :undo)"
             mark
             step
           where

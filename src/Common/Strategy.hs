@@ -294,20 +294,20 @@ subStrategies = rec []
       in (loc, Left ns) : concatMap (uncurry f) xs
 
 {- Domain.LinearAlgebra> Common.Strategy.reportLocations Domain.LinearAlgebra.toReducedEchelon -}
-reportLocations :: LabeledStrategy a -> IO ()
-reportLocations = putStrLn . format2 . map f . subStrategies
+reportLocations :: LabeledStrategy a -> [[String]]
+reportLocations = map f . subStrategies
  where
-   f (loc, Left ns) = (g loc, strategyName ns)
-   f (loc, Right r) = (g loc, name r ++ " (rule)")
+   f (loc, Left ns) = [show loc, strategyName ns]
+   f (loc, Right r) = [show loc, name r ++ " (rule)"]
    g loc = replicate (2*length loc) ' ' ++ show loc
 
-format2 :: [(String, String)] -> String
+{- format2 :: [(String, String)] -> String
 format2 list = unlines $ map format list
  where
    wx     = width (map fst list)
    width  = maximum . map length
    make i = take i . (++Prelude.repeat ' ')
-   format (x, y) = make wx x ++ "   " ++ y
+   format (x, y) = make wx x ++ "   " ++ y -}
 
 subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
 subStrategy loc = fmap (either id f) . subStrategyOrRule loc

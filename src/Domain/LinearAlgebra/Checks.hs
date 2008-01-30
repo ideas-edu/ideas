@@ -101,7 +101,7 @@ simplifyMatrix solution m = do
 
 reduceMatrixAssignment :: Assignment (MatrixInContext Rational)
 reduceMatrixAssignment = makeAssignment
-   { shortTitle    = "Reduce to Echelon form"
+   { shortTitle    = "Gaussian Elimination"
    , parser        = parseMatrix
    , prettyPrinter = ppRationalMatrix . matrix
    , equivalence   = \x y -> applyD toReducedEchelon (inContext $ matrix x) == applyD toReducedEchelon (inContext $ matrix y)

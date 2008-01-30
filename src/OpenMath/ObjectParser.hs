@@ -12,7 +12,7 @@ import OpenMath.XML
 -- abstract representation for OM objects
 data Expr = Con Int | Var String 
           | Expr :*: Expr | Expr :+: Expr | Expr :-: Expr | Expr :/: Expr 
-          | Matrix [[Expr]]
+          | Matrix [[Expr]] | List [Expr] | Expr :==: Expr
    deriving Show
 
 -- internal representation for OM objects (close to XML)
@@ -34,7 +34,12 @@ instance IsExpr Int where
 instance IsExpr Integer where
    toExpr   = Con . fromIntegral
    fromExpr = fmap (toInteger :: Int -> Integer) . fromExpr 
-  
+
+instance IsExpr a => IsExpr [a] where
+   toExpr = List . map toExpr
+   fromExpr (List xs) = mapM fromExpr xs
+   fromExpr _         = Nothing
+
 instance (Integral a, IsExpr a) => IsExpr (Ratio a) where
    toExpr r
       | j == 1    = toExpr i
@@ -116,7 +121,7 @@ omobj2xml = header . return . rec
          OMS cd name -> Tag "OMS" [("cd", cd), ("name", name)] []
 
 binaryOps :: [(String, Expr -> Expr -> Expr)]
-binaryOps = [ ("times", (:*:)), ("plus" , (:+:)), ("minus", (:-:)), ("divide", (:/:)) ]
+binaryOps = [ ("times", (:*:)), ("plus" , (:+:)), ("minus", (:-:)), ("divide", (:/:)), ("eq", (:==:)) ]
 
 omobj2expr :: OMOBJ -> Either String Expr
 omobj2expr omobj =
@@ -128,6 +133,9 @@ omobj2expr omobj =
              f _ = fail "invalid matrix row"
          es <- mapM f rows
          return (Matrix es)
+      OMA (OMS _ "list":elements) -> do
+         es <- mapM omobj2expr elements
+         return (List es)
       OMA [OMS _ op, x, y] -> 
          case lookup op binaryOps of
             Just f  -> do
@@ -146,6 +154,8 @@ expr2omobj expr =
       x :+: y   -> binop "arith1" "plus"   x y
       x :-: y   -> binop "arith1" "minus"  x y
       x :/: y   -> binop "arith1" "divide" x y
+      x :==: y  -> binop "relation1" "eq"  x y
+      List xs   -> OMA (OMS "list1" "list" : map expr2omobj xs)
       Matrix xs ->
          let f ys = OMA (OMS "linalg2" "matrixrow" : map expr2omobj ys)
          in OMA (OMS "linalg2" "matrix" : map f xs)
@@ -158,7 +168,7 @@ binop cd name x y = OMA [OMS cd name, expr2omobj x, expr2omobj y]
 
 check :: IO ()
 check = do
-   input <- readFile "src/OpenMath/omobj2" 
+   input <- readFile "src/OpenMath/omobj3" 
    let Right expr = parseExpr input 
    print expr
    let new = showXML $ omobj2xml $ expr2omobj expr

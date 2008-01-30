@@ -5,6 +5,8 @@ import Common.Strategy
 import Common.Transformation
 import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import Domain.LinearAlgebra
+import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
+import qualified Domain.LinearAlgebra.Equation as LA
 import OpenMath.ObjectParser
 
 type StrategyID = String
@@ -14,9 +16,9 @@ versionNr :: String
 versionNr = "0.1.0"
 
 -- not yet used
-strategyTable :: [(String, Assignment Expr)]
+strategyTable :: [(String, Assignment Expr, [String])]
 strategyTable =
-   [ ("Gaussian Elimination", exprAssignment reduceMatrixAssignment)
+   [ ("2.5", exprAssignment reduceMatrixAssignment, ["toReducedEchelon"])
    ]
 
 instance IsExpr a => IsExpr (Matrix a) where
@@ -29,6 +31,13 @@ instance IsExpr a => IsExpr (Matrix a) where
 instance (Num a, IsExpr a) => IsExpr (MatrixInContext a) where
    toExpr   = toExpr . matrix
    fromExpr = fmap inContext . fromExpr 
+
+instance IsExpr a => IsExpr (Equation a) where
+   toExpr eq = toExpr (getLHS eq) :==: toExpr (getRHS eq)
+   fromExpr (e1 :==: e2) = do
+      x <- fromExpr e1
+      y <- fromExpr e2
+      return (x LA.:==: y) 
 
 exprAssignment :: IsExpr a => Assignment a -> Assignment Expr
 exprAssignment a = Assignment

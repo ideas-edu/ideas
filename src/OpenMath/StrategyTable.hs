@@ -4,7 +4,7 @@ import Common.Assignment
 import Common.Strategy
 import Common.Transformation
 import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
-import Domain.LinearAlgebra
+import Domain.LinearAlgebra (Matrix, rows, matrix, inContext, makeMatrix, MatrixInContext)
 import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
 import qualified Domain.LinearAlgebra.Equation as LA
 import OpenMath.ObjectParser

@@ -17,14 +17,13 @@ import Session
 import Common.Transformation
 import Common.Strategy
 import Domain.Logic
-import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import Control.Monad
-import OpenMath.Exercises hiding (main)
 import Domain.Fraction
+import Domain.LinearAlgebra
 
 domains :: [PackedAssignment]
 domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment, Pack opgave6b
-          , Pack equationsAssignment, Pack simplAssignment
+          , {-Pack equationsAssignment,-} Pack simplAssignment
           ]
 
 main :: IO ()

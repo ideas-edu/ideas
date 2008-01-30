@@ -14,6 +14,7 @@ import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import Domain.LinearAlgebra (toReducedEchelon, MatrixInContext, parseSystem)
+import Domain.LinearAlgebra.EquationsRules hiding (equations)
 import qualified Domain.LinearAlgebra.Context as Matrix
 import qualified Common.Strategy as Strategy
 
@@ -31,12 +32,6 @@ main = do
    quickCheck propSound
    quickCheck propConv1
    quickCheck propConv2
-
-opgave6b :: Assignment (MatrixInContext Rational)
-opgave6b = reduceMatrixAssignment
-   { shortTitle = "Opgave 9.6 (b)"
-   , generator  = return (Matrix.inContext ex6b)
-   }
 
 equationsAssignment :: Assignment (EqsInContext Rational)
 equationsAssignment = makeAssignment
@@ -99,21 +94,7 @@ propSound sys =
    fun s  = fromJust . (`lookup` s)
     
 -- elementary equations operations
-exchange :: Int -> Int -> Transformation [a]
-exchange i j 
-   | i >  j    = exchange j i
-   | otherwise = makeTrans $ \xs -> do
-        guard (i/=j)
-        let (begin, x:rest) = splitAt i xs
-            (middle, y:end) = splitAt (j-i-1) rest
-        return $ begin++[y]++middle++[x]++end
-      
-addEquations :: Num a => Int -> Int -> a -> Transformation (LinearSystem a)
-addEquations i j a = makeTrans $ \xs -> do
-   guard (i/=j)
-   let (begin, this:end) = splitAt i xs
-       exprj = xs!!j
-   return $ begin++[combineWith (+) this (fmap (toLinearExpr a*) exprj)]++end
+
 
 equationToStandardForm :: Num a => Transformation (Equation (LinearExpr a))
 equationToStandardForm = makeTrans $ \eq -> do
@@ -185,20 +166,6 @@ data EqsInContext a = EIC
    , covered    ::  Int
    }
  deriving Show
-
--- | The equations that remain to be solved
-remaining :: EqsInContext a -> Equations (LinearExpr a)
-remaining c = drop (covered c) (equations c)
-
--- | The minimal variable in the remaining equations
-minvar :: EqsInContext a -> Maybe String
-minvar c | S.null set = Nothing
-         | otherwise  = Just (S.findMin set)
- where
-   set = getVars (remaining c) 
-   
-inContext :: LinearSystem a -> EqsInContext a
-inContext e = EIC e 0
 
 instance Eq a => Eq (EqsInContext a) where
   x==y = equations x == equations y

@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Rules where
+module Domain.LinearAlgebra.MatrixRules where
 
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Context

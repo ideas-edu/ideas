@@ -123,6 +123,9 @@ data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)
                 | Correct     (Doc a) (Maybe (Rule a)) {- The rule that was applied -}
 
+getRuleNames :: Assignment a -> [String]
+getRuleNames = map name . ruleset
+
 ---------------------------------------------------------------
 -- Documents (feedback with structure)
                 

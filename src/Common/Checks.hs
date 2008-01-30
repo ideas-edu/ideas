@@ -10,7 +10,7 @@
 module Main (main) where
 
 import Common.Assignment
-import Common.RegExp
+import Common.Grammar
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Checks as Logic
 import qualified Domain.LinearAlgebra as LA
@@ -20,8 +20,8 @@ import qualified Domain.Fraction.Checks as Frac
 
 main :: IO ()
 main = do
-   putStrLn "\n...checking regular expression combinators"
-   Common.RegExp.checks
+   putStrLn "\n...checking grammar combinators"
+   Common.Grammar.checks
    putStrLn "\n...checking logic domain"
    Logic.checks
    putStrLn "\n...checking linear algebra domain"

@@ -5,7 +5,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A strategy is a regular expression with rules as symbols. Strategies can be 
+-- A strategy is a context-free grammar with rules as symbols. Strategies can be 
 -- labeled with strings. A type class is introduced to lift all the combinators
 -- that work on strategies, only to prevent that you have to insert these lifting
 -- functions yourself.
@@ -23,12 +23,14 @@ module Common.Strategy
      -- ** Negation and greedy combinators
    , check, not, repeat, repeat1, try, (|>), exhaustive
      -- ** Traversal combinators
-   , somewhere, topDown, bottomUp
+   , fix, once, somewhere, topDown, bottomUp
+     -- * Operations on strategies
+   , runStrategy, acceptsEmpty
      -- * REST
-   , runStrategy, nextRule, nextRulesWith, nextRulesForSequenceWith, isSucceed, trackRule, trackRulesWith
+   , nextRule, nextRulesWith, nextRulesForSequenceWith, trackRule, trackRulesWith
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy
-   , StrategyLocation, fix
-   , firstLocation, subStrategy, reportLocations, once
+   , StrategyLocation
+   , firstLocation, subStrategy, reportLocations
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -36,14 +38,14 @@ import qualified Prelude as Prelude
 import Common.Transformation
 import Common.Move
 import Common.Utils
-import qualified Common.RegExp as RE
+import qualified Common.Grammar as RE
 import Debug.Trace
 
 -----------------------------------------------------------
 -- Data types and type classes
 
 -- | Abstract data type for a strategy
-newtype Strategy a = S { unS :: RE.RegExp (Either (Rule a) (LabeledStrategy a)) }
+newtype Strategy a = S { unS :: RE.Grammar (Either (Rule a) (LabeledStrategy a)) }
 
 -- | A strategy which is labeled with a string
 data LabeledStrategy a = Label 
@@ -167,35 +169,44 @@ exhaustive = repeat . alternatives
 
 -- Traversal combinators --------------------------------------------
 
+-- | A fix-point combinator on strategies (to model recursion). Powerful
+-- (but dangerous) combinator
 fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = S $ RE.fix $ unS . f . S
 
+-- | Apply a strategy on (exactly) one of the term's direct children
 once :: (IsStrategy f, Move a) => f a -> Strategy a
 once s = ruleMovesDown <*> s <*> ruleMoveUp
 
+-- | Apply a strategy somewhere in the term
 somewhere :: (IsStrategy f, Move a) => f a -> Strategy a
 somewhere s = fix $ \this -> s <|> once this
 
+-- | Search for a suitable location in the term to apply the strategy using a
+-- top-down approach
 topDown :: (IsStrategy f, Move a) => f a -> Strategy a
 topDown s = fix $ \this -> s |> once this
 
--- The ideal implementation does not yet work: there appears to be a strange
--- interplay between the fixpoint operator (with variables) and the not combinator
+-- | Search for a suitable location in the term to apply the strategy using a
+-- bottom-up approach
 bottomUp :: (IsStrategy f, Move a) => f a -> Strategy a
 bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
---bottomUp s = fix $ \this -> once this |> s
+
+{- The ideal implementation does not yet work: there appears to be a strange
+   interplay between the fixpoint operator (with variables) and the not combinator
+   > bottomUp s = fix $ \this -> once this |> s -}
 
 -----------------------------------------------------------
 --- Evaluation
 
 runStrategy :: Strategy a -> a -> [a]
 runStrategy strategy a =
-   [ a | isSucceed strategy ] ++
+   [ a | acceptsEmpty strategy ] ++
    [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
 
 traceStrategy :: Show a => Strategy a -> a -> [a]
 traceStrategy strategy a = trace (show a) $ 
-   [ trace (replicate 50 '-') a | isSucceed strategy ] ++
+   [ trace (replicate 50 '-') a | acceptsEmpty strategy ] ++
    [ result 
    | (rule, rest) <- firsts strategy
    , b <- applyAll rule a
@@ -203,18 +214,18 @@ traceStrategy strategy a = trace (show a) $
    ]
 
 -- local helper function
-noLabels :: Strategy a -> RE.RegExp (Rule a)
+noLabels :: Strategy a -> RE.Grammar (Rule a)
 noLabels = RE.join . fmap (either RE.symbol (noLabels . unlabel)) . unS
 
-isSucceed :: Strategy a -> Bool
-isSucceed = RE.isSucceed . noLabels
+acceptsEmpty :: Strategy a -> Bool
+acceptsEmpty = RE.acceptsEmpty . noLabels
 
 firsts :: Strategy a -> [(Rule a, Strategy a)]
 firsts = concatMap f . RE.firsts . unS
  where
    f (Left r,   re) = [(r, S re)]
    f (Right ns, re) = [ (r, s <*> S re) | (r, s) <- firsts (unlabel ns) ] ++
-                      if isSucceed (unlabel ns) then firsts (S re) else []
+                      if acceptsEmpty (unlabel ns) then firsts (S re) else []
 
 
 nextRule :: Strategy a -> a -> [(Rule a, a, Strategy a)]
@@ -258,12 +269,12 @@ intermediatesList strategy a = takeWhile (Prelude.not . null) (iterate (concatMa
 -- variation of runStrategy: TODO, merge
 runStrategyRules :: Strategy a -> a -> [([Rule a], a)]
 runStrategyRules strategy a =
-   [ ([], a) | isSucceed strategy ] ++
+   [ ([], a) | acceptsEmpty strategy ] ++
    [ (rule:rs, final) | (rule, rest) <- firsts strategy, b <- applyAll rule a, (rs, final) <- runStrategyRules rest b ]
 
 -- returns a strategy without the Succeed alternative
 nonSucceed :: Strategy a -> Strategy a
-nonSucceed = S . RE.nonSucceed . unS
+nonSucceed = S . RE.nonEmpty . unS
 
 mapStrategy :: (Rule a -> Rule b) -> Strategy a -> Strategy b
 mapStrategy f (S re) = S (fmap (either (Left . f) (Right . g)) re)
@@ -315,7 +326,7 @@ subStrategyOrRule loc ns =
             Right ns -> 
                subStrategyOrRule is ns
  
-withIndices :: LabeledStrategy a -> RE.RegExp ([Int], Rule a)
+withIndices :: LabeledStrategy a -> RE.Grammar ([Int], Rule a)
 withIndices = rec [] 
  where
    rec is = RE.join . combine f is . unS . unlabel
@@ -332,5 +343,5 @@ nextLocation a ns old =
    in fmap f (firstLocation a ns)
    -}
 -- local helper-function
-combine :: ([Int] -> a -> b) -> [Int] -> RE.RegExp a -> RE.RegExp b
+combine :: ([Int] -> a -> b) -> [Int] -> RE.Grammar a -> RE.Grammar b
 combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex

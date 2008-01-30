@@ -23,8 +23,6 @@ import Data.Char
 import Data.List
 import Data.Maybe
 
-import qualified Common.RegExp as RE
-import qualified Common.Strategy as S
 -----------------------------------------------------------
 --- QuickCheck properties
 

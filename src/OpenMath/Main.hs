@@ -11,8 +11,13 @@ main = do
    args <- getArgs
    case args of 
       [] -> runCGI cgiMain
-      ["--test", file] -> readFile file >>= putStrLn . respond . Just
-      _ -> putStrLn $ "laservice.cgi (version " ++ versionNr ++ ")\n   use with --test [request file] for testing"
+      ["--test", file]     -> readFile file >>= putStrLn . respond . Just
+      ["--oneliner", file] -> readFile file >>= putStrLn . oneliner
+      _ -> putStrLn $ unlines   
+              [ "laservice.cgi (version " ++ versionNr ++ ")"   
+              , "   use with --test     [request file] for testing"
+              , "   use with --oneliner [request file] to output the request as a 'one-liner'"
+              ]
       
 cgiMain :: CGI CGIResult
 cgiMain = do 
@@ -25,3 +30,7 @@ cgiMain = do
 
 logMsg :: String -> CGI ()
 logMsg = liftIO . logMessageWith defaultLogConfig {logFile = "laservice.log"}
+
+oneliner :: String -> String
+oneliner = (url++) . unwords . concatMap words . lines
+ where url = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?input="

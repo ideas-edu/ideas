@@ -43,12 +43,11 @@ ruleDropEquation = makeSimpleRule "Drop (0=0) equation" $
                      , covered   = if i < covered c then covered c-1 else covered c
                      }
 
-ruleInconsistentSystem :: Eq a => Rule (EqsInContext a)
+ruleInconsistentSystem :: Num a => Rule (EqsInContext a)
 ruleInconsistentSystem = makeSimpleRule "Inconsistent system (0=1)" $ 
-   \c -> do i <- findIndex (fromMaybe False . testConstants (/=)) (equations c)
-            return c { equations = [equations c !! i]
-                     , covered   = 1
-                     }
+   \c -> do let stop = [0 :==: 1]
+            guard $ invalidSystem (equations c) && equations c /= stop
+            return c {equations = stop, covered = 1}
 
 ruleScaleEquation :: Fractional a => Rule (EqsInContext a)
 ruleScaleEquation = makeRule "Scale equation to one" $ app2 (\x y -> liftSystemTrans $ scaleEquation x y) $ 

@@ -2,7 +2,7 @@ module OpenMath.StrategyToWiki where
 
 import Common.Assignment
 import Common.Strategy (reportLocations)
-import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
+import Domain.LinearAlgebra (reduceMatrixAssignment)
 import OpenMath.StrategyTable
 import Data.Char
 import Data.List

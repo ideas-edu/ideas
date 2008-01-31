@@ -2,6 +2,7 @@ module OpenMath.ObjectParser
    ( Expr(..), IsExpr(..), parseExpr, showExpr, xmlToExpr, exprToXML
    ) where
 
+import Control.Monad
 import Data.Char
 import Data.Ratio
 import OpenMath.XML
@@ -11,7 +12,7 @@ import OpenMath.XML
 
 -- abstract representation for OM objects
 data Expr = Con Int | Var String 
-          | Expr :*: Expr | Expr :+: Expr | Expr :-: Expr | Expr :/: Expr 
+          | Expr :*: Expr | Expr :+: Expr | Expr :-: Expr | Expr :/: Expr | Negate Expr
           | Matrix [[Expr]] | List [Expr] | Expr :==: Expr
    deriving Show
 
@@ -136,6 +137,8 @@ omobj2expr omobj =
       OMA (OMS _ "list":elements) -> do
          es <- mapM omobj2expr elements
          return (List es)
+      OMA [OMS _ "unary_minus", x] ->
+         liftM Negate (omobj2expr x)
       OMA [OMS _ op, x, y] -> 
          case lookup op binaryOps of
             Just f  -> do
@@ -154,6 +157,7 @@ expr2omobj expr =
       x :+: y   -> binop "arith1" "plus"   x y
       x :-: y   -> binop "arith1" "minus"  x y
       x :/: y   -> binop "arith1" "divide" x y
+      Negate x  -> OMA [OMS "arith1" "unary_minus", expr2omobj x]
       x :==: y  -> binop "relation1" "eq"  x y
       List xs   -> OMA (OMS "list1" "list" : map expr2omobj xs)
       Matrix xs ->

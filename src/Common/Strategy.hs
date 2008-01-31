@@ -28,7 +28,7 @@ module Common.Strategy
    , runStrategy, acceptsEmpty
      -- * REST
    , nextRule, nextRulesWith, nextRulesForSequenceWith, trackRule, trackRulesWith
-   , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy
+   , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
    , StrategyLocation
    , firstLocation, subStrategy, reportLocations
    ) where
@@ -277,9 +277,11 @@ nonSucceed :: Strategy a -> Strategy a
 nonSucceed = S . RE.nonEmpty . unS
 
 mapStrategy :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapStrategy f (S re) = S (fmap (either (Left . f) (Right . g)) re)
- where g (Label n s) = Label n (mapStrategy f s)
+mapStrategy f (S re) = S (fmap (either (Left . f) (Right . mapLabeledStrategy f)) re)
 
+mapLabeledStrategy :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
+mapLabeledStrategy f (Label n s) = Label n (mapStrategy f s)
+ 
 -----------------------------------------------------------
 --- Substrategies
 

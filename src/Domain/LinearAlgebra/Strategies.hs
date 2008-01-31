@@ -51,7 +51,7 @@ backSubstitution = label "Back substitution" $
 systemToEchelonWithEEO :: Fractional a => LabeledStrategy (EqsInContext a)
 systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
    repeat $   label "Drop (0=0) equation"       ruleDropEquation
-   --       |> label "Inconsistent system (0=1)" ruleInconsistentSystem
+          <|> label "Inconsistent system (0=1)" ruleInconsistentSystem
           <|> check (not . null . remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)

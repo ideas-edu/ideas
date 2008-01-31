@@ -1,7 +1,6 @@
-module OpenMath.LAServer (respond) where
+module OpenMath.LAServer (respond, versionNr) where
 
 import Domain.LinearAlgebra
-import Domain.LinearAlgebra.Checks (reduceMatrixAssignment)
 import OpenMath.StrategyTable
 import OpenMath.Request
 import OpenMath.Reply
@@ -29,44 +28,51 @@ xs ~= ys = let f = map toLower . filter (not . isSpace)
            in f xs == f ys 
 
 laServer :: Request -> Reply
-laServer req | not (req_Strategy req ~= "Gaussian elimination") =  -- Quick and dirty check!
-   replyError "request error" "unknown strategy"
-laServer req =
-   case subStrategy (req_Location req) toReducedEchelon of
-      Nothing -> 
-         replyError "location error" "invalid location for strategy"
-      Just subStrategy -> 
-         case applyAll subStrategy (inContext $ fromJust $ fromExpr $ req_Term req) of
-            [] -> replyError "strategy error" "not able to compute an expected answer"
-            answers@(expected:_)
-               | fmap (inContext . fromJust . fromExpr) (req_Answer req) `elem` (map Just answers) ->
+laServer req = 
+   case [ ea | Entry _ ea@(ExprAssignment a) _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+      [ExprAssignment a] -> laServerFor a req
+      _ -> replyError "request error" "unknown strategy"
+   
+laServerFor :: IsExpr a => Assignment a -> Request -> Reply
+laServerFor a req = 
+   case (subStrategy (req_Location req) (strategy a), fromExpr $ req_Term req) of
+   
+      (Nothing, _) -> 
+         replyError "request error" "invalid location for strategy"
+         
+      (_, Nothing) ->
+         replyError "request error" ("invalid term for " ++ show (req_Strategy req))
+         
+      (Just subStrategy, Just requestedTerm) -> 
+         
+         case (applyAll subStrategy requestedTerm, maybe Nothing fromExpr $ req_Answer req) of
+            ([], _) -> replyError "strategy error" "not able to compute an expected answer"
+            
+            (answers, Just answeredTerm)
+               | any (equality a answeredTerm) answers ->
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
-                       , repOk_Location = nextLocation (fromJust $ fromExpr $ fromJust $ req_Answer req) (req_Location req)
+                       , repOk_Location = nextLocation answeredTerm (req_Location req) a
                        , repOk_Steps    = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ fromExpr $ fromJust $ req_Answer req)
-                       } 
-               | otherwise ->
-                    Incorrect $ ReplyIncorrect
-                       { repInc_Strategy   = req_Strategy req
-                       , repInc_Location   = req_Location req ++ subTask (fromJust $ fromExpr $ req_Term req) subStrategy
-                       , repInc_Expected   = toExpr $ matrix expected
-                       , repInc_Steps      = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ fromExpr $ req_Term req)
-                       , repInc_Equivalent = case req_Answer req of
-                                                Nothing -> False
-                                                Just m  -> equivalence reduceMatrixAssignment expected (inContext $ fromJust $ fromExpr m)
                        }
                        
-subTask :: Matrix Rational -> LabeledStrategy (MatrixInContext Rational) -> Location
+            (expected:_, maybeAnswer) ->
+                    Incorrect $ ReplyIncorrect
+                       { repInc_Strategy   = req_Strategy req
+                       , repInc_Location   = req_Location req ++ subTask requestedTerm subStrategy
+                       , repInc_Expected   = toExpr expected
+                       , repInc_Steps      = stepsRemaining a requestedTerm
+                       , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
+                       }
+                     
+subTask :: a -> LabeledStrategy a -> Location
 subTask term subStrategy = 
-   case firstLocation (inContext term) subStrategy of
+   case firstLocation term subStrategy of
       Just (i:_) -> [i] -- one-level only
       _          -> []
       
-nextLocation :: Matrix Rational -> Location -> Location
-nextLocation term loc = 
-   case firstLocation (inContext term) toReducedEchelon of
-      Just new -> rec loc new
-      Nothing  -> loc
+nextLocation ::IsExpr a => a -> Location -> Assignment a -> Location
+nextLocation term loc = maybe loc (rec loc) . firstLocation term . strategy
  where
    rec (i:is) (j:js)
       | i == j    = j : rec is js 

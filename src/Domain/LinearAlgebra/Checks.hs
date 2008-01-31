@@ -7,7 +7,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Checks (checks, defaultMatrix, reduceMatrixAssignment) where
+module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
 
 import Domain.LinearAlgebra hiding (getSolution)
 import Test.QuickCheck

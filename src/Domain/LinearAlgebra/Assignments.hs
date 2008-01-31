@@ -18,7 +18,7 @@ import qualified Domain.LinearAlgebra.EquationsRules as EQ
 
 solveSystemAssignment :: Assignment (EqsInContext Rational)
 solveSystemAssignment = makeAssignment
-   { shortTitle    = "Solve linear system"
+   { shortTitle    = "Solve Linear System"
    , parser        = either (\(x,y) -> Left (x, fmap EQ.inContext y)) (Right . EQ.inContext) . parseSystem
    , prettyPrinter = unlines . map (show . fmap (fmap ShowRational)) . equations
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 

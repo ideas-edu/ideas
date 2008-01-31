@@ -12,7 +12,7 @@ main = do
    case args of 
       [] -> runCGI cgiMain
       ["--test", file] -> readFile file >>= putStrLn . respond . Just
-      _ -> putStrLn "laservice.cgi: use with --test [request file] for testing"
+      _ -> putStrLn $ "laservice.cgi (version " ++ versionNr ++ ")\n   use with --test [request file] for testing"
       
 cgiMain :: CGI CGIResult
 cgiMain = do 

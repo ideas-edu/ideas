@@ -1,28 +1,27 @@
-module OpenMath.StrategyToWiki where
+module Main (main) where
 
 import Common.Assignment
 import Common.Strategy (reportLocations)
-import Domain.LinearAlgebra (reduceMatrixAssignment)
 import OpenMath.StrategyTable
 import Data.Char
 import Data.List
+import Data.Maybe
 import System.Environment
 
 main :: IO ()
 main = do
    args <- getArgs
    case args of 
-      target:xs | not (null xs) -> mapM_ (make target) xs
-      _ -> putStrLn "Usage: StrategyToWiki targetDir [list of strategy numbers]"
-   
-make :: String -> String -> IO ()
-make target s = 
-   case [ triple | triple@(t, _, _) <- strategyTable, s==t ] of
-      [(nr, a, xs)] -> makeWikiFile target nr a xs
-      _ -> putStrLn $ "Invalid strategy: " ++ s
+      []       -> make Nothing
+      [target] -> make (Just target)
+      _        -> putStrLn "Usage: MakeWikiPages (optional: target directory)"
 
-makeWikiFile :: String -> String -> Assignment a -> [String] -> IO ()
-makeWikiFile target nr a xs = do
+make :: (Maybe String) -> IO ()
+make target =
+   mapM_ (makeWikiFile $ fromMaybe "." target) strategyTable
+
+makeWikiFile :: String -> StrategyEntry -> IO ()
+makeWikiFile target (Entry nr (ExprAssignment a) xs) = do
    code <- insertCode a xs
    let filename = target ++ "/" ++ targetFileName a
    putStrLn $ "Writing to " ++ show filename

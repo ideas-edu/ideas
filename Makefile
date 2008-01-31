@@ -19,11 +19,11 @@ GHCI = ghci
 endif
 
 # Define directories to store results
-BINDIR = bin
-OUTDIR = out
-DOCDIR = doc
-HPCDIR = hpc
-CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
+BINDIR  = bin
+OUTDIR  = out
+DOCDIR  = doc
+HPCDIR  = hpc
+CGIDIR  = ideas.cs.uu.nl:/var/www/cgi-bin/
 
 default: solver
 
@@ -32,7 +32,7 @@ test:
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
 
-all: solver solvergui doc markup cgi
+all: solver solvergui wiki docs markup cgi
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
@@ -46,7 +46,11 @@ $(BINDIR):
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
-	
+
+$(DOCDIR):
+	mkdir -p $(DOCDIR)
+	mkdir -p $(DOCDIR)/Wiki
+		
 bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
 	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
 
@@ -56,16 +60,21 @@ bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/Logic/Exerc
 	ghc --make -O -isrc -isrc/Presentation/Logic/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs
 	cp src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade bin/
 
+wiki: $(DOCDIR) $(BINDIR)/MakeWikiPages$(EXE) 
+	$(BINDIR)/MakeWikiPages$(EXE) $(DOCDIR)/Wiki
+
+$(BINDIR)/MakeWikiPages$(EXE): $(SOURCES)
+	ghc --make -O -isrc -odir out -hidir out -o bin/MakeWikiPages$(EXE) src/OpenMath/StrategyToWiki.hs
+
 checks: $(BINDIR) $(OUTDIR)
 	cd src/Common; runhaskell -i.. Checks.hs; cd ..
 
 run: $(BINDIR) $(OUTDIR)
 	$(GHCI) -isrc -odir out -hidir out 
 
-doc:	doc/index.html
+docs:	doc/index.html
 
-doc/index.html: $(SOURCES) src/Common/prologue
-	mkdir -p $(DOCDIR)
+doc/index.html: $(DOCDIR) $(SOURCES) src/Common/prologue
 	haddock -o doc -s "../%F" -p src/Common/prologue --html $(SOURCES)
 
 hpc/bin/solver$(EXE): $(SOURCES)

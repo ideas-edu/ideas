@@ -11,6 +11,12 @@ import qualified Data.Set as S
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
+import Test.QuickCheck -- hopefully, temporarily
+
+equationsRules :: Fractional a => [Rule (EqsInContext a)]
+equationsRules = [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation, ruleInconsistentSystem
+                 , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
+                 , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations ]
 
 ruleExchangeEquations :: Rule (EqsInContext a)
 ruleExchangeEquations = makeRule "Exchange" $ app2 (\x y -> liftSystemTrans $ exchange x y) $ 
@@ -26,6 +32,7 @@ ruleEliminateVar = makeRule "Eliminate variable" $ app3 (\x y z -> liftSystemTra
       let hd:rest = remaining c
           getCoef = coefficientOf mv . getLHS
       (i, coef) <- safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
+      guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
       return (i + covered c + 1, covered c, v)
 
@@ -45,14 +52,17 @@ ruleInconsistentSystem = makeSimpleRule "Inconsistent system (0=1)" $
 
 ruleScaleEquation :: Fractional a => Rule (EqsInContext a)
 ruleScaleEquation = makeRule "Scale equation to one" $ app2 (\x y -> liftSystemTrans $ scaleEquation x y) $ 
-   \c -> do let expr = getLHS (equations c !! covered c)
+   \c -> do eq <- safeHead $ drop (covered c) (equations c)
+            let expr = getLHS eq
             mv <- safeHead (getVarsList expr)
+            guard (coefficientOf mv expr /= 0)
             let coef = 1 / coefficientOf mv expr
             return (covered c, coef)
    
 ruleBackSubstitution :: Num a => Rule (EqsInContext a)
 ruleBackSubstitution = makeRule "Back substitution" $ app3 (\x y z -> liftSystemTrans $ addEquations x y z) $ 
-   \c -> do let expr = getLHS (equations c !! covered c)
+   \c -> do eq <- safeHead $ drop (covered c) (equations c)
+            let expr = getLHS eq
             mv <- safeHead (getVarsList expr)
             i  <- findIndex ((/= 0) . coefficientOf mv . getLHS) (take (covered c) (equations c))
             let coef = negate $ coefficientOf mv (getLHS (equations c !! i))
@@ -70,7 +80,7 @@ ruleCoverUpEquation :: Rule (EqsInContext a)
 ruleCoverUpEquation = minorRule $ makeRule "Cover up first equation" $ changeCover (+1)
 
 ruleUncoverEquation :: Rule (EqsInContext a)
-ruleUncoverEquation = minorRule $ makeRule "Cover up first equation" $ changeCover (\x -> x-1)
+ruleUncoverEquation = minorRule $ makeRule "Uncover one equation" $ changeCover (\x -> x-1)
 
 ruleCoverAllEquations :: Rule (EqsInContext a)
 ruleCoverAllEquations = minorRule $ makeSimpleRule "Cover all equations" $ 
@@ -146,3 +156,22 @@ liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (EqsInConte
 liftSystemTrans f = makeTrans $ \c -> do
    new <- apply f (equations c) 
    return c {equations = new}
+
+instance Eq a => Eq (EqsInContext a) where
+   x == y  =  equations x == equations y 
+   
+   
+instance RealFrac a => Arbitrary (EqsInContext a) where
+   arbitrary = liftM (inContext . fromIntegerSystem) systemInNF
+   coarbitrary c = coarbitrary (toIntegerSystem $ equations c)
+
+systemInNF :: (Arbitrary a, Num a) => Gen (LinearSystem a)
+systemInNF = do
+   n <- arbitrary
+   replicateM n $ liftM2 (:==:) arbitrary (liftM toLinearExpr arbitrary)
+
+toIntegerSystem :: RealFrac a => LinearSystem a -> LinearSystem Integer
+toIntegerSystem = map (fmap (fmap round))
+
+fromIntegerSystem :: RealFrac a => LinearSystem Integer -> LinearSystem a
+fromIntegerSystem = map (fmap (fmap fromInteger))

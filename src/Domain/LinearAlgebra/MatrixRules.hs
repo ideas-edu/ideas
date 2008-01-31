@@ -18,7 +18,7 @@ import Data.List
 
 matrixRules :: Fractional a => [Rule (MatrixInContext a)]
 matrixRules = 
-   [ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
+   [ ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
    , ruleZerosFP, ruleZerosBP, ruleCoverRow, ruleUncoverRow
    ]
 
@@ -32,23 +32,27 @@ ruleExchangeNonZero :: Num a => Rule (MatrixInContext a)
 ruleExchangeNonZero = makeRule "ExchangeNonZero" (app2 rowExchange args)
  where
    args c = do
+      nonEmpty c
       let col = column (columnJ c) (subMatrix c)
-      i <- findIndex (/= 0) col
+      i   <- findIndex (/= 0) col
       return (covered c, i + covered c)
 
 ruleScaleToOne :: Fractional a => Rule (MatrixInContext a)
 ruleScaleToOne = makeRule "ScaleToOne" (app2 rowScale args)
  where
    args c = do
+      nonEmpty c
       let pv = entry (0, columnJ c) (subMatrix c)
+      guard (pv /= 0)
       return (covered c, 1 / pv)
 
 ruleZerosFP :: Fractional a => Rule (MatrixInContext a)
 ruleZerosFP = makeRule "Introduce zeros (forward pass)" (app3 rowAdd args)
  where
    args c = do
+      nonEmpty c
       let col = drop 1 $ column (columnJ c) (subMatrix c)
-      i <- findIndex (/= 0) col
+      i   <- findIndex (/= 0) col
       let v = negate (col!!i)
       return (i + covered c + 1, covered c, v)
    
@@ -56,9 +60,11 @@ ruleZerosBP :: Fractional a => Rule (MatrixInContext a)
 ruleZerosBP = makeRule "Introduce zeros (backward pass)" (app3 rowAdd args)
  where
    args c = do
-      let ri = row 0 (subMatrix c)
-          j  = length $ takeWhile (==0) ri
+      nonEmpty c
+      let ri  = row 0 (subMatrix c)
+          j   = length $ takeWhile (==0) ri
           col = column j (matrix c)
+      guard (any (/= 0) ri)
       k <- findIndex (/= 0) col
       let v = negate (col!!k)
       return (k, covered c, v)
@@ -101,3 +107,6 @@ matrixTrans f = makeTrans $ \c -> do
 -- local helper function
 validRow :: Int -> Matrix a -> Bool
 validRow i m = i >= 0 && i < fst (dimensions m)
+   
+nonEmpty :: MatrixInContext a -> Maybe ()
+nonEmpty = guard . not . isEmpty . subMatrix

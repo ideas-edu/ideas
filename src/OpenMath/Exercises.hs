@@ -45,8 +45,6 @@ equationsAssignment = makeAssignment
    , generator     = liftM inContext (vector 3)
    }
    
-showLinSystem :: LinearSystem Rational -> String
-showLinSystem = unlines . map (show . fmap (fmap MyRational))
 
 newtype MyRational = MyRational Rational
   deriving (Eq, Num)

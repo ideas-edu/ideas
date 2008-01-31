@@ -8,7 +8,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Parser 
-   ( parseMatrix, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix
+   ( parseMatrix, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix, ppRational
    , parseSystem
    ) where
 
@@ -107,11 +107,13 @@ ppMatrixWith :: (a -> String) -> Matrix a -> String
 ppMatrixWith f = ppStringMatrix . fmap f 
 
 ppRationalMatrix :: Matrix Rational -> String
-ppRationalMatrix = ppMatrixWith f
- where f (x :% y)
-          | y==1      = show x
-          | otherwise = show x ++ "/" ++ show y
-         
+ppRationalMatrix = ppMatrixWith ppRational
+
+ppRational :: Rational -> String
+ppRational (x :% y)
+   | y==1      = show x
+   | otherwise = show x ++ "/" ++ show y
+        
 ppStringMatrix :: Matrix String -> String
 ppStringMatrix = format . rows
  where

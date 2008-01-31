@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Matrix 
    ( Matrix, Row, Column, isRectangular, makeMatrix, mapWithPos
-   , rows, row, columns, column, dimensions, entry
+   , rows, row, columns, column, dimensions, entry, isEmpty
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
    , nonZero, pivot, isPivotColumn
@@ -19,6 +19,10 @@ import Data.Maybe
 import Data.List hiding (transpose)
 import qualified Data.List as L
 import qualified Data.Map as M
+
+(x:xs) !!! 0 = x
+(x:xs) !!! n = xs !!! (n-1)
+_ !!! _ = error "!!!"
 
 -- Invariant: a matrix is always rectangular
 newtype Matrix a = M [[a]]
@@ -44,6 +48,9 @@ makeMatrix rows
    | isRectangular rows = M rows
    | otherwise          = error "makeMatrix: not rectangular"
 
+isEmpty :: Matrix a -> Bool
+isEmpty (M xs) = null xs
+
 rows :: Matrix a -> [Row a]
 rows (M rows) = rows
 
@@ -54,7 +61,7 @@ columns :: Matrix a -> [Column a]
 columns = rows . transpose
 
 column :: Int -> Matrix a -> Column a
-column n = (!!n) . columns
+column n = (!!!n) . columns
 
 dimensions :: Matrix a -> (Int, Int)
 dimensions m = (length $ rows m, length $ columns m)

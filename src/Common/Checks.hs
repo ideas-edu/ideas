@@ -31,3 +31,4 @@ main = do
    putStrLn "\n...checking assignments"
    checkAssignment Logic.dnfAssignment
    checkAssignment LA.reduceMatrixAssignment
+   checkAssignment LA.solveSystemAssignment

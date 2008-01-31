@@ -51,7 +51,7 @@ backSubstitution = label "Back substitution" $
 systemToEchelonWithEEO :: Fractional a => LabeledStrategy (EqsInContext a)
 systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
    repeat $   label "Drop (0=0) equation"       ruleDropEquation
-          <|> label "Inconsistent system (0=1)" ruleInconsistentSystem
+   --       |> label "Inconsistent system (0=1)" ruleInconsistentSystem
           <|> check (not . null . remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
@@ -64,7 +64,7 @@ generalSolutionLinearSystem = label "General solution to a lineary system" $
 
 
 -- temp for testing
-test = applyAll generalSolutionLinearSystem $ EIC ex1a 0
+test = applyAll ruleInconsistentSystem $ EIC [0 :==: 1] 0
 
 ex1a :: Equations (LinearExpr Rational)
 ex1a = 
@@ -72,7 +72,7 @@ ex1a =
    , 2*x1 + 3*x2 - x3 + 3*x4   :==:  0
    , 4*x4 + 6*x2 + x3 + 2*x4   :==:  0
    ]
-   
+
 x1 = var "x1"
 x2 = var "x2"
 x3 = var "x3"

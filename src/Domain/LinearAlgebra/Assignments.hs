@@ -6,11 +6,30 @@ import Common.Assignment
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
+import Domain.LinearAlgebra.EquationsRules hiding (inContext)
 import Domain.LinearAlgebra.Context
 import Domain.LinearAlgebra.Parser
+import Domain.LinearAlgebra.Equation
+import Domain.LinearAlgebra.LinearExpr
+import Domain.LinearAlgebra.LinearSystem
 import Test.QuickCheck
 import Control.Monad
+import qualified Domain.LinearAlgebra.EquationsRules as EQ
 
+solveSystemAssignment :: Assignment (EqsInContext Rational)
+solveSystemAssignment = makeAssignment
+   { shortTitle    = "Solve linear system"
+   , parser        = either (\(x,y) -> Left (x, fmap EQ.inContext y)) (Right . EQ.inContext) . parseSystem
+   , prettyPrinter = unlines . map (show . fmap (fmap ShowRational)) . equations
+   , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
+                                   . EQ.inContext . map toStandardForm . equations
+                             in f x == f y
+   , ruleset       = equationsRules
+   , finalProperty = inSolvedForm . equations
+   , strategy      = generalSolutionLinearSystem
+   -- , generator     =  -- liftM EQ.inContext (vector 3)
+   }
+   
 reduceMatrixAssignment :: Assignment (MatrixInContext Rational)
 reduceMatrixAssignment = makeAssignment
    { shortTitle    = "Gaussian Elimination"
@@ -30,10 +49,8 @@ reduceMatrixAssignment = makeAssignment
 opgave6b :: Assignment (MatrixInContext Rational)
 opgave6b = reduceMatrixAssignment
    { shortTitle = "Opgave 9.6 (b)"
-   , generator  = return (inContext ex6b)
+   , generator  = return $ inContext $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
    }
-
-ex6b = makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
   
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
@@ -92,3 +109,9 @@ fromSmallInt (SmallInt n) = fromIntegral n
 instance Arbitrary SmallInt where
    arbitrary = oneof $ map (return . SmallInt) [-15 .. 15]
    coarbitrary (SmallInt n) = coarbitrary n
+   
+newtype ShowRational = ShowRational Rational
+   deriving (Eq, Num)
+
+instance Show ShowRational where
+   show (ShowRational r) = ppRational r

@@ -26,7 +26,7 @@ cgiMain = do
    input <- getInput "input"             -- read matrix xml string 
    setHeader "Content-type" "text/plain" -- return plain text
    addr <- remoteAddr -- the IP address of the remote host making the request
-   let answer = respondHTML input
+   let answer = respondHTML $ fromMaybe "" input
    logMsg $ unlines [addr, fromMaybe "" input, answer]
    output answer 
 

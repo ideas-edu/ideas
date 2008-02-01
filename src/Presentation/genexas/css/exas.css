@@ -57,7 +57,6 @@ select {
 	font-size: xx-large;
 	border-style: solid;
 	border-width: 1px;
-	font-family: Arial, sans-serif;
 }
 
 #feedback {
@@ -69,7 +68,6 @@ select {
 	margin-right: 20px;
 	overflow: scroll;
 	contentEditable: true;
-	font-family: Arial, sans-serif;
 }
 
 #afleiding {
@@ -77,22 +75,22 @@ select {
 	padding: 10px;
 	width: auto;
 	height: auto;
+	min-height: 50px;
 	margin-left: 20px;
 	margin-right: 20px;
-}
-
-#afleiding {
-	font-family: Arial, sans-serif;
 	font-size: medium;
 	font-weight: bold;
+	border-style: solid;
+	border-width: 1px;
 }
 
+
 #werk {
-	font-family: Arial, sans-serif;
 	font-size: medium;
 	font-weight: bold;
 	position: relative;
 	top: -10px;
+	width: 102%;
 }
 
 .kolom {
@@ -103,11 +101,12 @@ select {
 .minibutton {
 	display: inline; 
 	float: right;
-	margin-right: 0px;
+	margin-right: 10px;
 	background-color: #CCCC99;
 	position: relative;
 	top: -30px;
-	right: -30px;
+	right: -45px;
+	width: 50px;
 }
 
 #controleerbutton {
@@ -118,7 +117,12 @@ select {
 	position: relative;
 	border-width: thick;
 	top: -30px;
-	right: -30px;
+	right: -45px;
+}
+
+#inputhulp {
+	width: 100%;
+	margin-top: 50px;
 }
 
 #toetsenbord {

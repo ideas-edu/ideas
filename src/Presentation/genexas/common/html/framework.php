@@ -29,7 +29,6 @@
 
 	<h3 id="log"><?php print WorkArea;?></h3>
 
-	<br>
 	<textarea id="werk" rows="2" cols="40" >	
 	</textarea>
 	<input id="controleerbutton" type="button" onclick="submitAntwoord()" value="<?php print Submit;?>" >
@@ -37,7 +36,8 @@
 	<input class="minibutton" type="button" onclick="getNext() "value="<?php print Step;?>" >
 	<input class="minibutton" type="button" onclick="getHint() "value="<?php print Hint;?>" >
 	<input id="klaarbutton" class="minibutton onzichtbaar" type="button" onclick="getKlaar() "value="<?php print Ready;?>" >
-	<div id="plaatsVoorToetsen"></div>
+	<br class="clear">;
+	<?php toetsen();?>
 	<br>
 
 </div>

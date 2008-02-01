@@ -1,3 +1,4 @@
+<div id="inputhulp">
 <div id="keyboard">
 	<table>
 	<tr>
@@ -61,3 +62,4 @@
 	<td><input id="falsetoets" class="toets" value="q" type="button" onclick='voegin("q", "werk")' ></td>
 	<td><input id="falsetoets" class="toets" value="p" type="button" onclick='voegin("p", "werk")' ></td>
 	</tr></table>
+</div>

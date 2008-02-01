@@ -125,9 +125,10 @@ showXML = unlines . rec
    rec (Tag tag attrs xs) = tagAttr tag attrs (concatMap rec xs)
 
 tagAttr :: String -> AttrList -> [String] -> [String]
-tagAttr t attrs xs
-   | null xs   = [tagWithAttrs openCloseTag t attrs]
-   | otherwise = [tagWithAttrs openTag t attrs] ++ indent 2 xs ++ [closeTag t]
+tagAttr t attrs xs =
+   case xs of
+      [] -> [tagWithAttrs openCloseTag t attrs]
+      _  -> [tagWithAttrs openTag t attrs] ++ indent 2 xs ++ [closeTag t]
 
 openTag, closeTag, openCloseTag :: String -> String
 openTag      t = "<"  ++ t ++ ">"
@@ -136,7 +137,12 @@ openCloseTag t = openTag (t ++ "/")
 
 tagWithAttrs :: (String -> String) -> String -> AttrList -> String
 tagWithAttrs f t attrs = f (concat $ intersperse " " $ t : map g attrs)
- where g (x, y) = x ++ "=" ++ show y
+ where g (x, y) = x ++ "=" ++ quote y
+ 
+quote :: String -> String
+quote s 
+   | '"' `notElem` s = show s
+   | otherwise       = "'" ++ s ++ "'" 
  
 indent :: Int -> [String] -> [String]
 indent n = map (replicate n ' '++)

@@ -1,4 +1,4 @@
-module OpenMath.LAServer (respond, versionNr) where
+module OpenMath.LAServer (respond, laServerFor, versionNr) where
 
 import Domain.LinearAlgebra
 import OpenMath.StrategyTable
@@ -53,7 +53,7 @@ laServerFor a req =
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
                        , repOk_Location = nextLocation answeredTerm (req_Location req) a
-                       , repOk_Steps    = stepsRemaining reduceMatrixAssignment (inContext $ fromJust $ fromExpr $ fromJust $ req_Answer req)
+                       , repOk_Steps    = stepsRemaining a (answeredTerm)
                        }
                        
             (expected:_, maybeAnswer) ->

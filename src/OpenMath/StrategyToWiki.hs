@@ -49,14 +49,15 @@ makeTitle :: String -> Assignment a -> String
 makeTitle nr a = title $ "Strategy " ++ nr ++ ": " ++ shortTitle a
 
 makeLocationTable :: Assignment a -> String
-makeLocationTable a = table ["Location", "Label or rule"] (reportLocations $ strategy a)
-
+makeLocationTable a = table ["Location", "Label or rule"] (map f $ reportLocations $ strategy a)
+ where f (loc, s) = [show loc, s]
+ 
 strategyFileName = "src/Domain/LinearAlgebra/Strategies.hs"
 
 insertCode :: Assignment a -> [String] -> IO String
 insertCode a xs = do
    program <- readFile strategyFileName
-   let functions = map (!!1) (reportLocations (strategy a)) ++ xs
+   let functions = map snd (reportLocations (strategy a)) ++ xs
        blocks    = makeBlocks (lines program)
        check x   = any (~= x) functions 
        pieces    = map (unlines . snd) $ filter (check . fst) blocks

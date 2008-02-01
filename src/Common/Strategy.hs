@@ -295,21 +295,9 @@ subStrategies = rec []
           xs   = RE.collectSymbols $ combine (,) loc $ unS $ unlabel ns
       in (loc, Left ns) : concatMap (uncurry f) xs
 
-{- Domain.LinearAlgebra> Common.Strategy.reportLocations Domain.LinearAlgebra.toReducedEchelon -}
-reportLocations :: LabeledStrategy a -> [[String]]
+reportLocations :: LabeledStrategy a -> [(StrategyLocation, String)]
 reportLocations = map f . subStrategies
- where
-   f (loc, Left ns) = [show loc, strategyName ns]
-   f (loc, Right r) = [show loc, name r ++ " (rule)"]
-   g loc = replicate (2*length loc) ' ' ++ show loc
-
-{- format2 :: [(String, String)] -> String
-format2 list = unlines $ map format list
- where
-   wx     = width (map fst list)
-   width  = maximum . map length
-   make i = take i . (++Prelude.repeat ' ')
-   format (x, y) = make wx x ++ "   " ++ y -}
+ where f (loc, e) = (loc, either strategyName ((++" (rule)") . name) e)
 
 subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
 subStrategy loc = fmap (either id f) . subStrategyOrRule loc
@@ -337,13 +325,7 @@ withIndices = rec []
 firstLocation :: a -> LabeledStrategy a -> Maybe StrategyLocation
 firstLocation a ns = safeHead
    [ is | ((is, r), _) <- RE.firsts (withIndices ns), applicable r a ]
-{-
-nextLocation :: a -> LabeledStrategy a -> StrategyLocation -> Maybe StrategyLocation
-nextLocation a ns old = 
-   let f new = take (g new + 1) new
-       g = length . takeWhile id . zipWith (==) old
-   in fmap f (firstLocation a ns)
-   -}
+
 -- local helper-function
 combine :: ([Int] -> a -> b) -> [Int] -> RE.Grammar a -> RE.Grammar b
 combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex

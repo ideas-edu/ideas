@@ -1,6 +1,7 @@
 module Main (main) where
 
 import OpenMath.LAServer
+import OpenMath.Interactive
 import Network.CGI
 import System.Environment
 import Common.Logging
@@ -12,6 +13,7 @@ main = do
    case args of 
       [] -> runCGI cgiMain
       ["--test", file]     -> readFile file >>= putStrLn . respond . Just
+      ["--html", file]     -> readFile file >>= putStrLn . respondHTML
       ["--oneliner", file] -> readFile file >>= putStrLn . oneliner
       _ -> putStrLn $ unlines   
               [ "laservice.cgi (version " ++ versionNr ++ ")"   
@@ -24,7 +26,7 @@ cgiMain = do
    input <- getInput "input"             -- read matrix xml string 
    setHeader "Content-type" "text/plain" -- return plain text
    addr <- remoteAddr -- the IP address of the remote host making the request
-   let answer = respond input
+   let answer = respondHTML input
    logMsg $ unlines [addr, fromMaybe "" input, answer]
    output answer 
 

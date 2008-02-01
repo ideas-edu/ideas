@@ -1,4 +1,4 @@
-module OpenMath.Request (Request(..), pRequest) where
+module OpenMath.Request (Request(..), pRequest, ppRequest) where
 
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
@@ -63,3 +63,16 @@ extractExpr n xml = do
 
 optional :: Either String a -> Either String (Maybe a)
 optional = Right . either (const Nothing) Just
+
+----------------------------
+-- Pretty-printer for requests
+
+ppRequest :: Request -> String
+ppRequest req = showXML $ Tag "request" [] $
+   [ Tag "strategy" [] [Text $ req_Strategy req]
+   , Tag "location" [] [Text $ show $ req_Location req]
+   , Tag "term"     [] [exprToXML $ req_Term req]
+   ] ++ 
+   [ Tag "answer" [] [exprToXML $ fromJust $ req_Answer req]
+   | isJust (req_Answer req)
+   ]

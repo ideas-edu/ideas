@@ -75,7 +75,7 @@ showLoc here (loc, s)
 
 oneliner :: String -> String
 oneliner = (url++) . unwords . concatMap words . lines
- where url = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?input="
+ where url = "http://ideas.cs.uu.nl/cgi-bin/lasi.cgi?input="
  
 imgOUNL :: XML
 imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []

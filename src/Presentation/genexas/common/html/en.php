@@ -8,10 +8,9 @@ define("Undo", "Undo");
 define("Step", "Step");
 define("Hint", "Hint");
 define("Ready", "Ready");
-
 define("Exercise", "Exercise");
 define("WorkingArea", "Working Area: Rewrite and Submit");
-define("Step", "Stap");
-define("Hint", "Hint");
-define("Ready", "Klaar");
+define("History", "History");
+define("Feedback", "Feedback");
+define("Close", "Close");
 ?>

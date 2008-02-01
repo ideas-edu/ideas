@@ -1,6 +1,7 @@
 body {
 	background-color: #CCCC99;
 	background-image: url(/genexas/css/background.jpg);
+	font-family: Arial, sans-serif;
 	position: relative;
 }
 
@@ -21,7 +22,6 @@ h1 {
 	font-weight: 900;
   	letter-spacing: 0.1em;
   	line-height: 3;
-  	font-family: "Book Antiqua", Georgia, Palatino, Times, "Times New Roman", serif;
   	margin-bottom: 0px;
   	margin-top: 0px;
   	margin-left: 20px;
@@ -29,7 +29,6 @@ h1 {
 }
 
 h2, h3, h4 {
-	font-family: "Book Antiqua", Georgia, Palatino, Times, "Times New Roman", serif;
 	margin-left: 20px;
 	margin-top: 20px;
 	margin-bottom: 0px;
@@ -181,9 +180,9 @@ select {
 	border-width: 2px;
 	border-color: #999966;
 	padding: 20px;
-	top: 160px;
+	top: 104px;
 	right: 20px;
-	width: 40%;
+	width: 85%;
 	clear: both;
 	font-family: Arial, sans-serif;
 	contentEditable: true;

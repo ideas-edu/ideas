@@ -43,27 +43,27 @@
 </div>
 
 <div class="kolom rechts">
-	<h3>Afleiding</h3>
+	<h3><?php print History;?></h3>
 	<div id="afleiding"></div>
-		<h3>Feedback</h3>
+		<h3><?php print Feedback ?></h3>
 	<div id="feedback">
 
 </div>
 
-<div id="regels" class=" helpgebied onzichtbaar">
-<input class="helpbutton" type="button" onclick="sluitmenuhelp('regels') "value="Sluit" >
-<?php include  'regels.html';?>
+<div id="regels" class="helpgebied onzichtbaar">
+<input class="helpbutton" type="button" onclick="sluitmenuhelp('regels') "value="<?php print Close;?>" >
+<?php rules();?>
 </div>
 
 <div id="help" class="helpgebied onzichtbaar">
-<input class="helpbutton" type="button" onclick="sluitmenuhelp('help') "value="Sluit" >
-<?php include  'help.html';?>
+<input class="helpbutton" type="button" onclick="sluitmenuhelp('help') "value="<?php print Close;?>" >
+<?php help();?>
 </div>
 
 <div id="about" class="helpgebied onzichtbaar">
-<input class="helpbutton" type="button" onclick="sluitmenuhelp('about') "value="Sluit" >
-<?php include  'about.html';?>
-
+<input class="helpbutton" type="button" onclick="sluitmenuhelp('about') "value="<?php print Close;?>" >
+<?php about();?>
 </div>
+
 </body>
 </html>

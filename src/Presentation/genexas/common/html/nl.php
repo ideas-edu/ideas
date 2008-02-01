@@ -8,10 +8,9 @@ define("Undo", "Herstel");
 define("Step", "Stap");
 define("Hint", "Hint");
 define("Ready", "Klaar");
-
 define("Exercise", "Opgave");
 define("WorkingArea", "Werkveld: wijzig en submit: ");
-define("Step", "Stap");
-define("Hint", "Hint");
-define("Ready", "Klaar");
+define("History", "Afleiding");
+define("Feedback", "Feedback");
+define("Close", "Sluit");
 ?>

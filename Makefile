@@ -36,7 +36,7 @@ all: solver solvergui wiki docs markup cgi
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
-	  src/Presentation/Logic/ExerciseAssistant/*.hs src/OpenMath/*.hs \
+	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs \
 	  src/Domain/Fraction/*.hs
 
 solver: bin/solver$(EXE)
@@ -56,9 +56,9 @@ bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
 
 solvergui: bin/solvergui$(EXE)
 
-bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade src/Presentation/Logic/ExerciseAssistant/exerciseassistant.gladep
-	ghc --make -O -isrc -isrc/Presentation/Logic/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs
-	cp src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade bin/
+bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/ExerciseAssistant/exerciseassistant.glade src/Presentation/ExerciseAssistant/exerciseassistant.gladep
+	ghc --make -O -isrc -isrc/Presentation/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
+	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
 
 wiki: $(DOCDIR) $(BINDIR)/MakeWikiPages$(EXE) 
 	$(BINDIR)/MakeWikiPages$(EXE) $(DOCDIR)/Wiki

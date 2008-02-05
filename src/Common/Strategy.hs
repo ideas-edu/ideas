@@ -236,17 +236,19 @@ nextRulesWith p strategy a = concatMap f (nextRule strategy a)
  where f (r, b, s) | p r       = [([r], b, s)]
                    | otherwise = [ (r:rs, c, t) | (rs, c, t) <- nextRulesWith p s b ] 
 
-nextRulesForSequenceWith :: (Rule a -> Bool) -> Strategy a -> [a] -> [([Rule a], a)]
-nextRulesForSequenceWith p strategy as = 
-   case as of
-      []     -> []
-      [a]    -> let f (x, y, z) = (x, y)
-                in map f (nextRulesWith p strategy a)
-      a:rest -> [ (rs1++rs2, c)
-                | (rs1, b, s) <- nextRulesWith p strategy a
---                , (rs2, c)    <- if b==(head rest) then nextRulesForSequenceWith p s rest else (rs1, b) -- ugly should be [] of rs1
-                , (rs2, c)    <- nextRulesForSequenceWith p s rest
-                ]
+nextRulesForSequenceWith :: (a -> a -> Bool) -> (Rule a -> Bool) -> Strategy a -> [a] -> [([Rule a], a)]
+nextRulesForSequenceWith eq p = rec
+ where
+   rec strategy as =
+      case as of
+         []     -> []
+         [a]    -> let f (x, y, z) = (x, y)
+                   in map f (nextRulesWith p strategy a)
+         a:rest@(d:_) -> [ (rs1++rs2, c)
+                         | (rs1, b, s) <- nextRulesWith p strategy a
+                         , b `eq` d
+                         , (rs2, c)    <- rec s rest
+                         ]
 
 trackRule :: Rule a -> Strategy a -> Strategy a
 trackRule rule = 

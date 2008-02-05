@@ -82,7 +82,7 @@ giveStep :: Assignment a -> [a] -> Maybe (Doc a, Rule a, a, a)
 giveStep x = safeHead . giveSteps x
 
 giveSteps :: Assignment a -> [a] -> [(Doc a, Rule a, a, a)]
-giveSteps x as = map g $ nextRulesForSequenceWith (not . isMinorRule) (unlabel $ strategy x) as
+giveSteps x as = map g $ nextRulesForSequenceWith (equality x) (not . isMinorRule) (unlabel $ strategy x) as
  where
    g (rs, new) = 
       let r   = last rs
@@ -104,7 +104,7 @@ feedback x as txt =
          | not (equivalence x (last as) new) -> 
               Incorrect (text "Incorrect") Nothing -- no suggestion yet
          | otherwise -> 
-              let paths = nextRulesForSequenceWith (not . isMinorRule) (unlabel $ strategy x) as
+              let paths = nextRulesForSequenceWith (equality x) (not . isMinorRule) (unlabel $ strategy x) as
                   check = equality x new . snd
               in case filter check paths of
                     (rs, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))

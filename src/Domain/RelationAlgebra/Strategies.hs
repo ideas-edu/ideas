@@ -1,11 +1,38 @@
 module Domain.RelationAlgebra.Strategies where
 
+import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Formula
-import Common.Strategy
+import Domain.RelationAlgebra.Zipper
 
-toCNF :: Strategy RelAlg
+
+
+import Common.Strategy
+import Prelude hiding (repeat)
+toCNF :: Strategy RelAlgInContext
 toCNF =
-   whenever (repeat topdown ruleRemCompl <*> repeat topdown ruleRedunExpr <*> repeat topdown ruleDoubleNot <*> repeat topdown ruleIdemp <*> repeat topdown ruleAbsorp <*> repeat topdown ruleAbsorpCompl)
-   (repeat topdown rulesInvOver_ 
-   <*> repeat topdown (ruleCompOverUnion <|> ruleAddOverIntersec<|> ruleDeMorgan) <|> ruleNotOverComp <|> ruleNotOverAnd
-   <*> repeat somewhere ruleUnionOverIntersection
+ repeat ( topDown ( alternatives ( map liftRelAlgRule (
+ 				 [ruleRemCompl
+                                 , ruleRemRedunExprs 
+                                 , ruleDoubleNegation
+				 , ruleIdemp 
+                                 , ruleAbsorp
+				 , ruleAbsorpCompl
+                                 ] ++
+                                  invRules))
+				 
+		  )|> topDown (alternatives (map liftRelAlgRule (
+		  		            [ruleCompOverUnion
+		                            , ruleAddOverIntersec
+					    , ruleDeMorgan
+					    , ruleNotOverComp
+					    , ruleNotOverAdd
+					    ]))
+		               ) 
+		   |> somewhere (liftRelAlgRule ruleUnionOverIntersec)
+	)
+       		  
+   
+
+
+   
+   

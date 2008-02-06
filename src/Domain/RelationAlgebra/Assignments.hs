@@ -15,6 +15,7 @@ import Test.QuickCheck hiding (label)
 cnfAssignment :: Assignment RelAlgInContext
 cnfAssignment = makeAssignment
    { shortTitle = "To conjunctive normal form"
+
    , parser        = \s -> case parseRelAlg s of
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs), Just (inContext p))
@@ -23,6 +24,7 @@ cnfAssignment = makeAssignment
    , ruleset   = map liftRelAlgRule relAlgRules
    , strategy  = label "cnf" toCNF
    , generator = return $ inContext $ Not (Not (Var "x")) -- liftM inContext arbitrary
+   , suitableTerm = isCNF . noContext
    }
    
 instance Arbitrary a => Arbitrary (Loc a) where

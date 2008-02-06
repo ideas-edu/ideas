@@ -57,12 +57,12 @@ pSymLow a       =  pCostSym      1 a a
 
 ppRelAlg :: RelAlg -> String
 ppRelAlg = ppRelAlgPrio 0
-        
-ppRelAlgPrio :: Int -> RelAlg -> String
+
+ppRelAlgPrio :: Int -> RelAlg -> String 
 ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "U", var "E") p n ""
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    var       = const . (++)
-   nott p n  = ("-"++) . p 6
-   inv  p n  = ("~"++) . p 6
+   nott p n  = p 6 . ("-"++) 
+   inv  p n  = p 6 . ("~"++)
    parIf b f = if b then ("("++) . f . (")"++) else f

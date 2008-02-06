@@ -6,6 +6,8 @@ import Data.List
 import Data.Maybe
 import qualified Data.Set as S
 
+import Test.QuickCheck
+
 infixr 1 :.:
 infixr 2 :+: 
 infixr 3 :||: 
@@ -80,6 +82,30 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
          U         -> universe 
          E         -> empty
 
+type Rel a = a -> a -> Bool
+
+evalRelAlg :: (String -> Rel a) -> [a] -> RelAlg -> Rel a
+evalRelAlg f as = rec 
+ where
+   rec term =
+      case term of
+         Var x     -> f x
+         p :.: q   -> \a b -> any (\c -> rec p a c && rec q c b) as
+         p :+: q   -> \a b -> all (\c -> rec p a c || rec q c b) as
+         p :&&: q  -> \a b -> rec p a b && rec q a b
+         p :||: q  -> \a b -> rec p a b || rec q a b
+         Not p     -> \a b -> not (rec p a b)
+	 Inv p	   -> \a b -> rec p b a
+         U         -> \_ _ -> True 
+         E         -> \_ _ -> False
+  
+(===) :: RelAlg -> RelAlg -> Property
+p === q = forAll arbitrary $ \f ->
+   let test a b = evalRelAlg f [0..10] p a b == evalRelAlg f [0..10] q a b
+   in and [ test a b | a <- [0::Int .. 10], b <- [0..10] ]
+     
+testje = quickCheck $ (Not (Not (Var "x"))) === Var "x"
+         
 -- | Function to unify to relationalgebra formulas: a returned substitution maps 
 -- | variables (String) to relationalgebra formulas 
 unifyRelAlg :: RelAlg -> RelAlg -> Maybe (Substitution RelAlg)

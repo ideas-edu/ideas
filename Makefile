@@ -19,11 +19,12 @@ GHCI = ghci
 endif
 
 # Define directories to store results
-BINDIR  = bin
-OUTDIR  = out
-DOCDIR  = doc
-HPCDIR  = hpc
-CGIDIR  = ideas.cs.uu.nl:/var/www/cgi-bin/
+BINDIR = bin
+OUTDIR = out
+DOCDIR = doc
+HPCDIR = hpc
+CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
+WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
 default: solver
 
@@ -32,12 +33,11 @@ test:
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
 
-all: solver solvergui wiki docs markup cgi
+all: solver solvergui doc markup cgi
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
-	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs \
-	  src/Domain/Fraction/*.hs
+	  src/Presentation/Logic/ExerciseAssistant/*.hs src/OpenMath/*.hs
 
 solver: bin/solver$(EXE)
 
@@ -46,25 +46,15 @@ $(BINDIR):
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
-
-$(DOCDIR):
-	mkdir -p $(DOCDIR)
-	mkdir -p $(DOCDIR)/Wiki
-		
+	
 bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
 	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
 
 solvergui: bin/solvergui$(EXE)
 
-bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/ExerciseAssistant/exerciseassistant.glade src/Presentation/ExerciseAssistant/exerciseassistant.gladep
-	ghc --make -O -isrc -isrc/Presentation/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
-	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
-
-wiki: $(DOCDIR) $(BINDIR)/MakeWikiPages$(EXE) 
-	$(BINDIR)/MakeWikiPages$(EXE) $(DOCDIR)/Wiki
-
-$(BINDIR)/MakeWikiPages$(EXE): $(SOURCES)
-	ghc --make -O -isrc -odir out -hidir out -o bin/MakeWikiPages$(EXE) src/OpenMath/StrategyToWiki.hs
+bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade src/Presentation/Logic/ExerciseAssistant/exerciseassistant.gladep
+	ghc --make -O -isrc -isrc/Presentation/Logic/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/Logic/ExerciseAssistant/ExerciseAssistant.hs
+	cp src/Presentation/Logic/ExerciseAssistant/exerciseassistant.glade bin/
 
 checks: $(BINDIR) $(OUTDIR)
 	cd src/Common; runhaskell -i.. Checks.hs; cd ..
@@ -72,9 +62,10 @@ checks: $(BINDIR) $(OUTDIR)
 run: $(BINDIR) $(OUTDIR)
 	$(GHCI) -isrc -odir out -hidir out 
 
-docs:	doc/index.html
+doc:	doc/index.html
 
-doc/index.html: $(DOCDIR) $(SOURCES) src/Common/prologue
+doc/index.html: $(SOURCES) src/Common/prologue
+	mkdir -p $(DOCDIR)
 	haddock -o doc -s "../%F" -p src/Common/prologue --html $(SOURCES)
 
 hpc/bin/solver$(EXE): $(SOURCES)
@@ -100,6 +91,9 @@ $(BINDIR)/laservice.cgi: $(BINDIR) $(OUTDIR) $(SOURCES)
 
 cgi-install: $(BINDIR)/laservice.cgi
 	scp $(BINDIR)/laservice.cgi $(CGIDIR)
+
+web:	
+	scp -r src/Presentation/genexas/* $(WEBDIR)
 
 clean:
 	rm -rf bin

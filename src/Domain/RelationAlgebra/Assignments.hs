@@ -2,6 +2,7 @@ module Domain.RelationAlgebra.Assignments where
 
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator
+import Domain.RelationAlgebra.Zipper
 import Common.Assignment
 
 cnfAssignment :: Assignment RelAlg
@@ -10,7 +11,7 @@ cnfAssignment = makeAssignment
 --   , parser        :: String -> Either (Doc a, Maybe a) a
 --   , prettyPrinter :: a -> String
 --   , equivalence   :: a -> a -> Bool
---   , equality      :: a -> a -> Bool -- syntactic equality
 --   , ruleset       :: [Rule a]
 --   , strategy      :: LabeledStrategy a
+   , generator = arbitrary
    }

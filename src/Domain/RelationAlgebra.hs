@@ -5,6 +5,7 @@ module Domain.RelationAlgebra
 --   , module Domain.RelationAlgebra.Strategies
    , module Domain.RelationAlgebra.Generator
    , module Domain.RelationAlgebra.Zipper
+   , module Domain.RelationAlgebra.Parser
    ) where
    
 import Domain.RelationAlgebra.Formula
@@ -13,3 +14,4 @@ import Domain.RelationAlgebra.Assignments
 import Domain.RelationAlgebra.Zipper
 -- import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Generator
+import Domain.RelationAlgebra.Parser

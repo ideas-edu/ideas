@@ -1,6 +1,6 @@
 module Domain.RelationAlgebra.Strategies where
 
-import Domain.RelationaAlgebra.Formula
+import Domain.RelationAlgebra.Formula
 import Common.Strategy
 
 toCNF :: Strategy RelAlg

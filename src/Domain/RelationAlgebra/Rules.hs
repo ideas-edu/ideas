@@ -1,9 +1,12 @@
 module Domain.RelationAlgebra.Rules where
+import Domain.RelationAlgebra.Formula
+import Common.Transformation
+import Common.Unification
 
--- local logic variables
-q, r, s :: Logic
+-- local relalg variables
+q, r, s :: RelAlg
 q:r:s:_ = map makeVarInt [0..]
-
+type RelAlgRule = Rule RelAlg
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
 ruleInvOverUnion :: RelAlgRule
@@ -16,51 +19,51 @@ ruleInvOverIntersec = makeRule "InvOverIntersect" $
 
 ruleInvOverComp :: RelAlgRule
 ruleInvOverComp = makeRule "InvOverComp" $
-   (Inv (r :;;: s)) |- (Inv s :;;: Inv r)
+   (Inv (r :.: s)) |- (Inv s :.: Inv r)
 
 ruleInvOverAdd :: RelAlgRule
 ruleInvOverAdd = makeRule "InvOverAdd" $
-   (Inv (r :tt: s)) |- (Inv s :tt: Inv r)
+   (Inv (r :+: s)) |- (Inv s :+: Inv r)
 
 ruleInvOverNot :: RelAlgRule
-ruleInvOverUnion = makeRule "InvOverNot" $
-   (Inv (Not r)     |- (Not (Inv r))
+ruleInvOverNot = makeRule "InvOverNot" $
+   (Inv (Not r))     |- (Not (Inv r))
 
 
 
--- | 2. Alle ; en tt operatoren zoveel mogelijk naar binnen verplaatsen 
+-- | 2. Alle ; en + operatoren zoveel mogelijk naar binnen verplaatsen 
 
 ruleCompOverUnion :: RelAlgRule
 ruleCompOverUnion = makeRuleList "CompOverUnion" 
-   [ (q :;;: (r :||: s) |-  ((q :;;: r) :||: (q :;;: s)) 
-   , (q :||: r) :;;: s) |-  ((q :;;: s) :||: (r :;;: s)) 
+   [ (q :.: (r :||: s)) |-  ((q :.: r) :||: (q :.: s)) 
+   , ((q :||: r) :.: s) |-  ((q :.: s) :||: (r :.: s)) 
    ]
 
 ruleCompOverIntersec :: RelAlgRule
 ruleCompOverIntersec = makeRuleList "CompOverIntersec" 
-   [ (q :;;: (r :&&: s) |-  ((q :;;: r) :&&: (q :;;: s))  --alleen toegestaan als q een functie is!
-   , (q :&&: r) :;;: s) |-  ((q :;;: s) :&&: (r :;;: s))  --idem
+   [ (q :.: (r :&&: s)) |-  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
+   , ((q :&&: r) :.: s) |-  ((q :.: s) :&&: (r :.: s))  --idem
    ]
 ruleAddOverUnion :: RelAlgRule
 ruleAddOverUnion = makeRuleList "AddOverUnion" 
-   [ (q :tt: (r :||: s) |-  ((q :tt: r) :||: (q :tt: s)) --alleen toegestaan als q een functie is!
-   , (q :||: r) :tt: s) |-  ((q :tt: s) :||: (r :tt: s)) --idem
+   [ (q :+: (r :||: s)) |-  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
+   , ((q :||: r) :+: s) |-  ((q :+: s) :||: (r :+: s)) --idem
    ]
 
 ruleAddOverIntersec :: RelAlgRule
 ruleAddOverIntersec = makeRuleList "AddOverIntersec" 
-   [ (q :tt: (r :&&: s) |-  ((q :tt: r) :&&: (q :tt: s))  
-   , (q :&&: r) :tt: s) |-  ((q :tt: s) :&&: (r :tt: s))  
+   [ (q :+: (r :&&: s)) |-  ((q :+: r) :&&: (q :+: s))  
+   , ((q :&&: r) :+: s) |-  ((q :+: s) :&&: (r :+: s))  
    ]
 -- | 3. Distribute union over intersection
-
+ 
 ruleUnionOverIntersec :: RelAlgRule
-ruleUnionOverIntersec = makeRuleList "UnionOverIntersec 
-   [ (q :||: (r :&&: s) |-  ((q :||: r) :&&: (q :||: s)) 
-   , (q :&&: r) :||: s) |-  ((q :||: s) :&&: (r :||: s)) 
+ruleUnionOverIntersec = makeRuleList "UnionOverIntersec" 
+   [ (q :||: (r :&&: s)) |-  ((q :||: r) :&&: (q :||: s)) 
+   , ((q :&&: r) :||: s) |-  ((q :||: s) :&&: (r :||: s)) 
    ]
 
---| 4. De Morgan rules
+-- | 4. De Morgan rules
 
 ruleDeMorgan :: RelAlgRule
 ruleDeMorgan = makeRuleList "DeMorgan" 
@@ -70,8 +73,8 @@ ruleDeMorgan = makeRuleList "DeMorgan"
 
 
 
-   ]
---| 5. Idempotention
+ 
+-- | 5. Idempotention
 
 ruleIdemp :: RelAlgRule
 ruleIdemp = makeRuleList "Idempotency" 
@@ -79,7 +82,7 @@ ruleIdemp = makeRuleList "Idempotency"
    , (r :&&: r) |-  r
    ]
 
---| 6. Complement
+-- | 6. Complement
 
 ruleRemCompl :: RelAlgRule
 ruleRemCompl = makeRuleList "RemCompl" 
@@ -88,11 +91,16 @@ ruleRemCompl = makeRuleList "RemCompl"
    , (r :&&: (Not r)) |-  E
    , ((Not r) :&&: r) |-  E
    ]
-
---| 7. Absorption complement
+   
+-- |6a. Double negation   
+ruleDoubleNegation :: RelAlgRule
+ruleDoubleNegation = makeRule "DoubleNegation" $
+   (Not (Not r)) |- r
+   
+-- | 7. Absorption complement
 
 ruleAbsorpCompl :: RelAlgRule
-ruleAbsorbCompl = makeRuleList "AbsorbCompl"
+ruleAbsorpCompl = makeRuleList "AbsorpCompl"
    [ (r :&&: ((Not r) :||: s)) |- (r :&&: s)  
    , (r :&&: (s :||: (Not r))) |- (r :&&: s)  
    , (((Not r) :||: s) :&&: r) |- (r :&&: s)
@@ -101,8 +109,10 @@ ruleAbsorbCompl = makeRuleList "AbsorbCompl"
    , (r :||: (s :&&: (Not r))) |- (r :||: s)
    , (((Not r) :&&: s) :||: r) |- (r :||: s)
    , ((s :&&: (Not r)) :||: r) |- (r :||: s)
-   
-   , (r :&&: (r :||: s))       |- r
+   ]
+ruleAbsorp :: RelAlgRule
+ruleAbsorp = makeRuleList "Absorp" 
+   [ (r :&&: (r :||: s))       |- r
    , (r :&&: (s :||: r))       |- r
    , ((r :||: s) :&&: r)       |- r
    , ((s :||: r) :&&: r)       |- r
@@ -112,7 +122,7 @@ ruleAbsorbCompl = makeRuleList "AbsorbCompl"
    , ((s :&&: r) :||: r)       |- r
    ]
 
---| 8. Remove redundant expressions
+-- | 8. Remove redundant expressions
 ruleRemRedunExprs :: RelAlgRule
 ruleRemRedunExprs = makeRuleList "RemRedunExprs"
    [ (r :||: U) |- U
@@ -125,16 +135,17 @@ ruleRemRedunExprs = makeRuleList "RemRedunExprs"
    , (E :&&: r) |- E 
    ]
    
---| 9. Distribute Not over ;; and tt
+-- | 9. Distribute Not over . and +
 
 ruleNotOverComp :: RelAlgRule
 ruleNotOverComp = makeRule "NotOverComp" $
-    Not (r :;;: s) |-  (Not r :;;: Not s)
+    Not (r :.: s) |-  (Not r :.: Not s)
    
 ruleNotOverAdd :: RelAlgRule
 ruleNotOverAdd = makeRule "NotOverAdd" $
-   Not (r :tt: s) |-  (Not r :tt: Not s)
-
-
-
+   Not (r :+: s) |-  (Not r :+: Not s)
+instance Unifiable RelAlg
+instance MakeVar RelAlg
+instance Substitutable RelAlg
+instance HasVars RelAlg
  

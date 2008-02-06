@@ -24,6 +24,42 @@ data RelAlg = Var String
             | E                            -- empty
  deriving (Show, Eq, Ord)
 
+ -- | ===============
+ 
+isAtom :: RelAlg -> Bool
+isAtom  r = 
+    case r of
+      Var x             -> True
+      Not (Var x)       -> True
+      Inv (Var x)       -> True
+      Not (Inv (Var x)) -> True
+      otherwise         -> False
+ 
+isMolecule :: RelAlg -> Bool
+isMolecule (r :.: s) = isMolecule r && isMolecule s
+isMolecule (r :+: s) = isMolecule r && isMolecule s
+isMolecule r = isAtom r
+ 
+isDisj :: RelAlg -> Bool
+isDisj (r :||: s) = isDisj r && isDisj s
+isDisj r = isMolecule r
+      
+isCNF :: RelAlg -> Bool
+isCNF (r :&&: s) = isCNF r && isCNF s
+isCNF r = isDisj r
+ 
+ 
+ 
+ 
+ 
+ -- | =============================
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 -- | The type RelAlgAlgebra is the algebra for the data type RelAlg
 -- | Used in the fold for RelAlg.
 type RelAlgAlgebra a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a, a -> a, a, a)
@@ -78,3 +114,5 @@ instance Substitutable RelAlg where
 
 instance Unifiable RelAlg where
    unify = unifyRelAlg
+   
+   

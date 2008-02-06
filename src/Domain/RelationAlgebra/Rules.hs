@@ -1,9 +1,10 @@
+module Domain.RelationAlgebra.Rules where
 
 -- local logic variables
 q, r, s :: Logic
 q:r:s:_ = map makeVarInt [0..]
 
---| 1. Alle ~ operatoren naar binnen verplaatsen
+-- | 1. Alle ~ operatoren naar binnen verplaatsen
 
 ruleInvOverUnion :: RelAlgRule
 ruleInvOverUnion = makeRule "InvOverUnion" $
@@ -27,7 +28,7 @@ ruleInvOverUnion = makeRule "InvOverNot" $
 
 
 
---| 2. Alle ; en tt operatoren zoveel mogelijk naar binnen verplaatsen 
+-- | 2. Alle ; en tt operatoren zoveel mogelijk naar binnen verplaatsen 
 
 ruleCompOverUnion :: RelAlgRule
 ruleCompOverUnion = makeRuleList "CompOverUnion" 
@@ -51,7 +52,7 @@ ruleAddOverIntersec = makeRuleList "AddOverIntersec"
    [ (q :tt: (r :&&: s) |-  ((q :tt: r) :&&: (q :tt: s))  
    , (q :&&: r) :tt: s) |-  ((q :tt: s) :&&: (r :tt: s))  
    ]
---| 3. Distribute union over intersection
+-- | 3. Distribute union over intersection
 
 ruleUnionOverIntersec :: RelAlgRule
 ruleUnionOverIntersec = makeRuleList "UnionOverIntersec 

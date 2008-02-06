@@ -1,13 +1,4 @@
------------------------------------------------------------------------------
--- |
--- Maintainer  :  bastiaan.heeren@ou.nl
--- Stability   :  provisional
--- Portability :  portable (depends on ghc)
---
--- (todo)
---
------------------------------------------------------------------------------
-module Domain.RelAlg.Formula where
+module Domain.RelationAlgebra.Formula where
 
 import Common.Unification
 import Common.Utils
@@ -15,16 +6,16 @@ import Data.List
 import Data.Maybe
 import qualified Data.Set as S
 
-infixr 1 :;;:
-infixr 2 :tt: 
+infixr 1 :.:
+infixr 2 :+: 
 infixr 3 :||: 
 infixr 4 :&&:
 
 -- | The data type RelAlg is the abstract syntax for the domain
 -- | of logic expressions.
 data RelAlg = Var String
-           | RelAlg :;;:  RelAlg            -- composition
-           | RelAlg :tt: RelAlg            -- relative addition
+           | RelAlg :.:  RelAlg            -- composition
+           | RelAlg :+: RelAlg            -- relative addition
            | RelAlg :&&:  RelAlg            -- and (conjunction)
            | RelAlg :||:  RelAlg            -- or (disjunction)
            | Not RelAlg                    -- not
@@ -32,6 +23,8 @@ data RelAlg = Var String
            | U                            -- universe
            | E                            -- empty
  deriving (Show, Eq, Ord)
+
+{-
 
 -- | The type RelAlgAlgebra is the algebra for the data type RelAlg
 -- | Used in the fold for RelAlg.
@@ -44,8 +37,8 @@ foldRelAlg (var, comp, add, intersection, union, not, inverse, universe, empty) 
    rec logic = 
       case logic of
          Var x     -> var x
-         p :;;: q  -> rec p `comp`  rec q
-         p :tt: q -> rec p `add` rec q
+         p :.: q  -> rec p `comp`  rec q
+         p :+: q -> rec p `add` rec q
          p :&&: q  -> rec p `intersection`   rec q
          p :||: q  -> rec p `union`    rec q
          Not p     -> not (rec p)
@@ -53,11 +46,11 @@ foldRelAlg (var, comp, add, intersection, union, not, inverse, universe, empty) 
          U         -> universe 
          E         -> empty
               
--- | evalLogic takes a function that gives a logic value to a variable,
--- | and a Logic expression, and evaluates the boolean expression.
+-- | evalRelAlg takes a function that gives a logic value to a variable,
+-- | and a RelAlg expression, and evaluates the boolean expression.
 {-
-evalLogic :: (String -> Bool) -> Logic -> Bool
-evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
+evalRelAlg :: (String -> Bool) -> RelAlg -> Bool
+evalRelAlg env = foldRelAlg (env, impl, (==), (&&), (||), not, True, False)
  where
    impl p q = not p || q
 -}
@@ -69,8 +62,8 @@ unifyRelAlg p q =
       (Var x, Var y) | x==y      -> return emptySubst
       (Var x, _)                 -> return (singletonSubst x q)
       (_    , Var y)             -> return (singletonSubst y p)
-      (p1 :;;: p2,  q1 :;;:  q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :tt: p2, q1 :tt: q2) -> unifyList [p1, p2] [q1, q2]
+      (p1 :.: p2,  q1 :.:  q2) -> unifyList [p1, p2] [q1, q2]
+      (p1 :+: p2, q1 :+: q2) -> unifyList [p1, p2] [q1, q2]
       (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
       (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
       (Not p1,      Not q1     ) -> unify p1 q1
@@ -79,22 +72,22 @@ unifyRelAlg p q =
       (E,           E          ) -> return emptySubst
       _ -> Nothing
 
--- | eqLogic determines whether or not two Logic expression are logically 
+-- | eqRelAlg determines whether or not two RelAlg expression are logically 
 -- | equal, by evaluating the logic expressions on all valuations.
 {-
-eqLogic :: Logic -> Logic -> Bool
-eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs
+eqRelAlg :: RelAlg -> RelAlg -> Bool
+eqRelAlg p q = all (\f -> evalRelAlg f p == evalRelAlg f q) fs
  where 
-   xs = varsLogic p `union` varsLogic q
+   xs = varsRelAlg p `union` varsRelAlg q
    fs = map (flip elem) (subsets xs) 
 -}
--- | Functions noInv, noNot, noUnion, and noIntersection determine whether or not a Logic 
+-- | Functions noInv, noNot, noUnion, and noIntersection determine whether or not a RelAlg 
 -- | expression contains a  inverse, not, union, and intersection constructor, respectively.
-noInv, noNot, noUnion, noIntersection :: Logic -> Bool
-noNot = foldLogic (const True, (&&), (&&), (&&), (&&), (&&), const False, True, True)
-noOr  = foldLogic (const True, (&&), (&&), (&&), (&&), \_ _ -> False, id, True, True)
-noUnion = foldLogic (const True, (&&), (&&), (&&), \_ _ -> False, (&&), id, True, True)
-noIntersection = foldLogic (const True, (&&), (&&), \_ _ -> False,(&&), (&&), id, True, True)
+noInv, noNot, noUnion, noIntersection :: RelAlg -> Bool
+noNot = foldRelAlg (const True, (&&), (&&), (&&), (&&), (&&), const False, True, True)
+noOr  = foldRelAlg (const True, (&&), (&&), (&&), (&&), \_ _ -> False, id, True, True)
+noUnion = foldRelAlg (const True, (&&), (&&), (&&), \_ _ -> False, (&&), id, True, True)
+noIntersection = foldRelAlg (const True, (&&), (&&), \_ _ -> False,(&&), (&&), id, True, True)
 
 -- | A RelAlg expression is atomic if it is a variable or a constant Universe or Empty.
 isAtomic :: RelAlg -> Bool 
@@ -112,13 +105,13 @@ isMolecule relalg =
      Var  _           	->  True
      (f1 :&&: f2)  	->  False 
      (f1 :||: f2) 	->  False
-     (f1 :;;: f2)  	->  isMolecule f1 && isMolecule f2
-     (f1 :tt: f2)  	->  isMolecule f1 && isMolecule f2
+     (f1 :.: f2)  	->  isMolecule f1 && isMolecule f2
+     (f1 :+: f2)  	->  isMolecule f1 && isMolecule f2
      Not (Var _) 	-> True
      Inv (Var _) 	-> True   
      U            	->  True
      E             	->  True
-      _           	-> False
+     _           	-> False
 
 -- | Functions isDNF, and isCNF determine whether or not a RelAlg expression
 -- | is in disjunctive normal form, or conjunctive normal form, respectively. 
@@ -140,14 +133,14 @@ conjunctions U          = []
 conjunctions (p :&&: q) = conjunctions p ++ conjunctions q
 conjunctions relalg      = [relalg]
 {-
--- | Count the number of implicationsations :: Logic -> Int
-countImplications :: Logic -> Int
-countImplications = foldLogic (const 0, \x y -> x+y+1, (+), (+), (+), id, 0, 0)
+-- | Count the number of implicationsations :: RelAlg -> Int
+countImplications :: RelAlg -> Int
+countImplications = foldRelAlg (const 0, \x y -> x+y+1, (+), (+), (+), id, 0, 0)
  -}
 -- | Count the number of equivalences
 {-
-countEquivalences :: Logic -> Int
-countEquivalences = foldLogic (const 0, (+), \x y -> x+y+1, (+), (+), id, 0, 0)
+countEquivalences :: RelAlg -> Int
+countEquivalences = foldRelAlg (const 0, (+), \x y -> x+y+1, (+), (+), id, 0, 0)
 -}
 -- | Count the number of binary operators
 countBinaryOperators :: RelAlg -> Int
@@ -160,7 +153,7 @@ countDoubleNegations = fst . foldRelAlg (const zero, bin, bin, bin, bin, notf, i
  where
    zero = (0, False)
    bin (n, _) (m, _) = (n+m, False)
-   invf (
+   invf = error "ZIE Domain.RA.Formula"
    notf (n, b) = if b then (n+1, False) else (n, True)
 
 -- | Function varsRelAlg returns the variables that appear in a RelAlg expression.
@@ -169,7 +162,7 @@ varsRelAlg = foldRelAlg (return, union, union, union, union, id, [], [])
 
 test = associativityAnd $ (Var "a" :||: Var "b") :||: (Var "c" :||: Var "d" :||: Var "e")
 
-associativityAnd, associativityOr :: Logic -> [Logic]
+associativityAnd, associativityOr :: RelAlg -> [RelAlg]
 associativityAnd = associativity conjunctions (:&&:) [T]
 associativityOr  = associativity disjunctions (:||:) [F]
 
@@ -186,7 +179,7 @@ associativity f op nil = rec . f
       f i = let (xs, ys) = splitAt i ps
             in [ x `op` y | x <- rec xs, y <- rec ys ]
 
-eqAssociative :: Logic -> Logic -> Bool
+eqAssociative :: RelAlg -> RelAlg -> Bool
 eqAssociative p q =
    case (p, q) of
       (Var x, Var y)             -> x==y
@@ -199,15 +192,15 @@ eqAssociative p q =
       (F,           F          ) -> True
       _ -> False
          
-instance HasVars Logic where
-   getVars = S.fromList . varsLogic
+instance HasVars RelAlg where
+   getVars = S.fromList . varsRelAlg
 
-instance MakeVar Logic where
+instance MakeVar RelAlg where
    makeVar = Var
    
-instance Substitutable Logic where 
-   (|->) sub = foldLogic (var, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
+instance Substitutable RelAlg where 
+   (|->) sub = foldRelAlg (var, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
        where var x = fromMaybe (Var x) (lookupVar x sub)
        
-instance Unifiable Logic where
-   unify = unifyLogic
+instance Unifiable RelAlg where
+   unify = unifyRelAlg -}

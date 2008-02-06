@@ -144,8 +144,3 @@ ruleNotOverComp = makeRule "NotOverComp" $
 ruleNotOverAdd :: RelAlgRule
 ruleNotOverAdd = makeRule "NotOverAdd" $
    Not (r :+: s) |-  (Not r :+: Not s)
-instance Unifiable RelAlg
-instance MakeVar RelAlg
-instance Substitutable RelAlg
-instance HasVars RelAlg
- 

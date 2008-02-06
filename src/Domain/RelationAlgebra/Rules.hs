@@ -7,6 +7,27 @@ import Common.Unification
 q, r, s :: RelAlg
 q:r:s:_ = map makeVarInt [0..]
 type RelAlgRule = Rule RelAlg
+
+
+
+
+invRules :: [RelAlgRule]
+invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
+           , ruleInvOverAdd, ruleInvOverNot
+           ]
+compAddRules :: [RelAlgRule]
+compAddRules = [ ruleCompOverUnion, ruleCompOverIntersec 
+	       , ruleAddOverUnion, ruleAddOverIntersec 
+	       ]
+relAlgRules :: [RelAlgRule]
+relAlgRules = invRules ++ compAddRules ++ 
+	      [ ruleUnionOverIntersec,ruleDeMorgan, ruleIdemp
+	      , ruleRemCompl, ruleDoubleNegation, ruleAbsorpCompl
+	      , ruleAbsorp, ruleRemRedunExprs, ruleNotOverComp
+	      , ruleNotOverAdd
+	      ]
+	      
+           
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
 ruleInvOverUnion :: RelAlgRule

@@ -26,7 +26,7 @@ data RelAlg = Var String
             | E                            -- empty
  deriving (Show, Eq, Ord)
 
- -- | ===============
+-----------------------------------
  
 isAtom :: RelAlg -> Bool
 isAtom  r = 
@@ -50,16 +50,8 @@ isCNF :: RelAlg -> Bool
 isCNF (r :&&: s) = isCNF r && isCNF s
 isCNF r = isDisj r
  
- 
- 
- 
- 
- -- | =============================
- 
- 
- 
- 
- 
+
+-----------------------------------
  
  
 -- | The type RelAlgAlgebra is the algebra for the data type RelAlg
@@ -82,9 +74,9 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
          U         -> universe 
          E         -> empty
 
-type Rel a = a -> a -> Bool
+type Relation a = a -> a -> Bool
 
-evalRelAlg :: (String -> Rel a) -> [a] -> RelAlg -> Rel a
+evalRelAlg :: (String -> Relation a) -> [a] -> RelAlg -> Relation a
 evalRelAlg f as = rec 
  where
    rec term =
@@ -98,11 +90,12 @@ evalRelAlg f as = rec
 	 Inv p	   -> \a b -> rec p b a
          U         -> \_ _ -> True 
          E         -> \_ _ -> False
-  
+
+-- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property
 p === q = forAll arbitrary $ \f ->
-   let test a b = evalRelAlg f [0..10] p a b == evalRelAlg f [0..10] q a b
-   in and [ test a b | a <- [0::Int .. 10], b <- [0..10] ]
+   let test a b = evalRelAlg f [0..3] p a b == evalRelAlg f [0..3] q a b
+   in and [ test a b | a <- [0::Int .. 3], b <- [0..3] ]
      
 testje = quickCheck $ (Not (Not (Var "x"))) === Var "x"
          

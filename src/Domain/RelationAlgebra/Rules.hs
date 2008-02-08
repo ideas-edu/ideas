@@ -1,4 +1,5 @@
 module Domain.RelationAlgebra.Rules where
+
 import Domain.RelationAlgebra.Formula
 import Common.Transformation
 import Common.Unification
@@ -27,7 +28,6 @@ relAlgRules = invRules ++ compAddRules ++
 	      , ruleNotOverAdd
 	      ]
 	      
-           
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
 ruleInvOverUnion :: RelAlgRule

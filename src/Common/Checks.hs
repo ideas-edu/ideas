@@ -17,6 +17,7 @@ import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.Fraction as Frac
 import qualified Domain.Fraction.Checks as Frac
+import qualified Domain.RelationAlgebra as RA
 
 main :: IO ()
 main = do
@@ -28,7 +29,10 @@ main = do
    LA.checks
    putStrLn "\n...checking fraction domain"
    Frac.checks
+   putStrLn "\n...checking relation algebra domain"
+   RA.checks
    putStrLn "\n...checking assignments"
    checkAssignment Logic.dnfAssignment
    checkAssignment LA.reduceMatrixAssignment
    checkAssignment LA.solveSystemAssignment
+   checkAssignment RA.cnfAssignment

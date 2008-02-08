@@ -1,6 +1,8 @@
 module Domain.RelationAlgebra.Generator where
 
 import Domain.RelationAlgebra.Formula
+import Domain.RelationAlgebra.Rules -- only for checks
+import Common.Transformation
 import Control.Monad
 import Test.QuickCheck 
 
@@ -29,4 +31,10 @@ arbRelAlg n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), binop (:&&:), binop
    rec      = arbRelAlg (n `div` 2)  
 
 vars :: [String]
-vars = ["p", "q", "r"]
+vars = ["q", "r", "s"]
+
+checks :: IO ()
+checks =
+   let f r = do putStr ("[" ++ name r ++ "]   ") >> quickCheck (g r)
+       g r a = applicable r a ==> a === applyD r a
+   in mapM_ f relAlgRules

@@ -2,7 +2,7 @@
 module Session 
    ( PackedAssignment(..), Assignment(..)
    , Session, makeSession, newTerm, newAssignment, progressPair, undo, submitText
-   , currentText, derivationText, readyText, hintText, stepText, applyStep
+   , currentText, derivationText, readyText, hintText, stepText, nextStep
    ) where
 
 import Common.Assignment
@@ -106,8 +106,8 @@ stepText = logMsg "Step" $ withState $ \a d ->
             , prettyPrinter a after
             ]
 
-applyStep :: Session -> IO (String, Bool)
-applyStep = logCurrent "Apply" $ \(Session _ ref) -> do
+nextStep :: Session -> IO (String, Bool)
+nextStep = logCurrent "Next" $ \(Session _ ref) -> do
    St a d <- readIORef ref
    case giveStep a (terms d) of
       Nothing -> 

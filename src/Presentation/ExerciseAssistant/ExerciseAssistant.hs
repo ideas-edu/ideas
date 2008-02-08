@@ -46,7 +46,7 @@ main =
         readyButton    <- fromXml castToButton      "readyButton"
         hintButton     <- fromXml castToButton      "hintButton"
         stepButton     <- fromXml castToButton      "stepButton"
-        applyButton    <- fromXml castToButton      "applyButton"
+        nextButton     <- fromXml castToButton      "nextButton"
         undoButton     <- fromXml castToButton      "undoButton"
         submitButton   <- fromXml castToButton      "submitButton"
         newButton      <- fromXml castToButton      "newButton"
@@ -104,8 +104,8 @@ main =
            txt <- stepText session
            textBufferSetText feedbackBuffer txt
         
-        onClicked applyButton $ do
-           (txt, ok) <- applyStep session
+        onClicked nextButton $ do
+           (txt, ok) <- nextStep session
            textBufferSetText feedbackBuffer txt
            when ok updateAll
         

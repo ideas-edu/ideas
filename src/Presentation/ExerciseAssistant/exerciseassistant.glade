@@ -257,6 +257,33 @@
           </packing>
         </child>
         <child>
+          <widget class="GtkButton" id="nextButton">
+            <property name="width_request">50</property>
+            <property name="height_request">25</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="label" translatable="yes">Next</property>
+            <property name="use_underline">True</property>
+          </widget>
+          <packing>
+            <property name="x">190</property>
+            <property name="y">280</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkComboBox" id="ruleBox">
+            <property name="width_request">180</property>
+            <property name="height_request">25</property>
+            <property name="visible">True</property>
+            <property name="active">0</property>
+            <property name="items" translatable="yes"></property>
+          </widget>
+          <packing>
+            <property name="x">70</property>
+            <property name="y">315</property>
+          </packing>
+        </child>
+        <child>
           <widget class="GtkButton" id="applyButton">
             <property name="width_request">50</property>
             <property name="height_request">25</property>
@@ -266,8 +293,8 @@
             <property name="use_underline">True</property>
           </widget>
           <packing>
-            <property name="x">190</property>
-            <property name="y">280</property>
+            <property name="x">260</property>
+            <property name="y">315</property>
           </packing>
         </child>
       </widget>

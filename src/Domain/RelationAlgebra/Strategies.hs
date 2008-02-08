@@ -8,8 +8,8 @@ import Domain.RelationAlgebra.Zipper
 
 import Common.Strategy
 import Prelude hiding (repeat)
-toCNF :: Strategy RelAlgInContext
-toCNF =
+toCNF :: LabeledStrategy RelAlgInContext
+toCNF = label "To CNF" $ 
  repeat ( topDown ( alternatives ( map liftRelAlgRule (
  				 [ruleRemCompl
                                  , ruleRemRedunExprs 

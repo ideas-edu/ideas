@@ -7,10 +7,9 @@ import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
 import Common.Transformation
-import Common.Strategy
 import Common.Assignment
 import Control.Monad
-import Test.QuickCheck hiding (label)
+import Test.QuickCheck
 
 cnfAssignment :: Assignment RelAlgInContext
 cnfAssignment = makeAssignment
@@ -22,9 +21,9 @@ cnfAssignment = makeAssignment
    , prettyPrinter = ppRelAlg . noContext
 --   , equivalence = \x y -> apply toCNF (inContext $ noContext x) == apply toCNF (inContext $ noContext y)
    , ruleset   = map liftRelAlgRule relAlgRules
-   , strategy  = label "cnf" toCNF
-   , generator = return $ inContext $ Not (Not (Var "x")) -- liftM inContext arbitrary
-   , suitableTerm = isCNF . noContext
+   , strategy  = toCNF
+   , generator = liftM inContext arbitrary
+   , suitableTerm = not . isCNF . noContext
    }
    
 instance Arbitrary a => Arbitrary (Loc a) where

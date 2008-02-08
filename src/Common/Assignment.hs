@@ -59,7 +59,7 @@ randomTerm a = do
 -- | Default size is 100
 randomTermWith :: StdGen -> Assignment a -> a
 randomTermWith stdgen a
-   | finalProperty a term || not (suitableTerm a term) =
+   | not (suitableTerm a term) =
         randomTermWith (snd $ next stdgen) a
    | otherwise =
         term

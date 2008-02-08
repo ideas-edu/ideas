@@ -20,10 +20,11 @@ import Domain.Logic
 import Control.Monad
 import Domain.Fraction
 import Domain.LinearAlgebra
+import Domain.RelationAlgebra (cnfAssignment)
 
 domains :: [PackedAssignment]
 domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment, Pack opgave6b
-          , {-Pack equationsAssignment,-} Pack simplAssignment
+          , Pack solveSystemAssignment, Pack simplAssignment, Pack cnfAssignment
           ]
 
 main :: IO ()
@@ -74,7 +75,7 @@ main =
                (x, y) <- progressPair session
                labelSetText progressLabel (show x ++ "/" ++ show y)
                progressBarSetFraction progressBar (if y==0 then 1 else fromIntegral x / fromIntegral y)
-                
+
         textBufferSetText feedbackBuffer "Welcome to the Exercise Assistant!" 
         updateAll
 

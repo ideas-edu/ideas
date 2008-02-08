@@ -29,7 +29,7 @@ module Common.Strategy
      -- * REST
    , nextRule, nextRulesWith, nextRulesForSequenceWith, trackRule, trackRulesWith
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
-   , StrategyLocation
+   , StrategyLocation, remainingStrategy
    , firstLocation, subStrategy, reportLocations
    ) where
 
@@ -248,6 +248,19 @@ nextRulesForSequenceWith eq p = rec
                    | (rs1, b, s) <- nextRulesWith p strategy a
                    , b `eq` d
                    , (rs2, c) <- rec s (b:ds)
+                   ]
+
+remainingStrategy :: (a -> a -> Bool) -> (Rule a -> Bool) -> Strategy a -> [a] -> Strategy a
+remainingStrategy eq p s = alternatives . rec s
+ where
+   rec strategy as =
+      case as of
+         []     -> []
+         [a]    -> [strategy]
+         a:d:ds -> [ this
+                   | (rs1, b, s) <- nextRulesWith p strategy a
+                   , b `eq` d
+                   , this <- rec s (b:ds)
                    ]
 
 trackRule :: Rule a -> Strategy a -> Strategy a

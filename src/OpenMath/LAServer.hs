@@ -53,7 +53,7 @@ laServerFor a req =
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
                        , repOk_Location = nextLocation answeredTerm (req_Location req) a
-                       , repOk_Steps    = stepsRemaining a (answeredTerm)
+                       , repOk_Steps    = stepsRemaining (unlabel $ strategy a) (answeredTerm) -- not precise
                        }
                        
             (expected:_, maybeAnswer) ->
@@ -61,7 +61,7 @@ laServerFor a req =
                        { repInc_Strategy   = req_Strategy req
                        , repInc_Location   = req_Location req ++ subTask requestedTerm subStrategy
                        , repInc_Expected   = toExpr expected
-                       , repInc_Steps      = stepsRemaining a requestedTerm
+                       , repInc_Steps      = stepsRemaining (unlabel $ strategy a) requestedTerm -- not precise
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
                        }
                      

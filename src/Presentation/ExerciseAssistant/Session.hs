@@ -77,7 +77,7 @@ derivationText = withState $ \a d ->
 progressPair :: Session -> IO (Int, Int)
 progressPair = withState $ \a d -> 
    let x = derivationLength d
-       y = stepsRemaining a (current d)
+       y = stepsRemainingA a (terms d)
    in return (x, x+y)
   
 readyText :: Session -> IO String

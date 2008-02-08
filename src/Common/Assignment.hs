@@ -112,12 +112,15 @@ feedback x as txt =
                          Correct (text "You have submitted the current term.") Nothing
                     _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
          
-stepsRemaining :: Assignment a -> a -> Int
-stepsRemaining x a = 
-   case runStrategyRules (unlabel $ strategy x) a of
+stepsRemaining :: Strategy a -> a -> Int
+stepsRemaining s a =
+   case runStrategyRules s a of
       (rs, _):_ -> length (filter (not . isMinorRule) rs)
       _         -> 0
 
+stepsRemainingA :: Assignment a -> [a] -> Int
+stepsRemainingA a as =
+   stepsRemaining (remainingStrategy (equality a) (not . isMinorRule) (unlabel $ strategy a) as) (last as)
 
 data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)

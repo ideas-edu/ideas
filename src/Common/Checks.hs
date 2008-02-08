@@ -35,4 +35,5 @@ main = do
    checkAssignment Logic.dnfAssignment
    checkAssignment LA.reduceMatrixAssignment
    checkAssignment LA.solveSystemAssignment
+   checkAssignment LA.solveSystemWithMatrixAssignment
    checkAssignment RA.cnfAssignment

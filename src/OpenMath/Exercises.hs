@@ -213,17 +213,6 @@ liftSystemTrans f = makeTrans $ \c -> do
    new <- apply f (equations c) 
    return c {equations = new}
 
-liftLeft :: Strategy a -> Strategy (Either a b)
-liftLeft = mapStrategy $ liftRule $ 
-   LiftPair (either Just (const Nothing)) (\a -> either (const $ Left a) Right)
-
-liftRight :: Strategy b -> Strategy (Either a b)
-liftRight = mapStrategy $ liftRule $ 
-   LiftPair (either (const Nothing) Just) (\a -> either Left (const $ Right a))
-
-translation :: String -> (a -> Maybe b) -> Rule (Either a b)
-translation s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
-
 --equationsToMatrix :: Fractional a => Strategy (Either (LinearSystem a)(MatrixInContext a))
 --equationsToMatrix = translation "SystemToMatrix" (Just . Matrix.inContext . systemToMatrix) <*> liftRight toReducedEchelon
 

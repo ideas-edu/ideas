@@ -24,7 +24,7 @@ import Domain.RelationAlgebra (cnfAssignment)
 
 domains :: [PackedAssignment]
 domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment, Pack opgave6b
-          , Pack solveSystemAssignment, Pack simplAssignment, Pack cnfAssignment
+          , Pack solveSystemAssignment, Pack solveSystemWithMatrixAssignment, Pack simplAssignment, Pack cnfAssignment
           ]
 
 main :: IO ()

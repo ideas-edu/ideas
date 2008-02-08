@@ -46,6 +46,9 @@ toStandardForm (lhs :==: rhs) =
 inSolvedForm :: Num a => LinearSystem a -> Bool
 inSolvedForm xs = invalidSystem xs || isJust (getSolution xs)
 
+homogeneous :: Num a => LinearSystem a -> Bool
+homogeneous = all ((== Just 0) . isConstant . getRHS)
+
 -- Conversions
 systemToMatrix :: Num a => LinearSystem a -> Matrix a
 systemToMatrix system = makeMatrix (map (makeRow . toStandardForm) system)

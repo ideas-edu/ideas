@@ -27,7 +27,6 @@ solveSystemAssignment = makeAssignment
    , ruleset       = equationsRules
    , finalProperty = inSolvedForm . equations
    , strategy      = generalSolutionLinearSystem
-   -- , generator     =  -- liftM EQ.inContext (vector 3)
    }
    
 reduceMatrixAssignment :: Assignment (MatrixInContext Rational)
@@ -46,6 +45,23 @@ reduceMatrixAssignment = makeAssignment
    , strategy      = toReducedEchelon
    }
 
+solveSystemWithMatrixAssignment :: Assignment (Either (EqsInContext Rational) (MatrixInContext Rational))
+solveSystemWithMatrixAssignment = makeAssignment
+   { shortTitle    = "Solve Linear System with Matrix"
+   , parser        = \s -> case (parser solveSystemAssignment s, parser reduceMatrixAssignment s) of
+                              (Right ok, _) -> Right (Left ok)
+                              (_, Right ok) -> Right (Right ok)
+                              (Left (doc1, _), Left (doc2, _)) -> Left (text "Error", Nothing) -- FIX THIS
+   , prettyPrinter = either (unlines . map (show . fmap (fmap ShowRational)) . equations) (ppRationalMatrix . matrix)
+   , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext . matrix
+                                 g = f . either (Domain.LinearAlgebra.Context.inContext . systemToMatrix . equations) id
+                             in g x == g y
+   , ruleset       = map liftRuleLeft equationsRules ++ map liftRuleRight matrixRules
+   , finalProperty = either (inSolvedForm . equations) (const False)
+   , strategy      = generalSolutionSystemWithMatrix
+   , generator     = liftM Left arbitrary
+   }
+
 opgave6b :: Assignment (MatrixInContext Rational)
 opgave6b = reduceMatrixAssignment
    { shortTitle = "Opgave 9.6 (b)"
@@ -54,6 +70,12 @@ opgave6b = reduceMatrixAssignment
   
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
+
+liftRuleLeft :: Rule a -> Rule (Either a b)
+liftRuleLeft = liftRule $ LiftPair (either Just (const Nothing)) (\a _ -> Left a)
+
+liftRuleRight :: Rule b -> Rule (Either a b)
+liftRuleRight = liftRule $ LiftPair (either (const Nothing) Just) (\b _ -> Right b)
 
 instance Arbitrary a => Arbitrary (Matrix a) where
    arbitrary = do

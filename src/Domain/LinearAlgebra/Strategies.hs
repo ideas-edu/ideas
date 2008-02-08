@@ -13,6 +13,7 @@ import Prelude hiding (repeat)
 import Domain.LinearAlgebra.Context
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
+import Domain.LinearAlgebra.LinearSystem
 import Common.Strategy hiding (not)
 import Common.Transformation
 
@@ -59,12 +60,38 @@ systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
           <*> label "Cover up first equation"   ruleCoverUpEquation
 
 generalSolutionLinearSystem :: Fractional a => LabeledStrategy (EqsInContext a)
-generalSolutionLinearSystem = label "General solution to a lineary system" $
+generalSolutionLinearSystem = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 
 
+generalSolutionSystemWithMatrix :: Fractional a => LabeledStrategy (Either (EqsInContext a) (MatrixInContext a))
+generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
+   conv1 <*> liftRight toReducedEchelon <*> conv2
+
+conv1 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
+conv1 = translationTo "Linear system to matrix" $
+   Just . Domain.LinearAlgebra.Context.inContext . systemToMatrix . equations
+
+conv2 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
+conv2 = translationFrom "Matrix to linear system" $ 
+   Just . Domain.LinearAlgebra.EquationsRules.inContext . matrixToSystem . matrix
+
+liftLeft :: LabeledStrategy a -> LabeledStrategy (Either a b)
+liftLeft = mapLabeledStrategy $ liftRule $
+   LiftPair (either Just (const Nothing)) (\a -> either (const $ Left a) Right)
+
+liftRight :: LabeledStrategy b -> LabeledStrategy (Either a b)
+liftRight = mapLabeledStrategy $ liftRule $ 
+   LiftPair (either (const Nothing) Just) (\a -> either Left (const $ Right a))
+
+translationTo :: String -> (a -> Maybe b) -> Rule (Either a b)
+translationTo s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
+
+translationFrom :: String -> (b -> Maybe a) -> Rule (Either a b)
+translationFrom s f = makeSimpleRule s (either (const Nothing) (fmap Left . f))
+
 -- temp for testing
-test = applyAll ruleInconsistentSystem $ EIC [0 :==: 1] 0
+test = applyAll generalSolutionSystemWithMatrix (Left $ Domain.LinearAlgebra.EquationsRules.inContext ex1a)
 
 ex1a :: Equations (LinearExpr Rational)
 ex1a = 

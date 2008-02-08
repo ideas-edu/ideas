@@ -244,11 +244,11 @@ nextRulesForSequenceWith eq p = rec
          []     -> []
          [a]    -> let f (x, y, z) = (x, y)
                    in map f (nextRulesWith p strategy a)
-         a:rest@(d:_) -> [ (rs1++rs2, c)
-                         | (rs1, b, s) <- nextRulesWith p strategy a
-                         , b `eq` d
-                         , (rs2, c)    <- rec s rest
-                         ]
+         a:d:ds -> [ (rs1++rs2, c)
+                   | (rs1, b, s) <- nextRulesWith p strategy a
+                   , b `eq` d
+                   , (rs2, c) <- rec s (b:ds)
+                   ]
 
 trackRule :: Rule a -> Strategy a -> Strategy a
 trackRule rule = 

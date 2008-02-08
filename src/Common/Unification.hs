@@ -78,7 +78,7 @@ unifyList xs ys = do
     where
       combine (a, b) msub = do
         s1 <- msub
-        s2 <- unify (s1 |-> a) b
+        s2 <- unify (s1 |-> a) (s1 |-> b)
         return (s1 @@@ s2)
 
 substitutePair :: (Substitutable a) => Substitution a -> (a, a) -> (a, a)

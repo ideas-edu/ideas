@@ -160,8 +160,8 @@ ruleRemRedunExprs = makeRuleList "RemRedunExprs"
 
 ruleNotOverComp :: RelAlgRule
 ruleNotOverComp = makeRule "NotOverComp" $
-    Not (r :.: s) |-  (Not r :.: Not s)
+    Not (r :.: s) |-  (Not r :+: Not s)
    
 ruleNotOverAdd :: RelAlgRule
 ruleNotOverAdd = makeRule "NotOverAdd" $
-   Not (r :+: s) |-  (Not r :+: Not s)
+   Not (r :+: s) |-  (Not r :.: Not s)

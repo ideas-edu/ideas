@@ -2,7 +2,7 @@
 module Session 
    ( PackedAssignment(..), Assignment(..)
    , Session, makeSession, newTerm, newAssignment, progressPair, undo, submitText
-   , currentText, derivationText, readyText, hintText, stepText, nextStep
+   , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
    ) where
 
 import Common.Assignment
@@ -115,6 +115,10 @@ nextStep = logCurrent "Next" $ \(Session _ ref) -> do
       Just (_, rule, _, new) -> do
          writeIORef ref $ St a (Step d rule new)
          return ("Successfully applied rule " ++ name rule, True)
+
+ruleNames :: Session -> IO [String]
+ruleNames = withState $ \a d -> 
+   return $ map name $ filter (not . isMinorRule) $ ruleset a
 
 --------------------------------------------------
 -- Derivations

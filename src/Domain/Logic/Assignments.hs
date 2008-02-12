@@ -9,8 +9,8 @@ import Domain.Logic.Rules
 
 import Common.Assignment
 import Common.Strategy hiding (not)
+import Common.Context
 import Control.Monad
-import System.Random
 
 {- generator
 * max. 1 equivalentie

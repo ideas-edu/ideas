@@ -51,18 +51,6 @@ instance Arbitrary Movement where
    arbitrary   = oneof $ map return [minBound..]
    coarbitrary = variant . fromMaybe (-1) . flip elemIndex [minBound..]
 
--- Uniplate class is experimental
-class Uniplate a where
-   uniplate :: a -> ([a], [a] -> a)
-
-children :: Uniplate a => a -> [a]
-children = fst . uniplate
-
-child :: Uniplate a => Int -> a -> Maybe a
-child n = safeHead . drop n . children 
-               
-select :: Uniplate a => [Int] -> a -> Maybe a
-select = flip $ foldM $ flip child
 
 {- propM1, propM2, propM3, propM4 :: LogicInContext -> Property
 propM1 x = isJust my ==> my==Just x

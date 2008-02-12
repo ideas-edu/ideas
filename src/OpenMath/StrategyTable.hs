@@ -1,12 +1,13 @@
 {-# OPTIONS -fglasgow-exts #-}
 module OpenMath.StrategyTable where
 
+import Common.Context
 import Common.Assignment
 import Common.Unification
 import Common.Strategy
 import Common.Transformation
 import Domain.LinearAlgebra (reduceMatrixAssignment, solveSystemAssignment)
-import Domain.LinearAlgebra (Matrix, rows, matrix, inContext, makeMatrix, MatrixInContext, 
+import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, 
                              EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var)
 import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
 import qualified Domain.LinearAlgebra.Equation as LA
@@ -49,7 +50,7 @@ instance (Num a, IsExpr a) => IsExpr (MatrixInContext a) where
 
 instance (Fractional a, IsExpr a) => IsExpr (EqsInContext a) where
    toExpr   = toExpr . equations
-   fromExpr = fmap (\x -> EIC x 0) . fromExpr
+   fromExpr = fmap inContext . fromExpr
 
 instance (Fractional a, IsExpr a) => IsExpr (LinearExpr a) where
    toExpr x =

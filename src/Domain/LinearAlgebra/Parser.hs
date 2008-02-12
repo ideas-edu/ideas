@@ -16,10 +16,11 @@ import UU.Parsing
 import UU.Scanner (Pos)
 import UU.Parsing.CharParser
 import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.Context
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
+import Domain.LinearAlgebra.MatrixRules -- for context
+import Common.Context
 import Common.Utils
 import Common.Assignment
 import Data.List
@@ -91,13 +92,13 @@ ppMatrixInContext m = ppStringMatrix (ppFocus m) ++ "\n" ++ ppEnv m
 
 ppEnv :: Show a => MatrixInContext a -> String
 ppEnv m = "[" ++ commaList list ++ "]"
- where f s g = s ++ "=" ++ show (g m)
+ where f s v = s ++ "=" ++ show (get v m)
        list  = [f "covered" covered, f "columnJ" columnJ]
 
 ppFocus :: Show a => MatrixInContext a -> Matrix String
 ppFocus c = mapWithPos f (matrix c)
  where f p a
-          | focus c==p = "[" ++ show a ++ "]"
+         {-  | focus c==p = "[" ++ show a ++ "]" -}
           | otherwise  = show a
      
 ppMatrix :: Show a => Matrix a -> String

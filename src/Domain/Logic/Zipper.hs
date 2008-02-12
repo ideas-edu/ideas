@@ -10,10 +10,47 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Zipper where
 
+import Common.Context
+import Common.Utils
 import Common.Move
 import Common.Transformation
 import Domain.Logic.Formula
 
+type LogicInContext = Context Logic
+
+liftLogicRule :: Rule Logic -> Rule LogicInContext
+liftLogicRule = liftRule $ LiftPair getter setter
+ where
+   getter c   = select (location c) (noContext c)
+   setter p c = c {fromContext = transformAt (location c) (const p) (fromContext c)}
+
+noContext :: LogicInContext -> Logic
+noContext = fromContext
+
+instance Uniplate a => Move (Context a) where
+   moveUp c
+      | null (location c) = Nothing
+      | otherwise         = Just $ c {location = init (location c) }
+   moveLeft = moveToChild $ \xs -> 
+                 case xs of
+                    [_, _] -> Just 0
+                    _      -> Nothing
+   moveRight = moveToChild $ \xs -> 
+                 case xs of
+                    [_, _] -> Just 1
+                    _      -> Nothing
+   moveDown = moveToChild $ \xs -> 
+                 case xs of
+                    [_] -> Just 0
+                    _   -> Nothing
+
+moveToChild :: Uniplate a => ([a] -> Maybe Int) -> Context a -> Maybe (Context a)
+moveToChild f c = do
+   p <- select (location c) (fromContext c)
+   n <- f (children p)
+   return c {location = location c ++ [n]}
+
+{-
 data Cxt = Top
          | ImplL Cxt Logic
          | ImplR Logic Cxt
@@ -70,7 +107,7 @@ instance Move LogicInContext where
    moveDown loc@(Loc ctx it) =
       case it of
          Not a -> Just (Loc (NotD (ctx)) a)
-         _     -> Nothing
+         _     -> Nothing -}
 
 instance Uniplate Logic where
    uniplate p =
@@ -82,7 +119,7 @@ instance Uniplate Logic where
          Not p     -> ([p], \[a] -> Not a)
          _         -> ([], \[] -> p)
          
-noContext :: LogicInContext -> Logic
+{- noContext :: LogicInContext -> Logic
 noContext loc@(Loc ctx it) = 
    let rec f c = noContext (Loc c (f it)) in
    case ctx of
@@ -98,7 +135,4 @@ noContext loc@(Loc ctx it) =
       NotD c     -> rec Not c
 
 inContext :: Logic -> LogicInContext
-inContext x = Loc Top x
-     
-liftLogicRule :: Rule Logic -> Rule LogicInContext
-liftLogicRule = liftRule $ LiftPair (\(Loc _ y) -> Just y) (\y (Loc x _) -> Loc x y)
+inContext x = Loc Top x -}

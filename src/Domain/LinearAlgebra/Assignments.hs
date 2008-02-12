@@ -3,26 +3,26 @@ module Domain.LinearAlgebra.Assignments where
 
 import Common.Transformation
 import Common.Assignment
+import Common.Context
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
-import Domain.LinearAlgebra.EquationsRules hiding (inContext)
-import Domain.LinearAlgebra.Context
+import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
 import Test.QuickCheck
 import Control.Monad
-import qualified Domain.LinearAlgebra.EquationsRules as EQ
+import Data.Ratio
 
 solveSystemAssignment :: Assignment (EqsInContext Rational)
 solveSystemAssignment = makeAssignment
    { shortTitle    = "Solve Linear System"
-   , parser        = either (\(x,y) -> Left (x, fmap EQ.inContext y)) (Right . EQ.inContext) . parseSystem
+   , parser        = either (\(x,y) -> Left (x, fmap inContext y)) (Right . inContext) . parseSystem
    , prettyPrinter = unlines . map (show . fmap (fmap ShowRational)) . equations
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
-                                   . EQ.inContext . map toStandardForm . equations
+                                   . inContext . map toStandardForm . equations
                              in f x == f y
    , ruleset       = equationsRules
    , finalProperty = inSolvedForm . equations
@@ -54,7 +54,7 @@ solveSystemWithMatrixAssignment = makeAssignment
                               (Left (doc1, _), Left (doc2, _)) -> Left (text "Error", Nothing) -- FIX THIS
    , prettyPrinter = either (unlines . map (show . fmap (fmap ShowRational)) . equations) (ppRationalMatrix . matrix)
    , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext . matrix
-                                 g = f . either (Domain.LinearAlgebra.Context.inContext . systemToMatrix . equations) id
+                                 g = f . either (inContext . systemToMatrix . equations) id
                              in g x == g y
    , ruleset       = map liftRuleLeft equationsRules ++ map liftRuleRight matrixRules
    , finalProperty = either (inSolvedForm . equations) (const False)
@@ -83,9 +83,13 @@ instance Arbitrary a => Arbitrary (Matrix a) where
       arbSizedMatrix (i `mod` 15, j `mod` 15)
    coarbitrary = coarbitrary . rows
 
-instance RealFrac a => Arbitrary (MatrixInContext a) where
-   arbitrary = liftM (inContext . fmap fromInteger) (arbitrary)
-   coarbitrary mic = coarbitrary (fmap round $ matrix mic :: Matrix Integer)
+instance Arbitrary a => Arbitrary (Context a) where
+   arbitrary   = liftM inContext arbitrary
+   coarbitrary = coarbitrary . fromContext
+
+instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
+   arbitrary = liftM fromInteger arbitrary
+   coarbitrary r = coarbitrary (numerator r) . coarbitrary (denominator r)
    
 arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
 arbSizedMatrix (i, j) = 

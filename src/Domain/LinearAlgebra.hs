@@ -1,6 +1,5 @@
 module Domain.LinearAlgebra
    ( module Domain.LinearAlgebra.Matrix
-   , module Domain.LinearAlgebra.Context
    , module Domain.LinearAlgebra.Parser
    , module Domain.LinearAlgebra.MatrixRules
    , module Domain.LinearAlgebra.EquationsRules
@@ -12,10 +11,9 @@ module Domain.LinearAlgebra
    ) where
    
 import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.Context 
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.MatrixRules
-import Domain.LinearAlgebra.EquationsRules hiding (inContext, covered, changeCover)
+import Domain.LinearAlgebra.EquationsRules hiding (changeCover)
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearSystem

@@ -26,14 +26,14 @@ HPCDIR = hpc
 CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
-default: solver
+default: solvergui
 
 test:
 	# Windows OS: $(WINDOWS) 
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
 
-all: solver solvergui doc markup cgi
+all: solvergui doc markup cgi # solver
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs \

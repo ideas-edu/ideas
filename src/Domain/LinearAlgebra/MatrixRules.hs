@@ -10,7 +10,7 @@
 module Domain.LinearAlgebra.MatrixRules where
 
 import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.Context
+import Common.Context
 import Common.Transformation
 import Common.Utils
 import Control.Monad
@@ -26,35 +26,35 @@ ruleFindColumnJ :: Num a => Rule (MatrixInContext a)
 ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
    let cols = columns (subMatrix c)
    i <- findIndex nonZero cols
-   return c {columnJ = i}
+   return (set columnJ i c)
    
 ruleExchangeNonZero :: Num a => Rule (MatrixInContext a)
 ruleExchangeNonZero = makeRule "ExchangeNonZero" (app2 rowExchange args)
  where
    args c = do
       nonEmpty c
-      let col = column (columnJ c) (subMatrix c)
+      let col = column (get columnJ c) (subMatrix c)
       i   <- findIndex (/= 0) col
-      return (covered c, i + covered c)
+      return (get covered c, i + get covered c)
 
 ruleScaleToOne :: Fractional a => Rule (MatrixInContext a)
 ruleScaleToOne = makeRule "ScaleToOne" (app2 rowScale args)
  where
    args c = do
       nonEmpty c
-      let pv = entry (0, columnJ c) (subMatrix c)
+      let pv = entry (0, get columnJ c) (subMatrix c)
       guard (pv /= 0)
-      return (covered c, 1 / pv)
+      return (get covered c, 1 / pv)
 
 ruleZerosFP :: Fractional a => Rule (MatrixInContext a)
 ruleZerosFP = makeRule "Introduce zeros (forward pass)" (app3 rowAdd args)
  where
    args c = do
       nonEmpty c
-      let col = drop 1 $ column (columnJ c) (subMatrix c)
+      let col = drop 1 $ column (get columnJ c) (subMatrix c)
       i   <- findIndex (/= 0) col
       let v = negate (col!!i)
-      return (i + covered c + 1, covered c, v)
+      return (i + get covered c + 1, get covered c, v)
    
 ruleZerosBP :: Fractional a => Rule (MatrixInContext a)
 ruleZerosBP = makeRule "Introduce zeros (backward pass)" (app3 rowAdd args)
@@ -67,7 +67,7 @@ ruleZerosBP = makeRule "Introduce zeros (backward pass)" (app3 rowAdd args)
       guard (any (/= 0) ri)
       k <- findIndex (/= 0) col
       let v = negate (col!!k)
-      return (k, covered c, v)
+      return (k, get covered c, v)
 
 ruleCoverRow :: Rule (MatrixInContext a)
 ruleCoverRow = minorRule $ makeRule "CoverRow" $ changeCover (+1)
@@ -95,14 +95,14 @@ rowAdd i j k = matrixTrans $ \m -> do
 
 changeCover :: (Int -> Int) -> Transformation (MatrixInContext a)
 changeCover f = makeTrans $ \c -> do
-   let new = f (covered c)
+   let new = f (get covered c)
    guard (new >= 0 && new <= fst (dimensions (matrix c)))
-   return c {covered = new}
+   return $ set covered new c --  c {get covered = new}
    
 matrixTrans :: (Matrix a -> Maybe (Matrix a)) -> Transformation (MatrixInContext a)
 matrixTrans f = makeTrans $ \c -> do
    new <- f (matrix c)
-   return c {matrix = new}
+   return (fmap (const new) c)
 
 -- local helper function
 validRow :: Int -> Matrix a -> Bool
@@ -110,3 +110,13 @@ validRow i m = i >= 0 && i < fst (dimensions m)
    
 nonEmpty :: MatrixInContext a -> Maybe ()
 nonEmpty = guard . not . isEmpty . subMatrix
+
+covered, columnJ :: Var Int
+covered = "covered" := 0
+columnJ = "columnJ" := 0
+
+type MatrixInContext a = Context (Matrix a)
+
+matrix, subMatrix :: MatrixInContext a -> Matrix a
+matrix = fromContext
+subMatrix c = makeMatrix $ drop (get covered c) $ rows $ matrix c

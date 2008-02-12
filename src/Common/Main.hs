@@ -38,7 +38,6 @@ main = do
             , "- matrix : bring a matrix to reduced echelon form"
             ]
 
-
 runMatrix :: IO ()
 runMatrix = runInterpreter redEchelonAssignment
 

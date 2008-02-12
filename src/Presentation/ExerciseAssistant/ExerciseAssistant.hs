@@ -19,12 +19,13 @@ import Common.Strategy
 import Domain.Logic
 import Control.Monad
 import Domain.Fraction
-import Domain.LinearAlgebra
-import Domain.RelationAlgebra (cnfAssignment)
+import qualified Domain.LinearAlgebra as LA
+import qualified Domain.RelationAlgebra as RA
 
 domains :: [PackedAssignment]
-domains = [ Pack dnfAssignment, Pack reduceMatrixAssignment, Pack opgave6b
-          , Pack solveSystemAssignment, Pack solveSystemWithMatrixAssignment, Pack simplAssignment, Pack cnfAssignment
+domains = [ Pack dnfAssignment, Pack LA.reduceMatrixAssignment, Pack LA.opgave6b
+          , Pack LA.solveSystemAssignment, Pack LA.solveSystemWithMatrixAssignment, Pack simplAssignment
+          , Pack RA.cnfAssignment
           ]
 
 main :: IO ()
@@ -50,7 +51,9 @@ main =
         undoButton     <- fromXml castToButton      "undoButton"
         submitButton   <- fromXml castToButton      "submitButton"
         newButton      <- fromXml castToButton      "newButton"
+        applyButton    <- fromXml castToButton      "applyButton"
         domainBox      <- fromXml castToComboBox    "domainBox"
+        ruleBox        <- fromXml castToComboBox    "ruleBox"
         progressBar    <- fromXml castToProgressBar "progressBar"
         progressLabel  <- fromXml castToLabel       "progressLabel"
 
@@ -66,6 +69,16 @@ main =
         -- initialize assignment
         session <- makeSession (head domains)
         
+        let fillRuleBox = do
+               -- first clear the box
+               result <- comboBoxGetModel ruleBox
+               case result of 
+                  Just model -> listStoreClear (castToListStore model)
+                  Nothing    -> return ()
+               -- then fill the box again
+               names <- ruleNames session
+               mapM_ (comboBoxAppendText ruleBox) names
+           
         let updateAll = do
                txt <- currentText session
                textBufferSetText assignmentBuffer txt
@@ -76,7 +89,8 @@ main =
                labelSetText progressLabel (show x ++ "/" ++ show y)
                progressBarSetFraction progressBar (if y==0 then 1 else fromIntegral x / fromIntegral y)
 
-        textBufferSetText feedbackBuffer "Welcome to the Exercise Assistant!" 
+        textBufferSetText feedbackBuffer "Welcome to the Exercise Assistant!"
+        fillRuleBox
         updateAll
 
         -- bind events
@@ -86,6 +100,7 @@ main =
         onChanged domainBox $ do
            index <- comboBoxGetActive domainBox
            newAssignment (domains !! fromMaybe 0 index) session
+           fillRuleBox
            updateAll
 
         onClicked newButton $ do
@@ -122,6 +137,40 @@ main =
            textBufferSetText feedbackBuffer txt
            when ok updateAll
         
+        onClicked applyButton $ do
+           (iterBegin, iterEnd) <- textBufferGetSelectionBounds entryBuffer
+           posBegin <- textIterGetOffset iterBegin
+           posEnd   <- textIterGetOffset iterEnd
+           print (posBegin, posEnd)
+           argumentFrame
+        
         -- show widgets and run GUI
         widgetShowAll window
         mainGUI
+        
+argumentFrame :: IO ()
+argumentFrame = do
+   w <- windowNew
+   windowSetModal w True
+   windowResize w 300 300
+   windowSetTitle w "Supply arguments" 
+   
+   box   <- vBoxNew True 5
+   views <- flip mapM [1..3] $ \i -> do
+      lab  <- labelNew $ Just $ "Argument " ++ show i
+      view <- textViewNew
+      set box [containerChild := lab]
+      set box [containerChild := view]
+      return view
+      
+   buttonBox    <- hBoxNew True 5
+   applyButton  <- buttonNew
+   cancelButton <- buttonNew
+   buttonSetLabel applyButton "Apply"
+   buttonSetLabel cancelButton "Cancel"
+   set buttonBox [containerChild := cancelButton]
+   set buttonBox [containerChild := applyButton]
+   set w   [containerChild := box]
+   set box [containerChild := buttonBox]
+   
+   widgetShowAll w

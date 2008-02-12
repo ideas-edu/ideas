@@ -10,13 +10,12 @@
 module Domain.LinearAlgebra.Strategies where
 
 import Prelude hiding (repeat)
-import Domain.LinearAlgebra.Context
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.LinearSystem
 import Common.Strategy hiding (not)
 import Common.Transformation
-
+import Common.Context
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
 
@@ -70,11 +69,11 @@ generalSolutionSystemWithMatrix = label "General solution to a linear system (ma
 
 conv1 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
 conv1 = translationTo "Linear system to matrix" $
-   Just . Domain.LinearAlgebra.Context.inContext . systemToMatrix . equations
+   Just . inContext . systemToMatrix . equations
 
 conv2 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
 conv2 = translationFrom "Matrix to linear system" $ 
-   Just . Domain.LinearAlgebra.EquationsRules.inContext . matrixToSystem . matrix
+   Just . inContext . matrixToSystem . matrix
 
 liftLeft :: LabeledStrategy a -> LabeledStrategy (Either a b)
 liftLeft = mapLabeledStrategy $ liftRule $
@@ -91,7 +90,7 @@ translationFrom :: String -> (b -> Maybe a) -> Rule (Either a b)
 translationFrom s f = makeSimpleRule s (either (const Nothing) (fmap Left . f))
 
 -- temp for testing
-test = applyAll generalSolutionSystemWithMatrix (Left $ Domain.LinearAlgebra.EquationsRules.inContext ex1a)
+test = applyAll generalSolutionSystemWithMatrix (Left $ inContext ex1a)
 
 ex1a :: Equations (LinearExpr Rational)
 ex1a = 

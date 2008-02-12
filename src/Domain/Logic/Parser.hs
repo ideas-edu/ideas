@@ -99,7 +99,7 @@ ppLogicInContext = ppLogicInContextPrio 0
 
 -- hack
 ppLogicInContextPrio :: Int -> LogicInContext -> String
-ppLogicInContextPrio prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noContext $ Loc ctx (Var "*")
+ppLogicInContextPrio = undefined {- prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noContext $ Loc ctx (Var "*")
  where
    f '*' = "[ " ++ ppLogicPrio (getPrio ctx) logic ++ " ]"
    f c   = [c]
@@ -112,7 +112,7 @@ ppLogicInContextPrio prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noC
    getPrio (EquivL _ _) = 1
    getPrio (EquivR _ _) = 0
    getPrio (ImplL  _ _) = 4
-   getPrio (ImplR  _ _) = 3
+   getPrio (ImplR  _ _) = 3 -}
 
 -- | Pretty printer that produces extra parentheses: also see parseLogicPars
 ppLogicPars :: Logic -> String

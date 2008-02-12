@@ -15,6 +15,7 @@ import Control.Monad
 import Common.Transformation
 import Common.Utils
 import Data.List
+import Common.Context
 import Common.Assignment
 import Common.Strategy
 

@@ -30,7 +30,7 @@ module Common.Strategy
    , nextRule, nextRulesWith, nextRulesForSequenceWith, trackRule, trackRulesWith
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
    , StrategyLocation, remainingStrategy
-   , firstLocation, subStrategy, reportLocations
+   , firstLocation, firstLocationWith, subStrategy, reportLocations
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -341,6 +341,15 @@ firstLocation :: a -> LabeledStrategy a -> Maybe StrategyLocation
 firstLocation a ns = safeHead
    [ is | ((is, r), _) <- RE.firsts (withIndices ns), applicable r a ]
 
+firstLocationWith :: (Rule a -> Bool) -> LabeledStrategy a -> a -> Maybe StrategyLocation
+firstLocationWith p strategy = safeHead . rec (withIndices strategy)
+ where
+   rec gr a = 
+      let f ((is, r), rest)
+             | p r       = [ is | applicable r a ]
+             | otherwise = [ js | b <- applyAll r a, js <- rec rest b ]
+      in concatMap f (RE.firsts gr)
+  
 -- local helper-function
 combine :: ([Int] -> a -> b) -> [Int] -> RE.Grammar a -> RE.Grammar b
 combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex

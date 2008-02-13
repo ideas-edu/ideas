@@ -26,6 +26,7 @@ data ReplyOk = ReplyOk
 data ReplyIncorrect = ReplyIncorrect
    { repInc_Strategy   :: StrategyID
    , repInc_Location   :: Location
+   , repInc_Context    :: String
    , repInc_Expected   :: Expr
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
@@ -64,6 +65,7 @@ replyIncorrectToXML :: ReplyIncorrect -> XML
 replyIncorrectToXML r = xmlResult "incorrect" $ xmlList
    [ ("strategy",   Text $ repInc_Strategy r)
    , ("location",   Text $ show $ repInc_Location r)
+   , ("context",    Text $ repInc_Context r)
    , ("expected",   exprToXML $ repInc_Expected r)
    , ("steps",      Text $ show $ repInc_Steps r)
    , ("equivalent", Text $ show $ repInc_Equivalent r)

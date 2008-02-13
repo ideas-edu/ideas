@@ -341,13 +341,13 @@ firstLocation :: a -> LabeledStrategy a -> Maybe StrategyLocation
 firstLocation a ns = safeHead
    [ is | ((is, r), _) <- RE.firsts (withIndices ns), applicable r a ]
 
-firstLocationWith :: (Rule a -> Bool) -> LabeledStrategy a -> a -> Maybe StrategyLocation
+firstLocationWith :: (Rule a -> Bool) -> LabeledStrategy a -> a -> Maybe (StrategyLocation, a)
 firstLocationWith p strategy = safeHead . rec (withIndices strategy)
  where
    rec gr a = 
       let f ((is, r), rest)
-             | p r       = [ is | applicable r a ]
-             | otherwise = [ js | b <- applyAll r a, js <- rec rest b ]
+             | p r       = [ (is, a) | applicable r a ]
+             | otherwise = [ pair    | b <- applyAll r a, pair <- rec rest b ]
       in concatMap f (RE.firsts gr)
   
 -- local helper-function

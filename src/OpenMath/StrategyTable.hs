@@ -17,7 +17,7 @@ import Control.Monad
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.2.2"
+versionNr = "0.2.3"
 
 data ExprAssignment = forall a . IsExpr a => ExprAssignment (Assignment (Context a))
 

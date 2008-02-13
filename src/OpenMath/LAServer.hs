@@ -63,20 +63,21 @@ laServerFor a req =
             (expected:_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
-                       , repInc_Location   = req_Location req ++ subTask requestedTerm subStrategy
+                       , repInc_Location   = req_Location req ++ take 1 subloc
+                       , repInc_Context    = showContext newContext
                        , repInc_Expected   = toExpr (fromContext expected)
                        , repInc_Steps      = stepsRemaining (unlabel $ strategy a) requestedTerm -- not precise
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
                        }
+             where
+               (subloc, newContext) = subTask requestedTerm subStrategy
                      
-subTask :: a -> LabeledStrategy a -> Location
+subTask :: a -> LabeledStrategy a -> (Location, a)
 subTask term subStrategy = 
-   case firstLocationWith (not . isMinorRule) subStrategy term of
-      Just (i:_) -> [i] -- one-level only
-      _          -> []
+   fromMaybe ([], term) $ firstLocationWith (not . isMinorRule) subStrategy term
       
 nextLocation ::IsExpr a => Context a -> Location -> Assignment (Context a) -> Location
-nextLocation term loc a = maybe loc (rec loc) (firstLocationWith (not . isMinorRule) (strategy a) term)
+nextLocation term loc a = maybe loc (rec loc . fst) (firstLocationWith (not . isMinorRule) (strategy a) term)
  where
    rec (i:is) (j:js)
       | i == j    = j : rec is js 

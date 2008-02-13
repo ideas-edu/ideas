@@ -66,7 +66,9 @@ make a req (Incorrect reply) = html
                              , req_Context  = Just (repOK_Context r)
                              }
                  _    -> error "internal error: Ok expected"
-   reqSub   = req {req_Location = repInc_Location reply}
+   reqSub   = req { req_Location = repInc_Location reply
+                  , req_Context  = Just (repInc_Context reply)
+                  }
    reqToURL = oneliner . ppRequest
    
 make _ _ _ = Text "request error: invalid request"

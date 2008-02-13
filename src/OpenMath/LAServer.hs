@@ -50,12 +50,15 @@ laServerFor a req =
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             
             (answers, Just answeredTerm)
-               | any (equality a answeredTerm) answers ->
+               | not (null witnesses) ->
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
                        , repOk_Location = nextLocation answeredTerm (req_Location req) a
+                       , repOK_Context  = showContext (head witnesses)
                        , repOk_Steps    = stepsRemaining (unlabel $ strategy a) (answeredTerm) -- not precise
                        }
+                  where
+                    witnesses = filter (equality a answeredTerm) answers
                        
             (expected:_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect

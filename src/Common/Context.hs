@@ -9,7 +9,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Context 
-   ( Context , inContext, fromContext, parseContext
+   ( Context , inContext, fromContext, showContext, parseContext
      -- Variable environment
    , Var(..), intVar, boolVar, get, set, change
      -- Location (current focus)
@@ -36,8 +36,8 @@ data Context a = C Location Environment a
 instance Eq a => Eq (Context a) where
    x == y = fromContext x == fromContext y
 
-instance Show (Context a) where
-   show (C loc env _) = show loc ++ ";" ++ showEnv env
+instance Show a => Show (Context a) where
+   show c = showContext c ++ ";" ++ show (fromContext c)
 
 instance Functor Context where
    fmap f (C loc env a) = C loc env (f a)
@@ -47,15 +47,18 @@ inContext = C [] M.empty
 
 fromContext :: Context a -> a
 fromContext (C _ _ a) = a
-   
-myc :: Context ()
-myc = set (intVar "b") 1 $ set (intVar "a") 6 $ set (boolVar "x") False $  set (intVar "a") 4 $ setLocation [1,2,3] $ inContext ()
-
-test = parseContext $ show myc
 
 ----------------------------------------------------------
--- A simple parser for contexts
+-- A simple parser and pretty-printer for contexts
 
+showContext :: Context a -> String
+showContext (C loc env _) = show loc ++ ";" ++ showEnv env
+
+-- local helper function
+showEnv :: Environment -> String
+showEnv = concat . intersperse "," . map f . M.toList
+ where f (k, (_, v)) = k ++ "=" ++ v
+ 
 parseContext :: String -> Maybe (Context ())
 parseContext s = do
    (loc, env)  <- splitAtChar ';' s
@@ -105,11 +108,6 @@ set (s := _) a (C loc env b) = C loc (M.insert s (Just (toDyn a), show a) env) b
 
 change :: (Show a, Read a, Typeable a) => Var a -> (a -> a) -> Context b -> Context b
 change v f c = set v (f (get v c)) c
-
--- local helper function
-showEnv :: Environment -> String
-showEnv = concat . intersperse "," . map f . M.toList
- where f (k, (_, v)) = k ++ "=" ++ v
   
 ----------------------------------------------------------
 -- Location (current focus)

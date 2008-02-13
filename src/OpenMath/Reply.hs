@@ -18,6 +18,7 @@ data Reply = Ok ReplyOk | Incorrect ReplyIncorrect | Error ReplyError
 data ReplyOk = ReplyOk
    { repOk_Strategy :: StrategyID
    , repOk_Location :: Location
+   , repOK_Context  :: String
    , repOk_Steps    :: Int
    }
  deriving Show
@@ -54,6 +55,7 @@ replyOkToXML :: ReplyOk -> XML
 replyOkToXML r = xmlResult "ok" $ xmlList
    [ ("strategy", Text $ repOk_Strategy r)
    , ("location", Text $ show $ repOk_Location r)
+   , ("context",  Text $ repOK_Context r)
    , ("steps",    Text $ show $ repOk_Steps r)
    ]
 

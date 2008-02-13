@@ -28,7 +28,7 @@ makeHTML req =
          in make a noAnswer $ laServerFor a $ noAnswer
       _ -> Text "request error: unknown strategy"
 
-make :: IsExpr a => Assignment (InContext a) -> Request -> Reply -> XML
+make :: IsExpr a => Assignment (Context a) -> Request -> Reply -> XML
 make a req (Incorrect reply) = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]

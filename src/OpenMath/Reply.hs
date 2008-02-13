@@ -3,6 +3,7 @@ module OpenMath.Reply
    , ReplyOk(..), ReplyIncorrect(..), ReplyError(..)
    ) where
 
+import Common.Context (Location)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.XML

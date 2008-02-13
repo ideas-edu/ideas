@@ -1,5 +1,6 @@
 module OpenMath.Request (Request(..), pRequest, ppRequest) where
 
+import Common.Context (Location)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.XML
@@ -13,6 +14,7 @@ data Request = Request
    { req_Strategy :: StrategyID 
    , req_Location :: Location
    , req_Term     :: Expr
+--   , req_Context  :: Maybe String
    , req_Answer   :: Maybe Expr
    }
  deriving Show
@@ -30,7 +32,7 @@ pRequest input = do
    answer <- optional (extractExpr "answer" xml)
    return $ Request 
       { req_Strategy = sid 
-      , req_Location = fromMaybe [] loc 
+      , req_Location = fromMaybe [] loc
       , req_Term     = term 
       , req_Answer   = answer
       }

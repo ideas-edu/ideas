@@ -34,7 +34,7 @@ laServer req =
       [ExprAssignment a] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    
-laServerFor :: IsExpr a => Assignment (InContext a) -> Request -> Reply
+laServerFor :: IsExpr a => Assignment (Context a) -> Request -> Reply
 laServerFor a req = 
    case (subStrategy (req_Location req) (strategy a), fmap inContext $ fromExpr $ req_Term req) of
    
@@ -72,7 +72,7 @@ subTask term subStrategy =
       Just (i:_) -> [i] -- one-level only
       _          -> []
       
-nextLocation ::IsExpr a => InContext a -> Location -> Assignment (InContext a) -> Location
+nextLocation ::IsExpr a => Context a -> Location -> Assignment (Context a) -> Location
 nextLocation term loc a = maybe loc (rec loc) (firstLocationWith (not . isMinorRule) (strategy a) term)
  where
    rec (i:is) (j:js)

@@ -15,12 +15,11 @@ import OpenMath.ObjectParser
 import Control.Monad
 
 type StrategyID = String
-type Location   = [Int]
 
 versionNr :: String
 versionNr = "0.2.2"
 
-data ExprAssignment = forall a . IsExpr a => ExprAssignment (Assignment (InContext a))
+data ExprAssignment = forall a . IsExpr a => ExprAssignment (Assignment (Context a))
 
 data StrategyEntry = Entry 
    { strategyNr     :: String
@@ -28,7 +27,7 @@ data StrategyEntry = Entry
    , functions      :: [String]
    }
  
-entry :: IsExpr a => String -> Assignment (InContext a) -> [String] -> StrategyEntry
+entry :: IsExpr a => String -> Assignment (Context a) -> [String] -> StrategyEntry
 entry nr a fs = Entry nr (ExprAssignment a) fs
 
 strategyTable :: [StrategyEntry]

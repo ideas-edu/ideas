@@ -131,7 +131,7 @@ changeCover f = makeTrans $ \c -> do
 --------------------
 -- TEMP
 
-type EqsInContext a = InContext (LinearSystem a)
+type EqsInContext a = Context (LinearSystem a)
 
 equations :: EqsInContext a -> LinearSystem a
 equations = fromContext

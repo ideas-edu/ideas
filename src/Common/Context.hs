@@ -4,128 +4,142 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (todo)
+-- A context for a term that maintains a current focus and an environment of
+-- key-value pairs. A context is both showable and parsable.
 --
 -----------------------------------------------------------------------------
-module Common.Context where
+module Common.Context 
+   ( Context , inContext, fromContext, parseContext
+     -- Variable environment
+   , Var(..), intVar, boolVar, get, set, change
+     -- Location (current focus)
+   , Location, location, setLocation, changeLocation, currentFocus, changeFocus
+     -- Lifting rewrite rules
+   , liftRuleToContext
+     -- Uniplate type class and utility functions
+   , Uniplate(..), noUniplate, children, child, select, transform, transformAt
+   ) where
 
 import Common.Utils
-import Common.Transformation -- get rid of this import
+import Common.Transformation
 import Control.Monad
+import Data.Char
 import Data.Dynamic
+import Data.List
 import qualified Data.Map as M
 
-class Functor f => Context f where
-   inContext   :: a -> f a
-   fromContext :: f a -> a
+----------------------------------------------------------
+-- Context abstract data type and core operations
 
-eqContext :: (Context f, Eq a) => f a -> f a -> Bool
-eqContext x y = fromContext x == fromContext y
+data Context a = C Location Environment a
 
-compareContext :: (Context f, Ord a) => f a -> f a -> Ordering
-compareContext x y = fromContext x `compare` fromContext y
+instance Eq a => Eq (Context a) where
+   x == y = fromContext x == fromContext y
 
----------------
--- Temp: clean up
+instance Show (Context a) where
+   show (C loc env _) = show loc ++ ";" ++ showEnv env
 
-data InContext a = InContext (M.Map String Dynamic) [Int] a
-   deriving Show
+instance Functor Context where
+   fmap f (C loc env a) = C loc env (f a)
 
-instance Context InContext where
-   inContext = InContext M.empty []
-   fromContext (InContext _ _ a) = a
+inContext :: a -> Context a
+inContext = C [] M.empty
 
-instance Eq a  => Eq  (InContext a) where (==)    = eqContext
-instance Ord a => Ord (InContext a) where compare = compareContext
+fromContext :: Context a -> a
+fromContext (C _ _ a) = a
+   
+myc :: Context ()
+myc = set (intVar "b") 1 $ set (intVar "a") 6 $ set (boolVar "x") False $  set (intVar "a") 4 $ setLocation [1,2,3] $ inContext ()
 
-instance Functor InContext where
-   fmap f (InContext env loc a) = InContext env loc (f a)
+test = parseContext $ show myc
 
-liftContextRule :: Uniplate a => Rule a -> Rule (InContext a)
-liftContextRule = liftRule $ LiftPair getter setter
- where
-   getter c   = select (location c) (fromContext c)
-   setter p c = fmap (transformAt (location c) (const p)) c
+----------------------------------------------------------
+-- A simple parser for contexts
 
-location :: InContext a -> [Int]
-location (InContext _ loc _) = loc
+parseContext :: String -> Maybe (Context ())
+parseContext s = do
+   (loc, env)  <- splitAtChar ';' s
+   pairs       <- mapM (splitAtChar '=') (charSplits ',' env)
+   let f (k, v) = (k, (Nothing, v))
+   return $ C (read loc) (M.fromList $ map f pairs) ()
 
-get :: Typeable a => Var a -> InContext b -> a
-get (s := a) (InContext env loc _) = maybe a (flip fromDyn a) (M.lookup s env)
+splitAtChar :: Char -> String -> Maybe (String, String)
+splitAtChar c s =
+   case break (==c) s of
+      (xs, _:ys) -> Just (xs, ys) 
+      _          -> Nothing
 
-set :: Typeable a => Var a -> a -> InContext b -> InContext b
-set (s := _) a (InContext env loc b) = InContext (M.insert s (toDyn a) env) loc b
+charSplits :: Char -> String -> [String]
+charSplits c s = 
+   case splitAtChar c s of
+      Just (xs, ys) -> xs : charSplits c ys
+      Nothing       -> [s]
 
-change :: Typeable a => Var a -> (a -> a) -> InContext b -> InContext b
-change v f c = set v (f (get v c)) c
+----------------------------------------------------------
+-- Manipulating the variable environment
 
----------------
-{-
-newtype And f g a = And (f (g a))
-   deriving Show
+-- local type synonym: can probably be simplified
+type Environment = M.Map String (Maybe Dynamic, String)
 
-instance (Context f, Context g) => Context (And f g) where
-   inContext = And . inContext . inContext
-   fromContext (And a) = fromContext (fromContext a)
-
-instance (Ord a, Context f, Context g) => Eq  (And f g a) where (==)    = eqContext
-instance (Ord a, Context f, Context g) => Ord (And f g a) where compare = compareContext
-
-instance (Functor f, Functor g) => Functor (And f g) where
-   fmap f (And a) = And (fmap (fmap f) a) 
-
--------------
-
-data Env a = Env (M.Map String Dynamic) a
-   deriving Show
-
-instance Context Env where
-   inContext = Env M.empty
-   fromContext (Env _ a) = a
-
-instance Eq a  => Eq  (Env a) where (==)    = eqContext
-instance Ord a => Ord (Env a) where compare = compareContext
-
-instance Functor Env where
-   fmap f (Env env a) = Env env (f a)
-
-liftEnv :: (a -> a) -> Env a -> Env a
-liftEnv = fmap
--}
--- a variable has a name (for showing) and a default value (for initializing)
+-- A variable has a name (for showing) and a default value (for initializing)
 data Var a = String := a
-{-
-get :: Typeable a => Var a -> Env b -> a
-get (s := a) (Env env _) = maybe a (flip fromDyn a) (M.lookup s env)
 
-set :: Typeable a => Var a -> a -> Env b -> Env b
-set (s := _) a (Env env b) = Env (M.insert s (toDyn a) env) b
+intVar :: String -> Var Int
+intVar = (:= 0)
 
-change :: Typeable a => Var a -> (a -> a) -> Env b -> Env b
+boolVar :: String -> Var Bool
+boolVar = (:= True)
+
+get :: (Read a, Typeable a) => Var a -> Context b -> a
+get (s := a) (C loc env _) = 
+   case M.lookup s env of
+      Nothing           -> a           -- return default value
+      Just (Just d,  s) -> fromDyn d a -- use the stored dynamic (default value as backup)
+      Just (Nothing, s) -> 
+         case reads s of               -- parse the pretty-printed value (default value as backup)
+            [(b, rest)] | all isSpace rest -> b
+            _ -> a
+
+set :: (Show a, Typeable a) => Var a -> a -> Context b -> Context b
+set (s := _) a (C loc env b) = C loc (M.insert s (Just (toDyn a), show a) env) b
+
+change :: (Show a, Read a, Typeable a) => Var a -> (a -> a) -> Context b -> Context b
 change v f c = set v (f (get v c)) c
 
+-- local helper function
+showEnv :: Environment -> String
+showEnv = concat . intersperse "," . map f . M.toList
+ where f (k, (_, v)) = k ++ "=" ++ v
+  
+----------------------------------------------------------
+-- Location (current focus)
+
+type Location = [Int]
+
+location :: Context a -> Location
+location (C loc _ _) = loc
+
+setLocation :: Location -> Context a -> Context a 
+setLocation loc (C _ env a) = C loc env a
+
+changeLocation :: (Location -> Location) -> Context a -> Context a
+changeLocation f c = setLocation (f (location c)) c
+
+currentFocus :: Uniplate a => Context a -> Maybe a
+currentFocus c = select (location c) (fromContext c)
+
+changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
+changeFocus f c = fmap (transformAt (location c) f) c
+
+----------------------------------------------------------
+-- Lifting rewrite rules
+
+liftRuleToContext :: Uniplate a => Rule a -> Rule (Context a)
+liftRuleToContext = liftRule $ LiftPair currentFocus (changeFocus . const)
+   
 ---------------------------------------------------------
 -- Uniplate class for generic traversals
 
-data Loc a = Loc [Int] a
-   deriving Show
-
-instance Context Loc where
-   inContext = Loc []
-   fromContext (Loc _ a) = a
-
-instance Eq a  => Eq  (Loc a) where (==)    = eqContext
-instance Ord a => Ord (Loc a) where compare = compareContext
-
-instance Functor Loc where
-   fmap f (Loc loc a) = Loc loc (f a)
-
-liftLoc :: Uniplate a => (a -> a) -> Loc a -> Loc a
-liftLoc f (Loc loc a) = Loc loc (transformAt loc f a)
-   
-location :: Loc a -> [Int]
-location (Loc loc _) = loc
--}
 class Uniplate a where
    uniplate :: a -> ([a], [a] -> a)
 

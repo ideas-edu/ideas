@@ -31,8 +31,8 @@ make :: IsExpr a => Assignment a -> Request -> Reply -> XML
 make a req (Incorrect reply) = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
-   [ para [ href "http://www.ou.nl/" [imgOUNL]
-          , bold [Text "How to continue?"]
+   [ para [ -- href "http://www.ou.nl/" [imgOUNL]
+            bold [Text "How to continue?"]
           , Text "Submit the "
           , href (reqToURL reqOk) [Text "correct"]
           , Text " answer, or zoom in to a " 

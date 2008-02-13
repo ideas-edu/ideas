@@ -77,4 +77,4 @@ nextLocation term loc a = maybe loc (rec loc) (firstLocationWith (not . isMinorR
    rec (i:is) (j:js)
       | i == j    = j : rec is js 
       | otherwise = [j]
-   rec _ js       = take 1 js
+   rec _ _        = [] 

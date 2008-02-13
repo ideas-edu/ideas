@@ -67,12 +67,12 @@ laServerFor a req =
                      
 subTask :: a -> LabeledStrategy a -> Location
 subTask term subStrategy = 
-   case firstLocation term subStrategy of
+   case firstLocationWith (not . isMinorRule) subStrategy term of
       Just (i:_) -> [i] -- one-level only
       _          -> []
       
 nextLocation ::IsExpr a => a -> Location -> Assignment a -> Location
-nextLocation term loc = maybe loc (rec loc) . firstLocation term . strategy
+nextLocation term loc a = maybe loc (rec loc) (firstLocationWith (not . isMinorRule) (strategy a) term)
  where
    rec (i:is) (j:js)
       | i == j    = j : rec is js 

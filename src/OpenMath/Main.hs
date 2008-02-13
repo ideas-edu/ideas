@@ -26,7 +26,7 @@ cgiMain :: CGI CGIResult
 cgiMain = do
    -- get input
    input <- getInput "input"     -- read matrix xml string
-   mode  <- getInput "html"      -- optional: a mode
+   mode  <- getInput "mode"      -- optional: a mode
    addr <- remoteAddr            -- the IP address of the remote host making the request
    
    -- process input and prepare answer

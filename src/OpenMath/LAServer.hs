@@ -5,6 +5,7 @@ import OpenMath.StrategyTable
 import OpenMath.Request
 import OpenMath.Reply
 import OpenMath.ObjectParser
+import Common.Context
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Assignment hiding (Incorrect)
@@ -33,9 +34,9 @@ laServer req =
       [ExprAssignment a] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    
-laServerFor :: IsExpr a => Assignment a -> Request -> Reply
+laServerFor :: IsExpr a => Assignment (InContext a) -> Request -> Reply
 laServerFor a req = 
-   case (subStrategy (req_Location req) (strategy a), fromExpr $ req_Term req) of
+   case (subStrategy (req_Location req) (strategy a), fmap inContext $ fromExpr $ req_Term req) of
    
       (Nothing, _) -> 
          replyError "request error" "invalid location for strategy"
@@ -45,7 +46,7 @@ laServerFor a req =
          
       (Just subStrategy, Just requestedTerm) -> 
          
-         case (applyAll subStrategy requestedTerm, maybe Nothing fromExpr $ req_Answer req) of
+         case (applyAll subStrategy requestedTerm, maybe Nothing (fmap inContext . fromExpr) $ req_Answer req) of
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             
             (answers, Just answeredTerm)
@@ -60,7 +61,7 @@ laServerFor a req =
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
                        , repInc_Location   = req_Location req ++ subTask requestedTerm subStrategy
-                       , repInc_Expected   = toExpr expected
+                       , repInc_Expected   = toExpr (fromContext expected)
                        , repInc_Steps      = stepsRemaining (unlabel $ strategy a) requestedTerm -- not precise
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
                        }
@@ -71,7 +72,7 @@ subTask term subStrategy =
       Just (i:_) -> [i] -- one-level only
       _          -> []
       
-nextLocation ::IsExpr a => a -> Location -> Assignment a -> Location
+nextLocation ::IsExpr a => InContext a -> Location -> Assignment (InContext a) -> Location
 nextLocation term loc a = maybe loc (rec loc) (firstLocationWith (not . isMinorRule) (strategy a) term)
  where
    rec (i:is) (j:js)

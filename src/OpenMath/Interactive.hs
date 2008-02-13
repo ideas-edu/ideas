@@ -1,5 +1,6 @@
 module OpenMath.Interactive (respondHTML) where
 
+import Common.Context
 import Common.Assignment hiding (Text, Incorrect)
 import Common.Strategy hiding (not)
 import OpenMath.LAServer
@@ -27,7 +28,7 @@ makeHTML req =
          in make a noAnswer $ laServerFor a $ noAnswer
       _ -> Text "request error: unknown strategy"
 
-make :: IsExpr a => Assignment a -> Request -> Reply -> XML
+make :: IsExpr a => Assignment (InContext a) -> Request -> Reply -> XML
 make a req (Incorrect reply) = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
@@ -50,10 +51,10 @@ make a req (Incorrect reply) = html
           ]
    , hr
    , para [ bold [Text "Term: "]
-          , preString (maybe "" (prettyPrinter a) $ fromExpr $ req_Term req) 
+          , preString (maybe "" (prettyPrinter a) $ fmap inContext $ fromExpr $ req_Term req) 
           ]
    , para [ bold [Text "Expected: "]
-          , preString (maybe "" (prettyPrinter a) $ fromExpr $ repInc_Expected reply) 
+          , preString (maybe "" (prettyPrinter a) $ fmap inContext $ fromExpr $ repInc_Expected reply) 
           ]
    ]
  where

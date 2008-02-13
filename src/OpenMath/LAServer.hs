@@ -46,7 +46,7 @@ laServerFor a req =
          
       (Just subStrategy, Just requestedTerm) -> 
          
-         case (applyAll subStrategy requestedTerm, getContextTerm req) of
+         case (applyAll subStrategy requestedTerm, maybe Nothing (fmap inContext . fromExpr) $ req_Answer req) of
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             
             (answers, Just answeredTerm)

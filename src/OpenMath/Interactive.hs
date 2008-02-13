@@ -50,6 +50,8 @@ make a req (Incorrect reply) = html
    , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ reportLocations $ strategy a 
           ]
    , hr
+   , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
+   , hr
    , para [ bold [Text "Term: "]
           , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
           ]
@@ -58,10 +60,13 @@ make a req (Incorrect reply) = html
           ]
    ]
  where
-   reqOk  = case laServerFor a req {req_Answer = Just $ repInc_Expected reply} of
-               Ok r -> req {req_Location = repOk_Location r, req_Term = repInc_Expected reply }
-               _    -> error "internal error: Ok expected"
-   reqSub = req {req_Location = repInc_Location reply}
+   reqOk    = case laServerFor a req {req_Answer = Just $ repInc_Expected reply} of
+                 Ok r -> req { req_Location = repOk_Location r
+                             , req_Term     = repInc_Expected reply
+                             , req_Context  = Just (repOK_Context r)
+                             }
+                 _    -> error "internal error: Ok expected"
+   reqSub   = req {req_Location = repInc_Location reply}
    reqToURL = oneliner . ppRequest
    
 make _ _ _ = Text "request error: invalid request"

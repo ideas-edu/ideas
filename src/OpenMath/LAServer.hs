@@ -11,6 +11,7 @@ import Common.Strategy hiding (not)
 import Common.Assignment hiding (Incorrect)
 import Data.Maybe
 import Data.Char
+import Data.List
 
 respond :: Maybe String -> String
 respond = replyInXML . maybe requestError (either parseError laServer . pRequest)
@@ -75,11 +76,11 @@ laServerFor a req =
                      
 subTask :: a -> LabeledStrategy a -> (Location, a)
 subTask term subStrategy = 
-   fromMaybe ([], term) $ firstLocationWith (not . isMinorRule) subStrategy term
+   fromMaybe ([], term) $ firstLocationWith (\_ -> not . isMinorRule) subStrategy term
       
 nextLocation ::IsExpr a => Context a -> Location -> Assignment (Context a) -> (Location, Context a)
 nextLocation term loc a = 
-   case firstLocationWith (not . isMinorRule) (strategy a) term of
+   case firstLocationWith (\p r -> not (loc `isPrefixOf` p) || not (isMinorRule r)) (strategy a) term of
       Just (is, a) -> (rec loc is, a)
       Nothing      -> (loc, term)
  where

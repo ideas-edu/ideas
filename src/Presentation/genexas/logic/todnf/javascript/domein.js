@@ -1,12 +1,3 @@
-// taalspecifieke operators definieren:
-var myLanguage = new Language();
-myLanguage.addOperator(new Operator("<->", 8596, 61, 5, 2));
-myLanguage.addOperator(new Operator("/\\", 8743, 97, 2, 2));
-myLanguage.addOperator(new Operator("||", 8744, 111, 3, 2));
-myLanguage.addOperator(new Operator("->", 8594,  105, 4, 2));
-myLanguage.addOperator(new Operator("~", 172, 45, 4, 1, "Prefix"));
-
-
 // wordt aangeroepen wanneer de gebruiker in het werkveld typt
 function controleer(e) {	// eerst  de character code ophalen	
 	e = getEvent(e);

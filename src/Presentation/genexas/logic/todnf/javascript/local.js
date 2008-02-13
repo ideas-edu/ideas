@@ -14,7 +14,7 @@ function goedgedaan() {
  * De locatie waar de services in de juiste taal staan
   */
 function locatie() {
-	return "http://ideas/exas/proplogic/toDNF/nl/";
+	return "http://ideas/php/proplogic/todnf/";
 	// return "http://ideas.cs.uu.nl/exas/proplogic/naarDNF/nl/";
 }
 

@@ -3,44 +3,37 @@
  * Eerste parameter: het venster dat zichtbaar moet worden.
  * Tweede parameter: het venster dat moet verdwijnen als het oppen stond.
  */
-function menuhelp(verschijn)
+function menuhelp(e)
 {
-	switch (verschijn) {
-    case 'regels':
-        $('help').className='helpgebied onzichtbaar';
-        $('about').className='helpgebied onzichtbaar';
-    case 'help':
-        $('regels').className='helpgebied onzichtbaar';
-        $('about').className='helpgebied onzichtbaar';
-    case 'about':
-        $('help').className='helpgebied onzichtbaar';
-        $('regels').className='helpgebied onzichtbaar';
-    default:
-        ;
-    }	
-    $(verschijn).className='helpgebied zichtbaar';
+	if (!e) var e = window.event;
+	switch (this.id) {
+    case 'regelsButton':
+        (get('help')).className='helpgebied onzichtbaar';
+		(get('about')).className='helpgebied onzichtbaar';
+		(get('regels')).className='helpgebied zichtbaar';
+		break;
+    case 'helpButton':
+        (get('regels')).className='helpgebied onzichtbaar';
+		(get('about')).className='helpgebied onzichtbaar';
+		(get('help')).className='helpgebied zichtbaar';
+		break;
+    case 'aboutButton':
+       (get('help')).className='helpgebied onzichtbaar';
+		(get('regels')).className='helpgebied onzichtbaar';
+		(get('about')).className='helpgebied zichtbaar';
+	}
 }
-
-/* 
- * Wordt aangeroepen wanneer de Sluit-menu-knop wordt ingedrukt
- */
-function sluitmenuhelp(id)
+function sluitmenuhelp(e)
 {
-	$(id).className='onzichtbaar';
-}
-
-/* 
- * Wordt aangeroepen wanneer een werkveldknop wordt ingedrukt
- */
-function help(id)
-{
-	$(id).className='zichtbaar minibutton';
-}
-
-/* 
- * Wordt aangeroepen wanneer een werkveldknop wordt ingedrukt
- */
-function sluithelp(id)
-{
-	$(id).className='onzichtbaar  minibutton';
+	if (!e) var e = window.event;
+	switch (this.id) {
+    case 'sluitmenuregelsButton':
+		(get('regels')).className='helpgebied onzichtbaar';
+		break;
+    case 'sluitmenuhelpButton':
+		(get('help')).className='helpgebied onzichtbaar';
+		break;
+    case 'sluitmenuaboutButton':
+		(get('about')).className='helpgebied onzichtbaar';
+	}
 }

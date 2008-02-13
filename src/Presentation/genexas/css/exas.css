@@ -164,6 +164,8 @@ select {
 	float: right;
 	background-image: url(/genexas/css/background.jpg);
 	position: relative;
+	right: -50px;
+	top: -10px;
 }
 
 .menu {
@@ -184,7 +186,7 @@ select {
 	border-width: 2px;
 	border-color: #999966;
 	padding: 20px;
-	top: 104px;
+	top: 124px;
 	right: 20px;
 	width: 85%;
 	clear: both;

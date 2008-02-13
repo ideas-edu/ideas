@@ -13,4 +13,6 @@ define("WorkArea", "Werkveld: wijzig en submit ");
 define("History", "Afleiding");
 define("Feedback", "Feedback");
 define("Close", "Sluit");
+define("Close1", "Sluit");
+define("Close2", "Sluit");
 ?>

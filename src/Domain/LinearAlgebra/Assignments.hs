@@ -83,7 +83,7 @@ instance Arbitrary a => Arbitrary (Matrix a) where
       arbSizedMatrix (i `mod` 15, j `mod` 15)
    coarbitrary = coarbitrary . rows
 
-instance Arbitrary a => Arbitrary (Context a) where
+instance Arbitrary a => Arbitrary (InContext a) where -- can this be thrown away?
    arbitrary   = liftM inContext arbitrary
    coarbitrary = coarbitrary . fromContext
 

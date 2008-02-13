@@ -16,21 +16,18 @@ import Common.Move
 import Common.Transformation
 import Domain.Logic.Formula
 
-type LogicInContext = Context Logic
+type LogicInContext = InContext Logic
 
 liftLogicRule :: Rule Logic -> Rule LogicInContext
-liftLogicRule = liftRule $ LiftPair getter setter
- where
-   getter c   = select (location c) (noContext c)
-   setter p c = c {fromContext = transformAt (location c) (const p) (fromContext c)}
+liftLogicRule = liftContextRule
 
 noContext :: LogicInContext -> Logic
 noContext = fromContext
 
-instance Uniplate a => Move (Context a) where
-   moveUp c
-      | null (location c) = Nothing
-      | otherwise         = Just $ c {location = init (location c) }
+instance Uniplate a => Move (InContext a) where
+   moveUp (InContext env loc a)
+      | null loc  = Nothing
+      | otherwise = Just (InContext env (init loc) a)
    moveLeft = moveToChild $ \xs -> 
                  case xs of
                     [_, _] -> Just 0
@@ -44,11 +41,11 @@ instance Uniplate a => Move (Context a) where
                     [_] -> Just 0
                     _   -> Nothing
 
-moveToChild :: Uniplate a => ([a] -> Maybe Int) -> Context a -> Maybe (Context a)
-moveToChild f c = do
-   p <- select (location c) (fromContext c)
+moveToChild :: Uniplate a => ([a] -> Maybe Int) -> InContext a -> Maybe (InContext a)
+moveToChild f (InContext env loc a) = do
+   p <- select loc a
    n <- f (children p)
-   return c {location = location c ++ [n]}
+   return (InContext env (loc++[n]) a)
 
 {-
 data Cxt = Top

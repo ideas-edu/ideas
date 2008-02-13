@@ -99,9 +99,9 @@ changeCover f = makeTrans $ \c -> do
    guard (new >= 0 && new <= fst (dimensions (matrix c)))
    return $ set covered new c --  c {get covered = new}
    
-matrixTrans :: (Matrix a -> Maybe (Matrix a)) -> Transformation (MatrixInContext a)
+matrixTrans :: (Matrix a -> Maybe (Matrix a)) -> Transformation (InContext (Matrix a))
 matrixTrans f = makeTrans $ \c -> do
-   new <- f (matrix c)
+   new <- f (fromContext c)
    return (fmap (const new) c)
 
 -- local helper function
@@ -115,7 +115,7 @@ covered, columnJ :: Var Int
 covered = "covered" := 0
 columnJ = "columnJ" := 0
 
-type MatrixInContext a = Context (Matrix a)
+type MatrixInContext a = InContext (Matrix a)
 
 matrix, subMatrix :: MatrixInContext a -> Matrix a
 matrix = fromContext

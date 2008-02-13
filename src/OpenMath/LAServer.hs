@@ -36,7 +36,7 @@ laServer req =
    
 laServerFor :: IsExpr a => Assignment (Context a) -> Request -> Reply
 laServerFor a req = 
-   case (subStrategy (req_Location req) (strategy a), fmap inContext $ fromExpr $ req_Term req) of
+   case (subStrategy (req_Location req) (strategy a), getContextTerm req) of
    
       (Nothing, _) -> 
          replyError "request error" "invalid location for strategy"
@@ -46,7 +46,7 @@ laServerFor a req =
          
       (Just subStrategy, Just requestedTerm) -> 
          
-         case (applyAll subStrategy requestedTerm, maybe Nothing (fmap inContext . fromExpr) $ req_Answer req) of
+         case (applyAll subStrategy requestedTerm, getContextTerm req) of
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             
             (answers, Just answeredTerm)

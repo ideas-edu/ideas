@@ -1,6 +1,6 @@
-module OpenMath.Request (Request(..), pRequest, ppRequest) where
+module OpenMath.Request (Request(..), getContextTerm, pRequest, ppRequest) where
 
-import Common.Context (Location)
+import Common.Context
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.XML
@@ -14,7 +14,7 @@ data Request = Request
    { req_Strategy :: StrategyID 
    , req_Location :: Location
    , req_Term     :: Expr
---   , req_Context  :: Maybe String
+   , req_Context  :: Maybe String
    , req_Answer   :: Maybe Expr
    }
  deriving Show
@@ -24,19 +24,33 @@ data Request = Request
 
 pRequest :: String -> Either String Request
 pRequest input = do
-   xml <- parseXML input
+   xml     <- parseXML input
    isRequest xml
-   sid    <- extractString "strategy" xml
-   loc    <- optional (extractLocation "location" xml)
-   term   <- extractExpr "term" xml
-   answer <- optional (extractExpr "answer" xml)
+   sid     <- extractString "strategy" xml
+   loc     <- optional (extractLocation "location" xml)
+   term    <- extractExpr "term" xml
+   context <- optional (extractString "context" xml)
+   answer  <- optional (extractExpr "answer" xml)
    return $ Request 
       { req_Strategy = sid 
       , req_Location = fromMaybe [] loc
       , req_Term     = term 
+      , req_Context  = context
       , req_Answer   = answer
       }
-   
+
+-- smart extractor
+getContextTerm :: IsExpr a => Request -> Maybe (Context a)
+getContextTerm req = do
+   a <- fromExpr (req_Term req)
+   return (putInContext req a)
+
+putInContext :: Request -> a -> Context a
+putInContext req = fromMaybe inContext $ do
+   s <- req_Context req
+   c <- parseContext s
+   return (flip fmap c . const)
+
 isRequest :: XML -> Either String ()
 isRequest (Tag "request" [] _) = return ()
 isRequest _ = fail "XML document is not a request"
@@ -75,6 +89,9 @@ ppRequest req = showXML $ Tag "request" [] $
    , Tag "location" [] [Text $ show $ req_Location req]
    , Tag "term"     [] [exprToXML $ req_Term req]
    ] ++ 
+   [ Tag "context" [] [Text $ fromJust $ req_Context req ]
+   | isJust (req_Context req)
+   ] ++
    [ Tag "answer" [] [exprToXML $ fromJust $ req_Answer req]
    | isJust (req_Answer req)
    ]

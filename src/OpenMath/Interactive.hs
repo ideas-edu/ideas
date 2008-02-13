@@ -51,10 +51,10 @@ make a req (Incorrect reply) = html
           ]
    , hr
    , para [ bold [Text "Term: "]
-          , preString (maybe "" (prettyPrinter a) $ fmap inContext $ fromExpr $ req_Term req) 
+          , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
           ]
    , para [ bold [Text "Expected: "]
-          , preString (maybe "" (prettyPrinter a) $ fmap inContext $ fromExpr $ repInc_Expected reply) 
+          , preString (maybe "" (prettyPrinter a . inContext) $ fromExpr $ repInc_Expected reply) 
           ]
    ]
  where

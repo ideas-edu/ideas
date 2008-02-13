@@ -53,12 +53,13 @@ laServerFor a req =
                | not (null witnesses) ->
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
-                       , repOk_Location = nextLocation answeredTerm (req_Location req) a
-                       , repOK_Context  = showContext (head witnesses)
+                       , repOk_Location = loc
+                       , repOK_Context  = showContext newContext
                        , repOk_Steps    = stepsRemaining (unlabel $ strategy a) (answeredTerm) -- not precise
                        }
                   where
                     witnesses = filter (equality a answeredTerm) answers
+                    (loc, newContext) = nextLocation answeredTerm (req_Location req) a
                        
             (expected:_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect
@@ -76,8 +77,11 @@ subTask :: a -> LabeledStrategy a -> (Location, a)
 subTask term subStrategy = 
    fromMaybe ([], term) $ firstLocationWith (not . isMinorRule) subStrategy term
       
-nextLocation ::IsExpr a => Context a -> Location -> Assignment (Context a) -> Location
-nextLocation term loc a = maybe loc (rec loc . fst) (firstLocationWith (not . isMinorRule) (strategy a) term)
+nextLocation ::IsExpr a => Context a -> Location -> Assignment (Context a) -> (Location, Context a)
+nextLocation term loc a = 
+   case firstLocationWith (not . isMinorRule) (strategy a) term of
+      Just (is, a) -> (rec loc is, a)
+      Nothing      -> (loc, term)
  where
    rec (i:is) (j:js)
       | i == j    = j : rec is js 

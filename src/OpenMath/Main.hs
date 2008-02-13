@@ -18,16 +18,24 @@ main = do
       _ -> putStrLn $ unlines   
               [ "laservice.cgi (version " ++ versionNr ++ ")"   
               , "   use with --test     [request file] for testing"
+              , "   use with --html     [request file] to output an html file with links for interaction"
               , "   use with --oneliner [request file] to output the request as a 'one-liner'"
               ]
       
 cgiMain :: CGI CGIResult
-cgiMain = do 
-   input <- getInput "input"             -- read matrix xml string 
-   setHeader "Content-type" "text/plain" -- return plain text
-   addr <- remoteAddr -- the IP address of the remote host making the request
-   let answer = respondHTML $ fromMaybe "" input
+cgiMain = do
+   -- get input
+   input <- getInput "input"     -- read matrix xml string
+   mode  <- getInput "html"      -- optional: a mode
+   addr <- remoteAddr            -- the IP address of the remote host making the request
+   
+   -- process input and prepare answer
+   let answer | mode == Just "html" = respondHTML (fromMaybe "" input)
+              | otherwise           = respond input
+   
+   -- log request and produce output
    logMsg $ unlines [addr, fromMaybe "" input, answer]
+   setHeader "Content-type" "text/plain" -- return plain text
    output answer 
 
 logMsg :: String -> CGI ()

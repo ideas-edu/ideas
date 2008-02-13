@@ -18,7 +18,7 @@ type StrategyID = String
 type Location   = [Int]
 
 versionNr :: String
-versionNr = "0.2.0"
+versionNr = "0.2.1"
 
 data ExprAssignment = forall a . IsExpr a => ExprAssignment (Assignment a)
 

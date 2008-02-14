@@ -31,6 +31,7 @@ module Common.Strategy
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
+   , emptyPrefix, continuePrefix, continuePrefixUntil, runPrefix, Prefix(..), prefixToRules
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -353,3 +354,52 @@ firstLocationWith p strategy = safeHead . rec (withIndices strategy)
 -- local helper-function
 combine :: ([Int] -> a -> b) -> [Int] -> RE.Grammar a -> RE.Grammar b
 combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex
+
+-----------------------------------------------------------
+--- Prefixes
+
+newtype Prefix = P [Int] deriving (Show, Eq)
+
+emptyPrefix :: Prefix 
+emptyPrefix = P []
+
+singlePrefix :: Int -> Prefix
+singlePrefix n = P [n]
+
+plusPrefix :: Prefix -> Prefix -> Prefix
+plusPrefix (P xs) (P ys) = P (xs++ys)
+
+-- local helper function
+runPrefix :: Prefix -> LabeledStrategy a -> Maybe ([Rule a], RE.Grammar ([Int], Rule a))
+runPrefix (P xs) = rec [] xs . withIndices
+ where
+   rec rs [] g = return (reverse rs, g)
+   rec rs (n:ns) g = 
+      case drop n (RE.firsts g) of
+         ((_, r), h):_ -> rec (r:rs) ns h
+         _             -> Nothing
+
+-- local helper function
+runGrammarUntil :: ([Int] -> Rule a -> Bool) -> a -> RE.Grammar ([Int], Rule a) -> [(a, Prefix)]
+runGrammarUntil stop a g
+   | RE.acceptsEmpty g = [(a, emptyPrefix)]
+   | otherwise         = concat (zipWith f [0..] (RE.firsts g))
+ where
+   f n ((is, r), h)
+      | stop is r = [ (b, new) | b <- bs ]
+      | otherwise = [ (c, plusPrefix new p) | b <- bs, (c, p) <- runGrammarUntil stop b h ]
+    where
+      bs  = applyAll r a
+      new = singlePrefix n
+
+prefixToRules :: Prefix -> LabeledStrategy a -> Maybe [Rule a]
+prefixToRules p = fmap fst . runPrefix p
+
+continuePrefixUntil :: ([Int] -> Rule a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
+continuePrefixUntil stop p a s = 
+   case runPrefix p s of 
+      Just (_, g) -> [ (b, plusPrefix p q) | (b, q) <- runGrammarUntil stop a g ]
+      _           -> []
+      
+continuePrefix :: Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
+continuePrefix = continuePrefixUntil (\_ _ -> True)

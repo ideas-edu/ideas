@@ -83,7 +83,25 @@ propStratDNF logic =
       case apply toDNF (inContext logic) of
          Just this -> isDNF (noContext this)
          _ -> False
-                
+
+propPrefix :: Logic -> Bool
+propPrefix logic = isDNF $ fromContext $ rec (inContext logic) emptyPrefix
+ where
+   rec c p = case continuePrefixUntil (\_ r -> not $ isMinorRule r) p c toDNF of
+                (d, q):_ | p /= q -> rec d q
+                _ -> c
+
+{-
+(t1, p1):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p0 t0 toDNF
+(t2, p2):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p1 t1 toDNF
+(t3, p3):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p2 t2 toDNF
+(t4, p4):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p3 t3 toDNF
+(t5, p5):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p4 t4 toDNF
+
+--t0 = inContext $ Not (Var "x" :||: Var "y") 
+t0 = inContext $ Var "p" :<->: Var "q" :||: Var "p"
+p0 = emptyPrefix  -}
+    
 -----------------------------------------------------------
 --- QuickCheck generator
 {-

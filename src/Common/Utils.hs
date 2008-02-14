@@ -39,6 +39,11 @@ safeHead :: [a] -> Maybe a
 safeHead (x:_) = return x
 safeHead _     = Nothing
 
+{- safeIndex :: Int -> [a] -> Maybe a
+safeIndex 0 (x:_)  = return x
+safeIndex n (_:xs) = safeIndex (n-1) xs
+safeIndex _ _      = Nothing -}
+
 trim :: String -> String
 trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
 

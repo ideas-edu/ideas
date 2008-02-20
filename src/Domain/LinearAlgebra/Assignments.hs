@@ -8,13 +8,24 @@ import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
+import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.Vector
 import Test.QuickCheck
 import Control.Monad
 import Data.Ratio
+
+solveGramSchmidt :: Assignment (Context [Vector MySqrt])
+solveGramSchmidt = makeAssignment
+   { shortTitle    = "Gram-Schmidt"
+   , ruleset       = rulesGramSchmidt
+   , finalProperty = orthonormalList . filter ((/=0) . norm) . fromContext
+   , strategy      = gramSchmidt
+   , generator     = liftM inContext arbBasis 
+   }
 
 solveSystemAssignment :: Assignment (EqsInContext Rational)
 solveSystemAssignment = makeAssignment
@@ -70,6 +81,20 @@ opgave6b = reduceMatrixAssignment
   
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
+
+instance Arbitrary a => Arbitrary (Vector a) where
+   arbitrary   = liftM fromList arbitrary
+   coarbitrary = coarbitrary . toList
+
+instance Arbitrary MySqrt where
+   arbitrary = oneof $ map (return . fromInteger) [-10 .. 10]
+   coarbitrary = coarbitrary . fromMySqrt
+
+arbBasis :: Gen [Vector MySqrt]
+arbBasis = do
+   j <- oneof $ map return [0..5]
+   i <- oneof $ map return [0..5] -- oneof $ map return [0..j]
+   replicateM i (liftM fromList $ replicateM j arbitrary)
 
 liftRuleLeft :: Rule a -> Rule (Either a b)
 liftRuleLeft = liftRule $ LiftPair (either Just (const Nothing)) (\a _ -> Left a)

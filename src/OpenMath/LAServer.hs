@@ -66,7 +66,7 @@ laServerFor a req =
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
                        , repInc_Location   = req_Location req ++ take 1 subloc
-                       , repInc_Context    = showContext newContext
+                      -- , repInc_Context    = showContext newContext
                        , repInc_Expected   = toExpr (fromContext expected)
                        , repInc_Steps      = stepsRemaining (unlabel $ strategy a) requestedTerm -- not precise
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer

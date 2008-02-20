@@ -39,6 +39,18 @@ safeHead :: [a] -> Maybe a
 safeHead (x:_) = return x
 safeHead _     = Nothing
 
+splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
+splitAtElem c s =
+   case break (==c) s of
+      (xs, _:ys) -> Just (xs, ys) 
+      _          -> Nothing
+
+splitsWithElem :: Eq a => a -> [a] -> [[a]]
+splitsWithElem c s = 
+   case splitAtElem c s of
+      Just (xs, ys) -> xs : splitsWithElem c ys
+      Nothing       -> [s]
+      
 {- safeIndex :: Int -> [a] -> Maybe a
 safeIndex 0 (x:_)  = return x
 safeIndex n (_:xs) = safeIndex (n-1) xs

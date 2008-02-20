@@ -31,7 +31,8 @@ module Common.Strategy
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
-   , emptyPrefix, continuePrefix, continuePrefixUntil, runPrefix, Prefix(..), prefixToRules
+   , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..), prefixToRules, prefixToLocations
+   , prefixToPairs, withMarks, prefixToSteps, Step(..)
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -335,9 +336,28 @@ subStrategyOrRule loc ns =
 withIndices :: LabeledStrategy a -> RE.Grammar ([Int], Rule a)
 withIndices = rec [] 
  where
-   rec is = RE.join . combine f is . unS . unlabel
+   rec is = RE.join . combine f is . unS . tag is . unlabel
    f   is = either (RE.symbol . (,) is) (rec is)
-      
+   begin is = idRule {name="begin " ++ show is}
+   end   is = idRule {name="end " ++ show is}
+   tag is s = begin is <*> s <*> end is
+
+data Step a = Minor (Rule a) | Major (Rule a) | Begin [Int] | End [Int]
+   deriving Show 
+
+withMarks :: LabeledStrategy a -> RE.Grammar (Step a)
+withMarks = rec [] 
+ where
+   rec is = mark is . RE.join . combine f is . unS . unlabel
+   f   is = either (RE.symbol . kind) (rec is)
+   kind r = if isMinorRule r then Minor r else Major r
+   --begin is = idRule {name="begin " ++ show is}
+   --end   is = idRule {name="end " ++ show is}
+   mark is g = 
+      let begin = RE.symbol (Begin is)
+          end   = RE.symbol (End is) 
+      in begin RE.<*> g RE.<*> end
+   
 firstLocation :: a -> LabeledStrategy a -> Maybe StrategyLocation
 firstLocation a ns = safeHead
    [ is | ((is, r), _) <- RE.firsts (withIndices ns), applicable r a ]
@@ -370,36 +390,68 @@ plusPrefix :: Prefix -> Prefix -> Prefix
 plusPrefix (P xs) (P ys) = P (xs++ys)
 
 -- local helper function
-runPrefix :: Prefix -> LabeledStrategy a -> Maybe ([Rule a], RE.Grammar ([Int], Rule a))
-runPrefix (P xs) = rec [] xs . withIndices
+runPrefix :: Prefix -> LabeledStrategy a -> Maybe ([Step a], RE.Grammar (Step a))
+runPrefix (P xs) = rec [] xs . withMarks
  where
-   rec rs [] g = return (reverse rs, g)
-   rec rs (n:ns) g = 
+   rec zs [] g = return (reverse zs, g)
+   rec zs (n:ns) g = 
       case drop n (RE.firsts g) of
-         ((_, r), h):_ -> rec (r:rs) ns h
-         _             -> Nothing
+         (z, h):_ -> rec (z:zs) ns h
+         _        -> Nothing
 
--- local helper function
-runGrammarUntil :: ([Int] -> Rule a -> Bool) -> a -> RE.Grammar ([Int], Rule a) -> [(a, Prefix)]
-runGrammarUntil stop a g
-   | RE.acceptsEmpty g = [(a, emptyPrefix)]
-   | otherwise         = concat (zipWith f [0..] (RE.firsts g))
+runGrammar :: a -> RE.Grammar (Step a) -> [(a, Prefix)]
+runGrammar = rec
  where
-   f n ((is, r), h)
-      | stop is r = [ (b, new) | b <- bs ]
-      | otherwise = [ (c, plusPrefix new p) | b <- bs, (c, p) <- runGrammarUntil stop b h ]
+   rec a g
+      | RE.acceptsEmpty g = [(a, emptyPrefix)]
+      | otherwise         = concat (zipWith f [0..] (RE.firsts g))
     where
-      bs  = applyAll r a
-      new = singlePrefix n
+      add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
+      f n (step, h) =
+         case step of
+            Begin _ -> add n $ rec a h 
+            End _   -> add n $ rec a h
+            Minor r -> [ (c, plusPrefix new p) | b <- applyAll r a, (c, p) <- rec b h ]
+            Major r -> [ (b, new) | b <- applyAll r a ]
+       where
+         new = singlePrefix n
+         
+-- local helper function
+runGrammarUntil :: ([Int] -> Rule a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
+runGrammarUntil stop = rec [] 
+ where
+   rec is a g
+      | RE.acceptsEmpty g = [(a, emptyPrefix)]
+      | otherwise         = concat (zipWith f [0..] (RE.firsts g))
+    where
+      add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
+      f n (step, h) =
+         case step of
+            Begin js -> add n $ rec js a h 
+            End _    -> add n $ rec is a h
+            Minor r  -> forRule n h r
+            Major r  -> forRule n h r
+      forRule n h r
+         | stop is r = [ (b, new) | b <- bs ]
+         | otherwise = [ (c, plusPrefix new p) | b <- bs, (c, p) <- rec is b h ]
+       where
+         bs  = applyAll r a
+         new = singlePrefix n
+
+prefixToSteps :: Prefix -> LabeledStrategy a -> Maybe [Step a]
+prefixToSteps p = fmap fst . runPrefix p
 
 prefixToRules :: Prefix -> LabeledStrategy a -> Maybe [Rule a]
-prefixToRules p = fmap fst . runPrefix p
+prefixToRules p = undefined -- fmap (map snd . fst) . runPrefix p
+
+prefixToLocations:: Prefix -> LabeledStrategy a -> Maybe [[Int]]
+prefixToLocations p = undefined -- fmap (map fst . fst) . runPrefix p
+
+prefixToPairs :: Prefix -> LabeledStrategy a -> Maybe [([Int], Rule a)]
+prefixToPairs p = undefined -- fmap fst . runPrefix p
 
 continuePrefixUntil :: ([Int] -> Rule a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
 continuePrefixUntil stop p a s = 
    case runPrefix p s of 
       Just (_, g) -> [ (b, plusPrefix p q) | (b, q) <- runGrammarUntil stop a g ]
       _           -> []
-      
-continuePrefix :: Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
-continuePrefix = continuePrefixUntil (\_ _ -> True)

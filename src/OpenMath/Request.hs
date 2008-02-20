@@ -1,6 +1,8 @@
-module OpenMath.Request (Request(..), getContextTerm, pRequest, ppRequest) where
+module OpenMath.Request (Request(..), getContextTerm, getPrefix, pRequest, ppRequest) where
 
+import Common.Utils
 import Common.Context
+import Common.Strategy hiding (fail)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.XML
@@ -47,9 +49,18 @@ getContextTerm req = do
 
 putInContext :: Request -> a -> Context a
 putInContext req = fromMaybe inContext $ do
-   s <- req_Context req
-   c <- parseContext s
+   s       <- req_Context req
+   (_, s2) <- splitAtElem ';' s
+   c       <- parseContext s2
    return (flip fmap c . const)
+
+getPrefix :: Request -> Prefix
+getPrefix req = fromMaybe emptyPrefix $ do
+   s       <- req_Context req
+   (s1, _) <- splitAtElem ';' s
+   case reads s1 of
+      [(is, xs)] | all isSpace xs -> return (P is)
+      _ -> Nothing
 
 isRequest :: XML -> Either String ()
 isRequest (Tag "request" [] _) = return ()

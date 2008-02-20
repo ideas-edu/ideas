@@ -61,22 +61,10 @@ showEnv = concat . intersperse "," . map f . M.toList
  
 parseContext :: String -> Maybe (Context ())
 parseContext s = do
-   (loc, env)  <- splitAtChar ';' s
-   pairs       <- mapM (splitAtChar '=') (charSplits ',' env)
+   (loc, env)  <- splitAtElem ';' s
+   pairs       <- mapM (splitAtElem '=') (splitsWithElem ',' env)
    let f (k, v) = (k, (Nothing, v))
    return $ C (read loc) (M.fromList $ map f pairs) ()
-
-splitAtChar :: Char -> String -> Maybe (String, String)
-splitAtChar c s =
-   case break (==c) s of
-      (xs, _:ys) -> Just (xs, ys) 
-      _          -> Nothing
-
-charSplits :: Char -> String -> [String]
-charSplits c s = 
-   case splitAtChar c s of
-      Just (xs, ys) -> xs : charSplits c ys
-      Nothing       -> [s]
 
 ----------------------------------------------------------
 -- Manipulating the variable environment

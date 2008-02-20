@@ -12,12 +12,15 @@ module Domain.LinearAlgebra.Strategies where
 import Prelude hiding (repeat)
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
+import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
+import Domain.LinearAlgebra.Vector
+import Data.Ratio
 
 toReducedEchelon :: Fractional a => LabeledStrategy (MatrixInContext a)
 toReducedEchelon = label "Gaussian elimination" $ 
@@ -67,6 +70,12 @@ generalSolutionSystemWithMatrix :: Fractional a => LabeledStrategy (Either (EqsI
 generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
    conv1 <*> liftRight toReducedEchelon <*> conv2
 
+gramSchmidt :: Floating a => LabeledStrategy (Context [Vector a])
+gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
+       label "Consider next vector"   ruleNext 
+   <*> label "Make vector orthogonal" (repeat ruleOrthogonal) 
+   <*> label "Normalize"              (try ruleNormalize)
+
 conv1 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
 conv1 = translationTo "Linear system to matrix" $
    Just . inContext . systemToMatrix . equations
@@ -90,6 +99,23 @@ translationFrom :: String -> (b -> Maybe a) -> Rule (Either a b)
 translationFrom s f = makeSimpleRule s (either (const Nothing) (fmap Left . f))
 
 -- temp for testing
+-- opgave 9.74
+a1, a2, a3 :: Vector MySqrt
+a1 = fromList [1,1,1,1]
+a2 = fromList [3,3,1,1]
+a3 = fromList [7,9,3,5]
+a1n = toUnit a1
+a2n = toUnit $ makeOrthogonal a1n a2
+a3n = toUnit $ makeOrthogonal a2n $ makeOrthogonal a1n a3
+
+testGS = applyAll gramSchmidt $ inContext [a1 , a2, a3]
+
+q = makeOrthogonal (a1n) a2
+
+gramSchmidt_ :: Floating a => [Vector a] -> [Vector a]
+gramSchmidt_ = foldr op []
+ where op xs yss = toUnit (foldr makeOrthogonal xs yss) : yss
+ 
 test = applyAll generalSolutionSystemWithMatrix (Left $ inContext ex1a)
 
 ex1a :: Equations (LinearExpr Rational)
@@ -104,3 +130,105 @@ x2 = var "x2"
 x3 = var "x3"
 x4 = var "x4"
 x5 = var "x5"
+
+-------------------------------------------------------------
+-- Square roots
+
+-- a/sqrt b = (a/b) * sqrt b
+-- a / (n * sqrt b) = a/(n*b)   * sqrt b
+
+data MySqrt = Con Rational | Sqrt Rational Integer | MySqrt :+: MySqrt deriving Show
+
+instance Num MySqrt where
+   Con 0 + x = x
+   x + Con 0 = x
+   Con a + Con b  = Con (a+b)
+   Sqrt a n + Sqrt b m | n==m = Sqrt (a+b) n
+   -- a + b = a :+: b
+   
+   a + b = error $ show ("(+)", a, b)
+   
+   Con 1 * x = x
+   x * Con 1 = x
+   (a :+: b) * x = a*x :+: b*x
+   x * (a :+: b) = x*a :+: x*b
+   Con a * Con b  = Con (a*b)
+   Con a * Sqrt n b = Sqrt (a*n) b
+   Sqrt n b * Con a = Sqrt (a*n) b
+   Sqrt n a * Sqrt m b = Con (n*m) * sqrt (Con $ fromIntegral (a*b))
+   
+   
+   
+   negate (Con a) = Con (negate a)
+   negate (Sqrt r n) = Sqrt (negate r) n
+   negate (a :+: b)  = negate a :+: negate b
+   fromInteger = fromRational . fromInteger
+   abs    = error "abs"
+   signum = error "signum"
+   
+instance Fractional MySqrt where
+   recip (Con a)    = Con (recip a)
+   recip (Sqrt a n) = Sqrt (recip (fromIntegral n*a)) n
+   recip (a :+: b)  = error "recip on a sum"
+   fromRational     = Con
+
+instance Floating MySqrt where
+   sqrt (Con r)
+      | denominator r == 1 =
+           toSquareRoot (numerator r)
+      | otherwise = 
+           Con (recip $ fromIntegral $ denominator r) * toSquareRoot (numerator r * denominator r)
+   sqrt a = error $ show ("sqrt", a)
+
+instance Eq MySqrt where
+   a == b = fromMySqrt a ~= fromMySqrt b
+    where x ~= y = abs (x-y) < 0.0000001
+
+toSquareRoot :: Integer -> MySqrt 
+toSquareRoot n
+   | n < 0     = negate (toSquareRoot (negate n))
+   | n == 0    = Con 0
+   | n == 1    = Con 1
+   | otherwise = rec 1 1 (factors n)
+ where
+   rec a b [] 
+      | b == 1    = Con a
+      | otherwise = Sqrt a b
+   rec a b [x] = Sqrt a (x*b)
+   rec a b (x:y:zs)
+      | x == y    = rec (fromIntegral x*a) b zs
+      | otherwise = rec a (x*b) (y:zs)
+
+
+-- argument should be > 0
+factors :: Integer -> [Integer]
+factors = smartRec (take 50 primes)
+ where
+   smartRec list n = 
+      case hasSquareRoot n of 
+         Just x  -> [x, x] 
+         Nothing -> rec list n
+ 
+   rec [] n = [n]
+   rec list@(p:ps) n
+      | n == 1         = []
+      | n `mod` p == 0 = p : smartRec list (n `div` p)
+      | 2*p > n        = [n]
+      | otherwise      = rec ps n
+
+hasSquareRoot :: Integer -> Maybe Integer
+hasSquareRoot n
+   | r*r == n  = Just r
+   | otherwise = Nothing
+ where
+   r = round $ sqrt $ fromIntegral n
+   
+primes :: [Integer]
+primes = sieve [2..]
+ where
+   sieve (x:xs) = x : sieve (filter ((/=0) . (`mod` x)) xs)
+
+fromMySqrt :: MySqrt -> Float
+fromMySqrt (Con n)   = fromRational n
+fromMySqrt (Sqrt r m)  = fromRational r * sqrt (fromIntegral m)
+fromMySqrt (a :+: b) = fromMySqrt a + fromMySqrt b

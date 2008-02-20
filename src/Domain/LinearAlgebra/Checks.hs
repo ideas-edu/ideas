@@ -17,7 +17,19 @@ import Common.Utils
 import Data.List
 import Common.Context
 import Common.Assignment
-import Common.Strategy
+import Common.Strategy hiding (not)
+
+
+(t1, p1):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p0 t0 toReducedEchelon
+(t2, p2):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p1 t1 toReducedEchelon
+(t3, p3):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p2 t2 toReducedEchelon
+(t4, p4):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p3 t3 toReducedEchelon
+(t5, p5):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p4 t4 toReducedEchelon
+(t6, p6):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p5 t5 toReducedEchelon
+
+--t0 = inContext $ Not (Var "x" :||: Var "y") 
+t0 = inContext $ makeMatrix [[6,3],[2,4]]
+p0 = emptyPrefix 
 
 -----------------------------------------------------------
 --- QuickCheck properties

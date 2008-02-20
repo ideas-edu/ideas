@@ -26,7 +26,7 @@ requestError :: Reply
 requestError = replyError "request error" "no request found in \"input\""
 
 (~=) :: String -> String -> Bool
-xs ~= ys = let f = map toLower . filter (not . isSpace)
+xs ~= ys = let f = map toLower . filter isAlphaNum
            in f xs == f ys 
 
 laServer :: Request -> Reply

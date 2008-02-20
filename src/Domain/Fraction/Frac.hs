@@ -17,6 +17,8 @@ import Data.Maybe
 import Ratio
 import qualified Data.Set as S
 
+
+
 infixl 7 :*:, :/: 
 infixl 6 :+:, :-:
 

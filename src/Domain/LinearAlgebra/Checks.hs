@@ -20,12 +20,15 @@ import Common.Assignment
 import Common.Strategy hiding (not)
 
 
-(t1, p1):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p0 t0 toReducedEchelon
-(t2, p2):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p1 t1 toReducedEchelon
-(t3, p3):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p2 t2 toReducedEchelon
-(t4, p4):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p3 t3 toReducedEchelon
-(t5, p5):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p4 t4 toReducedEchelon
-(t6, p6):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p5 t5 toReducedEchelon
+stopC (Major _) = True
+stopC _         = False
+
+(t1, p1):_   = continuePrefixUntil stopC p0 t0 toReducedEchelon
+(t2, p2):_   = continuePrefixUntil stopC p1 t1 toReducedEchelon
+(t3, p3):_   = continuePrefixUntil stopC p2 t2 toReducedEchelon
+(t4, p4):_   = continuePrefixUntil stopC p3 t3 toReducedEchelon
+(t5, p5):_   = continuePrefixUntil stopC p4 t4 toReducedEchelon
+(t6, p6):_   = continuePrefixUntil stopC p5 t5 toReducedEchelon
 
 --t0 = inContext $ Not (Var "x" :||: Var "y") 
 t0 = inContext $ makeMatrix [[6,3],[2,4]]

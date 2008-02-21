@@ -32,7 +32,7 @@ module Common.Strategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
    , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..), prefixToRules, prefixToLocations
-   , prefixToPairs, withMarks, prefixToSteps, Step(..)
+   , prefixToPairs, withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -417,26 +417,24 @@ runGrammar = rec
          new = singlePrefix n
          
 -- local helper function
-runGrammarUntil :: ([Int] -> Rule a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
-runGrammarUntil stop = rec [] 
+runGrammarUntil :: (Step a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
+runGrammarUntil stop a g
+   | RE.acceptsEmpty g = [(a, emptyPrefix)]
+   | otherwise         = concat (zipWith f [0..] (RE.firsts g))
  where
-   rec is a g
-      | RE.acceptsEmpty g = [(a, emptyPrefix)]
-      | otherwise         = concat (zipWith f [0..] (RE.firsts g))
+   add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
+   f n (step, h) =
+      case step of
+         Begin js -> add n $ recStop a h 
+         End _    -> add n $ recStop a h
+         Minor r  -> forRule n h r
+         Major r  -> forRule n h r
     where
-      add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
-      f n (step, h) =
-         case step of
-            Begin js -> add n $ rec js a h 
-            End _    -> add n $ rec is a h
-            Minor r  -> forRule n h r
-            Major r  -> forRule n h r
-      forRule n h r
-         | stop is r = [ (b, new) | b <- bs ]
-         | otherwise = [ (c, plusPrefix new p) | b <- bs, (c, p) <- rec is b h ]
-       where
-         bs  = applyAll r a
-         new = singlePrefix n
+      recStop a g
+         | stop step = [(a, emptyPrefix)]
+         | otherwise = runGrammarUntil stop a g
+      forRule n h r  = 
+         [ (c, plusPrefix (singlePrefix n) p) | b <- applyAll r a, (c, p) <- recStop b h ]
 
 prefixToSteps :: Prefix -> LabeledStrategy a -> Maybe [Step a]
 prefixToSteps p = fmap fst . runPrefix p
@@ -450,7 +448,7 @@ prefixToLocations p = undefined -- fmap (map fst . fst) . runPrefix p
 prefixToPairs :: Prefix -> LabeledStrategy a -> Maybe [([Int], Rule a)]
 prefixToPairs p = undefined -- fmap fst . runPrefix p
 
-continuePrefixUntil :: ([Int] -> Rule a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
+continuePrefixUntil :: (Step a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
 continuePrefixUntil stop p a s = 
    case runPrefix p s of 
       Just (_, g) -> [ (b, plusPrefix p q) | (b, q) <- runGrammarUntil stop a g ]

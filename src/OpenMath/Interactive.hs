@@ -22,55 +22,68 @@ xs ~= ys = let f = map toLower . filter (not . isSpace)
            
 makeHTML :: Request -> XML
 makeHTML req = 
-   case [ ea | Entry _ ea@(ExprAssignment a) _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
-      [ExprAssignment a] -> 
-         let noAnswer = req {req_Answer = Nothing}
-         in make a noAnswer $ laServerFor a $ noAnswer
-      _ -> Text "request error: unknown strategy"
-
-make :: IsExpr a => Assignment (Context a) -> Request -> Reply -> XML
-make a req (Incorrect reply) = html
+   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(ExprAssignment a) _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+      [(ExprAssignment a, Incorrect inc)] -> make a noAnswer inc
+      [_] -> Text "request error: invalid request"
+      []  -> Text "request error: unknown strategy"
+      _   -> Text "request error: ambiguous strategy"
+ where
+   noAnswer = req {req_Answer = Nothing}
+               
+make :: IsExpr a => Assignment (Context a) -> Request -> ReplyIncorrect -> XML
+make a req inc = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
-   [ para [ -- href "http://www.ou.nl/" [imgOUNL]
-            bold [Text "How to continue?"]
-          , Text "Submit the "
-          , href (reqToURL reqOk) [Text "correct"]
-          , Text " answer, or zoom in to a " 
-          , href (reqToURL reqSub) [Text "sub-strategy"]
-          , Text "."
-          ]
-   , hr
-   , para [ bold [Text "Strategy: "], Text (req_Strategy req), br
-          , bold [Text "Steps remaining: "], Text (show $ repInc_Steps reply), br
-          , bold [Text "Location: "], Text (show $ req_Location req)
-          -- , list $ map (return . Text) $ catMaybes $
-          --      map (fmap strategyName . flip subStrategy (strategy a)) $ inits $ req_Location req    
-          ]
-   , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ reportLocations $ strategy a 
-          ]
-   , hr
-   , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
-   , hr
-   , para [ bold [Text "Term: "]
+   [ para [ bold [Text "Term: "]
           , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
           ]
    , para [ bold [Text "Expected: "]
-          , preString (maybe "" (prettyPrinter a . inContext) $ fromExpr $ repInc_Expected reply) 
+          , preString (maybe "" (prettyPrinter a . inContext) $ fromExpr $ repInc_Expected inc) 
           ]
+   , para [ Text "Submit the", href (reqToURL reqOk) [Text "expected"], Text "answer and continue" ]
+   , hr
+   , para [ bold [Text "Strategy: "], Text (req_Strategy req), br
+          , bold [Text "Steps remaining: "], Text (show $ repInc_Steps inc), br
+          , bold [Text "Location: "], Text (show $ req_Location req) 
+          ]
+   , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ reportLocations $ strategy a 
+          ]
+   , para [ href (reqToURL reqZoomIn)  [Text "Zoom in"],  Text "to a substrategy or" 
+          , href (reqToURL reqZoomOut) [Text "zoom out"], Text "to the parent strategy" 
+          ]
+   , hr
+   , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
+   , Text "Remove all", href (reqToURL reqNoCtxt) [Text "context information"]
    ]
  where
-   reqOk    = case laServerFor a req {req_Answer = Just $ repInc_Expected reply} of
-                 Ok r -> req { req_Location = repOk_Location r
-                             , req_Term     = repInc_Expected reply
-                             , req_Context  = Just (repOK_Context r)
-                             }
-                 _    -> error "internal error: Ok expected"
-   reqSub   = req { req_Location = repInc_Location reply
-                  }
-   reqToURL = oneliner . ppRequest
-   
-make _ _ _ = Text "request error: invalid request"
+   reqOk      = expected a req inc
+   reqZoomIn  = zoomIn req inc
+   reqZoomOut = zoomOut req
+   reqNoCtxt  = removeContext req
+   reqToURL   = oneliner . ppRequest
+
+----------------------------------------------------------------------------
+-- Actions
+
+expected :: IsExpr a => Assignment (Context a) -> Request -> ReplyIncorrect -> Request
+expected a r inc = 
+   case laServerFor a r {req_Answer = Just $ repInc_Expected inc} of
+      Ok ok -> r { req_Location = repOk_Location ok
+                 , req_Term     = repInc_Expected inc
+                 , req_Context  = Just (repOK_Context ok)
+                 }
+      _ -> r
+
+zoomIn :: Request -> ReplyIncorrect -> Request
+zoomIn r inc = r { req_Location = repInc_Location inc }
+
+zoomOut :: Request -> Request
+zoomOut r = r { req_Location = drop 1 (req_Location r) }
+
+removeContext :: Request -> Request
+removeContext r = r { req_Context = Nothing }
+
+----------------------------------------------------------------------------
 
 showLoc :: StrategyLocation -> (StrategyLocation, String) -> Maybe String
 showLoc here (loc, s) 

@@ -88,10 +88,11 @@ nextTask (i:is) (j:js)
 nextTask _ js = take 1 js
 
 runStrategyUntil :: [Int] -> a -> LabeledStrategy a -> [(a, Prefix)]
-runStrategyUntil loc a s = runGrammarUntil stopC a (withMarks s)
+runStrategyUntil loc a s = runGrammarUntilSt stopC False a (withMarks s)
  where
-   stopC (End is) = is==loc
-   _              = False
+   stopC b (End is)  = (is==loc && b, b)
+   stopC b (Major _) = (False, True)
+   stopC b _         = (False, b)
    
 firstMajorInPrefix :: Prefix -> LabeledStrategy a -> [Int]
 firstMajorInPrefix p s = maybe [] (f [[]]) (prefixToSteps p s)

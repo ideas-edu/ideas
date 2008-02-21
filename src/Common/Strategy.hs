@@ -32,7 +32,7 @@ module Common.Strategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
    , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..), prefixToRules, prefixToLocations
-   , prefixToPairs, withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix
+   , prefixToPairs, withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -418,7 +418,10 @@ runGrammar = rec
          
 -- local helper function
 runGrammarUntil :: (Step a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
-runGrammarUntil stop a g
+runGrammarUntil stop = runGrammarUntilSt (\s step -> (stop step, s)) ()
+
+runGrammarUntilSt :: (s -> Step a -> (Bool, s)) -> s -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
+runGrammarUntilSt stop s a g
    | RE.acceptsEmpty g = [(a, emptyPrefix)]
    | otherwise         = concat (zipWith f [0..] (RE.firsts g))
  where
@@ -431,8 +434,8 @@ runGrammarUntil stop a g
          Major r  -> forRule n h r
     where
       recStop a g
-         | stop step = [(a, emptyPrefix)]
-         | otherwise = runGrammarUntil stop a g
+         | fst (stop s step) = [(a, emptyPrefix)]
+         | otherwise = runGrammarUntilSt stop (snd $ stop s step) a g
       forRule n h r  = 
          [ (c, plusPrefix (singlePrefix n) p) | b <- applyAll r a, (c, p) <- recStop b h ]
 

@@ -31,8 +31,8 @@ module Common.Strategy
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
-   , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..), prefixToRules, prefixToLocations
-   , prefixToPairs, withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt
+   , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..)
+   , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -378,7 +378,10 @@ combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex
 -----------------------------------------------------------
 --- Prefixes
 
-newtype Prefix = P [Int] deriving (Show, Eq)
+newtype Prefix = P [Int] deriving Eq
+
+instance Show Prefix where
+   show (P is) = show is
 
 emptyPrefix :: Prefix 
 emptyPrefix = P []
@@ -441,15 +444,6 @@ runGrammarUntilSt stop s a g
 
 prefixToSteps :: Prefix -> LabeledStrategy a -> Maybe [Step a]
 prefixToSteps p = fmap fst . runPrefix p
-
-prefixToRules :: Prefix -> LabeledStrategy a -> Maybe [Rule a]
-prefixToRules p = undefined -- fmap (map snd . fst) . runPrefix p
-
-prefixToLocations:: Prefix -> LabeledStrategy a -> Maybe [[Int]]
-prefixToLocations p = undefined -- fmap (map fst . fst) . runPrefix p
-
-prefixToPairs :: Prefix -> LabeledStrategy a -> Maybe [([Int], Rule a)]
-prefixToPairs p = undefined -- fmap fst . runPrefix p
 
 continuePrefixUntil :: (Step a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
 continuePrefixUntil stop p a s = 

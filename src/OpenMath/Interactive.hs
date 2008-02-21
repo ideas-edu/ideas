@@ -1,7 +1,8 @@
-module OpenMath.Interactive (respondHTML) where
+module OpenMath.Interactive (respondHTML, oneliner) where
 
 import Common.Context
 import Common.Assignment hiding (Text, Incorrect)
+import Common.Transformation
 import Common.Strategy hiding (not)
 import OpenMath.LAServer
 import OpenMath.StrategyTable
@@ -13,25 +14,25 @@ import Data.Char
 import Data.List
 import Data.Maybe
 
-respondHTML :: String -> String
-respondHTML = either (const "") (showXML . makeHTML) . pRequest
+respondHTML :: String -> String -> String
+respondHTML self = either (const "") (showXML . makeHTML self) . pRequest
 
 (~=) :: String -> String -> Bool
 xs ~= ys = let f = map toLower . filter (not . isSpace)
            in f xs == f ys 
            
-makeHTML :: Request -> XML
-makeHTML req = 
+makeHTML :: String -> Request -> XML
+makeHTML self req = 
    case [ (ea, laServerFor a noAnswer) | Entry _ ea@(ExprAssignment a) _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
-      [(ExprAssignment a, Incorrect inc)] -> make a noAnswer inc
+      [(ExprAssignment a, Incorrect inc)] -> make self a noAnswer inc
       [_] -> Text "request error: invalid request"
       []  -> Text "request error: unknown strategy"
       _   -> Text "request error: ambiguous strategy"
  where
    noAnswer = req {req_Answer = Nothing}
                
-make :: IsExpr a => Assignment (Context a) -> Request -> ReplyIncorrect -> XML
-make a req inc = html
+make :: IsExpr a => String -> Assignment (Context a) -> Request -> ReplyIncorrect -> XML
+make self a req inc = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
    [ para [ bold [Text "Term: "]
@@ -43,7 +44,7 @@ make a req inc = html
    , para [ Text "Submit the", href (reqToURL reqOk) [Text "expected"], Text "answer and continue" ]
    , hr
    , para [ bold [Text "Strategy: "], Text (req_Strategy req), br
-          , bold [Text "Steps remaining: "], Text (show $ repInc_Steps inc), br
+          , bold [Text "Steps remaining: "], Text (show (repInc_Steps inc) ++ " (and " ++ show n ++ " after submitting the expected answer)"), br
           , bold [Text "Location: "], Text (show $ req_Location req) 
           ]
    , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ reportLocations $ strategy a 
@@ -53,26 +54,31 @@ make a req inc = html
           ]
    , hr
    , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
+   , para [ bold [Text "Derivation:"], Text derivation ]
    , Text "Remove all", href (reqToURL reqNoCtxt) [Text "context information"]
    ]
  where
-   reqOk      = expected a req inc
+   (reqOk, n) = expected a req inc
    reqZoomIn  = zoomIn req inc
    reqZoomOut = zoomOut req
    reqNoCtxt  = removeContext req
-   reqToURL   = oneliner . ppRequest
+   reqToURL   = (self++) . oneliner . ppRequest
+   derivation = case prefixToSteps (getPrefix req) (strategy a) of
+                   Just steps -> concat $ intersperse "; " [ name r | Major r <- steps ]
+                   _ -> []
+               
 
 ----------------------------------------------------------------------------
 -- Actions
 
-expected :: IsExpr a => Assignment (Context a) -> Request -> ReplyIncorrect -> Request
+expected :: IsExpr a => Assignment (Context a) -> Request -> ReplyIncorrect -> (Request, Int)
 expected a r inc = 
    case laServerFor a r {req_Answer = Just $ repInc_Expected inc} of
-      Ok ok -> r { req_Location = repOk_Location ok
-                 , req_Term     = repInc_Expected inc
-                 , req_Context  = Just (repOK_Context ok)
-                 }
-      _ -> r
+      Ok ok -> ( r { req_Location = repOk_Location ok
+                   , req_Term     = repInc_Expected inc
+                   , req_Context  = Just (repOk_Context ok)
+                   }, repOk_Steps ok )
+      _ -> (r, 0)
 
 zoomIn :: Request -> ReplyIncorrect -> Request
 zoomIn r inc = r { req_Location = repInc_Location inc }
@@ -96,8 +102,7 @@ showLoc here (loc, s)
    | otherwise = Nothing
 
 oneliner :: String -> String
-oneliner = (url++) . unwords . concatMap words . lines
- where url = "http://ideas.cs.uu.nl/cgi-bin/lasi.cgi?mode=html&input="
+oneliner = unwords . concatMap words . lines
  
 imgOUNL :: XML
 imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []

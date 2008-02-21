@@ -13,8 +13,8 @@ main = do
    case args of 
       [] -> runCGI cgiMain
       ["--test", file]     -> readFile file >>= putStrLn . respond . Just
-      ["--html", file]     -> readFile file >>= putStrLn . respondHTML
-      ["--oneliner", file] -> readFile file >>= putStrLn . oneliner
+      ["--html", file]     -> readFile file >>= putStrLn . respondHTML (defaultURL True)
+      ["--oneliner", file] -> readFile file >>= putStrLn . (defaultURL False++) . oneliner
       _ -> putStrLn $ unlines   
               [ "laservice.cgi (version " ++ versionNr ++ ")"   
               , "   use with --test     [request file] for testing"
@@ -34,7 +34,10 @@ cgiMain = do
       
       Just "html" -> do
          setHeader "Content-type" "text/html" -- return html text
-         output $ respondHTML $ fromMaybe "" input
+         server <- serverName
+         script <- scriptName
+         let self = "http://" ++ server ++ script ++ "?mode=html&input="
+         output $ respondHTML self $ fromMaybe "" input
    
       _ -> do
          let answer = respond input
@@ -44,7 +47,6 @@ cgiMain = do
 
 logMsg :: String -> CGI ()
 logMsg = liftIO . logMessageWith defaultLogConfig {logFile = "laservice.log"}
-
-oneliner :: String -> String
-oneliner = (url++) . unwords . concatMap words . lines
- where url = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?input="
+ 
+defaultURL :: Bool -> String
+defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?" ++ (if b then "mode=html&" else "") ++ "input="

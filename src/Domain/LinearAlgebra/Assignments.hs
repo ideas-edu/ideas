@@ -21,6 +21,7 @@ import Data.Ratio
 solveGramSchmidt :: Assignment (Context [Vector MySqrt])
 solveGramSchmidt = makeAssignment
    { shortTitle    = "Gram-Schmidt"
+   , prettyPrinter = unlines . map show . fromContext
    , ruleset       = rulesGramSchmidt
    , finalProperty = orthonormalList . filter ((/=0) . norm) . fromContext
    , strategy      = gramSchmidt

@@ -19,7 +19,7 @@ import Control.Monad
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.2.6"
+versionNr = "0.2.7"
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines
@@ -49,7 +49,7 @@ strategyTable =
         []
    , entry "8.6" solveGramSchmidt       
         ["gramSchmidt"]
-        []
+        [[fromList [1,1,1,1], fromList [3,3,1,1], fromList [7,9,3,5]]]
    ]
 
 instance IsExpr a => IsExpr (Matrix a) where

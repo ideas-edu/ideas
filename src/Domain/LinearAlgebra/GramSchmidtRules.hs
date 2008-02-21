@@ -34,7 +34,7 @@ ruleOrthogonal = makeRule "Make orthogonal" $ app2 transOrthogonal $
 -- Consider the next vector 
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context [Vector a])
-ruleNext = makeSimpleRule "Consider next vector" $
+ruleNext = minorRule $ makeSimpleRule "Consider next vector" $
    \c -> do guard (get varI c < length (fromContext c))
             return $ change varI (+1) c 
 

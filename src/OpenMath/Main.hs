@@ -2,6 +2,7 @@ module Main (main) where
 
 import OpenMath.LAServer
 import OpenMath.Interactive
+import OpenMath.StrategyTable
 import Network.CGI
 import System.Environment
 import Common.Logging
@@ -47,6 +48,3 @@ cgiMain = do
 
 logMsg :: String -> CGI ()
 logMsg = liftIO . logMessageWith defaultLogConfig {logFile = "laservice.log"}
- 
-defaultURL :: Bool -> String
-defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?" ++ (if b then "mode=html&" else "") ++ "input="

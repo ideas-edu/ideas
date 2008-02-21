@@ -23,7 +23,7 @@ xs ~= ys = let f = map toLower . filter (not . isSpace)
            
 makeHTML :: String -> Request -> XML
 makeHTML self req = 
-   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(ExprAssignment a) _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(ExprAssignment a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
       [(ExprAssignment a, Incorrect inc)] -> make self a noAnswer inc
       [_] -> Text "request error: invalid request"
       []  -> Text "request error: unknown strategy"
@@ -100,9 +100,6 @@ showLoc here (loc, s)
    | not (null loc) && init loc `isPrefixOf` here && init loc /= here =
         Just $ replicate (length loc*2) '.' ++ s
    | otherwise = Nothing
-
-oneliner :: String -> String
-oneliner = unwords . concatMap words . lines
  
 imgOUNL :: XML
 imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []

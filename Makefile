@@ -33,7 +33,7 @@ test:
 	# Executable suffix: $(EXE) 
 	# GHC interpreter: $(GHCI)
 
-all: solvergui doc markup cgi # solver
+all: solvergui doc markup cgi wikipages # solver
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs \
@@ -93,6 +93,12 @@ $(BINDIR)/laservice.cgi: $(BINDIR) $(OUTDIR) $(SOURCES)
 cgi-install: $(BINDIR)/laservice.cgi
 	scp $(BINDIR)/laservice.cgi $(CGIDIR)
 
+wikipages: $(BINDIR)/wikipages$(EXE)
+	bin/wikipages$(EXE) doc
+
+$(BINDIR)/wikipages$(EXE): $(BINDIR) $(OUTDIR) $(DOCDIR) $(SOURCES)
+	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/wikipages src/OpenMath/StrategyToWiki.hs
+	
 web:	
 	scp -r src/Presentation/genexas/* $(WEBDIR)
 

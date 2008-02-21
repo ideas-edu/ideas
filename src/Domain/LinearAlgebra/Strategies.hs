@@ -112,8 +112,8 @@ testGS = applyAll gramSchmidt $ inContext [a1 , a2, a3]
 
 q = makeOrthogonal (a1n) a2
 
-gramSchmidt_ :: Floating a => [Vector a] -> [Vector a]
-gramSchmidt_ = foldr op []
+testGramSchmidt :: Floating a => [Vector a] -> [Vector a]
+testGramSchmidt = foldr op []
  where op xs yss = toUnit (foldr makeOrthogonal xs yss) : yss
  
 test = applyAll generalSolutionSystemWithMatrix (Left $ inContext ex1a)

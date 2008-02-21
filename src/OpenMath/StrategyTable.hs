@@ -21,22 +21,35 @@ type StrategyID = String
 versionNr :: String
 versionNr = "0.2.6"
 
+oneliner :: String -> String
+oneliner = unwords . concatMap words . lines
+
+defaultURL :: Bool -> String
+defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
+
 data ExprAssignment = forall a . IsExpr a => ExprAssignment (Assignment (Context a))
 
 data StrategyEntry = Entry 
    { strategyNr     :: String
    , exprAssignment :: ExprAssignment
    , functions      :: [String]
+   , examples       :: [Expr]
    }
  
-entry :: IsExpr a => String -> Assignment (Context a) -> [String] -> StrategyEntry
-entry nr a fs = Entry nr (ExprAssignment a) fs
+entry :: IsExpr a => String -> Assignment (Context a) -> [String] -> [a] -> StrategyEntry
+entry nr a fs ex = Entry nr (ExprAssignment a) fs (map toExpr ex)
 
 strategyTable :: [StrategyEntry]
 strategyTable =
-   [ entry "2.5" reduceMatrixAssignment ["toReducedEchelon"]
-   , entry "1.7" solveSystemAssignment  ["generalSolutionLinearSystem", "systemToEchelonWithEEO", "backSubstitutionSimple"]
-   , entry "8.6" solveGramSchmidt       ["gramSchmidt"]
+   [ entry "2.5" reduceMatrixAssignment 
+        ["toReducedEchelon"]
+        [makeMatrix [[6, 3], [2, 4]], makeMatrix [[0,1,1,1], [1,2,3,2], [3,1,1,3]]]
+   , entry "1.7" solveSystemAssignment  
+        ["generalSolutionLinearSystem", "systemToEchelonWithEEO", "backSubstitutionSimple"]
+        []
+   , entry "8.6" solveGramSchmidt       
+        ["gramSchmidt"]
+        []
    ]
 
 instance IsExpr a => IsExpr (Matrix a) where

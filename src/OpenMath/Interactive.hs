@@ -78,7 +78,9 @@ zoomIn :: Request -> ReplyIncorrect -> Request
 zoomIn r inc = r { req_Location = repInc_Location inc }
 
 zoomOut :: Request -> Request
-zoomOut r = r { req_Location = drop 1 (req_Location r) }
+zoomOut r = r { req_Location = case req_Location r of
+                                  [] -> []
+                                  xs -> init xs }
 
 removeContext :: Request -> Request
 removeContext r = r { req_Context = Nothing }

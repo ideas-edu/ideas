@@ -27,16 +27,20 @@ cgiMain = do
    -- get input
    input <- getInput "input"     -- read matrix xml string
    mode  <- getInput "mode"      -- optional: a mode
-   addr <- remoteAddr            -- the IP address of the remote host making the request
+   addr  <- remoteAddr           -- the IP address of the remote host making the request
    
-   -- process input and prepare answer
-   let answer | mode == Just "html" = respondHTML (fromMaybe "" input)
-              | otherwise           = respond input
+   -- process input, log request (optional), and produce output
+   case mode of
+      
+      Just "html" -> do
+         setHeader "Content-type" "text/html" -- return html text
+         output $ respondHTML $ fromMaybe "" input
    
-   -- log request and produce output
-   logMsg $ unlines [addr, fromMaybe "" input, answer]
-   setHeader "Content-type" "text/plain" -- return plain text
-   output answer 
+      _ -> do
+         let answer = respond input
+         logMsg $ unlines [addr, fromMaybe "" input, answer]
+         setHeader "Content-type" "text/plain" -- return plain text
+         output answer 
 
 logMsg :: String -> CGI ()
 logMsg = liftIO . logMessageWith defaultLogConfig {logFile = "laservice.log"}

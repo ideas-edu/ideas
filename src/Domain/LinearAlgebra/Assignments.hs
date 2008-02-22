@@ -57,21 +57,21 @@ reduceMatrixAssignment = makeAssignment
    , strategy      = toReducedEchelon
    }
 
-solveSystemWithMatrixAssignment :: Assignment (Either (EqsInContext Rational) (MatrixInContext Rational))
+solveSystemWithMatrixAssignment :: Assignment (Context (Either (LinearSystem Rational) (Matrix Rational)))
 solveSystemWithMatrixAssignment = makeAssignment
    { shortTitle    = "Solve Linear System with Matrix"
    , parser        = \s -> case (parser solveSystemAssignment s, parser reduceMatrixAssignment s) of
-                              (Right ok, _) -> Right (Left ok)
-                              (_, Right ok) -> Right (Right ok)
+                              (Right ok, _) -> Right (fmap Left ok)
+                              (_, Right ok) -> Right (fmap Right ok)
                               (Left (doc1, _), Left (doc2, _)) -> Left (text "Error", Nothing) -- FIX THIS
-   , prettyPrinter = either (unlines . map (show . fmap (fmap ShowRational)) . equations) (ppRationalMatrix . matrix)
-   , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext . matrix
-                                 g = f . either (inContext . systemToMatrix . equations) id
+   , prettyPrinter = either (unlines . map (show . fmap (fmap ShowRational))) ppRationalMatrix . fromContext
+   , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
+                                 g = f . either (fst . systemToMatrix) id . fromContext
                              in g x == g y
-   , ruleset       = map liftRuleLeft equationsRules ++ map liftRuleRight matrixRules
-   , finalProperty = either (inSolvedForm . equations) (const False)
+   , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
+   , finalProperty = either inSolvedForm (const False) . fromContext
    , strategy      = generalSolutionSystemWithMatrix
-   , generator     = liftM Left arbitrary
+   , generator     = liftM (fmap Left) arbitrary
    }
 
 opgave6b :: Assignment (MatrixInContext Rational)
@@ -98,10 +98,16 @@ arbBasis = do
    replicateM i (liftM fromList $ replicateM j arbitrary)
 
 liftRuleLeft :: Rule a -> Rule (Either a b)
-liftRuleLeft = liftRule $ LiftPair (either Just (const Nothing)) (\a _ -> Left a)
+liftRuleLeft = liftRule $ LiftPair isLeft (\a _ -> Left a)
 
 liftRuleRight :: Rule b -> Rule (Either a b)
-liftRuleRight = liftRule $ LiftPair (either (const Nothing) Just) (\b _ -> Right b)
+liftRuleRight = liftRule $ LiftPair isRight (\b _ -> Right b)
+
+liftRuleContextLeft :: Rule (Context a) -> Rule (Context (Either a b))
+liftRuleContextLeft = liftRule $ LiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
+
+liftRuleContextRight :: Rule (Context b) -> Rule (Context (Either a b))
+liftRuleContextRight = liftRule $ LiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
 
 instance Arbitrary a => Arbitrary (Matrix a) where
    arbitrary = do

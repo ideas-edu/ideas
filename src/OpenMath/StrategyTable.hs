@@ -6,7 +6,7 @@ import Common.Assignment
 import Common.Unification
 import Common.Strategy
 import Common.Transformation
-import Domain.LinearAlgebra (reduceMatrixAssignment, solveSystemAssignment, solveGramSchmidt, MySqrt)
+import Domain.LinearAlgebra (reduceMatrixAssignment, solveSystemAssignment, solveGramSchmidt, MySqrt, solveSystemWithMatrixAssignment)
 import qualified Domain.LinearAlgebra as MySqrt
 import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, 
                              EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var)
@@ -19,7 +19,7 @@ import Control.Monad
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.2.7"
+versionNr = "0.2.8"
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines
@@ -44,17 +44,21 @@ strategyTable =
    [ entry "2.5" reduceMatrixAssignment 
         ["toReducedEchelon"]
         [makeMatrix [[6, 3], [2, 4]], makeMatrix [[0,1,1,1], [1,2,3,2], [3,1,1,3]]]
-   , let (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4") in
-     entry "1.7" solveSystemAssignment  
+   , entry "1.7" solveSystemAssignment  
         ["generalSolutionLinearSystem", "systemToEchelonWithEEO", "backSubstitutionSimple"]
-        [ [x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]
-        , [x1 + 2 * x2 + 3 * x3 - x4 LA.:==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 LA.:==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 LA.:==: 0 ]
-        , [ x1 + x2 - 2*x3 LA.:==: 0, 2*x1 + x2 - 3*x3 LA.:==: 0, 4*x1 - 2*x2 - 2*x3 LA.:==: 0, 6*x1 - x2 - 5*x3 LA.:==: 0, 7*x1 - 3*x2 - 4*x3 LA.:==: 1]
-        ]
+        [sys1, sys2, sys3]
+   , entry "2.6" solveSystemWithMatrixAssignment
+        ["generalSolutionSystemWithMatrix"]
+        (map Left [sys1, sys2, sys3])
    , entry "8.6" solveGramSchmidt       
         ["gramSchmidt"]
         [[fromList [1,1,1,1], fromList [3,3,1,1], fromList [7,9,3,5]]]
    ]
+ where
+   (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4")
+   sys1 = [x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]
+   sys2 = [x1 + 2 * x2 + 3 * x3 - x4 LA.:==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 LA.:==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 LA.:==: 0 ]
+   sys3 = [ x1 + x2 - 2*x3 LA.:==: 0, 2*x1 + x2 - 3*x3 LA.:==: 0, 4*x1 - 2*x2 - 2*x3 LA.:==: 0, 6*x1 - x2 - 5*x3 LA.:==: 0, 7*x1 - 3*x2 - 4*x3 LA.:==: 1]
 
 instance IsExpr a => IsExpr (Matrix a) where
    toExpr   = Matrix . map (map toExpr) . rows

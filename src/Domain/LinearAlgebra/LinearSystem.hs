@@ -50,18 +50,25 @@ homogeneous :: Num a => LinearSystem a -> Bool
 homogeneous = all ((== Just 0) . isConstant . getRHS)
 
 -- Conversions
-systemToMatrix :: Num a => LinearSystem a -> Matrix a
-systemToMatrix system = makeMatrix (map (makeRow . toStandardForm) system)
+systemToMatrix :: Num a => LinearSystem a -> (Matrix a, [String])
+systemToMatrix system = (makeMatrix $ map (makeRow . toStandardForm) system, vars)
  where
    vars = getVarsList system
    makeRow (lhs :==: rhs) =
       map (`coefficientOf` lhs) vars ++ [getConstant rhs]
 
 matrixToSystem :: Num a => Matrix a -> LinearSystem a
-matrixToSystem = map makeEquation . rows
+matrixToSystem = matrixToSystemWith variables
+
+matrixToSystemWith :: Num a => [String] -> Matrix a -> LinearSystem a
+matrixToSystemWith vs = map makeEquation . rows
  where
+   varList = vs ++ (variables \\ vs)
+   makeEquation [] = 0 :==: 0
    makeEquation xs = 
-      sum (zipWith (\v a -> toLinearExpr a * var v) variables (init xs)) :==: toLinearExpr (last xs)
-      
+      let lhs = sum (zipWith (\v a -> toLinearExpr a * var v) varList (init xs))  
+          rhs = toLinearExpr (last xs)
+      in lhs :==: rhs
+            
 variables :: [String]
-variables = map (\n -> 'x' : [n]) ['a' .. 'z'] -- should be sorted!!
+variables = map (\n -> 'x' : [n]) $ ['1' .. '9'] ++ ['a' .. 'z'] -- should be sorted!!

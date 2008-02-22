@@ -4,6 +4,7 @@ module OpenMath.ObjectParser
 
 import Control.Monad
 import Data.Char
+import Data.Maybe
 import Data.Ratio
 import OpenMath.XML
 
@@ -36,6 +37,12 @@ instance IsExpr Integer where
    toExpr = Con
    fromExpr (Con n) = Just n
    fromExpr _       = Nothing 
+
+instance (IsExpr a, IsExpr b) => IsExpr (Either a b) where
+   toExpr = either toExpr toExpr
+   fromExpr e = 
+      let f g = fmap g (fromExpr e)
+      in fromMaybe (f Right) (f (Just . Left))
 
 instance IsExpr a => IsExpr [a] where
    toExpr = List . map toExpr

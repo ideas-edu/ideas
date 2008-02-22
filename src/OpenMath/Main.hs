@@ -38,10 +38,11 @@ cgiMain = do
    case mode of
       
       Just "html" -> do
-         setHeader "Content-type" "text/html" -- return html text
          server <- serverName
          script <- scriptName
          let self = "http://" ++ server ++ script ++ "?mode=html&input="
+         logMsg $ addr ++ " (html mode)"
+         setHeader "Content-type" "text/html" -- return html text
          output $ respondHTML self $ fromMaybe "" input
    
       _ -> do

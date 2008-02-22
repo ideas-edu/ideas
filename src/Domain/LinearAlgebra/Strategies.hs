@@ -10,6 +10,7 @@
 module Domain.LinearAlgebra.Strategies where
 
 import Prelude hiding (repeat)
+import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
@@ -66,9 +67,11 @@ generalSolutionLinearSystem = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 
 
-generalSolutionSystemWithMatrix :: Fractional a => LabeledStrategy (Either (EqsInContext a) (MatrixInContext a))
+generalSolutionSystemWithMatrix :: Fractional a => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
 generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
-   conv1 <*> liftRight toReducedEchelon <*> conv2
+       label "Convert linear system to matrix" conv1 
+   <*> liftRight toReducedEchelon 
+   <*> label "Convert matrix to linear system" conv2
 
 gramSchmidt :: Floating a => LabeledStrategy (Context [Vector a])
 gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
@@ -76,27 +79,54 @@ gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
    <*> label "Make vector orthogonal" (repeat ruleOrthogonal) 
    <*> label "Normalize"              (try ruleNormalize)
 
-conv1 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
-conv1 = translationTo "Linear system to matrix" $
-   Just . inContext . systemToMatrix . equations
+vars :: Var [String]
+vars = "variables" := []
 
-conv2 :: Num a => Rule (Either (EqsInContext a) (MatrixInContext a))
-conv2 = translationFrom "Matrix to linear system" $ 
-   Just . inContext . matrixToSystem . matrix
-
-liftLeft :: LabeledStrategy a -> LabeledStrategy (Either a b)
+conv1 :: Num a => Rule (Context (Either (LinearSystem a) (Matrix a)))
+conv1 = translationToContext "Linear system to matrix" $ \c -> 
+   let (m, vs) = systemToMatrix (fromContext c)
+   in return $ set vars vs $ fmap (const m) c
+ 
+conv2 :: Num a => Rule (Context (Either (LinearSystem a) (Matrix a)))
+conv2 = translationFromContext "Matrix to linear system" $ \c -> 
+   let linsys = matrixToSystemWith (get vars c) (fromContext c)
+   in return $ fmap (const linsys) c 
+   
+liftLeft :: LabeledStrategy (Context a) -> LabeledStrategy (Context (Either a b))
 liftLeft = mapLabeledStrategy $ liftRule $
-   LiftPair (either Just (const Nothing)) (\a -> either (const $ Left a) Right)
+   LiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
 
-liftRight :: LabeledStrategy b -> LabeledStrategy (Either a b)
+liftRight :: LabeledStrategy (Context b) -> LabeledStrategy (Context (Either a b))
 liftRight = mapLabeledStrategy $ liftRule $ 
-   LiftPair (either (const Nothing) Just) (\a -> either Left (const $ Right a))
+   LiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
+
+maybeInContext :: Context (Maybe a) -> Maybe (Context a)
+maybeInContext c = fmap (\a -> fmap (const a) c) (fromContext c)
+
+isLeft :: Either a b -> Maybe a
+isLeft = either Just (const Nothing)
+
+isRight :: Either a b -> Maybe b
+isRight = either (const Nothing) Just
 
 translationTo :: String -> (a -> Maybe b) -> Rule (Either a b)
 translationTo s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
 
 translationFrom :: String -> (b -> Maybe a) -> Rule (Either a b)
 translationFrom s f = makeSimpleRule s (either (const Nothing) (fmap Left . f))
+
+translationToContext :: String -> (Context a -> Maybe (Context b)) -> Rule (Context (Either a b))
+translationToContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Right) . f) . maybeInContext . fmap isLeft)
+
+-- earlier version, with a slightly differnt type
+--translationToContext s f = makeSimpleRule s (maybeInContext . fmap (fmap Right . maybe Nothing f . isLeft))
+
+translationFromContext :: String -> (Context b -> Maybe (Context a)) -> Rule (Context (Either a b))
+translationFromContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Left) . f) . maybeInContext . fmap isRight)
+
+--translationFromInContext :: String -> (b -> Maybe a) -> Rule (Context (Either a b))
+--translationFromInContext s f = makeSimpleRule s (maybeInContext . fmap (fmap Left . maybe Nothing f . isRight))
+
 
 -- temp for testing
 -- opgave 9.74
@@ -116,7 +146,7 @@ testGramSchmidt :: Floating a => [Vector a] -> [Vector a]
 testGramSchmidt = foldr op []
  where op xs yss = toUnit (foldr makeOrthogonal xs yss) : yss
  
-test = applyAll generalSolutionSystemWithMatrix (Left $ inContext ex1a)
+test = applyAll generalSolutionSystemWithMatrix (inContext $ Left  ex1a)
 
 ex1a :: Equations (LinearExpr Rational)
 ex1a = 

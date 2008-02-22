@@ -11,8 +11,8 @@
 module Common.Transformation 
    ( Apply(..), applyD, applicable, applyList, applyListAll, applyListD, applyListM, minorRule
    , Rule(..), makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList, (|-), combineRules
-   , Transformation, makeTrans, makeTransList
-   , LiftPair(..), liftRule, idRule, emptyRule, app, app2, app3, inverseRule, buggyRule
+   , Transformation, makeTrans, makeTransList, hasArguments
+   , LiftPair(..), liftTrans, liftRule, idRule, emptyRule, app, app2, app3, inverseRule, buggyRule
    , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional, arguments
    ) where
 
@@ -62,13 +62,13 @@ data Transformation a
    = Function (a -> [a])
    | Unifiable a => Pattern (ForAll (a, a))
    | forall b . Show b => App (a -> Maybe b) (b -> Transformation a)
+   | forall b . Lift (LiftPair b a) (Transformation b)
    
 instance Apply Transformation where
    applyAll (Function f) = f
    applyAll (Pattern  p) = maybe [] return . applyPattern p
-   applyAll (App f g   ) = \a -> case f a of
-                                   Nothing -> []
-                                   Just b  -> applyAll (g b) a
+   applyAll (App f g   ) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
+   applyAll (Lift lp t ) = \b -> maybe [] (map (\new -> setter lp new b) . applyAll t) (getter lp b)
 
 -- | Constructs a transformation based on two terms (a left-hand side and a
 -- | right-hand side). The terms must be unifiable. It is checked that no
@@ -141,11 +141,19 @@ app  f g = App g f
 app2 f g = App g $ uncurry  f
 app3 f g = App g $ uncurry3 f
 
+hasArguments :: Rule a -> Bool
+hasArguments rule =
+   case transformations rule of
+      [App _ _]  -> True
+      [Lift _ t] -> hasArguments rule {transformations = [t]}
+      _          -> False
+
 arguments :: Rule a -> a -> Maybe String
 arguments rule a =
    case transformations rule of
-      [App f g] -> fmap show (f a)
-      _ -> Nothing
+      [App f g]   -> fmap show (f a)
+      [Lift lp t] -> getter lp a >>= arguments (rule {transformations = [t]})
+      _           -> Nothing
 
 -- | Returns the inverse of a rule: only rules that use unifications (i.e., that are constructed
 -- | with (|-)), have a computable inverse.
@@ -183,17 +191,15 @@ instance Apply Rule where
    applyAll r a = concatMap (`applyAll` a) (transformations r)
 
 -----------------------------------------------------------
---- Lifting rules
+--- Lifting transformations and rules
 
 data LiftPair a b = LiftPair { getter :: b -> Maybe a, setter :: a -> b -> b }
 
+liftTrans :: LiftPair a b -> Transformation a -> Transformation b
+liftTrans = Lift
+
 liftRule :: LiftPair a b -> Rule a -> Rule b
-liftRule lp r = r {transformations = [Function f]}
- where
-   f x =
-      case getter lp x of
-         Nothing   -> []
-         Just this -> [ setter lp new x | new  <- applyAll r this ]
+liftRule lp r = r {transformations = map (liftTrans lp) (transformations r)}
 
 -----------------------------------------------------------
 --- QuickCheck generator

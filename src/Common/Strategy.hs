@@ -317,7 +317,7 @@ reportLocations = map f . subStrategies
  where f (loc, e) = (loc, either forStrategy forRule e)
        forStrategy s = strategyName s ++ 
                        if all (either (const True) isMinorRule . snd) (subStrategies s) then " (skipped)" else ""
-       forRule r = name r ++ " (rule)"
+       forRule r = name r ++ if hasArguments r then " (parameterized rule)" else " (rule)"
 
 subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
 subStrategy loc = fmap (either id f) . subStrategyOrRule loc

@@ -48,7 +48,6 @@ targetFileName :: Assignment a -> String
 targetFileName a =
    filter isAlphaNum (shortTitle a) ++ ".txt"
 
-
 makeTitle :: String -> Assignment a -> String
 makeTitle nr a = title $ "Strategy " ++ nr ++ ": " ++ shortTitle a
 
@@ -85,7 +84,7 @@ makeBlocks (x:xs)
 
 makeExamples :: String -> [Expr] -> String
 makeExamples name = unlines . map (f . oneliner . ppRequest . makeRequest name)
- where f s = "* Example [" ++ defaultURL True ++ escapeAngleBrackets s ++ "]"
+ where f s = "* Example [" ++ defaultURL True ++ escapeForWiki s ++ "]"
 
 makeRequest :: String -> Expr -> Request
 makeRequest name term = Request 
@@ -112,8 +111,8 @@ table xs xss = unlines $
    concat (map (("|-":) . map ("| "++)) xss) ++
    ["|}"]
    
-escapeAngleBrackets :: String -> String
-escapeAngleBrackets = concatMap f 
+escapeForWiki :: String -> String
+escapeForWiki = concatMap f 
  where
    f ' ' = "%20" -- dec: 32
    f '"' = "%22" -- dec: 34

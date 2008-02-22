@@ -87,7 +87,9 @@ propStratDNF logic =
 propPrefix :: Logic -> Bool
 propPrefix logic = isDNF $ fromContext $ rec (inContext logic) emptyPrefix
  where
-   rec c p = case continuePrefixUntil (\_ r -> not $ isMinorRule r) p c toDNF of
+   stopC (Major _ _) = True
+   stopC _           = False
+   rec c p = case continuePrefixUntil stopC p c toDNF of
                 (d, q):_ | p /= q -> rec d q
                 _ -> c
 

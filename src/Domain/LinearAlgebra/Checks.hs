@@ -20,8 +20,8 @@ import Common.Assignment
 import Common.Strategy hiding (not)
 
 
-stopC (Major _) = True
-stopC _         = False
+stopC (Major _ _) = True
+stopC _           = False
 
 (t1, p1):_   = continuePrefixUntil stopC p0 t0 toReducedEchelon
 (t2, p2):_   = continuePrefixUntil stopC p1 t1 toReducedEchelon

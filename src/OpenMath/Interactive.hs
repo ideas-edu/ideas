@@ -64,7 +64,7 @@ make self a req inc = html
    reqNoCtxt  = removeContext req
    reqToURL   = (self++) . oneliner . ppRequest
    derivation = case prefixToSteps (getPrefix req) (strategy a) of
-                   Just steps -> concat $ intersperse "; " [ name r | Major r <- steps ]
+                   Just steps -> concat $ intersperse "; " [ name r | Major _ r <- steps ]
                    _ -> []
                
 

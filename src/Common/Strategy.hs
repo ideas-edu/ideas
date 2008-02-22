@@ -314,7 +314,10 @@ subStrategies = rec []
 
 reportLocations :: LabeledStrategy a -> [(StrategyLocation, String)]
 reportLocations = map f . subStrategies
- where f (loc, e) = (loc, either strategyName ((++" (rule)") . name) e)
+ where f (loc, e) = (loc, either forStrategy forRule e)
+       forStrategy s = strategyName s ++ 
+                       if all (either (const True) isMinorRule . snd) (subStrategies s) then " (skipped)" else ""
+       forRule r = name r ++ " (rule)"
 
 subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
 subStrategy loc = fmap (either id f) . subStrategyOrRule loc
@@ -342,17 +345,15 @@ withIndices = rec []
    end   is = idRule {name="end " ++ show is}
    tag is s = begin is <*> s <*> end is
 
-data Step a = Minor (Rule a) | Major (Rule a) | Begin [Int] | End [Int]
+data Step a = Minor [Int] (Rule a) | Major [Int] (Rule a) | Begin [Int] | End [Int]
    deriving Show 
 
 withMarks :: LabeledStrategy a -> RE.Grammar (Step a)
 withMarks = rec [] 
  where
    rec is = mark is . RE.join . combine f is . unS . unlabel
-   f   is = either (RE.symbol . kind) (rec is)
-   kind r = if isMinorRule r then Minor r else Major r
-   --begin is = idRule {name="begin " ++ show is}
-   --end   is = idRule {name="end " ++ show is}
+   f   is = either (RE.symbol . kind is) (rec is)
+   kind is r = if isMinorRule r then Minor is r else Major is r
    mark is g = 
       let begin = RE.symbol (Begin is)
           end   = RE.symbol (End is) 
@@ -412,10 +413,10 @@ runGrammar = rec
       add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
       f n (step, h) =
          case step of
-            Begin _ -> add n $ rec a h 
-            End _   -> add n $ rec a h
-            Minor r -> [ (c, plusPrefix new p) | b <- applyAll r a, (c, p) <- rec b h ]
-            Major r -> [ (b, new) | b <- applyAll r a ]
+            Begin _   -> add n $ rec a h 
+            End _     -> add n $ rec a h
+            Minor _ r -> [ (c, plusPrefix new p) | b <- applyAll r a, (c, p) <- rec b h ]
+            Major _ r -> [ (b, new) | b <- applyAll r a ]
        where
          new = singlePrefix n
          
@@ -431,10 +432,10 @@ runGrammarUntilSt stop s a g
    add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
    f n (step, h) =
       case step of
-         Begin js -> add n $ recStop a h 
-         End _    -> add n $ recStop a h
-         Minor r  -> forRule n h r
-         Major r  -> forRule n h r
+         Begin js  -> add n $ recStop a h 
+         End _     -> add n $ recStop a h
+         Minor _ r -> forRule n h r
+         Major _ r -> forRule n h r
     where
       recStop a g
          | fst (stop s step) = [(a, emptyPrefix)]

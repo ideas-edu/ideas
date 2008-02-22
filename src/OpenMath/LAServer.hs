@@ -90,15 +90,15 @@ stepsRemaining p0@(P xs) a s =
       []       -> 0
       (_, p):_ ->
          case prefixToSteps (plusPrefix p0 p) s of
-            Just steps -> length [ () | Major _ <- drop (length xs) steps ] 
+            Just steps -> length [ () | Major _ _ <- drop (length xs) steps ] 
             _ -> 0
 
 runStrategyUntil :: [Int] -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
 runStrategyUntil loc p a s = runGrammarUntilSt stopC False a $ maybe (withMarks s) snd $ runPrefix p s
  where
-   stopC b (End is)  = (is==loc && b, b)
-   stopC b (Major _) = (False, True)
-   stopC b _         = (False, b)
+   stopC b (End is)    = (is==loc && b, b)
+   stopC b (Major _ _) = (False, True)
+   stopC b _           = (False, b)
    
 firstMajorInPrefix :: Prefix -> Prefix -> LabeledStrategy a -> [Int]
 firstMajorInPrefix p0@(P xs) p s = maybe [] (f 0 [[]]) (prefixToSteps (plusPrefix p0 p) s)
@@ -106,7 +106,7 @@ firstMajorInPrefix p0@(P xs) p s = maybe [] (f 0 [[]]) (prefixToSteps (plusPrefi
    len = length xs
    f i stack@(hd:tl) (step:rest) = 
       case step of
-         Major _  |  i >= len -> hd
+         Major _ _ | i >= len -> hd
          Begin is -> f (i+1) (is:stack) rest
          End _    -> f (i+1) tl rest
          _        -> f (i+1)stack rest
@@ -121,8 +121,8 @@ nextMajorForPrefix p0 a s =
             [] -> []
       Nothing -> []
  where
-   stopC (Major _) = True
-   stopC _         = False
+   stopC (Major _ _) = True
+   stopC _           = False
 
    f (hd:_) [] = hd
    f stack@(hd:tl) (step:rest) = 

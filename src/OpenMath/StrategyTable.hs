@@ -44,10 +44,13 @@ strategyTable =
    [ entry "2.5" reduceMatrixAssignment 
         ["toReducedEchelon"]
         [makeMatrix [[6, 3], [2, 4]], makeMatrix [[0,1,1,1], [1,2,3,2], [3,1,1,3]]]
-   , let (x1, x2, x3) = (var "x1", var "x2", var "x3") in
+   , let (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4") in
      entry "1.7" solveSystemAssignment  
         ["generalSolutionLinearSystem", "systemToEchelonWithEEO", "backSubstitutionSimple"]
-        [[x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]]
+        [ [x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]
+        , [x1 + 2 * x2 + 3 * x3 - x4 LA.:==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 LA.:==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 LA.:==: 0 ]
+        , [ x1 + x2 - 2*x3 LA.:==: 0, 2*x1 + x2 - 3*x3 LA.:==: 0, 4*x1 - 2*x2 - 2*x3 LA.:==: 0, 6*x1 - x2 - 5*x3 LA.:==: 0, 7*x1 - 3*x2 - 4*x3 LA.:==: 1]
+        ]
    , entry "8.6" solveGramSchmidt       
         ["gramSchmidt"]
         [[fromList [1,1,1,1], fromList [3,3,1,1], fromList [7,9,3,5]]]

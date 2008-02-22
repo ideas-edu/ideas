@@ -32,7 +32,7 @@ module Common.Strategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
    , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..)
-   , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt, subStrategyOrRule
+   , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt, subStrategyOrRule, stepsToRules
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -451,3 +451,10 @@ continuePrefixUntil stop p a s =
    case runPrefix p s of 
       Just (_, g) -> [ (b, plusPrefix p q) | (b, q) <- runGrammarUntil stop a g ]
       _           -> []
+      
+stepsToRules :: [Step a] -> [Rule a]
+stepsToRules = concatMap f 
+ where
+   f (Major _ r) = [r]
+   f (Minor _ r) = [r]
+   f _ = []

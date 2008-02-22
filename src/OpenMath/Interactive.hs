@@ -45,6 +45,7 @@ make self a req inc = html
    , hr
    , para [ bold [Text "Strategy: "], Text (req_Strategy req), br
           , bold [Text "Steps remaining: "], Text (show (repInc_Steps inc) ++ " (and " ++ show n ++ " after submitting the expected answer)"), br
+          , bold [Text "Arguments: "], Text (fromMaybe "" $ repInc_Arguments inc), br
           , bold [Text "Location: "], Text (show $ req_Location req) 
           ]
    , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ reportLocations $ strategy a 

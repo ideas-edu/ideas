@@ -60,17 +60,21 @@ laServerFor a req =
                        , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses) (strategy a)
                        }
                   where
-                    witnesses = filter (equality a answeredTerm . fst) answers
-                    newPrefix = getPrefix req `plusPrefix` snd (head witnesses)
+                    witnesses   = filter (equality a answeredTerm . fst) answers
+                    newPrefix   = getPrefix req `plusPrefix` snd (head witnesses)
                        
             ((expected,prefix):_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
-                       , repInc_Location   = subTask (req_Location req) $ firstMajorInPrefix (getPrefix req) prefix (strategy a)
+                       , repInc_Location   = subTask (req_Location req) loc
                        , repInc_Expected   = toExpr (fromContext expected)
+                                             -- only return arguments if we are at a rule
+                       , repInc_Arguments  = if loc==req_Location req then args else Nothing
                        , repInc_Steps      = stepsRemaining (getPrefix req) requestedTerm (strategy a)
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
                        }
+             where
+               (loc, args) = firstMajorInPrefix (getPrefix req) prefix requestedTerm (strategy a)
 
 -- old (current) and actual (next major rule) location
 subTask :: [Int] -> [Int] -> [Int]
@@ -102,15 +106,26 @@ runStrategyUntil loc p a s = runGrammarUntilSt stopC False a $ maybe (withMarks 
    stopC b (Minor is _) = (is==loc, b)
    stopC b _            = (False, b)
    
-firstMajorInPrefix :: Prefix -> Prefix -> LabeledStrategy a -> [Int]
-firstMajorInPrefix p0@(P xs) p s = fromMaybe [] $ do
+firstMajorInPrefix :: Prefix -> Prefix -> a -> LabeledStrategy a -> ([Int], Maybe String)
+firstMajorInPrefix p0@(P xs) p a s = fromMaybe ([], Nothing) $ do
    steps <- prefixToSteps (plusPrefix p0 p) s
-   safeHead [ is | Major is _ <- drop (length xs) steps ]
+   let newSteps = drop (length xs) steps
+   is    <- safeHead [ is | Major is _ <- newSteps ]
+   return (is, argumentsForSteps a newSteps)
+ 
+argumentsForSteps :: a -> [Step a] -> Maybe String
+argumentsForSteps a = safeHead . flip rec a . stepsToRules
+ where
+   rec [] _ = []
+   rec (r:rs) a
+      | isMinorRule r  = concatMap (rec rs) (applyAll r a)
+      | applicable r a = maybe [] return (arguments r a)
+      | otherwise      = []
  
 nextMajorForPrefix :: Prefix -> a -> LabeledStrategy a -> [Int]
-nextMajorForPrefix p0 a s = fromMaybe [] $ do
+nextMajorForPrefix p0@(P xs) a s = fromMaybe [] $ do
    (steps, g) <- runPrefix p0 s
-   (a, p1)    <- safeHead (runGrammarUntil stopC a g)
+   (_, p1)    <- safeHead (runGrammarUntil stopC a g)
    steps      <- prefixToSteps (plusPrefix p0 p1) s
    lastStep   <- safeHead (reverse steps)
    case lastStep of
@@ -119,3 +134,15 @@ nextMajorForPrefix p0 a s = fromMaybe [] $ do
  where
    stopC (Major _ _) = True
    stopC _           = False
+   
+   
+{-
+   case lastStep of
+      Major is r 
+         | hasArguments r ->
+              let rules = init $ drop (length xs) $ stepsToRules steps
+                  term  = applyListD rules a
+              in return (is, arguments r term)
+         | otherwise -> return (is, Nothing)
+      _              -> Nothing
+-}

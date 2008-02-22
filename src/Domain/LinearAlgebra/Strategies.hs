@@ -69,9 +69,7 @@ generalSolutionLinearSystem = label "General solution to a linear system" $
 
 generalSolutionSystemWithMatrix :: Fractional a => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
 generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
-       label "Convert linear system to matrix" conv1 
-   <*> liftRight toReducedEchelon 
-   <*> label "Convert matrix to linear system" conv2
+   conv1 <*> liftRight toReducedEchelon <*> conv2
 
 gramSchmidt :: Floating a => LabeledStrategy (Context [Vector a])
 gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
@@ -163,7 +161,60 @@ x5 = var "x5"
 
 -------------------------------------------------------------
 -- Square roots
+{-
+data FullSqrt = FCon Rational | FSqrt FullSqrt | FRecip FullSqrt | FullSqrt :+ FullSqrt | 
+   FullSqrt :* FullSqrt deriving Show
 
+instance Num FullSqrt where
+   FCon 0 + x = x
+   x + FCon 0 = x
+   FCon a + FCon b = FCon (a+b)
+   (a :+ b) + c = a + (b + c)
+   a + FCon b = FCon b :+ a
+   FCon a + (FCon b :+ c) = FCon (a+b) + c
+   a + b = a :+ b
+   
+   FCon 1 * x = x
+   x * FCon 1 = x
+   FCon a * FCon b = FCon (a*b)
+   (a :* b) * c = a * (b * c)
+   a * (FCon b) = FCon b * a
+   FCon a * (FCon b :* c) = FCon (a*b) * c
+   a * b = a :* b
+   
+   negate (FCon x) = FCon (negate x)
+   negate (FSqrt x) = FCon (-1) * FSqrt x
+   negate (FRecip x) = FRecip (negate x)
+   negate (x :+ y) = negate x :+ negate y
+   negate (x :* y) = negate x :* y
+   
+   fromInteger = FCon . fromInteger
+
+instance Fractional FullSqrt where
+   recip (FCon x) = FCon (recip x)
+   recip (FSqrt x) = (recip x) * FSqrt x
+   recip (FRecip x) = x
+   recip (x :* y) = recip x :* recip y
+   recip x = FRecip x
+   
+   fromRational = FCon
+
+instance Floating FullSqrt where
+   sqrt = FSqrt
+
+instance Eq FullSqrt where
+   x == y = evalSqrt x ~= evalSqrt y
+    where x ~= y = abs (x-y) < 0.0000001
+
+evalSqrt :: FullSqrt -> Float
+evalSqrt x = 
+   case x of
+      FCon r -> fromRational r
+      FSqrt a -> sqrt (evalSqrt a)
+      FRecip a -> recip (evalSqrt a)
+      a :+ b -> evalSqrt a + evalSqrt b
+      a :* b -> evalSqrt a * evalSqrt b -}
+      
 -- a/sqrt b = (a/b) * sqrt b
 -- a / (n * sqrt b) = a/(n*b)   * sqrt b
 

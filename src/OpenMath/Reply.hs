@@ -7,6 +7,7 @@ import Common.Context (Location)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.XML
+import Data.Maybe
 
 ------------------------------------------------------------------------
 -- Data types for replies
@@ -27,6 +28,7 @@ data ReplyIncorrect = ReplyIncorrect
    { repInc_Strategy   :: StrategyID
    , repInc_Location   :: Location
    , repInc_Expected   :: Expr
+   , repInc_Arguments  :: Maybe String
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
    }
@@ -61,11 +63,15 @@ replyOkToXML r = xmlResult "ok" $ xmlList
 
 -- For now, show a matrix with integers
 replyIncorrectToXML :: ReplyIncorrect -> XML
-replyIncorrectToXML r = xmlResult "incorrect" $ xmlList
+replyIncorrectToXML r = xmlResult "incorrect" $ xmlList $
    [ ("strategy",   Text $ repInc_Strategy r)
    , ("location",   Text $ show $ repInc_Location r)
    , ("expected",   exprToXML $ repInc_Expected r)
-   , ("steps",      Text $ show $ repInc_Steps r)
+   ] ++
+   [ ("arguments",  Text $ fromMaybe "" $ repInc_Arguments r) 
+   | isJust (repInc_Arguments r)
+   ] ++
+   [ ("steps",      Text $ show $ repInc_Steps r)
    , ("equivalent", Text $ show $ repInc_Equivalent r)
    ]
 

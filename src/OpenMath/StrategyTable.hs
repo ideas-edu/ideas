@@ -9,7 +9,7 @@ import Common.Transformation
 import Domain.LinearAlgebra (reduceMatrixAssignment, solveSystemAssignment, solveGramSchmidt, MySqrt, solveSystemWithMatrixAssignment)
 import qualified Domain.LinearAlgebra as MySqrt
 import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, 
-                             EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var)
+                             EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var, ShowRational(..))
 import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
 import Domain.LinearAlgebra.Vector (Vector, toList, fromList)
 import qualified Domain.LinearAlgebra.Equation as LA
@@ -19,7 +19,7 @@ import Control.Monad
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.2.8"
+versionNr = "0.2.9"
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines
@@ -125,3 +125,7 @@ instance IsExpr MySqrt where
          _        -> Nothing
     where
       binop op x y = liftM2 op (fromExpr x) (fromExpr y)
+      
+instance IsExpr ShowRational where
+   toExpr (ShowRational r) = toExpr r
+   fromExpr = fmap ShowRational . fromExpr

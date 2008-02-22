@@ -169,7 +169,7 @@ instance Arbitrary SmallInt where
    coarbitrary (SmallInt n) = coarbitrary n
    
 newtype ShowRational = ShowRational Rational
-   deriving (Eq, Num)
+   deriving (Eq, Num, Fractional)
 
 instance Show ShowRational where
    show (ShowRational r) = ppRational r

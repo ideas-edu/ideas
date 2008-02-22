@@ -69,7 +69,7 @@ ruleBackSubstitution = makeRule "Back substitution" $ app3 (\x y z -> liftSystem
             return (i, get covered c, coef)
 
 ruleIdentifyFreeVariables :: Num a => Rule (EqsInContext a)
-ruleIdentifyFreeVariables = makeSimpleRule "Identify free variables" $
+ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $
    \c ->  let vars = [ head ys | ys <- map (S.toList . getVars . getLHS) (equations c), not (null ys) ]
               change eq =
                  let (e1, e2) = splitLinearExpr (`notElem` vars) (getLHS eq) -- constant ends up in e1

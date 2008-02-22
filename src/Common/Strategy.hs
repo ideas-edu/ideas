@@ -32,7 +32,7 @@ module Common.Strategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
    , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..)
-   , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt
+   , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt, subStrategyOrRule
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)

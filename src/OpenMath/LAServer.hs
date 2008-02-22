@@ -9,6 +9,7 @@ import Common.Context
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Assignment hiding (Incorrect, stepsRemaining)
+import Common.Utils
 import Data.Maybe
 import Data.Char
 import Data.List
@@ -37,7 +38,7 @@ laServer req =
    
 laServerFor :: IsExpr a => Assignment (Context a) -> Request -> Reply
 laServerFor a req = 
-   case (subStrategy (req_Location req) (strategy a), getContextTerm req) of
+   case (subStrategyOrRule (req_Location req) (strategy a), getContextTerm req) of
    
       (Nothing, _) -> 
          replyError "request error" "invalid location for strategy"
@@ -96,38 +97,25 @@ stepsRemaining p0@(P xs) a s =
 runStrategyUntil :: [Int] -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
 runStrategyUntil loc p a s = runGrammarUntilSt stopC False a $ maybe (withMarks s) snd $ runPrefix p s
  where
-   stopC b (End is)    = (is==loc && b, b)
-   stopC b (Major _ _) = (False, True)
-   stopC b _           = (False, b)
+   stopC b (End is)     = (is==loc && b, b)
+   stopC b (Major is _) = (is==loc, True)
+   stopC b (Minor is _) = (is==loc, b)
+   stopC b _            = (False, b)
    
 firstMajorInPrefix :: Prefix -> Prefix -> LabeledStrategy a -> [Int]
-firstMajorInPrefix p0@(P xs) p s = maybe [] (f 0 [[]]) (prefixToSteps (plusPrefix p0 p) s)
- where
-   len = length xs
-   f i stack@(hd:tl) (step:rest) = 
-      case step of
-         Major _ _ | i >= len -> hd
-         Begin is -> f (i+1) (is:stack) rest
-         End _    -> f (i+1) tl rest
-         _        -> f (i+1)stack rest
-   f _ _ _ = []
-   
+firstMajorInPrefix p0@(P xs) p s = fromMaybe [] $ do
+   steps <- prefixToSteps (plusPrefix p0 p) s
+   safeHead [ is | Major is _ <- drop (length xs) steps ]
+ 
 nextMajorForPrefix :: Prefix -> a -> LabeledStrategy a -> [Int]
-nextMajorForPrefix p0 a s = 
-   case runPrefix p0 s of 
-      Just (steps, g) -> 
-         case runGrammarUntil stopC a g of
-            (a, p1):_ -> maybe [] (f [[]]) (prefixToSteps (plusPrefix p0 p1) s)
-            [] -> []
-      Nothing -> []
+nextMajorForPrefix p0 a s = fromMaybe [] $ do
+   (steps, g) <- runPrefix p0 s
+   (a, p1)    <- safeHead (runGrammarUntil stopC a g)
+   steps      <- prefixToSteps (plusPrefix p0 p1) s
+   lastStep   <- safeHead (reverse steps)
+   case lastStep of
+      Major is _ -> return is
+      _          -> Nothing
  where
    stopC (Major _ _) = True
    stopC _           = False
-
-   f (hd:_) [] = hd
-   f stack@(hd:tl) (step:rest) = 
-      case step of
-         Begin is -> f (is:stack) rest
-         End _    -> f tl rest
-         _        -> f stack rest
-   f _ _ = []

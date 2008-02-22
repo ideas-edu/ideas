@@ -13,6 +13,7 @@ import Common.Strategy
 import Common.Transformation
 import Common.Interpreter
 import Common.Assignment
+import Common.Context
 import Domain.Logic
 import Domain.LinearAlgebra
 import Domain.LinearAlgebra.Checks (defaultMatrix)
@@ -49,7 +50,7 @@ redEchelonAssignment = Assignment
    , equality      = (==)
    , finalProperty = inRowReducedEchelonForm . matrix
    , ruleset       = matrixRules
-   , generator     = return $ Domain.LinearAlgebra.inContext defaultMatrix
+   , generator     = return $ inContext defaultMatrix
    , strategy      = toReducedEchelon
    , configuration = defaultConfiguration
    }
@@ -58,3 +59,6 @@ runLogic :: IO ()
 runLogic = runInterpreter dnfAssignment
    { prettyPrinter = ppLogicInContext
    }
+   
+instance Uniplate (Matrix a) where
+   uniplate = noUniplate

@@ -19,7 +19,7 @@ import Control.Monad
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.2.9"
+versionNr = "0.2.10"
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines

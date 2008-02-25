@@ -56,6 +56,7 @@ instance (Integral a, IsExpr a) => IsExpr (Ratio a) where
     where (i, j) = (numerator r, denominator r)
    fromExpr expr = 
       case expr of 
+         Negate a -> fmap negate (fromExpr a)
          e1 :/: e2 -> do
             a <- fromExpr e1
             b <- fromExpr e2
@@ -94,7 +95,7 @@ xml2omobj xml =
  where
    rec xml =
       case xml of
-         Tag "OMA" [] xs -> do
+         Tag "OMA" attrs xs -> do
             xs <- mapM rec xs 
             return (OMA xs)
          Tag "OMS" attrs [] -> 
@@ -104,7 +105,7 @@ xml2omobj xml =
                      Just name  -> return (OMS cd name)
                      Nothing -> fail "OMS tag without name attribute" 
                _ -> fail "OMS tag without cd attribute"
-         Tag "OMI" [] [Text s] -> 
+         Tag "OMI" attrs [Text s] -> 
             case reads s of
                [(i, xs)] | all isSpace xs -> return (OMI i)
                _ -> fail "invalid integer in OMI"

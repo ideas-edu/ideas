@@ -1,6 +1,7 @@
 module Domain.LinearAlgebra.EquationsRules where
 
 import Prelude hiding (repeat)
+import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Utils

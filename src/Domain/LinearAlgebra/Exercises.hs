@@ -1,8 +1,9 @@
 {-# OPTIONS -XGeneralizedNewtypeDeriving #-}
-module Domain.LinearAlgebra.Assignments where
+module Domain.LinearAlgebra.Exercises where
 
+import Common.Apply
 import Common.Transformation
-import Common.Assignment
+import Common.Exercise
 import Common.Context
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
@@ -18,8 +19,8 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Ratio
 
-solveGramSchmidt :: Assignment (Context [Vector MySqrt])
-solveGramSchmidt = makeAssignment
+solveGramSchmidt :: Exercise (Context [Vector MySqrt])
+solveGramSchmidt = makeExercise
    { shortTitle    = "Gram-Schmidt"
    , prettyPrinter = unlines . map show . fromContext
    , ruleset       = rulesGramSchmidt
@@ -28,8 +29,8 @@ solveGramSchmidt = makeAssignment
    , generator     = liftM inContext arbBasis 
    }
 
-solveSystemAssignment :: Assignment (EqsInContext Rational)
-solveSystemAssignment = makeAssignment
+solveSystemExercise :: Exercise (EqsInContext Rational)
+solveSystemExercise = makeExercise
    { shortTitle    = "Solve Linear System"
    , parser        = either (\(x,y) -> Left (x, fmap inContext y)) (Right . inContext) . parseSystem
    , prettyPrinter = unlines . map (show . fmap (fmap ShowRational)) . equations
@@ -41,8 +42,8 @@ solveSystemAssignment = makeAssignment
    , strategy      = generalSolutionLinearSystem
    }
    
-reduceMatrixAssignment :: Assignment (MatrixInContext Rational)
-reduceMatrixAssignment = makeAssignment
+reduceMatrixExercise :: Exercise (MatrixInContext Rational)
+reduceMatrixExercise = makeExercise
    { shortTitle    = "Gaussian Elimination"
    , parser        = parseMatrix
    , prettyPrinter = ppRationalMatrix . matrix
@@ -57,10 +58,10 @@ reduceMatrixAssignment = makeAssignment
    , strategy      = toReducedEchelon
    }
 
-solveSystemWithMatrixAssignment :: Assignment (Context (Either (LinearSystem Rational) (Matrix Rational)))
-solveSystemWithMatrixAssignment = makeAssignment
+solveSystemWithMatrixExercise :: Exercise (Context (Either (LinearSystem Rational) (Matrix Rational)))
+solveSystemWithMatrixExercise = makeExercise
    { shortTitle    = "Solve Linear System with Matrix"
-   , parser        = \s -> case (parser solveSystemAssignment s, parser reduceMatrixAssignment s) of
+   , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right (fmap Left ok)
                               (_, Right ok) -> Right (fmap Right ok)
                               (Left (doc1, _), Left (doc2, _)) -> Left (text "Error", Nothing) -- FIX THIS
@@ -74,8 +75,8 @@ solveSystemWithMatrixAssignment = makeAssignment
    , generator     = liftM (fmap Left) arbitrary
    }
 
-opgave6b :: Assignment (MatrixInContext Rational)
-opgave6b = reduceMatrixAssignment
+opgave6b :: Exercise (MatrixInContext Rational)
+opgave6b = reduceMatrixExercise
    { shortTitle = "Opgave 9.6 (b)"
    , generator  = return $ inContext $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
    }

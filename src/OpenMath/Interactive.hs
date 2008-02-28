@@ -1,7 +1,7 @@
 module OpenMath.Interactive (respondHTML, oneliner) where
 
 import Common.Context
-import Common.Assignment hiding (Text, Incorrect)
+import Common.Exercise hiding (Pack, Text, Incorrect)
 import Common.Transformation
 import Common.Strategy hiding (not)
 import OpenMath.LAServer
@@ -23,15 +23,15 @@ xs ~= ys = let f = map toLower . filter (not . isSpace)
            
 makeHTML :: String -> Request -> XML
 makeHTML self req = 
-   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(ExprAssignment a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
-      [(ExprAssignment a, Incorrect inc)] -> make self a noAnswer inc
+   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Unpack a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+      [(Unpack a, Incorrect inc)] -> make self a noAnswer inc
       [_] -> Text "request error: invalid request"
       []  -> Text "request error: unknown strategy"
       _   -> Text "request error: ambiguous strategy"
  where
    noAnswer = req {req_Answer = Nothing}
                
-make :: IsExpr a => String -> Assignment (Context a) -> Request -> ReplyIncorrect -> XML
+make :: IsExpr a => String -> Exercise (Context a) -> Request -> ReplyIncorrect -> XML
 make self a req inc = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
@@ -72,7 +72,7 @@ make self a req inc = html
 ----------------------------------------------------------------------------
 -- Actions
 
-expected :: IsExpr a => Assignment (Context a) -> Request -> ReplyIncorrect -> (Request, Int)
+expected :: IsExpr a => Exercise (Context a) -> Request -> ReplyIncorrect -> (Request, Int)
 expected a r inc = 
    case laServerFor a r {req_Answer = Just $ repInc_Expected inc} of
       Ok ok -> ( r { req_Location = repOk_Location ok

@@ -6,7 +6,7 @@ module Domain.LinearAlgebra
    , module Domain.LinearAlgebra.Strategies
    , module Domain.LinearAlgebra.Equation
    , module Domain.LinearAlgebra.LinearSystem
-   , module Domain.LinearAlgebra.Assignments
+   , module Domain.LinearAlgebra.Exercises
    , module Domain.LinearAlgebra.LinearExpr
    ) where
    
@@ -17,5 +17,5 @@ import Domain.LinearAlgebra.EquationsRules hiding (changeCover)
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.Assignments
+import Domain.LinearAlgebra.Exercises
 import Domain.LinearAlgebra.LinearExpr

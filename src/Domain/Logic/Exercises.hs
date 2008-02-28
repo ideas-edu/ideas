@@ -1,4 +1,4 @@
-module Domain.Logic.Assignments where
+module Domain.Logic.Exercises where
 
 import Domain.Logic.Zipper
 import Domain.Logic.Generator
@@ -7,7 +7,7 @@ import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
 
-import Common.Assignment
+import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Context
 import Control.Monad
@@ -19,8 +19,8 @@ import Control.Monad
 * max. ?? stappen
 -}
 
-dnfAssignment :: Assignment LogicInContext
-dnfAssignment = Assignment
+dnfExercise :: Exercise LogicInContext
+dnfExercise = Exercise
    { shortTitle    = "Proposition to DNF" 
    , parser        = \s -> case parseLogicPars s of
                               (p, [])   -> Right (inContext p)

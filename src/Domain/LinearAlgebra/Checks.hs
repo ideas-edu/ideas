@@ -15,8 +15,9 @@ import Control.Monad
 import Common.Transformation
 import Common.Utils
 import Data.List
+import Common.Apply
 import Common.Context
-import Common.Assignment
+import Common.Exercise
 import Common.Strategy hiding (not)
 
 

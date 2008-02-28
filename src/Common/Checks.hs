@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
-import Common.Assignment
+import Common.Exercise
 import Common.Grammar
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Checks as Logic
@@ -31,9 +31,9 @@ main = do
    Frac.checks
    putStrLn "\n...checking relation algebra domain"
    RA.checks
-   putStrLn "\n...checking assignments"
-   checkAssignment Logic.dnfAssignment
-   checkAssignment LA.reduceMatrixAssignment
-   checkAssignment LA.solveSystemAssignment
-   checkAssignment LA.solveSystemWithMatrixAssignment
-   checkAssignment RA.cnfAssignment
+   putStrLn "\n...checking exercises"
+   checkExercise Logic.dnfExercise
+   checkExercise LA.reduceMatrixExercise
+   checkExercise LA.solveSystemExercise
+   checkExercise LA.solveSystemWithMatrixExercise
+   checkExercise RA.cnfExercise

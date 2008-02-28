@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Common.Assignment
+import Common.Exercise
 import Common.Strategy (reportLocations)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
@@ -23,7 +23,7 @@ make target =
    mapM_ (makeWikiFile $ fromMaybe "." target) strategyTable
 
 makeWikiFile :: String -> StrategyEntry -> IO ()
-makeWikiFile target (Entry nr (ExprAssignment a) xs examples) = do
+makeWikiFile target (Entry nr (Unpack a) xs examples) = do
    code <- insertCode a xs
    let filename = target ++ "/" ++ targetFileName a
    putStrLn $ "Writing to " ++ show filename
@@ -44,20 +44,20 @@ backRefText   = "Back to the [[FeedbackService|main page]]."
 visitRepoText = "Visit the repository [http://ideas.cs.uu.nl/trac/browser/Feedback/trunk] for the full code base."
 generatedText = "The locations have been generated automatically from the strategy code."
 
-targetFileName :: Assignment a -> String
+targetFileName :: Exercise a -> String
 targetFileName a =
    filter isAlphaNum (shortTitle a) ++ ".txt"
 
-makeTitle :: String -> Assignment a -> String
+makeTitle :: String -> Exercise a -> String
 makeTitle nr a = title $ "Strategy " ++ nr ++ ": " ++ shortTitle a
 
-makeLocationTable :: Assignment a -> String
+makeLocationTable :: Exercise a -> String
 makeLocationTable a = table ["Location", "Label or rule"] (map f $ reportLocations $ strategy a)
  where f (loc, s) = [show loc, s]
  
 strategyFileName = "src/Domain/LinearAlgebra/Strategies.hs"
 
-insertCode :: Assignment a -> [String] -> IO String
+insertCode :: Exercise a -> [String] -> IO String
 insertCode a xs = do
    program <- readFile strategyFileName
    let functions = map snd (reportLocations (strategy a)) ++ xs

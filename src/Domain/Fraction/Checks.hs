@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction.Checks (checks) where
 
-import Common.Assignment
+import Common.Exercise
 import Common.Strategy
 import Common.Transformation
 import Common.Utils

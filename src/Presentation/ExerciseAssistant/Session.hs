@@ -1,11 +1,11 @@
 {-# OPTIONS -fglasgow-exts #-}
 module Session 
-   ( PackedAssignment(..), Assignment(..)
-   , Session, makeSession, newTerm, newAssignment, progressPair, undo, submitText
+   ( PackedExercise(..), Exercise(..)
+   , Session, makeSession, newTerm, newExercise, progressPair, undo, submitText
    , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
    ) where
 
-import Common.Assignment
+import Common.Exercise
 import Common.Logging
 import Common.Transformation
 import Data.IORef
@@ -17,23 +17,23 @@ import System.Time
 
 data Session = Session String (IORef SessionState)
 
-data SessionState = forall a . St (Assignment a) (Derivation a)
+data SessionState = forall a . St (Exercise a) (Derivation a)
 
-withState :: (forall a . Assignment a -> Derivation a -> IO b) -> Session -> IO b
+withState :: (forall a . Exercise a -> Derivation a -> IO b) -> Session -> IO b
 withState f (Session _ ref) = do
    St a d <- readIORef ref
    f a d
 
-makeSession :: PackedAssignment -> IO Session
+makeSession :: PackedExercise -> IO Session
 makeSession pa = do
    logMessage "New session: "
    ref   <- newIORef (error "reference not initialized")
    let session = Session "" ref
-   newAssignment pa session
+   newExercise pa session
    return session
 
-newAssignment :: PackedAssignment -> Session -> IO ()
-newAssignment (Pack a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
+newExercise :: PackedExercise -> Session -> IO ()
+newExercise (Pack a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
    \(Session _ ref) -> do
       term <- randomTerm a
       writeIORef ref $ St a (Start term)
@@ -41,7 +41,7 @@ newAssignment (Pack a) = logCurrent ("New (" ++ shortTitle a ++ ")") $
 newTerm :: Session -> IO ()
 newTerm session@(Session _ ref) = do
    St a _ <- readIORef ref
-   newAssignment (Pack a) session
+   newExercise (Pack a) session
         
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->

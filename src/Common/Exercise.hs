@@ -1,6 +1,7 @@
 {-# OPTIONS -fglasgow-exts #-}
-module Common.Assignment where
+module Common.Exercise where
 
+import Common.Apply
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
@@ -8,9 +9,9 @@ import Common.Unification
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 
-data PackedAssignment = forall a . Pack { unpack :: Assignment a }
+data PackedExercise = forall a . Pack { unpack :: Exercise a }
 
-data Assignment a = Assignment
+data Exercise a = Exercise
    { shortTitle    :: String
    , parser        :: String -> Either (Doc a, Maybe a) a
    , prettyPrinter :: a -> String
@@ -25,8 +26,8 @@ data Assignment a = Assignment
    }
 
 -- default values for all fields
-makeAssignment :: (Arbitrary a, Eq a, Show a) => Assignment a
-makeAssignment = Assignment
+makeExercise :: (Arbitrary a, Eq a, Show a) => Exercise a
+makeExercise = Exercise
    { shortTitle    = "no short title"
    , parser        = const $ Left (text "no parser", Nothing)
    , prettyPrinter = show
@@ -51,13 +52,13 @@ defaultConfiguration = Configuration
    { language = English
    }
    
-randomTerm :: Assignment a -> IO a
+randomTerm :: Exercise a -> IO a
 randomTerm a = do 
    stdgen <- newStdGen
    return (randomTermWith stdgen a)
 
 -- | Default size is 100
-randomTermWith :: StdGen -> Assignment a -> a
+randomTermWith :: StdGen -> Exercise a -> a
 randomTermWith stdgen a
    | not (suitableTerm a term) =
         randomTermWith (snd $ next stdgen) a
@@ -67,21 +68,21 @@ randomTermWith stdgen a
    term = generate 100 stdgen (generator a)
 
 -- | Returns a text and the rule that is applicable
-giveHint :: Assignment a -> [a] -> Maybe (Doc a, Rule a)
+giveHint :: Exercise a -> [a] -> Maybe (Doc a, Rule a)
 giveHint x = safeHead . giveHints x
 
 -- | Returns a text and the rule that is applicable
-giveHints :: Assignment a -> [a] -> [(Doc a, Rule a)]
+giveHints :: Exercise a -> [a] -> [(Doc a, Rule a)]
 giveHints x = map g . giveSteps x
  where
    g (x, y, _, _) = (x, y)
    
 -- | Returns a text, a sub-expression that can be rewritten, and the result
 -- | of the rewriting
-giveStep :: Assignment a -> [a] -> Maybe (Doc a, Rule a, a, a)
+giveStep :: Exercise a -> [a] -> Maybe (Doc a, Rule a, a, a)
 giveStep x = safeHead . giveSteps x
 
-giveSteps :: Assignment a -> [a] -> [(Doc a, Rule a, a, a)]
+giveSteps :: Exercise a -> [a] -> [(Doc a, Rule a, a, a)]
 giveSteps x as = map g $ nextRulesForSequenceWith (equality x) (not . isMinorRule) (unlabel $ strategy x) as
  where
    g (rs, new) = 
@@ -93,9 +94,9 @@ giveSteps x as = map g $ nextRulesForSequenceWith (equality x) (not . isMinorRul
                    Nothing   -> emptyDoc
       in (doc, r, old, new)
 
--- | The strategy in the assignment should reflect the current position in the 
+-- | The strategy in the exercise should reflect the current position in the 
 -- | strategy, which might not be the original (complete) strategy.
-feedback :: Assignment a -> [a] -> String -> Feedback a
+feedback :: Exercise a -> [a] -> String -> Feedback a
 feedback x as txt =
    case parser x txt of
       Left (msg, suggestion) -> 
@@ -118,7 +119,7 @@ stepsRemaining s a =
       (rs, _):_ -> length (filter (not . isMinorRule) rs)
       _         -> 0
 
-stepsRemainingA :: Assignment a -> [a] -> Int
+stepsRemainingA :: Exercise a -> [a] -> Int
 stepsRemainingA a as =
    stepsRemaining (remainingStrategy (equality a) (not . isMinorRule) (unlabel $ strategy a) as) (last as)
 
@@ -126,7 +127,7 @@ data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)
                 | Correct     (Doc a) (Maybe (Rule a)) {- The rule that was applied -}
 
-getRuleNames :: Assignment a -> [String]
+getRuleNames :: Exercise a -> [String]
 getRuleNames = map name . ruleset
 
 ---------------------------------------------------------------
@@ -142,7 +143,7 @@ instance Show a => Show (Doc a) where
 emptyDoc :: Doc a
 emptyDoc = D []
 
-showDoc :: Assignment a -> Doc a -> String
+showDoc :: Exercise a -> Doc a -> String
 showDoc = showDocWith . prettyPrinter
 
 showDocWith :: (a -> String) -> Doc a -> String
@@ -170,22 +171,22 @@ rule :: Rule a -> Doc a
 rule r = D [DocRule r]
 
 ---------------------------------------------------------------
--- Checks for an assignment
+-- Checks for an exercise
 
 -- | An instance of the Arbitrary type class is required because the random
--- | term generator that is part of an Assignment is not used for the checks:
+-- | term generator that is part of an Exercise is not used for the checks:
 -- | the terms produced by this generator will typically be biased.
 
 
-checkAssignment :: (Arbitrary a, Show a) => Assignment a -> IO ()
-checkAssignment = checkAssignmentWith checkRule
+checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
+checkExercise = checkExerciseWith checkRule
 
-checkAssignmentSmart :: (Arbitrary a, Show a, Substitutable a) => Assignment a -> IO ()
-checkAssignmentSmart = checkAssignmentWith checkRuleSmart
+checkExerciseSmart :: (Arbitrary a, Show a, Substitutable a) => Exercise a -> IO ()
+checkExerciseSmart = checkExerciseWith checkRuleSmart
 
-checkAssignmentWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule a -> IO b) -> Assignment a -> IO ()
-checkAssignmentWith f a = do
-   putStrLn ("Checking assignment: " ++ shortTitle a)
+checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule a -> IO b) -> Exercise a -> IO ()
+checkExerciseWith f a = do
+   putStrLn ("Checking exercise: " ++ shortTitle a)
    let check txt p = putStr ("- " ++ txt ++ "\n    ") >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)

@@ -37,6 +37,7 @@ module Common.Strategy
 
 import Prelude hiding (fail, not, repeat, sequence)
 import qualified Prelude as Prelude
+import Common.Apply
 import Common.Transformation
 import Common.Move
 import Common.Utils

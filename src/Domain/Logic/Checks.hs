@@ -10,7 +10,8 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Checks (checks) where
 
-import Common.Assignment
+import Common.Apply
+import Common.Exercise
 import Common.Context
 import Common.Strategy hiding (not)
 import Common.Transformation

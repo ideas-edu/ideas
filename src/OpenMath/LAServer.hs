@@ -5,10 +5,11 @@ import OpenMath.StrategyTable
 import OpenMath.Request
 import OpenMath.Reply
 import OpenMath.ObjectParser
+import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Strategy hiding (not)
-import Common.Assignment hiding (Incorrect, stepsRemaining)
+import Common.Exercise hiding (Pack, Incorrect, stepsRemaining)
 import Common.Utils
 import Data.Maybe
 import Data.Char
@@ -32,11 +33,11 @@ xs ~= ys = let f = map toLower . filter isAlphaNum
 
 laServer :: Request -> Reply
 laServer req = 
-   case [ ea | Entry _ ea@(ExprAssignment a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
-      [ExprAssignment a] -> laServerFor a req
+   case [ ea | Entry _ ea@(Unpack a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+      [Unpack a] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    
-laServerFor :: IsExpr a => Assignment (Context a) -> Request -> Reply
+laServerFor :: IsExpr a => Exercise (Context a) -> Request -> Reply
 laServerFor a req = 
    case (subStrategyOrRule (req_Location req) (strategy a), getContextTerm req) of
    

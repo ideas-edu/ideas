@@ -18,6 +18,7 @@ import Domain.LinearAlgebra.LinearSystem
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
+import Common.Apply
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.Vector

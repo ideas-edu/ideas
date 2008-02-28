@@ -22,7 +22,7 @@ import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.MatrixRules -- for context
 import Common.Context
 import Common.Utils
-import Common.Assignment
+import Common.Exercise
 import Data.List
 import Data.Char
 import GHC.Real

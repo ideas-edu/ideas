@@ -14,7 +14,7 @@ module Domain.Logic
    , module Domain.Logic.Parser
    , module Domain.Logic.Strategies
    , module Domain.Logic.Rules
-   , module Domain.Logic.Assignments
+   , module Domain.Logic.Exercises
    ) where
    
 import Domain.Logic.Formula
@@ -23,5 +23,5 @@ import Domain.Logic.Zipper
 import Domain.Logic.Parser
 import Domain.Logic.Strategies
 import Domain.Logic.Rules
-import Domain.Logic.Assignments
+import Domain.Logic.Exercises
 

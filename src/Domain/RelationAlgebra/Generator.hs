@@ -2,6 +2,7 @@ module Domain.RelationAlgebra.Generator where
 
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Rules -- only for checks
+import Common.Apply
 import Common.Transformation
 import Control.Monad
 import Test.QuickCheck 

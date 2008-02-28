@@ -22,10 +22,10 @@ import Domain.Fraction
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.RelationAlgebra as RA
 
-domains :: [PackedAssignment]
-domains = [ Pack dnfAssignment, Pack LA.reduceMatrixAssignment, Pack LA.opgave6b
-          , Pack LA.solveSystemAssignment, Pack LA.solveSystemWithMatrixAssignment, Pack simplAssignment
-          , Pack RA.cnfAssignment
+domains :: [PackedExercise]
+domains = [ Pack dnfExercise, Pack LA.reduceMatrixExercise, Pack LA.opgave6b
+          , Pack LA.solveSystemExercise, Pack LA.solveSystemWithMatrixExercise, Pack simplExercise
+          , Pack RA.cnfExercise
           ]
 
 main :: IO ()
@@ -66,7 +66,7 @@ main =
         entryBuffer      <- textViewGetBuffer entryView 
         feedbackBuffer   <- textViewGetBuffer feedbackView 
 
-        -- initialize assignment
+        -- initialize exercise
         session <- makeSession (head domains)
         
         let fillRuleBox = do
@@ -99,7 +99,7 @@ main =
 
         onChanged domainBox $ do
            index <- comboBoxGetActive domainBox
-           newAssignment (domains !! fromMaybe 0 index) session
+           newExercise (domains !! fromMaybe 0 index) session
            fillRuleBox
            updateAll
 

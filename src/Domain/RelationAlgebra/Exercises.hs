@@ -1,4 +1,4 @@
-module Domain.RelationAlgebra.Assignments where
+module Domain.RelationAlgebra.Exercises where
 
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator
@@ -7,12 +7,12 @@ import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
 import Common.Transformation
-import Common.Assignment
+import Common.Exercise
 import Control.Monad
 import Test.QuickCheck
 
-cnfAssignment :: Assignment RelAlgInContext
-cnfAssignment = makeAssignment
+cnfExercise :: Exercise RelAlgInContext
+cnfExercise = makeExercise
    { shortTitle = "To conjunctive normal form"
 
    , parser        = \s -> case parseRelAlg s of

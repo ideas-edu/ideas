@@ -2,11 +2,11 @@
 module OpenMath.StrategyTable where
 
 import Common.Context
-import Common.Assignment
+import Common.Exercise hiding (Pack)
 import Common.Unification
 import Common.Strategy
 import Common.Transformation
-import Domain.LinearAlgebra (reduceMatrixAssignment, solveSystemAssignment, solveGramSchmidt, MySqrt, solveSystemWithMatrixAssignment)
+import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, MySqrt, solveSystemWithMatrixExercise)
 import qualified Domain.LinearAlgebra as MySqrt
 import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, 
                              EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var, ShowRational(..))
@@ -27,27 +27,29 @@ oneliner = unwords . concatMap words . lines
 defaultURL :: Bool -> String
 defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
 
-data ExprAssignment = forall a . IsExpr a => ExprAssignment (Assignment (Context a))
+-- data PackedExprExercise = forall a . Pack { unpack :: Exercise a }
+
+data PackedExprExercise = forall a . IsExpr a => Unpack (Exercise (Context a))
 
 data StrategyEntry = Entry 
-   { strategyNr     :: String
-   , exprAssignment :: ExprAssignment
-   , functions      :: [String]
-   , examples       :: [Expr]
+   { strategyNr   :: String
+   , exprExercise :: PackedExprExercise
+   , functions    :: [String]
+   , examples     :: [Expr]
    }
  
-entry :: IsExpr a => String -> Assignment (Context a) -> [String] -> [a] -> StrategyEntry
-entry nr a fs ex = Entry nr (ExprAssignment a) fs (map toExpr ex)
+entry :: IsExpr a => String -> Exercise (Context a) -> [String] -> [a] -> StrategyEntry
+entry nr a fs ex = Entry nr (Unpack a) fs (map toExpr ex)
 
 strategyTable :: [StrategyEntry]
 strategyTable =
-   [ entry "2.5" reduceMatrixAssignment 
+   [ entry "2.5" reduceMatrixExercise
         ["toReducedEchelon"]
         [makeMatrix [[6, 3], [2, 4]], makeMatrix [[0,1,1,1], [1,2,3,2], [3,1,1,3]]]
-   , entry "1.7" solveSystemAssignment  
+   , entry "1.7" solveSystemExercise
         ["generalSolutionLinearSystem", "systemToEchelonWithEEO", "backSubstitutionSimple"]
         [sys1, sys2, sys3]
-   , entry "2.6" solveSystemWithMatrixAssignment
+   , entry "2.6" solveSystemWithMatrixExercise
         ["generalSolutionSystemWithMatrix"]
         (map Left [sys1, sys2, sys3])
    , entry "8.6" solveGramSchmidt       

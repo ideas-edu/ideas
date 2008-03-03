@@ -104,9 +104,13 @@ stepText = logMsg "Step" $ withState $ \a d ->
       Nothing -> 
          return "Sorry, no hint available"
       Just (doc, rule, newPrefix, before, after) ->
-         return $ unlines 
+         return $ unlines $
             [ "Use rule " ++ name rule
-            , "   to rewrite the term into:"
+            ] ++
+            [ "   with arguments " ++ fromJust args
+            | let args = arguments rule before, isJust args
+            ] ++
+            [ "   to rewrite the term into:"
             , prettyPrinter a after
             ]
 
@@ -144,7 +148,7 @@ applyRuleAtIndex i args (Session _ ref) = do
       _ | any thisRule answers -> 
          return ("Use rule " ++ name rule ++ " with different arguments", False)
       _ -> 
-         return ("Try a different rule", False)
+         return ("You selected rule " ++ name rule ++ ": try a different rule", False)
 
 --------------------------------------------------
 -- Derivations

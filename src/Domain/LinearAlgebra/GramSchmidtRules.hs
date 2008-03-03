@@ -25,11 +25,13 @@ ruleNormalize = makeSimpleRule "Turn into unit Vector" $
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
 ruleOrthogonal :: Num a => Rule (Context [Vector a])
-ruleOrthogonal = makeRule "Make orthogonal" $ app2 transOrthogonal $
-   \c -> do let xs = take (get varI c - 1) (fromContext c)
-            v <- current c 
-            i <- findIndex (not . orthogonal v) xs
-            return (i, get varI c - 1)
+ruleOrthogonal = makeRule "Make orthogonal" $ app2 transOrthogonal descr args
+ where
+   descr  = (makeArgument "vector 1", makeArgument "vector 2")
+   args c = do let xs = take (get varI c - 1) (fromContext c)
+               v <- current c 
+               i <- findIndex (not . orthogonal v) xs
+               return ( i, get varI c - 1)
 
 -- Consider the next vector 
 -- This rule should fail if there are no vectors left

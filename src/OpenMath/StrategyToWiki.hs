@@ -2,6 +2,7 @@ module Main (main) where
 
 import Common.Exercise
 import Common.Strategy (reportLocations)
+import Common.Utils (Some(..))
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.Request
@@ -23,7 +24,7 @@ make target =
    mapM_ (makeWikiFile $ fromMaybe "." target) strategyTable
 
 makeWikiFile :: String -> StrategyEntry -> IO ()
-makeWikiFile target (Entry nr (Unpack a) xs examples) = do
+makeWikiFile target (Entry nr (Some (ExprExercise a)) xs examples) = do
    code <- insertCode a xs
    let filename = target ++ "/" ++ targetFileName a
    putStrLn $ "Writing to " ++ show filename

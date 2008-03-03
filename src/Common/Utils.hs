@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
@@ -15,6 +16,8 @@ import Test.QuickCheck
 import Control.Monad
 import System.Random
 import qualified Data.Map as M
+
+data Some f = forall a . Some (f a)
 
 thoroughCheck :: Testable a => a -> IO ()
 thoroughCheck = check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}

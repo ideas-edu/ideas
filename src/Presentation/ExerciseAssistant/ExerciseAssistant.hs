@@ -1,6 +1,6 @@
 {--------------------------------------------------- 
 This is an interactive system in which a student can 
-incrementally solve proposition formulae.
+incrementally solve exercises
 
 Copyright (c)        2006 - 2007 
 
@@ -14,18 +14,21 @@ import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import Data.Maybe
 import Session
+import SupplyArguments
 import Common.Transformation
-import Common.Strategy
+import Common.Strategy hiding (not)
+import Common.Apply
 import Domain.Logic
 import Control.Monad
 import Domain.Fraction
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.RelationAlgebra as RA
+import Data.IORef
 
-domains :: [PackedExercise]
-domains = [ Pack dnfExercise, Pack LA.reduceMatrixExercise, Pack LA.opgave6b
-          , Pack LA.solveSystemExercise, Pack LA.solveSystemWithMatrixExercise, Pack simplExercise
-          , Pack RA.cnfExercise
+domains :: [Some Exercise]
+domains = [ Some LA.opgave6b, Some dnfExercise, Some LA.reduceMatrixExercise
+          , Some LA.solveSystemExercise, Some LA.solveSystemWithMatrixExercise, Some simplExercise
+          , Some RA.cnfExercise
           ]
 
 main :: IO ()
@@ -57,7 +60,7 @@ main =
         progressBar    <- fromXml castToProgressBar "progressBar"
         progressLabel  <- fromXml castToLabel       "progressLabel"
 
-        mapM_ (\(Pack a) -> comboBoxAppendText domainBox (shortTitle a)) domains
+        mapM_ (\(Some a) -> comboBoxAppendText domainBox (shortTitle a)) domains
         comboBoxSetActive  domainBox 0
 
         -- get buffers from views
@@ -138,39 +141,37 @@ main =
            when ok updateAll
         
         onClicked applyButton $ do
+           mi <- comboBoxGetActive ruleBox
+           when (isJust mi) $ do
+              Some rule <- getRuleAtIndex (fromJust mi) session
+              case hasArguments rule of
+              
+                 False -> do
+                    (txt, ok) <- applyRuleAtIndex (fromJust mi) [] session
+                    textBufferSetText feedbackBuffer txt
+                    when ok updateAll
+                    
+                 _ -> do
+                    ref <- newIORef Nothing 
+                    w   <- argumentWindow ref rule
+                    onDestroy w $ do
+                       result <- readIORef ref
+                       case result of 
+                          Nothing -> return ()
+                          Just list -> do
+                             (txt, ok) <- applyRuleAtIndex (fromJust mi) list session
+                             textBufferSetText feedbackBuffer txt
+                             when ok updateAll
+                    return ()
+           
+           {- 
            (iterBegin, iterEnd) <- textBufferGetSelectionBounds entryBuffer
            posBegin <- textIterGetOffset iterBegin
            posEnd   <- textIterGetOffset iterEnd
            print (posBegin, posEnd)
-           argumentFrame
+           print i
+           argumentFrame undefined -}
         
         -- show widgets and run GUI
         widgetShowAll window
         mainGUI
-        
-argumentFrame :: IO ()
-argumentFrame = do
-   w <- windowNew
-   windowSetModal w True
-   windowResize w 300 300
-   windowSetTitle w "Supply arguments" 
-   
-   box   <- vBoxNew True 5
-   views <- flip mapM [1..3] $ \i -> do
-      lab  <- labelNew $ Just $ "Argument " ++ show i
-      view <- textViewNew
-      set box [containerChild := lab]
-      set box [containerChild := view]
-      return view
-      
-   buttonBox    <- hBoxNew True 5
-   applyButton  <- buttonNew
-   cancelButton <- buttonNew
-   buttonSetLabel applyButton "Apply"
-   buttonSetLabel cancelButton "Cancel"
-   set buttonBox [containerChild := cancelButton]
-   set buttonBox [containerChild := applyButton]
-   set w   [containerChild := box]
-   set box [containerChild := buttonBox]
-   
-   widgetShowAll w

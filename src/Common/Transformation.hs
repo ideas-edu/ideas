@@ -14,16 +14,19 @@ module Common.Transformation
    , Transformation, makeTrans, makeTransList, hasArguments
    , LiftPair(..), liftTrans, liftRule, idRule, emptyRule, app, app2, app3, inverseRule, buggyRule
    , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional, arguments
+   , Argument(..), makeArgument, getArguments, useArguments
    ) where
 
 import qualified Data.Set as S
 import Data.List
 import Data.Char
+import Data.Ratio
 import Data.Maybe
 import Test.QuickCheck hiding (arguments)
 import Common.Apply
 import Common.Utils
 import Control.Monad
+import Control.Arrow (second)
 import Common.Unification
 
 -----------------------------------------------------------
@@ -34,13 +37,13 @@ infix  6 |-
 data Transformation a
    = Function (a -> [a])
    | Unifiable a => Pattern (ForAll (a, a))
-   | forall b . Show b => App (a -> Maybe b) (b -> Transformation a)
+   | forall b . App (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b . Lift (LiftPair b a) (Transformation b)
    
 instance Apply Transformation where
    applyAll (Function f) = f
    applyAll (Pattern  p) = maybe [] return . applyPattern p
-   applyAll (App f g   ) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
+   applyAll (App _ f g)  = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (Lift lp t ) = \b -> maybe [] (map (\new -> setter lp new b) . applyAll t) (getter lp b)
 
 -- | Constructs a transformation based on two terms (a left-hand side and a
@@ -106,27 +109,167 @@ minorRule r = r {isMinorRule = True}
 buggyRule :: Rule a -> Rule a 
 buggyRule r = r {isBuggyRule = True}
 
-app  :: Show x => (x ->           Transformation a) -> (a -> Maybe x)         -> Transformation a
-app2 :: Show (x, y) => (x -> y ->      Transformation a) -> (a -> Maybe (x, y))    -> Transformation a
-app3 :: Show (x, y, z) => (x -> y -> z -> Transformation a) -> (a -> Maybe (x, y, z)) -> Transformation a
+data ArgumentList a
+   = Nil a
+   | forall b c . Cons ((b, c) -> a, a -> (b, c)) (Argument b) (ArgumentList c)
 
-app  f g = App g f
-app2 f g = App g $ uncurry  f
-app3 f g = App g $ uncurry3 f
+-- smart constructor
+nil :: ArgumentList ()
+nil = Nil ()
+
+-- smart constructor (provides the isomorphism proofs)
+cons :: Argument a -> ArgumentList b -> ArgumentList (a, b)
+cons arg list = Cons (id, id) arg list
+
+showArguments :: ArgumentList a -> a -> [String]
+showArguments (Nil _) _ = []
+showArguments (Cons (_, f) arg list) a =
+   let (b, c) = f a
+   in showArgument arg b : showArguments list c
+   
+parseArguments :: ArgumentList a -> [String] -> Maybe a
+parseArguments (Nil a) [] = Just a 
+parseArguments (Cons (f, _) arg list) (x:xs) = do
+   b <- parseArgument  arg  x
+   c <- parseArguments list xs
+   return $ f (b, c)
+parseArguments _ _ = Nothing
+   
+packedArguments :: ArgumentList a -> [Some Argument]
+packedArguments (Nil _) = []
+packedArguments (Cons _ arg list) = Some arg : packedArguments list
+
+{- SOLUTION WITH GADTs
+data ArgumentList a where
+   Cons :: Argument a -> ArgumentList b -> ArgumentList (a, b)
+   Nil  :: ArgumentList ()
+   
+packedArguments :: ArgumentList a -> [Some Argument]
+packedArguments (Cons a b) = Some a : packedArguments b
+packedArguments Nil        = []
+
+parseArguments :: ArgumentList a -> [String] -> Maybe a
+parseArguments (Cons a b) (s:ss) = liftM2 (,) (parseArgument a s) (parseArguments b ss)
+parseArguments Nil        []     = Just ()
+parseArguments _ _               = Nothing
+
+showArguments :: ArgumentList a -> a -> [String]
+showArguments (Cons x xs) (a, b) = showArgument x a : showArguments xs b
+showArguments Nil _ = [] -}
+
+--arg1 = makeArgument "int" :: Argument Int
+--arg2 = makeArgument "bool" :: Argument Bool
+
+data Argument a = Argument
+   { argumentDescription :: String
+   , argumentDefault     :: Maybe a
+   , parseArgument       :: String -> Maybe a
+   , showArgument        :: a -> String
+   }
+
+makeArgument :: (Show a, Read a) => String -> Argument a
+makeArgument descr = Argument descr Nothing parse show
+ where 
+   parse s = case reads s of
+                [(a, xs)] | all isSpace xs -> return a
+                _ -> Nothing
+
+
+{-
+class (Show a, Read a) => Argument a where
+   showArgument  :: a -> String
+   showArguments :: a -> [String]
+   readArgument  :: String -> Maybe a
+   readArguments :: [String] -> ([Bool], Maybe a)
+   -- default definition
+   showArgument    = show
+   showArguments a = [showArgument a]
+   readArgument  s = case reads s of
+                        [(a, xs)] | all isSpace xs -> return a
+                        _ -> Nothing
+   readArguments xs = let ma = maybe Nothing readArgument (safeHead xs)
+                      in ([isJust ma], ma)
+
+numberOfArguments :: Argument a => a -> Int
+numberOfArguments = length . showArguments
+
+instance Argument Int
+
+instance Argument Rational where
+   showArgument r = 
+      show (numerator r) ++  if denominator r == 1 then "" else "/" ++ show (denominator r)
+   readArgument s = 
+      let readDivOp s = 
+             case dropWhile isSpace s of
+                ('/':rest) -> return rest
+                _        -> fail "no (/) operator" 
+      in safeHead [ fromInteger x / fromInteger y | (x, s1) <- reads s, s2 <- readDivOp s1, (y, s3) <- reads s2, y /= 0, all isSpace s3 ]
+      
+instance (Argument a, Argument b) => Argument (a, b) where
+   showArguments (a, b) = showArguments a ++ showArguments b
+   readArguments xs =
+      let (bs1, ma) = readArguments xs
+          (bs2, mb) = readArguments ys
+          ys = drop (length bs1) xs
+      in (bs1++bs2, liftM2 (,) ma mb)
+   
+instance (Argument a, Argument b, Argument c) => Argument (a, b, c) where
+   showArguments (a, b, c) = showArguments a ++ showArguments b ++ showArguments c
+   readArguments = second (fmap f) . readArguments
+    where f (a, (b, c)) = (a, b, c) 
+         -}
+
+app :: (a -> Transformation ctx) -> Argument a -> (ctx -> Maybe a) -> Transformation ctx
+app f arg g = 
+   let args = cons arg nil
+       nest a = (a, ())
+   in App args (fmap nest . g) (\(a, ()) -> f a)
+            
+app2 :: (a -> b -> Transformation ctx) -> (Argument a, Argument b) -> (ctx -> Maybe (a, b)) -> Transformation ctx
+app2 f (arg1, arg2) g = 
+   let args = cons arg1 (cons arg2 nil)
+       nest (a, b) = (a, (b, ()))
+   in App args (fmap nest . g) (\(a, (b, ())) -> f a b)
+
+app3 :: (a -> b -> c -> Transformation ctx) -> (Argument a, Argument b, Argument c) -> (ctx -> Maybe (a, b, c)) -> Transformation ctx
+app3 f (arg1, arg2, arg3) g =
+   let args = cons arg1 (cons arg2 (cons arg3 nil))
+       nest (a, b, c) = (a, (b, (c, ())))
+   in App args (fmap nest . g) (\(a, (b, (c, ()))) -> f a b c)
 
 hasArguments :: Rule a -> Bool
 hasArguments rule =
    case transformations rule of
-      [App _ _]  -> True
-      [Lift _ t] -> hasArguments rule {transformations = [t]}
-      _          -> False
+      [App _ _ _ ] -> True
+      [Lift _ t]   -> hasArguments rule {transformations = [t]}
 
+      _            -> False
+
+
+getArguments :: Rule a -> [Some Argument]
+getArguments rule = fromMaybe [] $ 
+   case transformations rule of
+      [App args f g] -> Just (packedArguments args)
+      [Lift lp t]    -> Just (getArguments (rule {transformations = [t]}))
+      _              -> Nothing
+      
 arguments :: Rule a -> a -> Maybe String
 arguments rule a =
    case transformations rule of
-      [App f g]   -> fmap show (f a)
-      [Lift lp t] -> getter lp a >>= arguments (rule {transformations = [t]})
-      _           -> Nothing
+      [App args f g] -> fmap (showList . showArguments args) (f a)
+      [Lift lp t]    -> getter lp a >>= arguments (rule {transformations = [t]})
+      _              -> Nothing
+ where
+   showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
+
+useArguments :: [String] -> Rule a -> a -> [a]
+useArguments list rule a =
+   case transformations rule of
+      [App args f g] -> maybe [] (flip applyAll a . g) (parseArguments args list) 
+      [Lift lp t]    -> case getter lp a of
+                           Just b  -> map (\c -> setter lp c a) $ useArguments list (rule {transformations = [t]}) b
+                           Nothing -> []
+      _              -> applyAll rule a
 
 -- | Returns the inverse of a rule: only rules that use unifications (i.e., that are constructed
 -- | with (|-)), have a computable inverse.
@@ -221,7 +364,7 @@ instance Arbitrary a => Arbitrary (Transformation a) where
    arbitrary = oneof [liftM Function arbitrary]
    coarbitrary (Function f) = variant 0 . coarbitrary f
    coarbitrary (Pattern _)  = variant 1
-   coarbitrary (App _ _)    = variant 2
+   coarbitrary (App _ _ _)  = variant 2
 
 -- generates sufficiently long names
 arbName :: Gen String

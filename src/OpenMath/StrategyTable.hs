@@ -2,10 +2,11 @@
 module OpenMath.StrategyTable where
 
 import Common.Context
-import Common.Exercise hiding (Pack)
+import Common.Exercise
 import Common.Unification
 import Common.Strategy
 import Common.Transformation
+import Common.Utils (Some(..))
 import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, MySqrt, solveSystemWithMatrixExercise)
 import qualified Domain.LinearAlgebra as MySqrt
 import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, 
@@ -27,19 +28,17 @@ oneliner = unwords . concatMap words . lines
 defaultURL :: Bool -> String
 defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
 
--- data PackedExprExercise = forall a . Pack { unpack :: Exercise a }
-
-data PackedExprExercise = forall a . IsExpr a => Unpack (Exercise (Context a))
+data ExprExercise a = IsExpr a => ExprExercise (Exercise (Context a))
 
 data StrategyEntry = Entry 
    { strategyNr   :: String
-   , exprExercise :: PackedExprExercise
+   , exprExercise :: Some ExprExercise
    , functions    :: [String]
    , examples     :: [Expr]
    }
  
 entry :: IsExpr a => String -> Exercise (Context a) -> [String] -> [a] -> StrategyEntry
-entry nr a fs ex = Entry nr (Unpack a) fs (map toExpr ex)
+entry nr a fs ex = Entry nr (Some (ExprExercise a)) fs (map toExpr ex)
 
 strategyTable :: [StrategyEntry]
 strategyTable =

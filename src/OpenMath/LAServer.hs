@@ -9,7 +9,7 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Strategy hiding (not)
-import Common.Exercise hiding (Pack, Incorrect, stepsRemaining)
+import Common.Exercise hiding (Incorrect, stepsRemaining)
 import Common.Utils
 import Data.Maybe
 import Data.Char
@@ -33,8 +33,8 @@ xs ~= ys = let f = map toLower . filter isAlphaNum
 
 laServer :: Request -> Reply
 laServer req = 
-   case [ ea | Entry _ ea@(Unpack a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
-      [Unpack a] -> laServerFor a req
+   case [ ea | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+      [Some (ExprExercise a)] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    
 laServerFor :: IsExpr a => Exercise (Context a) -> Request -> Reply

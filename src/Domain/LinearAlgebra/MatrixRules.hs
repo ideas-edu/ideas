@@ -16,7 +16,7 @@ import Common.Utils
 import Control.Monad
 import Data.List
 
-matrixRules :: Fractional a => [Rule (MatrixInContext a)]
+matrixRules :: (Read a, Fractional a) => [Rule (MatrixInContext a)]
 matrixRules = 
    [ ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
    , ruleZerosFP, ruleZerosBP, ruleCoverRow, ruleUncoverRow
@@ -29,26 +29,29 @@ ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
    return (set columnJ i c)
    
 ruleExchangeNonZero :: Num a => Rule (MatrixInContext a)
-ruleExchangeNonZero = makeRule "ExchangeNonZero" (app2 rowExchange args)
+ruleExchangeNonZero = makeRule "ExchangeNonZero" (app2 rowExchange descr args)
  where
+   descr  = (makeArgument "row 1", makeArgument "row 2")
    args c = do
       nonEmpty c
       let col = column (get columnJ c) (subMatrix c)
       i   <- findIndex (/= 0) col
       return (get covered c, i + get covered c)
 
-ruleScaleToOne :: Fractional a => Rule (MatrixInContext a)
-ruleScaleToOne = makeRule "ScaleToOne" (app2 rowScale args)
+ruleScaleToOne :: (Read a, Fractional a) => Rule (MatrixInContext a)
+ruleScaleToOne = makeRule "ScaleToOne" (app2 rowScale descr args)
  where
+   descr  = (makeArgument "row", makeArgument "scale factor")
    args c = do
       nonEmpty c
       let pv = entry (0, get columnJ c) (subMatrix c)
       guard (pv /= 0)
       return (get covered c, 1 / pv)
 
-ruleZerosFP :: Fractional a => Rule (MatrixInContext a)
-ruleZerosFP = makeRule "Introduce zeros (forward pass)" (app3 rowAdd args)
+ruleZerosFP :: (Read a, Fractional a) => Rule (MatrixInContext a)
+ruleZerosFP = makeRule "Introduce zeros (forward pass)" (app3 rowAdd descr args)
  where
+   descr  = (makeArgument "row 1", makeArgument "row2", makeArgument "scale factor")
    args c = do
       nonEmpty c
       let col = drop 1 $ column (get columnJ c) (subMatrix c)
@@ -56,9 +59,10 @@ ruleZerosFP = makeRule "Introduce zeros (forward pass)" (app3 rowAdd args)
       let v = negate (col!!i)
       return (i + get covered c + 1, get covered c, v)
    
-ruleZerosBP :: Fractional a => Rule (MatrixInContext a)
-ruleZerosBP = makeRule "Introduce zeros (backward pass)" (app3 rowAdd args)
+ruleZerosBP :: (Read a, Fractional a) => Rule (MatrixInContext a)
+ruleZerosBP = makeRule "Introduce zeros (backward pass)" (app3 rowAdd descr args)
  where
+   descr  = (makeArgument "row 1", makeArgument "row2", makeArgument "scale factor")
    args c = do
       nonEmpty c
       let ri  = row 0 (subMatrix c)
@@ -80,7 +84,7 @@ ruleUncoverRow = minorRule $ makeRule "UncoverRow" $ changeCover (\x -> x-1)
 
 rowExchange :: Int -> Int -> Transformation (MatrixInContext a)
 rowExchange i j = matrixTrans $ \m -> do
-   guard (i /= j)
+   guard (i /= j && validRow i m && validRow j m)
    return (switchRows i j m)
                                                                             
 rowScale :: Num a => Int -> a -> Transformation (MatrixInContext a)

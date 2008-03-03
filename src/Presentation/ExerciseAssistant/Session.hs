@@ -1,13 +1,16 @@
 {-# OPTIONS -fglasgow-exts #-}
 module Session 
-   ( PackedExercise(..), Exercise(..)
+   ( Some(..), Exercise(..)
    , Session, makeSession, newTerm, newExercise, progressPair, undo, submitText
    , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
+   , getRuleAtIndex, applyRuleAtIndex
    ) where
 
 import Common.Exercise
 import Common.Logging
 import Common.Transformation
+import Common.Apply
+import Common.Utils
 import Data.IORef
 import Data.Maybe
 import System.Time
@@ -24,7 +27,7 @@ withState f (Session _ ref) = do
    St a d <- readIORef ref
    f a d
 
-makeSession :: PackedExercise -> IO Session
+makeSession :: Some Exercise -> IO Session
 makeSession pa = do
    logMessage "New session: "
    ref   <- newIORef (error "reference not initialized")
@@ -32,8 +35,8 @@ makeSession pa = do
    newExercise pa session
    return session
 
-newExercise :: PackedExercise -> Session -> IO ()
-newExercise (Pack a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
+newExercise :: Some Exercise -> Session -> IO ()
+newExercise (Some a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
    \(Session _ ref) -> do
       term <- randomTerm a
       writeIORef ref $ St a (Start term)
@@ -41,7 +44,7 @@ newExercise (Pack a) = logCurrent ("New (" ++ shortTitle a ++ ")") $
 newTerm :: Session -> IO ()
 newTerm session@(Session _ ref) = do
    St a _ <- readIORef ref
-   newExercise (Pack a) session
+   newExercise (Some a) session
         
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
@@ -64,8 +67,8 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
       Correct doc (Just rule) -> do
          let new = either (error "internal error") id $ parser a txt -- REWRITE !
          writeIORef ref $ St a (Step d rule new)
-         return (showDoc a doc, True)         
-
+         return (showDoc a doc, True)
+   
 currentText :: Session -> IO String
 currentText = withState $ \a d -> 
    return $ prettyPrinter a (current d)
@@ -119,6 +122,35 @@ nextStep = logCurrent "Next" $ \(Session _ ref) -> do
 ruleNames :: Session -> IO [String]
 ruleNames = withState $ \a d -> 
    return $ map name $ filter (not . isMinorRule) $ ruleset a
+
+getRuleAtIndex :: Int -> Session -> IO (Some Rule)
+getRuleAtIndex i = withState $ \a d -> do
+   let rule = filter (not . isMinorRule) (ruleset a) !! i
+   return (Some rule)
+
+applyRuleAtIndex :: Int -> [String] -> Session -> IO (String, Bool)
+applyRuleAtIndex i args (Session _ ref) = do
+   St a d <- readIORef ref
+   let rule = filter (not . isMinorRule) (ruleset a) !! i
+   case safeHead (useArguments args rule (current d)) of
+      Nothing  -> return ("Could not apply rule " ++ name rule, False)
+      Just new -> do 
+         writeIORef ref $ St a (Step d rule new)
+         return ("Successfully applied rule " ++ name rule, True)
+   
+{-
+askForArguments :: (forall a . Rule a -> a -> IO ()) -> Int -> Session -> IO (String, Bool)
+askForArguments ask i (Session _ ref) = do
+   St a d <- readIORef ref
+   let rule = filter (not . isMinorRule) (ruleset a) !! i
+   ma <- if   hasArguments rule 
+         then ask rule (current d) 
+         else return () -- apply rule (current d))
+   {-case ma of
+      Just new -> do
+         writeIORef ref $ St a (Step d rule new)
+         return ("Successfully applied rule " ++ name rule, True) -}
+   return ("Impossible to apply rule " ++ name rule, False) -}
 
 --------------------------------------------------
 -- Derivations

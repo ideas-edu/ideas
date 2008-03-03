@@ -1,9 +1,10 @@
 module OpenMath.Interactive (respondHTML, oneliner) where
 
 import Common.Context
-import Common.Exercise hiding (Pack, Text, Incorrect)
+import Common.Exercise hiding (Text, Incorrect)
 import Common.Transformation
 import Common.Strategy hiding (not)
+import Common.Utils (Some(..))
 import OpenMath.LAServer
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
@@ -23,8 +24,8 @@ xs ~= ys = let f = map toLower . filter (not . isSpace)
            
 makeHTML :: String -> Request -> XML
 makeHTML self req = 
-   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Unpack a) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
-      [(Unpack a, Incorrect inc)] -> make self a noAnswer inc
+   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+      [(Some (ExprExercise a), Incorrect inc)] -> make self a noAnswer inc
       [_] -> Text "request error: invalid request"
       []  -> Text "request error: unknown strategy"
       _   -> Text "request error: ambiguous strategy"

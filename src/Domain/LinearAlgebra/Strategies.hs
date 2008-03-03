@@ -24,11 +24,11 @@ import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.Vector
 import Data.Ratio
 
-toReducedEchelon :: Fractional a => LabeledStrategy (MatrixInContext a)
+toReducedEchelon :: (Read a, Fractional a) => LabeledStrategy (MatrixInContext a)
 toReducedEchelon = label "Gaussian elimination" $ 
    forwardPass <*> backwardPass
 
-forwardPass :: Fractional a => LabeledStrategy (MatrixInContext a)
+forwardPass :: (Read a, Fractional a) => LabeledStrategy (MatrixInContext a)
 forwardPass = label "Forward pass" $ 
    repeat  $    label "Find j-th column"      ruleFindColumnJ 
            <*>  label "Exchange rows"         (try ruleExchangeNonZero)
@@ -36,12 +36,12 @@ forwardPass = label "Forward pass" $
            <*>  label "Zeros in j-th column"  (repeat ruleZerosFP)
            <*>  label "Cover up top row"      ruleCoverRow
   
-backwardPass :: Fractional a => LabeledStrategy (MatrixInContext a)
+backwardPass :: (Read a, Fractional a) => LabeledStrategy (MatrixInContext a)
 backwardPass =  label "Backward pass" $ 
    repeat  $    label "Uncover row"  ruleUncoverRow
            <*>  label "Sweep"        (repeat ruleZerosBP)
 
-backSubstitutionSimple :: Fractional a => LabeledStrategy (EqsInContext a)
+backSubstitutionSimple :: (Read a, Fractional a) => LabeledStrategy (EqsInContext a)
 backSubstitutionSimple = label "Back substitution with equally many variables and equations" $
        label "Cover all equations" ruleCoverAllEquations
    <*> repeat (   label "Uncover one equation"  ruleUncoverEquation
@@ -49,11 +49,11 @@ backSubstitutionSimple = label "Back substitution with equally many variables an
               <*> label "Back Substitution"     (repeat ruleBackSubstitution)
               )
 
-backSubstitution :: Fractional a => LabeledStrategy (EqsInContext a)
+backSubstitution :: (Read a, Fractional a) => LabeledStrategy (EqsInContext a)
 backSubstitution = label "Back substitution" $ 
    ruleIdentifyFreeVariables <*> backSubstitutionSimple
    
-systemToEchelonWithEEO :: Fractional a => LabeledStrategy (EqsInContext a)
+systemToEchelonWithEEO :: (Read a, Fractional a) => LabeledStrategy (EqsInContext a)
 systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
    repeat $   label "Inconsistent system (0=1)" ruleInconsistentSystem
           <|> label "Drop (0=0) equation"       ruleDropEquation
@@ -63,12 +63,12 @@ systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
           <*> label "Eliminate variable"        (repeat ruleEliminateVar)
           <*> label "Cover up first equation"   ruleCoverUpEquation
 
-generalSolutionLinearSystem :: Fractional a => LabeledStrategy (EqsInContext a)
+generalSolutionLinearSystem :: (Read a, Fractional a) => LabeledStrategy (EqsInContext a)
 generalSolutionLinearSystem = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 
 
-generalSolutionSystemWithMatrix :: Fractional a => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
+generalSolutionSystemWithMatrix :: (Read a, Fractional a) => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
 generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
    conv1 <*> liftRight toReducedEchelon <*> conv2
 

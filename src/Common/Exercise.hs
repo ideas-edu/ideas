@@ -9,8 +9,6 @@ import Common.Unification
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 
-data PackedExercise = forall a . Pack { unpack :: Exercise a }
-
 data Exercise a = Exercise
    { shortTitle    :: String
    , parser        :: String -> Either (Doc a, Maybe a) a

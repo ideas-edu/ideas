@@ -8,15 +8,18 @@ import Graphics.UI.Gtk
 
 argumentWindow :: IORef (Maybe [String]) -> Rule a -> IO Window
 argumentWindow result rule = do
+   let args = getArguments rule
    w <- windowNew
    windowSetModal w True
-   windowResize w 500 300
-   windowSetTitle w $ "Supply arguments for " ++ name (rule)    
-         
-   box <- vBoxNew True 5  
-   buffers <- mapM (argumentBox box) (getArguments rule)
+   windowResize w 300 ((1 + length args) * 40)
+   windowSetTitle w $ name rule
+   let lightBlue = Color (235*256) (244*256) (255*256)
+   widgetModifyBg w StateNormal lightBlue
+        
+   box <- vBoxNew True 10
+   buffers <- mapM (argumentBox box) args
       
-   buttonBox    <- hBoxNew True 5
+   buttonBox    <- hBoxNew True 20
    applyButton  <- buttonNew
    cancelButton <- buttonNew
    buttonSetLabel applyButton "Apply rule"
@@ -29,7 +32,7 @@ argumentWindow result rule = do
    onClicked applyButton $ do 
       list <- mapM (flip get textBufferText) buffers
       let check (Some arg, s) = isJust (parseArgument arg s)
-      case all check $ zip (getArguments rule) list of
+      case all check $ zip args list of
          False -> return ()
          _ -> do
             writeIORef result (Just list)
@@ -43,9 +46,11 @@ argumentWindow result rule = do
    
 argumentBox :: ContainerClass a => a -> Some Argument -> IO TextBuffer
 argumentBox parent (Some arg) = do
-   box  <- hBoxNew True 5
+   box  <- hBoxNew True 20
    lab  <- labelNew (Just $ argumentDescription arg)
    view <- textViewNew
+   flip mapM_ [TextWindowLeft, TextWindowRight, TextWindowTop, TextWindowBottom] $ \tp -> 
+      textViewSetBorderWindowSize view tp 2
    
    buffer <- textViewGetBuffer view 
    textBufferSetText buffer $ maybe "" (showArgument arg) (argumentDefault arg)

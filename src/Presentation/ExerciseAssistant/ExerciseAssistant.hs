@@ -59,7 +59,17 @@ main =
         ruleBox        <- fromXml castToComboBox    "ruleBox"
         progressBar    <- fromXml castToProgressBar "progressBar"
         progressLabel  <- fromXml castToLabel       "progressLabel"
+        imageOUNL      <- fromXml castToImage       "imageOUNL"
 
+        imageSetFromFile imageOUNL "bin/ounl.jpg"
+        let lightBlue = Color (235*256) (244*256) (255*256)
+            ligthGrey = Color (230*256) (230*256) (230*256)
+        widgetModifyBg window StateNormal lightBlue
+        
+        
+        -- flip mapM_ [assignmentView, derivationView, feedbackView] $ \w -> 
+        --    widgetModifyBase w StateNormal ligthGrey
+        
         mapM_ (\(Some a) -> comboBoxAppendText domainBox (shortTitle a)) domains
         comboBoxSetActive  domainBox 0
 

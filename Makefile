@@ -56,12 +56,13 @@ solvergui: bin/solvergui$(EXE)
 bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/ExerciseAssistant/exerciseassistant.glade src/Presentation/ExerciseAssistant/exerciseassistant.gladep
 	ghc --make -O -isrc -isrc/Presentation/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
 	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
+	cp src/Presentation/ExerciseAssistant/ounl.jpg bin/
 
 checks: $(BINDIR) $(OUTDIR)
 	cd src/Common; runhaskell -i.. Checks.hs; cd ..
 
 run: $(BINDIR) $(OUTDIR)
-	$(GHCI) -isrc -odir out -hidir out 
+	$(GHCI) -isrc -isrc/Presentation/ExerciseAssistant -odir out -hidir out 
 
 doc:	doc/index.html
 

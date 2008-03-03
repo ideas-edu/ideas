@@ -31,7 +31,7 @@ module Common.Strategy
    , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
    , StrategyLocation, remainingStrategy
    , firstLocation, firstLocationWith, subStrategy, reportLocations
-   , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..)
+   , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..), lastRuleInPrefix
    , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt, subStrategyOrRule, stepsToRules
    ) where
 
@@ -443,6 +443,13 @@ runGrammarUntilSt stop s a g
          | otherwise = runGrammarUntilSt stop (snd $ stop s step) a g
       forRule n h r  = 
          [ (c, plusPrefix (singlePrefix n) p) | b <- applyAll r a, (c, p) <- recStop b h ]
+
+lastRuleInPrefix :: Prefix -> LabeledStrategy a -> Maybe (Rule a)
+lastRuleInPrefix p = maybe Nothing (getRule . reverse . fst) . runPrefix p
+ where
+   getRule (Minor _ r:_) = Just r
+   getRule (Major _ r:_) = Just r
+   getRule _             = Nothing
 
 prefixToSteps :: Prefix -> LabeledStrategy a -> Maybe [Step a]
 prefixToSteps p = fmap fst . runPrefix p

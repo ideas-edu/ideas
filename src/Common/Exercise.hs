@@ -65,6 +65,7 @@ randomTermWith stdgen a
  where
    term = generate 100 stdgen (generator a)
 
+{-
 -- | Returns a text and the rule that is applicable
 giveHint :: Exercise a -> [a] -> Maybe (Doc a, Rule a)
 giveHint x = safeHead . giveHints x
@@ -77,6 +78,7 @@ giveHints x = map g . giveSteps x
    
 -- | Returns a text, a sub-expression that can be rewritten, and the result
 -- | of the rewriting
+
 giveStep :: Exercise a -> [a] -> Maybe (Doc a, Rule a, a, a)
 giveStep x = safeHead . giveSteps x
 
@@ -90,8 +92,43 @@ giveSteps x as = map g $ nextRulesForSequenceWith (equality x) (not . isMinorRul
                 case arguments r old of
                    Just args -> text "\n   with arguments " <> text args
                    Nothing   -> emptyDoc
-      in (doc, r, old, new)
+      in (doc, r, old, new) -}
 
+-- | Returns a text and the rule that is applicable
+giveHintNew :: Exercise a -> Prefix -> a -> Maybe (Doc a, Rule a)
+giveHintNew ex p = safeHead . giveHintsNew ex p
+
+-- | Returns a text and the rule that is applicable
+giveHintsNew :: Exercise a -> Prefix -> a -> [(Doc a, Rule a)]
+giveHintsNew ex p = map g . giveStepsNew ex p
+ where
+   g (x, y, _, _, _) = (x, y)
+
+giveStepNew :: Exercise a -> Prefix -> a -> Maybe (Doc a, Rule a, Prefix, a, a)
+giveStepNew ex p = safeHead . giveStepsNew ex p
+
+giveStepsNew :: Exercise a -> Prefix -> a -> [(Doc a, Rule a, Prefix, a, a)]
+giveStepsNew ex p0@(P xs) a = 
+   case runPrefix p0 (strategy ex) of
+      Nothing -> []
+      Just (_, g) -> 
+         let make (new, p1) = 
+                let prefix = plusPrefix p0 p1 
+                    steps  = maybe [] fst $ runPrefix prefix $ strategy ex
+                    minors = stepsToRules (drop (length xs) steps)
+                    old    = if null minors then a else applyListD (init minors) a
+                in case lastRuleInPrefix prefix (strategy ex) of
+                      Just r -> [(doc r old, r, prefix, old, new)]
+                      _      -> []
+             stopC (Major _ _) = True
+             stopC _           = False
+             doc r old = text "Use rule " <> rule r <> 
+                case arguments r old of
+                   Just args -> text "\n   with arguments " <> text args
+                   Nothing   -> emptyDoc
+         in concatMap make $ runGrammarUntil stopC a g
+      
+{-
 -- | The strategy in the exercise should reflect the current position in the 
 -- | strategy, which might not be the original (complete) strategy.
 feedback :: Exercise a -> [a] -> String -> Feedback a
@@ -109,8 +146,26 @@ feedback x as txt =
                     (rs, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
                     _ | equality x (last as) new -> 
                          Correct (text "You have submitted the current term.") Nothing
-                    _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
+                    _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing -}
+                    
          
+feedbackNew :: Exercise a -> Prefix -> a -> String -> Feedback a
+feedbackNew ex p0 a txt =
+   case parser ex txt of
+      Left (msg, suggestion) -> 
+         SyntaxError msg suggestion
+      Right new
+         | not (equivalence ex a new) -> 
+              Incorrect (text "Incorrect") Nothing -- no suggestion yet
+         | otherwise -> 
+              let answers = giveStepsNew ex p0 a
+                  check (_, _, _, _, this) = equality ex new this
+              in case filter check answers of
+                    (_, r, newPrefix, _, newTerm):_ -> Correct (text "Well done! You applied rule " <> rule r) (Just (newPrefix, r, newTerm))
+                    _ | equality ex a new -> 
+                         Correct (text "You have submitted the current term.") Nothing
+                    _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
+              
 stepsRemaining :: Strategy a -> a -> Int
 stepsRemaining s a =
    case runStrategyRules s a of
@@ -123,7 +178,7 @@ stepsRemainingA a as =
 
 data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)
-                | Correct     (Doc a) (Maybe (Rule a)) {- The rule that was applied -}
+                | Correct     (Doc a) (Maybe (Prefix, Rule a, a)) {- The rule that was applied -}
 
 getRuleNames :: Exercise a -> [String]
 getRuleNames = map name . ruleset

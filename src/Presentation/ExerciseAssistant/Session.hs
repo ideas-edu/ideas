@@ -9,6 +9,7 @@ module Session
 import Common.Exercise
 import Common.Logging
 import Common.Transformation
+import Common.Strategy hiding (not)
 import Common.Apply
 import Common.Utils
 import Data.IORef
@@ -49,13 +50,13 @@ newTerm session@(Session _ ref) = do
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
    modifyIORef ref $ \st@(St a d) -> case d of 
-      Start _    -> st
-      Step d _ _ -> St a d
+      Start _      -> st
+      Step d _ _ _ -> St a d
 
 submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    St a d <- readIORef ref
-   case feedback a (terms d) txt of
+   case feedbackNew a (currentPrefix d) (current d) txt of
       SyntaxError doc msug -> 
          let msg = "Parse error:\n" ++ showDoc a doc ++ maybe "" (\x -> "\nDid you mean " ++ prettyPrinter a x) msug
          in return (msg, False)
@@ -64,9 +65,9 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
          in return (msg, False)
       Correct doc Nothing ->
          return (showDoc a doc, False)
-      Correct doc (Just rule) -> do
-         let new = either (error "internal error") id $ parser a txt -- REWRITE !
-         writeIORef ref $ St a (Step d rule new)
+      Correct doc (Just (newPrefix, rule, new)) -> do
+         -- let new = either (error "internal error") id $ parser a txt -- REWRITE !
+         writeIORef ref $ St a (Step d rule newPrefix new)
          return (showDoc a doc, True)
    
 currentText :: Session -> IO String
@@ -91,7 +92,7 @@ readyText = logMsg "Ready" $ withState $ \a d ->
 
 hintText :: Session -> IO String
 hintText = logMsg "Hint" $ withState $ \a d -> 
-   case giveHint a (terms d) of 
+   case giveHintNew a (currentPrefix d) (current d) of 
       Nothing -> 
          return "Sorry, no hint available" 
       Just (doc, rule) ->
@@ -99,10 +100,10 @@ hintText = logMsg "Hint" $ withState $ \a d ->
 
 stepText :: Session -> IO String
 stepText = logMsg "Step" $ withState $ \a d -> 
-   case giveStep a (terms d) of
+   case giveStepNew a (currentPrefix d) (current d) of
       Nothing -> 
          return "Sorry, no hint available"
-      Just (doc, rule, before, after) ->
+      Just (doc, rule, newPrefix, before, after) ->
          return $ unlines 
             [ "Use rule " ++ name rule
             , "   to rewrite the term into:"
@@ -112,11 +113,11 @@ stepText = logMsg "Step" $ withState $ \a d ->
 nextStep :: Session -> IO (String, Bool)
 nextStep = logCurrent "Next" $ \(Session _ ref) -> do
    St a d <- readIORef ref
-   case giveStep a (terms d) of
+   case giveStepNew a (currentPrefix d) (current d) of
       Nothing -> 
          return ("No more steps left to do", False)
-      Just (_, rule, _, new) -> do
-         writeIORef ref $ St a (Step d rule new)
+      Just (_, rule, newPrefix, _, new) -> do
+         writeIORef ref $ St a (Step d rule newPrefix new)
          return ("Successfully applied rule " ++ name rule, True)
 
 ruleNames :: Session -> IO [String]
@@ -131,52 +132,49 @@ getRuleAtIndex i = withState $ \a d -> do
 applyRuleAtIndex :: Int -> [String] -> Session -> IO (String, Bool)
 applyRuleAtIndex i args (Session _ ref) = do
    St a d <- readIORef ref
-   let rule = filter (not . isMinorRule) (ruleset a) !! i
-   case safeHead (useArguments args rule (current d)) of
-      Nothing  -> return ("Could not apply rule " ++ name rule, False)
-      Just new -> do 
-         writeIORef ref $ St a (Step d rule new)
+   let rule    = filter (not . isMinorRule) (ruleset a) !! i
+       results = useArguments args rule (current d)
+       answers = giveStepsNew a (currentPrefix d) (current d)
+       check    (_, r, _, _, new) = r==rule && any (equality a new) results
+       thisRule (_, r, _, _, _)   = r==rule
+   case safeHead (filter check answers) of
+      Just (_, _, newPrefix, _, new) -> do
+         writeIORef ref $ St a (Step d rule newPrefix new)
          return ("Successfully applied rule " ++ name rule, True)
-   
-{-
-askForArguments :: (forall a . Rule a -> a -> IO ()) -> Int -> Session -> IO (String, Bool)
-askForArguments ask i (Session _ ref) = do
-   St a d <- readIORef ref
-   let rule = filter (not . isMinorRule) (ruleset a) !! i
-   ma <- if   hasArguments rule 
-         then ask rule (current d) 
-         else return () -- apply rule (current d))
-   {-case ma of
-      Just new -> do
-         writeIORef ref $ St a (Step d rule new)
-         return ("Successfully applied rule " ++ name rule, True) -}
-   return ("Impossible to apply rule " ++ name rule, False) -}
+      _ | any thisRule answers -> 
+         return ("Use rule " ++ name rule ++ " with different arguments", False)
+      _ -> 
+         return ("Try a different rule", False)
 
 --------------------------------------------------
 -- Derivations
 
-data Derivation a = Start a | Step (Derivation a) (Rule a) a -- snoc list for fast access to current term
+data Derivation a = Start a | Step (Derivation a) (Rule a) Prefix a -- snoc list for fast access to current term
 
 current :: Derivation a -> a
-current (Start a)    = a
-current (Step _ _ a) = a
+current (Start a)      = a
+current (Step _ _ _ a) = a
 
 initial :: Derivation a -> a
-initial (Start a)    = a
-initial (Step d _ _) = initial d
+initial (Start a)      = a
+initial (Step d _ _ _) = initial d
+
+currentPrefix :: Derivation a -> Prefix
+currentPrefix (Start _)      = emptyPrefix
+currentPrefix (Step _ _ p _) = p
 
 -- | to do: make this function efficient (accumulating parameter)
 terms :: Derivation a -> [a]
-terms (Start a) = [a]
-terms (Step d _ a) = terms d ++ [a]
+terms (Start a)      = [a]
+terms (Step d _ _ a) = terms d ++ [a]
 
 showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (Start a)    = f a
-showDerivation f (Step d r a) = showDerivation f d ++ "\n   => [" ++ name r ++ "]\n" ++ f a
+showDerivation f (Start a)      = f a
+showDerivation f (Step d r _ a) = showDerivation f d ++ "\n   => [" ++ name r ++ "]\n" ++ f a
 
 derivationLength :: Derivation a -> Int
-derivationLength (Start _)    = 0
-derivationLength (Step d _ _) = 1 + derivationLength d
+derivationLength (Start _)      = 0
+derivationLength (Step d _ _ _) = 1 + derivationLength d
 
 --------------------------------------------------
 -- Logging

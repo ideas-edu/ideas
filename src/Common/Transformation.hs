@@ -14,7 +14,7 @@ module Common.Transformation
    , Transformation, makeTrans, makeTransList, hasArguments
    , LiftPair(..), liftTrans, liftRule, idRule, emptyRule, app, app2, app3, inverseRule, buggyRule
    , smartGen, checkRule, checkRuleSmart, propRule, propRuleConditional, checkRuleConditional, arguments
-   , Argument(..), makeArgument, getArguments, useArguments
+   , Argument(..), makeArgument, getArguments, useArguments, ratioArgument, ToArgument(..)
    ) where
 
 import qualified Data.Set as S
@@ -175,49 +175,35 @@ makeArgument descr = Argument descr Nothing parse show
                 _ -> Nothing
 
 
-{-
-class (Show a, Read a) => Argument a where
-   showArgument  :: a -> String
-   showArguments :: a -> [String]
-   readArgument  :: String -> Maybe a
-   readArguments :: [String] -> ([Bool], Maybe a)
-   -- default definition
-   showArgument    = show
-   showArguments a = [showArgument a]
-   readArgument  s = case reads s of
-                        [(a, xs)] | all isSpace xs -> return a
-                        _ -> Nothing
-   readArguments xs = let ma = maybe Nothing readArgument (safeHead xs)
-                      in ([isJust ma], ma)
+class ToArgument a where
+   toArgument :: String -> Argument a
 
-numberOfArguments :: Argument a => a -> Int
-numberOfArguments = length . showArguments
+instance ToArgument Int where
+   toArgument = makeArgument
 
-instance Argument Int
+instance ToArgument Integer where
+   toArgument = makeArgument
 
-instance Argument Rational where
-   showArgument r = 
-      show (numerator r) ++  if denominator r == 1 then "" else "/" ++ show (denominator r)
-   readArgument s = 
+instance Integral a => ToArgument (Ratio a) where
+   toArgument = ratioArgument
+
+ratioArgument :: Integral a => String -> Argument (Ratio a)
+ratioArgument descr = Argument descr Nothing parseRatio showRatio
+ where
+   showRatio  r = show (numerator r) ++ if denominator r == 1 then "" else "/" ++ show (denominator r)
+   parseRatio s = 
       let readDivOp s = 
              case dropWhile isSpace s of
                 ('/':rest) -> return rest
-                _        -> fail "no (/) operator" 
-      in safeHead [ fromInteger x / fromInteger y | (x, s1) <- reads s, s2 <- readDivOp s1, (y, s3) <- reads s2, y /= 0, all isSpace s3 ]
-      
-instance (Argument a, Argument b) => Argument (a, b) where
-   showArguments (a, b) = showArguments a ++ showArguments b
-   readArguments xs =
-      let (bs1, ma) = readArguments xs
-          (bs2, mb) = readArguments ys
-          ys = drop (length bs1) xs
-      in (bs1++bs2, liftM2 (,) ma mb)
-   
-instance (Argument a, Argument b, Argument c) => Argument (a, b, c) where
-   showArguments (a, b, c) = showArguments a ++ showArguments b ++ showArguments c
-   readArguments = second (fmap f) . readArguments
-    where f (a, (b, c)) = (a, b, c) 
-         -}
+                [] -> return "1"
+                _  -> fail "no (/) operator" 
+      in safeHead [ fromInteger x / fromInteger y 
+                  | (x, s1) <- reads s
+                  , s2 <- readDivOp s1
+                  , (y, s3) <- reads s2
+                  , y /= 0
+                  , all isSpace s3 
+                  ]
 
 app :: (a -> Transformation ctx) -> Argument a -> (ctx -> Maybe a) -> Transformation ctx
 app f arg g = 

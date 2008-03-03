@@ -54,7 +54,6 @@ main =
         undoButton     <- fromXml castToButton      "undoButton"
         submitButton   <- fromXml castToButton      "submitButton"
         newButton      <- fromXml castToButton      "newButton"
-        applyButton    <- fromXml castToButton      "applyButton"
         domainBox      <- fromXml castToComboBox    "domainBox"
         ruleBox        <- fromXml castToComboBox    "ruleBox"
         progressBar    <- fromXml castToProgressBar "progressBar"
@@ -150,9 +149,10 @@ main =
            textBufferSetText feedbackBuffer txt
            when ok updateAll
         
-        onClicked applyButton $ do
+        onChanged ruleBox $ do
            mi <- comboBoxGetActive ruleBox
            when (isJust mi) $ do
+              comboBoxSetActive ruleBox (-1)
               Some rule <- getRuleAtIndex (fromJust mi) session
               case hasArguments rule of
               

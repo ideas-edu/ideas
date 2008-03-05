@@ -13,7 +13,6 @@ import Common.Exercise
 import Common.Strategy
 import Common.Transformation
 import Common.Utils
-import Common.Move
 import Common.Unification
 import Domain.Fraction
 import Test.QuickCheck

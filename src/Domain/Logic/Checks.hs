@@ -16,7 +16,6 @@ import Common.Context
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Utils
-import Common.Move
 import Domain.Logic
 import Common.Unification
 import Test.QuickCheck

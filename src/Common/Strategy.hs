@@ -38,8 +38,8 @@ module Common.Strategy
 import Prelude hiding (fail, not, repeat, sequence)
 import qualified Prelude as Prelude
 import Common.Apply
+import Common.Context
 import Common.Transformation
-import Common.Move
 import Common.Utils
 import qualified Common.Grammar as RE
 import Debug.Trace
@@ -178,21 +178,30 @@ fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = S $ RE.fix $ unS . f . S
 
 -- | Apply a strategy on (exactly) one of the term's direct children
-once :: (IsStrategy f, Move a) => f a -> Strategy a
-once s = ruleMovesDown <*> s <*> ruleMoveUp
+once :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
+once s = ruleMoveDown <*> s <*> ruleMoveUp
+ where
+   ruleMoveDown = minorRule (makeSimpleRuleList "MoveDown" moveDown)
+   moveDown c = 
+      let n = maybe 0 (pred . length . children) (currentFocus c)
+      in [ changeLocation (++[i]) c | i <- [0 .. n] ]
+   
+   ruleMoveUp = minorRule (makeSimpleRule "MoveUp" moveUp)
+   moveUp c | null (location c) = Nothing 
+            | otherwise = return $ changeLocation init c
 
 -- | Apply a strategy somewhere in the term
-somewhere :: (IsStrategy f, Move a) => f a -> Strategy a
+somewhere :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
 somewhere s = fix $ \this -> s <|> once this
 
 -- | Search for a suitable location in the term to apply the strategy using a
 -- top-down approach
-topDown :: (IsStrategy f, Move a) => f a -> Strategy a
+topDown :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
 topDown s = fix $ \this -> s |> once this
 
 -- | Search for a suitable location in the term to apply the strategy using a
 -- bottom-up approach
-bottomUp :: (IsStrategy f, Move a) => f a -> Strategy a
+bottomUp :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
 bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
 
 {- The ideal implementation does not yet work: there appears to be a strange

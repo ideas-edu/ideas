@@ -12,7 +12,6 @@ module Domain.Fraction.Rules where
 
 import qualified Data.Set as S
 import Domain.Fraction.Frac
-import Domain.Fraction.Zipper
 import Common.Transformation
 import Common.Unification
 import Ratio

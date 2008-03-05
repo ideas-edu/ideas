@@ -188,8 +188,16 @@ getRuleNames = map name . ruleset
                 
 newtype Doc a = D [DocItem a]
 
-data DocItem a = Text String | Term a | DocRule (Rule a)
-           
+data DocItem a = Text String | Term a | DocRule (Some Rule)
+
+instance Functor Doc where
+   fmap f (D xs) = D (map (fmap f) xs)
+
+instance Functor DocItem where
+   fmap f (Text s) = Text s
+   fmap f (Term a) = Term (f a)
+   fmap f (DocRule r) = DocRule r 
+
 instance Show a => Show (Doc a) where
    show = showDocWith show
 
@@ -202,9 +210,9 @@ showDoc = showDocWith . prettyPrinter
 showDocWith :: (a -> String) -> Doc a -> String
 showDocWith f (D xs) = concatMap g xs
  where
-   g (Text s)    = s
-   g (Term a)    = f a 
-   g (DocRule r) = name r
+   g (Text s) = s
+   g (Term a) = f a 
+   g (DocRule (Some r)) = name r
    
 infixr 5 <>
 
@@ -221,7 +229,7 @@ term :: a -> Doc a
 term a = D [Term a]
 
 rule :: Rule a -> Doc a
-rule r = D [DocRule r]
+rule r = D [DocRule (Some r)]
 
 ---------------------------------------------------------------
 -- Checks for an exercise

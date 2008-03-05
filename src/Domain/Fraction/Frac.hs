@@ -9,6 +9,7 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction.Frac where
 
+import Common.Context (Uniplate(..))
 import Common.Unification
 import Common.Utils
 import Common.Transformation
@@ -86,6 +87,15 @@ eqFrac = (~=)
 varsFrac :: Frac -> [String]
 varsFrac = foldFrac (return, (\x -> []), union, union, union, union)
 
+instance Uniplate Frac where
+   uniplate p =
+      case p of 
+         p :*: q -> ([p, q], \[a, b] -> a :*: b)
+         p :/: q -> ([p, q], \[a, b] -> a :/: b)
+         p :+: q -> ([p, q], \[a, b] -> a :+: b)
+         p :-: q -> ([p, q], \[a, b] -> a :-: b)
+         _       -> ([], \[] -> p)
+         
 instance HasVars Frac where
    getVars = S.fromList . varsFrac
 

@@ -8,14 +8,13 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Fraction.Parser 
-   ( parseFrac, ppFrac, ppFracPrio, ppFracInContext, ppFracPars )
+   ( parseFrac, ppFrac, ppFracPrio, ppFracPars )
    where
 
 import UU.Parsing
 import UU.Parsing.CharParser
 import UU.Scanner
 import Domain.Fraction.Frac
-import Domain.Fraction.Zipper
 import Data.Char
 import Ratio
 
@@ -79,25 +78,6 @@ ppFracPrio n p = foldFrac (var, lit, binop 7 "*", div 7 "/", binop 6 "+", binop 
    nott p n  = ("~"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
    
-ppFracInContext :: FracInContext -> String
-ppFracInContext = ppFracInContextPrio 0
-
--- hack
-ppFracInContextPrio :: Int -> FracInContext -> String
-ppFracInContextPrio prio (Loc ctx logic) = concatMap f . ppFracPrio prio . noContext $ Loc ctx (Var "*")
- where
-   f '*' = "[ " ++ ppFracPrio (getPrio ctx) logic ++ " ]"
-   f c   = [c]
-   getPrio Top          = prio
-   getPrio (AddL _ _) = 6
-   getPrio (AddR _ _) = 5
-   getPrio (SubL _ _) = 5
-   getPrio (SubR _ _) = 6
-   getPrio (DivL _ _) = 7
-   getPrio (DivR _ _) = 6
-   getPrio (MulL _ _) = 7
-   getPrio (MulR _ _) = 6
-
 -- | Pretty printer that produces extra parentheses: also see parseFracPars
 ppFracPars :: Frac -> String
 ppFracPars = ppFracParsCode 0

@@ -10,7 +10,6 @@
 module Domain.Logic
    ( module Domain.Logic.Formula
    , module Domain.Logic.Generator
-   , module Domain.Logic.Zipper
    , module Domain.Logic.Parser
    , module Domain.Logic.Strategies
    , module Domain.Logic.Rules
@@ -19,7 +18,6 @@ module Domain.Logic
    
 import Domain.Logic.Formula
 import Domain.Logic.Generator
-import Domain.Logic.Zipper
 import Domain.Logic.Parser
 import Domain.Logic.Strategies
 import Domain.Logic.Rules

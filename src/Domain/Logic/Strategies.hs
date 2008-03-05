@@ -10,42 +10,43 @@
 module Domain.Logic.Strategies where
 
 import Prelude hiding (repeat)
-import Domain.Logic.Zipper
 import Domain.Logic.Rules
+import Domain.Logic.Formula
+import Common.Context (Context, liftRuleToContext)
 import Common.Strategy
 
-eliminateConstants :: Strategy LogicInContext
+eliminateConstants :: Strategy (Context Logic)
 eliminateConstants = repeat $ somewhere $
-   alternatives $ map liftLogicRule rules
+   alternatives $ map liftRuleToContext rules
  where 
    rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
            , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
            , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
            ]
 	   
-eliminateConstantsDWA :: Strategy LogicInContext
+eliminateConstantsDWA :: Strategy (Context Logic)
 eliminateConstantsDWA = repeat $ somewhere $
-   alternatives $ map liftLogicRule rules
+   alternatives $ map liftRuleToContext rules
  where 
    rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
            , ruleFalseZeroAnd, ruleNotBoolConst
            ]
 
-eliminateImplEquiv :: Strategy LogicInContext
+eliminateImplEquiv :: Strategy (Context Logic)
 eliminateImplEquiv = repeat $ somewhere $
-          liftLogicRule ruleDefImpl
-      <|> liftLogicRule ruleDefEquiv
+          liftRuleToContext ruleDefImpl
+      <|> liftRuleToContext ruleDefEquiv
       
-eliminateNots :: Strategy LogicInContext
+eliminateNots :: Strategy (Context Logic)
 eliminateNots = repeat $ somewhere $ 
-          liftLogicRule ruleDeMorganAnd
-      <|> liftLogicRule ruleDeMorganOr
-      <|> liftLogicRule ruleNotNot
+          liftRuleToContext ruleDeMorganAnd
+      <|> liftRuleToContext ruleDeMorganOr
+      <|> liftRuleToContext ruleNotNot
       
-orToTop :: Strategy LogicInContext
-orToTop = repeat $ somewhere $ liftLogicRule ruleAndOverOr
+orToTop :: Strategy (Context Logic)
+orToTop = repeat $ somewhere $ liftRuleToContext ruleAndOverOr
 
-toDNF :: LabeledStrategy LogicInContext
+toDNF :: LabeledStrategy (Context Logic)
 toDNF =  label "Bring to dnf"
       $  label "Eliminate constants"                 eliminateConstants
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv

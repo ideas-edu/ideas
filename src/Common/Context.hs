@@ -26,6 +26,7 @@ import Control.Monad
 import Data.Char
 import Data.Dynamic
 import Data.List
+import Test.QuickCheck
 import qualified Data.Map as M
 
 ----------------------------------------------------------
@@ -41,6 +42,10 @@ instance Show a => Show (Context a) where
 
 instance Functor Context where
    fmap f (C loc env a) = C loc env (f a)
+
+instance Arbitrary a => Arbitrary (Context a) where
+   arbitrary   = liftM inContext arbitrary
+   coarbitrary = coarbitrary . fromContext
 
 inContext :: a -> Context a
 inContext = C [] M.empty

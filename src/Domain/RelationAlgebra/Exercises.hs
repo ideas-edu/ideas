@@ -2,30 +2,25 @@ module Domain.RelationAlgebra.Exercises where
 
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator
-import Domain.RelationAlgebra.Zipper
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
 import Common.Transformation
 import Common.Exercise
+import Common.Context
 import Control.Monad
 import Test.QuickCheck
 
-cnfExercise :: Exercise RelAlgInContext
+cnfExercise :: Exercise (Context RelAlg)
 cnfExercise = makeExercise
    { shortTitle = "To conjunctive normal form"
-
    , parser        = \s -> case parseRelAlg s of
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs), Just (inContext p))
-   , prettyPrinter = ppRelAlg . noContext
+   , prettyPrinter = ppRelAlg . fromContext
 --   , equivalence = \x y -> apply toCNF (inContext $ noContext x) == apply toCNF (inContext $ noContext y)
-   , ruleset   = map liftRelAlgRule relAlgRules
+   , ruleset   = map liftRuleToContext relAlgRules
    , strategy  = toCNF
    , generator = liftM inContext arbitrary
-   , suitableTerm = not . isCNF . noContext
+   , suitableTerm = not . isCNF . fromContext
    }
-   
-instance Arbitrary a => Arbitrary (Loc a) where
-   arbitrary = liftM (Loc Top) arbitrary
-   coarbitrary (Loc _ a) = coarbitrary a

@@ -10,12 +10,36 @@
 module Common.Move where
 
 import Control.Monad
+import Common.Context
 import Common.Transformation
 import Common.Utils
 import Test.QuickCheck
 import Data.List
 import Data.Maybe
 
+instance Uniplate a => Move (Context a) where
+   moveUp c
+      | null (location c) = Nothing
+      | otherwise         = Just (changeLocation init c)
+   moveLeft = moveToChild $ \xs -> 
+                 case xs of
+                    [_, _] -> Just 0
+                    _      -> Nothing
+   moveRight = moveToChild $ \xs -> 
+                 case xs of
+                    [_, _] -> Just 1
+                    _      -> Nothing
+   moveDown = moveToChild $ \xs -> 
+                 case xs of
+                    [_] -> Just 0
+                    _   -> Nothing
+
+moveToChild :: Uniplate a => ([a] -> Maybe Int) -> Context a -> Maybe (Context a)
+moveToChild f c = do
+   p <- currentFocus c
+   n <- f (children p)
+   return $ changeLocation (++[n]) c
+   
 class Move a where
    moveLeft, moveRight, moveUp, moveDown :: a -> Maybe a
    movesDown :: a -> [a]

@@ -20,7 +20,7 @@ import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not)
 
-
+{-
 stopC (Major _ _) = True
 stopC _           = False
 
@@ -33,7 +33,7 @@ stopC _           = False
 
 --t0 = inContext $ Not (Var "x" :||: Var "y") 
 t0 = inContext $ makeMatrix [[6,3],[2,4]]
-p0 = emptyPrefix 
+p0 = emptyPrefix -}
 
 -----------------------------------------------------------
 --- QuickCheck properties

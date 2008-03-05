@@ -9,7 +9,6 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction
    ( module Domain.Fraction.Frac
-   , module Domain.Fraction.Zipper
    , module Domain.Fraction.Parser
    , module Domain.Fraction.Strategies
    , module Domain.Fraction.Rules
@@ -18,7 +17,6 @@ module Domain.Fraction
    ) where
    
 import Domain.Fraction.Frac
-import Domain.Fraction.Zipper
 import Domain.Fraction.Parser
 import Domain.Fraction.Strategies
 import Domain.Fraction.Rules

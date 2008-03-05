@@ -10,47 +10,48 @@
 module Domain.Fraction.Strategies where
 
 import Prelude hiding (repeat)
-import Domain.Fraction.Zipper
+import Domain.Fraction.Frac
 import Domain.Fraction.Rules
+import Common.Context (Context, liftRuleToContext)
 import Common.Strategy
 
-toSimple :: LabeledStrategy FracInContext
+toSimple :: LabeledStrategy (Context Frac)
 toSimple = label "Simplify expression" $ repeat $
            label "Eliminate zero's" eliminateZeros
        <*> label "Eliminate units"  eliminateUnits
        <*> label "Do calculation"   calculate
 
-eliminateZeros :: Strategy FracInContext
+eliminateZeros :: Strategy (Context Frac)
 eliminateZeros = repeat $ somewhere $
-                 liftFracRule ruleDivZero
-             <|> liftFracRule ruleMulZero
-             <|> liftFracRule ruleUnitAdd
-             <|> liftFracRule ruleSubZero
+                 liftRuleToContext ruleDivZero
+             <|> liftRuleToContext ruleMulZero
+             <|> liftRuleToContext ruleUnitAdd
+             <|> liftRuleToContext ruleSubZero
 
-eliminateUnits :: Strategy FracInContext
+eliminateUnits :: Strategy (Context Frac)
 eliminateUnits = repeat $ somewhere $ 
-                 liftFracRule ruleUnitMul
-             <|> liftFracRule ruleDivOne
-             <|> liftFracRule ruleDivSame
-             <|> liftFracRule ruleMulVar
-             <|> liftFracRule ruleSubVar
+                 liftRuleToContext ruleUnitMul
+             <|> liftRuleToContext ruleDivOne
+             <|> liftRuleToContext ruleDivSame
+             <|> liftRuleToContext ruleMulVar
+             <|> liftRuleToContext ruleSubVar
 
-calculate :: Strategy FracInContext
+calculate :: Strategy (Context Frac)
 calculate = somewhere $
-            liftFracRule ruleMul
-        <|> liftFracRule ruleDiv
-        <|> liftFracRule ruleAdd
-        <|> liftFracRule ruleSub
-        <|> liftFracRule ruleGCD
-        <|> liftFracRule ruleDistMul
-        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleAddFrac
-        <|> liftFracRule ruleCommonDenom <*> liftFracRule ruleSubFrac
+            liftRuleToContext ruleMul
+        <|> liftRuleToContext ruleDiv
+        <|> liftRuleToContext ruleAdd
+        <|> liftRuleToContext ruleSub
+        <|> liftRuleToContext ruleGCD
+        <|> liftRuleToContext ruleDistMul
+        <|> liftRuleToContext ruleCommonDenom <*> liftRuleToContext ruleAddFrac
+        <|> liftRuleToContext ruleCommonDenom <*> liftRuleToContext ruleSubFrac
 --       <|> calcFrac
 
 
 {-
 calcFrac :: Strategy FracInContext
-calcFrac =  liftFracRule ruleCommonDenom 
-        <*> (liftFracRule ruleAddFrac <|> liftFracRule ruleSubFrac)
-        <*> liftFracRule ruleGCD
+calcFrac =  liftRuleToContext ruleCommonDenom 
+        <*> (liftRuleToContext ruleAddFrac <|> liftRuleToContext ruleSubFrac)
+        <*> liftRuleToContext ruleGCD
 -}

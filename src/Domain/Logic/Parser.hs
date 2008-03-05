@@ -8,14 +8,13 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser 
-   ( parseLogic, parseLogicPars, ppLogic, ppLogicPrio, ppLogicInContext, ppLogicPars
+   ( parseLogic, parseLogicPars, ppLogic, ppLogicPrio, ppLogicPars
    ) where
 
 import UU.Parsing
 import UU.Parsing.CharParser
 import UU.Scanner
 import Domain.Logic.Formula
-import Domain.Logic.Zipper
 import Data.Char
 
 -----------------------------------------------------------
@@ -94,12 +93,13 @@ ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", bi
    nott p n  = ("~"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
    
-ppLogicInContext :: LogicInContext -> String
+{-
+ppLogicInContext :: Context Logic -> String
 ppLogicInContext = ppLogicInContextPrio 0
 
 -- hack
-ppLogicInContextPrio :: Int -> LogicInContext -> String
-ppLogicInContextPrio = undefined {- prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noContext $ Loc ctx (Var "*")
+ppLogicInContextPrio :: Int -> Context Logic -> String
+ppLogicInContextPrio = undefined prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noContext $ Loc ctx (Var "*")
  where
    f '*' = "[ " ++ ppLogicPrio (getPrio ctx) logic ++ " ]"
    f c   = [c]

@@ -1,5 +1,6 @@
 module Domain.RelationAlgebra.Formula where
 
+import Common.Context (Uniplate(..))
 import Common.Unification
 import Common.Utils
 import Data.List
@@ -229,6 +230,17 @@ unifyRelAlg p q =
 varsRelAlg :: RelAlg -> [String]
 varsRelAlg = foldRelAlg (return, union, union, union, union, id, id, [], [])      
 
+instance Uniplate RelAlg where
+   uniplate term =
+      case term of 
+         s :.:  t  -> ([s, t], \[a, b] -> a :.:   b)
+         s :+:  t  -> ([s, t], \[a, b] -> a :+:   b)
+         s :&&: t  -> ([s, t], \[a, b] -> a :&&:  b)
+         s :||: t  -> ([s, t], \[a, b] -> a :||:  b)
+         Not s     -> ([s], \[a] -> Not a)
+         Inv s     -> ([s], \[a] -> Inv a)
+         _         -> ([], \[] -> term)
+         
 instance HasVars RelAlg where
    getVars = S.fromList . varsRelAlg
 

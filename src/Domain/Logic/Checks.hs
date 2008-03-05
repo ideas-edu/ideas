@@ -60,10 +60,11 @@ propRuleNames = length xs == length (nub xs)
  where xs = map name logicRules
 
 -- zipper
+{-
 propContext :: Movement -> LogicInContext -> Property      
 propContext dir loc = 
    let newloc = move dir loc 
-   in isJust newloc ==> noContext loc == noContext (fromJust newloc)
+   in isJust newloc ==> noContext loc == noContext (fromJust newloc) -}
          
 propPretty :: Logic -> Bool
 propPretty p = 
@@ -71,10 +72,11 @@ propPretty p =
    in f ppLogic == f ppLogicPars
  
 -- pretty-printer zipper
+{-
 propCtxPP :: LogicInContext -> Bool
 propCtxPP ctx = ppLogic (noContext ctx) ~= ppLogicInContext ctx
  where s ~= t = filter p s == filter p t
-       p c = not (c `elem` "[]" || isSpace c)
+       p c = not (c `elem` "[]" || isSpace c) -}
 
 propStratDNF :: Logic -> Property
 propStratDNF logic = 
@@ -82,7 +84,7 @@ propStratDNF logic =
        binop x y = succ (x `max` y)
    in isSimple logic ==>
       case apply toDNF (inContext logic) of
-         Just this -> isDNF (noContext this)
+         Just this -> isDNF (fromContext this)
          _ -> False
 
 propPrefix :: Logic -> Bool

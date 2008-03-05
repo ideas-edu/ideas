@@ -12,7 +12,6 @@ module Domain.Logic.Rules where
 
 import qualified Data.Set as S
 import Domain.Logic.Formula
-import Domain.Logic.Zipper
 import Common.Transformation
 import Common.Unification
 

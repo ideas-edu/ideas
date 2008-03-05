@@ -2,15 +2,13 @@ module Domain.RelationAlgebra.Strategies where
 
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Formula
-import Domain.RelationAlgebra.Zipper
-
-
-
+import Common.Context
 import Common.Strategy
 import Prelude hiding (repeat)
-toCNF :: LabeledStrategy RelAlgInContext
+
+toCNF :: LabeledStrategy (Context RelAlg)
 toCNF = label "To CNF" $ 
- repeat ( topDown ( alternatives ( map liftRelAlgRule (
+ repeat ( topDown ( alternatives ( map liftRuleToContext (
  				 [ruleRemCompl
                                  , ruleRemRedunExprs 
                                  , ruleDoubleNegation
@@ -20,7 +18,7 @@ toCNF = label "To CNF" $
                                  ] ++
                                   invRules))
 				 
-		  )|> topDown (alternatives (map liftRelAlgRule (
+		  )|> topDown (alternatives (map liftRuleToContext (
 		  		            [ruleCompOverUnion
 		                            , ruleAddOverIntersec
 					    , ruleDeMorgan
@@ -28,7 +26,7 @@ toCNF = label "To CNF" $
 					    , ruleNotOverAdd
 					    ]))
 		               ) 
-		   |> somewhere (liftRelAlgRule ruleUnionOverIntersec)
+		   |> somewhere (liftRuleToContext ruleUnionOverIntersec)
 	)
        		  
    

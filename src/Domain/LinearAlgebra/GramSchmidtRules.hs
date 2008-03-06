@@ -25,9 +25,9 @@ ruleNormalize = makeSimpleRule "Turn into unit Vector" $
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
 ruleOrthogonal :: Num a => Rule (Context [Vector a])
-ruleOrthogonal = makeRule "Make orthogonal" $ app2 transOrthogonal descr args
+ruleOrthogonal = makeRule "Make orthogonal" $ supplyLabeled2 descr args transOrthogonal
  where
-   descr  = (makeArgument "vector 1", makeArgument "vector 2")
+   descr  = ("vector 1", "vector 2")
    args c = do let xs = take (get varI c - 1) (fromContext c)
                v <- current c 
                i <- findIndex (not . orthogonal v) xs

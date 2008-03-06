@@ -99,16 +99,16 @@ arbBasis = do
    replicateM i (liftM fromList $ replicateM j arbitrary)
 
 liftRuleLeft :: Rule a -> Rule (Either a b)
-liftRuleLeft = liftRule $ LiftPair isLeft (\a _ -> Left a)
+liftRuleLeft = lift $ makeLiftPair isLeft (\a _ -> Left a)
 
 liftRuleRight :: Rule b -> Rule (Either a b)
-liftRuleRight = liftRule $ LiftPair isRight (\b _ -> Right b)
+liftRuleRight = lift $ makeLiftPair isRight (\b _ -> Right b)
 
 liftRuleContextLeft :: Rule (Context a) -> Rule (Context (Either a b))
-liftRuleContextLeft = liftRule $ LiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
+liftRuleContextLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
 
 liftRuleContextRight :: Rule (Context b) -> Rule (Context (Either a b))
-liftRuleContextRight = liftRule $ LiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
+liftRuleContextRight = lift $ makeLiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
 
 instance Arbitrary a => Arbitrary (Matrix a) where
    arbitrary = do

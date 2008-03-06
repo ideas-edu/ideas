@@ -12,6 +12,7 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Apply
 import Common.Utils
+import Data.List
 import Data.IORef
 import Data.Maybe
 import System.Time
@@ -107,8 +108,9 @@ stepText = logMsg "Step" $ withState $ \a d ->
          return $ unlines $
             [ "Use rule " ++ name rule
             ] ++
-            [ "   with arguments " ++ fromJust args
-            | let args = arguments rule before, isJust args
+            [ "   with arguments " ++ showList (fromJust args)
+            | let args = expectedArguments rule before, isJust args
+            , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
             ] ++
             [ "   to rewrite the term into:"
             , prettyPrinter a after
@@ -137,7 +139,9 @@ applyRuleAtIndex :: Int -> [String] -> Session -> IO (String, Bool)
 applyRuleAtIndex i args (Session _ ref) = do
    St a d <- readIORef ref
    let rule    = filter (not . isMinorRule) (ruleset a) !! i
-       results = useArguments args rule (current d)
+       results = case useArguments args rule of
+                    Just new -> applyAll new (current d)
+                    Nothing  -> []
        answers = giveStepsNew a (currentPrefix d) (current d)
        check    (_, r, _, _, new) = r==rule && any (equality a new) results
        thisRule (_, r, _, _, _)   = r==rule

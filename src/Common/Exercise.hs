@@ -6,6 +6,7 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
 import Common.Unification
+import Data.List (intersperse)
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 
@@ -122,10 +123,11 @@ giveStepsNew ex p0@(P xs) a =
                       _      -> []
              stopC (Major _ _) = True
              stopC _           = False
+             showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
              doc r old = text "Use rule " <> rule r <> 
-                case arguments r old of
-                   Just args -> text "\n   with arguments " <> text args
-                   Nothing   -> emptyDoc
+                case expectedArguments r old of
+                   Just xs -> text "\n   with arguments " <> text (showList xs)
+                   Nothing -> emptyDoc
          in concatMap make $ runGrammarUntil stopC a g
       
 {-
@@ -237,7 +239,6 @@ rule r = D [DocRule (Some r)]
 -- | An instance of the Arbitrary type class is required because the random
 -- | term generator that is part of an Exercise is not used for the checks:
 -- | the terms produced by this generator will typically be biased.
-
 
 checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
 checkExercise = checkExerciseWith checkRule

@@ -117,10 +117,11 @@ firstMajorInPrefix p0@(P xs) p a s = fromMaybe ([], Nothing) $ do
 argumentsForSteps :: a -> [Step a] -> Maybe String
 argumentsForSteps a = safeHead . flip rec a . stepsToRules
  where
+   showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
    rec [] _ = []
    rec (r:rs) a
       | isMinorRule r  = concatMap (rec rs) (applyAll r a)
-      | applicable r a = maybe [] return (arguments r a)
+      | applicable r a = maybe [] (return . showList) (expectedArguments r a)
       | otherwise      = []
  
 nextMajorForPrefix :: Prefix -> a -> LabeledStrategy a -> [Int]

@@ -126,7 +126,7 @@ changeFocus f c = fmap (transformAt (location c) f) c
 -- Lifting rewrite rules
 
 liftRuleToContext :: Uniplate a => Rule a -> Rule (Context a)
-liftRuleToContext = liftRule $ LiftPair currentFocus (changeFocus . const)
+liftRuleToContext = lift $ makeLiftPair currentFocus (changeFocus . const)
    
 ---------------------------------------------------------
 -- Uniplate class for generic traversals

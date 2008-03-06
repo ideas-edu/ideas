@@ -16,23 +16,23 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.MatrixRules (covered) -- for context
 import Test.QuickCheck -- hopefully, temporarily
 
-equationsRules :: (ToArgument a, Fractional a) => [Rule (EqsInContext a)]
+equationsRules :: (Argument a, Fractional a) => [Rule (EqsInContext a)]
 equationsRules = [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation, ruleInconsistentSystem
                  , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
                  , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations ]
 
 ruleExchangeEquations :: Rule (EqsInContext a)
-ruleExchangeEquations = makeRule "Exchange" $ app2 (\x y -> liftSystemTrans $ exchange x y) descr args 
+ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
  where
-   descr  = (makeArgument "equation 1", makeArgument "equation 2")
+   descr  = ("equation 1", "equation 2")
    args c = do mv <- minvar c
                i  <- findIndex (S.member mv . getVars) (remaining c)
                return (get covered c, get covered c + i)
 
-ruleEliminateVar :: (ToArgument a, Fractional a) => Rule (EqsInContext a)
-ruleEliminateVar = makeRule "Eliminate variable" $ app3 (\x y z -> liftSystemTrans $ addEquations x y z) descr args
+ruleEliminateVar :: (Argument a, Fractional a) => Rule (EqsInContext a)
+ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
-   descr  = (makeArgument "equation 1", makeArgument "equation 2", toArgument "scale factor")
+   descr  = ("equation 1", "equation 2", "scale factor")
    args c = do 
       mv <- minvar c
       let hd:rest = remaining c
@@ -54,10 +54,10 @@ ruleInconsistentSystem = makeSimpleRule "Inconsistent system (0=1)" $
             guard $ invalidSystem (equations c) && equations c /= stop
             return $ set covered 1 (fmap (const stop) c)
 
-ruleScaleEquation :: (ToArgument a, Fractional a) => Rule (EqsInContext a)
-ruleScaleEquation = makeRule "Scale equation to one" $ app2 (\x y -> liftSystemTrans $ scaleEquation x y) descr args
+ruleScaleEquation :: (Argument a, Fractional a) => Rule (EqsInContext a)
+ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
  where
-   descr  = (makeArgument "equation", toArgument "scale factor")
+   descr  = ("equation", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
                let expr = getLHS eq
                mv <- safeHead (getVarsList expr)
@@ -65,10 +65,10 @@ ruleScaleEquation = makeRule "Scale equation to one" $ app2 (\x y -> liftSystemT
                let coef = 1 / coefficientOf mv expr
                return (get covered c, coef)
    
-ruleBackSubstitution :: (ToArgument a, Num a) => Rule (EqsInContext a)
-ruleBackSubstitution = makeRule "Back substitution" $ app3 (\x y z -> liftSystemTrans $ addEquations x y z) descr args
+ruleBackSubstitution :: (Argument a, Num a) => Rule (EqsInContext a)
+ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
-   descr  = (makeArgument "equation 1", makeArgument "equation 2", toArgument "scale factor")
+   descr  = ("equation 1", "equation 2", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
                let expr = getLHS eq
                mv <- safeHead (getVarsList expr)

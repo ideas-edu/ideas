@@ -8,7 +8,7 @@ import Graphics.UI.Gtk
 
 argumentWindow :: IORef (Maybe [String]) -> Rule a -> IO Window
 argumentWindow result rule = do
-   let args = getArguments rule
+   let args = getDescriptors rule
    w <- windowNew
    windowSetModal w True
    windowResize w 300 ((1 + length args) * 40)
@@ -44,16 +44,16 @@ argumentWindow result rule = do
    widgetShowAll w      
    return w
    
-argumentBox :: ContainerClass a => a -> Some Argument -> IO TextBuffer
+argumentBox :: ContainerClass a => a -> Some ArgDescr -> IO TextBuffer
 argumentBox parent (Some arg) = do
    box  <- hBoxNew True 20
-   lab  <- labelNew (Just $ argumentDescription arg)
+   lab  <- labelNew (Just $ labelArgument arg)
    view <- textViewNew
    flip mapM_ [TextWindowLeft, TextWindowRight, TextWindowTop, TextWindowBottom] $ \tp -> 
       textViewSetBorderWindowSize view tp 2
    
    buffer <- textViewGetBuffer view 
-   textBufferSetText buffer $ maybe "" (showArgument arg) (argumentDefault arg)
+   textBufferSetText buffer $ maybe "" (showArgument arg) (defaultArgument arg)
    
    set box [containerChild := lab]
    set box [containerChild := view]
@@ -62,6 +62,6 @@ argumentBox parent (Some arg) = do
    onBufferChanged  buffer $ do
       txt <- get buffer textBufferText
       let ok = isJust (parseArgument arg txt)
-      labelSetText lab $ argumentDescription arg ++ if ok then " (ok)" else ""
+      labelSetText lab $ labelArgument arg ++ if ok then " (ok)" else ""
    
    return buffer

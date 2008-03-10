@@ -18,9 +18,10 @@ import Data.List
 
 matrixRules :: (Argument a, Fractional a) => [Rule (MatrixInContext a)]
 matrixRules = 
-   [ ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
-   , ruleZerosFP, ruleZerosBP, ruleCoverRow, ruleUncoverRow
-   ]
+   let noArgs f = f (\_ -> Nothing)
+   in [ noArgs ruleScaleRow, noArgs ruleExchangeRows, noArgs ruleAddMultiple ]
+-- ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
+     -- , ruleZerosFP, ruleZerosBP, ruleCoverRow, ruleUncoverRow
 
 ruleFindColumnJ :: Num a => Rule (MatrixInContext a)
 ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
@@ -29,49 +30,37 @@ ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
    return (set columnJ i c)
    
 ruleExchangeNonZero :: Num a => Rule (MatrixInContext a)
-ruleExchangeNonZero = makeRule "ExchangeNonZero" (supplyLabeled2 descr args rowExchange)
- where
-   descr  = ("row 1", "row 2")
-   args c = do
-      nonEmpty c
-      let col = column (get columnJ c) (subMatrix c)
-      i   <- findIndex (/= 0) col
-      return (get covered c, i + get covered c)
+ruleExchangeNonZero = ruleExchangeRows $ \c -> do
+   nonEmpty c
+   let col = column (get columnJ c) (subMatrix c)
+   i   <- findIndex (/= 0) col
+   return (get covered c, i + get covered c)
 
 ruleScaleToOne :: (Argument a, Fractional a) => Rule (MatrixInContext a)
-ruleScaleToOne = makeRule "ScaleToOne" (supplyLabeled2 descr args rowScale)
- where
-   descr  = ("row", "scale factor")
-   args c = do
-      nonEmpty c
-      let pv = entry (0, get columnJ c) (subMatrix c)
-      guard (pv /= 0)
-      return (get covered c, 1 / pv)
+ruleScaleToOne = ruleScaleRow $ \c -> do
+   nonEmpty c
+   let pv = entry (0, get columnJ c) (subMatrix c)
+   guard (pv /= 0)
+   return (get covered c, 1 / pv)
 
 ruleZerosFP :: (Argument a, Fractional a) => Rule (MatrixInContext a)
-ruleZerosFP = makeRule "Introduce zeros (forward pass)" (supplyLabeled3 descr args rowAdd)
- where
-   descr  = ("row 1", "row2", "scale factor")
-   args c = do
-      nonEmpty c
-      let col = drop 1 $ column (get columnJ c) (subMatrix c)
-      i   <- findIndex (/= 0) col
-      let v = negate (col!!i)
-      return (i + get covered c + 1, get covered c, v)
+ruleZerosFP = ruleAddMultiple $ \c -> do
+   nonEmpty c
+   let col = drop 1 $ column (get columnJ c) (subMatrix c)
+   i   <- findIndex (/= 0) col
+   let v = negate (col!!i)
+   return (i + get covered c + 1, get covered c, v)
    
 ruleZerosBP :: (Argument a, Fractional a) => Rule (MatrixInContext a)
-ruleZerosBP = makeRule "Introduce zeros (backward pass)" (supplyLabeled3 descr args rowAdd)
- where
-   descr  = ("row 1", "row2", "scale factor")
-   args c = do
-      nonEmpty c
-      let ri  = row 0 (subMatrix c)
-          j   = length $ takeWhile (==0) ri
-          col = column j (matrix c)
-      guard (any (/= 0) ri)
-      k <- findIndex (/= 0) col
-      let v = negate (col!!k)
-      return (k, get covered c, v)
+ruleZerosBP = ruleAddMultiple $ \c -> do
+   nonEmpty c
+   let ri  = row 0 (subMatrix c)
+       j   = length $ takeWhile (==0) ri
+       col = column j (matrix c)
+   guard (any (/= 0) ri)
+   k <- findIndex (/= 0) col
+   let v = negate (col!!k)
+   return (k, get covered c, v)
 
 ruleCoverRow :: Rule (MatrixInContext a)
 ruleCoverRow = minorRule $ makeRule "CoverRow" $ changeCover (+1)
@@ -79,6 +68,21 @@ ruleCoverRow = minorRule $ makeRule "CoverRow" $ changeCover (+1)
 ruleUncoverRow :: Rule (MatrixInContext a)
 ruleUncoverRow = minorRule $ makeRule "UncoverRow" $ changeCover (\x -> x-1)
 
+---------------------------------------------------------------------------------
+-- Parameterized rules
+
+ruleScaleRow :: (Argument a, Fractional a) => (MatrixInContext a -> Maybe (Int, a)) -> Rule (MatrixInContext a)
+ruleScaleRow f = makeRule "Scale" (supplyLabeled2 descr f rowScale)
+ where descr  = ("row", "scale factor")
+      
+ruleExchangeRows :: Num a => (MatrixInContext a -> Maybe (Int, Int)) -> Rule (MatrixInContext a)
+ruleExchangeRows f = makeRule "Exchange" (supplyLabeled2 descr f rowExchange)
+ where descr = ("row 1", "row 2")
+
+ruleAddMultiple :: (Argument a, Fractional a) => (MatrixInContext a -> Maybe (Int, Int, a)) -> Rule (MatrixInContext a)
+ruleAddMultiple f = makeRule "Add" (supplyLabeled3 descr f  rowAdd)
+ where descr  = ("row 1", "row2", "scale factor")
+      
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
 

@@ -8,6 +8,7 @@ import Domain.Logic.Rules
 import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Context
+import Common.Parsing
 import Control.Monad
 
 {- generator
@@ -21,8 +22,8 @@ dnfExercise :: Exercise (Context Logic)
 dnfExercise = Exercise
    { shortTitle    = "Proposition to DNF" 
    , parser        = \s -> case parseLogicPars s of
-                              (p, [])   -> Right (inContext p)
-                              (p, msgs) -> Left  (text (show msgs), Just (inContext p))
+                              (p, [])   -> Right (inContext (fromRanged p))
+                              (p, msgs) -> Left  (text (show msgs), Just (inContext (fromRanged p)))
    , prettyPrinter = ppLogicPars . fromContext
    , equivalence   = \x y -> fromContext x `eqLogic` fromContext y
    , equality      = \x y -> fromContext x == fromContext y

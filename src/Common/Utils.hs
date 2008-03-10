@@ -5,7 +5,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (todo)
+-- A collection of general utility functions
 --
 -----------------------------------------------------------------------------
 module Common.Utils where

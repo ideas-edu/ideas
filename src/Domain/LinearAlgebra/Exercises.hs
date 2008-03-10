@@ -40,6 +40,8 @@ solveSystemExercise = makeExercise
    , ruleset       = equationsRules
    , finalProperty = inSolvedForm . equations
    , strategy      = generalSolutionLinearSystem
+   , generator     = do m <- generator reduceMatrixExercise
+                        return $ fmap matrixToSystem m
    }
    
 reduceMatrixExercise :: Exercise (MatrixInContext Rational)

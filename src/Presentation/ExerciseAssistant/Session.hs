@@ -143,8 +143,8 @@ applyRuleAtIndex i args (Session _ ref) = do
                     Just new -> applyAll new (current d)
                     Nothing  -> []
        answers = giveStepsNew a (currentPrefix d) (current d)
-       check    (_, r, _, _, new) = r==rule && any (equality a new) results
-       thisRule (_, r, _, _, _)   = r==rule
+       check    (_, r, _, _, new) = name r==name rule && any (equality a new) results
+       thisRule (_, r, _, _, _)   = name r==name rule
    case safeHead (filter check answers) of
       Just (_, _, newPrefix, _, new) -> do
          writeIORef ref $ St a (Step d rule newPrefix new)

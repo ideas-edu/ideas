@@ -1,17 +1,29 @@
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- Facilities to create a log file
+--
+-----------------------------------------------------------------------------
 module Common.Logging where
 
 import Control.Concurrent
 import Control.Monad
 import System.Time
 
+-- | A data type to configure the logging facility. The messages are logged in a file,
+-- and in case an exception is thrown during the logging, a second attempt can be made
 data LogConfig = LogConfig
-   { logFile      :: String
-   , logRetries   :: Int
-   , logDelay     :: Int -- in micro-seconds
-   , logTimeStamp :: Bool
-   , logTracing   :: Bool -- trace messages
+   { logFile      :: String    -- ^ The file name
+   , logRetries   :: Int       -- ^ The number of retries
+   , logDelay     :: Int       -- ^ The delay between attempts (in micro-seconds)
+   , logTimeStamp :: Bool      -- ^ Whether or not to include a time stamp
+   , logTracing   :: Bool      -- ^ Flag to trace the logged messages
    }
 
+-- | A default configuration for logging
 defaultLogConfig :: LogConfig
 defaultLogConfig = LogConfig
    { logFile      = "logfile"
@@ -21,9 +33,11 @@ defaultLogConfig = LogConfig
    , logTracing   = False
    }
 
+-- | Logs a message with the default configuration
 logMessage :: String -> IO ()
 logMessage = logMessageWith defaultLogConfig
 
+-- | Logs a message using the supplied configuration
 logMessageWith :: LogConfig -> String -> IO ()
 logMessageWith config msg = 
    do time <- getClockTime

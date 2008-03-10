@@ -16,6 +16,7 @@ import Common.Context
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Utils
+import Common.Parsing
 import Domain.Logic
 import Common.Unification
 import Test.QuickCheck
@@ -49,7 +50,7 @@ checks = do
    -- thoroughCheck propContext
    quickCheck propStratDNF
  where
-   f p x | null errs = Right y
+   f p x | null errs = Right (fromRanged y)
          | otherwise = Left (errs, Just y)
     where (y, errs) = p x 
     

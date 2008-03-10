@@ -2,7 +2,7 @@
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
 -- Stability   :  provisional
--- Portability :  portable (depends on UU parsing library)
+-- Portability :  portable
 --
 -- (todo)
 --
@@ -11,74 +11,59 @@ module Domain.Logic.Parser
    ( parseLogic, parseLogicPars, ppLogic, ppLogicPrio, ppLogicPars
    ) where
 
-import UU.Parsing
-import UU.Parsing.CharParser
-import UU.Scanner
+import Common.Parsing
 import Domain.Logic.Formula
-import Data.Char
+
+{- testje = map make $ subs $ fst $ parseRangedLogicPars "   (T -> T) ||  (q /\\ F )"
+ where
+   make (a, R (p1, p2)) = show a ++ "    ==    \"" ++  take (column p2 - column p1) (drop (column p1 - 1) input) ++ "\""
+   input = "   (T -> T) ||  (q /\\ F )"  -}
+   
+logicScanner :: Scanner
+logicScanner = (makeCharsSpecial "~" defaultScanner)
+   { keywords         = ["T", "F"]
+   , keywordOperators = ["<->", "||", "->", "/\\", "~"]
+   }
+
+logicOperators :: OperatorTable Logic
+logicOperators = 
+   [ (RightAssociative, [("<->", (:<->:))])
+   , (RightAssociative, [("||",  (:||:))])
+   , (RightAssociative, [("/\\", (:&&:))])
+   , (RightAssociative, [("->",  (:->:))])
+   ]
 
 -----------------------------------------------------------
 --- Parser
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseLogic  :: String -> (Logic, [Message Char Pos])
-parseLogic = runParser pLogic
+parseLogic  :: String -> (Ranged Logic, [Message Token (Maybe Token)])
+parseLogic = parse pLogic . scanWith logicScanner
  where
-   pLogic       =  pChainr  ((:<->:) <$  eqvSym)  disjunction 
-   disjunction  =  pChainr  ((:||:)  <$  orSym )  conjunction 
-   conjunction  =  pChainr  ((:&&:)  <$  andSym)  implication 
-   implication  =  pChainr  ((:->:)  <$  impSym)  basic
-   basic        =  basicWith pLogic
-
+   pLogic = pOperators logicOperators (basicWithPos pLogic)
+   
 -- | Parser for logic formulas that insists on more parentheses: "and" and "or" are associative, 
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
-parseLogicPars  :: String -> (Logic, [Message Char Pos])
-parseLogicPars = runParser pLogic
+parseLogicPars  :: String -> (Ranged Logic, [Message Token (Maybe Token)])
+parseLogicPars = parse pLogic . scanWith logicScanner
  where
-   basic     =  basicWith pLogic
+   basic     =  basicWithPos pLogic
    pLogic    =  flip ($) <$> basic <*> opt composed id
-   composed  =  flip (:<->:) <$ eqvSym <*> basic
-            <|> flip (:->:)  <$ impSym <*> basic
-            <|> (\xs p -> foldr1 (:&&:) (p:xs)) <$> pList1_gr (andSym *> basic)
-            <|> (\xs p -> foldr1 (:||:) (p:xs)) <$> pList1_gr (orSym *> basic)
-
-basicWith :: CharParser Logic -> CharParser Logic
-basicWith p  =  Var <$> pvarid
-            <|> pparens p
-            <|> T <$ pSym 'T'
-            <|> F <$ pSym 'F'
-            <|> Not <$ notSym <*> basicWith p 
-                
-andSym = pToks "/\\"
-orSym  = pToks "||" 
-impSym = pToks "->"
-eqvSym = pToks "<->"
-notSym = pToks "~"
-
-fstPair :: Pair a b -> a
-fstPair (Pair a b)  =  a
-
-runParser  :: CharParser a -> String -> (a, [Message Char Pos])
-runParser pLogic input = (result, messages)
- where
-   steps    = parseString pLogic (filter (not . isSpace) input)
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
-   
-pparens :: CharParser a -> CharParser a
-pparens = pPacked (pSymLow '(') (pSymLow ')')  
-
-pvarid  :: CharParser String
-pvarid = pList1 (pAnySymInf ['a'..'z'])    
-
-pAnySymInf xs = foldr1 (<|>) (map pSymInf xs)
-
-pSymInf a       =  pCostSym   1000 a a
-pSymLow a       =  pCostSym      1 a a
-                                   
+   composed  =  flip (binaryOp (:<->:)) <$ pKey "<->" <*> basic
+            <|> flip (binaryOp (:->:))  <$ pKey  "->" <*> basic
+            <|> (\xs p -> foldr1 (binaryOp (:&&:)) (p:xs)) <$> pList1 (pKey "/\\" *> basic)
+            <|> (\xs p -> foldr1 (binaryOp (:||:)) (p:xs)) <$> pList1 (pKey "||"  *> basic)
+            
+basicWithPos :: Parser Token (Ranged Logic) -> Parser Token (Ranged Logic)
+basicWithPos p  =  (\(s, r) -> leaf (Var s) r) <$> pVarid
+               <|> pParens p
+               <|> leaf T <$> pKey "T"
+               <|> leaf F <$> pKey "F"
+               <|> unaryOp Not <$> pKey "~" <*> basicWithPos p
+                    
 -----------------------------------------------------------
 --- Pretty-Printer
 
@@ -92,27 +77,6 @@ ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", bi
    var       = const . (++)
    nott p n  = ("~"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
-   
-{-
-ppLogicInContext :: Context Logic -> String
-ppLogicInContext = ppLogicInContextPrio 0
-
--- hack
-ppLogicInContextPrio :: Int -> Context Logic -> String
-ppLogicInContextPrio = undefined prio (Loc ctx logic) = concatMap f . ppLogicPrio prio . noContext $ Loc ctx (Var "*")
- where
-   f '*' = "[ " ++ ppLogicPrio (getPrio ctx) logic ++ " ]"
-   f c   = [c]
-   getPrio Top          = prio
-   getPrio (NotD     _) = 5
-   getPrio (AndL   _ _) = 3
-   getPrio (AndR   _ _) = 2
-   getPrio (OrL    _ _) = 2
-   getPrio (OrR    _ _) = 1
-   getPrio (EquivL _ _) = 1
-   getPrio (EquivR _ _) = 0
-   getPrio (ImplL  _ _) = 4
-   getPrio (ImplR  _ _) = 3 -}
 
 -- | Pretty printer that produces extra parentheses: also see parseLogicPars
 ppLogicPars :: Logic -> String

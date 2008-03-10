@@ -26,8 +26,10 @@ import qualified Domain.RelationAlgebra as RA
 import Data.IORef
 
 domains :: [Some Exercise]
-domains = [ Some LA.opgave6b, Some LA.reduceMatrixExercise, Some LA.solveSystemWithMatrixExercise, Some LA.solveGramSchmidt
-          , Some dnfExercise, Some LA.solveSystemExercise, Some simplExercise
+domains = [ Some LA.opgave6b, Some LA.reduceMatrixExercise
+          , Some LA.solveSystemExercise, Some LA.solveSystemWithMatrixExercise
+          , Some LA.solveGramSchmidt
+          , Some dnfExercise, Some simplExercise
           , Some RA.cnfExercise
           ]
 

@@ -46,13 +46,13 @@ infix  6 |-
 data Transformation a
    = Function (a -> [a])
    | Unifiable a => Pattern (ForAll (a, a))
-   | forall b . App (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
+   | forall b . Fun (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b . Lift (LiftPair b a) (Transformation b)
    
 instance Apply Transformation where
    applyAll (Function f) = f
    applyAll (Pattern  p) = maybe [] return . applyPattern p
-   applyAll (App _ f g)  = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
+   applyAll (Fun _ f g)  = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (Lift lp t ) = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
@@ -121,7 +121,7 @@ instance Integral a => Argument (Ratio a) where
 
 -- | Parameterization with one argument using a default label
 supply1 :: Argument x => 
-             (a -> Maybe x) -> (x -> Transformation a) ->  Transformation a
+             (a -> Maybe x) -> (x -> Transformation a) -> Transformation a
 supply1 = supplyLabeled1 "argument 1"
 
 -- | Parameterization with two arguments using default labels
@@ -131,7 +131,7 @@ supply2 = supplyLabeled2 ("argument 1", "argument 2")
 
 -- | Parameterization with three arguments using default labels
 supply3 :: (Argument x, Argument y, Argument z) => 
-             (a -> Maybe (x, y, z)) -> (x -> y -> z -> Transformation a) ->  Transformation a
+             (a -> Maybe (x, y, z)) -> (x -> y -> z -> Transformation a) -> Transformation a
 supply3 = supplyLabeled3 ("argument 1", "argument 2", "argument 3")
 
 -- | Parameterization with one argument using the provided label
@@ -141,7 +141,7 @@ supplyLabeled1 :: Argument x
 supplyLabeled1 s f t = 
    let args = cons (makeArgDescr s) nil
        nest a = (a, ())
-   in App args (fmap nest . f) (\(a, ()) -> t a)
+   in Fun args (fmap nest . f) (\(a, ()) -> t a)
 
 -- | Parameterization with two arguments using the provided labels
 supplyLabeled2 :: (Argument x, Argument y) 
@@ -150,7 +150,7 @@ supplyLabeled2 :: (Argument x, Argument y)
 supplyLabeled2 (s1, s2) f t = 
    let args = cons (makeArgDescr s1) (cons (makeArgDescr s2) nil)
        nest (a, b) = (a, (b, ()))
-   in App args (fmap nest . f) (\(a, (b, ())) -> t a b)
+   in Fun args (fmap nest . f) (\(a, (b, ())) -> t a b)
 
 -- | Parameterization with three arguments using the provided labels
 supplyLabeled3 :: (Argument x, Argument y, Argument z) 
@@ -159,7 +159,7 @@ supplyLabeled3 :: (Argument x, Argument y, Argument z)
 supplyLabeled3 (s1, s2, s3) f t =
    let args = cons (makeArgDescr s1) (cons (makeArgDescr s2) (cons (makeArgDescr s3) nil))
        nest (a, b, c) = (a, (b, (c, ())))
-   in App args (fmap nest . f) (\(a, (b, (c, ()))) -> t a b c)
+   in Fun args (fmap nest . f) (\(a, (b, (c, ()))) -> t a b c)
 
 -- | Checks whether a rule is parameterized
 hasArguments :: Rule a -> Bool
@@ -169,7 +169,7 @@ hasArguments = not . null . getDescriptors
 getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
-      [App args f g] -> someArguments args
+      [Fun args f g] -> someArguments args
       [Lift lp t]    -> getDescriptors (rule {transformations = [t]})
       _              -> []
 
@@ -177,7 +177,7 @@ getDescriptors rule =
 expectedArguments :: Rule a -> a -> Maybe [String]
 expectedArguments rule a =
    case transformations rule of
-      [App args f g] -> fmap (showArguments args) (f a)
+      [Fun args f g] -> fmap (showArguments args) (f a)
       [Lift lp t]    -> do b <- liftPairGet lp a
                            expectedArguments (rule {transformations = [t]}) b
       _              -> Nothing
@@ -194,7 +194,7 @@ useArguments list rule =
    make :: Transformation a -> Maybe (Transformation a)
    make trans = 
       case trans of
-         App args f g -> fmap g (parseArguments args list)
+         Fun args f g -> fmap g (parseArguments args list)
          Lift lp t    -> fmap (Lift lp) (make t)     
          _            -> Nothing
    
@@ -263,12 +263,6 @@ data Rule a = Rule
 instance Show (Rule a) where
    show = name
 
-instance Eq (Rule a) where
-   r1 == r2 = name r1 == name r2
-
-instance Ord (Rule a) where
-   r1 `compare` r2 = name r1 `compare` name r2
-     
 instance Apply Rule where
    applyAll r a = concatMap (`applyAll` a) (transformations r)
 
@@ -388,7 +382,7 @@ instance Arbitrary a => Arbitrary (Transformation a) where
    arbitrary = oneof [liftM Function arbitrary]
    coarbitrary (Function f) = variant 0 . coarbitrary f
    coarbitrary (Pattern _)  = variant 1
-   coarbitrary (App _ _ _)  = variant 2
+   coarbitrary (Fun _ _ _)  = variant 2
    coarbitrary (Lift _ _)   = variant 3
 
 -- generates sufficiently long names

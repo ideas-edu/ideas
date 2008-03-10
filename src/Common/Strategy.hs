@@ -27,12 +27,13 @@ module Common.Strategy
      -- * Operations on strategies
    , runStrategy, acceptsEmpty
      -- * REST
-   , nextRule, nextRulesWith, nextRulesForSequenceWith, trackRule, trackRulesWith
-   , intermediates, intermediatesList, traceStrategy, runStrategyRules, mapStrategy, mapLabeledStrategy
-   , StrategyLocation, remainingStrategy
-   , firstLocation, firstLocationWith, subStrategy, reportLocations
-   , emptyPrefix, continuePrefixUntil, runPrefix, Prefix(..), lastRuleInPrefix
-   , withMarks, prefixToSteps, Step(..), runGrammarUntil, plusPrefix, runGrammarUntilSt, subStrategyOrRule, stepsToRules
+   
+   , remainingStrategy, mapLabeledStrategy, subStrategyOrRule
+   , StrategyLocation, reportLocations
+   -- prefixes and steps
+   , Prefix(..), Step(..), runPrefix, emptyPrefix, plusPrefix, stepsToRules, lastRuleInPrefix
+   , runGrammarUntil, runStrategyRules, prefixToSteps, runGrammarUntilSt, withMarks
+   , continuePrefixUntil
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -274,15 +275,7 @@ remainingStrategy eq p s = alternatives . rec s
                    , b `eq` d
                    , this <- rec s (b:ds)
                    ]
-
-trackRule :: Rule a -> Strategy a -> Strategy a
-trackRule rule = 
-   alternatives . map snd . filter ((==rule) . fst) . firsts
-
-trackRulesWith :: (Rule a -> Bool) -> Rule a -> Strategy a -> a -> Strategy a
-trackRulesWith p rule strategy = 
-   alternatives . map thd3 . filter ((==rule) . last .  fst3) . nextRulesWith p strategy
-
+                   
 intermediates :: Strategy a -> a -> [([Rule a], a, Strategy a)]
 intermediates strategy = concat . intermediatesList strategy
 

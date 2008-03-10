@@ -51,17 +51,17 @@ parseLogicPars  :: String -> (Ranged Logic, [Message Token (Maybe Token)])
 parseLogicPars = parse pLogic . scanWith logicScanner
  where
    basic     =  basicWithPos pLogic
-   pLogic    =  flip ($) <$> basic <*> opt composed id
+   pLogic    =  flip ($) <$> basic <*> optional composed id
    composed  =  flip (binaryOp (:<->:)) <$ pKey "<->" <*> basic
             <|> flip (binaryOp (:->:))  <$ pKey  "->" <*> basic
             <|> (\xs p -> foldr1 (binaryOp (:&&:)) (p:xs)) <$> pList1 (pKey "/\\" *> basic)
             <|> (\xs p -> foldr1 (binaryOp (:||:)) (p:xs)) <$> pList1 (pKey "||"  *> basic)
             
 basicWithPos :: Parser Token (Ranged Logic) -> Parser Token (Ranged Logic)
-basicWithPos p  =  (\(s, r) -> leaf (Var s) r) <$> pVarid
+basicWithPos p  =  (\(s, r) -> toRanged (Var s) r) <$> pVarid
                <|> pParens p
-               <|> leaf T <$> pKey "T"
-               <|> leaf F <$> pKey "F"
+               <|> toRanged T <$> pKey "T"
+               <|> toRanged F <$> pKey "F"
                <|> unaryOp Not <$> pKey "~" <*> basicWithPos p
                     
 -----------------------------------------------------------

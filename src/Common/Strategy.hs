@@ -15,6 +15,8 @@ module Common.Strategy
    ( -- * Data types and type classes
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
+     -- * Running strategies
+   , runStrategy, traceStrategy
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), succeed, fail, label, sequence, alternatives
@@ -24,16 +26,12 @@ module Common.Strategy
    , check, not, repeat, repeat1, try, (|>), exhaustive
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
-     -- * Operations on strategies
-   , runStrategy, acceptsEmpty
-     -- * REST
-   
-   , remainingStrategy, mapLabeledStrategy, subStrategyOrRule
-   , StrategyLocation, reportLocations
-   -- prefixes and steps
-   , Prefix(..), Step(..), runPrefix, emptyPrefix, plusPrefix, stepsToRules, lastRuleInPrefix
-   , runGrammarUntil, runStrategyRules, prefixToSteps, runGrammarUntilSt, withMarks
-   , continuePrefixUntil
+     -- * Strategy locations
+   , StrategyLocation, StrategyOrRule, strategyLocations, subStrategy, rulesInStrategy
+     -- * Prefixes
+   , Prefix, emptyPrefix, makePrefix
+   , Step(..), runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
+   , prefixToSteps, stepsToRules, lastRuleInPrefix
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -43,6 +41,7 @@ import Common.Context
 import Common.Transformation
 import Common.Utils
 import qualified Common.Grammar as RE
+import Control.Monad (foldM)
 import Debug.Trace
 
 -----------------------------------------------------------
@@ -84,6 +83,48 @@ instance IsStrategy Strategy where
    
 instance IsStrategy LabeledStrategy where
    toStrategy = S . RE.symbol . Right
+
+-- instances for Lift
+instance Lift Strategy where
+   lift lp (S re) = S (fmap (either (Left . lift lp) (Right . lift lp)) re)
+   
+instance Lift LabeledStrategy where
+   lift lp (Label n s) = Label n (lift lp s)
+
+-----------------------------------------------------------
+--- Running strategies
+
+-- | Run a strategy on a term (implementation of the overloaded @applyAll@ function)
+runStrategy :: Strategy a -> a -> [a]
+runStrategy strategy a =
+   [ a | acceptsEmpty strategy ] ++
+   [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
+
+-- | Run a strategy on a term, and trace the progress (using Debug.Trace.trace). Useful for debugging strategies
+traceStrategy :: Show a => Strategy a -> a -> [a]
+traceStrategy strategy a = trace (show a) $ 
+   [ trace (replicate 50 '-') a | acceptsEmpty strategy ] ++
+   [ result 
+   | (rule, rest) <- firsts strategy
+   , b <- applyAll rule a
+   , result <- trace ("   ==> [" ++ show rule ++ "]") $ traceStrategy rest b 
+   ]
+
+-- local helper function 
+acceptsEmpty :: Strategy a -> Bool
+acceptsEmpty = RE.acceptsEmpty . noLabels
+
+-- local helper function
+noLabels :: Strategy a -> RE.Grammar (Rule a)
+noLabels = RE.join . fmap (either RE.symbol (noLabels . unlabel)) . unS
+
+-- local helper function
+firsts :: Strategy a -> [(Rule a, Strategy a)]
+firsts = concatMap f . RE.firsts . unS
+ where
+   f (Left r,   re) = [(r, S re)]
+   f (Right ns, re) = [ (r, s <*> S re) | (r, s) <- firsts (unlabel ns) ] ++
+                      if acceptsEmpty (unlabel ns) then firsts (S re) else []
 
 -----------------------------------------------------------
 --- Strategy combinators
@@ -208,173 +249,39 @@ bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
 {- The ideal implementation does not yet work: there appears to be a strange
    interplay between the fixpoint operator (with variables) and the not combinator
    > bottomUp s = fix $ \this -> once this |> s -}
-
+                      
 -----------------------------------------------------------
---- Evaluation
+--- Strategy locations
 
-runStrategy :: Strategy a -> a -> [a]
-runStrategy strategy a =
-   [ a | acceptsEmpty strategy ] ++
-   [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
-
-traceStrategy :: Show a => Strategy a -> a -> [a]
-traceStrategy strategy a = trace (show a) $ 
-   [ trace (replicate 50 '-') a | acceptsEmpty strategy ] ++
-   [ result 
-   | (rule, rest) <- firsts strategy
-   , b <- applyAll rule a
-   , result <- trace ("   ==> [" ++ show rule ++ "]") $ traceStrategy rest b 
-   ]
-
--- local helper function
-noLabels :: Strategy a -> RE.Grammar (Rule a)
-noLabels = RE.join . fmap (either RE.symbol (noLabels . unlabel)) . unS
-
-acceptsEmpty :: Strategy a -> Bool
-acceptsEmpty = RE.acceptsEmpty . noLabels
-
-firsts :: Strategy a -> [(Rule a, Strategy a)]
-firsts = concatMap f . RE.firsts . unS
- where
-   f (Left r,   re) = [(r, S re)]
-   f (Right ns, re) = [ (r, s <*> S re) | (r, s) <- firsts (unlabel ns) ] ++
-                      if acceptsEmpty (unlabel ns) then firsts (S re) else []
-
-
-nextRule :: Strategy a -> a -> [(Rule a, a, Strategy a)]
-nextRule strategy a = [ (r, b, s) | (r, s) <- firsts strategy, b <- applyAll r a ]
-
-nextRulesWith :: (Rule a -> Bool) -> Strategy a -> a -> [([Rule a], a, Strategy a)]
-nextRulesWith p strategy a = concatMap f (nextRule strategy a)
- where f (r, b, s) | p r       = [([r], b, s)]
-                   | otherwise = [ (r:rs, c, t) | (rs, c, t) <- nextRulesWith p s b ] 
-
-nextRulesForSequenceWith :: (a -> a -> Bool) -> (Rule a -> Bool) -> Strategy a -> [a] -> [([Rule a], a)]
-nextRulesForSequenceWith eq p = rec
- where
-   rec strategy as =
-      case as of
-         []     -> []
-         [a]    -> let f (x, y, z) = (x, y)
-                   in map f (nextRulesWith p strategy a)
-         a:d:ds -> [ (rs1++rs2, c)
-                   | (rs1, b, s) <- nextRulesWith p strategy a
-                   , b `eq` d
-                   , (rs2, c) <- rec s (b:ds)
-                   ]
-
-remainingStrategy :: (a -> a -> Bool) -> (Rule a -> Bool) -> Strategy a -> [a] -> Strategy a
-remainingStrategy eq p s = alternatives . rec s
- where
-   rec strategy as =
-      case as of
-         []     -> []
-         [a]    -> [strategy]
-         a:d:ds -> [ this
-                   | (rs1, b, s) <- nextRulesWith p strategy a
-                   , b `eq` d
-                   , this <- rec s (b:ds)
-                   ]
-                   
-intermediates :: Strategy a -> a -> [([Rule a], a, Strategy a)]
-intermediates strategy = concat . intermediatesList strategy
-
--- list of results reflect the search depth
-intermediatesList :: Strategy a -> a -> [[([Rule a], a, Strategy a)]]
-intermediatesList strategy a = takeWhile (Prelude.not . null) (iterate (concatMap next) start)
- where
-   start = [([], a, strategy)]
-   next (rs, a, s) = [ (r:rs, b, ns) | (r, b, ns) <- nextRule s a ]
-
--- variation of runStrategy: TODO, merge
-runStrategyRules :: Strategy a -> a -> [([Rule a], a)]
-runStrategyRules strategy a =
-   [ ([], a) | acceptsEmpty strategy ] ++
-   [ (rule:rs, final) | (rule, rest) <- firsts strategy, b <- applyAll rule a, (rs, final) <- runStrategyRules rest b ]
-
--- returns a strategy without the Succeed alternative
-nonSucceed :: Strategy a -> Strategy a
-nonSucceed = S . RE.nonEmpty . unS
-
-mapStrategy :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapStrategy f (S re) = S (fmap (either (Left . f) (Right . mapLabeledStrategy f)) re)
-
-mapLabeledStrategy :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
-mapLabeledStrategy f (Label n s) = Label n (mapStrategy f s)
- 
------------------------------------------------------------
---- Substrategies
-
+-- | A strategy location corresponds to a substrategy or a rule
 type StrategyLocation = [Int]
 
-subStrategies :: LabeledStrategy a -> [(StrategyLocation, Either (LabeledStrategy a) (Rule a))]
-subStrategies = rec [] 
+type StrategyOrRule a = Either (LabeledStrategy a) (Rule a)
+
+-- | Returns a list of all strategy locations, paired with the labeled substrategy or rule at that location
+strategyLocations :: LabeledStrategy a -> [(StrategyLocation, Either (LabeledStrategy a) (Rule a))]
+strategyLocations = rec [] 
  where
    rec loc ns = 
-      let f is = either (\r -> [ (is, Right r) | Prelude.not (isMinorRule r) ]) (rec is)
+      let f is = either (\r -> [ (is, Right r) | isMajorRule r ]) (rec is)
           xs   = RE.collectSymbols $ combine (,) loc $ unS $ unlabel ns
       in (loc, Left ns) : concatMap (uncurry f) xs
 
-reportLocations :: LabeledStrategy a -> [(StrategyLocation, String)]
-reportLocations = map f . subStrategies
- where f (loc, e) = (loc, either forStrategy forRule e)
-       forStrategy s = strategyName s ++ 
-                       if all (either (const True) isMinorRule . snd) (subStrategies s) then " (skipped)" else ""
-       forRule r = name r ++ if hasArguments r then " (parameterized rule)" else " (rule)"
-
-subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
-subStrategy loc = fmap (either id f) . subStrategyOrRule loc
- where f r = label (name r) (toStrategy r)
-
-subStrategyOrRule :: StrategyLocation -> LabeledStrategy a -> Maybe (Either (LabeledStrategy a) (Rule a))
-subStrategyOrRule loc ns =
+-- | Returns the substrategy or rule at a strategy location. Nothing indicates that the location is invalid
+subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (StrategyOrRule a)
+subStrategy loc s =
    case loc of
-      [] -> return (Left ns)
-      i:is -> do
-         hd <- safeHead $ drop i $ RE.collectSymbols $ unS $ unlabel ns
-         case hd of
-            Left r
-               | null is   -> return (Right r) 
-               | otherwise -> Nothing
-            Right ns -> 
-               subStrategyOrRule is ns
- 
-withIndices :: LabeledStrategy a -> RE.Grammar ([Int], Rule a)
-withIndices = rec [] 
- where
-   rec is = RE.join . combine f is . unS . tag is . unlabel
-   f   is = either (RE.symbol . (,) is) (rec is)
-   begin is = idRule {name="begin " ++ show is}
-   end   is = idRule {name="end " ++ show is}
-   tag is s = begin is <*> s <*> end is
+      []   -> return (Left s) 
+      n:ns -> 
+         case lookup n . RE.collectSymbols . RE.withIndex . unS . unlabel $ s of
+            Just (Left r)  |  null ns -> return (Right r)
+            Just (Right t) -> subStrategy ns t
+            _ -> Nothing
 
-data Step a = Minor [Int] (Rule a) | Major [Int] (Rule a) | Begin [Int] | End [Int]
-   deriving Show 
+-- | Returns a list of all major rules that are part of a labeled strategy
+rulesInStrategy :: LabeledStrategy a -> [Rule a]
+rulesInStrategy s = [ r | (_, Right r) <- strategyLocations s ]
 
-withMarks :: LabeledStrategy a -> RE.Grammar (Step a)
-withMarks = rec [] 
- where
-   rec is = mark is . RE.join . combine f is . unS . unlabel
-   f   is = either (RE.symbol . kind is) (rec is)
-   kind is r = if isMinorRule r then Minor is r else Major is r
-   mark is g = 
-      let begin = RE.symbol (Begin is)
-          end   = RE.symbol (End is) 
-      in begin RE.<*> g RE.<*> end
-   
-firstLocation :: a -> LabeledStrategy a -> Maybe StrategyLocation
-firstLocation a ns = safeHead
-   [ is | ((is, r), _) <- RE.firsts (withIndices ns), applicable r a ]
-
-firstLocationWith :: (StrategyLocation -> Rule a -> Bool) -> LabeledStrategy a -> a -> Maybe (StrategyLocation, a)
-firstLocationWith p strategy = safeHead . rec (withIndices strategy)
- where
-   rec gr a = 
-      let f ((is, r), rest)
-             | p is r    = [ (is, a) | applicable r a ]
-             | otherwise = [ pair    | b <- applyAll r a, pair <- rec rest b ]
-      in concatMap f (RE.firsts gr)
-  
 -- local helper-function
 combine :: ([Int] -> a -> b) -> [Int] -> RE.Grammar a -> RE.Grammar b
 combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex
@@ -382,89 +289,103 @@ combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex
 -----------------------------------------------------------
 --- Prefixes
 
-newtype Prefix = P [Int] deriving Eq
+-- | Abstract data type for a (labeled) strategy with a prefix (a sequence of executed rules). A prefix
+-- is still "aware" of the labels that appear in the strategy. A prefix is encoded as a list of integers 
+-- (and can be reconstructed from such a list: see @makePrefix@).
+data Prefix a = P [(Int, Step a)] (RE.Grammar (Step a))
 
-instance Show Prefix where
-   show (P is) = show is
+instance Show (Prefix a) where
+   show (P xs _) = show (map fst xs)
 
-emptyPrefix :: Prefix 
-emptyPrefix = P []
+-- | Construct the empty prefix for a labeled strategy
+emptyPrefix :: LabeledStrategy a -> Prefix a
+emptyPrefix = makePrefix []
 
-singlePrefix :: Int -> Prefix
-singlePrefix n = P [n]
-
-plusPrefix :: Prefix -> Prefix -> Prefix
-plusPrefix (P xs) (P ys) = P (xs++ys)
-
--- local helper function
-runPrefix :: Prefix -> LabeledStrategy a -> Maybe ([Step a], RE.Grammar (Step a))
-runPrefix (P xs) = rec [] xs . withMarks
+-- | Construct a prefix for a given list of integers and a labeled strategy.
+makePrefix :: [Int] -> LabeledStrategy a -> Prefix a
+makePrefix is ls = rec [] is start
  where
-   rec zs [] g = return (reverse zs, g)
-   rec zs (n:ns) g = 
+   start = withMarks ls
+   
+   rec acc [] g = P (reverse acc) g
+   rec acc (n:ns) g = 
       case drop n (RE.firsts g) of
-         (z, h):_ -> rec (z:zs) ns h
-         _        -> Nothing
+         (z, h):_ -> rec ((n, z):acc) ns h
+         _        -> P [] start
 
-runGrammar :: a -> RE.Grammar (Step a) -> [(a, Prefix)]
-runGrammar = rec
- where
-   rec a g
-      | RE.acceptsEmpty g = [(a, emptyPrefix)]
-      | otherwise         = concat (zipWith f [0..] (RE.firsts g))
-    where
-      add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
-      f n (step, h) =
-         case step of
-            Begin _   -> add n $ rec a h 
-            End _     -> add n $ rec a h
-            Minor _ r -> [ (c, plusPrefix new p) | b <- applyAll r a, (c, p) <- rec b h ]
-            Major _ r -> [ (b, new) | b <- applyAll r a ]
-       where
-         new = singlePrefix n
-         
--- local helper function
-runGrammarUntil :: (Step a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
-runGrammarUntil stop = runGrammarUntilSt (\s step -> (stop step, s)) ()
+-- | The @Step@ data type can be used to inspect the structure of the strategy
+data Step a = Begin StrategyLocation | Step StrategyLocation (Rule a) | End StrategyLocation
+   deriving Show 
 
-runGrammarUntilSt :: (s -> Step a -> (Bool, s)) -> s -> a -> RE.Grammar (Step a) -> [(a, Prefix)]
-runGrammarUntilSt stop s a g
-   | RE.acceptsEmpty g = [(a, emptyPrefix)]
+-- | Complete the remaining strategy
+runPrefix :: Prefix a -> a -> [(a, Prefix a)]
+runPrefix = runPrefixUntil (const False)
+
+-- | Continue with a prefix until a certain condition is fulfilled
+runPrefixUntil :: (Step a -> Bool) -> Prefix a -> a -> [(a, Prefix a)]
+runPrefixUntil stop (P xs0 g0) a0 = 
+   let f (a, g, xs1) = (a, P (xs0++xs1) g)
+   in map f (runPrefixUntilHelper stop a0 g0)
+
+-- local helper
+runPrefixUntilHelper :: (Step a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, RE.Grammar (Step a), [(Int, Step a)])]
+runPrefixUntilHelper stop a g
+   | RE.acceptsEmpty g = [(a, g, [])]
    | otherwise         = concat (zipWith f [0..] (RE.firsts g))
  where
-   add n xs = [ (a, P (n:ns)) | (a, P ns) <- xs ]
-   f n (step, h) =
+   add n s this = [ (a, g, (n,s):xs) | (a, g, xs) <- this ]
+   f n (step, h) = add n step $ 
       case step of
-         Begin js  -> add n $ recStop a h 
-         End _     -> add n $ recStop a h
-         Minor _ r -> forRule n h r
-         Major _ r -> forRule n h r
+         Begin _  -> recStop a h 
+         End _    -> recStop a h
+         Step _ r -> [ result | b <- applyAll r a, result <- recStop b h ]
     where
       recStop a g
-         | fst (stop s step) = [(a, emptyPrefix)]
-         | otherwise = runGrammarUntilSt stop (snd $ stop s step) a g
-      forRule n h r  = 
-         [ (c, plusPrefix (singlePrefix n) p) | b <- applyAll r a, (c, p) <- recStop b h ]
-
-lastRuleInPrefix :: Prefix -> LabeledStrategy a -> Maybe (Rule a)
-lastRuleInPrefix p = maybe Nothing (getRule . reverse . fst) . runPrefix p
+         | stop step = [(a, g, [])]
+         | otherwise = runPrefixUntilHelper stop a g
+ 
+-- | Continue with a prefix until the next major rule
+runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
+runPrefixMajor = runPrefixUntil stop
  where
-   getRule (Minor _ r:_) = Just r
-   getRule (Major _ r:_) = Just r
-   getRule _             = Nothing
+   stop (Step _ r) = isMajorRule r
+   stop _          = False  
+   
+-- | Continue with a prefix until a certain strategy location is reached. At least one
+-- major rule should have been executed
+runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
+runPrefixLocation loc p0 = concatMap check . runPrefixUntil stop p0
+ where
+   stop (End is)    = is==loc
+   stop (Step is r) = is==loc
+   stop _           = False
+   
+   check result@(a, p)
+      | null rules            = [result]
+      | all isMinorRule rules = runPrefixLocation loc p a
+      | otherwise             = [result]
+    where
+      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-prefixToSteps :: Prefix -> LabeledStrategy a -> Maybe [Step a]
-prefixToSteps p = fmap fst . runPrefix p
-
-continuePrefixUntil :: (Step a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
-continuePrefixUntil stop p a s = 
-   case runPrefix p s of 
-      Just (_, g) -> [ (b, plusPrefix p q) | (b, q) <- runGrammarUntil stop a g ]
-      _           -> []
-      
+-- | Returns the steps that belong to the prefix
+prefixToSteps :: Prefix a -> [Step a]
+prefixToSteps (P xs _) = map snd xs
+ 
+-- | Retrieves the rules from a list of steps
 stepsToRules :: [Step a] -> [Rule a]
-stepsToRules = concatMap f 
+stepsToRules steps = [ r | Step _ r <- steps ]
+
+-- | Returns the last rule of a prefix (if such a rule exists)
+lastRuleInPrefix :: Prefix a -> Maybe (Rule a)
+lastRuleInPrefix = safeHead . reverse . stepsToRules . prefixToSteps
+
+-- local helper function
+withMarks :: LabeledStrategy a -> RE.Grammar (Step a)
+withMarks = rec [] 
  where
-   f (Major _ r) = [r]
-   f (Minor _ r) = [r]
-   f _ = []
+   rec is = mark is . RE.join . combine f is . unS . unlabel
+   f   is = either (RE.symbol . Step is) (rec is)
+   mark is g = 
+      let begin = RE.symbol (Begin is)
+          end   = RE.symbol (End is) 
+      in begin RE.<*> g RE.<*> end

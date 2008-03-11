@@ -92,11 +92,11 @@ conv2 = translationFromContext "Matrix to linear system" $ \c ->
    in return $ fmap (const linsys) c 
    
 liftLeft :: LabeledStrategy (Context a) -> LabeledStrategy (Context (Either a b))
-liftLeft = mapLabeledStrategy $ lift $
+liftLeft = lift $
    makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
 
 liftRight :: LabeledStrategy (Context b) -> LabeledStrategy (Context (Either a b))
-liftRight = mapLabeledStrategy $ lift $ 
+liftRight = lift $ 
    makeLiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
 
 maybeInContext :: Context (Maybe a) -> Maybe (Context a)

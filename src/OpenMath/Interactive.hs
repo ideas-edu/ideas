@@ -49,7 +49,7 @@ make self a req inc = html
           , bold [Text "Arguments: "], Text (fromMaybe "" $ repInc_Arguments inc), br
           , bold [Text "Location: "], Text (show $ req_Location req) 
           ]
-   , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ reportLocations $ strategy a 
+   , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ strategyLocations $ strategy a 
           ]
    , para [ href (reqToURL reqZoomIn)  [Text "Zoom in"],  Text "to a substrategy or" 
           , href (reqToURL reqZoomOut) [Text "zoom out"], Text "to the parent strategy" 
@@ -65,9 +65,8 @@ make self a req inc = html
    reqZoomOut = zoomOut req
    reqNoCtxt  = removeContext req
    reqToURL   = (self++) . oneliner . ppRequest
-   derivation = case prefixToSteps (getPrefix req) (strategy a) of
-                   Just steps -> concat $ intersperse "; " [ name r | Major _ r <- steps ]
-                   _ -> []
+   derivation = case prefixToSteps (getPrefix req (strategy a)) of
+                   steps -> concat $ intersperse "; " [ name r | Step _ r <- steps, isMajorRule r ]
                
 
 ----------------------------------------------------------------------------
@@ -95,13 +94,15 @@ removeContext r = r { req_Context = Nothing }
 
 ----------------------------------------------------------------------------
 
-showLoc :: StrategyLocation -> (StrategyLocation, String) -> Maybe String
-showLoc here (loc, s) 
+showLoc :: StrategyLocation -> (StrategyLocation, StrategyOrRule a) -> Maybe String
+showLoc here (loc, eitherValue) 
    | loc `isPrefixOf` here = 
-        Just $ replicate (length loc*2) '.' ++ "<b>" ++ s ++ "</b>"
+        Just $ replicate (length loc*2) '.' ++ "<b>" ++ txt ++ "</b>"
    | not (null loc) && init loc `isPrefixOf` here && init loc /= here =
-        Just $ replicate (length loc*2) '.' ++ s
+        Just $ replicate (length loc*2) '.' ++ txt
    | otherwise = Nothing
+ where
+   txt = either strategyName ((++" (rule)") . name) eitherValue
  
 imgOUNL :: XML
 imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []

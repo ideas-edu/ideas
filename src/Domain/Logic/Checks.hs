@@ -87,14 +87,22 @@ propStratDNF logic =
          Just this -> isDNF (fromContext this)
          _ -> False
 
+{-
 propPrefix :: Logic -> Bool
 propPrefix logic = isDNF $ fromContext $ rec (inContext logic) emptyPrefix
  where
-   stopC (Major _ _) = True
-   stopC _           = False
+   stopC (Step _ r) = isMajorRule r
+   stopC _          = False
    rec c p = case continuePrefixUntil stopC p c toDNF of
                 (d, q):_ | p /= q -> rec d q
                 _ -> c
+
+--continuePrefixUntil :: (Step a -> Bool) -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
+--continuePrefixUntil stop p a s = 
+--   case runPrefix p s of 
+--      Just (_, g) -> [ (b, plusPrefix p q) | (b, q) <- runGrammarUntil stop a g ]
+--      _           -> []
+-}
 
 {-
 (t1, p1):_   = continuePrefixUntil (\_ r -> not $ isMinorRule r) p0 t0 toDNF

@@ -1,7 +1,8 @@
 module Main (main) where
 
 import Common.Exercise
-import Common.Strategy (reportLocations)
+import Common.Transformation
+import Common.Strategy hiding (not)
 import Common.Utils (Some(..))
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
@@ -55,7 +56,18 @@ makeTitle nr a = title $ "Strategy " ++ nr ++ ": " ++ shortTitle a
 makeLocationTable :: Exercise a -> String
 makeLocationTable a = table ["Location", "Label or rule"] (map f $ reportLocations $ strategy a)
  where f (loc, s) = [show loc, s]
- 
+
+reportLocations :: LabeledStrategy a -> [(StrategyLocation, String)]
+reportLocations = map f . strategyLocations
+ where 
+   f (loc, e) = (loc, either forStrategy forRule e)
+   forStrategy s
+      | all isMinorRule (rulesInStrategy s) = strategyName s ++ " (skipped)"
+      | otherwise                           = strategyName s
+   forRule r
+      | hasArguments r = name r ++ " (parameterized rule)"
+      | otherwise      = name r ++ " (rule)"
+
 strategyFileName = "src/Domain/LinearAlgebra/Strategies.hs"
 
 insertCode :: Exercise a -> [String] -> IO String

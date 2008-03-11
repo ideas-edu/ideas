@@ -9,7 +9,7 @@ module Session
 import Common.Exercise
 import Common.Logging
 import Common.Transformation
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, Step)
 import Common.Apply
 import Common.Utils
 import Data.List
@@ -41,7 +41,7 @@ newExercise :: Some Exercise -> Session -> IO ()
 newExercise (Some a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
    \(Session _ ref) -> do
       term <- randomTerm a
-      writeIORef ref $ St a (Start term)
+      writeIORef ref $ St a (Start (emptyPrefix $ strategy a) term)
 
 newTerm :: Session -> IO ()
 newTerm session@(Session _ ref) = do
@@ -51,13 +51,13 @@ newTerm session@(Session _ ref) = do
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
    modifyIORef ref $ \st@(St a d) -> case d of 
-      Start _      -> st
+      Start _ _    -> st
       Step d _ _ _ -> St a d
 
 submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    St a d <- readIORef ref
-   case feedbackNew a (currentPrefix d) (current d) txt of
+   case feedback a (currentPrefix d) (current d) txt of
       SyntaxError doc msug -> 
          let msg = "Parse error:\n" ++ showDoc a doc ++ maybe "" (\x -> "\nDid you mean " ++ prettyPrinter a x) msug
          in return (msg, False)
@@ -82,7 +82,7 @@ derivationText = withState $ \a d ->
 progressPair :: Session -> IO (Int, Int)
 progressPair = withState $ \a d -> 
    let x = derivationLength d
-       y = stepsRemainingA a (terms d)
+       y = stepsRemaining (currentPrefix d) (current d)
    in return (x, x+y)
   
 readyText :: Session -> IO String
@@ -93,7 +93,7 @@ readyText = logMsg "Ready" $ withState $ \a d ->
 
 hintText :: Session -> IO String
 hintText = logMsg "Hint" $ withState $ \a d -> 
-   case giveHintNew a (currentPrefix d) (current d) of 
+   case giveHint (currentPrefix d) (current d) of 
       Nothing -> 
          return "Sorry, no hint available" 
       Just (doc, rule) ->
@@ -101,7 +101,7 @@ hintText = logMsg "Hint" $ withState $ \a d ->
 
 stepText :: Session -> IO String
 stepText = logMsg "Step" $ withState $ \a d -> 
-   case giveStepNew a (currentPrefix d) (current d) of
+   case giveStep (currentPrefix d) (current d) of
       Nothing -> 
          return "Sorry, no hint available"
       Just (doc, rule, newPrefix, before, after) ->
@@ -119,7 +119,7 @@ stepText = logMsg "Step" $ withState $ \a d ->
 nextStep :: Session -> IO (String, Bool)
 nextStep = logCurrent "Next" $ \(Session _ ref) -> do
    St a d <- readIORef ref
-   case giveStepNew a (currentPrefix d) (current d) of
+   case giveStep (currentPrefix d) (current d) of
       Nothing -> 
          return ("No more steps left to do", False)
       Just (_, rule, newPrefix, _, new) -> do
@@ -142,7 +142,7 @@ applyRuleAtIndex i args (Session _ ref) = do
        results = case useArguments args rule of
                     Just new -> applyAll new (current d)
                     Nothing  -> []
-       answers = giveStepsNew a (currentPrefix d) (current d)
+       answers = giveSteps (currentPrefix d) (current d)
        check    (_, r, _, _, new) = name r==name rule && any (equality a new) results
        thisRule (_, r, _, _, _)   = name r==name rule
    case safeHead (filter check answers) of
@@ -157,31 +157,31 @@ applyRuleAtIndex i args (Session _ ref) = do
 --------------------------------------------------
 -- Derivations
 
-data Derivation a = Start a | Step (Derivation a) (Rule a) Prefix a -- snoc list for fast access to current term
+data Derivation a = Start (Prefix a) a | Step (Derivation a) (Rule a) (Prefix a) a -- snoc list for fast access to current term
 
 current :: Derivation a -> a
-current (Start a)      = a
+current (Start _ a)    = a
 current (Step _ _ _ a) = a
 
 initial :: Derivation a -> a
-initial (Start a)      = a
+initial (Start _ a)    = a
 initial (Step d _ _ _) = initial d
 
-currentPrefix :: Derivation a -> Prefix
-currentPrefix (Start _)      = emptyPrefix
+currentPrefix :: Derivation a -> Prefix a
+currentPrefix (Start p _)    = p
 currentPrefix (Step _ _ p _) = p
 
 -- | to do: make this function efficient (accumulating parameter)
 terms :: Derivation a -> [a]
-terms (Start a)      = [a]
+terms (Start _ a)    = [a]
 terms (Step d _ _ a) = terms d ++ [a]
 
 showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (Start a)      = f a
+showDerivation f (Start _ a)    = f a
 showDerivation f (Step d r _ a) = showDerivation f d ++ "\n   => [" ++ name r ++ "]\n" ++ f a
 
 derivationLength :: Derivation a -> Int
-derivationLength (Start _)      = 0
+derivationLength (Start _ _)    = 0
 derivationLength (Step d _ _ _) = 1 + derivationLength d
 
 --------------------------------------------------

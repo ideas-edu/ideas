@@ -9,7 +9,7 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Strategy hiding (not)
-import Common.Exercise hiding (Incorrect, stepsRemaining)
+import Common.Exercise hiding (Incorrect)
 import Common.Utils
 import Data.Maybe
 import Data.Char
@@ -39,43 +39,43 @@ laServer req =
    
 laServerFor :: IsExpr a => Exercise (Context a) -> Request -> Reply
 laServerFor a req = 
-   case (subStrategyOrRule (req_Location req) (strategy a), getContextTerm req) of
+   case getContextTerm req of
    
-      (Nothing, _) -> 
-         replyError "request error" "invalid location for strategy"
+      _ | isJust $ subStrategy (req_Location req) (strategy a) ->
+             replyError "request error" "invalid location for strategy"
          
-      (_, Nothing) ->
+      Nothing ->
          replyError "request error" ("invalid term for " ++ show (req_Strategy req))
          
-      (Just _, Just requestedTerm) ->          
-         case (runStrategyUntil (req_Location req) (getPrefix req) requestedTerm (strategy a), maybe Nothing (fmap inContext . fromExpr) $ req_Answer req) of
+      Just requestedTerm ->          
+         case (runPrefixLocation (req_Location req) (getPrefix req (strategy a)) requestedTerm, maybe Nothing (fmap inContext . fromExpr) $ req_Answer req) of
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             
             (answers, Just answeredTerm)
                | not (null witnesses) ->
                     Ok $ ReplyOk
                        { repOk_Strategy = req_Strategy req
-                       , repOk_Location = nextTask (req_Location req) $ nextMajorForPrefix newPrefix (fst $ head witnesses) (strategy a)
+                       , repOk_Location = nextTask (req_Location req) $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           showContext (fst $ head witnesses)
-                       , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses) (strategy a)
+                       , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses)
                        }
                   where
                     witnesses   = filter (equality a answeredTerm . fst) answers
-                    newPrefix   = getPrefix req `plusPrefix` snd (head witnesses)
+                    newPrefix   = snd (head witnesses)
                        
-            ((expected,prefix):_, maybeAnswer) ->
+            ((expected, prefix):_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
                        , repInc_Location   = subTask (req_Location req) loc
                        , repInc_Expected   = toExpr (fromContext expected)
                                              -- only return arguments if we are at a rule
                        , repInc_Arguments  = if loc==req_Location req then args else Nothing
-                       , repInc_Steps      = stepsRemaining (getPrefix req) requestedTerm (strategy a)
+                       , repInc_Steps      = stepsRemaining (getPrefix req (strategy a)) requestedTerm
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
                        }
              where
-               (loc, args) = firstMajorInPrefix (getPrefix req) prefix requestedTerm (strategy a)
+               (loc, args) = firstMajorInPrefix (getPrefix req (strategy a)) prefix requestedTerm
 
 -- old (current) and actual (next major rule) location
 subTask :: [Int] -> [Int] -> [Int]
@@ -87,31 +87,15 @@ subTask _ js   = take 1 js
 -- old (current) and actual (next major rule) location
 nextTask :: [Int] -> [Int] -> [Int]
 nextTask (i:is) (j:js)
-   | i == j   = i : nextTask is js
-nextTask _ js = take 1 js
+   | i == j    = i : nextTask is js
+   | otherwise = [j] 
+nextTask _ _   = [] 
 
-stepsRemaining :: Prefix -> a -> LabeledStrategy a -> Int
-stepsRemaining p0@(P xs) a s = 
-   case runStrategyUntil [] p0 a s of -- run until the end
-      []       -> 0
-      (_, p):_ ->
-         case prefixToSteps (plusPrefix p0 p) s of
-            Just steps -> length [ () | Major _ _ <- drop (length xs) steps ] 
-            _ -> 0
-
-runStrategyUntil :: [Int] -> Prefix -> a -> LabeledStrategy a -> [(a, Prefix)]
-runStrategyUntil loc p a s = runGrammarUntilSt stopC False a $ maybe (withMarks s) snd $ runPrefix p s
- where
-   stopC b (End is)     = (is==loc && b, b)
-   stopC b (Major is _) = (is==loc, True)
-   stopC b (Minor is _) = (is==loc, b)
-   stopC b _            = (False, b)
-   
-firstMajorInPrefix :: Prefix -> Prefix -> a -> LabeledStrategy a -> ([Int], Maybe String)
-firstMajorInPrefix p0@(P xs) p a s = fromMaybe ([], Nothing) $ do
-   steps <- prefixToSteps (plusPrefix p0 p) s
-   let newSteps = drop (length xs) steps
-   is    <- safeHead [ is | Major is _ <- newSteps ]
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> ([Int], Maybe String)
+firstMajorInPrefix p0 prefix a = fromMaybe ([], Nothing) $ do
+   let steps = prefixToSteps prefix
+       newSteps = drop (length $ prefixToSteps p0) steps
+   is    <- safeHead [ is | Step is r <- newSteps, not (isMinorRule r) ]
    return (is, argumentsForSteps a newSteps)
  
 argumentsForSteps :: a -> [Step a] -> Maybe String
@@ -124,27 +108,11 @@ argumentsForSteps a = safeHead . flip rec a . stepsToRules
       | applicable r a = maybe [] (return . showList) (expectedArguments r a)
       | otherwise      = []
  
-nextMajorForPrefix :: Prefix -> a -> LabeledStrategy a -> [Int]
-nextMajorForPrefix p0@(P xs) a s = fromMaybe [] $ do
-   (steps, g) <- runPrefix p0 s
-   (_, p1)    <- safeHead (runGrammarUntil stopC a g)
-   steps      <- prefixToSteps (plusPrefix p0 p1) s
-   lastStep   <- safeHead (reverse steps)
+nextMajorForPrefix :: Prefix a -> a -> [Int]
+nextMajorForPrefix p0 a = fromMaybe [] $ do
+   (_, p1)  <- safeHead $ runPrefixMajor p0 a
+   let steps = prefixToSteps p1
+   lastStep <- safeHead (reverse steps)
    case lastStep of
-      Major is _ -> return is
-      _          -> Nothing
- where
-   stopC (Major _ _) = True
-   stopC _           = False
-   
-   
-{-
-   case lastStep of
-      Major is r 
-         | hasArguments r ->
-              let rules = init $ drop (length xs) $ stepsToRules steps
-                  term  = applyListD rules a
-              in return (is, arguments r term)
-         | otherwise -> return (is, Nothing)
-      _              -> Nothing
--}
+      Step is r | not (isMinorRule r) -> return is
+      _ -> Nothing

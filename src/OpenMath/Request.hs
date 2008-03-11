@@ -54,12 +54,12 @@ putInContext req = fromMaybe inContext $ do
    c       <- parseContext s2
    return (flip fmap c . const)
 
-getPrefix :: Request -> Prefix
-getPrefix req = fromMaybe emptyPrefix $ do
+getPrefix :: Request -> LabeledStrategy a -> Prefix a
+getPrefix req ls = fromMaybe (emptyPrefix ls) $ do
    s       <- req_Context req
    (s1, _) <- splitAtElem ';' s
    case reads s1 of
-      [(is, xs)] | all isSpace xs -> return (P is)
+      [(is, xs)] | all isSpace xs -> return (makePrefix is ls)
       _ -> Nothing
 
 isRequest :: XML -> Either String ()

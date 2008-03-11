@@ -66,93 +66,37 @@ randomTermWith stdgen a
  where
    term = generate 100 stdgen (generator a)
 
-{-
 -- | Returns a text and the rule that is applicable
-giveHint :: Exercise a -> [a] -> Maybe (Doc a, Rule a)
-giveHint x = safeHead . giveHints x
-
--- | Returns a text and the rule that is applicable
-giveHints :: Exercise a -> [a] -> [(Doc a, Rule a)]
-giveHints x = map g . giveSteps x
- where
-   g (x, y, _, _) = (x, y)
-   
--- | Returns a text, a sub-expression that can be rewritten, and the result
--- | of the rewriting
-
-giveStep :: Exercise a -> [a] -> Maybe (Doc a, Rule a, a, a)
-giveStep x = safeHead . giveSteps x
-
-giveSteps :: Exercise a -> [a] -> [(Doc a, Rule a, a, a)]
-giveSteps x as = map g $ nextRulesForSequenceWith (equality x) (not . isMinorRule) (unlabel $ strategy x) as
- where
-   g (rs, new) = 
-      let r   = last rs
-          old = applyListD (init rs) (last as)
-          doc = text "Use rule " <> rule r <> 
-                case arguments r old of
-                   Just args -> text "\n   with arguments " <> text args
-                   Nothing   -> emptyDoc
-      in (doc, r, old, new) -}
+giveHint :: Prefix a -> a -> Maybe (Doc a, Rule a)
+giveHint p = safeHead . giveHints p
 
 -- | Returns a text and the rule that is applicable
-giveHintNew :: Exercise a -> Prefix -> a -> Maybe (Doc a, Rule a)
-giveHintNew ex p = safeHead . giveHintsNew ex p
-
--- | Returns a text and the rule that is applicable
-giveHintsNew :: Exercise a -> Prefix -> a -> [(Doc a, Rule a)]
-giveHintsNew ex p = map g . giveStepsNew ex p
+giveHints :: Prefix a -> a -> [(Doc a, Rule a)]
+giveHints p = map g . giveSteps p
  where
    g (x, y, _, _, _) = (x, y)
 
-giveStepNew :: Exercise a -> Prefix -> a -> Maybe (Doc a, Rule a, Prefix, a, a)
-giveStepNew ex p = safeHead . giveStepsNew ex p
+giveStep :: Prefix a -> a -> Maybe (Doc a, Rule a, Prefix a, a, a)
+giveStep p = safeHead . giveSteps p
 
-giveStepsNew :: Exercise a -> Prefix -> a -> [(Doc a, Rule a, Prefix, a, a)]
-giveStepsNew ex p0@(P xs) a = 
-   case runPrefix p0 (strategy ex) of
-      Nothing -> []
-      Just (_, g) -> 
-         let make (new, p1) = 
-                let prefix = plusPrefix p0 p1 
-                    steps  = maybe [] fst $ runPrefix prefix $ strategy ex
-                    minors = stepsToRules (drop (length xs) steps)
-                    old    = if null minors then a else applyListD (init minors) a
-                in case lastRuleInPrefix prefix (strategy ex) of
-                      Just r -> [(doc r old, r, prefix, old, new)]
-                      _      -> []
-             stopC (Major _ _) = True
-             stopC _           = False
-             showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
-             doc r old = text "Use rule " <> rule r <> 
-                case expectedArguments r old of
-                   Just xs -> text "\n   with arguments " <> text (showList xs)
-                   Nothing -> emptyDoc
-         in concatMap make $ runGrammarUntil stopC a g
-      
-{-
--- | The strategy in the exercise should reflect the current position in the 
--- | strategy, which might not be the original (complete) strategy.
-feedback :: Exercise a -> [a] -> String -> Feedback a
-feedback x as txt =
-   case parser x txt of
-      Left (msg, suggestion) -> 
-         SyntaxError msg suggestion
-      Right new
-         | not (equivalence x (last as) new) -> 
-              Incorrect (text "Incorrect") Nothing -- no suggestion yet
-         | otherwise -> 
-              let paths = nextRulesForSequenceWith (equality x) (not . isMinorRule) (unlabel $ strategy x) as
-                  check = equality x new . snd
-              in case filter check paths of
-                    (rs, _):_ -> Correct (text "Well done! You applied rule " <> rule (last rs)) (Just (last rs))
-                    _ | equality x (last as) new -> 
-                         Correct (text "You have submitted the current term.") Nothing
-                    _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing -}
-                    
+giveSteps :: Prefix a -> a -> [(Doc a, Rule a, Prefix a, a, a)]
+giveSteps p0 a = 
+   let make (new, prefix) = 
+          let steps  = prefixToSteps prefix
+              minors = stepsToRules (drop (length $ prefixToSteps p0) steps)
+              old    = if null minors then a else applyListD (init minors) a
+          in case lastRuleInPrefix prefix of
+                Just r -> [ (doc r old, r, prefix, old, new) | isMajorRule r ]
+                _      -> []
+       showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
+       doc r old = text "Use rule " <> rule r <> 
+          case expectedArguments r old of
+             Just xs -> text "\n   with arguments " <> text (showList xs)
+             Nothing -> emptyDoc
+   in concatMap make $ runPrefixMajor p0 a            
          
-feedbackNew :: Exercise a -> Prefix -> a -> String -> Feedback a
-feedbackNew ex p0 a txt =
+feedback :: Exercise a -> Prefix a -> a -> String -> Feedback a
+feedback ex p0 a txt =
    case parser ex txt of
       Left (msg, suggestion) -> 
          SyntaxError msg suggestion
@@ -160,27 +104,24 @@ feedbackNew ex p0 a txt =
          | not (equivalence ex a new) -> 
               Incorrect (text "Incorrect") Nothing -- no suggestion yet
          | otherwise -> 
-              let answers = giveStepsNew ex p0 a
+              let answers = giveSteps p0 a
                   check (_, _, _, _, this) = equality ex new this
               in case filter check answers of
                     (_, r, newPrefix, _, newTerm):_ -> Correct (text "Well done! You applied rule " <> rule r) (Just (newPrefix, r, newTerm))
                     _ | equality ex a new -> 
                          Correct (text "You have submitted the current term.") Nothing
                     _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
-              
-stepsRemaining :: Strategy a -> a -> Int
-stepsRemaining s a =
-   case runStrategyRules s a of
-      (rs, _):_ -> length (filter (not . isMinorRule) rs)
-      _         -> 0
 
-stepsRemainingA :: Exercise a -> [a] -> Int
-stepsRemainingA a as =
-   stepsRemaining (remainingStrategy (equality a) (not . isMinorRule) (unlabel $ strategy a) as) (last as)
+stepsRemaining :: Prefix a -> a -> Int
+stepsRemaining p0 a = 
+   case safeHead (runPrefixLocation [] p0 a) of -- run until the end
+      Nothing -> 0
+      Just (_, prefix) ->
+         length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
 
 data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
                 | Incorrect   (Doc a) (Maybe a)
-                | Correct     (Doc a) (Maybe (Prefix, Rule a, a)) {- The rule that was applied -}
+                | Correct     (Doc a) (Maybe (Prefix a, Rule a, a)) {- The rule that was applied -}
 
 getRuleNames :: Exercise a -> [String]
 getRuleNames = map name . ruleset

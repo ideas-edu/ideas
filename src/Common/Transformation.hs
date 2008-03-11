@@ -19,7 +19,7 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, name, isMinorRule, isBuggyRule
+   , Rule, name, isMinorRule, isMajorRule, isBuggyRule
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, emptyRule, minorRule, buggyRule, inverseRule
      -- * Lifting
@@ -265,6 +265,10 @@ instance Show (Rule a) where
 
 instance Apply Rule where
    applyAll r a = concatMap (`applyAll` a) (transformations r)
+
+-- | Returns whether or not the rule is major (i.e., not minor)
+isMajorRule :: Rule a -> Bool
+isMajorRule = not . isMinorRule
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
 makeRule :: String -> Transformation a -> Rule a

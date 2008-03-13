@@ -15,6 +15,7 @@ import Graphics.UI.Gtk.Glade
 import Data.Maybe
 import Session
 import SupplyArguments
+import Common.Context (Context)
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Apply
@@ -25,12 +26,12 @@ import qualified Domain.LinearAlgebra as LA
 import qualified Domain.RelationAlgebra as RA
 import Data.IORef
 
-domains :: [Some Exercise]
-domains = [ Some LA.opgave6b, Some LA.reduceMatrixExercise
-          , Some LA.solveSystemExercise, Some LA.solveSystemWithMatrixExercise
-          , Some LA.solveGramSchmidt
-          , Some dnfExercise, Some simplExercise
-          , Some RA.cnfExercise
+domains :: [Some Domain]
+domains = [ make LA.opgave6b, make LA.reduceMatrixExercise
+          , make LA.solveSystemExercise, make LA.solveSystemWithMatrixExercise
+          , make LA.solveGramSchmidt
+          , make dnfExercise, make simplExercise
+          , make RA.cnfExercise
           ]
 
 main :: IO ()
@@ -71,7 +72,7 @@ main =
         -- flip mapM_ [assignmentView, derivationView, feedbackView] $ \w -> 
         --    widgetModifyBase w StateNormal ligthGrey
         
-        mapM_ (\(Some a) -> comboBoxAppendText domainBox (shortTitle a)) domains
+        mapM_ (\(Some (Domain a)) -> comboBoxAppendText domainBox (shortTitle a)) domains
         comboBoxSetActive  domainBox 0
 
         -- get buffers from views
@@ -152,14 +153,22 @@ main =
            when ok updateAll
         
         onChanged ruleBox $ do
-           mi <- comboBoxGetActive ruleBox
+           (iterBegin, iterEnd) <- textBufferGetSelectionBounds entryBuffer
+           posBegin <- textIterGetOffset iterBegin
+           posEnd   <- textIterGetOffset iterEnd
+           cur      <- get entryBuffer textBufferText
+           mloc     <- subTermAtIndices cur posBegin posEnd session
+           mi       <- comboBoxGetActive ruleBox
+
            when (isJust mi) $ do
               comboBoxSetActive ruleBox (-1)
               Some rule <- getRuleAtIndex (fromJust mi) session
-              case hasArguments rule of
-              
-                 False -> do
-                    (txt, ok) <- applyRuleAtIndex (fromJust mi) [] session
+              case (mloc, hasArguments rule) of
+                 (Nothing, _) | posBegin /= posEnd ->
+                    textBufferSetText feedbackBuffer "Invalid selection: not a subterm"
+                 
+                 (_, False) -> do
+                    (txt, ok) <- applyRuleAtIndex (fromJust mi) mloc [] session
                     textBufferSetText feedbackBuffer txt
                     when ok updateAll
                     
@@ -171,18 +180,10 @@ main =
                        case result of 
                           Nothing -> return ()
                           Just list -> do
-                             (txt, ok) <- applyRuleAtIndex (fromJust mi) list session
+                             (txt, ok) <- applyRuleAtIndex (fromJust mi) mloc list session
                              textBufferSetText feedbackBuffer txt
                              when ok updateAll
                     return ()
-           
-           {- 
-           (iterBegin, iterEnd) <- textBufferGetSelectionBounds entryBuffer
-           posBegin <- textIterGetOffset iterBegin
-           posEnd   <- textIterGetOffset iterEnd
-           print (posBegin, posEnd)
-           print i
-           argumentFrame undefined -}
         
         -- show widgets and run GUI
         widgetShowAll window

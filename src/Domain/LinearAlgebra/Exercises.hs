@@ -32,7 +32,7 @@ solveGramSchmidt = makeExercise
 solveSystemExercise :: Exercise (EqsInContext Rational)
 solveSystemExercise = makeExercise
    { shortTitle    = "Solve Linear System"
-   , parser        = either (\(x,y) -> Left (x, fmap inContext y)) (Right . inContext) . parseSystem
+   , parser        = either Left (Right . inContext) . parseSystem
    , prettyPrinter = unlines . map (show . fmap (fmap ShowRational)) . equations
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
                                    . inContext . map toStandardForm . equations
@@ -66,7 +66,7 @@ solveSystemWithMatrixExercise = makeExercise
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right (fmap Left ok)
                               (_, Right ok) -> Right (fmap Right ok)
-                              (Left (doc1, _), Left (doc2, _)) -> Left (text "Error", Nothing) -- FIX THIS
+                              (Left doc1, Left doc2) -> Left (text "Error") -- FIX THIS
    , prettyPrinter = either (unlines . map (show . fmap (fmap ShowRational))) ppRationalMatrix . fromContext
    , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
                                  g = f . either (fst . systemToMatrix) id . fromContext

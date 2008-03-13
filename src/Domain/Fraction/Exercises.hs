@@ -24,11 +24,11 @@ import System.Random
 import Data.Maybe
 
 simplExercise :: Exercise (Context Frac)
-simplExercise = Exercise
+simplExercise = standard
    { shortTitle    = "Simplifying fractions" 
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right (inContext p)
-                              (p, msgs) -> Left  (text (show msgs), Just (inContext p))
+                              (p, msgs) -> Left  (text (show msgs))
    , prettyPrinter = ppFracPars . fromContext
    , equivalence   = \x y -> fromContext x ~= fromContext y
    , equality      = \x y -> fromContext x == fromContext y
@@ -36,5 +36,8 @@ simplExercise = Exercise
    , ruleset       = map liftRuleToContext fracRules
    , strategy      = toSimple
    , generator     = liftM inContext generateFrac
-   , suitableTerm  = \t -> not $ finalProperty simplExercise t && nf (fromContext t) /= Nothing
+   , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf (fromContext t))
    }
+ where
+   standard :: Exercise (Context Frac)
+   standard = makeExercise

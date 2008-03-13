@@ -18,7 +18,7 @@ module Common.Parsing
    , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1, pChainl, pChainr, pChoice
      -- * Subexpressions
    , Ranged, Range(..), Pos(..), toRanged, fromRanged, subExpressionAt
-   , pKey, pVarid, pConid, unaryOp, binaryOp, pParens
+   , pKey, pVarid, pConid, unaryOp, binaryOp, pParens, indicesToRange
     -- ** Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
    ) where
@@ -26,6 +26,7 @@ module Common.Parsing
 import qualified UU.Parsing as UU
 import qualified UU.Scanner as UU
 import Common.Utils
+import Data.Char
 import Data.List
 import Data.Maybe
 
@@ -192,7 +193,7 @@ subExpressionAt r ra
    | r == getRange ra = return []
    | otherwise = 
         let f i | special ra = id
-                | otherwise  = (++[i])
+                | otherwise  = (i:)
         in safeHead $ catMaybes
               [ fmap (f i) (subExpressionAt r c) | (i, c) <- zip [0..] (children ra) ]
 
@@ -212,6 +213,11 @@ binaryOp f r1 r2 = Ranged (f (fromRanged r1) (fromRanged r2)) (getRange r1 & get
 pParens :: TokenParser (Ranged a) -> TokenParser (Ranged a)
 pParens p = (\p1 r p2 -> Ranged (fromRanged r) (toRange 1 p1 & toRange 1 p2) True [r]) <$> UU.pOParenPos <*> p <*> UU.pCParenPos
 
+-- | Helper function to translate two indices on a string to a range: the positions of a range are line-based
+indicesToRange :: String -> Int -> Int -> Range
+indicesToRange s i j = Range (indexToPos s a) (indexToPos s b) 
+ where (a, b) = trimIndexPair s i j
+ 
 -- local helper functions
 (&) :: Range -> Range -> Range
 Range p1 p2 & Range p3 p4 = Range (p1 `min` p3) (p2 `max` p4)
@@ -221,6 +227,24 @@ toPos p = Pos (UU.line p) (UU.column p)
 
 toRange :: Int -> UU.Pos -> Range
 toRange n p = Range (toPos p) (toPos (UU.advc n p))
+
+indexToPos :: String -> Int -> Pos
+indexToPos = rec . zip [1..] . lines
+ where
+   rec [] _ = Pos 0 0
+   rec ((lnr, x):rest) i
+      | i <= len  = Pos lnr (i+1)
+      | otherwise = rec rest (i-len-1)
+    where
+      len = length x
+
+trimIndexPair :: String -> Int -> Int -> (Int, Int)
+trimIndexPair s i j 
+   | j < i     = trimIndexPair s j i
+   | otherwise = (i + f sub, j - f (reverse sub))
+ where 
+    sub = take (j-i) (drop i s)
+    f   = length . takeWhile isSpace
 
 ----------------------------------------------------------
 -- Operator table (parser)

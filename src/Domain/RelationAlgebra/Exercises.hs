@@ -16,7 +16,7 @@ cnfExercise = makeExercise
    { shortTitle = "To conjunctive normal form"
    , parser        = \s -> case parseRelAlg s of
                               (p, [])   -> Right (inContext p)
-                              (p, msgs) -> Left  (text (show msgs), Just (inContext p))
+                              (p, msgs) -> Left  (text (show msgs))
    , prettyPrinter = ppRelAlg . fromContext
 --   , equivalence = \x y -> apply toCNF (inContext $ noContext x) == apply toCNF (inContext $ noContext y)
    , ruleset   = map liftRuleToContext relAlgRules

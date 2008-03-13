@@ -1,12 +1,14 @@
 {-# OPTIONS -fglasgow-exts #-}
-module Session 
-   ( Some(..), Exercise(..)
+module Session
+   ( Domain(..), make, Some(..), Exercise(..)
    , Session, makeSession, newTerm, newExercise, progressPair, undo, submitText
    , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
-   , getRuleAtIndex, applyRuleAtIndex
+   , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
    ) where
 
+import Common.Context
 import Common.Exercise
+import Common.Parsing (indicesToRange)
 import Common.Logging
 import Common.Transformation
 import Common.Strategy hiding (not, Step)
@@ -17,19 +19,24 @@ import Data.IORef
 import Data.Maybe
 import System.Time
 
+newtype Domain a = Domain (Exercise (Context a))
+
+make :: Exercise (Context a) -> Some Domain
+make ex = Some (Domain ex)
+
 --------------------------------------------------
 -- Sessions with logging
 
 data Session = Session String (IORef SessionState)
 
-data SessionState = forall a . St (Exercise a) (Derivation a)
+data SessionState = forall a . St (Exercise (Context a)) (Derivation (Context a))
 
 withState :: (forall a . Exercise a -> Derivation a -> IO b) -> Session -> IO b
 withState f (Session _ ref) = do
    St a d <- readIORef ref
    f a d
 
-makeSession :: Some Exercise -> IO Session
+makeSession :: Some Domain -> IO Session
 makeSession pa = do
    logMessage "New session: "
    ref   <- newIORef (error "reference not initialized")
@@ -37,8 +44,8 @@ makeSession pa = do
    newExercise pa session
    return session
 
-newExercise :: Some Exercise -> Session -> IO ()
-newExercise (Some a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
+newExercise :: Some Domain -> Session -> IO ()
+newExercise (Some (Domain a)) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
    \(Session _ ref) -> do
       term <- randomTerm a
       writeIORef ref $ St a (Start (emptyPrefix $ strategy a) term)
@@ -46,7 +53,7 @@ newExercise (Some a) = logCurrent ("New (" ++ shortTitle a ++ ")") $
 newTerm :: Session -> IO ()
 newTerm session@(Session _ ref) = do
    St a _ <- readIORef ref
-   newExercise (Some a) session
+   newExercise (Some (Domain a)) session
         
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
@@ -58,11 +65,11 @@ submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    St a d <- readIORef ref
    case feedback a (currentPrefix d) (current d) txt of
-      SyntaxError doc msug -> 
-         let msg = "Parse error:\n" ++ showDoc a doc ++ maybe "" (\x -> "\nDid you mean " ++ prettyPrinter a x) msug
+      SyntaxError doc -> 
+         let msg = "Parse error:\n" ++ showDoc a doc
          in return (msg, False)
-      Incorrect doc msug -> 
-         let msg = showDoc a doc ++ maybe "" (\x -> "\nDid you mean " ++ prettyPrinter a x) msug
+      Incorrect doc -> 
+         let msg = showDoc a doc
          in return (msg, False)
       Correct doc Nothing ->
          return (showDoc a doc, False)
@@ -128,20 +135,20 @@ nextStep = logCurrent "Next" $ \(Session _ ref) -> do
 
 ruleNames :: Session -> IO [String]
 ruleNames = withState $ \a d -> 
-   return $ map name $ filter (not . isMinorRule) $ ruleset a
+   return $ map name $ filter isMajorRule $ ruleset a
 
 getRuleAtIndex :: Int -> Session -> IO (Some Rule)
 getRuleAtIndex i = withState $ \a d -> do
    let rule = filter (not . isMinorRule) (ruleset a) !! i
    return (Some rule)
 
-applyRuleAtIndex :: Int -> [String] -> Session -> IO (String, Bool)
-applyRuleAtIndex i args (Session _ ref) = do
+applyRuleAtIndex :: Int -> Maybe [Int] -> [String] -> Session -> IO (String, Bool)
+applyRuleAtIndex i mloc args (Session _ ref) = do
    St a d <- readIORef ref
-   let rule    = filter (not . isMinorRule) (ruleset a) !! i
-       results = case useArguments args rule of
-                    Just new -> applyAll new (current d)
-                    Nothing  -> []
+   let rule    = filter isMajorRule (ruleset a) !! i
+       newRule = fromMaybe rule (useArguments args rule)
+       loc     = fromMaybe [] mloc
+       results = applyAll newRule (setLocation loc $ current d)
        answers = giveSteps (currentPrefix d) (current d)
        check    (_, r, _, _, new) = name r==name rule && any (equality a new) results
        thisRule (_, r, _, _, _)   = name r==name rule
@@ -149,10 +156,20 @@ applyRuleAtIndex i args (Session _ ref) = do
       Just (_, _, newPrefix, _, new) -> do
          writeIORef ref $ St a (Step d rule newPrefix new)
          return ("Successfully applied rule " ++ name rule, True)
-      _ | any thisRule answers -> 
-         return ("Use rule " ++ name rule ++ " with different arguments", False)
+      _ | any thisRule answers && not (null args) -> 
+         return ("Use rule " ++ name rule ++ " with different arguments" ++ show (map (prettyPrinter a) results), False)
+      _ | any thisRule answers && null args ->
+         return ("Apply rule " ++ name rule ++ " at a different location", False)
       _ -> 
          return ("You selected rule " ++ name rule ++ ": try a different rule", False)
+
+subTermAtIndices :: String -> Int -> Int -> Session -> IO (Maybe [Int])
+subTermAtIndices s i j = withState $ \a d -> do
+   let rng = indicesToRange s i j
+   print rng
+   let mst = subTerm a s rng
+   print mst
+   return mst
 
 --------------------------------------------------
 -- Derivations

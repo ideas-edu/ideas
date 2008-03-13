@@ -19,11 +19,14 @@ import Control.Monad
 -}
 
 dnfExercise :: Exercise (Context Logic)
-dnfExercise = Exercise
+dnfExercise = standard
    { shortTitle    = "Proposition to DNF" 
    , parser        = \s -> case parseLogicPars s of
                               (p, [])   -> Right (inContext (fromRanged p))
-                              (p, msgs) -> Left  (text (show msgs), Just (inContext (fromRanged p)))
+                              (p, msgs) -> Left  (text (show msgs))
+   , subTerm       = \s r -> case parseLogicPars s of
+                                (p, []) -> subExpressionAt r p
+                                _       -> Nothing
    , prettyPrinter = ppLogicPars . fromContext
    , equivalence   = \x y -> fromContext x `eqLogic` fromContext y
    , equality      = \x y -> fromContext x == fromContext y
@@ -34,3 +37,6 @@ dnfExercise = Exercise
                      in liftM inContext generateLogic -- (suitableLogic check)
    , suitableTerm  = \p -> countEquivalences (fromContext p) < 2 && countBinaryOperators (fromContext p) <= 3
    }
+ where
+   standard :: Exercise (Context Logic)
+   standard = makeExercise

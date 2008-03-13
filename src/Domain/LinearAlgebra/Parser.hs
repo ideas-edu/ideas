@@ -27,11 +27,11 @@ import Data.List
 import Data.Char
 import GHC.Real
 
-parseSystem :: String -> Either (Doc a, Maybe (LinearSystem Rational)) (LinearSystem Rational)
+parseSystem :: String -> Either (Doc a) (LinearSystem Rational)
 parseSystem input = 
  case runParser (pSystem pRational) input of
     (sys, [])   -> Right sys
-    (sys, errs) -> Left (text (show errs), Just sys) 
+    (sys, errs) -> Left (text (show errs)) 
  
 pSystem :: Num a => CharParser a -> CharParser (LinearSystem a)
 pSystem p = pListSep (pSym '\n') pEquation
@@ -47,11 +47,11 @@ pSystem p = pListSep (pSym '\n') pEquation
 -----------------------------------------------------------
 --- Parser
 
-parseMatrix  :: String -> Either (Doc a, Maybe (MatrixInContext Rational)) (MatrixInContext Rational)
+parseMatrix  :: String -> Either (Doc a) (MatrixInContext Rational)
 parseMatrix input =
    case mm of
       Just m | null errs -> Right m
-      _                  -> Left (text (show errs), mm)
+      _                  -> Left (text (show errs))
  where 
    (xs, errs) = runParser (pMatrix pRational) input
    mm = if isRectangular xs then Just (inContext (makeMatrix xs)) else Nothing 

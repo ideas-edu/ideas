@@ -20,6 +20,8 @@ module Common.Exercise
    ) where
 
 import Common.Apply
+import Common.Context (Location)
+import Common.Parsing (Range)
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
@@ -32,7 +34,8 @@ import Test.QuickCheck hiding (label, arguments)
 
 data Exercise a = Exercise
    { shortTitle    :: String
-   , parser        :: String -> Either (Doc a, Maybe a) a
+   , parser        :: String -> Either (Doc a) a
+   , subTerm       :: String -> Range -> Maybe Location
    , prettyPrinter :: a -> String
    , equivalence   :: a -> a -> Bool
    , equality      :: a -> a -> Bool -- syntactic equality
@@ -50,7 +53,8 @@ instance Apply Exercise where
 makeExercise :: (Arbitrary a, Eq a, Show a) => Exercise a
 makeExercise = Exercise
    { shortTitle    = "no short title"
-   , parser        = const $ Left (text "no parser", Nothing)
+   , parser        = const $ Left (text "no parser")
+   , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show
    , equivalence   = (==)
    , equality      = (==)
@@ -108,11 +112,11 @@ giveSteps p0 a =
 feedback :: Exercise a -> Prefix a -> a -> String -> Feedback a
 feedback ex p0 a txt =
    case parser ex txt of
-      Left (msg, suggestion) -> 
-         SyntaxError msg suggestion
+      Left msg -> 
+         SyntaxError msg
       Right new
          | not (equivalence ex a new) -> 
-              Incorrect (text "Incorrect") Nothing -- no suggestion yet
+              Incorrect (text "Incorrect")
          | otherwise -> 
               let answers = giveSteps p0 a
                   check (_, _, _, _, this) = equality ex new this
@@ -129,8 +133,8 @@ stepsRemaining p0 a =
       Just (_, prefix) ->
          length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
 
-data Feedback a = SyntaxError (Doc a) (Maybe a) {- corrected -}
-                | Incorrect   (Doc a) (Maybe a)
+data Feedback a = SyntaxError (Doc a)
+                | Incorrect   (Doc a)
                 | Correct     (Doc a) (Maybe (Prefix a, Rule a, a)) {- The rule that was applied -}
 
 getRuleNames :: Exercise a -> [String]

@@ -33,5 +33,4 @@ dnfExercise = Exercise
    , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
                      in liftM inContext generateLogic -- (suitableLogic check)
    , suitableTerm  = \p -> countEquivalences (fromContext p) < 2 && countBinaryOperators (fromContext p) <= 3
-   , configuration = defaultConfiguration
    }

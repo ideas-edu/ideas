@@ -1,12 +1,32 @@
-{-# OPTIONS -fglasgow-exts #-}
-module Common.Exercise where
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- This module defines the concept of an exercise, and services that operate
+-- one these exercises.
+--
+-----------------------------------------------------------------------------
+module Common.Exercise 
+   ( -- * Exercises
+     Exercise(..), makeExercise
+     -- * Services
+   , Feedback(..), giveStep, giveSteps, giveHint, feedback, randomTerm, stepsRemaining
+     -- * Formatted documents
+   , Doc, text, showDoc
+     -- * QuickCheck utilities
+   , checkExercise, checkParserPretty
+   ) where
 
 import Common.Apply
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
 import Common.Unification
+import Control.Monad
 import Data.List (intersperse)
+import Data.Maybe (fromMaybe)
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 
@@ -21,8 +41,10 @@ data Exercise a = Exercise
    , strategy      :: LabeledStrategy a
    , generator     :: Gen a
    , suitableTerm  :: a -> Bool
-   , configuration :: Configuration
    }
+
+instance Apply Exercise where
+   applyAll = applyAll . strategy
 
 -- default values for all fields
 makeExercise :: (Arbitrary a, Eq a, Show a) => Exercise a
@@ -37,18 +59,6 @@ makeExercise = Exercise
    , strategy      = label "Succeed" succeed
    , generator     = arbitrary
    , suitableTerm  = const True
-   , configuration = defaultConfiguration
-   }
-
-data Language = English | Dutch
-
-data Configuration = Configuration
-   { language :: Language
-   }
-
-defaultConfiguration :: Configuration
-defaultConfiguration = Configuration
-   { language = English
    }
    
 randomTerm :: Exercise a -> IO a
@@ -140,9 +150,6 @@ instance Functor DocItem where
    fmap f (Text s) = Text s
    fmap f (Term a) = Term (f a)
    fmap f (DocRule r) = DocRule r 
-
-instance Show a => Show (Doc a) where
-   show = showDocWith show
 
 emptyDoc :: Doc a
 emptyDoc = D []

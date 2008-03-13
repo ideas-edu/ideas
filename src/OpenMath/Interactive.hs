@@ -1,7 +1,7 @@
 module OpenMath.Interactive (respondHTML, oneliner) where
 
 import Common.Context
-import Common.Exercise hiding (Text, Incorrect)
+import Common.Exercise hiding (Incorrect)
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils (Some(..))

@@ -37,5 +37,4 @@ simplExercise = Exercise
    , strategy      = toSimple
    , generator     = liftM inContext generateFrac
    , suitableTerm  = \t -> not $ finalProperty simplExercise t && nf (fromContext t) /= Nothing
-   , configuration = defaultConfiguration
    }

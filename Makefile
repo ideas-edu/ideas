@@ -1,4 +1,4 @@
-.PHONY: all checks solver doc run report markup clean test
+.PHONY: all checks run report clean test
 
 # On Windows machines (under cygwin), ghc automatically puts the .exe suffix after
 # all executables it generates. This gives some problems when we have to call this
@@ -18,7 +18,7 @@ EXE  =
 GHCI = ghci
 endif
 
-# Define directories to store results
+# Define directories to store results (assuming we'll always have `src')
 BINDIR = bin
 OUTDIR = out
 DOCDIR = doc
@@ -26,80 +26,87 @@ HPCDIR = hpc
 CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
+FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR)
+
 default: solvergui
 
 test:
-	# Windows OS: $(WINDOWS) 
-	# Executable suffix: $(EXE) 
-	# GHC interpreter: $(GHCI)
+# Windows OS: $(WINDOWS) 
+# Executable suffix: $(EXE) 
+# GHC interpreter: $(GHCI)
 
-all: solvergui doc markup cgi wikipages # solver
+all: solvergui doc markup cgi wikipages
 
 SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
 	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs
 
-solver: bin/solver$(EXE)
+GLADE = src/Presentation/ExerciseAssistant/exerciseassistant.glade \
+	src/Presentation/ExerciseAssistant/exerciseassistant.gladep
 
-$(BINDIR):
-	mkdir -p $(BINDIR)
+# AG: when used as a dependency it always fires, the time of the dir is set to the newest file in the (sub)dir
+#$(BINDIR): 
+#	mkdir -p $(BINDIR)
 
-$(OUTDIR):
-	mkdir -p $(OUTDIR)
-	
-bin/solver$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES)
-	ghc --make -O -isrc -odir out -hidir out -o bin/solver$(EXE) src/Common/Main.hs
+solvergui: $(BINDIR)/solvergui$(EXE)
 
-solvergui: bin/solvergui$(EXE)
-
-bin/solvergui$(EXE): $(BINDIR) $(OUTDIR) $(SOURCES) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs src/Presentation/ExerciseAssistant/exerciseassistant.glade src/Presentation/ExerciseAssistant/exerciseassistant.gladep
-	ghc --make -O -isrc -isrc/Presentation/ExerciseAssistant -odir out -hidir out -o bin/solvergui$(EXE) src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
+$(BINDIR)/solvergui$(EXE): $(SOURCES) $(GLADE)	
+#	if [ ! -d $(BINDIR) ] || [ ! -d $(OUTDIR) ]; then mkdir -p $(BINDIR) $(OUTDIR); fi  # AG: possible but overdone
+	mkdir -p $(BINDIR) $(OUTDIR)
+	ghc $(FLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
 	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
 	cp src/Presentation/ExerciseAssistant/ounl.jpg bin/
 
-checks: $(BINDIR) $(OUTDIR)
+checks: 
 	cd src/Common; runhaskell -i.. Checks.hs; cd ..
 
-run: $(BINDIR) $(OUTDIR)
-	$(GHCI) -isrc -isrc/Presentation/ExerciseAssistant -odir out -hidir out 
+run: solvergui
+	$(BINDIR)/solvergui$(EXE)
 
-doc:	doc/index.html
+ghci:
+	mkdir -p $(OUTDIR)
+	$(GHCI) -isrc -isrc/Presentation/ExerciseAssistant -odir $(OUTDIR) -hidir $(OUTDIR)
 
-doc/index.html: $(SOURCES) src/Common/prologue
+$(DOCDIR)/index.html: $(SOURCES) src/Common/prologue
 	mkdir -p $(DOCDIR)
-	haddock -o doc -s "../%F" -p src/Common/prologue --html $(SOURCES)
+	haddock -o $(DOCDIR) -s "../%F" -p src/Common/prologue --html $(SOURCES)
 
-hpc/bin/solver$(EXE): $(SOURCES)
-	mkdir -p $(HPCDIR)/out $(HPCDIR)/bin
-	ghc -fhpc --make -hpcdir hpc/out -isrc -odir hpc/out -hidir hpc/out -o hpc/bin/solver$(EXE) src/Common/Checks.hs
+doc: $(DOCDIR)/index.html
 
-hpc/bin/solver.tix: hpc/bin/solver$(EXE)
-	cd hpc/bin; rm -f solver.tix; ./solver$(EXE); cd ../..
+$(HPCDIR)/$(BINDIR)/solver$(EXE): $(SOURCES) 
+	mkdir -p $(HPCDIR)/$(OUTDIR) $(HPCDIR)/$(BINDIR)
+	ghc -fhpc --make -hpcdir $(HPCDIR)/$(OUTDIR) -isrc -odir $(HPCDIR)/$(OUTDIR) -hidir $(HPCDIR)/$(OUTDIR) \
+	-o $@ src/Common/Checks.hs
 
-report: hpc/bin/solver.tix
-	hpc report --hpcdir=hpc/out hpc/bin/solver$(EXE)
+$(HPCDIR)/$(BINDIR)/solver.tix: $(HPCDIR)/$(BINDIR)/solver$(EXE)
+	rm -f $@; cd $(HPCDIR)/$(BINDIR); ./solver$(EXE); cd ../..
 
-markup: hpc/doc/hpc_index.html
+report: $(HPCDIR)/$(BINDIR)/solver.tix
+	hpc report --hpcdir=$(HPCDIR)/$(OUTDIR) $(HPCDIR)/$(BINDIR)/solver$(EXE)
 
-hpc/doc/hpc_index.html: hpc/bin/solver.tix
-	mkdir -p $(HPCDIR)/doc
-	hpc markup --hpcdir=hpc/out --destdir=hpc/doc hpc/bin/solver$(EXE)
+markup: $(HPCDIR)/$(DOCDIR)/hpc_index.html
 
-cgi:	$(BINDIR)/laservice.cgi
+$(HPCDIR)/$(DOCDIR)/hpc_index.html: $(HPCDIR)/$(BINDIR)/solver.tix
+	mkdir -p $(HPCDIR)/$(DOCDIR)
+	hpc markup --hpcdir=$(HPCDIR)/$(OUTDIR) --destdir=$(HPCDIR)/$(DOCDIR) $(HPCDIR)/$(BINDIR)/solver$(EXE)
 
-$(BINDIR)/laservice.cgi: $(BINDIR) $(OUTDIR) $(SOURCES)
-	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/laservice.cgi src/OpenMath/Main.hs
+$(BINDIR)/laservice.cgi: $(SOURCES)
+	mkdir -p  $(BINDIR) $(OUTDIR)
+	ghc $(FLAGS) -o $@ src/OpenMath/Main.hs
 
-cgi-install: $(BINDIR)/laservice.cgi
+cgi: $(BINDIR)/laservice.cgi
+
+cgi-install: cgi
 	scp $(BINDIR)/laservice.cgi $(CGIDIR)
 
 wikipages: $(BINDIR)/wikipages$(EXE)
-	bin/wikipages$(EXE) doc
 
-$(BINDIR)/wikipages$(EXE): $(BINDIR) $(OUTDIR) $(DOCDIR) $(SOURCES)
+$(BINDIR)/wikipages$(EXE): $(SOURCES)
+	mkdir -p $(BINDIR) $(OUTDIR) $(DOCDIR)
 	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/wikipages src/OpenMath/StrategyToWiki.hs
-	
+	$(BINDIR)/wikipages$(EXE) doc
+
 web:	
 	scp -r src/Presentation/genexas/* $(WEBDIR)
 

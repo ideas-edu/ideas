@@ -166,10 +166,7 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
 subTermAtIndices :: String -> Int -> Int -> Session -> IO (Maybe [Int])
 subTermAtIndices s i j = withState $ \a d -> do
    let rng = indicesToRange s i j
-   print rng
-   let mst = subTerm a s rng
-   print mst
-   return mst
+   return (subTerm a s rng)
 
 --------------------------------------------------
 -- Derivations

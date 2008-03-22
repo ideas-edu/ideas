@@ -29,7 +29,7 @@ import GHC.Real
 
 parseSystem :: String -> Either (Doc a) (LinearSystem Rational)
 parseSystem input = 
- case runParser (pSystem pRational) input of
+ case runParser (pSystem pRatioParens) input of
     (sys, [])   -> Right sys
     (sys, errs) -> Left (text (show errs)) 
  
@@ -53,7 +53,7 @@ parseMatrix input =
       Just m | null errs -> Right m
       _                  -> Left (text (show errs))
  where 
-   (xs, errs) = runParser (pMatrix pRational) input
+   (xs, errs) = runParser (pMatrix pRatioParens) input
    mm = if isRectangular xs then Just (inContext (makeMatrix xs)) else Nothing 
 
 pMatrix :: CharParser a -> CharParser [[a]]
@@ -62,9 +62,17 @@ pMatrix p = pListSep (pSym '\n') pRow
    pRow    = pSpaces *> pList1 (p <* pSpaces)
    pSpaces = pList_gr (pAnySym " \t")
 
-pRational :: CharParser Rational
-pRational = glue <$> opt (negate <$ pSym '-') id <*> pNat <*> opt (pSym '/' *> pNat1) 1
- where glue f x y = fromInteger (f x) / fromInteger y
+pRatioParens :: CharParser Rational
+pRatioParens = (opt (negate <$ pSym '-') id <*> pparens pRatio) <|> pRatio
+
+pRatio :: CharParser Rational
+pRatio = (\n d -> fromInteger n / fromInteger d) <$> pZ <*> opt (pSym '/' *> pZ1) 1
+
+pZ :: CharParser Integer
+pZ = (\f x -> f x) <$> opt (negate <$ pSym '-') id <*> pNat
+
+pZ1 :: CharParser Integer
+pZ1 = (\f x -> f x) <$> opt (negate <$ pSym '-') id <*> pNat1
 
 pNat :: CharParser Integer
 pNat = read <$> pList1 ('0' <..> '9')
@@ -84,6 +92,11 @@ runParser pLogic input = (result, messages)
 fstPair :: Pair a b -> a
 fstPair (Pair a b)  =  a
   
+pparens :: CharParser a -> CharParser a
+pparens = pPacked (pSymLow '(') (pSymLow ')') 
+pSymInf a       =  pCostSym   1000 a a
+pSymLow a       =  pCostSym      1 a a
+
 -----------------------------------------------------------
 --- Pretty-Printer
 

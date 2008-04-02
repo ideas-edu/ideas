@@ -32,6 +32,14 @@ eliminateConstantsDWA = repeat $ somewhere $
            , ruleFalseZeroAnd, ruleNotBoolConst
            ]
 
+simplifyDWA :: Strategy (Context Logic)
+simplifyDWA = repeat $ somewhere $
+   	  liftRuleToContext ruleNotNot
+      <|> liftRuleToContext ruleIdempOr
+      <|> liftRuleToContext ruleIdempOr
+      <|> liftRuleToContext ruleAbsorpOr
+      <|> liftRuleToContext ruleAbsorpOr
+
 eliminateImplEquiv :: Strategy (Context Logic)
 eliminateImplEquiv = repeat $ somewhere $
           liftRuleToContext ruleDefImpl
@@ -49,6 +57,14 @@ orToTop = repeat $ somewhere $ liftRuleToContext ruleAndOverOr
 toDNF :: LabeledStrategy (Context Logic)
 toDNF =  label "Bring to dnf"
       $  label "Eliminate constants"                 eliminateConstants
+     <*> label "Eliminate implications/equivalences" eliminateImplEquiv
+     <*> label "Eliminate nots"                      eliminateNots 
+     <*> label "Move ors to top"                     orToTop
+     
+toDNFDWA :: LabeledStrategy (Context Logic)
+toDNFDWA =  label "Bring to dnf"
+      $  label "Eliminate constants"                 eliminateConstantsDWA
+     <*> label "Simplify"		    	     simplifyDWA
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv
      <*> label "Eliminate nots"                      eliminateNots 
      <*> label "Move ors to top"                     orToTop

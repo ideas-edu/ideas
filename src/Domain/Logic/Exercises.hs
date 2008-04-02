@@ -33,8 +33,9 @@ dnfExercise = standard
    , finalProperty = isDNF . fromContext
    , ruleset       = map liftRuleToContext logicRules
    , strategy      = toDNF
-   , generator     = let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
-                     in liftM inContext generateLogic -- (suitableLogic check)
+   , generator     = return $ inContext $ Not(Not(Var "q") :||: Var "p") :&&: Not (Var "r" :&&: Var "p")
+   		     --let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
+                     --in liftM inContext generateLogic -- (suitableLogic check)
    , suitableTerm  = \p -> countEquivalences (fromContext p) < 2 && countBinaryOperators (fromContext p) <= 3
    }
  where

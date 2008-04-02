@@ -62,11 +62,13 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
 -- | Function to unify to logic formulas: a returned substitution maps 
 -- | variables (String) to logic formulas 
 unifyLogic :: Logic -> Logic -> Maybe (Substitution Logic)
-unifyLogic p q = 
+unifyLogic p q
+ | not (S.null (getVars p `S.intersection` getVars q)) = error $ show (p, q)
+ | otherwise =
    case (p, q) of
       (Var x, Var y) | x==y      -> return emptySubst
-      (Var x, _)                 -> return (singletonSubst x q)
-      (_    , Var y)             -> return (singletonSubst y p)
+      (Var x, _) | not (x `S.member` getVars q) -> return (singletonSubst x q)
+      (_, Var y) | not (y `S.member` getVars p) -> return (singletonSubst y p)
       (p1 :->: p2,  q1 :->:  q2) -> unifyList [p1, p2] [q1, q2]
       (p1 :<->: p2, q1 :<->: q2) -> unifyList [p1, p2] [q1, q2]
       (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]

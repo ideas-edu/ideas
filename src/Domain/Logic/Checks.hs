@@ -87,6 +87,17 @@ propStratDNF logic =
          Just this -> isDNF (fromContext this)
          _ -> False
 
+propStratDNFDWA :: Logic -> Property
+propStratDNFDWA logic = 
+   let isSimple  = (<= 5) . foldLogic (const 1, binop, binop, binop, binop, succ, 1, 1)
+       binop x y = succ (x `max` y)
+   in isSimple logic ==>
+      case apply toDNFDWA (inContext logic) of
+         Just this -> isDNF (fromContext this)
+         _ -> False	 
+	 
+	 
+
 {-
 propPrefix :: Logic -> Bool
 propPrefix logic = isDNF $ fromContext $ rec (inContext logic) emptyPrefix

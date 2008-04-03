@@ -36,9 +36,9 @@ simplifyDWA :: Strategy (Context Logic)
 simplifyDWA = somewhere $
    	  liftRuleToContext ruleNotNot
       <|> liftRuleToContext ruleIdempOr
-      <|> liftRuleToContext ruleIdempOr
+      <|> liftRuleToContext ruleIdempAnd
       <|> liftRuleToContext ruleAbsorpOr
-      <|> liftRuleToContext ruleAbsorpOr
+      <|> liftRuleToContext ruleAbsorpAnd
 
 eliminateImplEquiv :: Strategy (Context Logic)
 eliminateImplEquiv = repeat $ somewhere $
@@ -80,9 +80,3 @@ toDNFDWA =  label "Bring to dnf" $ repeat $
    |> label "Eliminate implications/equivalences" eliminateImplEquivDWA
    |> label "Eliminate nots"                      eliminateNotsDWA
    |> label "Move ors to top"                     orToTopDWA
-{-
-      $  label "Eliminate constants"                 eliminateConstantsDWA
-     <*> label "Simplify"		    	     simplifyDWA
-     <*> label "Eliminate implications/equivalences" eliminateImplEquiv
-     <*> label "Eliminate nots"                      eliminateNots 
-     <*> label "Move ors to top"                     orToTop -}

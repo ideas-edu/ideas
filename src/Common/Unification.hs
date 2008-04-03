@@ -23,6 +23,7 @@ module Common.Unification
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import Data.List (nub)
 import Control.Monad
 
 -----------------------------------------------------------
@@ -42,12 +43,20 @@ emptySubst :: Substitution a
 emptySubst = S M.empty
 
 -- | Returns a singleton substitution
-singletonSubst :: String -> a -> Substitution a
-singletonSubst s a = S (M.singleton s a)
+singletonSubst :: HasVars a => String -> a -> Substitution a
+singletonSubst s a
+   | s `S.member` getVars a = error "Unification.singletonSubst: occurs check failed"
+   | otherwise = S (M.singleton s a)
 
 -- | Turns a list into a substitution
-listToSubst :: [(String, a)] -> Substitution a
-listToSubst = S . M.fromList
+listToSubst :: HasVars a => [(String, a)] -> Substitution a
+listToSubst s
+   | nub xs /= xs       = error "Unification.listToSubst: keys are not unique"
+   | any (`elem` xs) ys = error "Unification.listToSubst: occurs check failed"
+   | otherwise          = S (M.fromList s) 
+ where
+   xs = map fst s
+   ys = concatMap (getVarsList . snd) s
 
 -- | Combines two substitutions. The left-hand side substitution is first applied to
 -- the co-domain of the right-hand side substitution
@@ -161,7 +170,7 @@ instantiate = instantiateWith (|->)
 
 -- | Same as instantiate, except that a special purpose function is passed to 
 -- perform the substitution (instead of relying on the Substitutable type class)
-instantiateWith :: MakeVar b => (Substitution b -> a -> a) -> Int -> ForAll a -> (a, Int)
+instantiateWith :: (HasVars b, MakeVar b) => (Substitution b -> a -> a) -> Int -> ForAll a -> (a, Int)
 instantiateWith f unique (ForAll s a) = (f sub a, unique + length vars)
  where 
    vars = S.toList s
@@ -173,5 +182,5 @@ unsafeInstantiate = unsafeInstantiateWith (|->)
 
 -- | Same as unsafeInstantiate, except that a special purpose function is passed to
 -- perform the substitution
-unsafeInstantiateWith :: MakeVar b => (Substitution b -> a -> a) -> ForAll a -> a
+unsafeInstantiateWith :: (HasVars b, MakeVar b) => (Substitution b -> a -> a) -> ForAll a -> a
 unsafeInstantiateWith f = fst . instantiateWith f 12345

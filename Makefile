@@ -37,7 +37,7 @@ test:
 
 all: solvergui doc markup cgi wikipages
 
-SOURCES = src/Common/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
+SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
 	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs
@@ -79,15 +79,15 @@ $(HPCDIR)/$(BINDIR)/solver$(EXE): $(SOURCES)
 	ghc -fhpc --make -hpcdir $(HPCDIR)/$(OUTDIR) -isrc -odir $(HPCDIR)/$(OUTDIR) -hidir $(HPCDIR)/$(OUTDIR) \
 	-o $@ src/Common/Checks.hs
 
-$(HPCDIR)/$(BINDIR)/solver.tix: $(HPCDIR)/$(BINDIR)/solver$(EXE)
-	rm -f $@; cd $(HPCDIR)/$(BINDIR); ./solver$(EXE); cd ../..
+$(HPCDIR)/$(BINDIR)/solver$(EXE).tix: $(HPCDIR)/$(BINDIR)/solver$(EXE)
+	rm -f $(HPCDIR)/$(BINDIR)/solver$(EXE).tix; cd $(HPCDIR)/$(BINDIR); ./solver$(EXE); cd ../..
 
-report: $(HPCDIR)/$(BINDIR)/solver.tix
+report: $(HPCDIR)/$(BINDIR)/solver$(EXE).tix
 	hpc report --hpcdir=$(HPCDIR)/$(OUTDIR) $(HPCDIR)/$(BINDIR)/solver$(EXE)
 
 markup: $(HPCDIR)/$(DOCDIR)/hpc_index.html
 
-$(HPCDIR)/$(DOCDIR)/hpc_index.html: $(HPCDIR)/$(BINDIR)/solver.tix
+$(HPCDIR)/$(DOCDIR)/hpc_index.html: $(HPCDIR)/$(BINDIR)/solver$(EXE).tix
 	mkdir -p $(HPCDIR)/$(DOCDIR)
 	hpc markup --hpcdir=$(HPCDIR)/$(OUTDIR) --destdir=$(HPCDIR)/$(DOCDIR) $(HPCDIR)/$(BINDIR)/solver$(EXE)
 

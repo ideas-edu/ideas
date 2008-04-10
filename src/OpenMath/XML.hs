@@ -2,7 +2,7 @@
 module OpenMath.XML 
    ( XML(..), Attr, AttrList
    , parseXML, parseXMLs, showXML
-   , children, extract
+   , children, extract, extractText
    ) where
 
 import Common.Utils (trim)
@@ -154,8 +154,15 @@ children :: XML -> [XML]
 children (Tag _ _ xs) = xs
 children _            = []
 
-extract :: String -> XML -> Maybe [XML]
+extract :: Monad m => String -> XML -> m [XML]
 extract n xml =
    case [ xs | Tag m _ xs <- children xml, n==m ] of
       [hd] -> return hd
-      _    -> Nothing
+      _    -> fail ("missing tag " ++ show n)
+      
+extractText :: Monad m => String -> XML -> m String
+extractText n xml = do
+   xs <- extract n xml
+   case xs of
+      [Text s] -> return s
+      _        -> fail ("invalid content for tag " ++ show n)

@@ -18,7 +18,8 @@ module Common.Parsing
    , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1, pChainl, pChainr, pChoice
      -- * Subexpressions
    , Ranged, Range(..), Pos(..), toRanged, fromRanged, subExpressionAt
-   , pKey, pVarid, pConid, unaryOp, binaryOp, pParens, indicesToRange
+   , pKey, pSpec, pVarid, pConid, unaryOp, binaryOp, pParens, indicesToRange
+   , pInteger, pFraction, pString, pBracks, pCurly, pCommas
     -- ** Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
    ) where
@@ -198,7 +199,10 @@ subExpressionAt r ra
               [ fmap (f i) (subExpressionAt r c) | (i, c) <- zip [0..] (children ra) ]
 
 pKey :: String -> TokenParser Range
-pKey s = toRange 1 <$> UU.pKeyPos s
+pKey  s = toRange 1 <$> UU.pKeyPos  s
+
+pSpec :: Char -> TokenParser Range
+pSpec c = toRange 1 <$> UU.pSpecPos c
 
 pVarid, pConid :: TokenParser (String, Range)
 pVarid = (\(s, p) -> (s, toRange 1 p)) <$> UU.pVaridPos
@@ -213,11 +217,31 @@ binaryOp f r1 r2 = Ranged (f (fromRanged r1) (fromRanged r2)) (getRange r1 & get
 pParens :: TokenParser (Ranged a) -> TokenParser (Ranged a)
 pParens p = (\p1 r p2 -> Ranged (fromRanged r) (toRange 1 p1 & toRange 1 p2) True [r]) <$> UU.pOParenPos <*> p <*> UU.pCParenPos
 
+-- TODO: fix inconsistency with pParens
+pBracks :: TokenParser a -> TokenParser a
+pBracks  = UU.pBracks
+
+-- TODO: fix inconsistency with pParens
+pCurly :: TokenParser a -> TokenParser a
+pCurly   = UU.pCurly
+
+pInteger :: TokenParser Integer
+pInteger = read <$> UU.pInteger
+
+pFraction :: TokenParser Float
+pFraction = read <$> UU.pFraction
+
+pString :: TokenParser String
+pString = UU.pString
+
+pCommas :: TokenParser a -> TokenParser [a]
+pCommas = UU.pCommas
+
 -- | Helper function to translate two indices on a string to a range: the positions of a range are line-based
 indicesToRange :: String -> Int -> Int -> Range
 indicesToRange s i j = Range (indexToPos s a) (indexToPos s b) 
  where (a, b) = trimIndexPair s i j
- 
+
 -- local helper functions
 (&) :: Range -> Range -> Range
 Range p1 p2 & Range p3 p4 = Range (p1 `min` p3) (p2 `max` p4)

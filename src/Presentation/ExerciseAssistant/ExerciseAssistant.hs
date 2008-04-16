@@ -1,13 +1,16 @@
-{--------------------------------------------------- 
-This is an interactive system in which a student can 
-incrementally solve exercises
-
-Copyright (c)        2006 - 2007 
-
-Johan Jeuring, Harrie Passier, Bastiaan Heeren, Alex Gerdes
-and Arthur van Leeuwen
----------------------------------------------------}
-
+-----------------------------------------------------------------------------
+-- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- (...add description...)
+--
+-----------------------------------------------------------------------------
 module Main where
 
 import Graphics.UI.Gtk

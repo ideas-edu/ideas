@@ -1,4 +1,18 @@
+-----------------------------------------------------------------------------
+-- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-- (...add description...)
+--
+-----------------------------------------------------------------------------
 module Domain.Logic.Exercises where
+
 import Domain.Logic.Generator
 import Domain.Logic.Formula
 import Domain.Logic.Strategies

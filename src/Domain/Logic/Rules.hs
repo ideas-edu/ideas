@@ -1,11 +1,15 @@
 {-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
+-- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  bastiaan.heeren@ou.nl
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (todo)
+-- (...add description...)
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Rules where

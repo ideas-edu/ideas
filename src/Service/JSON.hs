@@ -8,6 +8,8 @@ module Service.JSON
 import Common.Parsing
 import Common.Utils (indent)
 import Data.List (intersperse)
+import Network.CGI hiding (requestMethod)
+import Control.Monad.Trans
 import qualified UU.Parsing
 
 -- temporary test
@@ -94,3 +96,100 @@ parseJSON input =
 squareBrackets, curlyBrackets :: String -> String
 squareBrackets s = "[" ++ s ++ "]"
 curlyBrackets  s = "{" ++ s ++ "}"
+
+--------------------------------------------------------
+-- JSON-RPC
+
+data JSON_RPC_Request = Request
+   { requestMethod :: String
+   , requestParams :: [JSON]
+   , requestId     :: JSON
+   }
+   
+data JSON_RPC_Response = Response
+   { responseResult :: JSON
+   , responseError  :: JSON
+   , responseId     :: JSON
+   }
+
+instance Show JSON_RPC_Request where
+   show = show . toJSON
+
+instance Show JSON_RPC_Response where
+   show = show . toJSON
+
+instance ToJSON JSON_RPC_Request where
+   toJSON req = Object
+      [ ("method", String $ requestMethod req)
+      , ("params", Array  $ requestParams req)
+      , ("id"    , requestId req)
+      ]
+
+instance ToJSON JSON_RPC_Response where
+   toJSON resp = Object
+      [ ("result", responseResult resp)
+      , ("error" , responseError resp)
+      , ("id"    , responseId resp)
+      ]
+
+okResponse :: JSON -> JSON -> JSON_RPC_Response
+okResponse x y = Response
+   { responseResult = x
+   , responseError  = Null
+   , responseId     = y
+   }
+   
+errorResponse :: JSON -> JSON -> JSON_RPC_Response
+errorResponse x y = Response
+   { responseResult = Null
+   , responseError  = x
+   , responseId     = y
+   }
+   
+--------------------------------------------------------
+-- JSON-RPC over HTTP
+
+type JSON_RPC_Handler = String -> [JSON] -> IO (JSON, Bool)
+
+jsonOverHTTP :: JSON_RPC_Handler -> IO ()
+jsonOverHTTP handler = runCGI $ do
+   -- get input
+   raw  <- getInput "input"     -- read input
+   addr <- remoteAddr           -- the IP address of the remote host making the request
+   
+   case raw of
+      Nothing -> fail "No request"
+      Just input -> 
+         case parseRequest input of 
+            Left err  -> fail err
+            Right req -> do 
+               (json, b) <- lift $ handler (requestMethod req) (requestParams req)
+               let f = if b then okResponse else errorResponse
+               setHeader "Content-type" "application/json"
+               output $ show $ f json (requestId req)
+               
+ 
+ where
+   lookupM :: (Show a, Eq a, Monad m) => a -> [(a, b)] -> m b
+   lookupM a xs = maybe (fail $ "Element " ++ show a ++ " not found") return (lookup a xs)
+ 
+   parseRequest :: String -> Either String JSON_RPC_Request
+   parseRequest input =
+      case parseJSON input of
+         Just (Object xs) -> do
+            m  <- lookupM "method" xs
+            ms <- case m of
+                     String s -> return s
+                     _        -> fail "method is not a string"
+            s  <- lookupM "params" xs
+            ps <- case s of
+                     Array xs -> return xs
+                     _        -> return [s] 
+            i  <- lookupM "id"     xs
+            return $ Request  
+               { requestMethod = ms
+               , requestParams = ps
+               , requestId     = i
+               }
+         Just _    -> fail "not a JSON object"
+         Nothing   -> fail "parse error"

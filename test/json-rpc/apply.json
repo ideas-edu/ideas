@@ -1,0 +1,4 @@
+{ "method" : "apply"
+, "params" : ["DeMorganOr", "[]", ["Proposition to DNF", "[]", "~(~x || ~y)"]]
+, "id"     : 421
+}

@@ -35,7 +35,7 @@ test:
 # Executable suffix: $(EXE) 
 # GHC interpreter: $(GHCI)
 
-all: solvergui doc markup cgi wikipages
+all: solvergui doc markup cgi service wikipages
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs \
@@ -99,6 +99,12 @@ cgi: $(BINDIR)/laservice.cgi
 
 cgi-install: cgi
 	scp $(BINDIR)/laservice.cgi $(CGIDIR)
+
+service: $(BINDIR)/service.cgi
+
+$(BINDIR)/service.cgi: $(SOURCES)
+	mkdir -p  $(BINDIR) $(OUTDIR)
+	ghc $(FLAGS) -o $@ src/Service/Main.hs
 
 wikipages: $(BINDIR)/wikipages$(EXE)
 

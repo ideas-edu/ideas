@@ -1,0 +1,4 @@
+{ "method" : "stepsremaining"
+, "params" : [["Proposition to DNF", "[]", "~(~x || ~y)"]]
+, "id"     : 421
+}

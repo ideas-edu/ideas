@@ -1,0 +1,4 @@
+{ "method" : "allfirsts"
+, "params" : [["Proposition to DNF", "[]", "~(~x || ~y)"]]
+, "id"     : 421
+}

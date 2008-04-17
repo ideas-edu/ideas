@@ -16,6 +16,7 @@ module Service.JSON
    ( JSON(..), Key, Number(..)            -- types
    , ToJSON(..)                           -- type class
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
+   , jsonRPC, jsonRPCOverHTTP, JSON_RPC_Handler
    ) where
 
 import Common.Parsing
@@ -164,22 +165,25 @@ errorResponse x y = Response
 
 type JSON_RPC_Handler = String -> [JSON] -> IO (JSON, Bool)
 
-jsonOverHTTP :: JSON_RPC_Handler -> IO ()
-jsonOverHTTP handler = runCGI $ do
+jsonRPCOverHTTP :: JSON_RPC_Handler -> IO ()
+jsonRPCOverHTTP handler = runCGI $ do
    -- get input
    raw  <- getInput "input"     -- read input
-   addr <- remoteAddr           -- the IP address of the remote host making the request
-   
    case raw of
-      Nothing -> fail "No request"
-      Just input -> 
+      Nothing    -> fail "No request"
+      Just input -> do 
+         setHeader "Content-type" "application/json"
+         txt <- lift $ jsonRPC input handler
+         output txt
+
+jsonRPC :: String -> JSON_RPC_Handler -> IO String
+jsonRPC input handler = 
          case parseRequest input of 
             Left err  -> fail err
             Right req -> do 
-               (json, b) <- lift $ handler (requestMethod req) (requestParams req)
+               (json, b) <- handler (requestMethod req) (requestParams req)
                let f = if b then okResponse else errorResponse
-               setHeader "Content-type" "application/json"
-               output $ show $ f json (requestId req)
+               return $ show $ f json (requestId req)
                
  
  where

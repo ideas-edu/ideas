@@ -41,7 +41,7 @@ data Logic = Var String
 -- | Used in the fold for Logic.
 type LogicAlg a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a, a, a)
 
--- | foldLogic is the standard folfd for Logic.
+-- | foldLogic is the standard fold for Logic.
 foldLogic :: LogicAlg a -> Logic -> a
 foldLogic (var, impl, equiv, and, or, not, true, false) = rec
  where
@@ -63,7 +63,7 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
  where
    impl p q = not p || q
 
--- | Function to unify to logic formulas: a returned substitution maps 
+-- | Function to unify to logic formulas: the resulting substitution maps 
 -- | variables (String) to logic formulas 
 unifyLogic :: Logic -> Logic -> Maybe (Substitution Logic)
 unifyLogic p q = 

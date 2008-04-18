@@ -127,10 +127,12 @@ arbIntNZ = do
 
 instance Arbitrary Frac where
    arbitrary = sized $ \n -> arbFrac defaultConfig {maxSize = n}
-   coarbitrary (Var x)       = variant 0 . coarbitrary (map ord x)
-   coarbitrary (Con x)       = variant 1 . coarbitrary x
-   coarbitrary (x :*: y)     = variant 1 . coarbitrary x . coarbitrary y
-   coarbitrary (x :/: y)     = variant 2 . coarbitrary x . coarbitrary y
-   coarbitrary (x :+: y)     = variant 3 . coarbitrary x . coarbitrary y
-   coarbitrary (x :-: y)     = variant 4 . coarbitrary x . coarbitrary y
+   coarbitrary frac = 
+     case frac of 
+       Var x   -> variant 0 . coarbitrary (map ord x)
+       Con x   -> variant 1 . coarbitrary x
+       x :*: y -> variant 1 . coarbitrary x . coarbitrary y
+       x :/: y -> variant 2 . coarbitrary x . coarbitrary y
+       x :+: y -> variant 3 . coarbitrary x . coarbitrary y
+       x :-: y -> variant 4 . coarbitrary x . coarbitrary y
 

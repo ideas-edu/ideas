@@ -1,4 +1,8 @@
 -----------------------------------------------------------------------------
+-- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
@@ -28,13 +32,21 @@ parseFrac = runParser pFrac
  where
    pFrac   =  pChainl ((:+:) <$ addSym <|> (:-:) <$ subSym) pFrac'
    pFrac'  =  pChainl ((:*:) <$ mulSym <|> (:/:) <$ divSym) pFrac'' 
-   pFrac'' =  Var <$> pVar <|> Con <$> (pNat <|> pNeg) <|> pparens pFrac
+   pFrac'' =  Var <$> pVar 
+          <|> Con <$> pNat
+          <|> toNegOrNot <$> subSym <*> pFrac''
+          <|> pparens pFrac
+
+toNegOrNot :: Char -> Frac -> Frac
+toNegOrNot _ (Con x) = Con $ negate x
+toNegOrNot _ x       = Neg x
 
 pNat :: CharParser Integer
 pNat = read <$> pList1 ('0' <..> '9')
 
-pNeg :: CharParser Integer
-pNeg = (\_ x -> negate x) <$> subSym <*> pNat
+pNeg :: CharParser Frac
+--pNeg = (\_ x -> Con (negate x)) <$> subSym <*> pNat
+pNeg = (\x -> Con (negate x)) <$> pNat
 
 mulSym = pSym '*'
 divSym = pSym '/' 
@@ -69,13 +81,13 @@ ppFrac :: Frac -> String
 ppFrac = ppFracPrio 0
         
 ppFracPrio :: Int -> Frac -> String
-ppFracPrio n p = foldFrac (var, lit, binop 7 "*", div 7 "/", binop 6 "+", binop 6 "-") p n ""
+ppFracPrio n p = foldFrac (var, lit, binop 7 "*", div 7 "/", binop 6 "+", binop 6 "-", neg) p n ""
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    div prio op p q n = parIf (n > prio) (p (prio+1) . (op++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
-   nott p n  = ("~"++) . p 4
+   neg p n  = ("-"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
    
 -- | Pretty printer that produces extra parentheses: also see parseFracPars
@@ -84,11 +96,11 @@ ppFracPars = ppFracParsCode 0
         
 -- | Implementation uses the well-known trick for fast string concatenation
 ppFracParsCode :: Int -> Frac -> String
-ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", binop 3 "-") p n ""
+ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", binop 3 "-", neg) p n ""
  where
    binop prio op p q n = parIf True (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
-   nott  p n = ("~"++) . p 3
+   neg  p n = ("-"++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f
 

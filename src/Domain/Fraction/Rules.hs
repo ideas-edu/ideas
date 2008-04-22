@@ -1,5 +1,9 @@
 {-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
+-- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
@@ -19,7 +23,7 @@ import Ratio
 type FracRule = Rule Frac
 
 fracRules :: [FracRule]
-fracRules = [ ruleDivZero, ruleAssAdd, ruleGCD
+fracRules = [ ruleDivZero, ruleAssAdd, ruleGCD, ruleNeg
             , ruleUnitAdd, ruleSubZero, ruleMulZero, ruleUnitMul
             , ruleDivOne, ruleCommonDenom, ruleMulVar, ruleSubVar
             , ruleAssMul, ruleCommAdd, ruleCommMul, ruleDistMul
@@ -56,8 +60,9 @@ ruleMulZero = makeRuleList "MulZero"
 
 ruleUnitMul :: FracRule
 ruleUnitMul = makeRuleList "UnitMul"
-   [ (x :*: Con 1)  |-  x
-   , (Con 1 :*: x)  |-  x
+   [ (x :*: Con 1)     |-  x
+   , (Con 1 :*: x)     |-  x
+   , (Con (-1) :*: x)  |-  negate x
    ]
 
 ruleCommonDenom :: FracRule
@@ -86,8 +91,8 @@ ruleGCD = makeSimpleRule "GCD" f
 
 ruleDivOne :: FracRule
 ruleDivOne = makeRuleList "DivOne" 
-   [ (x :/: Con 1)   |-  x
-   , (x :/: Con (-1))  |-  Con (-1) :*: x
+   [ (x :/: Con 1)     |-  x
+   , (x :/: Con (-1))  |-  Neg x
    ]
 
 ruleDivZero :: FracRule
@@ -101,29 +106,28 @@ ruleDivSame = makeRule "DivSame" $
 ruleAdd :: FracRule
 ruleAdd = makeSimpleRule "Add" f
  where
-   f (Con a :+: Con b) = return $ Con (a+b)
+   f (Con x :+: Con y) = return $ Con (x+y)
+   f (x :+: Neg y)     = return $ x :-: y                         
    f _                 = Nothing
 
-
--- something reeeeaaally weird going on here:
---   rule only fires AFTER ruleCommonDenom
 ruleAddFrac :: FracRule
 ruleAddFrac = makeSimpleRule "AddFrac" f
  where
-   f (Con x :/: Con y :+: Con v :/: Con w) | y==w = return $ Con (x+v) :/: Con w
+   f (x :/: y :+: v :/: w) | y==w = return $ (x+v) :/: w
                                            | otherwise = Nothing
    f _                 = Nothing
 
 ruleSub :: FracRule
 ruleSub = makeSimpleRule "Sub" f
  where
-   f (Con a :-: Con b) = return $ Con (a-b)
+   f (Con x :-: Con y) = return $ Con (x-y)
+   f (x :-: Neg y)     = return $ x :+: y
    f _                 = Nothing
 
 ruleSubFrac :: FracRule
 ruleSubFrac = makeSimpleRule "SubFrac" f
  where
-   f (Con x :/: Con y :-: Con v :/: Con w) | y==w = return $ Con (x-v) :/: Con w
+   f (x :/: y :-: v :/: w) | y==w = return $ (x-v) :/: w
                                            | otherwise = Nothing
    f _                 = Nothing
 
@@ -131,17 +135,20 @@ ruleMul :: FracRule
 ruleMul = makeSimpleRule "Mul" f
  where
    f (Con a :*: Con b) = return $ Con (a*b)
-   f ((Con x :/: Con y) :*: (Con v :/: Con w)) = return $ Con (x*v) :/: Con (y*w)
+   f ((x :/: y) :*: (v :/: w)) = return $ (x :*: v) :/: (y :*: w)
    f ((x :/: y) :*: v) = return $ (x :*: v) :/: y
    f (v :*: (x :/: y)) = return $ (x :*: v) :/: y
+   f (Neg x :*: Neg y) = return $ x :*: y
    f _                 = Nothing
 
 ruleDiv :: FracRule
 ruleDiv = makeSimpleRule "Div" f
  where
-   f ((Con x :/: Con y) :/: (Con v :/: Con w)) = return $ Con (x*w) :/: Con (y*v)
+   f ((x :/: y) :/: (v :/: w)) = return $ (x :/: y) :*: (w :/: v)
    f ((x :/: y) :/: v) = return $ x :/: (y :*: v)
    f (x :/: (y :/: v)) = return $ (x :*: v) :/: y
+   f (Neg x :/: Neg y) = return $ x :/: y
+   f (Con x :/: Con y) | x<0 && y<0 = return $ Con (negate x) :/: Con (negate y)
    f _                 = Nothing
 
 ruleAssAdd :: FracRule
@@ -159,6 +166,13 @@ ruleCommAdd = makeRule "CommAdd" $
 ruleCommMul :: FracRule
 ruleCommMul = makeRule "CommMul" $
    x :*: y |- y :*: x
+
+ruleNeg :: FracRule
+ruleNeg = makeSimpleRule "Neg" f
+  where
+    f (Neg (Neg x)) = return x
+    f (Neg x)       = return $ foldFrac ((\x->Neg $ Var x),(\x->Con $ negate x),(:*:),(:/:),(:+:),(:-:), id) x
+    f _             = Nothing
 
 ruleDistMul :: FracRule
 ruleDistMul = makeRuleList "DistMul" 

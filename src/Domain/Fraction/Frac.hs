@@ -1,4 +1,8 @@
 -----------------------------------------------------------------------------
+-- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
 -- |
 -- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
@@ -19,7 +23,6 @@ import Ratio
 import qualified Data.Set as S
 
 
-
 infixl 7 :*:, :/: 
 infixl 6 :+:, :-:
 
@@ -32,6 +35,7 @@ data Frac =  Var String          -- variable
           |  Frac :/: Frac       -- fraction
           |  Frac :+: Frac       -- addition
           |  Frac :-: Frac       -- subtraction
+          |  Neg Frac            -- Negate
  deriving (Show, Eq, Ord)
 
 
@@ -42,11 +46,12 @@ type FracAlg a = (String -> a,
                   a -> a -> a, 
                   a -> a -> a, 
                   a -> a -> a,
-                  a -> a -> a)                  
+                  a -> a -> a,
+                  a -> a)                  
 
 -- | foldFrac is the standard folfd for Frac.
 foldFrac :: FracAlg a -> Frac -> a
-foldFrac (var, lit, mul, div, add, sub) = rec
+foldFrac (var, lit, mul, div, add, sub, neg) = rec
  where
    rec frac = 
       case frac of
@@ -56,11 +61,12 @@ foldFrac (var, lit, mul, div, add, sub) = rec
          x :/: y  -> rec x `div`  rec y
          x :+: y  -> rec x `add`  rec y
          x :-: y  -> rec x `sub`  rec y
+         Neg x    -> neg (rec x)
               
 -- | evalFrac takes a function that gives a expression value to a variable,
 -- | and a Frac expression, and evaluates the expression.
 evalFrac :: (String -> Rational) -> Frac -> Rational
-evalFrac env = foldFrac (env, (\x -> x%1), (*), (/), (+), (-))
+evalFrac env = foldFrac (env, (\x -> x%1), (*), (/), (+), (-), negate)
 
 -- | Function to unify to fraction formulas: a returned substitution maps 
 -- | variables (String) to fraction formulas 
@@ -68,13 +74,14 @@ unifyFrac :: Frac -> Frac -> Maybe (Substitution Frac)
 unifyFrac x y = 
    case (x, y) of
       (Var v, Var w) | v == w -> return emptySubst
-      (Var v, _)              -> return (singletonSubst v y)
-      (_    , Var w)          -> return (singletonSubst w x)
+      (Var v, _)     | not (v `S.member` getVars y) -> return (singletonSubst v y)
+      (_    , Var w) | not (w `S.member` getVars x) -> return (singletonSubst w x)
       (Con x, Con y) | x == y -> return emptySubst
       (x1 :*: x2,  y1 :*: y2) -> unifyList [x1, x2] [y1, y2]
       (x1 :/: x2,  y1 :/: y2) -> unifyList [x1, x2] [y1, y2]
       (x1 :+: x2,  y1 :+: y2) -> unifyList [x1, x2] [y1, y2]
       (x1 :-: x2,  y1 :-: y2) -> unifyList [x1, x2] [y1, y2]
+      (Neg x, Neg y)          -> unify x y
       _ -> Nothing
 
 
@@ -85,16 +92,17 @@ eqFrac = (~=)
 
 -- | Function varsFrac returns the variables that appear in a Frac expression.
 varsFrac :: Frac -> [String]
-varsFrac = foldFrac (return, (\x -> []), union, union, union, union)
+varsFrac = foldFrac (return, (\x -> []), union, union, union, union, id)
 
 instance Uniplate Frac where
-   uniplate p =
-      case p of 
-         p :*: q -> ([p, q], \[a, b] -> a :*: b)
-         p :/: q -> ([p, q], \[a, b] -> a :/: b)
-         p :+: q -> ([p, q], \[a, b] -> a :+: b)
-         p :-: q -> ([p, q], \[a, b] -> a :-: b)
-         _       -> ([], \[] -> p)
+   uniplate x =
+      case x of 
+         x :*: y -> ([x, y], \[a, b] -> a :*: b)
+         x :/: y -> ([x, y], \[a, b] -> a :/: b)
+         x :+: y -> ([x, y], \[a, b] -> a :+: b)
+         x :-: y -> ([x, y], \[a, b] -> a :-: b)
+         Neg x   -> ([x], \[y] -> Neg y) 
+         _       -> ([], \[] -> x)
          
 instance HasVars Frac where
    getVars = S.fromList . varsFrac
@@ -103,7 +111,7 @@ instance MakeVar Frac where
    makeVar = Var
 
 instance Substitutable Frac where 
-   (|->) sub = foldFrac (var, Con, (:*:), (:/:), (:+:), (:-:))
+   (|->) sub = foldFrac (var, Con, (:*:), (:/:), (:+:), (:-:), Neg)
        where var x = fromMaybe (Var x) (lookupVar x sub)
 
 instance Unifiable Frac where
@@ -114,19 +122,35 @@ x ~= y = let (a, b) = numFraction x
              (c, d) = numFraction y
          in normaliseM (a * d) == normaliseM (b * c)
 
-simplifyM :: Frac -> Maybe Frac
-simplifyM this = do
+pushNeg :: Frac -> Frac -- push Negs inside
+pushNeg this = 
    case this of
-      a :+: b -> do a' <- simplifyM a
-                    b' <- simplifyM b
+      Neg a -> case a of
+                  Var _  -> this
+                  Con x  -> Con (negate x)
+                  b :+: c -> pushNeg (Neg b) :+: pushNeg (Neg c)
+                  b :*: c -> pushNeg (Neg b) :*: pushNeg c
+                  b :/: c -> pushNeg (Neg b) :/: pushNeg c
+                  b :-: c -> pushNeg (Neg b) :-: pushNeg (Neg c)
+                  Neg b   -> pushNeg b
+      a :+: b -> pushNeg a :+: pushNeg b
+      a :*: b -> pushNeg a :*: pushNeg b
+      a :/: b -> pushNeg a :/: pushNeg b
+      _ -> this
+
+simplifyM' :: Frac -> Maybe Frac
+simplifyM' this = do
+   case this of
+      a :+: b -> do a' <- simplifyM' a
+                    b' <- simplifyM' b
                     case (a', b') of
                       (Con x, Con y) -> Just $ Con (x+y)
                       (Con 0, c) -> Just c
                       (c, Con 0) -> Just c
                       (c :+: d, e) -> Just $ c :+: (d :+: e)
                       (c, d) -> Just $ c :+: d
-      a :*: b -> do a' <- simplifyM a
-                    b' <- simplifyM b
+      a :*: b -> do a' <- simplifyM' a
+                    b' <- simplifyM' b
                     case (a', b') of
                       (Con x, Con y) -> Just $ Con (x*y)
                       (Con 0, c) -> Just $ Con 0
@@ -135,16 +159,16 @@ simplifyM this = do
                       (c, Con 1) -> Just c
                       (c :*: d, e) -> Just $ c :*: (d :*: e)
                       (c, d) -> Just $ c :*: d
-      a :/: b -> do a' <- simplifyM a
-                    b' <- simplifyM b
+      a :/: b -> do a' <- simplifyM' a
+                    b' <- simplifyM' b
                     case (a', b') of
                       (c, Con 0) -> Nothing
                       (Con 0, c) -> Just $ Con 0
                       (c, Con 1) -> Just c
                       (c, Con (-1)) -> Just $ Con (-1) :*: c
                       (c, d) -> Just $ c :/: d
-      a :-: b -> do a' <- simplifyM a
-                    b' <- simplifyM b
+      a :-: b -> do a' <- simplifyM' a
+                    b' <- simplifyM' b
                     case (a', b') of
                       (Con x, Con y) -> Just $ Con (x-y)
                       (c, Con 0) -> Just c
@@ -152,6 +176,8 @@ simplifyM this = do
                       (c, d) -> Just $ c :-: d
       _ -> Just this
 
+simplifyM :: Frac -> Maybe Frac
+simplifyM = simplifyM' . pushNeg
 
 normaliseM' :: Frac -> [String] -> Maybe Frac
 normaliseM' f []     = simplifyM f  -- no variables left, so only constants
@@ -191,6 +217,8 @@ numFraction this =
       a :/: b -> let (a1, a2) = numFraction a
                      (b1, b2) = numFraction b
                  in (a1:*:b2, a2:*:b1)
+      Neg a   -> let (a1, a2) = numFraction a
+                 in (Neg a1, a2)
 
 fracSplit :: String -> Frac -> (Frac, Frac)
 fracSplit x this =
@@ -217,19 +245,23 @@ fracSplit x this =
                               Con 0 -> Con 0
                               _     -> a2 :/: b2
                  in (p :+: q, r)
+      Neg a   -> let (a1, a2) = fracSplit x a
+                 in (Neg a1, Neg a2)
       _ -> (Con 0, this)
 
 countVar :: Frac -> String -> Int
-countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+), (+)) f
+countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+), (+), const 0) f
 
 countCon :: Frac -> Int
-countCon = foldFrac (const 0, \x -> 1, (*), (*), (+), (+))
+countCon = foldFrac (const 0, \x -> 1, (*), (*), (+), (+), const 0)
 
 instance Num Frac where
   (+)          = (:+:)
   (-)          = (:-:)
   (*)          = (:*:)
-  negate x     = (Con 0 :-: x)
+  negate x     = case x of
+                      Con a -> Con $ negate a
+                      _     -> Neg x
   fromInteger  = Con
   abs          = error "Not supported: abs"
   signum       = error "Not supported: signum"
@@ -242,5 +274,12 @@ isZero (n :+: m) = n ~= negate m
 isZero (n :*: m) = isZero n || isZero m
 isZero (n :/: m) = isZero n
 isZero (n :-: m) = n ~= m
+isZero (Neg n)   = isZero n
 
-e = (Var "x" :*: (Con 1 :/: Con 2) :+: Var "x" :*: Con 3 :+: (Con 5 :+: (Con 2 :/: Con 3)))
+e = (Var "x" :*: (Con 1 :/: Con 2) :+: Var "x" :*: Con 3 :+: Neg (Con 5 :+: (Con 2 :/: Con 3)) )
+
+e2 = ((Con (-3) :/: Con 5) :-: (Con (-12) :/: Con 5))
+
+e3 = ((Var "x" :/: Var "y") :/: (Con 3 :/: Var "z"))
+
+e4 = "((x*1199)*62)"

@@ -38,7 +38,7 @@ test:
 all: solvergui doc markup cgi service wikipages
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
-	  src/Domain/RelationAlgebra/*.hs \
+	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \
 	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
 	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs
 

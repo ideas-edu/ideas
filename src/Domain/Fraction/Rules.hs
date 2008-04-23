@@ -177,7 +177,7 @@ ruleNeg :: FracRule
 ruleNeg = makeSimpleRule "Neg" f
   where
     f (Neg (Neg x)) = return x
-    f (Neg x)       = return $ pushNeg (Neg x)
+--    f (Neg x)       = return $ pushNeg (Neg x)
 --    f (Neg x)       = return $ foldFrac ((\x->Neg $ Var x),(\x->Con $ negate x),(:*:),(:/:),(:+:),(:-:), id) x
     f _             = Nothing
 

@@ -107,7 +107,8 @@ ruleAdd :: FracRule
 ruleAdd = makeSimpleRule "Add" f
  where
    f (Con x :+: Con y) = return $ Con (x+y)
-   f (x :+: Neg y)     = return $ x :-: y                         
+   f (x :+: Neg y)     = return $ x :-: y
+   f (x :+: Con y)     | y<0 = return $ x :-: (Con $ negate y)
    f _                 = Nothing
 
 ruleAddFrac :: FracRule
@@ -122,6 +123,7 @@ ruleSub = makeSimpleRule "Sub" f
  where
    f (Con x :-: Con y) = return $ Con (x-y)
    f (x :-: Neg y)     = return $ x :+: y
+   f (x :-: Con y)     | y < 0 = return $ x :+: (Con $ negate y)
    f _                 = Nothing
 
 ruleSubFrac :: FracRule
@@ -152,12 +154,16 @@ ruleDiv = makeSimpleRule "Div" f
    f _                 = Nothing
 
 ruleAssAdd :: FracRule
-ruleAssAdd = makeRule "AssAdd" $
-   (x :+: (y :+: z)) |- ((x :+: y) :+: z)
+ruleAssAdd = makeRuleList "AssAdd" 
+   [ (x :+: (y :+: z)) |- ((x :+: y) :+: z)
+   , ((x :+: y) :+: z) |- (x :+: (y :+: z))
+   ]
 
 ruleAssMul :: FracRule
-ruleAssMul = makeRule "AssMul" $
-   x :*: (y :*: z) |- (x :*: y) :*: z
+ruleAssMul = makeRuleList "AssMul"
+   [ x :*: (y :*: z) |- (x :*: y) :*: z
+   , (x :*: y) :*: z |- x :*: (y :*: z)
+   ]
 
 ruleCommAdd :: FracRule
 ruleCommAdd = makeRule "CommAdd" $
@@ -171,7 +177,8 @@ ruleNeg :: FracRule
 ruleNeg = makeSimpleRule "Neg" f
   where
     f (Neg (Neg x)) = return x
-    f (Neg x)       = return $ foldFrac ((\x->Neg $ Var x),(\x->Con $ negate x),(:*:),(:/:),(:+:),(:-:), id) x
+    f (Neg x)       = return $ pushNeg (Neg x)
+--    f (Neg x)       = return $ foldFrac ((\x->Neg $ Var x),(\x->Con $ negate x),(:*:),(:/:),(:+:),(:-:), id) x
     f _             = Nothing
 
 ruleDistMul :: FracRule

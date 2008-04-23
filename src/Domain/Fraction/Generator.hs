@@ -60,15 +60,20 @@ freqLeaf config = freqConstant config + freqVariable config
 
 -- Needs to be redesigned to take freq. variables into account
 
+-- restrain the generated integers
+smallInts :: Gen Integer
+smallInts = choose (-6,6)
+
 -- no variables
 arbFracNoVars :: FracGenConfig -> Gen Frac
 arbFracNoVars config 
-   | maxSize config == 0 = liftM fromInteger arbitrary
+   | maxSize config == 0 = liftM fromInteger smallInts
    | otherwise           = oneof [ arbFracNoVars config {maxSize = 0}
                                  , liftM2 (:+:) rec rec
                                  , liftM2 (:*:) rec rec
                                  , liftM2 (:/:) rec nz
                                  , liftM2 (:-:) rec rec
+                                 , liftM Neg $ arbFracNoVars config -- don't divide by two, prevent Neg (Con a)
                                  ]
                          where 
                            rec   = arbFracNoVars config {maxSize = (n `div` 2)}
@@ -90,13 +95,14 @@ arbFracNoVarsNZ config
 
 arbFrac :: FracGenConfig -> Gen Frac
 arbFrac config 
-   | maxSize config == 0 = liftM fromInteger arbitrary
+   | maxSize config == 0 = liftM fromInteger smallInts
    | otherwise           = oneof [ arbFrac config {maxSize = 0}
                                  , liftM2 (:+:) rec rec
                                  , liftM2 (:*:) rec nv  -- no higher order
                                  , liftM2 (:/:) rec const
                                  , liftM2 (:-:) rec rec
                                  , return $ Var "x"
+                                 , liftM Neg $ arbFrac config
                                  ]
                          where 
                            rec   = arbFrac config {maxSize = (n `div` 2)}
@@ -122,7 +128,7 @@ arbFracNZ config
 
 arbIntNZ :: Gen Integer
 arbIntNZ = do
-   x' <- arbitrary
+   x' <- smallInts
    let x = if x' == 0 then 1 else x'
    return x
 
@@ -139,4 +145,4 @@ instance Arbitrary Frac where
        x :/: y -> variant 2 . coarbitrary x . coarbitrary y
        x :+: y -> variant 3 . coarbitrary x . coarbitrary y
        x :-: y -> variant 4 . coarbitrary x . coarbitrary y
-
+       Neg x   -> variant 5 . coarbitrary x

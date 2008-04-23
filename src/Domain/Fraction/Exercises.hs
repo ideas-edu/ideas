@@ -33,7 +33,7 @@ simplExercise = standard
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs))
-   , prettyPrinter = ppFracPars . fromContext
+   , prettyPrinter = ppFrac . fromContext
    , equivalence   = \x y -> fromContext x ~= fromContext y
    , equality      = \x y -> fromContext x == fromContext y
    , finalProperty = \x -> fromContext x == fromContext (fromJust $ apply toSimple x)

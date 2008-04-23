@@ -33,8 +33,8 @@ checks :: IO ()
 checks = do
    mapM_ (checkRule eqFrac) fracRules
    quickCheck propRuleNames
-{-   thoroughCheck $ checkParserPretty (==) (f parseFrac) ppFrac
-   thoroughCheck $ checkParserPretty eqAssociative (f parseFracPars) ppFracPars
+   thoroughCheck $ checkParserPretty (~=) (f parseFrac) ppFrac
+{-   thoroughCheck $ checkParserPretty eqAssociative (f parseFracPars) ppFracPars
    thoroughCheck $ checkParserPretty eqAssociative (f parseFrac) ppFracPars
    quickCheck propPretty
    thoroughCheck propCtxPP

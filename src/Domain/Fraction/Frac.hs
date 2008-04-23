@@ -128,12 +128,13 @@ pushNeg this =
       Neg a -> case a of
                   Var _  -> this
                   Con x  -> Con (negate x)
-                  b :+: c -> pushNeg (Neg b) :+: pushNeg (Neg c)
+                  b :+: c -> pushNeg (Neg b) :-: pushNeg c
                   b :*: c -> pushNeg (Neg b) :*: pushNeg c
                   b :/: c -> pushNeg (Neg b) :/: pushNeg c
-                  b :-: c -> pushNeg (Neg b) :-: pushNeg (Neg c)
+                  b :-: c -> pushNeg (Neg b) :+: pushNeg c
                   Neg b   -> pushNeg b
       a :+: b -> pushNeg a :+: pushNeg b
+      a :-: b -> pushNeg a :-: pushNeg b
       a :*: b -> pushNeg a :*: pushNeg b
       a :/: b -> pushNeg a :/: pushNeg b
       _ -> this

@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Fraction.Parser 
-   ( parseFrac, ppFrac, ppFracPrio, ppFracPars )
+   ( parseFrac, ppFrac )
    where
 
 import UU.Parsing
@@ -78,21 +78,7 @@ pSymLow a       =  pCostSym      1 a a
 --- Pretty-Printer
 
 ppFrac :: Frac -> String
-ppFrac = ppFracPrio 0
-        
-ppFracPrio :: Int -> Frac -> String
-ppFracPrio n p = foldFrac (var, lit, binop 7 "*", div 7 "/", binop 6 "+", binop 6 "-", neg) p n ""
- where
-   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
-   div prio op p q n = parIf (n > prio) (p (prio+1) . (op++) . q prio)
-   var       = const . (++)
-   lit       = const . (++) . show
-   neg p n  = ("-"++) . p 4
-   parIf b f = if b then ("("++) . f . (")"++) else f
-   
--- | Pretty printer that produces extra parentheses: also see parseFracPars
-ppFracPars :: Frac -> String
-ppFracPars = ppFracParsCode 0
+ppFrac =  ppFracParsCode 0
         
 -- | Implementation uses the well-known trick for fast string concatenation
 ppFracParsCode :: Int -> Frac -> String
@@ -101,6 +87,6 @@ ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", 
    binop prio op p q n = parIf True (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
-   neg  p n = ("-"++) . p 3
+   neg  p n = ("-"++) .(parIf True (p 3))
    parIf b f = if b then ("("++) . f . (")"++) else f
 

@@ -23,34 +23,48 @@ import Common.Context
 import Common.Apply
 import Domain.Fraction.Parser
 
-
-foldComb comb unit rs = foldl comb unit $ map liftRuleToContext rs
+lrtc = liftRuleToContext
+foldComb comb unit rs = foldr comb unit $ map lrtc rs
 
 toSimple :: LabeledStrategy (Context Frac)
-toSimple = label "All rules" $ repeat $ zero <*> unit <*> calc
+toSimple = label "All rules" $ repeat $ zero <*> unit <*> option calc
   where
     zero = label "Eliminate zeros" $ repeat $ somewhere $ foldComb (<|>) fail zeroRules
     unit = label "Eliminate units" $ repeat $ somewhere $ foldComb (<|>) fail unitRules
     calc = label "Do calculation"  $ somewhere $ (foldComb (<|>) fail calcRules <|> calcFrac')
 
-altSimple = label "All rules" $ repeat $ somewhere $ foldComb (<|>) fail $ zeroRules ++ unitRules ++ calcRules ++ gcdRules
+toSimple'' = label "All rules" $ repeat $ somewhere $ foldComb (<|>) fail negRules
+             -- foldComb (<|>) fail $ zeroRules ++ unitRules ++ calcRules ++ gcdRules
 
-zeroRules :: [FracRule]
+
+toSimple' =  label "Alternative strategy" $ repeat $ somewhere $ calc <|> (asscomm <*> calc)
+             where
+               calc = cleanup <|> mul <|> div <|> add <|> sub <|> neg
+               cleanup = label "Remove units and zeros" $ 
+                           foldComb (<|>) fail (zeroRules ++ unitRules)
+               mul = label "Do multiplication"  $ foldComb (<|>) fail [ruleMul, ruleMulFrac]
+               div = label "Do division"        $ lrtc ruleDivFrac
+               add = label "Do addition"        $ lrtc ruleAdd <|> ((option (lrtc ruleCommonDenom)) 
+                                                                   <*> lrtc ruleAddFrac
+                                                                   <*> (option (lrtc ruleGCD)))
+               sub = label "Do subtraction"     $ lrtc ruleSub <|> ((option (lrtc ruleCommonDenom)) 
+                                                                   <*> lrtc ruleSubFrac
+                                                                   <*> (option (lrtc ruleGCD)))
+               neg = label ""                   $ foldComb (<|>) fail negRules
+               asscomm = label "" $ foldComb (<|>) fail [ruleAssAdd, ruleCommAdd, ruleAssMul, ruleCommMul]           
+                   
 zeroRules = [ruleDivZero, ruleMulZero, ruleUnitAdd, ruleSubZero]
-
-unitRules :: [FracRule]
-unitRules = [ruleUnitMul, ruleDivOne, ruleDivSame, ruleMulVar, ruleSubVar, ruleNeg]
-
-calcRules :: [FracRule]
-calcRules = [ruleMul, ruleDiv, ruleAdd, ruleSub, ruleGCD, ruleDistMul]
+unitRules = [ruleUnitMul, ruleDivOne, ruleDivSame, ruleSubVar]
+calcRules = [ruleMul, ruleDivFrac, ruleAdd, ruleSub, ruleGCD, ruleDistMul]
+negRules  = [ruleNeg, rulePushNeg]
 
 calcFrac :: Strategy (Context Frac)
-calcFrac =  liftRuleToContext ruleCommonDenom 
-        <*> (liftRuleToContext ruleAddFrac <|> liftRuleToContext ruleSubFrac)
-        <*> liftRuleToContext ruleGCD
+calcFrac =  lrtc ruleCommonDenom 
+        <*> (lrtc ruleAddFrac <|> lrtc ruleSubFrac)
+        <*> lrtc ruleGCD
 
 gcdRules = [ruleCommonDenom, ruleAddFrac, ruleSubFrac, ruleGCD]
 
-calcFrac' =  liftRuleToContext ruleCommonDenom <*> liftRuleToContext ruleAddFrac
-         <|> liftRuleToContext ruleCommonDenom <*> liftRuleToContext ruleSubFrac
+calcFrac' =  lrtc ruleCommonDenom <*> lrtc ruleAddFrac
+         <|> lrtc ruleCommonDenom <*> lrtc ruleSubFrac
 

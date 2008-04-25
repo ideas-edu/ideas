@@ -36,9 +36,9 @@ simplExercise = standard
    , prettyPrinter = ppFrac . fromContext
    , equivalence   = \x y -> fromContext x ~= fromContext y
    , equality      = \x y -> fromContext x == fromContext y
-   , finalProperty = \x -> fromContext x == fromContext (fromJust $ apply toSimple x)
+   , finalProperty = \x -> fromContext x == fromContext (fromJust $ apply toSimple'' x)
    , ruleset       = map liftRuleToContext fracRules
-   , strategy      = toSimple
+   , strategy      = toSimple''
    , generator     = liftM inContext generateFrac
    , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf (fromContext t))
    }

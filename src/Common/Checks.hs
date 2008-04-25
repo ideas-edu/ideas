@@ -41,3 +41,4 @@ main = do
    checkExercise LA.solveSystemExercise
    checkExercise LA.solveSystemWithMatrixExercise
    checkExercise RA.cnfExercise
+   checkExercise Frac.simplExercise

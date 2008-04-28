@@ -199,7 +199,7 @@ rulePushNeg :: FracRule -- push Negs inside
 rulePushNeg = makeSimpleRule "PushNeg" f
   where
    f (Neg x) = case x of
-                (Var x)   -> return $ Neg $ Var x
+                (Var x)   -> Nothing
                 (Con x)   -> return $ Con (negate x)
                 (b :*: c) -> return $ Neg b :*: c
                 (b :/: c) -> return $ Neg b :/: c

@@ -277,10 +277,12 @@ isZero (n :/: m) = isZero n
 isZero (n :-: m) = n ~= m
 isZero (Neg n)   = isZero n
 
-e = (Var "x" :*: (Con 1 :/: Con 2) :+: Var "x" :*: Con 3 :+: Neg (Con 5 :+: (Con 2 :/: Con 3)) )
+e1 = (Var "x" :*: (Con 1 :/: Con 2) :+: Var "x" :*: Con 3 :+: Neg (Con 5 :+: (Con 2 :/: Con 3)) )
 
 e2 = ((Con (-3) :/: Con 5) :-: (Con (-12) :/: Con 5))
 
 e3 = ((Var "x" :/: Var "y") :/: (Con 3 :/: Var "z"))
 
 e4 = "((x*1199)*62)"
+
+e5 = "(x * ((-4 - 4) / (-5 * 6)))"

@@ -24,47 +24,43 @@ import Common.Apply
 import Domain.Fraction.Parser
 
 lrtc = liftRuleToContext
-foldComb comb unit rs = foldr comb unit $ map lrtc rs
 
 toSimple :: LabeledStrategy (Context Frac)
-toSimple = label "All rules" $ repeat $ zero <*> unit <*> option calc
-  where
-    zero = label "Eliminate zeros" $ repeat $ somewhere $ foldComb (<|>) fail zeroRules
-    unit = label "Eliminate units" $ repeat $ somewhere $ foldComb (<|>) fail unitRules
-    calc = label "Do calculation"  $ somewhere $ (foldComb (<|>) fail calcRules <|> calcFrac')
+toSimple = label "Simplify fractions" $ repeat $ 
+                 (  topDown cleanup               -- first remove units and zeros from top to bottom if possible
+                 |> bottomUp (mul <|> div')       -- if clean, then multiply and dived bottom up
+                 |> bottomUp (add <|> sub))       -- then add and subtract
+             <*> negcon -- after every action, fire the minor rule to prevent (Neg (Con x))
 
-toSimple'' = label "All rules" $ repeat $ somewhere $ foldComb (<|>) fail negRules
-             -- foldComb (<|>) fail $ zeroRules ++ unitRules ++ calcRules ++ gcdRules
-
-
-toSimple' =  label "Alternative strategy" $ repeat $ somewhere $ calc <|> (asscomm <*> calc)
-             where
-               calc = cleanup <|> mul <|> div <|> add <|> sub <|> neg
-               cleanup = label "Remove units and zeros" $ 
-                           foldComb (<|>) fail (zeroRules ++ unitRules)
-               mul = label "Do multiplication"  $ foldComb (<|>) fail [ruleMul, ruleMulFrac]
-               div = label "Do division"        $ lrtc ruleDivFrac
-               add = label "Do addition"        $ lrtc ruleAdd <|> ((option (lrtc ruleCommonDenom)) 
-                                                                   <*> lrtc ruleAddFrac
-                                                                   <*> (option (lrtc ruleGCD)))
-               sub = label "Do subtraction"     $ lrtc ruleSub <|> ((option (lrtc ruleCommonDenom)) 
-                                                                   <*> lrtc ruleSubFrac
-                                                                   <*> (option (lrtc ruleGCD)))
-               neg = label ""                   $ foldComb (<|>) fail negRules
-               asscomm = label "" $ foldComb (<|>) fail [ruleAssAdd, ruleCommAdd, ruleAssMul, ruleCommMul]           
-                   
+zeroRules, unitRules, calcRules, negRules :: [FracRule]
 zeroRules = [ruleDivZero, ruleMulZero, ruleUnitAdd, ruleSubZero]
 unitRules = [ruleUnitMul, ruleDivOne, ruleDivSame, ruleSubVar]
 calcRules = [ruleMul, ruleDivFrac, ruleAdd, ruleSub, ruleGCD, ruleDistMul]
 negRules  = [ruleNeg, rulePushNeg]
 
-calcFrac :: Strategy (Context Frac)
-calcFrac =  lrtc ruleCommonDenom 
-        <*> (lrtc ruleAddFrac <|> lrtc ruleSubFrac)
-        <*> lrtc ruleGCD
+mul :: LabeledStrategy (Context Frac)
+mul = label "Do multiplication" $  lrtc ruleMul <|> lrtc ruleMulFrac
+                 <|> (lrtc ruleAssMul <|> fail) <*> somewhere (lrtc ruleMul <|> lrtc ruleMulFrac)
 
-gcdRules = [ruleCommonDenom, ruleAddFrac, ruleSubFrac, ruleGCD]
+div' :: LabeledStrategy (Context Frac)
+div' = label "Do division" $ lrtc ruleDivFrac
 
-calcFrac' =  lrtc ruleCommonDenom <*> lrtc ruleAddFrac
-         <|> lrtc ruleCommonDenom <*> lrtc ruleSubFrac
+add :: LabeledStrategy (Context Frac)
+add = label "Do addition" $ lrtc ruleAdd <|> addFrac
+                 <|> (lrtc ruleAssAdd <|> fail) <*> somewhere (lrtc ruleAdd <|> lrtc ruleAddFrac)
+
+sub :: LabeledStrategy (Context Frac)
+sub = label "Do subtraction" $ lrtc ruleSub <|> subFrac
+
+cleanup :: LabeledStrategy (Context Frac)
+cleanup = label "Remove units and zeros" $ alternatives $ map lrtc $ zeroRules ++ unitRules ++ negRules 
+
+negcon :: Strategy (Context Frac)
+negcon = try $ repeat $ somewhere $ lrtc ruleNegToCon
+
+addFrac, subFrac :: Strategy (Context Frac)
+addFrac =  option (lrtc ruleCommonDenom) <*> lrtc ruleAddFrac <*> option (lrtc ruleGCD)
+subFrac =  option (lrtc ruleCommonDenom) <*> lrtc ruleSubFrac <*> option (lrtc ruleGCD)
+
+
 

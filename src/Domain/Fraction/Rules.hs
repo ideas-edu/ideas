@@ -27,7 +27,7 @@ fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac
             , ruleDivOne, ruleDivZero, ruleDivFrac, ruleDivSame
             , ruleUnitAdd, ruleAdd, ruleAddFrac
             , ruleSubZero, ruleSub, ruleSubVar, ruleSubFrac
-            , ruleNeg, rulePushNeg 
+            , ruleNeg, rulePushNeg, ruleNegToCon 
             , ruleCommonDenom, ruleGCD
             , ruleAssAdd, ruleAssMul
             , ruleCommAdd, ruleCommMul
@@ -207,6 +207,12 @@ rulePushNeg = makeSimpleRule "PushNeg" f
                 (b :-: c) -> return $ Neg b :+: c
                 (Neg b)   -> return $ b
    f _         = Nothing
+
+ruleNegToCon :: FracRule
+ruleNegToCon = minorRule $ makeSimpleRule "NegToCon" f
+  where
+    f (Neg (Con x)) = return $ Con (negate x)
+    f _             = Nothing
 
 -- | Fraction rules
 ruleCommonDenom :: FracRule

@@ -1,4 +1,4 @@
-.PHONY: all checks run report clean test
+.PHONY: all checks run report clean test nolicense
 
 # On Windows machines (under cygwin), ghc automatically puts the .exe suffix after
 # all executables it generates. This gives some problems when we have to call this
@@ -112,6 +112,9 @@ $(BINDIR)/wikipages$(EXE): $(SOURCES)
 	mkdir -p $(BINDIR) $(OUTDIR) $(DOCDIR)
 	ghc --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -o $(BINDIR)/wikipages src/OpenMath/StrategyToWiki.hs
 	$(BINDIR)/wikipages$(EXE) doc
+
+nolicense:
+	find src -name *.hs -print0 | xargs --null grep -L "LICENSE"
 
 web:	
 	scp -r src/Presentation/genexas/* $(WEBDIR)

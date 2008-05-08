@@ -29,7 +29,7 @@ getResult = thd . last . derivation
 getNextStep :: State -> State
 getNextStep = thd . onefirst
 
--- | Get the (list of) concepts/rules that have to applied in the step
+-- | Get the (list of) concepts (rules) that have to applied in the step
 getConcepts :: State -> [RuleID]
 getConcepts = map (\(a,b,c)->a) . allfirsts
 
@@ -40,7 +40,7 @@ getCorrectness s e = isOk $ submit s e
                        isOk (Ok _ _) = True
                        isOk _        = False
 
--- | Get list of misconceptions/buggy rules
+-- | Get list of misconceptions (buggy) rules
 getMisconceptions :: State -> Expression -> [RuleID]
 getMisconceptions s e = buggyIDs $ submit s e 
                         where

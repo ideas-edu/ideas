@@ -54,7 +54,7 @@ laServerFor :: IsExpr a => Exercise (Context a) -> Request -> Reply
 laServerFor a req = 
    case getContextTerm req of
    
-      _ | isJust $ subStrategy (req_Location req) (strategy a) ->
+      _ | isNothing $ subStrategy (req_Location req) (strategy a) ->
              replyError "request error" "invalid location for strategy"
          
       Nothing ->

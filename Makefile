@@ -18,7 +18,7 @@ EXE  =
 GHCI = ghci
 endif
 
-# Define directories to store results (assuming we'll always have `src')
+# Define directories to store results (assuming we always have `src')
 BINDIR = bin
 OUTDIR = out
 DOCDIR = doc
@@ -35,11 +35,11 @@ test:
 # Executable suffix: $(EXE) 
 # GHC interpreter: $(GHCI)
 
-all: solvergui doc markup cgi service wikipages
+all: solvergui doc markup laservice service wikipages
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \
-	  src/Domain/Logic/Solver/*.hs src/Domain/LinearAlgebra/*.hs \
+	  src/Domain/LinearAlgebra/*.hs \
 	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs
 
 GLADE = src/Presentation/ExerciseAssistant/exerciseassistant.glade \
@@ -95,9 +95,9 @@ $(BINDIR)/laservice.cgi: $(SOURCES)
 	mkdir -p  $(BINDIR) $(OUTDIR)
 	ghc $(FLAGS) -o $@ src/OpenMath/Main.hs
 
-cgi: $(BINDIR)/laservice.cgi
+laservice: $(BINDIR)/laservice.cgi
 
-cgi-install: cgi
+cgi-install: laservice
 	scp $(BINDIR)/laservice.cgi $(CGIDIR)
 
 service: $(BINDIR)/service.cgi

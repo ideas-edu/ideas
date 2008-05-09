@@ -1,0 +1,16 @@
+{
+   "result": [
+      [
+         "DeMorganOr",
+         "[]",
+         [
+            "Proposition to DNF",
+            "[0,0,10,0,0,3,0,0,1]",
+            "~~x /\\ ~~y",
+            "[];"
+         ]
+      ]
+   ],
+   "error": null,
+   "id": 421
+}

@@ -1,0 +1,15 @@
+<reply result="ok" version="0.2.10">
+  <strategy>
+    Gaussian elimination
+  </strategy>
+  <location>
+    []
+  </location>
+  <context>
+    [0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0];[];columnJ=1,covered=0
+  </context>
+  <steps>
+    0
+  </steps>
+</reply>
+

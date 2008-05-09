@@ -1,4 +1,4 @@
-.PHONY: all checks run report clean test nolicense
+.PHONY: run report clean test nolicense unit-tests
 
 # On Windows machines (under cygwin), ghc automatically puts the .exe suffix after
 # all executables it generates. This gives some problems when we have to call this
@@ -35,7 +35,7 @@ test:
 # Executable suffix: $(EXE) 
 # GHC interpreter: $(GHCI)
 
-all: solvergui doc markup laservice service wikipages
+all: solvergui doc markup laservice service unit-tests wikipages
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \
@@ -57,10 +57,7 @@ $(BINDIR)/solvergui$(EXE): $(SOURCES) $(GLADE)
 	ghc $(FLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
 	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
 	cp src/Presentation/ExerciseAssistant/ounl.jpg bin/
-
-checks: 
-	cd src/Common; runhaskell -i.. Checks.hs; cd ..
-
+	
 run: solvergui
 	$(BINDIR)/solvergui$(EXE)
 
@@ -119,24 +116,38 @@ nolicense:
 web:	
 	scp -r src/Presentation/genexas/* $(WEBDIR)
 
-TESTS1 = test/mathdox-request/*.txt
-OUTS1  = test/mathdox-request/ok.out test/mathdox-request/incorrect.out
+TESTS1 = $(wildcard test/mathdox-request/*.txt)
+OUTS1  = $(patsubst %.txt,%.out,$(TESTS1))
 
-TESTS2 = test/json-rpc/*.json
-OUTS2  = test/json-rpc/allfirsts.out test/json-rpc/applicable.out test/json-rpc/apply.out \
-         test/json-rpc/derivation.out test/json-rpc/generate.out test/json-rpc/onefirst.out \
-         test/json-rpc/ready.out test/json-rpc/stepsremaining.out test/json-rpc/submit.out
+TESTS2 = $(wildcard test/json-rpc/*.json)
+OUTS2  = $(patsubst %.json,%.out,$(TESTS2))
 
-out-files: $(OUTS1) $(OUTS2)
+ALL-OUT     = $(OUTS1) $(OUTS2)
+ALL-EXP     = $(patsubst %.out,%.exp,$(ALL-OUT))
+ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
 
-test/mathdox-request/%.out: test/mathdox-request/%.txt
-	bin/laservice.cgi --test $^ > $@
+out-files: $(ALL-OUT)
+exp-files: $(ALL-EXP)
 
-test/json-rpc/%.out: test/json-rpc/%.json
-	bin/service.cgi --file $^ > $@
+unit-tests: $(ALL-OUT)
+	# --- Unit Tests ------------------------
+	@for i in $(ALL-WITHOUT); do \
+	  echo $$i; \
+	  diff $$i.out $$i.exp; \
+	done;
+
+test/mathdox-request/%.out: test/mathdox-request/%.txt bin/laservice.cgi
+	bin/laservice.cgi --test $< > $@
+
+test/json-rpc/%.out: test/json-rpc/%.json bin/service.cgi
+	bin/service.cgi --file $< > $@
+
+%.exp: %.out
+	cp $^ $@
 
 clean:
 	rm -rf bin
 	rm -rf out
 	rm -rf doc
 	rm -rf hpc
+	find test -name *.out -delete

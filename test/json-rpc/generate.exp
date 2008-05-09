@@ -1,0 +1,10 @@
+{
+   "result": [
+      "Proposition to DNF",
+      "[]",
+      "~(r || T)",
+      "[];"
+   ],
+   "error": null,
+   "id": 421
+}

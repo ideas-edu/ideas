@@ -1,4 +1,4 @@
 { "method" : "derivation"
-, "params" : [["Proposition to DNF", "[]", "~(~x || ~y)"]]
+, "params" : [["Proposition to DNF", "[]", "~(~x || ~y)", ""]]
 , "id"     : 421
 }

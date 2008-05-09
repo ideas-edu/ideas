@@ -230,11 +230,12 @@ once s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule (makeSimpleRuleList "MoveDown" moveDown)
    moveDown c = 
       let n = maybe 0 (pred . length . children) (currentFocus c)
-      in [ changeLocation (++[i]) c | i <- [0 .. n] ]
+      in [ changeLocation (locationDown i) c | i <- [0 .. n] ]
    
    ruleMoveUp = minorRule (makeSimpleRule "MoveUp" moveUp)
-   moveUp c | null (location c) = Nothing 
-            | otherwise = return $ changeLocation init c
+   moveUp c   = do
+      new <- locationUp (location c)
+      return $ setLocation new c
 
 -- | Apply a strategy somewhere in the term
 somewhere :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)

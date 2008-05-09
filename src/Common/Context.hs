@@ -18,7 +18,7 @@ module Common.Context
      -- * Variable environment
    , Var(..), intVar, boolVar, get, set, change
      -- * Location (current focus)
-   , Location, location, setLocation, changeLocation, currentFocus, changeFocus
+   , Location, location, setLocation, changeLocation, currentFocus, changeFocus, locationDown, locationUp, makeLocation
      -- * Lifting rewrite rules
    , liftRuleToContext
      -- * Uniplate type class and utility functions
@@ -56,7 +56,7 @@ instance Arbitrary a => Arbitrary (Context a) where
 
 -- | Put a value into a (default) context
 inContext :: a -> Context a
-inContext = C [] M.empty
+inContext = C (L []) M.empty
 
 -- | Retrieve a value from its context
 fromContext :: Context a -> a
@@ -76,11 +76,14 @@ showEnv = concat . intersperse "," . map f . M.toList
 
 -- | Parses a context: on a successful parse, the unit value is returned in the parsed context
 parseContext :: String -> Maybe (Context ())
-parseContext s = do
-   (loc, env)  <- splitAtElem ';' s
-   pairs       <- mapM (splitAtElem '=') (splitsWithElem ',' env)
-   let f (k, v) = (k, (Nothing, v))
-   return $ C (read loc) (M.fromList $ map f pairs) ()
+parseContext s
+   | all isSpace s = return (C (L []) M.empty ())
+   | otherwise = do
+        (loc, env)  <- splitAtElem ';' s
+        if all isSpace env then return (C (read loc) M.empty ()) else do
+        pairs       <- mapM (splitAtElem '=') (splitsWithElem ',' env)
+        let f (k, v) = (k, (Nothing, v))
+        return $ C (read loc) (M.fromList $ map f pairs) ()
 
 ----------------------------------------------------------
 -- Manipulating the variable environment
@@ -122,8 +125,14 @@ change v f c = set v (f (get v c)) c
 -- Location (current focus)
 
 -- | Type synonym for the current location (focus)
-type Location = [Int]
+newtype Location = L [Int] deriving (Eq, Ord)
 
+instance Show Location where
+   show (L is) = show is
+
+instance Read Location where
+   readsPrec n s = [ (L is, rest) | (is, rest) <- readsPrec n s ]
+   
 -- | Returns the current location of a context
 location :: Context a -> Location
 location (C loc _ _) = loc
@@ -145,6 +154,19 @@ currentFocus c = select (location c) (fromContext c)
 -- this function has no effect.
 changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
 changeFocus f c = fmap (transformAt (location c) f) c
+
+-- | Go down to a certain child
+locationDown :: Int -> Location -> Location
+locationDown i (L is) = L (is ++ [i])
+
+-- | Go up: Nothing indicates that we were already at the top
+locationUp :: Location -> Maybe Location
+locationUp (L is)
+   | null is   = Nothing
+   | otherwise = Just (L (init is))
+
+makeLocation :: [Int] -> Location
+makeLocation = L
 
 ----------------------------------------------------------
 -- Lifting rewrite rules
@@ -174,8 +196,8 @@ child :: Uniplate a => Int -> a -> Maybe a
 child n = safeHead . drop n . children 
                
 -- | Selects a child based on a path. Nothing indicates that the path is invalid
-select :: Uniplate a => [Int] -> a -> Maybe a
-select = flip $ foldM $ flip child
+select :: Uniplate a => Location -> a -> Maybe a
+select (L is) a = foldM (flip child) a is
 
 -- | Transforms one immediate child at a given index.
 transform :: Uniplate a => Int -> (a -> a) -> a -> a
@@ -185,5 +207,5 @@ transform n f a =
    in build (zipWith g [0..] as)
 
 -- | Transforms one child based on a path.
-transformAt :: Uniplate a => [Int] -> (a -> a) -> a -> a
-transformAt = flip (foldr transform)
+transformAt :: Uniplate a => Location -> (a -> a) -> a -> a
+transformAt (L is) f = foldr transform f is

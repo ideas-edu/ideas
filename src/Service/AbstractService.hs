@@ -15,12 +15,11 @@
 module Service.AbstractService where
 
 import Common.Utils (safeHead)
-import Common.Context (Location, Context, inContext, fromContext, location, Uniplate)
+import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
 import Common.Strategy (makePrefix)
 import qualified Service.TypedAbstractService as TAS
-import System.IO.Unsafe (unsafePerformIO)
 import Data.Char
 import Data.Maybe
 import Domain.Logic.Exercises
@@ -28,9 +27,10 @@ import Domain.Logic.Exercises
 type ExerciseID = String
 type RuleID     = String
 
-type State      = (ExerciseID, Prefix, Context Expression)
+type State      = (ExerciseID, Prefix, Expression, SimpleContext)
 type Prefix     = String
 type Expression = String -- concrete syntax (although this could also be abstract)
+type SimpleContext = String
 
 data Result = SyntaxError
             | Buggy [RuleID]   
@@ -39,10 +39,10 @@ data Result = SyntaxError
             | Detour [RuleID] State  -- equivalent
             | Unknown State          -- equivalent
             
-generate :: ExerciseID -> Int -> State
+generate :: ExerciseID -> Int -> IO State
 generate exID level = 
    case getExercise exID of
-      SE ex -> unsafePerformIO $ do
+      SE ex -> do
          s <- TAS.generate ex level
          return (toState s)
 
@@ -109,20 +109,17 @@ exerciseList =
 getExercise :: ExerciseID -> SomeExercise
 getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList
  where p (SE ex) = shortTitle ex == exID
- 
-showInContext :: Exercise (Context a) -> Context a -> Context Expression
-showInContext ex = fmap (prettyPrinter ex . inContext)
 
 fromState :: State -> SomeTypedState
-fromState (exID, p, ce) = 
+fromState (exID, p, ce, ctx) = 
    case getExercise exID of
       SE ex -> 
-         case parser ex (fromContext ce) of 
-            Left _  -> error "fromState"
-            Right a -> STS (ex, fmap (`makePrefix` strategy ex) (readPrefix p), fmap (const (fromContext a)) ce)
+         case (parser ex ce, parseContext ctx) of 
+            (Right a, Just unit) -> STS (ex, fmap (`makePrefix` strategy ex) (readPrefix p), fmap (\_ -> fromContext a) unit)
+            _ -> error "fromState"
       
 toState :: TAS.State a -> State
-toState (ex, mp, ca) = (shortTitle ex, maybe "NoPrefix" show mp, showInContext ex ca)
+toState (ex, mp, ca) = (shortTitle ex, maybe "NoPrefix" show mp, prettyPrinter ex ca, showContext ca)
       
 readPrefix :: String -> Maybe [Int]
 readPrefix input =

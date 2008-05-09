@@ -17,6 +17,7 @@ module OpenMath.Reply
    ) where
 
 import Common.Context (Location)
+import Common.Strategy
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.XML
@@ -31,7 +32,7 @@ data Reply = Ok ReplyOk | Incorrect ReplyIncorrect | Error ReplyError
 
 data ReplyOk = ReplyOk
    { repOk_Strategy :: StrategyID
-   , repOk_Location :: Location
+   , repOk_Location :: StrategyLocation
    , repOk_Context  :: String
    , repOk_Steps    :: Int
    }
@@ -39,7 +40,7 @@ data ReplyOk = ReplyOk
 
 data ReplyIncorrect = ReplyIncorrect
    { repInc_Strategy   :: StrategyID
-   , repInc_Location   :: Location
+   , repInc_Location   :: StrategyLocation
    , repInc_Expected   :: Expr
    , repInc_Arguments  :: Maybe String
    , repInc_Steps      :: Int

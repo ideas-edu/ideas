@@ -19,12 +19,13 @@ module Session
    , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
    ) where
 
+import Service.TypedAbstractService
 import Common.Context
-import Common.Exercise
+import Common.Exercise (Exercise(..), showDoc)
 import Common.Parsing (indicesToRange)
 import Common.Logging
 import Common.Transformation
-import Common.Strategy hiding (not, Step)
+import Common.Strategy hiding (not)
 import Common.Apply
 import Common.Utils
 import Data.List
@@ -40,14 +41,12 @@ make ex = Some (Domain ex)
 --------------------------------------------------
 -- Sessions with logging
 
-data Session = Session String (IORef SessionState)
+data Session = Session String (IORef (Some Derivation))
 
-data SessionState = forall a . St (Exercise (Context a)) (Derivation (Context a))
-
-withState :: (forall a . Exercise a -> Derivation a -> IO b) -> Session -> IO b
+withState :: (forall a . Derivation a -> IO b) -> Session -> IO b
 withState f (Session _ ref) = do
-   St a d <- readIORef ref
-   f a d
+   Some d <- readIORef ref
+   f d
 
 makeSession :: Some Domain -> IO Session
 makeSession pa = do
@@ -60,156 +59,163 @@ makeSession pa = do
 newExercise :: Some Domain -> Session -> IO ()
 newExercise (Some (Domain a)) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
    \(Session _ ref) -> do
-      term <- randomTerm a
-      writeIORef ref $ St a (Start (emptyPrefix $ strategy a) term)
-
+      d <- makeDerivation a
+      writeIORef ref $ Some d
+      
 newTerm :: Session -> IO ()
 newTerm session@(Session _ ref) = do
-   St a _ <- readIORef ref
-   newExercise (Some (Domain a)) session
-        
+   Some d <- readIORef ref
+   newExercise (Some (Domain (exercise d))) session
+       
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
-   modifyIORef ref $ \st@(St a d) -> case d of 
-      Start _ _    -> st
-      Step d _ _ _ -> St a d
-
+   modifyIORef ref $ \st@(Some d) -> Some (undoLast d)
+ 
 submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
-   St a d <- readIORef ref
-   case feedback a (currentPrefix d) (current d) txt of
-      SyntaxError doc -> 
-         let msg = "Parse error:\n" ++ showDoc a doc
-         in return (msg, False)
-      Incorrect doc -> 
-         let msg = showDoc a doc
-         in return (msg, False)
-      Correct doc Nothing ->
-         return (showDoc a doc, False)
-      Correct doc (Just (newPrefix, rule, new)) -> do
-         -- let new = either (error "internal error") id $ parser a txt -- REWRITE !
-         writeIORef ref $ St a (Step d rule newPrefix new)
-         return (showDoc a doc, True)
-   
+   Some d <- readIORef ref
+   case parser (exercise d) txt of
+      Left err -> 
+         return ("Parse error: " ++ showDoc (exercise d) err, False)
+      Right term ->
+         case submit (currentState d) term of
+            Buggy rs -> 
+               return ("Incorrect: you used the buggy rule: " ++ show rs, False)
+            NotEquivalent -> 
+               return ("Incorrect", False)
+            Ok rs new 
+               | null rs -> 
+                    return ("You have submitted the current term.", False)
+               | otherwise -> do
+                    writeIORef ref $ Some (extendDerivation new d)
+                    return ("Well done! You applied rule " ++ show rs, True)
+            Detour rs new -> 
+               return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy", False)
+            Unknown new -> 
+               return ("Equivalent, but not a known rule. Please retry.", False)
+
 currentText :: Session -> IO String
-currentText = withState $ \a d -> 
-   return $ prettyPrinter a (current d)
+currentText = withState $ \d -> 
+   return $ prettyPrinter (exercise d) (current d)
 
 derivationText :: Session -> IO String
-derivationText = withState $ \a d -> 
-   return $ showDerivation (prettyPrinter a) d   
+derivationText = withState $ \d -> 
+   return $ showDerivation (prettyPrinter (exercise d)) d
 
 progressPair :: Session -> IO (Int, Int)
-progressPair = withState $ \a d -> 
+progressPair = withState $ \d -> 
    let x = derivationLength d
-       y = stepsRemaining (currentPrefix d) (current d)
+       y = stepsremaining (currentState d)
    in return (x, x+y)
-  
+
 readyText :: Session -> IO String
-readyText = logMsg "Ready" $ withState $ \a d -> 
-   if finalProperty a (current d)
+readyText = logMsg "Ready" $ withState $ \d -> 
+   if ready (currentState d)
    then return "Congratulations: you have reached a solution!"
    else return "Sorry, you have not yet reached a solution"
 
-hintText :: Session -> IO String
-hintText = logMsg "Hint" $ withState $ \a d -> 
-   case giveHint (currentPrefix d) (current d) of 
-      Nothing -> 
-         return "Sorry, no hint available" 
-      Just (doc, rule) ->
-         return $ showDoc a doc
-
-stepText :: Session -> IO String
-stepText = logMsg "Step" $ withState $ \a d -> 
-   case giveStep (currentPrefix d) (current d) of
-      Nothing -> 
+hintOrStep :: Bool -> Session -> IO String
+hintOrStep verbose = withState $ \d -> 
+   case allfirsts (currentState d) of
+      [] -> 
          return "Sorry, no hint available"
-      Just (doc, rule, newPrefix, before, after) ->
+      (rule, loc, (_, _, after)):_ ->
          return $ unlines $
             [ "Use rule " ++ name rule
             ] ++
             [ "   with arguments " ++ showList (fromJust args)
-            | let args = expectedArguments rule before, isJust args
+            | let args = expectedArguments rule (current d), isJust args
             , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
-            ] ++
+            ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter a after
-            ]
+            , prettyPrinter (exercise d) after
+            ] else []
+
+hintText, stepText :: Session -> IO String
+hintText = logMsg "Hint" (hintOrStep False)
+stepText = logMsg "Step" (hintOrStep True)
 
 nextStep :: Session -> IO (String, Bool)
 nextStep = logCurrent "Next" $ \(Session _ ref) -> do
-   St a d <- readIORef ref
-   case giveStep (currentPrefix d) (current d) of
-      Nothing -> 
+   Some d <- readIORef ref
+   case allfirsts (currentState d) of
+      [] -> 
          return ("No more steps left to do", False)
-      Just (_, rule, newPrefix, _, new) -> do
-         writeIORef ref $ St a (Step d rule newPrefix new)
+      (rule, _, new):_ -> do
+         writeIORef ref $ Some (extendDerivation new d)
          return ("Successfully applied rule " ++ name rule, True)
 
 ruleNames :: Session -> IO [String]
-ruleNames = withState $ \a d -> 
-   return $ map name $ filter isMajorRule $ ruleset a
+ruleNames = withState $ \d -> 
+   return $ map name $ filter isMajorRule $ ruleset $ exercise d
 
 getRuleAtIndex :: Int -> Session -> IO (Some Rule)
-getRuleAtIndex i = withState $ \a d -> do
-   let rule = filter (not . isMinorRule) (ruleset a) !! i
+getRuleAtIndex i = withState $ \d -> do
+   let rule = filter (not . isMinorRule) (ruleset (exercise d)) !! i
    return (Some rule)
 
-applyRuleAtIndex :: Int -> Maybe [Int] -> [String] -> Session -> IO (String, Bool)
+applyRuleAtIndex :: Int -> Maybe Location -> [String] -> Session -> IO (String, Bool)
 applyRuleAtIndex i mloc args (Session _ ref) = do
-   St a d <- readIORef ref
+   Some d <- readIORef ref
+   let a = exercise d
    let rule    = filter isMajorRule (ruleset a) !! i
        newRule = fromMaybe rule (useArguments args rule)
-       loc     = fromMaybe [] mloc
+       loc     = fromMaybe (makeLocation []) mloc
        results = applyAll newRule (setLocation loc $ current d)
-       answers = giveSteps (currentPrefix d) (current d)
-       check    (_, r, _, _, new) = name r==name rule && any (equality a new) results
-       thisRule (_, r, _, _, _)   = name r==name rule
+       answers = allfirsts (currentState d)
+       check (r, _, (_, _, new)) = name r==name rule && any (equality a new) results
+       thisRule (r, _, _) = name r==name rule
    case safeHead (filter check answers) of
-      Just (_, _, newPrefix, _, new) -> do
-         writeIORef ref $ St a (Step d rule newPrefix new)
+      Just (_, _, new) -> do
+         writeIORef ref $ Some (extendDerivation new d)
          return ("Successfully applied rule " ++ name rule, True)
       _ | any thisRule answers && not (null args) -> 
-         return ("Use rule " ++ name rule ++ " with different arguments" ++ show (map (prettyPrinter a) results), False)
+         return ("Use rule " ++ name rule ++ " with different arguments:" ++ unlines (map (prettyPrinter a) results), False)
       _ | any thisRule answers && null args ->
          return ("Apply rule " ++ name rule ++ " at a different location", False)
       _ -> 
          return ("You selected rule " ++ name rule ++ ": try a different rule", False)
 
-subTermAtIndices :: String -> Int -> Int -> Session -> IO (Maybe [Int])
-subTermAtIndices s i j = withState $ \a d -> do
+subTermAtIndices :: String -> Int -> Int -> Session -> IO (Maybe Location)
+subTermAtIndices s i j = withState $ \d -> do
    let rng = indicesToRange s i j
-   return (subTerm a s rng)
+   return (subTerm (exercise d) s rng)
 
 --------------------------------------------------
 -- Derivations
 
-data Derivation a = Start (Prefix a) a | Step (Derivation a) (Rule a) (Prefix a) a -- snoc list for fast access to current term
+newtype Derivation a = D [State a]
 
-current :: Derivation a -> a
-current (Start _ a)    = a
-current (Step _ _ _ a) = a
+makeDerivation :: Exercise (Context a) -> IO (Derivation a)
+makeDerivation ex = do 
+   state <- generate ex 5
+   return $ D [state]
 
-initial :: Derivation a -> a
-initial (Start _ a)    = a
-initial (Step d _ _ _) = initial d
+undoLast :: Derivation a -> Derivation a
+undoLast (D [x]) = D [x]
+undoLast (D xs)  = D (drop 1 xs)
 
-currentPrefix :: Derivation a -> Prefix a
-currentPrefix (Start p _)    = p
-currentPrefix (Step _ _ p _) = p
+extendDerivation :: State a -> Derivation a -> Derivation a
+extendDerivation x (D xs) = D (x:xs)
 
--- | to do: make this function efficient (accumulating parameter)
-terms :: Derivation a -> [a]
-terms (Start _ a)    = [a]
-terms (Step d _ _ a) = terms d ++ [a]
+current :: Derivation a -> Context a
+current (D ((_, _, a):_)) = a
 
-showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (Start _ a)    = f a
-showDerivation f (Step d r _ a) = showDerivation f d ++ "\n   => [" ++ name r ++ "]\n" ++ f a
+exercise :: Derivation a -> Exercise (Context a)
+exercise (D ((ex, _, _):_)) = ex
+
+currentState :: Derivation a -> State a
+currentState (D xs) = head xs
+
+currentPrefix :: Derivation a -> Prefix (Context a)
+currentPrefix (D ((_, Just p, _):_)) = p
+
+showDerivation :: (Context a -> String) -> Derivation a -> String
+showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f a | (_, _, a) <- xs ] 
+
 
 derivationLength :: Derivation a -> Int
-derivationLength (Start _ _)    = 0
-derivationLength (Step d _ _ _) = 1 + derivationLength d
+derivationLength (D xs) = length xs - 1
 
 --------------------------------------------------
 -- Logging

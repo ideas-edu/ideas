@@ -1,4 +1,4 @@
-{-# OPTIONS -XTypeSynonymInstances #-}
+{-# OPTIONS -XTypeSynonymInstances -fallow-overlapping-instances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Service.JSON 
    ( JSON(..), Key, Number(..)            -- types
-   , ToJSON(..)                           -- type class
+   , InJSON(..)                           -- type class
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
    , jsonRPC, jsonRPCOverHTTP, JSON_RPC_Handler
    ) where
@@ -23,6 +23,7 @@ import Common.Parsing
 import Common.Utils (indent)
 import Data.List (intersperse)
 import Network.CGI hiding (requestMethod)
+import Control.Monad
 import Control.Monad.Trans
 import qualified UU.Parsing
 
@@ -78,16 +79,54 @@ instance Show Number where
    show (I n) = show n
    show (F f) = show f
 
-class ToJSON a where
-   toJSON :: a -> JSON
+class InJSON a where
+   toJSON   :: a -> JSON
+   fromJSON :: JSON -> Maybe a
 
-instance ToJSON Int     where toJSON = toJSON . toInteger
-instance ToJSON Integer where toJSON = Number . I
-instance ToJSON Float   where toJSON = Number . F
-instance ToJSON String  where toJSON = String
-instance ToJSON Bool    where toJSON = Boolean
-instance ToJSON a => ToJSON [a] where toJSON = Array . map toJSON
+instance InJSON Int where 
+   toJSON   = toJSON . toInteger
+   fromJSON = fmap fromInteger . fromJSON
+   
+instance InJSON Integer where 
+   toJSON                  = Number . I
+   fromJSON (Number (I n)) = Just n
+   fromJSON _              = Nothing
 
+instance InJSON Float where 
+   toJSON = Number . F
+   fromJSON (Number (F n)) = Just n
+   fromJSON _              = Nothing
+   
+instance InJSON String where
+   toJSON              = String
+   fromJSON (String s) = Just s
+   fromJSON _          = Nothing
+
+instance InJSON Bool where 
+   toJSON = Boolean
+   fromJSON (Boolean b) = Just b
+   fromJSON _           = Nothing
+
+instance InJSON a => InJSON [a] where 
+   toJSON              = Array . map toJSON
+   fromJSON (Array xs) = mapM fromJSON xs
+   fromJSON _          = Nothing
+
+instance (InJSON a, InJSON b) => InJSON (a, b) where
+   toJSON (a, b)           = Array [toJSON a, toJSON b]
+   fromJSON (Array [a, b]) = liftM2 (,) (fromJSON a) (fromJSON b)
+   fromJSON _              = Nothing
+
+instance (InJSON a, InJSON b, InJSON c) => InJSON (a, b, c) where
+   toJSON (a, b, c)           = Array [toJSON a, toJSON b, toJSON c]
+   fromJSON (Array [a, b, c]) = liftM3 (,,) (fromJSON a) (fromJSON b) (fromJSON c)
+   fromJSON _                 = Nothing
+
+instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
+   toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
+   fromJSON (Array [a, b, c, d]) = liftM4 (,,,) (fromJSON a) (fromJSON b) (fromJSON c) (fromJSON d)
+   fromJSON _                    = Nothing
+    
 parseJSON :: String -> Maybe JSON
 parseJSON input = 
    case parse json (scanWith (makeCharsSpecial ":" defaultScanner) input) of 
@@ -132,20 +171,35 @@ instance Show JSON_RPC_Request where
 instance Show JSON_RPC_Response where
    show = show . toJSON
 
-instance ToJSON JSON_RPC_Request where
+instance InJSON JSON_RPC_Request where
    toJSON req = Object
       [ ("method", String $ requestMethod req)
       , ("params", Array  $ requestParams req)
       , ("id"    , requestId req)
       ]
-
-instance ToJSON JSON_RPC_Response where
+   fromJSON (Object xs) = do
+      mj <- lookup "method" xs
+      pj <- lookup "params" xs
+      ij <- lookup "id"     xs
+      case (mj, pj) of
+         (String s, Array xs) -> return (Request s xs   ij)
+         (String s, _       ) -> return (Request s [pj] ij)
+         _                    -> Nothing
+   fromJSON _ = Nothing
+         
+instance InJSON JSON_RPC_Response where
    toJSON resp = Object
       [ ("result", responseResult resp)
       , ("error" , responseError resp)
       , ("id"    , responseId resp)
       ]
-
+   fromJSON (Object xs) = do
+      rj <- lookup "result" xs
+      ej <- lookup "error"  xs
+      ij <- lookup "id"     xs
+      return (Response rj ej ij)
+   fromJSON _ = Nothing
+   
 okResponse :: JSON -> JSON -> JSON_RPC_Response
 okResponse x y = Response
    { responseResult = x
@@ -163,7 +217,7 @@ errorResponse x y = Response
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 
-type JSON_RPC_Handler = String -> [JSON] -> IO (JSON, Bool)
+type JSON_RPC_Handler = String -> [JSON] -> IO JSON
 
 jsonRPCOverHTTP :: JSON_RPC_Handler -> IO ()
 jsonRPCOverHTTP handler = runCGI $ do
@@ -178,35 +232,10 @@ jsonRPCOverHTTP handler = runCGI $ do
 
 jsonRPC :: String -> JSON_RPC_Handler -> IO String
 jsonRPC input handler = 
-         case parseRequest input of 
-            Left err  -> fail err
-            Right req -> do 
-               (json, b) <- handler (requestMethod req) (requestParams req)
-               let f = if b then okResponse else errorResponse
-               return $ show $ f json (requestId req)
-               
- 
- where
-   lookupM :: (Show a, Eq a, Monad m) => a -> [(a, b)] -> m b
-   lookupM a xs = maybe (fail $ "Element " ++ show a ++ " not found") return (lookup a xs)
- 
-   parseRequest :: String -> Either String JSON_RPC_Request
-   parseRequest input =
-      case parseJSON input of
-         Just (Object xs) -> do
-            m  <- lookupM "method" xs
-            ms <- case m of
-                     String s -> return s
-                     _        -> fail "method is not a string"
-            s  <- lookupM "params" xs
-            ps <- case s of
-                     Array xs -> return xs
-                     _        -> return [s] 
-            i  <- lookupM "id"     xs
-            return $ Request  
-               { requestMethod = ms
-               , requestParams = ps
-               , requestId     = i
-               }
-         Just _    -> fail "not a JSON object"
-         Nothing   -> fail "parse error"
+         case parseJSON input >>= fromJSON of 
+            Nothing   -> fail "Invalid request"
+            Just req -> do 
+               json <- handler (requestMethod req) (requestParams req)
+               return $ show $ okResponse json (requestId req)
+             `catch` \e ->
+               return $ show $ errorResponse (String (show e)) (requestId req)

@@ -154,7 +154,7 @@ main =
            (txt, ok) <- submitText cur session
            textBufferSetText feedbackBuffer txt
            when ok updateAll
-        
+
         onChanged ruleBox $ do
            (iterBegin, iterEnd) <- textBufferGetSelectionBounds entryBuffer
            posBegin <- textIterGetOffset iterBegin

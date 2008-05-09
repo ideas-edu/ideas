@@ -39,7 +39,7 @@ dnfExercise = standard
                               (p, [])   -> Right (inContext (fromRanged p))
                               (p, msgs) -> Left  (text (show msgs))
    , subTerm       = \s r -> case parseLogicPars s of
-                                (p, []) -> subExpressionAt r p
+                                (p, []) -> fmap makeLocation (subExpressionAt r p)
                                 _       -> Nothing
    , prettyPrinter = ppLogicPars . fromContext
    , equivalence   = \x y -> fromContext x `eqLogic` fromContext y

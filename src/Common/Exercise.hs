@@ -8,21 +8,9 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines the concept of an exercise, and services that operate
--- one these exercises.
+-- This module defines the concept of an exercise
 --
 -----------------------------------------------------------------------------
-{- Services
-
-* generate new term
-* correct/incorrect
-* full derivation (with holes, partial/from here on)
-* zoom in as for MathDox
-* stepwise (expected, applicable)
-* progress information
-
--}
-
 module Common.Exercise 
    ( -- * Exercises
      Exercise(..), makeExercise

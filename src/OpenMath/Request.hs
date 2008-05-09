@@ -27,7 +27,7 @@ import Data.Maybe
 
 data Request = Request 
    { req_Strategy :: StrategyID 
-   , req_Location :: Location
+   , req_Location :: StrategyLocation
    , req_Term     :: Expr
    , req_Context  :: Maybe String
    , req_Answer   :: Maybe Expr
@@ -88,7 +88,7 @@ extractTextWith f n xml =
 extractString :: String -> XML -> Either String String
 extractString = extractTextWith Right
 
-extractLocation :: String -> XML -> Either String Location
+extractLocation :: String -> XML -> Either String StrategyLocation
 extractLocation = extractTextWith $ \s -> 
    case reads s of
       [(n, xs)] | all isSpace xs -> return n

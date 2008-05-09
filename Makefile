@@ -119,6 +119,22 @@ nolicense:
 web:	
 	scp -r src/Presentation/genexas/* $(WEBDIR)
 
+TESTS1 = test/mathdox-request/*.txt
+OUTS1  = test/mathdox-request/ok.out test/mathdox-request/incorrect.out
+
+TESTS2 = test/json-rpc/*.json
+OUTS2  = test/json-rpc/allfirsts.out test/json-rpc/applicable.out test/json-rpc/apply.out \
+         test/json-rpc/derivation.out test/json-rpc/generate.out test/json-rpc/onefirst.out \
+         test/json-rpc/ready.out test/json-rpc/stepsremaining.out test/json-rpc/submit.out
+
+out-files: $(OUTS1) $(OUTS2)
+
+test/mathdox-request/%.out: test/mathdox-request/%.txt
+	bin/laservice.cgi --test $^ > $@
+
+test/json-rpc/%.out: test/json-rpc/%.json
+	bin/service.cgi --file $^ > $@
+
 clean:
 	rm -rf bin
 	rm -rf out

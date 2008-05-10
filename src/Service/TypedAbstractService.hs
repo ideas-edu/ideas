@@ -63,7 +63,7 @@ allfirsts (ex, mp, ca) = fromMaybe (error "allfirsts") $ do
 onefirst :: State a -> (Rule (Context a), Location, State a)
 onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
 
-applicable :: Uniplate a => Location -> State a -> [Rule (Context a)]
+applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc (ex, _, ca) = filter (`Apply.applicable` ca) (ruleset ex)
 
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 

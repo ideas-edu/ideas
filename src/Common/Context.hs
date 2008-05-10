@@ -22,7 +22,7 @@ module Common.Context
      -- * Lifting rewrite rules
    , liftRuleToContext
      -- * Uniplate type class and utility functions
-   , Uniplate(..), noUniplate, children, child, select, transform, transformAt
+   , Uniplate(..), noUniplate, children, child, select, transform, transformAt, universe
    ) where
 
 import Common.Utils
@@ -209,3 +209,7 @@ transform n f a =
 -- | Transforms one child based on a path.
 transformAt :: Uniplate a => Location -> (a -> a) -> a -> a
 transformAt (L is) f = foldr transform f is
+
+-- | Returns all subterms
+universe :: Uniplate a => a -> [a]
+universe a = a : [ c | b <- children a, c <- universe b ]

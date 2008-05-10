@@ -99,8 +99,8 @@ submit s input =
 
 -------------------------
 
-data SomeExercise   = forall a . Uniplate a => SE  (Exercise (Context a))
-data SomeTypedState = forall a . Uniplate a => STS (TAS.State a)
+data SomeExercise   = forall a . SE  (Exercise (Context a))
+data SomeTypedState = forall a . STS (TAS.State a)
 
 exerciseList :: [SomeExercise]
 exerciseList = 

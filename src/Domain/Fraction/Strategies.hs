@@ -40,13 +40,16 @@ negRules  = [ruleNeg, rulePushNeg]
 
 mul :: LabeledStrategy (Context Frac)
 mul = label "Do multiplication" $  lrtc ruleMul <|> lrtc ruleMulFrac
-                 <|> (lrtc ruleAssMul <|> fail) <*> somewhere (lrtc ruleMul <|> lrtc ruleMulFrac)
+                 <|> lrtc ruleAssMul <*> somewhere (lrtc ruleMul <|> lrtc ruleMulFrac)
 
 div' :: LabeledStrategy (Context Frac)
 div' = label "Do division" $ lrtc ruleDivFrac
 
 add :: LabeledStrategy (Context Frac)
 add = label "Do addition" $ lrtc ruleAdd <|> addFrac
+                 <|> lrtc ruleAssAdd <*> somewhere (lrtc ruleAdd <|> addFrac)
+
+add' = label "Do addition" $ lrtc ruleAdd <|> addFrac
                  <|> (lrtc ruleAssAdd <|> fail) <*> somewhere (lrtc ruleAdd <|> lrtc ruleAddFrac)
 
 sub :: LabeledStrategy (Context Frac)

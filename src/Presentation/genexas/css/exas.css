@@ -48,7 +48,7 @@ select {
 	width: 150px;
 }
 
-#opgave {
+#exercise {
 	background-color: #FFFFFF;
 	padding: 10px;
 	width: 100%;
@@ -70,7 +70,7 @@ select {
 	contentEditable: true;
 }
 
-#afleiding {
+#history {
 	background-color: #FFFFFF;
 	padding: 10px;
 	width: auto;
@@ -85,7 +85,7 @@ select {
 }
 
 
-#werk {
+#work {
 	font-size: medium;
 	font-weight: bold;
 	position: relative;
@@ -93,7 +93,7 @@ select {
 	width: 102%;
 }
 
-.kolom {
+.column {
 	width: 50%;
 	position: relative;
 }
@@ -109,7 +109,7 @@ select {
 	width: 50px;
 }
 
-#controleerbutton {
+#submitbutton {
 	display: inline; 
 	float: right;
 	margin-right: 0px;
@@ -179,7 +179,7 @@ select {
 	top: 0px;
 }
 
-.helpgebied {
+.helparea {
 	position: absolute;
 	background-color: #CCCC99;
 	border-style: solid;
@@ -206,24 +206,24 @@ textarea {
 }
 
 
-.links {
+.left {
 	position: absolute;
 	top: 140px;
 	width: 45%
 }
 
-.rechts {
+.right {
 	position: absolute;
 	top: 140px;
 	right: 0px;
 	width: 45%;
 }
 
-.zichtbaar {
+.visible {
 	display: block;
 }
 
-.onzichtbaar {
+.invisible {
 	display: none;
 }
 

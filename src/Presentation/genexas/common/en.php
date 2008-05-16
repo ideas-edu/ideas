@@ -13,4 +13,5 @@ define("WorkArea", "Working Area: Rewrite and Submit");
 define("History", "History");
 define("Feedback", "Feedback");
 define("Close", "Close");
+define("localjs", "en/local.js");
 ?>

@@ -15,4 +15,5 @@ define("Feedback", "Feedback");
 define("Close", "Sluit");
 define("Close1", "Sluit");
 define("Close2", "Sluit");
+define("localjs", "nl/local.js");
 ?>

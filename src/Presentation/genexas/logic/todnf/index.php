@@ -1,6 +1,9 @@
 <?php
+// als er een speciale user interface voor het domein is
 function toetsen() {
-	include_once("../keys.php");
+	if (file_exists("../keys.php")) {
+		include_once("../keys.php");
+	}
 }
-include_once("../../common/html/framework.php");
+include_once("../../common/framework.php");
 ?>

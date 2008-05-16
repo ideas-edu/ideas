@@ -1,39 +1,43 @@
 /* 
- * Wordt aangeroepen wanneer een menuknop wordt ingedrukt
- * Eerste parameter: het venster dat zichtbaar moet worden.
- * Tweede parameter: het venster dat moet verdwijnen als het oppen stond.
+ * Menubuttons for help, about and a set of rewriting rules.
+ * There are default files in common; there may be specific files for each kind of exercise.
  */
-function menuhelp(e)
+function openhelp(e)
 {
 	if (!e) var e = window.event;
 	switch (this.id) {
-    case 'regelsButton':
-        (get('help')).className='helpgebied onzichtbaar';
-		(get('about')).className='helpgebied onzichtbaar';
-		(get('regels')).className='helpgebied zichtbaar';
+    case 'rulesButton':
+        ($('help')).className='helparea invisible';
+		($('about')).className='helparea invisible';
+		($('rules')).className='helparea visible';
 		break;
     case 'helpButton':
-        (get('regels')).className='helpgebied onzichtbaar';
-		(get('about')).className='helpgebied onzichtbaar';
-		(get('help')).className='helpgebied zichtbaar';
+        ($('rules')).className='helparea invisible';
+		($('about')).className='helparea invisible';
+		($('help')).className='helparea visible';
 		break;
     case 'aboutButton':
-       (get('help')).className='helpgebied onzichtbaar';
-		(get('regels')).className='helpgebied onzichtbaar';
-		(get('about')).className='helpgebied zichtbaar';
+       ($('help')).className='helparea invisible';
+		($('rules')).className='helparea invisible';
+		($('about')).className='helparea visible';
 	}
 }
-function sluitmenuhelp(e)
+function closehelp(e)
 {
 	if (!e) var e = window.event;
 	switch (this.id) {
-    case 'sluitmenuregelsButton':
-		(get('regels')).className='helpgebied onzichtbaar';
+    case 'closerulesButton':
+		($('rules')).className='helparea invisible';
 		break;
-    case 'sluitmenuhelpButton':
-		(get('help')).className='helpgebied onzichtbaar';
+    case 'closehelpButton':
+		($('help')).className='helparea invisible';
 		break;
-    case 'sluitmenuaboutButton':
-		(get('about')).className='helpgebied onzichtbaar';
+    case 'closeaboutButton':
+		($('about')).className='helparea invisible';
 	}
+}
+function closeallhelp() {
+	($('rules')).className='helparea invisible';
+	($('help')).className='helparea invisible';
+	($('about')).className='helparea invisible';
 }

@@ -18,7 +18,7 @@ import Common.Context
 import Common.Strategy hiding (fail)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
-import OpenMath.XML
+import Service.XML
 import Data.Char
 import Data.Maybe
 

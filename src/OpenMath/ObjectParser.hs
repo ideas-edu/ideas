@@ -19,7 +19,8 @@ import Control.Monad
 import Data.Char
 import Data.Maybe
 import Data.Ratio
-import OpenMath.XML
+import OpenMath.Object
+import Service.XML
 
 ----------------------------------------------------------
 -- Open Math data types
@@ -28,10 +29,6 @@ import OpenMath.XML
 data Expr = Con Integer | Var String 
           | Expr :*: Expr | Expr :+: Expr | Expr :-: Expr | Expr :/: Expr | Negate Expr
           | Matrix [[Expr]] | List [Expr] | Expr :==: Expr | Sqrt Expr
-   deriving Show
-
--- internal representation for OM objects (close to XML)
-data OMOBJ = OMI Integer | OMV String | OMS String String | OMA [OMOBJ]
    deriving Show
 
 ----------------------------------------------------------
@@ -98,50 +95,7 @@ exprToXML :: Expr -> XML
 exprToXML = omobj2xml . expr2omobj
 
 ----------------------------------------------------------
--- Four conversion functions: XML <-> OMOBJ <-> Expr
-
-xml2omobj :: XML -> Either String OMOBJ
-xml2omobj xml =
-   case xml of  
-      Tag "OMOBJ" _ [this] -> rec this
-      _                    -> fail "expected a OMOBJ tag"
- where
-   rec xml =
-      case xml of
-         Tag "OMA" attrs xs -> do
-            xs <- mapM rec xs 
-            return (OMA xs)
-         Tag "OMS" attrs [] -> 
-            case lookup "cd" attrs of
-               Just cd ->
-                  case lookup "name" attrs of
-                     Just name  -> return (OMS cd name)
-                     Nothing -> fail "OMS tag without name attribute" 
-               _ -> fail "OMS tag without cd attribute"
-         Tag "OMI" attrs [Text s] -> 
-            case reads s of
-               [(i, xs)] | all isSpace xs -> return (OMI i)
-               _ -> fail "invalid integer in OMI"
-         Tag "OMV" attrs [] ->
-            case lookup "name" attrs of
-               Just s  -> return (OMV s)
-               Nothing -> fail "OMV tag without name attribute"
-         Tag tag _ _ -> fail $ "unknown tag " ++ show tag
-
-omobj2xml :: OMOBJ -> XML
-omobj2xml = header . return . rec
- where
-   header = Tag "OMOBJ" attrs
-   attrs  = [ ("xmlns"  , "http://www.openmath.org/OpenMath")
-            , ("version", "2.0")
-            , ("cdbase" , "http://www.openmath.org/cd")
-            ]
-   rec omobj =
-      case omobj of
-         OMI i  -> Tag "OMI" [] [Text (show i)]
-         OMV v  -> Tag "OMV" [("name", v)] []
-         OMA xs -> Tag "OMA" [] (map rec xs)
-         OMS cd name -> Tag "OMS" [("cd", cd), ("name", name)] []
+-- conversion functions: OMOBJ <-> Expr
 
 binaryOps :: [(String, Expr -> Expr -> Expr)]
 binaryOps = [ ("times", (:*:)), ("plus" , (:+:)), ("minus", (:-:)), ("divide", (:/:)), ("eq", (:==:)) ]

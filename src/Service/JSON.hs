@@ -1,4 +1,3 @@
-{-# OPTIONS -XTypeSynonymInstances -fallow-overlapping-instances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -80,8 +79,14 @@ instance Show Number where
    show (F f) = show f
 
 class InJSON a where
-   toJSON   :: a -> JSON
-   fromJSON :: JSON -> Maybe a
+   toJSON       :: a -> JSON
+   listToJSON   :: [a] -> JSON
+   fromJSON     :: JSON -> Maybe a
+   listFromJSON :: JSON -> Maybe [a]
+   -- default definitions
+   listToJSON   = Array . map toJSON
+   listFromJSON (Array xs) = mapM fromJSON xs
+   listFromJSON _          = Nothing
 
 instance InJSON Int where 
    toJSON   = toJSON . toInteger
@@ -97,10 +102,13 @@ instance InJSON Float where
    fromJSON (Number (F n)) = Just n
    fromJSON _              = Nothing
    
-instance InJSON String where
-   toJSON              = String
-   fromJSON (String s) = Just s
-   fromJSON _          = Nothing
+instance InJSON Char where
+   toJSON c   = String [c]
+   listToJSON = String
+   fromJSON (String [c]) = Just c
+   fromJSON _ = Nothing
+   listFromJSON (String s) = Just s
+   listFromJSON _ = Nothing
 
 instance InJSON Bool where 
    toJSON = Boolean
@@ -108,9 +116,8 @@ instance InJSON Bool where
    fromJSON _           = Nothing
 
 instance InJSON a => InJSON [a] where 
-   toJSON              = Array . map toJSON
-   fromJSON (Array xs) = mapM fromJSON xs
-   fromJSON _          = Nothing
+   toJSON   = listToJSON
+   fromJSON = listFromJSON
 
 instance (InJSON a, InJSON b) => InJSON (a, b) where
    toJSON (a, b)           = Array [toJSON a, toJSON b]

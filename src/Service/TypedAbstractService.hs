@@ -21,6 +21,7 @@ import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Data.Maybe
 import System.Random
+import Debug.Trace
 import qualified Test.QuickCheck as QC
 
 type State a = (Exercise (Context a), Maybe (Prefix (Context a)), Context a)

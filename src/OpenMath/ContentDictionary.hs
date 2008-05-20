@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module OpenMath.ContentDictionary where
 
+import OpenMath.Object
 import OpenMath.XML
 import Data.Char
 import Data.List
@@ -28,6 +29,8 @@ main = do
    let cds  = catMaybes mcds 
        defs = concatMap definitions cds 
    putStrLn $ show (length cds) ++ " valid dictionaries, with " ++ show (length defs) ++ " definitions"
+
+   -- print [ p | d <- defs, p <- formalProperties d ]
 
 findOCDs :: String -> IO [FilePath]
 findOCDs filepath = do
@@ -88,7 +91,7 @@ buildDefinition xml = do
       , symbolDescription   = descr
       , role                = theRole
       , commentedProperties = cmps
-      , formalProperties    = fmps
+      , formalProperties    = map (either error id . xml2omobj) fmps
       , examples            = exs
       } 
 
@@ -139,6 +142,6 @@ data Definition = Definition
    , symbolDescription   :: String
    , role                :: Maybe String
    , commentedProperties :: [String]
-   , formalProperties    :: [XML] -- actually, an OMOBJ
+   , formalProperties    :: [OMOBJ]
    , examples            :: [[XML]]
    } deriving Show

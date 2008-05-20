@@ -23,7 +23,7 @@ import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import OpenMath.Request
 import OpenMath.Reply
-import OpenMath.XML
+import Service.XML
 import Data.Char
 import Data.List
 import Data.Maybe

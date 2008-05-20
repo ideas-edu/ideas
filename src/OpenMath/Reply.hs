@@ -20,7 +20,7 @@ import Common.Context (Location)
 import Common.Strategy
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
-import OpenMath.XML
+import Service.XML
 import Data.Maybe
 
 ------------------------------------------------------------------------

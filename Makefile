@@ -26,7 +26,7 @@ HPCDIR = hpc
 CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
-FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR)
+FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) 
 
 default: solvergui
 
@@ -39,7 +39,7 @@ all: solvergui doc markup laservice service unit-tests wikipages
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \
-	  src/Domain/LinearAlgebra/*.hs \
+	  src/Domain/LinearAlgebra/*.hs src/Domain/Derivative/*.hs \
 	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs
 
 GLADE = src/Presentation/ExerciseAssistant/exerciseassistant.glade \
@@ -133,7 +133,7 @@ unit-tests: $(ALL-OUT)
 	# --- Unit Tests ------------------------
 	@for i in $(ALL-WITHOUT); do \
 	  echo $$i; \
-	  diff $$i.out $$i.exp; \
+	  diff -I "version=" $$i.out $$i.exp; \
 	done;
 
 test/mathdox-request/%.out: test/mathdox-request/%.txt bin/laservice.cgi

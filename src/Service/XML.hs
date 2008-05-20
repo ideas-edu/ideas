@@ -11,7 +11,7 @@
 -- A datatype, parser, and pretty printer for XML documents
 --
 -----------------------------------------------------------------------------
-module OpenMath.XML 
+module Service.XML 
    ( XML(..), Attr, AttrList
    , parseXML, parseXMLs, showXML
    , children, extract, extractText

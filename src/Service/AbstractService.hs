@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -XExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -23,6 +23,11 @@ import qualified Service.TypedAbstractService as TAS
 import Data.Char
 import Data.Maybe
 import Domain.Logic.Exercises
+import Domain.Derivative.Exercises
+import qualified Common.Apply
+
+import Common.Strategy  (emptyPrefix)
+import Domain.Derivative.Basic
 
 type ExerciseID = String
 type RuleID     = String
@@ -104,14 +109,14 @@ data SomeTypedState = forall a . STS (TAS.State a)
 
 exerciseList :: [SomeExercise]
 exerciseList = 
-   [ SE dnfExercise ]
+   [ SE dnfExercise, SE derivativeExercise ]
    
 getExercise :: ExerciseID -> SomeExercise
 getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList
  where p (SE ex) = shortTitle ex == exID
 
 fromState :: State -> SomeTypedState
-fromState (exID, p, ce, ctx) = 
+fromState (exID, p, ce, ctx) =
    case getExercise exID of
       SE ex -> 
          case (parser ex ce, parseContext ctx) of 
@@ -130,3 +135,15 @@ readPrefix input =
 getRule :: RuleID -> Exercise a -> Rule a
 getRule ruleID ex = fromMaybe (error "invalid rule ID") $ safeHead $ 
    filter ((==ruleID) . name) (ruleset ex)
+   
+q = derivation' ("Derivative", "[]", "X", "")
+
+-- derivation' :: State -> [(RuleID, Location, Expression)]
+derivation' s = 
+   case fromState s of
+      STS ts@(ex, a, b) ->    
+         let f (r, ca) = (name r, location ca, prettyPrinter ex ca)
+         in map f (TAS.derivation ts)
+
+triple = (derivativeExercise, Just (emptyPrefix $ strategy derivativeExercise), inContext $ e)
+ where e = Diff (Lambda "x" (Con 10))

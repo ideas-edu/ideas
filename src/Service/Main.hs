@@ -1,4 +1,3 @@
-{-# OPTIONS -fallow-overlapping-instances -XFlexibleInstances -fallow-undecidable-instances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -36,39 +35,44 @@ main = do
       _ -> do
          putStrLn "service  (use json-rpc to post a request)"
          putStrLn "   --file filename   (to read the request from file)"
-     
-class Service a where
-   service :: a -> [JSON] -> IO JSON
-     
-instance InJSON a => Service a where
-   service a xs = do
-      unless (null xs) (fail "Too many arguments for service")
-      return (toJSON a)
 
-instance InJSON a => Service (IO a) where
-   service m xs = do
-      unless (null xs) (fail "Too many arguments for service")
-      a <- m
-      return (toJSON a)
-   
-instance (InJSON a, Service b) => Service (a -> b) where
-   service f (x:xs) =
-      case fromJSON x of
-         Just b -> service (f b) xs
-         _      -> fail "Invalid argument"
-   service _ _ = fail "Not enough arguments for service"
-     
+type Service a = a -> [JSON] -> IO JSON
+
+
+service :: InJSON a => Service a
+service a xs = do
+   unless (null xs) (fail "Too many arguments for service")
+   return (toJSON a)
+      
+serviceIO :: InJSON a => Service (IO a)
+serviceIO m xs = do
+   unless (null xs) (fail "Too many arguments for service")
+   a <- m
+   return (toJSON a)
+
+serviceFun :: InJSON a => Service b -> Service (a -> b)
+serviceFun srv f (x:xs) =
+   case fromJSON x of
+      Just b -> srv (f b) xs
+      _      -> fail "Invalid argument"
+serviceFun _ _ _ = fail "Not enough arguments for service"    
+
+service1 f = serviceFun service f
+service2 f = serviceFun (serviceFun service) f
+service2IO f = serviceFun (serviceFun serviceIO) f
+service3 f = serviceFun (serviceFun (serviceFun service)) f
+
 serviceTable :: M.Map String ([JSON] -> IO JSON)
 serviceTable = M.fromList
-   [ ("stepsremaining", service stepsremaining)
-   , ("ready",          service ready)
-   , ("apply",          service apply)
-   , ("applicable",     service applicable)
-   , ("onefirst",       service onefirst)
-   , ("allfirsts",      service allfirsts)
-   , ("derivation",     service derivation)
-   , ("generate",       service generate)
-   , ("submit",         service submit)
+   [ ("stepsremaining", service1 stepsremaining)
+   , ("ready",          service1 ready)
+   , ("apply",          service3 apply)
+   , ("applicable",     service2 applicable)
+   , ("onefirst",       service1 onefirst)
+   , ("allfirsts",      service1 allfirsts)
+   , ("derivation",     service1 derivation)
+   , ("generate",       service2IO generate)
+   , ("submit",         service2 submit)
    ]
     
 myHandler :: JSON_RPC_Handler

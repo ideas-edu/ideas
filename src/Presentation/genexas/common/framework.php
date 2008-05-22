@@ -34,6 +34,7 @@
 	</textarea>
 	<input id="submitbutton" type="button" value="<?php print Submit;?>" >
 	<input class="minibutton" type="button" id="herstelbutton" onclick="herstel() "value="<?php print Undo;?>" >
+	<input id="progressbutton" class="minibutton" type="button" value="<?php print Progress;?>" >
 	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
 	<input id="readybutton" class="minibutton invisible" type="button" onclick="getKlaar() "value="<?php print Ready;?>" >
@@ -47,7 +48,7 @@
 	<h3><?php print History;?></h3>
 	<div id="history"></div>
 		<h3><?php print Feedback ?></h3>
-	<div id="feedback">
+	<div id="feedback"></div>
 
 </div>
 

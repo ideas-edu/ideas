@@ -3,7 +3,7 @@
 function rules() {
 	// specific rules for the kind of exercise
 	if (file_exists("./nl/rules.html")) {
-		include_once("./hnl/rules.html");
+		include_once("./nl/rules.html");
 	}
 	else {
 		// specific rules for the domain

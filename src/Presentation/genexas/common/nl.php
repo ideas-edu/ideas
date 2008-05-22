@@ -5,6 +5,7 @@ define("Rules", "Herschrijfregels");
 define("NewExercise", "Nieuwe opgave");
 define("Submit", "Submit");
 define("Undo", "Herstel");
+define("Progress", "Voortgang");
 define("Step", "Stap");
 define("Hint", "Hint");
 define("Ready", "Klaar");

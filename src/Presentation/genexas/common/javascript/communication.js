@@ -11,33 +11,53 @@ var id = 421;
 function generate()
 {
  	closeallhelp();
+	// The expression will be shown in the work area and in the exrecise area
 	var exercise = $('exercise');
+	var workarea  = $('work');
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"generate", "params" : [[exercisekind, 5]], "id" : id}',
-         onSuccess : function(response) {
-			alert(response.error);
+		asynchronous:		true,
+         parameters : 'input={ "method" : "generate" , "params" : ["Proposition to DNF", 5] , "id" : 421}',
+         onSuccess : function(response) {			
 			var resJSON = response.responseText.parseJSON();
-			exercise.innerHTML = resJSON.result[2];
-         }
+			var task = resJSON.result[2];
+			exercise.innerHTML = task;
+			workarea.value = task;
+         },
+		 onFailure: function() { 
+			alert('Something went wrong...'); 
+		} 
      });
 }
 /**
  *  getHint gets a rule which can be applied, and puts it in the feedbackarea.
+ * TODO: we will need to control the language. For now, everything is in English
   */
 function getHint()
 {
 	var url = "/cgi-bin/service.cgi";
 	var feedbackArea = $('feedback');
+	var expressie = ($('work')).value;
+	var haskellexpressie = expressie.htmlToAscii();
+	// clean feedbackarea 
+	feedbackArea.innerHTML = "";
+
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"applicable", "params" : [[exercisekind, "[]", "~(~x || ~y)", ""]], "id" : id}',
+         parameters : 'input={ "method" :"applicable", "params" : ["[]", ["Proposition to DNF", "[]", "' + haskellexpressie + '", ""]], "id" : 421}',
          onSuccess : function(response) {
-			alert(response.error);
 			var resJSON = response.responseText.parseJSON();
-			feedbackArea.innerHTML = resJSON.result[2];
+			if (response.responseText["error"] == null) {
+				var result = resJSON["result"];
+				feedbackArea.innerHTML = "<p>A rule which can be applied to <strong>" + expressie + "</strong> is:<br><br><strong>" + result + "</strong></p>";
+			}
+			else {
+				alert(response.responseText["error"] );
+				var error = response.responseText["error"];
+				feedbackArea.innerHTML = "<p>" + error + " </p>";
+			}
          }
      });
 }
@@ -48,14 +68,39 @@ function getNext()
 {
 	var url = "/cgi-bin/service.cgi";
 	var workArea = $('work');
+	var feedbackArea = $('feedback');
+	var expressie = ($('work')).value;
+	var haskellexpressie = expressie.htmlToAscii();
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"onefirst", "params" : [[exercisekind, "[]", "~(~x || ~y)", ""]], "id" : id}',
-         onSuccess : function(response) {
-			alert(response.error);
+         parameters : 'input={ "method" :"onefirst", "params" : [["Proposition to DNF", "[]", "' + haskellexpressie + '", ""]], "id" : 421}',
+         onSuccess : function(response) {	
 			var resJSON = response.responseText.parseJSON();
-			workArea.innerHTML = resJSON.result[2];
+			var regel = resJSON["result"][0];
+			feedbackArea.innerHTML = "<p><p>A rule which can be applied to <strong>" + expressie + "</strong> is the:<br><br><strong>" + regel + "</strong> rule</p><p>The result of the rule applied to expression is shown in the Work Area.</p>";
+			var resultaat = resJSON["result"][2];
+			workArea.value = resultaat[2];
+         }
+     });
+}
+/**
+ *  getRenmaining puts the number of remaining steps in the feedbackarea
+  */
+function getRemaining()
+{
+	var url = "/cgi-bin/service.cgi";
+	var feedbackArea = $('feedback');
+	var expression = ($('work')).value;
+	var haskellexpression = expression.htmlToAscii();
+	var myAjax = new Ajax.Request
+    (url,
+     {   method: 'post',
+         parameters : 'input={ "method" :"stepsremaining", "params" : [["Proposition to DNF", "[]", "' + haskellexpression + '", ""]], "id" : 421}',
+         onSuccess : function(response) {	
+			var resJSON = response.responseText.parseJSON();
+			var feedback = resJSON.result;
+			feedbackArea.innerHTML = "<p>For the expression <strong>" + expression + "</strong>, you need, at a minimum: <br><strong>" + feedback + "</strong> steps to reach the solution.</p>";
          }
      });
 }
@@ -67,14 +112,28 @@ function getFeedback()
 	closeallhelp();
 	var url = "/cgi-bin/service.cgi";
 	var feedbackArea = $('feedback');
+	var expression = (($('work')).value).htmlToAscii();
+	var orig = (($('exercise')).innerHTML).htmlToAscii();
+	alert("we vergelijken " + orig + "met " + expression);
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"submit", "params" : [[exercisekind, "[]", "~(~x || ~y)", ""], "~~x /\\ ~~y"], "id" : id}',
+         parameters : 'input={ "method" : "submit", "params" : [["Proposition to DNF", "[]", "'+ orig + '", ""], "' + expression + '"], "id"     : 421}',
          onSuccess : function(response) {
-			alert(response.error);
+			alert(response.responseText);
 			var resJSON = response.responseText.parseJSON();
-			feedbackArea.innerHTML = resJSON.result[2];
+			var feedback = resJSON.result;
+			var summaryfeedback = feedback.result;
+			feedbackArea.innerHTML = "<p>De feedback is: <br><strong>" + summaryfeedback + "</strong></p>";
          }
      });
+}
+/**
+ * Uitbreiding van String, om HTML special characters om te zetten naar ascii
+  */
+String.prototype.htmlToAscii = function() {
+	var resultstring = this.replace(/&gt;/g, '>');
+	resultstring = resultstring.replace(/&lt;/g, '<');
+	resultstring = resultstring.replace(/\\/g, '\\\\');
+	 return resultstring;
 }

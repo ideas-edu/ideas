@@ -5,6 +5,7 @@ define("Rules", "Rewriting Rules");
 define("NewExercise", "New Exercise");
 define("Submit", "Submit");
 define("Undo", "Undo");
+define("Progress", "Progress");
 define("Step", "Step");
 define("Hint", "Hint");
 define("Ready", "Ready");

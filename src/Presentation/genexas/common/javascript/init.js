@@ -12,6 +12,7 @@ window.onload = function() {
 	$('generateButton').onclick = generate;
 	$('hintbutton').onclick = getHint;
 	$('nextbutton').onclick = getNext;
+	$('progressbutton').onclick = getRemaining;
 	$('submitbutton').onclick = getFeedback;
 	$('closehelpButton').onclick = closehelp;
 	$('closeaboutButton').onclick = closehelp;

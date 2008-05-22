@@ -14,16 +14,18 @@ function generate()
 	// The expression will be shown in the work area and in the exrecise area
 	var exercise = $('exercise');
 	var workarea  = $('work');
+	var feedbackArea = $('feedback');
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
 		asynchronous:		true,
-         parameters : 'input={ "method" : "generate" , "params" : ["Proposition to DNF", 5] , "id" : 421}',
+         parameters : 'input={ "method" : "generate" , "params" : ["'+ exercisekind + '", 5] , "id" : ' + id + '}',
          onSuccess : function(response) {			
 			var resJSON = response.responseText.parseJSON();
 			var task = resJSON.result[2];
 			exercise.innerHTML = task;
 			workarea.value = task;
+			feedbackArea.innerHTML = "<p>In JSON: <br>" + response.responseText + "</p>";
          },
 		 onFailure: function() { 
 			alert('Something went wrong...'); 
@@ -46,12 +48,12 @@ function getHint()
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"applicable", "params" : ["[]", ["Proposition to DNF", "[]", "' + haskellexpressie + '", ""]], "id" : 421}',
+         parameters : 'input={ "method" :"applicable", "params" : ["[]", ["'+ exercisekind + '", "[]", "' + haskellexpressie + '", ""]], "id" : ' + id + '}',
          onSuccess : function(response) {
 			var resJSON = response.responseText.parseJSON();
 			if (response.responseText["error"] == null) {
 				var result = resJSON["result"];
-				feedbackArea.innerHTML = "<p>A rule which can be applied to <strong>" + expressie + "</strong> is:<br><br><strong>" + result + "</strong></p>";
+				feedbackArea.innerHTML = "<p>A rule which can be applied to <strong>" + expressie + "</strong> is:<br><br><strong>" + result + "</strong></p><p>In JSON: <br>" + response.responseText + "</p>";
 			}
 			else {
 				alert(response.responseText["error"] );
@@ -74,11 +76,11 @@ function getNext()
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"onefirst", "params" : [["Proposition to DNF", "[]", "' + haskellexpressie + '", ""]], "id" : 421}',
+         parameters : 'input={ "method" :"onefirst", "params" : [["'+ exercisekind + '", "[]", "' + haskellexpressie + '", ""]], "id" : ' + id + '}',
          onSuccess : function(response) {	
 			var resJSON = response.responseText.parseJSON();
 			var regel = resJSON["result"][0];
-			feedbackArea.innerHTML = "<p><p>A rule which can be applied to <strong>" + expressie + "</strong> is the:<br><br><strong>" + regel + "</strong> rule</p><p>The result of the rule applied to expression is shown in the Work Area.</p>";
+			feedbackArea.innerHTML = "<p><p>A rule which can be applied to <strong>" + expressie + "</strong> is the:<br><br><strong>" + regel + "</strong> rule</p><p>The result of the rule applied to expression is shown in the Work Area.</p><p>In JSON: <br>" + response.responseText + "</p>";
 			var resultaat = resJSON["result"][2];
 			workArea.value = resultaat[2];
          }
@@ -96,11 +98,11 @@ function getRemaining()
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" :"stepsremaining", "params" : [["Proposition to DNF", "[]", "' + haskellexpression + '", ""]], "id" : 421}',
+         parameters : 'input={ "method" :"stepsremaining", "params" : [["'+ exercisekind + '", "[]", "' + haskellexpression + '", ""]], "id" : ' + id + '}',
          onSuccess : function(response) {	
 			var resJSON = response.responseText.parseJSON();
 			var feedback = resJSON.result;
-			feedbackArea.innerHTML = "<p>For the expression <strong>" + expression + "</strong>, you need, at a minimum: <br><strong>" + feedback + "</strong> steps to reach the solution.</p>";
+			feedbackArea.innerHTML = "<p>For the expression <strong>" + expression + "</strong>, you need, at a minimum: <br><strong>" + feedback + "</strong> steps to reach the solution.</p><p>In JSON: <br>" + response.responseText + "</p>";
          }
      });
 }
@@ -114,17 +116,15 @@ function getFeedback()
 	var feedbackArea = $('feedback');
 	var expression = (($('work')).value).htmlToAscii();
 	var orig = (($('exercise')).innerHTML).htmlToAscii();
-	alert("we vergelijken " + orig + "met " + expression);
 	var myAjax = new Ajax.Request
     (url,
      {   method: 'post',
-         parameters : 'input={ "method" : "submit", "params" : [["Proposition to DNF", "[]", "'+ orig + '", ""], "' + expression + '"], "id"     : 421}',
+         parameters : 'input={ "method" : "submit", "params" : [["'+ exercisekind + '", "[]", "'+ orig + '", ""], "' + expression + '"], "id" : ' + id + '}',
          onSuccess : function(response) {
-			alert(response.responseText);
 			var resJSON = response.responseText.parseJSON();
 			var feedback = resJSON.result;
 			var summaryfeedback = feedback.result;
-			feedbackArea.innerHTML = "<p>De feedback is: <br><strong>" + summaryfeedback + "</strong></p>";
+			feedbackArea.innerHTML = "<p>De feedback is: <br><strong>" + summaryfeedback + "</strong></p><p>In JSON: <br>" + response.responseText + "</p>";
          }
      });
 }

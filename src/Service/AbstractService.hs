@@ -135,15 +135,3 @@ readPrefix input =
 getRule :: RuleID -> Exercise a -> Rule a
 getRule ruleID ex = fromMaybe (error "invalid rule ID") $ safeHead $ 
    filter ((==ruleID) . name) (ruleset ex)
-   
-q = derivation' ("Derivative", "[]", "X", "")
-
--- derivation' :: State -> [(RuleID, Location, Expression)]
-derivation' s = 
-   case fromState s of
-      STS ts@(ex, a, b) ->    
-         let f (r, ca) = (name r, location ca, prettyPrinter ex ca)
-         in map f (TAS.derivation ts)
-
-triple = (derivativeExercise, Just (emptyPrefix $ strategy derivativeExercise), inContext $ e)
- where e = Diff (Lambda "x" (Con 10))

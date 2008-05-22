@@ -101,7 +101,7 @@ fix f =
 
 -- | Zero or more occurrences (defined with the fix-point combinator)
 star :: Grammar a -> Grammar a
-star p = fix $ \this -> (nonEmpty p <*> this) <|> succeed
+star p = fix $ \this -> succeed <|> (nonEmpty p <*> this)
 
 -- | One symbol
 symbol :: a -> Grammar a

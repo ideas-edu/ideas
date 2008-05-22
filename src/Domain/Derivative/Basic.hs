@@ -12,8 +12,11 @@
 module Domain.Derivative.Basic where
 
 import Common.Context
+import Common.Unification
 import Control.Monad
 import Data.List
+import qualified Data.Set as S
+import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck
 
@@ -75,6 +78,16 @@ instance Arbitrary Expr where
          Lambda s f  -> variant 9 . coarbitrary s . coarbitrary f
          Diff f      -> variant 10 . coarbitrary f
 
+arbFun :: Int -> Gen Expr
+arbFun 0 = oneof [ liftM (Con . fromInteger) arbitrary, return (Var "x"), return (Var "y") ]
+arbFun n = oneof [ arbFun 0, liftM Diff rec
+                 , bin (:+:), bin (:*:), bin (:^:), bin (:/:), liftM2 Special arbitrary rec
+                 , liftM (Lambda "x") rec
+                 ]
+ where
+   rec    = arbFun (n `div` 2)
+   bin op = liftM2 op rec rec
+   
 instance Num Expr where
    (+) = (:+:)
    (*) = (:*:)
@@ -85,13 +98,45 @@ instance Num Expr where
 instance Fractional Expr where
    (/) = (:/:)
    fromRational = Con
+
+instance HasVars Expr where
+   getVarsList e = [ x | Var x <- universe e ]
+
+instance MakeVar Expr where
+   makeVar = Var
+   
+instance Substitutable Expr where 
+   sub |-> e@(Var x) = fromMaybe e (lookupVar x sub)
+   sub |-> e = let (as, f) = uniplate e 
+               in f (map (sub |->) as)
        
-arbFun :: Int -> Gen Expr
-arbFun 0 = oneof [ liftM (Con . fromInteger) arbitrary, return (Var "x"), return (Var "y") ]
-arbFun n = oneof [ arbFun 0, liftM Diff rec
-                 , bin (:+:), bin (:*:), bin (:^:), bin (:/:), liftM2 Special arbitrary rec
-                 , liftM (Lambda "x") rec
-                 ]
- where
-   rec    = arbFun (n `div` 2)
-   bin op = liftM2 op rec rec
+instance Unifiable Expr where
+   unify = unifyExpr
+   
+unifyExpr :: Expr -> Expr -> Maybe (Substitution Expr)
+unifyExpr e1 e2 = 
+   case (e1, e2) of
+      (Var x, Var y) | x==y      -> return emptySubst
+      (Var x, _) | not (x `S.member` getVars e2) -> return (singletonSubst x e2)
+      (_, Var y) | not (y `S.member` getVars e1) -> return (singletonSubst y e1)
+      (Con x, Con y) -> if x==y then return emptySubst else Nothing
+      (Special f _, Special g _) | f /= g -> Nothing
+--      (Lambda x e1, Lambda y e2) | x /= y ->
+      _ -> if (exprToConNr e1 == exprToConNr e2) 
+           then unifyList (children e1) (children e2)
+           else Nothing
+
+exprToConNr :: Expr -> Int
+exprToConNr expr =
+   case expr of
+      Var _       -> 0
+      Con _       -> 1
+      _ :+: _     -> 2
+      _ :*: _     -> 3
+      _ :-: _     -> 4
+      _ :^: _     -> 5
+      _ :/: _     -> 6
+      Lambda _ _  -> 7
+      Negate _    -> 8
+      Diff  _     -> 9
+      Special _ _ -> 10

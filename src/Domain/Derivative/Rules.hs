@@ -14,6 +14,7 @@ module Domain.Derivative.Rules where
 import Domain.Derivative.Basic
 import Common.Context
 import Common.Transformation
+import Common.Apply
 
 type Fun = Expr
 
@@ -103,5 +104,5 @@ tidyRule = makeSimpleRule "Tidy-up rule" f
    f (x :+: Con 0) = return x
    f (x :^: Con 0) = return $ Con 1
    f (x :^: Con 1) = return x
-   
+
    f _ = Nothing

@@ -159,3 +159,14 @@ arbCtx n = oneof [ op2l ImplL, op2r ImplR, op2l EquivL, op2r EquivR, op2l AndL, 
 instance Arbitrary a => Arbitrary (Loc a) where
    arbitrary = liftM2 Loc arbitrary arbitrary
    coarbitrary (Loc a b) = coarbitrary a . coarbitrary b -}
+
+{-   
+main = print (propSound alexey)
+   
+alexey = ((Var "r" :<->: Var "r") :<->: (Var "r" :<->: Var "r")) :<->: (Var "q" :&&: Var "p" :<->: Var "r")
+
+propSound :: Logic -> Bool
+propSound p = 
+   case apply toDNF (inContext p) of
+      Just x -> isDNF (fromContext x)
+      _      -> False -}

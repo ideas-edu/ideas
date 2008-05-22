@@ -162,7 +162,7 @@ curlyBrackets  s = "{" ++ s ++ "}"
 
 data JSON_RPC_Request = Request
    { requestMethod :: String
-   , requestParams :: [JSON]
+   , requestParams :: JSON
    , requestId     :: JSON
    }
    
@@ -181,17 +181,16 @@ instance Show JSON_RPC_Response where
 instance InJSON JSON_RPC_Request where
    toJSON req = Object
       [ ("method", String $ requestMethod req)
-      , ("params", Array  $ requestParams req)
+      , ("params", requestParams req)
       , ("id"    , requestId req)
       ]
    fromJSON (Object xs) = do
       mj <- lookup "method" xs
       pj <- lookup "params" xs
       ij <- lookup "id"     xs
-      case (mj, pj) of
-         (String s, Array xs) -> return (Request s xs   ij)
-         (String s, _       ) -> return (Request s [pj] ij)
-         _                    -> Nothing
+      case mj of
+         String s -> return (Request s pj ij)
+         _        -> Nothing
    fromJSON _ = Nothing
          
 instance InJSON JSON_RPC_Response where
@@ -224,7 +223,7 @@ errorResponse x y = Response
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 
-type JSON_RPC_Handler = String -> [JSON] -> IO JSON
+type JSON_RPC_Handler = String -> JSON -> IO JSON
 
 jsonRPCOverHTTP :: JSON_RPC_Handler -> IO ()
 jsonRPCOverHTTP handler = runCGI $ do

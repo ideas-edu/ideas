@@ -122,7 +122,10 @@ OUTS1  = $(patsubst %.txt,%.out,$(TESTS1))
 TESTS2 = $(wildcard test/json-rpc/*.json)
 OUTS2  = $(patsubst %.json,%.out,$(TESTS2))
 
-ALL-OUT     = $(OUTS1) $(OUTS2)
+TESTS2 = $(wildcard test/xml-request/*.xml)
+OUTS2  = $(patsubst %.xml,%.out,$(TESTS3))
+
+ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3)
 ALL-EXP     = $(patsubst %.out,%.exp,$(ALL-OUT))
 ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
 
@@ -141,6 +144,9 @@ test/mathdox-request/%.out: test/mathdox-request/%.txt bin/laservice.cgi
 
 test/json-rpc/%.out: test/json-rpc/%.json bin/service.cgi
 	bin/service.cgi --file $< > $@
+
+test/xml-request/%.out: test/xml-request/%.xml bin/service.cgi
+	bin/service.cgi --xml $< > $@
 
 %.exp: %.out
 	cp $^ $@

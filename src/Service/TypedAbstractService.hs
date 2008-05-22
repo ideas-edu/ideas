@@ -43,12 +43,14 @@ generate ex level = do
       _   -> generate ex level 
 
 derivation :: State a -> [(Rule (Context a), Context a)]
-derivation (_, mp, ca) = fromMaybe (error "derivation") $ do
+derivation (ex, mp, ca) = fromMaybe (error "derivation") $ do
    p0 <- mp
-   (_, p1) <- safeHead (runPrefix p0 ca)
+   (final, p1) <- maybe (error $ "!!!" ++ show p0 ++ prettyPrinter ex ca ++ show (map snd $ runPrefix p0 ca)) Just $ safeHead (runPrefix p0 ca)
    let steps = drop (length (prefixToSteps p0)) (prefixToSteps p1)
        rules = stepsToRules steps
-       terms = scanl (\x y -> Apply.applyD y x) ca rules
+       terms = let run x []     = [ [] | equality ex x final ]
+                   run x (r:rs) = [ y:ys | y <- Apply.applyAll r x, ys <- run y rs ] 
+               in fromMaybe [] $ safeHead (run ca rules)
        check = isMajorRule . fst
    return $ filter check $ zip rules terms
 

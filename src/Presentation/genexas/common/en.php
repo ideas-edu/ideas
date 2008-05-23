@@ -8,7 +8,7 @@ define("Undo", "Undo");
 define("Progress", "Progress");
 define("Step", "Step");
 define("Hint", "Hint");
-define("Ready", "Ready");
+define("Ready", "In DNF");
 define("Exercise", "Exercise");
 define("WorkArea", "Working Area: Rewrite and Submit");
 define("History", "History");

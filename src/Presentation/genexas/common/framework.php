@@ -11,7 +11,7 @@
 <script type="text/javascript" src="http://www.json.org/json.js"></script>
 <script type="text/javascript" src="/genexas/common/javascript/help.js"></script>
 <script type="text/javascript" src="<?php print localjs;?>"></script>
-<script type="text/javascript" src="/genexas/common/javascript/communication.js"></script>
+<script type="text/javascript" src="/genexas/common/javascript/communication.js"></script> 
 <script type="text/javascript" src="/genexas/common/javascript/init.js"></script>
 </head>
 
@@ -33,13 +33,14 @@
 	<textarea id="work" rows="2" cols="40" >	
 	</textarea>
 	<input id="submitbutton" type="button" value="<?php print Submit;?>" >
-	<input class="minibutton" type="button" id="herstelbutton" onclick="herstel() "value="<?php print Undo;?>" >
+	<input class="minibutton" type="button" id="readybutton" onclick="ready() "value="<?php print Ready;?>" >
 	<input id="progressbutton" class="minibutton" type="button" value="<?php print Progress;?>" >
 	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
 	<input id="readybutton" class="minibutton invisible" type="button" onclick="getKlaar() "value="<?php print Ready;?>" >
 	<br class="clear">;
-	<?php toetsen();?>
+	<input class="minibutton" type="button" id="herstelbutton" onclick="herstel() "value="<?php print Undo;?>" >
+
 	<br>
 
 </div>

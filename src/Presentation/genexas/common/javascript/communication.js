@@ -1,9 +1,30 @@
 // The url for the services
-var url = "http://ideas.cs.uu.nl/cgi-bin/service.cgi";
+var url = "/cgi-bin/service.cgi";
 
 // This will be in local.js: local to each kind of exercise
 var exercisekind = "Proposition to DNF";
 var id = 421;
+
+/********************
+ * Test
+ ***********************/
+//window.onload = function() {
+//  $("generate").onclick = genExercise;
+//}
+
+function genExercise() {
+  var exercise = $("exercise");
+  alert("genExercise aangeroepen");
+  var myAjax = new Ajax.Request
+    ("../cgi-bin/service.cgi",
+     {   method: 'post',
+         parameters : 'input={ "method" :"generate", "params" : [["Proposition to DNF", 5]], "id" : 421}',
+         onSuccess : function(response) {
+	   var resJSON = response.responseText.parseJSON();
+           exercise.innerHTML = resJSON.result[2];
+         }
+     });
+}
 
 /**
  *  Generation of a new exercise. It will be shown in the area for the exercise.
@@ -28,6 +49,29 @@ function generate()
 			exercise.innerHTML = task;
 			workarea.value = task;
 			feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>Resultaat in JSON: <br>" + response.responseText + "</p>";
+         },
+		 onFailure: function() { 
+			alert('Something went wrong...'); 
+		} 
+     });
+}
+function getReady()
+{
+	var feedbackArea = $('feedback');
+	var expression = ($('work')).value;
+	var haskellexpression = expression.htmlToAscii();
+	feedbackArea.innerHTML = feedbackArea.innerHTML  + '<p><strong>Calling service Ready:</strong><br>parameters:<br> ' + 'input={ "method" : "ready" , "params" : [["'+ exercisekind + '", "[]", "' + haskellexpression + '", ""]] , "id" : ' + id + '}';
+	var myAjax = new Ajax.Request
+    (url,
+     {   method: 'post',
+		asynchronous:		true,
+         parameters : 'input={ "method" : "ready" , "params" : [["'+ exercisekind + '", "[]", "' + haskellexpression + '", ""]] , "id" : ' + id + '}',
+         onSuccess : function(response) {			
+			var resJSON = response.responseText.parseJSON();
+			var solved = resJSON.result;
+			feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>In DNF: <br><strong>" + solved + "</strong></p><p>Resultaat in JSON: <br>" + response.responseText + "</p>";
+			// alert(solved);
+			// alert(solved.toString());
          },
 		 onFailure: function() { 
 			alert('Something went wrong...'); 

@@ -5,27 +5,6 @@ var url = "http://ideas.cs.uu.nl/cgi-bin/service.cgi";
 var exercisekind = "Proposition to DNF";
 var id = 421;
 
-/********************
- * Test
- ***********************/
-//window.onload = function() {
-//  $("generate").onclick = genExercise;
-//}
-
-function genExercise() {
-  var exercise = $("exercise");
-  alert("genExercise aangeroepen");
-  var myAjax = new Ajax.Request
-    ("../cgi-bin/service.cgi",
-     {   method: 'post',
-         parameters : 'input={ "method" :"generate", "params" : [["Proposition to DNF", 5]], "id" : 421}',
-         onSuccess : function(response) {
-	   var resJSON = response.responseText.parseJSON();
-           exercise.innerHTML = resJSON.result[2];
-         }
-     });
-}
-
 /**
  *  Generation of a new exercise. It will be shown in the area for the exercise.
   */

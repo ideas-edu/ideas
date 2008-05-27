@@ -1,4 +1,6 @@
-<request service="derivation" exerciseid="Derivative">
+<request service="apply" exerciseid="Derivative">
+<ruleid>Tidy-up rule</ruleid>
+<location>[0]</location>
 <state>
 <prefix>[]</prefix>
 <context></context>

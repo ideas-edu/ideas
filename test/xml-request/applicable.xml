@@ -1,4 +1,5 @@
-<request service="derivation" exerciseid="Derivative">
+<request service="applicable" exerciseid="Derivative">
+<location>[0]</location>
 <state>
 <prefix>[]</prefix>
 <context></context>

@@ -1,0 +1,30 @@
+<reply result="ok" version="0.1">
+  <elem ruleid="Tidy-up rule">
+    <state>
+      <prefix>
+        [0,1,0]
+      </prefix>
+      <context>
+        [0];
+      </context>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="arith1" name="plus"/>
+          <OMI>
+            3
+          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="plus"/>
+            <OMI>
+              3
+            </OMI>
+            <OMI>
+              4
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </state>
+  </elem>
+</reply>
+

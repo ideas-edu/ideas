@@ -67,7 +67,7 @@ onefirst :: State a -> (Rule (Context a), Location, State a)
 onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
 
 applicable :: Location -> State a -> [Rule (Context a)]
-applicable loc (ex, _, ca) = filter (`Apply.applicable` ca) (ruleset ex)
+applicable loc (ex, _, ca) = filter (`Apply.applicable` (setLocation loc ca)) (ruleset ex)
 
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied

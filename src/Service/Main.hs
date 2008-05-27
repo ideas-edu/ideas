@@ -15,17 +15,22 @@ module Main (main) where
 
 import Common.Exercise hiding (SyntaxError)
 import Common.Context
-import Common.Strategy (emptyPrefix)
+import Common.Strategy (emptyPrefix, makePrefix)
+import Common.Transformation (name)
+import Common.Utils
 import Service.JSON
 import Service.XML
 import Service.AbstractService
 import qualified Service.TypedAbstractService as TAS
 import Domain.Derivative.Exercises (derivativeExercise, toExpr, fromExpr)
+import Domain.Derivative.Basic
 import OpenMath.Object
 import System.Environment
 import Control.Monad
+import Data.Maybe
 import Data.Char
 import qualified Data.Map as M
+import System.IO.Unsafe
 
 main :: IO ()
 main = do
@@ -54,19 +59,71 @@ infix  3 .:.
 serviceXML :: XML -> XML
 serviceXML request =
    case request of
-      Tag "request" attrs [Tag "state" _ [xml]]
-         | lookup "exerciseid" attrs == Just "Derivative" && 
-           lookup "service" attrs == Just "derivation" -> 
-              case xml2omobj xml of
-                 Left err  -> error (show err)
-                 Right obj -> 
-                    let list   = TAS.derivation state
-                        expr   = inContext (toExpr obj)
-                        state  = (derivativeExercise, Just (emptyPrefix $ strategy derivativeExercise), expr)
-                        f (r, a) = Tag "elem" [("ruleid", show r)] [omobj2xml (fromExpr (fromContext a))]
-                    in Tag "reply" [("result", "ok"), ("version", "0.1")] [Tag "list" [] (map f list)]
+      Tag "request" attrs _
+         | check "derivation" attrs -> 
+              let state  = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  list   = TAS.derivation state
+                  f (r, a) = Tag "elem" [("ruleid", show r)] [omobj2xml (fromExpr (fromContext a))]
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [Tag "list" [] (map f list)]
+         | check "allfirsts" attrs -> 
+              let state  = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  list   = TAS.allfirsts state
+                  f (r, _, a) = Tag "elem" [("ruleid", show r)] [state2xml a]
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [Tag "list" [] (map f list)]
+         | check "onefirst" attrs -> 
+              let state  = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  this   = TAS.onefirst state
+                  f (r, _, a) = Tag "elem" [("ruleid", show r)] [state2xml a]
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [f this]
+         | check "ready" attrs -> 
+              let state = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  bool  = TAS.ready state
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [Text $ show bool]
+         | check "stepsremaining" attrs -> 
+              let state = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  int  = TAS.ready state
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [Text $ show int]
+         | check "applicable" attrs -> 
+              let loc   = fromMaybe (error "no location") (extractText "location" request)
+                  state = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  list  = TAS.applicable (read loc) state
+                  f r   = Tag "elem" [("ruleid", show r)] []
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [Tag "list" [] (map f list)]
+         | check "apply" attrs -> 
+              let rid   = fromMaybe (error "no ruleid") (extractText "ruleid" request)
+                  rule  = fromMaybe (error "invalid ruleid") $ safeHead $ filter p (ruleset derivativeExercise)
+                  p     = (==rid) . name
+                  loc   = fromMaybe (error "no location") (extractText "location" request)
+                  state = xml2State (fromMaybe (error $ "no state tag" ++ show request) $ findChild (isTag "state") request)
+                  this  = TAS.apply rule (read loc) state
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [state2xml this]
+         | check "generate" attrs -> 
+              let diff  = fromMaybe (error "no difficulty") $ lookup "difficulty" attrs 
+                  state = unsafePerformIO $ TAS.generate derivativeExercise (read diff)
+              in Tag "reply" [("result", "ok"), ("version", "0.1")] [state2xml state]
       _ -> error "invalid request"
-   
+ where
+   check s attrs = lookup "exerciseid" attrs == Just "Derivative" && 
+                   lookup "service" attrs == Just s
+
+xml2State :: XML -> TAS.State Expr
+xml2State xml@(Tag "state" _ _) = fromMaybe (error "invalid state in request") $ do
+   sp <- extractText "prefix"  xml
+   sc <- Just $ maybe "" id $ extractText "context" xml
+   x  <- findChild (isTag "OMOBJ") xml
+   let state  = (derivativeExercise, Just (makePrefix (read sp) $ strategy derivativeExercise), term)
+       contxt = fromMaybe (error $ "invalid context" ++ show sc) $ parseContext sc
+       expr   = either (error . show) toExpr $ xml2omobj x
+       term   = fmap (const expr) contxt
+   return state
+xml2State _ = error "expected a state tag"
+
+state2xml :: TAS.State Expr -> XML
+state2xml (ex, mp, ca) = Tag "state" [] 
+   [ Tag "prefix"  [] [Text $ maybe "[]" show mp]
+   , Tag "context" [] [Text $ showContext ca] 
+   , omobj2xml (fromExpr (fromContext ca))
+   ]
 
 service :: InJSON a => Service a
 service a xs = do

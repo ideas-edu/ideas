@@ -14,10 +14,10 @@ module Domain.Derivative.Exercises where
 
 import Prelude hiding (repeat)
 import Domain.Derivative.Basic (Expr(..))
-import Domain.Derivative.Rules (derivativeRules, tidyRule)
+import Domain.Derivative.Rules (derivativeRules, tidyupRules, tidyRule)
 import Common.Strategy (Strategy, somewhere, many, (<*>), (<|>), alternatives, option, label, LabeledStrategy)
 import qualified Common.Strategy
-import Common.Context (Context, liftRuleToContext, inContext)
+import Common.Context (Context, liftRuleToContext, inContext, fromContext)
 import Common.Exercise (Exercise(..), text)
 import OpenMath.Object
 import Data.Ratio
@@ -34,12 +34,13 @@ derivativeExercise = Exercise
 --   , equivalence = undefined
    , equality    = (==)
 --   , generator   = undefined
---   , suitableTerm = undefined
+   , suitableTerm = const True
 --   , subTerm = undefined
    , prettyPrinter = show
---   , finalProperty = undefined -- const False -- noDiff . fromContext
---   , ruleset       = undefined -- derivativeRules ++ tidyupRules
+   , finalProperty = noDiff . fromContext
+   , ruleset       = derivativeRules ++ tidyupRules
    , strategy      = derivativeStrategy
+   , generator     = return $ inContext $ Diff $ Lambda "x" $ Var "x" :^: 2
    }
 
 derivativeStrategy :: LabeledStrategy (Context Expr)

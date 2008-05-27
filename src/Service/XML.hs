@@ -15,9 +15,10 @@ module Service.XML
    ( XML(..), Attr, AttrList
    , parseXML, parseXMLs, showXML
    , children, extract, extractText
+   , isText, isTag, findChild
    ) where
 
-import Common.Utils (trim)
+import Common.Utils (trim, safeHead)
 import Control.Monad.Error
 import Data.Char
 import Data.Maybe
@@ -171,10 +172,21 @@ extract n xml =
    case [ xs | Tag m _ xs <- children xml, n==m ] of
       [hd] -> return hd
       _    -> fail ("missing tag " ++ show n)
-      
+
 extractText :: Monad m => String -> XML -> m String
 extractText n xml = do
    xs <- extract n xml
    case xs of
       [Text s] -> return s
       _        -> fail ("invalid content for tag " ++ show n)
+      
+isTag :: String -> XML -> Bool
+isTag n (Tag m _ _) = n==m
+isTag _ _           = False
+
+isText :: XML -> Bool
+isText (Text _) = True
+isText _        = False
+
+findChild :: Monad m => (XML -> Bool) -> XML -> m XML
+findChild p = maybe (fail "child not found") return . safeHead . filter p . children

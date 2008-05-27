@@ -122,8 +122,8 @@ OUTS1  = $(patsubst %.txt,%.out,$(TESTS1))
 TESTS2 = $(wildcard test/json-rpc/*.json)
 OUTS2  = $(patsubst %.json,%.out,$(TESTS2))
 
-TESTS2 = $(wildcard test/xml-request/*.xml)
-OUTS2  = $(patsubst %.xml,%.out,$(TESTS3))
+TESTS3 = $(wildcard test/xml-request/*.xml)
+OUTS3  = $(patsubst %.xml,%.out,$(TESTS3))
 
 ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3)
 ALL-EXP     = $(patsubst %.out,%.exp,$(ALL-OUT))
@@ -134,6 +134,7 @@ exp-files: $(ALL-EXP)
 
 unit-tests: $(ALL-OUT)
 	# --- Unit Tests ------------------------
+	echo $(TESTS2)
 	@for i in $(ALL-WITHOUT); do \
 	  echo $$i; \
 	  diff -I "version=" $$i.out $$i.exp; \

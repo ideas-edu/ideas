@@ -56,8 +56,8 @@ $(BINDIR)/solvergui$(EXE): $(SOURCES) $(GLADE)
 	mkdir -p $(BINDIR) $(OUTDIR)
 	ghc $(FLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
 	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
-	cp src/Presentation/ExerciseAssistant/ounl.jpg bin/
-	
+	cp src/Presentation/ExerciseAssistant/ounl.jpg bin/	
+
 run: solvergui
 	$(BINDIR)/solvergui$(EXE)
 
@@ -133,10 +133,11 @@ out-files: $(ALL-OUT)
 exp-files: $(ALL-EXP)
 
 unit-tests: $(ALL-OUT)
-	# --- Unit Tests ------------------------
+# --- Unit Tests ------------------------
 	echo $(TESTS2)
 	@for i in $(ALL-WITHOUT); do \
 	  echo $$i; \
+	  if $(WINDOWS)==no; then dos2unix $$i.exp &> /dev/null; fi; \
 	  diff -I "version=" $$i.out $$i.exp; \
 	done;
 

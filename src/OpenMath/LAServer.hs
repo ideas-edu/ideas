@@ -21,7 +21,7 @@ import OpenMath.ObjectParser
 import Common.Apply
 import Common.Context
 import Common.Transformation
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, repeat)
 import Common.Exercise hiding (Incorrect)
 import Common.Utils
 import Data.Maybe
@@ -82,13 +82,18 @@ laServerFor a req =
                        { repInc_Strategy   = req_Strategy req
                        , repInc_Location   = subTask (req_Location req) loc
                        , repInc_Expected   = toExpr (fromContext expected)
-                                             -- only return arguments if we are at a rule
-                       , repInc_Arguments  = if loc==req_Location req then args else Nothing
+                       , repInc_Derivation = derivation
+                       , repInc_Arguments  = args
                        , repInc_Steps      = stepsRemaining (getPrefix req (strategy a)) requestedTerm
                        , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
                        }
              where
                (loc, args) = firstMajorInPrefix (getPrefix req (strategy a)) prefix requestedTerm
+               derivation  = 
+                  let len      = length $ prefixToSteps $ getPrefix req $ strategy a
+                      rules    = stepsToRules $ drop len $ prefixToSteps prefix
+                      f (s, a) = (s, toExpr $ fromContext a)
+                  in map f (makeDerivation requestedTerm rules)
 
 -- old (current) and actual (next major rule) location
 subTask :: [Int] -> [Int] -> [Int]
@@ -104,21 +109,21 @@ nextTask (i:is) (j:js)
    | otherwise = [j] 
 nextTask _ _   = [] 
 
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> ([Int], Maybe String)
-firstMajorInPrefix p0 prefix a = fromMaybe ([], Nothing) $ do
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> ([Int], Args)
+firstMajorInPrefix p0 prefix a = fromMaybe ([], []) $ do
    let steps = prefixToSteps prefix
        newSteps = drop (length $ prefixToSteps p0) steps
-   is    <- safeHead [ is | Step is r <- newSteps, not (isMinorRule r) ]
+   is    <- safeHead [ is | Step is r <- newSteps, isMajorRule r ]
    return (is, argumentsForSteps a newSteps)
  
-argumentsForSteps :: a -> [Step a] -> Maybe String
-argumentsForSteps a = safeHead . flip rec a . stepsToRules
+argumentsForSteps :: a -> [Step a] -> Args
+argumentsForSteps a = flip rec a . stepsToRules
  where
-   showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
    rec [] _ = []
    rec (r:rs) a
       | isMinorRule r  = concatMap (rec rs) (applyAll r a)
-      | applicable r a = maybe [] (return . showList) (expectedArguments r a)
+      | applicable r a = let ds = map (\(Some d) -> labelArgument d) (getDescriptors r)
+                         in maybe [] (zip ds) (expectedArguments r a)
       | otherwise      = []
  
 nextMajorForPrefix :: Prefix a -> a -> [Int]
@@ -129,3 +134,9 @@ nextMajorForPrefix p0 a = fromMaybe [] $ do
    case lastStep of
       Step is r | not (isMinorRule r) -> return is
       _ -> Nothing
+      
+makeDerivation :: a -> [Rule a] -> [(String, a)]
+makeDerivation a []     = []
+makeDerivation a (r:rs) = 
+   let new = applyD r a
+   in [ (name r, new) | isMajorRule r ] ++ makeDerivation new rs 

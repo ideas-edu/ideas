@@ -98,7 +98,7 @@ exprToXML = omobj2xml . expr2omobj
 -- conversion functions: OMOBJ <-> Expr
 
 binaryOps :: [(String, Expr -> Expr -> Expr)]
-binaryOps = [ ("times", (:*:)), ("plus" , (:+:)), ("minus", (:-:)), ("divide", (:/:)), ("eq", (:==:)) ]
+binaryOps = [ ("times", (:*:)), ("plus" , (:+:)), ("minus", (:-:)), ("divide", (:/:)), ("rational", (:/:)), ("eq", (:==:)) ]
 
 omobj2expr :: OMOBJ -> Either String Expr
 omobj2expr omobj =

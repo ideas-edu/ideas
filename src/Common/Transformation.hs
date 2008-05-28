@@ -17,7 +17,7 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( -- * Transformations
-     Transformation, makeTrans, makeTransList, (|-), inverseTrans
+     Transformation, makeTrans, makeTransList, (|-), inverseTrans, getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
@@ -25,7 +25,7 @@ module Common.Transformation
      -- * Rules
    , Rule, name, isMinorRule, isMajorRule, isBuggyRule
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
-   , idRule, emptyRule, minorRule, buggyRule, inverseRule
+   , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
      -- * QuickCheck
@@ -90,6 +90,15 @@ inverseTrans trans =
       Pattern pair -> return $ Pattern $ fmap (\(lhs, rhs) -> (rhs, lhs)) pair
       Lift lp t    -> fmap (Lift lp) (inverseTrans t)
       _ -> Nothing
+
+getPatternPair :: a -> Transformation a -> Maybe (a, a)
+getPatternPair _ (Pattern qp) = return $ unsafeInstantiateWith substitutePair qp
+getPatternPair a (Lift lp t)  = do
+   let f t = liftPairSet lp t a
+   b      <- liftPairGet lp a
+   (x, y) <- getPatternPair b t
+   return (f x, f y)
+getPatternPair _ _ = Nothing
 
 -----------------------------------------------------------
 --- Arguments

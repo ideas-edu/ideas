@@ -51,6 +51,7 @@ make self a req inc = html
    ]
    [ para [ bold [Text "Term: "]
           , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
+          , preString $ concat $ map show $ repInc_Derivation inc
           ]
    , para [ bold [Text "Expected: "]
           , preString (maybe "" (prettyPrinter a . inContext) $ fromExpr $ repInc_Expected inc) 
@@ -59,7 +60,7 @@ make self a req inc = html
    , hr
    , para [ bold [Text "Strategy: "], Text (req_Strategy req), br
           , bold [Text "Steps remaining: "], Text (show (repInc_Steps inc) ++ " (and " ++ show n ++ " after submitting the expected answer)"), br
-          , bold [Text "Arguments: "], Text (fromMaybe "" $ repInc_Arguments inc), br
+          , bold [Text "Arguments: "], Text (formatArgs $ repInc_Arguments inc), br
           , bold [Text "Location: "], Text (show $ req_Location req) 
           ]
    , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ strategyLocations $ strategy a 
@@ -78,6 +79,7 @@ make self a req inc = html
    reqZoomOut = zoomOut req
    reqNoCtxt  = removeContext req
    reqToURL   = (self++) . oneliner . ppRequest
+   formatArgs = concat . intersperse ", " . map (\(a, b) -> a ++ " = " ++ b)
    derivation = case prefixToSteps (getPrefix req (strategy a)) of
                    steps -> concat $ intersperse "; " [ name r | Step _ r <- steps, isMajorRule r ]
                

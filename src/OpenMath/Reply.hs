@@ -13,11 +13,11 @@
 -----------------------------------------------------------------------------
 module OpenMath.Reply 
    ( Reply(..), replyInXML
-   , ReplyOk(..), ReplyIncorrect(..), ReplyError(..)
+   , ReplyOk(..), ReplyIncorrect(..), ReplyError(..), Args
    ) where
 
 import Common.Context (Location)
-import Common.Strategy
+import Common.Strategy hiding (not)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import Service.XML
@@ -42,7 +42,8 @@ data ReplyIncorrect = ReplyIncorrect
    { repInc_Strategy   :: StrategyID
    , repInc_Location   :: StrategyLocation
    , repInc_Expected   :: Expr
-   , repInc_Arguments  :: Maybe String
+   , repInc_Derivation :: [(String, Expr)]
+   , repInc_Arguments  :: Args
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
    }
@@ -53,6 +54,8 @@ data ReplyError = ReplyError
    , repErr_Message :: String
    }
  deriving Show
+
+type Args = [(String, String)]
 
 ------------------------------------------------------------------------
 -- Conversion functions to XML
@@ -75,19 +78,20 @@ replyOkToXML r = xmlResult "ok" $ xmlList
    , ("steps",    Text $ show $ repOk_Steps r)
    ]
 
--- For now, show a matrix with integers
 replyIncorrectToXML :: ReplyIncorrect -> XML
-replyIncorrectToXML r = xmlResult "incorrect" $ xmlList $
+replyIncorrectToXML r = xmlResult "incorrect" $ xmlList (
    [ ("strategy",   Text $ repInc_Strategy r)
    , ("location",   Text $ show $ repInc_Location r)
    , ("expected",   exprToXML $ repInc_Expected r)
    ] ++
-   [ ("arguments",  Text $ fromMaybe "" $ repInc_Arguments r) 
-   | isJust (repInc_Arguments r)
-   ] ++
    [ ("steps",      Text $ show $ repInc_Steps r)
    , ("equivalent", Text $ show $ repInc_Equivalent r)
-   ]
+   ]) ++ [ Tag "arguments" [] (map (\(x,y) -> Tag "elem" [("descr", x)] [Text y]) (repInc_Arguments r))
+         | not (null $ repInc_Arguments r)
+         ]
+      ++ [ Tag "derivation" [] (map (\(x,y) -> Tag "elem" [("ruleid", x)] [exprToXML y]) (repInc_Derivation r))
+         | not (null $  repInc_Derivation r)
+         ]
 
 replyErrorToXML :: ReplyError -> XML
 replyErrorToXML r = xmlResult (repErr_Kind r) [Text $ repErr_Message r]

@@ -32,6 +32,7 @@ data Expr
    | Special Sym Expr
    | Lambda String Expr
    | Diff Expr
+   | MetaVar String
  deriving (Show, Read, Eq)
  
 data Sym = Sin | Cos | Ln
@@ -56,14 +57,15 @@ instance Uniplate Expr where
          f :/: g        -> ([f,g], \[x,y] -> x :/: y)
          Special s f    -> ([f], \[x] -> Special s x)
          Lambda s f     -> ([f], \[x] -> Lambda s x)
-         Diff f     -> ([f],   \[x] -> Diff x)
+         Diff f         -> ([f],   \[x] -> Diff x)
+         MetaVar s      -> ([], \_ -> MetaVar s)
 
 instance Arbitrary Sym where
    arbitrary = oneof $ map return syms
    coarbitrary a = coarbitrary (elemIndex a syms)
  
 instance Arbitrary Expr where
-   arbitrary = sized arbFun
+   arbitrary = sized arbExpr
    coarbitrary function =
       case function of
          Con r       -> variant 0 . coarbitrary (numerator r) . coarbitrary (denominator r)
@@ -77,15 +79,16 @@ instance Arbitrary Expr where
          Special s f -> variant 8 . coarbitrary s . coarbitrary f
          Lambda s f  -> variant 9 . coarbitrary s . coarbitrary f
          Diff f      -> variant 10 . coarbitrary f
+         MetaVar s   -> variant 11 . coarbitrary s
 
-arbFun :: Int -> Gen Expr
-arbFun 0 = oneof [ liftM (Con . fromInteger) arbitrary, return (Var "x"), return (Var "y") ]
-arbFun n = oneof [ arbFun 0, liftM Diff rec
+arbExpr :: Int -> Gen Expr
+arbExpr 0 = oneof [ liftM (Con . fromInteger) arbitrary, return (Var "x"), return (Var "y") ]
+arbExpr n = oneof [ arbExpr 0, liftM Diff rec
                  , bin (:+:), bin (:*:), bin (:^:), bin (:/:), liftM2 Special arbitrary rec
                  , liftM (Lambda "x") rec
                  ]
  where
-   rec    = arbFun (n `div` 2)
+   rec    = arbExpr (n `div` 2)
    bin op = liftM2 op rec rec
    
 instance Num Expr where
@@ -100,13 +103,13 @@ instance Fractional Expr where
    fromRational = Con
 
 instance HasVars Expr where
-   getVarsList e = [ x | Var x <- universe e ]
+   getVarsList e = [ x | MetaVar x <- universe e ]
 
 instance MakeVar Expr where
-   makeVar = Var
+   makeVar = MetaVar
    
 instance Substitutable Expr where 
-   sub |-> e@(Var x) = fromMaybe e (lookupVar x sub)
+   sub |-> e@(MetaVar x) = fromMaybe e (lookupVar x sub)
    sub |-> e = let (as, f) = uniplate e 
                in f (map (sub |->) as)
        
@@ -116,15 +119,26 @@ instance Unifiable Expr where
 unifyExpr :: Expr -> Expr -> Maybe (Substitution Expr)
 unifyExpr e1 e2 = 
    case (e1, e2) of
-      (Var x, Var y) | x==y      -> return emptySubst
-      (Var x, _) | not (x `S.member` getVars e2) -> return (singletonSubst x e2)
-      (_, Var y) | not (y `S.member` getVars e1) -> return (singletonSubst y e1)
+      (MetaVar x, MetaVar y) | x==y      -> return emptySubst
+      (MetaVar x, _) | not (x `S.member` getVars e2) -> return (singletonSubst x e2)
+      (_, MetaVar y) | not (y `S.member` getVars e1) -> return (singletonSubst y e1)
+      (Var x, Var y) -> if x==y then return emptySubst else Nothing
       (Con x, Con y) -> if x==y then return emptySubst else Nothing
       (Special f _, Special g _) | f /= g -> Nothing
---      (Lambda x e1, Lambda y e2) | x /= y ->
+      (Lambda x e1, Lambda y e2) | x /= y -> unifyExpr (renameVar x y e1) e2
       _ -> if (exprToConNr e1 == exprToConNr e2) 
            then unifyList (children e1) (children e2)
            else Nothing
+
+renameVar :: String -> String -> Expr -> Expr
+renameVar x y = rec 
+ where
+   rec (Var z) 
+      | z==x = Var y
+   rec (Lambda z e) 
+      | z==x || z==y = rec (Lambda (z++"_") (renameVar z (z++"_") e))
+   rec e = let (es, f) = uniplate e
+           in f (map rec es)
 
 exprToConNr :: Expr -> Int
 exprToConNr expr =
@@ -140,3 +154,4 @@ exprToConNr expr =
       Negate _    -> 8
       Diff  _     -> 9
       Special _ _ -> 10
+      MetaVar _   -> (-1)

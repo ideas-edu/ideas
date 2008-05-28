@@ -33,7 +33,7 @@ import Control.Monad
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.3.0"
+versionNr = "0.3.1"
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines

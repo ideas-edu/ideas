@@ -42,7 +42,7 @@ logicOperators =
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseLogic  :: String -> (Ranged Logic, [Message Token (Maybe Token)])
+parseLogic  :: String -> (Ranged Logic, [Message Token])
 parseLogic = parse pLogic . scanWith logicScanner
  where
    pLogic = pOperators logicOperators (basicWithPos pLogic)
@@ -51,7 +51,7 @@ parseLogic = parse pLogic . scanWith logicScanner
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
-parseLogicPars  :: String -> (Ranged Logic, [Message Token (Maybe Token)])
+parseLogicPars  :: String -> (Ranged Logic, [Message Token])
 parseLogicPars = parse pLogic . scanWith logicScanner
  where
    basic     =  basicWithPos pLogic

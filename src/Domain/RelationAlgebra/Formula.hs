@@ -227,8 +227,8 @@ unifyRelAlg :: RelAlg -> RelAlg -> Maybe (Substitution RelAlg)
 unifyRelAlg p q = 
    case (p, q) of
       (Var x, Var y) | x==y      -> return emptySubst
-      (Var x, _)                 -> return (singletonSubst x q)
-      (_    , Var y)             -> return (singletonSubst y p)
+      (Var x, _) | not (x `S.member` getVars q) -> return (singletonSubst x q)
+      (_, Var y) | not (y `S.member` getVars p) -> return (singletonSubst y p)
       (p1 :.: p2,  q1 :.:  q2) -> unifyList [p1, p2] [q1, q2]
       (p1 :+: p2, q1 :+: q2) -> unifyList [p1, p2] [q1, q2]
       (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
@@ -246,10 +246,10 @@ varsRelAlg = foldRelAlg (return, union, union, union, union, id, id, [], [])
 instance Uniplate RelAlg where
    uniplate term =
       case term of 
-         s :.:  t  -> ([s, t], \[a, b] -> a :.:   b)
-         s :+:  t  -> ([s, t], \[a, b] -> a :+:   b)
-         s :&&: t  -> ([s, t], \[a, b] -> a :&&:  b)
-         s :||: t  -> ([s, t], \[a, b] -> a :||:  b)
+         s :.:  t  -> ([s, t], \[a, b] -> a :.:  b)
+         s :+:  t  -> ([s, t], \[a, b] -> a :+:  b)
+         s :&&: t  -> ([s, t], \[a, b] -> a :&&: b)
+         s :||: t  -> ([s, t], \[a, b] -> a :||: b)
          Not s     -> ([s], \[a] -> Not a)
          Inv s     -> ([s], \[a] -> Inv a)
          _         -> ([], \[] -> term)

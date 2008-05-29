@@ -27,7 +27,7 @@ import Control.Monad
 
 {- generator
 * max. 1 equivalentie
-* min. 4 stappen
+* min. 4 stappen (dus niet in DNF)
 * geen T/F in formule
 * max. ?? stappen
 -}
@@ -36,8 +36,9 @@ dnfExercise :: Exercise (Context Logic)
 dnfExercise = standard
    { shortTitle    = "Proposition to DNF" 
    , parser        = \s -> case parseLogicPars s of
-                              (p, [])   -> Right (inContext (fromRanged p))
-                              (p, msgs) -> Left  (text (show msgs))
+                              (p, [])      -> Right (inContext (fromRanged p))
+                              (p, (a,b):_) -> Left $ text $ "Parse error" ++ 
+                                              maybe "" (\x -> " on " ++ show x) b ++ ":\n   expecting " ++ show a
    , subTerm       = \s r -> case parseLogicPars s of
                                 (p, []) -> fmap makeLocation (subExpressionAt r p)
                                 _       -> Nothing
@@ -47,10 +48,9 @@ dnfExercise = standard
    , finalProperty = isDNF . fromContext
    , ruleset       = map liftRuleToContext logicRules
    , strategy      = toDNF
-   , generator     = -- return $ inContext $ Not(Not(Var "q") :||: Var "p") :&&: Not (Var "r" :&&: Var "p")
-   		     let check p = not (isDNF p) && countEquivalences p < 2 && countBinaryOperators p <= 3
-                     in liftM inContext generateLogic -- (suitableLogic check)
-   , suitableTerm  = \p -> countEquivalences (fromContext p) < 2 && countBinaryOperators (fromContext p) <= 3
+   , generator     = liftM inContext generateLogic
+   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF) p
+                           in countEquivalences (fromContext p) < 2 && n >= 4 && n <= 12
    }
  where
    standard :: Exercise (Context Logic)

@@ -100,6 +100,8 @@ isAtomic logic =
    case logic of
       Var _       -> True
       Not (Var _) -> True
+      T           -> True
+      F           -> True
       _           -> False
 
 -- | Functions isDNF, and isCNF determine whether or not a Logix expression

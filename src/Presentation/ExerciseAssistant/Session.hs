@@ -76,7 +76,7 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    Some d <- readIORef ref
    case parser (exercise d) txt of
       Left err -> 
-         return ("Parse error: " ++ showDoc (exercise d) err, False)
+         return (showDoc (exercise d) err, False)
       Right term ->
          case submit (currentState d) term of
             Buggy rs -> 

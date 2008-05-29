@@ -17,7 +17,7 @@ module Common.Parsing
    ( -- * Scaning
      Scanner(..), defaultScanner, makeCharsSpecial, scan, scanWith, UU.Token
      -- * Parsing
-   , Parser, CharParser, TokenParser, parse, UU.Message
+   , Parser, CharParser, TokenParser, parse, Message
      -- * UU parser combinators
    , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1, pChainl, pChainr, pChoice
      -- * Subexpressions
@@ -114,14 +114,17 @@ liftPr f a ~(P p) = P (f a p)
 liftF2 f a b = P (f a b)
 liftF3 f a b c = P (f a b c)
 
+type Message s = (UU.Expecting s, Maybe s)
+
 -- Parsing an input string always returns a result and a list of error messages
-parse :: UU.Symbol s => Parser s a -> [s] -> (a, [UU.Message s (Maybe s)])
-parse (P p) input = (result, messages)
+parse :: UU.Symbol s => Parser s a -> [s] -> (a, [Message s])
+parse (P p) input = (result, map f messages)
  where
    steps    = UU.parse p input
    result   = fstPair (UU.evalSteps steps)
    messages = UU.getMsgs steps
    fstPair (UU.Pair a b) = a
+   f (UU.Msg a b _) = (a, b)
 
 ----------------------------------------------------------
 -- UU parser combinators

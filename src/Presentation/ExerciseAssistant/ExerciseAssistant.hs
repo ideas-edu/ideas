@@ -34,7 +34,7 @@ domains = [ make LA.opgave6b, make LA.reduceMatrixExercise
           , make LA.solveSystemExercise, make LA.solveSystemWithMatrixExercise
           , make LA.solveGramSchmidt
           , make dnfExercise, make simplExercise
-          , make RA.cnfExercise
+          , make RA.cnfExercise, make RA.cnfExerciseSimple
           ]
 
 main :: IO ()

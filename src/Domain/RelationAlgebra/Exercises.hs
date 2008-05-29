@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Exercises where
 
+import Prelude hiding (repeat)
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Strategies
@@ -21,8 +22,9 @@ import Domain.RelationAlgebra.Parser
 import Common.Transformation
 import Common.Exercise
 import Common.Context
+import Common.Strategy (repeat, somewhere, alternatives, label, traceStrategy, unlabel)
 import Control.Monad
-import Test.QuickCheck
+import Test.QuickCheck hiding (label)
 
 cnfExercise :: Exercise (Context RelAlg)
 cnfExercise = makeExercise
@@ -36,4 +38,10 @@ cnfExercise = makeExercise
    , strategy  = toCNF
    , generator = liftM inContext arbitrary
    , suitableTerm = not . isCNF . fromContext
+   }
+   
+cnfExerciseSimple :: Exercise (Context RelAlg)
+cnfExerciseSimple = cnfExercise
+   { shortTitle = shortTitle cnfExercise ++ " (simple)"
+   , strategy   = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise
    }

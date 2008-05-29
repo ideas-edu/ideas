@@ -43,15 +43,15 @@ data LogicGenConfig = LogicGenConfig
 
 defaultConfig :: LogicGenConfig
 defaultConfig = LogicGenConfig
-   { maxSize       = 2
+   { maxSize       = 4
    , differentVars = 3
    , freqConstant  = 1
-   , freqVariable  = 2
-   , freqImpl      = 2
+   , freqVariable  = 4
+   , freqImpl      = 4
    , freqEquiv     = 2
-   , freqAnd       = 3
-   , freqOr        = 3
-   , freqNot       = 3
+   , freqAnd       = 6
+   , freqOr        = 6
+   , freqNot       = 6
    }
 
 freqLeaf :: LogicGenConfig -> Int

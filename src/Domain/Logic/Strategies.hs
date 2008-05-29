@@ -20,7 +20,7 @@ import Common.Context (Context, liftRuleToContext)
 import Common.Strategy
 
 eliminateConstants :: Strategy (Context Logic)
-eliminateConstants = repeat $ somewhere $
+eliminateConstants = repeat $ topDown $
    alternatives $ map liftRuleToContext rules
  where 
    rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
@@ -45,7 +45,7 @@ simplifyDWA = somewhere $
       <|> liftRuleToContext ruleAbsorpAnd
 
 eliminateImplEquiv :: Strategy (Context Logic)
-eliminateImplEquiv = repeat $ somewhere $
+eliminateImplEquiv = repeat $ bottomUp $
           liftRuleToContext ruleDefImpl
       <|> liftRuleToContext ruleDefEquiv
 
@@ -55,7 +55,7 @@ eliminateImplEquivDWA = somewhere $
       <|> liftRuleToContext ruleDefEquiv
       
 eliminateNots :: Strategy (Context Logic)
-eliminateNots = repeat $ somewhere $ 
+eliminateNots = repeat $ topDown $ 
           liftRuleToContext ruleDeMorganAnd
       <|> liftRuleToContext ruleDeMorganOr
       <|> liftRuleToContext ruleNotNot

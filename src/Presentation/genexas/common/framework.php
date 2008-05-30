@@ -8,10 +8,13 @@
 <link rel="stylesheet" type="text/css" href="/genexas/css/exas.css" >
 <link rel="shortcut icon" href="/genexas/css/favicon.ico" type="image/x-icon" >
 <script type="text/javascript" src="http://prototype.conio.net/dist/prototype-1.4.0.js"></script>
-<script type="text/javascript" src="http://www.json.org/json.js"></script>
+
 <script type="text/javascript" src="/genexas/common/javascript/help.js"></script>
-<script type="text/javascript" src="<?php print localjs;?>"></script>
-<script type="text/javascript" src="/genexas/common/javascript/communication.js"></script> 
+<script type="text/javascript" src="/genexas/common/javascript/services.js"></script>
+<script type="text/javascript" src="<?php print Local;?>"></script>
+<script type="text/javascript" src="communication.js"></script>
+
+<script type="text/javascript" src="/genexas/common/javascript/json2007.js"></script>
 <script type="text/javascript" src="/genexas/common/javascript/init.js"></script>
 </head>
 
@@ -32,23 +35,28 @@
 
 	<textarea id="work" rows="2" cols="40" >	
 	</textarea>
-	<input id="submitbutton" type="button" value="<?php print Submit;?>" >
-	<input class="minibutton" type="button" id="readybutton" onclick="ready() "value="<?php print Ready;?>" >
+	<input class="minibutton" id="submitbutton" type="button" value="<?php print Submit;?>" >	
 	<input id="progressbutton" class="minibutton" type="button" value="<?php print Progress;?>" >
 	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
-	<input id="readybutton" class="minibutton invisible" type="button" onclick="getKlaar() "value="<?php print Ready;?>" >
-	<br class="clear">;
-	<input class="minibutton" type="button" id="herstelbutton" onclick="herstel() "value="<?php print Undo;?>" >
-
+	<br class="clear">
+	<input class="minibutton" type="button" id="readybutton" onclick="ready() "value="<?php print Ready;?>" >
+	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
+	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
+	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
+	<div  style="display: none;" id="current"></div>
 	<br>
+	<h3><?php print History;?></h3>
+	<div id="history"></div>
 
 </div>
 
 <div class="column right">
-	<h3><?php print History;?></h3>
-	<div id="history"></div>
+	
+		
 		<h3><?php print Feedback ?></h3>
+		<input type="button" id="clearbutton" value="<?php print Clear;?>" >
+		
 	<div id="feedback"></div>
 
 </div>

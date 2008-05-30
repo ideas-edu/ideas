@@ -73,8 +73,8 @@ select {
 #history {
 	background-color: #FFFFFF;
 	padding: 10px;
-	width: auto;
-	height: auto;
+	width: 100%;
+	height: 200px;
 	min-height: 50px;
 	margin-left: 20px;
 	margin-right: 20px;
@@ -104,20 +104,15 @@ select {
 	margin-right: 10px;
 	background-color: #CCCC99;
 	position: relative;
-	top: -30px;
+	top: -20px;
 	right: -45px;
-	width: 50px;
+	width: 80px;
+	height: 20px;
+	font-weight: 800;
 }
 
-#submitbutton {
-	display: inline; 
-	float: right;
+#submitbutton, #readybutton {
 	margin-right: 0px;
-	background-color: #CCCC99;
-	position: relative;
-	border-width: thick;
-	top: -30px;
-	right: -45px;
 }
 
 #inputhulp {
@@ -167,7 +162,12 @@ select {
 	right: -50px;
 	top: -10px;
 }
-
+#clearbutton {
+	margin-left: 20px;
+	display: block; 
+	font-size: small;
+	font-weight: 800;
+}
 .menu {
 	margin-bottom: 20px;
 	display: inline; 
@@ -175,7 +175,8 @@ select {
 	margin-right: 20px;
 	background-color: #CCCC99;
 	position: relative;
-	font-size: x-small;
+	font-size: small;
+	font-weight: 800;
 	top: 0px;
 }
 

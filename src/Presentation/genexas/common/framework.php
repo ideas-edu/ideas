@@ -44,7 +44,6 @@
 	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
 	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
 	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
-	<div  style="display: none;" id="current"></div>
 	<br>
 	<h3><?php print History;?></h3>
 	<div id="history"></div>

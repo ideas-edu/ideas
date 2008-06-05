@@ -6,43 +6,26 @@ var id = 421;
 * functions to use the services in a straightforward way. 
 * for each service, there is a calling function and a function that we be called back when the results are available.
  */
- 
 function generate() {
 	ss_generate(5, handleGenerate);
 }
 function handleGenerate(state) {
 	closeallhelp();
-	// state[0] is the exerciseID
-	//state[1] is the prefix
-	// state[2] is the expression
-	// state[3] is the simpleContext
-	var exerciseArea = $('exercise');
-	var workArea  = $('work');
-	var feedbackArea = $('feedback');
-	var historyArea = $('history');
-	var current = $('current');
 	clearFeedback();
-	task = state[2];
-	exerciseArea.innerHTML = task;
-	workArea.value = task;
-	historyArea.innerHTML = task;
-	current.innerHTML = task;
-	addToHistory(task, task, feedbackArea.innerHTML, task, task);
+	task = state.exercise;
+	areas.exerciseArea.innerHTML = task;
+	areas.workArea.value = task;
+	areas.historyArea.innerHTML = task;
+	newSnapshot(task, "", task, task, new CopyContent(state, ""), state, "");
 }
  
 function getReady() {
-	var workArea  = $('work');
-	var expression = (workArea.value).htmlToAscii();
-	ss_getReady(expression, handleReady);
+	ss_getReady(snapshot.state, handleReady);
 }
-
-function handleReady(expression, solved) {
-	expression = expression.asciiToHtml()
-	var exerciseArea = $('exercise');
-	var workArea  = $('work');
-	var feedbackArea = $('feedback');
-	var historyArea = $('history');
-	var current = $('current');
+function handleReady(solved) {
+	closeallhelp();
+	var feedbackArea = areas.feedbackArea;
+	var expression = (snapshot.state).exercise;
 	if (solved) {
 		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + yes + ", <strong>" + expression + "</strong> is " + ready + ".</p>";
 	}
@@ -50,17 +33,16 @@ function handleReady(expression, solved) {
 		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + no + ", <strong>" + expression + "</strong> is <strong>" + not + "</strong> " + ready + ".</p>";
 	}
 	feedbackArea.scrollTop = feedbackArea.scrollHeight;
+	addFeedback(feedbackArea.innerHTML);
 }
  
 function getHint() {
-	var workArea  = $('work');
-	var expression = (workArea.value).htmlToAscii();
-	ss_getHint(expression, handleHint);
+	ss_getHint("", snapshot.state, handleHint);
 }
-
-function handleHint(expression, listOfRules) {
-	expression = expression.asciiToHtml();
-	var feedbackArea = $('feedback');
+function handleHint(listOfRules) {
+	closeallhelp();
+	var feedbackArea = areas.feedbackArea;
+	var expression = (snapshot.state).exercise;
 	if (listOfRules.length > 0) {
 		rules = writeArray(listOfRules);
 		feedbackArea.innerHTML = feedbackArea.innerHTML  + "<p>" + applicable + " <strong>" + expression + "</strong>:<br><br><strong>" + rules + "</strong></p>";
@@ -69,90 +51,88 @@ function handleHint(expression, listOfRules) {
 		feedbackArea.innerHTML = feedbackArea.innerHTML  + "<p>" + sorry + " <strong>" + expression + "</strong></p>";
 	}
 	feedbackArea.scrollTop = feedbackArea.scrollHeight;
+	addFeedback(feedbackArea.innerHTML);
 }
 
-function writeArray(list) {
-	elements = "";
-	for (var i = 0; i < list.length; ++i) {
-		elements = elements + list[i] + ",<br>";
-	}
-	return elements;
-}
 
 function getNext() {
-	var workArea  = $('work');
-	var expression = (workArea.value).htmlToAscii();
-	ss_getNext(expression, handleNext);
+	var feedbackArea = areas.feedbackArea;
+	var workExpression = ((areas.workArea).value).htmlToAscii();
+	if (workExpression != (((snapshot.state).exercise).htmlToAscii())) {
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + changed + "</p>";
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, snapshot.history, workExpression, snapshot.copy, snapshot.state, snapshot.location);
+	}
+	ss_getNext(snapshot.state, handleNext);
 }
-
-function handleNext(expression, rule, number, result) {
-	newExpression = result[2];
-	expression = expression.asciiToHtml();
-	var feedbackArea = $('feedback');
+function handleNext(rule, location, state) {
+	closeallhelp();
+	var feedbackArea = areas.feedbackArea;
+	var newExpression = (state.exercise).asciiToHtml() ;
+	var expression = ((snapshot.state).exercise).asciiToHtml();
 	if (rule) {
-		copyContent = newExpression;
-		show($('copybutton'));
-		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + applicable + " <strong>" + expression + "</strong>:<br><br><strong>" + rule + "</strong> rule</p><p>" + newExpression.asciiToHtml() + "</p><p>" + paste + "</p><p";
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + applicable + " <strong>" + expression + "</strong>:<br><br><strong>" + rule + "</strong> rule</p><p>" + resulting + " <strong>" + newExpression + "</strong></p><p>" + paste + "</p><p";
+		var copyContent = new CopyContent(state, location);
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, snapshot.history, (areas.workArea).value.asciiToHtml(), copyContent, snapshot.state, snapshot.location);
 	}
 	else {
 		feedbackArea.innerHTML = feedbackArea.innerHTML  + "<p>" + sorry + " <strong>" + expression + "</strong></p>";
+		addFeedback(feedbackArea.innerHTML);
 	}
 	feedbackArea.scrollTop = feedbackArea.scrollHeight;
 }
 
 function getRemaining() {
-	var workArea  = $('work');
-	var expression = (workArea.value).htmlToAscii();
-	ss_getRemaining(expression, handleRemaining);
+	var feedbackArea = areas.feedbackArea;
+	var workExpression = ((areas.workArea).value).htmlToAscii();
+	if (workExpression != (((snapshot.state).exercise).htmlToAscii())) {
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + changed + "</p>";
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, snapshot.history, workExpression, snapshot.copy, snapshot.state, snapshot.location);
+	}
+	ss_getRemaining(snapshot.state, handleRemaining);
 }
-
-function handleRemaining(expression, number) {
-	expression = expression.asciiToHtml();
-	var feedbackArea = $('feedback');
+function handleRemaining(number) {
+	closeallhelp();
+	var feedbackArea = areas.feedbackArea;
+	var expression = ((snapshot.state).exercise).asciiToHtml();
 	feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + forexpression + " <strong>" + expression + "</strong>, " + minimum + " <br><strong>" + number + "</strong> " + steps + ".</p>";
+	addFeedback(feedbackArea.innerHTML);
 	feedbackArea.scrollTop = feedbackArea.scrollHeight;
 }
 
 function getFeedback() {
-	var workArea  = $('work');
-	var expression = (workArea.value).htmlToAscii();
-	var current = $('current');
-	var currentexpression = (current.innerHTML).htmlToAscii();
-	ss_getFeedback(currentexpression, expression, handleFeedback);
+	var feedbackArea = areas.feedbackArea;
+	var workExpression = ((areas.workArea).value).htmlToAscii();
+	if (workExpression == (((snapshot.state).exercise).htmlToAscii())) {
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + unchanged + "</p>";
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, snapshot.history, workExpression, snapshot.copy, snapshot.state, snapshot.location);
+	}
+	else {
+		ss_getFeedback(snapshot.state, workExpression, handleFeedback);
+	}
 }
-
-function handleFeedback(expression, newexpression, result, rules, state) {
-	expression = expression.asciiToHtml();
-	newexpression = newexpression.asciiToHtml();
-	var exerciseArea = $('exercise');
-	var workArea  = $('work');
-	var feedbackArea = $('feedback');
-	var historyArea = $('history');
-	var current = $('current');
+function handleFeedback(result, rules, state) {
+	closeallhelp();
+	var feedbackArea = areas.feedbackArea;
+	var historyArea = areas.historyArea;
+	feedbackArea.innerHTML = feedbackArea.innerHTML + "<p><strong>" + result + "</strong></p>";
 	if (result == "Ok") {
-		historyArea.innerHTML = historyArea.innerHTML + "<br>" + newexpression;
-		current.innerHTML = newexpression;
-		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p><strong>" + result + "</strong></p></p>";
+		historyArea.innerHTML = historyArea.innerHTML + "<br>" + (state.exercise).asciiToHtml();
 		if (rules.length > 0) {
 			feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + applied + "<strong>" + writeArray(rules) + "</strong></p></p>";
 		}
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, historyArea.innerHTML, state.exercise, new CopyContent(state, snapshot.location), state, snapshot.location);
 	}
 	else if (result == "Detour") {
 		historyArea.innerHTML = historyArea.innerHTML + "<br>" + expression.asciiToHtml();
-		current.innerHTML = newexpression;
-		var result = two;
-		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p><strong>" + result + "</strong></p></p>";
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p><strong>" + two + "</strong></p></p>";
 		if (rules.length > 0) {
 			feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>applied" + writeArray(rules) + "</strong></p></p>";
 		}
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, historyArea.innerHTML, state.exercise, new CopyContent(state, snapshot.location), state, snapshot.location);
 	}
-	else if (result == "NotEquivalent") {
-		show($('copybutton'));
-		var result = notequivalent;
-		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + result + "</p><p>The previous step is under the copy button;</p>";
-	} else {
-		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + result + "</p>";
+	else {
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + copybutton +  "</p>";
+		addFeedback(feedbackArea.innerHTML);
 	}
-	addToHistory(exerciseArea.innerHTML, workArea.value, feedbackArea.innerHTML, historyArea.innerHTML, current.innerHTML);
 	feedbackArea.scrollTop = feedbackArea.scrollHeight;
 }

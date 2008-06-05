@@ -58,7 +58,7 @@ function State(id, prefix, exercise, simpleContext) {
 	this.id = id;
 	this.prefix = prefix;
 	this.exercise = exercise;
-	this.simpleContext = "";
+	this.simpleContext = simpleContext;
 }
 /**
  * a historyObject contains:

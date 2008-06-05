@@ -8,7 +8,7 @@
 <link rel="stylesheet" type="text/css" href="/genexas/css/exas.css" >
 <link rel="shortcut icon" href="/genexas/css/favicon.ico" type="image/x-icon" >
 <script type="text/javascript" src="http://prototype.conio.net/dist/prototype-1.4.0.js"></script>
-
+<!--  <script type="text/javascript" src="/genexas/common/javascript/prototype-1.6.0.2.js"></script>  -->
 <script type="text/javascript" src="/genexas/common/javascript/help.js"></script>
 <script type="text/javascript" src="/genexas/common/javascript/services.js"></script>
 <script type="text/javascript" src="<?php print Local;?>"></script>

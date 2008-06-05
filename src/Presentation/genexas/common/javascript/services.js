@@ -1,5 +1,5 @@
 // The url for the services
-//var url = "/cgi-bin/service.cgi";
+// var url = "/cgi-bin/service.cgi";
 var url = "http://ideas/StrategyTool/bin/service.cgi";
 
 /**
@@ -144,10 +144,8 @@ function ss_getFeedback(state, newexpression, callback)
          parameters : 'input={ "method" : "submit", "params" : [["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"], "id" : ' + id + '}',
          onSuccess : function(response) {
 			var resJSON = response.responseText.parseJSON();
-			alert(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
-				//alert(response.responseText);
 				var result = (resJSON.result).result;
 				var rules = null;
 				if ((resJSON.result).rules) {
@@ -161,7 +159,6 @@ function ss_getFeedback(state, newexpression, callback)
 				callback(result, rules, newState);
 			}
 			else { alert("huh?")};
-			// var resJSON = parse(response.responseText);
          }
      });
 }

@@ -13,9 +13,10 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Formula where
 
-import Common.Context (Uniplate(..))
+import Common.Context (Uniplate(..), universe)
 import Common.Unification
 import Common.Utils
+import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S
@@ -224,20 +225,22 @@ testje = quickCheck $ (Not (Not (Var "x"))) === Var "x"
 -- | Function to unify to relationalgebra formulas: a returned substitution maps 
 -- | variables (String) to relationalgebra formulas 
 unifyRelAlg :: RelAlg -> RelAlg -> Maybe (Substitution RelAlg)
-unifyRelAlg p q = 
-   case (p, q) of
-      (Var x, Var y) | x==y      -> return emptySubst
-      (Var x, _) | not (x `S.member` getVars q) -> return (singletonSubst x q)
-      (_, Var y) | not (y `S.member` getVars p) -> return (singletonSubst y p)
-      (p1 :.: p2,  q1 :.:  q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :+: p2, q1 :+: q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
-      (Not p1,      Not q1     ) -> unify p1 q1
-      (Inv p1,	    Inv q1     ) -> unify p1 q1 
-      (U,           U          ) -> return emptySubst
-      (E,           E          ) -> return emptySubst
-      _ -> Nothing
+unifyRelAlg p q =
+   case (isMetaVar p, isMetaVar q) of
+      (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i q
+      (Just i, Nothing) -> if i `S.member` getMetaVars q then Nothing else return (singletonSubst i q)
+      (Nothing, Just j) -> if j `S.member` getMetaVars p then Nothing else return (singletonSubst j p)
+      _ -> case (p, q) of
+              (Var x, Var y) | x==y      -> return emptySubst
+              (p1 :.: p2,  q1 :.:  q2) -> unifyList [p1, p2] [q1, q2]
+              (p1 :+: p2, q1 :+: q2) -> unifyList [p1, p2] [q1, q2]
+              (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
+              (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
+              (Not p1,      Not q1     ) -> unify p1 q1
+              (Inv p1,	    Inv q1     ) -> unify p1 q1 
+              (U,           U          ) -> return emptySubst
+              (E,           E          ) -> return emptySubst
+              _ -> Nothing
 
 -- | Function varsRelAlg returns the variables that appear in a RelAlg expression.
 varsRelAlg :: RelAlg -> [String]
@@ -254,15 +257,19 @@ instance Uniplate RelAlg where
          Inv s     -> ([s], \[a] -> Inv a)
          _         -> ([], \[] -> term)
          
-instance HasVars RelAlg where
-   getVars = S.fromList . varsRelAlg
+instance HasMetaVars RelAlg where
+   getMetaVarsList = catMaybes . map isMetaVar . universe
 
-instance MakeVar RelAlg where
-   makeVar = Var
+instance MetaVar RelAlg where
+   isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
+   isMetaVar _ = Nothing
+   metaVar n = Var ("_" ++ show n)
    
 instance Substitutable RelAlg where 
    (|->) sub = foldRelAlg (var, (:.:), (:+:), (:&&:), (:||:), Not, Inv, U, E)
-    where var x = fromMaybe (Var x) (lookupVar x sub)
+    where var s = case isMetaVar (Var s) of
+                    Just i -> fromMaybe (Var s) (lookupVar i sub)
+                    _      -> Var s
 
 instance Unifiable RelAlg where
    unify = unifyRelAlg

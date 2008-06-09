@@ -38,7 +38,7 @@ logicBuggyRules = [ buggyRuleCommImp, buggyRuleAssImp
 
 -- local logic variables
 x, y, z :: Logic
-x:y:z:_ = map makeVarInt [0..]
+x:y:z:_ = metaVars
 
 ruleComplOr :: LogicRule
 ruleComplOr = makeRuleList "ComplOr"

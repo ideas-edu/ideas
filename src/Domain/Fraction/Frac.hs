@@ -13,12 +13,13 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction.Frac where
 
-import Common.Context (Uniplate(..))
+import Common.Context (Uniplate(..), universe)
 import Common.Unification
 import Common.Utils
 import Common.Transformation
 import Data.List
 import Data.Maybe
+import Data.Char
 import Ratio
 import qualified Data.Set as S
 
@@ -71,18 +72,20 @@ evalFrac env = foldFrac (env, (\x -> x%1), (*), (/), (+), (-), negate)
 -- | Function to unify to fraction formulas: a returned substitution maps 
 -- | variables (String) to fraction formulas 
 unifyFrac :: Frac -> Frac -> Maybe (Substitution Frac)
-unifyFrac x y = 
-   case (x, y) of
-      (Var v, Var w) | v == w -> return emptySubst
-      (Var v, _)     | not (v `S.member` getVars y) -> return (singletonSubst v y)
-      (_    , Var w) | not (w `S.member` getVars x) -> return (singletonSubst w x)
-      (Con x, Con y) | x == y -> return emptySubst
-      (x1 :*: x2,  y1 :*: y2) -> unifyList [x1, x2] [y1, y2]
-      (x1 :/: x2,  y1 :/: y2) -> unifyList [x1, x2] [y1, y2]
-      (x1 :+: x2,  y1 :+: y2) -> unifyList [x1, x2] [y1, y2]
-      (x1 :-: x2,  y1 :-: y2) -> unifyList [x1, x2] [y1, y2]
-      (Neg x, Neg y)          -> unify x y
-      _ -> Nothing
+unifyFrac x y =
+   case (isMetaVar x, isMetaVar y) of
+      (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i y
+      (Just i, Nothing) -> if i `S.member` getMetaVars y then Nothing else return (singletonSubst i y)
+      (Nothing, Just j) -> if j `S.member` getMetaVars x then Nothing else return (singletonSubst j x)
+      _ -> case (x, y) of
+              (Var v, Var w) | v == w -> return emptySubst
+              (Con x, Con y) | x == y -> return emptySubst
+              (x1 :*: x2,  y1 :*: y2) -> unifyList [x1, x2] [y1, y2]
+              (x1 :/: x2,  y1 :/: y2) -> unifyList [x1, x2] [y1, y2]
+              (x1 :+: x2,  y1 :+: y2) -> unifyList [x1, x2] [y1, y2]
+              (x1 :-: x2,  y1 :-: y2) -> unifyList [x1, x2] [y1, y2]
+              (Neg x, Neg y)          -> unify x y
+              _ -> Nothing
 
 
 -- | eqFrac determines whether or not two Frac expression are arithmetically 
@@ -104,15 +107,19 @@ instance Uniplate Frac where
          Neg x   -> ([x], \[y] -> Neg y) 
          _       -> ([], \[] -> x)
          
-instance HasVars Frac where
-   getVars = S.fromList . varsFrac
+instance HasMetaVars Frac where
+   getMetaVarsList = catMaybes . map isMetaVar . universe
 
-instance MakeVar Frac where
-   makeVar = Var
+instance MetaVar Frac where
+   isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
+   isMetaVar _ = Nothing
+   metaVar n = Var ("_" ++ show n)
 
 instance Substitutable Frac where 
    (|->) sub = foldFrac (var, Con, (:*:), (:/:), (:+:), (:-:), Neg)
-       where var x = fromMaybe (Var x) (lookupVar x sub)
+    where var s = case isMetaVar (Var s) of
+                    Just i -> fromMaybe (Var s) (lookupVar i sub)
+                    _      -> Var s
 
 instance Unifiable Frac where
    unify = unifyFrac

@@ -13,9 +13,10 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
-import Common.Context (Uniplate(..))
+import Common.Context (Uniplate(..), universe)
 import Common.Unification
 import Common.Utils
+import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S
@@ -66,19 +67,21 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
 -- | Function to unify to logic formulas: the resulting substitution maps 
 -- | variables (String) to logic formulas 
 unifyLogic :: Logic -> Logic -> Maybe (Substitution Logic)
-unifyLogic p q = 
-   case (p, q) of
-      (Var x, Var y) | x==y      -> return emptySubst
-      (Var x, _) | not (x `S.member` getVars q) -> return (singletonSubst x q)
-      (_, Var y) | not (y `S.member` getVars p) -> return (singletonSubst y p)
-      (p1 :->: p2,  q1 :->:  q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :<->: p2, q1 :<->: q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
-      (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
-      (Not p1,      Not q1     ) -> unify p1 q1
-      (T,           T          ) -> return emptySubst
-      (F,           F          ) -> return emptySubst
-      _ -> Nothing
+unifyLogic p q =
+   case (isMetaVar p, isMetaVar q) of
+      (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i q
+      (Just i, Nothing) -> if i `S.member` getMetaVars q then Nothing else return (singletonSubst i q)
+      (Nothing, Just j) -> if j `S.member` getMetaVars p then Nothing else return (singletonSubst j p)
+      _ -> case (p, q) of
+             (Var x, Var y) | x==y      -> return emptySubst
+             (p1 :->: p2,  q1 :->:  q2) -> unifyList [p1, p2] [q1, q2]
+             (p1 :<->: p2, q1 :<->: q2) -> unifyList [p1, p2] [q1, q2]
+             (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
+             (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
+             (Not p1,      Not q1     ) -> unify p1 q1
+             (T,           T          ) -> return emptySubst
+             (F,           F          ) -> return emptySubst
+             _ -> Nothing
 
 -- | eqLogic determines whether or not two Logic expression are logically 
 -- | equal, by evaluating the logic expressions on all valuations.
@@ -113,14 +116,12 @@ isCNF = all isAtomic . concatMap disjunctions . conjunctions
 -- | Function disjunctions returns all Logic expressions separated by an or
 -- | operator at the top level.
 disjunctions :: Logic -> [Logic]
-disjunctions F          = []
 disjunctions (p :||: q) = disjunctions p ++ disjunctions q
 disjunctions logic      = [logic]
 
 -- | Function conjunctions returns all Logic expressions separated by an and
 -- | operator at the top level.
 conjunctions :: Logic -> [Logic]
-conjunctions T          = []
 conjunctions (p :&&: q) = conjunctions p ++ conjunctions q
 conjunctions logic      = [logic]
 
@@ -191,15 +192,21 @@ instance Uniplate Logic where
          Not p     -> ([p], \[a] -> Not a)
          _         -> ([], \[] -> p)
          
-instance HasVars Logic where
-   getVars = S.fromList . varsLogic
+instance HasMetaVars Logic where
+   getMetaVarsList = catMaybes . map isMetaVar . universe
 
-instance MakeVar Logic where
-   makeVar = Var
+instance MetaVar Logic where
+   isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
+   isMetaVar _ = Nothing
+   metaVar n = Var ("_" ++ show n)
+
    
 instance Substitutable Logic where 
    (|->) sub = foldLogic (var, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
-       where var x = fromMaybe (Var x) (lookupVar x sub)
+       where 
+         var s = case isMetaVar (Var s) of
+                    Just i -> fromMaybe (Var s) (lookupVar i sub)
+                    _      -> Var s
        
 instance Unifiable Logic where
    unify = unifyLogic

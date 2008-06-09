@@ -39,7 +39,7 @@ ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y ->
  where
    descr  = ("equation 1", "equation 2")
    args c = do mv <- minvar c
-               i  <- findIndex (S.member mv . getVars) (remaining c)
+               i  <- findIndex (elem mv . getVarsSystem . return) (remaining c)
                return (get covered c, get covered c + i)
 
 ruleEliminateVar :: (Argument a, Fractional a) => Rule (EqsInContext a)
@@ -73,7 +73,7 @@ ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args
    descr  = ("equation", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
                let expr = getLHS eq
-               mv <- safeHead (getVarsList expr)
+               mv <- safeHead (getVars expr)
                guard (coefficientOf mv expr /= 0)
                let coef = 1 / coefficientOf mv expr
                return (get covered c, coef)
@@ -84,14 +84,14 @@ ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args 
    descr  = ("equation 1", "equation 2", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
                let expr = getLHS eq
-               mv <- safeHead (getVarsList expr)
+               mv <- safeHead (getVars expr)
                i  <- findIndex ((/= 0) . coefficientOf mv . getLHS) (take (get covered c) (equations c))
                let coef = negate $ coefficientOf mv (getLHS (equations c !! i))
                return (i, get covered c, coef)
 
 ruleIdentifyFreeVariables :: Num a => Rule (EqsInContext a)
 ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $
-   \c ->  let vars = [ head ys | ys <- map (S.toList . getVars . getLHS) (equations c), not (null ys) ]
+   \c ->  let vars = [ head ys | ys <- map (getVars . getLHS) (equations c), not (null ys) ]
               change eq =
                  let (e1, e2) = splitLinearExpr (`notElem` vars) (getLHS eq) -- constant ends up in e1
                  in e2 :==: getRHS eq - e1
@@ -163,10 +163,10 @@ remaining c = drop (get covered c) (equations c)
 
 -- | The minimal variable in the remaining equations
 minvar :: EqsInContext a -> Maybe String
-minvar c | S.null set = Nothing
-         | otherwise  = Just (S.findMin set)
+minvar c | null list = Nothing
+         | otherwise = Just (minimum list)
  where
-   set = getVars (remaining c) 
+   list = getVarsSystem (remaining c) 
    
 liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (EqsInContext a)
 liftSystemTrans f = makeTrans $ \c -> do

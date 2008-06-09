@@ -8,20 +8,20 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (...add description...)
+-- Support for JavaScript Object Notation (JSON) and remote procedure calls using 
+-- JSON. JSON is a lightweight alternative for XML. 
 --
 -----------------------------------------------------------------------------
 module Service.JSON 
    ( JSON(..), Key, Number(..)            -- types
    , InJSON(..)                           -- type class
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
-   , jsonRPC, jsonRPCOverHTTP, JSON_RPC_Handler
+   , jsonRPC, JSON_RPC_Handler
    ) where
 
 import Common.Parsing
 import Common.Utils (indent)
 import Data.List (intersperse)
-import Network.CGI hiding (requestMethod)
 import Control.Monad
 import Control.Monad.Trans
 import qualified UU.Parsing
@@ -224,17 +224,6 @@ errorResponse x y = Response
 -- JSON-RPC over HTTP
 
 type JSON_RPC_Handler = String -> JSON -> IO JSON
-
-jsonRPCOverHTTP :: JSON_RPC_Handler -> IO ()
-jsonRPCOverHTTP handler = runCGI $ do
-   -- get input
-   raw  <- getInput "input"     -- read input
-   case raw of
-      Nothing    -> fail "No request"
-      Just input -> do 
-         setHeader "Content-type" "application/json"
-         txt <- lift $ jsonRPC input handler
-         output txt
 
 jsonRPC :: String -> JSON_RPC_Handler -> IO String
 jsonRPC input handler = 

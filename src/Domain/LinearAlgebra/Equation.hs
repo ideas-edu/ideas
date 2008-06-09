@@ -29,9 +29,6 @@ instance Functor Equation where
    
 instance Show a => Show (Equation a) where
    show (x :==: y) = show x ++ " == " ++ show y
-
-instance HasVars a => HasVars (Equation a) where
-   getVars (x :==: y) = getVars (x, y)
  
 getLHS, getRHS :: Equation a -> a
 getLHS (x :==: _) = x

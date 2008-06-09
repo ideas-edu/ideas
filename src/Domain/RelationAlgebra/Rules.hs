@@ -19,10 +19,9 @@ import Common.Unification
 
 -- local relalg variables
 q, r, s :: RelAlg
-q:r:s:_ = map makeVarInt [0..]
+q:r:s:_ = metaVars
+
 type RelAlgRule = Rule RelAlg
-
-
 
 
 invRules :: [RelAlgRule]

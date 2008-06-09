@@ -19,7 +19,7 @@ module Session
    , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
    ) where
 
-import Service.TypedAbstractService
+import qualified Service.TypedAbstractService as TAS
 import Common.Context
 import Common.Exercise (Exercise(..), showDoc)
 import Common.Parsing (indicesToRange)
@@ -78,20 +78,20 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
       Left err -> 
          return (showDoc (exercise d) err, False)
       Right term ->
-         case submit (currentState d) term of
-            Buggy rs -> 
+         case TAS.submit (currentState d) term of
+            TAS.Buggy rs -> 
                return ("Incorrect: you used the buggy rule: " ++ show rs, False)
-            NotEquivalent -> 
+            TAS.NotEquivalent -> 
                return ("Incorrect", False)
-            Ok rs new 
+            TAS.Ok rs new 
                | null rs -> 
                     return ("You have submitted the current term.", False)
                | otherwise -> do
                     writeIORef ref $ Some (extendDerivation new d)
                     return ("Well done! You applied rule " ++ show rs, True)
-            Detour rs new -> 
+            TAS.Detour rs new -> 
                return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy", False)
-            Unknown new -> 
+            TAS.Unknown new -> 
                return ("Equivalent, but not a known rule. Please retry.", False)
 
 currentText :: Session -> IO String
@@ -105,21 +105,21 @@ derivationText = withState $ \d ->
 progressPair :: Session -> IO (Int, Int)
 progressPair = withState $ \d -> 
    let x = derivationLength d
-       y = stepsremaining (currentState d)
+       y = TAS.stepsremaining (currentState d)
    in return (x, x+y)
 
 readyText :: Session -> IO String
 readyText = logMsg "Ready" $ withState $ \d -> 
-   if ready (currentState d)
+   if TAS.ready (currentState d)
    then return "Congratulations: you have reached a solution!"
    else return "Sorry, you have not yet reached a solution"
 
 hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose = withState $ \d -> 
-   case allfirsts (currentState d) of
+   case TAS.allfirsts (currentState d) of
       [] -> 
          return "Sorry, no hint available"
-      (rule, loc, (_, _, after)):_ ->
+      (rule, loc, s):_ ->
          return $ unlines $
             [ "Use rule " ++ name rule
             ] ++
@@ -128,7 +128,7 @@ hintOrStep verbose = withState $ \d ->
             , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
             ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter (exercise d) after
+            , prettyPrinter (exercise d) (TAS.term s)
             ] else []
 
 hintText, stepText :: Session -> IO String
@@ -138,7 +138,7 @@ stepText = logMsg "Step" (hintOrStep True)
 nextStep :: Session -> IO (String, Bool)
 nextStep = logCurrent "Next" $ \(Session _ ref) -> do
    Some d <- readIORef ref
-   case allfirsts (currentState d) of
+   case TAS.allfirsts (currentState d) of
       [] -> 
          return ("No more steps left to do", False)
       (rule, _, new):_ -> do
@@ -162,8 +162,8 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
        newRule = fromMaybe rule (useArguments args rule)
        loc     = fromMaybe (makeLocation []) mloc
        results = applyAll newRule (setLocation loc $ current d)
-       answers = allfirsts (currentState d)
-       check (r, _, (_, _, new)) = name r==name rule && any (equality a new) results
+       answers = TAS.allfirsts (currentState d)
+       check (r, _, s) = name r==name rule && any (equality a (TAS.term s)) results
        thisRule (r, _, _) = name r==name rule
    case safeHead (filter check answers) of
       Just (_, _, new) -> do
@@ -184,34 +184,34 @@ subTermAtIndices s i j = withState $ \d -> do
 --------------------------------------------------
 -- Derivations
 
-newtype Derivation a = D [State a]
+newtype Derivation a = D [TAS.State a]
 
 makeDerivation :: Exercise (Context a) -> IO (Derivation a)
 makeDerivation ex = do 
-   state <- generate ex 5
+   state <- TAS.generate ex 5
    return $ D [state]
 
 undoLast :: Derivation a -> Derivation a
 undoLast (D [x]) = D [x]
 undoLast (D xs)  = D (drop 1 xs)
 
-extendDerivation :: State a -> Derivation a -> Derivation a
+extendDerivation :: TAS.State a -> Derivation a -> Derivation a
 extendDerivation x (D xs) = D (x:xs)
 
 current :: Derivation a -> Context a
-current (D ((_, _, a):_)) = a
+current (D (s:_)) = TAS.term s
 
 exercise :: Derivation a -> Exercise (Context a)
-exercise (D ((ex, _, _):_)) = ex
+exercise (D (s:_)) = TAS.exercise s
 
-currentState :: Derivation a -> State a
+currentState :: Derivation a -> TAS.State a
 currentState (D xs) = head xs
 
 currentPrefix :: Derivation a -> Prefix (Context a)
-currentPrefix (D ((_, Just p, _):_)) = p
+currentPrefix (D (s:_)) = fromMaybe (error "no prefix") (TAS.prefix s)
 
 showDerivation :: (Context a -> String) -> Derivation a -> String
-showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f a | (_, _, a) <- xs ] 
+showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (TAS.term s) | s <- xs ] 
 
 
 derivationLength :: Derivation a -> Int

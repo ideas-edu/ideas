@@ -22,7 +22,7 @@ import Common.Transformation
 import Common.Utils (Some(..))
 import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, MySqrt, solveSystemWithMatrixExercise)
 import qualified Domain.LinearAlgebra as MySqrt
-import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, 
+import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, getVars,
                              EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var, ShowRational(..))
 import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
 import Domain.LinearAlgebra.Vector (Vector, toList, fromList)
@@ -84,7 +84,7 @@ instance IsExpr a => IsExpr (Matrix a) where
 instance (Fractional a, IsExpr a) => IsExpr (LinearExpr a) where
    toExpr x =
       let op s e = (toExpr (coefficientOf s x) :*: Var s) :+: e
-      in foldr op (toExpr $ getConstant x) (getVarsList x)
+      in foldr op (toExpr $ getConstant x) (getVars x)
    fromExpr e =
       case e of
          Con n    -> Just (fromIntegral n)

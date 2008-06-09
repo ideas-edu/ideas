@@ -35,7 +35,7 @@ fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac
 
 -- local frac variables
 v, w, x, y, z :: Frac
-v:w:x:y:z:_ = map makeVarInt [0..]
+v:w:x:y:z:_ = metaVars
 
 
 -- | Multiplication rules

@@ -44,7 +44,7 @@ import Common.Unification
 -----------------------------------------------------------
 --- Transformations
 
-infix  6 |- 
+infix  1 |- 
 
 -- | Abstract data type for representing transformations
 data Transformation a
@@ -55,7 +55,7 @@ data Transformation a
    
 instance Apply Transformation where
    applyAll (Function f) = f
-   applyAll (Pattern  p) = maybe [] return . applyPattern p
+   applyAll (Pattern  p) = applyPattern p
    applyAll (Fun _ f g)  = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (Lift lp t ) = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
    
@@ -74,12 +74,12 @@ makeTransList = Function
 p |- q | S.null frees = Pattern $ generalizeAll (p, q)
        | otherwise    = error $ "Transformation: free variables in transformation"
  where
-   frees = getVars q S.\\ getVars p
+   frees = getMetaVars q S.\\ getMetaVars p
 
-applyPattern :: Unifiable a => ForAll (a, a) -> a -> Maybe a
+applyPattern :: Unifiable a => ForAll (a, a) -> a -> [a]
 applyPattern pair a = do
-   (lhs, rhs) <- return $ unsafeInstantiateWith substitutePair pair
-   sub <-  match lhs a
+   let (lhs, rhs) = unsafeInstantiateWith substitutePair pair
+   sub <- maybe [] return $ match lhs a
    return (sub |-> rhs)
 
 -- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
@@ -388,7 +388,7 @@ smartGenTerm :: (Arbitrary a, Substitutable a) => ForAll a -> Gen a
 smartGenTerm p = do 
    let (lhs, unique) = instantiate 1000 p
    list <- vector (unique - 1000) 
-   let sub = listToSubst $ zip (map (('_':) . show) [1000 :: Int ..]) list
+   let sub = listToSubst $ zip [1000 :: Int ..] list
    return (sub |-> lhs)
      
 instance Arbitrary a => Arbitrary (Rule a) where

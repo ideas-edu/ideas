@@ -37,22 +37,12 @@ data Request = Request
 ----------------------------
 -- XML parser for requests
 
+instance InXML Request where
+   toXML   = requestToXML
+   fromXML = either fail return . xmlToRequest
+   
 pRequest :: String -> Either String Request
-pRequest input = do
-   xml     <- parseXML input
-   isRequest xml
-   sid     <- extractString "strategy" xml
-   loc     <- optional (extractLocation "location" xml)
-   term    <- extractExpr "term" xml
-   context <- optional (extractString "context" xml)
-   answer  <- optional (extractExpr "answer" xml)
-   return $ Request 
-      { req_Strategy = sid 
-      , req_Location = fromMaybe [] loc
-      , req_Term     = term 
-      , req_Context  = context
-      , req_Answer   = answer
-      }
+pRequest input = parseXML input >>= xmlToRequest
 
 -- smart extractor
 getContextTerm :: IsExpr a => Request -> Maybe (Context a)
@@ -76,7 +66,7 @@ getPrefix req ls = fromMaybe (emptyPrefix ls) $ do
       _ -> Nothing
 
 isRequest :: XML -> Either String ()
-isRequest (Tag "request" [] _) = return ()
+isRequest (Tag "request" _ _) = return ()
 isRequest _ = fail "XML document is not a request"
 
 extractTextWith :: (String -> Either String a) -> String -> XML -> Either String a
@@ -108,7 +98,10 @@ optional = Right . either (const Nothing) Just
 -- Pretty-printer for requests
 
 ppRequest :: Request -> String
-ppRequest req = showXML $ Tag "request" [] $
+ppRequest = showXML . requestToXML 
+
+requestToXML :: Request -> XML
+requestToXML req = Tag "request" [] $
    [ Tag "strategy" [] [Text $ req_Strategy req]
    , Tag "location" [] [Text $ show $ req_Location req]
    , Tag "term"     [] [exprToXML $ req_Term req]
@@ -119,3 +112,19 @@ ppRequest req = showXML $ Tag "request" [] $
    [ Tag "answer" [] [exprToXML $ fromJust $ req_Answer req]
    | isJust (req_Answer req)
    ]
+   
+xmlToRequest :: XML -> Either String Request
+xmlToRequest xml = do
+   isRequest xml
+   sid     <- extractString "strategy" xml
+   loc     <- optional (extractLocation "location" xml)
+   term    <- extractExpr "term" xml
+   context <- optional (extractString "context" xml)
+   answer  <- optional (extractExpr "answer" xml)
+   return $ Request 
+      { req_Strategy = sid 
+      , req_Location = fromMaybe [] loc
+      , req_Term     = term 
+      , req_Context  = context
+      , req_Answer   = answer
+      }

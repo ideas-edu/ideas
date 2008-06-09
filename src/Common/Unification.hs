@@ -18,8 +18,8 @@ module Common.Unification
      Substitution, emptySubst, singletonSubst, listToSubst
    , (@@), (@@@), lookupVar, dom, domList, removeDom
     -- * Unification
-   , HasVars(..), MakeVar(..), Substitutable(..), Unifiable(..)
-   , noVars, match, unifyList, substitutePair
+   , HasMetaVars(..), MetaVar(..), Substitutable(..), Unifiable(..)
+   , noMetaVars, metaVars, match, unifyList, substitutePair
      -- * Quantification
    , ForAll, generalize, generalizeAll
    , instantiate, instantiateWith, unsafeInstantiate, unsafeInstantiateWith
@@ -28,6 +28,7 @@ module Common.Unification
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List (nub)
+import Common.Utils
 import Control.Monad
 
 -----------------------------------------------------------
@@ -37,7 +38,7 @@ infixr 4 |->
 infixr 5 @@, @@@
 
 -- | Abstract data type for substitutions
-newtype Substitution a = S { unS :: M.Map String a }
+newtype Substitution a = S { unS :: M.Map Int a }
 
 instance Show a => Show (Substitution a) where
    show = show . unS
@@ -47,20 +48,20 @@ emptySubst :: Substitution a
 emptySubst = S M.empty
 
 -- | Returns a singleton substitution
-singletonSubst :: HasVars a => String -> a -> Substitution a
-singletonSubst s a
-   | s `S.member` getVars a = error "Unification.singletonSubst: occurs check failed"
-   | otherwise = S (M.singleton s a)
+singletonSubst :: HasMetaVars a => Int -> a -> Substitution a
+singletonSubst i a
+   | i `S.member` getMetaVars a = error "Unification.singletonSubst: occurs check failed"
+   | otherwise = S (M.singleton i a)
 
 -- | Turns a list into a substitution
-listToSubst :: HasVars a => [(String, a)] -> Substitution a
+listToSubst :: HasMetaVars a => [(Int, a)] -> Substitution a
 listToSubst s
    | nub xs /= xs       = error "Unification.listToSubst: keys are not unique"
    | any (`elem` xs) ys = error "Unification.listToSubst: occurs check failed"
    | otherwise          = S (M.fromList s) 
  where
    xs = map fst s
-   ys = concatMap (getVarsList . snd) s
+   ys = concatMap (getMetaVarsList . snd) s
 
 -- | Combines two substitutions. The left-hand side substitution is first applied to
 -- the co-domain of the right-hand side substitution
@@ -75,69 +76,81 @@ S a @@@ S b = S (M.unionWith err a b)
 
 -- | Lookups a variable in a substitution. Nothing indicates that the variable is
 -- not in the domain of the substitution
-lookupVar :: String -> Substitution a -> Maybe a
+lookupVar :: Int -> Substitution a -> Maybe a
 lookupVar s = M.lookup s . unS
 
 -- | Returns the domain of a substitution (as a list)
-dom :: Substitution a -> S.Set String
+dom :: Substitution a -> S.Set Int
 dom = M.keysSet . unS
 
 -- | Returns the domain of a substitution (as a list)
-domList :: Substitution a -> [String]
+domList :: Substitution a -> [Int]
 domList = M.keys . unS
 
 -- | Removes variables from the domain of a substitution
-removeDom :: S.Set String -> Substitution a -> Substitution a
+removeDom :: S.Set Int -> Substitution a -> Substitution a
 removeDom s (S a) = S (M.filterWithKey (\k _ -> S.member k s) a)
 
 -----------------------------------------------------------
 --- Unification
 
--- | Type class for data types which have a variable. 
-class HasVars a where
-   getVars     :: a -> S.Set String
-   getVarsList :: a -> [String]
+-- | Type class for data types which have meta-variables
+class HasMetaVars a where
+   getMetaVars     :: a -> S.Set Int
+   getMetaVarsList :: a -> [Int]
    -- default definitions
-   getVars     = S.fromList . getVarsList 
-   getVarsList = S.toList   . getVars
+   getMetaVars     = S.fromList . getMetaVarsList 
+   getMetaVarsList = S.toList   . getMetaVars
    
--- | Type class for creating variables
-class MakeVar a where
-    makeVar    :: String -> a
-    makeVarInt :: Int -> a
-    -- default method
-    makeVarInt = makeVar . ('_':) . show
+-- | Type class for creating meta-variables
+class MetaVar a where
+    isMetaVar :: a -> Maybe Int
+    metaVar   :: Int -> a
 
 -- | Type class for substitutable data types
-class (HasVars a, MakeVar a) => Substitutable a where
+class (HasMetaVars a, MetaVar a) => Substitutable a where
    (|->) :: Substitution a -> a -> a    -- ^ The substitution operation
 
 -- | Type class for unifiable data types
 class Substitutable a => Unifiable a where
-   unify :: a -> a -> Maybe (Substitution a)
-  
-instance HasVars a => HasVars [a] where
-   getVars = S.unions . map getVars
+   unify    :: a -> a -> Maybe (Substitution a)
+   -- unifyAll :: a -> a -> [Substitution a]
+   -- default methods
+   -- unify    x y = safeHead (unifyAll x y)
+   -- unifyAll x y = maybe [] return (unify x y) 
    
-instance (HasVars a, HasVars b) => HasVars (a, b) where
-   getVars (x, y) = getVars x `S.union` getVars y
+instance HasMetaVars a => HasMetaVars [a] where
+   getMetaVars = S.unions . map getMetaVars
+   
+instance (HasMetaVars a, HasMetaVars b) => HasMetaVars (a, b) where
+   getMetaVars (x, y) = getMetaVars x `S.union` getMetaVars y
 
 -- | Checks whether a value has no variables
-noVars :: HasVars a => a -> Bool
-noVars = S.null . getVars  
+noMetaVars :: HasMetaVars a => a -> Bool
+noMetaVars = S.null . getMetaVars  
+
+-- | Produces an infinite list of meta-variables
+metaVars :: MetaVar a => [a]
+metaVars = map metaVar [0..]
 
 -- | Returns a substitution that unifies two lists. Nothing indicates that the
 -- values cannot be unified, or that the lists are of different lengths.           
 unifyList :: Unifiable a => [a] -> [a] -> Maybe (Substitution a)
-unifyList xs ys = do 
+unifyList xs ys = safeHead (unifyListAll xs ys)
+
+-- | Returns all substitutions that unify two lists. The empty list indicates that the
+-- values cannot be unified, or that the lists are of different lengths.           
+unifyListAll :: Unifiable a => [a] -> [a] -> [Substitution a]
+unifyListAll xs ys = do 
       guard (length xs == length ys)
       foldr combine (return emptySubst) (zip xs ys)
     where
+      unifyAll x y = maybe [] return (unify x y) 
       combine (a, b) msub = do
         s1 <- msub
-        s2 <- unify (s1 |-> a) (s1 |-> b)
+        s2 <- unifyAll (s1 |-> a) (s1 |-> b)
         return (s1 @@@ s2)
-
+        
 -- | Applies a substitution on a pair
 substitutePair :: (Substitutable a) => Substitution a -> (a, a) -> (a, a)
 substitutePair sub (a, b) = (sub |-> a, sub |-> b)
@@ -145,27 +158,34 @@ substitutePair sub (a, b) = (sub |-> a, sub |-> b)
 -- | One-way unification: the right-hand operand should not be affected by
 -- the returned substitution.
 match :: Unifiable a => a -> a -> Maybe (Substitution a)
-match a b = do
-   s <- unify a b
-   guard $ S.null $ dom s `S.intersection` getVars b
+match a b = safeHead (matchAll a b)
+
+-- | One-way unification: the right-hand operand should not be affected by
+-- the returned substitution.
+matchAll :: Unifiable a => a -> a -> [Substitution a]
+matchAll a b = do
+   s <- unifyAll a b
+   guard $ S.null $ dom s `S.intersection` getMetaVars b
    return s
-   
+ where
+   unifyAll x y = maybe [] return (unify x y) 
+      
 -----------------------------------------------------------
 --- Quantification
    
-data ForAll a = ForAll (S.Set String) a
+data ForAll a = ForAll (S.Set Int) a
    deriving Show
 
 instance Functor ForAll where
    fmap f (ForAll s a) = ForAll s (f a)
 
 -- | Quanity a term with a given set of variables
-generalize :: [String] -> a -> ForAll a
+generalize :: [Int] -> a -> ForAll a
 generalize xs a = ForAll (S.fromList xs) a
 
 -- | Quantify all free variables
-generalizeAll :: HasVars a => a -> ForAll a
-generalizeAll a = ForAll (getVars a) a
+generalizeAll :: HasMetaVars a => a -> ForAll a
+generalizeAll a = ForAll (getMetaVars a) a
 
 -- | Instantiate a quantified term using a value of type int to 
 -- generate unique (fresh) variables
@@ -174,11 +194,11 @@ instantiate = instantiateWith (|->)
 
 -- | Same as instantiate, except that a special purpose function is passed to 
 -- perform the substitution (instead of relying on the Substitutable type class)
-instantiateWith :: (HasVars b, MakeVar b) => (Substitution b -> a -> a) -> Int -> ForAll a -> (a, Int)
+instantiateWith :: (HasMetaVars b, MetaVar b) => (Substitution b -> a -> a) -> Int -> ForAll a -> (a, Int)
 instantiateWith f unique (ForAll s a) = (f sub a, unique + length vars)
  where 
    vars = S.toList s
-   sub  = listToSubst $ zip vars (map makeVarInt [unique..])
+   sub  = listToSubst $ zip vars (map metaVar [unique..])
       
 -- | Instantiate a quantified term using a magic number (which is very large)
 unsafeInstantiate :: Substitutable a => ForAll a -> a
@@ -186,5 +206,5 @@ unsafeInstantiate = unsafeInstantiateWith (|->)
 
 -- | Same as unsafeInstantiate, except that a special purpose function is passed to
 -- perform the substitution
-unsafeInstantiateWith :: (HasVars b, MakeVar b) => (Substitution b -> a -> a) -> ForAll a -> a
+unsafeInstantiateWith :: (HasMetaVars b, MetaVar b) => (Substitution b -> a -> a) -> ForAll a -> a
 unsafeInstantiateWith f = fst . instantiateWith f 12345

@@ -11,7 +11,7 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.LAServer (respond, laServerFor, versionNr) where
+module OpenMath.LAServer (respond, laServer, laServerFor, versionNr) where
 
 import Domain.LinearAlgebra
 import OpenMath.StrategyTable

@@ -141,14 +141,14 @@ unit-tests: $(ALL-OUT)
 	  diff -I "version=" $$i.out $$i.exp; \
 	done;
 
-test/mathdox-request/%.out: test/mathdox-request/%.txt bin/laservice.cgi
-	bin/laservice.cgi --test $< > $@
+test/mathdox-request/%.out: test/mathdox-request/%.txt bin/service.cgi
+	bin/service.cgi --file $< > $@
 
 test/json-rpc/%.out: test/json-rpc/%.json bin/service.cgi
 	bin/service.cgi --file $< > $@
 
 test/xml-request/%.out: test/xml-request/%.xml bin/service.cgi
-	bin/service.cgi --xml $< > $@
+	bin/service.cgi --file $< > $@
 
 %.exp: %.out
 	cp $^ $@

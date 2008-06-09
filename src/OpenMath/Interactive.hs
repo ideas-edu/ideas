@@ -51,7 +51,6 @@ make self a req inc = html
    ]
    [ para [ bold [Text "Term: "]
           , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
-          , preString $ concat $ map show $ repInc_Derivation inc
           ]
    , para [ bold [Text "Expected: "]
           , preString (maybe "" (prettyPrinter a . inContext) $ fromExpr $ repInc_Expected inc) 
@@ -70,8 +69,15 @@ make self a req inc = html
           ]
    , hr
    , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
-   , para [ bold [Text "Derivation:"], Text derivation ]
    , Text "Remove all", href (reqToURL reqNoCtxt) [Text "context information"]
+   , para [ bold [Text "Derivation (so far):"], Text derivation ]
+   , let f (x, y) = [ Text x, preString $ maybe "" (prettyPrinter a . inContext) (fromExpr y) ]
+         len = length (repInc_Derivation inc)
+     in para [ bold [Text $ "Derivation (expected, " ++ show len ++ " steps):"]
+             , list $ map f $ repInc_Derivation inc 
+             ]
+   
+   -- preString $ concat $ map show $ repInc_Derivation inc ]
    ]
  where
    (reqOk, n) = expected a req inc

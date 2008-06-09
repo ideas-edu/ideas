@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
+import Common.Utils (stringToHex)
 import OpenMath.LAServer
 import OpenMath.Interactive
 import OpenMath.StrategyTable
@@ -74,15 +75,3 @@ convert ('%':c1:c2:cs) =
       Just i  -> chr i : convert cs
       Nothing -> '%' : convert (c1:c2:cs)
 convert (c:cs) = c : convert cs
-
-stringToHex :: String -> Maybe Int
-stringToHex = foldl op (Just 0)
- where
-   op (Just i) c = fmap (\j -> i*16 + j) (charToHex c)
-   op Nothing  _ = Nothing
-
-charToHex :: Char -> Maybe Int
-charToHex c
-   | isDigit c = return (ord c - 48)
-   | toUpper c `elem` ['A' .. 'F'] = return (ord (toUpper c) - 55)
-   | otherwise = Nothing

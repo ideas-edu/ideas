@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module OpenMath.Reply 
-   ( Reply(..), replyInXML
+   ( Reply(..), replyToXML, replyInXML
    , ReplyOk(..), ReplyIncorrect(..), ReplyError(..), Args
    ) where
 

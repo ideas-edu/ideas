@@ -54,8 +54,8 @@ generate exID level =
 derivation :: State -> [(RuleID, Location, Expression)]
 derivation s = 
    case fromState s of
-      STS ts@(ex, _, _) -> 
-         let f (r, ca) = (name r, location ca, prettyPrinter ex ca)
+      STS ts -> 
+         let f (r, ca) = (name r, location ca, prettyPrinter (TAS.exercise ts) ca)
          in map f (TAS.derivation ts)
 
 allfirsts :: State -> [(RuleID, Location, State)]
@@ -76,7 +76,7 @@ applicable loc s =
 apply :: RuleID -> Location -> State -> State
 apply ruleID loc s = 
    case fromState s of
-      STS ts@(ex, _, _) -> toState (TAS.apply (getRule ruleID ex) loc ts)
+      STS ts -> toState (TAS.apply (getRule ruleID (TAS.exercise ts)) loc ts)
 
 ready :: State -> Bool
 ready s = 
@@ -91,8 +91,8 @@ stepsremaining s =
 submit :: State -> Expression -> Result
 submit s input = 
    case fromState s of
-      STS ts@(ex, _, _) -> 
-         case parser ex input of
+      STS ts -> 
+         case parser (TAS.exercise ts) input of
             Left _  -> SyntaxError
             Right a -> 
                case TAS.submit ts a of
@@ -120,11 +120,19 @@ fromState (exID, p, ce, ctx) =
    case getExercise exID of
       SE ex -> 
          case (parser ex ce, parseContext ctx) of 
-            (Right a, Just unit) -> STS (ex, fmap (`makePrefix` strategy ex) (readPrefix p), fmap (\_ -> fromContext a) unit)
+            (Right a, Just unit) -> STS TAS.State 
+               { TAS.exercise = ex
+               , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
+               , TAS.term     = fmap (\_ -> fromContext a) unit
+               }
             _ -> error "fromState"
       
 toState :: TAS.State a -> State
-toState (ex, mp, ca) = (shortTitle ex, maybe "NoPrefix" show mp, prettyPrinter ex ca, showContext ca)
+toState state = ( shortTitle (TAS.exercise state)
+                , maybe "NoPrefix" show (TAS.prefix state)
+                , prettyPrinter (TAS.exercise state) (TAS.term state)
+                , showContext (TAS.term state)
+                )
       
 readPrefix :: String -> Maybe [Int]
 readPrefix input =

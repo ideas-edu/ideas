@@ -19,6 +19,7 @@ module Domain.LinearAlgebra.LinearExpr
 import Common.Utils
 import Common.Unification
 import Data.List
+import Data.Char
 import Data.Maybe
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -62,16 +63,9 @@ instance Fractional a => Fractional (LinearExpr a) where
 instance Functor LinearExpr where
    fmap f (LE xs a) = LE (M.map f xs) (f a)
 
-instance HasVars (LinearExpr a) where
-   getVars (LE xs _) = M.keysSet xs
 
-instance Num a => MakeVar (LinearExpr a) where
-   makeVar = var
-
-instance Num a => Substitutable (LinearExpr a) where
-   sub |-> e@(LE xs c) = 
-      let op v a b = toLinearExpr a * fromMaybe (var v) (lookupVar v sub) + b
-      in M.foldWithKey op (toLinearExpr c) xs
+getVars :: LinearExpr a -> [String]
+getVars (LE xs _) = M.keys xs
 
 scaleLinearExpr :: Num a => a -> LinearExpr a -> LinearExpr a
 scaleLinearExpr a (LE xs c) = linearExpr (M.map (*a) xs) (c*a)
@@ -93,14 +87,15 @@ coefficientOf :: Num a => String -> LinearExpr a  -> a
 coefficientOf s (LE xs b) = M.findWithDefault 0 s xs
 
 isVar :: Num a => LinearExpr a -> Maybe String
-isVar e = case S.toList (getVars e) of 
-             [v] | getConstant e == 0 && coefficientOf v e == 1
-                -> return v
-             _  -> Nothing
+isVar e = let getVars (LE xs _) = M.keysSet xs
+          in case S.toList (getVars e) of 
+                [v] | getConstant e == 0 && coefficientOf v e == 1
+                   -> return v
+                _  -> Nothing
 
 isConstant :: LinearExpr a -> Maybe a
-isConstant e
-   | noVars e  = return (getConstant e)
+isConstant (LE xs c)
+   | M.null xs = return c
    | otherwise = Nothing
 
 evalLinearExpr :: Num a => (String -> a) -> LinearExpr a -> a

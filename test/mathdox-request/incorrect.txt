@@ -1,4 +1,4 @@
-<request>
+<request service="mathdox">
  <strategy>
    Gaussian elimination
  </strategy>

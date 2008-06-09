@@ -102,6 +102,7 @@ instance Fractional Expr where
    (/) = (:/:)
    fromRational = Con
 
+{-
 instance HasVars Expr where
    getVarsList e = [ x | MetaVar x <- universe e ]
 
@@ -154,4 +155,4 @@ exprToConNr expr =
       Negate _    -> 8
       Diff  _     -> 9
       Special _ _ -> 10
-      MetaVar _   -> (-1)
+      MetaVar _   -> (-1) -}

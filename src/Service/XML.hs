@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.XML 
-   ( XML(..), Attr, AttrList
+   ( XML(..), Attr, AttrList, InXML(..)
    , parseXML, parseXMLs, showXML
    , children, extract, extractText
    , isText, isTag, findChild
@@ -33,6 +33,16 @@ type AttrList = [Attr]
    
 data XML = Tag String AttrList [XML] | Text String
    deriving Show
+
+class InXML a where
+   toXML       :: a -> XML
+   listToXML   :: [a] -> XML
+   fromXML     :: Monad m => XML -> m a
+   listFromXML :: Monad m => XML -> m [a]
+   -- default definitions
+   listToXML = Tag "list" [] . map toXML
+   listFromXML (Tag "list" [] xs) = mapM fromXML xs
+   listFromXML _                  = fail "expecting a list tag"
 
 ----------------------------------------------------------------
 -- XML parser (a scanner and a XML tree constructor)

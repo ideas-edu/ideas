@@ -64,7 +64,7 @@ main = do
 process :: Maybe String -> Maybe String -> [Flag] -> String -> IO (String, String)
 process htmlMode maybeIP flags input = do
    pair@(out, _) <- rec (withMode flags)
-   when (withLogging flags && isJust htmlMode) $ 
+   when (withLogging flags && isNothing htmlMode) $ 
       case maybeIP of 
          Just addr -> logMessageWith config ("IP address: " ++ addr ++ "\n" ++ input ++ "\n" ++ out)
          Nothing   -> return ()

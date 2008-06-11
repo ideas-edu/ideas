@@ -21,7 +21,7 @@ import Data.List
 import Data.Maybe
 import qualified Data.Set as S
 import Common.Transformation
-
+import System.Random (mkStdGen)
 import Test.QuickCheck
 
 infixr 1 :.:
@@ -214,13 +214,20 @@ evalRelAlg f as = rec
          U         -> \_ _ -> True 
          E         -> \_ _ -> False
 
+-- | Try to find a counter-example showing that the two formulas are not equivalent.
+-- Result: True=didn't find a counter-example, False=found a counter-example
+probablyEqual :: RelAlg -> RelAlg -> Bool
+probablyEqual p q = all (\i -> eqRelation (eval i p) (eval i q)) seeds
+ where
+   as     = take 5  [0::Int ..] -- size of (co-)domain
+   seeds  = take 10 [0::Int ..] -- number of attemps (with different randomly generated relations)
+   eval i = evalRelAlg (fromGen i) as
+   fromGen seed = generate seed (mkStdGen seed) arbitrary
+   eqRelation p q = and [ p a1 a2 == q a1 a2 | a1 <- as, a2 <- as ]
+
 -- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property
-p === q = forAll arbitrary $ \f ->
-   let test a b = evalRelAlg f [0..3] p a b == evalRelAlg f [0..3] q a b
-   in and [ test a b | a <- [0::Int .. 3], b <- [0..3] ]
-     
-testje = quickCheck $ (Not (Not (Var "x"))) === Var "x"
+p === q = property (probablyEqual p q)
          
 -- | Function to unify to relationalgebra formulas: a returned substitution maps 
 -- | variables (String) to relationalgebra formulas 

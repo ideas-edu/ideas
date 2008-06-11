@@ -29,8 +29,8 @@ invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
            , ruleInvOverAdd, ruleInvOverNot
            ]
 compAddRules :: [RelAlgRule]
-compAddRules = [ ruleCompOverUnion, ruleCompOverIntersec 
-	       , ruleAddOverUnion, ruleAddOverIntersec 
+compAddRules = [ ruleCompOverUnion {- , ruleCompOverIntersec  -}
+	       , {- ruleAddOverUnion,-} ruleAddOverIntersec 
 	       ]
 relAlgRules :: [RelAlgRule]
 relAlgRules = invRules ++ compAddRules ++ 

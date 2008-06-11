@@ -50,6 +50,9 @@ subsets = foldr op [[]]
 isSubsetOf :: Eq a => [a] -> [a] -> Bool
 isSubsetOf xs ys = all (`elem` ys) xs
 
+cartesian :: [a] -> [b] -> [(a, b)]
+cartesian as bs = [ (a, b) | a <- as, b <- bs ]
+
 distinct :: Eq a => [a] -> Bool
 distinct []     = True
 distinct (x:xs) = all (/=x) xs && distinct xs 

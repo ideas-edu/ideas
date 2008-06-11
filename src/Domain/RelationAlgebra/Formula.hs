@@ -16,12 +16,13 @@ module Domain.RelationAlgebra.Formula where
 import Common.Context (Uniplate(..), universe)
 import Common.Unification
 import Common.Utils
+import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S
 import Common.Transformation
-import System.Random (mkStdGen)
+import System.Random (StdGen, mkStdGen, split)
 import Test.QuickCheck
 
 infixr 1 :.:
@@ -197,39 +198,52 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
 	 Inv p	   -> inverse (rec p)
          U         -> universe 
          E         -> empty
-{-
-type Relation a = a -> a -> Bool
 
-evalRelAlg :: (String -> Relation a) -> [a] -> RelAlg -> Relation a
-evalRelAlg f as = rec 
+type Relation a = S.Set (a, a)
+
+evalRelAlg :: Ord a => (String -> Relation a) -> [a] -> RelAlg -> Relation a
+evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) 
  where
-   rec term =
-      case term of
-         Var x     -> f x
-         p :.: q   -> \a b -> any (\c -> rec p a c && rec q c b) as
-         p :+: q   -> \a b -> all (\c -> rec p a c || rec q c b) as
-         p :&&: q  -> \a b -> rec p a b && rec q a b
-         p :||: q  -> \a b -> rec p a b || rec q a b
-         Not p     -> \a b -> not (rec p a b)
-	 Inv p	   -> \a b -> rec p b a
-         U         -> \_ _ -> True 
-         E         -> \_ _ -> False
+   pairs = cartesian as as
+   comp     = \p q -> let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
+                      in S.fromAscList [ x | x@(a1, a2) <- pairs, any (f x) as ] 
+   add      = \p q -> let f (a1, a2) c = (a1, c) `S.member` p || (c, a2) `S.member` q
+                      in S.fromAscList [ x | x@(a1, a2) <- pairs, all (f x) as ] 
+   conj     = S.intersection
+   disj     = S.union
+   not      = \p -> S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
+   inverse  = S.map (\(x, y) -> (y, x))
+   universe = S.fromAscList pairs
+   empty    = S.empty
 
 -- | Try to find a counter-example showing that the two formulas are not equivalent.
--- Result: True=didn't find a counter-example, False=found a counter-example
 probablyEqual :: RelAlg -> RelAlg -> Bool
-probablyEqual p q = all (\i -> eqRelation (eval i p) (eval i q)) seeds
+probablyEqual = probablyEqualWith (mkStdGen 28)
+
+probablyEqualWith :: StdGen -> RelAlg -> RelAlg -> Bool
+probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 5 rng)
  where
-   as     = take 5  [0::Int ..] -- size of (co-)domain
-   seeds  = take 10 [0::Int ..] -- number of attemps (with different randomly generated relations)
-   eval i = evalRelAlg (fromGen i) as
-   fromGen seed = generate seed (mkStdGen seed) arbitrary
-   eqRelation p q = and [ p a1 a2 == q a1 a2 | a1 <- as, a2 <- as ]
+   -- size of (co-)domain
+   as     = [0..9] 
+   -- number of attemps (with different randomly generated relations)
+   makeRngs n g
+      | n == 0    = []
+      | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
+   eval g = evalRelAlg (generate 0 g (arbRelations as)) as
+
+arbRelations :: Eq a => [a] -> Gen (String -> Relation a)
+arbRelations as = promote (\s -> coarbitrary s (arbRelation as))
+
+arbRelation :: Eq a => [a] -> Gen (Relation a)
+arbRelation as = do
+   let f _ = oneof $ map return [True, False]
+   xs <- filterM f (cartesian as as)
+   return (S.fromAscList xs)
 
 -- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property
-p === q = property (probablyEqual p q)
--}        
+p === q = forAll arbitrary $ \n -> probablyEqualWith (mkStdGen n) p q
+       
 -- | Function to unify to relationalgebra formulas: a returned substitution maps 
 -- | variables (String) to relationalgebra formulas 
 unifyRelAlg :: RelAlg -> RelAlg -> Maybe (Substitution RelAlg)

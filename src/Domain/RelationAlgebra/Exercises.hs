@@ -33,7 +33,7 @@ cnfExercise = makeExercise
                               (p, [])   -> Right (inContext p)
                               (p, msgs) -> Left  (text (show msgs))
    , prettyPrinter = ppRelAlg . fromContext
---   , equivalence = \x y -> apply toCNF (inContext $ noContext x) == apply toCNF (inContext $ noContext y)
+   , equivalence = \x y -> fromContext x `probablyEqual` fromContext y
    , ruleset   = map liftRuleToContext relAlgRules
    , strategy  = toCNF
    , generator = liftM inContext arbitrary

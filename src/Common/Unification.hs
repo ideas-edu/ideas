@@ -48,8 +48,9 @@ emptySubst :: Substitution a
 emptySubst = S M.empty
 
 -- | Returns a singleton substitution
-singletonSubst :: HasMetaVars a => Int -> a -> Substitution a
+singletonSubst :: (MetaVar a, HasMetaVars a) => Int -> a -> Substitution a
 singletonSubst i a
+   | isMetaVar a == Just i = emptySubst
    | i `S.member` getMetaVars a = error "Unification.singletonSubst: occurs check failed"
    | otherwise = S (M.singleton i a)
 
@@ -198,7 +199,7 @@ instantiateWith :: (HasMetaVars b, MetaVar b) => (Substitution b -> a -> a) -> I
 instantiateWith f unique (ForAll s a) = (f sub a, unique + length vars)
  where 
    vars = S.toList s
-   sub  = listToSubst $ zip vars (map metaVar [unique..])
+   sub  = S $ M.fromList $ zip vars (map metaVar [unique..])
       
 -- | Instantiate a quantified term using a magic number (which is very large)
 unsafeInstantiate :: Substitutable a => ForAll a -> a

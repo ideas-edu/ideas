@@ -54,7 +54,7 @@ dnfExercise = standard
    , equality      = \x y -> fromContext x == fromContext y
    , finalProperty = isDNF . fromContext
    , ruleset       = map liftRuleToContext logicRules
-   , strategy      = toDNF
+   , strategy      = toDNFDWA
    , generator     = liftM inContext generateLogic
    , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF) p
                            in countEquivalences (fromContext p) < 2 && n >= 4 && n <= 12

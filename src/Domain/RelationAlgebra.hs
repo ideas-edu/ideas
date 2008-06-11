@@ -26,3 +26,4 @@ import Domain.RelationAlgebra.Exercises
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Parser
+import Domain.RelationAlgebra.Equivalence

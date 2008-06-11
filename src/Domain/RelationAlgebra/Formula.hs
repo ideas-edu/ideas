@@ -68,7 +68,7 @@ isDisj r = isMolecule r
 isCNF :: RelAlg -> Bool
 isCNF (r :&&: s) = isCNF r && isCNF s
 isCNF r = isDisj r
- 
+{- 
 -- | maak er een cnf van
 isEquivalent :: RelAlg -> RelAlg -> Bool
 isEquivalent x1 x2 =
@@ -78,7 +78,8 @@ isEquivalent x1 x2 =
         (rs, r1, r2)   =  remCompls mols x1 x2  
 	vals           =  createValuations rs
     in and (map (\v -> evalFormula r1 v == evalFormula r2 v) vals) 
-
+-}
+{-
 -- | zet 'm in cnf
 solve (Inv (Inv (Not (Var "p")) :+: Not (Var "q"))) = Not (Var "p") :+: Not (Inv (Var "q"))
 solve (Not (Not (Var "p") :+: Not (Inv (Var "q")))) = undefined
@@ -165,7 +166,7 @@ getSetOfMolecules = nub . getMolecules
  [[(x,0),(y,0)],[(x,0),(y,1)],[(x,1),(y,0)],[(x,1),(y,1)]],
  where (x,0) means: variable x equals 0.
 --------------------------------------------------------------------} 
-
+{-
 type Molecule   =   RelAlg
 -- type Valuation  =  (RelAlg, Bool)
 
@@ -173,8 +174,8 @@ type Molecule   =   RelAlg
 createValuations :: [a] -> [[(a, Bool)]]
 createValuations = foldr op [[]]
  where op a vs = [ (a, b):v | v <- vs, b <- [True, False] ]
-
------------------------------------
+-}
+---}---------------------------------
  
  
 -- | The type RelAlgAlgebra is the algebra for the data type RelAlg
@@ -196,7 +197,7 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
 	 Inv p	   -> inverse (rec p)
          U         -> universe 
          E         -> empty
-
+{-
 type Relation a = a -> a -> Bool
 
 evalRelAlg :: (String -> Relation a) -> [a] -> RelAlg -> Relation a
@@ -228,7 +229,7 @@ probablyEqual p q = all (\i -> eqRelation (eval i p) (eval i q)) seeds
 -- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property
 p === q = property (probablyEqual p q)
-         
+-}        
 -- | Function to unify to relationalgebra formulas: a returned substitution maps 
 -- | variables (String) to relationalgebra formulas 
 unifyRelAlg :: RelAlg -> RelAlg -> Maybe (Substitution RelAlg)

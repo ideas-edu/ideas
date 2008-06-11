@@ -26,7 +26,7 @@ type RelAlgRule = Rule RelAlg
 
 invRules :: [RelAlgRule]
 invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
-           , ruleInvOverAdd, ruleInvOverNot
+           , ruleInvOverAdd, ruleInvOverNot, ruleDoubleInv
            ]
 compAddRules :: [RelAlgRule]
 compAddRules = [ ruleCompOverUnion {- , ruleCompOverIntersec  -}
@@ -61,6 +61,11 @@ ruleInvOverAdd = makeRule "InvOverAdd" $
 ruleInvOverNot :: RelAlgRule
 ruleInvOverNot = makeRule "InvOverNot" $
    (Inv (Not r))     |- (Not (Inv r))
+   
+ruleDoubleInv :: RelAlgRule
+ruleDoubleInv = makeRule "DoubleInv" $
+   (Inv (Inv r))     |- r
+      
 
 
 

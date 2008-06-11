@@ -47,8 +47,8 @@ checks = do
    mapM_ (checkRule eqLogic) logicRules
    quickCheck propRuleNames
    thoroughCheck $ checkParserPretty (==) (f parseLogic) ppLogic
-   thoroughCheck $ checkParserPretty eqAssociative (f parseLogicPars) ppLogicPars
-   thoroughCheck $ checkParserPretty eqAssociative (f parseLogic) ppLogicPars
+--   thoroughCheck $ checkParserPretty eqAssociative (f parseLogicPars) ppLogicPars
+--   thoroughCheck $ checkParserPretty eqAssociative (f parseLogic) ppLogicPars
    quickCheck propPretty
    -- thoroughCheck propCtxPP
    -- thoroughCheck propContext

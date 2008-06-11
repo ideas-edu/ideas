@@ -44,12 +44,16 @@ ruleComplOr :: LogicRule
 ruleComplOr = makeRuleList "ComplOr"
    [ (x :||: Not x)  |-  T
    , (Not x :||: x)  |-  T
+   , (x :||: Not x :||: y)  |-  T :||: y -- associativity
+   , (Not x :||: x :||: y)  |-  T :||: y -- associativity
    ]
    
 ruleComplAnd :: LogicRule
 ruleComplAnd = makeRuleList "ComplAnd"
    [ (x :&&: Not x)  |-  F
    , (Not x :&&: x)  |-  F
+   , (x :&&: Not x :&&: y)  |-  F :&&: y -- associativity
+   , (Not x :&&: x :&&: y)  |-  F :&&: y -- associativity
    ]
 
 ruleDefImpl :: LogicRule
@@ -88,24 +92,30 @@ ruleFalseZeroOr :: LogicRule
 ruleFalseZeroOr = makeRuleList "FalseZeroOr"
    [ (F :||: x)  |-  x
    , (x :||: F)  |-  x
+   , (x :||: F :||: y)  |-  x :||: y -- associativity
    ]
   
 ruleTrueZeroOr :: LogicRule
 ruleTrueZeroOr = makeRuleList "TrueZeroOr"
    [ (T :||: x)  |-  T
    , (x :||: T)  |-  T
+   , (T :||: x :||: y)  |-  T :||: y -- associativity
+   , (x :||: T :||: y)  |-  T :||: y -- associativity
    ]
 
 ruleTrueZeroAnd :: LogicRule
 ruleTrueZeroAnd = makeRuleList "TrueZeroAnd"
    [ (T :&&: x)  |-  x
    , (x :&&: T)  |-  x
-   ]
+   , (x :&&: T :&&: y)  |-  x :&&: y -- associativity
+   ] 
 
 ruleFalseZeroAnd :: LogicRule
 ruleFalseZeroAnd = makeRuleList "FalseZeroAnd"
    [ (F :&&: x)  |-  F
    , (x :&&: F)  |-  F
+   , (F :&&: x :&&: y)  |-  F :&&: y -- associativity
+   , (x :&&: F :&&: y)  |-  F :&&: y -- associativity
    ]
 
 ruleDeMorganOr :: LogicRule

@@ -39,7 +39,7 @@ oneliner :: String -> String
 oneliner = unwords . concatMap words . lines
 
 defaultURL :: Bool -> String
-defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/laservice.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
+defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/service.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
 
 data ExprExercise a = IsExpr a => ExprExercise (Exercise (Context a))
 

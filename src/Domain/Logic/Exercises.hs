@@ -25,10 +25,11 @@ import Common.Context
 import Common.Parsing (fromRanged, subExpressionAt)
 import Control.Monad
 
-{- import Common.Transformation
+import Common.Transformation
 import Common.Unification
 import Common.Apply
-
+import Data.Maybe
+{-
 import Test.QuickCheck hiding (check)
 import Data.List -}
 {- generator
@@ -61,6 +62,9 @@ dnfExercise = standard
  where
    standard :: Exercise (Context Logic)
    standard = makeExercise
+
+r = makeRule "Test" $ 
+   metaVar 0 :&&: metaVar 1 |- metaVar 1 :||: metaVar 0
 
 {-
 toNF :: Logic -> Logic
@@ -133,3 +137,89 @@ all2 s = (ruleMoveDown 0 <*> s <*> ruleMoveUp <*> ruleMoveDown 1 <*> s <*> ruleM
    moveUp c   = do
       new <- locationUp (location c)
       return $ setLocation new c -}
+
+type Pat = ForAll (Logic, Logic)
+
+{-
+foci = rec (inContext lhs1)
+ where
+   rec a = let n   = maybe 0 (length . children) (currentFocus a)
+               is  = take n [0..]
+               f i = changeLocation (locationDown i) a
+           in a : concatMap (rec . f) is
+           
+interesting = catMaybes (map f foci)
+ where
+   f p = do 
+      a <- currentFocus p
+      s <- match a asso1
+      return $ changeFocus (s |->) p
+
+news = filter pr $ concatMap f interesting
+ where
+   f ma = let ys = applyAll rule1 (fromContext ma)
+              xs = maybe [] (applyAll (asso1 |- asso2)) (currentFocus ma)
+              zs = map (\x -> changeFocus (const x) ma) xs
+          in [ (fromContext z, y) | z <- zs, y <- ys ]
+          
+pr (a, b) = generalizeAll (lhs1,rhs1) `implies` generalizeAll (a, b)
+   -- maybe False (/=b1) (apply rule1 a1)
+ where ((a1, b1), _) = instantiateWith substitutePair  777 $ generalizeAll (a, b) -}
+ 
+implies :: Pat -> Pat -> Bool
+implies p1 p2 = maybe False (==rhs2) (apply (lhs1 |- rhs1) lhs2)
+ where
+   ((lhs1, rhs1), i) = instantiateWith substitutePair 0 p1
+   ((lhs2, rhs2), _) = instantiateWith substitutePair i p2
+   
+superImpose :: Pat -> Pat -> [Pat]
+superImpose p1 p2 = result
+ where
+   ((lhs1, rhs1), i) = instantiateWith substitutePair 1001 p1 -- ??
+   ((lhs2, rhs2), _) = instantiateWith substitutePair i p2
+   
+   foci = everywhere lhs1
+   
+   interesting = catMaybes (map consider foci)
+   consider p = do 
+      a <- currentFocus p
+      s <- match a lhs2
+      return $ changeFocus (s |->) p
+      
+   result = concatMap make interesting
+   make ma = let ys = applyAll (lhs1 |- rhs1) (fromContext ma)
+                 xs = maybe [] (applyAll (lhs2 |- rhs2)) (currentFocus ma)
+                 zs = map (\x -> changeFocus (const x) ma) xs
+             in [ generalizeAll (fromContext z, y) | z <- zs, y <- ys ]
+      
+superImposeNew :: Pat -> Pat -> [Pat]
+superImposeNew p1 p2 = filter (not . (p1 `implies`)) $ superImpose p1 p2
+
+deMorganPat = generalizeAll 
+   ( Not (metaVar 0 :&&: metaVar 1)
+   , Not (metaVar 0) :||: Not (metaVar 1)
+   )
+   
+assocAndPat = generalizeAll
+   ( (metaVar 0 :&&: metaVar 1) :&&: metaVar 2
+   , metaVar 0 :&&: (metaVar 1 :&&: metaVar 2)
+   )
+   
+commAndPat = generalizeAll
+   ( metaVar 0 :&&: metaVar 1
+   , metaVar 1 :&&: metaVar 0
+   )
+   
+[q1] = superImposeNew deMorganPat assocAndPat
+[q2] = superImposeNew q1 assocAndPat
+[q3] = superImposeNew q2 assocAndPat
+[q4] = superImposeNew q3 assocAndPat 
+   
+everywhere :: Uniplate a => a -> [Context a]
+everywhere = rec . inContext 
+ where
+   rec a = let n   = maybe 0 (length . children) (currentFocus a)
+               is  = take n [0..]
+               f i = changeLocation (locationDown i) a
+           in [ a | n > 0 ] ++ concatMap (rec . f) is
+   

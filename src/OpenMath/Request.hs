@@ -101,7 +101,7 @@ ppRequest :: Request -> String
 ppRequest = showXML . requestToXML 
 
 requestToXML :: Request -> XML
-requestToXML req = Tag "request" [] $
+requestToXML req = Tag "request" [("service", "mathdox")] $
    [ Tag "strategy" [] [Text $ req_Strategy req]
    , Tag "location" [] [Text $ show $ req_Location req]
    , Tag "term"     [] [exprToXML $ req_Term req]

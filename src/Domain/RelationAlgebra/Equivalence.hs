@@ -212,30 +212,6 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
          U         -> universe 
          E         -> empty
 -}
-type Relation a = a -> a -> Bool
-
-evalRelAlg :: (String -> Relation a) -> [a] -> RelAlg -> Relation a
-evalRelAlg f as = rec 
- where
-   rec term =
-      case term of
-         Var x     -> f x
-         p :.: q   -> \a b -> any (\c -> rec p a c && rec q c b) as
-         p :+: q   -> \a b -> all (\c -> rec p a c || rec q c b) as
-         p :&&: q  -> \a b -> rec p a b && rec q a b
-         p :||: q  -> \a b -> rec p a b || rec q a b
-         Not p     -> \a b -> not (rec p a b)
-	 Inv p	   -> \a b -> rec p b a
-         U         -> \_ _ -> True 
-         E         -> \_ _ -> False
-
--- Test on a limited domain whether two relation algebra terms are equivalent
-(===) :: RelAlg -> RelAlg -> Property
-p === q = forAll arbitrary $ \f ->
-   let test a b = evalRelAlg f [0..3] p a b == evalRelAlg f [0..3] q a b
-   in and [ test a b | a <- [0::Int .. 3], b <- [0..3] ]
-     
-testje = quickCheck $ (Not (Not (Var "x"))) === Var "x"
          
 -- | Function to unify to relationalgebra formulas: a returned substitution maps 
 -- | variables (String) to relationalgebra formulas 

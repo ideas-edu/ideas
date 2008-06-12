@@ -24,6 +24,7 @@ import Data.Char
 import Data.Maybe
 import Domain.Logic.Exercises
 import Domain.Derivative.Exercises
+import Domain.RelationAlgebra.Exercises
 import qualified Common.Apply
 
 import Common.Strategy  (emptyPrefix)
@@ -109,7 +110,7 @@ data SomeTypedState = forall a . STS (TAS.State a)
 
 exerciseList :: [SomeExercise]
 exerciseList = 
-   [ SE dnfExercise, SE derivativeExercise ]
+   [ SE dnfExercise, SE derivativeExercise, SE cnfExercise ]
    
 getExercise :: ExerciseID -> SomeExercise
 getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList

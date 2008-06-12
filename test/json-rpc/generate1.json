@@ -1,0 +1,4 @@
+{ "method" : "generate"
+, "params" : ["To conjunctive normal form", 5]
+, "id"     : 421
+}

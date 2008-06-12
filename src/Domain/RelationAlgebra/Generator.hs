@@ -36,7 +36,7 @@ instance Arbitrary RelAlg where
          E        -> variant 8      
    
 arbRelAlg :: Int -> Gen RelAlg
-arbRelAlg 0 = oneof [liftM Var (oneof $ map return vars), return U, return E]
+arbRelAlg 0 = frequency [(8, liftM Var (oneof $ map return vars)), (1, return U), (1, return E)]
 arbRelAlg n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), binop (:&&:), binop (:||:)
                     , unop Not, unop Inv 
                     ]

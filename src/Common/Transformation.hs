@@ -17,7 +17,7 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( -- * Transformations
-     Transformation, makeTrans, makeTransList, (|-), inverseTrans, getPatternPair
+     Transformation, makeTrans, makeTransList, (|-), inverseTrans, getPatternPair, isPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
@@ -79,7 +79,7 @@ p |- q | S.null frees = Pattern $ generalizeAll (p, q)
 applyPattern :: Unifiable a => ForAll (a, a) -> a -> [a]
 applyPattern pair a = do
    let (lhs, rhs) = unsafeInstantiateWith substitutePair pair
-   sub <- maybe [] return $ match lhs a
+   sub <- matchAll lhs a
    return (sub |-> rhs)
 
 -- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
@@ -99,6 +99,10 @@ getPatternPair a (Lift lp t)  = do
    (x, y) <- getPatternPair b t
    return (f x, f y)
 getPatternPair _ _ = Nothing
+
+isPatternPair :: Transformation a -> Maybe (ForAll (a, a))
+isPatternPair (Pattern qp) = return qp
+isPatternPair _            = Nothing
 
 -----------------------------------------------------------
 --- Arguments

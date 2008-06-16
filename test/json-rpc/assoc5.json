@@ -1,0 +1,4 @@
+{ "method" : "applicable"
+, "params" : ["[]", ["Proposition to DNF", "[]", "p || q || p || q || r", ""]]
+, "id"     : 421
+}

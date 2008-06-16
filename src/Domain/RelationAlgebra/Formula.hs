@@ -112,7 +112,7 @@ probablyEqual :: RelAlg -> RelAlg -> Bool
 probablyEqual = probablyEqualWith (mkStdGen 28)
 
 probablyEqualWith :: StdGen -> RelAlg -> RelAlg -> Bool
-probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 5 rng)
+probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 10 rng)
  where
    -- size of (co-)domain
    as     = [0..9] 
@@ -121,6 +121,8 @@ probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 5 rng)
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
    eval g = evalRelAlg (generate 0 g (arbRelations as)) as
+
+-- counterexample of probabilistic approach: probablyEqual (Var "s" :&&: E) (Var "q" :+: E)
 
 arbRelations :: Eq a => [a] -> Gen (String -> Relation a)
 arbRelations as = promote (\s -> coarbitrary s (arbRelation as))

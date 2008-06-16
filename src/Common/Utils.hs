@@ -50,6 +50,13 @@ subsets = foldr op [[]]
 isSubsetOf :: Eq a => [a] -> [a] -> Bool
 isSubsetOf xs ys = all (`elem` ys) xs
 
+eqListBy :: (a -> a -> Bool) -> [a] -> [a] -> Bool
+eqListBy f = rec 
+ where
+   rec (x:xs) (y:ys) = f x y && rec xs ys
+   rec [] [] = True
+   rec _ _   = False
+
 cartesian :: [a] -> [b] -> [(a, b)]
 cartesian as bs = [ (a, b) | a <- as, b <- bs ]
 

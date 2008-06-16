@@ -37,20 +37,23 @@ data Logic = Var String
            | T                            -- true
            | F                            -- false
  deriving Show
-
--- Equality modulo associativity
+ 
 instance Eq Logic where
-   p==q = case (p, q) of
-             (Var x, Var y)             -> x==y
-             (p1 :->: p2,  q1 :->:  q2) -> p1==q1 && p2==q2
-             (p1 :<->: p2, q1 :<->: q2) -> p1==q1 && p2==q2
-             (_ :&&: _,    _ :&&:  _  ) -> conjunctions p == conjunctions q
-             (_ :||: _,    _ :||:  _  ) -> disjunctions p == disjunctions q
-             (Not p1,      Not q1     ) -> p1==q1
-             (T,           T          ) -> True
-             (F,           F          ) -> True
-             _ -> False
-
+   (==) = eqLogicA
+   
+-- Equality modulo associativity
+eqLogicA :: Logic -> Logic -> Bool
+eqLogicA p q =
+   case (p, q) of
+      (Var x, Var y)             -> x==y
+      (p1 :->: p2,  q1 :->:  q2) -> eqLogicA p1 q1 && eqLogicA p2 q2
+      (p1 :<->: p2, q1 :<->: q2) -> eqLogicA p1 q1 && eqLogicA p2 q2
+      (_ :&&: _,    _ :&&:  _  ) -> eqListBy eqLogicA (conjunctions p) (conjunctions q)
+      (_ :||: _,    _ :||:  _  ) -> eqListBy eqLogicA (disjunctions p) (disjunctions q)
+      (Not p1,      Not q1     ) -> eqLogicA p1 q1
+      (T,           T          ) -> True
+      (F,           F          ) -> True
+      _ -> False
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.
@@ -80,22 +83,32 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
 
 -- | Function to unify to logic formulas: the resulting substitution maps 
 -- | variables (String) to logic formulas 
-unifyLogic :: Logic -> Logic -> Maybe (Substitution Logic)
+unifyLogic :: Logic -> Logic -> [Substitution Logic]
 unifyLogic p q =
    case (isMetaVar p, isMetaVar q) of
       (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i q
-      (Just i, Nothing) -> if i `S.member` getMetaVars q then Nothing else return (singletonSubst i q)
-      (Nothing, Just j) -> if j `S.member` getMetaVars p then Nothing else return (singletonSubst j p)
-      _ -> case (rightSpine p, rightSpine q) of
+      (Just i, Nothing) -> if i `S.member` getMetaVars q then [] else return (singletonSubst i q)
+      (Nothing, Just j) -> if j `S.member` getMetaVars p then [] else return (singletonSubst j p)
+      _ -> case (p, q) of
              (Var x, Var y) | x==y      -> return emptySubst
-             (p1 :->: p2,  q1 :->:  q2) -> unifyList [p1, p2] [q1, q2]
-             (p1 :<->: p2, q1 :<->: q2) -> unifyList [p1, p2] [q1, q2]
-             (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
-             (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
-             (Not p1,      Not q1     ) -> unify p1 q1
+             (p1 :->: p2,  q1 :->:  q2) -> unifyListAll [p1, p2] [q1, q2]
+             (p1 :<->: p2, q1 :<->: q2) -> unifyListAll [p1, p2] [q1, q2]
+             (p1 :&&: p2,  _ :&&: _   ) -> let qs  = conjunctions q
+                                               f i = let (xs, ys) = splitAt i qs
+                                                         q1 = foldr1 (:&&:) xs
+                                                         q2 = foldr1 (:&&:) ys
+                                                     in unifyListAll [p1, p2] [q1, q2]
+                                           in concatMap f [1 .. length qs-1]
+             (p1 :||: p2,  _ :||: _   ) -> let qs  = disjunctions q
+                                               f i = let (xs, ys) = splitAt i qs
+                                                         q1 = foldr1 (:||:) xs
+                                                         q2 = foldr1 (:||:) ys
+                                                     in unifyListAll [p1, p2] [q1, q2]
+                                           in concatMap f [1 .. length qs-1]
+             (Not p1,      Not q1     ) -> unifyAll p1 q1
              (T,           T          ) -> return emptySubst
              (F,           F          ) -> return emptySubst
-             _ -> Nothing
+             _ -> []
 
 -- | eqLogic determines whether or not two Logic expression are logically 
 -- | equal, by evaluating the logic expressions on all valuations.
@@ -198,4 +211,4 @@ instance Substitutable Logic where
                     _      -> Var s
        
 instance Unifiable Logic where
-   unify = unifyLogic
+   unifyAll = unifyLogic

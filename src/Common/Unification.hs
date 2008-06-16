@@ -19,7 +19,7 @@ module Common.Unification
    , (@@), (@@@), lookupVar, dom, domList, removeDom
     -- * Unification
    , HasMetaVars(..), MetaVar(..), Substitutable(..), Unifiable(..)
-   , noMetaVars, metaVars, match, unifyList, substitutePair
+   , noMetaVars, metaVars, match, matchAll, unifyList, unifyListAll, substitutePair
      -- * Quantification
    , ForAll, generalize, generalizeAll
    , instantiate, instantiateWith, unsafeInstantiate, unsafeInstantiateWith
@@ -115,10 +115,10 @@ class (HasMetaVars a, MetaVar a) => Substitutable a where
 -- | Type class for unifiable data types
 class Substitutable a => Unifiable a where
    unify    :: a -> a -> Maybe (Substitution a)
-   -- unifyAll :: a -> a -> [Substitution a]
+   unifyAll :: a -> a -> [Substitution a]
    -- default methods
-   -- unify    x y = safeHead (unifyAll x y)
-   -- unifyAll x y = maybe [] return (unify x y) 
+   unify    x y = safeHead (unifyAll x y)
+   unifyAll x y = maybe [] return (unify x y) 
    
 instance HasMetaVars a => HasMetaVars [a] where
    getMetaVars = S.unions . map getMetaVars

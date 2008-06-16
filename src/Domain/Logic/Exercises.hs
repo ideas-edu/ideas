@@ -165,7 +165,7 @@ news = filter pr $ concatMap f interesting
 pr (a, b) = generalizeAll (lhs1,rhs1) `implies` generalizeAll (a, b)
    -- maybe False (/=b1) (apply rule1 a1)
  where ((a1, b1), _) = instantiateWith substitutePair  777 $ generalizeAll (a, b) -}
- 
+ {-
 implies :: Pat -> Pat -> Bool
 implies p1 p2 = maybe False (==rhs2) (apply (lhs1 |- rhs1) lhs2)
  where
@@ -204,16 +204,33 @@ assocAndPat = generalizeAll
    ( (metaVar 0 :&&: metaVar 1) :&&: metaVar 2
    , metaVar 0 :&&: (metaVar 1 :&&: metaVar 2)
    )
+
+assocAndPat2 = generalizeAll
+   ( metaVar 0 :&&: (metaVar 1 :&&: metaVar 2)
+   , (metaVar 0 :&&: metaVar 1) :&&: metaVar 2
+   )
+
+assocAndPatId = generalizeAll
+   ( (metaVar 0 :&&: metaVar 1) :&&: metaVar 2
+   , (metaVar 0 :&&: metaVar 1) :&&: metaVar 2
+   )
    
 commAndPat = generalizeAll
    ( metaVar 0 :&&: metaVar 1
    , metaVar 1 :&&: metaVar 0
    )
    
+idemAndPat = generalizeAll
+   ( metaVar 0 :&&: metaVar 0
+   , metaVar 0
+   )
+   
 [q1] = superImposeNew deMorganPat assocAndPat
 [q2] = superImposeNew q1 assocAndPat
 [q3] = superImposeNew q2 assocAndPat
 [q4] = superImposeNew q3 assocAndPat 
+   
+q5 = superImpose assocAndPatId idemAndPat 
    
 everywhere :: Uniplate a => a -> [Context a]
 everywhere = rec . inContext 
@@ -222,4 +239,14 @@ everywhere = rec . inContext
                is  = take n [0..]
                f i = changeLocation (locationDown i) a
            in [ a | n > 0 ] ++ concatMap (rec . f) is
-   
+-}
+
+test1 = testIdempOr $ Var "p" :||: Var "p"
+test2 = testIdempOr $ (Var "p" :||: Var "q") :||: (Var "p" :||: Var "q")
+test3 = testIdempOr $ Var "p" :||: Var "q" :||: Var "p" :||: Var "q"
+test4 = testIdempOr $ Var "p" :||: (Var "p" :||: Var "q")
+test5 = testIdempOr $ (Var "p" :||: Var "q") :||: ((Var "p" :||: Var "q") :||: Var "r")
+
+testIdempOr p = apply (somewhere $ liftRuleToContext ruleIdempOr) (inContext p)
+
+

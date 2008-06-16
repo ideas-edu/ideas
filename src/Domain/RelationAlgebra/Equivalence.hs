@@ -171,6 +171,7 @@ getSetOfMolecules = nub . getMolecules
     case expr of
        p :&&: q  ->  getMolecules p ++ getMolecules q
        p :||: q  ->  getMolecules p ++ getMolecules q
+       Not p     ->  getMolecules p
        p         ->  [p] 
 
  

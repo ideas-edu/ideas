@@ -3,20 +3,47 @@ var exercisekind = "Proposition to DNF";
 var id = 421;
 
 /**
-* functions to use the services in a straightforward way. 
-* for each service, there is a calling function and a function that we be called back when the results are available.
+ * Display a new exercise
  */
-function generate() {
-	ss_generate(5, handleGenerate);
-}
-function handleGenerate(state) {
+function displayNewExercise() {
 	closeallhelp();
 	clearFeedback();
-	task = state.exercise;
-	areas.exerciseArea.innerHTML = task;
-	areas.workArea.value = task;
-	areas.historyArea.innerHTML = task;
+	var task = (snapshot.state).exercise;
+	$('exercise').update(task);
+	$F('work') = task;
+	$('history').update(task);
+}
+function displaySteps(number) {
+	var stepsArea = areas.stepsArea;
+	stepsArea.innerHTML = "Steps<br> " + number;
+}
+/**
+* functions to use the services in a straightforward way. 
+* for each service, there is a calling function and a function that will be called back when the results are available.
+ */
+ function start() {
+	generate(newExercise);
+ }
+function generate(callback) {
+	ss_generate(5, callback);
+}
+function newExercise(state) {
+	var task = state.exercise;
 	newSnapshot(task, "", task, task, new CopyContent(state, ""), state, "");
+	displayNewExercise();
+	getRemaining(displaySteps);
+}
+function getDerivation() {
+	ss_getDerivation(snapshot.state);
+}
+function getRemaining(callback) {
+	var feedbackArea = areas.feedbackArea;
+	var workExpression = ((areas.workArea).value).htmlToAscii();
+	if (workExpression != (((snapshot.state).exercise).htmlToAscii())) {
+		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + changed + "</p>";
+		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, snapshot.history, workExpression, snapshot.copy, snapshot.state, snapshot.location);
+	}
+	ss_getRemaining(snapshot.state, callback);
 }
  
 function getReady() {
@@ -81,23 +108,6 @@ function handleNext(rule, location, state) {
 	feedbackArea.scrollTop = feedbackArea.scrollHeight;
 }
 
-function getRemaining() {
-	var feedbackArea = areas.feedbackArea;
-	var workExpression = ((areas.workArea).value).htmlToAscii();
-	if (workExpression != (((snapshot.state).exercise).htmlToAscii())) {
-		feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + changed + "</p>";
-		newSnapshot(snapshot.exercise, feedbackArea.innerHTML, snapshot.history, workExpression, snapshot.copy, snapshot.state, snapshot.location);
-	}
-	ss_getRemaining(snapshot.state, handleRemaining);
-}
-function handleRemaining(number) {
-	closeallhelp();
-	var feedbackArea = areas.feedbackArea;
-	var expression = ((snapshot.state).exercise).asciiToHtml();
-	feedbackArea.innerHTML = feedbackArea.innerHTML + "<p>" + forexpression + " <strong>" + expression + "</strong>, " + minimum + " <br><strong>" + number + "</strong> " + steps + ".</p>";
-	addFeedback(feedbackArea.innerHTML);
-	feedbackArea.scrollTop = feedbackArea.scrollHeight;
-}
 
 function getFeedback() {
 	var feedbackArea = areas.feedbackArea;

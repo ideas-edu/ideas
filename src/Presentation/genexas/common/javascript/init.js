@@ -40,11 +40,12 @@ function parse(json){
  * feedbackArea: conmtains the feedback
   * historyArea: contains the sequence of valid rewritings
  */
- function Areas(exercise, work, feedback, history, current) {
+ function Areas(exercise, work, feedback, history, steps) {
 	this.exerciseArea = exercise;
 	this.workArea = work;
 	this.feedbackArea = feedback;
 	this.historyArea = history;
+	this.stepsArea = steps;
 }
 var areas;
 /* * 
@@ -197,11 +198,11 @@ window.onload = function() {
  	$('aboutButton').onclick = openhelp;
 	$('helpButton').onclick = openhelp;
 	$('rulesButton').onclick = openhelp; 
-	$('generateButton').onclick = generate;
+	$('generateButton').onclick = start;
 	
 	$('hintbutton').onclick = getHint;
+	$('derivationbutton').onclick = getDerivation;
 	$('nextbutton').onclick = getNext;
-	$('progressbutton').onclick = getRemaining;
 	$('readybutton').onclick = getReady;
 	$('submitbutton').onclick = getFeedback;
 	$('readybutton').onclick = getReady;
@@ -220,5 +221,5 @@ window.onload = function() {
 	hide($('forwardbutton'));
 	
 	// the areas
-	areas = new Areas($('exercise'), $('work'), $('feedback'), $('history'), $('current'));
+	areas = new Areas($('exercise'), $('work'), $('feedback'), $('history'), $('progress'));
 }

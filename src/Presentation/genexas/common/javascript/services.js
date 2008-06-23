@@ -1,20 +1,18 @@
 // The url for the services
 // var url = "/cgi-bin/service.cgi";
-var url = "http://ideas/StrategyTool/bin/service.cgi";
+var url = "/StrategyTool/bin/service.cgi";
 
 /**
  *  Generation of a new exercise. 
   * Input: an integer
   * Output: a state object 
+  * The output is passed to the callback function
   */
-function ss_generate(number, callback)
-{
-	var myAjax = new Ajax.Request
-    (url,
-     {   method: 'post',
-         parameters : 'input={ "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',	 
-         onSuccess : function(response) {	
-			var resJSON = response.responseText.parseJSON();
+function ss_generate(number, callback) {
+	var myAjax = new Ajax.Request(url, {   
+		parameters : 'input={ "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',	 
+		onSuccess : function(response) {	
+			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				result = resJSON.result;
@@ -28,23 +26,20 @@ function ss_generate(number, callback)
 		 onFailure: function() { 
 			alert(wrong); 
 		} 
-     });
+	});
 }
 /**
  *  Is the exercise solved?
   * Input: a state object that should reflect the current state.
   * Output: a boolean
+   * The output is passed to the callback function
   */
-function ss_getReady(state, callback)
-{
+function ss_getReady(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request
-    (url,
-     {   method: 'post',
-		asynchronous:		true,
-         parameters : 'input={ "method" : "ready" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+	var myAjax = new Ajax.Request(url, {
+		parameters : 'input={ "method" : "ready" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
          onSuccess : function(response) {		
-			var resJSON = response.responseText.parseJSON();
+			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				var solved = resJSON.result;
@@ -57,21 +52,20 @@ function ss_getReady(state, callback)
 		 onFailure: function() { 
 			alert(wrong); 
 		} 
-     });
+    });
 }
 /**
- *  getHint gets a rule which can be applied, and puts it in the feedbackarea.
- * TODO: we will need to control the language. For now, everything is in English
+ *  getHint gets a rule which can be applied, 
+ * Input: a location and a state object that should reflect the current state.
+  * Output: a set of rules (strings)
+   * The output is passed to the callback function
   */
-function ss_getHint(location, state, callback)
-{
+function ss_getHint(location, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request
-    (url,
-     {   method: 'post',
-         parameters : 'input={ "method" :"applicable", "params" : ["[]", ["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", ""]], "id" : ' + id + '}',
-         onSuccess : function(response) {
-			var resJSON = response.responseText.parseJSON();
+	var myAjax = new Ajax.Request(url, {  
+		parameters : 'input={ "method" :"applicable", "params" : ["[]", ["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", ""]], "id" : ' + id + '}',
+		onSuccess : function(response) {
+			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				var result = resJSON["result"];
@@ -86,16 +80,16 @@ function ss_getHint(location, state, callback)
 }
 /**
  *  getNext puts a possible rewriting in the workarea
+  * Input: a state object that should reflect the current state.
+  * Output: a rulID, a location and a state 
+   * The output is passed to the callback function
   */
-function ss_getNext(state, callback)
-{
+function ss_getNext(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request
-    (url,
-     {   method: 'post',
+	var myAjax = new Ajax.Request(url, {
 		parameters : 'input={ "method" : "onefirst" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
-         onSuccess : function(response) {	
-			var resJSON = response.responseText.parseJSON();
+        onSuccess : function(response) {	
+			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				var rule = resJSON["result"][0];
@@ -113,18 +107,41 @@ function ss_getNext(state, callback)
      });
 }
 /**
+ *  getDerivation returns a complete derivation
+  */
+function ss_getDerivation(state, callback) {
+	var exercise = (state.exercise).htmlToAscii();
+	var myAjax = new Ajax.Request(url, {
+		parameters : 'input={ "method" : "onefirst" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+        onSuccess : function(response) {	
+			var resJSON = parseJSON(response.responseText);
+			alert(response.responseText);
+			/*var error = resJSON.error;
+			if (error == null) {
+				var rule = resJSON["result"][0];
+				var location = resJSON["result"][1];
+				var state = resJSON["result"][2];
+				var newState = new State(state[0], state[1], state[2], state[3]);
+				callback(rule, location, newState);
+			}
+			else { 
+				alert(response.responseText["error"] );
+			}*/
+			
+         }		 ,
+		 onFailure : function() {alert(wrong);}
+     });
+}
+/**
  *  getRenmaining puts the number of remaining steps in the feedbackarea
   */
-function ss_getRemaining(state, callback)
-{
+function ss_getRemaining(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request
-    (url,
-     {   method: 'post',
-         parameters : 'input={ "method" :"stepsremaining", "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
-         onSuccess : function(response) {	
-			// var resJSON = response.responseText.parseJSON();
-			var resJSON = response.responseText.parseJSON();
+	var myAjax = new Ajax.Request(url, {
+        parameters : 'input={ "method" :"stepsremaining", "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+        onSuccess : function(response) {	
+			// var resJSON = parseJSON(response.responseText);
+			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				callback(resJSON.result);
@@ -135,15 +152,12 @@ function ss_getRemaining(state, callback)
 /**
  *  getFeedbackt shows feedback in the feedbackarea
   */
-function ss_getFeedback(state, newexpression, callback)
-{
+function ss_getFeedback(state, newexpression, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request
-    (url,
-     {   method: 'post',
-         parameters : 'input={ "method" : "submit", "params" : [["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"], "id" : ' + id + '}',
-         onSuccess : function(response) {
-			var resJSON = response.responseText.parseJSON();
+	var myAjax = new Ajax.Request(url, {
+        parameters : 'input={ "method" : "submit", "params" : [["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"], "id" : ' + id + '}',
+        onSuccess : function(response) {
+			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				var result = (resJSON.result).result;
@@ -159,6 +173,20 @@ function ss_getFeedback(state, newexpression, callback)
 				callback(result, rules, newState);
 			}
 			else { alert("huh?")};
-         }
+        }
      });
+}
+
+/**
+ * Help functions
+  */
+function parseJSON(json){
+    try{
+        if(/^("(\\.|[^"\\\n\r])*?"|[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t])+?$/.test(json)){
+            var j = eval('(' + json + ')');
+            return j;
+		}
+	}catch(e){
+    }
+    throw new SyntaxError("parseJSON");
 }

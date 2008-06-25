@@ -3,9 +3,32 @@
   * some help functions, and
   * several functions for the back and forward buttons
   */
+  
+  /***
+ * adjust the area  with respect to the length of the expression
+ * row is the number of characters in a row
+ * height is the number of pixels per row
+ */
+ function adjustHeight(element, expression, row, height) {
+	var length = expression.length;
+	length /= row;
+	length = Math.floor(length) + 1;
+	length = length*height;
+	element.style.height = length + 'px';
+}
+  /***
+ * adjust the number of rows  with respect to the length of the expression
+ * row is the number of characters in a row
+ */
+ function adjustRows(element, expression, rows) {
+	var length = expression.length;
+	length /= rows;
+	length = Math.floor(length) + 1;
+	element.rows =  length ;
+}
 /**
  * From HTML characters to ascii and back
-  */
+  */ 
 String.prototype.htmlToAscii = function() {
 	var resultstring = this.replace(/&gt;/g, '>');
 	resultstring = resultstring.replace(/&lt;/g, '<');

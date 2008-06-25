@@ -10,7 +10,7 @@ define("Copy", "Copy");
 define("Progress", "Progress");
 define("Step", "Step");
 define("Hint", "Hint");
-define("Ready", "In DNF");
+define("Ready", "Ready");
 define("Clear", "Clear Feedback");
 define("Exercise", "Exercise");
 define("WorkArea", "Working Area: Rewrite and Submit");

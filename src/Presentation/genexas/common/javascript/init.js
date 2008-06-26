@@ -43,7 +43,7 @@ String.prototype.asciiToHtml = function() {
 }
 
 function clearFeedback() {
-	(areas.feedbackArea).innerHTML = "";
+	$('feedback').innerHTML = "";
 }
 function parse(json){
     try{
@@ -63,14 +63,15 @@ function parse(json){
  * feedbackArea: conmtains the feedback
   * historyArea: contains the sequence of valid rewritings
  */
- function Areas(exercise, work, feedback, history, steps) {
+ /*n bfunction Areas(exercise, work, feedback, history, steps) {
 	this.exerciseArea = exercise;
 	this.workArea = work;
 	this.feedbackArea = feedback;
 	this.historyArea = history;
 	this.stepsArea = steps;
 }
-var areas;
+var areas; */
+
 /* * 
  *Undo functionality
 */
@@ -189,13 +190,13 @@ function goBack() {
 }
 
 function fillAreas(stateObject) {
-	(areas.exerciseArea).innerHTML = stateObject.exercise;
-	(areas.workArea).value = (stateObject.work).htmlToAscii();
-	(areas.feedbackArea).innerHTML = stateObject.feedback;
-	(areas.historyArea).innerHTML = stateObject.history;
+	$('exercise').innerHTML = stateObject.exercise;
+	$('work').value = (stateObject.work).htmlToAscii();
+	$('feedback').innerHTML = stateObject.feedback;
+	$(history).innerHTML = stateObject.history;
 }
 function copy() {
-	var workArea  = areas.workArea;
+	var workArea  = $('work');
 	workArea.value = ((snapshot.copy).state).exercise;
 	addWorkexpression(((snapshot.copy).state).exercise);
 }
@@ -244,5 +245,5 @@ window.onload = function() {
 	hide($('forwardbutton'));
 	
 	// the areas
-	areas = new Areas($('exercise'), $('work'), $('feedback'), $('history'), $('progress'));
+	//areas = new Areas($('exercise'), $('work'), $('feedback'), $('history'), $('progress'));
 }

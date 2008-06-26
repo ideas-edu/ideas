@@ -10,6 +10,7 @@
 <script type="text/javascript" src="/genexas/common/javascript/prototype-1.6.0.2.js"></script> 
 <script type="text/javascript" src="/genexas/common/javascript/help.js"></script>
 <script type="text/javascript" src="/genexas/common/javascript/services.js"></script>
+<script type="text/javascript" src="/genexas/common/javascript/communication.js"></script>
 <script type="text/javascript" src="<?php print Local;?>"></script>
 <script type="text/javascript" src="communication.js"></script>
 <script type="text/javascript" src="/genexas/common/javascript/init.js"></script>

@@ -24,6 +24,7 @@ import qualified Data.Set as S
 import Common.Transformation
 import System.Random (StdGen, mkStdGen, split)
 import Test.QuickCheck
+import Control.Monad
 
 infixr 1 :.:
 infixr 2 :+: 
@@ -115,23 +116,67 @@ probablyEqualWith :: StdGen -> RelAlg -> RelAlg -> Bool
 probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 10 rng)
  where
    -- size of (co-)domain
-   as     = [0..9] 
+   as     = [0..4]
    -- number of attemps (with different randomly generated relations)
    makeRngs n g
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
-   eval g = evalRelAlg (generate 0 g (arbRelations as)) as
+   eval g = evalRelAlg (generate 100 g (arbRelations as)) as
 
--- counterexample of probabilistic approach: probablyEqual (Var "s" :&&: E) (Var "q" :+: E)
+probablyEqualWithG :: StdGen -> RelAlg -> RelAlg -> Maybe Int
+probablyEqualWithG rng p q = safeHead $ catMaybes $ zipWith f [1..] (makeRngs 500 rng)
+ where
+   f i g = if eval g p == eval g q then Nothing else Just i
+   -- size of (co-)domain
+   as     = [0..1]
+   -- number of attemps (with different randomly generated relations)
+   makeRngs n g
+      | n == 0    = []
+      | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
+   eval g = evalRelAlg (generate 100 g (arbRelations as)) as
+   
+inspect :: [Int]
+inspect = map f [1..100]
+ where f i = S.size $ generate 100 (mkStdGen i) (arbRelations [0..9]) "p"
 
 arbRelations :: Eq a => [a] -> Gen (String -> Relation a)
 arbRelations as = promote (\s -> coarbitrary s (arbRelation as))
 
 arbRelation :: Eq a => [a] -> Gen (Relation a)
-arbRelation as = do
+arbRelation = arbRelation1
+
+arbRelation4 as = do 
+   n  <- choose (0, 100)
+   let f x = do
+          m <- choose (1::Int, 100)
+          return [ x | n < m ]
+   xs <- mapM f $ cartesian as as
+   return $ S.fromAscList $ concat xs 
+
+arbRelation3 as = do
+   xs <- mapM f as 
+   return $ S.fromAscList (concat xs)
+ where
+   f a = do
+      n  <- choose (0, 2)
+      bs <- replicateM n $ oneof $ map return as
+      return $ zip (repeat a) bs
+
+arbRelation2 as = 
+   do i <- choose (0, length as ^ 2)
+      remove i (cartesian as as)
+ where
+   remove 0 xs = return (S.fromAscList xs)
+   remove n xs = do
+      i <- choose (0, length xs - 1)
+      let (ys, _:zs) = splitAt i xs
+      remove (n-1) (ys++zs)
+
+arbRelation1 as = do
    let f _ = oneof $ map return [True, False]
    xs <- filterM f (cartesian as as)
    return (S.fromAscList xs)
+   
 
 -- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property

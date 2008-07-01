@@ -173,6 +173,7 @@ ruleRemRedunExprs = makeRuleList "RemRedunExprs"
    , (E :&&: r) |- E 
 --   , (r :.: U)  |- r
 --   , (U :.: r)  |- r
+   , (U :.: U)  |- U
    , (r :.: E)  |- E
    , (E :.: r)  |- E 
    , (r :+: U)  |- U

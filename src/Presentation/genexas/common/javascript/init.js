@@ -4,7 +4,7 @@
   * several functions for the back and forward buttons
   */
   
-  /***
+ /***
  * adjust the area  with respect to the length of the expression
  * row is the number of characters in a row
  * height is the number of pixels per row
@@ -16,7 +16,7 @@
 	length = length*height;
 	element.style.height = length + 'px';
 }
-  /***
+ /***
  * adjust the number of rows  with respect to the length of the expression
  * row is the number of characters in a row
  */
@@ -55,23 +55,6 @@ function parse(json){
     }
     throw new SyntaxError("parseJSON");
 }
-
-/**
- * The areas 
- * exerciseArea: the original a exercise; stays the same until a new exercise is generated
- * workArea: the area where the user rewrites expressions
- * feedbackArea: conmtains the feedback
-  * historyArea: contains the sequence of valid rewritings
- */
- /*n bfunction Areas(exercise, work, feedback, history, steps) {
-	this.exerciseArea = exercise;
-	this.workArea = work;
-	this.feedbackArea = feedback;
-	this.historyArea = history;
-	this.stepsArea = steps;
-}
-var areas; */
-
 /* * 
  *Undo functionality
 */
@@ -94,9 +77,77 @@ function State(id, prefix, exercise, simpleContext) {
  *  -copy: is the content of the copy button; this is a combination of a state and a location
  * - state, which contains, the id of the exercise, the prefix, the current *valid* expression, and the simpleContext
  * - location
+ *  steps
  * 
  * snapshot is the current historyObject
+ * it is a Hash object, so we can add new key-value pairs if necessary
   */
+var snapshot;
+/**
+ * Our historykeeper will be an array filled with hashObjects, containing the variable contents of the page elements
+  * statePointer points out the index of the snapshot within the historyList
+  */
+var historyKeeper = new Object();
+historyKeeper.historyList = new Array();
+historyKeeper.statePointer = -1;
+/**
+ * function to add the current snapshot to the history 
+ */
+historyKeeper.addSnapshot = function () {
+	historyKeeper.historyList.push(snapshot);
+	++historyKeeper.statePointer;
+	if (historyKeeper.statePointer >= 1) {
+		$('undobutton').show();
+	}
+}
+/**
+ * create a new snapshot, based on the values of the page elements
+ */
+historyKeeper.newSnapshot = function (state) {
+	if (snapshot) {
+		if (snapshot.get('copy')) {
+			snapshot.unset('copy');
+		}
+		var newSnapshot = snapshot.clone();
+		snapshot = newSnapshot;
+	}
+	else {
+		snapshot = new Hash();
+		snapshot.set('location', new Array());
+	}
+	snapshot.set('feedback', $('feedback').innerHTML);
+	snapshot.set('history', $('history').innerHTML);
+	snapshot.set('work', $('work').value);
+	snapshot.set('steps', $('progress').innerHTML);
+	snapshot.set('state', state);
+	historyKeeper.addSnapshot(snapshot);
+	
+}
+/**
+ * create a new snapshot, based on the values of the page elements
+ */
+historyKeeper.update = function (state) {
+	var newSnapshot = snapshot.clone();
+	snapshot = newSnapshot;
+	snapshot.set('feedback', $('feedback').innerHTML);
+	snapshot.set('history', $('history').innerHTML);
+	snapshot.set('work', $('work').value);
+	snapshot.set('steps', $('progress').innerHTML);
+	snapshot.set('state', state);
+	historyKeeper.addSnapshot(snapshot);
+	
+}
+/**
+ * The current snapshot becomes history, and we create a new snapshot with the new content of the feedback area.
+*/
+historyKeeper.addFeedback = function () {
+	if (snapshot) {
+		var newSnapshot = snapshot.clone();
+		snapshot = newSnapshot;
+		snapshot.set('feedback', $('feedback').innerHTML);
+		historyKeeper.addSnapshot(snapshot);
+	}
+}
  /**
   * When the user has asked a possible next step, we receive a state and a location. 
   * Both are held available for the copy button.
@@ -105,84 +156,30 @@ function CopyContent(state, location) {
 	this.state = state;
 	this.location = location;
 }
-function HistoryObject(exercise, feedback, history, work, copy, state, location) {
-	this.exercise = exercise;
-	this.feedback = feedback;
-	this.history = history;
-	this.work = work;
-	this.copy = copy;
-	this.state = state;
-	this.location = location;
-}
-var snapshot;
-/**
- * Our historykeeper will be an array filled with historyObjects
-  * statePointer points out the index of the snapshot within the historyList
-  */
-var HistoryKeeper = function() {
-	this.historyList = new Array();
-	snapshot = new HistoryObject("", "", "", "", new State("", "", "", ""),  new State("", "", "", ""));
-	this.historyList.push(snapshot);
-	this.statePointer = 0;
-}
-var historyKeeper = new HistoryKeeper();
-
-function newSnapshot(exercise, feedback, history, work, copy, state, location) {
-	//create a new snapshot
-	snapshot = new HistoryObject(exercise, feedback, history, work, copy, state, location);
-	historyKeeper.historyList.push(snapshot);
-	++ (historyKeeper.statePointer);
-	if (historyKeeper.statePointer == 1) {
-		show($('undobutton'));
-	}
-	
-}
-/**
- * The current snapshot becomes history, and we create a new snapshot with the new content of the feedback area.
-*/
-function addFeedback(newFeedback) {
-	newSnapshot(snapshot.exercise, newFeedback, snapshot.history, snapshot.work, snapshot.copy, snapshot.state, snapshot.location);
-}
-/**
- * If the expression within the work area differs from thew one in the snapshot,
- * we create a new snapshot with the current value of the work area.
- */
-function addWorkexpression(expression) {
-	if ((snapshot.work).htmlToAscii() != expression) {
-		newSnapshot(snapshot.exercise, snapshot.feedback, snapshot.history, expression, snapshot.copy, snapshot.state, snapshot.location);
-	}		
-}
-/**
- * If the copy content differs from the copy content within the newest state,
-  * we create a new state and remember it.
-   * Otherwise, we do nothing
- */
-function addCopy(newState, newLocation) {
-	if ((((snapshot.copy).state).exercise).htmlToAscii() != expression) {
-		var newCopy = new CopyContent(newState, newLocation);
-		newSnapshot(snapshot.exercise, snapshot.feedback, snapshot.history, snapshot.work, newCopy, snapshot.state, snapshot.location);
-	}		
+historyKeeper.addCopy = function(copycontent) {
+	snapshot.set('copy', copycontent);
+	$('copybutton').show();
 }
 function goBack() {
 	if (historyKeeper.statePointer > 0) {
 		-- (historyKeeper.statePointer);
-		snapshot = historyKeeper.historyList[historyKeeper.statePointer];
-		fillAreas(snapshot);
+		var stateObject = historyKeeper.historyList[historyKeeper.statePointer];
+		fillAreas(stateObject);
 		if (historyKeeper.statePointer == 0) {
-			hide($('undobutton'));
+			$('undobutton').hide();
 		}
-		show($('forwardbutton'));
+		$('forwardbutton').show();
 	}
 }
  function goForward() {
 	if ((historyKeeper.statePointer +1) < historyKeeper.historyList.length) {
 		++(historyKeeper.statePointer);
-		snapshot = historyKeeper.historyList[historyKeeper.statePointer];
-		fillAreas(snapshot);
-		if ((historyKeeper.stateCounter + 1) == historyKeeper.historyList.length) {
-			hide($('forwardbutton'));
+		var stateObject = historyKeeper.historyList[historyKeeper.statePointer];
+		fillAreas(stateObject);
+		if ((historyKeeper.statePointer + 1) == historyKeeper.historyList.length) {
+			$('forwardbutton').hide();
 		}
-		show($('undobutton'));
+		$('undobutton').show();
 	}
 	else {
 		alert("You can't move forward unless you have been there!");
@@ -190,29 +187,23 @@ function goBack() {
 }
 
 function fillAreas(stateObject) {
-	$('exercise').innerHTML = stateObject.exercise;
-	$('work').value = (stateObject.work).htmlToAscii();
-	$('feedback').innerHTML = stateObject.feedback;
-	$(history).innerHTML = stateObject.history;
+	$('exercise').innerHTML = stateObject.get('state').exercise;
+	$('work').value = (stateObject.get('work')).htmlToAscii();
+	$('feedback').innerHTML = stateObject.get('feedback');
+	$('history').innerHTML = stateObject.get('history');
+	$('progress').innerHTML = stateObject.get('steps');
+	adjustHeight($('exercise'), $('exercise').innerHTML, 40, 40);
+	adjustRows($('work'), $('work').value, 40);
 }
 function copy() {
-	var workArea  = $('work');
-	workArea.value = ((snapshot.copy).state).exercise;
-	addWorkexpression(((snapshot.copy).state).exercise);
-}
-function hide(element) {
-	element.style.visibility = 'hidden';
-}
-function show(element) {
-	element.style.visibility = 'visible';
-}
-
-function writeArray(list) {
-	elements = "";
-	for (var i = 0; i < list.length; ++i) {
-		elements = elements + list[i] + ",<br>";
+	if (snapshot.get('copy')) {
+		$('work').value = snapshot.get('copy').state.exercise;
 	}
-	return elements;
+	else {
+		if (snapshot.get('work')) {
+			$('work').value = snapshot.get('work') ;
+		}
+	}
 }
 /**
  * After the full DOM has been ,loaded
@@ -222,7 +213,7 @@ window.onload = function() {
  	$('aboutButton').onclick = openhelp;
 	$('helpButton').onclick = openhelp;
 	$('rulesButton').onclick = openhelp; 
-	$('generateButton').onclick = start;
+	$('generateButton').onclick = generate;
 	
 	$('hintbutton').onclick = getHint;
 	$('derivationbutton').onclick = getDerivation;
@@ -240,10 +231,10 @@ window.onload = function() {
 	$('clearbutton').onclick = clearFeedback; 
 	$('copybutton').onclick = copy; 
 	
-	// the back and forward button are invisable
-	hide($('undobutton'));
-	hide($('forwardbutton'));
-	
-	// the areas
-	//areas = new Areas($('exercise'), $('work'), $('feedback'), $('history'), $('progress'));
+	// the back and forward button  and the copy button are invisable
+	$('undobutton').hide();
+	$('forwardbutton').hide();
+	$('copybutton').hide();
+
+	generate();
 }

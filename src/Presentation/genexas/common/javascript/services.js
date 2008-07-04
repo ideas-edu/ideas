@@ -9,6 +9,7 @@ var url = "/StrategyTool/bin/service.cgi";
   * The output is passed to the callback function
   */
 function ss_generate(number, callback) {
+	
 	var myAjax = new Ajax.Request(url, {   
 		parameters : 'input={ "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',	 
 		onSuccess : function(response) {	
@@ -66,6 +67,7 @@ function ss_getHint(location, state, callback) {
 		parameters : 'input={ "method" :"applicable", "params" : ["[]", ["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", ""]], "id" : ' + id + '}',
 		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
+			// alert(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
 				var result = resJSON["result"];
@@ -135,12 +137,11 @@ function ss_getDerivation(state, callback) {
 /**
  *  getRenmaining puts the number of remaining steps in the feedbackarea
   */
-function ss_getRemaining(state, callback) {
-	var exercise = (state.exercise).htmlToAscii();
+function ss_getRemaining(eastate, callback) {
+	var exercise = (eastate.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
-        parameters : 'input={ "method" :"stepsremaining", "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+        parameters : 'input={ "method" :"stepsremaining", "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
         onSuccess : function(response) {	
-			// var resJSON = parseJSON(response.responseText);
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {

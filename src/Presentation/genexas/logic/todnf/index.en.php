@@ -21,7 +21,7 @@ function help() {
 	}
 	else {
 		if (file_exists("./../en/help.html")) {
-			include_once("./../hnl/help.html");
+			include_once("./../en/help.html");
 		}
 		else {
 			include_once("../../common/en/help.html");

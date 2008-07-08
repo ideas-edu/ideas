@@ -35,7 +35,10 @@ import Data.Ratio
 solveGramSchmidt :: Exercise (Context [Vector MySqrt])
 solveGramSchmidt = makeExercise
    { shortTitle    = "Gram-Schmidt"
-   , prettyPrinter = unlines . map show . fromContext
+   , parser        = parseVectors 
+   , prettyPrinter = unlines . map (showVectorWith ppMySqrt) . fromContext
+--   , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt
+--                             in f x == f y
    , ruleset       = rulesGramSchmidt
    , finalProperty = orthonormalList . filter ((/=0) . norm) . fromContext
    , strategy      = gramSchmidt
@@ -62,14 +65,13 @@ reduceMatrixExercise = makeExercise
    { shortTitle    = "Gaussian Elimination"
    , parser        = parseMatrix
    , prettyPrinter = ppRationalMatrix . matrix
-   , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext . matrix
-                             in f x == f y
+   , equivalence   = \x y -> fromContext x === fromContext y
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm . matrix
-   , generator     = do m1        <- arbSizedMatrix (3, 3)
+   , generator     = fmap inContext arbNiceMatrix {- do m1        <- arbSizedMatrix (3, 3)
                         (sol, m2) <- arbSolution m1
                         m3        <- simplifyMatrix sol m2
-                        return $ inContext $ fmap fromSmallInt m3
+                        return $ inContext $ fmap fromSmallInt m3 -}
    , strategy      = toReducedEchelon
    }
 
@@ -166,7 +168,28 @@ simplifyMatrix solution m = do
     where 
        x  = abs (last r)
        xs = init r
-         
+
+arbUpperMatrix :: (Enum a, Num a) => Gen (Matrix a)
+arbUpperMatrix = do
+   a <- oneof $ map return [-5 .. 5]
+   b <- oneof $ map return [-5 .. 5]
+   c <- oneof $ map return [-5 .. 5]
+   return $ makeMatrix [[1, a, b], [0, 1, c], [0, 0, 1]]
+
+arbAugmentedMatrix :: (Enum a, Num a) => Gen (Matrix a)
+arbAugmentedMatrix = do
+   a <- oneof $ map return [-5 .. 5]
+   b <- oneof $ map return [-5 .. 5]
+   c <- oneof $ map return [-5 .. 5]
+   return $ makeMatrix [[1, 0, 0, 1], [a, 1, 0, 1], [b, c, 1, 1]]
+   
+arbNiceMatrix :: (Enum a, Num a) => Gen (Matrix a)
+arbNiceMatrix = do
+   m1 <- arbUpperMatrix
+   m2 <- arbAugmentedMatrix
+   return (multiply m1 m2)
+
+       
 ---------------------------------------------------------------
 -- Small Ints
    

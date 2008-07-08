@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Vector 
-   ( Vector, fromList, toList, liftV, liftV2
+   ( Vector, fromList, toList, liftV, liftV2, showVectorWith
    , toUnit, isUnit, makeOrthogonal, orthogonal, orthonormalList
    , scale, norm, distance, vectorSum, innerProduct
    ) where
@@ -22,8 +22,11 @@ import Data.List
 newtype Vector a = Vector [a]
    deriving Eq
 
+instance Functor Vector where
+   fmap f (Vector xs) = Vector (map f xs)
+
 instance Show a => Show (Vector a) where
-   show (Vector xs) = "(" ++ concat (intersperse "," (map show xs)) ++ ")"
+   show = showVectorWith show
 
 instance Num a => Num (Vector a) where
    (+) = liftV2 (+)
@@ -33,6 +36,9 @@ instance Num a => Num (Vector a) where
    abs    = liftV abs
    signum = liftV signum
    fromInteger = fromList . return . fromInteger
+
+showVectorWith :: (a -> String) -> Vector a -> String
+showVectorWith f (Vector xs) = "(" ++ concat (intersperse "," (map f xs)) ++ ")"
 
 toList :: Vector a -> [a]
 toList (Vector xs) = xs

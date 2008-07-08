@@ -12,8 +12,10 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Matrix 
-   ( Matrix, Row, Column, isRectangular, makeMatrix, mapWithPos
+   ( Matrix, Row, Column, isRectangular, makeMatrix, identity, mapWithPos
    , rows, row, columns, column, dimensions, entry, isEmpty
+   , add, scale, multiply
+   , reduce, forward, backward, inverse, (===)
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
    , nonZero, pivot, isPivotColumn
@@ -23,10 +25,6 @@ import Data.Maybe
 import Data.List hiding (transpose)
 import qualified Data.List as L
 import qualified Data.Map as M
-
-(x:xs) !!! 0 = x
-(x:xs) !!! n = xs !!! (n-1)
-_ !!! _ = error "!!!"
 
 -- Invariant: a matrix is always rectangular
 newtype Matrix a = M [[a]]
@@ -52,6 +50,10 @@ makeMatrix rows
    | isRectangular rows = M rows
    | otherwise          = error "makeMatrix: not rectangular"
 
+identity :: Num a => Int -> Matrix a
+identity n = M $ map f [0..n-1]
+ where f i = replicate i 0 ++ [1] ++ replicate (n-i-1) 0
+
 isEmpty :: Matrix a -> Bool
 isEmpty (M xs) = null xs
 
@@ -65,7 +67,7 @@ columns :: Matrix a -> [Column a]
 columns = rows . transpose
 
 column :: Int -> Matrix a -> Column a
-column n = (!!!n) . columns
+column n = (!!n) . columns
 
 dimensions :: Matrix a -> (Int, Int)
 dimensions m = (length $ rows m, length $ columns m)
@@ -107,6 +109,47 @@ multiply a b
         M $ map (\r -> map (sum . zipWith (*) r) (columns b)) (rows a)
    | otherwise =
         error "multiply: incorrect dimensions"
+
+-------------------------------------------------------
+-- Gaussian Elimination
+
+reduce :: Fractional a => Matrix a -> Matrix a
+reduce = backward . forward
+
+forward :: Fractional a => Matrix a -> Matrix a
+forward m 
+   | h==0 || w==0 = m
+   | all (==0) col = M $ zipWith (:) (repeat 0) $ rows $ forward $ M $ map tail $ rows m
+   | x == 0 = forward (switchRows 0 (fromJust $ findIndex (/= 0) col) m)
+   | x == 1 = let M (r:rs) = foldr (\k -> addRow k 0 (negate $ entry (k,0) m)) m [1..h-1]
+                  M ts = forward (M rs)
+              in M (r:ts)
+   | otherwise = forward (scaleRow 0 (1/x) m)
+ where
+   (h, w) = dimensions m
+   x      = entry (0,0) m
+   col    = column 0 m
+
+backward :: Fractional a => Matrix a -> Matrix a
+backward m = foldr f m [1..h-1]
+ where
+   (h, w) = dimensions m
+   f i    = let g j = let k = length $ takeWhile (==0) $ row i m
+                          a = entry (j, k) m
+                      in if k < w then addRow j i (negate a) else id
+            in flip (foldr g) [0..i-1]
+ 
+inverse :: Fractional a => Matrix a -> Matrix a
+inverse m
+   | h == w    = M $ map (drop h) $ rows $ reduce $ M $ zipWith (++) (rows m) $ rows $ identity h
+   | otherwise = error "inverse: not a rectangular matrix"
+ where 
+   (h, w) = dimensions m
+
+(===) :: Fractional a => Matrix a -> Matrix a -> Bool
+m1 === m2 = reduce m1 == reduce m2
+
+-- test = backward $ forward $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
 
 -------------------------------------------------------
 
@@ -195,6 +238,3 @@ isPivotColumn c =
    case filter (/=0) c of
       [1] -> True
       _   -> False
-
--------------------------------------------------------
--- m1 = makeMatrix [[0,1,4,0,3],[0,0,0,1,0],[0,0,0,0,1],[0,0,0,0,0]]

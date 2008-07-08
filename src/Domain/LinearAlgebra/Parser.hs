@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Parser 
-   ( parseMatrix, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix, ppRational
+   ( parseMatrix, parseVectors, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix, ppRational, ppMySqrt
    , parseSystem
    ) where
 
@@ -24,6 +24,8 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.MatrixRules -- for context
+import Domain.LinearAlgebra.Strategies  -- for MySqrt
+import Domain.LinearAlgebra.Vector
 import Common.Context
 import Common.Utils
 import Common.Exercise
@@ -86,13 +88,31 @@ pNat1 = (\x xs -> read (x:xs)) <$> '1' <..> '9' <*> pList ('0' <..> '9')
 
 -- copy/paste, except no white-space is filtered
 runParser  :: CharParser a -> String -> (a, [Message Char Pos])
-runParser pLogic input = (result, messages)
+runParser p input = (result, messages)
  where -- quick hack
-   steps    = parseString pLogic (safeInit $ unlines $ filter (any (not . isSpace)) $ lines input)
+   steps    = parseString p (safeInit $ unlines $ filter (any (not . isSpace)) $ lines input)
    result   = fstPair (evalSteps steps)
    messages = getMsgs steps
    safeInit xs = if null xs then [] else init xs
 
+parseVectors :: String -> Either (Doc a) (Context [Vector MySqrt])
+parseVectors input = if null messages then Right (inContext result) else Left (text (show messages)) 
+ where
+   myp      = pList (pVector pMySqrt <* pSym '\n')
+   steps    = parseString myp (filter (/= ' ') $ unlines $ filter (any (not . isSpace)) $ lines input) -- hack for trailing \n
+   result   = fstPair (evalSteps steps)
+   messages = getMsgs steps
+
+pVector :: CharParser a -> CharParser (Vector a)
+pVector p = fromList <$> pparens (pListSep (pSym ',') p)
+
+pMySqrt :: CharParser MySqrt
+pMySqrt = pChainr ((:+:) <$ pSym '+') atom 
+ where
+   atom =  Con <$> pRatio
+       <|> Sqrt <$> opt (pRatio <* pSym '*') 1 <* pToks "sqrt" <*> pparens pNat
+       <|> pparens pMySqrt
+   
 fstPair :: Pair a b -> a
 fstPair (Pair a b)  =  a
   
@@ -138,3 +158,10 @@ ppStringMatrix = format . rows
    format m = let ws = foldr (zipWith max . map length) (repeat 0) m 
                   align i s = take i (s ++ repeat ' ')
               in unlines $ map (concat . intersperse " " . zipWith align ws) m
+              
+ppMySqrt :: MySqrt -> String
+ppMySqrt (Con r)    = ppRational r
+ppMySqrt (x :+: y)  = ppMySqrt x ++ " + " ++ ppMySqrt y
+ppMySqrt (Sqrt r n)
+   | n==1      = "sqrt(" ++ show n ++ ")"
+   | otherwise = ppRational r ++ " * sqrt(" ++ show n ++ ")"

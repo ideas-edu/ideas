@@ -19,7 +19,7 @@ function getDerivation() {
 function displayExercise(state) {
 	closeallhelp();
 	clearFeedback();
-	$('copybutton').hide();
+	setInvisible($('copybutton'));
 	var task = state.exercise;
 	$('exercise').update(task);
 	$('work').value = task;
@@ -56,7 +56,7 @@ function getNext() {
 	// Does the work area contain the last valid step?
 	if (checkWorkArea()) {
 		$('feedback').innerHTML = $('feedback').innerHTML + "<p>" + changed + "</p>";
-		$('copybutton').show();
+		setVisible($('copybutton'));
 		historyKeeper.addFeedback();
 	}
 	else {
@@ -82,6 +82,35 @@ function getNext() {
 		historyKeeper.addFeedback();
 	}
 	
+}
+/**
+ * React to the derivation button
+ */
+function getDerivation() {
+	// Does the work area contain the last valid step?
+	if (checkWorkArea()) {
+		$('feedback').innerHTML = $('feedback').innerHTML + "<p>" + changed + "</p>";
+		setVisible($('copybutton'));
+		historyKeeper.addFeedback();
+	}
+	else {
+		ss_getDerivation(snapshot.get('state'), displayDerivation);
+	}
+ }
+ function displayDerivation(setOfRules) {
+	var counter = 0;
+	var text = $('feedback').innerHTML + derivationtext +  $('work').value + "<br><br>";
+	while (counter < setOfRules.length) {
+		var rule = setOfRules[counter];
+		++counter;
+		text += "Application of:  " + rule.name;
+		text += "<br>results in: <br>";
+		text += rule.expression;
+		text += "<br><br>";
+	}
+	$('feedback').update(text);
+	$('feedback').scrollTop = $('feedback').scrollHeight;
+	historyKeeper.addFeedback();
 }
 /**
  * Check whether the work area contains the last valid step
@@ -133,6 +162,6 @@ function displayFeedback(result, rules, state) {
 		text = text + "<p>" + copybutton +  "</p>";
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
-		$('copybutton').show();
+		setVisible($('copybutton'));
 	}
 }

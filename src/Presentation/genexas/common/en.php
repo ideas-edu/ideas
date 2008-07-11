@@ -17,5 +17,5 @@ define("WorkArea", "Working Area: Rewrite and Submit");
 define("History", "History");
 define("Feedback", "Feedback");
 define("Close", "Close");
-define("Local", "en/local.js");
+define("Local", "/genexas/common/javascript/en.js");
 ?>

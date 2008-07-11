@@ -111,24 +111,28 @@ function ss_getNext(state, callback) {
 /**
  *  getDerivation returns a complete derivation
   */
-function ss_getDerivation(state, callback) {
-	var exercise = (state.exercise).htmlToAscii();
+function ss_getDerivation(eastate, callback) {
+	var exercise = (eastate.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "method" : "onefirst" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+		parameters : 'input={ "method" : "derivation" , "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
         onSuccess : function(response) {	
 			var resJSON = parseJSON(response.responseText);
-			alert(response.responseText);
-			/*var error = resJSON.error;
+			var error = resJSON.error;
 			if (error == null) {
-				var rule = resJSON["result"][0];
-				var location = resJSON["result"][1];
-				var state = resJSON["result"][2];
-				var newState = new State(state[0], state[1], state[2], state[3]);
-				callback(rule, location, newState);
+				var list = resJSON["result"];
+				var setOfRules = new Array();
+				var counter = 0;
+				while (counter < list.length) {
+					var entry = list[counter];
+					var appliedRule = new Rule(entry[0], entry[1], entry[2]);
+					++counter;
+					setOfRules.push(appliedRule);
+				}
+				callback(setOfRules);
 			}
 			else { 
 				alert(response.responseText["error"] );
-			}*/
+			}
 			
          }		 ,
 		 onFailure : function() {alert(wrong);}

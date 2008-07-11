@@ -40,6 +40,13 @@ relAlgRules = invRules ++ compAddRules ++
 	      , ruleNotOverAdd
 	      ]
 	      
+buggyRelAlgRules ::[RelAlgRule]
+buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
+	           , buggyRuleNotOverAdd, buggyRuleNotOverComp, buggyRuleParenth
+		   , buggyRuleAssoc, buggyRuleInvOverComp, buggyRuleInvOverAdd
+		   , buggyRuleCompOverIntersec, buggyRuleAddOverUnion, buggyRuleRemCompl
+		   ]
+		   
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
 ruleInvOverUnion :: RelAlgRule
@@ -195,3 +202,106 @@ ruleNotOverComp = makeRule "NotOverComp" $
 ruleNotOverAdd :: RelAlgRule
 ruleNotOverAdd = makeRule "NotOverAdd" $
    Not (r :+: s) |-  (Not r :.: Not s)
+   
+   -- Buggy rules:
+
+
+    
+buggyRuleIdemComp :: RelAlgRule
+buggyRuleIdemComp = buggyRule $ makeRule "IdemComp" $
+    (q :.: q)  |-  q 
+    
+buggyRuleIdemAdd :: RelAlgRule
+buggyRuleIdemAdd = buggyRule $ makeRule "IdemAdd"  $
+    (q :+: q)  |-  q 
+    
+
+
+buggyRuleDeMorgan :: RelAlgRule
+buggyRuleDeMorgan = buggyRule $ makeRuleList "BuggyDeMorgan"
+    [ (Not (q :&&: r)) |-  (Not q :||: r)
+    , (Not (q :&&: r)) |-  (q :||: Not r)
+    , (Not (q :&&: r)) |- (Not (Not q :||: Not r))
+    , (Not (q :||: r)) |-  (Not q :&&: r)
+    , (Not (q :||: r)) |-  (q :&&: Not r)
+    , (Not (q :||: r)) |- (Not (Not q :&&: Not r)) --note the firstNot in both formulas!  
+    ]
+    
+buggyRuleNotOverAdd :: RelAlgRule
+buggyRuleNotOverAdd = buggyRule $ makeRuleList "BuggyNotOverAdd" $
+     [(Not(q :+: r)) |- (Not q :+: Not r)
+     ,(Not(q :+: r)) |- (Not q :.: r)
+     ,(Not(q :+: r)) |- (Not q :+: r)
+     ,(Not(q :+: r)) |- Not (Not q :.: Not r) --note the firstNot in both formulas! 
+     ]
+     
+buggyRuleNotOverComp :: RelAlgRule
+buggyRuleNotOverComp = buggyRule $ makeRuleList "BuggyNotOverComp" $
+     [(Not(q :.: r)) |- (Not q :.: Not r)
+     ,(Not(q :.: r)) |- (Not q :.: r)
+     ,(Not(q :.: r)) |- (Not q :+: r)
+     ,(Not(q :.: r)) |- Not (Not q :.: Not r) --note the firstNot in both formulas! 
+     ]
+     
+buggyRuleParenth :: RelAlgRule
+buggyRuleParenth = buggyRule $ makeRuleList "BuggyParenth"
+    [ (Not (q :&&: r)) |-  (Not q :&&: r)
+    , (Not (q :||: r)) |-  (Not q :||: r)
+    , (Not(Not q :&&: r)) |- (q :&&: r) 
+    , (Not(Not q :||: r)) |- (q :||: r)
+    , (Not(Not q :.: r)) |- (q :.: r)
+    , (Not(Not q :+: r)) |- (q :+: r)
+    , (Inv (q :&&: r)) |-  (Inv q :&&: r)
+    , (Inv (q :||: r)) |-  (Inv q :||: r)
+    , (Inv(Inv q :&&: r)) |- (q :&&: r) 
+    , (Inv(Inv q :||: r)) |- (q :||: r)
+    , (Inv(Inv q :.: r)) |- (q :.: r)
+    , (Inv(Inv q :+: r)) |- (q :+: r)
+    ]
+    
+buggyRuleAssoc :: RelAlgRule
+buggyRuleAssoc = buggyRule $ makeRuleList "BuggyAssoc"
+    [ (q :||: (r :&&: s)) |- ((q :||: r) :&&: s)
+    , ((q :||: r) :&&: s) |- (q :||: (r :&&: s))
+    , ((q :&&: r) :||: s) |- (q :&&: (r :||: s))
+    , (q :&&: (r :||: s)) |- ((q :&&: r) :||: s)
+    , (q :.: (r :||: s)) |-  ((q :.: r) :||: s) 
+    , ((q :||: r) :.: s) |-  (q :||: (r :.: s)) 
+    , (q :.: (r :&&: s)) |-  ((q :.: r) :&&: s) 
+    , ((q :&&: r) :.: s) |-  (q :&&: (r :.: s)) 
+    , (q :+: (r :||: s)) |-  ((q :+: r) :||: s) 
+    , ((q :||: r) :+: s) |-  (q :||: (r :+: s)) 
+    , (q :+: (r :&&: s)) |-  ((q :+: r) :&&: s)  
+    , ((q :&&: r) :+: s) |-  (q :&&: (r :+: s))  
+    ]
+    
+
+buggyRuleInvOverComp :: RelAlgRule
+buggyRuleInvOverComp = buggyRule $ makeRule "BuggyInvOverComp" $
+   (Inv (r :.: s)) |- (Inv r :.: Inv s)
+
+buggyRuleInvOverAdd :: RelAlgRule
+buggyRuleInvOverAdd = buggyRule $ makeRule "BuggyInvOverAdd" $
+   (Inv (r :+: s)) |- (Inv r :+: Inv s)
+   
+buggyRuleCompOverIntersec :: RelAlgRule
+buggyRuleCompOverIntersec = makeRuleList "BuggyCompOverIntersec" 
+   [ (q :.: (r :&&: s)) |-  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
+   , ((q :&&: r) :.: s) |-  ((q :.: s) :&&: (r :.: s))  --idem
+   ]
+buggyRuleAddOverUnion :: RelAlgRule
+buggyRuleAddOverUnion = makeRuleList "BuggyAddOverUnion" 
+   [ (q :+: (r :||: s)) |-  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
+   , ((q :||: r) :+: s) |-  ((q :+: s) :||: (r :+: s)) --idem
+   ]
+   
+buggyRuleRemCompl :: RelAlgRule
+buggyRuleRemCompl = makeRuleList "BuggyRemCompl" 
+   [ (r :||: (Not r)) |-  E
+   , ((Not r) :||: r) |-  E
+   , (r :&&: (Not r)) |-  U
+   , ((Not r) :&&: r) |-  U
+   ]
+
+
+    

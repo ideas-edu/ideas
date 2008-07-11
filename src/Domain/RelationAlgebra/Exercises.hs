@@ -36,7 +36,7 @@ cnfExercise = makeExercise
    , equivalence = \x y -> fromContext x `probablyEqual` fromContext y
    , ruleset   = map liftRuleToContext relAlgRules
    , strategy  = toCNF
-   , generator = liftM inContext arbitrary
+   , generator = liftM inContext $ oneof [gen1,gen2,gen3,gen4,gen5,gen6,gen7,gen8,gen9]
    , suitableTerm = not . isCNF . fromContext
    }
    

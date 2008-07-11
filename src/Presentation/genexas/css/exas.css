@@ -35,6 +35,7 @@ h2, h3, h4 {
 	margin-left: 20px;
 	margin-top: 20px;
 	margin-bottom: 0px;
+	clear: both;
 }
 
 form {

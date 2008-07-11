@@ -6,26 +6,26 @@
 */
 window.onload = function() {
 	// The handlers for buttons
- 	$('aboutButton').onclick = openhelp;
-	$('helpButton').onclick = openhelp;
-	$('rulesButton').onclick = openhelp; 
-	$('generateButton').onclick = generate;
+	$('aboutButton').observe('click', openhelp);
+	$('helpButton').observe('click', openhelp);
+	$('rulesButton').observe('click', openhelp); 
+	$('generateButton').observe('click', generate);
 	
-	$('hintbutton').onclick = getHint;
-	$('derivationbutton').onclick = getDerivation;
-	$('nextbutton').onclick = getNext;
-	$('readybutton').onclick = getReady;
-	$('submitbutton').onclick = getFeedback;
-	$('readybutton').onclick = getReady;
-	$('undobutton').onclick = goBack;
-	$('forwardbutton').onclick = goForward;
+	$('hintbutton').observe('click', getHint);
+	$('derivationbutton').observe('click', getDerivation);
+	$('nextbutton').observe('click', getNext);
+	$('readybutton').observe('click', getReady);
+	$('submitbutton').observe('click', getFeedback);
+	$('readybutton').observe('click', getReady);
+	$('undobutton').observe('click', goBack);
+	$('forwardbutton').observe('click', goForward);
 	
-	$('closehelpButton').onclick = closehelp;
-	$('closeaboutButton').onclick = closehelp;
-	$('closerulesButton').onclick = closehelp; 
+	$('closehelpButton').observe('click', closehelp);
+	$('closeaboutButton').observe('click', closehelp);
+	$('closerulesButton').observe('click', closehelp); 
 	
-	$('clearbutton').onclick = clearFeedback; 
-	$('copybutton').onclick = copy; 
+	$('clearbutton').observe('click', clearFeedback); 
+	$('copybutton').observe('click', copy); 
 	
 	// the back and forward button  and the copy button are invisable
 	setInvisible($('undobutton'));

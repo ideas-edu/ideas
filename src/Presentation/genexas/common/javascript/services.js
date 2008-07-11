@@ -67,7 +67,7 @@ function ss_getHint(location, state, callback) {
 		parameters : 'input={ "method" :"applicable", "params" : ["[]", ["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", ""]], "id" : ' + id + '}',
 		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
-			// alert(response.responseText);
+			
 			var error = resJSON.error;
 			if (error == null) {
 				var result = resJSON["result"];

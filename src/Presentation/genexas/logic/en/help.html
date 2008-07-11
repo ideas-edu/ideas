@@ -3,8 +3,11 @@
 <li><a href="#symbols">Symbols</a></li>
 <li><a href="#exerciseArea">Exercise</a></li>
 <li><a href="#workArea">Work Area</a></li>
-<li><a href="#history">History</a></li>
 <li><a href="#buttons">Buttons</a></li>
+<li><a href="#historyarea">History</a></li>
+<li><a href="#feedbackarea">Feedback</a></li>
+<li><a href="#menuarea">Menu</a></li>
+
 </ul>
 
 <h3 id="symbols">Symbols</h3>
@@ -38,7 +41,7 @@ represented as follows:</p>
 </tr>
 </table>
 
-<h3 id="exerciseArea">Exercise</h3>
+<h3 id="exerciseArea">Exercise Area</h3>
 <img src="/genexas/common/figures/screenshot-exercise-small.png" title="The Exercise Area of the Exercise Assistant">
 <p>The Exercise Area in the upper left corner will hold the exercise on
 which you are currently working. You can't change its contents.</p>
@@ -46,53 +49,71 @@ which you are currently working. You can't change its contents.</p>
 above the Feedback Area.</p>
 
 <h3 id="workArea">Work Area</h3>
+<img src="/genexas/common/figures/workarea-small.jpg" title="The Work Area of the Exercise Assistant">
 <p>Below the Exercise Area, you see the Work Area. This is the area which you use
 to rewrite the expression that you are trying to solve.</p>
 <p>When you have asked for a new exercise, the expression will not only be visible in the Exercise Area,
 but also in the Work Area. The difference is that you can edit the Work Area.</p>
 <p>When you think you have rewritten the expression into an equivalent expression toward a solution,
-you cclick the <strong>Submit</strong> button.</p>
+you click the <strong>Submit</strong> button.</p>
 
-<p>Onder het werkveld zie je een aantal knoppen. Van links naar rechts zijn dat:</p>
+<h3 id="buttons">Buttons</h3>
+<img src="/genexas/common/figures/screenshot-buttons-small.jpg" title="The Buttons of the Exercise Assistant">
+<p>Below the work area there are several buttons. Some of them are not always
+visible: buttons only appear when they are relevant.</p>
+<p>From left to right and from top to bottom you may see: </p>
 <ul>
-<li><b>Stap</b> kun je gebruiken om een mogelijke 
-herschrijving aan de Feedback Assistant te vragen.
+<li><b>Hint</b> Any time, you may ask for a hint. The Exercise Assistent
+will propose a rule that is applicable on the current expression in the Work area.
 <br>
-De mogelijke volgende stap komt in het Feedback veld te staan.</li>
-<li><b>Hint</b> kun je gebruiken om te vragen 
-welke herschrijfregel je kunt toepassen. Je moet dan zelf kijken 
-waar je die regel kunt toepassen.<br>
-De toe te passen herschrijfregel komt in het Feedback veld te staan.</li>
-<li><b>Herstel</b> gebruik je na een fout om weer de expressie 
-in het werkveld te krijgen waar je van uitging.</li>
-<li><b>Submit</b> gebruik je om je herschrijving te laten controleren.
+The name of the rule will appear in the Feedback area.</li>
+<li><b>Step</b> When a hint is not enough, you may ask for a step.
+The Exercise Assistent will show you not only the name of a rule that is applicable,
+but also the resulting expression.<br>
+The name of the rule and the resulting expression will appear in the Feedback
+area, and the resulting expression will also be available under the Cop button (see below).</li>
+<li><b>Derivation</b> One step further is to ask for a derivation. The Exercise assistant
+will show you a complete solution, in single steps, with the name of the rule which
+is applied in each step, and the intermediate expression.<br>
+The derivation will appear in the Feedback area.</li>
+<li><b>Submit</b> When you have rewritten the expression in the Work area,
+you can hit submit to check the result. The feedback will appear in the Feedback area.
 <br>
-In het Feedback veld kun je dan  lezen of je herschrijving correct was,
-en zo niet, wat er mis ging.<br>
-In plaats van <b>Submit</b> kun je ook simpelweg de enter toets gebruiken,
-ook als de cursor midden in de expressie staat.</li>
-<li><b>Klaar</b>, gebruik je om aan te geven dat de expressie volgens jou
-in DNF staat.<br>
-De melding of dat al dan niet het geval is komt in het 
-Feedback veld te staan.<br>
-De <b>Klaar</b>-knop krijg je te zien wanneer je een herschrijving hebt gesubmit die
-juist is.</li>
+When the Exercise Assistant detects a mistake, it will try to explain you exactly
+where and how the mistake was made. The previous expression will be
+available under the Copy button, in case of a mistake.</li>
+<li><b>Copy</b> The Copy button is the first button of the second row.<br>
+It will be available when it is relevant. It will paste the expression
+which is mentioned in the Feedback area to the Work area.</li>
+<li><b>Back</b> The Back button allows you to step back in time. The
+back button of the browser does not recognize the single steps you
+did take during the exercise; the Back button of the Exercise Assistent does.</li>
+<li><b>Forward</b> The same applies for the Forward button, which will appear after
+you have used the Back button.</li>
+<li><b>Ready</b> With the Ready button, you may check whether you have solved the exercise.</li>
 </ul>
 
-<h3 id="invoergeschiedenis">Afleiding</h3>
-<p>Rechts van het werkveld zie je de <b>Afleiding</b>. 
-Daarin komen alle stappen te staan die je hebt uitgevoerd 
-tijdens het oplossen van de opgave.</p>
+<h3 id="historyarea">History</h3>
+<img src="/genexas/common/figures/screenshot-history-small.jpg" title="The History area of the Exercise Assistant">
+<p>Below the Work area is the <b>History area</b>. 
+This area will contain all valid steps of a single exercise</p>
 
-<h3 id="menu">Menu</h3>
-<p>In het menu zie je naast de <b>About</b>-knop drie menu-items. Van links naar rechts zijn dat:</p>
+<h3 id="feedbackarea">Feedback</h3>
+<img src="/genexas/common/figures/screenshot-feedback-small.jpg" title="The Feedback area of the Exercise Assistant">
+<p>The green area to the right is the <b>Feedback area</b>. 
+All feedback will appear there. </p>
+<p>The feedback will appear below the previous feedback. If you feel that the Feedback area
+becomes too cluttered, you may clear it with the Clear button above it.
+
+<h3 id="menuarea">Menu</h3>
+<img src="/genexas/common/figures/screenshot-menu-small.jpg" title="The Feedback area of the Exercise Assistant">
+<p>The menu is formed by four buttons just below the title bar.
+From left to right you see:</p>
 <ul>
-<li>Met <b>Nieuwe Opgave</b> krijg je een nieuwe opgave.
-<br>
-De afleiding wordt gewist.</li>
-<li>Met <b>Help</b> krijg je deze tekst te zien. Je kunt de 
-Help weer sluiten door middel van de <b>Sluit knop</b>.</li>
-<li>Met <b>Herschrijfregels</b> krijg je een overzicht van 
-alle herschrijfregels. Ook dat scherm kun je weer sluiten 
-met de <b>Sluit knop</b>.</li>
+<li><b>New Exercise</b> will clear all areas, and show a new exercise in
+the Exercise area.</li>
+<li><b>Rewriting Rules</b> will show you a list of the rewriting rules.</li>
+<li>You used <b>Help</b> to see this text. The Help area will disappear
+when you use the <b>Close button</b>.</li>
+<li><b>About</b> will tell you some information about the Exercise Assistant.</li>
 </ul>

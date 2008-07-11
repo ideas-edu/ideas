@@ -1,9 +1,3 @@
-function getReadyService(callback) {
-	ss_getReady(snapshot.state, callback);
-}
-function getDerivation() {
-	ss_getDerivation(snapshot.state);
-}
 /**
  * Generate a new exercise,
  * A function to call the service and a display function
@@ -24,7 +18,10 @@ function displayExercise(state) {
 	$('exercise').update(task);
 	$('work').value = task;
 	$('history').update(task);
-	ss_getRemaining(state, function(number) {$('progress').innerHTML = "Steps<br> " + number; historyKeeper.newSnapshot(state);});
+	ss_getRemaining(state, function(number) {
+			$('progress').update('Steps<br> ' + number); 
+			historyKeeper.newSnapshot(state);
+		} );
 	adjustHeight($('exercise'), task, 40, 40);
 	adjustRows($('work'), task, 40);
 }
@@ -37,13 +34,13 @@ function getHint() {
 function displayHint(listOfRules) {
 	closeallhelp();	
 	var expression = (snapshot.get('state')).exercise;
-	var text = "";
+	var text = '';
 	if (listOfRules.length > 0) {
 		rules = writeArray(listOfRules);
-		text = $('feedback').innerHTML  + "<p>" + applicable + " <strong>" + expression + "</strong>:<br><br><strong>" + rules + "</strong></p>";
+		text = $('feedback').innerHTML  + '<p>' + applicable + ' <strong>' + expression + '</strong>:<br><br><strong>' + rules + '</strong></p>';
 	}
 	else {
-		text = $('feedback').innerHTML  + "<p>" + sorry + " <strong>" + expression + "</strong></p>";
+		text = $('feedback').innerHTML  + '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
 	}
 	$('feedback').update(text);
 	$('feedback').scrollTop = $('feedback').scrollHeight;
@@ -55,7 +52,7 @@ function displayHint(listOfRules) {
 function getNext() {
 	// Does the work area contain the last valid step?
 	if (checkWorkArea()) {
-		$('feedback').innerHTML = $('feedback').innerHTML + "<p>" + changed + "</p>";
+		$('feedback').update($('feedback').innerHTML + '<p>' + changed + '</p>');
 		setVisible($('copybutton'));
 		historyKeeper.addFeedback();
 	}
@@ -64,11 +61,11 @@ function getNext() {
 	}
  }
  function displayNext(rule, location, state) {
-	var text = "";
+	var text = '';
 	var nextExpression = (state.exercise).asciiToHtml() ;
 	var expression = ((snapshot.get('state')).exercise).asciiToHtml();
 	if (rule) {
-		text = $('feedback').innerHTML + "<p>" + applicable + " <strong>" + expression + "</strong>:<br><br><strong>" + rule + "</strong> rule</p><p>" + resulting + " <strong>" + nextExpression + "</strong></p><p>" + paste + "</p><p";
+		text = $('feedback').innerHTML + '<p>' + applicable + ' <strong>' + expression + '</strong>:<br><br><strong>' + rule + '</strong> rule</p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + '</p><p';
 		var copyContent = new CopyContent(state, location);
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
@@ -76,7 +73,7 @@ function getNext() {
 		historyKeeper.addCopy(copyContent);
 	}
 	else {
-		text = $('feedback').innerHTML  + "<p>" + sorry + " <strong>" + expression + "</strong></p>";	
+		text = $('feedback').innerHTML  + '<p>' + sorry + ' <strong>' + expression + '</strong></p>';	
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		historyKeeper.addFeedback();
@@ -89,7 +86,7 @@ function getNext() {
 function getDerivation() {
 	// Does the work area contain the last valid step?
 	if (checkWorkArea()) {
-		$('feedback').innerHTML = $('feedback').innerHTML + "<p>" + changed + "</p>";
+		$('feedback').update($('feedback').innerHTML + '<p>' + changed + '</p>');
 		setVisible($('copybutton'));
 		historyKeeper.addFeedback();
 	}
@@ -99,14 +96,14 @@ function getDerivation() {
  }
  function displayDerivation(setOfRules) {
 	var counter = 0;
-	var text = $('feedback').innerHTML + derivationtext +  $('work').value + "<br><br>";
+	var text = $('feedback').innerHTML + derivationtext +  $('work').value + '<br><br>';
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;
-		text += "Application of:  " + rule.name;
-		text += "<br>results in: <br>";
+		text += 'Application of:  ' + rule.name;
+		text += '<br>results in: <br>';
 		text += rule.expression;
-		text += "<br><br>";
+		text += '<br><br>';
 	}
 	$('feedback').update(text);
 	$('feedback').scrollTop = $('feedback').scrollHeight;
@@ -130,7 +127,7 @@ function getDerivation() {
 	var workExpression = (($('work')).value).htmlToAscii();
 	// Does the work area contain the last valid step?
 	 if (! checkWorkArea()) {
-		$('feedback').innerHTML = $('feedback').innerHTML + "<p>" + unchanged + "</p>";
+		$('feedback').update($('feedback').innerHTML + '<p>' + unchanged + '</p>');
 		historyKeeper.addFeedback();
 	}
 	else {
@@ -139,29 +136,48 @@ function getDerivation() {
 }
 function displayFeedback(result, rules, state) {
 	// always paste the result
-	var text = $('feedback').innerHTML + "<p><strong>" + result + "</strong></p>";
-	if (result == "Ok") {
+	var text = $('feedback').innerHTML + '<p><strong>' + result + '</strong></p>';
+	if (result == 'Ok') {
 		if (rules.length > 0) {
-			text = text + "<p>" + applied + "<strong>" + writeArray(rules) + "</strong></p></p>";
+			text = text + '<p>' + applied + '<strong>' + writeArray(rules) + '</strong></p></p>';
 		}
 		$('feedback').update(text);
-		$('history').update($('history').innerHTML + "<br>" + state.exercise);
+		$('history').update($('history').innerHTML + '<br>' + state.exercise);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
-		ss_getRemaining(state, function(number) {$('progress').innerHTML = "Steps<br> " + number; historyKeeper.update(state);});
+		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
-	else if (result == "Detour") {
-		text = text + "<p><strong>" + two + "</strong></p></p>";
+	else if (result == 'Detour') {
+		text = text + '<p><strong>' + two + '</strong></p></p>';
 		if (rules.length > 0) {
-			text = text + "<p>applied" + writeArray(rules) + "</strong></p></p>";
+			text = text + '<p>applied' + writeArray(rules) + '</strong></p></p>';
 		}
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
-		ss_getRemaining(state, function(number) {$('progress').innerHTML = "Steps<br> " + number; historyKeeper.update(state);});
+		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
 	else {
-		text = text + "<p>" + copybutton +  "</p>";
+		text = text + '<p>' + copybutton +  '</p>';
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		setVisible($('copybutton'));
 	}
+}
+/**
+ * React to the Ready button
+*/
+function getReady() {
+	ss_getReady(snapshot.get('state'), handleSolved);
+}
+function handleSolved(solved) {
+	var expression = (snapshot.get('state')).exercise;
+	var text = '';
+	if (solved) {
+		text = $('feedback').innerHTML + '<p>' + yes + ', <strong>' + expression + '</strong> is ' + ready + '.</p>';
+	}
+	else {
+		text = $('feedback') + '<p>' + no + ', <strong>' + expression + '</strong> is <strong>' + not + '</strong> ' + ready + '.</p>';
+	}
+	$('feedback').update(text);
+	$('feedback').scrollTop = $('feedback').scrollHeight;
+	historyKeeper.addFeedback();
 }

@@ -1,21 +1,22 @@
 <?php
 define("About", "About");
-define("Help", "Help");
-define("Rules", "Rewriting Rules");
-define("NewExercise", "New Exercise");
-define("Submit", "Submit");
 define("Back", "Back");
-define("Forward", "Forward");
-define("Copy", "Copy");
-define("Progress", "Progress");
-define("Step", "Step");
-define("Hint", "Hint");
-define("Ready", "Ready");
 define("Clear", "Clear Feedback");
-define("Exercise", "Exercise");
-define("WorkArea", "Working Area: Rewrite and Submit");
-define("History", "History");
-define("Feedback", "Feedback");
 define("Close", "Close");
+define("Copy", "Copy");
+define("Derivation", "Derivation");
+define("Exercise", "Exercise");
+define("Feedback", "Feedback");
+define("Forward", "Forward");
+define("Help", "Help");
+define("Hint", "Hint");
+define("History", "History");
 define("Local", "/genexas/common/javascript/en.js");
+define("NewExercise", "New Exercise");
+define("Progress", "Progress");
+define("Ready", "Ready");
+define("Rules", "Rewriting Rules");
+define("Step", "Step");
+define("Submit", "Submit");
+define("WorkArea", "Working Area: Rewrite and Submit");
 ?>

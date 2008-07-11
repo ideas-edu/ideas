@@ -24,7 +24,8 @@ function setInvisible(element) {
 	length /= row;
 	length = Math.floor(length) + 1;
 	length = length*height;
-	element.style.height = length + 'px';
+	element.setStyle({height: length + 'px'});
+	//element.style.height = length + 'px';
 }
  /***
  * adjust the number of rows  with respect to the length of the expression
@@ -51,9 +52,21 @@ String.prototype.asciiToHtml = function() {
 	resultstring = resultstring.replace(/\\\\/g, '\\');
 	 return resultstring;
 }
-
+/**
+* produce text in HTML, on seperate lines.
+*/
+function writeArray(list) {
+	elements = "";
+	for (var i = 0; i < list.length; ++i) {
+		elements = elements + list[i] + ",<br>";
+	}
+	return elements;
+}
+/**
+ * clear the feedback area
+ */
 function clearFeedback() {
-	$('feedback').innerHTML = "";
+	$('feedback').update('');
 }
 function parse(json){
     try{
@@ -63,7 +76,7 @@ function parse(json){
 		}
 	}catch(e){
     }
-    throw new SyntaxError("parseJSON");
+    throw new SyntaxError('parseJSON');
 }
 /**
  * Een datatype voor regels en de expressie die het resultaat is van het toepassen van die regel
@@ -201,16 +214,16 @@ function goBack() {
 		setVisible($('undobutton'));
 	}
 	else {
-		alert("You can't move forward unless you have been there!");
+		alert('You can\'t move forward unless you have been there!');
 	}
 }
 
 function fillAreas(stateObject) {
-	$('exercise').innerHTML = stateObject.get('state').exercise;
+	$('exercise').update(stateObject.get('state').exercise);
 	$('work').value = (stateObject.get('work')).htmlToAscii();
-	$('feedback').innerHTML = stateObject.get('feedback');
-	$('history').innerHTML = stateObject.get('history');
-	$('progress').innerHTML = stateObject.get('steps');
+	$('feedback').update(stateObject.get('feedback'));
+	$('history').update(stateObject.get('history'));
+	$('progress').update(stateObject.get('steps'));
 	adjustHeight($('exercise'), $('exercise').innerHTML, 40, 40);
 	adjustRows($('work'), $('work').value, 40);
 }

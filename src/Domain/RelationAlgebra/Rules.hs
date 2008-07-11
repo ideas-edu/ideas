@@ -285,18 +285,18 @@ buggyRuleInvOverAdd = buggyRule $ makeRule "BuggyInvOverAdd" $
    (Inv (r :+: s)) |- (Inv r :+: Inv s)
    
 buggyRuleCompOverIntersec :: RelAlgRule
-buggyRuleCompOverIntersec = makeRuleList "BuggyCompOverIntersec" 
+buggyRuleCompOverIntersec = buggyRule $ makeRuleList "BuggyCompOverIntersec" 
    [ (q :.: (r :&&: s)) |-  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
    , ((q :&&: r) :.: s) |-  ((q :.: s) :&&: (r :.: s))  --idem
    ]
 buggyRuleAddOverUnion :: RelAlgRule
-buggyRuleAddOverUnion = makeRuleList "BuggyAddOverUnion" 
+buggyRuleAddOverUnion = buggyRule $ makeRuleList "BuggyAddOverUnion" 
    [ (q :+: (r :||: s)) |-  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
    , ((q :||: r) :+: s) |-  ((q :+: s) :||: (r :+: s)) --idem
    ]
    
 buggyRuleRemCompl :: RelAlgRule
-buggyRuleRemCompl = makeRuleList "BuggyRemCompl" 
+buggyRuleRemCompl = buggyRule $ makeRuleList "BuggyRemCompl" 
    [ (r :||: (Not r)) |-  E
    , ((Not r) :||: r) |-  E
    , (r :&&: (Not r)) |-  U

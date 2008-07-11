@@ -75,8 +75,8 @@ isCNF (r :&&: s) = isCNF r && isCNF s
 isCNF r = isDisj r
 -}
 -- | maak er een cnf van
--- isEquivalent :: RelAlg -> RelAlg -> Bool
-isEquivalent x1 x2 =
+isEquivalent :: RelAlg -> RelAlg -> Bool
+isEquivalent x1 x2 = 
     let res1           =  fromContext (applyD toCNF (inContext x1))  -- cnf van x1
         res2           =  fromContext (applyD toCNF (inContext x2)) -- cnf van x2
 	mols           =  union (getSetOfMolecules res1) (getSetOfMolecules res2) 
@@ -172,6 +172,8 @@ getSetOfMolecules = nub . getMolecules
        p :&&: q  ->  getMolecules p ++ getMolecules q
        p :||: q  ->  getMolecules p ++ getMolecules q
        Not p     ->  getMolecules p
+       U	 ->  []
+       E	 ->  []
        p         ->  [p] 
 
  

@@ -22,12 +22,20 @@
 <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" >
 <input class="menu" type="button" id="rulesButton" value="<?php print Rules;?>" >
 <input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
-<br clear="all" >
+<br class="clear" >
 
 <div class="column left">
-
+	<div id="numberinput" style="display: none">
+		<h3>Please first fill in your student number</h3>
+		<textarea id="number" rows="1" cols="12"></textarea>
+		<input type="button" id="numberbutton" value="Enter">
+	</div><!-- end div numberinput -->
+	<div id="numberdisplay"  style="display: none">
+		<h3 id="studentnumber"></h3>
+		<input type="button" id="changenumberbutton" value="Change">
+	</div><!-- end div numberdisplay -->
 	<h3><?php print Exercise;?></h3>
-	<div id="exercise" ></div>
+	<div id="exercise" ></div><!-- end div exercise -->
 
 	<h3><?php print WorkArea;?></h3>
 
@@ -37,43 +45,43 @@
 	<input id="derivationbutton"  class="minibutton" type="button" value="<?php print Derivation;?>" >
 	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
-	<div id="progress">Steps<br>0</div>
+	<div id="progress">Steps<br>0</div><!-- end div progress -->
 	<br class="clear">
-	<input class="minibutton" type="button" id="readybutton" onclick="ready() "value="<?php print Ready;?>" >
+	<input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>" >
 	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
 	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
 	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
 	<br>
 	<h3><?php print History;?></h3>
-	<div id="history"></div>
+	<div id="history"></div><!-- end div history -->
 
-</div>
+</div><!-- end div column left -->
 
 <div class="column right">
-	
-		
 		<h3><?php print Feedback ?></h3>
-		<input type="button" id="clearbutton" value="<?php print Clear;?>" >
+		<label class="feedbacklabel"><?php print ChooseClear;?><input type="radio" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear" ></label>
+		<label class="feedbacklabel"><?php print ChooseKeep;?><input type="radio" name="feedbackchoice"  id="feedbackeepchoice" value="choosekeep" ></label>
+		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">
 		
-	<div id="feedback"></div>
+	<div id="feedback" class="clear"><?php print Welcome;?></div><!-- end div feedback -->
 
-</div>
+</div><!-- end div column right -->
 
 <div id="rules" class="helparea invisible">
 <input class="helpbutton" id="closerulesButton" type="button" value="<?php print Close;?>" >
 <?php rules();?>
-</div>
+</div><!-- end div rules -->
 
 <div id="help" class="helparea invisible">
 <input class="helpbutton"  id="closehelpButton" type="button" value="<?php print Close;?>" >
 <?php help();?>
-</div>
+</div><!-- end div help -->
 
 <div id="about" class="helparea invisible">
 <input class="helpbutton"  id="closeaboutButton" type="button" value="<?php print Close;?>" >
 <?php about();?>
 
-</div>
-
+</div><!-- end div about -->
+</div><!-- end div exas -->
 </body>
 </html>

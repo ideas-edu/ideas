@@ -4,8 +4,10 @@
 /**
  * After the full DOM has been ,loaded
 */
-window.onload = function() {
+document.observe("dom:loaded", init);
+//window.onload = function() {
 	// The handlers for buttons
+function init() {
 	$('aboutButton').observe('click', openhelp);
 	$('helpButton').observe('click', openhelp);
 	$('rulesButton').observe('click', openhelp); 
@@ -25,6 +27,8 @@ window.onload = function() {
 	$('closerulesButton').observe('click', closehelp); 
 	
 	$('clearbutton').observe('click', clearFeedback); 
+	$('feedbackclearchoice').observe('click', setClearFeedback); 
+	$('feedbackeepchoice').observe('click', setKeepFeedback); 
 	$('copybutton').observe('click', copy); 
 	
 	// the back and forward button  and the copy button are invisable

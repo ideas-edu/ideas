@@ -12,7 +12,7 @@
   */
 function displayExercise(state) {
 	closeallhelp();
-	clearFeedback();
+	
 	setInvisible($('copybutton'));
 	var task = state.exercise;
 	$('exercise').update(task);
@@ -35,15 +35,19 @@ function displayHint(listOfRules) {
 	closeallhelp();	
 	var expression = (snapshot.get('state')).exercise;
 	var text = '';
+	if (keepFeedback) {
+		text = $('feedback').innerHTML ;
+	}
 	if (listOfRules.length > 0) {
 		rules = writeArray(listOfRules);
-		text = $('feedback').innerHTML  + '<p>' + applicable + ' <strong>' + expression + '</strong>:<br><br><strong>' + rules + '</strong></p>';
+		text +=   '<p>' + applicable + ' <strong>' + expression + '</strong><br>is:<br><br><strong>' + rules + '</strong></p>';
 	}
 	else {
-		text = $('feedback').innerHTML  + '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
+		text +=  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
 	}
 	$('feedback').update(text);
 	$('feedback').scrollTop = $('feedback').scrollHeight;
+	
 	historyKeeper.addFeedback();
 }
 /**
@@ -61,11 +65,14 @@ function getNext() {
 	}
  }
  function displayNext(rule, location, state) {
-	var text = '';
 	var nextExpression = (state.exercise).asciiToHtml() ;
 	var expression = ((snapshot.get('state')).exercise).asciiToHtml();
+	var text = '';
+	if (keepFeedback) {
+		text = $('feedback').innerHTML ;
+	}
 	if (rule) {
-		text = $('feedback').innerHTML + '<p>' + applicable + ' <strong>' + expression + '</strong>:<br><br><strong>' + rule + '</strong> rule</p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + '</p><p';
+		text += '<p>' + applicable + ' <strong>' + expression + '</strong>:<br><br><strong>' + rule + ' rule</strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + '</p><p';
 		var copyContent = new CopyContent(state, location);
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
@@ -73,7 +80,7 @@ function getNext() {
 		historyKeeper.addCopy(copyContent);
 	}
 	else {
-		text = $('feedback').innerHTML  + '<p>' + sorry + ' <strong>' + expression + '</strong></p>';	
+		text +=   + '<p>' + sorry + ' <strong>' + expression + '</strong></p>';	
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		historyKeeper.addFeedback();
@@ -96,12 +103,16 @@ function getDerivation() {
  }
  function displayDerivation(setOfRules) {
 	var counter = 0;
-	var text = $('feedback').innerHTML + derivationtext +  $('work').value + '<br><br>';
+	var text = '';
+	if (keepFeedback) {
+		text = $('feedback').innerHTML ;
+	}
+	text += derivationtext +  $('work').value + '<br><br>';
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;
-		text += 'Application of:  ' + rule.name;
-		text += '<br>results in: <br>';
+		text += 'Application of:  <strong>' + rule.name;
+		text += '</strong><br>results in: <br>';
 		text += rule.expression;
 		text += '<br><br>';
 	}
@@ -136,7 +147,11 @@ function getDerivation() {
 }
 function displayFeedback(result, rules, state) {
 	// always paste the result
-	var text = $('feedback').innerHTML + '<p><strong>' + result + '</strong></p>';
+	var text = '';
+	if (keepFeedback) {
+		text = $('feedback').innerHTML ;
+	}
+	text +=  '<p><strong>' + result + '</strong></p>';
 	if (result == 'Ok') {
 		if (rules.length > 0) {
 			text = text + '<p>' + applied + '<strong>' + writeArray(rules) + '</strong></p></p>';
@@ -171,11 +186,14 @@ function getReady() {
 function handleSolved(solved) {
 	var expression = (snapshot.get('state')).exercise;
 	var text = '';
+	if (keepFeedback) {
+		text = $('feedback').innerHTML ;
+	}
 	if (solved) {
-		text = $('feedback').innerHTML + '<p>' + yes + ', <strong>' + expression + '</strong> is ' + ready + '.</p>';
+		text += '<p>' + yes + ', <strong>' + expression + '</strong> is ' + ready + '.</p>';
 	}
 	else {
-		text = $('feedback') + '<p>' + no + ', <strong>' + expression + '</strong> is <strong>' + not + '</strong> ' + ready + '.</p>';
+		text += '<p>' + no + ', <strong>' + expression + '</strong> is <strong>' + not + '</strong> ' + ready + '.</p>';
 	}
 	$('feedback').update(text);
 	$('feedback').scrollTop = $('feedback').scrollHeight;

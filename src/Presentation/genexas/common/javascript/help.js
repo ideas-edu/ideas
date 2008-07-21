@@ -2,6 +2,28 @@
   * This file contains t some help functions, and
   * several functions for the back and forward buttons
   */
+
+/**
+  * Global variable: usecookie
+  * for OU students, will be set using the ou/index.php page
+  */
+var usecookie = false;
+/**
+  * Global variable: keepFeedback
+  * made global, so we wont have to check the value of the radiobutton each time
+  */
+var keepFeedback = false;
+/**
+  * functions to choose between keepFeedback true or false
+  */
+function setClearFeedback() {
+	keepFeedback = false;
+	$('clearbutton').hide();
+}
+function setKeepFeedback() {
+	keepFeedback = true;
+	$('clearbutton').show();
+}
  /***
   * Makes an element visible or inviisible,
   * while yhe layout stays the same

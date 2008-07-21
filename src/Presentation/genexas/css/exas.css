@@ -51,9 +51,8 @@ input, select, label {
 select {
 	width: 150px;
 }
-
 #exercise {
-	background-color: #FFFFFF;
+	background-color: #FAEACA;
 	padding: 10px;
 	width: 100%;
 	height: 100px;
@@ -64,18 +63,22 @@ select {
 }
 
 #feedback {
-	background-color: #CCCC99;
+	background-color: #FAEACA;
 	padding: 10px;
 	width: auto;
 	height: 500px;
 	margin-left: 20px;
 	margin-right: 20px;
 	overflow: scroll;
+	border-style: solid;
+	border-width: 1px;
 	contentEditable: true;
 }
-
+.feedbacklabel {
+	margin-left: 20px;
+}
 #history {
-	background-color: #FFFFFF;
+	background-color: #FAEACA;
 	padding: 10px;
 	width: 100%;
 	height: 200px;
@@ -113,10 +116,20 @@ select {
 	height: 20px;
 	font-weight: 800;
 }
+#numberbutton {
+	display: inline; 
+	float: right;
+	margin-right: 10px;
+	background-color: #CCCC99;
+	position: relative;
+	right: -45px;
+	height: 20px;
+	font-weight: 800;
+}
 #progress {
 	float: left;
 	position: relative;
-	background-color: #FFFFFF;
+	background-color: #FAEACA;
 	margin-left: 20px;
 	padding: 5px;
 	left: 0px;
@@ -184,6 +197,14 @@ select {
 	display: block; 
 	font-size: small;
 	font-weight: 800;
+	background-color: #CCCC99;
+}
+#changenumberbutton {
+	margin-left: 20px;
+	display: block; 
+	font-size: small;
+	font-weight: 800;
+	background-color: #CCCC99;
 }
 .menu {
 	margin-bottom: 20px;

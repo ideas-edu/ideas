@@ -1,0 +1,118 @@
+\documentclass{article}
+\begin{document}
+\title{Documentation to the Online Exercise Assistant}
+\author{Sylvia Stuurman}
+\date{july 2008}
+\maketitle
+At this moment, there are three different ways to use the on-line Exercise Assistant.
+
+\section{The HTML}
+The HTML of the Exercise Assistant shows several elements which can be questioned and modified by Javascript, as we will see below.
+
+The elements are:
+\begin{itemize}
+\item The \textbf{New Exercise} button, which will invoke a \textbf{generate} function,
+\item The \textbf{Rules}-, \textbf{Help}- and \textbf{About}-button, which will cause three different HTML fragment to show,
+\item The \textbf{Exercise Area} where the exercise will be shows (not editable by the user),
+\item The \textbf{Work Area} where the user may rewrite the expression,
+\item The \textbf{Progress Area} which will show how many steps will be needed minimally,
+\item The \textbf{Hint}-button which will invoke the hint function,
+\item The \textbf{Next}-button which will invoke the next function,
+\item The \textbf{Derivation}-button which will invoke the derivation function,
+\item The \textbf{Submit}-button which will invoke the feedback function,
+\item The \textbf{Copy}-button (only visible when there is something to copy) which will invoke the copy function,
+\item The \textbf{Back}-button (only visible when there is something to go back to) which will invoke the back function,
+\item The \textbf{Forward}-button (only visible when there is something to go forward to) which will invoke the forward function,
+\item The \textbf{Ready}-button which will invoke the ready function,
+\item The \textbf{History Area} which will show the valid steps,
+\item The \textbf{Feedback Area} whic will show the feedback. There are radio buttons with which the user nmay choose between seeing all feedback, or only the current feedback,
+\item In the OU version, there are also page elements for the student number.
+\end{itemize}
+
+\section{How to invoke the Exercise Assistant}
+\subsection{Generic}
+\textbf{http://ideas.cs.uu.nl/genexas} \\
+shows links to the possible types of exercises that are
+offered by the Strategy-based feedbackservices. The links are hard-coded, but when an
+extra service would send a list of types of exercises, this service could be used to 
+generate the list of links automatically.
+
+The links now look like:
+
+\textbf{$<$ a href=``generic.php?exercisekind=Proposition to DNF''$>$Proposition Logic$<$/a$>$} and
+
+\textbf{$<$a href=``generic.php?exercisekind=Relational Algebra''$>$Relational Algebra$<$/a$>$}.
+
+
+The file ``generic.php'' inludes standard help-, about- and rules files, includes a file which sets the language into English, and includes the file ``common/generic.php''.
+
+This file contains the HTML which produces a page with the Exercise Assistant. The variable exercisekind in the url is used to set the value of a Javascript variable called exercisekind, which will be used for the calls to the feedback services.
+
+\subsubsection{Language}
+The language now is default set to English, but using the language options of the Apache server, it would be easy to switch to multilanguage. In that case, instead of a single index.php, there would be an index.en.php and an index.nl.php (etc), and instead of including the file with English names, the appropriate language file would be included.
+
+The file structure is:\\
+/genexas/index.php \\
+/genexas/generic.php \\
+/genexas/common/en.php \\
+/genexas/common/nl.php \\
+/genexas/common/generic.php \\
+/genexas/common/en/about.php \\
+/genexas/common/en/help.php \\
+
+Changing to multilanguage would result in\\
+/genexas/index.en.php \\
+/genexas/index.nl.php \\
+/genexas/generic.php (to be called with a language variable)\\
+/genexas/common/en.php \\
+/genexas/common/nl.php \\
+/genexas/common/generic.php \\
+/genexas/common/en/about.php \\
+/genexas/common/en/help.php \\
+/genexas/common/nl/about.php \\
+/genexas/common/nl/help.php \\
+
+\subsection{Specific}
+Another way to use the Exercise Assistant is through two specific URL's: 
+
+\textbf{http://ideas.cs.uu.nl/genexas/logic/todnf/index.php} \\ (which makes use of the multilanguage facility; because only English is fully implemented, it is safest to use http://ideas.cs.uu.nl/genexas/logic/todnf/index.en) or 
+
+\textbf{http://ideas.cs.uu.nl/genexas/math/relationalgebra/index.php} \\ (for which the same applies, so preferrably use http://ideas.cs.uu.nl/genexas/math/relationalgebra/index.en).
+
+The difference with the so-called generic url is, that it is possible to integrate domain-specific HTML and Javascript, for instance to enhance the user interface by providing real mathematical symbols instead of ASCII characters for input and output.
+
+\section{OU specific}
+At last, there is the possibility to use the Exercise Assistant for OU students, asking them for their student number:
+
+\textbf{http://ideas.cs.uu.nl/genexas/logic/todnf/ou/}
+
+In this case, the student number will be sent with each call to the strategy-based feedback services.
+
+\section{Javascript}
+\subsection{/genexas/common/javascript/services.js}
+This file contains functions to call the strategy-services. Each function requires the input which is needed to call the service, and a callback function. The services are called through an asynchronous Ajax call, and the callback function will be called when the result has arrived.
+
+The functions are:
+\begin{itemize}
+\item function ss\_generate(number, callback) 
+\item function ss\_getReady(state, callback) 
+\item function ss\_getHint(location, state, callback) 
+\item function ss\_getNext(state, callback)
+\item function ss\_getDerivation(state, callback)
+\item function ss\_getRemaining(state, callback) 
+\item function ss\_getFeedback(state, newexpression, callback)
+\end{itemize}
+
+\subsection{/genexas/common/javascript/communication.js}
+The functions in this file function as a mediator between the elements of the HTML page and the services.js-functions. 
+
+For each action that the user interface allows to, there are a pair of functions: one that knows where to get the appropriate paramteres from, and one that knows how to display the results. The display function is used as the callback function when calling a function from services.js.
+
+The pairs of functions are:
+
+\begin{itemize}
+\item function generate() and function displayExercise(state)
+\item function getHint() and function displayHint(listOfRules)
+\item function getNext() and  function displayNext(rule, location, state) 
+\end{itemize}
+\end{document}

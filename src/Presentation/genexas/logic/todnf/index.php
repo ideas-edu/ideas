@@ -5,5 +5,8 @@ function toetsen() {
 		include_once("../keys.php");
 	}
 }
+function getKind() {
+	return "Proposition%20to%20DNF";
+}
 include_once("../../common/framework.php");
 ?>

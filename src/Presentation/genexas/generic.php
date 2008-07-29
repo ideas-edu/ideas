@@ -9,5 +9,10 @@ function about() {
 	include_once("common/en/about.html");
 }
 include_once("common/en.php");
-include_once("common/generic.php");
+
+function getKind() {
+	return $_GET["exercisekind"];
+}
+
+include("common/framework.php");
 ?>

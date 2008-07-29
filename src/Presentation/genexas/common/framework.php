@@ -12,7 +12,8 @@
 <script type="text/javascript" src="/genexas/common/javascript/services.js"></script>
 <script type="text/javascript" src="/genexas/common/javascript/communication.js"></script>
 <script type="text/javascript" src="<?php print Local;?>"></script>
-<script type="text/javascript" src="communication.js"></script>
+
+<script type="text/javascript">var exercisekind = <?php $kind = getKind(); echo "\"$kind\";"; ?>; var id=421;</script>
 <script type="text/javascript" src="/genexas/common/javascript/init.js"></script>
 </head>
 

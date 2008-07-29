@@ -5,5 +5,8 @@ function toetsen() {
 		include_once("../keys.php");
 	}
 }
+function getKind() {
+	return "To%20conjunctive%20normal%20form";
+}
 include_once("../../common/framework.php");
 ?>

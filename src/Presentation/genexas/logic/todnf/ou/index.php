@@ -36,6 +36,12 @@ function about() {
 		include_once("../../../common/en/about.html");
 	}
 }
+function getKind() {
+	return "Proposition%20to%20DNF";
+}
+function getLocal() {
+	return "communication.js";
+}
 include_once("../../../common/en.php");
 include_once("../../../common/framework.php");
 ?>

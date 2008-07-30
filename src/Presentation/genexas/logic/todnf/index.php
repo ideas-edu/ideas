@@ -8,5 +8,8 @@ function toetsen() {
 function getKind() {
 	return "Proposition%20to%20DNF";
 }
+function getLocal() {
+	return "";
+}
 include_once("../../common/framework.php");
 ?>

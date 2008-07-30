@@ -8,11 +8,12 @@ function help() {
 function about() {
 	include_once("common/en/about.html");
 }
-include_once("common/en.php");
-
 function getKind() {
 	return $_GET["exercisekind"];
 }
-
+function getLocal() {
+	return "";
+}
+include_once("common/en.php");
 include("common/framework.php");
 ?>

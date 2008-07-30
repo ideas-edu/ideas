@@ -13,7 +13,6 @@ define("Forward", "Forward");
 define("Help", "Help");
 define("Hint", "Hint");
 define("History", "History");
-define("Local", "/genexas/common/javascript/en.js");
 define("NewExercise", "New Exercise");
 define("Progress", "Progress");
 define("Ready", "Ready");
@@ -22,4 +21,7 @@ define("Step", "Step");
 define("Submit", "Submit");
 define("Welcome", "<p>Welcome to the Exercise Assistent. <br>Rewrite the expression in the Work area and hit Submit to start.</p><p>The Help button will tell you more.</p><p>The Feedback area will be cleared before new feedback is written to the area. If you want to keep all feedback in view, choose <q>Show all feedback</q> above.</p>");
 define("WorkArea", "Working Area: Rewrite and Submit");
+function getLanguage() {
+	return "/genexas/common/javascript/en.js";
+}
 ?>

@@ -52,7 +52,7 @@ select {
 	width: 150px;
 }
 #exercise {
-	background-color: #FAEACA;
+	background-color: #FAEAC0;
 	padding: 10px;
 	width: 100%;
 	height: 100px;
@@ -63,7 +63,7 @@ select {
 }
 
 #feedback {
-	background-color: #FAEACA;
+	background-color: #FAEAC0;
 	padding: 10px;
 	width: auto;
 	height: 500px;
@@ -78,7 +78,7 @@ select {
 	margin-left: 20px;
 }
 #history {
-	background-color: #FAEACA;
+	background-color: #FAEAC0;
 	padding: 10px;
 	width: 100%;
 	height: 200px;
@@ -129,7 +129,7 @@ select {
 #progress {
 	float: left;
 	position: relative;
-	background-color: #FAEACA;
+	background-color: #FAEAC0;
 	margin-left: 20px;
 	padding: 5px;
 	left: 0px;

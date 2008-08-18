@@ -69,32 +69,32 @@ template7 x y z = x :.: (y :||:z)
 template8 x y z = x :||:(Not(Inv(y :.: z) :&&: Not(Inv(y) :.: Inv(z))))
 
 gen1 :: Gen RelAlg
-gen1 = liftM3 template1 (arbInvNotMol 20) (arbInvNotMol 20) (arbInvNotMol 20)
+gen1 = liftM3 template1 (arbInvNotMol 4) (arbInvNotMol 4) (arbInvNotMol 4)
 gen2 :: Gen RelAlg
-gen2 = liftM3 template2 (arbInvNotMol 20) (arbInvNotMol 20) (arbInvNotMol 20)
+gen2 = liftM3 template2 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
 gen3 :: Gen RelAlg
-gen3 = liftM3 template3 (arbInvNotMol 20) (arbInvNotMol 20) (arbInvNotMol 20)
+gen3 = liftM3 template3 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
 gen4 :: Gen RelAlg
-gen4 = liftM3 template4 (arbInvNotMol 20) (arbInvNotMol 20) (arbInvNotMol 20)
+gen4 = liftM3 template4 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
 gen5 :: Gen RelAlg
-gen5 = liftM4 template5 (arbInvNotMol 20) (arbInvNotMol 20) (arbInvNotMol 20) (arbInvNotMol 20)
+gen5 = liftM4 template5 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
 hulpgen1 :: Int -> Gen RelAlg
 hulpgen1 n = liftM4 template6 (arbMaybeInvNotMol n) arbVar arbVar (arbMaybeInvNotMol n)
 gen6 :: Gen RelAlg
-gen6 = liftM3 template1 (hulpgen1 10) (arbInvNotMol 20) (arbInvNotMol 20)
+gen6 = liftM3 template1 (hulpgen1 2) (arbInvNotMol 4) (arbInvNotMol 4)
 gen7 :: Gen RelAlg
-gen7 = liftM3 template1 (arbInvNotMol 20) (hulpgen1 10) (arbInvNotMol 20)
+gen7 = liftM3 template1 (arbInvNotMol 4) (hulpgen1 2) (arbInvNotMol 4)
 gen8 :: Gen RelAlg
-gen8 = liftM3 template2 (arbInvNotMol 20) (hulpgen1 10) (arbInvNotMol 20)
+gen8 = liftM3 template2 (arbInvNotMol 4) (hulpgen1 2) (arbInvNotMol 4)
 hulpgen2 :: Int -> Gen RelAlg
-hulpgen2 n = liftM3 template7 (arbInvNotMol n) (arbRelAlg n) (arbRelAlg n)
+hulpgen2 n = liftM3 template7 (arbInvNotMol 1) (arbRelAlg n) (arbRelAlg n)
 gen9 :: Gen RelAlg
-gen9 = liftM3 template8 (hulpgen2 10) (arbInvNotMol 20) (arbInvNotMol 20)
+gen9 = liftM3 template8 (hulpgen2 2) (arbInvNotMol 2) (arbInvNotMol 2)
 
 
 arbInvNotMol :: Int -> Gen RelAlg
-arbInvNotMol 0 = frequency [(8, liftM Var (oneof $ map return vars)), (1, return U), (1, return E)]
-arbInvNotMol n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), unop Not, unop Inv ]
+arbInvNotMol 0 = frequency [(10, liftM Var (oneof $ map return vars)), (1, return U), (1, return E)]
+arbInvNotMol n = frequency [ (1, arbRelAlg 0), (4, binop (:.:)), (4, binop (:+:)), (2, unop Not), (2, unop Inv) ]
  where
    binop op = liftM2 op rec rec
    unop op  = liftM op rec

@@ -32,7 +32,6 @@ ruleNormalize :: Floating a => Rule (Context [Vector a])
 ruleNormalize = makeSimpleRule "Turn into unit Vector" $
    \c -> do v <- current c
             guard (norm v `notElem` [0, 1])
-            if norm (toUnit v) /= 1 then error $ "NEE!" ++ show v ++ show (toUnit v) ++ show (norm v) else return ()
             setCurrent (toUnit v) c
 
 -- Make the current vector orthogonal with some other vector
@@ -72,8 +71,7 @@ transOrthogonal i j = contextTrans $ \xs ->
    do guard (i /= j)
       u <- safeHead $ drop i xs
       case splitAt j xs of
-         (begin, v:end) -> if not (orthogonal u (makeOrthogonal u v)) then error "FOUTJE" else 
-                           Just $ begin ++ makeOrthogonal u v:end
+         (begin, v:end) -> Just $ begin ++ makeOrthogonal u v:end
          _ -> Nothing 
 
 -- Find proper abstraction, and move this function to transformation module

@@ -133,6 +133,7 @@ translationFromContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Left) .
 
 -- temp for testing
 -- opgave 9.74
+{-
 a1, a2, a3 :: Vector MySqrt
 a1 = fromList [1,1,1,1]
 a2 = fromList [3,3,1,1]
@@ -162,14 +163,14 @@ x1 = var "x1"
 x2 = var "x2"
 x3 = var "x3"
 x4 = var "x4"
-x5 = var "x5"
+x5 = var "x5" -}
 
 -------------------------------------------------------------
 -- Square roots
       
 -- a/sqrt b = (a/b) * sqrt b
 -- a / (n * sqrt b) = a/(n*b)   * sqrt b
-
+{-
 data MySqrt = Con Rational | Sqrt Rational Integer | MySqrt :+: MySqrt deriving Show
 
 instance Num MySqrt where
@@ -264,4 +265,4 @@ primes = sieve [2..]
 fromMySqrt :: MySqrt -> Float
 fromMySqrt (Con n)   = fromRational n
 fromMySqrt (Sqrt r m)  = fromRational r * sqrt (fromIntegral m)
-fromMySqrt (a :+: b) = fromMySqrt a + fromMySqrt b
+fromMySqrt (a :+: b) = fromMySqrt a + fromMySqrt b -}

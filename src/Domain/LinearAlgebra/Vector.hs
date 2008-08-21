@@ -69,7 +69,7 @@ orthogonal :: Num a => Vector a -> Vector a -> Bool
 orthogonal v1 v2 = innerProduct v1 v2 == 0
 
 scale :: Num a => a -> Vector a -> Vector a
-scale a = liftV (*a)
+scale a = liftV (a*)
 
 orthonormalList :: Floating a => [Vector a] -> Bool
 orthonormalList xs = all isUnit xs && all (uncurry orthogonal) pairs

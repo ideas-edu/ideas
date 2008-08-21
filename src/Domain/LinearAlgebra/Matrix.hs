@@ -15,7 +15,7 @@ module Domain.LinearAlgebra.Matrix
    ( Matrix, Row, Column, isRectangular, makeMatrix, identity, mapWithPos
    , rows, row, columns, column, dimensions, entry, isEmpty
    , add, scale, multiply
-   , reduce, forward, backward, inverse, (===)
+   , reduce, forward, backward, inverse, invertible, rank, nullity, (===)
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
    , nonZero, pivot, isPivotColumn
@@ -134,22 +134,34 @@ backward :: Fractional a => Matrix a -> Matrix a
 backward m = foldr f m [1..h-1]
  where
    (h, w) = dimensions m
-   f i    = let g j = let k = length $ takeWhile (==0) $ row i m
-                          a = entry (j, k) m
-                      in if k < w then addRow j i (negate a) else id
+   f i    = let g j = case findIndex (/=0) (row i m) of
+                         Just k  -> addRow j i (negate (entry (j, k) m))
+                         Nothing -> id
             in flip (foldr g) [0..i-1]
+
+rank :: Fractional a => Matrix a -> Int
+rank = length . filter (isJust . pivot) . rows . reduce
+
+nullity :: Fractional a => Matrix a -> Int
+nullity m = snd (dimensions m) - rank m 
  
-inverse :: Fractional a => Matrix a -> Matrix a
+inverse :: Fractional a => Matrix a -> Maybe (Matrix a)
 inverse m
-   | h == w    = M $ map (drop h) $ rows $ reduce $ M $ zipWith (++) (rows m) $ rows $ identity h
-   | otherwise = error "inverse: not a rectangular matrix"
+   | h /= w     = Nothing
+   | rank m < w = Nothing
+   | otherwise  = Just $ M $ map (drop h) $ rows $ reduce $ M $ zipWith (++) (rows m) $ rows $ identity h
  where 
    (h, w) = dimensions m
+
+invertible :: Fractional a => Matrix a -> Bool
+invertible = isJust . inverse
 
 (===) :: Fractional a => Matrix a -> Matrix a -> Bool
 m1 === m2 = reduce m1 == reduce m2
 
--- test = backward $ forward $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
+test = rank $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
+
+t = inverse $ M [[1,0],[0,3]]
 
 -------------------------------------------------------
 

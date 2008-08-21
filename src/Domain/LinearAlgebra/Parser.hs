@@ -12,114 +12,113 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Parser 
-   ( parseMatrix, parseVectors, ppMatrixInContext, ppMatrix, ppMatrixWith, ppRationalMatrix, ppRational, ppMySqrt
+   ( parseMatrix, parseVectors, ppMatrixInContext, ppMatrix, ppMatrixWith {-, ppRationalMatrix, ppRational, ppMySqrt-}
    , parseSystem
    ) where
 
-import UU.Parsing
-import UU.Scanner (Pos)
-import UU.Parsing.CharParser
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.MatrixRules -- for context
-import Domain.LinearAlgebra.Strategies  -- for MySqrt
 import Domain.LinearAlgebra.Vector
 import Common.Context
 import Common.Utils
-import Common.Exercise
+import Control.Monad
 import Data.List
 import Data.Char
-import GHC.Real
+import qualified Domain.Math.Expr as Expr
+import Domain.Math.SExpr
+import Domain.Math.Classes
+import Domain.Math.Parser
+import Common.Parsing
 
-parseSystem :: String -> Either (Doc a) (LinearSystem Rational)
-parseSystem input = 
- case runParser (pSystem pRatioParens) input of
-    (sys, [])   -> Right sys
-    (sys, errs) -> Left (text (show errs)) 
- 
-pSystem :: Num a => CharParser a -> CharParser (LinearSystem a)
-pSystem p = pListSep (pSym '\n') pEquation
+{-
+testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
+            this -> this -}
+
+parseSystem :: String -> (Context (LinearSystem SExpr), [String])
+parseSystem = f . parse p . scanWith s
  where
-   pEquation = (:==:) <$> pTerm <* pToks "==" <*> pTerm
-   pTerm  = pChainr ((+) <$ pSym '+') pAtomS
-   pAtomS = pSpace *> pAtom <* pSpace
-   pAtom  = flip ($) <$> pCon <* pSpace <*> opt ((*) <$ pSym '*' <* pSpace <*> pVar) id <|> pVar
-   pVar   = (\x xs -> var (x:xs)) <$> 'a' <..> 'z' <*> pList ('a' <..> 'z' <|> '0' <..> '9')
-   pCon   = toLinearExpr <$> p
-   pSpace = pList (pAnySym " \t")
+   s0 = newlinesAsSpecial scannerExpr
+   s  = s0 {keywordOperators = "==" : keywordOperators s0 }
+   p  = fmap inContext <$> pSystem
+   f (Nothing, xs) = (inContext [], "System is not linear" : map show xs)
+   f (Just m, xs)  = (m, map show xs)
+
+pSystem :: TokenParser (Maybe (LinearSystem SExpr))
+pSystem = convertSystem <$> pEquations pExpr
+ where
+   convertSystem :: Equations Expr.Expr -> Maybe (LinearSystem SExpr)
+   convertSystem = mapM (f . fmap convertExpr)
+    where f (ma :==: mb) = liftM2 (:==:) ma mb
+ 
+   convertExpr :: Expr.Expr -> Maybe (LinearExpr SExpr)
+   convertExpr = fmap (foldr1 (+)) . mapM f . Expr.collectPlus . rewriteMinus
+    where
+      rewriteMinus :: Expr.Expr -> Expr.Expr
+      rewriteMinus = Expr.foldExpr ((+), (*), minus, negate, fromIntegral, (/), sqrt, variable, function)
+       where
+         a `minus` (b Expr.:*: c) 
+            | not (hasVar b) = a + (negate b * c)
+            | not (hasVar c) = a + (b * negate c)
+         a `minus` b = a + negate b
+      
+      f :: Expr.Expr -> Maybe (LinearExpr SExpr)
+      f e = case partition hasVar (Expr.collectTimes e) of
+               ([], es) -> 
+                  Just (toLinearExpr (simplifyExpr (foldr1 (*) es)))
+               ([Expr.Var v], es) 
+                  | null es -> 
+                       Just (var v)
+                  | otherwise ->
+                       Just (var v * toLinearExpr (simplifyExpr (foldr1 (*) es)))
+               _ -> Nothing
+               
+      hasVar = any isVar . universe
+      isVar (Expr.Var _) = True
+      isVar _            = False
+
+pEquations :: TokenParser a -> TokenParser (Equations a)
+pEquations p = pLines True (pEquation p)
+
+
+pEquation :: TokenParser a -> TokenParser (Equation a)
+pEquation p = (:==:) <$> p <* pKey "==" <*> p
  
 -----------------------------------------------------------
 --- Parser
 
-parseMatrix  :: String -> Either (Doc a) (MatrixInContext Rational)
-parseMatrix input =
-   case mm of
-      Just m | null errs -> Right m
-      _                  -> Left (text (show errs))
+parseMatrix :: String -> (MatrixInContext SExpr, [String])
+parseMatrix = f . parse p . scanWith s
+ where
+   s = newlinesAsSpecial scannerExpr
+   p = (fmap (inContext . fmap simplifyExpr)) <$> pMatrix pFractional
+   f (Nothing, xs) = (inContext (makeMatrix []), "Matrix is not rectangular" : map show xs)
+   f (Just m, xs)  = (m, map show xs)
+
+pMatrix :: TokenParser a -> TokenParser (Maybe (Matrix a))
+pMatrix p = make <$> pLines True (pList1 p)
  where 
-   (xs, errs) = runParser (pMatrix pRatioParens) input
-   mm = if isRectangular xs then Just (inContext (makeMatrix xs)) else Nothing 
+   make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-pMatrix :: CharParser a -> CharParser [[a]]
-pMatrix p = pListSep (pSym '\n') pRow
+parseVectors :: String -> (Context [Vector SExpr], [Message Token])
+parseVectors = parse p . scanWith s
  where
-   pRow    = pSpaces *> pList1 (p <* pSpaces)
-   pSpaces = pList_gr (pAnySym " \t")
+   s = newlinesAsSpecial scannerExpr
+   p = (inContext . map (fmap simplifyExpr)) <$> pVectors pExpr
 
-pRatioParens :: CharParser Rational
-pRatioParens = (opt (negate <$ pSym '-') id <*> pparens pRatio) <|> pRatio
+pVectors :: TokenParser a -> TokenParser [Vector a]
+pVectors p = pLines True (pVector p)
 
-pRatio :: CharParser Rational
-pRatio = (\n d -> fromInteger n / fromInteger d) <$> pZ <*> opt (pSym '/' *> pZ1) 1
+pVector :: TokenParser a -> TokenParser (Vector a)
+pVector p = fromList <$> myParens (myListSep (pSpec ',') p)
 
-pZ :: CharParser Integer
-pZ = (\f x -> f x) <$> opt (negate <$ pSym '-') id <*> pNat
+myListSep :: TokenParser a -> TokenParser b -> TokenParser [b]
+myListSep sep p = optional ((:) <$> p <*> pList (sep *> p)) []
 
-pZ1 :: CharParser Integer
-pZ1 = (\f x -> f x) <$> opt (negate <$ pSym '-') id <*> pNat1
-
-pNat :: CharParser Integer
-pNat = read <$> pList1 ('0' <..> '9')
-
-pNat1 :: CharParser Integer
-pNat1 = (\x xs -> read (x:xs)) <$> '1' <..> '9' <*> pList ('0' <..> '9')
-
--- copy/paste, except no white-space is filtered
-runParser  :: CharParser a -> String -> (a, [Message Char Pos])
-runParser p input = (result, messages)
- where -- quick hack
-   steps    = parseString p (safeInit $ unlines $ filter (any (not . isSpace)) $ lines input)
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
-   safeInit xs = if null xs then [] else init xs
-
-parseVectors :: String -> Either (Doc a) (Context [Vector MySqrt])
-parseVectors input = if null messages then Right (inContext result) else Left (text (show messages)) 
- where
-   myp      = pList (pVector pMySqrt <* pSym '\n')
-   steps    = parseString myp (filter (/= ' ') $ unlines $ filter (any (not . isSpace)) $ lines input) -- hack for trailing \n
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
-
-pVector :: CharParser a -> CharParser (Vector a)
-pVector p = fromList <$> pparens (pListSep (pSym ',') p)
-
-pMySqrt :: CharParser MySqrt
-pMySqrt = pChainr ((:+:) <$ pSym '+') atom 
- where
-   atom =  Con <$> pRatio
-       <|> Sqrt <$> opt (pRatio <* pSym '*') 1 <* pToks "sqrt" <*> pparens pNat
-       <|> pparens pMySqrt
-   
-fstPair :: Pair a b -> a
-fstPair (Pair a b)  =  a
-  
-pparens :: CharParser a -> CharParser a
-pparens = pPacked (pSymLow '(') (pSymLow ')') 
-pSymInf a       =  pCostSym   1000 a a
-pSymLow a       =  pCostSym      1 a a
+myParens :: TokenParser a -> TokenParser a
+myParens p = pSpec '(' *> p <* pSpec ')'
 
 -----------------------------------------------------------
 --- Pretty-Printer
@@ -143,14 +142,6 @@ ppMatrix = ppMatrixWith show
      
 ppMatrixWith :: (a -> String) -> Matrix a -> String
 ppMatrixWith f = ppStringMatrix . fmap f 
-
-ppRationalMatrix :: Matrix Rational -> String
-ppRationalMatrix = ppMatrixWith ppRational
-
-ppRational :: Rational -> String
-ppRational (x :% y)
-   | y==1      = show x
-   | otherwise = show x ++ "/" ++ show y
         
 ppStringMatrix :: Matrix String -> String
 ppStringMatrix = format . rows
@@ -159,9 +150,3 @@ ppStringMatrix = format . rows
                   align i s = take i (s ++ repeat ' ')
               in unlines $ map (concat . intersperse " " . zipWith align ws) m
               
-ppMySqrt :: MySqrt -> String
-ppMySqrt (Con r)    = ppRational r
-ppMySqrt (x :+: y)  = ppMySqrt x ++ " + " ++ ppMySqrt y
-ppMySqrt (Sqrt r n)
-   | n==1      = "sqrt(" ++ show n ++ ")"
-   | otherwise = ppRational r ++ " * sqrt(" ++ show n ++ ")"

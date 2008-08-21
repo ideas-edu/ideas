@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Parsing 
    ( -- * Scaning
-     Scanner(..), defaultScanner, makeCharsSpecial, scan, scanWith, UU.Token
+     Scanner(..), defaultScanner, makeCharsSpecial, newlinesAsSpecial, scan, scanWith, UU.Token
      -- * Parsing
    , Parser, CharParser, TokenParser, parse, Message
      -- * UU parser combinators
@@ -23,13 +23,14 @@ module Common.Parsing
      -- * Subexpressions
    , Ranged, Range(..), Pos(..), toRanged, fromRanged, subExpressionAt
    , pKey, pSpec, pVarid, pConid, unaryOp, binaryOp, pParens, indicesToRange
-   , pInteger, pFraction, pString, pBracks, pCurly, pCommas
+   , pInteger, pFraction, pString, pBracks, pCurly, pCommas, pLines
     -- ** Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
    ) where
 
 import qualified UU.Parsing as UU
 import qualified UU.Scanner as UU
+import qualified UU.Scanner.GenToken as UU
 import Common.Utils
 import Data.Char
 import Data.List
@@ -54,7 +55,7 @@ defaultScanner = Scanner
    , keywords           = []
    , keywordOperators   = []
    , specialCharacters  = "(),;[]`{}"              -- Haskell's special characters 
-   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters
+   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters      
    }
 
 -- | Add characters to the list of special characters (and remove these from the list of operator characters)
@@ -64,16 +65,31 @@ makeCharsSpecial cs scanner = scanner
    , operatorCharacters = operatorCharacters scanner \\ cs
    }
 
+-- Newline characters are mapped to "special" tokens
+-- The current solution to deal with newlines is a hack: all characters '\n' in the input
+-- are first mapped to '\127', and later the tokens are adapted
+newlinesAsSpecial :: Scanner -> Scanner
+newlinesAsSpecial = makeCharsSpecial ['\127']
+
 -- | Scan an input string with the default scanner configuration
 scan :: String -> [UU.Token]
 scan = scanWith defaultScanner
 
 -- | Scan an input string with the given scanner configuration
 scanWith :: Scanner -> String -> [UU.Token]
-scanWith scanner = 
-   let pos = UU.initPos $ fromMaybe "input" (fileName scanner)
-   in UU.scan (keywords scanner) (keywordOperators scanner) 
-              (specialCharacters scanner) (operatorCharacters scanner) pos 
+scanWith scanner = post . uuScan . pre
+ where
+   specialNewlines = '\127' `elem` specialCharacters scanner
+   pos  = UU.initPos $ fromMaybe "input" (fileName scanner)
+   pre  = if specialNewlines then map (\c -> if c=='\n' then '\127' else c) else id
+   post = if specialNewlines then map changeToken else id
+   uuScan = UU.scan (keywords scanner) (keywordOperators scanner) 
+               (specialCharacters scanner) (operatorCharacters scanner) pos
+               
+   changeToken t =
+      case t of
+         UU.Reserved key pos | key=="\127" -> UU.Reserved "\n" pos
+         _ -> t
                       
 ----------------------------------------------------------
 -- Parsing
@@ -227,6 +243,15 @@ pParens p = (\p1 r p2 -> Ranged (fromRanged r) (toRange 1 p1 & toRange 1 p2) Tru
 -- TODO: fix inconsistency with pParens
 pBracks :: TokenParser a -> TokenParser a
 pBracks  = UU.pBracks
+
+-- | Parse lines, separated by the newline character. The boolean argument indicates whether empy lines should 
+-- be accepted or not. Make sure to configure the scanner to treat newlines as special characters!
+pLines :: Bool -> TokenParser a -> TokenParser [a]
+pLines allowEmptyLine p = catMaybes <$> pn 
+ where
+   pOne | allowEmptyLine = optional (Just <$> p) Nothing
+        | otherwise      = Just <$> p
+   pn = (:) <$> pOne <*> pList (pSpec '\n' *> pOne)
 
 -- TODO: fix inconsistency with pParens
 pCurly :: TokenParser a -> TokenParser a

@@ -20,15 +20,16 @@ import Common.Unification
 import Common.Strategy
 import Common.Transformation
 import Common.Utils (Some(..))
-import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, MySqrt, solveSystemWithMatrixExercise)
-import qualified Domain.LinearAlgebra as MySqrt
+import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise)
 import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, getVars,
-                             EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var, ShowRational(..))
+                             EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var)
 import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
 import Domain.LinearAlgebra.Vector (Vector, toList, fromList)
 import qualified Domain.LinearAlgebra.Equation as LA
 import OpenMath.ObjectParser
 import Control.Monad
+import qualified Domain.Math.SExpr as SExpr
+import qualified Domain.Math.Expr  as Expr
 
 type StrategyID = String
 
@@ -73,6 +74,26 @@ strategyTable =
    sys1 = [x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]
    sys2 = [x1 + 2 * x2 + 3 * x3 - x4 LA.:==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 LA.:==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 LA.:==: 0 ]
    sys3 = [ x1 + x2 - 2*x3 LA.:==: 0, 2*x1 + x2 - 3*x3 LA.:==: 0, 4*x1 - 2*x2 - 2*x3 LA.:==: 0, 6*x1 - x2 - 5*x3 LA.:==: 0, 7*x1 - 3*x2 - 4*x3 LA.:==: 1]
+
+instance IsExpr SExpr.SExpr where
+   toExpr   = toExpr . SExpr.toExpr
+   fromExpr = fmap SExpr.simplifyExpr . fromExpr
+   
+instance IsExpr Expr.Expr where
+   toExpr = Expr.foldExpr ((:+:), (:*:), (:-:), Negate, Con, (:/:), Sqrt, Var, \s _ -> Var s)
+   fromExpr e = 
+      case e of
+         Con n    -> Just (fromIntegral n)
+         Var s    -> Just (Expr.Var s)
+         Negate x -> liftM negate (fromExpr x)
+         x :+: y  -> binop (+) x y
+         x :-: y  -> binop (-) x y
+         x :*: y  -> binop (*) x y
+         x :/: y  -> binop (/) x y
+         Sqrt x   -> liftM sqrt (fromExpr x)
+         _        -> Nothing
+    where
+      binop op x y = liftM2 op (fromExpr x) (fromExpr y)
 
 instance IsExpr a => IsExpr (Matrix a) where
    toExpr   = Matrix . map (map toExpr) . rows
@@ -119,27 +140,3 @@ instance IsExpr a => IsExpr (Vector a) where
    toExpr = List . map toExpr . toList
    fromExpr (List es) = liftM fromList (mapM fromExpr es)
    fromExpr _ = Nothing
-   
-instance IsExpr MySqrt where 
-   toExpr (MySqrt.Con c)    = toExpr c
-   toExpr (MySqrt.Sqrt a n)
-      | a == 1    = e
-      | otherwise = toExpr a :*: e
-    where 
-      e = Sqrt $ Con $ fromIntegral n
-   fromExpr e = -- unchecked!
-      case e of
-         Con n    -> Just (fromIntegral n)
-         Negate x -> liftM negate (fromExpr x)
-         x :+: y  -> binop (+) x y
-         x :-: y  -> binop (-) x y
-         x :*: y  -> binop (*) x y
-         x :/: y  -> binop (/) x y
-         Sqrt x   -> liftM sqrt (fromExpr x)
-         _        -> Nothing
-    where
-      binop op x y = liftM2 op (fromExpr x) (fromExpr y)
-      
-instance IsExpr ShowRational where
-   toExpr (ShowRational r) = toExpr r
-   fromExpr = fmap ShowRational . fromExpr

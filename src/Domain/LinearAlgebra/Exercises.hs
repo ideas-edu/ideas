@@ -24,32 +24,37 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.Parser
-import Domain.LinearAlgebra.Equation
-import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Vector
 import Test.QuickCheck
 import Control.Monad
 import Data.Ratio
 
-solveGramSchmidt :: Exercise (Context [Vector MySqrt])
+import Domain.Math.SExpr
+import Domain.Math.Parser
+
+solveGramSchmidt :: Exercise (Context [Vector SExpr])
 solveGramSchmidt = makeExercise
    { shortTitle    = "Gram-Schmidt"
-   , parser        = parseVectors 
-   , prettyPrinter = unlines . map (showVectorWith ppMySqrt) . fromContext
---   , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt
---                             in f x == f y
+   , parser        = \s -> case parseVectors s of
+                              (a, [])  -> Right a
+                              (_, msg) -> Left $ text $ show msg
+   , prettyPrinter = unlines . map show . fromContext
+   , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt
+                             in f x == f y
    , ruleset       = rulesGramSchmidt
    , finalProperty = orthonormalList . filter ((/=0) . norm) . fromContext
    , strategy      = gramSchmidt
    , generator     = liftM inContext arbBasis 
    }
 
-solveSystemExercise :: Exercise (EqsInContext Rational)
+solveSystemExercise :: Exercise (EqsInContext SExpr)
 solveSystemExercise = makeExercise
    { shortTitle    = "Solve Linear System"
-   , parser        = either Left (Right . inContext) . parseSystem
-   , prettyPrinter = unlines . map (show . fmap (fmap ShowRational)) . equations
+   , parser        = \s -> case parseSystem s of
+                              (a, [])  -> Right a
+                              (_, msg) -> Left $ text $ show msg
+   , prettyPrinter = unlines . map show . equations
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
                                    . inContext . map toStandardForm . equations
                              in f x == f y
@@ -60,39 +65,38 @@ solveSystemExercise = makeExercise
                         return $ fmap matrixToSystem m
    }
    
-reduceMatrixExercise :: Exercise (MatrixInContext Rational)
+reduceMatrixExercise :: Exercise (MatrixInContext SExpr)
 reduceMatrixExercise = makeExercise
    { shortTitle    = "Gaussian Elimination"
-   , parser        = parseMatrix
-   , prettyPrinter = ppRationalMatrix . matrix
+   , parser        = \s -> case parseMatrix s of
+                              (a, [])  -> Right a
+                              (_, msg) -> Left $ text $ unlines msg
+   , prettyPrinter = ppMatrix . matrix
    , equivalence   = \x y -> fromContext x === fromContext y
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm . matrix
-   , generator     = fmap inContext arbNiceMatrix {- do m1        <- arbSizedMatrix (3, 3)
-                        (sol, m2) <- arbSolution m1
-                        m3        <- simplifyMatrix sol m2
-                        return $ inContext $ fmap fromSmallInt m3 -}
+   , generator     = fmap (inContext . fmap fromInteger) arbNiceMatrix
    , strategy      = toReducedEchelon
    }
 
-solveSystemWithMatrixExercise :: Exercise (Context (Either (LinearSystem Rational) (Matrix Rational)))
+solveSystemWithMatrixExercise :: Exercise (Context (Either (LinearSystem SExpr) (Matrix SExpr)))
 solveSystemWithMatrixExercise = makeExercise
    { shortTitle    = "Solve Linear System with Matrix"
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right (fmap Left ok)
                               (_, Right ok) -> Right (fmap Right ok)
                               (Left doc1, Left doc2) -> Left (text "Error") -- FIX THIS
-   , prettyPrinter = either (unlines . map (show . fmap (fmap ShowRational))) ppRationalMatrix . fromContext
+   , prettyPrinter = either (unlines . map show . id) ppMatrix . fromContext
    , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
                                  g = f . either (fst . systemToMatrix) id . fromContext
                              in g x == g y
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
    , finalProperty = either inSolvedForm (const False) . fromContext
    , strategy      = generalSolutionSystemWithMatrix
-   , generator     = liftM (fmap Left) arbitrary
+   , generator     = liftM (fmap Left) (generator solveSystemExercise)
    }
 
-opgave6b :: Exercise (MatrixInContext Rational)
+opgave6b :: Exercise (MatrixInContext SExpr)
 opgave6b = reduceMatrixExercise
    { shortTitle = "Opgave 9.6 (b)"
    , generator  = return $ inContext $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
@@ -101,19 +105,27 @@ opgave6b = reduceMatrixExercise
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 
+instance Argument SExpr where
+   makeArgDescr = argDescrSExpr
+
+argDescrSExpr :: String -> ArgDescr SExpr
+argDescrSExpr descr = ArgDescr descr Nothing parseRatio show
+ where
+   parseRatio = either (const Nothing) (Just . simplifyExpr) . parseExpr
+                  
 instance Arbitrary a => Arbitrary (Vector a) where
    arbitrary   = liftM fromList arbitrary
    coarbitrary = coarbitrary . toList
 
-instance Arbitrary MySqrt where
+{- instance Arbitrary MySqrt where
    arbitrary = oneof $ map (return . fromInteger) [-10 .. 10]
-   coarbitrary = coarbitrary . fromMySqrt
+   coarbitrary = coarbitrary . fromMySqrt -}
 
-arbBasis :: Gen [Vector MySqrt]
+arbBasis :: Gen [Vector SExpr]
 arbBasis = do
-   j <- oneof $ map return [0..5]
-   i <- oneof $ map return [0..5] -- oneof $ map return [0..j]
-   replicateM i (liftM fromList $ replicateM j arbitrary)
+   --i <- oneof $ map return [0..5]
+   --j <- oneof $ map return [0..5]
+   replicateM 2 $ liftM fromList $ replicateM 2 $ liftM fromInteger arbitrary
 
 liftRuleLeft :: Rule a -> Rule (Either a b)
 liftRuleLeft = lift $ makeLiftPair isLeft (\a _ -> Left a)
@@ -133,9 +145,9 @@ instance Arbitrary a => Arbitrary (Matrix a) where
       arbSizedMatrix (i `mod` 15, j `mod` 15)
    coarbitrary = coarbitrary . rows
 
-instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
+{- instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
    arbitrary = liftM fromInteger arbitrary
-   coarbitrary r = coarbitrary (numerator r) . coarbitrary (denominator r)
+   coarbitrary r = coarbitrary (numerator r) . coarbitrary (denominator r) -}
    
 arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
 arbSizedMatrix (i, j) = 
@@ -192,7 +204,7 @@ arbNiceMatrix = do
        
 ---------------------------------------------------------------
 -- Small Ints
-   
+   {-
 newtype SmallInt = SmallInt Int
    deriving (Show, Eq, Ord, Num)
 
@@ -207,4 +219,4 @@ newtype ShowRational = ShowRational Rational
    deriving (Eq, Num, Fractional)
 
 instance Show ShowRational where
-   show (ShowRational r) = ppRational r
+   show (ShowRational r) = ppRational r -}

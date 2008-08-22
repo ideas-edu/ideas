@@ -35,7 +35,7 @@ test:
 # Executable suffix: $(EXE) 
 # GHC interpreter: $(GHCI)
 
-all: solvergui doc markup laservice service unit-tests wikipages
+all: solvergui doc laservice service unit-tests wikipages #markup
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \

@@ -56,7 +56,7 @@ instance Uniplate Expr where
       case expr of
          a :+: b  -> ([a,b], \[x,y] -> x :+: y)
          a :*: b  -> ([a,b], \[x,y] -> x :*: y)
-         a :-: b  -> ([a,b], \[x,y] -> x :*: y)
+         a :-: b  -> ([a,b], \[x,y] -> x :-: y)
          Negate a -> ([a]  , \[x]   -> Negate x)
          Con n    -> ([]   , \[]    -> expr)
          a :/: b  -> ([a,b], \[x,y] -> x :/: y)

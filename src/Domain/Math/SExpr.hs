@@ -10,7 +10,7 @@ import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
 
-newtype SExpr = SExpr (Constrained Expr)
+newtype SExpr = SExpr (Constrained (Con Expr) Expr)
 
 instance Show SExpr where
    show = show . toExpr -- !!
@@ -38,31 +38,28 @@ instance Symbolic SExpr where
    function s = liftSs (function s)
    
 instance Arbitrary SExpr where
-   arbitrary   = liftM (make . toConstrained) arbitrary -- !!
+   arbitrary   = liftM (make . return) arbitrary -- !!
    coarbitrary = coarbitrary . toExpr -- !!
    
 toExpr :: SExpr -> Expr
 toExpr (SExpr e) = fromConstrained e
 
 simplifyExpr :: Expr -> SExpr
-simplifyExpr = make . toConstrained
+simplifyExpr = make . return
 
 liftS  f (SExpr a)           = make $ f a
 liftS2 f (SExpr a) (SExpr b) = make $ f a b
 liftSs f xs = make $ f [ e | SExpr e <- xs ]
 
-make :: Constrained Expr -> SExpr
+make :: Constrained (Con Expr) Expr -> SExpr
 make = simplify . SExpr
 
 -----------------------------------------------------------------------
 -- Simplifications
 
 simplify :: SExpr -> SExpr
-simplify (SExpr a) = SExpr (liftC simplifyExpr2 a)
-
-simplifyExpr2 :: Expr -> Expr
-simplifyExpr2 = fixpoint (transformBU f) 
- where 
+simplify (SExpr c) = SExpr $ c >>= fixpointM (transformM f)
+ where
    f = applyRules . constantPropagation
             
 constantPropagation :: Expr -> Expr
@@ -82,9 +79,9 @@ hasSquareRoot n
  where
    r = round $ sqrt $ fromIntegral n
  
-applyRules :: Expr -> Expr
+applyRules :: Expr -> Constrained (Con Expr) Expr
 applyRules e = 
-   fromMaybe e $ safeHead [ a | r <- rs, a <- match r e ]
+   return $ fromMaybe e $ safeHead [ a | r <- rs, a <- match r e ]
  where
    rs = [ rule2 "Def. minus" $ \x y -> x-y ~> x+(-y)
         , ruleZeroPlus, ruleZeroPlusComm 
@@ -129,10 +126,20 @@ transformBU :: Uniplate a => (a -> a) -> a -> a
 transformBU g a = g $ f $ map (transformBU g) cs
  where
    (cs, f) = uniplate a
-   
+
+transformM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
+transformM g a = mapM (transformM g) cs >>= (g . f)
+ where
+   (cs, f) = uniplate a
+
 fixpoint :: Eq a => (a -> a) -> a -> a
 fixpoint f = stop . iterate f 
  where
    stop (x:xs) 
       | x == head xs = x
       | otherwise    = stop xs
+      
+fixpointM :: (Monad m, Eq a) => (a -> m a) -> a -> m a
+fixpointM f a = do
+   b <- f a
+   if a==b then return a else fixpointM f b

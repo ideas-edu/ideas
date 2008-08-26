@@ -1,4 +1,4 @@
-module Domain.Math.Constrained (Constrained, toConstrained, fromConstrained, liftC) where
+module Domain.Math.Constrained (Constrained, Con, fromConstrained) where
 
 import Common.Context 
 import Control.Monad
@@ -9,14 +9,39 @@ import Test.QuickCheck
 -----------------------------------------------------------------------
 -- Constrained values
 
-data Constrained a = C (Prop (Con a)) a 
+data Constrained c a = C (Prop c) a 
    deriving (Show, Eq)
+
+instance Functor (Constrained c) where
+   fmap f (C p a) = C p (f a)
+
+instance Monad (Constrained c) where
+   return = C mempty
+   C p a >>= f = let C q b = f a
+                 in C (p /\ q) b
+
+constrain :: Prop c -> Constrained c ()
+constrain p = C p ()
+
+infixl 2 #
+
+(#) :: Constrained c a -> Prop c -> Constrained c a
+c # p = constrain p >> c
 
 -----------------------------------------------------------------------
 -- Propositions
 
 data Prop a = T | F | Not (Prop a) | Prop a :/\: Prop a | Prop a :\/: Prop a | Atom a
    deriving (Show, Eq)
+
+instance Functor Prop where
+   fmap f prop = 
+      case prop of
+         T        -> T
+         F        -> F
+         Not p    -> Not (fmap f p)
+         p :/\: q -> fmap f p :/\: fmap f q
+         p :\/: q -> fmap f p :\/: fmap f q
 
 instance Monoid (Prop a) where
    mempty  = T
@@ -38,27 +63,34 @@ data Con a = a :==: a   -- equality
            | WF a       -- well-formedness
    deriving (Show, Eq)
 
+instance Functor Con where
+   fmap f con =
+      case con of
+         x :==: y -> f x :==: f y
+         x :<:  y -> f x :<:  f y
+         WF x     -> WF (f x)
+
 -----------------------------------------------------------------------
 -- Numeric instances
 
-instance Num a => Num (Constrained a) where
-   (+) = liftC2 (+)
-   (*) = liftC2 (*)
-   (-) = liftC2 (-)
-   negate      = liftC negate
-   fromInteger = toConstrained . fromInteger
+instance (Show c, Eq c, Num a) => Num (Constrained c a) where
+   (+) = liftM2 (+)
+   (*) = liftM2 (*)
+   (-) = liftM2 (-)
+   negate      = liftM negate
+   fromInteger = return . fromInteger
 
-instance Fractional a => Fractional (Constrained a) where
-   (/) = liftC2 (/)
-   fromRational = toConstrained . fromRational
+instance (Show c, Eq c, Fractional a) => Fractional (Constrained c a) where
+   (/) = liftM2 (/)
+   fromRational = return . fromRational
    
-instance Floating a => Floating (Constrained a) where
-   sqrt = liftC sqrt
-   pi   = toConstrained pi
+instance (Show c, Eq c, Floating a) => Floating (Constrained c a) where
+   sqrt = liftM sqrt
+   pi   = return pi
    
-instance Symbolic a => Symbolic (Constrained a) where
-   variable   = toConstrained . variable
-   function s = liftCs (function s)
+instance (Show c, Eq c, Symbolic a) => Symbolic (Constrained c a) where
+   variable   = return . variable
+   function s = liftM (function s) . sequence
 
 -----------------------------------------------------------------------
 -- Various instances
@@ -82,24 +114,11 @@ instance MetaVar (Constrained a) -}
 -----------------------------------------------------------------------
 -- Remaining functions
 
-liftC  f (C a x)         = C a (f x)
-liftC2 f (C a x) (C b y) = C (a `mappend` b) (f x y)
-
-liftCs f xs = C (mconcat $ map proposition xs) (f $ map fromConstrained xs)
-
-toConstrained :: a -> Constrained a
-toConstrained = C mempty
-
-fromConstrained :: Constrained a -> a
+fromConstrained :: Constrained c a -> a
 fromConstrained (C _ a) = a
 
-proposition :: Constrained a -> Prop (Con a)
+proposition :: Constrained c a -> Prop c
 proposition (C a _) = a
-
-infixl 2 #
-
-(#) :: Constrained a -> Prop (Con a) -> Constrained a
-C p a # q = C (p /\ q) a
 
 infix 3 #==, #<, #/=, #>=
 

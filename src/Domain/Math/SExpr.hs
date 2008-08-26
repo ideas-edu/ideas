@@ -1,64 +1,69 @@
-module Domain.Math.SExpr (SExpr, toExpr, simplifyExpr, hasSquareRoot) where
+module Domain.Math.SExpr (SExpr, toExpr, simplifyExpr, simplify, hasSquareRoot) where
 
 import Common.Utils (safeHead)
 import Common.Context
 import Domain.Math.Classes
 import Domain.Math.Expr
+import Domain.Math.Constrained
 import Domain.Math.Rules
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
 
-newtype SExpr = SExpr Expr
+newtype SExpr = SExpr (Constrained Expr)
 
 instance Show SExpr where
-   show = show . toExpr
+   show = show . toExpr -- !!
 
 instance Eq SExpr where
-   x == y = toExpr x == toExpr y
+   x == y = toExpr x == toExpr y -- !!
 
 instance Num SExpr where
    (+) = liftS2 (+)
    (*) = liftS2 (*)
    (-) = liftS2 (-)
    negate      = liftS negate
-   fromInteger = simplifyExpr . fromInteger
+   fromInteger = make . fromInteger
 
 instance Fractional SExpr where
    (/) = liftS2 (/)
-   fromRational = simplifyExpr . fromRational
+   fromRational = make . fromRational
    
 instance Floating SExpr where
    sqrt = liftS sqrt
-   pi   = simplifyExpr pi
+   pi   = make pi
    
 instance Symbolic SExpr where
-   variable = simplifyExpr . variable
-   function s = simplifyExpr . function s . map toExpr
+   variable   = make . variable
+   function s = liftSs (function s)
    
 instance Arbitrary SExpr where
-   arbitrary   = liftM simplifyExpr arbitrary
-   coarbitrary = coarbitrary . toExpr
+   arbitrary   = liftM (make . toConstrained) arbitrary -- !!
+   coarbitrary = coarbitrary . toExpr -- !!
    
 toExpr :: SExpr -> Expr
-toExpr (SExpr e) = e
+toExpr (SExpr e) = fromConstrained e
 
 simplifyExpr :: Expr -> SExpr
-simplifyExpr = SExpr . simplify
+simplifyExpr = make . toConstrained
 
-liftS  f a   = simplifyExpr $ f (toExpr a)
-liftS2 f a b = simplifyExpr $ f (toExpr a) (toExpr b)
+liftS  f (SExpr a)           = make $ f a
+liftS2 f (SExpr a) (SExpr b) = make $ f a b
+liftSs f xs = make $ f [ e | SExpr e <- xs ]
+
+make :: Constrained Expr -> SExpr
+make = simplify . SExpr
 
 -----------------------------------------------------------------------
 -- Simplifications
 
-simplify :: Expr -> Expr
-simplify a 
-   | a==b      = a 
-   | otherwise = fixpoint (transformBU f) b
+simplify :: SExpr -> SExpr
+simplify (SExpr a) = SExpr (liftC simplifyExpr2 a)
+
+simplifyExpr2 :: Expr -> Expr
+simplifyExpr2 = fixpoint (transformBU f) 
  where 
    f = applyRules . constantPropagation
-   b = f a
             
 constantPropagation :: Expr -> Expr
 constantPropagation e =

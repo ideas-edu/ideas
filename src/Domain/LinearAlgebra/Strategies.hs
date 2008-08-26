@@ -79,7 +79,7 @@ generalSolutionSystemWithMatrix = label "General solution to a linear system (ma
 gramSchmidt :: Floating a => LabeledStrategy (Context [Vector a])
 gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
        label "Consider next vector"   ruleNext 
-   <*> label "Make vector orthogonal" (repeat ruleOrthogonal) 
+   <*> label "Make vector orthogonal" (repeat (ruleOrthogonal <*> ruleNextOrthogonal)) 
    <*> label "Normalize"              (try ruleNormalize)
 
 vars :: Var [String]

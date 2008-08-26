@@ -20,8 +20,9 @@ import Domain.LinearAlgebra.Vector
 import Control.Monad
 import Data.List
 
-varI :: Var Int
+varI, varJ :: Var Int
 varI = "considered" := 0
+varJ = "j"          := 0
 
 rulesGramSchmidt :: Floating a => [Rule (Context [Vector a])]
 rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
@@ -40,17 +41,27 @@ ruleOrthogonal :: Num a => Rule (Context [Vector a])
 ruleOrthogonal = makeRule "Make orthogonal" $ supplyLabeled2 descr args transOrthogonal
  where
    descr  = ("vector 1", "vector 2")
+   args c = do let i = get varI c-1
+                   j = get varJ c
+               guard (i>j)
+               return (j, i)
+   {-
    args c = do let xs = take (get varI c - 1) (fromContext c)
                v <- current c 
                i <- findIndex (not . orthogonal v) xs
-               return ( i, get varI c - 1)
+               return ( i, get varI c - 1) -}
+
+-- Variable "j" is for administrating which vectors are already orthogonal 
+ruleNextOrthogonal :: Rule (Context [Vector a])
+ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $
+   return . change varJ (+1)
 
 -- Consider the next vector 
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context [Vector a])
 ruleNext = minorRule $ makeSimpleRule "Consider next vector" $
    \c -> do guard (get varI c < length (fromContext c))
-            return $ change varI (+1) c 
+            return $ change varI (+1) $ set varJ 0 c 
 
 current :: Context [Vector a] -> Maybe (Vector a)
 current c = 

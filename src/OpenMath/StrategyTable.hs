@@ -80,7 +80,10 @@ instance IsExpr SExpr.SExpr where
    fromExpr = fmap SExpr.simplifyExpr . fromExpr
    
 instance IsExpr Expr.Expr where
-   toExpr = Expr.foldExpr ((:+:), (:*:), (:-:), Negate, Con, (:/:), Sqrt, Var, \s _ -> Var s)
+   toExpr = Expr.foldExpr ((:+:), (:*:), (:-:), Negate, Con, (:/:), Sqrt, Var, sym)
+    where 
+      sym "pi" [] = Pi
+      sym s    _  = Var s -- error, should not happen
    fromExpr e = 
       case e of
          Con n    -> Just (fromIntegral n)
@@ -91,6 +94,7 @@ instance IsExpr Expr.Expr where
          x :*: y  -> binop (*) x y
          x :/: y  -> binop (/) x y
          Sqrt x   -> liftM sqrt (fromExpr x)
+         Pi       -> return pi
          _        -> Nothing
     where
       binop op x y = liftM2 op (fromExpr x) (fromExpr y)

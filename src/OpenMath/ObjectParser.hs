@@ -28,7 +28,7 @@ import Service.XML
 -- abstract representation for OM objects
 data Expr = Con Integer | Var String 
           | Expr :*: Expr | Expr :+: Expr | Expr :-: Expr | Expr :/: Expr | Negate Expr
-          | Matrix [[Expr]] | List [Expr] | Expr :==: Expr | Sqrt Expr
+          | Matrix [[Expr]] | List [Expr] | Expr :==: Expr | Sqrt Expr | Pi
    deriving Show
 
 ----------------------------------------------------------
@@ -105,6 +105,7 @@ omobj2expr omobj =
    case omobj of
       OMI i -> return (Con i)
       OMV v -> return (Var v)
+      OMS _ "pi" -> return Pi
       OMA (OMS _ "matrix":rows) -> do
          let f (OMA (OMS _ "matrixrow":elems)) = mapM omobj2expr elems
              f _ = fail "invalid matrix row"
@@ -137,6 +138,7 @@ expr2omobj expr =
       x :/: y   -> binop "arith1" "divide" x y
       Negate x  -> OMA [OMS "arith1" "unary_minus", expr2omobj x]
       Sqrt x    -> binop "arith1" "root" x (Con 2)
+      Pi        -> OMS "nums1" "pi"
       x :==: y  -> binop "relation1" "eq"  x y
       List xs   -> OMA (OMS "list1" "list" : map expr2omobj xs)
       Matrix xs ->

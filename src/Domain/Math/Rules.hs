@@ -28,6 +28,12 @@ rule2 s f = R s 2 $ \i -> f (metaVar i) (metaVar (i+1))
 rule3 :: MetaVar a => String -> (a -> a -> a -> (a, a)) -> Rule a
 rule3 s f = R s 3 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2))
 
+rule4 :: MetaVar a => String -> (a -> a -> a -> a -> (a, a)) -> Rule a
+rule4 s f = R s 4 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2)) (metaVar (i+3))
+
+rule5 :: MetaVar a => String -> (a -> a -> a -> a -> a -> (a, a)) -> Rule a
+rule5 s f = R s 5 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2)) (metaVar (i+3)) (metaVar (i+4))
+
 inverse :: Rule a -> Rule a
 inverse r = r { rulePair = swap . rulePair r }
  where swap (x, y) = (y, x)

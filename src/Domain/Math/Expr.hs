@@ -173,3 +173,9 @@ collectPlus e = [e]
 collectTimes :: Expr -> [Expr]
 collectTimes (a :*: b) = collectTimes a ++ collectTimes b
 collectTimes e = [e]
+
+composQ :: Uniplate b => a -> (a -> a -> a) -> (b -> a) -> b -> a
+composQ zero combine f = foldr (combine . f) zero . children
+
+size :: Expr -> Int
+size e = 1 + composQ 0 (+) size e

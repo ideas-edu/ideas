@@ -6,6 +6,7 @@ import Test.QuickCheck
 import Control.Monad
 import Common.Context
 import Domain.Math.Classes
+import Domain.Math.Rewriting
 
 -----------------------------------------------------------------------
 -- Expression data type
@@ -166,16 +167,27 @@ instance ShallowEq Expr where
    
 instance UniplateConstr Expr
 
-collectPlus :: Expr -> [Expr]
-collectPlus (a :+: b) = collectPlus a ++ collectPlus b
-collectPlus e = [e]
+-----------------------------------------------------------------------
+-- AC Theory for expression
 
-collectTimes :: Expr -> [Expr]
-collectTimes (a :*: b) = collectTimes a ++ collectTimes b
-collectTimes e = [e]
+exprACs ::[OperatorAC Expr]
+exprACs = [plusAC, timesAC]
 
-composQ :: Uniplate b => a -> (a -> a -> a) -> (b -> a) -> b -> a
-composQ zero combine f = foldr (combine . f) zero . children
+plusAC :: OperatorAC Expr
+plusAC = (isPlus, (+))
+ where
+   isPlus (a :+: b) = Just (a, b)
+   isPlus _         = Nothing
+
+timesAC :: OperatorAC Expr
+timesAC = (isTimes, (*))
+ where
+   isTimes (a :*: b) = Just (a, b)
+   isTimes _         = Nothing
+
+collectPlus, collectTimes :: Expr -> [Expr]
+collectPlus  = collectAC plusAC
+collectTimes = collectAC timesAC
 
 size :: Expr -> Int
 size e = 1 + composQ 0 (+) size e

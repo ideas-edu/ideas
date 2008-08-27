@@ -3,12 +3,20 @@ module Domain.Math.Rules where
 import Common.Context
 import Control.Monad
 import Data.List
+import Data.Monoid
+import Data.Maybe
 import qualified Data.IntMap as IM
 import Domain.Math.Classes
--- import Domain.Math.Condition
-import Domain.Math.Expr
+import Domain.Math.Constrained
+-- import Domain.Math.Expr
 
-data Rule a = R { name :: String, nrOfVars :: Int, rulePair :: Int -> (a, a) }
+data Rule a = R { name :: String, nrOfVars :: Int, ruleTriple :: Int -> Triple a }
+
+data Triple a = Triple a a (Prop (Con a))
+
+rulePair :: Rule a -> Int -> (a, a)
+rulePair r i = (lhs, rhs)
+ where Triple lhs rhs _ = ruleTriple r i
 
 instance Show (Rule a) where
    show r = "[" ++ name r ++ "]" 
@@ -16,58 +24,53 @@ instance Show (Rule a) where
 instance Eq (Rule a) where
    r1 == r2 = name r1 == name r2
 
-rule0 :: MetaVar a => String -> (a, a) -> Rule a
+rule0 :: MetaVar a => String -> Triple a -> Rule a
 rule0 s = R s 0 . const
 
-rule1 :: MetaVar a => String -> (a -> (a, a)) -> Rule a
+rule1 :: MetaVar a => String -> (a -> Triple a) -> Rule a
 rule1 s f = R s 1 $ \i -> f (metaVar i)
 
-rule2 :: MetaVar a => String -> (a -> a -> (a, a)) -> Rule a
+rule2 :: MetaVar a => String -> (a -> a -> Triple a) -> Rule a
 rule2 s f = R s 2 $ \i -> f (metaVar i) (metaVar (i+1))
 
-rule3 :: MetaVar a => String -> (a -> a -> a -> (a, a)) -> Rule a
+rule3 :: MetaVar a => String -> (a -> a -> a -> Triple a) -> Rule a
 rule3 s f = R s 3 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2))
 
-rule4 :: MetaVar a => String -> (a -> a -> a -> a -> (a, a)) -> Rule a
+rule4 :: MetaVar a => String -> (a -> a -> a -> a -> Triple a) -> Rule a
 rule4 s f = R s 4 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2)) (metaVar (i+3))
 
-rule5 :: MetaVar a => String -> (a -> a -> a -> a -> a -> (a, a)) -> Rule a
+rule5 :: MetaVar a => String -> (a -> a -> a -> a -> a -> Triple a) -> Rule a
 rule5 s f = R s 5 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2)) (metaVar (i+3)) (metaVar (i+4))
 
-inverse :: Rule a -> Rule a
-inverse r = r { rulePair = swap . rulePair r }
- where swap (x, y) = (y, x)
+inverse :: (MetaVar a, Uniplate a) => Rule a -> Maybe (Rule a)
+inverse r = if checkScope new then Just new else Nothing
+ where 
+   swap (Triple x y xs) = Triple y x xs
+   new = r { ruleTriple = swap . ruleTriple r }
+
+bothWays :: (MetaVar a, Uniplate a) => [Rule a] -> [Rule a]
+bothWays rs = rs ++ catMaybes (map inverse rs)
+
+checkScope :: (MetaVar a, Uniplate a) => Rule a -> Bool
+checkScope r = null (freeVars rhs \\ freeVars lhs)
+ where (lhs, rhs) = rulePair r 0
+
+infixl 1 ~>, #
+
+(~>) :: a -> a -> Triple a
+lhs ~> rhs = Triple lhs rhs mzero
+
+(#) :: Triple a -> Prop (Con a) -> Triple a
+Triple lhs rhs p1 # p2 = Triple lhs rhs (p1 `mappend` p2)
 
 {-
-ruleCondition :: Rule Expr -> Int -> Condition Expr
-ruleCondition r i = c1 /\ c2 /\ c3
- where
-   (lhs, rhs) = rulePair r i
-   c1 = foldr (:&&:) T [ Atom (WF (metaVar v)) | v <- freeVars lhs \\ freeVars rhs ]
-   c2 = foldr (:&&:) T [ Not (Atom (y :==: 0)) | x :/: y <- universe lhs ]
-   c3 = foldr (:&&:) T [ Not (Atom (x :<:  0)) | Sqrt x  <- universe lhs ] -}
+wfProp :: (Uniplate a, MetaVar a) => Triple a -> Prop (Con a)
+wfProp (Triple lhs rhs _) = mconcat 
+   [ wf (metaVar a) | a <- freeVars lhs \\ freeVars rhs ]
 
-infixl 1 ~>
-
-(~>) :: a -> a -> (a, a)
-lhs ~> rhs = (lhs, rhs)
-
-match :: (MonadPlus m, MetaVar a, UniplateConstr a) => Rule a -> a -> m a
-match r e = do 
-   let (lhs, rhs) = rulePair r (nextVar e)
-   s <- unify lhs e
-   if any (`IM.member` s) (freeVars e)
-      then mzero
-      else return (s |-> rhs)
-
-matchAt :: (MonadPlus m, MetaVar a, UniplateConstr a) => [Int] -> Rule a -> a -> m a
-matchAt []     r a = match r a
-matchAt (i:is) r a = do 
-   new <- matchAt is r y
-   return $ f $ xs ++ [new] ++ ys
- where
-   (cs, f)    = uniplate a
-   (xs, y:ys) = splitAt i cs
+bottomDivProp :: Uniplate a => Triple a -> Prop (Con a)
+bottomDivProp (Triple lhs rhs _) = mconcat 
+   [ x ./= 0 | _ :/: x <-  universe lhs ] -}
 
 -----------------------------------------------------------------------
 -- Rule collections
@@ -157,7 +160,7 @@ ruleZeroNeg = rule3 "Trans neg" $ \x y z ->
 ruleZeroDiv, ruleOneDiv :: (MetaVar a, Fractional a) => Rule a
 
 ruleZeroDiv = rule1 "Zero /" $ \x ->
-   0/x ~> 0
+   0/x ~> 0   # x./=0
    
 ruleOneDiv = rule3 "One /" $ \x y z -> 
    x/1 ~> x
@@ -187,13 +190,13 @@ ruleSimplPlusNegComm = rule1 "Simpl + neg Comm" $ \x ->
    x+(-x) ~> 0
    
 ruleSimplDiv = rule1 "Simpl /" $ \x -> 
-   x/x ~> 1
+   x/x ~> 1   # x./=0
    
 ruleSimplDivTimes = rule3 "Simpl / *" $ \x y z -> 
-   (x*y)/(x*z) ~> y/z
+   (x*y)/(x*z) ~> y/z   # x./=0
 
 ruleSimpleSqrtTimes = rule1 "Simpl sqrt *" $ \x -> 
-   sqrt x*sqrt x ~> x
+   sqrt x*sqrt x ~> x   #x.>=0
 
 -----------------------------------------------------------------------
 -- Distribution rules for Negation

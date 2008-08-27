@@ -30,6 +30,7 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Ratio
 
+import Domain.Math.Classes
 import Domain.Math.SExpr
 import Domain.Math.Parser
 
@@ -101,7 +102,14 @@ opgave6b = reduceMatrixExercise
    { shortTitle = "Opgave 9.6 (b)"
    , generator  = return $ inContext $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
    }
-  
+
+opgaveVarMatrix :: Exercise (MatrixInContext SExpr)
+opgaveVarMatrix = reduceMatrixExercise
+   { shortTitle = "Var in Matrix"
+   , generator  = return $ inContext $ makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]
+   }
+ where lam = variable "L"
+ 
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 

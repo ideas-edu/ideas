@@ -1,4 +1,4 @@
-module Domain.Math.Constrained (Constrained, Con, fromConstrained) where
+module Domain.Math.Constrained where
 
 import Common.Context 
 import Control.Monad
@@ -9,7 +9,7 @@ import Test.QuickCheck
 -----------------------------------------------------------------------
 -- Constrained values
 
-data Constrained c a = C (Prop c) a 
+data Constrained c a = C (Prop c) a
    deriving (Show, Eq)
 
 instance Functor (Constrained c) where
@@ -17,16 +17,16 @@ instance Functor (Constrained c) where
 
 instance Monad (Constrained c) where
    return = C mempty
-   C p a >>= f = let C q b = f a
-                 in C (p /\ q) b
+   C p a >>= f = case f a of
+                    C q b -> C (p /\ q) b
 
 constrain :: Prop c -> Constrained c ()
 constrain p = C p ()
 
-infixl 2 #
+{- infixl 2 #
 
 (#) :: Constrained c a -> Prop c -> Constrained c a
-c # p = constrain p >> c
+c # p = constrain p >> c -}
 
 -----------------------------------------------------------------------
 -- Propositions
@@ -35,17 +35,32 @@ data Prop a = T | F | Not (Prop a) | Prop a :/\: Prop a | Prop a :\/: Prop a | A
    deriving (Show, Eq)
 
 instance Functor Prop where
-   fmap f prop = 
-      case prop of
-         T        -> T
-         F        -> F
-         Not p    -> Not (fmap f p)
-         p :/\: q -> fmap f p :/\: fmap f q
-         p :\/: q -> fmap f p :\/: fmap f q
+   fmap f = mapProp (Atom . f)
+
+instance Monad Prop where
+   return = Atom
+   (>>=)  = flip mapProp
+
+instance MonadPlus Prop where
+   mzero = mempty
+   mplus = mappend
 
 instance Monoid (Prop a) where
    mempty  = T
    mappend = (/\)
+
+joinProp :: Prop (Prop a) -> Prop a
+joinProp = mapProp id
+
+mapProp :: (a -> Prop b) -> Prop a -> Prop b
+mapProp f prop =
+   case prop of
+      T        -> T
+      F        -> F
+      Not p    -> Not (mapProp f p)
+      p :/\: q -> mapProp f p :/\: mapProp f q
+      p :\/: q -> mapProp f p :\/: mapProp f q
+      Atom a   -> f a
 
 -- smart constructor
 (/\) :: Prop a -> Prop a -> Prop a
@@ -120,13 +135,13 @@ fromConstrained (C _ a) = a
 proposition :: Constrained c a -> Prop c
 proposition (C a _) = a
 
-infix 3 #==, #<, #/=, #>=
+infix 3 .==, .<, ./=, .>=
 
 wf :: a -> Prop (Con a)
 wf = Atom . WF
 
-(#==), (#<), (#/=), (#>=) :: a -> a -> Prop (Con a)
-a #== b = Atom $ a :==: b
-a #<  b = Atom $ a :<:  b
-a #/= b = Not $ Atom $ a :==: b
-a #>= b = Not $ Atom $ a :<: b
+(.==), (.<), (./=), (.>=) :: a -> a -> Prop (Con a)
+a .== b = return $ a :==: b
+a .<  b = return $ a :<:  b
+a ./= b = Not $ return $ a :==: b
+a .>= b = Not $ return $ a :<: b

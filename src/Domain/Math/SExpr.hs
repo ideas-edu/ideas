@@ -6,8 +6,12 @@ import Domain.Math.Classes
 import Domain.Math.Expr
 import Domain.Math.Constrained
 import Domain.Math.Rules
+import Domain.Math.Rewriting
 import Control.Monad
+import Data.List
+import Data.Ratio
 import Data.Maybe
+import Data.Monoid
 import Test.QuickCheck
 
 newtype SExpr = SExpr (Constrained (Con Expr) Expr)
@@ -41,7 +45,7 @@ instance Arbitrary SExpr where
    arbitrary   = liftM (make . return) arbitrary -- !!
    coarbitrary = coarbitrary . toExpr -- !!
    
-toExpr :: SExpr -> Expr
+toExpr :: SExpr -> Expr -- !!!
 toExpr (SExpr e) = fromConstrained e
 
 simplifyExpr :: Expr -> SExpr
@@ -58,9 +62,9 @@ make = simplify . SExpr
 -- Simplifications
 
 simplify :: SExpr -> SExpr
-simplify (SExpr c) = SExpr $ c >>= fixpointM (transformM f)
+simplify (SExpr c) = SExpr $ {-liftM rewriteGS-} c >>= fixpointM (transformM f)
  where
-   f = applyRules . constantPropagation
+   f a = (return . constantPropagation) a >>= applyRules >>= (return . simplifySquareRoots)
             
 constantPropagation :: Expr -> Expr
 constantPropagation e =
@@ -79,9 +83,11 @@ hasSquareRoot n
  where
    r = round $ sqrt $ fromIntegral n
  
+pp = let SExpr x = sqrt ((0*(sqrt 13) / 0)) in proposition x
+ 
 applyRules :: Expr -> Constrained (Con Expr) Expr
 applyRules e = 
-   return $ fromMaybe e $ safeHead [ a | r <- rs, a <- match r e ]
+   fromMaybe (return e) $ safeHead [ constrain p >> return a | r <- rs, (a, p) <- matchM r e ]
  where
    rs = [ rule2 "Def. minus" $ \x y -> x-y ~> x+(-y)
         , ruleZeroPlus, ruleZeroPlusComm 
@@ -105,7 +111,85 @@ applyRules e =
 --        , rule3 "Temp6" $ \x y z -> x/(y/z) ~> (x*z)/y
 --        , rule2 "Temp7" $ \x y -> sqrt (x/y) ~> sqrt x / sqrt y
         ]
- 
+
+-- Gram-Schmidt view
+data ViewGS = PlusGS ViewGS ViewGS | TimesGS Rational Integer
+
+rewriteGS :: Expr -> Expr
+rewriteGS e = maybe e (fromViewGS . sortAndMergeViewGS) (toViewGS e)
+
+toViewGS :: Expr -> Maybe ViewGS
+toViewGS = foldExpr (bin plus, bin times, bin min, unop neg, con, bin div, unop sqrt, err, const err)
+ where
+   err _ = fail "toMySqrt"
+   bin  f a b = join (liftM2 f a b)
+   unop f a = join (liftM f a)
+   con n = return (TimesGS (fromIntegral n) 1)
+   
+   plus a b = return (PlusGS a b)   
+   min a b  = bin plus (return a)  (neg b)
+   neg a    = bin times (con (-1)) (return a)
+   div a b  = bin times (return a) (recip b)
+   
+   times (PlusGS a b) c = bin plus (times a c) (times b c)
+   times a (PlusGS b c) = bin plus (times a b) (times a c)
+   times (TimesGS r1 n1) (TimesGS r2 n2) =
+      case squareRoot (n1*n2) of
+         Just (TimesGS r3 n3) -> return $ TimesGS (r1*r2*r3) n3
+         _ -> Nothing
+         
+   recip (TimesGS r n) = return $ TimesGS (1 / (fromIntegral n*r)) n 
+   recip _ = Nothing
+   
+   sqrt (TimesGS r 1) 
+      | r2 == 1 = 
+           squareRoot r1
+      | otherwise =  
+           bin div (unop sqrt $ con $ fromIntegral r1) (unop sqrt $ con $ fromIntegral r2)
+    where (r1, r2) = (numerator r, denominator r)
+   sqrt _ = Nothing
+   
+   squareRoot n = maybe (rec 1 n [2..20]) con (hasSquareRoot n) 
+    where
+      rec i n [] = return $ TimesGS (fromInteger i) n
+      rec i n (x:xs)
+         | n `mod` x2 == 0 = rec (i*x) (n `Prelude.div` x2) (x:xs)
+         | otherwise       = rec i n xs
+       where
+         x2 = x*x
+      
+sortAndMergeViewGS :: ViewGS -> ViewGS
+sortAndMergeViewGS = merge . sortBy cmp . collect
+ where
+   collect (PlusGS a b)  = collect a ++ collect b
+   collect (TimesGS r n) = [(r, n)]
+   
+   merge ((r1, n1):(r2, n2):rest)
+      | n1 == n2  = merge ((r1+r2, n1):rest)
+      | otherwise = PlusGS (TimesGS r1 n1) (merge ((r2,n2):rest))
+   merge [(r1, n1)] = TimesGS r1 n1
+   
+   cmp x y = snd x `compare` snd y
+
+fromViewGS :: ViewGS -> Expr
+fromViewGS (PlusGS a b)  = fromViewGS a + fromViewGS b
+fromViewGS (TimesGS r n) = fromRational r * sqrt (fromIntegral n)
+
+setS :: (Expr -> Expr) -> SExpr -> SExpr
+setS _ (SExpr c) = SExpr (f c)
+ where f :: Constrained c a -> Constrained c a
+       f = id
+
+{-
+gsRules :: Expr -> Expr
+gsRules (x :/: Sqrt y) = (x*sqrt y) / y
+gsRules (Sqrt y :/: z) = (1/z) * Sqrt y
+gsRules (Sqrt x :*: Sqrt y) = Sqrt (x*y)
+gsRules (Sqrt x :*: y) = y*Sqrt x
+gsRules (x :*: (y :*: z)) = (x*y)*z
+gsRules (x :*: (y :+: z)) = (x*y)+(x*z)
+gsRules a = a -}
+
 {-
 special :: Expr -> Expr
 special e0 = fromMaybe e0 $ do 
@@ -122,24 +206,3 @@ special e0 = fromMaybe e0 $ do
    partTwo   = foldr1 (+) . map (\(a,_,_) -> a*a)
    partThree = thd3 . head -}
    
-transformBU :: Uniplate a => (a -> a) -> a -> a
-transformBU g a = g $ f $ map (transformBU g) cs
- where
-   (cs, f) = uniplate a
-
-transformM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
-transformM g a = mapM (transformM g) cs >>= (g . f)
- where
-   (cs, f) = uniplate a
-
-fixpoint :: Eq a => (a -> a) -> a -> a
-fixpoint f = stop . iterate f 
- where
-   stop (x:xs) 
-      | x == head xs = x
-      | otherwise    = stop xs
-      
-fixpointM :: (Monad m, Eq a) => (a -> m a) -> a -> m a
-fixpointM f a = do
-   b <- f a
-   if a==b then return a else fixpointM f b

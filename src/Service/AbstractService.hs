@@ -18,18 +18,14 @@ import Common.Utils (safeHead)
 import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
-import Common.Strategy (makePrefix)
 import qualified Service.TypedAbstractService as TAS
 import Data.Char
 import Data.Maybe
 import Domain.Logic.Exercises
 import Domain.Derivative.Exercises
 import Domain.RelationAlgebra.Exercises
-import qualified Common.Apply
 import Domain.Fraction.Exercises
-
-import Common.Strategy  (emptyPrefix)
-import Domain.Derivative.Basic
+import Common.Strategy  (makePrefix)
 
 type ExerciseID = String
 type RuleID     = String

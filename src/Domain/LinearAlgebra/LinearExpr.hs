@@ -16,8 +16,7 @@ module Domain.LinearAlgebra.LinearExpr
    , coefficientOf, toLinearExpr, splitLinearExpr, evalLinearExpr, scaleLinearExpr
    ) where
 
-import Common.Utils
-import Common.Unification
+import Common.Utils ()
 import Data.List
 import Data.Char
 import Data.Maybe

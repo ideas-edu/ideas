@@ -17,11 +17,9 @@ import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Data.List
-import qualified Data.Set as S
 import Data.Maybe
 import Control.Monad
 import Common.Utils
-import Common.Unification
 
 type LinearSystem a = Equations (LinearExpr a)
 

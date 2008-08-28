@@ -13,20 +13,12 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Equivalence where
 
-import Common.Uniplate (Uniplate(..), universe)
-import Common.Unification
-import Common.Utils
-import Data.Char
 import Data.List
 import Data.Maybe
-import qualified Data.Set as S
-import Common.Transformation
 import Domain.RelationAlgebra.Formula
 import Common.Apply
 import Common.Context
 import Domain.RelationAlgebra.Strategies
-
-import Test.QuickCheck
 {-
 infixr 1 :.:
 infixr 2 :+: 

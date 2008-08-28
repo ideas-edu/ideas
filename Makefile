@@ -26,7 +26,8 @@ HPCDIR = hpc
 CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
-FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports
+WARNFLAGS = -fwarn-unused-imports
+FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(WARNFLAGS)
 
 default: solvergui
 
@@ -64,7 +65,7 @@ run: solvergui
 
 ghci:
 	mkdir -p $(OUTDIR)
-	$(GHCI) -isrc -isrc/Presentation/ExerciseAssistant -odir $(OUTDIR) -hidir $(OUTDIR)
+	$(GHCI) -isrc -isrc/Presentation/ExerciseAssistant -odir $(OUTDIR) -hidir $(OUTDIR) $(WARNFLAGS)
 
 $(DOCDIR)/index.html: $(SOURCES) src/Common/prologue
 	mkdir -p $(DOCDIR)

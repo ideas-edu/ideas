@@ -19,10 +19,9 @@ import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
-import Common.Transformation
 import Common.Exercise
 import Common.Context
-import Common.Strategy (repeat, somewhere, alternatives, label, traceStrategy, unlabel)
+import Common.Strategy (repeat, somewhere, alternatives, label)
 import Control.Monad
 import Test.QuickCheck hiding (label)
 

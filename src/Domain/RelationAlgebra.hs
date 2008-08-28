@@ -32,7 +32,7 @@ import Test.QuickCheck
 import System.Random
 import Data.List
 import Common.Apply
-import Common.Context
+import Common.Context 
 import Control.Monad
 
 nrpairs = 2000 -- 20000

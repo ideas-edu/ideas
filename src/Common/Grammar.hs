@@ -26,7 +26,7 @@ module Common.Grammar
    ) where
 
 import Prelude hiding (fail)
-import Common.Utils
+import Common.Utils ()
 import Control.Monad (liftM, liftM2)
 import Control.Arrow (second)
 import Data.List (nub)

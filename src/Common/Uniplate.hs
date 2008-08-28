@@ -14,7 +14,12 @@
 -----------------------------------------------------------------------------
 module Common.Uniplate (
      -- * Uniplate type class and utility functions
-     Uniplate(..), children, child, select, transform, transformAt, universe
+     Uniplate(..)
+   , universe, subtermsAt, children, child
+   , getTermAt, applyTo, applyToM, applyAt, applyAtM
+   , transform, transformM, rewrite, rewriteM
+   , somewhere, somewhereM
+   , compos
    ) where
    
 ---------------------------------------------------------
@@ -28,6 +33,14 @@ import Control.Monad
 class Uniplate a where
    uniplate :: a -> ([a], [a] -> a)    -- ^ Function for generic traversals
 
+-- | Returns all subterms
+universe :: Uniplate a => a -> [a]
+universe a = a : [ c | b <- children a, c <- universe b ]
+
+-- | Like universe, but also returns the location of the subterm
+subtermsAt :: Uniplate a => a -> [([Int], a)]
+subtermsAt a = ([], a) : [ (i:is, b) | (i, c) <- zip [0..] (children a), (is, b) <- subtermsAt c ]
+
 -- | Returns all the immediate children of a term
 children :: Uniplate a => a -> [a]
 children = fst . uniplate
@@ -37,20 +50,59 @@ child :: Uniplate a => Int -> a -> Maybe a
 child n = safeHead . drop n . children 
                
 -- | Selects a child based on a path. Nothing indicates that the path is invalid
-select :: Uniplate a => [Int] -> a -> Maybe a
-select is a = foldM (flip child) a is
+getTermAt :: Uniplate a => [Int] -> a -> Maybe a
+getTermAt is a = foldM (flip child) a is
 
--- | Transforms one immediate child at a given index.
-transform :: Uniplate a => Int -> (a -> a) -> a -> a
-transform n f a = 
+-- | Apply a function to one immediate child.
+applyTo :: Uniplate a => Int -> (a -> a) -> a -> a
+applyTo n f a = 
    let (as, build) = uniplate a 
        g i = if i==n then f else id
    in build (zipWith g [0..] as)
 
--- | Transforms one child based on a path.
-transformAt :: Uniplate a => [Int] -> (a -> a) -> a -> a
-transformAt is f = foldr transform f is
+-- | Monadic variant of applyTo
+applyToM :: (Monad m, Uniplate a) => Int -> (a -> m a) -> a -> m a
+applyToM n f a = 
+   let (as, build) = uniplate a 
+       g (i, b) = if i==n then f b else return b
+   in liftM build $ mapM g (zip [0..] as)
 
--- | Returns all subterms
-universe :: Uniplate a => a -> [a]
-universe a = a : [ c | b <- children a, c <- universe b ]
+-- | Apply a function at a given position (based on a path).
+applyAt :: Uniplate a => [Int] -> (a -> a) -> a -> a
+applyAt is f = foldr applyTo f is
+
+-- | Monadic variant of applyAt
+applyAtM :: (Monad m, Uniplate a) => [Int] -> (a -> m a) -> a -> m a
+applyAtM is f = foldr applyToM f is
+
+-- | A bottom-up transformation
+transform :: Uniplate a => (a -> a) -> a -> a
+transform g a = g $ f $ map (transform g) cs
+ where
+   (cs, f) = uniplate a
+
+-- | Monadic variant of transform
+transformM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
+transformM g a = mapM (transformM g) cs >>= (g . f)
+ where
+   (cs, f) = uniplate a
+   
+-- | Applies the function at a position until this is no longer possible
+rewrite :: Uniplate a => (a -> Maybe a) -> a -> a
+rewrite f = transform g
+    where g x = maybe x (rewrite f) (f x)
+
+-- | Monadic variant of rewrite
+rewriteM :: (Monad m, Uniplate a) => (a -> m (Maybe a)) -> a -> m a
+rewriteM f = transformM g
+    where g x = f x >>= maybe (return x) (rewriteM f)
+
+somewhere :: Uniplate a => (a -> a) -> a -> [a]
+somewhere f a = undefined 
+
+somewhereM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
+somewhereM = undefined
+
+-- | The compos function
+compos :: Uniplate b => a -> (a -> a -> a) -> (b -> a) -> b -> a
+compos zero combine f = foldr (combine . f) zero . children

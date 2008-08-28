@@ -18,10 +18,7 @@ import Graphics.UI.Gtk.Glade
 import Data.Maybe
 import Session
 import SupplyArguments
-import Common.Context (Context)
 import Common.Transformation
-import Common.Strategy hiding (not)
-import Common.Apply
 import Domain.Logic
 import Control.Monad
 import Domain.Fraction

@@ -31,7 +31,6 @@ import Common.Utils
 import Data.List
 import Data.IORef
 import Data.Maybe
-import System.Time
 
 newtype Domain a = Domain (Exercise (Context a))
 

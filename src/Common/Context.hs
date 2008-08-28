@@ -148,12 +148,12 @@ changeLocation f c = setLocation (f (location c)) c
 -- | Returns the term which has the current focus: Nothing indicates that the current 
 -- focus is invalid
 currentFocus :: Uniplate a => Context a -> Maybe a
-currentFocus c = select (fromLocation $ location c) (fromContext c)
+currentFocus c = getTermAt (fromLocation $ location c) (fromContext c)
 
 -- | Changes the term which has the current focus. In case the focus is invalid, then
 -- this function has no effect.
 changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
-changeFocus f c = fmap (transformAt (fromLocation $ location c) f) c
+changeFocus f c = fmap (applyAt (fromLocation $ location c) f) c
 
 -- | Go down to a certain child
 locationDown :: Int -> Location -> Location

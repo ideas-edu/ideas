@@ -1,6 +1,6 @@
 module Domain.Math.SExpr (SExpr, toExpr, simplifyExpr, simplify, hasSquareRoot) where
 
-import Common.Utils (safeHead)
+import Common.Utils
 import Common.Uniplate
 import Domain.Math.Classes
 import Domain.Math.Expr

@@ -190,4 +190,4 @@ collectPlus  = collectAC plusAC
 collectTimes = collectAC timesAC
 
 size :: Expr -> Int
-size e = 1 + composQ 0 (+) size e
+size e = 1 + compos 0 (+) size e

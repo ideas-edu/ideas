@@ -68,6 +68,18 @@ safeHead :: [a] -> Maybe a
 safeHead (x:_) = return x
 safeHead _     = Nothing
 
+fixpoint :: Eq a => (a -> a) -> a -> a
+fixpoint f = stop . iterate f 
+ where
+   stop (x:xs) 
+      | x == head xs = x
+      | otherwise    = stop xs
+      
+fixpointM :: (Monad m, Eq a) => (a -> m a) -> a -> m a
+fixpointM f a = do
+   b <- f a
+   if a==b then return a else fixpointM f b
+   
 splitAtElem :: Eq a => a -> [a] -> Maybe ([a], [a])
 splitAtElem c s =
    case break (==c) s of

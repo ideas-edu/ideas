@@ -43,7 +43,7 @@ import qualified Prelude as Prelude
 import Common.Apply
 import Common.Context
 import Common.Transformation
-import Common.Uniplate
+import Common.Uniplate (Uniplate, children)
 import Common.Utils
 import qualified Common.Grammar as RE
 import Debug.Trace

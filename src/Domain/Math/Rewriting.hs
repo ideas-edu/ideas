@@ -142,61 +142,10 @@ matchAC acs r e = do
       else return (s |-> rhs, fmap (fmap (s |->)) p)
 
 normalFormAC :: (MetaVar a, UniplateConstr a, Ord a) => [OperatorAC a] -> [Rule a] -> a -> a
-normalFormAC acs rs = fixpoint $ transformBU $ \a ->
+normalFormAC acs rs = fixpoint $ transform $ \a ->
    case [ b | r <- rs, (b, _) <- matchAC acs r a ] of
       hd:_ -> normalizeACs acs hd
       _    -> a
       
 normalForm :: (MetaVar a, UniplateConstr a, Ord a) => [Rule a] -> a -> a
 normalForm = normalFormAC []
-      
------------------------------------------------------------
--- Traversal functions: contains "general" uniplate functions -> clean up
-
-universeLocation :: Uniplate a => a -> [([Int], a)]
-universeLocation a = ([], a) : [ (i:is, b) | (i, c) <- zip [0..] (children a), (is, b) <- universeLocation c ]
-
-transformBU :: Uniplate a => (a -> a) -> a -> a
-transformBU g a = g $ f $ map (transformBU g) cs
- where
-   (cs, f) = uniplate a
-
-transformM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
-transformM g a = mapM (transformM g) cs >>= (g . f)
- where
-   (cs, f) = uniplate a
-
-oneM :: (MonadPlus m, Uniplate a) => (a -> m a) -> a -> m a
-oneM f a = msum (f a : zipWith make [0..] (children a))
- where
-   make i = applyAtM [i] (oneM f)
-   
-fixpoint :: Eq a => (a -> a) -> a -> a
-fixpoint f = stop . iterate f 
- where
-   stop (x:xs) 
-      | x == head xs = x
-      | otherwise    = stop xs
-      
-fixpointM :: (Monad m, Eq a) => (a -> m a) -> a -> m a
-fixpointM f a = do
-   b <- f a
-   if a==b then return a else fixpointM f b
-
--- helper function
-applyAt :: Uniplate a => [Int] -> (a -> a) -> a -> a
-applyAt is f a = fromMaybe a (applyAtM is (return . f) a)
-
-applyAtM :: (Monad m, Uniplate a) => [Int] -> (a -> m a) -> a -> m a
-applyAtM [] f a     = f a
-applyAtM (i:is) f a =
-   case splitAt i cs of
-      (xs, y:ys) -> do
-         z <- applyAtM is f y
-         return $ g $ xs ++ [z] ++ ys
-      _ -> fail "applyAt"
- where
-   (cs, g) = uniplate a
-
-composQ :: Uniplate b => a -> (a -> a -> a) -> (b -> a) -> b -> a
-composQ zero combine f = foldr (combine . f) zero . children

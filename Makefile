@@ -26,7 +26,7 @@ HPCDIR = hpc
 CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
-FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) 
+FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports
 
 default: solvergui
 

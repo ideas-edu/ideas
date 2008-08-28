@@ -1,5 +1,6 @@
 module Domain.Math.Confluence where
 
+import Common.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -11,7 +12,7 @@ import Domain.Math.Rules
 
 superImpose :: (MetaVar a, UniplateConstr a) => Rule a -> Rule a -> [([Int], a)]
 superImpose r1 r2 =
-   [ (loc, s |-> lhs2) | (loc, a) <- universeLocation lhs2, s <- make a ]
+   [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
  where
     lhs1 = fst (rulePair r1 0)
     lhs2 = fst (rulePair r2 (nrOfVars r1))
@@ -65,7 +66,7 @@ confluence = confluenceAC []
 
 testConfluenceWith :: (Eq a, MetaVar a, UniplateConstr a) => (a -> a) -> [Rule a] -> a -> Bool
 testConfluenceWith f rs a = 
-   case nub [ f b | r <- rs, b <- oneM (liftM fst . matchM r) a ] of
+   case nub [ f b | r <- rs, b <- somewhereM (liftM fst . matchM r) a ] of
       _:_:_ -> False
       _     -> True
       

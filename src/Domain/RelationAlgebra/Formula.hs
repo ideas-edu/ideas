@@ -21,7 +21,6 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S
-import Common.Transformation
 import System.Random (StdGen, mkStdGen, split)
 import Test.QuickCheck
 import Control.Monad

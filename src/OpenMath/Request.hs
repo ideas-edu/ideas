@@ -88,7 +88,7 @@ extractExpr :: String -> XML -> Either String Expr
 extractExpr n xml = do
    this <- case extract n xml of 
               Just [expr] -> return expr
-              Nothing     -> fail $ "error in " ++ n
+              _           -> fail $ "error in " ++ n
    xmlToExpr this
 
 optional :: Either String a -> Either String (Maybe a)

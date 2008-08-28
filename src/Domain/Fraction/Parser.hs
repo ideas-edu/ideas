@@ -20,7 +20,6 @@ import UU.Parsing.CharParser
 import UU.Scanner
 import Domain.Fraction.Frac
 import Data.Char
-import Ratio
 
 -----------------------------------------------------------
 --- Parser

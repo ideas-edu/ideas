@@ -152,7 +152,7 @@ ruleZeroDiv, ruleOneDiv :: (MetaVar a, Fractional a) => Rule a
 ruleZeroDiv = rule1 "Zero /" $ \x ->
    0/x ~> 0   # x./=0
    
-ruleOneDiv = rule3 "One /" $ \x y z -> 
+ruleOneDiv = rule1 "One /" $ \x -> 
    x/1 ~> x
    
 -----------------------------------------------------------------------

@@ -33,7 +33,7 @@ invalidSystem :: Eq a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
 
 invalidEquation :: Eq a => Equation (LinearExpr a) -> Bool
-invalidEquation eq@(lhs :==: rhs) = null (getVars lhs ++ getVars rhs) && getConstant lhs /= getConstant rhs
+invalidEquation (lhs :==: rhs) = null (getVars lhs ++ getVars rhs) && getConstant lhs /= getConstant rhs
 
 getSolution :: Num a => LinearSystem a -> Maybe [(String, LinearExpr a)]
 getSolution xs = do

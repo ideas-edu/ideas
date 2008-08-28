@@ -28,7 +28,6 @@ import Common.Parsing (Range)
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
-import Common.Unification
 import Control.Monad
 import Data.List (intersperse)
 import System.Random
@@ -139,8 +138,8 @@ data Feedback a = SyntaxError (Doc a)
                 | Incorrect   (Doc a)
                 | Correct     (Doc a) (Maybe (Prefix a, Rule a, a)) {- The rule that was applied -}
 
-getRuleNames :: Exercise a -> [String]
-getRuleNames = map name . ruleset
+--getRuleNames :: Exercise a -> [String]
+--getRuleNames = map name . ruleset
 
 ---------------------------------------------------------------
 -- Documents (feedback with structure)
@@ -153,9 +152,9 @@ instance Functor Doc where
    fmap f (D xs) = D (map (fmap f) xs)
 
 instance Functor DocItem where
-   fmap f (Text s) = Text s
+   fmap _ (Text s) = Text s
    fmap f (Term a) = Term (f a)
-   fmap f (DocRule r) = DocRule r 
+   fmap _ (DocRule r) = DocRule r 
 
 emptyDoc :: Doc a
 emptyDoc = D []
@@ -175,14 +174,14 @@ infixr 5 <>
 (<>) :: Doc a -> Doc a -> Doc a
 D xs <> D ys = D (xs ++ ys)
 
-docs :: [Doc a] -> Doc a
-docs = foldr (<>) emptyDoc
+-- docs :: [Doc a] -> Doc a
+-- docs = foldr (<>) emptyDoc
 
 text :: String -> Doc a
 text s = D [Text s]
 
-term :: a -> Doc a
-term a = D [Term a]
+-- term :: a -> Doc a
+-- term a = D [Term a]
 
 rule :: Rule a -> Doc a
 rule r = D [DocRule (Some r)]
@@ -197,8 +196,10 @@ rule r = D [DocRule (Some r)]
 checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
 checkExercise = checkExerciseWith checkRule
 
+{-
 checkExerciseSmart :: (Arbitrary a, Show a, Substitutable a) => Exercise a -> IO ()
 checkExerciseSmart = checkExerciseWith checkRuleSmart
+-}
 
 checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule a -> IO b) -> Exercise a -> IO ()
 checkExerciseWith f a = do

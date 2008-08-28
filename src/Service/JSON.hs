@@ -23,8 +23,6 @@ import Common.Parsing
 import Common.Utils (indent)
 import Data.List (intersperse)
 import Control.Monad
-import Control.Monad.Trans
-import qualified UU.Parsing
 
 -- temporary test
 main :: IO ()

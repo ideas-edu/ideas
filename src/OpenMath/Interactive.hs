@@ -125,8 +125,8 @@ showLoc here (loc, eitherValue)
  where
    txt = either strategyName ((++" (rule)") . name) eitherValue
  
-imgOUNL :: XML
-imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []
+-- imgOUNL :: XML
+-- imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []
  
 tag :: String -> [XML] -> XML
 tag s = Tag s []

@@ -104,10 +104,10 @@ boolVar = (:= True)
 
 -- | Returns the value of a variable stored in a context
 get :: (Read a, Typeable a) => Var a -> Context b -> a
-get (s := a) (C loc env _) = 
+get (s := a) (C _ env _) = 
    case M.lookup s env of
       Nothing           -> a           -- return default value
-      Just (Just d,  s) -> fromDyn d a -- use the stored dynamic (default value as backup)
+      Just (Just d,  _) -> fromDyn d a -- use the stored dynamic (default value as backup)
       Just (Nothing, s) -> 
          case reads s of               -- parse the pretty-printed value (default value as backup)
             [(b, rest)] | all isSpace rest -> b

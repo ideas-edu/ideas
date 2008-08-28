@@ -15,8 +15,6 @@ module Domain.Fraction.Frac where
 
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Unification
-import Common.Utils
-import Common.Transformation
 import Data.List
 import Data.Maybe
 import Data.Char

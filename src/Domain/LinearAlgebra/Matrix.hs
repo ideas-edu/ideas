@@ -13,12 +13,14 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Matrix 
    ( Matrix, Row, Column, isRectangular, makeMatrix, identity, mapWithPos
+   , changeEntries, changeEntry, setEntries, setEntry
    , rows, row, columns, column, dimensions, entry, isEmpty
    , add, scale, multiply
    , reduce, forward, backward, inverse, invertible, rank, nullity, (===)
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
    , nonZero, pivot, isPivotColumn
+   , isSquare, identityMatrix, isLowerTriangular, isUpperTriangular
    ) where
 
 import Data.Maybe
@@ -133,7 +135,7 @@ forward m
 backward :: Fractional a => Matrix a -> Matrix a
 backward m = foldr f m [1..h-1]
  where
-   (h, w) = dimensions m
+   (h, _) = dimensions m
    f i    = let g j = case findIndex (/=0) (row i m) of
                          Just k  -> addRow j i (negate (entry (j, k) m))
                          Nothing -> id
@@ -159,9 +161,9 @@ invertible = isJust . inverse
 (===) :: Fractional a => Matrix a -> Matrix a -> Bool
 m1 === m2 = reduce m1 == reduce m2
 
-test = rank $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
+-- test = rank $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
 
-t = inverse $ M [[1,0],[0,3]]
+-- t = inverse $ M [[1,0],[0,3]]
 
 -------------------------------------------------------
 

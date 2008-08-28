@@ -14,7 +14,7 @@ module Domain.Derivative.Exercises where
 
 import Prelude hiding (repeat)
 import Domain.Derivative.Rules (derivativeRules, tidyupRules, tidyRule)
-import Common.Strategy (Strategy, somewhere, many, (<*>), (<|>), alternatives, option, label, LabeledStrategy)
+import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy)
 import qualified Common.Strategy
 import Common.Context (Context, liftRuleToContext, inContext, fromContext)
 import Common.Exercise (Exercise(..), text)
@@ -22,7 +22,6 @@ import OpenMath.Object
 import Data.Ratio
 import Domain.Derivative.Basic
 import Data.Char (isSpace)
-import Common.Apply
 
 derivativeExercise :: Exercise (Context Expr)
 derivativeExercise = Exercise
@@ -30,11 +29,10 @@ derivativeExercise = Exercise
    , parser        = \input -> case reads input of
                                   [(fun, rest)] | all isSpace rest -> Right (inContext fun)
                                   _ -> Left (text "not a function")
---   , equivalence = undefined
+   , equivalence = undefined
    , equality    = (==)
---   , generator   = undefined
    , suitableTerm = const True
---   , subTerm = undefined
+   , subTerm = undefined
    , prettyPrinter = show
    , finalProperty = noDiff . fromContext
    , ruleset       = derivativeRules ++ tidyupRules

@@ -14,11 +14,9 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction.Rules where
 
-import qualified Data.Set as S
 import Domain.Fraction.Frac
 import Common.Transformation
 import Common.Unification
-import Ratio
 
 type FracRule = Rule Frac
 

@@ -35,7 +35,7 @@ processXML htmlMode input =
    case (parseXML input, htmlMode) of
       (Left err, _) -> 
          fail err
-      (Right xml, Just self) ->            
+      (Right _, Just self) ->           
          return (respondHTML self input, "text/html")
       (Right xml, _) -> do 
          out <- xmlRequestHandler xml
@@ -90,7 +90,7 @@ serviceXML s attrs request
         return $ resultOk $ state2xml this
    | s == "generate" =
         case getExercise "Derivative" of  -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-           SE ex -> do
+           SE _ -> do
               let diff  = fromMaybe (error "no difficulty") $ lookup "difficulty" attrs 
               state <- TAS.generate derivativeExercise (read diff) -- !!!!!!!!!!!!!!!!!!!!!!!!!!!
               return $ resultOk $ state2xml state

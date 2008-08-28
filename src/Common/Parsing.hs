@@ -139,7 +139,7 @@ parse (P p) input = (result, map f messages)
    steps    = UU.parse p input
    result   = fstPair (UU.evalSteps steps)
    messages = UU.getMsgs steps
-   fstPair (UU.Pair a b) = a
+   fstPair (UU.Pair a _) = a
    f (UU.Msg a b _) = (a, b)
 
 ----------------------------------------------------------

@@ -98,10 +98,13 @@ rewriteM f = transformM g
     where g x = f x >>= maybe (return x) (rewriteM f)
 
 somewhere :: Uniplate a => (a -> a) -> a -> [a]
-somewhere f a = undefined 
+somewhere f = somewhereM (return . f)
 
-somewhereM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
-somewhereM = undefined
+somewhereM :: (MonadPlus m, Uniplate a) => (a -> m a) -> a -> m a
+somewhereM f a = msum $ f a : map g [0..n-1]
+ where 
+   n   = length (children a)
+   g i = applyToM i (somewhereM f) a
 
 -- | The compos function
 compos :: Uniplate b => a -> (a -> a -> a) -> (b -> a) -> b -> a

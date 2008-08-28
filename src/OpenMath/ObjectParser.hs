@@ -150,7 +150,7 @@ binop cd name x y = OMA [OMS cd name, expr2omobj x, expr2omobj y]
 
 ----------------------------------------------------------
 -- Test function
-
+{-
 check :: IO ()
 check = do
    input <- readFile "src/OpenMath/omobj3" 
@@ -158,4 +158,5 @@ check = do
    print expr
    let new = showXML $ omobj2xml $ expr2omobj expr
    putStrLn new
-   print $ parseExpr new
+   print $ parseExpr new 
+-}

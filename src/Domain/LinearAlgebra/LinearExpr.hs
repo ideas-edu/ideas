@@ -50,6 +50,8 @@ instance Num a => Num (LinearExpr a) where
               _           -> error "LinExp.(*): resulting expression is not linear" 
    negate      = scaleLinearExpr (-1)
    fromInteger = toLinearExpr . fromIntegral
+   abs = error "LinExp.abs not defined"
+   signum = error "LinExp.signum not defined"
 
 instance Fractional a => Fractional (LinearExpr a) where
    fromRational (n :% m) = toLinearExpr (fromInteger n / fromInteger m)
@@ -83,7 +85,7 @@ splitLinearExpr p (LE xs c) = (LE ys c, LE zs 0)
  where (ys, zs) = M.partitionWithKey (\k _ -> p k) xs
 
 coefficientOf :: Num a => String -> LinearExpr a  -> a
-coefficientOf s (LE xs b) = M.findWithDefault 0 s xs
+coefficientOf s (LE xs _) = M.findWithDefault 0 s xs
 
 isVar :: Num a => LinearExpr a -> Maybe String
 isVar e = let getVars (LE xs _) = M.keysSet xs

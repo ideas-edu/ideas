@@ -85,7 +85,7 @@ solveSystemWithMatrixExercise = makeExercise
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right (fmap Left ok)
                               (_, Right ok) -> Right (fmap Right ok)
-                              (Left doc1, Left doc2) -> Left (text "Error") -- FIX THIS
+                              (Left _, Left _) -> Left (text "Error") -- FIX THIS
    , prettyPrinter = either (unlines . map show . id) ppMatrix . fromContext
    , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
                                  g = f . either (fst . systemToMatrix) id . fromContext

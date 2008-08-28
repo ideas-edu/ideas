@@ -18,10 +18,6 @@ import Domain.Fraction.Frac
 import Domain.Fraction.Rules
 import Common.Context (Context, liftRuleToContext)
 import Common.Strategy
-import Common.Transformation
-import Common.Context
-import Common.Apply
-import Domain.Fraction.Parser
 
 lrtc = liftRuleToContext
 

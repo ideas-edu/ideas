@@ -186,15 +186,15 @@ hasArguments = not . null . getDescriptors
 getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
-      [Fun args f g] -> someArguments args
-      [Lift lp t]    -> getDescriptors (rule {transformations = [t]})
+      [Fun args _ _] -> someArguments args
+      [Lift _ t]     -> getDescriptors (rule {transformations = [t]})
       _              -> []
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
 expectedArguments :: Rule a -> a -> Maybe [String]
 expectedArguments rule a =
    case transformations rule of
-      [Fun args f g] -> fmap (showArguments args) (f a)
+      [Fun args f _] -> fmap (showArguments args) (f a)
       [Lift lp t]    -> do b <- liftPairGet lp a
                            expectedArguments (rule {transformations = [t]}) b
       _              -> Nothing
@@ -211,7 +211,7 @@ useArguments list rule =
    make :: Transformation a -> Maybe (Transformation a)
    make trans = 
       case trans of
-         Fun args f g -> fmap g (parseArguments args list)
+         Fun args _ g -> fmap g (parseArguments args list)
          Lift lp t    -> fmap (Lift lp) (make t)     
          _            -> Nothing
    
@@ -377,7 +377,7 @@ checkRuleSmart eq rule = do
    quickCheck (propRule (smartGen rule) eq rule)
    
 propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> (a -> Bool) -> Property
-propRule gen eq rule condition = 
+propRule gen eq rule _ = 
    forAll gen $ \a ->
       applicable rule a ==> (a `eq` applyD rule a)
 

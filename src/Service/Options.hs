@@ -16,7 +16,6 @@ module Service.Options where
 import System.Environment
 import System.Exit
 import System.Console.GetOpt
-import Data.Maybe ( fromMaybe )
 
 data Flag = Verbose  | Version | Mode Mode
           | Logging Bool | InputFile String 

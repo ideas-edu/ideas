@@ -135,7 +135,7 @@ nextMajorForPrefix p0 a = fromMaybe [] $ do
       _ -> Nothing
       
 makeDerivation :: a -> [Rule a] -> [(String, a)]
-makeDerivation a []     = []
+makeDerivation _ []     = []
 makeDerivation a (r:rs) = 
    let new = applyD r a
    in [ (name r, new) | isMajorRule r ] ++ makeDerivation new rs 

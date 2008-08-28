@@ -31,7 +31,7 @@ xml2omobj xml =
  where
    rec xml =
       case xml of
-         Tag "OMA" attrs xs -> do
+         Tag "OMA" _ xs -> do
             xs <- mapM rec xs 
             return (OMA xs)
          Tag "OMS" attrs [] -> 
@@ -41,7 +41,7 @@ xml2omobj xml =
                      Just name  -> return (OMS cd name)
                      Nothing -> fail "OMS tag without name attribute" 
                _ -> fail "OMS tag without cd attribute"
-         Tag "OMI" attrs [Text s] -> 
+         Tag "OMI" _ [Text s] -> 
             case reads s of
                [(i, xs)] | all isSpace xs -> return (OMI i)
                _ -> fail "invalid integer in OMI"
@@ -49,21 +49,23 @@ xml2omobj xml =
             case lookup "name" attrs of
                Just s  -> return (OMV s)
                Nothing -> fail "OMV tag without name attribute"
-         Tag "OMBIND" attrs [x1,x2,x3] -> do
+         Tag "OMBIND" _ [x1,x2,x3] -> do
             y1 <- rec x1
             y2 <- recOMBVAR x2
             y3 <- rec x3
             return (OMBIND y1 y2 y3)
             
          Tag tag _ _ -> fail $ "unknown tag " ++ show tag
+         Text _ -> fail "expecting a tag"
    
    recOMBVAR xml = 
       case xml of
-         Tag "OMBVAR" attrs xs -> 
+         Tag "OMBVAR" _ xs -> 
             let f (Right (OMV s)) = return s
                 f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
             in mapM (f . rec) xs
          Tag tag _ _  -> fail $ "expected tag OMVAR, but found " ++ show tag
+         Text _ -> fail "expecting a tag"
    
 omobj2xml :: OMOBJ -> XML
 omobj2xml = header . return . rec

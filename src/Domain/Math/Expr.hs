@@ -34,6 +34,8 @@ instance Num Expr where
    (-) = (:-:)
    negate      = Negate 
    fromInteger = Con
+   abs         = unaryFunction "abs"
+   signum      = unaryFunction "signum"
 
 instance Fractional Expr where
    (/) = (:/:)
@@ -42,8 +44,24 @@ instance Fractional Expr where
       | otherwise = Con (numerator r) :/: Con (denominator r)
 
 instance Floating Expr where
-   sqrt = Sqrt
-   pi   = symbol "pi"
+   pi      = symbol "pi"
+   sqrt    = Sqrt
+   (**)    = binaryFunction "**"
+   logBase = binaryFunction "logBase"
+   exp     = unaryFunction "exp"
+   log     = unaryFunction "log"
+   sin     = unaryFunction "sin"
+   tan     = unaryFunction "tan"
+   cos     = unaryFunction "cos"
+   asin    = unaryFunction "asin"
+   atan    = unaryFunction "atan"
+   acos    = unaryFunction "acos"
+   sinh    = unaryFunction "sinh"
+   tanh    = unaryFunction "tanh"
+   cosh    = unaryFunction "cosh"
+   asinh   = unaryFunction "asinh"
+   atanh   = unaryFunction "atanh"
+   acosh   = unaryFunction "acosh" 
    
 instance Symbolic Expr where
    variable = Var
@@ -59,11 +77,11 @@ instance Uniplate Expr where
          a :*: b  -> ([a,b], \[x,y] -> x :*: y)
          a :-: b  -> ([a,b], \[x,y] -> x :-: y)
          Negate a -> ([a]  , \[x]   -> Negate x)
-         Con n    -> ([]   , \[]    -> expr)
+         Con _    -> ([]   , \[]    -> expr)
          a :/: b  -> ([a,b], \[x,y] -> x :/: y)
          Sqrt a   -> ([a]  , \[x]   -> Sqrt x)
-         Var s    -> ([]   , \[]    -> expr)
-         Sym f xs -> ([]   , \[]    -> expr)
+         Var _    -> ([]   , \[]    -> expr)
+         Sym _ _  -> ([]   , \[]    -> expr)
 
 -----------------------------------------------------------------------
 -- Arbitrary instance
@@ -144,11 +162,6 @@ instance Show Expr where
       
       parIf b = if b then par else id
       par s   = "(" ++ s ++ ")"
-      
-      simple (Con n)    = n>=0
-      simple (Var _)    = True
-      simple (Sym _ xs) = null xs
-      simple _          = False
       
 instance MetaVar Expr where
    metaVar n = Var ("_" ++ show n)

@@ -31,15 +31,33 @@ instance Num SExpr where
    (-) = liftS2 (-)
    negate      = liftS negate
    fromInteger = make . fromInteger
+   abs         = liftS abs
+   signum      = liftS signum
 
 instance Fractional SExpr where
    (/) = liftS2 (/)
    fromRational = make . fromRational
    
 instance Floating SExpr where
-   sqrt = liftS sqrt
-   pi   = make pi
-   
+   pi      = make   pi
+   sqrt    = liftS  sqrt
+   (**)    = liftS2 (**)
+   logBase = liftS2 logBase
+   exp     = liftS  exp
+   log     = liftS  log
+   sin     = liftS  sin
+   tan     = liftS  tan
+   cos     = liftS  cos
+   asin    = liftS  asin
+   atan    = liftS  atan
+   acos    = liftS  acos
+   sinh    = liftS  sinh
+   tanh    = liftS  tanh
+   cosh    = liftS  cosh
+   asinh   = liftS  asinh
+   atanh   = liftS  atanh
+   acosh   = liftS  acosh
+    
 instance Symbolic SExpr where
    variable   = make . variable
    function s = liftSs (function s)
@@ -95,9 +113,7 @@ hasSquareRoot n
    | otherwise = Nothing
  where
    r = round $ sqrt $ fromIntegral n
- 
-pp = let SExpr x = sqrt ((0*(sqrt 13) / 0)) in proposition x
- 
+
 applyRules :: Expr -> Constrained (Con Expr) Expr
 applyRules e = 
    fromMaybe (return e) $ safeHead [ constrain p >> return a | r <- rs, (a, p) <- matchM r e ]
@@ -171,6 +187,7 @@ sortAndMergeViewGS = merge . sortBy cmp . collect
       | n1 == n2  = merge ((r1+r2, n1):rest)
       | otherwise = PlusGS (TimesGS r1 n1) (merge ((r2,n2):rest))
    merge [(r1, n1)] = TimesGS r1 n1
+   merge _ = error "merge"
    
    cmp x y = snd x `compare` snd y
 
@@ -178,11 +195,6 @@ fromViewGS :: ViewGS -> Expr
 fromViewGS (PlusGS a b)  = fromViewGS a + fromViewGS b
 fromViewGS (TimesGS r n) = fromRational r * sqrt (fromIntegral n)
 
-setS :: (Expr -> Expr) -> SExpr -> SExpr
-setS _ (SExpr c) = SExpr (f c)
- where f :: Constrained c a -> Constrained c a
-       f = id
-       
 -----------------------------------------------------------------------
 -- Simplifications for constraints
 

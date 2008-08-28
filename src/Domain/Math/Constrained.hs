@@ -127,14 +127,32 @@ instance (Show c, Eq c, Num a) => Num (Constrained c a) where
    (-) = liftM2 (-)
    negate      = liftM negate
    fromInteger = return . fromInteger
-
+   abs         = liftM abs
+   signum      = liftM signum
+   
 instance (Show c, Eq c, Fractional a) => Fractional (Constrained c a) where
    (/) = liftM2 (/)
    fromRational = return . fromRational
    
 instance (Show c, Eq c, Floating a) => Floating (Constrained c a) where
-   sqrt = liftM sqrt
-   pi   = return pi
+   pi      = return pi
+   sqrt    = liftM  sqrt
+   (**)    = liftM2 (**)
+   logBase = liftM2 logBase
+   exp     = liftM  exp
+   log     = liftM  log
+   sin     = liftM  sin
+   tan     = liftM  tan
+   cos     = liftM  cos
+   asin    = liftM  asin
+   atan    = liftM  atan
+   acos    = liftM  acos
+   sinh    = liftM  sinh
+   tanh    = liftM  tanh
+   cosh    = liftM  cosh
+   asinh   = liftM  asinh
+   atanh   = liftM  atanh
+   acosh   = liftM  acosh
    
 instance (Show c, Eq c, Symbolic a) => Symbolic (Constrained c a) where
    variable   = return . variable

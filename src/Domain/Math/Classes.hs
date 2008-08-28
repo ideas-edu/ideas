@@ -9,7 +9,13 @@ class Symbolic a where
    function :: String -> [a] -> a
    -- default definition
    symbol s = function s []
-   
+
+unaryFunction :: Symbolic a => String -> a -> a
+unaryFunction f a = function f [a]
+
+binaryFunction :: Symbolic a => String -> a -> a -> a
+binaryFunction f a b = function f [a, b] 
+
 class MetaVar a where
    metaVar   :: Int -> a
    isMetaVar :: a -> Maybe Int

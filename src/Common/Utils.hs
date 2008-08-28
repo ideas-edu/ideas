@@ -71,7 +71,7 @@ safeHead _     = Nothing
 fixpoint :: Eq a => (a -> a) -> a -> a
 fixpoint f = stop . iterate f 
  where
-   stop (x:xs) 
+   stop (x:xs)
       | x == head xs = x
       | otherwise    = stop xs
       

@@ -14,15 +14,13 @@
 module Service.TypedAbstractService where
 
 import qualified Common.Apply as Apply
-import Common.Context  (Location, Context, inContext, location, currentFocus, setLocation)
-import Common.Uniplate
+import Common.Context  (Location, Context, location, setLocation)
 import Common.Exercise (Exercise(..))
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Data.Maybe
 import System.Random
-import Debug.Trace
 import qualified Test.QuickCheck as QC
 
 data State a = State 

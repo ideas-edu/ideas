@@ -66,7 +66,7 @@ main =
 
         imageSetFromFile imageOUNL "bin/ounl.jpg"
         let lightBlue = Color (235*256) (244*256) (255*256)
-            ligthGrey = Color (230*256) (230*256) (230*256)
+            -- ligthGrey = Color (230*256) (230*256) (230*256)
         widgetModifyBg window StateNormal lightBlue
         
         

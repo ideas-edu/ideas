@@ -79,7 +79,7 @@ ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", bi
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    var       = const . (++)
-   nott p n  = ("~"++) . p 4
+   nott p _  = ("~"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
 
 -- | Pretty printer that produces extra parentheses: also see parseLogicPars
@@ -92,5 +92,5 @@ ppLogicParsCode n p = foldLogic (var, binop 3 "->", binop 3 "<->", binop 1 "/\\"
  where
    binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
-   nott  p n = ("~"++) . p 3
+   nott  p _ = ("~"++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f

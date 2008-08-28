@@ -16,13 +16,10 @@ module OpenMath.StrategyTable where
 
 import Common.Context
 import Common.Exercise
-import Common.Unification
-import Common.Strategy
-import Common.Transformation
 import Common.Utils (Some(..))
 import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise)
-import Domain.LinearAlgebra (Matrix, rows, matrix, makeMatrix, MatrixInContext, getVars,
-                             EqsInContext(..), equations, LinearExpr, getConstant, coefficientOf, var)
+import Domain.LinearAlgebra (Matrix, rows, makeMatrix, getVars,
+                             LinearExpr, getConstant, coefficientOf, var)
 import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
 import Domain.LinearAlgebra.Vector (Vector, toList, fromList)
 import qualified Domain.LinearAlgebra.Equation as LA

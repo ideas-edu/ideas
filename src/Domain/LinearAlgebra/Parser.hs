@@ -131,7 +131,7 @@ ppEnv m = "[" ++ commaList list ++ "]"
 
 ppFocus :: Show a => MatrixInContext a -> Matrix String
 ppFocus c = mapWithPos f (matrix c)
- where f p a
+ where f _ a
          {-  | focus c==p = "[" ++ show a ++ "]" -}
           | otherwise  = show a
      

@@ -124,7 +124,7 @@ acceptsEmpty grammar =
    case grammar of
       p :*: q -> acceptsEmpty p && acceptsEmpty q
       p :|: q -> acceptsEmpty p || acceptsEmpty q
-      Fix i p -> acceptsEmpty p
+      Fix _ p -> acceptsEmpty p
       Succeed -> True
       _       -> False
 
@@ -167,6 +167,7 @@ member xs grammar = not $ null $ filter null $ rec grammar xs
                         _           -> []
          Succeed  -> [xs]
          Fail     -> []   
+         Var _    -> error "member"
 
 -- | Generates the language of the grammar (list can be infinite)  
 language :: Grammar a -> [[a]]
@@ -178,6 +179,7 @@ language grammar =
       Symbol a -> [[a]]
       Succeed  -> [[]]
       Fail     -> []
+      Var _    -> error "language"
 
 -- | Collect all the symbols of the grammar
 collectSymbols :: Grammar a -> [a]
@@ -185,7 +187,7 @@ collectSymbols grammar =
    case grammar of
       p :*: q  -> collectSymbols p ++ collectSymbols q
       p :|: q  -> collectSymbols p ++ collectSymbols q
-      Fix i p  -> collectSymbols p
+      Fix _ p  -> collectSymbols p
       Symbol a -> [a]
       _        -> []
 

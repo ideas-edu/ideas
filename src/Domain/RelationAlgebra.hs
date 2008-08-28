@@ -26,8 +26,9 @@ import Domain.RelationAlgebra.Exercises
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Parser
-import Domain.RelationAlgebra.Equivalence
+-- import Domain.RelationAlgebra.Equivalence
 
+{-
 import Test.QuickCheck 
 import System.Random
 import Data.List
@@ -75,4 +76,4 @@ pair3 = ((Not (Var "q") :||: Not (Var "s")) :||: ((Inv (Var "r") :+: E :.: Inv (
 
 test1 = uncurry isEquivalent pair1
 test2 = uncurry isEquivalent pair2
-test3 = uncurry isEquivalent pair3
+test3 = uncurry isEquivalent pair3 -}

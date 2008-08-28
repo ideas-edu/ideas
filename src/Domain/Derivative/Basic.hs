@@ -11,13 +11,9 @@
 -----------------------------------------------------------------------------
 module Domain.Derivative.Basic where
 
-import Common.Context
-import Common.Unification
 import Common.Uniplate
 import Control.Monad
 import Data.List
-import qualified Data.Set as S
-import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck
 
@@ -73,14 +69,13 @@ instance Arbitrary Expr where
          Var s       -> variant 1 . coarbitrary s
          f :+: g     -> variant 2 . coarbitrary f . coarbitrary g
          f :*: g     -> variant 3 . coarbitrary f . coarbitrary g
-         f :*: g     -> variant 4 . coarbitrary f . coarbitrary g
-         Negate f    -> variant 5 . coarbitrary f
-         f :^: g     -> variant 6 . coarbitrary f . coarbitrary g
-         f :/: g     -> variant 7 . coarbitrary f . coarbitrary g
-         Special s f -> variant 8 . coarbitrary s . coarbitrary f
-         Lambda s f  -> variant 9 . coarbitrary s . coarbitrary f
-         Diff f      -> variant 10 . coarbitrary f
-         MetaVar s   -> variant 11 . coarbitrary s
+         Negate f    -> variant 4 . coarbitrary f
+         f :^: g     -> variant 5 . coarbitrary f . coarbitrary g
+         f :/: g     -> variant 6 . coarbitrary f . coarbitrary g
+         Special s f -> variant 7 . coarbitrary s . coarbitrary f
+         Lambda s f  -> variant 8 . coarbitrary s . coarbitrary f
+         Diff f      -> variant 9 . coarbitrary f
+         MetaVar s   -> variant 10 . coarbitrary s
 
 arbExpr :: Int -> Gen Expr
 arbExpr 0 = oneof [ liftM (Con . fromInteger) arbitrary, return (Var "x"), return (Var "y") ]
@@ -98,6 +93,8 @@ instance Num Expr where
    (-) = (:-:)
    negate = Negate
    fromInteger = Con . fromInteger
+   abs = error "abs not defined"
+   signum = error "signum not defined"
        
 instance Fractional Expr where
    (/) = (:/:)

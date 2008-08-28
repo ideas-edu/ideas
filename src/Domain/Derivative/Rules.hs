@@ -14,7 +14,6 @@ module Domain.Derivative.Rules where
 import Domain.Derivative.Basic
 import Common.Context
 import Common.Transformation
-import Common.Apply
 
 derivativeRules :: [Rule (Context Expr)]
 derivativeRules = map liftRuleToContext

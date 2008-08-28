@@ -21,8 +21,6 @@ import Domain.Fraction.Frac
 import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
-import System.Random
-import Ratio
 
 generateFrac :: Gen Frac
 generateFrac = generateFracWith defaultConfig

@@ -44,7 +44,7 @@ dnfExercise = standard
    { shortTitle    = "Proposition to DNF" 
    , parser        = \s -> case parseLogicPars s of
                               (p, [])      -> Right (inContext (fromRanged p))
-                              (p, (a,b):_) -> Left $ text $ "Parse error" ++ 
+                              (_, (a,b):_) -> Left $ text $ "Parse error" ++ 
                                               maybe "" (\x -> " on " ++ show x) b ++ ":\n   expecting " ++ show a
    , subTerm       = \s r -> case parseLogicPars s of
                                 (p, []) -> fmap makeLocation (subExpressionAt r p)

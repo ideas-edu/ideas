@@ -362,7 +362,7 @@ runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
 runPrefixLocation loc p0 = concatMap check . runPrefixUntil stop p0
  where
    stop (End is)    = is==loc
-   stop (Step is r) = is==loc
+   stop (Step is _) = is==loc
    stop _           = False
    
    check result@(a, p)

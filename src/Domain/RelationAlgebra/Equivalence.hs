@@ -34,7 +34,7 @@ data RelAlg = Var String
             | RelAlg :&&:  RelAlg          -- and (conjunction)
             | RelAlg :||:  RelAlg          -- or (disjunction)
             | Not RelAlg                   -- not
-	    | Inv RelAlg                   -- inverse
+            | Inv RelAlg                   -- inverse
             | U                            -- universe
             | E                            -- empty
  deriving (Show, Eq, Ord)
@@ -71,9 +71,9 @@ isEquivalent :: RelAlg -> RelAlg -> Bool
 isEquivalent x1 x2 = 
     let res1           =  fromContext (applyD toCNF (inContext x1))  -- cnf van x1
         res2           =  fromContext (applyD toCNF (inContext x2)) -- cnf van x2
-	mols           =  union (getSetOfMolecules res1) (getSetOfMolecules res2) 
+        mols           =  union (getSetOfMolecules res1) (getSetOfMolecules res2) 
         (rs, r1, r2)   =  remCompls mols res1 res2  
-	vals           =  createValuations rs
+        vals           =  createValuations rs
     in and (map (\v -> evalFormula r1 v == evalFormula r2 v) vals) 
 {-
 -- | zet 'm in cnf
@@ -84,11 +84,14 @@ solve (Not (Var "p" :.: Inv (Var "q"))) = Inv (Inv (Not (Var "p")) :+: Not (Var 
 solve x = x
 -}
 
+{-
 ra1 = Var "a" :||: (Var "p" :.: Inv (Var "q"))
 ra2 = Var "a" :||: (Inv (Inv (Not (Var "p")) :+: Not (Var "q")))
 
 fa1 = Inv (Var "r" :+: Var "s")
 fa2 = Inv (Var "s") :+: Inv (Var "r")
+-}
+
 {-
 mols = union (getSetOfMolecules ra1) (getSetOfMolecules ra2) 
 triple@(t1, t2, t3) = remCompls mols ra1 ra2
@@ -101,7 +104,7 @@ remCompls rs r1 r2 =
          -- sub = [ (r1, Not r2) | (r1, r2) <- complements ]
      in ( removeCompls rs complements
         , substCompls  r1 complements
-	, substCompls  r2 complements
+        , substCompls  r2 complements
         )
 
 -- |
@@ -118,7 +121,7 @@ subst r (r1, r2) =
        p :||: q  ->  subst p (r1, r2) :||: subst q (r1, r2)
        _         ->  if r == r1
                      then Not r2
-		     else r   
+                     else r   
 
 
 removeCompls :: [RelAlg] -> [(RelAlg, RelAlg)] -> [RelAlg]
@@ -144,11 +147,11 @@ evalFormula f val =
             Not f       -> not (evalFormula f val)
             U           -> True
             E           -> False
-	    x           -> let value = lookup x val
+            x           -> let value = lookup x val
                            in if value == Nothing
                               then error $ "evalFormula: molecule not in valuation  " ++ show (f, val)
                               else fromJust value 
-	    
+            
             
 
           
@@ -164,8 +167,8 @@ getSetOfMolecules = nub . getMolecules
        p :&&: q  ->  getMolecules p ++ getMolecules q
        p :||: q  ->  getMolecules p ++ getMolecules q
        Not p     ->  getMolecules p
-       U	 ->  []
-       E	 ->  []
+       U         ->  []
+       E         ->  []
        p         ->  [p] 
 
  

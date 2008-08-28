@@ -103,6 +103,7 @@ instance InJSON Result where
          "ok"            -> liftM2 Ok getRules getState
          "detour"        -> liftM2 Detour getRules getState
          "unkown"        -> liftM  Unknown getState
+         _               -> Nothing
    fromJSON _ = Nothing
 
 fromString :: JSON -> Maybe String

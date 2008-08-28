@@ -321,7 +321,7 @@ propReturnLeft :: Int -> (Int -> Grammar Int) -> Bool
 propReturnLeft x f = (return x >>= f) === f x
 
 propReturnRight :: Grammar Int -> Bool
-propReturnRight m = (m >>= return) === m	
+propReturnRight m = (m >>= return) === m
 
 propFix :: Grammar Int -> Property
 propFix this@(Fix i p) = property (unfoldFix i p === this)

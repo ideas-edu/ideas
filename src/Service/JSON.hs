@@ -25,6 +25,7 @@ import Data.List (intersperse)
 import Control.Monad
 
 -- temporary test
+{-
 main :: IO ()
 main = do
    input <- readFile "ex.json"
@@ -33,6 +34,7 @@ main = do
    let Just json = parseJSON input
    print json
    print (parseJSON $ show json)
+-}
    
 data JSON 
    = Number  Number        -- integer, real, or floating point

@@ -144,7 +144,7 @@ s <*> t = S (unS (toStrategy s) RE.<*> unS (toStrategy t))
 
 -- | Choose between the two strategies (either do this or do that)
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-s <|> t	= S (unS (toStrategy s) RE.<|> unS (toStrategy t))
+s <|> t = S (unS (toStrategy s) RE.<|> unS (toStrategy t))
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a

@@ -22,26 +22,26 @@ import Prelude hiding (repeat)
 toCNF :: LabeledStrategy (Context RelAlg)
 toCNF = label "To CNF" $ 
  repeat ( topDown ( alternatives ( map liftRuleToContext (
- 				 [ruleRemCompl
+                                  [ruleRemCompl
                                  , ruleRemRedunExprs 
                                  , ruleDoubleNegation
-				 , ruleIdemp 
+                                 , ruleIdemp 
                                  , ruleAbsorp
-				 , ruleAbsorpCompl
+                                 , ruleAbsorpCompl
                                  ] ++
                                   invRules))
-				 
-		  )|> topDown (alternatives (map liftRuleToContext (
-		  		            [ruleCompOverUnion
-		                            , ruleAddOverIntersec
-					    , ruleDeMorgan
-					    , ruleNotOverComp
-					    , ruleNotOverAdd
-					    ]))
-		               ) 
-		   |> somewhere (liftRuleToContext ruleUnionOverIntersec)
-	)
-       		  
+                                 
+                  )|> topDown (alternatives (map liftRuleToContext (
+                                              [ruleCompOverUnion
+                                            , ruleAddOverIntersec
+                                            , ruleDeMorgan
+                                            , ruleNotOverComp
+                                            , ruleNotOverAdd
+                                            ]))
+                               ) 
+                   |> somewhere (liftRuleToContext ruleUnionOverIntersec)
+        )
+                         
    
 
 

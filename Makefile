@@ -26,7 +26,7 @@ HPCDIR = hpc
 CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
 WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
 
-WARNFLAGS = -W -fwarn-tabs -fwarn-duplicate-exports -fwarn-missing-signatures -fwarn-orphans
+WARNFLAGS = -W -fwarn-tabs -fwarn-duplicate-exports # -fwarn-orphans -fwarn-missing-signatures
 FLAGS = --make -O -isrc -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(WARNFLAGS)
 
 default: solvergui

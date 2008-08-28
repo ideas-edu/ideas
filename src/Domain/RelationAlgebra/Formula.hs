@@ -38,7 +38,7 @@ data RelAlg = Var String
             | RelAlg :&&:  RelAlg          -- and (conjunction)
             | RelAlg :||:  RelAlg          -- or (disjunction)
             | Not RelAlg                   -- not
-	    | Inv RelAlg                   -- inverse
+            | Inv RelAlg                   -- inverse
             | U                            -- universe
             | E                            -- empty
  deriving (Show, Eq, Ord)
@@ -49,13 +49,13 @@ data RelAlg = Var String
 isAtom :: RelAlg -> Bool
 isAtom  r = 
     case r of
-      Var x             -> True
-      Not (Var x)       -> True
-      Inv (Var x)       -> True
-      Not (Inv (Var x)) -> True
+      Var _             -> True
+      Not (Var _)       -> True
+      Inv (Var _)       -> True
+      Not (Inv (Var _)) -> True
       U                 -> True
       E                 -> True
-      otherwise         -> False
+      _                 -> False
  
 isMolecule :: RelAlg -> Bool
 isMolecule (r :.: s) = isMolecule r && isMolecule s
@@ -86,7 +86,7 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
          p :&&: q  -> rec p `conj` rec q
          p :||: q  -> rec p `disj` rec q
          Not p     -> not (rec p)
-	 Inv p	   -> inverse (rec p)
+         Inv p           -> inverse (rec p)
          U         -> universe 
          E         -> empty
 
@@ -97,9 +97,9 @@ evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, univer
  where
    pairs = cartesian as as
    comp     = \p q -> let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
-                      in S.fromAscList [ x | x@(a1, a2) <- pairs, any (f x) as ] 
+                      in S.fromAscList [ x | x <- pairs, any (f x) as ] 
    add      = \p q -> let f (a1, a2) c = (a1, c) `S.member` p || (c, a2) `S.member` q
-                      in S.fromAscList [ x | x@(a1, a2) <- pairs, all (f x) as ] 
+                      in S.fromAscList [ x | x <- pairs, all (f x) as ] 
    conj     = S.intersection
    disj     = S.union
    not      = \p -> S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
@@ -196,7 +196,7 @@ unifyRelAlg p q =
               (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
               (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
               (Not p1,      Not q1     ) -> unify p1 q1
-              (Inv p1,	    Inv q1     ) -> unify p1 q1 
+              (Inv p1,            Inv q1     ) -> unify p1 q1 
               (U,           U          ) -> return emptySubst
               (E,           E          ) -> return emptySubst
               _ -> Nothing

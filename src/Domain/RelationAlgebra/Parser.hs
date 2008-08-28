@@ -45,7 +45,7 @@ notSym = pToks "-"
 invSym = pToks "~"
 
 fstPair :: Pair a b -> a
-fstPair (Pair a b)  =  a
+fstPair (Pair a _)  =  a
 
 runParser  :: CharParser a -> String -> (a, [Message Char Pos])
 runParser pLogic input = (result, messages)
@@ -76,6 +76,6 @@ ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", bin
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    var       = const . (++)
-   nott p n  = p 6 . ("-"++) 
-   inv  p n  = p 6 . ("~"++)
+   nott p _  = p 6 . ("-"++) 
+   inv  p _  = p 6 . ("~"++)
    parIf b f = if b then ("("++) . f . (")"++) else f

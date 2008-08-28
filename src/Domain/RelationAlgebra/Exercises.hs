@@ -30,7 +30,7 @@ cnfExercise = makeExercise
    { shortTitle = "To conjunctive normal form"
    , parser        = \s -> case parseRelAlg s of
                               (p, [])   -> Right (inContext p)
-                              (p, msgs) -> Left  (text (show msgs))
+                              (_, msgs) -> Left  (text (show msgs))
    , prettyPrinter = ppRelAlg . fromContext
    , equivalence = \x y -> fromContext x `probablyEqual` fromContext y
    , ruleset   = map liftRuleToContext relAlgRules

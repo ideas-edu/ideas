@@ -31,7 +31,7 @@ instance Arbitrary RelAlg where
          p :&&: q -> variant 3 . coarbitrary p . coarbitrary q       
          p :||: q -> variant 4 . coarbitrary p . coarbitrary q       
          Not p    -> variant 5 . coarbitrary p
-	 Inv p    -> variant 6 . coarbitrary p  
+         Inv p    -> variant 6 . coarbitrary p  
          U        -> variant 7   
          E        -> variant 8      
    

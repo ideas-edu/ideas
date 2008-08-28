@@ -30,23 +30,23 @@ invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
            ]
 compAddRules :: [RelAlgRule]
 compAddRules = [ ruleCompOverUnion {- , ruleCompOverIntersec  -}
-	       , {- ruleAddOverUnion,-} ruleAddOverIntersec 
-	       ]
+               , {- ruleAddOverUnion,-} ruleAddOverIntersec 
+               ]
 relAlgRules :: [RelAlgRule]
 relAlgRules = invRules ++ compAddRules ++ 
-	      [ ruleUnionOverIntersec,ruleDeMorgan, ruleIdemp
-	      , ruleRemCompl, ruleDoubleNegation, ruleAbsorpCompl
-	      , ruleAbsorp, ruleRemRedunExprs, ruleNotOverComp
-	      , ruleNotOverAdd
-	      ]
-	      
+              [ ruleUnionOverIntersec,ruleDeMorgan, ruleIdemp
+              , ruleRemCompl, ruleDoubleNegation, ruleAbsorpCompl
+              , ruleAbsorp, ruleRemRedunExprs, ruleNotOverComp
+              , ruleNotOverAdd
+              ]
+              
 buggyRelAlgRules ::[RelAlgRule]
 buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
-	           , buggyRuleNotOverAdd, buggyRuleNotOverComp, buggyRuleParenth
-		   , buggyRuleAssoc, buggyRuleInvOverComp, buggyRuleInvOverAdd
-		   , buggyRuleCompOverIntersec, buggyRuleAddOverUnion, buggyRuleRemCompl
-		   ]
-		   
+                   , buggyRuleNotOverAdd, buggyRuleNotOverComp, buggyRuleParenth
+                   , buggyRuleAssoc, buggyRuleInvOverComp, buggyRuleInvOverAdd
+                   , buggyRuleCompOverIntersec, buggyRuleAddOverUnion, buggyRuleRemCompl
+                   ]
+                   
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
 ruleInvOverUnion :: RelAlgRule

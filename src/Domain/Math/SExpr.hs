@@ -20,7 +20,10 @@ instance Show SExpr where
    show = show . toExpr -- !!
 
 instance Eq SExpr where
-   x == y = toExpr x == toExpr y -- !!
+   x == y =  let nonsense (SExpr e) = contradiction (proposition e) in
+             equalACs exprACs (toExpr x) (toExpr y)
+          || nonsense x
+          || nonsense y
 
 instance Num SExpr where
    (+) = liftS2 (+)
@@ -65,10 +68,19 @@ simplify :: SExpr -> SExpr
 simplify (SExpr c) = SExpr $ {-liftM rewriteGS-} c >>= fixpointM (transformM f)
  where
    f a = (return . constantPropagation) a >>= applyRules >>= (return . simplifySquareRoots)
-            
+
+-- special care is taken for associative and commutative operators       
 constantPropagation :: Expr -> Expr
 constantPropagation e =
-   maybe e fromRational (exprToFractional e)
+   case findOperatorAC exprACs e of
+      Just ac
+         | not (null xs) && not (null ys) -> 
+              let new = constantPropagation (buildAC ac (catMaybes $ map snd xs))
+              in buildAC ac (new:map fst ys)
+       where 
+         (xs, ys) = partition (isJust . snd) $ map f $ collectAC ac e
+         f a = (a, exprToFractional a)
+      _ -> maybe e fromRational (exprToFractional e)
 
 simplifySquareRoots :: Expr -> Expr
 simplifySquareRoots e =
@@ -97,19 +109,9 @@ applyRules e =
         , ruleSimplPlusNeg, ruleSimplPlusNegComm
         , ruleSimplDiv, ruleSimpleSqrtTimes
         , rule2 "Temp1" $ \x y -> x * (1/y) ~> x/y
---        , rule2 "Temp2" $ \x y -> (1/y) * x ~> x/y
         , rule3 "Temp3" $ \x y z -> (x/z) * (y/z) ~> (x*y)/(z*z)
         , rule3 "Temp4" $ \x y z -> (x/z) + (y/z) ~> (x+y)/z
         , rule2 "Temp5" $ \x y -> (x/y)/y ~> x/(y*y)
-        
-        -- , rule5 "Xtreme" $ \a b x y c -> a*(x+ negate (a*c)) + b*(y+negate (b*c)) ~> ((a*x)+(b*y))-((a*a+b*b)*c)
-        
---        , rule5 "Xtreme" $ \a b c d e -> (a + (-(b*c)))+(d + (- (e*c))) ~> (a+d)-((b+e)*c)
---        , rule3 "TempD" $ \x y z -> x*(y + (-z)) ~> (x*y) - (x*z)
-        
---        , rule3 "Temp5" $ \x y z -> (x/y)/z ~> x/(y*z)
---        , rule3 "Temp6" $ \x y z -> x/(y/z) ~> (x*z)/y
---        , rule2 "Temp7" $ \x y -> sqrt (x/y) ~> sqrt x / sqrt y
         ]
 
 -- Gram-Schmidt view
@@ -179,30 +181,3 @@ setS :: (Expr -> Expr) -> SExpr -> SExpr
 setS _ (SExpr c) = SExpr (f c)
  where f :: Constrained c a -> Constrained c a
        f = id
-
-{-
-gsRules :: Expr -> Expr
-gsRules (x :/: Sqrt y) = (x*sqrt y) / y
-gsRules (Sqrt y :/: z) = (1/z) * Sqrt y
-gsRules (Sqrt x :*: Sqrt y) = Sqrt (x*y)
-gsRules (Sqrt x :*: y) = y*Sqrt x
-gsRules (x :*: (y :*: z)) = (x*y)*z
-gsRules (x :*: (y :+: z)) = (x*y)+(x*z)
-gsRules a = a -}
-
-{-
-special :: Expr -> Expr
-special e0 = fromMaybe e0 $ do 
-   triples <- mapM f (collectPlus e0)
-   guard (check triples)
-   return $ partOne triples - (partTwo triples * partThree triples)
- where
-   f (a1 :*: (x :+: Negate (a2 :*: c))) | a1==a2 = Just (a1, x, c)
-   f _ = Nothing
-   check (x:xs) = all ((==thd3 x) . thd3) xs
-   thd3 (_, _, a) = a
-   
-   partOne   = foldr1 (+) . map (\(a,x,_) -> a*x)
-   partTwo   = foldr1 (+) . map (\(a,_,_) -> a*a)
-   partThree = thd3 . head -}
-   

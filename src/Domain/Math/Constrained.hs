@@ -70,6 +70,16 @@ F /\ _ = F
 _ /\ F = F
 p /\ q = p :/\: q
 
+-- simple implementation for now
+contradiction :: Prop a -> Bool
+contradiction prop = 
+   case prop of
+      F        -> True
+      p :/\: q -> contradiction p || contradiction q
+      p :\/: q -> contradiction p && contradiction q
+      _        -> False
+
+
 -----------------------------------------------------------------------
 -- Elementary constraints (implied by sqrt and /)
  

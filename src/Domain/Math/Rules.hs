@@ -81,8 +81,8 @@ floatingRules   :: (MetaVar a, Floating a)   => [Rule a]
 allRules        :: (MetaVar a, Floating a)   => [Rule a]
 
 numRules = 
-   [ ruleCommPlus, ruleTransPlus, ruleZeroPlus, ruleZeroPlusComm
-   , ruleCommTimes, ruleTransTimes, ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm
+   [ ruleCommPlus, ruleAssocPlus, ruleZeroPlus, ruleZeroPlusComm
+   , ruleCommTimes, ruleAssocTimes, ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm
    , ruleInvNeg, ruleZeroNeg
    , ruleSimplPlusNeg
    , ruleDistrNegPlus, ruleDistrNegTimes, ruleDistrPlusTimes
@@ -106,12 +106,12 @@ allRules = numRules ++ fractionalRules ++ floatingRules
 -----------------------------------------------------------------------
 -- Basic rules Plus
 
-ruleCommPlus, ruleTransPlus, ruleZeroPlus, ruleZeroPlusComm :: (MetaVar a, Num a) => Rule a
+ruleCommPlus, ruleAssocPlus, ruleZeroPlus, ruleZeroPlusComm :: (MetaVar a, Num a) => Rule a
 
 ruleCommPlus = rule2 "Comm +" $ \x y -> 
    x+y ~> y+x 
    
-ruleTransPlus = rule3 "Trans +" $ \x y z -> 
+ruleAssocPlus = rule3 "Assoc +" $ \x y z -> 
    (x+y)+z ~> x+(y+z)
    
 ruleZeroPlus = rule1 "Zero +" $ \x -> 
@@ -123,12 +123,12 @@ ruleZeroPlusComm = rule1 "Zero + Comm" $ \x ->
 -----------------------------------------------------------------------
 -- Basic rules Times
 
-ruleCommTimes, ruleTransTimes, ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm :: (MetaVar a, Num a) => Rule a
+ruleCommTimes, ruleAssocTimes, ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm :: (MetaVar a, Num a) => Rule a
 
 ruleCommTimes = rule2 "Comm *" $ \x y -> 
    x*y ~> y*x 
    
-ruleTransTimes = rule3 "Trans *" $ \x y z -> 
+ruleAssocTimes = rule3 "Trans *" $ \x y z -> 
    (x*y)*z ~> x*(y*z)
    
 ruleZeroTimes = rule1 "Zero *" $ \x -> 

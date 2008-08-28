@@ -31,7 +31,6 @@ import Common.Utils
 import Common.Unification
 import Control.Monad
 import Data.List (intersperse)
-import Data.Maybe (fromMaybe)
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 

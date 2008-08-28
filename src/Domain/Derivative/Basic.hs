@@ -13,6 +13,7 @@ module Domain.Derivative.Basic where
 
 import Common.Context
 import Common.Unification
+import Common.Uniplate
 import Control.Monad
 import Data.List
 import qualified Data.Set as S

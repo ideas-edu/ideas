@@ -18,14 +18,14 @@ module Common.Context
      -- * Variable environment
    , Var(..), intVar, boolVar, get, set, change
      -- * Location (current focus)
-   , Location, location, setLocation, changeLocation, currentFocus, changeFocus, locationDown, locationUp, makeLocation
+   , Location, location, setLocation, changeLocation, currentFocus, changeFocus, locationDown, locationUp
+   , makeLocation, fromLocation
      -- * Lifting rewrite rules
    , liftRuleToContext
-     -- * Uniplate type class and utility functions
-   , Uniplate(..), noUniplate, children, child, select, transform, transformAt, universe
    ) where
 
 import Common.Utils
+import Common.Uniplate
 import Common.Transformation
 import Control.Monad
 import Data.Char
@@ -148,12 +148,12 @@ changeLocation f c = setLocation (f (location c)) c
 -- | Returns the term which has the current focus: Nothing indicates that the current 
 -- focus is invalid
 currentFocus :: Uniplate a => Context a -> Maybe a
-currentFocus c = select (location c) (fromContext c)
+currentFocus c = select (fromLocation $ location c) (fromContext c)
 
 -- | Changes the term which has the current focus. In case the focus is invalid, then
 -- this function has no effect.
 changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
-changeFocus f c = fmap (transformAt (location c) f) c
+changeFocus f c = fmap (transformAt (fromLocation $ location c) f) c
 
 -- | Go down to a certain child
 locationDown :: Int -> Location -> Location
@@ -168,48 +168,12 @@ locationUp (L is)
 makeLocation :: [Int] -> Location
 makeLocation = L
 
+fromLocation :: Location -> [Int]
+fromLocation (L is) = is
+
 ----------------------------------------------------------
 -- Lifting rewrite rules
 
 -- | Lift a rule to operate on a term in a context
 liftRuleToContext :: Uniplate a => Rule a -> Rule (Context a)
 liftRuleToContext = lift $ makeLiftPair currentFocus (changeFocus . const)
-   
----------------------------------------------------------
--- Uniplate class for generic traversals
-
--- | The Uniplate type class offers some light-weight functions for generic traversals. Only
--- a minimal set of operations are supported
-class Uniplate a where
-   uniplate :: a -> ([a], [a] -> a)    -- ^ Function for generic traversals
-
--- | Helper function to define a Uniplate instance for domains which don't support generic traversals
-noUniplate :: a -> ([a], [a] -> a)
-noUniplate a = ([], const a)
-
--- | Returns all the immediate children of a term
-children :: Uniplate a => a -> [a]
-children = fst . uniplate
-
--- | Selects one immediate child of a term. Nothing indicates that the child does not exist
-child :: Uniplate a => Int -> a -> Maybe a
-child n = safeHead . drop n . children 
-               
--- | Selects a child based on a path. Nothing indicates that the path is invalid
-select :: Uniplate a => Location -> a -> Maybe a
-select (L is) a = foldM (flip child) a is
-
--- | Transforms one immediate child at a given index.
-transform :: Uniplate a => Int -> (a -> a) -> a -> a
-transform n f a = 
-   let (as, build) = uniplate a 
-       g i = if i==n then f else id
-   in build (zipWith g [0..] as)
-
--- | Transforms one child based on a path.
-transformAt :: Uniplate a => Location -> (a -> a) -> a -> a
-transformAt (L is) f = foldr transform f is
-
--- | Returns all subterms
-universe :: Uniplate a => a -> [a]
-universe a = a : [ c | b <- children a, c <- universe b ]

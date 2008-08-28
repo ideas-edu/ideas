@@ -1,9 +1,7 @@
 module Domain.Math.Classes where
 
-import Common.Context
-import Control.Monad
+import Common.Uniplate
 import Data.List
-import qualified Data.IntMap as IM
 
 class Symbolic a where
    variable :: String -> a

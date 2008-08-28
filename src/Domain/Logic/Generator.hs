@@ -20,7 +20,6 @@ import Domain.Logic.Formula
 import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
-import System.Random
 
 generateLogic :: Gen Logic
 generateLogic = generateLogicWith defaultConfig

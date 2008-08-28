@@ -28,7 +28,6 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Vector
 import Test.QuickCheck
 import Control.Monad
-import Data.Ratio
 
 import Domain.Math.Classes
 import Domain.Math.SExpr

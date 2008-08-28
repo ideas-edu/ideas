@@ -18,11 +18,9 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Utils
-import Common.Unification
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
-import qualified Data.Set as S
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.LinearSystem

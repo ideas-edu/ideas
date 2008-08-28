@@ -14,7 +14,8 @@
 module Service.TypedAbstractService where
 
 import qualified Common.Apply as Apply
-import Common.Context  (Location, Context, inContext, location, currentFocus, Uniplate, setLocation)
+import Common.Context  (Location, Context, inContext, location, currentFocus, setLocation)
+import Common.Uniplate
 import Common.Exercise (Exercise(..))
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)

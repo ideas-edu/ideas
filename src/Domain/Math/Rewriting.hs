@@ -1,7 +1,7 @@
 module Domain.Math.Rewriting where
 
 import Common.Utils
-import Common.Context
+import Common.Uniplate
 import Domain.Math.Classes
 import Domain.Math.Rules
 import Domain.Math.Constrained

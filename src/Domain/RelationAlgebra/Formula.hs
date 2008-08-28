@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Formula where
 
-import Common.Context (Uniplate(..), universe)
+import Common.Uniplate (Uniplate(..), universe)
 import Common.Unification
 import Common.Utils
 import Control.Monad

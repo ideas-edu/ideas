@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Equivalence where
 
-import Common.Context (Uniplate(..), universe)
+import Common.Uniplate (Uniplate(..), universe)
 import Common.Unification
 import Common.Utils
 import Data.Char

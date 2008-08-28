@@ -16,12 +16,10 @@ module OpenMath.Reply
    , ReplyOk(..), ReplyIncorrect(..), ReplyError(..), Args
    ) where
 
-import Common.Context (Location)
 import Common.Strategy hiding (not)
 import OpenMath.StrategyTable
 import OpenMath.ObjectParser
 import Service.XML
-import Data.Maybe
 
 ------------------------------------------------------------------------
 -- Data types for replies

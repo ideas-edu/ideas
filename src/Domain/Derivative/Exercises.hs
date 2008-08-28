@@ -13,7 +13,6 @@
 module Domain.Derivative.Exercises where
 
 import Prelude hiding (repeat)
-import Domain.Derivative.Basic (Expr(..))
 import Domain.Derivative.Rules (derivativeRules, tidyupRules, tidyRule)
 import Common.Strategy (Strategy, somewhere, many, (<*>), (<|>), alternatives, option, label, LabeledStrategy)
 import qualified Common.Strategy

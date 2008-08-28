@@ -16,7 +16,6 @@ module Domain.LinearAlgebra.MatrixRules where
 import Domain.LinearAlgebra.Matrix
 import Common.Context
 import Common.Transformation
-import Common.Utils
 import Control.Monad
 import Data.List
 

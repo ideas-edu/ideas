@@ -1,11 +1,10 @@
 module Domain.Math.Rules where
 
-import Common.Context
+import Common.Uniplate
 import Control.Monad
 import Data.List
 import Data.Monoid
 import Data.Maybe
-import qualified Data.IntMap as IM
 import Domain.Math.Classes
 import Domain.Math.Constrained
 -- import Domain.Math.Expr

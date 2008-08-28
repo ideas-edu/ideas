@@ -43,9 +43,9 @@ import qualified Prelude as Prelude
 import Common.Apply
 import Common.Context
 import Common.Transformation
+import Common.Uniplate
 import Common.Utils
 import qualified Common.Grammar as RE
-import Control.Monad (foldM)
 import Debug.Trace
 
 -----------------------------------------------------------

@@ -22,9 +22,7 @@ import Domain.Fraction.Rules
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import Common.Transformation
 import Control.Monad
-import System.Random
 import Data.Maybe
 
 simplExercise :: Exercise (Context Frac)

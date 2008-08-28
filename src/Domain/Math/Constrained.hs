@@ -1,10 +1,8 @@
 module Domain.Math.Constrained where
 
-import Common.Context 
 import Control.Monad
 import Domain.Math.Classes
 import Data.Monoid
-import Test.QuickCheck
 
 -----------------------------------------------------------------------
 -- Constrained values

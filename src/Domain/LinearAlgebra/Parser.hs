@@ -75,9 +75,7 @@ pSystem = convertSystem <$> pEquations pExpr
                        Just (var v * toLinearExpr (simplifyExpr (foldr1 (*) es)))
                _ -> Nothing
                
-      hasVar = any isVar . universe
-      isVar (Expr.Var _) = True
-      isVar _            = False
+      hasVar = not . null . freeVars
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations p = pLines True (pEquation p)

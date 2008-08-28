@@ -4,7 +4,7 @@ import Data.Char
 import Data.Ratio
 import Test.QuickCheck
 import Control.Monad
-import Common.Context
+import Common.Uniplate
 import Domain.Math.Classes
 import Domain.Math.Rewriting
 

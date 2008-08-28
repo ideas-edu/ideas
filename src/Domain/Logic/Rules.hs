@@ -14,7 +14,6 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Rules where
 
-import qualified Data.Set as S
 import Domain.Logic.Formula
 import Common.Transformation
 import Common.Unification

@@ -13,7 +13,6 @@
 -----------------------------------------------------------------------------
 module OpenMath.LAServer (respond, laServer, laServerFor, versionNr) where
 
-import Domain.LinearAlgebra
 import OpenMath.StrategyTable
 import OpenMath.Request
 import OpenMath.Reply

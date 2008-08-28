@@ -53,15 +53,23 @@ joinProp :: Prop (Prop a) -> Prop a
 joinProp = mapProp id
 
 mapProp :: (a -> Prop b) -> Prop a -> Prop b
-mapProp f prop =
-   case prop of
-      T        -> T
-      F        -> F
-      Not p    -> Not (mapProp f p)
-      p :/\: q -> mapProp f p :/\: mapProp f q
-      p :\/: q -> mapProp f p :\/: mapProp f q
-      Atom a   -> f a
+mapProp f = foldProp (T, F, Not, (:/\:), (:\/:), f)
 
+foldProp :: (b, b, b -> b, b -> b -> b, b -> b -> b, a -> b) -> Prop a -> b
+foldProp (true, false, not, and, or, atom) = rec
+ where
+   rec prop =
+      case prop of
+         T        -> true
+         F        -> false
+         Not p    -> not (rec p)
+         p :/\: q -> rec p `and` rec q
+         p :\/: q -> rec p `or`  rec q
+         Atom a   -> atom a
+  
+simplifyProp :: Prop a -> Prop a
+simplifyProp = foldProp (T, F, notP, (/\), (\/), Atom)
+   
 -- smart constructor
 (/\) :: Prop a -> Prop a -> Prop a
 T /\ p = p
@@ -70,18 +78,35 @@ F /\ _ = F
 _ /\ F = F
 p /\ q = p :/\: q
 
+-- smart constructor
+(\/) :: Prop a -> Prop a -> Prop a
+T \/ _ = T
+_ \/ T = T
+F \/ p = p
+p \/ F = p
+p \/ q = p :\/: q
+
+-- smart constructor
+notP :: Prop a -> Prop a
+notP (Not p)    = p
+notP T          = F
+notP F          = T
+notP (p :/\: q) = notP p \/ notP q
+notP (p :\/: q) = notP p /\ notP q
+notP p          = Not p
+
 -- simple implementation for now
 contradiction :: Prop a -> Bool
 contradiction prop = 
-   case prop of
-      F        -> True
-      p :/\: q -> contradiction p || contradiction q
-      p :\/: q -> contradiction p && contradiction q
-      _        -> False
+   case simplifyProp prop of
+      F -> True
+      _ -> False
 
 
 -----------------------------------------------------------------------
 -- Elementary constraints (implied by sqrt and /)
+ 
+infix 3 :==:, :<:
  
 data Con a = a :==: a   -- equality
            | a :<:  a   -- ordering

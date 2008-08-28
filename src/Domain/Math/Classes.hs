@@ -30,7 +30,16 @@ class (Constructor a, ShallowEq a, Uniplate a) => UniplateConstr a
 ------
 
 freeVars :: (MetaVar a, Uniplate a) => a -> [Int]
-freeVars e = nub [ i | a <- universe e, Just i <- [isMetaVar a] ]
+freeVars a = freeVarsList [a]
+
+freeVarsList :: (MetaVar a, Uniplate a) => [a] -> [Int] -- generalize to crush
+freeVarsList xs = nub [ i | x <- xs, a <- universe x, Just i <- [isMetaVar a] ]
 
 nextVar :: (Uniplate a, MetaVar a) => a -> Int
-nextVar a = 1 + maximum (-1 : freeVars a)
+nextVar a = nextVarList [a]
+
+nextVarList :: (Uniplate a, MetaVar a) => [a] -> Int
+nextVarList xs = 
+   case concatMap freeVars xs of
+      [] -> 0
+      is -> 1 + maximum is

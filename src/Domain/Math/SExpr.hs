@@ -65,9 +65,10 @@ make = simplify . SExpr
 -- Simplifications
 
 simplify :: SExpr -> SExpr
-simplify (SExpr c) = SExpr $ {-liftM rewriteGS-} c >>= fixpointM (transformM f)
+simplify (SExpr c) = SExpr $ g $ liftM rewriteGS c >>= fixpointM (transformM f)
  where
    f a = (return . constantPropagation) a >>= applyRules >>= (return . simplifySquareRoots)
+   g (C c a) = C (simplifyPropCon c) a
 
 -- special care is taken for associative and commutative operators       
 constantPropagation :: Expr -> Expr
@@ -140,7 +141,7 @@ toViewGS = foldExpr (bin plus, bin times, bin min, unop neg, con, bin div, unop 
          Just (TimesGS r3 n3) -> return $ TimesGS (r1*r2*r3) n3
          _ -> Nothing
          
-   recip (TimesGS r n) = return $ TimesGS (1 / (fromIntegral n*r)) n 
+   recip (TimesGS r n) | r /= 0 && n /= 0 = return $ TimesGS (1 / (fromIntegral n*r)) n 
    recip _ = Nothing
    
    sqrt (TimesGS r 1) 
@@ -181,3 +182,51 @@ setS :: (Expr -> Expr) -> SExpr -> SExpr
 setS _ (SExpr c) = SExpr (f c)
  where f :: Constrained c a -> Constrained c a
        f = id
+       
+-----------------------------------------------------------------------
+-- Simplifications for constraints
+
+simplifyPropCon :: Prop (Con Expr) -> Prop (Con Expr)
+simplifyPropCon = fixpoint (mapProp simplifyCon . simplifyProp)
+
+simplifyCon :: Con Expr -> Prop (Con Expr)
+simplifyCon = convert . fmap simplifyExpr
+ where
+   f :: Con Expr -> Prop (Con Expr)
+   f con = 
+      case con of
+         -- equality constraints
+         Con x  :==: Con y  -> if x==y then T else F
+         Sqrt x :==: Sqrt y -> (x .== y) /\ (x .>= 0) /\ (y .>= 0)
+         Con x  :==: Sqrt y
+            | x >= 0    -> Con (x*x) .== y
+            | otherwise -> F
+         Sqrt x :==: Con y
+            | y >= 0    -> x .== Con (y*y)
+            | otherwise -> F
+         -- less-than constraints
+         Con x  :<: Con y  -> if x<y then T else F
+         Sqrt x :<: Sqrt y -> (x .< y) /\ (x .>= 0)
+         Con x  :<: Sqrt y
+            | x >= 0    -> (Con (x*x) .< y)
+            | otherwise -> y .>= 0
+         Sqrt x :<: Con y
+            | y >= 0    -> (x .< Con (y*y)) /\ (x .>= 0)
+            | otherwise -> F
+         -- well-formedness constraints
+         WF (x :/: y) -> wf x /\ (y ./= 0)
+         WF (Sqrt x)  -> x .>= 0
+         WF x         -> mconcat (map wf (children x))
+         -- catch-all
+         _ -> return con
+ 
+   convert :: Con SExpr -> Prop (Con Expr)
+   convert c = f (fmap toExpr c) `mplus`
+               msum [ proposition e | SExpr e <- flattenCon c ]
+   
+   flattenCon :: Con a -> [a] -- can be done generically
+   flattenCon con =
+      case con of
+         x :==: y -> [x,y]
+         x :<:  y -> [x,y]
+         WF x     -> [x]

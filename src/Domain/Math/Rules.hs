@@ -24,22 +24,22 @@ instance Show (Rule a) where
 instance Eq (Rule a) where
    r1 == r2 = name r1 == name r2
 
-rule0 :: MetaVar a => String -> Triple a -> Rule a
+rule0 :: MetaVar b => String -> Triple b -> Rule b
 rule0 s = R s 0 . const
 
-rule1 :: MetaVar a => String -> (a -> Triple a) -> Rule a
+rule1 :: MetaVar a => String -> (a -> Triple b) -> Rule b
 rule1 s f = R s 1 $ \i -> f (metaVar i)
 
-rule2 :: MetaVar a => String -> (a -> a -> Triple a) -> Rule a
+rule2 :: MetaVar a => String -> (a -> a -> Triple b) -> Rule b
 rule2 s f = R s 2 $ \i -> f (metaVar i) (metaVar (i+1))
 
-rule3 :: MetaVar a => String -> (a -> a -> a -> Triple a) -> Rule a
+rule3 :: MetaVar a => String -> (a -> a -> a -> Triple b) -> Rule b
 rule3 s f = R s 3 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2))
 
-rule4 :: MetaVar a => String -> (a -> a -> a -> a -> Triple a) -> Rule a
+rule4 :: MetaVar a => String -> (a -> a -> a -> a -> Triple b) -> Rule b
 rule4 s f = R s 4 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2)) (metaVar (i+3))
 
-rule5 :: MetaVar a => String -> (a -> a -> a -> a -> a -> Triple a) -> Rule a
+rule5 :: MetaVar a => String -> (a -> a -> a -> a -> a -> Triple b) -> Rule b
 rule5 s f = R s 5 $ \i -> f (metaVar i) (metaVar (i+1)) (metaVar (i+2)) (metaVar (i+3)) (metaVar (i+4))
 
 inverse :: (MetaVar a, Uniplate a) => Rule a -> Maybe (Rule a)
@@ -62,15 +62,6 @@ lhs ~> rhs = Triple lhs rhs mzero
 
 (#) :: Triple a -> Prop (Con a) -> Triple a
 Triple lhs rhs p1 # p2 = Triple lhs rhs (p1 `mappend` p2)
-
-{-
-wfProp :: (Uniplate a, MetaVar a) => Triple a -> Prop (Con a)
-wfProp (Triple lhs rhs _) = mconcat 
-   [ wf (metaVar a) | a <- freeVars lhs \\ freeVars rhs ]
-
-bottomDivProp :: Uniplate a => Triple a -> Prop (Con a)
-bottomDivProp (Triple lhs rhs _) = mconcat 
-   [ x ./= 0 | _ :/: x <-  universe lhs ] -}
 
 -----------------------------------------------------------------------
 -- Rule collections
@@ -98,7 +89,7 @@ floatingRules =
    [ ruleZeroSqrt, ruleOneSqrt
    , ruleSimpleSqrtTimes
    , ruleDistrNegDiv, ruleDistrNegDenom
-   , ruleDistrSqrtTimes, ruleDistrSqrtDiv, ruleDistrSqrtDenom
+   , ruleDistrSqrtTimes, {-ruleDistrSqrtDiv,-} ruleDistrSqrtDenom
    ]
 
 allRules = numRules ++ fractionalRules ++ floatingRules
@@ -151,7 +142,7 @@ ruleInvNeg, ruleZeroNeg :: (MetaVar a, Num a) => Rule a
 ruleInvNeg = rule1 "Inv neg" $ \x ->
    -(-x) ~> x
    
-ruleZeroNeg = rule3 "Trans neg" $ \x y z -> 
+ruleZeroNeg = rule0 "Zero neg" $ 
    -0 ~> 0
    
 -----------------------------------------------------------------------
@@ -196,7 +187,7 @@ ruleSimplDivTimes = rule3 "Simpl / *" $ \x y z ->
    (x*y)/(x*z) ~> y/z   # x./=0
 
 ruleSimpleSqrtTimes = rule1 "Simpl sqrt *" $ \x -> 
-   sqrt x*sqrt x ~> x   #x.>=0
+   sqrt x*sqrt x ~> x   # x.>=0
 
 -----------------------------------------------------------------------
 -- Distribution rules for Negation
@@ -208,10 +199,10 @@ ruleDistrNegPlus = rule2 "Distr neg +" $ \x y ->
    -(x+y) ~> (-x)+(-y)
    
 ruleDistrNegTimes = rule2 "Distr neg *" $ \x y -> 
-   -(x*y) ~> (-x)*y
+   (-x)*y ~> -(x*y)
    
 ruleDistrNegDiv = rule2 "Distr neg /" $ \x y -> 
-   -(x/y) ~> (-x)/y
+   (-x)/y ~> -(x/y)
    
 ruleDistrNegDenom = rule2 "Distr neg denom" $ \x y -> 
    x/(-y) ~> -(x/y)
@@ -221,7 +212,7 @@ ruleDistrNegDenom = rule2 "Distr neg denom" $ \x y ->
 
 ruleDistrPlusTimes                                       :: (MetaVar a, Num a)        => Rule a
 ruleDistrTimesDiv, ruleDistrDivNumer, ruleDistrDivDenom  :: (MetaVar a, Fractional a) => Rule a
-ruleDistrSqrtTimes, ruleDistrSqrtDiv, ruleDistrSqrtDenom :: (MetaVar a, Floating a)   => Rule a
+ruleDistrSqrtTimes, {-ruleDistrSqrtDiv,-} ruleDistrSqrtDenom :: (MetaVar a, Floating a)   => Rule a
 
 ruleDistrPlusTimes = rule3 "Distr + *" $ \x y z -> 
    x*(y+z) ~> (x*y)+(x*z)
@@ -236,10 +227,11 @@ ruleDistrDivDenom = rule3 "Distr / denom" $ \x y z ->
    x/(y/z) ~> x*(z/y)
    
 ruleDistrSqrtTimes = rule2 "Distr sqrt *" $ \x y -> 
-   sqrt x * sqrt y ~> sqrt (x*y)
-   
-ruleDistrSqrtDiv = rule2 "Distr sqrt /" $ \x y -> 
-   sqrt (x/y) ~> sqrt x / sqrt y
+   sqrt x * sqrt y ~> sqrt (x*y)   # (x.>=0) /\ (y.>=0)
+  
+-- False! 
+--ruleDistrSqrtDiv = rule2 "Distr sqrt /" $ \x y -> 
+--   sqrt (x/y) ~> sqrt x / sqrt y
    
 ruleDistrSqrtDenom = rule2 "Distr sqrt denom" $ \x y -> 
    x/sqrt y ~> (x*sqrt y)/y

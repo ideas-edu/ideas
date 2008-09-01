@@ -20,7 +20,7 @@ import Common.Strategy hiding (not)
 import Common.Utils (Some(..))
 import OpenMath.LAServer
 import OpenMath.StrategyTable
-import OpenMath.ObjectParser
+import OpenMath.Conversion
 import OpenMath.Request
 import OpenMath.Reply
 import Service.XML
@@ -45,7 +45,7 @@ makeHTML self req =
  where
    noAnswer = req {req_Answer = Nothing}
                
-make :: IsExpr a => String -> Exercise (Context a) -> Request -> ReplyIncorrect -> XML
+make :: IsOMOBJ a => String -> Exercise (Context a) -> Request -> ReplyIncorrect -> XML
 make self a req inc = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
@@ -53,7 +53,7 @@ make self a req inc = html
           , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
           ]
    , para [ bold [Text "Expected: "]
-          , preString (maybe "" (prettyPrinter a . inContext) $ fromExpr $ repInc_Expected inc) 
+          , preString (maybe "" (prettyPrinter a . inContext) $ fromOMOBJ $ repInc_Expected inc) 
           ]
    , para [ Text "Submit the", href (reqToURL reqOk) [Text "expected"], Text "answer and continue" ]
    , hr
@@ -71,7 +71,7 @@ make self a req inc = html
    , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
    , Text "Remove all", href (reqToURL reqNoCtxt) [Text "context information"]
    , para [ bold [Text "Derivation (so far):"], Text derivation ]
-   , let f (x, y) = [ Text x, preString $ maybe "" (prettyPrinter a . inContext) (fromExpr y) ]
+   , let f (x, y) = [ Text x, preString $ maybe "" (prettyPrinter a . inContext) (fromOMOBJ y) ]
          len = length (repInc_Derivation inc)
      in para [ bold [Text $ "Derivation (expected, " ++ show len ++ " steps):"]
              , list $ map f $ repInc_Derivation inc 
@@ -93,7 +93,7 @@ make self a req inc = html
 ----------------------------------------------------------------------------
 -- Actions
 
-expected :: IsExpr a => Exercise (Context a) -> Request -> ReplyIncorrect -> (Request, Int)
+expected :: IsOMOBJ a => Exercise (Context a) -> Request -> ReplyIncorrect -> (Request, Int)
 expected a r inc = 
    case laServerFor a r {req_Answer = Just $ repInc_Expected inc} of
       Ok ok -> ( r { req_Location = repOk_Location ok

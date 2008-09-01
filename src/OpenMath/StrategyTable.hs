@@ -17,21 +17,19 @@ module OpenMath.StrategyTable where
 import Common.Context
 import Common.Exercise
 import Common.Utils (Some(..))
-import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise)
-import Domain.LinearAlgebra (Matrix, rows, makeMatrix, getVars,
-                             LinearExpr, getConstant, coefficientOf, var)
-import Domain.LinearAlgebra.Equation (Equation, getLHS, getRHS)
-import Domain.LinearAlgebra.Vector (Vector, toList, fromList)
+import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise, LinearSystem)
+import Domain.LinearAlgebra (makeMatrix, var)
+import Domain.LinearAlgebra.Equation (Equation)
+import Domain.LinearAlgebra.Vector (fromList)
+import Domain.Math.SExpr
 import qualified Domain.LinearAlgebra.Equation as LA
-import OpenMath.ObjectParser
-import Control.Monad
-import qualified Domain.Math.SExpr as SExpr
-import qualified Domain.Math.Expr  as Expr
+import OpenMath.Conversion
+import OpenMath.Object
 
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.3.1"
+versionNr = "0.4.0"
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines
@@ -39,17 +37,17 @@ oneliner = unwords . concatMap words . lines
 defaultURL :: Bool -> String
 defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/service.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
 
-data ExprExercise a = IsExpr a => ExprExercise (Exercise (Context a))
+data ExprExercise a = IsOMOBJ a => ExprExercise (Exercise (Context a))
 
 data StrategyEntry = Entry 
    { strategyNr   :: String
    , exprExercise :: Some ExprExercise
    , functions    :: [String]
-   , examples     :: [Expr]
+   , examples     :: [OMOBJ]
    }
  
-entry :: IsExpr a => String -> Exercise (Context a) -> [String] -> [a] -> StrategyEntry
-entry nr a fs ex = Entry nr (Some (ExprExercise a)) fs (map toExpr ex)
+entry :: IsOMOBJ a => String -> Exercise (Context a) -> [String] -> [a] -> StrategyEntry
+entry nr a fs ex = Entry nr (Some (ExprExercise a)) fs (map toOMOBJ ex)
 
 strategyTable :: [StrategyEntry]
 strategyTable =
@@ -67,77 +65,13 @@ strategyTable =
         [[fromList [1,1,1,1], fromList [3,3,1,1], fromList [7,9,3,5]]]
    ]
  where
-   (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4")
+   x1, x2, x3, x4 :: Simplification a => SExprF a
+   x1 = var "x1"
+   x2 = var "x2"
+   x3 = var "x3"
+   x4 = var "x4"
+   -- (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4")
+   sys1, sys2, sys3 :: Simplification a => LinearSystem (SExprF a)
    sys1 = [x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]
    sys2 = [x1 + 2 * x2 + 3 * x3 - x4 LA.:==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 LA.:==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 LA.:==: 0 ]
    sys3 = [ x1 + x2 - 2*x3 LA.:==: 0, 2*x1 + x2 - 3*x3 LA.:==: 0, 4*x1 - 2*x2 - 2*x3 LA.:==: 0, 6*x1 - x2 - 5*x3 LA.:==: 0, 7*x1 - 3*x2 - 4*x3 LA.:==: 1]
-
-instance IsExpr SExpr.SExpr where
-   toExpr   = toExpr . SExpr.toExpr
-   fromExpr = fmap SExpr.simplifyExpr . fromExpr
-   
-instance IsExpr Expr.Expr where
-   toExpr = Expr.foldExpr ((:+:), (:*:), (:-:), Negate, Con, (:/:), Sqrt, Var, sym)
-    where 
-      sym "pi" [] = Pi
-      sym s    _  = Var s -- error, should not happen
-   fromExpr e = 
-      case e of
-         Con n    -> Just (fromIntegral n)
-         Var s    -> Just (Expr.Var s)
-         Negate x -> liftM negate (fromExpr x)
-         x :+: y  -> binop (+) x y
-         x :-: y  -> binop (-) x y
-         x :*: y  -> binop (*) x y
-         x :/: y  -> binop (/) x y
-         Sqrt x   -> liftM sqrt (fromExpr x)
-         Pi       -> return pi
-         _        -> Nothing
-    where
-      binop op x y = liftM2 op (fromExpr x) (fromExpr y)
-
-instance IsExpr a => IsExpr (Matrix a) where
-   toExpr   = Matrix . map (map toExpr) . rows
-   fromExpr (Matrix xs) = do 
-      rows <- mapM (mapM fromExpr) xs
-      return $ makeMatrix rows
-   fromExpr _ = Nothing
-   
-instance (Fractional a, IsExpr a) => IsExpr (LinearExpr a) where
-   toExpr x =
-      let op s e = (toExpr (coefficientOf s x) :*: Var s) :+: e
-      in foldr op (toExpr $ getConstant x) (getVars x)
-   fromExpr e =
-      case e of
-         Con n    -> Just (fromIntegral n)
-         Var s    -> Just (var s)
-         Negate x -> liftM negate (fromExpr x)
-         x :+: y  -> binop (+) x y
-         x :-: y  -> binop (-) x y
-         x :*: y  -> guard (isCon x || isCon y) >> binop (*) x y
-         x :/: y  -> guard (isCon y)            >> binop (/) x y
-         _        -> Nothing
-    where
-      binop op x y = liftM2 op (fromExpr x) (fromExpr y)
-      isCon e =
-         case e of
-            Con _    -> True
-            Negate x -> isCon x
-            x :+: y  -> isCon x && isCon y
-            x :-: y  -> isCon x && isCon y
-            x :*: y  -> isCon x && isCon y
-            x :/: y  -> isCon x && isCon y
-            _        -> False
-
-instance IsExpr a => IsExpr (Equation a) where
-   toExpr eq = toExpr (getLHS eq) :==: toExpr (getRHS eq)
-   fromExpr (e1 :==: e2) = do
-      x <- fromExpr e1
-      y <- fromExpr e2
-      return (x LA.:==: y) 
-   fromExpr _ = Nothing
-   
-instance IsExpr a => IsExpr (Vector a) where
-   toExpr = List . map toExpr . toList
-   fromExpr (List es) = liftM fromList (mapM fromExpr es)
-   fromExpr _ = Nothing

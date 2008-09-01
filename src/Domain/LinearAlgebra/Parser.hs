@@ -29,7 +29,6 @@ import Data.List
 import Data.Char
 import qualified Domain.Math.Expr as Expr
 import Domain.Math.SExpr
-import Domain.Math.Classes
 import Domain.Math.Parser
 import Common.Parsing
 
@@ -37,7 +36,7 @@ import Common.Parsing
 testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
             this -> this -}
 
-parseSystem :: String -> (Context (LinearSystem SExpr), [String])
+parseSystem :: String -> (Context (LinearSystem SExprLin), [String])
 parseSystem = f . parse p . scanWith s
  where
    s0 = newlinesAsSpecial scannerExpr
@@ -46,36 +45,16 @@ parseSystem = f . parse p . scanWith s
    f (Nothing, xs) = (inContext [], "System is not linear" : map show xs)
    f (Just m, xs)  = (m, map show xs)
 
-pSystem :: TokenParser (Maybe (LinearSystem SExpr))
+pSystem :: TokenParser (Maybe (LinearSystem SExprLin))
 pSystem = convertSystem <$> pEquations pExpr
  where
-   convertSystem :: Equations Expr.Expr -> Maybe (LinearSystem SExpr)
-   convertSystem = mapM (f . fmap convertExpr)
-    where f (ma :==: mb) = liftM2 (:==:) ma mb
- 
-   convertExpr :: Expr.Expr -> Maybe (LinearExpr SExpr)
-   convertExpr = fmap (foldr1 (+)) . mapM f . Expr.collectPlus . rewriteMinus
-    where
-      rewriteMinus :: Expr.Expr -> Expr.Expr
-      rewriteMinus = Expr.foldExpr ((+), (*), minus, negate, fromIntegral, (/), sqrt, variable, function)
-       where
-         a `minus` (b Expr.:*: c) 
-            | not (hasVar b) = a + (negate b * c)
-            | not (hasVar c) = a + (b * negate c)
-         a `minus` b = a + negate b
-      
-      f :: Expr.Expr -> Maybe (LinearExpr SExpr)
-      f e = case partition hasVar (Expr.collectTimes e) of
-               ([], es) -> 
-                  Just (toLinearExpr (simplifyExpr (foldr1 (*) es)))
-               ([Expr.Var v], es) 
-                  | null es -> 
-                       Just (var v)
-                  | otherwise ->
-                       Just (var v * toLinearExpr (simplifyExpr (foldr1 (*) es)))
-               _ -> Nothing
-               
-      hasVar = not . null . freeVars
+   convertSystem :: Equations Expr.Expr -> Maybe (LinearSystem SExprLin)
+   convertSystem eqs 
+      | all f simple = return simple
+      | otherwise    = Nothing
+    where 
+       simple = map (fmap simplifyExpr) eqs
+       f (a :==: b) = isLinear a && isLinear b
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations p = pLines True (pEquation p)
@@ -100,7 +79,7 @@ pMatrix p = make <$> pLines True (pList1 p)
  where 
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-parseVectors :: String -> (Context [Vector SExpr], [Message Token])
+parseVectors :: String -> (Context [Vector SExprGS], [Message Token])
 parseVectors = parse p . scanWith s
  where
    s = newlinesAsSpecial scannerExpr

@@ -19,6 +19,7 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.LinearExpr
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
@@ -41,7 +42,7 @@ backwardPass =  label "Backward pass" $
    repeat  $    label "Uncover row"  ruleUncoverRow
            <*>  label "Sweep"        (repeat ruleZerosBP)
 
-backSubstitutionSimple :: (Argument a, Fractional a) => LabeledStrategy (EqsInContext a)
+backSubstitutionSimple :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
 backSubstitutionSimple = label "Back substitution with equally many variables and equations" $
        label "Cover all equations" ruleCoverAllEquations
    <*> repeat (   label "Uncover one equation"  ruleUncoverEquation
@@ -49,11 +50,11 @@ backSubstitutionSimple = label "Back substitution with equally many variables an
               <*> label "Back Substitution"     (repeat ruleBackSubstitution)
               )
 
-backSubstitution :: (Argument a, Fractional a) => LabeledStrategy (EqsInContext a)
+backSubstitution :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
 backSubstitution = label "Back substitution" $ 
    ruleIdentifyFreeVariables <*> backSubstitutionSimple
    
-systemToEchelonWithEEO :: (Argument a, Fractional a) => LabeledStrategy (EqsInContext a)
+systemToEchelonWithEEO :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
 systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
    repeat $   label "Inconsistent system (0=1)" ruleInconsistentSystem
           <|> label "Drop (0=0) equation"       ruleDropEquation
@@ -63,12 +64,12 @@ systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
           <*> label "Eliminate variable"        (repeat ruleEliminateVar)
           <*> label "Cover up first equation"   ruleCoverUpEquation
 
-generalSolutionLinearSystem :: (Argument a, Fractional a) => LabeledStrategy (EqsInContext a)
+generalSolutionLinearSystem :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
 generalSolutionLinearSystem = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 
 
-generalSolutionSystemWithMatrix :: (Argument a, Fractional a) => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
+generalSolutionSystemWithMatrix :: (Argument a, IsLinear a) => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
 generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
    conv1 <*> liftRight toReducedEchelon <*> conv2
 
@@ -81,12 +82,12 @@ gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
 vars :: Var [String]
 vars = "variables" := []
 
-conv1 :: Num a => Rule (Context (Either (LinearSystem a) (Matrix a)))
+conv1 :: IsLinear a => Rule (Context (Either (LinearSystem a) (Matrix a)))
 conv1 = translationToContext "Linear system to matrix" $ \c -> 
    let (m, vs) = systemToMatrix (fromContext c)
    in return $ set vars vs $ fmap (const m) c
  
-conv2 :: Num a => Rule (Context (Either (LinearSystem a) (Matrix a)))
+conv2 :: IsLinear a => Rule (Context (Either (LinearSystem a) (Matrix a)))
 conv2 = translationFromContext "Matrix to linear system" $ \c -> 
    let linsys = matrixToSystemWith (get vars c) (fromContext c)
    in return $ fmap (const linsys) c 

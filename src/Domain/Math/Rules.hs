@@ -54,13 +54,13 @@ checkScope :: (MetaVar a, Uniplate a) => Rule a -> Bool
 checkScope r = null (freeVars rhs \\ freeVars lhs)
  where (lhs, rhs) = rulePair r 0
 
-infixl 1 ~>, #
+infixl 1 ~>, .#.
 
 (~>) :: a -> a -> Triple a
 lhs ~> rhs = Triple lhs rhs mzero
 
-(#) :: Triple a -> Prop (Con a) -> Triple a
-Triple lhs rhs p1 # p2 = Triple lhs rhs (p1 `mappend` p2)
+(.#.) :: Triple a -> Prop (Con a) -> Triple a
+Triple lhs rhs p1 .#. p2 = Triple lhs rhs (p1 `mappend` p2)
 
 -----------------------------------------------------------------------
 -- Rule collections
@@ -150,7 +150,7 @@ ruleZeroNeg = rule0 "Zero neg" $
 ruleZeroDiv, ruleOneDiv :: (MetaVar a, Fractional a) => Rule a
 
 ruleZeroDiv = rule1 "Zero /" $ \x ->
-   0/x ~> 0   # x./=0
+   0/x ~> 0   .#. x./=0
    
 ruleOneDiv = rule1 "One /" $ \x -> 
    x/1 ~> x
@@ -180,13 +180,13 @@ ruleSimplPlusNegComm = rule1 "Simpl + neg Comm" $ \x ->
    x+(-x) ~> 0
    
 ruleSimplDiv = rule1 "Simpl /" $ \x -> 
-   x/x ~> 1   # x./=0
+   x/x ~> 1   .#. x./=0
    
 ruleSimplDivTimes = rule3 "Simpl / *" $ \x y z -> 
-   (x*y)/(x*z) ~> y/z   # x./=0
+   (x*y)/(x*z) ~> y/z   .#. x./=0
 
 ruleSimpleSqrtTimes = rule1 "Simpl sqrt *" $ \x -> 
-   sqrt x*sqrt x ~> x   # x.>=0
+   sqrt x*sqrt x ~> x   .#. x.>=0
 
 -----------------------------------------------------------------------
 -- Distribution rules for Negation
@@ -226,7 +226,7 @@ ruleDistrDivDenom = rule3 "Distr / denom" $ \x y z ->
    x/(y/z) ~> x*(z/y)
    
 ruleDistrSqrtTimes = rule2 "Distr sqrt *" $ \x y -> 
-   sqrt x * sqrt y ~> sqrt (x*y)   # (x.>=0) /\ (y.>=0)
+   sqrt x * sqrt y ~> sqrt (x*y)   .#. (x.>=0) /\ (y.>=0)
   
 -- False! 
 --ruleDistrSqrtDiv = rule2 "Distr sqrt /" $ \x y -> 

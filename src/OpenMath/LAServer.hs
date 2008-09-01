@@ -16,7 +16,7 @@ module OpenMath.LAServer (respond, laServer, laServerFor, versionNr) where
 import OpenMath.StrategyTable
 import OpenMath.Request
 import OpenMath.Reply
-import OpenMath.ObjectParser
+import OpenMath.Conversion
 import Common.Apply
 import Common.Context
 import Common.Transformation
@@ -49,7 +49,7 @@ laServer req =
       [Some (ExprExercise a)] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    
-laServerFor :: IsExpr a => Exercise (Context a) -> Request -> Reply
+laServerFor :: IsOMOBJ a => Exercise (Context a) -> Request -> Reply
 laServerFor a req = 
    case getContextTerm req of
    
@@ -60,7 +60,7 @@ laServerFor a req =
          replyError "request error" ("invalid term for " ++ show (req_Strategy req))
          
       Just requestedTerm ->          
-         case (runPrefixLocation (req_Location req) (getPrefix req (strategy a)) requestedTerm, maybe Nothing (fmap inContext . fromExpr) $ req_Answer req) of
+         case (runPrefixLocation (req_Location req) (getPrefix req (strategy a)) requestedTerm, maybe Nothing (fmap inContext . fromOMOBJ) $ req_Answer req) of
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             
             (answers, Just answeredTerm)
@@ -80,7 +80,7 @@ laServerFor a req =
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
                        , repInc_Location   = subTask (req_Location req) loc
-                       , repInc_Expected   = toExpr (fromContext expected)
+                       , repInc_Expected   = toOMOBJ (fromContext expected)
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
                        , repInc_Steps      = stepsRemaining (getPrefix req (strategy a)) requestedTerm
@@ -91,7 +91,7 @@ laServerFor a req =
                derivation  = 
                   let len      = length $ prefixToSteps $ getPrefix req $ strategy a
                       rules    = stepsToRules $ drop len $ prefixToSteps prefix
-                      f (s, a) = (s, toExpr $ fromContext a)
+                      f (s, a) = (s, toOMOBJ $ fromContext a)
                   in map f (makeDerivation requestedTerm rules)
 
 -- old (current) and actual (next major rule) location

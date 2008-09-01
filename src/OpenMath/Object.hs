@@ -18,7 +18,7 @@ import Data.Char (isSpace)
 
 -- internal representation for OM objects (close to XML)
 data OMOBJ = OMI Integer | OMV String | OMS String String | OMA [OMOBJ] |OMBIND OMOBJ [String] OMOBJ
-   deriving Show
+   deriving (Show, Eq)
 
 ----------------------------------------------------------
 -- conversion functions: XML <-> OMOBJ

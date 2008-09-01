@@ -20,22 +20,23 @@ import Data.List
 import Data.Maybe
 import Control.Monad
 import Common.Utils
+import Common.Uniplate
 
-type LinearSystem a = Equations (LinearExpr a)
+type LinearSystem a = Equations a
 
-getVarsSystem :: LinearSystem a -> [String]
+getVarsSystem :: IsLinear a => LinearSystem a -> [String]
 getVarsSystem = foldr (\(lhs :==: rhs) xs -> getVars lhs `union` getVars rhs `union` xs) []
 
-evalSystem :: Num a => (String -> a) -> LinearSystem a -> Bool
+evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
 evalSystem = all . evalEquationWith . evalLinearExpr
 
-invalidSystem :: Eq a => LinearSystem a -> Bool
+invalidSystem :: IsLinear a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
 
-invalidEquation :: Eq a => Equation (LinearExpr a) -> Bool
+invalidEquation :: IsLinear a => Equation a -> Bool
 invalidEquation (lhs :==: rhs) = null (getVars lhs ++ getVars rhs) && getConstant lhs /= getConstant rhs
 
-getSolution :: Num a => LinearSystem a -> Maybe [(String, LinearExpr a)]
+getSolution :: IsLinear a => LinearSystem a -> Maybe [(String, a)]
 getSolution xs = do
    guard (distinct vars)
    guard (null (vars `intersect` frees))
@@ -48,40 +49,40 @@ getSolution xs = do
       return (v, rhs)
       
 -- No constant on the left, no variables on the right
-inStandardForm :: Num a => Equation (LinearExpr a) -> Bool
+inStandardForm :: IsLinear a => Equation a -> Bool
 inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && null (getVars rhs)
 
-toStandardForm :: Num a => Equation (LinearExpr a) -> Equation (LinearExpr a)
+toStandardForm :: IsLinear a => Equation a -> Equation a
 toStandardForm (lhs :==: rhs) =
-      let c = toLinearExpr (getConstant rhs - getConstant lhs)
+      let c = getConstant rhs - getConstant lhs
       in (lhs - rhs + c) :==: c
 
 
-inSolvedForm :: Num a => LinearSystem a -> Bool
+inSolvedForm :: IsLinear a => LinearSystem a -> Bool
 inSolvedForm xs = invalidSystem xs || isJust (getSolution xs)
 
-homogeneous :: Num a => LinearSystem a -> Bool
-homogeneous = all ((== Just 0) . isConstant . getRHS)
+homogeneous :: IsLinear a => LinearSystem a -> Bool
+homogeneous = all ((== 0) . getRHS)
 
 -- Conversions
-systemToMatrix :: Num a => LinearSystem a -> (Matrix a, [String])
+systemToMatrix :: IsLinear a => LinearSystem a -> (Matrix a, [String])
 systemToMatrix system = (makeMatrix $ map (makeRow . toStandardForm) system, vars)
  where
    vars = getVarsSystem system
    makeRow (lhs :==: rhs) =
       map (`coefficientOf` lhs) vars ++ [getConstant rhs]
 
-matrixToSystem :: Num a => Matrix a -> LinearSystem a
+matrixToSystem :: IsLinear a => Matrix a -> LinearSystem a
 matrixToSystem = matrixToSystemWith variables
 
-matrixToSystemWith :: Num a => [String] -> Matrix a -> LinearSystem a
+matrixToSystemWith :: IsLinear a => [String] -> Matrix a -> LinearSystem a
 matrixToSystemWith vs = map makeEquation . rows
  where
    varList = vs ++ (variables \\ vs)
    makeEquation [] = 0 :==: 0
    makeEquation xs = 
-      let lhs = sum (zipWith (\v a -> toLinearExpr a * var v) varList (init xs))  
-          rhs = toLinearExpr (last xs)
+      let lhs = sum (zipWith (\v a -> a * var v) varList (init xs))  
+          rhs = last xs
       in lhs :==: rhs
             
 variables :: [String]

@@ -17,7 +17,8 @@ import Common.Utils
 import Common.Context
 import Common.Strategy hiding (fail)
 import OpenMath.StrategyTable
-import OpenMath.ObjectParser
+import OpenMath.Object
+import OpenMath.Conversion
 import Service.XML
 import Data.Char
 import Data.Maybe
@@ -28,9 +29,9 @@ import Data.Maybe
 data Request = Request 
    { req_Strategy :: StrategyID 
    , req_Location :: StrategyLocation
-   , req_Term     :: Expr
+   , req_Term     :: OMOBJ
    , req_Context  :: Maybe String
-   , req_Answer   :: Maybe Expr
+   , req_Answer   :: Maybe OMOBJ
    }
  deriving Show
  
@@ -45,9 +46,9 @@ pRequest :: String -> Either String Request
 pRequest input = parseXML input >>= xmlToRequest
 
 -- smart extractor
-getContextTerm :: IsExpr a => Request -> Maybe (Context a)
+getContextTerm :: IsOMOBJ a => Request -> Maybe (Context a)
 getContextTerm req = do
-   a <- fromExpr (req_Term req)
+   a <- fromOMOBJ (req_Term req)
    return (putInContext req a)
 
 putInContext :: Request -> a -> Context a
@@ -84,12 +85,12 @@ extractLocation = extractTextWith $ \s ->
       [(n, xs)] | all isSpace xs -> return n
       _                          -> fail "invalid location"
 
-extractExpr :: String -> XML -> Either String Expr
+extractExpr :: String -> XML -> Either String OMOBJ
 extractExpr n xml = do
    this <- case extract n xml of 
               Just [expr] -> return expr
               _           -> fail $ "error in " ++ n
-   xmlToExpr this
+   xml2omobj this
 
 optional :: Either String a -> Either String (Maybe a)
 optional = Right . either (const Nothing) Just
@@ -104,12 +105,12 @@ requestToXML :: Request -> XML
 requestToXML req = Tag "request" [("service", "mathdox")] $
    [ Tag "strategy" [] [Text $ req_Strategy req]
    , Tag "location" [] [Text $ show $ req_Location req]
-   , Tag "term"     [] [exprToXML $ req_Term req]
+   , Tag "term"     [] [omobj2xml $ req_Term req]
    ] ++ 
    [ Tag "context" [] [Text $ fromJust $ req_Context req ]
    | isJust (req_Context req)
    ] ++
-   [ Tag "answer" [] [exprToXML $ fromJust $ req_Answer req]
+   [ Tag "answer" [] [omobj2xml $ fromJust $ req_Answer req]
    | isJust (req_Answer req)
    ]
    

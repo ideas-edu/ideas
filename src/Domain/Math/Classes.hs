@@ -4,9 +4,9 @@ import Common.Uniplate
 import Data.List
 
 class Symbolic a where
-   variable :: String -> a
-   symbol   :: String -> a
-   function :: String -> [a] -> a
+   variable   :: String -> a
+   symbol     :: String -> a
+   function   :: String -> [a] -> a
    -- default definition
    symbol s = function s []
 

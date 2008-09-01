@@ -33,7 +33,7 @@ import Domain.Math.Classes
 import Domain.Math.SExpr
 import Domain.Math.Parser
 
-solveGramSchmidt :: Exercise (Context [Vector SExpr])
+solveGramSchmidt :: Exercise (Context [Vector SExprGS])
 solveGramSchmidt = makeExercise
    { shortTitle    = "Gram-Schmidt"
    , parser        = \s -> case parseVectors s of
@@ -48,7 +48,7 @@ solveGramSchmidt = makeExercise
    , generator     = liftM inContext arbBasis 
    }
 
-solveSystemExercise :: Exercise (EqsInContext SExpr)
+solveSystemExercise :: Exercise (EqsInContext SExprLin)
 solveSystemExercise = makeExercise
    { shortTitle    = "Solve Linear System"
    , parser        = \s -> case parseSystem s of
@@ -62,7 +62,7 @@ solveSystemExercise = makeExercise
    , finalProperty = inSolvedForm . equations
    , strategy      = generalSolutionLinearSystem
    , generator     = do m <- generator reduceMatrixExercise
-                        return $ fmap matrixToSystem m
+                        return $ forget1 $ fmap matrixToSystem m
    }
    
 reduceMatrixExercise :: Exercise (MatrixInContext SExpr)
@@ -83,7 +83,7 @@ solveSystemWithMatrixExercise :: Exercise (Context (Either (LinearSystem SExpr) 
 solveSystemWithMatrixExercise = makeExercise
    { shortTitle    = "Solve Linear System with Matrix"
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
-                              (Right ok, _) -> Right (fmap Left ok)
+                              (Right ok, _) -> Right (fmap (Left . forget2) ok)
                               (_, Right ok) -> Right (fmap Right ok)
                               (Left _, Left _) -> Left (text "Error") -- FIX THIS
    , prettyPrinter = either (unlines . map show . id) ppMatrix . fromContext
@@ -93,7 +93,7 @@ solveSystemWithMatrixExercise = makeExercise
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
    , finalProperty = either inSolvedForm (const False) . fromContext
    , strategy      = generalSolutionSystemWithMatrix
-   , generator     = liftM (fmap Left) (generator solveSystemExercise)
+   , generator     = liftM (fmap (Left . forget2)) (generator solveSystemExercise)
    }
 
 opgave6b :: Exercise (MatrixInContext SExpr)
@@ -112,10 +112,16 @@ opgaveVarMatrix = reduceMatrixExercise
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 
-instance Argument SExpr where
+forget1 :: EqsInContext SExpr -> EqsInContext SExprLin
+forget1 = fmap (map (fmap forget))
+   
+forget2 :: LinearSystem SExprLin -> LinearSystem SExpr
+forget2 = map (fmap forget)
+
+instance Simplification a => Argument (SExprF a) where
    makeArgDescr = argDescrSExpr
 
-argDescrSExpr :: String -> ArgDescr SExpr
+argDescrSExpr :: Simplification a => String -> ArgDescr (SExprF a)
 argDescrSExpr descr = ArgDescr descr Nothing parseRatio show
  where
    parseRatio = either (const Nothing) (Just . simplifyExpr) . parseExpr
@@ -128,7 +134,7 @@ instance Arbitrary a => Arbitrary (Vector a) where
    arbitrary = oneof $ map (return . fromInteger) [-10 .. 10]
    coarbitrary = coarbitrary . fromMySqrt -}
 
-arbBasis :: Gen [Vector SExpr]
+arbBasis :: Simplification a => Gen [Vector (SExprF a)]
 arbBasis = do
    --i <- oneof $ map return [0..5]
    --j <- oneof $ map return [0..5]

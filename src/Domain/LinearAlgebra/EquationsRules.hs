@@ -27,12 +27,12 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.MatrixRules (covered) -- for context
 import Test.QuickCheck -- hopefully, temporarily
 
-equationsRules :: (Argument a, Fractional a) => [Rule (EqsInContext a)]
+equationsRules :: (Argument a, IsLinear a) => [Rule (EqsInContext a)]
 equationsRules = [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation, ruleInconsistentSystem
                  , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
                  , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations ]
 
-ruleExchangeEquations :: Rule (EqsInContext a)
+ruleExchangeEquations :: IsLinear a => Rule (EqsInContext a)
 ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
  where
    descr  = ("equation 1", "equation 2")
@@ -40,7 +40,7 @@ ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y ->
                i  <- findIndex (elem mv . getVarsSystem . return) (remaining c)
                return (get covered c, get covered c + i)
 
-ruleEliminateVar :: (Argument a, Fractional a) => Rule (EqsInContext a)
+ruleEliminateVar :: (Argument a, IsLinear a) => Rule (EqsInContext a)
 ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
    descr  = ("equation 1", "equation 2", "scale factor")
@@ -53,19 +53,19 @@ ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x
       let v = negate coef / getCoef hd
       return ( i + get covered c + 1, get covered c, v)
 
-ruleDropEquation :: Eq a => Rule (EqsInContext a)
+ruleDropEquation :: IsLinear a => Rule (EqsInContext a)
 ruleDropEquation = makeSimpleRule "Drop (0=0) equation" $ 
    \c -> do i <- findIndex (fromMaybe False . testConstants (==)) (equations c)
             return $ change covered (\n -> if i < n then n-1 else n)
                    $ fmap (deleteIndex i) c
 
-ruleInconsistentSystem :: Num a => Rule (EqsInContext a)
+ruleInconsistentSystem :: IsLinear a => Rule (EqsInContext a)
 ruleInconsistentSystem = makeSimpleRule "Inconsistent system (0=1)" $ 
    \c -> do let stop = [0 :==: 1]
             guard $ invalidSystem (equations c) && equations c /= stop
             return $ set covered 1 (fmap (const stop) c)
 
-ruleScaleEquation :: (Argument a, Fractional a) => Rule (EqsInContext a)
+ruleScaleEquation :: (Argument a, IsLinear a) => Rule (EqsInContext a)
 ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
  where
    descr  = ("equation", "scale factor")
@@ -76,7 +76,7 @@ ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args
                let coef = 1 / coefficientOf mv expr
                return (get covered c, coef)
    
-ruleBackSubstitution :: (Argument a, Num a) => Rule (EqsInContext a)
+ruleBackSubstitution :: (Argument a, IsLinear a) => Rule (EqsInContext a)
 ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
    descr  = ("equation 1", "equation 2", "scale factor")
@@ -87,7 +87,7 @@ ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args 
                let coef = negate $ coefficientOf mv (getLHS (equations c !! i))
                return (i, get covered c, coef)
 
-ruleIdentifyFreeVariables :: Num a => Rule (EqsInContext a)
+ruleIdentifyFreeVariables :: IsLinear a => Rule (EqsInContext a)
 ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $
    \c ->  let vars = [ head ys | ys <- map (getVars . getLHS) (equations c), not (null ys) ]
               change eq =
@@ -110,11 +110,10 @@ deleteIndex :: Int -> [a] -> [a]
 deleteIndex i xs = ys ++ drop 1 zs
  where (ys, zs) = splitAt i xs
 
-testConstants :: (a -> a -> Bool) -> Equation (LinearExpr a) -> Maybe Bool
-testConstants f eq = do
-   x <- isConstant (getLHS eq)
-   y <- isConstant (getRHS eq)
-   return (f x y)
+testConstants :: IsLinear a => (a -> a -> Bool) -> Equation a -> Maybe Bool
+testConstants f (lhs :==: rhs)
+   | isConstant lhs && isConstant rhs = Just (f lhs rhs)
+   | otherwise = Nothing
 
 ---------------------------------------------------------------------------------
 -- Parameterized transformations
@@ -128,18 +127,18 @@ exchange i j
             (middle, y:end) = splitAt (j-i-1) rest
         return $ begin++[y]++middle++[x]++end
 
-scaleEquation :: Num a => Int -> a -> Transformation (LinearSystem a)
+scaleEquation :: IsLinear a => Int -> a -> Transformation (LinearSystem a)
 scaleEquation i a = makeTrans $ \xs -> do
    guard (a `notElem` [0,1])
    let (begin, this:end) = splitAt i xs
-   return (begin ++ [fmap (toLinearExpr a*) this] ++ end)
+   return (begin ++ [fmap (a*) this] ++ end)
       
-addEquations :: Num a => Int -> Int -> a -> Transformation (LinearSystem a)
+addEquations :: IsLinear a => Int -> Int -> a -> Transformation (LinearSystem a)
 addEquations i j a = makeTrans $ \xs -> do
    guard (i/=j)
    let (begin, this:end) = splitAt i xs
        exprj = xs!!j
-   return $ begin++[combineWith (+) this (fmap (toLinearExpr a*) exprj)]++end
+   return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
 
 changeCover :: (Int -> Int) -> Transformation (EqsInContext a)
 changeCover f = makeTrans $ \c -> do
@@ -156,11 +155,11 @@ equations :: EqsInContext a -> LinearSystem a
 equations = fromContext
 
 -- | The equations that remain to be solved
-remaining :: EqsInContext a -> Equations (LinearExpr a)
+remaining :: EqsInContext a -> Equations a
 remaining c = drop (get covered c) (equations c)
 
 -- | The minimal variable in the remaining equations
-minvar :: EqsInContext a -> Maybe String
+minvar :: IsLinear a => EqsInContext a -> Maybe String
 minvar c | null list = Nothing
          | otherwise = Just (minimum list)
  where
@@ -171,13 +170,13 @@ liftSystemTrans f = makeTrans $ \c -> do
    new <- apply f (equations c) 
    return (fmap (const new) c)
 
-systemInNF :: (Arbitrary a, Num a) => Gen (LinearSystem a)
+systemInNF :: (Arbitrary a, IsLinear a) => Gen (LinearSystem a)
 systemInNF = do
    n <- arbitrary
-   replicateM n $ liftM2 (:==:) arbitrary (liftM toLinearExpr arbitrary)
+   replicateM n $ liftM2 (:==:) arbitrary arbitrary
 
 toIntegerSystem :: RealFrac a => LinearSystem a -> LinearSystem Integer
-toIntegerSystem = map (fmap (fmap round))
+toIntegerSystem = map (fmap round)
 
 fromIntegerSystem :: RealFrac a => LinearSystem Integer -> LinearSystem a
-fromIntegerSystem = map (fmap (fmap fromInteger))
+fromIntegerSystem = map (fmap fromInteger)

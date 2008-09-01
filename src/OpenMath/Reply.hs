@@ -18,7 +18,7 @@ module OpenMath.Reply
 
 import Common.Strategy hiding (not)
 import OpenMath.StrategyTable
-import OpenMath.ObjectParser
+import OpenMath.Object
 import Service.XML
 
 ------------------------------------------------------------------------
@@ -39,8 +39,8 @@ data ReplyOk = ReplyOk
 data ReplyIncorrect = ReplyIncorrect
    { repInc_Strategy   :: StrategyID
    , repInc_Location   :: StrategyLocation
-   , repInc_Expected   :: Expr
-   , repInc_Derivation :: [(String, Expr)]
+   , repInc_Expected   :: OMOBJ
+   , repInc_Derivation :: [(String, OMOBJ)]
    , repInc_Arguments  :: Args
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
@@ -80,14 +80,14 @@ replyIncorrectToXML :: ReplyIncorrect -> XML
 replyIncorrectToXML r = xmlResult "incorrect" $ xmlList (
    [ ("strategy",   Text $ repInc_Strategy r)
    , ("location",   Text $ show $ repInc_Location r)
-   , ("expected",   exprToXML $ repInc_Expected r)
+   , ("expected",   omobj2xml $ repInc_Expected r)
    ] ++
    [ ("steps",      Text $ show $ repInc_Steps r)
    , ("equivalent", Text $ show $ repInc_Equivalent r)
    ]) ++ [ Tag "arguments" [] (map (\(x,y) -> Tag "elem" [("descr", x)] [Text y]) (repInc_Arguments r))
          | not (null $ repInc_Arguments r)
          ]
-      ++ [ Tag "derivation" [] (map (\(x,y) -> Tag "elem" [("ruleid", x)] [exprToXML y]) (repInc_Derivation r))
+      ++ [ Tag "derivation" [] (map (\(x,y) -> Tag "elem" [("ruleid", x)] [omobj2xml y]) (repInc_Derivation r))
          | not (null $  repInc_Derivation r)
          ]
 

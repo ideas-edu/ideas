@@ -1,4 +1,5 @@
-module Domain.Math.SExpr (SExpr, toExpr, simplifyExpr, simplify, hasSquareRoot) where
+{-# OPTIONS -XEmptyDataDecls #-}
+module Domain.Math.SExpr (SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr, simplifyExpr, simplify, hasSquareRoot) where
 
 import Common.Utils
 import Common.Uniplate
@@ -11,21 +12,45 @@ import Control.Monad
 import Data.List
 import Data.Ratio
 import Data.Maybe
-import Data.Monoid
+import qualified Data.Map as M
+--import Data.Monoid
 import Test.QuickCheck
 
-newtype SExpr = SExpr (Constrained (Con Expr) Expr)
+class Simplification a where
+   simplifyWith :: a -> Expr -> Constrained (Con Expr) Expr
+   
+data NORMAL
+data GRAMSCHMIDT
+data LINEAR
 
-instance Show SExpr where
+instance Simplification NORMAL where
+   simplifyWith _ = simplify
+
+instance Simplification GRAMSCHMIDT where
+   simplifyWith _ = simplifyGS
+   
+instance Simplification LINEAR where
+   simplifyWith _ = simplifyLin
+   
+type SExpr    = SExprF NORMAL
+type SExprGS  = SExprF GRAMSCHMIDT
+type SExprLin = SExprF LINEAR
+
+forget :: SExprF a -> SExprF b
+forget (SExprF a) = SExprF a
+
+newtype SExprF a = SExprF (Constrained (Con Expr) Expr)
+
+instance Simplification a => Show (SExprF a) where
    show = show . toExpr -- !!
 
-instance Eq SExpr where
-   x == y =  let nonsense (SExpr e) = contradiction (proposition e) in
+instance Simplification a => Eq (SExprF a) where
+   x == y =  let nonsense (SExprF e) = contradiction (proposition e) in
              equalACs exprACs (toExpr x) (toExpr y)
           || nonsense x
           || nonsense y
 
-instance Num SExpr where
+instance Simplification a => Num (SExprF a) where
    (+) = liftS2 (+)
    (*) = liftS2 (*)
    (-) = liftS2 (-)
@@ -34,11 +59,11 @@ instance Num SExpr where
    abs         = liftS abs
    signum      = liftS signum
 
-instance Fractional SExpr where
+instance Simplification a => Fractional (SExprF a) where
    (/) = liftS2 (/)
    fromRational = make . fromRational
    
-instance Floating SExpr where
+instance Simplification a => Floating (SExprF a) where
    pi      = make   pi
    sqrt    = liftS  sqrt
    (**)    = liftS2 (**)
@@ -58,32 +83,35 @@ instance Floating SExpr where
    atanh   = liftS  atanh
    acosh   = liftS  acosh
     
-instance Symbolic SExpr where
+instance Simplification a => Symbolic (SExprF a) where
    variable   = make . variable
    function s = liftSs (function s)
    
-instance Arbitrary SExpr where
+instance Simplification a => Arbitrary (SExprF a) where
    arbitrary   = liftM (make . return) arbitrary -- !!
    coarbitrary = coarbitrary . toExpr -- !!
    
-toExpr :: SExpr -> Expr -- !!!
-toExpr (SExpr e) = fromConstrained e
+toExpr :: SExprF a -> Expr -- !!!
+toExpr (SExprF e) = fromConstrained e
 
-simplifyExpr :: Expr -> SExpr
+simplifyExpr :: Simplification a => Expr -> SExprF a
 simplifyExpr = make . return
 
-liftS  f (SExpr a)           = make $ f a
-liftS2 f (SExpr a) (SExpr b) = make $ f a b
-liftSs f xs = make $ f [ e | SExpr e <- xs ]
+liftS  f (SExprF a)            = make $ f a
+liftS2 f (SExprF a) (SExprF b) = make $ f a b
+liftSs f xs = make $ f [ e | SExprF e <- xs ]
 
-make :: Constrained (Con Expr) Expr -> SExpr
-make = simplify . SExpr
+make :: Simplification a => Constrained (Con Expr) Expr -> SExprF a
+make c = let result = SExprF $ simplifyWith (f result) (fromConstrained c)
+             f :: SExprF a -> a
+             f = error "Simplification"
+         in result
 
 -----------------------------------------------------------------------
 -- Simplifications
 
-simplify :: SExpr -> SExpr
-simplify (SExpr c) = SExpr $ g $ liftM rewriteGS c >>= fixpointM (transformM f)
+simplify :: Expr -> Constrained (Con Expr) Expr
+simplify = g . fixpointM (transformM f)
  where
    f a = (return . constantPropagation) a >>= applyRules >>= (return . simplifySquareRoots)
    g (C c a) = C (simplifyPropCon c) a
@@ -130,6 +158,9 @@ applyRules e =
         , rule3 "Temp4" $ \x y z -> (x/z) + (y/z) ~> (x+y)/z
         , rule2 "Temp5" $ \x y -> (x/y)/y ~> x/(y*y)
         ]
+
+simplifyGS :: Expr -> Constrained (Con Expr) Expr
+simplifyGS = simplify . rewriteGS
 
 -- Gram-Schmidt view
 data ViewGS = PlusGS ViewGS ViewGS | TimesGS Rational Integer
@@ -195,11 +226,62 @@ fromViewGS :: ViewGS -> Expr
 fromViewGS (PlusGS a b)  = fromViewGS a + fromViewGS b
 fromViewGS (TimesGS r n) = fromRational r * sqrt (fromIntegral n)
 
+-- Linear expressions view
+simplifyLin :: Expr -> Constrained (Con Expr) Expr
+simplifyLin = simplify . rewriteLin
+
+-- invariant: coefficients are /= 0
+data ViewLin = Lin (M.Map String Expr) Expr
+   deriving (Show, Eq)
+   
+rewriteLin :: Expr -> Expr
+rewriteLin e = maybe e fromViewLin (toViewLin e)
+
+toViewLin :: Expr -> Maybe ViewLin
+toViewLin (a :+: b) 
+   | otherwise = do
+        Lin m1 e1 <- toViewLin a
+        Lin m2 e2 <- toViewLin b
+        return $ makeLin (M.unionWith (+) m1 m2) (e1+e2)
+toViewLin (a :*: (b :+: c)) | isConstant a =
+   toViewLin ((a :*: b) + (a :*: c))
+toViewLin ((a :+: b) :*: c) | isConstant c =
+   toViewLin ((a :*: c) + (b :*: c))
+toViewLin a = do
+   (ms, e) <- toP a
+   return $ case ms of
+      Just s  -> makeLin (M.singleton s e) 0
+      Nothing -> makeLin M.empty e
+ where
+   toP :: Expr -> Maybe (Maybe String, Expr)
+   toP (Var s) = Just (Just s, 1)
+   toP (a :*: b)
+      | isConstant a = do
+           (ms, e) <- toP b
+           return (ms, a :*: e)
+      | isConstant b =
+           toP (b :*: a)
+      | otherwise = 
+           Nothing
+   toP e 
+      | isConstant e = Just (Nothing, e)
+      | otherwise = Nothing
+
+isConstant :: Expr -> Bool
+isConstant = null . collectVars
+
+makeLin :: M.Map String Expr -> Expr -> ViewLin
+makeLin m c = Lin (M.filter (/=0) m) c
+
+fromViewLin :: ViewLin -> Expr
+fromViewLin (Lin m c) = foldr op c (M.toList m)
+ where op (s, e) x = Var s*e + x
+
 -----------------------------------------------------------------------
 -- Simplifications for constraints
 
 simplifyPropCon :: Prop (Con Expr) -> Prop (Con Expr)
-simplifyPropCon = fixpoint (mapProp simplifyCon . simplifyProp)
+simplifyPropCon = id {- fixpoint (mapProp simplifyCon . simplifyProp)
 
 simplifyCon :: Con Expr -> Prop (Con Expr)
 simplifyCon = convert . fmap simplifyExpr
@@ -234,11 +316,11 @@ simplifyCon = convert . fmap simplifyExpr
  
    convert :: Con SExpr -> Prop (Con Expr)
    convert c = f (fmap toExpr c) `mplus`
-               msum [ proposition e | SExpr e <- flattenCon c ]
+               msum [ proposition e | SExprF e <- flattenCon c ]
    
    flattenCon :: Con a -> [a] -- can be done generically
    flattenCon con =
       case con of
          x :==: y -> [x,y]
          x :<:  y -> [x,y]
-         WF x     -> [x]
+         WF x     -> [x] -}

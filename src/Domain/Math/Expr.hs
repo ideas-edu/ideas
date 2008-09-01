@@ -204,3 +204,6 @@ collectTimes = collectAC timesAC
 
 size :: Expr -> Int
 size e = 1 + compos 0 (+) size e
+
+collectVars :: Expr -> [String]
+collectVars e = [ s | Var s <- universe e ]

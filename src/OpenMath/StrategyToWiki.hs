@@ -18,7 +18,8 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils (Some(..))
 import OpenMath.StrategyTable
-import OpenMath.ObjectParser
+import OpenMath.Object
+import OpenMath.Conversion
 import OpenMath.Request
 import Data.Char
 import Data.List
@@ -108,11 +109,11 @@ makeBlocks (x:xs)
  where
    fn = takeWhile isAlphaNum x
 
-makeExamples :: String -> [Expr] -> String
+makeExamples :: String -> [OMOBJ] -> String
 makeExamples name = unlines . map (f . oneliner . ppRequest . makeRequest name)
  where f s = "* Example [" ++ defaultURL True ++ escapeForWiki s ++ "]"
 
-makeRequest :: String -> Expr -> Request
+makeRequest :: String -> OMOBJ -> Request
 makeRequest name term = Request 
    { req_Strategy = name
    , req_Location = []

@@ -25,7 +25,6 @@ import Common.Exercise (Exercise(..), showDoc)
 import Common.Parsing (indicesToRange)
 import Common.Logging
 import Common.Transformation
-import Common.Strategy hiding (not)
 import Common.Apply
 import Common.Utils
 import Data.List
@@ -68,7 +67,7 @@ newTerm session@(Session _ ref) = do
        
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
-   modifyIORef ref $ \st@(Some d) -> Some (undoLast d)
+   modifyIORef ref $ \(Some d) -> Some (undoLast d)
  
 submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
@@ -88,9 +87,9 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
                | otherwise -> do
                     writeIORef ref $ Some (extendDerivation new d)
                     return ("Well done! You applied rule " ++ show rs, True)
-            TAS.Detour rs new -> 
+            TAS.Detour rs _ -> 
                return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy", False)
-            TAS.Unknown new -> 
+            TAS.Unknown _ -> 
                return ("Equivalent, but not a known rule. Please retry.", False)
 
 currentText :: Session -> IO String
@@ -118,7 +117,7 @@ hintOrStep verbose = withState $ \d ->
    case TAS.allfirsts (currentState d) of
       [] -> 
          return "Sorry, no hint available"
-      (rule, loc, s):_ ->
+      (rule, _, s):_ ->
          return $ unlines $
             [ "Use rule " ++ name rule
             ] ++
@@ -199,19 +198,17 @@ extendDerivation x (D xs) = D (x:xs)
 
 current :: Derivation a -> Context a
 current (D (s:_)) = TAS.term s
+current _ = error "Session.current: empty list"
 
 exercise :: Derivation a -> Exercise (Context a)
 exercise (D (s:_)) = TAS.exercise s
+exercise _ = error "Session.exercise: empty list"
 
 currentState :: Derivation a -> TAS.State a
 currentState (D xs) = head xs
 
-currentPrefix :: Derivation a -> Prefix (Context a)
-currentPrefix (D (s:_)) = fromMaybe (error "no prefix") (TAS.prefix s)
-
 showDerivation :: (Context a -> String) -> Derivation a -> String
 showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (TAS.term s) | s <- xs ] 
-
 
 derivationLength :: Derivation a -> Int
 derivationLength (D xs) = length xs - 1

@@ -21,15 +21,16 @@ import Common.Unification
 type LogicRule = Rule Logic  
 
 logicRules :: [LogicRule]
-logicRules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
-             , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
-             , ruleDefImpl, ruleDefEquiv
-             , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-	     , ruleComplOr, ruleComplAnd
-	     , ruleIdempOr, ruleIdempAnd
-	     , ruleAbsorpOr, ruleAbsorpAnd
-	     , ruleCommOr, ruleCommAnd
-             ]
+logicRules = 
+   [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
+   , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
+   , ruleDefImpl, ruleDefEquiv
+   , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
+   , ruleComplOr, ruleComplAnd
+   , ruleIdempOr, ruleIdempAnd
+   , ruleAbsorpOr, ruleAbsorpAnd
+   , ruleCommOr, ruleCommAnd
+   ]
 
 logicBuggyRules :: [LogicRule]
 logicBuggyRules = [ buggyRuleCommImp, buggyRuleAssImp

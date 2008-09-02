@@ -83,7 +83,7 @@ applicable loc state =
 apply :: Rule (Context a) -> Location -> State a -> State a
 apply r loc state = maybe applyOff applyOn (prefix state)
  where
-   applyOn p = -- scenario 1: on-strategy
+   applyOn _ = -- scenario 1: on-strategy
       fromMaybe applyOff $ safeHead
       [ s1 | (r1, loc1, s1) <- allfirsts state, name r == name r1, loc==loc1 ]
       
@@ -111,9 +111,9 @@ submit state new
         maybe applyOff applyOn (prefix state)
 
  where
-   applyOn p = -- scenario 1: on-strategy
+   applyOn _ = -- scenario 1: on-strategy
       fromMaybe applyOff $ safeHead
-      [ Ok [r1] s1 | (r1, loc1, s1) <- allfirsts state, equality (exercise state) new (term s1) ]      
+      [ Ok [r1] s1 | (r1, _, s1) <- allfirsts state, equality (exercise state) new (term s1) ]      
    
    applyOff = -- scenario 2: off-strategy
       let newState = state { term=new }

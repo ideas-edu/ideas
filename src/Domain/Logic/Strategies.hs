@@ -27,7 +27,7 @@ eliminateConstants = repeat $ topDown $
            , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
            , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
            ]
-	   
+
 eliminateConstantsDWA :: Strategy (Context Logic)
 eliminateConstantsDWA = somewhere $
    alternatives $ map liftRuleToContext rules
@@ -38,7 +38,7 @@ eliminateConstantsDWA = somewhere $
 
 simplifyDWA :: Strategy (Context Logic)
 simplifyDWA = somewhere $
-   	  liftRuleToContext ruleNotNot
+          liftRuleToContext ruleNotNot
       <|> liftRuleToContext ruleIdempOr
       <|> liftRuleToContext ruleIdempAnd
       <|> liftRuleToContext ruleAbsorpOr

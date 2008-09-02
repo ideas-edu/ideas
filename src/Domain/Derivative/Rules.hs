@@ -99,7 +99,7 @@ tidyRule = makeSimpleRule "Tidy-up rule" f
    f (x :*: Con 1) = return x
    f (Con 0 :+: x) = return x
    f (x :+: Con 0) = return x
-   f (x :^: Con 0) = return $ Con 1
+   f (_ :^: Con 0) = return $ Con 1
    f (x :^: Con 1) = return x
 
    f _ = Nothing

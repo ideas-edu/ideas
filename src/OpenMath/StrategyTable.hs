@@ -23,13 +23,14 @@ import Domain.LinearAlgebra.Equation (Equation)
 import Domain.LinearAlgebra.Vector (fromList)
 import Domain.Math.SExpr
 import qualified Domain.LinearAlgebra.Equation as LA
+import qualified Service.Options
 import OpenMath.Conversion
 import OpenMath.Object
 
 type StrategyID = String
 
 versionNr :: String
-versionNr = "0.4.0"
+versionNr = Service.Options.versionNr
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines

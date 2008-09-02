@@ -233,39 +233,56 @@ simplifyLin = simplify . rewriteLin
 -- invariant: coefficients are /= 0
 data ViewLin = Lin (M.Map String Expr) Expr
    deriving (Show, Eq)
-   
+
 rewriteLin :: Expr -> Expr
 rewriteLin e = maybe e fromViewLin (toViewLin e)
 
 toViewLin :: Expr -> Maybe ViewLin
-toViewLin (a :+: b) 
-   | otherwise = do
-        Lin m1 e1 <- toViewLin a
-        Lin m2 e2 <- toViewLin b
-        return $ makeLin (M.unionWith (+) m1 m2) (e1+e2)
-toViewLin (a :*: (b :+: c)) | isConstant a =
-   toViewLin ((a :*: b) + (a :*: c))
-toViewLin ((a :+: b) :*: c) | isConstant c =
-   toViewLin ((a :*: c) + (b :*: c))
-toViewLin a = do
-   (ms, e) <- toP a
-   return $ case ms of
-      Just s  -> makeLin (M.singleton s e) 0
-      Nothing -> makeLin M.empty e
+toViewLin expr =
+   case expr of
+      a :+: b -> do
+         Lin m1 e1 <- toViewLin a
+         Lin m2 e2 <- toViewLin b
+         return $ makeLin (M.unionWith (+) m1 m2) (e1+e2)
+      Negate a -> do
+         Lin m e <- toViewLin a
+         return $ Lin (M.map negate m) (negate e)
+      a :-: b ->
+         toViewLin (a :+: negate b)
+      a :*: b 
+         | isConstant a -> do
+              Lin m e <- toViewLin b
+              return $ Lin (M.map (a*) m) (a*e)
+         | isConstant b -> do
+              Lin m e <- toViewLin a
+              return $ Lin (M.map (*b) m) (e*b)
+      a :/: b
+         | isConstant b -> do
+              Lin m e <- toViewLin a
+              return $ Lin (M.map (/b) m) (e/b)
+      _ -> do
+         (ms, e) <- toProduct expr
+         return $ case ms of
+            Just s  -> makeLin (M.singleton s e) 0
+            Nothing -> makeLin M.empty e
  where
-   toP :: Expr -> Maybe (Maybe String, Expr)
-   toP (Var s) = Just (Just s, 1)
-   toP (a :*: b)
-      | isConstant a = do
-           (ms, e) <- toP b
-           return (ms, a :*: e)
-      | isConstant b =
-           toP (b :*: a)
-      | otherwise = 
-           Nothing
-   toP e 
-      | isConstant e = Just (Nothing, e)
-      | otherwise = Nothing
+   toProduct :: Expr -> Maybe (Maybe String, Expr)
+   toProduct expr =
+      case expr of
+         Var s -> return (Just s, 1)
+         a :*: b 
+            | isConstant a -> do
+                 (ms, e) <- toProduct b
+                 return (ms, a*e)
+            | isConstant b -> do
+                 (ms, e) <- toProduct a
+                 return (ms, e*b)
+            | otherwise -> 
+                 Nothing
+         _  | isConstant expr ->
+                 return (Nothing, expr)
+            | otherwise ->
+                 Nothing
 
 isConstant :: Expr -> Bool
 isConstant = null . collectVars

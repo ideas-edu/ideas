@@ -1,14 +1,8 @@
 module Domain.Math.Rules where
 
-import Common.Uniplate
 import Common.Rewriting
 import Common.Rewriting.Rule (Rule)
-import Control.Monad
-import qualified Data.IntSet as IS
 import Data.List
-import Data.Monoid
-import Data.Maybe
-import Domain.Math.Constrained
 
 -----------------------------------------------------------------------
 -- Rule collections

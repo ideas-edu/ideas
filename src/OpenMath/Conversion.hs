@@ -18,7 +18,7 @@ import OpenMath.Object
 import Domain.LinearAlgebra.Vector
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Equation
-import Domain.Math.Classes
+import Domain.Math.Symbolic
 import Domain.Math.Expr
 import Domain.Math.SExpr
 import Data.Maybe

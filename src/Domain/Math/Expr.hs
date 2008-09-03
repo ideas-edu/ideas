@@ -6,8 +6,7 @@ import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
 import Common.Rewriting
-import Domain.Math.Classes
-import Domain.Math.Rewriting
+import Domain.Math.Symbolic
 
 -----------------------------------------------------------------------
 -- Expression data type

@@ -1,7 +1,7 @@
 module Domain.Math.Parser where
 
 import Common.Parsing hiding (pParens)
-import Domain.Math.Classes
+import Domain.Math.Symbolic
 import Domain.Math.Expr
 
 scannerExpr :: Scanner

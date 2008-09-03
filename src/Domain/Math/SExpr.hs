@@ -2,13 +2,12 @@
 module Domain.Math.SExpr (SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr, simplifyExpr, simplify, hasSquareRoot) where
 
 import Common.Utils
-import Common.Uniplate
+import Common.Uniplate (transformM, children)
 import Common.Rewriting
-import Domain.Math.Classes
+import Domain.Math.Symbolic
 import Domain.Math.Expr
 import Domain.Math.Constrained
 import Domain.Math.Rules
-import Domain.Math.Rewriting
 import Control.Monad
 import Data.List
 import Data.Ratio
@@ -145,19 +144,19 @@ hasSquareRoot n
 
 applyRules :: Expr -> Constrained (Con Expr) Expr
 applyRules e = 
-   fromMaybe (return e) $ safeHead [ constrain p >> return a | r <- rs, (a, p) <- rulematchM r e ]
+   fromMaybe (return e) $ safeHead [ {- constrain p >> -} return a | r <- rs, a <- rewriteM r e ]
  where
-   rs = [ rule2 "Def. minus" $ \x y -> x-y ~> x+(-y)
+   rs = [ rule2 "Def. minus" $ \x y -> x-y :~> x+(-y)
         , ruleZeroPlus, ruleZeroPlusComm 
         , ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm
         , ruleInvNeg, ruleZeroNeg
         , ruleZeroDiv, ruleOneDiv
         , ruleSimplPlusNeg, ruleSimplPlusNegComm
         , ruleSimplDiv, ruleSimpleSqrtTimes
-        , rule2 "Temp1" $ \x y -> x * (1/y) ~> x/y
-        , rule3 "Temp3" $ \x y z -> (x/z) * (y/z) ~> (x*y)/(z*z)
-        , rule3 "Temp4" $ \x y z -> (x/z) + (y/z) ~> (x+y)/z
-        , rule2 "Temp5" $ \x y -> (x/y)/y ~> x/(y*y)
+        , rule2 "Temp1" $ \x y -> x * (1/y) :~> x/y
+        , rule3 "Temp3" $ \x y z -> (x/z) * (y/z) :~> (x*y)/(z*z)
+        , rule3 "Temp4" $ \x y z -> (x/z) + (y/z) :~> (x+y)/z
+        , rule2 "Temp5" $ \x y -> (x/y)/y :~> x/(y*y)
         ]
 
 simplifyGS :: Expr -> Constrained (Con Expr) Expr

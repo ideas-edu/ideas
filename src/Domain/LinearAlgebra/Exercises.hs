@@ -28,8 +28,7 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Vector
 import Test.QuickCheck
 import Control.Monad
-
-import Domain.Math.Classes
+import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
 

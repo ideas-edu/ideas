@@ -1,7 +1,7 @@
 module Domain.Math.Constrained where
 
 import Control.Monad
-import Domain.Math.Classes
+import Domain.Math.Symbolic
 import Data.Monoid
 
 -----------------------------------------------------------------------

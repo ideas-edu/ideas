@@ -1,6 +1,4 @@
-module Domain.Math.Classes where
-
-import Common.Uniplate
+module Domain.Math.Symbolic where
 
 class Symbolic a where
    variable   :: String -> a
@@ -13,7 +11,4 @@ unaryFunction :: Symbolic a => String -> a -> a
 unaryFunction f a = function f [a]
 
 binaryFunction :: Symbolic a => String -> a -> a -> a
-binaryFunction f a b = function f [a, b] 
-   
-class NF a where
-   normalize :: a -> a
+binaryFunction f a b = function f [a, b]

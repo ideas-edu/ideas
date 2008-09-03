@@ -1,15 +1,16 @@
-module Domain.Math.Confluence 
+module Common.Rewriting.Confluence 
    ( confluenceWith, confluenceAC, confluence
    , testConfluenceWith, testConfluenceAC, testConfluence
    ) where
 
-import Common.Rewriting
-import Common.Uniplate
-import Control.Monad
+import Common.Rewriting.MetaVar
+import Common.Rewriting.AC
+import Common.Rewriting.Substitution
+import Common.Rewriting.Unification
+import Common.Rewriting.Rule
+import Common.Uniplate (subtermsAt, applyAtM, somewhereM)
 import Data.List
 import Data.Maybe
-import Domain.Math.Rewriting
-import Domain.Math.Rules
 
 ----------------------------------------------------
 
@@ -17,8 +18,8 @@ superImpose :: Rewrite a => Rule a -> Rule a -> [([Int], a)]
 superImpose r1 r2 =
    [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
  where
-    lhs1 = fst (rulePair r1 0)
-    lhs2 = fst (rulePair r2 (nrOfVars r1))
+    lhs1 = lhs (rulePair r1 0)
+    lhs2 = lhs (rulePair r2 (nrOfMetaVars r1))
     
     make a
        | isJust (isMetaVar a) = []
@@ -30,8 +31,8 @@ criticalPairs rs =
    | r1       <- rs
    , r2       <- rs
    , (loc, a) <- superImpose r1 r2
-   , (b1,_)   <- rulematchM r1 a
-   , b2       <- applyAtM loc (liftM fst . rulematchM r2) a
+   , b1       <- rewriteM r1 a
+   , b2       <- applyAtM loc (rewriteM r2) a
    , b1 /= b2 
    ]
 
@@ -69,7 +70,7 @@ confluence = confluenceAC []
 
 testConfluenceWith :: (Eq a, Rewrite a) => (a -> a) -> [Rule a] -> a -> Bool
 testConfluenceWith f rs a = 
-   case nub [ f b | r <- rs, b <- somewhereM (liftM fst . rulematchM r) a ] of
+   case nub [ f b | r <- rs, b <- somewhereM (rewriteM r) a ] of
       _:_:_ -> False
       _     -> True
       

@@ -23,7 +23,7 @@ import Common.Uniplate
 import GHC.Real
 import Domain.Math.SExpr
 import Domain.Math.Expr
-import Domain.Math.Classes
+import Domain.Math.Symbolic
 
 class (Fractional a, Symbolic a) => IsLinear a where
    isLinear :: a -> Bool

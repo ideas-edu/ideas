@@ -14,12 +14,11 @@
 module Domain.Logic.Formula where
 
 import Common.Uniplate (Uniplate(..))
-import Common.Unification
+import Common.Rewriting
 import Common.Utils
 import Data.Char
 import Data.List
 import Data.Maybe
-import qualified Data.Set as S
 
 infixr 1 :<->:
 infixr 2 :->: 
@@ -81,35 +80,6 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
  where
    impl p q = not p || q
 
--- | Function to unify to logic formulas: the resulting substitution maps 
--- | variables (String) to logic formulas 
-unifyLogic :: Logic -> Logic -> [Substitution Logic]
-unifyLogic p q =
-   case (isMetaVar p, isMetaVar q) of
-      (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i q
-      (Just i, Nothing) -> if i `S.member` getMetaVars q then [] else return (singletonSubst i q)
-      (Nothing, Just j) -> if j `S.member` getMetaVars p then [] else return (singletonSubst j p)
-      _ -> case (p, q) of
-             (Var x, Var y) | x==y      -> return emptySubst
-             (p1 :->: p2,  q1 :->:  q2) -> unifyListAll [p1, p2] [q1, q2]
-             (p1 :<->: p2, q1 :<->: q2) -> unifyListAll [p1, p2] [q1, q2]
-             (p1 :&&: p2,  _ :&&: _   ) -> let qs  = conjunctions q
-                                               f i = let (xs, ys) = splitAt i qs
-                                                         q1 = foldr1 (:&&:) xs
-                                                         q2 = foldr1 (:&&:) ys
-                                                     in unifyListAll [p1, p2] [q1, q2]
-                                           in concatMap f [1 .. length qs-1]
-             (p1 :||: p2,  _ :||: _   ) -> let qs  = disjunctions q
-                                               f i = let (xs, ys) = splitAt i qs
-                                                         q1 = foldr1 (:||:) xs
-                                                         q2 = foldr1 (:||:) ys
-                                                     in unifyListAll [p1, p2] [q1, q2]
-                                           in concatMap f [1 .. length qs-1]
-             (Not p1,      Not q1     ) -> unifyAll p1 q1
-             (T,           T          ) -> return emptySubst
-             (F,           F          ) -> return emptySubst
-             _ -> []
-
 -- | eqLogic determines whether or not two Logic expression are logically 
 -- | equal, by evaluating the logic expressions on all valuations.
 eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs
@@ -143,14 +113,12 @@ isCNF = all isAtomic . concatMap disjunctions . conjunctions
 -- | Function disjunctions returns all Logic expressions separated by an or
 -- | operator at the top level.
 disjunctions :: Logic -> [Logic]
-disjunctions (p :||: q) = disjunctions p ++ disjunctions q
-disjunctions logic      = [logic]
+disjunctions = collectAC orOperator
 
 -- | Function conjunctions returns all Logic expressions separated by an and
 -- | operator at the top level.
 conjunctions :: Logic -> [Logic]
-conjunctions (p :&&: q) = conjunctions p ++ conjunctions q
-conjunctions logic      = [logic]
+conjunctions = collectAC andOperator
 
 -- | Count the number of implicationsations :: Logic -> Int
 countImplications :: Logic -> Int
@@ -184,7 +152,7 @@ rightSpine ((p :||: q) :||: r) = rightSpine (p :||: (q :||: r))
 rightSpine (p :||: q) = p :||: rightSpine q
 rightSpine p = p
 
-instance Uniplate Logic where   -- !!!!!!!!!!!
+instance Uniplate Logic where
    uniplate p =
       case rightSpine p of 
          p :->: q  -> ([p, q], \[a, b] -> a :->:  b)
@@ -194,10 +162,38 @@ instance Uniplate Logic where   -- !!!!!!!!!!!
          Not p     -> ([p], \[a] -> Not a)
          _         -> ([], \[] -> p)
 
+instance ShallowEq Logic where
+   shallowEq expr1 expr2 =
+      case (expr1, expr2) of
+         (Var a, Var b)         -> a==b
+         (_ :->: _ , _ :->: _ ) -> True
+         (_ :<->: _, _ :<->: _) -> True
+         (_ :&&: _ , _ :&&: _ ) -> True
+         (_ :||: _ , _ :||: _ ) -> True
+         (Not _    , Not _    ) -> True
+         (T        , T        ) -> True
+         (F        , F        ) -> True
+         _                      -> False
+
+instance Rewrite Logic where
+   operatorsAC = logicACs
+
 instance MetaVar Logic where
    isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
-       
-instance Unifiable Logic where
-   unifyAll = unifyLogic
+   
+logicACs :: [OperatorAC Logic]
+logicACs = [andOperator, orOperator]
+   
+andOperator :: OperatorAC Logic
+andOperator = (isAnd, (:&&:))
+ where
+   isAnd (p :&&: q) = Just (p, q)
+   isAnd _          = Nothing
+   
+orOperator :: OperatorAC Logic
+orOperator = (isOr, (:||:))
+ where
+   isOr (p :||: q) = Just (p, q)
+   isOr _          = Nothing

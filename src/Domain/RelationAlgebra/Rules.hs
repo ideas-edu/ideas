@@ -15,7 +15,7 @@ module Domain.RelationAlgebra.Rules where
 
 import Domain.RelationAlgebra.Formula
 import Common.Transformation
-import Common.Unification
+import Common.Rewriting
 
 -- local relalg variables
 q, r, s :: RelAlg

@@ -14,7 +14,7 @@
 module Domain.LinearAlgebra.Equation where
 
 import Common.Uniplate
-import Common.Unification
+import Common.Rewriting
 import Test.QuickCheck
 import Control.Monad
 

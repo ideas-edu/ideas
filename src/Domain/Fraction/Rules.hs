@@ -16,7 +16,7 @@ module Domain.Fraction.Rules where
 
 import Domain.Fraction.Frac
 import Common.Transformation
-import Common.Unification
+import Common.Rewriting
 
 type FracRule = Rule Frac
 

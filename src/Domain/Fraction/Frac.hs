@@ -14,12 +14,12 @@
 module Domain.Fraction.Frac where
 
 import Common.Uniplate (Uniplate(..), universe)
-import Common.Unification
+import Common.Rewriting
 import Data.List
 import Data.Maybe
 import Data.Char
 import Ratio
-import qualified Data.Set as S
+import qualified Data.IntSet as IS
 
 
 infixl 7 :*:, :/: 
@@ -67,25 +67,6 @@ foldFrac (var, lit, mul, div, add, sub, neg) = rec
 evalFrac :: (String -> Rational) -> Frac -> Rational
 evalFrac env = foldFrac (env, (\x -> x%1), (*), (/), (+), (-), negate)
 
--- | Function to unify to fraction formulas: a returned substitution maps 
--- | variables (String) to fraction formulas 
-unifyFrac :: Frac -> Frac -> Maybe (Substitution Frac)
-unifyFrac x y =
-   case (isMetaVar x, isMetaVar y) of
-      (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i y
-      (Just i, Nothing) -> if i `S.member` getMetaVars y then Nothing else return (singletonSubst i y)
-      (Nothing, Just j) -> if j `S.member` getMetaVars x then Nothing else return (singletonSubst j x)
-      _ -> case (x, y) of
-              (Var v, Var w) | v == w -> return emptySubst
-              (Con x, Con y) | x == y -> return emptySubst
-              (x1 :*: x2,  y1 :*: y2) -> unifyList [x1, x2] [y1, y2]
-              (x1 :/: x2,  y1 :/: y2) -> unifyList [x1, x2] [y1, y2]
-              (x1 :+: x2,  y1 :+: y2) -> unifyList [x1, x2] [y1, y2]
-              (x1 :-: x2,  y1 :-: y2) -> unifyList [x1, x2] [y1, y2]
-              (Neg x, Neg y)          -> unify x y
-              _ -> Nothing
-
-
 -- | eqFrac determines whether or not two Frac expression are arithmetically 
 -- | equal, by evaluating the expressions on all valuations.
 eqFrac :: Frac -> Frac -> Bool
@@ -110,8 +91,19 @@ instance MetaVar Frac where
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
 
-instance Unifiable Frac where
-   unify = unifyFrac
+instance ShallowEq Frac where
+   shallowEq expr1 expr2 =
+      case (expr1, expr2) of
+         (_ :*: _, _ :*: _) -> True
+         (_ :/: _, _ :/: _) -> True
+         (_ :+: _, _ :+: _) -> True
+         (_ :-: _, _ :-: _) -> True
+         (Neg _  , Neg _  ) -> True
+         (Var a  , Var b  ) -> a==b
+         (Con a  , Con b  ) -> a==b
+         _                  -> False       
+
+instance Rewrite Frac
 
 infix 1 ~=
 x ~= y = let (a, b) = numFraction x

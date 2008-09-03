@@ -3,6 +3,7 @@ module Domain.Math.SExpr (SExpr, SExprGS, SExprLin, SExprF, Simplification, NORM
 
 import Common.Utils
 import Common.Uniplate
+import Common.Rewriting
 import Domain.Math.Classes
 import Domain.Math.Expr
 import Domain.Math.Constrained
@@ -144,7 +145,7 @@ hasSquareRoot n
 
 applyRules :: Expr -> Constrained (Con Expr) Expr
 applyRules e = 
-   fromMaybe (return e) $ safeHead [ constrain p >> return a | r <- rs, (a, p) <- matchM r e ]
+   fromMaybe (return e) $ safeHead [ constrain p >> return a | r <- rs, (a, p) <- rulematchM r e ]
  where
    rs = [ rule2 "Def. minus" $ \x y -> x-y ~> x+(-y)
         , ruleZeroPlus, ruleZeroPlusComm 

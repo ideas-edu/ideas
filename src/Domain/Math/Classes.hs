@@ -1,6 +1,5 @@
 module Domain.Math.Classes where
 
-import Common.Unification
 import Common.Uniplate
 
 class Symbolic a where
@@ -18,8 +17,3 @@ binaryFunction f a b = function f [a, b]
    
 class NF a where
    normalize :: a -> a
-
-class ShallowEq a where 
-   shallowEq :: a -> a -> Bool
-
-class (MetaVar a, Uniplate a, ShallowEq a) => Rewrite a

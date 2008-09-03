@@ -1,14 +1,13 @@
 module Domain.Math.Rules where
 
 import Common.Uniplate
-import Common.Unification
+import Common.Rewriting
 import Control.Monad
-import qualified Data.Set as S
+import qualified Data.IntSet as IS
 import Data.List
 import Data.Monoid
 import Data.Maybe
 import Domain.Math.Constrained
--- import Domain.Math.Expr
 
 data Rule a = R { name :: String, nrOfVars :: Int, ruleTriple :: Int -> Triple a }
 
@@ -52,7 +51,7 @@ bothWays :: (MetaVar a, Uniplate a) => [Rule a] -> [Rule a]
 bothWays rs = rs ++ catMaybes (map inverse rs)
 
 checkScope :: (MetaVar a, Uniplate a) => Rule a -> Bool
-checkScope r = S.null (getMetaVars rhs S.\\ getMetaVars lhs)
+checkScope r = IS.null (getMetaVars rhs IS.\\ getMetaVars lhs)
  where (lhs, rhs) = rulePair r 0
 
 infixl 1 ~>, .#.

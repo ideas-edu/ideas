@@ -32,7 +32,7 @@ module Common.Transformation
    , checkRule, checkRuleSmart
    ) where
 
-import qualified Data.Set as S
+import qualified Data.IntSet as IS
 import Data.Char
 import Data.Ratio
 import Data.List
@@ -41,7 +41,7 @@ import Test.QuickCheck hiding (arguments)
 import Common.Apply
 import Common.Utils
 import Control.Monad
-import Common.Unification
+import Common.Rewriting
 import Common.Uniplate
 
 -----------------------------------------------------------
@@ -53,7 +53,7 @@ infix  1 |-
 data Transformation a
    = Function (a -> [a])
 --   | Unifiable a => Pattern (ForAll (a, a))
-   | (Unifiable a, MetaVar a, Uniplate a) => Pattern (Int -> (a, a))
+   | Rewrite a => Pattern (Int -> (a, a))
    | forall b . Fun (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b . Lift (LiftPair b a) (Transformation b)
    
@@ -74,19 +74,19 @@ makeTransList = Function
 -- | Constructs a transformation based on two terms (a left-hand side and a
 -- right-hand side). The terms must be unifiable. It is checked that no
 -- free variables appear in the right-hand side term.
-(|-) :: (Unifiable a, MetaVar a, Uniplate a) => a -> a -> Transformation a
-p |- q | S.null frees = Pattern $ \i -> 
-                           let vs = S.toList (getMetaVars p)
-                               f  = (i+) . fromMaybe 0 . (`elemIndex` vs)
-                           in (renameMetaVars f p, renameMetaVars f q)
-       | otherwise    = error $ "Transformation: free variables in transformation"
+(|-) :: Rewrite a => a -> a -> Transformation a
+p |- q | IS.null frees = Pattern $ \i -> 
+                            let vs = IS.toList (getMetaVars p)
+                                f  = (i+) . fromMaybe 0 . (`elemIndex` vs)
+                            in (renameMetaVars f p, renameMetaVars f q)
+       | otherwise     = error $ "Transformation: free variables in transformation"
  where
-   frees = getMetaVars q S.\\ getMetaVars p
+   frees = getMetaVars q IS.\\ getMetaVars p
 
-applyPattern :: (Unifiable a, MetaVar a, Uniplate a) => (Int -> (a, a)) -> a -> [a]
+applyPattern :: Rewrite a => (Int -> (a, a)) -> a -> [a]
 applyPattern f a = do
    let (lhs, rhs) = f (nextMetaVar a)
-   sub <- matchAll lhs a
+   sub <- matchAC operatorsAC lhs a
    return (sub |-> rhs)
 
 -- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
@@ -398,8 +398,8 @@ smartGenTrans _           = arbitrary
 smartGenTerm :: (Arbitrary a, Uniplate a, MetaVar a) => a -> Gen a
 smartGenTerm lhs = do
    let vs = getMetaVars lhs
-   list <- vector (S.size vs) 
-   let sub = listToSubst $ zip (S.toList vs) list
+   list <- vector (IS.size vs) 
+   let sub = listToSubst $ zip (IS.toList vs) list
    return (sub |-> lhs)
      
 instance Arbitrary a => Arbitrary (Rule a) where

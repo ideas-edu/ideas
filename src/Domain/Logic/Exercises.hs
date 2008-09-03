@@ -26,7 +26,7 @@ import Common.Parsing (fromRanged, subExpressionAt)
 import Control.Monad
 
 import Common.Transformation
-import Common.Unification
+import Common.Rewriting
 import Data.Maybe
 {-
 import Test.QuickCheck hiding (check)

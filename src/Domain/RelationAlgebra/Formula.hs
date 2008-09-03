@@ -14,13 +14,14 @@
 module Domain.RelationAlgebra.Formula where
 
 import Common.Uniplate (Uniplate(..))
-import Common.Unification
+import Common.Rewriting
 import Common.Utils
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S
+import qualified Data.IntSet as IS
 import System.Random (StdGen, mkStdGen, split)
 import Test.QuickCheck
 import Control.Monad
@@ -180,26 +181,6 @@ arbRelation1 as = do
 -- Test on a limited domain whether two relation algebra terms are equivalent
 (===) :: RelAlg -> RelAlg -> Property
 p === q = forAll arbitrary $ \n -> probablyEqualWith (mkStdGen n) p q
-       
--- | Function to unify to relationalgebra formulas: a returned substitution maps 
--- | variables (String) to relationalgebra formulas 
-unifyRelAlg :: RelAlg -> RelAlg -> Maybe (Substitution RelAlg)
-unifyRelAlg p q =
-   case (isMetaVar p, isMetaVar q) of
-      (Just i, Just j) -> return $ if i==j then emptySubst else singletonSubst i q
-      (Just i, Nothing) -> if i `S.member` getMetaVars q then Nothing else return (singletonSubst i q)
-      (Nothing, Just j) -> if j `S.member` getMetaVars p then Nothing else return (singletonSubst j p)
-      _ -> case (p, q) of
-              (Var x, Var y) | x==y      -> return emptySubst
-              (p1 :.: p2,  q1 :.:  q2) -> unifyList [p1, p2] [q1, q2]
-              (p1 :+: p2, q1 :+: q2) -> unifyList [p1, p2] [q1, q2]
-              (p1 :&&: p2,  q1 :&&:  q2) -> unifyList [p1, p2] [q1, q2]
-              (p1 :||: p2,  q1 :||:  q2) -> unifyList [p1, p2] [q1, q2]
-              (Not p1,      Not q1     ) -> unify p1 q1
-              (Inv p1,            Inv q1     ) -> unify p1 q1 
-              (U,           U          ) -> return emptySubst
-              (E,           E          ) -> return emptySubst
-              _ -> Nothing
 
 -- | Function varsRelAlg returns the variables that appear in a RelAlg expression.
 varsRelAlg :: RelAlg -> [String]
@@ -221,7 +202,17 @@ instance MetaVar RelAlg where
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
 
-instance Unifiable RelAlg where
-   unify = unifyRelAlg
-   
-   
+instance ShallowEq RelAlg where
+   shallowEq expr1 expr2 = 
+      case (expr1, expr2) of
+         (Var a   , Var b   ) -> a==b
+         (_ :.: _ , _ :.: _ ) -> True
+         (_ :+: _ , _ :+: _ ) -> True
+         (_ :&&: _, _ :&&: _) -> True
+         (_ :||: _, _ :||: _) -> True
+         (Not _   , Not _   ) -> True
+         (Inv _   , Inv _   ) -> True
+         (U       , U       ) -> True
+         (E       , E       ) -> True
+         _                    -> False
+instance Rewrite RelAlg

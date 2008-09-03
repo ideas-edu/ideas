@@ -27,7 +27,6 @@ import Control.Monad
 
 import Common.Transformation
 import Common.Unification
-import Common.Apply
 import Data.Maybe
 {-
 import Test.QuickCheck hiding (check)
@@ -136,11 +135,8 @@ all2 s = (ruleMoveDown 0 <*> s <*> ruleMoveUp <*> ruleMoveDown 1 <*> s <*> ruleM
    ruleMoveUp = minorRule (makeSimpleRule "MoveUp" moveUp)
    moveUp c   = do
       new <- locationUp (location c)
-      return $ setLocation new c -}
+      return $ setLocation new c
 
-type Pat = ForAll (Logic, Logic)
-
-{-
 foci = rec (inContext lhs1)
  where
    rec a = let n   = maybe 0 (length . children) (currentFocus a)
@@ -241,6 +237,9 @@ everywhere = rec . inContext
            in [ a | n > 0 ] ++ concatMap (rec . f) is
 -}
 
+{-
+type Pat = ForAll (Logic, Logic)
+
 test1 = testIdempOr $ Var "p" :||: Var "p"
 test2 = testIdempOr $ (Var "p" :||: Var "q") :||: (Var "p" :||: Var "q")
 test3 = testIdempOr $ Var "p" :||: Var "q" :||: Var "p" :||: Var "q"
@@ -248,5 +247,4 @@ test4 = testIdempOr $ Var "p" :||: (Var "p" :||: Var "q")
 test5 = testIdempOr $ (Var "p" :||: Var "q") :||: ((Var "p" :||: Var "q") :||: Var "r")
 
 testIdempOr p = apply (somewhere $ liftRuleToContext ruleIdempOr) (inContext p)
-
-
+-}

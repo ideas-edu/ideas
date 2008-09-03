@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Equation where
 
+import Common.Uniplate
 import Common.Unification
 import Test.QuickCheck
 import Control.Monad
@@ -40,10 +41,10 @@ evalEquation = evalEquationWith id
 evalEquationWith :: Eq b => (a -> b) -> Equation a -> Bool
 evalEquationWith f (x :==: y) = f x == f y
 
-substEquation :: Substitutable a => Substitution a -> Equation a -> Equation a
+substEquation :: (Uniplate a, MetaVar a) => Substitution a -> Equation a -> Equation a
 substEquation sub (x :==: y) = (sub |-> x) :==: (sub |-> y)
 
-substEquations :: Substitutable a => Substitution a -> Equations a -> Equations a
+substEquations :: (Uniplate a, MetaVar a) => Substitution a -> Equations a -> Equations a
 substEquations sub = map (substEquation sub)
 
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a

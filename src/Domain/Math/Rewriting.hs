@@ -2,14 +2,20 @@ module Domain.Math.Rewriting where
 
 import Common.Utils
 import Common.Uniplate
+import Common.Unification (MetaVar(..), getMetaVars, nextMetaVar)
 import Domain.Math.Classes
 import Domain.Math.Rules
 import Domain.Math.Constrained
 import Control.Monad
 import Data.List
+import qualified Data.Set as S
 import Data.Maybe
 import Data.Monoid
 import qualified Data.IntMap as IM
+
+-- temporary
+freeVars :: (Uniplate a, MetaVar a) => a -> [Int]
+freeVars = S.toList . getMetaVars
 
 -----------------------------------------------------------
 -- AC theories
@@ -71,13 +77,13 @@ s |-> e =
 -----------------------------------------------------------
 -- Unification
 
-unify :: (MetaVar a, UniplateConstr a) => a -> a -> Maybe (Subst a)
+unify :: Rewrite a => a -> a -> Maybe (Subst a)
 unify x y = safeHead (unifyAC [] x y)
 
-unifyM :: (Monad m, MetaVar a, UniplateConstr a) => a -> a -> m (Subst a)
+unifyM :: (Monad m, Rewrite a) => a -> a -> m (Subst a)
 unifyM x y = maybe (fail "unify") return (unify x y)  
 
-unifyAC :: (MetaVar a, UniplateConstr a) => [OperatorAC a] -> a -> a -> [Subst a]
+unifyAC :: Rewrite a => [OperatorAC a] -> a -> a -> [Subst a]
 unifyAC acs x y = 
    case (isMetaVar x, isMetaVar y) of
       (Just i, Just j) | i==j -> return IM.empty
@@ -97,7 +103,7 @@ unifyAC acs x y =
         | otherwise ->
              []
 
-unifyListAC :: (MetaVar a, UniplateConstr a) => [OperatorAC a] -> [a] -> [a] -> [Subst a]
+unifyListAC :: Rewrite a => [OperatorAC a] -> [a] -> [a] -> [Subst a]
 unifyListAC _ []     []     = return IM.empty
 unifyListAC acs (x:xs) (y:ys) = do
    s1 <- unifyAC acs x y
@@ -125,15 +131,15 @@ splits = foldr insert [([], [])]
 -----------------------------------------------------------
 -- Matching
 
-match :: (MetaVar a, UniplateConstr a) => Rule a -> a -> Maybe (a, Prop (Con a))
+match :: Rewrite a => Rule a -> a -> Maybe (a, Prop (Con a))
 match r e = safeHead (matchAC [] r e)
 
-matchM :: (Monad m, MetaVar a, UniplateConstr a) => Rule a -> a -> m (a, Prop (Con a))
+matchM :: (Monad m, Rewrite a) => Rule a -> a -> m (a, Prop (Con a))
 matchM r e = maybe (fail "match") return (match r e) 
       
-matchAC :: (MetaVar a, UniplateConstr a) => [OperatorAC a] -> Rule a -> a -> [(a, Prop (Con a))]
+matchAC :: Rewrite a => [OperatorAC a] -> Rule a -> a -> [(a, Prop (Con a))]
 matchAC acs r e = do 
-   let Triple lhs rhs p0 = ruleTriple r (nextVar e)
+   let Triple lhs rhs p0 = ruleTriple r (nextMetaVar e)
        wfs = [ return (WF (metaVar a)) | a <- freeVars lhs \\ freeVars rhs ]
        p   = mconcat (p0:wfs)
    s <- unifyAC acs lhs e
@@ -141,11 +147,11 @@ matchAC acs r e = do
       then []
       else return (s |-> rhs, fmap (fmap (s |->)) p)
 
-normalFormAC :: (MetaVar a, UniplateConstr a, Ord a) => [OperatorAC a] -> [Rule a] -> a -> a
+normalFormAC :: (Rewrite a, Ord a) => [OperatorAC a] -> [Rule a] -> a -> a
 normalFormAC acs rs = fixpoint $ transform $ \a ->
    case [ b | r <- rs, (b, _) <- matchAC acs r a ] of
       hd:_ -> normalizeACs acs hd
       _    -> a
       
-normalForm :: (MetaVar a, UniplateConstr a, Ord a) => [Rule a] -> a -> a
+normalForm :: (Rewrite a, Ord a) => [Rule a] -> a -> a
 normalForm = normalFormAC []

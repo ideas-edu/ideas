@@ -13,7 +13,7 @@ import Data.List
 import Data.Ratio
 import Data.Maybe
 import qualified Data.Map as M
---import Data.Monoid
+import Data.Monoid
 import Test.QuickCheck
 
 class Simplification a where
@@ -298,7 +298,7 @@ fromViewLin (Lin m c) = foldr op c (M.toList m)
 -- Simplifications for constraints
 
 simplifyPropCon :: Prop (Con Expr) -> Prop (Con Expr)
-simplifyPropCon = id {- fixpoint (mapProp simplifyCon . simplifyProp)
+simplifyPropCon = fixpoint (mapProp simplifyCon . simplifyProp)
 
 simplifyCon :: Con Expr -> Prop (Con Expr)
 simplifyCon = convert . fmap simplifyExpr
@@ -340,4 +340,4 @@ simplifyCon = convert . fmap simplifyExpr
       case con of
          x :==: y -> [x,y]
          x :<:  y -> [x,y]
-         WF x     -> [x] -}
+         WF x     -> [x]

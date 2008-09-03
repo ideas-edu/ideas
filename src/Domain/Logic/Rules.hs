@@ -49,12 +49,13 @@ makeRuleListA s = makeRuleList s . concatMap transA
 
 transA :: Transformation Logic -> [Transformation Logic]
 transA t = case isPatternPair t of
-              Nothing -> [t]
-              Just qp -> 
-                 case instantiateWith substitutePair 0 qp of
-                    ((lhs@(_ :||: _), rhs), n) -> [t, (lhs :||: metaVar n) |- (rhs :||: metaVar n)]
-                    ((lhs@(_ :&&: _), rhs), n) -> [t, (lhs :&&: metaVar n) |- (rhs :&&: metaVar n)]
-                    _ -> [t]
+              Just (lhs@(_ :||: _), rhs) -> 
+                 let n = nextMetaVar lhs
+                 in [t, (lhs :||: metaVar n) |- (rhs :||: metaVar n)]
+              Just (lhs@(_ :&&: _), rhs) -> 
+                 let n = nextMetaVar lhs
+                 in [t, (lhs :&&: metaVar n) |- (rhs :&&: metaVar n)]
+              _ -> [t]
 
 -----------------------------------------------------------------------------
 

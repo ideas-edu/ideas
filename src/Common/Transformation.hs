@@ -35,11 +35,14 @@ module Common.Transformation
 import qualified Data.Set as S
 import Data.Char
 import Data.Ratio
+import Data.List
+import Data.Maybe
 import Test.QuickCheck hiding (arguments)
 import Common.Apply
 import Common.Utils
 import Control.Monad
 import Common.Unification
+import Common.Uniplate
 
 -----------------------------------------------------------
 --- Transformations
@@ -49,7 +52,8 @@ infix  1 |-
 -- | Abstract data type for representing transformations
 data Transformation a
    = Function (a -> [a])
-   | Unifiable a => Pattern (ForAll (a, a))
+--   | Unifiable a => Pattern (ForAll (a, a))
+   | (Unifiable a, MetaVar a, Uniplate a) => Pattern (Int -> (a, a))
    | forall b . Fun (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b . Lift (LiftPair b a) (Transformation b)
    
@@ -70,15 +74,18 @@ makeTransList = Function
 -- | Constructs a transformation based on two terms (a left-hand side and a
 -- right-hand side). The terms must be unifiable. It is checked that no
 -- free variables appear in the right-hand side term.
-(|-) :: Unifiable a => a -> a -> Transformation a
-p |- q | S.null frees = Pattern $ generalizeAll (p, q)
+(|-) :: (Unifiable a, MetaVar a, Uniplate a) => a -> a -> Transformation a
+p |- q | S.null frees = Pattern $ \i -> 
+                           let vs = S.toList (getMetaVars p)
+                               f  = (i+) . fromMaybe 0 . (`elemIndex` vs)
+                           in (renameMetaVars f p, renameMetaVars f q)
        | otherwise    = error $ "Transformation: free variables in transformation"
  where
    frees = getMetaVars q S.\\ getMetaVars p
 
-applyPattern :: Unifiable a => ForAll (a, a) -> a -> [a]
-applyPattern pair a = do
-   let (lhs, rhs) = unsafeInstantiateWith substitutePair pair
+applyPattern :: (Unifiable a, MetaVar a, Uniplate a) => (Int -> (a, a)) -> a -> [a]
+applyPattern f a = do
+   let (lhs, rhs) = f (nextMetaVar a)
    sub <- matchAll lhs a
    return (sub |-> rhs)
 
@@ -92,17 +99,17 @@ inverseTrans trans =
       _ -> Nothing
 
 getPatternPair :: a -> Transformation a -> Maybe (a, a)
-getPatternPair _ (Pattern qp) = return $ unsafeInstantiateWith substitutePair qp
-getPatternPair a (Lift lp t)  = do
+getPatternPair _ (Pattern f) = return $ f 0
+getPatternPair a (Lift lp t) = do
    let f t = liftPairSet lp t a
    b      <- liftPairGet lp a
    (x, y) <- getPatternPair b t
    return (f x, f y)
 getPatternPair _ _ = Nothing
 
-isPatternPair :: Transformation a -> Maybe (ForAll (a, a))
-isPatternPair (Pattern qp) = return qp
-isPatternPair _            = Nothing
+isPatternPair :: Transformation a -> Maybe (a, a)
+isPatternPair (Pattern f) = return  (f 0)
+isPatternPair _           = Nothing
 
 -----------------------------------------------------------
 --- Arguments
@@ -371,7 +378,7 @@ checkRule eq rule = do
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
-checkRuleSmart :: (Arbitrary a, Substitutable a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
+checkRuleSmart :: (Arbitrary a, Uniplate a, MetaVar a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
 checkRuleSmart eq rule = do
    putStr $ "[" ++ name rule ++ "] "
    quickCheck (propRule (smartGen rule) eq rule)
@@ -381,18 +388,18 @@ propRule gen eq rule _ =
    forAll gen $ \a ->
       applicable rule a ==> (a `eq` applyD rule a)
 
-smartGen :: (Arbitrary a, Substitutable a) => Rule a -> Gen a
+smartGen :: (Arbitrary a, Uniplate a, MetaVar a) => Rule a -> Gen a
 smartGen = oneof . map smartGenTrans . transformations
    
 smartGenTrans :: Arbitrary a => Transformation a -> Gen a
-smartGenTrans (Pattern p) = smartGenTerm (fmap fst p)
+smartGenTrans (Pattern f) = smartGenTerm $ fst $ f 0
 smartGenTrans _           = arbitrary
 
-smartGenTerm :: (Arbitrary a, Substitutable a) => ForAll a -> Gen a
-smartGenTerm p = do 
-   let (lhs, unique) = instantiate 1000 p
-   list <- vector (unique - 1000) 
-   let sub = listToSubst $ zip [1000 :: Int ..] list
+smartGenTerm :: (Arbitrary a, Uniplate a, MetaVar a) => a -> Gen a
+smartGenTerm lhs = do
+   let vs = getMetaVars lhs
+   list <- vector (S.size vs) 
+   let sub = listToSubst $ zip (S.toList vs) list
    return (sub |-> lhs)
      
 instance Arbitrary a => Arbitrary (Rule a) where

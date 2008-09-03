@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Formula where
 
-import Common.Uniplate (Uniplate(..), universe)
+import Common.Uniplate (Uniplate(..))
 import Common.Unification
 import Common.Utils
 import Control.Monad
@@ -215,20 +215,11 @@ instance Uniplate RelAlg where
          Not s     -> ([s], \[a] -> Not a)
          Inv s     -> ([s], \[a] -> Inv a)
          _         -> ([], \[] -> term)
-         
-instance HasMetaVars RelAlg where
-   getMetaVarsList = catMaybes . map isMetaVar . universe
 
 instance MetaVar RelAlg where
    isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
-   
-instance Substitutable RelAlg where 
-   (|->) sub = foldRelAlg (var, (:.:), (:+:), (:&&:), (:||:), Not, Inv, U, E)
-    where var s = case isMetaVar (Var s) of
-                    Just i -> fromMaybe (Var s) (lookupVar i sub)
-                    _      -> Var s
 
 instance Unifiable RelAlg where
    unify = unifyRelAlg

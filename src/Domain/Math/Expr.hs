@@ -5,6 +5,7 @@ import Data.Ratio
 import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
+import Common.Unification
 import Domain.Math.Classes
 import Domain.Math.Rewriting
 
@@ -167,18 +168,22 @@ instance MetaVar Expr where
    metaVar n = Var ("_" ++ show n)
    isMetaVar (Var ('_':is)) | not (null is) && all isDigit is = Just (read is)
    isMetaVar _ = Nothing
-    
-instance Constructor Expr where
-   constructor = foldExpr (const2 "Plus", const2 "Times", const2 "Minus", const "Neg", const "Con", const2 "Div", const "Sqrt", const "Var", const2 "Sym")
-    where const2 = const . const
-    
+
 instance ShallowEq Expr where
-   shallowEq (Con a)   (Con b)   = a==b
-   shallowEq (Var a)   (Var b)   = a==b
-   shallowEq (Sym f _) (Sym g _) = f==g
-   shallowEq x y = constructor x == constructor y
+   shallowEq expr1 expr2 =
+      case (expr1, expr2) of
+         (_ :+: _ , _ :+: _ ) -> True
+         (_ :*: _ , _ :*: _ ) -> True
+         (_ :-: _ , _ :-: _ ) -> True
+         (Negate _, Negate _) -> True
+         (Con a   , Con b   ) -> a==b
+         (_ :/: _ , _ :/: _ ) -> True
+         (Sqrt _  , Sqrt _  ) -> True
+         (Var a   , Var b   ) -> a==b
+         (Sym f _ , Sym g _ ) -> f==g
+         _                    -> False
    
-instance UniplateConstr Expr
+instance Rewrite Expr
 
 -----------------------------------------------------------------------
 -- AC Theory for expression

@@ -104,20 +104,11 @@ instance Uniplate Frac where
          x :-: y -> ([x, y], \[a, b] -> a :-: b)
          Neg x   -> ([x], \[y] -> Neg y) 
          _       -> ([], \[] -> x)
-         
-instance HasMetaVars Frac where
-   getMetaVarsList = catMaybes . map isMetaVar . universe
 
 instance MetaVar Frac where
    isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
-
-instance Substitutable Frac where 
-   (|->) sub = foldFrac (var, Con, (:*:), (:/:), (:+:), (:-:), Neg)
-    where var s = case isMetaVar (Var s) of
-                    Just i -> fromMaybe (Var s) (lookupVar i sub)
-                    _      -> Var s
 
 instance Unifiable Frac where
    unify = unifyFrac

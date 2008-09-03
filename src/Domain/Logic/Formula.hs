@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
-import Common.Uniplate (Uniplate(..), universe)
+import Common.Uniplate (Uniplate(..))
 import Common.Unification
 import Common.Utils
 import Data.Char
@@ -184,7 +184,7 @@ rightSpine ((p :||: q) :||: r) = rightSpine (p :||: (q :||: r))
 rightSpine (p :||: q) = p :||: rightSpine q
 rightSpine p = p
 
-instance Uniplate Logic where
+instance Uniplate Logic where   -- !!!!!!!!!!!
    uniplate p =
       case rightSpine p of 
          p :->: q  -> ([p, q], \[a, b] -> a :->:  b)
@@ -193,22 +193,11 @@ instance Uniplate Logic where
          p :||: q  -> ([p, q], \[a, b] -> a :||:  b)
          Not p     -> ([p], \[a] -> Not a)
          _         -> ([], \[] -> p)
-         
-instance HasMetaVars Logic where
-   getMetaVarsList = catMaybes . map isMetaVar . universe
 
 instance MetaVar Logic where
    isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
-
-   
-instance Substitutable Logic where 
-   (|->) sub = foldLogic (var, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
-       where 
-         var s = case isMetaVar (Var s) of
-                    Just i -> fromMaybe (Var s) (lookupVar i sub)
-                    _      -> Var s
        
 instance Unifiable Logic where
    unifyAll = unifyLogic

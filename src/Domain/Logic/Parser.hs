@@ -26,11 +26,11 @@ import Domain.Logic.Formula
 logicScanner :: Scanner
 logicScanner = (makeCharsSpecial "~" defaultScanner)
    { keywords         = ["T", "F"]
-   , keywordOperators = ["<->", "||", "->", "/\\", "~"]
+   , keywordOperators = "~" : concatMap (map fst . snd) operatorTable
    }
 
-logicOperators :: OperatorTable Logic
-logicOperators = 
+operatorTable :: OperatorTable Logic
+operatorTable = 
    [ (RightAssociative, [("<->", (:<->:))])
    , (RightAssociative, [("||",  (:||:))])
    , (RightAssociative, [("/\\", (:&&:))])
@@ -45,7 +45,7 @@ logicOperators =
 parseLogic  :: String -> (Ranged Logic, [Message Token])
 parseLogic = parse pLogic . scanWith logicScanner
  where
-   pLogic = pOperators logicOperators (basicWithPos pLogic)
+   pLogic = pOperators operatorTable (basicWithPos pLogic)
    
 -- | Parser for logic formulas that insists on more parentheses: "and" and "or" are associative, 
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 

@@ -50,7 +50,7 @@ dnfExercise = standard
                                 _       -> Nothing
    , prettyPrinter = ppLogicPars . fromContext
    , equivalence   = \x y -> fromContext x `eqLogic` fromContext y
-   , equality      = \x y -> fromContext x == fromContext y
+   , equality      = \x y -> fromContext x `equalLogicAC` fromContext y
    , finalProperty = isDNF . fromContext
    , ruleset       = map liftRuleToContext logicRules
    , strategy      = toDNFDWA

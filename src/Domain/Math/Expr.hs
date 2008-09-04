@@ -187,24 +187,24 @@ instance Rewrite Expr
 -----------------------------------------------------------------------
 -- AC Theory for expression
 
-exprACs ::[OperatorAC Expr]
-exprACs = [plusAC, timesAC]
+exprACs :: Operators Expr
+exprACs = [plusOperator, timesOperator]
 
-plusAC :: OperatorAC Expr
-plusAC = (isPlus, (+))
+plusOperator :: Operator Expr
+plusOperator = acOperator (+) isPlus
  where
    isPlus (a :+: b) = Just (a, b)
    isPlus _         = Nothing
 
-timesAC :: OperatorAC Expr
-timesAC = (isTimes, (*))
+timesOperator :: Operator Expr
+timesOperator = acOperator (*) isTimes
  where
    isTimes (a :*: b) = Just (a, b)
    isTimes _         = Nothing
 
 collectPlus, collectTimes :: Expr -> [Expr]
-collectPlus  = collectAC plusAC
-collectTimes = collectAC timesAC
+collectPlus  = collectWithOperator plusOperator
+collectTimes = collectWithOperator timesOperator
 
 size :: Expr -> Int
 size e = 1 + compos 0 (+) size e

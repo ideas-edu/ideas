@@ -46,7 +46,7 @@ instance Simplification a => Show (SExprF a) where
 
 instance Simplification a => Eq (SExprF a) where
    x == y =  let nonsense (SExprF e) = contradiction (proposition e) in
-             equalACs exprACs (toExpr x) (toExpr y)
+             equalWith exprACs (toExpr x) (toExpr y)
           || nonsense x
           || nonsense y
 
@@ -119,13 +119,13 @@ simplify = g . fixpointM (transformM f)
 -- special care is taken for associative and commutative operators       
 constantPropagation :: Expr -> Expr
 constantPropagation e =
-   case findOperatorAC exprACs e of
+   case findOperator exprACs e of
       Just ac
          | not (null xs) && not (null ys) -> 
-              let new = constantPropagation (buildAC ac (catMaybes $ map snd xs))
-              in buildAC ac (new:map fst ys)
+              let new = constantPropagation (buildWithOperator ac (catMaybes $ map snd xs))
+              in buildWithOperator ac (new:map fst ys)
        where 
-         (xs, ys) = partition (isJust . snd) $ map f $ collectAC ac e
+         (xs, ys) = partition (isJust . snd) $ map f $ collectWithOperator ac e
          f a = (a, exprToFractional a)
       _ -> maybe e fromRational (exprToFractional e)
 

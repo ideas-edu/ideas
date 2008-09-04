@@ -1,6 +1,6 @@
 module Common.Rewriting.Confluence 
-   ( confluenceWith, confluenceAC, confluence
-   , testConfluenceWith, testConfluenceAC, testConfluence
+   ( confluence, confluenceWith, confluentFunction
+   , testConfluence, testConfluenceWith, testConfluentFunction
    ) where
 
 import Common.Rewriting.MetaVar
@@ -57,25 +57,25 @@ reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
 
 ----------------------------------------------------
 
-confluenceWith :: (Eq a, Show a, Rewrite a) => (a -> a) -> [Rule a] -> IO ()
-confluenceWith f rs = reportPairs $ noDiamondPairs f rs
+confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [Rule a] -> IO ()
+confluentFunction f rs = reportPairs $ noDiamondPairs f rs
 
-confluenceAC :: (Ord a, Show a, Rewrite a) => [OperatorAC a] -> [Rule a] -> IO ()
-confluenceAC acs rs = confluenceWith (normalFormAC acs rs) rs
+confluenceWith :: (Ord a, Show a, Rewrite a) => [Operator a] -> [Rule a] -> IO ()
+confluenceWith ops rs = confluentFunction (normalFormAC ops rs) rs
 
 confluence :: (Ord a, Show a, Rewrite a) => [Rule a] -> IO ()
-confluence = confluenceAC []
+confluence = confluenceWith operators
 
 ----------------------------------------------------
 
-testConfluenceWith :: (Eq a, Rewrite a) => (a -> a) -> [Rule a] -> a -> Bool
-testConfluenceWith f rs a = 
+testConfluentFunction :: (Eq a, Rewrite a) => (a -> a) -> [Rule a] -> a -> Bool
+testConfluentFunction f rs a = 
    case nub [ f b | r <- rs, b <- somewhereM (rewriteM r) a ] of
       _:_:_ -> False
       _     -> True
       
-testConfluenceAC :: (Ord a, Rewrite a) => [OperatorAC a] -> [Rule a] -> a -> Bool
-testConfluenceAC acs rs = testConfluenceWith (normalFormAC acs rs) rs
+testConfluenceWith :: (Ord a, Rewrite a) => [Operator a] -> [Rule a] -> a -> Bool
+testConfluenceWith acs rs = testConfluentFunction (normalFormAC acs rs) rs
 
 testConfluence :: (Ord a, Rewrite a) => [Rule a] -> a -> Bool
-testConfluence = testConfluenceAC []
+testConfluence = testConfluenceWith operators

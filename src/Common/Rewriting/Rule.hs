@@ -3,7 +3,7 @@ module Common.Rewriting.Rule
    , Rule, ruleName, nrOfMetaVars, rulePair
    , rule0, rule1, rule2, rule3, rule4, rule5
    , inverse, bothWays, checkScope
-   , rewrite, rewriteM, rewriteAC
+   , rewrite, rewriteM, rewriteWith
    , normalFormAC, normalForm
    ) where
 
@@ -70,26 +70,25 @@ checkScope r = IS.null (getMetaVars rhs IS.\\ getMetaVars lhs)
 -----------------------------------------------------------
 -- Applying rewrite rules
 
-rewrite :: Rewrite a => Rule a -> a -> Maybe a
-rewrite r e = safeHead (rewriteAC [] r e)
+rewrite :: Rewrite a => Rule a -> a -> [a]
+rewrite = rewriteWith operators
 
-rewriteM :: (Monad m, Rewrite a) => Rule a -> a -> m a
-rewriteM r e = maybe (fail "match") return (rewrite r e) 
+rewriteM :: (MonadPlus m, Rewrite a) => Rule a -> a -> m a
+rewriteM r e = msum $ map return $ rewriteWith operators r e
       
-rewriteAC :: Rewrite a => [OperatorAC a] -> Rule a -> a -> [a]
-rewriteAC acs r e = do
+rewriteWith :: Rewrite a => [Operator a] -> Rule a -> a -> [a]
+rewriteWith ops r e = do
    let lhs :~> rhs = rulePair r (nextMetaVar e)
-   s <- matchAC acs lhs e
+   s <- matchWith ops lhs e
    return (s |-> rhs)
       
 -----------------------------------------------------------
 -- Normal forms
 
-
-normalFormAC :: (Rewrite a, Ord a) => [OperatorAC a] -> [Rule a] -> a -> a
+normalFormAC :: (Rewrite a, Ord a) => [Operator a] -> [Rule a] -> a -> a
 normalFormAC acs rs = fixpoint $ transform $ \a ->
-   case [ b | r <- rs, b <- rewriteAC acs r a ] of
-      hd:_ -> normalizeACs acs hd
+   case [ b | r <- rs, b <- rewriteWith acs r a ] of
+      hd:_ -> normalizeWith acs hd
       _    -> a
       
 normalForm :: (Rewrite a, Ord a) => [Rule a] -> a -> a

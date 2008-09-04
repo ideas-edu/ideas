@@ -41,7 +41,7 @@ all: solvergui doc laservice service unit-tests wikipages #markup
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \
 	  src/Domain/LinearAlgebra/*.hs src/Domain/Derivative/*.hs \
-	  src/Domain/Math/*.hs \
+	  src/Domain/Math/*.hs src/Common/Rewriting/*.hs \
 	  src/Presentation/ExerciseAssistant/*.hs src/OpenMath/*.hs
 
 GLADE = src/Presentation/ExerciseAssistant/exerciseassistant.glade \

@@ -35,24 +35,11 @@ data Logic = Var String
            | Not Logic                    -- not
            | T                            -- true
            | F                            -- false
- deriving Show
+ deriving (Show, Eq, Ord)
  
-instance Eq Logic where
-   (==) = eqLogicA
-   
--- Equality modulo associativity
-eqLogicA :: Logic -> Logic -> Bool
-eqLogicA p q =
-   case (p, q) of
-      (Var x, Var y)             -> x==y
-      (p1 :->: p2,  q1 :->:  q2) -> eqLogicA p1 q1 && eqLogicA p2 q2
-      (p1 :<->: p2, q1 :<->: q2) -> eqLogicA p1 q1 && eqLogicA p2 q2
-      (_ :&&: _,    _ :&&:  _  ) -> eqListBy eqLogicA (conjunctions p) (conjunctions q)
-      (_ :||: _,    _ :||:  _  ) -> eqListBy eqLogicA (disjunctions p) (disjunctions q)
-      (Not p1,      Not q1     ) -> eqLogicA p1 q1
-      (T,           T          ) -> True
-      (F,           F          ) -> True
-      _ -> False
+-- | Equality module associative-commutativity of operators
+equalLogicAC:: Logic -> Logic -> Bool
+equalLogicAC = equalWith operators
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.
@@ -113,12 +100,12 @@ isCNF = all isAtomic . concatMap disjunctions . conjunctions
 -- | Function disjunctions returns all Logic expressions separated by an or
 -- | operator at the top level.
 disjunctions :: Logic -> [Logic]
-disjunctions = collectAC orOperator
+disjunctions = collectWithOperator orOperator
 
 -- | Function conjunctions returns all Logic expressions separated by an and
 -- | operator at the top level.
 conjunctions :: Logic -> [Logic]
-conjunctions = collectAC andOperator
+conjunctions = collectWithOperator andOperator
 
 -- | Count the number of implicationsations :: Logic -> Int
 countImplications :: Logic -> Int
@@ -176,24 +163,26 @@ instance ShallowEq Logic where
          _                      -> False
 
 instance Rewrite Logic where
-   operatorsAC = logicACs
+   operators = logicOperators
 
 instance MetaVar Logic where
    isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
    isMetaVar _ = Nothing
    metaVar n = Var ("_" ++ show n)
    
-logicACs :: [OperatorAC Logic]
-logicACs = [andOperator, orOperator]
+logicOperators :: Operators Logic
+logicOperators = [andOperator, orOperator]
    
-andOperator :: OperatorAC Logic
-andOperator = (isAnd, (:&&:))
+-- The "and" operator is also commutative, but not (yet) in the equational theory
+andOperator :: Operator Logic
+andOperator = associativeOperator (:&&:) isAnd
  where
    isAnd (p :&&: q) = Just (p, q)
    isAnd _          = Nothing
-   
-orOperator :: OperatorAC Logic
-orOperator = (isOr, (:||:))
+
+-- The "or" operator is also commutative, but not (yet) in the equational theory
+orOperator :: Operator Logic
+orOperator = associativeOperator (:||:) isOr
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing

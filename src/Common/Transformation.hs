@@ -54,14 +54,14 @@ data Transformation a
    = Function (a -> [a])
 --   | Unifiable a => Pattern (ForAll (a, a))
    | Rewrite a => Pattern (Int -> (a, a))
-   | forall b . Fun (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
+   | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b . Lift (LiftPair b a) (Transformation b)
    
 instance Apply Transformation where
-   applyAll (Function f) = f
-   applyAll (Pattern  p) = applyPattern p
-   applyAll (Fun _ f g)  = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
-   applyAll (Lift lp t ) = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
+   applyAll (Function f)        = f
+   applyAll (Pattern  p)        = applyPattern p
+   applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
+   applyAll (Lift lp t )        = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
 makeTrans :: (a -> Maybe a) -> Transformation a
@@ -86,7 +86,7 @@ p |- q | IS.null frees = Pattern $ \i ->
 applyPattern :: Rewrite a => (Int -> (a, a)) -> a -> [a]
 applyPattern f a = do
    let (lhs, rhs) = f (nextMetaVar a)
-   sub <- matchAC operatorsAC lhs a
+   sub <- match lhs a
    return (sub |-> rhs)
 
 -- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
@@ -165,7 +165,7 @@ supplyLabeled1 :: Argument x
 supplyLabeled1 s f t = 
    let args = cons (makeArgDescr s) nil
        nest a = (a, ())
-   in Fun args (fmap nest . f) (\(a, ()) -> t a)
+   in Abstraction args (fmap nest . f) (\(a, ()) -> t a)
 
 -- | Parameterization with two arguments using the provided labels
 supplyLabeled2 :: (Argument x, Argument y) 
@@ -174,7 +174,7 @@ supplyLabeled2 :: (Argument x, Argument y)
 supplyLabeled2 (s1, s2) f t = 
    let args = cons (makeArgDescr s1) (cons (makeArgDescr s2) nil)
        nest (a, b) = (a, (b, ()))
-   in Fun args (fmap nest . f) (\(a, (b, ())) -> t a b)
+   in Abstraction args (fmap nest . f) (\(a, (b, ())) -> t a b)
 
 -- | Parameterization with three arguments using the provided labels
 supplyLabeled3 :: (Argument x, Argument y, Argument z) 
@@ -183,7 +183,7 @@ supplyLabeled3 :: (Argument x, Argument y, Argument z)
 supplyLabeled3 (s1, s2, s3) f t =
    let args = cons (makeArgDescr s1) (cons (makeArgDescr s2) (cons (makeArgDescr s3) nil))
        nest (a, b, c) = (a, (b, (c, ())))
-   in Fun args (fmap nest . f) (\(a, (b, (c, ()))) -> t a b c)
+   in Abstraction args (fmap nest . f) (\(a, (b, (c, ()))) -> t a b c)
 
 -- | Checks whether a rule is parameterized
 hasArguments :: Rule a -> Bool
@@ -193,18 +193,18 @@ hasArguments = not . null . getDescriptors
 getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
-      [Fun args _ _] -> someArguments args
-      [Lift _ t]     -> getDescriptors (rule {transformations = [t]})
-      _              -> []
+      [Abstraction args _ _] -> someArguments args
+      [Lift _ t]             -> getDescriptors (rule {transformations = [t]})
+      _                      -> []
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
 expectedArguments :: Rule a -> a -> Maybe [String]
 expectedArguments rule a =
    case transformations rule of
-      [Fun args f _] -> fmap (showArguments args) (f a)
-      [Lift lp t]    -> do b <- liftPairGet lp a
-                           expectedArguments (rule {transformations = [t]}) b
-      _              -> Nothing
+      [Abstraction args f _] -> fmap (showArguments args) (f a)
+      [Lift lp t]            -> do b <- liftPairGet lp a
+                                   expectedArguments (rule {transformations = [t]}) b
+      _ -> Nothing
 
 -- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are 
 -- invalid (not parsable), or that the wrong number of arguments was supplied
@@ -218,9 +218,9 @@ useArguments list rule =
    make :: Transformation a -> Maybe (Transformation a)
    make trans = 
       case trans of
-         Fun args _ g -> fmap g (parseArguments args list)
-         Lift lp t    -> fmap (Lift lp) (make t)     
-         _            -> Nothing
+         Abstraction args _ g -> fmap g (parseArguments args list)
+         Lift lp t            -> fmap (Lift lp) (make t)     
+         _                    -> Nothing
    
 -----------------------------------------------------------
 --- Internal machinery for arguments
@@ -408,10 +408,10 @@ instance Arbitrary a => Arbitrary (Rule a) where
 
 instance Arbitrary a => Arbitrary (Transformation a) where
    arbitrary = oneof [liftM Function arbitrary]
-   coarbitrary (Function f) = variant 0 . coarbitrary f
-   coarbitrary (Pattern _)  = variant 1
-   coarbitrary (Fun _ _ _)  = variant 2
-   coarbitrary (Lift _ _)   = variant 3
+   coarbitrary (Function f)        = variant 0 . coarbitrary f
+   coarbitrary (Pattern _)         = variant 1
+   coarbitrary (Abstraction _ _ _) = variant 2
+   coarbitrary (Lift _ _)          = variant 3
 
 -- generates sufficiently long names
 arbName :: Gen String

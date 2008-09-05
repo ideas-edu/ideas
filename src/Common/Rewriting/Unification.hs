@@ -9,6 +9,7 @@ import Common.Rewriting.MetaVar
 import Common.Rewriting.Substitution
 import Common.Rewriting.AC
 import Control.Monad
+import qualified Data.IntSet as IS
 
 -----------------------------------------------------------
 -- Unification (in both ways)
@@ -46,9 +47,8 @@ unifyWith ops = rec
    recList [] []    = return emptySubst
    recList (x:xs) (y:ys) = do
       s1 <- rec x y
-      let f = map (s1 |->)
-      s2 <- recList (f xs) (f ys)
-      return (s1 @@@ s2)
+      s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
+      return (s2 @@ s1)
    recList _ _ = []
 
 -----------------------------------------------------------
@@ -61,11 +61,14 @@ matchM :: (MonadPlus m, Rewrite a) => a -> a -> m (Substitution a)
 matchM x y = msum $ map return $ match x y
 
 matchWith :: Rewrite a => [Operator a] -> a -> a -> [Substitution a]
-matchWith ops = rec
+matchWith ops x y = do
+   s <- rec x y
+   guard (IS.null $ dom s `IS.intersection` getMetaVars y)
+   return s
  where
    rec x y =
       case isMetaVar x of
-         Just i -> return $ singletonSubst i y
+         Just i | not (hasMetaVar i y) -> return $ singletonSubst i y
          _ -> do
             guard (shallowEq x y) 
             case findOperator ops x of
@@ -74,10 +77,9 @@ matchWith ops = rec
                Nothing -> 
                   recList (children x) (children y)    
 
-   recList [] []    = return emptySubst
+   recList [] [] = return emptySubst
    recList (x:xs) (y:ys) = do
       s1 <- rec x y
-      let f = map (s1 |->)
-      s2 <- recList (f xs) (f ys)
-      return (s1 @@@ s2)
+      s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
+      return (s2 @@ s1)
    recList _ _ = []

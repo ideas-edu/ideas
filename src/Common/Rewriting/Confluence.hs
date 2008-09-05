@@ -61,7 +61,7 @@ confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] ->
 confluentFunction f rs = reportPairs $ noDiamondPairs f rs
 
 confluenceWith :: (Ord a, Show a, Rewrite a) => [Operator a] -> [RewriteRule a] -> IO ()
-confluenceWith ops rs = confluentFunction (normalFormWith ops rs) rs
+confluenceWith ops rs = confluentFunction (normalizeWith ops . normalFormWith ops rs) rs
 
 confluence :: (Ord a, Show a, Rewrite a) => [RewriteRule a] -> IO ()
 confluence = confluenceWith operators

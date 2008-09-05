@@ -1,6 +1,6 @@
 module Common.Rewriting.Substitution 
    ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@)
-   , lookupVar, dom, domList, removeDom, (|->)
+   , lookupVar, dom, removeDom, ran, (|->)
    ) where
 
 import Common.Uniplate
@@ -12,45 +12,48 @@ import Data.List
 -----------------------------------------------------------
 --- Substitution
 
-infixr 4 |->
-infixr 5 @@, @@@
 
 -- | Abstract data type for substitutions
 newtype Substitution a = S { unS :: IM.IntMap a }
+
+invariant :: (Uniplate a, MetaVar a) => Substitution a -> Bool
+invariant s = IS.null (dom s `IS.intersection` getMetaVarsList (ran s))
+
+makeS :: (Uniplate a, MetaVar a) => IM.IntMap a -> Substitution a
+makeS m | invariant new = new
+        | otherwise     = error "Rewriting.Substitution: invariant was violated"
+ where
+   new = S m
+   
+infixr 4 |->
+infixr 5 @@, @@@
 
 instance Show a => Show (Substitution a) where
    show = show . unS
 
 -- | Returns the empty substitution
-emptySubst :: Substitution a
-emptySubst = S IM.empty
+emptySubst :: (Uniplate a, MetaVar a) => Substitution a
+emptySubst = makeS IM.empty
 
 -- | Returns a singleton substitution
 singletonSubst :: (MetaVar a, Uniplate a) => Int -> a -> Substitution a
 singletonSubst i a
    | isMetaVar a == Just i = emptySubst
-   | i `IS.member` getMetaVars a = error "Unification.singletonSubst: occurs check failed"
-   | otherwise = S (IM.singleton i a)
+   | otherwise             = makeS (IM.singleton i a)
 
 -- | Turns a list into a substitution
 listToSubst :: (Uniplate a, MetaVar a) => [(Int, a)] -> Substitution a
-listToSubst s
-   | nub xs /= xs       = error "Unification.listToSubst: keys are not unique"
-   | any (`elem` xs) ys = error "Unification.listToSubst: occurs check failed"
-   | otherwise          = S (IM.fromList s) 
- where
-   xs = map fst s
-   ys = IS.toList $ getMetaVarsList $ map snd s
+listToSubst s = makeS (IM.fromListWith (error "Substitution: keys are not unique") s) 
 
 -- | Combines two substitutions. The left-hand side substitution is first applied to
 -- the co-domain of the right-hand side substitution
 (@@) :: (Uniplate a, MetaVar a) => Substitution a -> Substitution a -> Substitution a
-S a @@ S b = S $ a `IM.union` IM.map (S a |->) b
+S a @@ S b = makeS $ a `IM.union` IM.map (S a |->) b
 
 -- | Combines two substitutions with disjoint domains. If the domains are not disjoint,
 -- an error is reported
-(@@@) :: Substitution a -> Substitution a -> Substitution a
-S a @@@ S b = S (IM.unionWith err a b)
+(@@@) :: (Uniplate a, MetaVar a) => Substitution a -> Substitution a -> Substitution a
+S a @@@ S b = makeS (IM.unionWith err a b)
  where err _ _ = error "Unification.(@@@): domains of substitutions are not disjoint"
 
 -- | Lookups a variable in a substitution. Nothing indicates that the variable is
@@ -62,13 +65,12 @@ lookupVar s = IM.lookup s . unS
 dom :: Substitution a -> IS.IntSet
 dom = IM.keysSet . unS
 
--- | Returns the domain of a substitution (as a list)
-domList :: Substitution a -> [Int]
-domList = IM.keys . unS
-
 -- | Removes variables from the domain of a substitution
 removeDom :: IS.IntSet -> Substitution a -> Substitution a
 removeDom s (S a) = S (IM.filterWithKey (\k _ -> IS.member k s) a)
+
+ran :: Substitution a -> [a]
+ran = IM.elems . unS
 
 -- | Apply the substitution
 (|->) :: (MetaVar a, Uniplate a) => Substitution a -> a -> a

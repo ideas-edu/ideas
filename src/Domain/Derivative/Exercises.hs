@@ -12,48 +12,61 @@
 -----------------------------------------------------------------------------
 module Domain.Derivative.Exercises where
 
+import Common.Apply
+import Common.Uniplate (universe)
 import Prelude hiding (repeat)
-import Domain.Derivative.Rules (derivativeRules, tidyupRules, tidyRule)
-import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy)
+import Domain.Derivative.Rules 
+import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
 import Common.Context (Context, liftRuleToContext, inContext, fromContext)
 import Common.Exercise (Exercise(..), text)
-import OpenMath.Object
-import Data.Ratio
-import Domain.Derivative.Basic
-import Data.Char (isSpace)
+import Common.Transformation
+import Test.QuickCheck hiding (label)
+import Domain.Math.Expr
+import Domain.Math.SExpr
+import Domain.Math.Parser
 
 derivativeExercise :: Exercise (Context Expr)
 derivativeExercise = Exercise
    { shortTitle    = "Derivative"
-   , parser        = \input -> case reads input of
-                                  [(fun, rest)] | all isSpace rest -> Right (inContext fun)
-                                  _ -> Left (text "not a function")
-   , equivalence = undefined
+   , parser        = \s -> case parseExpr s of 
+                              Left s  -> Left  (text s)
+                              Right a -> Right (inContext a)
+   , equivalence = (==) -- ??
    , equality    = (==)
    , suitableTerm = const True
    , subTerm = undefined
-   , prettyPrinter = show
+   , prettyPrinter = show . fromContext
    , finalProperty = noDiff . fromContext
-   , ruleset       = derivativeRules ++ tidyupRules
+   , ruleset       = map liftRuleToContext derivativeRules ++ [tidyup]
    , strategy      = derivativeStrategy
-   , generator     = return $ inContext $ Diff $ Lambda "x" $ Var "x" :^: 2
+   , generator     = oneof $ map (return . inContext) [ex1, ex2, ex3]
    }
+   
+noDiff :: Expr -> Bool
+noDiff e = null [ () | Sym "Diff" _ <- universe e ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy = label "Derivative" $
-   tidyup <*> Common.Strategy.repeat (derivative <*> tidyup)
+   try tidyup <*> Common.Strategy.repeat (derivative <*> try tidyup)
 
-tidyup :: Strategy (Context Expr)
-tidyup = Common.Strategy.repeat $ somewhere (liftRuleToContext tidyRule) --  $ alternatives tidyupRules
-
+tidyup :: Rule (Context Expr)
+tidyup = liftRuleToContext $ makeSimpleRule "Tidy-up rule" $ \old -> 
+   let new = toExpr $ (simplifyExpr :: Expr -> SExpr) old
+   in if old==new then Nothing else Just new
+   
 derivative :: Strategy (Context Expr)
-derivative = somewhere $ alternatives derivativeRules
-{-
-ex :: Expr
-ex = (Con (1/3) :*: (x :^: Con 3)) :+: (Con (-3) :*: (x :^: Con 2)) :+: x :+: (Con (-5))
- where x = Var "x"
+derivative = somewhere $ alternatives (map liftRuleToContext derivativeRules)
 
+ex1, ex2, ex3 :: Expr
+ex1 = diff $ lambda (Var "x") $ Var "x" `pow` 2
+ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x `pow` Con 3)) :+: (Con (-3) :*: (x `pow` Con 2)) :+: x :+: (Con (-5))
+ where x = Var "x"
+ex3 = diff $ lambda (Var "x") (2 * Var "x") 
+
+test = fromContext $ applyD derivativeStrategy (inContext ex2)
+
+{-
 test :: Expr -> Expr
 test = fromContext . fromJust . apply derivativeStrategy . inContext . Diff . Lambda "x"
 
@@ -79,6 +92,7 @@ main = do
             Left err  -> error (show err)
             Right obj -> print $ fromExpr $ toExpr $ fromExpr $ testje $ toExpr obj
 -}
+{-
 toExpr :: OMOBJ -> Expr
 toExpr (OMA [OMS "calculus1" "diff", x]) = Diff (toExpr x)
 toExpr (OMBIND (OMS "fns1" "lambda") xs e) = foldr Lambda (toExpr e) xs
@@ -107,7 +121,10 @@ fromExpr (Var x) = OMV x
 fromExpr (Con r)
    | denominator r == 1 = OMI (numerator r) 
    | otherwise = fromExpr (Con (fromIntegral $ numerator r) :/: Con (fromIntegral $ denominator r))
-fromExpr e = error $ "Unknown Expr: " ++ show e
+fromExpr e = error $ "Unknown Expr: " ++ show e -}
+
+
+
 {-
 
  -- ("Derivative","[]","Diff","")

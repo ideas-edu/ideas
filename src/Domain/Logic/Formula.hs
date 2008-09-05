@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
-import Common.Uniplate (Uniplate(..))
+import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
 import Common.Utils
 import Data.Char
@@ -109,11 +109,11 @@ conjunctions = collectWithOperator andOperator
 
 -- | Count the number of implicationsations :: Logic -> Int
 countImplications :: Logic -> Int
-countImplications = foldLogic (const 0, \x y -> x+y+1, (+), (+), (+), id, 0, 0)
+countImplications p = length [ () | _ :->: _ <- universe p ] 
  
 -- | Count the number of equivalences
 countEquivalences :: Logic -> Int
-countEquivalences = foldLogic (const 0, (+), \x y -> x+y+1, (+), (+), id, 0, 0)
+countEquivalences p = length [ () | _ :<->: _ <- universe p ]
 
 -- | Count the number of binary operators
 countBinaryOperators :: Logic -> Int
@@ -122,26 +122,15 @@ countBinaryOperators = foldLogic (const 0, binop, binop, binop, binop, id, 0, 0)
 
 -- | Count the number of double negations 
 countDoubleNegations :: Logic -> Int
-countDoubleNegations = fst . foldLogic (const zero, bin, bin, bin, bin, notf, zero, zero)
- where
-   zero = (0, False)
-   bin (n, _) (m, _) = (n+m, False)
-   notf (n, b) = if b then (n+1, False) else (n, True)
+countDoubleNegations p = length [ () | Not (Not _) <- universe p ] 
 
 -- | Function varsLogic returns the variables that appear in a Logic expression.
 varsLogic :: Logic -> [String]
-varsLogic = foldLogic (return, union, union, union, union, id, [], [])      
-
-rightSpine :: Logic -> Logic
-rightSpine ((p :&&: q) :&&: r) = rightSpine (p :&&: (q :&&: r))
-rightSpine (p :&&: q) = p :&&: rightSpine q
-rightSpine ((p :||: q) :||: r) = rightSpine (p :||: (q :||: r))
-rightSpine (p :||: q) = p :||: rightSpine q
-rightSpine p = p
+varsLogic p = nub [ s | Var s <- universe p ]   
 
 instance Uniplate Logic where
    uniplate p =
-      case rightSpine p of 
+      case p of 
          p :->: q  -> ([p, q], \[a, b] -> a :->:  b)
          p :<->: q -> ([p, q], \[a, b] -> a :<->: b)
          p :&&: q  -> ([p, q], \[a, b] -> a :&&:  b)

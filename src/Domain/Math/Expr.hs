@@ -81,7 +81,7 @@ instance Uniplate Expr where
          a :/: b  -> ([a,b], \[x,y] -> x :/: y)
          Sqrt a   -> ([a]  , \[x]   -> Sqrt x)
          Var _    -> ([]   , \[]    -> expr)
-         Sym _ _  -> ([]   , \[]    -> expr)
+         Sym s as -> (as   , \xs    -> Sym s xs)
 
 -----------------------------------------------------------------------
 -- Arbitrary instance
@@ -153,7 +153,7 @@ instance Show Expr where
    show e = foldExpr (bin "+", bin "*", bin "-", neg, con, bin "/", sq, var, sym) e 0
     where
       con n _     = show n
-      var ('_':is) _ = map return ("xyzuvw" ++ ['a'..]) !! read is
+      -- var ('_':is) _ = map return ("xyzuvw" ++ ['a'..]) !! read is
       var s _     = s
       neg x b     = parIf (b>0) ("-" ++ x 2)
       sq  x       = sym "sqrt" [x]

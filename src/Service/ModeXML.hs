@@ -19,13 +19,15 @@ import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation
 import Common.Utils (safeHead)
-import Domain.Derivative
+import Domain.Math.Expr
 import OpenMath.Object
 import Service.XML
 import Service.AbstractService (getExercise, SomeExercise(..))
 import OpenMath.LAServer
 import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
+import OpenMath.Conversion
+import Domain.Derivative.Exercises
 import qualified Service.TypedAbstractService as TAS
 import Data.Maybe
 import Data.Char
@@ -131,8 +133,8 @@ resultOk = Tag "reply" [("result", "ok"), ("version", "0.1")] . return
 data X = forall a . InXML a => X (TAS.State a)
 
 instance InXML Expr where
-   toXML   = omobj2xml . fromExpr
-   fromXML = either fail (return . toExpr) . xml2omobj
+   toXML   = omobj2xml . toOMOBJ
+   fromXML = either fail (maybe (fail "Conversion from OMOBJ to Expr") return . fromOMOBJ) . xml2omobj
 
 instance InXML X where
    toXML (X s) = state2xml s

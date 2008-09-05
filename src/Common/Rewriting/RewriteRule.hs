@@ -1,7 +1,8 @@
 {-# OPTIONS -fglasgow-exts #-}
 module Common.Rewriting.RewriteRule 
-   ( RuleSpec(..), lhs, rhs, (|-)
-   , RewriteRule, Builder, rewriteRule, ruleName, nrOfMetaVars, rulePair
+   ( RuleSpec(..), lhs, rhs
+   , RewriteRule, Builder, rewriteRule, BuilderList, rewriteRules
+   , ruleName, nrOfMetaVars, rulePair
    , inverse, bothWays, checkScope
    , rewrite, rewriteM, rewriteWith
    , normalForm, normalFormWith
@@ -22,9 +23,10 @@ import Common.Apply
 -----------------------------------------------------------
 -- Rewrite rules
 
-infixl 1 :~>, |-
+infixl 1 :~>
 
 data RuleSpec a = a :~> a
+   deriving Show
 
 lhs, rhs :: RuleSpec a -> a
 lhs (x :~> _) = x
@@ -37,13 +39,6 @@ instance Show (RewriteRule a) where
 
 instance Eq (RewriteRule a) where
    r1 == r2 = ruleName r1 == ruleName r2
-
--- to disappear
-(|-) :: Rewrite a => a -> a -> RewriteRule a
-a |- b = R "" (length vs) (\i -> renameMetaVars (f i) a :~> renameMetaVars (f i) b)
- where
-   vs  = IS.toList (getMetaVars a)
-   f i = (i+) . fromMaybe 0 . (`elemIndex` vs)
 
 class Rewrite a => Builder t a | t -> a where
    buildSpec :: t -> Int -> RuleSpec a
@@ -59,10 +54,33 @@ instance Rewrite a => Builder (RuleSpec a) a where
 
 instance (Rewrite a, Builder b a) => Builder (a -> b) a where
    buildSpec f i = buildSpec (f (metaVar i)) (i+1)
-   countVars f   = countVars (f $ error "countVars")
+   countVars f   = countVars (f $ error "countVars") + 1
 
+class Rewrite a => BuilderList t a | t -> a where
+   getSpecNr   :: t -> Int -> Int -> RuleSpec a
+   countSpecsL :: t -> Int
+   countVarsL  :: t -> Int
+   
+instance Rewrite a => BuilderList (RewriteRule a) a where
+   getSpecNr r n = if n==0 then rulePair r else error "getSpecNr"
+   countSpecsL _ = 1
+   countVarsL    = nrOfMetaVars
+  
+instance Rewrite a => BuilderList [RuleSpec a] a where
+   getSpecNr rs n = buildSpec (rs!!n)
+   countSpecsL    = length
+   countVarsL _   = 0
+
+instance BuilderList b a => BuilderList (a -> b) a where 
+   getSpecNr f n i = getSpecNr (f (metaVar i)) n (i+1)
+   countSpecsL f   = countSpecsL (f $ error "countSpecsL")
+   countVarsL f    = countVarsL (f $ error "countSpecsL") + 1
+   
 rewriteRule :: Builder f a => String -> f -> RewriteRule a
 rewriteRule s f = R s (countVars f) (buildSpec f)
+
+rewriteRules :: BuilderList f a => String -> f -> [RewriteRule a]
+rewriteRules s f = map (R s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
 
 inverse :: RewriteRule a -> Maybe (RewriteRule a)
 inverse r@(R _ _ _) = if checkScope new then Just new else Nothing
@@ -89,11 +107,28 @@ rewrite r@(R _ _ _) = rewriteWith operators r
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r@(R _ _ _) e = msum $ map return $ rewriteWith operators r e
       
-rewriteWith :: [Operator a] -> RewriteRule a -> a -> [a]
-rewriteWith ops r@(R _ _ _) e = do
+rewriteWith :: Operators a -> RewriteRule a -> a -> [a]
+rewriteWith ops r0@(R _ _ _) e = do
+   r <- extendContext ops r0
    let lhs :~> rhs = rulePair r (nextMetaVar e)
    s <- matchWith ops lhs e
    return (s |-> rhs)
+      
+extendContext :: Operators a -> RewriteRule a -> [RewriteRule a]
+extendContext ops r =
+   case findOperator ops (lhs $ rulePair r 0) of
+      Just op | isAssociative op -> 
+         [r, extend (leftContext op) r, extend (rightContext op) r]
+      _ -> [r]
+ where
+   leftContext op a (x :~> y) =
+      constructor op a x :~> constructor op a y
+   
+   rightContext op a (x :~> y) =
+      constructor op x a :~> constructor op y a
+
+extend :: (a -> RuleSpec a -> RuleSpec a) -> RewriteRule a -> RewriteRule a
+extend f (R s n g) = R s (n+1) (\i -> f (metaVar (i+n)) (g i))
       
 -----------------------------------------------------------
 -- Normal forms

@@ -3,54 +3,15 @@
     <elem ruleid="Tidy-up rule">
       <state>
         <prefix>
-          [0,1,0]
+          [0,0]
         </prefix>
         <context>
-          [0];
+          [];
         </context>
         <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-          <OMA>
-            <OMS cd="arith1" name="plus"/>
-            <OMI>
-              3
-            </OMI>
-            <OMA>
-              <OMS cd="arith1" name="plus"/>
-              <OMI>
-                3
-              </OMI>
-              <OMI>
-                4
-              </OMI>
-            </OMA>
-          </OMA>
-        </OMOBJ>
-      </state>
-    </elem>
-    <elem ruleid="Tidy-up rule">
-      <state>
-        <prefix>
-          [0,1,0]
-        </prefix>
-        <context>
-          [1];
-        </context>
-        <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-          <OMA>
-            <OMS cd="arith1" name="plus"/>
-            <OMA>
-              <OMS cd="arith1" name="plus"/>
-              <OMI>
-                1
-              </OMI>
-              <OMI>
-                2
-              </OMI>
-            </OMA>
-            <OMI>
-              7
-            </OMI>
-          </OMA>
+          <OMI>
+            10
+          </OMI>
         </OMOBJ>
       </state>
     </elem>

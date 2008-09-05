@@ -18,9 +18,7 @@ import Domain.Fraction.Frac
 import Common.Transformation
 import Common.Rewriting
 
-type FracRule = Rule Frac
-
-fracRules :: [FracRule]
+fracRules :: [Rule Frac]
 fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac
             , ruleDivOne, ruleDivZero, ruleDivFrac, ruleDivSame
             , ruleUnitAdd, ruleAdd, ruleAddFrac
@@ -31,85 +29,80 @@ fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac
             , ruleCommAdd, ruleCommMul
             , ruleDistMul ]
 
--- local frac variables
-v, w, x, y, z :: Frac
-v:w:x:y:z:_ = metaVars
-
-
 -- | Multiplication rules
-ruleMulZero :: FracRule
-ruleMulZero = makeRuleList "MulZero" $ map RewriteRule $
-   [ (x :*: Con 0) |- Con 0
-   , (Con 0 :*: x) |- Con 0
+ruleMulZero :: Rule Frac
+ruleMulZero = ruleList "MulZero"
+   [ \x -> (x :*: Con 0) :~> Con 0
+   , \x -> (Con 0 :*: x) :~> Con 0
    ]
 
-ruleUnitMul :: FracRule
-ruleUnitMul = makeRuleList "UnitMul" $ map RewriteRule $
-   [ (x :*: Con 1) |- x
-   , (Con 1 :*: x) |- x
+ruleUnitMul :: Rule Frac
+ruleUnitMul = ruleList "UnitMul"
+   [ \x -> (x :*: Con 1) :~> x
+   , \x -> (Con 1 :*: x) :~> x
    ]
 
-ruleMul :: FracRule
+ruleMul :: Rule Frac
 ruleMul = makeSimpleRule "Mul" f
  where
    f (Con a :*: Con b) = return $ Con (a*b)
    f _                 = Nothing
 
-ruleMulFrac :: FracRule
-ruleMulFrac = makeRuleList "MulFrac" $ map RewriteRule
-   [ (x :/: y) :*: (v :/: w) |-  (x :*: v) :/: (y :*: w)
-   , (x :/: y) :*: v         |-  (x :*: v) :/: y
-   , v :*: (x :/: y)         |-  (x :*: v) :/: y
+ruleMulFrac :: Rule Frac
+ruleMulFrac = ruleList "MulFrac"
+   [ \x y v w -> (x :/: y) :*: (v :/: w) :~>  (x :*: v) :/: (y :*: w)
+   , \x y v _ -> (x :/: y) :*: v         :~>  (x :*: v) :/: y
+   , \x y v _ -> v :*: (x :/: y)         :~>  (x :*: v) :/: y
    ]
 
-ruleAssMul :: FracRule
-ruleAssMul = makeRuleList "AssMul" $ map RewriteRule
-   [ x :*: (y :*: z) |- (x :*: y) :*: z
-   , (x :*: y) :*: z |- x :*: (y :*: z)
+ruleAssMul :: Rule Frac
+ruleAssMul = ruleList "AssMul" $
+   [ \x y z -> x :*: (y :*: z) :~> (x :*: y) :*: z
+   , \x y z -> (x :*: y) :*: z :~> x :*: (y :*: z)
    ]
 
-ruleCommMul :: FracRule
-ruleCommMul = makeRule "CommMul" $ RewriteRule $ 
-   x :*: y |- y :*: x
+ruleCommMul :: Rule Frac
+ruleCommMul = rule "CommMul" $
+   \x y -> x :*: y :~> y :*: x
 
 -- also other way around?
-ruleDistMul :: FracRule
-ruleDistMul = makeRuleList "DistMul" $ map RewriteRule $
-   [ (x :*: y :+: x :*: z) |- x :*: (y :+: z)
-   , (x :*: y :+: z :*: x) |- x :*: (y :+: z)
-   , (y :*: x :+: x :*: z) |- x :*: (y :+: z)
-   , (y :*: x :+: z :*: x) |- x :*: (y :+: z)
+ruleDistMul :: Rule Frac
+ruleDistMul = ruleList "DistMul"
+   [ \x y z -> (x :*: y :+: x :*: z) :~> x :*: (y :+: z)
+   , \x y z -> (x :*: y :+: z :*: x) :~> x :*: (y :+: z)
+   , \x y z -> (y :*: x :+: x :*: z) :~> x :*: (y :+: z)
+   , \x y z -> (y :*: x :+: z :*: x) :~> x :*: (y :+: z)
 
-   , (x :/: y :+: x :*: z) |- x :*: (Con 1 :/: y :+: z)
-   , (x :/: y :+: z :*: x) |- x :*: (Con 1 :/: y :+: z)
+   , \x y z -> (x :/: y :+: x :*: z) :~> x :*: (Con 1 :/: y :+: z)
+   , \x y z -> (x :/: y :+: z :*: x) :~> x :*: (Con 1 :/: y :+: z)
 
-   , (x :*: y :+: x :/: z) |- x :*: (y :+: Con 1 :/: z)
+   , \x y z -> (x :*: y :+: x :/: z) :~> x :*: (y :+: Con 1 :/: z)
 
-   , (x :/: y :+: x :/: z) |- x :*: (Con 1 :/: y :+: Con 1 :/: z)
+   , \x y z -> (x :/: y :+: x :/: z) :~> x :*: (Con 1 :/: y :+: Con 1 :/: z)
 --
-   , (x :*: y :-: x :*: z) |- x :*: (y :-: z)
-   , (x :*: y :-: z :*: x) |- x :*: (y :-: z)
-   , (y :*: x :-: x :*: z) |- x :*: (y :-: z)
-   , (y :*: x :-: z :*: x) |- x :*: (y :-: z)
+   , \x y z -> (x :*: y :-: x :*: z) :~> x :*: (y :-: z)
+   , \x y z -> (x :*: y :-: z :*: x) :~> x :*: (y :-: z)
+   , \x y z -> (y :*: x :-: x :*: z) :~> x :*: (y :-: z)
+   , \x y z -> (y :*: x :-: z :*: x) :~> x :*: (y :-: z)
 
-   , (x :/: y :-: x :*: z) |- x :*: (Con 1 :/: y :-: z)
-   , (x :/: y :-: z :*: x) |- x :*: (Con 1 :/: y :-: z)
+   , \x y z -> (x :/: y :-: x :*: z) :~> x :*: (Con 1 :/: y :-: z)
+   , \x y z -> (x :/: y :-: z :*: x) :~> x :*: (Con 1 :/: y :-: z)
 
-   , (x :*: y :-: x :/: z) |- x :*: (y :-: Con 1 :/: z)
+   , \x y z -> (x :*: y :-: x :/: z) :~> x :*: (y :-: Con 1 :/: z)
 
-   , (x :/: y :-: x :/: z) |- x :*: (Con 1 :/: y :-: Con 1 :/: z)
+   , \x y z -> (x :/: y :-: x :/: z) :~> x :*: (Con 1 :/: y :-: Con 1 :/: z)
    ]
 
 -- | Division rules
-ruleDivOne :: FracRule
-ruleDivOne = makeRule "DivOne" $ RewriteRule $
-   (x :/: Con 1) |- x   
+ruleDivOne :: Rule Frac
+ruleDivOne = rule "DivOne" $
+   \x -> (x :/: Con 1) :~> x   
 
-ruleDivZero :: FracRule
-ruleDivZero = makeRule "DivZero" $ RewriteRule $
-   (Con 0 :/: x)  |-  Con 0
+ruleDivZero :: Rule Frac
+ruleDivZero = rule "DivZero" $
+   \x -> (Con 0 :/: x)  :~>  Con 0
 
-ruleDivFrac :: FracRule
+ruleDivFrac :: Rule Frac
 ruleDivFrac = makeSimpleRule "Div" f
  where
    f ((x :/: y) :/: (v :/: w)) = return $ (x :/: y) :*: (w :/: v)
@@ -117,18 +110,18 @@ ruleDivFrac = makeSimpleRule "Div" f
    f (x :/: (y :/: v))         = return $ (x :*: v) :/: y
    f _                 = Nothing
 
-ruleDivSame :: FracRule
-ruleDivSame = makeRule "DivSame" $ RewriteRule $
-   (x :/: x) |- Con 1
+ruleDivSame :: Rule Frac
+ruleDivSame = rule "DivSame" $
+   \x -> (x :/: x) :~> Con 1
 
 -- | Addition rules
-ruleUnitAdd :: FracRule
-ruleUnitAdd = makeRuleList "UnitAdd" $ map RewriteRule
-   [ (x :+: Con 0)  |-  x
-   , (Con 0 :+: x)  |-  x
+ruleUnitAdd :: Rule Frac
+ruleUnitAdd = ruleList "UnitAdd"
+   [ \x -> (x :+: Con 0)  :~>  x
+   , \x -> (Con 0 :+: x)  :~>  x
    ]
 
-ruleAdd :: FracRule
+ruleAdd :: Rule Frac
 ruleAdd = makeSimpleRule "Add" f
  where 
    f (Con x :+: Con y) = return $ Con (x+y)
@@ -136,39 +129,39 @@ ruleAdd = makeSimpleRule "Add" f
                        | otherwise = Nothing
    f _                 = Nothing
 
-ruleAddFrac :: FracRule
+ruleAddFrac :: Rule Frac
 ruleAddFrac = makeSimpleRule "AddFrac" f
  where
    f (x :/: y :+: v :/: w) | y==w = return $ (x+v) :/: w
                            | otherwise = Nothing
    f _                     = Nothing
 
-ruleAssAdd :: FracRule
-ruleAssAdd = makeRuleList "AssAdd" $ map RewriteRule
-   [ (x :+: (y :+: z)) |- ((x :+: y) :+: z)
-   , ((x :+: y) :+: z) |- (x :+: (y :+: z))
+ruleAssAdd :: Rule Frac
+ruleAssAdd = ruleList "AssAdd"
+   [ \x y z -> (x :+: (y :+: z)) :~> ((x :+: y) :+: z)
+   , \x y z -> ((x :+: y) :+: z) :~> (x :+: (y :+: z))
    ]
 
-ruleCommAdd :: FracRule
-ruleCommAdd = makeRule "CommAdd" $ RewriteRule $
-   (x :+: y) |- (y :+: x)
+ruleCommAdd :: Rule Frac
+ruleCommAdd = rule "CommAdd" $ 
+   \x y -> (x :+: y) :~> (y :+: x)
 
 -- | Substraction rules
-ruleSubZero :: FracRule
-ruleSubZero = makeRule "SubZero" $ RewriteRule $
-   (x :-: Con 0) |-  x
+ruleSubZero :: Rule Frac
+ruleSubZero = rule "SubZero" $
+   \x -> (x :-: Con 0) :~>  x
 
-ruleSubVar :: FracRule
-ruleSubVar = makeRule "SubVar" $ RewriteRule $
-   (x :-: x) |- Con 0
+ruleSubVar :: Rule Frac
+ruleSubVar = rule "SubVar" $
+   \x -> (x :-: x) :~> Con 0
 
-ruleSub :: FracRule
+ruleSub :: Rule Frac
 ruleSub = makeSimpleRule "Sub" f
  where
    f (Con x :-: Con y) = return $ Con (x-y)
    f _                 = Nothing
 
-ruleSubFrac :: FracRule
+ruleSubFrac :: Rule Frac
 ruleSubFrac = makeSimpleRule "SubFrac" f
  where
    f (x :/: y :-: v :/: w) | y==w = return $ (x-v) :/: w
@@ -176,7 +169,7 @@ ruleSubFrac = makeSimpleRule "SubFrac" f
    f _                 = Nothing
 
 -- | Negation rules
-ruleNeg :: FracRule
+ruleNeg :: Rule Frac
 ruleNeg = makeSimpleRule "Neg" f
   where
     f (Con (-1) :*: x)  = return $ Neg x
@@ -193,11 +186,11 @@ ruleNeg = makeSimpleRule "Neg" f
 --    f (Neg x)           = return $ pushNeg' x -- non-recursive??
     f _                 = Nothing
   
-rulePushNeg :: FracRule -- push Negs inside
+rulePushNeg :: Rule Frac -- push Negs inside
 rulePushNeg = makeSimpleRule "PushNeg" f
   where
    f (Neg x) = case x of
-                (Var x)   -> Nothing
+                (Var _)   -> Nothing
                 (Con x)   -> return $ Con (negate x)
                 (b :*: c) -> return $ Neg b :*: c
                 (b :/: c) -> return $ Neg b :/: c
@@ -206,14 +199,14 @@ rulePushNeg = makeSimpleRule "PushNeg" f
                 (Neg b)   -> return $ b
    f _         = Nothing
 
-ruleNegToCon :: FracRule
+ruleNegToCon :: Rule Frac
 ruleNegToCon = minorRule $ makeSimpleRule "NegToCon" f
   where
     f (Neg (Con x)) = return $ Con (negate x)
     f _             = Nothing
 
 -- | Fraction rules
-ruleCommonDenom :: FracRule
+ruleCommonDenom :: Rule Frac
 ruleCommonDenom = makeSimpleRule "CommonDenom" f
  where
   f (Con x :/: Con y :+: Con v :/: Con w) | y/=w = return $ Con (x*w) :/: Con (y*w) 
@@ -228,7 +221,7 @@ ruleCommonDenom = makeSimpleRule "CommonDenom" f
   f (Con x :/: Con y :-: Con v) = return $ Con x :/: Con y :-: Con (v*y) :/: Con y
   f _                 = Nothing
 
-ruleGCD :: FracRule
+ruleGCD :: Rule Frac
 ruleGCD = makeSimpleRule "GCD" f
  where
   f (Con x :/: Con y) | a==1      = Nothing

@@ -18,6 +18,7 @@ import Domain.Fraction.Frac
 import Domain.Fraction.Rules
 import Common.Context (Context, liftRuleToContext)
 import Common.Strategy
+import Common.Transformation
 
 lrtc = liftRuleToContext
 
@@ -28,7 +29,7 @@ toSimple = label "Simplify fractions" $ repeat $
                  |> bottomUp (add <|> sub))       -- then add and subtract
              <*> negcon -- after every action, fire the minor rule to prevent (Neg (Con x))
 
-zeroRules, unitRules, calcRules, negRules :: [FracRule]
+zeroRules, unitRules, calcRules, negRules :: [Rule Frac]
 zeroRules = [ruleDivZero, ruleMulZero, ruleUnitAdd, ruleSubZero]
 unitRules = [ruleUnitMul, ruleDivOne, ruleDivSame, ruleSubVar]
 calcRules = [ruleMul, ruleDivFrac, ruleAdd, ruleSub, ruleGCD, ruleDistMul]

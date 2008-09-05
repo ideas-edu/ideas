@@ -1,7 +1,7 @@
 <reply result="ok" version="0.1">
   <state>
     <prefix>
-      [0,1,0]
+      []
     </prefix>
     <context>
       [0];

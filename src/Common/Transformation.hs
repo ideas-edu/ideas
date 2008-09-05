@@ -17,14 +17,14 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( -- * Transformations
-     Transformation(..), makeTrans, inverseTrans, getPatternPair
+     Transformation(RewriteRule), makeTrans, inverseTrans, getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, name, isMinorRule, isMajorRule, isBuggyRule
-   , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
+   , rule, ruleList, ruleListF, makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
@@ -268,6 +268,15 @@ instance Apply Rule where
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool
 isMajorRule = not . isMinorRule
+
+ruleList :: Builder f a => String -> [f] -> Rule a
+ruleList s = makeRuleList s . map (RewriteRule . rewriteRule s)
+
+ruleListF :: BuilderList f a => String -> f -> Rule a
+ruleListF s = makeRuleList s . map RewriteRule . rewriteRules s
+
+rule :: Builder f a => String -> f -> Rule a
+rule s = makeRule s . RewriteRule . rewriteRule s
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
 makeRule :: String -> Transformation a -> Rule a

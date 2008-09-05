@@ -32,29 +32,38 @@ class IsOMOBJ a where
 --------------------------------------------------------------------
 -- OpenMath symbols
 
-plusSymbol   = OMS "arith1" "plus"
-timesSymbol  = OMS "arith1" "times"
-minusSymbol  = OMS "arith1" "minus"
-divideSymbol = OMS "arith1" "divide"
-negateSymbol = OMS "arith1" "unary_minus"
-rootSymbol   = OMS "arith1" "root"
+plusSymbol      = OMS "arith1" "plus"
+timesSymbol     = OMS "arith1" "times"
+minusSymbol     = OMS "arith1" "minus"
+divideSymbol    = OMS "arith1" "divide"
+negateSymbol    = OMS "arith1" "unary_minus"
+rootSymbol      = OMS "arith1" "root"
+powerSymbol     = OMS "arith1" "power"
 
-listSymbol   = OMS "list1" "list"
-
-rationalSymbol = OMS "nums1" "rational"
-piSymbol       = OMS "nums1" "pi"
-
-equationSymbol = OMS "relation1" "eq"
+rationalSymbol  = OMS "nums1" "rational"
+piSymbol        = OMS "nums1" "pi"
 
 vectorSymbol    = OMS "linalg2" "vector"
 matrixSymbol    = OMS "linalg2" "matrix"
 matrixRowSymbol = OMS "linalg2" "matrixrow"
 
+sinSymbol       = OMS "transc1" "sin"
+cosSymbol       = OMS "transc1" "cos"
+lnSymbol        = OMS "transc1" "ln"
+
+listSymbol      = OMS "list1" "list"
+equationSymbol  = OMS "relation1" "eq"
+diffSymbol      = OMS "calculus1" "diff"
+lambdaSymbol    = OMS "fns1" "lambda"
+
 type SymbolMap = [(String, OMOBJ, Maybe Int)]
 
 symbolMap :: SymbolMap
-symbolMap = [("pi", piSymbol, Just 0)]
-
+symbolMap = 
+   [ ("pi", piSymbol, Just 0), ("Diff", diffSymbol, Just 1), ("sin", sinSymbol, Just 1)
+   , ("cos", cosSymbol, Just 1), ("ln", lnSymbol, Just 1), ("power", powerSymbol, Just 2)
+   ]
+   
 findByName :: String -> Maybe (OMOBJ, Maybe Int)
 findByName n = safeHead [ (s, ma) | (m, s, ma) <- symbolMap, n==m  ]
 
@@ -157,12 +166,13 @@ instance IsOMOBJ Expr where
          a :/: b  -> binop divideSymbol a b
          Sqrt a   -> binop rootSymbol a (2::Integer)
          Var s    -> OMV s
+         Sym "Lambda" [Var x, e] -> OMBIND lambdaSymbol [x] (toOMOBJ e)
          Sym f xs
-            | null xs   -> symbol
-            | otherwise -> listop symbol xs
+            | null xs      -> symbol
+            | otherwise    -> listop symbol xs
           where
             symbol = maybe (unknown f) fst $ findByName f
-   fromOMOBJ =  from2 plusSymbol (+)
+   fromOMOBJ =  from2 plusSymbol  (+)
              |> from2 timesSymbol (*)
              |> from2 minusSymbol (-)
              |> from1 negateSymbol negate
@@ -170,6 +180,7 @@ instance IsOMOBJ Expr where
              |> from2 divideSymbol (/)
              |> fromSqrt
              |> fromVar
+             |> fromLambda
              |> fromSym
     where
       fromSqrt (OMA [s,x,OMI 2]) | s == rootSymbol =
@@ -178,6 +189,10 @@ instance IsOMOBJ Expr where
       
       fromVar (OMV s) = Just (Var s)
       fromVar _ = Nothing
+      
+      fromLambda (OMBIND s [x] body) | s == lambdaSymbol = 
+         liftM (\e -> Sym "Lambda" [Var x, e]) (fromOMOBJ body)
+      fromLambda _ = Nothing
       
       fromSym obj@(OMS _ _) = fmap (symbol . fst) (findBySymbol obj)
       fromSym (OMA (s:xs)) = 
@@ -190,6 +205,7 @@ instance IsOMOBJ Expr where
 instance Simplification a => IsOMOBJ (SExprF a) where 
    toOMOBJ   = toOMOBJ . toExpr
    fromOMOBJ = fmap simplifyExpr . fromOMOBJ
+
 
 --------------------------------------------------------------------
 -- Linear algebra types

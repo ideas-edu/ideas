@@ -104,7 +104,7 @@ giveSteps p0 a =
                 Just r -> [ (doc r old, r, prefix, old, new) | isMajorRule r ]
                 _      -> []
        showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
-       doc r old = text "Use rule " <> rule r <> 
+       doc r old = text "Use rule " <> docrule r <> 
           case expectedArguments r old of
              Just xs -> text "\n   with arguments " <> text (showList xs)
              Nothing -> emptyDoc
@@ -122,7 +122,7 @@ feedback ex p0 a txt =
               let answers = giveSteps p0 a
                   check (_, _, _, _, this) = equality ex new this
               in case filter check answers of
-                    (_, r, newPrefix, _, newTerm):_ -> Correct (text "Well done! You applied rule " <> rule r) (Just (newPrefix, r, newTerm))
+                    (_, r, newPrefix, _, newTerm):_ -> Correct (text "Well done! You applied rule " <> docrule r) (Just (newPrefix, r, newTerm))
                     _ | equality ex a new -> 
                          Correct (text "You have submitted the current term.") Nothing
                     _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
@@ -183,8 +183,8 @@ text s = D [Text s]
 -- term :: a -> Doc a
 -- term a = D [Term a]
 
-rule :: Rule a -> Doc a
-rule r = D [DocRule (Some r)]
+docrule :: Rule a -> Doc a
+docrule r = D [DocRule (Some r)]
 
 ---------------------------------------------------------------
 -- Checks for an exercise

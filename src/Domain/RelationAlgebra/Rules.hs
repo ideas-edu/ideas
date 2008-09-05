@@ -17,22 +17,15 @@ import Domain.RelationAlgebra.Formula
 import Common.Transformation
 import Common.Rewriting
 
--- local relalg variables
-q, r, s :: RelAlg
-q:r:s:_ = metaVars
-
-type RelAlgRule = Rule RelAlg
-
-
-invRules :: [RelAlgRule]
+invRules :: [Rule RelAlg]
 invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
            , ruleInvOverAdd, ruleInvOverNot, ruleDoubleInv
            ]
-compAddRules :: [RelAlgRule]
+compAddRules :: [Rule RelAlg]
 compAddRules = [ ruleCompOverUnion {- , ruleCompOverIntersec  -}
                , {- ruleAddOverUnion,-} ruleAddOverIntersec 
                ]
-relAlgRules :: [RelAlgRule]
+relAlgRules :: [Rule RelAlg]
 relAlgRules = invRules ++ compAddRules ++ 
               [ ruleUnionOverIntersec,ruleDeMorgan, ruleIdemp
               , ruleRemCompl, ruleDoubleNegation, ruleAbsorpCompl
@@ -40,7 +33,7 @@ relAlgRules = invRules ++ compAddRules ++
               , ruleNotOverAdd
               ]
               
-buggyRelAlgRules ::[RelAlgRule]
+buggyRelAlgRules ::[Rule RelAlg]
 buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
                    , buggyRuleNotOverAdd, buggyRuleNotOverComp, buggyRuleParenth
                    , buggyRuleAssoc, buggyRuleInvOverComp, buggyRuleInvOverAdd
@@ -49,71 +42,71 @@ buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
                    
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
-ruleInvOverUnion :: RelAlgRule
-ruleInvOverUnion = makeRule "InvOverUnion" $ RewriteRule $
-   (Inv (r :||: s)) |- (Inv r :||: Inv s)
+ruleInvOverUnion :: Rule RelAlg
+ruleInvOverUnion = rule "InvOverUnion" $ 
+   \r s -> (Inv (r :||: s)) :~> (Inv r :||: Inv s)
 
-ruleInvOverIntersec :: RelAlgRule
-ruleInvOverIntersec = makeRule "InvOverIntersect" $ RewriteRule $ 
-   (Inv (r :&&: s)) |- (Inv r :&&: Inv s)
+ruleInvOverIntersec :: Rule RelAlg
+ruleInvOverIntersec = rule "InvOverIntersect" $  
+   \r s -> (Inv (r :&&: s)) :~> (Inv r :&&: Inv s)
 
-ruleInvOverComp :: RelAlgRule
-ruleInvOverComp = makeRule "InvOverComp" $ RewriteRule $
-   (Inv (r :.: s)) |- (Inv s :.: Inv r)
+ruleInvOverComp :: Rule RelAlg
+ruleInvOverComp = rule "InvOverComp" $ 
+   \r s -> (Inv (r :.: s)) :~> (Inv s :.: Inv r)
 
-ruleInvOverAdd :: RelAlgRule
-ruleInvOverAdd = makeRule "InvOverAdd" $ RewriteRule $
-   (Inv (r :+: s)) |- (Inv s :+: Inv r)
+ruleInvOverAdd :: Rule RelAlg
+ruleInvOverAdd = rule "InvOverAdd" $ 
+   \r s -> (Inv (r :+: s)) :~> (Inv s :+: Inv r)
 
-ruleInvOverNot :: RelAlgRule
-ruleInvOverNot = makeRule "InvOverNot" $ RewriteRule $
-   (Inv (Not r))     |- (Not (Inv r))
+ruleInvOverNot :: Rule RelAlg
+ruleInvOverNot = rule "InvOverNot" $ 
+   \r -> (Inv (Not r))     :~> (Not (Inv r))
    
-ruleDoubleInv :: RelAlgRule
-ruleDoubleInv = makeRule "DoubleInv" $ RewriteRule $
-   (Inv (Inv r))     |- r
+ruleDoubleInv :: Rule RelAlg
+ruleDoubleInv = rule "DoubleInv" $ 
+   \r -> (Inv (Inv r))     :~> r
       
 
 
 
 -- | 2. Alle ; en + operatoren zoveel mogelijk naar binnen verplaatsen 
 
-ruleCompOverUnion :: RelAlgRule
-ruleCompOverUnion = makeRuleList "CompOverUnion" $ map RewriteRule
-   [ (q :.: (r :||: s)) |-  ((q :.: r) :||: (q :.: s)) 
-   , ((q :||: r) :.: s) |-  ((q :.: s) :||: (r :.: s)) 
+ruleCompOverUnion :: Rule RelAlg
+ruleCompOverUnion = ruleList "CompOverUnion" 
+   [ \q r s -> (q :.: (r :||: s)) :~>  ((q :.: r) :||: (q :.: s)) 
+   , \q r s -> ((q :||: r) :.: s) :~>  ((q :.: s) :||: (r :.: s)) 
    ]
 
-ruleCompOverIntersec :: RelAlgRule
-ruleCompOverIntersec = makeRuleList "CompOverIntersec" $ map RewriteRule
-   [ (q :.: (r :&&: s)) |-  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
-   , ((q :&&: r) :.: s) |-  ((q :.: s) :&&: (r :.: s))  --idem
+ruleCompOverIntersec :: Rule RelAlg
+ruleCompOverIntersec = ruleList "CompOverIntersec" 
+   [ \q r s -> (q :.: (r :&&: s)) :~>  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
+   , \q r s -> ((q :&&: r) :.: s) :~>  ((q :.: s) :&&: (r :.: s))  --idem
    ]
-ruleAddOverUnion :: RelAlgRule
-ruleAddOverUnion = makeRuleList "AddOverUnion"  $ map RewriteRule
-   [ (q :+: (r :||: s)) |-  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
-   , ((q :||: r) :+: s) |-  ((q :+: s) :||: (r :+: s)) --idem
+ruleAddOverUnion :: Rule RelAlg
+ruleAddOverUnion = ruleList "AddOverUnion"  
+   [ \q r s -> (q :+: (r :||: s)) :~>  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
+   , \q r s -> ((q :||: r) :+: s) :~>  ((q :+: s) :||: (r :+: s)) --idem
    ]
 
-ruleAddOverIntersec :: RelAlgRule
-ruleAddOverIntersec = makeRuleList "AddOverIntersec"  $ map RewriteRule
-   [ (q :+: (r :&&: s)) |-  ((q :+: r) :&&: (q :+: s))  
-   , ((q :&&: r) :+: s) |-  ((q :+: s) :&&: (r :+: s))  
+ruleAddOverIntersec :: Rule RelAlg
+ruleAddOverIntersec = ruleList "AddOverIntersec"  
+   [ \q r s -> (q :+: (r :&&: s)) :~>  ((q :+: r) :&&: (q :+: s))  
+   , \q r s -> ((q :&&: r) :+: s) :~>  ((q :+: s) :&&: (r :+: s))  
    ]
 -- | 3. Distribute union over intersection
  
-ruleUnionOverIntersec :: RelAlgRule
-ruleUnionOverIntersec = makeRuleList "UnionOverIntersec" $ map RewriteRule
-   [ (q :||: (r :&&: s)) |-  ((q :||: r) :&&: (q :||: s)) 
-   , ((q :&&: r) :||: s) |-  ((q :||: s) :&&: (r :||: s)) 
+ruleUnionOverIntersec :: Rule RelAlg
+ruleUnionOverIntersec = ruleList "UnionOverIntersec" 
+   [  \q r s -> (q :||: (r :&&: s)) :~>  ((q :||: r) :&&: (q :||: s)) 
+   , \q r s -> ((q :&&: r) :||: s) :~>  ((q :||: s) :&&: (r :||: s)) 
    ]
 
 -- | 4. De Morgan rules
 
-ruleDeMorgan :: RelAlgRule
-ruleDeMorgan = makeRuleList "DeMorgan" $ map RewriteRule
-   [ Not (r :||: s) |-  (Not r :&&: Not s)
-   , Not (r :&&: s) |-  (Not r :||: Not s)
+ruleDeMorgan :: Rule RelAlg
+ruleDeMorgan = ruleList "DeMorgan" 
+   [ \r s -> Not (r :||: s) :~>  (Not r :&&: Not s)
+   , \r s -> Not (r :&&: s) :~>  (Not r :||: Not s)
    ]
 
 
@@ -121,187 +114,187 @@ ruleDeMorgan = makeRuleList "DeMorgan" $ map RewriteRule
  
 -- | 5. Idempotention
 
-ruleIdemp :: RelAlgRule
-ruleIdemp = makeRuleList "Idempotency" $ map RewriteRule 
-   [ (r :||: r) |-  r
-   , (r :&&: r) |-  r
+ruleIdemp :: Rule RelAlg
+ruleIdemp = ruleList "Idempotency"  
+   [ \r -> (r :||: r) :~>  r
+   , \r -> (r :&&: r) :~>  r
    ]
 
 -- | 6. Complement
 
-ruleRemCompl :: RelAlgRule
-ruleRemCompl = makeRuleList "RemCompl" $ map RewriteRule
-   [ (r :||: (Not r)) |-  U
-   , ((Not r) :||: r) |-  U
-   , (r :&&: (Not r)) |-  E
-   , ((Not r) :&&: r) |-  E
+ruleRemCompl :: Rule RelAlg
+ruleRemCompl = ruleList "RemCompl" 
+   [ \r -> (r :||: (Not r)) :~>  U
+   , \r -> ((Not r) :||: r) :~>  U
+   , \r -> (r :&&: (Not r)) :~>  E
+   , \r -> ((Not r) :&&: r) :~>  E
    ]
    
 -- |6a. Double negation   
-ruleDoubleNegation :: RelAlgRule
-ruleDoubleNegation = makeRule "DoubleNegation" $ RewriteRule $
-   (Not (Not r)) |- r
+ruleDoubleNegation :: Rule RelAlg
+ruleDoubleNegation = rule "DoubleNegation" $ 
+   \r -> (Not (Not r)) :~> r
    
 -- | 7. Absorption complement
 
-ruleAbsorpCompl :: RelAlgRule
-ruleAbsorpCompl = makeRuleList "AbsorpCompl" $ map RewriteRule
-   [ (r :&&: ((Not r) :||: s)) |- (r :&&: s)  
-   , (r :&&: (s :||: (Not r))) |- (r :&&: s)  
-   , (((Not r) :||: s) :&&: r) |- (r :&&: s)
-   , ((s :||: (Not r)) :&&: r) |- (r :&&: s)
-   , (r :||: ((Not r) :&&: s)) |- (r :||: s)  
-   , (r :||: (s :&&: (Not r))) |- (r :||: s)
-   , (((Not r) :&&: s) :||: r) |- (r :||: s)
-   , ((s :&&: (Not r)) :||: r) |- (r :||: s)
+ruleAbsorpCompl :: Rule RelAlg
+ruleAbsorpCompl = ruleList "AbsorpCompl" 
+   [ \r s -> (r :&&: ((Not r) :||: s)) :~> (r :&&: s)  
+   , \r s -> (r :&&: (s :||: (Not r))) :~> (r :&&: s)  
+   , \r s -> (((Not r) :||: s) :&&: r) :~> (r :&&: s)
+   , \r s -> ((s :||: (Not r)) :&&: r) :~> (r :&&: s)
+   , \r s -> (r :||: ((Not r) :&&: s)) :~> (r :||: s)  
+   , \r s -> (r :||: (s :&&: (Not r))) :~> (r :||: s)
+   , \r s -> (((Not r) :&&: s) :||: r) :~> (r :||: s)
+   , \r s -> ((s :&&: (Not r)) :||: r) :~> (r :||: s)
    ]
-ruleAbsorp :: RelAlgRule
-ruleAbsorp = makeRuleList "Absorp" $ map RewriteRule $
-   [ (r :&&: (r :||: s))       |- r
-   , (r :&&: (s :||: r))       |- r
-   , ((r :||: s) :&&: r)       |- r
-   , ((s :||: r) :&&: r)       |- r
-   , (r  :||: (r :&&: s))      |- r
-   , (r  :||: (s :&&: r))      |- r
-   , ((r :&&: s) :||: r)       |- r
-   , ((s :&&: r) :||: r)       |- r
+ruleAbsorp :: Rule RelAlg
+ruleAbsorp = ruleList "Absorp"  
+   [ \r s -> (r :&&: (r :||: s))       :~> r
+   , \r s -> (r :&&: (s :||: r))       :~> r
+   , \r s -> ((r :||: s) :&&: r)       :~> r
+   , \r s -> ((s :||: r) :&&: r)       :~> r
+   , \r s -> (r  :||: (r :&&: s))      :~> r
+   , \r s -> (r  :||: (s :&&: r))      :~> r
+   , \r s -> ((r :&&: s) :||: r)       :~> r
+   , \r s -> ((s :&&: r) :||: r)       :~> r
    ]
 
 -- | 8. Remove redundant expressions
-ruleRemRedunExprs :: RelAlgRule
-ruleRemRedunExprs = makeRuleList "RemRedunExprs" $ map RewriteRule $
-   [ (r :||: U) |- U
-   , (U :||: r) |- U 
-   , (r :||: E) |- r
-   , (E :||: r) |- r 
-   , (r :&&: U) |- r
-   , (U :&&: r) |- r 
-   , (r :&&: E) |- E
-   , (E :&&: r) |- E 
---   , (r :.: U)  |- r
---   , (U :.: r)  |- r
-   , (U :.: U)  |- U
-   , (r :.: E)  |- E
-   , (E :.: r)  |- E 
-   , (r :+: U)  |- U
-   , (U :+: r)  |- U
-   , (E :+: E)  |- E
---   , (r :+: E)  |- r
---   , (E :+: r)  |- r 
-   , (Not U)    |- E
-   , (Not E)    |- U
-   , (Inv U)    |- U
-   , (Inv E)    |- E
+ruleRemRedunExprs :: Rule RelAlg
+ruleRemRedunExprs = ruleList "RemRedunExprs"  
+   [ \r -> (r :||: U) :~> U
+   , \r -> (U :||: r) :~> U 
+   , \r -> (r :||: E) :~> r
+   , \r -> (E :||: r) :~> r 
+   , \r -> (r :&&: U) :~> r
+   , \r -> (U :&&: r) :~> r 
+   , \r -> (r :&&: E) :~> E
+   , \r -> (E :&&: r) :~> E 
+--   , (r :.: U)  :~> r
+--   , (U :.: r)  :~> r
+   , \_ -> (U :.: U)  :~> U
+   , \r -> (r :.: E)  :~> E
+   , \r -> (E :.: r)  :~> E 
+   , \r -> (r :+: U)  :~> U
+   , \r -> (U :+: r)  :~> U
+   , \_ -> (E :+: E)  :~> E
+--   , (r :+: E)  :~> r
+--   , (E :+: r)  :~> r 
+   , \_ -> (Not U)    :~> E
+   , \_ -> (Not E)    :~> U
+   , \_ -> (Inv U)    :~> U
+   , \_ -> (Inv E)    :~> E
    ]
    
 -- | 9. Distribute Not over . and +
 
-ruleNotOverComp :: RelAlgRule
-ruleNotOverComp = makeRule "NotOverComp" $ RewriteRule $
-    Not (r :.: s) |-  (Not r :+: Not s)
+ruleNotOverComp :: Rule RelAlg
+ruleNotOverComp = rule "NotOverComp" $ 
+    \r s -> Not (r :.: s) :~>  (Not r :+: Not s)
    
-ruleNotOverAdd :: RelAlgRule
-ruleNotOverAdd = makeRule "NotOverAdd" $ RewriteRule $
-   Not (r :+: s) |-  (Not r :.: Not s)
+ruleNotOverAdd :: Rule RelAlg
+ruleNotOverAdd = rule "NotOverAdd" $ 
+   \r s -> Not (r :+: s) :~>  (Not r :.: Not s)
    
    -- Buggy rules:
 
 
     
-buggyRuleIdemComp :: RelAlgRule
-buggyRuleIdemComp = buggyRule $ makeRule "IdemComp" $ RewriteRule $
-    (q :.: q)  |-  q 
+buggyRuleIdemComp :: Rule RelAlg
+buggyRuleIdemComp = buggyRule $ rule "IdemComp" $ 
+   \q -> (q :.: q)  :~>  q 
     
-buggyRuleIdemAdd :: RelAlgRule
-buggyRuleIdemAdd = buggyRule $ makeRule "IdemAdd"  $ RewriteRule $ 
-    (q :+: q)  |-  q 
+buggyRuleIdemAdd :: Rule RelAlg
+buggyRuleIdemAdd = buggyRule $ rule "IdemAdd"  $  
+   \q -> (q :+: q)  :~>  q 
     
 
 
-buggyRuleDeMorgan :: RelAlgRule
-buggyRuleDeMorgan = buggyRule $ makeRuleList "BuggyDeMorgan" $ map RewriteRule
-    [ (Not (q :&&: r)) |-  (Not q :||: r)
-    , (Not (q :&&: r)) |-  (q :||: Not r)
-    , (Not (q :&&: r)) |- (Not (Not q :||: Not r))
-    , (Not (q :||: r)) |-  (Not q :&&: r)
-    , (Not (q :||: r)) |-  (q :&&: Not r)
-    , (Not (q :||: r)) |- (Not (Not q :&&: Not r)) --note the firstNot in both formulas!  
+buggyRuleDeMorgan :: Rule RelAlg
+buggyRuleDeMorgan = buggyRule $ ruleList "BuggyDeMorgan" 
+    [ \q r -> (Not (q :&&: r)) :~>  (Not q :||: r)
+    , \q r -> (Not (q :&&: r)) :~>  (q :||: Not r)
+    , \q r -> (Not (q :&&: r)) :~> (Not (Not q :||: Not r))
+    , \q r -> (Not (q :||: r)) :~>  (Not q :&&: r)
+    , \q r -> (Not (q :||: r)) :~>  (q :&&: Not r)
+    , \q r -> (Not (q :||: r)) :~> (Not (Not q :&&: Not r)) --note the firstNot in both formulas!  
     ]
     
-buggyRuleNotOverAdd :: RelAlgRule
-buggyRuleNotOverAdd = buggyRule $ makeRuleList "BuggyNotOverAdd" $ map RewriteRule
-     [(Not(q :+: r)) |- (Not q :+: Not r)
-     ,(Not(q :+: r)) |- (Not q :.: r)
-     ,(Not(q :+: r)) |- (Not q :+: r)
-     ,(Not(q :+: r)) |- Not (Not q :.: Not r) --note the firstNot in both formulas! 
+buggyRuleNotOverAdd :: Rule RelAlg
+buggyRuleNotOverAdd = buggyRule $ ruleList "BuggyNotOverAdd" 
+     [ \q r -> (Not(q :+: r)) :~> (Not q :+: Not r)
+     , \q r -> (Not(q :+: r)) :~> (Not q :.: r)
+     , \q r -> (Not(q :+: r)) :~> (Not q :+: r)
+     , \q r -> (Not(q :+: r)) :~> Not (Not q :.: Not r) --note the firstNot in both formulas! 
      ]
      
-buggyRuleNotOverComp :: RelAlgRule
-buggyRuleNotOverComp = buggyRule $ makeRuleList "BuggyNotOverComp" $ map RewriteRule
-     [(Not(q :.: r)) |- (Not q :.: Not r)
-     ,(Not(q :.: r)) |- (Not q :.: r)
-     ,(Not(q :.: r)) |- (Not q :+: r)
-     ,(Not(q :.: r)) |- Not (Not q :.: Not r) --note the firstNot in both formulas! 
+buggyRuleNotOverComp :: Rule RelAlg
+buggyRuleNotOverComp = buggyRule $ ruleList "BuggyNotOverComp" 
+     [ \q r -> (Not(q :.: r)) :~> (Not q :.: Not r)
+     , \q r -> (Not(q :.: r)) :~> (Not q :.: r)
+     , \q r -> (Not(q :.: r)) :~> (Not q :+: r)
+     , \q r -> (Not(q :.: r)) :~> Not (Not q :.: Not r) --note the firstNot in both formulas! 
      ]
      
-buggyRuleParenth :: RelAlgRule
-buggyRuleParenth = buggyRule $ makeRuleList "BuggyParenth" $ map RewriteRule
-    [ (Not (q :&&: r)) |-  (Not q :&&: r)
-    , (Not (q :||: r)) |-  (Not q :||: r)
-    , (Not(Not q :&&: r)) |- (q :&&: r) 
-    , (Not(Not q :||: r)) |- (q :||: r)
-    , (Not(Not q :.: r)) |- (q :.: r)
-    , (Not(Not q :+: r)) |- (q :+: r)
-    , (Inv (q :&&: r)) |-  (Inv q :&&: r)
-    , (Inv (q :||: r)) |-  (Inv q :||: r)
-    , (Inv(Inv q :&&: r)) |- (q :&&: r) 
-    , (Inv(Inv q :||: r)) |- (q :||: r)
-    , (Inv(Inv q :.: r)) |- (q :.: r)
-    , (Inv(Inv q :+: r)) |- (q :+: r)
+buggyRuleParenth :: Rule RelAlg
+buggyRuleParenth = buggyRule $ ruleList "BuggyParenth" 
+    [ \q r -> (Not (q :&&: r)) :~>  (Not q :&&: r)
+    , \q r -> (Not (q :||: r)) :~>  (Not q :||: r)
+    , \q r -> (Not(Not q :&&: r)) :~> (q :&&: r) 
+    , \q r -> (Not(Not q :||: r)) :~> (q :||: r)
+    , \q r -> (Not(Not q :.: r)) :~> (q :.: r)
+    , \q r -> (Not(Not q :+: r)) :~> (q :+: r)
+    , \q r -> (Inv (q :&&: r)) :~>  (Inv q :&&: r)
+    , \q r -> (Inv (q :||: r)) :~>  (Inv q :||: r)
+    , \q r -> (Inv(Inv q :&&: r)) :~> (q :&&: r) 
+    , \q r -> (Inv(Inv q :||: r)) :~> (q :||: r)
+    , \q r -> (Inv(Inv q :.: r)) :~> (q :.: r)
+    , \q r -> (Inv(Inv q :+: r)) :~> (q :+: r)
     ]
     
-buggyRuleAssoc :: RelAlgRule
-buggyRuleAssoc = buggyRule $ makeRuleList "BuggyAssoc" $ map RewriteRule 
-    [ (q :||: (r :&&: s)) |- ((q :||: r) :&&: s)
-    , ((q :||: r) :&&: s) |- (q :||: (r :&&: s))
-    , ((q :&&: r) :||: s) |- (q :&&: (r :||: s))
-    , (q :&&: (r :||: s)) |- ((q :&&: r) :||: s)
-    , (q :.: (r :||: s)) |-  ((q :.: r) :||: s) 
-    , ((q :||: r) :.: s) |-  (q :||: (r :.: s)) 
-    , (q :.: (r :&&: s)) |-  ((q :.: r) :&&: s) 
-    , ((q :&&: r) :.: s) |-  (q :&&: (r :.: s)) 
-    , (q :+: (r :||: s)) |-  ((q :+: r) :||: s) 
-    , ((q :||: r) :+: s) |-  (q :||: (r :+: s)) 
-    , (q :+: (r :&&: s)) |-  ((q :+: r) :&&: s)  
-    , ((q :&&: r) :+: s) |-  (q :&&: (r :+: s))  
+buggyRuleAssoc :: Rule RelAlg
+buggyRuleAssoc = buggyRule $ ruleList "BuggyAssoc"  
+    [ \q r s -> (q :||: (r :&&: s)) :~> ((q :||: r) :&&: s)
+    , \q r s -> ((q :||: r) :&&: s) :~> (q :||: (r :&&: s))
+    , \q r s -> ((q :&&: r) :||: s) :~> (q :&&: (r :||: s))
+    , \q r s -> (q :&&: (r :||: s)) :~> ((q :&&: r) :||: s)
+    , \q r s -> (q :.: (r :||: s)) :~>  ((q :.: r) :||: s) 
+    , \q r s -> ((q :||: r) :.: s) :~>  (q :||: (r :.: s)) 
+    , \q r s -> (q :.: (r :&&: s)) :~>  ((q :.: r) :&&: s) 
+    , \q r s -> ((q :&&: r) :.: s) :~>  (q :&&: (r :.: s)) 
+    , \q r s -> (q :+: (r :||: s)) :~>  ((q :+: r) :||: s) 
+    , \q r s -> ((q :||: r) :+: s) :~>  (q :||: (r :+: s)) 
+    , \q r s -> (q :+: (r :&&: s)) :~>  ((q :+: r) :&&: s)  
+    , \q r s -> ((q :&&: r) :+: s) :~>  (q :&&: (r :+: s))  
     ]
     
 
-buggyRuleInvOverComp :: RelAlgRule
-buggyRuleInvOverComp = buggyRule $ makeRule "BuggyInvOverComp" $ RewriteRule $
-   (Inv (r :.: s)) |- (Inv r :.: Inv s)
+buggyRuleInvOverComp :: Rule RelAlg
+buggyRuleInvOverComp = buggyRule $ rule "BuggyInvOverComp" $ 
+   \r s -> (Inv (r :.: s)) :~> (Inv r :.: Inv s)
 
-buggyRuleInvOverAdd :: RelAlgRule
-buggyRuleInvOverAdd = buggyRule $ makeRule "BuggyInvOverAdd" $ RewriteRule $
-   (Inv (r :+: s)) |- (Inv r :+: Inv s)
+buggyRuleInvOverAdd :: Rule RelAlg
+buggyRuleInvOverAdd = buggyRule $ rule "BuggyInvOverAdd" $ 
+   \r s -> (Inv (r :+: s)) :~> (Inv r :+: Inv s)
    
-buggyRuleCompOverIntersec :: RelAlgRule
-buggyRuleCompOverIntersec = buggyRule $ makeRuleList "BuggyCompOverIntersec" $ map RewriteRule
-   [ (q :.: (r :&&: s)) |-  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
-   , ((q :&&: r) :.: s) |-  ((q :.: s) :&&: (r :.: s))  --idem
+buggyRuleCompOverIntersec :: Rule RelAlg
+buggyRuleCompOverIntersec = buggyRule $ ruleList "BuggyCompOverIntersec" 
+   [ \q r s -> (q :.: (r :&&: s)) :~>  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
+   , \q r s -> ((q :&&: r) :.: s) :~>  ((q :.: s) :&&: (r :.: s))  --idem
    ]
-buggyRuleAddOverUnion :: RelAlgRule
-buggyRuleAddOverUnion = buggyRule $ makeRuleList "BuggyAddOverUnion" $ map RewriteRule
-   [ (q :+: (r :||: s)) |-  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
-   , ((q :||: r) :+: s) |-  ((q :+: s) :||: (r :+: s)) --idem
+buggyRuleAddOverUnion :: Rule RelAlg
+buggyRuleAddOverUnion = buggyRule $ ruleList "BuggyAddOverUnion" 
+   [ \q r s -> (q :+: (r :||: s)) :~>  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
+   , \q r s -> ((q :||: r) :+: s) :~>  ((q :+: s) :||: (r :+: s)) --idem
    ]
    
-buggyRuleRemCompl :: RelAlgRule
-buggyRuleRemCompl = buggyRule $ makeRuleList "BuggyRemCompl" $ map RewriteRule
-   [ (r :||: (Not r)) |-  E
-   , ((Not r) :||: r) |-  E
-   , (r :&&: (Not r)) |-  U
-   , ((Not r) :&&: r) |-  U
+buggyRuleRemCompl :: Rule RelAlg
+buggyRuleRemCompl = buggyRule $ ruleList "BuggyRemCompl" 
+   [ \r -> (r :||: (Not r)) :~>  E
+   , \r -> ((Not r) :||: r) :~>  E
+   , \r -> (r :&&: (Not r)) :~>  U
+   , \r -> ((Not r) :&&: r) :~>  U
    ]
 
 

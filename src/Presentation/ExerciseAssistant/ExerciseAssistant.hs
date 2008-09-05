@@ -24,6 +24,7 @@ import Control.Monad
 import Domain.Fraction
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.RelationAlgebra as RA
+import qualified Domain.Derivative.Exercises as Math
 import Data.IORef
 
 domains :: [Some Domain]
@@ -33,6 +34,7 @@ domains = [ make LA.opgave6b, make LA.reduceMatrixExercise
           , make dnfExercise, make simplExercise
           , make RA.cnfExercise, make RA.cnfExerciseSimple
           , make LA.opgaveVarMatrix
+          , make Math.derivativeExercise
           ]
 
 main :: IO ()

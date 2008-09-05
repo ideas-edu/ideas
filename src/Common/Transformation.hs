@@ -17,7 +17,7 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( -- * Transformations
-     Transformation, makeTrans, makeTransList, (|-), inverseTrans, getPatternPair, isPatternPair
+     Transformation(..), makeTrans, inverseTrans, getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
@@ -32,84 +32,59 @@ module Common.Transformation
    , checkRule, checkRuleSmart
    ) where
 
-import qualified Data.IntSet as IS
 import Data.Char
 import Data.Ratio
 import Data.List
 import Data.Maybe
+import qualified Data.IntSet as IS
 import Test.QuickCheck hiding (arguments)
 import Common.Apply
 import Common.Utils
 import Control.Monad
 import Common.Rewriting
-import Common.Uniplate
+import Common.Uniplate (Uniplate)
 
 -----------------------------------------------------------
 --- Transformations
 
-infix  1 |- 
-
 -- | Abstract data type for representing transformations
 data Transformation a
-   = Function (a -> [a])
---   | Unifiable a => Pattern (ForAll (a, a))
-   | Rewrite a => Pattern (Int -> (a, a))
+   = Function String (a -> [a])
+   | RewriteRule (RewriteRule a)
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b . Lift (LiftPair b a) (Transformation b)
    
 instance Apply Transformation where
-   applyAll (Function f)        = f
-   applyAll (Pattern  p)        = applyPattern p
+   applyAll (Function _ f)      = f
+   applyAll (RewriteRule r)     = rewriteM r
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (Lift lp t )        = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
-makeTrans :: (a -> Maybe a) -> Transformation a
-makeTrans f = makeTransList (maybe [] return . f)
+makeTrans :: String -> (a -> Maybe a) -> Transformation a
+makeTrans s f = makeTransList s (maybe [] return . f)
 
 -- | Turn a function (which returns a list of results) into a transformation 
-makeTransList :: (a -> [a]) -> Transformation a
+makeTransList :: String -> (a -> [a]) -> Transformation a
 makeTransList = Function
-
--- | Constructs a transformation based on two terms (a left-hand side and a
--- right-hand side). The terms must be unifiable. It is checked that no
--- free variables appear in the right-hand side term.
-(|-) :: Rewrite a => a -> a -> Transformation a
-p |- q | IS.null frees = Pattern $ \i -> 
-                            let vs = IS.toList (getMetaVars p)
-                                f  = (i+) . fromMaybe 0 . (`elemIndex` vs)
-                            in (renameMetaVars f p, renameMetaVars f q)
-       | otherwise     = error $ "Transformation: free variables in transformation"
- where
-   frees = getMetaVars q IS.\\ getMetaVars p
-
-applyPattern :: Rewrite a => (Int -> (a, a)) -> a -> [a]
-applyPattern f a = do
-   let (lhs, rhs) = f (nextMetaVar a)
-   sub <- match lhs a
-   return (sub |-> rhs)
 
 -- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
 -- can be inversed
 inverseTrans :: Transformation a -> Maybe (Transformation a)
 inverseTrans trans = 
    case trans of
-      Pattern pair -> return $ Pattern $ fmap (\(lhs, rhs) -> (rhs, lhs)) pair
-      Lift lp t    -> fmap (Lift lp) (inverseTrans t)
+      RewriteRule r -> fmap RewriteRule (inverse r)
+      Lift lp t     -> fmap (Lift lp) (inverseTrans t)
       _ -> Nothing
 
 getPatternPair :: a -> Transformation a -> Maybe (a, a)
-getPatternPair _ (Pattern f) = return $ f 0
+getPatternPair _ (RewriteRule r) = let a :~> b = rulePair r 0 in Just (a, b)
 getPatternPair a (Lift lp t) = do
    let f t = liftPairSet lp t a
    b      <- liftPairGet lp a
    (x, y) <- getPatternPair b t
    return (f x, f y)
 getPatternPair _ _ = Nothing
-
-isPatternPair :: Transformation a -> Maybe (a, a)
-isPatternPair (Pattern f) = return  (f 0)
-isPatternPair _           = Nothing
 
 -----------------------------------------------------------
 --- Arguments
@@ -304,11 +279,11 @@ makeRuleList n ts = Rule n ts False False
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
-makeSimpleRule n = makeRule n . makeTrans
+makeSimpleRule n = makeRule n . makeTrans n
 
 -- | Turn a function (which returns a list of results) into a rule: the first argument is the rule's name
 makeSimpleRuleList :: String -> (a -> [a]) -> Rule a
-makeSimpleRuleList n = makeRule n . makeTransList
+makeSimpleRuleList n = makeRule n . makeTransList n
 
 -- | A special (minor) rule that always returns the identity
 idRule :: Rule a
@@ -392,8 +367,8 @@ smartGen :: (Arbitrary a, Uniplate a, MetaVar a) => Rule a -> Gen a
 smartGen = oneof . map smartGenTrans . transformations
    
 smartGenTrans :: Arbitrary a => Transformation a -> Gen a
-smartGenTrans (Pattern f) = smartGenTerm $ fst $ f 0
-smartGenTrans _           = arbitrary
+-- smartGenTrans (RewriteRule r) = smartGenTerm $ lhs $ rulePair r 0
+smartGenTrans _               = arbitrary
 
 smartGenTerm :: (Arbitrary a, Uniplate a, MetaVar a) => a -> Gen a
 smartGenTerm lhs = do
@@ -401,18 +376,19 @@ smartGenTerm lhs = do
    list <- vector (IS.size vs) 
    let sub = listToSubst $ zip (IS.toList vs) list
    return (sub |-> lhs)
-     
+
+{-    
 instance Arbitrary a => Arbitrary (Rule a) where
    arbitrary     = liftM4 Rule arbName arbitrary arbitrary arbitrary
    coarbitrary r = coarbitrary (map ord $ name r) . coarbitrary (transformations r)
 
 instance Arbitrary a => Arbitrary (Transformation a) where
-   arbitrary = oneof [liftM Function arbitrary]
-   coarbitrary (Function f)        = variant 0 . coarbitrary f
-   coarbitrary (Pattern _)         = variant 1
+   arbitrary = oneof [liftM (Function "") arbitrary]
+   coarbitrary (Function _ f)      = variant 0 . coarbitrary f
+   coarbitrary (RewriteRule _)     = variant 1
    coarbitrary (Abstraction _ _ _) = variant 2
    coarbitrary (Lift _ _)          = variant 3
 
 -- generates sufficiently long names
 arbName :: Gen String
-arbName = oneof $ map (return . ('r':) . show) [1 .. 10000 :: Int]
+arbName = oneof $ map (return . ('r':) . show) [1 .. 10000 :: Int] -}

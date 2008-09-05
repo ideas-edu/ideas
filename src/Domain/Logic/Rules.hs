@@ -17,10 +17,8 @@ module Domain.Logic.Rules where
 import Domain.Logic.Formula
 import Common.Transformation
 import Common.Rewriting
-
-type LogicRule = Rule Logic  
-
-logicRules :: [LogicRule]
+  
+logicRules :: [Rule Logic]
 logicRules = 
    [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
    , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
@@ -32,225 +30,227 @@ logicRules =
    , ruleCommOr, ruleCommAnd
    ]
 
-logicBuggyRules :: [LogicRule]
-logicBuggyRules = [ buggyRuleCommImp, buggyRuleAssImp
-                  ]
+logicBuggyRules :: [Rule Logic]
+logicBuggyRules = 
+   [ buggyRuleCommImp, buggyRuleAssImp
+   ]
 
--- local logic variables
-x, y, z :: Logic
-x:y:z:_ = metaVars
+transA :: RewriteRule Logic -> [RewriteRule Logic]
+transA r = 
+   case rulePair r 1 of
+      a@(_ :||: _) :~> b -> 
+         [r, (a :||: metaVar 0) |- (b :||: metaVar 0)]
+      a@(_ :&&: _) :~> b -> 
+         [r, (a :&&: metaVar 0) |- (b :&&: metaVar 0)]
+      _ -> [r]
 
--- make rule associative
-makeRuleA :: String -> Transformation Logic -> LogicRule
-makeRuleA s = makeRuleList s . transA
-
-makeRuleListA :: String -> [Transformation Logic] -> LogicRule
-makeRuleListA s = makeRuleList s . concatMap transA
-
-transA :: Transformation Logic -> [Transformation Logic]
-transA t = case isPatternPair t of
-              Just (lhs@(_ :||: _), rhs) -> 
-                 let n = nextMetaVar lhs
-                 in [t, (lhs :||: metaVar n) |- (rhs :||: metaVar n)]
-              Just (lhs@(_ :&&: _), rhs) -> 
-                 let n = nextMetaVar lhs
-                 in [t, (lhs :&&: metaVar n) |- (rhs :&&: metaVar n)]
-              _ -> [t]
+mk s xs = makeRuleList s $ concatMap (map RewriteRule . transA . rewriteRule s) xs
 
 -----------------------------------------------------------------------------
 
 
-ruleComplOr :: LogicRule
-ruleComplOr = makeRuleListA "ComplOr"
-   [ (x :||: Not x)  |-  T
-   , (Not x :||: x)  |-  T
+ruleComplOr :: Rule Logic 
+ruleComplOr = mk "ComplOr"
+   [ \x -> (x :||: Not x)  :~>  T
+   , \x -> (Not x :||: x)  :~>  T
    ]
    
-ruleComplAnd :: LogicRule
-ruleComplAnd = makeRuleListA "ComplAnd"
-   [ (x :&&: Not x)  |-  F
-   , (Not x :&&: x)  |-  F
-   ]
-
-ruleDefImpl :: LogicRule
-ruleDefImpl = makeRuleA "DefImpl" $
-   (x :->: y)  |-  (Not x :||: y)
-   
-ruleDefEquiv :: LogicRule
-ruleDefEquiv = makeRuleA "DefEquiv" $
-   (x :<->: y)  |-  ((x :&&: y) :||: (Not x :&&: Not y))
-   
-ruleFalseInEquiv :: LogicRule
-ruleFalseInEquiv = makeRuleListA "FalseInEquiv"
-   [ (F :<->: x)  |-  (Not x)
-   , (x :<->: F)  |-  (Not x)
-   ]
-   
-ruleTrueInEquiv :: LogicRule
-ruleTrueInEquiv = makeRuleListA "TrueInEquiv"
-   [ (T :<->: x)  |-  x
-   , (x :<->: T)  |-  x
+ruleComplAnd :: Rule Logic 
+ruleComplAnd = mk "ComplAnd"
+   [ \x -> (x :&&: Not x)  :~>  F
+   , \x -> (Not x :&&: x)  :~>  F
    ]
 
-ruleFalseInImpl :: LogicRule
-ruleFalseInImpl = makeRuleListA "FalseInImpl"
-   [ (F :->: x)  |-  T
-   , (x :->: F)  |- (Not x)
+ruleDefImpl :: Rule Logic 
+ruleDefImpl = mk "DefImpl"
+   [ \x y -> (x :->: y)  :~>  (Not x :||: y)
    ]
    
-ruleTrueInImpl :: LogicRule
-ruleTrueInImpl = makeRuleListA "TrueInImpl"
-   [  (T :->: x)  |-  x
-   ,  (x :->: T)  |-  T
+ruleDefEquiv :: Rule Logic 
+ruleDefEquiv = mk "DefEquiv" 
+   [ \x y -> (x :<->: y)  :~>  ((x :&&: y) :||: (Not x :&&: Not y))
+   ]
+   
+ruleFalseInEquiv :: Rule Logic 
+ruleFalseInEquiv = mk "FalseInEquiv"
+   [ \x -> (F :<->: x)  :~>  (Not x)
+   , \x -> (x :<->: F)  :~>  (Not x)
+   ]
+   
+ruleTrueInEquiv :: Rule Logic 
+ruleTrueInEquiv = mk "TrueInEquiv"
+   [ \x -> (T :<->: x)  :~>  x
+   , \x -> (x :<->: T)  :~>  x
+   ]
+
+ruleFalseInImpl :: Rule Logic 
+ruleFalseInImpl = mk "FalseInImpl"
+   [ \x -> (F :->: x)  :~>  T
+   , \x -> (x :->: F)  :~> (Not x)
+   ]
+   
+ruleTrueInImpl :: Rule Logic 
+ruleTrueInImpl = mk "TrueInImpl"
+   [ \x -> (T :->: x)  :~>  x
+   , \x -> (x :->: T)  :~>  T
    ]
         
-ruleFalseZeroOr :: LogicRule
-ruleFalseZeroOr = makeRuleListA "FalseZeroOr"
-   [ (F :||: x)  |-  x
-   , (x :||: F)  |-  x
+ruleFalseZeroOr :: Rule Logic 
+ruleFalseZeroOr = mk "FalseZeroOr"
+   [ \x -> (F :||: x)  :~>  x
+   , \x -> (x :||: F)  :~>  x
    ]
   
-ruleTrueZeroOr :: LogicRule
-ruleTrueZeroOr = makeRuleListA "TrueZeroOr"
-   [ (T :||: x)  |-  T
-   , (x :||: T)  |-  T
+ruleTrueZeroOr :: Rule Logic 
+ruleTrueZeroOr = mk "TrueZeroOr"
+   [ \x -> (T :||: x)  :~>  T
+   , \x -> (x :||: T)  :~>  T
    ]
 
-ruleTrueZeroAnd :: LogicRule
-ruleTrueZeroAnd = makeRuleListA "TrueZeroAnd"
-   [ (T :&&: x)  |-  x
-   , (x :&&: T)  |-  x
+ruleTrueZeroAnd :: Rule Logic 
+ruleTrueZeroAnd = mk "TrueZeroAnd"
+   [ \x -> (T :&&: x)  :~>  x
+   , \x -> (x :&&: T)  :~>  x
    ] 
 
-ruleFalseZeroAnd :: LogicRule
-ruleFalseZeroAnd = makeRuleListA "FalseZeroAnd"
-   [ (F :&&: x)  |-  F
-   , (x :&&: F)  |-  F
+ruleFalseZeroAnd :: Rule Logic 
+ruleFalseZeroAnd = mk "FalseZeroAnd"
+   [ \x -> (F :&&: x)  :~>  F
+   , \x -> (x :&&: F)  :~>  F
    ]
 
-ruleDeMorganOr :: LogicRule
-ruleDeMorganOr = makeRuleA "DeMorganOr" $
-   (Not (x :||: y))  |-  (Not x :&&: Not y)
-
-ruleDeMorganAnd :: LogicRule
-ruleDeMorganAnd = makeRuleA "DeMorganAnd" $
-   (Not (x :&&: y))  |-  (Not x :||: Not y)
-
-ruleNotBoolConst :: LogicRule
-ruleNotBoolConst = makeRuleListA "NotBoolConst"
-   [ (Not T)  |-  F
-   , (Not F)  |-  T
+ruleDeMorganOr :: Rule Logic 
+ruleDeMorganOr = mk "DeMorganOr"
+   [ \x y -> (Not (x :||: y))  :~>  (Not x :&&: Not y)
    ]
 
-ruleNotNot :: LogicRule
-ruleNotNot = makeRuleA "NotNot" $ 
-   (Not (Not x))  |-  x
-
-ruleAndOverOr :: LogicRule
-ruleAndOverOr = makeRuleListA "AndOverOr"
-   [ (x :&&: (y :||: z))  |-  ((x :&&: y) :||: (x :&&: z))
-   , ((x :||: y) :&&: z)  |-  ((x :&&: z) :||: (y :&&: z))
+ruleDeMorganAnd :: Rule Logic 
+ruleDeMorganAnd = mk "DeMorganAnd"
+   [ \x y -> (Not (x :&&: y))  :~>  (Not x :||: Not y)
    ]
 
-ruleOrOverAnd :: LogicRule
-ruleOrOverAnd = makeRuleListA "OrOverAnd"
-   [ (x :||: (y :&&: z))  |-  ((x :||: y) :&&: (x :||: z))
-   , ((x :&&: y) :||: z)  |-  ((x :||: z) :&&: (y :||: z))
+ruleNotBoolConst :: Rule Logic 
+ruleNotBoolConst = mk "NotBoolConst"
+   [ (Not T)  :~>  F
+   , (Not F)  :~>  T
+   ]
+
+ruleNotNot :: Rule Logic 
+ruleNotNot = mk "NotNot"
+   [ \x -> (Not (Not x))  :~>  x
+   ]
+
+ruleAndOverOr :: Rule Logic 
+ruleAndOverOr = mk "AndOverOr"
+   [ \x y z -> (x :&&: (y :||: z))  :~>  ((x :&&: y) :||: (x :&&: z))
+   , \x y z -> ((x :||: y) :&&: z)  :~>  ((x :&&: z) :||: (y :&&: z))
+   ]
+
+ruleOrOverAnd :: Rule Logic 
+ruleOrOverAnd = mk "OrOverAnd"
+   [ \x y z -> (x :||: (y :&&: z))  :~>  ((x :||: y) :&&: (x :||: z))
+   , \x y z -> ((x :&&: y) :||: z)  :~>  ((x :||: z) :&&: (y :||: z))
    ]
    
-ruleIdempOr :: LogicRule
-ruleIdempOr = makeRuleA "IdempOr" $
-    (x :||: x)  |-  x
+ruleIdempOr :: Rule Logic 
+ruleIdempOr = mk "IdempOr"
+   [ \x -> (x :||: x)  :~>  x
+   ]
    
-ruleIdempAnd :: LogicRule
-ruleIdempAnd = makeRuleA "IdempAnd" $
-    (x :&&: x)  |-  x
+ruleIdempAnd :: Rule Logic 
+ruleIdempAnd = mk "IdempAnd"
+   [  \x -> (x :&&: x)  :~>  x
+   ]
+    
+ruleAbsorpOr :: Rule Logic 
+ruleAbsorpOr = mk "AbsorpOr"
+   [ \x  y -> (x :||: (x :&&: y))  :~>  x
+   ]
     
     
-ruleAbsorpOr :: LogicRule
-ruleAbsorpOr = makeRuleA "AbsorpOr" $
-    (x :||: (x :&&: y))  |-  x
+ruleAbsorpAnd :: Rule Logic 
+ruleAbsorpAnd = mk "AbsorpAnd"
+   [ \x y -> (x :&&: (x :||: y))  :~>  x 
+   ]
     
     
-ruleAbsorpAnd :: LogicRule
-ruleAbsorpAnd = makeRuleA "AbsorpAnd" $
-    (x :&&: (x :||: y))  |-  x 
+ruleCommOr :: Rule Logic 
+ruleCommOr = mk "CommOr"
+   [ \x y -> (x :||: y)  :~>  (y :||: x) 
+   ]
     
+ruleCommAnd :: Rule Logic 
+ruleCommAnd = mk "CommAnd" $
+   [ \x y -> (x :&&: y)  :~>  (y :&&: x)
+   ]
     
-ruleCommOr :: LogicRule
-ruleCommOr = makeRuleA "CommOr" $
-    (x :||: y)  |-  (y :||: x) 
-    
-    
-ruleCommAnd :: LogicRule
-ruleCommAnd = makeRuleA "CommAnd" $
-    (x :&&: y)  |-  (y :&&: x)
-    
-    
-
 -- Buggy rules:
 
-buggyRuleCommImp :: LogicRule
-buggyRuleCommImp = buggyRule $ makeRuleA "CommImp" $
-    (x :->: y)  |-  (y :->: x) --this does not hold: T->T => T->x
+buggyRuleCommImp :: Rule Logic 
+buggyRuleCommImp = buggyRule $ mk "CommImp"
+   [ \x y -> (x :->: y)  :~>  (y :->: x) --this does not hold: T->T => T->x
+   ]
 
-    
-buggyRuleAssImp :: LogicRule
-buggyRuleAssImp = buggyRule $ makeRuleListA "AssImp"
-   [ (x :->: (y :->: z))  |-  ((x :->: y) :->: z)
-   , ((x :->: y) :->: z)  |-  (x :->: (y :->: z))
+buggyRuleAssImp :: Rule Logic
+buggyRuleAssImp = buggyRule $ mk "AssImp"
+   [ \x y z -> (x :->: (y :->: z))  :~>  ((x :->: y) :->: z)
+   , \x y z -> ((x :->: y) :->: z)  :~>  (x :->: (y :->: z))
    ]
     
-buggyRuleIdemImp :: LogicRule
-buggyRuleIdemImp = buggyRule $ makeRuleA "IdemImp" $
-    (x :->: x)  |-  x 
+buggyRuleIdemImp :: Rule Logic
+buggyRuleIdemImp = buggyRule $ mk "IdemImp"
+   [ \x -> (x :->: x)  :~>  x 
+   ]
     
-buggyRuleIdemEqui :: LogicRule
-buggyRuleIdemEqui = buggyRule $ makeRuleA "IdemEqui"  $
-    (x :<->: x)  |-  x 
-    
-buggyRuleEquivElim :: LogicRule
-buggyRuleEquivElim = buggyRule $ makeRuleListA "BuggyEquivElim"
-    [ (x :<->: y) |- ((x :&&: y) :||: Not (x :&&: y))
-    , (x :<->: y) |- ((x :||: y) :&&: (Not x :||: Not y))
-    , (x :<->: y) |- ((x :&&: y) :||: (Not x :&&:  y))
-    , (x :<->: y) |- ((x :&&: y) :||: ( x :&&: Not y))
-    , (x :<->: y) |- ((x :&&: y) :&&: (Not x :&&: Not y))
+buggyRuleIdemEqui :: Rule Logic
+buggyRuleIdemEqui = buggyRule $ mk "IdemEqui"
+   [ \x -> (x :<->: x)  :~>  x 
+   ]
+
+buggyRuleEquivElim :: Rule Logic
+buggyRuleEquivElim = buggyRule $ mk "BuggyEquivElim"
+    [ \x y -> (x :<->: y) :~> ((x :&&: y) :||: Not (x :&&: y))
+    , \x y -> (x :<->: y) :~> ((x :||: y) :&&: (Not x :||: Not y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :&&:  y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: ( x :&&: Not y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :&&: (Not x :&&: Not y))
     ]
     
-buggyRuleImplElim :: LogicRule
-buggyRuleImplElim = buggyRule $ makeRuleA "BuggyImplElim" $
-    (x :->: y) |- Not (x :||: y) 
+buggyRuleImplElim :: Rule Logic
+buggyRuleImplElim = buggyRule $ mk "BuggyImplElim" $
+   [ \x y -> (x :->: y) :~> Not (x :||: y) 
+   ]
     
-buggyRuleDeMorgan :: LogicRule
-buggyRuleDeMorgan = buggyRule $ makeRuleListA "BuggyDeMorgan"
-    [ (Not (x :&&: y)) |-  (Not x :||: y)
-    , (Not (x :&&: y)) |-  (x :||: Not y)
-    , (Not (x :&&: y)) |- (Not (Not x :||: Not y))
-    , (Not (x :||: y)) |-  (Not x :&&: y)
-    , (Not (x :||: y)) |-  (x :&&: Not y)
-    , (Not (x :||: y)) |- (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
-    ]
-buggyRuleNotOverImpl :: LogicRule
-buggyRuleNotOverImpl = buggyRule $ makeRuleA "BuggyNotOverImpl" $
-    (Not(x :->: y)) |- (Not x :->: Not y)   
-    
-buggyRuleParenth :: LogicRule
-buggyRuleParenth = buggyRule $ makeRuleListA "BuggyParenth"
-    [ (Not (x :&&: y)) |-  (Not x :&&: y)
-    , (Not (x :||: y)) |-  (Not x :||: y)
-    , (Not (x :<->: y)) |- (Not(x :&&: y) :||: (Not x :&&: Not y))
-    , (Not(Not x :&&: y)) |- (x :&&: y) 
-    , (Not(Not x :||: y)) |- (x :||: y)
-    , (Not(Not x :->: y)) |- (x :->: y)
-    , (Not(Not x :<->: y)) |- (x :<->: y)
-    ]
-    
-buggyRuleAssoc :: LogicRule
-buggyRuleAssoc = buggyRule $ makeRuleListA "BuggyAssoc"
-    [ (x :||: (y :&&: z)) |- ((x :||: y) :&&: z)
-    , ((x :||: y) :&&: z) |- (x :||: (y :&&: z))
-    , ((x :&&: y) :||: z) |- (x :&&: (y :||: z))
-    , (x :&&: (y :||: z)) |- ((x :&&: y) :||: z)
+buggyRuleDeMorgan :: Rule Logic
+buggyRuleDeMorgan = buggyRule $ mk "BuggyDeMorgan"
+    [ \x y -> (Not (x :&&: y)) :~>  (Not x :||: y)
+    , \x y -> (Not (x :&&: y)) :~>  (x :||: Not y)
+    , \x y -> (Not (x :&&: y)) :~> (Not (Not x :||: Not y))
+    , \x y -> (Not (x :||: y)) :~>  (Not x :&&: y)
+    , \x y -> (Not (x :||: y)) :~>  (x :&&: Not y)
+    , \x y -> (Not (x :||: y)) :~> (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
     ]
 
+buggyRuleNotOverImpl :: Rule Logic
+buggyRuleNotOverImpl = buggyRule $ mk "BuggyNotOverImpl" $
+    [ \x y -> (Not(x :->: y)) :~> (Not x :->: Not y)
+    ]
+    
+buggyRuleParenth :: Rule Logic
+buggyRuleParenth = buggyRule $ mk "BuggyParenth"
+    [ \x y -> (Not (x :&&: y))     :~> (Not x :&&: y)
+    , \x y -> (Not (x :||: y))     :~> (Not x :||: y)
+    , \x y -> (Not (x :<->: y))    :~> (Not(x :&&: y) :||: (Not x :&&: Not y))
+    , \x y -> (Not(Not x :&&: y))  :~> (x :&&: y) 
+    , \x y -> (Not(Not x :||: y))  :~> (x :||: y)
+    , \x y -> (Not(Not x :->: y))  :~> (x :->: y)
+    , \x y -> (Not(Not x :<->: y)) :~> (x :<->: y)
+    ]
+    
+buggyRuleAssoc :: Rule Logic
+buggyRuleAssoc = buggyRule $ mk "BuggyAssoc"
+    [ \x y z -> (x :||: (y :&&: z)) :~> ((x :||: y) :&&: z)
+    , \x y z -> ((x :||: y) :&&: z) :~> (x :||: (y :&&: z))
+    , \x y z -> ((x :&&: y) :||: z) :~> (x :&&: (y :||: z))
+    , \x y z -> (x :&&: (y :||: z)) :~> ((x :&&: y) :||: z)
+    ]

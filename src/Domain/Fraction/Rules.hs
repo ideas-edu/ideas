@@ -38,13 +38,13 @@ v:w:x:y:z:_ = metaVars
 
 -- | Multiplication rules
 ruleMulZero :: FracRule
-ruleMulZero = makeRuleList "MulZero"
+ruleMulZero = makeRuleList "MulZero" $ map RewriteRule $
    [ (x :*: Con 0) |- Con 0
    , (Con 0 :*: x) |- Con 0
    ]
 
 ruleUnitMul :: FracRule
-ruleUnitMul = makeRuleList "UnitMul"
+ruleUnitMul = makeRuleList "UnitMul" $ map RewriteRule $
    [ (x :*: Con 1) |- x
    , (Con 1 :*: x) |- x
    ]
@@ -56,25 +56,25 @@ ruleMul = makeSimpleRule "Mul" f
    f _                 = Nothing
 
 ruleMulFrac :: FracRule
-ruleMulFrac = makeRuleList "MulFrac"
+ruleMulFrac = makeRuleList "MulFrac" $ map RewriteRule
    [ (x :/: y) :*: (v :/: w) |-  (x :*: v) :/: (y :*: w)
    , (x :/: y) :*: v         |-  (x :*: v) :/: y
    , v :*: (x :/: y)         |-  (x :*: v) :/: y
    ]
 
 ruleAssMul :: FracRule
-ruleAssMul = makeRuleList "AssMul"
+ruleAssMul = makeRuleList "AssMul" $ map RewriteRule
    [ x :*: (y :*: z) |- (x :*: y) :*: z
    , (x :*: y) :*: z |- x :*: (y :*: z)
    ]
 
 ruleCommMul :: FracRule
-ruleCommMul = makeRule "CommMul" $
+ruleCommMul = makeRule "CommMul" $ RewriteRule $ 
    x :*: y |- y :*: x
 
 -- also other way around?
 ruleDistMul :: FracRule
-ruleDistMul = makeRuleList "DistMul" 
+ruleDistMul = makeRuleList "DistMul" $ map RewriteRule $
    [ (x :*: y :+: x :*: z) |- x :*: (y :+: z)
    , (x :*: y :+: z :*: x) |- x :*: (y :+: z)
    , (y :*: x :+: x :*: z) |- x :*: (y :+: z)
@@ -102,11 +102,11 @@ ruleDistMul = makeRuleList "DistMul"
 
 -- | Division rules
 ruleDivOne :: FracRule
-ruleDivOne = makeRule "DivOne" $
+ruleDivOne = makeRule "DivOne" $ RewriteRule $
    (x :/: Con 1) |- x   
 
 ruleDivZero :: FracRule
-ruleDivZero = makeRule "DivZero" $
+ruleDivZero = makeRule "DivZero" $ RewriteRule $
    (Con 0 :/: x)  |-  Con 0
 
 ruleDivFrac :: FracRule
@@ -118,12 +118,12 @@ ruleDivFrac = makeSimpleRule "Div" f
    f _                 = Nothing
 
 ruleDivSame :: FracRule
-ruleDivSame = makeRule "DivSame" $
+ruleDivSame = makeRule "DivSame" $ RewriteRule $
    (x :/: x) |- Con 1
 
 -- | Addition rules
 ruleUnitAdd :: FracRule
-ruleUnitAdd = makeRuleList "UnitAdd"
+ruleUnitAdd = makeRuleList "UnitAdd" $ map RewriteRule
    [ (x :+: Con 0)  |-  x
    , (Con 0 :+: x)  |-  x
    ]
@@ -144,22 +144,22 @@ ruleAddFrac = makeSimpleRule "AddFrac" f
    f _                     = Nothing
 
 ruleAssAdd :: FracRule
-ruleAssAdd = makeRuleList "AssAdd" 
+ruleAssAdd = makeRuleList "AssAdd" $ map RewriteRule
    [ (x :+: (y :+: z)) |- ((x :+: y) :+: z)
    , ((x :+: y) :+: z) |- (x :+: (y :+: z))
    ]
 
 ruleCommAdd :: FracRule
-ruleCommAdd = makeRule "CommAdd" $
+ruleCommAdd = makeRule "CommAdd" $ RewriteRule $
    (x :+: y) |- (y :+: x)
 
 -- | Substraction rules
 ruleSubZero :: FracRule
-ruleSubZero = makeRule "SubZero" $
+ruleSubZero = makeRule "SubZero" $ RewriteRule $
    (x :-: Con 0) |-  x
 
 ruleSubVar :: FracRule
-ruleSubVar = makeRule "SubVar" $
+ruleSubVar = makeRule "SubVar" $ RewriteRule $
    (x :-: x) |- Con 0
 
 ruleSub :: FracRule

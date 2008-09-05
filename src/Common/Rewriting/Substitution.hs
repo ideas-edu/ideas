@@ -1,4 +1,7 @@
-module Common.Rewriting.Substitution where
+module Common.Rewriting.Substitution 
+   ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@)
+   , lookupVar, dom, domList, removeDom, (|->)
+   ) where
 
 import Common.Uniplate
 import Common.Rewriting.MetaVar

@@ -1,16 +1,15 @@
 module Domain.Math.Rules where
 
 import Common.Rewriting
-import Common.Rewriting.Rule (Rule)
 import Data.List
 
 -----------------------------------------------------------------------
--- Rule collections
+--  RewriteRule collections
 
-numRules        :: (MetaVar a, Num a)        => [Rule a]
-fractionalRules :: (MetaVar a, Fractional a) => [Rule a]
-floatingRules   :: (MetaVar a, Floating a)   => [Rule a]
-allRules        :: (MetaVar a, Floating a)   => [Rule a]
+numRules        :: (Rewrite a, Num a)        => [ RewriteRule a]
+fractionalRules :: (Rewrite a, Fractional a) => [ RewriteRule a]
+floatingRules   :: (Rewrite a, Floating a)   => [ RewriteRule a]
+allRules        :: (Rewrite a, Floating a)   => [ RewriteRule a]
 
 numRules = 
    [ ruleCommPlus, ruleAssocPlus, ruleZeroPlus, ruleZeroPlusComm
@@ -38,141 +37,141 @@ allRules = numRules ++ fractionalRules ++ floatingRules
 -----------------------------------------------------------------------
 -- Basic rules Plus
 
-ruleCommPlus, ruleAssocPlus, ruleZeroPlus, ruleZeroPlusComm :: (MetaVar a, Num a) => Rule a
+ruleCommPlus, ruleAssocPlus, ruleZeroPlus, ruleZeroPlusComm :: (Rewrite a, Num a) =>  RewriteRule a
 
-ruleCommPlus = rule2 "Comm +" $ \x y -> 
+ruleCommPlus = rewriteRule "Comm +" $ \x y -> 
    x+y :~> y+x 
    
-ruleAssocPlus = rule3 "Assoc +" $ \x y z -> 
+ruleAssocPlus = rewriteRule "Assoc +" $ \x y z -> 
    (x+y)+z :~> x+(y+z)
    
-ruleZeroPlus = rule1 "Zero +" $ \x -> 
+ruleZeroPlus = rewriteRule "Zero +" $ \x -> 
    0+x :~> x
    
-ruleZeroPlusComm = rule1 "Zero + Comm" $ \x -> 
+ruleZeroPlusComm = rewriteRule "Zero + Comm" $ \x -> 
    x+0 :~> x
    
 -----------------------------------------------------------------------
 -- Basic rules Times
 
-ruleCommTimes, ruleAssocTimes, ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm :: (MetaVar a, Num a) => Rule a
+ruleCommTimes, ruleAssocTimes, ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm :: (Rewrite a, Num a) =>  RewriteRule a
 
-ruleCommTimes = rule2 "Comm *" $ \x y -> 
+ruleCommTimes = rewriteRule "Comm *" $ \x y -> 
    x*y :~> y*x 
    
-ruleAssocTimes = rule3 "Trans *" $ \x y z -> 
+ruleAssocTimes = rewriteRule "Trans *" $ \x y z -> 
    (x*y)*z :~> x*(y*z)
    
-ruleZeroTimes = rule1 "Zero *" $ \x -> 
+ruleZeroTimes = rewriteRule "Zero *" $ \x -> 
    0*x :~> 0
 
-ruleZeroTimesComm = rule1 "Zero * Comm" $ \x -> 
+ruleZeroTimesComm = rewriteRule "Zero * Comm" $ \x -> 
    x*0 :~> 0
    
-ruleOneTimes = rule1 "One *" $ \x -> 
+ruleOneTimes = rewriteRule "One *" $ \x -> 
    1*x :~> x
    
-ruleOneTimesComm = rule1 "One * Comm" $ \x -> 
+ruleOneTimesComm = rewriteRule "One * Comm" $ \x -> 
    x*1 :~> x
    
 -----------------------------------------------------------------------
 -- Basic rules Negation
 
-ruleInvNeg, ruleZeroNeg :: (MetaVar a, Num a) => Rule a
+ruleInvNeg, ruleZeroNeg :: (Rewrite a, Num a) =>  RewriteRule a
 
-ruleInvNeg = rule1 "Inv neg" $ \x ->
+ruleInvNeg = rewriteRule "Inv neg" $ \x ->
    -(-x) :~> x
    
-ruleZeroNeg = rule0 "Zero neg" $ 
+ruleZeroNeg = rewriteRule "Zero neg" $ 
    -0 :~> 0
    
 -----------------------------------------------------------------------
 -- Basic rules Division
 
-ruleZeroDiv, ruleOneDiv :: (MetaVar a, Fractional a) => Rule a
+ruleZeroDiv, ruleOneDiv :: (Rewrite a, Fractional a) =>  RewriteRule a
 
-ruleZeroDiv = rule1 "Zero /" $ \x ->
+ruleZeroDiv = rewriteRule "Zero /" $ \x ->
    0/x :~> 0   -- .#. x./=0
    
-ruleOneDiv = rule1 "One /" $ \x -> 
+ruleOneDiv = rewriteRule "One /" $ \x -> 
    x/1 :~> x
    
 -----------------------------------------------------------------------
 -- Basic rules Square Roots
 
-ruleZeroSqrt, ruleOneSqrt :: (MetaVar a, Floating a) => Rule a
+ruleZeroSqrt, ruleOneSqrt :: (Rewrite a, Floating a) =>  RewriteRule a
 
-ruleZeroSqrt = rule0 "Zero sqrt" $ 
+ruleZeroSqrt = rewriteRule "Zero sqrt" $ 
    sqrt 0 :~> 0
    
-ruleOneSqrt = rule0 "One sqrt" $ 
+ruleOneSqrt = rewriteRule "One sqrt" $ 
    sqrt 1 :~> 1
 
 -----------------------------------------------------------------------
 -- Simplification rules
 
-ruleSimplPlusNeg, ruleSimplPlusNegComm :: (MetaVar a, Num a)        => Rule a
-ruleSimplDiv, ruleSimplDivTimes        :: (MetaVar a, Fractional a) => Rule a
-ruleSimpleSqrtTimes                    :: (MetaVar a, Floating a)   => Rule a
+ruleSimplPlusNeg, ruleSimplPlusNegComm :: (Rewrite a, Num a)        =>  RewriteRule a
+ruleSimplDiv, ruleSimplDivTimes        :: (Rewrite a, Fractional a) =>  RewriteRule a
+ruleSimpleSqrtTimes                    :: (Rewrite a, Floating a)   =>  RewriteRule a
 
-ruleSimplPlusNeg = rule1 "Simpl + neg" $ \x ->
+ruleSimplPlusNeg = rewriteRule "Simpl + neg" $ \x ->
    -x+x :~> 0
 
-ruleSimplPlusNegComm = rule1 "Simpl + neg Comm" $ \x ->
+ruleSimplPlusNegComm = rewriteRule "Simpl + neg Comm" $ \x ->
    x+(-x) :~> 0
    
-ruleSimplDiv = rule1 "Simpl /" $ \x -> 
+ruleSimplDiv = rewriteRule "Simpl /" $ \x -> 
    x/x :~> 1   -- .#. x./=0
    
-ruleSimplDivTimes = rule3 "Simpl / *" $ \x y z -> 
+ruleSimplDivTimes = rewriteRule "Simpl / *" $ \x y z -> 
    (x*y)/(x*z) :~> y/z   -- .#. x./=0
 
-ruleSimpleSqrtTimes = rule1 "Simpl sqrt *" $ \x -> 
+ruleSimpleSqrtTimes = rewriteRule "Simpl sqrt *" $ \x -> 
    sqrt x*sqrt x :~> x   -- .#. x.>=0
 
 -----------------------------------------------------------------------
 -- Distribution rules for Negation
 
-ruleDistrNegPlus, ruleDistrNegTimes :: (MetaVar a, Num a)      => Rule a
-ruleDistrNegDiv, ruleDistrNegDenom  :: (MetaVar a, Floating a) => Rule a
+ruleDistrNegPlus, ruleDistrNegTimes :: (Rewrite a, Num a)      =>  RewriteRule a
+ruleDistrNegDiv, ruleDistrNegDenom  :: (Rewrite a, Floating a) =>  RewriteRule a
 
-ruleDistrNegPlus = rule2 "Distr neg +" $ \x y -> 
+ruleDistrNegPlus = rewriteRule "Distr neg +" $ \x y -> 
    -(x+y) :~> (-x)+(-y)
    
-ruleDistrNegTimes = rule2 "Distr neg *" $ \x y -> 
+ruleDistrNegTimes = rewriteRule "Distr neg *" $ \x y -> 
    (-x)*y :~> -(x*y)
    
-ruleDistrNegDiv = rule2 "Distr neg /" $ \x y -> 
+ruleDistrNegDiv = rewriteRule "Distr neg /" $ \x y -> 
    (-x)/y :~> -(x/y)
    
-ruleDistrNegDenom = rule2 "Distr neg denom" $ \x y -> 
+ruleDistrNegDenom = rewriteRule "Distr neg denom" $ \x y -> 
    x/(-y) :~> -(x/y)
    
 -----------------------------------------------------------------------
 -- Remaining distribution rules
 
-ruleDistrPlusTimes                                       :: (MetaVar a, Num a)        => Rule a
-ruleDistrTimesDiv, ruleDistrDivNumer, ruleDistrDivDenom  :: (MetaVar a, Fractional a) => Rule a
-ruleDistrSqrtTimes, {-ruleDistrSqrtDiv,-} ruleDistrSqrtDenom :: (MetaVar a, Floating a)   => Rule a
+ruleDistrPlusTimes                                       :: (Rewrite a, Num a)        =>  RewriteRule a
+ruleDistrTimesDiv, ruleDistrDivNumer, ruleDistrDivDenom  :: (Rewrite a, Fractional a) =>  RewriteRule a
+ruleDistrSqrtTimes, {-ruleDistrSqrtDiv,-} ruleDistrSqrtDenom :: (Rewrite a, Floating a)   =>  RewriteRule a
 
-ruleDistrPlusTimes = rule3 "Distr + *" $ \x y z -> 
+ruleDistrPlusTimes = rewriteRule "Distr + *" $ \x y z -> 
    x*(y+z) :~> (x*y)+(x*z)
    
-ruleDistrTimesDiv = rule3 "Distr * /" $ \x y z -> 
+ruleDistrTimesDiv = rewriteRule "Distr * /" $ \x y z -> 
    x*(y/z) :~> (x*y)/z
    
-ruleDistrDivNumer = rule3 "Distr / numer" $ \x y z -> 
+ruleDistrDivNumer = rewriteRule "Distr / numer" $ \x y z -> 
    (x/y)/z :~> x/(y*z)
    
-ruleDistrDivDenom = rule3 "Distr / denom" $ \x y z -> 
+ruleDistrDivDenom = rewriteRule "Distr / denom" $ \x y z -> 
    x/(y/z) :~> x*(z/y)
    
-ruleDistrSqrtTimes = rule2 "Distr sqrt *" $ \x y -> 
+ruleDistrSqrtTimes = rewriteRule "Distr sqrt *" $ \x y -> 
    sqrt x * sqrt y :~> sqrt (x*y)   -- .#. (x.>=0) /\ (y.>=0)
   
 -- False! 
---ruleDistrSqrtDiv = rule2 "Distr sqrt /" $ \x y -> 
+--ruleDistrSqrtDiv = rewriteRule "Distr sqrt /" $ \x y -> 
 --   sqrt (x/y) :~> sqrt x / sqrt y
    
-ruleDistrSqrtDenom = rule2 "Distr sqrt denom" $ \x y -> 
+ruleDistrSqrtDenom = rewriteRule "Distr sqrt denom" $ \x y -> 
    x/sqrt y :~> (x*sqrt y)/y

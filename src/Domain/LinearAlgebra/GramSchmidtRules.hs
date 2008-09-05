@@ -78,7 +78,7 @@ setCurrent v c =
 -- Two indices, change the second vector and make it orthogonal
 -- to the first
 transOrthogonal :: Num a => Int -> Int -> Transformation (Context [Vector a])
-transOrthogonal i j = contextTrans $ \xs ->
+transOrthogonal i j = contextTrans "transOrthogonal" $ \xs ->
    do guard (i /= j)
       u <- safeHead $ drop i xs
       case splitAt j xs of
@@ -86,7 +86,7 @@ transOrthogonal i j = contextTrans $ \xs ->
          _ -> Nothing 
 
 -- Find proper abstraction, and move this function to transformation module
-contextTrans :: (a -> Maybe a) -> Transformation (Context a)
-contextTrans f = makeTrans $ \c -> do
+contextTrans :: String -> (a -> Maybe a) -> Transformation (Context a)
+contextTrans s f = makeTrans s $ \c -> do
    new <- f (fromContext c)
    return (fmap (const new) c)

@@ -43,6 +43,7 @@ import qualified Prelude as Prelude
 import Common.Apply
 import Common.Context
 import Common.Transformation
+import Common.Rewriting
 import Common.Uniplate (Uniplate, children)
 import Common.Utils
 import qualified Common.Grammar as RE
@@ -79,6 +80,10 @@ instance Apply LabeledStrategy where
    apply = apply . toStrategy
 
 -- instances for IsStrategy
+instance IsStrategy RewriteRule where
+   toStrategy r = 
+      toStrategy (makeRule (ruleName r) (RewriteRule r))
+
 instance IsStrategy Rule where
    toStrategy = S . RE.symbol . Left
 

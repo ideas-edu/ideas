@@ -24,9 +24,6 @@ import Common.Strategy hiding (not)
 import Common.Context
 import Common.Parsing (fromRanged, subExpressionAt)
 import Control.Monad
-
-import Common.Transformation
-import Common.Rewriting
 import Data.Maybe
 {-
 import Test.QuickCheck hiding (check)
@@ -61,9 +58,9 @@ dnfExercise = standard
  where
    standard :: Exercise (Context Logic)
    standard = makeExercise
-
+{-
 r = makeRule "Test" $ 
-   metaVar 0 :&&: metaVar 1 |- metaVar 1 :||: metaVar 0
+   metaVar 0 :&&: metaVar 1 |- metaVar 1 :||: metaVar 0 -}
 
 {-
 toNF :: Logic -> Logic

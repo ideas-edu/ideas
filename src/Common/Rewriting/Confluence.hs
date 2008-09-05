@@ -7,14 +7,14 @@ import Common.Rewriting.MetaVar
 import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
-import Common.Rewriting.Rule
+import Common.Rewriting.RewriteRule
 import Common.Uniplate (subtermsAt, applyAtM, somewhereM)
 import Data.List
 import Data.Maybe
 
 ----------------------------------------------------
 
-superImpose :: Rewrite a => Rule a -> Rule a -> [([Int], a)]
+superImpose :: Rewrite a => RewriteRule a -> RewriteRule a -> [([Int], a)]
 superImpose r1 r2 =
    [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
  where
@@ -25,7 +25,7 @@ superImpose r1 r2 =
        | isJust (isMetaVar a) = []
        | otherwise            = unifyM lhs1 a
 
-criticalPairs :: (Rewrite a, Eq a) => [Rule a] -> [(a, (Rule a, a), (Rule a, a))]
+criticalPairs :: (Rewrite a, Eq a) => [RewriteRule a] -> [(a, (RewriteRule a, a), (RewriteRule a, a))]
 criticalPairs rs = 
    [ (a, (r1, b1), (r2, b2)) 
    | r1       <- rs
@@ -36,7 +36,7 @@ criticalPairs rs =
    , b1 /= b2 
    ]
 
-noDiamondPairs :: (Rewrite a, Eq a) => (a -> a) -> [Rule a] -> [(a, (Rule a, a, a), (Rule a, a, a))]
+noDiamondPairs :: (Rewrite a, Eq a) => (a -> a) -> [RewriteRule a] -> [(a, (RewriteRule a, a, a), (RewriteRule a, a, a))]
 noDiamondPairs f rs =
    [ (a, (r1, e1, nf1), (r2, e2, nf2)) 
    | (a, (r1, e1), (r2, e2)) <- criticalPairs rs
@@ -44,7 +44,7 @@ noDiamondPairs f rs =
    , nf1 /= nf2
    ]
 
-reportPairs :: (Show a, Eq a) => [(a, (Rule a, a, a), (Rule a, a, a))] -> IO ()
+reportPairs :: (Show a, Eq a) => [(a, (RewriteRule a, a, a), (RewriteRule a, a, a))] -> IO ()
 reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
  where
    f i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
@@ -57,25 +57,25 @@ reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
 
 ----------------------------------------------------
 
-confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [Rule a] -> IO ()
+confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> IO ()
 confluentFunction f rs = reportPairs $ noDiamondPairs f rs
 
-confluenceWith :: (Ord a, Show a, Rewrite a) => [Operator a] -> [Rule a] -> IO ()
-confluenceWith ops rs = confluentFunction (normalFormAC ops rs) rs
+confluenceWith :: (Ord a, Show a, Rewrite a) => [Operator a] -> [RewriteRule a] -> IO ()
+confluenceWith ops rs = confluentFunction (normalFormWith ops rs) rs
 
-confluence :: (Ord a, Show a, Rewrite a) => [Rule a] -> IO ()
+confluence :: (Ord a, Show a, Rewrite a) => [RewriteRule a] -> IO ()
 confluence = confluenceWith operators
 
 ----------------------------------------------------
 
-testConfluentFunction :: (Eq a, Rewrite a) => (a -> a) -> [Rule a] -> a -> Bool
+testConfluentFunction :: (Eq a, Rewrite a) => (a -> a) -> [RewriteRule a] -> a -> Bool
 testConfluentFunction f rs a = 
    case nub [ f b | r <- rs, b <- somewhereM (rewriteM r) a ] of
       _:_:_ -> False
       _     -> True
       
-testConfluenceWith :: (Ord a, Rewrite a) => [Operator a] -> [Rule a] -> a -> Bool
-testConfluenceWith acs rs = testConfluentFunction (normalFormAC acs rs) rs
+testConfluenceWith :: (Ord a, Rewrite a) => [Operator a] -> [RewriteRule a] -> a -> Bool
+testConfluenceWith ops rs = testConfluentFunction (normalFormWith ops rs) rs
 
-testConfluence :: (Ord a, Rewrite a) => [Rule a] -> a -> Bool
+testConfluence :: (Ord a, Rewrite a) => [RewriteRule a] -> a -> Bool
 testConfluence = testConfluenceWith operators

@@ -36,13 +36,12 @@ import Common.Parsing
 testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
             this -> this -}
 
-parseSystem :: String -> (Context (LinearSystem SExprLin), [String])
-parseSystem = f . parse p . scanWith s
+parseSystem :: String -> (LinearSystem SExprLin, [String])
+parseSystem = f . parse pSystem . scanWith s
  where
    s0 = newlinesAsSpecial scannerExpr
    s  = s0 {keywordOperators = "==" : keywordOperators s0 }
-   p  = fmap inContext <$> pSystem
-   f (Nothing, xs) = (inContext [], "System is not linear" : map show xs)
+   f (Nothing, xs) = ([], "System is not linear" : map show xs)
    f (Just m, xs)  = (m, map show xs)
 
 pSystem :: TokenParser (Maybe (LinearSystem SExprLin))
@@ -66,12 +65,12 @@ pEquation p = (:==:) <$> p <* pKey "==" <*> p
 -----------------------------------------------------------
 --- Parser
 
-parseMatrix :: String -> (MatrixInContext SExpr, [String])
+parseMatrix :: String -> (Matrix SExpr, [String])
 parseMatrix = f . parse p . scanWith s
  where
    s = newlinesAsSpecial scannerExpr
-   p = (fmap (inContext . fmap simplifyExpr)) <$> pMatrix pFractional
-   f (Nothing, xs) = (inContext (makeMatrix []), "Matrix is not rectangular" : map show xs)
+   p = (fmap (fmap simplifyExpr)) <$> pMatrix pFractional
+   f (Nothing, xs) = (makeMatrix [], "Matrix is not rectangular" : map show xs)
    f (Just m, xs)  = (m, map show xs)
 
 pMatrix :: TokenParser a -> TokenParser (Maybe (Matrix a))
@@ -79,11 +78,11 @@ pMatrix p = make <$> pLines True (pList1 p)
  where 
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-parseVectors :: String -> (Context [Vector SExprGS], [Message Token])
+parseVectors :: String -> ([Vector SExprGS], [Message Token])
 parseVectors = parse p . scanWith s
  where
    s = newlinesAsSpecial scannerExpr
-   p = (inContext . map (fmap simplifyExpr)) <$> pVectors pExpr
+   p = (map (fmap simplifyExpr)) <$> pVectors pExpr
 
 pVectors :: TokenParser a -> TokenParser [Vector a]
 pVectors p = pLines True (pVector p)

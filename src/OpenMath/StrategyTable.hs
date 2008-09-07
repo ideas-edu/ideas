@@ -38,7 +38,7 @@ oneliner = unwords . concatMap words . lines
 defaultURL :: Bool -> String
 defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/service.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
 
-data ExprExercise a = IsOMOBJ a => ExprExercise (Exercise (Context a))
+data ExprExercise a = IsOMOBJ a => ExprExercise (Exercise a)
 
 data StrategyEntry = Entry 
    { strategyNr   :: String
@@ -47,7 +47,7 @@ data StrategyEntry = Entry
    , examples     :: [OMOBJ]
    }
  
-entry :: IsOMOBJ a => String -> Exercise (Context a) -> [String] -> [a] -> StrategyEntry
+entry :: IsOMOBJ a => String -> Exercise a -> [String] -> [a] -> StrategyEntry
 entry nr a fs ex = Entry nr (Some (ExprExercise a)) fs (map toOMOBJ ex)
 
 strategyTable :: [StrategyEntry]

@@ -49,7 +49,7 @@ laServer req =
       [Some (ExprExercise a)] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    
-laServerFor :: IsOMOBJ a => Exercise (Context a) -> Request -> Reply
+laServerFor :: IsOMOBJ a => Exercise a -> Request -> Reply
 laServerFor a req = 
    case getContextTerm req of
    

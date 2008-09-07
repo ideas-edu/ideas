@@ -92,8 +92,8 @@ submit s input =
       STS ts -> 
          case parser (TAS.exercise ts) input of
             Left _  -> SyntaxError
-            Right a -> 
-               case TAS.submit ts a of
+            Right a ->
+               case TAS.submit ts (inContext a) of
                   TAS.NotEquivalent -> NotEquivalent
                   TAS.Buggy   rs    -> Buggy   (map name rs)       
                   TAS.Ok      rs ns -> Ok      (map name rs) (toState ns)
@@ -102,7 +102,7 @@ submit s input =
 
 -------------------------
 
-data SomeExercise   = forall a . SE  (Exercise (Context a))
+data SomeExercise   = forall a . SE  (Exercise a)
 data SomeTypedState = forall a . STS (TAS.State a)
 
 exerciseList :: [SomeExercise]
@@ -121,7 +121,7 @@ fromState (exID, p, ce, ctx) =
             (Right a, Just unit) -> STS TAS.State 
                { TAS.exercise = ex
                , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
-               , TAS.term     = fmap (\_ -> fromContext a) unit
+               , TAS.term     = fmap (\_ -> a) unit
                }
             _ -> error "fromState"
       
@@ -138,6 +138,6 @@ readPrefix input =
       [(is, rest)] | all isSpace rest -> return is
       _ -> Nothing
       
-getRule :: RuleID -> Exercise a -> Rule a
+getRule :: RuleID -> Exercise a -> Rule (Context a)
 getRule ruleID ex = fromMaybe (error "invalid rule ID") $ safeHead $ 
    filter ((==ruleID) . name) (ruleset ex)

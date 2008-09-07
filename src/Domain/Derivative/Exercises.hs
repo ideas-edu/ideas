@@ -19,19 +19,17 @@ import Domain.Derivative.Rules
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
 import Common.Context (Context, liftRuleToContext, inContext, fromContext)
-import Common.Exercise (Exercise(..), text)
+import Common.Exercise (Exercise(..))
 import Common.Transformation
 import Test.QuickCheck hiding (label)
 import Domain.Math.Expr
 import Domain.Math.SExpr
 import Domain.Math.Parser
 
-derivativeExercise :: Exercise (Context Expr)
+derivativeExercise :: Exercise Expr
 derivativeExercise = Exercise
    { shortTitle    = "Derivative"
-   , parser        = \s -> case parseExpr s of 
-                              Left s  -> Left  (text s)
-                              Right a -> Right (inContext a)
+   , parser        = parseExpr
    , equivalence = (==) -- ??
    , equality    = (==)
    , suitableTerm = const True

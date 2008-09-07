@@ -25,12 +25,12 @@ import Common.Strategy (repeat, somewhere, alternatives, label)
 import Control.Monad
 import Test.QuickCheck hiding (label)
 
-cnfExercise :: Exercise (Context RelAlg)
+cnfExercise :: Exercise RelAlg
 cnfExercise = makeExercise
    { shortTitle = "To conjunctive normal form"
    , parser        = \s -> case parseRelAlg s of
-                              (p, [])   -> Right (inContext p)
-                              (_, msgs) -> Left  (text (show msgs))
+                              (p, [])   -> Right p
+                              (_, msgs) -> Left  (show msgs)
    , prettyPrinter = ppRelAlg . fromContext
    , equivalence = \x y -> fromContext x `probablyEqual` fromContext y
    , ruleset   = map liftRuleToContext relAlgRules
@@ -39,7 +39,7 @@ cnfExercise = makeExercise
    , suitableTerm = not . isCNF . fromContext
    }
    
-cnfExerciseSimple :: Exercise (Context RelAlg)
+cnfExerciseSimple :: Exercise RelAlg
 cnfExerciseSimple = cnfExercise
    { shortTitle = shortTitle cnfExercise ++ " (simple)"
    , strategy   = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise

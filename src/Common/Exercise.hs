@@ -16,14 +16,12 @@ module Common.Exercise
      Exercise(..), makeExercise
      -- * Services
    , Feedback(..), giveStep, giveSteps, giveHint, feedback, randomTerm, stepsRemaining
-     -- * Formatted documents
-   , Doc, text, showDoc
      -- * QuickCheck utilities
    , checkExercise, checkParserPretty
    ) where
 
 import Common.Apply
-import Common.Context (Location)
+import Common.Context
 import Common.Parsing (Range)
 import Common.Transformation
 import Common.Strategy hiding (not)
@@ -35,26 +33,26 @@ import Test.QuickCheck hiding (label, arguments)
 
 data Exercise a = Exercise
    { shortTitle    :: String
-   , parser        :: String -> Either (Doc a) a
+   , parser        :: String -> Either String a
    , subTerm       :: String -> Range -> Maybe Location
-   , prettyPrinter :: a -> String
-   , equivalence   :: a -> a -> Bool
-   , equality      :: a -> a -> Bool -- syntactic equality
-   , finalProperty :: a -> Bool
-   , ruleset       :: [Rule a]
-   , strategy      :: LabeledStrategy a
-   , generator     :: Gen a
-   , suitableTerm  :: a -> Bool
+   , prettyPrinter :: Context a -> String
+   , equivalence   :: Context a -> Context a -> Bool
+   , equality      :: Context a -> Context a -> Bool -- syntactic equality
+   , finalProperty :: Context a -> Bool
+   , ruleset       :: [Rule (Context a)]
+   , strategy      :: LabeledStrategy (Context a)
+   , generator     :: Gen (Context a)
+   , suitableTerm  :: Context a -> Bool
    }
 
 instance Apply Exercise where
-   applyAll = applyAll . strategy
+   applyAll e a = map fromContext $ applyAll (strategy e) (inContext a)
 
 -- default values for all fields
 makeExercise :: (Arbitrary a, Eq a, Show a) => Exercise a
 makeExercise = Exercise
    { shortTitle    = "no short title"
-   , parser        = const $ Left (text "no parser")
+   , parser        = const $ Left "no parser"
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show
    , equivalence   = (==)
@@ -66,13 +64,13 @@ makeExercise = Exercise
    , suitableTerm  = const True
    }
    
-randomTerm :: Exercise a -> IO a
+randomTerm :: Exercise a -> IO (Context a)
 randomTerm a = do 
    stdgen <- newStdGen
    return (randomTermWith stdgen a)
 
 -- | Default size is 100
-randomTermWith :: StdGen -> Exercise a -> a
+randomTermWith :: StdGen -> Exercise a -> Context a
 randomTermWith stdgen a
    | not (suitableTerm a term) =
         randomTermWith (snd $ next stdgen) a
@@ -82,19 +80,19 @@ randomTermWith stdgen a
    term = generate 100 stdgen (generator a)
 
 -- | Returns a text and the rule that is applicable
-giveHint :: Prefix a -> a -> Maybe (Doc a, Rule a)
+giveHint :: Prefix a -> a -> Maybe (String, Rule a)
 giveHint p = safeHead . giveHints p
 
 -- | Returns a text and the rule that is applicable
-giveHints :: Prefix a -> a -> [(Doc a, Rule a)]
+giveHints :: Prefix a -> a -> [(String, Rule a)]
 giveHints p = map g . giveSteps p
  where
    g (x, y, _, _, _) = (x, y)
 
-giveStep :: Prefix a -> a -> Maybe (Doc a, Rule a, Prefix a, a, a)
+giveStep :: Prefix a -> a -> Maybe (String, Rule a, Prefix a, a, a)
 giveStep p = safeHead . giveSteps p
 
-giveSteps :: Prefix a -> a -> [(Doc a, Rule a, Prefix a, a, a)]
+giveSteps :: Prefix a -> a -> [(String, Rule a, Prefix a, a, a)]
 giveSteps p0 a = 
    let make (new, prefix) = 
           let steps  = prefixToSteps prefix
@@ -104,28 +102,28 @@ giveSteps p0 a =
                 Just r -> [ (doc r old, r, prefix, old, new) | isMajorRule r ]
                 _      -> []
        showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
-       doc r old = text "Use rule " <> docrule r <> 
+       doc r old = "Use rule " ++ name r ++
           case expectedArguments r old of
-             Just xs -> text "\n   with arguments " <> text (showList xs)
-             Nothing -> emptyDoc
+             Just xs -> "\n   with arguments " ++ showList xs
+             Nothing -> "" 
    in concatMap make $ runPrefixMajor p0 a            
          
-feedback :: Exercise a -> Prefix a -> a -> String -> Feedback a
+feedback :: Exercise a -> Prefix (Context a) -> Context a -> String -> Feedback (Context a)
 feedback ex p0 a txt =
    case parser ex txt of
       Left msg -> 
          SyntaxError msg
       Right new
-         | not (equivalence ex a new) -> 
-              Incorrect (text "Incorrect")
+         | not (equivalence ex a (inContext new)) -> 
+              Incorrect "Incorrect"
          | otherwise -> 
               let answers = giveSteps p0 a
-                  check (_, _, _, _, this) = equality ex new this
+                  check (_, _, _, _, this) = equality ex (inContext new) this
               in case filter check answers of
-                    (_, r, newPrefix, _, newTerm):_ -> Correct (text "Well done! You applied rule " <> docrule r) (Just (newPrefix, r, newTerm))
-                    _ | equality ex a new -> 
-                         Correct (text "You have submitted the current term.") Nothing
-                    _ -> Correct (text "Equivalent, but not a known rule. Please retry.") Nothing
+                    (_, r, newPrefix, _, newTerm):_ -> Correct ("Well done! You applied rule " ++ name r) (Just (newPrefix, r, newTerm))
+                    _ | equality ex a (inContext new) -> 
+                         Correct "You have submitted the current term." Nothing
+                    _ -> Correct "Equivalent, but not a known rule. Please retry." Nothing
 
 stepsRemaining :: Prefix a -> a -> Int
 stepsRemaining p0 a = 
@@ -134,57 +132,9 @@ stepsRemaining p0 a =
       Just (_, prefix) ->
          length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
 
-data Feedback a = SyntaxError (Doc a)
-                | Incorrect   (Doc a)
-                | Correct     (Doc a) (Maybe (Prefix a, Rule a, a)) {- The rule that was applied -}
-
---getRuleNames :: Exercise a -> [String]
---getRuleNames = map name . ruleset
-
----------------------------------------------------------------
--- Documents (feedback with structure)
-                
-newtype Doc a = D [DocItem a]
-
-data DocItem a = Text String | Term a | DocRule (Some Rule)
-
-instance Functor Doc where
-   fmap f (D xs) = D (map (fmap f) xs)
-
-instance Functor DocItem where
-   fmap _ (Text s) = Text s
-   fmap f (Term a) = Term (f a)
-   fmap _ (DocRule r) = DocRule r 
-
-emptyDoc :: Doc a
-emptyDoc = D []
-
-showDoc :: Exercise a -> Doc a -> String
-showDoc = showDocWith . prettyPrinter
-
-showDocWith :: (a -> String) -> Doc a -> String
-showDocWith f (D xs) = concatMap g xs
- where
-   g (Text s) = s
-   g (Term a) = f a 
-   g (DocRule (Some r)) = name r
-   
-infixr 5 <>
-
-(<>) :: Doc a -> Doc a -> Doc a
-D xs <> D ys = D (xs ++ ys)
-
--- docs :: [Doc a] -> Doc a
--- docs = foldr (<>) emptyDoc
-
-text :: String -> Doc a
-text s = D [Text s]
-
--- term :: a -> Doc a
--- term a = D [Term a]
-
-docrule :: Rule a -> Doc a
-docrule r = D [DocRule (Some r)]
+data Feedback a = SyntaxError String
+                | Incorrect   String
+                | Correct     String (Maybe (Prefix a, Rule a, a)) {- The rule that was applied -}
 
 ---------------------------------------------------------------
 -- Checks for an exercise
@@ -196,12 +146,7 @@ docrule r = D [DocRule (Some r)]
 checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
 checkExercise = checkExerciseWith checkRuleSmart
 
-{-
-checkExerciseSmart :: (Arbitrary a, Show a, Substitutable a) => Exercise a -> IO ()
-checkExerciseSmart = checkExerciseWith checkRuleSmart
--}
-
-checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule a -> IO b) -> Exercise a -> IO ()
+checkExerciseWith :: (Arbitrary a, Show a) => ((Context a -> Context a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
 checkExerciseWith f a = do
    putStrLn ("Checking exercise: " ++ shortTitle a)
    let check txt p = putStr ("- " ++ txt ++ "\n    ") >> quickCheck p
@@ -231,9 +176,9 @@ checkExerciseWith f a = do
       
 
 -- check combination of parser and pretty-printer
-checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
+checkParserPretty :: (Context a -> Context a -> Bool) -> (String -> Either b a) -> (Context a -> String) -> Context a -> Bool
 checkParserPretty eq parser pretty p = 
-   either (const False) (eq p) (parser (pretty p))
+   either (const False) (eq p . inContext) (parser (pretty p))
    
 checkEquivalence :: (Arbitrary a, Show a) => [Rule a] -> (a -> a -> Bool) -> a -> Property
 checkEquivalence rs eq x = 

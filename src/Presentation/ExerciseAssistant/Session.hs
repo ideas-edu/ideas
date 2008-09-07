@@ -21,7 +21,7 @@ module Session
 
 import qualified Service.TypedAbstractService as TAS
 import Common.Context
-import Common.Exercise (Exercise(..), showDoc)
+import Common.Exercise (Exercise(..))
 import Common.Parsing (indicesToRange)
 import Common.Logging
 import Common.Transformation
@@ -31,9 +31,9 @@ import Data.List
 import Data.IORef
 import Data.Maybe
 
-newtype Domain a = Domain (Exercise (Context a))
+newtype Domain a = Domain (Exercise a)
 
-make :: Exercise (Context a) -> Some Domain
+make :: Exercise a -> Some Domain
 make ex = Some (Domain ex)
 
 --------------------------------------------------
@@ -74,9 +74,9 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    Some d <- readIORef ref
    case parser (exercise d) txt of
       Left err -> 
-         return (showDoc (exercise d) err, False)
+         return (err, False)
       Right term ->
-         case TAS.submit (currentState d) term of
+         case TAS.submit (currentState d) (inContext term) of
             TAS.Buggy rs -> 
                return ("Incorrect: you used the buggy rule: " ++ show rs, False)
             TAS.NotEquivalent -> 
@@ -184,7 +184,7 @@ subTermAtIndices s i j = withState $ \d -> do
 
 newtype Derivation a = D [TAS.State a]
 
-makeDerivation :: Exercise (Context a) -> IO (Derivation a)
+makeDerivation :: Exercise a -> IO (Derivation a)
 makeDerivation ex = do 
    state <- TAS.generate ex 5
    return $ D [state]
@@ -200,7 +200,7 @@ current :: Derivation a -> Context a
 current (D (s:_)) = TAS.term s
 current _ = error "Session.current: empty list"
 
-exercise :: Derivation a -> Exercise (Context a)
+exercise :: Derivation a -> Exercise a
 exercise (D (s:_)) = TAS.exercise s
 exercise _ = error "Session.exercise: empty list"
 

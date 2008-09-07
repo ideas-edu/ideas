@@ -45,7 +45,7 @@ makeHTML self req =
  where
    noAnswer = req {req_Answer = Nothing}
                
-make :: IsOMOBJ a => String -> Exercise (Context a) -> Request -> ReplyIncorrect -> XML
+make :: IsOMOBJ a => String -> Exercise a -> Request -> ReplyIncorrect -> XML
 make self a req inc = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
@@ -93,7 +93,7 @@ make self a req inc = html
 ----------------------------------------------------------------------------
 -- Actions
 
-expected :: IsOMOBJ a => Exercise (Context a) -> Request -> ReplyIncorrect -> (Request, Int)
+expected :: IsOMOBJ a => Exercise a -> Request -> ReplyIncorrect -> (Request, Int)
 expected a r inc = 
    case laServerFor a r {req_Answer = Just $ repInc_Expected inc} of
       Ok ok -> ( r { req_Location = repOk_Location ok

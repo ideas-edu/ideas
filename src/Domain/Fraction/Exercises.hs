@@ -25,12 +25,12 @@ import Common.Exercise
 import Control.Monad
 import Data.Maybe
 
-simplExercise :: Exercise (Context Frac)
+simplExercise :: Exercise Frac
 simplExercise = standard
    { shortTitle    = "Simplifying fractions" 
    , parser        = \s -> case parseFrac s of
-                              (p, [])   -> Right (inContext p)
-                              (p, msgs) -> Left  (text (show msgs))
+                              (p, [])   -> Right p
+                              (p, msgs) -> Left  (show msgs)
    , prettyPrinter = ppFrac . fromContext
    , equivalence   = \x y -> fromContext x ~= fromContext y
    , equality      = \x y -> fromContext x == fromContext y

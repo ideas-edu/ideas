@@ -35,12 +35,12 @@ import Data.List -}
 * max. ?? stappen
 -}
 
-dnfExercise :: Exercise (Context Logic)
+dnfExercise :: Exercise Logic
 dnfExercise = standard
    { shortTitle    = "Proposition to DNF" 
    , parser        = \s -> case parseLogicPars s of
-                              (p, [])      -> Right (inContext (fromRanged p))
-                              (_, (a,b):_) -> Left $ text $ "Parse error" ++ 
+                              (p, [])      -> Right (fromRanged p)
+                              (_, (a,b):_) -> Left $ "Parse error" ++ 
                                               maybe "" (\x -> " on " ++ show x) b ++ ":\n   expecting " ++ show a
    , subTerm       = \s r -> case parseLogicPars s of
                                 (p, []) -> fmap makeLocation (subExpressionAt r p)

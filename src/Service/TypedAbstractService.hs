@@ -24,7 +24,7 @@ import System.Random
 import qualified Test.QuickCheck as QC
 
 data State a = State 
-   { exercise :: Exercise (Context a)
+   { exercise :: Exercise a
    , prefix   :: Maybe (Prefix (Context a))
    , term      :: Context a
    }
@@ -37,7 +37,7 @@ data Result a = Buggy  [Rule (Context a)]
               | Unknown                   (State a)  -- equivalent
           
 -- result must be in the IO monad to access a standard random number generator
-generate :: Exercise (Context a) -> Int -> IO (State a)
+generate :: Exercise a -> Int -> IO (State a)
 generate ex level = do 
    stdgen <- newStdGen
    case QC.generate 100 stdgen (generator ex) of
@@ -46,7 +46,7 @@ generate ex level = do
              , prefix   = Just (emptyPrefix (strategy ex))
              , term     = a
              }
-      _ -> generate ex level 
+      _ -> generate ex level
 
 derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state = fromMaybe (error "derivation") $ do
@@ -120,8 +120,8 @@ submit state new
       in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (term state) new)) of
               Just r  -> Detour [r] newState
               Nothing -> Unknown newState
-   
+
 -- local helper-function
-findRules :: Exercise a -> a -> a -> [Rule a]
+findRules :: Exercise a -> Context a -> Context a -> [Rule (Context a)]
 findRules ex old new = 
    filter (maybe False (equality ex new) . (`Apply.apply` old)) (ruleset ex)

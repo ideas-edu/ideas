@@ -41,7 +41,6 @@ import Common.Apply
 import Common.Utils
 import Control.Monad
 import Common.Rewriting
-import Common.Uniplate (Uniplate)
 
 -----------------------------------------------------------
 --- Transformations

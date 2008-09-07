@@ -102,7 +102,7 @@ serviceXML s attrs request
         
 serviceXML s _ _ = fail $ "Invalid request: unknown service " ++ show s
 
-xml2State :: InXML a => Exercise (Context a) -> XML -> TAS.State a
+xml2State :: InXML a => Exercise a -> XML -> TAS.State a
 xml2State ex xml@(Tag "state" _ _) = fromMaybe (error "invalid state in request") $ do
    sp   <- extractText "prefix"  xml
    sc   <- Just $ maybe "" id $ extractText "context" xml

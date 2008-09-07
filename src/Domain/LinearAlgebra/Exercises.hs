@@ -18,6 +18,7 @@ import Common.Apply
 import Common.Transformation
 import Common.Exercise
 import Common.Context
+import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
@@ -32,12 +33,12 @@ import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
 
-solveGramSchmidt :: Exercise (Context [Vector SExprGS])
+solveGramSchmidt :: Exercise [Vector SExprGS]
 solveGramSchmidt = makeExercise
    { shortTitle    = "Gram-Schmidt"
    , parser        = \s -> case parseVectors s of
                               (a, [])  -> Right a
-                              (_, msg) -> Left $ text $ show msg
+                              (_, msg) -> Left $ show msg
    , prettyPrinter = unlines . map show . fromContext
    , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt
                              in f x == f y
@@ -47,12 +48,12 @@ solveGramSchmidt = makeExercise
    , generator     = liftM inContext arbBasis 
    }
 
-solveSystemExercise :: Exercise (EqsInContext SExprLin)
+solveSystemExercise :: Exercise (Equations SExprLin)
 solveSystemExercise = makeExercise
    { shortTitle    = "Solve Linear System"
    , parser        = \s -> case parseSystem s of
                               (a, [])  -> Right a
-                              (_, msg) -> Left $ text $ show msg
+                              (_, msg) -> Left $ show msg
    , prettyPrinter = unlines . map show . equations
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
                                    . inContext . map toStandardForm . equations
@@ -64,12 +65,12 @@ solveSystemExercise = makeExercise
                         return $ forget1 $ fmap matrixToSystem m
    }
    
-reduceMatrixExercise :: Exercise (MatrixInContext SExpr)
+reduceMatrixExercise :: Exercise (Matrix SExpr)
 reduceMatrixExercise = makeExercise
    { shortTitle    = "Gaussian Elimination"
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right a
-                              (_, msg) -> Left $ text $ unlines msg
+                              (_, msg) -> Left $ unlines msg
    , prettyPrinter = ppMatrix . matrix
    , equivalence   = \x y -> fromContext x === fromContext y
    , ruleset       = matrixRules
@@ -78,13 +79,13 @@ reduceMatrixExercise = makeExercise
    , strategy      = toReducedEchelon
    }
 
-solveSystemWithMatrixExercise :: Exercise (Context (Either (LinearSystem SExpr) (Matrix SExpr)))
+solveSystemWithMatrixExercise :: Exercise (Either (LinearSystem SExpr) (Matrix SExpr))
 solveSystemWithMatrixExercise = makeExercise
    { shortTitle    = "Solve Linear System with Matrix"
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
-                              (Right ok, _) -> Right (fmap (Left . forget2) ok)
-                              (_, Right ok) -> Right (fmap Right ok)
-                              (Left _, Left _) -> Left (text "Error") -- FIX THIS
+                              (Right ok, _) -> Right $ Left $ forget2 ok
+                              (_, Right ok) -> Right $ Right ok
+                              (Left _, Left _) -> Left "Error" -- FIX THIS
    , prettyPrinter = either (unlines . map show . id) ppMatrix . fromContext
    , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
                                  g = f . either (fst . systemToMatrix) id . fromContext
@@ -95,13 +96,13 @@ solveSystemWithMatrixExercise = makeExercise
    , generator     = liftM (fmap (Left . forget2)) (generator solveSystemExercise)
    }
 
-opgave6b :: Exercise (MatrixInContext SExpr)
+opgave6b :: Exercise (Matrix SExpr)
 opgave6b = reduceMatrixExercise
    { shortTitle = "Opgave 9.6 (b)"
    , generator  = return $ inContext $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
    }
 
-opgaveVarMatrix :: Exercise (MatrixInContext SExpr)
+opgaveVarMatrix :: Exercise (Matrix SExpr)
 opgaveVarMatrix = reduceMatrixExercise
    { shortTitle = "Var in Matrix"
    , generator  = return $ inContext $ makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]

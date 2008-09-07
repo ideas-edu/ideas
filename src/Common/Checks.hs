@@ -16,7 +16,7 @@ module Main (main) where
 import Common.Exercise
 import Common.Grammar
 import qualified Domain.Logic as Logic
-import qualified Domain.Logic.Checks as Logic
+-- import qualified Domain.Logic.Checks as Logic
 import qualified Domain.LinearAlgebra as LA
 {- import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.Fraction as Frac

@@ -36,7 +36,6 @@ import Data.Char
 import Data.Ratio
 import Data.List
 import Data.Maybe
-import qualified Data.IntSet as IS
 import Test.QuickCheck hiding (arguments)
 import Common.Apply
 import Common.Utils
@@ -362,7 +361,7 @@ checkRule eq rule = do
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
-checkRuleSmart :: (Arbitrary a, Uniplate a, MetaVar a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
+checkRuleSmart :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
 checkRuleSmart eq rule = do
    putStr $ "[" ++ name rule ++ "] "
    quickCheck (propRule (smartGen rule) eq rule)
@@ -372,32 +371,22 @@ propRule gen eq rule _ =
    forAll gen $ \a ->
       applicable rule a ==> (a `eq` applyD rule a)
 
-smartGen :: (Arbitrary a, Uniplate a, MetaVar a) => Rule a -> Gen a
-smartGen = oneof . map smartGenTrans . transformations
-   
-smartGenTrans :: Arbitrary a => Transformation a -> Gen a
--- smartGenTrans (RewriteRule r) = smartGenTerm $ lhs $ rulePair r 0
-smartGenTrans _               = arbitrary
+smartGen :: Arbitrary a => Rule a -> Gen a
+smartGen r = frequency [(4, arbitrary), (1, smartGenRule r)]
 
-smartGenTerm :: (Arbitrary a, Uniplate a, MetaVar a) => a -> Gen a
-smartGenTerm lhs = do
-   let vs = getMetaVars lhs
-   list <- vector (IS.size vs) 
-   let sub = listToSubst $ zip (IS.toList vs) list
-   return (sub |-> lhs)
+smartGenRule :: Arbitrary a => Rule a -> Gen a
+smartGenRule r = do
+   a <- arbitrary
+   case catMaybes $ map (smartGenTrans a) (transformations r) of
+      [] -> arbitrary
+      gs -> oneof gs
 
-{-    
-instance Arbitrary a => Arbitrary (Rule a) where
-   arbitrary     = liftM4 Rule arbName arbitrary arbitrary arbitrary
-   coarbitrary r = coarbitrary (map ord $ name r) . coarbitrary (transformations r)
-
-instance Arbitrary a => Arbitrary (Transformation a) where
-   arbitrary = oneof [liftM (Function "") arbitrary]
-   coarbitrary (Function _ f)      = variant 0 . coarbitrary f
-   coarbitrary (RewriteRule _)     = variant 1
-   coarbitrary (Abstraction _ _ _) = variant 2
-   coarbitrary (Lift _ _)          = variant 3
-
--- generates sufficiently long names
-arbName :: Gen String
-arbName = oneof $ map (return . ('r':) . show) [1 .. 10000 :: Int] -}
+smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
+smartGenTrans a trans =
+   case trans of
+      RewriteRule r -> return (smartGenerator r)
+      Lift lp t -> do 
+         b   <- liftPairGet lp a
+         gen <- smartGenTrans b t
+         return $ liftM (\c -> liftPairSet lp c a) gen
+      _ -> Nothing

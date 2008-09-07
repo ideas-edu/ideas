@@ -6,6 +6,7 @@ module Common.Rewriting.RewriteRule
    , inverse, bothWays, checkScope
    , rewrite, rewriteM, rewriteWith
    , normalForm, normalFormWith
+   , smartGenerator
    ) where
 
 import Common.Uniplate (transform)
@@ -19,6 +20,7 @@ import Data.Maybe
 import Data.List
 import qualified Data.IntSet as IS
 import Common.Apply
+import Test.QuickCheck
 
 -----------------------------------------------------------
 -- Rewrite rules
@@ -141,3 +143,14 @@ normalFormWith ops rs = fixpoint $ transform $ \a ->
       
 normalForm :: (Rewrite a, Ord a) => [RewriteRule a] -> a -> a
 normalForm rs = normalFormWith operators rs
+
+-----------------------------------------------------------
+-- Smart generator that creates instantiations of the left-hand side
+
+smartGenerator :: RewriteRule a -> Gen a
+smartGenerator r@(R _ _ _) = do 
+   let a :~> _ = rulePair r 0
+   let vs      = getMetaVars a
+   list <- vector (IS.size vs) 
+   let sub = listToSubst $ zip (IS.toList vs) list
+   return (sub |-> a)

@@ -14,12 +14,23 @@
 module Domain.Logic.Generator 
    ( generateLogic, generateLogicWith
    , LogicGenConfig(..), defaultConfig
+   , equalLogicAC
    ) where
 
 import Domain.Logic.Formula
 import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
+import Common.Rewriting
+
+instance Rewrite Logic where
+   operators = logicOperators
+
+-- | Equality module associative-commutativity of operators
+equalLogicAC:: Logic -> Logic -> Bool
+equalLogicAC = equalWith operators
+
+
 
 generateLogic :: Gen Logic
 generateLogic = generateLogicWith defaultConfig

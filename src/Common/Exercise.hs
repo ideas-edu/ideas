@@ -194,7 +194,7 @@ docrule r = D [DocRule (Some r)]
 -- | the terms produced by this generator will typically be biased.
 
 checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
-checkExercise = checkExerciseWith checkRule
+checkExercise = checkExerciseWith checkRuleSmart
 
 {-
 checkExerciseSmart :: (Arbitrary a, Show a, Substitutable a) => Exercise a -> IO ()

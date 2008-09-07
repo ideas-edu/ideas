@@ -10,6 +10,7 @@ import Common.Rewriting.Substitution
 import Common.Rewriting.AC
 import Control.Monad
 import qualified Data.IntSet as IS
+import Test.QuickCheck
 
 -----------------------------------------------------------
 -- Unification (in both ways)
@@ -17,7 +18,10 @@ import qualified Data.IntSet as IS
 class ShallowEq a where 
    shallowEq :: a -> a -> Bool
 
-class (MetaVar a, Uniplate a, ShallowEq a) => Rewrite a where
+-- The arbitrary type class is a quick solution to have smart generators
+-- (in combination with lifting rules). The function in the RewriteRule module
+-- cannot have a type class for this reason
+class (MetaVar a, Uniplate a, ShallowEq a, Arbitrary a) => Rewrite a where
    operators :: [Operator a]
    -- default definition: no associative/commutative operators
    operators = []

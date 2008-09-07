@@ -14,6 +14,7 @@
 module Domain.RelationAlgebra.Rules where
 
 import Domain.RelationAlgebra.Formula
+import Domain.RelationAlgebra.Generator
 import Common.Transformation
 import Common.Rewriting
 

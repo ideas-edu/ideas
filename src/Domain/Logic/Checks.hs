@@ -22,7 +22,6 @@ import Common.Transformation
 import Common.Utils
 import Common.Parsing
 import Domain.Logic
-import Common.Unification
 import Test.QuickCheck
 import Control.Monad
 import Data.Char

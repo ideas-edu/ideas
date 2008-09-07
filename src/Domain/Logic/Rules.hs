@@ -17,6 +17,7 @@ module Domain.Logic.Rules where
 import Domain.Logic.Formula
 import Common.Transformation
 import Common.Rewriting
+import Domain.Logic.Generator
 
 -- qqq = confluence $ [ r | RewriteRule r <- concatMap transformations logicRules ]
  

@@ -37,10 +37,6 @@ data Logic = Var String
            | F                            -- false
  deriving (Show, Eq, Ord)
  
--- | Equality module associative-commutativity of operators
-equalLogicAC:: Logic -> Logic -> Bool
-equalLogicAC = equalWith operators
-
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.
 type LogicAlg a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a, a, a)
@@ -150,9 +146,6 @@ instance ShallowEq Logic where
          (T        , T        ) -> True
          (F        , F        ) -> True
          _                      -> False
-
-instance Rewrite Logic where
-   operators = logicOperators
 
 instance MetaVar Logic where
    isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)

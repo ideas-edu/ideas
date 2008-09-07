@@ -214,4 +214,3 @@ instance ShallowEq RelAlg where
          (U       , U       ) -> True
          (E       , E       ) -> True
          _                    -> False
-instance Rewrite RelAlg

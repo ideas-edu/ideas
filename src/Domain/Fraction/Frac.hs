@@ -103,8 +103,6 @@ instance ShallowEq Frac where
          (Con a  , Con b  ) -> a==b
          _                  -> False       
 
-instance Rewrite Frac
-
 infix 1 ~=
 x ~= y = let (a, b) = numFraction x
              (c, d) = numFraction y

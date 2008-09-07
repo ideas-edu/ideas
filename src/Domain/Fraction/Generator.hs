@@ -17,10 +17,13 @@ module Domain.Fraction.Generator
    , FracGenConfig(..), defaultConfig
    ) where
 
+import Common.Rewriting
 import Domain.Fraction.Frac
 import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
+
+instance Rewrite Frac
 
 generateFrac :: Gen Frac
 generateFrac = generateFracWith defaultConfig

@@ -35,14 +35,14 @@ data Exercise a = Exercise
    { shortTitle    :: String
    , parser        :: String -> Either String a
    , subTerm       :: String -> Range -> Maybe Location
-   , prettyPrinter :: Context a -> String
-   , equivalence   :: Context a -> Context a -> Bool
-   , equality      :: Context a -> Context a -> Bool -- syntactic equality
-   , finalProperty :: Context a -> Bool
+   , prettyPrinter :: a -> String
+   , equivalence   :: a -> a -> Bool
+   , equality      :: a -> a -> Bool -- syntactic equality
+   , finalProperty :: a -> Bool
    , ruleset       :: [Rule (Context a)]
    , strategy      :: LabeledStrategy (Context a)
-   , generator     :: Gen (Context a)
-   , suitableTerm  :: Context a -> Bool
+   , generator     :: Gen a
+   , suitableTerm  :: a -> Bool
    }
 
 instance Apply Exercise where
@@ -64,13 +64,13 @@ makeExercise = Exercise
    , suitableTerm  = const True
    }
    
-randomTerm :: Exercise a -> IO (Context a)
+randomTerm :: Exercise a -> IO a
 randomTerm a = do 
    stdgen <- newStdGen
    return (randomTermWith stdgen a)
 
 -- | Default size is 100
-randomTermWith :: StdGen -> Exercise a -> Context a
+randomTermWith :: StdGen -> Exercise a -> a
 randomTermWith stdgen a
    | not (suitableTerm a term) =
         randomTermWith (snd $ next stdgen) a
@@ -114,14 +114,14 @@ feedback ex p0 a txt =
       Left msg -> 
          SyntaxError msg
       Right new
-         | not (equivalence ex a (inContext new)) -> 
+         | not (equivalence ex (fromContext a) new) -> 
               Incorrect "Incorrect"
          | otherwise -> 
               let answers = giveSteps p0 a
-                  check (_, _, _, _, this) = equality ex (inContext new) this
+                  check (_, _, _, _, this) = equality ex new (fromContext this)
               in case filter check answers of
                     (_, r, newPrefix, _, newTerm):_ -> Correct ("Well done! You applied rule " ++ name r) (Just (newPrefix, r, newTerm))
-                    _ | equality ex a (inContext new) -> 
+                    _ | equality ex (fromContext a) new -> 
                          Correct "You have submitted the current term." Nothing
                     _ -> Correct "Equivalent, but not a known rule. Please retry." Nothing
 
@@ -144,22 +144,24 @@ data Feedback a = SyntaxError String
 -- | the terms produced by this generator will typically be biased.
 
 checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
-checkExercise = checkExerciseWith checkRuleSmart
+checkExercise = checkExerciseWith g 
+ where
+   g eq = checkRuleSmart $ \x y -> fromContext x `eq` fromContext y
 
-checkExerciseWith :: (Arbitrary a, Show a) => ((Context a -> Context a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
+checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
 checkExerciseWith f a = do
    putStrLn ("Checking exercise: " ++ shortTitle a)
    let check txt p = putStr ("- " ++ txt ++ "\n    ") >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)
    check "equality relation" $ 
-      checkEquivalence (ruleset a) (equality a)
+      checkEquivalence (ruleset a) (equality a) 
    check "equivalence relation" $ 
       checkEquivalence (ruleset a) (equivalence a)
    check "equality/equivalence" $ \x -> 
       forAll (similar (ruleset a) x) $ \y ->
       equality a x y ==> equivalence a x y
-   putStrLn "- Soundness non-buggy rules"
+   putStrLn "- Soundness non-buggy rules" 
    flip mapM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
       putStr "    " >> f (equivalence a) r
    check "non-trivial terms" $ 
@@ -172,21 +174,21 @@ checkExerciseWith f a = do
       classify suitable "suitable" $ property True
    check "soundness strategy/generator" $ 
       forAll (generator a) $ \x -> 
-      finalProperty a (applyD (strategy a) x)
+      finalProperty a (fromContext $ applyD (strategy a) (inContext x))
       
 
 -- check combination of parser and pretty-printer
-checkParserPretty :: (Context a -> Context a -> Bool) -> (String -> Either b a) -> (Context a -> String) -> Context a -> Bool
+checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
 checkParserPretty eq parser pretty p = 
-   either (const False) (eq p . inContext) (parser (pretty p))
+   either (const False) (eq p) (parser (pretty p))
    
-checkEquivalence :: (Arbitrary a, Show a) => [Rule a] -> (a -> a -> Bool) -> a -> Property
-checkEquivalence rs eq x = 
+checkEquivalence :: (Arbitrary a, Show a) => [Rule (Context a)] -> (a -> a -> Bool) -> a -> Property
+checkEquivalence rs eq x =
    forAll (similar rs x) $ \y ->
    forAll (similar rs y) $ \z ->
-      eq x x && (eq x y == eq y x) && (if eq x y && eq y z then eq x z else True)
+      eq x x && (eq x y == eq y x) && (if eq x y && eq y z then eq x z else True) 
    
-similar :: Arbitrary a => [Rule a] -> a -> Gen a
-similar rs a = 
-   let new = a : concatMap (\r -> applyAll r a) rs
+similar :: Arbitrary a => [Rule (Context a)] -> a -> Gen a
+similar rs a =
+   let new = a : [ fromContext cb | r <- rs, cb <- applyAll r (inContext a) ]
    in oneof [arbitrary, oneof $ map return new]

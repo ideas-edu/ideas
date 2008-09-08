@@ -41,7 +41,7 @@ data Result = SyntaxError
             | Ok [RuleID] State      -- equivalent
             | Detour [RuleID] State  -- equivalent
             | Unknown State          -- equivalent
-            
+          
 generate :: ExerciseID -> Int -> IO State
 generate exID level = 
    case getExercise exID of
@@ -53,7 +53,7 @@ derivation :: State -> [(RuleID, Location, Expression)]
 derivation s = 
    case fromState s of
       STS ts -> 
-         let f (r, ca) = (name r, location ca, prettyPrinter (TAS.exercise ts) ca)
+         let f (r, ca) = (name r, location ca, prettyPrinter (TAS.exercise ts) (fromContext ca))
          in map f (TAS.derivation ts)
 
 allfirsts :: State -> [(RuleID, Location, State)]
@@ -108,7 +108,7 @@ data SomeTypedState = forall a . STS (TAS.State a)
 exerciseList :: [SomeExercise]
 exerciseList = 
    [ SE dnfExercise, SE derivativeExercise, SE cnfExercise, SE simplExercise ]
-   
+  
 getExercise :: ExerciseID -> SomeExercise
 getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList
  where p (SE ex) = shortTitle ex == exID
@@ -128,16 +128,16 @@ fromState (exID, p, ce, ctx) =
 toState :: TAS.State a -> State
 toState state = ( shortTitle (TAS.exercise state)
                 , maybe "NoPrefix" show (TAS.prefix state)
-                , prettyPrinter (TAS.exercise state) (TAS.term state)
+                , prettyPrinter (TAS.exercise state) (fromContext $ TAS.term state)
                 , showContext (TAS.term state)
                 )
-      
+
 readPrefix :: String -> Maybe [Int]
 readPrefix input =
    case reads input of
       [(is, rest)] | all isSpace rest -> return is
       _ -> Nothing
-      
+
 getRule :: RuleID -> Exercise a -> Rule (Context a)
 getRule ruleID ex = fromMaybe (error "invalid rule ID") $ safeHead $ 
    filter ((==ruleID) . name) (ruleset ex)

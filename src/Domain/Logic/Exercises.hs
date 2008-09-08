@@ -45,15 +45,15 @@ dnfExercise = standard
    , subTerm       = \s r -> case parseLogicPars s of
                                 (p, []) -> fmap makeLocation (subExpressionAt r p)
                                 _       -> Nothing
-   , prettyPrinter = ppLogicPars . fromContext
-   , equivalence   = \x y -> fromContext x `eqLogic` fromContext y
-   , equality      = \x y -> fromContext x `equalLogicAC` fromContext y
-   , finalProperty = isDNF . fromContext
+   , prettyPrinter = ppLogicPars
+   , equivalence   = eqLogic
+   , equality      = equalLogicAC
+   , finalProperty = isDNF
    , ruleset       = map liftRuleToContext logicRules
    , strategy      = toDNFDWA
-   , generator     = liftM inContext generateLogic
-   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF) p
-                           in countEquivalences (fromContext p) < 2 && n >= 4 && n <= 12
+   , generator     = generateLogic
+   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF) (inContext p)
+                           in countEquivalences p < 2 && n >= 4 && n <= 12
    }
  where
    standard :: Exercise (Context Logic)

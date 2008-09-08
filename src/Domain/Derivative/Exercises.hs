@@ -34,11 +34,11 @@ derivativeExercise = Exercise
    , equality    = (==)
    , suitableTerm = const True
    , subTerm = undefined
-   , prettyPrinter = show . fromContext
-   , finalProperty = noDiff . fromContext
+   , prettyPrinter = show
+   , finalProperty = noDiff
    , ruleset       = map liftRuleToContext derivativeRules ++ [tidyup]
    , strategy      = derivativeStrategy
-   , generator     = oneof $ map (return . inContext) [ex1, ex2, ex3]
+   , generator     = oneof $ map return [ex1, ex2, ex3]
    }
    
 noDiff :: Expr -> Bool

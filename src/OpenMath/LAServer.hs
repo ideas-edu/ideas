@@ -72,10 +72,10 @@ laServerFor a req =
                                           showContext (fst $ head witnesses)
                        , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses)
                        }
-                  where
-                    witnesses   = filter (equality a answeredTerm . fst) answers
+                  where 
+                    witnesses   = filter (equality a (fromContext answeredTerm) . fromContext . fst) answers
                     newPrefix   = snd (head witnesses)
-                       
+                      
             ((expected, prefix):_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect
                        { repInc_Strategy   = req_Strategy req
@@ -84,7 +84,7 @@ laServerFor a req =
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
                        , repInc_Steps      = stepsRemaining (getPrefix req (strategy a)) requestedTerm
-                       , repInc_Equivalent = maybe False (equivalence a expected) maybeAnswer
+                       , repInc_Equivalent = maybe False (equivalence a (fromContext expected) . fromContext) maybeAnswer
                        }
              where
                (loc, args) = firstMajorInPrefix (getPrefix req (strategy a)) prefix requestedTerm

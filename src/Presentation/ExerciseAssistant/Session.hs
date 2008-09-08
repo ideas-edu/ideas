@@ -94,7 +94,7 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
 
 currentText :: Session -> IO String
 currentText = withState $ \d -> 
-   return $ prettyPrinter (exercise d) (current d)
+   return $ prettyPrinter (exercise d) (fromContext $ current d)
 
 derivationText :: Session -> IO String
 derivationText = withState $ \d -> 
@@ -126,7 +126,7 @@ hintOrStep verbose = withState $ \d ->
             , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
             ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter (exercise d) (TAS.term s)
+            , prettyPrinter (exercise d) (fromContext $ TAS.term s)
             ] else []
 
 hintText, stepText :: Session -> IO String
@@ -161,17 +161,17 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
        loc     = fromMaybe (makeLocation []) mloc
        results = applyAll newRule (setLocation loc $ current d)
        answers = TAS.allfirsts (currentState d)
-       check (r, _, s) = name r==name rule && any (equality a (TAS.term s)) results
+       check (r, _, s) = name r==name rule && any (equality a (fromContext $ TAS.term s) . fromContext) results
        thisRule (r, _, _) = name r==name rule
    case safeHead (filter check answers) of
       Just (_, _, new) -> do
          writeIORef ref $ Some (extendDerivation new d)
          return ("Successfully applied rule " ++ name rule, True)
       _ | any thisRule answers && not (null args) -> 
-         return ("Use rule " ++ name rule ++ " with different arguments:" ++ unlines (map (prettyPrinter a) results), False)
+         return ("Use rule " ++ name rule ++ " with different arguments:" ++ unlines (map (prettyPrinter a . fromContext) results), False)
       _ | any thisRule answers && null args ->
          return ("Apply rule " ++ name rule ++ " at a different location", False)
-      _ -> 
+      _ ->
          return ("You selected rule " ++ name rule ++ ": try a different rule", False)
 
 subTermAtIndices :: String -> Int -> Int -> Session -> IO (Maybe Location)
@@ -207,8 +207,8 @@ exercise _ = error "Session.exercise: empty list"
 currentState :: Derivation a -> TAS.State a
 currentState (D xs) = head xs
 
-showDerivation :: (Context a -> String) -> Derivation a -> String
-showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (TAS.term s) | s <- xs ] 
+showDerivation :: (a -> String) -> Derivation a -> String
+showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (fromContext $ TAS.term s) | s <- xs ] 
 
 derivationLength :: Derivation a -> Int
 derivationLength (D xs) = length xs - 1

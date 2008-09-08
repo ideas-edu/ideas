@@ -11,7 +11,7 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.Request (Request(..), getContextTerm, getPrefix, pRequest, ppRequest) where
+module OpenMath.Request (Request(..), getTerm, getContextTerm, getPrefix, pRequest, ppRequest) where
 
 import Common.Utils
 import Common.Context
@@ -46,9 +46,12 @@ pRequest :: String -> Either String Request
 pRequest input = parseXML input >>= xmlToRequest
 
 -- smart extractor
+getTerm :: IsOMOBJ a => Request -> Maybe a
+getTerm = fromOMOBJ . req_Term
+   
 getContextTerm :: IsOMOBJ a => Request -> Maybe (Context a)
 getContextTerm req = do
-   a <- fromOMOBJ (req_Term req)
+   a <- getTerm req
    return (putInContext req a)
 
 putInContext :: Request -> a -> Context a

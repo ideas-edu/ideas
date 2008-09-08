@@ -14,7 +14,7 @@
 module Service.TypedAbstractService where
 
 import qualified Common.Apply as Apply
-import Common.Context  (Location, Context, location, setLocation)
+import Common.Context 
 import Common.Exercise (Exercise(..))
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
@@ -26,7 +26,7 @@ import qualified Test.QuickCheck as QC
 data State a = State 
    { exercise :: Exercise a
    , prefix   :: Maybe (Prefix (Context a))
-   , term      :: Context a
+   , term     :: Context a
    }
 
 -- Note that in the typed setting there is no syntax error
@@ -44,7 +44,7 @@ generate ex level = do
       a | suitableTerm ex a -> return State
              { exercise = ex 
              , prefix   = Just (emptyPrefix (strategy ex))
-             , term     = a
+             , term     = inContext a
              }
       _ -> generate ex level
 
@@ -54,7 +54,7 @@ derivation state = fromMaybe (error "derivation") $ do
    (final, p1) <- safeHead (runPrefix p0 (term state))
    let steps = drop (length (prefixToSteps p0)) (prefixToSteps p1)
        rules = stepsToRules steps
-       terms = let run x []     = [ [] | equality (exercise state) x final ]
+       terms = let run x []     = [ [] | equality (exercise state) (fromContext x) (fromContext final) ]
                    run x (r:rs) = [ y:ys | y <- Apply.applyAll r x, ys <- run y rs ] 
                in fromMaybe [] $ safeHead (run (term state) rules)
        check = isMajorRule . fst
@@ -93,7 +93,7 @@ apply r loc state = maybe applyOff applyOn (prefix state)
          Nothing  -> error "apply"
        
 ready :: State a -> Bool
-ready state = finalProperty (exercise state) (term state)
+ready state = finalProperty (exercise state) (fromContext $ term state)
 
 stepsremaining :: State a -> Int
 stepsremaining = length . derivation
@@ -101,27 +101,27 @@ stepsremaining = length . derivation
 -- For now, only one rule look-ahead (for buggy rules and for sound rules)
 submit :: State a -> Context a -> Result a
 submit state new
-   | not (equivalence (exercise state) (term state) new) =
-        case safeHead (filter isBuggyRule (findRules (exercise state) (term state) new)) of
+   | not (equivalence (exercise state) (fromContext $ term state) (fromContext $ new)) =
+        case safeHead (filter isBuggyRule (findRules (exercise state) (fromContext $ term state) (fromContext new))) of
            Just br -> Buggy [br]
            Nothing -> NotEquivalent
-   | equality (exercise state) (term state) new =
+   | equality (exercise state) (fromContext $ term state) (fromContext new) =
         Ok [] state
    | otherwise =
         maybe applyOff applyOn (prefix state)
-
- where
+ where 
    applyOn _ = -- scenario 1: on-strategy
       fromMaybe applyOff $ safeHead
-      [ Ok [r1] s1 | (r1, _, s1) <- allfirsts state, equality (exercise state) new (term s1) ]      
-   
+      [ Ok [r1] s1 | (r1, _, s1) <- allfirsts state, equality (exercise state) (fromContext new) (fromContext $ term s1) ]      
+
    applyOff = -- scenario 2: off-strategy
       let newState = state { term=new }
-      in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (term state) new)) of
+      in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (fromContext $ term state) (fromContext new))) of
               Just r  -> Detour [r] newState
               Nothing -> Unknown newState
-
+   
 -- local helper-function
-findRules :: Exercise a -> Context a -> Context a -> [Rule (Context a)]
-findRules ex old new = 
-   filter (maybe False (equality ex new) . (`Apply.apply` old)) (ruleset ex)
+findRules :: Exercise a -> a -> a -> [Rule (Context a)]
+findRules ex old new =
+   let p r = any (equality ex new . fromContext) (Apply.applyAll r $ inContext old)
+   in filter p (ruleset ex)

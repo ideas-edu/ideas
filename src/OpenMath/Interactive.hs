@@ -13,7 +13,6 @@
 -----------------------------------------------------------------------------
 module OpenMath.Interactive (respondHTML, oneliner) where
 
-import Common.Context
 import Common.Exercise hiding (Incorrect)
 import Common.Transformation
 import Common.Strategy hiding (not)
@@ -50,10 +49,10 @@ make self a req inc = html
    [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
    ]
    [ para [ bold [Text "Term: "]
-          , preString (maybe "" (prettyPrinter a) $ getContextTerm req) 
+          , preString (maybe "" (prettyPrinter a) $ getTerm req) 
           ]
    , para [ bold [Text "Expected: "]
-          , preString (maybe "" (prettyPrinter a . inContext) $ fromOMOBJ $ repInc_Expected inc) 
+          , preString (maybe "" (prettyPrinter a) $ fromOMOBJ $ repInc_Expected inc) 
           ]
    , para [ Text "Submit the", href (reqToURL reqOk) [Text "expected"], Text "answer and continue" ]
    , hr
@@ -71,13 +70,12 @@ make self a req inc = html
    , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
    , Text "Remove all", href (reqToURL reqNoCtxt) [Text "context information"]
    , para [ bold [Text "Derivation (so far):"], Text derivation ]
-   , let f (x, y) = [ Text x, preString $ maybe "" (prettyPrinter a . inContext) (fromOMOBJ y) ]
+   , let f (x, y) = [ Text x, preString $ maybe "" (prettyPrinter a) (fromOMOBJ y) ]
          len = length (repInc_Derivation inc)
      in para [ bold [Text $ "Derivation (expected, " ++ show len ++ " steps):"]
              , list $ map f $ repInc_Derivation inc 
              ]
-   
-   -- preString $ concat $ map show $ repInc_Derivation inc ]
+--    , preString $ concat $ map show $ repInc_Derivation inc
    ]
  where
    (reqOk, n) = expected a req inc
@@ -88,7 +86,6 @@ make self a req inc = html
    formatArgs = concat . intersperse ", " . map (\(a, b) -> a ++ " = " ++ b)
    derivation = case prefixToSteps (getPrefix req (strategy a)) of
                    steps -> concat $ intersperse "; " [ name r | Step _ r <- steps, isMajorRule r ]
-               
 
 ----------------------------------------------------------------------------
 -- Actions

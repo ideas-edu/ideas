@@ -39,13 +39,13 @@ solveGramSchmidt = makeExercise
    , parser        = \s -> case parseVectors s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ show msg
-   , prettyPrinter = unlines . map show . fromContext
-   , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt
+   , prettyPrinter = unlines . map show
+   , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt . inContext
                              in f x == f y
    , ruleset       = rulesGramSchmidt
-   , finalProperty = orthonormalList . filter ((/=0) . norm) . fromContext
+   , finalProperty = orthonormalList . filter ((/=0) . norm)
    , strategy      = gramSchmidt
-   , generator     = liftM inContext arbBasis 
+   , generator     = arbBasis 
    }
 
 solveSystemExercise :: Exercise (Equations SExprLin)
@@ -54,15 +54,15 @@ solveSystemExercise = makeExercise
    , parser        = \s -> case parseSystem s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ show msg
-   , prettyPrinter = unlines . map show . equations
+   , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
-                                   . inContext . map toStandardForm . equations
+                                   . inContext . map toStandardForm
                              in f x == f y
    , ruleset       = equationsRules
-   , finalProperty = inSolvedForm . equations
+   , finalProperty = inSolvedForm
    , strategy      = generalSolutionLinearSystem
    , generator     = do m <- generator reduceMatrixExercise
-                        return $ forget1 $ fmap matrixToSystem m
+                        return $ forget1 $ matrixToSystem m
    }
    
 reduceMatrixExercise :: Exercise (Matrix SExpr)
@@ -71,11 +71,11 @@ reduceMatrixExercise = makeExercise
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ unlines msg
-   , prettyPrinter = ppMatrix . matrix
-   , equivalence   = \x y -> fromContext x === fromContext y
+   , prettyPrinter = ppMatrix
+   , equivalence   = (===)
    , ruleset       = matrixRules
-   , finalProperty = inRowReducedEchelonForm . matrix
-   , generator     = fmap (inContext . fmap fromInteger) arbNiceMatrix
+   , finalProperty = inRowReducedEchelonForm
+   , generator     = fmap (fmap fromInteger) arbNiceMatrix
    , strategy      = toReducedEchelon
    }
 
@@ -86,34 +86,34 @@ solveSystemWithMatrixExercise = makeExercise
                               (Right ok, _) -> Right $ Left $ forget2 ok
                               (_, Right ok) -> Right $ Right ok
                               (Left _, Left _) -> Left "Error" -- FIX THIS
-   , prettyPrinter = either (unlines . map show . id) ppMatrix . fromContext
+   , prettyPrinter = either (unlines . map show) ppMatrix
    , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
-                                 g = f . either (fst . systemToMatrix) id . fromContext
+                                 g = f . either (fst . systemToMatrix) id
                              in g x == g y
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
-   , finalProperty = either inSolvedForm (const False) . fromContext
+   , finalProperty = either inSolvedForm (const False)
    , strategy      = generalSolutionSystemWithMatrix
-   , generator     = liftM (fmap (Left . forget2)) (generator solveSystemExercise)
+   , generator     = liftM (Left . forget2) (generator solveSystemExercise)
    }
 
 opgave6b :: Exercise (Matrix SExpr)
 opgave6b = reduceMatrixExercise
    { shortTitle = "Opgave 9.6 (b)"
-   , generator  = return $ inContext $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
+   , generator  = return $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
    }
 
 opgaveVarMatrix :: Exercise (Matrix SExpr)
 opgaveVarMatrix = reduceMatrixExercise
    { shortTitle = "Var in Matrix"
-   , generator  = return $ inContext $ makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]
+   , generator  = return $ makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]
    }
  where lam = variable "L"
  
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 
-forget1 :: EqsInContext SExpr -> EqsInContext SExprLin
-forget1 = fmap (map (fmap forget))
+forget1 :: Equations SExpr -> Equations SExprLin
+forget1 = map (fmap forget)
    
 forget2 :: LinearSystem SExprLin -> LinearSystem SExpr
 forget2 = map (fmap forget)

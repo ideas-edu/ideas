@@ -31,14 +31,14 @@ simplExercise = standard
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right p
                               (p, msgs) -> Left  (show msgs)
-   , prettyPrinter = ppFrac . fromContext
-   , equivalence   = \x y -> fromContext x ~= fromContext y
-   , equality      = \x y -> fromContext x == fromContext y
-   , finalProperty = \x -> fromContext x == fromContext (fromJust $ apply toSimple x)
+   , prettyPrinter = ppFrac
+   , equivalence   = (~=)
+   , equality      = (==)
+   , finalProperty = \x -> x == (fromContext $ fromJust $ apply toSimple $ inContext x)
    , ruleset       = map liftRuleToContext fracRules
    , strategy      = toSimple
-   , generator     = liftM inContext generateFrac
-   , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf (fromContext t))
+   , generator     = generateFrac
+   , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf t)
    }
  where
    standard :: Exercise (Context Frac)

@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Parser 
-   ( parseMatrix, parseVectors, ppMatrixInContext, ppMatrix, ppMatrixWith {-, ppRationalMatrix, ppRational, ppMySqrt-}
+   ( parseMatrix, parseVectors, ppMatrix, ppMatrixWith
    , parseSystem
    ) where
 
@@ -99,20 +99,11 @@ myParens p = pSpec '(' *> p <* pSpec ')'
 -----------------------------------------------------------
 --- Pretty-Printer
 
-ppMatrixInContext :: Show a => MatrixInContext a -> String
-ppMatrixInContext m = ppStringMatrix (ppFocus m) ++ "\n" ++ ppEnv m
-
-ppEnv :: Show a => MatrixInContext a -> String
+ppEnv :: Show a => Context a -> String
 ppEnv m = "[" ++ commaList list ++ "]"
  where f s v = s ++ "=" ++ show (get v m)
        list  = [f "covered" covered, f "columnJ" columnJ]
 
-ppFocus :: Show a => MatrixInContext a -> Matrix String
-ppFocus c = mapWithPos f (matrix c)
- where f _ a
-         {-  | focus c==p = "[" ++ show a ++ "]" -}
-          | otherwise  = show a
-     
 ppMatrix :: Show a => Matrix a -> String
 ppMatrix = ppMatrixWith show
      
@@ -125,4 +116,3 @@ ppStringMatrix = format . rows
    format m = let ws = foldr (zipWith max . map length) (repeat 0) m 
                   align i s = take i (s ++ repeat ' ')
               in unlines $ map (concat . intersperse " " . zipWith align ws) m
-              

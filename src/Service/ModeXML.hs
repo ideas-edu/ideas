@@ -117,8 +117,8 @@ xml2State _ _ = error "expected a state tag"
 state2xml :: InXML a => TAS.State a -> XML
 state2xml state = Tag "state" [] 
    [ Tag "prefix"  [] [Text $ maybe "[]" show (TAS.prefix state)]
-   , Tag "context" [] [Text $ showContext (TAS.term state)] 
-   , toXML (fromContext (TAS.term state))
+   , Tag "context" [] [Text $ showContext (TAS.context state)] 
+   , toXML (TAS.term state)
    ]
    
 getState :: Monad m => XML -> m X

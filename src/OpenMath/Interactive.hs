@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module OpenMath.Interactive (respondHTML, oneliner) where
 
-import Common.Exercise hiding (Incorrect)
+import Common.Exercise
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils (Some(..))

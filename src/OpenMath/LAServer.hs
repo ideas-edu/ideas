@@ -21,7 +21,7 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Strategy hiding (not, repeat)
-import Common.Exercise hiding (Incorrect)
+import Common.Exercise
 import Common.Utils
 import Data.Maybe
 import Data.Char

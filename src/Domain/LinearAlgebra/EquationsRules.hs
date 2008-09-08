@@ -26,12 +26,12 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.MatrixRules (covered) -- for context
 import Test.QuickCheck -- hopefully, temporarily
 
-equationsRules :: (Argument a, IsLinear a) => [Rule (EqsInContext a)]
+equationsRules :: (Argument a, IsLinear a) => [Rule (Context (LinearSystem a))]
 equationsRules = [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation, ruleInconsistentSystem
                  , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
                  , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations ]
 
-ruleExchangeEquations :: IsLinear a => Rule (EqsInContext a)
+ruleExchangeEquations :: IsLinear a => Rule (Context (LinearSystem a))
 ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
  where
    descr  = ("equation 1", "equation 2")
@@ -39,7 +39,7 @@ ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y ->
                i  <- findIndex (elem mv . getVarsSystem . return) (remaining c)
                return (get covered c, get covered c + i)
 
-ruleEliminateVar :: (Argument a, IsLinear a) => Rule (EqsInContext a)
+ruleEliminateVar :: (Argument a, IsLinear a) => Rule (Context (LinearSystem a))
 ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
    descr  = ("equation 1", "equation 2", "scale factor")
@@ -52,19 +52,19 @@ ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x
       let v = negate coef / getCoef hd
       return ( i + get covered c + 1, get covered c, v)
 
-ruleDropEquation :: IsLinear a => Rule (EqsInContext a)
+ruleDropEquation :: IsLinear a => Rule (Context (LinearSystem a))
 ruleDropEquation = makeSimpleRule "Drop (0=0) equation" $ 
    \c -> do i <- findIndex (fromMaybe False . testConstants (==)) (equations c)
             return $ change covered (\n -> if i < n then n-1 else n)
                    $ fmap (deleteIndex i) c
 
-ruleInconsistentSystem :: IsLinear a => Rule (EqsInContext a)
+ruleInconsistentSystem :: IsLinear a => Rule (Context (LinearSystem a))
 ruleInconsistentSystem = makeSimpleRule "Inconsistent system (0=1)" $ 
    \c -> do let stop = [0 :==: 1]
             guard $ invalidSystem (equations c) && equations c /= stop
             return $ set covered 1 (fmap (const stop) c)
 
-ruleScaleEquation :: (Argument a, IsLinear a) => Rule (EqsInContext a)
+ruleScaleEquation :: (Argument a, IsLinear a) => Rule (Context (LinearSystem a))
 ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
  where
    descr  = ("equation", "scale factor")
@@ -75,7 +75,7 @@ ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args
                let coef = 1 / coefficientOf mv expr
                return (get covered c, coef)
    
-ruleBackSubstitution :: (Argument a, IsLinear a) => Rule (EqsInContext a)
+ruleBackSubstitution :: (Argument a, IsLinear a) => Rule (Context (LinearSystem a))
 ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
    descr  = ("equation 1", "equation 2", "scale factor")
@@ -86,7 +86,7 @@ ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args 
                let coef = negate $ coefficientOf mv (getLHS (equations c !! i))
                return (i, get covered c, coef)
 
-ruleIdentifyFreeVariables :: IsLinear a => Rule (EqsInContext a)
+ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $
    \c ->  let vars = [ head ys | ys <- map (getVars . getLHS) (equations c), not (null ys) ]
               change eq =
@@ -94,13 +94,13 @@ ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables"
                  in e2 :==: getRHS eq - e1
           in return (fmap (map change) c)
 
-ruleCoverUpEquation :: Rule (EqsInContext a)
+ruleCoverUpEquation :: Rule (Context (LinearSystem a))
 ruleCoverUpEquation = minorRule $ makeRule "Cover up first equation" $ changeCover (+1)
 
-ruleUncoverEquation :: Rule (EqsInContext a)
+ruleUncoverEquation :: Rule (Context (LinearSystem a))
 ruleUncoverEquation = minorRule $ makeRule "Uncover one equation" $ changeCover (\x -> x-1)
 
-ruleCoverAllEquations :: Rule (EqsInContext a)
+ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = minorRule $ makeSimpleRule "Cover all equations" $ 
    \c -> return (set covered (length $ equations c) c)
 
@@ -139,7 +139,7 @@ addEquations i j a = makeTrans "addEquations" $ \xs -> do
        exprj = xs!!j
    return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
 
-changeCover :: (Int -> Int) -> Transformation (EqsInContext a)
+changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
 changeCover f = makeTrans "changeCover" $ \c -> do
    let new = f (get covered c)
    guard (new >= 0 && new <= length (equations c))
@@ -148,23 +148,21 @@ changeCover f = makeTrans "changeCover" $ \c -> do
 --------------------
 -- TEMP
 
-type EqsInContext a = Context (LinearSystem a)
-
-equations :: EqsInContext a -> LinearSystem a
+equations :: Context (LinearSystem a) -> LinearSystem a
 equations = fromContext
 
 -- | The equations that remain to be solved
-remaining :: EqsInContext a -> Equations a
+remaining :: Context (LinearSystem a) -> Equations a
 remaining c = drop (get covered c) (equations c)
 
 -- | The minimal variable in the remaining equations
-minvar :: IsLinear a => EqsInContext a -> Maybe String
+minvar :: IsLinear a => Context (LinearSystem a) -> Maybe String
 minvar c | null list = Nothing
          | otherwise = Just (minimum list)
  where
    list = getVarsSystem (remaining c) 
    
-liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (EqsInContext a)
+liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (Context (LinearSystem a))
 liftSystemTrans = lift $ makeLiftPair (return . equations) (\new c -> fmap (const new) c)
 
 systemInNF :: (Arbitrary a, IsLinear a) => Gen (LinearSystem a)

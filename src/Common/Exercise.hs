@@ -13,9 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise(..), makeExercise
-     -- * Services
-   , Feedback(..), giveStep, giveSteps, giveHint, feedback, randomTerm, stepsRemaining
+     Exercise(..), makeExercise, stepsRemaining
      -- * QuickCheck utilities
    , checkExercise, checkParserPretty
    ) where
@@ -27,8 +25,6 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
 import Control.Monad
-import Data.List (intersperse)
-import System.Random
 import Test.QuickCheck hiding (label, arguments)
 
 data Exercise a = Exercise
@@ -63,79 +59,15 @@ makeExercise = Exercise
    , generator     = arbitrary
    , suitableTerm  = const True
    }
-   
-randomTerm :: Exercise a -> IO a
-randomTerm a = do 
-   stdgen <- newStdGen
-   return (randomTermWith stdgen a)
-
--- | Default size is 100
-randomTermWith :: StdGen -> Exercise a -> a
-randomTermWith stdgen a
-   | not (suitableTerm a term) =
-        randomTermWith (snd $ next stdgen) a
-   | otherwise =
-        term
- where
-   term = generate 100 stdgen (generator a)
-
--- | Returns a text and the rule that is applicable
-giveHint :: Prefix a -> a -> Maybe (String, Rule a)
-giveHint p = safeHead . giveHints p
-
--- | Returns a text and the rule that is applicable
-giveHints :: Prefix a -> a -> [(String, Rule a)]
-giveHints p = map g . giveSteps p
- where
-   g (x, y, _, _, _) = (x, y)
-
-giveStep :: Prefix a -> a -> Maybe (String, Rule a, Prefix a, a, a)
-giveStep p = safeHead . giveSteps p
-
-giveSteps :: Prefix a -> a -> [(String, Rule a, Prefix a, a, a)]
-giveSteps p0 a = 
-   let make (new, prefix) = 
-          let steps  = prefixToSteps prefix
-              minors = stepsToRules (drop (length $ prefixToSteps p0) steps)
-              old    = if null minors then a else applyListD (init minors) a
-          in case lastRuleInPrefix prefix of
-                Just r -> [ (doc r old, r, prefix, old, new) | isMajorRule r ]
-                _      -> []
-       showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
-       doc r old = "Use rule " ++ name r ++
-          case expectedArguments r old of
-             Just xs -> "\n   with arguments " ++ showList xs
-             Nothing -> "" 
-   in concatMap make $ runPrefixMajor p0 a            
-         
-feedback :: Exercise a -> Prefix (Context a) -> Context a -> String -> Feedback (Context a)
-feedback ex p0 a txt =
-   case parser ex txt of
-      Left msg -> 
-         SyntaxError msg
-      Right new
-         | not (equivalence ex (fromContext a) new) -> 
-              Incorrect "Incorrect"
-         | otherwise -> 
-              let answers = giveSteps p0 a
-                  check (_, _, _, _, this) = equality ex new (fromContext this)
-              in case filter check answers of
-                    (_, r, newPrefix, _, newTerm):_ -> Correct ("Well done! You applied rule " ++ name r) (Just (newPrefix, r, newTerm))
-                    _ | equality ex (fromContext a) new -> 
-                         Correct "You have submitted the current term." Nothing
-                    _ -> Correct "Equivalent, but not a known rule. Please retry." Nothing
-
+  
+-- Temporarily. To do: replace this function by a Typed Abstract Service  
 stepsRemaining :: Prefix a -> a -> Int
 stepsRemaining p0 a = 
    case safeHead (runPrefixLocation [] p0 a) of -- run until the end
       Nothing -> 0
       Just (_, prefix) ->
          length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
-
-data Feedback a = SyntaxError String
-                | Incorrect   String
-                | Correct     String (Maybe (Prefix a, Rule a, a)) {- The rule that was applied -}
-
+         
 ---------------------------------------------------------------
 -- Checks for an exercise
 

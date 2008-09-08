@@ -93,7 +93,7 @@ submit s input =
          case parser (TAS.exercise ts) input of
             Left _  -> SyntaxError
             Right a ->
-               case TAS.submit ts (inContext a) of
+               case TAS.submit ts a of
                   TAS.NotEquivalent -> NotEquivalent
                   TAS.Buggy   rs    -> Buggy   (map name rs)       
                   TAS.Ok      rs ns -> Ok      (map name rs) (toState ns)
@@ -121,15 +121,15 @@ fromState (exID, p, ce, ctx) =
             (Right a, Just unit) -> STS TAS.State 
                { TAS.exercise = ex
                , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
-               , TAS.term     = fmap (\_ -> a) unit
+               , TAS.context  = fmap (\_ -> a) unit
                }
             _ -> error "fromState"
       
 toState :: TAS.State a -> State
 toState state = ( shortTitle (TAS.exercise state)
                 , maybe "NoPrefix" show (TAS.prefix state)
-                , prettyPrinter (TAS.exercise state) (fromContext $ TAS.term state)
-                , showContext (TAS.term state)
+                , prettyPrinter (TAS.exercise state) (TAS.term state)
+                , showContext (TAS.context state)
                 )
 
 readPrefix :: String -> Maybe [Int]

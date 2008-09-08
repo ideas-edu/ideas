@@ -76,7 +76,7 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
       Left err -> 
          return (err, False)
       Right term ->
-         case TAS.submit (currentState d) (inContext term) of
+         case TAS.submit (currentState d) term of
             TAS.Buggy rs -> 
                return ("Incorrect: you used the buggy rule: " ++ show rs, False)
             TAS.NotEquivalent -> 
@@ -126,7 +126,7 @@ hintOrStep verbose = withState $ \d ->
             , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
             ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter (exercise d) (fromContext $ TAS.term s)
+            , prettyPrinter (exercise d) (TAS.term s)
             ] else []
 
 hintText, stepText :: Session -> IO String
@@ -161,7 +161,7 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
        loc     = fromMaybe (makeLocation []) mloc
        results = applyAll newRule (setLocation loc $ current d)
        answers = TAS.allfirsts (currentState d)
-       check (r, _, s) = name r==name rule && any (equality a (fromContext $ TAS.term s) . fromContext) results
+       check (r, _, s) = name r==name rule && any (equality a (TAS.term s) . fromContext) results
        thisRule (r, _, _) = name r==name rule
    case safeHead (filter check answers) of
       Just (_, _, new) -> do
@@ -197,7 +197,7 @@ extendDerivation :: TAS.State a -> Derivation a -> Derivation a
 extendDerivation x (D xs) = D (x:xs)
 
 current :: Derivation a -> Context a
-current (D (s:_)) = TAS.term s
+current (D (s:_)) = TAS.context s
 current _ = error "Session.current: empty list"
 
 exercise :: Derivation a -> Exercise a
@@ -208,7 +208,7 @@ currentState :: Derivation a -> TAS.State a
 currentState (D xs) = head xs
 
 showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (fromContext $ TAS.term s) | s <- xs ] 
+showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (TAS.term s) | s <- xs ] 
 
 derivationLength :: Derivation a -> Int
 derivationLength (D xs) = length xs - 1

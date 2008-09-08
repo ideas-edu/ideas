@@ -18,7 +18,6 @@ import Domain.Logic.Formula
 import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
-
 import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Context

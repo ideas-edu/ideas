@@ -25,11 +25,11 @@ import Common.Transformation
 import Common.Context
 import Domain.LinearAlgebra.Vector
 
-toReducedEchelon :: (Argument a, Fractional a) => LabeledStrategy (MatrixInContext a)
+toReducedEchelon :: (Argument a, Fractional a) => LabeledStrategy (Context (Matrix a))
 toReducedEchelon = label "Gaussian elimination" $ 
    forwardPass <*> backwardPass
 
-forwardPass :: (Argument a, Fractional a) => LabeledStrategy (MatrixInContext a)
+forwardPass :: (Argument a, Fractional a) => LabeledStrategy (Context (Matrix a))
 forwardPass = label "Forward pass" $ 
    repeat  $    label "Find j-th column"      ruleFindColumnJ 
            <*>  label "Exchange rows"         (try ruleExchangeNonZero)
@@ -37,12 +37,12 @@ forwardPass = label "Forward pass" $
            <*>  label "Zeros in j-th column"  (repeat ruleZerosFP)
            <*>  label "Cover up top row"      ruleCoverRow
   
-backwardPass :: (Argument a, Fractional a) => LabeledStrategy (MatrixInContext a)
+backwardPass :: (Argument a, Fractional a) => LabeledStrategy (Context (Matrix a))
 backwardPass =  label "Backward pass" $ 
    repeat  $    label "Uncover row"  ruleUncoverRow
            <*>  label "Sweep"        (repeat ruleZerosBP)
 
-backSubstitutionSimple :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
+backSubstitutionSimple :: (Argument a, IsLinear a) => LabeledStrategy (Context (LinearSystem a))
 backSubstitutionSimple = label "Back substitution with equally many variables and equations" $
        label "Cover all equations" ruleCoverAllEquations
    <*> repeat (   label "Uncover one equation"  ruleUncoverEquation
@@ -50,11 +50,11 @@ backSubstitutionSimple = label "Back substitution with equally many variables an
               <*> label "Back Substitution"     (repeat ruleBackSubstitution)
               )
 
-backSubstitution :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
+backSubstitution :: (Argument a, IsLinear a) => LabeledStrategy (Context (LinearSystem a))
 backSubstitution = label "Back substitution" $ 
    ruleIdentifyFreeVariables <*> backSubstitutionSimple
    
-systemToEchelonWithEEO :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
+systemToEchelonWithEEO :: (Argument a, IsLinear a) => LabeledStrategy (Context (LinearSystem a))
 systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
    repeat $   label "Inconsistent system (0=1)" ruleInconsistentSystem
           <|> label "Drop (0=0) equation"       ruleDropEquation
@@ -64,7 +64,7 @@ systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
           <*> label "Eliminate variable"        (repeat ruleEliminateVar)
           <*> label "Cover up first equation"   ruleCoverUpEquation
 
-generalSolutionLinearSystem :: (Argument a, IsLinear a) => LabeledStrategy (EqsInContext a)
+generalSolutionLinearSystem :: (Argument a, IsLinear a) => LabeledStrategy (Context (LinearSystem a))
 generalSolutionLinearSystem = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 

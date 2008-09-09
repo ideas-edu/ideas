@@ -81,39 +81,39 @@ instance Show Number where
 class InJSON a where
    toJSON       :: a -> JSON
    listToJSON   :: [a] -> JSON
-   fromJSON     :: JSON -> Maybe a
-   listFromJSON :: JSON -> Maybe [a]
+   fromJSON     :: Monad m => JSON -> m a
+   listFromJSON :: Monad m => JSON -> m [a]
    -- default definitions
    listToJSON   = Array . map toJSON
    listFromJSON (Array xs) = mapM fromJSON xs
-   listFromJSON _          = Nothing
+   listFromJSON _          = fail "expecting an array"
 
 instance InJSON Int where 
    toJSON   = toJSON . toInteger
-   fromJSON = fmap fromInteger . fromJSON
+   fromJSON = liftM fromInteger . fromJSON
    
 instance InJSON Integer where 
    toJSON                  = Number . I
-   fromJSON (Number (I n)) = Just n
-   fromJSON _              = Nothing
+   fromJSON (Number (I n)) = return n
+   fromJSON _              = fail "expecting a number"
 
 instance InJSON Float where 
    toJSON = Number . F
-   fromJSON (Number (F n)) = Just n
-   fromJSON _              = Nothing
+   fromJSON (Number (F n)) = return n
+   fromJSON _              = fail "expecting a number"
    
 instance InJSON Char where
    toJSON c   = String [c]
    listToJSON = String
-   fromJSON (String [c]) = Just c
-   fromJSON _ = Nothing
-   listFromJSON (String s) = Just s
-   listFromJSON _ = Nothing
+   fromJSON (String [c]) = return c
+   fromJSON _ = fail "expecting a string"
+   listFromJSON (String s) = return s
+   listFromJSON _ = fail "expecting a string"
 
 instance InJSON Bool where 
    toJSON = Boolean
-   fromJSON (Boolean b) = Just b
-   fromJSON _           = Nothing
+   fromJSON (Boolean b) = return b
+   fromJSON _           = fail "expecting a boolean"
 
 instance InJSON a => InJSON [a] where 
    toJSON   = listToJSON
@@ -122,17 +122,17 @@ instance InJSON a => InJSON [a] where
 instance (InJSON a, InJSON b) => InJSON (a, b) where
    toJSON (a, b)           = Array [toJSON a, toJSON b]
    fromJSON (Array [a, b]) = liftM2 (,) (fromJSON a) (fromJSON b)
-   fromJSON _              = Nothing
+   fromJSON _              = fail "expecting an array with 2 elements"
 
 instance (InJSON a, InJSON b, InJSON c) => InJSON (a, b, c) where
    toJSON (a, b, c)           = Array [toJSON a, toJSON b, toJSON c]
    fromJSON (Array [a, b, c]) = liftM3 (,,) (fromJSON a) (fromJSON b) (fromJSON c)
-   fromJSON _                 = Nothing
+   fromJSON _                 = fail "expecting an array with 3 elements"
 
 instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
    fromJSON (Array [a, b, c, d]) = liftM4 (,,,) (fromJSON a) (fromJSON b) (fromJSON c) (fromJSON d)
-   fromJSON _                    = Nothing
+   fromJSON _                    = fail "expecting an array with 4 elements"
     
 parseJSON :: String -> Maybe JSON
 parseJSON input = 
@@ -185,13 +185,13 @@ instance InJSON JSON_RPC_Request where
       , ("id"    , requestId req)
       ]
    fromJSON (Object xs) = do
-      mj <- lookup "method" xs
-      pj <- lookup "params" xs
-      ij <- lookup "id"     xs
+      mj <- lookupM "method" xs
+      pj <- lookupM "params" xs
+      ij <- lookupM "id"     xs
       case mj of
          String s -> return (Request s pj ij)
-         _        -> Nothing
-   fromJSON _ = Nothing
+         _        -> fail "expecting a string"
+   fromJSON _ = fail "exepecting an object"
          
 instance InJSON JSON_RPC_Response where
    toJSON resp = Object
@@ -200,11 +200,11 @@ instance InJSON JSON_RPC_Response where
       , ("id"    , responseId resp)
       ]
    fromJSON (Object xs) = do
-      rj <- lookup "result" xs
-      ej <- lookup "error"  xs
-      ij <- lookup "id"     xs
+      rj <- lookupM "result" xs
+      ej <- lookupM "error"  xs
+      ij <- lookupM "id"     xs
       return (Response rj ej ij)
-   fromJSON _ = Nothing
+   fromJSON _ = fail "expecting an object"
    
 okResponse :: JSON -> JSON -> JSON_RPC_Response
 okResponse x y = Response
@@ -219,7 +219,10 @@ errorResponse x y = Response
    , responseError  = x
    , responseId     = y
    }
-   
+
+lookupM :: Monad m => String -> [(String, a)] -> m a
+lookupM x = maybe (fail $ "field " ++ x ++ " not found") return . lookup x
+
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 

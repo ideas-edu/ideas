@@ -14,15 +14,15 @@
 {-# OPTIONS -fglasgow-exts #-}
 module Service.ModeXML (processXML) where
 
+import Common.Utils (Some(..), safeHead)
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation
-import Common.Utils (safeHead)
 import Domain.Math.Expr
 import OpenMath.Object
 import Service.XML
-import Service.AbstractService (getExercise, SomeExercise(..))
+import Service.AbstractService (getExercise)
 import OpenMath.LAServer
 import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
@@ -92,7 +92,7 @@ serviceXML s attrs request
         return $ resultOk $ state2xml this
    | s == "generate" =
         case getExercise "Derivative" of  -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-           SE _ -> do
+           Some _ -> do
               let diff  = fromMaybe (error "no difficulty") $ lookup "difficulty" attrs 
               state <- TAS.generate derivativeExercise (read diff) -- !!!!!!!!!!!!!!!!!!!!!!!!!!!
               return $ resultOk $ state2xml state

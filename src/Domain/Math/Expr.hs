@@ -101,12 +101,13 @@ instance Arbitrary Expr where
          Sym f xs -> variant 8 . coarbitrary f . coarbitrary xs
    
 arbExpr :: Int -> Gen Expr
+arbExpr _ = liftM Con arbitrary {- 
 arbExpr 0 = oneof [liftM (Con . abs) arbitrary, oneof [ return (Var x) | x <- ["x", "y", "z"] ], return pi ]
 arbExpr n = oneof [bin (+), bin (*), bin (-), unop negate, bin (/), unop sqrt, arbExpr 0]
  where
    bin  f = liftM2 f rec rec
    unop f = liftM f rec
-   rec    = arbExpr (n `div` 2)
+   rec    = arbExpr (n `div` 2) -}
        
 -----------------------------------------------------------------------
 -- Fold
@@ -152,13 +153,12 @@ safeDivision x y = if y==0 then fail "safeDivision" else return (x/y)
 instance Show Expr where
    show e = foldExpr (bin "+", bin "*", bin "-", neg, con, bin "/", sq, var, sym) e 0
     where
-      con n _     = show n
-      -- var ('_':is) _ = map return ("xyzuvw" ++ ['a'..]) !! read is
+      con n b     = if n>=0 then show n else neg (con (abs n)) b
       var s _     = s
       neg x b     = parIf (b>0) ("-" ++ x 2)
       sq  x       = sym "sqrt" [x]
       sym s xs b  = parIf (b>1) (unwords (s : map ($ 2) xs))
-      bin s x y  b = parIf (b>0) (x 1 ++ s ++ y 1)
+      bin s x y b = parIf (b>0) (x 1 ++ s ++ y 1)
       
       parIf b = if b then par else id
       par s   = "(" ++ s ++ ")"

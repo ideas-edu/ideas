@@ -93,18 +93,19 @@ data ArgDescr a = ArgDescr
    , defaultArgument :: Maybe a              -- ^ Default value that can be used
    , parseArgument   :: String -> Maybe a    -- ^ A parser 
    , showArgument    :: a -> String          -- ^ A pretty-printer
+   , genArgument     :: Gen a                -- ^ An arbitrary argument generator
    }
 
 -- | Constructor function for an argument descriptor that uses the Show and Read type classes
-defaultArgDescr :: (Show a, Read a) => String -> ArgDescr a
-defaultArgDescr descr = ArgDescr descr Nothing parse show
+defaultArgDescr :: (Show a, Read a, Arbitrary a) => String -> ArgDescr a
+defaultArgDescr descr = ArgDescr descr Nothing parse show arbitrary
  where 
    parse s = case reads s of
                 [(a, xs)] | all isSpace xs -> return a
                 _ -> Nothing
 
 -- | A type class for types which have an argument descriptor
-class Argument a where
+class Arbitrary a => Argument a where
    makeArgDescr :: String -> ArgDescr a   -- ^ The first argument is the label of the argument descriptor
 
 instance Argument Int where
@@ -113,8 +114,12 @@ instance Argument Int where
 instance Argument Integer where
    makeArgDescr = defaultArgDescr
 
-instance Integral a => Argument (Ratio a) where
+instance (Integral a, Arbitrary a) => Argument (Ratio a) where
    makeArgDescr = ratioArgDescr
+   
+instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
+   arbitrary = liftM2 (\x y -> fromInteger x / fromInteger y) arbitrary (oneof $ map return [1..5])
+   coarbitrary r = coarbitrary (numerator r) . coarbitrary (denominator r)
 
 -- | Parameterization with one argument using a default label
 supply1 :: Argument x => 
@@ -228,8 +233,8 @@ someArguments :: ArgumentList a -> [Some ArgDescr]
 someArguments (Nil _) = []
 someArguments (Cons _ arg list) = Some arg : someArguments list
 
-ratioArgDescr :: Integral a => String -> ArgDescr (Ratio a)
-ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio
+ratioArgDescr :: (Integral a, Arbitrary a) => String -> ArgDescr (Ratio a)
+ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
  where
    showRatio  r = show (numerator r) ++ if denominator r == 1 then "" else "/" ++ show (denominator r)
    parseRatio s = 
@@ -259,6 +264,9 @@ data Rule a = Rule
 
 instance Show (Rule a) where
    show = name
+
+instance Eq (Rule a) where
+   r1 == r2 = name r1 == name r2
 
 instance Apply Rule where
    applyAll r a = concatMap (`applyAll` a) (transformations r)
@@ -364,11 +372,12 @@ checkRuleSmart :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
 checkRuleSmart eq rule = do
    putStr $ "[" ++ name rule ++ "] "
    quickCheck (propRule (smartGen rule) eq rule)
-   
+  
 propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> (a -> Bool) -> Property
 propRule gen eq rule _ = 
-   forAll gen $ \a ->
-      applicable rule a ==> (a `eq` applyD rule a)
+   forAll gen $ \a -> 
+   forAll (smartApplyRule rule a) $ \ma -> 
+      isJust ma ==> (a `eq` fromJust ma)
 
 smartGen :: Arbitrary a => Rule a -> Gen a
 smartGen r = frequency [(4, arbitrary), (1, smartGenRule r)]
@@ -389,3 +398,20 @@ smartGenTrans a trans =
          gen <- smartGenTrans b t
          return $ liftM (\c -> liftPairSet lp c a) gen
       _ -> Nothing
+
+smartApplyRule :: Rule a -> a -> Gen (Maybe a)
+smartApplyRule r a = do
+   xss <- mapM (`smartApplyTrans` a) (transformations r)
+   case concat xss of
+      [] -> return Nothing
+      xs -> oneof $ map (return . Just) xs
+
+smartApplyTrans :: Transformation a -> a -> Gen [a]
+smartApplyTrans trans a =
+   case trans of
+      Abstraction args _ g -> smartArgs args >>= \b -> smartApplyTrans (g b) a
+      _ -> return (applyAll trans a)
+      
+smartArgs :: ArgumentList a -> Gen a
+smartArgs (Nil a) = return a
+smartArgs (Cons (f, _) descr xs) = liftM2 (curry f) (genArgument descr) (smartArgs xs)

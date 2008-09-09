@@ -86,13 +86,13 @@ checkExerciseWith f a = do
    let check txt p = putStr ("- " ++ txt ++ "\n    ") >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)
-   check "equality relation" $ 
+   {- check "equality relation" $ 
       checkEquivalence (ruleset a) (equality a) 
    check "equivalence relation" $ 
       checkEquivalence (ruleset a) (equivalence a)
    check "equality/equivalence" $ \x -> 
       forAll (similar (ruleset a) x) $ \y ->
-      equality a x y ==> equivalence a x y
+      equality a x y ==> equivalence a x y -}
    putStrLn "- Soundness non-buggy rules" 
    flip mapM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
       putStr "    " >> f (equivalence a) r

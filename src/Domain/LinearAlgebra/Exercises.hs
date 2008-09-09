@@ -12,7 +12,10 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Exercises where
+module Domain.LinearAlgebra.Exercises 
+   ( solveGramSchmidt, solveSystemExercise, reduceMatrixExercise
+   , solveSystemWithMatrixExercise, solveSystemWithMatrixExercise, opgave6b
+   ) where
 
 import Common.Apply
 import Common.Transformation
@@ -33,6 +36,9 @@ import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
 
+testje = checkExercise solveGramSchmidt -- solveSystemWithMatrixExercise
+
+        
 solveGramSchmidt :: Exercise [Vector SExprGS]
 solveGramSchmidt = makeExercise
    { shortTitle    = "Gram-Schmidt"
@@ -71,7 +77,7 @@ reduceMatrixExercise = makeExercise
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ unlines msg
-   , prettyPrinter = ppMatrix
+   , prettyPrinter = ppMatrixWith (\x -> "(" ++ show x ++ ")")
    , equivalence   = (===)
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm
@@ -122,12 +128,12 @@ instance Simplification a => Argument (SExprF a) where
    makeArgDescr = argDescrSExpr
 
 argDescrSExpr :: Simplification a => String -> ArgDescr (SExprF a)
-argDescrSExpr descr = ArgDescr descr Nothing parseRatio show
+argDescrSExpr descr = ArgDescr descr Nothing parseRatio show arbitrary
  where
    parseRatio = either (const Nothing) (Just . simplifyExpr) . parseExpr
                   
 instance Arbitrary a => Arbitrary (Vector a) where
-   arbitrary   = liftM fromList arbitrary
+   arbitrary   = liftM fromList $ oneof $ map vector [0..2]
    coarbitrary = coarbitrary . toList
 
 {- instance Arbitrary MySqrt where
@@ -155,12 +161,8 @@ liftRuleContextRight = lift $ makeLiftPair (maybeInContext . fmap isRight) (\b _
 instance Arbitrary a => Arbitrary (Matrix a) where
    arbitrary = do
       (i, j) <- arbitrary
-      arbSizedMatrix (i `mod` 15, j `mod` 15)
+      arbSizedMatrix (i `mod` 5, j `mod` 5)
    coarbitrary = coarbitrary . rows
-
-{- instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
-   arbitrary = liftM fromInteger arbitrary
-   coarbitrary r = coarbitrary (numerator r) . coarbitrary (denominator r) -}
    
 arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
 arbSizedMatrix (i, j) = 

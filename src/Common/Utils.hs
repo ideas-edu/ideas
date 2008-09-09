@@ -91,7 +91,7 @@ splitsWithElem c s =
    case splitAtElem c s of
       Just (xs, ys) -> xs : splitsWithElem c ys
       Nothing       -> [s]
-      
+
 {- safeIndex :: Int -> [a] -> Maybe a
 safeIndex 0 (x:_)  = return x
 safeIndex n (_:xs) = safeIndex (n-1) xs

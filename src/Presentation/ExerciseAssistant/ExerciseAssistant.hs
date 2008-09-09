@@ -19,23 +19,13 @@ import Data.Maybe
 import Session
 import SupplyArguments
 import Common.Transformation
-import Domain.Logic
 import Control.Monad
-import Domain.Fraction
 import qualified Domain.LinearAlgebra as LA
-import qualified Domain.RelationAlgebra as RA
-import qualified Domain.Derivative.Exercises as Math
+import Service.ExerciseList
 import Data.IORef
 
-domains :: [Some Domain]
-domains = [ make LA.opgave6b, make LA.reduceMatrixExercise
-          , make LA.solveSystemExercise, make LA.solveSystemWithMatrixExercise
-          , make LA.solveGramSchmidt
-          , make dnfExercise, make simplExercise
-          , make RA.cnfExercise, make RA.cnfExerciseSimple
-          , make LA.opgaveVarMatrix
-          , make Math.derivativeExercise
-          ]
+exercises :: [Some Exercise]
+exercises = Some LA.opgave6b : exerciseList
 
 main :: IO ()
 main = 
@@ -75,7 +65,7 @@ main =
         -- flip mapM_ [assignmentView, derivationView, feedbackView] $ \w -> 
         --    widgetModifyBase w StateNormal ligthGrey
         
-        mapM_ (\(Some (Domain a)) -> comboBoxAppendText domainBox (shortTitle a)) domains
+        mapM_ (\(Some a) -> comboBoxAppendText domainBox (shortTitle a)) exercises
         comboBoxSetActive  domainBox 0
 
         -- get buffers from views
@@ -85,7 +75,7 @@ main =
         feedbackBuffer   <- textViewGetBuffer feedbackView 
 
         -- initialize exercise
-        session <- makeSession (head domains)
+        session <- makeSession (head exercises)
         
         let fillRuleBox = do
                -- first clear the box
@@ -117,7 +107,7 @@ main =
 
         onChanged domainBox $ do
            index <- comboBoxGetActive domainBox
-           newExercise (domains !! fromMaybe 0 index) session
+           newExercise (exercises !! fromMaybe 0 index) session
            fillRuleBox
            updateAll
 

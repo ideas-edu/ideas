@@ -72,15 +72,15 @@ service3   f = fun service2 f
 service2IO f = fun (fun (io service)) f
 
 instance InJSON a => InJSON (Context a) where
-   toJSON   = toJSON . fromContext
-   fromJSON = fmap inContext . fromJSON
+   toJSON = toJSON . fromContext
+   fromJSON a = fromJSON a >>= (return . inContext)
    
 instance InJSON Location where
    toJSON              = toJSON . show
    fromJSON (String s) = case reads s of
-                            [(loc, rest)] | all isSpace rest -> Just loc
-                            _ -> Nothing
-   fromJSON _          = Nothing
+                            [(loc, rest)] | all isSpace rest -> return loc
+                            _ -> fail "invalid string"
+   fromJSON _          = fail "expecting a string"
 
 instance InJSON Result where
    toJSON result = Object $
@@ -92,10 +92,10 @@ instance InJSON Result where
          Detour rs st  -> [("result", String "Detour"), ("rules", Array $ map String rs), ("state", toJSON st)]
          Unknown st    -> [("result", String "Unknown"), ("state", toJSON st)]
    fromJSON (Object xs) = do
-      mj <- lookup "result" xs
+      mj <- lookupM "result" xs
       ms <- fromString mj
-      let getRules = (lookup "rules" xs >>= fromJSON) :: Maybe [RuleID]
-          getState = (lookup "state" xs >>= fromJSON) :: Maybe State
+      let getRules = (lookupM "rules" xs >>= fromJSON)
+          getState = (lookupM "state" xs >>= fromJSON)
       case ms of
          "syntaxerror"   -> return SyntaxError
          "buggy"         -> liftM  Buggy getRules
@@ -103,9 +103,13 @@ instance InJSON Result where
          "ok"            -> liftM2 Ok getRules getState
          "detour"        -> liftM2 Detour getRules getState
          "unkown"        -> liftM  Unknown getState
-         _               -> Nothing
-   fromJSON _ = Nothing
+         _               -> fail "Unknown service" 
+   fromJSON _ = fail "expecting an object"
 
-fromString :: JSON -> Maybe String
-fromString (String s) = Just (map toLower s)
-fromString _          = Nothing
+fromString :: Monad m => JSON -> m String
+fromString (String s) = return (map toLower s)
+fromString _          = fail "expecting a string"
+
+-- copied from JSON module
+lookupM :: Monad m => String -> [(String, a)] -> m a
+lookupM x = maybe (fail $ "field " ++ x ++ " not found") return . lookup x

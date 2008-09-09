@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Session
-   ( Domain(..), make, Some(..), Exercise(..)
+   ( Some(..), Exercise(..)
    , Session, makeSession, newTerm, newExercise, progressPair, undo, submitText
    , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
    , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
@@ -31,11 +31,6 @@ import Data.List
 import Data.IORef
 import Data.Maybe
 
-newtype Domain a = Domain (Exercise a)
-
-make :: Exercise a -> Some Domain
-make ex = Some (Domain ex)
-
 --------------------------------------------------
 -- Sessions with logging
 
@@ -46,7 +41,7 @@ withState f (Session _ ref) = do
    Some d <- readIORef ref
    f d
 
-makeSession :: Some Domain -> IO Session
+makeSession :: Some Exercise -> IO Session
 makeSession pa = do
    logMessage "New session: "
    ref   <- newIORef (error "reference not initialized")
@@ -54,8 +49,8 @@ makeSession pa = do
    newExercise pa session
    return session
 
-newExercise :: Some Domain -> Session -> IO ()
-newExercise (Some (Domain a)) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
+newExercise :: Some Exercise -> Session -> IO ()
+newExercise (Some a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
    \(Session _ ref) -> do
       d <- makeDerivation a
       writeIORef ref $ Some d
@@ -63,7 +58,7 @@ newExercise (Some (Domain a)) = logCurrent ("New (" ++ shortTitle a ++ ")") $
 newTerm :: Session -> IO ()
 newTerm session@(Session _ ref) = do
    Some d <- readIORef ref
-   newExercise (Some (Domain (exercise d))) session
+   newExercise (Some (exercise d)) session
        
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->

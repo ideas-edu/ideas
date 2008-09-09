@@ -22,9 +22,10 @@ import Data.List
 matrixRules :: (Argument a, Fractional a) => [Rule (Context (Matrix a))]
 matrixRules = 
    let noArgs f = f (\_ -> Nothing)
-   in [ noArgs ruleScaleRow, noArgs ruleExchangeRows, noArgs ruleAddMultiple ]
--- ruleExchangeNonZero, ruleScaleToOne, ruleFindColumnJ
-     -- , ruleZerosFP, ruleZerosBP, ruleCoverRow, ruleUncoverRow
+   in [ noArgs ruleScaleRow
+      , noArgs ruleExchangeRows
+      , noArgs ruleAddMultiple 
+      ]
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
 ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do

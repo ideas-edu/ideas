@@ -14,17 +14,14 @@
 -----------------------------------------------------------------------------
 module Service.AbstractService where
 
-import Common.Utils (safeHead)
+import Common.Utils (safeHead, Some(..))
 import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
+import Service.ExerciseList
 import qualified Service.TypedAbstractService as TAS
 import Data.Char
 import Data.Maybe
-import Domain.Logic.Exercises
-import Domain.Derivative.Exercises
-import Domain.RelationAlgebra.Exercises
-import Domain.Fraction.Exercises
 import Common.Strategy  (makePrefix)
 
 type ExerciseID = String
@@ -45,21 +42,21 @@ data Result = SyntaxError
 generate :: ExerciseID -> Int -> IO State
 generate exID level = 
    case getExercise exID of
-      SE ex -> do
+      Some ex -> do
          s <- TAS.generate ex level
          return (toState s)
 
 derivation :: State -> [(RuleID, Location, Expression)]
 derivation s = 
    case fromState s of
-      STS ts -> 
+      Some ts -> 
          let f (r, ca) = (name r, location ca, prettyPrinter (TAS.exercise ts) (fromContext ca))
          in map f (TAS.derivation ts)
 
 allfirsts :: State -> [(RuleID, Location, State)]
 allfirsts s = 
    case fromState s of
-      STS ts -> 
+      Some ts -> 
          let f (r, loc, s) = (name r, loc, toState s)
          in map f (TAS.allfirsts ts)
 
@@ -69,27 +66,27 @@ onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
 applicable :: Location -> State -> [RuleID]
 applicable loc s = 
    case fromState s of
-      STS ts -> map name (TAS.applicable loc ts)
+      Some ts -> map name (TAS.applicable loc ts)
 
 apply :: RuleID -> Location -> State -> State
 apply ruleID loc s = 
    case fromState s of
-      STS ts -> toState (TAS.apply (getRule ruleID (TAS.exercise ts)) loc ts)
+      Some ts -> toState (TAS.apply (getRule ruleID (TAS.exercise ts)) loc ts)
 
 ready :: State -> Bool
 ready s = 
    case fromState s of
-      STS ts -> TAS.ready ts
+      Some ts -> TAS.ready ts
 
 stepsremaining :: State -> Int
 stepsremaining s = 
    case fromState s of
-      STS ts -> TAS.stepsremaining ts
+      Some ts -> TAS.stepsremaining ts
 
 submit :: State -> Expression -> Result
 submit s input = 
    case fromState s of
-      STS ts -> 
+      Some ts -> 
          case parser (TAS.exercise ts) input of
             Left _  -> SyntaxError
             Right a ->
@@ -102,23 +99,16 @@ submit s input =
 
 -------------------------
 
-data SomeExercise   = forall a . SE  (Exercise a)
-data SomeTypedState = forall a . STS (TAS.State a)
-
-exerciseList :: [SomeExercise]
-exerciseList = 
-   [ SE dnfExercise, SE derivativeExercise, SE cnfExercise, SE simplExercise ]
-  
-getExercise :: ExerciseID -> SomeExercise
+getExercise :: ExerciseID -> Some Exercise
 getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList
- where p (SE ex) = shortTitle ex == exID
+ where p (Some ex) = shortTitle ex == exID
 
-fromState :: State -> SomeTypedState
+fromState :: State -> Some TAS.State
 fromState (exID, p, ce, ctx) =
    case getExercise exID of
-      SE ex -> 
+      Some ex -> 
          case (parser ex ce, parseContext ctx) of 
-            (Right a, Just unit) -> STS TAS.State 
+            (Right a, Just unit) -> Some TAS.State 
                { TAS.exercise = ex
                , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
                , TAS.context  = fmap (\_ -> a) unit

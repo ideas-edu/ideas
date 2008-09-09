@@ -43,9 +43,8 @@ toNegOrNot _ x       = Neg x
 pNat :: CharParser Integer
 pNat = read <$> pList1 ('0' <..> '9')
 
-pNeg :: CharParser Frac
---pNeg = (\_ x -> Con (negate x)) <$> subSym <*> pNat
-pNeg = (\x -> Con (negate x)) <$> pNat
+--pNeg :: CharParser Frac
+--pNeg = (\x -> Con (negate x)) <$> pNat
 
 mulSym = pSym '*'
 divSym = pSym '/' 
@@ -53,7 +52,7 @@ addSym = pSym '+'
 subSym = pSym '-'
 
 fstPair :: Pair a b -> a
-fstPair (Pair a b)  =  a
+fstPair (Pair a _)  =  a
 
 runParser  :: CharParser a -> String -> (a, [Message Char Pos])
 runParser pFrac input = (result, messages)

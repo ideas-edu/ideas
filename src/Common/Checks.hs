@@ -21,6 +21,7 @@ import Common.Transformation
 
 import qualified Domain.Logic as Logic
 import qualified Domain.LinearAlgebra as LA
+import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.RelationAlgebra as RA
 import qualified Domain.Fraction as Fraction
 
@@ -29,16 +30,11 @@ import qualified Service.ModeJSON as ModeJSON
 import qualified Service.ModeXML as ModeXML
 import Data.List
 
-   {-
-   Logic.checks
-   LA.checks
-   Frac.checks
-   RA.checks -}
-
 main :: IO ()
 main = do
    putStrLn "\n...checking grammar combinators"
    Common.Grammar.checks
+   LA.checks
    
    putStrLn "\n...checking exercises"
    checkExercise Logic.dnfExercise

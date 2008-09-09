@@ -23,9 +23,10 @@ import Control.Monad
 import qualified Domain.LinearAlgebra as LA
 import Service.ExerciseList
 import Data.IORef
+import Domain.Programming
 
 exercises :: [Some Exercise]
-exercises = Some LA.opgave6b : exerciseList
+exercises = Some LA.opgave6b : exerciseList ++ [Some isortExercise]
 
 main :: IO ()
 main = 

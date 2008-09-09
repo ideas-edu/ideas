@@ -55,10 +55,6 @@ defaultConfig = FracGenConfig
    , freqSub       = 3
    }
 
-freqLeaf :: FracGenConfig -> Int
-freqLeaf config = freqConstant config + freqVariable config
-
-
 -- Needs to be redesigned to take freq. variables into account
 
 -- restrain the generated integers
@@ -107,23 +103,7 @@ arbFrac config
                                  ]
                          where 
                            rec   = arbFrac config {maxSize = (n `div` 2)}
-                           nz    = arbFracNZ config {maxSize = (n `div` 2)}
                            nv    = arbFracNoVars config {maxSize = (n `div` 2)}
-                           n     = maxSize config
-                           const = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
-
--- non-zero value
-arbFracNZ :: FracGenConfig -> Gen Frac
-arbFracNZ config
-   | maxSize config == 0 = liftM fromInteger arbIntNZ
-   | otherwise           = oneof [ arbFracNZ config {maxSize = 0}
-                                 , liftM2 (:*:) const nz
-                                 , liftM2 (:/:) nz const
-                                 , liftM2 (:+:) nz nz 
-                                 , return $ Var "x"
-                                 ]
-                         where
-                           nz    = arbFracNZ config {maxSize = (n `div` 2)}
                            n     = maxSize config
                            const = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
 

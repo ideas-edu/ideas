@@ -14,7 +14,8 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Exercises 
    ( solveGramSchmidt, solveSystemExercise, reduceMatrixExercise
-   , solveSystemWithMatrixExercise, solveSystemWithMatrixExercise, opgave6b
+   , solveSystemWithMatrixExercise, opgave6b, opgaveVarMatrix
+   , arbSolution
    ) where
 
 import Common.Apply
@@ -35,9 +36,6 @@ import Control.Monad
 import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
-
-testje = checkExercise solveGramSchmidt -- solveSystemWithMatrixExercise
-
         
 solveGramSchmidt :: Exercise [Vector SExprGS]
 solveGramSchmidt = makeExercise
@@ -146,12 +144,6 @@ arbBasis = do
    --j <- oneof $ map return [0..5]
    replicateM 2 $ liftM fromList $ replicateM 2 $ liftM fromInteger arbitrary
 
-liftRuleLeft :: Rule a -> Rule (Either a b)
-liftRuleLeft = lift $ makeLiftPair isLeft (\a _ -> Left a)
-
-liftRuleRight :: Rule b -> Rule (Either a b)
-liftRuleRight = lift $ makeLiftPair isRight (\b _ -> Right b)
-
 liftRuleContextLeft :: Rule (Context a) -> Rule (Context (Either a b))
 liftRuleContextLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
 
@@ -175,26 +167,6 @@ arbSolution m = do
    let finalCol  = map (return . sum . zipWith (*) solution) (rows m)
        newMatrix = makeMatrix $ zipWith (++) (rows m) finalCol
    return (solution, newMatrix)
-   
-simplifyMatrix :: (Ord a, Num a) => [a] -> Matrix a -> Gen (Matrix a)
-simplifyMatrix solution m = do
-   rs <- mapM simplifyRow (rows m)
-   return (makeMatrix rs)
- where
-   make xs  = xs ++ [sum $ zipWith (*) solution xs]
-   f []     = []
-   f (x:xs) = map (:xs) (g x) ++ map (x:) (f xs)
-   g x      = filter (/=0) [x-1, x+1, negate x]
-   simplifyRow r
-      | x > 5 = 
-           case filter ((< x) . abs . last) $ map make $ f xs of
-              []   -> return r
-              list -> oneof (map return list) >>= simplifyRow
-      | otherwise = 
-           return r
-    where 
-       x  = abs (last r)
-       xs = init r
 
 arbUpperMatrix :: (Enum a, Num a) => Gen (Matrix a)
 arbUpperMatrix = do
@@ -215,23 +187,3 @@ arbNiceMatrix = do
    m1 <- arbUpperMatrix
    m2 <- arbAugmentedMatrix
    return (multiply m1 m2)
-
-       
----------------------------------------------------------------
--- Small Ints
-   {-
-newtype SmallInt = SmallInt Int
-   deriving (Show, Eq, Ord, Num)
-
-fromSmallInt :: Num a => SmallInt -> a
-fromSmallInt (SmallInt n) = fromIntegral n
-
-instance Arbitrary SmallInt where
-   arbitrary = oneof $ map (return . SmallInt) [-15 .. 15]
-   coarbitrary (SmallInt n) = coarbitrary n
-   
-newtype ShowRational = ShowRational Rational
-   deriving (Eq, Num, Fractional)
-
-instance Show ShowRational where
-   show (ShowRational r) = ppRational r -}

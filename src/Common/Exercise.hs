@@ -113,7 +113,8 @@ checkExerciseWith f a = do
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
 checkParserPretty eq parser pretty p = 
    either (const False) (eq p) (parser (pretty p))
-   
+
+{-
 checkEquivalence :: (Arbitrary a, Show a) => [Rule (Context a)] -> (a -> a -> Bool) -> a -> Property
 checkEquivalence rs eq x =
    forAll (similar rs x) $ \y ->
@@ -123,4 +124,4 @@ checkEquivalence rs eq x =
 similar :: Arbitrary a => [Rule (Context a)] -> a -> Gen a
 similar rs a =
    let new = a : [ fromContext cb | r <- rs, cb <- applyAll r (inContext a) ]
-   in oneof [arbitrary, oneof $ map return new]
+   in oneof [arbitrary, oneof $ map return new] -}

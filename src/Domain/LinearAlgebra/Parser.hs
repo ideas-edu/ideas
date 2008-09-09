@@ -20,10 +20,7 @@ import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearExpr
 import Domain.LinearAlgebra.Equation
-import Domain.LinearAlgebra.MatrixRules -- for context
 import Domain.LinearAlgebra.Vector
-import Common.Context
-import Common.Utils
 import Control.Monad
 import Data.List
 import Data.Char
@@ -98,11 +95,6 @@ myParens p = pSpec '(' *> p <* pSpec ')'
 
 -----------------------------------------------------------
 --- Pretty-Printer
-
-ppEnv :: Show a => Context a -> String
-ppEnv m = "[" ++ commaList list ++ "]"
- where f s v = s ++ "=" ++ show (get v m)
-       list  = [f "covered" covered, f "columnJ" columnJ]
 
 ppMatrix :: Show a => Matrix a -> String
 ppMatrix = ppMatrixWith show

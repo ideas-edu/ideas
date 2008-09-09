@@ -16,28 +16,10 @@ module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
 import Domain.LinearAlgebra hiding (getSolution)
 import Test.QuickCheck
 import Control.Monad
-import Common.Transformation
 import Common.Utils
 import Data.List
 import Common.Apply
 import Common.Context
-import Common.Exercise
-import Common.Strategy hiding (not)
-
-{-
-stopC (Major _ _) = True
-stopC _           = False
-
-(t1, p1):_   = continuePrefixUntil stopC p0 t0 toReducedEchelon
-(t2, p2):_   = continuePrefixUntil stopC p1 t1 toReducedEchelon
-(t3, p3):_   = continuePrefixUntil stopC p2 t2 toReducedEchelon
-(t4, p4):_   = continuePrefixUntil stopC p3 t3 toReducedEchelon
-(t5, p5):_   = continuePrefixUntil stopC p4 t4 toReducedEchelon
-(t6, p6):_   = continuePrefixUntil stopC p5 t5 toReducedEchelon
-
---t0 = inContext $ Not (Var "x" :||: Var "y") 
-t0 = inContext $ makeMatrix [[6,3],[2,4]]
-p0 = emptyPrefix -}
 
 -----------------------------------------------------------
 --- QuickCheck properties

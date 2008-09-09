@@ -17,7 +17,7 @@ module Domain.Fraction.Rules where
 import Domain.Fraction.Frac
 import Common.Transformation
 import Common.Rewriting
-import Domain.Fraction.Generator
+import Domain.Fraction.Generator()
 
 fracRules :: [Rule Frac]
 fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac

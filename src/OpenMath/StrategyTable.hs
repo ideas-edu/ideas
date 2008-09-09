@@ -14,7 +14,6 @@
 -----------------------------------------------------------------------------
 module OpenMath.StrategyTable where
 
-import Common.Context
 import Common.Exercise
 import Common.Utils (Some(..))
 import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise, LinearSystem)

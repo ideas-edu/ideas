@@ -13,13 +13,12 @@
 -----------------------------------------------------------------------------
 module Domain.Fraction.Frac where
 
-import Common.Uniplate (Uniplate(..), universe)
+import Common.Uniplate (Uniplate(..))
 import Common.Rewriting
 import Data.List
 import Data.Maybe
 import Data.Char
 import Ratio
-import qualified Data.IntSet as IS
 
 
 infixl 7 :*:, :/: 
@@ -74,7 +73,7 @@ eqFrac = (~=)
 
 -- | Function varsFrac returns the variables that appear in a Frac expression.
 varsFrac :: Frac -> [String]
-varsFrac = foldFrac (return, (\x -> []), union, union, union, union, id)
+varsFrac = foldFrac (return, (\_ -> []), union, union, union, union, id)
 
 instance Uniplate Frac where
    uniplate x =
@@ -140,8 +139,8 @@ simplifyM' this = do
                     b' <- simplifyM' b
                     case (a', b') of
                       (Con x, Con y) -> Just $ Con (x*y)
-                      (Con 0, c) -> Just $ Con 0
-                      (c, Con 0) -> Just $ Con 0
+                      (Con 0, _) -> Just $ Con 0
+                      (_, Con 0) -> Just $ Con 0
                       (Con 1, c) -> Just c
                       (c, Con 1) -> Just c
                       (c :*: d, e) -> Just $ c :*: (d :*: e)
@@ -149,8 +148,8 @@ simplifyM' this = do
       a :/: b -> do a' <- simplifyM' a
                     b' <- simplifyM' b
                     case (a', b') of
-                      (c, Con 0) -> Nothing
-                      (Con 0, c) -> Just $ Con 0
+                      (_, Con 0) -> Nothing
+                      (Con 0, _) -> Just $ Con 0
                       (c, Con 1) -> Just c
                       (c, Con (-1)) -> Just $ Con (-1) :*: c
                       (c, d) -> Just $ c :/: d
@@ -240,7 +239,7 @@ countVar :: Frac -> String -> Int
 countVar f v = foldFrac (\ x -> if x == v then 1 else 0, const 0, (+), (+), (+), (+), const 0) f
 
 countCon :: Frac -> Int
-countCon = foldFrac (const 0, \x -> 1, (*), (*), (+), (+), const 0)
+countCon = foldFrac (const 0, \_ -> 1, (*), (*), (+), (+), const 0)
 
 instance Num Frac where
   (+)          = (:+:)
@@ -259,7 +258,7 @@ isZero (Con n)   = n == 0
 isZero (Var _)   = False
 isZero (n :+: m) = n ~= negate m
 isZero (n :*: m) = isZero n || isZero m
-isZero (n :/: m) = isZero n
+isZero (n :/: _) = isZero n
 isZero (n :-: m) = n ~= m
 isZero (Neg n)   = isZero n
 

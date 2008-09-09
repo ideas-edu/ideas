@@ -22,7 +22,6 @@ import Domain.RelationAlgebra.Parser
 import Common.Exercise
 import Common.Context
 import Common.Strategy (repeat, somewhere, alternatives, label)
-import Control.Monad
 import Test.QuickCheck hiding (label)
 
 cnfExercise :: Exercise RelAlg

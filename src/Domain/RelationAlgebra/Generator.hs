@@ -14,10 +14,6 @@
 module Domain.RelationAlgebra.Generator where
 
 import Domain.RelationAlgebra.Formula
--- import Domain.RelationAlgebra.Rules -- only for checks
---import Domain.RelationAlgebra.Equivalence
-import Common.Apply
-import Common.Transformation
 import Common.Rewriting
 import Control.Monad
 import Test.QuickCheck 
@@ -50,14 +46,6 @@ arbRelAlg n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), binop (:&&:), binop
 
 vars :: [String]
 vars = ["q", "r", "s"]
-
-{-
-checks :: IO ()
-checks =
-   let f r = do putStr ("[" ++ name r ++ "]   ") >> quickCheck (g r)
-       g r a = applicable r a ==> a `isEquivalent` applyD r a
-   in mapM_ f relAlgRules
--}
   
 -------------------------------------------------------------------
 -- Templates

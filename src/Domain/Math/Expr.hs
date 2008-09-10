@@ -151,18 +151,23 @@ safeDivision x y = if y==0 then fail "safeDivision" else return (x/y)
 -- Pretty printer 
 
 instance Show Expr where
-   show e = foldExpr (bin "+", bin "*", bin "-", neg, con, bin "/", sq, var, sym) e 0
-    where
-      con n b     = if n>=0 then show n else neg (con (abs n)) b
-      var s _     = s
-      neg x b     = parIf (b>0) ("-" ++ x 2)
-      sq  x       = sym "sqrt" [x]
-      sym s xs b  = parIf (b>1) (unwords (s : map ($ 2) xs))
-      bin s x y b = parIf (b>0) (x 1 ++ s ++ y 1)
+   show = ppExprPrio 0
+
+ppExprPrio :: Int -> Expr -> String
+ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, con, bin "/" 2, sq, var, sym)
+ where
+   con n b        = if n>=0 then show n else neg (con (abs n)) b
+   var s _        = s
+   neg x b        = parIf (b>0) ("-" ++ x 1)
+   sq  x          = sym "sqrt" [x]
+   sym s xs b
+      | null xs   = s
+      | otherwise = parIf (b>3) (unwords (s : map ($ 4) xs))
+   bin s i x y b  = parIf (b>i) (x i ++ s ++ y (i+1))
       
-      parIf b = if b then par else id
-      par s   = "(" ++ s ++ ")"
-      
+   parIf b = if b then par else id
+   par s   = "(" ++ s ++ ")"
+    
 instance MetaVar Expr where
    metaVar n = Var ("_" ++ show n)
    isMetaVar (Var ('_':is)) | not (null is) && all isDigit is = Just (read is)

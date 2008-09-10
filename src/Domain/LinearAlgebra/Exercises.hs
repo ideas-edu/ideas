@@ -33,6 +33,7 @@ import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Vector
 import Test.QuickCheck
 import Control.Monad
+import Domain.Math.Expr
 import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
@@ -75,7 +76,7 @@ reduceMatrixExercise = makeExercise
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ unlines msg
-   , prettyPrinter = ppMatrixWith (\x -> "(" ++ show x ++ ")")
+   , prettyPrinter = ppMatrixWith (ppExprPrio 0 . toExpr)
    , equivalence   = (===)
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm

@@ -63,12 +63,16 @@ derivation state = fromMaybe (error "derivation") $ do
        check = isMajorRule . fst
    return $ filter check $ zip rules terms
 
+-- The last condition in the list comprehension is to avoid a very subtle case in which some steps
+-- remain to be done (in the prefix), but those steps are administrative (not even minor rules, but 
+-- markers for the beginning and the end of a sub-strategy). This is a quick fix. To do: inspect other
+-- locations where runPrefixUntil is called.
 allfirsts :: State a -> [(Rule (Context a), Location, State a)]
 allfirsts state = fromMaybe (error "allfirsts") $ do
    p0 <- prefix state
    let f (a, p1) = 
           [ (r, location a, state {context = a, prefix = Just p1})
-          | Just r <- [lastRuleInPrefix p1], isMajorRule r
+          | Just r <- [lastRuleInPrefix p1], isMajorRule r, stepsToRules (prefixToSteps p0) /= stepsToRules (prefixToSteps p1)
           ]
    return $ concatMap f $ runPrefixMajor p0 $ context state
 

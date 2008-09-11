@@ -23,7 +23,7 @@ module Common.Strategy
    , runStrategy, traceStrategy
      -- * Strategy combinators
      -- ** Basic combinators
-   , (<*>), (<|>), succeed, fail, label, sequence, alternatives
+   , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
      -- ** EBNF combinators
    , many, many1, option
      -- ** Negation and greedy combinators
@@ -106,13 +106,16 @@ instance Lift LabeledStrategy where
 -- | Run a strategy on a term (implementation of the overloaded @applyAll@ function)
 runStrategy :: Strategy a -> a -> [a]
 runStrategy strategy a =
-   [ a | acceptsEmpty strategy ] ++
+   [ a | empty strategy ] ++
    [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
+
+--run :: Apply f => Grammar (f a) -> a -> [a]
+--run s a = [ a | empty s ] ++ [ c | (r, t) <- firsts s, b <- applyAll r a, c <- run t b ]
 
 -- | Run a strategy on a term, and trace the progress (using Debug.Trace.trace). Useful for debugging strategies
 traceStrategy :: Show a => Strategy a -> a -> [a]
 traceStrategy strategy a = trace (show a) $ 
-   [ trace (replicate 50 '-') a | acceptsEmpty strategy ] ++
+   [ trace (replicate 50 '-') a | empty strategy ] ++
    [ result 
    | (rule, rest) <- firsts strategy
    , b <- applyAll rule a
@@ -120,8 +123,8 @@ traceStrategy strategy a = trace (show a) $
    ]
 
 -- local helper function 
-acceptsEmpty :: Strategy a -> Bool
-acceptsEmpty = RE.acceptsEmpty . noLabels
+empty :: Strategy a -> Bool
+empty = RE.empty . noLabels
 
 -- local helper function
 noLabels :: Strategy a -> RE.Grammar (Rule a)
@@ -133,15 +136,16 @@ firsts = concatMap f . RE.firsts . unS
  where
    f (Left r,   re) = [(r, S re)]
    f (Right ns, re) = [ (r, s <*> S re) | (r, s) <- firsts (unlabel ns) ] ++
-                      if acceptsEmpty (unlabel ns) then firsts (S re) else []
+                      if empty (unlabel ns) then firsts (S re) else []
 
 -----------------------------------------------------------
 --- Strategy combinators
 
 -- Basic combinators --------------------------------------
 
+infixr 3 <|>
+infixr 4 <||>
 infixr 5 <*>
-infixr 4 <|>
 
 -- | Put two strategies in sequence (first do this, then do that)
 (<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
@@ -150,6 +154,10 @@ s <*> t = S (unS (toStrategy s) RE.<*> unS (toStrategy t))
 -- | Choose between the two strategies (either do this or do that)
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 s <|> t = S (unS (toStrategy s) RE.<|> unS (toStrategy t))
+
+-- | Run two strategies in parallel (with interleaving)
+(<||>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+s <||> t = S (unS (toStrategy s) RE.<||> unS (toStrategy t))
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
@@ -175,7 +183,7 @@ alternatives = foldr ((<|>) . toStrategy) fail
 
 -- | Repeat a strategy zero or more times (non-greedy)
 many :: IsStrategy f => f a -> Strategy a
-many = S . RE.star . unS . toStrategy
+many = S . RE.many . unS . toStrategy
 
 -- | Apply a certain strategy at least once (non-greedy)
 many1 :: IsStrategy f => f a -> Strategy a
@@ -307,6 +315,9 @@ data Prefix a = P [(Int, Step a)] (RE.Grammar (Step a))
 instance Show (Prefix a) where
    show (P xs _) = show (map fst xs)
 
+instance Eq (Prefix a) where
+   P xs _ == P ys _ = map fst xs == map fst ys
+
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> Prefix a
 emptyPrefix = makePrefix []
@@ -340,8 +351,8 @@ runPrefixUntil stop (P xs0 g0) a0 =
 -- local helper
 runPrefixUntilHelper :: (Step a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, RE.Grammar (Step a), [(Int, Step a)])]
 runPrefixUntilHelper stop a g
-   | RE.acceptsEmpty g = [(a, g, [])]
-   | otherwise         = concat (zipWith f [0..] (RE.firsts g))
+   | RE.empty g = [(a, g, [])]
+   | otherwise  = concat (zipWith f [0..] (RE.firsts g))
  where
    add n s this = [ (a, g, (n,s):xs) | (a, g, xs) <- this ]
    f n (step, h) = add n step $ 

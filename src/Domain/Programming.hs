@@ -144,11 +144,11 @@ run = apply isortStrategy (inContext undef)
 
 {-
 Lambda "xs" (MatchList (Var "xs") (Var "nil") (Lambda "y" (Lambda "ys" (Let "insert" (Lambda "a" (Lambda "xs" (MatchList (Var "xs") (Apply (Apply (Var "Cons") (Var "a")) (Var "Nil")) (Lambda "y" (Lambda "ys" (Apply (Apply (Var "cons") (Var "y")) (Apply (Apply (Var "insert") (Var "a")) (Var "ys")))))))) (Apply (Apply (Var "insert") (Var "y")) (Apply (Var "isort") (Var "ys")))))))
--}
 
-{-
 test = do 
    s0 <- TAS.generate isortExercise 0
    let s1 = head $ TAS.allfirsts s0
    let list = iterate (\(_,_,s) -> head $ TAS.allfirsts s) s1
-   putStrLn $ unlines $ map show $ take 35 list -}
+   putStrLn $ unlines $ map show $ take 35 list
+   
+-}

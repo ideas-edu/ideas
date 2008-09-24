@@ -21,7 +21,8 @@ class ShallowEq a where
 -- The arbitrary type class is a quick solution to have smart generators
 -- (in combination with lifting rules). The function in the RewriteRule module
 -- cannot have a type class for this reason
-class (MetaVar a, Uniplate a, ShallowEq a, Arbitrary a) => Rewrite a where
+-- The show type class is added for pretty-printing rules
+class (MetaVar a, Uniplate a, ShallowEq a, Arbitrary a, Show a) => Rewrite a where
    operators :: [Operator a]
    -- default definition: no associative/commutative operators
    operators = []

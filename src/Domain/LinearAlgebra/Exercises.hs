@@ -37,10 +37,16 @@ import Domain.Math.Expr
 import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
-        
+
+laDomain :: String
+laDomain = "linalg"
+ 
 solveGramSchmidt :: Exercise [Vector SExprGS]
 solveGramSchmidt = makeExercise
-   { shortTitle    = "Gram-Schmidt"
+   { identifier    = "Gram-Schmidt" -- TODO: simplify code
+   , domain        = laDomain
+   , description   = "Gram-Schmidt"
+   , status        = Stable
    , parser        = \s -> case parseVectors s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ show msg
@@ -55,7 +61,10 @@ solveGramSchmidt = makeExercise
 
 solveSystemExercise :: Exercise (Equations SExprLin)
 solveSystemExercise = makeExercise
-   { shortTitle    = "Solve Linear System"
+   { identifier    = "Solve Linear System" -- TODO: simplify code
+   , domain        = laDomain
+   , description   = "Solve Linear System"
+   , status        = Stable
    , parser        = \s -> case parseSystem s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ show msg
@@ -72,7 +81,10 @@ solveSystemExercise = makeExercise
    
 reduceMatrixExercise :: Exercise (Matrix SExpr)
 reduceMatrixExercise = makeExercise
-   { shortTitle    = "Gaussian Elimination"
+   { identifier    = "Gaussian Elimination" -- TODO: simplify code
+   , domain        = laDomain
+   , description   = "Gaussian Elimination"
+   , status        = Stable
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right a
                               (_, msg) -> Left $ unlines msg
@@ -86,7 +98,10 @@ reduceMatrixExercise = makeExercise
 
 solveSystemWithMatrixExercise :: Exercise (Either (LinearSystem SExpr) (Matrix SExpr))
 solveSystemWithMatrixExercise = makeExercise
-   { shortTitle    = "Solve Linear System with Matrix"
+   { identifier    = "Solve Linear System with Matrix" -- TODO: simplify code
+   , domain        = laDomain
+   , description   = "Solve Linear System with Matrix"
+   , status        = Stable
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right $ Left $ forget2 ok
                               (_, Right ok) -> Right $ Right ok
@@ -103,13 +118,13 @@ solveSystemWithMatrixExercise = makeExercise
 
 opgave6b :: Exercise (Matrix SExpr)
 opgave6b = reduceMatrixExercise
-   { shortTitle = "Opgave 9.6 (b)"
+   { identifier = "opg9.6b"
    , generator  = return $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
    }
 
 opgaveVarMatrix :: Exercise (Matrix SExpr)
 opgaveVarMatrix = reduceMatrixExercise
-   { shortTitle = "Var in Matrix"
+   { identifier = "matrix-with-var"
    , generator  = return $ makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]
    }
  where lam = variable "L"

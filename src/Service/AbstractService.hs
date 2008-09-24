@@ -101,7 +101,7 @@ submit s input =
 
 getExercise :: ExerciseID -> Some Exercise
 getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList
- where p (Some ex) = shortTitle ex == exID
+ where p (Some ex) = description ex == exID -- TODO: use exercise code instead
 
 fromState :: State -> Some TAS.State
 fromState (exID, p, ce, ctx) =
@@ -116,11 +116,11 @@ fromState (exID, p, ce, ctx) =
             _ -> error "fromState"
       
 toState :: TAS.State a -> State
-toState state = ( shortTitle (TAS.exercise state)
+toState state = ( description (TAS.exercise state)
                 , maybe "NoPrefix" show (TAS.prefix state)
                 , prettyPrinter (TAS.exercise state) (TAS.term state)
                 , showContext (TAS.context state)
-                )
+                ) -- TODO: use exercise code instead
 
 readPrefix :: String -> Maybe [Int]
 readPrefix input =

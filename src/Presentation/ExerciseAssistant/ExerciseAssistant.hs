@@ -66,7 +66,7 @@ main =
         -- flip mapM_ [assignmentView, derivationView, feedbackView] $ \w -> 
         --    widgetModifyBase w StateNormal ligthGrey
         
-        mapM_ (\(Some a) -> comboBoxAppendText domainBox (shortTitle a)) exercises
+        mapM_ (\(Some a) -> comboBoxAppendText domainBox (show $ exerciseCode a)) exercises
         comboBoxSetActive  domainBox 0
 
         -- get buffers from views

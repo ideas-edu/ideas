@@ -19,7 +19,7 @@ import Domain.Derivative.Rules
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
 import Common.Context (Context, liftRuleToContext, inContext, fromContext)
-import Common.Exercise (Exercise(..))
+import Common.Exercise
 import Common.Transformation
 import Test.QuickCheck hiding (label)
 import Domain.Math.Expr
@@ -28,7 +28,10 @@ import Domain.Math.Parser
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = Exercise
-   { shortTitle    = "Derivative"
+   { identifier    = "derivative"
+   , domain        = "math"
+   , description   = "Derivative"
+   , status        = Experimental
    , parser        = parseExpr
    , equivalence = (==) -- ??
    , equality    = (==)

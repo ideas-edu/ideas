@@ -47,7 +47,7 @@ makeWikiFile target (Entry nr (Some (ExprExercise a)) xs examples) = do
       [ makeTitle nr a
       , backRefText
       , section "Examples"
-      , makeExamples (shortTitle a) examples
+      , makeExamples (show $ exerciseCode a) examples
       , section "Strategy code"
       , code
       , visitRepoText
@@ -62,10 +62,10 @@ generatedText = "The locations have been generated automatically from the strate
 
 targetFileName :: Exercise a -> String
 targetFileName a =
-   filter isAlphaNum (shortTitle a) ++ ".txt"
+   show (exerciseCode a) ++ ".txt"
 
 makeTitle :: String -> Exercise a -> String
-makeTitle nr a = title $ "Strategy " ++ nr ++ ": " ++ shortTitle a
+makeTitle nr a = title $ "Strategy " ++ nr ++ ": " ++ description a
 
 makeLocationTable :: Exercise a -> String
 makeLocationTable a = table ["Location", "Label or rule"] (map f $ reportLocations $ strategy a)

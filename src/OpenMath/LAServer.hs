@@ -44,8 +44,8 @@ xs ~= ys = let f = map toLower . filter isAlphaNum
            in f xs == f ys 
 
 laServer :: Request -> Reply
-laServer req = 
-   case [ ea | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+laServer req = -- TODO: use exercise code instead
+   case [ ea | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= description a ] of
       [Some (ExprExercise a)] -> laServerFor a req
       _ -> replyError "request error" "unknown strategy"
    

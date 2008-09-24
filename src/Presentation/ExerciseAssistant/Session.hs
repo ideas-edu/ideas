@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Session
-   ( Some(..), Exercise(..)
+   ( Some(..), Exercise(..), exerciseCode
    , Session, makeSession, newTerm, newExercise, progressPair, undo, submitText
    , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
    , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
@@ -21,7 +21,7 @@ module Session
 
 import qualified Service.TypedAbstractService as TAS
 import Common.Context
-import Common.Exercise (Exercise(..))
+import Common.Exercise
 import Common.Parsing (indicesToRange)
 import Common.Logging
 import Common.Transformation
@@ -50,7 +50,7 @@ makeSession pa = do
    return session
 
 newExercise :: Some Exercise -> Session -> IO ()
-newExercise (Some a) = logCurrent ("New (" ++ shortTitle a ++ ")") $ 
+newExercise (Some a) = logCurrent ("New (" ++ show (exerciseCode a) ++ ")") $ 
    \(Session _ ref) -> do
       d <- makeDerivation a
       writeIORef ref $ Some d

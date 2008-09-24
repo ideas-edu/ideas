@@ -115,7 +115,7 @@ probablyEqualWith :: StdGen -> RelAlg -> RelAlg -> Bool
 probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 10 rng)
  where
    -- size of (co-)domain
-   as     = [0..4]
+   as     = [0..2]
    -- number of attemps (with different randomly generated relations)
    makeRngs n g
       | n == 0    = []
@@ -123,7 +123,7 @@ probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 10 rng)
    eval g = evalRelAlg (generate 100 g (arbRelations as)) as
 
 probablyEqualWithG :: StdGen -> RelAlg -> RelAlg -> Maybe Int
-probablyEqualWithG rng p q = safeHead $ catMaybes $ zipWith f [1..] (makeRngs 500 rng)
+probablyEqualWithG rng p q = safeHead $ catMaybes $ zipWith f [1..] (makeRngs 100 rng)
  where
    f i g = if eval g p == eval g q then Nothing else Just i
    -- size of (co-)domain

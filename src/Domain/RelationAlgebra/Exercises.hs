@@ -26,7 +26,10 @@ import Test.QuickCheck hiding (label)
 
 cnfExercise :: Exercise RelAlg
 cnfExercise = makeExercise
-   { shortTitle = "To conjunctive normal form"
+   { identifier    = "cnf"
+   , domain        = "logic"
+   , description   = "To conjunctive normal form"
+   , status        = Experimental
    , parser        = \s -> case parseRelAlg s of
                               (p, [])   -> Right p
                               (_, msgs) -> Left  (show msgs)
@@ -40,6 +43,7 @@ cnfExercise = makeExercise
    
 cnfExerciseSimple :: Exercise RelAlg
 cnfExerciseSimple = cnfExercise
-   { shortTitle = shortTitle cnfExercise ++ " (simple)"
-   , strategy   = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise
+   { identifier  = "cnf-simple"
+   , description = description cnfExercise ++ " (simple)"
+   , strategy    = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise
    }

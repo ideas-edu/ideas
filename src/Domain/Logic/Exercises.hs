@@ -36,7 +36,10 @@ import Data.List -}
 
 dnfExercise :: Exercise Logic
 dnfExercise = standard
-   { shortTitle    = "Proposition to DNF" 
+   { identifier    = "Proposition to DNF" -- TODO: SIMPLIFY!
+   , domain        = "logic"
+   , description   = "Proposition to DNF" 
+   , status        = Stable
    , parser        = \s -> case parseLogicPars s of
                               (p, [])      -> Right (fromRanged p)
                               (_, (a,b):_) -> Left $ "Parse error" ++ 

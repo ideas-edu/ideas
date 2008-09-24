@@ -36,7 +36,7 @@ test:
 # Executable suffix: $(EXE) 
 # GHC interpreter: $(GHCI)
 
-all: solvergui doc laservice service unit-tests wikipages #markup
+all: solvergui laservice service doc wikipages unit-tests markup
 
 SOURCES = src/Common/*.hs src/Service/*.hs src/Domain/*.hs src/Domain/Logic/*.hs \
 	  src/Domain/RelationAlgebra/*.hs src/Domain/Fraction/*.hs \
@@ -57,6 +57,7 @@ $(BINDIR)/solvergui$(EXE): $(SOURCES) $(GLADE)
 #	if [ ! -d $(BINDIR) ] || [ ! -d $(OUTDIR) ]; then mkdir -p $(BINDIR) $(OUTDIR); fi  # AG: possible but overdone
 	mkdir -p $(BINDIR) $(OUTDIR)
 	ghc $(FLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
+	strip $@
 	cp src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
 	cp src/Presentation/ExerciseAssistant/ounl.jpg bin/	
 
@@ -93,6 +94,7 @@ $(HPCDIR)/$(DOCDIR)/hpc_index.html: $(HPCDIR)/$(BINDIR)/solver$(EXE).tix
 $(BINDIR)/laservice.cgi: $(SOURCES)
 	mkdir -p  $(BINDIR) $(OUTDIR)
 	ghc $(FLAGS) -o $@ src/OpenMath/Main.hs
+	strip $@
 
 laservice: $(BINDIR)/laservice.cgi
 
@@ -104,6 +106,7 @@ service: $(BINDIR)/service.cgi
 $(BINDIR)/service.cgi: $(SOURCES)
 	mkdir -p  $(BINDIR) $(OUTDIR)
 	ghc $(FLAGS) -o $@ src/Service/Main.hs
+	strip $@
 
 wikipages: $(BINDIR)/wikipages$(EXE)
 
@@ -160,4 +163,4 @@ clean:
 	rm -rf out
 	rm -rf doc
 	rm -rf hpc
-	find test -name *.out -delete
+	# find test -name *.out -delete

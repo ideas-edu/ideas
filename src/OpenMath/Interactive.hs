@@ -35,8 +35,8 @@ xs ~= ys = let f = map toLower . filter (not . isSpace)
            in f xs == f ys 
            
 makeHTML :: String -> Request -> XML
-makeHTML self req = 
-   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= shortTitle a ] of
+makeHTML self req = -- TODO: use exercise code instead
+   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= description a ] of
       [(Some (ExprExercise a), Incorrect inc)] -> make self a noAnswer inc
       [_] -> Text "request error: invalid request"
       []  -> Text "request error: unknown strategy"

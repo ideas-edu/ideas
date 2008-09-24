@@ -6,7 +6,7 @@ module Common.Rewriting.RewriteRule
    , inverse, bothWays, checkScope
    , rewrite, rewriteM, rewriteWith
    , normalForm, normalFormWith
-   , smartGenerator
+   , smartGenerator, showRewriteRule, showRuleSpec
    ) where
 
 import Common.Uniplate (transform)
@@ -154,3 +154,14 @@ smartGenerator r@(R _ _ _) = do
    list <- vector (IS.size vs) 
    let sub = listToSubst $ zip (IS.toList vs) list
    return (sub |-> a)
+   
+-----------------------------------------------------------
+-- Showing a rewrite-rule
+
+showRewriteRule :: RewriteRule a -> String
+showRewriteRule r@(R _ _ _) = ruleName r ++ ": " ++ showRuleSpec r 
+   
+showRuleSpec :: RewriteRule a -> String
+showRuleSpec r@(R _ _ _) = show lhs ++ " :~> " ++ show rhs
+ where
+   lhs :~> rhs = rulePair r 0 

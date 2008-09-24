@@ -119,7 +119,10 @@ testje2 = isortExpr == fromContext (applyD isortStrategy (inContext undef))
 
 isortExercise :: Exercise Expr
 isortExercise = Exercise   
-   { shortTitle    = "Insertion sort"
+   { identifier    = "isort"
+   , domain        = "programming"
+   , description   = "Insertion sort"
+   , status        = Experimental
    , parser        = \s -> case reads s of  
                              [(a, rest)] | all isSpace rest -> Right a 
                              _ -> Left "parse error"

@@ -13,7 +13,9 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise(..), makeExercise, stepsRemaining
+     Exercise(..), Status(..), makeExercise, stepsRemaining
+     -- * Exercise codes
+   , ExerciseCode, exerciseCode, validateCode
      -- * QuickCheck utilities
    , checkExercise, checkParserPretty
    ) where
@@ -25,21 +27,32 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
 import Control.Monad
+import Data.Char
 import Test.QuickCheck hiding (label, arguments)
 
 data Exercise a = Exercise
-   { shortTitle    :: String
+   { -- identification and meta-information
+     identifier    :: String    -- uniquely determines the exercise (in a given domain)
+   , domain        :: String    -- e.g., math, logic, linalg
+   , description   :: String    -- short sentence describing the task
+   , status        :: Status
+     -- parsing and pretty-printing
    , parser        :: String -> Either String a
    , subTerm       :: String -> Range -> Maybe Location
    , prettyPrinter :: a -> String
+     -- syntactic and semantic checks
    , equivalence   :: a -> a -> Bool
-   , equality      :: a -> a -> Bool -- syntactic equality
+   , equality      :: a -> a -> Bool   -- syntactic equality
    , finalProperty :: a -> Bool
-   , ruleset       :: [Rule (Context a)]
+     -- strategies and rules
    , strategy      :: LabeledStrategy (Context a)
+   , ruleset       :: [Rule (Context a)]
+     -- term generation
    , generator     :: Gen a
    , suitableTerm  :: a -> Bool
    }
+   
+data Status = Stable | Experimental deriving (Show, Eq)
 
 instance Apply Exercise where
    applyAll e a = map fromContext $ applyAll (strategy e) (inContext a)
@@ -47,7 +60,10 @@ instance Apply Exercise where
 -- default values for all fields
 makeExercise :: (Arbitrary a, Eq a, Show a) => Exercise a
 makeExercise = Exercise
-   { shortTitle    = "no short title"
+   { identifier    = "<no identifier>"
+   , domain        = ""
+   , description   = "<no description>"
+   , status        = Experimental
    , parser        = const $ Left "no parser"
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show
@@ -59,7 +75,32 @@ makeExercise = Exercise
    , generator     = arbitrary
    , suitableTerm  = const True
    }
-  
+
+---------------------------------------------------------------
+-- Exercise codes (unique identification)
+
+newtype ExerciseCode = EC String 
+
+exerciseCode :: Exercise a -> ExerciseCode
+exerciseCode ex = EC $ map toLower (domain ex) ++ "." ++ filter p (map toLower (identifier ex))
+ where p c = isAlphaNum c || c `elem` extraSymbols
+
+validateCode :: Exercise a -> Bool
+validateCode ex = all isLower (domain ex) && all p (identifier ex)
+ where p c = isLower c || isDigit c || c `elem` extraSymbols
+
+extraSymbols :: String
+extraSymbols = "-."
+
+instance Show ExerciseCode where
+   show (EC code) = code
+   
+instance Eq ExerciseCode where
+   EC x == EC y = x==y
+   
+instance Ord ExerciseCode where
+   EC x `compare` EC y = x `compare` y
+
 -- Temporarily. To do: replace this function by a Typed Abstract Service  
 stepsRemaining :: Prefix a -> a -> Int
 stepsRemaining p0 a = 
@@ -82,7 +123,7 @@ checkExercise = checkExerciseWith g
 
 checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
 checkExerciseWith f a = do
-   putStrLn ("Checking exercise: " ++ shortTitle a)
+   putStrLn ("Checking exercise: " ++ identifier a)
    let check txt p = putStr ("- " ++ txt ++ "\n    ") >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)

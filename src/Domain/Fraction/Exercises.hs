@@ -22,12 +22,14 @@ import Domain.Fraction.Rules
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import Control.Monad
 import Data.Maybe
 
 simplExercise :: Exercise Frac
 simplExercise = standard
-   { shortTitle    = "Simplifying fractions" 
+   { identifier    = "fraction"
+   , domain        = "math"
+   , description   = "Simplifying fractions" 
+   , status        = Experimental
    , parser        = \s -> case parseFrac s of
                               (p, [])   -> Right p
                               (p, msgs) -> Left  (show msgs)

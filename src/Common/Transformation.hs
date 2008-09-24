@@ -25,7 +25,7 @@ module Common.Transformation
      -- * Rules
    , Rule, name, isMinorRule, isMajorRule, isBuggyRule
    , rule, ruleList, ruleListF, makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
-   , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations
+   , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations, getRewriteRules
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
      -- * QuickCheck
@@ -316,8 +316,7 @@ minorRule r = r {isMinorRule = True}
 buggyRule :: Rule a -> Rule a 
 buggyRule r = r {isBuggyRule = True}
 
--- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
--- can be inversed
+-- | Return the inverse of a transformation. Only rewrite rules can be inversed
 inverseRule :: Rule a -> Maybe (Rule a)
 inverseRule r = do
    ts <- mapM inverseTrans (transformations r)
@@ -325,6 +324,16 @@ inverseRule r = do
       { name = name r ++ " [inverse]"
       , transformations = ts
       }
+
+getRewriteRules :: Rule a -> [Some RewriteRule]
+getRewriteRules = concatMap f . transformations
+ where
+   f :: Transformation a -> [Some RewriteRule]
+   f trans =
+      case trans of
+         RewriteRule r -> [Some r]      
+         Lift _ t      -> f t
+         _             -> []
 
 -----------------------------------------------------------
 --- Lifting

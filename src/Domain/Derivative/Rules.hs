@@ -43,27 +43,27 @@ pow = binaryFunction "power"
 -- Rules for Diffs
 
 ruleSine :: Rule Expr
-ruleSine = rule "Sine Rule" $ 
+ruleSine = rule "Sine" $ 
    \x -> diff (lambda x (sin x))  :~>  lambda x (cos x)
 
 ruleLog :: Rule Expr
-ruleLog = rule "Logarithmic Rule" $
+ruleLog = rule "Logarithmic" $
    \x -> diff (lambda x (ln x))  :~>  lambda x (1/x)
        
 ruleDerivPlus :: Rule Expr
-ruleDerivPlus = rule "Sum Rule" $
+ruleDerivPlus = rule "Sum" $
    \x f g -> diff (lambda x (f + g))  :~>  diff (lambda x f) + diff (lambda x g)
 
 ruleDerivVar :: Rule Expr
-ruleDerivVar = rule "Var Rule" $
+ruleDerivVar = rule "Var" $
    \x -> diff (lambda x x)  :~>  1
 
 ruleDerivProduct :: Rule Expr
-ruleDerivProduct = rule "Product Rule" $
+ruleDerivProduct = rule "Product" $
    \x f g -> diff (lambda x (f * g))  :~>  f*diff (lambda x g) + g*diff (lambda x f)
        
 ruleDerivQuotient :: Rule Expr
-ruleDerivQuotient = rule "Quotient Rule" $ 
+ruleDerivQuotient = rule "Quotient" $ 
    \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g `pow` 2)
 
 {- ruleDerivChain :: Rule Expr
@@ -75,13 +75,13 @@ ruleDerivChain = rule "Chain Rule" f
 -- Special rules (not defined with unification)
 
 ruleDerivCon :: Rule Expr
-ruleDerivCon = makeSimpleRule "Constant Term Rule" f
+ruleDerivCon = makeSimpleRule "Constant Term" f
  where 
    f (Sym "Diff" [Sym "Lambda" [Var v, e]]) | v `notElem` collectVars e = return 0
    f _ = Nothing
  
 ruleDerivMultiple :: Rule Expr
-ruleDerivMultiple = makeSimpleRule "Constant Multiple Rule" f
+ruleDerivMultiple = makeSimpleRule "Constant Multiple" f
  where 
     f (Sym "Diff" [Sym "Lambda" [x@(Var v), n :*: e]]) | v `notElem` collectVars n = 
        return $ n * diff (lambda x e)
@@ -90,7 +90,7 @@ ruleDerivMultiple = makeSimpleRule "Constant Multiple Rule" f
     f _ = Nothing 
 
 ruleDerivPower :: Rule Expr
-ruleDerivPower = makeSimpleRule "Power Rule" f
+ruleDerivPower = makeSimpleRule "Power" f
  where 
    f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "power" [x1, n]]]) |x==x1 && v `notElem` collectVars n =
       return $ n * (x `pow` (n-1)) 

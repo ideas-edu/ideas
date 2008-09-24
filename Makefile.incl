@@ -1,0 +1,69 @@
+#---------------------------------------------------------------------------------------
+# Diagnosing shell environment
+
+# On Windows machines (under cygwin), ghc automatically puts the .exe suffix after
+# all executables it generates. This gives some problems when we have to call this
+# executable later on. Hence, we first test whether we are on a windows machine or 
+# not (check whether Win32 is listed under ghc's installed packages).
+#
+# on Windows: EXE = .exe
+# otherwise:  EXE = 
+
+WINDOWS = $(shell ghc-pkg list | grep -q Win32 && echo yes || echo no)
+GTK     = $(shell ghc-pkg list | grep -q gtk   && echo yes || echo no)
+
+ifeq ($(WINDOWS), yes)
+EXE  = .exe
+GHCI = ghcii.sh
+else
+EXE  = 
+GHCI = ghci
+endif
+
+status:
+	# Windows OS: $(WINDOWS)
+	# Executable suffix: $(EXE)
+	# GHC interpreter: $(GHCI)
+	# Support for GTK: $(GTK)
+
+#---------------------------------------------------------------------------------------
+# Directories that have to be created
+
+BINDIR  = bin
+OUTDIR  = out
+DOCDIR  = doc
+TESTDIR = test
+
+#---------------------------------------------------------------------------------------
+# Source files
+
+HS-SOURCES = $(wildcard $(SRCDIR)/*.hs $(SRCDIR)/*/*.hs $(SRCDIR)/*/*/*.hs)
+GLADE-SOURCES = $(wildcard src/Presentation/ExerciseAssistant/*.glade*)
+	
+#---------------------------------------------------------------------------------------
+# Programs, tools, and flags
+
+GHC        = ghc
+GHCWARN    = -W -fwarn-tabs -fwarn-duplicate-exports # -fwarn-orphans -fwarn-missing-signatures
+GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
+HADDOCK    = haddock
+HPC        = hpc
+RUNHASKELL = runhaskell
+
+LHS2TEX    = lhs2TeX
+
+TOUCH = touch
+STRIP = strip
+MKDIR = mkdir
+CP    = cp
+RM    = rm
+CD    = cd
+
+#---------------------------------------------------------------------------------------
+# General rules
+
+%.pdf: %.tex
+	pdflatex $<
+
+%.tex: %.lhs
+	$(LHS2TEX) --poly $< > $@

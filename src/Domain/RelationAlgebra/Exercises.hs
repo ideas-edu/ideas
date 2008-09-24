@@ -27,7 +27,7 @@ import Test.QuickCheck hiding (label)
 cnfExercise :: Exercise RelAlg
 cnfExercise = makeExercise
    { identifier    = "cnf"
-   , domain        = "logic"
+   , domain        = "relationalg"
    , description   = "To conjunctive normal form"
    , status        = Experimental
    , parser        = \s -> case parseRelAlg s of

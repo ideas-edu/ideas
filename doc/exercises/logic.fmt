@@ -1,0 +1,12 @@
+%format :||:  = "\mathbin{\vee}"
+%format :&&:  = "\mathbin{\wedge}"
+%format :->:  = "\mathbin{\rightarrow}"
+%format :<->: = "\mathbin{\leftrightarrow}"
+%format Not   = "\neg"
+%format Var a = a
+%format T     = "T"
+%format F     = "F"
+%format _0    = "p"
+%format _1    = "q"
+%format _2    = "r"
+%format _3    = "s"

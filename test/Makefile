@@ -40,3 +40,10 @@ xml-request/%.out: xml-request/%.xml $(BINDIR)/service.cgi
 	
 %.exp: %.out
 	cp $^ $@
+	
+#---------------------------------------------------------------------------------------
+# Cleaning up
+
+clean:
+	$(RM) -f *.out
+	$(RM) -f */*.out

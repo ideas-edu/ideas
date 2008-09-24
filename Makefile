@@ -58,9 +58,14 @@ run: solvergui
 nolicense:
 	find src -name *.hs -print0 | xargs --null grep -L "LICENSE"\
 	
+#---------------------------------------------------------------------------------------
+# Cleaning up
+	
 clean:
-	# to do
-	# find test -name *.out -delete
+	$(RM) -rf $(BINDIR)
+	$(RM) -rf $(OUTDIR)
+	make -C $(DOCDIR)  clean
+	make -C $(TESTDIR) clean
 	
 #---------------------------------------------------------------------------------------
 # OLD

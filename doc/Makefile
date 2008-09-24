@@ -48,3 +48,12 @@ $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 	$(MKDIR) -p $(COVERAGEDIR)
 	$(HPC) markup --hpcdir=$(HPCTMPDIR) --destdir=$(COVERAGEDIR) $(HPCTMPDIR)/checks$(EXE)
+	
+#---------------------------------------------------------------------------------------
+# Cleaning up
+
+clean:
+	$(RM) -rf coverage
+	$(RM) -rf wikipages
+	$(RM) -f  haddock/*.html haddock/*.gif haddock/*.css haddock/*.js
+	make -C $(EXERCISEDIR) clean

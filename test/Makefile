@@ -1,5 +1,5 @@
-default: tests
-all: tests
+default: test.log
+all: test.log
 
 include ../Makefile.incl
 
@@ -21,12 +21,14 @@ ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
 #---------------------------------------------------------------------------------------
 # Testing
 
-tests: $(ALL-OUT)
+test.log: $(ALL-OUT)
 	# --- Unit Tests ------------------------
 	@for i in $(ALL-WITHOUT); do \
 	  echo $$i; \
+	  echo $$i >> test.log; \
 	  if $(WINDOWS)==no; then dos2unix $$i.exp &> /dev/null; fi; \
 	  diff -I "version=" $$i.out $$i.exp; \
+	  diff -I "version=" $$i.out $$i.exp >> test.log; \
 	done;
 
 mathdox-request/%.out: mathdox-request/%.txt $(BINDIR)/service.cgi
@@ -45,5 +47,6 @@ xml-request/%.out: xml-request/%.xml $(BINDIR)/service.cgi
 # Cleaning up
 
 clean:
+	$(RM) test.log
 	$(RM) -f *.out
 	$(RM) -f */*.out

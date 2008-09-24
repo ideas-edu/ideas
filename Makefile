@@ -33,18 +33,18 @@ endif
 #---------------------------------------------------------------------------------------
 # Other directories
 
-documentation: $(DOCDIR)
+documentation: doc
 
 $(DOCDIR): $(HS-SOURCES)	
 	make -C $(DOCDIR) || exit 1
 	$(TOUCH) $(DOCDIR) # To get a timestamp
 
-unit-tests: $(TESTDIR)
+unit-tests: $(TESTDIR)/test.log
+test: $(TESTDIR)/test.log
 
-$(TESTDIR): $(HS-SOURCES) $(BINDIR)/service.cgi
+$(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/service.cgi
 	make -C $(TESTDIR) || exit 1
-	$(TOUCH) $(TESTDIR) # To get a timestamp
-	
+
 #---------------------------------------------------------------------------------------
 # Helper targets
 

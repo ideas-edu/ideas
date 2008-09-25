@@ -11,7 +11,7 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Exercises where
+module Domain.Logic.Exercises (dnfExercise) where
 
 import Domain.Logic.Generator
 import Domain.Logic.Formula
@@ -25,18 +25,9 @@ import Common.Parsing (fromRanged, subExpressionAt)
 import Control.Monad
 import Data.Maybe
 
-{-
-import Test.QuickCheck hiding (check)
-import Data.List -}
-{- generator
-* max. 1 equivalentie
-* min. 4 stappen (dus niet in DNF)
-* geen T/F in formule
-* max. ?? stappen
--}
-
+-- Currently, we use the DWA strategy
 dnfExercise :: Exercise Logic
-dnfExercise = standard
+dnfExercise = Exercise
    { identifier    = "Proposition to DNF" -- TODO: SIMPLIFY!
    , domain        = "logic"
    , description   = "Proposition to DNF" 
@@ -52,12 +43,9 @@ dnfExercise = standard
    , equivalence   = eqLogic
    , equality      = equalLogicAC
    , finalProperty = isDNF
-   , ruleset       = map liftRuleToContext logicRules
-   , strategy      = toDNFDWA
+   , ruleset       = map liftRuleToContext (logicRules ++ buggyRules)
+   , strategy      = toDNF_DWA
    , generator     = generateLogic
-   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF) (inContext p)
+   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
                            in countEquivalences p < 2 && n >= 4 && n <= 12
    }
- where
-   standard :: Exercise (Context Logic)
-   standard = makeExercise

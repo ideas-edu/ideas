@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Rules 
-   ( logicRules, logicBuggyRules
+   ( logicRules, buggyRules
    , ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
    , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
    , ruleDefImpl, ruleDefEquiv
@@ -42,9 +42,10 @@ logicRules =
    , ruleCommOr, ruleCommAnd
    ]
 
-logicBuggyRules :: [Rule Logic]
-logicBuggyRules = 
-   [ buggyRuleCommImp, buggyRuleAssImp
+buggyRules :: [Rule Logic]
+buggyRules = 
+   [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui, buggyRuleEquivElim
+   , buggyRuleImplElim, buggyRuleDeMorgan, buggyRuleNotOverImpl, buggyRuleParenth, buggyRuleAssoc
    ]
 
 -----------------------------------------------------------------------------
@@ -173,7 +174,7 @@ ruleCommAnd = rule "CommAnd" $
    \x y -> (x :&&: y)  :~>  (y :&&: x)
     
 -- Buggy rules:
-
+   
 buggyRuleCommImp :: Rule Logic 
 buggyRuleCommImp = buggyRule $ rule "CommImp" $
    \x y -> (x :->: y)  :~>  (y :->: x) --this does not hold: T->T => T->x

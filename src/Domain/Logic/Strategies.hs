@@ -11,65 +11,17 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Strategies where
+module Domain.Logic.Strategies (toDNF, toDNF_DWA) where
 
 import Prelude hiding (repeat)
 import Domain.Logic.Rules
 import Domain.Logic.Formula
 import Common.Context (Context, liftRuleToContext)
+import Common.Transformation
 import Common.Strategy
 
-eliminateConstants :: Strategy (Context Logic)
-eliminateConstants = repeat $ topDown $
-   alternatives $ map liftRuleToContext rules
- where 
-   rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
-           , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
-           , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-           ]
-
-eliminateConstantsDWA :: Strategy (Context Logic)
-eliminateConstantsDWA = somewhere $
-   alternatives $ map liftRuleToContext rules
- where 
-   rules = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
-           , ruleFalseZeroAnd, ruleNotBoolConst
-           ]
-
-simplifyDWA :: Strategy (Context Logic)
-simplifyDWA = somewhere $
-          liftRuleToContext ruleNotNot
-      <|> liftRuleToContext ruleIdempOr
-      <|> liftRuleToContext ruleIdempAnd
-      <|> liftRuleToContext ruleAbsorpOr
-      <|> liftRuleToContext ruleAbsorpAnd
-
-eliminateImplEquiv :: Strategy (Context Logic)
-eliminateImplEquiv = repeat $ bottomUp $
-          liftRuleToContext ruleDefImpl
-      <|> liftRuleToContext ruleDefEquiv
-
-eliminateImplEquivDWA :: Strategy (Context Logic)
-eliminateImplEquivDWA = somewhere $
-          liftRuleToContext ruleDefImpl
-      <|> liftRuleToContext ruleDefEquiv
-      
-eliminateNots :: Strategy (Context Logic)
-eliminateNots = repeat $ topDown $ 
-          liftRuleToContext ruleDeMorganAnd
-      <|> liftRuleToContext ruleDeMorganOr
-      <|> liftRuleToContext ruleNotNot
-
-eliminateNotsDWA :: Strategy (Context Logic)
-eliminateNotsDWA = somewhere $ 
-          liftRuleToContext ruleDeMorganAnd
-      <|> liftRuleToContext ruleDeMorganOr
-      
-orToTop :: Strategy (Context Logic)
-orToTop = repeat $ somewhere $ liftRuleToContext ruleAndOverOr
-
-orToTopDWA :: Strategy (Context Logic)
-orToTopDWA = somewhere $ liftRuleToContext ruleAndOverOr
+-----------------------------------------------------------------------------
+-- To DNF, in four steps
 
 toDNF :: LabeledStrategy (Context Logic)
 toDNF =  label "Bring to dnf"
@@ -77,10 +29,45 @@ toDNF =  label "Bring to dnf"
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv
      <*> label "Eliminate nots"                      eliminateNots 
      <*> label "Move ors to top"                     orToTop
-     
-toDNFDWA :: LabeledStrategy (Context Logic)
-toDNFDWA =  label "Bring to dnf" $ repeat $
-      label "Simplify"                            (eliminateConstantsDWA <|> simplifyDWA)
-   |> label "Eliminate implications/equivalences" eliminateImplEquivDWA
-   |> label "Eliminate nots"                      eliminateNotsDWA
-   |> label "Move ors to top"                     orToTopDWA
+ where
+   eliminateConstants = repeat $ topDown $ useRules
+      [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
+      , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
+      , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
+      ]
+   eliminateImplEquiv = repeat $ bottomUp $ useRules
+      [ ruleDefImpl, ruleDefEquiv 
+      ] 
+   eliminateNots = repeat $ topDown $ useRules
+      [ ruleDeMorganAnd, ruleDeMorganOr, ruleNotNot
+      ]
+   orToTop = repeat $ somewhere $ liftRuleToContext 
+      ruleAndOverOr
+
+-----------------------------------------------------------------------------
+-- To DNF, with priorities (the "DWA" approachs)
+
+toDNF_DWA :: LabeledStrategy (Context Logic)
+toDNF_DWA =  label "Bring to dnf (DWA)" $ 
+   repeat $  label "Simplify"                            simplify
+          |> label "Eliminate implications/equivalences" eliminateImplEquiv
+          |> label "Eliminate nots"                      eliminateNots
+          |> label "Move ors to top"                     orToTop
+ where
+    simplify =  somewhere $ useRules
+       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
+       , ruleFalseZeroAnd, ruleNotBoolConst
+       , ruleNotNot, ruleIdempOr, ruleIdempAnd, ruleAbsorpOr, ruleAbsorpAnd
+       ]
+    eliminateImplEquiv = somewhere $ useRules
+       [ ruleDefImpl, ruleDefEquiv
+       ]
+    eliminateNots = somewhere $ useRules
+       [ ruleDeMorganAnd, ruleDeMorganOr
+       ]
+    orToTop = somewhere $ liftRuleToContext 
+       ruleAndOverOr
+      
+-- local helper function
+useRules :: [Rule Logic] -> Strategy (Context Logic)
+useRules = alternatives . map liftRuleToContext

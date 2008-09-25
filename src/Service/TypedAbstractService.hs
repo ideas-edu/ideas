@@ -81,7 +81,7 @@ onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
-   let check r = Apply.applicable r (setLocation loc (context state))
+   let check r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (context state))
    in filter check (ruleset (exercise state))
 
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 

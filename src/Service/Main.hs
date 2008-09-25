@@ -15,7 +15,7 @@
 module Main (main) where
 
 import Common.Logging
-import Common.Utils (stringToHex)
+import Common.Utils (stringToHex, useFixedStdGen)
 import Service.Options
 import Service.ModeXML  (processXML)
 import Service.ModeJSON (processJSON)
@@ -39,7 +39,8 @@ main :: IO ()
 main = do
    flags <- serviceOptions
    case withInputFile flags of
-      Just file -> do 
+      Just file -> do  
+         useFixedStdGen                 -- use a predictable "random" number generator
          input    <- readFile file
          (txt, _) <- process Nothing Nothing flags input
          putStrLn txt

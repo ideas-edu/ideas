@@ -126,7 +126,7 @@ submit state new
       in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (term state) new)) of
               Just r  -> Detour [r] newState
               Nothing -> Unknown newState
-   
+
 -- local helper-function
 findRules :: Exercise a -> a -> a -> [Rule (Context a)]
 findRules ex old new =

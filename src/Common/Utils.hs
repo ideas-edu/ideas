@@ -97,6 +97,11 @@ safeIndex 0 (x:_)  = return x
 safeIndex n (_:xs) = safeIndex (n-1) xs
 safeIndex _ _      = Nothing -}
 
+-- | Use a fixed standard "random" number generator. This generator is
+-- accessible by calling System.Random.getStdGen
+useFixedStdGen :: IO ()
+useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
+
 trim :: String -> String
 trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
 

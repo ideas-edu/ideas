@@ -2,7 +2,7 @@
    "result": [
       "To conjunctive normal form",
       "[]",
-      "(U~ ! ((r ! r)~ ! (U ! r)~) ; E)~ ! ((((q ; U)- \\/ E~ ! (U \\/ U))- \\/ E~~ ; (U \\/ U)- /\\ (E ; E)- ; s) /\\ ((U ; U ! q ! U \\/ E ; E /\\ E-) \\/ (r \\/ U~) ! q ! q ; q) ! (((U /\\ s) ; q- /\\ U~-) /\\ r))",
+      "(U- ! s ; q) ; (r /\\ q) ; E-~ \\/ ((s ; s) ; (r ! q)) ; (s ; r)- /\\ ((r ! r) ! q ! E) ; q ; q ; s",
       "[];"
    ],
    "error": null,

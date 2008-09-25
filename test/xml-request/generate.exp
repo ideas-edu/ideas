@@ -15,11 +15,11 @@
             <OMV name="x"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="arith1" name="power"/>
-            <OMV name="x"/>
+            <OMS cd="arith1" name="times"/>
             <OMI>
               2
             </OMI>
+            <OMV name="x"/>
           </OMA>
         </OMBIND>
       </OMA>

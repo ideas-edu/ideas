@@ -12,7 +12,18 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Rules where
+module Domain.Logic.Rules 
+   ( logicRules, logicBuggyRules
+   , ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
+   , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
+   , ruleDefImpl, ruleDefEquiv
+   , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
+   , ruleComplOr, ruleComplAnd
+   , ruleIdempOr, ruleIdempAnd
+   , ruleAbsorpOr, ruleAbsorpAnd
+   , ruleCommOr, ruleCommAnd
+   , buggyRuleCommImp, buggyRuleAssImp
+   ) where
 
 import Domain.Logic.Formula
 import Common.Transformation

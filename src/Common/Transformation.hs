@@ -370,16 +370,14 @@ instance Lift Rule where
 
 -- | Check the soundness of a rule: the equality function is passed explicitly
 checkRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-checkRule eq rule = do
-   putStr $ "[" ++ name rule ++ "] "
+checkRule eq rule =
    quickCheck (propRule arbitrary eq rule)
 
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
 checkRuleSmart :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-checkRuleSmart eq rule = do
-   putStr $ "[" ++ name rule ++ "] "
+checkRuleSmart eq rule =
    quickCheck (propRule (smartGen rule) eq rule)
   
 propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> (a -> Bool) -> Property

@@ -17,7 +17,13 @@ EXERCISEDIR = exercises
 COVERAGEDIR = coverage
 
 #---------------------------------------------------------------------------------------
-# 
+# Profiling during coverage analysis (with hpc)
+
+PROFILEFLAGS = # -prof -auto-all
+PROFILERTS   = # +RTS -p -hc
+
+#---------------------------------------------------------------------------------------
+# Documentation targets 
 
 documentation: haddock wikipages pdfdocs hpc
 
@@ -40,10 +46,13 @@ $(EXERCISEDIR): $(HS-SOURCES)
 
 $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	$(MKDIR) -p $(HPCTMPDIR)
-	$(GHC) -fhpc --make -hpcdir $(HPCTMPDIR) -i$(SRCDIR) -odir $(HPCTMPDIR) -hidir $(HPCTMPDIR) -o $@ $(SRCDIR)/Common/Checks.hs
+	$(GHC) -fhpc --make $(PROFILEFLAGS) -hpcdir $(HPCTMPDIR) \
+	   -i$(SRCDIR) -odir $(HPCTMPDIR) -hidir $(HPCTMPDIR) \
+	   -o $@ $(SRCDIR)/Common/Checks.hs
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
-	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix; $(CD) $(HPCTMPDIR); ./checks$(EXE);
+	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix
+	$(CD) $(HPCTMPDIR); ./checks$(EXE) ../../test $(PROFILERTS) || ($(RM) -f checks$(EXE).tix; exit 1);
 	
 $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 	$(MKDIR) -p $(COVERAGEDIR)

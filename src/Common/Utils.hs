@@ -126,6 +126,12 @@ primes = rec [2..]
  where
    rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
 
+putLabel :: String -> IO ()
+putLabel = putStr . take 40 . (++ repeat ' ')
+
+reportTest :: String -> Bool -> IO ()
+reportTest s b = putLabel s >> putStrLn (if b then "OK" else "FAILED")
+
 instance Show (a -> b) where
    show _ = "<function>"
    

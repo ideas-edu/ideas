@@ -1,5 +1,5 @@
 module Common.Rewriting.Confluence 
-   ( confluence, confluenceWith, confluentFunction
+   ( isConfluent, confluence, confluenceWith, confluentFunction
    , testConfluence, testConfluenceWith, testConfluentFunction
    ) where
 
@@ -56,6 +56,9 @@ reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
       ]
 
 ----------------------------------------------------
+
+isConfluent :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> Bool
+isConfluent f rs = null $ noDiamondPairs f rs
 
 confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> IO ()
 confluentFunction f rs = reportPairs $ noDiamondPairs f rs

@@ -104,7 +104,7 @@ instance Ord ExerciseCode where
 -- Temporarily. To do: replace this function by a Typed Abstract Service  
 stepsRemaining :: Prefix a -> a -> Int
 stepsRemaining p0 a = 
-   case safeHead (runPrefixLocation [] p0 a) of -- run until the end
+   case safeHead (runPrefix p0 a) of -- run until the end
       Nothing -> 0
       Just (_, prefix) ->
          length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
@@ -118,13 +118,12 @@ stepsRemaining p0 a =
 
 checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
 checkExercise = checkExerciseWith g 
- where
-   g eq = checkRuleSmart $ \x y -> fromContext x `eq` fromContext y
+ where g eq = checkRuleSmart $ \x y -> fromContext x `eq` fromContext y
 
 checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
-checkExerciseWith f a = do
-   putStrLn ("Checking exercise: " ++ identifier a)
-   let check txt p = putStr ("- " ++ txt ++ "\n    ") >> quickCheck p
+checkExerciseWith f a = do 
+   putStrLn ("** " ++ identifier a ++ " **")
+   let check txt p = putLabel txt >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)
    {- check "equality relation" $ 
@@ -134,21 +133,20 @@ checkExerciseWith f a = do
    check "equality/equivalence" $ \x -> 
       forAll (similar (ruleset a) x) $ \y ->
       equality a x y ==> equivalence a x y -}
-   putStrLn "- Soundness non-buggy rules" 
+   putStrLn "Soundness non-buggy rules" 
    flip mapM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
-      putStr "    " >> f (equivalence a) r
+      putLabel ("    " ++ name r) >> f (equivalence a) r
    check "non-trivial terms" $ 
-      forAll (sized $ \_ -> generator a) $ \x -> 
+      forAll (generator a) $ \x -> 
       let trivial  = finalProperty a x
           rejected = not (suitableTerm a x) && not trivial
           suitable = suitableTerm a x && not trivial in
       classify trivial  "trivial"  $
       classify rejected "rejected" $
-      classify suitable "suitable" $ property True
+      classify suitable "suitable" $ property True 
    check "soundness strategy/generator" $ 
       forAll (generator a) $ \x -> 
       finalProperty a (fromContext $ applyD (strategy a) (inContext x))
-      
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool

@@ -14,10 +14,13 @@
 module Main (main) where
 
 import Directory
+import Common.Utils (reportTest, useFixedStdGen)
 import Common.Exercise
 import Common.Grammar
 import Common.Rewriting
 import Common.Transformation
+import Control.Monad
+import System.Environment
 
 import qualified Domain.Logic as Logic
 import qualified Domain.LinearAlgebra as LA
@@ -32,11 +35,11 @@ import Data.List
 
 main :: IO ()
 main = do
-   putStrLn "\n...checking grammar combinators"
+   putStrLn "I) Domain checks"
    Common.Grammar.checks
    LA.checks
-   
-   putStrLn "\n...checking exercises"
+
+   putStrLn "II) Exercise checks"
    checkExercise Logic.dnfExercise
    checkExercise LA.reduceMatrixExercise
    checkExercise LA.solveSystemExercise
@@ -44,17 +47,17 @@ main = do
    checkExercise LA.solveGramSchmidt
    checkExercise RA.cnfExercise
    checkExercise Fraction.simplExercise
-   
-   -- checking confluence
+
+   putStrLn "III) Confluence checks"
    logicConfluence
    
-   -- unit-tests
+   putStrLn "IV) Unit tests"
    mathdoxRequests
    jsonRPCs
    xmlRequests
 
 logicConfluence :: IO ()
-logicConfluence = confluentFunction f rs
+logicConfluence = reportTest "logic rules" (isConfluent f rs)
  where
    f    = normalizeWith ops . normalFormWith ops rs
    ops  = map makeCommutative Logic.logicOperators
@@ -62,50 +65,32 @@ logicConfluence = confluentFunction f rs
    rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
    
-mathdoxRequests :: IO ()
-mathdoxRequests = do
-   xs <- getDirectoryContents path
-   let names = map f $ filter (".txt" `isSuffixOf`) xs
-       f = reverse . drop 4 . reverse
-   mapM_ oneRequest names
- where
-   path = "../../test/mathdox-request"
-   oneRequest base = do
-      putStr $ take 40 (base ++ ".txt" ++ repeat ' ')
-      txt <- readFile $ path ++ "/" ++ base ++ ".txt"
+mathdoxRequests, jsonRPCs, xmlRequests :: IO ()
+mathdoxRequests = testRequests (return . LAServer.respond . Just)       "mathdox-request" ".txt"
+jsonRPCs        = testRequests (liftM fst . ModeJSON.processJSON)       "json-rpc"        ".json"
+xmlRequests     = testRequests (liftM fst . ModeXML.processXML Nothing) "xml-request"     ".xml"
+
+testRequests :: (String -> IO String) -> String -> String -> IO ()
+testRequests eval subDir suffix = do
+   path <- makePath subDir
+   xs   <- getDirectoryContents path
+   let names = map f $ filter (suffix `isSuffixOf`) xs
+       f = reverse . drop (length suffix) . reverse
+   flip mapM_ names $ \base -> do
+      useFixedStdGen -- fix the random number generator
+      txt <- readFile $ path ++ "/" ++ base ++ suffix
       exp <- readFile $ path ++ "/" ++ base ++ ".exp"
-      let out = LAServer.respond (Just txt)
-      putStrLn $ if filterVersion out == filterVersion exp then "ok" else "failed"
-
-jsonRPCs :: IO ()
-jsonRPCs = do
-   xs <- getDirectoryContents path
-   let names = map f $ filter (not . ("generate" `isPrefixOf`)) $ filter (".json" `isSuffixOf`) xs
-       f = reverse . drop 5 . reverse
-   mapM_ oneRequest names
+      out <- eval txt
+      reportTest (base ++ suffix) (out ~= exp)
  where
-   path = "../../test/json-rpc"
-   oneRequest base = do
-      putStr $ take 40 (base ++ ".json" ++ repeat ' ')
-      json     <- readFile $ path ++ "/" ++ base ++ ".json"
-      exp      <- readFile $ path ++ "/" ++ base ++ ".exp"
-      (out, _) <- ModeJSON.processJSON json
-      putStrLn $ if filterVersion out == filterVersion exp then "ok" else "failed"
-
-xmlRequests :: IO ()
-xmlRequests = do
-   xs <- getDirectoryContents path
-   let names = map f $ filter (not . ("generate" `isPrefixOf`)) $ filter (".xml" `isSuffixOf`) xs
-       f = reverse . drop 4 . reverse
-   mapM_ oneRequest names
- where
-   path = "../../test/xml-request"
-   oneRequest base = do
-      putStr $ take 40 (base ++ ".xml" ++ repeat ' ')
-      xml      <- readFile $ path ++ "/" ++ base ++ ".xml"
-      exp      <- readFile $ path ++ "/" ++ base ++ ".exp"
-      (out, _) <- ModeXML.processXML Nothing xml
-      putStrLn $ if filterVersion out == filterVersion exp then "ok" else "failed"
-
-filterVersion :: String -> String
-filterVersion = unlines . filter (not . null) . filter (not . ("version" `isInfixOf`)) . lines
+   x ~= y = filterVersion x == filterVersion y
+ 
+   filterVersion :: String -> String
+   filterVersion = unlines . filter (not . null) . filter (not . ("version" `isInfixOf`)) . lines
+   
+   makePath :: String -> IO String
+   makePath s = do
+      args <- getArgs 
+      case args of
+         []  -> return $ "test/"  ++ s
+         x:_ -> return $ x ++ "/" ++ s

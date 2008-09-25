@@ -56,13 +56,16 @@ backSubstitution = label "Back substitution" $
    
 systemToEchelonWithEEO :: (Argument a, IsLinear a) => LabeledStrategy (Context (LinearSystem a))
 systemToEchelonWithEEO = label "System to Echelon Form (EEO)" $
-   repeat $   label "Inconsistent system (0=1)" ruleInconsistentSystem
-          <|> label "Drop (0=0) equation"       ruleDropEquation
+   repeat $   dropEquation
           <|> check (not . null . remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
           <*> label "Eliminate variable"        (repeat ruleEliminateVar)
           <*> label "Cover up first equation"   ruleCoverUpEquation
+
+dropEquation :: (Argument a, IsLinear a) => Strategy (Context (LinearSystem a))
+dropEquation  =  label "Inconsistent system (0=1)" ruleInconsistentSystem
+             <|> label "Drop (0=0) equation"       ruleDropEquation
 
 generalSolutionLinearSystem :: (Argument a, IsLinear a) => LabeledStrategy (Context (LinearSystem a))
 generalSolutionLinearSystem = label "General solution to a linear system" $
@@ -71,7 +74,11 @@ generalSolutionLinearSystem = label "General solution to a linear system" $
 
 generalSolutionSystemWithMatrix :: (Argument a, IsLinear a) => LabeledStrategy (Context (Either (LinearSystem a) (Matrix a)))
 generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
-   conv1 <*> liftRight toReducedEchelon <*> conv2
+       repeat (liftLeft dropEquation) 
+   <*> conv1 
+   <*> liftRight toReducedEchelon 
+   <*> conv2 
+   <*> repeat(liftLeft dropEquation)
 
 gramSchmidt :: Floating a => LabeledStrategy (Context [Vector a])
 gramSchmidt = label "Gram-Schmidt" $ repeat $ label "Iteration" $
@@ -92,11 +99,10 @@ conv2 = translationFromContext "Matrix to linear system" $ \c ->
    let linsys = matrixToSystemWith (get vars c) (fromContext c)
    in return $ fmap (const linsys) c 
    
-liftLeft :: LabeledStrategy (Context a) -> LabeledStrategy (Context (Either a b))
-liftLeft = lift $
-   makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
+liftLeft :: (IsStrategy f, Lift f) => f (Context a) -> f (Context (Either a b))
+liftLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
 
-liftRight :: LabeledStrategy (Context b) -> LabeledStrategy (Context (Either a b))
+liftRight :: (IsStrategy f, Lift f) => f (Context b) -> f (Context (Either a b))
 liftRight = lift $ 
    makeLiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
 

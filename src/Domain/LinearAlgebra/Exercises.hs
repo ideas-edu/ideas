@@ -76,7 +76,7 @@ solveSystemExercise = makeExercise
    , finalProperty = inSolvedForm
    , strategy      = generalSolutionLinearSystem
    , generator     = do m <- generator reduceMatrixExercise
-                        return $ forget1 $ matrixToSystem m
+                        return $ forgetList $ matrixToSystem m
    }
    
 reduceMatrixExercise :: Exercise (Matrix SExpr)
@@ -103,17 +103,16 @@ solveSystemWithMatrixExercise = makeExercise
    , description   = "Solve Linear System with Matrix"
    , status        = Stable
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
-                              (Right ok, _) -> Right $ Left $ forget2 ok
+                              (Right ok, _) -> Right $ Left $ forgetList ok
                               (_, Right ok) -> Right $ Right ok
                               (Left _, Left _) -> Left "Error" -- FIX THIS
    , prettyPrinter = either (unlines . map show) ppMatrix
-   , equivalence   = \x y -> let f = applyD toReducedEchelon . inContext
-                                 g = f . either (fst . systemToMatrix) id
-                             in g x == g y
+   , equivalence   = \x y -> let f = either forgetList (forgetList . matrixToSystem)
+                             in equivalence solveSystemExercise (f x) (f y)
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
    , finalProperty = either inSolvedForm (const False)
    , strategy      = generalSolutionSystemWithMatrix
-   , generator     = liftM (Left . forget2) (generator solveSystemExercise)
+   , generator     = liftM (Left . forgetList) (generator solveSystemExercise)
    }
 
 opgave6b :: Exercise (Matrix SExpr)
@@ -132,11 +131,8 @@ opgaveVarMatrix = reduceMatrixExercise
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 
-forget1 :: Equations SExpr -> Equations SExprLin
-forget1 = map (fmap forget)
-   
-forget2 :: LinearSystem SExprLin -> LinearSystem SExpr
-forget2 = map (fmap forget)
+forgetList :: Functor f => [f (SExprF a)] -> [f (SExprF b)]
+forgetList xs = map (fmap forget) xs
 
 instance Simplification a => Argument (SExprF a) where
    makeArgDescr = argDescrSExpr

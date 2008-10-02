@@ -26,7 +26,7 @@ module Common.Grammar
      -- * Additional functions
    , collectSymbols, join, withIndex
      -- * QuickCheck properties
-   , checks
+   , checks, inverse
    ) where
 
 import Prelude hiding (fail)
@@ -100,7 +100,7 @@ rec i s = if i `S.member` freeVars s then Rec i s else s
 -- VERY powerfull, and it is your own responsibility that the result
 -- is a valid, non-left-recursive grammar
 fix :: (Grammar a -> Grammar a) -> Grammar a
-fix f = rec i (f (Var i)) -- disadvantage: function f is applied twice
+fix f = Rec i (f (Var i)) -- disadvantage: function f is applied twice
  where
    s = allVars (f Succeed)
    i = if S.null s then 0 else S.findMax s + 1
@@ -108,7 +108,12 @@ fix f = rec i (f (Var i)) -- disadvantage: function f is applied twice
 -- | Zero or more occurrences
 many :: Grammar a -> Grammar a
 many s = rec 0 (succeed <|> (nonempty s <*> var 0))
-
+{- TODO: deal with free variables?
+many s = rec i (succeed <|> (nonempty s <*> var i))
+ where
+   vs = freeVars s
+   i  = if S.null vs then 0 else 1 + S.findMax vs -}
+   
 ----------------------------------------------------------------------
 -- Elementary operations
 
@@ -247,8 +252,78 @@ mapSymbol _ Fail        =  Fail
 ----------------------------------------------------------------------
 -- Experimental code for removing left recursion
 
-{-
-removeLeftRecursion :: Grammar a -> Grammar a
+testje = rlr 1 $ Rec 2 ((Symbol 4 :|: Var 1) :*: (Symbol 20 :|: Var 2))
+
+ex :: Grammar Int
+ex = rlr 0 ((Var 0 :*: Var 0 :*: Symbol 1) :|: Symbol 2)
+
+www = rlr2 {- rlr 0 -} $ Rec 0 $ (Succeed <|> (Var 0 <*> Symbol 1) <|> (symbol 2 <*> symbol 3))
+
+rlr2 :: Grammar a -> Grammar a
+rlr2 s = case f (map rlr2 cs) of
+            Rec i s  -> rlr i s
+            s :*: t  -> rlr2 s <*>  rlr2 t
+            s :|: t  -> rlr2 s <|>  rlr2 t
+            s :||: t -> rlr2 s <||> rlr2 t
+            new      -> new
+ where
+   (cs, f) = uniplate s
+
+rlr :: Int -> Grammar a -> Grammar a
+rlr i s
+   | i `S.notMember` freeVars s = s
+   | null xs   = Rec i s
+   | i `S.notMember` freeVars new = new
+   | otherwise = Rec i new
+ where
+   marked   = markFree s
+   (xs, ys) = partition (either (==i) (const False) . fst) (firsts marked)
+   basis    = let f (ea, xs) = either Var symbol ea <*> unmarkAll xs
+              in alternatives ([ Succeed | empty (Rec i s) ] ++ map f ys)
+   recpart  = unmarkAll $ nonempty $ {- unmark i $ -} alternatives (map snd xs)
+   new      = basis <*> mymany recpart
+   mymany s = let vs = freeVars s   
+                  i  = if S.null vs then 1000 else (S.findMax vs + 1) `max` 1000
+              in Rec i (Succeed <|> (s <*> Var i))
+
+alternatives = foldr (<|>) fail 
+
+isLeftRecursive :: Grammar a -> Bool
+isLeftRecursive s = 
+   case s of
+      Rec i s -> check i s || isLeftRecursive s
+      _       -> any isLeftRecursive (children s)
+ where 
+   check i = any (isLeft . fst) . firsts . markVar i   
+
+isLeft = either (const True) (const False)
+
+
+markVar :: Int -> Grammar a -> Grammar (Either () a)
+markVar i = replaceVar i (symbol (Left ())) . fmap Right
+
+markFree :: Grammar a -> Grammar (Either Int a)
+markFree = rec [] . fmap Right 
+ where
+   rec is (Var i) | i `notElem` is = Symbol (Left i)
+   rec is (Rec i s) = Rec i (rec (i:is) s)
+   rec is s         = f (map (rec is) cs)
+      where (cs, f) = uniplate s
+      
+markAll :: Grammar a -> Grammar (Either Int a)
+markAll = rec . fmap Right 
+ where
+   rec (Var i) = Symbol (Left i)
+   rec s       = f (map rec cs)
+      where (cs, f) = uniplate s
+
+unmark :: Int -> Grammar (Either Int a) -> Grammar (Either Int a)
+unmark i = mapSymbol (either (\j -> if i==j then Var i else symbol (Left j)) (symbol . Right))
+
+unmarkAll :: Grammar (Either Int a) -> Grammar a
+unmarkAll = mapSymbol (either Var symbol)
+
+{- removeLeftRecursion :: Grammar a -> Grammar a
 removeLeftRecursion grammar = 
    case grammar of
       Rec i s -> helper i s
@@ -265,8 +340,9 @@ helper i s
    basis   = alternatives ([ Succeed | empty (Rec i s) ] ++ map make ys)
    recpart = mapSymbol (either Var Symbol) (alternatives $ map snd xs)
    make (eva, t) = (either Var Symbol eva) <*> mapSymbol (either Var Symbol) t 
+   -- many s = Rec 0 (succeed <|> s <*> Var 0)
 
-   alternatives = foldr (<|>) fail 
+   alternatives = foldr (<|>) fail -}
 
 extraChecks = do
    let f ex xs = quickCheck $ property $ shorts ex == xs
@@ -286,8 +362,64 @@ extraChecks = do
    ex6 = fix $ \x -> (x <*> Symbol 'b' <*> Symbol 'a') <|> Succeed
    ex7 = many (symbol 'a') <*> many (symbol 'b')
 
-   shorts = take 15 . concat . take 5 . languageBF -}
-   
+   shorts = take 15 . language 5 -- concat . take 5 . languageBF
+
+inverse :: Grammar a -> Grammar a
+inverse = {- rlr2 . -} inv
+
+inv :: Grammar a -> Grammar a
+inv (s :*: t)  = inv t :*: inv s
+inv (s :|: t)  = inv s :|: inv t
+inv (s :||: t) = inv s :||: inv t
+inv (Rec i s)  = Rec i (inv s)
+inv s = s
+
+propRLR :: Grammar Int -> Bool
+propRLR s = rlr2 s === rlr2 (rlr2 s)
+
+propInv :: Grammar Int -> Bool
+propInv s = all ((`member` rlr2 s) . reverse) xs 
+ where xs = take 20 $ language 10 $ rlr2 $ inv s
+
+
+-- X -> XX | {} | a
+-- X -> ({} | a) (X)*
+e4 = rlr2 $ Rec 1 (Var 1 :*: Var 1 :|: Succeed :|: Symbol 5)
+
+q = verboseCheck $ forAll (sized $ g []) propInv -- propRLR --
+ where
+   g is 0 = frequency $
+      [ (1, return Succeed)
+      , (1, return Fail)
+      , (5, liftM symbol arbitrary)
+      ] ++
+      [ (1, return $ Var i) | i <- is ]
+   g is n = oneof 
+      [ g is 0
+      , bin (<*>)
+      , bin (<|>) 
+      , liftM (Rec j)(g (j:is) (n `div` 2))
+      {- , bin (<||>) -} 
+      ]
+    where 
+      j = maximum (0:is) + 1
+      bin op = liftM2 op rec rec
+      rec = g is (n `div` 2) 
+
+e0 :: Grammar Int -- propInv
+e0 = Rec 1 (Symbol 3 :|:
+      (Var 1 :|: Succeed) :*: Var 1 :*: Symbol 4)
+
+e1 :: Grammar Int -- propInv  
+e1 = Rec 1 (Rec 2 ((Symbol 5 :|: Var 2) :|: (Var 1 :*: Symbol 5)))
+
+e2 :: Grammar Int -- propInv
+e2 = Rec 1 (Rec 2 ((Symbol 4 :|: Var 1) :*: (Symbol 20 :|: Var 2)))
+
+e3 :: Grammar Int -- very slow with propInv, but why?
+e3 = Rec 1 (Rec 2 (Rec 3 Fail) :*: (Rec 2 (Symbol (-30)) :*: (Var 1 :*: (Rec 2 (Symbol (-9) :|: Symbol (-2)) :|: (Var 1 :|: Var 1) :*: (Symbol (-16) :|: Var 1)))))
+
+
 ----------------------------------------------------------------------
 -- Experimental code for turning Grammar into a Monad
 

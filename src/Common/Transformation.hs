@@ -23,7 +23,7 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, name, isMinorRule, isMajorRule, isBuggyRule
+   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse
    , rule, ruleList, ruleListF, makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations, getRewriteRules
      -- * Lifting
@@ -172,7 +172,7 @@ getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
       [Abstraction args _ _] -> someArguments args
-      [Lift _ t]             -> getDescriptors (rule {transformations = [t]})
+      [Lift _ t]             -> getDescriptors (rule {transformations = [t], getInverse = Nothing})
       _                      -> []
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
@@ -181,7 +181,7 @@ expectedArguments rule a =
    case transformations rule of
       [Abstraction args f _] -> fmap (showArguments args) (f a)
       [Lift lp t]            -> do b <- liftPairGet lp a
-                                   expectedArguments (rule {transformations = [t]}) b
+                                   expectedArguments (rule {transformations = [t], getInverse = Nothing}) b
       _ -> Nothing
 
 -- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are 
@@ -260,6 +260,7 @@ data Rule a = Rule
    , transformations :: [Transformation a]
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
+   , getInverse      :: Maybe (Rule a)
    }
 
 instance Show (Rule a) where
@@ -290,7 +291,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule n ts False False
+makeRuleList n ts = Rule n ts False False Nothing
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
@@ -316,14 +317,20 @@ minorRule r = r {isMinorRule = True}
 buggyRule :: Rule a -> Rule a 
 buggyRule r = r {isBuggyRule = True}
 
+hasInverse :: Rule a -> Rule a -> Rule a
+hasInverse inv r = r {getInverse = Just inv}
+
 -- | Return the inverse of a transformation. Only rewrite rules can be inversed
 inverseRule :: Rule a -> Maybe (Rule a)
-inverseRule r = do
-   ts <- mapM inverseTrans (transformations r)
-   return r
-      { name = name r ++ " [inverse]"
-      , transformations = ts
-      }
+inverseRule r =
+   case getInverse r of
+      Just new -> Just new
+      Nothing  -> do
+         ts <- mapM inverseTrans (transformations r)
+         return r
+            { name = name r ++ " [inverse]"
+            , transformations = ts
+            }
 
 getRewriteRules :: Rule a -> [Some RewriteRule]
 getRewriteRules = concatMap f . transformations
@@ -363,7 +370,9 @@ instance Lift Transformation where
    lift = Lift
    
 instance Lift Rule where
-   lift lp r = r {transformations = map (lift lp) (transformations r)}
+   lift lp r = r { transformations = map (lift lp) (transformations r)
+                 , getInverse = fmap (lift lp) (getInverse r)
+                 }
 
 -----------------------------------------------------------
 --- QuickCheck

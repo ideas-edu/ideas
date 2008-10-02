@@ -36,6 +36,8 @@ module Common.Strategy
    , Prefix, emptyPrefix, makePrefix
    , Step(..), runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
    , prefixToSteps, stepsToRules, lastRuleInPrefix
+     -- * Strategy inversion
+   , inverse
    ) where
 
 import Prelude hiding (fail, not, repeat, sequence)
@@ -43,7 +45,7 @@ import qualified Prelude as Prelude
 import Common.Apply
 import Common.Context
 import Common.Transformation
-import Common.Rewriting
+import Common.Rewriting hiding (inverse)
 import Common.Uniplate (Uniplate, children)
 import Common.Utils
 import qualified Common.Grammar as RE
@@ -200,8 +202,10 @@ infixr 4 |>
 -- | Checks whether a predicate holds for the current term. The
 --   check is considered to be a minor step.
 check :: (a -> Bool) -> Strategy a
-check p = toStrategy $ minorRule $ makeSimpleRule "check" $ \a ->
-   if p a then Just a else Nothing
+check p = toStrategy checkRule 
+ where
+   checkRule = minorRule $ hasInverse checkRule $ makeSimpleRule "check" $ \a ->
+                  if p a then Just a else Nothing
 
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
@@ -240,12 +244,12 @@ fix f = S $ RE.fix $ unS . f . S
 once :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
 once s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule (makeSimpleRuleList "MoveDown" moveDown)
+   ruleMoveDown = minorRule $ hasInverse ruleMoveUp $ makeSimpleRuleList "MoveDown" moveDown
    moveDown c = 
       let n = maybe 0 (pred . length . children) (currentFocus c)
       in [ changeLocation (locationDown i) c | i <- [0 .. n] ]
    
-   ruleMoveUp = minorRule (makeSimpleRule "MoveUp" moveUp)
+   ruleMoveUp = minorRule $ hasInverse ruleMoveDown $ makeSimpleRule "MoveUp" moveUp
    moveUp c   = do
       new <- locationUp (location c)
       return $ setLocation new c
@@ -410,3 +414,15 @@ withMarks = rec []
       let begin = RE.symbol (Begin is)
           end   = RE.symbol (End is) 
       in begin RE.<*> g RE.<*> end
+            
+-----------------------------------------------------------
+--- Strategy inversion
+
+inverse :: LabeledStrategy a -> LabeledStrategy a
+inverse (Label n s) = Label n (f s)
+ where
+   f :: Strategy a -> Strategy a
+   f s = S (fmap (either (Left . g) (Right . inverse)) (RE.inverse (unS s)))
+   
+   g :: Rule a -> Rule a 
+   g r = maybe (error $ "Rule not inversable: " ++ show (name r)) id (inverseRule r)

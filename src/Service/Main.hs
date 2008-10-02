@@ -25,16 +25,6 @@ import Control.Monad
 import Data.Maybe
 import Data.Char
 
-{-      
-      Just "html" -> do
-         server <- serverName
-         script <- scriptName
-         let self = "http://" ++ server ++ script ++ "?mode=html&input="
-         logMsg $ addr ++ " (html mode)"
-         setHeader "Content-type" "text/html" -- return html text
-         output $ respondHTML self $ fromMaybe "" input
--}
-
 main :: IO ()
 main = do
    flags <- serviceOptions

@@ -41,7 +41,7 @@ derivativeExercise = Exercise
    , finalProperty = noDiff
    , ruleset       = map liftRuleToContext derivativeRules ++ [tidyup]
    , strategy      = derivativeStrategy
-   , generator     = oneof $ map return [ex1, ex2, ex3]
+   , generator     = oneof $ map return [ex1, ex2, ex3, ex4]
    }
    
 noDiff :: Expr -> Bool
@@ -64,7 +64,7 @@ ex1 = diff $ lambda (Var "x") $ Var "x" `pow` 2
 ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x `pow` Con 3)) :+: (Con (-3) :*: (x `pow` Con 2)) :+: x :+: (Con (-5))
  where x = Var "x"
 ex3 = diff $ lambda (Var "x") (2 * Var "x") 
-
+ex4 = diff $ lambda (Var "x") (ln (Var "x"))
 test = fromContext $ applyD derivativeStrategy (inContext ex2)
 
 {-

@@ -70,7 +70,7 @@ ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args
    descr  = ("equation", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
                let expr = getLHS eq
-               mv <- safeHead (getVars expr)
+               mv <- minvar c
                guard (coefficientOf mv expr /= 0)
                let coef = 1 / coefficientOf mv expr
                return (get covered c, coef)

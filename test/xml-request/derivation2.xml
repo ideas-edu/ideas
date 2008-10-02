@@ -13,11 +13,7 @@ cdbase="http://www.openmath.org/cd">
           </OMBVAR>
           <OMA>
             <OMS cd="transc1" name="ln"/>
-              <OMA>
-                <OMS cd="arith1" name="minus"/>
-                <OMV name="x"/>
-                <OMI>1</OMI>
-             </OMA>
+              <OMV name="x"/>
           </OMA>
         </OMBIND>
       </OMA>

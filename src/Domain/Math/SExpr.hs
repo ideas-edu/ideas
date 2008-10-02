@@ -1,8 +1,8 @@
 {-# OPTIONS -XEmptyDataDecls #-}
-module Domain.Math.SExpr (SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr, simplifyExpr, simplify, hasSquareRoot) where
+module Domain.Math.SExpr (lam, SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr, simplifyExpr, simplify, hasSquareRoot) where
 
 import Common.Utils
-import Common.Uniplate (transformM, children)
+import Common.Uniplate (transformM, children, Uniplate(..))
 import Common.Rewriting
 import Domain.Math.Symbolic
 import Domain.Math.Expr
@@ -110,11 +110,52 @@ make c = let result = SExprF $ simplifyWith (f result) (fromConstrained c)
 -----------------------------------------------------------------------
 -- Simplifications
 
+-- rewriteLin is used in the simplification procedure to "merge" terms with the
+-- same variable
 simplify :: Expr -> Constrained (Con Expr) Expr
 simplify = g . fixpointM (transformM f)
  where
-   f a = (return . constantPropagation) a >>= applyRules >>= (return . simplifySquareRoots)
+   f a =   (return . constantPropagation) a 
+       >>= (return . distribution) 
+       >>= applyRules
+       >>= (return . simplifySquareRoots)
    g (C c a) = C (simplifyPropCon c) a
+
+-- in general, distribution rules are not desirable, but under the right circumstances 
+-- it can help to further simplify expressions
+distribution :: Expr -> Expr
+distribution (x :*: (y :+: z)) | isRat x = (x*y)+(x*z)
+distribution ((x :+: y) :*: z) | isRat z = (x*z)+(y*z)
+distribution (x :*: (y :-: z)) | isRat x = (x*y)-(x*z)
+distribution ((x :-: y) :*: z) | isRat z = (x*z)-(y*z)
+-- simplification
+distribution (x :/: y) | simplify x == simplify (-y) = -1
+distribution ((n :*: a1) :+: (m :*: a2)) | isRat n && isRat m && a1==a2 = (n+m)*a1
+distribution ((n :*: a1) :+: a2)         | isRat n && a1==a2 = (n+1)*a1
+distribution (a1         :+: (m :*: a2)) | isRat m && a1==a2 = (1+m)*a1
+distribution (a1 :+: a2)                 | a1==a2 = 2*a1
+distribution ((n :*: a1) :-: (m :*: a2)) | isRat n && isRat m && a1==a2 = (n-m)*a1
+distribution ((n :*: a1) :-: a2)         | isRat n && a1==a2 = (n-1)*a1
+distribution (a1         :-: (m :*: a2)) | isRat m && a1==a2 = (1-m)*a1
+distribution e = e
+
+transformTD :: Uniplate a => (a -> Maybe a) -> a -> a
+transformTD f a = 
+   case f a of
+      Just b  -> b
+      Nothing -> g (map (transformTD f) cs)
+ where
+   (cs, g) = uniplate a
+
+-- check whether the expression is a "rational" number
+isRat :: Expr -> Bool
+isRat (Con _) = True
+isRat (Con _ :/: Con _) = True
+isRat _ = False
+
+lam,varx :: SExpr
+lam = variable "L"
+varx = variable "x"
 
 -- special care is taken for associative and commutative operators       
 constantPropagation :: Expr -> Expr
@@ -166,12 +207,16 @@ applyRules e =
         , rewriteRule "Neg / Left"  $ \x y -> (-x)/y :~> -(x/y)
         , rewriteRule "Neg / Right" $ \x y -> x/(-y) :~> -(x/y)
         , ruleInvNeg
+        , rewriteRule "Neg with min" $ \x y -> -(x-y) :~> y-x
           -- other rules
         , ruleSimpleSqrtTimes
+        , rewriteRule "Times Div Left"  $ \x y z -> x*(y/z) :~> (x*y)/z
+        , rewriteRule "Times Div Right" $ \x y z -> (x/y)*z :~> (x*z)/y 
           -- temporary rules
         , rewriteRule "Temp1" $ \x y -> x * (1/y) :~> x/y
-        , rewriteRule "Temp3" $ \x y z -> (x/z) * (y/z) :~> (x*y)/(z*z)
-        , rewriteRule "Temp4" $ \x y z -> (x/z) + (y/z) :~> (x+y)/z
+        , rewriteRule "Temp2" $ \x y z -> (x/z) * (y/z) :~> (x*y)/(z*z)
+        , rewriteRule "Temp3" $ \x y z -> (x/z) + (y/z) :~> (x+y)/z
+        , rewriteRule "Temp3" $ \x y z -> (x/z) - (y/z) :~> (x-y)/z
         , rewriteRule "Temp5" $ \x y -> (x/y)/y :~> x/(y*y)
         ]
 
@@ -244,12 +289,16 @@ fromViewGS (TimesGS r n) = fromRational r * sqrt (fromIntegral n)
 
 -- Linear expressions view
 simplifyLin :: Expr -> Constrained (Con Expr) Expr
-simplifyLin = simplify . rewriteLin
+simplifyLin e = return $ maybe e (fromViewLin . simplifyViewLin) (toViewLin e)
 
 -- invariant: coefficients are /= 0
 data ViewLin = Lin (M.Map String Expr) Expr
    deriving (Show, Eq)
 
+simplifyViewLin :: ViewLin -> ViewLin
+simplifyViewLin (Lin m e) = makeLin (M.map f m) (f e)
+ where f = fromConstrained . simplify
+ 
 rewriteLin :: Expr -> Expr
 rewriteLin e = maybe e fromViewLin (toViewLin e)
 
@@ -307,8 +356,11 @@ makeLin :: M.Map String Expr -> Expr -> ViewLin
 makeLin m c = Lin (M.filter (/=0) m) c
 
 fromViewLin :: ViewLin -> Expr
-fromViewLin (Lin m c) = foldr op c (M.toList m)
- where op (s, e) x = Var s*e + x
+fromViewLin (Lin m c) = make $
+   [ if e == 1 then Var s else Var s * e | (s, e) <- M.toList m ] ++ [ c | c /= 0 ]
+ where
+   make [] = 0
+   make xs = foldr1 (+) xs
 
 -----------------------------------------------------------------------
 -- Simplifications for constraints

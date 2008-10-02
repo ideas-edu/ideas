@@ -26,7 +26,7 @@ import Data.IORef
 import Domain.Programming
 
 exercises :: [Some Exercise]
-exercises = Some LA.opgave6b : Some LA.opgaveVarMatrix2 : exerciseList ++ [Some isortExercise]
+exercises = Some LA.opgave6b : Some LA.opgaveVarMatrix2 : Some LA.opgaveVarMatrix : exerciseList ++ [Some isortExercise]
 
 main :: IO ()
 main = 

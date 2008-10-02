@@ -47,7 +47,7 @@ makeWikiFile target (Entry nr (Some (ExprExercise a)) xs examples) = do
       [ makeTitle nr a
       , backRefText
       , section "Examples"
-      , makeExamples (show $ exerciseCode a) examples
+      , makeExamples (description a) examples
       , section "Strategy code"
       , code
       , visitRepoText

@@ -21,6 +21,7 @@ import Domain.LinearAlgebra (makeMatrix, var)
 import Domain.LinearAlgebra.Equation (Equation)
 import Domain.LinearAlgebra.Vector (fromList)
 import Domain.Math.SExpr
+import Domain.Math.Symbolic
 import qualified Domain.LinearAlgebra.Equation as LA
 import qualified Service.Options
 import OpenMath.Conversion
@@ -53,7 +54,9 @@ strategyTable :: [StrategyEntry]
 strategyTable =
    [ entry "2.5" reduceMatrixExercise
         ["toReducedEchelon"]
-        [makeMatrix [[6, 3], [2, 4]], makeMatrix [[0,1,1,1], [1,2,3,2], [3,1,1,3]]]
+        [ makeMatrix [[6, 3], [2, 4]], makeMatrix [[0,1,1,1], [1,2,3,2], [3,1,1,3]]
+        , makeMatrix [[-1,-1,variable "a"],[2,4,2]]
+        ]
    , entry "1.7" solveSystemExercise
         ["generalSolutionLinearSystem", "systemToEchelonWithEEO", "backSubstitutionSimple"]
         [sys1, sys2, sys3]

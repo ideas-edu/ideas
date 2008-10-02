@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Exercises 
    ( solveGramSchmidt, solveSystemExercise, reduceMatrixExercise
-   , solveSystemWithMatrixExercise, opgave6b, opgaveVarMatrix
+   , solveSystemWithMatrixExercise, opgave6b, opgaveVarMatrix, opgaveVarMatrix2
    , arbSolution
    ) where
 
@@ -119,6 +119,12 @@ opgave6b :: Exercise (Matrix SExpr)
 opgave6b = reduceMatrixExercise
    { identifier = "opg9.6b"
    , generator  = return $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
+   }
+
+opgaveVarMatrix2 :: Exercise (Matrix SExpr)
+opgaveVarMatrix2 = reduceMatrixExercise
+   { identifier = "matrix-with-var2"
+   , generator  = return $ makeMatrix [[-1,-1,variable "a"],[2,4,2]]
    }
 
 opgaveVarMatrix :: Exercise (Matrix SExpr)

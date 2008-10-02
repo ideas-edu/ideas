@@ -127,7 +127,7 @@ constantPropagation e =
        where 
          (xs, ys) = partition (isJust . snd) $ map f $ collectWithOperator ac e
          f a = (a, exprToFractional a)
-      _ -> maybe e fromRational (exprToFractional e)
+      _ -> maybe e (\r -> if r < 0 then negate (fromRational $ negate r) else fromRational r) (exprToFractional e)
 
 simplifySquareRoots :: Expr -> Expr
 simplifySquareRoots e =
@@ -146,13 +146,29 @@ applyRules :: Expr -> Constrained (Con Expr) Expr
 applyRules e = 
    fromMaybe (return e) $ safeHead [ {- constrain p >> -} return a | r <- rs, a <- rewriteM r e ]
  where
-   rs = [ rewriteRule "Def. minus" $ \x y -> x-y :~> x+(-y)
-        , ruleZeroPlus, ruleZeroPlusComm 
-        , ruleZeroTimes, ruleZeroTimesComm, ruleOneTimes, ruleOneTimesComm
-        , ruleInvNeg, ruleZeroNeg
+   rs = [ -- Zeros and neutral elements
+          ruleZeroPlus, ruleZeroPlusComm 
+        , ruleZeroTimes, ruleZeroTimesComm
+        , ruleOneTimes, ruleOneTimesComm
         , ruleZeroDiv, ruleOneDiv
-        , ruleSimplPlusNeg, ruleSimplPlusNegComm
-        , ruleSimplDiv, ruleSimpleSqrtTimes
+        , ruleZeroNeg
+        , rewriteRule "Min Zero Left"  $ \x -> 0-x :~> -x
+        , rewriteRule "Min Zero Right" $ \x -> x-0 :~> x
+        , rewriteRule "Min Intro Zero" $ \x -> x-x :~> 0
+        , ruleSimplDiv
+          -- negation rules
+        , rewriteRule "Neg + Left"  $ \x y -> (-x)+y :~> y-x
+        , rewriteRule "Neg + Right" $ \x y -> x+(-y) :~> x-y
+        , rewriteRule "Neg - Left"  $ \x y -> (-x)-y :~> -(x+y)
+        , rewriteRule "Neg - Right" $ \x y -> x-(-y) :~> x+y
+        , rewriteRule "Neg * Left"  $ \x y -> (-x)*y :~> -(x*y)
+        , rewriteRule "Neg * Right" $ \x y -> x*(-y) :~> -(x*y)
+        , rewriteRule "Neg / Left"  $ \x y -> (-x)/y :~> -(x/y)
+        , rewriteRule "Neg / Right" $ \x y -> x/(-y) :~> -(x/y)
+        , ruleInvNeg
+          -- other rules
+        , ruleSimpleSqrtTimes
+          -- temporary rules
         , rewriteRule "Temp1" $ \x y -> x * (1/y) :~> x/y
         , rewriteRule "Temp3" $ \x y z -> (x/z) * (y/z) :~> (x*y)/(z*z)
         , rewriteRule "Temp4" $ \x y z -> (x/z) + (y/z) :~> (x+y)/z

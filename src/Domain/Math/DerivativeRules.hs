@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Derivative.Rules where
+module Domain.Math.DerivativeRules where
 
 import Common.Transformation
 import Domain.Math.Expr

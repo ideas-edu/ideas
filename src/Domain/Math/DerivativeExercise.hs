@@ -10,12 +10,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Derivative.Exercises where
+module Domain.Math.DerivativeExercise where
 
 import Common.Apply
 import Common.Uniplate (universe)
 import Prelude hiding (repeat)
-import Domain.Derivative.Rules 
+import Domain.Math.DerivativeRules 
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
 import Common.Context (Context, liftRuleToContext, inContext, fromContext)

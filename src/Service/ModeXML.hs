@@ -27,7 +27,7 @@ import OpenMath.LAServer
 import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
 import OpenMath.Conversion
-import Domain.Derivative.Exercises
+import Domain.Math.DerivativeExercise
 import qualified Service.TypedAbstractService as TAS
 import Data.Maybe
 import Data.Char

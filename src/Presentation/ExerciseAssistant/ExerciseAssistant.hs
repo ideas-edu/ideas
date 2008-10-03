@@ -11,10 +11,12 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
+{-# OPTIONS -fglasgow-exts #-}
 module Main where
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
+import System.Glib.GObject (GObjectClass)
 import Data.Maybe
 import Session
 import SupplyArguments
@@ -77,7 +79,7 @@ main =
 
         -- initialize exercise
         session <- makeSession (head exercises)
-        
+                
         let fillRuleBox = do
                -- first clear the box
                result <- comboBoxGetModel ruleBox
@@ -108,14 +110,13 @@ main =
 
         onChanged domainBox $ do
            index <- comboBoxGetActive domainBox
-           newExercise (exercises !! fromMaybe 0 index) session
+           newExercise 5 (exercises !! fromMaybe 0 index) session
            fillRuleBox
            updateAll
-
-        onClicked newButton $ do
-           newTerm session
-           updateAll
-
+ 
+        callbackNewAssignment <- makeNewAssignmentWindow fromXml session updateAll
+        onClicked newButton callbackNewAssignment
+        
         onClicked readyButton $ do
            txt <- readyText session
            textBufferSetText feedbackBuffer txt
@@ -182,3 +183,40 @@ main =
         -- show widgets and run GUI
         widgetShowAll window
         mainGUI
+        
+makeNewAssignmentWindow :: GObjectClass obj => (forall a . WidgetClass a => (obj -> a) -> String -> IO a) -> Session -> IO () -> IO (IO ())
+makeNewAssignmentWindow fromXml session updateAll = do
+   w                <- fromXml castToWindow "newAssignmentWindow"
+   randomButton     <- fromXml castToButton "randomButton"
+   cancelButton     <- fromXml castToButton "cancelButton"
+   goButton         <- fromXml castToButton "goButton"
+   difficultySlider <- fromXml castToHScale "difficultySlider"
+   ownTextView      <- fromXml castToTextView "ownTextView"
+   ownBuffer        <- textViewGetBuffer ownTextView 
+
+   windowSetModal w True  
+   let suggest = do
+          dif <- rangeGetValue difficultySlider
+          txt <- suggestTerm (round dif) session
+          textBufferSetText ownBuffer txt
+
+   onClicked randomButton suggest
+           
+   onClicked cancelButton (widgetHide w)
+              
+   onClicked goButton $ do
+      txt  <- get ownBuffer textBufferText
+      merr <- thisExercise txt session
+      case merr of
+         Nothing -> do
+            widgetHide w
+            updateAll
+         Just err -> do
+            md <- messageDialogNew Nothing [] MessageError ButtonsOk err
+            windowSetTitle md "Parse error"
+            dialogRun md
+            widgetDestroy md
+            
+   return $ do -- callback
+      widgetShowAll w
+      suggest

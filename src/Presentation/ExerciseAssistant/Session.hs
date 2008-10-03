@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Session
    ( Some(..), Exercise(..), exerciseCode
-   , Session, makeSession, newTerm, newExercise, progressPair, undo, submitText
+   , Session, makeSession, newTerm, suggestTerm, newExercise, thisExercise, progressPair, undo, submitText
    , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
    , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
    ) where
@@ -24,6 +24,7 @@ import Common.Context
 import Common.Exercise
 import Common.Parsing (indicesToRange)
 import Common.Logging
+import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Apply
 import Common.Utils
@@ -46,19 +47,38 @@ makeSession pa = do
    logMessage "New session: "
    ref   <- newIORef (error "reference not initialized")
    let session = Session "" ref
-   newExercise pa session
+   newExercise 5 pa session
    return session
 
-newExercise :: Some Exercise -> Session -> IO ()
-newExercise (Some a) = logCurrent ("New (" ++ show (exerciseCode a) ++ ")") $ 
+newExercise :: Int -> Some Exercise -> Session -> IO ()
+newExercise dif (Some a) = logCurrent ("New (" ++ show (exerciseCode a) ++ ")") $ 
    \(Session _ ref) -> do
-      d <- makeDerivation a
+      d <- startNewDerivation dif a
       writeIORef ref $ Some d
-      
-newTerm :: Session -> IO ()
-newTerm session@(Session _ ref) = do
+
+thisExercise :: String -> Session -> IO (Maybe String)
+thisExercise txt (Session _ ref) = do
    Some d <- readIORef ref
-   newExercise (Some (exercise d)) session
+   let ex = exercise d
+   case parser ex txt of
+      Left err  -> return (Just err)
+      Right a -> do
+         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext a)
+         writeIORef ref $ Some new
+         return Nothing
+         
+    
+newTerm :: Int -> Session -> IO ()
+newTerm dif session@(Session _ ref) = do
+   Some d <- readIORef ref
+   newExercise dif (Some (exercise d)) session
+   
+suggestTerm :: Int -> Session -> IO String
+suggestTerm dif (Session _ ref) = do
+   Some d <- readIORef ref
+   let ex = exercise d
+   a <- TAS.generate ex dif
+   return $ prettyPrinter ex $ fromContext $ TAS.context a
        
 undo :: Session -> IO ()
 undo = logCurrent "Undo" $ \(Session _ ref) ->
@@ -179,10 +199,13 @@ subTermAtIndices s i j = withState $ \d -> do
 
 newtype Derivation a = D [TAS.State a]
 
-makeDerivation :: Exercise a -> IO (Derivation a)
-makeDerivation ex = do 
-   state <- TAS.generate ex 5
-   return $ D [state]
+startNewDerivation :: Int -> Exercise a -> IO (Derivation a)
+startNewDerivation dif ex = do 
+   state <- TAS.generate ex dif
+   return $ makeDerivation state
+
+makeDerivation :: TAS.State a -> Derivation a
+makeDerivation state = D [state]
 
 undoLast :: Derivation a -> Derivation a
 undoLast (D [x]) = D [x]

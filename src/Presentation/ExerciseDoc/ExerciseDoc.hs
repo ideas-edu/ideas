@@ -29,79 +29,11 @@ targetDirectory = do
       []    -> return "."
       dir:_ -> return dir
 
-{- main :: IO ()
-main = do 
-   let vs = map (Var . return) $ [ 'p', 'q', 'r' ] ++ [ 'a' .. 'o' ]
-   mapM_ (doOneRule dnfExercise {prettyPrinter = logicToTeX} "tmp/Logic/" vs) (ruleset dnfExercise)
-   let vs = map (RA.Var . return) $ [ 'q', 'r', 's' ] ++ [ 'a' .. 'o' ]
-   mapM_ (doOneRule cnfExercise {prettyPrinter = relAlgToTeX} "tmp/RelationAlg/" vs) (ruleset cnfExercise)
-
-doOneRule :: Rewrite a => Exercise a -> String -> [a] -> Rule (Context a) -> IO ()
-doOneRule ex dir vs r = do
-   let nr = filter (not . isSpace) (name r)
-   putStrLn $ "rule " ++ nr
-   writeFile (dir++nr++".tex") (ruleToTeX ex vs r) -}
-
 rulesToTeX :: Exercise a -> String
-rulesToTeX = unlines . map f . concatMap getRewriteRules . ruleset
+rulesToTeX ex = unlines . map f . concatMap getRewriteRules . ruleset $ ex
  where
-   f (Some r) = "RewriteRule " ++ filter isAlpha (ruleName r) ++ " (" ++ showRuleSpec r ++ ")"
-
-{- ruleToTeX :: Rewrite a => Exercise a -> [a] -> Rule (Context a) -> String
-ruleToTeX ex vs r = unlines
-   [ "\\input fontch.tex.inc"
-   , "\\fourteenpoint\\nopagenumbers\\noindent"
-   , unlines $ map (transformationToTeX ex vs (name r)) (transformations r) 
-   , "\\bye"
-   ]
-   
-transformationToTeX :: Rewrite a => Exercise a -> [a] -> String -> Transformation (Context a) -> String
-transformationToTeX ex vs n t =
-   let (lhs, rhs) = case getPatternPair (inContext undefined) t of
-                       Just (a, b) -> 
-                          let list = IS.toList $ getMetaVars (fromContext a) `IS.union` getMetaVars (fromContext b)
-                              sub  = listToSubst (zip list vs)
-                          in ( prettyPrinter ex $ sub |-> fromContext a
-                             , prettyPrinter ex $ sub |-> fromContext b
-                             )
-                       _           -> ("\\ldots", "\\ldots")
-   in "\\noindent " ++ "{\\sc " ++ n ++ ":} $" ++ lhs ++ " = " ++ rhs ++ "$\\par" 
-
-rewriteRuleToTeX :: (a -> String) -> RewriteRule a -> String
-rewriteRuleToTeX f r = concat
-   [ "\\noindent "
-   , "{\\sc " ++ n ++ ":} $" 
-   , f (lhs p) 
-   , " = "
-   , f (rhs p)
-   , "$\\par"
-   ]
- where
-    n = ruleName r
-    p = rulePair r 0
-
-logicToTeX :: Logic -> String
-logicToTeX = logicToTeXPrio 0
-
-logicToTeXPrio :: Int -> Logic -> String
-logicToTeXPrio n p = foldLogic (var, binop 3 "\\rightarrow", binop 0 "\\leftrightarrow", binop 2 "\\wedge", binop 1 "\\vee", nott, var "T", var "F") p n ""
- where
-   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
-   var       = const . (++)
-   nott p n  = ("\\neg "++) . p 4
-   parIf b f = if b then ("("++) . f . (")"++) else f
-   
-relAlgToTeX :: RelAlg -> String
-relAlgToTeX = ppRelAlgPrio 0
-
-ppRelAlgPrio :: Int -> RelAlg -> String 
-ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "\\dagger", binop 3 "\\cap", binop 2 "\\cup", nott, inv, var "U", var "E") p n ""
- where
-   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
-   var       = const . (++)
-   nott p n  = ("\\overline{"++) . p 6 . ("}"++) 
-   inv  p n  = ("{"++) . p 6 . ("}^{\\smile}"++)
-   parIf b f = if b then ("("++) . f . (")"++) else f -}
+   f (Some r, sound) = 
+      "RewriteRule " ++ filter isAlpha (ruleName r) ++ " (" ++ showRuleSpec sound r ++ ")"
    
 ------------------------------------------------------
 
@@ -119,13 +51,13 @@ texHeader fmt = unlines
    [ "\\documentclass{article}"
    , ""
    , "%include lhs2TeX.fmt"
+   , "%format RewriteRule (a) (b) = a\": \"b"
+   , "%format :~> = \"\\:\\leadsto\\:\""
+   , "%format :/~> = \"\\:\\not\\leadsto\\:\""
    , maybe "" ("%include "++) fmt
    , "" 
    , "\\newcommand{\\rewriterule}[2]{#1: #2}"
    , "\\newcommand{\\rulename}[1]{\\mbox{\\sc #1}}"
-   , ""
-   , "%format RewriteRule (a) (b) = a\": \"b"
-   , "%format :~> = \"\\:\\leadsto\\:\""
    ]
    
 texBody :: Maybe String -> String -> String
@@ -146,7 +78,7 @@ texSectionRules ex = unlines
    ]
  where
    rules   = concatMap getRewriteRules (ruleset ex)
-   names   = let f (Some r) = ruleName r 
+   names   = let f (Some r, _) = ruleName r 
              in nub (map f rules)
    formats = unlines (map make names)
    make  s = "%format " ++ s ++ " = \"\\rulename{" ++ s ++ "}\"" 

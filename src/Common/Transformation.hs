@@ -332,15 +332,15 @@ inverseRule r =
             , transformations = ts
             }
 
-getRewriteRules :: Rule a -> [Some RewriteRule]
-getRewriteRules = concatMap f . transformations
+getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
+getRewriteRules r = concatMap f (transformations r)
  where
-   f :: Transformation a -> [Some RewriteRule]
+   f :: Transformation a -> [(Some RewriteRule, Bool)]
    f trans =
       case trans of
-         RewriteRule r -> [Some r]      
-         Lift _ t      -> f t
-         _             -> []
+         RewriteRule rr -> [(Some rr, not $ isBuggyRule r)]      
+         Lift _ t       -> f t
+         _              -> []
 
 -----------------------------------------------------------
 --- Lifting

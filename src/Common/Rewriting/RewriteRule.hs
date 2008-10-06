@@ -158,10 +158,11 @@ smartGenerator r@(R _ _ _) = do
 -----------------------------------------------------------
 -- Showing a rewrite-rule
 
-showRewriteRule :: RewriteRule a -> String
-showRewriteRule r@(R _ _ _) = ruleName r ++ ": " ++ showRuleSpec r 
+showRewriteRule :: Bool -> RewriteRule a -> String
+showRewriteRule sound r@(R _ _ _) = ruleName r ++ ": " ++ showRuleSpec sound r 
    
-showRuleSpec :: RewriteRule a -> String
-showRuleSpec r@(R _ _ _) = show lhs ++ " :~> " ++ show rhs
+showRuleSpec :: Bool -> RewriteRule a -> String
+showRuleSpec sound r@(R _ _ _) = show lhs ++ " " ++ leadsto ++ " " ++ show rhs
  where
+   leadsto = if sound then ":~>" else ":/~>" 
    lhs :~> rhs = rulePair r 0 

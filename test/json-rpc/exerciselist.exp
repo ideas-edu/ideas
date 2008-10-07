@@ -1,0 +1,54 @@
+{
+   "result": [
+      {
+         "domain": "linalg",
+         "identifier": "Gaussian Elimination",
+         "description": "Gaussian Elimination",
+         "status": "Stable"
+      },
+      {
+         "domain": "linalg",
+         "identifier": "Solve Linear System",
+         "description": "Solve Linear System",
+         "status": "Stable"
+      },
+      {
+         "domain": "linalg",
+         "identifier": "Solve Linear System with Matrix",
+         "description": "Solve Linear System with Matrix",
+         "status": "Stable"
+      },
+      {
+         "domain": "linalg",
+         "identifier": "Gram-Schmidt",
+         "description": "Gram-Schmidt",
+         "status": "Stable"
+      },
+      {
+         "domain": "math",
+         "identifier": "derivative",
+         "description": "Derivative",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "fraction",
+         "description": "Simplifying fractions",
+         "status": "Experimental"
+      },
+      {
+         "domain": "logic",
+         "identifier": "Proposition to DNF",
+         "description": "Proposition to DNF",
+         "status": "Stable"
+      },
+      {
+         "domain": "relationalg",
+         "identifier": "cnf",
+         "description": "To conjunctive normal form",
+         "status": "Experimental"
+      }
+   ],
+   "error": null,
+   "id": 421
+}

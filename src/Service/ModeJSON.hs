@@ -14,8 +14,11 @@
 module Service.ModeJSON (processJSON) where
 
 import Common.Context
+import Common.Utils (Some(..))
+import Common.Exercise (Exercise(..))
 import Service.JSON
 import Service.AbstractService
+import qualified Service.ExerciseList as List
 import qualified Data.Map as M
 import Control.Monad
 import Data.Char
@@ -43,8 +46,20 @@ serviceTable = M.fromList
    , ("derivation",     service1 derivation)
    , ("generate",       service2IO generate)
    , ("submit",         service2 submit)
+   , ("exerciselist",   exerciseList)
    ]
-   
+
+exerciseList :: [JSON] -> IO JSON
+exerciseList (_:_) = fail "Too many arguments for service"
+exerciseList _ = return $ Array $ map f List.exerciseList
+ where
+   f (Some ex) = Object
+      [ ("domain",      String $ domain ex)
+      , ("identifier",  String $ identifier ex)
+      , ("description", String $ description ex)
+      , ("status",      String $ show $ status ex)
+      ]
+ 
 type Service a = a -> [JSON] -> IO JSON
    
 service :: InJSON a => Service a

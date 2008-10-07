@@ -15,7 +15,8 @@ module Service.ModeJSON (processJSON) where
 
 import Common.Context
 import Common.Utils (Some(..))
-import Common.Exercise (Exercise(..))
+import Common.Exercise (Exercise(..), exerciseCode)
+import Common.Transformation (name, isBuggyRule, isRewriteRule)
 import Service.JSON
 import Service.AbstractService
 import qualified Service.ExerciseList as List
@@ -47,6 +48,7 @@ serviceTable = M.fromList
    , ("generate",       service2IO generate)
    , ("submit",         service2 submit)
    , ("exerciselist",   exerciseList)
+   , ("rulelist",       ruleList)
    ]
 
 exerciseList :: [JSON] -> IO JSON
@@ -59,6 +61,20 @@ exerciseList _ = return $ Array $ map f List.exerciseList
       , ("description", String $ description ex)
       , ("status",      String $ show $ status ex)
       ]
+
+ruleList :: [JSON] -> IO JSON
+ruleList [String code] =
+   case filter p List.exerciseList of
+      [Some ex] -> return $ Array $ map f (ruleset ex)
+      _ -> fail "unknown exercise code"
+ where
+   p (Some ex) = show (exerciseCode ex) == code
+   f r = Object 
+      [ ("name",        String  $ name r)
+      , ("buggy",       Boolean $ isBuggyRule r) 
+      , ("rewriterule", Boolean $ isRewriteRule r)
+      ]
+ruleList _ = fail "ruleList service requires exactly one argument (with a string)"
  
 type Service a = a -> [JSON] -> IO JSON
    

@@ -23,7 +23,7 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse
+   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse, isRewriteRule
    , rule, ruleList, ruleListF, makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations, getRewriteRules
      -- * Lifting
@@ -275,6 +275,14 @@ instance Apply Rule where
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool
 isMajorRule = not . isMinorRule
+
+isRewriteRule :: Rule a -> Bool
+isRewriteRule = all p . transformations
+ where
+   p :: Transformation a -> Bool
+   p (RewriteRule _) = True
+   p (Lift _ t)      = p t
+   p _               = False
 
 ruleList :: Builder f a => String -> [f] -> Rule a
 ruleList s = makeRuleList s . map (RewriteRule . rewriteRule s)

@@ -47,6 +47,6 @@ xml-request/%.out: xml-request/%.xml $(BINDIR)/service.cgi
 # Cleaning up
 
 clean:
-	$(RM) test.log
+	$(RM) -f test.log
 	$(RM) -f *.out
 	$(RM) -f */*.out

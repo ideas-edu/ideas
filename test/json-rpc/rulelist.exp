@@ -1,0 +1,176 @@
+{
+   "result": [
+      {
+         "name": "FalseZeroOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "TrueZeroOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "TrueZeroAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "FalseZeroAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "DeMorganOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "DeMorganAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "NotBoolConst",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "NotNot",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AndOverOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "OrOverAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "DefImpl",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "DefEquiv",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "FalseInEquiv",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "TrueInEquiv",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "FalseInImpl",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "TrueInImpl",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "ComplOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "ComplAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "IdempOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "IdempAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AbsorpOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AbsorpAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "CommOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "CommAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "CommImp",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "AssImp",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "IdemImp",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "IdemEqui",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyEquivElim",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyImplElim",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyDeMorgan",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyNotOverImpl",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyParenth",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyAssoc",
+         "buggy": true,
+         "rewriterule": true
+      }
+   ],
+   "error": null,
+   "id": 421
+}

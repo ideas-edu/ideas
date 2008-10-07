@@ -42,9 +42,12 @@
           <OMI>
             1
           </OMI>
-          <OMI>
-            -1
-          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              1
+            </OMI>
+          </OMA>
         </OMA>
         <OMA>
           <OMS cd="linalg2" name="matrixrow"/>
@@ -85,9 +88,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -3
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                3
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -104,9 +110,12 @@
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>
-            <OMI>
-              -2
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
             <OMI>
               8
             </OMI>
@@ -129,9 +138,12 @@
             <OMI>
               4
             </OMI>
-            <OMI>
-              -10
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                10
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -158,9 +170,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -3
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                3
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -183,18 +198,24 @@
             <OMI>
               2
             </OMI>
-            <OMI>
-              -2
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>
             <OMI>
               4
             </OMI>
-            <OMI>
-              -10
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                10
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -221,9 +242,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -3
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                3
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -246,9 +270,12 @@
             <OMI>
               2
             </OMI>
-            <OMI>
-              -2
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>
@@ -258,9 +285,12 @@
             <OMI>
               2
             </OMI>
-            <OMI>
-              -2
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
           </OMA>
         </OMA>
       </OMOBJ>
@@ -274,9 +304,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -3
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                3
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -299,9 +332,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -1
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>
@@ -311,9 +347,12 @@
             <OMI>
               2
             </OMI>
-            <OMI>
-              -2
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
           </OMA>
         </OMA>
       </OMOBJ>
@@ -327,9 +366,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -3
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                3
+              </OMI>
+            </OMA>
             <OMA>
               <OMS cd="arith1" name="minus"/>
               <OMI>
@@ -352,9 +394,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -1
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>
@@ -408,9 +453,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -1
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>

@@ -1,4 +1,4 @@
-<reply result="incorrect" version="0.4.0">
+<reply result="incorrect" version="0.4.1">
   <strategy>
     Gaussian elimination
   </strategy>
@@ -29,9 +29,12 @@
           <OMI>
             1
           </OMI>
-          <OMI>
-            -1
-          </OMI>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              1
+            </OMI>
+          </OMA>
         </OMA>
       </OMA>
     </OMOBJ>
@@ -128,13 +131,16 @@
               0
             </OMI>
             <OMA>
-              <OMS cd="arith1" name="divide"/>
-              <OMI>
-                -1
-              </OMI>
-              <OMI>
-                2
-              </OMI>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMA>
+                <OMS cd="arith1" name="divide"/>
+                <OMI>
+                  1
+                </OMI>
+                <OMI>
+                  2
+                </OMI>
+              </OMA>
             </OMA>
             <OMA>
               <OMS cd="arith1" name="divide"/>
@@ -185,9 +191,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -1
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
           </OMA>
         </OMA>
       </OMOBJ>
@@ -216,9 +225,12 @@
             <OMI>
               1
             </OMI>
-            <OMI>
-              -1
-            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="unary_minus"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
           </OMA>
         </OMA>
       </OMOBJ>

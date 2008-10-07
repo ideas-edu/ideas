@@ -158,9 +158,11 @@ instance (IsOMOBJ a, IsOMOBJ b) => IsOMOBJ (Either a b) where
 instance IsOMOBJ Expr where 
    toOMOBJ expr =
       case expr of
-         -- special conversions
-         Negate (Con n) -> toOMOBJ $ Con $ negate n
-         Negate (Con n :/: a) -> toOMOBJ $ Con (negate n) :/: a
+         -- the special conversions are disabled after having verified the 
+         -- prefered representation with Hans Cuypers
+         -- Negate (Con n) -> toOMOBJ $ Con $ negate n
+         -- Negate (Con n :/: a) -> toOMOBJ $ Con (negate n) :/: a
+         
          -- normal conversions
          a :+: b  -> binop plusSymbol  a b
          a :*: b  -> binop timesSymbol a b

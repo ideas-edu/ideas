@@ -113,7 +113,7 @@ make c = let result = SExprF $ simplifyWith (f result) (fromConstrained c)
 -- rewriteLin is used in the simplification procedure to "merge" terms with the
 -- same variable
 simplify :: Expr -> Constrained (Con Expr) Expr
-simplify = g . fixpointM (transformM f)
+simplify = g . fixpointM (transformM f) . rewriteLin
  where
    f a =   (return . constantPropagation) a 
        >>= (return . distribution) 

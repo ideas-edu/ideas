@@ -95,7 +95,7 @@ reduceMatrixExercise = makeExercise
    , generator     = fmap (fmap fromInteger) arbNiceMatrix
    , strategy      = toReducedEchelon
    }
-
+ 
 solveSystemWithMatrixExercise :: Exercise (Either (LinearSystem SExpr) (Matrix SExpr))
 solveSystemWithMatrixExercise = makeExercise
    { identifier    = "Solve Linear System with Matrix" -- TODO: simplify code

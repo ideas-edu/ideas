@@ -50,7 +50,7 @@ $(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/service.cgi
 
 ghci:
 	$(MKDIR) -p $(OUTDIR)
-	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation/ExerciseAssistant -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
+	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 	
 run: solvergui
 	$(BINDIR)/solvergui$(EXE)

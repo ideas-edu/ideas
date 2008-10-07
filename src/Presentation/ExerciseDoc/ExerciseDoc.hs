@@ -15,12 +15,21 @@ main :: IO ()
 main = do
    dir <- targetDirectory
    flip mapM_ exerciseList $ \(Some ex) -> do
+      -- Exercise document
       let rules = concatMap getRewriteRules (ruleset ex)
       unless (null rules) $ do
          doc <- makeDocument ex
          let filename = dir ++ "/" ++ show (exerciseCode ex) ++ ".lhs"
          putStrLn $ "Creating " ++ filename
          writeFile filename doc
+      -- individual rules
+      flip mapM_ (ruleset ex) $ \r ->
+         case makeSingleRule (domain ex ++ ".fmt") r of
+            Nothing  -> return ()
+            Just txt -> do
+               let filename = dir ++ "/" ++ show (exerciseCode ex) ++ "." ++ name r ++ ".lhs"
+               putStrLn $ "Creating " ++ filename
+               writeFile filename txt
 
 targetDirectory :: IO String
 targetDirectory = do
@@ -29,13 +38,29 @@ targetDirectory = do
       []    -> return "."
       dir:_ -> return dir
 
-rulesToTeX :: Exercise a -> String
-rulesToTeX ex = unlines . map f . concatMap getRewriteRules . ruleset $ ex
- where
-   f (Some r, sound) = 
-      "RewriteRule " ++ filter isAlpha (ruleName r) ++ " (" ++ showRuleSpec sound r ++ ")"
+exerciseRulesToTeX :: Exercise a -> String
+exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex
+
+ruleToTeX :: (Some RewriteRule, Bool) -> String
+ruleToTeX (Some r, sound) = 
+   "RewriteRule " ++ filter isAlpha (ruleName r) ++ " (" ++ showRuleSpec sound r ++ ")"
+
    
 ------------------------------------------------------
+
+makeSingleRule :: String -> Rule a -> Maybe String
+makeSingleRule dom r 
+   | null (getRewriteRules r) = Nothing
+   | otherwise = Just $ texHeader (Just dom) ++ texBody Nothing content
+ where
+   content = unlines $
+      [ "\\pagestyle{empty}"
+      , "\\begin{code}"
+      ] ++
+      map (filter (/= '"') . ruleToTeX) (getRewriteRules r) ++
+      [ "\\end{code}"
+      ]
+
 
 makeDocument :: Exercise a -> IO String
 makeDocument ex = do
@@ -73,7 +98,7 @@ texSectionRules ex = unlines
    [ "\\section*{Rewrite Rules}"
    , formats
    , "\\begin{code}"
-   , filter (/= '"') $ rulesToTeX ex
+   , filter (/= '"') $ exerciseRulesToTeX ex
    , "\\end{code}"
    ]
  where

@@ -62,8 +62,16 @@ CD    = cd
 #---------------------------------------------------------------------------------------
 # General rules
 
+%.dvi: %.tex
+	latex -output-directory=$(<D) $<
+
+%.png: %.dvi
+	dvipng -o tmp.png $<
+	convert -trim tmp.png $@
+	rm -f tmp.png
+
 %.pdf: %.tex
-	pdflatex $<
+	pdflatex -output-directory=$(<D) $<
 
 %.tex: %.lhs
 	$(LHS2TEX) --poly $< > $@

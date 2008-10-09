@@ -1,9 +1,10 @@
-FMTSOURCES = $(wildcard *.fmt)
-LHSSOURCES = $(wildcard *.lhs)
-PDFTARGETS = $(patsubst %.lhs,%.pdf,$(LHSSOURCES))
+OVERVIEWSOURCES = $(wildcard */*/overview.lhs)
+OVERVIEWTARGETS = $(patsubst %.lhs,%.pdf, $(OVERVIEWSOURCES))
+RULESOURCES     = $(wildcard */*/rule*.lhs)
+RULETARGETS     = $(patsubst %.lhs,%.png, $(RULESOURCES))
 
-default: $(PDFTARGETS)
-all: $(PDFTARGETS)
+default: $(OVERVIEWTARGETS) $(RULETARGETS)
+all: $(OVERVIEWTARGETS) $(RULETARGETS)
 
 include ../../Makefile.incl
 

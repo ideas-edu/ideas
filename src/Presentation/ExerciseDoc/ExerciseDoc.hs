@@ -8,6 +8,7 @@ import Control.Monad
 import Service.ExerciseList
 import Data.Char
 import Data.List
+import System.Directory
 import System.Environment
 import System.Time
 
@@ -15,19 +16,21 @@ main :: IO ()
 main = do
    dir <- targetDirectory
    flip mapM_ exerciseList $ \(Some ex) -> do
+      let path = dir ++ "/" ++ domain ex ++ "/" ++ identifier ex
       -- Exercise document
       let rules = concatMap getRewriteRules (ruleset ex)
       unless (null rules) $ do
+         createDirectoryIfMissing True path
          doc <- makeDocument ex
-         let filename = dir ++ "/" ++ show (exerciseCode ex) ++ ".lhs"
+         let filename = path ++ "/overview.lhs"
          putStrLn $ "Creating " ++ filename
          writeFile filename doc
       -- individual rules
       flip mapM_ (ruleset ex) $ \r ->
-         case makeSingleRule (domain ex ++ ".fmt") r of
+         case makeSingleRule (domain ex ++ "/" ++ domain ex ++ ".fmt") r of
             Nothing  -> return ()
             Just txt -> do
-               let filename = dir ++ "/" ++ show (exerciseCode ex) ++ "." ++ name r ++ ".lhs"
+               let filename = path ++ "/rule" ++ name r ++ ".lhs"
                putStrLn $ "Creating " ++ filename
                writeFile filename txt
 
@@ -66,7 +69,7 @@ makeDocument :: Exercise a -> IO String
 makeDocument ex = do
    time <- getClockTime
    return $ 
-      texHeader (Just $ domain ex ++ ".fmt") ++ 
+      texHeader (Just $ domain ex ++ "/" ++ domain ex ++ ".fmt") ++ 
       texBody (Just $ show time) (texSectionRules ex)
 
 ------------------------------------------------------

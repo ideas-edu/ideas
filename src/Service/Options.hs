@@ -38,7 +38,7 @@ header :: String
 header = "Usage: service [OPTION]      (version " ++ versionNr ++ ")"
 
 versionNr :: String
-versionNr = "0.4.2"
+versionNr = "0.4.3"
 
 serviceOptions :: IO [Flag]
 serviceOptions = do

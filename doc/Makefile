@@ -25,10 +25,10 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-documentation: haddock wikipages pdfdocs hpc
+documentation: haddock wikipages exercisedocs hpc
 
 haddock: $(HADDOCKDIR)/index.html
-pdfdocs: $(EXERCISEDIR) $(PDFTARGETS)
+exercisedocs: $(EXERCISEDIR) $(PDFTARGETS)
 hpc: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue

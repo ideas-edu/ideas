@@ -16,7 +16,7 @@ main :: IO ()
 main = do
    dir <- targetDirectory
    flip mapM_ exerciseList $ \(Some ex) -> do
-      let path = dir ++ "/" ++ domain ex ++ "/" ++ identifier ex
+      let path = dir ++ "/" ++ domain ex ++ "/" ++ filter (/= ' ') (identifier ex)
       -- Exercise document
       let rules = concatMap getRewriteRules (ruleset ex)
       unless (null rules) $ do

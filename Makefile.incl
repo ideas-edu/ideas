@@ -51,27 +51,33 @@ HPC        = hpc
 RUNHASKELL = runhaskell
 
 LHS2TEX    = lhs2TeX
+PDFLATEX   = pdflatex
+LATEX      = latex
+
+CONVERT    = convert
+DVIPNG     = dvipng
 
 TOUCH = touch
 STRIP = strip
 MKDIR = mkdir
 CP    = cp
 RM    = rm
+RMDIR = rmdir
 CD    = cd
 
 #---------------------------------------------------------------------------------------
 # General rules
 
 %.dvi: %.tex
-	latex -output-directory=$(<D) $<
+	$(LATEX) -output-directory=$(<D) $<
 
 %.png: %.dvi
-	dvipng -o tmp.png $<
-	convert -trim tmp.png $@
-	rm -f tmp.png
+	$(DVIPNG) -o tmp.png $<
+	$(CONVERT) -trim tmp.png $@
+	$(RM) -f tmp.png
 
 %.pdf: %.tex
-	pdflatex -output-directory=$(<D) $<
+	$(PDFLATEX) -output-directory=$(<D) $<
 
 %.tex: %.lhs
 	$(LHS2TEX) --poly $< > $@

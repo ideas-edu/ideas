@@ -33,9 +33,8 @@ dnfExercise = Exercise
    , description   = "Proposition to DNF" 
    , status        = Stable
    , parser        = \s -> case parseLogicPars s of
-                              (p, [])      -> Right (fromRanged p)
-                              (_, (a,b):_) -> Left $ "Parse error" ++ 
-                                              maybe "" (\x -> " on " ++ show x) b ++ ":\n   expecting " ++ show a
+                              (p, []) -> Right (fromRanged p)
+                              (_, xs) -> Left $ unlines xs
    , subTerm       = \s r -> case parseLogicPars s of
                                 (p, []) -> fmap makeLocation (subExpressionAt r p)
                                 _       -> Nothing

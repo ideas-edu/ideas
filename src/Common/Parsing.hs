@@ -24,8 +24,10 @@ module Common.Parsing
    , Ranged, Range(..), Pos(..), toRanged, fromRanged, subExpressionAt
    , pKey, pSpec, pVarid, pConid, unaryOp, binaryOp, pParens, indicesToRange
    , pInteger, pFraction, pString, pBracks, pCurly, pCommas, pLines
-    -- ** Operator table (parser)
+    -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
+    -- * Analyzing parentheses
+   , ParError(..), checkParentheses, showTokenPos, tokenNoPosition
    ) where
 
 import qualified UU.Parsing as UU
@@ -80,7 +82,7 @@ scanWith :: Scanner -> String -> [UU.Token]
 scanWith scanner = post . uuScan . pre
  where
    specialNewlines = '\127' `elem` specialCharacters scanner
-   pos  = UU.initPos $ fromMaybe "input" (fileName scanner)
+   pos  = UU.initPos $ fromMaybe "" (fileName scanner)
    pre  = if specialNewlines then map (\c -> if c=='\n' then '\127' else c) else id
    post = if specialNewlines then map changeToken else id
    uuScan = UU.scan (keywords scanner) (keywordOperators scanner) 
@@ -324,3 +326,58 @@ pChain a p q = case a of
                   LeftAssociative  -> pChainl p q
                   RightAssociative -> pChainr p q
                   NonAssociative   -> (flip ($)) <$> q <*> p <*> q
+                  
+-----------------------------------------------------------
+--- Analyzing parentheses
+
+data ParError = ParNotClosed UU.Token 
+              | ParNoOpen UU.Token 
+              | ParMismatch UU.Token UU.Token
+
+instance Show ParError where
+   show = showParError
+
+showParError :: ParError -> String
+showParError err =
+   case err of
+      ParNotClosed t  -> "Opening parenthesis at location " ++ showTokenPos t ++ " is not closed"
+      ParNoOpen t     -> "Closing parenthesis at location " ++ showTokenPos t ++ " has no matching symbol"
+      ParMismatch _ c -> "Closing parenthesis at location " ++ showTokenPos c ++ " does not match its matching symol"
+
+showTokenPos :: UU.Token -> String
+showTokenPos (UU.Reserved _ p)   = showPosition p
+showTokenPos (UU.ValToken _ _ p) = showPosition p
+
+showPosition :: UU.Position a => a -> String
+showPosition p = show (UU.line p, UU.column p)
+
+tokenNoPosition :: UU.Token -> UU.Token
+tokenNoPosition (UU.Reserved a _)   = UU.Reserved a UU.noPos
+tokenNoPosition (UU.ValToken a b _) = UU.ValToken a b UU.noPos
+
+checkParentheses :: [UU.Token] -> Maybe ParError
+checkParentheses = rec []
+ where
+   rec []    [] = Nothing
+   rec (t:_) [] = Just (ParNotClosed t)
+   rec stack (t:ts)
+      | isOpening t =
+           rec (t:stack) ts
+      | isClosing t =
+           case stack of
+              [] -> Just (ParNoOpen t) 
+              x:xs
+                 | match x t -> rec xs ts
+                 | otherwise -> Just (ParMismatch x t)
+      | otherwise =
+           rec stack ts
+      
+isOpening, isClosing :: UU.Token -> Bool
+isOpening (UU.Reserved ("(") _) = True
+isOpening _ = False
+isClosing (UU.Reserved (")") _) = True
+isClosing _ = False
+            
+match :: UU.Token -> UU.Token -> Bool
+match (UU.Reserved ("(") _) (UU.Reserved (")") _) = True
+match _ _ = False

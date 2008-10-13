@@ -112,17 +112,17 @@ probablyEqual :: RelAlg -> RelAlg -> Bool
 probablyEqual = probablyEqualWith (mkStdGen 28)
 
 probablyEqualWith :: StdGen -> RelAlg -> RelAlg -> Bool
-probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 10 rng)
+probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 50 rng)
  where
    -- size of (co-)domain
-   as     = [0..2]
+   as     = [0..1]
    -- number of attemps (with different randomly generated relations)
    makeRngs n g
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
    eval g = evalRelAlg (generate 100 g (arbRelations as)) as
 
-probablyEqualWithG :: StdGen -> RelAlg -> RelAlg -> Maybe Int
+{- probablyEqualWithG :: StdGen -> RelAlg -> RelAlg -> Maybe Int
 probablyEqualWithG rng p q = safeHead $ catMaybes $ zipWith f [1..] (makeRngs 100 rng)
  where
    f i g = if eval g p == eval g q then Nothing else Just i
@@ -132,7 +132,7 @@ probablyEqualWithG rng p q = safeHead $ catMaybes $ zipWith f [1..] (makeRngs 10
    makeRngs n g
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
-   eval g = evalRelAlg (generate 100 g (arbRelations as)) as
+   eval g = evalRelAlg (generate 100 g (arbRelations as)) as -}
    
 inspect :: [Int]
 inspect = map f [1..100]

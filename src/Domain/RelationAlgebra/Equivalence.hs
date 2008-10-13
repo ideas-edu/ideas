@@ -11,7 +11,7 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.RelationAlgebra.Equivalence where
+module Domain.RelationAlgebra.Equivalence (isEquivalent) where
 
 import Data.List
 import Data.Maybe

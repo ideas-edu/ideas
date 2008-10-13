@@ -19,12 +19,12 @@ import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
+-- import Domain.RelationAlgebra.Equivalence
 import Common.Apply
 import Common.Exercise
 import Common.Context
 import Common.Strategy hiding (not)
 import Common.Transformation
-import Test.QuickCheck hiding (label)
 
 cnfExercise :: Exercise RelAlg
 cnfExercise = makeExercise
@@ -36,12 +36,13 @@ cnfExercise = makeExercise
                               (p, [])   -> Right p
                               (_, msgs) -> Left  (show msgs)
    , prettyPrinter = ppRelAlg
-   , equivalence = probablyEqual
-   , ruleset   = map liftRuleToContext relAlgRules
-   , strategy  = toCNF
+   , equivalence   = probablyEqual -- isEquivalent
+   , ruleset       = map liftRuleToContext relAlgRules
+   , strategy      = toCNF
    , finalProperty = ready (ruleset cnfExercise)
-   , generator = oneof [gen1,gen2,gen3,gen4,gen5,gen6,gen7,gen8,gen9]
-   , suitableTerm = not . isCNF
+   , generator     = templateGenerator 1
+   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
+                           in n >= 4 && n <= 8
    }
 
 {- cnfExerciseSimple :: Exercise RelAlg

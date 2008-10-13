@@ -11,12 +11,13 @@
 -- (todo)
 --
 -----------------------------------------------------------------------------
-module Domain.RelationAlgebra.Generator where
+module Domain.RelationAlgebra.Generator (templateGenerator) where
 
 import Domain.RelationAlgebra.Formula
 import Common.Rewriting
 import Control.Monad
 import Test.QuickCheck 
+import Common.Exercise
 
 instance Rewrite RelAlg
 
@@ -61,33 +62,35 @@ template6 mp a b mq = f1 (f2 (a :&&: b))
 template7 x y z = x :.: (y :||:z) 
 template8 x y z = x :||:(Not(Inv(y :.: z) :&&: Not(Inv(y) :.: Inv(z))))
 
-gen1 :: Gen RelAlg
-gen1 = liftM3 template1 (arbInvNotMol 4) (arbInvNotMol 4) (arbInvNotMol 4)
-gen2 :: Gen RelAlg
-gen2 = liftM3 template2 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
-gen3 :: Gen RelAlg
-gen3 = liftM3 template3 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
-gen4 :: Gen RelAlg
-gen4 = liftM3 template4 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
-gen5 :: Gen RelAlg
-gen5 = liftM4 template5 (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2) (arbInvNotMol 2)
+-------------------------------------------------------------------
+-- Template generators
+
+templateGenerator :: Int -> Gen RelAlg
+templateGenerator n = oneof (map ($ n) [gen1,gen2,gen3,gen4,gen5,gen6,gen7,gen8,gen9])
+
+gen1, gen2, gen3, gen4, gen5, gen6, gen7, gen8, gen9 :: Int -> Gen RelAlg
+gen1 = use3 template1 arbInvNotMol arbInvNotMol arbInvNotMol
+gen2 = use3 template2 arbInvNotMol arbInvNotMol arbInvNotMol
+gen3 = use3 template3 arbInvNotMol arbInvNotMol arbInvNotMol
+gen4 = use3 template4 arbInvNotMol arbInvNotMol arbInvNotMol
+gen5 = use4 template5 arbInvNotMol arbInvNotMol arbInvNotMol arbInvNotMol
+gen6 = use3 template1 hulpgen1 arbInvNotMol arbInvNotMol
+gen7 = use3 template1 arbInvNotMol hulpgen1 arbInvNotMol
+gen8 = use3 template2 arbInvNotMol hulpgen1 arbInvNotMol
+gen9 = use3 template8 hulpgen2 arbInvNotMol arbInvNotMol
+
+use3 temp f g h   n = liftM3 temp (f n) (g n) (h n)
+use4 temp f g h k n = liftM4 temp (f n) (g n) (h n) (k n)
+
 hulpgen1 :: Int -> Gen RelAlg
 hulpgen1 n = liftM4 template6 (arbMaybeInvNotMol n) arbVar arbVar (arbMaybeInvNotMol n)
-gen6 :: Gen RelAlg
-gen6 = liftM3 template1 (hulpgen1 2) (arbInvNotMol 4) (arbInvNotMol 4)
-gen7 :: Gen RelAlg
-gen7 = liftM3 template1 (arbInvNotMol 4) (hulpgen1 2) (arbInvNotMol 4)
-gen8 :: Gen RelAlg
-gen8 = liftM3 template2 (arbInvNotMol 4) (hulpgen1 2) (arbInvNotMol 4)
+
 hulpgen2 :: Int -> Gen RelAlg
 hulpgen2 n = liftM3 template7 (arbInvNotMol 1) (arbRelAlg n) (arbRelAlg n)
-gen9 :: Gen RelAlg
-gen9 = liftM3 template8 (hulpgen2 2) (arbInvNotMol 2) (arbInvNotMol 2)
-
 
 arbInvNotMol :: Int -> Gen RelAlg
 arbInvNotMol 0 = frequency [(10, liftM Var (oneof $ map return vars)), (1, return U), (1, return E)]
-arbInvNotMol n = frequency [ (1, arbRelAlg 0), (4, binop (:.:)), (4, binop (:+:)), (2, unop Not), (2, unop Inv) ]
+arbInvNotMol n = frequency [ (1, arbInvNotMol 0), (4, binop (:.:)), (4, binop (:+:)), (2, unop Not), (2, unop Inv) ]
  where
    binop op = liftM2 op rec rec
    unop op  = liftM op rec
@@ -98,5 +101,3 @@ arbMaybeInvNotMol n = frequency [(3, liftM Just (arbInvNotMol n)), (1, return No
 
 arbVar :: Gen RelAlg
 arbVar = liftM Var (oneof $ map return vars)
-
-

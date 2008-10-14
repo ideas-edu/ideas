@@ -124,11 +124,18 @@ submit state new
    applyOff = -- scenario 2: off-strategy
       let newState = state { context=inContext new }
       in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (term state) new)) of
-              Just r  -> Detour [r] newState
-              Nothing -> Unknown newState
+            Just r  -> Detour [r] newState
+            Nothing -> Unknown newState
 
+-- TODO: better solution to test all rules at all locations. Unfortunately, we don't have the
+-- (Uniplate a) context here, which would make it simpler
 -- local helper-function
 findRules :: Exercise a -> a -> a -> [Rule (Context a)]
 findRules ex old new =
-   let p r = any (equality ex new . fromContext) (Apply.applyAll r $ inContext old)
-   in filter p (ruleset ex)
+   [ r | r <- ruleset ex, l <- makeLocs 5, p l r ]
+ where
+   p l r = any (equality ex new . fromContext) (Apply.applyAll r $ setLocation l $ inContext old)
+
+   
+makeLocs :: Int -> [Location]
+makeLocs i = makeLocation [] : [ locationDown i l | i>0, l <- makeLocs (i-1), i <- [0..1] ]

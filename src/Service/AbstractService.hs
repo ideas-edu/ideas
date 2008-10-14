@@ -38,6 +38,7 @@ data Result = SyntaxError
             | Ok [RuleID] State      -- equivalent
             | Detour [RuleID] State  -- equivalent
             | Unknown State          -- equivalent
+   deriving Show
           
 generate :: ExerciseID -> Int -> IO State
 generate exID level = 

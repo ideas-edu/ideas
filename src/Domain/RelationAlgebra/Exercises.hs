@@ -37,7 +37,7 @@ cnfExercise = makeExercise
                               (_, msgs) -> Left  (show msgs)
    , prettyPrinter = ppRelAlg
    , equivalence   = probablyEqual -- isEquivalent
-   , ruleset       = map liftRuleToContext relAlgRules
+   , ruleset       = map liftRuleToContext (relAlgRules ++ buggyRelAlgRules)
    , strategy      = toCNF
    , finalProperty = ready (ruleset cnfExercise)
    , generator     = templateGenerator 1

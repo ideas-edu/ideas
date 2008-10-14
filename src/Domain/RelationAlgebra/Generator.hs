@@ -32,11 +32,11 @@ instance Arbitrary RelAlg where
          p :||: q -> variant 4 . coarbitrary p . coarbitrary q       
          Not p    -> variant 5 . coarbitrary p
          Inv p    -> variant 6 . coarbitrary p  
-         U        -> variant 7   
+         V        -> variant 7   
          E        -> variant 8      
    
 arbRelAlg :: Int -> Gen RelAlg
-arbRelAlg 0 = frequency [(8, liftM Var (oneof $ map return vars)), (1, return U), (1, return E)]
+arbRelAlg 0 = frequency [(8, liftM Var (oneof $ map return vars)), (1, return V), (1, return E)]
 arbRelAlg n = oneof [ arbRelAlg 0, binop (:.:), binop (:+:), binop (:&&:), binop (:||:)
                     , unop Not, unop Inv 
                     ]
@@ -89,7 +89,7 @@ hulpgen2 :: Int -> Gen RelAlg
 hulpgen2 n = liftM3 template7 (arbInvNotMol 1) (arbRelAlg n) (arbRelAlg n)
 
 arbInvNotMol :: Int -> Gen RelAlg
-arbInvNotMol 0 = frequency [(10, liftM Var (oneof $ map return vars)), (1, return U), (1, return E)]
+arbInvNotMol 0 = frequency [(10, liftM Var (oneof $ map return vars)), (1, return V), (1, return E)]
 arbInvNotMol n = frequency [ (10, arbInvNotMol 0), (4, binop (:.:)), (4, binop (:+:)), (2, unop Not), (2, unop Inv) ]
  where
    binop op = liftM2 op rec rec

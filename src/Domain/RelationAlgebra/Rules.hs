@@ -125,8 +125,8 @@ ruleIdemp = ruleList "Idempotency"
 
 ruleRemCompl :: Rule RelAlg
 ruleRemCompl = ruleList "RemCompl" 
-   [ \r -> (r :||: (Not r)) :~>  U
-   , \r -> ((Not r) :||: r) :~>  U
+   [ \r -> (r :||: (Not r)) :~>  V
+   , \r -> ((Not r) :||: r) :~>  V
    , \r -> (r :&&: (Not r)) :~>  E
    , \r -> ((Not r) :&&: r) :~>  E
    ]
@@ -164,27 +164,27 @@ ruleAbsorp = ruleList "Absorp"
 -- | 8. Remove redundant expressions
 ruleRemRedunExprs :: Rule RelAlg
 ruleRemRedunExprs = ruleList "RemRedunExprs"  
-   [ \r -> (r :||: U) :~> U
-   , \r -> (U :||: r) :~> U 
+   [ \r -> (r :||: V) :~> V
+   , \r -> (V :||: r) :~> V 
    , \r -> (r :||: E) :~> r
    , \r -> (E :||: r) :~> r 
-   , \r -> (r :&&: U) :~> r
-   , \r -> (U :&&: r) :~> r 
+   , \r -> (r :&&: V) :~> r
+   , \r -> (V :&&: r) :~> r 
    , \r -> (r :&&: E) :~> E
    , \r -> (E :&&: r) :~> E 
 --   , (r :.: U)  :~> r
 --   , (U :.: r)  :~> r
-   , \_ -> (U :.: U)  :~> U
+   , \_ -> (V :.: V)  :~> V
    , \r -> (r :.: E)  :~> E
    , \r -> (E :.: r)  :~> E 
-   , \r -> (r :+: U)  :~> U
-   , \r -> (U :+: r)  :~> U
+   , \r -> (r :+: V)  :~> V
+   , \r -> (V :+: r)  :~> V
    , \_ -> (E :+: E)  :~> E
 --   , (r :+: E)  :~> r
 --   , (E :+: r)  :~> r 
-   , \_ -> (Not U)    :~> E
-   , \_ -> (Not E)    :~> U
-   , \_ -> (Inv U)    :~> U
+   , \_ -> (Not V)    :~> E
+   , \_ -> (Not E)    :~> V
+   , \_ -> (Inv V)    :~> V
    , \_ -> (Inv E)    :~> E
    ]
    
@@ -294,8 +294,8 @@ buggyRuleRemCompl :: Rule RelAlg
 buggyRuleRemCompl = buggyRule $ ruleList "BuggyRemCompl" 
    [ \r -> (r :||: (Not r)) :~>  E
    , \r -> ((Not r) :||: r) :~>  E
-   , \r -> (r :&&: (Not r)) :~>  U
-   , \r -> ((Not r) :&&: r) :~>  U
+   , \r -> (r :&&: (Not r)) :~>  V
+   , \r -> ((Not r) :&&: r) :~>  V
    ]
 
 

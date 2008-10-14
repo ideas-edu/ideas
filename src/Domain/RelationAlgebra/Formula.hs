@@ -39,7 +39,7 @@ data RelAlg = Var String
             | RelAlg :||:  RelAlg          -- or (disjunction)
             | Not RelAlg                   -- not
             | Inv RelAlg                   -- inverse
-            | U                            -- universe
+            | V                            -- universe
             | E                            -- empty
  deriving (Show, Eq, Ord)
 
@@ -53,7 +53,7 @@ isAtom  r =
       Not (Var _)       -> True
       Inv (Var _)       -> True
       Not (Inv (Var _)) -> True
-      U                 -> True
+      V                 -> True
       E                 -> True
       _                 -> False
  
@@ -87,7 +87,7 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
          p :||: q  -> rec p `disj` rec q
          Not p     -> not (rec p)
          Inv p           -> inverse (rec p)
-         U         -> universe 
+         V         -> universe 
          E         -> empty
 
 type Relation a = S.Set (a, a)
@@ -181,6 +181,6 @@ instance ShallowEq RelAlg where
          (_ :||: _, _ :||: _) -> True
          (Not _   , Not _   ) -> True
          (Inv _   , Inv _   ) -> True
-         (U       , U       ) -> True
+         (V       , V       ) -> True
          (E       , E       ) -> True
          _                    -> False

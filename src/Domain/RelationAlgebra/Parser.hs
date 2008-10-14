@@ -34,7 +34,7 @@ basicWith p = foldl (flip ($)) <$> atom <*> pList post
    post =  Not <$ notSym <|> Inv <$ invSym
    atom =  Var <$> pvarid
        <|> pparens p
-       <|> U <$ pSym 'U'
+       <|> V <$ pSym 'V'
        <|> E <$ pSym 'E'
                 
 andSym  = pToks "/\\"
@@ -72,7 +72,7 @@ ppRelAlg :: RelAlg -> String
 ppRelAlg = ppRelAlgPrio 0
 
 ppRelAlgPrio :: Int -> RelAlg -> String 
-ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "U", var "E") p n ""
+ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "V", var "E") p n ""
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    var       = const . (++)

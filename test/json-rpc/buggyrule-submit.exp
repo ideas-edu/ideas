@@ -1,0 +1,10 @@
+{
+   "result": {
+      "result": "Buggy",
+      "rules": [
+         "BuggyDeMorgan"
+      ]
+   },
+   "error": null,
+   "id": 2805
+}

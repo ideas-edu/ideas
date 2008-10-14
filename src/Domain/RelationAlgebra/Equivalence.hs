@@ -135,7 +135,7 @@ searchForComplements (x:xs) = [(x,z) | z <- xs, isComplement x z] ++ searchForCo
 isComplement :: RelAlg -> RelAlg -> Bool
 isComplement x y = (fromContext (applyD toCNF (inContext (Not x)))) == y  
 
-
+-- FIXME: what should we do with the identity relation?
 evalFormula :: RelAlg -> [(RelAlg, Bool)] -> Bool
 evalFormula f val =
    case lookup f val of
@@ -145,7 +145,7 @@ evalFormula f val =
             f1 :&&: f2  -> evalFormula f1 val && evalFormula f2 val
             f1 :||: f2  -> evalFormula f1 val || evalFormula f2 val
             Not f       -> not (evalFormula f val)
-            U           -> True
+            V           -> True
             E           -> False
             x           -> let value = lookup x val
                            in if value == Nothing
@@ -167,8 +167,9 @@ getSetOfMolecules = nub . getMolecules
        p :&&: q  ->  getMolecules p ++ getMolecules q
        p :||: q  ->  getMolecules p ++ getMolecules q
        Not p     ->  getMolecules p
-       U         ->  []
+       V         ->  []
        E         ->  []
+       I         ->  []
        p         ->  [p] 
 
  

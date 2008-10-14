@@ -127,8 +127,6 @@ ruleRemCompl :: Rule RelAlg
 ruleRemCompl = ruleList "RemCompl" 
    [ \r -> (r :||: (Not r)) :~>  V
    , \r -> ((Not r) :||: r) :~>  V
-   , \r -> (r :&&: (Not r)) :~>  E
-   , \r -> ((Not r) :&&: r) :~>  E
    ]
    
 -- |6a. Double negation   
@@ -166,26 +164,16 @@ ruleRemRedunExprs :: Rule RelAlg
 ruleRemRedunExprs = ruleList "RemRedunExprs"  
    [ \r -> (r :||: V) :~> V
    , \r -> (V :||: r) :~> V 
-   , \r -> (r :||: E) :~> r
-   , \r -> (E :||: r) :~> r 
    , \r -> (r :&&: V) :~> r
-   , \r -> (V :&&: r) :~> r 
-   , \r -> (r :&&: E) :~> E
-   , \r -> (E :&&: r) :~> E 
+   , \r -> (V :&&: r) :~> r  
 --   , (r :.: U)  :~> r
 --   , (U :.: r)  :~> r
    , \_ -> (V :.: V)  :~> V
-   , \r -> (r :.: E)  :~> E
-   , \r -> (E :.: r)  :~> E 
    , \r -> (r :+: V)  :~> V
    , \r -> (V :+: r)  :~> V
-   , \_ -> (E :+: E)  :~> E
 --   , (r :+: E)  :~> r
 --   , (E :+: r)  :~> r 
-   , \_ -> (Not V)    :~> E
-   , \_ -> (Not E)    :~> V
    , \_ -> (Inv V)    :~> V
-   , \_ -> (Inv E)    :~> E
    ]
    
 -- | 9. Distribute Not over . and +
@@ -198,7 +186,7 @@ ruleNotOverAdd :: Rule RelAlg
 ruleNotOverAdd = rule "NotOverAdd" $ 
    \r s -> Not (r :+: s) :~>  (Not r :.: Not s)
    
-   -- Buggy rules:
+-- Buggy rules:
 
 
     
@@ -292,11 +280,27 @@ buggyRuleAddOverUnion = buggyRule $ ruleList "BuggyAddOverUnion"
    
 buggyRuleRemCompl :: Rule RelAlg
 buggyRuleRemCompl = buggyRule $ ruleList "BuggyRemCompl" 
-   [ \r -> (r :||: (Not r)) :~>  E
-   , \r -> ((Not r) :||: r) :~>  E
-   , \r -> (r :&&: (Not r)) :~>  V
+   [ \r -> (r :&&: (Not r)) :~>  V
    , \r -> ((Not r) :&&: r) :~>  V
    ]
 
-
-    
+-- Older rules involving the empty relation
+{-
+  -- RemCompl
+   \r -> (r :&&: (Not r)) :~>  E
+   \r -> ((Not r) :&&: r) :~>  E
+  -- RemRedunExprs
+   \_ -> (Not V)    :~> E
+   \_ -> (Not E)    :~> V
+   \_ -> (Inv E)    :~> E
+   \r -> (r :||: E) :~> r
+   \r -> (E :||: r) :~> r 
+   \r -> (r :&&: E) :~> E
+   \r -> (E :&&: r) :~> E 
+   \r -> (r :.: E)  :~> E
+   \r -> (E :.: r)  :~> E
+   \_ -> (E :+: E)  :~> E
+  -- BuggyRemCompl
+  \r -> (r :||: (Not r)) :~>  E
+  \r -> ((Not r) :||: r) :~>  E
+-}

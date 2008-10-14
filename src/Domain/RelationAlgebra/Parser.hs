@@ -34,8 +34,9 @@ basicWith p = foldl (flip ($)) <$> atom <*> pList post
    post =  Not <$ notSym <|> Inv <$ invSym
    atom =  Var <$> pvarid
        <|> pparens p
-       <|> V <$ pSym 'V'
-       <|> E <$ pSym 'E'
+       <|> V     <$ pSym 'V'
+       <|> empty <$ pSym 'E' -- The empty relation is no longer present in the data-type, but E remains an abbreviation (for now)
+       <|> I     <$ pSym 'I'
                 
 andSym  = pToks "/\\"
 orSym   = pToks "\\/" 
@@ -72,7 +73,7 @@ ppRelAlg :: RelAlg -> String
 ppRelAlg = ppRelAlgPrio 0
 
 ppRelAlgPrio :: Int -> RelAlg -> String 
-ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "V", var "E") p n ""
+ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "V", var "I") p n ""
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    var       = const . (++)

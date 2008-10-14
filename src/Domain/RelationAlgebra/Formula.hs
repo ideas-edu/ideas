@@ -40,8 +40,13 @@ data RelAlg = Var String
             | Not RelAlg                   -- not
             | Inv RelAlg                   -- inverse
             | V                            -- universe
-            | E                            -- empty
+            | I                            -- identity relation
  deriving (Show, Eq, Ord)
+
+-- The empty relation is a smart-constructor: it has no (longer an) actual constructor
+-- in the RelAlg datatype
+empty :: RelAlg
+empty = Not V
 
 -------------------------------------
 
@@ -54,7 +59,7 @@ isAtom  r =
       Inv (Var _)       -> True
       Not (Inv (Var _)) -> True
       V                 -> True
-      E                 -> True
+      I                 -> True
       _                 -> False
  
 isMolecule :: RelAlg -> Bool
@@ -76,7 +81,7 @@ type RelAlgAlgebra a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a ->
 
 -- | foldRelAlg is the standard folfd for RelAlg.
 foldRelAlg :: RelAlgAlgebra a -> RelAlg -> a
-foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
+foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, ident) = rec
  where
    rec term =
       case term of
@@ -88,12 +93,12 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) = rec
          Not p     -> not (rec p)
          Inv p           -> inverse (rec p)
          V         -> universe 
-         E         -> empty
+         I         -> ident
 
 type Relation a = S.Set (a, a)
 
 evalRelAlg :: Ord a => (String -> Relation a) -> [a] -> RelAlg -> Relation a
-evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, empty) 
+evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, ident) 
  where
    pairs = cartesian as as
    comp     = \p q -> let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
@@ -105,7 +110,7 @@ evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, univer
    not      = \p -> S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
    inverse  = S.map (\(x, y) -> (y, x))
    universe = S.fromAscList pairs
-   empty    = S.empty
+   ident    = S.fromAscList [ (x, x) | x <- as ]
 
 -- | Try to find a counter-example showing that the two formulas are not equivalent.
 probablyEqual :: RelAlg -> RelAlg -> Bool
@@ -182,5 +187,5 @@ instance ShallowEq RelAlg where
          (Not _   , Not _   ) -> True
          (Inv _   , Inv _   ) -> True
          (V       , V       ) -> True
-         (E       , E       ) -> True
+         (I       , I       ) -> True
          _                    -> False

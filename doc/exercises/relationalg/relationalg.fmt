@@ -5,8 +5,8 @@
 %format Not (a) = "\overline{"a"}"
 %format Inv a = "{"a"}^{\smile}"
 %format Var a = a
-%format U     = "U"
-%format E     = "E"
+%format V     = "V"
+%format I     = "I"
 %format _0    = "q"
 %format _1    = "r"
 %format _2    = "s"

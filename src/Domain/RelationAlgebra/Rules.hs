@@ -110,9 +110,6 @@ ruleDeMorgan = ruleList "DeMorgan"
    , \r s -> Not (r :&&: s) :~>  (Not r :||: Not s)
    ]
 
-
-
- 
 -- | 5. Idempotention
 
 ruleIdemp :: Rule RelAlg
@@ -127,6 +124,8 @@ ruleRemCompl :: Rule RelAlg
 ruleRemCompl = ruleList "RemCompl" 
    [ \r -> (r :||: (Not r)) :~>  V
    , \r -> ((Not r) :||: r) :~>  V
+   , \r -> (r :&&: (Not r)) :~>  empty
+   , \r -> ((Not r) :&&: r) :~>  empty
    ]
    
 -- |6a. Double negation   
@@ -174,6 +173,15 @@ ruleRemRedunExprs = ruleList "RemRedunExprs"
 --   , (r :+: E)  :~> r
 --   , (E :+: r)  :~> r 
    , \_ -> (Inv V)    :~> V
+   -- rules involving the empty relation
+   , \_ -> (Inv empty)    :~> empty
+   , \r -> (r :||: empty) :~> r
+   , \r -> (empty :||: r) :~> r 
+   , \r -> (r :&&: empty) :~> empty
+   , \r -> (empty :&&: r) :~> empty
+   , \r -> (r :.: empty)  :~> empty
+   , \r -> (empty :.: r)  :~> empty
+   , \_ -> (empty :+: empty)  :~> empty
    ]
    
 -- | 9. Distribute Not over . and +
@@ -282,25 +290,13 @@ buggyRuleRemCompl :: Rule RelAlg
 buggyRuleRemCompl = buggyRule $ ruleList "BuggyRemCompl" 
    [ \r -> (r :&&: (Not r)) :~>  V
    , \r -> ((Not r) :&&: r) :~>  V
+   , \r -> (r :||: (Not r)) :~>  empty
+   , \r -> ((Not r) :||: r) :~>  empty
    ]
 
 -- Older rules involving the empty relation
 {-
-  -- RemCompl
-   \r -> (r :&&: (Not r)) :~>  E
-   \r -> ((Not r) :&&: r) :~>  E
   -- RemRedunExprs
    \_ -> (Not V)    :~> E
    \_ -> (Not E)    :~> V
-   \_ -> (Inv E)    :~> E
-   \r -> (r :||: E) :~> r
-   \r -> (E :||: r) :~> r 
-   \r -> (r :&&: E) :~> E
-   \r -> (E :&&: r) :~> E 
-   \r -> (r :.: E)  :~> E
-   \r -> (E :.: r)  :~> E
-   \_ -> (E :+: E)  :~> E
-  -- BuggyRemCompl
-  \r -> (r :||: (Not r)) :~>  E
-  \r -> ((Not r) :||: r) :~>  E
 -}

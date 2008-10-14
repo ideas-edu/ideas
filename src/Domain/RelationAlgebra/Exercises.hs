@@ -42,7 +42,7 @@ cnfExercise = makeExercise
    , finalProperty = ready (ruleset cnfExercise)
    , generator     = templateGenerator 1
    , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
-                           in n >= 4 && n <= 8
+                           in n >= 2 && n <= 4
    }
 
 {- cnfExerciseSimple :: Exercise RelAlg

@@ -49,7 +49,7 @@ ruleInvOverUnion = rule "InvOverUnion" $
 
 ruleInvOverIntersec :: Rule RelAlg
 ruleInvOverIntersec = rule "InvOverIntersect" $  
-   \r s -> (Inv (r :&&: s)) :~> (Inv r :&&: Inv s)
+   \r s -> (Inv (r :&&: s)) :~> (Inv r :&&: Inv s) --- !!!!!!! ALLEEN VOOR FUNCTIES
 
 ruleInvOverComp :: Rule RelAlg
 ruleInvOverComp = rule "InvOverComp" $ 

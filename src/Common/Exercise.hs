@@ -22,7 +22,7 @@ module Common.Exercise
 
 import Common.Apply
 import Common.Context
-import Common.Parsing (Range)
+import Common.Parsing (Range, SyntaxError(..))
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
@@ -37,7 +37,7 @@ data Exercise a = Exercise
    , description   :: String    -- short sentence describing the task
    , status        :: Status
      -- parsing and pretty-printing
-   , parser        :: String -> Either String a
+   , parser        :: String -> Either SyntaxError a
    , subTerm       :: String -> Range -> Maybe Location
    , prettyPrinter :: a -> String
      -- syntactic and semantic checks
@@ -64,7 +64,7 @@ makeExercise = Exercise
    , domain        = ""
    , description   = "<no description>"
    , status        = Experimental
-   , parser        = const $ Left "no parser"
+   , parser        = const $ Left $ ErrorMessage "No parser available"
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show
    , equivalence   = (==)

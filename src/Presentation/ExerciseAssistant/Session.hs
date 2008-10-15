@@ -61,7 +61,7 @@ thisExercise txt (Session _ ref) = do
    Some d <- readIORef ref
    let ex = exercise d
    case parser ex txt of
-      Left err  -> return (Just err)
+      Left err  -> return (Just $ show err)
       Right a -> do
          let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext a)
          writeIORef ref $ Some new
@@ -89,7 +89,7 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    Some d <- readIORef ref
    case parser (exercise d) txt of
       Left err -> 
-         return (err, False)
+         return (show err, False)
       Right term ->
          case TAS.submit (currentState d) term of
             TAS.Buggy rs -> 

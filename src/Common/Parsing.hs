@@ -27,7 +27,8 @@ module Common.Parsing
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
     -- * Analyzing parentheses
-   , ParError(..), checkParentheses, showTokenPos, tokenNoPosition
+   , SyntaxError(..), fromMessage, errorToPositions
+   , checkParentheses, showTokenPos, tokenNoPosition
    ) where
 
 import qualified UU.Parsing as UU
@@ -326,27 +327,49 @@ pChain a p q = case a of
                   LeftAssociative  -> pChainl p q
                   RightAssociative -> pChainr p q
                   NonAssociative   -> (flip ($)) <$> q <*> p <*> q
-                  
+
+-----------------------------------------------------------
+--- Syntax errors
+
+data SyntaxError 
+   = Unexpected UU.Token
+   | ParNotClosed UU.Token 
+   | ParNoOpen UU.Token 
+   | ParMismatch UU.Token UU.Token
+   | ErrorMessage String
+
+instance Show SyntaxError where
+   show err = 
+      case err of
+         Unexpected t      -> "Unexpected " ++ show (tokenNoPosition t) 
+         ParNotClosed t    -> "Opening parenthesis " ++ show (tokenNoPosition t) ++ " is not closed"
+         ParNoOpen t       -> "Closing parenthesis " ++ show (tokenNoPosition t) ++ " has no matching symbol"
+         ParMismatch t1 t2 -> "Opening parenthesis " ++ show (tokenNoPosition t1) ++ " is closed with " ++ show (tokenNoPosition t2)
+         ErrorMessage msg  -> msg
+
+fromMessage :: Message UU.Token -> SyntaxError
+fromMessage (_, Just t) = Unexpected t
+fromMessage _           = ErrorMessage "Syntax error"
+
+errorToPositions :: SyntaxError -> [(Int, Int)]
+errorToPositions err = 
+   case err of
+      Unexpected t      -> [toPosition t]
+      ParNotClosed t    -> [toPosition t]
+      ParNoOpen t       -> [toPosition t]
+      ParMismatch t1 t2 -> [toPosition t1, toPosition t2]
+      ErrorMessage _    -> []
+
 -----------------------------------------------------------
 --- Analyzing parentheses
-
-data ParError = ParNotClosed UU.Token 
-              | ParNoOpen UU.Token 
-              | ParMismatch UU.Token UU.Token
-
-instance Show ParError where
-   show = showParError
-
-showParError :: ParError -> String
-showParError err =
-   case err of
-      ParNotClosed t  -> "Opening parenthesis at location " ++ showTokenPos t ++ " is not closed"
-      ParNoOpen t     -> "Closing parenthesis at location " ++ showTokenPos t ++ " has no matching symbol"
-      ParMismatch _ c -> "Closing parenthesis at location " ++ showTokenPos c ++ " does not match its matching symol"
 
 showTokenPos :: UU.Token -> String
 showTokenPos (UU.Reserved _ p)   = showPosition p
 showTokenPos (UU.ValToken _ _ p) = showPosition p
+
+toPosition :: UU.Token -> (Int, Int)
+toPosition (UU.Reserved _ p)   = (UU.line p, UU.column p)
+toPosition (UU.ValToken _ _ p) = (UU.line p, UU.column p)
 
 showPosition :: UU.Position a => a -> String
 showPosition p = show (UU.line p, UU.column p)
@@ -355,7 +378,7 @@ tokenNoPosition :: UU.Token -> UU.Token
 tokenNoPosition (UU.Reserved a _)   = UU.Reserved a UU.noPos
 tokenNoPosition (UU.ValToken a b _) = UU.ValToken a b UU.noPos
 
-checkParentheses :: [UU.Token] -> Maybe ParError
+checkParentheses :: [UU.Token] -> Maybe SyntaxError
 checkParentheses = rec []
  where
    rec []    [] = Nothing

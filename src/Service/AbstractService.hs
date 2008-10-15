@@ -19,6 +19,7 @@ import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
 import Service.ExerciseList
+import Common.Parsing (SyntaxError(..))
 import qualified Service.TypedAbstractService as TAS
 import Data.Char
 import Data.Maybe
@@ -32,7 +33,7 @@ type Prefix     = String
 type Expression = String -- concrete syntax (although this could also be abstract)
 type SimpleContext = String
 
-data Result = SyntaxError
+data Result = SyntaxError SyntaxError
             | Buggy [RuleID]   
             | NotEquivalent      
             | Ok [RuleID] State      -- equivalent
@@ -89,8 +90,8 @@ submit s input =
    case fromState s of
       Some ts -> 
          case parser (TAS.exercise ts) input of
-            Left _  -> SyntaxError
-            Right a ->
+            Left err -> SyntaxError err
+            Right a  ->
                case TAS.submit ts a of
                   TAS.NotEquivalent -> NotEquivalent
                   TAS.Buggy   rs    -> Buggy   (map name rs)       

@@ -42,7 +42,7 @@ operatorTable =
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseLogic  :: String -> (Ranged Logic, [String])
+parseLogic :: String -> Either SyntaxError (Ranged Logic)
 parseLogic = analyseAndParse pLogic . scanWith logicScanner
  where
    pLogic = pOperators operatorTable (basicWithPos pLogic)
@@ -51,7 +51,7 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
-parseLogicPars  :: String -> (Ranged Logic, [String])
+parseLogicPars :: String -> Either SyntaxError (Ranged Logic)
 parseLogicPars = analyseAndParse pLogic . scanWith logicScanner
  where
    basic     =  basicWithPos pLogic
@@ -71,15 +71,13 @@ basicWithPos p  =  (\(s, r) -> toRanged (Var s) r) <$> pVarid
 -----------------------------------------------------------
 --- Helper-function for parentheses analyses
 
-analyseAndParse :: Parser Token a -> [Token] -> (a, [String])
+analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
 analyseAndParse p ts =
    case checkParentheses ts of
-      Just err -> (a, [show err])
-      Nothing  -> (a, map f $ take 1 msgs)
- where
-   (a, msgs) = parse p ts
-   f (_, Just t) = "Syntax error at location " ++ showTokenPos t ++ "\n   unexpected " ++ show (tokenNoPosition t)
-   f _ = "Parse error"
+      Just err -> Left err
+      Nothing  -> case parse p ts of
+                     (_, m:_) -> Left (fromMessage m)
+                     (a, _)   -> Right a
 
 -----------------------------------------------------------
 --- Pretty-Printer

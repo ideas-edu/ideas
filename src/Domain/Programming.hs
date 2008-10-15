@@ -7,9 +7,10 @@ import Common.Uniplate
 import Common.Exercise
 import Common.Transformation
 import Common.Apply
+import Common.Parsing (SyntaxError(..))
 import Data.Maybe
 import Data.Char
-import qualified Service.TypedAbstractService as TAS
+-- import qualified Service.TypedAbstractService as TAS
 
 isort :: Ord a => [a] -> [a]
 isort = \xs -> matchList xs
@@ -125,7 +126,7 @@ isortExercise = Exercise
    , status        = Experimental
    , parser        = \s -> case reads s of  
                              [(a, rest)] | all isSpace rest -> Right a 
-                             _ -> Left "parse error"
+                             _ -> Left $ ErrorMessage "parse error"
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show
    , equivalence   = (==)

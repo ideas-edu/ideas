@@ -22,6 +22,7 @@ import Domain.Fraction.Rules
 import Common.Apply
 import Common.Context
 import Common.Exercise
+import Common.Parsing (SyntaxError(..))
 import Data.Maybe
 
 simplExercise :: Exercise Frac
@@ -31,8 +32,8 @@ simplExercise = standard
    , description   = "Simplifying fractions" 
    , status        = Experimental
    , parser        = \s -> case parseFrac s of
-                              (p, [])   -> Right p
-                              (p, msgs) -> Left  (show msgs)
+                              (p, [])  -> Right p
+                              (p, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = ppFrac
    , equivalence   = (~=)
    , equality      = (==)

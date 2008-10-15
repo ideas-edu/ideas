@@ -22,6 +22,7 @@ import Common.Apply
 import Common.Transformation
 import Common.Exercise
 import Common.Context
+import Common.Parsing (SyntaxError(..))
 import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
@@ -49,7 +50,7 @@ solveGramSchmidt = makeExercise
    , status        = Stable
    , parser        = \s -> case parseVectors s of
                               (a, [])  -> Right a
-                              (_, msg) -> Left $ show msg
+                              (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt . inContext
                              in f x == f y
@@ -67,7 +68,7 @@ solveSystemExercise = makeExercise
    , status        = Stable
    , parser        = \s -> case parseSystem s of
                               (a, [])  -> Right a
-                              (_, msg) -> Left $ show msg
+                              (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
                                    . inContext . map toStandardForm
@@ -87,7 +88,7 @@ reduceMatrixExercise = makeExercise
    , status        = Stable
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right a
-                              (_, msg) -> Left $ unlines msg
+                              (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = ppMatrixWith (ppExprPrio 0 . toExpr)
    , equivalence   = (===)
    , ruleset       = matrixRules
@@ -105,7 +106,7 @@ solveSystemWithMatrixExercise = makeExercise
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right $ Left $ forgetList ok
                               (_, Right ok) -> Right $ Right ok
-                              (Left _, Left _) -> Left "Error" -- FIX THIS
+                              (Left _, Left _) -> Left $ ErrorMessage "Syntax error" -- FIX THIS
    , prettyPrinter = either (unlines . map show) ppMatrix
    , equivalence   = \x y -> let f = either forgetList (forgetList . matrixToSystem)
                              in equivalence solveSystemExercise (f x) (f y)

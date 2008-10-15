@@ -23,6 +23,7 @@ import Domain.RelationAlgebra.Parser
 import Common.Apply
 import Common.Exercise
 import Common.Context
+import Common.Parsing (SyntaxError(..))
 import Common.Strategy hiding (not)
 import Common.Transformation
 
@@ -33,8 +34,8 @@ cnfExercise = makeExercise
    , description   = "To conjunctive normal form"
    , status        = Experimental
    , parser        = \s -> case parseRelAlg s of
-                              (p, [])   -> Right p
-                              (_, msgs) -> Left  (show msgs)
+                              (p, [])  -> Right p
+                              (_, m:_) -> Left (ErrorMessage $ show m)
    , prettyPrinter = ppRelAlg
    , equivalence   = probablyEqual -- isEquivalent
    , ruleset       = map liftRuleToContext (relAlgRules ++ buggyRelAlgRules)

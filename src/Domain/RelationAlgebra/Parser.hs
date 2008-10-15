@@ -67,6 +67,17 @@ pSymInf a       =  pCostSym   1000 a a
 pSymLow a       =  pCostSym      1 a a
 
 -----------------------------------------------------------
+--- Helper-function for parentheses analyses
+{-
+analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
+analyseAndParse p ts =
+   case checkParentheses ts of
+      Just err -> Left err
+      Nothing  -> case parse p ts of
+                     (_, m:_) -> Left (fromMessage m)
+                     (a, _)   -> Right a -}
+                                        
+-----------------------------------------------------------
 --- Pretty-Printer
 
 ppRelAlg :: RelAlg -> String

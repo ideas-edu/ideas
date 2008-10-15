@@ -116,7 +116,7 @@ instance InJSON Location where
 instance InJSON Result where
    toJSON result = Object $
       case result of
-         SyntaxError   -> [("result", String "SyntaxError")]
+         SyntaxError _ -> [("result", String "SyntaxError")]
          Buggy rs      -> [("result", String "Buggy"), ("rules", Array $ map String rs)]
          NotEquivalent -> [("result", String "NotEquivalent")]   
          Ok rs st      -> [("result", String "Ok"), ("rules", Array $ map String rs), ("state", toJSON st)]
@@ -128,7 +128,7 @@ instance InJSON Result where
       let getRules = (lookupM "rules" xs >>= fromJSON)
           getState = (lookupM "state" xs >>= fromJSON)
       case ms of
-         "syntaxerror"   -> return SyntaxError
+         -- "syntaxerror"   -> return SyntaxError
          "buggy"         -> liftM  Buggy getRules
          "notequivalent" -> return NotEquivalent
          "ok"            -> liftM2 Ok getRules getState

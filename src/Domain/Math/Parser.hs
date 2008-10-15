@@ -7,11 +7,11 @@ import Domain.Math.Expr
 scannerExpr :: Scanner
 scannerExpr = defaultScanner {keywords = ["pi", "sqrt"], specialCharacters  = "+-*/()[]{},"}
 
-parseExpr :: String -> Either String Expr
+parseExpr :: String -> Either SyntaxError Expr
 parseExpr = f . parse pExpr . scanWith scannerExpr
  where 
    f (e, []) = Right e
-   f (_, xs) = Left (unlines $ map show xs)
+   f (_, xs) = Left $ ErrorMessage $ unlines $ map show xs
    
 pExpr :: TokenParser Expr
 pExpr = fromRanged <$> pOperators operatorTable (flip toRanged nul <$> pTerm)

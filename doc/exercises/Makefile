@@ -5,6 +5,7 @@ RULETARGETS     = $(patsubst %.lhs,%.png, $(RULESOURCES))
 
 default: $(OVERVIEWTARGETS) $(RULETARGETS) clean-tmp
 all: $(OVERVIEWTARGETS) $(RULETARGETS) clean-tmp
+overviews: $(OVERVIEWTARGETS)
 
 include ../../Makefile.incl
 

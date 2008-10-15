@@ -23,7 +23,7 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse, isRewriteRule
+   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse, isRewriteRule, ruleGroups, addRuleToGroup
    , rule, ruleList, ruleListF, makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, emptyRule, minorRule, buggyRule, inverseRule, transformations, getRewriteRules
      -- * Lifting
@@ -261,6 +261,7 @@ data Rule a = Rule
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , getInverse      :: Maybe (Rule a)
+   , ruleGroups      :: [String]
    }
 
 instance Show (Rule a) where
@@ -284,6 +285,9 @@ isRewriteRule = all p . transformations
    p (Lift _ t)      = p t
    p _               = False
 
+addRuleToGroup :: String -> Rule a -> Rule a
+addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
+
 ruleList :: Builder f a => String -> [f] -> Rule a
 ruleList s = makeRuleList s . map (RewriteRule . rewriteRule s)
 
@@ -299,7 +303,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule n ts False False Nothing
+makeRuleList n ts = Rule n ts False False Nothing []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a

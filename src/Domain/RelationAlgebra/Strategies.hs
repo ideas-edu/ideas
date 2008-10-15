@@ -28,10 +28,10 @@ toCNF = label "To CNF" $
  where
    step1 = topDown $ useRules $
       [ ruleRemCompl, ruleRemRedunExprs, ruleDoubleNegation
-      , ruleIdemp, ruleAbsorp, ruleAbsorpCompl
+      , ruleIdempOr, ruleIdempAnd, ruleAbsorp, ruleAbsorpCompl
       ] ++ invRules
    step2 = topDown $ useRules 
-      [ ruleCompOverUnion, ruleAddOverIntersec, ruleDeMorgan
+      [ ruleCompOverUnion, ruleAddOverIntersec, ruleDeMorganOr, ruleDeMorganAnd
       , ruleNotOverComp, ruleNotOverAdd
       ]
    step3 = somewhere $ liftRuleToContext 

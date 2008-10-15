@@ -41,8 +41,10 @@ targetDirectory = do
       []    -> return "."
       dir:_ -> return dir
 
+{- 
 exerciseRulesToTeX :: Exercise a -> String
 exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex
+-}
 
 ruleToTeX :: (Some RewriteRule, Bool) -> String
 ruleToTeX (Some r, sound) = 
@@ -91,22 +93,33 @@ texHeader fmt = unlines
 texBody :: Maybe String -> String -> String
 texBody date content = unlines
    [ "\\begin{document}"
-   , maybe "" (\s -> "\\hfill@(generated on " ++ s ++ ")@") date
    , content
+   , maybe "" (\s -> "\\par\\vspace*{5mm}\\noindent\\footnotesize{@(generated on " ++ s ++ ")@}") date
    , "\\end{document}"
    ]
    
 texSectionRules :: Exercise a -> String
 texSectionRules ex = unlines 
-   [ "\\section*{Rewrite Rules}"
+   [ "\\section{Rewrite rules}"
    , formats
-   , "\\begin{code}"
-   , filter (/= '"') $ exerciseRulesToTeX ex
-   , "\\end{code}"
+   , makeGroup Nothing
+   , unlines $ map (makeGroup . Just) groups
    ]
  where
    rules   = concatMap getRewriteRules (ruleset ex)
+   groups  = nub (concatMap ruleGroups (ruleset ex))
    names   = let f (Some r, _) = ruleName r 
              in nub (map f rules)
    formats = unlines (map make names)
    make  s = "%format " ++ s ++ " = \"\\rulename{" ++ s ++ "}\"" 
+   
+   makeGroup :: Maybe String -> String
+   makeGroup mgroup = unlines 
+      [ maybe "" (\s -> "\\subsection{" ++ s ++ " rules}") mgroup
+      , "\\begin{code}"
+      , unlines $ map (filter (/= '"') . ruleToTeX) xs
+      , "\\end{code}"
+      ]
+    where
+      p x = maybe (null $ ruleGroups x) (`elem` ruleGroups x) mgroup
+      xs  = concatMap getRewriteRules $ filter p $ ruleset ex

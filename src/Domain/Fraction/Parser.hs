@@ -6,7 +6,7 @@
 -- |
 -- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
--- Portability :  portable (depends on UU parsing library)
+-- Portability :  portable
 --
 -- (todo)
 --
@@ -15,63 +15,47 @@ module Domain.Fraction.Parser
    ( parseFrac, ppFrac )
    where
 
-import UU.Parsing
-import UU.Parsing.CharParser
-import UU.Scanner
+import Common.Parsing hiding (pParens)
 import Domain.Fraction.Frac
 import Data.Char
 
+scannerExpr :: Scanner
+scannerExpr = defaultScanner {specialCharacters  = "+-*/()[]{},"}
+
+operatorTable :: OperatorTable Frac
+operatorTable = 
+   [ (LeftAssociative, [("+", (:+:)), ("-", (:-:))])  -- infixl 6
+   , (LeftAssociative, [("*", (:*:)), ("/", (:/:))])  -- infixl 7
+   ] 
+   
 -----------------------------------------------------------
 --- Parser
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseFrac  :: String -> (Frac, [Message Char Pos])
-parseFrac = runParser pFrac
- where
-   pFrac   =  pChainl ((:+:) <$ addSym <|> (:-:) <$ subSym) pFrac'
-   pFrac'  =  pChainl ((:*:) <$ mulSym <|> (:/:) <$ divSym) pFrac'' 
-   pFrac'' =  Var <$> pVar 
-          <|> Con <$> pNat
-          <|> toNegOrNot <$> subSym <*> pFrac''
-          <|> pparens pFrac
-
-toNegOrNot :: Char -> Frac -> Frac
-toNegOrNot _ (Con x) = Con $ negate x
-toNegOrNot _ x       = Neg x
-
-pNat :: CharParser Integer
-pNat = read <$> pList1 ('0' <..> '9')
-
---pNeg :: CharParser Frac
---pNeg = (\x -> Con (negate x)) <$> pNat
-
-mulSym = pSym '*'
-divSym = pSym '/' 
-addSym = pSym '+'
-subSym = pSym '-'
-
-fstPair :: Pair a b -> a
-fstPair (Pair a _)  =  a
-
-runParser  :: CharParser a -> String -> (a, [Message Char Pos])
-runParser pFrac input = (result, messages)
- where
-   steps    = parseString pFrac (filter (not . isSpace) input)
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
+parseFrac :: String -> Either SyntaxError Frac
+parseFrac = f . parse pExpr . scanWith scannerExpr
+ where 
+   f (e, []) = Right e
+   f (_, xs) = Left $ ErrorMessage $ unlines $ map show xs
    
-pparens :: CharParser a -> CharParser a
-pparens = pPacked (pSymLow '(') (pSymLow ')')  
+pExpr :: TokenParser Frac
+pExpr = fromRanged <$> pOperators operatorTable (flip toRanged nul <$> pTerm)
 
-pVar :: CharParser String
-pVar = pList1 (pAnySymInf ['a'..'z'])    
+pTerm :: TokenParser Frac
+pTerm = optional (Neg <$ pKey "-") id <*> pAtom
 
-pAnySymInf xs = foldr1 (<|>) (map pSymInf xs)
+pAtom :: TokenParser Frac
+pAtom  =  Con <$> pInteger
+      <|> (Var . fst) <$> (pVarid <|> pConid)
+      <|> pParens pExpr
+      
+pParens :: TokenParser a -> TokenParser a
+pParens p = pKey "(" *> p <* pKey ")"
 
-pSymInf a       =  pCostSym   1000 a a
-pSymLow a       =  pCostSym      1 a a
-                                   
+nul :: Range
+nul = Range (Pos 0 0) (Pos 0 0)
+
 -----------------------------------------------------------
 --- Pretty-Printer
 

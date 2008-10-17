@@ -44,6 +44,9 @@ data Context a = C Location Environment a
 instance Eq a => Eq (Context a) where
    x == y = fromContext x == fromContext y
 
+instance Ord a => Ord (Context a) where
+   x `compare` y = fromContext x `compare` fromContext y
+
 instance Show a => Show (Context a) where
    show c = showContext c ++ ";" ++ show (fromContext c)
 

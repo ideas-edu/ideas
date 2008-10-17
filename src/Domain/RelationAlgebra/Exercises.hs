@@ -22,6 +22,7 @@ import Domain.RelationAlgebra.Parser
 import Common.Apply
 import Common.Exercise
 import Common.Context
+import Common.Uniplate (somewhereM)
 import Common.Parsing (fromRanged)
 import Common.Strategy hiding (not)
 import Common.Transformation
@@ -37,6 +38,8 @@ cnfExercise = makeExercise
    , equivalence   = probablyEqual -- isEquivalent
    , ruleset       = map liftRuleToContext (relAlgRules ++ buggyRelAlgRules)
    , strategy      = toCNF
+   , everywhere    = relAlgEverywhere
+   , ordering      = compare
    , finalProperty = ready (ruleset cnfExercise)
    , generator     = templateGenerator 1
    , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
@@ -52,3 +55,7 @@ cnfExerciseSimple = cnfExercise
    
 ready :: [Rule (Context a)] -> a -> Bool
 ready rs = null . applyAll (alternatives $ filter (not . isBuggyRule) rs) . inContext
+
+relAlgEverywhere :: Everywhere (Context RelAlg)
+relAlgEverywhere f c = [ fmap (const a) c | a <- somewhereM g (fromContext c) ]
+ where g = map fromContext . f . inContext

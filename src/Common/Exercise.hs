@@ -14,6 +14,7 @@
 module Common.Exercise 
    ( -- * Exercises
      Exercise(..), Status(..), makeExercise, stepsRemaining
+   , Everywhere
      -- * Exercise codes
    , ExerciseCode, exerciseCode, validateCode
      -- * QuickCheck utilities
@@ -47,12 +48,16 @@ data Exercise a = Exercise
      -- strategies and rules
    , strategy      :: LabeledStrategy (Context a)
    , ruleset       :: [Rule (Context a)]
+   , everywhere    :: Everywhere (Context a)
+   , ordering      :: a -> a -> Ordering
      -- term generation
    , generator     :: Gen a
    , suitableTerm  :: a -> Bool
    }
    
 data Status = Stable | Experimental deriving (Show, Eq)
+
+type Everywhere a = (a -> [a]) -> a -> [a]
 
 instance Apply Exercise where
    applyAll e a = map fromContext $ applyAll (strategy e) (inContext a)
@@ -71,6 +76,8 @@ makeExercise = Exercise
    , equality      = (==)
    , finalProperty = const True
    , ruleset       = []
+   , everywhere    = id
+   , ordering      = error "No ordering function available"
    , strategy      = label "Succeed" succeed
    , generator     = arbitrary
    , suitableTerm  = const True

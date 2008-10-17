@@ -41,5 +41,5 @@ simplExercise = standard
    , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf t)
    }
  where
-   standard :: Exercise (Context Frac)
+   standard :: Exercise Frac
    standard = makeExercise

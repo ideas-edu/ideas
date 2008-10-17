@@ -19,6 +19,8 @@ import Common.Exercise (Exercise(..))
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
+import Service.SearchSpace (searchSpace)
+import Service.Progress
 import Data.Maybe
 import System.Random
 import qualified Test.QuickCheck as QC
@@ -109,33 +111,41 @@ stepsremaining = length . derivation
 submit :: State a -> a -> Result a
 submit state new
    | not (equivalence (exercise state) (term state) new) =
-        case safeHead (filter isBuggyRule (findRules (exercise state) (term state) new)) of
-           Just br -> Buggy [br]
-           Nothing -> NotEquivalent
+        case filter isSame $ successes $ maxNumber 100 $ maxDepth 3 $ errSpace of
+           (_, _, rs):_  -> Buggy rs
+           _             -> NotEquivalent
    | equality (exercise state) (term state) new =
         Ok [] state
    | otherwise =
-        maybe applyOff applyOn (prefix state)
+        case filter isSame $ successes $ maxNumber 100 $ maxDepth 3 $ space of
+           (a, mp, rs):_ 
+              | isJust mp -> Ok rs state { context=a, prefix=mp }
+              | otherwise -> Detour rs state { context=a }
+           _ -> Unknown state { context=inContext new }
  where 
+   isSame (a, _, _) = equality (exercise state) new (fromContext a)
+ 
+   space    = searchSpace (getOrdering state) (everywhere $ exercise state) (prefix state) (filter (not . isBuggyRule) $ ruleset $ exercise state) (context state)
+   errSpace = searchSpace (getOrdering state) (everywhere $ exercise state) Nothing (filter isBuggyRule $ ruleset $ exercise state) (context state)
+   
+   {-
    applyOn _ = -- scenario 1: on-strategy
       fromMaybe applyOff $ safeHead
       [ Ok [r1] s1 | (r1, _, s1) <- allfirsts state, equality (exercise state) new (term s1) ]      
 
    applyOff = -- scenario 2: off-strategy
-      let newState = state { context=inContext new }
-      in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (term state) new)) of
+      let newState = state { context=inContext new } 
+          -- Prefix a -> [(score, Rule a)] -> a -> Progress score (a, [Rule a])
+      in case safeHead (filter (not . isBuggyRule) (findRules (exercise state) (context state) new)) of
             Just r  -> Detour [r] newState
-            Nothing -> Unknown newState
+            Nothing -> Unknown newState -}
 
--- TODO: better solution to test all rules at all locations. Unfortunately, we don't have the
--- (Uniplate a) context here, which would make it simpler
+getOrdering :: State a -> Context a -> Context a -> Ordering
+getOrdering state a b = ordering (exercise state) (fromContext a) (fromContext b)
+
 -- local helper-function
-findRules :: Exercise a -> a -> a -> [Rule (Context a)]
-findRules ex old new =
-   [ r | r <- ruleset ex, l <- makeLocs 5, p l r ]
+{-
+findRules :: Exercise a -> Context a -> a -> [Rule (Context a)]
+findRules ex old new = filter p (ruleset ex)
  where
-   p l r = any (equality ex new . fromContext) (Apply.applyAll r $ setLocation l $ inContext old)
-
-   
-makeLocs :: Int -> [Location]
-makeLocs i = makeLocation [] : [ locationDown i l | i>0, l <- makeLocs (i-1), i <- [0..1] ]
+   p r = any (equality ex new . fromContext) (everywhere ex (Apply.applyAll r) old) -}

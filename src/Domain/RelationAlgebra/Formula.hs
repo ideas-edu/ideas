@@ -55,6 +55,8 @@ isAtom :: RelAlg -> Bool
 isAtom  r = 
     case r of
       Var _             -> True
+      Not I             -> True
+      Not V             -> True
       Not (Var _)       -> True
       Inv (Var _)       -> True
       Not (Inv (Var _)) -> True

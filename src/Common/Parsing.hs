@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Parsing 
    ( -- * Scaning
-     Scanner(..), defaultScanner, makeCharsSpecial, newlinesAsSpecial, scan, scanWith, UU.Token
+     Scanner(..), defaultScanner, makeCharsSpecial, newlinesAsSpecial, minusAsSpecial, scan, scanWith, UU.Token
      -- * Parsing
    , Parser, CharParser, TokenParser, parse, Message
      -- * UU parser combinators
@@ -70,9 +70,22 @@ makeCharsSpecial cs scanner = scanner
 
 -- Newline characters are mapped to "special" tokens
 -- The current solution to deal with newlines is a hack: all characters '\n' in the input
--- are first mapped to '\127', and later the tokens are adapted
+-- are first mapped to '\001', and later the tokens are adapted
 newlinesAsSpecial :: Scanner -> Scanner
-newlinesAsSpecial = makeCharsSpecial ['\127']
+newlinesAsSpecial = makeCharsSpecial [specialNewlinesChar]
+
+specialNewlinesChar :: Char
+specialNewlinesChar = chr 1
+
+-- Minus characters are mapped to "special" tokens
+-- The current solution to deal with minus is a hack: all characters '-' in the input
+-- are first mapped to '\002', and later the tokens are adapted 
+-- (since the scanner considers -- to be comment)
+minusAsSpecial :: Scanner -> Scanner
+minusAsSpecial = makeCharsSpecial [specialMinusChar]
+
+specialMinusChar :: Char
+specialMinusChar = chr 2
 
 -- | Scan an input string with the default scanner configuration
 scan :: String -> [UU.Token]
@@ -82,16 +95,29 @@ scan = scanWith defaultScanner
 scanWith :: Scanner -> String -> [UU.Token]
 scanWith scanner = post . uuScan . pre
  where
-   specialNewlines = '\127' `elem` specialCharacters scanner
-   pos  = UU.initPos $ fromMaybe "" (fileName scanner)
-   pre  = if specialNewlines then map (\c -> if c=='\n' then '\127' else c) else id
-   post = if specialNewlines then map changeToken else id
+   -- very special characters
+   special = or [specialNewlines, specialMinus]
+   specialNewlines = specialNewlinesChar `elem` specialCharacters scanner
+   specialMinus    = specialMinusChar    `elem` specialCharacters scanner
+   
+   pre    = if special then map changeChar  else id
+   post   = if special then map changeToken else id
+   pos    = UU.initPos $ fromMaybe "" (fileName scanner)
    uuScan = UU.scan (keywords scanner) (keywordOperators scanner) 
                (specialCharacters scanner) (operatorCharacters scanner) pos
-               
+   
+   changeChar :: Char -> Char
+   changeChar c
+      | c == '\n' && specialNewlines = specialNewlinesChar
+      | c == '-'  && specialMinus    = specialMinusChar
+      | otherwise                    = c
+   
+   changeToken :: UU.Token -> UU.Token
    changeToken t =
       case t of
-         UU.Reserved key pos | key=="\127" -> UU.Reserved "\n" pos
+         UU.Reserved [c] pos 
+            | c == specialNewlinesChar && specialNewlines -> UU.Reserved "\n" pos
+            | c == specialMinusChar    && specialMinus    -> UU.Reserved "-"  pos
          _ -> t
                       
 ----------------------------------------------------------
@@ -194,6 +220,9 @@ data Ranged a = Ranged
    , special    :: Bool
    , children   :: [Ranged a]
    } 
+
+instance Show a => Show (Ranged a) where
+   show = show . fromRanged
 
 -- | Data type for ranges
 data Range = Range
@@ -311,13 +340,21 @@ trimIndexPair s i j
 -- | Type for an operator table. Operators with a low priority should appear in the front of the list.
 type OperatorTable a = [(Associativity, [(String, a -> a -> a)])]
 
--- | Data type to express the kind of associativity
-data Associativity = LeftAssociative | RightAssociative | NonAssociative
+-- | Data type to express the kind of associativity. The NoMix constructor expresses that the operators
+-- in the list should not be mixed, but require extra parentheses in the input
+data Associativity = LeftAssociative | RightAssociative | NonAssociative | NoMix
 
 -- | Construct a parser using an operator table
 pOperators :: OperatorTable a -> TokenParser (Ranged a) -> TokenParser (Ranged a)
 pOperators table p = foldr op p table 
- where op (a, ops) q = pChain a (pChoice $ map f ops) q
+ where op (a, ops) q = 
+          case a of
+             -- The NoMix variant is actually hard to define efficiently. Since we should not mix operators
+             -- that have the same priority, we have to inspect which operator we are dealing with before
+             -- we can use the chain combinator.
+             NoMix -> let make op = flip <$> f op <*> pChainr (f op) q
+                      in flip ($) <$> q <*> optional (pChoice $ map make ops) id
+             _     -> pChain a (pChoice $ map f ops) q
        f (s, g) = binaryOp g <$ pKey s
 
 
@@ -327,6 +364,7 @@ pChain a p q = case a of
                   LeftAssociative  -> pChainl p q
                   RightAssociative -> pChainr p q
                   NonAssociative   -> (flip ($)) <$> q <*> p <*> q
+                  NoMix            -> pChainr p q
 
 -----------------------------------------------------------
 --- Syntax errors

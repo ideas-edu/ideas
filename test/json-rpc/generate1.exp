@@ -2,7 +2,7 @@
    "result": [
       "To conjunctive normal form",
       "[]",
-      "r ; q \\/ V ; (r /\\ r) /\\ s ! r",
+      "r ; q \\/ (V ; (r /\\ r)) /\\ s ! r",
       "[];"
    ],
    "error": null,

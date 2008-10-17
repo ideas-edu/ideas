@@ -213,6 +213,10 @@ ruleRemRedunExprs = simplificationGroup "RemRedunExprs"
    , \r -> (r :.: empty)  :~> empty
    , \r -> (empty :.: r)  :~> empty
    , \_ -> (empty :+: empty)  :~> empty
+-- new identity rules: CHECK!
+   , \_ -> Inv I :~> I
+   , \r -> (I :.: r) :~> r
+   , \r -> (r :.: I) :~> r
    ]
       
 -- Buggy rules:

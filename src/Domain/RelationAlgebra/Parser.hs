@@ -14,80 +14,75 @@
 module Domain.RelationAlgebra.Parser (parseRelAlg, ppRelAlg) where
 
 import Domain.RelationAlgebra.Formula
-import UU.Parsing
-import UU.Parsing.CharParser
-import UU.Scanner
+import Common.Parsing
 import Data.Char
 
-parseRelAlg  :: String -> (RelAlg, [Message Char Pos])
-parseRelAlg = runParser disjunction
- where
-   disjunction = pChainr ((:||:) <$ orSym )  conjunction 
-   conjunction = pChainr ((:&&:) <$ andSym)  addition
-   addition    = pChainr ((:+:)  <$ addSym)  composition
-   composition = pChainr ((:.:)  <$ compSym) basic
-   basic       = basicWith disjunction
+myScanner :: Scanner
+myScanner = minusAsSpecial $ makeCharsSpecial "~" defaultScanner
+   { keywords         = ["V", "E", "I"]
+   , keywordOperators = concatMap (map fst . snd) operatorTable
+   }
+
+operatorTable :: OperatorTable RelAlg
+operatorTable = 
+   [ (RightAssociative, [(orSym, (:||:))])
+   , (RightAssociative, [(andSym, (:&&:))])
+   , (NoMix,            [(compSym, (:.:)), (addSym, (:+:))])
+   ]
+
+andSym  = "/\\"
+orSym   = "\\/" 
+addSym  = "!"
+compSym = ";"
+notSym  = "-"
+invSym  = "~"
    
-basicWith :: CharParser RelAlg -> CharParser RelAlg
-basicWith p = foldl (flip ($)) <$> atom <*> pList post
+-----------------------------------------------------------
+--- Parser
+
+parseRelAlg  :: String -> Either SyntaxError (Ranged RelAlg)
+parseRelAlg = analyseAndParse pRelAlg . scanWith myScanner
+
+pRelAlg :: Parser Token (Ranged RelAlg)
+pRelAlg = pOperators operatorTable pTerm
+
+-- Two postfix operators
+pTerm :: Parser Token (Ranged RelAlg)
+pTerm = (\x fs -> foldl (flip ($)) x fs) <$> pAtom <*> pList pUnOp
  where
-   post =  Not <$ notSym <|> Inv <$ invSym
-   atom =  Var <$> pvarid
-       <|> pparens p
-       <|> V     <$ pSym 'V'
-       <|> empty <$ pSym 'E' -- The empty relation is no longer present in the data-type, but E remains an abbreviation (for now)
-       <|> I     <$ pSym 'I'
-                
-andSym  = pToks "/\\"
-orSym   = pToks "\\/" 
-addSym  = pToks "!"
-compSym = pToks ";"
-notSym = pToks "-"
-invSym = pToks "~"
+   pUnOp  =  unaryOp  Inv <$> pKey invSym 
+         <|> unaryOp  Not <$> pKey notSym
 
-fstPair :: Pair a b -> a
-fstPair (Pair a _)  =  a
-
-runParser  :: CharParser a -> String -> (a, [Message Char Pos])
-runParser pLogic input = (result, messages)
- where
-   steps    = parseString pLogic (filter (not . isSpace) input)
-   result   = fstPair (evalSteps steps)
-   messages = getMsgs steps
-   
-pparens :: CharParser a -> CharParser a
-pparens = pPacked (pSymLow '(') (pSymLow ')')  
-
-pvarid  :: CharParser String
-pvarid = pList1 (pAnySymInf ['a'..'z'])    
-
-pAnySymInf xs = foldr1 (<|>) (map pSymInf xs)
-
-pSymInf a       =  pCostSym   1000 a a
-pSymLow a       =  pCostSym      1 a a
+pAtom :: Parser Token (Ranged RelAlg)
+pAtom  =  (\(s, r) -> toRanged (Var s) r) <$> pVarid
+      <|> pParens pRelAlg
+      <|> toRanged V     <$> pKey "V"
+      <|> toRanged empty <$> pKey "E"
+      <|> toRanged I     <$> pKey "I"
 
 -----------------------------------------------------------
 --- Helper-function for parentheses analyses
-{-
+
 analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
 analyseAndParse p ts =
    case checkParentheses ts of
       Just err -> Left err
       Nothing  -> case parse p ts of
                      (_, m:_) -> Left (fromMessage m)
-                     (a, _)   -> Right a -}
+                     (a, _)   -> Right a
                                         
 -----------------------------------------------------------
 --- Pretty-Printer
 
 ppRelAlg :: RelAlg -> String
-ppRelAlg = ppRelAlgPrio 0
+ppRelAlg = ppRelAlgPrio (0, "")
 
-ppRelAlgPrio :: Int -> RelAlg -> String 
-ppRelAlgPrio n p = foldRelAlg (var, binop 5 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "V", var "I") p n ""
+ppRelAlgPrio :: (Int, String) -> RelAlg -> String 
+ppRelAlgPrio n p = foldRelAlg (var, binop 4 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "V", var "I") p n ""
  where
-   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
+   binop prio op p q (n, parent) = 
+      parIf (n > prio || (prio==4 && n==4 && op/=parent)) (p (prio+1, op) . ((" "++op++" ")++) . q (prio, op))
    var       = const . (++)
-   nott p _  = p 6 . ("-"++) 
-   inv  p _  = p 6 . ("~"++)
+   nott p _  = p (6, "") . ("-"++) 
+   inv  p _  = p (6, "") . ("~"++)
    parIf b f = if b then ("("++) . f . (")"++) else f

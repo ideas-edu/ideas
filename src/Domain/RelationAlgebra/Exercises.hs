@@ -19,11 +19,10 @@ import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
--- import Domain.RelationAlgebra.Equivalence
 import Common.Apply
 import Common.Exercise
 import Common.Context
-import Common.Parsing (SyntaxError(..))
+import Common.Parsing (fromRanged)
 import Common.Strategy hiding (not)
 import Common.Transformation
 
@@ -33,9 +32,7 @@ cnfExercise = makeExercise
    , domain        = "relationalg"
    , description   = "To conjunctive normal form"
    , status        = Experimental
-   , parser        = \s -> case parseRelAlg s of
-                              (p, [])  -> Right p
-                              (_, m:_) -> Left (ErrorMessage $ show m)
+   , parser        = either Left (Right . fromRanged) . parseRelAlg
    , prettyPrinter = ppRelAlg
    , equivalence   = probablyEqual -- isEquivalent
    , ruleset       = map liftRuleToContext (relAlgRules ++ buggyRelAlgRules)
@@ -54,4 +51,4 @@ cnfExerciseSimple = cnfExercise
    } -}
    
 ready :: [Rule (Context a)] -> a -> Bool
-ready rs = null . applyAll (alternatives rs) . inContext
+ready rs = null . applyAll (alternatives $ filter (not . isBuggyRule) rs) . inContext

@@ -118,7 +118,7 @@ submitExtra state new
            Just br -> Buggy [br]  
            Nothing -> NotEquivalent  -}
         
-        case filter isSame $ successesAfter $ maxNumber 200 {- $ maxDepth 3 $ -} errSpace of
+        case filter isSame $ successesAfter $ maxNumber 200 {- maxDepth 3 -} errSpace of
            ((_, _, rs), n):_ -> (Buggy rs, n)
            _                 -> (NotEquivalent, 200)
    | equality (exercise state) (term state) new =

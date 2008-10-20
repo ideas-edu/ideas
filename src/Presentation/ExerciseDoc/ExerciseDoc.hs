@@ -115,7 +115,7 @@ texSectionRules ex = unlines
    
    makeGroup :: Maybe String -> String
    makeGroup mgroup = unlines 
-      [ maybe "" (\s -> "\\subsection{" ++ s ++ " rules}") mgroup
+      [ maybe "" (\s -> "\\subsection{" ++ s ++ "}") mgroup
       , "\\begin{code}"
       , unlines $ map (filter (/= '"') . ruleToTeX) xs
       , "\\end{code}"

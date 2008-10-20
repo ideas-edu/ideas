@@ -24,6 +24,7 @@ module Common.Exercise
 import Common.Apply
 import Common.Context
 import Common.Parsing (Range, SyntaxError(..))
+import Common.Rewriting (TreeDiff(..))
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Utils
@@ -48,7 +49,7 @@ data Exercise a = Exercise
      -- strategies and rules
    , strategy      :: LabeledStrategy (Context a)
    , ruleset       :: [Rule (Context a)]
-   , everywhere    :: Everywhere (Context a)
+   , differences   :: a -> a -> [([Int], TreeDiff)]
    , ordering      :: a -> a -> Ordering
      -- term generation
    , generator     :: Gen a
@@ -76,7 +77,7 @@ makeExercise = Exercise
    , equality      = (==)
    , finalProperty = const True
    , ruleset       = []
-   , everywhere    = id
+   , differences   = \_ _ -> [([], Different)]
    , ordering      = error "No ordering function available"
    , strategy      = label "Succeed" succeed
    , generator     = arbitrary

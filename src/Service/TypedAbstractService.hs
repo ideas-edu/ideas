@@ -107,32 +107,47 @@ ready state = finalProperty (exercise state) (term state)
 stepsremaining :: State a -> Int
 stepsremaining = length . derivation
 
--- For now, only one rule look-ahead (for buggy rules and for sound rules)
 submit :: State a -> a -> Result a
-submit state new
-   | not (equivalence (exercise state) (term state) new) =
-        case filter isSame $ successes $ maxNumber 100 $ maxDepth 3 $ errSpace of
-           (_, _, rs):_  -> Buggy rs
-           _             -> NotEquivalent
-   | equality (exercise state) (term state) new =
-        Ok [] state
-   | otherwise =
-        case filter isSame $ successes $ maxNumber 100 $ maxDepth 3 $ space of
-           (a, mp, rs):_ 
-              | isJust mp -> Ok rs state { context=a, prefix=mp }
-              | otherwise -> Detour rs state { context=a }
-           _ -> Unknown state { context=inContext new }
- where 
-   isSame (a, _, _) = equality (exercise state) new (fromContext a)
- 
-   space    = searchSpace (getOrdering state) (everywhere $ exercise state) (prefix state) (filter (not . isBuggyRule) $ ruleset $ exercise state) (context state)
-   errSpace = searchSpace (getOrdering state) (everywhere $ exercise state) Nothing (filter isBuggyRule $ ruleset $ exercise state) (context state)
-   
-   {-
-   applyOn _ = -- scenario 1: on-strategy
-      fromMaybe applyOff $ safeHead
-      [ Ok [r1] s1 | (r1, _, s1) <- allfirsts state, equality (exercise state) new (term s1) ]      
+submit state = fst . submitExtra state
 
+submitExtra :: State a -> a -> (Result a, Int)
+submitExtra state new
+   | not (equivalence (exercise state) (term state) new) =
+        {-
+        case safeHead (filter isBuggyRule (findRules (exercise state) (context state) new)) of  
+           Just br -> Buggy [br]  
+           Nothing -> NotEquivalent  -}
+        
+        case filter isSame $ successesAfter $ maxNumber 200 {- $ maxDepth 3 $ -} errSpace of
+           ((_, _, rs), n):_ -> (Buggy rs, n)
+           _                 -> (NotEquivalent, 200)
+   | equality (exercise state) (term state) new =
+        (Ok [] state, 0)
+   | otherwise =
+        {-
+        case fmap applyOn (prefix state) of
+           Just (Just r) -> (r, 0)
+           _ -> (Unknown state { context=inContext new }, 200) -}
+        
+        case filter isSame $ successesAfter $ maxNumber 200 $ {- maxDepth 5 $ -} space of
+           ((a, mp, rs), n):_ 
+              | isJust mp -> (Ok rs state { context=a, prefix=mp }, n)
+              | otherwise -> (Detour rs state { context=a }, n)
+           _ -> (Unknown state { context=inContext new }, 200)
+ where 
+   isSame ((a, _, _), _) = equality (exercise state) new (fromContext a)
+ 
+   space    = searchSpace (getOrdering state) diff (prefix state) (filter (not . isBuggyRule) $ ruleset $ exercise state) (context state)
+   errSpace = searchSpace (getOrdering state) diff Nothing (ruleset $ exercise state) (context state)
+   
+   diff a = map (f a) $ differences (exercise state) new (fromContext a)
+   f a (is, td) = (setLocation (makeLocation is) a, td)
+   
+{-
+   applyOn _ = -- scenario 1: on-strategy
+      safeHead
+      [ Ok [r1] s1 | (r1, _, s1) <- allfirsts state, equality (exercise state) new (term s1) ]      -}
+{-
    applyOff = -- scenario 2: off-strategy
       let newState = state { context=inContext new } 
           -- Prefix a -> [(score, Rule a)] -> a -> Progress score (a, [Rule a])
@@ -142,10 +157,9 @@ submit state new
 
 getOrdering :: State a -> Context a -> Context a -> Ordering
 getOrdering state a b = ordering (exercise state) (fromContext a) (fromContext b)
-
--- local helper-function
 {-
+-- local helper-function
 findRules :: Exercise a -> Context a -> a -> [Rule (Context a)]
 findRules ex old new = filter p (ruleset ex)
  where
-   p r = any (equality ex new . fromContext) (everywhere ex (Apply.applyAll r) old) -}
+   p r = any (equality ex new . fromContext) (everywhere ex (Apply.applyAll r) old)-}

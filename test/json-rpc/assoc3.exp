@@ -1,7 +1,8 @@
 {
    "result": [
-      "IdempOr",
-      "CommOr"
+      "CommOr",
+      "AssocOr",
+      "IdempOr"
    ],
    "error": null,
    "id": 421

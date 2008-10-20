@@ -18,7 +18,7 @@ module Service.Progress
    , scoreMaybeList, scoreMaybeListMonotonic
    , (<|>), mergeList, (<*>), combineBy, combineList
    , mapProgress, concatProgress, filterProgress
-   , addScore, maxDepth, maxNumber, successes, failures, (<||>), extractFirst
+   , addScore, maxDepth, maxNumber, successes, successesAfter, failures, (<||>), extractFirst
    , successesForScore, accumProgress, scoreMaybeLists, scoreMaybeListMonotonics, fromListBy
    , fromMap
    ) where
@@ -272,6 +272,16 @@ successesForScore (P xs) =
 
 successes :: Progress score a -> [a]
 successes (P xs) = [ a | Success a <- xs]
+
+successesAfter :: Progress score a -> [(a, Int)]
+successesAfter (P xs) = rec 0 xs
+ where
+   rec n [] = []
+   rec n (step:rest) =
+      case step of
+         Success a -> (a, n):rec (n+1) rest
+         Failure   -> rec (n+1) rest
+         Score _   -> rec n rest 
 
 failures :: Progress score a -> Int
 failures (P xs) = length [ () | Failure <- xs]

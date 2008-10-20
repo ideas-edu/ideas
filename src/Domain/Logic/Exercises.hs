@@ -21,8 +21,8 @@ import Domain.Logic.Rules
 import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Context
-import Common.Uniplate (somewhereM)
 import Common.Parsing (fromRanged, subExpressionAt)
+import Common.Rewriting
 import Control.Monad
 import Data.Maybe
 
@@ -43,14 +43,9 @@ dnfExercise = Exercise
    , finalProperty = isDNF
    , ruleset       = map liftRuleToContext (logicRules ++ buggyRules)
    , strategy      = toDNF_DWA
-   , everywhere    = logicEverywhere
+   , differences   = treeDiff
    , ordering      = compare
    , generator     = generateLogic
    , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
                            in countEquivalences p < 2 && n >= 4 && n <= 12
    }
-   
-logicEverywhere :: Everywhere (Context Logic)
-logicEverywhere f c = [ fmap (const a) c | a <- somewhereM g (fromContext c) ]
- where g :: Logic -> [Logic]
-       g = map fromContext . f . inContext

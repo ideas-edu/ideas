@@ -86,18 +86,21 @@ stepsremaining s =
       Some ts -> TAS.stepsremaining ts
 
 submit :: State -> Expression -> Result
-submit s input = 
+submit s input = fst $ submitExtra s input
+
+submitExtra :: State -> Expression -> (Result, Int)
+submitExtra s input = 
    case fromState s of
       Some ts -> 
          case parser (TAS.exercise ts) input of
-            Left err -> SyntaxError err
+            Left err -> (SyntaxError err, 0)
             Right a  ->
-               case TAS.submit ts a of
-                  TAS.NotEquivalent -> NotEquivalent
-                  TAS.Buggy   rs    -> Buggy   (map name rs)       
-                  TAS.Ok      rs ns -> Ok      (map name rs) (toState ns)
-                  TAS.Detour  rs ns -> Detour  (map name rs) (toState ns)
-                  TAS.Unknown    ns -> Unknown               (toState ns)
+               case TAS.submitExtra ts a of
+                  (TAS.NotEquivalent, c) -> (NotEquivalent, c)
+                  (TAS.Buggy   rs   , c) -> (Buggy   (map name rs), c)
+                  (TAS.Ok      rs ns, c) -> (Ok      (map name rs) (toState ns), c)
+                  (TAS.Detour  rs ns, c) -> (Detour  (map name rs) (toState ns), c)
+                  (TAS.Unknown    ns, c) -> (Unknown               (toState ns), c)
 
 -------------------------
 

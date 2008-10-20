@@ -1,7 +1,52 @@
 {
    "result": [
       {
-         "name": "FalseZeroOr",
+         "name": "CommOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "CommAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AssocOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AssocAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AndOverOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "OrOverAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "IdempOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "IdempAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AbsorpOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "AbsorpAnd",
          "buggy": false,
          "rewriterule": true
       },
@@ -16,7 +61,37 @@
          "rewriterule": true
       },
       {
+         "name": "ComplOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "NotTrue",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "FalseZeroOr",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
          "name": "FalseZeroAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "ComplAnd",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "NotFalse",
+         "buggy": false,
+         "rewriterule": true
+      },
+      {
+         "name": "NotNot",
          "buggy": false,
          "rewriterule": true
       },
@@ -27,26 +102,6 @@
       },
       {
          "name": "DeMorganAnd",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "NotBoolConst",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "NotNot",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "AndOverOr",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "OrOverAnd",
          "buggy": false,
          "rewriterule": true
       },
@@ -81,42 +136,22 @@
          "rewriterule": true
       },
       {
-         "name": "ComplOr",
+         "name": "CommEquiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "ComplAnd",
+         "name": "DefEquivImpls",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "IdempOr",
+         "name": "EquivSame",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "IdempAnd",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "AbsorpOr",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "AbsorpAnd",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "CommOr",
-         "buggy": false,
-         "rewriterule": true
-      },
-      {
-         "name": "CommAnd",
+         "name": "ImplSame",
          "buggy": false,
          "rewriterule": true
       },
@@ -167,6 +202,41 @@
       },
       {
          "name": "BuggyAssoc",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "AndSame",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "AndComplBuggy",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "OrSame",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "OrComplBuggy",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "TrueProp",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "FalseProp",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyDistr",
          "buggy": true,
          "rewriterule": true
       }

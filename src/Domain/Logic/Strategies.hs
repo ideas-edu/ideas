@@ -32,7 +32,7 @@ toDNF =  label "Bring to dnf"
  where
    eliminateConstants = repeat $ topDown $ useRules
       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
-      , ruleFalseZeroAnd, ruleNotBoolConst, ruleFalseInEquiv
+      , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse, ruleFalseInEquiv
       , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
       ]
    eliminateImplEquiv = repeat $ bottomUp $ useRules
@@ -56,7 +56,7 @@ toDNF_DWA =  label "Bring to dnf (DWA)" $
  where
     simplify =  somewhere $ useRules
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
-       , ruleFalseZeroAnd, ruleNotBoolConst
+       , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse
        , ruleNotNot, ruleIdempOr, ruleIdempAnd, ruleAbsorpOr, ruleAbsorpAnd
        ]
     eliminateImplEquiv = somewhere $ useRules

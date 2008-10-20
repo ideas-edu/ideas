@@ -9,21 +9,10 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (...add description...)
+-- Rewrite rules in the logic domain (including all the rules from the DWA course)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Rules 
-   ( logicRules, buggyRules
-   , ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
-   , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
-   , ruleDefImpl, ruleDefEquiv
-   , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-   , ruleComplOr, ruleComplAnd
-   , ruleIdempOr, ruleIdempAnd
-   , ruleAbsorpOr, ruleAbsorpAnd
-   , ruleCommOr, ruleCommAnd
-   , buggyRuleCommImp, buggyRuleAssImp
-   ) where
+module Domain.Logic.Rules (module Domain.Logic.Rules) where
 
 import Domain.Logic.Formula
 import Common.Transformation
@@ -31,45 +20,207 @@ import Common.Rewriting
 import Domain.Logic.Generator()
  
 logicRules :: [Rule Logic]
-logicRules = 
-   [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd, ruleFalseZeroAnd, ruleDeMorganOr, ruleDeMorganAnd
-   , ruleNotBoolConst, ruleNotNot, ruleAndOverOr, ruleOrOverAnd
-   , ruleDefImpl, ruleDefEquiv
-   , ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-   , ruleComplOr, ruleComplAnd
-   , ruleIdempOr, ruleIdempAnd
-   , ruleAbsorpOr, ruleAbsorpAnd
-   , ruleCommOr, ruleCommAnd
+logicRules = concat 
+   [ groupCommutativity, groupAssociativity, groupDistributivity, groupIdempotency
+   , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
+   , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
    ]
 
 buggyRules :: [Rule Logic]
-buggyRules = 
+buggyRules = makeGroup "Common misconceptions"
    [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui, buggyRuleEquivElim
    , buggyRuleImplElim, buggyRuleDeMorgan, buggyRuleNotOverImpl, buggyRuleParenth, buggyRuleAssoc
+   , buggyRuleAndSame, buggyRuleAndCompl, buggyRuleOrSame, buggyRuleOrCompl
+   , buggyRuleTrueProp, buggyRuleFalseProp, buggyRuleDistr
    ]
 
 -----------------------------------------------------------------------------
+-- Grouping DWA rules
 
-ruleComplOr :: Rule Logic 
+makeGroup :: String -> [Rule Logic] -> [Rule Logic]
+makeGroup = map . addRuleToGroup
+
+groupCommutativity, groupAssociativity, groupDistributivity, groupIdempotency, 
+   groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation,
+   groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination :: [Rule Logic]
+
+groupCommutativity = makeGroup "Commutativity" 
+   [ruleCommOr, ruleCommAnd]
+groupAssociativity = makeGroup "Associativity"
+   [ruleAssocOr, ruleAssocAnd]
+groupDistributivity = makeGroup "Distributivity"
+   [ruleAndOverOr, ruleOrOverAnd]
+groupIdempotency = makeGroup "Idempotency"
+   [ruleIdempOr, ruleIdempAnd]
+groupAbsorption = makeGroup "Absorption"
+   [ruleAbsorpOr, ruleAbsorpAnd]
+groupTrueProperties = makeGroup "True Properties"
+   [ruleTrueZeroOr, ruleTrueZeroAnd, ruleComplOr, ruleNotTrue]
+groupFalseProperties = makeGroup "False Properties"
+   [ruleFalseZeroOr, ruleFalseZeroAnd, ruleComplAnd, ruleNotFalse]
+groupDoubleNegation = makeGroup "Double Negation"
+   [ruleNotNot]
+groupDeMorgan = makeGroup "De Morgan" 
+   [ruleDeMorganOr, ruleDeMorganAnd]
+groupImplicationEliminatinon = makeGroup "Implication Elimination"
+   [ruleDefImpl]
+groupEquivalenceElimination = makeGroup "Equivalence Elimination"
+   [ruleDefEquiv]
+   
+-----------------------------------------------------------------------------
+-- Commutativity
+
+ruleCommOr, ruleCommAnd :: Rule Logic 
+
+ruleCommOr = rule "CommOr" $
+   \x y -> (x :||: y)  :~>  (y :||: x) 
+     
+ruleCommAnd = rule "CommAnd" $
+   \x y -> (x :&&: y)  :~>  (y :&&: x)
+   
+-----------------------------------------------------------------------------
+-- Associativity (implicit)
+
+ruleAssocOr, ruleAssocAnd :: Rule Logic
+
+ruleAssocOr = minorRule $ rule "AssocOr" $
+   \x y z -> ((x :||: y) :||: z)  :~>  (x :||: (y :||: z)) 
+     
+ruleAssocAnd = minorRule $ rule "AssocAnd" $
+   \x y z -> ((x :&&: y) :&&: z)  :~>  (x :&&: (y :&&: z))
+   
+-----------------------------------------------------------------------------
+-- Distributivity
+
+ruleAndOverOr, ruleOrOverAnd :: Rule Logic 
+
+ruleAndOverOr = ruleList "AndOverOr"
+   [ \x y z -> (x :&&: (y :||: z))  :~>  ((x :&&: y) :||: (x :&&: z))
+   , \x y z -> ((x :||: y) :&&: z)  :~>  ((x :&&: z) :||: (y :&&: z))
+   ]
+
+ruleOrOverAnd = ruleList "OrOverAnd"
+   [ \x y z -> (x :||: (y :&&: z))  :~>  ((x :||: y) :&&: (x :||: z))
+   , \x y z -> ((x :&&: y) :||: z)  :~>  ((x :||: z) :&&: (y :||: z))
+   ]
+   
+-----------------------------------------------------------------------------
+-- Idempotency
+
+ruleIdempOr, ruleIdempAnd :: Rule Logic 
+
+ruleIdempOr = rule "IdempOr" $
+   \x -> (x :||: x)  :~>  x
+
+ruleIdempAnd = rule "IdempAnd" $
+   \x -> (x :&&: x)  :~>  x
+
+-----------------------------------------------------------------------------
+-- Absorption
+
+ruleAbsorpOr, ruleAbsorpAnd :: Rule Logic 
+
+ruleAbsorpOr = ruleList "AbsorpOr" 
+   [ \x y -> (x :||: (x :&&: y))  :~>  x
+   , \x y -> (x :||: (y :&&: x))  :~>  x
+   , \x y -> ((x :&&: y) :||: x)  :~>  x
+   , \x y -> ((y :&&: x) :||: x)  :~>  x
+   ]
+    
+ruleAbsorpAnd = ruleList "AbsorpAnd"
+   [ \x y -> (x :&&: (x :||: y))  :~>  x 
+   , \x y -> (x :&&: (y :||: x))  :~>  x 
+   , \x y -> ((x :||: y) :&&: x)  :~>  x 
+   , \x y -> ((y :||: x) :&&: x)  :~>  x 
+   ]
+
+-----------------------------------------------------------------------------
+-- True-properties
+
+ruleTrueZeroOr, ruleTrueZeroAnd, ruleComplOr, ruleNotTrue :: Rule Logic 
+
+ruleTrueZeroOr = ruleList "TrueZeroOr"
+   [ \x -> (T :||: x)  :~>  T
+   , \x -> (x :||: T)  :~>  T
+   ]
+
+ruleTrueZeroAnd = ruleList "TrueZeroAnd"
+   [ \x -> (T :&&: x)  :~>  x
+   , \x -> (x :&&: T)  :~>  x
+   ] 
+ 
 ruleComplOr = ruleList "ComplOr" $
    [ \x -> (x :||: Not x)  :~>  T
    , \x -> (Not x :||: x)  :~>  T
    ]
+
+ruleNotTrue = rule "NotTrue" $
+   (Not T)  :~>  F
    
-ruleComplAnd :: Rule Logic 
+-----------------------------------------------------------------------------
+-- False-properties
+
+ruleFalseZeroOr, ruleFalseZeroAnd, ruleComplAnd, ruleNotFalse :: Rule Logic 
+
+ruleFalseZeroOr = ruleList "FalseZeroOr"
+   [ \x -> (F :||: x)  :~>  x
+   , \x -> (x :||: F)  :~>  x
+   ]
+  
+ruleFalseZeroAnd = ruleList "FalseZeroAnd"
+   [ \x -> (F :&&: x)  :~>  F
+   , \x -> (x :&&: F)  :~>  F
+   ]
+ 
 ruleComplAnd = ruleList "ComplAnd"
    [ \x -> (x :&&: Not x)  :~>  F
    , \x -> (Not x :&&: x)  :~>  F
    ]
 
+ruleNotFalse = rule "NotFalse" $
+   (Not F)  :~>  T
+
+-----------------------------------------------------------------------------
+-- Double negation
+
+ruleNotNot :: Rule Logic 
+ruleNotNot = rule "NotNot" $
+   \x -> (Not (Not x))  :~>  x
+   
+-----------------------------------------------------------------------------
+-- De Morgan
+
+ruleDeMorganOr, ruleDeMorganAnd :: Rule Logic 
+
+ruleDeMorganOr = rule "DeMorganOr" $
+   \x y -> (Not (x :||: y))  :~>  (Not x :&&: Not y)
+
+ruleDeMorganAnd = rule "DeMorganAnd" $
+   \x y -> (Not (x :&&: y))  :~>  (Not x :||: Not y)
+   
+-----------------------------------------------------------------------------
+-- Implication elimination
+
 ruleDefImpl :: Rule Logic 
 ruleDefImpl = rule "DefImpl" $
    \x y -> (x :->: y)  :~>  (Not x :||: y)
    
+-----------------------------------------------------------------------------
+-- Equivalence elimination
+
 ruleDefEquiv :: Rule Logic 
 ruleDefEquiv = rule "DefEquiv" $
    \x y -> (x :<->: y)  :~>  ((x :&&: y) :||: (Not x :&&: Not y))
-   
+
+-----------------------------------------------------------------------------
+-- Additional rules, not in the DWA course
+
+groupAdditional :: [Rule Logic]
+groupAdditional = makeGroup "Additional rules"
+   [ ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
+   , ruleCommEquiv, ruleDefEquivImpls, ruleEquivSame, ruleImplSame
+   ]
+
 ruleFalseInEquiv :: Rule Logic 
 ruleFalseInEquiv = ruleList "FalseInEquiv"
    [ \x -> (F :<->: x)  :~>  (Not x)
@@ -94,87 +245,65 @@ ruleTrueInImpl = ruleList "TrueInImpl"
    , \x -> (x :->: T)  :~>  T
    ]
         
-ruleFalseZeroOr :: Rule Logic 
-ruleFalseZeroOr = ruleList "FalseZeroOr"
-   [ \x -> (F :||: x)  :~>  x
-   , \x -> (x :||: F)  :~>  x
-   ]
-  
-ruleTrueZeroOr :: Rule Logic 
-ruleTrueZeroOr = ruleList "TrueZeroOr"
-   [ \x -> (T :||: x)  :~>  T
-   , \x -> (x :||: T)  :~>  T
-   ]
+ruleCommEquiv :: Rule Logic 
+ruleCommEquiv = rule "CommEquiv" $
+   \x y -> (x :<->: y)  :~>  (y :<->: x)
 
-ruleTrueZeroAnd :: Rule Logic 
-ruleTrueZeroAnd = ruleList "TrueZeroAnd"
-   [ \x -> (T :&&: x)  :~>  x
-   , \x -> (x :&&: T)  :~>  x
-   ] 
+ruleDefEquivImpls :: Rule Logic 
+ruleDefEquivImpls = rule "DefEquivImpls" $
+   \x y -> (x :<->: y)  :~>  ((x :->: y) :&&: (y :->: x))
 
-ruleFalseZeroAnd :: Rule Logic 
-ruleFalseZeroAnd = ruleList "FalseZeroAnd"
-   [ \x -> (F :&&: x)  :~>  F
-   , \x -> (x :&&: F)  :~>  F
-   ]
+ruleEquivSame :: Rule Logic 
+ruleEquivSame = rule "EquivSame" $
+   \x -> (x :<->: x)  :~>  T
 
-ruleDeMorganOr :: Rule Logic 
-ruleDeMorganOr = rule "DeMorganOr" $
-   \x y -> (Not (x :||: y))  :~>  (Not x :&&: Not y)
+ruleImplSame :: Rule Logic 
+ruleImplSame = rule "ImplSame" $
+   \x -> (x :->: x)  :~>  T
+   
+-----------------------------------------------------------------------------
+-- Buggy rules
 
-ruleDeMorganAnd :: Rule Logic 
-ruleDeMorganAnd = rule "DeMorganAnd" $
-   \x y -> (Not (x :&&: y))  :~>  (Not x :||: Not y)
+buggyRuleAndSame :: Rule Logic
+buggyRuleAndSame = buggyRule $ rule "AndSame" $
+   \x -> (x :&&: x)  :~>  T
 
-ruleNotBoolConst :: Rule Logic 
-ruleNotBoolConst = ruleList "NotBoolConst"
-   [ (Not T)  :~>  F
-   , (Not F)  :~>  T
-   ]
-
-ruleNotNot :: Rule Logic 
-ruleNotNot = rule "NotNot" $
-   \x -> (Not (Not x))  :~>  x
-
-ruleAndOverOr :: Rule Logic 
-ruleAndOverOr = ruleList "AndOverOr"
-   [ \x y z -> (x :&&: (y :||: z))  :~>  ((x :&&: y) :||: (x :&&: z))
-   , \x y z -> ((x :||: y) :&&: z)  :~>  ((x :&&: z) :||: (y :&&: z))
-   ]
-
-ruleOrOverAnd :: Rule Logic 
-ruleOrOverAnd = ruleList "OrOverAnd"
-   [ \x y z -> (x :||: (y :&&: z))  :~>  ((x :||: y) :&&: (x :||: z))
-   , \x y z -> ((x :&&: y) :||: z)  :~>  ((x :||: z) :&&: (y :||: z))
+buggyRuleAndCompl :: Rule Logic
+buggyRuleAndCompl = buggyRule $ ruleList "AndComplBuggy"
+   [ \x -> (x :&&: Not x)  :~>  T
+   , \x -> (Not x :&&: x)  :~>  T
+   , \x -> (x :&&: Not x)  :~>  x
+   , \x -> (Not x :&&: x)  :~>  x
    ]
    
-ruleIdempOr :: Rule Logic 
-ruleIdempOr = rule "IdempOr" $
-   \x -> (x :||: x)  :~>  x
-   
-ruleIdempAnd :: Rule Logic 
-ruleIdempAnd = rule "IdempAnd" $
-   \x -> (x :&&: x)  :~>  x
+buggyRuleOrSame :: Rule Logic
+buggyRuleOrSame = buggyRule $ rule "OrSame" $
+   \x -> (x :||: x)  :~>  T
+
+buggyRuleOrCompl :: Rule Logic
+buggyRuleOrCompl = buggyRule $ ruleList "OrComplBuggy"
+   [ \x -> (x :||: Not x)  :~>  F
+   , \x -> (Not x :||:  x) :~>  F
+   , \x -> (x :||: Not x)  :~>  x
+   , \x -> (Not x :||:  x) :~>  x
+   ]
     
-ruleAbsorpOr :: Rule Logic 
-ruleAbsorpOr = rule "AbsorpOr" $
-   \x y -> (x :||: (x :&&: y))  :~>  x
-    
-    
-ruleAbsorpAnd :: Rule Logic 
-ruleAbsorpAnd = rule "AbsorpAnd" $
-   \x y -> (x :&&: (x :||: y))  :~>  x 
-    
-ruleCommOr :: Rule Logic 
-ruleCommOr = rule "CommOr" $
-   \x y -> (x :||: y)  :~>  (y :||: x) 
-    
-ruleCommAnd :: Rule Logic 
-ruleCommAnd = rule "CommAnd" $
-   \x y -> (x :&&: y)  :~>  (y :&&: x)
-    
--- Buggy rules:
-   
+buggyRuleTrueProp :: Rule Logic
+buggyRuleTrueProp = buggyRule $ ruleList "TrueProp" 
+   [ \x -> (x :||: T)  :~>  x
+   , \x -> (T :||: x)  :~>  x
+   , \x -> (x :&&: T)  :~>  T
+   , \x -> (T :&&: x)  :~>  T
+   ]
+
+buggyRuleFalseProp :: Rule Logic
+buggyRuleFalseProp = buggyRule $ ruleList "FalseProp" 
+   [ \x -> (x :||: F)  :~>  F
+   , \x -> (F :||: x)  :~>  F
+   , \x -> (x :&&: F)  :~>  x
+   , \x -> (F :&&: x)  :~>  x
+   ]
+
 buggyRuleCommImp :: Rule Logic 
 buggyRuleCommImp = buggyRule $ rule "CommImp" $
    \x y -> (x :->: y)  :~>  (y :->: x) --this does not hold: T->T => T->x
@@ -200,6 +329,9 @@ buggyRuleEquivElim = buggyRule $ ruleList "BuggyEquivElim"
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :&&:  y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: ( x :&&: Not y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :&&: (Not x :&&: Not y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :||: Not y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (x :&&: y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: Not (x :||: Not y))
     ]
     
 buggyRuleImplElim :: Rule Logic
@@ -210,10 +342,14 @@ buggyRuleDeMorgan :: Rule Logic
 buggyRuleDeMorgan = buggyRule $ ruleList "BuggyDeMorgan"
     [ \x y -> (Not (x :&&: y)) :~>  (Not x :||: y)
     , \x y -> (Not (x :&&: y)) :~>  (x :||: Not y)
-    , \x y -> (Not (x :&&: y)) :~> (Not (Not x :||: Not y))
+    , \x y -> (Not (x :&&: y)) :~>  (Not (Not x :||: Not y))
+    , \x y -> (Not (x :&&: y)) :~>  (x :||: y)
+    , \x y -> (Not (x :&&: y)) :~>  (Not x :&&: Not y)
     , \x y -> (Not (x :||: y)) :~>  (Not x :&&: y)
     , \x y -> (Not (x :||: y)) :~>  (x :&&: Not y)
-    , \x y -> (Not (x :||: y)) :~> (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
+    , \x y -> (Not (x :||: y)) :~>  (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
+    , \x y -> (Not (x :||: y)) :~>  (x :&&: y)
+    , \x y -> (Not (x :||: y)) :~>  (Not x :||: Not y)
     ]
 
 buggyRuleNotOverImpl :: Rule Logic
@@ -238,3 +374,15 @@ buggyRuleAssoc = buggyRule $ ruleList "BuggyAssoc"
     , \x y z -> ((x :&&: y) :||: z) :~> (x :&&: (y :||: z))
     , \x y z -> (x :&&: (y :||: z)) :~> ((x :&&: y) :||: z)
     ]
+    
+buggyRuleDistr :: Rule Logic
+buggyRuleDistr = buggyRule $ ruleList "BuggyDistr"
+   [ \x y z -> (x :&&: (y :||: z))  :~>  ((x :&&: y) :&&: (x :&&: z))
+   , \x y z -> ((x :||: y) :&&: z)  :~>  ((x :&&: z) :&&: (y :&&: z))
+   , \x y z -> (x :&&: (y :||: z))  :~>  ((x :||: y) :&&: (x :||: z))
+   , \x y z -> ((x :||: y) :&&: z)  :~>  ((x :||: z) :&&: (y :||: z))
+   , \x y z -> (x :||: (y :&&: z))  :~>  ((x :||: y) :||: (x :||: z))
+   , \x y z -> ((x :&&: y) :||: z)  :~>  ((x :||: z) :||: (y :||: z))
+   , \x y z -> (x :||: (y :&&: z))  :~>  ((x :&&: y) :||: (x :&&: z))
+   , \x y z -> ((x :&&: y) :||: z)  :~>  ((x :&&: z) :||: (y :&&: z))
+   ] 

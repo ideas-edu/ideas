@@ -11,20 +11,36 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Service.SearchSpace (searchSpace) where
+module Service.SearchSpace 
+   ( searchSpace, searchSpaceWith, SearchSpaceConfig(..), defaultConfig
+   ) where
 
 import Common.Apply
-import Common.Exercise (Everywhere)
 import Common.Strategy (Prefix, runPrefixMajor, lastRuleInPrefix)
+import Common.Rewriting.TreeDiff
 import Common.Transformation
+import Common.Strategy hiding ((<||>), (<|>))
 import Service.Progress
 import qualified Data.Set as S
 
-searchSpace :: (Ord score, Num score) => (a -> a -> Ordering) -> Everywhere a -> Maybe (Prefix a) -> [Rule a] -> a -> Progress score (a, Maybe (Prefix a), [Rule a])
-searchSpace ordering everywhere mp = searchSpaceCost ordering everywhere mp . zip (repeat $ fromInteger costRULE)
+data SearchSpaceConfig = SSC 
+   { costStrategy :: Rational
+   , costRule     :: String -> Rational
+   }
+   
+defaultConfig :: SearchSpaceConfig
+defaultConfig = SSC 
+   { costStrategy = 1
+   , costRule     = const 1
+   }
 
-searchSpaceCost :: (Ord score, Num score) => (a -> a -> Ordering) -> Everywhere a -> Maybe (Prefix a) -> [(score, Rule a)] -> a -> Progress score (a, Maybe (Prefix a), [Rule a])
-searchSpaceCost ordering everywhere mp rules q = rec (empty ordering) (success (q, [], mp))
+type Diffs a = a -> [(a, TreeDiff)] 
+
+searchSpace :: (a -> a -> Ordering) -> Diffs a -> Maybe (Prefix a) -> [Rule a] -> a -> Progress Rational (a, Maybe (Prefix a), [Rule a])
+searchSpace = searchSpaceWith defaultConfig
+
+searchSpaceWith :: SearchSpaceConfig -> (a -> a -> Ordering) -> Diffs a -> Maybe (Prefix a) -> [Rule a] -> a -> Progress Rational (a, Maybe (Prefix a), [Rule a])
+searchSpaceWith config ordering diffs mp rules q = rec (empty ordering) (success (q, [], mp))
  where
    rec history worklist =
       case extractFirst worklist of
@@ -34,30 +50,40 @@ searchSpaceCost ordering everywhere mp rules q = rec (empty ordering) (success (
             | member p history ->
                  addScore cost failure <||> rec history rest
             | otherwise -> 
-                 let new =  addScore (fromInteger costSTRATEGY) (
-                               case mStrat of
-                                  Nothing -> emptyProgress
-                                  Just p1 -> fromList 
-                                     [ (x, r:rs, Just y) 
-                                     | (x, y) <- runPrefixMajor p1 p
-                                     , Just r <- [lastRuleInPrefix y], isMajorRule r
-                                     ]) 
-                        <|> mapProgress (\(a, r) -> (a, r:rs, Nothing)) (stepP everywhere rules p)
+                 let new = newStrategy <|> newRule
+                     newRule = mapProgress (\(a, r) -> (a, r:rs, Nothing)) (stepP p)
+                     newStrategy = 
+                        case mStrat of
+                           Nothing -> emptyProgress
+                           Just p1 -> addScore (costStrategy config) $ fromMaybeList $
+                              flip map (runPrefixMajor p1 p) $ \(x, y) -> 
+                                 case lastRuleInPrefix y of
+                                    Just r | isMajorRule r && stepsToRules (prefixToSteps p1) /= stepsToRules (prefixToSteps y) -> 
+                                       Just (x, r:rs, Just y)
+                                    _ -> Nothing
                      newHistory  = insert p history
                      newWorklist = addScore cost new <|> rest
                  in addScore cost (success (p, mStrat, rs)) <||> rec newHistory newWorklist
 
-costSTRATEGY, costRULE {-, costEXPENSIVE, costBUGGY -} :: Integer
-costSTRATEGY  = 1
-costRULE      = 3
---costEXPENSIVE = 10
---costBUGGY     = 15
+   stepP a0 = do
+      (r, a) <- scoreList 
+         [ (cost , (r, a)) 
+         | (a, td) <- diffs a0
+         , r <- rules 
+         , let cost = costRule config (name r) * scoreTreeDiff td
+         ]
+      fromMaybeList $ 
+         case applyAll r a of
+            [] -> [ Nothing ]
+            bs -> [ Just (b, r) | b <- bs]
 
-stepP :: (Ord score, Num score) => Everywhere a -> [(score, Rule (a))] -> a -> Progress score (a, Rule a)
-stepP everywhere rules a = do
-   r <- scoreList rules
-   let ps = everywhere (applyAll r) a
-   fromList $ map (\x -> (x, r)) ps
+scoreTreeDiff :: TreeDiff -> Rational
+scoreTreeDiff td =
+   case td of
+      Equal     -> 20
+      Inside    -> 10
+      Different -> 1
+      Top       -> 2
 
 -- History and X are a work-around, since we don't have an Ord instance for our type
 data History a = History (a -> a -> Ordering) (S.Set (X a))

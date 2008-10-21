@@ -72,6 +72,11 @@ introMatchList = toRule "Intro MatchList" f
    f e | e == undef = return $ MatchList undef undef undef
    f _ = Nothing
 
+listPatternMatching varname head tail = toRule "List Pattern Matching" f
+  where
+    f e | e == undef = return $ MatchList varname undef (Lambda head $ Lambda tail $ undef)
+    f _ = Nothing
+
 introVar:: String -> Rule (Context Expr)
 introVar x = toRule "Intro Var" f 
  where
@@ -109,6 +114,24 @@ getStrategy expr =
       Let x b d -> introLet x <*> getStrategy b <*> getStrategy d
       Apply f a -> introApply <*> getStrategy f <*> getStrategy a
 
+{- The abstract strategy has a slightly more abstract representation
+of list pattern matching. The following function is partial, and
+only works on pattern matching over variables. -}
+getAbstractStrategy :: Expr -> Strategy (Context Expr)
+getAbstractStrategy expr = 
+   case expr of
+      Lambda x e -> introLambda x <*> getAbstractStrategy e
+      MatchList b n c -> listPatternMatching b (getLambda c) (getLambda (dropLambda c)) <*> getAbstractStrategy n <*> getAbstractStrategy (dropLambda (dropLambda c))
+      Var x -> toStrategy (introVar x)
+      Let x b d -> introLet x <*> getAbstractStrategy b <*> getAbstractStrategy d
+      Apply f a -> introApply <*> getAbstractStrategy f <*> getAbstractStrategy a
+
+getLambda (Lambda x e)   = x
+getLambda expr           = error "Not a lambda"
+
+dropLambda (Lambda x e)  = e
+dropLambda expr          = error "Not a lambda"
+
 buildExpr :: [Rule (Context Expr)] -> Expr
 buildExpr = fromContext . foldl (flip applyD) (inContext undef)
 
@@ -140,6 +163,9 @@ isortExercise = Exercise
    
 isortStrategy :: Strategy (Context Expr)
 isortStrategy = getStrategy isortExpr
+
+isortAbstractStrategy :: Strategy (Context Expr)
+isortAbstractStrategy = getAbstractStrategy isortExpr
 
 toRule :: String -> (Expr -> Maybe Expr) -> Rule (Context Expr)
 toRule s f = liftRuleToContext $ makeSimpleRule s (\e -> applyRule e f)

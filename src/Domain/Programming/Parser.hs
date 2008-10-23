@@ -65,41 +65,47 @@ pAtom  =  (Var . fst) <$> (pVarid <|> pConid)
 -----------------------------------------------------------
 --- Pretty-Printer
 
-pprintExpr :: (Expr, Int) -> String
-pprintExpr (expr, offset) = 
+ppExpr :: (Expr, Int) -> String
+ppExpr (expr, i) = 
    case expr of
-      Lambda x e -> "\\" ++ x ++ " -> " ++ pprintExpr (e,offset+(length x)+5)
-      Var x -> x
-      Apply (Lambda f body) (Fix (Lambda _ e)) -> "let " ++ f ++ " = " ++ pprintExpr (e,offset+(length f)+7)
-                                                  ++ "\n" ++ spaces offset ++ "in " ++ pprintExpr (body, offset)
-      Apply f a -> "(" ++ case f of
-                        (Apply (Var op) l) -> if not (isAlpha (head op)) then 
-                                                  pprintExpr (l,offset) ++ " " ++ op ++ " " ++ pprintExpr (a,offset)
-                                              else
-                                                  op ++ " " ++ pprintExpr (l,offset) ++ " " ++ pprintExpr (a,offset)
-                        _ -> pprintExpr (f,offset) ++ case a of
-                                               (Var _)   -> " "  ++ pprintExpr (a,offset)
-                                               (Int _)   -> " "  ++ pprintExpr (a,offset)
-                                               _         -> " (" ++ pprintExpr (a,offset) ++ ")"
-                   ++ ")"
-      Fix f -> case f of 
-                 (Lambda x e) -> "let " ++ x ++ " = " ++ pprintExpr (e,offset+(length x)+7) ++ "\n"
-                                 ++ spaces offset ++ "in " ++ x
-                 _ -> error "Must be a function"
-      Int n -> [intToDigit n]
-      IfThenElse c t e -> "if " ++ pprintExpr (c,offset) ++ " then\n"
-                                ++ spaces (offset+2) ++ pprintExpr (t,offset+2) ++ "\n"
-                                ++ spaces offset ++ "else\n"
-                                ++ spaces (offset+2) ++ pprintExpr (e,offset+2)
-      MatchList b n c -> "case " ++ pprintExpr (b,offset) ++ " of\n" 
-                                 ++ spaces (offset+5) ++ pprintExpr (n,offset+5) ++ ";\n"
-                                 ++ spaces (offset+5) ++ pprintExpr (c,offset+5)
+      Lambda x e -> 
+          "\\" ++ x ++ " -> " ++ ppExpr (e,i+(length x)+5)
+      Var x -> 
+          x
+      Apply f a -> 
+          "(" ++ case f of
+               (Apply (Var op) l) -> 
+                   if not $ isAlpha (head op) then -- infix operator
+                       ppExpr (l,i) ++ " " ++ op ++ " " ++ ppExpr (a,i)
+                   else
+                       op ++ " " ++ ppExpr (l,i) ++ " " ++ ppExpr (a,i)
+               _ -> ppExpr (f,i) ++ case a of
+                   (Var _)   -> " "  ++ ppExpr (a,i)
+                   (Int _)   -> " "  ++ ppExpr (a,i)
+                   _         -> " (" ++ ppExpr (a,i) ++ ")"
+          ++ ")"
+      Fix f -> 
+          case f of 
+              (Lambda x e) -> "let " ++ x ++ " = " ++ ppExpr (e,i+(length x)+7) ++ "\n"
+                               ++ spc i ++ "in " ++ x
+              _ -> error "Must be a lambda expression"
+      Int n -> 
+          [intToDigit n]
+      IfThenElse c t e -> 
+          "if " ++ ppExpr (c,i) ++ " then\n"
+          ++ spc (i+2) ++ ppExpr (t,i+2) ++ "\n"
+          ++ spc i ++ "else\n"
+          ++ spc (i+2) ++ ppExpr (e,i+2)
+      MatchList b n c -> 
+          "case " ++ ppExpr (b,i) ++ " of\n" 
+          ++ spc (i+5) ++ ppExpr (n,i+5) ++ ";\n"
+          ++ spc (i+5) ++ ppExpr (c,i+5)
      where 
-      spaces n = take n (Prelude.repeat ' ')
+      spc n = take n (Prelude.repeat ' ')
 
 
-prettyIsort = putStr (pprintExpr (isortE,0) ++ "\n") 
+prettyIsort = putStr (ppExpr (isortE,0) ++ "\n") 
 
 testje = eval (isPermE # mylist # (isort # mylist))
   where
-    isort = (\(Right e) -> e) $ parseExpr $ pprintExpr (isortE,0)
+    isort = (\(Right e) -> e) $ parseExpr $ ppExpr (isortE,0)

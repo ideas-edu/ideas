@@ -25,7 +25,10 @@ instance Uniplate Expr where
          Int n            -> ([], \[] -> expr)
          IfThenElse c t e -> ([c,t,e], \[c,t,e] -> IfThenElse c t e)
          MatchList e n c  -> ([e,n,c], \[e,n,c] -> MatchList e n c)
-         
+
+makeLet :: String -> Expr -> Expr -> Expr
+makeLet s e body = Apply (Lambda s body) (Fix (Lambda s e))
+ 
 true, false :: Expr
 true  = Var "True"
 false = Var "False"

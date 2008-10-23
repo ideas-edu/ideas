@@ -1,13 +1,10 @@
 module Domain.Programming.Rules where
 
-import Prelude hiding (sequence)
 import Common.Context
-import Common.Strategy
 import Common.Uniplate
-import Common.Exercise
 import Common.Transformation
 import Common.Apply
-import Common.Parsing (SyntaxError(..))
+import Domain.Programming.Expr
 import Data.Maybe
 import Data.Char
 
@@ -38,7 +35,7 @@ introVar x = toRule "Intro Var" f
 introLet :: String -> Rule (Context Expr)
 introLet x = toRule "Intro Let" f 
  where
-   f e | e == undef = return $ Let x undef undef
+   f e | e == undef = return $ makeLet x undef undef
    f _ = Nothing
 
 introApply :: Rule (Context Expr)
@@ -47,6 +44,11 @@ introApply = toRule "Intro Apply" f
    f e | e == undef = return $ Apply undef undef
    f _ = Nothing
 
+introIf :: Rule (Context Expr)
+introIf = toRule "Intro If" f
+ where
+   f e | e == undef = return $ IfThenElse undef undef undef
+   f _ = Nothing
 
 getRules :: Expr -> [Rule (Context Expr)]
 getRules expr = 
@@ -54,8 +56,12 @@ getRules expr =
       Lambda x e -> introLambda x : getRules e
       MatchList b n c -> introMatchList : getRules b ++ getRules n ++ getRules c
       Var x -> introVar x : []
-      Let x b d -> introLet x : getRules b ++ getRules d
+      -- Let x b d -> introLet x : getRules b ++ getRules d
+      Apply (Lambda f b) (Fix (Lambda g e)) | f==g -> introLet f : getRules b ++ getRules e
+      Fix (Lambda x e) -> getRules (makeLet x e (Var "x"))
       Apply f a -> introApply : getRules f ++ getRules a
+      IfThenElse c t e -> introIf : getRules c ++ getRules t ++ getRules e
+      _ -> error (show expr)
 
 
 toRule :: String -> (Expr -> Maybe Expr) -> Rule (Context Expr)

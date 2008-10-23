@@ -8,6 +8,7 @@ import Common.Exercise
 import Common.Transformation
 import Common.Apply
 import Common.Parsing (SyntaxError(..))
+import Domain.Programming.Expr
 import Data.Maybe
 import Data.Char
 

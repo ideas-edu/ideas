@@ -26,6 +26,15 @@ type Eval = StateT Integer (Either EvalError)
 maxTime :: Integer
 maxTime = 1000000
 
+binOps :: M.Map String (Int -> Int -> Expr)
+binOps = M.fromList 
+   [ ("<=",  \x y -> if x<=y then true else false) 
+   , ("==",  \x y -> if x==y then true else false) 
+   , ("-" ,  \x y -> Int (x-y))
+   , ("+" ,  \x y -> Int (x+y))
+   , ("div", \x y -> Int (div x y))
+   ]
+
 -- To do: evaluate in Error monad to throw type errors, to report undefined, or
 -- to time out the evaluation (for looping expressions)
 eval :: Expr -> Either EvalError (Expr, Integer)
@@ -60,16 +69,14 @@ evalM expr = do
             Apply (Var g) x
                -- primitive binary functions
                | g == "Cons" -> liftM2 cons (evalM x) (evalM a)
-               | g == "<="   -> do
-                    p <- liftM2 (,) (evalM x) (evalM a)
-                    case p of
-                       (Int x, Int y) -> return (if x <= y then true else false)
-                       _ -> typeError "expecting an int"
-               | g == "==" -> do
-                    p <- liftM2 (,) (evalM x) (evalM a)
-                    case p of
-                       (Int x, Int y) -> return (if x == y then true else false)
-                       _ -> typeError "expecting an int"
+               | otherwise   ->
+                    case M.lookup g binOps of 
+                       Just f -> do
+                          p <- liftM2 (,) (evalM x) (evalM a)
+                          case p of
+                             (Int x, Int y) -> return (f x y)
+                             _ -> typeError "expecting an int"
+                       Nothing -> return (Apply ef a)
             g -> return (Apply g a)
       Var x ->
          case M.lookup x prelude of
@@ -128,3 +135,5 @@ test2 = quickCheck prop2
 
 mylist = cons (Int 4) $ cons (Int 3) $ cons (Int 5) $ cons (Int 1) nil
 test = eval (isPermE # mylist # (isortE2 # mylist))
+
+q = eval $ mergeE # intlist [1,3,4] # intlist [2,5]

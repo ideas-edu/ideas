@@ -1,5 +1,7 @@
 module Domain.Programming.Exercises where
 
+import Domain.Programming.Expr
+import Domain.Programming.Strategies
 import Common.Context
 import Common.Strategy
 import Common.Uniplate
@@ -21,12 +23,12 @@ isortExercise = Exercise
                              [(a, rest)] | all isSpace rest -> Right a 
                              _ -> Left $ ErrorMessage "parse error"
    , subTerm       = \_ _ -> Nothing
-   , prettyPrinter = \e -> pprintExpr (e,0)
+   , prettyPrinter = show -- \e -> pprintExpr (e,0)
    , equivalence   = (==)
    , equality      = (==)
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = label "isort" isortStrategy
+   , strategy      = label "isort" isortAbstractStrategy
    , generator     = return undef
    , suitableTerm  = const True
    }

@@ -11,6 +11,6 @@
 
 <h1>Exercise Assistant online</h1>
 <p><a href="generic.php?exercisekind=Proposition%20to%20DNF">Proposition Logic</a></p>
-<p><a href="generic.php?exercisekind=To%20conjunctive%20normal%20form">Relational Algebra</a></p>
+<p><a href="generic.php?exercisekind=To%20conjunctive%20normal%20form">Relation Algebra</a></p>
 </body>
 </html>

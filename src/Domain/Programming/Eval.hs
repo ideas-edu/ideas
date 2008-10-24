@@ -32,6 +32,7 @@ binOps = M.fromList
    , ("==",  \x y -> if x==y then true else false) 
    , ("-" ,  \x y -> Int (x-y))
    , ("+" ,  \x y -> Int (x+y))
+   , ("*" ,  \x y -> Int (x*y))
    , ("div", \x y -> Int (div x y))
    ]
 

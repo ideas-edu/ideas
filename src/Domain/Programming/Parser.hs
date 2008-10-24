@@ -104,8 +104,26 @@ ppExpr (expr, i) =
       spc n = take n (Prelude.repeat ' ')
 
 
+
+-- Some test stuff
+
 prettyIsort = putStr (ppExpr (isortE,0) ++ "\n") 
+
+fromRight (Right e) = e
 
 testje = eval (isPermE # mylist # (isort # mylist))
   where
-    isort = (\(Right e) -> e) $ parseExpr $ ppExpr (isortE,0)
+    isort = fromRight $ parseExpr $ ppExpr (isortE,0)
+
+testje2 = eval (fac # Int 4)
+  where 
+    s = "let f = \\n -> if n == 0 then 1 else n * f (n-1) in f"
+    fac = fromRight $ parseExpr s
+
+ssortE' :: Expr
+ssortE' = fromRight $ parseExpr $ "let ss = \\l -> case l of " ++
+                                      "Nil; " ++
+                                      "\\x -> \\xs -> let m = minimum (Cons x xs) " ++ 
+                                                      "in Cons m (ss (delete m (Cons x xs))) " ++ 
+                                 "in ss"
+

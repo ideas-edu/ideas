@@ -2,6 +2,7 @@ module Domain.Programming.Prelude where
 
 import Data.Map as M
 import Domain.Programming.Expr
+import Domain.Programming.Sorting
 
 infixl 5 #
 
@@ -17,6 +18,7 @@ prelude = M.fromList
    , ("take",   takeE)
    , ("drop",   dropE)
    , ("length", lengthE)
+   , ("minimum",minimumE)
    ]
 
 (#) :: Expr -> Expr -> Expr
@@ -63,7 +65,14 @@ dropE = Fix $ Lambda "f" $ Lambda "i" $ Lambda "xs" $ IfThenElse (Var "==" # Var
 lengthE :: Expr
 lengthE = Var "foldr" # op # Int 0
  where op = Lambda "x" $ Var "+" # Int 1
-       
+     
+
+minimumE :: Expr
+minimumE = Var "foldr" # op # Int (maxBound::Int)
+  where op = Lambda "x" $ Lambda "y" $ IfThenElse (Var "<=" # Var "x" # Var "y") 
+                                         (Var "x") 
+                                         (Var "y")
+  
 ---------------------------------------------------------------
 -- Sorting algorithms
 
@@ -103,6 +112,13 @@ mergeE = Fix $ Lambda "f" $ Lambda "as" $ Lambda "bs" $ MatchList (Var "as")
       (Lambda "y" $ Lambda "ys" $ IfThenElse (Var "<=" # Var "x" # Var "y")
          (cons (Var "x") (Var "f" # Var "xs" # Var "bs"))
          (cons (Var "y") (Var "f" # Var "as" # Var "ys")))) 
+
+ssortE :: Expr
+ssortE = Fix $ Lambda "f" $ Lambda "l"  $ MatchList (Var "l")
+   nil
+   (Lambda "x" $ Lambda "xs" $ cons (Var "minimum" # cons (Var "x") (Var "xs")) 
+                                    (Var "f" # (Var "delete" # (Var "minimum" # cons (Var "x") (Var "xs")) 
+                                                             # cons (Var "x") (Var "xs"))))
 
 -----------------------------------------------------------------
 -- Contracts for sorting

@@ -2,7 +2,6 @@ module Domain.Programming.Prelude where
 
 import Data.Map as M
 import Domain.Programming.Expr
-import Domain.Programming.Sorting
 
 infixl 5 #
 
@@ -29,6 +28,12 @@ foldrE = Lambda "op" $ Lambda "e" $ Fix $ Lambda "rec" $
    Lambda "xs" $ MatchList (Var "xs") 
       (Var "e")
       (Lambda "y" $ Lambda "ys" $ Var "op" # Var "y" # (Var "rec" # Var "ys"))
+
+paraE :: Expr
+paraE = Lambda "op" $ Lambda "e" $ Fix $ Lambda "rec" $
+   Lambda "xs" $ MatchList (Var "xs")
+      (Var "e")
+      (Lambda "y" $ Lambda "ys" $ Var "op" # Var "y" # Var "ys" # (Var "rec" # Var "ys"))
 
 elemE :: Expr
 elemE = Fix $ Lambda "f" $ Lambda "a" $ Lambda "xs" $ MatchList (Var "xs")
@@ -92,6 +97,10 @@ insertE = Fix $ Lambda "f" $ Lambda "a" $ Lambda "xs" $ MatchList (Var "xs")
       (Var "<=" # Var "a" # Var "y") 
       (cons (Var "a") (cons (Var "y") (Var "ys"))) 
       (cons (Var "y") (Var "f" # Var "a" # Var "ys")))
+
+-- unfinished: need if-then-else in expressions
+insertE2 = Lambda "y" $ paraE # (Lambda "z" $ Lambda "zs" $ Lambda "rec" $ undefined) 
+                              # (cons (Var "y") $ nil)
 
 msortE :: Expr
 msortE = Fix $ Lambda "f" $ Lambda "xs" $ MatchList (Var "xs") 

@@ -10,9 +10,11 @@ import Common.Apply
 import Common.Parsing (SyntaxError(..))
 import Domain.Programming.Expr
 import Domain.Programming.Rules
-import Domain.Programming.Prelude (isortE2)
+import Domain.Programming.Prelude (isortE2,insertE)
 import Data.Maybe
 import Data.Char
+
+-- strategies derived from the abstract syntax of expressions
 
 getStrategy :: Expr -> Strategy (Context Expr)
 getStrategy expr = 
@@ -48,6 +50,19 @@ getLambda expr           = error "Not a lambda"
 dropLambda (Lambda x e)  = e
 dropLambda expr          = error "Not a lambda"
  
+-- the fold strategy
+
+foldS :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
+foldS consS nilS = toStrategy (introVar "foldr") <*> consS <*> nilS
+
+-- the insertion sort strategy with a fold
+
+isortFoldStrategy :: Strategy (Context Expr)
+isortFoldStrategy = foldS insertS nilS
+
+insertS = getStrategy insertE
+nilS = toStrategy (introVar "nil")
+
 isortStrategy :: Strategy (Context Expr)
 isortStrategy = getStrategy isortE2
 

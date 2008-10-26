@@ -118,20 +118,34 @@ partially a b =
       (Right _, Left Undefined)  -> True
       _ -> False
 
-prop1 :: [Int] -> Property
-prop1 is = collect (length is) $
+prop1E2 :: [Int] -> Property
+prop1E2 is = collect (length is) $
            case eval (sortedE # (isortE2 # intlist is)) of
               Right (e, _) -> toBool e
               Left e -> error $ show e
 
-prop2 :: [Int] -> Property
-prop2 is = collect (length is) $
+prop2E2 :: [Int] -> Property
+prop2E2 is = collect (length is) $
            case eval (isPermE # (intlist is) # (isortE2 # intlist is)) of
               Right (e, _) -> toBool e
               Left e -> error $ show e
               
-test1 = quickCheck prop1
-test2 = quickCheck prop2
+prop1E3 :: [Int] -> Property
+prop1E3 is = collect (length is) $
+           case eval (sortedE # (isortE3 # intlist is)) of
+              Right (e, _) -> toBool e
+              Left e -> error $ show e
+
+prop2E3 :: [Int] -> Property
+prop2E3 is = collect (length is) $
+           case eval (isPermE # (intlist is) # (isortE3 # intlist is)) of
+              Right (e, _) -> toBool e
+              Left e -> error $ show e
+
+test1 = quickCheck prop1E2
+test2 = quickCheck prop2E2
+test3 = quickCheck prop1E3
+test4 = quickCheck prop2E3
 
 
 mylist = cons (Int 4) $ cons (Int 3) $ cons (Int 5) $ cons (Int 1) nil

@@ -81,12 +81,6 @@ minimumE = Var "foldr" # op # Int (maxBound::Int)
 ---------------------------------------------------------------
 -- Sorting algorithms
 
-isortE3 :: Expr
-isortE3 = Var "foldr" # insertE2 # nil 
-
-isortE2 :: Expr
-isortE2 = Var "foldr" # insertE # nil 
-                
 isortE :: Expr
 isortE = Fix $ Lambda "f" $ Lambda "xs" $ MatchList (Var "xs")
    nil
@@ -101,12 +95,22 @@ insertE = Fix $ Lambda "f" $ Lambda "a" $ Lambda "xs" $ MatchList (Var "xs")
       (cons (Var "a") (cons (Var "y") (Var "ys"))) 
       (cons (Var "y") (Var "f" # Var "a" # Var "ys")))
 
-insertE2 = Lambda "a" $ paraE # (Lambda "y" $ Lambda "ys" $ Lambda "rec" $ 
+isortE2 :: Expr
+isortE2 = Var "foldr" # insertE # nil 
+
+isortE3 :: Expr
+isortE3 = Var "foldr" # insertE2 # nil 
+
+insertE2 = Lambda "a" $ paraE # insertConsE
+                              # insertNilE
+
+insertConsE = Lambda "y" $ Lambda "ys" $ Lambda "rec" $ 
                                   IfThenElse 
                                     (Var "<=" # Var "a" # Var "y")  
                                     (cons (Var "a") (cons (Var "y") (Var "ys"))) 
-                                    (cons (Var "y") (Var "rec")))
-                              # (cons (Var "a") $ nil)
+                                    (cons (Var "y") (Var "rec"))
+
+insertNilE = cons (Var "a") $ nil
 
 msortE :: Expr
 msortE = Fix $ Lambda "f" $ Lambda "xs" $ MatchList (Var "xs") 

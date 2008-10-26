@@ -10,7 +10,7 @@ import Common.Apply
 import Common.Parsing (SyntaxError(..))
 import Domain.Programming.Expr
 import Domain.Programming.Rules
-import Domain.Programming.Prelude (isortE2,insertE)
+import Domain.Programming.Prelude (isortE2,insertE,insertNilE,insertConsE)
 import Data.Maybe
 import Data.Char
 
@@ -63,6 +63,8 @@ isortAbstractStrategy = getAbstractStrategy isortE2
 {- the fold & para strategies
 -- These strategy are only partially typed: the type of the arguments is
 -- a strategy. Maybe we can obtain more type info in the arguments?
+-- But I'm not sure if that is desirable.
+--
 -- Furthermore, we have to implement the different ways to construct a
 -- foldr/para.
 --
@@ -85,8 +87,7 @@ insertS = getStrategy insertE
 nilS = toStrategy (introVar "nil")
 
 insertS2 = introLambda "a" <*> paraS insertConsS insertNilS
-  where insertNilS = undefined -- gestrategy on the cooresponding expression
-        insertConsS = undefined -- idem
-
+  where insertNilS =  getStrategy insertNilE
+        insertConsS = getStrategy insertConsE
 
 run = apply isortStrategy (inContext undef)

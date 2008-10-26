@@ -50,12 +50,33 @@ getLambda expr           = error "Not a lambda"
 dropLambda (Lambda x e)  = e
 dropLambda expr          = error "Not a lambda"
  
--- the fold strategy
+-- the insertion sort strategy with a fold (Bastiaan)
+
+isortStrategy :: Strategy (Context Expr)
+isortStrategy = getStrategy isortE2
+
+isortAbstractStrategy :: Strategy (Context Expr)
+isortAbstractStrategy = getAbstractStrategy isortE2
+
+-- the insertion sort strategy with a fold (Johan)
+
+{- the fold & para strategies
+-- These strategy are only partially typed: the type of the arguments is
+-- a strategy. Maybe we can obtain more type info in the arguments?
+-- Furthermore, we have to implement the different ways to construct a
+-- foldr/para.
+--
+-- I think we need to define something like this in order to implement
+-- different ways to implement folds.
+-}
 
 foldS :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
 foldS consS nilS = toStrategy (introVar "foldr") <*> consS <*> nilS
 
--- the insertion sort strategy with a fold
+paraS :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
+paraS consS nilS = toStrategy (introVar "para") <*> consS <*> nilS
+
+-- Using fold and para
 
 isortFoldStrategy :: Strategy (Context Expr)
 isortFoldStrategy = foldS insertS nilS
@@ -63,10 +84,9 @@ isortFoldStrategy = foldS insertS nilS
 insertS = getStrategy insertE
 nilS = toStrategy (introVar "nil")
 
-isortStrategy :: Strategy (Context Expr)
-isortStrategy = getStrategy isortE2
+insertS2 = introLambda "a" <*> paraS insertConsS insertNilS
+  where insertNilS = undefined -- gestrategy on the cooresponding expression
+        insertConsS = undefined -- idem
 
-isortAbstractStrategy :: Strategy (Context Expr)
-isortAbstractStrategy = getAbstractStrategy isortE2
 
 run = apply isortStrategy (inContext undef)

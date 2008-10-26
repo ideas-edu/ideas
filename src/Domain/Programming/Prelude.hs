@@ -81,6 +81,9 @@ minimumE = Var "foldr" # op # Int (maxBound::Int)
 ---------------------------------------------------------------
 -- Sorting algorithms
 
+isortE3 :: Expr
+isortE3 = Var "foldr" # insertE2 # nil 
+
 isortE2 :: Expr
 isortE2 = Var "foldr" # insertE # nil 
                 
@@ -98,9 +101,12 @@ insertE = Fix $ Lambda "f" $ Lambda "a" $ Lambda "xs" $ MatchList (Var "xs")
       (cons (Var "a") (cons (Var "y") (Var "ys"))) 
       (cons (Var "y") (Var "f" # Var "a" # Var "ys")))
 
--- unfinished: need if-then-else in expressions
-insertE2 = Lambda "y" $ paraE # (Lambda "z" $ Lambda "zs" $ Lambda "rec" $ undefined) 
-                              # (cons (Var "y") $ nil)
+insertE2 = Lambda "a" $ paraE # (Lambda "y" $ Lambda "ys" $ Lambda "rec" $ 
+                                  IfThenElse 
+                                    (Var "<=" # Var "a" # Var "y")  
+                                    (cons (Var "a") (cons (Var "y") (Var "ys"))) 
+                                    (cons (Var "y") (Var "rec")))
+                              # (cons (Var "a") $ nil)
 
 msortE :: Expr
 msortE = Fix $ Lambda "f" $ Lambda "xs" $ MatchList (Var "xs") 

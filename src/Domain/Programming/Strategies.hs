@@ -73,7 +73,12 @@ isortAbstractStrategy = getAbstractStrategy isortE2
 -}
 
 foldS :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
-foldS consS nilS = toStrategy (introVar "foldr") <*> consS <*> nilS
+foldS consS nilS =   toStrategy (introVar "foldr") <*> consS <*> nilS
+--                <|>  introLambda "aname" <*> introMatchList (Var "aname") 
+--                                                            nilS 
+--                                                            undefined
+-- -- When recognising the lambda from te user I want to bind the string to a value which
+-- -- I want to use later in the strategy.
 
 paraS :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
 paraS consS nilS = toStrategy (introVar "para") <*> consS <*> nilS

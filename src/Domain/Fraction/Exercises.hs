@@ -37,6 +37,7 @@ simplExercise = standard
    , finalProperty = \x -> x == (fromContext $ fromJust $ apply toSimple $ inContext x)
    , ruleset       = map liftRuleToContext fracRules
    , strategy      = toSimple
+   , ordering      = compare
    , generator     = generateFrac
    , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf t)
    }

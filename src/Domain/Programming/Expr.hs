@@ -26,6 +26,9 @@ instance Uniplate Expr where
          IfThenElse c t e -> ([c,t,e], \[c,t,e] -> IfThenElse c t e)
          MatchList e n c  -> ([e,n,c], \[e,n,c] -> MatchList e n c)
 
+collectVars :: Expr -> [String]
+collectVars e = [ s | Lambda s _ <- universe e ]
+
 makeLet :: String -> Expr -> Expr -> Expr
 makeLet s e body = Apply (Lambda s body) (Fix (Lambda s e))
  

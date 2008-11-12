@@ -1,6 +1,7 @@
 module Domain.Programming.Exercises where
 
 import Domain.Programming.Expr
+import Domain.Programming.Parser
 import Domain.Programming.Strategies
 import Common.Context
 import Common.Strategy
@@ -23,7 +24,7 @@ isortExercise = Exercise
                              [(a, rest)] | all isSpace rest -> Right a 
                              _ -> Left $ ErrorMessage "parse error"
    , subTerm       = \_ _ -> Nothing
-   , prettyPrinter = show -- \e -> pprintExpr (e,0)
+   , prettyPrinter = \e -> ppExpr (e,0)
    , equivalence   = (==)
    , equality      = (==)
    , finalProperty = const True

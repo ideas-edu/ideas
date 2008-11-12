@@ -69,7 +69,8 @@ ppExpr :: (Expr, Int) -> String
 ppExpr (expr, i) = 
    case expr of
       Lambda x e -> 
-          "\\" ++ x ++ " -> " ++ ppExpr (e,i+(length x)+5)
+          let (xs, body) = collectLambdas e
+          in "\\" ++ unwords (x:xs) ++ " -> " ++ ppExpr (body,i+(length x)+5)
       Var x -> 
           x
       Apply f a -> 
@@ -103,7 +104,11 @@ ppExpr (expr, i) =
      where 
       spc n = take n (Prelude.repeat ' ')
 
-
+collectLambdas :: Expr -> ([String], Expr)
+collectLambdas = rec []
+ where
+   rec xs (Lambda x e) = rec (x:xs) e
+   rec xs e            = (reverse xs, e)
 
 -- Some test stuff
 

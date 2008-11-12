@@ -149,6 +149,6 @@ test4 = quickCheck prop2E3
 
 
 mylist = cons (Int 4) $ cons (Int 3) $ cons (Int 5) $ cons (Int 1) nil
-test = eval (isPermE # mylist # (isortE2 # mylist))
+mytest = eval (isPermE # mylist # (isortE2 # mylist))
 
 q = eval $ mergeE # intlist [1,3,4] # intlist [2,5]

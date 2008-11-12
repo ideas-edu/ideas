@@ -20,7 +20,7 @@ module Common.Transformation
      Transformation(RewriteRule), makeTrans, inverseTrans, getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
-   , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3
+   , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse, isRewriteRule, ruleGroups, addRuleToGroup
@@ -145,6 +145,13 @@ supplyLabeled1 s f t =
        nest a = (a, ())
    in Abstraction args (fmap nest . f) (\(a, ()) -> t a)
 
+supplyWith1 :: ArgDescr x -> (a -> Maybe x)
+                  -> (x -> Transformation a) -> Transformation a
+supplyWith1 descr f t = 
+   let args = cons descr nil
+       nest a = (a, ())
+   in Abstraction args (fmap nest . f) (\(a, ()) -> t a)
+   
 -- | Parameterization with two arguments using the provided labels
 supplyLabeled2 :: (Argument x, Argument y) 
                    => (String, String) -> (a -> Maybe (x, y)) 

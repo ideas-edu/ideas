@@ -1,6 +1,7 @@
 module Domain.Programming.Expr where
 
 import Common.Uniplate
+import Common.Rewriting
 
 data Expr = -- lambda calculus plus fixpoint
             Lambda String Expr
@@ -13,7 +14,7 @@ data Expr = -- lambda calculus plus fixpoint
           | IfThenElse Expr Expr Expr
             -- lists
           | MatchList Expr{-body-} Expr{-nil-} Expr{-cons-}
-   deriving (Show, Eq, Read)
+   deriving (Show, Eq, Read, Ord)
 
 instance Uniplate Expr where
    uniplate expr =
@@ -25,6 +26,18 @@ instance Uniplate Expr where
          Int n            -> ([], \[] -> expr)
          IfThenElse c t e -> ([c,t,e], \[c,t,e] -> IfThenElse c t e)
          MatchList e n c  -> ([e,n,c], \[e,n,c] -> MatchList e n c)
+
+instance ShallowEq Expr where
+   shallowEq expr1 expr2 =
+      case (expr1, expr2) of
+         (Var a, Var b)                        -> a==b
+         (Lambda a _, Lambda b _)              -> a==b
+         (Apply _ _, Apply _ _)                -> True
+         (Fix _, Fix _)                        -> True
+         (Int a, Int b)                        -> a==b
+         (IfThenElse _ _ _, IfThenElse _ _ _)  -> True
+         (MatchList _ _ _, MatchList _ _ _)    -> True
+         _                                     -> False
 
 collectVars :: Expr -> [String]
 collectVars e = [ s | Lambda s _ <- universe e ]

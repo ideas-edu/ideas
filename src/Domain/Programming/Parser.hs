@@ -15,6 +15,7 @@ scannerExpr = defaultScanner
    { keywords         = [ "case", "of"
                         , "if", "then", "else"
                         , "let", "in"
+                        , "undefined"
                         ] 
    , keywordOperators = ["->", "\\", "="]
    }
@@ -61,6 +62,7 @@ pAtom  =  (Var . fst) <$> (pVarid <|> pConid)
                     <*  pKey "of"   
                              <*> pExpr              -- nil
                              <*  pSpec ';' <*> pExpr -- cons
+      <|> const undef <$> pKey "undefined"
 
 -----------------------------------------------------------
 --- Pretty-Printer
@@ -132,3 +134,5 @@ ssortE' = fromRight $ parseExpr $ "let ss = \\l -> case l of " ++
                                                       "in Cons m (ss (delete m (Cons x xs))) " ++ 
                                  "in ss"
 
+
+partialIsort = "(foldr (\\f -> \\a -> \\xs -> case xs of\n(Cons a Nil);\nundefined (let f = undefined\nin f)) undefined)"

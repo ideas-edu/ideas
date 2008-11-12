@@ -10,9 +10,10 @@ import Common.Exercise
 import Common.Transformation
 import Common.Apply
 import Common.Parsing (SyntaxError(..))
+import Common.Rewriting
 import Data.Maybe
 import Data.Char
-
+import Domain.Programming.Parser
 
 isortExercise :: Exercise Expr
 isortExercise = Exercise   
@@ -20,16 +21,19 @@ isortExercise = Exercise
    , domain        = "programming"
    , description   = "Insertion sort"
    , status        = Experimental
-   , parser        = \s -> case reads s of  
+{-   , parser        = \s -> case reads s of  
                              [(a, rest)] | all isSpace rest -> Right a 
-                             _ -> Left $ ErrorMessage "parse error"
+                             _ -> Left $ ErrorMessage "parse error" -}
+   , parser        = parseExpr
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = \e -> ppExpr (e,0)
    , equivalence   = (==)
    , equality      = (==)
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = label "isort" isortAbstractStrategy
+   , strategy      = label "isort"  isortAbstractStrategy
+   , differences   = treeDiff
+   , ordering      = compare
    , generator     = return undef
    , suitableTerm  = const True
    }

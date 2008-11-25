@@ -66,9 +66,9 @@ ppFrac =  ppFracParsCode 0
 ppFracParsCode :: Int -> Frac -> String
 ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", binop 3 "-", neg) p n ""
  where
-   binop prio op p q n = parIf True (p prio . ((" "++op++" ")++) . q prio)
+   binop prio op p q n = parIf (n > prio) (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
-   neg  p n = ("-"++) .(parIf True (p 3))
+   neg  p n = ("-"++) . p 4
    parIf b f = if b then ("("++) . f . (")"++) else f
 

@@ -32,86 +32,78 @@ generateFracWith :: FracGenConfig -> Gen Frac
 generateFracWith = arbFrac
    
 data FracGenConfig = FracGenConfig
-   { maxSize       :: Int
-   , differentVars :: Int
-   , freqConstant  :: Int
-   , freqVariable  :: Int
-   , freqMul       :: Int
-   , freqDiv       :: Int
-   , freqAdd       :: Int
-   , freqSub       :: Int
+   { maxSize    :: Int
+   , range      :: (Integer, Integer)
+   , diffVars   :: Int
+   , freqConst  :: Int
+   , freqVar    :: Int
+   , freqMul    :: Int
+   , freqDiv    :: Int
+   , freqAdd    :: Int
+   , freqSub    :: Int
+   , freqNeg    :: Int
    }
  deriving Show
 
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
-   { maxSize       = 4
-   , differentVars = 2
-   , freqConstant  = 4
-   , freqVariable  = 1
-   , freqMul       = 2
-   , freqDiv       = 2
-   , freqAdd       = 3
-   , freqSub       = 3
+   { maxSize   = 2
+   , range     = (-6,6)
+   , diffVars  = 2 -- minimal 1
+   , freqConst = 0
+   , freqVar   = 1
+   , freqMul   = 2
+   , freqDiv   = 2
+   , freqAdd   = 3
+   , freqSub   = 3
+   , freqNeg   = 1
    }
 
--- Needs to be redesigned to take freq. variables into account
+-- decrease size and frequencies
+decConfig :: FracGenConfig -> FracGenConfig
+decConfig cfg = cfg
+   { maxSize    = (maxSize cfg) `div` 2
+   , freqConst  = dec (freqConst  cfg)
+   , freqVar    = dec (freqVar    cfg)
+   , freqMul    = dec (freqMul    cfg)
+   , freqDiv    = dec (freqDiv    cfg)
+   , freqAdd    = dec (freqAdd    cfg)
+   , freqSub    = dec (freqSub    cfg)
+   , freqNeg    = dec (freqNeg    cfg)
+   }
+   where dec i | i>0       = i-1
+               | otherwise = i
+
+-- list of variables
+varList :: FracGenConfig -> [Gen Frac]
+varList cfg = map (\x-> return (Var [chr (ord 'x' + x)])) [0..(diffVars cfg)-1]    
 
 -- restrain the generated integers
-smallInts :: Gen Integer
-smallInts = choose (-6,6)
+ints, posints :: (Num a) => FracGenConfig -> Gen a
+ints    cfg = liftM fromInteger $ choose (range cfg)
+posints cfg = liftM fromInteger $ choose (1, snd (range cfg))
 
--- no variables
-arbFracNoVars :: FracGenConfig -> Gen Frac
-arbFracNoVars config 
-   | maxSize config == 0 = liftM fromInteger smallInts
-   | otherwise           = oneof [ arbFracNoVars config {maxSize = 0}
-                                 , liftM2 (:+:) rec rec
-                                 , liftM2 (:*:) rec rec
-                                 , liftM2 (:/:) rec nz
-                                 , liftM2 (:-:) rec rec
-                                 , liftM Neg $ arbFracNoVars config -- don't divide by two, prevent Neg (Con a)
-                                 ]
-                         where 
-                           rec   = arbFracNoVars config {maxSize = (n `div` 2)}
-                           nz    = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
-                           n     = maxSize config
+-- make use of the frequencies
+freqConfig :: FracGenConfig -> [(Int, Gen Frac)]
+freqConfig cfg =
+   [ (freqConst cfg, ints cfg)
+   , (freqVar cfg,   oneof (varList cfg))
+   , (freqMul cfg,   liftM2 (:*:) rec nv)
+   , (freqDiv cfg,   liftM2 (:/:) rec const)
+   , (freqAdd cfg,   liftM2 (:+:) rec rec)
+   , (freqSub cfg,   liftM2 (:-:) rec rec)
+   , (freqNeg cfg,   liftM Neg $ rec)
+   ]
+   where rec   = arbFrac cfg'
+         nv    = arbFrac cfg' {freqVar = 0}  -- no variables
+         const = arbFrac cfg' {freqVar = 0, freqSub = 0, freqNeg = 0} -- no vars and non-zero
+         cfg'  = decConfig cfg
 
--- non zero and non var value
-arbFracNoVarsNZ :: FracGenConfig -> Gen Frac
-arbFracNoVarsNZ config 
-   | maxSize config == 0 = liftM fromInteger arbIntNZ
-   | otherwise           = oneof [ arbFracNoVarsNZ config {maxSize = 0}
-                                 , liftM2 (:+:) rec rec
-                                 , liftM2 (:*:) rec rec
-                                 , liftM2 (:/:) rec rec
-                                 ]
-                         where 
-                           rec   = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
-                           n     = maxSize config
 
 arbFrac :: FracGenConfig -> Gen Frac
 arbFrac config 
-   | maxSize config == 0 = liftM fromInteger smallInts
-   | otherwise           = oneof [ arbFrac config {maxSize = 0}
-                                 , liftM2 (:+:) rec rec
-                                 , liftM2 (:*:) rec nv  -- no higher order
-                                 , liftM2 (:/:) rec const
-                                 , liftM2 (:-:) rec rec
-                                 , return $ Var "x"
-                                 , liftM Neg $ arbFrac config
-                                 ]
-                         where 
-                           rec   = arbFrac config {maxSize = (n `div` 2)}
-                           nv    = arbFracNoVars config {maxSize = (n `div` 2)}
-                           n     = maxSize config
-                           const = arbFracNoVarsNZ config {maxSize = (n `div` 2)}
-
-arbIntNZ :: Gen Integer
-arbIntNZ = do
-   x' <- smallInts
-   let x = if x' == 0 then 1 else x'
-   return x
+   | maxSize config == 0 =  liftM2 (:/:) (ints config) (posints config)
+   | otherwise           =  frequency (freqConfig config) 
 
 -----------------------------------------------------------
 --- QuickCheck generator

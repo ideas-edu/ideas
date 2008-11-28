@@ -24,11 +24,27 @@ fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac
             , ruleDivOne, ruleDivZero, ruleDivFrac, ruleDivSame
             , ruleUnitAdd, ruleAdd, ruleAddFrac
             , ruleSubZero, ruleSub, ruleSubVar, ruleSubFrac
-            , ruleNeg, rulePushNeg, ruleNegToCon 
+            , ruleNeg, rulePushNeg 
             , ruleCommonDenom, ruleGCD
             , ruleAssAdd, ruleAssMul
             , ruleCommAdd, ruleCommMul
             , ruleDistMul ]
+
+-- functions to convert Neg N to Z and back
+toZ :: Frac -> Frac
+toZ e = case e of
+          Neg (Con x) -> Con (negate x)
+          _           -> e
+
+fromZ :: Frac -> Frac
+fromZ e = case e of
+            Con x -> if x < 0 then Neg (Con (negate x)) else e
+            _     -> e
+
+inZ op a b = case (toZ a, toZ b) of
+               (Con x, Con y) -> return $ fromZ $ Con (op x y)
+               _              -> Nothing
+
 
 -- | Multiplication rules
 ruleMulZero :: Rule Frac
@@ -46,8 +62,9 @@ ruleUnitMul = ruleList "UnitMul"
 ruleMul :: Rule Frac
 ruleMul = makeSimpleRule "Mul" f
  where
-   f (Con a :*: Con b) = return $ Con (a*b)
-   f _                 = Nothing
+   f (a :*: b) = inZ (*) a b
+   f _         = Nothing
+
 
 ruleMulFrac :: Rule Frac
 ruleMulFrac = ruleList "MulFrac"
@@ -125,10 +142,9 @@ ruleUnitAdd = ruleList "UnitAdd"
 ruleAdd :: Rule Frac
 ruleAdd = makeSimpleRule "Add" f
  where 
-   f (Con x :+: Con y) = return $ Con (x+y)
-   f (x :+: y)         | x==y = return $ x :*: Con 2
-                       | otherwise = Nothing
-   f _                 = Nothing
+   f (x :+: y)  | x==y = return $ x :*: Con 2 -- needs to be adjusted 3+3 -> 2*3 ipv 6
+                | otherwise = inZ (+) x y
+   f _          = Nothing
 
 ruleAddFrac :: Rule Frac
 ruleAddFrac = makeSimpleRule "AddFrac" f
@@ -159,7 +175,9 @@ ruleSubVar = rule "SubVar" $
 ruleSub :: Rule Frac
 ruleSub = makeSimpleRule "Sub" f
  where
-   f (Con x :-: Con y) = return $ Con (x-y)
+   f (a :-: b) = case (toZ a, b) of
+                      (Con x, Con y) -> return $ fromZ $ Con (x*y)
+                      _              -> Nothing
    f _                 = Nothing
 
 ruleSubFrac :: Rule Frac
@@ -192,19 +210,13 @@ rulePushNeg = makeSimpleRule "PushNeg" f
   where
    f (Neg x) = case x of
                 (Var _)   -> Nothing
-                (Con x)   -> return $ Con (negate x)
                 (b :*: c) -> return $ Neg b :*: c
                 (b :/: c) -> return $ Neg b :/: c
                 (b :+: c) -> return $ Neg b :-: c
                 (b :-: c) -> return $ Neg b :+: c
                 (Neg b)   -> return $ b
+                (Con _)   -> Nothing
    f _         = Nothing
-
-ruleNegToCon :: Rule Frac
-ruleNegToCon = minorRule $ makeSimpleRule "NegToCon" f
-  where
-    f (Neg (Con x)) = return $ Con (negate x)
-    f _             = Nothing
 
 -- | Fraction rules
 ruleCommonDenom :: Rule Frac

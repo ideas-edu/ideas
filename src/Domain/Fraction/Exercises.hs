@@ -44,3 +44,29 @@ simplExercise = standard
  where
    standard :: Exercise Frac
    standard = makeExercise
+
+{-
+addFracExercise :: Exercise Frac
+addFracExercise =  simplExercise
+   { identifier    = "addfraction"
+   , domain        = "math"
+   , description   = "Add fractions" 
+   , status        = Experimental
+   , ruleset       = map liftRuleToContext fracRules
+   , strategy      = addFractions
+   , generator     = generateWith config
+   , suitableTerm  = \t -> not $ finalProperty simplExercise t && isJust (nf t)
+   }
+ where
+   config = { maxSize   = 2
+            , range     = (-6,6)
+            , diffVars  = 1
+            , freqConst = 0
+            , freqVar   = 0
+            , freqMul   = 0
+            , freqDiv   = 0
+            , freqAdd   = 3
+            , freqSub   = 3
+            , freqNeg   = 0
+            }
+-}

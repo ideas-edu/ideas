@@ -33,7 +33,7 @@ generateFracWith = arbFrac
    
 data FracGenConfig = FracGenConfig
    { maxSize    :: Int
-   , range      :: (Integer, Integer)
+   , maxInt     :: Integer
    , diffVars   :: Int
    , freqConst  :: Int
    , freqVar    :: Int
@@ -48,15 +48,15 @@ data FracGenConfig = FracGenConfig
 defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
    { maxSize   = 2
-   , range     = (-6,6)
-   , diffVars  = 2 -- minimal 1
+   , maxInt    = 6
+   , diffVars  = 2
    , freqConst = 0
    , freqVar   = 1
    , freqMul   = 2
    , freqDiv   = 2
    , freqAdd   = 3
    , freqSub   = 3
-   , freqNeg   = 1
+   , freqNeg   = 3
    }
 
 -- decrease size and frequencies
@@ -76,12 +76,12 @@ decConfig cfg = cfg
 
 -- list of variables
 varList :: FracGenConfig -> [Gen Frac]
-varList cfg = map (\x-> return (Var [chr (ord 'x' + x)])) [0..(diffVars cfg)-1]    
+varList cfg = take (diffVars cfg) $ map (return.Var.(:[])) ['x'..]    
 
 -- restrain the generated integers
 ints, posints :: (Num a) => FracGenConfig -> Gen a
-ints    cfg = liftM fromInteger $ choose (range cfg)
-posints cfg = liftM fromInteger $ choose (1, snd (range cfg))
+ints    cfg = liftM fromInteger $ choose (0, maxInt cfg)
+posints cfg = liftM fromInteger $ choose (1, maxInt cfg)
 
 -- make use of the frequencies
 freqConfig :: FracGenConfig -> [(Int, Gen Frac)]

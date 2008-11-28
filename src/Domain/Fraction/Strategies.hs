@@ -26,8 +26,8 @@ toSimple :: LabeledStrategy (Context Frac)
 toSimple = label "Simplify fractions" $ repeat $ 
                  (  topDown cleanup               -- first remove units and zeros from top to bottom if possible
                  |> bottomUp (mul <|> div')       -- if clean, then multiply and dived bottom up
-                 |> bottomUp (add <|> sub))       -- then add and subtract
-             <*> negcon -- after every action, fire the minor rule to prevent (Neg (Con x))
+                 |> bottomUp (add <|> sub)        -- then add and subtract
+                 ) <|> (lrtc ruleGCD)
 
 zeroRules, unitRules, calcRules, negRules :: [Rule Frac]
 zeroRules = [ruleDivZero, ruleMulZero, ruleUnitAdd, ruleSubZero]
@@ -55,12 +55,16 @@ sub = label "Do subtraction" $ lrtc ruleSub <|> subFrac
 cleanup :: LabeledStrategy (Context Frac)
 cleanup = label "Remove units and zeros" $ alternatives $ map lrtc $ zeroRules ++ unitRules ++ negRules 
 
-negcon :: Strategy (Context Frac)
-negcon = try $ repeat $ somewhere $ lrtc ruleNegToCon
-
 addFrac, subFrac :: Strategy (Context Frac)
 addFrac =  option (lrtc ruleCommonDenom) <*> lrtc ruleAddFrac <*> option (lrtc ruleGCD)
 subFrac =  option (lrtc ruleCommonDenom) <*> lrtc ruleSubFrac <*> option (lrtc ruleGCD)
 
 
-
+{-
+toSimple :: LabeledStrategy (Context Frac)
+toSimple = label "Adding fractions" $ repeat $ bottomUp
+                 (                 -- first remove units and zeros from top to bottom if possible
+                 |> bottomUp (mul <|> div')       -- if clean, then multiply and dived bottom up
+                 |> bottomUp (add <|> sub))       -- then add and subtract
+             <*> negcon -- after every action, fire the minor rule to prevent (Neg (Con x))
+-}

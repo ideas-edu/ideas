@@ -176,7 +176,7 @@ ruleSub :: Rule Frac
 ruleSub = makeSimpleRule "Sub" f
  where
    f (a :-: b) = case (toZ a, b) of
-                      (Con x, Con y) -> return $ fromZ $ Con (x*y)
+                      (Con x, Con y) -> return $ fromZ $ Con (x-y)
                       _              -> Nothing
    f _                 = Nothing
 

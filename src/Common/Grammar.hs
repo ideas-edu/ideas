@@ -252,7 +252,53 @@ mapSymbol _ Fail        =  Fail
 ----------------------------------------------------------------------
 -- Experimental code for removing left recursion
 
-testje = rlr 1 $ Rec 2 ((Symbol 4 :|: Var 1) :*: (Symbol 20 :|: Var 2))
+-- non-empty
+ne :: Grammar a -> Grammar a
+ne (p :*: q)  =  
+   let np = ne p 
+       nq = ne q
+   in (if empty q then np else Fail) <|> (if empty p then nq else Fail) <|> (np <*> nq)
+ne (p :|: q)  = ne p <|> ne q
+ne (p :||: q) = 
+   let np = ne p 
+       nq = ne q
+   in (if empty q then np else Fail) <|> (if empty p then nq else Fail) <|> (np <||> nq)
+ne (Rec i p)
+   | empty p   = Rec i $ ne $ replaceVar i (Var i <|> Succeed) p
+   | otherwise = Rec i p
+ne (Symbol a) = Symbol a
+ne (Var i)    = Var i
+ne Succeed    = Fail
+ne Fail       = Fail
+
+-- left-recursive check (for closed grammars)
+isLR :: Grammar a -> Bool
+isLR (Var _)   = True
+isLR (Rec _ s) = isLR s
+isLR (p :*: q) = isLR p || (empty p && isLR q)
+isLR (p :|: q) = isLR p || isLR q
+isLR (p :||: q) = isLR p || isLR q
+isLR _ = False
+
+
+propNE1, propNE2 :: Grammar Int -> Bool
+propNE1 p
+   | empty p   = (ne p <|> Succeed) === p
+   | otherwise = ne p === p
+propNE2 p = not $ empty $ ne p
+
+
+
+
+
+
+testje = {- rlr2 $ -} (Rec 0 $ (Var 0 <*> Var 0) <|> Symbol 1 <|> Succeed)
+
+tg = Rec 0 $ (Rec 1 defy) <|> (Symbol 1 <*> x) <|> Succeed
+ where
+   defy = (x <*> x) <|> (Symbol 2 <*> y)
+   x = Var 0
+   y = Var 1
 
 ex :: Grammar Int
 ex = rlr 0 ((Var 0 :*: Var 0 :*: Symbol 1) :|: Symbol 2)
@@ -261,7 +307,7 @@ www = rlr2 {- rlr 0 -} $ Rec 0 $ (Succeed <|> (Var 0 <*> Symbol 1) <|> (symbol 2
 
 rlr2 :: Grammar a -> Grammar a
 rlr2 s = case f (map rlr2 cs) of
-            Rec i s  -> rlr i s
+            Rec i s  -> if empty s then Succeed <|> rlr i (ne (replaceVar i (Var i <|> Succeed) s)) else rlr i s
             s :*: t  -> rlr2 s <*>  rlr2 t
             s :|: t  -> rlr2 s <|>  rlr2 t
             s :||: t -> rlr2 s <||> rlr2 t
@@ -386,7 +432,7 @@ propInv s = all ((`member` rlr2 s) . reverse) xs
 -- X -> ({} | a) (X)*
 e4 = rlr2 $ Rec 1 (Var 1 :*: Var 1 :|: Succeed :|: Symbol 5)
 
-q = verboseCheck $ forAll (sized $ g []) propInv -- propRLR --
+q = verboseCheck $ forAll (sized $ g []) propInv -- propInv --  --
  where
    g is 0 = frequency $
       [ (1, return Succeed)
@@ -447,7 +493,7 @@ propReturnRight m = (m >>= return) === m
 -- QuickCheck generator
 
 instance Arbitrary a => Arbitrary (Grammar a) where
-   arbitrary = sized arbGrammar
+   arbitrary = sized (arbGrammar [])
    coarbitrary grammar =
       case grammar of
          p :*: q  -> variant 0 . coarbitrary p . coarbitrary q
@@ -460,24 +506,24 @@ instance Arbitrary a => Arbitrary (Grammar a) where
          Fail     -> variant 7
 
 -- Use smart constructors here
-arbGrammar :: Arbitrary a => Int -> Gen (Grammar a)
-arbGrammar n
+arbGrammar :: Arbitrary a => [Grammar a] -> Int -> Gen (Grammar a)
+arbGrammar xs n
    | n == 0 = oneof $
         liftM symbol arbitrary :
-        map return [succeed, fail]
+        map return ([succeed, fail] ++ xs)
    | otherwise = oneof
-        [ arbGrammar 0
+        [ arbGrammar xs 0
         , liftM2 (<*>)  rec rec
         , liftM2 (<|>)  rec rec
         , liftM2 (<||>) rec rec
         , liftM many rec
 --         , liftM fix (promote (\x -> arbGrammar (x:xs) (n `div` 2)))
-{-        , do n <- oneof $ map return [1..5]
-             x <- arbGrammar (Var n:xs) (n `div` 2)
-             return $ removeLeftRecursion $ Rec n x -}
+{-        , do i <- oneof $ map return [1::Int ..5]
+             x <- arbGrammar (Var i:xs) (n `div` 2)
+             return $ Rec i x -}
         ]
  where 
-   rec = arbGrammar (n `div` 2)
+   rec = arbGrammar xs (n `div` 2)
    
 --------------------------------------------------------
 -- QuickCheck properties                                                                 

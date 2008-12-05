@@ -23,7 +23,7 @@ infix 1 :==:
 type Equations a = [Equation a]
 
 data Equation  a = a :==: a
-   deriving Eq
+   deriving (Eq, Ord)
    
 instance Functor Equation where
    fmap f (x :==: y) = f x :==: f y

@@ -30,7 +30,7 @@ import qualified Data.Map as M
 
 -- Invariant: a matrix is always rectangular
 newtype Matrix a = M [[a]]
-   deriving (Eq, Show)
+   deriving (Eq, Ord, Show)
 
 type Row    a = [a]
 type Column a = [a]

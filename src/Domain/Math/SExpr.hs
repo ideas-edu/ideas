@@ -50,6 +50,14 @@ instance Simplification a => Eq (SExprF a) where
           || nonsense x
           || nonsense y
 
+instance Simplification a => Ord (SExprF a) where
+   x `compare` y = 
+      let f a@(SExprF e) = 
+             if contradiction (proposition e) 
+             then Nothing
+             else Just (normalizeWith exprACs (toExpr a))
+      in f x `compare` f y
+
 instance Simplification a => Num (SExprF a) where
    (+) = liftS2 (+)
    (*) = liftS2 (*)

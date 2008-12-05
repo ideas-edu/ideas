@@ -14,12 +14,19 @@
 module Common.Exercise 
    ( -- * Exercises
      Exercise(..), Status(..), makeExercise, stepsRemaining
-   , Everywhere
-     -- * Exercise codes
+{-   , identifier, domain, description, status
+   , parser, subTerm, prettyPrinter
+   , equivalence, equality, finalProperty
+   , strategy, ruleset, differences, ordering
+   , generator, suitableTerm -}
+     -- * Miscellaneous
    , ExerciseCode, exerciseCode, validateCode
-     -- * QuickCheck utilities
    , checkExercise, checkParserPretty
    ) where
+
+-- TODO: hide the Exercise constructor, and provide a default constructor
+-- function that does not assume any class instances (as makeExercise currently
+-- does)
 
 import Common.Apply
 import Common.Context
@@ -58,13 +65,11 @@ data Exercise a = Exercise
    
 data Status = Stable | Experimental deriving (Show, Eq)
 
-type Everywhere a = (a -> [a]) -> a -> [a]
-
 instance Apply Exercise where
    applyAll e a = map fromContext $ applyAll (strategy e) (inContext a)
 
 -- default values for all fields
-makeExercise :: (Arbitrary a, Eq a, Show a) => Exercise a
+makeExercise :: (Arbitrary a, Ord a, Show a) => Exercise a
 makeExercise = Exercise
    { identifier    = "<no identifier>"
    , domain        = ""
@@ -78,7 +83,7 @@ makeExercise = Exercise
    , finalProperty = const True
    , ruleset       = []
    , differences   = \_ _ -> [([], Different)]
-   , ordering      = error "No ordering function available"
+   , ordering      = compare
    , strategy      = label "Succeed" succeed
    , generator     = arbitrary
    , suitableTerm  = const True

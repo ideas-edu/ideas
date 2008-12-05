@@ -20,9 +20,9 @@ prelude = M.fromList
    , ("minimum",minimumE)
    ]
 
-(#) :: Expr -> Expr -> Expr
-(#) = Apply
-    
+-- (#) :: Expr -> Expr -> Expr
+f # x = Apply f x
+ 
 foldrE :: Expr 
 foldrE = Lambda "op" $ Lambda "e" $ Fix $ Lambda "rec" $
    Lambda "xs" $ MatchList (Var "xs") 

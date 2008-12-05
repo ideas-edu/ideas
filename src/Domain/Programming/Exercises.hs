@@ -27,7 +27,7 @@ isortExercise = Exercise
    , parser        = parseExpr
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = \e -> ppExpr (e,0)
-   , equivalence   = (==)
+   , equivalence   = \_ _ -> True
    , equality      = (==)
    , finalProperty = const True
    , ruleset       = []

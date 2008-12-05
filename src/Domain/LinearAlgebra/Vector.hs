@@ -20,7 +20,7 @@ module Domain.LinearAlgebra.Vector
 import Data.List
 
 newtype Vector a = Vector [a]
-   deriving Eq
+   deriving (Eq, Ord)
 
 instance Functor Vector where
    fmap f (Vector xs) = Vector (map f xs)

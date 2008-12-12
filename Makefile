@@ -5,10 +5,11 @@ SRCDIR = src
 
 include Makefile.incl
 
-binaries: service laservice solvergui
+binaries: service laservice viewlog solvergui
 
 service: $(BINDIR)/service.cgi
 laservice: $(BINDIR)/laservice.cgi
+viewlog: $(BINDIR)/viewlog.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
 
 $(BINDIR)/service.cgi: $(HS-SOURCES)
@@ -21,6 +22,11 @@ $(BINDIR)/laservice.cgi: $(HS-SOURCES)
 	$(GHC) $(GHCFLAGS) -o $@ src/OpenMath/Main.hs
 	$(STRIP) $@
 
+$(BINDIR)/viewlog.cgi: $(HS-SOURCES)
+	$(MKDIR) -p $(BINDIR) $(OUTDIR)
+	$(GHC) $(GHCFLAGS) -o $@ src/Presentation/ViewLog/Main.hs
+	$(STRIP) $@
+	
 $(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES)
 ifeq ($(GTK), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)

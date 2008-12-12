@@ -13,13 +13,14 @@
 -----------------------------------------------------------------------------
 module Service.XML 
    ( XML(..), Attr, AttrList, InXML(..)
+   , XMLBuilder, makeXML, text, element, tag, attribute
    , parseXML, parseXMLs, showXML, compactXML
    , children, extract, extractText
    , isText, isTag, findChild
    ) where
 
 import Common.Utils (trim, safeHead)
-import Control.Monad.Error
+import Control.Monad.State
 import Data.Char
 import Data.Maybe
 import Data.List
@@ -48,7 +49,7 @@ class InXML a where
 -- XML parser (a scanner and a XML tree constructor)
 
 parseXMLs :: String -> Either String [XML]
-parseXMLs input = tokenizeXML input >>= buildXML
+parseXMLs input = tokenizeXML input >>= constructXML
 
 parseXML :: String -> Either String XML
 parseXML input = do
@@ -114,28 +115,28 @@ getString xs =
 ----------------------------------------------------------------
 -- XML tree constructor (from tokens)
 
-buildXML :: [TokenXML] -> Either String [XML]
-buildXML tokens = do
-   (xmls, _) <- buildWithClose Nothing tokens
+constructXML :: [TokenXML] -> Either String [XML]
+constructXML tokens = do
+   (xmls, _) <- constructWithClose Nothing tokens
    return xmls
 
-buildWithClose :: Maybe String -> [TokenXML] -> Either String ([XML], [TokenXML])
-buildWithClose expected tokens =
+constructWithClose :: Maybe String -> [TokenXML] -> Either String ([XML], [TokenXML])
+constructWithClose expected tokens =
    case tokens of
       [] | isNothing expected -> return ([], []) 
          | otherwise          -> fail "unexpected end of input"
       TokenOpen tag attrs : rest -> do
-         (xmls1, xs) <- buildWithClose (Just tag) rest
-         (xmls2, ys) <- buildWithClose expected xs
+         (xmls1, xs) <- constructWithClose (Just tag) rest
+         (xmls2, ys) <- constructWithClose expected xs
          return (Tag tag attrs xmls1 : xmls2, ys)
       TokenClose tag : rest 
          | Just tag == expected -> return ([], rest)
          | otherwise -> fail $ "wrong tag" 
       TokenOpenClose tag attrs : rest -> do
-         (xmls, xs) <- buildWithClose expected rest 
+         (xmls, xs) <- constructWithClose expected rest 
          return (Tag tag attrs [] : xmls, xs)
       TokenText text : rest -> do
-         (xmls, xs) <- buildWithClose expected rest 
+         (xmls, xs) <- constructWithClose expected rest 
          return (Text text : xmls, xs)
          
 ----------------------------------------------------------------
@@ -177,6 +178,47 @@ quote s
  
 indent :: Int -> [String] -> [String]
 indent n = map (replicate n ' '++)
+
+----------------------------------------------------------------
+-- Monadic XML builder
+
+-- Uses the fast-append trick on lists
+data BuilderState = BS { attributes :: AttrList -> AttrList, elements :: [XML] -> [XML] }
+
+-- local helper
+emptyBS :: BuilderState
+emptyBS = BS id id
+
+appendAttrBS :: Attr -> BuilderState -> BuilderState
+appendAttrBS a bs = bs { attributes = attributes bs . (a:) }
+
+appendElemBS :: XML -> BuilderState -> BuilderState
+appendElemBS e bs = bs { elements = elements bs . (e:) }
+
+type XMLBuilder = XMLBuilderM ()
+
+newtype XMLBuilderM a = XMLBuilder { unBuild :: State BuilderState a }
+
+instance Monad XMLBuilderM where
+   return a = XMLBuilder (return a)
+   m >>= f  = XMLBuilder (unBuild m >>= (unBuild . f))
+
+makeXML :: String -> XMLBuilder -> XML
+makeXML s m = 
+   let bs = execState (unBuild m) emptyBS
+   in Tag s (attributes bs []) (elements bs [])
+
+text :: String -> XMLBuilder
+text = XMLBuilder . modify . appendElemBS . Text
+
+element :: String -> XMLBuilder -> XMLBuilder
+element s = XMLBuilder . modify . appendElemBS . makeXML s
+
+tag :: String -> XMLBuilder
+tag s = element s (return ())
+
+attribute :: Attr -> XMLBuilder
+attribute = XMLBuilder . modify . appendAttrBS
 
 ----------------------------------------------------------------
 -- XML utility functions

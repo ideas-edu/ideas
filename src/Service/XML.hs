@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Service.XML 
    ( XML(..), Attr, AttrList, InXML(..)
-   , parseXML, parseXMLs, showXML
+   , parseXML, parseXMLs, showXML, compactXML
    , children, extract, extractText
    , isText, isTag, findChild
    ) where
@@ -147,6 +147,14 @@ showXML = unlines . rec
    rec (Text s)           = [s]
    rec (Tag tag attrs xs) = tagAttr tag attrs (concatMap rec xs)
 
+compactXML :: XML -> String
+compactXML (Text s) = s
+compactXML (Tag tag attrs xs) 
+   | null xs = 
+        tagWithAttrs openCloseTag tag attrs
+   | otherwise = 
+        tagWithAttrs openTag tag attrs ++ concatMap compactXML xs ++ closeTag tag
+   
 tagAttr :: String -> AttrList -> [String] -> [String]
 tagAttr t attrs xs =
    case xs of

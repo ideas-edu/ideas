@@ -22,7 +22,7 @@ import OpenMath.StrategyTable
 import OpenMath.Conversion
 import OpenMath.Request
 import OpenMath.Reply
-import Service.XML
+import Service.XML hiding (tag)
 import Data.Char
 import Data.List
 import Data.Maybe

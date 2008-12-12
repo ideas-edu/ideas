@@ -21,6 +21,7 @@ module Service.XML
 
 import Common.Utils (trim, safeHead)
 import Control.Monad.State
+import Control.Monad.Error ()
 import Data.Char
 import Data.Maybe
 import Data.List

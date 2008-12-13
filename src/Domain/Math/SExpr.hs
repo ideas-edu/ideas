@@ -1,4 +1,4 @@
-{-# OPTIONS -XEmptyDataDecls #-}
+
 module Domain.Math.SExpr (lam, SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr, simplifyExpr, simplify, hasSquareRoot) where
 
 import Common.Utils
@@ -19,9 +19,9 @@ import Test.QuickCheck
 class Simplification a where
    simplifyWith :: a -> Expr -> Constrained (Con Expr) Expr
    
-data NORMAL
-data GRAMSCHMIDT
-data LINEAR
+data NORMAL = NORMAL
+data GRAMSCHMIDT = GRAMSCHMIDT
+data LINEAR = LINEAR
 
 instance Simplification NORMAL where
    simplifyWith _ = simplify

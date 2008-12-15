@@ -53,8 +53,8 @@ readMetaInfos = do
    
 ---------------------------------------------------------
   
-groupByDay :: [(a, MetaInfo)] -> [[(a, MetaInfo)]]
-groupByDay = groupBy (\(_, x) (_, y) -> f x == f y)
+groupByDay :: [MetaInfo] -> [[MetaInfo]]
+groupByDay = groupBy (\x y -> f x == f y)
  where
    f i = (day (timeStamp i), month (timeStamp i))
   
@@ -64,13 +64,14 @@ infosToHTML :: String -> [MetaInfo] -> HTML
 infosToHTML self infos = htmlPage "Logs"
    (mapM_ formatGroup list)
  where
-   list  = groupByDay (zip [0..] infos)
-   formatGroup xs@((_, info):_) = do
+   list  = groupByDay infos
+   formatGroup xs@(info:_) = do
       h2 (date (timeStamp info) ++ " (" ++ show (length xs) ++ ")")
       table (map makeRow xs)
    formatGroup _ = return ()
-   makeRow (n, info) = 
-      [ link (self ++ "?id=" ++ show n) (text $ time $ timeStamp info)
+   makeRow info = 
+      [ let params = "?file=" ++ (fst $ entryID info) ++ "&line=" ++ (show $ snd $ entryID info)
+        in link (self ++ params) (text $ time $ timeStamp info)
       , text $ service info
       , text $ strategy info
       , text $ mode info

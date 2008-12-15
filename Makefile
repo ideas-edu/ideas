@@ -24,7 +24,7 @@ $(BINDIR)/laservice.cgi: $(HS-SOURCES)
 
 $(BINDIR)/viewlog.cgi: $(HS-SOURCES)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) -o $@ src/Presentation/ViewLog/Main.hs
+	$(GHC) $(GHCFLAGS) -isrc/Presentation -o $@ src/Presentation/ViewLog/Main.hs
 	$(STRIP) $@
 	
 $(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES)
@@ -56,7 +56,7 @@ $(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/service.cgi
 
 ghci:
 	$(MKDIR) -p $(OUTDIR)
-	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
+	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 	
 run: solvergui
 	$(BINDIR)/solvergui$(EXE)

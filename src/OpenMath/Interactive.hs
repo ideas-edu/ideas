@@ -22,62 +22,74 @@ import OpenMath.StrategyTable
 import OpenMath.Conversion
 import OpenMath.Request
 import OpenMath.Reply
-import Service.XML hiding (tag)
+import Service.HTML
 import Data.Char
 import Data.List
 import Data.Maybe
 
 respondHTML :: String -> String -> String
-respondHTML self = either (const "") (showXML . makeHTML self) . pRequest
+respondHTML self = either (const "") (showHTML . makeHTML self) . pRequest
 
 (~=) :: String -> String -> Bool
 xs ~= ys = let f = map toLower . filter (not . isSpace)
            in f xs == f ys 
            
-makeHTML :: String -> Request -> XML
+makeHTML :: String -> Request -> HTML
 makeHTML self req = -- TODO: use exercise code instead
    case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= description a ] of
       [(Some (ExprExercise a), Incorrect inc)] -> make self a noAnswer inc
-      [_] -> Text "request error: invalid request"
-      []  -> Text "request error: unknown strategy"
-      _   -> Text "request error: ambiguous strategy"
+      [_] -> errorPage "request error: invalid request"
+      []  -> errorPage "request error: unknown strategy"
+      _   -> errorPage "request error: ambiguous strategy"
  where
    noAnswer = req {req_Answer = Nothing}
                
-make :: IsOMOBJ a => String -> Exercise a -> Request -> ReplyIncorrect -> XML
-make self a req inc = html
-   [ tag "title" [Text $ "LA Feedback Service (version " ++ versionNr ++ ")"]
-   ]
-   [ para [ bold [Text "Term: "]
-          , preString (maybe "" (prettyPrinter a) $ getTerm req) 
-          ]
-   , para [ bold [Text "Expected: "]
-          , preString (maybe "" (prettyPrinter a) $ fromOMOBJ $ repInc_Expected inc) 
-          ]
-   , para [ Text "Submit the", href (reqToURL reqOk) [Text "expected"], Text "answer and continue" ]
-   , hr
-   , para [ bold [Text "Strategy: "], Text (req_Strategy req), br
-          , bold [Text "Steps remaining: "], Text (show (repInc_Steps inc) ++ " (and " ++ show n ++ " after submitting the expected answer)"), br
-          , bold [Text "Arguments: "], Text (formatArgs $ repInc_Arguments inc), br
-          , bold [Text "Location: "], Text (show $ req_Location req) 
-          ]
-   , para [ preString $ unlines $ catMaybes $ map (showLoc (req_Location req)) $ strategyLocations $ strategy a 
-          ]
-   , para [ href (reqToURL reqZoomIn)  [Text "Zoom in"],  Text "to a substrategy or" 
-          , href (reqToURL reqZoomOut) [Text "zoom out"], Text "to the parent strategy" 
-          ]
-   , hr
-   , para [ bold [Text "Context:"], Text (fromMaybe "" $ req_Context req) ]
-   , Text "Remove all", href (reqToURL reqNoCtxt) [Text "context information"]
-   , para [ bold [Text "Derivation (so far):"], Text derivation ]
-   , let f (x, y) = [ Text x, preString $ maybe "" (prettyPrinter a) (fromOMOBJ y) ]
-         len = length (repInc_Derivation inc)
-     in para [ bold [Text $ "Derivation (expected, " ++ show len ++ " steps):"]
-             , list $ map f $ repInc_Derivation inc 
-             ]
---    , preString $ concat $ map show $ repInc_Derivation inc
-   ]
+make :: IsOMOBJ a => String -> Exercise a -> Request -> ReplyIncorrect -> HTML
+make self a req inc = htmlPage title $ do
+   para $ do 
+      bold (text "Term:  ")
+      preText (maybe "" (prettyPrinter a) $ getTerm req) 
+      
+   para $ do 
+      bold (text "Expected: ")
+      preText (maybe "" (prettyPrinter a) $ fromOMOBJ $ repInc_Expected inc) 
+          
+   para $ do 
+      text "Submit the "
+      link (reqToURL reqOk) (text "expected")
+      text " answer and continue"
+   
+   hr
+   para $ do
+      bold (text "Strategy: ") >> text (req_Strategy req) >> br
+      bold (text "Steps remaining: ") >> text (show (repInc_Steps inc) ++ " (and " ++ show n ++ " after submitting the expected answer)") >> br
+      bold (text "Arguments: ") >> text (formatArgs $ repInc_Arguments inc) >> br
+      bold (text "Location: ") >> text (show $ req_Location req) 
+   
+   let f = showLoc (req_Location req)
+   para $ pre $ mapM_ f $ strategyLocations $ strategy a
+
+   para $ do 
+      link (reqToURL reqZoomIn)  (text "Zoom in")  >> text " to a substrategy or " 
+      link (reqToURL reqZoomOut) (text "zoom out") >> text " to the parent strategy" 
+          
+   hr
+   para $ do 
+      bold (text "Context: ") >> text (fromMaybe "" $ req_Context req)
+      text "Remove all " >> link (reqToURL reqNoCtxt) (text " context information")
+   
+   para $ do 
+      bold (text "Derivation (so far): ") >> text derivation
+
+   let f (x, y) = text x >> preText (maybe "" (prettyPrinter a) (fromOMOBJ y))
+       len = length (repInc_Derivation inc)
+   para $ do
+      bold (text $ "Derivation (expected, " ++ show len ++ " steps):")
+      ul (map f $ repInc_Derivation inc)
+      preText $ concat $ map show $ repInc_Derivation inc
+      
  where
+   title      = "LA Feedback Service (version " ++ versionNr ++ ")"
    (reqOk, n) = expected a req inc
    reqZoomIn  = zoomIn req inc
    reqZoomOut = zoomOut req
@@ -85,7 +97,7 @@ make self a req inc = html
    reqToURL   = (self++) . oneliner . ppRequest
    formatArgs = concat . intersperse ", " . map (\(a, b) -> a ++ " = " ++ b)
    derivation = case prefixToSteps (getPrefix req (strategy a)) of
-                   steps -> concat $ intersperse "; " [ name r | Step _ r <- steps, isMajorRule r ]
+                   steps -> concat $ intersperse "; " [ name r | Step _ r <- steps, isMajorRule r ] 
 
 ----------------------------------------------------------------------------
 -- Actions
@@ -112,45 +124,18 @@ removeContext r = r { req_Context = Nothing }
 
 ----------------------------------------------------------------------------
 
-showLoc :: StrategyLocation -> (StrategyLocation, StrategyOrRule a) -> Maybe String
+showLoc :: StrategyLocation -> (StrategyLocation, StrategyOrRule a) -> HTMLBuilder
 showLoc here (loc, eitherValue) 
-   | loc `isPrefixOf` here = 
-        Just $ replicate (length loc*2) '.' ++ "<b>" ++ txt ++ "</b>"
-   | not (null loc) && init loc `isPrefixOf` here && init loc /= here =
-        Just $ replicate (length loc*2) '.' ++ txt
-   | otherwise = Nothing
+   | loc `isPrefixOf` here = do
+        text (replicate (length loc*2) '.')
+        bold (text txt)
+        br
+   | not (null loc) && init loc `isPrefixOf` here && init loc /= here = do
+        text (replicate (length loc*2) '.' ++ txt)
+        br
+   | otherwise = return ()
  where
    txt = either strategyName ((++" (rule)") . name) eitherValue
  
 -- imgOUNL :: XML
 -- imgOUNL = Tag "img" [("border","0"),("src","ounl.jpg"),("align","right"),("alt","OUNL")] []
- 
-tag :: String -> [XML] -> XML
-tag s = Tag s []
-
-br, hr :: XML
-br = tag "br" []
-hr = tag "hr" []
-
-bold, para :: [XML] -> XML
-bold = tag "b"
-para = tag "p"
-
-tt :: [XML] -> XML
-tt = tag "tt"
-
-preString :: String -> XML
-preString = tt . f . intersperse br . map Text . lines
- where f xml = [br] ++ xml ++ [br]
-
-list :: [[XML]] -> XML
-list = tag "ul" . map (tag "li")
-
-href :: String -> [XML] -> XML
-href s = Tag "a" [("href", s)] 
-
-html :: [XML] -> [XML] -> XML
-html xs ys = tag "html" 
-   [ tag "head" xs
-   , tag "body" ys
-   ]

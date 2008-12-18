@@ -18,6 +18,7 @@ import Domain.Fraction.Frac
 import Common.Transformation
 import Common.Rewriting
 import Domain.Fraction.Generator()
+import Common.Apply
 
 fracRules :: [Rule Frac]
 fracRules = [ ruleMulZero, ruleUnitMul, ruleMul, ruleMulFrac
@@ -242,3 +243,4 @@ ruleGCD = makeSimpleRule "GCD" f
     where
       a = gcd x y
   f _ = Nothing
+

@@ -22,6 +22,7 @@ import Domain.Fraction.Frac
 import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
+import System.Random
 
 instance Rewrite Frac
 
@@ -49,7 +50,7 @@ defaultConfig :: FracGenConfig
 defaultConfig = FracGenConfig
    { maxSize   = 2
    , maxInt    = 6
-   , diffVars  = 2
+   , diffVars  = 1
    , freqConst = 0
    , freqVar   = 1
    , freqMul   = 2
@@ -58,21 +59,6 @@ defaultConfig = FracGenConfig
    , freqSub   = 3
    , freqNeg   = 3
    }
-
--- decrease size and frequencies
-decConfig :: FracGenConfig -> FracGenConfig
-decConfig cfg = cfg
-   { maxSize    = (maxSize cfg) `div` 2
-   , freqConst  = dec (freqConst  cfg)
-   , freqVar    = dec (freqVar    cfg)
-   , freqMul    = dec (freqMul    cfg)
-   , freqDiv    = dec (freqDiv    cfg)
-   , freqAdd    = dec (freqAdd    cfg)
-   , freqSub    = dec (freqSub    cfg)
-   , freqNeg    = dec (freqNeg    cfg)
-   }
-   where dec i | i>0       = i-1
-               | otherwise = i
 
 -- list of variables
 varList :: FracGenConfig -> [Gen Frac]
@@ -88,22 +74,21 @@ freqConfig :: FracGenConfig -> [(Int, Gen Frac)]
 freqConfig cfg =
    [ (freqConst cfg, ints cfg)
    , (freqVar cfg,   oneof (varList cfg))
-   , (freqMul cfg,   liftM2 (:*:) rec nv)
+   , (freqMul cfg,   liftM2 (:*:) rec rec)
    , (freqDiv cfg,   liftM2 (:/:) rec const)
    , (freqAdd cfg,   liftM2 (:+:) rec rec)
    , (freqSub cfg,   liftM2 (:-:) rec rec)
    , (freqNeg cfg,   liftM Neg $ rec)
    ]
    where rec   = arbFrac cfg'
-         nv    = arbFrac cfg' {freqVar = 0}  -- no variables
-         const = arbFrac cfg' {freqVar = 0, freqSub = 0, freqNeg = 0} -- no vars and non-zero
-         cfg'  = decConfig cfg
+         const = arbFrac cfg' {freqSub = 0, freqNeg = 0} -- non-zero
+         cfg'  = cfg {maxSize = (maxSize cfg) `div` 2, freqVar = 0} -- no higher order
 
 
 arbFrac :: FracGenConfig -> Gen Frac
 arbFrac config 
    | maxSize config == 0 =  liftM2 (:/:) (ints config) (posints config)
-   | otherwise           =  frequency (freqConfig config) 
+   | otherwise           =  frequency (freqConfig config)
 
 -----------------------------------------------------------
 --- QuickCheck generator
@@ -114,8 +99,9 @@ instance Arbitrary Frac where
      case frac of 
        Var x   -> variant 0 . coarbitrary (map ord x)
        Con x   -> variant 1 . coarbitrary x
-       x :*: y -> variant 1 . coarbitrary x . coarbitrary y
-       x :/: y -> variant 2 . coarbitrary x . coarbitrary y
-       x :+: y -> variant 3 . coarbitrary x . coarbitrary y
-       x :-: y -> variant 4 . coarbitrary x . coarbitrary y
-       Neg x   -> variant 5 . coarbitrary x
+       x :*: y -> variant 2 . coarbitrary x . coarbitrary y
+       x :/: y -> variant 3 . coarbitrary x . coarbitrary y
+       x :+: y -> variant 4 . coarbitrary x . coarbitrary y
+       x :-: y -> variant 5 . coarbitrary x . coarbitrary y
+       Neg x   -> variant 6 . coarbitrary x
+

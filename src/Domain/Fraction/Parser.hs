@@ -64,11 +64,11 @@ ppFrac =  ppFracParsCode 0
         
 -- | Implementation uses the well-known trick for fast string concatenation
 ppFracParsCode :: Int -> Frac -> String
-ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 3 "+", binop 3 "-", neg) p n ""
+ppFracParsCode n p = foldFrac (var, lit, binop 2 "*", binop 2 "/", binop 1 "+", binop 1 "-", neg) p n ""
  where
-   binop prio op p q n = parIf (n > prio) (p prio . ((" "++op++" ")++) . q prio)
+   binop prio op p q n = parIf (n >= prio) (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
    lit       = const . (++) . show
-   neg  p n = ("-"++) . p 4
+   neg p n   = parIf (n >= 3) (("-"++) . p 3)
    parIf b f = if b then ("("++) . f . (")"++) else f
 

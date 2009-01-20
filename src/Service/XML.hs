@@ -8,33 +8,34 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A datatype, parser, and pretty printer for XML documents
+-- A datatype, parser, and pretty printer for XML documents. Re-exports
+-- functions defined elsewhere.
 --
 -----------------------------------------------------------------------------
-module Service.XML 
-   ( XML(..), Attr, AttrList, InXML(..)
+module Service.XML
+   ( XML, Attr, AttrList, InXML(..), Element(..)
    , XMLBuilder, makeXML, text, element, tag, attribute
-   , parseXML, parseXMLs, showXML, compactXML
-   , children, extract, extractText
-   , isText, isTag, findChild
+   , parseXML, showXML, compactXML, (.=.), findAttribute
+   , children, Attribute(..), builder, findChild, getData {-, extract, extractText -}
+   , {- isText, isTag, mkTag mkText , findChild-}
    ) where
 
-import Common.Utils (trim, safeHead)
+import Common.Utils (safeHead, trim)
 import Control.Monad.State
 import Control.Monad.Error ()
 import Data.Char
 import Data.Maybe
 import Data.List
+import Service.XML.Interface hiding (parseXML)
+import qualified Service.XML.Interface as I
 
 ----------------------------------------------------------------
 -- Datatype definitions
 
 -- two helper types for attributes
-type Attr     = (String, String)
-type AttrList = [Attr]
-   
-data XML = Tag String AttrList [XML] | Text String
-   deriving Show
+type XML      = Element
+type Attr     = Attribute  -- (String, String)
+type AttrList = Attributes -- [Attr]
 
 class InXML a where
    toXML       :: a -> XML
@@ -42,159 +43,56 @@ class InXML a where
    fromXML     :: Monad m => XML -> m a
    listFromXML :: Monad m => XML -> m [a]
    -- default definitions
-   listToXML = Tag "list" [] . map toXML
-   listFromXML (Tag "list" [] xs) = mapM fromXML xs
-   listFromXML _                  = fail "expecting a list tag"
+   listToXML = Element "list" [] . map (Right . toXML)
+   listFromXML xml
+      | name xml == "list" && noAttributes xml = mapM fromXML (children xml)
+      | otherwise = fail "expecting a list tag"
 
 ----------------------------------------------------------------
 -- XML parser (a scanner and a XML tree constructor)
 
-parseXMLs :: String -> Either String [XML]
-parseXMLs input = tokenizeXML input >>= constructXML
-
 parseXML :: String -> Either String XML
 parseXML input = do
-   xmls <- parseXMLs input
-   case xmls of
-      [xml] -> return xml
-      _     -> fail "multiple (or zero) xml objects at top-level"
+   xml <- I.parseXML input
+   return (ignoreLayout xml)
 
--- helper data type for the scanner
-data TokenXML = TokenOpen      String AttrList 
-              | TokenClose     String 
-              | TokenOpenClose String AttrList 
-              | TokenText      String
-   deriving Show
+ignoreLayout :: XML -> XML
+ignoreLayout (Element n as xs) = 
+   let f = either (Left . trim) (Right . ignoreLayout)
+   in Element n as (map f xs)
 
-----------------------------------------------------------------
--- XML scanner
-
-tokenizeXML :: String -> Either String [TokenXML]
-tokenizeXML input = 
-   case input of
-      [] -> return []
-      '<':'/':tl -> case break (not . isAlphaNum) tl of
-                       (tag, '>':xs) -> do 
-                          xmls <- tokenizeXML xs
-                          return (TokenClose tag : xmls)
-                       _ -> fail "expected a '>' when scanning a closing tag"
-      '<':tl     -> do let (tag, xs) = break (not . isAlphaNum) tl
-                       (attrs, ys) <- getAttrs (dropWhile isSpace xs)
-                       case ys of
-                          '/':'>':xs -> do 
-                             xmls <- tokenizeXML xs
-                             return (TokenOpenClose tag attrs : xmls)
-                          '>':xs -> do
-                             xmls <- tokenizeXML xs
-                             return (TokenOpen tag attrs : xmls)
-                          _ -> fail "expected a '/' or '>' when scanning an opening tag"
-      _          -> do let (xs, ys) = break (=='<') input
-                       xmls <- tokenizeXML ys
-                       return $ [ TokenText (trim xs) | any (not . isSpace) xs ] ++ xmls
-
-getAttrs :: String -> Either String (AttrList, String)
-getAttrs xs = 
-   case xs of
-      hd:_ | isAlphaNum hd ->
-         case break (not . isAlphaNum) xs of
-            (key, '=':xs) -> do
-               (value, ys) <- getString xs
-               (attrs, zs) <- getAttrs (dropWhile isSpace ys)
-               return ((key, value):attrs, zs)
-            _ -> fail "expected a '=' when scanning an attribute"
-      _ -> return ([], xs)
-
-getString :: String -> Either String (String, String)
-getString xs =
-   let msg = "unexpected end of input when scanning a string" 
-   in case xs of
-         '"':rest -> case break (=='"') rest of
-                        (xs, _:ys) -> return (xs, ys)
-                        _          -> fail msg
-         _ -> fail msg 
-                    
-----------------------------------------------------------------
--- XML tree constructor (from tokens)
-
-constructXML :: [TokenXML] -> Either String [XML]
-constructXML tokens = do
-   (xmls, _) <- constructWithClose Nothing tokens
-   return xmls
-
-constructWithClose :: Maybe String -> [TokenXML] -> Either String ([XML], [TokenXML])
-constructWithClose expected tokens =
-   case tokens of
-      [] | isNothing expected -> return ([], []) 
-         | otherwise          -> fail "unexpected end of input"
-      TokenOpen tag attrs : rest -> do
-         (xmls1, xs) <- constructWithClose (Just tag) rest
-         (xmls2, ys) <- constructWithClose expected xs
-         return (Tag tag attrs xmls1 : xmls2, ys)
-      TokenClose tag : rest 
-         | Just tag == expected -> return ([], rest)
-         | otherwise -> fail $ "wrong tag" 
-      TokenOpenClose tag attrs : rest -> do
-         (xmls, xs) <- constructWithClose expected rest 
-         return (Tag tag attrs [] : xmls, xs)
-      TokenText text : rest -> do
-         (xmls, xs) <- constructWithClose expected rest 
-         return (Text text : xmls, xs)
-         
-----------------------------------------------------------------
--- XML pretty printer
-
+indentXML :: XML -> XML
+indentXML = rec 0
+ where 
+   rec i (Element n as xs) =
+      let ipl  = i+2 
+          cd n = Left ("\n" ++ replicate n ' ')
+          f    = either (\x -> [cd ipl, Left x]) (\x -> [cd ipl, Right (rec ipl x)])
+          body | null xs   = xs
+               | otherwise = concatMap f xs ++ [cd i]
+      in Element n as body
+ 
 showXML :: XML -> String
-showXML = unlines . rec
- where
-   rec (Text s)           = [s]
-   rec (Tag tag attrs xs) = tagAttr tag attrs (concatMap rec xs)
+showXML = (++"\n") . show . indentXML . ignoreLayout
 
 compactXML :: XML -> String
-compactXML (Text s) = s
-compactXML (Tag tag attrs xs) 
-   | null xs = 
-        tagWithAttrs openCloseTag tag attrs
-   | otherwise = 
-        tagWithAttrs openTag tag attrs ++ concatMap compactXML xs ++ closeTag tag
-   
-tagAttr :: String -> AttrList -> [String] -> [String]
-tagAttr t attrs xs =
-   case xs of
-      [] -> [tagWithAttrs openCloseTag t attrs]
-      _  -> [tagWithAttrs openTag t attrs] ++ indent 2 xs ++ [closeTag t]
-
-openTag, closeTag, openCloseTag :: String -> String
-openTag      t = "<"  ++ t ++ ">"
-closeTag     t = openTag ("/" ++ t)
-openCloseTag t = openTag (t ++ "/")
-
-tagWithAttrs :: (String -> String) -> String -> AttrList -> String
-tagWithAttrs f t attrs = f (concat $ intersperse " " $ t : map g attrs)
- where g (x, y) = x ++ "=" ++ quote y
- 
-quote :: String -> String
-quote s 
-   | '"' `notElem` s = show s
-   | otherwise       = "'" ++ s ++ "'" 
- 
-indent :: Int -> [String] -> [String]
-indent n = map (replicate n ' '++)
+compactXML = show . ignoreLayout
 
 ----------------------------------------------------------------
 -- Monadic XML builder
 
 -- Uses the fast-append trick on lists
-data BuilderState = BS { attributes :: AttrList -> AttrList, elements :: [XML] -> [XML] }
+data BuilderState = BS { bsAttributes :: AttrList -> AttrList, bsElements :: Content -> Content }
 
 -- local helper
 emptyBS :: BuilderState
 emptyBS = BS id id
 
 appendAttrBS :: Attr -> BuilderState -> BuilderState
-appendAttrBS a bs = bs { attributes = attributes bs . (a:) }
+appendAttrBS a bs = bs { bsAttributes = bsAttributes bs . (a:) }
 
-appendElemBS :: XML -> BuilderState -> BuilderState
-appendElemBS e bs = bs { elements = elements bs . (e:) }
+appendElemBS :: Either String Element -> BuilderState -> BuilderState
+appendElemBS e bs = bs { bsElements = bsElements bs . (e:) }
 
 type XMLBuilder = XMLBuilderM ()
 
@@ -207,13 +105,13 @@ instance Monad XMLBuilderM where
 makeXML :: String -> XMLBuilder -> XML
 makeXML s m = 
    let bs = execState (unBuild m) emptyBS
-   in Tag s (attributes bs []) (elements bs [])
+   in Element s (bsAttributes bs []) (bsElements bs [])
 
 text :: String -> XMLBuilder
-text = XMLBuilder . modify . appendElemBS . Text
+text = XMLBuilder . modify . appendElemBS . Left
 
 element :: String -> XMLBuilder -> XMLBuilder
-element s = XMLBuilder . modify . appendElemBS . makeXML s
+element s = XMLBuilder . modify . appendElemBS . Right . makeXML s
 
 tag :: String -> XMLBuilder
 tag s = element s (return ())
@@ -221,16 +119,22 @@ tag s = element s (return ())
 attribute :: Attr -> XMLBuilder
 attribute = XMLBuilder . modify . appendAttrBS
 
+(.=.) :: String -> String -> XMLBuilder
+n .=. s = attribute (n := s)
+
+builder :: Element -> XMLBuilder
+builder = XMLBuilder . modify . appendElemBS . Right
+
 ----------------------------------------------------------------
 -- XML utility functions
 
+{-
 children :: XML -> [XML]
-children (Tag _ _ xs) = xs
-children _            = []
+children (Element _ _ xs) = xs
 
 extract :: Monad m => String -> XML -> m [XML]
 extract n xml =
-   case [ xs | Tag m _ xs <- children xml, n==m ] of
+   case filter (children xml) of --  [ xs | Tagged (Element m _ xs) <- children xml, n==m ] of
       [hd] -> return hd
       _    -> fail ("missing tag " ++ show n)
 
@@ -238,16 +142,33 @@ extractText :: Monad m => String -> XML -> m String
 extractText n xml = do
    xs <- extract n xml
    case xs of
-      [Text s] -> return s
-      _        -> fail ("invalid content for tag " ++ show n)
-      
-isTag :: String -> XML -> Bool
-isTag n (Tag m _ _) = n==m
-isTag _ _           = False
+      [hd] -> maybe (fail "extract text") return (isText hd)
+      _    -> fail ("invalid content for tag " ++ show n)
 
-isText :: XML -> Bool
-isText (Text _) = True
-isText _        = False
+isTag :: XML -> Maybe (String, AttrList, [XML])
+isTag = 
+isTag (Tagged (Element n as xs)) = 
+   let f (x := y) = (x, concatMap (either return g) y) 
+       g (CharRef n) = [chr n]
+       g (EntityRef n)
+          | otherwise = []
+   in Just (n, map f as, xs)
+isTag _ = Nothing 
 
-findChild :: Monad m => (XML -> Bool) -> XML -> m XML
-findChild p = maybe (fail "child not found") return . safeHead . filter p . children
+mkTag :: String -> AttrList -> Content -> XML
+mkTag n as = Element n (map f as)
+ where
+   f (x, y) = x := y
+
+mkText :: String -> XML
+mkText = -- CharData
+
+isText :: XML -> Maybe String
+isText =
+isText (CharData s) = Just s
+isText (CDATA s)    = Just s
+isText _            = Nothing 
+
+findChild :: Monad m => String -> XML -> m XML
+findChild s e = maybe (fail "child not found") return . safeHead $ 
+   [ c | c <- children e, Just (n, _, _) <- [isTag c], s==n ]-}

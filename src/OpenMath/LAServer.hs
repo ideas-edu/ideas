@@ -47,7 +47,7 @@ laServer :: Request -> Reply
 laServer req = -- TODO: use exercise code instead
    case [ ea | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= description a ] of
       [Some (ExprExercise a)] -> laServerFor a req
-      _ -> replyError "request error" "unknown strategy"
+      _ -> replyError "request error" ("unknown strategy " ++ show (req_Strategy req))
    
 laServerFor :: IsOMOBJ a => Exercise a -> Request -> Reply
 laServerFor a req = 

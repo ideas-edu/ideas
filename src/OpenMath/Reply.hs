@@ -16,6 +16,7 @@ module OpenMath.Reply
    , ReplyOk(..), ReplyIncorrect(..), ReplyError(..), Args
    ) where
 
+import Control.Monad
 import Common.Strategy hiding (not)
 import OpenMath.StrategyTable
 import OpenMath.Object
@@ -69,34 +70,37 @@ replyToXML reply =
       Error r     -> replyErrorToXML r
 
 replyOkToXML :: ReplyOk -> XML
-replyOkToXML r = xmlResult "ok" $ xmlList
-   [ ("strategy", Text $ repOk_Strategy r)
-   , ("location", Text $ show $ repOk_Location r)
-   , ("context",  Text $ repOk_Context r)
-   , ("steps",    Text $ show $ repOk_Steps r)
-   ]
+replyOkToXML r = makeReply "ok" $ do
+   element "strategy" (text $ repOk_Strategy r)
+   element "location" (text $ show $ repOk_Location r)
+   element "context"  (text $ repOk_Context r)
+   element "steps"    (text $ show $ repOk_Steps r)
 
 replyIncorrectToXML :: ReplyIncorrect -> XML
-replyIncorrectToXML r = xmlResult "incorrect" $ xmlList (
-   [ ("strategy",   Text $ repInc_Strategy r)
-   , ("location",   Text $ show $ repInc_Location r)
-   , ("expected",   omobj2xml $ repInc_Expected r)
-   ] ++
-   [ ("steps",      Text $ show $ repInc_Steps r)
-   , ("equivalent", Text $ show $ repInc_Equivalent r)
-   ]) ++ [ Tag "arguments" [] (map (\(x,y) -> Tag "elem" [("descr", x)] [Text y]) (repInc_Arguments r))
-         | not (null $ repInc_Arguments r)
-         ]
-      ++ [ Tag "derivation" [] (map (\(x,y) -> Tag "elem" [("ruleid", x)] [omobj2xml y]) (repInc_Derivation r))
-         | not (null $  repInc_Derivation r)
-         ]
+replyIncorrectToXML r = makeReply "incorrect" $ do
+   element "strategy"   (text $ repInc_Strategy r)
+   element "location"   (text $ show $ repInc_Location r)
+   element "expected"   (builder $ omobj2xml $ repInc_Expected r)
+   element "steps"      (text $ show $ repInc_Steps r)
+   element "equivalent" (text $ show $ repInc_Equivalent r)
+   
+   unless (null $ repInc_Arguments r) $
+       let f (x, y) = element "elem" $ do 
+              "descr" .=. x 
+              text y
+       in element "arguments" $ mapM_ f (repInc_Arguments r)
+
+   unless (null $  repInc_Derivation r) $
+      let f (x,y) = element "elem" $ do 
+             "ruleid" .=. x 
+             builder (omobj2xml y)
+      in element "derivation" $ mapM_ f (repInc_Derivation r)
 
 replyErrorToXML :: ReplyError -> XML
-replyErrorToXML r = xmlResult (repErr_Kind r) [Text $ repErr_Message r]
-
-xmlResult :: String -> [XML] -> XML
-xmlResult result = Tag "reply" [("result", result), ("version", versionNr)]
-
-xmlList :: [(String, XML)] -> [XML]
-xmlList = map f
- where f (x, y) = Tag x [] [y]
+replyErrorToXML r = makeReply (repErr_Kind r) (text $ repErr_Message r)
+   
+makeReply :: String -> XMLBuilder -> XML
+makeReply kind body = makeXML "reply" $ do
+   "result"  .=. kind
+   "version" .=. versionNr
+   body

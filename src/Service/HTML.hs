@@ -41,7 +41,7 @@ errorPage s = htmlPage "Error" $ do
    
 link :: String -> XMLBuilder -> XMLBuilder
 link url body = element "a" $ 
-   attribute ("href", url) >> body
+   ("href" .=. url) >> body
 
 h1 :: String -> XMLBuilder
 h1 = element "h1" . text
@@ -79,7 +79,7 @@ ul = element "ul" . mapM_ (element "li")
 
 table :: [[XMLBuilder]] -> XMLBuilder
 table rows = element "table" $ do
-   attribute ("border", "1")
+   "border" .=. "1"
    mapM_ (element "tr" . mapM_ (element "td")) rows
 
 text :: String -> XMLBuilder

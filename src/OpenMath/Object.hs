@@ -26,59 +26,62 @@ data OMOBJ = OMI Integer | OMV String | OMS String String | OMA [OMOBJ] |OMBIND 
 xml2omobj :: XML -> Either String OMOBJ
 xml2omobj xml =
    case xml of  
-      Tag "OMOBJ" _ [this] -> rec this
-      _                    -> fail "expected a OMOBJ tag"
+      Element "OMOBJ" _ [Right e] -> rec e
+      _ -> fail $ "expected an OMOBJ tag" ++ show xml
  where
    rec xml =
-      case xml of
-         Tag "OMA" _ xs -> do
-            xs <- mapM rec xs 
-            return (OMA xs)
-         Tag "OMS" attrs [] -> 
-            case lookup "cd" attrs of
-               Just cd ->
-                  case lookup "name" attrs of
-                     Just name  -> return (OMS cd name)
-                     Nothing -> fail "OMS tag without name attribute" 
-               _ -> fail "OMS tag without cd attribute"
-         Tag "OMI" _ [Text s] -> 
+      case content xml of
+      
+         _ | name xml == "OMA" -> do
+            ys <- mapM rec (children xml) 
+            return (OMA ys)
+            
+         [] | name xml == "OMS" -> do
+            cd   <- findAttribute "cd" xml
+            name <- findAttribute "name" xml
+            return (OMS cd name)
+
+         [Left s] | name xml == "OMI" ->
             case reads s of
                [(i, xs)] | all isSpace xs -> return (OMI i)
                _ -> fail "invalid integer in OMI"
-         Tag "OMV" attrs [] ->
-            case lookup "name" attrs of
-               Just s  -> return (OMV s)
-               Nothing -> fail "OMV tag without name attribute"
-         Tag "OMBIND" _ [x1,x2,x3] -> do
+               
+         [] | name xml == "OMV" -> do
+            s <- findAttribute "name" xml
+            return (OMV s)
+        
+         [Right x1, Right x2, Right x3] | name xml == "OMBIND" -> do
             y1 <- rec x1
             y2 <- recOMBVAR x2
             y3 <- rec x3
             return (OMBIND y1 y2 y3)
-            
-         Tag tag _ _ -> fail $ "unknown tag " ++ show tag
-         Text _ -> fail "expecting a tag"
+
+         _ -> fail ("invalid tag " ++ show (name xml))
    
-   recOMBVAR xml = 
-      case xml of
-         Tag "OMBVAR" _ xs -> 
-            let f (Right (OMV s)) = return s
-                f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
-            in mapM (f . rec) xs
-         Tag tag _ _  -> fail $ "expected tag OMVAR, but found " ++ show tag
-         Text _ -> fail "expecting a tag"
+   recOMBVAR xml
+      | name xml == "OMBVAR" =
+           let f (Right (OMV s)) = return s
+               f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
+           in mapM (f . rec) (children xml)
+      | otherwise = 
+           fail ("expected tag OMVAR, but found " ++ show tag)
    
 omobj2xml :: OMOBJ -> XML
-omobj2xml = header . return . rec
+omobj2xml object = makeXML "OMOBJ" $ do
+   "xmlns"   .=. "http://www.openmath.org/OpenMath"
+   "version" .=. "2.0"
+   "cdbase"  .=. "http://www.openmath.org/cd"
+   rec object
  where
-   header = Tag "OMOBJ" attrs
-   attrs  = [ ("xmlns"  , "http://www.openmath.org/OpenMath")
-            , ("version", "2.0")
-            , ("cdbase" , "http://www.openmath.org/cd")
-            ]
    rec omobj =
       case omobj of
-         OMI i  -> Tag "OMI" [] [Text (show i)]
-         OMV v  -> Tag "OMV" [("name", v)] []
-         OMA xs -> Tag "OMA" [] (map rec xs)
-         OMS cd name -> Tag "OMS" [("cd", cd), ("name", name)] []
-         OMBIND x ys z -> Tag "OMBIND" [] [rec x, Tag "OMBVAR" [] (map (rec . OMV) ys), rec z]
+         OMI i       -> element "OMI" (text (show i))
+         OMV v       -> element "OMV" ("name" .=. v)
+         OMA xs      -> element "OMA" (mapM_ rec xs)
+         OMS cd name -> element "OMS" $ do
+            "cd"   .=. cd
+            "name" .=. name
+         OMBIND x ys z -> element "OMBIND" $ do 
+            rec x 
+            element "OMBVAR" (mapM_ (rec . OMV) ys) 
+            rec z

@@ -16,6 +16,7 @@ module OpenMath.Request (Request(..), getTerm, getContextTerm, getPrefix, pReque
 import Common.Utils
 import Common.Context
 import Common.Strategy hiding (fail)
+import Control.Monad
 import OpenMath.StrategyTable
 import OpenMath.Object
 import OpenMath.Conversion
@@ -69,32 +70,6 @@ getPrefix req ls = fromMaybe (emptyPrefix ls) $ do
       [(is, xs)] | all isSpace xs -> return (makePrefix is ls)
       _ -> Nothing
 
-isRequest :: XML -> Either String ()
-isRequest (Tag "request" _ _) = return ()
-isRequest _ = fail "XML document is not a request"
-
-extractTextWith :: (String -> Either String a) -> String -> XML -> Either String a
-extractTextWith f n xml = 
-   case extract n xml of 
-      Just [Text s] -> f s
-      _             -> fail $ "error in " ++ n
-
-extractString :: String -> XML -> Either String String
-extractString = extractTextWith Right
-
-extractLocation :: String -> XML -> Either String StrategyLocation
-extractLocation = extractTextWith $ \s -> 
-   case reads s of
-      [(n, xs)] | all isSpace xs -> return n
-      _                          -> fail "invalid location"
-
-extractExpr :: String -> XML -> Either String OMOBJ
-extractExpr n xml = do
-   this <- case extract n xml of 
-              Just [expr] -> return expr
-              _           -> fail $ "error in " ++ n
-   xml2omobj this
-
 optional :: Either String a -> Either String (Maybe a)
 optional = Right . either (const Nothing) Just
 
@@ -105,21 +80,21 @@ ppRequest :: Request -> String
 ppRequest = showXML . requestToXML 
 
 requestToXML :: Request -> XML
-requestToXML req = Tag "request" [("service", "mathdox")] $
-   [ Tag "strategy" [] [Text $ req_Strategy req]
-   , Tag "location" [] [Text $ show $ req_Location req]
-   , Tag "term"     [] [omobj2xml $ req_Term req]
-   ] ++ 
-   [ Tag "context" [] [Text $ fromJust $ req_Context req ]
-   | isJust (req_Context req)
-   ] ++
-   [ Tag "answer" [] [omobj2xml $ fromJust $ req_Answer req]
-   | isJust (req_Answer req)
-   ]
+requestToXML req = makeXML "request" $ do
+   "service" .=. "mathdox"
+   element "strategy" (text (req_Strategy req))
+   element "location" (text (show (req_Location req)))
+   element "term"     (builder (omobj2xml (req_Term req)))
+   when (isJust (req_Context req)) $
+      element "context" (text (fromJust (req_Context req)))
+   when (isJust (req_Answer req)) $
+      element "answer" (builder (omobj2xml (fromJust (req_Answer req))))
    
 xmlToRequest :: XML -> Either String Request
 xmlToRequest xml = do
-   isRequest xml
+   unless (name xml == "request") $
+      fail "XML document is not a request" 
+   
    sid     <- extractString "strategy" xml
    loc     <- optional (extractLocation "location" xml)
    term    <- extractExpr "term" xml
@@ -132,3 +107,22 @@ xmlToRequest xml = do
       , req_Context  = context
       , req_Answer   = answer
       }
+
+extractString :: String -> XML -> Either String String
+extractString s xml = liftM getData (findChild s xml)
+
+extractLocation :: String -> XML -> Either String StrategyLocation
+extractLocation s xml = do
+   c <- findChild s xml
+   case reads (getData c) of
+      [(n, xs)] | all isSpace xs -> return n
+      _                          -> fail "invalid location"
+
+extractExpr :: String -> XML -> Either String OMOBJ
+extractExpr n xml = do
+   case findChild n xml of 
+      Just expr -> 
+         case children expr of 
+            [this] -> xml2omobj this
+            _ -> fail $ "error in " ++ show (n, xml)
+      _ -> fail $ "error in " ++ show (n, xml)

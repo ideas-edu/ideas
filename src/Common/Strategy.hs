@@ -20,7 +20,7 @@ module Common.Strategy
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
      -- * Running strategies
-   , runStrategy, traceStrategy
+   , runStrategy, derivations, traceStrategy
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
@@ -110,6 +110,13 @@ runStrategy :: Strategy a -> a -> [a]
 runStrategy strategy a =
    [ a | empty strategy ] ++
    [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
+
+derivations :: Strategy a -> a -> [(a, [(Rule a, a)])]
+derivations s a = zip (Prelude.repeat a) (rec s a)
+ where
+   rec s a =
+      [ [] | empty s ] ++
+      [ (rule, b):list | (rule, rest) <- firsts s, b <- applyAll rule a, list <- rec rest b ]
 
 --run :: Apply f => Grammar (f a) -> a -> [a]
 --run s a = [ a | empty s ] ++ [ c | (r, t) <- firsts s, b <- applyAll r a, c <- run t b ]

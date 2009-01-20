@@ -66,7 +66,12 @@ instance Floating Expr where
 instance Symbolic Expr where
    variable = Var
    function = Sym
-   
+
+infixr 8 ^
+
+(^) :: Symbolic a => a -> a -> a
+(^) = binaryFunction "^" 
+
 -----------------------------------------------------------------------
 -- Uniplate instance
 
@@ -127,7 +132,7 @@ foldExpr (plus, times, minus, neg, con, dv, sq, var, sym) = rec
          Sym f xs -> sym f (map rec xs)
 
 exprToNum :: (Monad m, Num a) => Expr -> m a
-exprToNum = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, return . fromInteger, err, err, err, \_ -> err)
+exprToNum = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, return . fromInteger, \_ -> err, err, err, \_ -> err)
  where
    err _ = fail "exprToNum"
 
@@ -162,6 +167,8 @@ ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, con, bin "/"
    sq  x          = sym "sqrt" [x]
    sym s xs b
       | null xs   = s
+      | length xs==2 && not (isAlpha (head s)) 
+                  = bin s 0 (xs!!0) (xs!!1) 1
       | otherwise = parIf (b>3) (unwords (s : map ($ 4) xs))
    bin s i x y b  = parIf (b>i) (x i ++ s ++ y (i+1))
       
@@ -216,3 +223,9 @@ size e = 1 + compos 0 (+) size e
 
 collectVars :: Expr -> [String]
 collectVars e = [ s | Var s <- universe e ]
+
+hasVars :: Expr -> Bool
+hasVars = not . noVars
+
+noVars :: Expr -> Bool
+noVars = null . collectVars

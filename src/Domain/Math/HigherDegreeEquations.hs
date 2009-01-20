@@ -2,6 +2,7 @@ module Domain.Math.HigherDegreeEquations where
 
 import Prelude hiding ((^), repeat)
 import Data.List (nub, sortBy, (\\), intersperse)
+import Data.Ratio
 import Common.Utils (safeHead, fixpoint)
 import Common.Transformation
 import Common.Strategy hiding (not)
@@ -36,6 +37,9 @@ constantView (Con n)    = return n
 constantView (Negate a) = fmap negate (constantView a)
 constantView _          = Nothing
 
+ratioView :: Expr -> Maybe (Integer, Integer)
+ratioView = fmap (\r -> (numerator r, denominator r)) . exprToFractional
+
 -- e.g., 3+4+5 or 3-4+5 or -(3+4)
 sumView :: Expr -> [Expr]
 sumView (a :+: b)  = sumView a ++ sumView b
@@ -63,7 +67,6 @@ powerView (a :*: b)
    | not (hasVars a) && hasVars b = do
         (e, x, n) <- powerView b
         return (a*e, x, n)
-   | otherwise = Nothing
 powerView _ = Nothing
 
 -- a*x^2 + b*x + c

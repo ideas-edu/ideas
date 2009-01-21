@@ -2,6 +2,7 @@ module Domain.Math.HigherDegreeEquations where
 
 import Prelude hiding ((^), repeat)
 import Data.List (nub, sortBy, (\\), intersperse)
+import Data.Maybe
 import Data.Ratio
 import Common.Utils (safeHead, fixpoint)
 import Common.Transformation
@@ -53,7 +54,7 @@ productView expr = [expr]
 
 -- a*x^b, e.g., -3*x^2, but also 3*x, x, and 3
 powerView :: Expr -> Maybe (Expr, String, Integer)
-powerView (Con n) = return (Con n, "x", 0) -- guess variable !!!!!!! 
+powerView e | isJust (ratioView e) = return (e, "x", 0) -- guess variable !!!!!!! 
 powerView (Negate a) = do
    (e, x, n) <- powerView a
    return (Negate e, x, n)
@@ -212,13 +213,25 @@ cleanup = fixpoint (transform step)
    step (Con 0 :+: x) = x
    step (x :+: Con 0) = x
    step (x :+: Negate y) = x - y
+   step (x :+: (Negate y :*: z)) = x - (y*z)
+   -- minus
+   step (x :-: (y :-: z)) = (x-y)+z
+   step (0 :-: x) = Negate x
    -- negate 
-   step (Negate (Con 0)) = 0
+   step (Negate (Con 0))   = 0
+   step (Negate (x :*: y)) = (-x)*y
    -- times
    step (Con 0 :*: _) = 0
    step (Con 1 :*: x) = x
    step (_ :*: Con 0) = 0
    step (x :*: Con 1) = x
+   step (x :*: (y :*: z)) | noVars x && noVars y = ((x :*: y) :*: z) -- not so nice!
+   step ((x :/: y) :*: z) | y==z = x
+   step (x :*: (y :/: z)) | x==z = y
+   step (x :*: (y :/: z)) = (x :*: y) :/: z
+   -- division
+   step ((a :*: x) :/: b) | a==b && b/=0 = x
+   step (Negate (x :/: y)) = (-x)/y
    -- power
    step (Sym "^" [_, Con 0]) = 1
    step (Sym "^" [x, Con 1]) = x
@@ -295,5 +308,3 @@ main = flip mapM_ [1..10] $ \i -> do
    case derivations solve start of
       hd:_ -> showDerivation "" hd
       _    -> putStrLn "unsolved"
-      
-      

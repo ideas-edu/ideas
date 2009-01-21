@@ -231,10 +231,11 @@ cleanup = fixpoint (transform step)
    step (Sqrt (x :/: y@(Con _))) = sqrt x / sqrt y
    -- finally, propagate constants
    step expr =
-      case exprToNum expr of
-         Just n
-            | n >= 0    -> Con n
-            | otherwise -> negate (Con (abs n))
+      let con n = if n >= 0 then Con n else negate (Con (abs n)) in
+      case ratioView expr of
+         Just (a, b)
+            | b==1      -> con a
+            | otherwise -> con a / con b
          Nothing -> expr
 
 -----------------------
@@ -294,3 +295,5 @@ main = flip mapM_ [1..10] $ \i -> do
    case derivations solve start of
       hd:_ -> showDerivation "" hd
       _    -> putStrLn "unsolved"
+      
+      

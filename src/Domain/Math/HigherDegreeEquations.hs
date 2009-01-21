@@ -285,4 +285,12 @@ showDerivation title (a, list) =
       | otherwise =  ["    => " ++ show r, f a]
       
 main :: IO ()
-main = mapM_ test [1..10]
+main = flip mapM_ [1..10] $ \i -> do
+   let line  = putStrLn (replicate 50 '-')  
+       start = OrList [examples !! (i-1)]
+   line
+   putStrLn $ "Exercise " ++ show i
+   line 
+   case derivations solve start of
+      hd:_ -> showDerivation "" hd
+      _    -> putStrLn "unsolved"

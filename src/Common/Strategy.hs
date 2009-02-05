@@ -20,7 +20,7 @@ module Common.Strategy
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
      -- * Running strategies
-   , runStrategy, derivations, traceStrategy
+   , runStrategy, derivations, runWithSteps, traceStrategy
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
@@ -49,7 +49,7 @@ import Common.Rewriting hiding (inverse)
 import Common.Uniplate (Uniplate, children)
 import Common.Utils
 import qualified Common.Grammar as RE
-import Debug.Trace
+import Control.Monad (liftM, when)
 
 -----------------------------------------------------------
 -- Data types and type classes
@@ -105,31 +105,40 @@ instance Lift LabeledStrategy where
 -----------------------------------------------------------
 --- Running strategies
 
+-- todo's: merge derivations and derivations2, and replace traceStrategy
+-- by an IO function
+
 -- | Run a strategy on a term (implementation of the overloaded @applyAll@ function)
 runStrategy :: Strategy a -> a -> [a]
-runStrategy strategy a =
-   [ a | empty strategy ] ++
-   [ result | (rule, rest) <- firsts strategy, b <- applyAll rule a, result <- runStrategy rest b ]
+runStrategy = RE.run . noLabels
 
+-- | Returns all possible derivations (the first components in the pairs are 
+-- the start term)
 derivations :: Strategy a -> a -> [(a, [(Rule a, a)])]
-derivations s a = zip (Prelude.repeat a) (rec s a)
+derivations s a = zip (Prelude.repeat a) (RE.runIntermediates (noLabels s) a)
+
+-- | Returns all intermediate steps (the first components in the pairs are 
+-- the start term)
+runWithSteps :: LabeledStrategy a -> a -> [(a, [(Step a, a)])]
+runWithSteps s a = zip (Prelude.repeat a) (RE.runIntermediates (withMarks s) a)
+
+-- | Run a strategy on a term, and traces the progress. Useful for debugging strategies
+traceStrategy :: Show a => Strategy a -> a -> IO [a]
+traceStrategy = rec 0 
  where
-   rec s a =
-      [ [] | empty s ] ++
-      [ (rule, b):list | (rule, rest) <- firsts s, b <- applyAll rule a, list <- rec rest b ]
-
---run :: Apply f => Grammar (f a) -> a -> [a]
---run s a = [ a | empty s ] ++ [ c | (r, t) <- firsts s, b <- applyAll r a, c <- run t b ]
-
--- | Run a strategy on a term, and trace the progress (using Debug.Trace.trace). Useful for debugging strategies
-traceStrategy :: Show a => Strategy a -> a -> [a]
-traceStrategy strategy a = trace (show a) $ 
-   [ trace (replicate 50 '-') a | empty strategy ] ++
-   [ result 
-   | (rule, rest) <- firsts strategy
-   , b <- applyAll rule a
-   , result <- trace ("   ==> [" ++ show rule ++ "]") $ traceStrategy rest b 
-   ]
+   indent n s = putStrLn (replicate n ' ' ++ s)
+ 
+   rec n s a = do
+      let b = empty s
+      indent n (show a ++ if b then "   (end)" else "")
+      let f (rule, rest) =
+             liftM concat $ flip mapM (applyAll rule a) $ \b -> do
+                let n2 = n+2
+                indent n2 ("[" ++ show rule ++ "]")
+                rec n2 rest b
+      xss <- mapM f (firsts s)
+      when (null (concat xss)) (indent n "---")
+      return $ [ a | b ] ++ concat xss
 
 -- local helper function 
 empty :: Strategy a -> Bool
@@ -348,6 +357,11 @@ makePrefix is ls = rec [] is start
 -- | The @Step@ data type can be used to inspect the structure of the strategy
 data Step a = Begin StrategyLocation | Step StrategyLocation (Rule a) | End StrategyLocation
    deriving Show 
+
+instance Apply Step where
+   apply (Step _ r) = apply r
+   apply (Begin _)  = return
+   apply (End _)    = return
 
 -- | Complete the remaining strategy
 runPrefix :: Prefix a -> a -> [(a, Prefix a)]

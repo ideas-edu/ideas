@@ -16,9 +16,10 @@ module Common.Context
    ( -- * Abstract data type
      Context, inContext, fromContext, showContext, parseContext
      -- * Variable environment
-   , Var(..), intVar, boolVar, get, set, change
+   , Var(..), intVar, integerVar, boolVar, get, set, change
      -- * Location (current focus)
-   , Location, location, setLocation, changeLocation, currentFocus, changeFocus, locationDown, locationUp
+   , Location, location, setLocation, changeLocation
+   , currentFocus, changeFocus, locationDown, locationUp
    , makeLocation, fromLocation
      -- * Lifting rewrite rules
    , liftRuleToContext
@@ -100,6 +101,10 @@ data Var a = String := a -- ^ Constructs a new variable
 -- | Make a new variable of type Int (initialized with 0)
 intVar :: String -> Var Int
 intVar = (:= 0)
+
+-- | Make a new variable of type Integer (initialized with 0)
+integerVar :: String -> Var Integer
+integerVar = (:= 0)
 
 -- | Make a new variable of type Bool (initialized with True)
 boolVar :: String -> Var Bool

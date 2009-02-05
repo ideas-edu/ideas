@@ -168,7 +168,7 @@ instance IsOMOBJ Expr where
          a :*: b  -> binop timesSymbol a b
          a :-: b  -> binop minusSymbol a b
          Negate a -> unop  negateSymbol a
-         Con n    -> toOMOBJ n
+         Nat n    -> toOMOBJ n
          a :/: b  -> binop divideSymbol a b
          Sqrt a   -> binop rootSymbol a (2::Integer)
          Var s    -> OMV s
@@ -182,7 +182,7 @@ instance IsOMOBJ Expr where
              |> from2 timesSymbol (*)
              |> from2 minusSymbol (-)
              |> from1 negateSymbol negate
-             |> (liftM Con . fromOMOBJ)
+             |> (liftM Nat . fromOMOBJ)
              |> from2 divideSymbol (/)
              |> fromSqrt
              |> fromVar

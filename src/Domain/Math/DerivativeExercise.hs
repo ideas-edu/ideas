@@ -61,7 +61,7 @@ derivative = somewhere $ alternatives (map liftRuleToContext derivativeRules)
 
 ex1, ex2, ex3 :: Expr
 ex1 = diff $ lambda (Var "x") $ Var "x" `pow` 2
-ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x `pow` Con 3)) :+: (Con (-3) :*: (x `pow` Con 2)) :+: x :+: (Con (-5))
+ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x `pow` fromInteger 3)) :+: (fromInteger (-3) :*: (x `pow` fromInteger 2)) :+: x :+: (fromInteger (-5))
  where x = Var "x"
 ex3 = diff $ lambda (Var "x") (2 * Var "x") 
 ex4 = diff $ lambda (Var "x") (ln (Var "x"))

@@ -34,9 +34,11 @@ solvedEquation (lhs :==: rhs) =
 
 -- e.g., 3 or -3
 constantView :: Expr -> Maybe Integer
-constantView (Con n)    = return n
+constantView = exprToNum
+{- 
+constantView (Nat n)    = return n
 constantView (Negate a) = fmap negate (constantView a)
-constantView _          = Nothing
+constantView _          = Nothing -}
 
 ratioView :: Expr -> Maybe (Integer, Integer)
 ratioView = fmap (\r -> (numerator r, denominator r)) . exprToFractional
@@ -59,7 +61,7 @@ powerView (Negate a) = do
    (e, x, n) <- powerView a
    return (Negate e, x, n)
 powerView (Var x) = return (1, x, 1)
-powerView (Sym "^" [Var x, Con n]) =
+powerView (Sym "^" [Var x, Nat n]) =
    return (1, x, n)
 powerView (a :*: b)
    | hasVars a && not (hasVars b) = do
@@ -89,14 +91,14 @@ quadraticView e = do
       
 -- A*B = 0  implies  A=0 or B=0
 productZero :: Equation Expr -> Maybe [Equation Expr]
-productZero (e :==: Con 0) | length xs > 1 = 
+productZero (e :==: Nat 0) | length xs > 1 = 
    return [ x :==: 0 | x <- xs ]
  where xs = productView e
 productZero _ = Nothing
 
 -- A^B = 0  implies  A=0
 powerZero :: Equation Expr -> Maybe (Equation Expr)
-powerZero (Sym "^" [a, _] :==: Con 0) =
+powerZero (Sym "^" [a, _] :==: Nat 0) =
    return (a :==: 0)
 powerZero _ = Nothing
 
@@ -116,20 +118,20 @@ powerFactor e = do
    let (as, vs, ns) = unzip3 xs
        r = minimum ns
        v = variable (head vs)
-       f a n = a*v^(Con (n-r))
-       con n = if n < 0 then negate (Con (abs n)) else Con n
+       f a n = a*v^(Nat (n-r))
+       Nat n = if n < 0 then negate (Nat (abs n)) else Nat n
    unless (length xs > 1 && length (nub vs) == 1 && r >= 1) Nothing
    -- also search for gcd constant
    case mapM constantView (map cleanup as) of 
       Just is | g > 1 -> 
-         return (Con g * v^Con r * foldr1 (+) (zipWith f (map (con . (`div` g)) is) ns))
+         return (Nat g * v^Nat r * foldr1 (+) (zipWith f (map (Nat . (`div` g)) is) ns))
        where g = foldr1 gcd is
       _ -> 
-         return (v^Con r * foldr1 (+) (zipWith f as ns))
+         return (v^Nat r * foldr1 (+) (zipWith f as ns))
 
 -- X^2 = A  implies  X= +/- sqrt(A)
 squared :: Equation Expr -> Maybe [Equation Expr]
-squared (Sym "^" [Var x, Con 2] :==: c) | noVars c = 
+squared (Sym "^" [Var x, Nat 2] :==: c) | noVars c = 
    return [Var x :==: sqrt c, Var x :==: negate (sqrt c)]
 squared _ = Nothing
 
@@ -139,14 +141,14 @@ divide (lhs :==: rhs) = do
    unless (noVars rhs) Nothing
    (a, x, i) <- powerView lhs
    when (a == 1 || i == 0) Nothing
-   return (variable x ^ Con i :==: rhs / a) 
+   return (variable x ^ Nat i :==: rhs / a) 
 
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Expr -> Maybe Expr
 niceFactors e = do
    (x, a, b, c) <- quadraticView e
    unless (a==1) Nothing
-   safeHead [ (variable x + Con i) * (variable x + Con j) | (i, j) <- factors c, i+j == b ]
+   safeHead [ (variable x + Nat i) * (variable x + Nat j) | (i, j) <- factors c, i+j == b ]
 
 moveToLHS :: Equation Expr -> Maybe (Equation Expr)
 moveToLHS (x :==: y) = do 
@@ -155,11 +157,11 @@ moveToLHS (x :==: y) = do
    return (x - y :==: 0)
 
 abcFormula :: Equation Expr -> Maybe [Equation Expr]
-abcFormula (e :==: Con 0) = do
+abcFormula (e :==: Nat 0) = do
    (x, a, b, c) <- quadraticView e
-   let discr = Con (b*b - 4 * a * c)
-   return [ variable x :==: (-Con b + sqrt discr) / 2 * Con a
-          , variable x :==: (-Con b - sqrt discr) / 2 * Con a
+   let discr = Nat (b*b - 4 * a * c)
+   return [ variable x :==: (-Nat b + sqrt discr) / 2 * Nat a
+          , variable x :==: (-Nat b - sqrt discr) / 2 * Nat a
           ]
 abcFormula _ = Nothing
 
@@ -207,24 +209,18 @@ liftExpr f = liftEqn $ \(lhs :==: rhs) ->
 
 -- clean up the expression: not at all a complete list of simplifications
 cleanup :: Expr -> Expr 
-cleanup = fixpoint (transform step)
+cleanup = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
  where
    -- plus
-   step (Con 0 :+: x) = x
-   step (x :+: Con 0) = x
    step (x :+: Negate y) = x - y
    step (x :+: (Negate y :*: z)) = x - (y*z)
    -- minus
    step (x :-: (y :-: z)) = (x-y)+z
    step (0 :-: x) = Negate x
    -- negate 
-   step (Negate (Con 0))   = 0
+   step (Negate (Nat 0))   = 0
    step (Negate (x :*: y)) = (-x)*y
    -- times
-   step (Con 0 :*: _) = 0
-   step (Con 1 :*: x) = x
-   step (_ :*: Con 0) = 0
-   step (x :*: Con 1) = x
    step (x :*: (y :*: z)) | noVars x && noVars y = ((x :*: y) :*: z) -- not so nice!
    step ((x :/: y) :*: z) | y==z = x
    step (x :*: (y :/: z)) | x==z = y
@@ -232,25 +228,37 @@ cleanup = fixpoint (transform step)
    -- division
    step ((a :*: x) :/: b) | a==b && b/=0 = x
    step (Negate (x :/: y)) = (-x)/y
-   -- power
-   step (Sym "^" [_, Con 0]) = 1
-   step (Sym "^" [x, Con 1]) = x
-   step (Sym "^" [Con 0, _]) = 0
-   step (Sym "^" [Con 1, _]) = 1
    -- square roots
-   step (Sqrt (Con n)) | a*a == n = Con a
+   step (Sqrt (Nat n)) | a*a == n = Nat a
     where a = round (sqrt (fromIntegral n))
-   step (Sqrt (x@(Con _) :/: y)) = sqrt x / sqrt y -- exceptional case: sqrt (-2/-3)
-   step (Sqrt (x :/: y@(Con _))) = sqrt x / sqrt y
+   step (Sqrt (x@(Nat _) :/: y)) = sqrt x / sqrt y -- exceptional case: sqrt (-2/-3)
+   step (Sqrt (x :/: y@(Nat _))) = sqrt x / sqrt y
    -- finally, propagate constants
    step expr =
-      let con n = if n >= 0 then Con n else negate (Con (abs n)) in
+      let Nat n = if n >= 0 then Nat n else negate (Nat (abs n)) in
       case ratioView expr of
          Just (a, b)
-            | b==1      -> con a
-            | otherwise -> con a / con b
+            | b==1      -> Nat a
+            | otherwise -> Nat a / Nat b
          Nothing -> expr
 
+   -- identities/absorbing
+   basic :: Expr -> Maybe Expr
+   basic (Nat 0 :+: x) = return x
+   basic (x :+: Nat 0) = return x
+   basic (Nat 0 :*: _) = return 0
+   basic (_ :*: Nat 0) = return 0
+   basic (Nat 1 :*: x) = return x
+   basic (x :*: Nat 1) = return x
+   basic (x :-: Nat 0) = return x
+   basic (x :/: Nat 1) = return x
+   basic (Nat 0 :/: _) = return 0 -- division-by-zero
+   basic (Sym "^" [_, Nat 0]) = return 1
+   basic (Sym "^" [x, Nat 1]) = return x
+   basic (Sym "^" [Nat 0, _]) = return 0 -- except that 0^0 = 1 (by definition), or left undefined
+   basic (Sym "^" [Nat 1, _]) = return 1
+   basic _ = Nothing
+   
 -----------------------
 
 solve :: Strategy (OrList (Equation Expr))

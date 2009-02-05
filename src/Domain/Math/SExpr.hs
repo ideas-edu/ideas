@@ -157,8 +157,8 @@ transformTD f a =
 
 -- check whether the expression is a "rational" number
 isRat :: Expr -> Bool
-isRat (Con _) = True
-isRat (Con _ :/: Con _) = True
+isRat (Nat _) = True
+isRat (Nat _ :/: Nat _) = True
 isRat _ = False
 
 lam,varx :: SExpr
@@ -181,7 +181,7 @@ constantPropagation e =
 simplifySquareRoots :: Expr -> Expr
 simplifySquareRoots e =
    case e of
-      Sqrt (Con a) -> maybe e fromInteger (hasSquareRoot a)
+      Sqrt (Nat a) -> maybe e fromInteger (hasSquareRoot a)
       _ -> e
 
 hasSquareRoot :: Integer -> Maybe Integer
@@ -383,22 +383,22 @@ simplifyCon = convert . fmap simplifyExpr
    f con = 
       case con of
          -- equality constraints
-         Con x  :==: Con y  -> if x==y then T else F
+         Nat x  :==: Nat y  -> if x==y then T else F
          Sqrt x :==: Sqrt y -> (x .== y) /\ (x .>= 0) /\ (y .>= 0)
-         Con x  :==: Sqrt y
-            | x >= 0    -> Con (x*x) .== y
+         Nat x  :==: Sqrt y
+            | x >= 0    -> Nat (x*x) .== y
             | otherwise -> F
-         Sqrt x :==: Con y
-            | y >= 0    -> x .== Con (y*y)
+         Sqrt x :==: Nat y
+            | y >= 0    -> x .== Nat (y*y)
             | otherwise -> F
          -- less-than constraints
-         Con x  :<: Con y  -> if x<y then T else F
+         Nat x  :<: Nat y  -> if x<y then T else F
          Sqrt x :<: Sqrt y -> (x .< y) /\ (x .>= 0)
-         Con x  :<: Sqrt y
-            | x >= 0    -> (Con (x*x) .< y)
+         Nat x  :<: Sqrt y
+            | x >= 0    -> (Nat (x*x) .< y)
             | otherwise -> y .>= 0
-         Sqrt x :<: Con y
-            | y >= 0    -> (x .< Con (y*y)) /\ (x .>= 0)
+         Sqrt x :<: Nat y
+            | y >= 0    -> (x .< Nat (y*y)) /\ (x .>= 0)
             | otherwise -> F
          -- well-formedness constraints
          WF (x :/: y) -> wf x /\ (y ./= 0)

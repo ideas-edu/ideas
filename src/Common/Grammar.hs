@@ -22,7 +22,8 @@ module Common.Grammar
      -- * Elementary operations
    , empty, firsts, nonempty 
      -- * Membership and generated language
-   , member, language, languageBF, run, runBF
+   , member, language, languageBF
+   , run, runBF, runIntermediates
      -- * Additional functions
    , collectSymbols, join, withIndex
      -- * QuickCheck properties
@@ -171,6 +172,13 @@ run s a = [ a | empty s ] ++ [ c | (r, t) <- firsts s, b <- applyAll r a, c <- r
 runBF :: Apply f => Grammar (f a) -> a -> [[a]]
 runBF s a = [ a | empty s ] : merge [ runBF t b | (r, t) <- firsts s, b <- applyAll r a ]
  where merge = map concat . transpose
+
+-- | Like the function run, except that all intermediate results are 
+-- also returned, each paired with an applicable rule
+runIntermediates :: Apply f => Grammar (f a) -> a -> [[(f a, a)]]
+runIntermediates s a =
+   [ [] | empty s ] ++
+   [ (f, b):list | (f, rest) <- firsts s, b <- applyAll f a, list <- runIntermediates rest b ]
 
 ----------------------------------------------------------------------
 -- Additional functions

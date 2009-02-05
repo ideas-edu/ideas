@@ -1,18 +1,20 @@
 module Domain.Math.LinearEquations where
 
 import Prelude hiding ((^), repeat)
+import Common.Apply
 import Common.Utils (distinct)
 import Common.Strategy
 import Common.Transformation
 import Common.Uniplate
 import Domain.Math.Expr
 import Domain.Math.Symbolic
-import Domain.Math.HigherDegreeEquations (powerView, sumView, constantView, ratioView, cleanup, showDerivation) -- to reuse some helpers (temp)
+import Domain.Math.HigherDegreeEquations (solvedEquation, powerView, sumView, constantView, ratioView, cleanup, showDerivation) -- to reuse some helpers (temp)
 import Domain.LinearAlgebra.Equation
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
 import Data.Ratio
+import Test.QuickCheck
 
 -------------------------------------------------------
 -- Views
@@ -58,7 +60,7 @@ mergeTerms = fmap (cleanup . merge)
  where
    make x [] = 0
    make x ((a, n):rest) = let (xs, ys) = partition ((==n) . snd) rest
-                          in cleanup (foldr (+) a (map fst xs)) * (x^Con n) + make x ys
+                          in cleanup (foldr (+) a (map fst xs)) * (x^Nat n) + make x ys
    
    merge e =
       case mapM powerView (sumView e) of
@@ -93,15 +95,19 @@ scaleToOne = makeSimpleRule "scaleToOne" $ \eq -> do
    return $ mergeTerms $
       divisionT (fromRat a) eq
 
--- be more clever here, it is not always a good idea to get rid of the fraction
 noDivision :: Rule (Equation Expr)
 noDivision = makeSimpleRule "noDivision" $ \eq@(lhs :==: rhs) -> 
-   case catMaybes (map f (sumView lhs ++ sumView rhs)) of
-      b:_ -> return $ mergeTerms (timesT b eq)
-      _   -> Nothing
+   let list = catMaybes (map f (sumView lhs ++ sumView rhs))
+       cons = catMaybes (map constantView list) 
+   in 
+   case (cons, list) of
+      (_, [])   -> Nothing
+      ([], e:_) -> return $ mergeTerms (timesT e eq)
+      (ns, _)   -> return $ mergeTerms (timesT (fromInteger (foldr1 lcm ns)) eq)
  where
    f (Negate a) = f a
    f (a :/: b) = do
+      guard (constantView a == Nothing)
       constantView b
       return b
    f _ = Nothing
@@ -125,13 +131,30 @@ linStrat =  repeat (noDivision |> merge |> distribute)
         <*> try varToLeft 
         <*> try conToRight 
         <*> try scaleToOne
+
+----------------------------------------------------------------------
+-- Substitution (for checking) 
+
+substitute :: [(String, Expr)] -> Expr -> Expr
+substitute sub = rec 
+ where
+   rec e@(Var s) = fromMaybe e (lookup s sub)
+   rec e = f (map rec cs)
+    where (cs, f) = uniplate e
+ 
+solveAndCheck :: Equation Expr -> Equation Expr
+solveAndCheck eq = 
+   case applyD linStrat eq of
+      Var x :==: e | x `notElem` collectVars e -> 
+         fmap (cleanup . substitute [(x, e)]) eq
+      result -> eq
  
 ----------------------------------------------------------------------
 -- Linear Equations Exercise Sets (from DWO environment)
 
 gaan = traceStrategy linStrat (level5 !! 9)
 
-testAll = putStrLn $ unlines $ map show $ map (runStrategy linStrat) (concat levels)
+testAll = putStrLn $ unlines $ map (show . solveAndCheck) (concat levels)
 
 main :: IO ()
 main = flip mapM_ [ (level, i) | level <- [1..5], i <- [1..10] ] $ \(level, i) -> do
@@ -221,3 +244,70 @@ level5 =
    , (-3*(x+2))/6        :==: 9*((2/3)*x + (1/3)) - (5/3)
    , 1 - ((4*x + 2)/3)   :==: 3*x - ((5*x - 1) / 4)
    ]
+   
+---------------------------------------------------------------------
+-- Linear equations in Q
+
+-- constructors: N, V, +, *, -, neg, /
+
+genQ :: Bool -> Int -> Gen Expr
+genQ b 0 = frequency [(if b then 3 else 0, return (variable "x")), (4, liftM fromInteger arbitrary)]
+genQ b n = frequency [ (2, liftM2 (+) (genQ b h) (genQ b h))
+                     , (2, liftM2 (-) (genQ b h) (genQ b h))
+                     , (2, liftM (negate) (genQ b h))
+                     , (1, liftM2 (*) (genQ b h) (genQ False h))
+                     , (1, liftM2 (*) (genQ False h) (genQ b h))
+                     , (2, liftM2 (/) (genQ False h) (genQ False h))
+                     ]
+ where h = n `div` 2
+
+prop1 :: Equation Expr -> Bool
+prop1 eq = solvedEquation (applyD linStrat eq)
+
+test1 = quickCheck $ forAll (liftM2 (:==:) (genQ True 10) (genQ True 10)) prop1
+
+type Q = (Rational, Rational)
+
+fromQ :: Q -> Expr
+fromQ (0, b) = fromRational b
+fromQ (1, b)
+   | b>0       = variable "x" + fromRational b
+   | b==0      = variable "x"
+   | otherwise = variable "x" - fromRational (abs b)
+fromQ (a, b)
+   | b>0       = fromRational a * variable "x" + fromRational b
+   | b==0      = fromRational a * variable "x"
+   | otherwise = fromRational a * variable "x" - fromRational (abs b)
+
+toQs :: Equation Expr -> Rational
+toQs (lhs :==: rhs) = negate (b/a)
+ where (a, b) = toQ lhs `minus` toQ rhs
+
+toQ :: Expr -> Q
+toQ = foldExpr (plus, times, minus, neg, nat, divq, error "sq", \_ -> var, error "sym")
+
+nat :: Integer -> Q
+nat n = (0, fromIntegral n)
+
+var :: Q
+var = (1, 0)
+
+plus :: Q -> Q -> Q
+plus (a, b) (c, d) = (a+c, b+d)
+
+times :: Q -> Q -> Q
+times (a, b) (c, d)
+   | a==0 = (b*c, b*d)
+   | c==0 = (d*a, d*b)
+   | otherwise = error "not linear"
+   
+minus :: Q -> Q -> Q
+minus x y = plus x (neg y)
+
+neg :: Q -> Q
+neg (a, b) = (negate a, negate b)
+
+divq :: Q -> Q -> Q
+divq (a, b) (c, d)
+   | c==0 = (a/d, b/d)
+   | otherwise = error "not linear"

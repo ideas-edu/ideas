@@ -16,7 +16,7 @@ data Expr = -- Num
           | Expr :*: Expr 
           | Expr :-: Expr
           | Negate Expr
-          | Con Integer
+          | Nat Integer
             -- Fractional & Floating
           | Expr :/: Expr   -- NaN if rhs is zero
           | Sqrt Expr       -- NaN if expr is negative
@@ -32,16 +32,18 @@ instance Num Expr where
    (+) = (:+:) 
    (*) = (:*:)
    (-) = (:-:)
-   negate      = Negate 
-   fromInteger = Con
-   abs         = unaryFunction "abs"
-   signum      = unaryFunction "signum"
+   fromInteger n 
+      | n < 0     = negate $ Nat $ abs n
+      | otherwise = Nat n
+   negate = Negate 
+   abs    = unaryFunction "abs"
+   signum = unaryFunction "signum"
 
 instance Fractional Expr where
    (/) = (:/:)
    fromRational r
-      | denominator r == 1 = Con (numerator r)
-      | otherwise = Con (numerator r) :/: Con (denominator r)
+      | denominator r == 1 = Nat (numerator r)
+      | otherwise = Nat (numerator r) :/: Nat (denominator r)
 
 instance Floating Expr where
    pi      = symbol "pi"
@@ -72,6 +74,9 @@ infixr 8 ^
 (^) :: Symbolic a => a -> a -> a
 (^) = binaryFunction "^" 
 
+bottom :: Expr
+bottom = symbol "_|_"
+
 -----------------------------------------------------------------------
 -- Uniplate instance
 
@@ -82,7 +87,7 @@ instance Uniplate Expr where
          a :*: b  -> ([a,b], \[x,y] -> x :*: y)
          a :-: b  -> ([a,b], \[x,y] -> x :-: y)
          Negate a -> ([a]  , \[x]   -> Negate x)
-         Con _    -> ([]   , \[]    -> expr)
+         Nat _    -> ([]   , \[]    -> expr)
          a :/: b  -> ([a,b], \[x,y] -> x :/: y)
          Sqrt a   -> ([a]  , \[x]   -> Sqrt x)
          Var _    -> ([]   , \[]    -> expr)
@@ -99,15 +104,15 @@ instance Arbitrary Expr where
          a :*: b  -> variant 1 . coarbitrary a . coarbitrary b
          a :-: b  -> variant 2 . coarbitrary a . coarbitrary b
          Negate a -> variant 3 . coarbitrary a
-         Con n    -> variant 4 . coarbitrary n
+         Nat n    -> variant 4 . coarbitrary n
          a :/: b  -> variant 5 . coarbitrary a . coarbitrary b
          Sqrt a   -> variant 6 . coarbitrary a
          Var s    -> variant 7 . coarbitrary s
          Sym f xs -> variant 8 . coarbitrary f . coarbitrary xs
    
 arbExpr :: Int -> Gen Expr
-arbExpr _ = liftM Con arbitrary {- 
-arbExpr 0 = oneof [liftM (Con . abs) arbitrary, oneof [ return (Var x) | x <- ["x", "y", "z"] ], return pi ]
+arbExpr _ = liftM Nat arbitrary {- 
+arbExpr 0 = oneof [liftM (Nat . abs) arbitrary, oneof [ return (Var x) | x <- ["x", "y", "z"] ], return pi ]
 arbExpr n = oneof [bin (+), bin (*), bin (-), unop negate, bin (/), unop sqrt, arbExpr 0]
  where
    bin  f = liftM2 f rec rec
@@ -117,7 +122,7 @@ arbExpr n = oneof [bin (+), bin (*), bin (-), unop negate, bin (/), unop sqrt, a
 -----------------------------------------------------------------------
 -- Fold
 
-foldExpr (plus, times, minus, neg, con, dv, sq, var, sym) = rec 
+foldExpr (plus, times, minus, neg, nat, dv, sq, var, sym) = rec 
  where
    rec expr = 
       case expr of
@@ -125,7 +130,7 @@ foldExpr (plus, times, minus, neg, con, dv, sq, var, sym) = rec
          a :*: b  -> times (rec a) (rec b)
          a :-: b  -> minus (rec a) (rec b)
          Negate a -> neg (rec a)
-         Con n    -> con n
+         Nat n    -> nat n
          a :/: b  -> dv (rec a) (rec b)
          Sqrt a   -> sq (rec a)
          Var v    -> var v
@@ -159,9 +164,9 @@ instance Show Expr where
    show = ppExprPrio 0
 
 ppExprPrio :: Int -> Expr -> String
-ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, con, bin "/" 2, sq, var, sym)
+ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, nat, bin "/" 2, sq, var, sym)
  where
-   con n b        = if n>=0 then show n else neg (con (abs n)) b
+   nat n b        = if n>=0 then show n else neg (nat (abs n)) b
    var s _        = s
    neg x b        = parIf (b>0) ("-" ++ x 1)
    sq  x          = sym "sqrt" [x]
@@ -187,7 +192,7 @@ instance ShallowEq Expr where
          (_ :*: _ , _ :*: _ ) -> True
          (_ :-: _ , _ :-: _ ) -> True
          (Negate _, Negate _) -> True
-         (Con a   , Con b   ) -> a==b
+         (Nat a   , Nat b   ) -> a==b
          (_ :/: _ , _ :/: _ ) -> True
          (Sqrt _  , Sqrt _  ) -> True
          (Var a   , Var b   ) -> a==b

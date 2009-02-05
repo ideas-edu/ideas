@@ -25,7 +25,7 @@ pAtomMin :: TokenParser Expr
 pAtomMin = optional (negate <$ pKey "-") id <*> pAtom
 
 pAtom :: TokenParser Expr
-pAtom  =  Con <$> pInteger
+pAtom  =  Nat <$> pInteger
       <|> (Var . fst) <$> (pVarid <|> pConid)
       <|> (\_ -> symbol "pi") <$> pKey "pi"
       <|> pParens pExpr

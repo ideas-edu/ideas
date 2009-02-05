@@ -293,7 +293,11 @@ instance Eq (Rule a) where
    r1 == r2 = name r1 == name r2
 
 instance Apply Rule where
-   applyAll r a = concatMap (`applyAll` a) (transformations r)
+   applyAll r a = do 
+      let b = doBeforeHook r a
+      t <- transformations r
+      c <- applyAll t b
+      return (doAfterHook r c)
 
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool
@@ -357,7 +361,7 @@ doBefore f r = r { doBeforeHook = f }
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r { doBeforeHook = f }
+doAfter f r = r { doAfterHook = f }
 
 hasInverse :: Rule a -> Rule a -> Rule a
 hasInverse inv r = r {getInverse = Just inv}

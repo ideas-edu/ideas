@@ -31,7 +31,8 @@ module Common.Strategy
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
      -- * Strategy locations
-   , StrategyLocation, StrategyOrRule, strategyLocations, subStrategy, rulesInStrategy
+   , StrategyLocation, StrategyOrRule, strategyLocations, subStrategy
+   , mapRules, rulesInStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix
    , Step(..), runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
@@ -316,6 +317,15 @@ subStrategy loc s =
             Just (Right t) -> subStrategy ns t
             _ -> Nothing
 
+-- | Apply a function to all the rules that make up a labeled strategy
+mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
+mapRules fun = f
+ where
+   f (Label n s) = Label n (g s)
+   g (S expr)    = S (fmap h expr)
+   h (Left r)    = Left (fun r)
+   h (Right ls)  = Right (f ls)
+
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: LabeledStrategy a -> [Rule a]
 rulesInStrategy s = [ r | (_, Right r) <- strategyLocations s ]
@@ -438,7 +448,7 @@ withMarks = rec []
             
 -----------------------------------------------------------
 --- Strategy inversion
-
+   
 inverse :: LabeledStrategy a -> LabeledStrategy a
 inverse (Label n s) = Label n (f s)
  where

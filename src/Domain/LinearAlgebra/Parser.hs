@@ -16,10 +16,11 @@ module Domain.LinearAlgebra.Parser
    , parseSystem
    ) where
 
+import Domain.Math.Equation
+import Domain.Math.Parser (pEquation)
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearExpr
-import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.Vector
 import Control.Monad
 import Data.List
@@ -51,13 +52,6 @@ pSystem = convertSystem <$> pEquations pExpr
     where 
        simple = map (fmap simplifyExpr) eqs
        f (a :==: b) = isLinear a && isLinear b
-
-pEquations :: TokenParser a -> TokenParser (Equations a)
-pEquations p = pLines True (pEquation p)
-
-
-pEquation :: TokenParser a -> TokenParser (Equation a)
-pEquation p = (:==:) <$> p <* pKey "==" <*> p
  
 -----------------------------------------------------------
 --- Parser

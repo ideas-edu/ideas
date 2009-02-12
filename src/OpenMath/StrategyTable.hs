@@ -18,11 +18,10 @@ import Common.Exercise
 import Common.Utils (Some(..))
 import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise, LinearSystem)
 import Domain.LinearAlgebra (makeMatrix, var)
-import Domain.LinearAlgebra.Equation (Equation)
+import Domain.Math.Equation (Equation(..))
 import Domain.LinearAlgebra.Vector (fromList)
 import Domain.Math.SExpr
 import Domain.Math.Symbolic
-import qualified Domain.LinearAlgebra.Equation as LA
 import qualified Service.Options
 import OpenMath.Conversion
 import OpenMath.Object
@@ -75,6 +74,6 @@ strategyTable =
    x4 = var "x4"
    -- (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4")
    sys1, sys2, sys3 :: Simplification a => LinearSystem (SExprF a)
-   sys1 = [x2 + 2 * x3 LA.:==: 1, x1 + 2 * x2 + 3 * x3 LA.:==: 2, 3 * x1 + x2 + x3 LA.:==: 3]
-   sys2 = [x1 + 2 * x2 + 3 * x3 - x4 LA.:==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 LA.:==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 LA.:==: 0 ]
-   sys3 = [ x1 + x2 - 2*x3 LA.:==: 0, 2*x1 + x2 - 3*x3 LA.:==: 0, 4*x1 - 2*x2 - 2*x3 LA.:==: 0, 6*x1 - x2 - 5*x3 LA.:==: 0, 7*x1 - 3*x2 - 4*x3 LA.:==: 1]
+   sys1 = [x2 + 2 * x3 :==: 1, x1 + 2 * x2 + 3 * x3 :==: 2, 3 * x1 + x2 + x3 :==: 3]
+   sys2 = [x1 + 2 * x2 + 3 * x3 - x4 :==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 :==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 :==: 0 ]
+   sys3 = [ x1 + x2 - 2*x3 :==: 0, 2*x1 + x2 - 3*x3 :==: 0, 4*x1 - 2*x2 - 2*x3 :==: 0, 6*x1 - x2 - 5*x3 :==: 0, 7*x1 - 3*x2 - 4*x3 :==: 1]

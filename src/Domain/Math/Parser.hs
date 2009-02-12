@@ -1,18 +1,20 @@
 module Domain.Math.Parser where
 
+import Prelude hiding ((^))
 import Common.Parsing hiding (pParens)
 import Domain.Math.Symbolic
+import Domain.Math.Equation
 import Domain.Math.Expr
 
 scannerExpr :: Scanner
-scannerExpr = defaultScanner {keywords = ["pi", "sqrt"], specialCharacters  = "+-*/()[]{},"}
+scannerExpr = defaultScanner {keywords = ["pi", "sqrt"], specialCharacters  = "+-*/^()[]{},"}
 
 parseExpr :: String -> Either SyntaxError Expr
 parseExpr = f . parse pExpr . scanWith scannerExpr
  where 
    f (e, []) = Right e
    f (_, xs) = Left $ ErrorMessage $ unlines $ map show xs
-   
+
 pExpr :: TokenParser Expr
 pExpr = fromRanged <$> pOperators operatorTable (flip toRanged nul <$> pTerm)
 
@@ -30,6 +32,12 @@ pAtom  =  Nat <$> pInteger
       <|> (\_ -> symbol "pi") <$> pKey "pi"
       <|> pParens pExpr
 
+pEquations :: TokenParser a -> TokenParser (Equations a)
+pEquations p = pLines True (pEquation p)
+
+pEquation :: TokenParser a -> TokenParser (Equation a)
+pEquation p = (:==:) <$> p <* pKey "==" <*> p
+
 -- This expression could have a fraction at top-level: both the numerator
 -- and denominator are atoms, optionally preceded by a (unary) minus
 pFractional :: TokenParser Expr
@@ -39,6 +47,7 @@ operatorTable :: OperatorTable Expr
 operatorTable = 
    [ (LeftAssociative, [("+", (+)), ("-", (-))])  -- infixl 6
    , (LeftAssociative, [("*", (*)), ("/", (/))])  -- infixl 7
+   , (RightAssociative, [("^", (^))])
    ]  
 
 pParens :: TokenParser a -> TokenParser a

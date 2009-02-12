@@ -3,12 +3,12 @@ module Domain.Math.Constrained where
 import Control.Monad
 import Domain.Math.Symbolic
 import Data.Monoid
+import Test.QuickCheck
 
 -----------------------------------------------------------------------
 -- Constrained values
 
-data Constrained c a = C (Prop c) a
-   deriving (Show, Eq)
+data Constrained c a = C (Prop c) a deriving Show
 
 instance Functor (Constrained c) where
    fmap f (C p a) = C p (f a)
@@ -17,6 +17,16 @@ instance Monad (Constrained c) where
    return = C mempty
    C p a >>= f = case f a of
                     C q b -> C (p /\ q) b
+
+instance Eq a => Eq (Constrained c a) where
+   C _ a == C _ b = a==b
+
+instance Ord a => Ord (Constrained c a) where
+   C _ a `compare` C _ b = a `compare` b
+
+instance Arbitrary a => Arbitrary (Constrained c a) where
+   arbitrary = liftM return arbitrary
+   coarbitrary (C _ a) = coarbitrary a 
 
 constrain :: Prop c -> Constrained c ()
 constrain p = C p ()

@@ -8,10 +8,10 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (...add description...)
+-- Mathematical equations
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Equation where
+module Domain.Math.Equation where
 
 import Common.Uniplate
 import Common.Rewriting

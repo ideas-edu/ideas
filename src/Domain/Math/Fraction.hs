@@ -1,4 +1,5 @@
-module Domain.Math.Fraction (fractionExercise) where
+module Domain.Math.Fraction 
+   (fractionExercise, cleanUpStrategy, go) where
 
 import Prelude hiding (repeat)
 import Control.Monad
@@ -9,10 +10,9 @@ import Common.Exercise
 import Common.Strategy hiding (fail)
 import Common.Transformation
 import Common.Uniplate hiding (somewhere)
-import Common.View
 import Domain.Math.Expr
 import Domain.Math.Parser
-import Domain.Math.Symbolic
+import Domain.Math.Views
 
 ------------------------------------------------------------
 -- Exercise
@@ -24,10 +24,10 @@ fractionExercise = makeExercise
    , description   = "simplify fraction"
    , status        = Experimental
    , parser        = parseExpr
-   , equality      = \x y -> cleanUpExpr x == cleanUpExpr y
+   , equality      = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence   = (~=)
-   , finalProperty = \a -> isFraction a || isInteger a || a == symbol "_|_"
-   , ruleset       = allRules
+   , finalProperty = \a -> isFraction a || isInteger a || a == bottom
+   , ruleset       = fractionRules
    , strategy      = fractionStrategy
    , generator     = genFraction 30
    }
@@ -35,44 +35,49 @@ fractionExercise = makeExercise
 ------------------------------------------------------------
 -- Strategy
 
-solveFraction :: Expr -> Expr
-solveFraction = fromContext . applyD fractionStrategy . inContext
-
 fractionStrategy :: LabeledStrategy (Context Expr)
-fractionStrategy = cleanUp (fmap cleanUpExpr) $ label "fraction" $ 
-   repeat $ somewhere $ alternatives allRules
+fractionStrategy = cleanUpStrategy (fmap cleanUpExpr) $ label "fraction" $ 
+   repeat $ somewhere $ alternatives fractionRules
 
 ------------------------------------------------------------
 -- Clean up: only some terms that look really "odd"
 
-cleanUp :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUp f s = mapRules g (label (strategyName s) (doAfter f idRule <*> unlabel s))
+cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
+cleanUpStrategy f s = mapRules g (label (strategyName s) (doAfter f idRule <*> unlabel s))
  where
    g r | isMajorRule r = doAfter f r  
        | otherwise     = r
  
 cleanUpExpr :: Expr -> Expr
-cleanUpExpr = rewrite f
+cleanUpExpr = checkBottom . rewrite f
  where
    f :: Expr -> Maybe Expr
    f (Negate (Nat 0))    = return 0
    f (Negate (Negate a)) = return a
    f (a :+: Negate b)    = return (a - b)
    f (a :-: Negate b)    = return (a + b)
+   f (_ :/: Nat 0)       = return bottom
    f _                   = Nothing
+   
+   checkBottom :: Expr -> Expr
+   checkBottom e 
+      | any (==bottom) (universe e) = bottom
+      | otherwise                   = e
 
 ------------------------------------------------------------
 -- Rules
 
-allRules :: [Rule (Context Expr)]
-allRules = map liftRuleToContext 
-   [ plusZero, timesZero, timesOne, plusCon, timesCon, minCon 
+fractionRules :: [Rule (Context Expr)]
+fractionRules = map liftRuleToContext 
+   [ plusCon, timesCon, minCon, divCon
+   , plusZero, timesZero, timesOne
    , negateFraction, conTimesFraction, fractionTimesFraction
    , fractionNumerator, fractionDenominator
    , sameDenominator, plusFraction, conPlusFraction
-   , divByZero, simplerFraction
+   , simplerFraction
    ]
 
+-- combining constants
 plusCon :: Rule Expr
 plusCon = makeSimpleRule "plusCon" f
  where
@@ -82,11 +87,38 @@ plusCon = makeSimpleRule "plusCon" f
       return (fromInteger (a+b))
    f _ = Nothing
 
+timesCon :: Rule Expr
+timesCon = makeSimpleRule "timesCon" f 
+ where
+   f (e1 :*: e2) = do
+      a <- match integerView e1
+      b <- match integerView e2 
+      return (fromInteger (a*b))
+   f _ = Nothing
+   
+minCon :: Rule Expr
+minCon = makeSimpleRule "minCon" f
+ where
+   f (e1 :-: e2) = do
+      a <- match integerView e1
+      b <- match integerView e2
+      return (fromInteger (a-b))
+   f _ = Nothing 
+
+divCon :: Rule Expr
+divCon = makeSimpleRule "divCon" f
+ where
+   f e = do
+      (a, b) <- match fractionView e
+      let (n, zero) = a `divMod` b
+      guard (b /= 0 && zero == 0)
+      return (fromInteger n)
+
 timesZero :: Rule Expr
 timesZero = makeSimpleRule "timesZero" f
  where
-   f (0 :*: x) = return (if wf x then 0 else symbol "_|_")
-   f (x :*: 0) = return (if wf x then 0 else symbol "_|_")
+   f (0 :*: x) | wf x = return 0
+   f (x :*: 0) | wf x = return 0
    f _ = Nothing
 
 timesOne :: Rule Expr
@@ -103,24 +135,6 @@ plusZero = makeSimpleRule "plusZero" f
    f (x :+: 0) = return x
    f _ = Nothing
 
-timesCon :: Rule Expr
-timesCon = makeSimpleRule "timesCon" f 
- where
-   f (e1 :*: e2) = do
-      a <- match integerView e1
-      b <- match integerView e2 
-      return (fromInteger (a*b))
-   f _ = Nothing
-
-minCon :: Rule Expr
-minCon = makeSimpleRule "minCon" f
- where
-   f (e1 :-: e2) = do
-      a <- match integerView e1
-      b <- match integerView e2
-      return (fromInteger (a-b))
-   f _ = Nothing   
-
 simplerFraction :: Rule Expr
 simplerFraction = makeSimpleRule "simplerFraction" f
  where
@@ -128,9 +142,8 @@ simplerFraction = makeSimpleRule "simplerFraction" f
       (a, b) <- match fractionView e
       guard (a /= 0 && b /= 0)
       let n = gcd a b
-      if b==n then return (fromInteger (a `div` n))
-              else guard (n `notElem` [0,1])
-                >> return (fromInteger (a `div` n) / fromInteger (b `div` n))   
+      guard (n `notElem` [0,1])
+      return (fromInteger (a `div` n) / fromInteger (b `div` n))   
 
 negateFraction :: Rule Expr
 negateFraction = makeSimpleRule "negateFraction" f
@@ -171,7 +184,7 @@ fractionNumerator = makeSimpleRule "fractionNumerator" f
 fractionDenominator :: Rule Expr
 fractionDenominator = makeSimpleRule "fractionDenominator" f
  where
-   f (a :/: (b :/: c)) = return (if wf (b/c) then a*(c/b) else symbol "_|_")
+   f (a :/: (b :/: c)) | wf (b/c) = return (a*(c/b))
    f _ = Nothing
    
 sameDenominator :: Rule Expr
@@ -212,51 +225,13 @@ conPlusFraction = makeSimpleRule "conPlusFraction" f
       (b, c)   <- match fractionView e1
       a        <- match integerView e2
       return (fromInteger (b+a*c) :/: fromInteger c)
-
-divByZero :: Rule Expr
-divByZero = makeSimpleRule "divByZero" f
- where
-   f (_ :/: Nat 0) = return (symbol "_|_")
-   f e = let xs = [ x | x <- universe e, x/=e, x==symbol "_|_" ]
-         in if null xs then Nothing else return (symbol "_|_")
    
-wf :: Expr -> Bool
-wf (a :/: b) = wf a && wf b && exprToFractional b /= Just 0 
-wf (Sym "_|_" []) = False
-wf e = all wf (children e) 
+wf :: Expr -> Bool -- pessimistic approach
+wf (a :/: b) = case exprToFractional b of
+                  Just r  -> r/=0 && wf a 
+                  Nothing -> False
+wf e = e /= bottom && all wf (children e)
    
-------------------------------------------------------------
--- Views
-
-plusView :: View Expr (Expr, Expr)
-plusView = makeView f (uncurry (+))
- where
-   f (a :+: b) = return (a, b)
-   f (a :-: b) = return (a, negate b)
-   f _         = Nothing
-
-integerView :: View Expr Integer
-integerView = makeView f fromInteger
- where
-   f (Nat n)    = return n
-   f (Negate e) = fmap negate (f e)
-   f _          = Nothing
-
-fractionView :: View Expr (Integer, Integer) -- second component is positive
-fractionView = makeView f g
- where
-   f (a :/: b)  = do 
-      x <- match integerView a
-      y <- match integerView b
-      case compare y 0 of
-         LT -> return (negate x, abs y)
-         EQ -> fail "division by zero"
-         GT -> return (x, y)
-   f (Negate e) = fmap (\(x, y) -> (negate x, y)) (f e)
-   f _          = Nothing
-   
-   g (x, y) = build integerView x / build integerView y
-
 ------------------------------------------------------------
 -- Testing and checking
 
@@ -265,11 +240,14 @@ go1 = quickCheck $ forAll (sized genFraction) prop1
 go2 = quickCheck $ forAll (sized genFraction) prop2
 
 prop1 :: Expr -> Bool
-prop1 e = isFraction a || isInteger a || a == symbol "_|_"
+prop1 e = isFraction a || isInteger a || a == bottom
  where a = solveFraction e
 
 prop2 :: Expr -> Bool 
 prop2 e = (e ~= solveFraction e)
+
+solveFraction :: Expr -> Expr
+solveFraction = fromContext . applyD fractionStrategy . inContext
 
 infix 1 ~=
 

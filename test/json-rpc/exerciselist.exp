@@ -37,6 +37,24 @@
          "status": "Experimental"
       },
       {
+         "domain": "math",
+         "identifier": "fraction",
+         "description": "simplify fraction",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "lineq",
+         "description": "solve a linear equation",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "higherdegree",
+         "description": "solve an equation (higher degree)",
+         "status": "Experimental"
+      },
+      {
          "domain": "logic",
          "identifier": "Proposition to DNF",
          "description": "Proposition to DNF",

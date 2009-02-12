@@ -13,8 +13,8 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.LinearSystem where
 
+import Domain.Math.Equation
 import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
-import Domain.LinearAlgebra.Equation
 import Domain.LinearAlgebra.LinearExpr
 import Data.List
 import Data.Maybe

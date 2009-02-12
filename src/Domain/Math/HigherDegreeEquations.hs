@@ -1,19 +1,73 @@
 module Domain.Math.HigherDegreeEquations where
+  -- (higherDegreeEquationExercise, main) where
 
 import Prelude hiding ((^), repeat)
-import Data.List (nub, sortBy, (\\), intersperse)
+import Data.List (nub, sort, sortBy, (\\), intersperse)
 import Data.Maybe
 import Data.Ratio
+import Common.Context
+import Common.Exercise
+import qualified Common.Parsing as P
 import Common.Utils (safeHead, fixpoint)
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Uniplate
+import Domain.Math.ExercisesDWO (higherDegreeEquations)
 import Domain.Math.Expr
+import Domain.Math.Parser
 import Domain.Math.Symbolic
-import Domain.LinearAlgebra.Equation
+import Domain.Math.Fraction (cleanUpStrategy)
+import Domain.Math.Views
+import Domain.Math.Equation
 import Control.Monad (unless, when)
+import Test.QuickCheck hiding (check, label)
 
-newtype OrList a = OrList [a]
+------------------------------------------------------------
+-- Exercise
+
+higherDegreeEquationExercise :: Exercise (OrList (Equation Expr))
+higherDegreeEquationExercise = makeExercise 
+   { identifier    = "higherdegree"
+   , domain        = "math"
+   , description   = "solve an equation (higher degree)"
+   , status        = Experimental
+   , parser        = parseOrs
+   , equality      = let f (OrList xs) = sort (map (fmap cleanUpExpr) xs)
+                     in \a b -> f a == f b
+   , equivalence   = equality higherDegreeEquationExercise -- TO DO: what about equivalence for undecidable domains?
+   , finalProperty = solved
+   , ruleset       = allRules
+   , strategy      = equationsStrategy
+   , generator     = oneof (take 9 $ map (return . OrList . return) higherDegreeEquations)
+   }
+   
+parseOrs :: String -> Either P.SyntaxError (OrList (Equation Expr))
+parseOrs = f . P.parse pOrs . P.scanWith myScanner
+ where 
+   myScanner = scannerExpr 
+      { P.keywordOperators = "==" : P.keywordOperators scannerExpr 
+      , P.keywords = ["or"]
+      }
+   
+   pOrs = pSepList (pEquation pExpr) (P.pKey "or")
+   pSepList p q = (\x xs -> OrList (x:xs)) P.<$> p P.<*> P.pList (q P.*> p)
+ 
+   f (e, []) = Right e
+   f (_, xs) = Left $ P.ErrorMessage $ unlines $ map show xs
+
+--------------------
+
+newtype OrList a = OrList [a] deriving (Ord, Eq)
+
+instance Functor OrList where
+   fmap f (OrList xs) = OrList (map f xs)
+
+instance Arbitrary a => Arbitrary (OrList a) where
+   arbitrary = do 
+      n  <- choose (1, 3)
+      xs <- vector n
+      return (OrList xs)
+   coarbitrary (OrList xs) = coarbitrary xs
 
 instance Show a => Show (OrList a) where
    show (OrList xs) 
@@ -34,25 +88,10 @@ solvedEquation (lhs :==: rhs) =
 
 -- e.g., 3 or -3
 constantView :: Expr -> Maybe Integer
-constantView = exprToNum
-{- 
-constantView (Nat n)    = return n
-constantView (Negate a) = fmap negate (constantView a)
-constantView _          = Nothing -}
+constantView = exprToNum -- match integerView
 
 ratioView :: Expr -> Maybe (Integer, Integer)
 ratioView = fmap (\r -> (numerator r, denominator r)) . exprToFractional
-
--- e.g., 3+4+5 or 3-4+5 or -(3+4)
-sumView :: Expr -> [Expr]
-sumView (a :+: b)  = sumView a ++ sumView b
-sumView (a :-: b)  = sumView a ++ map negate (sumView b)
-sumView (Negate a) = map negate (sumView a)
-sumView expr       = [expr]
-
-productView :: Expr -> [Expr] -- what about negate?
-productView (a :*: b) = productView a ++ productView b
-productView expr = [expr]
 
 -- a*x^b, e.g., -3*x^2, but also 3*x, x, and 3
 powerView :: Expr -> Maybe (Expr, String, Integer)
@@ -75,15 +114,15 @@ powerView _ = Nothing
 -- a*x^2 + b*x + c
 quadraticView :: Expr -> Maybe (String, Integer, Integer, Integer)
 quadraticView e = do 
-   xs <- mapM powerView (sumView e)
+   xs <- match sumView e >>= mapM powerView
    let vs = nub [ x | (_, x, _) <- xs ]
        cmp (_, _, x) (_, _, y) = compare x y
    unless (length vs == 1) Nothing
    case sortBy cmp xs of
       [(e0, _, 0), (e1, _, 1), (e2, _, 2)] -> do
-         a <- constantView (cleanup e2)
-         b <- constantView (cleanup e1)
-         c <- constantView (cleanup e0)
+         a <- constantView e2
+         b <- constantView e1
+         c <- constantView e0
          return (head vs, a, b, c)
       _ -> Nothing
       
@@ -93,7 +132,7 @@ quadraticView e = do
 productZero :: Equation Expr -> Maybe [Equation Expr]
 productZero (e :==: Nat 0) | length xs > 1 = 
    return [ x :==: 0 | x <- xs ]
- where xs = productView e
+ where xs = fromMaybe [] (match productView e)
 productZero _ = Nothing
 
 -- A^B = 0  implies  A=0
@@ -106,7 +145,7 @@ powerZero _ = Nothing
 -- copy/paste, but it is just for demonstration
 moveToRHS :: Equation Expr -> Maybe (Equation Expr)
 moveToRHS (lhs :==: rhs) = do
-   let xs = sumView lhs
+   xs <- match sumView lhs
    unless (length xs > 1) Nothing
    case filter hasVars xs of
       [e] -> return (e :==: rhs - foldr1 (+) (xs \\ [e]))
@@ -114,7 +153,7 @@ moveToRHS (lhs :==: rhs) = do
 
 powerFactor :: Expr -> Maybe Expr
 powerFactor e = do
-   xs <- mapM powerView (sumView e)
+   xs <- match sumView e >>= mapM powerView
    let (as, vs, ns) = unzip3 xs
        r = minimum ns
        v = variable (head vs)
@@ -122,7 +161,7 @@ powerFactor e = do
        Nat n = if n < 0 then negate (Nat (abs n)) else Nat n
    unless (length xs > 1 && length (nub vs) == 1 && r >= 1) Nothing
    -- also search for gcd constant
-   case mapM constantView (map cleanup as) of 
+   case mapM constantView as of 
       Just is | g > 1 -> 
          return (Nat g * v^Nat r * foldr1 (+) (zipWith f (map (Nat . (`div` g)) is) ns))
        where g = foldr1 gcd is
@@ -168,8 +207,8 @@ abcFormula _ = Nothing
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Equation Expr -> Maybe [Equation Expr]
 sameFactor (lhs :==: rhs) = do
-   let xs = productView lhs
-       ys = productView rhs
+   xs <- match productView lhs
+   ys <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y ] -- equality is too strong?
    return [ x :==: 0, foldr1 (*) (xs\\[x]) :==: foldr1 (*) (ys\\[y]) ]
 
@@ -179,7 +218,7 @@ rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10
    :: Rule (OrList (Equation Expr))
 rule1  = makeSimpleRule "productZero" $ liftEqn productZero
 rule2  = makeSimpleRule "powerZero"   $ liftEqn (fmap return . powerZero)
-rule3  = makeSimpleRule "moveToRHS"     $ liftEqn (fmap return . moveToRHS)
+rule3  = makeSimpleRule "moveToRHS"   $ liftEqn (fmap return . moveToRHS)
 rule4  = makeSimpleRule "powerFactor" $ liftExpr powerFactor
 rule5  = makeSimpleRule "squared"     $ liftEqn squared
 rule6  = makeSimpleRule "niceFactors" $ liftExpr niceFactors
@@ -188,14 +227,13 @@ rule8  = makeSimpleRule "divide"      $ liftEqn (fmap return . divide)
 rule9  = makeSimpleRule "abcFormula"  $ liftEqn abcFormula
 rule10 = makeSimpleRule "sameFactor"  $ liftEqn sameFactor
 
--- takes care of cleaning up afterwards
 liftEqn :: (Equation Expr -> Maybe [Equation Expr]) -> (OrList (Equation Expr) -> Maybe (OrList (Equation Expr)))
 liftEqn f (OrList eqs) = fmap OrList (rec eqs) 
  where
    rec []     = Nothing
    rec (x:xs) = 
       case f x of
-         Just ys -> return (map (fmap cleanup) ys ++ xs)
+         Just ys -> return (ys ++ xs)
          Nothing -> fmap (x:) (rec xs)
 
 liftExpr :: (Expr -> Maybe Expr) -> (OrList (Equation Expr) -> Maybe (OrList (Equation Expr)))
@@ -208,8 +246,8 @@ liftExpr f = liftEqn $ \(lhs :==: rhs) ->
 -----------------------
 
 -- clean up the expression: not at all a complete list of simplifications
-cleanup :: Expr -> Expr 
-cleanup = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
+cleanUpExpr :: Expr -> Expr 
+cleanUpExpr = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
  where
    -- plus
    step (x :+: Negate y) = x - y
@@ -261,33 +299,32 @@ cleanup = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
    
 -----------------------
 
-solve :: Strategy (OrList (Equation Expr))
-solve = repeat ( 
-   alternatives [rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule10]
-        |> rule9) <*> check solved
+-- The last check "removes" the unsuccessful paths. Quick solution
+-- to get the derivations, but does not prevent these paths from
+-- being explored by the "first" service
+equationsStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
+equationsStrategy = cleanUpStrategy (fmap (fmap (fmap cleanUpExpr))) $
+   label "higher degree" $ repeat ( 
+   alternatives (allRules \\ [liftRule rule9])
+        |> liftRule rule9) 
+        <*> check (solved . fromContext)
+   
+allRules :: [Rule (Context (OrList (Equation Expr)))]
+allRules = map liftRule [ rule1, rule2, rule3, rule4, rule5
+                        , rule6, rule7, rule8, rule9, rule10]
+ 
+liftRule :: Rule a -> Rule (Context a)
+liftRule = lift $ makeLiftPair (return . fromContext) (fmap . const)
 
-examples :: [Equation Expr]
-examples = 
-   [ x^3 + x^2 :==: 0
-   , x^3 - 5*x :==: 0
-   , x^3 - 11*x^2 + 18*x :==: 0
-   , x^3 + 36*x :==: 13*x^2
-   , x^3 + 2*x^2 :==: 24*x
-   , 7*x^3 :==: 8*x^2
-   , x^4 :==: 9*x^2
-   , 64*x^7 :==: x^5
-   , x^3 - 4*x^2 - 9*x :==: 0
-   , (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2
-   ]
- where x = variable "x"
-
-test n = showDerivations solve (OrList [examples !! (n-1)])
+test n = showDerivations (unlabel equationsStrategy) 
+   (inContext (OrList [higherDegreeEquations !! (n-1)]))
 
 factors :: Integer -> [(Integer, Integer)]
 factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
  where h = floor (sqrt (abs (fromIntegral n)))
  
-q = traceStrategy solve (OrList [ (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2])
+q = traceStrategy (unlabel equationsStrategy) 
+       (inContext (OrList [ (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2]))
                                   -- (x-1)*(x^3 - 6*x) :==: 3*x^2 * (x-1) ])
  where x = variable "x"
  
@@ -309,10 +346,10 @@ showDerivation title (a, list) =
 main :: IO ()
 main = flip mapM_ [1..10] $ \i -> do
    let line  = putStrLn (replicate 50 '-')  
-       start = OrList [examples !! (i-1)]
-   line
+       start = inContext (OrList [higherDegreeEquations !! (i-1)])
+   {- line
    putStrLn $ "Exercise " ++ show i
-   line 
-   case derivations solve start of
-      hd:_ -> showDerivation "" hd
+   line -} 
+   case derivations (unlabel equationsStrategy) start of
+      hd:_ -> putStrLn "ok" -- showDerivation "" hd
       _    -> putStrLn "unsolved"

@@ -23,7 +23,7 @@ import Common.Transformation
 import Common.Exercise
 import Common.Context
 import Common.Parsing (SyntaxError(..))
-import Domain.LinearAlgebra.Equation
+import Domain.Math.Equation
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules

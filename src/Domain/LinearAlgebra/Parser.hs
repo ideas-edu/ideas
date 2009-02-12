@@ -17,7 +17,6 @@ module Domain.LinearAlgebra.Parser
    ) where
 
 import Domain.Math.Equation
-import Domain.Math.Parser (pEquation)
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearExpr
@@ -25,8 +24,7 @@ import Domain.LinearAlgebra.Vector
 import Control.Monad
 import Data.List
 import Data.Char
-import qualified Domain.Math.Expr as Expr
-import Domain.Math.SExpr
+import Domain.Math.Expr
 import Domain.Math.Parser
 import Common.Parsing
 
@@ -34,7 +32,7 @@ import Common.Parsing
 testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
             this -> this -}
 
-parseSystem :: String -> (LinearSystem SExprLin, [String])
+parseSystem :: String -> (LinearSystem Expr, [String])
 parseSystem = f . parse pSystem . scanWith s
  where
    s0 = newlinesAsSpecial scannerExpr
@@ -42,25 +40,24 @@ parseSystem = f . parse pSystem . scanWith s
    f (Nothing, xs) = ([], "System is not linear" : map show xs)
    f (Just m, xs)  = (m, map show xs)
 
-pSystem :: TokenParser (Maybe (LinearSystem SExprLin))
+pSystem :: TokenParser (Maybe (LinearSystem Expr))
 pSystem = convertSystem <$> pEquations pExpr
  where
-   convertSystem :: Equations Expr.Expr -> Maybe (LinearSystem SExprLin)
+   convertSystem :: Equations Expr -> Maybe (LinearSystem Expr)
    convertSystem eqs 
-      | all f simple = return simple
-      | otherwise    = Nothing
+      | all f eqs = return eqs
+      | otherwise = Nothing
     where 
-       simple = map (fmap simplifyExpr) eqs
        f (a :==: b) = isLinear a && isLinear b
  
 -----------------------------------------------------------
 --- Parser
 
-parseMatrix :: String -> (Matrix SExpr, [String])
+parseMatrix :: String -> (Matrix Expr, [String])
 parseMatrix = f . parse p . scanWith s
  where
    s = newlinesAsSpecial scannerExpr
-   p = (fmap (fmap simplifyExpr)) <$> pMatrix pFractional
+   p = pMatrix pFractional
    f (Nothing, xs) = (makeMatrix [], "Matrix is not rectangular" : map show xs)
    f (Just m, xs)  = (m, map show xs)
 
@@ -69,11 +66,11 @@ pMatrix p = make <$> pLines True (pList1 p)
  where 
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-parseVectors :: String -> ([Vector SExprGS], [Message Token])
+parseVectors :: String -> ([Vector Expr], [Message Token])
 parseVectors = parse p . scanWith s
  where
    s = newlinesAsSpecial scannerExpr
-   p = (map (fmap simplifyExpr)) <$> pVectors pExpr
+   p = {- (map (fmap simplifyExpr)) <$> -} pVectors pExpr
 
 pVectors :: TokenParser a -> TokenParser [Vector a]
 pVectors p = pLines True (pVector p)

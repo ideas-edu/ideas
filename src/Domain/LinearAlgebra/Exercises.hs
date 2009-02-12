@@ -42,6 +42,8 @@ import Domain.Math.Parser
 laDomain :: String
 laDomain = "linalg"
  
+qq = checkExercise solveSystemExercise
+ 
 solveGramSchmidt :: Exercise [Vector SExprGS]
 solveGramSchmidt = makeExercise
    { identifier    = "Gram-Schmidt" -- TODO: simplify code
@@ -49,7 +51,7 @@ solveGramSchmidt = makeExercise
    , description   = "Gram-Schmidt"
    , status        = Stable
    , parser        = \s -> case parseVectors s of
-                              (a, [])  -> Right a
+                              (a, [])  -> Right (map (fmap simplifyExpr) a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt . inContext
@@ -60,14 +62,14 @@ solveGramSchmidt = makeExercise
    , generator     = arbBasis 
    }
 
-solveSystemExercise :: Exercise (Equations SExprLin)
+solveSystemExercise :: Exercise (Equations SExpr)
 solveSystemExercise = makeExercise
    { identifier    = "Solve Linear System" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Solve Linear System"
    , status        = Stable
    , parser        = \s -> case parseSystem s of
-                              (a, [])  -> Right a
+                              (a, [])  -> Right (map (fmap simplifyExpr) a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
@@ -87,7 +89,7 @@ reduceMatrixExercise = makeExercise
    , description   = "Gaussian Elimination"
    , status        = Stable
    , parser        = \s -> case parseMatrix s of
-                              (a, [])  -> Right a
+                              (a, [])  -> Right (fmap simplifyExpr a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = ppMatrixWith (ppExprPrio 0 . toExpr)
    , equivalence   = (===)

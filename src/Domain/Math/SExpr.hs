@@ -1,5 +1,10 @@
-
-module Domain.Math.SExpr (lam, SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr, simplifyExpr, simplify, hasSquareRoot) where
+{-# OPTIONS -XEmptyDataDecls #-}
+module Domain.Math.SExpr
+   ( --simpler, simplerGS, simplerLin, simplerMatrix, simplerVectors, simplerEquations
+  -- , cleanUpWith, cleanUpStrategy
+     lam, SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr
+   , simplifyExpr, simplify, hasSquareRoot
+   ) where
 
 import Common.Utils
 import Common.Uniplate (transformM, children, Uniplate(..))
@@ -14,14 +19,48 @@ import Data.Ratio
 import Data.Maybe
 import qualified Data.Map as M
 import Data.Monoid
-import Test.QuickCheck
+import Test.QuickCheck hiding (label)
+
+{-
+simpler, simplerGS, simplerLin :: View.Simplification Expr
+simpler    = View.makeSimplification (fromConstrained . simplify)
+simplerGS  = View.makeSimplification (fromConstrained . simplifyGS)
+simplerLin = View.makeSimplification (fromConstrained . simplifyLin)
+
+simplerMatrix :: View.Simplification (Matrix Expr)
+simplerMatrix = View.makeSimplification (fmap (View.simplify simpler))
+
+simplerVectors :: View.Simplification [Vector Expr]
+simplerVectors = View.makeSimplification (map (fmap (View.simplify simplerGS)))
+
+simplerEquations :: View.Simplification (Equations Expr)
+simplerEquations = View.makeSimplification (map (fmap (View.simplify simplerLin)))
+
+-- parser/pretty-printer are left unchanged
+cleanUpWith :: View.Simplification a -> Exercise a -> Exercise a
+cleanUpWith view ex = ex
+   { strategy      = cleanUpStrategy (fmap (View.simplify view)) (strategy ex)
+   , ruleset       = map (cleanUpRule (fmap (View.simplify view))) (ruleset ex)
+   , equality      = \x y -> equality ex (View.simplify view x) (View.simplify view y)
+   , finalProperty = finalProperty ex . View.simplify view
+   , generator     = liftM (View.simplify view) (generator ex)
+   }
+
+cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
+cleanUpStrategy f s = mapRules (cleanUpRule f) 
+   (label (strategyName s) (doAfter f idRule <*> unlabel s))
+
+cleanUpRule :: (a -> a) -> Rule a -> Rule a
+cleanUpRule f r
+   | isMajorRule r = doAfter f r  
+   | otherwise     = r -}
 
 class Simplification a where
    simplifyWith :: a -> Expr -> Constrained (Con Expr) Expr
    
-data NORMAL = NORMAL
-data GRAMSCHMIDT = GRAMSCHMIDT
-data LINEAR = LINEAR
+data NORMAL
+data GRAMSCHMIDT 
+data LINEAR
 
 instance Simplification NORMAL where
    simplifyWith _ = simplify

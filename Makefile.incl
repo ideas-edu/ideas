@@ -11,13 +11,16 @@
 
 WINDOWS = $(shell ghc-pkg list | grep -q Win32 && echo yes || echo no)
 GTK     = $(shell ghc-pkg list | grep -q gtk   && echo yes || echo no)
+WX      = $(shell ghc-pkg list | grep -q wx    && echo yes || echo no)
 
 ifeq ($(WINDOWS), yes)
 EXE  = .exe
 GHCI = ghcii.sh
+GHCGUIFLAGS = -optl-mwindows
 else
 EXE  = 
 GHCI = ghci
+GHCGUIFLAGS =
 endif
 
 status:
@@ -25,6 +28,7 @@ status:
 	# Executable suffix: $(EXE)
 	# GHC interpreter: $(GHCI)
 	# Support for GTK: $(GTK)
+	# Support for WX: $(WX)
 
 #---------------------------------------------------------------------------------------
 # Directories that have to be created

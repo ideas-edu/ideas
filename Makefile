@@ -1,16 +1,17 @@
-default: service solvergui
+default: service solvergui ideas
 all: binaries unit-tests documentation
 
 SRCDIR = src
 
 include Makefile.incl
 
-binaries: service laservice viewlog solvergui
+binaries: service laservice viewlog solvergui ideas
 
 service: $(BINDIR)/service.cgi
 laservice: $(BINDIR)/laservice.cgi
 viewlog: $(BINDIR)/viewlog.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
+ideas: $(BINDIR)/ideasWX$(EXE)
 
 $(BINDIR)/service.cgi: $(HS-SOURCES)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
@@ -30,12 +31,19 @@ $(BINDIR)/viewlog.cgi: $(HS-SOURCES)
 $(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES)
 ifeq ($(GTK), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
 	$(STRIP) $@
 	$(CP) src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
 	$(CP) src/Presentation/ExerciseAssistant/ounl.jpg bin/	
 endif
 
+$(BINDIR)/ideasWX$(EXE): $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs
+ifeq ($(WX), yes)
+	$(MKDIR) -p $(BINDIR) $(OUTDIR)
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/IdeasWX.hs
+	$(STRIP) $@
+endif
+	
 #---------------------------------------------------------------------------------------
 # Other directories
 

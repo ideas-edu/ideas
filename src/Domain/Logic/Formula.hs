@@ -63,6 +63,7 @@ evalLogic env = foldLogic (env, impl, (==), (&&), (||), not, True, False)
  where
    impl p q = not p || q
 
+
 -- | eqLogic determines whether or not two Logic expression are logically 
 -- | equal, by evaluating the logic expressions on all valuations.
 eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs

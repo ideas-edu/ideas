@@ -13,9 +13,10 @@
 --
 -----------------------------------------------------------------------------
 module Session
-   ( Some(..), Exercise(..), exerciseCode
-   , Session, makeSession, newTerm, suggestTerm, newExercise, thisExercise, progressPair, undo, submitText
-   , currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
+   ( Some(..), Exercise(..), Status(..), exerciseCode
+   , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
+   , thisExercise, thisExerciseFor, progressPair, undo, submitText
+   , currentDescription, currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
    , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
    ) where
 
@@ -66,7 +67,15 @@ thisExercise txt (Session _ ref) = do
          let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext a)
          writeIORef ref $ Some new
          return Nothing
-         
+
+thisExerciseFor :: String -> Some Exercise -> Session -> IO (Maybe String)
+thisExerciseFor txt (Some ex) (Session _ ref) =
+   case parser ex txt of
+      Left err  -> return (Just $ show err)
+      Right a -> do
+         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext a)
+         writeIORef ref $ Some new
+         return Nothing         
     
 newTerm :: Int -> Session -> IO ()
 newTerm dif session@(Session _ ref) = do
@@ -77,6 +86,11 @@ suggestTerm :: Int -> Session -> IO String
 suggestTerm dif (Session _ ref) = do
    Some d <- readIORef ref
    let ex = exercise d
+   a <- TAS.generate ex dif
+   return $ prettyPrinter ex $ fromContext $ TAS.context a
+
+suggestTermFor :: Int -> Some Exercise -> IO String
+suggestTermFor dif (Some ex) = do
    a <- TAS.generate ex dif
    return $ prettyPrinter ex $ fromContext $ TAS.context a
        
@@ -110,6 +124,10 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
 currentText :: Session -> IO String
 currentText = withState $ \d -> 
    return $ prettyPrinter (exercise d) (fromContext $ current d)
+
+currentDescription :: Session -> IO String
+currentDescription = withState $ \d -> 
+   return $ description (exercise d)
 
 derivationText :: Session -> IO String
 derivationText = withState $ \d -> 

@@ -23,12 +23,13 @@ module Session
 import qualified Service.TypedAbstractService as TAS
 import Common.Context
 import Common.Exercise
-import Common.Parsing (indicesToRange)
+import Common.Parsing (indicesToRange, SyntaxError(..))
 import Common.Logging
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Apply
 import Common.Utils
+import Domain.Logic
 import Data.List
 import Data.IORef
 import Data.Maybe
@@ -102,6 +103,63 @@ submitText :: String -> Session -> IO (String, Bool)
 submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
    Some d <- readIORef ref
    case parser (exercise d) txt of
+      Left (ParNotClosed token) -> 
+         return ("Opening parenthesis symbol ( at position 2 is not closed.", False)
+      Left (ParNoOpen token) -> 
+         return ("Closing parenthesis symbol ) at position 2 has no matching opening parenthesis.", False)
+      Left (ParMismatch token1 token2) -> 
+         return ("The openening parenthesis at position 2 does not match with the closing parenthesis at position 2.", False)
+      Left (ErrorMessage s) -> 
+         return (s, False)
+      Left (Unexpected token) -> 
+         return ("Unexpected symbol " ++ show token, False)
+      Right term ->
+         let err s = return ("This is incorrect. " ++ s ++ 
+                             "Press the Back button and try again. You may ask for a hint.", False) 
+             okay s = return ("Well done! " ++ s, True)
+         in
+         case TAS.submit (currentState d) term of
+            TAS.Buggy [br] 
+               | br ~= buggyRuleCommImp -> 
+                    err "Did you think that implication is commutative? This is not the case. "
+               | br ~= buggyRuleAssImp -> 
+                    err "Did you think that implication is associative? This is not the case. "
+               | br ~= buggyRuleIdemImp -> 
+                    err "Did you think that implication is idempotent? This is not the case. "
+               | br ~= buggyRuleIdemEqui -> 
+                    err "Did you think that equivalence is idempotent? This is not the case. "
+               -- TODO: aanvullen voor overige buggy regels
+            TAS.Buggy _       -> err ""
+            TAS.NotEquivalent -> err ""
+            TAS.Ok [] _   -> return ("You have submitted the current term.", False)
+            TAS.Ok rs new -> do 
+               writeIORef ref $ Some (extendDerivation new d)
+               case rs of
+                  [r] -> okay (appliedRule r)
+                  _   -> return ("You have combined multiple steps. Press the Back button and perform one step at the time.", False)
+            TAS.Detour [r] new -> do 
+               writeIORef ref $ Some (extendDerivation new d)
+               -- TODO Bastiaan: welke regel wordt er dan verwacht door de strategie?
+               return (appliedRule r ++ " This is correct. However, the standard strategy suggests a different step.", True)
+            TAS.Detour _ _ ->
+               return ("You have combined multiple steps (or made a mistake). Press the Back button and try again. You may ask for a hint.", False)
+            TAS.Unknown _ -> 
+               return ("You have combined multiple steps (or made a mistake). Press the Back button and try again. You may ask for a hint.", False)
+ where
+   r1 ~= r2 = name r1 == name r2
+
+   appliedRule :: Rule a -> String
+   appliedRule r = "You have applied " ++ txt ++ "."
+    where
+      txt | r ~= ruleFalseZeroOr || r ~= ruleTrueZeroOr =
+         "one of the False/True rules"
+          | otherwise  = " a rule correctly"
+       -- TODO: aanvullen met alle regels (ook die ook in de DWA strategie voorkomen)
+{-
+submitText :: String -> Session -> IO (String, Bool)
+submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
+   Some d <- readIORef ref
+   case parser (exercise d) txt of
       Left err -> 
          return (show err, False)
       Right term ->
@@ -120,6 +178,7 @@ submitText txt = logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
                return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy", False)
             TAS.Unknown _ -> 
                return ("Equivalent, but not a known rule. Please retry.", False)
+-}
 
 currentText :: Session -> IO String
 currentText = withState $ \d -> 

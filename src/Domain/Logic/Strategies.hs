@@ -58,6 +58,7 @@ toDNF_DWA =  label "Bring to dnf (DWA)" $
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
        , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse
        , ruleNotNot, ruleIdempOr, ruleIdempAnd, ruleAbsorpOr, ruleAbsorpAnd
+       , ruleComplOr, ruleComplAnd
        ]
     eliminateImplEquiv = somewhere $ useRules
        [ ruleDefImpl, ruleDefEquiv

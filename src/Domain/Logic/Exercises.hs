@@ -19,12 +19,13 @@ import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Common.Exercise
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, label)
 import Common.Context
 import Common.Parsing (fromRanged, subExpressionAt)
 import Common.Rewriting
 import Control.Monad
 import Data.Maybe
+import Test.QuickCheck
 
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise Logic
@@ -47,5 +48,12 @@ dnfExercise = Exercise
    , ordering      = compare
    , generator     = generateLogic
    , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
-                           in countEquivalences p < 2 && n >= 4 && n <= 12
+                           in countEquivalences p <= 2 && n >= 4 && n <= 12
    }
+   
+-- QuickCheck property to monitor the number of steps needed 
+-- to normalize a random proposition (30-40% is ok)
+testGen :: Property
+testGen = forAll generateLogic $ \p -> 
+   let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
+   in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True

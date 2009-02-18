@@ -55,7 +55,7 @@ defaultConfig :: LogicGenConfig
 defaultConfig = LogicGenConfig
    { maxSize       = 4
    , differentVars = 3
-   , freqConstant  = 1
+   , freqConstant  = 0 -- 1
    , freqVariable  = 4
    , freqImpl      = 4
    , freqEquiv     = 2

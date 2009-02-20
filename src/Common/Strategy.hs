@@ -80,7 +80,7 @@ instance Apply Strategy where
    applyAll = runStrategy
 
 instance Apply LabeledStrategy where
-   apply = apply . toStrategy
+   applyAll = applyAll . toStrategy
 
 -- instances for IsStrategy
 instance IsStrategy RewriteRule where

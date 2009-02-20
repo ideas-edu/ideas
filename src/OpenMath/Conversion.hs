@@ -208,7 +208,7 @@ instance IsOMOBJ Expr where
             _ -> Nothing
       fromSym _ = Nothing
 
-instance Simplification a => IsOMOBJ (SExprF a) where 
+instance IsOMOBJ SExpr where 
    toOMOBJ   = toOMOBJ . toExpr
    fromOMOBJ = fmap simplifyExpr . fromOMOBJ
 

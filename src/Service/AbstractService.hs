@@ -136,3 +136,11 @@ readPrefix input =
 getRule :: RuleID -> Exercise a -> Rule (Context a)
 getRule ruleID ex = fromMaybe (error "invalid rule ID") $ safeHead $ 
    filter ((==ruleID) . name) (ruleset ex)
+   
+getResultState :: Result -> Maybe State
+getResultState result =
+   case result of
+      Ok _ st     -> return st
+      Detour _ st -> return st
+      Unknown st  -> return st
+      _           -> Nothing

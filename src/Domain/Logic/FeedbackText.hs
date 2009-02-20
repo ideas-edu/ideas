@@ -12,20 +12,19 @@
 -- by Josje Lodder.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.FeedbackText (feedback) where
+module Domain.Logic.FeedbackText (feedback, feedbackSyntaxError) where
 
 import Common.Parsing
 import Common.Transformation
-import Service.AbstractService
+import Service.TypedAbstractService
 import Domain.Logic.Rules
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
 -- to go back to the previous state (False)
-feedback :: Result -> (String, Bool)
+feedback :: Result a -> (String, Bool)
 feedback result = 
    case result of
-      SyntaxError err -> (feedbackSyntaxError err, False)
       Buggy rs        -> (feedbackBuggy rs, False)
       NotEquivalent   -> (feedbackNotEquivalent, False)
       Ok rs _
@@ -34,6 +33,8 @@ feedback result =
       Detour rs _     -> feedbackDetour rs
       Unknown _       -> (feedbackUnknown, False)
 
+-- This is more general than the logic domain. Perhaps it should
+-- be defined elsewhere
 feedbackSyntaxError :: SyntaxError -> String
 feedbackSyntaxError syntaxError =
    case syntaxError of
@@ -49,7 +50,7 @@ feedbackSyntaxError syntaxError =
       Unexpected token -> 
          "Unexpected symbol " ++ showToken token
 
-feedbackBuggy :: [RuleID] -> String
+feedbackBuggy :: [Rule a] -> String
 feedbackBuggy [one] 
    | one ~= buggyRuleCommImp = 
         incorrect "Did you think that implication is commutative? This is not the case. "
@@ -68,25 +69,25 @@ feedbackNotEquivalent = incorrect ""
 feedbackSame :: String
 feedbackSame = "You have submitted the current term."
 
-feedbackOk :: [RuleID] -> (String, Bool)
-feedbackOk [one] = (okay (appliedRule one), False)
+feedbackOk :: [Rule a] -> (String, Bool)
+feedbackOk [one] = (okay (appliedRule one), True)
 feedbackOk _     = ("You have combined multiple steps. Press the Back button and perform one step at the time.", False)
 
 -- TODO Bastiaan: welke regel wordt er dan verwacht door de strategie?
-feedbackDetour :: [RuleID] -> (String, Bool)
+feedbackDetour :: [Rule a] -> (String, Bool)
 feedbackDetour [one] = (appliedRule one ++ " This is correct. However, the standard strategy suggests a different step.", True)
 feedbackDetour _     = (feedbackUnknown, False)
 
 feedbackUnknown :: String
 feedbackUnknown = "You have combined multiple steps (or made a mistake). " ++ backAndHint 
     
-appliedRule :: RuleID -> String
+appliedRule :: Rule a -> String
 appliedRule r = "You have applied " ++ txt ++ "."
  where
    txt | r ~= ruleFalseZeroOr || r ~= ruleTrueZeroOr = "one of the False/True rules"
        | otherwise = " a rule correctly"
     -- TODO Josje: aanvullen met alle regels (ook die ook in de DWA strategie voorkomen)
-       
+
 -------------------------------------------------------------------------
 -- General text
   
@@ -102,8 +103,8 @@ backAndHint = "Press the Back button and try again. You may ask for a hint."
 -------------------------------------------------------------------------
 -- Helper functions
 
-(~=) :: RuleID -> Rule a -> Bool
-rid ~= r = name r == rid
+(~=) :: Rule a -> Rule b -> Bool
+r1 ~= r2 = name r1 == name r2
 
 -- TODO by Bastiaan
 showToken :: Token -> String

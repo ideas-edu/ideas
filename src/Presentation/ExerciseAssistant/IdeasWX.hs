@@ -105,8 +105,9 @@ exerciseFrame = do
    session <- makeSession (head exercises)
        
    let fillRuleBox = do
-          names <- ruleNames session
-          set ruleBox [items := names]
+          -- names <- ruleNames session
+          -- set ruleBox [items := names]
+          return ()
 
    let updateAll = do
           descr <- currentDescription session

@@ -138,7 +138,7 @@ instance IsLinear Expr where
          Var t | s==t -> 1
          _            -> 0 -}
 
-instance Simplification a => IsLinear (SExprF a) where
+instance IsLinear SExpr where
    isLinear = isLinear . toExpr
    isVariable = isVariable . toExpr
    getVars    = getVars . toExpr

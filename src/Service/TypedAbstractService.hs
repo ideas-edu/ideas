@@ -163,3 +163,11 @@ findRules :: Exercise a -> Context a -> a -> [Rule (Context a)]
 findRules ex old new = filter p (ruleset ex)
  where
    p r = any (equality ex new . fromContext) (everywhere ex (Apply.applyAll r) old)-}
+   
+getResultState :: Result a -> Maybe (State a)
+getResultState result =
+   case result of
+      Ok _ st     -> return st
+      Detour _ st -> return st
+      Unknown st  -> return st
+      _           -> Nothing

@@ -67,13 +67,13 @@ strategyTable =
         [[fromList [1,1,1,1], fromList [3,3,1,1], fromList [7,9,3,5]]]
    ]
  where
-   x1, x2, x3, x4 :: Simplification a => SExprF a
+   x1, x2, x3, x4 :: SExpr
    x1 = var "x1"
    x2 = var "x2"
    x3 = var "x3"
    x4 = var "x4"
    -- (x1, x2, x3, x4) = (var "x1", var "x2", var "x3", var "x4")
-   sys1, sys2, sys3 :: Simplification a => LinearSystem (SExprF a)
+   sys1, sys2, sys3 :: LinearSystem SExpr
    sys1 = [x2 + 2 * x3 :==: 1, x1 + 2 * x2 + 3 * x3 :==: 2, 3 * x1 + x2 + x3 :==: 3]
    sys2 = [x1 + 2 * x2 + 3 * x3 - x4 :==: 0, 2 * x1 + 3 * x2 - x3 + 3 * x4 :==: 0, 4 * x1 + 6 * x2 + x3 + 2 * x4 :==: 0 ]
    sys3 = [ x1 + x2 - 2*x3 :==: 0, 2*x1 + x2 - 3*x3 :==: 0, 4*x1 - 2*x2 - 2*x3 :==: 0, 6*x1 - x2 - 5*x3 :==: 0, 7*x1 - 3*x2 - 4*x3 :==: 1]

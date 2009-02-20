@@ -2,11 +2,13 @@
 module Domain.Math.SExpr
    ( --simpler, simplerGS, simplerLin, simplerMatrix, simplerVectors, simplerEquations
   -- , cleanUpWith, cleanUpStrategy
-     lam, SExpr, SExprGS, SExprLin, SExprF, Simplification, NORMAL, forget, toExpr
+     lam, SExpr, toExpr
    , simplifyExpr, simplify, hasSquareRoot
    ) where
 
 import Common.Utils
+import Common.View hiding (Simplification, simplify)
+import qualified Common.View as View
 import Common.Uniplate (transformM, children, Uniplate(..))
 import Common.Rewriting
 import Domain.Math.Symbolic
@@ -55,49 +57,26 @@ cleanUpRule f r
    | isMajorRule r = doAfter f r  
    | otherwise     = r -}
 
-class Simplification a where
-   simplifyWith :: a -> Expr -> Constrained (Con Expr) Expr
-   
-data NORMAL
-data GRAMSCHMIDT 
-data LINEAR
+newtype SExpr = SExpr (Constrained (Con Expr) Expr)
 
-instance Simplification NORMAL where
-   simplifyWith _ = simplify
-
-instance Simplification GRAMSCHMIDT where
-   simplifyWith _ = simplifyGS
-   
-instance Simplification LINEAR where
-   simplifyWith _ = simplifyLin
-   
-type SExpr    = SExprF NORMAL
-type SExprGS  = SExprF GRAMSCHMIDT
-type SExprLin = SExprF LINEAR
-
-forget :: SExprF a -> SExprF b
-forget (SExprF a) = SExprF a
-
-newtype SExprF a = SExprF (Constrained (Con Expr) Expr)
-
-instance Simplification a => Show (SExprF a) where
+instance Show SExpr where
    show = show . toExpr -- !!
 
-instance Simplification a => Eq (SExprF a) where
-   x == y =  let nonsense (SExprF e) = contradiction (proposition e) in
+instance Eq SExpr where
+   x == y =  let nonsense (SExpr e) = contradiction (proposition e) in
              equalWith exprACs (toExpr x) (toExpr y)
           || nonsense x
           || nonsense y
 
-instance Simplification a => Ord (SExprF a) where
+instance Ord SExpr where
    x `compare` y = 
-      let f a@(SExprF e) = 
+      let f a@(SExpr e) = 
              if contradiction (proposition e) 
              then Nothing
              else Just (normalizeWith exprACs (toExpr a))
       in f x `compare` f y
 
-instance Simplification a => Num (SExprF a) where
+instance Num SExpr where
    (+) = liftS2 (+)
    (*) = liftS2 (*)
    (-) = liftS2 (-)
@@ -106,11 +85,11 @@ instance Simplification a => Num (SExprF a) where
    abs         = liftS abs
    signum      = liftS signum
 
-instance Simplification a => Fractional (SExprF a) where
+instance Fractional SExpr where
    (/) = liftS2 (/)
    fromRational = make . fromRational
    
-instance Simplification a => Floating (SExprF a) where
+instance Floating SExpr where
    pi      = make   pi
    sqrt    = liftS  sqrt
    (**)    = liftS2 (**)
@@ -129,29 +108,27 @@ instance Simplification a => Floating (SExprF a) where
    asinh   = liftS  asinh
    atanh   = liftS  atanh
    acosh   = liftS  acosh
-    
-instance Simplification a => Symbolic (SExprF a) where
+
+instance Symbolic SExpr where
    variable   = make . variable
    function s = liftSs (function s)
-   
-instance Simplification a => Arbitrary (SExprF a) where
+
+instance Arbitrary SExpr where
    arbitrary   = liftM (make . return) arbitrary -- !!
    coarbitrary = coarbitrary . toExpr -- !!
-   
-toExpr :: SExprF a -> Expr -- !!!
-toExpr (SExprF e) = fromConstrained e
 
-simplifyExpr :: Simplification a => Expr -> SExprF a
+toExpr :: SExpr -> Expr -- !!!
+toExpr (SExpr e) = fromConstrained e
+
+simplifyExpr :: Expr -> SExpr
 simplifyExpr = make . return
 
-liftS  f (SExprF a)            = make $ f a
-liftS2 f (SExprF a) (SExprF b) = make $ f a b
-liftSs f xs = make $ f [ e | SExprF e <- xs ]
+liftS  f (SExpr a)           = make $ f a
+liftS2 f (SExpr a) (SExpr b) = make $ f a b
+liftSs f xs = make $ f [ e | SExpr e <- xs ]
 
-make :: Simplification a => Constrained (Con Expr) Expr -> SExprF a
-make c = let result = SExprF $ simplifyWith (f result) (fromConstrained c)
-             f :: SExprF a -> a
-             f = error "Simplification"
+make :: Constrained (Con Expr) Expr -> SExpr
+make c = let result = SExpr $ simplify (fromConstrained c)
          in result
 
 -----------------------------------------------------------------------
@@ -274,10 +251,13 @@ simplifyGS = simplify . rewriteGS
 data ViewGS = PlusGS ViewGS ViewGS | TimesGS Rational Integer
 
 rewriteGS :: Expr -> Expr
-rewriteGS e = maybe e (fromViewGS . sortAndMergeViewGS) (toViewGS e)
+rewriteGS = undefined -- View.simplify viewGS
+
+viewGS :: View Expr ViewGS
+viewGS = makeView toViewGS (fromViewGS . sortAndMergeViewGS)
 
 toViewGS :: Expr -> Maybe ViewGS
-toViewGS = foldExpr (bin plus, bin times, bin min, unop neg, con, bin div, unop sqrt, err, const err)
+toViewGS = undefined -- foldExpr (bin plus, bin times, bin min, unop neg, con, bin div, unop sqrt, err, const err)
  where
    err _ = fail "toMySqrt"
    bin  f a b = join (liftM2 f a b)
@@ -448,7 +428,7 @@ simplifyCon = convert . fmap simplifyExpr
  
    convert :: Con SExpr -> Prop (Con Expr)
    convert c = f (fmap toExpr c) `mplus`
-               msum [ proposition e | SExprF e <- flattenCon c ]
+               msum [ proposition e | SExpr e <- flattenCon c ]
    
    flattenCon :: Con a -> [a] -- can be done generically
    flattenCon con =

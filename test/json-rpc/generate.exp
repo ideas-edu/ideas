@@ -2,7 +2,7 @@
    "result": [
       "Proposition to DNF",
       "[]",
-      "q /\\ (F -> p) /\\ T",
+      "(r /\\ q) || (r /\\ p) || (~p -> (p -> q))",
       "[];"
    ],
    "error": null,

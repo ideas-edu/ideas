@@ -196,7 +196,17 @@
          "rewriterule": true
       },
       {
-         "name": "BuggyParenth",
+         "name": "BuggyParenth1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyParenth2",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyParenth3",
          "buggy": true,
          "rewriterule": true
       },

@@ -29,7 +29,8 @@ logicRules = concat
 buggyRules :: [Rule Logic]
 buggyRules = makeGroup "Common misconceptions"
    [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui, buggyRuleEquivElim
-   , buggyRuleImplElim, buggyRuleDeMorgan, buggyRuleNotOverImpl, buggyRuleParenth, buggyRuleAssoc
+   , buggyRuleImplElim, buggyRuleDeMorgan, buggyRuleNotOverImpl
+   , buggyRuleParenth1, buggyRuleParenth2, buggyRuleParenth3, buggyRuleAssoc
    , buggyRuleAndSame, buggyRuleAndCompl, buggyRuleOrSame, buggyRuleOrCompl
    , buggyRuleTrueProp, buggyRuleFalseProp, buggyRuleDistr
    ]
@@ -356,12 +357,19 @@ buggyRuleNotOverImpl :: Rule Logic
 buggyRuleNotOverImpl = buggyRule $ rule "BuggyNotOverImpl" $
     \x y -> (Not(x :->: y)) :~> (Not x :->: Not y)
     
-buggyRuleParenth :: Rule Logic
-buggyRuleParenth = buggyRule $ ruleList "BuggyParenth"
+buggyRuleParenth1 :: Rule Logic
+buggyRuleParenth1 = buggyRule $ ruleList "BuggyParenth1"
     [ \x y -> (Not (x :&&: y))     :~> (Not x :&&: y)
     , \x y -> (Not (x :||: y))     :~> (Not x :||: y)
-    , \x y -> (Not (x :<->: y))    :~> (Not(x :&&: y) :||: (Not x :&&: Not y))
-    , \x y -> (Not(Not x :&&: y))  :~> (x :&&: y) 
+    ]
+
+buggyRuleParenth2 :: Rule Logic
+buggyRuleParenth2 = buggyRule $ rule "BuggyParenth2" $
+    \x y -> (Not (x :<->: y))    :~> (Not(x :&&: y) :||: (Not x :&&: Not y))
+    
+buggyRuleParenth3 :: Rule Logic
+buggyRuleParenth3 = buggyRule $ ruleList "BuggyParenth3"    
+    [ \x y -> (Not(Not x :&&: y))  :~> (x :&&: y) 
     , \x y -> (Not(Not x :||: y))  :~> (x :||: y)
     , \x y -> (Not(Not x :->: y))  :~> (x :->: y)
     , \x y -> (Not(Not x :<->: y)) :~> (x :<->: y)

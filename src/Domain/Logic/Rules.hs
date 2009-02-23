@@ -12,7 +12,7 @@
 -- Rewrite rules in the logic domain (including all the rules from the DWA course)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Rules (module Domain.Logic.Rules) where
+module Domain.Logic.Rules where
 
 import Domain.Logic.Formula
 import Common.Transformation
@@ -28,9 +28,11 @@ logicRules = concat
 
 buggyRules :: [Rule Logic]
 buggyRules = makeGroup "Common misconceptions"
-   [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui, buggyRuleEquivElim
-   , buggyRuleImplElim, buggyRuleDeMorgan, buggyRuleNotOverImpl
-   , buggyRuleParenth1, buggyRuleParenth2, buggyRuleParenth3, buggyRuleAssoc
+   [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui
+   , buggyRuleEquivElim1, buggyRuleEquivElim2
+   , buggyRuleImplElim, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
+   , buggyRuleDeMorgan4, buggyRuleNotOverImpl, buggyRuleParenth1, buggyRuleParenth2
+   , buggyRuleParenth3, buggyRuleAssoc
    , buggyRuleAndSame, buggyRuleAndCompl, buggyRuleOrSame, buggyRuleOrCompl
    , buggyRuleTrueProp, buggyRuleFalseProp, buggyRuleDistr
    ]
@@ -323,8 +325,8 @@ buggyRuleIdemEqui :: Rule Logic
 buggyRuleIdemEqui = buggyRule $ rule "IdemEqui" $
    \x -> (x :<->: x)  :~>  x 
 
-buggyRuleEquivElim :: Rule Logic
-buggyRuleEquivElim = buggyRule $ ruleList "BuggyEquivElim"
+buggyRuleEquivElim1 :: Rule Logic
+buggyRuleEquivElim1 = buggyRule $ ruleList "BuggyEquivElim1"
     [ \x y -> (x :<->: y) :~> ((x :&&: y) :||: Not (x :&&: y))
     , \x y -> (x :<->: y) :~> ((x :||: y) :&&: (Not x :||: Not y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :&&:  y))
@@ -334,25 +336,37 @@ buggyRuleEquivElim = buggyRule $ ruleList "BuggyEquivElim"
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (x :&&: y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: Not (x :||: Not y))
     ]
+buggyRuleEquivElim2 :: Rule Logic
+buggyRuleEquivElim2 = buggyRule $ rule "BuggyEquivElim2" $
+    \x y -> (x :<->: y) :~> ((x :||: y) :&&: (Not x :||: Not y))
     
 buggyRuleImplElim :: Rule Logic
 buggyRuleImplElim = buggyRule $ rule "BuggyImplElim" $
    \x y -> (x :->: y) :~> Not (x :||: y) 
     
-buggyRuleDeMorgan :: Rule Logic
-buggyRuleDeMorgan = buggyRule $ ruleList "BuggyDeMorgan"
+buggyRuleDeMorgan1 :: Rule Logic
+buggyRuleDeMorgan1 = buggyRule $ ruleList "BuggyDeMorgan1"
     [ \x y -> (Not (x :&&: y)) :~>  (Not x :||: y)
     , \x y -> (Not (x :&&: y)) :~>  (x :||: Not y)
-    , \x y -> (Not (x :&&: y)) :~>  (Not (Not x :||: Not y))
     , \x y -> (Not (x :&&: y)) :~>  (x :||: y)
-    , \x y -> (Not (x :&&: y)) :~>  (Not x :&&: Not y)
     , \x y -> (Not (x :||: y)) :~>  (Not x :&&: y)
-    , \x y -> (Not (x :||: y)) :~>  (x :&&: Not y)
-    , \x y -> (Not (x :||: y)) :~>  (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
+    , \x y -> (Not (x :||: y)) :~>  (x :&&: Not y) 
     , \x y -> (Not (x :||: y)) :~>  (x :&&: y)
-    , \x y -> (Not (x :||: y)) :~>  (Not x :||: Not y)
     ]
+    
+buggyRuleDeMorgan2 :: Rule Logic
+buggyRuleDeMorgan2 = buggyRule $ ruleList "BuggyDeMorgan2"
+    [ \x y -> (Not (x :&&: y)) :~>  (Not (Not x :||: Not y))
+    , \x y -> (Not (x :||: y)) :~>  (Not (Not x :&&: Not y)) --note the firstNot in both formulas!  
+    ]
+buggyRuleDeMorgan3 :: Rule Logic    
+buggyRuleDeMorgan3 = buggyRule $  rule "BuggyDeMorgan3" $
+    \x y -> (Not (x :&&: y)) :~>  (Not x :&&: Not y)
 
+buggyRuleDeMorgan4 :: Rule Logic    
+buggyRuleDeMorgan4 = buggyRule $  rule "BuggyDeMorgan4" $   
+     \x y -> (Not (x :||: y)) :~>  (Not x :||: Not y)
+ 
 buggyRuleNotOverImpl :: Rule Logic
 buggyRuleNotOverImpl = buggyRule $ rule "BuggyNotOverImpl" $
     \x y -> (Not(x :->: y)) :~> (Not x :->: Not y)
@@ -374,7 +388,8 @@ buggyRuleParenth3 = buggyRule $ ruleList "BuggyParenth3"
     , \x y -> (Not(Not x :->: y))  :~> (x :->: y)
     , \x y -> (Not(Not x :<->: y)) :~> (x :<->: y)
     ]
-    
+   
+        
 buggyRuleAssoc :: Rule Logic
 buggyRuleAssoc = buggyRule $ ruleList "BuggyAssoc"
     [ \x y z -> (x :||: (y :&&: z)) :~> ((x :||: y) :&&: z)

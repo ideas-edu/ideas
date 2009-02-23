@@ -176,7 +176,12 @@
          "rewriterule": true
       },
       {
-         "name": "BuggyEquivElim",
+         "name": "BuggyEquivElim1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyEquivElim2",
          "buggy": true,
          "rewriterule": true
       },
@@ -186,7 +191,22 @@
          "rewriterule": true
       },
       {
-         "name": "BuggyDeMorgan",
+         "name": "BuggyDeMorgan1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyDeMorgan2",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyDeMorgan3",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyDeMorgan4",
          "buggy": true,
          "rewriterule": true
       },

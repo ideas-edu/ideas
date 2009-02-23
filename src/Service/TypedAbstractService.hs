@@ -40,17 +40,20 @@ data Result a = Buggy  [Rule (Context a)]
               | Ok     [Rule (Context a)] (State a)  -- equivalent
               | Detour [Rule (Context a)] (State a)  -- equivalent
               | Unknown                   (State a)  -- equivalent
-          
+
+emptyState :: Exercise a -> a -> State a
+emptyState ex a = State
+   { exercise = ex
+   , prefix   = Just (emptyPrefix (strategy ex))
+   , context  = inContext a
+   }
+      
 -- result must be in the IO monad to access a standard random number generator
 generate :: Exercise a -> Int -> IO (State a)
 generate ex level = do 
    stdgen <- newStdGen
    case QC.generate 100 stdgen (generator ex) of
-      a | suitableTerm ex a -> return State
-             { exercise = ex 
-             , prefix   = Just (emptyPrefix (strategy ex))
-             , context  = inContext a
-             }
+      a | suitableTerm ex a -> return (emptyState ex a)
       _ -> generate ex level
 
 derivation :: State a -> [(Rule (Context a), Context a)]

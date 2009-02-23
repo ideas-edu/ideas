@@ -8,7 +8,8 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- (...add description...)
+-- Exercise for the logic domain, used for the OUNL course 
+-- "Discrete Wiskunde A (DWA)"
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Exercises (dnfExercise) where
@@ -57,3 +58,6 @@ testGen :: Property
 testGen = forAll generateLogic $ \p -> 
    let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
    in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True
+   
+{- main :: IO ()
+main = quickCheck testGen -}

@@ -2,7 +2,7 @@
    "result": {
       "result": "Buggy",
       "rules": [
-         "BuggyDeMorgan"
+         "BuggyDeMorgan1"
       ]
    },
    "error": null,

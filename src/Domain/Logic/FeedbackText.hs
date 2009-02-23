@@ -51,16 +51,54 @@ feedbackSyntaxError syntaxError =
          "Unexpected symbol " ++ showToken token
 
 feedbackBuggy :: [Rule a] -> String
-feedbackBuggy [one] 
-   | one ~= buggyRuleCommImp = 
+feedbackBuggy [br] 
+   | br ~= buggyRuleCommImp = 
         incorrect "Did you think that implication is commutative? This is not the case. "
-   | one ~= buggyRuleAssImp =
+   | br ~= buggyRuleAssImp = 
         incorrect "Did you think that implication is associative? This is not the case. "
-   | one ~= buggyRuleIdemImp =
+   | br ~= buggyRuleIdemImp = 
         incorrect "Did you think that implication is idempotent? This is not the case. "
-   | one ~= buggyRuleIdemEqui =
+   | br ~= buggyRuleIdemEqui = 
         incorrect "Did you think that equivalence is idempotent? This is not the case. "
-               -- TODO Josje: aanvullen voor overige buggy regels
+   | br ~= buggyRuleAndSame = 
+        incorrect "Did you think that phi AND phi is equivalent to True? This is not the case. Idempotency of AND means that phi AND phi is equivalent to phi. "
+   | br ~= buggyRuleOrSame = 
+        incorrect "Did you think that phi OR phi is equivalent to True? This is not the case. Idempotency of OR means that phi OR phi is equivalent to phi. "
+   | br ~= buggyRuleAndCompl = 
+        incorrect "Be careful in the application of the the complement-rules "
+   | br ~= buggyRuleOrCompl = 
+        incorrect "Be careful in the application of the the complement-rules " 
+   | br ~= buggyRuleTrueProp = 
+        incorrect "Be careful in the application of the the True-False rules "     
+   | br ~= buggyRuleFalseProp = 
+        incorrect "Be careful in the application of the the True-False rules " 
+   | br ~= buggyRuleEquivElim1 = 
+        incorrect "Be careful with the elimination of an equivalence; take care of the negations. "
+   | br ~= buggyRuleEquivElim2 = 
+        incorrect "Be careful with the elimination of an equivalence; did you interchange conjunctions and disjunctions? "
+   | br ~= buggyRuleImplElim = 
+        incorrect "Be careful with the elimination of an implication; make sure the negation is at the right place. "
+   | br ~= buggyRuleDeMorgan1 = 
+        incorrect "Did you try to apply DeMorgan? Be careful with the negations. " 
+   | br ~= buggyRuleDeMorgan2 = 
+        incorrect "Did you try to apply DeMorgan? Make sure that you remove the outer negation when applying this rule "
+   | br ~= buggyRuleDeMorgan3 = 
+        incorrect "Did you try to apply DeMorgan? Make sure that you replace AND by OR. "
+   | br ~= buggyRuleDeMorgan4 = 
+        incorrect "Did you try to apply DeMorgan? Make sure that you replace OR by AND. "
+   | br ~= buggyRuleNotOverImpl = 
+        incorrect "Did you think that you can distribute a negation over an implication? This is not the case. "
+   | br ~= buggyRuleParenth1 = 
+        incorrect "Take care of the negations and the parentheses" 
+   | br ~= buggyRuleParenth2 = 
+        incorrect "Take care of the outer negation when you eliminate an equivalence. " 
+   | br ~= buggyRuleParenth3 = 
+        incorrect "Did you try to apply double negation? At this place this is not allowed, because of the parenthesis between the negations. " 
+   | br ~= buggyRuleAssoc = 
+        incorrect "Did you change the negations? This is not allowed in a subformula consisting of a disjunction and a conjunction. " 
+   | br ~= buggyRuleDistr = 
+        incorrect "Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. "  
+               -- TODO Josje: aanvullen voor overige buggy regels [Gedaan!]
 feedbackBuggy _ = incorrect ""
 
 feedbackNotEquivalent :: String

@@ -37,7 +37,7 @@ fractionExercise = makeExercise
 
 fractionStrategy :: LabeledStrategy (Context Expr)
 fractionStrategy = cleanUpStrategy (fmap cleanUpExpr) $ label "fraction" $ 
-   repeat $ somewhere $ alternatives fractionRules
+   repeat $ somewhere $ (addTwoFractions <|> alternatives fractionRules)
 
 ------------------------------------------------------------
 -- Clean up: only some terms that look really "odd"
@@ -70,10 +70,10 @@ cleanUpExpr = checkBottom . rewrite f
 fractionRules :: [Rule (Context Expr)]
 fractionRules = map liftRuleToContext 
    [ plusCon, timesCon, minCon, divCon
-   , plusZero, timesZero, timesOne
-   , negateFraction, conTimesFraction, fractionTimesFraction
+   -- , plusZero, timesZero, timesOne
+   {- , negateFraction-} , conTimesFraction, fractionTimesFraction
    , fractionNumerator, fractionDenominator
-   , sameDenominator, plusFraction, conPlusFraction
+   {- , sameDenominator, plusFraction conPlusFraction -}
    , simplerFraction
    ]
 
@@ -178,14 +178,19 @@ fractionTimesFraction = makeSimpleRule "fractionTimesFraction" f
 fractionNumerator :: Rule Expr
 fractionNumerator = makeSimpleRule "fractionNumerator" f
  where
-   f ((a :/: b) :/: c) = return (a/(b*c))
-   f _ = Nothing
+   f e = do 
+      (e1, c) <- divV e
+      (a, b)  <- divV e1
+      return (a/(b*c))
 
 fractionDenominator :: Rule Expr
 fractionDenominator = makeSimpleRule "fractionDenominator" f
  where
-   f (a :/: (b :/: c)) | wf (b/c) = return (a*(c/b))
-   f _ = Nothing
+   f e = do
+      (a, e1) <- divV e
+      (b, c)  <- divV e1
+      guard (wf (b/c))
+      return (a*(c/b))
    
 sameDenominator :: Rule Expr
 sameDenominator = makeSimpleRule "sameDenominator" f
@@ -283,41 +288,50 @@ genFraction n
  where h = n `div` 2
  
 -- sub-strategy for adding two fractions 
-{- addTwoFractions :: Strategy (Context Expr)
+addTwoFractions :: Strategy (Context Expr)
 addTwoFractions =  ruleLCM 
-               <*> moveDown 0 <*> try scaleToLCM <*> moveUp
-               <*> moveDown 1 <*> try scaleToLCM <*> moveUp
+               <*> moveDown 0 <*> try (scaleToLCM <|> scaleCon) <*> moveUp
+               <*> moveDown 1 <*> try (scaleToLCM <|> scaleCon) <*> moveUp
                <*> addParts
+               <*> option (liftRuleToContext simplerFraction <|> liftRuleToContext divCon)
  where
    lcmVar = integerVar "lcm"
  
    ruleLCM = minorRule $ makeSimpleRule "ruleLCM" $ \c -> do
       e <- currentFocus c
-      case e of
-         (_ :/: e1) :+: (_ :/: e2) -> do
-            a <- intV e1
-            b <- intV e2
-            return (set lcmVar (lcm a b) c)
-         _ -> Nothing
+      (e1, e2) <- match plusView e
+      let f = fmap (either snd (const 1)) . match (eitherV fractionView integerView)
+                -- fmap snd (match fractionView e)-- `mplus` 
+                --fmap (const 1) (match integerView e)
+      a <- f e1
+      b <- f e2
+      let v = lcm a b
+      guard (v /= 1)
+      return (set lcmVar v c)
    
    scaleToLCM = makeSimpleRule "scaleToLCM" $ \c -> do
       e <- currentFocus c
-      case e of
-         e1 :/: e2 -> do
-            b <- intV e2
-            let n   = get lcmVar c
-                new = (e1 * Con (n `div` b)) / Con n -- but immediately simplify e1*...
-            guard (n `mod` b == 0 && n /= b)
-            return (changeFocus (const new) c)
-         _ -> Nothing
+      (a, b) <- match fractionView e
+      let n   = get lcmVar c
+          new = (fromInteger (a*n `div` b)) / Nat n
+      guard (n `mod` b == 0 && n /= b)
+      return (changeFocus (const new) c)
+   
+   scaleCon = makeSimpleRule "scaleToLCM" $ \c -> do
+      e <- currentFocus c
+      a <- match integerView e
+      let n   = get lcmVar c
+          new = (fromInteger (a*n)) / Nat n
+      return (changeFocus (const new) c)
    
    addParts = makeSimpleRule "addParts" $ \c -> do
       e <- currentFocus c
-      case e of
-         (a :/: n) :+: (b :/: m) | n==m -> do
-            let new = (a+b) / n -- but immediately simplify a+b
-            return (changeFocus (const new) c)
-         _ -> Nothing
+      (e1, e2) <- match plusView e
+      (a, n)   <- match fractionView e1
+      (b, m)   <- match fractionView e2
+      guard (n==m)
+      let new = fromInteger (a+b) / fromInteger n
+      return (changeFocus (const new) c)
    
    moveDown i = minorRule $ makeSimpleRule ("moveDown["++show i++"]") $ \c -> return $ 
       changeLocation (locationDown i) c
@@ -325,4 +339,21 @@ addTwoFractions =  ruleLCM
    moveUp = minorRule $ makeSimpleRule "moveUp" $ \c -> do
       l <- locationUp (location c)
       return (setLocation l c)
-      -}
+      
+   intV :: Expr -> Maybe Integer
+   intV = match integerView
+   
+divV :: Expr -> Maybe (Expr, Expr)
+divV (a :/: b)  = Just (a, b)
+divV (Negate a) = fmap (\(x, y) -> (negate x, y)) (divV a)
+divV _ = Nothing
+
+second :: View a b -> View (c, a) (c, b)
+second v = makeView (\(c, a) -> match v a >>= \b -> return (c, b)) (\(c, b) -> (c, build v b))
+
+newV :: View Expr (Expr, Integer)
+newV = makeView divV undefined >>> second integerView
+
+-- left-biased
+eitherV :: View a b -> View a c -> View a (Either b c)
+eitherV v1 v2 = makeView (\a -> fmap Left (match v1 a) `mplus` fmap Right (match v2 a)) (either (build v1) (build v2))

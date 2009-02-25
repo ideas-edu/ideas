@@ -175,7 +175,7 @@ hintOrStep verbose = withState $ \d ->
          return "Sorry, no hint available"
       (rule, _, s):_ ->
          return $ unlines $
-            [ "Use rule " ++ name rule
+            [ "Use " ++ fromMaybe ("rule " ++ name rule) (ruleText rule)
             ] ++
             [ "   with arguments " ++ showList (fromJust args)
             | let args = expectedArguments rule (current d), isJust args

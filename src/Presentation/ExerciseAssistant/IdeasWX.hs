@@ -62,12 +62,12 @@ exerciseFrame = do
    hintButton     <- button buttonPanel [text := "Hint"]
    stepButton     <- button buttonPanel [text := "Step"]
    nextButton     <- button buttonPanel [text := "Next"]
-   undoButton     <- button buttonPanel [text := "Undo"]
+   backButton     <- button buttonPanel [text := "Back"]
    submitButton   <- button buttonPanel [text := "Submit"]
    ruleBox        <- comboBox buttonPanel [] 
    set buttonPanel [layout := column 10
       [ row 10 $ map widget [readyButton, hintButton, stepButton, nextButton, submitButton]
-      , row 10 [widget undoButton, hglue, hfill $ widget ruleBox]
+      , row 10 [widget backButton, hglue, hfill $ widget ruleBox]
       ]]
    
    assignmentView <- textCtrl leftPanel [bgcolor := myGrey]
@@ -160,7 +160,7 @@ exerciseFrame = do
       set feedbackView [text := txt]
       when ok updateAll]
  
-   set undoButton [on command := do
+   set backButton [on command := do
       txt1 <- get entryView text
       txt2 <- get assignmentView text
       if txt1 == txt2 

@@ -119,9 +119,6 @@ feedbackDetour _     = (feedbackUnknown, False)
 feedbackUnknown :: String
 feedbackUnknown = "You have combined multiple steps (or made a mistake). " ++ backAndHint 
 
-inGroup :: Rule a -> String -> Bool
-inGroup r n = n `elem` ruleGroups r
-
 appliedRule :: Rule a -> String
 appliedRule r = "You have applied " ++ txt ++ "."
  where
@@ -156,6 +153,9 @@ backAndHint = "Press the Back button and try again. You may ask for a hint."
 
 (~=) :: Rule a -> Rule b -> Bool
 r1 ~= r2 = name r1 == name r2
+
+inGroup :: Rule a -> String -> Bool
+inGroup r n = n `elem` ruleGroups r
 
 -- TODO by Bastiaan
 showToken :: Token -> String

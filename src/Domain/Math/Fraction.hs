@@ -290,8 +290,7 @@ genFraction n
 -- sub-strategy for adding two fractions 
 addTwoFractions :: Strategy (Context Expr)
 addTwoFractions =  ruleLCM 
-               <*> moveDown 0 <*> try (scaleToLCM <|> scaleCon) <*> moveUp
-               <*> moveDown 1 <*> try (scaleToLCM <|> scaleCon) <*> moveUp
+               <*> repeat (moveDown <*> (scaleToLCM <|> scaleCon) <*> moveUp)
                <*> addParts
                <*> option (liftRuleToContext simplerFraction <|> liftRuleToContext divCon)
  where
@@ -333,8 +332,11 @@ addTwoFractions =  ruleLCM
       let new = fromInteger (a+b) / fromInteger n
       return (changeFocus (const new) c)
    
-   moveDown i = minorRule $ makeSimpleRule ("moveDown["++show i++"]") $ \c -> return $ 
-      changeLocation (locationDown i) c
+   moveDown :: Rule (Context Expr)
+   moveDown = minorRule $ makeSimpleRuleList "moveDown" $ \c ->
+      case currentFocus c of 
+         Just e  -> [ changeLocation (locationDown i) c | i <- [0 .. length (children e)-1] ]
+         Nothing -> []
    
    moveUp = minorRule $ makeSimpleRule "moveUp" $ \c -> do
       l <- locationUp (location c)

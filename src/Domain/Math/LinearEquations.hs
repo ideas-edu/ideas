@@ -23,6 +23,12 @@ import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck (oneof)
 
+paper = 
+   let start = inContext $ last $ concat linearEquations in
+   case derivations (unlabel linearEquationStrategy) start of
+      hd:_ -> showDerivation "" hd
+      _    -> putStrLn "unsolved"
+
 ------------------------------------------------------------
 -- Exercise
 
@@ -150,10 +156,12 @@ linearView = makeView f g
 -------------------------------------------------------
 -- Transformations
 
-plusT, minusT, timesT, divisionT :: Fractional a => a -> Equation a -> Equation a
+plusT, minusT, timesT, divisionT :: Expr -> Equation Expr -> Equation Expr
 plusT     e = fmap (+e)
 minusT    e = fmap (\x -> x-e)
-timesT    e = fmap (e*) -- order is somehow significant
+timesT    e = fmap $ \a ->
+   let xs  = fromMaybe [] (match sumView a)
+   in build sumView (map (*e) xs)
 divisionT e = fmap (/e)
 
 distributionT :: Expr -> Maybe Expr

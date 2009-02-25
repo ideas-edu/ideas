@@ -328,17 +328,18 @@ buggyRuleIdemEqui = buggyRule $ rule "IdemEqui" $
 buggyRuleEquivElim1 :: Rule Logic
 buggyRuleEquivElim1 = buggyRule $ ruleList "BuggyEquivElim1"
     [ \x y -> (x :<->: y) :~> ((x :&&: y) :||: Not (x :&&: y))
-    , \x y -> (x :<->: y) :~> ((x :||: y) :&&: (Not x :||: Not y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :&&:  y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: ( x :&&: Not y))
-    , \x y -> (x :<->: y) :~> ((x :&&: y) :&&: (Not x :&&: Not y))
-    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :||: Not y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (x :&&: y))
     , \x y -> (x :<->: y) :~> ((x :&&: y) :||: Not (x :||: Not y))
     ]
+    
 buggyRuleEquivElim2 :: Rule Logic
-buggyRuleEquivElim2 = buggyRule $ rule "BuggyEquivElim2" $
-    \x y -> (x :<->: y) :~> ((x :||: y) :&&: (Not x :||: Not y))
+buggyRuleEquivElim2 = buggyRule $ ruleList "BuggyEquivElim2"
+    [\x y -> (x :<->: y) :~> ((x :||: y) :&&: (Not x :||: Not y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :&&: (Not x :&&: Not y))
+    , \x y -> (x :<->: y) :~> ((x :&&: y) :||: (Not x :||: Not y))
+    ]
     
 buggyRuleImplElim :: Rule Logic
 buggyRuleImplElim = buggyRule $ rule "BuggyImplElim" $

@@ -118,11 +118,24 @@ feedbackDetour _     = (feedbackUnknown, False)
 
 feedbackUnknown :: String
 feedbackUnknown = "You have combined multiple steps (or made a mistake). " ++ backAndHint 
-    
+
+inGroup :: Rule a -> String -> Bool
+inGroup r n = n `elem` ruleGroups r
+
 appliedRule :: Rule a -> String
 appliedRule r = "You have applied " ++ txt ++ "."
  where
-   txt | r ~= ruleFalseZeroOr || r ~= ruleTrueZeroOr = "one of the False/True rules"
+   txt | r ~= ruleFalseZeroOr || r ~= ruleTrueZeroOr || r ~= ruleFalseZeroAnd || r ~= ruleTrueZeroAnd || r ~= ruleNotTrue || r ~= ruleNotFalse = "one of the False/True rules"
+       | r ~= ruleComplOr || r ~= ruleComplAnd = "a complement rule" 
+       | r ~= ruleNotNot  = "double negation" 
+       | r ~= ruleDefImpl  = "implication elimination" 
+       | r ~= ruleDefEquiv  = "equivalence elimination" 
+       | r `inGroup`"Commutativity" = "commutativity"
+       | r `inGroup`"Aasociativity" = "associativity"
+       | r `inGroup`"Distributivity" = "dommutativity"
+       | r `inGroup`"Idempotency" = "idempotency"
+       | r `inGroup`"Absorption" = "absorption"
+       | r `inGroup`"De Morgan" = "De Morgan"
        | otherwise = " a rule correctly"
     -- TODO Josje: aanvullen met alle regels (ook die ook in de DWA strategie voorkomen)
 

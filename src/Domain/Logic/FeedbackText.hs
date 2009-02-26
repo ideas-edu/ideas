@@ -76,7 +76,7 @@ feedbackBuggy [br]
    | br ~= buggyRuleEquivElim1 = 
         incorrect "Be careful with the elimination of an equivalence; take care of the negations. "
    | br ~= buggyRuleEquivElim2 = 
-        incorrect "Be careful with the elimination of an equivalence; did you interchange conjunctions and disjunctions? "
+        incorrect "Be careful with the elimination of an equivalence; make sure that the disjunctions and the conjunctions are at the right place. "
    | br ~= buggyRuleImplElim = 
         incorrect "Be careful with the elimination of an implication; make sure the negation is at the right place. "
    | br ~= buggyRuleDeMorgan1 = 

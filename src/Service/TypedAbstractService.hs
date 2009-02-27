@@ -135,7 +135,7 @@ submitExtra state new
         case filter isSame $ successesAfter $ maxNumber 200 $ {- maxDepth 5 $ -} space of
            ((a, mp, rs), n):_ 
               | isJust mp -> (Ok rs state { context=a, prefix=mp }, n)
-              | otherwise -> (Detour rs state { context=a }, n)
+              | otherwise -> (Detour rs state { context=a, prefix=mp }, n)
            _ -> (Unknown state { context=inContext new }, 200)
  where 
    isSame ((a, _, _), _) = equality (exercise state) new (fromContext a)

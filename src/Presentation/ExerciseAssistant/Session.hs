@@ -139,7 +139,13 @@ submitTextLogic txt ref = do
       Right term -> do
          let result = TAS.submit (currentState d) term
          case (feedback result, TAS.getResultState result) of
-            ((txt, True), Just new) -> do 
+            ((txt, True), Just n) -> do
+               -- make sure that new has a prefix (because of possible detour)
+               -- when resetting the prefix, also make sure that the context is refreshed
+               let new = if isJust (TAS.prefix n) then n else
+                         n { TAS.prefix  = Just (emptyPrefix (strategy (TAS.exercise n)))
+                           , TAS.context = inContext $ fromContext (TAS.context n)
+                           } 
                writeIORef ref $ Some (extendDerivation new d)
                return (txt, True)
             ((txt, _), _) -> return (txt, False)

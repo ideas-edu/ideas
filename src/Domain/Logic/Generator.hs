@@ -22,6 +22,7 @@ import Control.Monad
 import Data.Char
 import Test.QuickCheck hiding (defaultConfig)
 import Common.Rewriting
+import Common.Uniplate
 
 instance Rewrite Logic where
    operators = logicOperators
@@ -36,7 +37,7 @@ generateLogic :: Gen Logic
 generateLogic = generateLogicWith defaultConfig
    
 generateLogicWith :: LogicGenConfig -> Gen Logic
-generateLogicWith = arbLogic
+generateLogicWith config = arbLogic config >>= preventSameVar config
    
 data LogicGenConfig = LogicGenConfig
    { maxSize       :: Int
@@ -91,6 +92,18 @@ arbLogicBin config = frequency
    rec   = arbLogic config {maxSize = maxSize config `div` 2}
    op1 f = liftM  f rec
    op2 f = liftM2 f rec rec
+
+preventSameVar :: LogicGenConfig -> Logic -> Gen Logic
+preventSameVar config = rec 
+ where
+   rec p = case uniplate p of
+              ([Var x, Var y], f) | x==y -> do
+                 z <- oneof [ return z
+                            | z <- take (differentVars config) variableList
+                            , z /= x
+                            ]
+                 return (f [Var x, Var z])
+              (cs, f) -> liftM f (mapM rec cs)
 
 variableList :: [String]
 variableList = ["p", "q", "r", "s", "t"] ++ [ "x" ++ show n | n <- [0..] ]

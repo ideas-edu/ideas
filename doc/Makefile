@@ -32,7 +32,8 @@ exercisedocs: $(EXERCISEDIR) $(PDFTARGETS)
 hpc: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
-	$(HADDOCK) -o $(HADDOCKDIR) -s "../%F" -p $(HADDOCKDIR)/prologue --html $(HS-SOURCES)
+	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../doc/$(HADDOCKDIR) --prologue=../doc/$(HADDOCKDIR)/prologue Service/Main.hs
+	
 
 $(WIKIDIR): $(HS-SOURCES)
 	$(MKDIR) -p $(WIKIDIR)

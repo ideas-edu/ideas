@@ -203,7 +203,7 @@ nextStep = logCurrent "Next" $ \(Session _ ref) -> do
          return ("No more steps left to do", False)
       (rule, _, new):_ -> do
          writeIORef ref $ Some (extendDerivation new d)
-         return ("Successfully applied rule " ++ name rule, True)
+         return (appliedRule rule, True)
 
 ruleNames :: Session -> IO [String]
 ruleNames = withState $ \d -> 

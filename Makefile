@@ -37,12 +37,16 @@ ifeq ($(GTK), yes)
 	$(CP) src/Presentation/ExerciseAssistant/ounl.jpg bin/	
 endif
 
-$(BINDIR)/ideasWX$(EXE): $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs
+$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/IdeasWX.hs
 	$(STRIP) $@
 endif
+
+$(BINDIR)/ounl.jpg: $(SRCDIR)/Presentation/ExerciseAssistant/ounl.jpg
+	$(MKDIR) -p $(BINDIR)
+	$(CP) $< $@
 	
 #---------------------------------------------------------------------------------------
 # Other directories

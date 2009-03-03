@@ -12,7 +12,7 @@
 -- by Josje Lodder.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.FeedbackText (feedback, feedbackSyntaxError, ruleText) where
+module Domain.Logic.FeedbackText (feedback, feedbackSyntaxError, ruleText, appliedRule) where
 
 import Data.Maybe
 import Common.Parsing

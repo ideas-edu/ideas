@@ -115,12 +115,17 @@ rewriteWith ops r0@(R _ _ _) e = do
    let lhs :~> rhs = rulePair r (nextMetaVar e)
    s <- matchWith ops lhs e
    return (s |-> rhs)
-      
+
+-- Bug fix 4/3/2009: for associative operators, we need to extend rewrite
+-- rules to take "contexts" into account. In addition to a left and a right
+-- context, we also should consider a context on both sides. If not, we 
+-- might miss some locations, as pointed out by Josje's bug report.
 extendContext :: Operators a -> RewriteRule a -> [RewriteRule a]
 extendContext ops r =
    case findOperator ops (lhs $ rulePair r 0) of
       Just op | isAssociative op -> 
-         [r, extend (leftContext op) r, extend (rightContext op) r]
+         [r, extend (leftContext op) r, extend (rightContext op) r 
+         , extend (rightContext op) (extend (leftContext op) r) ]
       _ -> [r]
  where
    leftContext op a (x :~> y) =

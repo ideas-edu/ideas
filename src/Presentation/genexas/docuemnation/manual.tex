@@ -240,7 +240,7 @@ function State(id, prefix, exercise, simpleContext) {
 \end{verbatim}
 Here, id will be produced by the application itself, to discern between responses of services that might arrive in a non-chronological order. In addition, the student number could be used to produce id's. The other three elements of State are strings, received through the services.
 
-Location also comes as a string, and is received through the services.
+%Location also comes as a string, and is received through the services.
 
 \subsection{/genexas/common/javascript/communication.js}
 This file is a mediator between the elements of the HTML page and the \url{services.js}-functions. 
@@ -259,23 +259,23 @@ Apart from some utility functions, this file provides the code for the history w
 The two concepts which are used to implement the history are the \url{snapshot} and the \url{historykeeper}:
 \begin{verbatim}
 /**
- * a historyObject contains:
+ * a snapshot contains:
  * - exercise. Is the exercise that is to be solved, 
  *   and will stay the same until a new exercise is generated
  * - feedback: Is the content of the feedback area
  * - history: Is the content of the History area
  * - work: is the content of the work area; 
- * - copy: is the content of the copy button; 
  *   this is a combination of a state and a location
  * - state, which contains: 
  *     the id of the exercise, 
  *     the prefix, 
  *     the current *valid* expression, 
  *     and the simpleContext
+ * - copy: is a copy of the last valid state; 
  * - location
  * - steps
  * 
- * snapshot is the current historyObject
+ * snapshot is the current snapshot
  * it is a Hash object, so we can add new key-value pairs if necessary
  */
 var snapshot;
@@ -288,6 +288,18 @@ var historyKeeper = new Object();
 historyKeeper.historyList = new Array();
 historyKeeper.statePointer = -1;
 \end{verbatim}
+
+The historyKeeper has the following functions:
+\begin{itemize}
+\item addSnapshot(snapshot)
+\item newSnapshot()
+\item update(state) (a new snapshot is taken, with only the state different from the previous one)
+\item addFeedback() (a new snapshoy is taken, with only the contents of the feedbackfield different from the previous one)
+\item addCopy(state) (a state is kept to copy from)
+\item removeCopy() (there is no extra state to remember)
+\end{itemize}
+
+The functions goBack and goForward make use of the historyKeeper.
 
 \subsection{/genexas/logic/todnf/ou/communication.js}
 The file \url{framework.php} contains page elements that show an input field for the student number, a field to display it, and a button with which the student may tell the number is wrong. The style sheet for the application (\url{/genezas/css/exas.css}) hides those elements by default.

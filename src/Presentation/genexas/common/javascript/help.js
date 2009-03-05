@@ -2,12 +2,6 @@
   * This file contains t some help functions, and
   * several functions for the back and forward buttons
   */
-
-/**
-  * Global variable: usecookie
-  * for OU students, will be set using the ou/index.php page
-  */
-var usecookie = false;
 /**
   * Global variable: keepFeedback
   * made global, so we wont have to check the value of the radiobutton each time
@@ -25,7 +19,7 @@ function setKeepFeedback() {
 	$('clearbutton').show();
 }
  /***
-  * Makes an element visible or inviisible,
+  * Makes an element visible or invisible,
   * while yhe layout stays the same
   */
 function setVisible(element) {
@@ -122,7 +116,7 @@ function State(id, prefix, exercise, simpleContext) {
 	this.simpleContext = simpleContext;
 }
 /**
- * a historyObject contains:
+ * a snapshot contains:
  * - exercise. Is the exercise that is to be solved, and will stay the same until a new exercise is generated
  * - feedback: Is the content of the feedback area
  * - history: Is the content of the History area
@@ -132,32 +126,35 @@ function State(id, prefix, exercise, simpleContext) {
  * - location
  *  steps
  * 
- * snapshot is the current historyObject
+ * snapshot is the current snapshot
  * it is a Hash object, so we can add new key-value pairs if necessary
   */
 var snapshot;
 /**
- * Our historykeeper will be an array filled with hashObjects, containing the variable contents of the page elements
-  * statePointer points out the index of the snapshot within the historyList
+ * Our historykeeper will be an array filled with snapshot, containing the variable contents of the page elements
+  * snapshotPointer points out the index of the current snapshot within the historyList
   */
 var historyKeeper = new Object();
 historyKeeper.historyList = new Array();
-historyKeeper.statePointer = -1;
+historyKeeper.snapshotPointer = -1;
 /**
  * function to add the current snapshot to the history 
  */
-historyKeeper.addSnapshot = function () {
+historyKeeper.addSnapshot = function (snapshot) {
 	historyKeeper.historyList.push(snapshot);
-	++historyKeeper.statePointer;
-	if (historyKeeper.statePointer >= 1) {
+	++historyKeeper.snapshotPointer;
+	if (historyKeeper.snapshotPointer >= 1) {
 		setVisible($('undobutton'));
 	}
+	// clear any state under the copy button ( it will be outdated)	
+	historyKeeper.removeCopy();
 }
 /**
  * create a new snapshot, based on the values of the page elements
  */
 historyKeeper.newSnapshot = function (state) {
 	if (snapshot) {
+		// clear the state under 'copy'
 		if (snapshot.get('copy')) {
 			snapshot.unset('copy');
 		}
@@ -174,6 +171,9 @@ historyKeeper.newSnapshot = function (state) {
 	snapshot.set('work', $('work').value);
 	snapshot.set('steps', $('progress').innerHTML);
 	snapshot.set('state', state);
+/* 	if (studentid && studentid != "") {
+		snapshot.get('state').id = studentid;
+	} */
 	historyKeeper.addSnapshot(snapshot);
 	
 }
@@ -188,6 +188,9 @@ historyKeeper.update = function (state) {
 	snapshot.set('work', $('work').value);
 	snapshot.set('steps', $('progress').innerHTML);
 	snapshot.set('state', state);
+/* 	if (studentid && studentid != "") {
+		snapshot.get('state').id = studentid;
+	} */
 	historyKeeper.addSnapshot(snapshot);
 	
 }
@@ -202,35 +205,43 @@ historyKeeper.addFeedback = function () {
 		historyKeeper.addSnapshot(snapshot);
 	}
 }
- /**
-  * When the user has asked a possible next step, we receive a state and a location. 
-  * Both are held available for the copy button.
-  */
-function CopyContent(state, location) {
-	this.state = state;
-	this.location = location;
-}
 historyKeeper.addCopy = function(copycontent) {
 	snapshot.set('copy', copycontent);
 	setVisible($('copybutton'));
 }
+historyKeeper.removeCopy = function() {
+	snapshot.unset('copy');
+	setInvisible($('copybutton'));
+}
+ /**
+  * When the user has asked a possible next step, we receive a state and a location. 
+  * Both are held available for the copy button.
+  * This function returns an object to hold the state and the location
+  */
+function CopyContent(state, location) {
+	this.state = state;
+/*	if (studentid && studentid != "") {
+		this.state.id = studentid;
+	} */
+	this.location = location;
+}
 function goBack() {
-	if (historyKeeper.statePointer > 0) {
-		-- (historyKeeper.statePointer);
-		var stateObject = historyKeeper.historyList[historyKeeper.statePointer];
+	if (historyKeeper.snapshotPointer > 0) {
+		-- (historyKeeper.snapshotPointer);
+		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
 		fillAreas(stateObject);
-		if (historyKeeper.statePointer == 0) {
+		if (historyKeeper.snapshotPointer == 0) {
 			setInvisible($('undobutton'));
 		}
 		setVisible($('forwardbutton'));
 	}
 }
  function goForward() {
-	if ((historyKeeper.statePointer +1) < historyKeeper.historyList.length) {
-		++(historyKeeper.statePointer);
-		var stateObject = historyKeeper.historyList[historyKeeper.statePointer];
+	if ((historyKeeper.snapshotPointer +1) < historyKeeper.historyList.length) {
+		++(historyKeeper.snapshotPointer);
+		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
 		fillAreas(stateObject);
-		if ((historyKeeper.statePointer + 1) == historyKeeper.historyList.length) {
+		if ((historyKeeper.snapshotPointer + 1) == historyKeeper.historyList.length) {
 			setInvisible($('forwardbutton'));
 		}
 		setVisible($('undobutton'));
@@ -258,6 +269,7 @@ function copy() {
 			$('work').value = snapshot.get('work') ;
 		}
 	}
+	historyKeeper.removeCopy();
 }
 
 /* 

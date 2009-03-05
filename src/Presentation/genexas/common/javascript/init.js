@@ -35,6 +35,9 @@ function init() {
 	setInvisible($('undobutton'));
 	setInvisible($('forwardbutton'));
 	setInvisible($('copybutton'));
-
+	// OU students have to find out themselves whether they are done
+	if (id && id != "421") {
+		setInvisible($('progress'));
+	}
 	generate();
 }

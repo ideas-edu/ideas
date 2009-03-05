@@ -9,7 +9,6 @@ var url = "/StrategyTool/bin/service.cgi";
   * The output is passed to the callback function
   */
 function ss_generate(number, callback) {
-	
 	var myAjax = new Ajax.Request(url, {   
 		parameters : 'input={ "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',	 
 		onSuccess : function(response) {	

@@ -11,6 +11,9 @@ function about() {
 function getKind() {
 	return $_GET["exercisekind"];
 }
+function getStudentNumber() {
+	return "";
+}
 function getLocal() {
 	return "";
 }

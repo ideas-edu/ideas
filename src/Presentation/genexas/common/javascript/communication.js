@@ -17,6 +17,7 @@ function displayExercise(state) {
 	$('exercise').update(task);
 	$('work').value = task;
 	$('history').update(task);
+	$('feedback').innerHTML = "";
 	// call a Strategytool-service
 	ss_getRemaining(state, function(number) {
 			$('progress').update('Steps<br> ' + number); 

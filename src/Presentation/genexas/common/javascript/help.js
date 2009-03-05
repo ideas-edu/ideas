@@ -253,7 +253,7 @@ function goBack() {
 
 function fillAreas(stateObject) {
 	$('exercise').update(stateObject.get('state').exercise);
-	$('work').value = (stateObject.get('work')).htmlToAscii();
+	$('work').value = stateObject.get('work');
 	$('feedback').update(stateObject.get('feedback'));
 	$('history').update(stateObject.get('history'));
 	$('progress').update(stateObject.get('steps'));

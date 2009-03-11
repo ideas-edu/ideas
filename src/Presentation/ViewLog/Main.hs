@@ -47,9 +47,9 @@ main = runCGI $ do
 readMetaInfos :: IO [MetaInfo]
 readMetaInfos = do
    files1 <- getDirectoryContents "."
-   files2 <- getDirectoryContents ".."
-   let logFiles = filter (".log" `isSuffixOf`) (sort files1) ++
-                  filter (== "service.log") files2
+   -- files2 <- getDirectoryContents ".."
+   let logFiles = filter (".log" `isSuffixOf`) (sort files1) {- ++
+                  [ "../service.log" | "service.log" `elem` files2 ] -}
    lists <- mapM readIndexFile logFiles
    return (reverse (concat lists))
    

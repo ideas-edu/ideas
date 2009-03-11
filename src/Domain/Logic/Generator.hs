@@ -14,7 +14,7 @@
 module Domain.Logic.Generator 
    ( generateLogic, generateLogicWith
    , LogicGenConfig(..), defaultConfig
-   , equalLogicAC
+   , equalLogicA
    ) where
 
 import Domain.Logic.Formula
@@ -27,9 +27,9 @@ import Common.Uniplate
 instance Rewrite Logic where
    operators = logicOperators
 
--- | Equality module associative-commutativity of operators
-equalLogicAC:: Logic -> Logic -> Bool
-equalLogicAC = equalWith operators
+-- | Equality modulo associativity of operators
+equalLogicA:: Logic -> Logic -> Bool
+equalLogicA = equalWith operators
 
 
 

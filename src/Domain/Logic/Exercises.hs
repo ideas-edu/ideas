@@ -41,7 +41,7 @@ dnfExercise = Exercise
                                 _       -> Nothing
    , prettyPrinter = ppLogicPars
    , equivalence   = eqLogic
-   , equality      = equalLogicAC
+   , equality      = equalLogicA
    , finalProperty = isDNF
    , ruleset       = map liftRuleToContext (logicRules ++ buggyRules)
    , strategy      = toDNF_DWA

@@ -80,10 +80,12 @@ searchSpaceWith config ordering diffs mp rules q = rec (empty ordering) (success
 scoreTreeDiff :: TreeDiff -> Rational
 scoreTreeDiff td =
    case td of
-      Equal     -> 20
+      Equal -> 1000 
+      _ -> 1
+      {- Equal     -> 20
       Inside    -> 10
       Different -> 1
-      Top       -> 2
+      Top       -> 2 -}
 
 -- History and X are a work-around, since we don't have an Ord instance for our type
 data History a = History (a -> a -> Ordering) (S.Set (X a))

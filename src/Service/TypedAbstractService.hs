@@ -168,7 +168,7 @@ submitExtra state new
            Just br -> Buggy [br]  
            Nothing -> NotEquivalent  -}
         
-        case filter isSame $ successesAfter $ maxNumber 200 {- maxDepth 3 -} errSpace of
+        case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 errSpace of
            ((_, _, rs), n):_ -> (Buggy rs, n)
            _                 -> (NotEquivalent, 200)
    | equality (exercise state) (term state) new =
@@ -179,7 +179,7 @@ submitExtra state new
            Just (Just r) -> (r, 0)
            _ -> (Unknown state { context=inContext new }, 200) -}
         
-        case filter isSame $ successesAfter $ maxNumber 200 $ {- maxDepth 5 $ -} space of
+        case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 $ space of
            ((a, mp, rs), n):_ 
               | isJust mp -> (Ok rs state { context=a, prefix=mp }, n)
               | otherwise -> (Detour rs state { context=a, prefix=mp }, n)

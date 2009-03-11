@@ -41,7 +41,7 @@ domains :: [String]
 domains = sort $ nub [ domain e | Some e <- exerciseList ]
 
 title :: String
-title = "Exercise Assistant" ++ replicate 10 ' ' ++ versionText
+title = "Exercise Assistant: " ++ versionText
 
 main :: IO ()
 main = start exerciseFrame

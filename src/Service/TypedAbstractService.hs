@@ -18,7 +18,7 @@ import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
-import Common.Utils (safeHead)
+import Common.Utils (safeHead, fst3)
 import Domain.Logic.FeedbackText -- FIXME
 import Service.SearchSpace (searchSpace)
 import Service.Progress
@@ -55,8 +55,11 @@ feedbackLogic old result =
       Ok rs _
          | null rs    -> (feedbackSame, False)
          | otherwise  -> feedbackOk rs
-      Detour rs _     -> feedbackDetour (ready old) rs
+      Detour rs _     -> feedbackDetour (ready old) (expected old) rs
       Unknown _       -> (feedbackUnknown, False)
+ where
+   expected = fmap fst3 . safeHead . allfirsts 
+             
 
 -----------------------------------------------------------
 

@@ -103,11 +103,15 @@ feedbackOk [one] = (okay (appliedRule one), True)
 feedbackOk _     = ("You have combined multiple steps. Press the Back button and perform one step at the time.", False)
 
 -- TODO Bastiaan: welke regel wordt er dan verwacht door de strategie?
-feedbackDetour :: Bool -> [Rule a] -> (String, Bool)
-feedbackDetour True [one] = (appliedRule one ++ " " ++ feedbackFinished, True)
-feedbackDetour True _     = (feedbackMultipleSteps ++ " " ++ feedbackFinished, True)
-feedbackDetour _ [one]    = (appliedRule one ++ " This is correct. However, the standard strategy suggests a different step.", True)
-feedbackDetour _ _        = (feedbackUnknown , False)
+feedbackDetour :: Bool -> Maybe (Rule a) -> [Rule a] -> (String, Bool)
+feedbackDetour True _ [one] = (appliedRule one ++ " " ++ feedbackFinished, True)
+feedbackDetour True _ _     = (feedbackMultipleSteps ++ " " ++ feedbackFinished, True)
+feedbackDetour _ mexp [one] = 
+   let however = case mexp >>= ruleText of
+                    Just s  -> "However, the standard strategy suggests to use " ++ s ++ "." 
+                    Nothing -> "However, the standard strategy suggests a different step."   
+   in (appliedRule one ++ " This is correct. " ++ however, True)
+feedbackDetour _ _ _ = (feedbackUnknown , False)
 
 feedbackUnknown :: String
 feedbackUnknown = feedbackMultipleSteps ++ " " ++ backAndHint 

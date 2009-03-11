@@ -25,6 +25,7 @@ import Domain.Math.Expr
 import OpenMath.Object
 import Service.XML
 import Service.AbstractService (getExercise)
+import Service.Revision (version)
 import OpenMath.LAServer
 import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
@@ -138,7 +139,7 @@ getState xml =
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
    "result"  .=. "ok"
-   "version" .=. "0.1"
+   "version" .=. version
    body
 
 data X = forall a . InXML a => X (TAS.State a)

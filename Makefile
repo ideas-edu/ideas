@@ -82,7 +82,9 @@ else
 	open $(BINDIR)/ideasWX.app/
 endif
 
-$(SRCDIR)/Service/Revision.hs:
+revision: $(SRCDIR)/Service/Revision.hs
+
+$(SRCDIR)/Service/Revision.hs: $(filter-out $(SRCDIR)/Service/Revision.hs, $(HS-SOURCES))
 	echo "module Service.Revision where" > $@
 	echo 'version = "$(VERSION)"' >> $@
 ifeq ($(SVN), yes)

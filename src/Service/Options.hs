@@ -16,6 +16,7 @@ module Service.Options where
 import System.Environment
 import System.Exit
 import System.Console.GetOpt
+import Service.Revision
 
 data Flag = Verbose  | Version | Mode Mode
           | Logging Bool | InputFile String 
@@ -35,10 +36,10 @@ options =
      ]
 
 header :: String
-header = "Usage: service [OPTION]      (version " ++ versionNr ++ ")"
+header = "Usage: service [OPTION]      (" ++ versionText ++ ")"
 
-versionNr :: String
-versionNr = "0.4.3"
+versionText :: String
+versionText = "version " ++ version ++ " (revision " ++ show revision ++ ")"
 
 serviceOptions :: IO [Flag]
 serviceOptions = do

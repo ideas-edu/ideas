@@ -29,7 +29,7 @@ import OpenMath.Object
 type StrategyID = String
 
 versionNr :: String
-versionNr = Service.Options.versionNr
+versionNr = Service.Options.versionText
 
 oneliner :: String -> String
 oneliner = unwords . concatMap words . lines

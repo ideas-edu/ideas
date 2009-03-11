@@ -23,6 +23,7 @@ import Common.Parsing
 import Common.Utils (indent)
 import Data.List (intersperse)
 import Control.Monad
+import Service.Revision (version, revision)
 
 -- temporary test
 {-
@@ -198,6 +199,7 @@ instance InJSON JSON_RPC_Response where
       [ ("result", responseResult resp)
       , ("error" , responseError resp)
       , ("id"    , responseId resp)
+      , ("version", String $ version ++ " (" ++ show revision ++ ")")
       ]
    fromJSON (Object xs) = do
       rj <- lookupM "result" xs

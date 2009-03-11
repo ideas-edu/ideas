@@ -27,8 +27,8 @@ test.log: $(ALL-OUT)
 	  echo $$i; \
 	  echo $$i >> test.log; \
 	  if $(WINDOWS)==no; then dos2unix $$i.exp &> /dev/null; fi; \
-	  diff -I "version=" $$i.out $$i.exp; \
-	  diff -I "version=" $$i.out $$i.exp >> test.log; \
+	  diff -I "version" $$i.out $$i.exp; \
+	  diff -I "version" $$i.out $$i.exp >> test.log; \
 	done;
 
 mathdox-request/%.out: mathdox-request/%.txt $(BINDIR)/service.cgi

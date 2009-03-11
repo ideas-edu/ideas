@@ -79,6 +79,8 @@ feedbackBuggy [br]
         incorrect "Be careful with the elimination of an equivalence; make sure that the disjunctions and the conjunctions are at the right place. "
    | br ~= buggyRuleImplElim = 
         incorrect "Be careful with the elimination of an implication; make sure the negation is at the right place. "
+   | br ~= buggyRuleImplElim1 = 
+        incorrect "Did you try to eliminate an implication? In that case you used an AND instead of an OR "
    | br ~= buggyRuleDeMorgan1 = 
         incorrect "Did you try to apply DeMorgan? Be careful with the negations. " 
    | br ~= buggyRuleDeMorgan2 = 
@@ -134,7 +136,7 @@ ruleText r
    | r ~= ruleDefEquiv  = return "equivalence elimination" 
    | r `inGroup`"Commutativity" = return "commutativity"
    | r `inGroup`"Aasociativity" = return "associativity"
-   | r `inGroup`"Distributivity" = return "dommutativity"
+   | r `inGroup`"Distributivity" = return "distributivity"
    | r `inGroup`"Idempotency" = return "idempotency"
    | r `inGroup`"Absorption" = return "absorption"
    | r `inGroup`"De Morgan" = return "De Morgan"

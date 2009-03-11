@@ -30,7 +30,7 @@ buggyRules :: [Rule Logic]
 buggyRules = makeGroup "Common misconceptions"
    [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui
    , buggyRuleEquivElim1, buggyRuleEquivElim2
-   , buggyRuleImplElim, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
+   , buggyRuleImplElim, buggyRuleImplElim1, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
    , buggyRuleDeMorgan4, buggyRuleNotOverImpl, buggyRuleParenth1, buggyRuleParenth2
    , buggyRuleParenth3, buggyRuleAssoc
    , buggyRuleAndSame, buggyRuleAndCompl, buggyRuleOrSame, buggyRuleOrCompl
@@ -342,9 +342,16 @@ buggyRuleEquivElim2 = buggyRule $ ruleList "BuggyEquivElim2"
     ]
     
 buggyRuleImplElim :: Rule Logic
-buggyRuleImplElim = buggyRule $ rule "BuggyImplElim" $
-   \x y -> (x :->: y) :~> Not (x :||: y) 
-    
+buggyRuleImplElim = buggyRule $ ruleList "BuggyImplElim" 
+   [\x y -> (x :->: y) :~> Not (x :||: y)
+   ,\x y -> (x :->: y) :~> (x :||: y)
+   ,\x y -> (x :->: y) :~> Not (x :&&: y)
+   ]
+  
+buggyRuleImplElim1 :: Rule Logic
+buggyRuleImplElim1 = buggyRule $ rule "BuggyImplElim1"  $  
+     \x y -> (x :->: y) :~> (Not x :&&: y)
+     
 buggyRuleDeMorgan1 :: Rule Logic
 buggyRuleDeMorgan1 = buggyRule $ ruleList "BuggyDeMorgan1"
     [ \x y -> (Not (x :&&: y)) :~>  (Not x :||: y)

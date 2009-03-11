@@ -12,27 +12,16 @@
 -- by Josje Lodder.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.FeedbackText (feedback, feedbackSyntaxError, ruleText, appliedRule) where
+module Domain.Logic.FeedbackText 
+   ( feedbackSyntaxError, ruleText, appliedRule
+   , feedbackBuggy, feedbackNotEquivalent, feedbackSame, feedbackOk, feedbackDetour, feedbackUnknown
+   ) where
 
 import Data.Maybe
 import Common.Parsing
 import Common.Transformation
-import Service.TypedAbstractService
 import Domain.Logic.Rules
 
--- Feedback messages for submit service (free student input). The boolean
--- indicates whether the student is allowed to continue (True), or forced 
--- to go back to the previous state (False)
-feedback :: Result a -> (String, Bool)
-feedback result = 
-   case result of
-      Buggy rs        -> (feedbackBuggy rs, False)
-      NotEquivalent   -> (feedbackNotEquivalent, False)
-      Ok rs _
-         | null rs    -> (feedbackSame, False)
-         | otherwise  -> feedbackOk rs
-      Detour rs _     -> feedbackDetour rs
-      Unknown _       -> (feedbackUnknown, False)
 
 -- This is more general than the logic domain. Perhaps it should
 -- be defined elsewhere
@@ -160,8 +149,14 @@ backAndHint = "Press the Back button and try again. You may ask for a hint."
 (~=) :: Rule a -> Rule b -> Bool
 r1 ~= r2 = name r1 == name r2
 
+-- Quick and dirty fix!
 inGroup :: Rule a -> String -> Bool
-inGroup r n = n `elem` ruleGroups r
+inGroup r n = 
+   let rs = filter (~= r) (logicRules ++ buggyRules)
+   in n `elem` concatMap ruleGroups rs
+
+
+-- logicRules ++ buggyRules
 
 -- TODO by Bastiaan
 showToken :: Token -> String

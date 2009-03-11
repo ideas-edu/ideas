@@ -1,0 +1,4 @@
+{ "method" : "onefirsttext"
+, "params" : [["Proposition to DNF", "[]", "~(~x || ~y)", ""]]
+, "id"     : 421
+}

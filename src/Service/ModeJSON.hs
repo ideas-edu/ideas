@@ -43,10 +43,12 @@ serviceTable = M.fromList
    , ("apply",          service3 apply)
    , ("applicable",     service2 applicable)
    , ("onefirst",       service1 onefirst)
+   , ("onefirsttext",   service1 onefirsttext)
    , ("allfirsts",      service1 allfirsts)
    , ("derivation",     service1 derivation)
    , ("generate",       service2IO generate)
    , ("submit",         service2 submit)
+   , ("submittext",     service2 submittext)
    , ("exerciselist",   exerciseList)
    , ("rulelist",       ruleList)
    ]

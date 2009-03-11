@@ -191,6 +191,11 @@
          "rewriterule": true
       },
       {
+         "name": "BuggyImplElim1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
          "name": "BuggyDeMorgan1",
          "buggy": true,
          "rewriterule": true

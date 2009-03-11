@@ -18,6 +18,7 @@ import Common.Utils (safeHead, Some(..))
 import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
+import Domain.Logic.FeedbackText (feedbackSyntaxError) -- FIXME
 import Service.ExerciseList
 import Common.Parsing (SyntaxError(..))
 import qualified Service.TypedAbstractService as TAS
@@ -65,6 +66,13 @@ allfirsts s =
 onefirst :: State -> (RuleID, Location, State)
 onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
 
+onefirsttext :: State -> (Bool, String, State)
+onefirsttext s = 
+   case fromState s of
+      Some ts -> 
+         let (b, txt, s) = TAS.onefirsttext ts 
+         in (b, txt, toState s)
+
 applicable :: Location -> State -> [RuleID]
 applicable loc s = 
    case fromState s of
@@ -84,6 +92,16 @@ stepsremaining :: State -> Int
 stepsremaining s = 
    case fromState s of
       Some ts -> TAS.stepsremaining ts
+
+submittext :: State -> Expression -> (Bool, String, State)
+submittext s input = 
+   case fromState s of
+      Some ts -> 
+         case parser (TAS.exercise ts) input of
+            Left err -> (False, feedbackSyntaxError err, s)
+            Right a  ->
+               let (b, txt, s) = TAS.submittext ts a
+               in (b, txt, toState s)
 
 submit :: State -> Expression -> Result
 submit s input = fst $ submitExtra s input

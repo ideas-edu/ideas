@@ -1,0 +1,14 @@
+{
+   "result": [
+      true,
+      "Well done! You have applied De Morgan correctly.",
+      [
+         "Proposition to DNF",
+         "[0,1,1,0,1]",
+         "~~x /\\ ~~y",
+         "[];"
+      ]
+   ],
+   "error": null,
+   "id": 421
+}

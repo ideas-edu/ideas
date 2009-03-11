@@ -29,6 +29,7 @@ module Common.Parsing
     -- * Analyzing parentheses
    , SyntaxError(..), fromMessage, errorToPositions
    , checkParentheses, showTokenPos, tokenNoPosition
+   , toPosition, tokenText
    ) where
 
 import qualified UU.Parsing as UU
@@ -400,6 +401,10 @@ errorToPositions err =
 
 -----------------------------------------------------------
 --- Analyzing parentheses
+
+tokenText :: UU.Token -> String
+tokenText (UU.Reserved s _)   = "symbol " ++ s
+tokenText (UU.ValToken s v _) = show s ++ " " ++ v
 
 showTokenPos :: UU.Token -> String
 showTokenPos (UU.Reserved _ p)   = showPosition p

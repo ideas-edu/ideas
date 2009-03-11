@@ -22,23 +22,22 @@ import Common.Parsing
 import Common.Transformation
 import Domain.Logic.Rules
 
-
 -- This is more general than the logic domain. Perhaps it should
 -- be defined elsewhere
 feedbackSyntaxError :: SyntaxError -> String
 feedbackSyntaxError syntaxError =
    case syntaxError of
       ParNotClosed token -> 
-         "Opening parenthesis symbol ( at position " ++ tokenPos token ++ " is not closed."
+         "Opening parenthesis symbol '(' at position " ++ tokenPos token ++ " is not closed."
       ParNoOpen token -> 
-         "Closing parenthesis symbol ) at position " ++ tokenPos token ++ " has no matching opening parenthesis."
+         "Closing parenthesis symbol ')' at position " ++ tokenPos token ++ " has no matching opening parenthesis."
       ParMismatch token1 token2 -> 
          "The openening parenthesis at position " ++ tokenPos token1 ++ 
          " does not match with the closing parenthesis at position " ++ tokenPos token2 ++ "."
       ErrorMessage txt -> 
          txt
       Unexpected token -> 
-         "Unexpected symbol " ++ showToken token
+         "Unexpected " ++ showToken token
 
 feedbackBuggy :: [Rule a] -> String
 feedbackBuggy [br] 
@@ -163,13 +162,11 @@ inGroup r n =
    let rs = filter (~= r) (logicRules ++ buggyRules)
    in n `elem` concatMap ruleGroups rs
 
-
--- logicRules ++ buggyRules
-
--- TODO by Bastiaan
 showToken :: Token -> String
-showToken = show
+showToken token = tokenText token ++ " at position " ++ tokenPos token
 
--- TODO by Bastiaan
 tokenPos :: Token -> String
-tokenPos _ = "(??)"
+tokenPos token = 
+   let p@(l, c) = toPosition token
+   in if l==1 then show c else show p 
+   

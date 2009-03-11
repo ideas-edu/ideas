@@ -3,6 +3,8 @@ all: binaries unit-tests documentation
 
 SRCDIR = src
 
+VERSION = 0.5.0
+
 include Makefile.incl
 
 binaries: service laservice viewlog solvergui ideas
@@ -78,6 +80,17 @@ ifeq ($(WINDOWS), yes)
 	$(BINDIR)/ideasWX$(EXE)
 else
 	open $(BINDIR)/ideasWX.app/
+endif
+
+$(SRCDIR)/Service/Revision.hs:
+	echo "module Service.Revision where" > $@
+	echo 'version = "$(VERSION)"' >> $@
+ifeq ($(SVN), yes)
+	svn info | grep 'Revision' | sed 's/.*\: /revision = /' >> $@
+	svn info | grep 'Last Changed Date' | sed 's/.*(\(.*\))/lastChanged = \"\1\"/' >> $@
+else
+	echo 'revision = 0' >> $@
+	echo 'lastChanged = "unknown"' >> $@
 endif
 
 nolicense:

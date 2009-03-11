@@ -29,6 +29,7 @@ import Session
 --import Control.Monad
 --import Data.IORef
 import Service.ExerciseList
+import Service.Options (versionText)
 import qualified Domain.LinearAlgebra as LA
 import Domain.Programming
 
@@ -39,12 +40,15 @@ exercises = Some LA.opgave6b : Some LA.opgaveVarMatrix2 : Some LA.opgaveVarMatri
 domains :: [String]
 domains = sort $ nub [ domain e | Some e <- exerciseList ]
 
+title :: String
+title = "Exercise Assistant" ++ replicate 10 ' ' ++ versionText
+
 main :: IO ()
 main = start exerciseFrame
 
 exerciseFrame :: IO ()
 exerciseFrame = do 
-   f <- frame [text := "Exercise Assistant", bgcolor := white]
+   f <- frame [text := title, bgcolor := white]
    
    -- Left Panel
    leftPanel <- panel f []

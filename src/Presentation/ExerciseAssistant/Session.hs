@@ -137,8 +137,9 @@ submitTextLogic txt ref = do
    case parser (exercise d) txt of
       Left err -> return (feedbackSyntaxError err, False)
       Right term -> do
-         let result = TAS.submit (currentState d) term
-         case (TAS.feedbackLogic result, TAS.getResultState result) of
+         let old = currentState d
+             result = TAS.submit old term
+         case (TAS.feedbackLogic old result, TAS.getResultState result) of
             ((txt, True), Just n) -> do
                -- make sure that new has a prefix (because of possible detour)
                -- when resetting the prefix, also make sure that the context is refreshed

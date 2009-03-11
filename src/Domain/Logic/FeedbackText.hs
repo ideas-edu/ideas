@@ -104,12 +104,20 @@ feedbackOk [one] = (okay (appliedRule one), True)
 feedbackOk _     = ("You have combined multiple steps. Press the Back button and perform one step at the time.", False)
 
 -- TODO Bastiaan: welke regel wordt er dan verwacht door de strategie?
-feedbackDetour :: [Rule a] -> (String, Bool)
-feedbackDetour [one] = (appliedRule one ++ " This is correct. However, the standard strategy suggests a different step.", True)
-feedbackDetour _     = (feedbackUnknown, False)
+feedbackDetour :: Bool -> [Rule a] -> (String, Bool)
+feedbackDetour True [one] = (appliedRule one ++ " " ++ feedbackFinished, True)
+feedbackDetour True _     = (feedbackMultipleSteps ++ " " ++ feedbackFinished, True)
+feedbackDetour _ [one]    = (appliedRule one ++ " This is correct. However, the standard strategy suggests a different step.", True)
+feedbackDetour _ _        = (feedbackUnknown , False)
 
 feedbackUnknown :: String
-feedbackUnknown = "You have combined multiple steps (or made a mistake). " ++ backAndHint 
+feedbackUnknown = feedbackMultipleSteps ++ " " ++ backAndHint 
+
+feedbackMultipleSteps :: String
+feedbackMultipleSteps = "You have combined multiple steps (or made a mistake)."
+
+feedbackFinished :: String
+feedbackFinished = "Are you aware that you already reached disjunctive normal form?"
 
 appliedRule :: Rule a -> String
 appliedRule r = "You have applied " ++ txt ++ " correctly."

@@ -47,15 +47,15 @@ data Result a = Buggy  [Rule (Context a)]
 -- to go back to the previous state (False)
 -- !! Placed here to avoid a cyclic import dependency. Should be moved 
 -- to Domain.Logic in future
-feedbackLogic :: Result a -> (String, Bool)
-feedbackLogic result =
+feedbackLogic :: State a -> Result a -> (String, Bool)
+feedbackLogic old result =
    case result of
       Buggy rs        -> (feedbackBuggy rs, False)
       NotEquivalent   -> (feedbackNotEquivalent, False)
       Ok rs _
          | null rs    -> (feedbackSame, False)
          | otherwise  -> feedbackOk rs
-      Detour rs _     -> feedbackDetour rs
+      Detour rs _     -> feedbackDetour (ready old) rs
       Unknown _       -> (feedbackUnknown, False)
 
 -----------------------------------------------------------
@@ -144,7 +144,7 @@ submittext state a =
       _ -> (False, txt, state)
  where
   result = submit state a
-  (txt, b) = feedbackLogic result
+  (txt, b) = feedbackLogic state result
 
 -- make sure that new has a prefix (because of possible detour)
 -- when resetting the prefix, also make sure that the context is refreshed

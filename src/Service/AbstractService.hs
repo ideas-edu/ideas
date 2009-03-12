@@ -18,7 +18,7 @@ import Common.Utils (safeHead, Some(..))
 import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
-import Domain.Logic.FeedbackText (feedbackSyntaxError) -- FIXME
+import Domain.Logic.FeedbackText (feedbackSyntaxError, ruleText) -- FIXME
 import Service.ExerciseList
 import Common.Parsing (SyntaxError(..))
 import qualified Service.TypedAbstractService as TAS
@@ -53,7 +53,7 @@ derivation :: State -> [(RuleID, Location, Expression)]
 derivation s = 
    case fromState s of
       Some ts -> 
-         let f (r, ca) = (name r, location ca, prettyPrinter (TAS.exercise ts) (fromContext ca))
+         let f (r, ca) = (fromMaybe ("rule " ++ name r) (ruleText r), location ca, prettyPrinter (TAS.exercise ts) (fromContext ca))
          in map f (TAS.derivation ts)
 
 allfirsts :: State -> [(RuleID, Location, State)]

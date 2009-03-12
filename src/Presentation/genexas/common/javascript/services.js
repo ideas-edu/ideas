@@ -63,13 +63,13 @@ function ss_getReady(state, callback) {
 function ss_getHint(location, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {  
-		parameters : 'input={ "method" :"applicable", "params" : ["[]", ["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", ""]], "id" : ' + id + '}',
+		parameters : 'input={ "method" :"onefirsttext", "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
 		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
-			
 			var error = resJSON.error;
+			//alert(response.responseText);
 			if (error == null) {
-				var result = resJSON["result"];
+				var result = resJSON['result'];
 				callback(result);
 			}
 			else {

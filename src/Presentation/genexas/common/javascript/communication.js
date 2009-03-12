@@ -35,16 +35,15 @@ function displayExercise(state) {
 function getHint() {
 	ss_getHint(snapshot.get('location'), snapshot.get('state'), displayHint);
 }
-function displayHint(listOfRules) {
+function displayHint(hint) {
 	closeallhelp();	
 	var expression = (snapshot.get('state')).exercise;
 	var text = '';
 	if (keepFeedback) {
 		text = $('feedback').innerHTML ;
 	}
-	if (listOfRules.length > 0) {
-		rules = writeArray(listOfRules);
-		text +=   '<p>' + applicable + ' <strong>' + expression + '</strong><br>is:<br><br><strong>' + rules + '</strong></p>';
+	if (hint[0]) {
+		text +=   '<p><strong>' + hint[1] + '</strong></p>';
 	}
 	else {
 		text +=  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';

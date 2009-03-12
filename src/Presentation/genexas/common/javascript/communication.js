@@ -94,14 +94,14 @@ function getDerivation() {
 	if (keepFeedback) {
 		text = $('feedback').innerHTML ;
 	}
-	text += derivationtext +  $('work').value + '<br><br>';
+	text += '<strong>' + derivationtext + '</strong><br><br>' + $('work').value + '<br>';
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;
-		text += '<font size="+2">\u21D4</font>  <strong>' + rule.name;
+		text += '<font size="+2">&nbsp;&nbsp;&nbsp;\u21D4</font>  <strong>' + rule.name;
 		text += '</strong><br>';
 		text += rule.expression;
-		text += '<br><br>';
+		text += '<br>';
 	}
 	$('feedback').update(text);
 	$('feedback').scrollTop = $('feedback').scrollHeight;

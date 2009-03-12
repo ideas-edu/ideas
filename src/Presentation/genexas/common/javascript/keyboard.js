@@ -171,8 +171,8 @@ function naarAscii(expressie) {
 	while (resultaatstring != resultaatstring.replace(String.fromCharCode(8744), '||')) {
 		resultaatstring = resultaatstring.replace(String.fromCharCode(8744), '||');
 	}
-	while (resultaatstring != resultaatstring.replace(String.fromCharCode(8743), '/\\')) {
-		resultaatstring = resultaatstring.replace(String.fromCharCode(8743), '/\\');
+	while (resultaatstring != resultaatstring.replace(String.fromCharCode(8743), '/\\\\')) {
+		resultaatstring = resultaatstring.replace(String.fromCharCode(8743), '/\\\\');
 	 }
 	 return resultaatstring;
 }

@@ -46,10 +46,11 @@ function setKeepFeedback() {
  * From HTML characters to ascii and back
   */ 
 String.prototype.htmlToAscii = function() {
-	var resultstring = this.replace(/&gt;/g, '>');
+	var resultstring = werkveldNaarExas(this);
+/*	this.replace(/&gt;/g, '>');
 	resultstring = resultstring.replace(/&lt;/g, '<');
-	resultstring = resultstring.replace(/\\/g, '\\\\');		
-	 return werkveldNaarExas(resultstring);
+	resultstring = resultstring.replace(/\\/g, '\\\\'); */
+	 return resultstring;
 }
 String.prototype.asciiToHtml = function() {
 	var resultstring = this.replace(/>/g, '&gt;');

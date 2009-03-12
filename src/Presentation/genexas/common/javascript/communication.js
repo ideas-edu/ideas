@@ -98,7 +98,7 @@ function getDerivation() {
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;
-		text += '==&gt;  <strong>' + rule.name;
+		text += '<font size="+2">\u21D4</font>  <strong>' + rule.name;
 		text += '</strong><br>';
 		text += rule.expression;
 		text += '<br><br>';
@@ -123,7 +123,7 @@ function displayFeedback(result, state) {
 	text +=  '<p><strong>' + result[1] + '</strong></p>';
 	if (result[0]) {
 		$('feedback').update(text);
-		$('history').update($('history').innerHTML + '<br>==&gt; ' + state.exercise);
+		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font> ' + state.exercise);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}

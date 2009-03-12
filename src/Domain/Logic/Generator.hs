@@ -37,7 +37,7 @@ generateLogic :: Gen Logic
 generateLogic = generateLogicWith defaultConfig
    
 generateLogicWith :: LogicGenConfig -> Gen Logic
-generateLogicWith config = arbLogic config >>= preventSameVar config
+generateLogicWith config = arbLogic config >>= preventSameVar config >>= (return . removePartsInDNF)
    
 data LogicGenConfig = LogicGenConfig
    { maxSize       :: Int
@@ -104,6 +104,19 @@ preventSameVar config = rec
                             ]
                  return (f [Var x, Var z])
               (cs, f) -> liftM f (mapM rec cs)
+
+removePartsInDNF :: Logic -> Logic
+removePartsInDNF = buildOr . filter p1 . disjunctions
+ where
+   buildOr [] = T
+   buildOr xs = foldl1 (:||:) xs
+   
+   p1 = all (not . p2) . conjunctions
+   p2 (Var _) = True
+   p2 (Not q) = p2 q
+   p2 T       = True
+   p2 F       = True
+   p2 _       = False
 
 variableList :: [String]
 variableList = ["p", "q", "r", "s", "t"] ++ [ "x" ++ show n | n <- [0..] ]

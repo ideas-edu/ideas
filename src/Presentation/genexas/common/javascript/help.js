@@ -48,8 +48,8 @@ function setKeepFeedback() {
 String.prototype.htmlToAscii = function() {
 	var resultstring = this.replace(/&gt;/g, '>');
 	resultstring = resultstring.replace(/&lt;/g, '<');
-	resultstring = resultstring.replace(/\\/g, '\\\\');
-	 return resultstring;
+	resultstring = resultstring.replace(/\\/g, '\\\\');		
+	 return werkveldNaarExas(resultstring);
 }
 String.prototype.asciiToHtml = function() {
 	var resultstring = this.replace(/>/g, '&gt;');

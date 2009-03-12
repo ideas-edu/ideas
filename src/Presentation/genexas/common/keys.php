@@ -5,7 +5,8 @@
 	</tr>
 	<tr>
 	<td><input title="Press the '-' key to insert a negation." id="nottoets" class="toets" value="&#172;" type="button" onclick='voegin("&#172;", "work")'></td>
-	<td><input title="Press the 'o' key to insert an logic or." id="ortoets" class="toets" value="&#8744;" type="button" onclick='voegin("&#8744;", "work")'></td>
+	<td><input title="Press the 'o' key to insert a logic or." id="ortoets" class="toets" value="&#8744;" type="button" 
+onclick='voegin("&#8744;", "work")'></td>
 	<td><input title="Press the 'a' key to insert a logic and." id="andtoets" class="toets" value="&#8743;" type="button" onclick='voegin("&#8743;", "work")'></td>
 	<td><input title="Press the 'i' key to insert an implication." id="implicatietoets" class="toets" value="&#8594;" type="button" onclick='voegin("&#8594;", "work")'></td>
 	<td><input title="Press the '=' key to insert an equivalence sign." id="equivalentietoets" class="toets" value="&#8596;" type="button" onclick='voegin("&#8596;", "work")'></td>

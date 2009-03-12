@@ -16,7 +16,10 @@ function ss_generate(number, callback) {
 			var error = resJSON.error;
 			if (error == null) {
 				result = resJSON.result;
-				var state = new State(result[0], result[1], result[2], result[3]);
+				/*                    id          locatie   formule */
+				var state = new State(result[0], result[1], presenteertekst(result[2]), result[3]);
+//				var state = new State(result[0], result[1], result[2], result[3]);
+				
 				callback(state);
 			}
 			else {
@@ -97,7 +100,7 @@ function ss_getNext(state, callback) {
 				var valid = result[0];
 				var rule = result[1];
 				var state = result[2];
-				var newState = new State(state[0], state[1], state[2], state[3]);
+				var newState = new State(state[0], state[1], presenteertekst(state[2]), state[3]);
 				callback(rule, valid, newState);
 			}
 			else { 
@@ -171,7 +174,7 @@ function ss_getFeedback(state, newexpression, callback) {
 				//alert(result[1]);
 				var newState = null;
 				var receivedstate = (resJSON.result)[2];
-				newState = new State(receivedstate[0], receivedstate[1], receivedstate[2], receivedstate[3]);
+				newState = new State(receivedstate[0], receivedstate[1], presenteertekst(receivedstate[2]), receivedstate[3]);
 				callback(result, newState);
 			}
 			else { alert(error)};

@@ -37,7 +37,7 @@ function getHint() {
 }
 function displayHint(hint) {
 	closeallhelp();	
-	var expression = (snapshot.get('state')).exercise;
+	var expression = presenteertekst((snapshot.get('state')).exercise);
 	var text = '';
 	if (keepFeedback) {
 		text = $('feedback').innerHTML ;

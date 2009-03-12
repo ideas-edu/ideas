@@ -10,7 +10,7 @@ document.observe("dom:loaded", init);
 function init() {
 	$('aboutButton').observe('click', openhelp);
 	$('helpButton').observe('click', openhelp);
-	$('rulesButton').observe('click', openhelp); 
+//	$('rulesButton').observe('click', openhelp); 
 	$('generateButton').observe('click', generate);
 	
 	$('hintbutton').observe('click', getHint);

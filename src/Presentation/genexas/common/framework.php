@@ -15,6 +15,7 @@
 <script type="text/javascript">var exercisekind = <?php $kind = getKind(); echo '"'.$kind.'";'; ?>var id=421;</script>
 <?php if (getStudentNumber() != "") print getStudentNumber();?>
 <script type="text/javascript" src="/genexas/common/javascript/init.js"></script>
+<script type="text/javascript" src="/genexas/common/javascript/keyboard.js"></script>	
 </head>
 
 <h1>Exercise Assistant online</h1>
@@ -57,6 +58,8 @@
 		
 	<div id="feedback" class="clear"><?php print Welcome;?></div><!-- end div feedback -->
 
+	<div><?php include("/var/www/html/genexas/common/keys.php"); ?></div>
+	
 </div><!-- end div column right -->
 
 <div id="rules" class="helparea invisible">

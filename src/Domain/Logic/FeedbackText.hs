@@ -106,6 +106,8 @@ feedbackOk _     = ("You have combined multiple steps. Press the Back button and
 feedbackDetour :: Bool -> Maybe (Rule a) -> [Rule a] -> (String, Bool)
 feedbackDetour True _ [one] = (appliedRule one ++ " " ++ feedbackFinished, True)
 feedbackDetour True _ _     = (feedbackMultipleSteps ++ " " ++ feedbackFinished, True)
+feedbackDetour _ _ [one] | one `inGroup`"Commutativity" =
+   ("You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula.", True)
 feedbackDetour _ mexp [one] = 
    let however = case mexp >>= ruleText of
                     Just s  -> "However, the standard strategy suggests to use " ++ s ++ "." 

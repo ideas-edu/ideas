@@ -57,27 +57,27 @@ function controleer(e) {	// eerst  de character code ophalen
 		switch (code) {
 			// - voor negatie
 			case 45 : 
-				voegin(String.fromCharCode(172), "werk");
+				voegin(String.fromCharCode(172), "work");
 				stop(e);
 				return false;
 			// = voor equivalentie
 			case 61:
-				voegin(String.fromCharCode(8596), "werk");
+				voegin(String.fromCharCode(8596), "work");
 				stop(e);
 				return false;
 			//  o voor or
 			case 111 :
-				voegin(String.fromCharCode(8744), "werk");
+				voegin(String.fromCharCode(8744), "work");
 				stop(e);
 				return false;
 			// i  voor implicatie
 			case 105 :
-				voegin(String.fromCharCode(8594), "werk");
+				voegin(String.fromCharCode(8594), "work");
 				stop(e);
 				return false;
 			// a voor and
 			case 97 : 
-				voegin(String.fromCharCode(8743), "werk");
+				voegin(String.fromCharCode(8743), "work");
 				stop(e);
 				return false;				
 		}
@@ -180,4 +180,59 @@ function naarAscii(expressie) {
 // hulpfunctie: domeinspecifieke karakters vervangen, en enters en tabs verwijderen: vanuit textarea naar exas
 function werkveldNaarExas(expressie) {
 	return schoon(naarAscii(expressie));
+}
+
+/**
+* Om event handlers aan objecten te kunnen hangen
+*/
+function addEventSimple(object,event,fn) {
+        if (object.addEventListener)
+                object.addEventListener(event,fn,false);
+        else if (object.attachEvent)
+                object.attachEvent('on'+event,fn);
+}
+						  
+function removeEventSimple(object,event,fn) {
+        if (object.removeEventListener)
+	        object.removeEventListener(event,fn,false);
+        else if (object.detachEvent)
+                object.detachEvent('on'+event,fn);
+}
+
+/**
+ * Om cross-browser het event-object te pakken te krijgen
+ */
+function getEvent(event) {
+	if (typeof event == "undefined") {
+		var event = window.event;	
+	}
+	return event;
+}
+
+/**
+ * om cross-browser de keycode te pakken te krijgen
+ */
+function getCode(event) {
+	var code;
+	if (event.keyCode) {
+		// Opera en IE
+		code = event.keyCode;	
+	}
+	else {
+		// Firefox
+		code = event.which;	
+	}
+	return code;
+}
+
+/**
+ * om cross-browser de default action te voorkomen
+  */
+function stop(event) {
+	event.cancelBubble = true;
+	event.returnValue = false;
+	if (event.stopPropagation) {
+		event.stopPropagation();
+		event.preventDefault();
+	}
 }

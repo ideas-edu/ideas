@@ -8,7 +8,10 @@ document.observe("dom:loaded", init);
 //window.onload = function() {
 	// The handlers for buttons
 function init() {
-	$('aboutButton').observe('click', openhelp);
+
+	addEventSimple($("work"), 'keypress', controleer);
+
+ 	$('aboutButton').observe('click', openhelp);
 	$('helpButton').observe('click', openhelp);
 //	$('rulesButton').observe('click', openhelp); 
 	$('generateButton').observe('click', generate);
@@ -41,3 +44,5 @@ function init() {
 	}
 	generate();
 }
+
+						

@@ -120,7 +120,7 @@ function displayFeedback(result, state) {
 	if (keepFeedback) {
 		text = $('feedback').innerHTML ;
 	}
-	text +=  '<p><strong>' + result[1] + '</strong></p>';
+	text +=  '<p>' + result[1] + '</p>';
 	if (result[0]) {
 		$('feedback').update(text);
 		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);

@@ -236,3 +236,27 @@ function stop(event) {
 		event.preventDefault();
 	}
 }
+
+/** 
+ * Een functie om tabs en nieuwe regeltekens weg te halen,
+  */
+function schoon(tekst) {
+	var oplossing = tekst.replace("\n", "");
+	oplossing = oplossing.replace("\r", "");
+	oplossing = oplossing.replace("\t", "");
+	return oplossing;
+}
+
+/**
+ * Om cross-browser aan de juiste selectie te komen
+*/ 
+function getRangeObject(selectionObject) {
+	if (selectionObject.getRangeAt)
+		return selectionObject.getRangeAt(0);
+	else { // Safari!
+		var range = document.createRange();
+		range.setStart(selectionObject.anchorNode,selectionObject.anchorOffset);
+		range.setEnd(selectionObject.focusNode,selectionObject.focusOffset);
+		return range;
+	}
+}

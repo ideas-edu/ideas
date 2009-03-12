@@ -86,7 +86,7 @@ select {
 	margin-left: 20px;
 	margin-right: 20px;
 	font-size: medium;
-	font-weight: bold;
+	font-weight: normal;
 	border-style: solid;
 	border-width: 1px;
 }

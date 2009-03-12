@@ -22,7 +22,7 @@
 <div id="exasdiv">
 <input class="menu" type="button" id="aboutButton" value="<?php print About;?>" >
 <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" >
-<input class="menu" type="button" onclick="window.location.href='http://ideas.cs.uu.nl/rules/logic/PropositiontoDNF/overview.pdf'" value="<?php print Rules;?>" >
+<input class="menu" type="button" onclick="window.open('http://ideas.cs.uu.nl/rules/logic/PropositiontoDNF/overview.pdf','','')" value="<?php print Rules;?>" >
 <input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
 <br class="clear" >
 <input id="derivationbutton"  class="menu" type="button" value="<?php print Derivation;?>" >

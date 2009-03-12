@@ -16,7 +16,7 @@ define("History", "Derivation");
 define("NewExercise", "New Exercise");
 define("Progress", "Progress");
 define("Ready", "Ready");
-define("Rules", "Rewriting Rules");
+define("Rules", "Rewrite Rules");
 define("Step", "Step");
 define("Submit", "Submit");
 define("Welcome", "<p>Welcome to the Exercise Assistent. <br>Rewrite the expression in the Work area and hit Submit to start.</p><p>The Help button will tell you more.</p><p>The Feedback area will be cleared before new feedback is written to the area. If you want to keep all feedback in view, choose <q>Show all feedback</q> above.</p>");

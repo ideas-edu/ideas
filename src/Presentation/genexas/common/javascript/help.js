@@ -39,7 +39,7 @@ function setKeepFeedback() {
  function adjustRows(element, expression, rows) {
 	var length = expression.length;
 	length /= rows;
-	length = Math.floor(length) + 1;
+	length = Math.floor(length) + 2;
 	element.rows =  length ;
 }
 /**

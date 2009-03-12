@@ -127,7 +127,7 @@ function ss_getDerivation(eastate, callback) {
 				var counter = 0;
 				while (counter < list.length) {
 					var entry = list[counter];
-					var appliedRule = new Rule(entry[0], entry[1], entry[2]);
+					var appliedRule = new Rule(entry[0], entry[1], presenteertekst(entry[2]));
 					++counter;
 					setOfRules.push(appliedRule);
 				}

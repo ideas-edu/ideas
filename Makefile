@@ -15,22 +15,22 @@ viewlog: $(BINDIR)/viewlog.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
 ideas: $(BINDIR)/ideasWX$(EXE)
 
-$(BINDIR)/service.cgi: $(HS-SOURCES)
+$(BINDIR)/service.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) -o $@ src/Service/Main.hs
 	$(STRIP) $@
 
-$(BINDIR)/laservice.cgi: $(HS-SOURCES)
+$(BINDIR)/laservice.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) -o $@ src/OpenMath/Main.hs
 	$(STRIP) $@
 
-$(BINDIR)/viewlog.cgi: $(HS-SOURCES)
+$(BINDIR)/viewlog.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) -isrc/Presentation -o $@ src/Presentation/ViewLog/Main.hs
 	$(STRIP) $@
 
-$(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES)
+$(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES) revision
 ifeq ($(GTK), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
@@ -39,7 +39,7 @@ ifeq ($(GTK), yes)
 	$(CP) src/Presentation/ExerciseAssistant/ounl.jpg bin/	
 endif
 
-$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs
+$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs revision
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/IdeasWX.hs
@@ -71,7 +71,7 @@ $(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/service.cgi
 #---------------------------------------------------------------------------------------
 # Helper targets
 
-ghci:
+ghci: revision
 	$(MKDIR) -p $(OUTDIR)
 	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 

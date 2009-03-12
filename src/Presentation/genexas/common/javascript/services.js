@@ -1,6 +1,6 @@
 // The url for the services
-//var url = "/cgi-bin/service.cgi";
-var url = "/StrategyTool/bin/service.cgi";
+var url = "/cgi-bin/service.cgi";
+//var url = "/StrategyTool/bin/service.cgi";
 
 /**
  *  Generation of a new exercise. 
@@ -20,11 +20,11 @@ function ss_generate(number, callback) {
 				callback(state);
 			}
 			else {
-				alert(wrong);
+				alert(error);
 			}			
          },
 		 onFailure: function() { 
-			alert(wrong); 
+			alert(parameters); 
 		} 
 	});
 }
@@ -88,16 +88,17 @@ function ss_getHint(location, state, callback) {
 function ss_getNext(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "method" : "onefirst" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+		parameters : 'input={ "method" : "onefirsttext" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
         onSuccess : function(response) {	
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
+			var result = resJSON['result'];
 			if (error == null) {
-				var rule = resJSON["result"][0];
-				var location = resJSON["result"][1];
-				var state = resJSON["result"][2];
+				var valid = result[0];
+				var rule = result[1];
+				var state = result[2];
 				var newState = new State(state[0], state[1], state[2], state[3]);
-				callback(rule, location, newState);
+				callback(rule, valid, newState);
 			}
 			else { 
 				alert(response.responseText["error"] );
@@ -159,24 +160,21 @@ function ss_getRemaining(eastate, callback) {
 function ss_getFeedback(state, newexpression, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
-        parameters : 'input={ "method" : "submit", "params" : [["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"], "id" : ' + id + '}',
+        parameters : 'input={ "method" : "submittext", "params" : [["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"], "id" : ' + id + '}',
         onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
+			//alert(response.responseText);
 			if (error == null) {
-				var result = (resJSON.result).result;
-				var rules = null;
-				if ((resJSON.result).rules) {
-					rules = (resJSON.result).rules;
-				}
+				var result = resJSON.result;
+				//alert(result[0]);
+				//alert(result[1]);
 				var newState = null;
-				if ((resJSON.result).state) {
-					var receivedstate = (resJSON.result).state;
-					newState = new State(receivedstate[0], receivedstate[1], receivedstate[2], receivedstate[3]);
-				}
-				callback(result, rules, newState);
+				var receivedstate = (resJSON.result)[2];
+				newState = new State(receivedstate[0], receivedstate[1], receivedstate[2], receivedstate[3]);
+				callback(result, newState);
 			}
-			else { alert("huh?")};
+			else { alert(error)};
         }
      });
 }

@@ -32,12 +32,12 @@ function init() {
 	$('copybutton').observe('click', copy); 
 	
 	// the back and forward button  and the copy button are invisable
-	setInvisible($('undobutton'));
-	setInvisible($('forwardbutton'));
-	setInvisible($('copybutton'));
+	$('undobutton').hide();
+	$('forwardbutton').hide();
+	$('copybutton').hide();
 	// OU students have to find out themselves whether they are done
 	if (id && id != "421") {
-		setInvisible($('progress'));
+		$('progress').hide();
 	}
 	generate();
 }

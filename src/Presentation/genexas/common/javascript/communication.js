@@ -12,6 +12,7 @@
   */
 function displayExercise(state) {
 	closeallhelp();
+	historyKeeper.clear();
 	//setInvisible($('copybutton'));
 	var task = state.exercise;
 	$('exercise').update(task);
@@ -59,19 +60,19 @@ function displayHint(listOfRules) {
 function getNext() {
 	ss_getNext(snapshot.get('state'), displayNext);
  }
- function displayNext(rule, location, state) {
+ function displayNext(rule, valid, state) {
 	var nextExpression = (state.exercise).asciiToHtml() ;
 	var expression = ((snapshot.get('state')).exercise).asciiToHtml();
 	var text = '';
 	if (keepFeedback) {
 		text = $('feedback').innerHTML ;
 	}
-	if (rule) {
-		text += '<p>' + applicable + ' <strong>' + expression + '</strong>:<br><br><strong>' + rule + ' rule</strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + '</p><p';
-		var copyContent = new CopyContent(state, location);
+	if (valid) {
+		text += '<p><strong>' + rule + ' rule</strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + '</p><p';
+		var copyContent = new CopyContent(state, state[3]);
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
-		historyKeeper.newSnapshot(state);
+		historyKeeper.addFeedback();
 		historyKeeper.addCopy(copyContent);
 	}
 	else {
@@ -114,31 +115,19 @@ function getDerivation() {
 	var workExpression = (($('work')).value).htmlToAscii();
 	ss_getFeedback(snapshot.get('state'), workExpression, displayFeedback);
  }
-function displayFeedback(result, rules, state) {
+function displayFeedback(result, state) {
 	// always paste the result
 	var text = '';
 	if (keepFeedback) {
 		text = $('feedback').innerHTML ;
 	}
-	text +=  '<p><strong>' + result + '</strong></p>';
-	if ((result == 'Ok') || (result == 'Detour')){
-		if (rules.length > 0) {
-			text = text + '<p>' + applied + '<strong>' + writeArray(rules) + '</strong></p></p>';
-		}
+	text +=  '<p><strong>' + result[1] + '</strong></p>';
+	if (result[0]) {
 		$('feedback').update(text);
 		$('history').update($('history').innerHTML + '<br>==&gt; ' + state.exercise);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
-/*	else if (result == 'Detour') {
-		text = text + '<p><strong>' + two + '</strong></p>';
-		if (rules.length > 0) {
-			text = text + '<p>applied' + writeArray(rules) + '</strong></p>';
-		}
-		$('feedback').update(text);
-		$('feedback').scrollTop = $('feedback').scrollHeight;
-		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
-	} */
 	else {
 		text = text + '<p>' + copybutton +  '</p>';
 		$('feedback').update(text);

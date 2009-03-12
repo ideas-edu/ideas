@@ -18,18 +18,7 @@ function setKeepFeedback() {
 	keepFeedback = true;
 	$('clearbutton').show();
 }
- /***
-  * Makes an element visible or invisible,
-  * while yhe layout stays the same
-  */
-function setVisible(element) {
-	element.setStyle( {visibility: 'visible' 
-	});
-}
-function setInvisible(element) {
-	element.setStyle( {visibility: 'hidden' 
-	});
-}
+
  /***
  * adjust the area  with respect to the length of the expression
  * row is the number of characters in a row
@@ -138,13 +127,22 @@ var historyKeeper = new Object();
 historyKeeper.historyList = new Array();
 historyKeeper.snapshotPointer = -1;
 /**
+ * function that clears all memorized state
+  */
+historyKeeper.clear = function() {
+	historyKeeper.historyList = new Array();
+	historyKeeper.snapshotPointer = -1;
+	//if (visible($('undobutton'))) hide($('undobutton'));
+	//if (visible($('forwardbutton'))) hide($('forwardbutton'));
+}
+/**
  * function to add the current snapshot to the history 
  */
 historyKeeper.addSnapshot = function (snapshot) {
 	historyKeeper.historyList.push(snapshot);
 	++historyKeeper.snapshotPointer;
 	if (historyKeeper.snapshotPointer >= 1) {
-		setVisible($('undobutton'));
+		$('undobutton').show();
 	}
 	// clear any state under the copy button ( it will be outdated)	
 	historyKeeper.removeCopy();
@@ -207,11 +205,11 @@ historyKeeper.addFeedback = function () {
 }
 historyKeeper.addCopy = function(copycontent) {
 	snapshot.set('copy', copycontent);
-	setVisible($('copybutton'));
+	$('copybutton').show();
 }
 historyKeeper.removeCopy = function() {
 	snapshot.unset('copy');
-	setInvisible($('copybutton'));
+	$('copybutton').hide();
 }
  /**
   * When the user has asked a possible next step, we receive a state and a location. 
@@ -231,9 +229,9 @@ function goBack() {
 		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
 		fillAreas(stateObject);
 		if (historyKeeper.snapshotPointer == 0) {
-			setInvisible($('undobutton'));
+			$('undobutton').hide();
 		}
-		setVisible($('forwardbutton'));
+		$('forwardbutton').show();
 	}
 }
  function goForward() {
@@ -242,9 +240,9 @@ function goBack() {
 		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
 		fillAreas(stateObject);
 		if ((historyKeeper.snapshotPointer + 1) == historyKeeper.historyList.length) {
-			setInvisible($('forwardbutton'));
+			$('forwardbutton').hide();
 		}
-		setVisible($('undobutton'));
+		$('undobutton').show();
 	}
 	else {
 		alert('You can\'t move forward unless you have been there!');

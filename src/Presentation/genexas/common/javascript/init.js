@@ -31,7 +31,7 @@ function init() {
 	
 	$('clearbutton').observe('click', clearFeedback); 
 	$('feedbackclearchoice').observe('click', setClearFeedback); 
-	$('feedbackeepchoice').observe('click', setKeepFeedback); 
+//	$('feedbackeepchoice').observe('click', setKeepFeedback); 
 	$('copybutton').observe('click', copy); 
 	
 	// the back and forward button  and the copy button are invisable

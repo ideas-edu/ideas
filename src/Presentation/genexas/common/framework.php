@@ -51,12 +51,16 @@
 </div><!-- end div column left -->
 
 <div class="column right">
-		<h3><?php print Feedback ?></h3>
-		<label class="feedbacklabel"><?php print ChooseClear;?><input type="radio" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear" ></label>
-		<label class="feedbacklabel"><?php print ChooseKeep;?><input type="radio" name="feedbackchoice"  id="feedbackeepchoice" value="choosekeep" ></label>
-		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">
-		
+	<h3><?php print Feedback ?></h3>
 	<div id="feedback" class="clear"><?php print Welcome;?></div><!-- end div feedback -->
+	<table><tr><td>
+		<input class="feedbacklabel" type="checkbox" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear">
+		<label class="feedbacklabel" for="feedbackclearchoice"><?php print ChooseClear;?></label>
+<!--	</td><tr><td>
+		<label class="feedbacklabel"><?php print ChooseKeep;?><input type="radio" name="feedbackchoice"  id="feedbackeepchoice" value="choosekeep" ></label> -->
+	</td><td>
+		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">
+	</td></tr></table>
 
 	<div><?php include("/var/www/html/genexas/common/keys.php"); ?></div>
 	

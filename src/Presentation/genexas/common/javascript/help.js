@@ -11,8 +11,12 @@ var keepFeedback = false;
   * functions to choose between keepFeedback true or false
   */
 function setClearFeedback() {
-	keepFeedback = false;
-	$('clearbutton').hide();
+	 if ($('feedbackclearchoice').checked == true) {
+	    keepFeedback = false;
+	    $('clearbutton').hide();
+	 } else {
+	   setKeepFeedback();
+	 }
 }
 function setKeepFeedback() {
 	keepFeedback = true;

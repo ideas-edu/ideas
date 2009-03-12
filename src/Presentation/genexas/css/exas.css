@@ -89,6 +89,7 @@ select {
 	font-weight: normal;
 	border-style: solid;
 	border-width: 1px;
+	overflow: auto;
 }
 
 

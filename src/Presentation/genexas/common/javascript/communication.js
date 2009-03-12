@@ -75,12 +75,12 @@ function getNext() {
 		historyKeeper.addCopy(copyContent);
 	}
 	else {
-		text +=   + '<p>' + sorry + ' <strong>' + expression + '</strong></p>';	
+		text += '<p>' + sorry + ' <strong>' + expression + '</strong></p>';	
 		$('feedback').update(text);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		historyKeeper.addFeedback();
 	}
-	
+	$('history').scrollTop = $('history').scrollHeight;
 }
 /**
  * React to the derivation button

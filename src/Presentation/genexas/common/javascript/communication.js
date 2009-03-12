@@ -20,11 +20,13 @@ function displayExercise(state) {
 	$('history').update(task);
 	$('feedback').innerHTML = "";
 	// call a Strategytool-service
-	ss_getRemaining(state, function(number) {
+/*	ss_getRemaining(state, function(number) {
 			$('progress').update('Steps<br> ' + number); 
 			// take a snapshot to be able to go back later
 			historyKeeper.newSnapshot(state);
 		} );
+*/		
+	historyKeeper.newSnapshot(state);
 	// adjust the dimensions of page elements to the generated exercise
 	adjustHeight($('exercise'), task, 40, 40);
 	adjustRows($('work'), task, 40);
@@ -125,7 +127,7 @@ function displayFeedback(result, state) {
 		$('feedback').update(text);
 		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
-		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
+//		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
 	else {
 		text = text + '<p>' + copybutton +  '</p>';

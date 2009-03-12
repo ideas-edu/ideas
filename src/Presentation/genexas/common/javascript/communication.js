@@ -123,7 +123,7 @@ function displayFeedback(result, state) {
 	text +=  '<p><strong>' + result[1] + '</strong></p>';
 	if (result[0]) {
 		$('feedback').update(text);
-		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font> ' + state.exercise);
+		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);
 		$('feedback').scrollTop = $('feedback').scrollHeight;
 		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}

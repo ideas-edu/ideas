@@ -139,18 +139,18 @@ function displayFeedback(result, state) {
 	// always paste the result
 	var newText = '<p>' + result[1] + '</p>';
         if (!result[0]) {
-           newText += '<p>' + copybutton + '</p';
+           newText += '<p>' + copybutton + '</p>';
         }
         addToFeedback(newText);
-
-	if (result[0]) {
+/*	if (result[0]) {
 		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);
 		// this call to remaining steps has a side-effect
                 ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
 	else {
 //		setVisible($('copybutton'));
-	}
+	} */
+	historyKeeper.newSnapshot(state);
 	updateDerivation();
 }
 /**

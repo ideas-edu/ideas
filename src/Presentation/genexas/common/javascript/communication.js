@@ -125,7 +125,7 @@ function getDerivation() {
 	        newText += '<br>';
 	}
 	addToFeedback(newText);
-	historyKeeper.addFeedback();
+	// historyKeeper.addFeedback();
 }
  /**
  * React to the submit button

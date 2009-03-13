@@ -230,7 +230,7 @@ function CopyContent(state, location) {
 }
 function goBack() {
 	// if (historyKeeper.snapshotPointer > 0) {
-	if (historyKeeper.historyList.length > 0) {
+	if (historyKeeper.historyList.length > 1) {
 	        -- (historyKeeper.snapshotPointer);
 		//var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
 		historyKeeper.historyList.pop();
@@ -282,7 +282,7 @@ function updateDerivation() {
    }
    $('history').update(text);
    $('history').scrollTop = $('history').scrollHeight;
-   alert('updateDerivation');
+   //alert('updateDerivation');
 }
 
 // will be auto step
@@ -305,7 +305,7 @@ function autoHandler(rule, valid, state) {
 	if (valid) {
    	   historyKeeper.newSnapshot(state);
 	   historyKeeper.snapshotPointer++;
-	   updateDerivation();
+	   fillAreas();
         }
 }
 

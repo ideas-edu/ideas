@@ -5,7 +5,7 @@ define("Clear", "Clear area");
 define("ChooseClear", "Last message only");
 define("ChooseKeep", "All messages");
 define("Close", "Close");
-define("Copy", "Copy");
+define("Copy", "Auto step");
 define("Derivation", "Worked-out example");
 define("Exercise", "Exercise");
 define("Feedback", "Feedback");

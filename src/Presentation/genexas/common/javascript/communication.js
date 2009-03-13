@@ -68,8 +68,8 @@ function displayHint(hint) {
 		newText =  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
 	}
         addToFeedback(newText);
-	historyKeeper.addFeedback();
-	updateDerivation();
+	// historyKeeper.addFeedback();
+	// updateDerivation();
 }
 /**
  * React to the next button
@@ -92,7 +92,7 @@ function getNext() {
 
         addToFeedback(newText);
 
-        if (valid) {
+        /* if (valid) {
                 var copyContent = new CopyContent(state, state[3]);
 		historyKeeper.addFeedback();
 		historyKeeper.addCopy(copyContent);
@@ -101,7 +101,7 @@ function getNext() {
 		historyKeeper.addFeedback();
 	}
 	$('history').scrollTop = $('history').scrollHeight;
-        updateDerivation();
+        updateDerivation(); */
 }
 /**
  * React to the derivation button

@@ -5,7 +5,6 @@ function getElemId(id) {
 	return document.getElementById(id); 
 }
 
-
 /**
  * Een tekst invoegen in een textarea
  */
@@ -20,9 +19,7 @@ function voegin(tekst, id) {
 		prevRange.moveStart("character", -1);
 		insertAtCursor(selectie, tekst);
 		return;
-	}
-//MOZILLA/NETSCAPE  
-	if (tekstveld.selectionStart) {
+	} else if (tekstveld.selectionStart || tekstveld.selectionStart == '0') { //MOZILLA/NETSCAPE  
 		var start = tekstveld.selectionStart; 
 		var end   = tekstveld.selectionEnd; 
 		tekstveld.value = tekstveld.value.substr(0, start) 
@@ -31,6 +28,8 @@ function voegin(tekst, id) {
 		tekstveld.selectionStart = start + 1;
 		tekstveld.selectionEnd = start + tekst.length;
 		return;		
+	} else {
+	  tekstveld.value += tekst;
 	}
  }
  

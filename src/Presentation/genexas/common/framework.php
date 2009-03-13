@@ -39,7 +39,7 @@
 	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
 	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
 	<br class="clear">
-	<input id="derivationbutton" style="background-color: #CCCC99; float: right; display: inline; height: 20px; position: relative; right: -45px; margin-right: 0px;" type="button" value="<?php print Derivation;?>" >	
+	<input id="derivationbutton" style="background-color: #CCCC99; float: right; display: inline; height: 20px; position: relative; right: -45px;" type="button" value="<?php print Derivation;?>" >	
 	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
 	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >

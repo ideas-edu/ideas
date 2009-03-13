@@ -66,7 +66,7 @@ select {
 	background-color: #FAEAC0;
 	padding: 10px;
 	width: auto;
-	height: 150px;
+	height: 250px;
 	margin-left: 20px;
 	margin-right: 20px;
 	overflow: scroll;
@@ -146,7 +146,7 @@ select {
 }
 
 #submitbutton, #readybutton {
-	margin-right: 0px;
+	margin-right: 10px;
 }
 
 #inputhulp {
@@ -244,7 +244,7 @@ textarea {
 
 .right {
 	position: absolute;
-	top: 174px;
+	top: 140px;
 	right: 0px;
 	width: 45%;
 }

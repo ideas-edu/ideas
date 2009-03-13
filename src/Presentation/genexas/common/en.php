@@ -6,7 +6,7 @@ define("ChooseClear", "Last message only");
 define("ChooseKeep", "All messages");
 define("Close", "Close");
 define("Copy", "Copy");
-define("Derivation", "Show worked-out example");
+define("Derivation", "Worked-out example");
 define("Exercise", "Exercise");
 define("Feedback", "Feedback");
 define("Forward", "Forward");

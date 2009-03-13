@@ -36,14 +36,15 @@
 	<textarea id="work" rows="2" cols="40" >	
 	</textarea>
 	<input class="minibutton" id="submitbutton" type="button" value="<?php print Submit;?>" >	
-	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
-	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
-	<div id="progress">Steps<br>0</div><!-- end div progress -->
-	<br class="clear">
 	<input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>" >
 	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
 	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
+
+	<div id="progress">Steps<br>0</div><!-- end div progress -->
+	<br class="clear">
 	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
+	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
+	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<br>
 	<h3><?php print History;?></h3>
 	<div id="history"></div><!-- end div history -->

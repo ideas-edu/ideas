@@ -19,7 +19,7 @@ define("Ready", "Ready");
 define("Rules", "Rewrite rules");
 define("Step", "Step");
 define("Submit", "Submit");
-define("Welcome", "<p>Welcome to the Exercise Assistent. <br>Rewrite the expression in the work area and hit submit to start.</p><p>The Help button will tell you more.</p><p>The Feedback area will be cleared before new feedback is written to the area. If you want to keep all feedback in view, choose <q>Show all feedback</q> above.</p>");
+define("Welcome", "<p>Welcome to the Exercise Assistant. Rewrite the expression in the work area and hit <strong>Submit</strong> after each step. Press the <strong>Ready</strong> button as soon as your proposition is in disjunctive normal form.</p><p>If you are stuck in the exercise, you can use one of the hint buttons: ask for a hint, the next step, automatically perform the next step, or show a worked-out example.</p><p>There is a special keyboard to insert the logical symbols, or you can use the <strong>short-keys '-', 'o', 'a', 'i', or '='</strong>.</p><p>The Feedback area will be cleared before new feedback is written to the area. If you want to keep all messages, then disable the checkbox.</p>");
 define("WorkArea", "Working area: rewrite and submit");
 function getLanguage() {
 	return "/genexas/common/javascript/en.js";

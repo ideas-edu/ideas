@@ -21,3 +21,4 @@ var resulting = 'The result would be';
 var changed = 'You changed the work area, so we cannot give you a next step. The original expression is under the copy button.';
 var unchanged = 'You can only receive feedback after you changed the expression in the work area.';
 var derivationtext = 'Worked-out example:';
+var welcometext = '<p>Welcome to the Exercise Assistent. <br>Rewrite the expression in the work area and hit submit to start.</p><p>The Help button will tell you more.</p><p>The Feedback area will be cleared before new feedback is written to the area. If you want to keep all feedback in view, choose <q>Show all feedback</q> above.</p>'

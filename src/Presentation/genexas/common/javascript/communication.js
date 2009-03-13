@@ -18,7 +18,7 @@ function displayExercise(state) {
 	$('exercise').update(task);
 	$('work').value = task;
 	$('history').update(task);
-	$('feedback').innerHTML = "";
+//	$('feedback').innerHTML = "";
 	// call a Strategytool-service
 /*	ss_getRemaining(state, function(number) {
 			$('progress').update('Steps<br> ' + number); 
@@ -142,7 +142,7 @@ function displayFeedback(result, state) {
                 ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
 	else {
-		setVisible($('copybutton'));
+//		setVisible($('copybutton'));
 	}
 }
 /**

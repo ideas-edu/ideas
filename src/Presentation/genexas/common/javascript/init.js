@@ -37,7 +37,7 @@ function init() {
 	// the back and forward button  and the copy button are invisable
 	$('undobutton').hide();
 	$('forwardbutton').hide();
-	$('copybutton').hide();
+//	$('copybutton').hide();
 	// OU students have to find out themselves whether they are done
 	if (id && id != "421") {
 	   $('progress').hide();

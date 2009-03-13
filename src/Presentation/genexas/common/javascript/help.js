@@ -210,11 +210,11 @@ historyKeeper.addFeedback = function () {
 }
 historyKeeper.addCopy = function(copycontent) {
 	snapshot.set('copy', copycontent);
-	$('copybutton').show();
+//	$('copybutton').show();
 }
 historyKeeper.removeCopy = function() {
 	snapshot.unset('copy');
-	$('copybutton').hide();
+//	$('copybutton').hide();
 }
  /**
   * When the user has asked a possible next step, we receive a state and a location. 

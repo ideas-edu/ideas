@@ -118,7 +118,7 @@ select {
 	right: -45px;
 	width: 80px;
 	height: 20px;
-	font-weight: 800;
+//	font-weight: 800;
 }
 #numberbutton {
 	display: inline; 
@@ -145,7 +145,7 @@ select {
 	font-weight: 800;
 }
 
-#submitbutton, #readybutton {
+#derivationbutton, #submitbutton {
 	margin-right: 10px;
 }
 

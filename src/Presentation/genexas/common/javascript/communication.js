@@ -86,7 +86,7 @@ function getNext() {
 	var newText = '';
 
 	if (valid) {
-		newText = '<p><strong>' + rule + ' rule</strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + 
+		newText = '<p><strong>' + rule + ' </strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + 
 '</p><p';
         }
         else {
@@ -138,9 +138,6 @@ function getDerivation() {
 function displayFeedback(result, state) {
 	// always paste the result
 	var newText = '<p>' + result[1] + '</p>';
-        if (!result[0]) {
-           newText += '<p>' + copybutton + '</p>';
-        }
         addToFeedback(newText);
 /*	if (result[0]) {
 		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);
@@ -150,8 +147,10 @@ function displayFeedback(result, state) {
 	else {
 //		setVisible($('copybutton'));
 	} */
-	historyKeeper.newSnapshot(state);
-	updateDerivation();
+	if (result[0]) {
+   	   historyKeeper.newSnapshot(state);
+   	   updateDerivation();
+	}
 }
 /**
  * React to the Ready button

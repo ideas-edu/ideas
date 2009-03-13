@@ -31,6 +31,20 @@ function displayExercise(state) {
 	adjustHeight($('exercise'), task, 40, 40);
 	adjustRows($('work'), task, 40);
 }
+function addToFeedback(newText) {
+   var text = '';
+   if (keepFeedback) {
+      text = $('feedback').innerHTML;
+      if (text != '') {
+         text += '<hr>';
+      }
+   }
+   text += newText;
+
+   $('feedback').update(text);
+   $('feedback').scrollTop = $('feedback').scrollHeight;
+}
+
 /**
  * React on the hint button
  */
@@ -40,19 +54,15 @@ function getHint() {
 function displayHint(hint) {
 	closeallhelp();	
 	var expression = presenteertekst((snapshot.get('state')).exercise);
-	var text = '';
-	if (keepFeedback) {
-		text = $('feedback').innerHTML ;
-	}
+	var newText = '';
+ 
 	if (hint[0]) {
-		text +=   '<p><strong>' + hint[1] + '</strong></p>';
+		newText =   '<p><strong>' + hint[1] + '</strong></p>';
 	}
 	else {
-		text +=  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
+		newText =  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
 	}
-	$('feedback').update(text);
-	$('feedback').scrollTop = $('feedback').scrollHeight;
-	
+        addToFeedback(newText);
 	historyKeeper.addFeedback();
 }
 /**

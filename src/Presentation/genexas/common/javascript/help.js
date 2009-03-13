@@ -255,14 +255,30 @@ function goBack() {
 }
 
 function fillAreas(stateObject) {
-	$('exercise').update(stateObject.get('state').exercise);
+//	$('exercise').update(stateObject.get('state').exercise);
 	$('work').value = stateObject.get('work');
-	$('feedback').update(stateObject.get('feedback'));
+//	$('feedback').update(stateObject.get('feedback'));
 	$('history').update(stateObject.get('history'));
-	$('progress').update(stateObject.get('steps'));
-	adjustHeight($('exercise'), $('exercise').innerHTML, 40, 40);
-	adjustRows($('work'), $('work').value, 40);
+//	$('progress').update(stateObject.get('steps'));
+//	adjustHeight($('exercise'), $('exercise').innerHTML, 40, 40);
+//	adjustRows($('work'), $('work').value, 40);
+        updateDerivation();
 }
+
+function updateDerivation() {
+   var i = 0;
+   var text = '';
+   while (i < historyKeeper.historyList.length) {
+      if (i!=0) {
+         text += '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp;';
+      }
+      var state = historyKeeper.historyList[i];
+      text += state.get('state').exercise;
+      i++;
+   }
+   $('history').update(text);
+}
+
 function copy() {
 	if (snapshot.get('copy')) {
 		$('work').value = snapshot.get('copy').state.exercise;

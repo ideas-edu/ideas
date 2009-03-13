@@ -69,6 +69,7 @@ function displayHint(hint) {
 	}
         addToFeedback(newText);
 	historyKeeper.addFeedback();
+	updateDerivation();
 }
 /**
  * React to the next button
@@ -100,6 +101,7 @@ function getNext() {
 		historyKeeper.addFeedback();
 	}
 	$('history').scrollTop = $('history').scrollHeight;
+        updateDerivation();
 }
 /**
  * React to the derivation button
@@ -144,6 +146,7 @@ function displayFeedback(result, state) {
 	else {
 //		setVisible($('copybutton'));
 	}
+	updateDerivation();
 }
 /**
  * React to the Ready button

@@ -46,9 +46,9 @@
 	
 	<div id="progress">Steps<br>0</div><!-- end div progress -->
 	
-	<br>
-	<h3><?php print History;?></h3>
-	<div id="history"></div><!-- end div history -->
+	<br/>
+	<div align="center" width="100%"><br/><?php include("/var/www/html/genexas/common/keys.php"); ?></div>
+
 
 </div><!-- end div column left -->
 
@@ -56,15 +56,17 @@
 	<h3><?php print Feedback ?></h3>
 	<div id="feedback" class="clear"><?php print Welcome;?></div><!-- end div feedback -->
 	<table><tr><td>
-		<input class="feedbacklabel" type="checkbox" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear">
+		&nbsp;&nbsp;<input class="feedbacklabel" type="checkbox" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear">
 		<label class="feedbacklabel" for="feedbackclearchoice"><?php print ChooseClear;?></label>
 <!--	</td><tr><td>
 		<label class="feedbacklabel"><?php print ChooseKeep;?><input type="radio" name="feedbackchoice"  id="feedbackeepchoice" value="choosekeep" ></label> -->
 	</td><td>
 		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">
 	</td></tr></table>
-
-	<div><?php include("/var/www/html/genexas/common/keys.php"); ?></div>
+	
+	<br>
+       	<h3><?php print History;?></h3>
+	<div id="history"></div><!-- end div history -->
 	
 </div><!-- end div column right -->
 

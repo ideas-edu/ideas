@@ -83,7 +83,7 @@ select {
 #history {
 	background-color: #FAEAC0;
 	padding: 10px;
-	width: 100%;
+	width: auto;
 	height: 200px;
 	min-height: 50px;
 	margin-left: 20px;
@@ -184,7 +184,8 @@ select {
 	top: -10px;
 }
 #clearbutton {
-	margin-left: 20px;
+	//margin-left: 20px;
+	margin: 0px;
 	display: block; 
 	font-size: small;
 	font-weight: 800;

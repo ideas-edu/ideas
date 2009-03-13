@@ -229,14 +229,16 @@ function CopyContent(state, location) {
 	this.location = location;
 }
 function goBack() {
-	if (historyKeeper.snapshotPointer > 0) {
-		-- (historyKeeper.snapshotPointer);
-		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
-		fillAreas(stateObject);
-		if (historyKeeper.snapshotPointer == 0) {
+	// if (historyKeeper.snapshotPointer > 0) {
+	if (historyKeeper.historyList.length > 0) {
+	        -- (historyKeeper.snapshotPointer);
+		//var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
+		historyKeeper.historyList.pop();
+		fillAreas();
+		/* if (historyKeeper.snapshotPointer == 0) {
 			$('undobutton').hide();
 		}
-		$('forwardbutton').show();
+		$('forwardbutton').show(); */
 	}
 }
  function goForward() {
@@ -254,11 +256,13 @@ function goBack() {
 	}
 }
 
-function fillAreas(stateObject) {
+function fillAreas() {
 //	$('exercise').update(stateObject.get('state').exercise);
-	$('work').value = stateObject.get('work');
+//	$('work').value = stateObject.get('work');
+        var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+	$('work').value = s.get('state').exercise;
 //	$('feedback').update(stateObject.get('feedback'));
-	$('history').update(stateObject.get('history'));
+//	$('history').update(stateObject.get('history'));
 //	$('progress').update(stateObject.get('steps'));
 //	adjustHeight($('exercise'), $('exercise').innerHTML, 40, 40);
 //	adjustRows($('work'), $('work').value, 40);
@@ -277,10 +281,15 @@ function updateDerivation() {
       i++;
    }
    $('history').update(text);
+   $('history').scrollTop = $('history').scrollHeight;
+   alert('updateDerivation');
 }
 
+// will be auto step
 function copy() {
-	if (snapshot.get('copy')) {
+       ss_getNext(snapshot.get('state'), autoHandler);
+
+	/* if (snapshot.get('copy')) {
 		$('work').value = snapshot.get('copy').state.exercise;
 	}
 	else {
@@ -289,7 +298,17 @@ function copy() {
 		}
 	}
 	historyKeeper.removeCopy();
+        updateDerivation(); */
 }
+function autoHandler(rule, valid, state) {
+        addToFeedback('<strong>Auto step: </strong>' + rule);
+	if (valid) {
+   	   historyKeeper.newSnapshot(state);
+	   historyKeeper.snapshotPointer++;
+	   updateDerivation();
+        }
+}
+
 
 /* 
  * Menubuttons for help, about and a set of rewriting rules.

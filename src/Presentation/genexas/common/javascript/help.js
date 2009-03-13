@@ -287,7 +287,8 @@ function updateDerivation() {
 
 // will be auto step
 function copy() {
-       ss_getNext(snapshot.get('state'), autoHandler);
+        var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+        ss_getNext(s.get('state'), autoHandler);
 
 	/* if (snapshot.get('copy')) {
 		$('work').value = snapshot.get('copy').state.exercise;

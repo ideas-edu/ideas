@@ -12,7 +12,7 @@ function init() {
 	addEventSimple($("work"), 'keypress', controleer);
 
  	$('aboutButton').observe('click', openhelp);
-	$('helpButton').observe('click', openhelp);
+//	$('helpButton').observe('click', openhelp);
 //	$('rulesButton').observe('click', openhelp); 
 	$('generateButton').observe('click', generate);
 	

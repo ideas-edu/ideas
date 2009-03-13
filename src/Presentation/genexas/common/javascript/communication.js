@@ -54,13 +54,14 @@ function getAuto() {
  * React on the hint button
  */
 function getHint() {
-	ss_getHint(snapshot.get('location'), snapshot.get('state'), displayHint);
+        var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
+	ss_getHint(s.get('location'), s.get('state'), displayHint);
 }
 function displayHint(hint) {
-	closeallhelp();	
-	var expression = presenteertekst((snapshot.get('state')).exercise);
+	closeallhelp();
+	var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
+	var expression = presenteertekst((s.get('state')).exercise);
 	var newText = '';
- 
 	if (hint[0]) {
 		newText =   '<p><strong>' + hint[1] + '</strong></p>';
 	}
@@ -75,11 +76,13 @@ function displayHint(hint) {
  * React to the next button
  */
 function getNext() {
-	ss_getNext(snapshot.get('state'), displayNext);
+        var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+	ss_getNext(s.get('state'), displayNext);
  }
  function displayNext(rule, valid, state) {
 	var nextExpression = (state.exercise).asciiToHtml() ;
-	var expression = ((snapshot.get('state')).exercise).asciiToHtml();
+	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+	var expression = ((s.get('state')).exercise).asciiToHtml();
 	var newText = '';
 
 	if (valid) {
@@ -107,7 +110,8 @@ function getNext() {
  * React to the derivation button
  */
 function getDerivation() {
-	ss_getDerivation(snapshot.get('state'), displayDerivation);
+     var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+     ss_getDerivation(s.get('state'), displayDerivation);
  }
  function displayDerivation(setOfRules) {
 	var counter = 0;
@@ -128,7 +132,8 @@ function getDerivation() {
  */
  function getFeedback() {
 	var workExpression = (($('work')).value).htmlToAscii();
-	ss_getFeedback(snapshot.get('state'), workExpression, displayFeedback);
+	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+	ss_getFeedback(s.get('state'), workExpression, displayFeedback);
  }
 function displayFeedback(result, state) {
 	// always paste the result
@@ -152,10 +157,12 @@ function displayFeedback(result, state) {
  * React to the Ready button
 */
 function getReady() {
-	ss_getReady(snapshot.get('state'), handleSolved);
+	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+	ss_getReady(s.get('state'), handleSolved);
 }
 function handleSolved(solved) {
-	var expression = (snapshot.get('state')).exercise;
+	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+	var expression = (s.get('state')).exercise;
 	var newText = '';
 
 	if (solved) {

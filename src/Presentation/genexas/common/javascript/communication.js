@@ -45,6 +45,11 @@ function addToFeedback(newText) {
    $('feedback').scrollTop = $('feedback').scrollHeight;
 }
 
+function getAuto() {
+   alert('auto step');
+}
+
+
 /**
  * React on the hint button
  */

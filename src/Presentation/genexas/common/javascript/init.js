@@ -18,7 +18,7 @@ function init() {
 	
 	$('hintbutton').observe('click', getHint);
 	$('derivationbutton').observe('click', getDerivation);
-//	$('nextbutton').observe('click', getNext);
+	$('nextbutton').observe('click', getNext);
 	$('readybutton').observe('click', getReady);
 	$('submitbutton').observe('click', getFeedback);
 	$('readybutton').observe('click', getReady);
@@ -38,7 +38,10 @@ function init() {
 	$('undobutton').hide();
 	$('forwardbutton').hide();
 	$('copybutton').hide();
-
+	// OU students have to find out themselves whether they are done
+	if (id && id != "421") {
+	   $('progress').hide();
+	}
 	generate();
 }
 

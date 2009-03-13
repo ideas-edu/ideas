@@ -24,6 +24,7 @@
 <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" >
 <input class="menu" type="button" onclick="window.open('http://ideas.cs.uu.nl/rules/logic/PropositiontoDNF/overview.pdf','','')" value="<?php print Rules;?>" >
 <input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
+<br class="clear" >
 
 <div class="column left">
 	<h3><?php print Exercise;?></h3>
@@ -35,15 +36,16 @@
 	</textarea>
 	<input class="minibutton" id="submitbutton" type="button" value="<?php print Submit;?>" >	
 	<input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>" >
-	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
 	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
-
+	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
 	<br class="clear">
-	<input class="minibutton" type="button" id="derivationbutton" value="<?php print Derivation; ?>" >
-        <input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
-        <input id="autobutton" class="minibutton" type="button" value="<?php print "Auto step";?>">
-	<input id="stepbutton" class="minibutton" type="button" value="<?php print Step;?>" >
+	<input id="derivationbutton" style="background-color: #CCCC99; float: right; display: inline; height: 20px; position: relative; right: -45px; margin-right: 0px;" type="button" value="<?php print Derivation;?>" >	
+	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
+	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
+	
+	<div id="progress">Steps<br>0</div><!-- end div progress -->
+	
 	<br>
 	<h3><?php print History;?></h3>
 	<div id="history"></div><!-- end div history -->

@@ -74,22 +74,24 @@ function getNext() {
  function displayNext(rule, valid, state) {
 	var nextExpression = (state.exercise).asciiToHtml() ;
 	var expression = ((snapshot.get('state')).exercise).asciiToHtml();
-	var text = '';
-	if (keepFeedback) {
-		text = $('feedback').innerHTML ;
-	}
+	var newText = '';
+
 	if (valid) {
-		text += '<p><strong>' + rule + ' rule</strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + '</p><p';
-		var copyContent = new CopyContent(state, state[3]);
-		$('feedback').update(text);
-		$('feedback').scrollTop = $('feedback').scrollHeight;
+		newText = '<p><strong>' + rule + ' rule</strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + 
+'</p><p';
+        }
+        else {
+                newText = '<p>' + sorry +  ' <strong>' + expression + '</strong></p>';
+        }
+
+        addToFeedback(newText);
+
+        if (valid) {
+                var copyContent = new CopyContent(state, state[3]);
 		historyKeeper.addFeedback();
 		historyKeeper.addCopy(copyContent);
 	}
 	else {
-		text += '<p>' + sorry + ' <strong>' + expression + '</strong></p>';	
-		$('feedback').update(text);
-		$('feedback').scrollTop = $('feedback').scrollHeight;
 		historyKeeper.addFeedback();
 	}
 	$('history').scrollTop = $('history').scrollHeight;
@@ -102,21 +104,16 @@ function getDerivation() {
  }
  function displayDerivation(setOfRules) {
 	var counter = 0;
-	var text = '';
-	if (keepFeedback) {
-		text = $('feedback').innerHTML ;
-	}
-	text += '<strong>' + derivationtext + '</strong><br><br>' + $('work').value + '<br>';
+	var newText = '<strong>' + derivationtext + '</strong><br><br>' + $('work').value + '<br>';
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;
-		text += '<font size="+2">&nbsp;&nbsp;&nbsp;\u21D4</font>  <strong>' + rule.name;
-		text += '</strong><br>';
-		text += rule.expression;
-		text += '<br>';
+		newText += '<font size="+2">&nbsp;&nbsp;&nbsp;\u21D4</font>  <strong>' + rule.name;
+		newText += '</strong><br>';
+		newText += rule.expression;
+	        newText += '<br>';
 	}
-	$('feedback').update(text);
-	$('feedback').scrollTop = $('feedback').scrollHeight;
+	addToFeedback(newText);
 	historyKeeper.addFeedback();
 }
  /**
@@ -128,21 +125,18 @@ function getDerivation() {
  }
 function displayFeedback(result, state) {
 	// always paste the result
-	var text = '';
-	if (keepFeedback) {
-		text = $('feedback').innerHTML ;
-	}
-	text +=  '<p>' + result[1] + '</p>';
+	var newText = '<p>' + result[1] + '</p>';
+        if (!result[0]) {
+           newText += '<p>' + copybutton + '</p';
+        }
+        addToFeedback(newText);
+
 	if (result[0]) {
-		$('feedback').update(text);
 		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);
-		$('feedback').scrollTop = $('feedback').scrollHeight;
-//		ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
+		// this call to remaining steps has a side-effect
+                ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
 	}
 	else {
-		text = text + '<p>' + copybutton +  '</p>';
-		$('feedback').update(text);
-		$('feedback').scrollTop = $('feedback').scrollHeight;
 		setVisible($('copybutton'));
 	}
 }
@@ -154,17 +148,15 @@ function getReady() {
 }
 function handleSolved(solved) {
 	var expression = (snapshot.get('state')).exercise;
-	var text = '';
-	if (keepFeedback) {
-		text = $('feedback').innerHTML ;
-	}
+	var newText = '';
+
 	if (solved) {
-		text += '<p>' + yes + ', <strong>' + expression + '</strong> is ' + ready + '.</p>';
+		newText = '<p>' + yes + ', <strong>' + expression + '</strong> is ' + ready + '.</p>';
 	}
 	else {
-		text += '<p>' + no + ', <strong>' + expression + '</strong> is <strong>' + not + '</strong> ' + ready + '.</p>';
+		newText = '<p>' + no + ', <strong>' + expression + '</strong> is <strong>' + not + '</strong> ' + ready + '.</p>';
 	}
-	$('feedback').update(text);
-	$('feedback').scrollTop = $('feedback').scrollHeight;
-	historyKeeper.addFeedback();
+
+	addToFeedback(newText);
+        historyKeeper.addFeedback();
 }

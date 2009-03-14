@@ -229,19 +229,23 @@ function CopyContent(state, location) {
 	this.location = location;
 }
 function goBack() {
-	// if (historyKeeper.snapshotPointer > 0) {
-	if (historyKeeper.historyList.length > 1) {
-	        -- (historyKeeper.snapshotPointer);
-		//var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
-		historyKeeper.historyList.pop();
-		fillAreas();
-		/* if (historyKeeper.snapshotPointer == 0) {
-			$('undobutton').hide();
-		}
-		$('forwardbutton').show(); */
-	}
+  //if (historyKeeper.snapshotPointer > 0) {
+  if (historyKeeper.historyList.length > 1  ) {
+    var stateObject = historyKeeper.historyList[historyKeeper.historyList.length-1];
+    if ($('work').value == stateObject.get('state').exercise) { // student didn't touch expression
+      -- (historyKeeper.snapshotPointer);
+      //var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
+      historyKeeper.historyList.pop();
+      /* if (historyKeeper.snapshotPointer == 0) {
+	  $('undobutton').hide();
+	  }
+	  $('forwardbutton').show(); */
+    } 
+  }      
+  fillAreas();
 }
- function goForward() {
+
+function goForward() {
 	if ((historyKeeper.snapshotPointer +1) < historyKeeper.historyList.length) {
 		++(historyKeeper.snapshotPointer);
 		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];

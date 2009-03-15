@@ -172,8 +172,8 @@ function naarAscii(expressie) {
 	}
 	while (resultaatstring != resultaatstring.replace(String.fromCharCode(8743), '/\\\\')) {
 		resultaatstring = resultaatstring.replace(String.fromCharCode(8743), '/\\\\');
-	 }
-	 return resultaatstring;
+	}
+        return resultaatstring;
 }
 
 // hulpfunctie: domeinspecifieke karakters vervangen, en enters en tabs verwijderen: vanuit textarea naar exas

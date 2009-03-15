@@ -50,12 +50,14 @@ function setKeepFeedback() {
  * From HTML characters to ascii and back
   */ 
 String.prototype.htmlToAscii = function() {
-	var resultstring = werkveldNaarExas(this);
+    var s = this.replace(/\\/g, '\\\\');
+    s = werkveldNaarExas(s);
+    return s;
 /*	this.replace(/&gt;/g, '>');
 	resultstring = resultstring.replace(/&lt;/g, '<');
 	resultstring = resultstring.replace(/\\/g, '\\\\'); */
-	 return resultstring;
 }
+
 String.prototype.asciiToHtml = function() {
 	var resultstring = this.replace(/>/g, '&gt;');
 	resultstring = resultstring.replace(/</g, '&lt;');

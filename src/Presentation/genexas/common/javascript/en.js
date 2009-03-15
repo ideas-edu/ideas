@@ -20,4 +20,4 @@ var applied = 'You applied: ';
 var resulting = 'The result would be';
 var changed = 'You changed the work area, so we cannot give you a next step. The original expression is under the copy button.';
 var unchanged = 'You can only receive feedback after you changed the expression in the work area.';
-var derivationtext = 'Worked-out example:';
+var derivationtext = 'Worked-out exercise';

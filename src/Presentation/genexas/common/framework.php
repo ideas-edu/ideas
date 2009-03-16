@@ -44,7 +44,8 @@
 	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
 	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
 	
-	<div id="progress">Steps<br>0</div><!-- end div progress -->
+	<!-- <div id="progress">Steps<br>0</div> -->
+	<div id="progress"></div>
 	
 	<br/>
 	<div align="center" width="100%"><br/><?php include("/var/www/html/genexas/common/keys.php"); ?></div>

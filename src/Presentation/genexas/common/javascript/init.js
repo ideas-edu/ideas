@@ -14,7 +14,7 @@ function init() {
  	$('aboutButton').observe('click', openhelp);
 //	$('helpButton').observe('click', openhelp);
 //	$('rulesButton').observe('click', openhelp); 
-	$('generateButton').observe('click', generate);
+	$('generateButton').observe('click', displayNewExercise);
 	
 	$('hintbutton').observe('click', getHint);
 	$('derivationbutton').observe('click', getDerivation);
@@ -35,7 +35,7 @@ function init() {
 	$('copybutton').observe('click', copy); 
 	
 	// the back and forward button  and the copy button are invisable
-	$('undobutton').hide();
+//	$('undobutton').hide();
 	$('forwardbutton').hide();
 //	$('copybutton').hide();
 	// OU students have to find out themselves whether they are done

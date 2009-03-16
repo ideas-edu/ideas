@@ -130,20 +130,7 @@ select {
 	height: 20px;
 	font-weight: 800;
 }
-#progress {
-	float: left;
-	position: relative;
-	background-color: #FAEAC0;
-	margin-left: 20px;
-	padding: 5px;
-	left: 0px;
-	width: 50px;
-	height: 40px;
-	font-size: large;
-	border-style: solid;
-	border-width: 1px;
-	font-weight: 800;
-}
+
 
 #derivationbutton, #submitbutton {
 	margin-right: 10px;

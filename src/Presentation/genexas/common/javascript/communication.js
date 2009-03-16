@@ -2,8 +2,13 @@
  * Generate a new exercise,
  * A function to call the service and a display function
  */
- function generate() {
+function generate() {
 	ss_generate(5, displayExercise);
+}
+
+function displayNewExercise(state) {
+    generate();
+    clearFeedback();
 }
  /**
   * Display new exercise.
@@ -18,7 +23,6 @@ function displayExercise(state) {
 	$('exercise').update(task);
 	$('work').value = task;
 	$('history').update(task);
-//	$('feedback').innerHTML = "";
 	// call a Strategytool-service
 /*	ss_getRemaining(state, function(number) {
 			$('progress').update('Steps<br> ' + number); 

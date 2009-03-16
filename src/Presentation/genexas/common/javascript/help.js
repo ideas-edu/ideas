@@ -308,7 +308,7 @@ function copy() {
         updateDerivation(); */
 }
 function autoHandler(rule, valid, state) {
-        addToFeedback('<strong>Auto step: </strong>' + rule);
+        addToFeedback('<strong>Auto step: </strong>' + rule + ' (has been done)');
 	if (valid) {
    	   historyKeeper.newSnapshot(state);
 	   historyKeeper.snapshotPointer++;

@@ -132,7 +132,7 @@ quadraticView e = do
 productZero :: Equation Expr -> Maybe [Equation Expr]
 productZero (e :==: Nat 0) | length xs > 1 = 
    return [ x :==: 0 | x <- xs ]
- where xs = fromMaybe [] (match productView e)
+ where xs = maybe [] snd (match productView e)
 productZero _ = Nothing
 
 -- A^B = 0  implies  A=0
@@ -207,10 +207,10 @@ abcFormula _ = Nothing
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Equation Expr -> Maybe [Equation Expr]
 sameFactor (lhs :==: rhs) = do
-   xs <- match productView lhs
-   ys <- match productView rhs
+   (b1, xs) <- match productView lhs
+   (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y ] -- equality is too strong?
-   return [ x :==: 0, foldr1 (*) (xs\\[x]) :==: foldr1 (*) (ys\\[y]) ]
+   return [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -----------------------
 

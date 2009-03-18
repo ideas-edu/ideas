@@ -12,12 +12,14 @@
 --
 -----------------------------------------------------------------------------
 module Common.View 
-   ( View, makeView, Simplification, makeSimplification
+   ( Match, View, makeView, Simplification, makeSimplification
    , match, build, canonical, simplify
    , belongsTo, viewEquivalent, viewEquivalentWith
-   , (>>>)
+   , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
    ) where
 
+import Control.Arrow hiding ((>>>))
+import qualified Control.Category as C
 import Control.Monad
 import Data.Maybe
 
@@ -29,8 +31,10 @@ import Data.Maybe
 --
 -- Derived property: simplification is idempotent
 
+type Match a b = a -> Maybe b
+
 data View a b = View 
-   { match :: a -> Maybe b
+   { match :: Match a b
    , build :: b -> a
    }
 
@@ -63,6 +67,54 @@ viewEquivalentWith eq view x y =
       _                -> False
       
 ---------------------------------------------------------------
+-- Arrow combinators
+
+identity :: View a a 
+identity = undefined
 
 (>>>) :: View a b -> View b c -> View a c
-v1 >>> v2 = makeView (\a -> match v1 a >>= match v2) (build v1 . build v2)
+v >>> w = makeView (\a -> match v a >>= match w) (build v . build w)
+
+instance C.Category View where
+   id    = identity
+   v . w = w >>> v
+
+instance Arrow View where
+   arr f = makeView 
+      (return . f) 
+      (error "Control.View.arr: function is not invertible")
+
+   first v = makeView 
+      (\(a, c) -> match v a >>= \b -> return (b, c)) 
+      (\(b, c) -> (build v b, c))
+
+   second v = makeView 
+      (\(a, b) -> match v b >>= \c -> return (a, c)) 
+      (\(a, c) -> (a, build v c))
+
+   v *** w = makeView 
+      (\(a, c) -> liftM2 (,) (match v a) (match w c)) 
+      (\(b, d) -> (build v b, build w d))
+
+   -- left-biased builder
+   v &&& w = makeView 
+      (\a -> liftM2 (,) (match v a) (match w a)) 
+      (\(b, _) -> build v b)
+
+instance ArrowChoice View where
+   left v = makeView 
+      (either (liftM Left . match v) (return . Right)) 
+      (either (Left . build v) Right)
+
+   right v = makeView 
+      (either (return . Left) (liftM Right . match v)) 
+      (either Left (Right . build v))
+
+   v +++ w = makeView 
+      (either (liftM Left . match v) (liftM Right . match w))  
+      (either (Left . build v) (Right . build w))
+
+   -- left-biased builder
+   v ||| w = makeView 
+      (either (match v) (match w))
+      (Left . build v)

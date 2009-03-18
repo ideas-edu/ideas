@@ -82,8 +82,8 @@ plusCon :: Rule Expr
 plusCon = makeSimpleRule "plusCon" f
  where
    f (e1 :+: e2) = do 
-      a <- match integerView e1 
-      b <- match integerView e2
+      a <- match conView e1 
+      b <- match conView e2
       return (fromInteger (a+b))
    f _ = Nothing
 
@@ -91,8 +91,8 @@ timesCon :: Rule Expr
 timesCon = makeSimpleRule "timesCon" f 
  where
    f (e1 :*: e2) = do
-      a <- match integerView e1
-      b <- match integerView e2 
+      a <- match conView e1
+      b <- match conView e2 
       return (fromInteger (a*b))
    f _ = Nothing
    
@@ -100,8 +100,8 @@ minCon :: Rule Expr
 minCon = makeSimpleRule "minCon" f
  where
    f (e1 :-: e2) = do
-      a <- match integerView e1
-      b <- match integerView e2
+      a <- match conView e1
+      b <- match conView e2
       return (fromInteger (a-b))
    f _ = Nothing 
 
@@ -158,11 +158,11 @@ conTimesFraction = makeSimpleRule "conTimesFraction" f
  where
    f (e1 :*: e2) = do
       (a, b) <- match fractionView e2
-      n <- match integerView e1
+      n <- match conView e1
       return (fromInteger (a*n) :/: fromInteger b)
     `mplus` do
       (a, b) <- match fractionView e1
-      n <- match integerView e2
+      n <- match conView e2
       return (fromInteger (a*n) :/: fromInteger b)
    f _ = Nothing
    
@@ -222,13 +222,13 @@ conPlusFraction = makeSimpleRule "conPlusFraction" f
  where
    f e = do
       (e1, e2) <- match plusView e
-      a        <- match integerView e1
+      a        <- match conView e1
       (b, c)   <- match fractionView e2
       return (fromInteger (b+a*c) :/: fromInteger c)
     `mplus` do
       (e1, e2) <- match plusView e
       (b, c)   <- match fractionView e1
-      a        <- match integerView e2
+      a        <- match conView e2
       return (fromInteger (b+a*c) :/: fromInteger c)
    
 wf :: Expr -> Bool -- pessimistic approach
@@ -269,7 +269,7 @@ e1 ~= e2 = forAll arbitrary $ \f ->
    in g e1 == g e2 -}
 
 isInteger :: Expr -> Bool
-isInteger e = e `belongsTo` integerView
+isInteger e = e `belongsTo` conView
 
 isFraction :: Expr -> Bool
 isFraction e = e `belongsTo` fractionView
@@ -299,9 +299,9 @@ addTwoFractions =  ruleLCM
    ruleLCM = minorRule $ makeSimpleRule "ruleLCM" $ \c -> do
       e <- currentFocus c
       (e1, e2) <- match plusView e
-      let f = fmap (either snd (const 1)) . match (eitherV fractionView integerView)
+      let f = fmap (either snd (const 1)) . match (eitherV fractionView conView)
                 -- fmap snd (match fractionView e)-- `mplus` 
-                --fmap (const 1) (match integerView e)
+                --fmap (const 1) (match conView e)
       a <- f e1
       b <- f e2
       let v = lcm a b
@@ -318,7 +318,7 @@ addTwoFractions =  ruleLCM
    
    scaleCon = makeSimpleRule "scaleToLCM" $ \c -> do
       e <- currentFocus c
-      a <- match integerView e
+      a <- match conView e
       let n   = get lcmVar c
           new = (fromInteger (a*n)) / Nat n
       return (changeFocus (const new) c)
@@ -343,18 +343,18 @@ addTwoFractions =  ruleLCM
       return (setLocation l c)
       
    intV :: Expr -> Maybe Integer
-   intV = match integerView
+   intV = match conView
    
 divV :: Expr -> Maybe (Expr, Expr)
 divV (a :/: b)  = Just (a, b)
 divV (Negate a) = fmap (\(x, y) -> (negate x, y)) (divV a)
 divV _ = Nothing
 
-second :: View a b -> View (c, a) (c, b)
-second v = makeView (\(c, a) -> match v a >>= \b -> return (c, b)) (\(c, b) -> (c, build v b))
+--second :: View a b -> View (c, a) (c, b)
+--second v = makeView (\(c, a) -> match v a >>= \b -> return (c, b)) (\(c, b) -> (c, build v b))
 
 newV :: View Expr (Expr, Integer)
-newV = makeView divV undefined >>> second integerView
+newV = makeView divV undefined >>> second conView
 
 -- left-biased
 eitherV :: View a b -> View a c -> View a (Either b c)

@@ -3,83 +3,145 @@ module Domain.Math.Views
    , module Common.View -- export all view-related functions
    ) where
 
-import Common.Utils (distinct)
+import Prelude hiding (recip)
 import Common.View
 import Domain.Math.Expr
-import Domain.Math.Symbolic
+import Domain.Math.Equation
 import Control.Monad
 import Data.List (nub)
 
 ------------------------------------------------------------
--- Views
+-- Smart constructors
+
+(.+.) :: Expr -> Expr -> Expr
+Nat 0 .+. b        = b
+a     .+. Nat 0    = a
+a     .+. Negate b = a .-. b
+a     .+. b        = a :+: b
+
+(.-.) :: Expr -> Expr -> Expr
+Nat 0 .-. b        = neg b
+a     .-. Nat 0    = a
+a     .-. Negate b = a .+. b
+a     .-. b        = a :-: b
+
+neg :: Expr -> Expr
+neg (Negate a) = a
+neg a          = Negate a
+
+(.*.) :: Expr -> Expr -> Expr
+Nat 0    .*. _        = Nat 0
+_        .*. Nat 0    = Nat 0
+Nat 1    .*. b        = b
+a        .*. Nat 1    = a
+Negate a .*. b        = neg (a .*. b)
+a        .*. Negate b = neg (a .*. b)
+a        .*. b        = a :*: b
+
+(./.) :: Expr -> Expr -> Expr
+a ./. Nat 1           = a
+Negate a ./. b        = neg (a ./. b)
+a        ./. Negate b = neg (a ./. b)
+a ./. b               = a :/: b
+
+recip :: Expr -> Expr
+recip (Nat 1 :/: a) = a
+recip a             = Nat 1 :/: a
+
+------------------------------------------------------------
+-- Views of binary constructors
 
 plusView :: View Expr (Expr, Expr)
-plusView = makeView f (uncurry (+))
+plusView = makeView matchPlus (uncurry (.+.))
  where
-   f (a :+: b) = return (a, b)
-   f (a :-: b) = return (a, negate b)
-   f _         = Nothing
+   matchPlus :: Match Expr (Expr, Expr)
+   matchPlus (a :+: b)  = Just (a, b)
+   matchPlus (a :-: b)  = Just (a, neg b)
+   matchPlus (Negate a) = do (x, y) <- matchPlus a
+                             Just (neg x, neg y)
+   matchPlus _          = Nothing
 
-integerView :: View Expr Integer
-integerView = makeView f fromInteger
+divView :: View Expr (Expr, Expr)
+divView = makeView matchDiv (uncurry (./.))
+ where
+   matchDiv :: Match Expr (Expr, Expr)
+   matchDiv (a :/: b)  = Just (a, b)
+   matchDiv (Negate a) = do (x, y) <- matchDiv a
+                            Just (neg x, y)
+   matchDiv _          = Nothing
+
+------------------------------------------------------------
+-- Some constant views
+
+conView :: View Expr Integer
+conView = makeView f fromInteger
  where
    f (Nat n)    = return n
    f (Negate e) = fmap negate (f e)
    f _          = Nothing
 
 fractionView :: View Expr (Integer, Integer) -- second component is positive
-fractionView = makeView f g
+fractionView = divView >>> signs >>> (conView *** conView)
  where
-   f (a :/: b)  = do 
-      x <- match integerView a
-      y <- match integerView b
-      case compare y 0 of
-         LT -> return (negate x, abs y)
-         EQ -> fail "division by zero"
-         GT -> return (x, y)
-   f (Negate e) = fmap (\(x, y) -> (negate x, y)) (f e)
-   f _          = Nothing
-   
-   g (x, y) = build integerView x / build integerView y
+   signs = makeView (Just . f) id
+   f (a, Negate b) = f (neg a, b)
+   f (a, b)        = (a, b)
+
+rationalView :: View Expr Rational
+rationalView = makeView exprToFractional fromRational
    
 -------------------------------------------------------------
--- Views that originated from (linear) equations domain
+-- Sums and products
 
 sumView :: View Expr [Expr]
-sumView = makeView (return . ($ []) . f False) g 
+sumView = makeView (return . ($ []) . f False) (foldl (.+.) 0)
  where
    f n (a :+: b)  = f n a . f n b
    f n (a :-: b)  = f n a . f (not n) b
    f n (Negate a) = f (not n) a
-   f n (Nat 0)    = id
-   f n e          = if n then (negate e:) else (e:)
-   
-   g xs
-      | null xs   = 0
-      | otherwise = foldl1 op xs
-    where 
-       op a (Negate b) = a - b
-       op a b          = a + b
+   f n e          = if n then (neg e:) else (e:)
 
-productView :: View Expr [Expr]
-productView = makeView (return . ($ []) . f) g 
+productView :: View Expr (Bool, [Expr])
+productView = makeView (Just . second ($ []) . f False) g
  where
-   f (a :*: b)  = f a . f b
-   f (Negate a) = f a
-   f (Nat 1)    = \xs -> if null xs then [] else negate (head xs) : tail xs
-   f e          = (e:)
+   f r (a :*: b)  = f r a &&& f r b
+   f r (a :/: b)  = f r a &&& f (not r) b
+   f r (Negate a) = first not (f r a)
+   f r e          = (False, if r then (recip e:) else (e:))
    
-   g xs 
-      | null xs   = 1
-      | otherwise = foldl1 (*) xs
+   (n1, g1) &&& (n2, g2) = (n1 /= n2, g1 . g2)
+   
+   g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
 
-rationalView :: View Expr Rational
-rationalView = makeView f fromRational
+-------------------------------------------------------------
+-- Equations
+
+linearView :: View Expr (Rational, String, Rational)
+linearView = makeView matchLin g
  where
-   f e = do
-      n <- match integerView e
-      return (fromIntegral n)
-    `mplus` do
-      (a, b) <- match fractionView e
-      guard (b /= 0)
-      return (fromIntegral a / fromIntegral b)
+   matchLin e = do
+      (a, b) <- f e
+      case nub (collectVars e) of
+         [v] | a /= 0 -> Just (a, v, b)
+         _            -> Nothing
+ 
+   f (Var _)    = Just (1, 0)
+   f (Nat n)    = Just (0, fromIntegral n)
+   f (a :+: b)  = liftM2 (\(u,v) (w, x) -> (u+w, v+x)) (f a) (f b)
+   f (a :-: b)  = f (a :+: Negate b)
+   f (Negate a) = liftM (\(u,v) -> (-u,-v)) (f a)
+   f (a :*: b)  = liftM2 (\(u,v) r -> (u*r,v*r)) (f a) (match rationalView b)
+                     `mplus`
+                  liftM2 (\r (u,v) -> (u*r,v*r)) (match rationalView a) (f b)
+   f (a :/: b)  = liftM2 (\(u,v) r -> (u/r,v/r)) (f a) (match rationalView b)
+   f _          = Nothing
+   
+   g (a, x, b) = (fromRational a .*. Var x) .+. fromRational b
+
+equationView :: View (Equation Expr) (String, Rational)
+equationView = makeView f g
+ where
+   f (lhs :==: rhs) = do 
+      (a, x, b) <- match linearView (lhs - rhs)
+      return (x, -b/a)
+   g (x, r) = Var x :==: fromRational r

@@ -129,7 +129,7 @@ cleanUpExpr = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
 
 
 
-
+{-
 -- ax + b
 linearView :: View Expr (Rational, String, Rational)
 linearView = makeView f g
@@ -152,6 +152,7 @@ linearView = makeView f g
          | a ==  0   = []
          | a ==  1   = [var]
          | otherwise = [fromRational a*var]
+-}
 
 -------------------------------------------------------
 -- Transformations

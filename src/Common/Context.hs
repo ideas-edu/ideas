@@ -21,8 +21,8 @@ module Common.Context
    , Location, location, setLocation, changeLocation
    , currentFocus, changeFocus, locationDown, locationUp
    , makeLocation, fromLocation
-     -- * Lifting rewrite rules
-   , liftRuleToContext
+     -- * Lifting
+   , liftToContext
    ) where
 
 import Common.Utils
@@ -183,5 +183,5 @@ fromLocation (L is) = is
 -- Lifting rewrite rules
 
 -- | Lift a rule to operate on a term in a context
-liftRuleToContext :: Uniplate a => Rule a -> Rule (Context a)
-liftRuleToContext = lift $ makeLiftPair currentFocus (changeFocus . const)
+liftToContext :: (Lift f, Uniplate a) => f a -> f (Context a)
+liftToContext = lift $ makeLiftPair currentFocus (changeFocus . const)

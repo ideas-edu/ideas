@@ -34,12 +34,12 @@ toCNF = label "To CNF" $
       [ ruleCompOverUnion, ruleAddOverIntersec, ruleDeMorganOr, ruleDeMorganAnd
       , ruleNotOverComp, ruleNotOverAdd
       ]
-   step3 = somewhere $ liftRuleToContext 
+   step3 = somewhere $ liftToContext 
       ruleUnionOverIntersec
 
 -- local helper-function
 useRules :: [Rule RelAlg] -> Strategy (Context RelAlg)
-useRules = alternatives . map liftRuleToContext
+useRules = alternatives . map liftToContext
    
 
 

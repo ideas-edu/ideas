@@ -18,7 +18,7 @@ import Prelude hiding (repeat)
 import Domain.Math.DerivativeRules 
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
-import Common.Context (Context, liftRuleToContext, inContext, fromContext)
+import Common.Context (Context, liftToContext, inContext, fromContext)
 import Common.Exercise
 import Common.Transformation
 import Test.QuickCheck hiding (label)
@@ -39,7 +39,7 @@ derivativeExercise = makeExercise
    , subTerm = undefined
    , prettyPrinter = show
    , finalProperty = noDiff
-   , ruleset       = map liftRuleToContext derivativeRules ++ [tidyup]
+   , ruleset       = map liftToContext derivativeRules ++ [tidyup]
    , strategy      = derivativeStrategy
    , generator     = oneof $ map return [ex1, ex2, ex3, ex4]
    }
@@ -52,12 +52,12 @@ derivativeStrategy = label "Derivative" $
    try tidyup <*> Common.Strategy.repeat (derivative <*> try tidyup)
 
 tidyup :: Rule (Context Expr)
-tidyup = liftRuleToContext $ makeSimpleRule "Tidy-up rule" $ \old -> 
+tidyup = liftToContext $ makeSimpleRule "Tidy-up rule" $ \old -> 
    let new = toExpr $ (simplifyExpr :: Expr -> SExpr) old
    in if old==new then Nothing else Just new
    
 derivative :: Strategy (Context Expr)
-derivative = somewhere $ alternatives (map liftRuleToContext derivativeRules)
+derivative = somewhere $ alternatives (map liftToContext derivativeRules)
 
 ex1, ex2, ex3 :: Expr
 ex1 = diff $ lambda (Var "x") $ Var "x" `pow` 2

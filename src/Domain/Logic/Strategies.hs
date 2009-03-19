@@ -16,7 +16,7 @@ module Domain.Logic.Strategies (toDNF, toDNF_DWA) where
 import Prelude hiding (repeat)
 import Domain.Logic.Rules
 import Domain.Logic.Formula
-import Common.Context (Context, liftRuleToContext)
+import Common.Context (Context, liftToContext)
 import Common.Transformation
 import Common.Strategy
 
@@ -41,7 +41,7 @@ toDNF =  label "Bring to dnf"
    eliminateNots = repeat $ topDown $ useRules
       [ ruleDeMorganAnd, ruleDeMorganOr, ruleNotNot
       ]
-   orToTop = repeat $ somewhere $ liftRuleToContext 
+   orToTop = repeat $ somewhere $ liftToContext 
       ruleAndOverOr
 
 -----------------------------------------------------------------------------
@@ -66,9 +66,9 @@ toDNF_DWA =  label "Bring to dnf (DWA)" $
     eliminateNots = somewhere $ useRules
        [ ruleDeMorganAnd, ruleDeMorganOr
        ]
-    orToTop = somewhere $ liftRuleToContext 
+    orToTop = somewhere $ liftToContext 
        ruleAndOverOr
       
 -- local helper function
 useRules :: [Rule Logic] -> Strategy (Context Logic)
-useRules = alternatives . map liftRuleToContext
+useRules = alternatives . map liftToContext

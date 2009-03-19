@@ -33,12 +33,6 @@
       {
          "domain": "math",
          "identifier": "fraction",
-         "description": "Simplifying fractions",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "fraction",
          "description": "simplify fraction",
          "status": "Experimental"
       },
@@ -69,5 +63,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.0 (1688)"
+   "version": "0.5.0 (1748)"
 }

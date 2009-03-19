@@ -68,7 +68,7 @@ cleanUpExpr = checkBottom . rewrite f
 -- Rules
 
 fractionRules :: [Rule (Context Expr)]
-fractionRules = map liftRuleToContext 
+fractionRules = map liftToContext 
    [ plusCon, timesCon, minCon, divCon
    -- , plusZero, timesZero, timesOne
    {- , negateFraction-} , conTimesFraction, fractionTimesFraction
@@ -292,7 +292,7 @@ addTwoFractions :: Strategy (Context Expr)
 addTwoFractions =  ruleLCM 
                <*> repeat (moveDown <*> (scaleToLCM <|> scaleCon) <*> moveUp)
                <*> addParts
-               <*> option (liftRuleToContext simplerFraction <|> liftRuleToContext divCon)
+               <*> option (liftToContext simplerFraction <|> liftToContext divCon)
  where
    lcmVar = integerVar "lcm"
  

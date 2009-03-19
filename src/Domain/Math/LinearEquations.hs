@@ -16,16 +16,16 @@ import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Symbolic
 import Domain.Math.Parser
 import Domain.Math.Views
-import Domain.Math.HigherDegreeEquations (solvedEquation, powerView, constantView, ratioView, showDerivation) -- to reuse some helpers (temp)
+import Domain.Math.HigherDegreeEquations (powerView, constantView, ratioView, showDerivation) -- to reuse some helpers (temp)
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
 import Data.Ratio
-import Test.QuickCheck (oneof)
+import Test.QuickCheck hiding (label)
 
 paper = 
    let start = inContext $ last $ concat linearEquations in
-   case derivations (unlabel linearEquationStrategy) start of
+   case derivations (unlabel solveEquation) start of
       hd:_ -> showDerivation "" hd
       _    -> putStrLn "unsolved"
 
@@ -39,11 +39,11 @@ linearEquationExercise = makeExercise
    , description   = "solve a linear equation"
    , status        = Experimental
    , parser        = parseLineq
-   , equality      = \a b -> fmap cleanUpExpr a == fmap cleanUpExpr b
-   , equivalence   = (~=)
+   , equality      = \a b -> a == b
+   , equivalence   = viewEquivalent equationView
    , finalProperty = solvedEquation
    , ruleset       = lineqRules
-   , strategy      = linearEquationStrategy
+   , strategy      = solveEquation
    , generator     = oneof (map return (concat linearEquations))
    }
 
@@ -58,112 +58,23 @@ parseLineq = f . P.parse (pEquation pExpr) . P.scanWith myScanner
 ------------------------------------------------------------
 -- Strategy
 
-linearEquationStrategy :: LabeledStrategy (Context (Equation Expr))
-linearEquationStrategy = cleanUpStrategy (fmap (fmap cleanUpExpr)) $ label "linear Equation" $ 
-            repeat (liftRule noDivision |> liftRule merge |> liftRule distribute) 
-        <*> try (liftRule varToLeft)
-        <*> try (liftRule conToRight)
-        <*> try (liftRule scaleToOne)
+solveEquation :: LabeledStrategy (Context (Equation Expr))
+solveEquation = liftF $ 
+   label "linear Equation" $ 
+   repeat (distribute <|> removeDivision <|> merge) 
+      <*> try varToLeft <*> try conToRight <*> try scaleToOne
 
-liftRule :: Rule a -> Rule (Context a)
-liftRule = lift $ makeLiftPair (return . fromContext) (fmap . const)
-
-------------------------------------------------------------
--- Clean up
-
-cleanUpExpr :: Expr -> Expr
-cleanUpExpr = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
- where
-   -- plus
-   step (x :+: Negate y) = x - y
-   step (x :+: (Negate y :*: z)) = x - (y*z)
-   -- minus
-   step (x :-: (y :-: z)) = (x-y)+z
-   step (0 :-: x) = Negate x
-   -- negate 
-   step (Negate (Nat 0))   = 0
-   step (Negate (x :*: y)) = (-x)*y
-   -- times
-   step (x :*: (y :/: z)) = (x :*: y) :/: z
-   -- division
-   step ((a :*: x) :/: b) | a==b && b/=0 = x
-   step (Negate (x :/: y)) = (-x)/y
-   -- finally, propagate constants
-   step expr =
-      let Nat n = if n >= 0 then Nat n else negate (Nat (abs n)) in
-      case ratioView expr of
-         Just (a, b)
-            | b==1      -> fromInteger a
-            | otherwise -> fromInteger a / fromInteger b
-         Nothing -> expr
-
-   -- identities/absorbing
-   basic :: Expr -> Maybe Expr
-   basic (Nat 0 :+: x) = return x
-   basic (x :+: Nat 0) = return x
-   basic (Nat 0 :*: _) = return 0
-   basic (_ :*: Nat 0) = return 0
-   basic (Nat 1 :*: x) = return x
-   basic (x :*: Nat 1) = return x
-   basic (x :-: Nat 0) = return x
-   basic (x :/: Nat 1) = return x
-   basic (Nat 0 :/: _) = return 0 -- division-by-zero
-   basic _ = Nothing
-
--- ============================================================ --
---  O L D    S T U F F 
--- ============================================================ --
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{-
--- ax + b
-linearView :: View Expr (Rational, String, Rational)
-linearView = makeView f g
- where 
-   f e = do
-      list <- match sumView e >>= mapM powerView
-      let (as, xs, ns) = unzip3 list
-      unless (length (nub xs) == 1 && distinct ns && all (<=1) ns) Nothing
-      cs <- mapM ratioView (map cleanUpExpr as)
-      let a = maybe 0 f $ lookup 1 (zip ns cs)
-          b = maybe 0 f $ lookup 0 (zip ns cs)
-          f (i,j) = fromIntegral i/fromIntegral j
-      return (a, head xs, b)
-   
-   g (a, x, b) = build sumView $ firstPart ++ [ fromRational b | b /= 0 ]
-    where
-      var = variable x
-      firstPart 
-         | a == -1   = [negate var] 
-         | a ==  0   = []
-         | a ==  1   = [var]
-         | otherwise = [fromRational a*var]
--}
+liftF :: Lift f => f a -> f (Context a)
+liftF = lift $ makeLiftPair (return . fromContext) (fmap . const)
 
 -------------------------------------------------------
 -- Transformations
 
 plusT, minusT, timesT, divisionT :: Expr -> Equation Expr -> Equation Expr
-plusT     e = fmap (+e)
-minusT    e = fmap (\x -> x-e)
-timesT    e = fmap $ \a ->
-   let xs  = fromMaybe [] (match sumView a)
-   in build sumView (map (*e) xs)
-divisionT e = fmap (/e)
+plusT     e = merge2 . fmap (.+. e)
+minusT    e = merge2 . fmap (.-. e)
+timesT    e = merge2 . applyD distribute . fmap (.*. e)
+divisionT e = merge2 . fmap (./. e)
 
 distributionT :: Expr -> Maybe Expr
 distributionT (a :*: b) | length bs > 1 = do
@@ -171,68 +82,54 @@ distributionT (a :*: b) | length bs > 1 = do
    return $ foldr1 (+) (map (a*) bs)
  where bs = fromMaybe [] (match sumView b)
 distributionT (a :*: b) | length as > 1 = do
-   ratioView a -- restriction
+   ratioView b -- restriction
    return $ foldr1 (+) (map (b*) as)
    
  where as = fromMaybe [] (match sumView a)
 distributionT _ = Nothing
 
-mergeTerms :: Equation Expr -> Equation Expr
-mergeTerms = fmap (cleanUpExpr . merge)
- where
-   make x [] = 0
-   make x ((a, n):rest) = let (xs, ys) = partition ((==n) . snd) rest
-                          in ((if n==1 then (*x) else id) (foldr (+) a (map fst xs))) + make x ys
-   
-   merge e =
-      case match sumView e >>= mapM powerView of
-         Just es | length (nub xs) == 1 && all (`elem` [0,1]) ns  -> make (variable $ head xs) (zip as ns)
-          where
-            (as, xs, ns) = unzip3 es
-         _ -> e
-
 -------------------------------------------------------
 -- Rewrite Rules
 
 lineqRules :: [Rule (Context (Equation Expr))]
-lineqRules = map liftRule 
-   [ noDivision, merge, distribute
+lineqRules = map liftF
+   [ removeDivision, merge, distribute
    , varToLeft, conToRight, scaleToOne
    ]
 
 varToLeft :: Rule (Equation Expr)
 varToLeft = makeSimpleRule "varToLeft" $ \eq -> do
    (a, x, _) <- match linearView (getRHS eq)
-   when (a==0) Nothing
-   return $ mergeTerms $
+   guard (a/=0)
+   return $
       if (a > 0) then minusT (fromRational a       * variable x) eq
                  else plusT  (fromRational (abs a) * variable x) eq
 
 conToRight :: Rule (Equation Expr)
 conToRight = makeSimpleRule "conToRight" $ \eq -> do
    (_, _, b) <- match linearView (getLHS eq)
-   when (b==0) Nothing
-   return $ mergeTerms $
+   guard (b/=0)
+   return $
       if (b > 0) then minusT (fromRational b) eq
                  else plusT  (fromRational (abs b)) eq
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = makeSimpleRule "scaleToOne" $ \eq -> do
    (a, _, _) <- match linearView (getLHS eq)
-   when (a==0 || a==1) Nothing
-   return $ mergeTerms $
+   guard (a `notElem` [0, 1])
+   return $ 
       divisionT (fromRational a) eq
 
-noDivision :: Rule (Equation Expr)
-noDivision = makeSimpleRule "noDivision" $ \eq@(lhs :==: rhs) -> do
+removeDivision :: Rule (Equation Expr)
+removeDivision = makeSimpleRule "removeDivision" $ \eq@(lhs :==: rhs) -> do
    xs <- match sumView lhs
    ys <- match sumView rhs
    let list = catMaybes (map f (xs ++ ys))
        cons = catMaybes (map constantView list) 
    case (cons, list) of
       (_, [])   -> Nothing
-      ([], e:_) -> return $ mergeTerms (timesT e eq)
-      (ns, _)   -> return $ mergeTerms (timesT (fromInteger (foldr1 lcm ns)) eq)
+      ([], e:_) -> return $ timesT e eq
+      (ns, _)   -> return $ timesT (fromInteger (foldr1 lcm ns)) eq
  where
    f (Negate a) = f a
    f (a :/: b) = do
@@ -242,11 +139,8 @@ noDivision = makeSimpleRule "noDivision" $ \eq@(lhs :==: rhs) -> do
    f _ = Nothing
 
 merge :: Rule (Equation Expr)
-merge = makeSimpleRule "merge" $ \e -> 
-   do let new = mergeTerms e
-      unless (e /= new) Nothing
-      return new
-      
+merge = makeSimpleRule "merge" mergeR
+
 distribute :: Rule (Equation Expr)
 distribute = makeSimpleRule "distribute" $ \(lhs :==: rhs) -> 
    let f = somewhereM distributionT in
@@ -254,6 +148,48 @@ distribute = makeSimpleRule "distribute" $ \(lhs :==: rhs) ->
       (Just new, _) -> Just (new :==: rhs)
       (_, Just new) -> Just (lhs :==: new)
       _  -> Nothing
+
+normalizeProduct :: [Expr] -> [Expr]
+normalizeProduct ys = f [ (match rationalView y, y) | y <- ys ]
+  where  f []                    = []
+         f ((Nothing  , e):xs)   = e:f xs
+         f ((Just r   , _):xs)   = 
+           let  cs    = r :  [ c  | (Just c   , _)  <- xs ]
+                rest  =      [ x  | (Nothing  , x)  <- xs ]
+           in   build rationalView (product cs):rest
+
+normalizeSum :: [Expr] -> [Expr]
+normalizeSum xs = rec [ (Just $ pm x, x) | x <- xs ]
+ where
+   pm :: Expr -> (Rational, Expr)
+   pm (e1 :*: e2) = case (match rationalView e1, match rationalView e2) of
+                       (Just r1, _) -> let (r2, a) = pm e2 in (r1*r2, a)
+                       (_, Just r1) -> let (r2, a) = pm e1 in (r1*r2, a) 
+                       _           -> (1, e1 .*. e2)
+   pm (Negate e) = let (r, a) = pm e in (negate r, a)
+   pm e = case match rationalView e of
+             Just r  -> (r, Nat 1)
+             Nothing -> (1, e)
+   
+   rec [] = []
+   rec ((Nothing, e):xs) = e:rec xs
+   rec ((Just (r, a), e):xs) = new:rec rest
+    where
+      (js, rest) = partition (maybe False ((==a) . snd) . fst) xs
+      rs  = r:map fst (catMaybes (map fst js))
+      new | null js   = e
+          | otherwise = build rationalView (sum rs) .*. a
+
+mergeR e1 = if e1==e2 then Nothing else Just e2
+ where e2 = merge2 e1
+
+merge2 e = fmap mergeE e
+mergeE a = fromMaybe a $ do 
+   xs <- match sumView a
+   ys <- flip mapM xs $ \b -> do
+            (n, zs) <- match productView b
+            return (build productView (n, normalizeProduct zs))
+   return (build sumView (normalizeSum ys))
 
 ----------------------------------------------------------------------
 -- Substitution (for checking) 
@@ -264,13 +200,19 @@ substitute sub = rec
    rec e@(Var s) = fromMaybe e (lookup s sub)
    rec e = f (map rec cs)
     where (cs, f) = uniplate e
+
+solvedEquation :: Equation Expr -> Bool
+solvedEquation (lhs :==: rhs) =
+   case lhs of 
+      Var x -> x `notElem` collectVars rhs
+      _     -> False
  
 solveAndCheck :: Equation Expr -> Equation Expr
 solveAndCheck eq = 
-   case fromContext (applyD linearEquationStrategy (inContext eq)) of
+   case fromContext (applyD solveEquation (inContext eq)) of
       Var x :==: e | x `notElem` collectVars e -> 
-         fmap (cleanUpExpr . substitute [(x, e)]) eq
-      result -> eq
+         fmap (simplify rationalView . substitute [(x, e)]) eq
+      _ -> eq
  
 ----------------------------------------------------------------------
 -- Linear Equations Exercise Sets (from DWO environment)
@@ -289,52 +231,3 @@ main = flip mapM_ [ (level, i) | level <- [1..5], i <- [1..10] ] $ \(level, i) -
    case derivations (unlabel linearEquationStrategy) start of
       hd:_ -> showDerivation "" hd
       _    -> putStrLn "unsolved" -}
-
-
----------------------------------------------------------------------
--- Linear equations in Q
-{-
--- constructors: N, V, +, *, -, neg, /
-
-genQ :: Bool -> Int -> Gen Expr
-genQ b 0 = frequency [(if b then 3 else 0, return (variable "x")), (4, liftM fromInteger arbitrary)]
-genQ b n = frequency [ (2, liftM2 (+) (genQ b h) (genQ b h))
-                     , (2, liftM2 (-) (genQ b h) (genQ b h))
-                     , (2, liftM (negate) (genQ b h))
-                     , (1, liftM2 (*) (genQ b h) (genQ False h))
-                     , (1, liftM2 (*) (genQ False h) (genQ b h))
-                     , (2, liftM2 (/) (genQ False h) (genQ False h))
-                     ]
- where h = n `div` 2
-
---prop1 :: Equation Expr -> Bool
---prop1 eq = solvedEquation (applyD linearEquationStrategy (inContext eq))
--- test1 = quickCheck $ forAll (liftM2 (:==:) (genQ True 10) (genQ True 10)) prop1
--}
-type Q = (Rational, Rational)
-
-(~=) :: Equation Expr -> Equation Expr -> Bool
-a ~= b = toQs a == toQs b
-
-toQs :: Equation Expr -> Maybe (Either Rational Rational)
-toQs (lhs :==: rhs) = do
-   (a, b) <- toQ (lhs - rhs)
-   return $
-      if (a == 0) then Left b
-                  else Right (negate (b/a))
-
-toQ :: Expr -> Maybe Q
-toQ = foldExpr (liftM2 plus, liftM2 times, liftM2 minus, liftM neg, nat, divq, \_ -> fail "sq", \_ -> var, \_ _ -> fail "sym")
- where 
-   nat n = return (0, fromIntegral n)
-   var   = return (1, 0)
-   plus (a, b) (c, d) = (a+c, b+d)
-   times (a, b) (c, d)
-      | a==0 = (b*c, b*d)
-      | c==0 = (d*a, d*b)
-      | otherwise = error "not linear"
-   minus x y = plus x (neg y)
-   neg (a, b) = (negate a, negate b)
-   divq (Just (a, b)) (Just (c, d))
-      | c==0 && d /=0 = return (a/d, b/d)
-   divq _ _ = fail "not linear"

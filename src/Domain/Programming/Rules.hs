@@ -12,7 +12,7 @@ import Data.Char
 import Control.Monad
 
 introLambda :: String -> Rule (Context Expr)
-introLambda = liftRuleToContext . makeRule "Intro Lambda" . introLambdaT
+introLambda = liftToContext . makeRule "Intro Lambda" . introLambdaT
 {- introLambda x = toRule "Intro Lambda" f
  where
    f e | e == undef = return $ Lambda x undef
@@ -74,7 +74,7 @@ getRules expr =
 
 
 toRule :: String -> (Expr -> Maybe Expr) -> Rule (Context Expr)
-toRule s f = liftRuleToContext $ makeSimpleRule s (\e -> applyRule e f)
+toRule s f = liftToContext $ makeSimpleRule s (\e -> applyRule e f)
 
 buildExpr :: [Rule (Context Expr)] -> Expr
 buildExpr = fromContext . foldl (flip applyD) (inContext undef)

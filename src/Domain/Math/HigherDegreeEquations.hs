@@ -74,14 +74,14 @@ instance Show a => Show (OrList a) where
       | null xs   = "true"
       | otherwise = unwords (intersperse "or" (map show xs))
 
-solved :: OrList (Equation Expr) -> Bool
-solved (OrList xs) = all solvedEquation xs
-
 solvedEquation :: Equation Expr -> Bool
 solvedEquation (lhs :==: rhs) =
    case lhs of 
-      Var _ -> noVars rhs
+      Var x -> x `notElem` collectVars rhs
       _     -> False
+      
+solved :: OrList (Equation Expr) -> Bool
+solved (OrList xs) = all solvedEquation xs
  
 -----------------------------------------------------------
 -- Views on mathematical expressions

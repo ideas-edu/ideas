@@ -22,11 +22,6 @@ import Test.QuickCheck hiding (label)
 ------------------------------------------------------------
 -- Exercise
 
-mytest = checkExercise linearEquationExercise
-
-s1 = "2*x-(3*x+5) == 10+5*(x-1)"
-s2 = "2*x-(3*x+5) == 10+(5*x-5)"
-
 linearEquationExercise :: Exercise (Equation Expr)
 linearEquationExercise = makeExercise 
    { identifier    = "lineq"

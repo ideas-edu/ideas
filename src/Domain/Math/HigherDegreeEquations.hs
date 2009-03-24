@@ -2,9 +2,8 @@ module Domain.Math.HigherDegreeEquations where
   -- (higherDegreeEquationExercise, main) where
 
 import Prelude hiding ((^), repeat)
-import Data.List (nub, sort, sortBy, (\\), intersperse)
+import Data.List (nub, sort, (\\), intersperse)
 import Data.Maybe
-import Data.Ratio
 import Common.Context
 import Common.Exercise
 import qualified Common.Parsing as P
@@ -20,7 +19,7 @@ import Domain.Math.Symbolic
 import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Views
 import Domain.Math.Equation
-import Control.Monad (unless, when)
+import Control.Monad 
 import Test.QuickCheck hiding (check, label)
 
 ------------------------------------------------------------
@@ -39,7 +38,7 @@ higherDegreeEquationExercise = makeExercise
    , finalProperty = solved
    , ruleset       = allRules
    , strategy      = equationsStrategy
-   , generator     = oneof (take 9 $ map (return . OrList . return) higherDegreeEquations)
+   , generator     = oneof (map (return . OrList . return) higherDegreeEquations)
    }
    
 parseOrs :: String -> Either P.SyntaxError (OrList (Equation Expr))
@@ -84,49 +83,8 @@ solvedEquation (lhs :==: rhs) =
 solved :: OrList (Equation Expr) -> Bool
 solved (OrList xs) = all solvedEquation xs
  
------------------------------------------------------------
--- Views on mathematical expressions
 
--- e.g., 3 or -3
-constantView :: Expr -> Maybe Integer
-constantView = exprToNum -- match integerView
 
-ratioView :: Expr -> Maybe (Integer, Integer)
-ratioView = fmap (\r -> (numerator r, denominator r)) . exprToFractional
-
--- a*x^b, e.g., -3*x^2, but also 3*x, x, and 3
-powerView :: Expr -> Maybe (Expr, String, Integer)
-powerView e | isJust (ratioView e) = return (e, "x", 0) -- guess variable !!!!!!! 
-powerView (Negate a) = do
-   (e, x, n) <- powerView a
-   return (Negate e, x, n)
-powerView (Var x) = return (1, x, 1)
-powerView (Sym "^" [Var x, Nat n]) =
-   return (1, x, n)
-powerView (a :*: b)
-   | hasVars a && not (hasVars b) = do
-        (e, x, n) <- powerView a
-        return (b*e, x, n)
-   | not (hasVars a) && hasVars b = do
-        (e, x, n) <- powerView b
-        return (a*e, x, n)
-powerView _ = Nothing
-
--- a*x^2 + b*x + c
-quadraticView :: Expr -> Maybe (String, Integer, Integer, Integer)
-quadraticView e = do 
-   xs <- match sumView e >>= mapM powerView
-   let vs = nub [ x | (_, x, _) <- xs ]
-       cmp (_, _, x) (_, _, y) = compare x y
-   unless (length vs == 1) Nothing
-   case sortBy cmp xs of
-      [(e0, _, 0), (e1, _, 1), (e2, _, 2)] -> do
-         a <- constantView e2
-         b <- constantView e1
-         c <- constantView e0
-         return (head vs, a, b, c)
-      _ -> Nothing
-      
 -----------------------------------------------------------
       
 -- A*B = 0  implies  A=0 or B=0
@@ -154,7 +112,7 @@ moveToRHS (lhs :==: rhs) = do
 
 powerFactor :: Expr -> Maybe Expr
 powerFactor e = do
-   xs <- match sumView e >>= mapM powerView
+   xs <- match sumView e >>= mapM (match powerView)
    let (as, vs, ns) = unzip3 xs
        r = minimum ns
        v = variable (head vs)
@@ -162,7 +120,7 @@ powerFactor e = do
        Nat n = if n < 0 then negate (Nat (abs n)) else Nat n
    unless (length xs > 1 && length (nub vs) == 1 && r >= 1) Nothing
    -- also search for gcd constant
-   case mapM constantView as of 
+   case mapM (match integerView) as of 
       Just is | g > 1 -> 
          return (Nat g * v^Nat r * foldr1 (+) (zipWith f (map (Nat . (`div` g)) is) ns))
        where g = foldr1 gcd is
@@ -179,26 +137,26 @@ squared _ = Nothing
 divide :: Equation Expr -> Maybe (Equation Expr)
 divide (lhs :==: rhs) = do
    unless (noVars rhs) Nothing
-   (a, x, i) <- powerView lhs
+   (a, x, i) <- match powerView lhs
    when (a == 1 || i == 0) Nothing
    return (variable x ^ Nat i :==: rhs / a) 
 
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Expr -> Maybe Expr
 niceFactors e = do
-   (x, a, b, c) <- quadraticView e
+   (x, a, b, c) <- match quadraticView e
    unless (a==1) Nothing
    safeHead [ (variable x + Nat i) * (variable x + Nat j) | (i, j) <- factors c, i+j == b ]
 
 moveToLHS :: Equation Expr -> Maybe (Equation Expr)
 moveToLHS (x :==: y) = do 
-   (_, _, n) <- powerView y
+   (_, _, n) <- match powerView y
    unless (n >= 1) Nothing
    return (x - y :==: 0)
 
 abcFormula :: Equation Expr -> Maybe [Equation Expr]
 abcFormula (e :==: Nat 0) = do
-   (x, a, b, c) <- quadraticView e
+   (x, a, b, c) <- match quadraticView e
    let discr = Nat (b*b - 4 * a * c)
    return [ variable x :==: (-Nat b + sqrt discr) / 2 * Nat a
           , variable x :==: (-Nat b - sqrt discr) / 2 * Nat a
@@ -275,10 +233,8 @@ cleanUpExpr = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
    -- finally, propagate constants
    step expr =
       let Nat n = if n >= 0 then Nat n else negate (Nat (abs n)) in
-      case ratioView expr of
-         Just (a, b)
-            | b==1      -> Nat a
-            | otherwise -> Nat a / Nat b
+      case match rationalView expr of
+         Just r -> fromRational r
          Nothing -> expr
 
    -- identities/absorbing
@@ -337,5 +293,5 @@ main = flip mapM_ [1..10] $ \i -> do
    putStrLn $ "Exercise " ++ show i
    line -} 
    case derivations (unlabel equationsStrategy) start of
-      hd:_ -> showDerivation "" hd
+      hd:_ -> putStrLn "ok" --showDerivation "" hd
       _    -> putStrLn "unsolved"

@@ -12,7 +12,7 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Uniplate
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.LinearEquations (showDerivation, showDerivations)
+import Domain.Math.LinearEquations (showDerivation, showDerivations, solvedEquation)
 import Domain.Math.Expr
 import Domain.Math.Parser
 import Domain.Math.Symbolic
@@ -74,17 +74,9 @@ instance Show a => Show (OrList a) where
       | null xs   = "true"
       | otherwise = unwords (intersperse "or" (map show xs))
 
-solvedEquation :: Equation Expr -> Bool
-solvedEquation (lhs :==: rhs) =
-   case lhs of 
-      Var x -> x `notElem` collectVars rhs
-      _     -> False
-      
 solved :: OrList (Equation Expr) -> Bool
 solved (OrList xs) = all solvedEquation xs
  
-
-
 -----------------------------------------------------------
       
 -- A*B = 0  implies  A=0 or B=0

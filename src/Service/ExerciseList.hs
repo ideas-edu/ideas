@@ -18,10 +18,11 @@ exerciseList =
    , Some LA.solveSystemWithMatrixExercise
    , Some LA.solveGramSchmidt
      -- basic math
-   , Some Math.derivativeExercise
    , Some Math.fractionExercise
+   , Some Math.calculationExercise
    , Some Math.linearEquationExercise
    , Some Math.higherDegreeEquationExercise
+   , Some Math.derivativeExercise
      -- logic and relation-algebra
    , Some Logic.dnfExercise
    , Some RA.cnfExercise

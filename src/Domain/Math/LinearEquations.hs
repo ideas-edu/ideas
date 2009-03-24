@@ -1,4 +1,4 @@
-module Domain.Math.LinearEquations (linearEquationExercise, testAll, showDerivation, showDerivations) where
+module Domain.Math.LinearEquations (linearEquationExercise, testAll, showDerivation, showDerivations, solvedEquation) where
 
 import Prelude hiding (repeat)
 import Common.Apply

@@ -1,5 +1,5 @@
 module Domain.Math.Fraction 
-   (fractionExercise, cleanUpStrategy, go) where
+   (fractionExercise, calculationExercise, cleanUpStrategy, go) where
 
 import Prelude hiding (repeat)
 import Control.Monad
@@ -11,6 +11,7 @@ import Common.Strategy hiding (fail)
 import Common.Transformation
 import Common.Uniplate hiding (somewhere)
 import Domain.Math.Expr
+import Domain.Math.ExercisesDWO
 import Domain.Math.Parser
 import Domain.Math.Views
 
@@ -32,12 +33,19 @@ fractionExercise = makeExercise
    , generator     = genFraction 30
    }
 
+calculationExercise :: Exercise Expr
+calculationExercise = fractionExercise
+   { identifier    = "calculation"
+   , description   = "calculate result (basic)"
+   , generator     = oneof $ map return (concat calculateResults)
+   }
+
 ------------------------------------------------------------
 -- Strategy
 
 fractionStrategy :: LabeledStrategy (Context Expr)
 fractionStrategy = cleanUpStrategy (fmap cleanUpExpr) $ label "fraction" $ 
-   repeat $ somewhere $ (addTwoFractions <|> alternatives fractionRules)
+   repeat $ somewhere (alternatives fractionRules) |> somewhere addTwoFractions
 
 ------------------------------------------------------------
 -- Clean up: only some terms that look really "odd"
@@ -142,7 +150,7 @@ simplerFraction = makeSimpleRule "simplerFraction" f
       (a, b) <- match fractionView e
       guard (a /= 0 && b /= 0)
       let n = gcd a b
-      guard (n `notElem` [0,1])
+      guard (n `notElem` [0,1, b])
       return (fromInteger (a `div` n) / fromInteger (b `div` n))   
 
 negateFraction :: Rule Expr

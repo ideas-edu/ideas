@@ -89,7 +89,10 @@ fractionView = divView >>> signs >>> (conView *** conView)
 
 rationalView :: View Expr Rational
 rationalView = makeView exprToFractional fromRational
-   
+
+integerView :: View Expr Integer
+integerView = makeView exprToNum fromIntegral
+ 
 -------------------------------------------------------------
 -- Sums and products
 
@@ -133,7 +136,10 @@ linearView = makeView matchLin g
    f (a :*: b)  = liftM2 (\(u,v) r -> (u*r,v*r)) (f a) (match rationalView b)
                      `mplus`
                   liftM2 (\r (u,v) -> (u*r,v*r)) (match rationalView a) (f b)
-   f (a :/: b)  = liftM2 (\(u,v) r -> (u/r,v/r)) (f a) (match rationalView b)
+   f (a :/: b)  = do (u, v) <- f a 
+                     r <- match rationalView b 
+                     guard (r /= 0)
+                     return (u/r,v/r)
    f _          = Nothing
    
    g (a, x, b) = (fromRational a .*. Var x) .+. fromRational b

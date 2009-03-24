@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Match, View, makeView, Simplification, makeSimplification
-   , match, build, canonical, simplify
+   , match, build, canonical, canonicalWith, simplify, simplifyWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
    ) where
@@ -47,10 +47,16 @@ makeSimplification :: (a -> a) -> Simplification a
 makeSimplification f = makeView (return . f) id
 
 canonical :: View a b -> a -> Maybe a
-canonical view = liftM (build view) . match view
+canonical = canonicalWith id
+
+canonicalWith :: (b -> b) -> View a b -> a -> Maybe a
+canonicalWith f view = liftM (build view . f) . match view
 
 simplify :: View a b -> a -> a
-simplify view a = fromMaybe a (canonical view a)
+simplify = simplifyWith id
+
+simplifyWith :: (b -> b) -> View a b -> a -> a
+simplifyWith f view a = fromMaybe a (canonicalWith f view a)
 
 ---------------------------------------------------------------
 

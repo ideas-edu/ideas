@@ -1,6 +1,6 @@
 module Domain.Math.Expr where
 
-import Data.Char
+import Data.Char  (isAlpha, isDigit)
 import Data.Ratio
 import Test.QuickCheck
 import Control.Monad
@@ -111,8 +111,9 @@ instance Arbitrary Expr where
          Sym f xs -> variant 8 . coarbitrary f . coarbitrary xs
    
 arbExpr :: Int -> Gen Expr
-arbExpr _ = liftM Nat arbitrary {- 
-arbExpr 0 = oneof [liftM (Nat . abs) arbitrary, oneof [ return (Var x) | x <- ["x", "y", "z"] ], return pi ]
+arbExpr _ = liftM (Nat . abs) arbitrary
+{-
+arbExpr 0 = oneof [liftM (Nat . abs) arbitrary, oneof [ return (Var x) | x <- ["x", "y", "z"] ] {- , return pi -} ]
 arbExpr n = oneof [bin (+), bin (*), bin (-), unop negate, bin (/), unop sqrt, arbExpr 0]
  where
    bin  f = liftM2 f rec rec
@@ -168,7 +169,7 @@ ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, nat, bin "/"
  where
    nat n b        = if n>=0 then show n else neg (nat (abs n)) b
    var s _        = s
-   neg x b        = parIf (b>0) ("-" ++ x 1)
+   neg x b        = parIf (b>0) ("-" ++ x 10)
    sq  x          = sym "sqrt" [x]
    sym s xs b
       | null xs   = s
@@ -234,3 +235,10 @@ hasVars = not . noVars
 
 noVars :: Expr -> Bool
 noVars = null . collectVars
+
+substituteVars :: (String -> Expr) -> Expr -> Expr
+substituteVars sub = rec 
+ where
+   rec e@(Var s) = sub s
+   rec e = f (map rec cs)
+    where (cs, f) = uniplate e

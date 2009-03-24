@@ -2,9 +2,11 @@ module Domain.Math.Parser where
 
 import Prelude hiding ((^))
 import Common.Parsing hiding (pParens)
+import Common.Transformation
 import Domain.Math.Symbolic
 import Domain.Math.Equation
 import Domain.Math.Expr
+import Test.QuickCheck (arbitrary)
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner {keywords = ["pi", "sqrt"], specialCharacters  = "+-*/^()[]{},"}
@@ -27,7 +29,7 @@ pAtomMin :: TokenParser Expr
 pAtomMin = optional (negate <$ pKey "-") id <*> pAtom
 
 pAtom :: TokenParser Expr
-pAtom  =  Nat <$> pInteger
+pAtom  =  fromInteger <$> pInteger
       <|> (Var . fst) <$> (pVarid <|> pConid)
       <|> (\_ -> symbol "pi") <$> pKey "pi"
       <|> pParens pExpr
@@ -55,3 +57,13 @@ pParens p = pKey "(" *> p <* pKey ")"
 
 nul :: Range
 nul = Range (Pos 0 0) (Pos 0 0)
+
+
+-----------------------------------------------------------------------
+-- Argument descriptor (for parameterized rules)
+
+instance Argument Expr where
+   makeArgDescr = exprArgDescr
+
+exprArgDescr :: String -> ArgDescr Expr
+exprArgDescr descr = ArgDescr descr Nothing (either (const Nothing) Just . parseExpr) show arbitrary

@@ -13,6 +13,7 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Uniplate
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
+import Domain.Math.LinearEquations (showDerivation, showDerivations)
 import Domain.Math.Expr
 import Domain.Math.Parser
 import Domain.Math.Symbolic
@@ -327,22 +328,7 @@ q = traceStrategy (unlabel equationsStrategy)
        (inContext (OrList [ (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2]))
                                   -- (x-1)*(x^3 - 6*x) :==: 3*x^2 * (x-1) ])
  where x = variable "x"
- 
-showDerivations :: Show a => Strategy a -> a -> IO ()
-showDerivations s a = mapM_ make list
- where
-   list = zip [1..] (derivations s a)
-   make (n, d) = showDerivation ("Derivation " ++ show n ++ ":") d
-
-showDerivation :: Show a => String -> (a, [(Rule a, a)]) -> IO ()
-showDerivation title (a, list) = 
-   putStrLn $ unlines $ title : f a : concatMap g list
- where
-   f a = "  " ++ show a
-   g (r, a)
-      | isMinorRule r = []
-      | otherwise =  ["    => " ++ show r, f a]
-      
+       
 main :: IO ()
 main = flip mapM_ [1..10] $ \i -> do
    let line  = putStrLn (replicate 50 '-')  
@@ -351,5 +337,5 @@ main = flip mapM_ [1..10] $ \i -> do
    putStrLn $ "Exercise " ++ show i
    line -} 
    case derivations (unlabel equationsStrategy) start of
-      hd:_ -> putStrLn "ok" -- showDerivation "" hd
+      hd:_ -> showDerivation "" hd
       _    -> putStrLn "unsolved"

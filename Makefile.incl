@@ -70,7 +70,7 @@ CP    = cp
 RM    = rm
 RMDIR = rmdir
 CD    = cd
-MAC   = macosx-app
+MAC   = /usr/local/wxhaskell/bin/macosx-app -v
 
 #---------------------------------------------------------------------------------------
 # General rules

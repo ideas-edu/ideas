@@ -71,6 +71,15 @@ plusView = makeView matchPlus (uncurry (.+.))
                              Just (neg x, neg y)
    matchPlus _          = Nothing
 
+timesView :: View Expr (Expr, Expr)
+timesView = makeView matchTimes (uncurry (.*.))
+ where
+   matchTimes :: Match Expr (Expr, Expr)
+   matchTimes (a :*: b)  = Just (a, b)
+   matchTimes (Negate a) = do (x, y) <- matchTimes a
+                              Just (neg x, y)
+   matchTimes _          = Nothing
+
 divView :: View Expr (Expr, Expr)
 divView = makeView matchDiv (uncurry (./.))
  where

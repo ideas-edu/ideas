@@ -7,6 +7,7 @@ import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA
 import qualified Domain.Math.DerivativeExercise as Math
 import qualified Domain.Math.Fraction as Math
+import qualified Domain.Math.CoverUpEquations as Math
 import qualified Domain.Math.LinearEquations as Math
 import qualified Domain.Math.HigherDegreeEquations as Math
 
@@ -20,6 +21,7 @@ exerciseList =
      -- basic math
    , Some Math.fractionExercise
    , Some Math.calculationExercise
+   , Some Math.coverUpExercise
    , Some Math.linearEquationExercise
    , Some Math.higherDegreeEquationExercise
    , Some Math.derivativeExercise

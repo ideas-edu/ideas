@@ -26,14 +26,20 @@
       },
       {
          "domain": "math",
-         "identifier": "derivative",
-         "description": "Derivative",
+         "identifier": "fraction",
+         "description": "simplify fraction",
          "status": "Experimental"
       },
       {
          "domain": "math",
-         "identifier": "fraction",
-         "description": "simplify fraction",
+         "identifier": "calculation",
+         "description": "calculate result (basic)",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "coverup",
+         "description": "solve an equation by covering up",
          "status": "Experimental"
       },
       {
@@ -46,6 +52,12 @@
          "domain": "math",
          "identifier": "higherdegree",
          "description": "solve an equation (higher degree)",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "derivative",
+         "description": "Derivative",
          "status": "Experimental"
       },
       {
@@ -63,5 +75,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.0 (1748)"
+   "version": "0.5.0 (1769)"
 }

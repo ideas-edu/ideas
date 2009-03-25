@@ -174,7 +174,7 @@ ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, nat, bin "/"
    sym s xs b
       | null xs   = s
       | length xs==2 && not (isAlpha (head s)) 
-                  = bin s 0 (xs!!0) (xs!!1) 1
+                  = bin s 10 (xs!!0) (xs!!1) 1
       | otherwise = parIf (b>3) (unwords (s : map ($ 4) xs))
    bin s i x y b  = parIf (b>i) (x i ++ s ++ y (i+1))
       

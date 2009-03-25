@@ -10,6 +10,7 @@ import qualified Domain.Math.Fraction as Math
 import qualified Domain.Math.CoverUpEquations as Math
 import qualified Domain.Math.LinearEquations as Math
 import qualified Domain.Math.HigherDegreeEquations as Math
+import qualified Domain.Programming as Programming
 
 exerciseList :: [Some Exercise]
 exerciseList = 
@@ -28,4 +29,6 @@ exerciseList =
      -- logic and relation-algebra
    , Some Logic.dnfExercise
    , Some RA.cnfExercise
+     -- programming
+   , Some Programming.isortExercise
    ]

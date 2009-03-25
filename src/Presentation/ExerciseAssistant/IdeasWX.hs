@@ -30,12 +30,6 @@ import Session
 --import Data.IORef
 import Service.ExerciseList
 import Service.Options (versionText)
-import qualified Domain.LinearAlgebra as LA
-import Domain.Programming
-
-
-exercises :: [Some Exercise]
-exercises = Some LA.opgave6b : Some LA.opgaveVarMatrix2 : Some LA.opgaveVarMatrix : exerciseList ++ [Some isortExercise]
 
 domains :: [String]
 domains = sort $ nub [ domain e | Some e <- exerciseList ]
@@ -61,17 +55,19 @@ exerciseFrame = do
    set domainPanel [layout := row 10 [hfill $ widget domainText, hglue, widget newButton, widget changeButton]]
    
    -- Button Panel
-   buttonPanel <- panel leftPanel []
-   readyButton    <- button buttonPanel [text := "Ready"]
-   hintButton     <- button buttonPanel [text := "Hint"]
-   stepButton     <- button buttonPanel [text := "Step"]
-   nextButton     <- button buttonPanel [text := "Next"]
-   backButton     <- button buttonPanel [text := "Back"]
-   submitButton   <- button buttonPanel [text := "Submit"]
-   ruleBox        <- comboBox buttonPanel [] 
-   set buttonPanel [layout := column 10
-      [ row 10 $ map widget [readyButton, hintButton, stepButton, nextButton, submitButton]
-      , row 10 [widget backButton, hglue, hfill $ widget ruleBox]
+   bp <- panel leftPanel []
+   backButton      <- button bp [text := "Back"]
+   readyButton     <- button bp [text := "Ready"]
+   submitButton    <- button bp [text := "Submit"]
+   hintButton      <- button bp [text := "Hint"]
+   stepButton      <- button bp [text := "Step"]
+   autoButton      <- button bp [text := "Auto step"]
+   -- workedoutButton <- button bp [text := "Worked-out exerc"]
+   
+   -- ruleBox        <- comboBox bp [] 
+   set bp [layout := column 10
+      [ row 10 [widget backButton, hglue, widget readyButton, widget submitButton] 
+      , row 10 [widget hintButton, widget stepButton, widget autoButton {-, widget workedoutButton-}]
       ]]
    
    assignmentView <- textCtrl leftPanel [bgcolor := myGrey]
@@ -80,7 +76,7 @@ exerciseFrame = do
    set leftPanel [layout := column 10
       [ hfill $ widget domainPanel, hstretch $ label "Assignment", fill $ widget assignmentView
       , hstretch $ label "Enter modified term", fill $ widget entryView
-      , row 0 [hglue, widget buttonPanel, hglue]]]
+      , row 0 [hglue, widget bp, hglue]]]
    
    -- Right Panel
    rightPanel     <- panel f []
@@ -106,12 +102,12 @@ exerciseFrame = do
    mapM_ (flip textCtrlSetEditable False) [assignmentView, derivationView, feedbackView]
 
    -- initialize exercise
-   session <- makeSession (head exercises)
+   session <- makeSession (head exerciseList)
        
-   let fillRuleBox = do
+   {- let fillRuleBox = do
           -- names <- ruleNames session
           -- set ruleBox [items := names]
-          return ()
+          return () -}
 
    let updateAll = do
           descr <- currentDescription session
@@ -126,7 +122,6 @@ exerciseFrame = do
           set progressBar [selection := if y==0 then 100 else (100*x) `div` y] 
 
    set feedbackView [text := "Welcome to the Exercise Assistant!"]
-   fillRuleBox
    
    assignmentFrame <- newAssignmentFrame session updateAll
    
@@ -159,7 +154,7 @@ exerciseFrame = do
       txt <- stepText session
       set feedbackView [text := txt]]
        
-   set nextButton [on command := do
+   set autoButton [on command := do
       (txt, ok) <- nextStep session
       set feedbackView [text := txt]
       when ok updateAll]
@@ -234,7 +229,7 @@ newAssignmentFrame session onExit = do
    rightPanel <- panel f []
    domainBox  <- radioBox rightPanel Vertical domains []
    exerciseList <- singleListBox rightPanel []
-   experimentalBox <- checkBox rightPanel [text := "Include experimental", checked := False]
+   experimentalBox <- checkBox rightPanel [text := "Include experimental", checked := True]
    set rightPanel [layout := column 10 
       [ hstretch $ label "Domain selection", hfill $ widget domainBox
       , hstretch $ vspace 10
@@ -295,7 +290,7 @@ newAssignmentFrame session onExit = do
    return f
 
 getExercises :: Bool -> String -> [Some Exercise]
-getExercises b d = filter p exercises
+getExercises b d = filter p exerciseList
  where p (Some e) = domain e == d && (b || status e == Stable) 
 
 searchPath :: String -> IO (Maybe String)

@@ -71,6 +71,12 @@
          "identifier": "cnf",
          "description": "To conjunctive normal form",
          "status": "Experimental"
+      },
+      {
+         "domain": "programming",
+         "identifier": "isort",
+         "description": "Insertion sort",
+         "status": "Experimental"
       }
    ],
    "error": null,

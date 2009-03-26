@@ -31,9 +31,16 @@ import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
 import OpenMath.Conversion
 import Domain.Math.DerivativeExercise
+import Domain.Math.LinearEquations
 import qualified Service.TypedAbstractService as TAS
 import Data.Maybe
 import Data.Char
+
+
+import Domain.Math.Equation
+vb :: Equation Expr
+vb = 1 - ((4*x + 2) / 3) :==: 3*x - ((5*x - 1) /4)
+ where x = Var "x"
 
 processXML :: Maybe String -> String -> IO (String, String)
 processXML htmlMode input = 
@@ -50,49 +57,57 @@ xmlRequestHandler :: XML -> IO XML
 xmlRequestHandler xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
-   s <- findAttribute "service" xml
-   serviceXML (map toLower s) xml
+   s  <- findAttribute "service" xml
+   let ec = extractExerciseCode xml 
+   serviceXML (map toLower s) ec xml
+
+extractExerciseCode ::XML -> ExerciseCode
+extractExerciseCode xml =
+   case findAttribute "exerciseid" xml >>= return . break (=='.') of
+      Just (as, _:bs) -> makeCode as bs
+      Just (as, _)    -> makeCode "" as
+      Nothing         -> makeCode "" "" -- being backwards compatible with early MathDox
 
 -- temporary
-serviceXML :: String -> XML -> IO XML
-serviceXML s request
+serviceXML :: String -> ExerciseCode -> XML -> IO XML
+serviceXML s ec request
    | s == "derivation" = do
-        X state <- getState request
+        X state <- getState ec request
         let list   = TAS.derivation state
             f (r, a) = element "elem" $ do 
                "ruleid" .=. show r
                builder $ toXML $ fromContext a
         return $ resultOk $ element "list" (mapM_ f list)
    | s == "allfirsts" = do
-        X state <- getState request
+        X state <- getState ec request
         let list   = TAS.allfirsts state
             f (r, _, a) = element "elem" $ do
                "ruleid" .=. show r
                builder $ state2xml a
         return $ resultOk $ element "list" (mapM_ f list)
    | s == "onefirst" = do
-        X state <- getState request
+        X state <- getState ec request
         let this = TAS.onefirst state
             f (r, _, a) = element "elem" $ do
                "ruleid" .=. show r
                builder (state2xml a)
         return $ resultOk $ f this
    | s == "ready" = do
-        X state <- getState request
+        X state <- getState ec request
         let a = TAS.ready state
         return $ resultOk $ text $ show a
    | s == "stepsremaining" = do
-        X state <- getState request
+        X state <- getState ec request
         let a = TAS.stepsremaining state
         return $ resultOk $ text $ show a
    | s == "applicable" = do
-        X state <- getState request
+        X state <- getState ec request
         let loc   = maybe (error "no location") getData (findChild "location" request)         
             list  = TAS.applicable (read loc) state
             f r   = element "elem" ("ruleid" .=. show r)
         return $ resultOk $ element "list" (mapM_ f list)
    | s == "apply" = do
-        X state <- getState request
+        X state <- getState ec request
         let rid   = maybe (error "no ruleid") getData (findChild "ruleid" request)
             rule  = fromMaybe (error "invalid ruleid") $ safeHead $ filter p (ruleset (TAS.exercise state))
             p     = (==rid) . Transformation.name
@@ -109,7 +124,7 @@ serviceXML s request
         req <- fromXML request
         return $ replyToXML $ laServer req
 
-serviceXML s _ = fail $ "Invalid request: unknown service " ++ show s
+serviceXML s _ _ = fail $ "Invalid request: unknown service " ++ show s
 
 
 xml2State :: InXML a => Exercise a -> XML -> TAS.State a
@@ -130,11 +145,17 @@ state2xml state = makeXML "state" $ do
    element "context" (text $ showContext (TAS.context state))
    builder (toXML (TAS.term state))
    
-getState :: Monad m => XML -> m X
-getState xml =
+getState :: Monad m => ExerciseCode -> XML -> m X
+getState ec xml =
    case findChild "state" xml of
-      Just a -> maybe (fail "invalid xml state") return (fromXML a)
-      _ -> fail "expected tag state"
+      Just a 
+         | ec == exerciseCode linearEquationExercise -> 
+              return $ X (xml2State linearEquationExercise a)
+         | ec == exerciseCode derivativeExercise -> 
+              return $ X (xml2State derivativeExercise a)
+         | otherwise ->
+              fail $ "unknown exercise id: " ++ show ec
+      _ ->    fail "expected tag state"
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
@@ -148,27 +169,6 @@ instance InXML Expr where
    toXML   = omobj2xml . toOMOBJ
    fromXML = either fail (maybe (fail "Conversion from OMOBJ to Expr") return . fromOMOBJ) . xml2omobj
 
-instance InXML X where
-   toXML (X s) = state2xml s
-   fromXML xml = return $ X (xml2State derivativeExercise xml)
-
-{-
-instance InXML Bool where
-   toXML = mkText . show
-   fromXML xml =
-      case isText xml of
-         Just s -> 
-            case reads s of
-               [(b, rest)] | all isSpace rest -> return b
-               _ -> fail "expecting a boolean"
-         _ -> fail "expecting text"
-
-instance InXML Int where
-   toXML = mkText . show
-   fromXML xml =
-      case isText xml of
-         Just s -> 
-            case reads s of
-               [(n, rest)] | all isSpace rest -> return n
-               _ -> fail "expecting an int"
-         _ -> fail "expecting text" -}
+instance IsOMOBJ a => InXML (Equation a) where
+   toXML eq = omobj2xml (toOMOBJ eq)
+   fromXML = either fail (maybe (fail "Conversion from OMOBJ to Equation") return . fromOMOBJ) . xml2omobj

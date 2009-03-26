@@ -1,0 +1,19 @@
+<reply result="ok" version="0.5.0">
+  <list>
+    <elem ruleid="scale to one">
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMV name="x"/>
+          <OMA>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMI>
+              4
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </elem>
+  </list>
+</reply>
+

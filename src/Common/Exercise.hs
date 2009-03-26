@@ -20,7 +20,7 @@ module Common.Exercise
    , strategy, ruleset, differences, ordering
    , generator, suitableTerm -}
      -- * Miscellaneous
-   , ExerciseCode, exerciseCode, validateCode
+   , ExerciseCode, exerciseCode, validateCode, makeCode
    , checkExercise, checkParserPretty
    ) where
 
@@ -94,9 +94,12 @@ makeExercise = Exercise
 
 newtype ExerciseCode = EC String 
 
-exerciseCode :: Exercise a -> ExerciseCode
-exerciseCode ex = EC $ map toLower (domain ex) ++ "." ++ filter p (map toLower (identifier ex))
+makeCode :: String -> String -> ExerciseCode
+makeCode d i = EC $ map toLower d ++ "." ++ filter p (map toLower i)
  where p c = isAlphaNum c || c `elem` extraSymbols
+
+exerciseCode :: Exercise a -> ExerciseCode
+exerciseCode ex = makeCode (domain ex) (identifier ex)
 
 validateCode :: Exercise a -> Bool
 validateCode ex = all isLower (domain ex) && all p (identifier ex)

@@ -50,6 +50,10 @@ raise i (P m)
    | i >= 0    = P $ IM.fromAscList [ (n+i, a) | (n, a) <- IM.toList m ]
    | otherwise = error "raise with a negative number"
 
+power :: Num a => Polynomial a -> Int -> Polynomial a
+power _ 0 = 1
+power p n = p * power p (n-1)
+
 scale :: Num a => a -> Polynomial a -> Polynomial a
 scale a p = if a==0 then 0 else fmap (*a) p
 
@@ -64,8 +68,12 @@ degree (P m)
 coefficient :: Num a => Int -> Polynomial a -> a
 coefficient n (P m) = IM.findWithDefault 0 n m
 
-monic :: Num a => Polynomial a -> Bool
-monic p = coefficient (degree p) p == 1
+isMonic :: Num a => Polynomial a -> Bool
+isMonic p = coefficient (degree p) p == 1
+
+toMonic :: Fractional a => Polynomial a -> Polynomial a
+toMonic p = scale (recip a) p
+ where a = coefficient (degree p) p
 
 -- Returns the maximal number of positive roots (Descartes theorem)
 -- Multiple roots are counted separately
@@ -108,7 +116,7 @@ longDivision p1 p2 = monicLongDivision (scale (recip a) p1) (scale (recip a) p2)
 -- polynomial long division, where p2 is monic
 monicLongDivision :: Num a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
 monicLongDivision p1 p2
-   | d1 >= d2 && monic p2 = (toP quot, toP rem)
+   | d1 >= d2 && isMonic p2 = (toP quot, toP rem)
    | otherwise = error "invalid monic division"
  where
    d1 = degree p1
@@ -122,6 +130,17 @@ monicLongDivision p1 p2
    rec acc (a:as) | length as >= length ys = 
       rec (a:acc) (zipWith (+) (map (*a) ys ++ repeat 0) as)
    rec acc as = (acc, reverse as)
+   
+-- use polynomial long division to compute the greatest common factor 
+-- of the polynomials
+polynomialGCD :: Fractional a => Polynomial a -> Polynomial a -> Polynomial a
+polynomialGCD x y
+   | degree y > degree x = rec y x 
+   | otherwise           = rec x y
+ where
+   rec a b
+      | b == 0    = a 
+      | otherwise = rec b (snd (longDivision a b))
    
 ------------------------
 
@@ -145,3 +164,12 @@ next :: Rational -> Rational
 next a = a - (f a / ff a)
 
 newton = take 100 (iterate next (-10))
+
+e8, e9 :: Polynomial Rational
+e8 = (var+1) * (var-5) * (var-3)
+e9 = (var-2) * (var-5) * (var+2) * (var+2)
+
+(q0, r0) = longDivision e8 e9
+(q1, r1) = longDivision e9 r0
+(q2, r2) = longDivision r0 r1 -- r1 is wat ik zoek
+

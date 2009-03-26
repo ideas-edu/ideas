@@ -32,9 +32,10 @@ higherDegreeEquationExercise = makeExercise
    , description   = "solve an equation (higher degree)"
    , status        = Experimental
    , parser        = parseOrs
-   , equality      = let f (OrList xs) = sort (map (fmap cleanUpExpr) xs)
-                     in \a b -> f a == f b
-   , equivalence   = equality higherDegreeEquationExercise -- TO DO: what about equivalence for undecidable domains?
+   , equality      = (==) 
+                     -- let f (OrList xs) = sort (map (fmap cleanUpExpr) xs)
+                     -- in \a b -> a == b
+   , equivalence   = \_ _ -> True -- equality higherDegreeEquationExercise -- TO DO: what about equivalence for undecidable domains?
    , finalProperty = solved
    , ruleset       = allRules
    , strategy      = equationsStrategy
@@ -254,13 +255,12 @@ cleanUpExpr = fixpoint (transform (\e -> fromMaybe (step e) (basic e)))
 equationsStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 equationsStrategy = cleanUpStrategy (fmap (fmap (fmap cleanUpExpr))) $
    label "higher degree" $ repeat ( 
-   alternatives (allRules \\ [liftRule rule9])
-        |> liftRule rule9) 
-        <*> check (solved . fromContext)
+   alternatives allRules)
+        -- <*> check (solved . fromContext)
    
 allRules :: [Rule (Context (OrList (Equation Expr)))]
 allRules = map liftRule [ rule1, rule2, rule3, rule4, rule5
-                        , rule6, rule7, rule8, rule9, rule10]
+                        , rule6, rule7, rule8, rule10, rule9] --abc last in list
  
 liftRule :: Rule a -> Rule (Context a)
 liftRule = lift $ makeLiftPair (return . fromContext) (fmap . const)

@@ -21,6 +21,7 @@ import Domain.Math.Symbolic
 import Domain.Math.Equation
 import Domain.Math.Expr
 import Domain.Math.SExpr
+import Domain.Math.HigherDegreeEquations (OrList(..))
 import Data.Maybe
 import Data.Ratio
 import Control.Monad
@@ -55,6 +56,8 @@ listSymbol      = OMS "list1" "list"
 equationSymbol  = OMS "relation1" "eq"
 diffSymbol      = OMS "calculus1" "diff"
 lambdaSymbol    = OMS "fns1" "lambda"
+
+orSymbol        = OMS "logic1" "or" -- n-ary symbol
 
 type SymbolMap = [(String, OMOBJ, Maybe Int)]
 
@@ -212,6 +215,9 @@ instance IsOMOBJ SExpr where
    toOMOBJ   = toOMOBJ . toExpr
    fromOMOBJ = fmap simplifyExpr . fromOMOBJ
 
+instance IsOMOBJ a => IsOMOBJ (OrList a) where 
+   toOMOBJ (OrList xs) = listop orSymbol xs
+   fromOMOBJ = fromN orSymbol OrList
 
 --------------------------------------------------------------------
 -- Linear algebra types

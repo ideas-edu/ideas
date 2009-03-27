@@ -20,6 +20,10 @@ import Data.Char (isSpace)
 data OMOBJ = OMI Integer | OMV String | OMS String String | OMA [OMOBJ] |OMBIND OMOBJ [String] OMOBJ
    deriving (Show, Eq)
 
+instance InXML OMOBJ where
+   toXML   = omobj2xml
+   fromXML = either fail return . xml2omobj
+
 ----------------------------------------------------------
 -- conversion functions: XML <-> OMOBJ
    

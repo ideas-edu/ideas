@@ -19,7 +19,7 @@ import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Transformation (name, Rule)
 import Domain.Logic.FeedbackText (feedbackSyntaxError, ruleText) -- FIXME
-import Service.ExerciseList
+import Service.ExerciseList (exerciseList)
 import Common.Parsing (SyntaxError(..))
 import qualified Service.TypedAbstractService as TAS
 import Data.Char

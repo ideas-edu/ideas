@@ -50,14 +50,14 @@ xmlRequestHandler xml = do
       fail "expected xml tag request"
    s  <- findAttribute "service" xml
    ec <- extractExerciseCode xml
-   triple <- omTriple ec
+   triple <- omTriple ec `mplus` concTriple ec -- first try math exercises
    serviceXML (map toLower s) triple xml
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =
    case findAttribute "exerciseid" xml >>= return . break (=='.') of
       Just (as, _:bs) -> return (makeCode as bs)
-      Just (as, _)    -> return (makeCode "" as)
+      Just (as, _)    -> resolveExerciseCode as
       -- being backwards compatible with early MathDox
       Nothing ->
          case fmap getData (findChild "strategy" xml) of
@@ -137,7 +137,7 @@ xml2State (Triple tEx tRead _) top = do
    return state
 
 state2xml :: Triple a -> TAS.State a -> XML
-state2xml (Triple tEx tRead tBuild) state = makeXML "state" $ do
+state2xml (Triple _ _ tBuild) state = makeXML "state" $ do
    element "prefix"  (text $ maybe "[]" show (TAS.prefix state))
    element "context" (text $ showContext (TAS.context state))
    tBuild (TAS.term state)
@@ -160,14 +160,13 @@ omTriple code =
          Triple a (either fail fromOMOBJ . xml2omobj) (builder . toXML . toOMOBJ)
       _ -> fail "exercise code not found"
 
-{-
-concTriple :: ExerciseCode -> Maybe Triple
+concTriple :: ExerciseCode -> IO (Some Triple)
 concTriple code = 
    case Service.ExerciseList.getExercise code of
-      Just (Some a) -> Just $ 
+      Just (Some a) -> return $ Some $ 
          let reader xml = do
                 guard (name xml == "expr")
                 let input = getData xml
                 either (fail . show) return (parser a input)
          in Triple a reader (text . prettyPrinter a)
-      _ -> Nothing -}
+      _ -> fail "exercise code not found"

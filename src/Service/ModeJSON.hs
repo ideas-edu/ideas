@@ -15,7 +15,7 @@ module Service.ModeJSON (processJSON) where
 
 import Common.Context
 import Common.Utils (Some(..))
-import Common.Exercise (Exercise(..), exerciseCode)
+import Common.Exercise (Exercise(..), ExerciseCode, exerciseCode)
 import Common.Transformation (name, isBuggyRule, isRewriteRule)
 import Service.JSON
 import Service.AbstractService
@@ -107,6 +107,11 @@ service2IO f = fun (fun (io service)) f
 instance InJSON a => InJSON (Context a) where
    toJSON = toJSON . fromContext
    fromJSON a = fromJSON a >>= (return . inContext)
+
+instance InJSON ExerciseCode where 
+   toJSON = toJSON . show
+   fromJSON (String s) = List.resolveExerciseCode s
+   fromJSON _          = fail "expecting a string"
    
 instance InJSON Location where
    toJSON              = toJSON . show

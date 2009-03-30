@@ -16,20 +16,19 @@ module Service.AbstractService where
 
 import Common.Utils (safeHead, Some(..))
 import Common.Context
-import Common.Exercise (Exercise(..))
+import Common.Exercise (Exercise(..), exerciseCode, ExerciseCode)
 import Common.Transformation (name, Rule)
 import Domain.Logic.FeedbackText (feedbackSyntaxError, ruleText) -- FIXME
-import Service.ExerciseList (exerciseList)
+import Service.ExerciseList
 import Common.Parsing (SyntaxError(..))
 import qualified Service.TypedAbstractService as TAS
 import Data.Char
 import Data.Maybe
 import Common.Strategy  (makePrefix)
 
-type ExerciseID = String
 type RuleID     = String
 
-type State      = (ExerciseID, Prefix, Expression, SimpleContext)
+type State      = (ExerciseCode, Prefix, Expression, SimpleContext)
 type Prefix     = String
 type Expression = String -- concrete syntax (although this could also be abstract)
 type SimpleContext = String
@@ -42,12 +41,13 @@ data Result = SyntaxError SyntaxError
             | Unknown State          -- equivalent
    deriving Show
           
-generate :: ExerciseID -> Int -> IO State
+generate :: ExerciseCode -> Int -> IO State
 generate exID level = 
    case getExercise exID of
-      Some ex -> do
+      Just (Some ex) -> do
          s <- TAS.generate ex level
          return (toState s)
+      _ -> error "generate"
 
 derivation :: State -> [(RuleID, Location, Expression)]
 derivation s = 
@@ -104,32 +104,25 @@ submittext s input =
                in (b, txt, toState s)
 
 submit :: State -> Expression -> Result
-submit s input = fst $ submitExtra s input
-
-submitExtra :: State -> Expression -> (Result, Int)
-submitExtra s input = 
+submit s input =
    case fromState s of
       Some ts -> 
          case parser (TAS.exercise ts) input of
-            Left err -> (SyntaxError err, 0)
+            Left err -> SyntaxError err
             Right a  ->
-               case TAS.submitExtra ts a of
-                  (TAS.NotEquivalent, c) -> (NotEquivalent, c)
-                  (TAS.Buggy   rs   , c) -> (Buggy   (map name rs), c)
-                  (TAS.Ok      rs ns, c) -> (Ok      (map name rs) (toState ns), c)
-                  (TAS.Detour  rs ns, c) -> (Detour  (map name rs) (toState ns), c)
-                  (TAS.Unknown    ns, c) -> (Unknown               (toState ns), c)
+               case TAS.submit ts a of
+                  TAS.NotEquivalent -> NotEquivalent
+                  TAS.Buggy   rs    -> Buggy   (map name rs)
+                  TAS.Ok      rs ns -> Ok      (map name rs) (toState ns)
+                  TAS.Detour  rs ns -> Detour  (map name rs) (toState ns)
+                  TAS.Unknown    ns -> Unknown               (toState ns)
 
 -------------------------
 
-getExercise :: ExerciseID -> Some Exercise
-getExercise exID = fromMaybe (error "invalid exercise ID") $ safeHead $ filter p exerciseList
- where p (Some ex) = description ex == exID -- TODO: use exercise code instead
-
 fromState :: State -> Some TAS.State
-fromState (exID, p, ce, ctx) =
-   case getExercise exID of
-      Some ex -> 
+fromState (code, p, ce, ctx) =
+   case getExercise code of
+      Just (Some ex) -> 
          case (parser ex ce, parseContext ctx) of 
             (Right a, Just unit) -> Some TAS.State 
                { TAS.exercise = ex
@@ -137,9 +130,10 @@ fromState (exID, p, ce, ctx) =
                , TAS.context  = fmap (\_ -> a) unit
                }
             _ -> error "fromState"
+      _ -> error "fromState"
       
 toState :: TAS.State a -> State
-toState state = ( description (TAS.exercise state)
+toState state = ( exerciseCode (TAS.exercise state)
                 , maybe "NoPrefix" show (TAS.prefix state)
                 , prettyPrinter (TAS.exercise state) (TAS.term state)
                 , showContext (TAS.context state)

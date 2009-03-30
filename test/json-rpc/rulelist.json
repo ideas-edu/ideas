@@ -1,4 +1,4 @@
 { "method" : "rulelist"
-, "params" : ["logic.propositiontodnf"]
+, "params" : ["logic.dnf"]
 , "id"     : 421
 }

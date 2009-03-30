@@ -1,11 +1,11 @@
 {
    "result": [
-      "Proposition to DNF",
+      "logic.dnf",
       "[]",
       "~(q || r) /\\ (q -> p) /\\ (r || q)",
       "[];"
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.0 (1703)"
+   "version": "0.5.1 (1784)"
 }

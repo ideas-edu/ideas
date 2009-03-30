@@ -1,28 +1,22 @@
 {
    "result": [
       {
-         "domain": "linalg",
-         "identifier": "Gaussian Elimination",
-         "description": "Gaussian Elimination",
+         "domain": "logic",
+         "identifier": "dnf",
+         "description": "Proposition to DNF",
          "status": "Stable"
       },
       {
-         "domain": "linalg",
-         "identifier": "Solve Linear System",
-         "description": "Solve Linear System",
-         "status": "Stable"
+         "domain": "relationalg",
+         "identifier": "cnf",
+         "description": "To conjunctive normal form",
+         "status": "Experimental"
       },
       {
-         "domain": "linalg",
-         "identifier": "Solve Linear System with Matrix",
-         "description": "Solve Linear System with Matrix",
-         "status": "Stable"
-      },
-      {
-         "domain": "linalg",
-         "identifier": "Gram-Schmidt",
-         "description": "Gram-Schmidt",
-         "status": "Stable"
+         "domain": "programming",
+         "identifier": "isort",
+         "description": "Insertion sort",
+         "status": "Experimental"
       },
       {
          "domain": "math",
@@ -61,25 +55,31 @@
          "status": "Experimental"
       },
       {
-         "domain": "logic",
-         "identifier": "Proposition to DNF",
-         "description": "Proposition to DNF",
+         "domain": "linalg",
+         "identifier": "Gaussian Elimination",
+         "description": "Gaussian Elimination",
          "status": "Stable"
       },
       {
-         "domain": "relationalg",
-         "identifier": "cnf",
-         "description": "To conjunctive normal form",
-         "status": "Experimental"
+         "domain": "linalg",
+         "identifier": "Solve Linear System",
+         "description": "Solve Linear System",
+         "status": "Stable"
       },
       {
-         "domain": "programming",
-         "identifier": "isort",
-         "description": "Insertion sort",
-         "status": "Experimental"
+         "domain": "linalg",
+         "identifier": "Solve Linear System with Matrix",
+         "description": "Solve Linear System with Matrix",
+         "status": "Stable"
+      },
+      {
+         "domain": "linalg",
+         "identifier": "Gram-Schmidt",
+         "description": "Gram-Schmidt",
+         "status": "Stable"
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.0 (1769)"
+   "version": "0.5.1 (1784)"
 }

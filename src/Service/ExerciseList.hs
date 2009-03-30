@@ -3,11 +3,13 @@ module Service.ExerciseList
    ( exerciseList, findExercises, getExercise
    , openMathExercises, findOpenMathExercises, getOpenMathExercise
    , OpenMathExercise(..)
+   , resolveExerciseCode
    ) where
 
 import Common.Utils (Some(..))
 import Common.Exercise
-import OpenMath.Conversion
+import Data.Char
+import OpenMath.Conversion (IsOMOBJ)
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA
@@ -53,6 +55,15 @@ openMathExercises =
    
 -----------------------------------------------------------------------------
 -- Utility functions for finding an exercise
+
+resolveExerciseCode :: Monad m => String -> m ExerciseCode
+resolveExerciseCode txt = 
+   case findExercises (\ex -> identifier ex ~= txt || description ex ~= txt) of
+      [Some ex] -> return (exerciseCode ex)
+      _         -> fail $ "Failed to resolve the exercise code " ++ show txt
+ where
+   s ~= t = f s == f t 
+   f = map toLower . filter isAlphaNum
 
 findExercises :: (forall a . Exercise a -> Bool) -> [Some Exercise]
 findExercises p = [ Some e | Some e <- exerciseList, p e ]

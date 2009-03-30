@@ -1,11 +1,11 @@
 {
    "result": [
-      "To conjunctive normal form",
+      "relationalg.cnf",
       "[]",
       "r ; q \\/ (V ; (r /\\ r)) /\\ s ! r",
       "[];"
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.0 (1688)"
+   "version": "0.5.1 (1784)"
 }

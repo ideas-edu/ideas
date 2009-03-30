@@ -31,7 +31,7 @@ import Test.QuickCheck
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise Logic
 dnfExercise = Exercise
-   { identifier    = "Proposition to DNF" -- TODO: SIMPLIFY!
+   { identifier    = "dnf"
    , domain        = "logic"
    , description   = "Proposition to DNF" 
    , status        = Stable

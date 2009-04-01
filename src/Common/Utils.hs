@@ -115,6 +115,12 @@ thd3 (_, _, x) = x
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (a, b, c) = f a b c
 
+mapLeft :: (a -> b) -> Either a c -> Either b c
+mapLeft f = either (Left . f) Right
+
+mapRight :: (b -> c) -> Either a b -> Either a c
+mapRight f = either Left (Right . f)
+
 commaList :: [String] -> String
 commaList = concat . intersperse ", "
 

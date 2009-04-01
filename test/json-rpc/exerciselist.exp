@@ -1,63 +1,15 @@
 {
    "result": [
       {
-         "domain": "logic",
-         "identifier": "dnf",
-         "description": "Proposition to DNF",
-         "status": "Stable"
-      },
-      {
-         "domain": "relationalg",
-         "identifier": "cnf",
-         "description": "To conjunctive normal form",
-         "status": "Experimental"
-      },
-      {
-         "domain": "programming",
-         "identifier": "isort",
-         "description": "Insertion sort",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "fraction",
-         "description": "simplify fraction",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "calculation",
-         "description": "calculate result (basic)",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "coverup",
-         "description": "solve an equation by covering up",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "lineq",
-         "description": "solve a linear equation",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "higherdegree",
-         "description": "solve an equation (higher degree)",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "derivative",
-         "description": "Derivative",
-         "status": "Experimental"
-      },
-      {
          "domain": "linalg",
          "identifier": "Gaussian Elimination",
          "description": "Gaussian Elimination",
+         "status": "Stable"
+      },
+      {
+         "domain": "linalg",
+         "identifier": "Gram-Schmidt",
+         "description": "Gram-Schmidt",
          "status": "Stable"
       },
       {
@@ -73,13 +25,61 @@
          "status": "Stable"
       },
       {
-         "domain": "linalg",
-         "identifier": "Gram-Schmidt",
-         "description": "Gram-Schmidt",
+         "domain": "logic",
+         "identifier": "dnf",
+         "description": "Proposition to DNF",
          "status": "Stable"
+      },
+      {
+         "domain": "math",
+         "identifier": "calculation",
+         "description": "calculate result (basic)",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "coverup",
+         "description": "solve an equation by covering up",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "derivative",
+         "description": "Derivative",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "fraction",
+         "description": "simplify fraction",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "higherdegree",
+         "description": "solve an equation (higher degree)",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "lineq",
+         "description": "solve a linear equation",
+         "status": "Experimental"
+      },
+      {
+         "domain": "programming",
+         "identifier": "isort",
+         "description": "Insertion sort",
+         "status": "Experimental"
+      },
+      {
+         "domain": "relationalg",
+         "identifier": "cnf",
+         "description": "To conjunctive normal form",
+         "status": "Experimental"
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.1 (1784)"
+   "version": "0.5.1 (1788)"
 }

@@ -6,8 +6,8 @@ import qualified Common.Transformation as Rule
 import Common.Context
 import Common.Utils (uncurry3)
 import Common.Exercise
+import Control.Monad.Error
 import Service.TypedAbstractService hiding (exercise)
-import Data.Maybe
 
 data Service a = Service 
    { serviceName  :: String
@@ -22,11 +22,11 @@ makeService n f t1 t2 = Service
    , typedService = TypedService f t1 t2
    }
 
-execute :: Service a -> Converter s a -> s -> s
+execute :: Service a -> Converter s a -> s -> Either String s
 execute (Service _ ts) conv = 
    case ts of 
       TypedService f t1 t2 ->
-         fromType conv t2 . f . toType conv t1
+         liftM (fromType conv t2 . f) . toType conv t1
 
 getService :: Monad m => String -> m (Service a)
 getService txt =
@@ -55,9 +55,9 @@ serviceList =
 
 data Converter s a = Converter 
    { exercise :: Exercise a
-   , toTerm   :: s -> Maybe a
+   , toTerm   :: s -> Either String a
+   , toType   :: forall t . ServiceType a t -> s -> Either String t
    , fromTerm :: a -> s
-   , toType   :: forall t . ServiceType a t -> s -> t
    , fromType :: forall t . ServiceType a t -> t -> s
    }
 
@@ -102,7 +102,7 @@ applyS :: Service a
 applyS = makeService "apply" (uncurry3 apply) (TripleType RuleType LocationType StateType) StateType
 
 generateS :: Service a
-generateS = makeService "generate" (uncurry generate) (PairType ExerciseType IntType) (IOType StateType)
+generateS = makeService "generate" (flip generate 5) ExerciseType (IOType StateType)
 
 submitS :: Service a
 submitS = makeService "submit" f (PairType StateType TermType) ResultType

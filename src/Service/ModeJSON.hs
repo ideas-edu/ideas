@@ -15,7 +15,7 @@
 module Service.ModeJSON (processJSON) where
 
 import Common.Context
-import Common.Utils (Some(..), safeHead)
+import Common.Utils (Some(..), safeHead, mapLeft)
 import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList)
@@ -52,14 +52,16 @@ myHandler fun arg
         case jsonConverter (extractCode arg) of
            Some conv -> do
               service <- getService fun
-              return (execute service conv arg)
+              case execute service conv arg of
+                 Left err  -> fail err
+                 Right txt -> return txt
 
 jsonConverter :: ExerciseCode -> Some (Converter JSON)
 jsonConverter code = 
    case List.getExercise code of
       Just (Some ex) -> Some $ 
          let builder = String . prettyPrinter ex
-             reader (String s) = either (const Nothing) Just (parser ex s)
+             reader (String s) = mapLeft show (parser ex s)
              reader _ = fail "reading term" 
          in Converter 
                   { exercise = ex
@@ -69,18 +71,6 @@ jsonConverter code =
                   , fromType = fromResult builder
                   }
       _ -> error "exercise code not found"
-
-
-
-{-
-instance InJSON a => InJSON (Context a) where
-   toJSON = toJSON . fromContext
-   fromJSON a = fromJSON a >>= (return . inContext)
-
-instance InJSON ExerciseCode where 
-   toJSON = toJSON . show
-   fromJSON (String s) = List.resolveExerciseCode s
-   fromJSON _          = fail "expecting a string"  -}
    
 instance InJSON Location where
    toJSON              = toJSON . show
@@ -94,19 +84,24 @@ instance InJSON (Rule a) where
 
 --------------------------
 
-toArgument :: Exercise a -> (JSON -> Maybe a) -> ServiceType a t -> JSON -> t
-toArgument ex f (PairType t1 t2) (Array [a, b]) =
-   (toArgument ex f t1 a, toArgument ex f t2 b)
-toArgument ex f (TripleType t1 t2 t3) (Array [a, b, c]) =
-   (toArgument ex f t1 a, toArgument ex f t2 b, toArgument ex f t3 c)
+toArgument :: Exercise a -> (JSON -> Either String a) -> ServiceType a t -> JSON -> Either String t
+toArgument ex f (PairType t1 t2) (Array [a, b]) = do
+   ra <- toArgument ex f t1 a
+   rb <- toArgument ex f t2 b
+   return (ra, rb)
+toArgument ex f (TripleType t1 t2 t3) (Array [a, b, c]) = do
+   ra <- toArgument ex f t1 a
+   rb <- toArgument ex f t2 b
+   rc <- toArgument ex f t3 c
+   return (ra, rb, rc)
 toArgument ex f serviceType json =
    case serviceType of 
       StateType    -> jsonToState ex f json
-      LocationType -> fromJust $ fromJSON json
-      TermType     -> inContext (fromJust (f json))
-      RuleType     -> fromJust $ getRule ex $ fromJust $ fromJSON json
-      ExerciseType -> ex
-      _            -> error "toArgument"
+      LocationType -> fromJSON json
+      TermType     -> liftM inContext (f json)
+      RuleType     -> fromJSON json >>= getRule ex
+      ExerciseType -> return ex
+      _            -> fail "Unknown argument type"
        
 fromResult :: (a -> JSON) -> ServiceType a t -> t -> JSON
 fromResult f serviceType tv =
@@ -131,17 +126,17 @@ fromResult f serviceType tv =
       ResultType -> resultToJSON f tv
       TermType -> f (fromContext tv)
 
-jsonToState :: Exercise a -> (JSON -> Maybe a) -> JSON -> TAS.State a
+jsonToState :: Exercise a -> (JSON -> Either String a) -> JSON -> Either String (TAS.State a)
 jsonToState ex f (Array [a]) = jsonToState ex f a
-jsonToState ex f (Array [String code, String p, ce, String ctx]) = 
-   case (f ce, parseContext ctx) of 
-      (Just a, Just unit) -> TAS.State 
-         { TAS.exercise = ex
-         , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
-         , TAS.context  = fmap (\_ -> a) unit
-         }
-      _ -> error "jsonToState"
-jsonToState _ _ a = error $ "jsonToState: " ++ show a
+jsonToState ex f (Array [String code, String p, ce, String ctx]) = do
+   a    <- f ce 
+   unit <- maybe (fail "invalid context") return (parseContext ctx) 
+   return $ TAS.State 
+      { TAS.exercise = ex
+      , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
+      , TAS.context  = fmap (\_ -> a) unit
+      }
+jsonToState _ _ _ = fail "invalid state"
 
 readPrefix :: String -> Maybe [Int]
 readPrefix input =

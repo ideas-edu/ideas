@@ -90,6 +90,10 @@ derivation state = fromMaybe (error "derivation") $ do
        check = isMajorRule . fst
    return $ filter check $ zip rules terms
 
+derivationtext :: State a -> [(String, Context a)]
+derivationtext =
+   map (\(r, ca) -> (fromMaybe ("rule " ++ name r) (ruleText r), ca)) . derivation
+
 -- The last condition in the list comprehension is to avoid a very subtle case in which some steps
 -- remain to be done (in the prefix), but those steps are administrative (not even minor rules, but 
 -- markers for the beginning and the end of a sub-strategy). This is a quick fix. To do: inspect other

@@ -1,3 +1,4 @@
+{-# OPTIONS -XRankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -11,27 +12,28 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-{-# OPTIONS -fglasgow-exts #-}
 module Service.ModeXML (processXML) where
 
-import Common.Utils (Some(..), safeHead)
+import Common.Utils (Some(..))
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation hiding (name)
-import qualified Common.Transformation as Transformation
+import qualified Common.Transformation as Rule
 import Control.Monad
 import OpenMath.Object
 import Service.XML
 import Service.ExerciseList
 import Service.Revision (version)
+import Service.ServiceList
 import OpenMath.LAServer
 import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
 import OpenMath.Conversion
-import qualified Service.TypedAbstractService as TAS
+import Service.TypedAbstractService hiding (exercise)
 import Data.Maybe
 import Data.Char
+import System.IO.Unsafe
 
 processXML :: Maybe String -> String -> IO (String, String)
 processXML htmlMode input = 
@@ -48,10 +50,12 @@ xmlRequestHandler :: XML -> IO XML
 xmlRequestHandler xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
-   s  <- findAttribute "service" xml
-   ec <- extractExerciseCode xml
-   triple <- omTriple ec `mplus` concTriple ec -- first try math exercises
-   serviceXML (map toLower s) triple xml
+   s    <- findAttribute "service" xml
+   code <- extractExerciseCode xml
+   conv <- liftM openMathConverter (getOpenMathExercise code) 
+              `mplus`
+           liftM xmlConverter (getExercise code)
+   serviceXML (map toLower s) conv xml
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =
@@ -69,104 +73,120 @@ extractExerciseCode xml =
                      _ -> fail $ "Unknown strategy name " ++ show name 
             _ -> fail "no exerciseid attribute, nor a known strategy element" 
 
-serviceXML :: String -> Some Triple -> XML -> IO XML
-serviceXML s (Some triple@(Triple tEx tRead tBuild)) request
-   | s == "derivation" = do
-        state <- xml2State triple request
-        let list   = TAS.derivation state
-            f (r, a) = element "elem" $ do 
-               "ruleid" .=. show r
-               tBuild (fromContext a)
-        return $ resultOk $ element "list" (mapM_ f list)
-   | s == "allfirsts" = do
-        state <- xml2State triple request
-        let list   = TAS.allfirsts state
-            f (r, _, a) = element "elem" $ do
-               "ruleid" .=. show r
-               builder (state2xml triple a)
-        return $ resultOk $ element "list" (mapM_ f list)
-   | s == "onefirst" = do
-        state <-  xml2State triple request
-        let this = TAS.onefirst state
-            f (r, _, a) = element "elem" $ do
-               "ruleid" .=. show r
-               builder (state2xml triple a)
-        return $ resultOk $ f this
-   | s == "ready" = do
-        state <-  xml2State triple request
-        let a = TAS.ready state
-        return $ resultOk $ text $ show a
-   | s == "stepsremaining" = do
-        state <-  xml2State triple request
-        let a = TAS.stepsremaining state
-        return $ resultOk $ text $ show a
-   | s == "applicable" = do
-        state <-  xml2State triple request
-        let loc   = maybe (error "no location") getData (findChild "location" request)         
-            list  = TAS.applicable (read loc) state
-            f r   = element "elem" ("ruleid" .=. show r)
-        return $ resultOk $ element "list" (mapM_ f list)
-   | s == "apply" = do
-        state <-  xml2State triple request
-        let rid   = maybe (error "no ruleid") getData (findChild "ruleid" request)
-            rule  = fromMaybe (error "invalid ruleid") $ safeHead $ filter p (ruleset (TAS.exercise state))
-            p     = (==rid) . Transformation.name
-            loc   = maybe (error "no location") getData (findChild "location" request)
-            this  = TAS.apply rule (read loc) state
-        return $ resultOk $ builder $ state2xml triple this
-   | s == "generate" = do
-        let diff  = fromMaybe (error "no difficulty") $ findAttribute "difficulty" request 
-        state <- TAS.generate tEx (read diff)
-        return $ resultOk $ builder $ state2xml triple state
-   | s == "mathdox" = do
-        req <- fromXML request
-        return $ replyToXML $ laServer req
-serviceXML s _ _ = fail $ "Invalid request: unknown service " ++ show s
+serviceXML :: String -> Some (Converter XML) -> XML -> IO XML
+serviceXML s (Some conv) request = 
+   case getService s of
+      Just service -> 
+         return (execute service conv request)
+      Nothing  
+         | s == "mathdox" -> do
+              req <- fromXML request
+              return $ replyToXML $ laServer req
+         | otherwise ->  
+              fail $ "Invalid request: unknown service " ++ show s
 
-xml2State :: Monad m => Triple a -> XML -> m (TAS.State a)
-xml2State (Triple tEx tRead _) top = do
-   xml <- findChild "state" top
-   unless (name xml == "state") (fail "expected a state tag")
-   sp   <- liftM getData (findChild "prefix" xml)
-   sc   <- return $ maybe "" getData $ findChild "context" xml
-   x    <- findChild "OMOBJ" xml
-   expr <- maybe (fail "reading") return (tRead x)
-   let state  = TAS.State tEx (Just (makePrefix (read sp) $ strategy tEx)) term
-       contxt = fromMaybe (error $ "invalid context" ++ show sc) $ parseContext sc
-       term   = fmap (const expr) contxt
-   return state
+------------------------------------------------------------
+-- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-state2xml :: Triple a -> TAS.State a -> XML
-state2xml (Triple _ _ tBuild) state = makeXML "state" $ do
-   element "prefix"  (text $ maybe "[]" show (TAS.prefix state))
-   element "context" (text $ showContext (TAS.context state))
-   tBuild (TAS.term state)
+xmlConverter :: Some Exercise -> Some (Converter XML)
+xmlConverter (Some ex) = Some $ Converter
+   { exercise = ex
+   , toTerm   = xmlRead
+   , fromTerm = xmlBuild
+   , toType   = toArgument ex xmlRead
+   , fromType = \a b -> resultOk (fromResult xmlBuild a b)
+   }
+ where
+   xmlBuild = makeXML "expr" . text . prettyPrinter ex
+   xmlRead xml = do
+                guard (name xml == "expr")
+                let input = getData xml
+                either (fail . show) return (parser ex input)
+   
+openMathConverter :: OpenMathExercise -> Some (Converter XML)
+openMathConverter (OMEX ex) = Some $ Converter
+   { exercise = ex
+   , toTerm   = xmlRead
+   , fromTerm = xmlBuild
+   , toType   = toArgument ex xmlRead
+   , fromType = \a b -> resultOk (fromResult xmlBuild a b)
+   }
+ where
+   xmlRead  = either fail fromOMOBJ . xml2omobj
+   xmlBuild = toXML . toOMOBJ
 
+toArgument :: Exercise a -> (XML -> Maybe a) -> ServiceType a t -> XML -> t 
+toArgument ex f serviceType xml = 
+    case serviceType of
+       PairType t1 t2 -> 
+          (toArgument ex f t1 xml, toArgument ex f t2 xml) 
+       TripleType t1 t2 t3 ->
+          (toArgument ex f t1 xml, toArgument ex f t2 xml, toArgument ex f t3 xml) 
+       StateType -> 
+          maybe (error "evalTo") id (xml2State ex f xml)
+       LocationType -> 
+          maybe (error "no location") (read . getData) (findChild "location" xml)
+       RuleType ->
+          maybe (error "no ruleid") (fromJust . getRule ex . getData) (findChild "ruleid" xml)
+       ExerciseType -> 
+          ex
+       _ -> 
+          error "toArgument: unknown argument type"
+          
+fromResult :: (a -> XML) -> ServiceType a t -> t -> XMLBuilder
+fromResult f serviceType tv = 
+   case serviceType of
+      ListType t1 -> 
+         element "list" (mapM_ (\x -> element "elem" (fromResult f t1 x)) tv)
+      PairType t1 t2 -> do
+         let (a, b) = tv 
+         fromResult f t1 a
+         fromResult f t2 b
+      TripleType t1 t2 t3 -> do 
+         let (a, b, c) = tv 
+         fromResult f t1 a
+         fromResult f t2 b
+         fromResult f t3 c
+      ElemType t1 ->
+         element "elem" (fromResult f t1 tv) -- quick fix  
+      IOType t1 -> 
+         fromResult f t1 (unsafePerformIO tv) -- quick fix                                                          
+      RuleType -> 
+         "ruleid" .=. Rule.name tv
+      TermType -> 
+         builder $ f $ fromContext tv
+      LocationType -> 
+         text (show tv)
+      BoolType -> 
+         text (show tv)
+      IntType -> 
+         text (show tv)
+      StateType -> 
+         builder $ state2xml f tv
+      _ -> 
+         error "fromResult: unknown result type"
+      
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
    "result"  .=. "ok"
    "version" .=. version
    body
 
-------------------------------------------------------------
--- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
-
-data Triple a = Triple (Exercise a) (XML -> Maybe a) (a -> XMLBuilder)
-
-omTriple :: ExerciseCode -> IO (Some Triple)
-omTriple code = 
-   case getOpenMathExercise code of
-      Just (OMEX a) -> return $ Some $ 
-         Triple a (either fail fromOMOBJ . xml2omobj) (builder . toXML . toOMOBJ)
-      _ -> fail "exercise code not found"
-
-concTriple :: ExerciseCode -> IO (Some Triple)
-concTriple code = 
-   case Service.ExerciseList.getExercise code of
-      Just (Some a) -> return $ Some $ 
-         let reader xml = do
-                guard (name xml == "expr")
-                let input = getData xml
-                either (fail . show) return (parser a input)
-         in Triple a reader (text . prettyPrinter a)
-      _ -> fail "exercise code not found"
+xml2State :: Monad m => Exercise a -> (XML -> Maybe a) -> XML -> m (State a)
+xml2State tEx tRead top = do
+   xml <- findChild "state" top
+   unless (name xml == "state") (fail "expected a state tag")
+   sp   <- liftM getData (findChild "prefix" xml)
+   sc   <- return $ maybe "" getData $ findChild "context" xml
+   x    <- findChild "OMOBJ" xml
+   expr <- maybe (fail "reading") return (tRead x)
+   let state  = State tEx (Just (makePrefix (read sp) $ strategy tEx)) term
+       contxt = fromMaybe (error $ "invalid context" ++ show sc) $ parseContext sc
+       term   = fmap (const expr) contxt
+   return state
+   
+state2xml :: (a -> XML) -> State a -> XML
+state2xml tBuild state = makeXML "state" $ do
+   element "prefix"  (text $ maybe "[]" show (prefix state))
+   element "context" (text $ showContext (context state))
+   builder $ tBuild (term state)

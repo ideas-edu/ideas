@@ -1,3 +1,4 @@
+{-# OPTIONS -XRankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -14,58 +15,175 @@
 module Service.ModeJSON (processJSON) where
 
 import Common.Context
-import Common.Utils (Some(..))
-import Common.Exercise (Exercise(..), ExerciseCode, exerciseCode)
-import Common.Transformation (name, isBuggyRule, isRewriteRule)
+import Common.Utils (Some(..), safeHead)
+import Common.Exercise
+import Common.Strategy (makePrefix)
+import Common.Transformation hiding (ruleList)
 import Service.JSON
-import Service.AbstractService
+-- import Service.AbstractService
+import qualified Service.TypedAbstractService as TAS
+import Service.ServiceList hiding (Service)
 import qualified Service.ExerciseList as List
-import qualified Data.Map as M
 import Control.Monad
+import Data.List (sortBy)
+import Data.Maybe
 import Data.Char
+import System.IO.Unsafe
 
+extractCode :: JSON -> ExerciseCode
+extractCode = fromMaybe (makeCode "" "") . List.resolveExerciseCode . f
+ where 
+   f (String s) = s
+   f (Array [String _, String _, a@(Array _)]) = f a
+   f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c)) s = f (Array tl)
+   f (Array (hd:_)) = f hd
+   f _ = ""
+      
 processJSON :: String -> IO (String, String)
 processJSON input = do
    txt <- jsonRPC input myHandler
    return (txt, "application/json")
    
 myHandler :: JSON_RPC_Handler
-myHandler fun arg = 
-   case (M.lookup fun serviceTable, arg) of
-      (Just f, Array args) -> f args
-      (Just _, _) -> fail $ "The params part is not an object"
-      _ -> fail $ "Unknown function: " ++ fun
-      
-serviceTable :: M.Map String ([JSON] -> IO JSON)
-serviceTable = M.fromList
-   [ ("stepsremaining", service1 stepsremaining)
-   , ("ready",          service1 ready)
-   , ("apply",          service3 apply)
-   , ("applicable",     service2 applicable)
-   , ("onefirst",       service1 onefirst)
-   , ("onefirsttext",   service1 onefirsttext)
-   , ("allfirsts",      service1 allfirsts)
-   , ("derivation",     service1 derivation)
-   , ("generate",       service2IO generate)
-   , ("submit",         service2 submit)
-   , ("submittext",     service2 submittext)
-   , ("exerciselist",   exerciseList)
-   , ("rulelist",       ruleList)
-   ]
+myHandler fun arg
+   | fun == "exerciselist" = exerciseList arg
+   | fun == "rulelist"     = ruleList arg
+   | otherwise = 
+        case jsonConverter (extractCode arg) of
+           Some conv -> do
+              service <- getService fun
+              return (execute service conv arg)
 
-exerciseList :: [JSON] -> IO JSON
-exerciseList (_:_) = fail "Too many arguments for service"
-exerciseList _ = return $ Array $ map f List.exerciseList
+jsonConverter :: ExerciseCode -> Some (Converter JSON)
+jsonConverter code = 
+   case List.getExercise code of
+      Just (Some ex) -> Some $ 
+         let builder = String . prettyPrinter ex
+             reader (String s) = either (const Nothing) Just (parser ex s)
+             reader _ = fail "reading term" 
+         in Converter 
+                  { exercise = ex
+                  , toTerm   = reader
+                  , fromTerm = builder
+                  , toType   = toArgument ex reader
+                  , fromType = fromResult builder
+                  }
+      _ -> error "exercise code not found"
+
+
+
+{-
+instance InJSON a => InJSON (Context a) where
+   toJSON = toJSON . fromContext
+   fromJSON a = fromJSON a >>= (return . inContext)
+
+instance InJSON ExerciseCode where 
+   toJSON = toJSON . show
+   fromJSON (String s) = List.resolveExerciseCode s
+   fromJSON _          = fail "expecting a string"  -}
+   
+instance InJSON Location where
+   toJSON              = toJSON . show
+   fromJSON (String s) = case reads s of
+                            [(loc, rest)] | all isSpace rest -> return loc
+                            _ -> fail "invalid string"
+   fromJSON _          = fail "expecting a string"
+
+instance InJSON (Rule a) where
+   toJSON = toJSON . name
+
+--------------------------
+
+toArgument :: Exercise a -> (JSON -> Maybe a) -> ServiceType a t -> JSON -> t
+toArgument ex f (PairType t1 t2) (Array [a, b]) =
+   (toArgument ex f t1 a, toArgument ex f t2 b)
+toArgument ex f (TripleType t1 t2 t3) (Array [a, b, c]) =
+   (toArgument ex f t1 a, toArgument ex f t2 b, toArgument ex f t3 c)
+toArgument ex f serviceType json =
+   case serviceType of 
+      StateType    -> jsonToState ex f json
+      LocationType -> fromJust $ fromJSON json
+      TermType     -> inContext (fromJust (f json))
+      RuleType     -> fromJust $ getRule ex $ fromJust $ fromJSON json
+      ExerciseType -> ex
+      _            -> error "toArgument"
+       
+fromResult :: (a -> JSON) -> ServiceType a t -> t -> JSON
+fromResult f serviceType tv =
+   case serviceType of
+      ListType t -> Array $ map (fromResult f t) tv
+      PairType t1 t2 -> 
+         let (a, b) = tv
+         in Array [fromResult f t1 a, fromResult f t2 b]
+      TripleType t1 t2 t3 -> 
+         let (a, b,c ) = tv
+         in Array [fromResult f t1 a, fromResult f t2 b, fromResult f t3 c]
+      ElemType t -> 
+         fromResult f t tv
+      IOType t -> 
+         fromResult f t (unsafePerformIO tv) -- quick fix
+      IntType -> toJSON tv
+      BoolType -> toJSON tv
+      StringType -> toJSON tv
+      LocationType -> toJSON tv
+      RuleType -> toJSON (name tv)
+      StateType -> stateToJSON f tv
+      ResultType -> resultToJSON f tv
+      TermType -> f (fromContext tv)
+
+jsonToState :: Exercise a -> (JSON -> Maybe a) -> JSON -> TAS.State a
+jsonToState ex f (Array [a]) = jsonToState ex f a
+jsonToState ex f (Array [String code, String p, ce, String ctx]) = 
+   case (f ce, parseContext ctx) of 
+      (Just a, Just unit) -> TAS.State 
+         { TAS.exercise = ex
+         , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
+         , TAS.context  = fmap (\_ -> a) unit
+         }
+      _ -> error "jsonToState"
+jsonToState _ _ a = error $ "jsonToState: " ++ show a
+
+readPrefix :: String -> Maybe [Int]
+readPrefix input =
+   case reads input of
+      [(is, rest)] | all isSpace rest -> return is
+      _ -> Nothing
+
+stateToJSON :: (a -> JSON) -> TAS.State a -> JSON
+stateToJSON f state = Array
+   [ String $ show $ exerciseCode (TAS.exercise state)
+   , String $ maybe "NoPrefix" show (TAS.prefix state)
+   , f (TAS.term state)
+   , String $ showContext (TAS.context state)
+   ] 
+   
+resultToJSON :: (a -> JSON) -> TAS.Result a -> JSON
+resultToJSON f result = Object $
+   case result of
+      -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]
+      TAS.Buggy rs      -> [("result", String "Buggy"), ("rules", Array $ map toJSON rs)]
+      TAS.NotEquivalent -> [("result", String "NotEquivalent")]   
+      TAS.Ok rs st      -> [("result", String "Ok"), ("rules", Array $ map toJSON rs), ("state", stateToJSON f  st)]
+      TAS.Detour rs st  -> [("result", String "Detour"), ("rules", Array $ map toJSON rs), ("state", stateToJSON f  st)]
+      TAS.Unknown st    -> [("result", String "Unknown"), ("state", stateToJSON f st)]
+      
+------------------------------------------------------------
+-- to be removed
+
+exerciseList :: JSON -> IO JSON
+exerciseList _ = return $ Array $ map make $ sortBy cmp List.exerciseList
  where
-   f (Some ex) = Object
+   cmp e1 e2  = f e1 `compare` f e2
+   f (Some e) = (domain e, identifier e)
+   make (Some ex) = Object
       [ ("domain",      String $ domain ex)
       , ("identifier",  String $ identifier ex)
       , ("description", String $ description ex)
       , ("status",      String $ show $ status ex)
       ]
 
-ruleList :: [JSON] -> IO JSON
-ruleList [String code] =
+ruleList :: JSON -> IO JSON
+ruleList (Array [String code]) =
    case filter p List.exerciseList of
       [Some ex] -> return $ Array $ map f (ruleset ex)
       _ -> fail "unknown exercise code"
@@ -76,78 +194,4 @@ ruleList [String code] =
       , ("buggy",       Boolean $ isBuggyRule r) 
       , ("rewriterule", Boolean $ isRewriteRule r)
       ]
-ruleList _ = fail "ruleList service requires exactly one argument (with a string)"
- 
-type Service a = a -> [JSON] -> IO JSON
-   
-service :: InJSON a => Service a
-service a xs = do
-   unless (null xs) (fail "Too many arguments for service")
-   return (toJSON a)
-     
-fun :: InJSON a => Service b -> Service (a -> b)
-fun srv = \f args ->
-   case args of 
-      x:xs ->
-         case fromJSON x of
-            Just b -> srv (f b) xs
-            _      -> fail "Invalid argument"
-      _ -> fail $ "Argument not found for service"
-
-io :: InJSON a => Service a -> Service (IO a)
-io srv ma xs = do
-   a <- ma
-   srv a xs
-
-service1   f = fun service f
-service2   f = fun service1 f
-service3   f = fun service2 f
-service2IO f = fun (fun (io service)) f
-
-instance InJSON a => InJSON (Context a) where
-   toJSON = toJSON . fromContext
-   fromJSON a = fromJSON a >>= (return . inContext)
-
-instance InJSON ExerciseCode where 
-   toJSON = toJSON . show
-   fromJSON (String s) = List.resolveExerciseCode s
-   fromJSON _          = fail "expecting a string"
-   
-instance InJSON Location where
-   toJSON              = toJSON . show
-   fromJSON (String s) = case reads s of
-                            [(loc, rest)] | all isSpace rest -> return loc
-                            _ -> fail "invalid string"
-   fromJSON _          = fail "expecting a string"
-
-instance InJSON Result where
-   toJSON result = Object $
-      case result of
-         SyntaxError _ -> [("result", String "SyntaxError")]
-         Buggy rs      -> [("result", String "Buggy"), ("rules", Array $ map String rs)]
-         NotEquivalent -> [("result", String "NotEquivalent")]   
-         Ok rs st      -> [("result", String "Ok"), ("rules", Array $ map String rs), ("state", toJSON st)]
-         Detour rs st  -> [("result", String "Detour"), ("rules", Array $ map String rs), ("state", toJSON st)]
-         Unknown st    -> [("result", String "Unknown"), ("state", toJSON st)]
-   fromJSON (Object xs) = do
-      mj <- lookupM "result" xs
-      ms <- fromString mj
-      let getRules = (lookupM "rules" xs >>= fromJSON)
-          getState = (lookupM "state" xs >>= fromJSON)
-      case ms of
-         -- "syntaxerror"   -> return SyntaxError
-         "buggy"         -> liftM  Buggy getRules
-         "notequivalent" -> return NotEquivalent
-         "ok"            -> liftM2 Ok getRules getState
-         "detour"        -> liftM2 Detour getRules getState
-         "unkown"        -> liftM  Unknown getState
-         _               -> fail "Unknown service" 
-   fromJSON _ = fail "expecting an object"
-
-fromString :: Monad m => JSON -> m String
-fromString (String s) = return (map toLower s)
-fromString _          = fail "expecting a string"
-
--- copied from JSON module
-lookupM :: Monad m => String -> [(String, a)] -> m a
-lookupM x = maybe (fail $ "field " ++ x ++ " not found") return . lookup x
+ruleList xs = fail $ "ruleList service requires exactly one argument (with a string)" ++ show xs

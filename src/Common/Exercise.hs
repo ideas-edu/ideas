@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise(..), Status(..), makeExercise, stepsRemaining
+     Exercise(..), Status(..), makeExercise, stepsRemaining, getRule
 {-   , identifier, domain, description, status
    , parser, subTerm, prettyPrinter
    , equivalence, equality, finalProperty
@@ -33,7 +33,7 @@ import Common.Context
 import Common.Parsing (Range, SyntaxError(..))
 import Common.Rewriting (TreeDiff(..))
 import Common.Transformation
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, fail)
 import Common.Utils
 import Control.Monad
 import Data.Char
@@ -124,6 +124,13 @@ stepsRemaining p0 a =
       Nothing -> 0
       Just (_, prefix) ->
          length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
+         
+getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
+getRule ex s = 
+   case filter ((==s) . name) (ruleset ex) of 
+      [hd] -> return hd
+      []   -> fail $ "Could not find ruleid " ++ s
+      _    -> fail $ "Ambiguous ruleid " ++ s
          
 ---------------------------------------------------------------
 -- Checks for an exercise

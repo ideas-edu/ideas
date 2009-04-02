@@ -1,36 +1,69 @@
-{-# OPTIONS -XGADTs -XRankNTypes #-}
+{-# OPTIONS -XGADTs -XRank2Types #-}
 module Service.Types where
 
 import Common.Context (Context, Location)
 import Common.Exercise (Exercise)
 import Common.Transformation (Rule)
+import Common.Utils (commaList)
+import Data.Maybe
 import Service.TypedAbstractService (State, Result)
 import System.IO.Unsafe
 
 infixr 1 :->
 
 data Type a t where
-   (:->)   :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
-
-   Pair   :: Type a t1 -> Type a t2 -> Type a (t1, t2)
-   Triple :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
-   List  :: Type a t -> Type a [t]
-
-   Bool  :: Type a Bool
-   Int   :: Type a Int
-   String :: Type a String
-   Location :: Type a Location
-   
-   State :: Type a (State a)
-   Exercise :: Type a (Exercise a)
-   Rule  :: Type a (Rule (Context a))
-   
-   Term  :: Type a (Context a)
-   
+   -- Function type
+   (:->)    :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
+   -- Tuple types
+   Pair     :: Type a t1 -> Type a t2 -> Type a (t1, t2)
+   Triple   :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
+   -- Type constructors
+   List     :: Type a t -> Type a [t]
    Elem     :: Type a t -> Type a t -- quick fix
    IO       :: Type a t -> Type a (IO t)
+   -- Exercise-specific types
+   State    :: Type a (State a)
+   Exercise :: Type a (Exercise a)
+   Rule     :: Type a (Rule (Context a))
+   Term     :: Type a (Context a)
    Result   :: Type a (Result a)
-   
+   -- Basic types
+   Bool     :: Type a Bool
+   Int      :: Type a Int
+   String   :: Type a String
+   Location :: Type a Location
+
+instance Show (Type a t) where
+   show (t1 :-> t2)       = show t1 ++ " -> " ++ show t2 
+   show (Pair t1 t2)      = "(" ++ commaList [show t1, show t2] ++ ")"
+   show (Triple t1 t2 t3) = "(" ++ commaList [show t1, show t2, show t3] ++ ")"
+   show (List t)          = "[" ++ show t ++ "]"
+   show (Elem t)          = show t
+   show (IO t)            = show t
+   show t                 = fromMaybe "??" (groundType t)
+
+groundType :: Type a t -> Maybe String
+groundType tp =
+   case tp of 
+      State    -> Just "State"
+      Exercise -> Just "Exercise"
+      Rule     -> Just "Rule"
+      Term     -> Just "Term"
+      Result   -> Just "Result"
+      Bool     -> Just "Bool"
+      Int      -> Just "Int"
+      String   -> Just "String"
+      Location -> Just "Location"
+      _        -> Nothing
+
+eqType :: Type a1 t1 -> Type a2 t2 -> Bool
+eqType (t1 :-> t2)       (t3 :-> t4)       = eqType t1 t3 && eqType t2 t4
+eqType (Pair t1 t2)      (Pair t3 t4)      = eqType t1 t3 && eqType t2 t4
+eqType (Triple t1 t2 t3) (Triple t4 t5 t6) = eqType t1 t4 && eqType t2 t5 && eqType t3 t6
+eqType (List t1)         (List t2)         = eqType t1 t2
+eqType (Elem t1)         (Elem t2)         = eqType t1 t2
+eqType (IO t1)           (IO t2)           = eqType t1 t2 
+eqType t1 t2 = maybe False ((groundType t1 ==) . Just) (groundType t2)
 
 data Evaluator m inp out a = Evaluator 
    { encoder :: Encoder out a

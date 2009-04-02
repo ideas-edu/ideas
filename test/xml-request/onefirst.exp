@@ -1,5 +1,6 @@
-<reply result="ok" version="0.1">
+<reply result="ok" version="0.5.1">
   <elem ruleid="Tidy-up rule">
+    []
     <state>
       <prefix>
         [0,0]

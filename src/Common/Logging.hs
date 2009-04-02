@@ -13,9 +13,9 @@
 -----------------------------------------------------------------------------
 module Common.Logging where
 
-import Control.Concurrent
+import Control.Concurrent (threadDelay)
 import Control.Monad
-import System.Time
+import Data.Time
 
 -- | A data type to configure the logging facility. The messages are logged in a file,
 -- and in case an exception is thrown during the logging, a second attempt can be made
@@ -44,10 +44,10 @@ logMessage = logMessageWith defaultLogConfig
 -- | Logs a message using the supplied configuration
 logMessageWith :: LogConfig -> String -> IO ()
 logMessageWith config msg = 
-   do time <- getClockTime
+   do time <- getCurrentTime
       try (logRetries config) time
  where 
-   try :: Int -> ClockTime -> IO ()
+   try :: Int -> UTCTime -> IO ()
    try n time 
       | n==0      = putStrLn $ "Log failed at " ++ show time
       | otherwise = do 
@@ -62,3 +62,16 @@ logMessageWith config msg =
     where
       text | logTimeStamp config = "[" ++ show time ++ "] " ++ msg
            | otherwise           = msg
+
+logAction :: String -> IO a -> IO a
+logAction = logActionWith defaultLogConfig
+           
+logActionWith :: LogConfig -> String -> IO a -> IO a
+logActionWith config msg action = do
+   begin <- getCurrentTime
+   a     <- action
+   end   <- getCurrentTime
+   let diff   = diffUTCTime end begin 
+       newcfg = config {logTimeStamp = False}
+   logMessageWith newcfg ("[" ++ show diff ++ "] " ++ msg)
+   return a

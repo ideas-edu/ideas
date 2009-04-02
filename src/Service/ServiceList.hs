@@ -1,16 +1,10 @@
-{-# OPTIONS -XGADTs -XRank2Types #-}
-module Service.ServiceList where
- --   (ServiceType(..), Converter(..), getService, execute) where
+{-# OPTIONS -XExistentialQuantification #-}
+module Service.ServiceList (Service, getService, evalService) where
 
---import Common.Transformation
---import qualified Common.Transformation as Rule
 import Common.Context
---import Common.Utils (uncurry3)
--- import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
 import Service.TypedAbstractService hiding (exercise, State)
 import Service.Types
---import Data.Monoid
 
 data Service a = Service 
    { serviceName  :: String

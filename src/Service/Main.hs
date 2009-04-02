@@ -28,6 +28,7 @@ import Data.Char
 main :: IO ()
 main = do
    flags <- serviceOptions
+   (if withLogging flags then logActionWith config "Response time" else id) $ do
    case withInputFile flags of
       Just file -> do  
          useFixedStdGen                 -- use a predictable "random" number generator
@@ -60,19 +61,19 @@ process htmlMode maybeIP flags input = do
          Just addr -> logMessageWith config ("IP address: " ++ addr ++ "\n" ++ input ++ "\n" ++ out)
          Nothing   -> return ()
    return pair
- where
-   config :: LogConfig
-   config = defaultLogConfig
-      { logFile    = "service.log"
-      , logRetries = 1
-      }
- 
+ where 
    rec :: Mode -> IO (String, String)
    rec Mixed =
       let b = take 1 (dropWhile isSpace input) == "<"
       in rec (if b then XML else JSON)
    rec XML  = processXML htmlMode input
    rec JSON = processJSON input
+
+config :: LogConfig
+config = defaultLogConfig
+   { logFile    = "service.log"
+   , logRetries = 1
+   }
 
 -- Convert escaped characters ('%')   
 convert :: String -> String

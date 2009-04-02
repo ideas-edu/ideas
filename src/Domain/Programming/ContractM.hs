@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -31,20 +32,20 @@ infixr :->
 
 -----------------------------------------------------------------------------
 -- | Contract combinators
-prop :: Monad m => (a -> Bool) -> (a -> m a)
-prop p a = if p a then return a else fail "contract failed"
+prop :: Monad m => (a -> Bool) -> a :-> m a
+prop p ls a = if p a then return a else fail ("contract failed: " ++ blame ls)
 
-fun :: Monad m => (a -> m b) -> (b -> c -> m d) -> (b -> c) -> a -> m d
-fun pre post f x = pre x >>= (\x' -> ((post x') . f) x')
+fun :: Monad m => (a :-> m b) -> (b -> c :-> m d) -> Locs -> (b -> c) -> a :-> m d
+fun pre post lsf f ls x = pre (lsf +> ls) x >>= (\x' -> ((post x' lsf) . f) x')
 
-pair :: Monad m => (a -> m b) -> (b -> c -> m d) -> (a, c) -> m (b, d)
-pair g h (a, b) = g a >>= (\a' -> (h a') b >>= (\b' -> return (a', b')))
+pair :: Monad m => (a :-> m b) -> (b -> c :-> m d) -> (a, c) :-> m (b, d)
+pair c1 c2 ls (a, b) = c1 ls a >>= (\a' -> (c2 a' ls) b >>= (\b' -> return (a', b')))
 
-list :: Monad m => (a -> m b) -> [a] -> m [b]
-list = mapM 
+list :: Monad m => (a :-> m b) -> [a] :-> m [b]
+list c ls = mapM (c ls)
  
-(<>) :: Monad m => (b -> m c) -> (a -> m b) -> a -> m c
-g <> h = \a -> h a >>= g
+(<>) :: Monad m => (b :-> m c) -> (a :-> m b) -> a :-> m c
+c1 <> c2  = \ls a -> c2 ls a >>= c1 ls
 
 infixr 4 >->
 pre >->  post = fun pre (const post)
@@ -54,25 +55,25 @@ pre >>-> post = fun pre post
 
 infixl 3 <>
 
-run :: (a -> Maybe b) -> a -> b
-run f a = case f a of
-            Just b -> b
-            Nothing -> error "assertion error"
+run :: (a :-> Maybe b) -> Locs -> a -> b
+run f ls a = case f ls a of
+               Just b -> b
+               Nothing -> error "assertion error"
 
 -----------------------------------------------------------------------------
 -- | Basic contracts
-true, false :: Monad m => a -> m a
+true, false :: Monad m => a :-> m a
 true = prop (const True) 
 false = prop (const False)
-nat :: Monad m => Int -> m Int
+nat :: Monad m => Int :-> m Int
 nat = prop (>=0)
-nonempty :: Monad m => [a] -> m [a]
+nonempty :: Monad m => [a] :-> m [a]
 nonempty = prop (not . null)
 
-preserves :: (Monad m, Eq b) => (a -> b) -> (a -> a) -> a -> m a
+preserves :: (Monad m, Eq b) => (a -> b) -> Locs -> (a -> a) -> a :-> m a
 preserves f = true >>-> (\x-> (prop (\y -> f x == f y)))
 
-is ::(Monad m, Eq b) => (a -> b) -> (a -> b) -> a -> m b
+is ::(Monad m, Eq b) => (a -> b) -> Locs -> (a -> b) -> a :-> m b
 is f =  true >>-> (\x-> (prop (\y -> y == f x)))
 
 -----------------------------------------------------------------------------
@@ -81,13 +82,14 @@ l0 = makeloc (Def "")
 
 -----------------------------------------------------------------------------
 -- | Contracted functions
+
 insertionSort :: Ord a => [a] -> [a]
 insertionSort = foldr insert [] 
 
-insert' :: (Monad ((->) [a]), Monad m, Ord a) => a -> [a] -> m [a]
-insert' = (true >-> ord >-> ord) insert
+insert' :: (Monad ((->) [a]), Monad m, Ord a) => a :-> [a] :-> m [a]
+insert' = (true >-> ord >-> ord) l0 insert
 
-ord :: (Monad m, Ord a) => [a] -> m [a]
+ord :: (Monad m, Ord a) => [a] :-> m [a]
 ord = prop (\x -> ordered x)
 
 ordered                 ::  Ord a => [a] -> Bool
@@ -95,9 +97,8 @@ ordered []              =   True
 ordered [a]             =   True
 ordered (a1 : a2 : as)  =   a1 <= a2 && ordered (a2 : as)
 
-insertionSort' :: (Monad m, Ord a) => [a] -> m [a]
-insertionSort' = (true >-> ord) insertionSort
+insertionSort' :: (Monad m, Ord a) => [a] :-> m [a]
+insertionSort' = (true >-> ord) l0 insertionSort
 
-head' :: Monad m => [a] -> m a
-head' = (nonempty >-> true) head
-
+head' :: Monad m => [a] :-> m a
+head' = (nonempty >-> true) l0 head

@@ -26,6 +26,7 @@ import Control.Monad.Error ()
 import Data.Char
 import Data.Maybe
 import Data.List
+import Data.Monoid
 import Service.XML.Interface hiding (parseXML)
 import qualified Service.XML.Interface as I
 
@@ -97,6 +98,10 @@ appendElemBS e bs = bs { bsElements = bsElements bs . (e:) }
 type XMLBuilder = XMLBuilderM ()
 
 newtype XMLBuilderM a = XMLBuilder { unBuild :: State BuilderState a }
+
+instance Monoid a => Monoid (XMLBuilderM a) where
+   mempty  = return mempty
+   mappend = (>>)
 
 instance Monad XMLBuilderM where
    return a = XMLBuilder (return a)

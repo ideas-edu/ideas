@@ -15,12 +15,13 @@
 module Service.ModeJSON (processJSON) where
 
 import Common.Context
-import Common.Utils (Some(..), safeHead, mapLeft)
+import Common.Utils (Some(..))
 import Common.Exercise
 import Common.Strategy (makePrefix)
-import Common.Transformation hiding (ruleList)
+import Common.Transformation hiding (ruleList, defaultArgument)
 import Service.JSON
--- import Service.AbstractService
+import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
+import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
 import Service.ServiceList hiding (Service)
 import qualified Service.ExerciseList as List
@@ -28,7 +29,6 @@ import Control.Monad
 import Data.List (sortBy)
 import Data.Maybe
 import Data.Char
-import System.IO.Unsafe
 
 extractCode :: JSON -> ExerciseCode
 extractCode = fromMaybe (makeCode "" "") . List.resolveExerciseCode . f
@@ -43,7 +43,33 @@ processJSON :: String -> IO (String, String)
 processJSON input = do
    txt <- jsonRPC input myHandler
    return (txt, "application/json")
-   
+
+{- jsonRequest :: JSON -> Either String Request
+jsonRequest json = do
+   srv  <- case lookupM "method" json of
+              Just (String s) -> return s
+              _               -> fail "Invalid method"
+   code <- lookupM "params" json >>= (return . extractCode)
+   enc  <- case lookupM "encoding" json of
+              Nothing         -> return Nothing
+              Just (String s) -> liftM Just (readEncoding s)
+              _               -> fail "Invalid encoding"
+   src  <- case lookupM "source" json of
+              Nothing         -> return Nothing
+              Just (String s) -> return (Just s)
+              _               -> fail "Invalid source"
+   return $ Request 
+      { service    = srv
+      , exerciseID = code
+      , source     = src
+      , dataformat = JSON
+      , encoding   = enc
+      }
+
+jsonReply :: Request -> JSON -> Either String JSON
+jsonReply request json
+   | otherwise =  -}
+
 myHandler :: JSON_RPC_Handler
 myHandler fun arg
    | fun == "exerciselist" = exerciseList arg
@@ -52,26 +78,66 @@ myHandler fun arg
         case jsonConverter (extractCode arg) of
            Some conv -> do
               service <- getService fun
-              case execute service conv arg of
+              case evalService conv service arg of
                  Left err  -> fail err
                  Right txt -> return txt
 
-jsonConverter :: ExerciseCode -> Some (Converter JSON)
-jsonConverter code = 
+jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
+jsonConverter code =
    case List.getExercise code of
-      Just (Some ex) -> Some $ 
-         let builder = String . prettyPrinter ex
-             reader (String s) = mapLeft show (parser ex s)
-             reader _ = fail "reading term" 
-         in Converter 
-                  { exercise = ex
-                  , toTerm   = reader
-                  , fromTerm = builder
-                  , toType   = toArgument ex reader
-                  , fromType = fromResult builder
-                  }
+      Just (Some ex) -> 
+         Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
       _ -> error "exercise code not found"
+
+jsonEncoder :: Exercise a -> Encoder JSON a
+jsonEncoder ex = Encoder
+   { encodeType  = encode (jsonEncoder ex)
+   , encodeTerm  = String . prettyPrinter ex
+   , encodeTuple = Array
+   }
+ where
+   encode :: Encoder JSON a -> Type a t -> t -> JSON
+   encode enc serviceType =
+      case serviceType of
+         Tp.List t   -> Array . map (encode enc t)
+         Tp.Elem t   -> encode enc t
+         Tp.Int      -> toJSON
+         Tp.Bool     -> toJSON
+         Tp.String   -> toJSON
+         Tp.Location -> toJSON
+         Tp.Rule     -> toJSON . name
+         Tp.State    -> encodeState (encodeTerm enc)
+         Tp.Result   -> encodeResult (encodeTerm enc)
+         Tp.Term     -> encodeTerm enc . fromContext
+         _           -> encodeDefault enc serviceType
+
+jsonDecoder :: Monad m => Exercise a -> Decoder m JSON a
+jsonDecoder ex = Decoder
+   { decodeType      = decode (jsonDecoder ex)
+   , decodeTerm      = reader ex
+   , decoderExercise = ex
+   }
+ where
+   reader :: Monad m => Exercise a -> JSON -> m a
+   reader ex (String s) = either (fail . show) return (parser ex s)
+   reader _  _          = fail "Expecting a string when reading a term"
+ 
+   decode :: Monad m => Decoder m JSON a -> Type a t -> JSON -> m (t, JSON) 
+   decode dec serviceType =
+      case serviceType of
+         Tp.State    -> useFirst $ decodeState (decoderExercise dec) (decodeTerm dec)
+         Tp.Location -> useFirst fromJSON
+         Tp.Term     -> useFirst $ liftM inContext . decodeTerm dec
+         Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
+         Tp.Exercise -> \json -> return (decoderExercise dec, json)
+         _           -> decodeDefault dec serviceType
    
+   useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)
+   useFirst f (Array (x:xs)) = do
+      a <- f x
+      return (a, Array xs)
+   useFirst _ _ = fail "expecting an arugment"
+         
 instance InJSON Location where
    toJSON              = toJSON . show
    fromJSON (String s) = case reads s of
@@ -84,51 +150,9 @@ instance InJSON (Rule a) where
 
 --------------------------
 
-toArgument :: Exercise a -> (JSON -> Either String a) -> ServiceType a t -> JSON -> Either String t
-toArgument ex f (PairType t1 t2) (Array [a, b]) = do
-   ra <- toArgument ex f t1 a
-   rb <- toArgument ex f t2 b
-   return (ra, rb)
-toArgument ex f (TripleType t1 t2 t3) (Array [a, b, c]) = do
-   ra <- toArgument ex f t1 a
-   rb <- toArgument ex f t2 b
-   rc <- toArgument ex f t3 c
-   return (ra, rb, rc)
-toArgument ex f serviceType json =
-   case serviceType of 
-      StateType    -> jsonToState ex f json
-      LocationType -> fromJSON json
-      TermType     -> liftM inContext (f json)
-      RuleType     -> fromJSON json >>= getRule ex
-      ExerciseType -> return ex
-      _            -> fail "Unknown argument type"
-       
-fromResult :: (a -> JSON) -> ServiceType a t -> t -> JSON
-fromResult f serviceType tv =
-   case serviceType of
-      ListType t -> Array $ map (fromResult f t) tv
-      PairType t1 t2 -> 
-         let (a, b) = tv
-         in Array [fromResult f t1 a, fromResult f t2 b]
-      TripleType t1 t2 t3 -> 
-         let (a, b,c ) = tv
-         in Array [fromResult f t1 a, fromResult f t2 b, fromResult f t3 c]
-      ElemType t -> 
-         fromResult f t tv
-      IOType t -> 
-         fromResult f t (unsafePerformIO tv) -- quick fix
-      IntType -> toJSON tv
-      BoolType -> toJSON tv
-      StringType -> toJSON tv
-      LocationType -> toJSON tv
-      RuleType -> toJSON (name tv)
-      StateType -> stateToJSON f tv
-      ResultType -> resultToJSON f tv
-      TermType -> f (fromContext tv)
-
-jsonToState :: Exercise a -> (JSON -> Either String a) -> JSON -> Either String (TAS.State a)
-jsonToState ex f (Array [a]) = jsonToState ex f a
-jsonToState ex f (Array [String code, String p, ce, String ctx]) = do
+decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (TAS.State a)
+decodeState ex f (Array [a]) = decodeState ex f a
+decodeState ex f (Array [String code, String p, ce, String ctx]) = do
    a    <- f ce 
    unit <- maybe (fail "invalid context") return (parseContext ctx) 
    return $ TAS.State 
@@ -136,7 +160,7 @@ jsonToState ex f (Array [String code, String p, ce, String ctx]) = do
       , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
       , TAS.context  = fmap (\_ -> a) unit
       }
-jsonToState _ _ _ = fail "invalid state"
+decodeState _ _ s = fail $ "invalid state" ++ show s
 
 readPrefix :: String -> Maybe [Int]
 readPrefix input =
@@ -144,24 +168,24 @@ readPrefix input =
       [(is, rest)] | all isSpace rest -> return is
       _ -> Nothing
 
-stateToJSON :: (a -> JSON) -> TAS.State a -> JSON
-stateToJSON f state = Array
+encodeState :: (a -> JSON) -> TAS.State a -> JSON
+encodeState f state = Array
    [ String $ show $ exerciseCode (TAS.exercise state)
    , String $ maybe "NoPrefix" show (TAS.prefix state)
    , f (TAS.term state)
    , String $ showContext (TAS.context state)
    ] 
    
-resultToJSON :: (a -> JSON) -> TAS.Result a -> JSON
-resultToJSON f result = Object $
+encodeResult :: (a -> JSON) -> TAS.Result a -> JSON
+encodeResult f result = Object $
    case result of
       -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]
       TAS.Buggy rs      -> [("result", String "Buggy"), ("rules", Array $ map toJSON rs)]
       TAS.NotEquivalent -> [("result", String "NotEquivalent")]   
-      TAS.Ok rs st      -> [("result", String "Ok"), ("rules", Array $ map toJSON rs), ("state", stateToJSON f  st)]
-      TAS.Detour rs st  -> [("result", String "Detour"), ("rules", Array $ map toJSON rs), ("state", stateToJSON f  st)]
-      TAS.Unknown st    -> [("result", String "Unknown"), ("state", stateToJSON f st)]
-      
+      TAS.Ok rs st      -> [("result", String "Ok"), ("rules", Array $ map toJSON rs), ("state", encodeState f  st)]
+      TAS.Detour rs st  -> [("result", String "Detour"), ("rules", Array $ map toJSON rs), ("state", encodeState f  st)]
+      TAS.Unknown st    -> [("result", String "Unknown"), ("state", encodeState f st)]
+
 ------------------------------------------------------------
 -- to be removed
 

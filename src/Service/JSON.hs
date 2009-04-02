@@ -14,7 +14,8 @@
 -----------------------------------------------------------------------------
 module Service.JSON 
    ( JSON(..), Key, Number(..)            -- types
-   , InJSON(..)                           -- type class
+   , InJSON(..)                           -- type class"
+   , lookupM
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
    , jsonRPC, JSON_RPC_Handler
    ) where
@@ -185,14 +186,13 @@ instance InJSON JSON_RPC_Request where
       , ("params", requestParams req)
       , ("id"    , requestId req)
       ]
-   fromJSON (Object xs) = do
-      mj <- lookupM "method" xs
-      pj <- lookupM "params" xs
-      ij <- lookupM "id"     xs
+   fromJSON obj = do
+      mj <- lookupM "method" obj
+      pj <- lookupM "params" obj
+      ij <- lookupM "id"     obj
       case mj of
          String s -> return (Request s pj ij)
          _        -> fail "expecting a string"
-   fromJSON _ = fail "exepecting an object"
          
 instance InJSON JSON_RPC_Response where
    toJSON resp = Object
@@ -201,12 +201,11 @@ instance InJSON JSON_RPC_Response where
       , ("id"    , responseId resp)
       , ("version", String $ version ++ " (" ++ show revision ++ ")")
       ]
-   fromJSON (Object xs) = do
-      rj <- lookupM "result" xs
-      ej <- lookupM "error"  xs
-      ij <- lookupM "id"     xs
+   fromJSON obj = do
+      rj <- lookupM "result" obj
+      ej <- lookupM "error"  obj
+      ij <- lookupM "id"     obj
       return (Response rj ej ij)
-   fromJSON _ = fail "expecting an object"
    
 okResponse :: JSON -> JSON -> JSON_RPC_Response
 okResponse x y = Response
@@ -222,8 +221,9 @@ errorResponse x y = Response
    , responseId     = y
    }
 
-lookupM :: Monad m => String -> [(String, a)] -> m a
-lookupM x = maybe (fail $ "field " ++ x ++ " not found") return . lookup x
+lookupM :: Monad m => String -> JSON -> m JSON
+lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
+lookupM _ _ = fail "expecting a JSON object"
 
 --------------------------------------------------------
 -- JSON-RPC over HTTP

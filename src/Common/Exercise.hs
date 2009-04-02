@@ -20,7 +20,7 @@ module Common.Exercise
    , strategy, ruleset, differences, ordering
    , generator, suitableTerm -}
      -- * Miscellaneous
-   , ExerciseCode, exerciseCode, validateCode, makeCode
+   , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
    , checkExercise, checkParserPretty
    ) where
 
@@ -92,10 +92,18 @@ makeExercise = Exercise
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
 
-newtype ExerciseCode = EC String 
+data ExerciseCode = EC String String
+   deriving (Eq, Ord)
+
+readCode :: String -> Maybe ExerciseCode
+readCode xs =
+   case break (=='.') xs of
+      (as, _:bs) | all isAlphaNum (as++bs) -> 
+         return $ EC (map toLower as) (map toLower bs)
+      _ -> Nothing
 
 makeCode :: String -> String -> ExerciseCode
-makeCode d i = EC $ map toLower d ++ "." ++ filter p (map toLower i)
+makeCode d i = EC (map toLower d) (filter p (map toLower i))
  where p c = isAlphaNum c || c `elem` extraSymbols
 
 exerciseCode :: Exercise a -> ExerciseCode
@@ -109,14 +117,8 @@ extraSymbols :: String
 extraSymbols = "-."
 
 instance Show ExerciseCode where
-   show (EC code) = code
+   show (EC xs ys) = xs ++ "." ++ ys
    
-instance Eq ExerciseCode where
-   EC x == EC y = x==y
-   
-instance Ord ExerciseCode where
-   EC x `compare` EC y = x `compare` y
-
 -- Temporarily. To do: replace this function by a Typed Abstract Service  
 stepsRemaining :: Prefix a -> a -> Int
 stepsRemaining p0 a = 

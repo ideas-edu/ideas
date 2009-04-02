@@ -14,26 +14,28 @@
 -----------------------------------------------------------------------------
 module Service.ModeXML (processXML) where
 
-import Common.Utils (Some(..), mapLeft)
+import Common.Utils (Some(..))
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
-import Common.Transformation hiding (name)
+import Common.Transformation hiding (name, defaultArgument)
 import qualified Common.Transformation as Rule
 import Control.Monad
 import OpenMath.Object
 import Service.XML
 import Service.ExerciseList
 import Service.Revision (version)
-import Service.ServiceList
+import Service.Request
+import Service.ServiceList 
 import OpenMath.LAServer
 import OpenMath.Reply
 import OpenMath.Interactive (respondHTML)
 import OpenMath.Conversion
+import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
+import qualified Service.Types as Tp
 import Service.TypedAbstractService hiding (exercise)
 import Data.Maybe
 import Data.Char
-import System.IO.Unsafe
 
 processXML :: Maybe String -> String -> IO (String, String)
 processXML htmlMode input = 
@@ -45,17 +47,54 @@ processXML htmlMode input =
       (Right xml, _) -> do 
          out <- xmlRequestHandler xml
          return (showXML out, "application/xml")
-         
-xmlRequestHandler :: XML -> IO XML
-xmlRequestHandler xml = do
+
+xmlRequest :: XML -> Either String Request
+xmlRequest xml = do   
    unless (name xml == "request") $
       fail "expected xml tag request"
-   s    <- findAttribute "service" xml
+   srv  <- findAttribute "service" xml
    code <- extractExerciseCode xml
-   conv <- liftM openMathConverter (getOpenMathExercise code) 
-              `mplus`
-           liftM xmlConverter (getExercise code)
-   serviceXML (map toLower s) conv xml
+   enc  <- case findAttribute "encoding" xml of
+              Just s  -> liftM Just (readEncoding s)
+              Nothing -> return Nothing 
+   return $ Request 
+      { service    = srv
+      , exerciseID = code
+      , source     = findAttribute "source" xml
+      , dataformat = XML
+      , encoding   = enc
+      }
+
+xmlReply :: Request -> XML -> Either String XML
+xmlReply request xml 
+   | service request == "mathdox" = do
+        req <- fromXML xml
+        return $ replyToXML $ laServer req
+   | otherwise =
+   case encoding request of
+      Just StringEncoding -> do 
+         ex <- getExercise (exerciseID request)
+         case stringFormatConverter ex of
+            Some conv -> do
+               srv <- getService (service request)
+               res <- evalService conv srv xml 
+               return (resultOk res)
+      _ -> do 
+         ex <- getOpenMathExercise (exerciseID request)
+         case openMathConverter ex of
+            Some conv -> do
+               srv <- getService (service request)
+               res <- evalService conv srv xml 
+               return (resultOk res)
+
+xmlRequestHandler :: XML -> IO XML
+xmlRequestHandler xml =
+   case xmlRequest xml of 
+      Left err -> return (resultError err)
+      Right request ->  
+         case xmlReply request xml of
+            Left err     -> return (resultError err)
+            Right result -> return result
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =
@@ -73,110 +112,6 @@ extractExerciseCode xml =
                      _ -> fail $ "Unknown strategy name " ++ show name 
             _ -> fail "no exerciseid attribute, nor a known strategy element" 
 
-serviceXML :: String -> Some (Converter XML) -> XML -> IO XML
-serviceXML s (Some conv) request = 
-   case getService s of
-      Just service -> 
-         case execute service conv request of
-            Left  err -> return (resultError err)
-            Right xml -> return xml
-      Nothing  
-         | s == "mathdox" -> do
-              req <- fromXML request
-              return $ replyToXML $ laServer req
-         | otherwise ->  
-              fail $ "Invalid request: unknown service " ++ show s
-
-------------------------------------------------------------
--- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
-
-xmlConverter :: Some Exercise -> Some (Converter XML)
-xmlConverter (Some ex) = Some $ Converter
-   { exercise = ex
-   , toTerm   = xmlRead
-   , fromTerm = xmlBuild
-   , toType   = toArgument ex xmlRead
-   , fromType = \a b -> resultOk (fromResult xmlBuild a b)
-   }
- where
-   xmlBuild = makeXML "expr" . text . prettyPrinter ex
-   xmlRead xml = do
-                guard (name xml == "expr")
-                let input = getData xml
-                mapLeft show (parser ex input)
-   
-openMathConverter :: OpenMathExercise -> Some (Converter XML)
-openMathConverter (OMEX ex) = Some $ Converter
-   { exercise = ex
-   , toTerm   = xmlRead
-   , fromTerm = xmlBuild
-   , toType   = toArgument ex xmlRead
-   , fromType = \a b -> resultOk (fromResult xmlBuild a b)
-   }
- where
-   xmlRead xml = do 
-      omobj <- xml2omobj xml
-      case fromOMOBJ omobj of
-         Just a  -> return a
-         Nothing -> fail "Unknown OpenMath object"
-   xmlBuild = toXML . toOMOBJ
-
-toArgument :: Exercise a -> (XML -> Either String a) -> ServiceType a t -> XML -> Either String t 
-toArgument ex f serviceType xml = 
-   case serviceType of
-      PairType t1 t2 -> do
-         r1 <- toArgument ex f t1 xml
-         r2 <- toArgument ex f t2 xml
-         return (r1, r2)
-      TripleType t1 t2 t3 -> do
-         r1 <- toArgument ex f t1 xml
-         r2 <- toArgument ex f t2 xml
-         r3 <- toArgument ex f t3 xml
-         return (r1, r2, r3)
-      StateType -> 
-         xml2State ex f xml
-      LocationType -> 
-         liftM (read . getData) (findChild "location" xml)
-      RuleType ->
-         liftM (fromJust . getRule ex . getData) (findChild "ruleid" xml)
-      ExerciseType -> 
-         return ex
-      _ -> 
-         fail "toArgument: unknown argument type"
-          
-fromResult :: (a -> XML) -> ServiceType a t -> t -> XMLBuilder
-fromResult f serviceType tv = 
-   case serviceType of
-      ListType t1 -> 
-         element "list" (mapM_ (\x -> element "elem" (fromResult f t1 x)) tv)
-      PairType t1 t2 -> do
-         let (a, b) = tv 
-         fromResult f t1 a
-         fromResult f t2 b
-      TripleType t1 t2 t3 -> do 
-         let (a, b, c) = tv 
-         fromResult f t1 a
-         fromResult f t2 b
-         fromResult f t3 c
-      ElemType t1 ->
-         element "elem" (fromResult f t1 tv) -- quick fix  
-      IOType t1 -> 
-         fromResult f t1 (unsafePerformIO tv) -- quick fix                                                          
-      RuleType -> 
-         "ruleid" .=. Rule.name tv
-      TermType -> 
-         builder $ f $ fromContext tv
-      LocationType -> 
-         text (show tv)
-      BoolType -> 
-         text (show tv)
-      IntType -> 
-         text (show tv)
-      StateType -> 
-         builder $ state2xml f tv
-      _ -> 
-         fail "fromResult: unknown result type"
-      
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
    "result"  .=. "ok"
@@ -189,21 +124,84 @@ resultError txt = makeXML "reply" $ do
    "version" .=. version
    element "message" (text txt)
 
-xml2State :: Exercise a -> (XML -> Either String a) -> XML -> Either String (State a)
-xml2State ex f top = do
+------------------------------------------------------------
+-- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
+
+stringFormatConverter :: Some Exercise -> Some (Evaluator (Either String) XML XMLBuilder)
+stringFormatConverter (Some ex) = 
+   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
+ where
+   f = element "expr" . text . prettyPrinter ex
+   g xml = do
+      guard (name xml == "expr")
+      let input = getData xml
+      either (fail . show) return (parser ex input)
+                
+openMathConverter :: OpenMathExercise -> Some (Evaluator (Either String) XML XMLBuilder)
+openMathConverter (OMEX ex) = 
+   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
+ where
+   f = builder . toXML . toOMOBJ
+   g xml = do 
+      omobj <- xml2omobj xml
+      case fromOMOBJ omobj of
+         Just a  -> return a
+         Nothing -> fail "Unknown OpenMath object"
+   
+xmlEncoder :: (a -> XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
+xmlEncoder f ex = Encoder
+   { encodeType  = encode (xmlEncoder f ex)
+   , encodeTerm  = f
+   , encodeTuple = sequence_
+   }
+ where
+   encode :: Encoder XMLBuilder a -> Type a t -> t -> XMLBuilder
+   encode enc serviceType = 
+      case serviceType of
+         Tp.List t1  -> element "list" . mapM_ (element "elem" . encode enc t1)
+         Tp.Elem t1  -> element "elem" . encode enc t1 -- quick fix                                                           
+         Tp.Rule     -> ("ruleid" .=.) . Rule.name
+         Tp.Term     -> encodeTerm enc . fromContext
+         Tp.Location -> text . show
+         Tp.Bool     -> text . show
+         Tp.Int      -> text . show
+         Tp.State    -> encodeState (encodeTerm enc)
+         _           -> encodeDefault enc serviceType
+
+xmlDecoder :: Monad m => (XML -> m a) -> Exercise a -> Decoder m XML a
+xmlDecoder f ex = Decoder
+   { decodeType      = decode (xmlDecoder f ex)
+   , decodeTerm      = f
+   , decoderExercise = ex
+   }
+ where
+   decode :: Monad m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
+   decode dec serviceType = 
+      case serviceType of
+         Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)
+         Tp.Location -> leave $ liftM (read . getData) . findChild "location"
+         Tp.Rule     -> leave $ liftM (fromJust . getRule (decoderExercise dec) . getData) . findChild "ruleid"
+         Tp.Exercise -> leave $ const (return (decoderExercise dec))
+         _           -> decodeDefault dec serviceType
+         
+   leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
+   leave f xml = liftM (\a -> (a, xml)) (f xml)
+         
+decodeState :: Monad m => Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
+decodeState ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
    sp   <- liftM getData (findChild "prefix" xml)
-   sc   <- return $ maybe "" getData $ findChild "context" xml
+   let sc = maybe "" getData (findChild "context" xml)
    x    <- findChild "OMOBJ" xml
    expr <- f x
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
        contxt = fromMaybe (error $ "invalid context" ++ show sc) $ parseContext sc
        term   = fmap (const expr) contxt
-   return state
-   
-state2xml :: (a -> XML) -> State a -> XML
-state2xml tBuild state = makeXML "state" $ do
+   return (state, top)
+
+encodeState :: (a -> XMLBuilder) -> State a -> XMLBuilder
+encodeState f state = element "state" $ do
    element "prefix"  (text $ maybe "[]" show (prefix state))
    element "context" (text $ showContext (context state))
-   builder $ tBuild (term state)
+   f (term state)

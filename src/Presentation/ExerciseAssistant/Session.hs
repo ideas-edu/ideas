@@ -21,6 +21,7 @@ module Session
    ) where
 
 import qualified Service.TypedAbstractService as TAS
+import Service.FeedbackText (feedbackLogic)
 import Common.Context
 import Common.Exercise
 import Common.Parsing (indicesToRange)
@@ -29,8 +30,8 @@ import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Apply
 import Common.Utils
-import Domain.Logic.Exercises (dnfExercise)
-import Domain.Logic.FeedbackText
+import Domain.Logic.Exercises (dnfExercise) -- to be removed 
+import Domain.Logic.FeedbackText            -- to be removed
 import Data.List
 import Data.IORef
 import Data.Maybe
@@ -139,7 +140,7 @@ submitTextLogic txt ref = do
       Right term -> do
          let old = currentState d
              result = TAS.submit old term
-         case (TAS.feedbackLogic old result, TAS.getResultState result) of
+         case (feedbackLogic old result, TAS.getResultState result) of
             ((txt, True), Just n) -> do
                -- make sure that new has a prefix (because of possible detour)
                -- when resetting the prefix, also make sure that the context is refreshed

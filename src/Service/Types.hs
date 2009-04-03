@@ -56,23 +56,23 @@ groundType tp =
       Location -> Just "Location"
       _        -> Nothing
 
-eqType :: Type a1 t1 -> Type a2 t2 -> Bool
+{- eqType :: Type a1 t1 -> Type a2 t2 -> Bool
 eqType (t1 :-> t2)       (t3 :-> t4)       = eqType t1 t3 && eqType t2 t4
 eqType (Pair t1 t2)      (Pair t3 t4)      = eqType t1 t3 && eqType t2 t4
 eqType (Triple t1 t2 t3) (Triple t4 t5 t6) = eqType t1 t4 && eqType t2 t5 && eqType t3 t6
 eqType (List t1)         (List t2)         = eqType t1 t2
 eqType (Elem t1)         (Elem t2)         = eqType t1 t2
 eqType (IO t1)           (IO t2)           = eqType t1 t2 
-eqType t1 t2 = maybe False ((groundType t1 ==) . Just) (groundType t2)
+eqType t1 t2 = maybe False ((groundType t1 ==) . Just) (groundType t2) -}
 
 data Evaluator m inp out a = Evaluator 
-   { encoder :: Encoder out a
+   { encoder :: Encoder m out a
    , decoder :: Decoder m inp a
    }
 
-data Encoder s a = Encoder 
-   { encodeType  :: forall t . Type a t -> t -> s
-   , encodeTerm  :: a -> s
+data Encoder m s a = Encoder 
+   { encodeType  :: forall t . Type a t -> t -> m s
+   , encodeTerm  :: a -> m s
    , encodeTuple :: [s] -> s
    }
 
@@ -89,7 +89,7 @@ eval f tp tv s =
          (a, s1) <- decodeType (decoder f) t1 s
          eval f t2 (tv a) s1
       _ ->
-         return (encodeType (encoder f) tp tv)
+         encodeType (encoder f) tp tv
 
 decodeDefault :: Monad m => Decoder m s a -> Type a t -> s -> m (t, s)
 decodeDefault dec tp s =
@@ -104,18 +104,23 @@ decodeDefault dec tp s =
          (c, s3) <- decodeType dec t3 s2
          return ((a, b, c), s3)
       _ ->
-         error "No support for argument type"
+         fail "No support for argument type"
 
-encodeDefault :: Encoder s a -> Type a t -> t -> s
-encodeDefault enc tp tv = do
+encodeDefault :: Monad m => Encoder m s a -> Type a t -> t -> m s
+encodeDefault enc tp tv =
    case tp of
-      Pair t1 t2 ->
+      Pair t1 t2 -> do
          let (a, b) = tv
-         in encodeTuple enc [encodeType enc t1 a, encodeType enc t2 b]
-      Triple t1 t2 t3 ->
+         x <- encodeType enc t1 a
+         y <- encodeType enc t2 b
+         return (encodeTuple enc [x, y])
+      Triple t1 t2 t3 -> do
          let (a, b, c) = tv
-         in encodeTuple enc [encodeType enc t1 a, encodeType enc t2 b, encodeType enc t3 c]
+         x <- encodeType enc t1 a
+         y <- encodeType enc t2 b
+         z <- encodeType enc t3 c
+         return (encodeTuple enc [x, y, z])
       IO t1 ->
          encodeType enc t1 (unsafePerformIO tv)
       _ -> 
-         error "No support for result type"
+         fail "No support for result type"

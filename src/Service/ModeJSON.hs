@@ -35,7 +35,7 @@ extractCode = fromMaybe (makeCode "" "") . List.resolveExerciseCode . f
  where 
    f (String s) = s
    f (Array [String _, String _, a@(Array _)]) = f a
-   f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c)) s = f (Array tl)
+   f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c || c == '.')) s = f (Array tl)
    f (Array (hd:_)) = f hd
    f _ = ""
       
@@ -89,23 +89,23 @@ jsonConverter code =
          Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
       _ -> error "exercise code not found"
 
-jsonEncoder :: Exercise a -> Encoder JSON a
+jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
 jsonEncoder ex = Encoder
    { encodeType  = encode (jsonEncoder ex)
-   , encodeTerm  = String . prettyPrinter ex
+   , encodeTerm  = return . String . prettyPrinter ex
    , encodeTuple = Array
    }
  where
-   encode :: Encoder JSON a -> Type a t -> t -> JSON
+   encode :: Monad m => Encoder m JSON a -> Type a t -> t -> m JSON
    encode enc serviceType =
       case serviceType of
-         Tp.List t   -> Array . map (encode enc t)
+         Tp.List t   -> liftM Array . mapM (encode enc t)
          Tp.Elem t   -> encode enc t
-         Tp.Int      -> toJSON
-         Tp.Bool     -> toJSON
-         Tp.String   -> toJSON
-         Tp.Location -> toJSON
-         Tp.Rule     -> toJSON . name
+         Tp.Int      -> return . toJSON
+         Tp.Bool     -> return . toJSON
+         Tp.String   -> return . toJSON
+         Tp.Location -> return . toJSON
+         Tp.Rule     -> return . toJSON . name
          Tp.State    -> encodeState (encodeTerm enc)
          Tp.Result   -> encodeResult (encodeTerm enc)
          Tp.Term     -> encodeTerm enc . fromContext
@@ -168,23 +168,31 @@ readPrefix input =
       [(is, rest)] | all isSpace rest -> return is
       _ -> Nothing
 
-encodeState :: (a -> JSON) -> TAS.State a -> JSON
-encodeState f state = Array
-   [ String $ show $ exerciseCode (TAS.exercise state)
-   , String $ maybe "NoPrefix" show (TAS.prefix state)
-   , f (TAS.term state)
-   , String $ showContext (TAS.context state)
-   ] 
+encodeState :: Monad m => (a -> m JSON) -> TAS.State a -> m JSON
+encodeState f state = do 
+   json <- f (TAS.term state)
+   return $ Array
+      [ String $ show $ exerciseCode (TAS.exercise state)
+      , String $ maybe "NoPrefix" show (TAS.prefix state)
+      , json
+      , String $ showContext (TAS.context state)
+      ]
    
-encodeResult :: (a -> JSON) -> TAS.Result a -> JSON
-encodeResult f result = Object $
+encodeResult :: Monad m => (a -> m JSON) -> TAS.Result a -> m JSON
+encodeResult f result =
    case result of
       -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]
-      TAS.Buggy rs      -> [("result", String "Buggy"), ("rules", Array $ map toJSON rs)]
-      TAS.NotEquivalent -> [("result", String "NotEquivalent")]   
-      TAS.Ok rs st      -> [("result", String "Ok"), ("rules", Array $ map toJSON rs), ("state", encodeState f  st)]
-      TAS.Detour rs st  -> [("result", String "Detour"), ("rules", Array $ map toJSON rs), ("state", encodeState f  st)]
-      TAS.Unknown st    -> [("result", String "Unknown"), ("state", encodeState f st)]
+      TAS.Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map toJSON rs)]
+      TAS.NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
+      TAS.Ok rs st      -> do
+         json <- encodeState f st
+         return $ Object [("result", String "Ok"), ("rules", Array $ map toJSON rs), ("state", json)]
+      TAS.Detour rs st  -> do
+         json <- encodeState f st
+         return $ Object [("result", String "Detour"), ("rules", Array $ map toJSON rs), ("state", json)]
+      TAS.Unknown st    -> do
+         json <- encodeState f st
+         return $ Object [("result", String "Unknown"), ("state", json)]
 
 ------------------------------------------------------------
 -- to be removed

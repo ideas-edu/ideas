@@ -18,8 +18,7 @@ import Common.Context
 import Common.Exercise (Exercise(..))
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
-import Common.Utils (safeHead, fst3)
-import Domain.Logic.FeedbackText -- FIXME
+import Common.Utils (safeHead)
 import Service.SearchSpace (searchSpace)
 import Service.Progress
 import Data.Maybe
@@ -41,25 +40,6 @@ data Result a = Buggy  [Rule (Context a)]
               | Ok     [Rule (Context a)] (State a)  -- equivalent
               | Detour [Rule (Context a)] (State a)  -- equivalent
               | Unknown                   (State a)  -- equivalent
-
--- Feedback messages for submit service (free student input). The boolean
--- indicates whether the student is allowed to continue (True), or forced 
--- to go back to the previous state (False)
--- !! Placed here to avoid a cyclic import dependency. Should be moved 
--- to Domain.Logic in future
-feedbackLogic :: State a -> Result a -> (String, Bool)
-feedbackLogic old result =
-   case result of
-      Buggy rs        -> (feedbackBuggy rs, False)
-      NotEquivalent   -> (feedbackNotEquivalent, False)
-      Ok rs _
-         | null rs    -> (feedbackSame, False)
-         | otherwise  -> feedbackOk rs
-      Detour rs _     -> feedbackDetour (ready old) (expected old) rs
-      Unknown _       -> (feedbackUnknown, False)
- where
-   expected = fmap fst3 . safeHead . allfirsts 
-             
 
 -----------------------------------------------------------
 
@@ -90,10 +70,6 @@ derivation state = fromMaybe (error "derivation") $ do
        check = isMajorRule . fst
    return $ filter check $ zip rules terms
 
-derivationtext :: State a -> [(String, Context a)]
-derivationtext =
-   map (\(r, ca) -> (fromMaybe ("rule " ++ name r) (ruleText r), ca)) . derivation
-
 -- The last condition in the list comprehension is to avoid a very subtle case in which some steps
 -- remain to be done (in the prefix), but those steps are administrative (not even minor rules, but 
 -- markers for the beginning and the end of a sub-strategy). This is a quick fix. To do: inspect other
@@ -109,13 +85,6 @@ allfirsts state = fromMaybe (error "allfirsts") $ do
 
 onefirst :: State a -> (Rule (Context a), Location, State a)
 onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
-
--- FIXME: specialized output for logic solver
-onefirsttext :: State a -> (Bool, String, State a)
-onefirsttext state =
-   case allfirsts state of
-      (r, _, s):_ -> (True, "Use " ++ fromMaybe ("rule " ++ name r) (ruleText r), s)
-      _ -> (False, "Sorry, no hint available", state)
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
@@ -143,16 +112,6 @@ ready state = finalProperty (exercise state) (term state)
 stepsremaining :: State a -> Int
 stepsremaining = length . derivation
 
--- FIXME: specialized output for logic solver
-submittext :: State a -> a -> (Bool, String, State a)
-submittext state a = 
-   case getResultState result of
-      Just new | b -> (True, txt, resetStateIfNeeded new)
-      _ -> (False, txt, state)
- where
-  result = submit state a
-  (txt, b) = feedbackLogic state result
-
 -- make sure that new has a prefix (because of possible detour)
 -- when resetting the prefix, also make sure that the context is refreshed
 resetStateIfNeeded :: State a -> State a
@@ -162,7 +121,6 @@ resetStateIfNeeded s
         { prefix  = Just (emptyPrefix (strategy (exercise s)))
         , context = inContext (fromContext (context s))
         } 
-
 
 submit :: State a -> a -> Result a
 submit state new

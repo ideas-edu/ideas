@@ -2,9 +2,16 @@
 module Service.ServiceList (Service, getService, evalService) where
 
 import Common.Context
+import Common.Transformation
+import qualified Common.Exercise as E
+import Common.Utils (Some(..))
+import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
+import qualified Service.ExerciseList as List
 import Service.TypedAbstractService hiding (exercise, State)
-import Service.Types
+import Service.FeedbackText
+import Service.Types 
+import Data.List (sortBy)
 
 data Service a = Service 
    { serviceName  :: String
@@ -28,6 +35,7 @@ serviceList =
    , stepsremainingS, applicableS, applyS, generateS
    , submitS
    , onefirsttextS, submittextS, derivationtextS
+   , exerciselistS, rulelistS
    ]
 
 getService :: Monad m => String -> m (Service a)
@@ -96,105 +104,37 @@ submittextS = makeService "submittext" (\a -> submittext a . fromContext) $
 derivationtextS :: Service a
 derivationtextS = makeService "derivationtext" derivationtext $ 
    State :-> List (Pair String Term)
-
-{-
-data ResultType t where
-   IntRes  :: ResultType Int
-   (:->)   :: ResultType t1 -> ResultType t2 -> ResultType (t1 -> t2)
-   Conv    :: (t2 -> t1) -> ResultType t1 -> ResultType t2
-   PairRes :: ResultType t1 -> ResultType t2 -> ResultType (t1, t2)
-
-data EvalType s = EvalType 
-   { evalArgument :: forall t . ResultType t -> s -> (t, s)
-   , evalResult   :: forall t . ResultType t -> t -> s -> s
-   , evalAppend   :: s -> s -> s
-   }
-
-evalString :: EvalType String
-evalString = EvalType 
-   { evalArgument = fromSpec
-   , evalResult   = runSpec
-   , evalAppend   = \x y -> x ++ "/" ++ y
-   }
-
-triple t1 t2 t3 = Conv (\(a, b, c) -> (a, (b, c))) (PairRes t1 (PairRes t2 t3))
-
-fromGen :: EvalType s -> ResultType t -> s -> (t, s)
-fromGen f (PairRes t1 t2) = \s -> 
-   let (a, s1) = fromGen f t1 s
-       (b, s2) = fromGen f t2 s1 
-   in ((a, b), s2)
-fromGen f t = evalArgument f t
    
-fromSpec :: ResultType t -> String -> (t, String)
-fromSpec IntRes = \s -> case words s of
-   hd:tl -> (read hd, unwords tl)
-   [] -> error "" 
-
-runGen :: EvalType s -> ResultType t -> t -> s -> s
-runGen f (Conv fun t) a s = runGen f t (fun a) s
-runGen f (t1 :-> t2) fun s = let (a, s1) = fromGen f t1 s in runGen f t2 (fun a) s1
-runGen f (PairRes t1 t2) (a, b) s = evalAppend f (runGen f t1 a s) (runGen f t2 b s)
-runGen f t a s = evalResult f t a s
-
-runSpec :: ResultType t -> t -> String -> String
-runSpec IntRes n _ = show n
-
-test = runGen evalString ((:->) IntRes ((:->) (PairRes IntRes IntRes) (triple IntRes IntRes IntRes))) (\x (y, z) -> (x*y*z, max x y, min y z)) "3 4 5"
-
-
-
-
-
-execute :: Service a -> Converter s a -> s -> Either String s
-execute (Service _ ts) conv = 
-   case ts of 
-      TypedService f t1 t2 ->
-         liftM (fromType conv t2 . f) . toType conv t1
-
-
-
-
-
-
-
-  
-{-
-fromTypeDefault :: Monoid s => (forall t . ServiceType a t -> t -> Maybe s) -> ServiceType a t -> t -> s
-fromTypeDefault f serviceType tv = 
-   case f serviceType tv of
-      Just s  -> s
-      Nothing ->
-         case serviceType of
-            PairType t1 t2 -> 
-               let (a, b) = tv
-               in fromTypeDefault f t1 a `mappend` fromTypeDefault f t2 b
-            TripleType t1 t2 t3 -> 
-               let (a, b, c) = tv
-               in mconcat [fromTypeDefault f t1 a, fromTypeDefault f t2 b, fromTypeDefault f t3 c]
-            ElemType t1 ->
-               fromTypeDefault f t1 tv
-            IOType t1 -> 
-               fromTypeDefault f t1 (unsafePerformIO tv)
-            IntType  -> fromTypeDefault f StringType (show tv)
-            BoolType -> fromTypeDefault f StringType (show tv)
-            LocationType ->  fromTypeDefault f StringType (show tv)
-            RuleType -> fromTypeDefault f StringType (name tv) -}
+------------------------------------------------------
+-- Reflective services
    
+exerciselistS :: Service a
+exerciselistS = makeService "exerciselist" allExercises $ 
+   List (Pair (Pair String String) (Pair String String))
 
--- instance Show (ServiceType a t) 
-     
+rulelistS :: Service a
+rulelistS = makeService "rulelist" allRules $ 
+   Exercise :-> List (Triple String Bool Bool)
+      
+allExercises :: [((String, String), (String, String))]
+allExercises  = map make $ sortBy cmp List.exerciseList
+ where
+   cmp e1 e2  = f e1 `compare` f e2
+   f (Some e) = (domain e, identifier e)
+   make (Some ex) =
+      ( (tag "domain"      (domain ex)
+      , tag "identifier"  (identifier ex))
+      , (tag "description" (description ex)
+      , tag "status"      (show $ status ex))
+      ) 
 
-
--------------------------------
-
-
--}
-
--------------------------------
-{-
-exerciselistS :: Service
-exerciselistS = Service "exerciselist" $ makeExecutable f VoidType (ListType ExerciseType)
- where f = undefined
-
- -}
+allRules :: E.Exercise a -> [(String, Bool, Bool)]
+allRules = map make . ruleset
+ where
+   make r = 
+      ( tag "name"        (name r)
+      , tag "buggy"       (isBuggyRule r) 
+      , tag "rewriterule" (isRewriteRule r)
+      )
+      
+tag _ a = a

@@ -131,7 +131,7 @@ stringFormatConverter :: Some Exercise -> Some (Evaluator (Either String) XML XM
 stringFormatConverter (Some ex) = 
    Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
  where
-   f = element "expr" . text . prettyPrinter ex
+   f = return . element "expr" . text . prettyPrinter ex
    g xml = do
       guard (name xml == "expr")
       let input = getData xml
@@ -141,30 +141,33 @@ openMathConverter :: OpenMathExercise -> Some (Evaluator (Either String) XML XML
 openMathConverter (OMEX ex) = 
    Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
  where
-   f = builder . toXML . toOMOBJ
+   f = return . builder . toXML . toOMOBJ
    g xml = do 
       omobj <- xml2omobj xml
       case fromOMOBJ omobj of
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
    
-xmlEncoder :: (a -> XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
+xmlEncoder :: Monad m => (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
 xmlEncoder f ex = Encoder
    { encodeType  = encode (xmlEncoder f ex)
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
  where
-   encode :: Encoder XMLBuilder a -> Type a t -> t -> XMLBuilder
-   encode enc serviceType = 
+   encode :: Monad m => Encoder m XMLBuilder a -> Type a t -> t -> m XMLBuilder
+   encode enc serviceType =
       case serviceType of
-         Tp.List t1  -> element "list" . mapM_ (element "elem" . encode enc t1)
-         Tp.Elem t1  -> element "elem" . encode enc t1 -- quick fix                                                           
-         Tp.Rule     -> ("ruleid" .=.) . Rule.name
+         Tp.List t1  -> \xs -> do
+            bs <- mapM (encode enc t1) xs
+            let b = mapM_ (element "elem") bs
+            return (element "list" b)
+         Tp.Elem t1  -> liftM (element "elem") . encode enc t1 -- quick fix
+         Tp.Rule     -> return . ("ruleid" .=.) . Rule.name
          Tp.Term     -> encodeTerm enc . fromContext
-         Tp.Location -> text . show
-         Tp.Bool     -> text . show
-         Tp.Int      -> text . show
+         Tp.Location -> return . text . show
+         Tp.Bool     -> return . text . show
+         Tp.Int      -> return . text . show
          Tp.State    -> encodeState (encodeTerm enc)
          _           -> encodeDefault enc serviceType
 
@@ -195,13 +198,16 @@ decodeState ex f top = do
    let sc = maybe "" getData (findChild "context" xml)
    x    <- findChild "OMOBJ" xml
    expr <- f x
+   contxt <- maybe (fail $ "invalid context" ++ show sc) return (parseContext sc)
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
-       contxt = fromMaybe (error $ "invalid context" ++ show sc) $ parseContext sc
        term   = fmap (const expr) contxt
    return (state, top)
 
-encodeState :: (a -> XMLBuilder) -> State a -> XMLBuilder
-encodeState f state = element "state" $ do
-   element "prefix"  (text $ maybe "[]" show (prefix state))
-   element "context" (text $ showContext (context state))
-   f (term state)
+encodeState :: Monad m => (a -> m XMLBuilder) -> State a -> m XMLBuilder
+encodeState f state = do
+   b <- f (term state)
+   return $ element "state" $ do
+      element "prefix"  (text $ maybe "[]" show (prefix state))
+      element "context" (text $ showContext (context state))
+      b
+   

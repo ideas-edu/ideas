@@ -1,6 +1,6 @@
-<reply result="incorrect" version="0.3.1">
+<reply result="incorrect" version="version 0.5.1 (revision 1805)">
   <strategy>
-    Gaussian elimination
+    linalg.gaussianelimination
   </strategy>
   <location>
     [0]

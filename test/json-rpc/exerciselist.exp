@@ -67,12 +67,6 @@
          "status": "Experimental"
       },
       {
-         "domain": "programming",
-         "identifier": "isort",
-         "description": "Insertion sort",
-         "status": "Experimental"
-      },
-      {
          "domain": "relationalg",
          "identifier": "cnf",
          "description": "To conjunctive normal form",
@@ -81,5 +75,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.1 (1788)"
+   "version": "0.5.1 (1805)"
 }

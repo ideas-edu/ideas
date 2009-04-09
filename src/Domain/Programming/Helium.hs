@@ -6,18 +6,19 @@ import PhaseParser
 --import PhaseImport
 import PhaseResolveOperators
 import PhaseStaticChecks
-import PhaseKindInferencer
+--import PhaseKindInferencer
 import PhaseTypingStrategies
 import PhaseTypeInferencer
 import PhaseDesugarer
 import PhaseCodeGenerator
-import CompileUtils
 import Utils
 import UHA_Syntax
 import Data.IORef
+import Messages
+import HeliumMessages
 import StaticErrors(errorsLogCode)
 import System.IO.Unsafe (unsafePerformIO)
-import CompileUtils
+import CompileUtils hiding (doPhaseWithExit)
 import qualified Core
 import Id(Id)
 import UHA_Syntax
@@ -30,89 +31,88 @@ import CoreToImportEnv(getImportEnvironment)
 import qualified ExtractImportDecls(sem_Module)
 import CorePretty
 import Data.List(isPrefixOf)
+import Control.Monad.Trans
 
-main = either print (\_ -> print "OK") $ compile "mysum = foldr (+) 0"
+-- main = either print (\_ -> print "OK") $ compile "mysum xs = foldr (+) 0 xs"
 
 compile :: String -> Either String Module
 compile txt = unsafePerformIO $ do
-   m <- compile_ txt [Overloading, Verbose] [".", "../../../heliumsystem/helium/lib"] []
-   return (Right m)
+   ea <- run $ compile_ txt [Overloading, Verbose] [".", "../../../heliumsystem/helium/lib"] []
+   case ea of
+      Left ms -> return $ Left $ unlines ms
+      Right a -> return $ Right a 
+
+newtype Compile a = C { run :: IO (Either [String] a) }
+
+instance Monad Compile where
+   return a  = C (return (Right a))
+   C m >>= f = C $ do 
+      ea <- m
+      case ea of 
+         Left err -> return (Left err)
+         Right a  -> do
+            let C m2 = f a
+            m2
+
+instance MonadIO Compile where
+   liftIO m = C $ do
+      a <- m
+      return (Right a)
 
 --------------------------------------------------------------------
 -- Adjusted code from Compile
 
-compile_ :: String -> [Option] -> [String] -> [String] -> IO Module
+compile_ :: String -> [Option] -> [String] -> [String] -> Compile Module
 compile_ contents options lvmPath doneModules =
     do
         let fullName = "..."
         let compileOptions = (options, fullName, doneModules)
-        putStrLn ("Compiling " ++ fullName)
-
+        liftIO $ putStrLn ("Compiling")
+        
         -- Phase 1: Lexing
         (lexerWarnings, tokens) <- 
-            doPhaseWithExit 20 (const "L") compileOptions $
+            doPhaseWithExit $
                phaseLexer fullName contents options
         
-        unless (NoWarnings `elem` options) $
-            showMessages lexerWarnings
+        
+        --unless (NoWarnings `elem` options) $
+        --    showMessages lexerWarnings
 
         -- Phase 2: Parsing
         parsedModule <- 
-            doPhaseWithExit 20 (const "P") compileOptions $
+            doPhaseWithExit $
                phaseParser fullName tokens options
-
+        
         -- Phase 3: Importing
         (indirectionDecls, importEnvs) <-
-            phaseImport fullName parsedModule lvmPath options
+            liftIO $ phaseImport fullName parsedModule lvmPath options
         
         -- Phase 4: Resolving operators
         resolvedModule <- 
-            doPhaseWithExit 20 (const "R") compileOptions $
+            doPhaseWithExit $
                phaseResolveOperators parsedModule importEnvs options
-            
-        stopCompilingIf (StopAfterParser `elem` options)
-
         -- Phase 5: Static checking
         (localEnv, typeSignatures, staticWarnings) <-
-            doPhaseWithExit 20 (("S"++) . errorsLogCode) compileOptions $
+            doPhaseWithExit $
                phaseStaticChecks fullName resolvedModule importEnvs options        
 
-        unless (NoWarnings `elem` options) $
-            showMessages staticWarnings
+        --unless (NoWarnings `elem` options) $
+        --    showMessages staticWarnings
 
-        stopCompilingIf (StopAfterStaticAnalysis `elem` options)
-
-        -- Phase 6: Kind inferencing (by default turned off)
-        let combinedEnv = foldr combineImportEnvironments localEnv importEnvs
-        when (KindInferencing `elem` options) $
-           doPhaseWithExit maximumNumberOfKindErrors (const "K") compileOptions $
-              phaseKindInferencer combinedEnv resolvedModule options
-              
-        -- Phase 7: Type Inference Directives
-        --(beforeTypeInferEnv, typingStrategiesDecls) <-
-        --    phaseTypingStrategies fullName combinedEnv typeSignatures options
+        -- Phase 6: Kind inferencing (skipped)
+        let combinedEnv = foldr combineImportEnvironments localEnv importEnvs              
+        -- Phase 7: Type Inference Directives (skipped)
         let beforeTypeInferEnv = combinedEnv
 
         -- Phase 8: Type inferencing
         (dictionaryEnv, afterTypeInferEnv, toplevelTypes, typeWarnings) <- 
-            doPhaseWithExit maximumNumberOfTypeErrors (const "T") compileOptions $ 
+            doPhaseWithExit $ 
                phaseTypeInferencer fullName resolvedModule {-doneModules-} localEnv beforeTypeInferEnv options
 
-        unless (NoWarnings `elem` options) $
-            showMessages typeWarnings
-
-        stopCompilingIf (StopAfterTypeInferencing `elem` options)
+        --unless (NoWarnings `elem` options) $
+        --    showMessages typeWarnings
 
         return resolvedModule
-
-stopCompilingIf :: Bool -> IO ()
-stopCompilingIf bool = when bool (exitWith (ExitFailure 1))
-
-maximumNumberOfTypeErrors :: Int
-maximumNumberOfTypeErrors = 3
-
-maximumNumberOfKindErrors :: Int
-maximumNumberOfKindErrors = 1
 
 --------------------------------------------------------------------
 -- Adjusted code from PhaseImport
@@ -186,3 +186,17 @@ addImplicitImports m@(Module_Module moduleRange maybeName exports
             (Name_Identifier noRange [] moduleName) -- !!!Name
             MaybeName_Nothing
             MaybeImportSpecification_Nothing
+            
+--------------------------------------------------------------------
+-- Adjusted code from CompileUtils
+
+doPhaseWithExit :: HasMessage err => Phase err a -> Compile a
+doPhaseWithExit phase = C $
+   do result <- phase
+      case result of
+         Left errs ->
+            do 
+               --showErrorsAndExit errs nrOfMsgs
+               return (Left (map showMessage errs))
+         Right a ->
+            return (Right a)

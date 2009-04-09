@@ -15,7 +15,7 @@
 module Service.ModeJSON (processJSON) where
 
 import Common.Context
-import Common.Utils (Some(..))
+import Common.Utils (Some(..), distinct)
 import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
@@ -26,7 +26,6 @@ import qualified Service.TypedAbstractService as TAS
 import Service.ServiceList hiding (Service)
 import qualified Service.ExerciseList as List
 import Control.Monad
-import Data.List (sortBy)
 import Data.Maybe
 import Data.Char
 
@@ -71,47 +70,54 @@ jsonReply request json
    | otherwise =  -}
 
 myHandler :: JSON_RPC_Handler
-myHandler fun arg
-   | fun == "exerciselist" = exerciseList arg
-   | fun == "rulelist"     = ruleList arg
-   | otherwise = 
-        case jsonConverter (extractCode arg) of
-           Some conv -> do
-              service <- getService fun
-              case evalService conv service arg of
-                 Left err  -> fail err
-                 Right txt -> return txt
+myHandler fun arg =
+   case jsonConverter (extractCode arg) of
+      Some conv -> do
+         service <- getService fun
+         case evalService conv service arg of
+            Left err  -> fail err
+            Right txt -> return txt
 
 jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
 jsonConverter code =
    case List.getExercise code of
       Just (Some ex) -> 
          Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
-      _ -> error "exercise code not found"
+      -- TO DO: fix
+      _ -> Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
+        where ex = error "exercise code not found"
 
 jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
 jsonEncoder ex = Encoder
    { encodeType  = encode (jsonEncoder ex)
    , encodeTerm  = return . String . prettyPrinter ex
-   , encodeTuple = Array
+   , encodeTuple = jsonTuple
    }
  where
    encode :: Monad m => Encoder m JSON a -> Type a t -> t -> m JSON
    encode enc serviceType =
       case serviceType of
          Tp.List t   -> liftM Array . mapM (encode enc t)
-         Tp.Elem t   -> encode enc t
+         Tp.Tag s t  -> liftM (\a -> Object [(s, a)]) . encode enc t 
          Tp.Int      -> return . toJSON
          Tp.Bool     -> return . toJSON
          Tp.String   -> return . toJSON
-         Tp.Location -> return . toJSON
-         Tp.Rule     -> return . toJSON . name
-         Tp.State    -> encodeState (encodeTerm enc)
-         Tp.Result   -> encodeResult (encodeTerm enc)
-         Tp.Term     -> encodeTerm enc . fromContext
+         Tp.State    -> encode enc stateType . fromState
+         Tp.Result   -> encodeResult enc
          _           -> encodeDefault enc serviceType
 
-jsonDecoder :: Monad m => Exercise a -> Decoder m JSON a
+fromState :: TAS.State a -> (String, String, Context a, String)
+fromState st = 
+   ( show (exerciseCode (TAS.exercise st))
+   , maybe "NoPrefix" show (TAS.prefix st)
+   , inContext (TAS.term st)
+   , showContext (TAS.context st)
+   )
+
+stateType :: Type a (String, String, Context a, String)
+stateType = Tp.Quadruple Tp.String Tp.String Tp.Term Tp.String
+
+jsonDecoder :: MonadPlus m => Exercise a -> Decoder m JSON a
 jsonDecoder ex = Decoder
    { decodeType      = decode (jsonDecoder ex)
    , decodeTerm      = reader ex
@@ -122,7 +128,7 @@ jsonDecoder ex = Decoder
    reader ex (String s) = either (fail . show) return (parser ex s)
    reader _  _          = fail "Expecting a string when reading a term"
  
-   decode :: Monad m => Decoder m JSON a -> Type a t -> JSON -> m (t, JSON) 
+   decode :: MonadPlus m => Decoder m JSON a -> Type a t -> JSON -> m (t, JSON) 
    decode dec serviceType =
       case serviceType of
          Tp.State    -> useFirst $ decodeState (decoderExercise dec) (decodeTerm dec)
@@ -145,9 +151,6 @@ instance InJSON Location where
                             _ -> fail "invalid string"
    fromJSON _          = fail "expecting a string"
 
-instance InJSON (Rule a) where
-   toJSON = toJSON . name
-
 --------------------------
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (TAS.State a)
@@ -167,58 +170,28 @@ readPrefix input =
    case reads input of
       [(is, rest)] | all isSpace rest -> return is
       _ -> Nothing
-
-encodeState :: Monad m => (a -> m JSON) -> TAS.State a -> m JSON
-encodeState f state = do 
-   json <- f (TAS.term state)
-   return $ Array
-      [ String $ show $ exerciseCode (TAS.exercise state)
-      , String $ maybe "NoPrefix" show (TAS.prefix state)
-      , json
-      , String $ showContext (TAS.context state)
-      ]
    
-encodeResult :: Monad m => (a -> m JSON) -> TAS.Result a -> m JSON
-encodeResult f result =
+encodeResult :: Monad m => Encoder m JSON a -> TAS.Result a -> m JSON
+encodeResult enc result =
    case result of
       -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]
-      TAS.Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map toJSON rs)]
+      TAS.Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . name) rs)]
       TAS.NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
       TAS.Ok rs st      -> do
-         json <- encodeState f st
-         return $ Object [("result", String "Ok"), ("rules", Array $ map toJSON rs), ("state", json)]
+         json <- encodeType enc Tp.State st
+         return $ Object [("result", String "Ok"), ("rules", Array $ map (String . name) rs), ("state", json)]
       TAS.Detour rs st  -> do
-         json <- encodeState f st
-         return $ Object [("result", String "Detour"), ("rules", Array $ map toJSON rs), ("state", json)]
+         json <- encodeType enc Tp.State st
+         return $ Object [("result", String "Detour"), ("rules", Array $ map (String . name) rs), ("state", json)]
       TAS.Unknown st    -> do
-         json <- encodeState f st
+         json <- encodeType enc Tp.State st
          return $ Object [("result", String "Unknown"), ("state", json)]
 
-------------------------------------------------------------
--- to be removed
-
-exerciseList :: JSON -> IO JSON
-exerciseList _ = return $ Array $ map make $ sortBy cmp List.exerciseList
+jsonTuple :: [JSON] -> JSON
+jsonTuple xs = 
+   case mapM f xs of 
+      Just xs | distinct (map fst xs) -> Object xs
+      _ -> Array xs
  where
-   cmp e1 e2  = f e1 `compare` f e2
-   f (Some e) = (domain e, identifier e)
-   make (Some ex) = Object
-      [ ("domain",      String $ domain ex)
-      , ("identifier",  String $ identifier ex)
-      , ("description", String $ description ex)
-      , ("status",      String $ show $ status ex)
-      ]
-
-ruleList :: JSON -> IO JSON
-ruleList (Array [String code]) =
-   case filter p List.exerciseList of
-      [Some ex] -> return $ Array $ map f (ruleset ex)
-      _ -> fail "unknown exercise code"
- where
-   p (Some ex) = show (exerciseCode ex) == code
-   f r = Object 
-      [ ("name",        String  $ name r)
-      , ("buggy",       Boolean $ isBuggyRule r) 
-      , ("rewriterule", Boolean $ isRewriteRule r)
-      ]
-ruleList xs = fail $ "ruleList service requires exactly one argument (with a string)" ++ show xs
+   f (Object [p]) = Just p
+   f _ = Nothing

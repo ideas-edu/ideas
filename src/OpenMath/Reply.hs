@@ -17,8 +17,10 @@ module OpenMath.Reply
    ) where
 
 import Control.Monad
+import Common.Exercise
 import Common.Strategy hiding (not)
 import OpenMath.StrategyTable
+import OpenMath.Conversion
 import OpenMath.Object
 import Service.XML
 
@@ -26,61 +28,57 @@ import Service.XML
 -- Data types for replies
 
 -- There are three possible replies: ok, incorrect, or an error in the protocol (e.g., a parse error)
-data Reply = Ok ReplyOk | Incorrect ReplyIncorrect | Error ReplyError
-   deriving Show
+data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a) | Error ReplyError
 
-data ReplyOk = ReplyOk
-   { repOk_Strategy :: StrategyID
+data ReplyOk a = ReplyOk
+   { repOk_Code     :: Exercise a
    , repOk_Location :: StrategyLocation
    , repOk_Context  :: String
    , repOk_Steps    :: Int
    }
- deriving Show
-
-data ReplyIncorrect = ReplyIncorrect
-   { repInc_Strategy   :: StrategyID
+   
+data ReplyIncorrect a = ReplyIncorrect
+   { repInc_Code       :: Exercise a
    , repInc_Location   :: StrategyLocation
-   , repInc_Expected   :: OMOBJ
-   , repInc_Derivation :: [(String, OMOBJ)]
+   , repInc_Expected   :: a
+   , repInc_Derivation :: [(String, a)]
    , repInc_Arguments  :: Args
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
    }
- deriving Show
  
 data ReplyError = ReplyError
    { repErr_Kind    :: String
    , repErr_Message :: String
    }
- deriving Show
 
 type Args = [(String, String)]
 
 ------------------------------------------------------------------------
 -- Conversion functions to XML
  
-replyInXML :: Reply -> String
+replyInXML :: IsOMOBJ a => Reply a -> String
 replyInXML = showXML . replyToXML
 
-replyToXML :: Reply -> XML
+replyToXML :: IsOMOBJ a => Reply a -> XML
 replyToXML reply =
    case reply of
       Ok r        -> replyOkToXML r
       Incorrect r -> replyIncorrectToXML r 
       Error r     -> replyErrorToXML r
 
-replyOkToXML :: ReplyOk -> XML
+replyOkToXML :: ReplyOk a -> XML
 replyOkToXML r = makeReply "ok" $ do
-   element "strategy" (text $ repOk_Strategy r)
+   element "strategy" (text $ show $ exerciseCode $ repOk_Code r)
    element "location" (text $ show $ repOk_Location r)
    element "context"  (text $ repOk_Context r)
    element "steps"    (text $ show $ repOk_Steps r)
 
-replyIncorrectToXML :: ReplyIncorrect -> XML
+replyIncorrectToXML :: IsOMOBJ a => ReplyIncorrect a -> XML
 replyIncorrectToXML r = makeReply "incorrect" $ do
-   element "strategy"   (text $ repInc_Strategy r)
+   element "strategy"   (text $ show $ exerciseCode $ repInc_Code r)
    element "location"   (text $ show $ repInc_Location r)
-   element "expected"   (builder $ omobj2xml $ repInc_Expected r)
+   element "expected"   (builder $ omobj2xml $ toOMOBJ $ repInc_Expected r)
    element "steps"      (text $ show $ repInc_Steps r)
    element "equivalent" (text $ show $ repInc_Equivalent r)
    
@@ -93,7 +91,7 @@ replyIncorrectToXML r = makeReply "incorrect" $ do
    unless (null $  repInc_Derivation r) $
       let f (x,y) = element "elem" $ do 
              "ruleid" .=. x 
-             builder (omobj2xml y)
+             builder (omobj2xml (toOMOBJ y))
       in element "derivation" $ mapM_ f (repInc_Derivation r)
 
 replyErrorToXML :: ReplyError -> XML

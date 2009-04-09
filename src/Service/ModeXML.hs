@@ -22,14 +22,14 @@ import Common.Transformation hiding (name, defaultArgument)
 import qualified Common.Transformation as Rule
 import Control.Monad
 import OpenMath.Object
+import OpenMath.Request (xmlToRequest)
+import OpenMath.Reply (replyToXML)
 import Service.XML
 import Service.ExerciseList
+import Service.ProblemDecomposition
 import Service.Revision (version)
 import Service.Request
 import Service.ServiceList 
-import OpenMath.LAServer
-import OpenMath.Reply
-import OpenMath.Interactive (respondHTML)
 import OpenMath.Conversion
 import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
 import qualified Service.Types as Tp
@@ -42,8 +42,8 @@ processXML htmlMode input =
    case (parseXML input, htmlMode) of
       (Left err, _) -> 
          fail err
-      (Right _, Just self) ->           
-         return (respondHTML self input, "text/html")
+   {-    (Right _, Just self) ->           
+         return (respondHTML self input, "text/html") -}
       (Right xml, _) -> do 
          out <- xmlRequestHandler xml
          return (showXML out, "application/xml")
@@ -68,8 +68,9 @@ xmlRequest xml = do
 xmlReply :: Request -> XML -> Either String XML
 xmlReply request xml 
    | service request == "mathdox" = do
-        req <- fromXML xml
-        return $ replyToXML $ laServer req
+        OMEX ex <- getOpenMathExercise (exerciseID request)
+        (st, sloc, answer) <- xmlToRequest xml ex
+        return (replyToXML (problemDecomposition st sloc answer))
    | otherwise =
    case encoding request of
       Just StringEncoding -> do 
@@ -162,7 +163,8 @@ xmlEncoder f ex = Encoder
             bs <- mapM (encode enc t1) xs
             let b = mapM_ (element "elem") bs
             return (element "list" b)
-         Tp.Elem t1  -> liftM (element "elem") . encode enc t1 -- quick fix
+         Tp.Elem t1  -> liftM (element "elem") . encode enc t1
+         Tp.Tag s t1 -> liftM (element s) . encode enc t1  -- quick fix
          Tp.Rule     -> return . ("ruleid" .=.) . Rule.name
          Tp.Term     -> encodeTerm enc . fromContext
          Tp.Location -> return . text . show
@@ -171,14 +173,14 @@ xmlEncoder f ex = Encoder
          Tp.State    -> encodeState (encodeTerm enc)
          _           -> encodeDefault enc serviceType
 
-xmlDecoder :: Monad m => (XML -> m a) -> Exercise a -> Decoder m XML a
+xmlDecoder :: MonadPlus m => (XML -> m a) -> Exercise a -> Decoder m XML a
 xmlDecoder f ex = Decoder
    { decodeType      = decode (xmlDecoder f ex)
    , decodeTerm      = f
    , decoderExercise = ex
    }
  where
-   decode :: Monad m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
+   decode :: MonadPlus m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
    decode dec serviceType = 
       case serviceType of
          Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)

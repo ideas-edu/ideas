@@ -11,105 +11,67 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.Request (Request(..), getTerm, getContextTerm, getPrefix, pRequest, ppRequest) where
+module OpenMath.Request (xmlToRequest) where
 
-import Common.Utils
-import Common.Context
-import Common.Strategy hiding (fail)
-import Control.Monad
-import OpenMath.StrategyTable
-import OpenMath.Object
-import OpenMath.Conversion
+import Service.TypedAbstractService
 import Service.XML
+import Control.Monad
+import Common.Context
+import Common.Exercise
+import Common.Strategy hiding (fail)
+import Common.Utils (splitAtElem)
+import OpenMath.Conversion
+import OpenMath.Object
 import Data.Char
 import Data.Maybe
 
-------------------------------------------------------------------------
--- Data type for requests
+extractString :: String -> XML -> Either String String
+extractString s xml = liftM getData (findChild s xml)
 
-data Request = Request 
-   { req_Strategy :: StrategyID 
-   , req_Location :: StrategyLocation
-   , req_Term     :: OMOBJ
-   , req_Context  :: Maybe String
-   , req_Answer   :: Maybe OMOBJ
-   }
- deriving Show
- 
-----------------------------
--- XML parser for requests
-
-instance InXML Request where
-   toXML   = requestToXML
-   fromXML = either fail return . xmlToRequest
-   
-pRequest :: String -> Either String Request
-pRequest input = parseXML input >>= xmlToRequest
-
--- smart extractor
-getTerm :: IsOMOBJ a => Request -> Maybe a
-getTerm = fromOMOBJ . req_Term
-   
-getContextTerm :: IsOMOBJ a => Request -> Maybe (Context a)
-getContextTerm req = do
-   a <- getTerm req
-   return (putInContext req a)
-
-putInContext :: Request -> a -> Context a
-putInContext req = fromMaybe inContext $ do
-   s       <- req_Context req
-   (_, s2) <- splitAtElem ';' s
-   c       <- parseContext s2
-   return (flip fmap c . const)
-
-getPrefix :: Request -> LabeledStrategy a -> Prefix a
-getPrefix req ls = fromMaybe (emptyPrefix ls) $ do
-   s       <- req_Context req
-   (s1, _) <- splitAtElem ';' s
-   case reads s1 of
-      [(is, xs)] | all isSpace xs -> return (makePrefix is ls)
-      _ -> Nothing
-
-optional :: Either String a -> Either String (Maybe a)
-optional = Right . either (const Nothing) Just
-
-----------------------------
--- Pretty-printer for requests
-
-ppRequest :: Request -> String
-ppRequest = showXML . requestToXML 
-
-requestToXML :: Request -> XML
-requestToXML req = makeXML "request" $ do
-   "service" .=. "mathdox"
-   element "strategy" (text (req_Strategy req))
-   element "location" (text (show (req_Location req)))
-   element "term"     (builder (omobj2xml (req_Term req)))
-   when (isJust (req_Context req)) $
-      element "context" (text (fromJust (req_Context req)))
-   when (isJust (req_Answer req)) $
-      element "answer" (builder (omobj2xml (fromJust (req_Answer req))))
-   
-xmlToRequest :: XML -> Either String Request
-xmlToRequest xml = do
+xmlToRequest :: IsOMOBJ a => XML -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
+xmlToRequest xml ex = do
    unless (name xml == "request") $
       fail "XML document is not a request" 
-   
-   sid     <- extractString "strategy" xml
    loc     <- optional (extractLocation "location" xml)
    term    <- extractExpr "term" xml
    context <- optional (extractString "context" xml)
    answer  <- optional (extractExpr "answer" xml)
-   return $ Request 
-      { req_Strategy = sid 
-      , req_Location = fromMaybe [] loc
-      , req_Term     = term 
-      , req_Context  = context
-      , req_Answer   = answer
-      }
+   t  <- maybe (fail "invalid OpenMath object in term") return $ fromOMOBJ term
+   mt <- case answer of
+            Nothing -> return Nothing 
+            Just o  -> do 
+               a <- maybe (fail "invalid OpenMath object in answer") return $ fromOMOBJ o
+               return (Just a)
+   return
+      ( State
+           { exercise = ex
+           , prefix   = case context of
+                           Just s  -> Just $ getPrefix2 s (strategy ex)
+                           Nothing -> Just $ emptyPrefix (strategy ex)
+           , context  = case context of 
+                           Just s  -> putInContext2 s t
+                           Nothing -> inContext t
+           }
+      , fromMaybe [] loc
+      , mt
+      )
 
-extractString :: String -> XML -> Either String String
-extractString s xml = liftM getData (findChild s xml)
+-----------------------------------------------------------
+putInContext2 :: String -> a -> Context a
+putInContext2 s = fromMaybe inContext $ do
+   (_, s2) <- splitAtElem ';' s
+   c       <- parseContext s2
+   return (flip fmap c . const)
+
+getPrefix2 :: String -> LabeledStrategy (Context a) -> Prefix (Context a)
+getPrefix2 s ls = fromMaybe (emptyPrefix ls) $ do
+   (s1, _) <- splitAtElem ';' s
+   case reads s1 of
+      [(is, xs)] | all isSpace xs -> return (makePrefix is ls)
+      _ -> Nothing 
+
+optional :: Either String a -> Either String (Maybe a)
+optional = Right . either (const Nothing) Just
 
 extractLocation :: String -> XML -> Either String StrategyLocation
 extractLocation s xml = do

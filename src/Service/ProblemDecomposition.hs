@@ -11,87 +11,61 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.LAServer (respond, laServer, laServerFor, versionNr) where
+module Service.ProblemDecomposition (problemDecomposition) where
 
-import OpenMath.StrategyTable
-import OpenMath.Request
-import OpenMath.Reply
-import OpenMath.Conversion
 import Common.Apply
 import Common.Context
-import Common.Transformation
-import Common.Strategy hiding (not, repeat)
 import Common.Exercise
+import Common.Strategy hiding (not, repeat)
+import Common.Transformation
 import Common.Utils
-import Data.Maybe
 import Data.Char
 import Data.List
+import Data.Maybe
+import OpenMath.Reply
+import Service.TypedAbstractService (State(..))
 
-respond :: Maybe String -> String
-respond = replyInXML . maybe requestError (either parseError laServer . pRequest)
-
-replyError :: String -> String -> Reply
+replyError :: String -> String -> Reply a
 replyError kind = Error . ReplyError kind
 
-parseError :: String -> Reply
-parseError   = replyError "parse error"
-
-requestError :: Reply
-requestError = replyError "request error" "no request found in \"input\""
-
-(~=) :: String -> String -> Bool
-xs ~= ys = let f = map toLower . filter isAlphaNum
-           in f xs == f ys 
-
-laServer :: Request -> Reply
-laServer req = -- TODO: use exercise code instead
-   case [ ea | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= description a ] of
-      [Some (ExprExercise a)] -> laServerFor a req
-      _ -> replyError "request error" ("unknown strategy " ++ show (req_Strategy req))
-   
-laServerFor :: IsOMOBJ a => Exercise a -> Request -> Reply
-laServerFor a req = 
-   case getContextTerm req of
-   
-      _ | isNothing $ subStrategy (req_Location req) (strategy a) ->
-             replyError "request error" "invalid location for strategy"
-         
-      Nothing ->
-         replyError "request error" ("invalid term for " ++ show (req_Strategy req))
-         
-      Just requestedTerm ->          
-         case (runPrefixLocation (req_Location req) (getPrefix req (strategy a)) requestedTerm, maybe Nothing (fmap inContext . fromOMOBJ) $ req_Answer req) of
+problemDecomposition :: State a -> StrategyLocation -> Maybe a -> Reply a
+problemDecomposition st@(State ex mpr requestedTerm) sloc answer 
+   | isNothing $ subStrategy sloc (strategy ex) =
+        replyError "request error" "invalid location for strategy"
+   | otherwise =
+   let pr = fromMaybe (emptyPrefix $ strategy ex) mpr in
+         case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext) answer) of            
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
-            
+                     
             (answers, Just answeredTerm)
                | not (null witnesses) ->
                     Ok $ ReplyOk
-                       { repOk_Strategy = req_Strategy req
-                       , repOk_Location = nextTask (req_Location req) $ nextMajorForPrefix newPrefix (fst $ head witnesses)
+                       { repOk_Code     = ex
+                       , repOk_Location = nextTask sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           showContext (fst $ head witnesses)
                        , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses)
                        }
                   where 
-                    witnesses   = filter (equality a (fromContext answeredTerm) . fromContext . fst) answers
+                    witnesses   = filter (equality ex (fromContext answeredTerm) . fromContext . fst) answers
                     newPrefix   = snd (head witnesses)
                       
             ((expected, prefix):_, maybeAnswer) ->
                     Incorrect $ ReplyIncorrect
-                       { repInc_Strategy   = req_Strategy req
-                       , repInc_Location   = subTask (req_Location req) loc
-                       , repInc_Expected   = toOMOBJ (fromContext expected)
+                       { repInc_Code       = ex
+                       , repInc_Location   = subTask sloc loc
+                       , repInc_Expected   = fromContext expected
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
-                       , repInc_Steps      = stepsRemaining (getPrefix req (strategy a)) requestedTerm
-                       , repInc_Equivalent = maybe False (equivalence a (fromContext expected) . fromContext) maybeAnswer
-                       }
+                       , repInc_Steps      = stepsRemaining pr requestedTerm
+                       , repInc_Equivalent = maybe False (equivalence ex (fromContext expected) . fromContext) maybeAnswer
+                       }  
              where
-               (loc, args) = firstMajorInPrefix (getPrefix req (strategy a)) prefix requestedTerm
+               (loc, args) = firstMajorInPrefix pr prefix requestedTerm
                derivation  = 
-                  let len      = length $ prefixToSteps $ getPrefix req $ strategy a
+                  let len      = length $ prefixToSteps pr
                       rules    = stepsToRules $ drop len $ prefixToSteps prefix
-                      f (s, a) = (s, toOMOBJ $ fromContext a)
+                      f (s, a) = (s, fromContext a)
                   in map f (makeDerivation requestedTerm rules)
 
 -- old (current) and actual (next major rule) location

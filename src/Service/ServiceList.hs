@@ -1,4 +1,3 @@
-{-# OPTIONS -XExistentialQuantification #-}
 module Service.ServiceList (Service, getService, evalService) where
 
 import Common.Context
@@ -7,23 +6,15 @@ import qualified Common.Exercise as E
 import Common.Utils (Some(..))
 import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
-import qualified Service.ExerciseList as List
-import Service.TypedAbstractService hiding (exercise, State)
+import qualified Service.ExerciseList as S
+import qualified Service.TypedAbstractService as S
 import Service.FeedbackText
 import Service.Types 
 import Data.List (sortBy)
 
 data Service a = Service 
-   { serviceName  :: String
-   , typedService :: TypedService a
-   }
-
-data TypedService a = forall t . TypedService t (Type a t)
-
-makeService :: String -> t -> Type a t -> Service a
-makeService n f tp = Service
-   { serviceName  = n
-   , typedService = TypedService f tp
+   { serviceName :: String
+   , typedValue  :: TypedValue a
    }
 
 ------------------------------------------------------
@@ -46,95 +37,80 @@ getService txt =
       _    -> fail $ "Ambiguous service " ++ txt
 
 evalService :: Monad m => Evaluator m inp out a -> Service a -> inp -> m out
-evalService f srv s = 
-   case typedService srv of
-      TypedService tv tp ->
-         eval f tp tv s
+evalService f = eval f . typedValue
    
 ------------------------------------------------------
 -- Basic services
 
 derivationS :: Service a
-derivationS = makeService "derivation" derivation $
-   State :-> List (Pair Rule Term)
+derivationS = Service "derivation" $ 
+   S.derivation ::: State :-> List (Pair Rule Term)
 
 allfirstsS :: Service a
-allfirstsS = makeService "allfirsts" allfirsts $ 
-   State :-> List (Triple Rule Location State)
+allfirstsS = Service "allfirsts" $ 
+   S.allfirsts ::: State :-> List (Triple Rule Location State)
         
 onefirstS :: Service a
-onefirstS = makeService "onefirst" onefirst $ 
-   State :-> Elem (Triple Rule Location State)
+onefirstS = Service "onefirst" $ 
+   S.onefirst ::: State :-> Elem (Triple Rule Location State)
   
 readyS :: Service a
-readyS = makeService "ready" ready $ 
-   State :-> Bool
+readyS = Service "ready" $ 
+   S.ready ::: State :-> Bool
 
 stepsremainingS :: Service a
-stepsremainingS = makeService "stepsremaining" stepsremaining $
-   State :-> Int
+stepsremainingS = Service "stepsremaining" $ 
+   S.stepsremaining ::: State :-> Int
 
 applicableS :: Service a
-applicableS = makeService "applicable" applicable $  
-   Location :-> State :-> List Rule
+applicableS = Service "applicable" $ 
+   S.applicable ::: Location :-> State :-> List Rule
 
 applyS :: Service a
-applyS = makeService "apply" apply $ 
-   Rule :-> Location :-> State :-> State
+applyS = Service "apply" $ 
+   S.apply ::: Rule :-> Location :-> State :-> State
 
 generateS :: Service a
-generateS = makeService "generate" (flip generate 5) $ 
+generateS = Service "generate" $ (flip S.generate 5) ::: 
    Exercise :-> IO State
 
 submitS :: Service a
-submitS = makeService "submit" (\a -> submit a . fromContext) $
+submitS = Service "submit" $ (\a -> S.submit a . fromContext) :::
    State :-> Term :-> Result
 
 ------------------------------------------------------
 -- Services with a feedback component
 
 onefirsttextS :: Service a
-onefirsttextS = makeService "onefirsttext" onefirsttext $ 
-   State :-> Elem (Triple Bool String State)
+onefirsttextS = Service "onefirsttext" $ 
+   onefirsttext ::: State :-> Elem (Triple Bool String State)
 
 submittextS :: Service a
-submittextS = makeService "submittext" (\a -> submittext a . fromContext) $ 
+submittextS = Service "submittext" $ (\a -> submittext a . fromContext) :::
    State :-> Term :-> Elem (Triple Bool String State)
 
 derivationtextS :: Service a
-derivationtextS = makeService "derivationtext" derivationtext $ 
-   State :-> List (Pair String Term)
+derivationtextS = Service "derivationtext" $ 
+   derivationtext ::: State :-> List (Pair String Term)
    
 ------------------------------------------------------
 -- Reflective services
    
 exerciselistS :: Service a
-exerciselistS = makeService "exerciselist" allExercises $ 
-   List (Pair (Pair String String) (Pair String String))
+exerciselistS = Service "exerciselist" $
+   allExercises ::: List (Quadruple (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
 
 rulelistS :: Service a
-rulelistS = makeService "rulelist" allRules $ 
-   Exercise :-> List (Triple String Bool Bool)
+rulelistS = Service "rulelist" $ 
+   allRules ::: Exercise :-> List (Triple (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
-allExercises :: [((String, String), (String, String))]
-allExercises  = map make $ sortBy cmp List.exerciseList
+allExercises :: [(String, String, String, String)]
+allExercises  = map make $ sortBy cmp S.exerciseList
  where
    cmp e1 e2  = f e1 `compare` f e2
    f (Some e) = (domain e, identifier e)
-   make (Some ex) =
-      ( (tag "domain"      (domain ex)
-      , tag "identifier"  (identifier ex))
-      , (tag "description" (description ex)
-      , tag "status"      (show $ status ex))
-      ) 
+   make (Some ex) = (domain ex, identifier ex, description ex, show (status ex))
 
 allRules :: E.Exercise a -> [(String, Bool, Bool)]
 allRules = map make . ruleset
- where
-   make r = 
-      ( tag "name"        (name r)
-      , tag "buggy"       (isBuggyRule r) 
-      , tag "rewriterule" (isRewriteRule r)
-      )
-      
-tag _ a = a
+ where  make r = (name r, isBuggyRule r, isRewriteRule r)

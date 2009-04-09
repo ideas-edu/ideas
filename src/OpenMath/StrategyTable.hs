@@ -15,18 +15,16 @@
 module OpenMath.StrategyTable where
 
 import Common.Exercise
-import Common.Utils (Some(..))
 import Domain.LinearAlgebra (reduceMatrixExercise, solveSystemExercise, solveGramSchmidt, solveSystemWithMatrixExercise, LinearSystem)
 import Domain.LinearAlgebra (makeMatrix, var)
 import Domain.Math.Equation (Equation(..))
 import Domain.LinearAlgebra.Vector (fromList)
 import Domain.Math.SExpr
 import Domain.Math.Symbolic
+import Service.ExerciseList
 import qualified Service.Options
 import OpenMath.Conversion
 import OpenMath.Object
-
-type StrategyID = String
 
 versionNr :: String
 versionNr = Service.Options.versionText
@@ -37,17 +35,15 @@ oneliner = unwords . concatMap words . lines
 defaultURL :: Bool -> String
 defaultURL b = "http://ideas.cs.uu.nl/cgi-bin/service.cgi?" ++ (if b then "mode=html&" else "") ++ "input="
 
-data ExprExercise a = IsOMOBJ a => ExprExercise (Exercise a)
-
 data StrategyEntry = Entry 
    { strategyNr   :: String
-   , exprExercise :: Some ExprExercise
+   , exprExercise :: OpenMathExercise
    , functions    :: [String]
    , examples     :: [OMOBJ]
    }
  
 entry :: IsOMOBJ a => String -> Exercise a -> [String] -> [a] -> StrategyEntry
-entry nr a fs ex = Entry nr (Some (ExprExercise a)) fs (map toOMOBJ ex)
+entry nr a fs ex = Entry nr (OMEX a) fs (map toOMOBJ ex)
 
 strategyTable :: [StrategyEntry]
 strategyTable =

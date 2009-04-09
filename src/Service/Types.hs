@@ -1,42 +1,53 @@
 {-# OPTIONS -XGADTs -XRank2Types #-}
 module Service.Types where
 
-import Common.Context (Context, Location)
+import Common.Context (Context, Location, fromContext)
 import Common.Exercise (Exercise)
-import Common.Transformation (Rule)
+import Common.Transformation (Rule, name)
 import Common.Utils (commaList)
+import Control.Monad
 import Data.Maybe
 import Service.TypedAbstractService (State, Result)
 import System.IO.Unsafe
 
-infixr 1 :->
+infix  2 :::
+infixr 3 :->
+
+data TypedValue a = forall t . t ::: Type a t
 
 data Type a t where
    -- Function type
-   (:->)    :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
+   (:->)     :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
    -- Tuple types
-   Pair     :: Type a t1 -> Type a t2 -> Type a (t1, t2)
-   Triple   :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
+   Pair      :: Type a t1 -> Type a t2 -> Type a (t1, t2)
+   Triple    :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
+   Quadruple :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
+   -- Special annotations
+   Tag       :: String -> Type a t1 -> Type a t1
+   Optional  :: t1 -> Type a t1 -> Type a t1
    -- Type constructors
-   List     :: Type a t -> Type a [t]
-   Elem     :: Type a t -> Type a t -- quick fix
-   IO       :: Type a t -> Type a (IO t)
+   List      :: Type a t -> Type a [t]
+   Elem      :: Type a t -> Type a t -- quick fix
+   IO        :: Type a t -> Type a (IO t)
    -- Exercise-specific types
-   State    :: Type a (State a)
-   Exercise :: Type a (Exercise a)
-   Rule     :: Type a (Rule (Context a))
-   Term     :: Type a (Context a)
-   Result   :: Type a (Result a)
+   State     :: Type a (State a)
+   Exercise  :: Type a (Exercise a)
+   Rule      :: Type a (Rule (Context a))
+   Term      :: Type a (Context a)
+   Result    :: Type a (Result a)
    -- Basic types
-   Bool     :: Type a Bool
-   Int      :: Type a Int
-   String   :: Type a String
-   Location :: Type a Location
+   Bool      :: Type a Bool
+   Int       :: Type a Int
+   String    :: Type a String
+   Location  :: Type a Location
 
 instance Show (Type a t) where
    show (t1 :-> t2)       = show t1 ++ " -> " ++ show t2 
    show (Pair t1 t2)      = "(" ++ commaList [show t1, show t2] ++ ")"
    show (Triple t1 t2 t3) = "(" ++ commaList [show t1, show t2, show t3] ++ ")"
+   show (Quadruple t1 t2 t3 t4) = "(" ++ commaList [show t1, show t2, show t3, show t4] ++ ")"
+   show (Tag _ t)         = show t
+   show (Optional _ t)    = show t
    show (List t)          = "[" ++ show t ++ "]"
    show (Elem t)          = show t
    show (IO t)            = show t
@@ -82,16 +93,16 @@ data Decoder m s a = Decoder
    , decoderExercise :: Exercise a
    }
 
-eval :: Monad m => Evaluator m inp out a -> Type a t -> t -> inp -> m out
-eval f tp tv s = 
+eval :: Monad m => Evaluator m inp out a -> TypedValue a -> inp -> m out
+eval f (tv ::: tp) s = 
    case tp of 
       t1 :-> t2 -> do
          (a, s1) <- decodeType (decoder f) t1 s
-         eval f t2 (tv a) s1
+         eval f (tv a ::: t2) s1
       _ ->
          encodeType (encoder f) tp tv
 
-decodeDefault :: Monad m => Decoder m s a -> Type a t -> s -> m (t, s)
+decodeDefault :: MonadPlus m => Decoder m s a -> Type a t -> s -> m (t, s)
 decodeDefault dec tp s =
    case tp of
       Pair t1 t2 -> do
@@ -103,6 +114,16 @@ decodeDefault dec tp s =
          (b, s2) <- decodeType dec t2 s1
          (c, s3) <- decodeType dec t3 s2
          return ((a, b, c), s3)
+      Quadruple t1 t2 t3 t4 -> do
+         (a, s1) <- decodeType dec t1 s
+         (b, s2) <- decodeType dec t2 s1
+         (c, s3) <- decodeType dec t3 s2
+         (d, s4) <- decodeType dec t4 s3
+         return ((a, b, c, d), s4)
+      Tag _ t1 ->
+         decodeType dec t1 s
+      Optional a t1 -> 
+         decodeType dec t1 s `mplus` return (a, s)
       _ ->
          fail "No support for argument type"
 
@@ -120,7 +141,18 @@ encodeDefault enc tp tv =
          y <- encodeType enc t2 b
          z <- encodeType enc t3 c
          return (encodeTuple enc [x, y, z])
-      IO t1 ->
-         encodeType enc t1 (unsafePerformIO tv)
-      _ -> 
-         fail "No support for result type"
+      Quadruple t1 t2 t3 t4 -> do
+         let (a, b, c, d) = tv
+         x <- encodeType enc t1 a
+         y <- encodeType enc t2 b
+         z <- encodeType enc t3 c
+         u <- encodeType enc t4 d
+         return (encodeTuple enc [x, y, z, u])
+      Tag _ t1      -> encodeType enc t1 tv
+      Elem t1       -> encodeType enc t1 tv
+      Optional _ t1 -> encodeType enc t1 tv
+      IO t1         -> encodeType enc t1 (unsafePerformIO tv)
+      Rule          -> encodeType enc String (name tv)
+      Term          -> encodeTerm enc (fromContext tv)
+      Location      -> encodeType enc String (show tv)
+      _             -> fail "No support for result type"

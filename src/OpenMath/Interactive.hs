@@ -14,9 +14,9 @@
 module OpenMath.Interactive (respondHTML, oneliner) where
 
 import Common.Exercise
+import Service.ExerciseList
 import Common.Transformation
 import Common.Strategy hiding (not)
-import Common.Utils (Some(..))
 import OpenMath.LAServer
 import OpenMath.StrategyTable
 import OpenMath.Conversion
@@ -29,23 +29,20 @@ import Data.Maybe
 
 respondHTML :: String -> String -> String
 respondHTML self = either (const "") (showHTML . makeHTML self) . pRequest
-
-(~=) :: String -> String -> Bool
-xs ~= ys = let f = map toLower . filter (not . isSpace)
-           in f xs == f ys 
            
 makeHTML :: String -> Request -> HTML
-makeHTML self req = -- TODO: use exercise code instead
-   case [ (ea, laServerFor a noAnswer) | Entry _ ea@(Some (ExprExercise a)) _ _ <- strategyTable, req_Strategy req ~= description a ] of
-      [(Some (ExprExercise a), Incorrect inc)] -> make self a noAnswer inc
-      [_] -> errorPage "request error: invalid request"
-      []  -> errorPage "request error: unknown strategy"
-      _   -> errorPage "request error: ambiguous strategy"
+makeHTML self req = undefined {-
+   case getOpenMathExercise (req_Code req) of
+      Just omex -> 
+         case laServerFor omex noAnswer of
+            Incorrect inc -> make self omex noAnswer inc
+            _ -> errorPage "request error: invalid request"
+      _ -> errorPage "request error: ambiguous strategy"      
  where
    noAnswer = req {req_Answer = Nothing}
                
-make :: IsOMOBJ a => String -> Exercise a -> Request -> ReplyIncorrect -> HTML
-make self a req inc = htmlPage title $ do
+make :: String -> OpenMathExercise -> Request -> ReplyIncorrect -> HTML
+make self omex@(OMEX a) req inc = htmlPage title $ do
    para $ do 
       bold (text "Term:  ")
       preText (maybe "" (prettyPrinter a) $ getTerm req) 
@@ -61,7 +58,7 @@ make self a req inc = htmlPage title $ do
    
    hr
    para $ do
-      bold (text "Strategy: ") >> text (req_Strategy req) >> br
+      bold (text "Strategy: ") >> text (show $ req_Code req) >> br
       bold (text "Steps remaining: ") >> text (show (repInc_Steps inc) ++ " (and " ++ show n ++ " after submitting the expected answer)") >> br
       bold (text "Arguments: ") >> text (formatArgs $ repInc_Arguments inc) >> br
       bold (text "Location: ") >> text (show $ req_Location req) 
@@ -90,7 +87,7 @@ make self a req inc = htmlPage title $ do
       
  where
    title      = "LA Feedback Service (version " ++ versionNr ++ ")"
-   (reqOk, n) = expected a req inc
+   (reqOk, n) = expected omex req inc
    reqZoomIn  = zoomIn req inc
    reqZoomOut = zoomOut req
    reqNoCtxt  = removeContext req
@@ -102,14 +99,14 @@ make self a req inc = htmlPage title $ do
 ----------------------------------------------------------------------------
 -- Actions
 
-expected :: IsOMOBJ a => Exercise a -> Request -> ReplyIncorrect -> (Request, Int)
-expected a r inc = 
-   case laServerFor a r {req_Answer = Just $ repInc_Expected inc} of
+expected :: OpenMathExercise -> Request -> ReplyIncorrect -> (Request, Int)
+expected omex r inc = 
+   case laServerFor omex r {req_Answer = Just $ repInc_Expected inc} of
       Ok ok -> ( r { req_Location = repOk_Location ok
                    , req_Term     = repInc_Expected inc
                    , req_Context  = Just (repOk_Context ok)
                    }, repOk_Steps ok )
-      _ -> (r, 0)
+      _ -> (r, 0)-}
 
 zoomIn :: Request -> ReplyIncorrect -> Request
 zoomIn r inc = r { req_Location = repInc_Location inc }

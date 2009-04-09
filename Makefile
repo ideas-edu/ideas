@@ -42,7 +42,7 @@ endif
 $(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs revision
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/IdeasWX.hs
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) $(HELIUMFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/IdeasWX.hs
 	$(STRIP) $@
 ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) ideasWX

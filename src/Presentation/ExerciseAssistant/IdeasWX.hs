@@ -28,8 +28,11 @@ import Session
 --import Common.Transformation
 --import Control.Monad
 --import Data.IORef
-import Service.ExerciseList
+import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
+import Domain.Programming.Exercises (heliumExercise)
+
+exerciseList = Some heliumExercise : SE.exerciseList
 
 domains :: [String]
 domains = sort $ nub [ domain e | Some e <- exerciseList ]

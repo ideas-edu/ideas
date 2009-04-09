@@ -37,7 +37,8 @@ import Control.Monad.Trans
 
 compile :: String -> Either String Module
 compile txt = unsafePerformIO $ do
-   ea <- run $ compile_ txt [Overloading, Verbose] [".", "../../../heliumsystem/helium/lib"] []
+   ea <- run $ compile_ txt [Overloading, Verbose] [".", "../../../heliumsystem/helium/lib"
+                                                   ,"/Users/alex/Documents/heliumsystem/helium/lib"] []
    case ea of
       Left ms -> return $ Left $ unlines ms
       Right a -> return $ Right a 

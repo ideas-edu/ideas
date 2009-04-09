@@ -3,20 +3,14 @@ module Domain.Programming.Helium
 
 import PhaseLexer
 import PhaseParser
---import PhaseImport
 import PhaseResolveOperators
 import PhaseStaticChecks
---import PhaseKindInferencer
-import PhaseTypingStrategies
+import PhaseTypingStrategies ()
 import PhaseTypeInferencer
-import PhaseDesugarer
-import PhaseCodeGenerator
-import Utils
 import UHA_Syntax
 import Data.IORef
 import Messages
 import HeliumMessages
-import StaticErrors(errorsLogCode)
 import System.IO.Unsafe (unsafePerformIO)
 import CompileUtils hiding (doPhaseWithExit)
 import qualified Core
@@ -29,7 +23,6 @@ import LvmImport(lvmImportDecls)
 import Id(stringFromId)
 import CoreToImportEnv(getImportEnvironment)
 import qualified ExtractImportDecls(sem_Module)
-import CorePretty
 import Data.List(isPrefixOf)
 import Control.Monad.Trans
 

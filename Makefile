@@ -75,6 +75,24 @@ ghci: revision
 	$(MKDIR) -p $(OUTDIR)
 	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
+HELIUMDIR = ../../../heliumsystem/helium/src
+TOPDIR = ../../../heliumsystem/Top/src
+LVMDIR = ../../../heliumsystem/lvm/src/
+
+HELIUMFLAGS = -fglasgow-exts -package network -XUndecidableInstances -XOverlappingInstances \
+	-i$(HELIUMDIR)/utils \
+	-i$(HELIUMDIR)/staticanalysis/staticchecks -i$(HELIUMDIR)/staticanalysis/inferencers \
+	-i$(HELIUMDIR)/staticanalysis/messages -i$(HELIUMDIR)/main -i$(TOPDIR) \
+	-i$(HELIUMDIR)/staticanalysis/miscellaneous -i$(HELIUMDIR)/syntax -i$(LVMDIR)/lib/common \
+	-i$(LVMDIR)/lib/common/ghc -i$(HELIUMDIR)/modulesystem -i$(HELIUMDIR)/staticanalysis/directives \
+	-i$(HELIUMDIR)/staticanalysis/heuristics -i$(HELIUMDIR)/parser -i$(HELIUMDIR)/codegeneration \
+	-i$(LVMDIR)/lib/lvm -i$(LVMDIR)/lib/asm -i$(LVMDIR)/lib/core
+
+helium: revision
+	$(MKDIR) -p $(OUTDIR)
+	$(GHCI) $(HELIUMFLAGS) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
+
+
 run: ideas
 ifeq ($(WINDOWS), yes)
 	$(BINDIR)/ideasWX$(EXE)

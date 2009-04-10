@@ -15,7 +15,7 @@ import Data.Maybe
 import Data.Char
 import Domain.Programming.Parser
 import Domain.Programming.Helium
-import qualified UHA_Pretty as PP (sem_Module) --(sem_Pattern, sem_LeftHandSide, sem_Expression)
+import qualified UHA_Pretty as PP (sem_Module) 
 
 isortExercise :: Exercise Expr
 isortExercise = Exercise   
@@ -60,7 +60,6 @@ heliumExercise = Exercise
    , suitableTerm  = const True
    }
 
-
 modParser s = case compile s of
                 Left e  -> Left $ ErrorMessage e
                 Right m -> Right m
@@ -71,3 +70,37 @@ emptyProg =  Module_Module posUnknown
                            (Body_Body posUnknown [] [])
   where 
     posUnknown = (Range_Range Position_Unknown Position_Unknown)
+
+deriving instance Show Module
+deriving instance Show Body
+deriving instance Show MaybeName
+deriving instance Show MaybeNames
+deriving instance Show MaybeExports
+deriving instance Show Declaration
+deriving instance Show ImportDeclaration
+deriving instance Show Export 
+deriving instance Show Type
+deriving instance Show RightHandSide
+deriving instance Show Pattern
+deriving instance Show Constructor
+deriving instance Show FunctionBinding
+deriving instance Show MaybeInt
+deriving instance Show Fixity
+deriving instance Show MaybeDeclarations
+deriving instance Show SimpleType
+deriving instance Show ContextItem
+deriving instance Show MaybeImportSpecification
+deriving instance Show Expression
+deriving instance Show RecordPatternBinding
+deriving instance Show Literal
+deriving instance Show GuardedExpression
+deriving instance Show FieldDeclaration
+deriving instance Show AnnotatedType
+deriving instance Show LeftHandSide
+deriving instance Show ImportSpecification
+deriving instance Show RecordExpressionBinding
+deriving instance Show MaybeExpression
+deriving instance Show Statement
+deriving instance Show Qualifier
+deriving instance Show Alternative
+deriving instance Show Import

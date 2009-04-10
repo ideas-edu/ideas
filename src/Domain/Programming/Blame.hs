@@ -14,7 +14,7 @@ cause []    =   ""
 cause locs  =   " (the violation was caused by the expression(s) " 
             ++  concat (interleave ", " (map show locs)) ++ ")"
 
-data Locs = NegPos { neg :: [Loc], pos :: [Loc] }
+data Locs = NegPos { neg :: [Loc], pos :: [Loc] } deriving Show
 
 blame       ::  Locs -> String
 blame locs  =   "the expression " ++ show (head (pos locs)) ++ " is to blame" 

@@ -186,7 +186,7 @@ instance IsOMOBJ Expr where
              |> from2 minusSymbol (-)
              |> from1 negateSymbol negate
              |> (liftM Nat . fromOMOBJ)
-             |> from2 divideSymbol (/)
+             |> from2s [divideSymbol, rationalSymbol] (/)
              |> fromSqrt
              |> fromVar
              |> fromLambda
@@ -217,7 +217,8 @@ instance IsOMOBJ SExpr where
 
 instance IsOMOBJ a => IsOMOBJ (OrList a) where 
    toOMOBJ (OrList xs) = listop orSymbol xs
-   fromOMOBJ = fromN orSymbol OrList
+   fromOMOBJ =  fromN orSymbol OrList 
+             |> (liftM (\x -> OrList [x]) . fromOMOBJ)
 
 --------------------------------------------------------------------
 -- Linear algebra types

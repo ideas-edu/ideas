@@ -51,7 +51,7 @@ parseLineq = f . P.parse (pEquation pExpr) . P.scanWith myScanner
 solveEquation :: LabeledStrategy (Context (Equation Expr))
 solveEquation = liftF $ 
    label "linear Equation" $ 
-   repeat (distribute <|> removeDivision <|> merge) 
+   repeat (removeDivision <|> distribute <|> merge) 
       <*> try varToLeft <*> try conToRight <*> try scaleToOne
 
 liftF :: Lift f => f a -> f (Context a)
@@ -68,7 +68,7 @@ timesT :: Expr -> Transformation (Equation Expr)
 timesT e = makeTrans "times" $ \eq -> do 
    r <- match rationalView e
    guard (r /= 0)
-   return $ fmap (applyD mergeT . applyD distributionT . (.*. e)) eq
+   return $ fmap (applyD mergeT . applyD distributionT . (e .*.)) eq
 
 divisionT :: Expr -> Transformation (Equation Expr)
 divisionT e = makeTrans "division" $ \eq -> do
@@ -124,8 +124,9 @@ removeDivision :: Rule (Equation Expr)
 removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: rhs) -> do
    xs <- match sumView lhs
    ys <- match sumView rhs
+   zs <- mapM (fmap snd . match productView) (filter hasVars (xs ++ ys))
    let f = fmap snd . match (divView >>> second integerView)
-   case catMaybes (map f (xs ++ ys)) of
+   case catMaybes (map f (concat zs)) of
       [] -> Nothing
       ns -> return (fromInteger (foldr1 lcm ns))
 
@@ -143,13 +144,13 @@ merge = makeSimpleRule "merge similar terms" $ \old -> do
 
 ----------------------------------------------------------------------
 -- Expr normalization
-
+   
 normalizeExpr :: Expr -> Expr
 normalizeExpr a =
    case (match sumView a, match productView a) of
       (Just xs, _) | length xs > 1 -> 
          build sumView (sort $ normalizeSum $ map normalizeExpr xs)
-      (_, Just (b, ys)) | length ys > 1 -> 
+      (_, Just (b, ys)) | length (filter (/= 1) ys) > 1 -> 
          build productView (b, sort $ normalizeProduct $ map normalizeExpr ys)
       _ -> a
 

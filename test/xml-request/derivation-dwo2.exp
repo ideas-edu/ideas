@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.0">
+<reply result="ok" version="0.5.1">
   <list>
     <elem ruleid="remove division">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -11,6 +11,9 @@
             </OMI>
             <OMA>
               <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
               <OMA>
                 <OMS cd="arith1" name="plus"/>
                 <OMA>
@@ -24,9 +27,6 @@
                   2
                 </OMI>
               </OMA>
-              <OMI>
-                4
-              </OMI>
             </OMA>
           </OMA>
           <OMA>
@@ -40,6 +40,9 @@
             </OMA>
             <OMA>
               <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
               <OMA>
                 <OMS cd="arith1" name="minus"/>
                 <OMA>
@@ -53,9 +56,6 @@
                   1
                 </OMI>
               </OMA>
-              <OMI>
-                3
-              </OMI>
             </OMA>
           </OMA>
         </OMA>
@@ -95,6 +95,9 @@
             </OMA>
             <OMA>
               <OMS cd="arith1" name="times"/>
+              <OMI>
+                3
+              </OMI>
               <OMA>
                 <OMS cd="arith1" name="minus"/>
                 <OMA>
@@ -108,9 +111,6 @@
                   1
                 </OMI>
               </OMA>
-              <OMI>
-                3
-              </OMI>
             </OMA>
           </OMA>
         </OMA>

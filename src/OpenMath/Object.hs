@@ -17,7 +17,12 @@ import Service.XML
 import Data.Char (isSpace)
 
 -- internal representation for OM objects (close to XML)
-data OMOBJ = OMI Integer | OMV String | OMS String String | OMA [OMOBJ] |OMBIND OMOBJ [String] OMOBJ
+data OMOBJ = OMI Integer 
+           | OMF Float 
+           | OMV String 
+           | OMS String String 
+           | OMA [OMOBJ] 
+           |OMBIND OMOBJ [String] OMOBJ
    deriving (Show, Eq)
 
 instance InXML OMOBJ where
@@ -49,7 +54,13 @@ xml2omobj xml =
             case reads s of
                [(i, xs)] | all isSpace xs -> return (OMI i)
                _ -> fail "invalid integer in OMI"
-               
+         
+         [] | name xml == "OMF" -> do
+            s <- findAttribute "dec" xml 
+            case reads s of
+               [(fp, xs)] | all isSpace xs -> return (OMF fp)
+               _ -> fail "invalid floating-point in OMF"
+                    
          [] | name xml == "OMV" -> do
             s <- findAttribute "name" xml
             return (OMV s)
@@ -80,6 +91,7 @@ omobj2xml object = makeXML "OMOBJ" $ do
    rec omobj =
       case omobj of
          OMI i       -> element "OMI" (text (show i))
+         OMF f       -> element "OMF" ("dec" .=. show f)
          OMV v       -> element "OMV" ("name" .=. v)
          OMA xs      -> element "OMA" (mapM_ rec xs)
          OMS cd name -> element "OMS" $ do

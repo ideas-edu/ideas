@@ -42,8 +42,12 @@ instance Num Expr where
 instance Fractional Expr where
    (/) = (:/:)
    fromRational r
-      | denominator r == 1 = fromIntegral (numerator r)
-      | otherwise = fromIntegral (numerator r) :/: fromIntegral (denominator r)
+      | denominator r == 1 = 
+           fromIntegral (numerator r)
+      | numerator r < 0 =
+           Negate (fromIntegral (abs (numerator r)) :/: fromIntegral (denominator r))
+      | otherwise = 
+           fromIntegral (numerator r) :/: fromIntegral (denominator r)
 
 instance Floating Expr where
    pi      = symbol "pi"

@@ -11,6 +11,7 @@ import Common.Uniplate
 import Domain.Math.Equation
 import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
+import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Symbolic
 import Domain.Math.Parser
 import Domain.Math.Views
@@ -49,10 +50,10 @@ parseLineq = f . P.parse (pEquation pExpr) . P.scanWith myScanner
 -- Strategy
 
 solveEquation :: LabeledStrategy (Context (Equation Expr))
-solveEquation = liftF $ 
-   label "linear Equation" $ 
-   repeat (removeDivision <|> distribute <|> merge) 
-      <*> try varToLeft <*> try conToRight <*> try scaleToOne
+solveEquation = liftF $ cleanUpStrategy (fmap simplifyExpr) $
+   label "Linear Equation" 
+    $  label "Phase 1" (repeat (removeDivision <|> distribute <|> merge))
+   <*> label "Phase 2" (try varToLeft <*> try conToRight <*> try scaleToOne)
 
 liftF :: Lift f => f a -> f (Context a)
 liftF = lift $ makeLiftPair (return . fromContext) (fmap . const)

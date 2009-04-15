@@ -4,6 +4,7 @@ module Domain.Math.Views
    ) where
 
 import Prelude hiding (recip, (^))
+import Common.Uniplate (transform)
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Equation
@@ -29,6 +30,8 @@ a     .-. b        = a :-: b
 
 neg :: Expr -> Expr
 neg (Negate a) = a
+neg (a :+: b)  = neg a .-. b
+neg (a :-: b)  = neg a .+. b
 neg a          = Negate a
 
 (.*.) :: Expr -> Expr -> Expr
@@ -57,6 +60,22 @@ _ .^. Nat 0 = Nat 1
 a .^. Nat 1 = a
 a .^. b     = a ^ b
 
+------------------------------------------------------------
+-- Simplification with the smart constructors
+
+simplifyExpr :: Expr -> Expr
+simplifyExpr = transform simplifyExprTop
+
+simplifyExprTop :: Expr -> Expr
+simplifyExprTop expr =
+   case expr of
+      a :+: b  -> a .+. b
+      a :-: b  -> a .-. b
+      Negate a -> neg a
+      a :*: b  -> a .*. b
+      a :/: b  -> a ./. b
+      Sym "^" [a, b] -> a .^. b
+      _        -> expr
 
 ------------------------------------------------------------
 -- Views of binary constructors

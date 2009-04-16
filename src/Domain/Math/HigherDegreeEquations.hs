@@ -39,7 +39,7 @@ higherDegreeEquationExercise = makeExercise
    , finalProperty = solved
    , ruleset       = allRules
    , strategy      = equationsStrategy
-   , generator     = oneof (map (return . OrList . return) higherDegreeEquations)
+   , generator     = oneof (map (return . OrList . return) $ take 1 higherDegreeEquations)
    }
    
 parseOrs :: String -> Either P.SyntaxError (OrList (Equation Expr))

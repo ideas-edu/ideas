@@ -38,10 +38,15 @@ main = do
       Nothing -> runCGI $ do
          raw    <- getInput "input"     -- read input
          mode   <- getInput "mode" 
+         method <- requestMethod        -- HTTP method, e.g. GET, HEAD or POST
+         body   <- queryString
          addr   <- remoteAddr           -- the IP address of the remote host making the request
          server <- serverName
          script <- scriptName
-         
+
+         setHeader "Content-type" "text/plain"
+         output $ body
+{-         
          let self = "http://" ++ server ++ script ++ "?mode=html&input="
              htmlMode | mode==Just "html" = Just self
                       | otherwise         = Nothing
@@ -52,6 +57,9 @@ main = do
                do (txt, ctp) <- lift $ process htmlMode (Just addr) flags input
                   setHeader "Content-type" ctp
                   output txt
+-}
+   closeDB config -- close the database connection (in case of a file do nothing (ie return () ))
+
    
 process :: Maybe String -> Maybe String -> [Flag] -> String -> IO (String, String)
 process htmlMode maybeIP flags input = do
@@ -71,8 +79,8 @@ process htmlMode maybeIP flags input = do
 
 config :: LogConfig
 config = defaultLogConfig
-   { logFile    = "service.log"
-   , logRetries = 1
+   { logDest    = File "service.log",
+     logRetries = 1
    }
 
 -- Convert escaped characters ('%')   

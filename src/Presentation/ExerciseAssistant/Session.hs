@@ -25,7 +25,6 @@ import Service.FeedbackText (feedbackLogic)
 import Common.Context
 import Common.Exercise
 import Common.Parsing (indicesToRange)
-import Common.Logging
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Apply
@@ -48,17 +47,15 @@ withState f (Session _ ref) = do
 
 makeSession :: Some Exercise -> IO Session
 makeSession pa = do
-   logMessage "New session: "
    ref   <- newIORef (error "reference not initialized")
    let session = Session "" ref
    newExercise 5 pa session
    return session
 
 newExercise :: Int -> Some Exercise -> Session -> IO ()
-newExercise dif (Some a) = logCurrent ("New (" ++ show (exerciseCode a) ++ ")") $ 
-   \(Session _ ref) -> do
-      d <- startNewDerivation dif a
-      writeIORef ref $ Some d
+newExercise dif (Some a) (Session _ ref) = do
+   d <- startNewDerivation dif a
+   writeIORef ref $ Some d
 
 thisExercise :: String -> Session -> IO (Maybe String)
 thisExercise txt (Session _ ref) = do
@@ -98,16 +95,15 @@ suggestTermFor dif (Some ex) = do
    return $ prettyPrinter ex $ fromContext $ TAS.context a
        
 undo :: Session -> IO ()
-undo = logCurrent "Undo" $ \(Session _ ref) ->
+undo (Session _ ref) =
    modifyIORef ref $ \(Some d) -> Some (undoLast d)
 
 submitText :: String -> Session -> IO (String, Bool)
-submitText txt = do
-   logMsgWith fst ("Submit: " ++ txt) $ \(Session _ ref) -> do
-      Some d <- readIORef ref
-      if exerciseCode (exercise d) == exerciseCode dnfExercise 
-         then submitTextLogic   txt ref 
-         else submitTextGeneral txt ref
+submitText txt (Session _ ref) = do
+   Some d <- readIORef ref
+   if exerciseCode (exercise d) == exerciseCode dnfExercise 
+      then submitTextLogic   txt ref 
+      else submitTextGeneral txt ref
          
 submitTextGeneral :: String -> IORef (Some Derivation) -> IO (String, Bool)
 submitTextGeneral txt ref = do
@@ -168,7 +164,7 @@ progressPair = withState $ \d ->
    in return (x, x+y)
 
 readyText :: Session -> IO String
-readyText = logMsg "Ready" $ withState $ \d -> 
+readyText = withState $ \d -> 
    if TAS.ready (currentState d)
    then return "Congratulations: you have reached a solution!"
    else return "Sorry, you have not yet reached a solution"
@@ -191,11 +187,11 @@ hintOrStep verbose = withState $ \d ->
             ] else []
 
 hintText, stepText :: Session -> IO String
-hintText = logMsg "Hint" (hintOrStep False)
-stepText = logMsg "Step" (hintOrStep True)
+hintText = hintOrStep False
+stepText = hintOrStep True
 
 nextStep :: Session -> IO (String, Bool)
-nextStep = logCurrent "Next" $ \(Session _ ref) -> do
+nextStep (Session _ ref) = do
    Some d <- readIORef ref
    case TAS.allfirsts (currentState d) of
       [] -> 
@@ -276,22 +272,3 @@ showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (TAS.ter
 
 derivationLength :: Derivation a -> Int
 derivationLength (D xs) = length xs - 1
-
---------------------------------------------------
--- Logging
-
-logMsg :: String -> (Session -> IO String) -> Session -> IO String
-logMsg = logMsgWith id
-
-logCurrent :: String -> (Session -> IO a) -> Session -> IO a
-logCurrent msg m session = do
-   result <- m session
-   term <- currentText session
-   logMessage (msg ++ ": " ++ term)
-   return result
-
-logMsgWith :: (a -> String) -> String -> (Session -> IO a) -> Session -> IO a
-logMsgWith f msg m session = do
-   result <- m session
-   logMessage (msg ++ ": " ++ f result)
-   return result

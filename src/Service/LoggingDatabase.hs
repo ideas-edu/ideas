@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -14,8 +15,9 @@
 module Service.LoggingDatabase where
 
 import Data.Time
+import Data.Maybe
 import Service.Request
-#ifdef DB
+#ifndef DB
 import Database.HDBC
 import Database.HDBC.Sqlite3 (connectSqlite3)
 
@@ -33,17 +35,17 @@ logMessage req input output ipaddress begin =
      let diff = diffUTCTime end begin 
 
      -- insert data into database
-     run conn logStmt (map toSql [ service req
-                                 , show (exerciseID req)
-                                 , fromMaybe "" (source req)
-                                 , show (dataformat req)
-                                 , show (fromMaybe "" (encoding req))
-                                 , input
-                                 , output
-                                 , ipaddress
-                                 , begin
-                                 , diff
-                                 ])
+     run conn logStmt [ toSql $ service req
+                      , toSql $ show (exerciseID req)
+                      , toSql $ fromMaybe "" (source req)
+                      , toSql $ show (dataformat req)
+                      , toSql $ maybe "unknown" show (encoding req)
+                      , toSql $ input
+                      , toSql $ output
+                      , toSql $ ipaddress
+                      , toSql $ begin
+                      , toSql $ diff
+                      ]
      commit conn
 
      -- close the connection to the database

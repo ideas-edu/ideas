@@ -40,8 +40,13 @@ main = do
       Just file -> do  
          useFixedStdGen                 -- use a predictable "random" number generator
          input    <- readFile file
-         (_, txt, _) <- process input
+         (req, txt, _) <- process input
+         when (Logging True `elem` flags) $ 
+            writeIORef logRef $ -- save logging action for later
+               logMessage req input txt "local" startTime
          putStrLn txt
+         
+         
       -- cgi binary
       Nothing -> runCGI $ do
          addr  <- remoteAddr           -- the IP address of the remote host making the request          

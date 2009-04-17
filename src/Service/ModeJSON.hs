@@ -20,6 +20,7 @@ import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Service.JSON
+import Service.Request
 import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
@@ -38,12 +39,15 @@ extractCode = fromMaybe (makeCode "" "") . List.resolveExerciseCode . f
    f (Array (hd:_)) = f hd
    f _ = ""
       
-processJSON :: String -> IO (String, String)
+processJSON :: String -> IO (Request, String, String)
 processJSON input = do
    txt <- jsonRPC input myHandler
-   return (txt, "application/json")
+   case fmap jsonRequest (parseJSON input) of
+      Just (Right req) -> return (req, txt, "application/json")
+      Just (Left err)  -> fail err
+      _                -> fail "no parse"
 
-{- jsonRequest :: JSON -> Either String Request
+jsonRequest :: JSON -> Either String Request
 jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
@@ -64,7 +68,7 @@ jsonRequest json = do
       , dataformat = JSON
       , encoding   = enc
       }
-
+{-
 jsonReply :: Request -> JSON -> Either String JSON
 jsonReply request json
    | otherwise =  -}

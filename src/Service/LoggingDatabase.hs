@@ -17,7 +17,7 @@ module Service.LoggingDatabase where
 import Data.Time
 import Data.Maybe
 import Service.Request
-#ifndef DB
+#ifdef DB
 import Database.HDBC
 import Database.HDBC.Sqlite3 (connectSqlite3)
 

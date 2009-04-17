@@ -37,16 +37,13 @@ import Service.TypedAbstractService hiding (exercise)
 import Data.Maybe
 import Data.Char
 
-processXML :: Maybe String -> String -> IO (String, String)
-processXML htmlMode input = 
-   case (parseXML input, htmlMode) of
-      (Left err, _) -> 
-         fail err
-   {-    (Right _, Just self) ->           
-         return (respondHTML self input, "text/html") -}
-      (Right xml, _) -> do 
-         out <- xmlRequestHandler xml
-         return (showXML out, "application/xml")
+processXML :: String -> IO (Request, String, String)
+processXML input = 
+   either fail return $ do
+      xml <- parseXML input
+      req <- xmlRequest xml
+      out <- xmlRequestHandler xml
+      return (req, showXML out, "application/xml") 
 
 xmlRequest :: XML -> Either String Request
 xmlRequest xml = do   
@@ -88,7 +85,7 @@ xmlReply request xml
                res <- evalService conv srv xml 
                return (resultOk res)
 
-xmlRequestHandler :: XML -> IO XML
+xmlRequestHandler :: Monad m => XML -> m XML
 xmlRequestHandler xml =
    case xmlRequest xml of 
       Left err -> return (resultError err)

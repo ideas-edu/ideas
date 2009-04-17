@@ -14,80 +14,64 @@
 {-# OPTIONS -fglasgow-exts #-}
 module Main (main) where
 
-import Common.Logging
-import Common.Utils (stringToHex, useFixedStdGen)
+-- import Common.Logging
+import Common.Utils (useFixedStdGen)
 import Service.Options
 import Service.ModeXML  (processXML)
 import Service.ModeJSON (processJSON)
+import Service.Request
+import Service.LoggingDatabase
 import Network.CGI
 import Control.Monad.Trans
 import Control.Monad
 import Data.Maybe
 import Data.Char
+import Data.IORef
+import Data.Time
 
 main :: IO ()
 main = do
-   flags <- serviceOptions
-   (if withLogging flags then logActionWith config "Response time" else id) $ do
+   startTime <- getCurrentTime
+   flags     <- serviceOptions
+   logRef    <- newIORef (return ())
+   
    case withInputFile flags of
+      -- from file
       Just file -> do  
          useFixedStdGen                 -- use a predictable "random" number generator
          input    <- readFile file
-         (txt, _) <- process Nothing Nothing flags input
+         (_, txt, _) <- process input
          putStrLn txt
+      -- cgi binary
       Nothing -> runCGI $ do
-         raw    <- getInput "input"     -- read input
-         mode   <- getInput "mode" 
-         method <- requestMethod        -- HTTP method, e.g. GET, HEAD or POST
-         body   <- queryString
-         addr   <- remoteAddr           -- the IP address of the remote host making the request
-         server <- serverName
-         script <- scriptName
-
-         setHeader "Content-type" "text/plain"
-         output $ body
-{-         
-         let self = "http://" ++ server ++ script ++ "?mode=html&input="
-             htmlMode | mode==Just "html" = Just self
-                      | otherwise         = Nothing
-             
-         case fmap convert raw of
-            Nothing    -> fail "Invalid request: environment variable \"input\" is empty"
-            Just input ->
-               do (txt, ctp) <- lift $ process htmlMode (Just addr) flags input
-                  setHeader "Content-type" ctp
-                  output txt
--}
---   closeDB config -- close the database connection (in case of a file do nothing (ie return () ))
-
+         addr  <- remoteAddr           -- the IP address of the remote host making the request          
+         raw   <- getInput "input"     -- read input
+         input <- case raw of
+                     Nothing -> fail "Invalid request: environment variable \"input\" is empty"
+                     Just s  -> return s
+         (req, txt, ctp) <- lift $ process input
+         lift $ writeIORef logRef $ -- save logging action for later
+            logMessage req input txt addr startTime
+         setHeader "Content-type" ctp
+         output txt
    
-process :: Maybe String -> Maybe String -> [Flag] -> String -> IO (String, String)
-process htmlMode maybeIP flags input = do
-   pair@(out, _) <- rec (withMode flags)
-   when (withLogging flags && isNothing htmlMode) $ 
-      case maybeIP of 
-         Just addr -> logMessageWith config ("IP address: " ++ addr ++ "\n" ++ input ++ "\n" ++ out)
-         Nothing   -> return ()
-   return pair
- where 
-   rec :: Mode -> IO (String, String)
-   rec Mixed =
-      let b = take 1 (dropWhile isSpace input) == "<"
-      in rec (if b then XML else JSON)
-   rec XML  = processXML htmlMode input
-   rec JSON = processJSON input
-
-config :: LogConfig
-config = defaultLogConfig
-   { logFile = "service.log"
-   , logRetries = 1
-   }
+   -- log request to database
+   when (withLogging flags) $
+      readIORef logRef >>= id
+   
+process :: String -> IO (Request, String, String)
+process input =
+   case discoverDataFormat input of
+      Just XML  -> processXML  input
+      Just JSON -> processJSON input
+      _         -> fail "Invalid input"
 
 -- Convert escaped characters ('%')   
+{-
 convert :: String -> String
 convert [] = []
 convert ('%':c1:c2:cs) =
    case stringToHex [c1, c2] of
       Just i  -> chr i : convert cs
       Nothing -> '%' : convert (c1:c2:cs)
-convert (c:cs) = c : convert cs
+convert (c:cs) = c : convert cs -}

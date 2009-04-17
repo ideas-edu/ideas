@@ -16,20 +16,14 @@ module Service.Options where
 import System.Environment
 import System.Exit
 import System.Console.GetOpt
-import Service.Revision
+import Service.Revision (version, revision)
 
-data Flag = Verbose  | Version | Mode Mode
-          | Logging Bool | InputFile String 
+data Flag = Verbose | Version | Logging Bool | InputFile String 
  deriving (Show, Eq)
-
-data Mode = XML | JSON | Mixed deriving (Show, Eq)
 
 options :: [OptDescr Flag]
 options =
-     [ Option ['v']     ["verbose"]    (NoArg Verbose)           "chatty output"
-     , Option ['?']     ["version"]    (NoArg Version)           "show version number"
-     , Option []        ["xml"]        (NoArg $ Mode XML)        "xml mode"
-     , Option []        ["json"]       (NoArg $ Mode JSON)       "json mode"
+     [ Option ['?']     ["version"]    (NoArg Version)           "show version number"
      , Option ['l']     ["logging"]    (NoArg $ Logging True)    "enable logging (default)"
      , Option []        ["no-logging"] (NoArg $ Logging False)   "disable logging"
      , Option ['f']     ["file"]       (ReqArg InputFile "FILE") "input FILE"
@@ -50,22 +44,9 @@ serviceOptions = do
       (_, _, errs) -> do
          putStrLn (concat errs ++ usageInfo header options)
          exitFailure 
-
-withVerbose :: [Flag] -> Bool
-withVerbose flags = Verbose `elem` flags
          
 withLogging :: [Flag] -> Bool
 withLogging flags = and [ b | Logging b <- flags ]
-
-withMode :: [Flag] -> Mode
-withMode flags =
-   case (xmlMode, jsonMode) of 
-      (True, False) -> XML
-      (False, True) -> JSON
-      _             -> Mixed
- where
-   xmlMode  = Mode XML  `elem` flags
-   jsonMode = Mode JSON `elem` flags
    
 withInputFile :: [Flag] -> Maybe String
 withInputFile flags = 

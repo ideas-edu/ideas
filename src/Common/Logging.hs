@@ -55,7 +55,7 @@ data LogConfig = LogConfig
 -- | A default configuration for logging
 defaultLogConfig :: LogConfig
 defaultLogConfig = LogConfig
-   { logDest      = openDB "service.db"
+   { logDest      = File "service.log" -- openDB "service.db"
    , logRetries   = 5
    , logDelay     = 100000
    , logTimeStamp = True

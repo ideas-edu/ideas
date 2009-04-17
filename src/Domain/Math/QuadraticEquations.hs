@@ -9,6 +9,9 @@ import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Views
 import Common.Apply
 import Common.Context
+import Common.Exercise
+import qualified Common.Parsing as P
+import Domain.Math.Parser
 import Common.Transformation
 import Common.Uniplate (somewhereM, transform)
 import Common.Strategy
@@ -17,8 +20,39 @@ import Control.Monad
 import Data.List (intersperse, (\\))
 import Data.Maybe
 import Data.Ratio
-import qualified Data.IntMap as IM
-import Debug.Trace
+import qualified OpenMath.Conversion as OM
+
+------------------------------------------------------------
+-- Exercise
+
+quadraticEquationExercise :: Exercise (OrList (Equation Expr))
+quadraticEquationExercise = makeExercise 
+   { identifier    = "quadreq"
+   , domain        = "math"
+   , description   = "solve a quadratic equation"
+   , status        = Experimental
+   , parser        = parseOrs
+   , equality      = (==) 
+   , equivalence   = \_ _ -> True -- to do
+   , finalProperty = solved
+   , ruleset       = map liftF allRules
+   , strategy      = liftF solverQ
+   , generator     = oneof (map (return . OrList . return) $ concat quadraticEquations)
+   }
+
+parseOrs :: String -> Either P.SyntaxError (OrList (Equation Expr))
+parseOrs = f . P.parse pOrs . P.scanWith myScanner
+ where 
+   myScanner = scannerExpr 
+      { P.keywordOperators = "==" : P.keywordOperators scannerExpr 
+      , P.keywords = ["or"]
+      }
+   
+   pOrs = pSepList (pEquation pExpr) (P.pKey "or")
+   pSepList p q = (\x xs -> OrList (x:xs)) P.<$> p P.<*> P.pList (q P.*> p)
+ 
+   f (e, []) = Right e
+   f (_, xs) = Left $ P.ErrorMessage $ unlines $ map show xs
 
 ------------------------------------------------------------
 -- OrList
@@ -40,17 +74,16 @@ instance Show a => Show (OrList a) where
       | null xs   = "true"
       | otherwise = unwords (intersperse "or" (map show xs))
 
+instance OM.IsOMOBJ a => OM.IsOMOBJ (OrList a) where 
+   toOMOBJ (OrList xs) = OM.listop OM.orSymbol xs
+   fromOMOBJ =  OM.fromN OM.orSymbol OrList 
+             OM.|> (liftM (\x -> OrList [x]) . OM.fromOMOBJ)
+
 solved :: OrList (Equation Expr) -> Bool
 solved (OrList xs) = all solvedEquation xs
 
 ------------------------------------------------------------
 -- Strategy and lifting
-
-compl = 9*x^2+30*x+25+(x^2-10*x+25)-40 where x = Var "x"
-eee = x^2+2*x+1 :==: 0 where x = Var "x"
-
-testje = traceStrategy (unlabel solverQ) $ 
-   OrList [concat quadraticEquations !! 40]
 
 solve :: Equation Expr -> OrList (Equation Expr)
 solve e = applyD solverQ (OrList [e])
@@ -61,7 +94,6 @@ solverQ = cleanUpStrategy cleanUpOrs $
       repeat ((coverUpPlus <|> coverUpTimes <|> coverUpNegate <|> coverUpSquare
          <|> coverUpDiv <|> cancelTerms <|> factorPower <|> mulZero <|> flipEquation
          ) |> (moveToLeft <|> niceFactors <|> distribution <|> distributionSquare <|> mergeR <|> simplerA) |> abcFormula) 
-         --  <|> conToRight <|> divideByConstant <|> linS)
 
 cleanUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
 cleanUpOrs (OrList xs) = OrList (map (fmap (f . simplifyExpr)) xs)
@@ -83,6 +115,17 @@ forOne f (OrList xs) = map OrList (rec xs)
    rec (x:xs) = maybe [] (\y -> [y++xs]) (f x) ++ map (x:) (rec xs)
 
 ------------------------------------------------------------
+-- Rule collection
+
+allRules :: [Rule (OrList (Equation Expr))]
+allRules = 
+   [ coverUpPlus, coverUpTimes, coverUpNegate, coverUpSquare
+   , coverUpDiv, cancelTerms, factorPower, mulZero, flipEquation
+   , moveToLeft, niceFactors, distribution, distributionSquare 
+   , mergeR, simplerA, abcFormula
+   ]
+
+------------------------------------------------------------
 -- Rules
 
 makeSqrt :: Expr -> Expr
@@ -98,38 +141,6 @@ coverUpSquare = makeSimpleRuleList "cover-up square" (forOne f)
       let e = makeSqrt rhs
       return [a :==: e, a :==: negate e]
    f _ = Nothing
-
-{-
--- Under specific conditions, a constant should be moved to the right
-conToRight :: Rule (OrList (Equation Expr))
-conToRight = makeSimpleRuleList "constant to right" (forOne (fmap return . apply f))
- where
-   f = flip supply1 minusT $ \(lhs :==: rhs) -> do
-      guard (noVars rhs)
-      (_, im) <- match polynomialView lhs
-      case IM.toList im of
-         [(0, c), (2, _)] -> canonical rationalView c
-         _ -> Nothing
-
-divideByConstant :: Rule (OrList (Equation Expr))
-divideByConstant = makeSimpleRuleList "divide by constant" (forOne (fmap return . apply f))
- where
-   f = flip supply1 divisionT $ \(lhs :==: rhs) -> do
-      (bx, xs) <- match productView lhs
-      (by, ys) <- match productView rhs
-      let f = product . catMaybes . map (match rationalView)
-          c = sign (f xs `smart` f ys)
-          sign = if bx && noVars rhs || by && noVars lhs
-                 then negate else id
-      guard (c `notElem` [0, 1])
-      return (fromRational c)
-
-   smart :: Rational -> Rational -> Rational
-   smart r1 r2
-      | denominator r1 == 1 && denominator r2 == 1 =
-           fromIntegral (numerator r1 `gcd` numerator r2)
-      | otherwise =
-           1 / (fromIntegral (denominator r1 `lcm` denominator r2)) -}
 
 coverUpPlus :: Rule (OrList (Equation Expr))
 coverUpPlus = makeSimpleRuleList "cover-up plus" (forOne (fmap return . apply f))

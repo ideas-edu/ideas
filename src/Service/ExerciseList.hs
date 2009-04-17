@@ -17,6 +17,7 @@ import qualified Domain.Math.DerivativeExercise as Math
 import qualified Domain.Math.Fraction as Math
 import qualified Domain.Math.CoverUpEquations as Math
 import qualified Domain.Math.LinearEquations as Math
+import qualified Domain.Math.QuadraticEquations as Math
 import qualified Domain.Math.HigherDegreeEquations as Math
 
 -- List with all known exercises
@@ -41,6 +42,7 @@ openMathExercises =
    , OMEX Math.calculationExercise
    , OMEX Math.coverUpExercise
    , OMEX Math.linearEquationExercise
+   , OMEX Math.quadraticEquationExercise
    , OMEX Math.higherDegreeEquationExercise
    , OMEX Math.derivativeExercise
      -- linear algebra

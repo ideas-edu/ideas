@@ -13,6 +13,7 @@ WINDOWS = $(shell ghc-pkg list  | grep -q Win32 && echo yes || echo no)
 GTK     = $(shell ghc-pkg list  | grep -q gtk   && echo yes || echo no)
 WX      = $(shell ghc-pkg list  | grep -q wx    && echo yes || echo no)
 SVN     = $(shell test -e /usr/bin/svn && echo yes || echo no)
+IDEASSERVER = $(shell hostname | grep -q ideas && echo yes || echo no)
 
 ifeq ($(WINDOWS), yes)
 EXE  = .exe
@@ -31,6 +32,7 @@ status:
 	# Support for GTK: $(GTK)
 	# Support for WX: $(WX)
 	# Subversion: $(SVN)
+	# Ideas server: $(IDEASSERVER)
 
 #---------------------------------------------------------------------------------------
 # Directories that have to be created
@@ -51,10 +53,15 @@ GLADE-SOURCES = $(wildcard src/Presentation/ExerciseAssistant/*.glade*)
 
 GHC        = ghc
 GHCWARN    = -W -fwarn-tabs -fwarn-duplicate-exports -fwarn-orphans # -fwarn-missing-signatures
-GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
 HADDOCK    = haddock
 HPC        = hpc
 RUNHASKELL = runhaskell
+
+ifeq ($(IDEASSERVER), yes)
+GHCFLAGS   = --make -DDB -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
+else
+GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
+endif
 
 LHS2TEX    = lhs2TeX
 PDFLATEX   = pdflatex

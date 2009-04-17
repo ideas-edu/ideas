@@ -7,10 +7,9 @@ VERSION = 0.5.2
 
 include Makefile.incl
 
-binaries: service laservice viewlog solvergui ideas
+binaries: service viewlog solvergui ideas
 
 service: $(BINDIR)/service.cgi
-laservice: $(BINDIR)/laservice.cgi
 viewlog: $(BINDIR)/viewlog.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
 ideas: $(BINDIR)/ideasWX$(EXE)
@@ -18,11 +17,6 @@ ideas: $(BINDIR)/ideasWX$(EXE)
 $(BINDIR)/service.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) -o $@ src/Service/Main.hs
-	$(STRIP) $@
-
-$(BINDIR)/laservice.cgi: $(HS-SOURCES) revision
-	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) -o $@ src/OpenMath/Main.hs
 	$(STRIP) $@
 
 $(BINDIR)/viewlog.cgi: $(HS-SOURCES) revision
@@ -124,15 +118,3 @@ clean:
 	$(RM) -rf $(OUTDIR)
 	make -C $(DOCDIR)  clean
 	make -C $(TESTDIR) clean
-
-#---------------------------------------------------------------------------------------
-# OLD
-
-# CGIDIR = ideas.cs.uu.nl:/var/www/cgi-bin/
-# WEBDIR = ideas.cs.uu.nl:/var/www/html/genexas/
-
-# cgi-install: laservice
-# 	scp $(BINDIR)/laservice.cgi $(CGIDIR)
-
-# web:	
-#	scp -r src/Presentation/genexas/* $(WEBDIR)

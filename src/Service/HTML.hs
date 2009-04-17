@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Service.HTML 
    ( HTML, HTMLBuilder, showHTML
-   , htmlPage, errorPage, link, h1, h2, preText, ul, table, text
+   , htmlPage, errorPage, link, h1, h2, preText, ul, table, text, image, space
    , bold, italic, para, ttText, hr, br, pre
    ) where
 
@@ -28,61 +28,73 @@ showHTML :: HTML -> String
 showHTML = compactXML
 
 -- html helper functions
-htmlPage :: String -> XMLBuilder -> HTML
-htmlPage title body = makeXML "html" $ do
-   element "head" $
+htmlPage :: String -> Maybe String -> HTMLBuilder -> HTML
+htmlPage title css body = makeXML "html" $ do
+   element "head" $ do
       element "title" (text title)
+      case css of
+         Nothing -> return ()
+         Just n  -> element "link" $ do
+            "rel"  .=. "STYLESHEET" 
+            "href" .=. n
+            "type" .=. "text/css"
    element "body" body     
 
 errorPage :: String -> HTML
-errorPage s = htmlPage "Error" $ do
+errorPage s = htmlPage "Error" Nothing $ do
    h1 "Error"
    text s
    
-link :: String -> XMLBuilder -> XMLBuilder
+link :: String -> HTMLBuilder -> HTMLBuilder
 link url body = element "a" $ 
    ("href" .=. url) >> body
 
-h1 :: String -> XMLBuilder
+h1 :: String -> HTMLBuilder
 h1 = element "h1" . text
 
-h2 :: String -> XMLBuilder
+h2 :: String -> HTMLBuilder
 h2 = element "h2" . text
 
-bold, italic :: XMLBuilder -> XMLBuilder
+bold, italic :: HTMLBuilder -> HTMLBuilder
 bold   = element "b" 
 italic = element "i"
 
-para :: XMLBuilder -> XMLBuilder
+para :: HTMLBuilder -> HTMLBuilder
 para = element "p"
 
-preText :: String -> XMLBuilder
+preText :: String -> HTMLBuilder
 preText = pre . text
 
-pre :: XMLBuilder -> XMLBuilder
+pre :: HTMLBuilder -> HTMLBuilder
 pre = element "pre"
 
-hr :: XMLBuilder
+hr :: HTMLBuilder
 hr = tag "hr"
 
-br :: XMLBuilder
+br :: HTMLBuilder
 br = tag "br"
 
-tt :: XMLBuilder -> XMLBuilder
+tt :: HTMLBuilder -> HTMLBuilder
 tt = element "tt"
 
-ttText :: String -> XMLBuilder
+ttText :: String -> HTMLBuilder
 ttText = tt . text
 
-ul :: [XMLBuilder] -> XMLBuilder
+ul :: [HTMLBuilder] -> HTMLBuilder
 ul = element "ul" . mapM_ (element "li")
 
-table :: [[XMLBuilder]] -> XMLBuilder
+table :: [[HTMLBuilder]] -> HTMLBuilder
 table rows = element "table" $ do
    "border" .=. "1"
    mapM_ (element "tr" . mapM_ (element "td")) rows
 
-text :: String -> XMLBuilder
+space :: HTMLBuilder
+space = XML.text "&nbsp;"
+
+image :: String -> HTMLBuilder 
+image n = element "img" ("src" .=. n) 
+
+text :: String -> HTMLBuilder
 text = XML.text . escape
 
 escape :: String -> String

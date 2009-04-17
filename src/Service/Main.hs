@@ -58,7 +58,7 @@ main = do
                   setHeader "Content-type" ctp
                   output txt
 -}
-   closeDB config -- close the database connection (in case of a file do nothing (ie return () ))
+--   closeDB config -- close the database connection (in case of a file do nothing (ie return () ))
 
    
 process :: Maybe String -> Maybe String -> [Flag] -> String -> IO (String, String)
@@ -79,8 +79,8 @@ process htmlMode maybeIP flags input = do
 
 config :: LogConfig
 config = defaultLogConfig
-   { logDest    = File "service.log",
-     logRetries = 1
+   { logFile = "service.log"
+   , logRetries = 1
    }
 
 -- Convert escaped characters ('%')   

@@ -1,4 +1,4 @@
-module Service.ServiceList (Service, getService, evalService) where
+module Service.ServiceList (serviceList, Service(..), getService, evalService) where
 
 import Common.Context
 import Common.Transformation

@@ -30,8 +30,8 @@ import Control.Monad
 import Data.Maybe
 import Data.Char
 
-extractCode :: JSON -> ExerciseCode
-extractCode = fromMaybe (makeCode "" "") . List.resolveExerciseCode . f
+extractCode :: JSON -> Maybe ExerciseCode
+extractCode = List.resolveExerciseCode . f
  where 
    f (String s) = s
    f (Array [String _, String _, a@(Array _)]) = f a
@@ -73,9 +73,11 @@ jsonReply :: Request -> JSON -> Either String JSON
 jsonReply request json
    | otherwise =  -}
 
+fakeCode = makeCode "" "" 
+
 myHandler :: JSON_RPC_Handler
 myHandler fun arg =
-   case jsonConverter (extractCode arg) of
+   case jsonConverter (fromMaybe fakeCode $ extractCode arg) of
       Some conv -> do
          service <- getService fun
          case evalService conv service arg of

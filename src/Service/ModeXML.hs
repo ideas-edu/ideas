@@ -50,7 +50,7 @@ xmlRequest xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
    srv  <- findAttribute "service" xml
-   code <- extractExerciseCode xml
+   let code = extractExerciseCode xml
    enc  <- case findAttribute "encoding" xml of
               Just s  -> liftM Just (readEncoding s)
               Nothing -> return Nothing 
@@ -65,20 +65,23 @@ xmlRequest xml = do
 xmlReply :: Request -> XML -> Either String XML
 xmlReply request xml 
    | service request == "mathdox" = do
-        OMEX ex <- getOpenMathExercise (exerciseID request)
+        code <- maybe (fail "unknown exercise code") return (exerciseID request)
+        OMEX ex <- getOpenMathExercise code
         (st, sloc, answer) <- xmlToRequest xml ex
         return (replyToXML (problemDecomposition st sloc answer))
    | otherwise =
    case encoding request of
       Just StringEncoding -> do 
-         ex <- getExercise (exerciseID request)
+         code <- maybe (fail "unknown exercise code") return (exerciseID request)
+         ex <- getExercise code
          case stringFormatConverter ex of
             Some conv -> do
                srv <- getService (service request)
                res <- evalService conv srv xml 
                return (resultOk res)
       _ -> do 
-         ex <- getOpenMathExercise (exerciseID request)
+         code <- maybe (fail "unknown exercise code") return (exerciseID request)
+         ex <- getOpenMathExercise code
          case openMathConverter ex of
             Some conv -> do
                srv <- getService (service request)

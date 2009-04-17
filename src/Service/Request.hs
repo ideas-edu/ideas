@@ -5,7 +5,7 @@ import Data.Char
 
 data Request = Request
    { service    :: String
-   , exerciseID :: ExerciseCode
+   , exerciseID :: Maybe ExerciseCode
    , source     :: Maybe String
    , dataformat :: DataFormat
    , encoding   :: Maybe Encoding

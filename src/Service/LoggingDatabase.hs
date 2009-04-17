@@ -38,7 +38,7 @@ logMessage req input output ipaddress begin = do
      -- insert data into database
      run conn "INSERT INTO log VALUES (?,?,?,?,?,?,?,?,?,?)" 
              [ toSql $ service req
-             , toSql $ show (exerciseID req)
+             , toSql $ maybe "unknown" show (exerciseID req)
              , toSql $ fromMaybe "unknown" (source req)
              , toSql $ show (dataformat req)
              , toSql $ maybe "unknown" show (encoding req)

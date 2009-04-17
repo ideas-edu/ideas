@@ -1,6 +1,5 @@
 // The url for the services
-var url = "/cgi-bin/service.cgi";
-//var url = "/StrategyTool/bin/service.cgi";
+var url = "/cgi-bin/servicegenexas.cgi";
 
 /**
  *  Generation of a new exercise. 

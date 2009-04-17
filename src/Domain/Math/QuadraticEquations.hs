@@ -1,15 +1,16 @@
 module Domain.Math.QuadraticEquations where
 
-import Prelude hiding (repeat)
+import Prelude hiding (repeat, (^))
 import Domain.Math.Equation
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
-import Domain.Math.LinearEquations (liftF, solvedEquation, minusT, timesT, divisionT, solveEquation)
+import Domain.Math.LinearEquations (liftF, solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
 import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Views
 import Common.Apply
 import Common.Context
 import Common.Transformation
+import Common.Uniplate (somewhereM, transform)
 import Common.Strategy
 import Test.QuickCheck hiding (label)
 import Control.Monad
@@ -45,8 +46,11 @@ solved (OrList xs) = all solvedEquation xs
 ------------------------------------------------------------
 -- Strategy and lifting
 
+compl = 9*x^2+30*x+25+(x^2-10*x+25)-40 where x = Var "x"
+eee = x^2+2*x+1 :==: 0 where x = Var "x"
+
 testje = traceStrategy (unlabel solverQ) $ 
-   OrList [concat quadraticEquations !! 3]
+   OrList [concat quadraticEquations !! 40]
 
 solve :: Equation Expr -> OrList (Equation Expr)
 solve e = applyD solverQ (OrList [e])
@@ -54,12 +58,15 @@ solve e = applyD solverQ (OrList [e])
 solverQ :: LabeledStrategy (OrList (Equation Expr))
 solverQ = cleanUpStrategy cleanUpOrs $
    label "Quadratic equations" $
-      repeat (coverUpPlus <|> coverUpTimes <|> coverUpNegate <|> coverUpSquare
-         <|> coverUpDiv <|> cancelTerms <|> factorPower <|> mulZero
-         <|> flipEquation) --  <|> conToRight <|> divideByConstant <|> linS)
+      repeat ((coverUpPlus <|> coverUpTimes <|> coverUpNegate <|> coverUpSquare
+         <|> coverUpDiv <|> cancelTerms <|> factorPower <|> mulZero <|> flipEquation
+         ) |> (moveToLeft <|> niceFactors <|> distribution <|> distributionSquare <|> mergeR <|> simplerA) |> abcFormula) 
+         --  <|> conToRight <|> divideByConstant <|> linS)
 
 cleanUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
-cleanUpOrs (OrList xs) = OrList (map (fmap simplifyExpr) xs)
+cleanUpOrs (OrList xs) = OrList (map (fmap (f . simplifyExpr)) xs)
+ where
+   f = transform (simplify powerView)
 
 linS :: Rule (OrList (Equation Expr))
 linS = makeSimpleRuleList "linear equation" $ forOne $ \eq -> do
@@ -130,10 +137,11 @@ coverUpPlus = makeSimpleRuleList "cover-up plus" (forOne (fmap return . apply f)
    f = flip supply1 minusT $ \(lhs :==: rhs) -> do
       guard (noVars rhs)
       (a, b) <- match plusView lhs
+      let oneVar = (==1) . length . collectVars
       r <- case (match rationalView a, match rationalView b) of
-              (Just r, _) | hasVars b -> Just r
-              (_, Just r) | hasVars a -> Just r
-              _                       -> Nothing
+              (Just r, _) | oneVar b -> Just r
+              (_, Just r) | oneVar a -> Just r
+              _                      -> Nothing
       guard (r /= 0)
       return (build rationalView r)
 
@@ -209,6 +217,85 @@ flipEquation :: Rule (OrList (Equation Expr))
 flipEquation = makeSimpleRuleList "flip equation" $ forOne $ \(lhs :==: rhs) -> do
    guard (noVars lhs && hasVars rhs)
    return [ rhs :==: lhs ]
+
+moveToLeft :: Rule (OrList (Equation Expr))
+moveToLeft = makeSimpleRuleList "move to left" (forOne (fmap return . apply f))
+ where
+   f = flip supply1 minusT $ \(lhs :==: rhs) -> do
+      guard (rhs /= 0 && lhs /= Var "x")
+      return rhs
+
+-- search for (X+A)*(X+B) decomposition 
+niceFactors :: Rule (OrList (Equation Expr))
+niceFactors = makeSimpleRuleList "nice factors" $ forOne $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   let sign t@(x, a, b, c) = if a== -1 then (x, 1, -b, -c) else t 
+   (x, a, rb, rc) <- liftM sign (match quadraticView lhs)
+   b <- isInt rb
+   c <- isInt rc
+   guard (a==1)
+   case [ (Var x + Nat i) * (Var x + Nat j) | (i, j) <- factors c, i+j == b ] of
+      hd:_ -> return [hd :==: 0]
+      _    -> Nothing
+
+factors :: Integer -> [(Integer, Integer)]
+factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
+ where h = floor (sqrt (abs (fromIntegral n)))
+
+distribution :: Rule (OrList (Equation Expr))
+distribution = makeSimpleRuleList "distribution" (forOne f)
+ where
+   g = somewhereM (apply distributionT)
+   f (lhs :==: rhs) = 
+      case (g lhs, g rhs) of
+         (Just new, _) -> return [new :==: rhs]
+         (_, Just new) -> return [lhs :==: new]
+         _             -> Nothing 
+
+distributionSquare :: Rule (OrList (Equation Expr))
+distributionSquare = makeSimpleRuleList "distribution square" (forOne f)
+ where
+   g (Sym "^" [x, Nat 2]) = do
+      (a, x, b) <- match linearView x
+      guard (a /= 0 && b /= 0)
+      return  (  (fromRational (a*a) .*. (Var x^2)) 
+             .+. (fromRational (2*a*b) .*. Var x)
+             .+. (fromRational (b*b)))
+   g _ = Nothing
+   f (lhs :==: rhs) = 
+      case (somewhereM g lhs, somewhereM g rhs) of
+         (Just new, _) -> return [new :==: rhs]
+         (_, Just new) -> return [lhs :==: new]
+         _             -> Nothing 
+
+mergeR :: Rule (OrList (Equation Expr))
+mergeR = makeSimpleRuleList "distribution square" (forOne (fmap return . apply merge))
+
+simplerA :: Rule (OrList (Equation Expr))
+simplerA = makeSimpleRuleList "simpler A" $ (forOne f)
+ where
+   f (lhs :==: rhs) = do
+      guard (rhs == 0)
+      (x, ra, rb, rc) <- match quadraticView lhs
+      [a, b, c] <- mapM isInt [ra, rb, rc] 
+      let d = a `gcd` b `gcd` c
+      guard (d `notElem` [0, 1])
+      return [build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0]
+
+abcFormula :: Rule (OrList (Equation Expr))
+abcFormula = makeSimpleRuleList "flip equation" $ forOne $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (x, a, b, c) <- match quadraticView lhs
+   let discr = makeSqrt (fromRational (b*b - 4 * a * c))
+   case discr of Nat n -> guard (even n); _ -> return () -- no nice numbers (for now)
+   return [ Var x :==: (-fromRational b + discr) / 2 * fromRational a
+          , Var x :==: (-fromRational b - discr) / 2 * fromRational a
+          ]
+
+isInt :: Rational -> Maybe Integer
+isInt r = do
+   guard (denominator r == 1)
+   return (numerator r)
 
 ------------------------------------------------------------
 -- Testing
@@ -345,12 +432,6 @@ divide (lhs :==: rhs) = do
    when (a == 1 || i == 0) Nothing
    return (variable x ^ Nat i :==: rhs / a) 
 
--- search for (X+A)*(X+B) decomposition 
-niceFactors :: Expr -> Maybe Expr
-niceFactors e = do
-   (x, a, b, c) <- match quadraticView e
-   unless (a==1) Nothing
-   safeHead [ (variable x + Nat i) * (variable x + Nat j) | (i, j) <- factors c, i+j == b ]
 
 moveToLHS :: Equation Expr -> Maybe (Equation Expr)
 moveToLHS (x :==: y) = do 
@@ -479,9 +560,6 @@ liftRule = lift $ makeLiftPair (return . fromContext) (fmap . const)
 test n = showDerivations (unlabel equationsStrategy) 
    (inContext (OrList [higherDegreeEquations !! (n-1)]))
 
-factors :: Integer -> [(Integer, Integer)]
-factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
- where h = floor (sqrt (abs (fromIntegral n)))
  
 q = traceStrategy (unlabel equationsStrategy) 
        (inContext (OrList [ (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2]))

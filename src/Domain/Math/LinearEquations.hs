@@ -1,6 +1,6 @@
 module Domain.Math.LinearEquations 
   ( linearEquationExercise, testAll, showDerivation, showDerivations
-  , solvedEquation, liftF, minusT, divisionT, timesT, solveEquation) where
+  , solvedEquation, liftF, minusT, merge, divisionT, timesT, solveEquation, distributionT) where
 
 import Prelude hiding (repeat)
 import Common.Apply

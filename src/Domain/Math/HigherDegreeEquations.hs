@@ -21,6 +21,7 @@ import Domain.Math.Views
 import Domain.Math.Equation
 import Control.Monad 
 import Test.QuickCheck hiding (check, label)
+import Data.Ratio
 
 ------------------------------------------------------------
 -- Exercise
@@ -137,8 +138,10 @@ divide (lhs :==: rhs) = do
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Expr -> Maybe Expr
 niceFactors e = do
-   (x, a, b, c) <- match quadraticView e
-   unless (a==1) Nothing
+   (x, ra, rb, rc) <- match quadraticView e
+   guard (ra==1)
+   b <- isInt rb
+   c <- isInt rc
    safeHead [ (variable x + Nat i) * (variable x + Nat j) | (i, j) <- factors c, i+j == b ]
 
 moveToLHS :: Equation Expr -> Maybe (Equation Expr)
@@ -149,7 +152,10 @@ moveToLHS (x :==: y) = do
 
 abcFormula :: Equation Expr -> Maybe [Equation Expr]
 abcFormula (e :==: Nat 0) = do
-   (x, a, b, c) <- match quadraticView e
+   (x, ra, rb, rc) <- match quadraticView e
+   a <- isInt ra
+   b <- isInt rb
+   c <- isInt rc
    let discr = Nat (b*b - 4 * a * c)
    return [ variable x :==: (-Nat b + sqrt discr) / 2 * Nat a
           , variable x :==: (-Nat b - sqrt discr) / 2 * Nat a
@@ -163,6 +169,11 @@ sameFactor (lhs :==: rhs) = do
    (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y ] -- equality is too strong?
    return [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
+
+isInt :: Rational -> Maybe Integer
+isInt r = do
+   guard (denominator r == 1)
+   return (numerator r)
 
 -----------------------
 

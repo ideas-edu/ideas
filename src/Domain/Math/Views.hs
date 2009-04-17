@@ -195,16 +195,16 @@ polynomialView = makeView matchPolynomial buildPolynomial
     where f (n, a) = a .*. (Var x .^. fromIntegral n)
    
 -- a*x^2 + b*x + c
-quadraticView :: View Expr (String, Integer, Integer, Integer)
+quadraticView :: View Expr (String, Rational, Rational, Rational)
 quadraticView = polynomialView >>> makeView matchQ buildQ 
  where
    matchQ (x, im) = do
       let keys = IM.keysSet im
           f n  = IM.findWithDefault 0 n im
       guard (IS.findMin keys == 0 && IS.findMax keys == 2 && IS.size keys == 3)
-      [a, b, c] <- mapM (match integerView . f) [2,1,0]
+      [a, b, c] <- mapM (match rationalView . f) [2,1,0]
       return (x, a, b, c)
-   buildQ (x, a, b, c) = (x, IM.fromList [(2, fromInteger a), (1, fromInteger b), (0, fromInteger c)])
+   buildQ (x, a, b, c) = (x, IM.fromList [(2, fromRational a), (1, fromRational b), (0, fromRational c)])
 
 -------------------------------------------------------------
 -- Equations

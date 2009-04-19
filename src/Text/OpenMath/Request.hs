@@ -11,17 +11,17 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.Request (xmlToRequest) where
+module Text.OpenMath.Request (xmlToRequest) where
 
 import Service.TypedAbstractService
-import Service.XML
+import Text.XML
 import Control.Monad
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (fail)
 import Common.Utils (splitAtElem)
-import OpenMath.Conversion
-import OpenMath.Object
+import Text.OpenMath.Conversion
+import Text.OpenMath.Object
 import Data.Char
 import Data.Maybe
 

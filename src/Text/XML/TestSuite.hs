@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
-import Service.XML.Interface
+import Text.XML.Interface
 import Common.Utils (trim)
 import Control.Monad.Error
 import Data.List

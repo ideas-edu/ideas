@@ -9,7 +9,7 @@ import Common.Uniplate
 import Common.Exercise
 import Common.Transformation
 import Common.Apply
-import Common.Parsing (SyntaxError(..))
+import Text.Parsing (SyntaxError(..))
 import Common.Rewriting
 import Data.Maybe
 import Data.Char

@@ -11,7 +11,7 @@
 -- Support for Unicode
 --
 -----------------------------------------------------------------------------
-module Service.XML.Unicode 
+module Text.XML.Unicode 
    ( isExtender, isLetter, isDigit, isCombiningChar
    , extenderMap, letterMap, digitMap, combiningCharMap
    , decoding

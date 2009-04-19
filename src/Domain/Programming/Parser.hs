@@ -1,6 +1,6 @@
 module Domain.Programming.Parser where
 
-import Common.Parsing
+import Text.Parsing
 import Domain.Programming.Expr
 import Domain.Programming.Prelude
 import Domain.Programming.Eval

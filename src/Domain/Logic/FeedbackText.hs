@@ -18,7 +18,7 @@ module Domain.Logic.FeedbackText
    ) where
 
 import Data.Maybe
-import Common.Parsing
+import Text.Parsing
 import Common.Transformation
 import Domain.Logic.Rules
 

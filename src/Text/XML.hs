@@ -12,7 +12,7 @@
 -- functions defined elsewhere.
 --
 -----------------------------------------------------------------------------
-module Service.XML
+module Text.XML
    ( XML, Attr, AttrList, InXML(..), Element(..)
    , XMLBuilder, makeXML, text, element, tag, attribute
    , parseXML, showXML, compactXML, (.=.), findAttribute
@@ -24,11 +24,10 @@ import Common.Utils (safeHead, trim)
 import Control.Monad.State
 import Control.Monad.Error ()
 import Data.Char
-import Data.Maybe
 import Data.List
 import Data.Monoid
-import Service.XML.Interface hiding (parseXML)
-import qualified Service.XML.Interface as I
+import Text.XML.Interface hiding (parseXML)
+import qualified Text.XML.Interface as I
 
 ----------------------------------------------------------------
 -- Datatype definitions

@@ -11,7 +11,7 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.Reply 
+module Text.OpenMath.Reply 
    ( Reply(..), replyToXML, replyInXML
    , ReplyOk(..), ReplyIncorrect(..), ReplyError(..), Args
    ) where
@@ -19,10 +19,11 @@ module OpenMath.Reply
 import Control.Monad
 import Common.Exercise
 import Common.Strategy hiding (not)
-import OpenMath.StrategyTable
-import OpenMath.Conversion
-import OpenMath.Object
-import Service.XML
+--import Text.OpenMath.StrategyTable
+import Text.OpenMath.Conversion
+import Text.OpenMath.Object
+import Text.XML
+import Service.Revision
 
 ------------------------------------------------------------------------
 -- Data types for replies
@@ -100,5 +101,5 @@ replyErrorToXML r = makeReply (repErr_Kind r) (text $ repErr_Message r)
 makeReply :: String -> XMLBuilder -> XML
 makeReply kind body = makeXML "reply" $ do
    "result"  .=. kind
-   "version" .=. versionNr
+   "version" .=. version
    body

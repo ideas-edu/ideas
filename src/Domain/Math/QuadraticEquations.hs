@@ -10,7 +10,7 @@ import Domain.Math.Views
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import qualified Common.Parsing as P
+import qualified Text.Parsing as P
 import Domain.Math.Parser
 import Common.Transformation
 import Common.Uniplate (somewhereM, transform)
@@ -20,7 +20,7 @@ import Control.Monad
 import Data.List (intersperse, (\\))
 import Data.Maybe
 import Data.Ratio
-import qualified OpenMath.Conversion as OM
+import qualified Text.OpenMath.Conversion as OM
 
 ------------------------------------------------------------
 -- Exercise

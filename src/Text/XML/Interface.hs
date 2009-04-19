@@ -11,14 +11,14 @@
 -- Collection of common operation on XML documents
 --
 -----------------------------------------------------------------------------
-module Service.XML.Interface where
+module Text.XML.Interface where
 
-import Service.XML.Document (Name)
-import Service.XML.Unicode (decoding)
-import Service.XML.Parser (document, extParsedEnt)
-import Service.XML.ParseLib (parse)
+import Text.XML.Document (Name)
+import Text.XML.Unicode (decoding)
+import Text.XML.Parser (document, extParsedEnt)
+import Text.XML.ParseLib (parse)
 import Control.Monad.Error ()
-import qualified Service.XML.Document as D
+import qualified Text.XML.Document as D
 import System.FilePath (takeDirectory, pathSeparator)
 import Data.Char (chr)
 

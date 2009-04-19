@@ -7,7 +7,7 @@ import Common.Uniplate
 import Common.Exercise
 import Common.Transformation
 import Common.Apply
-import Common.Parsing (SyntaxError(..))
+import Text.Parsing (SyntaxError(..))
 import Domain.Programming.Expr
 import Domain.Programming.Rules
 import Domain.Programming.Parser

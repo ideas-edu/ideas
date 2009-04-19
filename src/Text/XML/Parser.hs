@@ -14,17 +14,17 @@
 
 -----------------------------------------------------------------------------
 
-module Service.XML.Parser where
+module Text.XML.Parser where
 
 import Prelude hiding (seq)
 import Control.Monad
 import Data.Char (toUpper, ord, isSpace)
 import Data.Maybe (catMaybes)
-import Service.XML.Unicode
-import Service.XML.Document hiding (versionInfo, name, content)
-import qualified Service.XML.Document as D
-import Service.XML.ParseLib --hiding ((<|>), option, optionM, choice)
---import qualified Service.XML.ParseLib as P
+import Text.XML.Unicode
+import Text.XML.Document hiding (versionInfo, name, content)
+import qualified Text.XML.Document as D
+import Text.XML.ParseLib --hiding ((<|>), option, optionM, choice)
+--import qualified Text.XML.ParseLib as P
 
 letter, digit, combiningChar, extender :: Parser Char
 letter        = ranges letterMap

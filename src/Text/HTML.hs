@@ -11,14 +11,14 @@
 -- A minimal interface for constructing simple HTML pages
 --
 -----------------------------------------------------------------------------
-module Service.HTML 
+module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
    , htmlPage, errorPage, link, h1, h2, preText, ul, table, text, image, space
    , bold, italic, para, ttText, hr, br, pre
    ) where
 
-import Service.XML hiding (text)
-import qualified Service.XML as XML
+import Text.XML hiding (text)
+import qualified Text.XML as XML
 
 type HTML = XML
 

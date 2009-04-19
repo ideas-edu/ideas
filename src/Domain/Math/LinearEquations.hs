@@ -6,7 +6,7 @@ import Prelude hiding (repeat)
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import qualified Common.Parsing as P
+import qualified Text.Parsing as P
 import Common.Strategy hiding (not, fail)
 import Common.Transformation
 import Common.Uniplate

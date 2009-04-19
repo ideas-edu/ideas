@@ -24,7 +24,7 @@ import qualified Service.TypedAbstractService as TAS
 import Service.FeedbackText (feedbackLogic)
 import Common.Context
 import Common.Exercise
-import Common.Parsing (indicesToRange)
+import Text.Parsing (indicesToRange)
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Apply

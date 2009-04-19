@@ -14,28 +14,29 @@
 -----------------------------------------------------------------------------
 module Service.ModeXML (processXML) where
 
-import Common.Utils (Some(..))
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation hiding (name, defaultArgument)
-import qualified Common.Transformation as Rule
+import Common.Utils (Some(..))
 import Control.Monad
-import OpenMath.Object
-import OpenMath.Request (xmlToRequest)
-import OpenMath.Reply (replyToXML)
-import Service.XML
+import Data.Char
+import Data.Maybe
 import Service.ExerciseList
 import Service.ProblemDecomposition
-import Service.Revision (version)
 import Service.Request
+import Service.Revision (version)
 import Service.ServiceList 
-import OpenMath.Conversion
-import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
-import qualified Service.Types as Tp
 import Service.TypedAbstractService hiding (exercise)
-import Data.Maybe
-import Data.Char
+import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
+import Text.OpenMath.Conversion
+import Text.OpenMath.Object
+import Text.OpenMath.Reply (replyToXML)
+import Text.OpenMath.Request (xmlToRequest)
+import Text.XML
+import qualified Common.Transformation as Rule
+import qualified Service.Types as Tp
+
 
 processXML :: String -> IO (Request, String, String)
 processXML input = 

@@ -9,11 +9,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module OpenMath.Object 
+module Text.OpenMath.Object 
    ( OMOBJ(..), xml2omobj, omobj2xml
    ) where
 
-import Service.XML
+import Text.XML
 import Data.Char (isSpace)
 
 -- internal representation for OM objects (close to XML)

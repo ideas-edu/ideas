@@ -6,7 +6,7 @@ import Data.List (nub, sort, (\\), intersperse)
 import Data.Maybe
 import Common.Context
 import Common.Exercise
-import qualified Common.Parsing as P
+import qualified Text.Parsing as P
 import Common.Utils (safeHead, fixpoint)
 import Common.Transformation
 import Common.Strategy hiding (not)

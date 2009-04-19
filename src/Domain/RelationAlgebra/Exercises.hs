@@ -23,7 +23,7 @@ import Common.Apply
 import Common.Exercise
 import Common.Context
 import Common.Uniplate (somewhereM)
-import Common.Parsing (fromRanged)
+import Text.Parsing (fromRanged)
 import Common.Rewriting (treeDiff)
 import Common.Strategy hiding (not)
 import Common.Transformation

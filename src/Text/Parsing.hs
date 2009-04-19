@@ -13,7 +13,7 @@
 -- provides some additional functionality to determine valid sub-expressions.
 --
 -----------------------------------------------------------------------------
-module Common.Parsing 
+module Text.Parsing 
    ( -- * Scaning
      Scanner(..), defaultScanner, makeCharsSpecial, newlinesAsSpecial, minusAsSpecial, scan, scanWith, UU.Token
      -- * Parsing

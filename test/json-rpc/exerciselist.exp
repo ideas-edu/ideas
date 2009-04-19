@@ -67,6 +67,12 @@
          "status": "Experimental"
       },
       {
+         "domain": "math",
+         "identifier": "quadreq",
+         "description": "solve a quadratic equation",
+         "status": "Experimental"
+      },
+      {
          "domain": "relationalg",
          "identifier": "cnf",
          "description": "To conjunctive normal form",
@@ -75,5 +81,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.1 (1805)"
+   "version": "0.5.2 (1839)"
 }

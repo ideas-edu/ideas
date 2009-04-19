@@ -22,7 +22,7 @@ import Common.Utils
 import Data.Char
 import Data.List
 import Data.Maybe
-import OpenMath.Reply
+import Text.OpenMath.Reply
 import Service.TypedAbstractService (State(..))
 
 replyError :: String -> String -> Reply a

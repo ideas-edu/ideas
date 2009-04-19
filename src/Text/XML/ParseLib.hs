@@ -16,7 +16,7 @@
 -- in future, in case we want to.
 --
 -----------------------------------------------------------------------------
-module Service.XML.ParseLib 
+module Text.XML.ParseLib 
    ( Parser, (<|>), (<..>)
    , symbol, string, optionM, option, oneOf, ranges, many, doubleQuoted, bracketed
    , singleQuoted, stopOn, parenthesized, choice, many1, try

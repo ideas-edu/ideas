@@ -30,7 +30,7 @@ module Common.Exercise
 
 import Common.Apply
 import Common.Context
-import Common.Parsing (Range, SyntaxError(..))
+import Text.Parsing (Range, SyntaxError(..))
 import Common.Rewriting (TreeDiff(..))
 import Common.Transformation
 import Common.Strategy hiding (not, fail)

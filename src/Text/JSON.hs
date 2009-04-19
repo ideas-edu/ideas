@@ -12,7 +12,7 @@
 -- JSON. JSON is a lightweight alternative for XML. 
 --
 -----------------------------------------------------------------------------
-module Service.JSON 
+module Text.JSON 
    ( JSON(..), Key, Number(..)            -- types
    , InJSON(..)                           -- type class"
    , lookupM
@@ -20,7 +20,7 @@ module Service.JSON
    , jsonRPC, JSON_RPC_Handler
    ) where
 
-import Common.Parsing
+import Text.Parsing
 import Common.Utils (indent)
 import Data.List (intersperse)
 import Control.Monad

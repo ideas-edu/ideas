@@ -19,7 +19,7 @@ import Common.Utils (Some(..), distinct)
 import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
-import Service.JSON
+import Text.JSON
 import Service.Request
 import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
 import qualified Service.Types as Tp

@@ -26,7 +26,7 @@ import Data.List
 import Data.Char
 import Domain.Math.Expr
 import Domain.Math.Parser
-import Common.Parsing
+import Text.Parsing
 
 {-
 testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of

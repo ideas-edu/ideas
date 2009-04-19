@@ -15,7 +15,7 @@ module Domain.Logic.Parser
    ( parseLogic, parseLogicPars, ppLogic, ppLogicPrio, ppLogicPars
    ) where
 
-import Common.Parsing
+import Text.Parsing
 import Domain.Logic.Formula
 
 {- testje = map make $ subs $ fst $ parseRangedLogicPars "   (T -> T) ||  (q /\\ F )"

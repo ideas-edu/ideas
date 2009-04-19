@@ -1,7 +1,7 @@
 module Domain.Math.Parser where
 
 import Prelude hiding ((^))
-import Common.Parsing hiding (pParens)
+import Text.Parsing hiding (pParens)
 import Common.Transformation
 import Domain.Math.Symbolic
 import Domain.Math.Equation

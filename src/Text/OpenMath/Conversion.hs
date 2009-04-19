@@ -11,10 +11,10 @@
 -- Defines a mapping between openmath objects and data-types
 --
 -----------------------------------------------------------------------------
-module OpenMath.Conversion where
+module Text.OpenMath.Conversion where
 
 import Common.Utils
-import OpenMath.Object
+import Text.OpenMath.Object
 import Domain.LinearAlgebra.Vector
 import Domain.LinearAlgebra.Matrix
 import Domain.Math.Symbolic

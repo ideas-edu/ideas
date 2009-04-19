@@ -11,7 +11,7 @@
 -- Datatype for representing XML documents
 --
 -----------------------------------------------------------------------------
-module Service.XML.Document where
+module Text.XML.Document where
 
 import Data.Char
 import Data.List

@@ -22,7 +22,7 @@ import Domain.Logic.Rules
 import Common.Exercise
 import Common.Strategy hiding (not, label)
 import Common.Context
-import Common.Parsing (fromRanged, subExpressionAt)
+import Text.Parsing (fromRanged, subExpressionAt)
 import Common.Rewriting
 import Control.Monad
 import Data.Maybe

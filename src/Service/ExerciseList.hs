@@ -9,7 +9,7 @@ module Service.ExerciseList
 import Common.Utils (Some(..))
 import Common.Exercise
 import Data.Char
-import OpenMath.Conversion (IsOMOBJ)
+import Text.OpenMath.Conversion (IsOMOBJ)
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA

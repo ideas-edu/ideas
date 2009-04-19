@@ -11,13 +11,14 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module OpenMath.ContentDictionary where
+module Text.OpenMath.ContentDictionary where
 
-import OpenMath.Object
-import OpenMath.XML
+import Text.OpenMath.Object
+import Text.XML
 import Data.Char
 import Data.List
 import Data.Maybe
+import Control.Monad
 import System.Directory
 
 main :: IO ()
@@ -43,20 +44,20 @@ readContentDictionary filename = do
    input <- readFile filename
    case parseXML input of
       Left s  -> err s
-      Right xml@(Tag tag _ _) | map toUpper tag == "CD" -> 
+      Right xml -> do 
+         guard (name xml == "CD") 
          case buildContentDictionary xml of 
             Left s -> err s
             Right cd -> do
                putStrLn $ "  found " ++ show (length $ definitions cd) ++ " definition(s)"
                return (Just cd)
-      Right _   -> err "Not an OpenMath Content Description (ocd) file"
  `catch` \exception -> err (show exception)
  where
    err s = putStrLn ("   ERROR: " ++ show s) >> return Nothing
 
 buildContentDictionary :: XML -> Either String ContentDictionary
 buildContentDictionary xml = do
-   name      <- extractText "CDName"       xml
+   cdname    <- extractText "CDName"       xml
    descr     <- extractText "Description"  xml
    revision  <- extractDate "CDDate"       xml
    review    <- extractDate "CDReviewDate" xml
@@ -65,9 +66,9 @@ buildContentDictionary xml = do
    theStatus <- extractStatus              xml
    let theBase = extractText "CDBase"      xml
    theURL    <- extractText "CDURL"        xml
-   defs      <- mapM buildDefinition [ xml | xml@(Tag "CDDefinition" _ _) <- children xml ]
+   defs      <- mapM buildDefinition [ d | d <- children xml, name d == "CDDefinition" ]
    return CD
-      { dictionaryName = name
+      { dictionaryName = cdname
       , description    = descr
       , revisionDate   = revision
       , reviewDate     = review
@@ -83,9 +84,9 @@ buildDefinition xml = do
    theName    <- extractText "Name"        xml
    descr      <- extractText "Description" xml
    let theRole = extractText "Role"        xml
-       cmps    = [ s     | xml@(Tag "CMP" _ [Text s]) <- children xml ]
-       fmps    = [ this  | xml@(Tag "FMP" _ [this]) <- children xml ]
-       exs     = [ these | xml@(Tag "Example" _ these) <- children xml ]
+       cmps    = [ getData a   | a <- children xml, name a == "CMP" ]
+       fmps    = [ head xs   | a <- children xml, name a == "FMP", let xs=children a, length xs==1 ]
+       exs     = [ children a | a <- children xml, name a == "Example" ]
    return Definition
       { symbolName          = theName
       , symbolDescription   = descr
@@ -93,7 +94,7 @@ buildDefinition xml = do
       , commentedProperties = cmps
       , formalProperties    = map (either error id . xml2omobj) fmps
       , examples            = exs
-      } 
+      }
 
 extractDate :: String -> XML -> Either String Date
 extractDate s xml = do
@@ -104,7 +105,7 @@ extractDate s xml = do
       _ -> fail ("invalid date (YYYY-MM-DD): " ++ txt)
 
 extractInt :: String -> XML -> Either String Int
-extractInt s xml = do 
+extractInt s xml = do
    txt <- extractText s xml
    case reads txt of 
       [(n, xs)] | all isSpace xs -> 
@@ -119,6 +120,12 @@ extractStatus xml = do
       [(st, xs)] | all isSpace xs -> 
          return st
       _ -> fail ("invalid status: " ++ txt)
+
+extractText :: MonadPlus m => String -> XML -> m String
+extractText s xml = do
+   a <- findChild s xml
+   guard (null $ children a)
+   return (getData a)
 
 data ContentDictionary = CD 
    { dictionaryName :: String

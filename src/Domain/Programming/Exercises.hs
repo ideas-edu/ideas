@@ -14,8 +14,11 @@ import Common.Rewriting
 import Data.Maybe
 import Data.Char
 import Domain.Programming.Parser
-import Domain.Programming.Helium
+import Domain.Programming.Helium hiding (undef)
+import qualified Domain.Programming.Helium as H
 import qualified UHA_Pretty as PP (sem_Module) 
+import OneLiner
+import qualified UHA_OneLine as OL
 
 isortExercise :: Exercise Expr
 isortExercise = Exercise   
@@ -64,43 +67,35 @@ modParser s = case compile s of
                 Left e  -> Left $ ErrorMessage e
                 Right m -> Right m
 
-emptyProg =  Module_Module posUnknown
+emptyProg =  Module_Module noRange
                            MaybeName_Nothing
                            MaybeExports_Nothing
-                           (Body_Body posUnknown [] [])
-  where 
-    posUnknown = (Range_Range Position_Unknown Position_Unknown)
+                           (Body_Body noRange [] [])
 
-deriving instance Show Module
-deriving instance Show Body
-deriving instance Show MaybeName
-deriving instance Show MaybeNames
-deriving instance Show MaybeExports
-deriving instance Show Declaration
-deriving instance Show ImportDeclaration
-deriving instance Show Export 
-deriving instance Show Type
-deriving instance Show RightHandSide
-deriving instance Show Pattern
-deriving instance Show Constructor
-deriving instance Show FunctionBinding
-deriving instance Show MaybeInt
-deriving instance Show Fixity
-deriving instance Show MaybeDeclarations
-deriving instance Show SimpleType
-deriving instance Show ContextItem
-deriving instance Show MaybeImportSpecification
-deriving instance Show Expression
-deriving instance Show RecordPatternBinding
-deriving instance Show Literal
-deriving instance Show GuardedExpression
-deriving instance Show FieldDeclaration
-deriving instance Show AnnotatedType
-deriving instance Show LeftHandSide
-deriving instance Show ImportSpecification
-deriving instance Show RecordExpressionBinding
-deriving instance Show MaybeExpression
-deriving instance Show Statement
-deriving instance Show Qualifier
-deriving instance Show Alternative
-deriving instance Show Import
+sumAST :: Module
+sumAST = Module_Module (range (1,1)) MaybeName_Nothing MaybeExports_Nothing 
+           (Body_Body (range (1,1)) [] [ sumDecl ])
+
+sumDecl :: Declaration
+sumDecl = Declaration_PatternBinding 
+            (range (1,1))
+            (Pattern_Variable (range (1,1)) (Name_Identifier (range (1,1)) [] "mysum")) 
+            (RightHandSide_Expression 
+               (range (1,7))
+               sumExpr
+               MaybeDeclarations_Nothing
+            )
+
+sumExpr :: Expression
+sumExpr = Expression_NormalApplication 
+            (range (1,9))
+            (Expression_Variable (range (1,9)) (Name_Identifier (range (1,9)) [] "foldr")) 
+            [ Expression_InfixApplication 
+                (range (1,15))
+                MaybeExpression_Nothing 
+                (Expression_Variable (range (1,16)) (Name_Operator (range (1,16)) [] "+")) 
+                MaybeExpression_Nothing
+            , Expression_Literal 
+                (range (1,19))
+                (Literal_Int (range (1,19)) "0")
+            ]

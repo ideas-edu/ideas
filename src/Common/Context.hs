@@ -22,7 +22,7 @@ module Common.Context
    , currentFocus, changeFocus, locationDown, locationUp
    , makeLocation, fromLocation
      -- * Lifting
-   , liftToContext
+   , liftToContext, ignoreContext
    ) where
 
 import Common.Utils
@@ -185,3 +185,7 @@ fromLocation (L is) = is
 -- | Lift a rule to operate on a term in a context
 liftToContext :: (Lift f, Uniplate a) => f a -> f (Context a)
 liftToContext = lift $ makeLiftPair currentFocus (changeFocus . const)
+
+-- | Lift a rule to operate on a term in a context by ignoring the context
+ignoreContext :: Lift f => f a -> f (Context a)
+ignoreContext = lift $ makeLiftPair (return . fromContext) (fmap . const)

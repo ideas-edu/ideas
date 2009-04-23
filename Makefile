@@ -3,7 +3,7 @@ all: binaries unit-tests documentation
 
 SRCDIR = src
 
-VERSION = 0.5.2
+VERSION = 0.5.3
 
 include Makefile.incl
 
@@ -73,7 +73,7 @@ HELIUMDIR = ../../../heliumsystem/helium/src
 TOPDIR = ../../../heliumsystem/Top/src
 LVMDIR = ../../../heliumsystem/lvm/src/
 
-HELIUMFLAGS = -fglasgow-exts -package network -XUndecidableInstances -XOverlappingInstances \
+HELIUMFLAGS = -fglasgow-exts -XUndecidableInstances -XOverlappingInstances \
 	-i$(HELIUMDIR)/utils \
 	-i$(HELIUMDIR)/staticanalysis/staticchecks -i$(HELIUMDIR)/staticanalysis/inferencers \
 	-i$(HELIUMDIR)/staticanalysis/messages -i$(HELIUMDIR)/main -i$(TOPDIR) \

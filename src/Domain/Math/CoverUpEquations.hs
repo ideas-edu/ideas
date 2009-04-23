@@ -10,8 +10,9 @@ import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
 import Domain.Math.Equation
-import Domain.Math.LinearEquations (liftF)
-import Domain.Math.HigherDegreeEquations (OrList(..), solved, parseOrs)
+import Domain.Math.QuadraticEquations (solvedList)
+import Domain.Math.OrList
+import Domain.Math.Parser
 import Domain.Math.Views
 import Test.QuickCheck (oneof)
 
@@ -32,11 +33,11 @@ coverUpExercise = makeExercise
    , domain        = "math"
    , description   = "solve an equation by covering up"
    , status        = Experimental
-   , parser        = parseOrs
+   , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = \a b -> a==b
    , equivalence   = \_ _ -> True
-   , finalProperty = solved
-   , ruleset       = map liftF [rule1, rule2, rule3, rule4, rule5, rule6, rule7]
+   , finalProperty = solvedList
+   , ruleset       = map ignoreContext [rule1, rule2, rule3, rule4, rule5, rule6, rule7]
    , strategy      = coverUpStrategy
    , generator     = oneof (map (return . OrList . return) (concat (fillInResult ++ coverUpEquations)))
    }
@@ -46,7 +47,7 @@ coverUpExercise = makeExercise
    
 coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 coverUpStrategy = label "Cover-up" $ 
-   repeat (alternatives $ map liftF [rule1, rule2, rule3, rule4, rule5, rule6, rule7])
+   repeat (alternatives $ map ignoreContext [rule1, rule2, rule3, rule4, rule5, rule6, rule7])
 
 rule1, rule2, rule3, rule4, rule5, rule6, rule7 :: Rule (OrList (Equation Expr))
 rule1 = makeSimpleRuleList "coverUpPlus"        (toOrs (fmap return . coverUpPlus))

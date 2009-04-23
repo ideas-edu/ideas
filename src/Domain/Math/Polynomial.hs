@@ -44,6 +44,9 @@ instance Num a => Num (Polynomial a) where
 var :: Num a => Polynomial a
 var = P (IM.singleton 1 1)
 
+con :: a -> Polynomial a
+con a = P (IM.singleton 0 a)
+
 -- | Raise all powers by a (non-negative) constant
 raise :: Int -> Polynomial a -> Polynomial a
 raise i (P m)

@@ -2,7 +2,7 @@ module Domain.Math.HigherDegreeEquations where
   -- (higherDegreeEquationExercise, main) where
 
 import Prelude hiding ((^), repeat)
-import Data.List (nub, sort, (\\), intersperse)
+import Data.List (nub, (\\))
 import Data.Maybe
 import Common.Context
 import Common.Exercise
@@ -12,11 +12,11 @@ import Common.Transformation
 import Common.Strategy hiding (not)
 import Common.Uniplate
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.LinearEquations (showDerivation, showDerivations, solvedEquation)
+import Domain.Math.QuadraticEquations (solvedList)
+import Domain.Math.OrList
 import Domain.Math.Expr
 import Domain.Math.Parser
 import Domain.Math.Symbolic
-import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Views
 import Domain.Math.Equation
 import Control.Monad 
@@ -37,7 +37,7 @@ higherDegreeEquationExercise = makeExercise
                      -- let f (OrList xs) = sort (map (fmap cleanUpExpr) xs)
                      -- in \a b -> a == b
    , equivalence   = \_ _ -> True -- equality higherDegreeEquationExercise -- TO DO: what about equivalence for undecidable domains?
-   , finalProperty = solved
+   , finalProperty = solvedList
    , ruleset       = allRules
    , strategy      = equationsStrategy
    , generator     = oneof (map (return . OrList . return) $ take 1 higherDegreeEquations)
@@ -56,28 +56,6 @@ parseOrs = f . P.parse pOrs . P.scanWith myScanner
  
    f (e, []) = Right e
    f (_, xs) = Left $ P.ErrorMessage $ unlines $ map show xs
-
---------------------
-
-newtype OrList a = OrList [a] deriving (Ord, Eq)
-
-instance Functor OrList where
-   fmap f (OrList xs) = OrList (map f xs)
-
-instance Arbitrary a => Arbitrary (OrList a) where
-   arbitrary = do 
-      n  <- choose (1, 3)
-      xs <- vector n
-      return (OrList xs)
-   coarbitrary (OrList xs) = coarbitrary xs
-
-instance Show a => Show (OrList a) where
-   show (OrList xs) 
-      | null xs   = "true"
-      | otherwise = unwords (intersperse "or" (map show xs))
-
-solved :: OrList (Equation Expr) -> Bool
-solved (OrList xs) = all solvedEquation xs
  
 -----------------------------------------------------------
       
@@ -276,9 +254,6 @@ allRules = map liftRule [ rule1, rule2, rule3, rule4, rule5
 liftRule :: Rule a -> Rule (Context a)
 liftRule = lift $ makeLiftPair (return . fromContext) (fmap . const)
 
-test n = showDerivations (unlabel equationsStrategy) 
-   (inContext (OrList [higherDegreeEquations !! (n-1)]))
-
 factors :: Integer -> [(Integer, Integer)]
 factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
  where h = floor (sqrt (abs (fromIntegral n)))
@@ -289,12 +264,5 @@ q = traceStrategy (unlabel equationsStrategy)
  where x = variable "x"
        
 main :: IO ()
-main = flip mapM_ [1..10] $ \i -> do
-   let line  = putStrLn (replicate 50 '-')  
-       start = inContext (OrList [higherDegreeEquations !! (i-1)])
-   {- line
-   putStrLn $ "Exercise " ++ show i
-   line -} 
-   case derivations (unlabel equationsStrategy) start of
-      hd:_ -> putStrLn "ok" --showDerivation "" hd
-      _    -> putStrLn "unsolved"
+main = showDerivations higherDegreeEquationExercise xs 
+ where xs = map (OrList . return) (take 5 higherDegreeEquations)

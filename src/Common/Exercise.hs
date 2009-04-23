@@ -21,6 +21,7 @@ module Common.Exercise
    , generator, suitableTerm -}
      -- * Miscellaneous
    , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
+   , showDerivation, showDerivations
    , checkExercise, checkParserPretty
    ) where
 
@@ -133,6 +134,26 @@ getRule ex s =
       [hd] -> return hd
       []   -> fail $ "Could not find ruleid " ++ s
       _    -> fail $ "Ambiguous ruleid " ++ s
+
+showDerivations :: Exercise a -> [a] -> IO ()
+showDerivations ex xs = mapM_ f (zip [1..] xs)
+ where
+   f (i, x) = do
+      putStrLn (replicate 50 '-')
+      putStrLn $ "-- Exercise " ++ show i ++ "\n"
+      showDerivation ex x
+
+showDerivation :: Exercise a -> a -> IO ()
+showDerivation ex start =
+   putStrLn $ unlines $ 
+   case derivations (unlabel (strategy ex)) (inContext start) of 
+      [] -> [f (inContext start), "    => no derivation"]
+      (a, xs):_ -> f a : concatMap g xs
+ where
+   f a = "  " ++ prettyPrinter ex (fromContext a)
+   g (r, a)
+      | isMinorRule r = []
+      | otherwise =  ["    => " ++ show r, f a]
          
 ---------------------------------------------------------------
 -- Checks for an exercise

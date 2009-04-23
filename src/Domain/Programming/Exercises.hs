@@ -1,3 +1,4 @@
+{-# OPTIONS -XStandaloneDeriving #-}
 module Domain.Programming.Exercises where
 
 import Domain.Programming.Expr

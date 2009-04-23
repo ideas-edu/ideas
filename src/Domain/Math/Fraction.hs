@@ -1,5 +1,6 @@
 module Domain.Math.Fraction 
-   (fractionExercise, calculationExercise, cleanUpStrategy, go) where
+   ( fractionExercise, calculationExercise, go
+   ) where
 
 import Prelude hiding (repeat)
 import Control.Monad
@@ -49,12 +50,6 @@ fractionStrategy = cleanUpStrategy (fmap cleanUpExpr) $ label "fraction" $
 
 ------------------------------------------------------------
 -- Clean up: only some terms that look really "odd"
-
-cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategy f s = mapRules g (label (strategyName s) (doAfter f idRule <*> unlabel s))
- where
-   g r | isMajorRule r = doAfter f r  
-       | otherwise     = r
  
 cleanUpExpr :: Expr -> Expr
 cleanUpExpr = checkBottom . rewrite f

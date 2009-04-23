@@ -1,19 +1,17 @@
 module Domain.Math.LinearEquations 
   ( linearEquationExercise, testAll, showDerivation, showDerivations
-  , solvedEquation, liftF, minusT, merge, divisionT, timesT, solveEquation, distributionT) where
+  , solvedEquation, minusT, merge, divisionT, timesT, solveEquation, distributionT, normalizeProduct) where
 
 import Prelude hiding (repeat)
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import qualified Text.Parsing as P
 import Common.Strategy hiding (not, fail)
 import Common.Transformation
 import Common.Uniplate
 import Domain.Math.Equation
 import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
-import Domain.Math.Fraction (cleanUpStrategy)
 import Domain.Math.Symbolic
 import Domain.Math.Parser
 import Domain.Math.Views
@@ -31,7 +29,7 @@ linearEquationExercise = makeExercise
    , domain        = "math"
    , description   = "solve a linear equation"
    , status        = Experimental
-   , parser        = parseLineq
+   , parser        = parseWith (pEquation pExpr)
    , equality      = \a b -> a==b -- fmap normalizeExpr a == fmap normalizeExpr b
    , equivalence   = \a b -> viewEquivalent equationView a b || a==b
    , finalProperty = solvedEquation
@@ -40,25 +38,14 @@ linearEquationExercise = makeExercise
    , generator     = oneof (map return (concat linearEquations))
    }
 
-parseLineq :: String -> Either P.SyntaxError (Equation Expr)
-parseLineq = f . P.parse (pEquation pExpr) . P.scanWith myScanner
- where 
-   myScanner = scannerExpr {P.keywordOperators = "==" : P.keywordOperators scannerExpr }
- 
-   f (e, []) = Right e
-   f (_, xs) = Left $ P.ErrorMessage $ unlines $ map show xs
-
 ------------------------------------------------------------
 -- Strategy
 
 solveEquation :: LabeledStrategy (Context (Equation Expr))
-solveEquation = liftF $ cleanUpStrategy (fmap simplifyExpr) $
+solveEquation = ignoreContext $ cleanUpStrategy (fmap simplifyExpr) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> distribute <|> merge))
    <*> label "Phase 2" (try varToLeft <*> try conToRight <*> try scaleToOne)
-
-liftF :: Lift f => f a -> f (Context a)
-liftF = lift $ makeLiftPair (return . fromContext) (fmap . const)
 
 -------------------------------------------------------
 -- Transformations
@@ -84,10 +71,12 @@ distributionT = makeTrans "distribute" f
  where
    f (a :*: b) =
       case (match sumView a, match sumView b) of
-         (Just as, _) | length as > 1 ->
+         (Just as, Just bs) | length as > 1 || length bs > 1 -> 
+            return $ build sumView [ (a .*. b) | a <- as, b <- bs ]
+{-         (Just as, _) | length as > 1 ->
             return $ build sumView (map (.*. b) as) 
          (_, Just bs) | length bs > 1 -> 
-            return $ build sumView (map (a .*.) bs)
+            return $ build sumView (map (a .*.) bs) -}
          _ -> Nothing
    f _ = Nothing
 
@@ -100,7 +89,7 @@ mergeT = makeTrans "merge" $ return . simplifyWith f sumView
 -- Rewrite Rules
 
 lineqRules :: [Rule (Context (Equation Expr))]
-lineqRules = map liftF
+lineqRules = map ignoreContext
    [ removeDivision, merge, distribute
    , varToLeft, conToRight, scaleToOne
    ]
@@ -211,27 +200,4 @@ testAll = all f (concat linearEquations)
                  a :==: b -> if a==b then True else error (show (eq, a, b))
 
 main :: IO ()
-main = flip mapM_ [ (level, i) | level <- [1..5], i <- [1..10] ] $ \(level, i) -> do
-   let line  = putStrLn (replicate 50 '-')  
-       start = inContext $ (linearEquations !! (level-1)) !! (i-1)
-   line
-   putStrLn $ "Exercise " ++ show i ++ " (level " ++ show level ++ ")"
-   line 
-   case derivations (unlabel solveEquation) start of
-      hd:_ -> showDerivation "" hd
-      _    -> putStrLn "unsolved"
-      
-showDerivations :: Show a => Strategy (Context a) -> Context a -> IO ()
-showDerivations s a = mapM_ make list
- where
-   list = zip [1..] (derivations s a)
-   make (n, d) = showDerivation ("Derivation " ++ show n ++ ":") d
-
-showDerivation :: Show a => String -> (Context a, [(Rule (Context a), Context a)]) -> IO ()
-showDerivation title (a, list) = 
-   putStrLn $ unlines $ title : f a : concatMap g list
- where
-   f a = "  " ++ show (fromContext a)
-   g (r, a)
-      | isMinorRule r = []
-      | otherwise =  ["    => " ++ show r, f a]
+main = showDerivations linearEquationExercise (concat linearEquations)

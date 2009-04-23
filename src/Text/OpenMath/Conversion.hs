@@ -21,7 +21,6 @@ import Domain.Math.Symbolic
 import Domain.Math.Equation
 import Domain.Math.Expr
 import Domain.Math.SExpr
-import Domain.Math.HigherDegreeEquations (OrList(..))
 import Data.Maybe
 import Data.Ratio
 import Control.Monad
@@ -214,11 +213,6 @@ instance IsOMOBJ Expr where
 instance IsOMOBJ SExpr where 
    toOMOBJ   = toOMOBJ . toExpr
    fromOMOBJ = fmap simplifyExpr . fromOMOBJ
-
-instance IsOMOBJ a => IsOMOBJ (OrList a) where 
-   toOMOBJ (OrList xs) = listop orSymbol xs
-   fromOMOBJ =  fromN orSymbol OrList 
-             |> (liftM (\x -> OrList [x]) . fromOMOBJ)
 
 --------------------------------------------------------------------
 -- Linear algebra types

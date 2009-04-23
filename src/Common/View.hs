@@ -15,7 +15,7 @@ module Common.View
    ( Match, View, makeView, Simplification, makeSimplification
    , match, build, canonical, canonicalWith, simplify, simplifyWith
    , belongsTo, viewEquivalent, viewEquivalentWith
-   , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
+   , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
    ) where
 
 import Control.Arrow hiding ((>>>))
@@ -76,7 +76,7 @@ viewEquivalentWith eq view x y =
 -- Arrow combinators
 
 identity :: View a a 
-identity = undefined
+identity = makeView Just id
 
 (>>>) :: View a b -> View b c -> View a c
 v >>> w = makeView (\a -> match v a >>= match w) (build v . build w)

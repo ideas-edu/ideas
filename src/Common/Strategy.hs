@@ -32,7 +32,7 @@ module Common.Strategy
    , fix, once, somewhere, topDown, bottomUp
      -- * Strategy locations
    , StrategyLocation, StrategyOrRule, strategyLocations, subStrategy
-   , mapRules, rulesInStrategy
+   , mapRules, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix
    , Step(..), runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
@@ -333,6 +333,13 @@ rulesInStrategy s = [ r | (_, Right r) <- strategyLocations s ]
 -- local helper-function
 combine :: ([Int] -> a -> b) -> [Int] -> RE.Grammar a -> RE.Grammar b
 combine g is = fmap (\(i, a) -> g (is++[i]) a) . RE.withIndex
+
+-- | Use a function as do-after hook for all rules in a labeled strategy
+cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
+cleanUpStrategy f s = mapRules g (label (strategyName s) (doAfter f idRule <*> unlabel s))
+ where
+   g r | isMajorRule r = doAfter f r  
+       | otherwise     = r
 
 -----------------------------------------------------------
 --- Prefixes

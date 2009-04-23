@@ -12,7 +12,6 @@ HPCTMPDIR = $(OUTDIR)/hpc-tmp
 # Directories
 
 HADDOCKDIR  = haddock
-WIKIDIR     = wikipages
 EXERCISEDIR = exercises
 COVERAGEDIR = coverage
 
@@ -25,7 +24,7 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-documentation: haddock wikipages exercisedocs hpc
+documentation: haddock exercisedocs hpc
 
 haddock: $(HADDOCKDIR)/index.html
 exercisedocs: $(EXERCISEDIR) $(PDFTARGETS)
@@ -33,12 +32,6 @@ hpc: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
 	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../doc/$(HADDOCKDIR) --prologue=../doc/$(HADDOCKDIR)/prologue Service/Main.hs
-	
-
-$(WIKIDIR): $(HS-SOURCES)
-	$(MKDIR) -p $(WIKIDIR)
-	$(CD) ..; $(RUNHASKELL) -isrc src/OpenMath/StrategyToWiki.hs doc/$(WIKIDIR)
-	$(TOUCH) $(WIKIDIR) # To get a timestamp
 	
 $(EXERCISEDIR): $(HS-SOURCES)
 	$(RUNHASKELL) -i$(SRCDIR) $(SRCDIR)/Presentation/ExerciseDoc/ExerciseDoc.hs $(EXERCISEDIR)

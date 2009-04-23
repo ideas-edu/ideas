@@ -20,15 +20,14 @@ import Common.Grammar
 import Common.Rewriting
 import Common.Transformation
 import Control.Monad
+import Common.Utils (snd3)
 import System.Environment
 
 import qualified Domain.Logic as Logic
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.RelationAlgebra as RA
-import qualified Domain.Fraction as Fraction
 
-import qualified OpenMath.LAServer as LAServer
 import qualified Service.ModeJSON as ModeJSON
 import qualified Service.ModeXML as ModeXML
 import Data.List
@@ -46,7 +45,6 @@ main = do
    checkExercise LA.solveSystemWithMatrixExercise
    checkExercise LA.solveGramSchmidt
    checkExercise RA.cnfExercise
-   checkExercise Fraction.simplExercise
 
    putStrLn "III) Confluence checks"
    logicConfluence
@@ -66,9 +64,9 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
    
 mathdoxRequests, jsonRPCs, xmlRequests :: IO ()
-mathdoxRequests = testRequests (return . LAServer.respond . Just)       "mathdox-request" ".txt"
-jsonRPCs        = testRequests (liftM fst . ModeJSON.processJSON)       "json-rpc"        ".json"
-xmlRequests     = testRequests (liftM fst . ModeXML.processXML Nothing) "xml-request"     ".xml"
+mathdoxRequests = testRequests (liftM snd3 . ModeXML.processXML) "mathdox-request" ".txt"
+jsonRPCs        = testRequests (liftM snd3 . ModeJSON.processJSON)       "json-rpc"        ".json"
+xmlRequests     = testRequests (liftM snd3 . ModeXML.processXML) "xml-request"     ".xml"
 
 testRequests :: (String -> IO String) -> String -> String -> IO ()
 testRequests eval subDir suffix = do

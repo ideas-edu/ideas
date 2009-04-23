@@ -16,7 +16,7 @@ treeDiff x y = fst (rec x y)
    rec x y
       | not b     = ([(l, if null l then Different else Inside) | l <- allLocations y], False)
       | nr==0     = ([(l, Equal) | l <- allLocations y] , True)
-      -- | nr>1      = (([], Split):concat lists, False)
+ {-   | nr>1      = (([], Split):concat lists, False)  -}
       | otherwise = (([], Top):concat lists, False)
     where
       xs = children x

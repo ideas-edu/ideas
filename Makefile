@@ -109,6 +109,25 @@ endif
 
 nolicense:
 	find src -name *.hs -print0 | xargs --null grep -L "LICENSE"\
+
+#-------------------------------------------------------------------------
+# Installing on the IDEAS server
+
+ifeq ($(IDEASSERVER), yes)
+
+INSTALL-CGI  = /var/www/cgi-bin
+INSTALL-API  = /var/www/html/docs/latest/api
+INSTALL-HPC  = /var/www/html/docs/latest/coverage
+INSTALL-TEST = /var/www/html/docs/latest 
+
+install: service
+	# "sudo make install"
+	$(CP) $(BINDIR)/service.cgi $(INSTALL-CGI)
+	$(CP) $(DOCDIR)/haddock/* $(INSTALL-API)
+	$(CP) $(DOCDIR)/coverage/* $(INSTALL-HPC)
+	$(CP) $(TESTDIR)/test.log $(INSTALL-TEST)
+
+endif
 	
 #---------------------------------------------------------------------------------------
 # Cleaning up

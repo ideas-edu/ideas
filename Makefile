@@ -7,21 +7,15 @@ VERSION = 0.5.3
 
 include Makefile.incl
 
-binaries: service viewlog solvergui ideas
+binaries: service solvergui ideas
 
 service: $(BINDIR)/service.cgi
-viewlog: $(BINDIR)/viewlog.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
 ideas: $(BINDIR)/ideasWX$(EXE)
 
 $(BINDIR)/service.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) -o $@ src/Service/Main.hs
-	$(STRIP) $@
-
-$(BINDIR)/viewlog.cgi: $(HS-SOURCES) revision
-	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) -isrc/Presentation -o $@ src/Presentation/ViewLog/Main.hs
 	$(STRIP) $@
 
 $(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES) revision
@@ -50,11 +44,8 @@ $(BINDIR)/ounl.jpg: $(SRCDIR)/Presentation/ExerciseAssistant/ounl.jpg
 #---------------------------------------------------------------------------------------
 # Other directories
 
-documentation: doc
-
-$(DOCDIR): $(HS-SOURCES)	
+documentation: docs
 	make -C $(DOCDIR) || exit 1
-	$(TOUCH) $(DOCDIR) # To get a timestamp
 
 unit-tests: $(TESTDIR)/test.log
 test: $(TESTDIR)/test.log

@@ -63,7 +63,8 @@ type SymbolMap = [(String, OMOBJ, Maybe Int)]
 symbolMap :: SymbolMap
 symbolMap = 
    [ ("pi", piSymbol, Just 0), ("Diff", diffSymbol, Just 1), ("sin", sinSymbol, Just 1)
-   , ("cos", cosSymbol, Just 1), ("ln", lnSymbol, Just 1), ("power", powerSymbol, Just 2)
+   , ("cos", cosSymbol, Just 1), ("ln", lnSymbol, Just 1) -- , ("power", powerSymbol, Just 2)
+   , ("^", powerSymbol, Just 2)
    ]
    
 findByName :: String -> Maybe (OMOBJ, Maybe Int)

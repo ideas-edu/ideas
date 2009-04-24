@@ -39,7 +39,7 @@ status:
 
 BINDIR  = bin
 OUTDIR  = out
-DOCDIR  = doc
+DOCDIR  = docs
 TESTDIR = test
 
 #---------------------------------------------------------------------------------------

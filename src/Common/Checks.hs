@@ -76,8 +76,10 @@ testRequests eval subDir suffix = do
        f = reverse . drop (length suffix) . reverse
    flip mapM_ names $ \base -> do
       useFixedStdGen -- fix the random number generator
-      txt <- readFile $ path ++ "/" ++ base ++ suffix
-      exp <- readFile $ path ++ "/" ++ base ++ ".exp"
+      txt <- readFile (path ++ "/" ++ base ++ suffix)
+                `catch` \_ -> return ""
+      exp <- readFile (path ++ "/" ++ base ++ ".exp")
+                `catch` \_ -> return "" 
       out <- eval txt
       reportTest (base ++ suffix) (out ~= exp)
  where

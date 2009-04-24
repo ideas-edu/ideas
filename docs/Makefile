@@ -11,7 +11,7 @@ HPCTMPDIR = $(OUTDIR)/hpc-tmp
 #---------------------------------------------------------------------------------------
 # Directories
 
-HADDOCKDIR  = haddock
+HADDOCKDIR  = api
 EXERCISEDIR = exercises
 COVERAGEDIR = coverage
 
@@ -24,14 +24,14 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-documentation: haddock exercisedocs hpc
+documentation: api coverage exercisedocs
 
-haddock: $(HADDOCKDIR)/index.html
+api: $(HADDOCKDIR)/index.html
 exercisedocs: $(EXERCISEDIR) $(PDFTARGETS)
-hpc: $(COVERAGEDIR)/hpc_index.html
+coverage: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
-	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../doc/$(HADDOCKDIR) --prologue=../doc/$(HADDOCKDIR)/prologue Service/Main.hs
+	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../$(DOCDIR)/$(HADDOCKDIR) --prologue=../$(DOCDIR)/$(HADDOCKDIR)/prologue Service/Main.hs
 	
 $(EXERCISEDIR): $(HS-SOURCES)
 	$(RUNHASKELL) -i$(SRCDIR) $(SRCDIR)/Presentation/ExerciseDoc/ExerciseDoc.hs $(EXERCISEDIR)
@@ -49,14 +49,13 @@ $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(CD) $(HPCTMPDIR); ./checks$(EXE) ../../test $(PROFILERTS) || ($(RM) -f checks$(EXE).tix; exit 1);
 	
 $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
-	$(MKDIR) -p $(COVERAGEDIR)
 	$(HPC) markup --hpcdir=$(HPCTMPDIR) --destdir=$(COVERAGEDIR) $(HPCTMPDIR)/checks$(EXE)
 	
 #---------------------------------------------------------------------------------------
 # Cleaning up
 
 clean:
-	$(RM) -rf coverage
+	$(RM) -rf $(COVERAGEDIR)/*.html
 	$(RM) -rf wikipages
 	$(RM) -f  haddock/*.html haddock/*.gif haddock/*.css haddock/*.js
 	make -C $(EXERCISEDIR) clean

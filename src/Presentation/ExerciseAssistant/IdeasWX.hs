@@ -30,9 +30,9 @@ import Session
 --import Data.IORef
 import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
-import Domain.Programming.Exercises (heliumExercise, isortExercise)
+--import Domain.Programming.Exercises (heliumExercise, isortExercise)
 
-exerciseList = Some heliumExercise : Some isortExercise : SE.exerciseList
+exerciseList = {- Some heliumExercise : Some isortExercise : -} SE.exerciseList
 
 domains :: [String]
 domains = sort $ nub [ domain e | Some e <- exerciseList ]

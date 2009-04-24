@@ -7,14 +7,27 @@ import Common.Uniplate
 import Common.Exercise
 import Common.Transformation
 import Common.Apply
-import Text.Parsing (SyntaxError(..))
+--import Common.Parsing (SyntaxError(..))
 import Domain.Programming.Expr
 import Domain.Programming.Rules
+import Domain.Programming.HeliumRules
+import Domain.Programming.Helium
 import Domain.Programming.Parser
 import Domain.Programming.Prelude (isortE2,insertE,insertNilE,insertConsE)
 import Domain.Programming.Eval (eval, mylist)
 import Data.Maybe
 import Data.Char
+
+-- sum strategy
+sumStrategy  =  introModule
+            <*> introPatternBinding 
+            <*> introPatternVariable "mysum"
+            <*> introRHSExpr 
+            <*> introNormalApplication 2
+            <*> introIdentifier "foldr"
+            <*> introInfixApplication 
+            <*> introOperator "+"
+            <*> introInt "0"
 
 -- strategies derived from the abstract syntax of expressions
 

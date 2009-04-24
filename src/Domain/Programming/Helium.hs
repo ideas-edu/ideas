@@ -1,5 +1,8 @@
 module Domain.Programming.Helium 
-   (compile, module UHA_Syntax, undef, range, module UHA_Range) where
+   ( compile, module UHA_Syntax, module UHA_Range
+   , emptyProg, range
+   , undefExpr, undefPattern, undefRHS, undefDecl
+   ) where
 
 import PhaseLexer
 import PhaseParser
@@ -25,7 +28,11 @@ import CoreToImportEnv(getImportEnvironment)
 import qualified ExtractImportDecls(sem_Module)
 import Data.List(isPrefixOf)
 import Control.Monad.Trans
-import Common.Uniplate
+-- import Common.Uniplate
+
+import Data.Typeable
+import Data.Data hiding (Fixity)
+
 
 -- main = either print (\_ -> print "OK") $ compile "mysum xs = foldr (+) 0 xs"
 
@@ -33,8 +40,21 @@ import Common.Uniplate
 range :: (Int, Int) -> Range
 range (line, col) = Range_Range (Position_Position "" line col) Position_Unknown
 
-undef :: Expression
-undef = Expression_Variable noRange (Name_Special noRange [] "undefined")
+emptyProg =  Module_Module noRange MaybeName_Nothing MaybeExports_Nothing
+                           (Body_Body noRange [] [undefDecl])
+
+-- Typed holes in a incomplete program
+undefExpr :: Expression
+undefExpr = Expression_Variable noRange $ Name_Special noRange [] "undefined"
+
+undefPattern :: Pattern
+undefPattern = Pattern_Variable noRange $ Name_Special noRange [] "undefined"
+
+undefRHS :: RightHandSide
+undefRHS = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
+
+undefDecl :: Declaration
+undefDecl = Declaration_Empty noRange
 
 -- the compiler/parser
 compile :: String -> Either String Module
@@ -241,7 +261,13 @@ deriving instance Show Qualifier
 deriving instance Show Alternative
 deriving instance Show Import
 
-
+deriving instance Eq Module
+deriving instance Eq Body
+deriving instance Eq MaybeName
+deriving instance Eq MaybeNames
+deriving instance Eq MaybeExports
+deriving instance Eq ImportDeclaration
+deriving instance Eq Export 
 deriving instance Eq Expression
 deriving instance Eq Type
 deriving instance Eq RecordExpressionBinding
@@ -265,3 +291,80 @@ deriving instance Eq LeftHandSide
 deriving instance Eq ContextItem
 deriving instance Eq RecordPatternBinding
 deriving instance Eq GuardedExpression
+deriving instance Eq MaybeImportSpecification
+deriving instance Eq ImportSpecification
+deriving instance Eq Import
+
+deriving instance Data Module
+deriving instance Data Range
+deriving instance Data Position
+deriving instance Data Name
+deriving instance Data Body
+deriving instance Data MaybeName
+deriving instance Data MaybeNames
+deriving instance Data MaybeExports
+deriving instance Data Declaration
+deriving instance Data ImportDeclaration
+deriving instance Data Export 
+deriving instance Data Type
+deriving instance Data RightHandSide
+deriving instance Data Pattern
+deriving instance Data Constructor
+deriving instance Data FunctionBinding
+deriving instance Data MaybeInt
+deriving instance Data Fixity
+deriving instance Data MaybeDeclarations
+deriving instance Data SimpleType
+deriving instance Data ContextItem
+deriving instance Data MaybeImportSpecification
+deriving instance Data Expression
+deriving instance Data RecordPatternBinding
+deriving instance Data Literal
+deriving instance Data GuardedExpression
+deriving instance Data FieldDeclaration
+deriving instance Data AnnotatedType
+deriving instance Data LeftHandSide
+deriving instance Data ImportSpecification
+deriving instance Data RecordExpressionBinding
+deriving instance Data MaybeExpression
+deriving instance Data Statement
+deriving instance Data Qualifier
+deriving instance Data Alternative
+deriving instance Data Import
+
+deriving instance Typeable Module
+deriving instance Typeable Range
+deriving instance Typeable Position
+deriving instance Typeable Name
+deriving instance Typeable Body
+deriving instance Typeable MaybeName
+deriving instance Typeable MaybeNames
+deriving instance Typeable MaybeExports
+deriving instance Typeable Declaration
+deriving instance Typeable ImportDeclaration
+deriving instance Typeable Export 
+deriving instance Typeable Type
+deriving instance Typeable RightHandSide
+deriving instance Typeable Pattern
+deriving instance Typeable Constructor
+deriving instance Typeable FunctionBinding
+deriving instance Typeable MaybeInt
+deriving instance Typeable Fixity
+deriving instance Typeable MaybeDeclarations
+deriving instance Typeable SimpleType
+deriving instance Typeable ContextItem
+deriving instance Typeable MaybeImportSpecification
+deriving instance Typeable Expression
+deriving instance Typeable RecordPatternBinding
+deriving instance Typeable Literal
+deriving instance Typeable GuardedExpression
+deriving instance Typeable FieldDeclaration
+deriving instance Typeable AnnotatedType
+deriving instance Typeable LeftHandSide
+deriving instance Typeable ImportSpecification
+deriving instance Typeable RecordExpressionBinding
+deriving instance Typeable MaybeExpression
+deriving instance Typeable Statement
+deriving instance Typeable Qualifier
+deriving instance Typeable Alternative
+deriving instance Typeable Import

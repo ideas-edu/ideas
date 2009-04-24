@@ -1,9 +1,7 @@
 module Domain.Programming.HeliumRules where
 
 import Common.Context
---import Common.Uniplate
 import Common.Transformation
-import Common.Uniplate
 import Common.Apply
 import Domain.Programming.Helium
 import Data.List
@@ -11,93 +9,161 @@ import Data.Maybe
 import Data.Char
 import Control.Monad
 
+import Data.Generics.Biplate
+import Data.Generics.PlateData
+import Data.Data hiding (Fixity)
 
-introModule :: Rule Module
-introModule = minorRule $ makeSimpleRule "Intro module" f
+
+-- Empty programming AST
+introModule :: Rule (Context Module)
+introModule = minorRule $ makeSimpleRule "Intro module" (const (return (inContext emptyProg)))
+
+--------------------------------------------------------------------------------
+-- Declarations
+--------------------------------------------------------------------------------
+
+introPatternBinding :: Rule (Context Module)
+introPatternBinding = toRule "Introduce pattern binding" undefDecls f
   where 
-    f _ = return $ 
-            Module_Module 
-              noRange                           -- Range
-              MaybeName_Nothing                 -- Module name
-              MaybeExports_Nothing              -- Exports
-              ( Body_Body 
-                noRange               -- Body, range
-                []                    -- Imports
-                [ Declaration_PatternBinding    -- Declarations
-                  noRange                                  -- range
-                  ( Pattern_Variable                       -- Pattern variable
-                    noRange                                                                                                   ( Name_Identifier noRange [] "f" )   -- name
-                  )
-                  ( RightHandSide_Expression 
-                    noRange
-                    undef         -- expression
-                    MaybeDeclarations_Nothing       -- declarations
-                  ) 
-                ]
-              )
+    f = Declaration_PatternBinding noRange undefPattern undefRHS
+
+
+--------------------------------------------------------------------------------
+-- Patterns
+--------------------------------------------------------------------------------
+introPatternVariable :: String -> Rule (Context Module)
+introPatternVariable = toRule "Introduce pattern variable" undefPatterns . f
+  where
+    f name = Pattern_Variable noRange (Name_Identifier noRange [] name)
+
+
+--------------------------------------------------------------------------------
+-- RightHandSide
+--------------------------------------------------------------------------------
+introRHSExpr :: Rule (Context Module)
+introRHSExpr = toRule "Introduce pattern variable" undefRHSs f
+  where
+    f = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
 
 
 --------------------------------------------------------------------------------
 -- Expressions
 --------------------------------------------------------------------------------
 
-introNormalApplication :: Int -> Rule Module
-introNormalApplication = (toRule "Introduce application") . normalApplication
-
-normalApplication :: Int -> Expression -> Maybe Expression
-normalApplication nargs e = case e of
-  undef -> return $ Expression_NormalApplication 
-                      noRange
-                      undef
-                      (take nargs (repeat undef))
-  _ -> Nothing
-
-introInfixApplication :: Rule Module
-introInfixApplication = toRule "Introduce operator" f
+introNormalApplication :: Int -> Rule (Context Module)
+introNormalApplication = toRule "Introduce application" undefExprs . f
   where 
-    f e = case e of 
-            undef -> return $ Expression_InfixApplication 
-                                noRange
-                                MaybeExpression_Nothing -- need to do something with this... maybe undef...
-                                undef                   
-                                MaybeExpression_Nothing 
-            _     -> Nothing
+    f nargs = Expression_NormalApplication noRange undefExpr $ take nargs $ repeat undefExpr
 
+introInfixApplication :: Rule (Context Module)
+introInfixApplication = toRule "Introduce operator" undefExprs e
+  where -- need to do something with the operands ... maybe undefExpr...
+    e = Expression_InfixApplication noRange MaybeExpression_Nothing undefExpr MaybeExpression_Nothing
 
 -- Variables
-introIdentifier :: String -> Rule Module
-introIdentifier name = toRule "Intro identifier" f
-  where
-    f e | e == undef = return $ Expression_Variable 
-                                  noRange 
-                                  (Name_Identifier noRange [] name)
-    f _ = Nothing
+introIdentifier :: String -> Rule (Context Module)
+introIdentifier = toRule "Intro identifier" undefExprs . f
+  where 
+    f name = Expression_Variable noRange $ Name_Identifier noRange [] name
 
-introOperator :: String -> Rule Module
-introOperator name = toRule "Intro operator" f
-  where
-    f e | e == undef = return $ Expression_Variable 
-                                  noRange 
-                                  (Name_Operator noRange [] name)
-    f _ = Nothing
-
+introOperator :: String -> Rule (Context Module)
+introOperator = toRule "Intro operator" undefExprs . f
+  where 
+    f name = Expression_Variable noRange $ Name_Operator noRange [] name
 
 -- Literals
-introInt :: String -> Rule Module
-introInt i = toRule "Intro int" f
-  where
-    f e | e == undef = return $ Expression_Literal noRange $ Literal_Int noRange i
-    f _ = Nothing
+introInt :: String -> Rule (Context Module)
+introInt = toRule "Intro int" undefExprs . f
+  where 
+    f i = Expression_Literal noRange $ Literal_Int noRange i
 
-introString :: String -> Rule Module
-introString s = toRule "Intro literal" f
+introString :: String -> Rule (Context Module)
+introString = toRule "Intro string" undefExprs . f
   where
-    f e | e == undef = return $ Expression_Literal noRange $ Literal_String noRange s
-    f _ = Nothing
+    f s = Expression_Literal noRange $ Literal_String noRange s
 
 
 --------------------------------------------------------------------------------
--- Lifting expressions to declarations to modules
+-- Help functions
+--------------------------------------------------------------------------------
+
+type Undefs a = Module -> [(a, a -> Module)]
+
+undefs :: (Data.Data.Data a, Eq a) => a -> Undefs a
+undefs undef = filter ((== undef) . fst) . contextsBi
+
+undefDecls    = undefs undefDecl
+undefRHSs     = undefs undefRHS
+undefExprs    = undefs undefExpr
+undefPatterns = undefs undefPattern
+
+toRule :: String -> Undefs a -> a -> Rule (Context Module)
+toRule s u = makeSimpleRule s . (replaceFirstUndef u)
+
+replaceFirstUndef :: Undefs a -> a -> (Context Module) -> Maybe (Context Module)
+replaceFirstUndef u a m = case head (u (fromContext m)) of
+                              f -> return $ inContext $ (snd f) $ a
+                              _ -> Nothing  
+
+--------------------------------------------------------------------------------
+-- Test stuff
+--------------------------------------------------------------------------------
+
+sumAST :: Module
+sumAST = Module_Module (range (1,1)) MaybeName_Nothing MaybeExports_Nothing 
+           (Body_Body (range (1,1)) [] [ sumDecl ])
+
+sumDecl :: Declaration
+sumDecl = Declaration_PatternBinding 
+            (range (1,1))
+            (Pattern_Variable (range (1,1)) (Name_Identifier (range (1,1)) [] "mysum")) 
+            (RightHandSide_Expression 
+               (range (1,7))
+               sumExpr
+               MaybeDeclarations_Nothing
+            )
+
+sumExpr :: Expression
+sumExpr = Expression_NormalApplication 
+            (range (1,9))
+            (Expression_Variable (range (1,9)) (Name_Identifier (range (1,9)) [] "foldr")) 
+            [ Expression_InfixApplication 
+                (range (1,15))
+                MaybeExpression_Nothing 
+                (Expression_Variable (range (1,16)) (Name_Operator (range (1,16)) [] "+")) 
+                MaybeExpression_Nothing
+            , Expression_Literal 
+                (range (1,19))
+                (Literal_Int (range (1,19)) "0")
+            ]
+
+sumExpr' :: Expression
+sumExpr' = Expression_NormalApplication 
+            (range (1,9))
+            undefExpr
+            [ undefExpr, undefExpr ]
+
+
+-- todo:
+
+{-
+getRules :: Module -> [Rule (Context Module)]
+getRules expr = 
+   case expr of
+      Lambda x e -> introLambda x : getRules e
+      MatchList b n c -> introMatchList : getRules b ++ getRules n ++ getRules c
+      Var x -> introVar x : []
+      -- Let x b d -> introLet x : getRules b ++ getRules d
+      Apply (Lambda f b) (Fix (Lambda g e)) | f==g -> introLet f : getRules b ++ getRules e
+      Fix (Lambda x e) -> getRules (makeLet x e (Var "x"))
+      Apply f a -> introApply : getRules f ++ getRules a
+      IfThenElse c t e -> introIf : getRules c ++ getRules t ++ getRules e
+      _ -> error (show expr)
+-}
+
+
+--------------------------------------------------------------------------------
+-- Old stuff
 --------------------------------------------------------------------------------
 
 -- use GP (EMGM) for this
@@ -117,54 +183,4 @@ liftExpression f d = case d of
     (RightHandSide_Guarded rg gexpr w) -> undefined
 
 
---------------------------------------------------------------------------------
--- Help functions
---------------------------------------------------------------------------------
 
-toRule :: String -> (Expression -> Maybe Expression) -> Rule Module
-toRule s f = makeSimpleRule s $ liftDecl $ liftExpression f
-
-
-{-
-getRules :: Module -> [Rule (Context Module)]
-getRules expr = 
-   case expr of
-      Lambda x e -> introLambda x : getRules e
-      MatchList b n c -> introMatchList : getRules b ++ getRules n ++ getRules c
-      Var x -> introVar x : []
-      -- Let x b d -> introLet x : getRules b ++ getRules d
-      Apply (Lambda f b) (Fix (Lambda g e)) | f==g -> introLet f : getRules b ++ getRules e
-      Fix (Lambda x e) -> getRules (makeLet x e (Var "x"))
-      Apply f a -> introApply : getRules f ++ getRules a
-      IfThenElse c t e -> introIf : getRules c ++ getRules t ++ getRules e
-      _ -> error (show expr)
--}
-
-
---buildModule :: [Rule (Context Module)] -> Module
---buildModule = fromContext . foldl (flip applyD) (inContext undef)
-
---applyRule :: Module -> (Module -> Maybe Module) -> Maybe Module
---applyRule e f = somewhereM f e
-
-{-
-focusUndef :: Rule (Context Module)
-focusUndef = minorRule $ makeSimpleRule "Focus on undefined" f
- where
-   f :: Context Module -> Maybe (Context Module)
-   f ce = case findUndefined (fromContext ce) of
-             is:_ -> return (setLocation (makeLocation is) ce)
-             _    -> Nothing
-
-focusTop :: Rule (Context Module)
-focusTop = minorRule $ makeSimpleRule "Focus Top" f
- where
-   f :: Context Module -> Maybe (Context Module)
-   f = return . setLocation (makeLocation [])
-
-findUndefined :: Module -> [[Int]]
-findUndefined e
-   | e == undef = [[]]
-   | otherwise  = [ i:is | (i, c) <- zip [0..] (children e), is <- findUndefined c ]
-
--}

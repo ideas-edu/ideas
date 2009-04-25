@@ -19,6 +19,7 @@ import Data.Maybe
 import Data.Char
 
 -- sum strategy
+sumString = "mysum = foldr (+) 0"
 sumStrategy  =  introModule
             <*> introPatternBinding 
             <*> introPatternVariable "mysum"
@@ -28,6 +29,17 @@ sumStrategy  =  introModule
             <*> introInfixApplication 
             <*> introOperator "+"
             <*> introInt "0"
+
+isortString =  "isort []     = []\n"
+            ++ "isort (x:xs) = insert x (isort xs)\n"
+            ++ "insert x xs = xs\n"
+
+isortStrategy' = getStrategy' $ either (const (error "Cannot compile isort")) id $ compile isortString
+
+-- AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
+-- Biplate only allows (a->a) in container b 
+getStrategy' :: Module -> Strategy (Context Module)
+getStrategy' = undefined
 
 -- strategies derived from the abstract syntax of expressions
 

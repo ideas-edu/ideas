@@ -35,7 +35,7 @@ linearEquationExercise = makeExercise
    , finalProperty = solvedEquation
    , ruleset       = lineqRules
    , strategy      = solveEquation
-   , generator     = oneof (map return (concat linearEquations))
+   , termGenerator = ExerciseList (concat linearEquations)
    }
 
 ------------------------------------------------------------

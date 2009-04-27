@@ -14,11 +14,7 @@
 module Common.Exercise 
    ( -- * Exercises
      Exercise(..), Status(..), makeExercise, stepsRemaining, getRule
-{-   , identifier, domain, description, status
-   , parser, subTerm, prettyPrinter
-   , equivalence, equality, finalProperty
-   , strategy, ruleset, differences, ordering
-   , generator, suitableTerm -}
+   , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
      -- * Miscellaneous
    , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
    , showDerivation, showDerivations
@@ -38,6 +34,7 @@ import Common.Strategy hiding (not, fail)
 import Common.Utils
 import Control.Monad
 import Data.Char
+import System.Random
 import Test.QuickCheck hiding (label, arguments)
 
 data Exercise a = Exercise
@@ -60,8 +57,7 @@ data Exercise a = Exercise
    , differences   :: a -> a -> [([Int], TreeDiff)]
    , ordering      :: a -> a -> Ordering
      -- term generation
-   , generator     :: Gen a
-   , suitableTerm  :: a -> Bool
+   , termGenerator :: TermGenerator a
    }
    
 data Status = Stable | Experimental deriving (Show, Eq)
@@ -86,9 +82,36 @@ makeExercise = Exercise
    , differences   = \_ _ -> [([], Different)]
    , ordering      = compare
    , strategy      = label "Succeed" succeed
-   , generator     = arbitrary
-   , suitableTerm  = const True
+   , termGenerator = simpleGenerator arbitrary
    }
+
+---------------------------------------------------------------
+-- Exercise generators
+
+data TermGenerator a = ExerciseList [a] | ExerciseGenerator (a -> Bool) (Gen a)
+
+simpleGenerator :: Gen a -> TermGenerator a
+simpleGenerator = makeGenerator (const True)
+
+makeGenerator :: (a -> Bool) -> Gen a -> TermGenerator a
+makeGenerator = ExerciseGenerator
+
+randomTerm :: Exercise a -> IO a
+randomTerm ex = do
+   rng <- newStdGen
+   return (randomTermWith rng ex)
+
+randomTermWith :: StdGen -> Exercise a -> a
+randomTermWith rng ex = 
+   case termGenerator ex of
+      ExerciseList xs
+         | null xs   -> error "randomTermWith: empty exercise list"
+         | otherwise -> xs !! fst (randomR (0, length xs - 1) rng)
+      ExerciseGenerator p m 
+         | p a       -> a 
+         | otherwise -> randomTermWith (snd $ next rng) ex
+       where
+         a = generate 100 rng m
 
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
@@ -182,17 +205,21 @@ checkExerciseWith f a = do
    putStrLn "Soundness non-buggy rules" 
    flip mapM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
       putLabel ("    " ++ name r) >> f (equivalence a) r
-   check "non-trivial terms" $ 
-      forAll (generator a) $ \x -> 
-      let trivial  = finalProperty a x
-          rejected = not (suitableTerm a x) && not trivial
-          suitable = suitableTerm a x && not trivial in
-      classify trivial  "trivial"  $
-      classify rejected "rejected" $
-      classify suitable "suitable" $ property True 
-   check "soundness strategy/generator" $ 
-      forAll (generator a) $ \x -> 
-      finalProperty a (fromContext $ applyD (strategy a) (inContext x))
+   
+   case termGenerator a of 
+      ExerciseList _ -> return ()
+      ExerciseGenerator p m -> do
+         check "non-trivial terms" $ 
+            forAll m $ \x -> 
+            let trivial  = finalProperty a x
+                rejected = not (p x) && not trivial
+                suitable = p x && not trivial in
+            classify trivial  "trivial"  $
+            classify rejected "rejected" $
+            classify suitable "suitable" $ property True 
+         check "soundness strategy/generator" $ 
+            forAll m $ \x -> 
+            finalProperty a (fromContext $ applyD (strategy a) (inContext x))
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool

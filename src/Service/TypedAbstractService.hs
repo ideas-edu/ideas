@@ -15,7 +15,7 @@ module Service.TypedAbstractService where
 
 import qualified Common.Apply as Apply
 import Common.Context 
-import Common.Exercise (Exercise(..))
+import Common.Exercise (Exercise(..), randomTermWith)
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
@@ -23,7 +23,6 @@ import Service.SearchSpace (searchSpace)
 import Service.Progress
 import Data.Maybe
 import System.Random
-import qualified Test.QuickCheck as QC
 
 data State a = State 
    { exercise :: Exercise a
@@ -54,9 +53,10 @@ emptyState ex a = State
 generate :: Exercise a -> Int -> IO (State a)
 generate ex level = do 
    stdgen <- newStdGen
-   case QC.generate 100 stdgen (generator ex) of
-      a | suitableTerm ex a -> return (emptyState ex a)
-      _ -> generate ex level
+   return (generateWith stdgen ex level)
+
+generateWith :: StdGen -> Exercise a -> Int -> State a
+generateWith rng ex _ = emptyState ex (randomTermWith rng ex)
 
 derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state = fromMaybe (error "derivation") $ do

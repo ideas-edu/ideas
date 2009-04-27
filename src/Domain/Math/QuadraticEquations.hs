@@ -36,7 +36,7 @@ quadraticEquationExercise = makeExercise
    , finalProperty = solvedList
    , ruleset       = map ignoreContext allRules
    , strategy      = ignoreContext solverQ
-   , generator     = oneof (map (return . OrList . return) $ concat quadraticEquations)
+   , termGenerator = ExerciseList (map (OrList . return) $ concat quadraticEquations)
    }
 
 ------------------------------------------------------------

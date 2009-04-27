@@ -39,7 +39,7 @@ coverUpExercise = makeExercise
    , finalProperty = solvedList
    , ruleset       = map ignoreContext [rule1, rule2, rule3, rule4, rule5, rule6, rule7]
    , strategy      = coverUpStrategy
-   , generator     = oneof (map (return . OrList . return) (concat (fillInResult ++ coverUpEquations)))
+   , termGenerator = ExerciseList (map (OrList . return) (concat (fillInResult ++ coverUpEquations)))
    }
 
 ------------------------------------------------------------

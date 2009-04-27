@@ -61,7 +61,7 @@ solveGramSchmidt = makeExercise
    , ruleset       = rulesGramSchmidt
    , finalProperty = orthonormalList . filter ((/=0) . norm)
    , strategy      = gramSchmidt
-   , generator     = arbBasis 
+   , termGenerator = simpleGenerator arbBasis
    }
 
 solveSystemExercise :: Exercise (Equations SExpr)
@@ -80,8 +80,7 @@ solveSystemExercise = makeExercise
    , ruleset       = equationsRules
    , finalProperty = inSolvedForm
    , strategy      = generalSolutionLinearSystem
-   , generator     = do m <- generator reduceMatrixExercise
-                        return $ matrixToSystem m
+   , termGenerator = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
    
 reduceMatrixExercise :: Exercise (Matrix SExpr)
@@ -97,7 +96,7 @@ reduceMatrixExercise = makeExercise
    , equivalence   = (===)
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm
-   , generator     = fmap (fmap fromInteger) arbNiceMatrix
+   , termGenerator = simpleGenerator arbMatrix
    , strategy      = toReducedEchelon
    }
  
@@ -117,25 +116,25 @@ solveSystemWithMatrixExercise = makeExercise
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
    , finalProperty = either inSolvedForm (const False)
    , strategy      = generalSolutionSystemWithMatrix
-   , generator     = liftM Left (generator solveSystemExercise)
+   , termGenerator = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
    }
 
 opgave6b :: Exercise (Matrix SExpr)
 opgave6b = reduceMatrixExercise
    { identifier = "opg9.6b"
-   , generator  = return $ makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]
+   , termGenerator  = ExerciseList [makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]]
    }
 
 opgaveVarMatrix2 :: Exercise (Matrix SExpr)
 opgaveVarMatrix2 = reduceMatrixExercise
    { identifier = "matrix-with-var2"
-   , generator  = return $ makeMatrix [[-1,-1,variable "a"],[2,4,2]]
+   , termGenerator  = ExerciseList [makeMatrix [[-1,-1,variable "a"],[2,4,2]]]
    }
 
 opgaveVarMatrix :: Exercise (Matrix SExpr)
 opgaveVarMatrix = reduceMatrixExercise
-   { identifier = "matrix-with-var"
-   , generator  = return $ makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]
+   { identifier    = "matrix-with-var"
+   , termGenerator = ExerciseList [makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]]
    }
  where lam = variable "L"
  
@@ -157,6 +156,9 @@ instance Arbitrary a => Arbitrary (Vector a) where
 {- instance Arbitrary MySqrt where
    arbitrary = oneof $ map (return . fromInteger) [-10 .. 10]
    coarbitrary = coarbitrary . fromMySqrt -}
+
+arbMatrix :: Num a => Gen (Matrix a)
+arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
 
 arbBasis :: Gen [Vector SExpr]
 arbBasis = do

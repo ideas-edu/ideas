@@ -47,9 +47,10 @@ dnfExercise = Exercise
    , strategy      = toDNF_DWA
    , differences   = treeDiff
    , ordering      = compare
-   , generator     = generateLogic
-   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
-                           in countEquivalences p <= 2 && n >= 4 && n <= 12
+   , termGenerator = let isSuitable p =
+                            let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
+                            in countEquivalences p <= 2 && n >= 4 && n <= 12
+                     in makeGenerator isSuitable generateLogic
    }
    
 -- QuickCheck property to monitor the number of steps needed 

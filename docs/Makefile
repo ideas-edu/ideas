@@ -57,5 +57,5 @@ $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 clean:
 	$(RM) -rf $(COVERAGEDIR)/*.html
 	$(RM) -rf wikipages
-	$(RM) -f  haddock/*.html haddock/*.gif haddock/*.css haddock/*.js
+	$(RM) -f  $(HADDOCKDIR)/*.html $(HADDOCKDIR)/*.gif $(HADDOCKDIR)/*.css $(HADDOCKDIR)/*.js
 	make -C $(EXERCISEDIR) clean

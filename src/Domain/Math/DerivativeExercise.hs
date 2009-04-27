@@ -35,13 +35,12 @@ derivativeExercise = makeExercise
    , parser        = parseExpr
    , equivalence = (==) -- ??
    , equality    = (==)
-   , suitableTerm = const True
    , subTerm = undefined
    , prettyPrinter = show
    , finalProperty = noDiff
    , ruleset       = map liftToContext derivativeRules ++ [tidyup]
    , strategy      = derivativeStrategy
-   , generator     = oneof $ map return [ex1, ex2, ex3, ex4]
+   , termGenerator = ExerciseList [ex1, ex2, ex3, ex4]
    }
    
 noDiff :: Expr -> Bool

@@ -42,9 +42,10 @@ cnfExercise = makeExercise
    , differences   = treeDiff
    , ordering      = compare
    , finalProperty = ready (ruleset cnfExercise)
-   , generator     = templateGenerator 1
-   , suitableTerm  = \p -> let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
-                           in n >= 2 && n <= 4
+   , termGenerator = let isSuitable p =
+                            let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
+                            in n >= 2 && n <= 4
+                     in makeGenerator isSuitable (templateGenerator 1)
    }
 
 {- cnfExerciseSimple :: Exercise RelAlg

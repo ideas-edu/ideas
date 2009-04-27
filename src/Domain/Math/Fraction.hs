@@ -31,14 +31,14 @@ fractionExercise = makeExercise
    , finalProperty = \a -> isFraction a || isInteger a || a == bottom
    , ruleset       = fractionRules
    , strategy      = fractionStrategy
-   , generator     = genFraction 30
+   , termGenerator = simpleGenerator (genFraction 30)
    }
 
 calculationExercise :: Exercise Expr
 calculationExercise = fractionExercise
    { identifier    = "calculation"
    , description   = "calculate result (basic)"
-   , generator     = oneof $ map return (concat calculateResults)
+   , termGenerator = ExerciseList (concat calculateResults)
    }
 
 ------------------------------------------------------------

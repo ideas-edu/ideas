@@ -1,4 +1,4 @@
-module Main (main) where
+module Documentation.LatexRules (main) where
 
 import Common.Exercise
 import Common.Rewriting

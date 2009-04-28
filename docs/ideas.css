@@ -1,0 +1,81 @@
+body { 
+	background-color: white;
+  color:            black;
+  font-family:      sans-serif;
+}
+
+h1 {
+   font-size: 20pt;
+}
+
+h1, h2, h3 {
+   color: rgb(41,134,189);
+}
+
+ul {
+   list-style-type: square;
+}
+
+ul.papers li {
+  background-color: rgb(215,215,255);
+  padding-left: 5px;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+}
+
+ul.papers {
+  list-style-type: none;
+  padding-left: 10px;
+  margin-left: 10px;
+  padding-right: 10px;
+  margin-right: 10px;
+}
+
+a:link
+  { color:            rgb(255,97,8);
+    text-decoration:  none;
+  }
+
+a:visited
+  { color:            rgb(255,97,8);
+    text-decoration:  none;
+  }
+
+a.link:link
+  { color: rgb(41,134,189);
+  	text-decoration:  underline;
+    font-weight:      bold;
+  }
+
+a.link:visited
+  { color: rgb(41,134,189);
+  	text-decoration:  underline;
+    font-weight:      bold;
+  }
+    
+dt.header
+  { padding-top:      2ex;
+    font-weight:      bold;
+    color:            rgb(41,134,189);
+  }
+
+dd.subheader
+  { padding-top:      1ex;
+    font-style:       italic;
+  }
+  
+dl.information
+  { background-color: rgb(215,215,255);
+    padding-left:     3ex;
+    padding-right:    3ex;
+    padding-bottom:   2ex;
+  }
+  
+dd.freeitem
+  { padding-top:      2ex;
+    margin-left:      0px;
+  }
+  
+dd.item
+  { padding-top:      0.5ex;
+  }

@@ -24,25 +24,30 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-documentation: api coverage exercisedocs
+all: api pages coverage latexrules
+documentation: all
 
 api: $(HADDOCKDIR)/index.html
-exercisedocs: $(EXERCISEDIR) $(PDFTARGETS)
+pages: exercises.html
+latexrules: $(EXERCISEDIR) $(PDFTARGETS)
 coverage: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
 	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../$(DOCDIR)/$(HADDOCKDIR) --prologue=../$(DOCDIR)/$(HADDOCKDIR)/prologue Service/Main.hs
-	
+
+exercises.html: $(HS-SOURCES)
+	$(RUNHASKELL) -i$(SRCDIR) -odir$(OUTDIR) -hidir$(OUTDIR) $(SRCDIR)/Documentation/Make.hs .
+
 $(EXERCISEDIR): $(HS-SOURCES)
-	$(RUNHASKELL) -i$(SRCDIR) $(SRCDIR)/Presentation/ExerciseDoc/ExerciseDoc.hs $(EXERCISEDIR)
-	make -C $(EXERCISEDIR) || exit 1
+	$(RUNHASKELL) -i$(SRCDIR) $(SRCDIR)/Documentation/LatexRules.hs $(EXERCISEDIR)
+	make -C $(EXERCISEDIR) all
 	$(TOUCH) $(EXERCISEDIR) # To get a timestamp
 
 $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	$(MKDIR) -p $(HPCTMPDIR)
 	$(GHC) -fhpc --make $(PROFILEFLAGS) -hpcdir $(HPCTMPDIR) \
 	   -i$(SRCDIR) -odir $(HPCTMPDIR) -hidir $(HPCTMPDIR) \
-	   -o $@ $(SRCDIR)/Common/Checks.hs
+	   -o $@ $(SRCDIR)/Documentation/Checks.hs
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix

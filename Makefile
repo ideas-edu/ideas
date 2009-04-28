@@ -1,5 +1,5 @@
 default: service ideas
-all: binaries unit-tests documentation
+all: binaries documentation
 
 SRCDIR = src
 

@@ -14,12 +14,15 @@ import Documentation.DefaultPage
 
 makeExercisePage :: Exercise a -> IO ()
 makeExercisePage ex = do
-   let file = exercisePageFile ex
-   stdgen <- newStdGen
-   generatePage (exercisePageFile ex) (exercisePage stdgen ex)
+   generatePage (exercisePageFile ex) (exercisePage ex)
+   case derivationsPage ex of 
+      Nothing   -> return ()
+      Just this ->
+         generatePage (exerciseDerivationsFile ex) this
+      
 
-exercisePage :: StdGen -> Exercise a -> HTML
-exercisePage stdgen ex = defaultPage title 2 $ do
+exercisePage :: Exercise a -> HTML
+exercisePage ex = defaultPage title 2 $ do
    h1 (description ex)
    table 
       [ [bold $ text "Code:",   ttText (show $ exerciseCode ex)]
@@ -57,11 +60,21 @@ exercisePage stdgen ex = defaultPage title 2 $ do
          )
    
    h2 "3. Example"
-   let st   = generateWith stdgen ex 5
-       list = derivation st
-       f r  = text ("=> " ++ name r)
-       g ca = pre (text (prettyPrinter ex (fromContext ca)))
-   g (context st)
-   flip mapM_ list $ \(r, ca) -> f r >> g ca
+   let state = generateWith (mkStdGen 0) ex 5
+   preText (showDerivation ex (fromContext $ context state))
+   link (up 2 ++ exerciseDerivationsFile ex) (text "More examples")
  where
    title = "Exercise " ++ show (exerciseCode ex)
+   
+derivationsPage :: Exercise a -> Maybe HTML
+derivationsPage ex = 
+   case termGenerator ex of
+      ExerciseList xs -> Just $ defaultPage title 2 $ do
+         h1 "Examples"
+         let f i x = do
+                h2 (show i ++ ".")
+                preText (showDerivation ex x)
+         sequence_ $ zipWith f [1..] xs
+      _ -> Nothing
+ where
+   title = "Derivations for " ++ show (exerciseCode ex)

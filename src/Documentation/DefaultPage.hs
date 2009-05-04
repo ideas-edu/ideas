@@ -16,8 +16,9 @@ generatePage :: String -> HTML -> IO ()
 generatePage txt doc = do
    dir <- targetDirectory
    let filename = dir ++ "/" ++ txt
+       dirpart  = takeDirectory filename
    putStrLn $ "Generating " ++ filename
-   createDirectoryIfMissing True (takeDirectory filename)
+   unless (null dirpart) (createDirectoryIfMissing True dirpart)
    writeFile filename (showHTML doc)
 
 defaultPage :: String -> Int -> HTMLBuilder -> HTML
@@ -27,7 +28,7 @@ defaultPage title level builder = htmlPage title (Just (up level ++ "ideas.css")
    footer 
 
 header :: Int -> HTMLBuilder
-header level = do
+header level = center $ do
    let f m = text "[" >> space >> m >> space >> text "]"
    f $ link (up level ++ exerciseOverviewPageFile) $ text "Exercises"
    replicateM 5 space
@@ -77,6 +78,9 @@ serviceOverviewPageFile = "services.html"
 exercisePageFile :: Exercise a -> String
 exercisePageFile ex = exercisePagePath ex ++ filter (not . isSpace) (identifier ex) ++ ".html"
 
+exerciseDerivationsFile :: Exercise a -> String
+exerciseDerivationsFile ex = exercisePagePath ex ++ filter (not . isSpace) (identifier ex) ++ "-derivations.html"
+
 servicePageFile :: Service a -> String
 servicePageFile srv = servicePagePath ++ serviceName srv ++ ".html"
 
@@ -90,5 +94,5 @@ targetDirectory :: IO String
 targetDirectory = do
    args <- getArgs
    case args of
-      []    -> return "docs"
-      dir:_ -> return dir
+      [dir] -> return dir
+      _     -> return "docs"

@@ -17,8 +17,9 @@ module Common.Exercise
    , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
      -- * Miscellaneous
    , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
-   , showDerivation, showDerivations
+   , showDerivation, showDerivations, printDerivation, printDerivations
    , checkExercise, checkParserPretty
+   , checksForList
    ) where
 
 -- TODO: hide the Exercise constructor, and provide a default constructor
@@ -32,7 +33,7 @@ import Common.Rewriting (TreeDiff(..))
 import Common.Transformation
 import Common.Strategy hiding (not, fail)
 import Common.Utils
-import Control.Monad
+import Control.Monad.Error
 import Data.Char
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
@@ -158,17 +159,17 @@ getRule ex s =
       []   -> fail $ "Could not find ruleid " ++ s
       _    -> fail $ "Ambiguous ruleid " ++ s
 
-showDerivations :: Exercise a -> [a] -> IO ()
-showDerivations ex xs = mapM_ f (zip [1..] xs)
+showDerivations :: Exercise a -> [a] -> String
+showDerivations ex xs = unlines (zipWith f [1..] xs)
  where
-   f (i, x) = do
-      putStrLn (replicate 50 '-')
-      putStrLn $ "-- Exercise " ++ show i ++ "\n"
-      showDerivation ex x
+   f i x = unlines
+      [ replicate 50 '-'
+      , "-- Exercise " ++ show i ++ "\n"
+      , showDerivation ex x
+      ]
 
-showDerivation :: Exercise a -> a -> IO ()
-showDerivation ex start =
-   putStrLn $ unlines $ 
+showDerivation :: Exercise a -> a -> String
+showDerivation ex start = unlines $ 
    case derivations (unlabel (strategy ex)) (inContext start) of 
       [] -> [f (inContext start), "    => no derivation"]
       (a, xs):_ -> f a : concatMap g xs
@@ -177,6 +178,12 @@ showDerivation ex start =
    g (r, a)
       | isMinorRule r = []
       | otherwise =  ["    => " ++ show r, f a]
+         
+printDerivations :: Exercise a -> [a] -> IO ()
+printDerivations ex = putStrLn . showDerivations ex
+
+printDerivation :: Exercise a -> a -> IO ()
+printDerivation ex = putStrLn . showDerivation ex
          
 ---------------------------------------------------------------
 -- Checks for an exercise
@@ -237,3 +244,30 @@ similar :: Arbitrary a => [Rule (Context a)] -> a -> Gen a
 similar rs a =
    let new = a : [ fromContext cb | r <- rs, cb <- applyAll r (inContext a) ]
    in oneof [arbitrary, oneof $ map return new] -}
+
+checksForList :: Exercise a -> IO ()
+checksForList ex = do
+   putStrLn ("** " ++ identifier ex ++ " **")
+   case termGenerator ex of
+      ExerciseList xs -> 
+         let err s = putStrLn $ "Error: " ++ s
+         in mapM_ (either err return . checksForTerm ex) xs
+      _ -> return ()
+
+checksForTerm :: Monad m => Exercise a -> a -> m ()
+checksForTerm ex a = 
+   let txt = prettyPrinter ex a in
+   case derivations (unlabel $ strategy ex) (inContext a) of
+      [] -> fail $ "no derivation for " ++ txt
+      (_, xs):_ -> do
+         unless (finalProperty ex (last as)) $
+            fail $ "not solved: " ++ txt
+         case [ (x, y) | x <- as, y <- as, not (equivalence ex x y) ] of
+            (x, y):_ -> fail $ "not equivalent: " ++ prettyPrinter ex x ++ "  and  "
+                                                  ++ prettyPrinter ex y
+            _        -> return ()
+         case filter (not . checkParserPretty (equality ex) (parser ex) (prettyPrinter ex)) as of
+            hd:_ -> fail $ "parse error for " ++ prettyPrinter ex hd
+            _    -> return ()
+       where
+         as = a : map (fromContext . snd) xs

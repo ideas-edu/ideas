@@ -291,7 +291,7 @@ testD e =
                (x,y):_ -> error $ show (x, y) -- (simplify qView x) ++ "    is not    " ++ show (simplify qView y)
 
 main :: IO ()
-main = showDerivations quadraticEquationExercise xs 
+main = printDerivations quadraticEquationExercise xs 
  where xs = map (OrList . return) (concat quadraticEquations)
  
 qView :: View (OrList (Equation Expr)) [SQ.SquareRoot Rational]

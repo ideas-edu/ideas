@@ -264,5 +264,5 @@ q = traceStrategy (unlabel equationsStrategy)
  where x = variable "x"
        
 main :: IO ()
-main = showDerivations higherDegreeEquationExercise xs 
+main = printDerivations higherDegreeEquationExercise xs 
  where xs = map (OrList . return) (take 5 higherDegreeEquations)

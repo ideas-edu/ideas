@@ -14,7 +14,7 @@
 module Main (main) where
 
 import Directory
-import Common.Utils (reportTest, useFixedStdGen)
+import Common.Utils (reportTest, useFixedStdGen, Some(..))
 import Common.Exercise
 import Common.Grammar
 import Common.Rewriting
@@ -22,10 +22,11 @@ import Common.Transformation
 import Control.Monad
 import Common.Utils (snd3)
 import System.Environment
+import Service.ExerciseList
 
 import qualified Domain.Logic as Logic
-import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
+import qualified Domain.LinearAlgebra as LA
 import qualified Domain.RelationAlgebra as RA
 
 import qualified Service.ModeJSON as ModeJSON
@@ -34,22 +35,24 @@ import Data.List
 
 main :: IO ()
 main = do
-   putStrLn "I) Domain checks"
+   putStrLn "* 1. Domain checks"
    Common.Grammar.checks
    LA.checks
 
-   putStrLn "II) Exercise checks"
+   putStrLn "* 2. Exercise checks"
    checkExercise Logic.dnfExercise
    checkExercise LA.reduceMatrixExercise
    checkExercise LA.solveSystemExercise
    checkExercise LA.solveSystemWithMatrixExercise
    checkExercise LA.solveGramSchmidt
    checkExercise RA.cnfExercise
-
-   putStrLn "III) Confluence checks"
+   flip mapM_ exerciseList $ \(Some ex) -> do 
+      checksForList ex
+   
+   putStrLn "* 3. Confluence checks"
    logicConfluence
    
-   putStrLn "IV) Unit tests"
+   putStrLn "* 4. Unit tests"
    mathdoxRequests
    jsonRPCs
    xmlRequests

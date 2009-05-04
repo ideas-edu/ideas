@@ -597,7 +597,7 @@ propStarStar     p    =  many (many p) === many p
 
 checks :: IO ()
 checks = do
-   putStrLn "** Grammar combinators **"
+   putStrLn "** Grammar combinators"
    quickCheck propMap
    quickCheck propJoin
    quickCheck propSymbols

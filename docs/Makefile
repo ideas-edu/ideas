@@ -24,11 +24,12 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-all: api pages coverage latexrules
+all: api pages tests coverage latexrules
 documentation: all
 
 api: $(HADDOCKDIR)/index.html
 pages: exercises.html
+tests: tests.html
 latexrules: $(EXERCISEDIR) $(PDFTARGETS)
 coverage: $(COVERAGEDIR)/hpc_index.html
 
@@ -51,8 +52,11 @@ $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix
-	$(CD) $(HPCTMPDIR); ./checks$(EXE) ../../test $(PROFILERTS) || ($(RM) -f checks$(EXE).tix; exit 1);
-	
+	$(CD) $(HPCTMPDIR); ./checks$(EXE) ../../test $(PROFILERTS) > tests.txt || ($(RM) -f checks$(EXE).tix; exit 1);
+
+tests.html: $(HPCTMPDIR)/checks$(EXE).tix
+	$(RUNHASKELL) -i$(SRCDIR) -odir$(OUTDIR) -hidir$(OUTDIR) $(SRCDIR)/Documentation/TestsPage.hs $(HPCTMPDIR)/tests.txt $@
+
 $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 	$(HPC) markup --hpcdir=$(HPCTMPDIR) --destdir=$(COVERAGEDIR) $(HPCTMPDIR)/checks$(EXE)
 	

@@ -14,7 +14,7 @@
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
    , htmlPage, errorPage, link, h1, h2, preText, ul, table, text, image, space
-   , bold, italic, para, ttText, hr, br, pre
+   , bold, italic, para, ttText, hr, br, pre, center
    ) where
 
 import Text.XML hiding (text)
@@ -48,6 +48,9 @@ errorPage s = htmlPage "Error" Nothing $ do
 link :: String -> HTMLBuilder -> HTMLBuilder
 link url body = element "a" $ 
    ("href" .=. url) >> body
+
+center :: HTMLBuilder -> HTMLBuilder
+center = element "center"
 
 h1 :: String -> HTMLBuilder
 h1 = element "h1" . text

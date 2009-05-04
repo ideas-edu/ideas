@@ -200,4 +200,4 @@ testAll = all f (concat linearEquations)
                  a :==: b -> if a==b then True else error (show (eq, a, b))
 
 main :: IO ()
-main = showDerivations linearEquationExercise (concat linearEquations)
+main = printDerivations linearEquationExercise (concat linearEquations)

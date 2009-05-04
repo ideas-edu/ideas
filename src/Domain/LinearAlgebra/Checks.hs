@@ -26,7 +26,7 @@ import Common.Context
 
 checks :: IO ()
 checks = do
-   putStrLn "** Linear algebra **"
+   putStrLn "** Linear algebra"
    thoroughCheck propEchelon
    thoroughCheck propReducedEchelon
    thoroughCheck propSolution

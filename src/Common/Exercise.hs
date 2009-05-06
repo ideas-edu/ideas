@@ -267,7 +267,9 @@ checksForTerm ex a =
                                                   ++ prettyPrinter ex y
             _        -> return ()
          case filter (not . checkParserPretty (equality ex) (parser ex) (prettyPrinter ex)) as of
-            hd:_ -> fail $ "parse error for " ++ prettyPrinter ex hd
+            hd:_ -> let s = prettyPrinter ex hd in
+                    fail $ "parse error for " ++ s ++ ": parsed as " ++
+                           either show (prettyPrinter ex) (parser ex s)
             _    -> return ()
        where
          as = a : map (fromContext . snd) xs

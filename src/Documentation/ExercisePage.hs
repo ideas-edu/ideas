@@ -8,6 +8,7 @@ import Service.ExerciseList
 import Service.TypedAbstractService
 import Control.Monad
 import Data.List
+import Data.Maybe
 import System.Random
 import Text.HTML
 import Documentation.DefaultPage
@@ -62,7 +63,8 @@ exercisePage ex = defaultPage title 2 $ do
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) ex 5
    preText (showDerivation ex (fromContext $ context state))
-   link (up 2 ++ exerciseDerivationsFile ex) (text "More examples")
+   when (isJust (derivationsPage ex)) $ 
+      link (up 2 ++ exerciseDerivationsFile ex) (text "More examples")
  where
    title = "Exercise " ++ show (exerciseCode ex)
    

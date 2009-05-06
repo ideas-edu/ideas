@@ -1,6 +1,6 @@
 module Domain.Math.Expr where
 
-import Data.Char  (isAlpha, isDigit)
+import Data.Char  (isDigit)
 import Data.Ratio
 import Test.QuickCheck
 import Control.Monad
@@ -166,23 +166,31 @@ safeDivision x y = if y==0 then fail "safeDivision" else return (x/y)
 -- Pretty printer 
 
 instance Show Expr where
-   show = ppExprPrio 0
+   show = ppExprPrio False 0
 
-ppExprPrio :: Int -> Expr -> String
-ppExprPrio = flip $ foldExpr (bin "+" 1, bin "*" 2, bin "-" 1, neg, nat, bin "/" 2, sq, var, sym)
+parenthesizedExpr :: Expr -> String
+parenthesizedExpr = ppExprPrio True 0
+
+-- infixl 6 -, +
+-- infixl 6.5 negate
+-- infixl 7 *, /
+-- infixr 8 ^
+ppExprPrio :: Bool -> Double -> Expr -> String
+ppExprPrio parens = flip $ foldExpr (binL "+" 6, binL "*" 7, binL "-" 6, neg, nat, binL "/" 7, sq, var, sym)
  where
-   nat n b        = if n>=0 then show n else neg (nat (abs n)) b
+   nat n _        = show n
    var s _        = s
-   neg x b        = parIf (b>0) ("-" ++ x 10)
+   neg x b        = parIf (b>6.5) ("-" ++ x 7)
    sq  x          = sym "sqrt" [x]
    sym s xs b
       | null xs   = s
-      | length xs==2 && not (isAlpha (head s)) 
-                  = bin s 10 (xs!!0) (xs!!1) 1
-      | otherwise = parIf (b>3) (unwords (s : map ($ 4) xs))
-   bin s i x y b  = parIf (b>i) (x i ++ s ++ y (i+1))
+      | s=="^" && length xs==2
+                  = binR s 8 (xs!!0) (xs!!1) b
+      | otherwise = parIf (b>10) (unwords (s : map ($ 10) xs))
+   binL s i x y b = parIf (b>i) (x i ++ s ++ y (i+1))
+   binR s i x y b = parIf (b>i) (x (i+1) ++ s ++ y i)
       
-   parIf b = if b then par else id
+   parIf b = if b || parens then par else id
    par s   = "(" ++ s ++ ")"
     
 instance MetaVar Expr where
@@ -243,6 +251,6 @@ noVars = null . collectVars
 substituteVars :: (String -> Expr) -> Expr -> Expr
 substituteVars sub = rec 
  where
-   rec e@(Var s) = sub s
+   rec (Var s) = sub s
    rec e = f (map rec cs)
     where (cs, f) = uniplate e

@@ -1,4 +1,6 @@
-module Domain.Math.Parser where
+module Domain.Math.Parser 
+   ( scannerExpr, parseExpr, parseWith, pExpr, pEquations, pEquation, pOrList, pFractional
+   ) where
 
 import Prelude hiding ((^))
 import Text.Parsing hiding (pParens)
@@ -26,6 +28,27 @@ parseExpr :: String -> Either SyntaxError Expr
 parseExpr = parseWith pExpr
 
 pExpr :: TokenParser Expr
+pExpr = expr6
+
+-- This expression could have a fraction at top-level: both the numerator
+-- and denominator are atoms, optionally preceded by a (unary) minus
+pFractional :: TokenParser Expr
+pFractional = expr6u -- flip ($) <$> expr6u <*> optional (flip (/) <$ pKey "/" <*> expr6u) id
+
+expr6, expr6u, expr7, expr8, term, atom :: TokenParser Expr
+expr6  =  pChainl ((+) <$ pKey "+" <|> (-) <$ pKey "-") expr6u
+expr6u =  optional (Negate <$ pKey "-") id <*> expr7
+expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
+expr8  =  pChainr ((^) <$ pKey "^") term
+term   =  sqrt <$ pKey "sqrt" <*> atom
+      <|> atom
+atom   =  fromInteger <$> pInteger
+      <|> (Var . fst) <$> (pVarid <|> pConid)
+      <|> (\_ -> symbol "pi") <$> pKey "pi"
+      <|> pParens pExpr
+
+{-
+pExpr :: TokenParser Expr
 pExpr = fromRanged <$> pOperators operatorTable (flip toRanged nul <$> pTerm)
 
 pTerm :: TokenParser Expr
@@ -34,13 +57,13 @@ pTerm  =  sqrt <$ pKey "sqrt" <*> pAtom
 
 -- An atom, optionally preceded by a (unary) minus
 pAtomMin :: TokenParser Expr
-pAtomMin = optional (negate <$ pKey "-") id <*> pAtom
+pAtomMin = optional (Negate <$ pKey "-") id <*> pAtom
 
 pAtom :: TokenParser Expr
 pAtom  =  fromInteger <$> pInteger
       <|> (Var . fst) <$> (pVarid <|> pConid)
       <|> (\_ -> symbol "pi") <$> pKey "pi"
-      <|> pParens pExpr
+      <|> pParens pExpr -}
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations p = pLines True (pEquation p)
@@ -52,23 +75,19 @@ pOrList :: TokenParser a -> TokenParser (OrList a)
 pOrList p = pSepList p (pKey "or")
  where pSepList p q = (\x xs -> OrList (x:xs)) <$> p <*> pList (q *> p)
 
--- This expression could have a fraction at top-level: both the numerator
--- and denominator are atoms, optionally preceded by a (unary) minus
-pFractional :: TokenParser Expr
-pFractional = flip ($) <$> pAtomMin <*> optional (flip (/) <$ pKey "/" <*> pAtomMin) id
-
+{-
 operatorTable :: OperatorTable Expr
 operatorTable = 
    [ (LeftAssociative, [("+", (+)), ("-", (-))])  -- infixl 6
    , (LeftAssociative, [("*", (*)), ("/", (/))])  -- infixl 7
-   , (RightAssociative, [("^", (^))])
-   ]  
+   , (RightAssociative, [("^", (^))])             -- infixr 8
+   ]   -}
 
 pParens :: TokenParser a -> TokenParser a
 pParens p = pKey "(" *> p <* pKey ")"
 
-nul :: Range
-nul = Range (Pos 0 0) (Pos 0 0)
+--nul :: Range
+--nul = Range (Pos 0 0) (Pos 0 0)
 
 -----------------------------------------------------------------------
 -- Argument descriptor (for parameterized rules)

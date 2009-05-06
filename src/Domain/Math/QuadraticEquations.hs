@@ -206,7 +206,7 @@ niceFactors = makeSimpleRuleList "nice factors" $ forOne $ \(lhs :==: rhs) -> do
    b <- isInt rb
    c <- isInt rc
    guard (a==1)
-   case [ (Var x + Nat i) * (Var x + Nat j) | (i, j) <- factors c, i+j == b ] of
+   case [ (Var x + fromInteger i) * (Var x + fromInteger j) | (i, j) <- factors c, i+j == b ] of
       hd:_ -> return [hd :==: 0]
       _    -> Nothing
 

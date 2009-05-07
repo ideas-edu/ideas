@@ -78,6 +78,9 @@ infixr 8 ^
 (^) :: Symbolic a => a -> a -> a
 (^) = binaryFunction "^" 
 
+ln :: Symbolic a => a -> a
+ln = unaryFunction "ln"
+
 bottom :: Expr
 bottom = symbol "_|_"
 
@@ -186,7 +189,7 @@ ppExprPrio parens = flip $ foldExpr (binL "+" 6, binL "*" 7, binL "-" 6, neg, na
       | null xs   = s
       | s=="^" && length xs==2
                   = binR s 8 (xs!!0) (xs!!1) b
-      | otherwise = parIf (b>10) (unwords (s : map ($ 10) xs))
+      | otherwise = parIf (b>10) (unwords (s : map ($ 15) xs))
    binL s i x y b = parIf (b>i) (x i ++ s ++ y (i+1))
    binR s i x y b = parIf (b>i) (x (i+1) ++ s ++ y i)
       

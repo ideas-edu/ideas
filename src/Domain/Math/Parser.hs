@@ -13,7 +13,7 @@ import Test.QuickCheck (arbitrary)
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords          = ["pi", "sqrt", "or"]
+   { keywords          = ["pi", "sqrt", "or", "ln"]
    , keywordOperators  = ["==" ]
    , specialCharacters = "+-*/^()[]{},"
    }
@@ -41,10 +41,12 @@ expr6u =  optional (Negate <$ pKey "-") id <*> expr7
 expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
 expr8  =  pChainr ((^) <$ pKey "^") term
 term   =  sqrt <$ pKey "sqrt" <*> atom
+      <|> ln   <$ pKey "ln" <*> atom
+      <|> (\a b -> Sym (fst a) b) <$> pConid <*> pList atom
       <|> atom
 atom   =  fromInteger <$> pInteger
-      <|> (Var . fst) <$> (pVarid <|> pConid)
-      <|> (\_ -> symbol "pi") <$> pKey "pi"
+      <|> (Var . fst) <$> pVarid
+      <|> pi <$ pKey "pi"
       <|> pParens pExpr
 
 {-

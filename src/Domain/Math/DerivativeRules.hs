@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.DerivativeRules where
 
+import Prelude hiding ((^))
 import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.Symbolic
@@ -18,7 +19,8 @@ import Common.Rewriting
 
 derivativeRules :: [Rule Expr]
 derivativeRules =
-   [ ruleDerivCon, ruleDerivPlus, ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
+   [ ruleDerivCon, ruleDerivPlus, ruleDerivMin
+   , ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
    , ruleDerivProduct, ruleDerivQuotient {-, ruleDerivChain-}, ruleDerivChainPowerExprs
    , ruleSine, ruleLog 
    ]
@@ -29,15 +31,9 @@ diff = unaryFunction "Diff"
 lambda :: Expr -> Expr -> Expr
 lambda = binaryFunction "Lambda"
 
-ln :: Expr -> Expr
-ln = unaryFunction "ln"
-
 -- function composition
 fcomp :: Expr -> Expr -> Expr
 fcomp = binaryFunction "(.)"
-
-pow :: Expr -> Expr -> Expr
-pow = binaryFunction "power" 
 
 -----------------------------------------------------------------
 -- Rules for Diffs
@@ -54,6 +50,10 @@ ruleDerivPlus :: Rule Expr
 ruleDerivPlus = rule "Sum" $
    \x f g -> diff (lambda x (f + g))  :~>  diff (lambda x f) + diff (lambda x g)
 
+ruleDerivMin :: Rule Expr
+ruleDerivMin = rule "Sum" $
+   \x f g -> diff (lambda x (f - g))  :~>  diff (lambda x f) - diff (lambda x g)
+
 ruleDerivVar :: Rule Expr
 ruleDerivVar = rule "Var" $
    \x -> diff (lambda x x)  :~>  1
@@ -64,7 +64,7 @@ ruleDerivProduct = rule "Product" $
        
 ruleDerivQuotient :: Rule Expr
 ruleDerivQuotient = rule "Quotient" $ 
-   \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g `pow` 2)
+   \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g^2)
 
 {- ruleDerivChain :: Rule Expr
 ruleDerivChain = rule "Chain Rule" f
@@ -92,13 +92,13 @@ ruleDerivMultiple = makeSimpleRule "Constant Multiple" f
 ruleDerivPower :: Rule Expr
 ruleDerivPower = makeSimpleRule "Power" f
  where 
-   f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "power" [x1, n]]]) |x==x1 && v `notElem` collectVars n =
-      return $ n * (x `pow` (n-1)) 
+   f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "^" [x1, n]]]) |x==x1 && v `notElem` collectVars n =
+      return $ n * (x ^ (n-1)) 
    f _ = Nothing
 
 ruleDerivChainPowerExprs :: Rule Expr
 ruleDerivChainPowerExprs = makeSimpleRule "Chain Rule for Power Exprs" f 
  where 
-   f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "power" [g, n]]]) | v `notElem` collectVars n =
-      return $ n * (g `pow` (n-1)) * diff (lambda x g)
+   f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "^" [g, n]]]) | v `notElem` collectVars n =
+      return $ n * (g ^ (n-1)) * diff (lambda x g)
    f _ = Nothing

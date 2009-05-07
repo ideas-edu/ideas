@@ -14,14 +14,13 @@ module Domain.Math.DerivativeExercise where
 
 import Common.Apply
 import Common.Uniplate (universe)
-import Prelude hiding (repeat)
+import Prelude hiding (repeat, (^))
 import Domain.Math.DerivativeRules 
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
 import Common.Context (Context, liftToContext, inContext, fromContext)
 import Common.Exercise
 import Common.Transformation
-import Test.QuickCheck hiding (label)
 import Domain.Math.Expr
 import Domain.Math.SExpr
 import Domain.Math.Parser
@@ -33,9 +32,8 @@ derivativeExercise = makeExercise
    , description   = "Derivative"
    , status        = Experimental
    , parser        = parseExpr
-   , equivalence = (==) -- ??
-   , equality    = (==)
-   , subTerm = undefined
+   , equivalence   = \_ _ -> True
+   , equality      = (==)
    , prettyPrinter = show
    , finalProperty = noDiff
    , ruleset       = map liftToContext derivativeRules ++ [tidyup]
@@ -59,8 +57,8 @@ derivative :: Strategy (Context Expr)
 derivative = somewhere $ alternatives (map liftToContext derivativeRules)
 
 ex1, ex2, ex3 :: Expr
-ex1 = diff $ lambda (Var "x") $ Var "x" `pow` 2
-ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x `pow` fromInteger 3)) :+: (fromInteger (-3) :*: (x `pow` fromInteger 2)) :+: x :+: (fromInteger (-5))
+ex1 = diff $ lambda (Var "x") $ Var "x" ^ 2
+ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x ^ fromInteger 3)) :+: (fromInteger (-3) :*: (x ^ fromInteger 2)) :+: x :+: (fromInteger (-5))
  where x = Var "x"
 ex3 = diff $ lambda (Var "x") (2 * Var "x") 
 ex4 = diff $ lambda (Var "x") (ln (Var "x"))

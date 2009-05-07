@@ -2,10 +2,10 @@
    "result": [
       "relationalg.cnf",
       "[]",
-      "r ; q \\/ (V ; (r /\\ r)) /\\ s ! r",
+      "q- \\/ ((s /\\ q) ; s) /\\ V ! s",
       "[];"
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.1 (1784)"
+   "version": "0.5.3 (1873)"
 }

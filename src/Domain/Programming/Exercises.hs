@@ -44,8 +44,7 @@ isortExercise = Exercise
    , strategy      = label "isort"  isortAbstractStrategy
    , differences   = treeDiff
    , ordering      = compare
-   , generator     = return E.undef
-   , suitableTerm  = const True
+   , termGenerator = makeGenerator (const True) (return E.undef)
    }
 
 heliumExercise :: Exercise Module
@@ -61,11 +60,10 @@ heliumExercise = Exercise
    , equality      = \x y -> (transformBi (\(Range_Range  _ _) -> noRange) x) == y
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = label "helium" sumStrategy
+   , strategy      = label "helium" sumStrategy'
    , differences   = \_ _ -> [([], Different)]
    , ordering      = \_ _ -> LT
-   , generator     = return emptyProg
-   , suitableTerm  = const True
+   , termGenerator = makeGenerator (const True) (return emptyProg)
    }
 
 modParser s = case compile s of

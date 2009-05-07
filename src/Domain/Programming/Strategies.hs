@@ -30,16 +30,62 @@ sumStrategy  =  introModule
             <*> introOperator "+"
             <*> introInt "0"
 
-isortString =  "isort []     = []\n"
-            ++ "isort (x:xs) = insert x (isort xs)\n"
-            ++ "insert x xs = xs\n"
+sumStrategy' = stringToStrategy sumString
 
-isortStrategy' = getStrategy' $ either (const (error "Cannot compile isort")) id $ compile isortString
+isortString =  "isort []     = []\n"
+            ++ "isort (x:xs) = insert x (isort xs)\n\n"
+            ++ "insert x []     = [x]\n"
+            ++ "insert x (y:ys) | x <= y     = x : y : ys\n"
+            ++ "                | otherwise  = y : insert x ys\n"
+
+isortStrategy' = stringToStrategy isortString
+
+stringToStrategy :: String -> Strategy (Context Module)
+stringToStrategy = getstrat . either (const (error "Compile error")) id . compile
 
 -- AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
 -- Biplate only allows (a->a) in container b 
-getStrategy' :: Module -> Strategy (Context Module)
-getStrategy' = undefined
+class GetStrategy a where
+  getstrat :: a -> Strategy (Context Module)
+
+instance GetStrategy Module where
+  getstrat (Module_Module _ _ _ body) = introModule <*> getstrat body
+
+instance GetStrategy Body where
+  getstrat (Body_Body _ _ decls) = foldr ((<*>) . getstrat) succeed decls
+
+instance GetStrategy Declaration where
+  getstrat d = 
+    case d of 
+      Declaration_PatternBinding _ pattern rhs -> introPatternBinding <*> getstrat pattern 
+                                                                      <*> getstrat rhs
+
+instance GetStrategy Pattern where
+  getstrat (Pattern_Variable _ (Name_Identifier _ _ name)) = toStrategy $ introPatternVariable name
+
+instance GetStrategy RightHandSide where
+  getstrat (RightHandSide_Expression _ expr _) = introRHSExpr <*> getstrat expr
+
+instance GetStrategy Expression where
+  getstrat expr = 
+    case expr of 
+      Expression_NormalApplication _ fun args  ->  introNormalApplication (length args) 
+                                              <*> getstrat fun <*> foldr ((<*>) . getstrat) succeed args
+      Expression_Variable _ name -> toStrategy $ case name of
+                                      Name_Identifier _ _ n -> introIdentifier n
+                                      Name_Operator   _ _ n -> introOperator n
+      Expression_InfixApplication _ lexpr op rexpr -> introInfixApplication <*> getstrat lexpr
+                                                                            <*> getstrat op
+                                                                            <*> getstrat rexpr
+      Expression_Literal _ lit -> toStrategy $ case lit of
+                                                 Literal_Int _ val -> introInt val
+
+instance GetStrategy MaybeExpression where
+  getstrat mexpr = 
+    case mexpr of
+      MaybeExpression_Nothing   -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
+      MaybeExpression_Just expr -> getstrat expr
+
 
 -- strategies derived from the abstract syntax of expressions
 

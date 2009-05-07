@@ -48,29 +48,65 @@ stringToStrategy = getstrat . either (const (error "Compile error")) id . compil
 class GetStrategy a where
   getstrat :: a -> Strategy (Context Module)
 
+seqStrategy :: GetStrategy a => [a] -> Strategy (Context Module)
+seqStrategy = foldr ((<*>) . getstrat) succeed 
+
 instance GetStrategy Module where
   getstrat (Module_Module _ _ _ body) = introModule <*> getstrat body
 
 instance GetStrategy Body where
-  getstrat (Body_Body _ _ decls) = foldr ((<*>) . getstrat) succeed decls
+  getstrat (Body_Body _ _ decls) = seqStrategy decls
+
+instance GetStrategy MaybeDeclarations where
+  getstrat mdecls = 
+    case mdecls of
+      MaybeDeclarations_Nothing    -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
+      MaybeDeclarations_Just decls -> seqStrategy decls
 
 instance GetStrategy Declaration where
   getstrat d = 
     case d of 
       Declaration_PatternBinding _ pattern rhs -> introPatternBinding <*> getstrat pattern 
                                                                       <*> getstrat rhs
+      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) 
+                                          <*> seqStrategy funbs -- can be made more flexible with other strategy combinators (like parallel)
+
+instance GetStrategy FunctionBinding where
+  getstrat (FunctionBinding_FunctionBinding _ lhs rhs) = getstrat lhs <*> getstrat rhs
 
 instance GetStrategy Pattern where
-  getstrat (Pattern_Variable _ (Name_Identifier _ _ name)) = toStrategy $ introPatternVariable name
+  getstrat p = 
+    case p of
+      Pattern_Variable _ (Name_Identifier _ _ name) -> toStrategy $ introPatternVariable name
+      Pattern_Constructor _ (Name_Special _ _ name) ps -> introPatternConstructor name (length ps) <*> seqStrategy ps
+      Pattern_InfixConstructor _ lp (Name_Special _ _ op) rp -> introPatternInfixConstructor op 
+                                                               <*> getstrat lp <*> getstrat rp
+      Pattern_Parenthesized _ p -> introPatternParenthesized <*> getstrat p
+      _ -> error $ "Couldn't mactch " ++ show p
 
 instance GetStrategy RightHandSide where
-  getstrat (RightHandSide_Expression _ expr _) = introRHSExpr <*> getstrat expr
+  getstrat rhs = 
+    case rhs of 
+      RightHandSide_Expression _ expr _ -> introRHSExpr <*> getstrat expr
+      RightHandSide_Guarded _ gexprs _  -> introRHSGuarded (length gexprs) <*> seqStrategy gexprs
+
+instance GetStrategy LeftHandSide where
+  getstrat (LeftHandSide_Function _ (Name_Identifier _ _ name) ps) = introLHSFun name (length ps) <*> seqStrategy ps
+
+instance GetStrategy GuardedExpression where
+  getstrat (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr <*> getstrat guard <*> getstrat expr
+
+instance GetStrategy MaybeExpression where
+  getstrat mexpr = 
+    case mexpr of
+      MaybeExpression_Nothing   -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
+      MaybeExpression_Just expr -> getstrat expr
 
 instance GetStrategy Expression where
   getstrat expr = 
     case expr of 
       Expression_NormalApplication _ fun args  ->  introNormalApplication (length args) 
-                                              <*> getstrat fun <*> foldr ((<*>) . getstrat) succeed args
+                                              <*> getstrat fun <*> seqStrategy args
       Expression_Variable _ name -> toStrategy $ case name of
                                       Name_Identifier _ _ n -> introIdentifier n
                                       Name_Operator   _ _ n -> introOperator n
@@ -79,12 +115,9 @@ instance GetStrategy Expression where
                                                                             <*> getstrat rexpr
       Expression_Literal _ lit -> toStrategy $ case lit of
                                                  Literal_Int _ val -> introInt val
+      Expression_Constructor _ (Name_Special _ _ name) -> toStrategy $ introConstructor name
+      _ -> error $ "Couldn't mactch " ++ show expr
 
-instance GetStrategy MaybeExpression where
-  getstrat mexpr = 
-    case mexpr of
-      MaybeExpression_Nothing   -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
-      MaybeExpression_Just expr -> getstrat expr
 
 
 -- strategies derived from the abstract syntax of expressions

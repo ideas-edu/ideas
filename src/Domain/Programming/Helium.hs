@@ -1,7 +1,7 @@
 module Domain.Programming.Helium 
    ( compile, module UHA_Syntax, module UHA_Range
    , emptyProg, range
-   , undefExpr, undefPattern, undefRHS, undefDecl
+   , undefExpr, undefPattern, undefRHS, undefLHS, undefDecl, undefFunBind, undefGuardedExpr
    ) where
 
 import PhaseLexer
@@ -42,19 +42,29 @@ range (line, col) = Range_Range (Position_Position "" line col) Position_Unknown
 
 emptyProg =  Module_Module noRange MaybeName_Nothing MaybeExports_Nothing
                            (Body_Body noRange [] [undefDecl])
+undef = Name_Special noRange [] "undefined"
 
 -- Typed holes in a incomplete program
 undefExpr :: Expression
-undefExpr = Expression_Variable noRange $ Name_Special noRange [] "undefined"
+undefExpr = Expression_Variable noRange undef
 
 undefPattern :: Pattern
-undefPattern = Pattern_Variable noRange $ Name_Special noRange [] "undefined"
+undefPattern = Pattern_Variable noRange undef
 
 undefRHS :: RightHandSide
 undefRHS = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
 
+undefLHS :: LeftHandSide
+undefLHS = LeftHandSide_Function noRange undef []
+
 undefDecl :: Declaration
 undefDecl = Declaration_Empty noRange
+
+undefFunBind :: FunctionBinding
+undefFunBind = FunctionBinding_FunctionBinding noRange undefLHS undefRHS
+
+undefGuardedExpr :: GuardedExpression
+undefGuardedExpr = GuardedExpression_GuardedExpression noRange undefExpr undefExpr
 
 -- the compiler/parser
 compile :: String -> Either String Module

@@ -34,20 +34,20 @@ introFunctionBindings nbs = minorRule $ toRule "Introduce function binding" unde
 --------------------------------------------------------------------------------
 -- Patterns
 --------------------------------------------------------------------------------
-introPatternVariable :: String -> Rule (Context Module)
-introPatternVariable = toRule "Introduce pattern variable" undefPatterns . f
+introPatternVariable :: Rule (Context Module)
+introPatternVariable = toRule "Introduce pattern variable" undefPatterns f
   where
-    f name = Pattern_Variable noRange (Name_Identifier noRange [] name)
+    f = Pattern_Variable noRange undefName
 
-introPatternConstructor :: String -> Int -> Rule (Context Module)
-introPatternConstructor name nps = toRule "Introduce pattern constructor" undefPatterns f
+introPatternConstructor :: Int -> Rule (Context Module)
+introPatternConstructor = toRule "Introduce pattern constructor" undefPatterns . f
   where
-    f = Pattern_Constructor noRange (Name_Special noRange [] name) $ take nps $ repeat undefPattern
+    f nps = Pattern_Constructor noRange undefName $ take nps $ repeat undefPattern
 
-introPatternInfixConstructor :: String -> Rule (Context Module)
-introPatternInfixConstructor = toRule "Introduce infix pattern constructor" undefPatterns . f
+introPatternInfixConstructor :: Rule (Context Module)
+introPatternInfixConstructor = toRule "Introduce infix pattern constructor" undefPatterns f
   where
-    f name = Pattern_InfixConstructor noRange undefPattern (Name_Special noRange [] name) undefPattern
+    f = Pattern_InfixConstructor noRange undefPattern undefName undefPattern
 
 introPatternParenthesized :: Rule (Context Module)
 introPatternParenthesized = toRule "Introduce pattern parentheses" undefPatterns f
@@ -80,41 +80,45 @@ introRHSGuarded = toRule "Introduce pattern variable" undefRHSs . f
 --------------------------------------------------------------------------------
 -- LeftHandSide
 --------------------------------------------------------------------------------
-introLHSFun :: String -> Int -> Rule (Context Module)
-introLHSFun name nps = toRule "Introduce function name and patterns" undefLHSs f
+introLHSFun :: Int -> Rule (Context Module)
+introLHSFun = toRule "Introduce function name and patterns" undefLHSs . f
   where
-    f = LeftHandSide_Function noRange (Name_Identifier noRange [] name) $ 
-                              take nps $ repeat undefPattern
+    f nps = LeftHandSide_Function noRange undefName $ take nps $ repeat undefPattern
 
 
 --------------------------------------------------------------------------------
 -- Expressions
 --------------------------------------------------------------------------------
-introNormalApplication :: Int -> Rule (Context Module)
-introNormalApplication = toRule "Introduce application" undefExprs . f
+introExprNormalApplication :: Int -> Rule (Context Module)
+introExprNormalApplication = toRule "Introduce application" undefExprs . f
   where 
     f nargs = Expression_NormalApplication noRange undefExpr $ take nargs $ repeat undefExpr
 
-introInfixApplication :: Rule (Context Module)
-introInfixApplication = toRule "Introduce operator" undefExprs e
+introExprInfixApplication :: Rule (Context Module)
+introExprInfixApplication = toRule "Introduce operator" undefExprs e
   where -- need to do something with the operands ... maybe undefExpr...
     e = Expression_InfixApplication noRange MaybeExpression_Nothing undefExpr MaybeExpression_Nothing
 
-introConstructor :: String -> Rule (Context Module)
-introConstructor = toRule "Intro constructor" undefExprs . f
+introExprConstructor :: Rule (Context Module)
+introExprConstructor = toRule "Intro constructor" undefExprs f
   where 
-    f name = Expression_Constructor noRange $ Name_Special noRange [] name
+    f = Expression_Constructor noRange undefName
 
--- Variables
-introIdentifier :: String -> Rule (Context Module)
-introIdentifier = toRule "Intro identifier" undefExprs . f
+introExprParenthesized :: Rule (Context Module) -- minor?
+introExprParenthesized = toRule "Intro parentheses" undefExprs f
   where 
-    f name = Expression_Variable noRange $ Name_Identifier noRange [] name
+    f = Expression_Parenthesized noRange undefExpr
 
-introOperator :: String -> Rule (Context Module)
-introOperator = toRule "Intro operator" undefExprs . f
+introExprList :: Int -> Rule (Context Module) -- minor ?
+introExprList = toRule "Intro expr list" undefExprs . f
   where 
-    f name = Expression_Variable noRange $ Name_Operator noRange [] name
+    f nexprs = Expression_List noRange $ take nexprs $ repeat undefExpr
+
+-- Variables -- Perhaps a minor rule and the names not
+introExprVariable :: Rule (Context Module)
+introExprVariable = toRule "Intro variable" undefExprs f
+  where 
+    f = Expression_Variable noRange undefName
 
 -- Literals
 introInt :: String -> Rule (Context Module)
@@ -126,6 +130,25 @@ introString :: String -> Rule (Context Module)
 introString = toRule "Intro string" undefExprs . f
   where
     f s = Expression_Literal noRange $ Literal_String noRange s
+
+
+--------------------------------------------------------------------------------
+-- Names
+--------------------------------------------------------------------------------
+introNameIdentifier :: String -> Rule (Context Module)
+introNameIdentifier = minorRule . toRule "Introduce identifier name" undefNames . f
+  where
+    f = Name_Identifier noRange []
+
+introNameOperator :: String -> Rule (Context Module)
+introNameOperator = minorRule . toRule "Introduce operator name" undefNames . f
+  where
+    f = Name_Operator noRange []
+
+introNameSpecial :: String -> Rule (Context Module)
+introNameSpecial = minorRule . toRule "Introduce special name" undefNames . f
+  where
+    f = Name_Special noRange []
 
 
 --------------------------------------------------------------------------------
@@ -144,6 +167,7 @@ undefExprs        = undefs undefExpr
 undefPatterns     = undefs undefPattern
 undefFunBinds     = undefs undefFunBind
 undefGuardedExprs = undefs undefGuardedExpr
+undefNames        = undefs undefName
 
 toRule :: String -> Undefs a -> a -> Rule (Context Module)
 toRule s u = makeSimpleRule s . (replaceFirstUndef u)

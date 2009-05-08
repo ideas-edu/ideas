@@ -22,12 +22,12 @@ import Data.Char
 sumString = "mysum = foldr (+) 0"
 sumStrategy  =  introModule
             <*> introPatternBinding 
-            <*> introPatternVariable "mysum"
+            <*> introPatternVariable <*> introNameIdentifier "mysum"
             <*> introRHSExpr 
-            <*> introNormalApplication 2
-            <*> introIdentifier "foldr"
-            <*> introInfixApplication 
-            <*> introOperator "+"
+            <*> introExprNormalApplication 2
+            <*> introExprVariable <*> introNameIdentifier "mysum"
+            <*> introExprInfixApplication 
+            <*> introExprVariable <*> introNameOperator "+"
             <*> introInt "0"
 
 sumStrategy' = stringToStrategy sumString
@@ -77,10 +77,11 @@ instance GetStrategy FunctionBinding where
 instance GetStrategy Pattern where
   getstrat p = 
     case p of
-      Pattern_Variable _ (Name_Identifier _ _ name) -> toStrategy $ introPatternVariable name
-      Pattern_Constructor _ (Name_Special _ _ name) ps -> introPatternConstructor name (length ps) <*> seqStrategy ps
-      Pattern_InfixConstructor _ lp (Name_Special _ _ op) rp -> introPatternInfixConstructor op 
-                                                               <*> getstrat lp <*> getstrat rp
+      Pattern_Variable _ name -> introPatternVariable <*> getstrat name
+      Pattern_Constructor _ name ps -> introPatternConstructor (length ps) <*> getstrat name 
+                                   <*> seqStrategy ps
+      Pattern_InfixConstructor _ lp op rp -> introPatternInfixConstructor <*> getstrat op
+                                         <*> getstrat lp <*> getstrat rp
       Pattern_Parenthesized _ p -> introPatternParenthesized <*> getstrat p
       _ -> error $ "Couldn't mactch " ++ show p
 
@@ -91,7 +92,7 @@ instance GetStrategy RightHandSide where
       RightHandSide_Guarded _ gexprs _  -> introRHSGuarded (length gexprs) <*> seqStrategy gexprs
 
 instance GetStrategy LeftHandSide where
-  getstrat (LeftHandSide_Function _ (Name_Identifier _ _ name) ps) = introLHSFun name (length ps) <*> seqStrategy ps
+  getstrat (LeftHandSide_Function _ name ps) = introLHSFun (length ps) <*> getstrat name <*> seqStrategy ps
 
 instance GetStrategy GuardedExpression where
   getstrat (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr <*> getstrat guard <*> getstrat expr
@@ -105,19 +106,25 @@ instance GetStrategy MaybeExpression where
 instance GetStrategy Expression where
   getstrat expr = 
     case expr of 
-      Expression_NormalApplication _ fun args  ->  introNormalApplication (length args) 
+      Expression_NormalApplication _ fun args  -> introExprNormalApplication (length args) 
                                               <*> getstrat fun <*> seqStrategy args
-      Expression_Variable _ name -> toStrategy $ case name of
-                                      Name_Identifier _ _ n -> introIdentifier n
-                                      Name_Operator   _ _ n -> introOperator n
-      Expression_InfixApplication _ lexpr op rexpr -> introInfixApplication <*> getstrat lexpr
-                                                                            <*> getstrat op
-                                                                            <*> getstrat rexpr
+      Expression_Variable _ name -> introExprVariable <*> getstrat name
+      Expression_InfixApplication _ lexpr op rexpr -> introExprInfixApplication <*> getstrat lexpr
+                                                                                <*> getstrat op
+                                                                                <*> getstrat rexpr
       Expression_Literal _ lit -> toStrategy $ case lit of
                                                  Literal_Int _ val -> introInt val
-      Expression_Constructor _ (Name_Special _ _ name) -> toStrategy $ introConstructor name
+      Expression_Constructor _ name -> introExprConstructor <*> getstrat name
+      Expression_Parenthesized _ expr -> introExprParenthesized <*> getstrat expr
+      Expression_List _ exprs -> introExprList (length exprs) <*> seqStrategy exprs
       _ -> error $ "Couldn't mactch " ++ show expr
 
+instance GetStrategy Name where
+  getstrat name = 
+    case name of 
+      Name_Identifier _ _ name -> toStrategy $ introNameIdentifier name
+      Name_Operator   _ _ name -> toStrategy $ introNameOperator name
+      Name_Special    _ _ name -> toStrategy $ introNameSpecial name
 
 
 -- strategies derived from the abstract syntax of expressions

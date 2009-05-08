@@ -2,6 +2,7 @@ module Domain.Programming.Helium
    ( compile, module UHA_Syntax, module UHA_Range
    , emptyProg, range
    , undefExpr, undefPattern, undefRHS, undefLHS, undefDecl, undefFunBind, undefGuardedExpr
+   , undefName
    ) where
 
 import PhaseLexer
@@ -65,6 +66,9 @@ undefFunBind = FunctionBinding_FunctionBinding noRange undefLHS undefRHS
 
 undefGuardedExpr :: GuardedExpression
 undefGuardedExpr = GuardedExpression_GuardedExpression noRange undefExpr undefExpr
+
+undefName :: Name
+undefName = undef
 
 -- the compiler/parser
 compile :: String -> Either String Module

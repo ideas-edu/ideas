@@ -60,7 +60,7 @@ heliumExercise = Exercise
    , equality      = \x y -> (transformBi (\(Range_Range  _ _) -> noRange) x) == y
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = label "helium" sumStrategy'
+   , strategy      = label "helium" isortStrategy'
    , differences   = \_ _ -> [([], Different)]
    , ordering      = \_ _ -> LT
    , termGenerator = makeGenerator (const True) (return emptyProg)
@@ -69,4 +69,3 @@ heliumExercise = Exercise
 modParser s = case compile s of
                 Left e  -> Left $ ErrorMessage e
                 Right m -> Right m
-

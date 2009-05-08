@@ -18,15 +18,116 @@ import Domain.Programming.Eval (eval, mylist)
 import Data.Maybe
 import Data.Char
 
--- sum strategy
+
+-- AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
+-- Biplate only allows (a->a) in container b 
+
+--------------------------------------------------------------------------------
+-- | Strategies derived from the abstract syntax of expressions
+class GetStrategy a where
+  getstrat :: a -> Strategy (Context Module)
+
+instance GetStrategy Module where
+  getstrat (Module_Module _ _ _ body) = introModule <*> getstrat body
+
+instance GetStrategy Body where
+  getstrat (Body_Body _ _ decls) = introDecls (length decls) <*> seqStrategy decls
+
+instance GetStrategy MaybeDeclarations where
+  getstrat mdecls = 
+    case mdecls of
+      MaybeDeclarations_Nothing    -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
+      MaybeDeclarations_Just decls -> seqStrategy decls
+
+instance GetStrategy Declaration where
+  getstrat d = 
+    case d of 
+      Declaration_PatternBinding _ pattern rhs -> introPatternBinding <*> 
+                                                  getstrat pattern <*>
+                                                  getstrat rhs
+      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) 
+                                          <*> seqStrategy funbs -- can be made more flexible with other strategy combinators (like parallel)
+
+instance GetStrategy MaybeExpression where
+  getstrat mexpr = 
+    case mexpr of
+      MaybeExpression_Nothing   -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
+      MaybeExpression_Just expr -> getstrat expr
+
+instance GetStrategy Expression where
+  getstrat expr = 
+    case expr of 
+      Expression_NormalApplication _ fun args       -> introExprNormalApplication (length args) <*>
+                                                       getstrat fun <*> seqStrategy args
+      Expression_Variable          _ name           -> introExprVariable <*> getstrat name
+      Expression_InfixApplication  _ lexpr op rexpr -> introExprInfixApplication (lexpr /= MaybeExpression_Nothing) 
+                                                                                 (rexpr /= MaybeExpression_Nothing) <*> 
+                                                       getstrat lexpr <*> getstrat op <*>
+                                                       getstrat rexpr
+      Expression_Literal           _ lit            -> toStrategy $ case lit of
+                                                                      Literal_Int _ val -> introInt val
+      Expression_Constructor       _ name           -> introExprConstructor <*> getstrat name
+      Expression_Parenthesized     _ expr           -> introExprParenthesized <*> getstrat expr
+      Expression_List              _ exprs          -> introExprList (length exprs) <*> 
+                                                       seqStrategy exprs
+
+instance GetStrategy LeftHandSide where
+  getstrat (LeftHandSide_Function _ name ps) = introLHSFun (length ps) <*> 
+                                               getstrat name <*> 
+                                               seqStrategy ps
+
+instance GetStrategy RightHandSide where
+  getstrat rhs = 
+    case rhs of 
+      RightHandSide_Expression _ expr   _ -> introRHSExpr <*> getstrat expr
+      RightHandSide_Guarded    _ gexprs _ -> introRHSGuarded (length gexprs) <*>
+                                             seqStrategy gexprs
+
+instance GetStrategy GuardedExpression where
+  getstrat (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr <*> 
+                                                                getstrat guard <*> 
+                                                                getstrat expr
+
+instance GetStrategy FunctionBinding where
+  getstrat (FunctionBinding_FunctionBinding _ lhs rhs) = getstrat lhs <*>
+                                                         getstrat rhs
+
+instance GetStrategy Pattern where
+  getstrat p = 
+    case p of
+      Pattern_Variable         _ name     -> introPatternVariable <*> getstrat name
+      Pattern_Constructor      _ name ps  -> introPatternConstructor (length ps) <*>
+                                             getstrat name <*>
+                                             seqStrategy ps
+      Pattern_InfixConstructor _ lp op rp -> introPatternInfixConstructor <*>
+                                             getstrat op <*> getstrat lp <*> getstrat rp
+      Pattern_Parenthesized    _ p         -> introPatternParenthesized <*> getstrat p
+
+instance GetStrategy Name where
+  getstrat name = 
+    case name of 
+      Name_Identifier _ _ name -> toStrategy $ introNameIdentifier name
+      Name_Operator   _ _ name -> toStrategy $ introNameOperator name
+      Name_Special    _ _ name -> toStrategy $ introNameSpecial name
+
+
+-- help functions
+stringToStrategy :: String -> Strategy (Context Module)
+stringToStrategy = getstrat . either (const (error "Compile error")) id . compile
+
+seqStrategy :: GetStrategy a => [a] -> Strategy (Context Module)
+seqStrategy = foldr ((<*>) . getstrat) succeed 
+
+-- test stuff
 sumString = "mysum = foldr (+) 0"
 sumStrategy  =  introModule
+            <*> introDecls 1
             <*> introPatternBinding 
             <*> introPatternVariable <*> introNameIdentifier "mysum"
             <*> introRHSExpr 
             <*> introExprNormalApplication 2
             <*> introExprVariable <*> introNameIdentifier "mysum"
-            <*> introExprInfixApplication 
+            <*> introExprInfixApplication False False
             <*> introExprVariable <*> introNameOperator "+"
             <*> introInt "0"
 
@@ -40,95 +141,10 @@ isortString =  "isort []     = []\n"
 
 isortStrategy' = stringToStrategy isortString
 
-stringToStrategy :: String -> Strategy (Context Module)
-stringToStrategy = getstrat . either (const (error "Compile error")) id . compile
-
--- AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
--- Biplate only allows (a->a) in container b 
-class GetStrategy a where
-  getstrat :: a -> Strategy (Context Module)
-
-seqStrategy :: GetStrategy a => [a] -> Strategy (Context Module)
-seqStrategy = foldr ((<*>) . getstrat) succeed 
-
-instance GetStrategy Module where
-  getstrat (Module_Module _ _ _ body) = introModule <*> getstrat body
-
-instance GetStrategy Body where
-  getstrat (Body_Body _ _ decls) = seqStrategy decls
-
-instance GetStrategy MaybeDeclarations where
-  getstrat mdecls = 
-    case mdecls of
-      MaybeDeclarations_Nothing    -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
-      MaybeDeclarations_Just decls -> seqStrategy decls
-
-instance GetStrategy Declaration where
-  getstrat d = 
-    case d of 
-      Declaration_PatternBinding _ pattern rhs -> introPatternBinding <*> getstrat pattern 
-                                                                      <*> getstrat rhs
-      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) 
-                                          <*> seqStrategy funbs -- can be made more flexible with other strategy combinators (like parallel)
-
-instance GetStrategy FunctionBinding where
-  getstrat (FunctionBinding_FunctionBinding _ lhs rhs) = getstrat lhs <*> getstrat rhs
-
-instance GetStrategy Pattern where
-  getstrat p = 
-    case p of
-      Pattern_Variable _ name -> introPatternVariable <*> getstrat name
-      Pattern_Constructor _ name ps -> introPatternConstructor (length ps) <*> getstrat name 
-                                   <*> seqStrategy ps
-      Pattern_InfixConstructor _ lp op rp -> introPatternInfixConstructor <*> getstrat op
-                                         <*> getstrat lp <*> getstrat rp
-      Pattern_Parenthesized _ p -> introPatternParenthesized <*> getstrat p
-      _ -> error $ "Couldn't mactch " ++ show p
-
-instance GetStrategy RightHandSide where
-  getstrat rhs = 
-    case rhs of 
-      RightHandSide_Expression _ expr _ -> introRHSExpr <*> getstrat expr
-      RightHandSide_Guarded _ gexprs _  -> introRHSGuarded (length gexprs) <*> seqStrategy gexprs
-
-instance GetStrategy LeftHandSide where
-  getstrat (LeftHandSide_Function _ name ps) = introLHSFun (length ps) <*> getstrat name <*> seqStrategy ps
-
-instance GetStrategy GuardedExpression where
-  getstrat (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr <*> getstrat guard <*> getstrat expr
-
-instance GetStrategy MaybeExpression where
-  getstrat mexpr = 
-    case mexpr of
-      MaybeExpression_Nothing   -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
-      MaybeExpression_Just expr -> getstrat expr
-
-instance GetStrategy Expression where
-  getstrat expr = 
-    case expr of 
-      Expression_NormalApplication _ fun args  -> introExprNormalApplication (length args) 
-                                              <*> getstrat fun <*> seqStrategy args
-      Expression_Variable _ name -> introExprVariable <*> getstrat name
-      Expression_InfixApplication _ lexpr op rexpr -> introExprInfixApplication <*> getstrat lexpr
-                                                                                <*> getstrat op
-                                                                                <*> getstrat rexpr
-      Expression_Literal _ lit -> toStrategy $ case lit of
-                                                 Literal_Int _ val -> introInt val
-      Expression_Constructor _ name -> introExprConstructor <*> getstrat name
-      Expression_Parenthesized _ expr -> introExprParenthesized <*> getstrat expr
-      Expression_List _ exprs -> introExprList (length exprs) <*> seqStrategy exprs
-      _ -> error $ "Couldn't mactch " ++ show expr
-
-instance GetStrategy Name where
-  getstrat name = 
-    case name of 
-      Name_Identifier _ _ name -> toStrategy $ introNameIdentifier name
-      Name_Operator   _ _ name -> toStrategy $ introNameOperator name
-      Name_Special    _ _ name -> toStrategy $ introNameSpecial name
 
 
--- strategies derived from the abstract syntax of expressions
 
+-- Old stuff
 getStrategy :: Expr -> Strategy (Context Expr)
 getStrategy expr = 
    case expr of

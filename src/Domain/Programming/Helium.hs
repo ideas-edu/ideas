@@ -2,7 +2,7 @@ module Domain.Programming.Helium
    ( compile, module UHA_Syntax, module UHA_Range
    , emptyProg, range
    , undefExpr, undefPattern, undefRHS, undefLHS, undefDecl, undefFunBind, undefGuardedExpr
-   , undefName
+   , undefName, undefBody
    ) where
 
 import PhaseLexer
@@ -41,31 +41,33 @@ import Data.Data hiding (Fixity)
 range :: (Int, Int) -> Range
 range (line, col) = Range_Range (Position_Position "" line col) Position_Unknown
 
-emptyProg =  Module_Module noRange MaybeName_Nothing MaybeExports_Nothing
-                           (Body_Body noRange [] [undefDecl])
+emptyProg =  Module_Module noRange MaybeName_Nothing MaybeExports_Nothing undefBody
 undef = Name_Special noRange [] "undefined"
 
 -- Typed holes in a incomplete program
+undefDecl :: Declaration
+undefDecl = Declaration_Empty noRange
+
+undefBody :: Body
+undefBody = Body_Body noRange [] []
+
 undefExpr :: Expression
 undefExpr = Expression_Variable noRange undef
 
-undefPattern :: Pattern
-undefPattern = Pattern_Variable noRange undef
-
-undefRHS :: RightHandSide
-undefRHS = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
+undefGuardedExpr :: GuardedExpression
+undefGuardedExpr = GuardedExpression_GuardedExpression noRange undefExpr undefExpr
 
 undefLHS :: LeftHandSide
 undefLHS = LeftHandSide_Function noRange undef []
 
-undefDecl :: Declaration
-undefDecl = Declaration_Empty noRange
+undefRHS :: RightHandSide
+undefRHS = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
 
 undefFunBind :: FunctionBinding
 undefFunBind = FunctionBinding_FunctionBinding noRange undefLHS undefRHS
 
-undefGuardedExpr :: GuardedExpression
-undefGuardedExpr = GuardedExpression_GuardedExpression noRange undefExpr undefExpr
+undefPattern :: Pattern
+undefPattern = Pattern_Variable noRange undef
 
 undefName :: Name
 undefName = undef

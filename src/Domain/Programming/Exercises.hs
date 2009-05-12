@@ -60,7 +60,7 @@ heliumExercise = Exercise
    , equality      = \x y -> (transformBi (\(Range_Range  _ _) -> noRange) x) == y
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = label "helium" isortStrategy'
+   , strategy      = label "helium" toDecStrategy
    , differences   = \_ _ -> [([], Different)]
    , ordering      = \_ _ -> LT
    , termGenerator = makeGenerator (const True) (return emptyProg)

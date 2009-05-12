@@ -64,12 +64,16 @@ instance GetStrategy Expression where
                                                                                  (rexpr /= MaybeExpression_Nothing) <*> 
                                                        getstrat lexpr <*> getstrat op <*>
                                                        getstrat rexpr
-      Expression_Literal           _ lit            -> toStrategy $ case lit of
-                                                                      Literal_Int _ val -> introInt val
+      Expression_Literal           _ lit            -> introExprLiteral <*> getstrat lit
       Expression_Constructor       _ name           -> introExprConstructor <*> getstrat name
       Expression_Parenthesized     _ expr           -> introExprParenthesized <*> getstrat expr
       Expression_List              _ exprs          -> introExprList (length exprs) <*> 
                                                        seqStrategy exprs
+      Expression_Tuple             _ exprs          -> introExprTuple (length exprs) <*> 
+                                                       seqStrategy exprs
+      Expression_Let               _ decls expr     -> introExprLet (length decls) <*> seqStrategy decls <*>
+                                                       getstrat expr
+      _                                             -> error $ "No instance for: " ++ show expr
 
 instance GetStrategy LeftHandSide where
   getstrat (LeftHandSide_Function _ name ps) = introLHSFun (length ps) <*> 
@@ -79,9 +83,19 @@ instance GetStrategy LeftHandSide where
 instance GetStrategy RightHandSide where
   getstrat rhs = 
     case rhs of 
-      RightHandSide_Expression _ expr   _ -> introRHSExpr <*> getstrat expr
-      RightHandSide_Guarded    _ gexprs _ -> introRHSGuarded (length gexprs) <*>
-                                             seqStrategy gexprs
+      RightHandSide_Expression _ expr   mdecls -> 
+          case mdecls of 
+            MaybeDeclarations_Just decls -> introRHSExpr (length decls) <*> 
+                                            getstrat expr <*>
+                                            seqStrategy decls
+            _                            -> introRHSExpr 0 <*> getstrat expr
+      RightHandSide_Guarded    _ gexprs mdecls -> 
+          case mdecls of
+            MaybeDeclarations_Just decls -> introRHSGuarded (length gexprs) (length decls) <*>
+                                            seqStrategy gexprs <*>
+                                            seqStrategy decls
+            _                            -> introRHSGuarded (length gexprs) 0 <*>
+                                            seqStrategy gexprs
 
 instance GetStrategy GuardedExpression where
   getstrat (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr <*> 
@@ -102,6 +116,15 @@ instance GetStrategy Pattern where
       Pattern_InfixConstructor _ lp op rp -> introPatternInfixConstructor <*>
                                              getstrat op <*> getstrat lp <*> getstrat rp
       Pattern_Parenthesized    _ p         -> introPatternParenthesized <*> getstrat p
+      Pattern_Literal          _ l         -> introPatternLiteral <*> getstrat l
+      Pattern_Tuple            _ ps        -> introPatternTuple (length ps) <*> seqStrategy ps
+      _                                    -> error $ "No instance for: " ++ show p
+
+instance GetStrategy Literal where
+  getstrat lit = 
+    case lit of 
+      Literal_Int    _ val -> toStrategy $ introLiteralInt val
+      Literal_String _ val -> toStrategy $ introLiteralString val
 
 instance GetStrategy Name where
   getstrat name = 
@@ -124,12 +147,12 @@ sumStrategy  =  introModule
             <*> introDecls 1
             <*> introPatternBinding 
             <*> introPatternVariable <*> introNameIdentifier "mysum"
-            <*> introRHSExpr 
+            <*> introRHSExpr 0
             <*> introExprNormalApplication 2
             <*> introExprVariable <*> introNameIdentifier "mysum"
             <*> introExprInfixApplication False False
             <*> introExprVariable <*> introNameOperator "+"
-            <*> introInt "0"
+            <*> introExprLiteral <*> introLiteralInt "0"
 
 sumStrategy' = stringToStrategy sumString
 
@@ -141,8 +164,15 @@ isortString =  "isort []     = []\n"
 
 isortStrategy' = stringToStrategy isortString
 
+toDecString  = "toDec 0 = [0]\n"
+             ++ "toDec n = to n []\n"
+             ++ "  where\n"
+             ++ "    to 0 = id\n"
+             ++ "    to n = let (n', k) = n `divMod` 10\n"
+             ++ "           in  to n' . (k :)\n\n"
+             ++ "divMod a b = (a `div` b, a `mod` b)\n"
 
-
+toDecStrategy = stringToStrategy toDecString
 
 -- Old stuff
 getStrategy :: Expr -> Strategy (Context Expr)

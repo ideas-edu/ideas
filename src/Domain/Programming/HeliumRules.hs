@@ -65,20 +65,30 @@ introExprInfixApplication hasLExpr hasRExpr = toRule "Introduce operator" undefE
                                        then MaybeExpression_Just undefExpr 
                                        else MaybeExpression_Nothing) 
 
+introExprLet :: Int -> Rule (Context Module)
+introExprLet ndecls = toRule "Introduce operator" undefExprs f
+  where
+    f = Expression_Let noRange (take ndecls (repeat undefDecl)) undefExpr
+
 introExprConstructor :: Rule (Context Module)
 introExprConstructor = toRule "Intro constructor" undefExprs f
   where 
     f = Expression_Constructor noRange undefName
 
-introExprParenthesized :: Rule (Context Module) -- minor?
+introExprParenthesized :: Rule (Context Module)
 introExprParenthesized = toRule "Intro parentheses" undefExprs f
   where 
     f = Expression_Parenthesized noRange undefExpr
 
-introExprList :: Int -> Rule (Context Module) -- minor ?
+introExprList :: Int -> Rule (Context Module)
 introExprList = toRule "Intro expr list" undefExprs . f
   where 
     f nexprs = Expression_List noRange $ take nexprs $ repeat undefExpr
+
+introExprTuple :: Int -> Rule (Context Module)
+introExprTuple = toRule "Intro expr tuple" undefExprs . f
+  where 
+    f nexprs = Expression_Tuple noRange $ take nexprs $ repeat undefExpr
 
 -- Variables
 introExprVariable :: Rule (Context Module)
@@ -87,15 +97,10 @@ introExprVariable = minorRule $ toRule "Intro variable" undefExprs f
     f = Expression_Variable noRange undefName
 
 -- Literals
-introInt :: String -> Rule (Context Module)
-introInt = toRule "Intro int" undefExprs . f
+introExprLiteral :: Rule (Context Module)
+introExprLiteral = minorRule $ toRule "Intro literal" undefExprs f
   where 
-    f i = Expression_Literal noRange $ Literal_Int noRange i
-
-introString :: String -> Rule (Context Module)
-introString = toRule "Intro string" undefExprs . f
-  where
-    f s = Expression_Literal noRange $ Literal_String noRange s
+    f = Expression_Literal noRange undefLiteral
 
 
 --------------------------------------------------------------------------------
@@ -119,17 +124,24 @@ introLHSFun = toRule "Introduce function name and patterns" undefLHSs . f
 --------------------------------------------------------------------------------
 -- RightHandSide
 --------------------------------------------------------------------------------
-introRHSExpr :: Rule (Context Module)
-introRHSExpr = toRule "Introduce pattern variable" undefRHSs f
+introRHSExpr :: Int -> Rule (Context Module)
+introRHSExpr ndecls = toRule "Introduce pattern variable" undefRHSs f
   where
-    f = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
+    f = RightHandSide_Expression noRange 
+                                 undefExpr 
+                                 (if ndecls > 0
+                                    then MaybeDeclarations_Just (take ndecls (repeat undefDecl))
+                                    else MaybeDeclarations_Nothing)
 
-introRHSGuarded :: Int -> Rule (Context Module)
-introRHSGuarded = toRule "Introduce pattern variable" undefRHSs . f
+introRHSGuarded :: Int -> Int -> Rule (Context Module)
+introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" undefRHSs f
   where
-    f ngexprs = RightHandSide_Guarded noRange 
-                                      (take ngexprs (repeat undefGuardedExpr)) 
-                                      MaybeDeclarations_Nothing
+    f = RightHandSide_Guarded noRange 
+                              (take ngexprs (repeat undefGuardedExpr)) 
+                              (if ndecls > 0
+                                 then MaybeDeclarations_Just (take ndecls (repeat undefDecl))
+                                 else MaybeDeclarations_Nothing)
+
 
 
 --------------------------------------------------------------------------------
@@ -155,6 +167,29 @@ introPatternParenthesized = toRule "Introduce pattern parentheses" undefPatterns
   where
     f = Pattern_Parenthesized noRange undefPattern
 
+introPatternLiteral :: Rule (Context Module)
+introPatternLiteral = toRule "Introduce literal pattern" undefPatterns f
+  where
+    f = Pattern_Literal noRange undefLiteral
+
+introPatternTuple :: Int -> Rule (Context Module)
+introPatternTuple nps = toRule "Introduce tuple pattern" undefPatterns f
+  where
+    f = Pattern_Tuple noRange $ take nps $ repeat undefPattern
+
+
+--------------------------------------------------------------------------------
+-- Literals
+--------------------------------------------------------------------------------
+introLiteralInt :: String -> Rule (Context Module)
+introLiteralInt = toRule "Introduce a literal integer" undefLiterals . f
+  where
+    f = Literal_Int noRange
+
+introLiteralString :: String -> Rule (Context Module)
+introLiteralString = toRule "Introduce a literal string" undefLiterals . f
+  where
+    f = Literal_String noRange
 
 --------------------------------------------------------------------------------
 -- Names
@@ -193,6 +228,7 @@ undefFunBinds     = undefs undefFunBind
 undefGuardedExprs = undefs undefGuardedExpr
 undefNames        = undefs undefName
 undefBodies       = undefs undefBody
+undefLiterals     = undefs undefLiteral
 
 toRule :: String -> Undefs a -> a -> Rule (Context Module)
 toRule s u = makeSimpleRule s . (replaceFirstUndef u)

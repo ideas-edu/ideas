@@ -116,7 +116,7 @@ function ss_getNext(state, callback) {
 function ss_getDerivation(eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "source": "genexas", "method" : "derivation" , "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
+		parameters : 'input={ "source": "genexas", "method" : "derivationtext" , "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
         onSuccess : function(response) {	
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -126,7 +126,7 @@ function ss_getDerivation(eastate, callback) {
 				var counter = 0;
 				while (counter < list.length) {
 					var entry = list[counter];
-					var appliedRule = new Rule(entry[0], entry[1], presenteertekst(entry[2]));
+				    var appliedRule = new Rule(entry[0], null, presenteertekst(entry[1]));
 					++counter;
 					setOfRules.push(appliedRule);
 				}

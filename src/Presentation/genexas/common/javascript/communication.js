@@ -118,8 +118,9 @@ function getDerivation() {
      ss_getDerivation(s.get('state'), displayDerivation);
  }
  function displayDerivation(setOfRules) {
-	var counter = 0;
-	var newText = '<strong>' + derivationtext + '</strong><br><br>' + $('work').value + '<br>';
+     var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+     var counter = 0;
+     var newText = '<strong>' + derivationtext + '</strong><br><br>' + s.get('state').exercise + '<br>';
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;

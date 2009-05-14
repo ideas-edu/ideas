@@ -3,16 +3,15 @@ module Domain.Programming.HeliumRules where
 import Common.Context
 import Common.Transformation
 import Common.Apply
-import Domain.Programming.Helium
-import Data.List
-import Data.Maybe
-import Data.Char
 import Control.Monad
-
+import Data.Char
+import Data.Data hiding (Fixity)
 import Data.Generics.Biplate
 import Data.Generics.PlateData
-import Data.Data hiding (Fixity)
-
+import Data.List
+import Data.Maybe
+import Domain.Programming.Helium
+import Domain.Programming.Prog
 
 --------------------------------------------------------------------------------
 -- Module

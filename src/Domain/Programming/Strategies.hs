@@ -45,8 +45,8 @@ instance GetStrategy Declaration where
       Declaration_PatternBinding _ pattern rhs -> introPatternBinding <*> 
                                                   getstrat pattern <*>
                                                   getstrat rhs
-      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) 
-                                          <*> seqStrategy funbs -- can be made more flexible with other strategy combinators (like parallel)
+      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) <*>
+                                              seqStrategy funbs -- can be made more flexible with other strategy combinators (like parallel)
 
 instance GetStrategy MaybeExpression where
   getstrat mexpr = 
@@ -164,15 +164,6 @@ isortString =  "isort []     = []\n"
 
 isortStrategy' = stringToStrategy isortString
 
-toDecString  = "toDec 0 = [0]\n"
-             ++ "toDec n = to n []\n"
-             ++ "  where\n"
-             ++ "    to 0 = id\n"
-             ++ "    to n = let (n', k) = n `divMod` 10\n"
-             ++ "           in  to n' . (k :)\n\n"
-             ++ "divMod a b = (a `div` b, a `mod` b)\n"
-
-toDecStrategy = stringToStrategy toDecString
 
 -- Old stuff
 getStrategy :: Expr -> Strategy (Context Expr)

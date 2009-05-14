@@ -1,29 +1,28 @@
 module Domain.Programming.Exercises where
 
+import Common.Context
+import Common.Strategy
+--import Common.Uniplate
+import Common.Exercise
+import Common.Transformation
+import Common.Apply
+import Common.Rewriting
+import Data.Maybe
+import Data.Char
+import Data.List
+import Data.Generics.Biplate
+import Data.Generics.PlateData
+import Data.Data hiding (Fixity)
 import qualified Domain.Programming.Expr as E
 import Domain.Programming.Expr hiding (undef)
 import Domain.Programming.Parser
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
-import Common.Context
-import Common.Strategy
-import Common.Uniplate
-import Common.Exercise
-import Common.Transformation
-import Common.Apply
+import Domain.Programming.Prog
+import Domain.Programming.EncodingExercises
 import Text.Parsing (SyntaxError(..))
-import Common.Rewriting
-import Data.Maybe
-import Data.Char
-import Domain.Programming.Parser
-import Domain.Programming.Helium
-import qualified Domain.Programming.Helium as H
 import qualified UHA_Pretty as PP (sem_Module) 
-
-import Data.Generics.Biplate
-import Data.Generics.PlateData
-import Data.Data hiding (Fixity)
 
 isortExercise :: Exercise Expr
 isortExercise = Exercise   
@@ -57,10 +56,10 @@ heliumExercise = Exercise
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show . PP.sem_Module
    , equivalence   = \_ _ -> True
-   , equality      = \x y -> (transformBi (\(Range_Range  _ _) -> noRange) x) == y
+   , equality      = equalModules
    , finalProperty = const True
    , ruleset       = []
-   , strategy      = label "helium" toDecStrategy
+   , strategy      = label "helium" $ stringToStrategy toDec
    , differences   = \_ _ -> [([], Different)]
    , ordering      = \_ _ -> LT
    , termGenerator = makeGenerator (const True) (return emptyProg)
@@ -69,3 +68,7 @@ heliumExercise = Exercise
 modParser s = case compile s of
                 Left e  -> Left $ ErrorMessage e
                 Right m -> Right m
+
+toDecExercises :: [Exercise Module]
+toDecExercises = map (\ex -> heliumExercise { strategy = label "helium" (stringToStrategy ex) }) toDecs
+

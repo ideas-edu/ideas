@@ -233,9 +233,15 @@ toRule :: String -> Undefs a -> a -> Rule (Context Module)
 toRule s u = makeSimpleRule s . (replaceFirstUndef u)
 
 replaceFirstUndef :: Undefs a -> a -> (Context Module) -> Maybe (Context Module)
-replaceFirstUndef u a m = case head (u (fromContext m)) of
-                              f -> return $ inContext $ (snd f) $ a
-                              _ -> Nothing  
+replaceFirstUndef u a m = let us = u (fromContext m) in
+    if not (null us) 
+    then
+        case head us of
+          f -> return $ inContext $ (snd f) $ a
+          _ -> Nothing  
+    else
+        error $ "error undefs" ++ show m
+
 
 --------------------------------------------------------------------------------
 -- Test stuff

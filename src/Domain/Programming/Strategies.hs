@@ -23,19 +23,51 @@ fromBinStrategy  =  introModule
                 <*> introDecls 1
                 <*> introPatternBinding 
                 <*> introPatternVariable <*> introNameIdentifier "fromBin"
-                <*> introRHSExpr 0
-                <*> introExprNormalApplication 1
-                <*> introExprParenthesized 
-                <*> introExprInfixApplication True True
-                <*> introExprInfixApplication False False
-                <*> introExprVariable <*> introNameOperator "+"
-                <*> introExprVariable <*> introNameOperator "."
-                <*> introExprInfixApplication False True
-                <*> introExprVariable <*> introNameOperator "*" 
-                <*> introExprLiteral <*> introLiteralInt "2"
-                <*> introExprLiteral <*> introLiteralInt "0"
+                <*> foldlS (    introExprParenthesized                       -- cons
+                            <*> introExprInfixApplication True True
+                            <*> introExprInfixApplication False False
+                            <*> introExprVariable <*> introNameOperator "+"
+                            <*> introExprVariable <*> introNameOperator "."
+                            <*> introExprInfixApplication False True
+                            <*> introExprVariable <*> introNameOperator "*" 
+                            <*> introExprLiteral <*> introLiteralInt "2"
+                           )
+                           (    introExprLiteral <*> introLiteralInt "0"     -- nil
+                           )
 
 -- | Specialised strategies
+type ModuleS = Strategy (Context Module)
+
+foldlS :: ModuleS -> ModuleS -> ModuleS
+foldlS consS nilS 
+    =  introRHSExpr 0 <*> introExprNormalApplication 2 <*> introExprVariable <*> introNameIdentifier "foldl" 
+                                                       <*> consS <*> nilS 
+   <|> introRHSExpr 1 <*> introExprNormalApplication 1 
+                        <*> introExprVariable <*> introNameIdentifier "f"
+                        <*> nilS
+                           <*> introFunctionBindings 2  -- where
+                             <*> introLHSFun 2 <*> introNameIdentifier "f"
+                               <*> introPatternVariable <*> introNameIdentifier "nil"
+                               <*> introPatternConstructor 0 <*> introNameSpecial "[]"
+                             <*> introRHSExpr 0 
+                               <*> introExprVariable <*> introNameIdentifier "nil"
+                             <*> introLHSFun 2 <*> introNameIdentifier "f"
+                               <*> introPatternVariable <*> introNameIdentifier "nil"
+                               <*> introPatternParenthesized 
+                                 <*> introPatternInfixConstructor 
+                                   <*> introPatternVariable <*> introNameIdentifier "x"
+                                   <*> introNameSpecial ":"
+                                   <*> introPatternVariable <*> introNameIdentifier "xs"
+                             <*> introRHSExpr 0 
+                               <*> introExprNormalApplication 2 
+                                 <*> introExprVariable <*> introNameIdentifier "f"
+                                 <*> introExprParenthesized 
+                                   <*> introExprNormalApplication 2
+                                     <*> consS
+                                       <*> introExprVariable <*> introNameIdentifier "nil"
+                                       <*> introExprVariable <*> introNameIdentifier "x"
+                                 <*> introExprVariable <*> introNameIdentifier "xs"
+
 {-
 foldlS :: ExprS -> ExprS -> ExprS
 foldlS consS nilS i
@@ -175,7 +207,7 @@ sumStrategy  =  introModule
             <*> introPatternVariable <*> introNameIdentifier "mysum"
             <*> introRHSExpr 0
             <*> introExprNormalApplication 2
-            <*> introExprVariable <*> introNameIdentifier "mysum"
+            <*> introExprVariable <*> introNameIdentifier "foldr"
             <*> introExprInfixApplication False False
             <*> introExprVariable <*> introNameOperator "+"
             <*> introExprLiteral <*> introLiteralInt "0"

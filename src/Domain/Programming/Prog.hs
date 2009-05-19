@@ -1,5 +1,7 @@
 module Domain.Programming.Prog where
 
+import Common.Context
+import Common.Strategy
 import Control.Monad.State
 import Data.Generics.Biplate
 import Data.Generics.PlateData
@@ -41,6 +43,16 @@ rename (old, new) = transformBi f
 
 alphaConversion m = foldr rename m $ alphaPairs m
 
+allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
+isSolution mod strat = any (equalModules mod) $ allSolutions strat
+
+checkExercises :: Strategy (Context Module) -> [String] -> IO ()
+checkExercises strat xs = mapM_ f xs
+  where
+    f x = putStrLn $ x ++ " : " ++ (show (isSolution (fromRight (compile x)) strat))
+    fromRight x = case x of
+                    Right y -> y
+                    _       -> error "no compile"
 
 -- Typed holes in a incomplete program
 undefDecl :: Declaration

@@ -18,12 +18,38 @@ import Domain.Programming.Eval (eval, mylist)
 import Data.Maybe
 import Data.Char
 
+-- | fromBin strategy
+fromBinStrategy  =  introModule
+                <*> introDecls 1
+                <*> introPatternBinding 
+                <*> introPatternVariable <*> introNameIdentifier "fromBin"
+                <*> introRHSExpr 0
+                <*> introExprNormalApplication 1
+                <*> introExprParenthesized 
+                <*> introExprInfixApplication True True
+                <*> introExprInfixApplication False False
+                <*> introExprVariable <*> introNameOperator "+"
+                <*> introExprVariable <*> introNameOperator "."
+                <*> introExprInfixApplication False True
+                <*> introExprVariable <*> introNameOperator "*" 
+                <*> introExprLiteral <*> introLiteralInt "2"
+                <*> introExprLiteral <*> introLiteralInt "0"
 
--- AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
--- Biplate only allows (a->a) in container b 
+-- | Specialised strategies
+{-
+foldlS :: ExprS -> ExprS -> ExprS
+foldlS consS nilS i
+    =  appN 2 <*> introVar "foldr" <*> consS i <*> nilS i
+   <|> lam <*> appN 3 <*> introVar "foldr" <*> consS (i+1) <*> nilS (i+1) <*> var 0
+   <|> rec <*> lam <*> introMatchList <*> var 0 <*> focusTop <*> nilS (i+2) <*>
+       lam <*> lam <*> appN 2 <*> focusTop <*> consS (i+4) <*> var 1 <*> 
+       app <*> var 3 <*> var 0 
+-}
 
 --------------------------------------------------------------------------------
 -- | Strategies derived from the abstract syntax of expressions
+-- AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
+-- Biplate only allows (a->a) in container b 
 class GetStrategy a where
   getstrat :: a -> Strategy (Context Module)
 
@@ -165,49 +191,6 @@ isortString =  "isort []     = []\n"
 isortStrategy' = stringToStrategy isortString
 
 
--- Old stuff
-getStrategy :: Expr -> Strategy (Context Expr)
-getStrategy expr = 
-   case expr of
-      Lambda x e -> introLambda x <*> getStrategy e
-      MatchList b n c -> introMatchList <*> getStrategy b <*> getStrategy n <*> getStrategy c
-      Var x -> toStrategy (introVar x)
-      --Let x b d -> introLet x <*> getStrategy b <*> getStrategy d
-      Apply (Lambda f body) (Fix (Lambda g e)) | f==g ->
-         introLet f <*> getStrategy e <*> getStrategy body
-      Fix (Lambda f e) -> getStrategy (makeLet f e (Var f))
-      Apply f a -> introApply <*> getStrategy f <*> getStrategy a
-      IfThenElse c t e -> introIf <*> getStrategy c <*> getStrategy t <*> getStrategy e
-
-{- The abstract strategy has a slightly more abstract representation
-of list pattern matching. The following function is partial, and
-only works on pattern matching over variables. -}
-getAbstractStrategy :: Expr -> Strategy (Context Expr)
-getAbstractStrategy expr = 
-   case expr of
-      Lambda x e -> introLambda x <*> getAbstractStrategy e
-      MatchList b n c -> listPatternMatching b (getLambda c) (getLambda (dropLambda c)) <*> getAbstractStrategy n <*> getAbstractStrategy (dropLambda (dropLambda c))
-      Var x -> toStrategy (introVar x)
-      Apply (Lambda f body) (Fix (Lambda g e)) | f==g -> 
-         introLet f <*> getAbstractStrategy e <*> getAbstractStrategy body
-      Fix (Lambda f e) -> getAbstractStrategy (makeLet f e (Var f))
-      Apply f a -> introApply <*> getAbstractStrategy f <*> getAbstractStrategy a
-      IfThenElse c t e -> introIf <*> getAbstractStrategy c <*> getAbstractStrategy t <*> getAbstractStrategy e
-      
-getLambda (Lambda x e)   = x
-getLambda expr           = error "Not a lambda"
-
-dropLambda (Lambda x e)  = e
-dropLambda expr          = error "Not a lambda"
- 
--- the insertion sort strategy with a fold (Bastiaan)
-
-isortStrategy :: Strategy (Context Expr)
-isortStrategy = getStrategy isortE2
-
-isortAbstractStrategy :: Strategy (Context Expr)
-isortAbstractStrategy = getAbstractStrategy isortE2
-
 -- the insertion sort strategy with a fold (Johan)
 
 {- the fold & para strategies
@@ -222,6 +205,8 @@ isortAbstractStrategy = getAbstractStrategy isortE2
 -- different ways to implement folds.
 -}
 
+
+{-
 foldS' :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
 foldS' consS nilS =   toStrategy (introVar "foldr") <*> consS <*> nilS
 --                <|>  introLambda "aname" <*> introMatchList (Var "aname") 
@@ -291,3 +276,5 @@ app = focusTop <*> introApply
 appN :: Int -> Strategy (Context Expr) 
 appN 0 = succeed
 appN n = app <*> appN (n-1)
+
+-}

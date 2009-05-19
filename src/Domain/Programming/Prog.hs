@@ -8,6 +8,9 @@ import Data.List
 import Data.Typeable
 import Domain.Programming.Helium
 
+
+-- write a PreludeS, with strategies for prelude functions
+
 -- Some help functions
 range :: (Int, Int) -> Range
 range (line, col) = Range_Range (Position_Position "" line col) Position_Unknown
@@ -19,9 +22,11 @@ collectNames :: Module -> [String]
 collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
 
 equalModules :: Module -> Module -> Bool
-equalModules x y = alphaConversion (removeRanges x) == alphaConversion y
+equalModules x y = f x == f y
   where
-    removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
+    f = alphaConversion . removeRanges
+    
+removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
 alphaPairs m = zip names freshnames
   where 

@@ -24,6 +24,39 @@ import Domain.Programming.EncodingExercises
 import Text.Parsing (SyntaxError(..))
 import qualified UHA_Pretty as PP (sem_Module) 
 
+
+heliumExercise :: Exercise Module
+heliumExercise = Exercise   
+   { identifier    = "helium"
+   , domain        = "programming"
+   , description   = "Flexible fromBin strategy"
+   , status        = Experimental
+   , parser        = \s -> if s == "" then Right emptyProg else modParser s 
+   , subTerm       = \_ _ -> Nothing
+   , prettyPrinter = show . PP.sem_Module
+   , equivalence   = \_ _ -> True
+   , equality      = equalModules
+   , finalProperty = const True
+   , ruleset       = []
+   , strategy      = label "fromBin :: [Int] -> Int" fromBinStrategy
+   , differences   = \_ _ -> [([], Different)]
+   , ordering      = \_ _ -> LT
+   , termGenerator = makeGenerator (const True) (return emptyProg)
+   }
+
+modParser s = case compile s of
+                Left e  -> Left $ ErrorMessage e
+                Right m -> Right m
+
+toDecExercises :: [Exercise Module]
+toDecExercises = map (\ex -> heliumExercise { strategy = label "helium" (stringToStrategy ex) }) toDecs
+
+fromBinExercises :: [Exercise Module]
+fromBinExercises = map (\ex -> heliumExercise { strategy = label "fromBin" (stringToStrategy ex)
+                                              , description = "Student solutions fromBin" 
+                                              }) fromBins
+
+{-
 isortExercise :: Exercise Expr
 isortExercise = Exercise   
    { identifier    = "isort"
@@ -45,30 +78,4 @@ isortExercise = Exercise
    , ordering      = compare
    , termGenerator = makeGenerator (const True) (return E.undef)
    }
-
-heliumExercise :: Exercise Module
-heliumExercise = Exercise   
-   { identifier    = "helium"
-   , domain        = "programming"
-   , description   = "Helium testing"
-   , status        = Experimental
-   , parser        = \s -> if s == "" then Right emptyProg else modParser s 
-   , subTerm       = \_ _ -> Nothing
-   , prettyPrinter = show . PP.sem_Module
-   , equivalence   = \_ _ -> True
-   , equality      = equalModules
-   , finalProperty = const True
-   , ruleset       = []
-   , strategy      = label "helium" $ stringToStrategy toDec
-   , differences   = \_ _ -> [([], Different)]
-   , ordering      = \_ _ -> LT
-   , termGenerator = makeGenerator (const True) (return emptyProg)
-   }
-
-modParser s = case compile s of
-                Left e  -> Left $ ErrorMessage e
-                Right m -> Right m
-
-toDecExercises :: [Exercise Module]
-toDecExercises = map (\ex -> heliumExercise { strategy = label "helium" (stringToStrategy ex) }) toDecs
-
+-}

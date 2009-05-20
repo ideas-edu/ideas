@@ -69,6 +69,11 @@ introExprLet ndecls = toRule "Introduce operator" undefExprs f
   where
     f = Expression_Let noRange (take ndecls (repeat undefDecl)) undefExpr
 
+introExprLambda :: Int -> Rule (Context Module)
+introExprLambda nps = toRule "Introduce operator" undefExprs f
+  where
+    f = Expression_Lambda noRange (take nps (repeat undefPattern)) undefExpr
+
 introExprConstructor :: Rule (Context Module)
 introExprConstructor = toRule "Intro constructor" undefExprs f
   where 

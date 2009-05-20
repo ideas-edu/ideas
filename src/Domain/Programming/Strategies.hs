@@ -42,31 +42,51 @@ foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
     =  introRHSExpr 0 <*> introExprNormalApplication 2 <*> introExprVariable <*> introNameIdentifier "foldl" 
                                                        <*> consS <*> nilS 
-   <|> introRHSExpr 1 <*> introExprNormalApplication 1 
-                        <*> introExprVariable <*> introNameIdentifier "f"
-                        <*> nilS
-                           <*> introFunctionBindings 2  -- where
-                             <*> introLHSFun 2 <*> introNameIdentifier "f"
-                               <*> introPatternVariable <*> introNameIdentifier "nil"
-                               <*> introPatternConstructor 0 <*> introNameSpecial "[]"
-                             <*> introRHSExpr 0 
-                               <*> introExprVariable <*> introNameIdentifier "nil"
-                             <*> introLHSFun 2 <*> introNameIdentifier "f"
-                               <*> introPatternVariable <*> introNameIdentifier "nil"
-                               <*> introPatternParenthesized 
-                                 <*> introPatternInfixConstructor 
-                                   <*> introPatternVariable <*> introNameIdentifier "x"
-                                   <*> introNameSpecial ":"
-                                   <*> introPatternVariable <*> introNameIdentifier "xs"
-                             <*> introRHSExpr 0 
-                               <*> introExprNormalApplication 2 
-                                 <*> introExprVariable <*> introNameIdentifier "f"
-                                 <*> introExprParenthesized 
-                                   <*> introExprNormalApplication 2
-                                     <*> consS
-                                       <*> introExprVariable <*> introNameIdentifier "nil"
-                                       <*> introExprVariable <*> introNameIdentifier "x"
-                                 <*> introExprVariable <*> introNameIdentifier "xs"
+   <|> letS 1 ( introExprNormalApplication 1 <*> introExprVariable <*> introNameIdentifier "f" <*> nilS )
+              ( introFunctionBindings 2
+                  <*> introLHSFun 2 <*> introNameIdentifier "f"
+                                    <*> introPatternVariable <*> introNameIdentifier "nil"
+                                    <*> introPatternConstructor 0 <*> introNameSpecial "[]"
+                      <*> introRHSExpr 0 
+                                    <*> introExprVariable <*> introNameIdentifier "nil"
+                  <*> introLHSFun 2 <*> introNameIdentifier "f"
+                                    <*> introPatternVariable <*> introNameIdentifier "nil"
+                                    <*> introPatternParenthesized 
+                                    <*> introPatternInfixConstructor 
+                                    <*> introPatternVariable <*> introNameIdentifier "x"
+                                    <*> introNameSpecial ":"
+                                    <*> introPatternVariable <*> introNameIdentifier "xs"
+                      <*> introRHSExpr 0 
+                                    <*> introExprNormalApplication 2 
+                                    <*> introExprVariable <*> introNameIdentifier "f"
+                                    <*> introExprParenthesized 
+                                    <*> introExprNormalApplication 2
+                                    <*> consS
+                                    <*> introExprVariable <*> introNameIdentifier "nil"
+                                    <*> introExprVariable <*> introNameIdentifier "x"
+                                    <*> introExprVariable <*> introNameIdentifier "xs"
+              )
+
+-- specialised let strategy, also recognizes where clauses
+letS :: Int -> ModuleS -> ModuleS -> ModuleS
+letS ndecls exprS declS  =  introRHSExpr ndecls <*> exprS <*> declS
+                        <|> introRHSExpr 0 <*> introExprLet ndecls <*> declS <*> exprS
+
+compS :: ModuleS -> ModuleS -> ModuleS
+compS f g  =  introExprInfixApplication True True <*> f <*> introExprVariable <*> introNameOperator "." <*> g
+          <|> introExprLambda 1 <*> introPatternVariable <*> introNameIdentifier "aname" {- not in free vars of f and g -} <*>
+              introExprNormalApplication 1 <*> f <*> introExprParenthesized <*> introExprNormalApplication 1 <*>
+              g <*> introExprVariable <*> introNameIdentifier "aname"
+
+infixS :: ModuleS
+infixS = undefined
+
+{-
+foldlMaarTochR f v xs = foldr (\x g -> (\a -> g (f a x))) id xs v 
+
+(Module_Module (1,1) MaybeName_Nothing MaybeExports_Nothing (Body_Body (1,1) [] [Declaration_FunctionBindings (1,1) [FunctionBinding_FunctionBinding (1,1) (LeftHandSide_Function (1,1) foldlMaarTochR [Pattern_Variable (1,16) f,Pattern_Variable (1,18) v,Pattern_Variable (1,20) xs]) (RightHandSide_Expression (1,23) (Expression_NormalApplication (1,25) (Expression_Variable (1,25) foldr) [Expression_Parenthesized (1,31) (Expression_Lambda (1,32) [Pattern_Variable (1,33) x,Pattern_Variable (1,35) g] (Expression_Parenthesized (1,40) (Expression_Lambda (1,41) [Pattern_Variable (1,42) a] (Expression_NormalApplication (1,47) (Expression_Variable (1,47) g) [Expression_Parenthesized (1,49) (Expression_NormalApplication (1,50) (Expression_Variable (1,50) f) [Expression_Variable (1,52) a,Expression_Variable (1,54) x])])))),Expression_Variable (1,59) id,Expression_Variable (1,62) xs,Expression_Variable (1,65) v]) MaybeDeclarations_Nothing)]]))
+-}
+
 
 {-
 foldlS :: ExprS -> ExprS -> ExprS

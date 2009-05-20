@@ -2,7 +2,9 @@ module Domain.Programming.EncodingExercises where
 
 -- fromBin :: [Int] -> Int
 
-fromBins = [fromBin, fromBinER, fromBin1, fromBin2, fromBin3, fromBin4, fromBin5, fromBin6]
+fromBins = [ fromBin, fromBinER, fromBinLet
+           , fromBin1, fromBin2, fromBin3, fromBin4, fromBin5, fromBin6
+           ]
 
 fromBin = "fromBin = foldl ((+) . (* 2)) 0"
 
@@ -10,6 +12,10 @@ fromBinER =  "fromBin = f 0\n" -- explicit recursion
           ++ "  where\n" 
           ++ "    f nil []     = nil\n" 
           ++ "    f nil (x:xs) = f (((+) . (*2)) nil x) xs\n"
+
+fromBinLet =  "fromBin = let f nil []     = nil\n" 
+           ++ "              f nil (x:xs) = f (((+) . (*2)) nil x) xs\n"
+           ++ "          in f 0\n"
 
 fromBin1 = "fromBin = foldl (\\x y -> x * 2 + y) 0"
 

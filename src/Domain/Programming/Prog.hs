@@ -46,13 +46,14 @@ alphaConversion m = foldr rename m $ alphaPairs m
 allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
 isSolution mod strat = any (equalModules mod) $ allSolutions strat
 
-checkExercises :: Strategy (Context Module) -> [String] -> IO ()
-checkExercises strat xs = mapM_ f xs
+checkExercise :: Strategy (Context Module) -> String -> IO ()
+checkExercise strat x = putStrLn $ x ++ " : " ++ (show (isSolution (fromRight (compile x)) strat))
   where
-    f x = putStrLn $ x ++ " : " ++ (show (isSolution (fromRight (compile x)) strat))
     fromRight x = case x of
                     Right y -> y
                     _       -> error "no compile"
+checkExercises :: Strategy (Context Module) -> [String] -> IO ()
+checkExercises strat xs = mapM_ (checkExercise strat) xs
 
 -- Typed holes in a incomplete program
 undefDecl :: Declaration

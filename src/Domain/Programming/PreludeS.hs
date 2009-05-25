@@ -1,5 +1,5 @@
 module Domain.Programming.PreludeS
-   ( ModuleS, foldlS, letS, compS, infixS
+   ( ModuleS, foldlS, letS, compS, etaS
    ) where
 
 import Common.Context
@@ -7,6 +7,10 @@ import Common.Strategy
 import Data.Maybe
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
+
+-- use applicative or monad type class for getting rules in to strategy context, and somehow get
+-- the strategy arguments typed
+-- pure = 
 
 -- | Specialised strategies
 type ModuleS = Strategy (Context Module)
@@ -46,15 +50,25 @@ letS ndecls exprS declS  =  introRHSExpr ndecls <*> exprS <*> declS
                         <|> introRHSExpr 0 <*> introExprLet ndecls <*> declS <*> exprS
 
 compS :: ModuleS -> ModuleS -> ModuleS
-compS f g  =  introExprParenthesized <*> introExprInfixApplication True True <*> f 
-                                     <*> introExprVariable <*> introNameOperator "." <*> g
+compS f g  =  introExprInfixApplication True True <*> f <*> introExprVariable <*> introNameOperator "." <*> g
           <|> introExprLambda 1 <*> introPatternVariable <*> introNameIdentifier "aname" <*> -- not in free vars of f and g 
               introExprNormalApplication 1 <*> f <*> introExprParenthesized <*> introExprNormalApplication 1 <*>
               g <*> introExprVariable <*> introNameIdentifier "aname"
 
+etaS :: ModuleS -> ModuleS
+etaS expr  =  expr
+          <|> introExprParenthesized <*> introExprLambda 1 <*> introPatternVariable <*> introNameIdentifier "x" <*> 
+              introExprNormalApplication 1 <*> expr <*> introExprVariable <*> introNameIdentifier "x"
+
+etaFunS :: ModuleS -> ModuleS -> ModuleS
+etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
+                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
+                     introExprVariable <*> introNameIdentifier "x"
+                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
+
+
 {-
--- should be eta expansion
-infixS :: String -> Maybe ModuleS -> Maybe ModuleS -> ModuleS
+infixS :: Maybe ModuleS -> Maybe ModuleS -> ModuleS
 infixS op l r  =  introExprInfixApplication (isJust l) (isJust r) <*>
                   fromMaybe succeed l <*> introExprVariable <*> introNameOperator op  <*>
                   fromMaybe succeed r

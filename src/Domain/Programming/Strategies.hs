@@ -13,17 +13,17 @@ fromBinStrategy  =  introModule
                 <*> introDecls 1
                 <*> introPatternBinding 
                 <*> introPatternVariable <*> introNameIdentifier "fromBin"
-                <*> foldlS ( introExprParenthesized <*>
-                             compS (  introExprInfixApplication False False
-                                  <*> introExprVariable <*> introNameOperator "+"
-                                   )( introExprInfixApplication False True
-                                  <*> introExprVariable <*> introNameOperator "*" 
-                                  <*> introExprLiteral <*> introLiteralInt "2"
-                                   )
-                           )
-                           ( introExprLiteral <*> introLiteralInt "0"     -- nil
-                           )
+                <*> foldlS consS nilS
 
+consS = etaS ( introExprParenthesized <*> 
+               compS ( introExprInfixApplication False False <*> introExprVariable <*> introNameOperator "+"
+                     )( introExprInfixApplication False True <*> introExprVariable <*> introNameOperator "*" 
+                    <*> introExprLiteral <*> introLiteralInt "2"
+                     )
+             )
+
+nilS = introExprLiteral <*> introLiteralInt "0"
+                           
 
 -- | Strategies derived from the abstract syntax of expressions
 --   AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.

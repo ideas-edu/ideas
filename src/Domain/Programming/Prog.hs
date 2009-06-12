@@ -1,17 +1,20 @@
 module Domain.Programming.Prog where
 
-import Common.Context
+import Common.Context hiding (get)
 import Common.Strategy
 import Control.Monad.State
 import Data.Generics.Biplate
 import Data.Generics.PlateData
 import Data.Data hiding (Fixity)
-import Data.List
-import Data.Typeable
+import Data.List hiding (union, lookup)
+import Data.Map hiding (map, filter)
+import Data.Maybe
 import Domain.Programming.Helium
+import Domain.Programming.AlphaConv (alphaConversion, sem_Module)
 
 
--- write a PreludeS, with strategies for prelude functions
+-- Test values
+(Right m) = compile "f x = x + 3"
 
 -- Some help functions
 range :: (Int, Int) -> Range
@@ -30,24 +33,11 @@ equalModules x y = f x == f y
     
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
-alphaPairs m = zip names freshnames
-  where 
-    names      = nub [ Name_Identifier r m s | Name_Identifier r m s <- universeBi m
-                     ,                         s `notElem` preludeIdentifiers ]
-    freshnames = ['x' : show i | i <- [1..]]
-
-rename (old, new) = transformBi f
-  where 
-    f x | x == old  = Name_Identifier noRange [] new
-        | otherwise = x
-
-alphaConversion m = foldr rename m $ alphaPairs m
-
 allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
 isSolution mod strat = any (equalModules mod) $ allSolutions strat
 
 checkExercise :: Strategy (Context Module) -> String -> IO ()
-checkExercise strat x = putStrLn $ x ++ " : " ++ (show (isSolution (fromRight (compile x)) strat))
+checkExercise strat x = putStrLn $ x ++ " : " ++ show (isSolution (fromRight (compile x)) strat)
   where
     fromRight x = case x of
                     Right y -> y

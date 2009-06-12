@@ -17,13 +17,14 @@ fromBinLet =  "fromBin = let f nil []     = nil\n"
            ++ "              f nil (x:xs) = f (((+) . (*2)) nil x) xs\n"
            ++ "          in f 0\n"
 
-fromBinEta = "fromBin = foldl (\\x -> ((+) . (* 2)) x) 0"
+fromBinEta = "fromBin = foldl (\\x -> (\\y -> ((+) . (* 2)) y) x) 0"
 
 fromBin1 = "fromBin = foldl (\\x y -> x * 2 + y) 0"
 
 fromBin2 =  "fromBin [] = 0\n"
          ++ "fromBin (x:xs) = x * 2^(length xs) + fromBin xs\n"
 
+-- looks like a foldl1, however, solution is not entirely correct (no case for [])
 fromBin3 =  "fromBin [x]      = x\n"
          ++ "fromBin (x:y:ys) = fromBin (x * 2 + y : ys)\n"
 

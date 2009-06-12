@@ -1,5 +1,5 @@
 module Domain.Programming.Helium 
-   ( compile, module UHA_Syntax, module UHA_Range
+   ( compile, module UHA_Syntax, module UHA_Range, patternVars, changeOfScope
    ) where
 
 import PhaseLexer
@@ -9,6 +9,7 @@ import PhaseStaticChecks
 import PhaseTypingStrategies ()
 import PhaseTypeInferencer
 import UHA_Syntax
+import UHA_Utils (patternVars)
 import Data.IORef
 import Messages
 import HeliumMessages
@@ -19,6 +20,7 @@ import Id(Id)
 import UHA_Syntax
 import UHA_Utils
 import UHA_Range(noRange)
+import StaticChecks (changeOfScope)
 import Standard(searchPath)
 import LvmImport(lvmImportDecls)
 import Id(stringFromId)
@@ -33,7 +35,7 @@ import Control.Monad.Trans
 -- the compiler/parser
 compile :: String -> Either String Module
 compile txt = unsafePerformIO $ do
-   ea <- run $ compile_ txt [Overloading, Verbose] [".", "../../../heliumsystem/helium/lib"
+   ea <- run $ compile_ txt [Overloading {-, Verbose-}] [".", "../../../heliumsystem/helium/lib"
                                                    ,"/Users/alex/Documents/heliumsystem/helium/lib"] []
    case ea of
       Left ms -> return $ Left $ unlines ms
@@ -64,7 +66,7 @@ compile_ contents options lvmPath doneModules =
     do
         let fullName = "..."
         let compileOptions = (options, fullName, doneModules)
-        liftIO $ putStrLn ("Compiling")
+--        liftIO $ putStrLn ("Compiling")
         
         -- Phase 1: Lexing
         (lexerWarnings, tokens) <- 

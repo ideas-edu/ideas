@@ -15,7 +15,7 @@ fromBinStrategy  =  introModule
                 <*> introPatternVariable <*> introNameIdentifier "fromBin"
                 <*> foldlS consS nilS
 
-consS = etaS ( introExprParenthesized <*> 
+consS = etaS $ etaS ( introExprParenthesized <*> 
                compS ( introExprInfixApplication False False <*> introExprVariable <*> introNameOperator "+"
                      )( introExprInfixApplication False True <*> introExprVariable <*> introNameOperator "*" 
                     <*> introExprLiteral <*> introLiteralInt "2"

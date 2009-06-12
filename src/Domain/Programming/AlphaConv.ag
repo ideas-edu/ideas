@@ -1,0 +1,47 @@
+
+ATTR * [ | env:{Map Name String} names:{[String]} | result:SELF ]
+
+INCLUDE "syntax/UHA_Syntax.ag"
+--INCLUDE "staticanalysis/staticchecks/StaticChecks.ag"
+
+-- maybe include free vars to check if name is elem of freevars and than don't change it
+
+-- compile with: uuagc -scfr --module=Domain.Programming.AlphaConv -P ~/Documents/heliumsystem/helium/src AlphaConv.ag
+
+-- this is a partial implementaiton!
+
+imports{
+import Data.Map hiding (map, filter)
+import Domain.Programming.Helium
+}
+
+SEM Declaration
+  | PatternBinding lhs . env = @lhs.env
+
+SEM Expression
+  | Lambda lhs . env = @lhs.env 
+
+SEM FunctionBinding
+  | FunctionBinding --righthandside . env = union @lefthandside.env @lhs.env -- not necessary due to left to right when chaining
+                    lhs . env = @lhs.env -- make sure that the variables of the lhs don't travel up 
+
+
+
+SEM Name
+  | Identifier lhs . result   = changeName @newname @result
+                   . names    = if member @result @lhs.env then @lhs.names else tail @lhs.names
+                   . env      = insert @result @newname @lhs.env
+               loc . newname  = case Data.Map.lookup @result @lhs.env of
+                                     Just n -> n 
+                                     _      -> head @lhs.names
+
+{
+changeName :: String -> Name -> Name
+changeName s n = case n of 
+                   Name_Identifier r m _ -> Name_Identifier r m s
+                   Name_Operator   r m _ -> Name_Operator   r m s
+                   _                     -> n
+
+alphaConversion :: Module -> Module
+alphaConversion m = (\(_,_,c) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]]
+}

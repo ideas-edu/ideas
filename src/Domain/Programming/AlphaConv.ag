@@ -1,14 +1,12 @@
 
-ATTR * [ | env:{Map Name String} names:{[String]} | result:SELF ]
+ATTR * [ freevars:{[String]} | env:{Map Name String} names:{[String]} | result:SELF ]
 
 INCLUDE "syntax/UHA_Syntax.ag"
 --INCLUDE "staticanalysis/staticchecks/StaticChecks.ag"
-
--- maybe include free vars to check if name is elem of freevars and than don't change it
-
--- compile with: uuagc -scfr --module=Domain.Programming.AlphaConv -P ~/Documents/heliumsystem/helium/src AlphaConv.ag
-
--- this is a partial implementaiton!
+{-
+   o  compile with: uuagc -scfr --module=Domain.Programming.AlphaConv -P ~/Documents/heliumsystem/helium/src AlphaConv.ag
+   o  this is a partial implementation! Complete with all bindings
+-}
 
 imports{
 import Data.Map hiding (map, filter)
@@ -17,20 +15,27 @@ import Domain.Programming.Helium
 
 SEM Declaration
   | PatternBinding lhs . env = @lhs.env
+                   pattern . env = empty
+                   righthandside . env = union @pattern.env @lhs.env
 
 SEM Expression
   | Lambda lhs . env = @lhs.env 
+           patterns . env = empty
+           expression . env = union @patterns.env @lhs.env
 
 SEM FunctionBinding
-  | FunctionBinding --righthandside . env = union @lefthandside.env @lhs.env -- not necessary due to left to right when chaining
-                    lhs . env = @lhs.env -- make sure that the variables of the lhs don't travel up 
+  | FunctionBinding lhs . env = @lhs.env -- make sure that the variables of the lhs don't travel up 
+                    lefthandside . env = empty
+                    righthandside . env = union @lefthandside.env @lhs.env -- not necessary due to left to right when chaining
 
 
 
 SEM Name
-  | Identifier lhs . result   = changeName @newname @result
-                   . names    = if member @result @lhs.env then @lhs.names else tail @lhs.names
-                   . env      = insert @result @newname @lhs.env
+  | Identifier lhs . result   = if @name `notElem` @lhs.freevars then changeName @newname @result else @result
+                   . names    = if member @result @lhs.env 
+                                  then @lhs.names 
+                                  else tail @lhs.names
+                   . env      = insert @result @newname @lhs.env  -- insert also updates an existing binding
                loc . newname  = case Data.Map.lookup @result @lhs.env of
                                      Just n -> n 
                                      _      -> head @lhs.names
@@ -43,5 +48,9 @@ changeName s n = case n of
                    _                     -> n
 
 alphaConversion :: Module -> Module
-alphaConversion m = (\(_,_,c) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]]
+alphaConversion m = (\(_,_,c) -> c) $ sem_Module m empty preludeIdentifiers ['x' : show i | i <- [1..]] 
+
+
+-- Reserved identifiers
+preludeIdentifiers = ["$!","catch","!!","$","&&","++",".","=<<","Bool","False","True","Bounded","minBound","maxBound","Char","Double","Either","Left","Right","Enum","succ","pred","toEnum","fromEnum","enumFrom","enumFromThen","enumFromTo","enumFromThenTo","Eq","==","/=","FilePath","Float","Fractional","pi","exp","sqrt","log","**","logBase","sin","tan","cos","asin","atan","acos","sinh","tanh","cosh","asinh","atanh","acosh","Fractional","/","recip","fromRational","Functor","fmap","IO","IOError","Int","Integer","Integral","quot","rem","div","mod","quotRem","divMod","toInteger","Maybe","Nothing","Just","Monad",">>=",">>","return","fail","Num","+","*","-","negate","abs","signum","fromInteger","Ord","compare","<",">=",">","<=","max","min","Ordering","LT","EQ","GT","Rational","Read","readsPrec","readList","ReadS","Real","toRational","RealFloat","floatRadix","floatDigits","floatRange","decodeFloat","encodeFloat","exponent","significand","scaleFloat","isNaN","isInfinite","isDenormalized","isNegativeZero","isIEEE","atan2","RealFrac","properFraction","truncate","round","ceiling","floor","Show","showsPrec","show","showList","ShowS","String","^","^^","all","and","any","appendFile","asTypeOf","break","concat","concatMap","const","curry","cycle","drop","dropWhile","either","elem","error","even","filter","flip","foldl","foldl1","foldr","foldr1","fromIntegral","fst","gcd","getChar","getContents","getLine","head","id","init","interact","ioError","iterate","last","lcm","length","lex","lines","lookup","map","mapM","mapM_","maximum","maybe","minimum","not","notElem","null","odd","or","otherwise","print","product","putChar","putStr","putStrLn","read","readFile","readIO","readLn","readParen","reads","realToFrac","repeat","replicate","reverse","scanl","scanl1","scanr","scanr1","seq","sequence","sequence_","showChar","showParen","showString","shows","snd","span","splitAt","subtract","sum","tail","take","takeWhile","uncurry","undefined","unlines","until","unwords","unzip","unzip3","userError","words","writeFile","zip","zip3","zipWith","zipWith3","||"]
 }

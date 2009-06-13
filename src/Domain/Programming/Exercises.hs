@@ -15,7 +15,7 @@ import Domain.Programming.PreludeS
 import Domain.Programming.EncodingExercises
 import Text.Parsing (SyntaxError(..))
 import qualified UHA_Pretty as PP (sem_Module) 
-
+import Domain.Programming.AlphaConv (alphaConversion, sem_Module)
 
 heliumExercise :: Exercise Module
 heliumExercise = Exercise   

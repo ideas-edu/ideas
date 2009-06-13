@@ -14,8 +14,6 @@ import Domain.Programming.Prog
 import Domain.Programming.PreludeS
 import Domain.Programming.EncodingExercises
 import Text.Parsing (SyntaxError(..))
-import qualified UHA_Pretty as PP (sem_Module) 
-import Domain.Programming.AlphaConv (alphaConversion, sem_Module)
 
 heliumExercise :: Exercise Module
 heliumExercise = Exercise   
@@ -23,9 +21,13 @@ heliumExercise = Exercise
    , domain        = "programming"
    , description   = "Flexible fromBin strategy"
    , status        = Experimental
-   , parser        = \s -> if s == "" then Right emptyProg else modParser s 
+   , parser        = \s -> if s == "" 
+                           then Right emptyProg 
+                           else  case compile s of
+                                   Left e  -> Left $ ErrorMessage e
+                                   Right m -> Right m
    , subTerm       = \_ _ -> Nothing
-   , prettyPrinter = show . PP.sem_Module
+   , prettyPrinter = ppModule
    , equivalence   = \_ _ -> True
    , equality      = equalModules
    , finalProperty = const True
@@ -35,10 +37,6 @@ heliumExercise = Exercise
    , ordering      = \_ _ -> LT
    , termGenerator = makeGenerator (const True) (return emptyProg)
    }
-
-modParser s = case compile s of
-                Left e  -> Left $ ErrorMessage e
-                Right m -> Right m
 
 toDecExercises :: [Exercise Module]
 toDecExercises = map (\ex -> heliumExercise { strategy = label "helium" (stringToStrategy ex) }) toDecs

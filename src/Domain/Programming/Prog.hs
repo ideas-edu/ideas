@@ -10,7 +10,7 @@ import Data.List hiding (union, lookup)
 import Data.Map hiding (map, filter)
 import Data.Maybe
 import Domain.Programming.Helium
-import Domain.Programming.AlphaConv (alphaConversion, sem_Module)
+import Domain.Programming.AlphaConv (alphaConversion)
 
 
 -- Test values

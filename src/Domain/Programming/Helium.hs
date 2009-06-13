@@ -1,5 +1,5 @@
 module Domain.Programming.Helium 
-   ( compile, module UHA_Syntax, module UHA_Range, patternVars, changeOfScope
+   ( compile, module UHA_Syntax, module UHA_Range, patternVars, ppModule
    ) where
 
 import PhaseLexer
@@ -20,6 +20,7 @@ import Id(Id)
 import UHA_Syntax
 import UHA_Utils
 import UHA_Range(noRange)
+import qualified UHA_Pretty as PP (sem_Module)
 import StaticChecks (changeOfScope)
 import Standard(searchPath)
 import LvmImport(lvmImportDecls)
@@ -31,6 +32,9 @@ import Control.Monad.Trans
 -- import Common.Uniplate
 
 -- main = either print (\_ -> print "OK") $ compile "mysum xs = foldr (+) 0 xs"
+
+-- a Module pretty printer
+ppModule = show . PP.sem_Module
 
 -- the compiler/parser
 compile :: String -> Either String Module

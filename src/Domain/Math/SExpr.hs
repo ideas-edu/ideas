@@ -2,14 +2,12 @@
 module Domain.Math.SExpr
    ( --simpler, simplerGS, simplerLin, simplerMatrix, simplerVectors, simplerEquations
   -- , cleanUpWith, cleanUpStrategy
-     lam, SExpr, toExpr
+     SExpr, toExpr
    , simplifyExpr, simplify, hasSquareRoot
    ) where
 
 import Common.Utils
-import Common.View hiding (Simplification, simplify)
-import qualified Common.View as View
-import Common.Uniplate (transformM, children, Uniplate(..))
+import Common.Uniplate (transformM, children)
 import Common.Rewriting
 import Domain.Math.Symbolic
 import Domain.Math.Expr
@@ -17,45 +15,10 @@ import Domain.Math.Constrained
 import Domain.Math.Rules
 import Control.Monad
 import Data.List
-import Data.Ratio
 import Data.Maybe
 import qualified Data.Map as M
 import Data.Monoid
 import Test.QuickCheck hiding (label)
-
-{-
-simpler, simplerGS, simplerLin :: View.Simplification Expr
-simpler    = View.makeSimplification (fromConstrained . simplify)
-simplerGS  = View.makeSimplification (fromConstrained . simplifyGS)
-simplerLin = View.makeSimplification (fromConstrained . simplifyLin)
-
-simplerMatrix :: View.Simplification (Matrix Expr)
-simplerMatrix = View.makeSimplification (fmap (View.simplify simpler))
-
-simplerVectors :: View.Simplification [Vector Expr]
-simplerVectors = View.makeSimplification (map (fmap (View.simplify simplerGS)))
-
-simplerEquations :: View.Simplification (Equations Expr)
-simplerEquations = View.makeSimplification (map (fmap (View.simplify simplerLin)))
-
--- parser/pretty-printer are left unchanged
-cleanUpWith :: View.Simplification a -> Exercise a -> Exercise a
-cleanUpWith view ex = ex
-   { strategy      = cleanUpStrategy (fmap (View.simplify view)) (strategy ex)
-   , ruleset       = map (cleanUpRule (fmap (View.simplify view))) (ruleset ex)
-   , equality      = \x y -> equality ex (View.simplify view x) (View.simplify view y)
-   , finalProperty = finalProperty ex . View.simplify view
-   , generator     = liftM (View.simplify view) (generator ex)
-   }
-
-cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
-cleanUpStrategy f s = mapRules (cleanUpRule f) 
-   (label (strategyName s) (doAfter f idRule <*> unlabel s))
-
-cleanUpRule :: (a -> a) -> Rule a -> Rule a
-cleanUpRule f r
-   | isMajorRule r = doAfter f r  
-   | otherwise     = r -}
 
 newtype SExpr = SExpr (Constrained (Con Expr) Expr)
 
@@ -163,23 +126,11 @@ distribution ((n :*: a1) :-: a2)         | isRat n && a1==a2 = (n-1)*a1
 distribution (a1         :-: (m :*: a2)) | isRat m && a1==a2 = (1-m)*a1
 distribution e = e
 
-transformTD :: Uniplate a => (a -> Maybe a) -> a -> a
-transformTD f a = 
-   case f a of
-      Just b  -> b
-      Nothing -> g (map (transformTD f) cs)
- where
-   (cs, g) = uniplate a
-
 -- check whether the expression is a "rational" number
 isRat :: Expr -> Bool
 isRat (Nat _) = True
 isRat (Nat _ :/: Nat _) = True
 isRat _ = False
-
-lam,varx :: SExpr
-lam = variable "L"
-varx = variable "x"
 
 -- special care is taken for associative and commutative operators       
 constantPropagation :: Expr -> Expr
@@ -244,88 +195,10 @@ applyRules e =
         , rewriteRule "Temp5" $ \x y -> (x/y)/y :~> x/(y*y)
         ]
 
-simplifyGS :: Expr -> Constrained (Con Expr) Expr
-simplifyGS = simplify . rewriteGS
-
--- Gram-Schmidt view
-data ViewGS = PlusGS ViewGS ViewGS | TimesGS Rational Integer
-
-rewriteGS :: Expr -> Expr
-rewriteGS = undefined -- View.simplify viewGS
-
-viewGS :: View Expr ViewGS
-viewGS = makeView toViewGS (fromViewGS . sortAndMergeViewGS)
-
-toViewGS :: Expr -> Maybe ViewGS
-toViewGS = undefined -- foldExpr (bin plus, bin times, bin min, unop neg, con, bin div, unop sqrt, err, const err)
- where
-   err _ = fail "toMySqrt"
-   bin  f a b = join (liftM2 f a b)
-   unop f a = join (liftM f a)
-   con n = return (TimesGS (fromIntegral n) 1)
-   
-   plus a b = return (PlusGS a b)   
-   min a b  = bin plus (return a)  (neg b)
-   neg a    = bin times (con (-1)) (return a)
-   div a b  = bin times (return a) (recip b)
-   
-   times (PlusGS a b) c = bin plus (times a c) (times b c)
-   times a (PlusGS b c) = bin plus (times a b) (times a c)
-   times (TimesGS r1 n1) (TimesGS r2 n2) =
-      case squareRoot (n1*n2) of
-         Just (TimesGS r3 n3) -> return $ TimesGS (r1*r2*r3) n3
-         _ -> Nothing
-         
-   recip (TimesGS r n) | r /= 0 && n /= 0 = return $ TimesGS (1 / (fromIntegral n*r)) n 
-   recip _ = Nothing
-   
-   sqrt (TimesGS r 1) 
-      | r2 == 1 = 
-           squareRoot r1
-      | otherwise =  
-           bin div (unop sqrt $ con $ fromIntegral r1) (unop sqrt $ con $ fromIntegral r2)
-    where (r1, r2) = (numerator r, denominator r)
-   sqrt _ = Nothing
-   
-   squareRoot n = maybe (rec 1 n [2..20]) con (hasSquareRoot n) 
-    where
-      rec i n [] = return $ TimesGS (fromInteger i) n
-      rec i n (x:xs)
-         | n `mod` x2 == 0 = rec (i*x) (n `Prelude.div` x2) (x:xs)
-         | otherwise       = rec i n xs
-       where
-         x2 = x*x
-      
-sortAndMergeViewGS :: ViewGS -> ViewGS
-sortAndMergeViewGS = merge . sortBy cmp . collect
- where
-   collect (PlusGS a b)  = collect a ++ collect b
-   collect (TimesGS r n) = [(r, n)]
-   
-   merge ((r1, n1):(r2, n2):rest)
-      | n1 == n2  = merge ((r1+r2, n1):rest)
-      | otherwise = PlusGS (TimesGS r1 n1) (merge ((r2,n2):rest))
-   merge [(r1, n1)] = TimesGS r1 n1
-   merge _ = error "merge"
-   
-   cmp x y = snd x `compare` snd y
-
-fromViewGS :: ViewGS -> Expr
-fromViewGS (PlusGS a b)  = fromViewGS a + fromViewGS b
-fromViewGS (TimesGS r n) = fromRational r * sqrt (fromIntegral n)
-
--- Linear expressions view
-simplifyLin :: Expr -> Constrained (Con Expr) Expr
-simplifyLin e = return $ maybe e (fromViewLin . simplifyViewLin) (toViewLin e)
-
 -- invariant: coefficients are /= 0
 data ViewLin = Lin (M.Map String Expr) Expr
    deriving (Show, Eq)
 
-simplifyViewLin :: ViewLin -> ViewLin
-simplifyViewLin (Lin m e) = makeLin (M.map f m) (f e)
- where f = fromConstrained . simplify
- 
 rewriteLin :: Expr -> Expr
 rewriteLin e = maybe e fromViewLin (toViewLin e)
 

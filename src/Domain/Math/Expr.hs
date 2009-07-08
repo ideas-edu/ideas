@@ -181,7 +181,7 @@ parenthesizedExpr = ppExprPrio True 0
 ppExprPrio :: Bool -> Double -> Expr -> String
 ppExprPrio parens = flip $ foldExpr (binL "+" 6, binL "*" 7, binL "-" 6, neg, nat, binL "/" 7, sq, var, sym)
  where
-   nat n _        = show n
+   nat n _        = if n >= 0 then show n else "!" ++ show n
    var s _        = s
    neg x b        = parIf (b>6.5) ("-" ++ x 7)
    sq  x          = sym "sqrt" [x]

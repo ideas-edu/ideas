@@ -7,7 +7,7 @@ import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Uniplate (somewhereM, transform)
 import Control.Monad
-import Data.List (intersperse, (\\), sort, nub)
+import Data.List ((\\), sort, nub)
 import Data.Ratio
 import Domain.Math.Equation
 import Domain.Math.ExercisesDWO
@@ -17,8 +17,8 @@ import Domain.Math.OrList
 import Domain.Math.Parser
 import Domain.Math.Polynomial 
 import Domain.Math.Views
+import Data.Maybe
 import Prelude hiding (repeat, (^))
-import Test.QuickCheck hiding (label)
 import qualified Domain.Math.SquareRoot as SQ
 
 ------------------------------------------------------------
@@ -74,6 +74,13 @@ forOne f (OrList xs) = map OrList (rec xs)
  where
    rec []     = []
    rec (x:xs) = maybe [] (\y -> [y++xs]) (f x) ++ map (x:) (rec xs)
+
+oneSide :: (a -> Maybe a) -> Equation a -> Maybe [Equation a]
+oneSide f (lhs :==: rhs)
+   | null xs   = Nothing
+   | otherwise = Just xs
+ where 
+   xs = catMaybes [fmap (:==: rhs) (f lhs), fmap (lhs :==:) (f rhs)]
 
 ------------------------------------------------------------
 -- Rule collection
@@ -225,20 +232,15 @@ distribution = makeSimpleRuleList "distribution" (forOne f)
          _             -> Nothing 
 
 distributionSquare :: Rule (OrList (Equation Expr))
-distributionSquare = makeSimpleRuleList "distribution square" (forOne f)
+distributionSquare = makeSimpleRuleList "distribution square" (forOne $ oneSide f)
  where
-   g (Sym "^" [x, Nat 2]) = do
+   f (Sym "^" [x, Nat 2]) = do
       (a, x, b) <- match linearView x
       guard (a /= 0 && b /= 0)
       return  (  (fromRational (a*a) .*. (Var x^2)) 
              .+. (fromRational (2*a*b) .*. Var x)
              .+. (fromRational (b*b)))
-   g _ = Nothing
-   f (lhs :==: rhs) = 
-      case (somewhereM g lhs, somewhereM g rhs) of
-         (Just new, _) -> return [new :==: rhs]
-         (_, Just new) -> return [lhs :==: new]
-         _             -> Nothing 
+   f _ = Nothing
 
 mergeR :: Rule (OrList (Equation Expr))
 mergeR = makeSimpleRuleList "merge" (forOne (fmap return . apply merge))
@@ -304,7 +306,7 @@ qView2 :: View (Equation Expr) [SQ.SquareRoot Rational]
 qView2 = makeView f undefined
  where
    f (lhs :==: rhs) = do
-      (x, poly) <- match polyView (lhs - rhs)
+      (_, poly) <- match polyView (lhs - rhs)
       guard (degree poly <= 2)
       ra <- match rationalView (coefficient 2 poly)
       rb <- match rationalView (coefficient 1 poly)
@@ -334,7 +336,7 @@ squareRootView = makeView f g
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
    f (a :/: b)  = liftM2 (\s r -> s * SQ.con (1/r)) (f a) (match rationalView b)
-   f e = Nothing
+   f _ = Nothing
    
    g m = build sumView (map h (SQ.toList m))
    h (r, n)  
@@ -356,7 +358,7 @@ polyView = makeView f undefined
    g (a :-: b)  = liftM2 (-) (g a) (g b)
    g (a :*: b)  = liftM2 (*) (g a) (g b)
    g (a :/: b)  = guard (noVars b) >> liftM (\x -> fmap (/b) x) (g a)
-   g (Sym "^" [a, Nat n]) = liftM (`power` 2) (g a)
+   g (Sym "^" [a, Nat n]) = liftM (`power` fromInteger n) (g a)
    g e@(Sqrt a) | noVars a = Just (con e)
    g e | noVars e  = Just (con e)
        | otherwise = Nothing

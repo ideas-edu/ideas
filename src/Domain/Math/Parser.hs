@@ -5,7 +5,6 @@ module Domain.Math.Parser
 import Prelude hiding ((^))
 import Text.Parsing hiding (pParens)
 import Common.Transformation
-import Domain.Math.Symbolic
 import Domain.Math.Equation
 import Domain.Math.Expr
 import Domain.Math.OrList

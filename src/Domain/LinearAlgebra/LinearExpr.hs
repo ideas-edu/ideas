@@ -90,16 +90,6 @@ class (Fractional a, Symbolic a) => IsLinear a where
 instance IsLinear Expr where
 
    isLinear expr = belongsTo expr linearView
-      
-      {- 
-      case expr of
-         a :+: b  -> isLinear a && isLinear b
-         a :*: b  -> (isConstant a && isLinear b) || (isConstant b && isLinear a)
-         a :-: b  -> isLinear a && isLinear b
-         Negate a -> isLinear a
-         a :/: b  -> (isConstant a && isLinear b) || (isConstant b && isLinear a)
-         Var _    -> True
-         _        -> isConstant expr -}
          
    isVariable expr =
       case expr of 
@@ -112,32 +102,11 @@ instance IsLinear Expr where
       case match linearView expr of
          Just (LM _ c) -> c
          _             -> 0
-   
-      {-
-      case expr of
-         a :+: b  -> getConstant a + getConstant b
-         a :-: b  -> getConstant a - getConstant b
-         Negate a -> negate (getConstant a)
-         a :*: b  -> getConstant a * getConstant b
-         a :/: b  -> getConstant a / b
-         _ | isConstant expr -> expr
-           | otherwise       -> 0 -}
 
    coefficientOf s expr = 
       case match linearView expr of
          Just (LM m _) -> M.findWithDefault 0 s m
          _             -> 0
-   
-   {- 
-      case expr of
-         a :+: b  -> coefficientOf s a + coefficientOf s b
-         a :-: b  -> coefficientOf s a - coefficientOf s b
-         Negate a -> negate (coefficientOf s a)
-         a :*: b | isConstant a -> a * coefficientOf s b
-                 | isConstant b -> b * coefficientOf s a
-         a :/: b | isConstant b -> coefficientOf s a / b
-         Var t | s==t -> 1
-         _            -> 0 -}
 
 instance IsLinear SExpr where
    isLinear = isLinear . toExpr

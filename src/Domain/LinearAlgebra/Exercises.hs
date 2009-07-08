@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Exercises 
    ( solveGramSchmidt, solveSystemExercise, reduceMatrixExercise
-   , solveSystemWithMatrixExercise, opgave6b, opgaveVarMatrix, opgaveVarMatrix2
+   , solveSystemWithMatrixExercise
    , arbSolution
    ) where
 
@@ -35,16 +35,11 @@ import Domain.LinearAlgebra.Vector
 import Test.QuickCheck
 import Control.Monad
 import Domain.Math.Expr
-import Domain.Math.Symbolic
 import Domain.Math.SExpr
 import Domain.Math.Parser
 
 laDomain :: String
 laDomain = "linalg"
- 
-qq = checkExercise solveGramSchmidt
-t1 = applyD (strategy solveGramSchmidt) $ inContext [fromList [1,1,2,2], fromList [3,3,1,0], fromList [6,9,3,5]]
-t2 = orthonormalList $ fromContext t1
 
 solveGramSchmidt :: Exercise [Vector SExpr]
 solveGramSchmidt = makeExercise
@@ -119,6 +114,7 @@ solveSystemWithMatrixExercise = makeExercise
    , termGenerator = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
    }
 
+{-
 opgave6b :: Exercise (Matrix SExpr)
 opgave6b = reduceMatrixExercise
    { identifier = "opg9.6b"
@@ -136,7 +132,7 @@ opgaveVarMatrix = reduceMatrixExercise
    { identifier    = "matrix-with-var"
    , termGenerator = ExerciseList [makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]]
    }
- where lam = variable "L"
+ where lam = variable "L" -}
  
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)

@@ -20,8 +20,8 @@ import qualified Common.Strategy
 import Common.Context (Context, liftToContext)
 import Common.Exercise
 import Common.Transformation
+import Domain.Math.Simplification
 import Domain.Math.Expr
-import Domain.Math.SExpr
 import Domain.Math.Parser
 
 derivativeExercise :: Exercise Expr
@@ -44,12 +44,13 @@ noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym "Diff" _ <- universe e ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
-derivativeStrategy = label "Derivative" $
+derivativeStrategy = -- cleanUpStrategy simplify $ 
+   label "Derivative" $
    try tidyup <*> Common.Strategy.repeat (derivative <*> try tidyup)
 
 tidyup :: Rule (Context Expr)
 tidyup = liftToContext $ makeSimpleRule "Tidy-up rule" $ \old -> 
-   let new = toExpr $ (simplifyExpr :: Expr -> SExpr) old
+   let new = simplify old
    in if old==new then Nothing else Just new
    
 derivative :: Strategy (Context Expr)

@@ -19,7 +19,6 @@ module Domain.LinearAlgebra
    , module Domain.LinearAlgebra.Strategies
    , module Domain.LinearAlgebra.LinearSystem
    , module Domain.LinearAlgebra.Exercises
-   , module Domain.LinearAlgebra.LinearExpr
    ) where
    
 import Domain.LinearAlgebra.Matrix
@@ -29,4 +28,3 @@ import Domain.LinearAlgebra.EquationsRules hiding (changeCover)
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Exercises
-import Domain.LinearAlgebra.LinearExpr

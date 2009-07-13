@@ -18,12 +18,17 @@ module Domain.LinearAlgebra.Exercises
    , arbSolution
    ) where
 
+import Domain.Math.LinearEquations
+import Common.Uniplate
+
 import Common.Apply
 import Common.Transformation
 import Common.Exercise
 import Common.Context
+import Common.Strategy
 import Text.Parsing (SyntaxError(..))
 import Domain.Math.Equation
+import Domain.Math.Simplification
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
@@ -32,23 +37,24 @@ import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Vector
+import Domain.LinearAlgebra.LinearView
 import Test.QuickCheck
 import Control.Monad
 import Domain.Math.Expr
-import Domain.Math.SExpr
+import Domain.Math.Views hiding (linearView, simplify)
 import Domain.Math.Parser
 
 laDomain :: String
 laDomain = "linalg"
 
-solveGramSchmidt :: Exercise [Vector SExpr]
+solveGramSchmidt :: Exercise [Vector Expr]
 solveGramSchmidt = makeExercise
    { identifier    = "Gram-Schmidt" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Gram-Schmidt"
    , status        = Stable
    , parser        = \s -> case parseVectors s of
-                              (a, [])  -> Right (map (fmap simplifyExpr) a)
+                              (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt . inContext
@@ -59,14 +65,14 @@ solveGramSchmidt = makeExercise
    , termGenerator = simpleGenerator arbBasis
    }
 
-solveSystemExercise :: Exercise (Equations SExpr)
+solveSystemExercise :: Exercise (Equations Expr)
 solveSystemExercise = makeExercise
    { identifier    = "Solve Linear System" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Solve Linear System"
    , status        = Stable
    , parser        = \s -> case parseSystem s of
-                              (a, [])  -> Right (map (fmap simplifyExpr) a)
+                              (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
    , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
@@ -78,24 +84,24 @@ solveSystemExercise = makeExercise
    , termGenerator = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
    
-reduceMatrixExercise :: Exercise (Matrix SExpr)
+reduceMatrixExercise :: Exercise (Matrix Expr)
 reduceMatrixExercise = makeExercise
    { identifier    = "Gaussian Elimination" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Gaussian Elimination"
    , status        = Stable
    , parser        = \s -> case parseMatrix s of
-                              (a, [])  -> Right (fmap simplifyExpr a)
+                              (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = ppMatrixWith (ppExprPrio False 0 . toExpr)
-   , equivalence   = (===)
+   , prettyPrinter = ppMatrixWith (ppExprPrio False 0)
+   , equivalence   = \x y -> fmap simplified x === fmap simplified y
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm
    , termGenerator = simpleGenerator arbMatrix
    , strategy      = toReducedEchelon
    }
  
-solveSystemWithMatrixExercise :: Exercise (Either (LinearSystem SExpr) (Matrix SExpr))
+solveSystemWithMatrixExercise :: Exercise (Either (LinearSystem Expr) (Matrix Expr))
 solveSystemWithMatrixExercise = makeExercise
    { identifier    = "Solve Linear System with Matrix" -- TODO: simplify code
    , domain        = laDomain
@@ -115,19 +121,19 @@ solveSystemWithMatrixExercise = makeExercise
    }
 
 {-
-opgave6b :: Exercise (Matrix SExpr)
+opgave6b :: Exercise (Matrix Expr)
 opgave6b = reduceMatrixExercise
    { identifier = "opg9.6b"
    , termGenerator  = ExerciseList [makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]]
    }
 
-opgaveVarMatrix2 :: Exercise (Matrix SExpr)
+opgaveVarMatrix2 :: Exercise (Matrix Expr)
 opgaveVarMatrix2 = reduceMatrixExercise
    { identifier = "matrix-with-var2"
    , termGenerator  = ExerciseList [makeMatrix [[-1,-1,variable "a"],[2,4,2]]]
    }
 
-opgaveVarMatrix :: Exercise (Matrix SExpr)
+opgaveVarMatrix :: Exercise (Matrix Expr)
 opgaveVarMatrix = reduceMatrixExercise
    { identifier    = "matrix-with-var"
    , termGenerator = ExerciseList [makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]]
@@ -137,13 +143,14 @@ opgaveVarMatrix = reduceMatrixExercise
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
 
-instance Argument SExpr where
-   makeArgDescr = argDescrSExpr
+{-
+instance Argument Expr where
+   makeArgDescr = argDescrExpr
 
-argDescrSExpr :: String -> ArgDescr SExpr
-argDescrSExpr descr = ArgDescr descr Nothing parseRatio show arbitrary
+argDescrExpr :: String -> ArgDescr Expr
+argDescrExpr descr = ArgDescr descr Nothing parseRatio show arbitrary
  where
-   parseRatio = either (const Nothing) (Just . simplifyExpr) . parseExpr
+   parseRatio = either (const Nothing) (Just . simplifyExpr) . parseExpr -}
                   
 instance Arbitrary a => Arbitrary (Vector a) where
    arbitrary   = liftM fromList $ oneof $ map vector [0..2]
@@ -156,7 +163,7 @@ instance Arbitrary a => Arbitrary (Vector a) where
 arbMatrix :: Num a => Gen (Matrix a)
 arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
 
-arbBasis :: Gen [Vector SExpr]
+arbBasis :: Gen [Vector Expr]
 arbBasis = do
    --i <- oneof $ map return [0..5]
    --j <- oneof $ map return [0..5]
@@ -205,3 +212,10 @@ arbNiceMatrix = do
    m1 <- arbUpperMatrix
    m2 <- arbAugmentedMatrix
    return (multiply m1 m2)
+   
+ex = apply toReducedEchelon $ inContext $ makeMatrix 
+   -- [[-1,-1, Var "a"],[2,4,2]]
+   [[2,3,1], [1,1,1]]
+
+enda = simplify $ let a = Var "a" in (a*2+2)*(1/2) :: Expr
+endb = simplify $ let a = Var "a" in 1/2*(a*2)+1 :: Expr

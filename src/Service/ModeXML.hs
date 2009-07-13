@@ -186,7 +186,7 @@ xmlDecoder f ex = Decoder
       case serviceType of
          Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)
          Tp.Location -> leave $ liftM (read . getData) . findChild "location"
-         Tp.Rule     -> leave $ liftM (fromJust . getRule (decoderExercise dec) . getData) . findChild "ruleid"
+         Tp.Rule     -> leave $ maybe (fail "unknown rule") id . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Exercise -> leave $ const (return (decoderExercise dec))
          _           -> decodeDefault dec serviceType
          

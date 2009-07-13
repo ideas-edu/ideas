@@ -20,7 +20,6 @@ import Domain.LinearAlgebra.Matrix
 import Domain.Math.Symbolic
 import Domain.Math.Equation
 import Domain.Math.Expr
-import Domain.Math.SExpr
 import Data.Maybe
 import Data.Ratio
 import Control.Monad
@@ -210,10 +209,6 @@ instance IsOMOBJ Expr where
                -> liftM (function name) (mapM fromOMOBJ xs)
             _ -> Nothing
       fromSym _ = Nothing
-
-instance IsOMOBJ SExpr where 
-   toOMOBJ   = toOMOBJ . toExpr
-   fromOMOBJ = fmap simplifyExpr . fromOMOBJ
 
 --------------------------------------------------------------------
 -- Linear algebra types

@@ -1,6 +1,6 @@
 module Domain.Math.LinearEquations 
   ( linearEquationExercise, testAll, showDerivation, showDerivations
-  , solvedEquation, minusT, merge, divisionT, timesT, solveEquation, distributionT, normalizeProduct) where
+  , solvedEquation, minusT, merge, divisionT, timesT, solveEquation, distributionT, normalizeProduct, normalizeExpr) where
 
 import Prelude hiding (repeat)
 import Common.Apply
@@ -12,6 +12,7 @@ import Common.Uniplate
 import Domain.Math.Equation
 import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
+import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Symbolic
 import Domain.Math.Parser
 import Domain.Math.Views
@@ -42,7 +43,7 @@ linearEquationExercise = makeExercise
 -- Strategy
 
 solveEquation :: LabeledStrategy (Context (Equation Expr))
-solveEquation = ignoreContext $ cleanUpStrategy (fmap simplifyExpr) $
+solveEquation = ignoreContext $ cleanUpStrategy (fmap smartConstructors) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> distribute <|> merge))
    <*> label "Phase 2" (try varToLeft <*> try conToRight <*> try scaleToOne)

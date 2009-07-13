@@ -36,7 +36,6 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
    let pr = fromMaybe (emptyPrefix $ strategy ex) mpr in
          case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext) answer) of            
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
-                     
             (answers, Just answeredTerm)
                | not (null witnesses) ->
                     Ok $ ReplyOk
@@ -47,7 +46,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                        , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses)
                        }
                   where 
-                    witnesses   = filter (equality ex (fromContext answeredTerm) . fromContext . fst) answers
+                    witnesses   = filter (equality ex (fromContext answeredTerm) . fromContext . fst) $ take 1 answers
                     newPrefix   = snd (head witnesses)
                       
             ((expected, prefix):_, maybeAnswer) ->

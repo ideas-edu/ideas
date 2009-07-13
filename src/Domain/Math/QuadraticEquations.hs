@@ -16,6 +16,7 @@ import Domain.Math.LinearEquations (solvedEquation, merge, distributionT, minusT
 import Domain.Math.OrList
 import Domain.Math.Parser
 import Domain.Math.Polynomial 
+import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Views
 import Data.Maybe
 import Prelude hiding (repeat, (^))
@@ -56,7 +57,7 @@ solverQ = cleanUpStrategy cleanUpOrs $
          ) |> (moveToLeft <|> niceFactors <|> distribution <|> distributionSquare <|> mergeR <|> simplerA) |> abcFormula) 
 
 cleanUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
-cleanUpOrs (OrList xs) = OrList (map (fmap (f2 . f1 . simplifyExpr)) xs)
+cleanUpOrs (OrList xs) = OrList (map (fmap (f2 . f1 . smartConstructors)) xs)
  where
    f1 = transform (simplify powerView)
    f2 = simplify squareRootView
@@ -335,7 +336,7 @@ squareRootView = makeView f g
    f (a :+: b)  = liftM2 (+) (f a) (f b)
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
-   f (a :/: b)  = liftM2 (\s r -> s * SQ.con (1/r)) (f a) (match rationalView b)
+   f (a :/: b) = join $ liftM2 SQ.safeDiv (f a) (f b)
    f _ = Nothing
    
    g m = build sumView (map h (SQ.toList m))

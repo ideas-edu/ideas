@@ -11,9 +11,10 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.LinearExpr 
+module Domain.LinearAlgebra.LinearView
    ( IsLinear(..), var, isVar, isConstant, renameVariables
-   , splitLinearExpr, evalLinearExpr
+   , splitLinearExpr, evalLinearExpr, linearView
+   , LinearMap -- tmp
    ) where
 
 import Control.Monad
@@ -23,8 +24,8 @@ import Data.Maybe
 import Common.Uniplate
 import Common.View hiding (simplify)
 import GHC.Real
-import Domain.Math.SExpr
-import Domain.Math.Constrained
+--import Domain.Math.SExpr
+--import Domain.Math.Constrained
 import Domain.Math.Expr
 import Domain.Math.Symbolic
 import Domain.Math.Views (sumView)
@@ -39,7 +40,7 @@ linearView :: View Expr (LinearMap Expr)
 linearView = makeView f g
  where 
    -- compositional (sumView would be a more restrictive alternative)
-   f = fmap (fmap (fromConstrained . simplify)) . foldExpr alg
+   f = {- fmap (fmap (fromConstrained . simplify)) . -} foldExpr alg
    alg = (liftM2 plus, liftJ2 times, liftM2 minus, liftM neg, nat, liftJ2 dv, liftJ sq, var, \f xs -> sequence xs >>= sym f)
     where
       nat n = return $ LM M.empty (fromInteger n)
@@ -108,12 +109,12 @@ instance IsLinear Expr where
          Just (LM m _) -> M.findWithDefault 0 s m
          _             -> 0
 
-instance IsLinear SExpr where
+{- instance IsLinear SExpr where
    isLinear = isLinear . toExpr
    isVariable = isVariable . toExpr
    getVars    = getVars . toExpr
    getConstant = simplifyExpr . getConstant . toExpr
-   coefficientOf s = simplifyExpr . coefficientOf s . toExpr 
+   coefficientOf s = simplifyExpr . coefficientOf s . toExpr  -}
 
 splitLinearExpr :: IsLinear a => (String -> Bool) -> a -> (a, a)
 splitLinearExpr f a = (make (getConstant a) xs, make 0 ys)

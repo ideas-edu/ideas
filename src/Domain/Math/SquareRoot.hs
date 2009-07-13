@@ -1,6 +1,7 @@
 module Domain.Math.SquareRoot 
    ( SquareRoot, imaginary, imaginaryUnit, con, toList, scale
    , sqrt, sqrtRational, isqrt
+   , safeDiv, safeRecip
    ) where
 
 import Prelude hiding (sqrt)
@@ -37,6 +38,15 @@ instance Num a => Num (SquareRoot a) where
    -- not defined for square roots
    abs    = error "abs not defined for square roots"
    signum = error "signum not defined for square roots"
+
+safeDiv :: Fractional a => SquareRoot a -> SquareRoot a -> Maybe (SquareRoot a)
+safeDiv a b = fmap (a*) (safeRecip b)
+
+safeRecip :: Fractional a => SquareRoot a -> Maybe (SquareRoot a)
+safeRecip a =
+   case toList a of 
+      [(x, n)] -> Just (con (recip (x * fromIntegral n)) * sqrt (fromIntegral n))
+      _        -> Nothing
 
 ------------------------------------------------
 

@@ -17,7 +17,7 @@ module Common.Uniplate (
      Uniplate(..)
    , universe, subtermsAt, children, child
    , getTermAt, applyTo, applyToM, applyAt, applyAtM
-   , transform, transformM, rewrite, rewriteM
+   , transform, transformM, transformTD, rewrite, rewriteM
    , somewhere, somewhereM
    , compos
    ) where
@@ -86,6 +86,12 @@ transformM :: (Monad m, Uniplate a) => (a -> m a) -> a -> m a
 transformM g a = mapM (transformM g) cs >>= (g . f)
  where
    (cs, f) = uniplate a
+
+-- | A top-down transformation
+transformTD :: Uniplate a => (a -> a) -> a -> a
+transformTD g a = 
+   let (cs, f) = uniplate (g a)
+   in f (map (transformTD g) cs)
    
 -- | Applies the function at a position until this is no longer possible
 rewrite :: Uniplate a => (a -> Maybe a) -> a -> a

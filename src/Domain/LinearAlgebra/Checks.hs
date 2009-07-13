@@ -18,6 +18,7 @@ import Test.QuickCheck
 import Control.Monad
 import Common.Utils
 import Data.List
+import Domain.Math.Expr
 import Common.Apply
 import Common.Context
 
@@ -33,17 +34,18 @@ checks = do
 
 propEchelon :: Matrix Int -> Bool
 propEchelon =
-   inRowEchelonForm . matrix . applyD forwardPass . inContext . fmap toRational
+   inRowEchelonForm . matrix . applyD forwardPass . inContext . fmap fromIntegral
 
 propReducedEchelon :: Matrix Int -> Bool
 propReducedEchelon = 
-   inRowReducedEchelonForm . matrix . applyD toReducedEchelon . inContext . fmap toRational
+   inRowReducedEchelonForm . matrix . applyD toReducedEchelon . inContext . fmap fromIntegral
 
 propSolution :: Matrix Int -> Property
 propSolution initial =
    forAll (arbSolution initial) $ \(solution, m) -> 
-      let final = matrix $ applyD toReducedEchelon $ inContext $ fmap toRational m
-          check n = maybe True ((==n) . round)
+      let final = matrix $ applyD toReducedEchelon $ inContext $ fmap fromIntegral m
+          check :: Int -> Maybe Expr -> Bool
+          check n me = maybe False (==n) (join $ fmap exprToNum me)
       in and $ zipWith check solution (getSolution final)
       
 getSolution :: Num a => Matrix a -> [Maybe a]

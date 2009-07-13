@@ -1,4 +1,4 @@
-<reply result="incorrect" version="version 0.5.1 (revision 1805)">
+<reply result="incorrect" version="0.5.4">
   <strategy>
     linalg.gaussianelimination
   </strategy>
@@ -18,12 +18,9 @@
             0
           </OMI>
           <OMA>
-            <OMS cd="arith1" name="unary_minus"/>
+            <OMS cd="arith1" name="minus"/>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
-              <OMI>
-                1
-              </OMI>
+              <OMS cd="arith1" name="unary_minus"/>
               <OMA>
                 <OMS cd="arith1" name="times"/>
                 <OMI>
@@ -32,6 +29,9 @@
                 <OMV name="a"/>
               </OMA>
             </OMA>
+            <OMI>
+              1
+            </OMI>
           </OMA>
         </OMA>
         <OMA>
@@ -64,7 +64,7 @@
       0
     </elem>
     <elem descr="scale factor">
-      -1
+      1/(-1)
     </elem>
   </arguments>
   <derivation>
@@ -127,9 +127,6 @@
             </OMI>
             <OMA>
               <OMS cd="arith1" name="plus"/>
-              <OMI>
-                2
-              </OMI>
               <OMA>
                 <OMS cd="arith1" name="times"/>
                 <OMI>
@@ -137,6 +134,9 @@
                 </OMI>
                 <OMV name="a"/>
               </OMA>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
         </OMA>
@@ -191,12 +191,9 @@
               0
             </OMI>
             <OMA>
-              <OMS cd="arith1" name="unary_minus"/>
+              <OMS cd="arith1" name="minus"/>
               <OMA>
-                <OMS cd="arith1" name="plus"/>
-                <OMI>
-                  1
-                </OMI>
+                <OMS cd="arith1" name="unary_minus"/>
                 <OMA>
                   <OMS cd="arith1" name="times"/>
                   <OMI>
@@ -205,6 +202,9 @@
                   <OMV name="a"/>
                 </OMA>
               </OMA>
+              <OMI>
+                1
+              </OMI>
             </OMA>
           </OMA>
           <OMA>

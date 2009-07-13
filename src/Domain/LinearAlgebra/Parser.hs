@@ -19,7 +19,7 @@ module Domain.LinearAlgebra.Parser
 import Domain.Math.Equation
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.LinearExpr
+import Domain.LinearAlgebra.LinearView (isLinear)
 import Domain.LinearAlgebra.Vector
 import Control.Monad
 import Data.List

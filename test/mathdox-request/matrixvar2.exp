@@ -1,4 +1,4 @@
-<reply result="incorrect" version="version 0.5.1 (revision 1805)">
+<reply result="incorrect" version="0.5.4">
   <strategy>
     linalg.gaussianelimination
   </strategy>
@@ -18,12 +18,9 @@
             0
           </OMI>
           <OMA>
-            <OMS cd="arith1" name="unary_minus"/>
+            <OMS cd="arith1" name="minus"/>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
-              <OMI>
-                2
-              </OMI>
+              <OMS cd="arith1" name="unary_minus"/>
               <OMA>
                 <OMS cd="arith1" name="times"/>
                 <OMI>
@@ -32,6 +29,9 @@
                 <OMV name="a"/>
               </OMA>
             </OMA>
+            <OMI>
+              2
+            </OMI>
           </OMA>
         </OMA>
         <OMA>
@@ -95,17 +95,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    2
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 1
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  2
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
           <OMA>
@@ -145,17 +148,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    8
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 2
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  8
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
         </OMA>
@@ -177,17 +183,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    2
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 1
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  2
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
           <OMA>
@@ -217,17 +226,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    8
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 2
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  8
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
         </OMA>
@@ -249,17 +261,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    2
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 1
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  2
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
           <OMA>
@@ -311,17 +326,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    2
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 1
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  2
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
           <OMA>
@@ -373,17 +391,20 @@
               </OMI>
             </OMA>
             <OMA>
-              <OMS cd="arith1" name="minus"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMA>
+                <OMS cd="arith1" name="unary_minus"/>
+                <OMA>
+                  <OMS cd="arith1" name="times"/>
+                  <OMI>
+                    2
+                  </OMI>
+                  <OMV name="a"/>
+                </OMA>
+              </OMA>
               <OMI>
                 1
               </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  2
-                </OMI>
-                <OMV name="a"/>
-              </OMA>
             </OMA>
           </OMA>
           <OMA>
@@ -429,12 +450,9 @@
               0
             </OMI>
             <OMA>
-              <OMS cd="arith1" name="unary_minus"/>
+              <OMS cd="arith1" name="minus"/>
               <OMA>
-                <OMS cd="arith1" name="plus"/>
-                <OMI>
-                  2
-                </OMI>
+                <OMS cd="arith1" name="unary_minus"/>
                 <OMA>
                   <OMS cd="arith1" name="times"/>
                   <OMI>
@@ -443,6 +461,9 @@
                   <OMV name="a"/>
                 </OMA>
               </OMA>
+              <OMI>
+                2
+              </OMI>
             </OMA>
           </OMA>
           <OMA>

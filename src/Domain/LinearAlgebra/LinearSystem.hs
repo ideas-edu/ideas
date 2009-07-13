@@ -15,7 +15,7 @@ module Domain.LinearAlgebra.LinearSystem where
 
 import Domain.Math.Equation
 import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
-import Domain.LinearAlgebra.LinearExpr
+import Domain.LinearAlgebra.LinearView
 import Data.List
 import Data.Maybe
 import Control.Monad

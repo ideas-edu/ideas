@@ -19,7 +19,6 @@ module Text.XML.Unicode
 
 import Data.Char (chr, ord)
 import Control.Monad (liftM)
-import Data.Maybe (fromMaybe)
 
 data Tree a = Node (Tree a) a (Tree a) | Leaf
 
@@ -27,9 +26,6 @@ isLetter        = checkTree $ makeTree letterMap
 isExtender      = checkTree $ makeTree extenderMap
 isDigit         = checkTree $ makeTree digitMap
 isCombiningChar = checkTree $ makeTree combiningCharMap
-
-check :: [(Char, Char)] -> Char -> Bool
-check xs c = any (\(a,b) -> a <= c && c <= b) xs
 
 checkTree :: Tree (Char, Char) -> Char -> Bool
 checkTree Leaf _ = False
@@ -51,7 +47,7 @@ makeTree xs = Node (makeTree ys) z (makeTree zs)
 f :: Char -> (Char, Char)
 f c = (c, c)
 
-letterMap	= baseCharMap `merge` ideographicMap `merge` controlMap `merge` extraMap
+letterMap = baseCharMap `merge` ideographicMap `merge` controlMap `merge` extraMap
 
 merge :: [(Char, Char)] -> [(Char, Char)] -> [(Char, Char)]
 merge (x:xs) (y:ys) 
@@ -201,7 +197,7 @@ utf8 (a:b:c:rest) | ord a >= 224 && ord a < 240 && ord b >= 128 && ord b < 192 &
 utf8 (a:b:c:d:rest) | ord a >= 240 && ord a < 248 && ord b >= 128 && ord b < 192 && ord c >= 128 && ord c < 192 && ord d >= 128 && ord d < 192 =
    do new <- chrSafe ((ord a-240)*262144 + (ord b-128)*4096 + (ord c-128)*64 + ord d-128) 
       liftM (new:) (utf8 rest) -- four bytes
-utf8 (a:rest) = 
+utf8 _ = 
    fail "invalid character in UTF8, skipped"
    
 chrSafe :: Monad m => Int -> m Char

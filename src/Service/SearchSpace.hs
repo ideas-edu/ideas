@@ -16,7 +16,6 @@ module Service.SearchSpace
    ) where
 
 import Common.Apply
-import Common.Strategy (Prefix, runPrefixMajor, lastRuleInPrefix)
 import Common.Rewriting.TreeDiff
 import Common.Transformation
 import Common.Strategy hiding ((<||>), (<|>))

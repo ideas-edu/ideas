@@ -20,7 +20,7 @@ module Text.XML
    , {- isText, isTag, mkTag mkText , findChild-}
    ) where
 
-import Common.Utils (safeHead, trim)
+import Common.Utils (trim)
 import Control.Monad.State
 import Control.Monad.Error ()
 import Data.Char

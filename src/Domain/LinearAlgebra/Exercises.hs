@@ -18,31 +18,25 @@ module Domain.LinearAlgebra.Exercises
    , arbSolution
    ) where
 
-import Domain.Math.LinearEquations
-import Common.Uniplate
-
 import Common.Apply
-import Common.Transformation
-import Common.Exercise
 import Common.Context
-import Common.Strategy
-import Text.Parsing (SyntaxError(..))
-import Domain.Math.Equation
-import Domain.Math.Simplification
-import Domain.LinearAlgebra.Strategies
-import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.MatrixRules
+import Common.Exercise
+import Common.Transformation
+import Control.Monad
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
-import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.MatrixRules
+import Domain.LinearAlgebra.Parser
+import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Vector
-import Domain.LinearAlgebra.LinearView
-import Test.QuickCheck
-import Control.Monad
+import Domain.Math.Equation
 import Domain.Math.Expr
-import Domain.Math.Views hiding (linearView, simplify)
-import Domain.Math.Parser
+import Domain.Math.Simplification
+import Test.QuickCheck
+import Text.Parsing (SyntaxError(..))
+
 
 laDomain :: String
 laDomain = "linalg"
@@ -212,10 +206,3 @@ arbNiceMatrix = do
    m1 <- arbUpperMatrix
    m2 <- arbAugmentedMatrix
    return (multiply m1 m2)
-   
-ex = apply toReducedEchelon $ inContext $ makeMatrix 
-   -- [[-1,-1, Var "a"],[2,4,2]]
-   [[2,3,1], [1,1,1]]
-
-enda = simplify $ let a = Var "a" in (a*2+2)*(1/2) :: Expr
-endb = simplify $ let a = Var "a" in 1/2*(a*2)+1 :: Expr

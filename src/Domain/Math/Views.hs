@@ -4,7 +4,6 @@ module Domain.Math.Views
    ) where
 
 import Prelude hiding (recip, (^))
-import Common.Uniplate (transform)
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Equation

@@ -1,5 +1,5 @@
 
-ATTR * [ freevars:{[String]} | env:{Map Name String} names:{[String]} | result:SELF ]
+ATTR * [ prelude:{[String]} | env:{Map Name String} names:{[String]} | result:SELF ]
 
 INCLUDE "syntax/UHA_Syntax.ag"
 --INCLUDE "staticanalysis/staticchecks/StaticChecks.ag"
@@ -13,32 +13,29 @@ import Data.Map hiding (map, filter)
 import Domain.Programming.Helium
 }
 
+
 SEM Declaration
-  | PatternBinding lhs . env = @lhs.env
-                   pattern . env = empty
+  | PatternBinding lhs . env           = @lhs.env
+                   pattern . env       = empty
                    righthandside . env = union @pattern.env @lhs.env
 
 SEM Expression
-  | Lambda lhs . env = @lhs.env 
-           patterns . env = empty
+  | Lambda lhs . env        = @lhs.env 
+           patterns . env   = empty
            expression . env = union @patterns.env @lhs.env
 
 SEM FunctionBinding
-  | FunctionBinding lhs . env = @lhs.env -- make sure that the variables of the lhs don't travel up 
-                    lefthandside . env = empty
+  | FunctionBinding lhs . env           = @lhs.env -- make sure that the variables of the lhs don't travel up 
+                    lefthandside . env  = empty
                     righthandside . env = union @lefthandside.env @lhs.env -- not necessary due to left to right when chaining
 
-
-
 SEM Name
-  | Identifier lhs . result   = if @name `notElem` @lhs.freevars then changeName @newname @result else @result
-                   . names    = if member @result @lhs.env 
-                                  then @lhs.names 
-                                  else tail @lhs.names
-                   . env      = insert @result @newname @lhs.env  -- insert also updates an existing binding
+  | Identifier lhs . result   = if @name `notElem` @lhs.prelude then changeName (fst @newname) @result else @result
+                   . names    = snd @newname
+                   . env      = insert @result (fst @newname) @lhs.env  -- insert also updates an existing binding
                loc . newname  = case Data.Map.lookup @result @lhs.env of
-                                     Just n -> n 
-                                     _      -> head @lhs.names
+                                     Just n -> (n, @lhs.names) 
+                                     _      -> (head @lhs.names, tail @lhs.names)
 
 {
 changeName :: String -> Name -> Name
@@ -48,7 +45,7 @@ changeName s n = case n of
                    _                     -> n
 
 alphaConversion :: Module -> Module
-alphaConversion m = (\(_,_,c) -> c) $ sem_Module m empty preludeIdentifiers ['x' : show i | i <- [1..]] 
+alphaConversion m = (\(_,_,c) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]] preludeIdentifiers
 
 
 -- Reserved identifiers

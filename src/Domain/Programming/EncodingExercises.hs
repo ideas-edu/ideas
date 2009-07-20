@@ -2,7 +2,7 @@ module Domain.Programming.EncodingExercises where
 
 -- fromBin :: [Int] -> Int
 
-fromBins = [ fromBin, fromBinER, fromBinLet, fromBinEta
+fromBins = [ fromBin, fromBinER, fromBinLet, fromBinEta, fromBinEta'
            , fromBin1, fromBin2, fromBin3, fromBin4, fromBin5, fromBin6
            ]
 
@@ -18,6 +18,8 @@ fromBinLet =  "fromBin = let f nil []     = nil\n"
            ++ "          in f 0\n"
 
 fromBinEta = "fromBin = foldl (\\x -> (\\y -> ((+) . (* 2)) y) x) 0"
+
+fromBinEta' = "fromBin = foldl (\\x y -> ((+) . (* 2)) y x) 0"
 
 fromBin1 = "fromBin = foldl (\\x y -> x * 2 + y) 0"
 

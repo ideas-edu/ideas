@@ -7,6 +7,7 @@ import Common.Apply
 import Common.Rewriting
 import Data.Maybe
 import Data.List
+import Domain.Programming.AlphaConv (alphaConversion)
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium

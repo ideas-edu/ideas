@@ -2,8 +2,8 @@ module Domain.Programming.PreludeS
    ( ModuleS, foldlS, letS, compS, etaS
    ) where
 
-import Common.Context
-import Common.Strategy
+import Common.Context hiding (Var)
+import Common.Strategy hiding (repeat)
 import Data.Maybe
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
@@ -14,6 +14,8 @@ import Domain.Programming.Helium
 
 -- | Specialised strategies
 type ModuleS = Strategy (Context Module)
+type Var = String
+type Pat = String
 
 foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
@@ -55,10 +57,18 @@ compS f g  =  introExprInfixApplication True True <*> f <*> introExprVariable <*
               introExprNormalApplication 1 <*> f <*> introExprParenthesized <*> introExprNormalApplication 1 <*>
               g <*> introExprVariable <*> introNameIdentifier "aname"
 
+appS :: ModuleS -> [ModuleS] -> ModuleS
+appS f args  =  introExprNormalApplication (length args) <*> f <*> seqS args
+        -- <|> introExprInfixApplication True True <*> f <*> varS "$" <*> seq  
+
 etaS :: ModuleS -> ModuleS
 etaS expr  =  expr
           <|> introExprParenthesized <*> introExprLambda 1 <*> introPatternVariable <*> introNameIdentifier "x" <*> 
               introExprNormalApplication 1 <*> expr <*> introExprVariable <*> introNameIdentifier "x"
+
+etaS' :: ModuleS -> ModuleS -- f => \x -> f x
+etaS' expr = expr <|> parenS (lambdaS arg (appS expr arg))
+  where arg = [varS "x"]
 
 etaFunS :: ModuleS -> ModuleS -> ModuleS
 etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
@@ -66,6 +76,9 @@ etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> intr
                      introExprVariable <*> introNameIdentifier "x"
                  <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
 
+lambdaS :: [ModuleS] -> ModuleS -> ModuleS -- do via context
+lambdaS ps expr  =  introExprLambda (length ps) <*> seqS ps <*> expr
+                <|> seqS (map (\x -> introExprLambda 1 <*> x) ps) <*> expr
 
 {-
 infixS :: Maybe ModuleS -> Maybe ModuleS -> ModuleS
@@ -78,6 +91,25 @@ infixS op l r  =  introExprInfixApplication (isJust l) (isJust r) <*>
   where
     f = maybe 0 (const 1)
 -}
+
+
+-- | help functions
+--seqS :: IsStrategy a => [Strategy a] -> Strategy [a]
+seqS = foldr1 (<*>)
+
+mapSeqS f = seqS . (map f)
+
+repeatS :: Int -> ModuleS -> ModuleS
+repeatS n = seqS . (take n) . repeat
+
+varS :: String -> ModuleS
+varS n = introExprVariable <*> introNameIdentifier n
+
+patS :: String -> ModuleS
+patS n = introPatternVariable <*> introNameIdentifier n
+
+parenS :: ModuleS -> ModuleS
+parenS expr = introExprParenthesized <*> expr
 
 -- the insertion sort strategy with a fold (Johan)
 

@@ -33,6 +33,13 @@ equalModules x y = f x == f y
     
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
+desugarLambdas :: Module -> Module
+desugarLambdas = transformBi explode
+  where
+    explode expr = case expr of 
+                     Expression_Lambda _ ps expr -> foldr (\p -> Expression_Lambda noRange [p]) expr ps
+                     _                           -> expr
+
 allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
 isSolution mod strat = any (equalModules mod) $ allSolutions strat
 

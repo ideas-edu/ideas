@@ -1,21 +1,91 @@
 module Domain.Programming.PreludeS
-   ( ModuleS, foldlS, letS, compS, etaS
-   ) where
+{-   ( ModuleS, foldlS, letS, compS, etaS
+   )-} where
 
 import Common.Context hiding (Var)
 import Common.Strategy hiding (repeat)
+import Data.List
 import Data.Maybe
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
+import Prelude hiding (fail)
 
--- use applicative or monad type class for getting rules in to strategy context, and somehow get
--- the strategy arguments typed
--- pure = 
+{- ideas:
 
--- | Specialised strategies
+   o  use applicative or monad type class for getting rules in to strategy 
+      context
+
+   o  Use a GADT to get the strategies typed again
+-}
+
+--------------------------------------------------------------------------------
+-- Type synonyms
+--------------------------------------------------------------------------------
 type ModuleS = Strategy (Context Module)
 type Var = String
 type Pat = String
+
+--------------------------------------------------------------------------------
+-- Language definition strategies
+--------------------------------------------------------------------------------
+letS :: Int -> ModuleS -> ModuleS -> ModuleS -- specialised let strategy, also recognizes where clauses
+letS ndecls expr decl  =  introRHSExpr ndecls <*> expr <*> decl
+                      <|> introRHSExpr 0 <*> introExprLet ndecls 
+                                         <*> decl <*> expr
+
+f # args = appS f args
+infixr 0 #
+
+appS :: ModuleS -> [ModuleS] -> ModuleS
+appS f args = curryS f args <|> infixS f args
+
+infixS f args = case args of 
+                  x:y:z:zs -> app (parenS (infixApp f x y)) (z:zs)
+                  x:y:[]   -> infixApp f x y
+                  _        -> fail
+  where
+    infixApp f l r = introExprInfixApplication True True <*> l <*> f <*> r
+
+curryS :: ModuleS -> [ModuleS] -> ModuleS
+curryS f args  = case args of 
+                   []   -> fail
+                   a:as -> app f (a:as) <|> partialS f args <|> curryS (parenS (app f [a])) as
+
+partialS f args | length args > 2  = choiceS $ map (\(x, y) -> curryS (parenS (f `app` x)) y) (split args)
+                | otherwise        = fail
+
+app f as = introExprNormalApplication (length as) <*> f <*> seqS as
+
+opS :: String -> Maybe ModuleS -> Maybe ModuleS -> ModuleS
+opS n l r = case (l, r) of 
+              (Just x, Just y)   -> app (introExprInfixApplication False False <*> op) [x, y]    <|> 
+                                    app (introExprInfixApplication True  False <*> x  <*> op) [y] <|> 
+                                    app (introExprInfixApplication False True  <*> op <*>  y) [x] <|> 
+                                    introExprInfixApplication True True   <*> x  <*> op <*> y
+              (Nothing, Just y)  -> introExprInfixApplication False True  <*> op <*> y
+              (Just x, Nothing)  -> introExprInfixApplication True  False <*> x  <*> op
+              (Nothing, Nothing) -> introExprInfixApplication False False <*> op         
+  where 
+    op = introExprVariable <*> introNameOperator n
+
+etaS :: ModuleS -> ModuleS -- f => \x -> f x
+etaS expr = expr <|> parenS (lambdaS arg (appS expr arg))
+  where arg = [varS "x"]
+
+etaFunS :: ModuleS -> ModuleS -> ModuleS
+etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
+                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
+                     introExprVariable <*> introNameIdentifier "x"
+                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
+
+lambdaS :: [ModuleS] -> ModuleS -> ModuleS -- do via context
+lambdaS ps expr  =  introExprLambda (length ps) <*> seqS ps <*> expr
+                <|> seqS (map (\x -> introExprLambda 1 <*> x) ps) <*> expr
+
+
+--------------------------------------------------------------------------------
+-- Prelude definition strategies
+--------------------------------------------------------------------------------
 
 foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
@@ -46,62 +116,16 @@ foldlS consS nilS
                                     <*> introExprVariable <*> introNameIdentifier "xs"
               )
 
--- specialised let strategy, also recognizes where clauses
-letS :: Int -> ModuleS -> ModuleS -> ModuleS
-letS ndecls exprS declS  =  introRHSExpr ndecls <*> exprS <*> declS
-                        <|> introRHSExpr 0 <*> introExprLet ndecls <*> declS <*> exprS
 
-compS :: ModuleS -> ModuleS -> ModuleS
-compS f g  =  introExprInfixApplication True True <*> f <*> introExprVariable <*> introNameOperator "." <*> g
-          <|> introExprLambda 1 <*> introPatternVariable <*> introNameIdentifier "aname" <*> -- not in free vars of f and g 
-              introExprNormalApplication 1 <*> f <*> introExprParenthesized <*> introExprNormalApplication 1 <*>
-              g <*> introExprVariable <*> introNameIdentifier "aname"
+-- composition is nothing different than infix app
+compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
+compS f g  =  introExprInfixApplication True True <*> f <*> opS "." <*> g
+          <|> lambdaS [patS "x"] (appS f [parenS (appS g [varS "x"])]) -- not in free vars of f and g 
+  where opS n = introExprVariable <*> introNameOperator n
 
-appS :: ModuleS -> [ModuleS] -> ModuleS
-appS f args  =  introExprNormalApplication (length args) <*> f <*> seqS args
-        -- <|> introExprInfixApplication True True <*> f <*> varS "$" <*> seq  
-
-etaS :: ModuleS -> ModuleS
-etaS expr  =  expr
-          <|> introExprParenthesized <*> introExprLambda 1 <*> introPatternVariable <*> introNameIdentifier "x" <*> 
-              introExprNormalApplication 1 <*> expr <*> introExprVariable <*> introNameIdentifier "x"
-
-etaS' :: ModuleS -> ModuleS -- f => \x -> f x
-etaS' expr = expr <|> parenS (lambdaS arg (appS expr arg))
-  where arg = [varS "x"]
-
-etaFunS :: ModuleS -> ModuleS -> ModuleS
-etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
-                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
-                     introExprVariable <*> introNameIdentifier "x"
-                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
-
-lambdaS :: [ModuleS] -> ModuleS -> ModuleS -- do via context
-lambdaS ps expr  =  introExprLambda (length ps) <*> seqS ps <*> expr
-                <|> seqS (map (\x -> introExprLambda 1 <*> x) ps) <*> expr
-
-{-
-infixS :: Maybe ModuleS -> Maybe ModuleS -> ModuleS
-infixS op l r  =  introExprInfixApplication (isJust l) (isJust r) <*>
-                  fromMaybe succeed l <*> introExprVariable <*> introNameOperator op  <*>
-                  fromMaybe succeed r
-              <|> introExprLambda (f l + f r) <*> introPatternVariable <*> introNameIdentifier "aname" <*> -- not in free vars
-                  introExprNormalApplication 1 <*> f <*> introExprParenthesized <*> introExprNormalApplication 1 <*>
-                  g <*> introExprVariable <*> introNameIdentifier "aname"
-  where
-    f = maybe 0 (const 1)
--}
-
-
--- | help functions
---seqS :: IsStrategy a => [Strategy a] -> Strategy [a]
-seqS = foldr1 (<*>)
-
-mapSeqS f = seqS . (map f)
-
-repeatS :: Int -> ModuleS -> ModuleS
-repeatS n = seqS . (take n) . repeat
-
+--------------------------------------------------------------------------------
+-- Smart constructors
+--------------------------------------------------------------------------------
 varS :: String -> ModuleS
 varS n = introExprVariable <*> introNameIdentifier n
 
@@ -111,90 +135,32 @@ patS n = introPatternVariable <*> introNameIdentifier n
 parenS :: ModuleS -> ModuleS
 parenS expr = introExprParenthesized <*> expr
 
--- the insertion sort strategy with a fold (Johan)
+funS :: String -> [ModuleS] -> ModuleS -> [ModuleS] -> ModuleS
+funS name args rhs ws  =  introLHSFun (length args)
+                      <*> introNameIdentifier name <*> seqS args 
+                      <*> rhsS rhs ws
 
-{- the fold & para strategies
--- These strategy are only partially typed: the type of the arguments is
--- a strategy. Maybe we can obtain more type info in the arguments?
--- But I'm not sure if that is desirable.
---
--- Furthermore, we have to implement the different ways to construct a
--- foldr/para.
---
--- I think we need to define something like this in order to implement
--- different ways to implement folds.
--}
+declFunS :: [ModuleS] -> ModuleS
+declFunS fs = introFunctionBindings (length fs) <*> seqS fs
 
+declPatS :: String -> ModuleS -> [ModuleS] -> ModuleS
+declPatS name rhs ws = introPatternBinding <*> patS name <*> rhsS rhs ws
 
-{-
-foldS' :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
-foldS' consS nilS =   toStrategy (introVar "foldr") <*> consS <*> nilS
---                <|>  introLambda "aname" <*> introMatchList (Var "aname") 
---                                                            nilS 
---                                                            undefined
--- -- When recognising the lambda from te user I want to bind the string to a value which
--- -- I want to use later in the strategy.
+rhsS :: ModuleS -> [ModuleS] -> ModuleS
+rhsS expr ws  =  introRHSExpr (length ws) <*> expr 
+             <*> if null ws then succeed else seqS ws -- where clause
 
-paraS :: Strategy (Context Expr) -> Strategy (Context Expr) -> Strategy (Context Expr)
-paraS consS nilS = toStrategy (introVar "para") <*> consS <*> nilS
+intS :: String -> ModuleS
+intS i = introExprLiteral <*> introLiteralInt i
 
--- Using fold and para
+infixFunS = undefined
 
-isortFoldStrategy :: Strategy (Context Expr)
-isortFoldStrategy = foldS' insertS1 nilS -- '
+--------------------------------------------------------------------------------
+-- Help functions
+--------------------------------------------------------------------------------
+seqS = foldr1 (<*>)
+choiceS = foldr1 (<|>)
+mapSeqS f = seqS . (map f)
+repeatS n = seqS . (take n) . repeat
 
-insertS1 = getStrategy insertE
-nilS = toStrategy (introVar "nil")
-
-insertS2 = introLambda "a" <*> paraS insertConsS insertNilS
-  where insertNilS =  getStrategy insertNilE
-        insertConsS = getStrategy insertConsE
-
--- run = apply isortStrategy (inContext undef)
-
--- Bastiaan's code
-type ExprS = Int -> Strategy (Context Expr)
-
-list = map fromContext (applyAll (isortS 0) (inContext undef))
-test = putStrLn $ unlines $ map (\e -> ppExpr (e,0)) list 
-run  = eval (Apply (list!!0) mylist)
-       
-isortS :: ExprS
-isortS = foldS insertS -- (\_ -> toStrategy $ introVar "insert") 
-               (\_ -> toStrategy $ introVar "Nil")
-
-insertS :: ExprS
-insertS _ =
-   rec <*> lam <*> lam <*> introMatchList <*> var 0 <*>
-   appN 2 <*> focusTop <*> introVar "Cons" <*> var 1 <*> focusTop <*> introVar "Nil"
-   <*> lam <*> lam <*> introIf <*> appN 2
-   <*> focusTop <*> introVar "<=" <*> var 3 <*> var 1
-   <*> appN 2 <*> focusTop <*> introVar "Cons" <*> var 3 <*> var 2
-   <*> appN 2 <*> focusTop <*> introVar "Cons" <*> var 1 <*> appN 2
-   <*> var 4 <*> var 3 <*> var 0 <*> focusTop
-      
-foldS :: ExprS -> ExprS -> ExprS
-foldS consS nilS i
-    =  appN 2 <*> introVar "foldr" <*> consS i <*> nilS i
-   <|> lam <*> appN 3 <*> introVar "foldr" <*> consS (i+1) <*> nilS (i+1) <*> var 0
-   <|> rec <*> lam <*> introMatchList <*> var 0 <*> focusTop <*> nilS (i+2) <*>
-       lam <*> lam <*> appN 2 <*> focusTop <*> consS (i+4) <*> var 1 <*> 
-       app <*> var 3 <*> var 0 
-
-rec :: Strategy (Context Expr)
-rec = focusTop <*> introFix <*> lam
-
-lam :: Strategy (Context Expr)
-lam = focusUndef <*> introLambdaAuto
-
-var :: Int -> Strategy (Context Expr)
-var n = focusUndef <*> introVarDB n
-
-app :: Strategy (Context Expr)
-app = focusTop <*> introApply
-
-appN :: Int -> Strategy (Context Expr) 
-appN 0 = succeed
-appN n = app <*> appN (n-1)
-
--}
+split xs = init $ map (\x -> splitAt x xs) [1..length xs]

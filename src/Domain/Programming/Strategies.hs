@@ -1,12 +1,19 @@
 module Domain.Programming.Strategies
-   ( fromBinStrategy, getstrat, stringToStrategy
-   ) where
+{-   ( fromBinStrategy, getstrat, stringToStrategy, testS
+   )-} where
 
 import Common.Context
 import Common.Strategy
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.PreludeS
+
+
+-- test strategy for appS
+testS  =  introModule
+      <*> introDecls 2
+      <*> declFunS [ funS "f" [patS "a", patS "b", patS "c", patS "d"] (varS "a")  [] ]
+      <*> declPatS "g" (varS "f" # [intS "1", intS "2", intS "3", intS "4"]) []
 
 -- | fromBin strategy
 fromBinStrategy  =  introModule

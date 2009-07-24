@@ -16,14 +16,18 @@ import Prelude hiding (fail)
       context
 
    o  Use a GADT to get the strategies typed again
+
+   o  Change show function for names, show also the name of the constructor.
+      For the range datatype: remove from show.
+
+   o  Devise a scheme in which certain strategies, like etaS and parenS, can
+      be used at any point in the strategy.
 -}
 
 --------------------------------------------------------------------------------
 -- Type synonyms
 --------------------------------------------------------------------------------
 type ModuleS = Strategy (Context Module)
-type Var = String
-type Pat = String
 
 --------------------------------------------------------------------------------
 -- Language definition strategies
@@ -51,7 +55,7 @@ curryS f args  = case args of
                    []   -> fail
                    a:as -> app f (a:as) <|> partialS f args <|> curryS (parenS (app f [a])) as
 
-partialS f args | length args > 2  = choiceS $ map (\(x, y) -> curryS (parenS (f `app` x)) y) (split args)
+partialS f args | length args > 2  = choiceS $ map (\(x, y) -> curryS (parenS (f `app` x)) y) (init (split args))
                 | otherwise        = fail
 
 app f as = introExprNormalApplication (length as) <*> f <*> seqS as
@@ -68,19 +72,26 @@ opS n l r = case (l, r) of
   where 
     op = introExprVariable <*> introNameOperator n
 
-etaS :: ModuleS -> ModuleS -- f => \x -> f x
+etaS :: ModuleS -> ModuleS -- f => \x -> f x ; think of how to get two consecutive etaS in one lambda.. context?
 etaS expr = expr <|> parenS (lambdaS arg (appS expr arg))
   where arg = [varS "x"]
 
+{-
+-- wil do this strat. when needed
 etaFunS :: ModuleS -> ModuleS -> ModuleS
 etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
                      introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
                      introExprVariable <*> introNameIdentifier "x"
                  <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
+-}
 
-lambdaS :: [ModuleS] -> ModuleS -> ModuleS -- do via context
-lambdaS ps expr  =  introExprLambda (length ps) <*> seqS ps <*> expr
-                <|> seqS (map (\x -> introExprLambda 1 <*> x) ps) <*> expr
+lambdaS :: [ModuleS] -> ModuleS -> ModuleS
+lambdaS args expr = choiceS $ map f $ split args
+  where
+    f (xs, ys) = introExprLambda (length xs) <*> seqS xs <*> rec ys
+    rec ys = case ys of
+               [] -> expr
+               ps -> lambdaS ps expr
 
 
 --------------------------------------------------------------------------------
@@ -117,11 +128,10 @@ foldlS consS nilS
               )
 
 
--- composition is nothing different than infix app
 compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
-compS f g  =  introExprInfixApplication True True <*> f <*> opS "." <*> g
-          <|> lambdaS [patS "x"] (appS f [parenS (appS g [varS "x"])]) -- not in free vars of f and g 
-  where opS n = introExprVariable <*> introNameOperator n
+compS f g  =  opS "." (Just f) (Just g)
+          <|> lambdaS [patS "x"] (appS f [parenS (appS g [varS "x"])])
+
 
 --------------------------------------------------------------------------------
 -- Smart constructors
@@ -163,4 +173,4 @@ choiceS = foldr1 (<|>)
 mapSeqS f = seqS . (map f)
 repeatS n = seqS . (take n) . repeat
 
-split xs = init $ map (\x -> splitAt x xs) [1..length xs]
+split xs = map (\x -> splitAt x xs) [1..length xs]

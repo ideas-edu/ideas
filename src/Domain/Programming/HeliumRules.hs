@@ -247,6 +247,9 @@ replaceFirstUndef u a m = let us = u (fromContext m) in
     else
         error $ "error undefs" ++ show m
 
+--nlambdas :: Var Int
+--nlambdas = "nlambdas" := 0
+
 
 --------------------------------------------------------------------------------
 -- Test stuff

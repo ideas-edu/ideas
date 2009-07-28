@@ -3,6 +3,7 @@ module Domain.Programming.Exercises where
 import Common.Apply
 import Common.Context
 import Common.Exercise hiding (checkExercise)
+import Common.Grammar
 import Common.Rewriting
 import Common.Strategy hiding (fail, not)
 import Control.Monad (unless, fail)

@@ -29,7 +29,10 @@ nilS = introExprLiteral <*> introLiteralInt "0"
 --   AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
 --   Biplate only allows (a->a) in container b 
 stringToStrategy :: String -> Strategy (Context Module)
-stringToStrategy = sequence . getRules . either (const (error "Compile error")) id . compile
+stringToStrategy = sequence . stringToRules
+
+stringToRules :: String -> [Rule (Context Module)]
+stringToRules = getRules . either (const (error "Compile error")) id . compile
 
 class GetRules a where
   getRules :: a -> [Rule (Context Module)]

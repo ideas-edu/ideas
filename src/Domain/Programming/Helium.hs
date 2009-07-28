@@ -9,8 +9,7 @@ import PhaseStaticChecks
 import PhaseTypingStrategies ()
 import PhaseTypeInferencer
 import UHA_Syntax
-import UHA_Utils (patternVars)
-import Data.IORef
+--import Data.IORef
 import Messages
 import HeliumMessages
 import System.IO.Unsafe (unsafePerformIO)
@@ -21,7 +20,6 @@ import UHA_Syntax
 import UHA_Utils
 import UHA_Range(noRange)
 import qualified UHA_Pretty as PP (sem_Module)
-import StaticChecks (changeOfScope)
 import Standard(searchPath)
 import LvmImport(lvmImportDecls)
 import Id(stringFromId)

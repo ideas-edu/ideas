@@ -4,8 +4,6 @@ module Domain.Programming.PreludeS
 
 import Common.Context hiding (Var)
 import Common.Strategy hiding (repeat)
-import Data.List
-import Data.Maybe
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Prelude hiding (fail, sequence)
@@ -82,10 +80,10 @@ opS n l r = case (l, r) of
     op = introExprVariable <*> introNameOperator n
     infixApp l r = introExprInfixApplication l r 
 
-etaS :: ModuleS -> ModuleS -- f => \x -> f x ; think of how to get two consecutive etaS in one lambda.. context?
-etaS expr = expr <|> parenS (lambdaS arg (appS expr arg))
+etaS :: ModuleS -> ModuleS -- f => \x -> f x ;
+etaS expr = expr <|> parenS (lambdaS arg (app expr arg))
   where 
-    arg = [varS "x"] -- check if x is not elem freevars (if necessary, there are probably no free variables, would not compile)
+    arg = [varS "x"] -- check if x is not elem freevars
 
 {-
 -- wil do this strat. when needed
@@ -97,12 +95,13 @@ etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> intr
 -}
 
 lambdaS :: [ModuleS] -> ModuleS -> ModuleS
-lambdaS args expr = alternatives $ map f $ split args
+lambdaS args expr =  alternatives $ map f $ split args
   where
     f (xs, ys) = introExprLambda (length xs) <*> sequence xs <*> rec ys
     rec ys = case ys of
                [] -> expr
                ps -> lambdaS ps expr
+
 
 betaS :: ModuleS -> ModuleS
 betaS = undefined

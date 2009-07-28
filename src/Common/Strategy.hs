@@ -20,7 +20,7 @@ module Common.Strategy
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
      -- * Running strategies
-   , runStrategy, derivations, runWithSteps, traceStrategy
+   , runStrategy, derivations, runWithSteps, traceStrategy, noLabels
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives

@@ -1,10 +1,11 @@
 module Domain.Programming.Exercises where
 
-import Common.Context
-import Common.Strategy
-import Common.Exercise hiding (checkExercise)
 import Common.Apply
+import Common.Context
+import Common.Exercise hiding (checkExercise)
 import Common.Rewriting
+import Common.Strategy hiding (fail, not)
+import Control.Monad (unless, fail)
 import Data.Maybe
 import Data.List
 import Domain.Programming.AlphaConv (alphaConversion)
@@ -14,6 +15,7 @@ import Domain.Programming.Helium
 import Domain.Programming.Prog
 import Domain.Programming.PreludeS
 import Domain.Programming.EncodingExercises
+import Prelude hiding (fail)
 import Text.Parsing (SyntaxError(..))
 
 heliumExercise :: Exercise Module

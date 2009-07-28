@@ -247,9 +247,6 @@ replaceFirstUndef u a m = let us = u (fromContext m) in
     else
         error $ "error undefs" ++ show m
 
---nlambdas :: Var Int
---nlambdas = "nlambdas" := 0
-
 
 --------------------------------------------------------------------------------
 -- Test stuff
@@ -288,24 +285,6 @@ sumExpr' = Expression_NormalApplication
             (range (1,9))
             undefExpr
             [ undefExpr, undefExpr ]
-
-
--- todo:
-
-{-
-getRules :: Module -> [Rule (Context Module)]
-getRules expr = 
-   case expr of
-      Lambda x e -> introLambda x : getRules e
-      MatchList b n c -> introMatchList : getRules b ++ getRules n ++ getRules c
-      Var x -> introVar x : []
-      -- Let x b d -> introLet x : getRules b ++ getRules d
-      Apply (Lambda f b) (Fix (Lambda g e)) | f==g -> introLet f : getRules b ++ getRules e
-      Fix (Lambda x e) -> getRules (makeLet x e (Var "x"))
-      Apply f a -> introApply : getRules f ++ getRules a
-      IfThenElse c t e -> introIf : getRules c ++ getRules t ++ getRules e
-      _ -> error (show expr)
--}
 
 
 --------------------------------------------------------------------------------

@@ -4,30 +4,23 @@ module Domain.Programming.Strategies
 
 import Common.Context
 import Common.Strategy
+import Common.Transformation
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.PreludeS
-
+import Prelude hiding (sequence)
 
 -- test strategy for appS
-testS  =  introModule
-      <*> introDecls 2
-      <*> declFunS [ funS "f" [patS "a", patS "b", patS "c", patS "d"] (varS "a")  [] ]
-      <*> declPatS "g" (varS "f" # [intS "1", intS "2", intS "3", intS "4"]) []
+testS  =  modS [ declFunS [ funS "f" [patS "a", patS "b", patS "c", patS "d"] (varS "a")  [] ]
+               , declPatS "g" (varS "f" # [intS "1", intS "2", intS "3", intS "4"]) [] ]
+
+testFunS = modS [ declPatS "f" consS [] ]
 
 -- | fromBin strategy
-fromBinStrategy  =  introModule
-                <*> introDecls 1
-                <*> introPatternBinding 
-                <*> introPatternVariable <*> introNameIdentifier "fromBin"
-                <*> foldlS consS nilS
+fromBinStrategy = modS [ introPatternBinding <*> introPatternVariable <*> 
+                         introNameIdentifier "fromBin" <*> foldlS consS nilS ]
 
-consS = etaS $ etaS ( introExprParenthesized <*> 
-               compS ( introExprInfixApplication False False <*> introExprVariable <*> introNameOperator "+"
-                     )( introExprInfixApplication False True <*> introExprVariable <*> introNameOperator "*" 
-                    <*> introExprLiteral <*> introLiteralInt "2"
-                     )
-             )
+consS = parenS $ compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
 
 nilS = introExprLiteral <*> introLiteralInt "0"
                            
@@ -36,121 +29,116 @@ nilS = introExprLiteral <*> introLiteralInt "0"
 --   AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
 --   Biplate only allows (a->a) in container b 
 stringToStrategy :: String -> Strategy (Context Module)
-stringToStrategy = getstrat . either (const (error "Compile error")) id . compile
+stringToStrategy = sequence . getRules . either (const (error "Compile error")) id . compile
 
-class GetStrategy a where
-  getstrat :: a -> Strategy (Context Module)
+class GetRules a where
+  getRules :: a -> [Rule (Context Module)]
 
-instance GetStrategy Module where
-  getstrat (Module_Module _ _ _ body) = introModule <*> getstrat body
+instance GetRules Module where
+  getRules (Module_Module _ _ _ body) = introModule : getRules body
 
-instance GetStrategy Body where
-  getstrat (Body_Body _ _ decls) = introDecls (length decls) <*> seqStrategy decls
+instance GetRules Body where
+  getRules (Body_Body _ _ decls) = introDecls (length decls) : concatMap getRules decls
 
-instance GetStrategy MaybeDeclarations where
-  getstrat mdecls = 
+instance GetRules MaybeDeclarations where
+  getRules mdecls = 
     case mdecls of
-      MaybeDeclarations_Nothing    -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
-      MaybeDeclarations_Just decls -> seqStrategy decls
+      MaybeDeclarations_Nothing    -> []
+      MaybeDeclarations_Just decls -> concatMap getRules decls
 
-instance GetStrategy Declaration where
-  getstrat d = 
+instance GetRules Declaration where
+  getRules d = 
     case d of 
-      Declaration_PatternBinding _ pattern rhs -> introPatternBinding <*> 
-                                                  getstrat pattern <*>
-                                                  getstrat rhs
-      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) <*>
-                                              seqStrategy funbs -- can be made more flexible with other strategy combinators (like parallel)
+      Declaration_PatternBinding _ pattern rhs -> introPatternBinding : 
+                                                  getRules pattern ++
+                                                  getRules rhs
+      Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) :
+                                              concatMap getRules funbs
 
-instance GetStrategy MaybeExpression where
-  getstrat mexpr = 
+instance GetRules MaybeExpression where
+  getRules mexpr = 
     case mexpr of
-      MaybeExpression_Nothing   -> succeed -- ! could result to unexpected behaviour, when using choice <|> !
-      MaybeExpression_Just expr -> getstrat expr
+      MaybeExpression_Nothing   -> []
+      MaybeExpression_Just expr -> getRules expr
 
-instance GetStrategy Expression where
-  getstrat expr = 
+instance GetRules Expression where
+  getRules expr = 
     case expr of 
-      Expression_NormalApplication _ fun args       -> introExprNormalApplication (length args) <*>
-                                                       getstrat fun <*> seqStrategy args
-      Expression_Variable          _ name           -> introExprVariable <*> getstrat name
+      Expression_NormalApplication _ fun args       -> introExprNormalApplication (length args) :
+                                                       getRules fun ++ concatMap getRules args
+      Expression_Variable          _ name           -> introExprVariable : getRules name
       Expression_InfixApplication  _ lexpr op rexpr -> introExprInfixApplication (lexpr /= MaybeExpression_Nothing) 
-                                                                                 (rexpr /= MaybeExpression_Nothing) <*> 
-                                                       getstrat lexpr <*> getstrat op <*>
-                                                       getstrat rexpr
-      Expression_Literal           _ lit            -> introExprLiteral <*> getstrat lit
-      Expression_Constructor       _ name           -> introExprConstructor <*> getstrat name
-      Expression_Parenthesized     _ expr           -> introExprParenthesized <*> getstrat expr
-      Expression_List              _ exprs          -> introExprList (length exprs) <*> 
-                                                       seqStrategy exprs
-      Expression_Tuple             _ exprs          -> introExprTuple (length exprs) <*> 
-                                                       seqStrategy exprs
-      Expression_Let               _ decls expr     -> introExprLet (length decls) <*> seqStrategy decls <*>
-                                                       getstrat expr
+                                                                                 (rexpr /= MaybeExpression_Nothing) :
+                                                       getRules lexpr ++ getRules op ++
+                                                       getRules rexpr
+      Expression_Literal           _ lit            -> introExprLiteral : getRules lit
+      Expression_Constructor       _ name           -> introExprConstructor : getRules name
+      Expression_Parenthesized     _ expr           -> introExprParenthesized : getRules expr
+      Expression_List              _ exprs          -> introExprList (length exprs) : 
+                                                       concatMap getRules exprs
+      Expression_Tuple             _ exprs          -> introExprTuple (length exprs) :
+                                                       concatMap getRules exprs
+      Expression_Let               _ decls expr     -> introExprLet (length decls) : concatMap getRules decls ++
+                                                       getRules expr
       _                                             -> error $ "No instance for: " ++ show expr
 
-instance GetStrategy LeftHandSide where
-  getstrat (LeftHandSide_Function _ name ps) = introLHSFun (length ps) <*> 
-                                               getstrat name <*> 
-                                               seqStrategy ps
+instance GetRules LeftHandSide where
+  getRules (LeftHandSide_Function _ name ps) = introLHSFun (length ps) : getRules name ++
+                                               concatMap getRules ps
 
-instance GetStrategy RightHandSide where
-  getstrat rhs = 
+instance GetRules RightHandSide where
+  getRules rhs = 
     case rhs of 
       RightHandSide_Expression _ expr   mdecls -> 
           case mdecls of 
-            MaybeDeclarations_Just decls -> introRHSExpr (length decls) <*> 
-                                            getstrat expr <*>
-                                            seqStrategy decls
-            _                            -> introRHSExpr 0 <*> getstrat expr
+            MaybeDeclarations_Just decls -> introRHSExpr (length decls) :
+                                            getRules expr ++
+                                            concatMap getRules decls
+            _                            -> introRHSExpr 0 : getRules expr
       RightHandSide_Guarded    _ gexprs mdecls -> 
           case mdecls of
-            MaybeDeclarations_Just decls -> introRHSGuarded (length gexprs) (length decls) <*>
-                                            seqStrategy gexprs <*>
-                                            seqStrategy decls
-            _                            -> introRHSGuarded (length gexprs) 0 <*>
-                                            seqStrategy gexprs
+            MaybeDeclarations_Just decls -> introRHSGuarded (length gexprs) (length decls) :
+                                            concatMap getRules gexprs ++
+                                            concatMap getRules decls
+            _                            -> introRHSGuarded (length gexprs) 0 :
+                                            concatMap getRules gexprs
 
-instance GetStrategy GuardedExpression where
-  getstrat (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr <*> 
-                                                                getstrat guard <*> 
-                                                                getstrat expr
+instance GetRules GuardedExpression where
+  getRules (GuardedExpression_GuardedExpression _ guard expr) = introGuardedExpr : 
+                                                                getRules guard ++ 
+                                                                getRules expr
 
-instance GetStrategy FunctionBinding where
-  getstrat (FunctionBinding_FunctionBinding _ lhs rhs) = getstrat lhs <*>
-                                                         getstrat rhs
+instance GetRules FunctionBinding where
+  getRules (FunctionBinding_FunctionBinding _ lhs rhs) = getRules lhs ++
+                                                         getRules rhs
 
-instance GetStrategy Pattern where
-  getstrat p = 
+instance GetRules Pattern where
+  getRules p = 
     case p of
-      Pattern_Variable         _ name     -> introPatternVariable <*> getstrat name
-      Pattern_Constructor      _ name ps  -> introPatternConstructor (length ps) <*>
-                                             getstrat name <*>
-                                             seqStrategy ps
-      Pattern_InfixConstructor _ lp op rp -> introPatternInfixConstructor <*>
-                                             getstrat op <*> getstrat lp <*> getstrat rp
-      Pattern_Parenthesized    _ p         -> introPatternParenthesized <*> getstrat p
-      Pattern_Literal          _ l         -> introPatternLiteral <*> getstrat l
-      Pattern_Tuple            _ ps        -> introPatternTuple (length ps) <*> seqStrategy ps
+      Pattern_Variable         _ name     -> introPatternVariable : getRules name
+      Pattern_Constructor      _ name ps  -> introPatternConstructor (length ps) :
+                                             getRules name ++
+                                             concatMap getRules ps
+      Pattern_InfixConstructor _ lp op rp -> introPatternInfixConstructor :
+                                             getRules op ++ getRules lp ++ getRules rp
+      Pattern_Parenthesized    _ p         -> introPatternParenthesized : getRules p
+      Pattern_Literal          _ l         -> introPatternLiteral : getRules l
+      Pattern_Tuple            _ ps        -> introPatternTuple (length ps) : concatMap getRules ps
       _                                    -> error $ "No instance for: " ++ show p
 
-instance GetStrategy Literal where
-  getstrat lit = 
+instance GetRules Literal where
+  getRules lit = 
     case lit of 
-      Literal_Int    _ val -> toStrategy $ introLiteralInt val
-      Literal_String _ val -> toStrategy $ introLiteralString val
+      Literal_Int    _ val -> [introLiteralInt val]
+      Literal_String _ val -> [introLiteralString val]
 
-instance GetStrategy Name where
-  getstrat name = 
+instance GetRules Name where
+  getRules name = 
     case name of 
-      Name_Identifier _ _ name -> toStrategy $ introNameIdentifier name
-      Name_Operator   _ _ name -> toStrategy $ introNameOperator name
-      Name_Special    _ _ name -> toStrategy $ introNameSpecial name
+      Name_Identifier _ _ name -> [introNameIdentifier name]
+      Name_Operator   _ _ name -> [introNameOperator name]
+      Name_Special    _ _ name -> [introNameSpecial name]
 
-
--- | help functions
-seqStrategy :: GetStrategy a => [a] -> Strategy (Context Module)
-seqStrategy = foldr ((<*>) . getstrat) succeed 
 
 -- | test stuff
 sumString = "mysum = foldr (+) 0"

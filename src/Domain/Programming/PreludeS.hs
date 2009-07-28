@@ -8,7 +8,7 @@ import Data.List
 import Data.Maybe
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
-import Prelude hiding (fail)
+import Prelude hiding (fail, sequence)
 
 {- ideas:
 
@@ -22,6 +22,10 @@ import Prelude hiding (fail)
 
    o  Devise a scheme in which certain strategies, like etaS and parenS, can
       be used at any point in the strategy.
+
+   o  Add beta reduction, uniplate for app (\x->expr) y
+
+   o  Add etaS to prelude strategies
 -}
 
 --------------------------------------------------------------------------------
@@ -41,7 +45,7 @@ f # args = appS f args
 infixr 0 #
 
 appS :: ModuleS -> [ModuleS] -> ModuleS
-appS f args = curryS f args <|> infixS f args
+appS f args = etaS $ curryS f args <|> infixS f args
 
 infixS f args = case args of 
                   x:y:z:zs -> app (parenS (infixApp f x y)) (z:zs)
@@ -53,28 +57,35 @@ infixS f args = case args of
 curryS :: ModuleS -> [ModuleS] -> ModuleS
 curryS f args  = case args of 
                    []   -> fail
-                   a:as -> app f (a:as) <|> partialS f args <|> curryS (parenS (app f [a])) as
+                   a:as -> app f (a:as) <|> partialS f args 
+                                        <|> curryS (parenS (app f [a])) as
 
-partialS f args | length args > 2  = choiceS $ map (\(x, y) -> curryS (parenS (f `app` x)) y) (init (split args))
+partialS :: ModuleS -> [ModuleS] -> ModuleS
+partialS f args | length args > 2  = alternatives $ map g $ init $ split args
                 | otherwise        = fail
+  where
+    g (x, y) = curryS (parenS (f `app` x)) y
 
-app f as = introExprNormalApplication (length as) <*> f <*> seqS as
+app :: ModuleS -> [ModuleS] -> ModuleS
+app f as  =  introExprNormalApplication (length as) <*> f <*> sequence as
 
 opS :: String -> Maybe ModuleS -> Maybe ModuleS -> ModuleS
 opS n l r = case (l, r) of 
-              (Just x, Just y)   -> app (introExprInfixApplication False False <*> op) [x, y]    <|> 
-                                    app (introExprInfixApplication True  False <*> x  <*> op) [y] <|> 
-                                    app (introExprInfixApplication False True  <*> op <*>  y) [x] <|> 
-                                    introExprInfixApplication True True   <*> x  <*> op <*> y
-              (Nothing, Just y)  -> introExprInfixApplication False True  <*> op <*> y
-              (Just x, Nothing)  -> introExprInfixApplication True  False <*> x  <*> op
-              (Nothing, Nothing) -> introExprInfixApplication False False <*> op         
+              (Just x, Just y)   -> app (infixApp False False <*> op) [x, y]    <|> 
+                                    app (infixApp True  False <*> x  <*> op) [y] <|> 
+                                    app (infixApp False True  <*> op <*>  y) [x] <|> 
+                                    infixApp True True   <*> x  <*> op <*> y
+              (Nothing, Just y)  -> infixApp False True  <*> op <*> y
+              (Just x, Nothing)  -> infixApp True  False <*> x  <*> op
+              (Nothing, Nothing) -> infixApp False False <*> op         
   where 
     op = introExprVariable <*> introNameOperator n
+    infixApp l r = introExprInfixApplication l r 
 
 etaS :: ModuleS -> ModuleS -- f => \x -> f x ; think of how to get two consecutive etaS in one lambda.. context?
 etaS expr = expr <|> parenS (lambdaS arg (appS expr arg))
-  where arg = [varS "x"]
+  where 
+    arg = [varS "x"] -- check if x is not elem freevars (if necessary, there are probably no free variables, would not compile)
 
 {-
 -- wil do this strat. when needed
@@ -86,13 +97,15 @@ etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> intr
 -}
 
 lambdaS :: [ModuleS] -> ModuleS -> ModuleS
-lambdaS args expr = choiceS $ map f $ split args
+lambdaS args expr = alternatives $ map f $ split args
   where
-    f (xs, ys) = introExprLambda (length xs) <*> seqS xs <*> rec ys
+    f (xs, ys) = introExprLambda (length xs) <*> sequence xs <*> rec ys
     rec ys = case ys of
                [] -> expr
                ps -> lambdaS ps expr
 
+betaS :: ModuleS -> ModuleS
+betaS = undefined
 
 --------------------------------------------------------------------------------
 -- Prelude definition strategies
@@ -147,30 +160,30 @@ parenS expr = introExprParenthesized <*> expr
 
 funS :: String -> [ModuleS] -> ModuleS -> [ModuleS] -> ModuleS
 funS name args rhs ws  =  introLHSFun (length args)
-                      <*> introNameIdentifier name <*> seqS args 
+                      <*> introNameIdentifier name <*> sequence args 
                       <*> rhsS rhs ws
 
 declFunS :: [ModuleS] -> ModuleS
-declFunS fs = introFunctionBindings (length fs) <*> seqS fs
+declFunS fs = introFunctionBindings (length fs) <*> sequence fs
 
 declPatS :: String -> ModuleS -> [ModuleS] -> ModuleS
 declPatS name rhs ws = introPatternBinding <*> patS name <*> rhsS rhs ws
 
 rhsS :: ModuleS -> [ModuleS] -> ModuleS
 rhsS expr ws  =  introRHSExpr (length ws) <*> expr 
-             <*> if null ws then succeed else seqS ws -- where clause
+             <*> if null ws then succeed else sequence ws -- where clause
 
 intS :: String -> ModuleS
 intS i = introExprLiteral <*> introLiteralInt i
 
-infixFunS = undefined
+modS :: [ModuleS] -> ModuleS
+modS decls = introModule <*> introDecls (length decls) <*> sequence decls
+
 
 --------------------------------------------------------------------------------
 -- Help functions
 --------------------------------------------------------------------------------
-seqS = foldr1 (<*>)
-choiceS = foldr1 (<|>)
-mapSeqS f = seqS . (map f)
-repeatS n = seqS . (take n) . repeat
+mapSeqS f = sequence . (map f)
+repeatS n = sequence . (take n) . repeat
 
 split xs = map (\x -> splitAt x xs) [1..length xs]

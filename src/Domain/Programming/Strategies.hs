@@ -83,6 +83,8 @@ instance GetRules Expression where
                                                        concatMap getRules exprs
       Expression_Let               _ decls expr     -> introExprLet (length decls) : concatMap getRules decls ++
                                                        getRules expr
+      Expression_Lambda            _ ps expr        -> introExprLambda (length ps) : concatMap getRules ps ++ 
+                                                       getRules expr
       _                                             -> error $ "No instance for: " ++ show expr
 
 instance GetRules LeftHandSide where

@@ -43,7 +43,8 @@ f # args = appS f args
 infixr 0 #
 
 appS :: ModuleS -> [ModuleS] -> ModuleS
-appS f args = etaS $ curryS f args <|> infixS f args
+appS f args = parenS $ app f args
+-- appS f args = fix (\ t -> curryS f args <|> infixS f args <|> etaS t)
 
 infixS f args = case args of 
                   x:y:z:zs -> app (parenS (infixApp f x y)) (z:zs)
@@ -52,11 +53,25 @@ infixS f args = case args of
   where
     infixApp f l r = introExprInfixApplication True True <*> l <*> f <*> r
 
+{-
 curryS :: ModuleS -> [ModuleS] -> ModuleS
-curryS f args  = case args of 
-                   []   -> fail
-                   a:as -> app f (a:as) <|> partialS f args 
-                                        <|> curryS (parenS (app f [a])) as
+curryS f args = case args of 
+                  []   -> fail
+                  a:as -> app f (a:as) <|> partialS f args 
+                                       <|> curryS (parenS (app f [a])) as
+-}
+
+curryS :: ModuleS -> [ModuleS] -> ModuleS
+curryS f args = fix (\t -> case args of 
+                             []   -> fail
+                             a:as -> app f (a:as) <|> curryS (parenS (app f [a])) as)
+
+funS :: Int -> ModuleS -> [ModuleS] -> ModuleS
+funS kind f args  =  appS f args
+                 <|> if partargs > 0
+                     then lambdaS (take partargs [varS ('x' : show i) | i <- [1..]]) (appS f args)
+                     else fail
+  where partargs = kind - (length args)
 
 partialS :: ModuleS -> [ModuleS] -> ModuleS
 partialS f args | length args > 2  = alternatives $ map g $ init $ split args
@@ -81,9 +96,10 @@ opS n l r = case (l, r) of
     infixApp l r = introExprInfixApplication l r 
 
 etaS :: ModuleS -> ModuleS -- f => \x -> f x ;
-etaS expr = expr <|> parenS (lambdaS arg (app expr arg))
-  where 
-    arg = [varS "x"] -- check if x is not elem freevars
+etaS expr = fix (\t -> expr <|> lambdaS [patS "x"] (app (parenS t) [varS "x"])) -- check if x not elem of freevars!
+--etaS expr = fix (\ t -> expr <|> lambdaS [patS "x"] (appS t [varS "x"])) -- check if x not elem of freevars!
+
+
 
 {-
 -- wil do this strat. when needed
@@ -95,13 +111,15 @@ etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> intr
 -}
 
 lambdaS :: [ModuleS] -> ModuleS -> ModuleS
-lambdaS args expr =  alternatives $ map f $ split args
+lambdaS args expr = alternatives $ map f $ split args
   where
     f (xs, ys) = introExprLambda (length xs) <*> sequence xs <*> rec ys
     rec ys = case ys of
                [] -> expr
                ps -> lambdaS ps expr
 
+lambda :: ModuleS -> ModuleS -> ModuleS
+lambda arg expr = introExprLambda 1 <*> arg <*> expr
 
 betaS :: ModuleS -> ModuleS
 betaS = undefined
@@ -155,7 +173,7 @@ patS :: String -> ModuleS
 patS n = introPatternVariable <*> introNameIdentifier n
 
 parenS :: ModuleS -> ModuleS
-parenS expr = introExprParenthesized <*> expr
+parenS expr = expr <|> introExprParenthesized <*> expr
 
 funS :: String -> [ModuleS] -> ModuleS -> [ModuleS] -> ModuleS
 funS name args rhs ws  =  introLHSFun (length args)

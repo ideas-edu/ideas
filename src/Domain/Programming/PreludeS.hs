@@ -6,6 +6,8 @@ import Common.Context hiding (Var)
 import Common.Strategy hiding (repeat)
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
+import Data.Generics.Biplate
+import Data.Generics.PlateData
 import Prelude hiding (fail, sequence)
 
 {- ideas:
@@ -30,6 +32,9 @@ import Prelude hiding (fail, sequence)
 -- Type synonyms
 --------------------------------------------------------------------------------
 type ModuleS = Strategy (Context Module)
+
+
+s = modS [ declPatS "f" (parenS $ compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))) [] ]
 
 --------------------------------------------------------------------------------
 -- Language definition strategies
@@ -66,8 +71,8 @@ curryS f args = fix (\t -> case args of
                              []   -> fail
                              a:as -> app f (a:as) <|> curryS (parenS (app f [a])) as)
 
-funS :: Int -> ModuleS -> [ModuleS] -> ModuleS
-funS kind f args  =  appS f args
+funS' :: Int -> ModuleS -> [ModuleS] -> ModuleS
+funS' kind f args  =  appS f args
                  <|> if partargs > 0
                      then lambdaS (take partargs [varS ('x' : show i) | i <- [1..]]) (appS f args)
                      else fail
@@ -84,16 +89,19 @@ app f as  =  introExprNormalApplication (length as) <*> f <*> sequence as
 
 opS :: String -> Maybe ModuleS -> Maybe ModuleS -> ModuleS
 opS n l r = case (l, r) of 
-              (Just x, Just y)   -> app (infixApp False False <*> op) [x, y]    <|> 
-                                    app (infixApp True  False <*> x  <*> op) [y] <|> 
-                                    app (infixApp False True  <*> op <*>  y) [x] <|> 
-                                    infixApp True True   <*> x  <*> op <*> y
-              (Nothing, Just y)  -> infixApp False True  <*> op <*> y
-              (Just x, Nothing)  -> infixApp True  False <*> x  <*> op
-              (Nothing, Nothing) -> infixApp False False <*> op         
+              (Just x, Just y)   -> app (prefix) [x, y] <|> 
+                                    app (pleft x) [y] <|> 
+                                    app (pright y) [x] <|> 
+                                    infixApp True True <*> x  <*> op <*> y
+              (Nothing, Just y)  -> pright y <|> parenS (lambdaS [patS "x"] (opS n (Just (varS "x")) r))
+              (Just x, Nothing)  -> pleft x  <|> parenS (lambdaS [patS "x"] (opS n l (Just (varS "x"))))
+              (Nothing, Nothing) -> prefix   <|> parenS (lambdaS [patS "x", patS "y"] (opS n (Just (varS "x")) (Just (varS "y"))))
   where 
     op = introExprVariable <*> introNameOperator n
-    infixApp l r = introExprInfixApplication l r 
+    infixApp l r = introExprInfixApplication l r
+    pleft x = infixApp True  False <*> x  <*> op
+    prefix = infixApp False False <*> op
+    pright y = infixApp False True  <*> op <*> y
 
 etaS :: ModuleS -> ModuleS -- f => \x -> f x ;
 etaS expr = fix (\t -> expr <|> lambdaS [patS "x"] (app (parenS t) [varS "x"])) -- check if x not elem of freevars!
@@ -121,8 +129,23 @@ lambdaS args expr = alternatives $ map f $ split args
 lambda :: ModuleS -> ModuleS -> ModuleS
 lambda arg expr = introExprLambda 1 <*> arg <*> expr
 
-betaS :: ModuleS -> ModuleS
-betaS = undefined
+betaReduction :: Context Module -> Context Module
+betaReduction = inContext . transformBi red . fromContext
+  where
+    red x = case x of 
+              (Expression_NormalApplication _ 
+                (Expression_Parenthesized _ 
+                  (Expression_Lambda _ ps expr)) as) -> substAllArgs ps as expr 
+              _                                      -> x 
+    substAllArgs xs ys expr = foldr (\(x,y) -> substArg x y) expr (zip xs ys)
+    substArg x y expr = case x of 
+      (Pattern_Variable _ x) -> transformBi (subst x y) expr
+      _                      -> expr
+    subst x y e = case e of
+                    (Expression_Variable _ n) -> if n == x then y else e
+                    _ -> e
+
+
 
 --------------------------------------------------------------------------------
 -- Prelude definition strategies

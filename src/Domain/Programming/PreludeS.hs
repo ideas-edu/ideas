@@ -6,8 +6,10 @@ import Common.Context hiding (Var)
 import Common.Strategy hiding (repeat)
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
+import Data.Data
 import Data.Generics.Biplate
 import Data.Generics.PlateData
+import Data.Maybe
 import Prelude hiding (fail, sequence)
 
 {- ideas:
@@ -135,17 +137,34 @@ betaReduction = inContext . transformBi red . fromContext
     red x = case x of 
               (Expression_NormalApplication _ 
                 (Expression_Parenthesized _ 
-                  (Expression_Lambda _ ps expr)) as) -> substAllArgs ps as expr 
+                  (Expression_Lambda _ ps expr)) as) -> x --substituteArgs ps as expr
               _                                      -> x 
-    substAllArgs xs ys expr = foldr (\(x,y) -> substArg x y) expr (zip xs ys)
-    substArg x y expr = case x of 
-      (Pattern_Variable _ x) -> transformBi (subst x y) expr
-      _                      -> expr
-    subst x y e = case e of
-                    (Expression_Variable _ n) -> if n == x then y else e
-                    _ -> e
 
+substitute :: (Data a, Data b) => (a -> a) -> b -> b
+substitute = transformBi
 
+substituteAll :: (Data a, Data b) => b -> [(a -> a)] -> b
+substituteAll = foldr (\f -> substitute f)
+
+pat2var :: Patterns -> Expressions
+pat2var = map fromJust . filter isJust . map f
+  where f x = case x of
+                Pattern_Variable _ x -> Just $ Expression_Variable noRange x
+                _                    -> Nothing
+
+substituteArgs :: Data a => Patterns -> Expressions -> a -> a
+substituteArgs ps as expr = undefined --substituteAll expr $ removeRanges $ zip (pat2var ps) as
+
+removeRanges :: Data a => a -> a
+removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
+
+substAllArgs xs ys expr = foldr (\(x,y) -> substArg x y) expr (zip xs ys)
+substArg x y expr = case x of 
+  (Pattern_Variable _ x) -> transformBi (subst x y) expr
+  _                      -> expr
+subst x y e = case e of
+                (Expression_Variable _ n) -> if n == x then y else e
+                _ -> e
 
 --------------------------------------------------------------------------------
 -- Prelude definition strategies

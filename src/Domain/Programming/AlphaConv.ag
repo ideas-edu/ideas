@@ -4,7 +4,7 @@ ATTR * [ prelude:{[String]} | env:{Map Name String} names:{[String]} | result:SE
 INCLUDE "syntax/UHA_Syntax.ag"
 --INCLUDE "staticanalysis/staticchecks/StaticChecks.ag"
 {-
-   o  compile with: uuagc -scfr --module=Domain.Programming.AlphaConv -P ~/Documents/heliumsystem/helium/src AlphaConv.ag
+   o  compile with: uuagc -scfr --module=Domain.Programming.AlphaRenaming -P ~/Documents/heliumsystem/helium/src AlphaRenaming.ag
    o  this is a partial implementation! Complete with all bindings
 -}
 
@@ -44,8 +44,8 @@ changeName s n = case n of
                    Name_Operator   r m _ -> Name_Operator   r m s
                    _                     -> n
 
-alphaConversion :: Module -> Module
-alphaConversion m = (\(_,_,c) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]] preludeIdentifiers
+alphaRenaming :: Module -> Module
+alphaRenaming m = (\(_,_,c) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]] preludeIdentifiers
 
 
 -- Reserved identifiers

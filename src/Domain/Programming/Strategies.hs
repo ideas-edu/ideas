@@ -20,7 +20,7 @@ testFunS = modS [ declPatS "f" consS [] ]
 fromBinStrategy = modS [ introPatternBinding <*> introPatternVariable <*> 
                          introNameIdentifier "fromBin" <*> foldlS consS nilS ]
 
-consS = parenS $ compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
+consS = compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
 
 nilS = introExprLiteral <*> introLiteralInt "0"
                            

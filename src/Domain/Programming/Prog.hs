@@ -7,7 +7,7 @@ import Data.Generics.Biplate
 import Data.Generics.PlateData
 import Data.Data hiding (Fixity)
 import Data.List hiding (union, lookup)
-import Domain.Programming.AlphaConv (alphaConversion)
+import Domain.Programming.AlphaRenaming (alphaRenaming)
 import Domain.Programming.Strategies (getRules)
 import Domain.Programming.Helium
 
@@ -29,7 +29,7 @@ import Domain.Programming.Helium
 -}
 
 -- Test values
-(Right m) = compile "f x = x + 3"
+(Right m) = compile "f = \\ y -> (\\x -> div x 3) y"
 
 --------------------------------------------------------------------------------
 -- Help functions
@@ -62,23 +62,22 @@ equalModules :: Module -> Module -> Bool
 equalModules x y = normalise x == normalise y
 
 normalise :: Module -> Module
-normalise = alphaRenaming . removeRanges
+normalise = alphaRenaming . removeRanges . removeParen
     
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
 -- eta reduction, e.g. \x -> f x => f
-etaReduction :: Module -> Module
-etaReduction = transformBi red
+etaReduce :: Module -> Module
+etaReduce = transformBi red
   where
     red x = case x of 
       Expression_Lambda _ [Pattern_Variable _ p] 
-        (Expression_NormalApplication _ f [Expression_Variable a]) -> if p == n 
-                                                                      then f
-                                                                      else x 
+        (Expression_NormalApplication _ f [Expression_Variable _ v]) -> if p == v
+                                                                        then f
+                                                                        else x 
       _                                                            -> x
 
 {-
-
 rewrite functions e.g. f x = div x => f = div
 
 -- wil do this strat. when needed
@@ -193,3 +192,9 @@ removeParen :: Module -> Module
 removeParen = transformBi f
   where f (Expression_Parenthesized _ expr) = expr
         f x = x
+
+--------------------------------------------------------------------------------
+-- QuickCheck properties
+--------------------------------------------------------------------------------
+
+-- beta . eta == id

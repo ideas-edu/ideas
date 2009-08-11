@@ -1,8 +1,17 @@
-module Domain.Math.Polynomial where
+module Domain.Math.Polynomial 
+   ( Polynomial, var, con, raise, power, scale
+   , degree, coefficient, terms
+   , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
+   , derivative, eval, division, longDivision, polynomialGCD
+   , factorize, switchM
+   ) where
 
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 import Data.Char
+import Data.List  (nub)
+import Data.Ratio (approxRational)
+import Domain.Math.Approximation
 
 -- Invariants: all keys are non-negative, all values are non-zero
 newtype Polynomial a = P (IM.IntMap a) deriving Eq
@@ -47,12 +56,13 @@ var = P (IM.singleton 1 1)
 con :: a -> Polynomial a
 con a = P (IM.singleton 0 a)
 
--- | Raise all powers by a (non-negative) constant
+-- | Raise all powers by a constant (discarding negative exponents)
 raise :: Int -> Polynomial a -> Polynomial a
-raise i (P m)
-   | i >= 0    = P $ IM.fromAscList [ (n+i, a) | (n, a) <- IM.toList m ]
-   | otherwise = error "raise with a negative number"
-
+raise i p@(P m)
+   | i > 0     = P $ IM.fromAscList [ (n+i, a) | (n, a) <- IM.toList m ]
+   | i == 0    = p
+   | otherwise = P $ IM.fromAscList [ (n+i, a) | (n, a) <- IM.toList m, n+i>=0 ]
+ 
 power :: Num a => Polynomial a -> Int -> Polynomial a
 power _ 0 = 1
 power p n = p * power p (n-1)
@@ -65,11 +75,14 @@ scale a p = if a==0 then 0 else fmap (*a) p
 degree :: Polynomial a -> Int
 degree (P m)
    | IS.null is = 0
-   | otherwise  = IS.findMax (IM.keysSet m)
+   | otherwise  = IS.findMax is
  where is = IM.keysSet m
 
 coefficient :: Num a => Int -> Polynomial a -> a
 coefficient n (P m) = IM.findWithDefault 0 n m
+
+terms :: Polynomial a -> [(Int, a)]
+terms (P m) = IM.toList m
 
 isMonic :: Num a => Polynomial a -> Bool
 isMonic p = coefficient (degree p) p == 1
@@ -77,6 +90,9 @@ isMonic p = coefficient (degree p) p == 1
 toMonic :: Fractional a => Polynomial a -> Polynomial a
 toMonic p = scale (recip a) p
  where a = coefficient (degree p) p
+
+isRoot :: Num a => Polynomial a -> a -> Bool
+isRoot p a = eval p a == 0
 
 -- Returns the maximal number of positive roots (Descartes theorem)
 -- Multiple roots are counted separately
@@ -147,8 +163,39 @@ polynomialGCD x y
    
 ------------------------
 
+factorize :: Polynomial Rational -> [Polynomial Rational]
+factorize p
+   | degree p <= 1 = [p]
+   | l > 0         = power var l : factorize (raise (-l) p)
+   | otherwise     =
+        case pairs of
+           (p1,p2):_ -> factorize p1 ++ factorize p2
+           []        -> [p]
+ where
+   l     = fst (head (terms p))
+   pairs = [ (p1, p2) 
+           | a <- candidateRoots p
+           , isRoot p a 
+           , let p1 = var - con a
+           , Just p2 <- [division p p1]
+           ] 
+           
+   candidateRoots :: Polynomial Rational -> [Rational]
+   candidateRoots p = nub (map (`approxRational` 0.0001) xs)
+    where
+       f  = eval (fmap fromRational p)
+       df = eval (fmap fromRational (derivative p))
+       xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
+       startList = [0, 3, -3, 10, -10, 100, -100]
+    
+-- testing
+
+e10 = var*var + 4* var + 4
+e11 = power var 3 - 11 * power var 2 + 18 * var :: Polynomial Rational
+e12 = power var 2 - 11 * var + 18 :: Polynomial Rational
+{-
 -- (x+5)(x+2)(x-3)(x-7)(x-8)
-test = longDivision e1 e2 
+--test = longDivision e1 e2 
 
 test2 = division e3 ((var + 2) * (var - 3))
 
@@ -156,17 +203,6 @@ e3 = (var+5) * (var + 2) * (var - 3) * (var - 7) * (var - 8)
 
 e1 = raise 2 var - 12 * raise 1 var - 42
 e2 = 2 * (raise 1 var + var - 3)
- 
-f :: Rational -> Rational
-f x = x*x + 2*x - 3
-
-ff :: Rational -> Rational
-ff x = 2*x + 2
-
-next :: Rational -> Rational
-next a = a - (f a / ff a)
-
-newton = take 100 (iterate next (-10))
 
 e8, e9 :: Polynomial Rational
 e8 = (var+1) * (var-5) * (var-3)
@@ -176,3 +212,11 @@ e9 = (var-2) * (var-5) * (var+2) * (var+2)
 (q1, r1) = longDivision e9 r0
 (q2, r2) = longDivision r0 r1 -- r1 is wat ik zoek
 
+ex = var * (var + 6) * (var - 4) :: Polynomial Rational
+ef = var * var + 2 * var - 3 :: Polynomial Rational -}
+
+switchM :: Monad m => Polynomial (m a) -> m (Polynomial a)
+switchM (P m) = do
+   let (ns, ms) = unzip (IM.toList m)
+   as <- sequence ms 
+   return $ P $ IM.fromAscList $ zip ns as

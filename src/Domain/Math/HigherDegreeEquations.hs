@@ -1,7 +1,7 @@
 module Domain.Math.HigherDegreeEquations where
 
 import Prelude hiding ((^), repeat)
-import Data.List (nub, (\\))
+import Data.List (sort, nub, (\\))
 import Data.Maybe
 import Common.Context
 import Common.Exercise
@@ -18,6 +18,8 @@ import Domain.Math.Symbolic
 import Domain.Math.Views
 import Domain.Math.Equation
 import Control.Monad
+
+import Domain.Math.Polynomial -- 
 
 ------------------------------------------------------------
 -- Exercise
@@ -87,3 +89,55 @@ allRules = [powerZero, powerFactor, sameFactor] ++ QE.allRules
 main :: IO ()
 main = printDerivations higherDegreeEquationExercise xs 
  where xs = map (OrList . return) higherDegreeEquations
+ 
+testje :: IO ()
+testje = flip mapM_ higherDegreeEquations $ \eq ->
+   flip mapM_ (take 1 $ derivations (unlabel $ ignoreContext equationsStrategy) (inContext $ OrList $ return eq)) $ \(a, ps) -> 
+   let xs = a : map snd ps in
+   flip mapM_ [ (x, y) | x <- xs, y <- xs ] $ \(x, y) -> 
+   if eqHD (fromContext x) (fromContext y) then putChar '.' else print x >> print y >> error "STOP"
+
+eqHD :: OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
+eqHD a b = f a == f b
+ where
+   f (OrList xs) = sort $ nub $ concatMap normHD xs
+
+normHD :: Equation Expr -> [Expr]
+normHD (x :==: y) = 
+   case toPoly (x-y) of
+      Just p  -> concatMap g $ factorize p
+      Nothing -> 
+         case (x, y) of 
+            (Var _, e) | noVars e -> [simplify QE.squareRootView e]
+            _ -> error $ show (x,y)
+ where
+   g :: Polynomial Rational -> [Expr]
+   g p | d==0 = []
+       | length (terms p) <= 1 = [0]
+       | d==1 = [fromRational $ coefficient 0 p / coefficient 1 p]
+       | d==2 = let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
+                    discr   = b*b - 4*a*c
+                in if discr < 0 then [] else 
+                   map (simplify QE.squareRootView)
+                   [ (-fromRational b + sqrt (fromRational discr)) / 2 * fromRational a 
+                   , (-fromRational b - sqrt (fromRational discr)) / 2 * fromRational a
+                   ]
+       | otherwise     = error ("NOT SOLVED:" ++ show p) -- fromPoly
+    where d = degree p
+
+{- 
+
+testje :: String
+testje = concatMap f higherDegreeEquations 
+ where f (x :==: y) = map g (factorizeWith candidateRoots (toPoly (x-y)))
+       g p | degree p <= 2 = '.'
+           | length (terms p) <= 1 = '.'
+           | otherwise     = error (show p) -}
+
+toPoly :: Expr -> Maybe (Polynomial Rational)
+toPoly e = do
+   (_, p) <- match QE.polyView e
+   switchM (fmap (match rationalView) p)
+                 
+              
+              

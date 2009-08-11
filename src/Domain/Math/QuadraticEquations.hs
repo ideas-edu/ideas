@@ -233,7 +233,7 @@ distribution = makeSimpleRuleList "distribution" (forOne f)
          _             -> Nothing 
 
 distributionSquare :: Rule (OrList (Equation Expr))
-distributionSquare = makeSimpleRuleList "distribution square" (forOne $ oneSide f)
+distributionSquare = makeSimpleRuleList "distribution square" (forOne $ oneSide $ somewhereM f)
  where
    f (Sym "^" [x, Nat 2]) = do
       (a, x, b) <- match linearView x
@@ -344,22 +344,34 @@ squareRootView = makeView f g
       | n == 0    = 0
       | n == 1    = fromRational r
       | otherwise = fromRational r .*. Sqrt (fromIntegral n)
-   
+
 polyView :: View Expr (String, Polynomial Expr)
-polyView = makeView f undefined
+polyView = makeView f g
  where
    f e = case nub (collectVars e) of
-            [v] -> g e >>= \a -> Just (v, a)
+            [v] -> do p <- match (polyViewFor v) e
+                      return (v, p)
+            []  -> do p <- match (polyViewFor "") e -- special case really necessary?
+                      return ("", p)
             _   -> Nothing
-   
-   g (Var _)    = Just var
-   g (Nat n)    = Just (fromIntegral n)
-   g (Negate a) = liftM negate (g a)
-   g (a :+: b)  = liftM2 (+) (g a) (g b)
-   g (a :-: b)  = liftM2 (-) (g a) (g b)
-   g (a :*: b)  = liftM2 (*) (g a) (g b)
-   g (a :/: b)  = guard (noVars b) >> liftM (\x -> fmap (/b) x) (g a)
-   g (Sym "^" [a, Nat n]) = liftM (`power` fromInteger n) (g a)
-   g e@(Sqrt a) | noVars a = Just (con e)
-   g e | noVars e  = Just (con e)
-       | otherwise = Nothing
+   g (s, p) = build (polyViewFor s) p
+            
+polyViewFor :: String -> View Expr (Polynomial Expr)
+polyViewFor v = makeView f g
+ where
+   f (Var s)    
+      | v == s  = Just var
+   f (Nat n)    = Just (fromIntegral n)
+   f (Negate a) = liftM negate (f a)
+   f (a :+: b)  = liftM2 (+) (f a) (f b)
+   f (a :-: b)  = liftM2 (-) (f a) (f b)
+   f (a :*: b)  = liftM2 (*) (f a) (f b)
+   f (Sym "^" [a, n]) = liftM2 power (f a) (exprToNum n)
+   f (a :/: b) = do
+      guard (v `notElem` collectVars b)
+      p <- f a
+      return (fmap (/b) p)
+   f e = do
+      guard (v `notElem` collectVars e)
+      return (con e)
+   g = build sumView . map (\(n, a) -> a .*. (Var v .^. fromIntegral n)) . terms

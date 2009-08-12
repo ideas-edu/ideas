@@ -11,7 +11,7 @@ import qualified Data.IntSet as IS
 import Data.Char
 import Data.List  (nub)
 import Data.Ratio (approxRational)
-import Domain.Math.Approximation
+import Domain.Math.Approximation (newton, within)
 
 -- Invariants: all keys are non-negative, all values are non-zero
 newtype Polynomial a = P (IM.IntMap a) deriving Eq

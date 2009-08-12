@@ -29,7 +29,8 @@ import Domain.Programming.Helium
 -}
 
 -- Test values
-(Right m) = compile "f = \\ y -> (\\x -> div x 3) y"
+(Right m) = compile "f = \\ y -> (\\x -> div x) y"
+(Right m') = compile "f = div"
 
 --------------------------------------------------------------------------------
 -- Help functions
@@ -57,69 +58,48 @@ checkExercises strat xs = mapM_ (checkExercise strat) xs
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
 --------------------------------------------------------------------------------
-
 equalModules :: Module -> Module -> Bool
 equalModules x y = normalise x == normalise y
 
 normalise :: Module -> Module
-normalise = alphaRenaming . removeRanges . removeParen
+normalise = rewriteBi rules . preprocess
+  where
+    preprocess = alphaRenaming . removeRanges . removeParens
+    rules = etaReduce ->> betaReduce
     
+(->>) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
+f ->> g = \ x -> case f x of
+                   Just y  -> case g y of
+                                Just z  -> Just z
+                                Nothing -> Just y -- as long as one of the two rules fires, return a Just
+                   Nothing -> g x
+infixr 9 ->>
+
+removeParens = transformBi f
+  where f (Expression_Parenthesized _ expr) = expr
+        f x = x
+
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
+
 -- eta reduction, e.g. \x -> f x => f
-etaReduce :: Module -> Module
-etaReduce = transformBi red
-  where
-    red x = case x of 
-      Expression_Lambda _ [Pattern_Variable _ p] 
-        (Expression_NormalApplication _ f [Expression_Variable _ v]) -> if p == v
-                                                                        then f
-                                                                        else x 
-      _                                                            -> x
-
-{-
-rewrite functions e.g. f x = div x => f = div
-
--- wil do this strat. when needed
-etaFunS :: ModuleS -> ModuleS -> ModuleS
-etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
-                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
-                     introExprVariable <*> introNameIdentifier "x"
-                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
--}
-
-{-
--- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
-lambdaS :: [ModuleS] -> ModuleS -> ModuleS
-lambdaS args expr = alternatives $ map f $ split args
-  where
-    f (xs, ys) = introExprLambda (length xs) <*> sequence xs <*> rec ys
-    rec ys = case ys of
-               [] -> expr
-               ps -> lambdaS ps expr
-
-
+etaReduce :: Expression -> Maybe Expression
+etaReduce x = case x of 
+  Expression_Lambda _ [Pattern_Variable _ p] 
+    (Expression_NormalApplication _ f [Expression_Variable _ v]) -> if p == v
+                                                                    then Just f
+                                                                    else Nothing
+  _                                                              -> Nothing
 
 -- beta reduction, e.g. (\x -> x + x) 42 => 42 + 42
-betaReductionRule :: Rule (Context Module)
-betaReductionRule = makeSimpleRule "Beta reduction" f
-  where
-    f m = case [() | Expression_NormalApplication _ 
-                       (Expression_Parenthesized _ 
-                         (Expression_Lambda _ ps expr)) as <- universeBi m'] of
-            []      -> Nothing
-            redexes -> Just $ inContext $ betaReduce $ m'
-      where m' = fromContext m
-
-betaReduce :: Module -> Module
-betaReduce = transformBi red
-  where
-    red x = case x of 
-      Expression_NormalApplication _ (Expression_Parenthesized _ 
-          (Expression_Lambda _ ps expr)) as -> case drop (length as) ps of
-            []  -> substArgs expr ps as
-            ps' -> Expression_Lambda noRange ps' (substArgs expr (take (length as) ps) as)
-      _                                     -> x 
+betaReduce :: Expression -> Maybe Expression
+betaReduce x = case x of 
+  Expression_NormalApplication _ 
+    (Expression_Lambda _ ps expr) as -> case drop (length as) ps of
+                                         []  -> Just $ substArgs expr ps as
+                                         ps' -> Just $ Expression_Lambda noRange ps' 
+                                                         (substArgs expr (take (length as) ps) as)
+  _                                   -> Nothing
 
 substArgs :: Data a => a -> Patterns -> Expressions -> a
 substArgs expr ps =  foldr transformBi expr . zipWith rep ps
@@ -128,6 +108,23 @@ substArgs expr ps =  foldr transformBi expr . zipWith rep ps
               Expression_Variable _ n -> if n == p then x else e
               _                       -> e
     rep _                      _ e = e
+
+{-
+-- rewrite functions e.g. f x = div x => f = div
+etaFunS :: ModuleS -> ModuleS -> ModuleS
+etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
+                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
+                     introExprVariable <*> introNameIdentifier "x"
+                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
+
+-- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
+lambdaS :: [ModuleS] -> ModuleS -> ModuleS
+lambdaS args expr = alternatives $ map f $ split args
+  where
+    f (xs, ys) = introExprLambda (length xs) <*> sequence xs <*> rec ys
+    rec ys = case ys of
+               [] -> expr
+               ps -> lambdaS ps expr
 
 
 -- application rewrites, e.g. ((f 1) 2) 3 => f 1 2 3
@@ -187,14 +184,9 @@ opS n l r = case (l, r) of
 
 -}
 
--- drop all parentheses
-removeParen :: Module -> Module
-removeParen = transformBi f
-  where f (Expression_Parenthesized _ expr) = expr
-        f x = x
+
 
 --------------------------------------------------------------------------------
 -- QuickCheck properties
 --------------------------------------------------------------------------------
 
--- beta . eta == id

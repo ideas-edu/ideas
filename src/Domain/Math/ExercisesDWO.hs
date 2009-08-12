@@ -2,6 +2,7 @@ module Domain.Math.ExercisesDWO
    ( calculateResults, fillInResult
    , coverUpEquations, linearEquations
    , quadraticEquations, higherDegreeEquations 
+   , modulusEquations, sqrtEquations, sqrtSubstEquations, brokenEquations
    ) where
 
 import Prelude hiding ((^))
@@ -293,4 +294,142 @@ higherDegreeEquations =
    , 64*x^7 :==: x^5
    , x^3 - 4*x^2 - 9*x :==: 0
    , (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2
+   ]
+   
+modulusEquations :: [[Equation Expr]]
+modulusEquations = 
+   let x = variable "x" in
+   [ [ abs (2*x + 3)  :==: 2 
+     , abs (5 - 2*x)  :==: 1
+     , abs (4*x + 7)  :==: 3
+     , abs (11 - 3*x) :==: 15
+     ]
+   , [ abs (x^2 + 3) :==: 9
+     , abs (x^2 - 7) :==: 2
+     , abs (3-x^2)   :==: 6
+     , abs (9-x^2)   :==: 7
+     ]
+   , [ abs (2*x^2+3)     :==: 19
+     , abs (3*x^2-2)     :==: 1
+     , abs (6-2*x^2)     :==: 2
+     , abs (3-(1/2)*x^2) :==: 15
+     ]
+   , [ abs (4*x^3-72)       :==: 36
+     , abs (0.2*x^4 - 112)  :==: 13
+     , abs (2*x^4-4.25)     :==: 3.75
+     , abs (1.75 - 0.5*x^3) :==: 2.25
+     ]
+   ]
+
+sqrtEquations :: [[Equation Expr]]
+sqrtEquations = 
+   let x = variable "x" in
+   [ [ 5 - 2*sqrt x   :==: 1
+     , 7 - 3 * sqrt x :==: 5
+     , 4 - 2*sqrt x   :==: -3
+     , 6 - 3*sqrt x   :==: 2
+     ]
+   , [ 2*sqrt x       :==: x
+     , 2*sqrt x       :==: 3*x
+     , x-3*sqrt x     :==: 0
+     , 3*x - 5*sqrt x :==: 0
+     ]
+   , [ x :==: sqrt (2*x + 3)
+     , x :==: sqrt (3*x+10)
+     , x :==: sqrt (4*x + 21)
+     , x :==: sqrt (3*x + 4)
+     ]
+   , [ 5*x :==: sqrt (50*x + 75)
+     , 2*x :==: sqrt (24*x + 28)
+     , 3*x :==: sqrt (27*x - 18)
+     , 2*x :==: sqrt (28*x - 40)
+     , 3*x :==: sqrt (3*x + 42)
+     , 5*x :==: sqrt (49*x + 2)
+     , 3*x :==: sqrt (10*x -1)
+     , 5*x :==: sqrt (30*x - 5)
+     ]
+   , [ x - sqrt x     :==: 6
+     , x - 4*sqrt x   :==: 12
+     , x - sqrt x     :==: 12
+     , x - sqrt x     :==: 2
+     , 2*x + sqrt x   :==: 3
+     , 3*x + 4*sqrt x :==: 20
+     , 2*x + sqrt x   :==: 15
+     , 2*x - 3*sqrt x :==: 27 
+     ]
+   ]
+   
+sqrtSubstEquations :: [[Equation Expr]]
+sqrtSubstEquations = 
+   let x = variable "x" in
+   [ [ 8*x^3 + 1 :==: 9*x * sqrt x
+     , 27*x^3    :==: 28*x*sqrt x - 1
+     , x^3 + 3   :==: 4*x*sqrt x
+     , x^3       :==: 10*x*sqrt x - 16
+     ]
+   , [ x^3               :==: 6*x*sqrt x + 16
+     , x^3 - 24*x*sqrt x :==: 81
+     , x^3 + x*sqrt x    :==: 20
+     , x^3 - 15          :==: 2*x*sqrt x
+     ]
+   , [ x^5 +32                      :==: 33*x^2*sqrt x
+     , 243*x^5 - 244*x^2*sqrt x + 1 :==: 0
+     , 32*x^5 + 31*x^2*sqrt x       :==: 1
+     , x^5                          :==: 242*x^2*sqrt x + 243
+     ]
+   , [ x^5 + 8              :==: 6*x^2*sqrt x
+     , x^5                  :==: 9*x^2 * sqrt x - 18
+     , x^5                  :==: 5*x^2*sqrt x + 24
+     , x^5 + 4*x^2 * sqrt x :==: 12
+     ]
+   ]
+   
+brokenEquations :: [[Equation Expr]]
+brokenEquations = 
+   let x = variable "x" in
+   [ [ (2*x^2 - 10) / (x^2+3) :==: 0 
+     , (7*x^2 - 21) / (2*x^2 - 5) :==: 0
+     , (3*x^2 - 6) / (4*x^2+1) :==: 0
+     , (4*x^2 - 24) / (6*x^2 - 2) :==: 0
+     , x^2 / (x+4) :==: (3*x+4) / (x+4)
+     , (x^2 + 2) / (x-2) :==: (x+8) / (x-2)
+     , (x^2 + 6*x - 6) / (x^2 - 1) :==: (4*x + 9) / (x^2 - 1)
+     , (x^2 + 6) / (x^2 - 2) :==: (7*x) / (x^2 - 2)
+     ]
+   , [ (x^2 + 6*x) / (x^2 - 1) :==: (3*x + 4) / (x^2 - 1)
+     , (x^2 + 6) / (x - 3) :==: (5*x) / (x - 3)
+     , (x^2 + 4*x) / (x^2 - 4) :==: (3*x + 6) / (x^2 - 4)
+     , (x^2 + 2*x - 4) / (x-5) :==: (4*x + 11) / (x - 5)
+     , (5*x+2) / (2*x - 1) :==: (5*x + 2) / (3*x + 5)
+     , (x^2-9) / (4*x - 1) :==: (x^2 - 9) / (2*x + 7)
+     , (3*x - 2) / (2*x^2) :==: (3*x - 2) / (x^2 + 4)
+     , (2*x + 1) / (x^2+3*x) :==: (2*x + 1) / (5*x + 8)
+     ]
+   , [ (x^2 - 1) / (2*x + 2) :==: (x^2-1) / (x+8)
+     , (x^2 - 4) / (3*x - 6) :==: (x^2-4) / (2*x+1)
+     , (x^2 + 5*x) / (2*x^2) :==: (x^2 + 5*x) / (x^2 + 4)
+     , (x^2 - 3*x) / (2*x - 6) :==: (x^2 - 3*x) / (4*x + 2)
+     , x/(x+1) :==: 1+3/4
+     , (x+2)/3*x :==: 1+1/3
+     , 2*x + 3 / (x-1) :==: 3+1/2
+     , (x-3)/(1-x) :==: 1+2/5
+     ]
+   , [ (x+4)/(x+3) :==: (x+1)/(x+2)
+     , (2*x+3)/(x-1) :==: (2*x-1) / (x-2)
+     , (3*x+6)/(3*x-1) :==: (x+4) / (x+1)
+     , (x+2)/(2*x+5) :==: (x+4)/(2*x-3)
+     , (x+5)/(2*x) +2 :==: 5
+     , (3*x+4)/(x+2) - 3 :==: 2
+     , (x^2)/(5*x+6) +4 :==: 5
+     , (x^2)/(2*x-3) + 3 :==: 7
+     ]
+   , [ (x-2) / (x-3) :==: x/2
+     , (x+9) / (x-5) :==: 2/x
+     , (x+2) / (x+4) :==: 2/(x+1)
+     , (-3) / (x-5) :==: (x+3)/(x-1)
+     , (x+1)/(x+2) :==: (7*x+1) / (2*x-4)
+     , (2*x-7)/(5-x) :==: (x+1) / (3*x-7)
+     , (x+1)/(x-1) :==: (3*x-7)/(x-2)
+     , (3*x-7)/(x-2) :==: (7-x) / (3*x-3)
+     ]
    ]

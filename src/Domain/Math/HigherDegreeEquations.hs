@@ -32,7 +32,7 @@ higherDegreeEquationExercise = makeExercise
    , status        = Experimental
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = (==) 
-   , equivalence   = \_ _ -> True -- equality higherDegreeEquationExercise -- TO DO: what about equivalence for undecidable domains?
+   , equivalence   = eqHD
    , finalProperty = solvedList
    , ruleset       = map ignoreContext allRules
    , strategy      = ignoreContext equationsStrategy
@@ -138,6 +138,3 @@ toPoly :: Expr -> Maybe (Polynomial Rational)
 toPoly e = do
    (_, p) <- match QE.polyView e
    switchM (fmap (match rationalView) p)
-                 
-              
-              

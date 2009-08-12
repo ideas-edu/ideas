@@ -50,3 +50,16 @@ newton f df x0 = iterate next x0
        | otherwise = a - f a / dfa
      where
        dfa = df a
+
+------------------------------------------------------------
+-- Finding the derivative of a function
+    
+derivative :: Double -> Function -> Function
+derivative delta f x = (f (x+delta) - f (x-delta)) / (2*delta)
+
+-- Test code
+{-
+same f g = sum [ abs (f x - g x) | x <- [0,0.01..6] ]
+
+test1 = same (derivative 0.01 sin) cos
+test2 = same (derivative 0.01 cos) (negate . sin) -}

@@ -3,6 +3,7 @@ module Domain.Math.ExercisesDWO
    , coverUpEquations, linearEquations
    , quadraticEquations, higherDegreeEquations 
    , modulusEquations, sqrtEquations, sqrtSubstEquations, brokenEquations
+   , simplerSqrt, simplerSqrt2, simplerSqrt3
    ) where
 
 import Prelude hiding ((^))
@@ -431,5 +432,71 @@ brokenEquations =
      , (2*x-7)/(5-x) :==: (x+1) / (3*x-7)
      , (x+1)/(x-1) :==: (3*x-7)/(x-2)
      , (3*x-7)/(x-2) :==: (7-x) / (3*x-3)
+     ]
+   ]
+   
+infix 9 *|
+
+-- short-hand notation for a product with a square-root
+(*|) :: Expr -> Expr -> Expr
+a *| b = a * sqrt b
+
+simplerSqrt :: [[Expr]]
+simplerSqrt = 
+   let a = Var "a" in
+   [ [ 9*|5 * 7*|3, 3*|2 * 2*|5, 5*|2 * 6*|7, 4*|6 * 2*|7, (6*a)*|3 * 9*|2
+     , 5*|5 * (2*a)*|7, a*|6 * 7*|5, 8*|7 * a*|3
+     ]
+   , [ sqrt 15 / 6*|3, 5*|30/sqrt 5, 4*|10 / 5*|2, 5*|21 / 2*|7, (6*a)*|35 / 3*|5
+     , (5*a)*|14 / 9*|2, a*|6 / 7*|3, (a*3)*|42 / 7*|7
+     ]
+   , [ 5/2*|2, 2/5*|3, 3/2*|5, 8/7*|6, (2*a)/3*|7, (6*a)/7*|10, (5*a)/3*|11
+     , (6*a)/5*|13
+     ]
+   , [ sqrt (2/3), sqrt (5+1/3), sqrt (1+1/2), sqrt (3+4/7), sqrt (5*a^2)
+     , sqrt (7*a^2), sqrt (3*a^2), sqrt (6*a^2)
+     ]
+   , [ sqrt ((2/9)*a^2), sqrt ((5/16)*a^2), sqrt ((3/25)*a^2), sqrt ((7/16)*a^2)
+     , ((1/3)*|2)^2, ((1/2)*|3)^2, ((2/7)*|5)^2, ((2/3)*|7)^2
+     ]
+   ]
+   
+simplerSqrt2 :: [[Expr]]
+simplerSqrt2 = 
+   let a = Var "a" in
+   [ [ (((1/7)*a)*|2)^2, (((3/5)*a)*|3)^2, (((1/3)*a)*|5)^2, (((4/7)*a)*|6)^2
+     , sqrt 8 + sqrt 2, sqrt 2 + sqrt 18, sqrt 12 - sqrt 3, sqrt 7 - sqrt 28
+     ]
+   , [ sqrt 12 + sqrt 48, sqrt 18 - sqrt 8, sqrt 45 - sqrt 20, sqrt 80 + sqrt 45
+     , sqrt (50*a^2) - sqrt (32*a^2), sqrt (75*a^2) - sqrt (12*a^2)
+     , sqrt (27*a^2) + sqrt (3*a^2), sqrt (24*a^2) + sqrt (96*a^2)
+     ]
+   , [ sqrt 27 + 1 / sqrt 3, sqrt 24 + 5/sqrt 6, sqrt 72- 7/ sqrt 2
+     , sqrt 98 - 5/sqrt 2, sqrt 24 + sqrt (1+1/2), sqrt 40 - sqrt (2+1/2)
+     , sqrt 75 - sqrt (1+1/3)
+     , sqrt (1+2/3) + sqrt 60
+     ] 
+   ]
+   
+simplerSqrt3 :: [[Expr]]
+simplerSqrt3 = 
+   let a = Var "a" in
+   [ [ (2*|7 + 7*|3)^2, (sqrt 2 + 6*|3)^2, (4*|3 + 3*|2)^2, (2*|5 + sqrt 7)^2
+     , (3*|6 - 4*|5)^2, (5*|3 - sqrt 2)^2, (4*|6 - 2*|7)^2, (sqrt 5 - 2*|3)^2
+     ]
+   , [ (2*|3 - 2)^2, (5*|2 - 1)^2, (3+4*|3)^2, (2+3*|6)^2, (4*|2+3)*(4*|2 - 3)
+     , (sqrt 7 + sqrt 3)*(sqrt 7 - sqrt 3), (2*|2 - sqrt 5)*(2*|2 + sqrt 5)
+     , (6-3*|3)*(6+3*|3)
+     ]
+   , [ (a-sqrt 3)^2,  (2*|6 + a)^2, (2*a + a*|5)^2, (a*|3 - (2*a)*|2)^2
+     , (a-sqrt 7)*(a+sqrt 7), (3*a + 2*|3)*(3*a - 2*|3)
+     , (2*a + a*|2)*(2*a - a*|2), ((3*a)*|5 - a)*((3*a)*|5 + a)
+     ]
+   , [ 4/(sqrt 2 + 2), 3/(sqrt 5 + 1), 2/(sqrt 3 - 3), 5/(sqrt 6 - 2)
+     , 6/(sqrt 7 + sqrt 5), 4/(2*|3 + sqrt 6), 5/(3*|2 - sqrt 3)
+     , 2/(sqrt 11-sqrt 2)
+     ]
+   , [ 2*|3 / (sqrt 5 + sqrt 2), 6*|5 / (sqrt 7 + sqrt 3)
+     , 4*|3 / (sqrt 5 - sqrt 3), 8*|7 / (sqrt 6 - sqrt 5)
      ]
    ]

@@ -54,7 +54,8 @@ solverQ = cleanUpStrategy cleanUpOrs $
    label "Quadratic equations" $
       repeat ((coverUpPlus <|> coverUpTimes <|> coverUpNegate <|> coverUpSquare
          <|> coverUpDiv <|> cancelTerms <|> factorPower <|> mulZero <|> flipEquation
-         ) |> (moveToLeft <|> niceFactors <|> distribution <|> distributionSquare <|> mergeR <|> simplerA) |> abcFormula) 
+         ) |> (moveToLeft <|> niceFactors <|> distribution <|> distributionSquare <|> mergeR <|> simplerA) 
+           |> abcFormula) 
 
 cleanUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
 cleanUpOrs (OrList xs) = OrList (map (fmap (f2 . f1 . smartConstructors)) xs)
@@ -262,9 +263,9 @@ abcFormula = makeSimpleRuleList "abc formula" $ forOne $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, a, b, c) <- match quadraticView lhs
    let discr = makeSqrt (fromRational (b*b - 4 * a * c))
-   case discr of Nat n -> guard (even n); _ -> return () -- no nice numbers (for now)
-   return [ Var x :==: (-fromRational b + discr) / 2 * fromRational a
-          , Var x :==: (-fromRational b - discr) / 2 * fromRational a
+   -- case discr of Nat n -> guard (even n); _ -> return () -- no nice numbers (for now)
+   return [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
+          , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
           ]
 
 isInt :: Rational -> Maybe Integer

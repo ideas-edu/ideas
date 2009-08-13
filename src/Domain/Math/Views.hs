@@ -152,6 +152,7 @@ powerView = makeView matchPower buildPower
              case y of 
                 Var _                  -> return (a,x,n+1)
                 Sym "^" [Var _, Nat m] -> return (a,x,n+m)
+                Nat 1 :/: b | noVars y -> return (a ./. b, x, n) -- Not nice! instead, xs should be normalized
                 _ | noVars y           -> return (a .*. y, x, n)
                 _ -> Nothing 
       foldM op (if b then -1 else 1, head vs, 0) xs 

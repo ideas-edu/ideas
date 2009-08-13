@@ -1,4 +1,6 @@
-module Domain.Math.CoverUpEquations (coverUpExercise) where
+module Domain.Math.CoverUpEquations 
+   ( coverUpExercise, rule1
+   ) where
 
 import Prelude hiding (repeat)
 import Control.Monad
@@ -14,7 +16,7 @@ import Domain.Math.QuadraticEquations (solvedList)
 import Domain.Math.OrList
 import Domain.Math.Parser
 import Domain.Math.Views
-import Test.QuickCheck (oneof)
+-- import Test.QuickCheck (oneof)
 
 {-
 main = map test (concat (fillInResult ++ coverUpEquations))

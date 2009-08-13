@@ -1,5 +1,5 @@
 module Domain.Math.CoverUpEquations 
-   ( coverUpExercise, rule1
+   ( coverUpExercise, rule1, rule2
    ) where
 
 import Prelude hiding (repeat)
@@ -7,7 +7,7 @@ import Control.Monad
 -- import Common.Apply
 import Common.Context
 import Common.Exercise
-import Common.Strategy
+import Common.Strategy hiding (replicate)
 import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO

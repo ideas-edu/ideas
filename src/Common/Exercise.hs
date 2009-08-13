@@ -31,7 +31,7 @@ import Common.Context
 import Text.Parsing (Range, SyntaxError(..))
 import Common.Rewriting (TreeDiff(..))
 import Common.Transformation
-import Common.Strategy hiding (not, fail)
+import Common.Strategy hiding (not, fail, replicate)
 import Common.Utils
 import Control.Monad.Error
 import Data.Char

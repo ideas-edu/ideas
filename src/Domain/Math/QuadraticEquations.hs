@@ -43,6 +43,13 @@ quadraticEquationExercise = makeExercise
 ------------------------------------------------------------
 -- Strategy and lifting
 
+eq1 = (2*Var "x")^2 :==: Var "x"
+eq2 = Var "x" :==: ((1/2)*Var "x")^2
+eq3 = Var "x" :==: (Var "x" / 2)^2
+eq4 = Var "x" :==: (1/4) * Var "x"^2
+eq5 = x :==: x^2 - 12*x + 36 where x = Var "x"
+eq6 = x^2 :==: x^2 - 12*x + 36 where x = Var "x"
+
 solvedList :: OrList (Equation Expr) -> Bool
 solvedList (OrList xs) = all solvedEquation xs
 
@@ -196,7 +203,10 @@ mulZero = makeSimpleRuleList "multiplication is zero" $ forOne $ \(lhs :==: rhs)
 -- really needed?
 flipEquation :: Rule (OrList (Equation Expr))
 flipEquation = makeSimpleRuleList "flip equation" $ forOne $ \(lhs :==: rhs) -> do
-   guard (noVars lhs && hasVars rhs)
+   --guard (noVars lhs && hasVars rhs) -- not sufficient
+   (_, p1) <- match polyView lhs
+   (_, p2) <- match polyView rhs
+   guard (degree p1 < degree p2)
    return [ rhs :==: lhs ]
 
 moveToLeft :: Rule (OrList (Equation Expr))
@@ -238,7 +248,7 @@ distributionSquare = makeSimpleRuleList "distribution square" (forOne $ oneSide 
  where
    f (Sym "^" [x, Nat 2]) = do
       (a, x, b) <- match linearView x
-      guard (a /= 0 && b /= 0)
+      guard (a /= 0 && (a /= 1 || b /=0))
       return  (  (fromRational (a*a) .*. (Var x^2)) 
              .+. (fromRational (2*a*b) .*. Var x)
              .+. (fromRational (b*b)))

@@ -78,7 +78,7 @@ sameFactor :: Rule (OrList (Equation Expr))
 sameFactor = makeSimpleRuleList "same factor" $ forOne $ \(lhs :==: rhs) -> do
    (b1, xs) <- match productView lhs
    (b2, ys) <- match productView rhs
-   (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y ] -- equality is too strong?
+   (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
    return [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -----------------------

@@ -25,7 +25,7 @@ module Common.Strategy
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
      -- ** EBNF combinators
-   , many, many1, option
+   , many, many1, replicate, option
      -- ** Negation and greedy combinators
    , check, not, repeat, repeat1, try, (|>), exhaustive
      -- ** Traversal combinators
@@ -41,7 +41,7 @@ module Common.Strategy
    , inverse
    ) where
 
-import Prelude hiding (fail, not, repeat, sequence)
+import Prelude hiding (fail, not, repeat, replicate, sequence)
 import qualified Prelude as Prelude
 import Common.Apply
 import Common.Context
@@ -127,7 +127,7 @@ runWithSteps s a = zip (Prelude.repeat a) (RE.runIntermediates (withMarks s) a)
 traceStrategy :: Show a => Strategy a -> a -> IO [a]
 traceStrategy = rec 0 
  where
-   indent n s = putStrLn (replicate n ' ' ++ s)
+   indent n s = putStrLn (Prelude.replicate n ' ' ++ s)
  
    rec n s a = do
       let b = empty s
@@ -207,6 +207,10 @@ many = S . RE.many . unS . toStrategy
 -- | Apply a certain strategy at least once (non-greedy)
 many1 :: IsStrategy f => f a -> Strategy a
 many1 s = s <*> many s
+
+-- | Apply a strategy a certain number of times
+replicate :: IsStrategy f => Int -> f a -> Strategy a
+replicate n s = sequence (Prelude.replicate n s)
 
 -- | Apply a certain strategy or do nothing (non-greedy)
 option :: IsStrategy f => f a -> Strategy a

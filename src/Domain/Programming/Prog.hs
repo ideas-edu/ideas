@@ -30,7 +30,8 @@ import Domain.Programming.Helium
 
 -- Test values
 (Right m) = compile "f = \\ y -> (\\x -> div x) y"
-(Right m') = compile "f = div"
+(Right m2) = compile "f = \\ y -> \\x -> div x y"
+(Right m3) = compile "f a b c d = a ; g = ((f 1) 2 3) ; h = g 4"
 
 --------------------------------------------------------------------------------
 -- Help functions
@@ -65,15 +66,16 @@ normalise :: Module -> Module
 normalise = rewriteBi rules . preprocess
   where
     preprocess = alphaRenaming . removeRanges . removeParens
-    rules = etaReduce ->> betaReduce
+    rules = etaReduce >-> betaReduce >-> lambdaReduce >-> applicationReduce
     
-(->>) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
-f ->> g = \ x -> case f x of
+-- a kind of Left-to-right Kleisli composition of monads
+(>->) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
+f >-> g = \ x -> case f x of
                    Just y  -> case g y of
                                 Just z  -> Just z
                                 Nothing -> Just y -- as long as one of the two rules fires, return a Just
                    Nothing -> g x
-infixr 9 ->>
+infixr 1 >->
 
 removeParens = transformBi f
   where f (Expression_Parenthesized _ expr) = expr
@@ -109,25 +111,21 @@ substArgs expr ps =  foldr transformBi expr . zipWith rep ps
               _                       -> e
     rep _                      _ e = e
 
-{-
--- rewrite functions e.g. f x = div x => f = div
-etaFunS :: ModuleS -> ModuleS -> ModuleS
-etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
-                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
-                     introExprVariable <*> introNameIdentifier "x"
-                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
-
 -- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
-lambdaS :: [ModuleS] -> ModuleS -> ModuleS
-lambdaS args expr = alternatives $ map f $ split args
-  where
-    f (xs, ys) = introExprLambda (length xs) <*> sequence xs <*> rec ys
-    rec ys = case ys of
-               [] -> expr
-               ps -> lambdaS ps expr
-
+lambdaReduce :: Expression -> Maybe Expression
+lambdaReduce x = case x of
+  Expression_Lambda r ps 
+    (Expression_Lambda _ ps' expr) -> Just $ Expression_Lambda r (ps ++ ps') expr -- important that alphaRenaming has been done!
+  _                                -> Nothing
 
 -- application rewrites, e.g. ((f 1) 2) 3 => f 1 2 3
+applicationReduce :: Expression -> Maybe Expression
+applicationReduce x = case x of
+  Expression_NormalApplication r  
+    (Expression_NormalApplication _ f as) as' -> Just $ Expression_NormalApplication r f (as ++ as')
+  _                                           -> Nothing
+
+{-
 appS :: ModuleS -> [ModuleS] -> ModuleS
 appS f args = parenS $ app f args
 -- appS f args = fix (\ t -> curryS f args <|> infixS f args <|> etaS t)
@@ -140,7 +138,6 @@ infixS f args = case args of
   where
     infixApp f l r = introExprInfixApplication True True <*> l <*> f <*> r
 
-{-
 curryS :: ModuleS -> [ModuleS] -> ModuleS
 curryS f args = case args of 
                   []   -> fail
@@ -148,10 +145,15 @@ curryS f args = case args of
                                        <|> curryS (parenS (app f [a])) as
 -}
 
-curryS :: ModuleS -> [ModuleS] -> ModuleS
-curryS f args = fix (\t -> case args of 
-                             []   -> fail
-                             a:as -> app f (a:as) <|> curryS (parenS (app f [a])) as)
+{-
+-- rewrite functions e.g. f x = div x => f = div
+etaFunS :: ModuleS -> ModuleS -> ModuleS
+etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
+                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
+                     introExprVariable <*> introNameIdentifier "x"
+                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
+
+
 
 funS' :: Int -> ModuleS -> [ModuleS] -> ModuleS
 funS' kind f args  =  appS f args

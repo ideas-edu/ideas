@@ -1,5 +1,5 @@
 
-ATTR * [ prelude:{[String]} | env:{Map Name String} names:{[String]} | result:SELF ]
+ATTR * [ prelude:{[String]} | args,env:{Map Name String} names:{[String]} | result:SELF ]
 
 INCLUDE "syntax/UHA_Syntax.ag"
 --INCLUDE "staticanalysis/staticchecks/StaticChecks.ag"
@@ -15,20 +15,26 @@ import Domain.Programming.Helium
 
 
 SEM Declaration
-  | PatternBinding lhs . env           = @lhs.env
+  | PatternBinding lhs . env           = @newenv
+                       . args          = empty
                    pattern . env       = empty
-                   righthandside . env = union @pattern.env @lhs.env
+                   righthandside . env = @newenv
+                   loc . newenv        = union @pattern.env @lhs.env
 
 SEM Expression
   | Lambda lhs . env        = @lhs.env 
-           patterns . env   = empty
-           expression . env = union @patterns.env @lhs.env
+               . args       = empty
+           patterns . args  = empty
+           expression . env = union @patterns.args @lhs.env
 
 SEM FunctionBinding
-  | FunctionBinding lhs . env           = @lhs.env -- make sure that the variables of the lhs don't travel up 
+  | FunctionBinding lhs . env           = union @lefthandside.env @lhs.env
+                        . args          = empty
                     lefthandside . env  = empty
-                    righthandside . env = union @lefthandside.env @lhs.env -- not necessary due to left to right when chaining
-
+                                 . args = empty
+                    righthandside . env = foldr union empty [@lefthandside.env, @lefthandside.args
+                                                            , @lhs.args, @lhs.env]
+{-
 SEM Name
   | Identifier lhs . result   = if @name `notElem` @lhs.prelude then changeName (fst @newname) @result else @result
                    . names    = snd @newname
@@ -36,7 +42,32 @@ SEM Name
                loc . newname  = case Data.Map.lookup @result @lhs.env of
                                      Just n -> (n, @lhs.names) 
                                      _      -> (head @lhs.names, tail @lhs.names)
+-}
 
+SEM LeftHandSide
+  | Function lhs . env       = insert @name (head @lhs.names) @lhs.env
+                 . args      = @patterns.args
+                 . names     = tail @lhs.names
+             patterns . args = empty
+  | Infix lhs . env           = insert @operator (head @lhs.names) @lhs.env
+              . args          = union @leftPattern.args @rightPattern.args
+              . names         = tail @lhs.names
+          leftPattern  . args = empty
+          rightPattern . args = empty
+  | Parenthesized lhs . env     = union @lefthandside.env @lhs.env
+                      . args    = union @patterns.args $ union @lefthandside.args @lhs.args
+                  patterns.args = empty
+
+SEM Expression
+  | Variable lhs . result  = @newname
+             loc . newname  = case Data.Map.lookup @name @lhs.env of
+                                Just n -> n
+                                _      -> @name
+
+SEM Pattern
+  | Variable lhs . args  = insert @name (head @lhs.names) @lhs.args
+                 . names = tail @lhs.names
+                
 {
 changeName :: String -> Name -> Name
 changeName s n = case n of 
@@ -45,7 +76,7 @@ changeName s n = case n of
                    _                     -> n
 
 alphaRenaming :: Module -> Module
-alphaRenaming m = (\(_,_,c) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]] preludeIdentifiers
+alphaRenaming m = (\(_,_,c,_) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]] preludeIdentifiers empty
 
 
 -- Reserved identifiers

@@ -32,6 +32,7 @@ import Domain.Programming.Helium
 (Right m) = compile "f = \\ y -> (\\x -> div x) y"
 (Right m2) = compile "f = \\ y -> \\x -> div x y"
 (Right m3) = compile "f a b c d = a ; g = ((f 1) 2 3) ; h = g 4"
+(Right m4) = compile "f x y = x ; g x y = f x y where f x y = y"
 
 --------------------------------------------------------------------------------
 -- Help functions

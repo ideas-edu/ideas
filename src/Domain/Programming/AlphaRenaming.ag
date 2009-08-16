@@ -1,84 +1,99 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+-- todo : Testing: a possible test method could be to specify contracts for
+--        a number of standard/complete functions and check whether the alpha
+--        renamed function still satisfies the contract.
+--
+-----------------------------------------------------------------------------
 
-ATTR * [ prelude:{[String]} | args,env:{Map Name String} names:{[String]} | result:SELF ]
+INCLUDE "Scope.ag"
 
-INCLUDE "syntax/UHA_Syntax.ag"
---INCLUDE "staticanalysis/staticchecks/StaticChecks.ag"
-{-
-   o  compile with: uuagc -scfr --module=Domain.Programming.AlphaRenaming -P ~/Documents/heliumsystem/helium/src AlphaRenaming.ag
-   o  this is a partial implementation! Complete with all bindings
--}
+ATTR Expression RightHandSide
+     RecordExpressionBinding RecordExpressionBindings
+     MaybeExpression GuardedExpression FunctionBinding
+     Expressions Declaration Declarations Alternative FunctionBindings
+     Alternatives GuardedExpressions RecordPatternBinding
+     Patterns Pattern LeftHandSide RecordPatternBindings AnnotatedType
+     AnnotatedTypes Constructor Constructors FieldDeclaration FieldDeclarations Body 
+     MaybeDeclarations Statements Statement Qualifier Qualifiers
+     [ nameMap : NameMap | freshNames : Names | ]
 
-imports{
-import Data.Map hiding (map, filter)
-import Domain.Programming.Helium
-}
+SEM Module
+  | Module body . nameMap    = empty 
+                . freshNames = [Name_Identifier noRange [] ('x' : show i) | i <- [1..]]
 
-
-SEM Declaration
-  | PatternBinding lhs . env           = @newenv
-                       . args          = empty
-                   pattern . env       = empty
-                   righthandside . env = @newenv
-                   loc . newenv        = union @pattern.env @lhs.env
+SEM MaybeDeclarations
+  | Just loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
 
 SEM Expression
-  | Lambda lhs . env        = @lhs.env 
-               . args       = empty
-           patterns . args  = empty
-           expression . env = union @patterns.args @lhs.env
+  | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+           
+SEM Statement
+  | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+           
+SEM Qualifier
+  | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+
+-- monomorphic binding constructs
 
 SEM FunctionBinding
-  | FunctionBinding lhs . env           = union @lefthandside.env @lhs.env
-                        . args          = empty
-                    lefthandside . env  = empty
-                                 . args = empty
-                    righthandside . env = foldr union empty [@lefthandside.env, @lefthandside.args
-                                                            , @lhs.args, @lhs.env]
-{-
-SEM Name
-  | Identifier lhs . result   = if @name `notElem` @lhs.prelude then changeName (fst @newname) @result else @result
-                   . names    = snd @newname
-                   . env      = insert @result (fst @newname) @lhs.env  -- insert also updates an existing binding
-               loc . newname  = case Data.Map.lookup @result @lhs.env of
-                                     Just n -> (n, @lhs.names) 
-                                     _      -> (head @lhs.names, tail @lhs.names)
--}
-
-SEM LeftHandSide
-  | Function lhs . env       = insert @name (head @lhs.names) @lhs.env
-                 . args      = @patterns.args
-                 . names     = tail @lhs.names
-             patterns . args = empty
-  | Infix lhs . env           = insert @operator (head @lhs.names) @lhs.env
-              . args          = union @leftPattern.args @rightPattern.args
-              . names         = tail @lhs.names
-          leftPattern  . args = empty
-          rightPattern . args = empty
-  | Parenthesized lhs . env     = union @lefthandside.env @lhs.env
-                      . args    = union @patterns.args $ union @lefthandside.args @lhs.args
-                  patterns.args = empty
+  | FunctionBinding loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
 
 SEM Expression
-  | Variable lhs . result  = @newname
-             loc . newname  = case Data.Map.lookup @name @lhs.env of
-                                Just n -> n
-                                _      -> @name
+  | Lambda loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
 
-SEM Pattern
-  | Variable lhs . args  = insert @name (head @lhs.names) @lhs.args
-                 . names = tail @lhs.names
-                
+SEM Alternative
+  | Alternative loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+                      
+SEM Statement
+  | Generator loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+
+SEM Qualifier
+  | Generator loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+
+SEM Declaration
+  | PatternBinding loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+
+-- Do the renaming and make a copy of the ast
+ATTR * [ | | result : SELF ]
+ATTR Name [ nameMap : NameMap | | ]
+
+SEM Name
+  | Identifier Operator Special lhs.result = case lookup @result @lhs.nameMap of
+                                               Just n -> n
+                                               _      -> @result
+
+-- utility functions
 {
-changeName :: String -> Name -> Name
-changeName s n = case n of 
-                   Name_Identifier r m _ -> Name_Identifier r m s
-                   Name_Operator   r m _ -> Name_Operator   r m s
-                   _                     -> n
+type NameMap = Map Name Name
+
+updateMap :: ScopeInfo -> NameMap -> Names -> Names -> (NameMap, Names)
+updateMap si m ks vs = let newMap = insertAllInNameMap si m ks vs
+                       in (newMap, drop (size newMap - size m) vs)
+
+insertInNameMap :: ScopeInfo -> (Name, Name) -> NameMap -> NameMap
+insertInNameMap si (k, v) m | notMember k m {- || isShadowed k si -} = insert k v m
+                            | otherwise = m
+
+insertAllInNameMap :: ScopeInfo -> NameMap -> Names -> Names -> NameMap
+insertAllInNameMap si m ks = foldr (insertInNameMap si) m . zip ks
+
+isShadowed :: Name -> ScopeInfo -> Bool
+isShadowed n = elem n . map fst . (\(_,_,s)->s) 
 
 alphaRenaming :: Module -> Module
-alphaRenaming m = (\(_,_,c,_) -> c) $ sem_Module m empty ['x' : show i | i <- [1..]] preludeIdentifiers empty
+alphaRenaming = fst . sem_Module
 
 
--- Reserved identifiers
+-- Reserved identifiers, not necessary anymore: the unbounded names are not put into the renaming scheme. 
+-- I let them hang around for a while, you never know ;-)
 preludeIdentifiers = ["$!","catch","!!","$","&&","++",".","=<<","Bool","False","True","Bounded","minBound","maxBound","Char","Double","Either","Left","Right","Enum","succ","pred","toEnum","fromEnum","enumFrom","enumFromThen","enumFromTo","enumFromThenTo","Eq","==","/=","FilePath","Float","Fractional","pi","exp","sqrt","log","**","logBase","sin","tan","cos","asin","atan","acos","sinh","tanh","cosh","asinh","atanh","acosh","Fractional","/","recip","fromRational","Functor","fmap","IO","IOError","Int","Integer","Integral","quot","rem","div","mod","quotRem","divMod","toInteger","Maybe","Nothing","Just","Monad",">>=",">>","return","fail","Num","+","*","-","negate","abs","signum","fromInteger","Ord","compare","<",">=",">","<=","max","min","Ordering","LT","EQ","GT","Rational","Read","readsPrec","readList","ReadS","Real","toRational","RealFloat","floatRadix","floatDigits","floatRange","decodeFloat","encodeFloat","exponent","significand","scaleFloat","isNaN","isInfinite","isDenormalized","isNegativeZero","isIEEE","atan2","RealFrac","properFraction","truncate","round","ceiling","floor","Show","showsPrec","show","showList","ShowS","String","^","^^","all","and","any","appendFile","asTypeOf","break","concat","concatMap","const","curry","cycle","drop","dropWhile","either","elem","error","even","filter","flip","foldl","foldl1","foldr","foldr1","fromIntegral","fst","gcd","getChar","getContents","getLine","head","id","init","interact","ioError","iterate","last","lcm","length","lex","lines","lookup","map","mapM","mapM_","maximum","maybe","minimum","not","notElem","null","odd","or","otherwise","print","product","putChar","putStr","putStrLn","read","readFile","readIO","readLn","readParen","reads","realToFrac","repeat","replicate","reverse","scanl","scanl1","scanr","scanr1","seq","sequence","sequence_","showChar","showParen","showString","shows","snd","span","splitAt","subtract","sum","tail","take","takeWhile","uncurry","undefined","unlines","until","unwords","unzip","unzip3","userError","words","writeFile","zip","zip3","zipWith","zipWith3","||"]
 }

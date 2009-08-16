@@ -22,7 +22,7 @@ GHCGUIFLAGS = -optl-mwindows
 else
 EXE  = 
 GHCI = ghci
-GHCGUIFLAGS =
+GHCGUIFLAGS = -optl-L/opt/local/lib
 endif
 
 status:
@@ -56,6 +56,9 @@ GHCWARN    = -W -fwarn-tabs -fwarn-duplicate-exports # -fwarn-orphans -fwarn-mis
 HADDOCK    = haddock
 HPC        = hpc
 RUNHASKELL = runhaskell
+AG         = uuagc
+
+AG_OPTS    = -scfr --genlinepragmas
 
 ifeq ($(IDEASSERVER), yes)
 GHCFLAGS   = --make -DDB -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)

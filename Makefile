@@ -73,7 +73,7 @@ HELIUMFLAGS = -fglasgow-exts -XUndecidableInstances -XOverlappingInstances \
 	-i$(HELIUMDIR)/staticanalysis/heuristics -i$(HELIUMDIR)/parser -i$(HELIUMDIR)/codegeneration \
 	-i$(LVMDIR)/lib/lvm -i$(LVMDIR)/lib/asm -i$(LVMDIR)/lib/core
 
-helium: revision
+helium: revision ag
 	$(MKDIR) -p $(OUTDIR)
 	$(GHCI) $(HELIUMFLAGS) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
@@ -102,6 +102,23 @@ nolicense:
 	find src -name *.hs -print0 | xargs --null grep -L "LICENSE"\
 
 #-------------------------------------------------------------------------
+# AG sources
+AG-SOURCES = src/Domain/Programming/AlphaRenaming.hs
+
+ag : $(AG-SOURCES)
+
+$(SRCDIR)/Domain/Programming/AlphaRenaming.hs : \
+		$(SRCDIR)/Domain/Programming/AlphaRenaming.ag \
+		$(SRCDIR)/Domain/Programming/Scope.ag \
+		$(HELIUMDIR)/syntax/UHA_Syntax.ag 
+
+	# AG AlphaRenaming
+	cd $(SRCDIR)/Domain/Programming;\
+	$(AG) $(AG_OPTS) --self --module=Domain.Programming.AlphaRenaming \
+	-P ../../../$(HELIUMDIR) AlphaRenaming.ag;\
+	cd ../../..
+
+#-------------------------------------------------------------------------
 # Installing on the IDEAS server
 
 ifeq ($(IDEASSERVER), yes)
@@ -128,3 +145,4 @@ clean:
 	$(RM) -rf $(OUTDIR)
 	make -C $(DOCDIR)  clean
 	make -C $(TESTDIR) clean
+	$(RM) $(AG-SOURCES)

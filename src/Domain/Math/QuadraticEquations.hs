@@ -302,7 +302,7 @@ testD e =
          let xs = a : map snd ps
          in case [ (x, y) | x <- xs, y <- xs, not (equivalence quadraticEquationExercise x y) ] of
                []   -> False
-               (x,y):_ -> error $ show (x, y) -- (simplify qView x) ++ "    is not    " ++ show (simplify qView y)
+               (x,y):_ -> error $ show (x, y, match qView x, match qView y) -- (simplify qView x) ++ "    is not    " ++ show (simplify qView y)
 
 main :: IO ()
 main = printDerivations quadraticEquationExercise xs 
@@ -347,7 +347,7 @@ squareRootView = makeView f g
    f (a :+: b)  = liftM2 (+) (f a) (f b)
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
-   f (a :/: b) = join $ liftM2 SQ.safeDiv (f a) (f b)
+   f (a :/: b)  = liftM2 (/) (f a) (f b)
    f _ = Nothing
    
    g m = build sumView (map h (SQ.toList m))

@@ -189,11 +189,10 @@ factorize p
        startList = [0, 3, -3, 10, -10, 100, -100]
     
 -- testing
-
+{-
 e10 = var*var + 4* var + 4
 e11 = power var 3 - 11 * power var 2 + 18 * var :: Polynomial Rational
 e12 = power var 2 - 11 * var + 18 :: Polynomial Rational
-{-
 -- (x+5)(x+2)(x-3)(x-7)(x-8)
 --test = longDivision e1 e2 
 
@@ -220,3 +219,25 @@ switchM (P m) = do
    let (ns, ms) = unzip (IM.toList m)
    as <- sequence ms 
    return $ P $ IM.fromAscList $ zip ns as
+  
+{- 
+class Functor f => Switch f where
+   switch :: Monad m => f (m a) -> m (f a)
+  
+instance Switch Polynomial where switch = switchM
+
+newtype Comp f g a = Comp (f (g a))
+newtype Id a = Id a
+
+instance (Functor f, Functor g) => Functor (Comp f g) where
+   fmap f (Comp a) = Comp (fmap (fmap f) a)
+
+instance Functor Id where
+   fmap f (Id a) = Id (f a)
+   
+instance (Switch f, Switch g) => Switch (Comp f g) where 
+   switch (Comp ma) = do
+      switch (fmap switch ma) >>= (return . Comp)
+   
+instance Switch Id where
+   switch (Id ma) = ma >>= (return . Id) -} 

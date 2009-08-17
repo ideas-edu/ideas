@@ -1,14 +1,19 @@
 module Domain.Math.SquareRoot 
-   ( SquareRoot, imaginary, imaginaryUnit, con, toList, scale
-   , sqrt, sqrtRational, isqrt
-   , safeDiv, safeRecip
+   ( SquareRoot
+   , imaginary, imaginaryUnit
+   , con, toList, scale
+   , sqrt, sqrtRational, isqrt, eval
    ) where
 
 import Prelude hiding (sqrt)
-import Common.Utils (primes)
 import Data.Ratio
-import qualified Data.IntMap as IM
+import qualified Domain.Math.PrimeFactors as P
+import qualified Data.Map as M
 import qualified Prelude
+import Control.Monad
+
+-------------------------------------------------------------
+-- Representation
 
 -- Sum of square roots (possibly imaginary) that are normalized 
 --
@@ -17,92 +22,132 @@ import qualified Prelude
 -- * all values are non-zero
 -- * We maintain the "imaginary" property since sqrt(-1)*sqrt(-1) may or may not
 --   be equal to sqrt(1)
+--
+-- Note on the Ord instance: comparison does not follow the value (semantic
+-- interpretation); it can be used though for sorting and storing in maps
+
 data SquareRoot a = S 
    { imaginary     :: Bool
-   , squareRootMap :: IM.IntMap a
-   } deriving (Show, Eq, Ord)
+   , squareRootMap :: SqMap a
+   } deriving (Eq, Ord)
+
+type SqMap a = M.Map P.PrimeFactors a
+
+-------------------------------------------------------------
+-- Primitive operations on maps
+
+-- re-establish invariants
+makeMap :: Num a => SqMap a -> SqMap a
+makeMap = M.filter (/=0) . M.foldWithKey f M.empty 
+ where
+   f k a m
+      | a == 0    = m
+      | otherwise = M.unionWith (+) (fmap (*a) (sqrtPF k)) m
+
+plusSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
+plusSqMap m1 m2 = M.filter (/=0) (M.unionWith (+) m1 m2)
+
+minusSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
+minusSqMap m1 m2 = m1 `plusSqMap` (negateSqMap m2)
+
+negateSqMap :: Num a => SqMap a -> SqMap a
+negateSqMap = fmap negate
+
+timesSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
+timesSqMap m1 m2 =
+   let op n a m = M.unionWith (+) (f n (fmap (a*) (m1))) m
+       f i m    = M.mapKeys (*i) m
+   in makeMap (M.foldWithKey op M.empty m2)
+
+recipSqMap :: Fractional a => SqMap a -> SqMap a
+recipSqMap m = 
+   case M.toList m of
+      []       -> error "division by zero"
+      [(n, x)] -> M.singleton n (recip (x Prelude.* fromIntegral n))
+      _        -> (a-b) * recipSqMap (makeMap ((a*a) - (b*b)))
+ where
+   (ys, zs) = splitAt (length xs `div` 2) xs
+   (a, b)   = (M.fromList ys, M.fromList zs)
+   xs  = M.toList m
+   (*) = timesSqMap
+   (-) = minusSqMap
+
+sqrtPF :: Num a => P.PrimeFactors -> SqMap a
+sqrtPF n
+   | n == 0    = M.empty
+   | otherwise = M.singleton b (fromIntegral a)
+ where 
+   (a, b) = P.splitPower 2 n 
+
+-------------------------------------------------------------
+-- Type class instances
+
+instance Num a => Show (SquareRoot a) where
+   show (S b m) = g (map f (M.toList m)) ++ imPart
+    where 
+      f (n, a) = ( signum a == -1
+                 , times (guard (abs a /= 1) >> Just (show (abs a)))
+                         (guard (n /= 1)     >> Just ("sqrt(" ++ show (toInteger n) ++ ")"))
+                 )
+      imPart = if b then " (imaginary number)" else "" 
+      g []         = "0"
+      g ((b,x):xs) = (if b then "-" else "") ++ x ++ concatMap h xs
+      h (b, x)     = (if b then " - " else " + ") ++ x
+      
+      times (Just a) (Just b) = a ++ "*" ++ b
+      times (Just a) Nothing  = a
+      times Nothing  (Just b) = b
+      times Nothing  Nothing  = "1"
 
 -- the Functor instance does not maintain the invariant (non-zero)
 instance Functor SquareRoot where
-   fmap f (S b m) = S b (IM.map f m)
+   fmap f (S b m) = S b (M.map f m)
 
 instance Num a => Num (SquareRoot a) where
-   negate (S b m)    = S b (fmap negate m)
+   S b1 m1 + S b2 m2 = S (b1 || b2) (plusSqMap  m1 m2)
+   S b1 m1 - S b2 m2 = S (b1 || b2) (minusSqMap m1 m2)
+   S b1 m1 * S b2 m2 = S (b1 || b2) (timesSqMap m1 m2)
+   negate (S b m)    = S b (negateSqMap m)
    fromInteger       = con . fromInteger
-   S b1 m1 + S b2 m2 = S (b1 || b2) (IM.filter (/=0) (IM.unionWith (+) m1 m2))
-   s       * S b2 m2 = 
-      let op n a m = timesSqrt n (scale a s) + m
-          start    = if b2 then 0 {imaginary = True} else 0
-      in  IM.foldWithKey op start m2
    
    -- not defined for square roots
    abs    = error "abs not defined for square roots"
    signum = error "signum not defined for square roots"
 
-safeDiv :: Fractional a => SquareRoot a -> SquareRoot a -> Maybe (SquareRoot a)
-safeDiv a b = fmap (a*) (safeRecip b)
+instance Fractional a => Fractional (SquareRoot a) where
+   recip (S b m) = S b (recipSqMap m)
+   fromRational  = con . fromRational
 
-safeRecip :: Fractional a => SquareRoot a -> Maybe (SquareRoot a)
-safeRecip a =
-   case toList a of 
-      [(x, n)] -> Just (con (recip (x * fromIntegral n)) * sqrt (fromIntegral n))
-      _        -> Nothing
-
-------------------------------------------------
+-------------------------------------------------------------
+-- Utility functions
 
 imaginaryUnit :: Num a => SquareRoot a
-imaginaryUnit = S True (IM.singleton (-1) 1)
+imaginaryUnit = S True (M.singleton (-1) 1)
 
-toList :: SquareRoot a -> [(a, Int)]
-toList = map (\(k, r) -> (r, k)) . IM.toList . squareRootMap
+toList :: SquareRoot a -> [(a, Integer)]
+toList = map (\(k, r) -> (r, toInteger k)) . M.toList . squareRootMap
 
 con :: Num a => a -> SquareRoot a
-con a = S False (if a==0 then IM.empty else IM.singleton 1 a)
+con a = S False (if a==0 then M.empty else M.singleton 1 a)
 
 sqrt :: Num a => Integer -> SquareRoot a
-sqrt n =
-   case compare n 0 of
-      EQ -> 0
-      LT -> imaginaryUnit * helper (abs n)
-      GT -> helper n
-
+sqrt n
+   | n < 0     = S True (M.mapKeys negate m)
+   | otherwise = S False m
  where
-   -- helper gets a positive number
-   -- primesSquared !! 50 equals 54289
-   helper :: Num a => Integer -> SquareRoot a
-   helper n 
-      | a*a == n  = fromIntegral a 
-      | otherwise = f 1 (fromIntegral n) (take 50 $ zip primes primesSquared)
-    where
-      a = isqrt n
-  
-      f :: Num a => Int -> Int -> [(Int, Int)] -> SquareRoot a
-      f acc n xs@((i,isq):rest)
-         | m == 0  = f (i*acc) d xs
-         | n > isq = f acc n rest
-       where 
-         (d, m) = n `divMod` isq
-      f acc n _ = S False (IM.singleton (fromIntegral n) (fromIntegral acc))
+   m = sqrtPF (fromIntegral (abs n))
 
 scale :: Num a => a -> SquareRoot a -> SquareRoot a
 scale a sr = if a==0 then 0 else fmap (*a) sr
                
-------------------------------------------------
-
 isqrt :: Integer -> Integer
 isqrt = floor . Prelude.sqrt . fromInteger
 
-primesSquared :: [Int]
-primesSquared = map (\x -> x*x) primes
-
-timesSqrt :: Num a => Int -> SquareRoot a -> SquareRoot a
-timesSqrt i (S b m) = S (b || i < 0) $ 
-   case compare i 0 of 
-      EQ -> make (const [])
-      LT -> make reverse
-      GT -> make id
- where
-   make f = IM.fromAscList $ f [ (n*i, a) | (n, a) <- IM.toList m ]
-
 sqrtRational :: Fractional a => Rational -> SquareRoot a
-sqrtRational r = scale (1/fromIntegral (denominator r)) (sqrt (numerator r * denominator r))
+sqrtRational r = scale (1/fromIntegral b) (sqrt (a*b))
+ where 
+   (a, b) = (numerator r, denominator r)
+
+eval :: Floating a => SquareRoot a -> a
+eval (S _ m) = M.foldWithKey f 0 m
+ where f n a b = a * Prelude.sqrt (fromIntegral n) + b

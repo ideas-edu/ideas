@@ -2,6 +2,7 @@ module Domain.Math.PrimeFactors
    ( PrimeFactors
    , factors, multiplicity, coprime
    , square, power, splitPower
+   , primes
    ) where
 
 import qualified Data.IntMap as IM

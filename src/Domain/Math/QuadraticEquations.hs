@@ -20,6 +20,7 @@ import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Views
 import Data.Maybe
 import Prelude hiding (repeat, (^))
+import qualified Prelude
 import qualified Domain.Math.SquareRoot as SQ
 
 ------------------------------------------------------------
@@ -348,6 +349,7 @@ squareRootView = makeView f g
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
    f (a :/: b)  = liftM2 (/) (f a) (f b)
+   f (Sym "^" [a, b]) = liftM2 (Prelude.^) (f a) (match integerView b)
    f _ = Nothing
    
    g m = build sumView (map h (SQ.toList m))

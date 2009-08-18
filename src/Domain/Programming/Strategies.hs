@@ -1,6 +1,19 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+--
+-----------------------------------------------------------------------------
+
 module Domain.Programming.Strategies
-{-   ( fromBinStrategy, getstrat, stringToStrategy, testS
-   )-} where
+   ( fromBinStrategy, stringToStrategy, stringToRules, getRules
+   ) where
 
 import Common.Context
 import Common.Strategy
@@ -10,24 +23,15 @@ import Domain.Programming.Helium
 import Domain.Programming.PreludeS
 import Prelude hiding (sequence)
 
--- test strategy for appS
-testS  =  modS [ declFunS [ funS "f" [patS "a", patS "b", patS "c", patS "d"] (varS "a")  [] ]
-               , declPatS "g" (varS "f" # [intS "1", intS "2", intS "3", intS "4"]) [] ]
-
-testFunS = modS [ declPatS "f" consS [] ]
 
 -- | fromBin strategy
-fromBinStrategy = modS [ introPatternBinding <*> introPatternVariable <*> 
-                         introNameIdentifier "fromBin" <*> foldlS consS nilS ]
-
-consS = compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
-
-nilS = introExprLiteral <*> introLiteralInt "0"
+fromBinStrategy = modS [ declPatS "fromBin" (foldlS consS nilS) [] ]
+  where
+    consS = exprParenS $ compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
+    nilS = intS "0"
                            
 
 -- | Strategies derived from the abstract syntax of expressions
---   AG: Use multirec (?) to traverse AST to map every language contruct to rule (a->b) in c.
---   Biplate only allows (a->a) in container b 
 stringToStrategy :: String -> Strategy (Context Module)
 stringToStrategy = sequence . stringToRules
 
@@ -145,25 +149,3 @@ instance GetRules Name where
       Name_Special    _ _ name -> [introNameSpecial name]
 
 
--- | test stuff
-sumString = "mysum = foldr (+) 0"
-sumStrategy  =  introModule
-            <*> introDecls 1
-            <*> introPatternBinding 
-            <*> introPatternVariable <*> introNameIdentifier "mysum"
-            <*> introRHSExpr 0
-            <*> introExprNormalApplication 2
-            <*> introExprVariable <*> introNameIdentifier "foldr"
-            <*> introExprInfixApplication False False
-            <*> introExprVariable <*> introNameOperator "+"
-            <*> introExprLiteral <*> introLiteralInt "0"
-
-sumStrategy' = stringToStrategy sumString
-
-isortString =  "isort []     = []\n"
-            ++ "isort (x:xs) = insert x (isort xs)\n\n"
-            ++ "insert x []     = [x]\n"
-            ++ "insert x (y:ys) | x <= y     = x : y : ys\n"
-            ++ "                | otherwise  = y : insert x ys\n"
-
-isortStrategy' = stringToStrategy isortString

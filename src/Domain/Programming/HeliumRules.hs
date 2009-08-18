@@ -1,3 +1,16 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+--
+-----------------------------------------------------------------------------
+
 module Domain.Programming.HeliumRules where
 
 import Common.Context
@@ -492,4 +505,36 @@ deriving instance Typeable Qualifier
 deriving instance Typeable Alternative
 deriving instance Typeable Import
 
-
+deriving instance Ord Module
+deriving instance Ord Body
+deriving instance Ord MaybeName
+deriving instance Ord MaybeNames
+deriving instance Ord MaybeExports
+deriving instance Ord Declaration
+deriving instance Ord ImportDeclaration
+deriving instance Ord Export 
+deriving instance Ord Type
+deriving instance Ord RightHandSide
+deriving instance Ord Pattern
+deriving instance Ord Constructor
+deriving instance Ord FunctionBinding
+deriving instance Ord MaybeInt
+deriving instance Ord Fixity
+deriving instance Ord MaybeDeclarations
+deriving instance Ord SimpleType
+deriving instance Ord ContextItem
+deriving instance Ord MaybeImportSpecification
+deriving instance Ord Expression
+deriving instance Ord RecordPatternBinding
+deriving instance Ord Literal
+deriving instance Ord GuardedExpression
+deriving instance Ord FieldDeclaration
+deriving instance Ord AnnotatedType
+deriving instance Ord LeftHandSide
+deriving instance Ord ImportSpecification
+deriving instance Ord RecordExpressionBinding
+deriving instance Ord MaybeExpression
+deriving instance Ord Statement
+deriving instance Ord Qualifier
+deriving instance Ord Alternative
+deriving instance Ord Import

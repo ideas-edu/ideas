@@ -1,15 +1,27 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+--
+-----------------------------------------------------------------------------
+
 module Domain.Programming.Exercises where
 
 import Common.Apply
 import Common.Context
 import Common.Exercise hiding (checkExercise)
-import Common.Grammar
 import Common.Rewriting
 import Common.Strategy hiding (fail, not)
 import Control.Monad (unless, fail)
 import Data.Maybe
 import Data.List
-import Domain.Programming.AlphaConv (alphaConversion)
+import Domain.Programming.AlphaRenaming (alphaRenaming)
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium

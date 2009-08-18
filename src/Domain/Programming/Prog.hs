@@ -1,37 +1,38 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+--
+-----------------------------------------------------------------------------
+
 module Domain.Programming.Prog where
 
 import Common.Context
-import Common.Grammar
 import Common.Strategy
 import Data.Generics.Biplate
 import Data.Generics.PlateData
 import Data.Data hiding (Fixity)
 import Data.List hiding (union, lookup)
 import Domain.Programming.AlphaRenaming (alphaRenaming)
-import Domain.Programming.Strategies (getRules)
 import Domain.Programming.Helium
+import Domain.Programming.HeliumRules
 
 {- ideas:
 
-   o  rewrite 
-
    o  Use a GADT to get the strategies typed again
-
-   o  Change show function for names, show also the name of the constructor.
-      For the range datatype: remove from show.
-
-   o  Devise a scheme in which certain strategies, like etaS and parenS, can
-      be used at any point in the strategy.
-
-   o  Add beta reduction, uniplate for app (\x->expr) y
-
-   o  Add etaS to prelude strategies
 -}
 
 -- Test values
-(Right m) = compile "f = \\ y -> (\\x -> div x) y"
+(Right m) = compile "f x y = x + y"
 (Right m2) = compile "f = \\ y -> \\x -> div x y"
 (Right m3) = compile "f a b c d = a ; g = ((f 1) 2 3) ; h = g 4"
+(Right m3') = compile "f a b c d = a ; g = f 1 2 3 ; t = g 4"
 (Right m4) = compile "f x y = x ; g x y = f x y where f x y = y"
 
 --------------------------------------------------------------------------------
@@ -43,12 +44,12 @@ collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
 freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
 
--- allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
-isSolution strat m = member m (noLabels strat)
+allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
+isSolution strat m = elem (normaliseModule m) $ map normaliseModule $ allSolutions strat
 
 checkExercise :: Strategy (Context Module) -> String -> IO ()
 checkExercise strat x = putStrLn $ x ++ " : " ++ 
-                        show (isSolution strat (getRules (fromRight (compile x))))
+                        (show $ isSolution strat $ fromRight $ compile x)
   where
     fromRight x = case x of
                     Right y -> y
@@ -61,13 +62,17 @@ checkExercises strat xs = mapM_ (checkExercise strat) xs
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
 --------------------------------------------------------------------------------
 equalModules :: Module -> Module -> Bool
-equalModules x y = normalise x == normalise y
+equalModules x y = normaliseModule x == normaliseModule y
 
-normalise :: Module -> Module
+normaliseModule :: Module -> Module
+normaliseModule = normalise . alphaRenaming
+
+normalise :: Data a => a -> a
 normalise = rewriteBi rules . preprocess
   where
-    preprocess = alphaRenaming . removeRanges . removeParens
-    rules = etaReduce >-> betaReduce >-> lambdaReduce >-> applicationReduce
+    preprocess = removeRanges . removeParens
+    rules  =  etaReduce >-> betaReduce >-> lambdaReduce >-> applicationReduce 
+          >-> infix2prefix >-> commutativeOps
     
 -- a kind of Left-to-right Kleisli composition of monads
 (>->) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
@@ -78,10 +83,12 @@ f >-> g = \ x -> case f x of
                    Nothing -> g x
 infixr 1 >->
 
+removeParens :: Data a => a -> a
 removeParens = transformBi f
   where f (Expression_Parenthesized _ expr) = expr
         f x = x
 
+removeRanges :: Data a => a -> a
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
 
@@ -92,7 +99,16 @@ etaReduce x = case x of
     (Expression_NormalApplication _ f [Expression_Variable _ v]) -> if p == v
                                                                     then Just f
                                                                     else Nothing
+  Expression_Lambda _ [Pattern_Variable _ p] 
+    (Expression_NormalApplication r f args)                      -> appLambda
+    where
+      appLambda = case last args of
+                    Expression_Variable _ v -> if p == v
+                                               then Just $ Expression_NormalApplication r f $ init args
+                                               else Nothing
+                    _                       -> Nothing
   _                                                              -> Nothing
+
 
 -- beta reduction, e.g. (\x -> x + x) 42 => 42 + 42
 betaReduce :: Expression -> Maybe Expression
@@ -115,36 +131,46 @@ substArgs expr ps =  foldr transformBi expr . zipWith rep ps
 -- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
 lambdaReduce :: Expression -> Maybe Expression
 lambdaReduce x = case x of
-  Expression_Lambda r ps 
-    (Expression_Lambda _ ps' expr) -> Just $ Expression_Lambda r (ps ++ ps') expr -- important that alphaRenaming has been done!
-  _                                -> Nothing
+  Expression_Lambda r [p] expr    -> Nothing
+  Expression_Lambda r (p:ps) expr -> Just $ Expression_Lambda r [p] $ Expression_Lambda r ps expr
+  _                               -> Nothing
 
 -- application rewrites, e.g. ((f 1) 2) 3 => f 1 2 3
 applicationReduce :: Expression -> Maybe Expression
 applicationReduce x = case x of
   Expression_NormalApplication r  
     (Expression_NormalApplication _ f as) as' -> Just $ Expression_NormalApplication r f (as ++ as')
+  Expression_NormalApplication r f []         -> Just $ f
   _                                           -> Nothing
 
-{-
-appS :: ModuleS -> [ModuleS] -> ModuleS
-appS f args = parenS $ app f args
--- appS f args = fix (\ t -> curryS f args <|> infixS f args <|> etaS t)
-
--- 1 `f` 2 3 => f 1 2 3
-infixS f args = case args of 
-                  x:y:z:zs -> app (parenS (infixApp f x y)) (z:zs)
-                  x:y:[]   -> infixApp f x y
-                  _        -> fail
+-- infix application rewrites, e.g. 1 `div` 2 => div 1 2 or 1 + 2 => (+) 1 2
+infix2prefix :: Expression -> Maybe Expression
+infix2prefix x = case x of
+  Expression_InfixApplication _ l f r ->
+      case (l, r) of
+        (MaybeExpression_Nothing, MaybeExpression_Nothing) -> Nothing
+        (MaybeExpression_Just x, MaybeExpression_Nothing)  -> Just $ app (op f) [x]
+        (MaybeExpression_Nothing, MaybeExpression_Just x)  -> Just $ app (op f) [x]
+        (MaybeExpression_Just x, MaybeExpression_Just y)   -> Just $ app (op f) [x, y]
+  _ -> Nothing
   where
-    infixApp f l r = introExprInfixApplication True True <*> l <*> f <*> r
+    op f = Expression_InfixApplication noRange MaybeExpression_Nothing f MaybeExpression_Nothing
+    app = Expression_NormalApplication noRange
 
-curryS :: ModuleS -> [ModuleS] -> ModuleS
-curryS f args = case args of 
-                  []   -> fail
-                  a:as -> app f (a:as) <|> partialS f args 
-                                       <|> curryS (parenS (app f [a])) as
--}
+
+-- quick'n dirty domain specific rewrite rules
+commutativeOps :: Expression -> Maybe Expression
+commutativeOps x = case x of
+  Expression_NormalApplication r
+    (Expression_InfixApplication r' MaybeExpression_Nothing f MaybeExpression_Nothing) args ->
+      if isSorted args
+      then Nothing
+      else Just $ Expression_NormalApplication r
+                    (Expression_InfixApplication r' MaybeExpression_Nothing f MaybeExpression_Nothing) $ sort args
+  _ -> Nothing
+  where
+    isSorted xs = sort xs == xs
+      
 
 {-
 -- rewrite functions e.g. f x = div x => f = div
@@ -153,38 +179,6 @@ etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> intr
                      introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
                      introExprVariable <*> introNameIdentifier "x"
                  <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
-
-
-
-funS' :: Int -> ModuleS -> [ModuleS] -> ModuleS
-funS' kind f args  =  appS f args
-                 <|> if partargs > 0
-                     then lambdaS (take partargs [varS ('x' : show i) | i <- [1..]]) (appS f args)
-                     else fail
-  where partargs = kind - (length args)
-
-partialS :: ModuleS -> [ModuleS] -> ModuleS
-partialS f args | length args > 2  = alternatives $ map g $ init $ split args
-                | otherwise        = fail
-  where
-    g (x, y) = curryS (parenS (f `app` x)) y
-
-
-
-opS n l r = case (l, r) of 
-              (Just x, Just y)   -> app (prefix) [x, y] <|> 
-                                    app (pleft x) [y] <|> 
-                                    app (pright y) [x] <|> 
-                                    infixApp True True <*> x  <*> op <*> y
-              (Nothing, Just y)  -> pright y <|> parenS (lambdaS [patS "x"] (opS n (Just (varS "x")) r))
-              (Just x, Nothing)  -> pleft x  <|> parenS (lambdaS [patS "x"] (opS n l (Just (varS "x"))))
-              (Nothing, Nothing) -> prefix   <|> parenS (lambdaS [patS "x", patS "y"] (opS n (Just (varS "x")) (Just (varS "y"))))
-  where 
-    infixApp l r = introExprInfixApplication l r
-    pleft x = infixApp True  False <*> x  <*> op
-    prefix = infixApp False False <*> op
-    pright y = infixApp False True  <*> op <*> y
-
 -}
 
 
@@ -193,3 +187,4 @@ opS n l r = case (l, r) of
 -- QuickCheck properties
 --------------------------------------------------------------------------------
 
+-- Do contract checking for normalised programs

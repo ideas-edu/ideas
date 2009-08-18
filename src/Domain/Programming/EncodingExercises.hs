@@ -1,8 +1,22 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+-- Test exercises.
+-- 
+-----------------------------------------------------------------------------
+
 module Domain.Programming.EncodingExercises where
 
 -- fromBin :: [Int] -> Int
 
-fromBins = [ fromBin, fromBinER, fromBinLet, fromBinEta, fromBinEta'
+fromBins = [ fromBin, fromBinER, fromBinLet, fromBinEta
            , fromBin1, fromBin2, fromBin3, fromBin4, fromBin5, fromBin6
            ]
 
@@ -18,8 +32,6 @@ fromBinLet =  "fromBin = let f nil []     = nil\n"
            ++ "          in f 0\n"
 
 fromBinEta = "fromBin = foldl (\\x -> (\\y -> ((+) . (* 2)) y) x) 0"
-
-fromBinEta' = "fromBin = foldl (\\x y -> ((+) . (* 2)) y x) 0"
 
 fromBin1 = "fromBin = foldl (\\x y -> x * 2 + y) 0"
 

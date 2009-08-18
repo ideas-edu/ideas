@@ -1,36 +1,31 @@
-module Domain.Programming.PreludeS
-{-   ( ModuleS, foldlS, letS, compS, etaS
-   )-} where
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+--
+-----------------------------------------------------------------------------
 
-import Common.Apply
+module Domain.Programming.PreludeS
+   ( -- * Type synonyms
+     ModuleS
+     -- * Prelude strategies
+   , foldlS, letS, compS
+     -- * Smart constructors and help functions
+   , varS, patS, modS, funS, declFunS, declPatS, rhsS, intS, appS, opS
+   , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
+   ) where
+
 import Common.Context hiding (Var)
-import Common.Transformation
 import Common.Strategy hiding (repeat)
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
-import Data.Data
-import Data.Generics.Biplate
-import Data.Generics.PlateData
-import Data.Maybe
-import Prelude hiding (fail, sequence)
-
-{- ideas:
-
-   o  use applicative or monad type class for getting rules in to strategy 
-      context
-
-   o  Use a GADT to get the strategies typed again
-
-   o  Change show function for names, show also the name of the constructor.
-      For the range datatype: remove from show.
-
-   o  Devise a scheme in which certain strategies, like etaS and parenS, can
-      be used at any point in the strategy.
-
-   o  Add beta reduction, uniplate for app (\x->expr) y
-
-   o  Add etaS to prelude strategies
--}
+import Prelude hiding (sequence)
 
 --------------------------------------------------------------------------------
 -- Type synonyms
@@ -38,50 +33,30 @@ import Prelude hiding (fail, sequence)
 type ModuleS = Strategy (Context Module)
 
 
-s = modS [ declPatS "f" (compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))) [] ]
-
 --------------------------------------------------------------------------------
 -- Language definition strategies
 --------------------------------------------------------------------------------
-letS :: Int -> ModuleS -> ModuleS -> ModuleS -- specialised let strategy, also recognizes where clauses
-letS ndecls expr decl  =  introRHSExpr ndecls <*> expr <*> decl
-                      <|> introRHSExpr 0 <*> introExprLet ndecls 
-                                         <*> decl <*> expr
+letS :: [ModuleS] -> ModuleS -> ModuleS -- specialised let strategy, also recognizes where clauses
+letS decls expr  =  rhsS expr decls
+                <|> rhsS (introExprLet (length decls) <*> sequence decls 
+                                                      <*> expr) []
 
 
 --------------------------------------------------------------------------------
--- Prelude definition strategies
+-- Prelude definition strategies (ie. inlining)
 --------------------------------------------------------------------------------
 
 foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
-    =  introRHSExpr 0 <*> introExprNormalApplication 2 <*> introExprVariable <*> introNameIdentifier "foldl" 
-                                                       <*> consS <*> nilS 
-   <|> letS 1 ( introExprNormalApplication 1 <*> introExprVariable <*> introNameIdentifier "f" <*> nilS )
-              ( introFunctionBindings 2
-                  <*> introLHSFun 2 <*> introNameIdentifier "f"
-                                    <*> introPatternVariable <*> introNameIdentifier "nil"
-                                    <*> introPatternConstructor 0 <*> introNameSpecial "[]"
-                      <*> introRHSExpr 0 
-                                    <*> introExprVariable <*> introNameIdentifier "nil"
-                  <*> introLHSFun 2 <*> introNameIdentifier "f"
-                                    <*> introPatternVariable <*> introNameIdentifier "nil"
-                                    <*> introPatternParenthesized 
-                                    <*> introPatternInfixConstructor 
-                                    <*> introPatternVariable <*> introNameIdentifier "x"
-                                    <*> introNameSpecial ":"
-                                    <*> introPatternVariable <*> introNameIdentifier "xs"
-                      <*> introRHSExpr 0 
-                                    <*> introExprNormalApplication 2 
-                                    <*> introExprVariable <*> introNameIdentifier "f"
-                                    <*> introExprParenthesized 
-                                    <*> introExprNormalApplication 2
-                                    <*> consS
-                                    <*> introExprVariable <*> introNameIdentifier "nil"
-                                    <*> introExprVariable <*> introNameIdentifier "x"
-                                    <*> introExprVariable <*> introNameIdentifier "xs"
-              )
+    =  rhsS (varS "foldl" # [consS, nilS]) []
+   <|> letS [ declFunS [ funS "f" [ patS "nil", patConS "[]" ] (varS "nil") [] 
+                       , funS "f" [ patS "nil", patParenS (patInfixConS (patS "x") ":" (patS "xs")) ]
+                                  (varS "f" #  [ exprParenS (consS # [ varS "nil", varS "x" ]), varS "xs" ]) [] ]
+            ] -- in
+            ( varS "f" # [nilS] )
 
+-- foldl cons nil []     = nil
+-- foldl cons nil (x:xs) = foldl f (cons x) xs
 
 compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
 compS f g  =  opS "." (Just f) (Just g)
@@ -94,9 +69,19 @@ compS f g  =  opS "." (Just f) (Just g)
 varS :: String -> ModuleS
 varS n = introExprVariable <*> introNameIdentifier n
 
+exprParenS expr = introExprParenthesized <*> expr
+
 patS :: String -> ModuleS
 patS n = introPatternVariable <*> introNameIdentifier n
 
+patConS :: String -> ModuleS
+patConS n = introPatternConstructor 0 <*> introNameSpecial n
+
+patParenS expr = introPatternParenthesized <*> expr
+
+patInfixConS :: ModuleS -> String -> ModuleS -> ModuleS
+patInfixConS l con r = introPatternInfixConstructor <*> l <*> 
+                       introNameSpecial con <*> r
 
 funS :: String -> [ModuleS] -> ModuleS -> [ModuleS] -> ModuleS
 funS name args rhs ws  =  introLHSFun (length args)
@@ -145,4 +130,3 @@ lambdaS as expr = introExprLambda (length as) <*> sequence as <*> expr
 mapSeqS f = sequence . (map f)
 repeatS n = sequence . (take n) . repeat
 
-split xs = map (\x -> splitAt x xs) [1..length xs]

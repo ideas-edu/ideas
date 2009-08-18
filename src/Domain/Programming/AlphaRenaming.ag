@@ -40,14 +40,14 @@ SEM LeftHandSide
   | Infix     lhs . name = @operator.self
   | Parenthesized lhs . name = @lefthandside.name
 
--- Put patternbinding in to scope
-SEM Declaration
-  | PatternBinding    loc . (namesInScope, unboundNames, scopeInfo) = changeOfScope @pattern.patVarNames @righthandside.unboundNames @lhs.namesInScope
-                      lhs . unboundNames = @unboundNames
-
+-- Adding scope changes at certain places in the AST
 SEM Body
   | Body loc . (namesInScope, unboundNames, scopeInfo) = changeOfScope @declarations.declVarNames @declarations.unboundNames @lhs.namesInScope
-                      lhs . unboundNames = @unboundNames
+         lhs . unboundNames = @unboundNames
+
+SEM Declaration
+  | PatternBinding loc . (namesInScope, unboundNames, scopeInfo) = changeOfScope @pattern.patVarNames @righthandside.unboundNames @lhs.namesInScope
+                   lhs . unboundNames = @unboundNames
 
 -- Construct a mapping from vars to vars with fresh names
 ATTR Expression RightHandSide
@@ -56,7 +56,7 @@ ATTR Expression RightHandSide
      Expressions Declaration Declarations Alternative FunctionBindings
      Alternatives GuardedExpressions RecordPatternBinding
      Patterns Pattern LeftHandSide RecordPatternBindings AnnotatedType
-     AnnotatedTypes Constructor Constructors FieldDeclaration FieldDeclarations Body 
+     AnnotatedTypes Constructor Constructors FieldDeclaration FieldDeclarations Body
      MaybeDeclarations Statements Statement Qualifier Qualifiers
      [ nameMap : NameMap | freshNames : Names | ]
 
@@ -80,7 +80,6 @@ SEM Qualifier
   | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
 
 -- monomorphic binding constructs
-
 SEM FunctionBinding
   | FunctionBinding loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
 
@@ -98,6 +97,7 @@ SEM Qualifier
 
 SEM Declaration
   | PatternBinding loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
+
 
 -- Do the renaming and make a copy of the ast
 ATTR * [ | | result : SELF ]
@@ -117,7 +117,7 @@ updateMap si m ks vs = let newMap = insertAllInNameMap si m ks vs
                        in (newMap, drop (size newMap - size m) vs)
 
 insertInNameMap :: ScopeInfo -> (Name, Name) -> NameMap -> NameMap
-insertInNameMap si (k, v) m | notMember k m  || isShadowed k si = insert k v m
+insertInNameMap si (k, v) m | notMember k m  {- || isShadowed k si -} = insert k v m
                             | otherwise = m
 
 insertAllInNameMap :: ScopeInfo -> NameMap -> Names -> Names -> NameMap

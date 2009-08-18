@@ -34,6 +34,9 @@ import Domain.Programming.HeliumRules
 (Right m3) = compile "f a b c d = a ; g = ((f 1) 2 3) ; h = g 4"
 (Right m3') = compile "f a b c d = a ; g = f 1 2 3 ; t = g 4"
 (Right m4) = compile "f x y = x ; g x y = f x y where f x y = y"
+(Right m5) = compile "f x y = x ; g x y = f x y"
+(Right m6) = compile "f x = g x where g y = reverse y"
+
 
 --------------------------------------------------------------------------------
 -- Help functions

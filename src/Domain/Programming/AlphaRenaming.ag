@@ -14,8 +14,42 @@
 --
 -----------------------------------------------------------------------------
 
-INCLUDE "Scope.ag"
+INCLUDE "staticanalysis/staticchecks/Scope.ag"
+INCLUDE "syntax/UHA_Syntax.ag"
 
+imports{
+import Data.List hiding (union, insert, lookup)
+import Data.Map hiding (map, filter, (\\))
+import Domain.Programming.Helium
+import Prelude hiding (lookup)
+}
+
+-- Set initialScope
+SEM Module
+  | Module loc . initialScope = []
+
+-- Copied from StaticChecks, get the names of LHSs
+ATTR FunctionBinding FunctionBindings LeftHandSide [ | | name:Name ]
+
+SEM FunctionBindings 
+  | Cons  lhs . name = @hd.name
+  | Nil   lhs . name = error "AlphaRenaming: empty FunctionBindings"
+
+SEM LeftHandSide
+  | Function  lhs . name = @name.self
+  | Infix     lhs . name = @operator.self
+  | Parenthesized lhs . name = @lefthandside.name
+
+-- Put patternbinding in to scope
+SEM Declaration
+  | PatternBinding    loc . (namesInScope, unboundNames, scopeInfo) = changeOfScope @pattern.patVarNames @righthandside.unboundNames @lhs.namesInScope
+                      lhs . unboundNames = @unboundNames
+
+SEM Body
+  | Body loc . (namesInScope, unboundNames, scopeInfo) = changeOfScope @declarations.declVarNames @declarations.unboundNames @lhs.namesInScope
+                      lhs . unboundNames = @unboundNames
+
+-- Construct a mapping from vars to vars with fresh names
 ATTR Expression RightHandSide
      RecordExpressionBinding RecordExpressionBindings
      MaybeExpression GuardedExpression FunctionBinding
@@ -29,6 +63,9 @@ ATTR Expression RightHandSide
 SEM Module
   | Module body . nameMap    = empty 
                 . freshNames = [Name_Identifier noRange [] ('x' : show i) | i <- [1..]]
+
+SEM Body
+  | Body loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
 
 SEM MaybeDeclarations
   | Just loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap @namesInScope @lhs.freshNames
@@ -80,7 +117,7 @@ updateMap si m ks vs = let newMap = insertAllInNameMap si m ks vs
                        in (newMap, drop (size newMap - size m) vs)
 
 insertInNameMap :: ScopeInfo -> (Name, Name) -> NameMap -> NameMap
-insertInNameMap si (k, v) m | notMember k m {- || isShadowed k si -} = insert k v m
+insertInNameMap si (k, v) m | notMember k m  || isShadowed k si = insert k v m
                             | otherwise = m
 
 insertAllInNameMap :: ScopeInfo -> NameMap -> Names -> Names -> NameMap

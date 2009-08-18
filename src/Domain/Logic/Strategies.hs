@@ -23,7 +23,7 @@ import Common.Strategy
 -----------------------------------------------------------------------------
 -- To DNF, in four steps
 
-toDNF :: LabeledStrategy (Context Logic)
+toDNF :: LabeledStrategy (Context SLogic)
 toDNF =  label "Bring to dnf"
       $  label "Eliminate constants"                 eliminateConstants
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv
@@ -47,7 +47,7 @@ toDNF =  label "Bring to dnf"
 -----------------------------------------------------------------------------
 -- To DNF, with priorities (the "DWA" approachs)
 
-toDNF_DWA :: LabeledStrategy (Context Logic)
+toDNF_DWA :: LabeledStrategy (Context SLogic)
 toDNF_DWA =  label "Bring to dnf (DWA)" $ 
    repeat $  label "Simplify"                            simplify
           |> label "Eliminate implications/equivalences" eliminateImplEquiv
@@ -70,5 +70,5 @@ toDNF_DWA =  label "Bring to dnf (DWA)" $
        ruleAndOverOr
       
 -- local helper function
-useRules :: [Rule Logic] -> Strategy (Context Logic)
+useRules :: [Rule SLogic] -> Strategy (Context SLogic)
 useRules = alternatives . map liftToContext

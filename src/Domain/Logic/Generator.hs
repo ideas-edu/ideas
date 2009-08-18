@@ -1,3 +1,4 @@
+{-# OPTIONS -XTypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -11,7 +12,7 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Generator 
+module Domain.Logic.Generator
    ( generateLogic, generateLogicWith
    , LogicGenConfig(..), defaultConfig
    , equalLogicA
@@ -24,19 +25,17 @@ import Test.QuickCheck hiding (defaultConfig)
 import Common.Rewriting
 import Common.Uniplate
 
-instance Rewrite Logic where
+instance Rewrite SLogic where
    operators = logicOperators
 
 -- | Equality modulo associativity of operators
-equalLogicA:: Logic -> Logic -> Bool
+equalLogicA:: SLogic -> SLogic -> Bool
 equalLogicA = equalWith operators
 
-
-
-generateLogic :: Gen Logic
+generateLogic :: Gen SLogic
 generateLogic = generateLogicWith defaultConfig
    
-generateLogicWith :: LogicGenConfig -> Gen Logic
+generateLogicWith :: LogicGenConfig -> Gen SLogic
 generateLogicWith config = arbLogic config >>= preventSameVar config >>= (return . removePartsInDNF)
    
 data LogicGenConfig = LogicGenConfig
@@ -68,18 +67,18 @@ defaultConfig = LogicGenConfig
 freqLeaf :: LogicGenConfig -> Int
 freqLeaf config = freqConstant config + freqVariable config
 
-arbLogic :: LogicGenConfig -> Gen Logic
+arbLogic :: LogicGenConfig -> Gen SLogic
 arbLogic config
    | maxSize config == 0 = arbLogicLeaf config
    | otherwise           = arbLogicBin  config
 
-arbLogicLeaf :: LogicGenConfig -> Gen Logic
+arbLogicLeaf :: LogicGenConfig -> Gen SLogic
 arbLogicLeaf config = frequency
    [ (freqConstant config, oneof $ map return [F, T])
    , (freqVariable config, oneof [ return (Var x) | x <- take (differentVars config) variableList])
    ]
 
-arbLogicBin :: LogicGenConfig -> Gen Logic
+arbLogicBin :: LogicGenConfig -> Gen SLogic
 arbLogicBin config = frequency
    [ (freqLeaf  config, arbLogicLeaf config)
    , (freqImpl  config, op2 (:->:))
@@ -93,7 +92,7 @@ arbLogicBin config = frequency
    op1 f = liftM  f rec
    op2 f = liftM2 f rec rec
 
-preventSameVar :: LogicGenConfig -> Logic -> Gen Logic
+preventSameVar :: LogicGenConfig -> SLogic -> Gen SLogic
 preventSameVar config = rec 
  where
    rec p = case uniplate p of
@@ -105,7 +104,7 @@ preventSameVar config = rec
                  return (f [Var x, Var z])
               (cs, f) -> liftM f (mapM rec cs)
 
-removePartsInDNF :: Logic -> Logic
+removePartsInDNF :: SLogic -> SLogic
 removePartsInDNF = buildOr . filter p1 . disjunctions
  where
    buildOr [] = T
@@ -124,7 +123,7 @@ variableList = ["p", "q", "r", "s", "t"] ++ [ "x" ++ show n | n <- [0..] ]
 -----------------------------------------------------------
 --- QuickCheck generator
 
-instance Arbitrary Logic where
+instance Arbitrary SLogic where
    arbitrary = sized $ \n -> arbLogic defaultConfig {maxSize = n}
    coarbitrary logic = 
       case logic of

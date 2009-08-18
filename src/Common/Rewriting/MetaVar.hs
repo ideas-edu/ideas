@@ -1,7 +1,10 @@
+{-# OPTIONS -XTypeSynonymInstances #-}
 module Common.Rewriting.MetaVar where
 
 import Common.Uniplate
 import qualified Data.IntSet as IS
+import Data.List
+import Data.Char (ord, isDigit)
 
 -----------------------------------------------------------
 --- Meta variables
@@ -10,6 +13,17 @@ import qualified Data.IntSet as IS
 class MetaVar a where
     metaVar   :: Int -> a
     isMetaVar :: a -> Maybe Int
+
+instance MetaVar String where
+   isMetaVar  ('_':xs) | not (null xs) && all isDigit xs = return (read xs)
+   isMetaVar _ = Nothing
+   metaVar n   = "_" ++ show n
+   
+readInt :: String -> Maybe Int
+readInt xs 
+   | null xs                = Nothing
+   | any (not . isDigit) xs = Nothing
+   | otherwise              = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
 
 -- | Produces an infinite list of meta-variables
 metaVars :: MetaVar a => [a]

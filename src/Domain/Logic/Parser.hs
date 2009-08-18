@@ -29,7 +29,7 @@ logicScanner = (makeCharsSpecial "~" defaultScanner)
    , keywordOperators = "~" : concatMap (map fst . snd) operatorTable
    }
 
-operatorTable :: OperatorTable Logic
+operatorTable :: OperatorTable SLogic
 operatorTable = 
    [ (RightAssociative, [("<->", (:<->:))])
    , (RightAssociative, [("||",  (:||:))])
@@ -42,7 +42,7 @@ operatorTable =
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseLogic :: String -> Either SyntaxError (Ranged Logic)
+parseLogic :: String -> Either SyntaxError (Ranged SLogic)
 parseLogic = analyseAndParse pLogic . scanWith logicScanner
  where
    pLogic = pOperators operatorTable (basicWithPos pLogic)
@@ -51,7 +51,7 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
-parseLogicPars :: String -> Either SyntaxError (Ranged Logic)
+parseLogicPars :: String -> Either SyntaxError (Ranged SLogic)
 parseLogicPars = analyseAndParse pLogic . scanWith logicScanner
  where
    basic     =  basicWithPos pLogic
@@ -61,7 +61,7 @@ parseLogicPars = analyseAndParse pLogic . scanWith logicScanner
             <|> (\xs p -> foldr1 (binaryOp (:&&:)) (p:xs)) <$> pList1 (pKey "/\\" *> basic)
             <|> (\xs p -> foldr1 (binaryOp (:||:)) (p:xs)) <$> pList1 (pKey "||"  *> basic)
             
-basicWithPos :: Parser Token (Ranged Logic) -> Parser Token (Ranged Logic)
+basicWithPos :: Parser Token (Ranged SLogic) -> Parser Token (Ranged SLogic)
 basicWithPos p  =  (\(s, r) -> toRanged (Var s) r) <$> pVarid
                <|> pParens p
                <|> toRanged T <$> pKey "T"
@@ -82,10 +82,10 @@ analyseAndParse p ts =
 -----------------------------------------------------------
 --- Pretty-Printer
 
-ppLogic :: Logic -> String
+ppLogic :: SLogic -> String
 ppLogic = ppLogicPrio 0
         
-ppLogicPrio :: Int -> Logic -> String
+ppLogicPrio :: Int -> SLogic -> String
 ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, var "T", var "F") p n ""
  where
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
@@ -94,11 +94,11 @@ ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", bi
    parIf b f = if b then ("("++) . f . (")"++) else f
 
 -- | Pretty printer that produces extra parentheses: also see parseLogicPars
-ppLogicPars :: Logic -> String
+ppLogicPars :: SLogic -> String
 ppLogicPars = ppLogicParsCode 0
         
 -- | Implementation uses the well-known trick for fast string concatenation
-ppLogicParsCode :: Int -> Logic -> String
+ppLogicParsCode :: Int -> SLogic -> String
 ppLogicParsCode n p = foldLogic (var, binop 3 "->", binop 3 "<->", binop 1 "/\\", binop 2 "||", nott, var "T", var "F") p n ""
  where
    binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)

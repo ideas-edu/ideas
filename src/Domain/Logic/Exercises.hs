@@ -29,7 +29,7 @@ import Data.Maybe
 import Test.QuickCheck
 
 -- Currently, we use the DWA strategy
-dnfExercise :: Exercise Logic
+dnfExercise :: Exercise SLogic
 dnfExercise = Exercise
    { identifier    = "dnf"
    , domain        = "logic"

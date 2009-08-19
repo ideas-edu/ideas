@@ -58,6 +58,8 @@ foldlS consS nilS
 -- foldl cons nil []     = nil
 -- foldl cons nil (x:xs) = foldl f (cons x) xs
 
+-- foldl f b = (foldr f b) . reverse ???
+
 compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
 compS f g  =  opS "." (Just f) (Just g)
           <|> lambdaS [patS "x"] (appS f [appS g [varS "x"]])

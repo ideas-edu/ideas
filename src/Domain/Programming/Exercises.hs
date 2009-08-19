@@ -60,7 +60,7 @@ toDecExercises = map (\ex -> heliumExercise { strategy = label "helium" (stringT
 fromBinExercises :: [Exercise Module]
 fromBinExercises = map (\ex -> heliumExercise { strategy = label "fromBin" (stringToStrategy ex)
                                               , description = "Student solutions fromBin" 
-                                              }) fromBins
+                                              }) (map fst fromBins)
 
 {-
 isortExercise :: Exercise Expr

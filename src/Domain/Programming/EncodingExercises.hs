@@ -281,9 +281,113 @@ fromBin66 = ("fromBin [] = 0\n"
           ++ "fromBin' (x:xs) tussen = fromBin' xs (2*tussen+x)\n", "pdstaats-cjplatte")
 
 
+fromBin67 = ("fromBin    x     =  toInt 2 x\n"
+          ++ "toInt    _      []                           = 0\n"
+          ++ "toInt    b      (x:xs)  | x < 0 || x > b - 1 = -1\n"
+          ++ "                        | otherwise          = x * (b ^ l) + toInt b xs\n"
+          ++ "                          where l = length xs\n", "pjwjanse-jjvisser")
 
+fromBin68 = ("fromBin xs = foldl' (\\x y -> x*2+y) 0 xs\n", "pmspek")
 
+fromBin69 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x*(2^length xs)+fromBin xs\n", "pqgroot")
 
+fromBin70 = ("fromBin cs = if isBinair cs then foldl (\\ x y -> x*2 + y) 0 cs else error \"Invoer is niet Binair!\"\n"
+          ++ "isBinair [] = True\n"
+          ++ "isBinair (c:cs) | c == 1 || c == 0 = isBinair cs\n"
+          ++ "                | otherwise = False\n", "raspauwe")
+
+fromBin71 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs)  | x <= 1 = x * (2 ^ (length (x:xs) - 1)) + fromBin xs\n"
+          ++ "                | otherwise = error \"lijst mag alleen uit 1 en 0 bestaan!\"\n", "ravries-ccmrooij")
+
+fromBin72 = ("fromBin []     = 0\n"
+          ++ "fromBin (x:xs) = x * 2^length xs + fromBin xs\n", "rawagenm")
+
+fromBin73 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = (x*b)+ fromBin(xs)\n"
+          ++ "   where b = 2^(length(xs))\n", "rehoef-irrencke")
+
+fromBin74 = ("fromBin x = fromIntGet 2 x\n"
+          ++ "fromIntGet _ [] = 0\n"
+          ++ "fromIntGet g (x:xs) =  g^(length xs) * x + fromIntGet g xs\n", "rgroot")
+
+fromBin75 = ("fromBin = fromBaseInt 2\n"
+          ++ "fromBaseInt n = (foldr (\\x y -> x + n*y) 0) . reverse\n", "rhaan")
+
+fromBin76 = ("fromBin [] = 0\n"
+          ++ "fromBin [x] = x\n"
+          ++ "fromBin (x:xs)= getal + fromBin xs\n"
+          ++ "  where getal = x * (2 ^ length xs)\n", "rhouweli")
+
+fromBin77 = ("fromBin [] = 0\n"
+          ++ "fromBin (c:cs) = c * (2 ^ length cs) + fromBin cs\n", "rpvermeu-jcrvrijho")
+
+fromBin78 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) =   x * 2^length xs + fromBin xs\n", "rslagmol")
+
+fromBin79 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x*2^(length xs) + fromBin xs\n", "rtharder")
+
+fromBin80 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * 2 ^ length xs + fromBin xs\n", "rvesten-rsalphen")
+
+fromBin81 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x*2^(length xs) + fromBin xs\n", "sagieske")
+
+fromBin82 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = (x * 2 ^ length (xs))+ fromBin (xs)\n", "sdriel")
+
+fromBin83 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * 2 ^ length xs  + fromBin xs\n", "sjavissc")
+
+fromBin84 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * 2 ^ z + fromBin xs\n"
+          ++ "  where z = length(x:xs) - 1\n", "sjveldhu")
+
+fromBin85 = ("fromBin l = sum $ zipWith (*) (map (2^) [0..(length l)-1]) (reverse l)\n"
+            , "sttimmer")
+
+fromBin86 = ("fromBin [a] = a\n"
+          ++ "fromBin (a:as) = a * (2 ^ (length (a:as) - 1)) + fromBin(as)\n", "talles")
+
+fromBin87 = ("fromBin x = doFromBin (reverse x) 0\n"
+          ++ "  where doFromBin (y:ys) z = y * 2^z + doFromBin ys (z +1)\n"
+          ++ "        doFromBin [] _ = 0\n", "taveld")
+
+fromBin88 = ("fromBin x = fromBin2 x ((length x) - 1)\n"
+          ++ "fromBin2 (a:[]) _ = a\n"
+          ++ "fromBin2 (h:t) x = (h * (2 ^ x)) + fromBin2 t (x - 1)\n", "tleroi")
+
+fromBin89 = ("fromBin = listToNumber 2\n"
+          ++ "listToNumber _ [] = 0\n"
+          ++ "listToNumber stelsel (h:t) = h*(stelsel^(length t)) + (listToNumber stelsel t)\n"
+            , "tmsoetho")
+
+fromBin90 = ("fromBin ys = fB ys (length ys - 1)\n"
+          ++ "  where fB [] _ = 0\n"
+          ++ "        fB (x:xs) n = (x * 2^n) + fB xs (n-1)\n", "tromberg-rjanssen")
+
+fromBin91 = ("fromBin' (h:[]) _   = h\n"
+          ++ "fromBin' (h:t) l = (h * (2 ^ l)) + (fromBin' t (l - 1))\n"
+          ++ "fromBin v = fromBin' v ((length v) - 1)\n", "tsteemer")
+
+fromBin92 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * (2 ^ l) + fromBin xs\n"
+          ++ "  where l = length (x:xs) -1\n", "vrbons-hckampma")
+
+fromBin93 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * (2 ^ (length xs)) + fromBin xs\n", "whustinx")
+
+fromBin94 = ("fromBin list = fromBaseNum 2 list\n"
+          ++ "fromBaseNum b list = sum (zipWith (*) (reverse list) (powList b))\n", "wlelsing")
+
+fromBin95 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x*2^y + fromBin xs\n"
+          ++ "  where y = length xs\n", "wokatz")
+
+fromBin96 = ("fromBin []      = 0\n"
+          ++ "fromBin (x:y)   = x * 2 ^ length y + fromBin y\n", "ybouma")
 
 
 -- toDec :: Int -> [Int]

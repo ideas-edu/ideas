@@ -20,37 +20,270 @@ fromBins = [ fromBin, fromBinER, fromBinLet, fromBinEta
            , fromBin1, fromBin2, fromBin3, fromBin4, fromBin5, fromBin6
            ]
 
-fromBin = "fromBin = foldl ((+) . (* 2)) 0"
 
-fromBinER =  "fromBin = f 0\n" -- explicit recursion
+fromBin = ("fromBin = foldl ((+) . (* 2)) 0", "Stefan")
+
+fromBinER = ("fromBin = f 0\n" -- explicit recursion
           ++ "  where\n" 
           ++ "    f nil []     = nil\n" 
-          ++ "    f nil (x:xs) = f (((+) . (*2)) nil x) xs\n"
+          ++ "    f nil (x:xs) = f (((+) . (*2)) nil x) xs\n", "Explicit recursion")
 
-fromBinLet =  "fromBin = let f nil []     = nil\n" 
+fromBinLet = ("fromBin = let f nil []     = nil\n" 
            ++ "              f nil (x:xs) = f (((+) . (*2)) nil x) xs\n"
-           ++ "          in f 0\n"
+           ++ "          in f 0\n", "Let variant")
 
-fromBinEta = "fromBin = foldl (\\x -> (\\y -> ((+) . (* 2)) y) x) 0"
+fromBinEta = ("fromBin = foldl (\\x -> (\\y -> ((+) . (* 2)) y) x) 0", "Eta expanded variant")
 
-fromBin1 = "fromBin = foldl (\\x y -> x * 2 + y) 0"
 
-fromBin2 =  "fromBin [] = 0\n"
-         ++ "fromBin (x:xs) = x * 2^(length xs) + fromBin xs\n"
+
+fromBin1 = ("fromBin = fromBase' 2\n"
+         ++ "fromBase' _ []     = 0\n"
+         ++ "fromBase' n (x:xs) = x * n ^ length xs + fromBase' n xs\n", "affboth-lveerman")
+
+fromBin2 = ("fromBin = foldl (\\x y -> x * 2 + y) 0", "bdoren-mjspoor")
+
+fromBin3 = ("fromBin [] = 0\n"
+         ++ "fromBin (x:xs) = x * 2^(length xs) + fromBin xs\n", "bgreeven-jsteenbe")
 
 -- looks like a foldl1, however, solution is not entirely correct (no case for [])
-fromBin3 =  "fromBin [x]      = x\n"
-         ++ "fromBin (x:y:ys) = fromBin (x * 2 + y : ys)\n"
+fromBin4 = ("fromBin [x]      = x\n"
+         ++ "fromBin (x:y:ys) = fromBin (x * 2 + y : ys)\n", "bjliefer-ptpkokke")
 
-fromBin4 =  "fromBin = fromBaseInt 2\n"
+fromBin5 = ("fromBin = fromBaseInt 2\n"
          ++ "fromBaseInt base xs = sum $ zipWith (*) bMachten xs\n"
-         ++ "  where bMachten = scanr (*) 1 $ take (length xs - 1) $ repeat base\n"
+         ++ "  where bMachten = scanr (*) 1 $ take (length xs - 1) $ repeat base\n", "bspaans")
 
-fromBin5 =  "fromBin [] = 0\n"
-         ++ "fromBin (x:xs) = (x*(2^length xs)) + fromBin xs\n"
+fromBin6 = ("fromBin [] = 0\n"
+         ++ "fromBin (x:xs) = (x*(2^length xs)) + fromBin xs\n", "btdijk")
 
-fromBin6 =  "fromBin [] = 0\n"
-         ++ "fromBin (h:hs) =h*2^length hs +fromBin hs\n"
+fromBin7 = ("fromBin = foldl ( (+).(2*) ) 0", "cjblom")
+
+fromBin8 = ("fromBin [] = 0\n"
+         ++ "fromBin (h:hs) =h*2^length hs +fromBin hs\n", "ddtoniss-dsgroote")
+
+fromBin9 = ("fromBin l = foldr op 0 (reverse l)\n"
+         ++ "  where op a b = a + 2*b\n", "dekuppev")
+
+fromBin10 = ("fromBin [] = 0\n"
+          ++ "fromBin x@(y:ys) = y * 2^(length x - 1) + fromBin ys\n", "dgerritz")
+
+fromBin11 = ("fromBin []       =  0\n"
+          ++ "fromBin (x : xs) =  x * 2 ^ (length xs) + fromBin xs\n", "dpboot")
+
+fromBin12 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * (2^(length xs)) + fromBin xs\n", "dwinkel")
+
+fromBin13 = ("fromIntBase b = foldl' (\\ x y -> b*x+y ) 0\n"
+          ++ "fromBin = fromIntBase 2\n", "elrenkem-ogrottie")
+
+fromBin14 = ("fromBin   = foldl (\\r n -> 2 * r + n) 0\n", "ergallo")
+
+fromBin15 = ("fromNumeralSystem base input\n"
+          ++ "    | and (map (<base) input) = foldl ((+).(base*)) 0 input\n"
+          ++ "    | otherwise = error \"Input not within limits of base\"\n"
+          ++ "fromBin = fromNumeralSystem 2\n", "ewjmulde")
+
+fromBin16 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) |x == 1 = (2^(length xs)) + fromBin xs\n"
+          ++ "               |otherwise = fromBin xs\n", "fcbijlsm")
+
+fromBin17 = ("fromBin = digitsToInt 2\n"
+          ++ "digitsToInt b dgts = if (null.(filter (\\x -> 0>x || x>=b))) dgts && (not.null) dgts\n"
+          ++ "                     then foldl (\\x y -> b*x + y) 0 dgts\n"
+          ++ "                     else error (\"digitsToInt: list must not be empty and list must only include values: 0 - \" ++ show(b-1))", "fldenis")
+
+fromBin18 = ("fromBin [] = 0\n"
+          ++ "fromBin [s] = s\n"
+          ++ "fromBin (s:t:staart) = fromBin ((2*s+t):staart)\n", "fsteeg-hkbarnev")
+
+fromBin19 = ("fromBin  []    = 0\n"
+          ++ "fromBin (x:xs) = 2 ^ (length (x:xs) -1 ) * x + fromBin xs", "gcpzunde")
+
+fromBin20 = ("fromBin = fromBaseI 2\n"
+          ++ "fromBaseI base = foldl op 0\n"
+          ++ "    where op a b | abs b < base = (abs a * base + abs b) * sign a * sign b\n"
+          ++ "                 | otherwise = error \"Invoer cijfers groter dan basis.\"\n"
+          ++ "              where sign x | x < 0 = -1\n"
+          ++ "                           | otherwise = 1\n", "gdijkstr-rjhensin")
+
+fromBin21 = ("fromBin []     = 0\n"
+          ++ "fromBin (x:xs) = x*2^length(xs) + fromBin xs\n", "gloupias")
+
+fromBin22 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * 2 ^ length xs + fromBin x\n", "hjkuijk")
+
+fromBin23 = ("fromBaseIndex 2\n"
+          ++ "fromBaseIndex _ [] = 0\n"
+          ++ "fromBaseIndex base (i:is) = base^(length is)*i + fromBaseIndex base is\n", "hlversto")
+
+fromBin24 = ("fromBin = fromSys 2\n"
+          ++ "fromSys s l = foldl (+) 0 (snd (mapAccumR convertNthDigit 0 l))\n"
+          ++ "            where convertNthDigit x y | y < s     = (x+1, y*s^x)\n"
+          ++ "                                      | otherwise = error \"number is greater then base\"\n", "hmpaasse")
+
+fromBin25 = ("fromBin []     = 0\n"
+          ++ "fromBin (x:xs) = x * 2^l + fromBin xs\n"
+          ++ "  where l = length xs\n", "imberg-cwbbonen")
+
+fromBin26 = ("fromBin s = fromBinMetHulp s 0\n"
+          ++ "fromBinMetHulp [] hulp = hulp\n"
+          ++ "fromBinMetHulp (x:xs) hulp = fromBinMetHulp xs ((hulp*2) + (x))\n", "jcgoosen")
+
+fromBin27 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = let y = length xs\n"
+          ++ "                 in if (x == 1 || x == 0) then x * 2 ^ y + fromBin xs else error \"niet binair\"\n", "jcgsmits")
+
+fromBin28 = ("fromBin = foldl (\\x y -> 2*x+y) 0", "jdfeddem")
+
+fromBin29 = ("fromBin [] =  0\n"
+          ++ "fromBin (x:xs) =  x * 2 ^ length xs + fromBin xs\n", "jduijn-iduijn")
+
+fromBin30 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * 2 ^ (length xs) + fromBin xs\n", "jeceding")
+
+fromBin31 = ("fromBin ints = fromBinHulp 0 (reverse ints)\n"
+          ++ "  where fromBinHulp :: Int -> [Int] -> Int\n"
+          ++ "        fromBinHulp _ [] = 0\n"
+          ++ "        fromBinHulp n (i:is) | i < 2     = (i*2^n) + fromBinHulp (n+1) is\n"
+          ++ "                             | otherwise = undefined\n", "jgageldo")
+
+fromBin32 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = 2^(length xs) * x + (fromBin xs)\n", "jhberg")
+
+fromBin33 = ("fromBin = fromBaseN 2\n"
+          ++ "fromBaseN base number = fromBaseN' base (reverse number)\n"
+          ++ "    where fromBaseN' _ [] = 0\n"
+          ++ "          fromBaseN' base' (c:cs) = c + base' * (fromBaseN' base' cs)\n", "jhorn")
+
+fromBin34 = ("fromBin [] = 0\n"
+          ++ "fromBin (a:b) = let macht = 2^(length (b))\n"
+          ++ "                in a * (macht) + fromBin b\n", "jjhoozem")
+
+fromBin35 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = x * 2 ^ n + fromBin xs\n"
+          ++ "  where n = length xs\n", "jkoperdr")
+
+fromBin36 = ("fromBin []     = 0\n"
+          ++ "fromBin (x:xs) = x*b + fromBin xs\n"
+          ++ "  where b = 2^length xs\n", "jleersum-anieuwla")
+
+fromBin37 = ("fromBin x = fromBin' x (length x - 1)\n"
+          ++ "  where fromBin' []     _ = 0\n"
+          ++ "        fromBin' (y:ys) z | y == 0 || y == 1 = y * 2^z + fromBin' ys (z-1)\n"
+          ++ "                          | otherwise        = error \"Alstublieft binaire getallen gebruiken\"\n", "jmlinsse")
+
+fromBin38 = ("fromBin []     =  0\n"
+          ++ "fromBin (x:xs) =  x * 2^(length xs) + fromBin xs\n", "jmulder")
+
+fromBin40 = ("fromBin [] = 0\n"
+          ++ "fromBin (x : xs) = x * 2 ^ (length xs) + fromBin xs\n", "jtkman-echgbon")
+
+fromBin41 = ("fromBin [] = 0\n"
+          ++ "fromBin (x : xs) = x*2^length xs + fromBin xs\n", "jwind")
+
+fromBin42 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = result + fromBin xs\n"
+          ++ "  where result = x * (2 ^ length xs)\n", "kfaro")
+
+fromBin43 = ("fromBin [] = 0\n"
+          ++ "fromBin (x : []) = x\n"
+          ++ "fromBin (x : xs) = ( x * 2^length xs ) + fromBin xs\n", "kjdvoors-apol")
+
+fromBin44 = ("fromBin (a : as) = a*(2^(length(a : as)-1)) + fromBin(as)\n"
+          ++ "fromBin [] = 0\n", "lblhartm")
+
+fromBin45 = ("fromBin x = fromBin' x (length x - 1)\n"
+          ++ "fromBin' [] _ = 0\n"
+          ++ "fromBin' (x:xs) y = x*2^y + (fromBin' xs (y - 1))\n", "ldsbroe-jfklein")
+
+fromBin46 = ("fromBin []     = 0\n"
+          ++ "fromBin (x:xs) = x * 2^length(xs) + fromBin xs\n", "lrwester")
+
+fromBin47 = ("fromBin (x:xs) = x * 2^(length xs) + fromBin xs\n"
+          ++ "fromBin []     = 0\n", "lsstoel")
+
+fromBin48 = ("fromBin [] = 0\n"
+          ++ "fromBin xs = fromBin' 0 (reverse xs)\n"
+          ++ "fromBin' _ [] = 0\n"
+          ++ "fromBin' a (x:xs) = 2^a * (abs x `mod` 2) + fromBin' (a+1) xs\n", "ltbinsbe")
+
+fromBin49 = ("fromBin = foldl ((+).(*2)) 0", "lwgraaff")
+
+fromBin50 = ("fromBin []   = 0\n"
+          ++ "fromBin l    = sum (oplopendeMachten 2 l)\n"
+          ++ "oplopendeMachten a []=  [0]\n"
+          ++ "oplopendeMachten a l =  last l: oplopendeMachten a (init(basis))\n"
+          ++ "  where basis = map (*a) l\n", "mahashi-mjhobbel")
+
+fromBin51 = ("fromBin []     = 0\n"
+          ++ "fromBin (x:xs) | x==0 || x==1 = x * 2 ^ (length xs) + (fromBin xs)\n"
+          ++ "               | otherwise    = error \"Binaire getallen hebben alleen nullen en enen, dommerd!\"\n", "maooster")
+
+fromBin52 = ("fromBin [] = 0\n"
+          ++ "fromBin [bin] = bin\n"
+          ++ "fromBin (bin:rest) = bin * 2^length rest + fromBin rest\n", "mbarendr")
+
+fromBin53 = ("fromBin = foldl (\\n c -> 2 * n + c) 0", "mfrancke-jfidijks")
+
+fromBin54 = ("fromBin x = fromBinRev (reverse x) 0\n"
+          ++ "fromBinRev [] _ = 0\n"
+          ++ "fromBinRev [x] y  = x * 2^y\n"
+          ++ "fromBinRev (x:xs) y = x * 2^y + fromBinRev xs (y+1)\n", "mgrimme")
+
+fromBin55 = ("fromBin = fromSpecial 2\n"
+          ++ "fromSpecial _ [] = 0\n"
+          ++ "fromSpecial base xs | or (map (\\y -> y >= base || y<0) xs) = error \"Please provide a list only containing values in the given range\"\n"
+          ++ "                    | otherwise = sum (zipWith (*) (reverse xs) [base^x | x <- [0..] ])\n", "mkroese")
+
+fromBin56 = ("fromBin [] = 0\n"
+          ++ "fromBin getalLijst = 2 * fromBin (init getalLijst) + last getalLijst\n", "mlmbroer-jmwbrete")
+
+fromBin57 = ("fromBin = foldl (\\x y -> 2*x + y) 0\n", "mmontvai-beck")
+
+fromBin58 = ("fromBin a = from 2 a\n"
+          ++ "from a b | (or . (map (a<))) b = error \"[Int]->Int conversion out of range\"\n"
+          ++ "         | otherwise         = from'' a b\n"
+          ++ "from'' a [] = 0\n"
+          ++ "from'' a [b] = b\n"
+          ++ "from'' a ( kop : tussen : staart ) = from'' a ([(kop * a) + tussen ] ++ staart)\n", "mrvaarti-rwerken")
+
+fromBin59 = ("fromBin []      = 0\n"
+          ++ "fromBin (x:xs)  = x * 2 ^ length xs + fromBin xs\n", "mtduysen")
+
+fromBin60 = ("fromBin [] = 0\n"
+          ++ "fromBin xs = fromBim (reverse xs)\n"
+          ++ "fromBim [] = 0\n"
+          ++ "fromBim (x:xs) | x < 0 || x > 1 = error \"Niet binair getal!\"\n"
+          ++ "               | otherwise = x + 2 * fromBim xs\n", "mtibboel-sabitter")
+
+fromBin61 = ("fromBin x = maakGetal 2 x 0\n"
+          ++ "maakGetal _ [] b = b\n"
+          ++ "maakGetal a (x:xs) b = if (x < a) then  maakGetal a xs (b * a + x) else 0\n", "mvensela-merboxel")
+
+fromBin62 = ("fromBin [] = 0\n"
+          ++ "fromBin (x : xs) = x * 2 ^ length xs + fromBin xs\n", "mzwan-jgeeden")
+
+fromBin63 = ("fromBin [0] = 0\n"
+          ++ "fromBin [1] = 1\n"
+          ++ "fromBin(h:t) = (h*(2^length t)) + fromBin t\n", "njvlamin")
+
+fromBin64 = ("fromBin a = foldl (\\x y->(2*x)+y) 0 a\n", "nroumimp")
+
+fromBin65 = ("fromBin = fromAap 2\n"
+          ++ "fromAap base = foldl (nextInt base) 0\n"
+          ++ "  where nextInt base x y | y >= base = error (concat[\"fromAap: Number \", show y, \" out of range for base \", show base,\".\"])\n"
+          ++ "                         | y < 0 = error (concat[\"fromAap: Number \", show y, \" is negative.\"])\n"
+          ++ "                         | otherwise = x * base + y\n", "ompennin")
+
+fromBin66 = ("fromBin [] = 0\n"
+          ++ "fromBin (x:xs) = fromBin' xs x\n"
+          ++ "fromBin' [] tussen = tussen\n"
+          ++ "fromBin' (x:xs) tussen = fromBin' xs (2*tussen+x)\n", "pdstaats-cjplatte")
+
+
+
+
+
 
 
 -- toDec :: Int -> [Int]

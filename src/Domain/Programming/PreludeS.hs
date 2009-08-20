@@ -19,6 +19,7 @@ module Domain.Programming.PreludeS
      -- * Smart constructors and help functions
    , varS, patS, modS, funS, declFunS, declPatS, rhsS, intS, appS, opS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
+   , patInfixConS
    ) where
 
 import Common.Context hiding (Var)
@@ -54,11 +55,6 @@ foldlS consS nilS
                                   (varS "f" #  [ exprParenS (consS # [ varS "nil", varS "x" ]), varS "xs" ]) [] ]
             ] -- in
             ( varS "f" # [nilS] )
-
--- foldl cons nil []     = nil
--- foldl cons nil (x:xs) = foldl f (cons x) xs
-
--- foldl f b = (foldr f b) . reverse ???
 
 compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
 compS f g  =  opS "." (Just f) (Just g)

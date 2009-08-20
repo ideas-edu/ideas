@@ -48,17 +48,19 @@ freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
 
 allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ inContext emptyProg
-isSolution strat m = elem (normaliseModule m) $ map normaliseModule $ allSolutions strat
+normalisedSolutions strat =  map normaliseModule $ allSolutions strat
+isSolution strat m = elem (normaliseModule m) $ normalisedSolutions strat
 
-checkExercise :: Strategy (Context Module) -> String -> IO ()
-checkExercise strat x = putStrLn $ x ++ " : " ++ 
-                        (show $ isSolution strat $ fromRight $ compile x)
+checkExercise :: Strategy (Context Module) -> (String, String) -> IO ()
+checkExercise strat x = checkExercises strat [x]
+
+checkExercises :: Strategy (Context Module) -> [(String, String)] -> IO ()
+checkExercises strat xs = mapM_ (pp . compile') xs
   where
-    fromRight x = case x of
-                    Right y -> y
-                    _       -> error "no compile"
-checkExercises :: Strategy (Context Module) -> [String] -> IO ()
-checkExercises strat xs = mapM_ (checkExercise strat) xs
+    compile' x = case compile (fst x) of
+                    Right y -> (normaliseModule y, snd x)
+                    _       -> error $ "no compile: " ++ snd x
+    pp x = putStrLn $ (snd x) ++ " : " ++ show (elem (fst x) (normalisedSolutions strat))
 
 
 --------------------------------------------------------------------------------
@@ -87,9 +89,11 @@ f >-> g = \ x -> case f x of
 infixr 1 >->
 
 removeParens :: Data a => a -> a
-removeParens = transformBi f
+removeParens = transformBi f . transformBi g
   where f (Expression_Parenthesized _ expr) = expr
         f x = x
+        g (Pattern_Parenthesized _ pat) = pat
+        g x = x
 
 removeRanges :: Data a => a -> a
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)

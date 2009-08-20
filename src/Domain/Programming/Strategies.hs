@@ -25,11 +25,26 @@ import Prelude hiding (sequence)
 
 
 -- | fromBin strategy
-fromBinStrategy = modS [ declPatS "fromBin" (foldlS consS nilS) [] ]
+fromBinStrategy = fromBinFoldlS <|> fromBinRecurS
+
+fromBinFoldlS = modS [ declPatS "fromBin" (foldlS consS nilS) [] ]
   where
     consS = exprParenS $ compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
     nilS = intS "0"
-                           
+
+fromBinRecurS = modS [ declFunS [ funS "fromBin" [patConS "[]"] (intS "0") []
+                                , funS "fromBin" [patInfixConS (patS "x") ":" (patS "xs")] 
+                                       (opS "+" (Just (opS "*" (Just (varS "x"))
+                                                              (Just (opS "^" (Just (intS "2")) 
+                                                                             (Just (varS "length" # [varS "xs"]))))))
+                                               (Just (varS "fromBin" # [varS "xs"])))
+                                       []
+                                ]
+                     ]
+
+-- fromBin [] = 0
+-- fromBin (x:xs) = x * 2^(length xs) + fromBin xs
+
 
 -- | Strategies derived from the abstract syntax of expressions
 stringToStrategy :: String -> Strategy (Context Module)

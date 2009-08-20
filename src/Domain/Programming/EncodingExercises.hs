@@ -16,13 +16,17 @@ module Domain.Programming.EncodingExercises where
 
 -- fromBin :: [Int] -> Int
 
-fromBins = [ fromBin, fromBinER, fromBinLet, fromBinEta
-           , fromBin1, fromBin2, fromBin3, fromBin4, fromBin5, fromBin6
-           ]
+fromBins = [fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7,fromBin8,fromBin9,fromBin10,fromBin11,fromBin12,fromBin13,fromBin14,fromBin15,fromBin16,fromBin17,fromBin18,fromBin19,fromBin20,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin27,fromBin28,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin43,fromBin44,fromBin45,fromBin46,fromBin47,fromBin48,fromBin49,fromBin50,fromBin51,fromBin52,fromBin53,fromBin54,fromBin55,fromBin56,fromBin57,fromBin58,fromBin59,fromBin60,fromBin61,fromBin62,fromBin63,fromBin64,fromBin65,fromBin66,fromBin67,fromBin68,fromBin69,fromBin70,fromBin71,fromBin72,fromBin73,fromBin74,fromBin75,fromBin76,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81,fromBin82,fromBin83,fromBin84,fromBin85,fromBin86,fromBin87,fromBin88,fromBin89,fromBin90,fromBin91,fromBin92,fromBin93,fromBin94,fromBin95,fromBin96]
+
+fromBinsNoCompile = [fromBin24 {- can be fixed by inlining mapAccumR -}]
+fromBinsWrong = [fromBin4]
 
 
+-- Stefan his standard solution
 fromBin = ("fromBin = foldl ((+) . (* 2)) 0", "Stefan")
 
+
+-- Test solutions
 fromBinER = ("fromBin = f 0\n" -- explicit recursion
           ++ "  where\n" 
           ++ "    f nil []     = nil\n" 
@@ -35,6 +39,7 @@ fromBinLet = ("fromBin = let f nil []     = nil\n"
 fromBinEta = ("fromBin = foldl (\\x -> (\\y -> ((+) . (* 2)) y) x) 0", "Eta expanded variant")
 
 
+-- Student solutions:
 
 fromBin1 = ("fromBin = fromBase' 2\n"
          ++ "fromBase' _ []     = 0\n"
@@ -110,9 +115,9 @@ fromBin21 = ("fromBin []     = 0\n"
           ++ "fromBin (x:xs) = x*2^length(xs) + fromBin xs\n", "gloupias")
 
 fromBin22 = ("fromBin [] = 0\n"
-          ++ "fromBin (x:xs) = x * 2 ^ length xs + fromBin x\n", "hjkuijk")
+          ++ "fromBin (x:xs) = x * 2 ^ length xs + fromBin xs\n", "hjkuijk")
 
-fromBin23 = ("fromBaseIndex 2\n"
+fromBin23 = ("fromBin = fromBaseIndex 2\n"
           ++ "fromBaseIndex _ [] = 0\n"
           ++ "fromBaseIndex base (i:is) = base^(length is)*i + fromBaseIndex base is\n", "hlversto")
 
@@ -142,8 +147,7 @@ fromBin30 = ("fromBin [] = 0\n"
           ++ "fromBin (x:xs) = x * 2 ^ (length xs) + fromBin xs\n", "jeceding")
 
 fromBin31 = ("fromBin ints = fromBinHulp 0 (reverse ints)\n"
-          ++ "  where fromBinHulp :: Int -> [Int] -> Int\n"
-          ++ "        fromBinHulp _ [] = 0\n"
+          ++ "  where fromBinHulp _ [] = 0\n"
           ++ "        fromBinHulp n (i:is) | i < 2     = (i*2^n) + fromBinHulp (n+1) is\n"
           ++ "                             | otherwise = undefined\n", "jgageldo")
 
@@ -380,7 +384,8 @@ fromBin93 = ("fromBin [] = 0\n"
           ++ "fromBin (x:xs) = x * (2 ^ (length xs)) + fromBin xs\n", "whustinx")
 
 fromBin94 = ("fromBin list = fromBaseNum 2 list\n"
-          ++ "fromBaseNum b list = sum (zipWith (*) (reverse list) (powList b))\n", "wlelsing")
+          ++ "fromBaseNum b list = sum (zipWith (*) (reverse list) (powList b))\n"
+          ++ "  where powList b = pow 0 where pow n = (b^n):(pow (n+1))\n", "wlelsing")
 
 fromBin95 = ("fromBin [] = 0\n"
           ++ "fromBin (x:xs) = x*2^y + fromBin xs\n"

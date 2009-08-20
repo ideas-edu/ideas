@@ -13,8 +13,9 @@
 
 module Domain.Programming.Prog where
 
-import Common.Context
+import Common.Context hiding (get)
 import Common.Strategy
+import Control.Monad.State
 import Data.Generics.Biplate
 import Data.Generics.PlateData
 import Data.Data hiding (Fixity)
@@ -51,17 +52,25 @@ allSolutions strat = map (fromContext . snd . last . snd) $ derivations strat $ 
 normalisedSolutions strat =  map normaliseModule $ allSolutions strat
 isSolution strat m = elem (normaliseModule m) $ normalisedSolutions strat
 
-checkExercise :: Strategy (Context Module) -> (String, String) -> IO ()
-checkExercise strat x = checkExercises strat [x]
+checkExercise :: Strategy (Context Module) -> [Module] -> (String, String) -> StateT Integer IO ()
+checkExercise strat solutions (solution, name) = do
+    correctCount <- get
+    let m = compilation
+    let isSolution = m `elem` solutions
+    liftIO $ putStrLn $ name ++ " : " ++ show isSolution
+    put $ if isSolution then correctCount + 1 else correctCount
+  where
+    compilation = case compile solution of
+                    Right y -> normaliseModule y
+                    _       -> error $ "no compile: " ++ name
 
 checkExercises :: Strategy (Context Module) -> [(String, String)] -> IO ()
-checkExercises strat xs = mapM_ (pp . compile') xs
-  where
-    compile' x = case compile (fst x) of
-                    Right y -> (normaliseModule y, snd x)
-                    _       -> error $ "no compile: " ++ snd x
-    pp x = putStrLn $ (snd x) ++ " : " ++ show (elem (fst x) (normalisedSolutions strat))
-
+checkExercises strat es = do
+  let solutions = normalisedSolutions strat
+  (_, count) <- runStateT (mapM (checkExercise strat solutions) es) 0
+  let percentage = (fromInteger count) / (fromInteger (toInteger (length es))) * 100.0
+  putStrLn $ "\n" ++ take 4 (show percentage) ++ "% has been recognised by the strategy.\n"
+  return ()
 
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
@@ -70,14 +79,15 @@ equalModules :: Module -> Module -> Bool
 equalModules x y = normaliseModule x == normaliseModule y
 
 normaliseModule :: Module -> Module
-normaliseModule = normalise . alphaRenaming
+normaliseModule = alphaRenaming . normalise
 
 normalise :: Data a => a -> a
-normalise = rewriteBi rules . preprocess
+normalise = rewriteExprs . rewriteRHSs . preprocess
   where
     preprocess = removeRanges . removeParens
-    rules  =  etaReduce >-> betaReduce >-> lambdaReduce >-> applicationReduce 
-          >-> infix2prefix >-> commutativeOps
+    rewriteExprs = rewriteBi $ etaReduce >-> betaReduce >-> lambdaReduce >-> applicationReduce >->
+                               infix2prefix >-> commutativeOps 
+    rewriteRHSs = rewriteBi inline
     
 -- a kind of Left-to-right Kleisli composition of monads
 (>->) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
@@ -178,6 +188,20 @@ commutativeOps x = case x of
   where
     isSorted xs = sort xs == xs
       
+inline :: RightHandSide -> Maybe RightHandSide
+inline x = case x of
+  RightHandSide_Expression r expr 
+    (MaybeDeclarations_Just ws) -> Just $ RightHandSide_Expression r (replace expr ws) MaybeDeclarations_Nothing
+  _                             -> Nothing
+  where 
+    replace expr = foldr transformBi expr . map rep . reps
+      where
+        reps ws = [(pat, expr) | w <- ws, Declaration_PatternBinding _ pat (RightHandSide_Expression _ expr _) <- universeBi w]
+        rep (Pattern_Variable _ p, x) e = case e of
+                  Expression_Variable _ n -> if n == p then x else e
+                  _                       -> e
+        rep _                         e = e
+    
 
 {-
 -- rewrite functions e.g. f x = div x => f = div

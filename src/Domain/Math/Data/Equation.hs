@@ -15,6 +15,7 @@ module Domain.Math.Data.Equation where
 
 import Common.Uniplate
 import Common.Rewriting
+import Common.Traversable
 import Test.QuickCheck
 import Control.Monad
 
@@ -27,6 +28,13 @@ data Equation  a = a :==: a
    
 instance Functor Equation where
    fmap f (x :==: y) = f x :==: f y
+   
+instance Once Equation where 
+   onceM f (lhs :==: rhs) = 
+      liftM (:==: rhs) (f lhs) `mplus` liftM (lhs :==:) (f rhs)
+
+instance Switch Equation where 
+   switch (ma :==: mb) = liftM2 (:==:) ma mb
    
 instance Show a => Show (Equation a) where
    show (x :==: y) = show x ++ " == " ++ show y

@@ -23,8 +23,10 @@ module Domain.LinearAlgebra.Matrix
    , isSquare, identityMatrix, isLowerTriangular, isUpperTriangular
    ) where
 
+import Control.Monad
 import Data.Maybe
 import Data.List hiding (transpose)
+import Common.Traversable
 import qualified Data.List as L
 import qualified Data.Map as M
 
@@ -37,6 +39,14 @@ type Column a = [a]
 
 instance Functor Matrix where 
    fmap f (M rows) = M (map (map f) rows)
+
+instance Once Matrix where 
+   onceM f (M xss) = do 
+      yss <- onceM (onceM f) xss
+      return (M yss)
+
+instance Switch Matrix where
+   switch (M xss) = liftM M (mapM sequence xss)
 
 -- Check whether the table is rectangular
 isRectangular :: [[a]] -> Bool

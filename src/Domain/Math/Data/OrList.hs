@@ -2,16 +2,31 @@ module Domain.Math.Data.OrList where
 
 import qualified Text.OpenMath.Conversion as OM -- Preferably not
 import Control.Monad
+import Common.Traversable
 import Test.QuickCheck
 import Data.List (intersperse)
 
 ------------------------------------------------------------
 -- OrList
 
-newtype OrList a = OrList [a] deriving (Ord, Eq)
+newtype OrList a = OrList { fromOrList :: [a] } deriving (Ord, Eq)
 
 instance Functor OrList where
    fmap f (OrList xs) = OrList (map f xs)
+
+instance Monad OrList where
+   return = OrList . return
+   OrList m >>= f = OrList (m >>= fromOrList . f)
+
+instance Once OrList where
+   onceM = useOnceJoin
+
+instance Switch OrList where
+   switch (OrList xs) = liftM OrList (sequence xs)
+
+instance OnceJoin OrList where
+   onceJoinM f (OrList xs) = 
+      liftM OrList (onceJoinM (liftM fromOrList . f) xs)
 
 instance Arbitrary a => Arbitrary (OrList a) where
    arbitrary = do 

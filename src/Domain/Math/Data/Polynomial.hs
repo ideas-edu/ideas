@@ -3,12 +3,14 @@ module Domain.Math.Data.Polynomial
    , degree, coefficient, terms
    , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
    , derivative, eval, division, longDivision, polynomialGCD
-   , factorize, switchM
+   , factorize
    ) where
 
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 import Data.Char
+import Control.Monad
+import Common.Traversable
 import Data.List  (nub)
 import Data.Ratio (approxRational)
 import Domain.Math.Approximation (newton, within)
@@ -36,6 +38,12 @@ instance Num a => Show (Polynomial a) where
 -- the Functor instance does not maintain the invariant
 instance Functor Polynomial where
    fmap f (P m) = P (IM.map f m)
+
+instance Once Polynomial where
+   onceM f (P m) = liftM P (onceM f m)
+
+instance Switch Polynomial where
+   switch (P m) = liftM P (switch m)
 
 instance Num a => Num (Polynomial a) where
    P m1 + P m2   = P (IM.filter (/= 0) (IM.unionWith (+) m1 m2))
@@ -213,9 +221,3 @@ e9 = (var-2) * (var-5) * (var+2) * (var+2)
 
 ex = var * (var + 6) * (var - 4) :: Polynomial Rational
 ef = var * var + 2 * var - 3 :: Polynomial Rational -}
-
-switchM :: Monad m => Polynomial (m a) -> m (Polynomial a)
-switchM (P m) = do
-   let (ns, ms) = unzip (IM.toList m)
-   as <- sequence ms 
-   return $ P $ IM.fromAscList $ zip ns as

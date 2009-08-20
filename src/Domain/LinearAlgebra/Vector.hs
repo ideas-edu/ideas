@@ -17,6 +17,8 @@ module Domain.LinearAlgebra.Vector
    , scale, norm, distance, vectorSum, innerProduct
    ) where
 
+import Control.Monad
+import Common.Traversable
 import Data.List
 
 newtype Vector a = Vector [a]
@@ -24,6 +26,12 @@ newtype Vector a = Vector [a]
 
 instance Functor Vector where
    fmap f (Vector xs) = Vector (map f xs)
+
+instance Once Vector where
+   onceM f (Vector xs) = liftM Vector (onceM f xs)
+
+instance Switch Vector where
+   switch (Vector xs) = liftM Vector (switch xs)
 
 instance Show a => Show (Vector a) where
    show = showVectorWith show

@@ -6,6 +6,7 @@ import Data.Maybe
 import Common.Context
 import Common.Exercise
 import Common.Utils (safeHead)
+import Common.Traversable
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
@@ -136,4 +137,4 @@ testje = concatMap f higherDegreeEquations
 toPoly :: Expr -> Maybe (Polynomial Rational)
 toPoly e = do
    (_, p) <- match QE.polyView e
-   switchM (fmap (match rationalView) p)
+   switch (fmap (match rationalView) p)

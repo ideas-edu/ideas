@@ -1,4 +1,4 @@
-module Domain.Math.SquareRoot 
+module Domain.Math.Data.SquareRoot 
    ( SquareRoot
    , imaginary, imaginaryUnit
    , con, toList, scale
@@ -7,7 +7,7 @@ module Domain.Math.SquareRoot
 
 import Prelude hiding (sqrt)
 import Data.Ratio
-import qualified Domain.Math.PrimeFactors as P
+import qualified Domain.Math.Data.PrimeFactors as P
 import qualified Data.Map as M
 import qualified Prelude
 import Control.Monad

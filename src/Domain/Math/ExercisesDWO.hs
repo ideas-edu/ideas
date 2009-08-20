@@ -7,7 +7,7 @@ module Domain.Math.ExercisesDWO
    ) where
 
 import Prelude hiding ((^))
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.Math.Expr
 import Domain.Math.Symbolic
 

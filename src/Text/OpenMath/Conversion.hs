@@ -18,7 +18,7 @@ import Text.OpenMath.Object
 import Domain.LinearAlgebra.Vector
 import Domain.LinearAlgebra.Matrix
 import Domain.Math.Symbolic
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.Math.Expr
 import Data.Maybe
 import Data.Ratio

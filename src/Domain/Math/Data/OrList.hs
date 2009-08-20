@@ -1,6 +1,6 @@
-module Domain.Math.OrList where
+module Domain.Math.Data.OrList where
 
-import qualified Text.OpenMath.Conversion as OM
+import qualified Text.OpenMath.Conversion as OM -- Preferably not
 import Control.Monad
 import Test.QuickCheck
 import Data.List (intersperse)

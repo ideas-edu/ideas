@@ -7,8 +7,8 @@ import Common.Uniplate
 import Common.Transformation
 import Control.Monad
 import Domain.Math.Expr
-import Domain.Math.Equation
-import Domain.Math.OrList
+import Domain.Math.Data.Equation
+import Domain.Math.Data.OrList
 import Domain.Math.Views
 import Domain.Math.ExercisesDWO
 import Domain.Math.HigherDegreeEquations (equationsStrategy)

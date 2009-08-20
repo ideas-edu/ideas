@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Match, View, makeView, Simplification, makeSimplification
-   , match, build, canonical, canonicalWith, simplify, simplifyWith
+   , match, matchM, build, canonical, canonicalWith, simplify, simplifyWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
    ) where
@@ -39,6 +39,9 @@ data View a b = View
    }
 
 type Simplification a = View a a
+
+matchM :: Monad m => View a b -> a -> m b
+matchM v = maybe (Prelude.fail "no match") return . match v
 
 makeView :: (a -> Maybe b) -> (b -> a) -> View a b
 makeView = View

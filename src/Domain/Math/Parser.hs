@@ -5,9 +5,9 @@ module Domain.Math.Parser
 import Prelude hiding ((^))
 import Text.Parsing hiding (pParens)
 import Common.Transformation
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.Math.Expr
-import Domain.Math.OrList
+import Domain.Math.Data.OrList
 import Test.QuickCheck (arbitrary)
 
 scannerExpr :: Scanner

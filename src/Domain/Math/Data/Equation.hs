@@ -11,7 +11,7 @@
 -- Mathematical equations
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Equation where
+module Domain.Math.Data.Equation where
 
 import Common.Uniplate
 import Common.Rewriting

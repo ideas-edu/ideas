@@ -11,9 +11,9 @@ import Common.Strategy hiding (replicate)
 import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.Math.QuadraticEquations (solvedList)
-import Domain.Math.OrList
+import Domain.Math.Data.OrList
 import Domain.Math.Parser
 import Domain.Math.Views
 -- import Test.QuickCheck (oneof)

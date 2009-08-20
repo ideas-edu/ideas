@@ -1,4 +1,4 @@
-module Domain.Math.PrimeFactors
+module Domain.Math.Data.PrimeFactors
    ( PrimeFactors
    , factors, multiplicity, coprime
    , square, power, splitPower

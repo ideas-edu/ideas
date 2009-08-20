@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.LinearSystem where
 
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
 import Domain.LinearAlgebra.LinearView
 import Data.List

@@ -10,7 +10,7 @@ import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation
 import Common.Uniplate
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
 import Domain.Math.Simplification (smartConstructors)

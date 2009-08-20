@@ -11,15 +11,14 @@ import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
 import Domain.Math.QuadraticEquations (solvedList, cleanUpOrs, forOne, oneSide)
 import qualified Domain.Math.QuadraticEquations as QE
-import Domain.Math.OrList
+import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Parser
 import Domain.Math.Symbolic
 import Domain.Math.Views
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Control.Monad
-
-import Domain.Math.Polynomial -- 
+import Domain.Math.Data.Polynomial
 
 ------------------------------------------------------------
 -- Exercise

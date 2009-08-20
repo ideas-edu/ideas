@@ -3,25 +3,25 @@ module Domain.Math.QuadraticEquations where
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, once)
 import Common.Transformation
 import Common.Uniplate (somewhereM, transform)
 import Control.Monad
 import Data.List ((\\), sort, nub)
 import Data.Ratio
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
 import Domain.Math.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
-import Domain.Math.OrList
+import Domain.Math.Data.OrList
 import Domain.Math.Parser
-import Domain.Math.Polynomial 
+import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Views
 import Data.Maybe
 import Prelude hiding (repeat, (^))
 import qualified Prelude
-import qualified Domain.Math.SquareRoot as SQ
+import qualified Domain.Math.Data.SquareRoot as SQ
 
 ------------------------------------------------------------
 -- Exercise
@@ -72,13 +72,13 @@ cleanUpOrs (OrList xs) = OrList (map (fmap (f2 . f1 . smartConstructors)) xs)
    f2 = simplify squareRootView
 
 linS :: Rule (OrList (Equation Expr))
-linS = makeSimpleRuleList "linear equation" $ forOne $ \eq -> do
+linS = makeSimpleRule "linear equation" $ once $ \eq -> do
    match equationView eq
    cnew <- apply solveEquation (inContext eq)
    let new = fromContext cnew
    guard (new /= eq)
-   return [new]
-   
+   return new
+
 forOne :: (a -> Maybe [a]) -> OrList a -> [OrList a]
 forOne f (OrList xs) = map OrList (rec xs)
  where
@@ -91,6 +91,34 @@ oneSide f (lhs :==: rhs)
    | otherwise = Just xs
  where 
    xs = catMaybes [fmap (:==: rhs) (f lhs), fmap (lhs :==:) (f rhs)]
+
+------------------------------------------------------------
+-- Traversals (temporary)
+
+class Functor f => Once f where
+   once  :: MonadPlus m => (a -> m a) -> f a -> m (f a)
+   
+class Once f => OnceF f where
+   onceF :: MonadPlus m => (a -> m (f a)) -> f a -> m (f a)
+
+instance Once [] where
+   once f = onceF (liftM return . f)
+
+instance OnceF [] where
+   onceF _ []     = mzero 
+   onceF f (x:xs) = liftM (++xs) (f x) `mplus` liftM (x:) (onceF f xs)
+
+instance Once Equation where
+   once f (lhs :==: rhs) = 
+      liftM (:==: rhs) (f lhs) `mplus` liftM (lhs :==:) (f rhs)
+
+instance Once OrList where
+   once f (OrList xs) = liftM OrList (once f xs)
+
+instance OnceF OrList where
+   onceF f (OrList xs) = liftM OrList (onceF g xs)
+    where  
+      g = liftM (\(OrList ys) -> ys) . f
 
 ------------------------------------------------------------
 -- Rule collection
@@ -113,15 +141,15 @@ makeSqrt e = sqrt e
 
 -- X^2 = A  implies  X= +/- sqrt(A)
 coverUpSquare :: Rule (OrList (Equation Expr))
-coverUpSquare = makeSimpleRuleList "cover-up square" (forOne f)
+coverUpSquare = makeSimpleRuleList "cover-up square" (onceF f)
  where
    f (Sym "^" [a, Nat 2] :==: rhs) | hasVars a && noVars rhs = do
       let e = makeSqrt rhs
-      return [a :==: e, a :==: negate e]
-   f _ = Nothing
+      return $ OrList [a :==: e, a :==: negate e]
+   f _ = []
 
 coverUpPlus :: Rule (OrList (Equation Expr))
-coverUpPlus = makeSimpleRuleList "cover-up plus" (forOne (fmap return . apply f))
+coverUpPlus = makeSimpleRule "cover-up plus" (once (apply f))
  where
    f = flip supply1 minusT $ \(lhs :==: rhs) -> do
       guard (noVars rhs)
@@ -135,7 +163,7 @@ coverUpPlus = makeSimpleRuleList "cover-up plus" (forOne (fmap return . apply f)
       return (build rationalView r)
 
 coverUpTimes :: Rule (OrList (Equation Expr))
-coverUpTimes = makeSimpleRuleList "cover-up times" (forOne (fmap return . apply f))
+coverUpTimes = makeSimpleRule "cover-up times" (once (apply f))
  where
    f = flip supply1 divisionT $ \(lhs :==: rhs) -> do
       guard (noVars rhs)
@@ -148,16 +176,16 @@ coverUpTimes = makeSimpleRuleList "cover-up times" (forOne (fmap return . apply 
       return (build rationalView r)
 
 coverUpNegate :: Rule (OrList (Equation Expr))
-coverUpNegate = makeSimpleRuleList "cover-up negate" (forOne f)
+coverUpNegate = makeSimpleRuleList "cover-up negate" (once f)
  where
    f (Negate a :==: b) | hasVars a && noVars b = 
-      return [a :==: Negate b]
+      return (a :==: Negate b)
    f (a :==: Negate b) | noVars a && hasVars b =
-      return [Negate a :==: b]
-   f _ = Nothing
+      return (Negate a :==: b)
+   f _ = []
 
 coverUpDiv :: Rule (OrList (Equation Expr))
-coverUpDiv = makeSimpleRuleList "cover-up division" (forOne (fmap return . apply f))
+coverUpDiv = makeSimpleRule "cover-up division" (once (apply f))
  where
    f = flip supply1 timesT $ \(lhs :==: rhs) -> do
       guard (noVars rhs)
@@ -168,23 +196,23 @@ coverUpDiv = makeSimpleRuleList "cover-up division" (forOne (fmap return . apply
       return (build rationalView r)
 
 cancelTerms :: Rule (OrList (Equation Expr))
-cancelTerms = makeSimpleRuleList "cancel terms" $ forOne $ \(lhs :==: rhs) -> do
+cancelTerms = makeSimpleRule "cancel terms" $ onceF $ \(lhs :==: rhs) -> do
    xs <- match sumView lhs
    ys <- match sumView rhs
    let without a as = build sumView (as \\ [a])
    case [ x | x <- xs, y <- ys, x==y ] of
       []   -> Nothing
-      hd:_ -> return [without hd xs :==: without hd ys]
+      hd:_ -> return (OrList [without hd xs :==: without hd ys])
 
 -- x^n == x^m   or    x^n+x^m ==0    (can this be combined?)
 factorPower :: Rule (OrList (Equation Expr))
-factorPower = makeSimpleRuleList "factor power" $ forOne $ \(lhs :==: rhs) -> do
+factorPower = makeSimpleRule "factor power" $ onceF $ \(lhs :==: rhs) -> do
    (e1, x1, n1) <- match powerView lhs
    (e2, x2, n2) <- match powerView rhs
    guard (x1==x2 && n1 > 0 && n2 > 0)
    let m = n1 `min` n2
        make e n = build powerView (e, x1, n-m)
-   return [ Var x1 :==: 0, make e1 n1 :==: make e2 n2 ]
+   return (OrList [ Var x1 :==: 0, make e1 n1 :==: make e2 n2 ])
  `mplus` do
    guard (rhs == 0)
    (a, b) <- match plusView lhs
@@ -193,25 +221,25 @@ factorPower = makeSimpleRuleList "factor power" $ forOne $ \(lhs :==: rhs) -> do
    guard (x1==x2 && n1 > 0 && n2 > 0)
    let m = n1 `min` n2
        make e n = build powerView (e, x1, n-m)
-   return [ Var x1 :==: 0, make e1 n1 .+. make e2 n2 :==: 0 ]
+   return (OrList [ Var x1 :==: 0, make e1 n1 .+. make e2 n2 :==: 0 ])
 
 mulZero :: Rule (OrList (Equation Expr))
-mulZero = makeSimpleRuleList "multiplication is zero" $ forOne $ \(lhs :==: rhs) -> do
+mulZero = makeSimpleRule "multiplication is zero" $ onceF $ \(lhs :==: rhs) -> do
    (_, xs) <- match productView lhs
    guard (rhs == 0 && length xs > 1)
-   return [ x :==: 0 | x <- xs ]
+   return (OrList [ x :==: 0 | x <- xs ])
 
 -- really needed?
 flipEquation :: Rule (OrList (Equation Expr))
-flipEquation = makeSimpleRuleList "flip equation" $ forOne $ \(lhs :==: rhs) -> do
+flipEquation = makeSimpleRule "flip equation" $ once $ \(lhs :==: rhs) -> do
    --guard (noVars lhs && hasVars rhs) -- not sufficient
    (_, p1) <- match polyView lhs
    (_, p2) <- match polyView rhs
    guard (degree p1 < degree p2)
-   return [ rhs :==: lhs ]
-
+   return (rhs :==: lhs)
+   
 moveToLeft :: Rule (OrList (Equation Expr))
-moveToLeft = makeSimpleRuleList "move to left" (forOne (fmap return . apply f))
+moveToLeft = makeSimpleRule "move to left" (once (apply f))
  where
    f = flip supply1 minusT $ \(lhs :==: rhs) -> do
       guard (rhs /= 0 && lhs /= Var "x")
@@ -219,7 +247,7 @@ moveToLeft = makeSimpleRuleList "move to left" (forOne (fmap return . apply f))
 
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Rule (OrList (Equation Expr))
-niceFactors = makeSimpleRuleList "nice factors" $ forOne $ \(lhs :==: rhs) -> do
+niceFactors = makeSimpleRule "nice factors" $ once $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let sign t@(x, a, b, c) = if a== -1 then (x, 1, -b, -c) else t 
    (x, a, rb, rc) <- liftM sign (match quadraticView lhs)
@@ -227,7 +255,7 @@ niceFactors = makeSimpleRuleList "nice factors" $ forOne $ \(lhs :==: rhs) -> do
    c <- isInt rc
    guard (a==1)
    case [ (Var x + fromInteger i) * (Var x + fromInteger j) | (i, j) <- factors c, i+j == b ] of
-      hd:_ -> return [hd :==: 0]
+      hd:_ -> return (hd :==: 0)
       _    -> Nothing
 
 factors :: Integer -> [(Integer, Integer)]
@@ -235,17 +263,17 @@ factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `di
  where h = floor (sqrt (abs (fromIntegral n)))
 
 distribution :: Rule (OrList (Equation Expr))
-distribution = makeSimpleRuleList "distribution" (forOne f)
+distribution = makeSimpleRuleList "distribution" (once f)
  where
    g = somewhereM (apply distributionT)
    f (lhs :==: rhs) = 
       case (g lhs, g rhs) of
-         (Just new, _) -> return [new :==: rhs]
-         (_, Just new) -> return [lhs :==: new]
-         _             -> Nothing 
+         (Just new, _) -> return (new :==: rhs)
+         (_, Just new) -> return (lhs :==: new)
+         _             -> [] 
 
 distributionSquare :: Rule (OrList (Equation Expr))
-distributionSquare = makeSimpleRuleList "distribution square" (forOne $ oneSide $ somewhereM f)
+distributionSquare = makeSimpleRule "distribution square" ((once . once) (somewhereM f))
  where
    f (Sym "^" [x, Nat 2]) = do
       (a, x, b) <- match linearView x
@@ -256,10 +284,10 @@ distributionSquare = makeSimpleRuleList "distribution square" (forOne $ oneSide 
    f _ = Nothing
 
 mergeR :: Rule (OrList (Equation Expr))
-mergeR = makeSimpleRuleList "merge" (forOne (fmap return . apply merge))
+mergeR = makeSimpleRuleList "merge" (once (applyAll merge))
 
 simplerA :: Rule (OrList (Equation Expr))
-simplerA = makeSimpleRuleList "simpler A" $ (forOne f)
+simplerA = makeSimpleRule "simpler A" $ (once f)
  where
    f (lhs :==: rhs) = do
       guard (rhs == 0)
@@ -267,17 +295,18 @@ simplerA = makeSimpleRuleList "simpler A" $ (forOne f)
       [a, b, c] <- mapM isInt [ra, rb, rc] 
       let d = a `gcd` b `gcd` c
       guard (d `notElem` [0, 1])
-      return [build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0]
+      return (build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0)
 
 abcFormula :: Rule (OrList (Equation Expr))
-abcFormula = makeSimpleRuleList "abc formula" $ forOne $ \(lhs :==: rhs) -> do
+abcFormula = makeSimpleRule "abc formula" $ onceF $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, a, b, c) <- match quadraticView lhs
    let discr = makeSqrt (fromRational (b*b - 4 * a * c))
    -- case discr of Nat n -> guard (even n); _ -> return () -- no nice numbers (for now)
-   return [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
-          , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
-          ]
+   return $ OrList
+      [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
+      , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
+      ]
 
 isInt :: Rational -> Maybe Integer
 isInt r = do

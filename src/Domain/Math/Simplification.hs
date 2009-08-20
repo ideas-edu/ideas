@@ -10,7 +10,7 @@ import Data.Maybe
 import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Views hiding (simplify, recip)
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 
 class Simplify a where
    simplify :: a -> a

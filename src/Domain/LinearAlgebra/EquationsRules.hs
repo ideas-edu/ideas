@@ -20,7 +20,7 @@ import Common.Utils
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Domain.LinearAlgebra.LinearView
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.MatrixRules (covered) -- for context

@@ -1,4 +1,4 @@
-module Domain.Math.Polynomial 
+module Domain.Math.Data.Polynomial 
    ( Polynomial, var, con, raise, power, scale
    , degree, coefficient, terms
    , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
@@ -219,25 +219,3 @@ switchM (P m) = do
    let (ns, ms) = unzip (IM.toList m)
    as <- sequence ms 
    return $ P $ IM.fromAscList $ zip ns as
-  
-{- 
-class Functor f => Switch f where
-   switch :: Monad m => f (m a) -> m (f a)
-  
-instance Switch Polynomial where switch = switchM
-
-newtype Comp f g a = Comp (f (g a))
-newtype Id a = Id a
-
-instance (Functor f, Functor g) => Functor (Comp f g) where
-   fmap f (Comp a) = Comp (fmap (fmap f) a)
-
-instance Functor Id where
-   fmap f (Id a) = Id (f a)
-   
-instance (Switch f, Switch g) => Switch (Comp f g) where 
-   switch (Comp ma) = do
-      switch (fmap switch ma) >>= (return . Comp)
-   
-instance Switch Id where
-   switch (Id ma) = ma >>= (return . Id) -} 

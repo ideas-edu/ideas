@@ -6,7 +6,7 @@ module Domain.Math.Views
 import Prelude hiding (recip, (^))
 import Common.View
 import Domain.Math.Expr
-import Domain.Math.Equation
+import Domain.Math.Data.Equation
 import Control.Monad
 import Data.List (nub)
 import qualified Data.IntMap as IM

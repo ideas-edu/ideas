@@ -12,7 +12,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Views
 import Domain.Math.ExercisesDWO
 import Domain.Math.HigherDegreeEquations (equationsStrategy)
-import Domain.Math.QuadraticEquations (solvedList, forOne, squareRootView)
+import Domain.Math.QuadraticEquations (solvedList, squareRootView)
 {- 
 Strategie (p21. G&R deel 1):
 1) Isoleer wortel
@@ -35,7 +35,7 @@ sqrtStrategy = label "squareroot equation" $ isolate <*> repeat squareBoth <*>
 -}
 isolate :: LabeledStrategy (OrList (Equation Expr))
 isolate = undefined
-   
+
 ------------------------------------------------------------------------
 -- Equation rules
 {-

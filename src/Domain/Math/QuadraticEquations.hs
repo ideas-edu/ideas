@@ -19,7 +19,6 @@ import Domain.Math.Parser
 import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Views
-import Data.Maybe
 import Prelude hiding (repeat, (^))
 import qualified Prelude
 import qualified Domain.Math.Data.SquareRoot as SQ
@@ -43,14 +42,7 @@ quadraticEquationExercise = makeExercise
    }
 
 ------------------------------------------------------------
--- Strategy and lifting
-
-eq1 = (2*Var "x")^2 :==: Var "x"
-eq2 = Var "x" :==: ((1/2)*Var "x")^2
-eq3 = Var "x" :==: (Var "x" / 2)^2
-eq4 = Var "x" :==: (1/4) * Var "x"^2
-eq5 = x :==: x^2 - 12*x + 36 where x = Var "x"
-eq6 = x^2 :==: x^2 - 12*x + 36 where x = Var "x"
+-- Strategy and liftings
 
 solvedList :: OrList (Equation Expr) -> Bool
 solvedList (OrList xs) = all solvedEquation xs
@@ -80,6 +72,7 @@ linS = makeSimpleRule "linear equation" $ onceM  $ \eq -> do
    guard (new /= eq)
    return new
 
+{-
 forOne :: (a -> Maybe [a]) -> OrList a -> [OrList a]
 forOne f (OrList xs) = map OrList (rec xs)
  where
@@ -91,7 +84,7 @@ oneSide f (lhs :==: rhs)
    | null xs   = Nothing
    | otherwise = Just xs
  where 
-   xs = catMaybes [fmap (:==: rhs) (f lhs), fmap (lhs :==:) (f rhs)]
+   xs = catMaybes [fmap (:==: rhs) (f lhs), fmap (lhs :==:) (f rhs)] -}
 
 ------------------------------------------------------------
 -- Rule collection

@@ -4,6 +4,7 @@ import Prelude hiding (repeat)
 import Common.Apply
 import Common.Strategy hiding (not)
 import Common.Transformation
+import Common.Traversable
 import Common.Uniplate (universe)
 import Control.Monad
 import Domain.Math.Expr
@@ -12,7 +13,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Views
 import Domain.Math.ExercisesDWO
 import Domain.Math.HigherDegreeEquations (equationsStrategy)
-import Domain.Math.QuadraticEquations (solvedList, forOne)
+import Domain.Math.QuadraticEquations (solvedList)
 {- 
 Strategie (p21. G&R deel 1):
 1) Isoleer wortel
@@ -45,45 +46,45 @@ varUnderSqrt e = not $ null [ () | Sqrt a <- universe e, hasVars a ]
 
 -- Isolation
 coverUpPlus :: Rule (OrList (Equation Expr))
-coverUpPlus  = makeSimpleRuleList "coverup plus" $ forOne $ \(a :==: b) -> do
+coverUpPlus  = makeSimpleRule "coverup plus" $ onceJoinM $ \(a :==: b) -> do
    guard (not $ varUnderSqrt b)
    (x, y) <- match plusView a
    case (varUnderSqrt x, varUnderSqrt y) of
-      (True,  False) -> return [x :==: b .-. y]
-      (False, True ) -> return [y :==: b .-. x]
+      (True,  False) -> return $ OrList [x :==: b .-. y]
+      (False, True ) -> return $ OrList [y :==: b .-. x]
       _ -> Nothing
 
 coverUpNegation :: Rule (OrList (Equation Expr))
-coverUpNegation = makeSimpleRuleList "coverup negation" $ forOne f 
+coverUpNegation = makeSimpleRule "coverup negation" $ onceJoinM f 
  where
    f (Negate a :==: b) | varUnderSqrt a && not (varUnderSqrt b) =
-      return [a :==: Negate b]
+      return $ OrList [a :==: Negate b]
    f _ = Nothing
       
 coverUpTimes :: Rule (OrList (Equation Expr))
-coverUpTimes = makeSimpleRuleList "coverup times" $ forOne $ \(a :==: b) -> do
+coverUpTimes = makeSimpleRule "coverup times" $ onceJoinM $ \(a :==: b) -> do
    guard (not $ varUnderSqrt b)
    (x, y) <- match timesView a
    case (varUnderSqrt x, varUnderSqrt y) of
-      (True,  False) -> return [x :==: b ./. y]
-      (False, True ) -> return [y :==: b ./. x]
+      (True,  False) -> return $ OrList [x :==: b ./. y]
+      (False, True ) -> return $ OrList [y :==: b ./. x]
       _ -> Nothing
 
 --------------------------------------------------------------
 
 squareBoth :: Rule (OrList (Equation Expr))
-squareBoth = makeSimpleRuleList "inconsistencies" $ forOne f
+squareBoth = makeSimpleRule "inconsistencies" $ onceJoinM f
  where
-    f (Sqrt a :==: Sqrt b) = return [a :==: b]
-    f (a      :==: Sqrt b) = return [a .^. 2 :==: b]
-    f (Sqrt a :==: b     ) = return [a :==: b .^. 2]
+    f (Sqrt a :==: Sqrt b) = return $ OrList [a :==: b]
+    f (a      :==: Sqrt b) = return $ OrList [a .^. 2 :==: b]
+    f (Sqrt a :==: b     ) = return $ OrList [a :==: b .^. 2]
     f _ = Nothing
 
 -- remove inconsistent equations from the or-list, such as 0==1
 -- TODO: move this to a different module (should not be here)
 inconsistencies :: Rule (OrList (Equation Expr))
-inconsistencies = makeSimpleRuleList "inconsistencies" $ forOne $ \(a :==: b) -> do
+inconsistencies = makeSimpleRule "inconsistencies" $ onceJoinM $ \(a :==: b) -> do
    r1 <- match rationalView a
    r2 <- match rationalView b
    guard (r1 /= r2)
-   return []
+   return $ OrList []

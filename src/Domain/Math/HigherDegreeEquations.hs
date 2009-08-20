@@ -10,7 +10,7 @@ import Common.Traversable
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.QuadraticEquations (solvedList, cleanUpOrs, forOne, oneSide)
+import Domain.Math.QuadraticEquations (solvedList, cleanUpOrs)
 import qualified Domain.Math.QuadraticEquations as QE
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
@@ -50,15 +50,15 @@ equationsStrategy = cleanUpStrategy cleanUpOrs $
 
 -- A^B = 0  implies  A=0
 powerZero :: Rule (OrList (Equation Expr))
-powerZero = makeSimpleRuleList "power zero" (forOne f)
+powerZero = makeSimpleRule "power zero" (onceJoinM f)
  where
    f (Sym "^" [a, _] :==: Nat 0) =
-      return [a :==: 0]
+      return (OrList [a :==: 0])
    f _ = Nothing
 
 -- Factor-out variable on both sides of the equation
 powerFactor :: Rule (OrList (Equation Expr))
-powerFactor = makeSimpleRuleList "power factor" $ forOne $ oneSide $ \e -> do
+powerFactor = makeSimpleRule "power factor" $ onceM $ onceM $ \e -> do
    xs <- match sumView e >>= mapM (match powerView)
    let (as, vs, ns) = unzip3 xs
        r = minimum ns
@@ -75,11 +75,11 @@ powerFactor = makeSimpleRuleList "power factor" $ forOne $ oneSide $ \e -> do
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))
-sameFactor = makeSimpleRuleList "same factor" $ forOne $ \(lhs :==: rhs) -> do
+sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
    (b1, xs) <- match productView lhs
    (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
-   return [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
+   return $ OrList[ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -----------------------
    
@@ -90,8 +90,8 @@ main :: IO ()
 main = printDerivations higherDegreeEquationExercise xs 
  where xs = map (OrList . return) higherDegreeEquations
  
-testje :: IO ()
-testje = flip mapM_ higherDegreeEquations $ \eq ->
+testAll :: IO ()
+testAll = flip mapM_ higherDegreeEquations $ \eq ->
    flip mapM_ (take 1 $ derivations (unlabel $ ignoreContext equationsStrategy) (inContext $ OrList $ return eq)) $ \(a, ps) -> 
    let xs = a : map snd ps in
    flip mapM_ [ (x, y) | x <- xs, y <- xs ] $ \(x, y) -> 

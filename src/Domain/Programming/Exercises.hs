@@ -19,6 +19,7 @@ import Common.Exercise hiding (checkExercise)
 import Common.Rewriting
 import Common.Strategy hiding (fail, not)
 import Control.Monad (unless, fail)
+import Data.Generics.Biplate
 import Data.Maybe
 import Data.List
 import Domain.Programming.AlphaRenaming (alphaRenaming)

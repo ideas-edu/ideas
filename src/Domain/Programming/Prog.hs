@@ -82,12 +82,12 @@ normaliseModule :: Module -> Module
 normaliseModule = alphaRenaming . normalise
 
 normalise :: Data a => a -> a
-normalise = rewriteExprs . rewriteRHSs . preprocess
+normalise = rewriteExprs . rewriteRHSs . preprocess -- rewrites in a module???
   where
     preprocess = removeRanges . removeParens
     rewriteExprs = rewriteBi $ etaReduce >-> betaReduce >-> lambdaReduce >-> applicationReduce >->
                                infix2prefix >-> commutativeOps 
-    rewriteRHSs = rewriteBi inline
+    rewriteRHSs = rewriteBi $ inline >-> let2where
     
 -- a kind of Left-to-right Kleisli composition of monads
 (>->) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
@@ -111,7 +111,7 @@ removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
 -- eta reduction, e.g. \x -> f x => f
 etaReduce :: Expression -> Maybe Expression
-etaReduce x = case x of 
+etaReduce expr = case expr of 
   Expression_Lambda _ [Pattern_Variable _ p] 
     (Expression_NormalApplication _ f [Expression_Variable _ v]) -> if p == v
                                                                     then Just f
@@ -129,13 +129,13 @@ etaReduce x = case x of
 
 -- beta reduction, e.g. (\x -> x + x) 42 => 42 + 42
 betaReduce :: Expression -> Maybe Expression
-betaReduce x = case x of 
+betaReduce expr = case expr of 
   Expression_NormalApplication _ 
-    (Expression_Lambda _ ps expr) as -> case drop (length as) ps of
-                                         []  -> Just $ substArgs expr ps as
-                                         ps' -> Just $ Expression_Lambda noRange ps' 
-                                                         (substArgs expr (take (length as) ps) as)
-  _                                   -> Nothing
+    (Expression_Lambda _ ps e) as -> case drop (length as) ps of
+                                       []  -> Just $ substArgs e ps as
+                                       ps' -> Just $ Expression_Lambda noRange ps' 
+                                                       (substArgs e (take (length as) ps) as)
+  _                                -> Nothing
 
 substArgs :: Data a => a -> Patterns -> Expressions -> a
 substArgs expr ps =  foldr transformBi expr . zipWith rep ps
@@ -147,14 +147,14 @@ substArgs expr ps =  foldr transformBi expr . zipWith rep ps
 
 -- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
 lambdaReduce :: Expression -> Maybe Expression
-lambdaReduce x = case x of
-  Expression_Lambda r [p] expr    -> Nothing
-  Expression_Lambda r (p:ps) expr -> Just $ Expression_Lambda r [p] $ Expression_Lambda r ps expr
-  _                               -> Nothing
+lambdaReduce expr = case expr of
+  Expression_Lambda r [p] e    -> Nothing
+  Expression_Lambda r (p:ps) e -> Just $ Expression_Lambda r [p] $ Expression_Lambda r ps e
+  _                            -> Nothing
 
 -- application rewrites, e.g. ((f 1) 2) 3 => f 1 2 3
 applicationReduce :: Expression -> Maybe Expression
-applicationReduce x = case x of
+applicationReduce expr = case expr of
   Expression_NormalApplication r  
     (Expression_NormalApplication _ f as) as' -> Just $ Expression_NormalApplication r f (as ++ as')
   Expression_NormalApplication r f []         -> Just $ f
@@ -162,7 +162,7 @@ applicationReduce x = case x of
 
 -- infix application rewrites, e.g. 1 `div` 2 => div 1 2 or 1 + 2 => (+) 1 2
 infix2prefix :: Expression -> Maybe Expression
-infix2prefix x = case x of
+infix2prefix expr = case expr of
   Expression_InfixApplication _ l f r ->
       case (l, r) of
         (MaybeExpression_Nothing, MaybeExpression_Nothing) -> Nothing
@@ -177,19 +177,22 @@ infix2prefix x = case x of
 
 -- quick'n dirty domain specific rewrite rules
 commutativeOps :: Expression -> Maybe Expression
-commutativeOps x = case x of
+commutativeOps expr = case expr of
   Expression_NormalApplication r
     (Expression_InfixApplication r' MaybeExpression_Nothing f MaybeExpression_Nothing) args ->
-      if isSorted args
+      if isSorted args || (isOp f "-" || isOp f "/") -- should be done elsewhere, in preludeS?
       then Nothing
       else Just $ Expression_NormalApplication r
                     (Expression_InfixApplication r' MaybeExpression_Nothing f MaybeExpression_Nothing) $ sort args
   _ -> Nothing
   where
     isSorted xs = sort xs == xs
+    isOp op n = case op of
+                  Expression_Variable _ (Name_Operator _ [] n') -> n == n'
+                  _ -> False
       
 inline :: RightHandSide -> Maybe RightHandSide
-inline x = case x of
+inline rhs = case rhs of
   RightHandSide_Expression r expr 
     (MaybeDeclarations_Just ws) -> Just $ RightHandSide_Expression r (replace expr ws) MaybeDeclarations_Nothing
   _                             -> Nothing
@@ -201,7 +204,19 @@ inline x = case x of
                   Expression_Variable _ n -> if n == p then x else e
                   _                       -> e
         rep _                         e = e
-    
+
+let2where :: RightHandSide -> Maybe RightHandSide
+let2where rhs = case rhs of
+  RightHandSide_Expression r (Expression_Let r' decls expr) maybeDecls -> case maybeDecls of
+    MaybeDeclarations_Just ds -> Just $ RightHandSide_Expression r expr $ MaybeDeclarations_Just $ ds ++ decls
+    MaybeDeclarations_Nothing -> Just $ RightHandSide_Expression r expr $ MaybeDeclarations_Just decls
+  _ -> Nothing
+
+
+-- detect fixed arguments, eg. f n [] = ... ; f n (x:xs) = ...
+
+
+-- rewrite functions so that the have no fixed arguments, eg. f n = g  where g [] = ... ; g (x:xs) = ... 
 
 {-
 -- rewrite functions e.g. f x = div x => f = div

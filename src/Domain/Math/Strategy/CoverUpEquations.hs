@@ -15,6 +15,7 @@ import Domain.Math.Data.Equation
 import Domain.Math.Strategy.QuadraticEquations (solvedList)
 import Domain.Math.Data.OrList
 import Domain.Math.Expr.Parser
+import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic
 -- import Test.QuickCheck (oneof)
 
@@ -110,7 +111,7 @@ coverUpSqrt (Sqrt a :==: rhs) = do
 coverUpSqrt _ = Nothing
 
 coverUpBase :: Equation Expr -> Maybe [Equation Expr]
-coverUpBase (Sym "^" [a, Nat n] :==: rhs) = do
+coverUpBase (Sym s [a, Nat n] :==: rhs) | s == powerSymbol = do
    c <- match rationalView rhs
    let b = round (fromRational c ** (1 / fromIntegral n))
    guard (c >= 0 && product (replicate (fromIntegral n) (fromIntegral b)) == c)

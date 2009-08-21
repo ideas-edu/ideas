@@ -9,6 +9,7 @@ import Data.List
 import Data.Maybe
 import Control.Monad
 import Domain.Math.Expr
+import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic hiding (simplify, recip)
 import Domain.Math.Data.Equation
 
@@ -72,7 +73,8 @@ smartConstructors = transform $ \expr ->
       Negate a -> neg a
       a :*: b  -> a .*. b
       a :/: b  -> a ./. b
-      Sym "^" [a, b] -> a .^. b
+      Sym s [a, b] | s == powerSymbol -> 
+         a .^. b
       _        -> expr
 
 -------------------------------------------------------------

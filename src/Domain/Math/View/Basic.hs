@@ -6,6 +6,7 @@ module Domain.Math.View.Basic
 import Prelude hiding (recip, (^))
 import Common.View
 import Domain.Math.Expr
+import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Equation
 import Control.Monad
 import Data.List (nub)
@@ -151,7 +152,8 @@ powerView = makeView matchPower buildPower
       let op (a, x, n) y =
              case y of 
                 Var _                  -> return (a,x,n+1)
-                Sym "^" [Var _, Nat m] -> return (a,x,n+m)
+                Sym s [Var _, Nat m] | s == powerSymbol -> 
+                   return (a,x,n+m)
                 Nat 1 :/: b | noVars y -> return (a ./. b, x, n) -- Not nice! instead, xs should be normalized
                 _ | noVars y           -> return (a .*. y, x, n)
                 _ -> Nothing 

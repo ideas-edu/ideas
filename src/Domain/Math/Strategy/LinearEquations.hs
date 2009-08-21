@@ -14,7 +14,7 @@ import Domain.Math.Data.Equation
 import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
 import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.Symbolic
+import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Parser
 import Domain.Math.View.Basic
 import Control.Monad (guard)

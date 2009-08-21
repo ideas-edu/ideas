@@ -14,7 +14,12 @@ import Common.Uniplate hiding (somewhere)
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr.Parser
+import Domain.Math.Expr.Symbols
+import Domain.Math.Expr.Symbolic
 import Domain.Math.View.Basic
+import Data.Maybe
+
+bottom = symbol bottomSymbol
 
 ------------------------------------------------------------
 -- Exercise
@@ -248,7 +253,7 @@ go1 = quickCheck $ forAll (sized genFraction) prop1
 go2 = quickCheck $ forAll (sized genFraction) prop2
 
 prop1 :: Expr -> Bool
-prop1 e = isFraction a || isInteger a || a == bottom
+prop1 e = isFraction a || isInteger a || isJust (isSymbol bottomSymbol a)
  where a = solveFraction e
 
 prop2 :: Expr -> Bool 

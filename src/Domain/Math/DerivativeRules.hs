@@ -14,7 +14,8 @@ module Domain.Math.DerivativeRules where
 import Prelude hiding ((^))
 import Common.Transformation
 import Domain.Math.Expr
-import Domain.Math.Symbolic
+import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbols
 import Common.Rewriting
 
 derivativeRules :: [Rule Expr]
@@ -25,15 +26,24 @@ derivativeRules =
    , ruleSine, ruleLog 
    ]
 
+diffSymbol = makeSymbolN "Diff"
+
 diff :: Expr -> Expr
-diff = unaryFunction "Diff"
+diff = unary diffSymbol
+
+ln :: Expr -> Expr
+ln = unary lnSymbol
+
+lambdaSymbol = makeSymbolN "Lambda"
 
 lambda :: Expr -> Expr -> Expr
-lambda = binaryFunction "Lambda"
+lambda = binary lambdaSymbol
 
 -- function composition
+fcompSymbol = makeSymbolN "(.)"
+
 fcomp :: Expr -> Expr -> Expr
-fcomp = binaryFunction "(.)"
+fcomp = binary fcompSymbol
 
 -----------------------------------------------------------------
 -- Rules for Diffs
@@ -77,28 +87,33 @@ ruleDerivChain = rule "Chain Rule" f
 ruleDerivCon :: Rule Expr
 ruleDerivCon = makeSimpleRule "Constant Term" f
  where 
-   f (Sym "Diff" [Sym "Lambda" [Var v, e]]) | v `notElem` collectVars e = return 0
+   f (Sym d [Sym l [Var v, e]]) 
+      | d == diffSymbol && l == lambdaSymbol && v `notElem` collectVars e = return 0
    f _ = Nothing
  
 ruleDerivMultiple :: Rule Expr
 ruleDerivMultiple = makeSimpleRule "Constant Multiple" f
  where 
-    f (Sym "Diff" [Sym "Lambda" [x@(Var v), n :*: e]]) | v `notElem` collectVars n = 
+    f (Sym d [Sym l [x@(Var v), n :*: e]]) 
+       | d == diffSymbol && l == lambdaSymbol && v `notElem` collectVars n = 
        return $ n * diff (lambda x e)
-    f (Sym "Diff" [Sym "Lambda" [x@(Var v), e :*: n]]) | v `notElem` collectVars n = 
+    f (Sym d [Sym l [x@(Var v), e :*: n]]) 
+       | d == diffSymbol && l == lambdaSymbol && v `notElem` collectVars n = 
        return $ n * diff (lambda x e)
     f _ = Nothing 
 
 ruleDerivPower :: Rule Expr
 ruleDerivPower = makeSimpleRule "Power" f
  where 
-   f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "^" [x1, n]]]) |x==x1 && v `notElem` collectVars n =
+   f (Sym d [Sym l [x@(Var v), Sym p [x1, n]]]) 
+      | d == diffSymbol && l == lambdaSymbol && p == powerSymbol && x==x1 && v `notElem` collectVars n =
       return $ n * (x ^ (n-1)) 
    f _ = Nothing
 
 ruleDerivChainPowerExprs :: Rule Expr
 ruleDerivChainPowerExprs = makeSimpleRule "Chain Rule for Power Exprs" f 
  where 
-   f (Sym "Diff" [Sym "Lambda" [x@(Var v), Sym "^" [g, n]]]) | v `notElem` collectVars n =
+   f (Sym d [Sym l [x@(Var v), Sym p [g, n]]]) 
+      | d == diffSymbol && l == lambdaSymbol && p == powerSymbol && v `notElem` collectVars n =
       return $ n * (g ^ (n-1)) * diff (lambda x g)
    f _ = Nothing

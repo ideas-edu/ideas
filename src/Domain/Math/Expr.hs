@@ -6,7 +6,8 @@ import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
 import Common.Rewriting
-import Domain.Math.Symbolic
+import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbols
 
 -----------------------------------------------------------------------
 -- Expression data type
@@ -22,7 +23,7 @@ data Expr = -- Num
           | Sqrt Expr       -- NaN if expr is negative
             -- Symbolic
           | Var String
-          | Sym String [Expr]
+          | Sym Symbol [Expr]
    deriving (Eq, Ord)
 
 -----------------------------------------------------------------------
@@ -36,8 +37,8 @@ instance Num Expr where
       | n < 0     = negate $ Nat $ abs n
       | otherwise = Nat n
    negate = Negate 
-   abs    = unaryFunction "abs"
-   signum = unaryFunction "signum"
+   abs    = unary absSymbol
+   signum = unary signumSymbol
 
 instance Fractional Expr where
    (/) = (:/:)
@@ -50,55 +51,61 @@ instance Fractional Expr where
            fromIntegral (numerator r) :/: fromIntegral (denominator r)
 
 instance Floating Expr where
-   pi      = symbol "pi"
+   pi      = symbol piSymbol
    sqrt    = Sqrt
-   (**)    = binaryFunction "**"
-   logBase = binaryFunction "logBase"
-   exp     = unaryFunction "exp"
-   log     = unaryFunction "log"
-   sin     = unaryFunction "sin"
-   tan     = unaryFunction "tan"
-   cos     = unaryFunction "cos"
-   asin    = unaryFunction "asin"
-   atan    = unaryFunction "atan"
-   acos    = unaryFunction "acos"
-   sinh    = unaryFunction "sinh"
-   tanh    = unaryFunction "tanh"
-   cosh    = unaryFunction "cosh"
-   asinh   = unaryFunction "asinh"
-   atanh   = unaryFunction "atanh"
-   acosh   = unaryFunction "acosh" 
+   (**)    = binary powerSymbol
+   logBase = binary logSymbol
+   exp     = unary expSymbol
+   log     = unary logSymbol
+   sin     = unary sinSymbol
+   tan     = unary tanSymbol
+   cos     = unary cosSymbol
+   asin    = unary asinSymbol
+   atan    = unary atanSymbol
+   acos    = unary acosSymbol
+   sinh    = unary sinhSymbol
+   tanh    = unary tanhSymbol
+   cosh    = unary coshSymbol
+   asinh   = unary asinhSymbol
+   atanh   = unary atanhSymbol
+   acosh   = unary acoshSymbol 
    
 instance Symbolic Expr where
    variable = Var
-   function = Sym
-
-infixr 8 ^
-
-(^) :: Symbolic a => a -> a -> a
-(^) = binaryFunction "^" 
-
-ln :: Symbolic a => a -> a
-ln = unaryFunction "ln"
-
-bottom :: Expr
-bottom = symbol "_|_"
+   
+   getVariable (Var s) = return s
+   getVariable _       = mzero
+   
+   function s [a, b] 
+      | s == plusSymbol   = a :+: b
+      | s == timesSymbol  = a :*: b
+      | s == minusSymbol  = a :-: b
+      | s == divSymbol    = a :/: b
+   function s [a]
+      | s == negateSymbol = Negate a
+      | s == sqrtSymbol   = Sqrt a
+   function s as = 
+      Sym s as
+   
+   getFunction expr =
+      case expr of
+         a :+: b  -> return (plusSymbol,   [a, b])
+         a :*: b  -> return (timesSymbol,  [a, b])
+         a :-: b  -> return (minusSymbol,  [a, b])
+         Negate a -> return (negateSymbol, [a])
+         a :/: b  -> return (divSymbol,    [a, b])
+         Sqrt a   -> return (sqrtSymbol,   [a])
+         Sym s as -> return (s, as)
+         _ -> mzero
 
 -----------------------------------------------------------------------
 -- Uniplate instance
 
 instance Uniplate Expr where 
    uniplate expr =
-      case expr of
-         a :+: b  -> ([a,b], \[x,y] -> x :+: y)
-         a :*: b  -> ([a,b], \[x,y] -> x :*: y)
-         a :-: b  -> ([a,b], \[x,y] -> x :-: y)
-         Negate a -> ([a]  , \[x]   -> Negate x)
-         Nat _    -> ([]   , \[]    -> expr)
-         a :/: b  -> ([a,b], \[x,y] -> x :/: y)
-         Sqrt a   -> ([a]  , \[x]   -> Sqrt x)
-         Var _    -> ([]   , \[]    -> expr)
-         Sym s as -> (as   , \xs    -> Sym s xs)
+      case getFunction expr of
+         Just (s, as) -> (as, \bs -> function s bs)
+         _            -> ([], const expr)
 
 -----------------------------------------------------------------------
 -- Arbitrary instance
@@ -115,7 +122,7 @@ instance Arbitrary Expr where
          a :/: b  -> variant 5 . coarbitrary a . coarbitrary b
          Sqrt a   -> variant 6 . coarbitrary a
          Var s    -> variant 7 . coarbitrary s
-         Sym f xs -> variant 8 . coarbitrary f . coarbitrary xs
+         Sym f xs -> variant 8 . coarbitrary (show f) . coarbitrary xs
    
 arbExpr :: Int -> Gen Expr
 arbExpr _ = liftM (Nat . abs) arbitrary
@@ -155,7 +162,7 @@ exprToFractional = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, r
    mx /! my = join (liftM2 safeDivision mx my)
    err _ = fail "exprToFractional"
        
-exprToFloating :: (Monad m, Floating a) => (String -> [a] -> m a) -> Expr -> m a
+exprToFloating :: (Monad m, Floating a) => (Symbol -> [a] -> m a) -> Expr -> m a
 exprToFloating f = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, return . fromInteger, (/!), liftM sqrt, err, sym)
  where 
    mx /! my = join (liftM2 safeDivision mx my)
@@ -184,12 +191,12 @@ ppExprPrio parens = flip $ foldExpr (binL "+" 6, binL "*" 7, binL "-" 6, neg, na
    nat n _        = if n >= 0 then show n else "!" ++ show n
    var s _        = s
    neg x b        = parIf (b>6.5) ("-" ++ x 7)
-   sq  x          = sym "sqrt" [x]
+   sq  x          = sym sqrtSymbol [x]
    sym s xs b
-      | null xs   = s
-      | s=="^" && length xs==2
-                  = binR s 8 (xs!!0) (xs!!1) b
-      | otherwise = parIf (b>10) (unwords (s : map ($ 15) xs))
+      | null xs   = show s
+      | show s=="^" && length xs==2
+                  = binR (show s) 8 (xs!!0) (xs!!1) b
+      | otherwise = parIf (b>10) (unwords (show s : map ($ 15) xs))
    binL s i x y b = parIf (b>i) (x i ++ s ++ y (i+1))
    binR s i x y b = parIf (b>i) (x (i+1) ++ s ++ y i)
       

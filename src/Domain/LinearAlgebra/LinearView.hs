@@ -25,7 +25,7 @@ import Common.Uniplate
 import Common.View hiding (simplify)
 import GHC.Real
 import Domain.Math.Expr
-import Domain.Math.Symbolic
+import Domain.Math.Expr.Symbolic
 import Domain.Math.View.Basic (sumView)
 import qualified Data.Map as M
 

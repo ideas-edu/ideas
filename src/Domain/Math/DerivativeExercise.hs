@@ -22,6 +22,7 @@ import Common.Exercise
 import Common.Transformation
 import Domain.Math.Simplification
 import Domain.Math.Expr
+import Domain.Math.Expr.Symbols
 import Domain.Math.Expr.Parser
 
 derivativeExercise :: Exercise Expr
@@ -41,7 +42,7 @@ derivativeExercise = makeExercise
    }
    
 noDiff :: Expr -> Bool
-noDiff e = null [ () | Sym "Diff" _ <- universe e ]   
+noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy = -- cleanUpStrategy simplify $ 

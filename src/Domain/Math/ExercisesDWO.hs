@@ -9,7 +9,8 @@ module Domain.Math.ExercisesDWO
 import Prelude hiding ((^))
 import Domain.Math.Data.Equation
 import Domain.Math.Expr
-import Domain.Math.Symbolic
+import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbols
 
 calculateResults :: [[Expr]]
 calculateResults = [level1, level2, level3]

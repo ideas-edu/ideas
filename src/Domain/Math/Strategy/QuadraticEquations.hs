@@ -16,6 +16,7 @@ import Domain.Math.Expr
 import Domain.Math.Strategy.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
 import Domain.Math.Data.OrList
 import Domain.Math.Expr.Parser
+import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.View.Basic
@@ -109,7 +110,7 @@ makeSqrt e = sqrt e
 coverUpSquare :: Rule (OrList (Equation Expr))
 coverUpSquare = makeSimpleRuleList "cover-up square" (onceJoinM f)
  where
-   f (Sym "^" [a, Nat 2] :==: rhs) | hasVars a && noVars rhs = do
+   f (Sym s [a, Nat 2] :==: rhs) | s == powerSymbol && hasVars a && noVars rhs = do
       let e = makeSqrt rhs
       return $ OrList [a :==: e, a :==: negate e]
    f _ = []
@@ -241,7 +242,7 @@ distribution = makeSimpleRuleList "distribution" (onceM  f)
 distributionSquare :: Rule (OrList (Equation Expr))
 distributionSquare = makeSimpleRule "distribution square" ((onceM  . onceM ) (somewhereM f))
  where
-   f (Sym "^" [x, Nat 2]) = do
+   f (Sym s [x, Nat 2]) | s == powerSymbol = do
       (a, x, b) <- match linearView x
       guard (a /= 0 && (a /= 1 || b /=0))
       return  (  (fromRational (a*a) .*. (Var x^2)) 
@@ -344,7 +345,8 @@ squareRootView = makeView f g
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
    f (a :/: b)  = liftM2 (/) (f a) (f b)
-   f (Sym "^" [a, b]) = liftM2 (Prelude.^) (f a) (match integerView b)
+   f (Sym s [a, b]) | s == powerSymbol = 
+      liftM2 (Prelude.^) (f a) (match integerView b)
    f _ = Nothing
    
    g m = build sumView (map h (SQ.toList m))
@@ -374,7 +376,8 @@ polyViewFor v = makeView f g
    f (a :+: b)  = liftM2 (+) (f a) (f b)
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
-   f (Sym "^" [a, n]) = liftM2 power (f a) (exprToNum n)
+   f (Sym s [a, n]) | s == powerSymbol = 
+      liftM2 power (f a) (exprToNum n)
    f (a :/: b) = do
       guard (v `notElem` collectVars b)
       p <- f a

@@ -15,7 +15,8 @@ import qualified Domain.Math.Strategy.QuadraticEquations as QE
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Expr.Parser
-import Domain.Math.Symbolic
+import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic
 import Domain.Math.Data.Equation
 import Control.Monad
@@ -52,7 +53,7 @@ equationsStrategy = cleanUpStrategy cleanUpOrs $
 powerZero :: Rule (OrList (Equation Expr))
 powerZero = makeSimpleRule "power zero" (onceJoinM f)
  where
-   f (Sym "^" [a, _] :==: Nat 0) =
+   f (Sym s [a, _] :==: Nat 0) | s == powerSymbol =
       return (OrList [a :==: 0])
    f _ = Nothing
 

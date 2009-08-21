@@ -1,4 +1,4 @@
------------------------------------------------------------------------------
+ -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
@@ -17,9 +17,10 @@ import Common.Utils
 import Text.OpenMath.Object
 import Domain.LinearAlgebra.Vector
 import Domain.LinearAlgebra.Matrix
-import Domain.Math.Symbolic
+import qualified Domain.Math.Expr.Symbolic as ES
 import Domain.Math.Data.Equation
 import Domain.Math.Expr
+import qualified Domain.Math.Expr.Symbols as ES
 import Data.Maybe
 import Data.Ratio
 import Control.Monad
@@ -57,23 +58,28 @@ lambdaSymbol    = OMS "fns1" "lambda"
 
 orSymbol        = OMS "logic1" "or" -- n-ary symbol
 
-type SymbolMap = [(String, OMOBJ, Maybe Int)]
+type SymbolMap = [(ES.Symbol, OMOBJ, Maybe Int)]
 
 symbolMap :: SymbolMap
 symbolMap = 
-   [ ("pi", piSymbol, Just 0), ("Diff", diffSymbol, Just 1), ("sin", sinSymbol, Just 1)
-   , ("cos", cosSymbol, Just 1), ("ln", lnSymbol, Just 1) -- , ("power", powerSymbol, Just 2)
-   , ("^", powerSymbol, Just 2)
+   [ (ES.piSymbol, piSymbol, Just 0), (diffS, diffSymbol, Just 1)
+   , (ES.sinSymbol, sinSymbol, Just 1)
+   , (ES.cosSymbol, cosSymbol, Just 1), (ES.lnSymbol, lnSymbol, Just 1)
+   , (ES.powerSymbol, powerSymbol, Just 2)
    ]
    
-findByName :: String -> Maybe (OMOBJ, Maybe Int)
+findByName :: ES.Symbol -> Maybe (OMOBJ, Maybe Int)
 findByName n = safeHead [ (s, ma) | (m, s, ma) <- symbolMap, n==m  ]
 
-findBySymbol :: OMOBJ -> Maybe (String, Maybe Int)
+findBySymbol :: OMOBJ -> Maybe (ES.Symbol, Maybe Int)
 findBySymbol s = safeHead [ (n, ma) | (n, t, ma) <- symbolMap, s==t  ]
 
-unknown :: String -> OMOBJ
-unknown = OMS "UNKNOWN"
+unknown :: ES.Symbol -> OMOBJ
+unknown = OMS "UNKNOWN" . show
+
+lambdaS, diffS :: ES.Symbol
+lambdaS = ES.makeSymbolN "Lambda"
+diffS   = ES.makeSymbolN "Diff"
 
 --------------------------------------------------------------------
 -- Utility functions
@@ -174,7 +180,8 @@ instance IsOMOBJ Expr where
          a :/: b  -> binop divideSymbol a b
          Sqrt a   -> binop rootSymbol a (2::Integer)
          Var s    -> OMV s
-         Sym "Lambda" [Var x, e] -> OMBIND lambdaSymbol [x] (toOMOBJ e)
+         Sym s [Var x, e] | show s == "Lambda" -> 
+            OMBIND lambdaSymbol [x] (toOMOBJ e)
          Sym f xs
             | null xs      -> symbol
             | otherwise    -> listop symbol xs
@@ -199,14 +206,14 @@ instance IsOMOBJ Expr where
       fromVar _ = Nothing
       
       fromLambda (OMBIND s [x] body) | s == lambdaSymbol = 
-         liftM (\e -> Sym "Lambda" [Var x, e]) (fromOMOBJ body)
+         liftM (\e -> Sym lambdaS [Var x, e]) (fromOMOBJ body)
       fromLambda _ = Nothing
       
-      fromSym obj@(OMS _ _) = fmap (symbol . fst) (findBySymbol obj)
+      fromSym obj@(OMS _ _) = fmap (ES.symbol . fst) (findBySymbol obj)
       fromSym (OMA (s:xs)) = 
          case findBySymbol s of 
             Just (name, ma) | maybe True (\a -> length xs == a) ma
-               -> liftM (function name) (mapM fromOMOBJ xs)
+               -> liftM (ES.function name) (mapM fromOMOBJ xs)
             _ -> Nothing
       fromSym _ = Nothing
 

@@ -7,6 +7,8 @@ import Text.Parsing hiding (pParens)
 import Common.Transformation
 import Domain.Math.Data.Equation
 import Domain.Math.Expr
+import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
 import Test.QuickCheck (arbitrary)
 
@@ -40,8 +42,8 @@ expr6u =  optional (Negate <$ pKey "-") id <*> expr7
 expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
 expr8  =  pChainr ((^) <$ pKey "^") term
 term   =  sqrt <$ pKey "sqrt" <*> atom
-      <|> ln   <$ pKey "ln" <*> atom
-      <|> (\a b -> Sym (fst a) b) <$> pConid <*> pList atom
+      <|> unary lnSymbol   <$ pKey "ln" <*> atom
+      <|> (\a b -> Sym (makeSymbolN (fst a)) b) <$> pConid <*> pList atom
       <|> atom
 atom   =  fromInteger <$> pInteger
       <|> (Var . fst) <$> pVarid

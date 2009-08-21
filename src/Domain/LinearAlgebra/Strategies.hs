@@ -15,10 +15,10 @@ module Domain.LinearAlgebra.Strategies where
 
 import Prelude hiding (repeat)
 import Domain.Math.Expr
-import Domain.Math.Parser ()
+import Domain.Math.Expr.Parser ()
 import Domain.Math.Simplification
-import Domain.Math.QuadraticEquations (squareRootView)
-import Domain.Math.Views hiding (simplify, linearView)
+import Domain.Math.Strategy.QuadraticEquations (squareRootView)
+import Domain.Math.View.Basic hiding (simplify, linearView)
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules

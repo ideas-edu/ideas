@@ -25,7 +25,7 @@ import Control.Monad
 import Data.List
 import Data.Char
 import Domain.Math.Expr
-import Domain.Math.Parser
+import Domain.Math.Expr.Parser
 import Text.Parsing
 
 {-

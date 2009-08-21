@@ -1,4 +1,4 @@
-module Domain.Math.CoverUpEquations 
+module Domain.Math.Strategy.CoverUpEquations 
    ( coverUpExercise, rule1, rule2
    ) where
 
@@ -12,10 +12,10 @@ import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
 import Domain.Math.Data.Equation
-import Domain.Math.QuadraticEquations (solvedList)
+import Domain.Math.Strategy.QuadraticEquations (solvedList)
 import Domain.Math.Data.OrList
-import Domain.Math.Parser
-import Domain.Math.Views
+import Domain.Math.Expr.Parser
+import Domain.Math.View.Basic
 -- import Test.QuickCheck (oneof)
 
 {-

@@ -1,4 +1,4 @@
-module Domain.Math.BrokenEquations where
+module Domain.Math.Strategy.BrokenEquations where
 
 import Prelude hiding (repeat)
 import Common.Apply
@@ -10,11 +10,11 @@ import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
-import Domain.Math.Views
+import Domain.Math.View.Basic
 import Domain.Math.ExercisesDWO
-import Domain.Math.HigherDegreeEquations (equationsStrategy)
-import Domain.Math.QuadraticEquations (solvedList, polyView)
-import Domain.Math.CoverUpEquations (rule1)
+import Domain.Math.Strategy.HigherDegreeEquations (equationsStrategy)
+import Domain.Math.Strategy.QuadraticEquations (solvedList, polyView)
+import Domain.Math.Strategy.CoverUpEquations (rule1)
 {- 
 Equations:
    (a/b) = 0       =   a=0

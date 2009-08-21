@@ -1,5 +1,5 @@
-module Domain.Math.Views 
-   ( module Domain.Math.Views
+module Domain.Math.View.Basic
+   ( module Domain.Math.View.Basic
    , module Common.View -- export all view-related functions
    ) where
 

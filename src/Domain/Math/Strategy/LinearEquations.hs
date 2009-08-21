@@ -1,4 +1,4 @@
-module Domain.Math.LinearEquations 
+module Domain.Math.Strategy.LinearEquations 
   ( linearEquationExercise, solveEquation, solvedEquation, merge 
   , minusT, timesT, divisionT, distributionT
   ) where 
@@ -15,8 +15,8 @@ import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Symbolic
-import Domain.Math.Parser
-import Domain.Math.Views
+import Domain.Math.Expr.Parser
+import Domain.Math.View.Basic
 import Control.Monad (guard)
 import Data.List  (partition, sort)
 import Data.Maybe (catMaybes)

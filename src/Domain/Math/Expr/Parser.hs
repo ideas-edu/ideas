@@ -1,4 +1,4 @@
-module Domain.Math.Parser 
+module Domain.Math.Expr.Parser 
    ( scannerExpr, parseExpr, parseWith, pExpr, pEquations, pEquation, pOrList, pFractional
    ) where
 

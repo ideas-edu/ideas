@@ -1,4 +1,4 @@
-module Domain.Math.Fraction 
+module Domain.Math.Strategy.Fraction 
    ( fractionExercise, calculationExercise, go
    ) where
 
@@ -13,8 +13,8 @@ import Common.Transformation
 import Common.Uniplate hiding (somewhere)
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
-import Domain.Math.Parser
-import Domain.Math.Views
+import Domain.Math.Expr.Parser
+import Domain.Math.View.Basic
 
 ------------------------------------------------------------
 -- Exercise

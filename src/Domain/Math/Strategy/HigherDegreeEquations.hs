@@ -1,4 +1,4 @@
-module Domain.Math.HigherDegreeEquations where
+module Domain.Math.Strategy.HigherDegreeEquations where
 
 import Prelude hiding ((^), repeat)
 import Data.List (sort, nub, (\\))
@@ -10,13 +10,13 @@ import Common.Traversable
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.QuadraticEquations (solvedList, cleanUpOrs)
-import qualified Domain.Math.QuadraticEquations as QE
+import Domain.Math.Strategy.QuadraticEquations (solvedList, cleanUpOrs)
+import qualified Domain.Math.Strategy.QuadraticEquations as QE
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
-import Domain.Math.Parser
+import Domain.Math.Expr.Parser
 import Domain.Math.Symbolic
-import Domain.Math.Views
+import Domain.Math.View.Basic
 import Domain.Math.Data.Equation
 import Control.Monad
 import Domain.Math.Data.Polynomial

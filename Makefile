@@ -145,4 +145,4 @@ clean:
 	$(RM) -rf $(OUTDIR)
 	make -C $(DOCDIR)  clean
 	make -C $(TESTDIR) clean
-	$(RM) $(AG-SOURCES)
+	$(RM) -f $(AG-SOURCES)

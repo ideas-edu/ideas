@@ -1,4 +1,4 @@
-module Domain.Math.QuadraticEquations where
+module Domain.Math.Strategy.QuadraticEquations where
 
 import Common.Apply
 import Common.Context
@@ -13,12 +13,12 @@ import Data.Ratio
 import Domain.Math.Data.Equation
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
-import Domain.Math.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
+import Domain.Math.Strategy.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
 import Domain.Math.Data.OrList
-import Domain.Math.Parser
+import Domain.Math.Expr.Parser
 import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.Views
+import Domain.Math.View.Basic
 import Prelude hiding (repeat, (^))
 import qualified Prelude
 import qualified Domain.Math.Data.SquareRoot as SQ

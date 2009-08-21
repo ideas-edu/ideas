@@ -24,11 +24,9 @@ import Data.Maybe
 import Common.Uniplate
 import Common.View hiding (simplify)
 import GHC.Real
---import Domain.Math.SExpr
---import Domain.Math.Constrained
 import Domain.Math.Expr
 import Domain.Math.Symbolic
-import Domain.Math.Views (sumView)
+import Domain.Math.View.Basic (sumView)
 import qualified Data.Map as M
 
 data LinearMap a = LM { lmMap :: M.Map String a, lmConstant :: a }

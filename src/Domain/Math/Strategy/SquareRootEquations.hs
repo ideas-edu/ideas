@@ -1,4 +1,4 @@
-module Domain.Math.SquareRootEquations where
+module Domain.Math.Strategy.SquareRootEquations where
 
 import Prelude hiding (repeat)
 import Common.Apply
@@ -10,10 +10,10 @@ import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
-import Domain.Math.Views
+import Domain.Math.View.Basic
 import Domain.Math.ExercisesDWO
-import Domain.Math.HigherDegreeEquations (equationsStrategy)
-import Domain.Math.QuadraticEquations (solvedList)
+import Domain.Math.Strategy.HigherDegreeEquations (equationsStrategy)
+import Domain.Math.Strategy.QuadraticEquations (solvedList)
 {- 
 Strategie (p21. G&R deel 1):
 1) Isoleer wortel

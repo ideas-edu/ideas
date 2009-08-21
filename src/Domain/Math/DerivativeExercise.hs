@@ -22,7 +22,7 @@ import Common.Exercise
 import Common.Transformation
 import Domain.Math.Simplification
 import Domain.Math.Expr
-import Domain.Math.Parser
+import Domain.Math.Expr.Parser
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise

@@ -240,7 +240,7 @@ conPlusFraction = makeSimpleRule "conPlusFraction" f
       return (fromInteger (b+a*c) :/: fromInteger c)
    
 wf :: Expr -> Bool -- pessimistic approach
-wf (a :/: b) = case exprToFractional b of
+wf (a :/: b) = case match rationalView b of
                   Just r  -> r/=0 && wf a 
                   Nothing -> False
 wf e = e /= bottom && all wf (children e)
@@ -265,16 +265,7 @@ solveFraction = fromContext . applyD fractionStrategy . inContext
 infix 1 ~=
 
 (~=) :: Expr -> Expr -> Bool
-e1 ~= e2 = exprToFractional e1 == (exprToFractional e2 :: Maybe Rational)
-   
-{- (~=) :: Expr -> Expr -> Property
-e1 ~= e2 = forAll arbitrary $ \f -> 
-   let g :: Expr -> Maybe Rational 
-       g = exprToFractional . rec
-       rec (Var s) = f s
-       rec e = h (map rec cs)
-        where (cs, h) = uniplate e
-   in g e1 == g e2 -}
+(~=) = viewEquivalent rationalView
 
 isInteger :: Expr -> Bool
 isInteger e = e `belongsTo` conView

@@ -151,27 +151,6 @@ foldExpr (plus, times, minus, neg, nat, dv, sq, var, sym) = rec
          Var v    -> var v
          Sym f xs -> sym f (map rec xs)
 
-exprToNum :: (Monad m, Num a) => Expr -> m a
-exprToNum = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, return . fromInteger, \_ -> err, err, err, \_ -> err)
- where
-   err _ = fail "exprToNum"
-
-exprToFractional :: (Monad m, Fractional a) => Expr -> m a
-exprToFractional = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, return . fromInteger, (/!), err, err, \_ -> err)
- where 
-   mx /! my = join (liftM2 safeDivision mx my)
-   err _ = fail "exprToFractional"
-       
-exprToFloating :: (Monad m, Floating a) => (Symbol -> [a] -> m a) -> Expr -> m a
-exprToFloating f = foldExpr (liftM2 (+), liftM2 (*), liftM2 (-), liftM negate, return . fromInteger, (/!), liftM sqrt, err, sym)
- where 
-   mx /! my = join (liftM2 safeDivision mx my)
-   sym s = join . liftM (f s) . sequence 
-   err _ = fail "Floating"
-
-safeDivision :: (Monad m, Fractional a) => a -> a -> m a
-safeDivision x y = if y==0 then fail "safeDivision" else return (x/y)
-
 -----------------------------------------------------------------------
 -- Pretty printer 
 

@@ -377,7 +377,7 @@ polyViewFor v = makeView f g
    f (a :-: b)  = liftM2 (-) (f a) (f b)
    f (a :*: b)  = liftM2 (*) (f a) (f b)
    f (Sym s [a, n]) | s == powerSymbol = 
-      liftM2 power (f a) (exprToNum n)
+      liftM2 power (f a) (match integralView n)
    f (a :/: b) = do
       guard (v `notElem` collectVars b)
       p <- f a

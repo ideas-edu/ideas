@@ -1,11 +1,13 @@
 module Domain.Math.View.Basic
    ( module Domain.Math.View.Basic
+   , module Domain.Math.View.Numeric
    , module Common.View -- export all view-related functions
    ) where
 
 import Prelude hiding (recip, (^))
 import Common.View
 import Domain.Math.Expr
+import Domain.Math.View.Numeric
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Equation
 import Control.Monad
@@ -107,12 +109,6 @@ fractionView = divView >>> signs >>> (conView *** conView)
    signs = makeView (Just . f) id
    f (a, Negate b) = f (neg a, b)
    f (a, b)        = (a, b)
-
-rationalView :: View Expr Rational
-rationalView = makeView exprToFractional fromRational
-
-integerView :: View Expr Integer
-integerView = makeView exprToNum fromIntegral
  
 -------------------------------------------------------------
 -- Sums and products

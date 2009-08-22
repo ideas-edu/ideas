@@ -62,7 +62,7 @@ type SymbolMap = [(ES.Symbol, OMOBJ, Maybe Int)]
 
 symbolMap :: SymbolMap
 symbolMap = 
-   [ (ES.piSymbol, piSymbol, Just 0), (diffS, diffSymbol, Just 1)
+   [ (ES.piSymbol, piSymbol, Just 0), (ES.diffSymbol, diffSymbol, Just 1)
    , (ES.sinSymbol, sinSymbol, Just 1)
    , (ES.cosSymbol, cosSymbol, Just 1), (ES.lnSymbol, lnSymbol, Just 1)
    , (ES.powerSymbol, powerSymbol, Just 2)
@@ -76,10 +76,6 @@ findBySymbol s = safeHead [ (n, ma) | (n, t, ma) <- symbolMap, s==t  ]
 
 unknown :: ES.Symbol -> OMOBJ
 unknown = OMS "UNKNOWN" . show
-
-lambdaS, diffS :: ES.Symbol
-lambdaS = ES.makeSymbolN "Lambda"
-diffS   = ES.makeSymbolN "Diff"
 
 --------------------------------------------------------------------
 -- Utility functions
@@ -180,7 +176,7 @@ instance IsOMOBJ Expr where
          a :/: b  -> binop divideSymbol a b
          Sqrt a   -> binop rootSymbol a (2::Integer)
          Var s    -> OMV s
-         Sym s [Var x, e] | show s == "Lambda" -> 
+         Sym s [Var x, e] | s == ES.lambdaSymbol -> 
             OMBIND lambdaSymbol [x] (toOMOBJ e)
          Sym f xs
             | null xs      -> symbol
@@ -206,7 +202,7 @@ instance IsOMOBJ Expr where
       fromVar _ = Nothing
       
       fromLambda (OMBIND s [x] body) | s == lambdaSymbol = 
-         liftM (\e -> Sym lambdaS [Var x, e]) (fromOMOBJ body)
+         liftM (\e -> Sym ES.lambdaSymbol [Var x, e]) (fromOMOBJ body)
       fromLambda _ = Nothing
       
       fromSym obj@(OMS _ _) = fmap (ES.symbol . fst) (findBySymbol obj)

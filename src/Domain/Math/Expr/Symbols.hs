@@ -52,6 +52,9 @@ acoshSymbol   = makeSymbol "acosh"  1
 
 -- Extra symbols
 bottomSymbol  = makeSymbolN "error"
+lambdaSymbol  = makeSymbolN "lambda"
+diffSymbol    = makeSymbolN "diff"
+fcompSymbol   = makeSymbolN "compose"
 
 -------------------------------------------------------------
 -- Some match functions

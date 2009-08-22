@@ -1,9 +1,9 @@
-<reply result="incorrect" version="version 0.5.1 (revision 1805)">
+<reply result="incorrect" version="0.5.4">
   <strategy>
     linalg.gaussianelimination
   </strategy>
   <location>
-    [0,2,0]
+    [0]
   </location>
   <expected>
     <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -14,23 +14,17 @@
           <OMI>
             1
           </OMI>
-          <OMA>
-            <OMS cd="arith1" name="divide"/>
-            <OMI>
-              1
-            </OMI>
-            <OMI>
-              2
-            </OMI>
-          </OMA>
+          <OMI>
+            0
+          </OMI>
         </OMA>
         <OMA>
           <OMS cd="linalg2" name="matrixrow"/>
           <OMI>
-            2
+            0
           </OMI>
           <OMI>
-            4
+            1
           </OMI>
         </OMA>
       </OMA>
@@ -77,6 +71,93 @@
             </OMI>
             <OMI>
               4
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </elem>
+    <elem ruleid="Add">
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="linalg2" name="matrix"/>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              1
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              0
+            </OMI>
+            <OMI>
+              3
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </elem>
+    <elem ruleid="Scale">
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="linalg2" name="matrix"/>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              1
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="divide"/>
+              <OMI>
+                1
+              </OMI>
+              <OMI>
+                2
+              </OMI>
+            </OMA>
+          </OMA>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              0
+            </OMI>
+            <OMI>
+              1
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </elem>
+    <elem ruleid="Add">
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="linalg2" name="matrix"/>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              1
+            </OMI>
+            <OMI>
+              0
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              0
+            </OMI>
+            <OMI>
+              1
             </OMI>
           </OMA>
         </OMA>

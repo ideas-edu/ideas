@@ -209,19 +209,14 @@ instance MetaVar Expr where
    isMetaVar _ = Nothing
 
 instance ShallowEq Expr where
+   shallowEq (Nat a) (Nat b) = a == b
+   shallowEq (Var a) (Var b) = a == b
    shallowEq expr1 expr2 =
-      case (expr1, expr2) of
-         (_ :+: _ , _ :+: _ ) -> True
-         (_ :*: _ , _ :*: _ ) -> True
-         (_ :-: _ , _ :-: _ ) -> True
-         (Negate _, Negate _) -> True
-         (Nat a   , Nat b   ) -> a==b
-         (_ :/: _ , _ :/: _ ) -> True
-         (Sqrt _  , Sqrt _  ) -> True
-         (Var a   , Var b   ) -> a==b
-         (Sym f _ , Sym g _ ) -> f==g
-         _                    -> False
-   
+      case (getFunction expr1, getFunction expr2) of
+         (Just (s1, as), Just (s2, bs)) -> 
+              s1 == s2 && length as == length bs
+         _ -> False 
+
 instance Rewrite Expr
 
 -----------------------------------------------------------------------
@@ -230,17 +225,9 @@ instance Rewrite Expr
 exprACs :: Operators Expr
 exprACs = [plusOperator, timesOperator]
 
-plusOperator :: Operator Expr
-plusOperator = acOperator (+) isPlus
- where
-   isPlus (a :+: b) = Just (a, b)
-   isPlus _         = Nothing
-
-timesOperator :: Operator Expr
+plusOperator, timesOperator :: Operator Expr
+plusOperator  = acOperator (+) isPlus
 timesOperator = acOperator (*) isTimes
- where
-   isTimes (a :*: b) = Just (a, b)
-   isTimes _         = Nothing
 
 collectPlus, collectTimes :: Expr -> [Expr]
 collectPlus  = collectWithOperator plusOperator

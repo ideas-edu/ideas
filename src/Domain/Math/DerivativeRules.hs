@@ -26,21 +26,14 @@ derivativeRules =
    , ruleSine, ruleLog 
    ]
 
-diffSymbol = makeSymbolN "Diff"
-
 diff :: Expr -> Expr
 diff = unary diffSymbol
 
 ln :: Expr -> Expr
 ln = unary lnSymbol
 
-lambdaSymbol = makeSymbolN "Lambda"
-
 lambda :: Expr -> Expr -> Expr
 lambda = binary lambdaSymbol
-
--- function composition
-fcompSymbol = makeSymbolN "(.)"
 
 fcomp :: Expr -> Expr -> Expr
 fcomp = binary fcompSymbol

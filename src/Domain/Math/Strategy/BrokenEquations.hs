@@ -13,7 +13,8 @@ import Domain.Math.Data.OrList
 import Domain.Math.View.Basic
 import Domain.Math.ExercisesDWO
 import Domain.Math.Strategy.HigherDegreeEquations (equationsStrategy)
-import Domain.Math.Strategy.QuadraticEquations (solvedList, polyView)
+import Domain.Math.Strategy.QuadraticEquations (solvedList)
+import Domain.Math.View.Polynomial
 import Domain.Math.Strategy.CoverUpEquations (rule1)
 {- 
 Equations:

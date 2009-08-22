@@ -13,6 +13,8 @@ import Data.Ratio
 import Domain.Math.Data.Equation
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
+import Domain.Math.View.SquareRoot
+import Domain.Math.View.Polynomial
 import Domain.Math.Strategy.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
 import Domain.Math.Data.OrList
 import Domain.Math.Expr.Parser
@@ -335,54 +337,3 @@ qView2 = makeView f undefined
                             , SQ.scale (1/(2*ra)) (-SQ.con rb - sdiscr)
                             ]
 
-squareRootView :: View Expr (SQ.SquareRoot Rational)
-squareRootView = makeView f g
- where
-   f (Sqrt a)   = fmap SQ.sqrtRational (match rationalView a)
-   f (Negate a) = fmap negate (f a)
-   f (Nat a)    = Just (fromIntegral a)
-   f (a :+: b)  = liftM2 (+) (f a) (f b)
-   f (a :-: b)  = liftM2 (-) (f a) (f b)
-   f (a :*: b)  = liftM2 (*) (f a) (f b)
-   f (a :/: b)  = liftM2 (/) (f a) (f b)
-   f (Sym s [a, b]) | s == powerSymbol = 
-      liftM2 (Prelude.^) (f a) (match integerView b)
-   f _ = Nothing
-   
-   g m = build sumView (map h (SQ.toList m))
-   h (r, n)  
-      | n == 0    = 0
-      | n == 1    = fromRational r
-      | otherwise = fromRational r .*. Sqrt (fromIntegral n)
-
-polyView :: View Expr (String, Polynomial Expr)
-polyView = makeView f g
- where
-   f e = case nub (collectVars e) of
-            [v] -> do p <- match (polyViewFor v) e
-                      return (v, p)
-            []  -> do p <- match (polyViewFor "") e -- special case really necessary?
-                      return ("", p)
-            _   -> Nothing
-   g (s, p) = build (polyViewFor s) p
-            
-polyViewFor :: String -> View Expr (Polynomial Expr)
-polyViewFor v = makeView f g
- where
-   f (Var s)    
-      | v == s  = Just var
-   f (Nat n)    = Just (fromIntegral n)
-   f (Negate a) = liftM negate (f a)
-   f (a :+: b)  = liftM2 (+) (f a) (f b)
-   f (a :-: b)  = liftM2 (-) (f a) (f b)
-   f (a :*: b)  = liftM2 (*) (f a) (f b)
-   f (Sym s [a, n]) | s == powerSymbol = 
-      liftM2 power (f a) (match integralView n)
-   f (a :/: b) = do
-      guard (v `notElem` collectVars b)
-      p <- f a
-      return (fmap (/b) p)
-   f e = do
-      guard (v `notElem` collectVars e)
-      return (con e)
-   g = build sumView . map (\(n, a) -> a .*. (Var v .^. fromIntegral n)) . terms

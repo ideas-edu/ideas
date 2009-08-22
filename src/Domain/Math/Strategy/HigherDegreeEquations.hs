@@ -12,6 +12,8 @@ import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
 import Domain.Math.Strategy.QuadraticEquations (solvedList, cleanUpOrs)
 import qualified Domain.Math.Strategy.QuadraticEquations as QE
+import Domain.Math.View.Polynomial
+import Domain.Math.View.SquareRoot
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Expr.Parser
@@ -109,7 +111,7 @@ normHD (x :==: y) =
       Just p  -> concatMap g $ factorize p
       Nothing -> 
          case (x, y) of 
-            (Var _, e) | noVars e -> [simplify QE.squareRootView e]
+            (Var _, e) | noVars e -> [simplify squareRootView e]
             _ -> error $ show (x,y)
  where
    g :: Polynomial Rational -> [Expr]
@@ -119,7 +121,7 @@ normHD (x :==: y) =
        | d==2 = let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
                     discr   = b*b - 4*a*c
                 in if discr < 0 then [] else 
-                   map (simplify QE.squareRootView)
+                   map (simplify squareRootView)
                    [ (-fromRational b + sqrt (fromRational discr)) / 2 * fromRational a 
                    , (-fromRational b - sqrt (fromRational discr)) / 2 * fromRational a
                    ]
@@ -137,5 +139,5 @@ testje = concatMap f higherDegreeEquations
 
 toPoly :: Expr -> Maybe (Polynomial Rational)
 toPoly e = do
-   (_, p) <- match QE.polyView e
+   (_, p) <- match polyView e
    switch (fmap (match rationalView) p)

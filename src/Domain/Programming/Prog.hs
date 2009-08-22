@@ -40,7 +40,7 @@ import Domain.Programming.HeliumRules
 
 
 --------------------------------------------------------------------------------
--- Help functions
+-- Help Functions
 --------------------------------------------------------------------------------
 collectNames :: Module -> [String]
 collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
@@ -79,7 +79,7 @@ equalModules :: Module -> Module -> Bool
 equalModules x y = normaliseModule x == normaliseModule y
 
 normaliseModule :: Module -> Module
-normaliseModule = alphaRenaming . normalise
+normaliseModule =  normalise . alphaRenaming
 
 normalise :: Data a => a -> a
 normalise = rewriteExprs . rewriteRHSs . preprocess -- rewrites in a module???
@@ -132,13 +132,13 @@ betaReduce :: Expression -> Maybe Expression
 betaReduce expr = case expr of 
   Expression_NormalApplication _ 
     (Expression_Lambda _ ps e) as -> case drop (length as) ps of
-                                       []  -> Just $ substArgs e ps as
+                                       []  -> Just $ substArgs ps as e
                                        ps' -> Just $ Expression_Lambda noRange ps' 
-                                                       (substArgs e (take (length as) ps) as)
+                                                       (substArgs (take (length as) ps) as e)
   _                                -> Nothing
 
-substArgs :: Data a => a -> Patterns -> Expressions -> a
-substArgs expr ps =  foldr transformBi expr . zipWith rep ps
+substArgs :: Data a => Patterns -> Expressions -> a -> a
+substArgs ps exprs expr = foldr transformBi expr $ zipWith rep ps exprs
   where   
     rep (Pattern_Variable _ p) x e = case e of
               Expression_Variable _ n -> if n == p then x else e
@@ -192,18 +192,25 @@ commutativeOps expr = case expr of
                   _ -> False
       
 inline :: RightHandSide -> Maybe RightHandSide
-inline rhs = case rhs of
-  RightHandSide_Expression r expr 
-    (MaybeDeclarations_Just ws) -> Just $ RightHandSide_Expression r (replace expr ws) MaybeDeclarations_Nothing
-  _                             -> Nothing
-  where 
-    replace expr = foldr transformBi expr . map rep . reps
-      where
+inline rhs = 
+  case rhs of
+    RightHandSide_Expression r expr (MaybeDeclarations_Just ws) -> 
+      if null patterns then Nothing
+      else Just $ RightHandSide_Expression r (replace expr patterns) 
+                                             (if null rest then MaybeDeclarations_Nothing 
+                                              else MaybeDeclarations_Just rest)
+      where 
+        replace expr = foldr transformBi expr . map rep . reps
+        (patterns, rest) = partition (\d -> case d of 
+                                              Declaration_PatternBinding _ _ _ -> True
+                                              _ -> False) ws
         reps ws = [(pat, expr) | w <- ws, Declaration_PatternBinding _ pat (RightHandSide_Expression _ expr _) <- universeBi w]
-        rep (Pattern_Variable _ p, x) e = case e of
-                  Expression_Variable _ n -> if n == p then x else e
-                  _                       -> e
+        rep (Pattern_Variable _ p, x) e = 
+          case e of
+            Expression_Variable _ n -> if n == p then x else e
+            _                       -> e
         rep _                         e = e
+    _ -> Nothing
 
 let2where :: RightHandSide -> Maybe RightHandSide
 let2where rhs = case rhs of

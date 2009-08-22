@@ -37,28 +37,39 @@ type ModuleS = Strategy (Context Module)
 --------------------------------------------------------------------------------
 -- Language definition strategies
 --------------------------------------------------------------------------------
-letS :: [ModuleS] -> ModuleS -> ModuleS -- specialised let strategy, also recognizes where clauses
-letS decls expr  =  rhsS expr decls
-                <|> rhsS (introExprLet (length decls) <*> sequence decls 
-                                                      <*> expr) []
+whereS :: [ModuleS] -> ModuleS -> ModuleS -- specialised let strategy, also recognizes where clauses
+whereS decls expr  =  rhsS expr decls
+                  <|> rhsS (letS decls expr) []
 
+letS :: [ModuleS] -> ModuleS -> ModuleS
+letS decls expr = introExprLet (length decls) <*> sequence decls <*> expr
 
 --------------------------------------------------------------------------------
--- Prelude definition strategies (ie. inlining)
+-- Prelude definition strategies
 --------------------------------------------------------------------------------
 
 foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
-    =  rhsS (varS "foldl" # [consS, nilS]) []
+       -- Normal usage
+    = {- (varS "foldl" # [consS, nilS])
+       -- Foldl definition
    <|> letS [ declFunS [ funS "f" [ patS "nil", patConS "[]" ] (varS "nil") [] 
                        , funS "f" [ patS "nil", patParenS (patInfixConS (patS "x") ":" (patS "xs")) ]
                                   (varS "f" #  [ exprParenS (consS # [ varS "nil", varS "x" ]), varS "xs" ]) [] ]
             ] -- in
             ( varS "f" # [nilS] )
+       -- Bastiaan's theorem, ie. foldl op e == foldr (flip op) e . reverse
+   <|> -}compS (varS "foldr" # [flipS consS, nilS]) (varS "reverse")
+
+-- zie Hutton's paper voor nog een foldl def, ook inefficiente variant meenemen (foldl op e [] = ..)?
 
 compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
 compS f g  =  opS "." (Just f) (Just g)
           <|> lambdaS [patS "x"] (appS f [appS g [varS "x"]])
+
+flipS :: ModuleS -> ModuleS
+flipS f  =  (varS "flip" # [f])
+        <|> lambdaS [patS "x", patS "y"] (f # [varS "y", varS "x"])
 
 
 --------------------------------------------------------------------------------

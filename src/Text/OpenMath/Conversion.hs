@@ -14,16 +14,18 @@
 module Text.OpenMath.Conversion where
 
 import Common.Utils
-import Text.OpenMath.Object
-import Domain.LinearAlgebra.Vector
-import Domain.LinearAlgebra.Matrix
-import qualified Domain.Math.Expr.Symbolic as ES
-import Domain.Math.Data.Equation
-import Domain.Math.Expr
-import qualified Domain.Math.Expr.Symbols as ES
+import Control.Monad
 import Data.Maybe
 import Data.Ratio
-import Control.Monad
+import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.Vector
+import Domain.Math.Data.Equation
+import Domain.Math.Data.OrList
+import Domain.Math.Expr
+import Text.OpenMath.Object
+import qualified Domain.Math.Expr.Symbolic as ES
+import qualified Domain.Math.Expr.Symbols as ES
+
 
 class IsOMOBJ a where
    toOMOBJ   :: a -> OMOBJ
@@ -230,4 +232,7 @@ instance IsOMOBJ a => IsOMOBJ (Equation a) where
    toOMOBJ (x :==: y) = binop equationSymbol x y
    fromOMOBJ = from2 equationSymbol (:==:)
 
--- instance Num a => IsOMOBJ (LinearExpr a)
+instance IsOMOBJ a => IsOMOBJ (OrList a) where 
+   toOMOBJ (OrList xs) = listop orSymbol xs
+   fromOMOBJ =  fromN orSymbol OrList 
+             |> (liftM (\x -> OrList [x]) . fromOMOBJ)

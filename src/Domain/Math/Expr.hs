@@ -111,7 +111,9 @@ instance Uniplate Expr where
 -- Arbitrary instance
 
 instance Arbitrary Expr where
-   arbitrary = sized arbExpr
+   arbitrary = 
+      let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
+      in sized (symbolGenerator [] syms)
    coarbitrary expr =
       case expr of 
          a :+: b  -> variant 0 . coarbitrary a . coarbitrary b
@@ -123,17 +125,24 @@ instance Arbitrary Expr where
          Sqrt a   -> variant 6 . coarbitrary a
          Var s    -> variant 7 . coarbitrary s
          Sym f xs -> variant 8 . coarbitrary (show f) . coarbitrary xs
-   
-arbExpr :: Int -> Gen Expr
-arbExpr _ = liftM (Nat . abs) arbitrary
-{-
-arbExpr 0 = oneof [liftM (Nat . abs) arbitrary, oneof [ return (Var x) | x <- ["x", "y", "z"] ] {- , return pi -} ]
-arbExpr n = oneof [bin (+), bin (*), bin (-), unop negate, bin (/), unop sqrt, arbExpr 0]
+
+symbolGenerator :: [String] -> [Symbol] -> Int -> Gen Expr
+symbolGenerator = symbolGeneratorWith (const [])
+  
+symbolGeneratorWith :: (Int -> [Gen Expr]) -> [String] -> [Symbol] -> Int -> Gen Expr
+symbolGeneratorWith extras vars syms = f 
  where
-   bin  f = liftM2 f rec rec
-   unop f = liftM f rec
-   rec    = arbExpr (n `div` 2) -}
-       
+   f n = oneof $  liftM (Nat . abs) arbitrary
+               :  [ oneof [ return (Var x) | x <- vars ] | not (null vars) ]
+               ++ map (g n) (filter (\s -> n > 0 || arity s == Just 0) syms)
+               ++ extras n
+   g n s = do
+      i  <- case arity s of
+               Just i  -> return i
+               Nothing -> choose (0, 5)
+      as <- replicateM i (f (n `div` i))
+      return (function s as)
+  
 -----------------------------------------------------------------------
 -- Fold
 

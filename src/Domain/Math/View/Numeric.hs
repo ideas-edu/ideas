@@ -1,7 +1,7 @@
 module Domain.Math.View.Numeric 
    ( integralView, realView
    , integerView, rationalView, doubleView
-   , integerNormalForm, rationalNormalForm, rationalRelaxedForm
+   , integerNormalForm, rationalNormalForm, rationalRelaxedForm, fractionForm
    , integerGenerator, rationalGenerator
    ) where
 
@@ -57,6 +57,18 @@ rationalNormalForm = makeView (optionNegate f) fromRational
       Just (fromInteger a / fromInteger b)
    f (Nat n) = Just (fromInteger n)
    f _       = Nothing
+
+fractionForm :: View Expr (Integer, Integer)
+fractionForm = makeView f (\(a, b) -> (fromInteger a :/: fromInteger b))
+ where
+   f (Negate a) = liftM (\(x,y) -> (negate x, y)) (g a)
+   f a = g a
+   g (e1 :/: e2) = do
+      a <- match integerNormalForm e1
+      b <- match integerNormalForm e2
+      guard (b /= 0)
+      return (a, b)
+   g _       = Nothing
 
 rationalRelaxedForm :: View Expr Rational
 rationalRelaxedForm = makeView (optionNegate f) fromRational
@@ -129,6 +141,11 @@ testAll = do
       mapM_ (f p) gens
 
 testIntGen = quickCheck $ forAll (sized integerGenerator) (`belongsTo` integerView)
+
+testFrac = quickCheck $ forAll (sized rationalGenerator) p1 
+
+p1 e = 
+   (e `belongsTo` fractionForm) == (e `belongsTo` rationalRelaxedForm && not (e `belongsTo` integerNormalForm)) 
 
 -------------------------------------------------------------------
 -- Helper functions

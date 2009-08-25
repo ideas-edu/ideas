@@ -59,7 +59,7 @@ import Control.Monad (liftM, when)
 newtype Strategy a = S { unS :: RE.Grammar (Either (Rule a) (LabeledStrategy a)) }
 
 -- | A strategy which is labeled with a string
-data LabeledStrategy a = Label 
+data LabeledStrategy a = LS 
    { strategyName :: String  -- ^ Returns the label of the strategy
    , unlabel :: Strategy a   -- ^ Removes the label from a strategy
    }
@@ -73,14 +73,15 @@ instance Show a => Show (Strategy a) where
    show = show . unS
 
 instance Show a => Show (LabeledStrategy a) where
-   show (Label n s) = "label " ++ show n ++ " (" ++ show s ++ ")"
+   show s = 
+      strategyName s ++ ": " ++ show (unlabel s)
 
 -- instances for Apply
 instance Apply Strategy where
    applyAll = runStrategy
 
 instance Apply LabeledStrategy where
-   applyAll = applyAll . toStrategy
+   applyAll = applyAll . unlabel
 
 -- instances for IsStrategy
 instance IsStrategy RewriteRule where
@@ -93,15 +94,15 @@ instance IsStrategy Rule where
 instance IsStrategy Strategy where
    toStrategy = id
    
-instance IsStrategy LabeledStrategy where
-   toStrategy = S . RE.symbol . Right
+instance IsStrategy (LabeledStrategy) where
+  toStrategy = S . RE.symbol . Right
 
 -- instances for Lift
 instance Lift Strategy where
    lift lp (S re) = S (fmap (either (Left . lift lp) (Right . lift lp)) re)
    
-instance Lift LabeledStrategy where
-   lift lp (Label n s) = Label n (lift lp s)
+instance Lift (LabeledStrategy) where
+   lift lp (LS n s) = LS n (lift lp s)
 
 -----------------------------------------------------------
 --- Running strategies
@@ -188,7 +189,7 @@ fail = S RE.fail
 
 -- | Labels a strategy with a string
 label :: IsStrategy f => String -> f a -> LabeledStrategy a
-label l = Label l . toStrategy
+label l = LS l . toStrategy
 
 -- | Puts a list of strategies into a sequence
 sequence :: IsStrategy f => [f a] -> Strategy a
@@ -325,7 +326,7 @@ subStrategy loc s =
 mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
 mapRules fun = f
  where
-   f (Label n s) = Label n (g s)
+   f (LS n s)    = LS n (g s)
    g (S expr)    = S (fmap h expr)
    h (Left r)    = Left (fun r)
    h (Right ls)  = Right (f ls)
@@ -461,7 +462,7 @@ withMarks = rec []
 --- Strategy inversion
    
 inverse :: LabeledStrategy a -> LabeledStrategy a
-inverse (Label n s) = Label n (f s)
+inverse (LS n s) = LS n (f s)
  where
    f :: Strategy a -> Strategy a
    f s = S (fmap (either (Left . g) (Right . inverse)) (RE.inverse (unS s)))

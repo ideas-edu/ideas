@@ -31,6 +31,7 @@ a     .-. Negate b = a .+. b
 a     .-. b        = a :-: b
 
 neg :: Expr -> Expr
+neg (Nat 0)    = 0
 neg (Negate a) = a
 neg (a :+: b)  = neg a .-. b
 neg (a :-: b)  = neg a .+. b

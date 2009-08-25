@@ -14,7 +14,7 @@ import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA
 import qualified Domain.Math.DerivativeExercise as Math
-import qualified Domain.Math.Strategy.Fraction as Math
+import qualified Domain.Math.Strategy.Numeric as Math
 import qualified Domain.Math.Strategy.CoverUpEquations as Math
 import qualified Domain.Math.Strategy.LinearEquations as Math
 import qualified Domain.Math.Strategy.QuadraticEquations as Math
@@ -38,8 +38,8 @@ data OpenMathExercise = forall a . IsOMOBJ a => OMEX (Exercise a)
 openMathExercises :: [OpenMathExercise]
 openMathExercises = 
    [ -- basic math
-     OMEX Math.fractionExercise
-   , OMEX Math.calculationExercise
+     OMEX Math.naturalExercise, OMEX Math.integerExercise
+   , OMEX Math.rationalExercise, OMEX Math.fractionExercise
    , OMEX Math.coverUpExercise
    , OMEX Math.linearEquationExercise
    , OMEX Math.quadraticEquationExercise

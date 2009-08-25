@@ -45,7 +45,7 @@ calculateResults = [level1, level2, level3]
       , -55/(3*(-5)+4)
       , -4*(-2+ (-4)+7)
       , -8 - (140/4*5)
-      , 13-(2-1) / 3
+      , (13-(2-1)) / 3
       ]
 
 fillInResult :: [[Equation Expr]]

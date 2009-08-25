@@ -76,10 +76,34 @@ checkExercises strat es = do
   putStrLn $ "\n" ++ take 4 (show percentage) ++ "% has been recognised by the strategy.\n"
   return ()
 
-pat2var :: Pattern -> Expression
-pat2var (Pattern_Variable r n) = Expression_Variable r n
+pat2expr :: Pattern -> Expression
+pat2expr p = 
+  case p of 
+    Pattern_Literal r l                -> Expression_Literal r l
+    Pattern_Variable r n               -> Expression_Variable r n
+    Pattern_Constructor r n _          -> Expression_Constructor r n
+    Pattern_Parenthesized r p          -> Expression_Parenthesized r $ pat2expr p
+    Pattern_InfixConstructor r' l op r -> Expression_InfixApplication r'
+                                            (MaybeExpression_Just (pat2expr l))
+                                            (var op)
+                                            (MaybeExpression_Just (pat2expr r))
+    Pattern_List r ps                  -> Expression_List r $ map pat2expr ps
+
+expr2pat e = 
+  case e of
+    Expression_Literal r l                -> Pattern_Literal r l
+    Expression_Variable r n               -> Pattern_Variable r n
+    Expression_Constructor r n            -> Pattern_Constructor r n []
+    Expression_Parenthesized r e          -> Pattern_Parenthesized r $ expr2pat p
+--    Expression_InfixApplication r' l op r -> Pattern_InfixApplication r'
+--                                               (MaybeExpression_Just (pat2expr l))
+--                                               ( op)
+--                                               (MaybeExpression_Just (pat2expr r))
+    Expression_List r es                  -> Pattern_List r $ map expr2pat es
+         
 
 var = Expression_Variable noRange
+pat = Pattern_Variable noRange
 
 pp = putStrLn . ppModule
 comp = (\(Right m)->m) . compile . fst
@@ -154,7 +178,7 @@ betaReduce :: Expression -> Maybe Expression
 betaReduce expr = 
   case expr of 
     Expression_NormalApplication r (Expression_Lambda _ [p] e) (a:as) -> 
-      Just $ Expression_NormalApplication r (subst (pat2var p, a) e) as
+      Just $ Expression_NormalApplication r (subst (pat2expr p, a) e) as
     _ -> Nothing
 
 -- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
@@ -220,7 +244,7 @@ inlineWhere rhs =
         (patterns, rest) = partition (\d -> case d of 
                                               Declaration_PatternBinding _ _ _ -> True
                                               _ -> False) ws
-        reps = [(pat2var pat, expr) | p <- patterns, 
+        reps = [(pat2expr pat, expr) | p <- patterns, 
                                       Declaration_PatternBinding _ pat 
                                         (RightHandSide_Expression _ expr _) <- universeBi p]
     _ -> Nothing
@@ -252,26 +276,51 @@ anonymise :: Declaration -> Declaration
 anonymise d = 
   case d of
     -- f = 1 : f => f = let f = 1 : f in f 
-    d@(Declaration_PatternBinding r p rhs) -> if isRecursive d then toLet p [d] else d
+    Declaration_PatternBinding r p rhs -> if isRecursive d then letItBe p [d] else d
     -- f n [] = 0; f n (x:xs) = 1 + f xs => f = \n -> let f [] = 0; f (_:xs) = 1 + f xs in f
     Declaration_FunctionBindings r fbs ->
       case fbs of
-        [FunctionBinding_FunctionBinding r lhs rhs] -> undefined
+        [FunctionBinding_FunctionBinding r lhs rhs] -> 
+          if isRecursive d then
+            -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
+            let invariantPs = -- use lambdaIt and letItBe to construct : map expr2pat (invariantArgs d)
+            in lambdaIt 
+          else 
+            -- just anonymise the function
+            let (name, ps, expr, ds) = decomposeFB (head fbs) in lambdaIt name ps expr ds
         f:fs -> undefined
 
-toLet :: Pattern -> Declarations -> Declaration
-toLet p ds = let r = noRange in
+functionArgs :: Declaration -> ([Expressions], [Expressions])
+functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . f) ([],[]) fbs
+  where
+    g (xs, ys) (xs', ys') = (xs ++ xs', ys ++ ys')
+    f fb = let (n, ps, _, _) = decomposeFB fb
+               fpats = [map pat2expr ps]
+               fargs = [args | Expression_NormalApplication _ 
+                                 (Expression_Variable _ vn) args <- universeBi fb
+                             , n == vn]
+           in (fpats, fargs)
+
+lambdaIt :: Name -> Patterns -> Expression -> Declarations -> Declaration 
+lambdaIt name ps expr ds = 
+  Declaration_PatternBinding r (pat name) $ 
+    RightHandSide_Expression r (Expression_Lambda r ps expr) (if null ds 
+                                                              then MaybeDeclarations_Nothing
+                                                              else MaybeDeclarations_Just ds)    
+  where
+    r = noRange
+
+letItBe :: Pattern -> Declarations -> Declaration
+letItBe p ds = let r = noRange in
   Declaration_PatternBinding r p (RightHandSide_Expression r
-    (Expression_Let r ds (pat2var p)) MaybeDeclarations_Nothing)
+    (Expression_Let r ds (pat2expr p)) MaybeDeclarations_Nothing)
 
 isRecursive :: Declaration -> Bool
-isRecursive decl = or $ map isRec uni
-  where
-    uni = (universeBi decl :: [Declaration])
-    isRec decl = case decl of
-                   Declaration_PatternBinding _ p rhs -> any (== pat2var p) $ universeBi decl
-                   Declaration_FunctionBindings _ fbs -> any (== var (name (head fbs))) $ universeBi fbs
-                   _ -> False
+isRecursive = not . null . snd . functionArgs
+
+invariantArgs :: Declaration -> Expressions
+invariantArgs = 
+  concat . filter ((==1) . length) . map nub . transpose . uncurry (++) . functionArgs
 
 name :: FunctionBinding -> Name
 name = (\(n, _, _, _) -> n) . decomposeFB

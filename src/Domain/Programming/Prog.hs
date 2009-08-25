@@ -79,7 +79,10 @@ checkExercises strat es = do
 pat2var :: Pattern -> Expression
 pat2var (Pattern_Variable r n) = Expression_Variable r n
 
+var = Expression_Variable noRange
+
 pp = putStrLn . ppModule
+comp = (\(Right m)->m) . compile . fst
 
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
@@ -194,7 +197,7 @@ commutativeOps expr =
   case expr of
     Expression_NormalApplication r
       (Expression_InfixApplication r' MaybeExpression_Nothing f MaybeExpression_Nothing) args -> do
-        guard (not (isSorted args || (isOp f "-" || isOp f "/"))) -- should be done elsewhere, in preludeS?
+        guard (not (isSorted args) && (isOp f "+" || isOp f "*")) -- should be done elsewhere, in preludeS?
         return $ Expression_NormalApplication r
                    (Expression_InfixApplication r' MaybeExpression_Nothing 
                                                 f MaybeExpression_Nothing) $ sort args
@@ -228,13 +231,11 @@ inlineBinding decl =
     Declaration_FunctionBindings _ [fb] -> 
       case fb of
         FunctionBinding_FunctionBinding _ _ (RightHandSide_Expression _ _ MaybeDeclarations_Nothing) ->
-          Just $ anonymise fb
+          Just $ anonymise' fb
         _ -> Nothing
     _ -> Nothing
 
-
-anonymise :: FunctionBinding -> Declaration
-anonymise (FunctionBinding_FunctionBinding r lhs rhs) = 
+anonymise' (FunctionBinding_FunctionBinding r lhs rhs) = 
   Declaration_PatternBinding r (Pattern_Variable r name) rhs'
   where
     (name, patterns) = deLHS lhs
@@ -247,9 +248,47 @@ anonymise (FunctionBinding_FunctionBinding r lhs rhs) =
              _ -> error "rhs should not contain wheres and is not defined on guards"
     rhs' = RightHandSide_Expression r (Expression_Lambda r patterns expr) MaybeDeclarations_Nothing
 
-{-
-[Declaration_FunctionBindings  [FunctionBinding_FunctionBinding  (LeftHandSide_Function  op [Pattern_Variable  a,Pattern_Variable  b]) (RightHandSide_Expression  (Expression_InfixApplication  (MaybeExpression_Just (Expression_Variable  a)) (Expression_Variable  +) (MaybeExpression_Just (Expression_InfixApplication  (MaybeExpression_Just (Expression_Literal  (Literal_Int  "2"))) (Expression_Variable  *) (MaybeExpression_Just (Expression_Variable  b))))) 
--}
+anonymise :: Declaration -> Declaration
+anonymise d = 
+  case d of
+    -- f = 1 : f => f = let f = 1 : f in f 
+    d@(Declaration_PatternBinding r p rhs) -> if isRecursive d then toLet p [d] else d
+    -- f n [] = 0; f n (x:xs) = 1 + f xs => f = \n -> let f [] = 0; f (_:xs) = 1 + f xs in f
+    Declaration_FunctionBindings r fbs ->
+      case fbs of
+        [FunctionBinding_FunctionBinding r lhs rhs] -> undefined
+        f:fs -> undefined
+
+toLet :: Pattern -> Declarations -> Declaration
+toLet p ds = let r = noRange in
+  Declaration_PatternBinding r p (RightHandSide_Expression r
+    (Expression_Let r ds (pat2var p)) MaybeDeclarations_Nothing)
+
+isRecursive :: Declaration -> Bool
+isRecursive decl = or $ map isRec uni
+  where
+    uni = (universeBi decl :: [Declaration])
+    isRec decl = case decl of
+                   Declaration_PatternBinding _ p rhs -> any (== pat2var p) $ universeBi decl
+                   Declaration_FunctionBindings _ fbs -> any (== var (name (head fbs))) $ universeBi fbs
+                   _ -> False
+
+name :: FunctionBinding -> Name
+name = (\(n, _, _, _) -> n) . decomposeFB
+
+decomposeFB :: FunctionBinding -> (Name, Patterns, Expression, Declarations)
+decomposeFB (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
+  where
+    deLHS l = case l of 
+                LeftHandSide_Function _ n ps -> (n, ps)
+                LeftHandSide_Infix _ l op r   -> (op, [l, r])
+                LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' in (n, ps' ++ ps)
+    (name, ps) = deLHS lhs
+    (expr, ds) = case rhs of
+                    RightHandSide_Expression _ expr w -> (expr, case w of
+                                                                  MaybeDeclarations_Just ds -> ds
+                                                                  _                         -> [])
+                    RightHandSide_Guarded _ gexpr w   -> error "Todo: guarded expressions"
 
 let2where :: RightHandSide -> Maybe RightHandSide
 let2where x = 
@@ -266,7 +305,8 @@ let2where x =
 -- detect fixed arguments, eg. f n [] = ... ; f n (x:xs) = ...
 
 
--- rewrite functions so that the have no fixed arguments, eg. f n = g  where g [] = ... ; g (x:xs) = ... 
+-- rewrite functions so that the have no fixed arguments, eg. f n = g  where g [] = ... ; g (x:xs) = ... or
+-- let g [] = ... ; g (x:xs) = ... g xs ... ; in f n = g
 
 {-
 -- rewrite functions e.g. f x = div x => f = div

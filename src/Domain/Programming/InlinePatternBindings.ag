@@ -24,26 +24,24 @@ import Domain.Programming.Utils
 import Prelude hiding (lookup)
 }
 
-ATTR * [ | | result : SELF ]
+ATTR * [ | | me : SELF result : SELF ]
 
 ATTR RightHandSide Expression [ | env : Env | ]
-ATTR Alternative Alternatives Expressions Declarations Declaration 
+ATTR Module Body
+     Alternative Alternatives Expressions Declarations Declaration 
      FunctionBindings FunctionBinding GuardedExpression GuardedExpressions 
      MaybeDeclarations MaybeExpression Qualifier Qualifiers
      RecordExpressionBinding RecordExpressionBindings Statements Statement
      [ env : Env | | ]
 
-SEM Body 
-  | Body declarations . env = updateEnv @result empty
-
 SEM RightHandSide 
-  | Expression expression . env = updateEnv @result @lhs.env
+  | Expression expression . env = updateEnv @me @lhs.env
 
 SEM Expression
-  | Variable lhs.result = case lookup @result @lhs.env of
-                            Just n -> n
-                            _      -> @result
-  | Let expression . env = updateEnv @result @lhs.env
+  | Variable lhs . result = case lookup @me @lhs.env of
+                              Just n -> n
+                              _      -> @me
+  | Let expression . env = updateEnv @me @lhs.env
 
 -- utility functions
 {
@@ -76,11 +74,6 @@ updateEnv' ds env = foldr insertInEnv env ds
             insert (pat2expr p) expr env
         _ -> env
 
-fromMaybeDecl :: MaybeDeclarations -> Declarations
-fromMaybeDecl m = case m of
-                    MaybeDeclarations_Just ds -> ds
-                    _                         -> []
-        
-inlinePatternBindings :: Module -> Module
-inlinePatternBindings = fst . sem_Module
+inlinePatternBindings :: Env -> Module -> Module
+inlinePatternBindings env m = (\(_, m, _) -> m) $ sem_Module m env
 }

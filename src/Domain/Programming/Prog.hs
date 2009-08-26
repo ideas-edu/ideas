@@ -97,16 +97,15 @@ normalise = rewrites . preprocess
                         >->  applicationReduce 
                         >->  infix2prefix 
                         >->  commutativeOps)
-                       >>-> (inlineWhere 
-                        >->  let2where)
-                       >>->  inlineBinding
+--                       >>-> (inlineWhere 
+--                        >->  let2where)
+--                       >>->  inlineBinding
 
 -- Choice do all rewrites in a Module or just one and let it to the rewriteBi
 liftRule :: (Data a, Data b) => (a -> Maybe a) -> b -> Maybe b
 liftRule rule m =
    safeHead [ fill a | (h, fill) <- contextsBi m, Just a <- [rule h] ]
 
--- a kind of Left-to-right Kleisli composition of monads
 (>->) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
 f >-> g = \ x -> f x `mplus` g x
 infixr 1 >->
@@ -213,6 +212,13 @@ let2where x =
   where
    rhs r expr ds = RightHandSide_Expression r expr $ MaybeDeclarations_Just $ ds
 
+
+-- Inlining: give a list of desired top level functions, eg. split the body decls in help
+-- and main functions. Create a env of to be inlined help functions and remove them from
+-- the module. Then do the inlining.
+
+
+{-
 inlineWhere :: RightHandSide -> Maybe RightHandSide
 inlineWhere rhs = 
   case rhs of
@@ -239,6 +245,7 @@ inlinePatBinding decl =
           Just $ undefined --anonymise' fb
         _ -> Nothing
     _ -> Nothing
+-}
 
 anonymise :: Data a => a -> a
 anonymise = transformBi f 

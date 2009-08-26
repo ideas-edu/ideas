@@ -23,12 +23,14 @@ import Data.Generics.Biplate
 import Data.Maybe
 import Data.List
 import Domain.Programming.AlphaRenaming (alphaRenaming)
+import Domain.Programming.InlinePatternBindings -- (inlinePatternBindings)
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.Prog
 import Domain.Programming.PreludeS
 import Domain.Programming.EncodingExercises
+import Domain.Programming.Utils
 import Prelude hiding (fail)
 import Text.Parsing (SyntaxError(..))
 

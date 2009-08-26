@@ -94,7 +94,7 @@ expr2pat e =
     Expression_Literal r l                -> Pattern_Literal r l
     Expression_Variable r n               -> Pattern_Variable r n
     Expression_Constructor r n            -> Pattern_Constructor r n []
-    Expression_Parenthesized r e          -> Pattern_Parenthesized r $ expr2pat p
+    Expression_Parenthesized r e          -> Pattern_Parenthesized r $ expr2pat e
 --    Expression_InfixApplication r' l op r -> Pattern_InfixApplication r'
 --                                               (MaybeExpression_Just (pat2expr l))
 --                                               ( op)
@@ -104,6 +104,10 @@ expr2pat e =
 
 var = Expression_Variable noRange
 pat = Pattern_Variable noRange
+patBinding pat expr w = Declaration_PatternBinding noRange pat $ 
+                          RightHandSide_Expression noRange expr w
+lambda ps expr = Expression_Lambda noRange ps expr
+letItBe ds expr = Expression_Let noRange ds expr
 
 pp = putStrLn . ppModule
 comp = (\(Right m)->m) . compile . fst
@@ -276,19 +280,20 @@ anonymise :: Declaration -> Declaration
 anonymise d = 
   case d of
     -- f = 1 : f => f = let f = 1 : f in f 
-    Declaration_PatternBinding r p rhs -> if isRecursive d then letItBe p [d] else d
+    Declaration_PatternBinding r p rhs -> if isRecursive d 
+                                          then patBinding p (letItBe [d] (pat2expr p)) MaybeDeclarations_Nothing
+                                          else d
     -- f n [] = 0; f n (x:xs) = 1 + f xs => f = \n -> let f [] = 0; f (_:xs) = 1 + f xs in f
     Declaration_FunctionBindings r fbs ->
-      case fbs of
-        [FunctionBinding_FunctionBinding r lhs rhs] -> 
-          if isRecursive d then
-            -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
-            let invariantPs = -- use lambdaIt and letItBe to construct : map expr2pat (invariantArgs d)
-            in lambdaIt 
-          else 
-            -- just anonymise the function
-            let (name, ps, expr, ds) = decomposeFB (head fbs) in lambdaIt name ps expr ds
-        f:fs -> undefined
+      if isRecursive d then
+        -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
+        let invariantPs = map expr2pat $ invariantArgs d
+            (name, _, _, _) = decomposeFB (head fbs)
+        -- for efficiency reasons the args of the function calls of name in d should be ps \\ invariantArgs
+        in patBinding (pat name) (lambda invariantPs (letItBe [d] (var name))) MaybeDeclarations_Nothing
+      else 
+        -- just anonymise the function
+        let (name, ps, expr, ds) = decomposeFB (head fbs) in patBinding (pat name) (lambda ps expr) ds
 
 functionArgs :: Declaration -> ([Expressions], [Expressions])
 functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . f) ([],[]) fbs
@@ -301,20 +306,6 @@ functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . f) ([],[]) fbs
                              , n == vn]
            in (fpats, fargs)
 
-lambdaIt :: Name -> Patterns -> Expression -> Declarations -> Declaration 
-lambdaIt name ps expr ds = 
-  Declaration_PatternBinding r (pat name) $ 
-    RightHandSide_Expression r (Expression_Lambda r ps expr) (if null ds 
-                                                              then MaybeDeclarations_Nothing
-                                                              else MaybeDeclarations_Just ds)    
-  where
-    r = noRange
-
-letItBe :: Pattern -> Declarations -> Declaration
-letItBe p ds = let r = noRange in
-  Declaration_PatternBinding r p (RightHandSide_Expression r
-    (Expression_Let r ds (pat2expr p)) MaybeDeclarations_Nothing)
-
 isRecursive :: Declaration -> Bool
 isRecursive = not . null . snd . functionArgs
 
@@ -325,7 +316,7 @@ invariantArgs =
 name :: FunctionBinding -> Name
 name = (\(n, _, _, _) -> n) . decomposeFB
 
-decomposeFB :: FunctionBinding -> (Name, Patterns, Expression, Declarations)
+decomposeFB :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
 decomposeFB (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
   where
     deLHS l = case l of 
@@ -334,9 +325,7 @@ decomposeFB (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
                 LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' in (n, ps' ++ ps)
     (name, ps) = deLHS lhs
     (expr, ds) = case rhs of
-                    RightHandSide_Expression _ expr w -> (expr, case w of
-                                                                  MaybeDeclarations_Just ds -> ds
-                                                                  _                         -> [])
+                    RightHandSide_Expression _ expr w -> (expr, w)
                     RightHandSide_Guarded _ gexpr w   -> error "Todo: guarded expressions"
 
 let2where :: RightHandSide -> Maybe RightHandSide

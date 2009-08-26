@@ -17,42 +17,62 @@
 INCLUDE "syntax/UHA_Syntax.ag"
 
 imports{
-import Data.List hiding (union, insert, lookup)
-import Data.Map hiding (map, filter, (\\))
+import Data.Map hiding (map)
 import Domain.Programming.Helium
-import Domain.Programming.Prog
+import Domain.Programming.HeliumRules ()
+import Domain.Programming.Utils
 import Prelude hiding (lookup)
 }
 
 ATTR * [ | | result : SELF ]
 
 ATTR RightHandSide Expression [ | env : Env | ]
-ATTR Declarations Declaration [ env : Env | | ]
+ATTR Alternative Alternatives Expressions Declarations Declaration 
+     FunctionBindings FunctionBinding GuardedExpression GuardedExpressions 
+     MaybeDeclarations MaybeExpression Qualifier Qualifiers
+     RecordExpressionBinding RecordExpressionBindings Statements Statement
+     [ env : Env | | ]
 
 SEM Body 
-  | Body declarations . env = updateEnv @declarations empty
+  | Body declarations . env = updateEnv @result empty
 
 SEM RightHandSide 
-  | Expression expression . env = updateEnv (fromMaybeDecl @where) @lhs.env
+  | Expression expression . env = updateEnv @result @lhs.env
 
 SEM Expression
   | Variable lhs.result = case lookup @result @lhs.env of
                             Just n -> n
                             _      -> @result
-  | Let 
+  | Let expression . env = updateEnv @result @lhs.env
 
 -- utility functions
 {
 type Env = Map Expression Expression
 
-updateEnv :: Declarations -> Env -> Env
-updateEnv ds env = foldr insertInEnv env ds
+class UpdateEnv a where
+  updateEnv :: a -> Env -> Env
+
+instance UpdateEnv Body where
+  updateEnv (Body_Body _ _ ds) = updateEnv' ds
+instance UpdateEnv RightHandSide where
+  updateEnv rhs env = 
+    case rhs of
+      RightHandSide_Expression _ _ w -> updateEnv' (fromMaybeDecl w) env
+      _                              -> env
+instance UpdateEnv Expression where
+  updateEnv expr env =
+    case expr of
+      Expression_Let _ ds _ -> updateEnv' ds env
+      _                     -> env
+
+updateEnv' :: Declarations -> Env -> Env
+updateEnv' ds env = foldr insertInEnv env ds
   where
     insertInEnv :: Declaration -> Env -> Env
     insertInEnv d env = 
       case d of
         Declaration_PatternBinding _ p 
-          (RightHandSide _ expr MaybeDeclarations_Nothing) ->
+          (RightHandSide_Expression _ expr MaybeDeclarations_Nothing) ->
             insert (pat2expr p) expr env
         _ -> env
 

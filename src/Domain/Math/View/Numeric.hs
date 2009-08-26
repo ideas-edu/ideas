@@ -91,9 +91,9 @@ optionNegate f a          = f a
 -- tailored towards generating "int" expressions (also prevents 
 -- division by zero)
 integerGenerator :: Int -> Gen Expr
-integerGenerator = symbolGeneratorWith extras [] numSymbols
+integerGenerator = symbolGenerator extras numSymbols
  where
-   extras n = [ divGen n | n > 0 ]
+   extras n = natGenerator : [ divGen n | n > 0 ]
    divGen n = do
       e1 <- integerGenerator (n `div` 2)
       e2 <- integerGenerator (n `div` 2)
@@ -116,7 +116,7 @@ integerGenerator = symbolGeneratorWith extras [] numSymbols
          _ -> error "integerGenerator"
 
 rationalGenerator :: Int -> Gen Expr
-rationalGenerator = symbolGenerator [] (divSymbol:numSymbols)
+rationalGenerator = symbolGenerator (const [natGenerator]) (divSymbol:numSymbols)
 
 numSymbols :: [Symbol]
 numSymbols = [plusSymbol, timesSymbol, minusSymbol, negateSymbol]

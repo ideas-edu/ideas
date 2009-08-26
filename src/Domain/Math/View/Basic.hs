@@ -12,8 +12,6 @@ import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Equation
 import Control.Monad
 import Data.List (nub)
-import qualified Data.IntMap as IM
-import qualified Data.IntSet as IS
 
 ------------------------------------------------------------
 -- Smart constructors
@@ -157,7 +155,7 @@ powerView = makeView matchPower buildPower
       foldM op (if b then -1 else 1, head vs, 0) xs 
       
    buildPower (a, x, n) = a .*. (Var x .^. fromInteger n)
-
+{-
 -- This view also merges equivalent power factors
 polynomialView :: View Expr (String, IM.IntMap Expr)
 polynomialView = makeView matchPolynomial buildPolynomial
@@ -177,6 +175,7 @@ polynomialView = makeView matchPolynomial buildPolynomial
     where f (n, a) = a .*. (Var x .^. fromIntegral n)
    
 -- a*x^2 + b*x + c
+
 quadraticView :: View Expr (String, Rational, Rational, Rational)
 quadraticView = polynomialView >>> makeView matchQ buildQ 
  where
@@ -187,7 +186,7 @@ quadraticView = polynomialView >>> makeView matchQ buildQ
       [a, b, c] <- mapM (match rationalView . f) [2,1,0]
       return (x, a, b, c)
    buildQ (x, a, b, c) = (x, IM.fromList [(2, fromRational a), (1, fromRational b), (0, fromRational c)])
-
+-}
 -------------------------------------------------------------
 -- Equations
 

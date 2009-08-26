@@ -21,7 +21,7 @@ import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.View.Basic
+import Domain.Math.View.Basic hiding (linearView)
 import Prelude hiding (repeat, (^))
 import qualified Prelude
 import qualified Domain.Math.Data.SquareRoot as SQ
@@ -219,7 +219,7 @@ niceFactors :: Rule (OrList (Equation Expr))
 niceFactors = makeSimpleRule "nice factors" $ onceM  $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let sign t@(x, a, b, c) = if a== -1 then (x, 1, -b, -c) else t 
-   (x, a, rb, rc) <- liftM sign (match quadraticView lhs)
+   (x, a, rb, rc) <- liftM sign (match (quadraticViewWith rationalView) lhs)
    b <- isInt rb
    c <- isInt rc
    guard (a==1)
@@ -245,7 +245,7 @@ distributionSquare :: Rule (OrList (Equation Expr))
 distributionSquare = makeSimpleRule "distribution square" ((onceM  . onceM ) (somewhereM f))
  where
    f (Sym s [x, Nat 2]) | s == powerSymbol = do
-      (a, x, b) <- match linearView x
+      (x, a, b) <- match (linearViewWith rationalView) x
       guard (a /= 0 && (a /= 1 || b /=0))
       return  (  (fromRational (a*a) .*. (Var x^2)) 
              .+. (fromRational (2*a*b) .*. Var x)
@@ -260,7 +260,7 @@ simplerA = makeSimpleRule "simpler A" $ (onceM  f)
  where
    f (lhs :==: rhs) = do
       guard (rhs == 0)
-      (x, ra, rb, rc) <- match quadraticView lhs
+      (x, ra, rb, rc) <- match (quadraticViewWith rationalView) lhs
       [a, b, c] <- mapM isInt [ra, rb, rc] 
       let d = a `gcd` b `gcd` c
       guard (d `notElem` [0, 1])
@@ -269,7 +269,7 @@ simplerA = makeSimpleRule "simpler A" $ (onceM  f)
 abcFormula :: Rule (OrList (Equation Expr))
 abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
-   (x, a, b, c) <- match quadraticView lhs
+   (x, a, b, c) <- match (quadraticViewWith rationalView) lhs
    let discr = makeSqrt (fromRational (b*b - 4 * a * c))
    -- case discr of Nat n -> guard (even n); _ -> return () -- no nice numbers (for now)
    return $ OrList

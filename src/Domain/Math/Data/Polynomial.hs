@@ -89,8 +89,8 @@ degree (P m)
 coefficient :: Num a => Int -> Polynomial a -> a
 coefficient n (P m) = IM.findWithDefault 0 n m
 
-terms :: Polynomial a -> [(Int, a)]
-terms (P m) = IM.toList m
+terms :: Polynomial a -> [(a, Int)]
+terms (P m) = [ (a, n) | (n, a) <- IM.toList m ]
 
 isMonic :: Num a => Polynomial a -> Bool
 isMonic p = coefficient (degree p) p == 1
@@ -180,7 +180,7 @@ factorize p
            (p1,p2):_ -> factorize p1 ++ factorize p2
            []        -> [p]
  where
-   l     = fst (head (terms p))
+   l     = snd (head (terms p))
    pairs = [ (p1, p2) 
            | a <- candidateRoots p
            , isRoot p a 

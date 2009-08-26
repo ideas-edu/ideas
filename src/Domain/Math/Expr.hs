@@ -113,7 +113,7 @@ instance Uniplate Expr where
 instance Arbitrary Expr where
    arbitrary = 
       let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
-      in sized (symbolGenerator [] syms)
+      in sized (symbolGenerator (const [natGenerator]) syms)
    coarbitrary expr =
       case expr of 
          a :+: b  -> variant 0 . coarbitrary a . coarbitrary b
@@ -125,16 +125,11 @@ instance Arbitrary Expr where
          Sqrt a   -> variant 6 . coarbitrary a
          Var s    -> variant 7 . coarbitrary s
          Sym f xs -> variant 8 . coarbitrary (show f) . coarbitrary xs
-
-symbolGenerator :: [String] -> [Symbol] -> Int -> Gen Expr
-symbolGenerator = symbolGeneratorWith (const [])
   
-symbolGeneratorWith :: (Int -> [Gen Expr]) -> [String] -> [Symbol] -> Int -> Gen Expr
-symbolGeneratorWith extras vars syms = f 
+symbolGenerator :: (Int -> [Gen Expr]) -> [Symbol] -> Int -> Gen Expr
+symbolGenerator extras syms = f 
  where
-   f n = oneof $  liftM (Nat . abs) arbitrary
-               :  [ oneof [ return (Var x) | x <- vars ] | not (null vars) ]
-               ++ map (g n) (filter (\s -> n > 0 || arity s == Just 0) syms)
+   f n = oneof $  map (g n) (filter (\s -> n > 0 || arity s == Just 0) syms)
                ++ extras n
    g n s = do
       i  <- case arity s of
@@ -143,6 +138,14 @@ symbolGeneratorWith extras vars syms = f
       as <- replicateM i (f (n `div` i))
       return (function s as)
   
+natGenerator :: Gen Expr
+natGenerator = liftM (Nat . abs) arbitrary
+
+varGenerator :: [String] -> Gen Expr
+varGenerator vars
+   | null vars = error "varGenerator: empty list"
+   | otherwise = oneof [ return (Var x) | x <- vars ]
+
 -----------------------------------------------------------------------
 -- Fold
 

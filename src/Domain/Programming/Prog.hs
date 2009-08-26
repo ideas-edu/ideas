@@ -124,7 +124,7 @@ normaliseModule = alphaRenaming . normalise . alphaRenaming
 normalise :: Module -> Module
 normalise = rewrites . preprocess
   where
-    preprocess = removeRanges . removeParens
+    preprocess = anonymise . removeRanges . removeParens
     rewrites = rewriteBi $  (etaReduce 
                         >->  betaReduce 
                         >->  lambdaReduce 
@@ -236,6 +236,17 @@ commutativeOps expr =
                   Expression_Variable _ (Name_Operator _ [] n') -> n == n'
                   _ -> False
 
+let2where :: RightHandSide -> Maybe RightHandSide
+let2where x = 
+  case x of
+    RightHandSide_Expression r (Expression_Let _ decls expr) maybeDecls -> 
+      case maybeDecls of
+        MaybeDeclarations_Just ds -> Just $ rhs r expr $ ds ++ decls
+        MaybeDeclarations_Nothing -> Just $ rhs r expr decls
+    _ -> Nothing
+  where
+   rhs r expr ds = RightHandSide_Expression r expr $ MaybeDeclarations_Just $ ds
+
 inlineWhere :: RightHandSide -> Maybe RightHandSide
 inlineWhere rhs = 
   case rhs of
@@ -253,47 +264,39 @@ inlineWhere rhs =
                                         (RightHandSide_Expression _ expr _) <- universeBi p]
     _ -> Nothing
 
-inlineBinding :: Declaration -> Maybe Declaration -- from fun binding to pat binding
-inlineBinding decl =
+inlinePatBinding :: Declaration -> Maybe Declaration -- from fun binding to pat binding
+inlinePatBinding decl =
   case decl of  -- A non recursive function binding, eg. f n = g n ; f 2 = g 3
     Declaration_FunctionBindings _ [fb] -> 
       case fb of
         FunctionBinding_FunctionBinding _ _ (RightHandSide_Expression _ _ MaybeDeclarations_Nothing) ->
-          Just $ anonymise' fb
+          Just $ undefined --anonymise' fb
         _ -> Nothing
     _ -> Nothing
 
-anonymise' (FunctionBinding_FunctionBinding r lhs rhs) = 
-  Declaration_PatternBinding r (Pattern_Variable r name) rhs'
-  where
-    (name, patterns) = deLHS lhs
-    deLHS lhs = case lhs of 
-                  LeftHandSide_Function _ n ps -> (n, ps)
-                  LeftHandSide_Infix _ l op r   -> (op, [l, r])
-                  LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' in (n, ps' ++ ps)
-    expr = case rhs of 
-             RightHandSide_Expression _ e MaybeDeclarations_Nothing -> e
-             _ -> error "rhs should not contain wheres and is not defined on guards"
-    rhs' = RightHandSide_Expression r (Expression_Lambda r patterns expr) MaybeDeclarations_Nothing
-
-anonymise :: Declaration -> Declaration
-anonymise d = 
-  case d of
-    -- f = 1 : f => f = let f = 1 : f in f 
-    Declaration_PatternBinding r p rhs -> if isRecursive d 
-                                          then patBinding p (letItBe [d] (pat2expr p)) MaybeDeclarations_Nothing
-                                          else d
-    -- f n [] = 0; f n (x:xs) = 1 + f xs => f = \n -> let f [] = 0; f (_:xs) = 1 + f xs in f
-    Declaration_FunctionBindings r fbs ->
-      if isRecursive d then
-        -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
-        let invariantPs = map expr2pat $ invariantArgs d
-            (name, _, _, _) = decomposeFB (head fbs)
-        -- for efficiency reasons the args of the function calls of name in d should be ps \\ invariantArgs
-        in patBinding (pat name) (lambda invariantPs (letItBe [d] (var name))) MaybeDeclarations_Nothing
-      else 
-        -- just anonymise the function
-        let (name, ps, expr, ds) = decomposeFB (head fbs) in patBinding (pat name) (lambda ps expr) ds
+anonymise :: Data a => a -> a
+anonymise = transformBi f 
+  where 
+    f d = 
+      case d of
+        -- f = 1 : f => f = let f = 1 : f in f 
+        Declaration_PatternBinding r p rhs -> if isRecursive d 
+                                              then patBinding p (letItBe [d] (pat2expr p)) 
+                                                     MaybeDeclarations_Nothing
+                                              else d
+        -- f n [] = 0; f n (x:xs) = 1 + f xs => f = \n -> let f [] = 0; f (_:xs) = 1 + f xs in f
+        Declaration_FunctionBindings r fbs ->
+          if isRecursive d then
+            -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
+            let invariantPs = map expr2pat $ invariantArgs d
+                (name, _, _, _) = decomposeFB (head fbs)
+            -- for efficiency reasons the args of the function calls of name in d should be ps \\ invariantArgs
+            in patBinding (pat name) (lambda invariantPs (letItBe [d] (var name))) 
+                 MaybeDeclarations_Nothing
+          else 
+            -- just anonymise the function
+            let (name, ps, expr, ds) = decomposeFB (head fbs) 
+            in patBinding (pat name) (lambda ps expr) ds
 
 functionArgs :: Declaration -> ([Expressions], [Expressions])
 functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . f) ([],[]) fbs
@@ -306,8 +309,12 @@ functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . f) ([],[]) fbs
                              , n == vn]
            in (fpats, fargs)
 
+-- detect fix ?
 isRecursive :: Declaration -> Bool
-isRecursive = not . null . snd . functionArgs
+isRecursive d = 
+  case d of 
+    Declaration_FunctionBindings _ _   -> (not . null . snd . functionArgs) d
+    Declaration_PatternBinding _ p rhs -> pat2expr p `elem` [v | v@(Expression_Variable _ _) <- universeBi rhs]
 
 invariantArgs :: Declaration -> Expressions
 invariantArgs = 
@@ -322,39 +329,12 @@ decomposeFB (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
     deLHS l = case l of 
                 LeftHandSide_Function _ n ps -> (n, ps)
                 LeftHandSide_Infix _ l op r   -> (op, [l, r])
-                LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' in (n, ps' ++ ps)
+                LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' 
+                                                        in (n, ps' ++ ps)
     (name, ps) = deLHS lhs
     (expr, ds) = case rhs of
                     RightHandSide_Expression _ expr w -> (expr, w)
                     RightHandSide_Guarded _ gexpr w   -> error "Todo: guarded expressions"
-
-let2where :: RightHandSide -> Maybe RightHandSide
-let2where x = 
-  case x of
-    RightHandSide_Expression r (Expression_Let _ decls expr) maybeDecls -> 
-      case maybeDecls of
-        MaybeDeclarations_Just ds -> Just $ rhs r expr $ ds ++ decls
-        MaybeDeclarations_Nothing -> Just $ rhs r expr decls
-    _ -> Nothing
-  where
-   rhs r expr ds = RightHandSide_Expression r expr $ MaybeDeclarations_Just $ ds
-
-
--- detect fixed arguments, eg. f n [] = ... ; f n (x:xs) = ...
-
-
--- rewrite functions so that the have no fixed arguments, eg. f n = g  where g [] = ... ; g (x:xs) = ... or
--- let g [] = ... ; g (x:xs) = ... g xs ... ; in f n = g
-
-{-
--- rewrite functions e.g. f x = div x => f = div
-etaFunS :: ModuleS -> ModuleS -> ModuleS
-etaFunS name expr =  introFunctionBindings 1 <*> introLHSFun 1 <*> name <*> introPatternVariable <*>
-                     introNameIdentifier "x" <*> introRHSExpr 0 <*> introExprNormalApplication 1 <*> expr <*>
-                     introExprVariable <*> introNameIdentifier "x"
-                 <|> introPatternBinding <*> introPatternVariable <*> name <*> introRHSExpr 0 <*> etaS expr
--}
-
 
 
 --------------------------------------------------------------------------------

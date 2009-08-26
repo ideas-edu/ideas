@@ -1,0 +1,66 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  alex.gerdes@ou.nl
+-- Stability   :  provisional
+-- Portability :  unknown
+--
+-- todo : Testing: a possible test method could be to specify contracts for
+--        a number of standard/complete functions and check whether the alpha
+--        renamed function still satisfies the contract.
+--
+-----------------------------------------------------------------------------
+
+INCLUDE "syntax/UHA_Syntax.ag"
+
+imports{
+import Data.List hiding (union, insert, lookup)
+import Data.Map hiding (map, filter, (\\))
+import Domain.Programming.Helium
+import Domain.Programming.Prog
+import Prelude hiding (lookup)
+}
+
+ATTR * [ | | result : SELF ]
+
+ATTR RightHandSide Expression [ | env : Env | ]
+ATTR Declarations Declaration [ env : Env | | ]
+
+SEM Body 
+  | Body declarations . env = updateEnv @declarations empty
+
+SEM RightHandSide 
+  | Expression expression . env = updateEnv (fromMaybeDecl @where) @lhs.env
+
+SEM Expression
+  | Variable lhs.result = case lookup @result @lhs.env of
+                            Just n -> n
+                            _      -> @result
+  | Let 
+
+-- utility functions
+{
+type Env = Map Expression Expression
+
+updateEnv :: Declarations -> Env -> Env
+updateEnv ds env = foldr insertInEnv env ds
+  where
+    insertInEnv :: Declaration -> Env -> Env
+    insertInEnv d env = 
+      case d of
+        Declaration_PatternBinding _ p 
+          (RightHandSide _ expr MaybeDeclarations_Nothing) ->
+            insert (pat2expr p) expr env
+        _ -> env
+
+fromMaybeDecl :: MaybeDeclarations -> Declarations
+fromMaybeDecl m = case m of
+                    MaybeDeclarations_Just ds -> ds
+                    _                         -> []
+        
+inlinePatternBindings :: Module -> Module
+inlinePatternBindings = fst . sem_Module
+}

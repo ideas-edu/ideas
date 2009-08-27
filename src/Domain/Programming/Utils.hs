@@ -13,8 +13,10 @@
 
 module Domain.Programming.Utils where
 
+import Control.Monad
 import Domain.Programming.Helium
 import Data.Maybe
+
 
 pat2expr :: Pattern -> Maybe Expression
 pat2expr p = 
@@ -41,6 +43,12 @@ expr2pat e =
     Expression_Constructor r n            -> Just $ Pattern_Constructor r n []
     Expression_Parenthesized r e          -> do p <- expr2pat e
                                                 return $ Pattern_Parenthesized r p
+{-    Expression_InfixConstructor rg l op r -> do l' <- pat2expr l
+                                             r' <- pat2expr r
+                                             return $ Expression_InfixApplication rg
+                                                        (MaybeExpression_Just l')
+                                                        (var op)
+                                                        (MaybeExpression_Just r') -}
     Expression_List r es                  -> do ps <- mapM expr2pat es
                                                 return $ Pattern_List r ps
     _                                     -> Nothing
@@ -63,3 +71,22 @@ fromMaybeDecl m = case m of
                     _                         -> []
 
 toplevelDecls (Module_Module _ _ _ (Body_Body _ _ ds)) = ds
+
+-- You can't conjure up an a out of the blue... of course ;-) It suits me nonetheless.
+class MonadPlus m => MonadMul m where
+  mone :: a -> m a
+  mmul :: m a -> m a -> m a
+instance MonadMul Maybe where
+  mone = Just
+  mmul (Just x) (Just y) = Just x
+  mmul _ _               = Nothing
+
+mprod :: MonadMul m => a -> [m a] -> m a
+mprod a = foldr mmul (mone a)
+
+mprod1 :: MonadMul m => [m a] -> m a
+mprod1 = foldr1 mmul
+  
+-- laws: mzero `mmul` _ = mzero
+--       _ `mmul` mzero = mzero
+--       mone x `mmul` mone _xs = mone x

@@ -51,7 +51,7 @@ letS decls expr = introExprLet (length decls) <*> sequence decls <*> expr
 foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
        -- Normal usage
-    =  {- (varS "foldl" # [consS, nilS])
+    =  (varS "foldl" # [consS, nilS])
        -- Foldl definition
    <|> letS [ declFunS [ funS "f" [ patS "nil", patConS "[]" ] (varS "nil") [] 
                        , funS "f" [ patS "nil", patParenS (patInfixConS (patS "x") ":" (patS "xs")) ]
@@ -59,7 +59,7 @@ foldlS consS nilS
             ] -- in
             ( varS "f" # [nilS] )
        -- Bastiaan's theorem, ie. foldl op e == foldr (flip op) e . reverse
-   <|> -}compS (varS "foldr" # [flipS consS, nilS]) (varS "reverse")
+   <|> compS (varS "foldr" # [flipS consS, nilS]) (varS "reverse")
 
 -- zie Hutton's paper voor nog een foldl def, ook inefficiente variant meenemen (foldl op e [] = ..)?
 

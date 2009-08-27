@@ -139,9 +139,7 @@ insertInNameMap :: ScopeInfo -> Strings -> (Name, Name) -> (NameMap, Int) -> (Na
 insertInNameMap si fixedNames (k, v) (m, i) | check = (insert k v m, i+1)
                                             | otherwise = (m, i)
   where
-    check 
-        | isShadowed k si = error $ show (si, fixedNames, k, v, m, i)
-        | otherwise = (notMember k m && (name2string k) `notElem` fixedNames) -- || isShadowed k si
+    check = (notMember k m && (name2string k) `notElem` fixedNames) || isShadowed k si
 
 insertAllInNameMap :: ScopeInfo -> Strings -> NameMap -> Names -> Names -> (NameMap, Int)
 insertAllInNameMap si fixedNames m ks vs = foldr (insertInNameMap si fixedNames) (m, 0) $ zip ks vs

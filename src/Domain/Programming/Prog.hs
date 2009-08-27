@@ -45,7 +45,7 @@ import Prelude hiding (lookup)
 (Right m5) = compile "f x y = x ; g x y = f x y"
 (Right m6) = compile "f x = g x where g y = reverse y"
 
-(Right m) = compile "f n [] = 0\nf n (_:xs) = n + f n xs\ng = f 2\n"
+(Right m) = compile "f n [] = 0\nf m (_:xs) = m + f m xs\ng = f 2\n"
 
 --------------------------------------------------------------------------------
 -- Help Functions
@@ -281,76 +281,48 @@ anonymise = transformBi f
         Declaration_FunctionBindings r fbs ->
           if isRecursive d then
             -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
-            let args = snd $ unzip $ filter ((==True) . fst) $ invariantArgs d
-                -- [(True, [n,m,o]) , ... ] => (\ n -> rename m o to n in expr)
+            let args = catMaybes $ invariantArgs fbs :: [Expressions]
                 d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d args
-                ps = map (expr2pat . head) args
-
-{-
-+ detect common arguments
-+ rename them
-- put in a let and extract them from function calls
-
-
-f n [] = n
-f m (x:xs) = m + f m xs
-
-=>
-
-\ n -> f [] = n
-       f (_:xs) = f xs
--}
-
-                (name, _, _, _) = decomposeFB (head fbs)
+--                d'' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d' 
+--                                        (map (map (fromMaybe (error ("Prog.hs: no conversion from expr to pat!" ++ show args)) . expr2pat)) args)
+                ps = map (fromMaybe (error "Prog.hs: no conversion from expr to pat") . expr2pat . head) args
+                (name, _, _, _) = deconstrucFunBinding (head fbs)
             -- for efficiency reasons the args of the function calls of name in d should be ps \\ invariantArgs
-            in d' --patBinding (pat name) (lambda ps (letItBe [d'] (var name))) 
-                 --MaybeDeclarations_Nothing
-          else 
+            in patBinding (pat name) (lambda ps (letItBe [d'] (var name))) MaybeDeclarations_Nothing
+         else 
             -- just anonymise the function
-            let (name, ps, expr, ds) = decomposeFB (head fbs) 
+            let (name, ps, expr, ds) = deconstrucFunBinding (head fbs) 
             in patBinding (pat name) (lambda ps expr) ds
+        x -> x
 
-
-functionArgs :: Declaration -> ([Expressions], [Expressions])
-functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . functionArgs') ([],[]) fbs
-  where
-    g (xs, ys) (xs', ys') = (xs ++ xs', ys ++ ys')
-
-functionArgs' :: FunctionBinding -> ([Expressions], [Expressions])
-functionArgs' fb = 
+functionArgs :: FunctionBinding -> [[Maybe Expression]]
+functionArgs fb = 
   let (n, ps, _, _) = deconstrucFunBinding fb
-      fpats = [map pat2expr ps]
-      fargs = [args | Expression_NormalApplication _ 
-                        (Expression_Variable _ vn) args <- universeBi fb
-                    , n == vn]
-  in (fpats, fargs)
+      fpats = map pat2expr ps
+      fargs = [map Just args | Expression_NormalApplication _ 
+                                 (Expression_Variable _ vn) args <- universeBi fb
+                             , n == vn]
+  in fpats : fargs
 
 -- detect fix ?
 isRecursive :: Declaration -> Bool
 isRecursive d = 
   case d of 
-    Declaration_FunctionBindings _ _   -> (not . null . snd . functionArgs) d
-    Declaration_PatternBinding _ p rhs -> pat2expr p `elem` [v | v@(Expression_Variable _ _) <- universeBi rhs]
+    Declaration_FunctionBindings _ fbs -> any (== var (funName (head fbs))) $ universeBi fbs 
+    Declaration_PatternBinding _ p rhs -> 
+      case pat2expr p of
+        Just e -> e `elem` [v | v@(Expression_Variable _ _) <- universeBi rhs]
+        _      -> error "Prog.hs: pattern not convertible to expr."
 
-invariantArgs :: Declaration -> [(Bool, Expressions)]
-invariantArgs (Declaration_FunctionBindings _ fbs) = map f $ transpose $ map sameArgs fbs
-  where
-    f :: [(Bool, Expressions)] -> (Bool, Expressions)
-    f xs = let (ys, zs) = unzip xs in (and ys, concat zs) 
-    sameArgs fb = let as = allArgs fb in map (\a -> (allSame a, nub a)) as
-    allArgs = transpose . uncurry (++) . functionArgs'                
-    allSame (x:xs) = all (==x) xs
-    allSame [] = False -- will never happen in an functionbinding
-
--- [ [n,[]] ] T=> [ [n] , [[]] ] => [ (True, [n]) , (True, [[]]) ] 
--- [ [m,(_:xs)] , [m, xs] ] T=> [ [m, m] , [(_:xs), xs] ] => [ (True, [m]) , (False, [(_:xs),xs]) ]
-
--- [ [ (True, [n]) , (True, [[]]) ] , [ (True, [m]) , (False, [(_:xs),xs]) ] ] T=> [ [(True, [n]) , (True [m]) ] , [(True, [[]]), (F, ...) ] ]
--- => [ (True, [n,m]) , (False, [[], ...]) ]
-
+invariantArgs :: FunctionBindings -> [Maybe Expressions]
+invariantArgs = (map (foldr mulMaybe (Just []))) . transpose . (map sameArgs)
+    where
+      sameArgs = (map mprod1) . transpose . functionArgs
+      mulMaybe (Just x) (Just ys) = Just (x:ys)
+      mulMaybe _        _         = Nothing
 
 funName :: FunctionBinding -> Name
-funName = (\(n, _, _, _) -> n) . decomposeFB
+funName = (\(n, _, _, _) -> n) . deconstrucFunBinding
 
 deconstrucFunBinding :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
 deconstrucFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)

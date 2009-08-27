@@ -71,7 +71,9 @@ updateEnv' ds env = foldr insertInEnv env ds
       case d of
         Declaration_PatternBinding _ p 
           (RightHandSide_Expression _ expr MaybeDeclarations_Nothing) ->
-            insert (pat2expr p) expr env
+            case pat2expr p of
+              Just e -> insert e expr env
+              _      -> error $ "InlinePatternBinding: cannot insert " ++ show p ++ " into env"
         _ -> env
 
 inlinePatternBindings :: Env -> Module -> Module

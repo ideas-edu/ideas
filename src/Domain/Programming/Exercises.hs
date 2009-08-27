@@ -20,8 +20,9 @@ import Common.Rewriting
 import Common.Strategy hiding (fail, not)
 import Control.Monad (unless, fail)
 import Data.Generics.Biplate
+import Data.Map hiding (map)
 import Data.Maybe
-import Data.List
+--import Data.List
 import Domain.Programming.AlphaRenaming (alphaRenaming)
 import Domain.Programming.InlinePatternBindings -- (inlinePatternBindings)
 import Domain.Programming.Strategies
@@ -48,7 +49,7 @@ heliumExercise = Exercise
    , subTerm       = \_ _ -> Nothing
    , prettyPrinter = ppModule
    , equivalence   = \_ _ -> True
-   , equality      = equalModules
+   , equality      = equalModules ["fromBin"]
    , finalProperty = const True
    , ruleset       = []
    , strategy      = label "fromBin :: [Int] -> Int" fromBinStrategy

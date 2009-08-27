@@ -14,33 +14,39 @@
 module Domain.Programming.Utils where
 
 import Domain.Programming.Helium
+import Data.Maybe
 
-pat2expr :: Pattern -> Expression
+pat2expr :: Pattern -> Maybe Expression
 pat2expr p = 
   case p of 
-    Pattern_Literal r l                -> Expression_Literal r l
-    Pattern_Variable r n               -> Expression_Variable r n
-    Pattern_Constructor r n _          -> Expression_Constructor r n
-    Pattern_Parenthesized r p          -> Expression_Parenthesized r $ pat2expr p
-    Pattern_InfixConstructor r' l op r -> Expression_InfixApplication r'
-                                            (MaybeExpression_Just (pat2expr l))
-                                            (var op)
-                                            (MaybeExpression_Just (pat2expr r))
-    Pattern_List r ps                  -> Expression_List r $ map pat2expr ps
+    Pattern_Literal r l                -> Just $ Expression_Literal r l
+    Pattern_Variable r n               -> Just $ Expression_Variable r n
+    Pattern_Constructor r n _          -> Just $ Expression_Constructor r n
+    Pattern_Parenthesized r p          -> do e <- pat2expr p
+                                             return $ Expression_Parenthesized r e
+    Pattern_InfixConstructor rg l op r -> do l' <- pat2expr l
+                                             r' <- pat2expr r
+                                             return $ Expression_InfixApplication rg
+                                                        (MaybeExpression_Just l')
+                                                        (var op)
+                                                        (MaybeExpression_Just r')
+    Pattern_List r ps                  -> do exprs <- mapM pat2expr ps
+                                             return $ Expression_List r exprs
+    _                                  -> Nothing
 
 expr2pat e = 
   case e of
-    Expression_Literal r l                -> Pattern_Literal r l
-    Expression_Variable r n               -> Pattern_Variable r n
-    Expression_Constructor r n            -> Pattern_Constructor r n []
-    Expression_Parenthesized r e          -> Pattern_Parenthesized r $ expr2pat e
---    Expression_InfixApplication r' l op r -> Pattern_InfixApplication r'
---                                               (MaybeExpression_Just (pat2expr l))
---                                               ( op)
---                                               (MaybeExpression_Just (pat2expr r))
-    Expression_List r es                  -> Pattern_List r $ map expr2pat es
+    Expression_Literal r l                -> Just $ Pattern_Literal r l
+    Expression_Variable r n               -> Just $ Pattern_Variable r n
+    Expression_Constructor r n            -> Just $ Pattern_Constructor r n []
+    Expression_Parenthesized r e          -> do p <- expr2pat e
+                                                return $ Pattern_Parenthesized r p
+    Expression_List r es                  -> do ps <- mapM expr2pat es
+                                                return $ Pattern_List r ps
+    _                                     -> Nothing
          
-
+name2string (Name_Identifier _ _ n) = n
+name = Name_Identifier noRange []
 var = Expression_Variable noRange
 pat = Pattern_Variable noRange
 patBinding pat expr w = Declaration_PatternBinding noRange pat $ 
@@ -55,3 +61,5 @@ fromMaybeDecl :: MaybeDeclarations -> Declarations
 fromMaybeDecl m = case m of
                     MaybeDeclarations_Just ds -> ds
                     _                         -> []
+
+toplevelDecls (Module_Module _ _ _ (Body_Body _ _ ds)) = ds

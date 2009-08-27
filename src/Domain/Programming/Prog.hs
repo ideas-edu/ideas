@@ -19,15 +19,17 @@ import Common.Strategy hiding (not)
 import Control.Monad.State
 import Data.Generics.Biplate
 import Data.Generics.PlateData
+import Data.Map (Map, insert, empty, lookup)
 import Data.Maybe
 import Data.Data hiding (Fixity)
-import Data.List hiding (union, lookup)
+import Data.List hiding (union, lookup, insert)
 import Domain.Programming.AlphaRenaming (alphaRenaming)
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules
-import Domain.Programming.InlinePatternBindings (inlinePatternBindings)
+import Domain.Programming.InlinePatternBindings (Env, inlinePatternBindings, updateEnv')
 import Domain.Programming.Substitute
 import Domain.Programming.Utils
+import Prelude hiding (lookup)
 
 {- ideas:
 
@@ -35,7 +37,7 @@ import Domain.Programming.Utils
 -}
 
 -- Test values
-(Right m) = compile "f x y = x + y"
+(Right m') = compile "f x y = x + y"
 (Right m2) = compile "f = \\ y -> \\x -> div x y"
 (Right m3) = compile "f a b c d = a ; g = ((f 1) 2 3) ; h = g 4"
 (Right m3') = compile "f a b c d = a ; g = f 1 2 3 ; t = g 4"
@@ -43,6 +45,7 @@ import Domain.Programming.Utils
 (Right m5) = compile "f x y = x ; g x y = f x y"
 (Right m6) = compile "f x = g x where g y = reverse y"
 
+(Right m) = compile "f n [] = 0\nf n (_:xs) = n + f n xs\ng = f 2\n"
 
 --------------------------------------------------------------------------------
 -- Help Functions
@@ -55,11 +58,11 @@ freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
 
 allSolutions strat = map (fromContext . snd . last . snd) 
                          (derivations strat $ inContext emptyProg)
-normalisedSolutions strat =  map normaliseModule $ allSolutions strat
-isSolution strat m = elem (normaliseModule m) $ normalisedSolutions strat
+normalisedSolutions fs strat = map (normaliseModule fs) $ allSolutions strat
+isSolution fs strat m = elem (normaliseModule fs m) $ normalisedSolutions fs strat
 
-checkExercise :: Strategy (Context Module) -> [Module] -> (String, String) -> StateT Integer IO ()
-checkExercise strat solutions (solution, name) = do
+checkExercise :: [String] -> Strategy (Context Module) -> [Module] -> (String, String) -> StateT Integer IO ()
+checkExercise fs strat solutions (solution, name) = do
     correctCount <- get
     let m = compilation
     let isSolution = m `elem` solutions
@@ -67,13 +70,13 @@ checkExercise strat solutions (solution, name) = do
     put $ if isSolution then correctCount + 1 else correctCount
   where
     compilation = case compile solution of
-                    Right y -> normaliseModule y
+                    Right y -> normaliseModule fs y
                     _       -> error $ "no compile: " ++ name
 
-checkExercises :: Strategy (Context Module) -> [(String, String)] -> IO ()
-checkExercises strat es = do
-  let solutions = normalisedSolutions strat
-  (_, count) <- runStateT (mapM (checkExercise strat solutions) es) 0
+checkExercises :: [String] -> Strategy (Context Module) -> [(String, String)] -> IO ()
+checkExercises fs strat es = do
+  let solutions = normalisedSolutions fs strat
+  (_, count) <- runStateT (mapM (checkExercise fs strat solutions) es) 0
   let percentage = count * 100  `div` toInteger (length es)
   putStrLn $ "\n" ++ take 4 (show percentage) ++ "% has been recognised by the strategy.\n"
   return ()
@@ -81,25 +84,23 @@ checkExercises strat es = do
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
 --------------------------------------------------------------------------------
-equalModules :: Module -> Module -> Bool
-equalModules x y = normaliseModule x == normaliseModule y
+equalModules :: [String] -> Module -> Module -> Bool
+equalModules fs x y = let nm = normaliseModule fs
+                      in nm x == nm y
 
-normaliseModule :: Module -> Module
-normaliseModule = alphaRenaming . normalise . alphaRenaming
+normaliseModule :: [String] -> Module -> Module
+normaliseModule fs = alphaRenaming fs . normalise fs . alphaRenaming fs
 
-normalise :: Module -> Module
-normalise = rewrites . preprocess
+normalise :: [String] -> Module -> Module
+normalise fs = rewrites . preprocess
   where
-    preprocess = anonymise . removeRanges . removeParens
+    preprocess =  inline fs . anonymise . removeRanges . removeParens
     rewrites = rewriteBi $  (etaReduce 
                         >->  betaReduce 
                         >->  lambdaReduce 
                         >->  applicationReduce 
                         >->  infix2prefix 
                         >->  commutativeOps)
---                       >>-> (inlineWhere 
---                        >->  let2where)
---                       >>->  inlineBinding
 
 -- Choice do all rewrites in a Module or just one and let it to the rewriteBi
 liftRule :: (Data a, Data b) => (a -> Maybe a) -> b -> Maybe b
@@ -146,8 +147,9 @@ etaReduce expr =
 betaReduce :: Expression -> Maybe Expression
 betaReduce expr = 
   case expr of 
-    Expression_NormalApplication r (Expression_Lambda _ [p] e) (a:as) -> 
-      Just $ Expression_NormalApplication r (subst (pat2expr p, a) e) as
+    Expression_NormalApplication r (Expression_Lambda _ [p] e) (a:as) -> do
+      e' <- pat2expr p
+      return $ Expression_NormalApplication r (subst (e', a) e) as
     _ -> Nothing
 
 -- rewrite lambda expressions, e.g. \x -> \y -> x + y => \x y -> x + y
@@ -217,6 +219,22 @@ let2where x =
 -- and main functions. Create a env of to be inlined help functions and remove them from
 -- the module. Then do the inlining.
 
+inline :: [String] -> Module -> Module
+inline fs m = let (env, m') = putInEnv (map (pat . name) fs) m
+              in inlinePatternBindings env m'
+
+putInEnv :: Patterns -> Module -> (Env, Module)
+putInEnv ps m = 
+  let (decls, replaceDecls) = head (contextsBi m :: [(Declarations, Declarations -> Module)])
+      (helpDecls, mainDecls) = partition ((`notElem` ps) . bindingPattern) decls
+  in (updateEnv' helpDecls empty, replaceDecls mainDecls)
+
+bindingPattern :: Declaration -> Pattern
+bindingPattern d = 
+  case d of
+    Declaration_PatternBinding _ p _        -> p
+    Declaration_FunctionBindings r (fb:fbs) -> pat (funName fb)
+    _                                       -> error "not a function!"
 
 {-
 inlineWhere :: RightHandSide -> Maybe RightHandSide
@@ -253,34 +271,59 @@ anonymise = transformBi f
     f d = 
       case d of
         -- f = 1 : f => f = let f = 1 : f in f 
-        Declaration_PatternBinding r p rhs -> if isRecursive d 
-                                              then patBinding p (letItBe [d] (pat2expr p)) 
-                                                     MaybeDeclarations_Nothing
-                                              else d
+        Declaration_PatternBinding r p rhs -> 
+          if isRecursive d 
+          then case pat2expr p of 
+                 Just e -> patBinding p (letItBe [d] e) MaybeDeclarations_Nothing
+                 _      -> error $ "Prog.hs: pattern " ++ show p ++ " cannot be converted to an expr."
+          else d
         -- f n [] = 0; f n (x:xs) = 1 + f xs => f = \n -> let f [] = 0; f (_:xs) = 1 + f xs in f
         Declaration_FunctionBindings r fbs ->
           if isRecursive d then
             -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
-            let invariantPs = map expr2pat $ invariantArgs d
+            let args = snd $ unzip $ filter ((==True) . fst) $ invariantArgs d
+                -- [(True, [n,m,o]) , ... ] => (\ n -> rename m o to n in expr)
+                d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d args
+                ps = map (expr2pat . head) args
+
+{-
++ detect common arguments
++ rename them
+- put in a let and extract them from function calls
+
+
+f n [] = n
+f m (x:xs) = m + f m xs
+
+=>
+
+\ n -> f [] = n
+       f (_:xs) = f xs
+-}
+
                 (name, _, _, _) = decomposeFB (head fbs)
             -- for efficiency reasons the args of the function calls of name in d should be ps \\ invariantArgs
-            in patBinding (pat name) (lambda invariantPs (letItBe [d] (var name))) 
-                 MaybeDeclarations_Nothing
+            in d' --patBinding (pat name) (lambda ps (letItBe [d'] (var name))) 
+                 --MaybeDeclarations_Nothing
           else 
             -- just anonymise the function
             let (name, ps, expr, ds) = decomposeFB (head fbs) 
             in patBinding (pat name) (lambda ps expr) ds
 
+
 functionArgs :: Declaration -> ([Expressions], [Expressions])
-functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . f) ([],[]) fbs
+functionArgs (Declaration_FunctionBindings _ fbs) = foldr (g . functionArgs') ([],[]) fbs
   where
     g (xs, ys) (xs', ys') = (xs ++ xs', ys ++ ys')
-    f fb = let (n, ps, _, _) = decomposeFB fb
-               fpats = [map pat2expr ps]
-               fargs = [args | Expression_NormalApplication _ 
-                                 (Expression_Variable _ vn) args <- universeBi fb
-                             , n == vn]
-           in (fpats, fargs)
+
+functionArgs' :: FunctionBinding -> ([Expressions], [Expressions])
+functionArgs' fb = 
+  let (n, ps, _, _) = deconstrucFunBinding fb
+      fpats = [map pat2expr ps]
+      fargs = [args | Expression_NormalApplication _ 
+                        (Expression_Variable _ vn) args <- universeBi fb
+                    , n == vn]
+  in (fpats, fargs)
 
 -- detect fix ?
 isRecursive :: Declaration -> Bool
@@ -289,15 +332,28 @@ isRecursive d =
     Declaration_FunctionBindings _ _   -> (not . null . snd . functionArgs) d
     Declaration_PatternBinding _ p rhs -> pat2expr p `elem` [v | v@(Expression_Variable _ _) <- universeBi rhs]
 
-invariantArgs :: Declaration -> Expressions
-invariantArgs = 
-  concat . filter ((==1) . length) . map nub . transpose . uncurry (++) . functionArgs
+invariantArgs :: Declaration -> [(Bool, Expressions)]
+invariantArgs (Declaration_FunctionBindings _ fbs) = map f $ transpose $ map sameArgs fbs
+  where
+    f :: [(Bool, Expressions)] -> (Bool, Expressions)
+    f xs = let (ys, zs) = unzip xs in (and ys, concat zs) 
+    sameArgs fb = let as = allArgs fb in map (\a -> (allSame a, nub a)) as
+    allArgs = transpose . uncurry (++) . functionArgs'                
+    allSame (x:xs) = all (==x) xs
+    allSame [] = False -- will never happen in an functionbinding
 
-name :: FunctionBinding -> Name
-name = (\(n, _, _, _) -> n) . decomposeFB
+-- [ [n,[]] ] T=> [ [n] , [[]] ] => [ (True, [n]) , (True, [[]]) ] 
+-- [ [m,(_:xs)] , [m, xs] ] T=> [ [m, m] , [(_:xs), xs] ] => [ (True, [m]) , (False, [(_:xs),xs]) ]
 
-decomposeFB :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
-decomposeFB (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
+-- [ [ (True, [n]) , (True, [[]]) ] , [ (True, [m]) , (False, [(_:xs),xs]) ] ] T=> [ [(True, [n]) , (True [m]) ] , [(True, [[]]), (F, ...) ] ]
+-- => [ (True, [n,m]) , (False, [[], ...]) ]
+
+
+funName :: FunctionBinding -> Name
+funName = (\(n, _, _, _) -> n) . decomposeFB
+
+deconstrucFunBinding :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
+deconstrucFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
   where
     deLHS l = case l of 
                 LeftHandSide_Function _ n ps -> (n, ps)

@@ -21,7 +21,7 @@ squareRootViewWith v = makeView f g
          a :-: b  -> liftM2 (-) (f a) (f b)
          Negate a -> fmap negate (f a)
          a :*: b  -> liftM2 (*) (f a) (f b)
-         a :/: b  -> liftM2 (/) (f a) (f b)
+         a :/: b  -> join $ liftM2 fracDiv (f a) (f b)
          Sqrt a   -> fmap sqrtRational (match rationalView a)
          Sym s [a, b] | s == powerSymbol ->
             liftM2 (^) (f a) (match integerView b)

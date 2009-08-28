@@ -12,6 +12,7 @@ import Common.View
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
+import Domain.Math.Numeric.Generators
 import Prelude hiding (repeat)
 import Test.QuickCheck hiding (label)
 

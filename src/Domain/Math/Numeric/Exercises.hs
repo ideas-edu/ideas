@@ -10,6 +10,7 @@ import Domain.Math.Expr
 import Domain.Math.Expr.Parser
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
+import Domain.Math.Numeric.Generators
 import Domain.Math.ExercisesDWO (calculateResults)
 import Common.Context
    

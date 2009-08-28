@@ -14,6 +14,7 @@ import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
+import Domain.Math.Numeric.Generators (rationalGenerator)
 import Domain.Math.View.Basic hiding (linearView, quadraticView)
 import Domain.Math.View.Power (powerFactorViewForWith)
 import Test.QuickCheck

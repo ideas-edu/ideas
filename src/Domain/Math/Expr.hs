@@ -111,9 +111,12 @@ instance Uniplate Expr where
 -- Arbitrary instance
 
 instance Arbitrary Expr where
-   arbitrary = 
+   arbitrary = natGenerator 
+      -- before chaning this instance, check that the 
+      -- Gaussian elimination exercise still works (with checkExercise)
+      {-
       let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
-      in sized (symbolGenerator (const [natGenerator]) syms)
+      in sized (symbolGenerator (const [natGenerator]) syms) -}
    coarbitrary expr =
       case expr of 
          a :+: b  -> variant 0 . coarbitrary a . coarbitrary b

@@ -36,6 +36,7 @@ ATTR Module Body
 
 SEM RightHandSide 
   | Expression expression . env = updateEnv @me @lhs.env
+               lhs . result = removeWhere @result-- sloop de wheres eraf
 
 SEM Expression
   | Variable lhs . result = case lookup @me @lhs.env of
@@ -78,4 +79,12 @@ updateEnv' ds env = foldr insertInEnv env ds
 
 inlinePatternBindings :: Env -> Module -> Module
 inlinePatternBindings env m = (\(_, m, _) -> m) $ sem_Module m env
+
+removeWhere :: RightHandSide -> RightHandSide
+removeWhere rhs = 
+  case rhs of
+    RightHandSide_Expression r expr w -> 
+      RightHandSide_Expression r expr MaybeDeclarations_Nothing
+    RightHandSide_Guarded r gexpr w ->
+      RightHandSide_Guarded r gexpr MaybeDeclarations_Nothing
 }

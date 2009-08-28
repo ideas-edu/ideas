@@ -89,7 +89,9 @@ equalModules fs x y = let nm = normaliseModule fs
                       in nm x == nm y
 
 normaliseModule :: [String] -> Module -> Module
-normaliseModule fs = alphaRenaming fs . normalise fs . alphaRenaming fs
+normaliseModule fs = alphaRenaming ns . normalise fs . alphaRenaming ns
+  where 
+    ns = map name fs
 
 normalise :: [String] -> Module -> Module
 normalise fs = rewrites . preprocess

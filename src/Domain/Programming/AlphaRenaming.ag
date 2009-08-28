@@ -21,13 +21,12 @@ imports{
 import Data.List hiding (union, insert, lookup)
 import Data.Map hiding (map, filter, (\\))
 import Domain.Programming.Helium
-import Domain.Programming.Utils
 import Prelude hiding (lookup)
 }
 
 -- Set initialScope
 SEM Module
-  | Module loc . initialScope = []
+  | Module loc . initialScope = [Name_Identifier noRange [] "fromBin"]
 
 -- Copied from StaticChecks, get the names of LHSs
 ATTR FunctionBinding FunctionBindings LeftHandSide [ | | name:Name ]
@@ -37,121 +36,110 @@ SEM FunctionBindings
   | Nil   lhs . name = error "AlphaRenaming: empty FunctionBindings"
 
 SEM LeftHandSide
-  | Function  lhs . name = @name.self
-  | Infix     lhs . name = @operator.self
+  | Function      lhs . name = @name.self
+  | Infix         lhs . name = @operator.self
   | Parenthesized lhs . name = @lefthandside.name
-
-
-{-
--- Adding scope changes at certain places in the AST
-SEM Body
-  | Body loc . (namesInScope, unboundNames, scopeInfo) = changeOfScope @declarations.declVarNames @declarations.unboundNames @lhs.namesInScope
-         lhs . unboundNames = @unboundNames
--}
 
 SEM Body 
    | Body  loc . namesInScope = @declarations.declVarNames
+               . unboundNames = @declarations.unboundNames
                . scopeInfo    = ([],[],[])
 
 -- Construct a mapping from vars to vars with fresh names
-ATTR Expression RightHandSide
+ATTR Body Module Expression RightHandSide
      RecordExpressionBinding RecordExpressionBindings
      MaybeExpression GuardedExpression FunctionBinding
      Expressions Declaration Declarations Alternative FunctionBindings
      Alternatives GuardedExpressions RecordPatternBinding
      Patterns Pattern LeftHandSide RecordPatternBindings AnnotatedType
-     AnnotatedTypes Constructor Constructors FieldDeclaration FieldDeclarations Body Module
-     [ nameMap : NameMap fixedNames : Strings | freshNames : Names | ]
-
-{-
-SEM Module
-  | Module body . nameMap    = empty 
-                . freshNames = [Name_Identifier noRange [] ('x' : show i) | i <- [1..]]
--}
+     AnnotatedTypes Constructor Constructors FieldDeclaration FieldDeclarations 
+     ContextItem Export Import ImportDeclaration MaybeName Names SimpleType
+     ContextItems ImportDeclarations Imports MaybeNames Type Exports
+     ImportSpecification MaybeExports Types MaybeImportSpecification
+     [ nameMap : NameMap | freshNames : Names | ]
 
 SEM Body
   | Body loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                 @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                 @namesInScope @lhs.freshNames 
 
 SEM MaybeDeclarations
   | Just loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                 @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                 @namesInScope @lhs.freshNames 
 
 SEM Expression
   | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                @namesInScope @lhs.freshNames 
            
 SEM Statement
   | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                @namesInScope @lhs.freshNames @lhs.fixedNames  
+                                                @namesInScope @lhs.freshNames   
 
 SEM Qualifier
   | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                @namesInScope @lhs.freshNames 
 
 -- monomorphic binding constructs
 SEM FunctionBinding
   | FunctionBinding loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                            @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                            @namesInScope @lhs.freshNames 
 
 SEM Expression
   | Lambda loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                   @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                   @namesInScope @lhs.freshNames 
 
 SEM Alternative
   | Alternative loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                        @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                        @namesInScope @lhs.freshNames 
 
 SEM Statement
   | Generator loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                      @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                      @namesInScope @lhs.freshNames 
 
 SEM Qualifier
   | Generator loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
-                                                      @namesInScope @lhs.freshNames @lhs.fixedNames
+                                                      @namesInScope @lhs.freshNames 
 
 -- Correct the scope for RHSs with where, might also be necessary for Statements/Qualifiers, skipping for now
 
 ATTR MaybeDeclarations Statements Statement Qualifier Qualifiers 
-     [ fixedNames : Strings | nameMap : NameMap freshNames : Names | ]
+     [ | nameMap : NameMap freshNames : Names | ]
 
 SEM RightHandSide
   | Expression expression . nameMap = @where.nameMap
 
 -- Do the renaming and make a copy of the ast
-ATTR * [ | | result : SELF ]
+ATTR * [ fixedNames : Names | | result : SELF ]
 ATTR Name [ nameMap : NameMap | | ]
 
 SEM Name
-  | Identifier Operator Special lhs.result = case lookup @result @lhs.nameMap of
-                                               Just n -> n
-                                               _      -> @result
+  | Identifier Operator Special lhs.result = 
+      case lookup @result @lhs.nameMap of
+        Just n -> if @result `notElem` @lhs.fixedNames then n else @result
+        _      -> @result
 
 -- utility functions
 {
 type NameMap = Map Name Name
 
-updateMap :: ScopeInfo -> NameMap -> Names -> Names -> Strings -> (NameMap, Names)
-updateMap si m ks vs fixedNames = let (newMap, i) = insertAllInNameMap si fixedNames m ks vs
+updateMap :: ScopeInfo -> NameMap -> Names -> Names -> (NameMap, Names)
+updateMap si m ks vs = let (newMap, i) = insertAllInNameMap si m ks vs
                                   in (newMap, drop i vs)
 
-insertInNameMap :: ScopeInfo -> Strings -> (Name, Name) -> (NameMap, Int) -> (NameMap, Int)
-insertInNameMap si fixedNames (k, v) (m, i) | check = (insert k v m, i+1)
-                                            | otherwise = (m, i)
+insertInNameMap :: ScopeInfo -> (Name, Name) -> (NameMap, Int) -> (NameMap, Int)
+insertInNameMap si (k, v) (m, i) | check = (insert k v m, i+1)
+                                 | otherwise = (m, i)
   where
-    check = (notMember k m && (name2string k) `notElem` fixedNames) || isShadowed k si
+    --check = (notMember k m && (name2string k) `notElem` fixedNames) || isShadowed k si
+    check = notMember k m || isShadowed k si
 
-insertAllInNameMap :: ScopeInfo -> Strings -> NameMap -> Names -> Names -> (NameMap, Int)
-insertAllInNameMap si fixedNames m ks vs = foldr (insertInNameMap si fixedNames) (m, 0) $ zip ks vs
+insertAllInNameMap :: ScopeInfo -> NameMap -> Names -> Names -> (NameMap, Int)
+insertAllInNameMap si m ks vs = foldr (insertInNameMap si) (m, 0) $ zip ks vs
 
 isShadowed :: Name -> ScopeInfo -> Bool
 isShadowed n = elem n . map fst . (\(_,_,s)->s) 
 
-alphaRenaming :: Strings -> Module -> Module
+alphaRenaming :: Names -> Module -> Module
 alphaRenaming fixedNames m = 
   (\(_, m', _) -> m') $ sem_Module m fixedNames [Name_Identifier noRange [] ('x' : show i) | i <- [1..]] empty
 
--- Reserved identifiers, not necessary anymore: the unbounded names are not put into the renaming scheme. 
--- I let them hang around for a while, you never know ;-)
-preludeIdentifiers = ["$!","catch","!!","$","&&","++",".","=<<","Bool","False","True","Bounded","minBound","maxBound","Char","Double","Either","Left","Right","Enum","succ","pred","toEnum","fromEnum","enumFrom","enumFromThen","enumFromTo","enumFromThenTo","Eq","==","/=","FilePath","Float","Fractional","pi","exp","sqrt","log","**","logBase","sin","tan","cos","asin","atan","acos","sinh","tanh","cosh","asinh","atanh","acosh","Fractional","/","recip","fromRational","Functor","fmap","IO","IOError","Int","Integer","Integral","quot","rem","div","mod","quotRem","divMod","toInteger","Maybe","Nothing","Just","Monad",">>=",">>","return","fail","Num","+","*","-","negate","abs","signum","fromInteger","Ord","compare","<",">=",">","<=","max","min","Ordering","LT","EQ","GT","Rational","Read","readsPrec","readList","ReadS","Real","toRational","RealFloat","floatRadix","floatDigits","floatRange","decodeFloat","encodeFloat","exponent","significand","scaleFloat","isNaN","isInfinite","isDenormalized","isNegativeZero","isIEEE","atan2","RealFrac","properFraction","truncate","round","ceiling","floor","Show","showsPrec","show","showList","ShowS","String","^","^^","all","and","any","appendFile","asTypeOf","break","concat","concatMap","const","curry","cycle","drop","dropWhile","either","elem","error","even","filter","flip","foldl","foldl1","foldr","foldr1","fromIntegral","fst","gcd","getChar","getContents","getLine","head","id","init","interact","ioError","iterate","last","lcm","length","lex","lines","lookup","map","mapM","mapM_","maximum","maybe","minimum","not","notElem","null","odd","or","otherwise","print","product","putChar","putStr","putStrLn","read","readFile","readIO","readLn","readParen","reads","realToFrac","repeat","replicate","reverse","scanl","scanl1","scanr","scanr1","seq","sequence","sequence_","showChar","showParen","showString","shows","snd","span","splitAt","subtract","sum","tail","take","takeWhile","uncurry","undefined","unlines","until","unwords","unzip","unzip3","userError","words","writeFile","zip","zip3","zipWith","zipWith3","||"]
 }

@@ -51,6 +51,7 @@ atanhSymbol   = makeSymbol "atanh"  1
 acoshSymbol   = makeSymbol "acosh"  1
 
 -- Extra symbols
+rootSymbol    = makeSymbol  "root" 2  
 bottomSymbol  = makeSymbolN "error"
 lambdaSymbol  = makeSymbolN "lambda"
 diffSymbol    = makeSymbolN "diff"
@@ -69,3 +70,6 @@ infixr 8 ^
 
 (^) :: Symbolic a => a -> a -> a
 (^) = binary powerSymbol
+
+root :: Symbolic a => a -> a -> a
+root = binary rootSymbol

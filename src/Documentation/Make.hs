@@ -1,4 +1,4 @@
-module Documentation.Make (main) where
+module Main (main) where
 
 import Common.Utils (Some(..))
 import Service.ExerciseList

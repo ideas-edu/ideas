@@ -29,6 +29,7 @@ toFactors n
    | n < 0     = rec primes (-n)
    | otherwise = IM.singleton 0 1
  where
+   rec [] n       = IM.singleton (fromIntegral n) 1
    rec (p:ps) n
       | n <= 1    = IM.empty
       | otherwise = f 0 n
@@ -46,8 +47,10 @@ fromFactors :: Factors -> Integer
 fromFactors = product . map f . IM.toList
  where f (a, i) = fromIntegral a ^ fromIntegral i
 
-primes :: [Int]
-primes = rec [2..]
+-- For practical reasons, the list of prime numbers is cut-off after 
+-- 1000 elements (last primes gives 7919).
+primes :: [Int] 
+primes = take 1000 $ rec [2..]
  where
    rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
 

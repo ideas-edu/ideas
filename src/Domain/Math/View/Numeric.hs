@@ -3,6 +3,7 @@ module Domain.Math.View.Numeric
    , integerView, rationalView, doubleView
    , integerNormalForm, rationalNormalForm, rationalRelaxedForm, fractionForm
    , integerGenerator, rationalGenerator
+   , intDiv, fracDiv, exprToNum
    ) where
 
 import Common.View
@@ -19,13 +20,24 @@ import Test.QuickCheck
 integralView :: Integral a => View Expr a
 integralView = makeView (exprToNum f) fromIntegral
  where
-   f s [x, y] | s == divSymbol = intDiv x y
+   f s [x, y] 
+      | s == divSymbol = 
+           intDiv x y
+      | s == powerSymbol = do
+           guard (y >= 0)
+           return (x Prelude.^ y)
    f _ _ = Nothing
 
 realView :: RealFrac a => View Expr a
 realView = makeView (exprToNum f) (fromRational . toRational)
  where
-   f s [x, y] | s == divSymbol = fracDiv x y
+   f s [x, y] 
+      | s == divSymbol = 
+           fracDiv x y
+      | s == powerSymbol = do
+           let ry = toRational y
+           guard (denominator ry == 1)
+           return (x Prelude.^ numerator ry)
    f _ _ = Nothing
    
 integerView :: View Expr Integer

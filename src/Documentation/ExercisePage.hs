@@ -2,7 +2,7 @@ module Documentation.ExercisePage (makeExercisePage) where
 
 import Common.Exercise
 import Common.Context
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, replicate)
 import Common.Transformation
 import Service.ExerciseList
 import Service.TypedAbstractService

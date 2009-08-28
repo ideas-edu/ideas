@@ -17,7 +17,7 @@ module Common.Exercise
    , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
      -- * Miscellaneous
    , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
-   , showDerivation, showDerivations, printDerivation, printDerivations
+   , showDerivation, showDerivationWith, showDerivations, printDerivation, printDerivations
    , checkExercise, checkParserPretty
    , checksForList
    ) where
@@ -169,12 +169,15 @@ showDerivations ex xs = unlines (zipWith f [1..] xs)
       ]
 
 showDerivation :: Exercise a -> a -> String
-showDerivation ex start = unlines $ 
-   case derivations (unlabel (strategy ex)) (inContext start) of 
+showDerivation ex = showDerivationWith (prettyPrinter ex) (unlabel (strategy ex))
+
+showDerivationWith :: (a -> String) -> Strategy (Context a) -> a -> String
+showDerivationWith showf s start = unlines $ 
+   case derivations s (inContext start) of 
       [] -> [f (inContext start), "    => no derivation"]
       (a, xs):_ -> f a : concatMap g xs
  where
-   f a = "  " ++ prettyPrinter ex (fromContext a)
+   f a = "  " ++ showf (fromContext a)
    g (r, a)
       | isMinorRule r = []
       | otherwise =  ["    => " ++ show r, f a]

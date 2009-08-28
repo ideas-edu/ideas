@@ -4,6 +4,7 @@ module Domain.Math.View.Polynomial
    , linearView, linearViewFor, linearViewWith, linearViewForWith
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
+   , selectVar, buildPairs
    ) where
 
 import Prelude hiding ((^))
@@ -12,7 +13,7 @@ import Data.List
 import Domain.Math.Data.Polynomial
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
-import Domain.Math.View.Basic hiding (linearView)
+import Domain.Math.View.Basic hiding (linearView, quadraticView)
 import Test.QuickCheck
 
 -------------------------------------------------------------------
@@ -56,7 +57,7 @@ polyViewForWith pv v = makeView f g
             guard (pv `notElem` collectVars expr)
             liftM con (match v expr)
    
-   g        = build sumView . map h . terms
+   g        = build sumView . map h . reverse . terms
    h (a, n) = build v a .*. (Var pv .^. fromIntegral n)
 
 -- helper

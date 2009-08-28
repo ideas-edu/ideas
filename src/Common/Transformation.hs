@@ -29,6 +29,7 @@ module Common.Transformation
    , inverseRule, transformations, getRewriteRules
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
+   , ruleOnce, ruleOnce2
      -- * QuickCheck
    , checkRule, checkRuleSmart
    ) where
@@ -42,6 +43,7 @@ import Common.Apply
 import Common.Utils
 import Control.Monad
 import Common.Rewriting
+import Common.Traversable
 
 -----------------------------------------------------------
 --- Transformations
@@ -361,7 +363,7 @@ doBefore f r = r { doBeforeHook = f }
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r { doAfterHook = f }
+doAfter f r = r { doAfterHook = f {- . (doAfterHook r) -} }
 
 hasInverse :: Rule a -> Rule a -> Rule a
 hasInverse inv r = r {getInverse = Just inv}
@@ -428,7 +430,16 @@ liftFunction lp f a =
    case liftPairGet lp a of 
       Just b  -> liftPairSet lp (f b) a
       Nothing -> a
-                                   
+
+-- | Lift a rule using the Once type class
+ruleOnce :: Once f => Rule a -> Rule (f a)
+ruleOnce r = makeSimpleRuleList (name r) $ onceM $ 
+   map (doAfterHook r) . applyAll r . doBeforeHook r
+
+-- | Apply a rule once (in two functors)
+ruleOnce2 :: (Once f, Once g) => Rule a -> Rule (f (g a))
+ruleOnce2 = ruleOnce . ruleOnce
+                            
 -----------------------------------------------------------
 --- QuickCheck
 

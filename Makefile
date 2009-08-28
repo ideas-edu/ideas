@@ -12,6 +12,7 @@ binaries: service solvergui ideas
 service: $(BINDIR)/service.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
 ideas: $(BINDIR)/ideasWX$(EXE)
+prof: $(BINDIR)/prof$(EXE)
 
 $(BINDIR)/service.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
@@ -36,6 +37,12 @@ ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) ideasWX
 endif
 endif
+
+# For profiling purposes
+$(BINDIR)/prof$(EXE): $(HS-SOURCES) revision
+	$(MKDIR) -p $(BINDIR) $(OUTDIR)
+	$(GHC) -prof -auto-all -iscripts $(GHCFLAGS) -o $@ src/Documentation/Make.hs
+	$(STRIP) $@
 
 $(BINDIR)/ounl.jpg: $(SRCDIR)/Presentation/ExerciseAssistant/ounl.jpg
 	$(MKDIR) -p $(BINDIR)

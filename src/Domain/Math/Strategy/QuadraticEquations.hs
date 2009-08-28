@@ -14,14 +14,14 @@ import Domain.Math.Data.Equation
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
 import Domain.Math.View.SquareRoot
-import Domain.Math.View.Polynomial
 import Domain.Math.Strategy.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
 import Domain.Math.Data.OrList
 import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.View.Basic hiding (linearView)
+import Domain.Math.View.Polynomial (polyView, quadraticViewWith, linearViewWith)
+import Domain.Math.View.Basic
 import Prelude hiding (repeat, (^))
 import qualified Prelude
 import qualified Domain.Math.Data.SquareRoot as SQ

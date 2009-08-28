@@ -1,6 +1,6 @@
 module Domain.Math.Strategy.LinearEquations 
   ( linearEquationExercise, solveEquation, solvedEquation, merge 
-  , minusT, timesT, divisionT, distributionT
+  , minusT, timesT, divisionT, distributionT, distribute, mergeT
   ) where 
 
 import Prelude hiding (repeat)

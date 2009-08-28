@@ -13,7 +13,8 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Match, View, makeView, Simplification, makeSimplification
-   , match, matchM, build, canonical, canonicalWith, simplify, simplifyWith
+   , match, matchM, build, canonical, canonicalWith
+   , simplify, simplifyWith, isCanonical, isCanonicalWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
    ) where
@@ -74,6 +75,12 @@ viewEquivalentWith eq view x y =
    case (match view x, match view y) of
       (Just a, Just b) -> a `eq` b
       _                -> False
+      
+isCanonical :: Eq a => View a b -> a -> Bool
+isCanonical = isCanonicalWith (==)
+      
+isCanonicalWith :: (a -> a -> Bool) -> View a b -> a -> Bool
+isCanonicalWith eq v a = maybe False (eq a) (canonical v a)
       
 ---------------------------------------------------------------
 -- Arrow combinators

@@ -15,6 +15,7 @@ module Domain.Programming.Utils where
 
 import Control.Monad
 import Domain.Programming.Helium
+import Domain.Programming.HeliumRules
 import Data.Maybe
 
 
@@ -34,25 +35,46 @@ pat2expr p =
                                                         (MaybeExpression_Just r')
     Pattern_List r ps                  -> do exprs <- mapM pat2expr ps
                                              return $ Expression_List r exprs
+    Pattern_Wildcard r                 -> Just $ Expression_Variable r $ name "_"
     _                                  -> Nothing
 
+expr2pat :: Expression -> Maybe Pattern
 expr2pat e = 
   case e of
     Expression_Literal r l                -> Just $ Pattern_Literal r l
-    Expression_Variable r n               -> Just $ Pattern_Variable r n
+    Expression_Variable r n               -> Just $ if n == name "_" 
+                                                    then Pattern_Wildcard r
+                                                    else Pattern_Variable r n
     Expression_Constructor r n            -> Just $ Pattern_Constructor r n []
     Expression_Parenthesized r e          -> do p <- expr2pat e
                                                 return $ Pattern_Parenthesized r p
-{-    Expression_InfixConstructor rg l op r -> do l' <- pat2expr l
-                                             r' <- pat2expr r
-                                             return $ Expression_InfixApplication rg
-                                                        (MaybeExpression_Just l')
-                                                        (var op)
-                                                        (MaybeExpression_Just r') -}
+    Expression_InfixApplication rg ml op mr -> do l <- expr2pat =<< fromMaybeExpr ml
+                                                  r <- expr2pat =<< fromMaybeExpr mr
+                                                  return $ Pattern_InfixConstructor rg l
+                                                           (getName op) r
     Expression_List r es                  -> do ps <- mapM expr2pat es
                                                 return $ Pattern_List r ps
     _                                     -> Nothing
-         
+
+fromMaybeExpr :: MaybeExpression -> Maybe Expression
+fromMaybeExpr mexpr = 
+  case mexpr of
+    MaybeExpression_Just expr -> Just expr
+    _                         -> Nothing
+
+class GetName a where
+  getName :: a -> Name
+instance GetName Expression where
+  getName expr = case expr of
+                   Expression_Variable _ n -> n
+                   Expression_Constructor _ n -> n
+                   _ -> error $ "No constructor instancse for: " ++ show expr
+instance GetName Pattern where
+  getName pat = case pat of
+                  Pattern_Variable _ n -> n
+                  Pattern_Constructor _ n _ -> n
+                  _ -> error $ "No constructor instancse for: " ++ show pat
+
 name2string (Name_Identifier _ _ n) = n
 name = Name_Identifier noRange []
 var = Expression_Variable noRange

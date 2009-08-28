@@ -89,7 +89,7 @@ equalModules fs x y = let nm = normaliseModule fs
                       in nm x == nm y
 
 normaliseModule :: [String] -> Module -> Module
-normaliseModule fs = alphaRenaming ns . normalise fs . alphaRenaming ns
+normaliseModule fs = alphaRenaming [] . normalise fs . alphaRenaming ns
   where 
     ns = map name fs
 
@@ -283,19 +283,40 @@ anonymise = transformBi f
         Declaration_FunctionBindings r fbs ->
           if isRecursive d then
             -- extract invariant args, use them as pats in a lambda expr and `let' the remaining function
-            let args = catMaybes $ invariantArgs fbs :: [Expressions]
-                d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d args
---                d'' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d' 
---                                        (map (map (fromMaybe (error ("Prog.hs: no conversion from expr to pat!" ++ show args)) . expr2pat)) args)
-                ps = map (fromMaybe (error "Prog.hs: no conversion from expr to pat") . expr2pat . head) args
+            let args = map (reverse . sort) $ catMaybes $ invariantArgs fbs :: [Expressions]               
+                d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d args          
+                ps = map (fromMaybe (error ("Prog.hs: no conversion from expr to pat: " ++ show args)) . expr2pat . head) args
+                d'' = transformBi (removeInvArgs ps (map head args)) d'
                 (name, _, _, _) = deconstrucFunBinding (head fbs)
             -- for efficiency reasons the args of the function calls of name in d should be ps \\ invariantArgs
-            in patBinding (pat name) (lambda ps (letItBe [d'] (var name))) MaybeDeclarations_Nothing
+            in if not (null ps) 
+               then patBinding (pat name) (lambda ps (letItBe [d''] (var name))) MaybeDeclarations_Nothing
+               else patBinding (pat name) (letItBe [d'] (var name)) MaybeDeclarations_Nothing
          else 
             -- just anonymise the function
             let (name, ps, expr, ds) = deconstrucFunBinding (head fbs) 
             in patBinding (pat name) (lambda ps expr) ds
         x -> x
+
+removeInvArgs :: Patterns -> Expressions -> FunctionBinding -> FunctionBinding
+removeInvArgs invPs invArgs = transformBi remPats . transformBi remArgs
+  where
+    remPats x = case x of
+                  (ps :: Patterns) -> (ps \\ invPs) \\ [Pattern_Wildcard noRange]
+                  _                -> x
+    remArgs x = case x of 
+                  Expression_NormalApplication r f args -> 
+                    Expression_NormalApplication r f (args \\ invArgs)
+                  _ -> x
+{- todo:          Expression_InfixApplication r' l op r ->
+                    Expression_InfixApplication r' (if l `elem` invArgs 
+                                                    then MaybeExpression_Nothing
+                                                    else l)
+                                                    op 
+                                                    (if r `elem` invArgs 
+                                                     then MaybeExpression_Nothing
+                                                     else r)
+-}
 
 functionArgs :: FunctionBinding -> [[Maybe Expression]]
 functionArgs fb = 
@@ -319,9 +340,15 @@ isRecursive d =
 invariantArgs :: FunctionBindings -> [Maybe Expressions]
 invariantArgs = (map (foldr mulMaybe (Just []))) . transpose . (map sameArgs)
     where
-      sameArgs = (map mprod1) . transpose . functionArgs
+      sameArgs = (map sameMaybe) . transpose . functionArgs
       mulMaybe (Just x) (Just ys) = Just (x:ys)
       mulMaybe _        _         = Nothing
+      sameMaybe = foldr1 f
+        where f x y = case (x,y) of
+                        (Just x', Just y') -> if x' == y' || x' == wildcard || y' == wildcard
+                                              then x else Nothing
+                        _                  -> Nothing
+              wildcard = var $ name "_"
 
 funName :: FunctionBinding -> Name
 funName = (\(n, _, _, _) -> n) . deconstrucFunBinding

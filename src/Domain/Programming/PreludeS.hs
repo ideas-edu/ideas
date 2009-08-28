@@ -52,6 +52,7 @@ foldlS :: ModuleS -> ModuleS -> ModuleS
 foldlS consS nilS 
        -- Normal usage
     =  (varS "foldl" # [consS, nilS])
+   <|> (varS "foldl'" # [consS, nilS])
        -- Foldl definition
    <|> letS [ declFunS [ funS "f" [ patS "nil", patConS "[]" ] (varS "nil") [] 
                        , funS "f" [ patS "nil", patParenS (patInfixConS (patS "x") ":" (patS "xs")) ]

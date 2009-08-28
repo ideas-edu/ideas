@@ -32,12 +32,6 @@
       },
       {
          "domain": "math",
-         "identifier": "calculation",
-         "description": "calculate result (basic)",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
          "identifier": "coverup",
          "description": "solve an equation by covering up",
          "status": "Experimental"
@@ -51,7 +45,7 @@
       {
          "domain": "math",
          "identifier": "fraction",
-         "description": "simplify fraction",
+         "description": "simplify expression (fractions)",
          "status": "Experimental"
       },
       {
@@ -62,14 +56,32 @@
       },
       {
          "domain": "math",
+         "identifier": "integer",
+         "description": "simplify expression (integers)",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
          "identifier": "lineq",
          "description": "solve a linear equation",
          "status": "Experimental"
       },
       {
          "domain": "math",
+         "identifier": "natural",
+         "description": "simplify expression (natural numbers)",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
          "identifier": "quadreq",
          "description": "solve a quadratic equation",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
+         "identifier": "rational",
+         "description": "simplify expression (rational numbers)",
          "status": "Experimental"
       },
       {
@@ -81,5 +93,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.2 (1839)"
+   "version": "0.5.4 (2045)"
 }

@@ -1,4 +1,4 @@
-module Domain.Math.View.Numeric 
+module Domain.Math.Numeric.Views
    ( integralView, realView
    , integerView, rationalView, doubleView
    , integerNormalForm, rationalNormalForm, rationalRelaxedForm, fractionForm

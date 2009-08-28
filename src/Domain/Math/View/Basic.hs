@@ -1,13 +1,13 @@
 module Domain.Math.View.Basic
    ( module Domain.Math.View.Basic
-   , module Domain.Math.View.Numeric
+   , module Domain.Math.Numeric.Views -- to be removed?
    , module Common.View -- export all view-related functions
    ) where
 
 import Prelude hiding (recip, (^))
 import Common.View
 import Domain.Math.Expr
-import Domain.Math.View.Numeric
+import Domain.Math.Numeric.Views
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Equation
 import Control.Monad

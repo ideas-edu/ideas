@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
 
-import Domain.Math.View.Numeric
+import Domain.Math.Numeric.Views
 import Common.View
 import Domain.LinearAlgebra hiding (getSolution)
 import Test.QuickCheck

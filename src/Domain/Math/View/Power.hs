@@ -1,5 +1,5 @@
 -- For now, restricted to integers in exponent:
--- * no sqrt, or roots
+-- no sqrt, or roots
 module Domain.Math.View.Power 
    ( powerView, powerViewFor
    , powerFactorView, powerFactorViewForWith

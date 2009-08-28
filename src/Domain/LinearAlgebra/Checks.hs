@@ -13,6 +13,8 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
 
+import Domain.Math.View.Numeric
+import Common.View
 import Domain.LinearAlgebra hiding (getSolution)
 import Test.QuickCheck
 import Control.Monad
@@ -45,7 +47,7 @@ propSolution initial =
    forAll (arbSolution initial) $ \(solution, m) -> 
       let final = matrix $ applyD toReducedEchelon $ inContext $ fmap fromIntegral m
           check :: Int -> Maybe Expr -> Bool
-          check n me = maybe False (==n) (join $ fmap exprToNum me)
+          check n me = maybe False (==n) (join $ fmap (match integralView) me)
       in and $ zipWith check solution (getSolution final)
       
 getSolution :: Num a => Matrix a -> [Maybe a]

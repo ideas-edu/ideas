@@ -17,6 +17,7 @@ module Common.View
    , simplify, simplifyWith, isCanonical, isCanonicalWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
+   , listView, conversion, (#>)
    ) where
 
 import Control.Arrow hiding ((>>>))
@@ -134,3 +135,16 @@ instance ArrowChoice View where
    v ||| w = makeView 
       (either (match v) (match w))
       (Left . build v)
+      
+---------------------------------------------------------------
+-- More combinators
+
+listView :: View a b -> View [a] [b]
+listView v = makeView (mapM (match v)) (map (build v))
+
+conversion :: (a -> b) -> (b -> a) -> View a b
+conversion f g = makeView (Just . f) g
+
+(#>) :: (a -> Bool) -> View a b -> View a b
+p #> v = makeView f (build v)
+ where f a = guard (p a) >> match v a

@@ -224,3 +224,11 @@ equationView = makeView f g
       (a, x, b) <- match linearView (lhs - rhs)
       return (x, -b/a)
    g (x, r) = Var x :==: fromRational r
+   
+-- helper to determine the name of the variable (move to a different module?)
+selectVar :: Expr -> Maybe String
+selectVar = f . nub . collectVars
+ where
+   f []  = Just "x" -- exceptional case (e.g., for constants)
+   f [a] = Just a
+   f _   = Nothing

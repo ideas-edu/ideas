@@ -11,12 +11,11 @@ import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic hiding (powerView)
-import Domain.Math.View.Polynomial (selectVar)
 
 ----------------------------------------------------------------------
 -- Simplified views (no side-conditions to worry about)
 
-powerView :: View Expr (String, Integer)
+powerView :: View Expr (String, Int)
 powerView = makeView f g
  where
    f expr = do
@@ -25,7 +24,7 @@ powerView = makeView f g
       return (pv, n)
    g (pv, n) = build (powerViewFor pv) n
 
-powerViewFor :: String -> View Expr Integer
+powerViewFor :: String -> View Expr Int
 powerViewFor pv = makeView f g
  where
    f expr = 
@@ -33,12 +32,12 @@ powerViewFor pv = makeView f g
          Var s | pv == s -> Just 1
          e1 :*: e2 -> liftM2 (+) (f e1) (f e2) 
          Sym s [e, Nat n] 
-            | s == powerSymbol -> liftM (*n) (f e)
+            | s == powerSymbol -> liftM (* fromInteger n) (f e)
          _ -> Nothing
    
-   g a = Var pv .^. fromInteger a
+   g a = Var pv .^. fromIntegral a
 
-powerFactorView :: View Expr (String, Expr, Integer)
+powerFactorView :: View Expr (String, Expr, Int)
 powerFactorView = makeView f g
  where
    f expr = do
@@ -47,7 +46,7 @@ powerFactorView = makeView f g
       return (pv, e, n)
    g (pv, e, n) = build (powerFactorViewForWith pv identity) (e, n)
 
-powerFactorViewForWith :: Num a => String -> View Expr a -> View Expr (a, Integer)
+powerFactorViewForWith :: Num a => String -> View Expr a -> View Expr (a, Int)
 powerFactorViewForWith pv v = makeView f g
  where
    f expr = 
@@ -64,13 +63,13 @@ powerFactorViewForWith pv v = makeView f g
             | s == powerSymbol -> do 
                  (a1, b1) <- f e1
                  a <- match v (build v a1 ^ Nat n)
-                 return (a, b1*n)
+                 return (a, b1 * fromInteger n)
          _ -> do
             guard (pv `notElem` collectVars expr)
             a <- match v expr 
             return (a, 0)
    
-   g (a, b) = build v a .*. (Var pv .^. fromInteger b)
+   g (a, b) = build v a .*. (Var pv .^. fromIntegral b)
 
 ----------------------------------------------------------------------
 -- General views (that have to cope with side-conditions)

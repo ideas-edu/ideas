@@ -4,16 +4,18 @@ module Domain.Math.View.Polynomial
    , linearView, linearViewFor, linearViewWith, linearViewForWith
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
-   , selectVar, buildPairs
+   , polyNormalForm
    ) where
 
 import Prelude hiding ((^))
 import Control.Monad
 import Data.List
+import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic hiding (linearView, quadraticView)
+import Domain.Math.View.Power (powerFactorViewForWith)
 import Test.QuickCheck
 
 -------------------------------------------------------------------
@@ -59,14 +61,6 @@ polyViewForWith pv v = makeView f g
    
    g        = build sumView . map h . reverse . terms
    h (a, n) = build v a .*. (Var pv .^. fromIntegral n)
-
--- helper
-selectVar :: Expr -> Maybe String
-selectVar = f . nub . collectVars
- where
-   f []  = Just "x" -- exceptional case (a polynomial can be constant)
-   f [a] = Just a
-   f _   = Nothing
 
 -------------------------------------------------------------------
 -- Quadratic view
@@ -159,6 +153,22 @@ isList3 [a, b, c]    = Just (a, b, c)
 isList3 _            = Nothing
 isList4 [a, b, c, d] = Just (a, b, c, d)
 isList4 _            = Nothing
+
+-------------------------------------------------------------------
+-- Normal form, and list of power factors
+
+listOfPowerFactors :: Num a => String -> View Expr a -> View Expr [(a, Int)]
+listOfPowerFactors pv v = sumView >>> listView (powerFactorViewForWith pv v)
+
+polyNormalForm :: Num a => View Expr a -> View Expr (String, Polynomial a)
+polyNormalForm v = makeView f (uncurry g)
+ where
+   f e = do
+      pv <- selectVar e
+      xs <- match (listOfPowerFactors pv v) e
+      guard (distinct (map snd xs))
+      return (pv, buildPairs xs)
+   g pv = build (listOfPowerFactors pv v) . reverse . terms
 
 -------------------------------------------------------------------
 -- Generators

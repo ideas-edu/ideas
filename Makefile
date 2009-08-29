@@ -110,7 +110,8 @@ nolicense:
 
 #-------------------------------------------------------------------------
 # AG sources
-AG-SOURCES = src/Domain/Programming/AlphaRenaming.hs
+AG-SOURCES = $(SRCDIR)/Domain/Programming/AlphaRenaming.hs \
+             $(SRCDIR)/Domain/Programming/InlinePatternBindings.hs
 
 ag : $(AG-SOURCES)
 
@@ -124,6 +125,17 @@ $(SRCDIR)/Domain/Programming/AlphaRenaming.hs : \
 	$(AG) $(AG_OPTS) --self --module=Domain.Programming.AlphaRenaming \
 	-P ../../../$(HELIUMDIR) AlphaRenaming.ag;\
 	cd ../../..
+
+$(SRCDIR)/Domain/Programming/InlinePatternBindings.hs : \
+		$(SRCDIR)/Domain/Programming/InlinePatternBindings.ag \
+		$(HELIUMDIR)/syntax/UHA_Syntax.ag 
+
+	# AG InlinePatternBindings
+	cd $(SRCDIR)/Domain/Programming;\
+	$(AG) $(AG_OPTS) --self --module=Domain.Programming.InlinePatternBindings \
+	-P ../../../$(HELIUMDIR) InlinePatternBindings.ag;\
+	cd ../../..
+
 
 #-------------------------------------------------------------------------
 # Installing on the IDEAS server

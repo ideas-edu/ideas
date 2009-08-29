@@ -19,34 +19,11 @@ module Domain.Programming.Inlining where
 import Data.Data hiding (Fixity)
 import Data.Generics.Biplate
 import Data.Generics.PlateData
-import Data.List (partition, sort, transpose, (\\))
-import Data.Map (Map, insert, empty, lookup)
+import Data.List (sort, transpose, (\\))
 import Data.Maybe
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules
-import Domain.Programming.InlinePatternBindings (Env, inlinePatternBindings, updateEnv')
 import Domain.Programming.Utils
-
-inline :: [String] -> Module -> Module
-inline fs m = let (env, m') = putInEnv (map (pat . name) fs) m
-              in inlinePatternBindings env m'
-
---------------------------------------------------------------------------------
--- Help Functions
---------------------------------------------------------------------------------
-
-putInEnv :: Patterns -> Module -> (Env, Module)
-putInEnv ps m = 
-  let (decls, replaceDecls) = head (contextsBi m :: [(Declarations, Declarations -> Module)])
-      (helpDecls, mainDecls) = partition ((`notElem` ps) . bindingPattern) decls
-  in (updateEnv' helpDecls empty, replaceDecls mainDecls)
-
-bindingPattern :: Declaration -> Pattern
-bindingPattern d = 
-  case d of
-    Declaration_PatternBinding _ p _        -> p
-    Declaration_FunctionBindings r (fb:fbs) -> pat (funName fb)
-    _                                       -> error "not a function!"
 
    
 --------------------------------------------------------------------------------

@@ -205,6 +205,27 @@ commutativeOps expr =
                   Expression_Variable _ (Name_Operator _ [] n') -> n == n'
                   _ -> False
 
+--------------------------------------------------------------------------------
+-- Inlining
+--------------------------------------------------------------------------------
+inline :: [String] -> Module -> Module
+inline fs m = let (env, m') = putInEnv (map (pat . name) fs) m
+              in inlinePatternBindings env m'
+
+putInEnv :: Patterns -> Module -> (Env, Module)
+putInEnv ps m = 
+  let (decls, replaceDecls) = head (contextsBi m :: [(Declarations, Declarations -> Module)])
+      (helpDecls, mainDecls) = partition ((`notElem` ps) . bindingPattern) decls
+  in (updateEnv' helpDecls empty, replaceDecls mainDecls)
+
+bindingPattern :: Declaration -> Pattern
+bindingPattern d = 
+  case d of
+    Declaration_PatternBinding _ p _        -> p
+    Declaration_FunctionBindings r (fb:fbs) -> pat (funName fb)
+    _                                       -> error "not a function!"
+
+{-
 let2where :: RightHandSide -> Maybe RightHandSide
 let2where x = 
   case x of
@@ -215,7 +236,7 @@ let2where x =
     _ -> Nothing
   where
    rhs r expr ds = RightHandSide_Expression r expr $ MaybeDeclarations_Just $ ds
-
+-}
 
 
 --------------------------------------------------------------------------------

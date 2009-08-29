@@ -87,11 +87,13 @@ letItBe ds expr = Expression_Let noRange ds expr
 pp = putStrLn . ppModule
 compExercise = (\(Right m)->m) . compile . fst
 
-fromMaybeDecl :: MaybeDeclarations -> Declarations
-fromMaybeDecl m = case m of
-                    MaybeDeclarations_Just ds -> ds
-                    _                         -> []
+fromMaybeDecl :: MaybeDeclarations -> Maybe Declarations
+fromMaybeDecl m = 
+  case m of
+    MaybeDeclarations_Just ds -> Just ds
+    _                         -> Nothing
 
+toplevelDecls :: Module -> Declarations
 toplevelDecls (Module_Module _ _ _ (Body_Body _ _ ds)) = ds
 
 -- You can't conjure up an a out of the blue... of course ;-) It suits me nonetheless.
@@ -108,7 +110,21 @@ mprod a = foldr mmul (mone a)
 
 mprod1 :: MonadMul m => [m a] -> m a
 mprod1 = foldr1 mmul
-  
--- laws: mzero `mmul` _ = mzero
---       _ `mmul` mzero = mzero
---       mone x `mmul` mone _xs = mone x
+
+funName :: FunctionBinding -> Name
+funName = (\(n, _, _, _) -> n) . deconstrucFunBinding
+
+deconstrucFunBinding :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
+deconstrucFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
+  where
+    deLHS l = case l of 
+                LeftHandSide_Function _ n ps -> (n, ps)
+                LeftHandSide_Infix _ l op r   -> (op, [l, r])
+                LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' 
+                                                        in (n, ps' ++ ps)
+    (name, ps) = deLHS lhs
+    (expr, ds) = case rhs of
+                    RightHandSide_Expression _ expr w -> (expr, w)
+                    RightHandSide_Guarded _ gexpr w   -> error "Todo: guarded expressions"
+
+

@@ -18,6 +18,7 @@ INCLUDE "syntax/UHA_Syntax.ag"
 
 imports{
 import Data.Map hiding (map)
+import Data.Maybe
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules ()
 import Domain.Programming.Utils
@@ -56,8 +57,11 @@ instance UpdateEnv Body where
 instance UpdateEnv RightHandSide where
   updateEnv rhs env = 
     case rhs of
-      RightHandSide_Expression _ _ w -> updateEnv' (fromMaybeDecl w) env
-      _                              -> env
+      RightHandSide_Expression _ _ maybeWhere ->
+        case fromMaybeDecl maybeWhere of
+          Just w -> updateEnv' w env
+          _      -> env
+      _ -> env
 instance UpdateEnv Expression where
   updateEnv expr env =
     case expr of

@@ -16,12 +16,12 @@ module Domain.Programming.EncodingExercises where
 
 -- fromBin :: [Int] -> Int
 
-fromBins = [fromBin,fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7,fromBin8,fromBin9,fromBin10,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16,fromBin17,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin27,fromBin28,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45,fromBin46,fromBin48,fromBin49,fromBin50,fromBin51,fromBin53,fromBin55,fromBin56,fromBin57,fromBin59,fromBin60,fromBin61,fromBin62,fromBin64,fromBin66,fromBin67,fromBin68,fromBin69,fromBin70,fromBin71,fromBin72,fromBin73,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81,fromBin82,fromBin83,fromBin85,fromBin86,fromBin89,fromBin90,fromBin93,fromBin94,fromBin95,fromBin96]
+fromBins = [fromBin,fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7,fromBin8,fromBin9,fromBin10,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16,fromBin17,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin27,fromBin28,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45,fromBin46,fromBin48,fromBin49,fromBin50,fromBin51,fromBin53,fromBin55,fromBin56,fromBin57,fromBin59,fromBin60,fromBin61,fromBin62,fromBin64,fromBin66,fromBin67,fromBin68,fromBin69,fromBin70,fromBin72,fromBin73,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81,fromBin82,fromBin83,fromBin85,fromBin86,fromBin89,fromBin90,fromBin93,fromBin94,fromBin95,fromBin96]
 
 fromBinsTodo = [ fromBin15, fromBin20, fromBin47, fromBin58, fromBin65
                , fromBin87, fromBin91]
 
-fromBinsClumsy = [ fromBin19, fromBin43, fromBin44, fromBin52, fromBin54
+fromBinsClumsy = [ fromBin19, fromBin43, fromBin44, fromBin52, fromBin54, fromBin71
                  , fromBin76, fromBin84, fromBin92
                  ]
 

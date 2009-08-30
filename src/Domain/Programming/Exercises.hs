@@ -24,6 +24,7 @@ import Data.Map hiding (map)
 import Data.Maybe
 --import Data.List
 import Domain.Programming.AlphaRenaming (alphaRenaming)
+import Domain.Programming.Anonymise
 import Domain.Programming.InlinePatternBindings -- (inlinePatternBindings)
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
@@ -65,6 +66,8 @@ fromBinExercises :: [Exercise Module]
 fromBinExercises = map (\ex -> heliumExercise { strategy = label "fromBin" (stringToStrategy ex)
                                               , description = "Student solutions fromBin" 
                                               }) (map fst fromBins)
+
+checkFromBin = checkExercises ["fromBin"] fromBinStrategy
 
 {-
 isortExercise :: Exercise Expr

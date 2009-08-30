@@ -81,6 +81,10 @@ var = Expression_Variable noRange
 pat = Pattern_Variable noRange
 patBinding pat expr w = Declaration_PatternBinding noRange pat $ 
                           RightHandSide_Expression noRange expr w
+declFunBindings fbs = Declaration_FunctionBindings noRange fbs
+funBinding name ps expr = FunctionBinding_FunctionBinding noRange 
+                           (LeftHandSide_Function noRange name ps) 
+                           (RightHandSide_Expression noRange expr MaybeDeclarations_Nothing)                           
 lambda ps expr = Expression_Lambda noRange ps expr
 letItBe ds expr = Expression_Let noRange ds expr
 
@@ -112,10 +116,10 @@ mprod1 :: MonadMul m => [m a] -> m a
 mprod1 = foldr1 mmul
 
 funName :: FunctionBinding -> Name
-funName = (\(n, _, _, _) -> n) . deconstrucFunBinding
+funName = (\(n, _, _, _) -> n) . deconstructFunBinding
 
-deconstrucFunBinding :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
-deconstrucFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
+deconstructFunBinding :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
+deconstructFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
   where
     deLHS l = case l of 
                 LeftHandSide_Function _ n ps -> (n, ps)

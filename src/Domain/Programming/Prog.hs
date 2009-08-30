@@ -24,9 +24,11 @@ import Data.Maybe
 import Data.Data hiding (Fixity)
 import Data.List hiding (union, lookup, insert)
 import Domain.Programming.AlphaRenaming (alphaRenaming)
+import Domain.Programming.Anonymise
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules
-import Domain.Programming.Inlining
+import Domain.Programming.InlinePatternBindings (Env, updateEnv'
+                                                , inlinePatternBindings)
 import Domain.Programming.Substitute
 import Domain.Programming.Utils
 import Prelude hiding (lookup)
@@ -89,14 +91,15 @@ equalModules fs x y = let nm = normaliseModule fs
                       in nm x == nm y
 
 normaliseModule :: [String] -> Module -> Module
-normaliseModule fs = alphaRenaming [] . normalise fs . alphaRenaming ns
+normaliseModule fs = alphaRenaming [] . normalise ns . alphaRenaming ns
   where 
     ns = map name fs
 
-normalise :: [String] -> Module -> Module
+normalise :: Names -> Module -> Module
 normalise fs = rewrites . preprocess
   where
-    preprocess =  inline fs . anonymise . removeRanges . removeParens
+    preprocess =  inline fs . makeBetaReducible fs . removeRanges . removeParens
+--    preprocess =  inline fs . anonymise . removeRanges . removeParens
     rewrites = rewriteBi $  (etaReduce 
                         >->  betaReduce 
                         >->  lambdaReduce 
@@ -208,8 +211,8 @@ commutativeOps expr =
 --------------------------------------------------------------------------------
 -- Inlining
 --------------------------------------------------------------------------------
-inline :: [String] -> Module -> Module
-inline fs m = let (env, m') = putInEnv (map (pat . name) fs) m
+inline :: Names -> Module -> Module
+inline fs m = let (env, m') = putInEnv (map pat fs) m
               in inlinePatternBindings env m'
 
 putInEnv :: Patterns -> Module -> (Env, Module)

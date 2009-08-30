@@ -138,8 +138,14 @@ insertAllInNameMap si m ks vs = foldr (insertInNameMap si) (m, 0) $ zip ks vs
 isShadowed :: Name -> ScopeInfo -> Bool
 isShadowed n = elem n . map fst . (\(_,_,s)->s) 
 
-alphaRenaming :: Names -> Module -> Module
-alphaRenaming fixedNames m = 
-  (\(_, m', _) -> m') $ sem_Module m fixedNames [Name_Identifier noRange [] ('x' : show i) | i <- [1..]] empty
+freshNames = [Name_Identifier noRange [] ('x' : show i) | i <- [1..]]
 
+class AlphaRenaming a where
+  alphaRenaming :: Names -> a -> a
+instance AlphaRenaming Module where
+  alphaRenaming fixedNames m = 
+    (\(_, x, _) -> x) $ sem_Module m fixedNames freshNames empty
+instance AlphaRenaming Expression where
+  alphaRenaming fixedNames e = 
+    (\(_, x, _, _) -> x) $ sem_Expression e fixedNames freshNames empty []
 }

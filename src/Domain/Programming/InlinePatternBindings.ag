@@ -17,8 +17,11 @@
 INCLUDE "syntax/UHA_Syntax.ag"
 
 imports{
-import Data.List (partition)
-import Data.Map hiding (map, partition, null)
+import Data.Data hiding (Fixity)
+import Data.Generics.Biplate
+import Data.Generics.PlateData
+import Data.List (partition, (\\))
+import Data.Map hiding (map, partition, null, (\\))
 import Data.Maybe
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules ()
@@ -60,7 +63,7 @@ instance UpdateEnv RightHandSide where
   updateEnv rhs env = 
     case rhs of
       RightHandSide_Expression _ _ maybeWhere ->
-        case fromMaybeDecl maybeWhere of
+        case fromMaybeDecls maybeWhere of
           Just w -> updateEnv' w env
           _      -> env
       _ -> env
@@ -90,18 +93,25 @@ removeWhere :: RightHandSide -> RightHandSide
 removeWhere rhs = 
   case rhs of
     RightHandSide_Expression r expr w -> 
-      RightHandSide_Expression r expr MaybeDeclarations_Nothing
+      case fromMaybeDecls w of
+        Just ds -> RightHandSide_Expression r expr $ 
+                     MaybeDeclarations_Just $ ds \\ getPatBinds ds
+        _       -> rhs
     RightHandSide_Guarded r gexpr w ->
-      RightHandSide_Guarded r gexpr MaybeDeclarations_Nothing
+      case fromMaybeDecls w of
+        Just ds -> RightHandSide_Guarded r gexpr $ 
+                     MaybeDeclarations_Just $ ds \\ getPatBinds ds
+        _       -> rhs
 
 removeLet :: Expression -> Expression
 removeLet (Expression_Let r ds expr) = 
-  let (patBinds, funBinds) = partition isPatDecl ds
-      isPatDecl d = case d of
-                      Declaration_PatternBinding _ _ _ -> True
-                      _                                -> False
+  let funBinds = ds \\ getPatBinds ds
   in if null funBinds then
        expr 
      else
        Expression_Let r funBinds expr
+
+getPatBinds :: Data a => a -> Declarations
+getPatBinds x = [ d | d@(Declaration_PatternBinding _ _ _) <- universeBi x] :: Declarations
+
 }

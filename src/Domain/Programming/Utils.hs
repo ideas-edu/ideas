@@ -15,7 +15,7 @@ module Domain.Programming.Utils where
 
 import Control.Monad
 import Domain.Programming.Helium
-import Domain.Programming.HeliumRules
+import Domain.Programming.HeliumRules ()
 import Data.Maybe
 
 
@@ -91,8 +91,8 @@ letItBe ds expr = Expression_Let noRange ds expr
 pp = putStrLn . ppModule
 compExercise = (\(Right m)->m) . compile 
 
-fromMaybeDecl :: MaybeDeclarations -> Maybe Declarations
-fromMaybeDecl m = 
+fromMaybeDecls :: MaybeDeclarations -> Maybe Declarations
+fromMaybeDecls m = 
   case m of
     MaybeDeclarations_Just ds -> Just ds
     _                         -> Nothing
@@ -106,7 +106,7 @@ class MonadPlus m => MonadMul m where
   mmul :: m a -> m a -> m a
 instance MonadMul Maybe where
   mone = Just
-  mmul (Just x) (Just y) = Just x
+  mmul (Just x) (Just _) = Just x
   mmul _ _               = Nothing
 
 mprod :: MonadMul m => a -> [m a] -> m a

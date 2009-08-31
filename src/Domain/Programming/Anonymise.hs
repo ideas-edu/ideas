@@ -29,7 +29,7 @@ import Domain.Programming.Utils
 
 
 makeBetaReducible :: (AlphaRenaming a, Data a) => Names -> a -> a
-makeBetaReducible fs = letRecursivePatDecl . anonymise' . alphaRenaming fs . optimise
+makeBetaReducible fs = where2let . letRecursivePatDecl . anonymise' . alphaRenaming fs . optimise
 
 optimise :: Data a => a -> a
 optimise = transformBi optimiseFunBindings
@@ -72,6 +72,15 @@ letRecursivePatDecl = transformBi toLet
         maybe d (\e -> patBinding p (letItBe [d] e) MaybeDeclarations_Nothing) $ pat2expr p
       else
         d
+    toLet x = x
+
+where2let :: Data a => a -> a
+where2let = transformBi toLet
+  where
+    toLet rhs@(RightHandSide_Expression r expr w) = 
+      case fromMaybeDecls w of
+        Just ds -> RightHandSide_Expression r (letItBe ds expr) MaybeDeclarations_Nothing
+        _ -> rhs
     toLet x = x
 
 {- 

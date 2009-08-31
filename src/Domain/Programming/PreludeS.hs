@@ -15,7 +15,7 @@ module Domain.Programming.PreludeS
    ( -- * Type synonyms
      ModuleS
      -- * Prelude strategies
-   , foldlS, letS, compS, iterateS, sumS, zipWithS
+   , foldlS, letS, compS, iterateS, sumS, zipWithS, reverseS
      -- * Smart constructors and help functions
    , varS, patS, modS, funS, declFunS, declPatS, rhsS, intS, appS, opS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
@@ -99,11 +99,18 @@ zipWith f (a:as) (b:bs) = f a b : zipWith f as bs
 zipWith _ _      _      = []
 -}
 
+reverseS :: ModuleS
+reverseS  =  (varS "reverse")
+--         <|> foldlS (flipS (opS ":" Nothing Nothing)) (exprConS "[]")
+
 --------------------------------------------------------------------------------
 -- Smart constructors
 --------------------------------------------------------------------------------
 varS :: String -> ModuleS
 varS n = introExprVariable <*> introNameIdentifier n
+
+exprConS :: String -> ModuleS
+exprConS n = introExprConstructor <*> introNameSpecial n 
 
 exprParenS expr = introExprParenthesized <*> expr
 

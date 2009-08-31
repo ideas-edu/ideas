@@ -245,8 +245,9 @@ cleanUpLet x =
 -- Inlining
 --------------------------------------------------------------------------------
 inline :: Names -> Module -> Module
-inline fs m = let (env, m') = putInEnv (map pat fs) m
-              in inlinePatternBindings env m'
+inline fs = go . go
+  where 
+    go = uncurry inlinePatternBindings . putInEnv (map pat fs)
 
 putInEnv :: Patterns -> Module -> (Env, Module)
 putInEnv ps m = 

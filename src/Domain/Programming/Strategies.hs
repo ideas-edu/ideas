@@ -47,9 +47,13 @@ fromBinRecurS = label "explicit recursion"  $
 
 fromBinZipWithS = label "sum zipwith" $
   modS [declPatS "fromBin" 
-          (compS sumS (zipWithS # [ opS "*" Nothing Nothing
-                                  , iterateS # [ opS "*" Nothing (Just (intS "2"))
-                                               , intS "1"]])) []]
+          (compS sumS (compS (zipWithS # [ opS "*" Nothing Nothing
+                                         , iterateS # [ opS "*" Nothing (Just (intS "2"))
+                                                      , intS "1"]])
+                             (reverseS)
+                      )
+          ) []
+       ]
 
 
 -- | Strategies derived from the abstract syntax of expressions

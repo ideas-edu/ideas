@@ -27,15 +27,26 @@ incorrect = label "Incorrect" CS.fail
 --------------------------------------------------------------------------------
 -- Categories: good, good with modification, clumsy, incorrect.
 --------------------------------------------------------------------------------
-fromBinsGood = [fromBin, fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7,fromBin8,fromBin9,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin28,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45,fromBin46,fromBin48,fromBin49,fromBin50,fromBin51,fromBin53,fromBin55,fromBin56,fromBin57,fromBin59,fromBin60,fromBin61,fromBin62,fromBin64,fromBin66,fromBin67,fromBin68,fromBin69,fromBin70,fromBin72,fromBin73,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81,fromBin82,fromBin83,fromBin85,fromBin86,fromBin89,fromBin90,fromBin93,fromBin94,fromBin95,fromBin96]
+fromBinsGood = [fromBin, fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7
+               ,fromBin8,fromBin9,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16
+               ,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin28
+               ,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35
+               ,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45
+               ,fromBin46,fromBin49,fromBin53,fromBin55,fromBin57,fromBin59,fromBin61
+               ,fromBin62,fromBin64,fromBin66,fromBin68,fromBin69,fromBin72,fromBin73
+               ,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81
+               ,fromBin82,fromBin83,fromBin85,fromBin89,fromBin90,fromBin93,fromBin95
+               ,fromBin96]
 
-fromBinsGoodModified = [fromBin15', fromBin17', fromBin27']
+fromBinsGoodModified = [ fromBin15', fromBin17', fromBin27', fromBin47', fromBin51'
+                       , fromBin65', fromBin67', fromBin70']
 
-fromBinsTodo = [ fromBin20, fromBin47, fromBin58, fromBin65
+fromBinsTodo = [ fromBin20, fromBin58
                , fromBin87, fromBin91]
 
-fromBinsClumsy = [ fromBin10, fromBin19, fromBin43, fromBin44, fromBin52, fromBin54
-                 , fromBin71, fromBin76, fromBin84, fromBin92
+fromBinsClumsy = [ fromBin10, fromBin19, fromBin43, fromBin44, fromBin48, fromBin50
+                 , fromBin52, fromBin54, fromBin56, fromBin60
+                 , fromBin71, fromBin76, fromBin84, fromBin86, fromBin92, fromBin94
                  ]
 
 fromBinsWrong = [fromBin4, fromBin63, fromBin88]
@@ -90,7 +101,7 @@ fromBin5 =
          ++ "  where bMachten = scanr (*) 1 $ take (length xs - 1) $ repeat base\n")
             "bspaans"
             fromBinZipWithS
-            "Clumsy way of describing iterate with scanr"
+            "Good solution"
 
 fromBin6 = 
   Solution ("fromBin [] = 0\n"
@@ -321,7 +332,7 @@ fromBin33 =
          ++ "    where fromBaseN' _ [] = 0\n"
          ++ "          fromBaseN' base' (c:cs) = c + base' * (fromBaseN' base' cs)\n") 
             "jhorn"
-            fromBinFoldlS -- foldrS
+            fromBinFoldlS
             ""
 
 fromBin34 = 
@@ -353,6 +364,13 @@ fromBin37 =
          ++ "  where fromBin' []     _ = 0\n"
          ++ "        fromBin' (y:ys) z | y == 0 || y == 1 = y * 2^z + fromBin' ys (z-1)\n"
          ++ "                          | otherwise        = error \"Alstublieft binaire getallen gebruiken\"\n") 
+            "jmlinsse"
+            fromBinRecurS
+            "Tupling of the length, good solution, must be a model."
+fromBin37' = 
+  Solution ("fromBin x = fromBin' x (length x - 1)\n"
+         ++ "  where fromBin' []     _ = 0\n"
+         ++ "        fromBin' (y:ys) z = y * 2^z + fromBin' ys (z-1)\n")
             "jmlinsse"
             fromBinRecurS
             ""
@@ -407,7 +425,7 @@ fromBin45 =
          ++ "fromBin' (x:xs) y = x*2^y + (fromBin' xs (y - 1))\n") 
             "ldsbroe-jfklein"
             fromBinRecurS
-            ""
+            "Tupling of length -> like fromBin37"
 
 fromBin46 = 
   Solution ("fromBin []     = 0\n"
@@ -422,6 +440,12 @@ fromBin47 =
            "lsstoel"
            fromBinRecurS
            ""
+fromBin47' = 
+  Solution ("fromBin []     = 0\n"
+        ++ "fromBin (x:xs) = x * 2^(length xs) + fromBin xs\n") 
+           "lsstoel"
+           fromBinRecurS
+           "Different, but also correct, order of patterns. Has to be added to rewriting machinery."
 
 fromBin48 = 
   Solution ("fromBin [] = 0\n"
@@ -429,8 +453,8 @@ fromBin48 =
          ++ "fromBin' _ [] = 0\n"
          ++ "fromBin' a (x:xs) = 2^a * (abs x `mod` 2) + fromBin' (a+1) xs\n") 
             "ltbinsbe"
-            fromBinFoldlS -- foldrS
-            ""
+            fromBinFoldlS
+            "Also tupling, however, in increasing order. Some weird checking and an unnecessary case for []."
 
 fromBin49 = 
   Solution "fromBin = foldl ((+).(*2)) 0" 
@@ -446,12 +470,18 @@ fromBin50 =
          ++ "  where basis = map (*a) l\n") 
             "mahashi-mjhobbel"
             fromBinZipWithS
-            "Inefficient: gebruik van last en init."
+            "Inefficient: unnecessary use of last."
 
 fromBin51 = 
   Solution ("fromBin []     = 0\n"
          ++ "fromBin (x:xs) | x==0 || x==1 = x * 2 ^ (length xs) + (fromBin xs)\n"
          ++ "               | otherwise    = error \"Binaire getallen hebben alleen nullen en enen) dommerd!\"\n") 
+            "maooster"
+            fromBinRecurS
+            ""
+fromBin51' = 
+  Solution ("fromBin []     = 0\n"
+         ++ "fromBin (x:xs) = x * 2 ^ (length xs) + (fromBin xs)\n")
             "maooster"
             fromBinRecurS
             ""
@@ -486,14 +516,14 @@ fromBin55 =
          ++ "                    | otherwise = sum (zipWith (*) (reverse xs) [base^x | x <- [0..] ])\n") 
             "mkroese"
             fromBinZipWithS
-            ""
+            "Good solution, uses power instead of multiplication. Model?"
 
 fromBin56 = 
   Solution ("fromBin [] = 0\n"
          ++ "fromBin getalLijst = 2 * fromBin (init getalLijst) + last getalLijst\n") 
             "mlmbroer-jmwbrete"
             fromBinRecurS
-            ""
+            "Not so efficient solution, certainly not a model solution"
 
 fromBin57 = 
   Solution "fromBin = foldl (\\x y -> 2*x + y) 0\n"
@@ -526,8 +556,8 @@ fromBin60 =
          ++ "fromBim (x:xs) | x < 0 || x > 1 = error \"Niet binair getal!\"\n"
          ++ "               | otherwise = x + 2 * fromBim xs\n") 
             "mtibboel-sabitter"
-            fromBinFoldlS -- foldr
-            ""
+            fromBinFoldlS
+            "Superfluous first case."
 
 fromBin61 = 
   Solution ("fromBin x = maakGetal 2 x 0\n"
@@ -561,12 +591,19 @@ fromBin64 =
 fromBin65 = 
   Solution ("fromBin = fromAap 2\n"
          ++ "fromAap base = foldl (nextInt base) 0\n"
-         ++ "  where nextInt base x y | y >= base = error (concat[\"fromAap: Number \", show y, \" out of range for base \", show base,\".\")\n"
-         ++ "                         | y < 0 = error (concat[\"fromAap: Number \", show y, \" is negative.\")\n"
+         ++ "  where nextInt base x y | y >= base = error \"\"\n"
+         ++ "                         | y < 0 = error \"\"\n"
          ++ "                         | otherwise = x * base + y\n") 
             "ompennin"
             fromBinFoldlS
             ""
+fromBin65' = 
+  Solution ("fromBin = fromAap 2\n"
+         ++ "fromAap base = foldl (nextInt base) 0\n"
+         ++ "  where nextInt base x y = x * base + y\n") 
+            "ompennin"
+            fromBinFoldlS
+            "Removed checks"
 
 fromBin66 = 
   Solution ("fromBin [] = 0\n"
@@ -574,8 +611,8 @@ fromBin66 =
          ++ "fromBin' [] tussen = tussen\n"
          ++ "fromBin' (x:xs) tussen = fromBin' xs (2*tussen+x)\n") 
             "pdstaats-cjplatte"
-            fromBinFoldlS -- foldr
-            ""
+            fromBinFoldlS
+            "Correct soltion, maybe a model."
 
 fromBin67 = 
   Solution ("fromBin    x     =  toInt 2 x\n"
@@ -586,6 +623,14 @@ fromBin67 =
             "pjwjanse-jjvisser"
             fromBinRecurS
             ""
+fromBin67' = 
+  Solution ("fromBin    x     =  toInt 2 x\n"
+         ++ "toInt    _      []                           = 0\n"
+         ++ "toInt    b      (x:xs) = x * (b ^ l) + toInt b xs\n"
+         ++ "                          where l = length xs\n") 
+            "pjwjanse-jjvisser"
+            fromBinRecurS
+            "Removed checks by hand."
 
 fromBin68 = 
   Solution "fromBin xs = foldl' (\\x y -> x*2+y) 0 xs\n"
@@ -608,6 +653,11 @@ fromBin70 =
             "raspauwe"
             fromBinFoldlS
             ""
+fromBin70' = 
+  Solution "fromBin cs = foldl (\\ x y -> x*2 + y) 0 cs\n" 
+           "raspauwe"
+           fromBinFoldlS
+           "Removed check by hand."
 
 fromBin71 = 
   Solution ("fromBin [] = 0\n"
@@ -717,7 +767,7 @@ fromBin85 =
   Solution "fromBin l = sum $ zipWith (*) (map (2^) [0..(length l)-1]) (reverse l)\n"
            "sttimmer"
            fromBinZipWithS
-           ""
+           "Nice solution, a slight difference from the model solution (a map power instead of iterate)."
 
 fromBin86 = 
   Solution ("fromBin [a] = a\n"
@@ -731,7 +781,7 @@ fromBin87 =
          ++ "  where doFromBin (y:ys) z = y * 2^z + doFromBin ys (z +1)\n"
          ++ "        doFromBin [] _ = 0\n") 
             "taveld"
-            fromBinFoldlS -- foldr
+            fromBinFoldlS 
             ""
 
 fromBin88 = 
@@ -756,7 +806,7 @@ fromBin90 =
          ++ "        fB (x:xs) n = (x * 2^n) + fB xs (n-1)\n") 
             "tromberg-rjanssen"
             fromBinRecurS
-            ""
+            "Good solution -> model like fromBin37"
 
 fromBin91 = 
   Solution ("fromBin' (h:[]) _   = h\n"
@@ -787,7 +837,7 @@ fromBin94 =
          ++ "  where powList b = pow 0 where pow n = (b^n):(pow (n+1))\n") 
             "wlelsing"
             fromBinZipWithS
-            ""
+            "Correct solution but a model way of making a list of powers of two. Use of standard higher order functions is preferred."
 
 fromBin95 = 
   Solution ("fromBin [] = 0\n"

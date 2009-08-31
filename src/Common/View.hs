@@ -18,13 +18,14 @@ module Common.View
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
    , listView, conversion, (#>)
+   , propIdempotence, propSoundness
    ) where
 
 import Control.Arrow hiding ((>>>))
 import qualified Control.Category as C
 import Control.Monad
 import Data.Maybe
-
+import Test.QuickCheck
 
 -- For all v::View the following should hold:
 --   1) simplify v a "is equivalent to" a
@@ -148,3 +149,16 @@ conversion f g = makeView (Just . f) g
 (#>) :: (a -> Bool) -> View a b -> View a b
 p #> v = makeView f (build v)
  where f a = guard (p a) >> match v a
+ 
+---------------------------------------------------------------
+-- Properties on views 
+
+propIdempotence :: (Show a, Eq a) => Gen a -> View a b -> Property
+propIdempotence g v = forAll g $ \a -> 
+   let b = simplify v a
+   in b == simplify v b
+
+propSoundness :: Show a => (a -> a -> Bool) -> Gen a -> View a c -> Property
+propSoundness semEq g v = forAll g $ \a -> 
+   let b = simplify v a
+   in semEq a b

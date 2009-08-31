@@ -10,7 +10,7 @@ import Prelude hiding ((^), recip)
 import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
-import Domain.Math.View.Basic hiding (powerView)
+import Domain.Math.View.Basic
 
 ----------------------------------------------------------------------
 -- Simplified views (no side-conditions to worry about)

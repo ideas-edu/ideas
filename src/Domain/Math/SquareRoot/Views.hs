@@ -1,4 +1,4 @@
-module Domain.Math.View.SquareRoot 
+module Domain.Math.SquareRoot.Views
    ( squareRootView, squareRootViewWith
    ) where
 

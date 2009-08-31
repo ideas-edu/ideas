@@ -12,8 +12,6 @@ import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Equation
 import Control.Monad
 import Data.List (nub)
-import qualified Data.IntMap as IM
-import qualified Data.IntSet as IS
 
 ------------------------------------------------------------
 -- Smart constructors
@@ -134,63 +132,16 @@ productView = makeView (Just . second ($ []) . f False) g
    
    g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
 
------------------------------------------------------------
--- Views for powers
-
--- a*x^b, e.g., -3*x^2, but also 3*x, and x
--- This view also merges powers in multiplications
-powerView :: View Expr (Expr, String, Integer)
-powerView = makeView matchPower buildPower
- where
-   matchPower e = do
-      let vs = nub (collectVars e)
-      guard (length vs == 1)
-      (b, xs) <- match productView e
-      let op (a, x, n) y =
-             case y of 
-                Var _                  -> return (a,x,n+1)
-                Sym s [Var _, Nat m] | s == powerSymbol -> 
-                   return (a,x,n+m)
-                Nat 1 :/: b | noVars y -> return (a ./. b, x, n) -- Not nice! instead, xs should be normalized
-                _ | noVars y           -> return (a .*. y, x, n)
-                _ -> Nothing 
-      foldM op (if b then -1 else 1, head vs, 0) xs 
-      
-   buildPower (a, x, n) = a .*. (Var x .^. fromInteger n)
-
--- This view also merges equivalent power factors
-polynomialView :: View Expr (String, IM.IntMap Expr)
-polynomialView = makeView matchPolynomial buildPolynomial
- where
-   matchPolynomial e = do
-      xs <- match sumView e
-      ts <- flip mapM xs $ \x ->
-               fmap Left  (match powerView x) `mplus` 
-               fmap Right (match rationalView x)
-      let vs = nub [ x | Left (_, x, _) <- ts ]
-      guard (length vs == 1)
-      let op (Left (e, _, n)) im = IM.insertWith (.+.) (fromIntegral n) e im
-          op (Right r )       im = IM.insertWith (.+.) 0 (fromRational r) im
-      return (head vs, foldr op IM.empty ts)
-   
-   buildPolynomial (x, im) = build sumView (map f (reverse (IM.toList im)))
-    where f (n, a) = a .*. (Var x .^. fromIntegral n)
-   
--- a*x^2 + b*x + c
-
-quadraticView :: View Expr (String, Rational, Rational, Rational)
-quadraticView = polynomialView >>> makeView matchQ buildQ 
- where
-   matchQ (x, im) = do
-      let keys = IM.keysSet im
-          f n  = IM.findWithDefault 0 n im
-      guard (IS.findMin keys == 0 && IS.findMax keys == 2 && IS.size keys == 3)
-      [a, b, c] <- mapM (match rationalView . f) [2,1,0]
-      return (x, a, b, c)
-   buildQ (x, a, b, c) = (x, IM.fromList [(2, fromRational a), (1, fromRational b), (0, fromRational c)])
-
 -------------------------------------------------------------
 -- Equations
+
+equationSolvedForm :: View (Equation Expr) (String, Expr)
+equationSolvedForm = makeView f g
+ where
+   f (Var x :==: e) | x `notElem` collectVars e =
+      return (x, e)
+   f _ = Nothing
+   g (s, e) = Var s :==: e
 
 linearView :: View Expr (Rational, String, Rational)
 linearView = makeView matchLin g

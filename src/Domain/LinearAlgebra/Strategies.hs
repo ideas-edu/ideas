@@ -17,14 +17,14 @@ import Prelude hiding (repeat)
 import Domain.Math.Expr
 import Domain.Math.Expr.Parser ()
 import Domain.Math.Simplification
-import Domain.Math.View.SquareRoot
+import Domain.Math.SquareRoot.Views
 import Domain.Math.View.Basic hiding (simplify, linearView)
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.LinearView (IsLinear, linearView)
+import Domain.LinearAlgebra.LinearView (linearView)
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context

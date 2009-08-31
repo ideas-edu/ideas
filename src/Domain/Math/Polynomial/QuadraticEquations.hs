@@ -7,23 +7,24 @@ import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Traversable
-import Common.Uniplate (somewhereM, transform, universe)
+import Common.Uniplate (transform, universe)
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
 import Data.Ratio
-import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
+import Domain.Math.Data.Polynomial
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
+import Domain.Math.Polynomial.Generators
+import Domain.Math.Polynomial.LinearEquations (merge, distribute)
+import Domain.Math.Polynomial.Views
 import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.Polynomial.LinearEquations (mergeT, distributionT, solvedEquation)
-import Domain.Math.View.Basic hiding (linearView)
-import Domain.Math.Polynomial.Views hiding (quadraticView)
-import Domain.Math.Numeric.Generators
-import Domain.Math.View.SquareRoot
+import Domain.Math.SquareRoot.Views
+import Domain.Math.View.Basic
+import Domain.Math.View.Power
 import Prelude hiding (repeat, (^), replicate)
 import Test.QuickCheck hiding (label)
 import qualified Domain.Math.Data.SquareRoot as SQ
@@ -54,8 +55,8 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       )
       |> -- top form
       (  label "top form" $ 
-         ruleOnce2 merge2 <|> ruleOnce cancelTerms  <|> ruleOnce2 distribute2
-         <|> ruleOnce2 distributionSquare <|> ruleOnce flipEquation 
+         ruleOnce2 (ruleSomewhere merge) <|> ruleOnce cancelTerms  <|> ruleOnce2 distribute
+         <|> ruleOnce2 (ruleSomewhere distributionSquare) <|> ruleOnce flipEquation 
          <|> ruleOnce moveToLeft
       )
 
@@ -76,7 +77,7 @@ keepEquation (a :==: b) = not (trivial || any falsity (universe a ++ universe b)
 cleanUpExpr :: Expr -> Expr
 cleanUpExpr = smartConstructors . f2 . f1 . smartConstructors . simplify sumView
  where
-   f1 = transform (simplify powerView)
+   f1 = transform (simplify powerFactorView)
    f2 = transform (simplify squareRootView)
 
 ------------------------------------------------------------
@@ -87,20 +88,79 @@ quadraticRules =
    [ ruleOnce noConFormula, ruleOnce noLinFormula, ruleOnce niceFactors
    , ruleOnce simplerA, abcFormula, mulZero, coverUpSquare, ruleOnce coverUpPlus
    , ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpDiv
-   , ruleOnce2 merge2, ruleOnce cancelTerms , ruleOnce2 distribute2
-   , ruleOnce2 distributionSquare, ruleOnce flipEquation 
+   , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms , ruleOnce2 distribute
+   , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft
    ]
 
 ------------------------------------------------------------
--- Rules
+-- General form rules: ax^2 + bx + c = 0
 
-makeSqrt :: Expr -> Expr
-makeSqrt (Nat n) | a*a == n = Nat a
- where a = SQ.isqrt n
-makeSqrt e = sqrt e
+-- ax^2 + bx = 0 
+noConFormula :: Rule (Equation Expr) 
+noConFormula = makeSimpleRule "no constant c" $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   guard (c == 0 && b /= 0)
+   -- also search for constant factor
+   let d = gcdFrac a b
+   return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)) :==: 0)
 
--- x^2 = A
+-- ax^2 + c = 0
+noLinFormula :: Rule (Equation Expr)
+noLinFormula = makeSimpleRule "no linear term b" $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   guard (b == 0 && c /= 0)
+   return $ 
+      if a>0 then fromRational a .*. (Var x .^. 2) :==: fromRational (-c)
+             else fromRational (-a) .*. (Var x .^. 2) :==: fromRational c
+
+-- search for (X+A)*(X+B) decomposition 
+niceFactors :: Rule (Equation Expr)
+niceFactors = makeSimpleRule "nice factors" $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   let sign t@(x, (a, b, c)) = if a== -1 then (x, (1, -b, -c)) else t 
+   (x, (a, rb, rc)) <- liftM sign (match (polyNormalForm rationalView >>> second quadraticPolyView) lhs)
+   guard (a==1)
+   b <- isInt rb
+   c <- isInt rc
+   case [ (Var x + fromInteger i) * (Var x + fromInteger j) | (i, j) <- factors c, i+j == b ] of
+      hd:_ -> return (hd :==: 0)
+      _    -> Nothing
+
+simplerA :: Rule (Equation Expr)
+simplerA = makeSimpleRule "simpler A" $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (x, (ra, rb, rc)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   [a, b, c] <- mapM isInt [ra, rb, rc] 
+   let d = a `gcd` b `gcd` c
+   guard (d `notElem` [0, 1])
+   return (build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0)
+
+abcFormula :: Rule (OrList (Equation Expr))
+abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   let discr = makeSqrt (fromRational (b*b - 4 * a * c))
+   return $ OrList
+      [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
+      , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
+      ]
+
+------------------------------------------------------------
+-- General form rules: expr = 0
+
+mulZero :: Rule (OrList (Equation Expr))
+mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (_, xs) <- match productView lhs
+   guard (length xs > 1)
+   return (OrList [ x :==: 0 | x <- xs ])
+
+------------------------------------------------------------
+-- Constant form rules: expr = constant
+
 coverUpSquare :: Rule (OrList (Equation Expr))
 coverUpSquare = makeSimpleRule "constant square" (onceJoinM f) 
  where
@@ -112,9 +172,6 @@ coverUpSquare = makeSimpleRule "constant square" (onceJoinM f)
          EQ -> return $ OrList [e :==: 0]
          GT -> return $ OrList [e :==: s, e :==: negate s]
    f _ = Nothing
-
-isLinear :: Expr -> Bool
-isLinear e = e `belongsTo` (polyNormalForm rationalView >>> second linearPolyView)
 
 coverUpPlus :: Rule (Equation Expr)
 coverUpPlus = makeSimpleRule "cover-up plus/minus" $ \(lhs :==: rhs) -> do
@@ -153,6 +210,9 @@ coverUpDiv = makeSimpleRule "cover-up division" $ \(lhs :==: rhs) -> do
    guard (a /= 0)
    return (e1 :==: fromRational (b*a))
 
+------------------------------------------------------------
+-- Top form rules: expr1 = expr2
+
 cancelTerms :: Rule (Equation Expr)
 cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
    xs <- match sumView lhs
@@ -162,61 +222,8 @@ cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
    let without as = build sumView (as \\ zs)
    return (without xs :==: without ys)
 
-{-
--- x^n == x^m   or    x^n+x^m ==0    (can this be combined?)
-factorPower :: Rule (OrList (Equation Expr))
-factorPower = makeSimpleRule "factor power" $ onceJoinM $ \(lhs :==: rhs) -> do
-   (e1, x1, n1) <- match powerView lhs
-   (e2, x2, n2) <- match powerView rhs
-   guard (x1==x2 && n1 > 0 && n2 > 0)
-   let m = n1 `min` n2
-       make e n = build powerView (e, x1, n-m)
-   return (OrList [ Var x1 :==: 0, make e1 n1 :==: make e2 n2 ])
- `mplus` do
-   guard (rhs == 0)
-   (a, b) <- match plusView lhs
-   (e1, x1, n1) <- match powerView a
-   (e2, x2, n2) <- match powerView b
-   guard (x1==x2 && n1 > 0 && n2 > 0)
-   let m = n1 `min` n2
-       make e n = build powerView (e, x1, n-m)
-   return (OrList [ Var x1 :==: 0, make e1 n1 .+. make e2 n2 :==: 0 ]) -}
-
-mulZero :: Rule (OrList (Equation Expr))
-mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (_, xs) <- match productView lhs
-   guard (length xs > 1)
-   return (OrList [ x :==: 0 | x <- xs ])
-   
-moveToLeft :: Rule (Equation Expr)
-moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
-   guard (rhs /= 0)
-   let complex = case fmap (filter hasVars) $ match sumView (applyD mergeT lhs) of
-                    Just xs | length xs >= 2 -> True
-                    _ -> False
-   guard (hasVars lhs && (hasVars rhs || complex))
-   return (lhs - rhs :==: 0)
-
--- search for (X+A)*(X+B) decomposition 
-niceFactors :: Rule (Equation Expr)
-niceFactors = makeSimpleRule "nice factors" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   let sign t@(x, (a, b, c)) = if a== -1 then (x, (1, -b, -c)) else t 
-   (x, (a, rb, rc)) <- liftM sign (match (polyNormalForm rationalView >>> second quadraticPolyView) lhs)
-   guard (a==1)
-   b <- isInt rb
-   c <- isInt rc
-   case [ (Var x + fromInteger i) * (Var x + fromInteger j) | (i, j) <- factors c, i+j == b ] of
-      hd:_ -> return (hd :==: 0)
-      _    -> Nothing
-
-factors :: Integer -> [(Integer, Integer)]
-factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
- where h = floor (sqrt (abs (fromIntegral n)))
- 
 distributionSquare :: Rule Expr
-distributionSquare = makeSimpleRule "distribution square" (somewhereM f)
+distributionSquare = makeSimpleRule "distribution square" f
  where
    f (Sym s [x, Nat 2]) | s == powerSymbol = do
       (x, a, b) <- match (linearViewWith rationalView) x
@@ -227,30 +234,34 @@ distributionSquare = makeSimpleRule "distribution square" (somewhereM f)
               )
    f _ = Nothing
 
-simplerA :: Rule (Equation Expr)
-simplerA = makeSimpleRule "simpler A" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, ra, rb, rc) <- match quadraticView lhs
-   [a, b, c] <- mapM isInt [ra, rb, rc] 
-   let d = a `gcd` b `gcd` c
-   guard (d `notElem` [0, 1])
-   return (build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0)
-
-abcFormula :: Rule (OrList (Equation Expr))
-abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
-   let discr = makeSqrt (fromRational (b*b - 4 * a * c))
-   -- case discr of Nat n -> guard (even n); _ -> return () -- no nice numbers (for now)
-   return $ OrList
-      [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
-      , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
-      ]
-
 flipEquation :: Rule (Equation Expr)
 flipEquation = makeSimpleRule "flip equation" $ \(lhs :==: rhs) -> do
    guard (hasVars rhs && noVars lhs)
    return (rhs :==: lhs)
+
+moveToLeft :: Rule (Equation Expr)
+moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
+   guard (rhs /= 0)
+   let complex = case fmap (filter hasVars) $ match sumView (applyD merge lhs) of
+                    Just xs | length xs >= 2 -> True
+                    _ -> False
+   guard (hasVars lhs && (hasVars rhs || complex))
+   return (lhs - rhs :==: 0)
+
+------------------------------------------------------------
+-- Helpers and Rest
+
+makeSqrt :: Expr -> Expr
+makeSqrt (Nat n) | a*a == n = Nat a
+ where a = SQ.isqrt n
+makeSqrt e = sqrt e
+
+isLinear :: Expr -> Bool
+isLinear e = e `belongsTo` (polyNormalForm rationalView >>> second linearPolyView)
+
+factors :: Integer -> [(Integer, Integer)]
+factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
+ where h = floor (sqrt (abs (fromIntegral n)))
 
 isInt :: Rational -> Maybe Integer
 isInt r = do
@@ -260,42 +271,6 @@ isInt r = do
 ------------------------------------------------------------
 -- Testing
 
-------------------------------------------------------------
--- QuadGen
-
-quadGen :: Int -> Gen Expr
-quadGen = symbolGenerator extras syms
- where
-   syms = [plusSymbol, minusSymbol, negateSymbol]
-   extras n = [ ratGen, varGenerator ["x"] ] ++ 
-              [ g | n > 0, g <- [timesGen1, timesGen2, divGen, sqGen] ]
-    where 
-      h = n `div` 2
-      timesGen1 = oneof
-         [ liftM2 (+) (quadGen h) ratGenNZ
-         , liftM2 (+) ratGenNZ (quadGen h)
-         ]
-      timesGen2 = liftM2 (+) (linGen h) (linGen h)
-      divGen    = liftM2 (/) (quadGen h) ratGenNZ
-      sqGen     = liftM (^ 2) (linGen h)
-   
-linGen :: Int -> Gen Expr
-linGen = symbolGenerator extras syms
- where
-   syms = [plusSymbol, minusSymbol, negateSymbol]
-   extras n = [ ratGen, varGenerator ["x"] ] ++ 
-              [ g | n > 0, g <- [timesGen, divGen] ]
-    where 
-      h = n `div` 2
-      timesGen = oneof
-         [ liftM2 (+) (linGen h) ratGenNZ
-         , liftM2 (+) ratGenNZ (linGen h)
-         ]
-      divGen    = liftM2 (/) (linGen h) ratGenNZ
-
-ratGen, ratGenNZ :: Gen Expr
-ratGen   = liftM fromRational (ratioGen 40 10)
-ratGenNZ = liftM fromRational (ratioGenNonZero 40 10)
 
 go = mapM_ f $ zip [0..] (concat quadraticEquations)
  where 
@@ -306,60 +281,22 @@ go = mapM_ f $ zip [0..] (concat quadraticEquations)
       in if all p result then putStrLn (show n++" ok") else error $ show result ++ " for " ++ show n
 
 go2 = quickCheck $ 
-   forAll (sized quadGen) $ \a -> 
-   forAll (sized quadGen) $ \b -> 
+   forAll (sized quadraticGen) $ \a -> 
+   forAll (sized quadraticGen) $ \b -> 
    let start  = OrList [a :==: b]
        OrList result = applyD quadraticStrategy start
        p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
    in if all p result then True else error $ "go2: " ++ show result
     
 
-
-
-
-
-{- linFormula :: Rule (Equation Expr)
-linFormula = makeSimpleRule "linear formula" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, a, b) <- match (linearViewWith rationalView) lhs
-   guard (a /= 0 && (a /= 1 || b /= 0))
-   return (Var "x" :==: fromRational (-b/a)) -}
-   
-noConFormula :: Rule (Equation Expr) -- ax^2 + bx
-noConFormula = makeSimpleRule "no constant c" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
-   guard (c == 0 && b /= 0)
-   -- also search for constant factor
-   let d = gcdFrac a b
-   return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)) :==: 0)
    
 gcdFrac :: Rational -> Rational -> Rational
 gcdFrac r1 r2 = fromMaybe 1 $ do 
    a <- isInt r1
    b <- isInt r2
    return (fromInteger (gcd a b))
-   
-noLinFormula :: Rule (Equation Expr) -- ax^2 + c
-noLinFormula = makeSimpleRule "no linear term b" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
-   guard (b == 0 && c /= 0)
-   return $ 
-      if a>0 then fromRational a .*. (Var x .^. 2) :==: fromRational (-c)
-             else fromRational (-a) .*. (Var x .^. 2) :==: fromRational c
-   
-merge2 :: Rule Expr
-merge2 = makeSimpleRuleList "merge" $ somewhereM $ \a -> do
-   b <- applyAll mergeT a
-   guard (a /= b)
-   return b
+      
 
-distribute2 :: Rule Expr
-distribute2 = makeSimpleRuleList "distribute" $ somewhereM $ \a -> do
-   b <- applyAll distributionT a
-   guard (a /= b)
-   return b
    
 q = putStrLn $ showDerivationWith show (ignoreContext $ unlabel quadraticStrategy) $ 
    let x=Var "x" in OrList $ return $ 
@@ -399,4 +336,4 @@ qView2 = makeView f undefined
                             ]
                             
 solvedList :: OrList (Equation Expr) -> Bool
-solvedList (OrList xs) = all solvedEquation xs
+solvedList (OrList xs) = all (`belongsTo` equationSolvedForm) xs

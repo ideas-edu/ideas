@@ -12,12 +12,13 @@ import Domain.Math.ExercisesDWO (higherDegreeEquations)
 import Domain.Math.Polynomial.QuadraticEquations (cleanUp)
 import qualified Domain.Math.Polynomial.QuadraticEquations as QE
 import Domain.Math.Polynomial.Views
-import Domain.Math.View.SquareRoot
+import Domain.Math.SquareRoot.Views
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic
+import Domain.Math.View.Power
 import Domain.Math.Data.Equation
 import Control.Monad
 import Domain.Math.Data.Polynomial
@@ -42,19 +43,19 @@ powerZero = makeSimpleRule "power zero" (onceJoinM f)
 -- Factor-out variable on both sides of the equation
 powerFactor :: Rule (OrList (Equation Expr))
 powerFactor = makeSimpleRule "power factor" $ onceM $ onceM $ \e -> do
-   xs <- match sumView e >>= mapM (match powerView)
-   let (as, vs, ns) = unzip3 xs
+   xs <- match sumView e >>= mapM (match powerFactorView)
+   let (vs, as, ns) = unzip3 xs
        r = minimum ns
        v = variable (head vs)
-       f a n = a*v^fromInteger (n-r)
+       f a n = a*v^fromIntegral (n-r)
    unless (length xs > 1 && length (nub vs) == 1 && r >= 1) Nothing
    -- also search for gcd constant
    case mapM (match integerView) as of 
       Just is | g > 1 -> 
-         return (fromInteger g * v^fromInteger r * foldr1 (+) (zipWith f (map (fromInteger . (`div` g)) is) ns))
+         return (fromInteger g * v^fromIntegral r * foldr1 (+) (zipWith f (map (fromIntegral . (`div` g)) is) ns))
        where g = foldr1 gcd is
       _ -> 
-         return (v^fromInteger r * build sumView (zipWith f as ns))
+         return (v^fromIntegral r * build sumView (zipWith f as ns))
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))

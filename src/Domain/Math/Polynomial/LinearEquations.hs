@@ -1,5 +1,5 @@
 module Domain.Math.Polynomial.LinearEquations 
-  ( linearStrategy, solvedEquation, merge 
+  ( linearStrategy, merge 
   , minusT, timesT, divisionT, distributionT, distribute, mergeT
   , linearRules, linearEquations, testAll
   ) where 
@@ -18,7 +18,7 @@ import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Parser ()
 import Domain.Math.View.Basic
 import Control.Monad (guard)
-import Data.List  (partition, sort)
+import Data.List  (partition)
 import Data.Maybe (catMaybes)
 
 ------------------------------------------------------------
@@ -27,7 +27,7 @@ import Data.Maybe (catMaybes)
 linearStrategy :: LabeledStrategy (Context (Equation Expr))
 linearStrategy = ignoreContext $ cleanUpStrategy (fmap smartConstructors) $
    label "Linear Equation" 
-    $  label "Phase 1" (repeat (removeDivision <|> distribute <|> merge))
+    $  label "Phase 1" (repeat (removeDivision <|> ruleOnce distribute <|> ruleMulti merge))
    <*> label "Phase 2" (try varToLeft <*> try conToRight <*> try scaleToOne)
 
 -------------------------------------------------------
@@ -69,7 +69,7 @@ mergeT = makeTrans "merge" $ return . simplifyWith f sumView
 
 linearRules :: [Rule (Context (Equation Expr))]
 linearRules = map ignoreContext
-   [ removeDivision, merge, distribute
+   [ removeDivision, ruleMulti merge, ruleOnce distribute
    , varToLeft, conToRight, scaleToOne
    ]
 
@@ -100,34 +100,21 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: r
    case catMaybes (map f (concat zs)) of
       [] -> Nothing
       ns -> return (fromInteger (foldr1 lcm ns))
-
-{- distribute :: Rule Expr
-distribute = makeSimpleRuleList "distribution" $ somewhereM $ \a -> do
-   e <- applyM distributionT a
-   return (applyD mergeT e)
+   
+distribute :: Rule Expr
+distribute = makeSimpleRuleList "distribution" $
+   somewhereM (\x -> applyM distributionT x >>= applyM mergeT)
 
 merge :: Rule Expr
-merge = makeSimpleRule "merge similar terms" $ id $ \old -> do
-   new <- applyM mergeT old
-   guard (old /= new)
-   return new -}
-   
-distribute :: Rule (Equation Expr)
-distribute = makeSimpleRuleList "distribution" $ \(lhs :==: rhs) -> 
-   let f = somewhereM (\x -> applyM distributionT x >>= applyM mergeT)
-   in [ new :==: rhs | new <- f lhs ] ++
-      [ lhs :==: new | new <- f rhs ]
-
-merge :: Rule (Equation Expr)
 merge = makeSimpleRule "merge similar terms" $ \old -> do
-   let new = fmap (applyD mergeT) old
+   new <- apply mergeT old
    guard (old /= new)
    return new   
 
 
 ----------------------------------------------------------------------
 -- Expr normalization
-   
+   {-
 normalizeExpr :: Expr -> Expr
 normalizeExpr a =
    case (match sumView a, match productView a) of
@@ -135,8 +122,8 @@ normalizeExpr a =
          build sumView (sort $ normalizeSum $ map normalizeExpr xs)
       (_, Just (b, ys)) | length (filter (/= 1) ys) > 1 -> 
          build productView (b, sort $ normalizeProduct $ map normalizeExpr ys)
-      _ -> a
-
+      _ -> a 
+-}
 normalizeProduct :: [Expr] -> [Expr]
 normalizeProduct ys = f [ (match rationalView y, y) | y <- ys ]
   where  f []                    = []
@@ -166,14 +153,10 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
       (js, rest) = partition (maybe False ((==a) . snd) . fst) xs
       rs  = r:map fst (catMaybes (map fst js))
       new | null js   = e
-          | otherwise = build rationalView (sum rs) .*. a
+          | otherwise = build rationalView (sum rs) .*. a 
           
 ----------------------------------------------------------------------
 -- Substitution (for checking) 
-
-solvedEquation :: Equation Expr -> Bool
-solvedEquation (Var x :==: rhs) = x `notElem` collectVars rhs
-solvedEquation _                = False
  
 solveAndCheck :: Equation Expr -> Equation Expr
 solveAndCheck eq = 

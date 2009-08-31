@@ -29,7 +29,7 @@ module Common.Transformation
    , inverseRule, transformations, getRewriteRules
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
-   , ruleOnce, ruleOnce2
+   , ruleOnce, ruleOnce2, ruleMulti, ruleSomewhere
      -- * QuickCheck
    , checkRule, checkRuleSmart
    ) where
@@ -41,6 +41,7 @@ import Data.Maybe
 import Test.QuickCheck hiding (arguments)
 import Common.Apply
 import Common.Utils
+import Common.Uniplate (Uniplate, somewhereM)
 import Control.Monad
 import Common.Rewriting
 import Common.Traversable
@@ -429,13 +430,28 @@ liftFunction lp f a =
 
 -- | Lift a rule using the Once type class
 ruleOnce :: Once f => Rule a -> Rule (f a)
-ruleOnce r = makeSimpleRuleList (name r) $ onceM $ 
-   map (doAfterHook r) . applyAll r . doBeforeHook r
+ruleOnce r = makeSimpleRuleList (name r) $ onceM $ applyAll r
 
 -- | Apply a rule once (in two functors)
 ruleOnce2 :: (Once f, Once g) => Rule a -> Rule (f (g a))
 ruleOnce2 = ruleOnce . ruleOnce
-                            
+
+-- | Apply at multiple locations, but at least once
+ruleMulti :: (Switch f, Crush f) => Rule a -> Rule (f a)
+ruleMulti r = makeSimpleRuleList (name r) $ multi $ applyAll r
+
+multi :: (Switch f, Crush f) => (a -> [a]) -> f a -> [f a]
+multi f a =
+   let g a = case f a of 
+                [] -> [(False, a)]
+                xs -> zip (repeat True) xs
+       xs = switch (fmap g a)
+       p = any fst . crush
+   in map (fmap snd) (filter p xs)
+
+ruleSomewhere :: Uniplate a => Rule a -> Rule a
+ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
+
 -----------------------------------------------------------
 --- QuickCheck
 

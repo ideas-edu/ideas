@@ -80,3 +80,21 @@ testFrac = quickCheck $ forAll (sized rationalGenerator) p1
 
 p1 e = 
    (e `belongsTo` fractionForm) == (e `belongsTo` rationalRelaxedForm && not (e `belongsTo` integerNormalForm)) 
+   
+t1 = quickCheck $ propIdempotence (sized integerGenerator) integerView
+t2 = quickCheck $ propSoundness semEqDouble (sized integerGenerator) integerView
+t3 = quickCheck $ propIdempotence (sized rationalGenerator) rationalView
+t4 = quickCheck $ propSoundness semEqDouble (sized rationalGenerator) rationalView
+
+semEqDouble :: Expr -> Expr -> Bool
+semEqDouble a b = 
+   case (match doubleView a, match doubleView b) of
+      (Just a, Just b)   -> a ~= b
+      (Nothing, Nothing) -> True
+      _                  -> False
+ where
+   delta = 0.0001
+ 
+   (~=) :: Double -> Double -> Bool
+   a ~= b | abs a < delta || abs b < delta = True
+          | otherwise = abs (1 - (a/b)) < delta

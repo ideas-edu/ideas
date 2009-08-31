@@ -1,5 +1,5 @@
 module Common.Traversable 
-   ( Once(..), Switch(..), OnceJoin(..), useOnceJoin
+   ( Once(..), Switch(..), Crush(..), OnceJoin(..), useOnceJoin
    ) where
 
 import Control.Monad
@@ -73,6 +73,24 @@ instance Switch IM.IntMap where
       let (ns, ms) = unzip (IM.toList m)
       as <- sequence ms 
       return $ IM.fromAscList $ zip ns as
+
+-----------------------------------------------------------
+-- * Type class |Crush|
+
+class Functor f => Crush f where
+   crush :: f a -> [a]
+
+instance Crush [] where
+   crush = id
+
+instance Crush Maybe where
+   crush = maybe [] return
+
+instance Crush (M.Map a) where
+   crush = M.elems
+
+instance Crush IM.IntMap where
+   crush = IM.elems
 
 -----------------------------------------------------------
 -- * Type class |OnceJoin|

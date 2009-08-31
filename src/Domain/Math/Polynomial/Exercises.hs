@@ -25,7 +25,7 @@ linearExercise = makeExercise
    , parser        = parseWith (pEquation pExpr)
    , equality      = \a b -> a==b -- fmap normalizeExpr a == fmap normalizeExpr b
    , equivalence   = \a b -> viewEquivalent equationView a b || a==b
-   , finalProperty = solvedEquation
+   , finalProperty = (`belongsTo` equationSolvedForm)
    , ruleset       = linearRules
    , strategy      = linearStrategy
    , termGenerator = ExerciseList (concat linearEquations)

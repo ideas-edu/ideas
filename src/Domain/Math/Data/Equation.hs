@@ -36,6 +36,9 @@ instance Once Equation where
 instance Switch Equation where 
    switch (ma :==: mb) = liftM2 (:==:) ma mb
    
+instance Crush Equation where
+   crush (a :==: b) = [a, b]
+   
 instance Show a => Show (Equation a) where
    show (x :==: y) = show x ++ " == " ++ show y
  

@@ -37,9 +37,9 @@ optimise = transformBi optimiseFunBindings
     optimiseFunBindings d@(Declaration_FunctionBindings r fbs) =
       let invArgsLists = map (reverse . sort) $ catMaybes $ invariantArgs fbs
           fname = funName $ head fbs
-      in if not (null invArgsLists) then
-           let invArgs = map head $ invArgsLists
-               d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) 
+          invArgs = map head $ invArgsLists               
+      in if not (null invArgs) then
+           let d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) 
                           d invArgsLists
                invPs = let err = error "Anonymise.hs: no conversion from expr to pat."
                        in map (fromMaybe err . expr2pat) invArgs

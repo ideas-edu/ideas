@@ -106,6 +106,7 @@ normalise fs = rewrites . preprocess
                         >->  applicationReduce 
                         >->  infix2prefix 
                         >->  commutativeOps)
+                       >>->  cleanUpLet
 
 -- Choice do all rewrites in a Module or just one and let it to the rewriteBi
 liftRule :: (Data a, Data b) => (a -> Maybe a) -> b -> Maybe b
@@ -207,6 +208,15 @@ commutativeOps expr =
     isOp op n = case op of
                   Expression_Variable _ (Name_Operator _ [] n') -> n == n'
                   _ -> False
+
+cleanUpLet :: Declaration -> Maybe Declaration
+cleanUpLet x = 
+  case x of
+    Declaration_PatternBinding _ _ 
+      (RightHandSide_Expression _ (Expression_Let _ [decl] (Expression_Variable _ _)) 
+        MaybeDeclarations_Nothing) -> Just decl
+    _ -> Nothing
+
 
 --------------------------------------------------------------------------------
 -- Inlining

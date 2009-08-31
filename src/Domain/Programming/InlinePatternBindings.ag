@@ -17,7 +17,8 @@
 INCLUDE "syntax/UHA_Syntax.ag"
 
 imports{
-import Data.Map hiding (map)
+import Data.List (partition)
+import Data.Map hiding (map, partition, null)
 import Data.Maybe
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules ()
@@ -37,13 +38,14 @@ ATTR Module Body
 
 SEM RightHandSide 
   | Expression expression . env = updateEnv @me @lhs.env
-               lhs . result = removeWhere @result-- sloop de wheres eraf
+               lhs . result    = removeWhere @result -- sloop de wheres eraf
 
 SEM Expression
   | Variable lhs . result = case lookup @me @lhs.env of
                               Just n -> n
                               _      -> @me
-  | Let expression . env = updateEnv @me @lhs.env
+  | Let expression . env    = updateEnv @me @lhs.env
+               lhs . result = removeLet @result
 
 -- utility functions
 {
@@ -91,4 +93,15 @@ removeWhere rhs =
       RightHandSide_Expression r expr MaybeDeclarations_Nothing
     RightHandSide_Guarded r gexpr w ->
       RightHandSide_Guarded r gexpr MaybeDeclarations_Nothing
+
+removeLet :: Expression -> Expression
+removeLet (Expression_Let r ds expr) = 
+  let (patBinds, funBinds) = partition isPatDecl ds
+      isPatDecl d = case d of
+                      Declaration_PatternBinding _ _ _ -> True
+                      _                                -> False
+  in if null funBinds then
+       expr 
+     else
+       Expression_Let r funBinds expr
 }

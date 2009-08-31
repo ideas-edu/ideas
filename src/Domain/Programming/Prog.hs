@@ -121,10 +121,10 @@ normalise fs = rewrites . preprocess
   where
     preprocess =  inline fs . makeBetaReducible fs . removeRanges . removeParens
 --    preprocess =  inline fs . anonymise . removeRanges . removeParens
-    rewrites = rewriteBi $  (etaReduce 
+    rewrites = rewriteBi $  (applicationReduce
                         >->  betaReduce 
                         >->  lambdaReduce 
-                        >->  applicationReduce 
+                        >->  etaReduce
                         >->  infix2prefix 
                         >->  commutativeOps)
                        >>->  cleanUpLet
@@ -163,11 +163,13 @@ etaReduce expr =
         return f
     Expression_Lambda _ [Pattern_Variable _ p] 
       (Expression_NormalApplication r f args) -> 
-        case last args of
-          Expression_Variable _ v -> do
-            guard (p == v)
-            return $ Expression_NormalApplication r f $ init args
-          _  -> Nothing
+        if not (null args) then
+          case last args of
+            Expression_Variable _ v -> do
+              guard (p == v)
+              return $ Expression_NormalApplication r f $ init args
+            _  -> Nothing
+        else Nothing
     _ -> Nothing
 
 -- beta reduction, e.g. (\x -> x + x) 42 => 42 + 42

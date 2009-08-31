@@ -27,15 +27,15 @@ incorrect = label "Incorrect" CS.fail
 --------------------------------------------------------------------------------
 -- Categories: good, good with modification, clumsy, incorrect.
 --------------------------------------------------------------------------------
-fromBinsGood = [fromBin, fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7,fromBin8,fromBin9,fromBin10,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16,fromBin17,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin27,fromBin28,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45,fromBin46,fromBin48,fromBin49,fromBin50,fromBin51,fromBin53,fromBin55,fromBin56,fromBin57,fromBin59,fromBin60,fromBin61,fromBin62,fromBin64,fromBin66,fromBin67,fromBin68,fromBin69,fromBin70,fromBin72,fromBin73,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81,fromBin82,fromBin83,fromBin85,fromBin86,fromBin89,fromBin90,fromBin93,fromBin94,fromBin95,fromBin96]
+fromBinsGood = [fromBin, fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7,fromBin8,fromBin9,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin28,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45,fromBin46,fromBin48,fromBin49,fromBin50,fromBin51,fromBin53,fromBin55,fromBin56,fromBin57,fromBin59,fromBin60,fromBin61,fromBin62,fromBin64,fromBin66,fromBin67,fromBin68,fromBin69,fromBin70,fromBin72,fromBin73,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81,fromBin82,fromBin83,fromBin85,fromBin86,fromBin89,fromBin90,fromBin93,fromBin94,fromBin95,fromBin96]
 
-fromBinsGoodModified = []
+fromBinsGoodModified = [fromBin15', fromBin17', fromBin27']
 
-fromBinsTodo = [ fromBin15, fromBin20, fromBin47, fromBin58, fromBin65
+fromBinsTodo = [ fromBin20, fromBin47, fromBin58, fromBin65
                , fromBin87, fromBin91]
 
-fromBinsClumsy = [ fromBin19, fromBin43, fromBin44, fromBin52, fromBin54, fromBin71
-                 , fromBin76, fromBin84, fromBin92
+fromBinsClumsy = [ fromBin10, fromBin19, fromBin43, fromBin44, fromBin52, fromBin54
+                 , fromBin71, fromBin76, fromBin84, fromBin92
                  ]
 
 fromBinsWrong = [fromBin4, fromBin63, fromBin88]
@@ -124,7 +124,7 @@ fromBin10 =
          ++ "fromBin x@(y:ys) = y * 2^(length x - 1) + fromBin ys\n")
             "dgerritz"
             fromBinRecurS
-            ""
+            "Clumsy way of calculating the length."
 
 fromBin11 = 
   Solution ("fromBin []       =  0\n"
@@ -161,6 +161,12 @@ fromBin15 =
             "ewjmulde"
             fromBinFoldlS
             ""
+fromBin15' = 
+  Solution ("fromNumeralSystem base input = foldl ((+).(base*)) 0 input\n"
+         ++ "fromBin = fromNumeralSystem 2\n")
+            "ewjmulde"
+            fromBinFoldlS
+            "Rewritten by hand: removed checks."
 
 fromBin16 = 
   Solution ("fromBin [] = 0\n"
@@ -168,7 +174,7 @@ fromBin16 =
          ++ "               |otherwise = fromBin xs\n")
             "fcbijlsm"
             fromBinRecurS
-            ""
+            "This solutions uses a guard instead of a multiplication. Rewrite?"
 
 fromBin17 = 
   Solution ("fromBin = digitsToInt 2\n"
@@ -178,6 +184,12 @@ fromBin17 =
             "fldenis"
             fromBinFoldlS
             ""
+fromBin17' = 
+  Solution ("fromBin = digitsToInt 2\n"
+         ++ "digitsToInt b dgts = foldl (\\x y -> b*x + y) 0 dgts\n") 
+            "fldenis"
+            fromBinFoldlS
+            "Rewritten by hand: removed checks."
 
 fromBin18 = 
   Solution ("fromBin [] = 0\n"
@@ -185,14 +197,14 @@ fromBin18 =
          ++ "fromBin (s:t:staart) = fromBin ((2*s+t):staart)\n")
             "fsteeg-hkbarnev"
             fromBinRecurS
-            ""
+            "Good solution, might be a model solution."
 
 fromBin19 = 
   Solution ("fromBin  []    = 0\n"
          ++ "fromBin (x:xs) = 2 ^ (length (x:xs) -1 ) * x + fromBin xs")
             "gcpzunde"
             fromBinRecurS
-            ""
+            "Clumsy length calculation."
 
 fromBin20 = 
   Solution ("fromBin = fromBaseI 2\n"
@@ -203,7 +215,7 @@ fromBin20 =
          ++ "                           | otherwise = 1\n") 
             "gdijkstr-rjhensin"
             fromBinFoldlS
-            ""
+            "Unnecessary calculations, like abs and sign."
 
 fromBin21 = 
   Solution ("fromBin []     = 0\n"
@@ -234,7 +246,7 @@ fromBin24 =
          ++ "                                      | otherwise = error \"number is greater then base\"\n") 
             "hmpaasse"
             fromBinFoldlS
-            ""
+            "This solution does not compile in Helium, due to the mapAccumR."
 
 fromBin25 = 
   Solution ("fromBin []     = 0\n"
@@ -250,12 +262,19 @@ fromBin26 =
          ++ "fromBinMetHulp (x:xs) hulp = fromBinMetHulp xs ((hulp*2) + (x))\n") 
             "jcgoosen"
             fromBinRecurS
-            ""
+            "Another good solutions, similar to fromBin18."
 
 fromBin27 = 
   Solution ("fromBin [] = 0\n"
          ++ "fromBin (x:xs) = let y = length xs\n"
          ++ "                 in if (x == 1 || x == 0) then x * 2 ^ y + fromBin xs else error \"niet binair\"\n") 
+            "jcgsmits"
+            fromBinRecurS
+            ""
+fromBin27' = 
+  Solution ("fromBin [] = 0\n"
+         ++ "fromBin (x:xs) = let y = length xs\n"
+         ++ "                 in x * 2 ^ y + fromBin xs\n") 
             "jcgsmits"
             fromBinRecurS
             ""
@@ -286,8 +305,8 @@ fromBin31 =
          ++ "        fromBinHulp n (i:is) | i < 2     = (i*2^n) + fromBinHulp (n+1) is\n"
          ++ "                             | otherwise = undefined\n") 
             "jgageldo"
-            fromBinFoldlS -- should be foldrS
-            ""
+            fromBinFoldlS
+            "Fine solution, almost a foldr."
 
 fromBin32 = 
   Solution ("fromBin [] = 0\n"

@@ -89,7 +89,7 @@ lambda ps expr = Expression_Lambda noRange ps expr
 letItBe ds expr = Expression_Let noRange ds expr
 
 pp = putStrLn . ppModule
-compExercise = (\(Right m)->m) . compile . fst
+compExercise = (\(Right m)->m) . compile 
 
 fromMaybeDecl :: MaybeDeclarations -> Maybe Declarations
 fromMaybeDecl m = 

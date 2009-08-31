@@ -60,7 +60,15 @@ foldlS consS nilS
             ] -- in
             ( varS "f" # [nilS] )
        -- Bastiaan's theorem, ie. foldl op e == foldr (flip op) e . reverse
-   <|> compS (varS "foldr" # [flipS consS, nilS]) (varS "reverse")
+   <|> compS (foldrS (flipS consS) nilS) (varS "reverse")
+
+foldrS :: ModuleS -> ModuleS -> ModuleS
+foldrS consS nilS  =  (varS "foldr" # [consS, nilS])
+                  <|> letS [ declFunS [ funS "f" [ patConS "[]" ] nilS []
+                                      , funS "f" [ patInfixConS (patS "x") ":" (patS "xs") ] 
+                                                 (consS # [ varS "x", varS "f" # [ varS "xs" ] ] ) [] 
+                                      ]
+                           ] {- in -} ( varS "f" )
 
 -- zie Hutton's paper voor nog een foldl def, ook inefficiente variant meenemen (foldl op e [] = ..)?
 

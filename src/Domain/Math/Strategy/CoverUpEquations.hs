@@ -12,7 +12,7 @@ import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.ExercisesDWO
 import Domain.Math.Data.Equation
-import Domain.Math.Strategy.QuadraticEquations (solvedList)
+import Domain.Math.Polynomial.QuadraticEquations (solvedList)
 import Domain.Math.Data.OrList
 import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbols

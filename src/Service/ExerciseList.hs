@@ -16,9 +16,7 @@ import qualified Domain.RelationAlgebra as RA
 import qualified Domain.Math.DerivativeExercise as Math
 import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Strategy.CoverUpEquations as Math
-import qualified Domain.Math.Strategy.LinearEquations as Math
-import qualified Domain.Math.Strategy.QuadraticEquations as Math
-import qualified Domain.Math.Strategy.HigherDegreeEquations as Math
+import qualified Domain.Math.Polynomial.Exercises as Math
 
 -- List with all known exercises
 exerciseList :: [Some Exercise]
@@ -41,9 +39,9 @@ openMathExercises =
      OMEX Math.naturalExercise, OMEX Math.integerExercise
    , OMEX Math.rationalExercise, OMEX Math.fractionExercise
    , OMEX Math.coverUpExercise
-   , OMEX Math.linearEquationExercise
-   , OMEX Math.quadraticEquationExercise
-   , OMEX Math.higherDegreeEquationExercise
+   , OMEX Math.linearExercise
+   , OMEX Math.quadraticExercise
+   , OMEX Math.higherDegreeExercise
    , OMEX Math.derivativeExercise
      -- linear algebra
    , OMEX LA.reduceMatrixExercise

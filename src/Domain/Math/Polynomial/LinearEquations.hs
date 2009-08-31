@@ -1,12 +1,12 @@
-module Domain.Math.Strategy.LinearEquations 
-  ( linearEquationExercise, solveEquation, solvedEquation, merge 
+module Domain.Math.Polynomial.LinearEquations 
+  ( solveEquation, solvedEquation, merge 
   , minusT, timesT, divisionT, distributionT, distribute, mergeT
+  , lineqRules, linearEquations
   ) where 
 
 import Prelude hiding (repeat)
 import Common.Apply
 import Common.Context
-import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation
 import Common.Uniplate
@@ -15,30 +15,11 @@ import Domain.Math.ExercisesDWO (linearEquations)
 import Domain.Math.Expr
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Expr.Symbolic
-import Domain.Math.Expr.Parser
+import Domain.Math.Expr.Parser ()
 import Domain.Math.View.Basic
 import Control.Monad (guard)
 import Data.List  (partition, sort)
 import Data.Maybe (catMaybes)
-import Test.QuickCheck hiding (label)
-
-------------------------------------------------------------
--- Exercise
-
-linearEquationExercise :: Exercise (Equation Expr)
-linearEquationExercise = makeExercise 
-   { identifier    = "lineq"
-   , domain        = "math"
-   , description   = "solve a linear equation"
-   , status        = Experimental
-   , parser        = parseWith (pEquation pExpr)
-   , equality      = \a b -> a==b -- fmap normalizeExpr a == fmap normalizeExpr b
-   , equivalence   = \a b -> viewEquivalent equationView a b || a==b
-   , finalProperty = solvedEquation
-   , ruleset       = lineqRules
-   , strategy      = solveEquation
-   , termGenerator = ExerciseList (concat linearEquations)
-   }
 
 ------------------------------------------------------------
 -- Strategy
@@ -200,6 +181,3 @@ solveAndCheck eq =
 testAll = all f (concat linearEquations)
  where f eq = case solveAndCheck eq of
                  a :==: b -> if a==b then True else error (show (eq, a, b))
-
-main :: IO ()
-main = printDerivations linearEquationExercise (concat linearEquations)

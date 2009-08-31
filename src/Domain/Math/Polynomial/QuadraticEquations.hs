@@ -1,8 +1,7 @@
-module Domain.Math.Strategy.QuadraticEquations where
+module Domain.Math.Polynomial.QuadraticEquations where
 
 import Common.Apply
 import Common.Context
-import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Traversable
@@ -11,38 +10,18 @@ import Control.Monad
 import Data.List ((\\), sort, nub)
 import Data.Ratio
 import Domain.Math.Data.Equation
-import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
 import Domain.Math.View.SquareRoot
-import Domain.Math.Strategy.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
+import Domain.Math.Polynomial.LinearEquations (solvedEquation, merge, distributionT, minusT, timesT, divisionT, solveEquation)
 import Domain.Math.Data.OrList
-import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Polynomial 
 import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.View.Polynomial (polyView, quadraticViewWith, linearViewWith)
+import Domain.Math.Polynomial.Views (polyView, quadraticViewWith, linearViewWith)
 import Domain.Math.View.Basic
 import Prelude hiding (repeat, (^))
 import qualified Prelude
 import qualified Domain.Math.Data.SquareRoot as SQ
-
-------------------------------------------------------------
--- Exercise
-
-quadraticEquationExercise :: Exercise (OrList (Equation Expr))
-quadraticEquationExercise = makeExercise 
-   { identifier    = "quadreq"
-   , domain        = "math"
-   , description   = "solve a quadratic equation"
-   , status        = Experimental
-   , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = (==) 
-   , equivalence   = viewEquivalent qView
-   , finalProperty = solvedList
-   , ruleset       = map ignoreContext allRules
-   , strategy      = ignoreContext solverQ
-   , termGenerator = ExerciseList (map (OrList . return) $ concat quadraticEquations)
-   }
 
 ------------------------------------------------------------
 -- Strategy and liftings
@@ -92,8 +71,8 @@ oneSide f (lhs :==: rhs)
 ------------------------------------------------------------
 -- Rule collection
 
-allRules :: [Rule (OrList (Equation Expr))]
-allRules = 
+quadeqRules :: [Rule (OrList (Equation Expr))]
+quadeqRules = 
    [ coverUpPlus, coverUpTimes, coverUpNegate, coverUpSquare
    , coverUpDiv, cancelTerms, factorPower, mulZero, flipEquation
    , moveToLeft, niceFactors, distribution, distributionSquare 
@@ -284,28 +263,6 @@ isInt r = do
 
 ------------------------------------------------------------
 -- Testing
-
-testAll = drop 0 $ zipWith f [1..] (concat quadraticEquations)
- where
-   f i e
-      | not (solvedList (solve e)) = 
-           error (show e ++ "  becomes   " ++ show (solve e))
-      | testD e   = 0
-      | otherwise = i
-
-testD :: Equation Expr -> Bool
-testD e = 
-   case derivations (unlabel solverQ) (OrList [e]) of
-      [] -> error "no derivation"
-      (a, ps):_ -> 
-         let xs = a : map snd ps
-         in case [ (x, y) | x <- xs, y <- xs, not (equivalence quadraticEquationExercise x y) ] of
-               []   -> False
-               (x,y):_ -> error $ show (x, y, match qView x, match qView y) -- (simplify qView x) ++ "    is not    " ++ show (simplify qView y)
-
-main :: IO ()
-main = printDerivations quadraticEquationExercise xs 
- where xs = map (OrList . return) (concat quadraticEquations)
  
 qView :: View (OrList (Equation Expr)) [SQ.SquareRoot Rational]
 qView = makeView f g

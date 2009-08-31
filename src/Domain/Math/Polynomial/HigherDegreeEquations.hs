@@ -1,22 +1,20 @@
-module Domain.Math.Strategy.HigherDegreeEquations where
+module Domain.Math.Polynomial.HigherDegreeEquations where
 
 import Prelude hiding ((^), repeat)
 import Data.List (sort, nub, (\\))
 import Data.Maybe
 import Common.Context
-import Common.Exercise
 import Common.Utils (safeHead)
 import Common.Traversable
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.Strategy.QuadraticEquations (solvedList, cleanUpOrs)
-import qualified Domain.Math.Strategy.QuadraticEquations as QE
-import Domain.Math.View.Polynomial
+import Domain.Math.Polynomial.QuadraticEquations (cleanUpOrs)
+import qualified Domain.Math.Polynomial.QuadraticEquations as QE
+import Domain.Math.Polynomial.Views
 import Domain.Math.View.SquareRoot
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic
@@ -24,30 +22,12 @@ import Domain.Math.Data.Equation
 import Control.Monad
 import Domain.Math.Data.Polynomial
 
-------------------------------------------------------------
--- Exercise
-
-higherDegreeEquationExercise :: Exercise (OrList (Equation Expr))
-higherDegreeEquationExercise = makeExercise 
-   { identifier    = "higherdegree"
-   , domain        = "math"
-   , description   = "solve an equation (higher degree)"
-   , status        = Experimental
-   , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = (==) 
-   , equivalence   = eqHD
-   , finalProperty = solvedList
-   , ruleset       = map ignoreContext allRules
-   , strategy      = ignoreContext equationsStrategy
-   , termGenerator = ExerciseList (map (OrList . return) higherDegreeEquations)
-   }
-
 -----------------------------------------------------------
 -- Strategy
 
 equationsStrategy :: LabeledStrategy (OrList (Equation Expr))
 equationsStrategy = cleanUpStrategy cleanUpOrs $
-   label "higher degree" $ repeat (alternatives allRules)
+   label "higher degree" $ repeat (alternatives hdeqRules)
  
 -----------------------------------------------------------
 
@@ -86,12 +66,8 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
 
 -----------------------
    
-allRules :: [Rule (OrList (Equation Expr))]
-allRules = [powerZero, powerFactor, sameFactor] ++ QE.allRules
-
-main :: IO ()
-main = printDerivations higherDegreeEquationExercise xs 
- where xs = map (OrList . return) higherDegreeEquations
+hdeqRules :: [Rule (OrList (Equation Expr))]
+hdeqRules = [powerZero, powerFactor, sameFactor] ++ QE.quadeqRules
  
 testAll :: IO ()
 testAll = flip mapM_ higherDegreeEquations $ \eq ->

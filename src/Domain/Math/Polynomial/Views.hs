@@ -1,4 +1,4 @@
-module Domain.Math.View.Polynomial 
+module Domain.Math.Polynomial.Views
    ( polyView, polyViewFor, polyViewWith, polyViewForWith
    , quadraticView, quadraticViewFor, quadraticViewWith, quadraticViewForWith
    , linearView, linearViewFor, linearViewWith, linearViewForWith

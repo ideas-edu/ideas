@@ -59,15 +59,7 @@ heliumExercise = Exercise
    , termGenerator = makeGenerator (const True) (return emptyProg)
    }
 
-toDecExercises :: [Exercise Module]
-toDecExercises = map (\ex -> heliumExercise { strategy = label "helium" (stringToStrategy ex) }) toDecs
-
-fromBinExercises :: [Exercise Module]
-fromBinExercises = map (\ex -> heliumExercise { strategy = label "fromBin" (stringToStrategy ex)
-                                              , description = "Student solutions fromBin" 
-                                              }) (map fst fromBins)
-
-checkFromBin = checkExercises ["fromBin"] fromBinStrategy
+checkFromBin = checkExercises ["fromBin"]
 
 {-
 isortExercise :: Exercise Expr

@@ -15,7 +15,7 @@ module Domain.Programming.PreludeS
    ( -- * Type synonyms
      ModuleS
      -- * Prelude strategies
-   , foldlS, letS, compS
+   , foldlS, letS, compS, iterateS, sumS, zipWithS
      -- * Smart constructors and help functions
    , varS, patS, modS, funS, declFunS, declPatS, rhsS, intS, appS, opS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
@@ -72,6 +72,24 @@ flipS :: ModuleS -> ModuleS
 flipS f  =  (varS "flip" # [f])
         <|> lambdaS [patS "x", patS "y"] (f # [varS "y", varS "x"])
 
+sumS :: ModuleS
+sumS =  varS "sum"  
+    <|> foldlS (opS "+" Nothing Nothing) (intS "0")
+
+iterateS :: ModuleS
+iterateS  =  varS "iterate"
+         <|> letS [ declFunS [ funS "f" [ patS "g", patS "x" ] 
+                                     (opS ":" (Just (varS "x"))
+                                              (Just (varS "f" # [varS "g", varS "g" # [varS "x"]]))) []] 
+                  ] ( varS "f" )
+
+zipWithS :: ModuleS
+zipWithS = varS "zipWith"
+{-
+zipWith :: (a->b->c) -> [a]->[b]->[c]
+zipWith f (a:as) (b:bs) = f a b : zipWith f as bs
+zipWith _ _      _      = []
+-}
 
 --------------------------------------------------------------------------------
 -- Smart constructors

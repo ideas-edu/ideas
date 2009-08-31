@@ -15,7 +15,7 @@ module Domain.Programming.Prog where
 
 import Common.Utils (safeHead)
 import Common.Context hiding (get)
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, repeat)
 import Control.Monad.State
 import Data.Generics.Biplate
 import Data.Generics.PlateData
@@ -49,6 +49,18 @@ import Prelude hiding (lookup)
 
 (Right m) = compile "f n [] = 0\nf m (_:xs) = m + f m xs\ng = f 2\n"
 
+
+--------------------------------------------------------------------------------
+-- Data types
+--------------------------------------------------------------------------------
+data Solution = Solution { solution :: String
+                         , sid      :: String
+                         , strat    :: LabeledStrategy (Context Module)
+                         , remark   :: String }
+
+type Solutions = [Solution]
+
+
 --------------------------------------------------------------------------------
 -- Help Functions
 --------------------------------------------------------------------------------
@@ -63,25 +75,34 @@ allSolutions strat = map (fromContext . snd . last . snd)
 normalisedSolutions fs strat = map (normaliseModule fs) $ allSolutions strat
 isSolution fs strat m = elem (normaliseModule fs m) $ normalisedSolutions fs strat
 
-checkExercise :: [String] -> Strategy (Context Module) -> [Module] -> (String, String) -> StateT Integer IO ()
-checkExercise fs strat solutions (solution, name) = do
+checkExercise :: [String] -> Solution -> StateT Integer IO ()
+checkExercise fixedNames s = do
     correctCount <- get
     let m = compilation
-    let isSolution = m `elem` solutions
-    liftIO $ putStrLn $ name ++ " : " ++ show isSolution
+    let isSolution = m `elem` normalisedSolutions fixedNames (unlabel (strat s))
+    liftIO $ do putStrLn $ pps (sid s) ++ pps (show isSolution)
+                        ++ pps (strategyName (strat s)) ++ ppStringS 40 (remark s)
+                putStrLn line
     put $ if isSolution then correctCount + 1 else correctCount
   where
-    compilation = case compile solution of
-                    Right y -> normaliseModule fs y
-                    _       -> error $ "no compile: " ++ name
+    compilation = case compile (solution s) of
+                    Right y -> normaliseModule fixedNames y
+                    _       -> error $ "no compile: " ++ sid s
+    pps = ppStringS 20
 
-checkExercises :: [String] -> Strategy (Context Module) -> [(String, String)] -> IO ()
-checkExercises fs strat es = do
-  let solutions = normalisedSolutions fs strat
-  (_, count) <- runStateT (mapM (checkExercise fs strat solutions) es) 0
-  let percentage = count * 100  `div` toInteger (length es)
-  putStrLn $ "\n" ++ take 4 (show percentage) ++ "% has been recognised by the strategy.\n"
+checkExercises :: [String] -> Solutions -> IO ()
+checkExercises fixedNames solutions = do
+  let pps = ppStringS 20
+  putStrLn $ line ++ "\n" ++ pps "Identifier" ++ pps "Is recognised" 
+          ++ pps "By strategy" ++ ppStringS 40 "Remark" ++ "\n" ++ dline
+  (_, count) <- runStateT (mapM (checkExercise fixedNames) solutions) 0
+  let percentage = take 4 $ show $ count * 100  `div` toInteger (length solutions)
+  putStrLn $ "\n" ++ percentage ++ "% has been recognised by the strategy.\n"
   return ()
+
+ppStringS i s = "| " ++ s ++ take (i - length s) (repeat ' ')
+line = take 80 $ repeat '-'
+dline = take 80 $ repeat '='
 
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)

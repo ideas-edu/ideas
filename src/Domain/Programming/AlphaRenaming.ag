@@ -148,4 +148,7 @@ instance AlphaRenaming Module where
 instance AlphaRenaming Expression where
   alphaRenaming fixedNames e = 
     (\(_, x, _, _) -> x) $ sem_Expression e fixedNames freshNames empty []
+instance AlphaRenaming Declaration where
+  alphaRenaming fixedNames d = 
+    (\(_, _, x, _, _) -> x) $ sem_Declaration d fixedNames freshNames empty []
 }

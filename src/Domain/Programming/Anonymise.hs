@@ -35,20 +35,23 @@ optimise :: Data a => a -> a
 optimise = transformBi optimiseFunBindings
   where
     optimiseFunBindings d@(Declaration_FunctionBindings r fbs) =
-      let invArgsLists = map (reverse . sort) $ catMaybes $ invariantArgs fbs
-          fname = funName $ head fbs
-          invArgs = map head $ invArgsLists               
-      in if not (null invArgs) then
-           let d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) 
-                          d invArgsLists
-               invPs = let err = error "Anonymise.hs: no conversion from expr to pat."
-                       in map (fromMaybe err . expr2pat) invArgs
-           in declFunBindings 
-                [funBinding fname invPs
-                            (letItBe [removeArgs invArgs d'] (var fname))
-                ]                          
-         else    
-           d
+      if isRecursive d then
+        let invArgsLists = map (reverse . sort) $ catMaybes $ invariantArgs fbs
+            fname = funName $ head fbs
+            invArgs = map head $ invArgsLists               
+        in if not (null invArgs) then
+             let d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) 
+                            d invArgsLists
+                 invPs = let err = error "Anonymise.hs: no conversion from expr to pat."
+                         in map (fromMaybe err . expr2pat) invArgs
+             in declFunBindings 
+                  [funBinding fname invPs
+                              (letItBe [removeArgs invArgs d'] (var fname))
+                  ]                          
+           else    
+             d
+      else
+        d
     optimiseFunBindings x = x
 
 anonymise' :: Data a => a -> a

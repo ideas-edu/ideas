@@ -1,7 +1,7 @@
 module Domain.Math.Polynomial.LinearEquations 
-  ( solveEquation, solvedEquation, merge 
+  ( linearStrategy, solvedEquation, merge 
   , minusT, timesT, divisionT, distributionT, distribute, mergeT
-  , lineqRules, linearEquations
+  , linearRules, linearEquations, testAll
   ) where 
 
 import Prelude hiding (repeat)
@@ -24,8 +24,8 @@ import Data.Maybe (catMaybes)
 ------------------------------------------------------------
 -- Strategy
 
-solveEquation :: LabeledStrategy (Context (Equation Expr))
-solveEquation = ignoreContext $ cleanUpStrategy (fmap smartConstructors) $
+linearStrategy :: LabeledStrategy (Context (Equation Expr))
+linearStrategy = ignoreContext $ cleanUpStrategy (fmap smartConstructors) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> distribute <|> merge))
    <*> label "Phase 2" (try varToLeft <*> try conToRight <*> try scaleToOne)
@@ -56,10 +56,6 @@ distributionT = makeTrans "distribute" f
       case (match sumView a, match sumView b) of
          (Just as, Just bs) | length as > 1 || length bs > 1 -> 
             return $ build sumView [ (a .*. b) | a <- as, b <- bs ]
-{-         (Just as, _) | length as > 1 ->
-            return $ build sumView (map (.*. b) as) 
-         (_, Just bs) | length bs > 1 -> 
-            return $ build sumView (map (a .*.) bs) -}
          _ -> Nothing
    f _ = Nothing
 
@@ -71,8 +67,8 @@ mergeT = makeTrans "merge" $ return . simplifyWith f sumView
 -------------------------------------------------------
 -- Rewrite Rules
 
-lineqRules :: [Rule (Context (Equation Expr))]
-lineqRules = map ignoreContext
+linearRules :: [Rule (Context (Equation Expr))]
+linearRules = map ignoreContext
    [ removeDivision, merge, distribute
    , varToLeft, conToRight, scaleToOne
    ]
@@ -105,6 +101,17 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: r
       [] -> Nothing
       ns -> return (fromInteger (foldr1 lcm ns))
 
+{- distribute :: Rule Expr
+distribute = makeSimpleRuleList "distribution" $ somewhereM $ \a -> do
+   e <- applyM distributionT a
+   return (applyD mergeT e)
+
+merge :: Rule Expr
+merge = makeSimpleRule "merge similar terms" $ id $ \old -> do
+   new <- applyM mergeT old
+   guard (old /= new)
+   return new -}
+   
 distribute :: Rule (Equation Expr)
 distribute = makeSimpleRuleList "distribution" $ \(lhs :==: rhs) -> 
    let f = somewhereM (\x -> applyM distributionT x >>= applyM mergeT)
@@ -116,6 +123,7 @@ merge = makeSimpleRule "merge similar terms" $ \old -> do
    let new = fmap (applyD mergeT) old
    guard (old /= new)
    return new   
+
 
 ----------------------------------------------------------------------
 -- Expr normalization
@@ -169,7 +177,7 @@ solvedEquation _                = False
  
 solveAndCheck :: Equation Expr -> Equation Expr
 solveAndCheck eq = 
-   case fromContext (applyD solveEquation (inContext eq)) of
+   case fromContext (applyD linearStrategy (inContext eq)) of
       Var x :==: e | x `notElem` collectVars e -> 
          let sub y =  if x==y then e else Var y
          in fmap (simplify rationalView . substituteVars sub) eq

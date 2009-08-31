@@ -19,6 +19,7 @@ import Data.List
 import Test.QuickCheck
 import Control.Monad
 import System.Random
+import Data.Ratio
 import qualified Data.Map as M
 
 data Some f = forall a . Some (f a)
@@ -149,3 +150,17 @@ instance Arbitrary Char where
 instance (Ord k, Arbitrary k, Arbitrary a) => Arbitrary (M.Map k a) where
    arbitrary   = liftM M.fromList arbitrary
    coarbitrary = coarbitrary . M.toList
+   
+-- Generating arbitrary random rational numbers
+instance Integral a => Arbitrary (Ratio a) where
+   arbitrary     = sized (\n -> ratioGen n (n `div` 4))
+   coarbitrary r = f (numerator r) . f (denominator r)
+    where f = variant . fromIntegral
+   
+-- | Prevents a bias towards small numbers
+ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)
+ratioGen n m = do 
+   a <- choose (-n, n)
+   b <- liftM (succ . abs) (choose (-m, m))
+   c <- choose (1-b, b-1)
+   return (fromIntegral a + (fromIntegral c / fromIntegral b))

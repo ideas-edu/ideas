@@ -9,7 +9,7 @@ import Common.Traversable
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.Polynomial.QuadraticEquations (cleanUpOrs)
+import Domain.Math.Polynomial.QuadraticEquations (cleanUp)
 import qualified Domain.Math.Polynomial.QuadraticEquations as QE
 import Domain.Math.Polynomial.Views
 import Domain.Math.View.SquareRoot
@@ -25,9 +25,9 @@ import Domain.Math.Data.Polynomial
 -----------------------------------------------------------
 -- Strategy
 
-equationsStrategy :: LabeledStrategy (OrList (Equation Expr))
-equationsStrategy = cleanUpStrategy cleanUpOrs $
-   label "higher degree" $ repeat (alternatives hdeqRules)
+higherDegreeStrategy :: LabeledStrategy (OrList (Equation Expr))
+higherDegreeStrategy = cleanUpStrategy cleanUp $
+   label "higher degree" $ repeat (alternatives higherDegreeRules)
  
 -----------------------------------------------------------
 
@@ -66,12 +66,12 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
 
 -----------------------
    
-hdeqRules :: [Rule (OrList (Equation Expr))]
-hdeqRules = [powerZero, powerFactor, sameFactor] ++ QE.quadeqRules
+higherDegreeRules :: [Rule (OrList (Equation Expr))]
+higherDegreeRules = [powerZero, powerFactor, sameFactor] ++ QE.quadraticRules
  
 testAll :: IO ()
 testAll = flip mapM_ higherDegreeEquations $ \eq ->
-   flip mapM_ (take 1 $ derivations (unlabel $ ignoreContext equationsStrategy) (inContext $ OrList $ return eq)) $ \(a, ps) -> 
+   flip mapM_ (take 1 $ derivations (unlabel $ ignoreContext higherDegreeStrategy) (inContext $ OrList $ return eq)) $ \(a, ps) -> 
    let xs = a : map snd ps in
    flip mapM_ [ (x, y) | x <- xs, y <- xs ] $ \(x, y) -> 
    if eqHD (fromContext x) (fromContext y) then putChar '.' else print x >> print y >> error "STOP"

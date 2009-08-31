@@ -26,8 +26,8 @@ linearExercise = makeExercise
    , equality      = \a b -> a==b -- fmap normalizeExpr a == fmap normalizeExpr b
    , equivalence   = \a b -> viewEquivalent equationView a b || a==b
    , finalProperty = solvedEquation
-   , ruleset       = lineqRules
-   , strategy      = solveEquation
+   , ruleset       = linearRules
+   , strategy      = linearStrategy
    , termGenerator = ExerciseList (concat linearEquations)
    }
 
@@ -41,8 +41,8 @@ quadraticExercise = makeExercise
    , equality      = (==) 
    , equivalence   = viewEquivalent qView
    , finalProperty = solvedList
-   , ruleset       = map ignoreContext quadeqRules
-   , strategy      = ignoreContext solverQ
+   , ruleset       = map ignoreContext quadraticRules
+   , strategy      = ignoreContext quadraticStrategy
    , termGenerator = ExerciseList (map (OrList . return) $ concat quadraticEquations)
    }
    
@@ -56,8 +56,8 @@ higherDegreeExercise = makeExercise
    , equality      = (==) 
    , equivalence   = eqHD
    , finalProperty = solvedList
-   , ruleset       = map ignoreContext hdeqRules
-   , strategy      = ignoreContext equationsStrategy
+   , ruleset       = map ignoreContext higherDegreeRules
+   , strategy      = ignoreContext higherDegreeStrategy
    , termGenerator = ExerciseList (map (OrList . return) higherDegreeEquations)
    }
 

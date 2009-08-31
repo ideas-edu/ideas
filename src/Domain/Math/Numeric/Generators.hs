@@ -5,6 +5,7 @@ module Domain.Math.Numeric.Generators
 
 import Control.Monad
 import Common.View
+import Common.Utils (ratioGen)
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
 import Data.Ratio
@@ -44,19 +45,6 @@ integerGenerator = symbolGenerator extras numSymbols
 
 rationalGenerator :: Int -> Gen Expr
 rationalGenerator = symbolGenerator (const [natGenerator]) (divSymbol:numSymbols)
-
-{- instance Integral a => Arbitrary (Ratio a) where
-   arbitrary     = sized (\n -> ratioGen n (n `div` 4))
-   coarbitrary r = f (numerator r) . f (denominator r)
-    where f = variant . fromIntegral -}
-   
--- | Prevents a bias towards small numbers
-ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)
-ratioGen n m = do 
-   a <- choose (-n, n)
-   b <- liftM (succ . abs) (choose (-m, m))
-   c <- choose (1-b, b-1)
-   return (fromIntegral a + (fromIntegral c / fromIntegral b))
 
 ratioGenNonZero :: Integral a => Int -> Int -> Gen (Ratio a)
 ratioGenNonZero n m = nonZero (ratioGen n m)

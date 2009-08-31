@@ -119,10 +119,6 @@ instance Argument Integer where
 
 instance (Integral a, Arbitrary a) => Argument (Ratio a) where
    makeArgDescr = ratioArgDescr
-   
-instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
-   arbitrary = liftM2 (\x y -> fromInteger x / fromInteger y) arbitrary (oneof $ map return [1..5])
-   coarbitrary r = coarbitrary (numerator r) . coarbitrary (denominator r)
 
 -- | Parameterization with one argument using a default label
 supply1 :: Argument x => 

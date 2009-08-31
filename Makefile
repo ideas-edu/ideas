@@ -117,7 +117,7 @@ ag : $(AG-SOURCES)
 
 $(SRCDIR)/Domain/Programming/AlphaRenaming.hs : \
 		$(SRCDIR)/Domain/Programming/AlphaRenaming.ag \
-		$(SRCDIR)/Domain/Programming/Scope.ag \
+		$(HELIUMDIR)/staticanalysis/staticchecks/Scope.ag \
 		$(HELIUMDIR)/syntax/UHA_Syntax.ag 
 
 	# AG AlphaRenaming

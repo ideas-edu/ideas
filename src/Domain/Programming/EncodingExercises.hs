@@ -185,7 +185,7 @@ fromBin16 =
          ++ "               |otherwise = fromBin xs\n")
             "fcbijlsm"
             fromBinRecurS
-            "This solutions uses a guard instead of a multiplication. Rewrite?"
+            "This solution uses a guard instead of a multiplication. Rewrite?"
 
 fromBin17 = 
   Solution ("fromBin = digitsToInt 2\n"
@@ -273,7 +273,7 @@ fromBin26 =
          ++ "fromBinMetHulp (x:xs) hulp = fromBinMetHulp xs ((hulp*2) + (x))\n") 
             "jcgoosen"
             fromBinRecurS
-            "Another good solutions, similar to fromBin18."
+            "Another good solution, similar to fromBin18."
 
 fromBin27 = 
   Solution ("fromBin [] = 0\n"
@@ -317,7 +317,7 @@ fromBin31 =
          ++ "                             | otherwise = undefined\n") 
             "jgageldo"
             fromBinFoldlS
-            "Fine solution, almost a foldr."
+            "Good solution, almost a foldr."
 
 fromBin32 = 
   Solution ("fromBin [] = 0\n"
@@ -612,7 +612,7 @@ fromBin66 =
          ++ "fromBin' (x:xs) tussen = fromBin' xs (2*tussen+x)\n") 
             "pdstaats-cjplatte"
             fromBinFoldlS
-            "Correct soltion, maybe a model."
+            "Correct solution, maybe a model solution."
 
 fromBin67 = 
   Solution ("fromBin    x     =  toInt 2 x\n"

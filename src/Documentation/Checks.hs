@@ -31,12 +31,15 @@ import qualified Domain.RelationAlgebra as RA
 
 import qualified Service.ModeJSON as ModeJSON
 import qualified Service.ModeXML as ModeXML
+
+import qualified Domain.Math.Numeric.Tests as MathNum
 import Data.List
 
 main :: IO ()
 main = do
    putStrLn "* 1. Domain checks"
    Common.Grammar.checks
+   MathNum.main
    LA.checks
 
    putStrLn "* 2. Exercise checks"

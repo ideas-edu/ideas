@@ -13,12 +13,12 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( Match, View, makeView, Simplification, makeSimplification
-   , match, matchM, build, canonical, canonicalWith
+   , match, matchM, build, canonical, canonicalM, canonicalWith
    , simplify, simplifyWith, isCanonical, isCanonicalWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
    , listView, conversion, (#>)
-   , propIdempotence, propSoundness
+   , propIdempotence, propSoundness, propNormalForm
    ) where
 
 import Control.Arrow hiding ((>>>))
@@ -54,6 +54,9 @@ makeSimplification f = makeView (return . f) id
 
 canonical :: View a b -> a -> Maybe a
 canonical = canonicalWith id
+
+canonicalM :: Monad m => View a b -> a -> m a
+canonicalM v a = maybe (Prelude.fail "no match") return (canonicalWith id v a)
 
 canonicalWith :: (b -> b) -> View a b -> a -> Maybe a
 canonicalWith f view = liftM (build view . f) . match view
@@ -162,3 +165,6 @@ propSoundness :: Show a => (a -> a -> Bool) -> Gen a -> View a c -> Property
 propSoundness semEq g v = forAll g $ \a -> 
    let b = simplify v a
    in semEq a b
+   
+propNormalForm :: (Show a, Eq a) => Gen a -> View a b -> Property
+propNormalForm g v = forAll g $ \a -> a == simplify v a

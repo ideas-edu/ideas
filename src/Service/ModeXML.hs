@@ -135,7 +135,8 @@ stringFormatConverter (Some ex) =
  where
    f = return . element "expr" . text . prettyPrinter ex
    g xml = do
-      guard (name xml == "expr")
+      xml <- findChild "expr" xml -- quick fix
+      -- guard (name xml == "expr")
       let input = getData xml
       either (fail . show) return (parser ex input)
                 

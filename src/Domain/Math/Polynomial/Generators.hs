@@ -42,5 +42,5 @@ quadraticGen = polynomialGen 2
 linearGen    = polynomialGen 1
 
 ratGen, ratGenNZ :: Gen Expr
-ratGen   = liftM fromRational (ratioGen 40 10)
-ratGenNZ = liftM fromRational (ratioGenNonZero 40 10)
+ratGen   = sized ratioExprGen
+ratGenNZ = sized ratioExprGenNonZero

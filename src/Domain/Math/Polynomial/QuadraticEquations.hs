@@ -9,7 +9,8 @@ import Common.Transformation
 import Common.Traversable
 import Common.Uniplate (transform, universe)
 import Control.Monad
-import Data.List hiding (repeat)
+import Common.Utils (safeHead)
+import Data.List (sort, nub, (\\))
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Data.Equation
@@ -18,6 +19,7 @@ import Domain.Math.Data.Polynomial
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
+import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.LinearEquations (merge, distribute)
 import Domain.Math.Polynomial.Views
@@ -161,54 +163,10 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant
 
-coverUpSquare :: Rule (OrList (Equation Expr))
-coverUpSquare = makeSimpleRule "constant square" (onceJoinM f) 
- where
-   f (Sym s [e, Nat 2] :==: rhs) | s == powerSymbol = do
-      r <- match rationalView rhs
-      let s = makeSqrt rhs
-      case compare r 0 of
-         LT -> return $ OrList []
-         EQ -> return $ OrList [e :==: 0]
-         GT -> return $ OrList [e :==: s, e :==: negate s]
-   f _ = Nothing
-
-coverUpPlus :: Rule (Equation Expr)
-coverUpPlus = makeSimpleRule "cover-up plus/minus" $ \(lhs :==: rhs) -> do
-   guard (noVars rhs)
-   (e1, e2) <- case match sumView lhs of
-                  Just [e1, e2] -> return (e1, e2)
-                  _             -> Nothing
-   guard (rhs /= 0 || isLinear lhs)
-   case (match rationalView e1, match rationalView e2) of
-      (Just a, Nothing) -> return (e2 :==: rhs - fromRational a)
-      (Nothing, Just a) -> return (e1 :==: rhs - fromRational a)
-      _ -> Nothing
-
-coverUpTimes :: Rule (Equation Expr)
-coverUpTimes = makeSimpleRule "cover-up times" $ \(lhs :==: rhs) -> do
-   guard (noVars rhs)
-   (e1, e2) <- match timesView lhs
-   case (match rationalView e1, match rationalView e2) of
-      (Just a, Nothing) | a /= 0 -> return (e2 :==: rhs/fromRational a)
-      (Nothing, Just a) | a /= 0 -> return (e1 :==: rhs/fromRational a)
-      _ -> Nothing
-
-coverUpNegate :: Rule (Equation Expr)
-coverUpNegate = makeSimpleRule "cover-up negate" f
- where
-   f (Negate a :==: b) = do
-      guard (noVars b)
-      return (a :==: -b)
-   f _ = Nothing
-
-coverUpDiv :: Rule (Equation Expr)
-coverUpDiv = makeSimpleRule "cover-up division" $ \(lhs :==: rhs) -> do
-   b <- match rationalView rhs
-   (e1, e2) <- match divView lhs
-   a <- match rationalView e2
-   guard (a /= 0)
-   return (e1 :==: fromRational (b*a))
+coverUpSquare = coverUpPower
+coverUpDiv    = coverUpDenominator
+coverUpPlus   = coverUpPlusWith "special" p
+ where p x = hasVars x && maybe False ((==1) . length) (match sumView x) 
 
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2
@@ -256,9 +214,6 @@ makeSqrt (Nat n) | a*a == n = Nat a
  where a = SQ.isqrt n
 makeSqrt e = sqrt e
 
-isLinear :: Expr -> Bool
-isLinear e = e `belongsTo` (polyNormalForm rationalView >>> second linearPolyView)
-
 factors :: Integer -> [(Integer, Integer)]
 factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
  where h = floor (sqrt (abs (fromIntegral n)))
@@ -278,7 +233,7 @@ go = mapM_ f $ zip [0..] (concat quadraticEquations)
       let start  = OrList [eq]
           OrList result = applyD quadraticStrategy start
           p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
-      in if all p result then putStrLn (show n++" ok") else error $ show result ++ " for " ++ show n
+      in if all p result then putStr (show n++" ok; ") else error $ show result ++ " for " ++ show n
 
 go2 = quickCheck $ 
    forAll (sized quadraticGen) $ \a -> 
@@ -288,7 +243,13 @@ go2 = quickCheck $
        p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
    in if all p result then True else error $ "go2: " ++ show result
     
-
+go3 = quickCheck $ 
+   forAll (sized linearGen) $ \a -> 
+   forAll (sized linearGen) $ \b -> 
+   let start  = OrList [a :==: b]
+       OrList result = applyD quadraticStrategy start
+       p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
+   in if all p result then True else error $ "go2: " ++ show result
    
 gcdFrac :: Rational -> Rational -> Rational
 gcdFrac r1 r2 = fromMaybe 1 $ do 
@@ -300,40 +261,53 @@ gcdFrac r1 r2 = fromMaybe 1 $ do
    
 q = putStrLn $ showDerivationWith show (ignoreContext $ unlabel quadraticStrategy) $ 
    let x=Var "x" in OrList $ return $ 
-   concat quadraticEquations !! 35
+   --concat quadraticEquations !! 45 -- quadraticEquations !! 35
+   
+   237720469701/7115275300*x^2 :==: -2735/216663796*x^2+23536855
+   /3899948328*x-50020/31116609-(-49/8*x+(164/9-x)*(1/11))*(40832/17201)*x
    
    -- *** Exception: Cleaning-up: (-7/3 == x/(10/7)+881/1672,
                          --          -7/3 == 7/10*x+881/1672)
-                         
-qView :: View (OrList (Equation Expr)) [SQ.SquareRoot Rational]
+              
+allSame :: Eq a => [a] -> Bool           
+allSame []     = True
+allSame (x:xs) = all (==x) xs                         
+
+qView :: View (OrList (Equation Expr)) (String, [SQ.SquareRoot Rational])
 qView = makeView f g
  where
-   f (OrList xs) = liftM (sort . nub . filter (not . SQ.imaginary) . concat) $ mapM (match qView2) xs
-   g xs = OrList [ Var "x" :==: build squareRootView rhs | rhs <- xs ] -- !!!!!! don't guess variable
+   f (OrList xs) = do 
+      ps <- mapM (match qView2) xs
+      let (ss, xss) = unzip ps
+          pv        = fromMaybe "" (safeHead ss)
+          make      = sort . nub . filter (not . SQ.imaginary) . concat
+      guard (allSame ss)
+      return (pv, make xss)
+   g (s, xs) = OrList [ Var s :==: build squareRootView rhs | rhs <- xs ]
 
-qView2 :: View (Equation Expr) [SQ.SquareRoot Rational]
+qView2 :: View (Equation Expr) (String, [SQ.SquareRoot Rational])
 qView2 = makeView f undefined
  where
    f (lhs :==: rhs) = do
-      (_, poly) <- match polyView (lhs - rhs)
+      (x, poly) <- match polyView (lhs - rhs)
       guard (degree poly <= 2)
       ra <- match rationalView (coefficient 2 poly)
       rb <- match rationalView (coefficient 1 poly)
       case ra==0 of
          True -> do
             rc <- match squareRootView (coefficient 0 poly)
-            return [SQ.scale (-1/rb) rc]
+            return (x, [SQ.scale (-1/rb) rc])
          False -> do 
             rc <- match rationalView (coefficient 0 poly)
             let discr = rb*rb - 4*ra*rc
             case compare discr 0 of
-               LT -> Just []
-               EQ -> Just [SQ.con (-rb/(2*ra))]
+               LT -> Just (x, [])
+               EQ -> Just (x, [SQ.con (-rb/(2*ra))])
                GT ->  
                   let sdiscr = SQ.sqrtRational discr
-                  in return [ SQ.scale (1/(2*ra)) (-SQ.con rb + sdiscr)
-                            , SQ.scale (1/(2*ra)) (-SQ.con rb - sdiscr)
-                            ]
+                  in return (x, [ SQ.scale (1/(2*ra)) (-SQ.con rb + sdiscr)
+                                , SQ.scale (1/(2*ra)) (-SQ.con rb - sdiscr)
+                                ])
                             
 solvedList :: OrList (Equation Expr) -> Bool
 solvedList (OrList xs) = all (`belongsTo` equationSolvedForm) xs

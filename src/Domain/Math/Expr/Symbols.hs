@@ -65,6 +65,7 @@ isTimes  a = isBinary timesSymbol  a
 isMinus  a = isBinary minusSymbol  a
 isDiv    a = isBinary divSymbol    a
 isNegate a = isUnary  negateSymbol a
+isSqrt   a = isUnary  sqrtSymbol   a
 
 infixr 8 ^
 

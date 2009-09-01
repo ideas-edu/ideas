@@ -1,6 +1,6 @@
 module Domain.Math.Polynomial.HigherDegreeEquations where
 
-import Prelude hiding ((^), repeat)
+import Prelude hiding ((^), repeat, replicate)
 import Data.List (sort, nub, (\\))
 import Data.Maybe
 import Common.Context
@@ -20,6 +20,7 @@ import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic
 import Domain.Math.View.Power
 import Domain.Math.Data.Equation
+import Common.Exercise 
 import Control.Monad
 import Domain.Math.Data.Polynomial
 
@@ -28,7 +29,7 @@ import Domain.Math.Data.Polynomial
 
 higherDegreeStrategy :: LabeledStrategy (OrList (Equation Expr))
 higherDegreeStrategy = cleanUpStrategy cleanUp $
-   label "higher degree" $ repeat (alternatives higherDegreeRules)
+   label "higher degree" $ replicate 10 $ try (alternatives higherDegreeRules)
  
 -----------------------------------------------------------
 
@@ -118,3 +119,7 @@ toPoly :: Expr -> Maybe (Polynomial Rational)
 toPoly e = do
    (_, p) <- match polyView e
    switch (fmap (match rationalView) p)
+   
+q = putStrLn $ showDerivationWith show (ignoreContext $ unlabel higherDegreeStrategy) $ 
+   let x=Var "x" in OrList $ return $ 
+   higherDegreeEquations !! 3

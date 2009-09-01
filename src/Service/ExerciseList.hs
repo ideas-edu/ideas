@@ -15,7 +15,7 @@ import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA
 import qualified Domain.Math.DerivativeExercise as Math
 import qualified Domain.Math.Numeric.Exercises as Math
-import qualified Domain.Math.Strategy.CoverUpEquations as Math
+import qualified Domain.Math.Equation.CoverUpExercise as Math
 import qualified Domain.Math.Polynomial.Exercises as Math
 
 -- List with all known exercises

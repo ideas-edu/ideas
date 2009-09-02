@@ -1,9 +1,11 @@
 module Domain.Math.Equation.CoverUpRules 
    ( coverUpRules, coverUpRulesOr
-   , coverUpPowerWith, coverUpPlusWith, coverUpTimesWith, coverUpNegateWith
-   , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
    , coverUpPower, coverUpPlus, coverUpTimes, coverUpNegate
    , coverUpNumerator, coverUpDenominator, coverUpSqrt 
+     -- parameterized rules
+   , ConfigCoverUp(..), varConfig
+   , coverUpPowerWith, coverUpPlusWith, coverUpTimesWith, coverUpNegateWith
+   , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
    ) where
 
 import Domain.Math.Expr
@@ -23,51 +25,77 @@ coverUpRuleName :: String -> String -> String
 coverUpRuleName opName viewName =
    "cover-up " ++ opName ++ " [" ++ viewName ++ "]"
 
-coverUpBinaryRule :: String -> (a -> [(a, a)]) -> (a -> a -> a) 
-               -> String -> (a -> Bool) -> Rule (Equation a)
-coverUpBinaryRule opName fm fb s p = 
-   makeSimpleRuleList (coverUpRuleName opName s) $ \(lhs :==: rhs) -> do
-      (e1, e2) <- fm lhs
-      guard (p e1 && not (p e2) && not (p rhs))
-      return (e1 :==: fb rhs e2)
+coverUpBinaryRule :: String -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
+                  -> ConfigCoverUp -> Rule (Equation Expr)
+coverUpBinaryRule opName fm fb cfg = 
+   let name = coverUpRuleName opName (configName cfg)
+   in makeSimpleRuleList name $ \(lhs :==: rhs) -> do
+         (e1, e2) <- fm lhs
+         guard (predicateCovered  cfg e1)
+         guard (predicateCombined cfg e2)
+         guard (predicateCombined cfg rhs)
+         return (e1 :==: fb rhs e2)
       
-coverUpUnaryRule :: String -> (a -> [a]) -> (a -> a) 
-               -> String -> (a -> Bool) -> Rule (Equation a)
-coverUpUnaryRule opName fm fb s p = 
-   makeSimpleRuleList (coverUpRuleName opName s) $ \(lhs :==: rhs) -> do
-      e1 <- fm lhs
-      guard (p e1 && not (p rhs))
-      return (e1 :==: fb rhs)
+coverUpUnaryRule :: String -> (Expr -> [Expr]) -> (Expr -> Expr) 
+               -> ConfigCoverUp -> Rule (Equation Expr)
+coverUpUnaryRule opName fm fb cfg = 
+   let name = coverUpRuleName opName (configName cfg)
+   in makeSimpleRuleList name $ \(lhs :==: rhs) -> do
+         e1 <- fm lhs
+         guard (predicateCovered  cfg e1)
+         guard (predicateCombined cfg rhs)
+         return (e1 :==: fb rhs)
+
+---------------------------------------------------------------------
+-- Configuration for cover-up rules
+
+data ConfigCoverUp = Config
+   { configName        :: String
+   , predicateCovered  :: Expr -> Bool
+   , predicateCombined :: Expr -> Bool
+   }
+
+-- default configuration
+varConfig :: ConfigCoverUp 
+varConfig = Config
+   { configName        = "vars"
+   , predicateCovered  = hasVars
+   , predicateCombined = noVars
+   }
 
 ---------------------------------------------------------------------
 -- Parameterized cover-up rules
- 
-coverUpPowerWith :: String -> (Expr -> Bool) -> Rule (OrList (Equation Expr))
-coverUpPowerWith s p = makeSimpleRule (coverUpRuleName "power" s) $ 
-   onceJoinM $ \(lhs :==: rhs) -> do
-      (e1, e2) <- isBinary powerSymbol lhs
-      n <- isNat e2
-      guard (p e1 && n > 0 && not (p e2) && not (p rhs))
-      new1 <- canonical identity (makeRoot n rhs)
-      new2 <- canonical identity (negate (makeRoot n rhs))
-      return $ OrList $ (e1 :==: new1) : [ e1 :==: new2 | new1 /= new2, even n ]
 
-coverUpPlusWith :: String -> (Expr -> Bool) -> Rule (Equation Expr)
+coverUpPowerWith :: ConfigCoverUp -> Rule (OrList (Equation Expr))
+coverUpPowerWith cfg = 
+   let name = coverUpRuleName "power" (configName cfg)
+   in makeSimpleRule name $ onceJoinM $ \(lhs :==: rhs) -> do
+         (e1, e2) <- isBinary powerSymbol lhs
+         n <- isNat e2
+         guard (n > 0)
+         guard (predicateCovered  cfg e1)
+         guard (predicateCombined cfg e2)
+         guard (predicateCombined cfg rhs)
+         new1 <- canonical identity (makeRoot n rhs)
+         new2 <- canonical identity (negate (makeRoot n rhs))
+         return $ OrList $ (e1 :==: new1) : [ e1 :==: new2 | new1 /= new2, even n ]
+
+coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . matchM plusView) (-)
 
-coverUpTimesWith :: String -> (Expr -> Bool) -> Rule (Equation Expr)
+coverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpTimesWith = coverUpBinaryRule "times" (commOp . isTimes) (/)
 
-coverUpNegateWith :: String -> (Expr -> Bool) -> Rule (Equation Expr)
+coverUpNegateWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpNegateWith = coverUpUnaryRule "negate" isNegate negate
 
-coverUpNumeratorWith :: String -> (Expr -> Bool) -> Rule (Equation Expr)
+coverUpNumeratorWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpNumeratorWith = coverUpBinaryRule "numerator" (matchM divView) (*)
 
-coverUpDenominatorWith :: String -> (Expr -> Bool) -> Rule (Equation Expr)
+coverUpDenominatorWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpDenominatorWith = coverUpBinaryRule "denominator" (flipOp . matchM divView) (flip (/))
 
-coverUpSqrtWith :: String -> (Expr -> Bool) -> Rule (Equation Expr)
+coverUpSqrtWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpSqrtWith = coverUpUnaryRule "square root" isSqrt (\x -> x*x)
 
 ---------------------------------------------------------------------
@@ -86,13 +114,13 @@ coverUpPower :: Rule (OrList (Equation Expr))
 coverUpPlus, coverUpTimes, coverUpNegate, 
    coverUpNumerator, coverUpDenominator, coverUpSqrt :: Rule (Equation Expr)
 
-coverUpPower       = coverUpPowerWith       "var" hasVars
-coverUpPlus        = coverUpPlusWith        "var" hasVars
-coverUpTimes       = coverUpTimesWith       "var" hasVars
-coverUpNegate      = coverUpNegateWith      "var" hasVars
-coverUpNumerator   = coverUpNumeratorWith   "var" hasVars
-coverUpDenominator = coverUpDenominatorWith "var" hasVars
-coverUpSqrt        = coverUpSqrtWith        "var" hasVars
+coverUpPower       = coverUpPowerWith       varConfig
+coverUpPlus        = coverUpPlusWith        varConfig
+coverUpTimes       = coverUpTimesWith       varConfig
+coverUpNegate      = coverUpNegateWith      varConfig
+coverUpNumerator   = coverUpNumeratorWith   varConfig
+coverUpDenominator = coverUpDenominatorWith varConfig
+coverUpSqrt        = coverUpSqrtWith        varConfig
 
 ---------------------------------------------------------------------
 -- Some helper-functions

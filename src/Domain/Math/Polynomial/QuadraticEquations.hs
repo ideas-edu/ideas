@@ -28,7 +28,7 @@ import Domain.Math.SquareRoot.Views
 import Domain.Math.View.Basic
 import Domain.Math.View.Power
 import Prelude hiding (repeat, (^), replicate)
-import Test.QuickCheck hiding (label)
+import Test.QuickCheck hiding (label, Config)
 import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Prelude
 import qualified Test.QuickCheck as QC
@@ -39,10 +39,10 @@ import qualified Test.QuickCheck as QC
 quadraticStrategy :: LabeledStrategy (OrList (Equation Expr))
 quadraticStrategy = cleanUpStrategy cleanUp $ 
    label "Quadratic Equation Strategy" $ 
-   repeat $
+   repeat $ 
          -- general form
       (  label "general form" $ 
-         ( ruleOnce noConFormula <|> ruleOnce noLinFormula 
+         ( ruleOnce noConFormula <|> ruleOnce noLinFormula{- or coverup -}
            <|> ruleOnce niceFactors <|> ruleOnce simplerA )
          |> abcFormula
       )
@@ -52,14 +52,15 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       )
       |> -- constant form
       (  label "constant form" $ 
-         coverUpSquare <|> ruleOnce coverUpPlus <|> ruleOnce coverUpTimes
-         <|> ruleOnce coverUpNegate <|> ruleOnce coverUpDiv
+         coverUpPower <|> ruleOnce coverUpTimes <|> ruleOnce coverUpPlus
+         <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator
       )
       |> -- top form
       (  label "top form" $ 
-         ruleOnce2 (ruleSomewhere merge) <|> ruleOnce cancelTerms  <|> ruleOnce2 distribute
-         <|> ruleOnce2 (ruleSomewhere distributionSquare) <|> ruleOnce flipEquation 
-         <|> ruleOnce moveToLeft
+         ( ruleOnce2 (ruleSomewhere merge) <|> ruleOnce cancelTerms  
+           <|> ruleOnce2 (ruleSomewhere distributionSquare)
+           <|> ruleOnce2 distribute <|> ruleOnce flipEquation )
+         |> ruleOnce moveToLeft
       )
 
 ------------------------------------------------------------
@@ -77,10 +78,18 @@ keepEquation (a :==: b) = not (trivial || any falsity (universe a ++ universe b)
    falsity _         = False
 
 cleanUpExpr :: Expr -> Expr
-cleanUpExpr = smartConstructors . f2 . f1 . smartConstructors . simplify sumView
+cleanUpExpr = smartConstructors . f2 . f1 . smartConstructors . simplifyWith sumList sumView
  where
    f1 = transform (simplify powerFactorView)
    f2 = transform (simplify squareRootView)
+   
+   sumList = rec . map (\a -> maybe (Left a) Right $ match rationalView a) 
+    where
+      rec (Right r1:Right r2:rest) = rec (Right (r1+r2):rest)
+      rec (Right r:xs)   = fromRational r:rec xs
+      rec (Left a:xs) = a:rec xs
+      rec [] = []
+
 
 ------------------------------------------------------------
 -- Rule collection
@@ -88,8 +97,8 @@ cleanUpExpr = smartConstructors . f2 . f1 . smartConstructors . simplify sumView
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = 
    [ ruleOnce noConFormula, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerA, abcFormula, mulZero, coverUpSquare, ruleOnce coverUpPlus
-   , ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpDiv
+   , ruleOnce simplerA, abcFormula, mulZero, coverUpPower, ruleOnce coverUpPlus
+   , ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms , ruleOnce2 distribute
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft
@@ -162,11 +171,13 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant
-
-coverUpSquare = coverUpPower
-coverUpDiv    = coverUpDenominator
-coverUpPlus   = coverUpPlusWith "special" p
- where p x = hasVars x && maybe False ((==1) . length) (match sumView x) 
+ 
+coverUpPlus :: Rule (Equation Expr) 
+coverUpPlus = coverUpPlusWith $ Config
+   { configName        = "one var"
+   , predicateCovered  = (==1) . length . collectVars
+   , predicateCombined = noVars
+   }
 
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2
@@ -229,11 +240,12 @@ isInt r = do
 
 go = mapM_ f $ zip [0..] (concat quadraticEquations)
  where 
-   f (n, eq) = 
-      let start  = OrList [eq]
-          OrList result = applyD quadraticStrategy start
-          p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
-      in if all p result then putStr (show n++" ok; ") else error $ show result ++ " for " ++ show n
+   f (n, eq) = mapM_ g (applyAll quadraticStrategy (OrList [eq]))
+    where
+      g (OrList result) =
+         let OrList result = applyD quadraticStrategy (OrList [eq])
+             p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
+         in if all p result then putStr (show n++" ok; ") else error $ show result ++ " for " ++ show n
 
 go2 = quickCheck $ 
    forAll (sized quadraticGen) $ \a -> 
@@ -261,12 +273,9 @@ gcdFrac r1 r2 = fromMaybe 1 $ do
    
 q = putStrLn $ showDerivationWith show (ignoreContext $ unlabel quadraticStrategy) $ 
    let x=Var "x" in OrList $ return $ 
-   --concat quadraticEquations !! 45 -- quadraticEquations !! 35
+   concat quadraticEquations !! 42 -- quadraticEquations !! 35
    
-   237720469701/7115275300*x^2 :==: -2735/216663796*x^2+23536855
-   /3899948328*x-50020/31116609-(-49/8*x+(164/9-x)*(1/11))*(40832/17201)*x
-   
-   -- *** Exception: Cleaning-up: (-7/3 == x/(10/7)+881/1672,
+   -- Exception: Cleaning-up: (-7/3 == x/(10/7)+881/1672,
                          --          -7/3 == 7/10*x+881/1672)
               
 allSame :: Eq a => [a] -> Bool           

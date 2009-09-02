@@ -5,6 +5,7 @@ module Domain.Math.Polynomial.Views
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
    , polyNormalForm
+   , linearEquationView, quadraticEquationView, quadraticEquationsView
    ) where
 
 import Prelude hiding ((^))
@@ -12,12 +13,16 @@ import Control.Monad
 import Data.List
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
+import Domain.Math.Data.Equation
+import Domain.Math.Data.OrList
 import Domain.Math.Expr
+import Data.Maybe
+import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.Expr.Symbols
-import Domain.Math.Numeric.Generators (rationalGenerator)
-import Domain.Math.View.Basic hiding (linearView)
+import Domain.Math.SquareRoot.Views
+import Domain.Math.View.Basic
+import Common.Traversable
 import Domain.Math.View.Power (powerFactorViewForWith)
-import Test.QuickCheck
 
 -------------------------------------------------------------------
 -- Polynomial view
@@ -170,35 +175,63 @@ polyNormalForm v = makeView f (uncurry g)
       guard (distinct (map snd xs))
       return (pv, buildPairs xs)
    g pv = build (listOfPowerFactors pv v) . reverse . terms
-
--------------------------------------------------------------------
--- Generators
-
--- tailored towards generating "int" expressions (also prevents 
--- division by zero)
-polyGenerator :: String -> Maybe Int -> Int -> Gen Expr
-polyGenerator v degree = symbolGenerator extras syms
- where
-   syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol]
-   extras n = natGenerator:varGenerator [v]:[ g | n > 0, g <- [divGen n, powerGen n] ]
-   divGen n = do
-      e <- polyGenerator v degree (n `div` 2)
-      r <- rationalGeneratorNZ (n `div` 2)
-      return (e :/: r)
-   powerGen n = do
-      e <- polyGenerator v degree (n `div` 2)
-      n <- choose (0, 10)
-      return (e ^ fromInteger n)
-
-rationalGeneratorNZ :: Int -> Gen Expr -- non-zero
-rationalGeneratorNZ n = do
-   expr <- rationalGenerator n
-   case match rationalView expr of
-      Just r | r /= 0 -> return expr
-      _               -> rationalGeneratorNZ n
    
+-------------------------------------------------------------------
+-- Normal forms for equations
+{-
+orListView :: ([b] -> Maybe c) -> (c -> [b]) -> View a b -> View (OrList a) c
+orListView z z2 v = makeView f g
+ where
+   f (OrList xs) = join $ liftM z (mapM (match v) xs)
+   g = OrList . map (build v) . z2 -}
+   
+linearEquationView :: View (Equation Expr) (String, Rational)
+linearEquationView = makeView f g
+ where
+   f (lhs :==: rhs) = do 
+      (x, a, b) <- match (linearViewWith rationalView) (lhs - rhs)
+      return (x, -b/a)
+   g (x, r) = Var x :==: fromRational r
 
-testPolyGen = quickCheck $ forAll (sized (polyGenerator "x" Nothing)) (`belongsTo` polyViewWith rationalView)
+quadraticEquationsView:: View (OrList (Equation Expr)) (String, [SQ.SquareRoot Rational])
+quadraticEquationsView = makeView f g
+ where
+   f (OrList xs) = do 
+      ps <- mapM (match quadraticEquationView) xs
+      case unzip ps of
+         ([], _)     -> 
+            return ([], [])
+         (s:ss, xss) -> do
+            guard (all (==s) ss)
+            let make = sort . nub . filter (not . SQ.imaginary) . concat
+            return (s, make xss)
+            
+   g (s, xs) = OrList [ Var s :==: build squareRootView rhs | rhs <- xs ]
 
-t1 = replicateM_ 10 testPolyGen
-t2 = verboseCheck $ forAll (sized (polyGenerator "x" Nothing)) $ \_ -> True
+quadraticEquationView:: View (Equation Expr) (String, [SQ.SquareRoot Rational])
+quadraticEquationView = makeView f g
+ where
+   f (lhs :==: rhs) = do
+      (s, poly) <- match polyView (lhs - rhs)
+      liftM ((,) s) $
+         case degree poly < 2 of
+            True -> do
+               polySQ <- switch $ fmap (match (squareRootViewWith rationalView)) poly
+               (a, b) <- match linearPolyView polySQ
+               if a==0 then (if b==0 then Just [] else Nothing)
+                       else return [-(b/a)]
+            False -> do
+               polyR <- switch $ fmap (match rationalView) poly
+               (a, b, c) <- match quadraticPolyView polyR
+               if a == 0 then return [SQ.con (-(c/b))] else do -- BAH!
+               let discr  = b*b - 4*a*c
+                   sdiscr = SQ.sqrtRational discr
+               case compare discr 0 of
+                  LT -> Just []
+                  EQ -> Just [ SQ.con (-b/(2*a)) ]
+                  GT -> Just [ SQ.scale (1/(2*a)) (-SQ.con b + sdiscr)
+                             , SQ.scale (1/(2*a)) (-SQ.con b - sdiscr)
+                             ]
+
+   g (s, as) = build productView (False, map (h s) as) :==: 0
+   h s a = simplify sumView (Var s - build squareRootView a)

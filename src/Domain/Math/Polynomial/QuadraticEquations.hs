@@ -1,5 +1,5 @@
 module Domain.Math.Polynomial.QuadraticEquations
-   (quadraticStrategy, qView, cleanUp, q, go, go2, solvedList, quadraticRules) where
+   (quadraticStrategy, cleanUp, q, go, go2, solvedList, quadraticRules) where
 
 import Common.Apply
 import Common.Context
@@ -9,18 +9,17 @@ import Common.Transformation
 import Common.Traversable
 import Common.Uniplate (transform, universe)
 import Control.Monad
-import Common.Utils (safeHead)
-import Data.List (sort, nub, (\\))
+import Data.List (nub, (\\))
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
-import Domain.Math.Data.Polynomial
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Generators
+import Domain.Math.Equation.Views
 import Domain.Math.Polynomial.LinearEquations (merge, distribute)
 import Domain.Math.Polynomial.Views
 import Domain.Math.Simplification (smartConstructors)
@@ -263,13 +262,32 @@ go3 = quickCheck $
        p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
    in if all p result then True else error $ "go2: " ++ show result
    
+go4 = concatMap f $ zip [0..] (concat quadraticEquations)
+ where 
+   f (n, eq) = map g (derivations (unlabel quadraticStrategy) (OrList [eq]))
+    where
+      g (a, ps) = 
+         let as = a : map snd ps 
+             eq x y = simplify quadraticEquationsView x `eqOr` simplify quadraticEquationsView y
+         in case [ (x, y) | x <- as, y <- as, not (eq x y) ] of
+               [] -> n
+               (x,y):_ -> error $ unlines $ "":map show [x, y, simplify quadraticEquationsView x, simplify quadraticEquationsView y]
+               
+eqOr :: Eq a => OrList a -> OrList a -> Bool
+eqOr = (==)
+
+      {- rList result) =
+         let OrList result = applyD quadraticStrategy (OrList [eq])
+             p (x :==: y) = x == Var "x" && y `belongsTo` squareRootView
+         in if all p result then n else error $ show result ++ " for " ++ show n -}
+
+   
 gcdFrac :: Rational -> Rational -> Rational
 gcdFrac r1 r2 = fromMaybe 1 $ do 
    a <- isInt r1
    b <- isInt r2
    return (fromInteger (gcd a b))
       
-
    
 q = putStrLn $ showDerivationWith show (ignoreContext $ unlabel quadraticStrategy) $ 
    let x=Var "x" in OrList $ return $ 
@@ -278,45 +296,6 @@ q = putStrLn $ showDerivationWith show (ignoreContext $ unlabel quadraticStrateg
    -- Exception: Cleaning-up: (-7/3 == x/(10/7)+881/1672,
                          --          -7/3 == 7/10*x+881/1672)
               
-allSame :: Eq a => [a] -> Bool           
-allSame []     = True
-allSame (x:xs) = all (==x) xs                         
-
-qView :: View (OrList (Equation Expr)) (String, [SQ.SquareRoot Rational])
-qView = makeView f g
- where
-   f (OrList xs) = do 
-      ps <- mapM (match qView2) xs
-      let (ss, xss) = unzip ps
-          pv        = fromMaybe "" (safeHead ss)
-          make      = sort . nub . filter (not . SQ.imaginary) . concat
-      guard (allSame ss)
-      return (pv, make xss)
-   g (s, xs) = OrList [ Var s :==: build squareRootView rhs | rhs <- xs ]
-
-qView2 :: View (Equation Expr) (String, [SQ.SquareRoot Rational])
-qView2 = makeView f undefined
- where
-   f (lhs :==: rhs) = do
-      (x, poly) <- match polyView (lhs - rhs)
-      guard (degree poly <= 2)
-      ra <- match rationalView (coefficient 2 poly)
-      rb <- match rationalView (coefficient 1 poly)
-      case ra==0 of
-         True -> do
-            rc <- match squareRootView (coefficient 0 poly)
-            return (x, [SQ.scale (-1/rb) rc])
-         False -> do 
-            rc <- match rationalView (coefficient 0 poly)
-            let discr = rb*rb - 4*ra*rc
-            case compare discr 0 of
-               LT -> Just (x, [])
-               EQ -> Just (x, [SQ.con (-rb/(2*ra))])
-               GT ->  
-                  let sdiscr = SQ.sqrtRational discr
-                  in return (x, [ SQ.scale (1/(2*ra)) (-SQ.con rb + sdiscr)
-                                , SQ.scale (1/(2*ra)) (-SQ.con rb - sdiscr)
-                                ])
-                            
+-- misschien weg?
 solvedList :: OrList (Equation Expr) -> Bool
 solvedList (OrList xs) = all (`belongsTo` equationSolvedForm) xs

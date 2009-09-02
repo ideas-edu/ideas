@@ -3,13 +3,14 @@ module Domain.Math.Polynomial.Exercises where
 import Domain.Math.Polynomial.LinearEquations
 import Domain.Math.Polynomial.QuadraticEquations
 import Domain.Math.Polynomial.HigherDegreeEquations
+import Domain.Math.Polynomial.Views
 import Common.Exercise
 import Domain.Math.Data.Equation
+import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.ExercisesDWO
 import Domain.Math.Expr.Parser
-import Domain.Math.View.Basic
 import Common.View
 import Common.Context
 
@@ -23,11 +24,11 @@ linearExercise = makeExercise
    , description   = "solve a linear equation"
    , status        = Experimental
    , parser        = parseWith (pEquation pExpr)
-   , equality      = \a b -> a==b -- fmap normalizeExpr a == fmap normalizeExpr b
-   , equivalence   = \a b -> viewEquivalent equationView a b || a==b
+   , equality      = (==)
+   , equivalence   = viewEquivalent linearEquationView
    , finalProperty = (`belongsTo` equationSolvedForm)
    , ruleset       = linearRules
-   , strategy      = linearStrategy
+   , strategy      = ignoreContext linearStrategy
    , termGenerator = ExerciseList (concat linearEquations)
    }
 
@@ -39,7 +40,7 @@ quadraticExercise = makeExercise
    , status        = Experimental
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = (==) 
-   , equivalence   = viewEquivalent qView
+   , equivalence   = viewEquivalent quadraticEquationsView
    , finalProperty = solvedList
    , ruleset       = map ignoreContext quadraticRules
    , strategy      = ignoreContext quadraticStrategy

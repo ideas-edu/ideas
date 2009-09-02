@@ -18,7 +18,7 @@ import Domain.Math.Expr
 import Domain.Math.Expr.Parser ()
 import Domain.Math.Simplification
 import Domain.Math.SquareRoot.Views
-import Domain.Math.View.Basic hiding (simplify, linearView)
+import Domain.Math.View.Basic hiding (simplify)
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules

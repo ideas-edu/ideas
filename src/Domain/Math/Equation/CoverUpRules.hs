@@ -84,7 +84,7 @@ coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . matchM plusView) (-)
 
 coverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
-coverUpTimesWith = coverUpBinaryRule "times" (commOp . isTimes) (/)
+coverUpTimesWith = coverUpBinaryRule "times" (commOp . matchM timesView) (/)
 
 coverUpNegateWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpNegateWith = coverUpUnaryRule "negate" isNegate negate

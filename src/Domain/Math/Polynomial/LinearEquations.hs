@@ -1,7 +1,7 @@
 module Domain.Math.Polynomial.LinearEquations 
-  ( linearStrategy, merge 
-  , minusT, timesT, divisionT, distributionT, distribute, mergeT
-  , linearRules, linearEquations, testAll
+  ( linearRules, linearStrategy
+  , merge, distribute
+  , testAll
   ) where 
 
 import Prelude hiding (repeat)
@@ -11,12 +11,16 @@ import Common.Strategy hiding (not, fail)
 import Common.Transformation
 import Common.Uniplate
 import Domain.Math.Data.Equation
+import Common.Exercise
+import Domain.Math.Equation.CoverUpRules
 import Domain.Math.ExercisesDWO (linearEquations)
+import Domain.Math.Polynomial.Views
 import Domain.Math.Expr
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Parser ()
 import Domain.Math.View.Basic
+import Domain.Math.ExercisesDWO
 import Control.Monad (guard)
 import Data.List  (partition)
 import Data.Maybe (catMaybes)
@@ -24,11 +28,14 @@ import Data.Maybe (catMaybes)
 ------------------------------------------------------------
 -- Strategy
 
-linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = ignoreContext $ cleanUpStrategy (fmap smartConstructors) $
+linearStrategy :: LabeledStrategy (Equation Expr)
+linearStrategy = cleanUpStrategy cleanUp $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> ruleOnce distribute <|> ruleMulti merge))
-   <*> label "Phase 2" (try varToLeft <*> try conToRight <*> try scaleToOne)
+   <*> label "Phase 2" (try varToLeft <*> try coverUpPlus <*> try (coverUpTimes |> coverUpNegate))
+
+cleanUp :: Equation Expr -> Equation Expr
+cleanUp = fmap (smartConstructors . transform (simplify rationalView))
 
 -------------------------------------------------------
 -- Transformations
@@ -75,19 +82,19 @@ linearRules = map ignoreContext
 
 varToLeft :: Rule (Equation Expr)
 varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
-   (a, x, _) <- match linearView (getRHS eq)
+   (x, a, _) <- match (linearViewWith rationalView) (getRHS eq)
    guard (a/=0)
    return (fromRational a * variable x)
 
 conToRight :: Rule (Equation Expr)
 conToRight = makeRule "constant to right" $ flip supply1 minusT $ \eq -> do
-   (_, _, b) <- match linearView (getLHS eq)
+   (_, _, b) <- match (linearViewWith rationalView) (getLHS eq)
    guard (b/=0)
    return (fromRational b)
 
 scaleToOne :: Rule (Equation Expr)
 scaleToOne = makeRule "scale to one" $ flip supply1 divisionT $ \eq -> do
-   (a, _, _) <- match linearView (getLHS eq)
+   (_, a, _) <- match (linearViewWith rationalView) (getLHS eq)
    guard (a `notElem` [0, 1])
    return (fromRational a)
 
@@ -160,7 +167,7 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
  
 solveAndCheck :: Equation Expr -> Equation Expr
 solveAndCheck eq = 
-   case fromContext (applyD linearStrategy (inContext eq)) of
+   case applyD linearStrategy eq of
       Var x :==: e | x `notElem` collectVars e -> 
          let sub y =  if x==y then e else Var y
          in fmap (simplify rationalView . substituteVars sub) eq
@@ -172,3 +179,17 @@ solveAndCheck eq =
 testAll = all f (concat linearEquations)
  where f eq = case solveAndCheck eq of
                  a :==: b -> if a==b then True else error (show (eq, a, b))
+                 
+q n = putStrLn $ showDerivationWith show (unlabel $ ignoreContext linearStrategy) $ 
+   let x=Var "x" in
+   concat linearEquations !! n
+
+go :: IO () 
+go = mapM_ f $ zip [0..] (concat linearEquations)
+ where 
+   f (n, eq) = mapM_ g (applyAll linearStrategy eq)
+    where
+      g result = 
+         let p (x :==: y) = x == Var "x" && y `belongsTo` rationalView
+         in if p result then putStr (show n++" ok; ") 
+            else error $ show result ++ " for " ++ show n

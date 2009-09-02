@@ -9,7 +9,6 @@ import Common.View
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Expr.Symbols
-import Domain.Math.Data.Equation
 import Control.Monad
 import Data.List (nub)
 
@@ -131,50 +130,6 @@ productView = makeView (Just . second ($ []) . f False) g
    (n1, g1) &&& (n2, g2) = (n1 /= n2, g1 . g2)
    
    g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
-
--------------------------------------------------------------
--- Equations
-
-equationSolvedForm :: View (Equation Expr) (String, Expr)
-equationSolvedForm = makeView f g
- where
-   f (Var x :==: e) | x `notElem` collectVars e =
-      return (x, e)
-   f _ = Nothing
-   g (s, e) = Var s :==: e
-
-linearView :: View Expr (Rational, String, Rational)
-linearView = makeView matchLin g
- where
-   matchLin e = do
-      (a, b) <- f e
-      case nub (collectVars e) of
-         [v] | a /= 0 -> Just (a, v, b)
-         _            -> Nothing
- 
-   f (Var _)    = Just (1, 0)
-   f (Nat n)    = Just (0, fromIntegral n)
-   f (a :+: b)  = liftM2 (\(u,v) (w, x) -> (u+w, v+x)) (f a) (f b)
-   f (a :-: b)  = f (a :+: Negate b)
-   f (Negate a) = liftM (\(u,v) -> (-u,-v)) (f a)
-   f (a :*: b)  = liftM2 (\(u,v) r -> (u*r,v*r)) (f a) (match rationalView b)
-                     `mplus`
-                  liftM2 (\r (u,v) -> (u*r,v*r)) (match rationalView a) (f b)
-   f (a :/: b)  = do (u, v) <- f a 
-                     r <- match rationalView b 
-                     guard (r /= 0)
-                     return (u/r,v/r)
-   f _          = Nothing
-   
-   g (a, x, b) = (fromRational a .*. Var x) .+. fromRational b
-
-equationView :: View (Equation Expr) (String, Rational)
-equationView = makeView f g
- where
-   f (lhs :==: rhs) = do 
-      (a, x, b) <- match linearView (lhs - rhs)
-      return (x, -b/a)
-   g (x, r) = Var x :==: fromRational r
    
 -- helper to determine the name of the variable (move to a different module?)
 selectVar :: Expr -> Maybe String

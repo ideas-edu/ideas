@@ -1,11 +1,16 @@
-module Domain.Math.Equation.Views (equationSolvedForm, solvedEquation) where
+module Domain.Math.Equation.Views 
+   ( equationSolvedForm, solvedEquation, solvedEquations ) where
 
 import Domain.Math.Expr
+import Domain.Math.Data.OrList
 import Domain.Math.Data.Equation
 import Common.View
 
 -------------------------------------------------------------
 -- Views on equations
+
+solvedEquations :: OrList (Equation Expr) -> Bool
+solvedEquations (OrList xs) = all solvedEquation xs
 
 solvedEquation :: Equation Expr -> Bool
 solvedEquation eq@(lhs :==: rhs) = 

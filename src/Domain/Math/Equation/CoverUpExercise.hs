@@ -1,21 +1,21 @@
 module Domain.Math.Equation.CoverUpExercise (coverUpExercise) where
 
-import Prelude hiding (repeat)
-import Control.Monad
 import Common.Context
 import Common.Exercise
-import Data.Ratio
 import Common.Strategy hiding (replicate)
-import Domain.Math.Expr
-import Domain.Math.Equation.CoverUpRules
-import Domain.Math.ExercisesDWO
+import Common.Uniplate (transform)
+import Control.Monad
+import Data.Ratio
 import Domain.Math.Data.Equation
-import Domain.Math.Polynomial.QuadraticEquations (solvedList)
 import Domain.Math.Data.OrList
+import Domain.Math.Equation.CoverUpRules
+import Domain.Math.Equation.Views
+import Domain.Math.ExercisesDWO
+import Domain.Math.Expr
 import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbols
 import Domain.Math.View.Basic
-import Common.Uniplate (transform)
+import Prelude hiding (repeat)
 
 ------------------------------------------------------------
 -- Exercise
@@ -29,7 +29,7 @@ coverUpExercise = makeExercise
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = \a b -> a==b
    , equivalence   = \_ _ -> True
-   , finalProperty = solvedList
+   , finalProperty = solvedEquations
    , ruleset       = map ignoreContext coverUpRulesOr
    , strategy      = coverUpStrategy
    , termGenerator = ExerciseList (map (OrList . return) (concat (fillInResult ++ coverUpEquations)))

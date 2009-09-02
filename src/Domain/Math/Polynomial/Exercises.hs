@@ -1,8 +1,7 @@
 module Domain.Math.Polynomial.Exercises where
 
-import Domain.Math.Polynomial.LinearEquations
-import Domain.Math.Polynomial.QuadraticEquations
-import Domain.Math.Polynomial.HigherDegreeEquations
+import Domain.Math.Polynomial.Rules
+import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Common.Exercise
 import Domain.Math.Data.Equation
@@ -41,7 +40,7 @@ quadraticExercise = makeExercise
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = (==) 
    , equivalence   = viewEquivalent quadraticEquationsView
-   , finalProperty = solvedList
+   , finalProperty = solvedEquations
    , ruleset       = map ignoreContext quadraticRules
    , strategy      = ignoreContext quadraticStrategy
    , termGenerator = ExerciseList (map (OrList . return) $ concat quadraticEquations)
@@ -56,7 +55,7 @@ higherDegreeExercise = makeExercise
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = (==) 
    , equivalence   = eqHD
-   , finalProperty = solvedList
+   , finalProperty = solvedEquations
    , ruleset       = map ignoreContext higherDegreeRules
    , strategy      = ignoreContext higherDegreeStrategy
    , termGenerator = ExerciseList (map (OrList . return) higherDegreeEquations)

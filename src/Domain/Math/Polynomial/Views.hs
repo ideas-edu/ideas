@@ -5,7 +5,7 @@ module Domain.Math.Polynomial.Views
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
    , polyNormalForm
-   , linearEquationView, quadraticEquationView, quadraticEquationsView
+   , linearEquationView, quadraticEquationView, quadraticEquationsView, eqHD
    ) where
 
 import Prelude hiding ((^))
@@ -235,3 +235,36 @@ quadraticEquationView = makeView f g
 
    g (s, as) = build productView (False, map (h s) as) :==: 0
    h s a = simplify sumView (Var s - build squareRootView a)
+   
+eqHD :: OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
+eqHD a b = f a == f b
+ where
+   f (OrList xs) = sort $ nub $ concatMap normHD xs
+
+normHD :: Equation Expr -> [Expr]
+normHD (x :==: y) = 
+   case toPoly (x-y) of
+      Just p  -> concatMap g $ factorize p
+      Nothing -> 
+         case (x, y) of 
+            (Var _, e) | noVars e -> [simplify squareRootView e]
+            _ -> error $ show (x,y)
+ where
+   g :: Polynomial Rational -> [Expr]
+   g p | d==0 = []
+       | length (terms p) <= 1 = [0]
+       | d==1 = [fromRational $ coefficient 0 p / coefficient 1 p]
+       | d==2 = let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
+                    discr   = b*b - 4*a*c
+                in if discr < 0 then [] else 
+                   map (simplify squareRootView)
+                   [ (-fromRational b + sqrt (fromRational discr)) / 2 * fromRational a 
+                   , (-fromRational b - sqrt (fromRational discr)) / 2 * fromRational a
+                   ]
+       | otherwise     = error ("NOT SOLVED:" ++ show p) -- fromPoly
+    where d = degree p
+
+toPoly :: Expr -> Maybe (Polynomial Rational)
+toPoly e = do
+   (_, p) <- match polyView e
+   switch (fmap (match rationalView) p)

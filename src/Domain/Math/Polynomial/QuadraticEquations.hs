@@ -1,5 +1,5 @@
 module Domain.Math.Polynomial.QuadraticEquations
-   (quadraticStrategy, cleanUp, q, go, go2, solvedList, quadraticRules) where
+   (quadraticStrategy, cleanUp, q, go, go2, solvedList, quadraticRules, mulZero) where
 
 import Common.Apply
 import Common.Context

@@ -28,11 +28,12 @@ import Data.Maybe (catMaybes)
 ------------------------------------------------------------
 -- Strategy
 
+-- see derivation for -x*3 == 0
 linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy cleanUp $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> ruleOnce distribute <|> ruleMulti merge))
-   <*> label "Phase 2" (try varToLeft <*> try coverUpPlus <*> try (coverUpTimes |> coverUpNegate))
+   <*> label "Phase 2" (try varToLeft <*> try coverUpPlus <*> try (coverUpTimes |> try coverUpNegate))
 
 cleanUp :: Equation Expr -> Equation Expr
 cleanUp = fmap (smartConstructors . transform (simplify rationalView))

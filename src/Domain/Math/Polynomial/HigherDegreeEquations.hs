@@ -4,12 +4,12 @@ import Prelude hiding ((^), repeat, replicate)
 import Data.List (sort, nub, (\\))
 import Data.Maybe
 import Common.Context
-import Common.Utils (safeHead)
+import Common.Utils (safeHead, snd3)
 import Common.Traversable
 import Common.Transformation
 import Common.Strategy hiding (not)
 import Domain.Math.ExercisesDWO (higherDegreeEquations)
-import Domain.Math.Polynomial.QuadraticEquations (cleanUp)
+import Domain.Math.Polynomial.QuadraticEquations (cleanUp, quadraticStrategy, mulZero)
 import qualified Domain.Math.Polynomial.QuadraticEquations as QE
 import Domain.Math.Polynomial.Views
 import Domain.Math.SquareRoot.Views
@@ -29,7 +29,12 @@ import Domain.Math.Data.Polynomial
 
 higherDegreeStrategy :: LabeledStrategy (OrList (Equation Expr))
 higherDegreeStrategy = cleanUpStrategy cleanUp $
-   label "higher degree" $ replicate 10 $ try (alternatives higherDegreeRules)
+   label "higher degree" $ 
+      repeat (allPowerFactors |> (mulZero <|> ruleOnce2 powerFactor <|> sameFactor))
+      <*> check isQ <*> quadraticStrategy
+ 
+isQ :: OrList (Equation Expr) -> Bool
+isQ xs = if (`belongsTo` quadraticEquationsView) xs then True else error $ show xs
  
 -----------------------------------------------------------
 
@@ -41,9 +46,23 @@ powerZero = makeSimpleRule "power zero" (onceJoinM f)
       return (OrList [a :==: 0])
    f _ = Nothing
 
+-- X*A + X*B = X*C + X*D
+allPowerFactors :: Rule (OrList (Equation Expr))
+allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ \(lhs :==: rhs) -> do
+   xs <- match (sumView >>> listView powerFactorView) lhs
+   ys <- match (sumView >>> listView powerFactorView) rhs
+   case unzip3 (filter ((/=0) . snd3) (xs ++ ys)) of
+      (s:ss, _, ns) | all (==s) ss -> do
+         let m = minimum ns 
+             make = build (sumView >>> listView powerFactorView) . map f
+             f (s, i, n) = (s, i, n-m)
+         guard (m > 0 && length ns > 1)
+         return $ OrList [Var s :==: 0, make xs :==: make ys]
+      _ -> Nothing
+
 -- Factor-out variable on both sides of the equation
-powerFactor :: Rule (OrList (Equation Expr))
-powerFactor = makeSimpleRule "power factor" $ onceM $ onceM $ \e -> do
+powerFactor :: Rule Expr
+powerFactor = makeSimpleRule "power factor" $ \e -> do
    xs <- match sumView e >>= mapM (match powerFactorView)
    let (vs, as, ns) = unzip3 xs
        r = minimum ns
@@ -69,7 +88,7 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
 -----------------------
    
 higherDegreeRules :: [Rule (OrList (Equation Expr))]
-higherDegreeRules = [powerZero, powerFactor, sameFactor] ++ QE.quadraticRules
+higherDegreeRules = [] -- [powerZero, powerFactor, sameFactor] ++ QE.quadraticRules
  
 testAll :: IO ()
 testAll = flip mapM_ higherDegreeEquations $ \eq ->

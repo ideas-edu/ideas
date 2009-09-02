@@ -26,7 +26,7 @@ linearExercise = makeExercise
    , parser        = parseWith (pEquation pExpr)
    , equality      = (==)
    , equivalence   = viewEquivalent linearEquationView
-   , finalProperty = (`belongsTo` equationSolvedForm)
+   , finalProperty = solvedEquation
    , ruleset       = linearRules
    , strategy      = ignoreContext linearStrategy
    , termGenerator = ExerciseList (concat linearEquations)

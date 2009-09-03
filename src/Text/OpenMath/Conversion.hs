@@ -21,10 +21,9 @@ import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
-import Domain.Math.Expr
+import qualified Domain.Math.Expr as ES
+import Domain.Math.Expr (Expr(..))
 import Text.OpenMath.Object
-import qualified Domain.Math.Expr.Symbolic as ES
-import qualified Domain.Math.Expr.Symbols as ES
 
 
 class IsOMOBJ a where

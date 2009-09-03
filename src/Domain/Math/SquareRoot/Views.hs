@@ -3,9 +3,8 @@ module Domain.Math.SquareRoot.Views
    ) where
 
 import Control.Monad
-import Domain.Math.Expr
+import Domain.Math.Expr hiding ((^))
 import Domain.Math.Data.SquareRoot
-import Domain.Math.Expr.Symbols hiding ((^))
 import Domain.Math.View.Basic
 
 squareRootView :: View Expr (SquareRoot Rational)

@@ -8,8 +8,6 @@ module Domain.Math.Numeric.Views
 import Common.View
 import Control.Monad
 import Data.Ratio
-import Domain.Math.Expr.Symbolic
-import Domain.Math.Expr.Symbols
 import Domain.Math.Expr
 
 -------------------------------------------------------------------

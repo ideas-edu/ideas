@@ -87,7 +87,7 @@ reduceMatrixExercise = makeExercise
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = ppMatrixWith (ppExprPrio False 0)
+   , prettyPrinter = ppMatrixWith showExpr
    , equivalence   = \x y -> fmap simplified x === fmap simplified y
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm

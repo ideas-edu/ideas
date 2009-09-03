@@ -6,7 +6,7 @@ import Prelude hiding ((^))
 import Text.Parsing hiding (pParens)
 import Common.Transformation
 import Domain.Math.Data.Equation
-import Domain.Math.Expr
+import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList

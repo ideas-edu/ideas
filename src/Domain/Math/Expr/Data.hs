@@ -1,4 +1,4 @@
-module Domain.Math.Expr where
+module Domain.Math.Expr.Data where
 
 import Data.Char  (isDigit, isAlphaNum)
 import Data.Ratio

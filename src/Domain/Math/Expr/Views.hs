@@ -1,13 +1,8 @@
-module Domain.Math.View.Basic
-   ( module Domain.Math.View.Basic
-   , module Domain.Math.Numeric.Views -- to be removed?
-   , module Common.View -- export all view-related functions
-   ) where
+module Domain.Math.Expr.Views where
 
 import Prelude hiding (recip, (^))
 import Common.View
-import Domain.Math.Expr
-import Domain.Math.Numeric.Views
+import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
 import Control.Monad
 import Data.List (nub)
@@ -41,8 +36,6 @@ Nat 1    .*. b        = b
 a        .*. Nat 1    = a
 Negate a .*. b        = neg (a .*. b)
 a        .*. Negate b = neg (a .*. b)
---a        .*. (Nat 1 :/: b) = a ./. b -- New
---(Nat 1 :/: a) .*. b = b ./. a -- New
 a        .*. b        = a :*: b
 
 (./.) :: Expr -> Expr -> Expr

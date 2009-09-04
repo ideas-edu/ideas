@@ -6,13 +6,13 @@ module Domain.Math.Polynomial.Strategies
 import Prelude hiding (repeat)
 import Common.Strategy
 import Common.Transformation
+import Common.View
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Views
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Equation
 import Domain.Math.Expr
-import Domain.Math.View.Basic
 import Domain.Math.Polynomial.CleanUp
 
 ------------------------------------------------------------

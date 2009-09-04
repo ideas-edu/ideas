@@ -4,13 +4,13 @@ module Domain.Math.Simplification
    ) where
 
 import Common.Context
+import Common.View hiding (simplify)
+import Domain.Math.Numeric.Views
 import Common.Uniplate
 import Data.List
 import Data.Maybe
 import Control.Monad
-import Domain.Math.Expr
-import Domain.Math.Expr.Symbols
-import Domain.Math.View.Basic hiding (simplify, recip)
+import Domain.Math.Expr hiding (recip)
 import Domain.Math.Data.Equation
 
 class Simplify a where

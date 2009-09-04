@@ -1,6 +1,6 @@
 -- For now, restricted to integers in exponent:
 -- no sqrt, or roots
-module Domain.Math.View.Power 
+module Domain.Math.Power.Views
    ( powerView, powerViewFor
    , powerFactorView, powerFactorViewForWith
    ) where
@@ -8,9 +8,8 @@ module Domain.Math.View.Power
 import qualified Prelude
 import Prelude hiding ((^), recip)
 import Control.Monad
+import Common.View
 import Domain.Math.Expr
-import Domain.Math.Expr.Symbols
-import Domain.Math.View.Basic
 
 ----------------------------------------------------------------------
 -- Simplified views (no side-conditions to worry about)

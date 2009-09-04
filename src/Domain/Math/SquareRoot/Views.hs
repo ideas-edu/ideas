@@ -3,9 +3,10 @@ module Domain.Math.SquareRoot.Views
    ) where
 
 import Control.Monad
+import Common.View
+import Domain.Math.Numeric.Views
 import Domain.Math.Expr hiding ((^))
 import Domain.Math.Data.SquareRoot
-import Domain.Math.View.Basic
 
 squareRootView :: View Expr (SquareRoot Expr)
 squareRootView = squareRootViewWith identity

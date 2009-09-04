@@ -4,6 +4,7 @@ import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (replicate)
 import Common.Uniplate (transform)
+import Common.View
 import Control.Monad
 import Data.Ratio
 import Domain.Math.Data.Equation
@@ -11,10 +12,8 @@ import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.ExercisesDWO
+import Domain.Math.Numeric.Views
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser
-import Domain.Math.Expr.Symbols
-import Domain.Math.View.Basic
 import Prelude hiding (repeat)
 
 ------------------------------------------------------------

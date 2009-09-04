@@ -15,10 +15,8 @@ module Domain.LinearAlgebra.Strategies where
 
 import Prelude hiding (repeat)
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser ()
 import Domain.Math.Simplification
 import Domain.Math.SquareRoot.Views
-import Domain.Math.View.Basic hiding (simplify)
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
@@ -28,6 +26,7 @@ import Domain.LinearAlgebra.LinearView (linearView)
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
+import Common.View hiding (simplify)
 import Domain.LinearAlgebra.Vector
 
 toReducedEchelon :: LabeledStrategy (Context (Matrix Expr))

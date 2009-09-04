@@ -8,9 +8,10 @@ import Data.Maybe
 -- import Debug.Trace
 import Data.Ratio
 import Data.List
+import Common.View
+import Domain.Math.Numeric.Views
 import Domain.Math.Expr
-import Domain.Math.View.Basic
-import Domain.Math.View.Power
+import Domain.Math.Power.Views
 import Domain.Math.SquareRoot.Views
 import Common.Uniplate
 import Domain.Math.Simplification (smartConstructors)

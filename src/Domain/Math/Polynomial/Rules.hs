@@ -6,6 +6,8 @@ import Common.Transformation
 import Common.Traversable
 import Common.Uniplate (somewhereM)
 import Common.Utils
+import Common.View
+import Domain.Math.Numeric.Views
 import Control.Monad
 import Data.List (nub, (\\))
 import Data.Maybe
@@ -16,8 +18,7 @@ import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Expr
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.CleanUp
-import Domain.Math.View.Basic
-import Domain.Math.View.Power
+import Domain.Math.Power.Views
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Prelude

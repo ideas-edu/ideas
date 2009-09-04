@@ -8,13 +8,13 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
    ) where
 
+import Common.View
 import Domain.Math.Expr
 import Domain.Math.Data.Equation
 import Control.Monad
 import Common.Transformation
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
-import Domain.Math.View.Basic
 import Common.Traversable
 import Domain.Math.Expr.Symbolic
 

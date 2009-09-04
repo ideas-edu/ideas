@@ -4,7 +4,8 @@ import Common.Transformation
 import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
-import Domain.Math.View.Basic
+import Domain.Math.Numeric.Views
+import Common.View
 
 ------------------------------------------------------------
 -- Rules

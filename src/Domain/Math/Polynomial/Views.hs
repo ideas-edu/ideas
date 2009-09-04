@@ -12,17 +12,18 @@ module Domain.Math.Polynomial.Views
 import Prelude hiding ((^))
 import Control.Monad
 import Data.List
+import Common.View
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.Expr.Symbols
 import Domain.Math.SquareRoot.Views
-import Domain.Math.View.Basic
-import Domain.Math.View.Power (powerFactorViewForWith)
+import Domain.Math.Power.Views (powerFactorViewForWith)
 
 -------------------------------------------------------------------
 -- Polynomial view

@@ -41,6 +41,8 @@ Nat 1    .*. b        = b
 a        .*. Nat 1    = a
 Negate a .*. b        = neg (a .*. b)
 a        .*. Negate b = neg (a .*. b)
+--a        .*. (Nat 1 :/: b) = a ./. b -- New
+--(Nat 1 :/: a) .*. b = b ./. a -- New
 a        .*. b        = a :*: b
 
 (./.) :: Expr -> Expr -> Expr

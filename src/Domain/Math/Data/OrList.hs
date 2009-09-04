@@ -36,5 +36,5 @@ instance Arbitrary a => Arbitrary (OrList a) where
 
 instance Show a => Show (OrList a) where
    show (OrList xs) 
-      | null xs   = "false"
+      | null xs   = "Or []"
       | otherwise = unwords (intersperse "or" (map show xs))

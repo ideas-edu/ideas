@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.0">
+<reply result="ok" version="0.5.4">
   <list>
-    <elem ruleid="scale to one">
+    <elem ruleid="cover-up times [vars]">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>

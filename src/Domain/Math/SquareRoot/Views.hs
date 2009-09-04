@@ -7,8 +7,8 @@ import Domain.Math.Expr hiding ((^))
 import Domain.Math.Data.SquareRoot
 import Domain.Math.View.Basic
 
-squareRootView :: View Expr (SquareRoot Rational)
-squareRootView = squareRootViewWith rationalView
+squareRootView :: View Expr (SquareRoot Expr)
+squareRootView = squareRootViewWith identity
 
 squareRootViewWith :: Fractional a => View Expr a -> View Expr (SquareRoot a)
 squareRootViewWith v = makeView f g

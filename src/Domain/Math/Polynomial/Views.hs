@@ -5,7 +5,8 @@ module Domain.Math.Polynomial.Views
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
    , polyNormalForm
-   , linearEquationView, quadraticEquationView, quadraticEquationsView, eqHD
+   , linearEquationView, quadraticEquationView, quadraticEquationsView
+   , higherDegreeEquationsView
    ) where
 
 import Prelude hiding ((^))
@@ -21,7 +22,6 @@ import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.Expr.Symbols
 import Domain.Math.SquareRoot.Views
 import Domain.Math.View.Basic
-import Common.Traversable
 import Domain.Math.View.Power (powerFactorViewForWith)
 
 -------------------------------------------------------------------
@@ -178,20 +178,17 @@ polyNormalForm v = makeView f (uncurry g)
    
 -------------------------------------------------------------------
 -- Normal forms for equations
-{-
-orListView :: ([b] -> Maybe c) -> (c -> [b]) -> View a b -> View (OrList a) c
-orListView z z2 v = makeView f g
- where
-   f (OrList xs) = join $ liftM z (mapM (match v) xs)
-   g = OrList . map (build v) . z2 -}
-   
-linearEquationView :: View (Equation Expr) (String, Rational)
-linearEquationView = makeView f g
+
+linearEquationViewWith :: Fractional a => View Expr a -> View (Equation Expr) (String, a)
+linearEquationViewWith v = makeView f g
  where
    f (lhs :==: rhs) = do 
-      (x, a, b) <- match (linearViewWith rationalView) (lhs - rhs)
+      (x, a, b) <- match (linearViewWith v) (lhs - rhs)
       return (x, -b/a)
-   g (x, r) = Var x :==: fromRational r
+   g (x, r) = Var x :==: build v r
+   
+linearEquationView :: View (Equation Expr) (String, Rational)
+linearEquationView = linearEquationViewWith rationalView
 
 quadraticEquationsView:: View (OrList (Equation Expr)) (String, [SQ.SquareRoot Rational])
 quadraticEquationsView = makeView f g
@@ -200,71 +197,61 @@ quadraticEquationsView = makeView f g
       ps <- mapM (match quadraticEquationView) xs
       case unzip ps of
          ([], _)     -> 
-            return ([], [])
+            return ("x", []) -- important for equality
          (s:ss, xss) -> do
             guard (all (==s) ss)
             let make = sort . nub . filter (not . SQ.imaginary) . concat
             return (s, make xss)
             
-   g (s, xs) = OrList [ Var s :==: build squareRootView rhs | rhs <- xs ]
+   g (s, xs) = OrList [ Var s :==: build (squareRootViewWith rationalView) rhs | rhs <- xs ]
 
-quadraticEquationView:: View (Equation Expr) (String, [SQ.SquareRoot Rational])
+quadraticEquationView :: View (Equation Expr) (String, [SQ.SquareRoot Rational])
 quadraticEquationView = makeView f g
  where
    f (lhs :==: rhs) = do
-      (s, poly) <- match polyView (lhs - rhs)
+      (s, p) <- match (polyViewWith (squareRootViewWith rationalView)) (lhs - rhs)
+      guard (degree p <= 2)
       liftM ((,) s) $
-         case degree poly < 2 of
-            True -> do
-               polySQ <- switch $ fmap (match (squareRootViewWith rationalView)) poly
-               (a, b) <- match linearPolyView polySQ
-               if a==0 then (if b==0 then Just [] else Nothing)
-                       else return [-(b/a)]
-            False -> do
-               polyR <- switch $ fmap (match rationalView) poly
-               (a, b, c) <- match quadraticPolyView polyR
-               if a == 0 then return [SQ.con (-(c/b))] else do -- BAH!
-               let discr  = b*b - 4*a*c
-                   sdiscr = SQ.sqrtRational discr
+         case polynomialList p of
+            [a, b, c] -> do
+               discr <- SQ.fromSquareRoot (b*b - SQ.scale 4 (a*c))
+               let sdiscr = SQ.sqrtRational discr
+                   twoA   = SQ.scale 2 a
                case compare discr 0 of
-                  LT -> Just []
-                  EQ -> Just [ SQ.con (-b/(2*a)) ]
-                  GT -> Just [ SQ.scale (1/(2*a)) (-SQ.con b + sdiscr)
-                             , SQ.scale (1/(2*a)) (-SQ.con b - sdiscr)
-                             ]
+                  LT -> return []
+                  EQ -> return [ -b/twoA ]
+                  GT -> return [ (-b+sdiscr)/twoA, (-b-sdiscr)/twoA ]
+            [a, b]   -> return [-b/a]
+            _        -> return []
 
    g (s, as) = build productView (False, map (h s) as) :==: 0
-   h s a = simplify sumView (Var s - build squareRootView a)
-   
-eqHD :: OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
-eqHD a b = f a == f b
- where
-   f (OrList xs) = sort $ nub $ concatMap normHD xs
+   h s a = simplify sumView (Var s - build (squareRootViewWith rationalView) a)
 
-normHD :: Equation Expr -> [Expr]
-normHD (x :==: y) = 
-   case toPoly (x-y) of
-      Just p  -> concatMap g $ factorize p
-      Nothing -> 
-         case (x, y) of 
-            (Var _, e) | noVars e -> [simplify squareRootView e]
-            _ -> error $ show (x,y)
+higherDegreeEquationsView :: View (OrList (Equation Expr)) [Expr]
+higherDegreeEquationsView = makeView f undefined
  where
-   g :: Polynomial Rational -> [Expr]
-   g p | d==0 = []
-       | length (terms p) <= 1 = [0]
-       | d==1 = [fromRational $ coefficient 0 p / coefficient 1 p]
+   f (OrList xs) = Just $ sort $ nub [ e | a :==: b <- xs, e <- normHDE (a-b) ]
+
+normHDE :: Expr -> [Expr]
+normHDE e = do 
+   case match (polyViewWith rationalView) e of
+      Just (x, p)  -> concatMap (g x) $ factorize p
+      Nothing -> fromMaybe [e] $ do
+         (x, a) <- match (linearEquationViewWith (squareRootViewWith rationalView)) (e :==: 0)
+         return [ Var x .+. build (squareRootViewWith rationalView) (-a) ] 
+ where
+   g :: String -> Polynomial Rational -> [Expr]
+   g x p 
+       | d==0 = []
+       | length (terms p) <= 1 = [Var x]
+       | d==1 = [Var x .+. fromRational ((coefficient 0 p / coefficient 1 p))]
        | d==2 = let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
                     discr   = b*b - 4*a*c
+                    sdiscr  = SQ.sqrtRational discr
                 in if discr < 0 then [] else 
-                   map (simplify squareRootView)
-                   [ (-fromRational b + sqrt (fromRational discr)) / 2 * fromRational a 
-                   , (-fromRational b - sqrt (fromRational discr)) / 2 * fromRational a
+                   map ((Var x .+.) . build (squareRootViewWith rationalView))
+                   [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
+                   , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
                    ]
        | otherwise     = error ("NOT SOLVED:" ++ show p) -- fromPoly
     where d = degree p
-
-toPoly :: Expr -> Maybe (Polynomial Rational)
-toPoly e = do
-   (_, p) <- match polyView e
-   switch (fmap (match rationalView) p)

@@ -7,16 +7,15 @@ import Common.Traversable
 import Common.Uniplate (somewhereM)
 import Common.Utils
 import Control.Monad
-import Data.List (nub, (\\), partition)
+import Data.List (nub, (\\))
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser () -- for instance Argument Expr
-import Domain.Math.Expr.Symbols
 import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.View.Basic
 import Domain.Math.View.Power
 import Prelude hiding (repeat, (^), replicate)
@@ -27,6 +26,12 @@ import qualified Prelude
 ------------------------------------------------------------
 -- Rule collection
 
+linearRules :: [Rule (Context (Equation Expr))]
+linearRules = map ignoreContext
+   [ removeDivision, ruleMulti merge, ruleOnce distribute
+   , varToLeft, conToRight, scaleToOne
+   ]
+
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = 
    [ ruleOnce noConFormula, ruleOnce noLinFormula, ruleOnce niceFactors
@@ -36,6 +41,11 @@ quadraticRules =
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft
    ]
+   
+higherDegreeRules :: [Rule (OrList (Equation Expr))]
+higherDegreeRules = 
+   [ allPowerFactors, ruleOnce2 powerFactor, sameFactor
+   ] ++ quadraticRules
 
 ------------------------------------------------------------
 -- General form rules: ax^2 + bx + c = 0
@@ -215,9 +225,6 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
    return $ OrList[ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
    
-higherDegreeRules :: [Rule (OrList (Equation Expr))]
-higherDegreeRules = [allPowerFactors, ruleOnce2 powerFactor, sameFactor] ++ quadraticRules
-
 
 ---------------------------------------------------------
 -- From LinearEquations
@@ -259,12 +266,6 @@ mergeT = makeTrans "merge" $ return . simplifyWith f sumView
 -------------------------------------------------------
 -- Rewrite Rules
 
-linearRules :: [Rule (Context (Equation Expr))]
-linearRules = map ignoreContext
-   [ removeDivision, ruleMulti merge, ruleOnce distribute
-   , varToLeft, conToRight, scaleToOne
-   ]
-
 varToLeft :: Rule (Equation Expr)
 varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
    (x, a, _) <- match (linearViewWith rationalView) (getRHS eq)
@@ -301,47 +302,4 @@ merge :: Rule Expr
 merge = makeSimpleRule "merge similar terms" $ \old -> do
    new <- apply mergeT old
    guard (old /= new)
-   return new   
-   
-----------------------------------------------------------------------
--- Expr normalization
-   {-
-normalizeExpr :: Expr -> Expr
-normalizeExpr a =
-   case (match sumView a, match productView a) of
-      (Just xs, _) | length xs > 1 -> 
-         build sumView (sort $ normalizeSum $ map normalizeExpr xs)
-      (_, Just (b, ys)) | length (filter (/= 1) ys) > 1 -> 
-         build productView (b, sort $ normalizeProduct $ map normalizeExpr ys)
-      _ -> a 
--}
-normalizeProduct :: [Expr] -> [Expr]
-normalizeProduct ys = f [ (match rationalView y, y) | y <- ys ]
-  where  f []                    = []
-         f ((Nothing  , e):xs)   = e:f xs
-         f ((Just r   , _):xs)   = 
-           let  cs    = r :  [ c  | (Just c   , _)  <- xs ]
-                rest  =      [ x  | (Nothing  , x)  <- xs ]
-           in   build rationalView (product cs):rest
-
-normalizeSum :: [Expr] -> [Expr]
-normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
- where
-   pm :: Rational -> Expr -> (Rational, Expr)
-   pm r (e1 :*: e2) = case (match rationalView e1, match rationalView e2) of
-                         (Just r1, _) -> pm (r*r1) e2
-                         (_, Just r1) -> pm (r*r1) e1
-                         _           -> (r, e1 .*. e2)
-   pm r (Negate e) = pm (negate r) e
-   pm r e = case match rationalView e of
-               Just r1 -> (r*r1, Nat 1)
-               Nothing -> (r, e)
-   
-   rec [] = []
-   rec ((Nothing, e):xs) = e:rec xs
-   rec ((Just (r, a), e):xs) = new:rec rest
-    where
-      (js, rest) = partition (maybe False ((==a) . snd) . fst) xs
-      rs  = r:map fst (catMaybes (map fst js))
-      new | null js   = e
-          | otherwise = build rationalView (sum rs) .*. a 
+   return new

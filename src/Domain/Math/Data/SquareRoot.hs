@@ -1,7 +1,7 @@
 module Domain.Math.Data.SquareRoot 
    ( SquareRoot
    , imaginary, imaginaryUnit
-   , con, toList, scale
+   , con, toList, scale, fromSquareRoot
    , sqrt, sqrtRational, isqrt, eval
    ) where
 
@@ -55,9 +55,15 @@ negateSqMap = fmap negate
 
 timesSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
 timesSqMap m1 m2 =
-   let op n a m = M.unionWith (+) (f n (fmap (a*) (m1))) m
-       f i m    = M.mapKeys (*i) m
-   in makeMap (M.foldWithKey op M.empty m2)
+   case (M.toList m1, M.toList m2) of
+      ([], _) -> M.empty
+      (_, []) -> M.empty
+      ([(n, a)], _) | n==1 -> if a==0 then M.empty else fmap (*a) m2
+      (_, [(n, a)]) | n==1 -> if a==0 then M.empty else fmap (*a) m1
+      _ ->
+         let op n a m = M.unionWith (+) (f n (fmap (a*) m1)) m
+             f i m    = M.mapKeys (*i) m
+         in makeMap (M.foldWithKey op M.empty m2)
 
 recipSqMap :: Fractional a => SqMap a -> SqMap a
 recipSqMap m = 
@@ -126,6 +132,13 @@ imaginaryUnit = S True (M.singleton (-1) 1)
 
 toList :: SquareRoot a -> [(a, Integer)]
 toList = map (\(k, r) -> (r, toInteger k)) . M.toList . squareRootMap
+
+fromSquareRoot :: Num a => SquareRoot a -> Maybe a
+fromSquareRoot a =
+   case toList a of
+      [(a, n)] | n==1 -> Just a 
+      []              -> Just 0
+      _ -> Nothing
 
 con :: Num a => a -> SquareRoot a
 con a = S False (if a==0 then M.empty else M.singleton 1 a)

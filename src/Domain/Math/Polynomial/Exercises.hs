@@ -54,42 +54,9 @@ higherDegreeExercise = makeExercise
    , status        = Experimental
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = (==) 
-   , equivalence   = eqHD
+   , equivalence   = viewEquivalent higherDegreeEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext higherDegreeRules
    , strategy      = ignoreContext higherDegreeStrategy
    , termGenerator = ExerciseList (map (OrList . return) higherDegreeEquations)
    }
-
-   
-   {-
-main :: IO ()
-main = printDerivations linearEquationExercise (concat linearEquations)
-
-
-testAll = drop 0 $ zipWith f [1..] (concat quadraticEquations)
- where
-   f i e
-      | not (solvedList (solve e)) = 
-           error (show e ++ "  becomes   " ++ show (solve e))
-      | testD e   = 0
-      | otherwise = i
-
-testD :: Equation Expr -> Bool
-testD e = 
-   case derivations (unlabel solverQ) (OrList [e]) of
-      [] -> error "no derivation"
-      (a, ps):_ -> 
-         let xs = a : map snd ps
-         in case [ (x, y) | x <- xs, y <- xs, not (equivalence quadraticEquationExercise x y) ] of
-               []   -> False
-               (x,y):_ -> error $ show (x, y, match qView x, match qView y) -- (simplify qView x) ++ "    is not    " ++ show (simplify qView y)
-
-main :: IO ()
-main = printDerivations quadraticEquationExercise xs 
- where xs = map (OrList . return) (concat quadraticEquations)
-
-main :: IO ()
-main = printDerivations higherDegreeEquationExercise xs 
- where xs = map (OrList . return) higherDegreeEquations
--}

@@ -135,16 +135,14 @@ cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
    let without as = build sumView (as \\ zs)
    return (without xs :==: without ys)
 
+-- Two out of three "merkwaardige producten"
 distributionSquare :: Rule Expr
 distributionSquare = makeSimpleRule "distribution square" f
  where
-   f (Sym s [x, Nat 2]) | s == powerSymbol = do
-      (x, a, b) <- match (linearViewWith rationalView) x
-      guard (a /= 0 && (a /= 1 || b /=0))
-      return  (  (fromRational (a*a) .*. (Var x^2)) 
-             .+. (fromRational (2*a*b) .*. Var x)
-             .+. (fromRational (b*b))
-              )
+   f (Sym s [a :+: b, Nat 2]) | s == powerSymbol = do
+      return ((a .^. 2) .+. (2 .*. a .*. b) + (b .^. 2))
+   f (Sym s [a :-: b, Nat 2]) | s == powerSymbol = do
+      return ((a .^. 2) .-. (2 .*. a .*. b) + (b .^. 2))
    f _ = Nothing
 
 flipEquation :: Rule (Equation Expr)
@@ -201,7 +199,7 @@ allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ \(lhs :==: rh
          return $ OrList [Var s :==: 0, make xs :==: make ys]
       _ -> Nothing
 
--- Factor-out variable on both sides of the equation
+-- Factor-out variable
 powerFactor :: Rule Expr
 powerFactor = makeSimpleRule "power factor" $ \e -> do
    xs <- match sumView e >>= mapM (match powerFactorView)

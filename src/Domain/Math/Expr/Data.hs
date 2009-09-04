@@ -19,8 +19,8 @@ data Expr = -- Num
           | Negate Expr
           | Nat Integer
             -- Fractional & Floating
-          | Expr :/: Expr   -- NaN if rhs is zero
-          | Sqrt Expr       -- NaN if expr is negative
+          | Expr :/: Expr
+          | Sqrt Expr
             -- Symbolic
           | Var String
           | Sym Symbol [Expr]
@@ -112,7 +112,7 @@ instance Uniplate Expr where
 
 instance Arbitrary Expr where
    arbitrary = natGenerator 
-      -- before chaning this instance, check that the 
+      -- before changing this instance, check that the 
       -- Gaussian elimination exercise still works (with checkExercise)
       {-
       let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
@@ -150,23 +150,6 @@ varGenerator vars
    | otherwise = oneof [ return (Var x) | x <- vars ]
 
 -----------------------------------------------------------------------
--- Fold
-
-foldExpr (plus, times, minus, neg, nat, dv, sq, var, sym) = rec 
- where
-   rec expr = 
-      case expr of
-         a :+: b  -> plus (rec a) (rec b)
-         a :*: b  -> times (rec a) (rec b)
-         a :-: b  -> minus (rec a) (rec b)
-         Negate a -> neg (rec a)
-         Nat n    -> nat n
-         a :/: b  -> dv (rec a) (rec b)
-         Sqrt a   -> sq (rec a)
-         Var v    -> var v
-         Sym f xs -> sym f (map rec xs)
-
------------------------------------------------------------------------
 -- Pretty printer 
 
 instance Show Expr where
@@ -175,8 +158,8 @@ instance Show Expr where
 showExpr :: Expr -> String
 showExpr = rec 0 
  where
-   rec i (Nat n) = show n
-   rec i (Var s) 
+   rec _ (Nat n) = show n
+   rec _ (Var s) 
       | all isAlphaNum s = s
       | otherwise        = "\"" ++ s ++ "\""
    rec i expr = 
@@ -243,10 +226,3 @@ hasVars = not . noVars
 
 noVars :: Expr -> Bool
 noVars = null . collectVars
-{-
-substituteVars :: (String -> Expr) -> Expr -> Expr
-substituteVars sub = rec 
- where
-   rec (Var s) = sub s
-   rec e = f (map rec cs)
-    where (cs, f) = uniplate e -}

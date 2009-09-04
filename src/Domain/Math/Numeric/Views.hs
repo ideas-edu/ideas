@@ -107,17 +107,19 @@ doubleSym _ _ = Nothing
 -- General numeric interpretation function: constructors Sqrt and
 -- (:/:) are interpreted with function
 exprToNum :: (Monad m, Num a) => (Symbol -> [a] -> m a) -> Expr -> m a
-exprToNum f = foldExpr 
-   ( liftM2 (+)
-   , liftM2 (*)
-   , liftM2 (-)
-   , liftM negate
-   , return . fromInteger
-   , \mx my -> do x <- mx; y <- my; f divSymbol [x, y]
-   , \mx    -> do x <- mx; f sqrtSymbol [x]
-   , \_     -> fail "exprToNum: variable"
-   , \s xs  -> sequence xs >>= f s
-   )
+exprToNum f = rec 
+ where
+   rec expr = 
+      case expr of 
+         a :+: b  -> liftM2 (+)    (rec a) (rec b)
+         a :*: b  -> liftM2 (*)    (rec a) (rec b)
+         a :-: b  -> liftM2 (-)    (rec a) (rec b)
+         Negate a -> liftM  negate (rec a)
+         Nat n    -> return (fromInteger n)
+         a :/: b  -> do x <- rec a; y <- rec b; f divSymbol [x, y]
+         Sqrt a   -> do x <- rec a; f sqrtSymbol [x]
+         Var _    -> fail "exprToNum: variable"
+         Sym s xs -> mapM rec xs >>= f s
 
 intDiv :: Integral a => a -> a -> Maybe a
 intDiv x y 

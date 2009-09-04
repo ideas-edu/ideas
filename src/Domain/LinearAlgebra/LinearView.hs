@@ -14,7 +14,7 @@
 module Domain.LinearAlgebra.LinearView
    ( IsLinear(..), var, isVar, isConstant, renameVariables
    , splitLinearExpr, evalLinearExpr, linearView
-   , LinearMap -- tmp
+   , LinearMap
    ) where
 
 import Control.Monad
@@ -37,34 +37,18 @@ linearView :: View Expr (LinearMap Expr)
 linearView = makeView f g
  where 
    -- compositional (sumView would be a more restrictive alternative)
-   f = {- fmap (fmap (fromConstrained . simplify)) . -} foldExpr alg
-   alg = (liftM2 plus, liftJ2 times, liftM2 minus, liftM neg, nat, liftJ2 dv, liftJ sq, var, \f xs -> sequence xs >>= sym f)
-    where
-      nat n = return $ LM M.empty (fromInteger n)
-      var s = return $ LM (M.singleton s 1) 0
-      
-      plus (LM m1 c1) (LM m2 c2) = 
-         LM (M.unionWith (+) m1 m2) (c1+c2)
-      neg (LM m c) = 
-         LM (M.map negate m) (negate c)
-      minus p1 p2 = 
-         plus p1 (neg p2)
-      
-      times lm1@(LM m1 c1) lm2@(LM m2 c2) 
-         | M.null m1 = return $ fmap (c1*) lm2
-         | M.null m2 = return $ fmap (*c2) lm1
-         | otherwise = Nothing
-      dv lm (LM m2 c2) = do
-         guard (M.null m2 && c2 /= 0)
-         return $ fmap (/c2) lm
-      
-      sq (LM m c) = do
-         guard (M.null m)
-         return $ LM M.empty (sqrt c)
-      sym f ps = do
-         guard (all (M.null . lmMap) ps)
-         return $ LM M.empty (function f (map lmConstant ps))
-   
+   f expr = 
+      case expr of
+         Nat n    -> return $ LM M.empty (fromInteger n)
+         Var s    -> return $ LM (M.singleton s 1) 0
+         a :+: b  -> liftM2 plusLM  (f a) (f b)
+         a :-: b  -> liftM2 plusLM  (f a) (liftM negateLM (f b))
+         Negate a -> liftM negateLM (f a)
+         a :*: b  -> join $ liftM2 timesLM (f a) (f b)
+         a :/: b  -> join $ liftM2 divLM (f a) (f b)
+         Sqrt a   -> join $ liftM sqrtLM (f a)
+         Sym s as -> mapM f as >>= symLM s
+       
    g (LM m c) = build sumView (concatMap make (M.toList m) ++ [c | c /= 0])
    make (s, e)
       | e == 0    = []
@@ -72,11 +56,32 @@ linearView = makeView f g
       | e == -1   = [negate (variable s)]
       | otherwise = [e*variable s]
 
-liftJ :: Monad m => (a -> m b) -> m a -> m b
-liftJ f ma = ma >>= \a -> f a
+plusLM :: Num a => LinearMap a -> LinearMap a -> LinearMap a
+plusLM (LM m1 c1) (LM m2 c2) = LM (M.unionWith (+) m1 m2) (c1+c2)
 
-liftJ2 :: Monad m => (a -> b -> m c) -> m a -> m b -> m c
-liftJ2 f ma mb = ma >>= \a -> mb >>= \b -> f a b
+negateLM :: Num a => LinearMap a -> LinearMap a
+negateLM (LM m c) = LM (M.map negate m) (negate c)
+
+timesLM :: Num a => LinearMap a -> LinearMap a -> Maybe (LinearMap a)
+timesLM lm1@(LM m1 c1) lm2@(LM m2 c2) 
+   | M.null m1 = return $ fmap (c1*) lm2
+   | M.null m2 = return $ fmap (*c2) lm1
+   | otherwise = Nothing
+
+divLM :: Fractional a => LinearMap a -> LinearMap a -> Maybe (LinearMap a)
+divLM lm (LM m2 c2) = do
+   guard (M.null m2 && c2 /= 0)
+   return $ fmap (/c2) lm
+
+sqrtLM :: Floating a => LinearMap a -> Maybe (LinearMap a)
+sqrtLM (LM m c) = do
+   guard (M.null m)
+   return $ LM M.empty (sqrt c)
+
+symLM :: Symbolic a => Symbol -> [LinearMap a] -> Maybe (LinearMap a)
+symLM f ps = do
+   guard (all (M.null . lmMap) ps)
+   return $ LM M.empty (function f (map lmConstant ps))
 
 class (Fractional a, Symbolic a) => IsLinear a where
    isLinear :: a -> Bool

@@ -132,44 +132,48 @@ negT (R r) = R (negate r)
 negT (S s) = S (negate s)
 negT (P x r n) = P x (negate r) n
 negT (E e) = E (neg e)
-
-{- recipT :: T -> T
-recipT (R r) = R (Prelude.recip r)
-recipT (S s) = S (Prelude.recip s)
-recipT t     = E (Domain.Math.View.Basic.recip (fromT t)) -}
      
 sumT :: [T] -> T
-sumT = f3 . f2 . f1
+sumT = head . f (const True) . f (`elem` [1,2]) . f (==1)
  where
-   f1 (R a:R b:xs) = f1 (R (a+b):xs)
-   f1 (x:xs)       = x:f1 xs
-   f1 []           = []
-   
-   f2 (S a:S b:xs) = f2 (S (a+b):xs)
-   f2 (R a:S b:xs) = f2 (S (fromRational a+b):xs)
-   f2 (S a:R b:xs) = f2 (S (a+fromRational b):xs)
-   f2 (x:xs)       = x:f2 xs
-   f2 []           = []
-   
-   f3 [t] = t
-   f3 ts  = E (build sumView (map fromT ts))
+   f p (a:b:xs)
+      | p (orderT a) && p (orderT b) = 
+           f p (plusT a b:xs)
+      | otherwise  = a:f p (b:xs)
+   f _ xs = xs
+
+plusT :: T -> T -> T
+plusT (R x) (R y) = R (x+y)
+plusT (S x) (S y) = S (x+y)
+plusT t@(P _ _ _) b = plusT (E $ fromT t) b 
+plusT (E a) (E b) = E (a .+. b)
+plusT a b = convTs plusT a b
 
 divT :: T -> T -> T
 divT (R x) (R y) = R (x/y)
-divT (E x) (R y) = E (x ./. fromRational y)
-divT (S s) (R y) = S (s/fromRational y)
-divT (P x r n) (R y) = P x (r/y) n
-divT x y = error ("divT: " ++ show (x, y))
+divT (S x) (S y) = S (x/y)
+divT t@(P _ _ _) b = divT (E $ fromT t) b 
+divT (E a) (E b) = E (a ./. b)
+divT a b = convTs divT a b
 
 mulT :: T -> T -> T
 mulT (R a) (R b) = R (a*b)
-mulT (R a) (S s) = S (fromRational a*s)
-mulT (R a) (P x r n) = P x (r*a) n
-mulT (P x r n) (R a) = P x (r*a) n
-mulT (R a) (E e) = E (fromRational a .*. e)
-mulT (E e) (R a)  = E (fromRational a .*. e)
-mulT (P x1 r1 n1) (P x2 r2 n2) |x1==x2 = P x1 (r1*r2) (n1+n2)
-mulT a@(P _ _ _) (E e) = E (fromT a .*. e)
-mulT (E e) a@(P _ _ _) = E (fromT a .*. e)
+mulT (S a) (S b) = S (a*b)
+mulT (P x1 r1 n1) (P x2 r2 n2) | x1==x2 = P x1 (r1*r2) (n1+n2)
+                               | otherwise = error ""
 mulT (E a) (E b) = E (a .*. b)
-mulT x y = error ("mulT: " ++ show (x, y))
+mulT a b = convTs mulT a b
+
+convTs :: (T -> T -> T) -> T -> T -> T
+convTs f (R a) t@(S _)       = f (S (fromRational a)) t
+convTs f (R a) t@(P x _ _)   = f (P x (fromRational a) 0) t
+convTs f t@(R _) e@(E _)     = f (E $ fromT t) e
+convTs f t@(P _ _ _) e@(E _) = f (E $ fromT t) e
+convTs f a b | orderT a > orderT b = convTs (flip f) b a
+convTs _ x y = error $ "conv " ++ show (x, y)
+
+orderT :: T -> Int
+orderT (R _)     = 1
+orderT (S _)     = 2
+orderT (P _ _ _) = 3
+orderT (E _)     = 4

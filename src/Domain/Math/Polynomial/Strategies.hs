@@ -19,7 +19,7 @@ import Domain.Math.Polynomial.CleanUp
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Equation Expr)
-linearStrategy = cleanUpStrategy cleanUpSimple $
+linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> ruleOnce distribute <|> ruleMulti merge))
    <*> label "Phase 2" (try varToLeft <*> try coverUpPlus <*> try (coverUpTimes |> try coverUpNegate))

@@ -3,7 +3,9 @@ module Domain.Math.Polynomial.Exercises where
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.CleanUp
 import Common.Exercise
+import Common.Rewriting
 import Domain.Math.Data.Equation
 import Domain.Math.Equation.Views
 import Domain.Math.Expr
@@ -12,6 +14,7 @@ import Domain.Math.ExercisesDWO
 import Domain.Math.Expr.Parser
 import Common.View
 import Common.Context
+import Data.List
 
 ------------------------------------------------------------
 -- Exercises
@@ -23,7 +26,7 @@ linearExercise = makeExercise
    , description   = "solve a linear equation"
    , status        = Experimental
    , parser        = parseWith (pEquation pExpr)
-   , equality      = (==)
+   , equality      = eqEquation cleanUpSimple
    , equivalence   = viewEquivalent linearEquationView
    , finalProperty = solvedEquation
    , ruleset       = linearRules
@@ -38,7 +41,7 @@ quadraticExercise = makeExercise
    , description   = "solve a quadratic equation"
    , status        = Experimental
    , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = (==) 
+   , equality      = eqOrList cleanUpExpr
    , equivalence   = viewEquivalent quadraticEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext quadraticRules
@@ -53,10 +56,35 @@ higherDegreeExercise = makeExercise
    , description   = "solve an equation (higher degree)"
    , status        = Experimental
    , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = (==) 
+   , equality      = eqOrList cleanUpExpr
    , equivalence   = viewEquivalent higherDegreeEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext higherDegreeRules
    , strategy      = ignoreContext higherDegreeStrategy
    , termGenerator = ExerciseList (map (OrList . return) higherDegreeEquations)
    }
+   
+--------------------------------------------
+-- Equality
+
+eqOrList :: (Expr -> Expr) -> OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
+eqOrList f x y = normOrList f x == normOrList f y
+
+eqEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr -> Bool
+eqEquation f x y = normEquation f x == normEquation f y
+
+normOrList :: (Expr -> Expr) -> OrList (Equation Expr) -> OrList (Equation Expr)
+normOrList f (OrList xs) = OrList $ nub $ sort $ map (normEquation f) xs
+
+normEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr
+normEquation f eq
+   | a <= b    = a :==: b
+   | otherwise = b :==: a
+ where
+   a :==: b = fmap (normExpr f) eq
+
+normExpr :: (Expr -> Expr) -> Expr -> Expr
+normExpr f = normalizeWith [plusOperator, timesOperator] . f
+ where
+   plusOperator  = acOperator (+) isPlus
+   timesOperator = acOperator (*) isTimes

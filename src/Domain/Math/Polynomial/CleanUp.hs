@@ -1,5 +1,5 @@
 module Domain.Math.Polynomial.CleanUp 
-   ( cleanUp, cleanUpSimple
+   ( cleanUp, cleanUpExpr, cleanUpSimple
    , normalizeSum, normalizeProduct, raar
    ) where
 
@@ -8,7 +8,6 @@ import Prelude hiding ((^))
 import Domain.Math.Data.SquareRoot
 import Data.Maybe
 import Common.Utils
--- import Debug.Trace
 import Data.Ratio
 import Data.List
 import Common.View
@@ -23,16 +22,7 @@ import Domain.Math.Data.OrList
 
 ----------------------------------------------------------------------
 -- Expr normalization
-   {-
-normalizeExpr :: Expr -> Expr
-normalizeExpr a =
-   case (match sumView a, match productView a) of
-      (Just xs, _) | length xs > 1 -> 
-         build sumView (sort $ normalizeSum $ map normalizeExpr xs)
-      (_, Just (b, ys)) | length (filter (/= 1) ys) > 1 -> 
-         build productView (b, sort $ normalizeProduct $ map normalizeExpr ys)
-      _ -> a 
--}
+
 normalizeProduct :: [Expr] -> [Expr]
 normalizeProduct ys = f [ (match rationalView y, y) | y <- ys ]
   where  f []                    = []
@@ -85,8 +75,11 @@ raar = map cleanUpExpr $ let x=Var "x" in
 ------------------------------------------------------------
 -- Cleaning up
 
-cleanUpSimple :: Equation Expr -> Equation Expr
-cleanUpSimple = fmap (smartConstructors . transform (simplify rationalView))
+cleanUpSimple :: Expr -> Expr
+cleanUpSimple = transform $ \x -> 
+   case canonical rationalView x of
+      Just a  -> a
+      Nothing -> smart x
 
 cleanUp :: OrList (Equation Expr) -> OrList (Equation Expr)
 cleanUp (OrList xs) = OrList (filter keepEquation (map (fmap cleanUpExpr) xs))
@@ -165,7 +158,9 @@ smart (a :*: b) = a .*. b
 smart (a :/: b) = a ./. b
 smart (Sym s [x, y]) | s == powerSymbol = x .^. y
 smart (Negate a) = neg a
-smart e = error $ show e
+smart (a :+: b) = a .+. b
+smart (a :-: b) = a .-. b
+smart e = e
 
 ------------------------------------------------------------
 -- Technique 3: lattice of views
@@ -276,5 +271,5 @@ upgr (E e) =
       (_, Just (x, a, n)) -> upgr (P x a n)
       _ -> E e
 upgr (S a) = maybe (S a) R (fromSquareRoot a)
-upgr (P x a n) | n==0 = R a
+upgr (P _ a n) | n==0 = R a
 upgr t = t

@@ -1,10 +1,13 @@
 module Domain.Math.Polynomial.CleanUp 
    ( cleanUp, cleanUpSimple
-   , normalizeSum, normalizeProduct
+   , normalizeSum, normalizeProduct, raar
    ) where
 
+import qualified Prelude
+import Prelude hiding ((^))
 import Domain.Math.Data.SquareRoot
 import Data.Maybe
+import Common.Utils
 -- import Debug.Trace
 import Data.Ratio
 import Data.List
@@ -60,6 +63,24 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
       rs  = r:map fst (catMaybes (map fst js))
       new | null js   = e
           | otherwise = build rationalView (sum rs) .*. a 
+ 
+raar = map cleanUpExpr $ let x=Var "x" in
+  [ -1/2*x*(x/1)
+  , (x/(-3))
+  , (x/(-3))^2
+  , (0-x)*(-x)/(-5/2)
+  , (x/(-1))^2
+  , (x/(-1))^2-(-7/2)*x/(-1)
+  , (x^2+0)*3
+  , -(49/9*x^2+0^2)*(3/16)
+  , (0*x-(-x^2))*(-3)
+  , x^2 - x^2
+  , x^2-x^2-(x+x)*1
+  , x^2/(16/3)-x^2*(-1/3)-(x+(-26/3)-x^2)*1
+  , (-7+7*x)^2-(x*0)^2/(-3)
+  , 1*(x+93)+4
+  , (1*(x+(-93/5))-(-4+x/19))/8-(x^2-x+(19/2-x)-34/3*(x*(-41/2)))/9
+  ]
           
 ------------------------------------------------------------
 -- Cleaning up
@@ -79,45 +100,102 @@ keepEquation (a :==: b) = Prelude.not (trivial || any falsity (universe a ++ uni
    falsity _         = False
 
 cleanUpExpr :: Expr -> Expr
-cleanUpExpr e = a2 -- if a1==a2 then a1 else error $ show (e, a1, a2)
+cleanUpExpr e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 else error $ "\n\n\n" ++ unlines (map show
+   [e, a1, a2, a3, a4])
  where
-   a1 = ff e
-   a2 = cleanUp2 e
-   ff = smartConstructors . f2 . f1 . smartConstructors . simplifyWith sumList sumView
- 
-   f1 = transform (simplify powerFactorView)
-   f2 = transform (simplify (squareRootViewWith rationalView))
-   
-   sumList = rec . map (\a -> maybe (Left a) Right $ match rationalView a) 
-    where
-      rec (Right r1:Right r2:rest) = rec (Right (r1+r2):rest)
-      rec (Right r:xs)   = fromRational r:rec xs
-      rec (Left a:xs) = a:rec xs
-      rec [] = []
+   a1 = cleanUpFix e
+   a2 = cleanUpBU e
+   a3 = cleanUpBU2 e
+   a4 = cleanUpLattice e
       
+------------------------------------------------------------
+-- Technique 1: fixed points of views
+
+cleanUpFix :: Expr -> Expr
+cleanUpFix = fixpoint (f4 . f3 . f2 . f1)
+ where
+   use v = transform (simplifyWith (assoPlus v) sumView)
+ 
+   f1 = use rationalView
+   f2 = use (squareRootViewWith rationalView)
+   f3 = use (powerFactorViewWith rationalView)
+   f4 = smartConstructors
+
+assoPlus :: View Expr a -> [Expr] -> [Expr]
+assoPlus v = rec . map (simplify v)
+ where
+   rec (x:y:zs) =
+      case canonical v (x+y) of
+         Just a  -> assoPlus v (a:zs)
+         Nothing -> x:assoPlus v (y:zs)
+   rec xs = xs
+
+------------------------------------------------------------
+-- Technique 2a: one bottom-up traversal
+
+cleanUpBU :: Expr -> Expr
+cleanUpBU = transform (f4 . f3 . f2 . f1)
+ where
+   use v = simplifyWith (assoPlus v) sumView
+ 
+   f1 = simplify rationalView
+   f2 = simplify (squareRootViewWith rationalView)
+   f3 = use (powerFactorViewWith rationalView)
+   f4 = smartConstructors
+
+------------------------------------------------------------
+-- Technique 2b: one bottom-up traversal
+
+cleanUpBU2 :: Expr -> Expr
+cleanUpBU2 = transform $ \e -> 
+   case ( canonical rationalView e
+        , canonical (squareRootViewWith rationalView) e
+        , match sumView e
+        ) of
+      (Just a, _, _) -> a
+      (_, Just a, _) -> a
+      (_, _, Just xs) | length xs > 1 -> 
+         build sumView (assoPlus (powerFactorViewWith rationalView) xs)
+      _ -> case canonical (powerFactorViewWith rationalView) e of
+              Just a  -> a
+              Nothing -> smart e
+ 
+smart :: Expr -> Expr
+smart (a :*: b) = a .*. b
+smart (a :/: b) = a ./. b
+smart (Sym s [x, y]) | s == powerSymbol = x .^. y
+smart (Negate a) = neg a
+smart e = error $ show e
+
+------------------------------------------------------------
+-- Technique 3: lattice of views
+   
 data T = R Rational 
        | S (SquareRoot Rational)
        | P String Rational Int
        | E Expr deriving Show
    
-cleanUp2 :: Expr -> Expr
-cleanUp2 e = {-trace (show e) -} ((fromT . toT) e)
+cleanUpLattice :: Expr -> Expr
+cleanUpLattice = fromT . toT
 
 fromT :: T -> Expr
-fromT (R r) = fromRational r
-fromT (S s) = build (squareRootViewWith rationalView) s
+fromT (R r)     = fromRational r
+fromT (S s)     = build (squareRootViewWith rationalView) s
 fromT (P x r n) = build (powerFactorViewForWith x rationalView) (r, n)
-fromT (E e) = e
+fromT (E e)     = e
 
 toT :: Expr -> T
 toT (Nat n) = R (fromInteger n)
 toT (x :/: y) = divT (toT x) (toT y)
 toT (x :*: y) = mulT (toT x) (toT y)
 toT (Var x) = P x 1 1
-toT e@(Sym s [_, _]) | s == powerSymbol = fromMaybe (E e) $ do -- Actually, also take smart constr ^ into ac
-   s <- selectVar e
-   (r, n) <- match (powerFactorViewForWith s (rationalView)) e
-   return (P s r n)
+toT (Sym s [x, y]) | s == powerSymbol =
+   case (toT x, toT y) of
+      (R x, R y) | denominator y == 1  ->
+         R (x Prelude.^ fromInteger (numerator y))
+      (P x a n, R y) | denominator y == 1 -> 
+         P x (a Prelude.^ numerator y) (n*fromInteger (numerator y))
+      (x, y) -> E (fromT x .^. fromT y)
 toT e@(Sqrt _) = fromMaybe (E e) $ do -- Also here, too simplistic
    s <- match (squareRootViewWith rationalView) e
    return (S s)
@@ -128,14 +206,19 @@ toT expr =
       _ -> error $ show expr
       
 negT :: T -> T
-negT (R r) = R (negate r)
-negT (S s) = S (negate s)
+negT (R r)     = R (negate r)
+negT (S s)     = S (negate s)
 negT (P x r n) = P x (negate r) n
-negT (E e) = E (neg e)
+negT (E e)     = E (neg e)
      
 sumT :: [T] -> T
-sumT = head . f (const True) . f (`elem` [1,2]) . f (==1)
+sumT = head . f (const True) . f (`elem` [1,2]) . f (==1) . concatMap g
  where
+   g e@(E a) = case match sumView a of
+                  Just xs | length xs > 1 -> map (upgr . E) xs
+                  _ -> [e]
+   g a = [a]
+ 
    f p (a:b:xs)
       | p (orderT a) && p (orderT b) = 
            f p (plusT a b:xs)
@@ -143,6 +226,8 @@ sumT = head . f (const True) . f (`elem` [1,2]) . f (==1)
    f _ xs = xs
 
 plusT :: T -> T -> T
+plusT (R 0) t = t -- ?????
+plusT t (R 0) = t -- ?????
 plusT (R x) (R y) = R (x+y)
 plusT (S x) (S y) = S (x+y)
 plusT t@(P _ _ _) b = plusT (E $ fromT t) b 
@@ -150,6 +235,8 @@ plusT (E a) (E b) = E (a .+. b)
 plusT a b = convTs plusT a b
 
 divT :: T -> T -> T
+divT t (R 1) = t -- ?????
+divT t (R (-1)) = negT t -- ?????
 divT (R x) (R y) = R (x/y)
 divT (S x) (S y) = S (x/y)
 divT t@(P _ _ _) b = divT (E $ fromT t) b 
@@ -157,6 +244,10 @@ divT (E a) (E b) = E (a ./. b)
 divT a b = convTs divT a b
 
 mulT :: T -> T -> T
+mulT (R 0) _     = R 0 -- ?????
+mulT _ (R 0)     = R 0 -- ?????
+mulT t (R 1)     = t -- ????
+mulT (R 1) t     = t -- ?????
 mulT (R a) (R b) = R (a*b)
 mulT (S a) (S b) = S (a*b)
 mulT (P x1 r1 n1) (P x2 r2 n2) | x1==x2 = P x1 (r1*r2) (n1+n2)
@@ -177,3 +268,13 @@ orderT (R _)     = 1
 orderT (S _)     = 2
 orderT (P _ _ _) = 3
 orderT (E _)     = 4
+
+upgr :: T -> T
+upgr (E e) =
+   case (match (squareRootViewWith rationalView) e, match (powerFactorViewWith rationalView) e) of
+      (Just a, _) -> upgr (S a)
+      (_, Just (x, a, n)) -> upgr (P x a n)
+      _ -> E e
+upgr (S a) = maybe (S a) R (fromSquareRoot a)
+upgr (P x a n) | n==0 = R a
+upgr t = t

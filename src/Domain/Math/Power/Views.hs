@@ -2,7 +2,7 @@
 -- no sqrt, or roots
 module Domain.Math.Power.Views
    ( powerView, powerViewFor
-   , powerFactorView, powerFactorViewForWith
+   , powerFactorView, powerFactorViewWith, powerFactorViewForWith
    ) where
 
 import qualified Prelude
@@ -37,13 +37,16 @@ powerViewFor pv = makeView f g
    g a = Var pv .^. fromIntegral a
 
 powerFactorView :: View Expr (String, Expr, Int)
-powerFactorView = makeView f g
+powerFactorView = powerFactorViewWith identity
+
+powerFactorViewWith :: Num a => View Expr a -> View Expr (String, a, Int)
+powerFactorViewWith v = makeView f g
  where
    f expr = do
       pv <- selectVar expr
-      (e, n) <- match (powerFactorViewForWith pv identity) expr
+      (e, n) <- match (powerFactorViewForWith pv v) expr
       return (pv, e, n)
-   g (pv, e, n) = build (powerFactorViewForWith pv identity) (e, n)
+   g (pv, e, n) = build (powerFactorViewForWith pv v) (e, n)
 
 powerFactorViewForWith :: Num a => String -> View Expr a -> View Expr (a, Int)
 powerFactorViewForWith pv v = makeView f g

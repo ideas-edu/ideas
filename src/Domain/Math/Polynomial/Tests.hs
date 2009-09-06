@@ -16,6 +16,9 @@ import Common.View
 import Domain.Math.Expr
 import Prelude hiding ((^))
 import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.CleanUp
+
+q = raar
 
 -- see the derivations for the DWO exercise set
 seeLE  n = printDerivation linearExercise $ concat linearEquations !! n

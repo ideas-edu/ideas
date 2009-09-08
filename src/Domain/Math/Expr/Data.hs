@@ -170,8 +170,8 @@ showExpr = rec 0
                   parIf (i>n) $ concat [rec n x, show s, rec (n+1) y]
                (Just (InfixRight, n), [x, y]) -> 
                   parIf (i>n) $ concat [rec (n+1) x, show s, rec n y]
-               (Just (Prefix, n), [x]) -> 
-                  parIf (i>n) $ concat [special s, rec (n+1) x]
+               (Just (Prefix, n), [x]) -> -- i>=5 prevents "3--5"
+                  parIf (i>=n) $ concat [special s, rec (n+1) x]
                _ -> 
                   parIf (not (null as) && i>10000) $ unwords (prefix s : map (rec 10001) as)
          Nothing -> 

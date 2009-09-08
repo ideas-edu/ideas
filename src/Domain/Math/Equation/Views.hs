@@ -5,12 +5,13 @@ import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Equation
 import Common.View
+import Common.Traversable
 
 -------------------------------------------------------------
 -- Views on equations
 
 solvedEquations :: OrList (Equation Expr) -> Bool
-solvedEquations (OrList xs) = all solvedEquation xs
+solvedEquations = all solvedEquation . crush
 
 solvedEquation :: Equation Expr -> Bool
 solvedEquation eq@(lhs :==: rhs) = 

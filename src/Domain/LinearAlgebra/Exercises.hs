@@ -46,7 +46,7 @@ solveGramSchmidt = makeExercise
    { identifier    = "Gram-Schmidt" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Gram-Schmidt"
-   , status        = Stable
+   , status        = Provisional
    , parser        = \s -> case parseVectors s of
                               (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
@@ -100,7 +100,7 @@ solveSystemWithMatrixExercise = makeExercise
    { identifier    = "Solve Linear System with Matrix" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Solve Linear System with Matrix"
-   , status        = Stable
+   , status        = Provisional
    , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
                               (Right ok, _) -> Right $ Left  ok
                               (_, Right ok) -> Right $ Right ok

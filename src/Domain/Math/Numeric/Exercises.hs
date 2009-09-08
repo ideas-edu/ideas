@@ -20,7 +20,7 @@ import Common.Context
 numericExercise :: LabeledStrategy Expr -> Exercise Expr
 numericExercise s = makeExercise 
    { domain        = "math"
-   , status        = Experimental
+   , status        = Provisional
    , parser        = parseExpr
    , equality      = (==)
    , equivalence   = viewEquivalent rationalView

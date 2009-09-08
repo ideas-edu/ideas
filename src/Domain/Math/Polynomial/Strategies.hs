@@ -3,7 +3,7 @@ module Domain.Math.Polynomial.Strategies
    , higherDegreeStrategy 
    ) where
 
-import Prelude hiding (repeat)
+import Prelude hiding (repeat, replicate)
 import Common.Strategy
 import Common.Transformation
 import Common.View

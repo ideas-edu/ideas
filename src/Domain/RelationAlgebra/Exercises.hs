@@ -22,7 +22,6 @@ import Domain.RelationAlgebra.Parser
 import Common.Apply
 import Common.Exercise
 import Common.Context
-import Common.Uniplate (somewhereM)
 import Text.Parsing (fromRanged)
 import Common.Rewriting (treeDiff)
 import Common.Strategy hiding (not)
@@ -33,7 +32,7 @@ cnfExercise = makeExercise
    { identifier    = "cnf"
    , domain        = "relationalg"
    , description   = "To conjunctive normal form"
-   , status        = Experimental
+   , status        = Provisional
    , parser        = either Left (Right . fromRanged) . parseRelAlg
    , prettyPrinter = ppRelAlg
    , equivalence   = probablyEqual -- isEquivalent

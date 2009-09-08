@@ -10,7 +10,7 @@
          "domain": "linalg",
          "identifier": "Gram-Schmidt",
          "description": "Gram-Schmidt",
-         "status": "Stable"
+         "status": "Provisional"
       },
       {
          "domain": "linalg",
@@ -22,7 +22,7 @@
          "domain": "linalg",
          "identifier": "Solve Linear System with Matrix",
          "description": "Solve Linear System with Matrix",
-         "status": "Stable"
+         "status": "Provisional"
       },
       {
          "domain": "logic",
@@ -34,7 +34,7 @@
          "domain": "math",
          "identifier": "coverup",
          "description": "solve an equation by covering up",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
@@ -46,52 +46,52 @@
          "domain": "math",
          "identifier": "fraction",
          "description": "simplify expression (fractions)",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
          "identifier": "higherdegree",
          "description": "solve an equation (higher degree)",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
          "identifier": "integer",
          "description": "simplify expression (integers)",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
          "identifier": "lineq",
          "description": "solve a linear equation",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
          "identifier": "natural",
          "description": "simplify expression (natural numbers)",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
          "identifier": "quadreq",
          "description": "solve a quadratic equation",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
          "identifier": "rational",
          "description": "simplify expression (rational numbers)",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "relationalg",
          "identifier": "cnf",
          "description": "To conjunctive normal form",
-         "status": "Experimental"
+         "status": "Provisional"
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.4 (2045)"
+   "version": "0.5.4 (2119)"
 }

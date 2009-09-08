@@ -24,7 +24,7 @@ linearExercise = makeExercise
    { identifier    = "lineq"
    , domain        = "math"
    , description   = "solve a linear equation"
-   , status        = Experimental
+   , status        = Provisional
    , parser        = parseWith (pEquation pExpr)
    , equality      = eqEquation cleanUpSimple
    , equivalence   = viewEquivalent linearEquationView
@@ -39,14 +39,14 @@ quadraticExercise = makeExercise
    { identifier    = "quadreq"
    , domain        = "math"
    , description   = "solve a quadratic equation"
-   , status        = Experimental
+   , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = eqOrList cleanUpExpr
    , equivalence   = viewEquivalent quadraticEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext quadraticRules
    , strategy      = ignoreContext quadraticStrategy
-   , termGenerator = ExerciseList (map (OrList . return) $ concat quadraticEquations)
+   , termGenerator = ExerciseList (map (orList . return) $ concat quadraticEquations)
    }
    
 higherDegreeExercise :: Exercise (OrList (Equation Expr))
@@ -54,14 +54,14 @@ higherDegreeExercise = makeExercise
    { identifier    = "higherdegree"
    , domain        = "math"
    , description   = "solve an equation (higher degree)"
-   , status        = Experimental
+   , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = eqOrList cleanUpExpr
    , equivalence   = viewEquivalent higherDegreeEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext higherDegreeRules
    , strategy      = ignoreContext higherDegreeStrategy
-   , termGenerator = ExerciseList (map (OrList . return) higherDegreeEquations)
+   , termGenerator = ExerciseList (map (orList . return) higherDegreeEquations)
    }
    
 --------------------------------------------
@@ -74,7 +74,10 @@ eqEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr -> Bool
 eqEquation f x y = normEquation f x == normEquation f y
 
 normOrList :: (Expr -> Expr) -> OrList (Equation Expr) -> OrList (Equation Expr)
-normOrList f (OrList xs) = OrList $ nub $ sort $ map (normEquation f) xs
+normOrList f ors = 
+   case disjunctions ors of 
+      Just xs -> orList $ nub $ sort $ map (normEquation f) xs
+      Nothing -> false
 
 normEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr
 normEquation f eq

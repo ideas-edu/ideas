@@ -61,7 +61,7 @@ data Exercise a = Exercise
    , termGenerator :: TermGenerator a
    }
    
-data Status = Stable | Experimental deriving (Show, Eq)
+data Status = Stable | Provisional | Experimental deriving (Show, Eq)
 
 instance Apply Exercise where
    applyAll e a = map fromContext $ applyAll (strategy e) (inContext a)
@@ -89,7 +89,9 @@ makeExercise = Exercise
 ---------------------------------------------------------------
 -- Exercise generators
 
-data TermGenerator a = ExerciseList [a] | ExerciseGenerator (a -> Bool) (Gen a)
+data TermGenerator a 
+   = ExerciseList [a] 
+   | ExerciseGenerator (a -> Bool) (Gen a)
 
 simpleGenerator :: Gen a -> TermGenerator a
 simpleGenerator = makeGenerator (const True)
@@ -249,12 +251,12 @@ similar rs a =
    in oneof [arbitrary, oneof $ map return new] -}
 
 checksForList :: Exercise a -> IO ()
-checksForList ex = do
-   putStrLn ("** " ++ identifier ex ++ " **")
+checksForList ex =
    case termGenerator ex of
-      ExerciseList xs -> 
+      ExerciseList xs | status ex /= Experimental -> do
          let err s = putStrLn $ "Error: " ++ s
-         in mapM_ (either err return . checksForTerm ex) xs
+         putStrLn ("** " ++ identifier ex ++ " **")
+         mapM_ (either err return . checksForTerm ex) xs
       _ -> return ()
 
 checksForTerm :: Monad m => Exercise a -> a -> m ()

@@ -76,7 +76,7 @@ pEquation p = (:==:) <$> p <* pKey "==" <*> p
 
 pOrList :: TokenParser a -> TokenParser (OrList a)
 pOrList p = pSepList p (pKey "or")
- where pSepList p q = (\x xs -> OrList (x:xs)) <$> p <*> pList (q *> p)
+ where pSepList p q = (\x xs -> orList (x:xs)) <$> p <*> pList (q *> p)
 
 {-
 operatorTable :: OperatorTable Expr

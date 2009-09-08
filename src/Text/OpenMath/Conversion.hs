@@ -58,6 +58,8 @@ diffSymbol      = OMS "calculus1" "diff"
 lambdaSymbol    = OMS "fns1" "lambda"
 
 orSymbol        = OMS "logic1" "or" -- n-ary symbol
+trueSymbol      = OMS "logic1" "true"
+falseSymbol     = OMS "logic1" "false"
 
 type SymbolMap = [(ES.Symbol, OMOBJ, Maybe Int)]
 
@@ -89,6 +91,9 @@ binop symbol x y = OMA [symbol, toOMOBJ x, toOMOBJ y]
 
 listop :: IsOMOBJ a => OMOBJ -> [a] -> OMOBJ
 listop symbol xs = OMA (symbol : map toOMOBJ xs)
+
+from :: OMOBJ -> a -> OMOBJ -> Maybe a
+from symbol a obj = guard (obj==symbol) >> return a
 
 from1 :: IsOMOBJ a => OMOBJ -> (a -> b) -> OMOBJ -> Maybe b
 from1 symbol f obj =
@@ -232,6 +237,12 @@ instance IsOMOBJ a => IsOMOBJ (Equation a) where
    fromOMOBJ = from2 equationSymbol (:==:)
 
 instance IsOMOBJ a => IsOMOBJ (OrList a) where 
-   toOMOBJ (OrList xs) = listop orSymbol xs
-   fromOMOBJ =  fromN orSymbol OrList 
-             |> (liftM (\x -> OrList [x]) . fromOMOBJ)
+   toOMOBJ ors = case disjunctions ors of
+                    Just []        -> falseSymbol
+                    Just [x]       -> toOMOBJ x
+                    Just xs        -> listop orSymbol xs
+                    Nothing        -> trueSymbol
+   fromOMOBJ =  fromN orSymbol    orList 
+             |> from  falseSymbol false
+             |> from  trueSymbol  true
+             |> (liftM (\x -> orList [x]) . fromOMOBJ)

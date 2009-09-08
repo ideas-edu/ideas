@@ -24,14 +24,14 @@ coverUpExercise = makeExercise
    { identifier    = "coverup"
    , domain        = "math"
    , description   = "solve an equation by covering up"
-   , status        = Experimental
+   , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = \a b -> a==b
    , equivalence   = \_ _ -> True
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext coverUpRulesOr
    , strategy      = coverUpStrategy
-   , termGenerator = ExerciseList (map (OrList . return) (concat (fillInResult ++ coverUpEquations)))
+   , termGenerator = ExerciseList (map (orList . return) (concat (fillInResult ++ coverUpEquations)))
    }
 
 ------------------------------------------------------------

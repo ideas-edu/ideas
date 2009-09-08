@@ -10,6 +10,7 @@ import Data.Maybe
 import Common.Utils
 import Data.Ratio
 import Data.List
+import Control.Monad
 import Common.View
 import Domain.Math.Numeric.Views
 import Domain.Math.Expr
@@ -82,12 +83,19 @@ cleanUpSimple = transform $ \x ->
       Nothing -> smart x
 
 cleanUp :: OrList (Equation Expr) -> OrList (Equation Expr)
-cleanUp (OrList xs) = OrList (filter keepEquation (map (fmap cleanUpExpr) xs))
+cleanUp = join . fmap (keepEquation . fmap cleanUpExpr)
 
-keepEquation :: Equation Expr -> Bool
-keepEquation (a :==: b) = Prelude.not (trivial || any falsity (universe a ++ universe b))  
+keepEquation :: Equation Expr -> OrList (Equation Expr)
+keepEquation eq@(a :==: b)
+   | any falsity (universe a ++ universe b) = false
+   | a == b    = true
+   | otherwise = 
+        case (match rationalView a, match rationalView b) of
+           (Just r, Just s) 
+              | r == s    -> true
+              | otherwise -> false
+           _              -> return eq
  where
-   trivial = noVars a && noVars b
    falsity (Sqrt e)  = maybe False (<0)  (match rationalView e)
    falsity (_ :/: e) = maybe False (==0) (match rationalView e)
    falsity _         = False

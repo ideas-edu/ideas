@@ -78,7 +78,7 @@ coverUpPowerWith cfg =
          guard (predicateCombined cfg rhs)
          new1 <- canonical identity (makeRoot n rhs)
          new2 <- canonical identity (negate (makeRoot n rhs))
-         return $ OrList $ (e1 :==: new1) : [ e1 :==: new2 | new1 /= new2, even n ]
+         return $ orList $ (e1 :==: new1) : [ e1 :==: new2 | new1 /= new2, even n ]
 
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . matchM plusView) (-)

@@ -98,7 +98,7 @@ abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    let discr = makeSqrt (fromRational (b*b - 4 * a * c))
-   return $ OrList
+   return $ orList
       [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
       , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
       ]
@@ -111,7 +111,7 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
    guard (rhs == 0)
    (_, xs) <- match productView lhs
    guard (length xs > 1)
-   return (OrList [ x :==: 0 | x <- xs ])
+   return (orList [ x :==: 0 | x <- xs ])
 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant
@@ -196,7 +196,7 @@ allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ \(lhs :==: rh
              make = build (sumView >>> listView powerFactorView) . map f
              f (s, i, n) = (s, i, n-m)
          guard (m > 0 && length ns > 1)
-         return $ OrList [Var s :==: 0, make xs :==: make ys]
+         return $ orList [Var s :==: 0, make xs :==: make ys]
       _ -> Nothing
 
 -- Factor-out variable
@@ -222,7 +222,7 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
    (b1, xs) <- match productView lhs
    (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
-   return $ OrList[ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
+   return $ orList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
    
 
 ---------------------------------------------------------

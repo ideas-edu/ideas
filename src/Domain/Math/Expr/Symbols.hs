@@ -5,7 +5,7 @@ import Domain.Math.Expr.Symbolic
 -------------------------------------------------------------
 -- Operator fixities
 
-data Associativity = InfixLeft | InfixRight | Prefix {- | InfixNon | Postfix  -}
+data Associativity = InfixLeft | InfixRight | Prefix -- InfixNon | Postfix
    deriving (Show, Eq)
 
 operators :: [ (Associativity, [Symbol]) ]

@@ -194,7 +194,8 @@ linearEquationView = linearEquationViewWith rationalView
 quadraticEquationsView:: View (OrList (Equation Expr)) (String, [SQ.SquareRoot Rational])
 quadraticEquationsView = makeView f g
  where
-   f (OrList xs) = do 
+   f ors = do 
+      xs <- disjunctions ors
       ps <- mapM (match quadraticEquationView) xs
       case unzip ps of
          ([], _)     -> 
@@ -204,7 +205,7 @@ quadraticEquationsView = makeView f g
             let make = sort . nub . filter (not . SQ.imaginary) . concat
             return (s, make xss)
             
-   g (s, xs) = OrList [ Var s :==: build (squareRootViewWith rationalView) rhs | rhs <- xs ]
+   g (s, xs) = orList [ Var s :==: build (squareRootViewWith rationalView) rhs | rhs <- xs ]
 
 quadraticEquationView :: View (Equation Expr) (String, [SQ.SquareRoot Rational])
 quadraticEquationView = makeView f g
@@ -231,7 +232,9 @@ quadraticEquationView = makeView f g
 higherDegreeEquationsView :: View (OrList (Equation Expr)) [Expr]
 higherDegreeEquationsView = makeView f undefined
  where
-   f (OrList xs) = Just $ sort $ nub [ e | a :==: b <- xs, e <- normHDE (a-b) ]
+   f ors = do
+      xs <- disjunctions ors
+      return $ sort $ nub [ e | a :==: b <- xs, e <- normHDE (a-b) ]
 
 normHDE :: Expr -> [Expr]
 normHDE e = do 

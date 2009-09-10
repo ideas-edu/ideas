@@ -21,14 +21,15 @@ import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
+import qualified Domain.LinearAlgebra.Symbols as ES
 import qualified Domain.Math.Expr as ES
 import Domain.Math.Expr (Expr(..))
 import Text.OpenMath.Object
 
-
+{-
 class IsOMOBJ a where
    toOMOBJ   :: a -> OMOBJ
-   fromOMOBJ :: OMOBJ -> Maybe a
+   fromOMOBJ :: OMOBJ -> Maybe a -}
 
 --------------------------------------------------------------------
 -- OpenMath symbols
@@ -82,7 +83,7 @@ unknown = OMS "UNKNOWN" . show
 
 --------------------------------------------------------------------
 -- Utility functions
-
+{-
 unop :: IsOMOBJ a => OMOBJ -> a -> OMOBJ
 unop symbol x = OMA [symbol, toOMOBJ x]
 
@@ -122,17 +123,19 @@ fromN symbol f obj =
 -- local helper function
 toRatio :: Integral a => a -> Ratio a
 toRatio = fromIntegral
+-}
 
 --------------------------------------------------------------------
 -- Identity conversion
 
+{-
 instance IsOMOBJ OMOBJ where
    toOMOBJ   = id
    fromOMOBJ = return
-
+-}
 --------------------------------------------------------------------
 -- Prelude types
-
+{-
 instance IsOMOBJ Int where
    toOMOBJ   = toOMOBJ . toInteger
    fromOMOBJ = fmap fromInteger . fromOMOBJ
@@ -161,12 +164,16 @@ instance (IsOMOBJ a, IsOMOBJ b) => IsOMOBJ (Either a b) where
       case fromOMOBJ e of
          Just a  -> Just (Left a)
          Nothing -> fmap Right (fromOMOBJ e)
-
+-}
 --------------------------------------------------------------------
 -- General type for mathematical expressions
 
+implTo = ES.toOMOBJ (ES.mathDictionary ++ ES.laDictionary)
+implFrom = ES.fromOMOBJ (ES.mathDictionary ++ ES.laDictionary)
+{-
 instance IsOMOBJ Expr where 
-   toOMOBJ expr =
+   toOMOBJ = implTo
+   fromOMOBJ = Just . implFrom 
       case expr of
          -- the special conversions are disabled after having verified the 
          -- prefered representation with Hans Cuypers
@@ -217,32 +224,32 @@ instance IsOMOBJ Expr where
             Just (name, ma) | maybe True (\a -> length xs == a) ma
                -> liftM (ES.function name) (mapM fromOMOBJ xs)
             _ -> Nothing
-      fromSym _ = Nothing
+      fromSym _ = Nothing -}
 
 --------------------------------------------------------------------
 -- Linear algebra types
 
-instance IsOMOBJ a => IsOMOBJ (Vector a) where
-   toOMOBJ   = listop vectorSymbol . toList
-   fromOMOBJ = fromN vectorSymbol fromList
+{-
+instance ES.IsExpr a => IsOMOBJ (Vector a) where
+   toOMOBJ   = toOMOBJ . ES.toExpr
+   fromOMOBJ = maybe Nothing ES.fromExpr . fromOMOBJ
    
-instance IsOMOBJ a => IsOMOBJ (Matrix a) where
-   toOMOBJ   = listop matrixSymbol . map (listop matrixRowSymbol) . rows
-   fromOMOBJ = 
-      let fromRow = fromN matrixRowSymbol id 
-      in  fmap makeMatrix . join . fromN matrixSymbol (mapM fromRow)
+instance ES.IsExpr a => IsOMOBJ (Matrix a) where
+   toOMOBJ   = toOMOBJ . ES.toExpr
+   fromOMOBJ = maybe Nothing ES.fromExpr . fromOMOBJ
    
-instance IsOMOBJ a => IsOMOBJ (Equation a) where
-   toOMOBJ (x :==: y) = binop equationSymbol x y
-   fromOMOBJ = from2 equationSymbol (:==:)
+instance ES.IsExpr a => IsOMOBJ (Equation a) where
+   toOMOBJ   = toOMOBJ . ES.toExpr
+   fromOMOBJ = maybe Nothing ES.fromExpr . fromOMOBJ
 
-instance IsOMOBJ a => IsOMOBJ (OrList a) where 
-   toOMOBJ ors = case disjunctions ors of
-                    Just []        -> falseSymbol
-                    Just [x]       -> toOMOBJ x
-                    Just xs        -> listop orSymbol xs
-                    Nothing        -> trueSymbol
-   fromOMOBJ =  fromN orSymbol    orList 
-             |> from  falseSymbol false
-             |> from  trueSymbol  true
-             |> (liftM (\x -> orList [x]) . fromOMOBJ)
+instance ES.IsExpr a => IsOMOBJ (OrList a) where 
+   toOMOBJ   = toOMOBJ . ES.toExpr
+   fromOMOBJ = maybe Nothing ES.fromExpr . fromOMOBJ
+
+instance ES.IsExpr a => IsOMOBJ [a] where 
+   toOMOBJ   = toOMOBJ . ES.toExpr
+   fromOMOBJ = maybe Nothing ES.fromExpr . fromOMOBJ
+   
+instance (ES.IsExpr a, ES.IsExpr b) => IsOMOBJ (Either a b) where 
+   toOMOBJ   = toOMOBJ . ES.toExpr
+   fromOMOBJ = maybe Nothing ES.fromExpr . fromOMOBJ -}

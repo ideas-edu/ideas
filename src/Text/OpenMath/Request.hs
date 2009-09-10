@@ -20,15 +20,15 @@ import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (fail)
 import Common.Utils (splitAtElem)
-import Text.OpenMath.Conversion
 import Text.OpenMath.Object
 import Data.Char
 import Data.Maybe
+import Domain.Math.Expr
 
 extractString :: String -> XML -> Either String String
 extractString s xml = liftM getData (findChild s xml)
 
-xmlToRequest :: IsOMOBJ a => XML -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
+xmlToRequest :: IsExpr a => XML -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
 xmlToRequest xml ex = do
    unless (name xml == "request") $
       fail "XML document is not a request" 
@@ -36,12 +36,10 @@ xmlToRequest xml ex = do
    term    <- extractExpr "term" xml
    context <- optional (extractString "context" xml)
    answer  <- optional (extractExpr "answer" xml)
-   t  <- maybe (fail "invalid OpenMath object in term") return $ fromOMOBJ term
+   t  <- fromExpr $ fromOMOBJ term
    mt <- case answer of
             Nothing -> return Nothing 
-            Just o  -> do 
-               a <- maybe (fail "invalid OpenMath object in answer") return $ fromOMOBJ o
-               return (Just a)
+            Just o  -> return $ fromExpr $ fromOMOBJ o
    return
       ( State
            { exercise = ex

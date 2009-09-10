@@ -15,14 +15,16 @@ module Text.OpenMath.Object
 
 import Text.XML
 import Data.Char (isSpace)
+import Data.Maybe
+import Text.OpenMath.Symbol
 
--- internal representation for OM objects (close to XML)
+-- internal representation for OpenMath objects
 data OMOBJ = OMI Integer 
            | OMF Float 
            | OMV String 
-           | OMS String String 
+           | OMS Symbol 
            | OMA [OMOBJ] 
-           |OMBIND OMOBJ [String] OMOBJ
+           | OMBIND OMOBJ [String] OMOBJ
    deriving (Show, Eq)
 
 instance InXML OMOBJ where
@@ -46,9 +48,9 @@ xml2omobj xml =
             return (OMA ys)
             
          [] | name xml == "OMS" -> do
-            cd   <- findAttribute "cd" xml
+            let mcd = findAttribute "cd" xml
             name <- findAttribute "name" xml
-            return (OMS cd name)
+            return (OMS (Symbol mcd name))
 
          [Left s] | name xml == "OMI" ->
             case reads s of
@@ -90,13 +92,13 @@ omobj2xml object = makeXML "OMOBJ" $ do
  where
    rec omobj =
       case omobj of
-         OMI i       -> element "OMI" (text (show i))
-         OMF f       -> element "OMF" ("dec" .=. show f)
-         OMV v       -> element "OMV" ("name" .=. v)
-         OMA xs      -> element "OMA" (mapM_ rec xs)
-         OMS cd name -> element "OMS" $ do
-            "cd"   .=. cd
-            "name" .=. name
+         OMI i  -> element "OMI" (text (show i))
+         OMF f  -> element "OMF" ("dec" .=. show f)
+         OMV v  -> element "OMV" ("name" .=. v)
+         OMA xs -> element "OMA" (mapM_ rec xs)
+         OMS s  -> element "OMS" $ do
+            "cd"   .=. fromMaybe "unknown" (dictionary s)
+            "name" .=. symbolName s
          OMBIND x ys z -> element "OMBIND" $ do 
             rec x 
             element "OMBVAR" (mapM_ (rec . OMV) ys) 

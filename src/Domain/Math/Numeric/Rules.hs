@@ -34,7 +34,7 @@ calcTimesWith = calcBinRule "times" (*) isTimes
 calcDivisionWith :: Integral a => String -> View Expr a -> Rule Expr
 calcDivisionWith viewName v = 
    makeSimpleRule (calcRuleName "division" viewName) $ \e -> 
-   do (e1, e2) <- isDiv e
+   do (e1, e2) <- isDivide e
       a <- match v e1
       b <- match v e2
       let (d, m) = divMod a b

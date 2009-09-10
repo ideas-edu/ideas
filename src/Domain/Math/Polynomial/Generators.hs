@@ -1,5 +1,7 @@
 module Domain.Math.Polynomial.Generators 
-   ( polynomialGen, cubicGen, quadraticGen, linearGen ) where
+   ( polynomialGen, polynomialDegreeGen
+   , cubicGen, quadraticGen, linearGen 
+   ) where
 
 import Prelude hiding ((^))
 import Domain.Math.Expr
@@ -8,10 +10,15 @@ import Domain.Math.Numeric.Generators
 import Test.QuickCheck
 import Control.Monad
 
+polynomialGen :: Int -> Gen Expr
+polynomialGen n = do
+   d <- choose (0, n `div` 5)
+   polynomialDegreeGen d n
+
 -- Random polynomial generator for (exactly) degree d
 -- No division by zero
-polynomialGen :: Int -> Int -> Gen Expr
-polynomialGen d n
+polynomialDegreeGen :: Int -> Int -> Gen Expr
+polynomialDegreeGen d n
    | d==0         = ratGen
    | n==0 && d==1 = return (Var "x") 
    | n==0         = return (Var "x" ^ fromIntegral d) 
@@ -20,7 +27,7 @@ polynomialGen d n
         , liftM2 (:/:) (rec d) ratGenNZ
         ] ++ [ powerGen | d > 1 ]
  where
-   rec i = polynomialGen i (n `div` 2)
+   rec i = polynomialDegreeGen i (n `div` 2)
    plusGen = do
       d1 <- choose (0, d)
       a <- rec d1
@@ -37,9 +44,9 @@ polynomialGen d n
       return (a ^ fromIntegral i)
       
 cubicGen, quadraticGen, linearGen :: Int -> Gen Expr
-cubicGen     = polynomialGen 3
-quadraticGen = polynomialGen 2
-linearGen    = polynomialGen 1
+cubicGen     = polynomialDegreeGen 3
+quadraticGen = polynomialDegreeGen 2
+linearGen    = polynomialDegreeGen 1
 
 ratGen, ratGenNZ :: Gen Expr
 ratGen   = sized ratioExprGen

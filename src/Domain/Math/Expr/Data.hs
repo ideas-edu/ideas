@@ -5,7 +5,7 @@ import Data.Ratio
 import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
-import Common.Rewriting hiding (operators)
+import Common.Rewriting hiding (operators, match)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 
@@ -80,7 +80,7 @@ instance Symbolic Expr where
       | s == plusSymbol   = a :+: b
       | s == timesSymbol  = a :*: b
       | s == minusSymbol  = a :-: b
-      | s == divSymbol    = a :/: b
+      | s == divideSymbol = a :/: b
    function s [a]
       | s == negateSymbol = Negate a
       | s == sqrtSymbol   = Sqrt a
@@ -93,7 +93,7 @@ instance Symbolic Expr where
          a :*: b  -> return (timesSymbol,  [a, b])
          a :-: b  -> return (minusSymbol,  [a, b])
          Negate a -> return (negateSymbol, [a])
-         a :/: b  -> return (divSymbol,    [a, b])
+         a :/: b  -> return (divideSymbol, [a, b])
          Sqrt a   -> return (sqrtSymbol,   [a])
          Sym s as -> return (s, as)
          _ -> mzero
@@ -129,13 +129,13 @@ instance Arbitrary Expr where
          Var s    -> variant 7 . coarbitrary s
          Sym f xs -> variant 8 . coarbitrary (show f) . coarbitrary xs
   
-symbolGenerator :: (Int -> [Gen Expr]) -> [Symbol] -> Int -> Gen Expr
+symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
 symbolGenerator extras syms = f 
  where
-   f n = oneof $  map (g n) (filter (\s -> n > 0 || arity s == Just 0) syms)
+   f n = oneof $  map (g n) (filter (\(_, a) -> n > 0 || a == Just 0) syms)
                ++ extras n
-   g n s = do
-      i  <- case arity s of
+   g n (s, arity) = do
+      i  <- case arity of
                Just i  -> return i
                Nothing -> choose (0, 5)
       as <- replicateM i (f (n `div` i))
@@ -166,21 +166,18 @@ showExpr = rec 0
       case getFunction expr of
          Just (s, as) -> 
             case (lookup s table, as) of 
-               (Just (InfixLeft, n), [x, y]) -> 
-                  parIf (i>n) $ concat [rec n x, show s, rec (n+1) y]
-               (Just (InfixRight, n), [x, y]) -> 
-                  parIf (i>n) $ concat [rec (n+1) x, show s, rec n y]
-               (Just (Prefix, n), [x]) -> -- i>=5 prevents "3--5"
-                  parIf (i>=n) $ concat [special s, rec (n+1) x]
+               (Just (InfixLeft, n, op), [x, y]) -> 
+                  parIf (i>n) $ concat [rec n x, op, rec (n+1) y]
+               (Just (InfixRight, n, op), [x, y]) -> 
+                  parIf (i>n) $ concat [rec (n+1) x, op, rec n y]
+               (Just (Prefix, n, op), [x]) -> -- i>=5 prevents "3--5"
+                  parIf (i>=n) $ concat [op, rec (n+1) x]
                _ -> 
-                  parIf (not (null as) && i>10000) $ unwords (prefix s : map (rec 10001) as)
+                  parIf (not (null as) && i>10000) $ unwords (show s : map (rec 10001) as)
          Nothing -> 
             error "showExpr"
 
-   prefix  s = let a = show s in parIf (any (not . isAlphaNum) a) a
-   special s = head (extraNames s ++ [symbolName s])
-
-   table  = [ (s, (a, n)) | (n, (a, xs)) <- zip [1..] operators, s <- xs ]
+   table  = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] operators, (s, op) <- xs ]
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"

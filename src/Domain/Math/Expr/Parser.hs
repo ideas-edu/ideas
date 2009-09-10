@@ -1,9 +1,12 @@
 module Domain.Math.Expr.Parser 
-   ( scannerExpr, parseExpr, parseWith, pExpr, pEquations, pEquation, pOrList, pFractional
+   ( scannerExpr, parseExpr, parseWith, pExpr
+   , pEquations, pEquation, pOrList, pFractional
    ) where
 
 import Prelude hiding ((^))
 import Text.Parsing hiding (pParens)
+import Control.Monad
+import Data.List
 import Common.Transformation
 import Domain.Math.Data.Equation
 import Domain.Math.Expr.Data
@@ -12,9 +15,18 @@ import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
 import Test.QuickCheck (arbitrary)
 
+import Text.OpenMath.Dictionary.Arith1
+import Text.OpenMath.Dictionary.Logic1
+import Text.OpenMath.Dictionary.Relation1
+import Text.OpenMath.Dictionary.Calculus1
+
+symbols :: [Symbol]
+symbols = nubBy (\x y -> symbolName x == symbolName y) $ 
+   sqrtSymbol : concat [ arith1List, logic1List, relation1List, calculus1List ]
+
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords          = ["pi", "sqrt", "or", "ln"]
+   { keywords          = map symbolName symbols
    , keywordOperators  = ["==" ]
    , specialCharacters = "+-*/^()[]{},"
    }
@@ -41,32 +53,14 @@ expr6  =  pChainl ((+) <$ pKey "+" <|> (-) <$ pKey "-") expr6u
 expr6u =  optional (Negate <$ pKey "-") id <*> expr7
 expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
 expr8  =  pChainr ((^) <$ pKey "^") term
-term   =  sqrt <$ pKey "sqrt" <*> atom
-      <|> unary lnSymbol   <$ pKey "ln" <*> atom
-      <|> (\a b -> Sym (makeSymbolN (fst a)) b) <$> pConid <*> pList atom
+term   =  function <$> symb <*> pList atom
       <|> atom
 atom   =  fromInteger <$> pInteger
       <|> (Var . fst) <$> pVarid
-      <|> pi <$ pKey "pi"
       <|> pParens pExpr
 
-{-
-pExpr :: TokenParser Expr
-pExpr = fromRanged <$> pOperators operatorTable (flip toRanged nul <$> pTerm)
-
-pTerm :: TokenParser Expr
-pTerm  =  sqrt <$ pKey "sqrt" <*> pAtom
-      <|> pAtomMin
-
--- An atom, optionally preceded by a (unary) minus
-pAtomMin :: TokenParser Expr
-pAtomMin = optional (Negate <$ pKey "-") id <*> pAtom
-
-pAtom :: TokenParser Expr
-pAtom  =  fromInteger <$> pInteger
-      <|> (Var . fst) <$> (pVarid <|> pConid)
-      <|> (\_ -> symbol "pi") <$> pKey "pi"
-      <|> pParens pExpr -}
+symb :: TokenParser Symbol
+symb = pChoice (map (\s -> s <$ pKey (symbolName s)) symbols)
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations p = pLines True (pEquation p)
@@ -75,22 +69,15 @@ pEquation :: TokenParser a -> TokenParser (Equation a)
 pEquation p = (:==:) <$> p <* pKey "==" <*> p
 
 pOrList :: TokenParser a -> TokenParser (OrList a)
-pOrList p = pSepList p (pKey "or")
- where pSepList p q = (\x xs -> orList (x:xs)) <$> p <*> pList (q *> p)
-
-{-
-operatorTable :: OperatorTable Expr
-operatorTable = 
-   [ (LeftAssociative, [("+", (+)), ("-", (-))])  -- infixl 6
-   , (LeftAssociative, [("*", (*)), ("/", (/))])  -- infixl 7
-   , (RightAssociative, [("^", (^))])             -- infixr 8
-   ]   -}
+pOrList p = (join . orList) <$> pSepList pTerm (pKey "or")
+ where 
+   pTerm =  return <$> p 
+        <|> true   <$  pKey "true" 
+        <|> false  <$  pKey "false"
+   pSepList p q = (:) <$> p <*> pList (q *> p)
 
 pParens :: TokenParser a -> TokenParser a
 pParens p = pKey "(" *> p <* pKey ")"
-
---nul :: Range
---nul = Range (Pos 0 0) (Pos 0 0)
 
 -----------------------------------------------------------------------
 -- Argument descriptor (for parameterized rules)

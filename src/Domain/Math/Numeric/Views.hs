@@ -17,7 +17,7 @@ integralView :: Integral a => View Expr a
 integralView = makeView (exprToNum f) fromIntegral
  where
    f s [x, y] 
-      | s == divSymbol = 
+      | s == divideSymbol = 
            intDiv x y
       | s == powerSymbol = do
            guard (y >= 0)
@@ -28,7 +28,7 @@ realView :: RealFrac a => View Expr a
 realView = makeView (exprToNum f) (fromRational . toRational)
  where
    f s [x, y] 
-      | s == divSymbol = 
+      | s == divideSymbol = 
            fracDiv x y
       | s == powerSymbol = do
            let ry = toRational y
@@ -98,8 +98,8 @@ optionNegate f a          = f a
 
 doubleSym :: Symbol -> [Double] -> Maybe Double
 doubleSym s [x, y] 
-   | s == divSymbol   = fracDiv x y
-   | s == powerSymbol = floatingPower x y 
+   | s == divideSymbol = fracDiv x y
+   | s == powerSymbol  = floatingPower x y 
 doubleSym s [x]    
    | s == sqrtSymbol && x >= 0 = Just (sqrt x)
 doubleSym _ _ = Nothing
@@ -116,7 +116,7 @@ exprToNum f = rec
          a :-: b  -> liftM2 (-)    (rec a) (rec b)
          Negate a -> liftM  negate (rec a)
          Nat n    -> return (fromInteger n)
-         a :/: b  -> do x <- rec a; y <- rec b; f divSymbol [x, y]
+         a :/: b  -> do x <- rec a; y <- rec b; f divideSymbol [x, y]
          Sqrt a   -> do x <- rec a; f sqrtSymbol [x]
          Var _    -> fail "exprToNum: variable"
          Sym s xs -> mapM rec xs >>= f s

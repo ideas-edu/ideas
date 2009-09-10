@@ -195,29 +195,3 @@ factorize p
        df = eval (fmap fromRational (derivative p))
        xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
        startList = [0, 3, -3, 10, -10, 100, -100]
-    
--- testing
-{-
-e10 = var*var + 4* var + 4
-e11 = power var 3 - 11 * power var 2 + 18 * var :: Polynomial Rational
-e12 = power var 2 - 11 * var + 18 :: Polynomial Rational
--- (x+5)(x+2)(x-3)(x-7)(x-8)
---test = longDivision e1 e2 
-
-test2 = division e3 ((var + 2) * (var - 3))
-
-e3 = (var+5) * (var + 2) * (var - 3) * (var - 7) * (var - 8)
-
-e1 = raise 2 var - 12 * raise 1 var - 42
-e2 = 2 * (raise 1 var + var - 3)
-
-e8, e9 :: Polynomial Rational
-e8 = (var+1) * (var-5) * (var-3)
-e9 = (var-2) * (var-5) * (var+2) * (var+2)
-
-(q0, r0) = longDivision e8 e9
-(q1, r1) = longDivision e9 r0
-(q2, r2) = longDivision r0 r1 -- r1 is wat ik zoek
-
-ex = var * (var + 6) * (var - 4) :: Polynomial Rational
-ef = var * var + 2 * var - 3 :: Polynomial Rational -}

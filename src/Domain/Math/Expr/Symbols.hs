@@ -1,6 +1,27 @@
-module Domain.Math.Expr.Symbols where
+module Domain.Math.Expr.Symbols 
+   ( module Domain.Math.Expr.Symbols
+     -- arith1
+   , plusSymbol, timesSymbol, minusSymbol, divideSymbol
+   , rootSymbol, powerSymbol
+     -- logic1
+   , orSymbol, trueSymbol, falseSymbol
+     -- list1
+   , listSymbol
+     -- relation1
+   , eqSymbol
+     -- calculus1
+   , diffSymbol
+   ) where
 
 import Domain.Math.Expr.Symbolic
+import Text.OpenMath.Symbol
+import Text.OpenMath.Dictionary.Arith1
+import Text.OpenMath.Dictionary.Logic1
+import Text.OpenMath.Dictionary.List1
+import Text.OpenMath.Dictionary.Relation1
+import Text.OpenMath.Dictionary.Calculus1
+
+-- Check (rationalSymbol  , oms "nums1" "rational")
 
 -------------------------------------------------------------
 -- Operator fixities
@@ -8,64 +29,52 @@ import Domain.Math.Expr.Symbolic
 data Associativity = InfixLeft | InfixRight | Prefix -- InfixNon | Postfix
    deriving (Show, Eq)
 
-operators :: [ (Associativity, [Symbol]) ]
+operators :: [ (Associativity, [(Symbol, String)]) ]
 operators =
-   [ (InfixLeft, [plusSymbol, minusSymbol]) -- 6
-   , (Prefix,    [negateSymbol])            -- 6+
-   , (InfixLeft, [timesSymbol, divSymbol])  -- 7
-   , (InfixRight, [powerSymbol])            -- 8
+   [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
+   , (Prefix,     [(negateSymbol, "-")])                      -- 6+
+   , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7
+   , (InfixRight, [(powerSymbol, "^")])                       -- 8
    ]
 
 -------------------------------------------------------------
--- Math symbols
+-- Extra math symbols
 
--- Num type class
-plusSymbol    = makeSymbol "+"      2
-timesSymbol   = makeSymbol "*"      2
-minusSymbol   = makeSymbol "-"      2
-absSymbol     = makeSymbol "abs"    1
-signumSymbol  = makeSymbol "signum" 1
-negateSymbol  = (makeSymbol "negate" 1)  { extraNames = ["-"] }
+-- rename
+negateSymbol = unary_minusSymbol
 
--- Fractional type class
-divSymbol     = makeSymbol "/"      2
-
--- Floating type class
-piSymbol      = makeConst  "pi"
-sqrtSymbol    = makeSymbol "sqrt"   1
-powerSymbol   = makeSymbol "^"      2   -- same as "**"
-logSymbol     = makeSymbol "log"    2   -- in Haskell, logbase e = log
-expSymbol     = makeSymbol "exp"    1   -- exp 1 ~= 2.718
-lnSymbol      = makeSymbol "ln"     1   -- natural log
-sinSymbol     = makeSymbol "sin"    1
-tanSymbol     = makeSymbol "tan"    1
-cosSymbol     = makeSymbol "cos"    1
-asinSymbol    = makeSymbol "asin"   1
-atanSymbol    = makeSymbol "atan"   1
-acosSymbol    = makeSymbol "acos"   1
-sinhSymbol    = makeSymbol "sinh"   1
-tanhSymbol    = makeSymbol "tanh"   1
-coshSymbol    = makeSymbol "cosh"   1
-asinhSymbol   = makeSymbol "asinh"  1
-atanhSymbol   = makeSymbol "atanh"  1
-acoshSymbol   = makeSymbol "acosh"  1
-
--- Extra symbols
-rootSymbol    = makeSymbol  "root" 2  
-bottomSymbol  = makeSymbolN "error"
-lambdaSymbol  = makeSymbolN "lambda"
-diffSymbol    = makeSymbolN "diff"
-fcompSymbol   = makeSymbolN "compose"
+absSymbol    = extraSymbol "abs"   
+signumSymbol = extraSymbol "signum" 
+piSymbol     = makeSymbol  "nums1" "pi"
+sqrtSymbol   = extraSymbol "sqrt"   
+logSymbol    = extraSymbol "log"            -- in Haskell, logbase e = log
+expSymbol    = extraSymbol "exp"            -- exp 1 ~= 2.718
+lnSymbol     = makeSymbol  "transc1" "ln"   -- natural log
+sinSymbol    = makeSymbol  "transc1" "sin"    
+tanSymbol    = extraSymbol "tan"    
+cosSymbol    = makeSymbol  "transc1" "cos"    
+asinSymbol   = extraSymbol "asin"   
+atanSymbol   = extraSymbol "atan"   
+acosSymbol   = extraSymbol "acos"   
+sinhSymbol   = extraSymbol "sinh"   
+tanhSymbol   = extraSymbol "tanh"   
+coshSymbol   = extraSymbol "cosh"   
+asinhSymbol  = extraSymbol "asinh"  
+atanhSymbol  = extraSymbol "atanh" 
+acoshSymbol  = extraSymbol "acosh"  
+bottomSymbol = extraSymbol "error"
+lambdaSymbol = makeSymbol  "fns1" "lambda"
+fcompSymbol  = extraSymbol "compose"
 
 -------------------------------------------------------------
 -- Some match functions
 
-isPlus   a = isBinary plusSymbol   a
-isTimes  a = isBinary timesSymbol  a
-isMinus  a = isBinary minusSymbol  a
-isDiv    a = isBinary divSymbol    a
-isNegate a = isUnary  negateSymbol a
-isSqrt   a = isUnary  sqrtSymbol   a
+isPlus   a = isAssoBinary plusSymbol   a
+isTimes  a = isAssoBinary timesSymbol  a
+isMinus  a = isBinary     minusSymbol  a
+isDivide a = isBinary     divideSymbol a
+isNegate a = isUnary      negateSymbol a
+isSqrt   a = isUnary      sqrtSymbol   a
 
 infixr 8 ^
 

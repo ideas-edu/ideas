@@ -56,7 +56,8 @@ rationalGenerator = symbolGenerator extras numSymbols
 
 -- Also generates "division-by-zero" expressions
 numGenerator :: Int -> Gen Expr
-numGenerator = symbolGenerator (const [natGenerator]) (divSymbol:numSymbols)
+numGenerator = symbolGenerator (const [natGenerator]) $ 
+   (divideSymbol, Just 2):numSymbols
 
 ratioExprGen :: Int -> Gen Expr
 ratioExprGen n = liftM fromRational $ ratioGen n (n `div` 4)
@@ -67,5 +68,7 @@ ratioExprGenNonZero n = liftM fromRational $ nonZero $ ratioGen n (n `div` 4)
 nonZero :: Num a => Gen a -> Gen a
 nonZero = liftM (\a -> if a==0 then 1 else a)
 
-numSymbols :: [Symbol]
-numSymbols = [plusSymbol, timesSymbol, minusSymbol, negateSymbol]
+numSymbols :: [(Symbol, Maybe Int)]
+numSymbols = 
+   (negateSymbol, Just 1) :
+   zip [plusSymbol, timesSymbol, minusSymbol] (repeat (Just 2))

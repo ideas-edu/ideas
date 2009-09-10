@@ -62,8 +62,6 @@ liftV op = fromList . map op . toList
 liftV2 :: (a -> b -> c) -> Vector a -> Vector b -> Vector c
 liftV2 op v1 v2 = fromList $ zipWith op (toList v1) (toList v2)
 
- 
-
 toUnit :: Floating a => Vector a -> Vector a
 toUnit v = scale (1 / norm v) v
 

@@ -1,13 +1,14 @@
 module Domain.Math.Data.OrList 
    ( OrList
    , orList, (\/), true, false
-   , isTrue, isFalse, disjunctions
+   , isTrue, isFalse
+   , disjunctions, normalize
    ) where
 
 import Control.Monad
 import Common.Traversable
 import Test.QuickCheck
-import Data.List (intersperse)
+import Data.List (intersperse, nub, sort)
 
 ------------------------------------------------------------
 -- Data type
@@ -39,6 +40,11 @@ disjunctions (OrList xs) = Just xs
 
 (\/) :: OrList a -> OrList a -> OrList a
 p \/ q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
+
+-- | Sort the propositions and remove duplicates
+normalize :: Ord a => OrList a -> OrList a
+normalize T           = T
+normalize (OrList xs) = OrList (nub $ sort xs)
 
 ------------------------------------------------------------
 -- Instances

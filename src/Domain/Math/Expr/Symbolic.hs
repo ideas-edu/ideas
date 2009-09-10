@@ -1,33 +1,10 @@
-module Domain.Math.Expr.Symbolic where
+module Domain.Math.Expr.Symbolic 
+   ( Symbol(..)
+   , module Domain.Math.Expr.Symbolic
+   ) where
 
 import Control.Monad
-
--------------------------------------------------------------
--- Symbol data type
-
-data Symbol = Symbol 
-   { symbolName :: String
-   , arity      :: Maybe Int
-   , extraNames :: [String]
-   }
-
-instance Show Symbol where
-   show = symbolName
-
-instance Eq Symbol where
-   a == b = symbolName a == symbolName b
-
-instance Ord Symbol where
-   compare a b = compare (symbolName a) (symbolName b)
-
-makeConst :: String -> Symbol
-makeConst s = makeSymbol s 0
-
-makeSymbol :: String -> Int -> Symbol
-makeSymbol s n = Symbol s (Just n) []
-
-makeSymbolN :: String -> Symbol
-makeSymbolN s = Symbol s Nothing []
+import Text.OpenMath.Symbol
 
 -------------------------------------------------------------------
 -- Type class for symbolic representations
@@ -59,6 +36,9 @@ unary f a = function f [a]
 binary :: Symbolic a => Symbol -> a -> a -> a
 binary f a b = function f [a, b]
 
+isConst :: Symbolic a => Symbol -> a -> Bool
+isConst s = maybe False null . isSymbol s 
+
 isUnary :: (Symbolic a, MonadPlus m) => Symbol -> a -> m a
 isUnary s a = 
    case isSymbol s a of
@@ -69,4 +49,12 @@ isBinary :: (Symbolic a, MonadPlus m) => Symbol -> a -> m (a, a)
 isBinary s a = 
    case isSymbol s a of
       Just [x, y] -> return (x, y)
+      _ -> mzero
+
+-- left-associative by default
+isAssoBinary :: (Symbolic a, MonadPlus m) => Symbol -> a -> m (a, a)
+isAssoBinary s a =
+   case isSymbol s a of
+      Just [x, y] -> return (x, y)
+      Just (x:xs) | length xs > 1 -> return (x, function s xs)
       _ -> mzero

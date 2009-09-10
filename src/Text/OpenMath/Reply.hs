@@ -19,8 +19,7 @@ module Text.OpenMath.Reply
 import Control.Monad
 import Common.Exercise
 import Common.Strategy hiding (not)
---import Text.OpenMath.StrategyTable
-import Text.OpenMath.Conversion
+import Domain.Math.Expr
 import Text.OpenMath.Object
 import Text.XML
 import Service.Revision
@@ -58,10 +57,10 @@ type Args = [(String, String)]
 ------------------------------------------------------------------------
 -- Conversion functions to XML
  
-replyInXML :: IsOMOBJ a => Reply a -> String
+replyInXML :: IsExpr a => Reply a -> String
 replyInXML = showXML . replyToXML
 
-replyToXML :: IsOMOBJ a => Reply a -> XML
+replyToXML :: IsExpr a => Reply a -> XML
 replyToXML reply =
    case reply of
       Ok r        -> replyOkToXML r
@@ -75,11 +74,11 @@ replyOkToXML r = makeReply "ok" $ do
    element "context"  (text $ repOk_Context r)
    element "steps"    (text $ show $ repOk_Steps r)
 
-replyIncorrectToXML :: IsOMOBJ a => ReplyIncorrect a -> XML
+replyIncorrectToXML :: IsExpr a => ReplyIncorrect a -> XML
 replyIncorrectToXML r = makeReply "incorrect" $ do
    element "strategy"   (text $ show $ exerciseCode $ repInc_Code r)
    element "location"   (text $ show $ repInc_Location r)
-   element "expected"   (builder $ omobj2xml $ toOMOBJ $ repInc_Expected r)
+   element "expected"   (builder $ omobj2xml $ toOMOBJ $ toExpr $ repInc_Expected r)
    element "steps"      (text $ show $ repInc_Steps r)
    element "equivalent" (text $ show $ repInc_Equivalent r)
    
@@ -92,7 +91,7 @@ replyIncorrectToXML r = makeReply "incorrect" $ do
    unless (null $  repInc_Derivation r) $
       let f (x,y) = element "elem" $ do 
              "ruleid" .=. x 
-             builder (omobj2xml (toOMOBJ y))
+             builder (omobj2xml (toOMOBJ (toExpr y)))
       in element "derivation" $ mapM_ f (repInc_Derivation r)
 
 replyErrorToXML :: ReplyError -> XML

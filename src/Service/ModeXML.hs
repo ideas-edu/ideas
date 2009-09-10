@@ -29,7 +29,7 @@ import Service.Revision (version)
 import Service.ServiceList 
 import Service.TypedAbstractService hiding (exercise)
 import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
-import Text.OpenMath.Conversion
+import Domain.Math.Expr
 import Text.OpenMath.Object
 import Text.OpenMath.Reply (replyToXML)
 import Text.OpenMath.Request (xmlToRequest)
@@ -139,15 +139,15 @@ stringFormatConverter (Some ex) =
       -- guard (name xml == "expr")
       let input = getData xml
       either (fail . show) return (parser ex input)
-                
+        
 openMathConverter :: OpenMathExercise -> Some (Evaluator (Either String) XML XMLBuilder)
 openMathConverter (OMEX ex) = 
    Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
  where
-   f = return . builder . toXML . toOMOBJ
+   f = return . builder . toXML . toOMOBJ . toExpr
    g xml = do 
       omobj <- xml2omobj xml
-      case fromOMOBJ omobj of
+      case fromExpr (fromOMOBJ omobj) of
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
    

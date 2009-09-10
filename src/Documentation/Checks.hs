@@ -33,6 +33,8 @@ import qualified Service.ModeJSON as ModeJSON
 import qualified Service.ModeXML as ModeXML
 
 import qualified Domain.Math.Numeric.Tests as MathNum
+import qualified Domain.Math.Polynomial.Tests as MathPoly
+import qualified Domain.Math.SquareRoot.Tests as MathSqrt
 import Data.List
 
 main :: IO ()
@@ -40,6 +42,8 @@ main = do
    putStrLn "* 1. Domain checks"
    Common.Grammar.checks
    MathNum.main
+   MathPoly.tests
+   MathSqrt.tests
    LA.checks
 
    putStrLn "* 2. Exercise checks"

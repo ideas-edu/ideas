@@ -9,7 +9,7 @@ module Service.ExerciseList
 import Common.Utils (Some(..))
 import Common.Exercise
 import Data.Char
-import Text.OpenMath.Conversion (IsOMOBJ)
+import Domain.Math.Expr
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA
@@ -31,7 +31,7 @@ exerciseList =
 -- All mathematical exercises are supported by the OpenMath standard, and 
 -- require an extra type constraint
 
-data OpenMathExercise = forall a . IsOMOBJ a => OMEX (Exercise a)
+data OpenMathExercise = forall a . IsExpr a => OMEX (Exercise a)
    
 openMathExercises :: [OpenMathExercise]
 openMathExercises = 

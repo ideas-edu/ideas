@@ -13,6 +13,7 @@ import Prelude hiding ((^))
 import Control.Monad
 import Data.List
 import Common.View
+import Common.Traversable
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Equation
@@ -180,6 +181,7 @@ polyNormalForm v = makeView f (uncurry g)
 -------------------------------------------------------------------
 -- Normal forms for equations
 
+-- Excludes equations such as 1==1 or 0==1
 linearEquationViewWith :: Fractional a => View Expr a -> View (Equation Expr) (String, a)
 linearEquationViewWith v = makeView f g
  where
@@ -191,51 +193,50 @@ linearEquationViewWith v = makeView f g
 linearEquationView :: View (Equation Expr) (String, Rational)
 linearEquationView = linearEquationViewWith rationalView
 
-quadraticEquationsView:: View (OrList (Equation Expr)) (String, [SQ.SquareRoot Rational])
-quadraticEquationsView = makeView f g
+quadraticEquationsView:: View (OrList (Equation Expr)) (OrList (String, SQ.SquareRoot Rational))
+quadraticEquationsView = makeView f (fmap g)
  where
-   f ors = do 
-      xs <- disjunctions ors
-      ps <- mapM (match quadraticEquationView) xs
-      case unzip ps of
-         ([], _)     -> 
-            return ("x", []) -- important for equality
-         (s:ss, xss) -> do
-            guard (all (==s) ss)
-            let make = sort . nub . filter (not . SQ.imaginary) . concat
-            return (s, make xss)
-            
-   g (s, xs) = orList [ Var s :==: build (squareRootViewWith rationalView) rhs | rhs <- xs ]
+   f eq = do 
+      ors <- switch (fmap (match quadraticEquationView) eq)
+      return (normalize (join ors))
 
-quadraticEquationView :: View (Equation Expr) (String, [SQ.SquareRoot Rational])
+   g (x, a) = Var x :==: build (squareRootViewWith rationalView) a
+
+quadraticEquationView :: View (Equation Expr) (OrList (String, SQ.SquareRoot Rational))
 quadraticEquationView = makeView f g
  where
    f (lhs :==: rhs) = do
       (s, p) <- match (polyViewWith (squareRootViewWith rationalView)) (lhs - rhs)
       guard (degree p <= 2)
-      liftM ((,) s) $
+      liftM (fmap ((,) s)) $ do
          case polynomialList p of
             [a, b, c] -> do
                discr <- SQ.fromSquareRoot (b*b - SQ.scale 4 (a*c))
                let sdiscr = SQ.sqrtRational discr
                    twoA   = SQ.scale 2 a
                case compare discr 0 of
-                  LT -> return []
-                  EQ -> return [ -b/twoA ]
-                  GT -> return [ (-b+sdiscr)/twoA, (-b-sdiscr)/twoA ]
-            [a, b]   -> return [-b/a]
-            _        -> return []
+                  LT   -> return false
+                  EQ   -> return $ orList [-b/twoA]
+                  GT   -> return $ orList [(-b+sdiscr)/twoA, (-b-sdiscr)/twoA]
+            [a, b]     -> return $ orList [-b/a]
+            [a] | a==0 -> return true
+            _          -> return false
+   
+   g ors = 
+      case disjunctions ors of
+         Nothing -> 0 :==: 0
+         Just xs -> 
+            let make (x, a) = Var x .-. build (squareRootViewWith rationalView) a
+            in build productView (False, map make xs) :==: 0
 
-   g (s, as) = build productView (False, map (h s) as) :==: 0
-   h s a = simplify sumView (Var s - build (squareRootViewWith rationalView) a)
-
-higherDegreeEquationsView :: View (OrList (Equation Expr)) [Expr]
-higherDegreeEquationsView = makeView f undefined
+higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
+higherDegreeEquationsView = makeView f (fmap g)
  where
-   f ors = do
-      xs <- disjunctions ors
-      return $ sort $ nub [ e | a :==: b <- xs, e <- normHDE (a-b) ]
+   f = let make (a :==: b) = orList (normHDE (a-b))
+       in Just . normalize . join . fmap make
 
+   g a = a :==: 0
+   
 normHDE :: Expr -> [Expr]
 normHDE e = do 
    case match (polyViewWith rationalView) e of
@@ -257,5 +258,5 @@ normHDE e = do
                    [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
                    , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
                    ]
-       | otherwise     = error ("NOT SOLVED:" ++ show p) -- fromPoly
+       | otherwise     = [build (polyViewWith rationalView) (x, p)]
     where d = degree p

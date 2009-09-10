@@ -74,10 +74,7 @@ eqEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr -> Bool
 eqEquation f x y = normEquation f x == normEquation f y
 
 normOrList :: (Expr -> Expr) -> OrList (Equation Expr) -> OrList (Equation Expr)
-normOrList f ors = 
-   case disjunctions ors of 
-      Just xs -> orList $ nub $ sort $ map (normEquation f) xs
-      Nothing -> false
+normOrList f = normalize . fmap (normEquation f)
 
 normEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr
 normEquation f eq

@@ -1,0 +1,9 @@
+<request service="findbuggyrules" exerciseid="math.quadreq" encoding="string">
+<location>[]</location>
+<state>
+<prefix>[]</prefix>
+<context></context>
+<OMOBJ><expr>x^2+x-3==0</expr></OMOBJ>
+</state>
+<expr>x==(-1+sqrt 13)/2</expr>
+</request>

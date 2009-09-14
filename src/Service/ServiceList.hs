@@ -25,7 +25,8 @@ serviceList =
    [ derivationS, allfirstsS, onefirstS, readyS
    , stepsremainingS, applicableS, applyS, generateS
    , submitS
-   , onefirsttextS, submittextS, derivationtextS
+   , onefirsttextS, findbuggyrulesS
+   , submittextS, derivationtextS
    , exerciselistS, rulelistS
    ]
 
@@ -73,6 +74,10 @@ applyS = Service "apply" $
 generateS :: Service a
 generateS = Service "generate" $ (flip S.generate 5) ::: 
    Exercise :-> IO State
+
+findbuggyrulesS :: Service a
+findbuggyrulesS = Service "findbuggyrules" $ 
+   S.findbuggyrules ::: State :-> Term :-> List Rule
 
 submitS :: Service a
 submitS = Service "submit" $ (\a -> S.submit a . fromContext) :::

@@ -4,6 +4,7 @@ import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.BuggyRules
 import Common.Exercise
 import Common.Rewriting
 import Domain.Math.Data.Equation
@@ -44,7 +45,7 @@ quadraticExercise = makeExercise
    , equality      = eqOrList cleanUpExpr
    , equivalence   = viewEquivalent quadraticEquationsView
    , finalProperty = solvedEquations
-   , ruleset       = map ignoreContext quadraticRules
+   , ruleset       = map ignoreContext $ quadraticRules ++ abcBuggyRules
    , strategy      = ignoreContext quadraticStrategy
    , termGenerator = ExerciseList (map (orList . return) $ concat quadraticEquations)
    }

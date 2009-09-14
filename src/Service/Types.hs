@@ -125,7 +125,7 @@ decodeDefault dec tp s =
       Optional a t1 -> 
          decodeType dec t1 s `mplus` return (a, s)
       _ ->
-         fail "No support for argument type"
+         fail $ "No support for argument type: " ++ show tp
 
 encodeDefault :: Monad m => Encoder m s a -> Type a t -> t -> m s
 encodeDefault enc tp tv =

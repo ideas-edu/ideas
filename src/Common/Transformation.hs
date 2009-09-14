@@ -17,7 +17,8 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( -- * Transformations
-     Transformation(RewriteRule), makeTrans, inverseTrans, getPatternPair
+     Transformation(RewriteRule), makeTrans, makeTransList
+   , inverseTrans, getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1

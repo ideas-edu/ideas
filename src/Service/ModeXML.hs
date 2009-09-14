@@ -189,6 +189,7 @@ xmlDecoder f ex = Decoder
          Tp.Location -> leave $ liftM (read . getData) . findChild "location"
          Tp.Rule     -> leave $ maybe (fail "unknown rule") id . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Exercise -> leave $ const (return (decoderExercise dec))
+         Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (inContext a, xml)
          _           -> decodeDefault dec serviceType
          
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)

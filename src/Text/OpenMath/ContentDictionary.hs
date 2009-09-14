@@ -11,7 +11,13 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Text.OpenMath.ContentDictionary where
+module Text.OpenMath.ContentDictionary 
+   ( -- data types
+     ContentDictionary(..), VersionNumber, Date
+   , ContentDictionaryStatus(..), Definition(..)
+     -- parsing and reading
+   , readContentDictionary, main, findOCDs
+   ) where
 
 import Text.OpenMath.Object (OMOBJ, xml2omobj)
 import Text.XML
@@ -31,54 +37,6 @@ main = do
    putStrLn $ show (length cds) ++ " valid dictionaries, with " ++ show (length defs) ++ " definitions"
 
    -- print [ p | d <- defs, p <- formalProperties d ]
-
-makes = mapM_ make ["arith1", "calculus1", "linalg2", "list1", "logic1", "relation1"]
-
-make :: String -> IO ()
-make cdname = do
-   let base   = "lib/Dictionaries"
-       ocd    = cdname ++ ".ocd"
-       modn   = map toUpper (take 1 cdname) ++ drop 1 cdname
-   cd <- readContentDictionary (base ++ "/" ++ ocd)  
-   putStrLn "Writing symbol definition module"
-   writeFile ("src/Text/OpenMath/Dictionary/" ++ modn ++ ".hs") $ unlines $ 
-      [ "-- Automatically generated from content dictionary " ++ ocd ++ ". \
-        \ Do not change."
-      , "module Text.OpenMath.Dictionary." ++ modn ++ " where\n"
-      , "import Text.OpenMath.Symbol\n"
-      , makeSymbolList cd
-      ] ++
-      map (makeSymbol cdname) (definitions cd)
-
-makeSymbolList :: ContentDictionary -> String
-makeSymbolList cd = unlines 
-   [ "-- | List of symbols defined in " ++ dictionaryName cd ++ " dictionary" 
-   , name ++ " :: [Symbol]"
-   , name ++ " = [" ++ concat (intersperse ", " list) ++ "]"
-   ]
- where
-   name = dictionaryName cd ++ "List"
-   list = map ((++"Symbol") . symbolName) (definitions cd)
-
-makeSymbol :: String -> Definition -> String
-makeSymbol dict def = unlines $
-   makeComment 80 (symbolDescription def) ++
-   [ name ++ " :: Symbol"
-   , name ++ " = makeSymbol " ++ show dict ++ " " ++ show (symbolName def)
-   ]
- where
-    name = symbolName def ++ "Symbol" 
-    
-makeComment :: Int -> String -> [String]
-makeComment n = breaks . comment . words
- where
-   comment xs = ["{-|"] ++ xs ++ ["-}"]
-   accLength  = scanl (\n -> (+n) . succ . length) 0
-   breaks xs
-      | null xs   = []
-      | otherwise =
-           case break ((>=n) . fst) (zip (drop 1 (accLength xs)) xs) of
-              (as, bs) -> unwords (map snd as) : breaks (map snd bs)
 
 findOCDs :: String -> IO [FilePath]
 findOCDs filepath = do

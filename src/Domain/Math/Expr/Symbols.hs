@@ -11,6 +11,12 @@ module Domain.Math.Expr.Symbols
    , eqSymbol
      -- calculus1
    , diffSymbol
+     -- nusm1
+   , piSymbol
+     -- fns1
+   , lambdaSymbol
+     -- transc1
+   , sinSymbol, cosSymbol, lnSymbol
    ) where
 
 import Domain.Math.Expr.Symbolic
@@ -20,6 +26,9 @@ import Text.OpenMath.Dictionary.Logic1
 import Text.OpenMath.Dictionary.List1
 import Text.OpenMath.Dictionary.Relation1
 import Text.OpenMath.Dictionary.Calculus1
+import Text.OpenMath.Dictionary.Nums1
+import Text.OpenMath.Dictionary.Fns1
+import Text.OpenMath.Dictionary.Transc1
 
 -- Check (rationalSymbol  , oms "nums1" "rational")
 
@@ -45,14 +54,10 @@ negateSymbol = unary_minusSymbol
 
 absSymbol    = extraSymbol "abs"   
 signumSymbol = extraSymbol "signum" 
-piSymbol     = makeSymbol  "nums1" "pi"
 sqrtSymbol   = extraSymbol "sqrt"   
 logSymbol    = extraSymbol "log"            -- in Haskell, logbase e = log
 expSymbol    = extraSymbol "exp"            -- exp 1 ~= 2.718
-lnSymbol     = makeSymbol  "transc1" "ln"   -- natural log
-sinSymbol    = makeSymbol  "transc1" "sin"    
-tanSymbol    = extraSymbol "tan"    
-cosSymbol    = makeSymbol  "transc1" "cos"    
+tanSymbol    = extraSymbol "tan"       
 asinSymbol   = extraSymbol "asin"   
 atanSymbol   = extraSymbol "atan"   
 acosSymbol   = extraSymbol "acos"   
@@ -63,7 +68,6 @@ asinhSymbol  = extraSymbol "asinh"
 atanhSymbol  = extraSymbol "atanh" 
 acoshSymbol  = extraSymbol "acosh"  
 bottomSymbol = extraSymbol "error"
-lambdaSymbol = makeSymbol  "fns1" "lambda"
 fcompSymbol  = extraSymbol "compose"
 
 -------------------------------------------------------------

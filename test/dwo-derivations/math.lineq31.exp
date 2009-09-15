@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        x-8 == 4*x+5
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -3*x-8 == 5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -3*x == 13
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -13/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

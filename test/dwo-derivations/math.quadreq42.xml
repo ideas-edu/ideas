@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadreq" encoding="string">
+  <state>
+    <expr>
+      4*(10-x^2) == -2*x*(2*x+10)
+    </expr>
+  </state>
+</request>

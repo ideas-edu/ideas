@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution square">
+      <expr>
+        x^2-7*x+49/4 == 2*(x+4)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        x^2-7*x+49/4 == 2*x+8
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-7*x+49/4-2*x-8 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        x^2-9*x+17/4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 17/2 or x == 1/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

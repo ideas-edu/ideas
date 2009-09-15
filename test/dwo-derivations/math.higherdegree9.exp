@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="all power factors">
+      <expr>
+        x == 0 or x^2-4*x-9 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 0 or x == 2+sqrt 13 or x == 2-sqrt 13
+      </expr>
+    </elem>
+  </list>
+</reply>
+

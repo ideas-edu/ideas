@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.lineq" encoding="string">
+  <state>
+    <expr>
+      18-2*(4*x+2) == 7*x-4*(4*x-2)
+    </expr>
+  </state>
+</request>

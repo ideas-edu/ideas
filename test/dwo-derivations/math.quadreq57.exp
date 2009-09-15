@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        x^2-3*x == 3*x-6
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-3*x-3*x+6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        x^2-6*x+6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 3+sqrt 3 or x == 3-sqrt 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

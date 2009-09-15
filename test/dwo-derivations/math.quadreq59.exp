@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        2*x^2 == x^2+2*x+7
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        2*x^2-x^2-2*x-7 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        x^2-2*x-7 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 1+2*sqrt 2 or x == 1-2*sqrt 2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadreq" encoding="string">
+  <state>
+    <expr>
+      (x-4)*(x-1) == 11
+    </expr>
+  </state>
+</request>

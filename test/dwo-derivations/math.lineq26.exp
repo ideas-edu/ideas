@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        12*x-3+3 == 7*x-14
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        12*x == 7*x-14
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        5*x == -14
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -14/5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

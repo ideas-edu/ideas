@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="variable to left">
+      <expr>
+        4*x-2 == 14
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        4*x == 16
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

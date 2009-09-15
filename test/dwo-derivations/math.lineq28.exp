@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        2*x-(3*x+5) == 10+(5*x-5)
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -x-5 == 5+5*x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -6*x-5 == 5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -6*x == 10
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -5/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

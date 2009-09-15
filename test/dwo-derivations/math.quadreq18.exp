@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        7+2*x == sqrt 7 or 7+2*x == -sqrt 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        2*x == -7+sqrt 7 or 7+2*x == -sqrt 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -7/2+1/2*sqrt 7 or 7+2*x == -sqrt 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -7/2+1/2*sqrt 7 or 2*x == -7-sqrt 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -7/2+1/2*sqrt 7 or x == -7/2-1/2*sqrt 7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

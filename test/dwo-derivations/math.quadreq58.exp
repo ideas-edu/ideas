@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        4-5*x+x^2 == 3*x
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        4-5*x+x^2-3*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        4-8*x+x^2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 4+2*sqrt 3 or x == 4-2*sqrt 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

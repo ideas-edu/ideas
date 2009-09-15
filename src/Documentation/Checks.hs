@@ -63,6 +63,7 @@ main = do
    mathdoxRequests
    jsonRPCs
    xmlRequests
+   dwoDerivations
 
 logicConfluence :: IO ()
 logicConfluence = reportTest "logic rules" (isConfluent f rs)
@@ -73,10 +74,12 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
    rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
    
-mathdoxRequests, jsonRPCs, xmlRequests :: IO ()
-mathdoxRequests = testRequests (liftM snd3 . ModeXML.processXML) "mathdox-request" ".txt"
-jsonRPCs        = testRequests (liftM snd3 . ModeJSON.processJSON)       "json-rpc"        ".json"
-xmlRequests     = testRequests (liftM snd3 . ModeXML.processXML) "xml-request"     ".xml"
+mathdoxRequests, jsonRPCs, xmlRequests, dwoDerivations :: IO ()
+mathdoxRequests = testRequests (liftM snd3 . ModeXML.processXML)   "mathdox-request" ".txt"
+jsonRPCs        = testRequests (liftM snd3 . ModeJSON.processJSON) "json-rpc"        ".json"
+xmlRequests     = testRequests (liftM snd3 . ModeXML.processXML)   "xml-request"     ".xml"
+dwoDerivations  = testRequests (liftM snd3 . ModeXML.processXML)   "dwo-derivations" ".xml"
+
 
 testRequests :: (String -> IO String) -> String -> String -> IO ()
 testRequests eval subDir suffix = do

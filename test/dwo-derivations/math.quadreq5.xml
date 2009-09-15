@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadreq" encoding="string">
+  <state>
+    <expr>
+      32-2*x^2 == 14
+    </expr>
+  </state>
+</request>

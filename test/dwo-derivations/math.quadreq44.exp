@@ -1,0 +1,50 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        3*(x-2)*x+18*(x-2) == 12*x
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        (3*x-6)*x+18*(x-2) == 12*x
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        3*x^2-6*x+18*(x-2) == 12*x
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        3*x^2-6*x+18*x-36 == 12*x
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        3*x^2+12*x-36 == 12*x
+      </expr>
+    </elem>
+    <elem ruleid="cancel terms">
+      <expr>
+        3*x^2-36 == 0
+      </expr>
+    </elem>
+    <elem ruleid="no linear term b">
+      <expr>
+        3*x^2 == 36
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^2 == 12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2*sqrt 3 or x == -2*sqrt 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

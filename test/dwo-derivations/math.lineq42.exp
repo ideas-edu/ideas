@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        x+3 == 10*(1/2*x+1+1/2)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        x+3 == 5*x+15
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -4*x+3 == 15
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -4*x == 12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

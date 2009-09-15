@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="all power factors">
+      <expr>
+        x == 0 or x+1 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 0 or x == -1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

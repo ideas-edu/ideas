@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        x+2 == 10*x+8
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -9*x+2 == 8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -9*x == 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -2/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

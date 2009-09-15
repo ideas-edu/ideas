@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadreq" encoding="string">
+  <state>
+    <expr>
+      1/4*(17-x^2) == 2
+    </expr>
+  </state>
+</request>

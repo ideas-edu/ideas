@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadreq" encoding="string">
+  <state>
+    <expr>
+      14-2*x^2 == 6
+    </expr>
+  </state>
+</request>

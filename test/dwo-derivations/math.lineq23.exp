@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        10-6*x == 6-x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        10-5*x == 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -5*x == -4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 4/5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

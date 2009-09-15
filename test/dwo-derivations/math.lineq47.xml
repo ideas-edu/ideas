@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.lineq" encoding="string">
+  <state>
+    <expr>
+      (5*x-1)/6-2 == -4*x+(3*x-6)/2
+    </expr>
+  </state>
+</request>

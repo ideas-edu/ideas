@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.lineq" encoding="string">
+  <state>
+    <expr>
+      -12+5*x == 33
+    </expr>
+  </state>
+</request>

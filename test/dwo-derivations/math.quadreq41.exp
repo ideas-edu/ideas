@@ -1,0 +1,50 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution square">
+      <expr>
+        9*x^2+30*x+25+(x-5)^2 == 40
+      </expr>
+    </elem>
+    <elem ruleid="distribution square">
+      <expr>
+        9*x^2+30*x+25+x^2-10*x+25 == 40
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        10*x^2+20*x+50 == 40
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        10*x^2+20*x+10 == 0
+      </expr>
+    </elem>
+    <elem ruleid="simpler A">
+      <expr>
+        x^2+2*x+1 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x+1)*(x+1) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x+1 == 0 or x+1 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1 or x+1 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1 or x == -1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,35 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        (6*x-3)^2 == 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        6*x-3 == sqrt 6 or 6*x-3 == -sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        6*x == 3+sqrt 6 or 6*x-3 == -sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 1/2+1/6*sqrt 6 or 6*x-3 == -sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 1/2+1/6*sqrt 6 or 6*x == 3-sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 1/2+1/6*sqrt 6 or x == 1/2-1/6*sqrt 6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

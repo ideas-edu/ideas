@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        60*x-6*(2*x+2) == 360+5*(x-1)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        60*x-(12*x+12) == 360+5*(x-1)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        60*x-(12*x+12) == 360+(5*x-5)
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        48*x-12 == 355+5*x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        43*x-12 == 355
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        43*x == 367
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 367/43
+      </expr>
+    </elem>
+  </list>
+</reply>
+

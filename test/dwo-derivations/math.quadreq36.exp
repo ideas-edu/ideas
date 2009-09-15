@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        2*x+15-x^2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x+3)*(x-5) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x+3 == 0 or x-5 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -3 or x-5 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -3 or x == 5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

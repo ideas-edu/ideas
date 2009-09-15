@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        9*(7-2/3*x) == 36+2*x
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        63-6*x == 36+2*x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        63-8*x == 36
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -8*x == -27
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 27/8
+      </expr>
+    </elem>
+  </list>
+</reply>
+

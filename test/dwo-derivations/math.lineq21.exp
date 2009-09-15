@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        4*x-4 == 11*x-12
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -7*x-4 == -12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -7*x == -8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 8/7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

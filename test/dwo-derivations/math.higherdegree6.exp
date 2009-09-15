@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="all power factors">
+      <expr>
+        x == 0 or 7*x == 8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 0 or x == 8/7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

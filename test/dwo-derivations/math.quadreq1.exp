@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == sqrt 2 or x == -sqrt 2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

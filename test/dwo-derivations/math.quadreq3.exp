@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="no linear term b">
+      <expr>
+        x^2 == 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == sqrt 7 or x == -sqrt 7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

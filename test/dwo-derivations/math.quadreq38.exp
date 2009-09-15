@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-15+8*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == -4+sqrt 31 or x == -4-sqrt 31
+      </expr>
+    </elem>
+  </list>
+</reply>
+

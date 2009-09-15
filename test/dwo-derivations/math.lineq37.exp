@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        9*x-4 == 8*x-9
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        x-4 == -9
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

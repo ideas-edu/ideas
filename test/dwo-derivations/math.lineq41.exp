@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        x-3 == 2*x-16
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -x-3 == -16
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -x == -13
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        x == 13
+      </expr>
+    </elem>
+  </list>
+</reply>
+

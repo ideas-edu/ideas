@@ -1,0 +1,45 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        8*x^2+4*x-24 == x^2-5*x-24
+      </expr>
+    </elem>
+    <elem ruleid="cancel terms">
+      <expr>
+        8*x^2+4*x == x^2-5*x
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        8*x^2+4*x-x^2+5*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        7*x^2+9*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="no constant c">
+      <expr>
+        x*(7*x+9) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 0 or 7*x+9 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 0 or 7*x == -9
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 0 or x == -9/7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

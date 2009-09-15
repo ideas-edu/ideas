@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        -5*(x-7) == 3*(x+2)-18
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        -5*x+35 == 3*(x+2)-18
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        -5*x+35 == 3*x+6-18
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -5*x+35 == 3*x-12
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -8*x+35 == -12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -8*x == -47
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 47/8
+      </expr>
+    </elem>
+  </list>
+</reply>
+

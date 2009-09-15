@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -x^2/10 == 2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        x^2/10 == -2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up numerator [vars]">
+      <expr>
+        x^2 == -20
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        false
+      </expr>
+    </elem>
+  </list>
+</reply>
+

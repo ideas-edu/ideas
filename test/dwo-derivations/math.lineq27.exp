@@ -1,0 +1,35 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        16*x-4-2 == -3*x+3*(2*x-5)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        16*x-4-2 == -3*x+(6*x-15)
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        16*x-6 == 3*x-15
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        13*x-6 == -15
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        13*x == -9
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -9/13
+      </expr>
+    </elem>
+  </list>
+</reply>
+

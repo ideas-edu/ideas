@@ -1,0 +1,35 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="power factor">
+      <expr>
+        (x-1)*(x^3-6*x) == 3*x^2*(x-1)
+      </expr>
+    </elem>
+    <elem ruleid="same factor">
+      <expr>
+        x-1 == 0 or x^3-6*x == 3*x^2
+      </expr>
+    </elem>
+    <elem ruleid="all power factors">
+      <expr>
+        x-1 == 0 or x == 0 or x^2-6 == 3*x
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 1 or x == 0 or x^2-6 == 3*x
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x == 1 or x == 0 or x^2-6-3*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 1 or x == 0 or x == 3/2+1/2*sqrt 33 or x == 3/2-1/2*sqrt 33
+      </expr>
+    </elem>
+  </list>
+</reply>
+

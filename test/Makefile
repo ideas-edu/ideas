@@ -14,7 +14,10 @@ OUTS2  = $(patsubst %.json,%.out,$(TESTS2))
 TESTS3 = $(wildcard xml-request/*.xml)
 OUTS3  = $(patsubst %.xml,%.out,$(TESTS3))
 
-ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3)
+TESTS4 = $(wildcard dwo-derivations/*.xml)
+OUTS4  = $(patsubst %.xml,%.out,$(TESTS4))
+
+ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3) $(OUTS4)
 ALL-EXP     = $(patsubst %.out,%.exp,$(ALL-OUT))
 ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
 
@@ -39,6 +42,11 @@ json-rpc/%.out: json-rpc/%.json $(BINDIR)/service.cgi
 
 xml-request/%.out: xml-request/%.xml $(BINDIR)/service.cgi
 	$(BINDIR)/service.cgi --file $< > $@
+
+dwo-derivations/%.out: dwo-derivations/%.xml $(BINDIR)/service.cgi
+	$(BINDIR)/service.cgi --file $< > $@
+	
+exp: $(ALL-EXP)
 	
 %.exp: %.out
 	cp $^ $@

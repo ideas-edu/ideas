@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        3/5*x-3+5 == 7*x-14
+      </expr>
+    </elem>
+    <elem ruleid="remove division">
+      <expr>
+        3*x+10 == 35*x-70
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -32*x+10 == -70
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -32*x == -80
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 5/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

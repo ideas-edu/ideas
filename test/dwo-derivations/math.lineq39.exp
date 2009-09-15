@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        10*x-30 == 3*x-9
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        7*x-30 == -9
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        7*x == 21
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

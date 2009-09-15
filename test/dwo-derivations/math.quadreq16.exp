@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -(2*x+1)^2 == -6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        (2*x+1)^2 == 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        2*x+1 == sqrt 6 or 2*x+1 == -sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        2*x == -1+sqrt 6 or 2*x+1 == -sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -1/2+1/2*sqrt 6 or 2*x+1 == -sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1/2+1/2*sqrt 6 or 2*x == -1-sqrt 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -1/2+1/2*sqrt 6 or x == -1/2-1/2*sqrt 6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

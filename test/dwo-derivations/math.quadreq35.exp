@@ -1,0 +1,35 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        x^2-3*x == 4
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-3*x-4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x+1)*(x-4) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x+1 == 0 or x-4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1 or x-4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1 or x == 4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

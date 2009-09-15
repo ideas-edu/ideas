@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.lineq" encoding="string">
+  <state>
+    <expr>
+      -1-5*x == 3*x-20
+    </expr>
+  </state>
+</request>

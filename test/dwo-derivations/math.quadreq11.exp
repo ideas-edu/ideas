@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        (x-7)^2 == 8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x-7 == 2*sqrt 2 or x-7 == -2*sqrt 2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 7+2*sqrt 2 or x-7 == -2*sqrt 2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 7+2*sqrt 2 or x == 7-2*sqrt 2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

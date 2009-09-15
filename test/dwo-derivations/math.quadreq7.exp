@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        1/4*x^2 == 4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^2 == 16
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 4 or x == -4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

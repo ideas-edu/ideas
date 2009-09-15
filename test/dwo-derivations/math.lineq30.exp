@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        18-(8*x+4) == 7*x-4*(4*x-2)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        18-(8*x+4) == 7*x-(16*x-8)
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        14-8*x == -9*x+8
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        14+x == 8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

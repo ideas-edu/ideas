@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        12-4*(4*x+2) == 36*x-3*(5*x-1)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        12-(16*x+8) == 36*x-3*(5*x-1)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        12-(16*x+8) == 36*x-(15*x-3)
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        4-16*x == 21*x+3
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        4-37*x == 3
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -37*x == -1
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 1/37
+      </expr>
+    </elem>
+  </list>
+</reply>
+

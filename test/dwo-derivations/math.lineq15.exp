@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="variable to left">
+      <expr>
+        -3*x-6 == -14
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -3*x == -8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 8/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        3*x-2*x^2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="no constant c">
+      <expr>
+        x*(-2*x+3) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 0 or -2*x+3 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 0 or -2*x == -3
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 0 or x == 3/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

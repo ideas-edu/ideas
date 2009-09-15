@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadreq" encoding="string">
+  <state>
+    <expr>
+      2*(x^2-3) == 12
+    </expr>
+  </state>
+</request>

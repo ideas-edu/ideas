@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        x^2+12*x == 2*x^2
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2+12*x-2*x^2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -x^2+12*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="no constant c">
+      <expr>
+        x*(-x+12) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 0 or -x+12 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 0 or -x == -12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        x == 0 or x == 12
+      </expr>
+    </elem>
+  </list>
+</reply>
+

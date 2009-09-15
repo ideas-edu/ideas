@@ -1,0 +1,45 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="distribution">
+      <expr>
+        2*x^2-6*x-3 == (x+2)*(x+6)
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        2*x^2-6*x-3 == x^2+8*x+12
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        2*x^2-6*x-3-x^2-8*x-12 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        x^2-14*x-15 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x+1)*(x-15) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x+1 == 0 or x-15 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1 or x-15 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1 or x == 15
+      </expr>
+    </elem>
+  </list>
+</reply>
+

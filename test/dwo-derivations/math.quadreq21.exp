@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-5*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="no constant c">
+      <expr>
+        x*(x-5) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 0 or x-5 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 0 or x == 5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

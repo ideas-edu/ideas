@@ -203,7 +203,7 @@ checkExercise = checkExerciseWith g
 
 checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
 checkExerciseWith f a = do 
-   putStrLn ("** " ++ identifier a ++ " **")
+   putStrLn ("** " ++ identifier a)
    let check txt p = putLabel txt >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)
@@ -255,7 +255,7 @@ checksForList ex =
    case termGenerator ex of
       ExerciseList xs | status ex /= Experimental -> do
          let err s = putStrLn $ "Error: " ++ s
-         putStrLn ("** " ++ identifier ex ++ " **")
+         putStrLn ("** " ++ identifier ex)
          mapM_ (either err return . checksForTerm ex) xs
       _ -> return ()
 

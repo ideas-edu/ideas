@@ -35,7 +35,7 @@ testsPage input = defaultPage "Tests" 0 $ do
       | otherwise = 
            (ttText (htmlString s), True)
     where
-      ws = words (map toLower s)
+      ws = map (map toLower . filter isAlpha) (words s)
       
       
 brs :: [HTMLBuilder] -> HTMLBuilder

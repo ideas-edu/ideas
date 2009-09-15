@@ -10,7 +10,7 @@ import Test.QuickCheck
 
 main :: IO ()
 main = do
-   putStrLn "*** Correctness numeric views"
+   putStrLn "** Correctness numeric views"
    let f v = flip mapM_ numGenerators $ \g -> do
           quickCheck $ propIdempotence g v
           quickCheck $ propSoundness semEqDouble g v
@@ -20,20 +20,20 @@ main = do
    f rationalNormalForm
    f rationalRelaxedForm
    
-   putStrLn "*** Normal forms"
+   putStrLn "** Normal forms"
    let f v = flip mapM_ numGenerators $ \g -> do
           quickCheck $ propNormalForm g v
    f integerNormalForm
    f rationalNormalForm
 
-   putStrLn "*** Correctness generators"
+   putStrLn "** Correctness generators"
    let f g v = quickCheck $ forAll (sized g) $ \a -> a `belongsTo` v
    f integerGenerator integerView
    f rationalGenerator rationalView
    f ratioExprGen rationalNormalForm
    f ratioExprGenNonZero rationalNormalForm
    
-   putStrLn "*** View relations"
+   putStrLn "** View relations"
    let va .>. vb = flip mapM_ numGenerators $ \g -> 
           quickCheck $ forAll g $ \a -> 
              not (a `belongsTo` va) || a `belongsTo` vb
@@ -43,7 +43,7 @@ main = do
    integerNormalForm .>. rationalNormalForm
    integerView .>. rationalView
    
-   putStrLn "*** Pre/post conditions strategies"
+   putStrLn "** Pre/post conditions strategies"
    let f s pre post = flip mapM_ numGenerators $ \g -> 
           quickCheck $ forAll g $ \a ->
              not (a `belongsTo` pre) || applyD s a `belongsTo` post

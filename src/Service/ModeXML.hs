@@ -146,7 +146,8 @@ openMathConverter (OMEX ex) =
  where
    f = return . builder . toXML . toOMOBJ . toExpr
    g xml = do 
-      omobj <- xml2omobj xml
+      xob   <- findChild "OMOBJ" xml
+      omobj <- xml2omobj xob
       case fromExpr (fromOMOBJ omobj) of
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
@@ -199,10 +200,10 @@ decodeState :: Monad m => Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
 decodeState ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
-   sp   <- liftM getData (findChild "prefix" xml)
-   let sc = maybe "" getData (findChild "context" xml)
-   x    <- findChild "OMOBJ" xml
-   expr <- f x
+   let sp = maybe "" getData (findChild "prefix" xml)
+       sc = maybe "" getData (findChild "context" xml)
+   --x    <- findChild "OMOBJ" xml
+   expr <- f xml
    contxt <- maybe (fail $ "invalid context" ++ show sc) return (parseContext sc)
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
        term   = fmap (const expr) contxt

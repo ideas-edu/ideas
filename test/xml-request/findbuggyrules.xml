@@ -1,9 +1,4 @@
 <request service="findbuggyrules" exerciseid="logic.dnf" encoding="string">
-<location>[]</location>
-<state>
-<prefix>[]</prefix>
-<context></context>
-<OMOBJ><expr>~(p || q)</expr></OMOBJ>
-</state>
+<state><expr>~(p || q)</expr></state>
 <expr>~p || ~q</expr>
 </request>

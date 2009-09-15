@@ -12,9 +12,9 @@
 -----------------------------------------------------------------------------
 
 module Domain.Programming.Strategies
-   ( fromBinStrategy, stringToStrategy, stringToRules, getRules
-   , fromBinFoldlS, fromBinRecurS, fromBinZipWithS
-   ) where
+{-   ( fromBinStrategy, stringToStrategy, stringToRules, getRules
+   , fromBinFoldlS, fromBinRecurS, fromBinInnerProductS
+   )-} where
 
 import Common.Context
 import Common.Strategy
@@ -26,35 +26,78 @@ import Prelude hiding (sequence)
 
 
 -- | fromBin strategy
-fromBinStrategy = fromBinFoldlS <|> fromBinRecurS <|> fromBinZipWithS
+fromBinStrategy = fromBinFoldlS <|> fromBinRecurS <|> fromBinInnerProductS
 
 fromBinFoldlS = label "foldl" $ 
-  modS [ declPatS "fromBin" (foldlS consS nilS) [] ]
+  progS [ declPatS "fromBin" (foldlS consS nilS) [] ]
     where
       consS = exprParenS $ compS (opS "+" Nothing Nothing) (opS "*" Nothing (Just (intS "2")))
       nilS = intS "0"
 
-fromBinRecurS = label "explicit recursion"  $
-  modS [ declFunS [ funS "fromBin" [patConS "[]"] (intS "0") []
-                  , funS "fromBin" [patInfixConS (patS "x") ":" (patS "xs")] 
-                         (opS "+" (Just (opS "*" (Just (varS "x"))
-                                                (Just (opS "^" (Just (intS "2")) 
-                                                               (Just (varS "length" # [varS "xs"]))))))
-                                 (Just (varS "fromBin" # [varS "xs"])))
-                         []
+fromBinRecurS = label "explicit recursion"  $ -- Add tupling model solution! Add an uncurryS to recognise tuples and arguments
+  progS [ declFunS [ funS "fromBin" [patConS "[]"] (intS "0") []
+                   , funS "fromBin" [patInfixConS (patS "x") ":" (patS "xs")] 
+                          (opS "+" (Just (opS "*" (Just (varS "x"))
+                                                 (Just (opS "^" (Just (intS "2")) 
+                                                                (Just (varS "length" # [varS "xs"]))))))
+                                  (Just (varS "fromBin" # [varS "xs"])))
+                          []
+                   ]
+        ]
+
+{-
+fromBin x = fromBin' x (length x - 1)
+  where fromBin' []     _ = 0
+        fromBin' (y:ys) z = y * 2^z + fromBin' ys (z-1)
+-}
+fromBinTuplingS = label "Tupling"  $ -- Add an uncurryS to recognise tuples and arguments
+  progS [ declFunS [ funS "fromBin" [patS "x"] 
+    (varS "fromBin'" # [varS "x", opS "-" (Just (varS "length" # [varS "x"])) (Just (intS "1"))]) 
+      [  declFunS [ funS "fromBin'" [patConS "[]", patWildcardS] (intS "0") []
+                  , funS "fromBin'" [patInfixConS (patS "y") ":" (patS "ys"), patS "z"] 
+                          (opS "+" (Just (opS "*" (Just (varS "y"))
+                                                  (Just (opS "^" (Just (intS "2")) 
+                                                                 (Just (varS "z"))))))
+                                   (Just (varS "fromBin'" # [varS "ys", opS "-" (Just (varS "z")) (Just (intS "1"))])))
+                          []
                   ]
-       ]
+      ]]]
 
-fromBinZipWithS = label "sum zipwith" $
-  modS [declPatS "fromBin" 
-          (compS sumS (compS (zipWithS # [ opS "*" Nothing Nothing
-                                         , iterateS # [ opS "*" Nothing (Just (intS "2"))
-                                                      , intS "1"]])
-                             (reverseS)
-                      )
-          ) []
-       ]
 
+            
+
+-- fromBin = sum . zipWith (*) (iterate (*2) 1) . reverse
+fromBinInnerProductS = label "Inner product" $
+  progS [declPatS "fromBin" 
+           (compS sumS (compS (zipWithS # [ opS "*" Nothing Nothing
+                                          , powersOfTwoS
+                                          ])
+                              (reverseS)
+                       )
+           ) []
+        ]
+  where
+    powersOfTwoS  =  (iterateS # [opS "*" Nothing (Just (intS "2")), intS "1"])
+{-                 <|> ([base^x | x <- [0..] ])
+                 <|> (map (2^) [0..(length l)-1])
+                 <|> (lambdaS [varS "xs"] 
+                       (varS "scanr" # [ opS "*" Nothing Nothing
+                                       , intS "1"
+                                       , varS "take" # [ opS "-" (Just (varS "length" # [varS "xs"]))
+                                                                 (Just (intS "1"))                
+                                                       , varS "repeat" # [intS "2"]
+                                                       ]
+                                       ]))
+-}
+
+{-
+  Solution ("fromBin = fromBaseInt 2\n"
+         ++ "fromBaseInt base xs = sum $ zipWith (*) bMachten xs\n"
+         ++ "  where bMachten = scanr (*) 1 $ take (length xs - 1) $ repeat base\n")
+            "bspaans"
+            fromBinInnerProductS
+            "Good solution"
+-}
 
 -- | Strategies derived from the abstract syntax of expressions
 stringToStrategy :: String -> Strategy (Context Module)

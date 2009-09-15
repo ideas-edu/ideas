@@ -17,9 +17,9 @@ module Domain.Programming.PreludeS
      -- * Prelude strategies
    , foldlS, letS, compS, iterateS, sumS, zipWithS, reverseS
      -- * Smart constructors and help functions
-   , varS, patS, modS, funS, declFunS, declPatS, rhsS, intS, appS, opS
+   , varS, patS, progS, funS, declFunS, declPatS, rhsS, intS, appS, opS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
-   , patInfixConS
+   , patInfixConS, patWildcardS
    ) where
 
 import Common.Context hiding (Var)
@@ -74,7 +74,7 @@ foldrS consS nilS  =  (varS "foldr" # [consS, nilS])
 
 compS :: ModuleS -> ModuleS -> ModuleS -- f . g -> \x -> f (g x) 
 compS f g  =  opS "." (Just f) (Just g)
-          <|> lambdaS [patS "x"] (appS f [appS g [varS "x"]])
+          <|> lambdaS [patS "x"] (f # [appS g [varS "x"]])
 
 flipS :: ModuleS -> ModuleS
 flipS f  =  (varS "flip" # [f])
@@ -82,7 +82,7 @@ flipS f  =  (varS "flip" # [f])
 
 sumS :: ModuleS
 sumS =  varS "sum"  
-    <|> foldlS (opS "+" Nothing Nothing) (intS "0")
+--    <|> foldlS (opS "+" Nothing Nothing) (intS "0")
 
 iterateS :: ModuleS
 iterateS  =  varS "iterate"
@@ -117,6 +117,9 @@ exprParenS expr = introExprParenthesized <*> expr
 patS :: String -> ModuleS
 patS n = introPatternVariable <*> introNameIdentifier n
 
+patWildcardS :: ModuleS
+patWildcardS = toStrategy introPatternWildcard
+
 patConS :: String -> ModuleS
 patConS n = introPatternConstructor 0 <*> introNameSpecial n
 
@@ -132,7 +135,7 @@ funS name args rhs ws  =  introLHSFun (length args)
                       <*> rhsS rhs ws
 
 declFunS :: [ModuleS] -> ModuleS
-declFunS fs = introFunctionBindings (length fs) <*> sequence fs
+declFunS fs = introFunctionBindings (length fs) <*> sequence fs -- also recognise patbinding/lambda?
 
 declPatS :: String -> ModuleS -> [ModuleS] -> ModuleS
 declPatS name rhs ws = introPatternBinding <*> patS name <*> rhsS rhs ws
@@ -144,11 +147,11 @@ rhsS expr ws  =  introRHSExpr (length ws) <*> expr
 intS :: String -> ModuleS
 intS i = introExprLiteral <*> introLiteralInt i
 
-modS :: [ModuleS] -> ModuleS
-modS decls = introModule <*> introDecls (length decls) <*> sequence decls
+progS :: [ModuleS] -> ModuleS
+progS decls = introModule <*> introDecls (length decls) <*> sequence decls
 
 appS :: ModuleS -> [ModuleS] -> ModuleS
-appS f as = introExprNormalApplication (length as) <*> f <*> sequence as
+appS f as  =  introExprNormalApplication (length as) <*> f <*> sequence as
 
 infixr 0 #
 f # as = appS f as

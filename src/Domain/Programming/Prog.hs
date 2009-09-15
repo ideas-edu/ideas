@@ -119,7 +119,7 @@ normaliseModule fs = alphaRenaming [] . normalise ns . alphaRenaming ns
 normalise :: Names -> Module -> Module
 normalise fs = rewrites . preprocess
   where
-    preprocess =  inline fs . makeBetaReducible fs . removeRanges . removeParens
+    preprocess =  inline fs . makeBetaReducible fs . removeExplicitApps . removeRanges . removeParens
 --    preprocess =  inline fs . anonymise . removeRanges . removeParens
     rewrites = rewriteBi $  (applicationReduce
                         >->  betaReduce 
@@ -149,6 +149,15 @@ removeParens = transformBi f . transformBi g
         g (Pattern_Parenthesized _ pat) = pat
         g x = x
 
+removeExplicitApps :: Data a => a -> a -- could also be done in strategy, the easy way out for now
+removeExplicitApps = transformBi f
+  where 
+    f (Expression_InfixApplication r
+        (MaybeExpression_Just f) 
+        (Expression_Variable _ (Name_Operator _ _ "$")) 
+        (MaybeExpression_Just arg)) = Expression_NormalApplication r f [arg]
+    f x = x
+
 removeRanges :: Data a => a -> a
 removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
@@ -157,19 +166,13 @@ removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 etaReduce :: Expression -> Maybe Expression
 etaReduce expr = 
   case expr of 
-    Expression_Lambda _ [Pattern_Variable _ p]  
-      (Expression_NormalApplication _ f [Expression_Variable _ v]) -> do
-        guard (p == v)
-        return f
     Expression_Lambda _ [Pattern_Variable _ p] 
-      (Expression_NormalApplication r f args) -> 
-        if not (null args) then
-          case last args of
-            Expression_Variable _ v -> do
-              guard (p == v)
-              return $ Expression_NormalApplication r f $ init args
-            _  -> Nothing
-        else Nothing
+      (Expression_NormalApplication r f args@(_:_)) -> 
+        case last args of
+          Expression_Variable _ v -> do
+            guard (p == v)
+            return $ Expression_NormalApplication r f $ init args
+          _  -> Nothing
     _ -> Nothing
 
 -- beta reduction, e.g. (\x -> x + x) 42 => 42 + 42
@@ -221,7 +224,8 @@ commutativeOps expr =
   case expr of
     Expression_NormalApplication r
       (Expression_InfixApplication r' MaybeExpression_Nothing f MaybeExpression_Nothing) args -> do
-        guard (not (isSorted args) && (isOp f "+" || isOp f "*")) -- should be done elsewhere, in preludeS?
+        guard (not (isSorted args))
+        guard (isOp f "+" || isOp f "*") -- should be done elsewhere, in preludeS?
         return $ Expression_NormalApplication r
                    (Expression_InfixApplication r' MaybeExpression_Nothing 
                                                 f MaybeExpression_Nothing) $ sort args

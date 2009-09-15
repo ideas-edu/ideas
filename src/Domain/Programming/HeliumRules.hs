@@ -193,6 +193,10 @@ introPatternTuple nps = toRule "Introduce tuple pattern" undefPatterns f
   where
     f = Pattern_Tuple noRange $ take nps $ repeat undefPattern
 
+introPatternWildcard :: Rule (Context Module)
+introPatternWildcard = toRule "Introduce wildcard pattern" undefPatterns f
+  where
+    f = Pattern_Wildcard noRange
 
 --------------------------------------------------------------------------------
 -- Literals

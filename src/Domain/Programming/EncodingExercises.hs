@@ -25,29 +25,29 @@ import Domain.Programming.Strategies
 incorrect = label "Incorrect" CS.fail
 
 --------------------------------------------------------------------------------
--- Categories: good, good with modification, clumsy, incorrect.
+-- Categories: good, good with modification, imperfect, incorrect.
 --------------------------------------------------------------------------------
 fromBinsGood = [fromBin, fromBin1,fromBin2,fromBin3,fromBin5,fromBin6,fromBin7
                ,fromBin8,fromBin9,fromBin11,fromBin12,fromBin13,fromBin14,fromBin16
                ,fromBin18,fromBin21,fromBin22,fromBin23,fromBin25,fromBin26,fromBin28
                ,fromBin29,fromBin30,fromBin31,fromBin32,fromBin33,fromBin34,fromBin35
                ,fromBin36,fromBin37,fromBin38,fromBin40,fromBin41,fromBin42,fromBin45
-               ,fromBin46,fromBin49,fromBin53,fromBin55,fromBin57,fromBin59,fromBin61
+               ,fromBin46,fromBin49,fromBin53,fromBin57,fromBin59,fromBin61
                ,fromBin62,fromBin64,fromBin66,fromBin68,fromBin69,fromBin72,fromBin73
                ,fromBin74,fromBin75,fromBin77,fromBin78,fromBin79,fromBin80,fromBin81
                ,fromBin82,fromBin83,fromBin85,fromBin89,fromBin90,fromBin93,fromBin95
                ,fromBin96]
 
 fromBinsGoodModified = [ fromBin15', fromBin17', fromBin27', fromBin47', fromBin51'
-                       , fromBin65', fromBin67', fromBin70']
+                       , fromBin55', fromBin65', fromBin67', fromBin70']
 
 fromBinsTodo = [ fromBin20, fromBin58
                , fromBin87, fromBin91]
 
-fromBinsClumsy = [ fromBin10, fromBin19, fromBin43, fromBin44, fromBin48, fromBin50
-                 , fromBin52, fromBin54, fromBin56, fromBin60
-                 , fromBin71, fromBin76, fromBin84, fromBin86, fromBin92, fromBin94
-                 ]
+fromBinsImperfect = [ fromBin10, fromBin19, fromBin43, fromBin44, fromBin48, fromBin50
+                    , fromBin52, fromBin54, fromBin56, fromBin60
+                    , fromBin71, fromBin76, fromBin84, fromBin86, fromBin92, fromBin94
+                    ]
 
 fromBinsWrong = [fromBin4, fromBin63, fromBin88]
 
@@ -100,7 +100,7 @@ fromBin5 =
          ++ "fromBaseInt base xs = sum $ zipWith (*) bMachten xs\n"
          ++ "  where bMachten = scanr (*) 1 $ take (length xs - 1) $ repeat base\n")
             "bspaans"
-            fromBinZipWithS
+            fromBinInnerProductS
             "Good solution"
 
 fromBin6 = 
@@ -317,7 +317,7 @@ fromBin31 =
          ++ "                             | otherwise = undefined\n") 
             "jgageldo"
             fromBinFoldlS
-            "Good solution, almost a foldr."
+            "Good solution, tuplin."
 
 fromBin32 = 
   Solution ("fromBin [] = 0\n"
@@ -410,7 +410,7 @@ fromBin43 =
          ++ "fromBin (x : xs) = ( x * 2^length xs ) + fromBin xs\n") 
             "kjdvoors-apol"
             fromBinRecurS
-            ""
+            "Second case unnecessary. -> clumsy"
 
 fromBin44 = 
   Solution ("fromBin (a : as) = a*(2^(length(a : as)-1)) + fromBin(as)\n"
@@ -469,7 +469,7 @@ fromBin50 =
          ++ "oplopendeMachten a l =  last l: oplopendeMachten a (init(basis))\n"
          ++ "  where basis = map (*a) l\n") 
             "mahashi-mjhobbel"
-            fromBinZipWithS
+            fromBinInnerProductS
             "Inefficient: unnecessary use of last."
 
 fromBin51 = 
@@ -507,7 +507,7 @@ fromBin54 =
          ++ "fromBinRev (x:xs) y = x * 2^y + fromBinRev xs (y+1)\n") 
             "mgrimme"
             fromBinFoldlS -- foldr
-            ""
+            "clumsy"
 
 fromBin55 = 
   Solution ("fromBin = fromSpecial 2\n"
@@ -515,7 +515,14 @@ fromBin55 =
          ++ "fromSpecial base xs | or (map (\\y -> y >= base || y<0) xs) = error \"Please provide a list only containing values in the given range\"\n"
          ++ "                    | otherwise = sum (zipWith (*) (reverse xs) [base^x | x <- [0..] ])\n") 
             "mkroese"
-            fromBinZipWithS
+            fromBinInnerProductS
+            "Good solution, uses power instead of multiplication. Model?"
+fromBin55' = 
+  Solution ("fromBin = fromSpecial 2\n"
+         ++ "fromSpecial _ [] = 0\n"
+         ++ "fromSpecial base xs = sum (zipWith (*) (reverse xs) [base^x | x <- [0..] ])\n") 
+            "mkroese"
+            fromBinInnerProductS
             "Good solution, uses power instead of multiplication. Model?"
 
 fromBin56 = 
@@ -612,7 +619,7 @@ fromBin66 =
          ++ "fromBin' (x:xs) tussen = fromBin' xs (2*tussen+x)\n") 
             "pdstaats-cjplatte"
             fromBinFoldlS
-            "Correct solution, maybe a model solution."
+            "Clumsy: fromBin xs = fromBin' xs 0"
 
 fromBin67 = 
   Solution ("fromBin    x     =  toInt 2 x\n"
@@ -766,7 +773,7 @@ fromBin84 =
 fromBin85 = 
   Solution "fromBin l = sum $ zipWith (*) (map (2^) [0..(length l)-1]) (reverse l)\n"
            "sttimmer"
-           fromBinZipWithS
+           fromBinInnerProductS
            "Nice solution, a slight difference from the model solution (a map power instead of iterate)."
 
 fromBin86 = 
@@ -836,7 +843,7 @@ fromBin94 =
          ++ "fromBaseNum b list = sum (zipWith (*) (reverse list) (powList b))\n"
          ++ "  where powList b = pow 0 where pow n = (b^n):(pow (n+1))\n") 
             "wlelsing"
-            fromBinZipWithS
+            fromBinInnerProductS
             "Correct solution but a model way of making a list of powers of two. Use of standard higher order functions is preferred."
 
 fromBin95 = 

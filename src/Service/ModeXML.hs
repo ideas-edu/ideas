@@ -200,8 +200,8 @@ decodeState :: Monad m => Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
 decodeState ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
-   let sp = maybe "" getData (findChild "prefix" xml)
-       sc = maybe "" getData (findChild "context" xml)
+   let sp = maybe "[]" getData (findChild "prefix" xml)
+       sc = maybe ""   getData (findChild "context" xml)
    --x    <- findChild "OMOBJ" xml
    expr <- f xml
    contxt <- maybe (fail $ "invalid context" ++ show sc) return (parseContext sc)

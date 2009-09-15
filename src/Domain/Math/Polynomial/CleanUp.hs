@@ -240,7 +240,8 @@ plusT a b = convTs plusT a b
 divT :: T -> T -> T
 divT t (R 1) = t -- ?????
 divT t (R (-1)) = negT t -- ?????
-divT (R x) (R y) = R (x/y)
+divT (R x) (R y) | y /= 0 = R (x/y)
+divT t@(R _) b@(R _) = divT (E $ fromT t) b
 divT (S x) (S y) = S (x/y)
 divT t@(P _ _ _) b = divT (E $ fromT t) b 
 divT (E a) (E b) = E (a ./. b)

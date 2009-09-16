@@ -1,6 +1,6 @@
-<reply result="incorrect" version="version 0.5.1 (revision 1805)">
+<reply result="incorrect" version="0.5.5">
   <strategy>
-    linalg.gaussianelimination
+    linalg.gaussianelim
   </strategy>
   <location>
     [0]

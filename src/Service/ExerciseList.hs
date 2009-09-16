@@ -44,10 +44,10 @@ openMathExercises =
    , OMEX Math.higherDegreeExercise
    , OMEX Math.derivativeExercise
      -- linear algebra
-   , OMEX LA.reduceMatrixExercise
-   , OMEX LA.solveSystemExercise
-   , OMEX LA.solveSystemWithMatrixExercise
-   , OMEX LA.solveGramSchmidt
+   , OMEX LA.gramSchmidtExercise
+   , OMEX LA.linearSystemExercise
+   , OMEX LA.gaussianElimExercise
+   , OMEX LA.systemWithMatrixExercise
    ]
    
 -----------------------------------------------------------------------------

@@ -13,15 +13,12 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Checks (checks) where
 
-import Domain.Math.Numeric.Views
--- import Common.View
 import Domain.Math.Simplification (simplify)
 import Domain.LinearAlgebra hiding (getSolution)
 import Test.QuickCheck
 import Control.Monad
 import Common.Utils
 import Data.List
-import Domain.Math.Expr
 import Common.Apply
 import Common.Context
 
@@ -42,17 +39,24 @@ propEchelon =
 
 propReducedEchelon :: Matrix Rational -> Bool
 propReducedEchelon = 
-   inRowReducedEchelonForm . matrix . applyD toReducedEchelon . inContext . fmap fromRational
+   inRowReducedEchelonForm . matrix . applyD gaussianElimStrategy . inContext . fmap fromRational
    
 propSound :: Matrix Rational -> Bool
 propSound m =
-   (matrix . applyD toReducedEchelon . inContext . fmap fromRational) m
+   (matrix . applyD gaussianElimStrategy . inContext . fmap fromRational) m
    == fmap fromRational (reduce m)
 
 propSolution :: Matrix Rational -> Property
 propSolution m1 =
    forAll (arbSolution m1) $ \(solution, m2) -> 
-      let m3  = (matrix . applyD toReducedEchelon . inContext . fmap fromRational) m2
+      let m3  = (matrix . applyD gaussianElimStrategy . inContext . fmap fromRational) m2
           p r = simplify (sum (zipWith g (solution ++ [-1]) r)) == 0
           g r e = fromRational r * e
       in all p (rows m3)
+
+arbSolution :: (Arbitrary a, Num a) => Matrix a -> Gen ([a], Matrix a)
+arbSolution m = do
+   solution <- vector (snd $ dimensions m)
+   let finalCol  = map (return . sum . zipWith (*) solution) (rows m)
+       newMatrix = makeMatrix $ zipWith (++) (rows m) finalCol
+   return (solution, newMatrix)

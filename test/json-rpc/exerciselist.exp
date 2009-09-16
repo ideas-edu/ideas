@@ -2,25 +2,25 @@
    "result": [
       {
          "domain": "linalg",
-         "identifier": "Gaussian Elimination",
+         "identifier": "gaussianelim",
          "description": "Gaussian Elimination",
          "status": "Stable"
       },
       {
          "domain": "linalg",
-         "identifier": "Gram-Schmidt",
+         "identifier": "gramschmidt",
          "description": "Gram-Schmidt",
          "status": "Provisional"
       },
       {
          "domain": "linalg",
-         "identifier": "Solve Linear System",
+         "identifier": "linsystem",
          "description": "Solve Linear System",
          "status": "Stable"
       },
       {
          "domain": "linalg",
-         "identifier": "Solve Linear System with Matrix",
+         "identifier": "systemwithmatrix",
          "description": "Solve Linear System with Matrix",
          "status": "Provisional"
       },
@@ -93,5 +93,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.4 (2119)"
+   "version": "0.5.5 (2193)"
 }

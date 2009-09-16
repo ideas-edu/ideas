@@ -28,8 +28,8 @@ import Common.Context
 import Common.View hiding (simplify)
 import Domain.LinearAlgebra.Vector
 
-toReducedEchelon :: LabeledStrategy (Context (Matrix Expr))
-toReducedEchelon = label "Gaussian elimination" $ 
+gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
+gaussianElimStrategy = label "Gaussian elimination" $ 
    forwardPass <*> backwardPass
 
 forwardPass :: LabeledStrategy (Context (Matrix Expr))
@@ -81,16 +81,15 @@ dropEquation  =  cleanUpStrategy (fmap simplifySystem) $
                  label "Inconsistent system (0=1)" ruleInconsistentSystem
              <|> label "Drop (0=0) equation"       ruleDropEquation
 
-generalSolutionLinearSystem :: LabeledStrategy (Context (LinearSystem Expr))
-generalSolutionLinearSystem = label "General solution to a linear system" $
+linearSystemStrategy :: LabeledStrategy (Context (LinearSystem Expr))
+linearSystemStrategy = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 
-
-generalSolutionSystemWithMatrix :: LabeledStrategy (Context (Either (LinearSystem Expr) (Matrix Expr)))
-generalSolutionSystemWithMatrix = label "General solution to a linear system (matrix approach)" $
+systemWithMatrixStrategy :: LabeledStrategy (Context (Either (LinearSystem Expr) (Matrix Expr)))
+systemWithMatrixStrategy = label "General solution to a linear system (matrix approach)" $
        repeat (liftLeft dropEquation) 
    <*> conv1 
-   <*> liftRight toReducedEchelon 
+   <*> liftRight gaussianElimStrategy 
    <*> conv2 
    <*> repeat (liftLeft dropEquation)
 

@@ -48,10 +48,10 @@ main = do
 
    putStrLn "* 2. Exercise checks"
    checkExercise Logic.dnfExercise
-   checkExercise LA.reduceMatrixExercise
-   checkExercise LA.solveSystemExercise
-   checkExercise LA.solveSystemWithMatrixExercise
-   checkExercise LA.solveGramSchmidt
+   checkExercise LA.gaussianElimExercise
+   checkExercise LA.linearSystemExercise
+   checkExercise LA.systemWithMatrixExercise
+   checkExercise LA.gramSchmidtExercise
    checkExercise RA.cnfExercise
    flip mapM_ exerciseList $ \(Some ex) -> do 
       checksForList ex

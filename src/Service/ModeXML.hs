@@ -109,7 +109,7 @@ extractExerciseCode xml =
             Just name -> 
                let s ~= t = f s == f t 
                    f = map toLower . filter isAlphaNum
-               in case findOpenMathExercises (\ex -> name ~= identifier ex) of 
+               in case findOpenMathExercises (\ex -> name ~= description ex) of 
                      [OMEX a] -> return (exerciseCode a)
                      _ -> fail $ "Unknown strategy name " ++ show name 
             _ -> fail "no exerciseid attribute, nor a known strategy element" 

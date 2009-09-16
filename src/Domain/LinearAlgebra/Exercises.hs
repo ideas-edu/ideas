@@ -13,9 +13,9 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Exercises 
-   ( solveGramSchmidt, solveSystemExercise, reduceMatrixExercise
-   , solveSystemWithMatrixExercise
-   , arbSolution
+   ( gramSchmidtExercise, linearSystemExercise
+   , gaussianElimExercise, systemWithMatrixExercise
+   -- , arbSolution
    ) where
 
 import Common.Apply
@@ -40,9 +40,9 @@ import Text.Parsing (SyntaxError(..))
 laDomain :: String
 laDomain = "linalg"
 
-solveGramSchmidt :: Exercise (VectorSpace (Simplified Expr))
-solveGramSchmidt = makeExercise
-   { identifier    = "Gram-Schmidt" -- TODO: simplify code
+gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
+gramSchmidtExercise = makeExercise
+   { identifier    = "gramschmidt"
    , domain        = laDomain
    , description   = "Gram-Schmidt"
    , status        = Provisional
@@ -58,9 +58,9 @@ solveGramSchmidt = makeExercise
    , termGenerator = simpleGenerator arbitrary
    }
 
-solveSystemExercise :: Exercise (Equations Expr)
-solveSystemExercise = makeExercise
-   { identifier    = "Solve Linear System" -- TODO: simplify code
+linearSystemExercise :: Exercise (Equations Expr)
+linearSystemExercise = makeExercise
+   { identifier    = "linsystem"
    , domain        = laDomain
    , description   = "Solve Linear System"
    , status        = Stable
@@ -68,18 +68,18 @@ solveSystemExercise = makeExercise
                               (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter = unlines . map show
-   , equivalence   = \x y -> let f = getSolution . equations . applyD generalSolutionLinearSystem 
+   , equivalence   = \x y -> let f = getSolution . equations . applyD linearSystemStrategy 
                                    . inContext . map toStandardForm
                              in f x == f y
    , ruleset       = equationsRules
    , finalProperty = inSolvedForm
-   , strategy      = generalSolutionLinearSystem
+   , strategy      = linearSystemStrategy
    , termGenerator = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
    
-reduceMatrixExercise :: Exercise (Matrix Expr)
-reduceMatrixExercise = makeExercise
-   { identifier    = "Gaussian Elimination" -- TODO: simplify code
+gaussianElimExercise :: Exercise (Matrix Expr)
+gaussianElimExercise = makeExercise
+   { identifier    = "gaussianelim"
    , domain        = laDomain
    , description   = "Gaussian Elimination"
    , status        = Stable
@@ -91,25 +91,25 @@ reduceMatrixExercise = makeExercise
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm
    , termGenerator = simpleGenerator arbMatrix
-   , strategy      = toReducedEchelon
+   , strategy      = gaussianElimStrategy
    }
  
-solveSystemWithMatrixExercise :: Exercise (Either (LinearSystem Expr) (Matrix Expr))
-solveSystemWithMatrixExercise = makeExercise
-   { identifier    = "Solve Linear System with Matrix" -- TODO: simplify code
+systemWithMatrixExercise :: Exercise (Either (LinearSystem Expr) (Matrix Expr))
+systemWithMatrixExercise = makeExercise
+   { identifier    = "systemwithmatrix"
    , domain        = laDomain
    , description   = "Solve Linear System with Matrix"
    , status        = Provisional
-   , parser        = \s -> case (parser solveSystemExercise s, parser reduceMatrixExercise s) of
+   , parser        = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
                               (Right ok, _) -> Right $ Left  ok
                               (_, Right ok) -> Right $ Right ok
                               (Left _, Left _) -> Left $ ErrorMessage "Syntax error" -- FIX THIS
    , prettyPrinter = either (unlines . map show) ppMatrix
    , equivalence   = \x y -> let f = either id matrixToSystem
-                             in equivalence solveSystemExercise (f x) (f y)
+                             in equivalence linearSystemExercise (f x) (f y)
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
    , finalProperty = either inSolvedForm (const False)
-   , strategy      = generalSolutionSystemWithMatrix
+   , strategy      = systemWithMatrixStrategy
    , termGenerator = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
    }
  
@@ -147,13 +147,6 @@ arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
 arbSizedMatrix (i, j) = 
    do rows <- replicateM i (vector j)
       return (makeMatrix rows)
-
-arbSolution :: (Arbitrary a, Num a) => Matrix a -> Gen ([a], Matrix a)
-arbSolution m = do
-   solution <- vector (snd $ dimensions m)
-   let finalCol  = map (return . sum . zipWith (*) solution) (rows m)
-       newMatrix = makeMatrix $ zipWith (++) (rows m) finalCol
-   return (solution, newMatrix)
 
 arbUpperMatrix :: (Enum a, Num a) => Gen (Matrix a)
 arbUpperMatrix = do

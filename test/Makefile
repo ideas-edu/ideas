@@ -17,6 +17,9 @@ OUTS3  = $(patsubst %.xml,%.out,$(TESTS3))
 TESTS4 = $(wildcard dwo-derivations/*.xml)
 OUTS4  = $(patsubst %.xml,%.out,$(TESTS4))
 
+SOME-OUT     = $(OUTS1) $(OUTS2) $(OUTS3)
+SOME-WITHOUT = $(patsubst %.out,%,$(SOME-OUT))
+
 ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3) $(OUTS4)
 ALL-EXP     = $(patsubst %.out,%.exp,$(ALL-OUT))
 ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
@@ -24,9 +27,9 @@ ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
 #---------------------------------------------------------------------------------------
 # Testing
 
-test.log: $(ALL-OUT)
+test.log: $(SOME-OUT)
 	# --- Unit Tests ------------------------
-	@for i in $(ALL-WITHOUT); do \
+	@for i in $(SOME-WITHOUT); do \
 	  echo $$i; \
 	  echo $$i >> test.log; \
 	  if $(WINDOWS)==no; then dos2unix $$i.exp &> /dev/null; fi; \

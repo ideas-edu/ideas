@@ -11,10 +11,11 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Checks (checks, defaultMatrix) where
+module Domain.LinearAlgebra.Checks (checks) where
 
 import Domain.Math.Numeric.Views
-import Common.View
+-- import Common.View
+import Domain.Math.Simplification (simplify)
 import Domain.LinearAlgebra hiding (getSolution)
 import Test.QuickCheck
 import Control.Monad
@@ -32,33 +33,26 @@ checks = do
    putStrLn "** Linear algebra"
    thoroughCheck propEchelon
    thoroughCheck propReducedEchelon
+   thoroughCheck propSound
    thoroughCheck propSolution
 
-propEchelon :: Matrix Int -> Bool
+propEchelon :: Matrix Rational -> Bool
 propEchelon =
-   inRowEchelonForm . matrix . applyD forwardPass . inContext . fmap fromIntegral
+   inRowEchelonForm . matrix . applyD forwardPass . inContext . fmap fromRational
 
-propReducedEchelon :: Matrix Int -> Bool
+propReducedEchelon :: Matrix Rational -> Bool
 propReducedEchelon = 
-   inRowReducedEchelonForm . matrix . applyD toReducedEchelon . inContext . fmap fromIntegral
+   inRowReducedEchelonForm . matrix . applyD toReducedEchelon . inContext . fmap fromRational
+   
+propSound :: Matrix Rational -> Bool
+propSound m =
+   (matrix . applyD toReducedEchelon . inContext . fmap fromRational) m
+   == fmap fromRational (reduce m)
 
-propSolution :: Matrix Int -> Property
-propSolution initial =
-   forAll (arbSolution initial) $ \(solution, m) -> 
-      let final = matrix $ applyD toReducedEchelon $ inContext $ fmap fromIntegral m
-          check :: Int -> Maybe Expr -> Bool
-          check n me = maybe False (==n) (join $ fmap (match integralView) me)
-      in and $ zipWith check solution (getSolution final)
-      
-getSolution :: Num a => Matrix a -> [Maybe a]
-getSolution m = map (merge . concatMap checkRow . findIndices (==1)) (columns m)
- where
-   checkRow r = let xs = row r m
-                in [ last xs | filter (/=0) (init xs) == [1] ]
-   merge (x:xs) = if all (==x) xs then Just x else Nothing
-   merge _ = Nothing
-
-defaultMatrix :: Matrix Rational
-defaultMatrix = makeMatrix $ reverse [[4,1,-1,6],[1,2,-1,1], [6,-3,1,12]]
--- x=2, y=1, z=3
-     
+propSolution :: Matrix Rational -> Property
+propSolution m1 =
+   forAll (arbSolution m1) $ \(solution, m2) -> 
+      let m3  = (matrix . applyD toReducedEchelon . inContext . fmap fromRational) m2
+          p r = simplify (sum (zipWith g (solution ++ [-1]) r)) == 0
+          g r e = fromRational r * e
+      in all p (rows m3)

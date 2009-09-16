@@ -56,10 +56,10 @@ main = do
    flip mapM_ exerciseList $ \(Some ex) -> do 
       checksForList ex
    
-   putStrLn "* 3. Confluence checks"
-   logicConfluence
+   -- putStrLn "* 3. Confluence checks"
+   -- logicConfluence
    
-   putStrLn "* 4. Unit tests"
+   putStrLn "* 3. Unit tests"
    mathdoxRequests
    jsonRPCs
    xmlRequests

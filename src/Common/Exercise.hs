@@ -215,7 +215,7 @@ checkExerciseWith f a = do
 --      forAll (similar (ruleset a) x) $ \y ->
 --      equality a x y ==> equivalence a x y
    putStrLn "Soundness non-buggy rules" 
-   flip mapM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
+   forM (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
       putLabel ("    " ++ name r) >> f (equivalence a) r
    
    case termGenerator a of 

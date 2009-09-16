@@ -30,3 +30,10 @@ instance IsExpr a => IsExpr (Vector a) where
       xs <- isSymbol vectorSymbol expr
       ys <- mapM fromExpr xs
       return (fromList ys)
+      
+instance IsExpr a => IsExpr (VectorSpace a) where
+   toExpr = toExpr . vectors
+   fromExpr expr = do
+      xs <- fromExpr expr
+      guard (sameDimension xs)
+      return (makeVectorSpace xs)

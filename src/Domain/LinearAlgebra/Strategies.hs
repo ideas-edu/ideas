@@ -16,7 +16,6 @@ module Domain.LinearAlgebra.Strategies where
 import Prelude hiding (repeat)
 import Domain.Math.Expr
 import Domain.Math.Simplification
-import Domain.Math.SquareRoot.Views
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
@@ -95,14 +94,11 @@ generalSolutionSystemWithMatrix = label "General solution to a linear system (ma
    <*> conv2 
    <*> repeat (liftLeft dropEquation)
 
-simplifyGS :: [Vector Expr] -> [Vector Expr]
-simplifyGS = map (fmap (simplifyWith id squareRootView . simplify))
-
-gramSchmidt :: LabeledStrategy (Context [Vector Expr])
-gramSchmidt = cleanUpStrategy (fmap simplifyGS) $ 
+gramSchmidtStrategy :: LabeledStrategy (Context (VectorSpace (Simplified Expr)))
+gramSchmidtStrategy =
    label "Gram-Schmidt" $ repeat $ label "Iteration" $
        label "Consider next vector"   ruleNext 
-   <*> label "Make vector orthogonal" (repeat (ruleOrthogonal <*> ruleNextOrthogonal)) 
+   <*> label "Make vector orthogonal" (repeat (ruleNextOrthogonal <*> try ruleOrthogonal)) 
    <*> label "Normalize"              (try ruleNormalize)
 
 vars :: Var [String]
@@ -150,4 +146,7 @@ instance Simplify a => Simplify (Matrix a) where
    simplify = fmap simplify
    
 instance Simplify a => Simplify (Vector a) where
+   simplify = fmap simplify
+   
+instance Simplify a => Simplify (VectorSpace a) where
    simplify = fmap simplify

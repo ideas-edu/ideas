@@ -1,6 +1,6 @@
 module Domain.Math.Polynomial.CleanUp 
-   ( cleanUp, cleanUpExpr, cleanUpSimple
-   , normalizeSum, normalizeProduct, raar
+   ( cleanUp, cleanUpExpr, cleanUpSimple, collectLikeTerms
+   , normalizeSum, normalizeProduct
    ) where
 
 import qualified Prelude
@@ -24,14 +24,20 @@ import Domain.Math.Data.OrList
 ----------------------------------------------------------------------
 -- Expr normalization
 
+collectLikeTerms :: Expr -> Expr
+collectLikeTerms = simplifyWith f sumView
+ where
+   f = normalizeSum . map (simplifyWith (second normalizeProduct) productView)
+
 normalizeProduct :: [Expr] -> [Expr]
 normalizeProduct ys = f [ (match rationalView y, y) | y <- ys ]
-  where  f []                    = []
-         f ((Nothing  , e):xs)   = e:f xs
-         f ((Just r   , _):xs)   = 
-           let  cs    = r :  [ c  | (Just c   , _)  <- xs ]
-                rest  =      [ x  | (Nothing  , x)  <- xs ]
-           in   build rationalView (product cs):rest
+ where  
+   f []                    = []
+   f ((Nothing  , e):xs)   = e:f xs
+   f ((Just r   , _):xs)   = 
+      let cs   = r : [ c | (Just c, _) <- xs ]
+          rest = [ x | (Nothing, x) <- xs ]
+      in build rationalView (product cs):rest
 
 normalizeSum :: [Expr] -> [Expr]
 normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
@@ -54,8 +60,12 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
       rs  = r:map fst (catMaybes (map fst js))
       new | null js   = e
           | otherwise = build rationalView (sum rs) .*. a 
- 
-raar = map cleanUpExpr $ let x=Var "x" in
+
+------------------------------------------------------------
+-- Testing
+
+-- List with hard cases
+hardCases = map cleanUpExpr $ let x=Var "x" in
   [ -1/2*x*(x/1)
   , (x/(-3))
   , (x/(-3))^2

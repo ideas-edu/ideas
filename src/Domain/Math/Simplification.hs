@@ -5,13 +5,16 @@ module Domain.Math.Simplification
 
 import Common.Context
 import Common.View hiding (simplify)
+import qualified Common.View as View
 import Domain.Math.Numeric.Views
+import Domain.Math.SquareRoot.Views
 import Common.Uniplate
 import Data.List
 import Data.Maybe
 import Control.Monad
 import Domain.Math.Expr hiding (recip)
 import Domain.Math.Data.Equation
+import Test.QuickCheck
 
 class Simplify a where
    simplify :: a -> a
@@ -26,12 +29,13 @@ instance Simplify a => Simplify [a] where
    simplify = fmap simplify
 
 instance Simplify Expr where
-   simplify = smartConstructors . mergeAlike . distribution . constantFolding
+   simplify = smartConstructors 
+            . mergeAlike 
+            . distribution 
+            . View.simplify (squareRootViewWith rationalView)
+            . constantFolding
 
-data Simplified a = S a
-
-instance Eq a => Eq (Simplified a) where
-   S x == S y = x==y
+data Simplified a = S a deriving (Eq, Ord)
 
 instance Show a => Show (Simplified a) where
    show (S x) = show x
@@ -50,8 +54,36 @@ instance (Fractional a, Simplify a) => Fractional (Simplified a) where
    recip        = liftS recip
    fromRational = simplified . fromRational
 
+instance (Floating a, Simplify a) => Floating (Simplified a) where
+   pi      = simplified pi
+   sqrt    = liftS  sqrt
+   (**)    = liftS2 (**)
+   logBase = liftS2 logBase
+   exp     = liftS exp
+   log     = liftS log
+   sin     = liftS sin
+   tan     = liftS tan
+   cos     = liftS cos
+   asin    = liftS asin
+   atan    = liftS atan
+   acos    = liftS acos
+   sinh    = liftS sinh
+   tanh    = liftS tanh
+   cosh    = liftS cosh
+   asinh   = liftS asinh
+   atanh   = liftS atanh
+   acosh   = liftS acosh
+
 instance Simplify (Simplified a) where
    simplify = id
+
+instance (Simplify a, IsExpr a) => IsExpr (Simplified a) where
+   toExpr (S x) = toExpr x
+   fromExpr = liftM simplified . fromExpr
+
+instance (Arbitrary a, Simplify a) => Arbitrary (Simplified a) where
+   arbitrary = liftM simplified arbitrary
+   coarbitrary (S x) = coarbitrary x
 
 simplified :: Simplify a => a -> Simplified a
 simplified = S . simplify

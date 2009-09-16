@@ -258,9 +258,7 @@ distributionT = makeTrans "distribute" f
    f _ = Nothing
 
 mergeT :: Transformation Expr
-mergeT = makeTrans "merge" $ return . simplifyWith f sumView
- where
-   f = normalizeSum . map (simplifyWith (second normalizeProduct) productView)
+mergeT = makeTrans "merge" $ return . collectLikeTerms
 
 -------------------------------------------------------
 -- Rewrite Rules

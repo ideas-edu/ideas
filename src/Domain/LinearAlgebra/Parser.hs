@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Parser 
-   ( parseMatrix, parseVectors, ppMatrix, ppMatrixWith
+   ( parseMatrix, parseVectorSpace, ppMatrix, ppMatrixWith
    , parseSystem
    ) where
 
@@ -66,11 +66,11 @@ pMatrix p = make <$> pLines True (pList1 p)
  where 
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-parseVectors :: String -> ([Vector Expr], [Message Token])
-parseVectors = parse p . scanWith s
+parseVectorSpace :: String -> (VectorSpace Expr, [Message Token])
+parseVectorSpace = parse p . scanWith s
  where
    s = newlinesAsSpecial scannerExpr
-   p = {- (map (fmap simplifyExpr)) <$> -} pVectors pExpr
+   p = makeVectorSpace <$> pVectors pExpr
 
 pVectors :: TokenParser a -> TokenParser [Vector a]
 pVectors p = pLines True (pVector p)

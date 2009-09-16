@@ -37,26 +37,25 @@ import Domain.Math.Simplification
 import Test.QuickCheck
 import Text.Parsing (SyntaxError(..))
 
-
 laDomain :: String
 laDomain = "linalg"
 
-solveGramSchmidt :: Exercise [Vector Expr]
+solveGramSchmidt :: Exercise (VectorSpace (Simplified Expr))
 solveGramSchmidt = makeExercise
    { identifier    = "Gram-Schmidt" -- TODO: simplify code
    , domain        = laDomain
    , description   = "Gram-Schmidt"
    , status        = Provisional
-   , parser        = \s -> case parseVectors s of
-                              (a, [])  -> Right (simplify a)
+   , parser        = \s -> case parseVectorSpace s of
+                              (a, [])  -> Right (fmap simplified a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = unlines . map show
-   , equivalence   = \x y -> let f = fromContext . applyD gramSchmidt . inContext
+   , prettyPrinter = unlines . map show . vectors
+   , equivalence   = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
                              in f x == f y
    , ruleset       = rulesGramSchmidt
-   , finalProperty = orthonormalList . filter ((/=0) . norm)
-   , strategy      = gramSchmidt
-   , termGenerator = simpleGenerator arbBasis
+   , finalProperty = orthonormalList . filter (not . isZero) . vectors
+   , strategy      = gramSchmidtStrategy
+   , termGenerator = simpleGenerator arbitrary
    }
 
 solveSystemExercise :: Exercise (Equations Expr)
@@ -113,55 +112,24 @@ solveSystemWithMatrixExercise = makeExercise
    , strategy      = generalSolutionSystemWithMatrix
    , termGenerator = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
    }
-
-{-
-opgave6b :: Exercise (Matrix Expr)
-opgave6b = reduceMatrixExercise
-   { identifier = "opg9.6b"
-   , termGenerator  = ExerciseList [makeMatrix [[0,1,1,1], [1,2,3,2],[3,1,1,3]]]
-   }
-
-opgaveVarMatrix2 :: Exercise (Matrix Expr)
-opgaveVarMatrix2 = reduceMatrixExercise
-   { identifier = "matrix-with-var2"
-   , termGenerator  = ExerciseList [makeMatrix [[-1,-1,variable "a"],[2,4,2]]]
-   }
-
-opgaveVarMatrix :: Exercise (Matrix Expr)
-opgaveVarMatrix = reduceMatrixExercise
-   { identifier    = "matrix-with-var"
-   , termGenerator = ExerciseList [makeMatrix [[1,lam,0,1,0,0],[lam,1,lam*lam-1,0,1,0],[0,2,-1,0,0,1]]]
-   }
- where lam = variable "L" -}
  
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
-
-{-
-instance Argument Expr where
-   makeArgDescr = argDescrExpr
-
-argDescrExpr :: String -> ArgDescr Expr
-argDescrExpr descr = ArgDescr descr Nothing parseRatio show arbitrary
- where
-   parseRatio = either (const Nothing) (Just . simplifyExpr) . parseExpr -}
                   
 instance Arbitrary a => Arbitrary (Vector a) where
    arbitrary   = liftM fromList $ oneof $ map vector [0..2]
    coarbitrary = coarbitrary . toList
 
-{- instance Arbitrary MySqrt where
-   arbitrary = oneof $ map (return . fromInteger) [-10 .. 10]
-   coarbitrary = coarbitrary . fromMySqrt -}
+instance Arbitrary a => Arbitrary (VectorSpace a) where
+   arbitrary = do
+      i <- choose (0, 3) -- too many vectors "disables" prime factorization
+      j <- choose (0, 10 `div` i)
+      xs <- replicateM i (liftM fromList $ replicateM j arbitrary)
+      return $ makeVectorSpace xs
+   coarbitrary = coarbitrary . vectors
 
 arbMatrix :: Num a => Gen (Matrix a)
 arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
-
-arbBasis :: Gen [Vector Expr]
-arbBasis = do
-   --i <- oneof $ map return [0..5]
-   --j <- oneof $ map return [0..5]
-   replicateM 2 $ liftM fromList $ replicateM 2 $ liftM fromInteger arbitrary
 
 liftRuleContextLeft :: Rule (Context a) -> Rule (Context (Either a b))
 liftRuleContextLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)

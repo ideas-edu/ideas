@@ -8,6 +8,7 @@ import Common.Rewriting.MetaVar
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 import Data.List
+import Data.Maybe
 
 -----------------------------------------------------------
 --- Substitution
@@ -43,7 +44,7 @@ singletonSubst i a
 
 -- | Turns a list into a substitution
 listToSubst :: (Uniplate a, MetaVar a) => [(Int, a)] -> Substitution a
-listToSubst s = makeS (IM.fromListWith (error "Substitution: keys are not unique") s) 
+listToSubst = makeS . IM.fromListWith (error "Substitution: keys are not unique")
 
 -- | Combines two substitutions. The left-hand side substitution is first applied to
 -- the co-domain of the right-hand side substitution
@@ -76,6 +77,6 @@ ran = IM.elems . unS
 (|->) :: (MetaVar a, Uniplate a) => Substitution a -> a -> a
 s |-> e = 
    case isMetaVar e of
-      Just i  -> maybe e id (lookupVar i s)
+      Just i  -> fromMaybe e (lookupVar i s)
       Nothing -> let (cs, f) = uniplate e
                  in f (map (s |->) cs)

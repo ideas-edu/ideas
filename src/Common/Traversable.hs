@@ -109,4 +109,4 @@ instance OnceJoin [] where
    onceJoinM f (x:xs) = liftM (++xs) (f x) `mplus` liftM (x:) (onceJoinM f xs)
 
 instance OnceJoin Maybe where
-   onceJoinM f = maybe mzero f
+   onceJoinM = maybe mzero

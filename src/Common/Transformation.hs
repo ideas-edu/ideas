@@ -1,4 +1,4 @@
-{-# OPTIONS -XExistentialQuantification #-} 
+{-# LANGUAGE ExistentialQuantification #-} 
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -233,7 +233,7 @@ nil = Nil ()
 
 -- smart constructor (provides the isomorphism proofs)
 cons :: ArgDescr a -> ArgumentList b -> ArgumentList (a, b)
-cons arg list = Cons (id, id) arg list
+cons = Cons (id, id)
 
 showArguments :: ArgumentList a -> a -> [String]
 showArguments (Nil _) _ = []
@@ -256,7 +256,7 @@ someArguments (Cons _ arg list) = Some arg : someArguments list
 ratioArgDescr :: (Integral a, Arbitrary a) => String -> ArgDescr (Ratio a)
 ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
  where
-   showRatio  r = show (numerator r) ++ if denominator r == 1 then "" else "/" ++ show (denominator r)
+   showRatio  r = show (numerator r) ++ if denominator r == 1 then "" else '/' : show (denominator r)
    parseRatio s = 
       let readDivOp s = 
              case dropWhile isSpace s of
@@ -458,8 +458,7 @@ ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
 
 -- | Check the soundness of a rule: the equality function is passed explicitly
 checkRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-checkRule eq rule =
-   quickCheck (propRule arbitrary eq rule)
+checkRule eq = quickCheck . propRule arbitrary eq
 
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
@@ -480,7 +479,7 @@ smartGen r = frequency [(4, arbitrary), (1, smartGenRule r)]
 smartGenRule :: Arbitrary a => Rule a -> Gen a
 smartGenRule r = do
    a <- arbitrary
-   case catMaybes $ map (smartGenTrans a) (transformations r) of
+   case mapMaybe (smartGenTrans a) (transformations r) of
       [] -> arbitrary
       gs -> oneof gs
 

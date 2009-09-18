@@ -1,4 +1,4 @@
-{-# OPTIONS -XTypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 module Common.Rewriting.MetaVar where
 
 import Common.Uniplate
@@ -17,7 +17,7 @@ class MetaVar a where
 instance MetaVar String where
    isMetaVar  ('_':xs) | not (null xs) && all isDigit xs = return (read xs)
    isMetaVar _ = Nothing
-   metaVar n   = "_" ++ show n
+   metaVar n   = '_' : show n
    
 readInt :: String -> Maybe Int
 readInt xs 

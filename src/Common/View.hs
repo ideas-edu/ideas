@@ -17,7 +17,7 @@ module Common.View
    , simplify, simplifyWith, isCanonical, isCanonicalWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
-   , listView, conversion, (#>)
+   , listView, conversion, ( #> )
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
@@ -56,7 +56,7 @@ canonical :: View a b -> a -> Maybe a
 canonical = canonicalWith id
 
 canonicalM :: Monad m => View a b -> a -> m a
-canonicalM v a = maybe (Prelude.fail "no match") return (canonicalWith id v a)
+canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
 
 canonicalWith :: (b -> b) -> View a b -> a -> Maybe a
 canonicalWith f view = liftM (build view . f) . match view
@@ -107,15 +107,15 @@ instance Arrow View where
 
    first v = makeView 
       (\(a, c) -> match v a >>= \b -> return (b, c)) 
-      (\(b, c) -> (build v b, c))
+      (first (build v))
 
    second v = makeView 
       (\(a, b) -> match v b >>= \c -> return (a, c)) 
-      (\(a, c) -> (a, build v c))
+      (second (build v))
 
    v *** w = makeView 
       (\(a, c) -> liftM2 (,) (match v a) (match w c)) 
-      (\(b, d) -> (build v b, build w d))
+      (build v *** build w)
 
    -- left-biased builder
    v &&& w = makeView 
@@ -149,7 +149,7 @@ listView v = makeView (mapM (match v)) (map (build v))
 conversion :: (a -> b) -> (b -> a) -> View a b
 conversion f g = makeView (Just . f) g
 
-(#>) :: (a -> Bool) -> View a b -> View a b
+( #> ) :: (a -> Bool) -> View a b -> View a b
 p #> v = makeView f (build v)
  where f a = guard (p a) >> match v a
  

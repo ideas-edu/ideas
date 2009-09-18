@@ -64,7 +64,7 @@ data Exercise a = Exercise
 data Status = Stable | Provisional | Experimental deriving (Show, Eq)
 
 instance Apply Exercise where
-   applyAll e a = map fromContext $ applyAll (strategy e) (inContext a)
+   applyAll e = map fromContext . applyAll (strategy e) . inContext
 
 -- default values for all fields
 makeExercise :: (Arbitrary a, Ord a, Show a) => Exercise a
@@ -230,8 +230,8 @@ checkExerciseWith f a = do
             classify rejected "rejected" $
             classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
-            forAll m $ \x -> 
-            finalProperty a (fromContext $ applyD (strategy a) (inContext x))
+            forAll m $
+               finalProperty a . fromContext . applyD (strategy a) . inContext
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool

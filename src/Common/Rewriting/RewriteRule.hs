@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
 module Common.Rewriting.RewriteRule 
    ( RuleSpec(..), lhs, rhs
    , RewriteRule, Builder, rewriteRule, BuilderList, rewriteRules
@@ -69,9 +69,9 @@ instance Rewrite a => BuilderList (RewriteRule a) a where
    countVarsL    = nrOfMetaVars
   
 instance Rewrite a => BuilderList [RuleSpec a] a where
-   getSpecNr rs n = buildSpec (rs!!n)
-   countSpecsL    = length
-   countVarsL _   = 0
+   getSpecNr rs = buildSpec . (rs !!)
+   countSpecsL  = length
+   countVarsL _ = 0
 
 instance BuilderList b a => BuilderList (a -> b) a where 
    getSpecNr f n i = getSpecNr (f (metaVar i)) n (i+1)
@@ -91,7 +91,7 @@ inverse r@(R _ _ _) = if checkScope new then Just new else Nothing
    new = R (ruleName r) (nrOfMetaVars r) (swap . rulePair r)
 
 bothWays :: Rewrite a => [RewriteRule a] -> [RewriteRule a]
-bothWays rs = rs ++ catMaybes (map inverse rs)
+bothWays rs = rs ++ mapMaybe inverse rs
 
 checkScope :: Rewrite a => RewriteRule a -> Bool
 checkScope r = IS.null (getMetaVars rhs IS.\\ getMetaVars lhs)
@@ -107,7 +107,7 @@ rewrite :: RewriteRule a -> a -> [a]
 rewrite r@(R _ _ _) = rewriteWith operators r
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
-rewriteM r@(R _ _ _) e = msum $ map return $ rewriteWith operators r e
+rewriteM r@(R _ _ _) = msum . map return . rewriteWith operators r
       
 rewriteWith :: Operators a -> RewriteRule a -> a -> [a]
 rewriteWith ops r0@(R _ _ _) e = do
@@ -147,7 +147,7 @@ normalFormWith ops rs = fixpoint $ transform $ \a ->
       _    -> a
       
 normalForm :: (Rewrite a, Ord a) => [RewriteRule a] -> a -> a
-normalForm rs = normalFormWith operators rs
+normalForm = normalFormWith operators
 
 -----------------------------------------------------------
 -- Smart generator that creates instantiations of the left-hand side

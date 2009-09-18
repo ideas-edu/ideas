@@ -58,10 +58,10 @@ reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
 ----------------------------------------------------
 
 isConfluent :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> Bool
-isConfluent f rs = null $ noDiamondPairs f rs
+isConfluent f = null . noDiamondPairs f
 
 confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> IO ()
-confluentFunction f rs = reportPairs $ noDiamondPairs f rs
+confluentFunction f = reportPairs . noDiamondPairs f
 
 confluenceWith :: (Ord a, Show a, Rewrite a) => [Operator a] -> [RewriteRule a] -> IO ()
 confluenceWith ops rs = confluentFunction (normalizeWith ops . normalFormWith ops rs) rs

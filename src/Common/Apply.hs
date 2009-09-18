@@ -37,7 +37,7 @@ applyD ta a = fromMaybe a (apply ta a)
 
 -- | Same as apply, except that the result (at most one) is returned in some monad
 applyM :: (Apply t, Monad m) => t a -> a -> m a
-applyM ta a = maybe (fail "applyM") return (apply ta a)
+applyM ta = maybe (fail "applyM") return . apply ta
  
 -- | Apply a list of steps, and return at most one result
 applyList :: Apply t => [t a] -> a -> Maybe a

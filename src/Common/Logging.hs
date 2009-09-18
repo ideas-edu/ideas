@@ -44,8 +44,7 @@ logMessage = logMessageWith defaultLogConfig
 -- | Logs a message using the supplied configuration
 logMessageWith :: LogConfig -> String -> IO ()
 logMessageWith config msg = 
-   do time <- getCurrentTime
-      try (logRetries config) time
+  getCurrentTime >>= try (logRetries config)
  where 
    try :: Int -> UTCTime -> IO ()
    try n time 

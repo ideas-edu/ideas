@@ -4,6 +4,7 @@ module Common.Rewriting.TreeDiff
 
 import Common.Rewriting.Unification (ShallowEq(..))
 import Common.Uniplate
+import Control.Arrow
 
 type Loc = [Int]
 
@@ -26,7 +27,7 @@ treeDiff x y = fst (rec x y)
       nr = length (filter not bs)
       f i x y = 
          let (zs, b) = rec x y
-         in (map (\(loc,td) -> (i:loc, td)) zs, b)
+         in (map (first (i:)) zs, b)
                 
       
 allLocations :: Uniplate a => a -> [Loc]

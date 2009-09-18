@@ -259,7 +259,7 @@ mapSymbol _ Fail        =  Fail
 
 ----------------------------------------------------------------------
 -- Experimental code for removing left recursion
-
+{-
 -- non-empty
 ne :: Grammar a -> Grammar a
 ne (p :*: q)  =  
@@ -295,18 +295,13 @@ propNE1 p
    | otherwise = ne p === p
 propNE2 p = not $ empty $ ne p
 
+testje = {- rlr2 $ -} Rec 0 $ (Var 0 <*> Var 0) <|> Symbol 1 <|> Succeed
 
-
-
-
-
-testje = {- rlr2 $ -} (Rec 0 $ (Var 0 <*> Var 0) <|> Symbol 1 <|> Succeed)
-
-tg = Rec 0 $ (Rec 1 defy) <|> (Symbol 1 <*> x) <|> Succeed
+tg = Rec 0 $ Rec 1 defy <|> (Symbol 1 <*> x) <|> Succeed
  where
    defy = (x <*> x) <|> (Symbol 2 <*> y)
    x = Var 0
-   y = Var 1
+   y = Var 1 
 
 ex :: Grammar Int
 ex = rlr 0 ((Var 0 :*: Var 0 :*: Symbol 1) :|: Symbol 2)
@@ -339,7 +334,7 @@ rlr i s
    mymany s = let vs = freeVars s   
                   i  = if S.null vs then 1000 else (S.findMax vs + 1) `max` 1000
               in Rec i (Succeed <|> (s <*> Var i))
-
+-}
 alternatives = foldr (<|>) fail 
 
 isLeftRecursive :: Grammar a -> Bool
@@ -397,7 +392,7 @@ helper i s
    -- many s = Rec 0 (succeed <|> s <*> Var 0)
 
    alternatives = foldr (<|>) fail -}
-
+{-
 extraChecks = do
    let f ex xs = quickCheck $ property $ shorts ex == xs
    f ex1 [""]
@@ -417,7 +412,7 @@ extraChecks = do
    ex7 = many (symbol 'a') <*> many (symbol 'b')
 
    shorts = take 15 . language 5 -- concat . take 5 . languageBF
-
+-}
 inverse :: Grammar a -> Grammar a
 inverse = {- rlr2 . -} inv
 
@@ -427,7 +422,7 @@ inv (s :|: t)  = inv s :|: inv t
 inv (s :||: t) = inv s :||: inv t
 inv (Rec i s)  = Rec i (inv s)
 inv s = s
-
+{-
 propRLR :: Grammar Int -> Bool
 propRLR s = rlr2 s === rlr2 (rlr2 s)
 
@@ -472,7 +467,7 @@ e2 = Rec 1 (Rec 2 ((Symbol 4 :|: Var 1) :*: (Symbol 20 :|: Var 2)))
 
 e3 :: Grammar Int -- very slow with propInv, but why?
 e3 = Rec 1 (Rec 2 (Rec 3 Fail) :*: (Rec 2 (Symbol (-30)) :*: (Var 1 :*: (Rec 2 (Symbol (-9) :|: Symbol (-2)) :|: (Var 1 :|: Var 1) :*: (Symbol (-16) :|: Var 1)))))
-
+-}
 
 ----------------------------------------------------------------------
 -- Experimental code for turning Grammar into a Monad
@@ -554,7 +549,7 @@ propEmpty :: Grammar Int -> Bool
 propEmpty s = empty s == member [] s
 
 propNonEmpty :: Grammar Int -> Bool
-propNonEmpty p = not $ member [] (nonempty p)
+propNonEmpty = not . member [] . nonempty
 
 propSplitSucceed :: Grammar Int -> Bool
 propSplitSucceed p = p === if empty p then succeed <|> new else new
@@ -568,7 +563,7 @@ propJoin :: Grammar Int -> Bool
 propJoin p = join (fmap symbol p) === p
           
 propMap :: (Int -> Int) -> (Int -> Int) -> Grammar Int -> Bool
-propMap f g p = fmap f (fmap g p) === fmap (f . g) p
+propMap f g p = fmap (f . g) p === fmap (f . g) p
 
 propRec :: Grammar Int -> Property
 propRec this@(Rec i p) = property (replaceVar i this p === this)

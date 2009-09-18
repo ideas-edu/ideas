@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -50,7 +49,8 @@ import Common.Rewriting hiding (inverse)
 import Common.Uniplate (Uniplate, children)
 import Common.Utils
 import qualified Common.Grammar as RE
-import Control.Monad (liftM, when)
+import Control.Monad (liftM, when, forM)
+import Data.Maybe
 
 -----------------------------------------------------------
 -- Data types and type classes
@@ -134,7 +134,7 @@ traceStrategy = rec 0
       let b = empty s
       indent n (show a ++ if b then "   (end)" else "")
       let f (rule, rest) =
-             liftM concat $ flip mapM (applyAll rule a) $ \b -> do
+             liftM concat $ forM (applyAll rule a) $ \b -> do
                 let n2 = n+2
                 indent n2 ("[" ++ show rule ++ "]")
                 rec n2 rest b
@@ -211,7 +211,7 @@ many1 s = s <*> many s
 
 -- | Apply a strategy a certain number of times
 replicate :: IsStrategy f => Int -> f a -> Strategy a
-replicate n s = sequence (Prelude.replicate n s)
+replicate n = sequence . Prelude.replicate n
 
 -- | Apply a certain strategy or do nothing (non-greedy)
 option :: IsStrategy f => f a -> Strategy a
@@ -468,4 +468,4 @@ inverse (LS n s) = LS n (f s)
    f s = S (fmap (either (Left . g) (Right . inverse)) (RE.inverse (unS s)))
    
    g :: Rule a -> Rule a 
-   g r = maybe (error $ "Rule not inversable: " ++ show (name r)) id (inverseRule r)
+   g r = fromMaybe (error $ "Rule not inversable: " ++ show (name r)) (inverseRule r)

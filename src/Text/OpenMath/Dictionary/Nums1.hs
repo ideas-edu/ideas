@@ -5,7 +5,7 @@ import Text.OpenMath.Symbol
 
 -- | List of symbols defined in nums1 dictionary
 nums1List :: [Symbol]
-nums1List = [based_integerSymbol, rationalSymbol, infinitySymbol, eSymbol, iSymbol, piSymbol, gammaSymbol, naNSymbol]
+nums1List = [basedIntegerSymbol, rationalSymbol, infinitySymbol, eSymbol, iSymbol, piSymbol, gammaSymbol, naNSymbol]
 
 {-| This symbol represents the constructor function for integers, specifying
 the base. It takes two arguments, the first is a positive integer to denote
@@ -13,8 +13,8 @@ the base to which the number is represented, the second argument is a string
 which contains an optional sign and the digits of the integer, using 0-9a-z
 (as a consequence of this no radix greater than 35 is supported). Base 16 and
 base 10 are already covered in the encodings of integers. -}
-based_integerSymbol :: Symbol
-based_integerSymbol = makeSymbol "nums1" "based_integer"
+basedIntegerSymbol :: Symbol
+basedIntegerSymbol = makeSymbol "nums1" "based_integer"
 
 {-| This symbol represents the constructor function for rational numbers. It
 takes two arguments, the first is an integer p to denote the numerator and the

@@ -21,7 +21,7 @@ newtype Polynomial a = P (IM.IntMap a) deriving Eq
 instance Num a => Show (Polynomial a) where
    show (P m) = 
       let f (n, a) = sign (one (show a ++ g n))
-          g n = concat $ [ "x" | n > 0 ] ++ [ "^" ++ show n | n > 1 ]
+          g n = concat $ [ "x" | n > 0 ] ++ [ '^' : show n | n > 1 ]
           one ('1':xs@('x':_))     = xs
           one ('-':'1':xs@('x':_)) = xs
           one xs                   = xs
@@ -62,7 +62,7 @@ var :: Num a => Polynomial a
 var = P (IM.singleton 1 1)
 
 con :: a -> Polynomial a
-con a = P (IM.singleton 0 a)
+con = P . IM.singleton 0
 
 -- | Raise all powers by a constant (discarding negative exponents)
 raise :: Int -> Polynomial a -> Polynomial a

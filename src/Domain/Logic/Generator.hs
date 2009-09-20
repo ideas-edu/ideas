@@ -1,4 +1,4 @@
-{-# OPTIONS -XTypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -36,7 +36,8 @@ generateLogic :: Gen SLogic
 generateLogic = generateLogicWith defaultConfig
    
 generateLogicWith :: LogicGenConfig -> Gen SLogic
-generateLogicWith config = arbLogic config >>= preventSameVar config >>= (return . removePartsInDNF)
+generateLogicWith config = 
+   liftM removePartsInDNF (arbLogic config >>= preventSameVar config)
    
 data LogicGenConfig = LogicGenConfig
    { maxSize       :: Int
@@ -118,7 +119,7 @@ removePartsInDNF = buildOr . filter p1 . disjunctions
    p2 _       = False
 
 variableList :: [String]
-variableList = ["p", "q", "r", "s", "t"] ++ [ "x" ++ show n | n <- [0..] ]
+variableList = ["p", "q", "r", "s", "t"] ++ [ 'x' : show n | n <- [0..] ]
 
 -----------------------------------------------------------
 --- QuickCheck generator

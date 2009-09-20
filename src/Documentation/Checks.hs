@@ -14,13 +14,12 @@
 module Main (main) where
 
 import Directory
-import Common.Utils (reportTest, useFixedStdGen, Some(..))
+import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import Common.Grammar
 import Common.Rewriting
 import Common.Transformation
 import Control.Monad
-import Common.Utils (snd3)
 import System.Environment
 import Service.ExerciseList
 
@@ -53,7 +52,7 @@ main = do
    checkExercise LA.systemWithMatrixExercise
    checkExercise LA.gramSchmidtExercise
    checkExercise RA.cnfExercise
-   flip mapM_ exerciseList $ \(Some ex) -> do 
+   forM_ exerciseList $ \(Some ex) ->
       checksForList ex
    
    -- putStrLn "* 3. Confluence checks"
@@ -87,7 +86,7 @@ testRequests eval subDir suffix = do
    xs   <- getDirectoryContents path
    let names = map f $ filter (suffix `isSuffixOf`) xs
        f = reverse . drop (length suffix) . reverse
-   flip mapM_ names $ \base -> do
+   forM_ names $ \base -> do
       useFixedStdGen -- fix the random number generator
       txt <- readFile (path ++ "/" ++ base ++ suffix)
                 `catch` \_ -> return ""

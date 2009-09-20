@@ -84,7 +84,7 @@ vectors (VS xs) = xs
 gramSchmidt :: Floating a => VectorSpace a -> VectorSpace a
 gramSchmidt (VS xs) = VS (reverse (foldr op [] xs))
  where
-   op a as = toUnit (foldr (makeOrthogonal) a as):as
+   op a as = toUnit (foldr makeOrthogonal a as):as
 
 -------------------------------------------------------------------------------
 -- Vector operations

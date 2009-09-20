@@ -167,7 +167,7 @@ minvar c | null list = Nothing
    list = getVarsSystem (remaining c) 
    
 liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (Context (LinearSystem a))
-liftSystemTrans = lift $ makeLiftPair (return . equations) (\new c -> fmap (const new) c)
+liftSystemTrans = lift $ makeLiftPair (return . equations) (fmap . const)
 
 systemInNF :: (Arbitrary a, IsLinear a) => Gen (LinearSystem a)
 systemInNF = do

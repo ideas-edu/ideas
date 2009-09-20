@@ -17,6 +17,7 @@ import Common.Utils  (safeHead)
 import Control.Monad (join)
 import Data.Maybe    (isJust, fromMaybe)
 
+
 -- | A type class for functors that can be applied to a value. Transformation, Rule, and
 -- Strategy are all instances of this type class. Minimal complete definition: only one of
 -- the two member functions should be defined.

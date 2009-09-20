@@ -40,17 +40,18 @@ module Common.Strategy
    , inverse
    ) where
 
-import Prelude hiding (fail, not, repeat, replicate, sequence)
-import qualified Prelude as Prelude
 import Common.Apply
 import Common.Context
-import Common.Transformation
 import Common.Rewriting hiding (inverse)
+import Common.Transformation
 import Common.Uniplate (Uniplate, children)
 import Common.Utils
-import qualified Common.Grammar as RE
 import Control.Monad (liftM, when, forM)
 import Data.Maybe
+import Prelude hiding (fail, not, repeat, replicate, sequence)
+import qualified Common.Grammar as RE
+import qualified Prelude as Prelude
+
 
 -----------------------------------------------------------
 -- Data types and type classes

@@ -74,7 +74,7 @@ isEquivalent x1 x2 =
         mols           =  union (getSetOfMolecules res1) (getSetOfMolecules res2) 
         (rs, r1, r2)   =  remCompls mols res1 res2  
         vals           =  createValuations rs
-    in and (map (\v -> evalFormula r1 v == evalFormula r2 v) vals) 
+    in all (\ v -> evalFormula r1 v == evalFormula r2 v) vals
 {-
 -- | zet 'm in cnf
 solve (Inv (Inv (Not (Var "p")) :+: Not (Var "q"))) = Not (Var "p") :+: Not (Inv (Var "q"))
@@ -109,8 +109,7 @@ remCompls rs r1 r2 =
 
 -- |
 substCompls ::  RelAlg -> [(RelAlg, RelAlg)] -> RelAlg
-substCompls r [] = r
-substCompls r (x:xs) = substCompls (subst r x) xs 
+substCompls = foldl subst
 
 
 
@@ -133,7 +132,7 @@ searchForComplements []     = []
 searchForComplements (x:xs) = [(x,z) | z <- xs, isComplement x z] ++ searchForComplements xs    
 
 isComplement :: RelAlg -> RelAlg -> Bool
-isComplement x y = (fromContext (applyD toCNF (inContext (Not x)))) == y  
+isComplement = (==) . fromContext . applyD toCNF . inContext . Not
 
 -- FIXME: what should we do with the identity relation?
 evalFormula :: RelAlg -> [(RelAlg, Bool)] -> Bool
@@ -189,4 +188,4 @@ createValuations = foldr op [[]]
  where op a vs = [ (a, b):v | v <- vs, b <- [True, False] ]
 
 prop :: RelAlg -> RelAlg -> Bool
-prop p q = (isEquivalent p q) == (probablyEqual p q)
+prop p q = isEquivalent p q == probablyEqual p q

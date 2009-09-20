@@ -76,7 +76,7 @@ derivationsPage ex =
          let f i x = do
                 h2 (show i ++ ".")
                 preText (showDerivation ex x)
-         sequence_ $ zipWith f [1..] xs
+         zipWithM_ f [1 ..] xs
       _ -> Nothing
  where
    title = "Derivations for " ++ show (exerciseCode ex)

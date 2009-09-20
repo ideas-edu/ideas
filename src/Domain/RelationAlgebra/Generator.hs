@@ -59,7 +59,7 @@ template6 mp a b mq = f1 (f2 (a :&&: b))
  where f1 x = maybe x (:.: x) mp
        f2 x = maybe x (x :.:) mq 
 template7 x y z = x :.: (y :||:z) 
-template8 x y z = x :||:(Not(Inv(y :.: z) :&&: Not(Inv(y) :.: Inv(z))))
+template8 x y z = x :||: Not (Inv (y :.: z) :&&: Not (Inv y :.: Inv z))
 
 -------------------------------------------------------------------
 -- Template generators

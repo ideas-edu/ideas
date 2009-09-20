@@ -5,7 +5,7 @@ import Text.OpenMath.Symbol
 
 -- | List of symbols defined in arith1 dictionary
 arith1List :: [Symbol]
-arith1List = [lcmSymbol, gcdSymbol, plusSymbol, unary_minusSymbol, minusSymbol, timesSymbol, divideSymbol, powerSymbol, absSymbol, rootSymbol, sumSymbol, productSymbol]
+arith1List = [lcmSymbol, gcdSymbol, plusSymbol, unaryMinusSymbol, minusSymbol, timesSymbol, divideSymbol, powerSymbol, absSymbol, rootSymbol, sumSymbol, productSymbol]
 
 {-| The symbol to represent the n-ary function to return the least common
 multiple of its arguments. -}
@@ -22,8 +22,8 @@ plusSymbol :: Symbol
 plusSymbol = makeSymbol "arith1" "plus"
 
 {-| This symbol denotes unary minus, i.e. the additive inverse. -}
-unary_minusSymbol :: Symbol
-unary_minusSymbol = makeSymbol "arith1" "unary_minus"
+unaryMinusSymbol :: Symbol
+unaryMinusSymbol = makeSymbol "arith1" "unary_minus"
 
 {-| The symbol representing a binary minus function. This is equivalent to
 adding the additive inverse. -}

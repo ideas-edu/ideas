@@ -9,18 +9,18 @@ module Common.Rewriting.RewriteRule
    , smartGenerator, showRewriteRule, showRuleSpec
    ) where
 
-import Common.Uniplate (transform)
-import Common.Utils
-import Common.Rewriting.MetaVar
+import Common.Apply
 import Common.Rewriting.AC
+import Common.Rewriting.MetaVar
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
+import Common.Uniplate (transform)
+import Common.Utils
 import Control.Monad
-import Data.Maybe
 import Data.List
-import qualified Data.IntSet as IS
-import Common.Apply
+import Data.Maybe
 import Test.QuickCheck
+import qualified Data.IntSet as IS
 
 -----------------------------------------------------------
 -- Rewrite rules

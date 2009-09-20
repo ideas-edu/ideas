@@ -19,6 +19,7 @@ module Domain.Math.Expr.Symbols
    , sinSymbol, cosSymbol, lnSymbol
    ) where
 
+import Control.Monad
 import Domain.Math.Expr.Symbolic
 import Text.OpenMath.Symbol
 import Text.OpenMath.Dictionary.Arith1
@@ -50,7 +51,7 @@ operators =
 -- Extra math symbols
 
 -- rename
-negateSymbol = unary_minusSymbol
+negateSymbol = unaryMinusSymbol
 
 absSymbol    = extraSymbol "abs"   
 signumSymbol = extraSymbol "signum" 
@@ -73,12 +74,17 @@ fcompSymbol  = extraSymbol "compose"
 -------------------------------------------------------------
 -- Some match functions
 
-isPlus   a = isAssoBinary plusSymbol   a
-isTimes  a = isAssoBinary timesSymbol  a
-isMinus  a = isBinary     minusSymbol  a
-isDivide a = isBinary     divideSymbol a
-isNegate a = isUnary      negateSymbol a
-isSqrt   a = isUnary      sqrtSymbol   a
+isPlus, isTimes, isMinus, isDivide :: 
+   (Symbolic a, MonadPlus m) => a -> m (a, a)
+isNegate, isSqrt :: 
+   (Symbolic a, MonadPlus m) => a -> m a
+   
+isPlus   = isAssoBinary plusSymbol
+isTimes  = isAssoBinary timesSymbol  
+isMinus  = isBinary     minusSymbol  
+isDivide = isBinary     divideSymbol 
+isNegate = isUnary      negateSymbol 
+isSqrt   = isUnary      sqrtSymbol  
 
 infixr 8 ^
 

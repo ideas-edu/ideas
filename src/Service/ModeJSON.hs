@@ -1,4 +1,4 @@
-{-# OPTIONS -XRankNTypes #-}
+
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -52,7 +52,7 @@ jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
               _               -> fail "Invalid method"
-   code <- lookupM "params" json >>= (return . extractCode)
+   code <- liftM extractCode (lookupM "params" json)
    enc  <- case lookupM "encoding" json of
               Nothing         -> return Nothing
               Just (String s) -> liftM Just (readEncoding s)
@@ -61,7 +61,7 @@ jsonRequest json = do
               Nothing         -> return Nothing
               Just (String s) -> return (Just s)
               _               -> fail "Invalid source"
-   return $ Request 
+   return Request 
       { service    = srv
       , exerciseID = code
       , source     = src
@@ -164,10 +164,10 @@ decodeState ex f (Array [a]) = decodeState ex f a
 decodeState ex f (Array [String code, String p, ce, String ctx]) = do
    a    <- f ce 
    unit <- maybe (fail "invalid context") return (parseContext ctx) 
-   return $ TAS.State 
+   return TAS.State 
       { TAS.exercise = ex
       , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
-      , TAS.context  = fmap (\_ -> a) unit
+      , TAS.context  = fmap (const a) unit
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
 

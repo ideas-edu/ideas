@@ -22,10 +22,10 @@ module Common.View
    ) where
 
 import Control.Arrow hiding ((>>>))
-import qualified Control.Category as C
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
+import qualified Control.Category as C
 
 -- For all v::View the following should hold:
 --   1) simplify v a "is equivalent to" a

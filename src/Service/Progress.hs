@@ -23,6 +23,7 @@ module Service.Progress
    , fromMap
    ) where
 
+import Control.Arrow
 import Control.Monad
 import Data.List (groupBy, sortBy)
 import qualified Data.Map as M
@@ -85,7 +86,7 @@ fromListBy f = scoreList . map (\x -> (f x, x))
 
 scoreList, scoreListMonotonic :: (Num score, Ord score) => [(score, a)] -> Progress score a
 scoreList = scoreListMonotonic . sortByFst
-scoreListMonotonic = scoreMaybeListMonotonic . map (\(i, a) -> (i, Just a)) 
+scoreListMonotonic = scoreMaybeListMonotonic . map (second Just) 
 
 scoreMaybeList, scoreMaybeListMonotonic :: (Num score, Ord score) => [(score, Maybe a)] -> Progress score a
 scoreMaybeList = scoreMaybeListMonotonic . sortByFst
@@ -177,7 +178,7 @@ xs .|. ys = f xs
 infixr 3 <*>
 
 combineBy :: (Num score, Ord score) => (a -> b -> c) -> Progress score a -> Progress score b -> Progress score c
-combineBy f pa pb = pa >>= \a -> pb >>= \b -> return (f a b)
+combineBy f pa pb = pa >>= \a -> liftM (f a) pb
 
 (<*>) :: (Num score, Ord score) => Progress score a -> Progress score b -> Progress score (a, b)
 (<*>) = combineBy (,)

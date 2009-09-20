@@ -3,6 +3,7 @@ module Documentation.OverviewPages
 
 import Documentation.DefaultPage
 import Data.List
+import Control.Monad
 import Common.Utils (Some(..))
 import Common.Exercise
 import Service.ExerciseList
@@ -22,7 +23,7 @@ exerciseOverviewPage = defaultPage "Exercises" 0 $ do
        f (Some ex) = domain ex
        g (Some ex) = show (exerciseCode ex)
    h1 "Exercises"
-   flip mapM_ (zip [1..] groups) $ \(i, xs@(hd:_)) -> do
+   forM_ (zip [1..] groups) $ \(i, xs@(hd:_)) -> do
       h2 (show i ++ ". " ++ f hd)
       ul $ flip map xs $ \(Some ex) -> do
          link (exercisePageFile ex) $ ttText (show (exerciseCode ex))

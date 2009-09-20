@@ -23,12 +23,11 @@ import Data.Maybe
 import qualified Data.Set as S
 import System.Random (StdGen, mkStdGen, split)
 import Test.QuickCheck
-import Control.Monad
 
-infixr 1 :.:
-infixr 2 :+: 
-infixr 3 :||: 
-infixr 4 :&&:
+infixr 2 :.:
+infixr 3 :+: 
+infixr 4 :||: 
+infixr 5 :&&:
 
 -- | The data type RelAlg is the abstract syntax for the domain
 -- | of logic expressions.
@@ -103,13 +102,13 @@ evalRelAlg :: Ord a => (String -> Relation a) -> [a] -> RelAlg -> Relation a
 evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, ident) 
  where
    pairs = cartesian as as
-   comp     = \p q -> let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
-                      in S.fromAscList [ x | x <- pairs, any (f x) as ] 
-   add      = \p q -> let f (a1, a2) c = (a1, c) `S.member` p || (c, a2) `S.member` q
-                      in S.fromAscList [ x | x <- pairs, all (f x) as ] 
+   comp p q = let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
+              in S.fromAscList [ x | x <- pairs, any (f x) as ] 
+   add p q  = let f (a1, a2) c = (a1, c) `S.member` p || (c, a2) `S.member` q
+              in S.fromAscList [ x | x <- pairs, all (f x) as ] 
    conj     = S.intersection
    disj     = S.union
-   not      = \p -> S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
+   not p    = S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
    inverse  = S.map (\(x, y) -> (y, x))
    universe = S.fromAscList pairs
    ident    = S.fromAscList [ (x, x) | x <- as ]
@@ -174,9 +173,10 @@ instance Uniplate RelAlg where
          _         -> ([], \[] -> term)
 
 instance MetaVar RelAlg where
-   isMetaVar (Var ('_':xs)) | not (null xs) && all isDigit xs = return (read xs)
+   isMetaVar (Var ('_' : xs)) | not (null xs) && all isDigit xs = 
+      return (read xs)
    isMetaVar _ = Nothing
-   metaVar n = Var ("_" ++ show n)
+   metaVar n = Var ('_' : show n)
 
 instance ShallowEq RelAlg where
    shallowEq expr1 expr2 = 

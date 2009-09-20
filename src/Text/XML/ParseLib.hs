@@ -71,7 +71,7 @@ string = P.string
 ranges :: [(Char, Char)] -> Parser Char
 ranges xs = P.choice [ a <..> b | (a, b) <- xs ]
 
-oneOf :: [Char] -> Parser Char
+oneOf :: String -> Parser Char
 oneOf = P.oneOf
 
 many :: Parser a -> Parser [a] 

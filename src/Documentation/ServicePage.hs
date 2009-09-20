@@ -28,7 +28,7 @@ toRequest s =
    case typedValue s of  
       _ ::: t -> XML.makeXML "request" (f t)
  where
-   f t = mapM_ (\(Some a) -> XML.text $ show a) (arguments t)
+   f = mapM_ (\ (Some a) -> XML.text $ show a) . arguments
 
 arguments :: Type a t -> [Some (Type a)]
 arguments (a :-> b) = Some a : arguments b

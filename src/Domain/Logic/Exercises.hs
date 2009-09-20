@@ -44,11 +44,11 @@ dnfExercise = Exercise
    , equality      = equalLogicA
    , finalProperty = isDNF
    , ruleset       = map liftToContext (logicRules ++ buggyRules)
-   , strategy      = toDNF_DWA
+   , strategy      = dnfStrategyDWA
    , differences   = treeDiff
    , ordering      = compare
    , termGenerator = let isSuitable p =
-                            let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
+                            let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
                             in countEquivalences p <= 2 && n >= 4 && n <= 12
                      in makeGenerator isSuitable generateLogic
    }
@@ -57,7 +57,7 @@ dnfExercise = Exercise
 -- to normalize a random proposition (30-40% is ok)
 testGen :: Property
 testGen = forAll generateLogic $ \p -> 
-   let n = stepsRemaining (emptyPrefix toDNF_DWA) (inContext p)
+   let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
    in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True
    
 {- main :: IO ()

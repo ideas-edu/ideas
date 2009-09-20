@@ -24,7 +24,7 @@ Equations:
    sqrt a = b   =   a = b^2   (if a >= 0, and b>=0)
 -}
 
-main = flip mapM_ (concat sqrtEquations) $ \eq -> 
+main = forM_ (concat sqrtEquations) $ \eq -> 
    let res = applyD sqrtStrategy (OrList [eq])
    in if solvedList res then print "ok" else print res
 

@@ -11,7 +11,8 @@
 -- (...add description...)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Strategies (toDNF, toDNF_DWA) where
+module Domain.Logic.Strategies 
+   ( dnfStrategy, dnfStrategyDWA) where
 
 import Prelude hiding (repeat)
 import Domain.Logic.Rules
@@ -23,8 +24,8 @@ import Common.Strategy
 -----------------------------------------------------------------------------
 -- To DNF, in four steps
 
-toDNF :: LabeledStrategy (Context SLogic)
-toDNF =  label "Bring to dnf"
+dnfStrategy :: LabeledStrategy (Context SLogic)
+dnfStrategy =  label "Bring to dnf"
       $  label "Eliminate constants"                 eliminateConstants
      <*> label "Eliminate implications/equivalences" eliminateImplEquiv
      <*> label "Eliminate nots"                      eliminateNots 
@@ -47,8 +48,8 @@ toDNF =  label "Bring to dnf"
 -----------------------------------------------------------------------------
 -- To DNF, with priorities (the "DWA" approachs)
 
-toDNF_DWA :: LabeledStrategy (Context SLogic)
-toDNF_DWA =  label "Bring to dnf (DWA)" $ 
+dnfStrategyDWA :: LabeledStrategy (Context SLogic)
+dnfStrategyDWA =  label "Bring to dnf (DWA)" $ 
    repeat $  label "Simplify"                            simplify
           |> label "Eliminate implications/equivalences" eliminateImplEquiv
           |> label "Eliminate nots"                      eliminateNots

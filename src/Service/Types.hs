@@ -1,4 +1,4 @@
-{-# OPTIONS -XGADTs -XRank2Types #-}
+{-# LANGUAGE GADTs, Rank2Types #-}
 module Service.Types where
 
 import Common.Context (Context, Location, fromContext)

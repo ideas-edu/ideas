@@ -3,14 +3,15 @@ module Common.Rewriting.Confluence
    , testConfluence, testConfluenceWith, testConfluentFunction
    ) where
 
-import Common.Rewriting.MetaVar
 import Common.Rewriting.AC
+import Common.Rewriting.MetaVar
+import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
-import Common.Rewriting.RewriteRule
 import Common.Uniplate (subtermsAt, applyAtM, somewhereM)
 import Data.List
 import Data.Maybe
+
 
 ----------------------------------------------------
 

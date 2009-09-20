@@ -1,4 +1,3 @@
-{-# OPTIONS -XRankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -55,7 +54,7 @@ xmlRequest xml = do
    enc  <- case findAttribute "encoding" xml of
               Just s  -> liftM Just (readEncoding s)
               Nothing -> return Nothing 
-   return $ Request 
+   return Request 
       { service    = srv
       , exerciseID = code
       , source     = findAttribute "source" xml
@@ -100,7 +99,7 @@ xmlRequestHandler xml =
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =
-   case findAttribute "exerciseid" xml >>= return . break (=='.') of
+   case liftM (break (== '.')) (findAttribute "exerciseid" xml) of
       Just (as, _:bs) -> return (makeCode as bs)
       Just (as, _)    -> resolveExerciseCode as
       -- being backwards compatible with early MathDox
@@ -188,7 +187,7 @@ xmlDecoder f ex = Decoder
       case serviceType of
          Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)
          Tp.Location -> leave $ liftM (read . getData) . findChild "location"
-         Tp.Rule     -> leave $ maybe (fail "unknown rule") id . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
+         Tp.Rule     -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Exercise -> leave $ const (return (decoderExercise dec))
          Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (inContext a, xml)
          _           -> decodeDefault dec serviceType

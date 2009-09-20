@@ -2,6 +2,7 @@
 module Text.OpenMath.MakeSymbols where
 
 import Text.OpenMath.ContentDictionary hiding (main)
+import Control.Monad
 import Data.Char
 import Data.List
 
@@ -10,7 +11,7 @@ main = do
    let base   = "lib/Dictionaries"
        target = "src/Text/Openmath/Dictionary"
    ocds <- findOCDs base
-   flip mapM_ ocds $ \s -> do
+   forM_ ocds $ \s -> do
       let modn = target ++ "/" ++ moduleName s ++ ".hs" 
       txt <- makeSymbols (base ++ "/" ++ s)
       putStrLn $ "  writing " ++ modn
@@ -42,7 +43,12 @@ makeSymbols file = do
 
 symbolIdentifier :: Definition -> String
 symbolIdentifier d = f (symbolName d) ++ "Symbol" 
- where f xs = map toLower (take 1 xs) ++ drop 1 xs
+ where f xs = map toLower (take 1 xs) ++ camelCase (drop 1 xs)
+
+camelCase :: String -> String
+camelCase []         = []
+camelCase ('_':x:xs) = toUpper x : camelCase xs
+camelCase (x:xs)     = x : camelCase xs 
 
 makeSymbolList :: ContentDictionary -> String
 makeSymbolList cd = unlines 

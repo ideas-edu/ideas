@@ -35,17 +35,18 @@ module Common.Transformation
    , checkRule, checkRuleSmart
    ) where
 
-import Data.Char
-import Data.Ratio
-import Data.List
-import Data.Maybe
-import Test.QuickCheck hiding (arguments)
 import Common.Apply
-import Common.Utils
-import Common.Uniplate (Uniplate, somewhereM)
-import Control.Monad
 import Common.Rewriting
 import Common.Traversable
+import Common.Uniplate (Uniplate, somewhereM)
+import Common.Utils
+import Control.Monad
+import Data.Char
+import Data.List
+import Data.Maybe
+import Data.Ratio
+import Test.QuickCheck hiding (arguments)
+
 
 -----------------------------------------------------------
 --- Transformations

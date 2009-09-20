@@ -29,12 +29,11 @@ minusB = buggyRule $ makeRule "abc misconception minus b" $
       let discr = makeSqrt (fromRational (b*b - 4 * a * c))
           f (?) buggy = 
              let minus = if buggy then id else negate
-             in Var x :==: (minus (fromRational b) ? discr) / (2 * fromRational a)
-      id $ 
-         [ orList [ f (+) True,  f (-) True  ]
-         , orList [ f (+) False, f (-) True  ]
-         , orList [ f (+) True,  f (-) False ]
-         ]
+             in Var x :==: (minus (fromRational b) ? discr) / (2 * fromRational a) 
+      [ orList [ f (+) True,  f (-) True  ],
+        orList [ f (+) False, f (-) True  ],
+        orList [ f (+) True,  f (-) False ]]
+        
          
 twoA :: Rule (OrList (Equation Expr))
 twoA = buggyRule $ makeRule "abc misconception two a" $ 
@@ -42,12 +41,10 @@ twoA = buggyRule $ makeRule "abc misconception two a" $
       let discr = makeSqrt (fromRational (b*b - 4 * a * c))
           f (?) buggy = 
              let twice = if buggy then id else (2*)
-             in Var x :==: (-fromRational b ? discr) / twice (fromRational a)
-      id $ 
-         [ orList [ f (+) True,  f (-) True  ]
-         , orList [ f (+) False, f (-) True  ]
-         , orList [ f (+) True,  f (-) False ]
-         ]
+             in Var x :==: (-fromRational b ? discr) / twice (fromRational a) 
+      [ orList [ f (+) True,  f (-) True  ],
+        orList [ f (+) False, f (-) True  ],
+        orList [ f (+) True,  f (-) False ]]
          
 minus4AC :: Rule (OrList (Equation Expr))
 minus4AC = buggyRule $ makeRule "abc misconception minus 4ac" $ 
@@ -56,11 +53,9 @@ minus4AC = buggyRule $ makeRule "abc misconception minus 4ac" $
           f (?) buggy = 
              let op = if buggy then (+) else (-)
              in Var x :==: (-fromRational b ? discr op) / (2 * fromRational a)
-      id $ 
-         [ orList [ f (+) True,  f (-) True  ]
-         , orList [ f (+) False, f (-) True  ]
-         , orList [ f (+) True,  f (-) False ]
-         ]
+      [ orList [ f (+) True,  f (-) True  ],
+        orList [ f (+) False, f (-) True  ],
+        orList [ f (+) True,  f (-) False ]]
          
 oneSolution :: Rule (OrList (Equation Expr))
 oneSolution = buggyRule $ makeRule "abc misconception one solution" $ 

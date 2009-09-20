@@ -104,7 +104,7 @@ instance Symbolic Expr where
 instance Uniplate Expr where 
    uniplate expr =
       case getFunction expr of
-         Just (s, as) -> (as, \bs -> function s bs)
+         Just (s, as) -> (as, function s)
          _            -> ([], const expr)
 
 -----------------------------------------------------------------------
@@ -183,7 +183,7 @@ showExpr = rec 0
    par s   = "(" ++ s ++ ")"
 
 instance MetaVar Expr where
-   metaVar n = Var ("_" ++ show n)
+   metaVar n = Var ('_' : show n)
    isMetaVar (Var ('_':is)) | not (null is) && all isDigit is = Just (read is)
    isMetaVar _ = Nothing
 

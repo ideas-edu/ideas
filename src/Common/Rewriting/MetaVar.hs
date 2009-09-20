@@ -2,9 +2,10 @@
 module Common.Rewriting.MetaVar where
 
 import Common.Uniplate
-import qualified Data.IntSet as IS
-import Data.List
 import Data.Char (ord, isDigit)
+import Data.List
+import qualified Data.IntSet as IS
+
 
 -----------------------------------------------------------
 --- Meta variables

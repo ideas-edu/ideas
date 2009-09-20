@@ -57,7 +57,7 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
    rec ((Just (r, a), e):xs) = new:rec rest
     where
       (js, rest) = partition (maybe False ((==a) . snd) . fst) xs
-      rs  = r:map fst (catMaybes (map fst js))
+      rs  = r:map fst (mapMaybe fst js)
       new | null js   = e
           | otherwise = build rationalView (sum rs) .*. a 
 

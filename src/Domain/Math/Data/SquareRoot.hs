@@ -48,7 +48,7 @@ plusSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
 plusSqMap m1 m2 = M.filter (/=0) (M.unionWith (+) m1 m2)
 
 minusSqMap :: Num a => SqMap a -> SqMap a -> SqMap a
-minusSqMap m1 m2 = m1 `plusSqMap` (negateSqMap m2)
+minusSqMap m1 m2 = m1 `plusSqMap` negateSqMap m2
 
 negateSqMap :: Num a => SqMap a -> SqMap a
 negateSqMap = fmap negate
@@ -61,8 +61,8 @@ timesSqMap m1 m2 =
       ([(n, a)], _) | n==1 -> if a==0 then M.empty else fmap (*a) m2
       (_, [(n, a)]) | n==1 -> if a==0 then M.empty else fmap (*a) m1
       _ ->
-         let op n a m = M.unionWith (+) (f n (fmap (a*) m1)) m
-             f i m    = M.mapKeys (*i) m
+         let op n a = M.unionWith (+) (f n (fmap (a *) m1))
+             f i    = M.mapKeys (*i)
          in makeMap (M.foldWithKey op M.empty m2)
 
 recipSqMap :: Fractional a => SqMap a -> SqMap a

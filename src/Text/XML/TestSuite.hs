@@ -31,9 +31,7 @@ rootDir :: String
 rootDir  = "D:/xmlts20080827/xmlconf"
 
 main :: IO ()
-main = do
-   doc <- parseIO (rootDir ++ "/xmlconf.xml")
-   runTestSuite doc
+main = parseIO (rootDir ++ "/xmlconf.xml") >>= runTestSuite
 
 printProfile :: Element -> IO ()
 printProfile =
@@ -50,11 +48,11 @@ runTestSuite e
 
 runTestCases :: String -> Element -> IO Int
 runTestCases base e
-   | name e /= "TESTCASES" = fail $ "expected TESTCASES "
+   | name e /= "TESTCASES" = fail "expected TESTCASES"
    | otherwise = do
         printProfile e
         let newbase = fromMaybe base (findAttribute "xml:base" e)
-        is <- flip mapM (children e) $ \x -> 
+        is <- forM (children e) $ \x -> 
            if name x == "TESTCASES" 
            then runTestCases newbase x 
            else do b <- runTest newbase x
@@ -78,7 +76,7 @@ runTest base e
            Just "XML1.0-errata3e" -> return ()
            Just "XML1.0-errata4e" -> return ()
            Just "NS1.0-errata1e" -> return () -}
-        if (reccom /= Nothing) then return True else do
+        if reccom /= Nothing then return True else do
         putChar '.'
         mdoc <- (do a <- parseIO filename; return (Just a)) 
                    `catch` (\_ -> return Nothing)

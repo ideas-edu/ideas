@@ -9,7 +9,7 @@ import Domain.Math.Numeric.Laws
 -- Testing
  
 tests :: IO ()
-tests = do 
+tests = 
    testNumLaws  "square roots" squareRootGen
    -- 	testFracLaws "square roots" squareRootGen
 

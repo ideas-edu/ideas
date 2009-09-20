@@ -1,4 +1,4 @@
-{-# OPTIONS -XExistentialQuantification -XRank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 module Service.ExerciseList 
    ( exerciseList, findExercises, getExercise
    , openMathExercises, findOpenMathExercises, getOpenMathExercise

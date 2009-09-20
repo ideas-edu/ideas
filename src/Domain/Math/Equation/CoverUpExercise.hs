@@ -26,7 +26,7 @@ coverUpExercise = makeExercise
    , description   = "solve an equation by covering up"
    , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = \a b -> a==b
+   , equality      = (==)
    , equivalence   = \_ _ -> True
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext coverUpRulesOr
@@ -49,14 +49,14 @@ cleanUpExpr = transform (simplify (makeView f fromRational))
  where
    f (Negate a) = liftM negate (f a)
    f (Sqrt a)   = match rationalView a >>= rootedRational 2
-   f (Sym s [Nat n, a]) | s == rootSymbol = do
+   f (Sym s [Nat n, a]) | s == rootSymbol =
       match rationalView a >>= rootedRational n
    f e = match rationalView e
 
 rootedInt :: Integer -> Integer -> Maybe Integer 
 rootedInt a b = do
    guard (a > 0)
-   let d = fromInteger b ** (Prelude.recip (fromInteger a)) :: Double
+   let d = fromInteger b ** Prelude.recip (fromInteger a) :: Double
        n = round d :: Integer
    guard (n Prelude.^ a == b)
    return n

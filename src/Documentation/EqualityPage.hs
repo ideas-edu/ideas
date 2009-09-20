@@ -45,7 +45,7 @@ make pp eqs terms code =
           expect = map ((++ repeat False) . fromInt) (code ++ repeat 0)
           header   = map (bold . text) ("term1" : "term2" : map fst eqs)
           f (x, y) bs es = ttText (pp x) : ttText (pp y) : zipWith g bs es
-          g b e = (if (b==e) then id else errorLine) (text $ showBool b)
+          g b e = (if b==e then id else errorLine) (text $ showBool b)
       table (header : zipWith3 f terms bools expect)
       para $ do
          bold (text "Validation code: ")

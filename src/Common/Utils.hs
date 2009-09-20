@@ -14,12 +14,12 @@
 -----------------------------------------------------------------------------
 module Common.Utils where
 
+import Control.Monad
 import Data.Char
 import Data.List
-import Test.QuickCheck
-import Control.Monad
-import System.Random
 import Data.Ratio
+import System.Random
+import Test.QuickCheck
 import qualified Data.Map as M
 
 data Some f = forall a . Some (f a)

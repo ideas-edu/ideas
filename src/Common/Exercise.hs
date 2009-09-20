@@ -28,15 +28,17 @@ module Common.Exercise
 
 import Common.Apply
 import Common.Context
-import Text.Parsing (Range, SyntaxError(..))
 import Common.Rewriting (TreeDiff(..))
-import Common.Transformation
 import Common.Strategy hiding (not, fail, replicate)
+import Common.Transformation
 import Common.Utils
 import Control.Monad.Error
 import Data.Char
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
+import Text.Parsing (Range, SyntaxError(..))
+
+
 
 data Exercise a = Exercise
    { -- identification and meta-information

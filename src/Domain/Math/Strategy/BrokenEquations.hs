@@ -24,7 +24,7 @@ Equations:
    (a/b) = (a/c)   =   b==c
 -}
 
-main = flip mapM_ (concat brokenEquations) $ \eq -> 
+main = forM_ (concat brokenEquations) $ \eq -> 
    let res = applyD brokenStrategy (OrList [eq])
    in if solvedList res then print "ok" else print res
 

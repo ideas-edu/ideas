@@ -25,15 +25,16 @@ module Common.Context
    , liftToContext, ignoreContext
    ) where
 
-import Common.Utils
-import Common.Uniplate
 import Common.Transformation
+import Common.Uniplate
+import Common.Utils
 import Control.Monad
 import Data.Char
 import Data.Dynamic
 import Data.List
 import Test.QuickCheck
 import qualified Data.Map as M
+
 
 ----------------------------------------------------------
 -- Abstract data type

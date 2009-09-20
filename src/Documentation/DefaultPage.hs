@@ -31,13 +31,13 @@ header :: Int -> HTMLBuilder
 header level = center $ do
    let f m = text "[" >> space >> m >> space >> text "]"
    f $ link (up level ++ exerciseOverviewPageFile) $ text "Exercises"
-   replicateM 5 space
+   replicateM_ 5 space
    f $ link (up level ++ "services.html")  $ text "Services"
-   replicateM 5 space
+   replicateM_ 5 space
    f $ link (up level ++ "tests.html")  $ text "Tests"
-   replicateM 5 space
+   replicateM_ 5 space
    f $ link (up level ++ "coverage/hpc_index.html")  $ text "Coverage"
-   replicateM 5 space
+   replicateM_ 5 space
    f $ link (up level ++ "api/index.html")  $ text "API"
    hr
 

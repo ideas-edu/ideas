@@ -30,7 +30,7 @@ integerGenerator = symbolGenerator extras numSymbols
                  [ e1 :/: (e2 + 1), e1 :/: (e2 - 1)
                  , e1 :/: (1 + e2), e1 :/: (1 - e2) 
                  ]
-            | a `mod` b == 0 -> do
+            | a `mod` b == 0 ->
                  return (e1 :/: e2)
             | otherwise -> do -- change numerator
                 i <- arbitrary

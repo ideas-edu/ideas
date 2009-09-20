@@ -51,7 +51,7 @@ propSolution m1 =
    forAll (arbSolution m1) $ \(solution, m2) -> 
       let m3  = (matrix . applyD gaussianElimStrategy . inContext . fmap fromRational) m2
           p r = simplify (sum (zipWith g (solution ++ [-1]) r)) == 0
-          g r e = fromRational r * e
+          g   = (*) . fromRational
       in all p (rows m3)
 
 arbSolution :: (Arbitrary a, Num a) => Matrix a -> Gen ([a], Matrix a)

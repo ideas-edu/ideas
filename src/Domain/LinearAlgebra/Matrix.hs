@@ -249,7 +249,7 @@ nonZero = any (/=0)
 inRowReducedEchelonForm :: Num a => Matrix a -> Bool
 inRowReducedEchelonForm m@(M rows) =
    inRowEchelonForm m && 
-   all (==1) (catMaybes $ map pivot rows) &&
+   all (==1) (mapMaybe pivot rows) &&
    all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZero rows)
 
 pivot :: Num a => Row a -> Maybe a

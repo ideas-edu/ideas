@@ -38,7 +38,7 @@ quadraticStrategy = cleanUpStrategy cleanUp $
          |> abcFormula
       )
       |> -- zero form
-      (  label "zero form" $ 
+      (  label "zero form"
          mulZero
       )
       |> -- constant form

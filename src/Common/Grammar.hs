@@ -30,13 +30,14 @@ module Common.Grammar
    , checks, inverse
    ) where
 
-import Prelude hiding (fail)
-import Data.List
-import qualified Data.Set as S
-import Common.Uniplate
 import Common.Apply
-import Test.QuickCheck
+import Common.Uniplate
 import Control.Monad (liftM, liftM2)
+import Data.List
+import Prelude hiding (fail)
+import Test.QuickCheck
+import qualified Data.Set as S
+
 
 ----------------------------------------------------------------------
 -- Abstract data type

@@ -67,9 +67,9 @@ showCompact json =
 showPretty :: JSON -> String
 showPretty json =
    case json of
-      Array xs  -> squareBrackets $ "\n" ++ indent 3 (commas (map showPretty xs))
+      Array xs  -> squareBrackets $ '\n' : indent 3 (commas (map showPretty xs))
       Object xs -> let f (k, v) = show k ++ ": " ++ showPretty v
-                   in curlyBrackets $ "\n" ++ indent 3 (commas (map f xs))
+                   in curlyBrackets $ '\n' : indent 3 (commas (map f xs))
       _         -> showCompact json
  where      
    commas []     = []

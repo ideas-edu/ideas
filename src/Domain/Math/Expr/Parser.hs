@@ -63,7 +63,7 @@ symb :: TokenParser Symbol
 symb = pChoice (map (\s -> s <$ pKey (symbolName s)) symbols)
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
-pEquations p = pLines True (pEquation p)
+pEquations = pLines True . pEquation
 
 pEquation :: TokenParser a -> TokenParser (Equation a)
 pEquation p = (:==:) <$> p <* pKey "==" <*> p

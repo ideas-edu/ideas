@@ -38,7 +38,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             (answers, Just answeredTerm)
                | not (null witnesses) ->
-                    Ok $ ReplyOk
+                    Ok ReplyOk
                        { repOk_Code     = ex
                        , repOk_Location = nextTask sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
@@ -50,7 +50,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                     newPrefix   = snd (head witnesses)
                       
             ((expected, prefix):_, maybeAnswer) ->
-                    Incorrect $ ReplyIncorrect
+                    Incorrect ReplyIncorrect
                        { repInc_Code       = ex
                        , repInc_Location   = subTask sloc loc
                        , repInc_Expected   = fromContext expected

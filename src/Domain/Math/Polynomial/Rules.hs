@@ -117,7 +117,7 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
 -- Constant form rules: expr = constant
  
 coverUpPlus :: Rule (Equation Expr) 
-coverUpPlus = coverUpPlusWith $ Config
+coverUpPlus = coverUpPlusWith Config
    { configName        = "one var"
    , predicateCovered  = (==1) . length . collectVars
    , predicateCombined = noVars
@@ -139,9 +139,9 @@ cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
 distributionSquare :: Rule Expr
 distributionSquare = makeSimpleRule "distribution square" f
  where
-   f (Sym s [a :+: b, Nat 2]) | s == powerSymbol = do
+   f (Sym s [a :+: b, Nat 2]) | s == powerSymbol =
       return ((a .^. 2) .+. (2 .*. a .*. b) + (b .^. 2))
-   f (Sym s [a :-: b, Nat 2]) | s == powerSymbol = do
+   f (Sym s [a :-: b, Nat 2]) | s == powerSymbol =
       return ((a .^. 2) .-. (2 .*. a .*. b) + (b .^. 2))
    f _ = Nothing
 
@@ -253,7 +253,7 @@ distributionT = makeTrans "distribute" f
    f (a :*: b) =
       case (match sumView a, match sumView b) of
          (Just as, Just bs) | length as > 1 || length bs > 1 -> 
-            return $ build sumView [ (a .*. b) | a <- as, b <- bs ]
+            return $ build sumView [ a .*. b | a <- as, b <- bs ]
          _ -> Nothing
    f _ = Nothing
 
@@ -287,7 +287,7 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: r
    ys <- match sumView rhs
    zs <- mapM (fmap snd . match productView) (filter hasVars (xs ++ ys))
    let f = fmap snd . match (divView >>> second integerView)
-   case catMaybes (map f (concat zs)) of
+   case mapMaybe f (concat zs) of
       [] -> Nothing
       ns -> return (fromInteger (foldr1 lcm ns))
    

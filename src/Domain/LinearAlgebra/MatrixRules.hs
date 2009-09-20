@@ -21,7 +21,7 @@ import Data.List
 
 matrixRules :: (Argument a, Fractional a) => [Rule (Context (Matrix a))]
 matrixRules = 
-   let noArgs f = f (\_ -> Nothing)
+   let noArgs f = f (const Nothing)
    in [ noArgs ruleScaleRow
       , noArgs ruleExchangeRows
       , noArgs ruleAddMultiple 

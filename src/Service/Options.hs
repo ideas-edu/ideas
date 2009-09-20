@@ -23,10 +23,10 @@ data Flag = Verbose | Version | Logging Bool | InputFile String
 
 options :: [OptDescr Flag]
 options =
-     [ Option ['?']     ["version"]    (NoArg Version)           "show version number"
-     , Option ['l']     ["logging"]    (NoArg $ Logging True)    "enable logging"
-     , Option []        ["no-logging"] (NoArg $ Logging False)   "disable logging (default on local machine)"
-     , Option ['f']     ["file"]       (ReqArg InputFile "FILE") "input FILE"
+     [ Option "?"     ["version"]    (NoArg Version)           "show version number"
+     , Option "l"     ["logging"]    (NoArg $ Logging True)    "enable logging"
+     , Option []      ["no-logging"] (NoArg $ Logging False)   "disable logging (default on local machine)"
+     , Option "f"     ["file"]       (ReqArg InputFile "FILE") "input FILE"
      ]
 
 header :: String

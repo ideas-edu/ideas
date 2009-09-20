@@ -6,6 +6,7 @@ import Common.Rewriting.Unification (ShallowEq(..))
 import Common.Uniplate
 import Control.Arrow
 
+
 type Loc = [Int]
 
 data TreeDiff = Equal | Top | Split | Different | Inside deriving (Show, Eq, Ord)

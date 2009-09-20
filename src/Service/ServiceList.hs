@@ -72,7 +72,7 @@ applyS = Service "apply" $
    S.apply ::: Rule :-> Location :-> State :-> State
 
 generateS :: Service a
-generateS = Service "generate" $ (flip S.generate 5) ::: 
+generateS = Service "generate" $ flip S.generate 5 ::: 
    Exercise :-> IO State
 
 findbuggyrulesS :: Service a

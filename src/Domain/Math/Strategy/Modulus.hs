@@ -34,7 +34,7 @@ Equations:
 -}
 
 -- For level-4 exercises, I need cube-roots (to solve x^3=9)
-main = flip mapM_ (take 12 $ concat modulusEquations) $ \eq -> 
+main = forM_ (take 12 $ concat modulusEquations) $ \eq -> 
    let res = applyD modulusStrategy (OrList [eq])
    in if solvedList res then print "ok" else print res
 

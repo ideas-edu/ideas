@@ -48,7 +48,7 @@ pRelAlg = pOperators operatorTable pTerm
 
 -- Two postfix operators
 pTerm :: Parser Token (Ranged RelAlg)
-pTerm = (\x fs -> foldl (flip ($)) x fs) <$> pAtom <*> pList pUnOp
+pTerm = foldl (flip ($)) <$> pAtom <*> pList pUnOp
  where
    pUnOp  =  unaryOp  Inv <$> pKey invSym 
          <|> unaryOp  Not <$> pKey notSym

@@ -4,13 +4,13 @@ module Common.Rewriting.Unification
    , match, matchM, matchWith
    ) where
 
-import Common.Uniplate
+import Common.Rewriting.AC
 import Common.Rewriting.MetaVar
 import Common.Rewriting.Substitution
-import Common.Rewriting.AC
+import Common.Uniplate
 import Control.Monad
-import qualified Data.IntSet as IS
 import Test.QuickCheck
+import qualified Data.IntSet as IS
 
 -----------------------------------------------------------
 -- Unification (in both ways)

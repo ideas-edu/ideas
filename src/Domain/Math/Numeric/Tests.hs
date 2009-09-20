@@ -2,6 +2,7 @@ module Domain.Math.Numeric.Tests (main) where
 
 import Common.Apply
 import Common.View
+import Control.Monad
 import Domain.Math.Expr
 import Domain.Math.Numeric.Generators
 import Domain.Math.Numeric.Strategies
@@ -11,7 +12,7 @@ import Test.QuickCheck
 main :: IO ()
 main = do
    putStrLn "** Correctness numeric views"
-   let f v = flip mapM_ numGenerators $ \g -> do
+   let f v = forM_ numGenerators $ \g -> do
           quickCheck $ propIdempotence g v
           quickCheck $ propSoundness semEqDouble g v
    f integerView
@@ -21,20 +22,20 @@ main = do
    f rationalRelaxedForm
    
    putStrLn "** Normal forms"
-   let f v = flip mapM_ numGenerators $ \g -> do
+   let f v = forM_ numGenerators $ \g ->
           quickCheck $ propNormalForm g v
    f integerNormalForm
    f rationalNormalForm
 
    putStrLn "** Correctness generators"
-   let f g v = quickCheck $ forAll (sized g) $ \a -> a `belongsTo` v
+   let f g v = quickCheck $ forAll (sized g) (`belongsTo` v)
    f integerGenerator integerView
    f rationalGenerator rationalView
    f ratioExprGen rationalNormalForm
    f ratioExprGenNonZero rationalNormalForm
    
    putStrLn "** View relations"
-   let va .>. vb = flip mapM_ numGenerators $ \g -> 
+   let va .>. vb = forM_ numGenerators $ \g -> 
           quickCheck $ forAll g $ \a -> 
              not (a `belongsTo` va) || a `belongsTo` vb
    integerNormalForm .>. integerView
@@ -44,7 +45,7 @@ main = do
    integerView .>. rationalView
    
    putStrLn "** Pre/post conditions strategies"
-   let f s pre post = flip mapM_ numGenerators $ \g -> 
+   let f s pre post = forM_ numGenerators $ \g -> 
           quickCheck $ forAll g $ \a ->
              not (a `belongsTo` pre) || applyD s a `belongsTo` post
    f naturalStrategy  integerView  integerNormalForm

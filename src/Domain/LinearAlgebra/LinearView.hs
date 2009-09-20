@@ -21,10 +21,8 @@ import Control.Monad
 import Data.List
 import Common.Uniplate
 import Data.Maybe 
-import Common.Uniplate
 import Common.View hiding (simplify)
 import GHC.Real
-import Domain.Math.Expr
 import Domain.Math.Expr
 import qualified Data.Map as M
 

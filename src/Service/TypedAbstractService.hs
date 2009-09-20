@@ -139,7 +139,7 @@ submit state new
    | equality (exercise state) (term state) new =
         Ok [] state
    | otherwise =        
-        case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 $ space of
+        case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 space of
            ((a, mp, rs), _):_ 
               | isJust mp -> Ok rs state { context=a, prefix=mp }
               | otherwise -> Detour rs state { context=a, prefix=mp }

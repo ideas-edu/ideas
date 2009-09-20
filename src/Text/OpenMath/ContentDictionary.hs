@@ -56,7 +56,7 @@ readContentDictionary filename = do
             Right cd -> do
                putStrLn $ "  found " ++ show (length $ definitions cd) ++ " definition(s)"
                return cd
- `catch` \exception -> err (show exception)
+ `catch` (err . show)
  where
    err s = fail $ "Content dictionary not found: " ++ s
 

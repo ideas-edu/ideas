@@ -30,21 +30,21 @@ boundedEditDistance bound xs ys = runSTArray m ! (lenXs, lenYs)
           a <- newArray ((0, 0), (lenXs, lenYs)) bound
           
           -- initialize first column and row
-          flip mapM_ [0 .. lenXs `min` (bound-1)] $ \i -> 
+          forM_ [0 .. lenXs `min` (bound-1)] $ \i -> 
              writeArray a (i, 0) i
-          flip mapM_ [1 .. lenYs `min` (bound-1)] $ \j -> 
+          forM_ [1 .. lenYs `min` (bound-1)] $ \j -> 
              writeArray a (0, j) j
              
           -- write interesting fields
           let zs   = zip [1 ..] ys
-              rows = zipWith (\n r -> take ((bound+n-1) `min` (bound*2-1)) r) [0..] $ replicate (bound-1) zs ++ tails zs
+              rows = zipWith (\n -> take ((bound+n-1) `min` (bound*2-1))) [0..] $ replicate (bound-1) zs ++ tails zs
               list = [ (i, x, j, y) 
                      | (i, x, row) <- zip3 [1 ..] xs rows
                      , (j, y) <- row
                      -- , if j > i-bound then True else error $ show (i,j)
                      -- , if j < i+bound then True else error $ show (i,j)
                      ]
-          flip mapM_ list $ \(i, x, j, y) -> do
+          forM_ list $ \(i, x, j, y) -> do
              -- deletion
              v1 <- readArray a (i-1, j)
              -- insertion

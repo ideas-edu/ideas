@@ -11,7 +11,6 @@
 -- Main module for feedback services
 --
 -----------------------------------------------------------------------------
-{-# OPTIONS -fglasgow-exts #-}
 module Main (main) where
 
 -- import Common.Logging
@@ -62,7 +61,7 @@ main = do
    
    -- log request to database
    when (withLogging flags) $
-      readIORef logRef >>= id
+      join (readIORef logRef)
    
 process :: String -> IO (Request, String, String)
 process input =

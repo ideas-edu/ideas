@@ -39,7 +39,7 @@ testsPage input = defaultPage "Tests" 0 $ do
       
       
 brs :: [HTMLBuilder] -> HTMLBuilder
-brs = sequence_ . map (>> br)
+brs = mapM_ (>> br)
 
 -- no backspaces
 htmlString :: String -> String

@@ -23,7 +23,7 @@ Equations:
    sqrt a = b   =   a = b^2   (if a >= 0, and b>=0)
 -}
 
-main = flip mapM_ (concat simplerSqrt) $ \e -> 
+main = forM_ (concat simplerSqrt) $ \e -> 
    if e `belongsTo` squareRootView then print "ok" else print e
 
 -- TODO: check results afterwards (invalid results due to squaring both sides)

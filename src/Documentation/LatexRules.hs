@@ -15,7 +15,7 @@ import System.Time
 main :: IO ()
 main = do
    dir <- targetDirectory
-   flip mapM_ exerciseList $ \(Some ex) -> do
+   forM_ exerciseList $ \(Some ex) -> do
       let path = dir ++ "/" ++ domain ex ++ "/" ++ filter (/= ' ') (identifier ex)
       -- Exercise document
       let rules = concatMap getRewriteRules (ruleset ex)
@@ -26,7 +26,7 @@ main = do
          putStrLn $ "Creating " ++ filename
          writeFile filename doc
       -- individual rules
-      flip mapM_ (ruleset ex) $ \r ->
+      forM_ (ruleset ex) $ \r ->
          case makeSingleRule (domain ex ++ "/" ++ domain ex ++ ".fmt") r of
             Nothing  -> return ()
             Just txt -> do

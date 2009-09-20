@@ -26,7 +26,7 @@ import Data.Maybe
 import Domain.Math.Expr
 
 extractString :: String -> XML -> Either String String
-extractString s xml = liftM getData (findChild s xml)
+extractString s = liftM getData . findChild s
 
 xmlToRequest :: IsExpr a => XML -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
 xmlToRequest xml ex = do
@@ -79,7 +79,7 @@ extractLocation s xml = do
       _                          -> fail "invalid location"
 
 extractExpr :: String -> XML -> Either String OMOBJ
-extractExpr n xml = do
+extractExpr n xml =
    case findChild n xml of 
       Just expr -> 
          case children expr of 

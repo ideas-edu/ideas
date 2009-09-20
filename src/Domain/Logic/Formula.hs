@@ -19,10 +19,10 @@ import Common.Utils
 import Data.List
 import Data.Maybe
 
-infixr 1 :<->:
-infixr 2 :->: 
-infixr 3 :||: 
-infixr 4 :&&:
+infixr 2 :<->:
+infixr 3 :->: 
+infixr 4 :||: 
+infixr 5 :&&:
 
 -- | The data type Logic is the abstract syntax for the domain
 -- | of logic expressions.

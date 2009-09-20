@@ -29,9 +29,7 @@ instance IsExpr Expr where
    
 instance IsExpr a => IsExpr [a] where
    toExpr = function listSymbol . map toExpr
-   fromExpr expr = do
-      xs <- isSymbol listSymbol expr
-      mapM fromExpr xs
+   fromExpr expr = isSymbol listSymbol expr >>= mapM fromExpr
 
 instance (IsExpr a, IsExpr b) => IsExpr (Either a b) where
    toExpr = either toExpr toExpr
@@ -64,7 +62,7 @@ instance IsExpr a => IsExpr (OrList a) where
       guard (isConst falseSymbol expr) >> return false
     `mplus` do
       guard (isConst trueSymbol  expr) >> return true
-    `mplus` do
+    `mplus`
       liftM return (fromExpr expr)
       
 -------------------------------------------------------------

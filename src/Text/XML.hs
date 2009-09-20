@@ -66,7 +66,7 @@ indentXML = rec 0
  where 
    rec i (Element n as xs) =
       let ipl  = i+2 
-          cd n = Left ("\n" ++ replicate n ' ')
+          cd n = Left ('\n' : replicate n ' ')
           f    = either (\x -> [cd ipl, Left x]) (\x -> [cd ipl, Right (rec ipl x)])
           body | null xs   = xs
                | otherwise = concatMap f xs ++ [cd i]
@@ -103,8 +103,8 @@ instance Monoid a => Monoid (XMLBuilderM a) where
    mappend = (>>)
 
 instance Monad XMLBuilderM where
-   return a = XMLBuilder (return a)
-   m >>= f  = XMLBuilder (unBuild m >>= (unBuild . f))
+   return  = XMLBuilder . return
+   m >>= f = XMLBuilder (unBuild m >>= (unBuild . f))
 
 makeXML :: String -> XMLBuilder -> XML
 makeXML s m = 

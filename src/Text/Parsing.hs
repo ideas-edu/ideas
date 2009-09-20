@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2008, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -35,6 +35,7 @@ module Text.Parsing
 import qualified UU.Parsing as UU
 import qualified UU.Scanner as UU
 import qualified UU.Scanner.GenToken as UU
+import Control.Arrow
 import Common.Utils
 import Data.Char
 import Data.List
@@ -48,8 +49,8 @@ data Scanner = Scanner
    { fileName           :: Maybe String
    , keywords           :: [String]
    , keywordOperators   :: [String]
-   , specialCharacters  :: [Char]
-   , operatorCharacters :: [Char]
+   , specialCharacters  :: String
+   , operatorCharacters :: String
    }
 
 -- | A default scanner configuration (using Haskell's special characters)
@@ -63,7 +64,7 @@ defaultScanner = Scanner
    }
 
 -- | Add characters to the list of special characters (and remove these from the list of operator characters)
-makeCharsSpecial :: [Char] -> Scanner -> Scanner
+makeCharsSpecial :: String -> Scanner -> Scanner
 makeCharsSpecial cs scanner = scanner
    { specialCharacters  = specialCharacters scanner `union` cs
    , operatorCharacters = operatorCharacters scanner \\ cs
@@ -136,29 +137,29 @@ type CharParser  = Parser Char
 type TokenParser = Parser UU.Token
 
 instance (UU.Symbol s, Ord s) => UU.IsParser (Parser s) s where
-   (<*>)      = liftP2 (UU.<*>)
-   (<* )      = liftP2 (UU.<*)
-   ( *>)      = liftP2 (UU.*>)
-   (<|>)      = liftP2 (UU.<|>) 
-   (<$>)      = liftPr (UU.<$>)
-   (<$)       = liftPr (UU.<$ ) 
-   pSucceed   = P . UU.pSucceed
-   pFail      = P UU.pFail
-   pLow       = P . UU.pLow
-   pSym       = P . UU.pSym
-   pRange     = liftF2 UU.pRange
-   pCostRange = liftF3 UU.pCostRange
-   pCostSym   = liftF3 UU.pCostSym
-   getfirsts  = UU.getfirsts . unP
-   setfirsts  = \e -> P . UU.setfirsts e . unP
-   getzerop   = fmap P . UU.getzerop . unP
-   getonep    = fmap P . UU.getonep  . unP 
+   (<*>)       = liftP2 (UU.<*>)
+   (<* )       = liftP2 (UU.<*)
+   ( *>)       = liftP2 (UU.*>)
+   (<|>)       = liftP2 (UU.<|>) 
+   (<$>)       = liftPr (UU.<$>)
+   (<$)        = liftPr (UU.<$ ) 
+   pSucceed    = P . UU.pSucceed
+   pFail       = P UU.pFail
+   pLow        = P . UU.pLow
+   pSym        = P . UU.pSym
+   pRange      = liftF2 UU.pRange
+   pCostRange  = liftF3 UU.pCostRange
+   pCostSym    = liftF3 UU.pCostSym
+   getfirsts   = UU.getfirsts . unP
+   setfirsts e = P . UU.setfirsts e . unP
+   getzerop    = fmap P . UU.getzerop . unP
+   getonep     = fmap P . UU.getonep  . unP 
 
 -- local helper functions
 liftP2 f ~(P p) ~(P q) = P (f p q)
 liftPr f a ~(P p) = P (f a p)
-liftF2 f a b = P (f a b)
-liftF3 f a b c = P (f a b c)
+liftF2 f a   = P . f a
+liftF3 f a b = P . f a b
 
 type Message s = (UU.Expecting s, Maybe s)
 
@@ -261,8 +262,8 @@ pSpec :: Char -> TokenParser Range
 pSpec c = toRange 1 <$> UU.pSpecPos c
 
 pVarid, pConid :: TokenParser (String, Range)
-pVarid = (\(s, p) -> (s, toRange 1 p)) <$> UU.pVaridPos
-pConid = (\(s, p) -> (s, toRange 1 p)) <$> UU.pConidPos
+pVarid = second (toRange 1) <$> UU.pVaridPos
+pConid = second (toRange 1) <$> UU.pConidPos
    
 unaryOp :: (a -> a) -> Range -> Ranged a -> Ranged a
 unaryOp f r1 r2 = Ranged (f $ fromRanged r2) (r1 & getRange r2) False [r2]
@@ -364,7 +365,7 @@ pChain :: (Ord s, UU.Symbol s) => Associativity -> Parser s (a -> a -> a) -> Par
 pChain a p q = case a of
                   LeftAssociative  -> pChainl p q
                   RightAssociative -> pChainr p q
-                  NonAssociative   -> (flip ($)) <$> q <*> p <*> q
+                  NonAssociative   -> flip ($) <$> q <*> p <*> q
                   NoMix            -> pChainr p q
 
 -----------------------------------------------------------

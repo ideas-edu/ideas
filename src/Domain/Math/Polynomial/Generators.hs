@@ -39,7 +39,7 @@ polynomialDegreeGen d n
       b  <- rec (d-d1)
       return (a :*: b)
    powerGen = do
-      i <- oneof $ [ return i | i <- [2..d], d `mod` i == 0 ]
+      i <- oneof [ return i | i <- [2..d], d `mod` i == 0 ]
       a <- rec (d `div` i)
       return (a ^ fromIntegral i)
       

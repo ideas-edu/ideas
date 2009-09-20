@@ -5,7 +5,7 @@ import Text.OpenMath.Symbol
 
 -- | List of symbols defined in fns1 dictionary
 fns1List :: [Symbol]
-fns1List = [domainofapplicationSymbol, domainSymbol, rangeSymbol, imageSymbol, identitySymbol, left_inverseSymbol, right_inverseSymbol, inverseSymbol, left_composeSymbol, lambdaSymbol]
+fns1List = [domainofapplicationSymbol, domainSymbol, rangeSymbol, imageSymbol, identitySymbol, leftInverseSymbol, rightInverseSymbol, inverseSymbol, leftComposeSymbol, lambdaSymbol]
 
 {-| The domainofapplication element denotes the domain over which a given
 function is being applied. It is intended in MathML to be a more general
@@ -41,16 +41,16 @@ function). This inverse may only be partially defined because the function may
 not have been surjective. If the function is not surjective the left inverse
 function is ill-defined without further stipulations. No other assumptions are
 made on the semantics of this left inverse. -}
-left_inverseSymbol :: Symbol
-left_inverseSymbol = makeSymbol "fns1" "left_inverse"
+leftInverseSymbol :: Symbol
+leftInverseSymbol = makeSymbol "fns1" "left_inverse"
 
 {-| This symbol is used to describe the right inverse of its argument (a
 function). This inverse may only be partially defined because the function may
 not have been surjective. If the function is not surjective the right inverse
 function is ill-defined without further stipulations. No other assumptions are
 made on the semantics of this right inverse. -}
-right_inverseSymbol :: Symbol
-right_inverseSymbol = makeSymbol "fns1" "right_inverse"
+rightInverseSymbol :: Symbol
+rightInverseSymbol = makeSymbol "fns1" "right_inverse"
 
 {-| This symbol is used to describe the inverse of its argument (a function).
 This inverse may only be partially defined because the function may not have
@@ -62,8 +62,8 @@ inverseSymbol = makeSymbol "fns1" "inverse"
 
 {-| This symbol represents the function which forms the left-composition of
 its two (function) arguments. -}
-left_composeSymbol :: Symbol
-left_composeSymbol = makeSymbol "fns1" "left_compose"
+leftComposeSymbol :: Symbol
+leftComposeSymbol = makeSymbol "fns1" "left_compose"
 
 {-| This symbol is used to represent anonymous functions as lambda expansions.
 It is used in a binder that takes two further arguments, the first of which is

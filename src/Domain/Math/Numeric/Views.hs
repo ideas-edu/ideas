@@ -69,7 +69,7 @@ rationalNormalForm = makeView (optionNegate f) fromRational
 fractionForm :: View Expr (Integer, Integer)
 fractionForm = makeView f (\(a, b) -> (fromInteger a :/: fromInteger b))
  where
-   f (Negate a) = liftM (\(x,y) -> (negate x, y)) (g a)
+   f (Negate a) = liftM (first negate) (g a)
    f a = g a
    g (e1 :/: e2) = do
       a <- match integerNormalForm e1

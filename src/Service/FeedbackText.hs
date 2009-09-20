@@ -16,6 +16,7 @@ module Service.FeedbackText
    , onefirsttext, submittext, derivationtext
    ) where
 
+import Control.Arrow
 import Common.Exercise
 import Common.Utils (safeHead, fst3)
 import Data.Maybe
@@ -53,7 +54,7 @@ getCode :: State a -> ExerciseCode
 getCode = exerciseCode . exercise
 
 derivationtext :: State a -> [(String, Context a)]
-derivationtext st = map (\(r, ca) -> (showRule (getCode st) r, ca)) (derivation st)
+derivationtext st = map (first (showRule (getCode st))) (derivation st)
    
 onefirsttext :: State a -> (Bool, String, State a)
 onefirsttext state =

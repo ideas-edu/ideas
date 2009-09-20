@@ -47,27 +47,27 @@ conversionGroup s =  addRuleToGroup "Conversion" . rule s
 
 ruleInvOverUnion :: Rule RelAlg
 ruleInvOverUnion = conversionGroup "InvOverUnion" $ 
-   \r s -> (Inv (r :||: s)) :~> (Inv r :||: Inv s)
+   \r s -> Inv (r :||: s) :~> Inv r :||: Inv s
 
 ruleInvOverIntersec :: Rule RelAlg
 ruleInvOverIntersec = conversionGroup "InvOverIntersect" $  
-   \r s -> (Inv (r :&&: s)) :~> (Inv r :&&: Inv s) --- !!!!!!! ALLEEN VOOR FUNCTIES
+   \r s -> Inv (r :&&: s) :~> Inv r :&&: Inv s --- !!!!!!! ALLEEN VOOR FUNCTIES
 
 ruleInvOverComp :: Rule RelAlg
 ruleInvOverComp = conversionGroup "InvOverComp" $ 
-   \r s -> (Inv (r :.: s)) :~> (Inv s :.: Inv r)
+   \r s -> Inv (r :.: s) :~> Inv s :.: Inv r
 
 ruleInvOverAdd :: Rule RelAlg
 ruleInvOverAdd = conversionGroup "InvOverAdd" $ 
-   \r s -> (Inv (r :+: s)) :~> (Inv s :+: Inv r)
+   \r s -> Inv (r :+: s) :~> Inv s :+: Inv r
 
 ruleInvOverNot :: Rule RelAlg
 ruleInvOverNot = conversionGroup "InvOverNot" $ 
-   \r -> (Inv (Not r))     :~> (Not (Inv r))
+   \r -> Inv (Not r) :~> Not (Inv r)
    
 ruleDoubleInv :: Rule RelAlg
 ruleDoubleInv = conversionGroup "DoubleInv" $ 
-   \r -> (Inv (Inv r))     :~> r
+   \r -> Inv (Inv r) :~> r
       
 
 
@@ -78,32 +78,32 @@ distributionGroup s =  addRuleToGroup "Distribution" . ruleList s
 
 ruleCompOverUnion :: Rule RelAlg
 ruleCompOverUnion = distributionGroup "CompOverUnion" 
-   [ \q r s -> (q :.: (r :||: s)) :~>  ((q :.: r) :||: (q :.: s)) 
-   , \q r s -> ((q :||: r) :.: s) :~>  ((q :.: s) :||: (r :.: s)) 
+   [ \q r s -> q :.: (r :||: s) :~>  (q :.: r) :||: (q :.: s) 
+   , \q r s -> (q :||: r) :.: s :~>  (q :.: s) :||: (r :.: s) 
    ]
 
 ruleCompOverIntersec :: Rule RelAlg
 ruleCompOverIntersec = distributionGroup "CompOverIntersec" 
-   [ \q r s -> (q :.: (r :&&: s)) :~>  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
-   , \q r s -> ((q :&&: r) :.: s) :~>  ((q :.: s) :&&: (r :.: s))  --idem
+   [ \q r s -> q :.: (r :&&: s) :~> (q :.: r) :&&: (q :.: s)  --alleen toegestaan als q een functie is!
+   , \q r s -> (q :&&: r) :.: s :~> (q :.: s) :&&: (r :.: s)  --idem
    ]
 ruleAddOverUnion :: Rule RelAlg
 ruleAddOverUnion = distributionGroup "AddOverUnion"  
-   [ \q r s -> (q :+: (r :||: s)) :~>  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
-   , \q r s -> ((q :||: r) :+: s) :~>  ((q :+: s) :||: (r :+: s)) --idem
+   [ \q r s -> q :+: (r :||: s) :~>  (q :+: r) :||: (q :+: s) --alleen toegestaan als q een functie is!
+   , \q r s -> (q :||: r) :+: s :~>  (q :+: s) :||: (r :+: s) --idem
    ]
 
 ruleAddOverIntersec :: Rule RelAlg
 ruleAddOverIntersec = distributionGroup "AddOverIntersec"  
-   [ \q r s -> (q :+: (r :&&: s)) :~>  ((q :+: r) :&&: (q :+: s))  
-   , \q r s -> ((q :&&: r) :+: s) :~>  ((q :+: s) :&&: (r :+: s))  
+   [ \q r s -> q :+: (r :&&: s) :~>  (q :+: r) :&&: (q :+: s)  
+   , \q r s -> (q :&&: r) :+: s :~>  (q :+: s) :&&: (r :+: s)  
    ]
 -- | 3. Distribute union over intersection
  
 ruleUnionOverIntersec :: Rule RelAlg
 ruleUnionOverIntersec = distributionGroup "UnionOverIntersec" 
-   [  \q r s -> (q :||: (r :&&: s)) :~>  ((q :||: r) :&&: (q :||: s)) 
-   , \q r s -> ((q :&&: r) :||: s) :~>  ((q :||: s) :&&: (r :||: s)) 
+   [ \q r s -> q :||: (r :&&: s) :~> (q :||: r) :&&: (q :||: s) 
+   , \q r s -> (q :&&: r) :||: s :~> (q :||: s) :&&: (r :||: s) 
    ]
 
 -- | 4. De Morgan rules
@@ -112,11 +112,11 @@ deMorganGroup s = addRuleToGroup "DeMorgan" . rule s
 
 ruleDeMorganOr :: Rule RelAlg
 ruleDeMorganOr = deMorganGroup "DeMorganOr" $
-   \r s -> Not (r :||: s) :~>  (Not r :&&: Not s)
+   \r s -> Not (r :||: s) :~> Not r :&&: Not s
    
 ruleDeMorganAnd :: Rule RelAlg
 ruleDeMorganAnd = deMorganGroup "DeMorganAnd" $
-   \r s -> Not (r :&&: s) :~>  (Not r :||: Not s)
+   \r s -> Not (r :&&: s) :~> Not r :||: Not s
 
 -- | 5. Idempotency
 
@@ -124,11 +124,11 @@ idempotencyGroup s = addRuleToGroup "Idempotency" . rule s
 
 ruleIdempOr :: Rule RelAlg
 ruleIdempOr = idempotencyGroup "IdempotencyOr" $
-   \r -> (r :||: r) :~>  r
+   \r -> r :||: r :~>  r
    
 ruleIdempAnd :: Rule RelAlg
 ruleIdempAnd = idempotencyGroup "IdempotencyAnd" $
-   \r -> (r :&&: r) :~>  r
+   \r -> r :&&: r :~>  r
 
 -- | 6. Complement
 
@@ -136,27 +136,27 @@ complementGroup s = addRuleToGroup "Complement" . ruleList s
 
 ruleDoubleNegation :: Rule RelAlg
 ruleDoubleNegation = complementGroup "DoubleNegation"
-   [ \r -> (Not (Not r)) :~> r
+   [ \r -> Not (Not r) :~> r
    ]
 
 ruleRemCompl :: Rule RelAlg
 ruleRemCompl = complementGroup "RemCompl" 
-   [ \r -> (r :||: (Not r)) :~>  V
-   , \r -> ((Not r) :||: r) :~>  V
-   , \r -> (r :&&: (Not r)) :~>  empty
-   , \r -> ((Not r) :&&: r) :~>  empty
+   [ \r -> r :||: Not r :~>  V
+   , \r -> Not r :||: r :~>  V
+   , \r -> r :&&: Not r :~>  empty
+   , \r -> Not r :&&: r :~>  empty
    ]   
 
 -- Distribute Not over . and +
 
 ruleNotOverComp :: Rule RelAlg
 ruleNotOverComp = complementGroup "NotOverComp"
-   [ \r s -> Not (r :.: s) :~>  (Not r :+: Not s)
+   [ \r s -> Not (r :.: s) :~> Not r :+: Not s
    ]
    
 ruleNotOverAdd :: Rule RelAlg
-ruleNotOverAdd = complementGroup "NotOverAdd" $ 
-   [ \r s -> Not (r :+: s) :~>  (Not r :.: Not s)
+ruleNotOverAdd = complementGroup "NotOverAdd"
+   [ \r s -> Not (r :+: s) :~> Not r :.: Not s
    ]
   
 -- | 7. Absorption complement
@@ -165,25 +165,26 @@ absorptionGroup s = addRuleToGroup "Absorption" . ruleList s
 
 ruleAbsorpCompl :: Rule RelAlg
 ruleAbsorpCompl = absorptionGroup "AbsorpCompl" 
-   [ \r s -> (r :&&: ((Not r) :||: s)) :~> (r :&&: s)  
-   , \r s -> (r :&&: (s :||: (Not r))) :~> (r :&&: s)  
-   , \r s -> (((Not r) :||: s) :&&: r) :~> (r :&&: s)
-   , \r s -> ((s :||: (Not r)) :&&: r) :~> (r :&&: s)
-   , \r s -> (r :||: ((Not r) :&&: s)) :~> (r :||: s)  
-   , \r s -> (r :||: (s :&&: (Not r))) :~> (r :||: s)
-   , \r s -> (((Not r) :&&: s) :||: r) :~> (r :||: s)
-   , \r s -> ((s :&&: (Not r)) :||: r) :~> (r :||: s)
+   [ \r s -> r :&&: (Not r :||: s) :~> r :&&: s
+   , \r s -> r :&&: (s :||: Not r) :~> r :&&: s  
+   , \r s -> (Not r :||: s) :&&: r :~> r :&&: s
+   , \r s -> (s :||: Not r) :&&: r :~> r :&&: s
+   , \r s -> r :||: (Not r :&&: s) :~> r :||: s  
+   , \r s -> r :||: (s :&&: Not r) :~> r :||: s
+   , \r s -> (Not r :&&: s) :||: r :~> r :||: s
+   , \r s -> (s :&&: Not r) :||: r :~> r :||: s
    ]
+   
 ruleAbsorp :: Rule RelAlg
 ruleAbsorp = absorptionGroup "Absorp"  
-   [ \r s -> (r :&&: (r :||: s))       :~> r
-   , \r s -> (r :&&: (s :||: r))       :~> r
-   , \r s -> ((r :||: s) :&&: r)       :~> r
-   , \r s -> ((s :||: r) :&&: r)       :~> r
-   , \r s -> (r  :||: (r :&&: s))      :~> r
-   , \r s -> (r  :||: (s :&&: r))      :~> r
-   , \r s -> ((r :&&: s) :||: r)       :~> r
-   , \r s -> ((s :&&: r) :||: r)       :~> r
+   [ \r s -> r :&&: (r :||: s)  :~> r
+   , \r s -> r :&&: (s :||: r)  :~> r
+   , \r s -> (r :||: s) :&&: r  :~> r
+   , \r s -> (s :||: r) :&&: r  :~> r
+   , \r s -> r  :||: (r :&&: s) :~> r
+   , \r s -> r  :||: (s :&&: r) :~> r
+   , \r s -> (r :&&: s) :||: r  :~> r
+   , \r s -> (s :&&: r) :||: r  :~> r
    ]
 
 -- | 8. Remove redundant expressions
@@ -192,31 +193,31 @@ simplificationGroup s = addRuleToGroup "Simplification" . ruleList s
 
 ruleRemRedunExprs :: Rule RelAlg
 ruleRemRedunExprs = simplificationGroup "RemRedunExprs"  
-   [ \r -> (r :||: V) :~> V
-   , \r -> (V :||: r) :~> V 
-   , \r -> (r :&&: V) :~> r
-   , \r -> (V :&&: r) :~> r  
+   [ \r -> r :||: V :~> V
+   , \r -> V :||: r :~> V 
+   , \r -> r :&&: V :~> r
+   , \r -> V :&&: r :~> r  
 --   , (r :.: U)  :~> r
 --   , (U :.: r)  :~> r
-   , \_ -> (V :.: V)  :~> V
-   , \r -> (r :+: V)  :~> V
-   , \r -> (V :+: r)  :~> V
+   , \_ -> V :.: V :~> V
+   , \r -> r :+: V :~> V
+   , \r -> V :+: r :~> V
 --   , (r :+: E)  :~> r
 --   , (E :+: r)  :~> r 
-   , \_ -> (Inv V)    :~> V
+   , \_ -> Inv V :~> V
    -- rules involving the empty relation
-   , \_ -> (Inv empty)    :~> empty
-   , \r -> (r :||: empty) :~> r
-   , \r -> (empty :||: r) :~> r 
-   , \r -> (r :&&: empty) :~> empty
-   , \r -> (empty :&&: r) :~> empty
-   , \r -> (r :.: empty)  :~> empty
-   , \r -> (empty :.: r)  :~> empty
-   , \_ -> (empty :+: empty)  :~> empty
+   , \_ -> Inv empty    :~> empty
+   , \r -> r :||: empty :~> r
+   , \r -> empty :||: r :~> r 
+   , \r -> r :&&: empty :~> empty
+   , \r -> empty :&&: r :~> empty
+   , \r -> r :.: empty  :~> empty
+   , \r -> empty :.: r  :~> empty
+   , \_ -> empty :+: empty :~> empty
 -- new identity rules: CHECK!
    , \_ -> Inv I :~> I
-   , \r -> (I :.: r) :~> r
-   , \r -> (r :.: I) :~> r
+   , \r -> I :.: r :~> r
+   , \r -> r :.: I :~> r
    ]
       
 -- Buggy rules:
@@ -225,99 +226,99 @@ buggyGroup s = addRuleToGroup "Buggy" . buggyRule . ruleList s
     
 buggyRuleIdemComp :: Rule RelAlg
 buggyRuleIdemComp = buggyGroup "IdemComp" 
-   [ \q -> (q :.: q)  :~>  q 
+   [ \q -> q :.: q :~> q 
    ]
     
 buggyRuleIdemAdd :: Rule RelAlg
 buggyRuleIdemAdd = buggyGroup "IdemAdd"
-   [ \q -> (q :+: q)  :~>  q
+   [ \q -> q :+: q :~>  q
    ]
 
 buggyRuleDeMorgan :: Rule RelAlg
 buggyRuleDeMorgan = buggyGroup "BuggyDeMorgan" 
-    [ \q r -> (Not (q :&&: r)) :~>  (Not q :||: r)
-    , \q r -> (Not (q :&&: r)) :~>  (q :||: Not r)
-    , \q r -> (Not (q :&&: r)) :~> (Not (Not q :||: Not r))
-    , \q r -> (Not (q :||: r)) :~>  (Not q :&&: r)
-    , \q r -> (Not (q :||: r)) :~>  (q :&&: Not r)
-    , \q r -> (Not (q :||: r)) :~> (Not (Not q :&&: Not r)) --note the firstNot in both formulas!  
+    [ \q r -> Not (q :&&: r) :~> Not q :||: r
+    , \q r -> Not (q :&&: r) :~> q :||: Not r
+    , \q r -> Not (q :&&: r) :~> Not (Not q :||: Not r)
+    , \q r -> Not (q :||: r) :~> Not q :&&: r
+    , \q r -> Not (q :||: r) :~> q :&&: Not r
+    , \q r -> Not (q :||: r) :~> Not (Not q :&&: Not r) --note the firstNot in both formulas!  
     ]
     
 buggyRuleNotOverAdd :: Rule RelAlg
 buggyRuleNotOverAdd = buggyGroup "BuggyNotOverAdd" 
-     [ \q r -> (Not(q :+: r)) :~> (Not q :+: Not r)
-     , \q r -> (Not(q :+: r)) :~> (Not q :.: r)
-     , \q r -> (Not(q :+: r)) :~> (Not q :+: r)
-     , \q r -> (Not(q :+: r)) :~> Not (Not q :.: Not r) --note the firstNot in both formulas! 
+     [ \q r -> Not (q :+: r) :~> Not q :+: Not r
+     , \q r -> Not (q :+: r) :~> Not q :.: r
+     , \q r -> Not (q :+: r) :~> Not q :+: r
+     , \q r -> Not (q :+: r) :~> Not (Not q :.: Not r) --note the firstNot in both formulas! 
      ]
      
 buggyRuleNotOverComp :: Rule RelAlg
 buggyRuleNotOverComp = buggyGroup "BuggyNotOverComp" 
-     [ \q r -> (Not(q :.: r)) :~> (Not q :.: Not r)
-     , \q r -> (Not(q :.: r)) :~> (Not q :.: r)
-     , \q r -> (Not(q :.: r)) :~> (Not q :+: r)
-     , \q r -> (Not(q :.: r)) :~> Not (Not q :.: Not r) --note the firstNot in both formulas! 
+     [ \q r -> Not (q :.: r) :~> Not q :.: Not r
+     , \q r -> Not (q :.: r) :~> Not q :.: r
+     , \q r -> Not (q :.: r) :~> Not q :+: r
+     , \q r -> Not (q :.: r) :~> Not (Not q :.: Not r) --note the firstNot in both formulas! 
      ]
      
 buggyRuleParenth :: Rule RelAlg
 buggyRuleParenth = buggyGroup "BuggyParenth" 
-    [ \q r -> (Not (q :&&: r)) :~>  (Not q :&&: r)
-    , \q r -> (Not (q :||: r)) :~>  (Not q :||: r)
-    , \q r -> (Not(Not q :&&: r)) :~> (q :&&: r) 
-    , \q r -> (Not(Not q :||: r)) :~> (q :||: r)
-    , \q r -> (Not(Not q :.: r)) :~> (q :.: r)
-    , \q r -> (Not(Not q :+: r)) :~> (q :+: r)
-    , \q r -> (Inv (q :&&: r)) :~>  (Inv q :&&: r)
-    , \q r -> (Inv (q :||: r)) :~>  (Inv q :||: r)
-    , \q r -> (Inv(Inv q :&&: r)) :~> (q :&&: r) 
-    , \q r -> (Inv(Inv q :||: r)) :~> (q :||: r)
-    , \q r -> (Inv(Inv q :.: r)) :~> (q :.: r)
-    , \q r -> (Inv(Inv q :+: r)) :~> (q :+: r)
+    [ \q r -> Not (q :&&: r)     :~> Not q :&&: r
+    , \q r -> Not (q :||: r)     :~> Not q :||: r
+    , \q r -> Not (Not q :&&: r) :~> q :&&: r 
+    , \q r -> Not (Not q :||: r) :~> q :||: r
+    , \q r -> Not (Not q :.: r)  :~> q :.: r
+    , \q r -> Not (Not q :+: r)  :~> q :+: r
+    , \q r -> Inv (q :&&: r)     :~> Inv q :&&: r
+    , \q r -> Inv (q :||: r)     :~> Inv q :||: r
+    , \q r -> Inv (Inv q :&&: r) :~> q :&&: r 
+    , \q r -> Inv (Inv q :||: r) :~> q :||: r
+    , \q r -> Inv (Inv q :.: r)  :~> q :.: r
+    , \q r -> Inv (Inv q :+: r)  :~> q :+: r
     ]
     
 buggyRuleAssoc :: Rule RelAlg
 buggyRuleAssoc = buggyGroup "BuggyAssoc"  
-    [ \q r s -> (q :||: (r :&&: s)) :~> ((q :||: r) :&&: s)
-    , \q r s -> ((q :||: r) :&&: s) :~> (q :||: (r :&&: s))
-    , \q r s -> ((q :&&: r) :||: s) :~> (q :&&: (r :||: s))
-    , \q r s -> (q :&&: (r :||: s)) :~> ((q :&&: r) :||: s)
-    , \q r s -> (q :.: (r :||: s)) :~>  ((q :.: r) :||: s) 
-    , \q r s -> ((q :||: r) :.: s) :~>  (q :||: (r :.: s)) 
-    , \q r s -> (q :.: (r :&&: s)) :~>  ((q :.: r) :&&: s) 
-    , \q r s -> ((q :&&: r) :.: s) :~>  (q :&&: (r :.: s)) 
-    , \q r s -> (q :+: (r :||: s)) :~>  ((q :+: r) :||: s) 
-    , \q r s -> ((q :||: r) :+: s) :~>  (q :||: (r :+: s)) 
-    , \q r s -> (q :+: (r :&&: s)) :~>  ((q :+: r) :&&: s)  
-    , \q r s -> ((q :&&: r) :+: s) :~>  (q :&&: (r :+: s))  
+    [ \q r s -> q :||: (r :&&: s) :~> (q :||: r) :&&: s
+    , \q r s -> (q :||: r) :&&: s :~> q :||: (r :&&: s)
+    , \q r s -> (q :&&: r) :||: s :~> q :&&: (r :||: s)
+    , \q r s -> q :&&: (r :||: s) :~> (q :&&: r) :||: s
+    , \q r s -> q :.: (r :||: s)  :~> (q :.: r) :||: s 
+    , \q r s -> (q :||: r) :.: s  :~> q :||: (r :.: s) 
+    , \q r s -> q :.: (r :&&: s)  :~> (q :.: r) :&&: s 
+    , \q r s -> (q :&&: r) :.: s  :~> q :&&: (r :.: s) 
+    , \q r s -> q :+: (r :||: s)  :~> (q :+: r) :||: s 
+    , \q r s -> (q :||: r) :+: s  :~> q :||: (r :+: s) 
+    , \q r s -> q :+: (r :&&: s)  :~> (q :+: r) :&&: s  
+    , \q r s -> (q :&&: r) :+: s  :~> q :&&: (r :+: s)
     ]
 
 buggyRuleInvOverComp :: Rule RelAlg
-buggyRuleInvOverComp = buggyGroup "BuggyInvOverComp" $ 
-   [ \r s -> (Inv (r :.: s)) :~> (Inv r :.: Inv s)
+buggyRuleInvOverComp = buggyGroup "BuggyInvOverComp"
+   [ \r s -> Inv (r :.: s) :~> Inv r :.: Inv s
    ]
 
 buggyRuleInvOverAdd :: Rule RelAlg
 buggyRuleInvOverAdd = buggyGroup "BuggyInvOverAdd"
-   [ \r s -> (Inv (r :+: s)) :~> (Inv r :+: Inv s)
+   [ \r s -> Inv (r :+: s) :~> Inv r :+: Inv s
    ]
    
 buggyRuleCompOverIntersec :: Rule RelAlg
 buggyRuleCompOverIntersec = buggyGroup "BuggyCompOverIntersec" 
-   [ \q r s -> (q :.: (r :&&: s)) :~>  ((q :.: r) :&&: (q :.: s))  --alleen toegestaan als q een functie is!
-   , \q r s -> ((q :&&: r) :.: s) :~>  ((q :.: s) :&&: (r :.: s))  --idem
+   [ \q r s -> q :.: (r :&&: s) :~> (q :.: r) :&&: (q :.: s)  --alleen toegestaan als q een functie is!
+   , \q r s -> (q :&&: r) :.: s :~> (q :.: s) :&&: (r :.: s)  --idem
    ]
 buggyRuleAddOverUnion :: Rule RelAlg
 buggyRuleAddOverUnion = buggyGroup "BuggyAddOverUnion" 
-   [ \q r s -> (q :+: (r :||: s)) :~>  ((q :+: r) :||: (q :+: s)) --alleen toegestaan als q een functie is!
-   , \q r s -> ((q :||: r) :+: s) :~>  ((q :+: s) :||: (r :+: s)) --idem
+   [ \q r s -> q :+: (r :||: s) :~> (q :+: r) :||: (q :+: s) --alleen toegestaan als q een functie is!
+   , \q r s -> (q :||: r) :+: s :~> (q :+: s) :||: (r :+: s) --idem
    ]
    
 buggyRuleRemCompl :: Rule RelAlg
 buggyRuleRemCompl = buggyGroup "BuggyRemCompl" 
-   [ \r -> (r :&&: (Not r)) :~>  V
-   , \r -> ((Not r) :&&: r) :~>  V
-   , \r -> (r :||: (Not r)) :~>  empty
-   , \r -> ((Not r) :||: r) :~>  empty
+   [ \r -> r :&&: Not r :~> V
+   , \r -> Not r :&&: r :~> V
+   , \r -> r :||: Not r :~> empty
+   , \r -> Not r :||: r :~> empty
    ]
 
 -- Older rules involving the empty relation

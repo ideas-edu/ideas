@@ -153,7 +153,7 @@ list2 (a, b)       = [a, b]
 list3 (a, b, c)    = [a, b, c]
 list4 (a, b, c, d) = [a, b, c, d]
 
-isList1 [a]          = Just (a)
+isList1 [a]          = Just a
 isList1 _            = Nothing
 isList2 [a, b]       = Just (a, b)
 isList2 _            = Nothing
@@ -208,7 +208,7 @@ quadraticEquationView = makeView f g
    f (lhs :==: rhs) = do
       (s, p) <- match (polyViewWith (squareRootViewWith rationalView)) (lhs - rhs)
       guard (degree p <= 2)
-      liftM (fmap ((,) s)) $ do
+      liftM (fmap ((,) s)) $
          case polynomialList p of
             [a, b, c] -> do
                discr <- SQ.fromSquareRoot (b*b - SQ.scale 4 (a*c))
@@ -235,10 +235,10 @@ higherDegreeEquationsView = makeView f (fmap g)
    f = let make (a :==: b) = orList (normHDE (a-b))
        in Just . normalize . join . fmap make
 
-   g a = a :==: 0
+   g = (:==: 0)
    
 normHDE :: Expr -> [Expr]
-normHDE e = do 
+normHDE e =
    case match (polyViewWith rationalView) e of
       Just (x, p)  -> concatMap (g x) $ factorize p
       Nothing -> fromMaybe [e] $ do
@@ -249,7 +249,7 @@ normHDE e = do
    g x p 
        | d==0 = []
        | length (terms p) <= 1 = [Var x]
-       | d==1 = [Var x .+. fromRational ((coefficient 0 p / coefficient 1 p))]
+       | d==1 = [Var x .+. fromRational (coefficient 0 p / coefficient 1 p)]
        | d==2 = let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
                     discr   = b*b - 4*a*c
                     sdiscr  = SQ.sqrtRational discr

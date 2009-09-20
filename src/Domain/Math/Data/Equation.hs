@@ -56,7 +56,7 @@ substEquation :: (Uniplate a, MetaVar a) => Substitution a -> Equation a -> Equa
 substEquation sub (x :==: y) = (sub |-> x) :==: (sub |-> y)
 
 substEquations :: (Uniplate a, MetaVar a) => Substitution a -> Equations a -> Equations a
-substEquations sub = map (substEquation sub)
+substEquations = map . substEquation
 
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
 combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2

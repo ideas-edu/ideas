@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.5">
+  <list>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 5 or x == 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

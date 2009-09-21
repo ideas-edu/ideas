@@ -2,7 +2,7 @@ module Domain.Math.Data.OrList
    ( OrList
    , orList, (\/), true, false
    , isTrue, isFalse
-   , disjunctions, normalize
+   , disjunctions, normalize, idempotent
    ) where
 
 import Control.Monad
@@ -45,6 +45,11 @@ p \/ q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
 normalize :: Ord a => OrList a -> OrList a
 normalize T           = T
 normalize (OrList xs) = OrList (nub $ sort xs)
+
+-- | Remove duplicates
+idempotent :: Eq a => OrList a -> OrList a
+idempotent T           = T
+idempotent (OrList xs) = OrList (nub xs)
 
 ------------------------------------------------------------
 -- Instances

@@ -93,7 +93,7 @@ cleanUpSimple = transform $ \x ->
       Nothing -> smart x
 
 cleanUp :: OrList (Equation Expr) -> OrList (Equation Expr)
-cleanUp = join . fmap (keepEquation . fmap cleanUpExpr)
+cleanUp = idempotent . join . fmap (keepEquation . fmap cleanUpExpr)
 
 keepEquation :: Equation Expr -> OrList (Equation Expr)
 keepEquation eq@(a :==: b)

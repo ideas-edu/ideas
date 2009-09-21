@@ -98,10 +98,14 @@ abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    let discr = makeSqrt (fromRational (b*b - 4 * a * c))
-   return $ orList
-      [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
-      , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
-      ]
+   case compare discr 0 of
+      LT -> return false
+      EQ -> return $ return $ 
+         Var x :==: (-fromRational b) / (2 * fromRational a)
+      GT -> return $ orList
+         [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
+         , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
+         ]
 
 ------------------------------------------------------------
 -- General form rules: expr = 0

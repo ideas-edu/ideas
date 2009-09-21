@@ -1,5 +1,5 @@
 default: test.log
-all: test.log
+all: test-all.log
 
 include ../Makefile.incl
 
@@ -35,6 +35,16 @@ test.log: $(SOME-OUT)
 	  dos2unix $$i.exp &> /dev/null; \
 	  diff -I "version" $$i.out $$i.exp; \
 	  diff -I "version" $$i.out $$i.exp >> test.log; \
+	done;
+
+test-all.log: $(ALL-OUT)
+	# --- Unit Tests ------------------------
+	@for i in $(ALL-WITHOUT); do \
+	  echo $$i; \
+	  echo $$i >> test-all.log; \
+	  dos2unix $$i.exp &> /dev/null; \
+	  diff -I "version" $$i.out $$i.exp; \
+	  diff -I "version" $$i.out $$i.exp >> test-all.log; \
 	done;
 
 mathdox-request/%.out: mathdox-request/%.txt $(BINDIR)/service.cgi

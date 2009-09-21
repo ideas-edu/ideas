@@ -32,17 +32,12 @@
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
-        x+1 == 0 or x+1 == 0
+        x+1 == 0
       </expr>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
-        x == -1 or x+1 == 0
-      </expr>
-    </elem>
-    <elem ruleid="cover-up plus [one var]">
-      <expr>
-        x == -1 or x == -1
+        x == -1
       </expr>
     </elem>
   </list>

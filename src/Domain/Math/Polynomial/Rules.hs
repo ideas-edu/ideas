@@ -28,10 +28,13 @@ import qualified Prelude
 -- Rule collection
 
 linearRules :: [Rule (Context (Equation Expr))]
-linearRules = map ignoreContext
+linearRules = map ignoreContext $
    [ removeDivision, ruleMulti merge, ruleOnce distribute
-   , varToLeft, conToRight, scaleToOne
-   ]
+   , varToLeft, coverUpNegate, coverUpTimes
+   ] ++
+   map ($ oneVar) 
+   [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith]
+
 
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = 
@@ -289,6 +292,7 @@ varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
    guard (a/=0)
    return (fromRational a * Var x)
 
+{-
 conToRight :: Rule (Equation Expr)
 conToRight = makeRule "constant to right" $ flip supply1 minusT $ \eq -> do
    (_, _, b) <- match (linearViewWith rationalView) (getLHS eq)
@@ -299,7 +303,7 @@ scaleToOne :: Rule (Equation Expr)
 scaleToOne = makeRule "scale to one" $ flip supply1 divisionT $ \eq -> do
    (_, a, _) <- match (linearViewWith rationalView) (getLHS eq)
    guard (a `notElem` [0, 1])
-   return (fromRational a)
+   return (fromRational a) -}
 
 removeDivision :: Rule (Equation Expr)
 removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: rhs) -> do

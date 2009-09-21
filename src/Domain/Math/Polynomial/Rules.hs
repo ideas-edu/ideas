@@ -119,7 +119,14 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
    guard (rhs == 0)
    (_, xs) <- match productView lhs
    guard (length xs > 1)
-   return (orList [ x :==: 0 | x <- xs ])
+   let f e = case match (polyNormalForm rationalView >>> second linearPolyView) e of
+                Just (x, (a, b)) -- special cases (simplify immediately)
+                   | a == 1 -> 
+                        Var x :==: fromRational (-b)
+                   | a == -1 -> 
+                        Var x :==: fromRational b
+                _ -> e :==: 0 
+   return $ orList $ map f xs 
 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant

@@ -2,16 +2,6 @@
   <list>
     <elem ruleid="multiplication is zero">
       <expr>
-        x+5 == 0 or x-8 == 0
-      </expr>
-    </elem>
-    <elem ruleid="cover-up plus [one var]">
-      <expr>
-        x == -5 or x-8 == 0
-      </expr>
-    </elem>
-    <elem ruleid="cover-up plus [one var]">
-      <expr>
         x == -5 or x == 8
       </expr>
     </elem>

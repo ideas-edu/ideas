@@ -27,16 +27,6 @@
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
-        x == 0 or x-4 == 0 or x+6 == 0
-      </expr>
-    </elem>
-    <elem ruleid="cover-up plus [one var]">
-      <expr>
-        x == 0 or x == 4 or x+6 == 0
-      </expr>
-    </elem>
-    <elem ruleid="cover-up plus [one var]">
-      <expr>
         x == 0 or x == 4 or x == -6
       </expr>
     </elem>

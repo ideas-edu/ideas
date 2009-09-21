@@ -34,7 +34,8 @@ quadraticStrategy = cleanUpStrategy cleanUp $
          -- general form
       (  label "general form" $ 
          ( ruleOnce noConFormula <|> ruleOnce noLinFormula{- or coverup -}
-           <|> ruleOnce niceFactors <|> ruleOnce simplerA )
+           <|> ruleOnce niceFactors <|> ruleOnce simplerA 
+           <|> coverUpPower) -- to deal with special case x^2=0
          |> abcFormula
       )
       |> -- zero form

@@ -1,8 +1,8 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        -2*x^2 == -18
+        2*x^2 == 18
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

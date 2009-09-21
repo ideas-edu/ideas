@@ -5,9 +5,9 @@
         -1-8*x == -20
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        -8*x == -19
+        8*x == 19
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

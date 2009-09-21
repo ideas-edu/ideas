@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         -4*x == 2
       </expr>

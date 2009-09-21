@@ -5,9 +5,9 @@
         x == 0 or 1-6*x == 0
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        x == 0 or -6*x == -1
+        x == 0 or 6*x == 1
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

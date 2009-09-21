@@ -15,7 +15,7 @@
         x-1 == 0 or x == 0 or x^2-6 == 3*x
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 1 or x == 0 or x^2-6 == 3*x
       </expr>

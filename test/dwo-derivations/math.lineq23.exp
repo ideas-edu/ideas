@@ -10,9 +10,9 @@
         10-5*x == 6
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        -5*x == -4
+        5*x == 4
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

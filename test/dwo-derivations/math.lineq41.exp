@@ -10,7 +10,7 @@
         -x-3 == -16
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         -x == -13
       </expr>

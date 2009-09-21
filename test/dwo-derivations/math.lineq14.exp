@@ -5,7 +5,7 @@
         3*x-8 == 18
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         3*x == 26
       </expr>

@@ -22,7 +22,12 @@ linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (removeDivision <|> ruleOnce distribute <|> ruleMulti merge))
-   <*> label "Phase 2" (try varToLeft <*> try coverUpPlus <*> try (coverUpTimes |> try coverUpNegate))
+   <*> label "Phase 2" (try varToLeft <*> try (coverUpPlus id) <*> try (coverUpTimes |> try coverUpNegate))
+
+-- helper strategy
+coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a
+coverUpPlus f = alternatives $ map (f . ($ oneVar))
+   [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith]
 
 ------------------------------------------------------------
 -- Quadratic equations
@@ -44,7 +49,7 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       )
       |> -- constant form
       (  label "constant form" $ 
-         coverUpPower <|> ruleOnce coverUpTimes <|> ruleOnce coverUpPlus
+         coverUpPower <|> ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
          <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator
       )
       |> -- top form

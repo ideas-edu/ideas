@@ -10,7 +10,7 @@
         6*x-3 == sqrt 6 or 6*x-3 == -sqrt 6
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         6*x == 3+sqrt 6 or 6*x-3 == -sqrt 6
       </expr>
@@ -20,7 +20,7 @@
         x == 1/2+1/6*sqrt 6 or 6*x-3 == -sqrt 6
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 1/2+1/6*sqrt 6 or 6*x == 3-sqrt 6
       </expr>

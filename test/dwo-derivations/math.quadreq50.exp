@@ -25,7 +25,7 @@
         x-11 == 0
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 11
       </expr>

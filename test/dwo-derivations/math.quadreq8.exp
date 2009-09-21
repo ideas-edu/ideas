@@ -5,12 +5,12 @@
         x-1 == 10 or x-1 == -10
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 11 or x-1 == -10
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 11 or x == -9
       </expr>

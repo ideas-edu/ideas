@@ -5,7 +5,7 @@
         4*x-2 == 14
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         4*x == 16
       </expr>

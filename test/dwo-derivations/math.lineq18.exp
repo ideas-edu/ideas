@@ -5,7 +5,7 @@
         -7*x-18 == 14
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         -7*x == 32
       </expr>

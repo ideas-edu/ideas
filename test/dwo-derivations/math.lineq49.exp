@@ -25,7 +25,7 @@
         -39*x-6 == 8
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         -39*x == 14
       </expr>

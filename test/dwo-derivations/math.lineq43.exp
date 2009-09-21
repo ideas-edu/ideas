@@ -15,9 +15,9 @@
         63-8*x == 36
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        -8*x == -27
+        8*x == 27
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

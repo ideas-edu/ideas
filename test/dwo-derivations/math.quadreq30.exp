@@ -5,7 +5,7 @@
         3*x-1 == 0 or x == -3
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         3*x == 1 or x == -3
       </expr>

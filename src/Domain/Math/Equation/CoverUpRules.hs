@@ -1,10 +1,12 @@
 module Domain.Math.Equation.CoverUpRules 
    ( coverUpRules, coverUpRulesOr
-   , coverUpPower, coverUpPlus, coverUpTimes, coverUpNegate
+   , coverUpPower, coverUpPlus, coverUpMinusLeft, coverUpMinusRight 
+   , coverUpTimes, coverUpNegate
    , coverUpNumerator, coverUpDenominator, coverUpSqrt 
      -- parameterized rules
    , ConfigCoverUp(..), varConfig
-   , coverUpPowerWith, coverUpPlusWith, coverUpTimesWith, coverUpNegateWith
+   , coverUpPowerWith, coverUpTimesWith, coverUpNegateWith
+   , coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
    , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
    ) where
 
@@ -81,8 +83,15 @@ coverUpPowerWith cfg =
          return $ orList $ (e1 :==: new1) : [ e1 :==: new2 | new1 /= new2, even n ]
 
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
-coverUpPlusWith = coverUpBinaryRule "plus" (commOp . matchM plusView) (-)
+coverUpPlusWith = coverUpBinaryRule "plus" (commOp . isPlus) (-)
 
+coverUpMinusLeftWith :: ConfigCoverUp -> Rule (Equation Expr)
+coverUpMinusLeftWith = coverUpBinaryRule "minus left" isMinus (+)
+
+coverUpMinusRightWith :: ConfigCoverUp -> Rule (Equation Expr)
+coverUpMinusRightWith = coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-))
+
+-- | Negations are pushed inside
 coverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpTimesWith = coverUpBinaryRule "times" (map signs . commOp . matchM timesView) (/)
  where
@@ -92,9 +101,11 @@ coverUpTimesWith = coverUpBinaryRule "times" (map signs . commOp . matchM timesV
 coverUpNegateWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpNegateWith = coverUpUnaryRule "negate" isNegate negate
 
+-- | Negations are pushed inside
 coverUpNumeratorWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpNumeratorWith = coverUpBinaryRule "numerator" (matchM divView) (*)
 
+-- | Negations are pushed inside
 coverUpDenominatorWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpDenominatorWith = coverUpBinaryRule "denominator" (flipOp . matchM divView) (flip (/))
 
@@ -109,16 +120,18 @@ coverUpRulesOr = coverUpPower : map ruleOnce coverUpRules
 
 coverUpRules :: [Rule (Equation Expr)]
 coverUpRules = 
-   [ coverUpPlus, coverUpTimes, coverUpNegate
-   , coverUpNumerator, coverUpDenominator, coverUpSqrt
+   [ coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpNegate
+   , coverUpTimes, coverUpNumerator, coverUpDenominator, coverUpSqrt
    ]
 
 coverUpPower :: Rule (OrList (Equation Expr))
-coverUpPlus, coverUpTimes, coverUpNegate, 
+coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpTimes, coverUpNegate, 
    coverUpNumerator, coverUpDenominator, coverUpSqrt :: Rule (Equation Expr)
 
 coverUpPower       = coverUpPowerWith       varConfig
 coverUpPlus        = coverUpPlusWith        varConfig
+coverUpMinusLeft   = coverUpMinusLeftWith   varConfig
+coverUpMinusRight  = coverUpMinusRightWith  varConfig
 coverUpTimes       = coverUpTimesWith       varConfig
 coverUpNegate      = coverUpNegateWith      varConfig
 coverUpNumerator   = coverUpNumeratorWith   varConfig

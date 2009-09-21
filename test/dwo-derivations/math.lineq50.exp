@@ -25,9 +25,9 @@
         4-37*x == 3
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        -37*x == -1
+        37*x == 1
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

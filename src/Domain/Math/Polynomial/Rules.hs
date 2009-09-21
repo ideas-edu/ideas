@@ -36,8 +36,11 @@ linearRules = map ignoreContext
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = 
    [ ruleOnce noConFormula, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerA, abcFormula, mulZero, coverUpPower, ruleOnce coverUpPlus
-   , ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
+   , ruleOnce simplerA, abcFormula, mulZero, coverUpPower
+   ] ++
+   map (ruleOnce . ($ oneVar)) 
+     [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
+   [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms , ruleOnce2 distribute
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft
@@ -130,9 +133,11 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant
- 
-coverUpPlus :: Rule (Equation Expr) 
-coverUpPlus = coverUpPlusWith Config
+
+-- Use this configuration for covering-up plus and minus symbols!
+-- Prevent    (x^2+3x)+5 = 0   to be covered up
+oneVar :: ConfigCoverUp
+oneVar = Config
    { configName        = "one var"
    , predicateCovered  = (==1) . length . collectVars
    , predicateCombined = noVars

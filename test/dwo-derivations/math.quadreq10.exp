@@ -5,12 +5,7 @@
         17-x^2 == 8
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
-      <expr>
-        -x^2 == -9
-      </expr>
-    </elem>
-    <elem ruleid="cover-up negate [vars]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
         x^2 == 9
       </expr>

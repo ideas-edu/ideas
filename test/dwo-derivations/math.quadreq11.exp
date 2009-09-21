@@ -10,12 +10,12 @@
         x-7 == 2*sqrt 2 or x-7 == -2*sqrt 2
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 7+2*sqrt 2 or x-7 == -2*sqrt 2
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 7+2*sqrt 2 or x == 7-2*sqrt 2
       </expr>

@@ -20,7 +20,7 @@
         20*x-13 == -18
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         20*x == -5
       </expr>

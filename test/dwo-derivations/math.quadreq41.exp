@@ -27,10 +27,10 @@
     </elem>
     <elem ruleid="nice factors">
       <expr>
-        (x+1)*(x+1) == 0
+        (x+1)^2 == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="cover-up power [vars]">
       <expr>
         x+1 == 0
       </expr>

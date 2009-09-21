@@ -73,16 +73,20 @@ noLinFormula = makeSimpleRule "no linear term b" $ \(lhs :==: rhs) -> do
 
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Rule (Equation Expr)
-niceFactors = makeSimpleRule "nice factors" $ \(lhs :==: rhs) -> do
+niceFactors = makeSimpleRuleList "nice factors" $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let sign t@(x, (a, b, c)) = if a== -1 then (x, (1, -b, -c)) else t 
-   (x, (a, rb, rc)) <- liftM sign (match (polyNormalForm rationalView >>> second quadraticPolyView) lhs)
+   (x, (a, rb, rc)) <- liftM sign (matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs)
    guard (a==1)
    b <- isInt rb
    c <- isInt rc
-   case [ (Var x + fromInteger i) * (Var x + fromInteger j) | (i, j) <- factors c, i+j == b ] of
-      hd:_ -> return (hd :==: 0)
-      _    -> Nothing
+   let ok (i, j) = i+j == b
+       f  (i, j) 
+          | i == j = -- special case
+              (Var x + fromInteger i) ^ 2 :==: 0
+          | otherwise =
+              (Var x + fromInteger i) * (Var x + fromInteger j) :==: 0
+   map f (filter ok (factors c))
 
 simplerA :: Rule (Equation Expr)
 simplerA = makeSimpleRule "simpler A" $ \(lhs :==: rhs) -> do
@@ -175,7 +179,7 @@ factors :: Integer -> [(Integer, Integer)]
 factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
  where h = floor (sqrt (abs (fromIntegral n)))
 
-isInt :: Rational -> Maybe Integer
+isInt :: MonadPlus m => Rational -> m Integer
 isInt r = do
    guard (denominator r == 1)
    return (numerator r)

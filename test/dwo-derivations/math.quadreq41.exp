@@ -20,7 +20,7 @@
         10*x^2+20*x+10 == 0
       </expr>
     </elem>
-    <elem ruleid="simpler A">
+    <elem ruleid="simpler polynomial">
       <expr>
         x^2+2*x+1 == 0
       </expr>

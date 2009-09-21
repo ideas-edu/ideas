@@ -5,7 +5,7 @@
         3*x-2*x^2 == 0
       </expr>
     </elem>
-    <elem ruleid="no constant c">
+    <elem ruleid="common factor var">
       <expr>
         x*(-2*x+3) == 0
       </expr>

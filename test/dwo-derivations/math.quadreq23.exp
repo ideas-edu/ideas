@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="no constant c">
+    <elem ruleid="common factor var">
       <expr>
         x*(x+6) == 0
       </expr>

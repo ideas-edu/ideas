@@ -5,7 +5,7 @@
         x^2-5*x == 0
       </expr>
     </elem>
-    <elem ruleid="no constant c">
+    <elem ruleid="common factor var">
       <expr>
         x*(x-5) == 0
       </expr>

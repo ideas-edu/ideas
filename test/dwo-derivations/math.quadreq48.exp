@@ -10,7 +10,7 @@
         12*x^2-36*x-48 == 0
       </expr>
     </elem>
-    <elem ruleid="simpler A">
+    <elem ruleid="simpler polynomial">
       <expr>
         x^2-3*x-4 == 0
       </expr>

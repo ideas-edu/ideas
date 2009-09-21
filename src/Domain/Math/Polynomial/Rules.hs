@@ -38,7 +38,7 @@ linearRules = map ignoreContext $
 
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = 
-   [ ruleOnce noConFormula, ruleOnce noLinFormula, ruleOnce niceFactors
+   [ ruleOnce commonFactorVar, ruleOnce noLinFormula, ruleOnce niceFactors
    , ruleOnce simplerA, abcFormula, mulZero, coverUpPower
    ] ++
    map (ruleOnce . ($ oneVar)) 
@@ -58,8 +58,8 @@ higherDegreeRules =
 -- General form rules: ax^2 + bx + c = 0
 
 -- ax^2 + bx = 0 
-noConFormula :: Rule (Equation Expr) 
-noConFormula = makeSimpleRule "no constant c" $ \(lhs :==: rhs) -> do
+commonFactorVar :: Rule (Equation Expr) 
+commonFactorVar = makeSimpleRule "common factor var" $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    guard (c == 0 && b /= 0)
@@ -95,7 +95,7 @@ niceFactors = makeSimpleRuleList "nice factors" $ \(lhs :==: rhs) -> do
    map f (filter ok (factors c))
 
 simplerA :: Rule (Equation Expr)
-simplerA = makeSimpleRule "simpler A" $ \(lhs :==: rhs) -> do
+simplerA = makeSimpleRule "simpler polynomial" $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (ra, rb, rc)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    [a, b, c] <- mapM isInt [ra, rb, rc] 

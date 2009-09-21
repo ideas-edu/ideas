@@ -15,7 +15,7 @@
         -x^2+12*x == 0
       </expr>
     </elem>
-    <elem ruleid="no constant c">
+    <elem ruleid="common factor var">
       <expr>
         x*(-x+12) == 0
       </expr>

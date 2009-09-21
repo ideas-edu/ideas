@@ -20,7 +20,7 @@
         7*x^2+9*x == 0
       </expr>
     </elem>
-    <elem ruleid="no constant c">
+    <elem ruleid="common factor var">
       <expr>
         x*(7*x+9) == 0
       </expr>

@@ -32,7 +32,7 @@ test.log: $(SOME-OUT)
 	@for i in $(SOME-WITHOUT); do \
 	  echo $$i; \
 	  echo $$i >> test.log; \
-	  if $(WINDOWS)==no; then dos2unix $$i.exp &> /dev/null; fi; \
+	  dos2unix $$i.exp &> /dev/null; \
 	  diff -I "version" $$i.out $$i.exp; \
 	  diff -I "version" $$i.out $$i.exp >> test.log; \
 	done;

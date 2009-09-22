@@ -50,7 +50,8 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       |> -- constant form
       (  label "constant form" $ 
          coverUpPower <|> ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
-         <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator
+         <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator 
+         <|> squareBothSides
       )
       |> -- top form
       (  label "top form" $ 

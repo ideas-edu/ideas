@@ -38,7 +38,7 @@ linearRules = map ignoreContext $
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = 
    [ ruleOnce commonFactorVar, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerA, abcFormula, mulZero, coverUpPower
+   , ruleOnce simplerA, abcFormula, mulZero, coverUpPower, squareBothSides
    ] ++
    map (ruleOnce . ($ oneVar)) 
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
@@ -174,6 +174,14 @@ distributionSquare = makeSimpleRule "distribution square" f
       return ((a .^. 2) .+. (2 .*. a .*. b) + (b .^. 2))
    f (Sym s [a :-: b, Nat 2]) | s == powerSymbol =
       return ((a .^. 2) .-. (2 .*. a .*. b) + (b .^. 2))
+   f _ = Nothing
+
+-- a^2 == b^2
+squareBothSides :: Rule (OrList (Equation Expr))
+squareBothSides = makeSimpleRule "square both sides" $ onceJoinM f 
+ where
+   f (Sym s1 [a, Nat 2] :==: Sym s2 [b, Nat 2]) | all (==powerSymbol) [s1, s2] = 
+      return $ orList [a :==: b, a :==: -b]
    f _ = Nothing
 
 -- Afterwards, merge, sort, and (possibly) change sign

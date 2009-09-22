@@ -4,7 +4,7 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Traversable
-import Common.Uniplate (somewhereM)
+import Common.Uniplate (somewhereM, universe)
 import Common.Utils
 import Common.View
 import Domain.Math.Numeric.Views
@@ -21,6 +21,7 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Power.Views
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.SquareRoot as SQ
+import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
 
 
@@ -46,7 +47,7 @@ quadraticRules =
    [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms , ruleOnce2 distribute
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
-   , ruleOnce moveToLeft
+   , ruleOnce moveToLeft, ruleOnce2 (ruleSomewhere simplerSquareRoot)
    ]
    
 higherDegreeRules :: [Rule (OrList (Equation Expr))]
@@ -107,7 +108,7 @@ abcFormula :: Rule (OrList (Equation Expr))
 abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
-   let discr = makeSqrt (fromRational (b*b - 4 * a * c))
+   let discr = sqrt (fromRational (b*b - 4 * a * c))
    case compare discr 0 of
       LT -> return false
       EQ -> return $ return $ 
@@ -149,6 +150,13 @@ oneVar = Config
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2
 
+simplerSquareRoot :: Rule Expr
+simplerSquareRoot = makeSimpleRule "simpler square root" $ \e -> do
+   guard $ not . null $ [ e | Sqrt e <- universe e ]
+   new <- canonical (SQ.squareRootViewWith rationalView) e
+   guard (new /= e)
+   return new
+
 cancelTerms :: Rule (Equation Expr)
 cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
    xs <- match sumView lhs
@@ -185,10 +193,11 @@ moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
 ------------------------------------------------------------
 -- Helpers and Rest
 
+{-
 makeSqrt :: Expr -> Expr
 makeSqrt (Nat n) | a*a == n = Nat a
  where a = SQ.isqrt n
-makeSqrt e = sqrt e
+makeSqrt e = sqrt e -}
 
 factors :: Integer -> [(Integer, Integer)]
 factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]

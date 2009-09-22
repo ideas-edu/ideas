@@ -67,11 +67,11 @@
           <OMS cd="relation1" name="eq"/>
           <OMA>
             <OMS cd="arith1" name="minus"/>
-            <OMI>
-              12
-            </OMI>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="arith1" name="minus"/>
+              <OMI>
+                12
+              </OMI>
               <OMA>
                 <OMS cd="arith1" name="times"/>
                 <OMI>
@@ -79,10 +79,10 @@
                 </OMI>
                 <OMV name="x"/>
               </OMA>
-              <OMI>
-                8
-              </OMI>
             </OMA>
+            <OMI>
+              8
+            </OMI>
           </OMA>
           <OMA>
             <OMS cd="arith1" name="minus"/>
@@ -122,11 +122,11 @@
           <OMS cd="relation1" name="eq"/>
           <OMA>
             <OMS cd="arith1" name="minus"/>
-            <OMI>
-              12
-            </OMI>
             <OMA>
-              <OMS cd="arith1" name="plus"/>
+              <OMS cd="arith1" name="minus"/>
+              <OMI>
+                12
+              </OMI>
               <OMA>
                 <OMS cd="arith1" name="times"/>
                 <OMI>
@@ -134,22 +134,22 @@
                 </OMI>
                 <OMV name="x"/>
               </OMA>
-              <OMI>
-                8
-              </OMI>
             </OMA>
+            <OMI>
+              8
+            </OMI>
           </OMA>
           <OMA>
-            <OMS cd="arith1" name="minus"/>
-            <OMA>
-              <OMS cd="arith1" name="times"/>
-              <OMI>
-                36
-              </OMI>
-              <OMV name="x"/>
-            </OMA>
+            <OMS cd="arith1" name="plus"/>
             <OMA>
               <OMS cd="arith1" name="minus"/>
+              <OMA>
+                <OMS cd="arith1" name="times"/>
+                <OMI>
+                  36
+                </OMI>
+                <OMV name="x"/>
+              </OMA>
               <OMA>
                 <OMS cd="arith1" name="times"/>
                 <OMI>
@@ -157,10 +157,10 @@
                 </OMI>
                 <OMV name="x"/>
               </OMA>
-              <OMI>
-                3
-              </OMI>
             </OMA>
+            <OMI>
+              3
+            </OMI>
           </OMA>
         </OMA>
       </OMOBJ>

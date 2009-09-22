@@ -10,7 +10,6 @@ import Common.View
 import Common.Transformation
 import Common.Traversable
 import Control.Monad
-import Domain.Math.Polynomial.Rules (makeSqrt)
 
 abcBuggyRules :: [Rule (OrList (Equation Expr))]
 abcBuggyRules = [ minusB, twoA, minus4AC, oneSolution ]
@@ -26,7 +25,7 @@ abcMisconception f = makeTransList "abc misconception" $
 minusB :: Rule (OrList (Equation Expr))
 minusB = buggyRule $ makeRule "abc misconception minus b" $ 
    abcMisconception $ \x a b c -> do
-      let discr = makeSqrt (fromRational (b*b - 4 * a * c))
+      let discr = sqrt (fromRational (b*b - 4 * a * c))
           f (?) buggy = 
              let minus = if buggy then id else negate
              in Var x :==: (minus (fromRational b) ? discr) / (2 * fromRational a) 
@@ -38,7 +37,7 @@ minusB = buggyRule $ makeRule "abc misconception minus b" $
 twoA :: Rule (OrList (Equation Expr))
 twoA = buggyRule $ makeRule "abc misconception two a" $ 
    abcMisconception $ \x a b c -> do
-      let discr = makeSqrt (fromRational (b*b - 4 * a * c))
+      let discr = sqrt (fromRational (b*b - 4 * a * c))
           f (?) buggy = 
              let twice = if buggy then id else (2*)
              in Var x :==: (-fromRational b ? discr) / twice (fromRational a) 
@@ -49,7 +48,7 @@ twoA = buggyRule $ makeRule "abc misconception two a" $
 minus4AC :: Rule (OrList (Equation Expr))
 minus4AC = buggyRule $ makeRule "abc misconception minus 4ac" $ 
    abcMisconception $ \x a b c -> do
-      let discr (?) = makeSqrt (fromRational ((b*b) ? (4 * a * c)))
+      let discr (?) = sqrt (fromRational ((b*b) ? (4 * a * c)))
           f (?) buggy = 
              let op = if buggy then (+) else (-)
              in Var x :==: (-fromRational b ? discr op) / (2 * fromRational a)
@@ -60,6 +59,6 @@ minus4AC = buggyRule $ makeRule "abc misconception minus 4ac" $
 oneSolution :: Rule (OrList (Equation Expr))
 oneSolution = buggyRule $ makeRule "abc misconception one solution" $ 
    abcMisconception $ \x a b c -> do
-      let discr = makeSqrt (fromRational (b*b - 4 * a * c))
+      let discr = sqrt (fromRational (b*b - 4 * a * c))
           f (?) = Var x :==: (-fromRational b ? discr) / (2 * fromRational a)
       [ return $ f (+), return $ f (-) ]

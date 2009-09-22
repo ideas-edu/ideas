@@ -2,7 +2,7 @@
   <list>
     <elem ruleid="distribution">
       <expr>
-        4*x-(x-2) == 12+(5*x-5)
+        4*x-x+2 == 12+5*x-5
       </expr>
     </elem>
     <elem ruleid="merge similar terms">

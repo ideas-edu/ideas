@@ -20,6 +20,7 @@ import Common.Uniplate
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
+import qualified Domain.Math.Data.SquareRoot as SQ
 
 ----------------------------------------------------------------------
 -- Expr normalization
@@ -87,11 +88,13 @@ hardCases = map cleanUpExpr $ let x=Var "x" in
 -- Cleaning up
 
 cleanUpSimple :: Expr -> Expr
-cleanUpSimple = transform $ \x -> 
-   case canonical rationalView x of
-      Just a  -> a
-      Nothing -> smart x
-
+cleanUpSimple = transform (f4 . f2 . f1)
+ where
+   use v = simplifyWith (assoPlus v) sumView
+   f1    = simplify rationalView
+   f2    = use identity
+   f4    = smartConstructors
+   
 cleanUp :: OrList (Equation Expr) -> OrList (Equation Expr)
 cleanUp = idempotent . join . fmap (keepEquation . fmap cleanUpExpr)
 
@@ -111,13 +114,13 @@ keepEquation eq@(a :==: b)
    falsity _         = False
 
 cleanUpExpr :: Expr -> Expr
-cleanUpExpr e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 else error $ "\n\n\n" ++ unlines (map show
+cleanUpExpr = cleanUpBU2 {- e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 else error $ "\n\n\n" ++ unlines (map show
    [e, a1, a2, a3, a4])
  where
    a1 = cleanUpFix e
    a2 = cleanUpBU e
    a3 = cleanUpBU2 e
-   a4 = cleanUpLattice e
+   a4 = cleanUpLattice e -}
       
 ------------------------------------------------------------
 -- Technique 1: fixed points of views
@@ -164,13 +167,13 @@ cleanUpBU2 = transform $ \e ->
         , match sumView e
         ) of
       (Just a, _, _) -> a
-      (_, Just a, _) -> a
+      (_, Just a, _) -> a -- Just simplify square roots for now
       (_, _, Just xs) | length xs > 1 -> 
          build sumView (assoPlus (powerFactorViewWith rationalView) xs)
       _ -> case canonical (powerFactorViewWith rationalView) e of
               Just a  -> a
               Nothing -> smart e
- 
+
 smart :: Expr -> Expr
 smart (a :*: b) = a .*. b
 smart (a :/: b) = a ./. b
@@ -178,6 +181,8 @@ smart (Sym s [x, y]) | s == powerSymbol = x .^. y
 smart (Negate a) = neg a
 smart (a :+: b) = a .+. b
 smart (a :-: b) = a .-. b
+smart (Sqrt (Nat n)) | i*i == n = fromInteger i
+ where i = SQ.isqrt n  
 smart e = e
 
 ------------------------------------------------------------

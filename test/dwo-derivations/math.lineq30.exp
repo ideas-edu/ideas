@@ -2,12 +2,12 @@
   <list>
     <elem ruleid="distribution">
       <expr>
-        18-(8*x+4) == 7*x-4*(4*x-2)
+        18-8*x-4 == 7*x-4*(4*x-2)
       </expr>
     </elem>
     <elem ruleid="distribution">
       <expr>
-        18-(8*x+4) == 7*x-(16*x-8)
+        18-8*x-4 == 7*x-16*x+8
       </expr>
     </elem>
     <elem ruleid="merge similar terms">

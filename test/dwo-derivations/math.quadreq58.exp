@@ -7,11 +7,6 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        4-5*x+x^2-3*x == 0
-      </expr>
-    </elem>
-    <elem ruleid="merge similar terms">
-      <expr>
         4-8*x+x^2 == 0
       </expr>
     </elem>

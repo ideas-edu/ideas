@@ -12,11 +12,6 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        x^2-7*x+49/4-2*x-8 == 0
-      </expr>
-    </elem>
-    <elem ruleid="merge similar terms">
-      <expr>
         x^2-9*x+17/4 == 0
       </expr>
     </elem>

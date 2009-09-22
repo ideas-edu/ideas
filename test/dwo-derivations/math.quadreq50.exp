@@ -17,11 +17,6 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        -4*x-5+5*x-6 == 0
-      </expr>
-    </elem>
-    <elem ruleid="merge similar terms">
-      <expr>
         x-11 == 0
       </expr>
     </elem>

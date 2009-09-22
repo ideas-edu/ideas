@@ -7,22 +7,23 @@ import Common.Traversable
 import Common.Uniplate (somewhereM, universe)
 import Common.Utils
 import Common.View
-import Domain.Math.Numeric.Views
 import Control.Monad
-import Data.List (nub, (\\))
+import Data.List (nub, (\\), sortBy)
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Expr
-import Domain.Math.Polynomial.Views
+import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
+
 
 
 ------------------------------------------------------------
@@ -181,6 +182,7 @@ flipEquation = makeSimpleRule "flip equation" $ \(lhs :==: rhs) -> do
    guard (hasVars rhs && noVars lhs)
    return (rhs :==: lhs)
 
+-- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)
 moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
    guard (rhs /= 0)
@@ -188,16 +190,11 @@ moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
                     Just xs | length xs >= 2 -> True
                     _ -> False
    guard (hasVars lhs && (hasVars rhs || complex))
-   return (lhs - rhs :==: 0)
+   let new = applyD mergeT (lhs - rhs)
+   return (new :==: 0)
 
 ------------------------------------------------------------
 -- Helpers and Rest
-
-{-
-makeSqrt :: Expr -> Expr
-makeSqrt (Nat n) | a*a == n = Nat a
- where a = SQ.isqrt n
-makeSqrt e = sqrt e -}
 
 factors :: Integer -> [(Integer, Integer)]
 factors n = concat [ [(a, b), (negate a, negate b)] | a <- [1..h], let b = n `div` a, a*b == n ]
@@ -292,6 +289,14 @@ distributionT = makeTrans "distribute" f
 mergeT :: Transformation Expr
 mergeT = makeTrans "merge" $ return . collectLikeTerms
 
+sortT :: Transformation Expr
+sortT = makeTrans "sort" $ \e -> do
+   xs <- match sumView e
+   let f  = fmap thd3 . match powerFactorView
+       ps = sortBy cmp $ zip xs (map f xs)
+       cmp (_, ma) (_, mb) = compare ma mb
+   return $ build sumView $ map fst ps
+   
 -------------------------------------------------------
 -- Rewrite Rules
 

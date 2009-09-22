@@ -2,11 +2,6 @@
   <list>
     <elem ruleid="move to left">
       <expr>
-        4*x^2-6*x-x^2-9 == 0
-      </expr>
-    </elem>
-    <elem ruleid="merge similar terms">
-      <expr>
         3*x^2-6*x-9 == 0
       </expr>
     </elem>

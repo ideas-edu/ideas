@@ -7,11 +7,6 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        2*x^2-x^2-2*x-7 == 0
-      </expr>
-    </elem>
-    <elem ruleid="merge similar terms">
-      <expr>
         x^2-2*x-7 == 0
       </expr>
     </elem>

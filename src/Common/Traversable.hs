@@ -2,7 +2,7 @@ module Common.Traversable
    ( Once(..), Switch(..), Crush(..), OnceJoin(..), useOnceJoin
    ) where
 
-import Control.Monad
+import Control.Monad.Identity
 import qualified Data.IntMap as IM
 import qualified Data.Map as M
 
@@ -38,6 +38,9 @@ instance Once [] where
    
 instance Once Maybe where
    onceM = useOnceJoin
+   
+instance Once Identity where
+   onceM = useOnceJoin
 
 instance Eq a => Once (M.Map a) where
    onceM f m = liftM M.fromAscList (onceM g (M.toList m))
@@ -61,6 +64,9 @@ instance Switch [] where
 
 instance Switch Maybe where
    switch = maybe (return Nothing) (liftM Just)
+
+instance Switch Identity where
+   switch (Identity m) = liftM Identity m
 
 instance Eq a => Switch (M.Map a) where
    switch m = do
@@ -86,6 +92,9 @@ instance Crush [] where
 instance Crush Maybe where
    crush = maybe [] return
 
+instance Crush Identity where
+   crush = return . runIdentity
+
 instance Crush (M.Map a) where
    crush = M.elems
 
@@ -110,3 +119,6 @@ instance OnceJoin [] where
 
 instance OnceJoin Maybe where
    onceJoinM = maybe mzero
+   
+instance OnceJoin Identity where
+   onceJoinM f = f . runIdentity

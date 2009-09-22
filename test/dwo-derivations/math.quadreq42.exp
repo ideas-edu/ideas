@@ -15,12 +15,12 @@
         40 == -20*x
       </expr>
     </elem>
-    <elem ruleid="flip equation">
+    <elem ruleid="cover-up times [vars]">
       <expr>
-        20*x == -40
+        -2 == x
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="flip equation">
       <expr>
         x == -2
       </expr>

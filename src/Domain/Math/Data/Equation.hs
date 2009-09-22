@@ -61,6 +61,9 @@ substEquations = map . substEquation
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
 combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2
 
+flipSides :: Equation a -> Equation a
+flipSides (x :==: y) = y :==: x
+
 -----------------------------------------------------
 -- QuickCheck generators
 

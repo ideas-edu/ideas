@@ -4,7 +4,8 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpTimes, coverUpNegate
    , coverUpNumerator, coverUpDenominator, coverUpSqrt 
      -- parameterized rules
-   , ConfigCoverUp(..), varConfig
+   , ConfigCoverUp, configName, predicateCovered, predicateCombined
+   , coverLHS, coverRHS, configCoverUp, varConfig
    , coverUpPowerWith, coverUpTimesWith, coverUpNegateWith
    , coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
    , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
@@ -13,7 +14,7 @@ module Domain.Math.Equation.CoverUpRules
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Data.Equation
-import Control.Monad
+import Control.Monad.Identity
 import Common.Transformation
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
@@ -23,44 +24,64 @@ import Domain.Math.Expr.Symbolic
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules
 
-coverUpRuleName :: String -> String -> String
-coverUpRuleName opName viewName =
-   "cover-up " ++ opName ++ " [" ++ viewName ++ "]"
+coverUpBinary2Rule :: (OnceJoin f, Switch f) => String -> (Expr -> [(Expr, Expr)]) 
+                   -> (Expr -> Expr -> [f Expr])
+                   -> ConfigCoverUp -> Rule (f (Equation Expr))
+coverUpBinary2Rule opName fm fb cfg = 
+   makeSimpleRuleList name $ onceJoinM $ \eq -> 
+      (guard (coverLHS cfg) >> coverLeft eq) ++ 
+      (guard (coverRHS cfg) >> coverRight eq)
+ where
+   name       = coverUpRuleName opName (configName cfg)
+   coverRight = map (fmap flipSides) . coverLeft . flipSides
+   
+   coverLeft (lhs :==: rhs) = do
+      (e1, e2) <- fm lhs
+      guard (predicateCovered  cfg e1)
+      new <- fb rhs e2
+      switch $ fmap (guard . predicateCombined cfg) new
+      return (fmap (e1 :==:) new)
 
 coverUpBinaryRule :: String -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
                   -> ConfigCoverUp -> Rule (Equation Expr)
-coverUpBinaryRule opName fm fb cfg = 
-   let name = coverUpRuleName opName (configName cfg)
-   in makeSimpleRuleList name $ \(lhs :==: rhs) -> do
-         (e1, e2) <- fm lhs
-         guard (predicateCovered  cfg e1)
-         guard (predicateCombined cfg e2)
-         guard (predicateCombined cfg rhs)
-         return (e1 :==: fb rhs e2)
+coverUpBinaryRule opName fm fb =
+   let lp = makeLiftPair (return . Identity) (const . runIdentity) 
+       fbi x y = [Identity (fb x y)]
+   in lift lp . coverUpBinary2Rule opName fm fbi
       
 coverUpUnaryRule :: String -> (Expr -> [Expr]) -> (Expr -> Expr) 
                -> ConfigCoverUp -> Rule (Equation Expr)
-coverUpUnaryRule opName fm fb cfg = 
-   let name = coverUpRuleName opName (configName cfg)
-   in makeSimpleRuleList name $ \(lhs :==: rhs) -> do
-         e1 <- fm lhs
-         guard (predicateCovered  cfg e1)
-         guard (predicateCombined cfg rhs)
-         return (e1 :==: fb rhs)
+coverUpUnaryRule opName fm fb = 
+   coverUpBinaryRule opName (map (\e -> (e, e)) . fm) (const . fb) 
+
+coverUpRuleName :: String -> Maybe String -> String
+coverUpRuleName opName viewName =
+   "cover-up " ++ opName ++ maybe "" (\s -> " [" ++ s ++ "]") viewName
 
 ---------------------------------------------------------------------
 -- Configuration for cover-up rules
 
 data ConfigCoverUp = Config
-   { configName        :: String
+   { configName        :: Maybe String
    , predicateCovered  :: Expr -> Bool
    , predicateCombined :: Expr -> Bool
+   , coverLHS          :: Bool
+   , coverRHS          :: Bool
+   }
+
+configCoverUp :: ConfigCoverUp
+configCoverUp = Config
+   { configName        = Nothing
+   , predicateCovered  = const True
+   , predicateCombined = const True
+   , coverLHS          = True
+   , coverRHS          = True
    }
 
 -- default configuration
 varConfig :: ConfigCoverUp 
-varConfig = Config
-   { configName        = "vars"
+varConfig = configCoverUp
+   { configName        = Just "vars"
    , predicateCovered  = hasVars
    , predicateCombined = noVars
    }
@@ -69,19 +90,15 @@ varConfig = Config
 -- Parameterized cover-up rules
 
 coverUpPowerWith :: ConfigCoverUp -> Rule (OrList (Equation Expr))
-coverUpPowerWith cfg = 
-   let name = coverUpRuleName "power" (configName cfg)
-   in makeSimpleRule name $ onceJoinM $ \(lhs :==: rhs) -> do
-         (e1, e2) <- isBinary powerSymbol lhs
-         n <- isNat e2
-         guard (n > 0)
-         guard (predicateCovered  cfg e1)
-         guard (predicateCombined cfg e2)
-         guard (predicateCombined cfg rhs)
-         new1 <- canonical identity (makeRoot n rhs)
-         new2 <- canonical identity (negate (makeRoot n rhs))
-         return $ orList $ (e1 :==: new1) : [ e1 :==: new2 | new1 /= new2, even n ]
-
+coverUpPowerWith = coverUpBinary2Rule "power" (isBinary powerSymbol) fb
+ where
+   fb rhs e2 = do
+      n <- isNat e2
+      guard (n > 0)
+      new1 <- canonicalM identity (makeRoot n rhs)
+      new2 <- canonicalM identity (negate (makeRoot n rhs))
+      return $ orList $ new1 : [ new2 | new1 /= new2, even n ]
+      
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . isPlus) (-)
 

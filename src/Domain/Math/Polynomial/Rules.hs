@@ -139,10 +139,12 @@ mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) 
 -- Use this configuration for covering-up plus and minus symbols!
 -- Prevent    (x^2+3x)+5 = 0   to be covered up
 oneVar :: ConfigCoverUp
-oneVar = Config
-   { configName        = "one var"
+oneVar = configCoverUp
+   { configName        = Just "one var"
    , predicateCovered  = (==1) . length . collectVars
    , predicateCombined = noVars
+   , coverLHS          = True
+   , coverRHS          = True
    }
 
 ------------------------------------------------------------

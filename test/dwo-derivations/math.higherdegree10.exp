@@ -22,7 +22,7 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        x == 1 or x == 0 or x^2-6-3*x == 0
+        x == 1 or x == 0 or x^2-3*x-6 == 0
       </expr>
     </elem>
     <elem ruleid="abc formula">

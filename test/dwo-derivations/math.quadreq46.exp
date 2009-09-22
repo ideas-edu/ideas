@@ -7,7 +7,7 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        -x^2-20-12*x == 0
+        -x^2-12*x-20 == 0
       </expr>
     </elem>
     <elem ruleid="nice factors">

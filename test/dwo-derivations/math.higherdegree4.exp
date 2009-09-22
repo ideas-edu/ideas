@@ -7,7 +7,7 @@
     </elem>
     <elem ruleid="move to left">
       <expr>
-        x == 0 or x^2+36-13*x == 0
+        x == 0 or x^2-13*x+36 == 0
       </expr>
     </elem>
     <elem ruleid="nice factors">

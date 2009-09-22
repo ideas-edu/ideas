@@ -174,10 +174,12 @@ distributionSquare = makeSimpleRule "distribution square" f
       return ((a .^. 2) .-. (2 .*. a .*. b) + (b .^. 2))
    f _ = Nothing
 
+-- Afterwards, merge, sort, and (possibly) change sign
 flipEquation :: Rule (Equation Expr)
 flipEquation = makeSimpleRule "flip equation" $ \(lhs :==: rhs) -> do
    guard (hasVars rhs && noVars lhs)
-   return (rhs :==: lhs)
+   let new = fmap (applyListD [sortT, mergeT]) (rhs :==: lhs)
+   return $ applyD signT new
 
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)
@@ -187,7 +189,7 @@ moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
                     Just xs | length xs >= 2 -> True
                     _ -> False
    guard (hasVars lhs && (hasVars rhs || complex))
-   let new = applyD mergeT (lhs - rhs)
+   let new = applyD mergeT $ applyD sortT $ lhs - rhs
    return (new :==: 0)
 
 ------------------------------------------------------------
@@ -286,13 +288,21 @@ distributionT = makeTrans "distribute" f
 mergeT :: Transformation Expr
 mergeT = makeTrans "merge" $ return . collectLikeTerms
 
+-- high exponents first, non power-factor terms at the end
 sortT :: Transformation Expr
 sortT = makeTrans "sort" $ \e -> do
    xs <- match sumView e
-   let f  = fmap thd3 . match powerFactorView
+   let f  = fmap (negate . thd3) . match powerFactorView
        ps = sortBy cmp $ zip xs (map f xs)
        cmp (_, ma) (_, mb) = compare ma mb
    return $ build sumView $ map fst ps
+   
+signT :: Transformation (Equation Expr)
+signT = makeTrans "sign" $ \(lhs :==: rhs) -> do
+   a <- match sumView lhs >>= safeHead
+   p <- match productView a
+   guard (fst p)
+   return (-lhs :==: -rhs)
    
 -------------------------------------------------------
 -- Rewrite Rules

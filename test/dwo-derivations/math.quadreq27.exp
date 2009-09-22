@@ -2,7 +2,7 @@
   <list>
     <elem ruleid="move to left">
       <expr>
-        3*x-2*x^2 == 0
+        -2*x^2+3*x == 0
       </expr>
     </elem>
     <elem ruleid="common factor var">

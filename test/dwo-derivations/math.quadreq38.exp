@@ -2,7 +2,7 @@
   <list>
     <elem ruleid="move to left">
       <expr>
-        x^2-15+8*x == 0
+        x^2+8*x-15 == 0
       </expr>
     </elem>
     <elem ruleid="abc formula">

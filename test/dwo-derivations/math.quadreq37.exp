@@ -2,7 +2,7 @@
   <list>
     <elem ruleid="move to left">
       <expr>
-        4*x-12+x^2 == 0
+        x^2+4*x-12 == 0
       </expr>
     </elem>
     <elem ruleid="nice factors">

@@ -45,7 +45,7 @@ TESTDIR = test
 #---------------------------------------------------------------------------------------
 # Source files
 
-HS-SOURCES = $(wildcard $(SRCDIR)/*.hs $(SRCDIR)/*/*.hs $(SRCDIR)/*/*/*.hs)
+HS-SOURCES = $(wildcard $(SRCDIR)/*.hs $(SRCDIR)/*/*.hs $(SRCDIR)/*/*/*.hs $(SRCDIR)/*/*/*/*.hs)
 GLADE-SOURCES = $(wildcard src/Presentation/ExerciseAssistant/*.glade*)
 	
 #---------------------------------------------------------------------------------------

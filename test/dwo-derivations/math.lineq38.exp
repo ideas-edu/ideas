@@ -2,20 +2,20 @@
   <list>
     <elem ruleid="remove division">
       <expr>
-        4*x-5/2 == 5*x+15/2
+        8*x-5 == 10*x+15
       </expr>
     </elem>
     <elem ruleid="variable to left">
       <expr>
-        -x-5/2 == 15/2
+        -2*x-5 == 15
       </expr>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
-        -x == 10
+        -2*x == 20
       </expr>
     </elem>
-    <elem ruleid="cover-up negate [vars]">
+    <elem ruleid="cover-up times [vars]">
       <expr>
         x == -10
       </expr>

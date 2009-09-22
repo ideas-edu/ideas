@@ -309,7 +309,8 @@ removeDivision :: Rule (Equation Expr)
 removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: rhs) -> do
    xs <- match sumView lhs
    ys <- match sumView rhs
-   zs <- mapM (fmap snd . match productView) (filter hasVars (xs ++ ys))
+   -- also consider parts without variables
+   zs <- mapM (fmap snd . match productView) (xs ++ ys)
    let f = fmap snd . match (divView >>> second integerView)
    case mapMaybe f (concat zs) of
       [] -> Nothing

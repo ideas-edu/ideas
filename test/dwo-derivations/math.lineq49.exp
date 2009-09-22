@@ -7,11 +7,6 @@
     </elem>
     <elem ruleid="distribution">
       <expr>
-        -3*x-6 == 54*(2/3*x+1/3)-10
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
         -3*x-6 == 36*x+18-10
       </expr>
     </elem>

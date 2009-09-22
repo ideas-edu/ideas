@@ -85,61 +85,6 @@
             </OMI>
           </OMA>
           <OMA>
-            <OMS cd="arith1" name="minus"/>
-            <OMA>
-              <OMS cd="arith1" name="times"/>
-              <OMI>
-                36
-              </OMI>
-              <OMV name="x"/>
-            </OMA>
-            <OMA>
-              <OMS cd="arith1" name="times"/>
-              <OMI>
-                3
-              </OMI>
-              <OMA>
-                <OMS cd="arith1" name="minus"/>
-                <OMA>
-                  <OMS cd="arith1" name="times"/>
-                  <OMI>
-                    5
-                  </OMI>
-                  <OMV name="x"/>
-                </OMA>
-                <OMI>
-                  1
-                </OMI>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMA>
-      </OMOBJ>
-    </elem>
-    <elem ruleid="distribution">
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMA>
-          <OMS cd="relation1" name="eq"/>
-          <OMA>
-            <OMS cd="arith1" name="minus"/>
-            <OMA>
-              <OMS cd="arith1" name="minus"/>
-              <OMI>
-                12
-              </OMI>
-              <OMA>
-                <OMS cd="arith1" name="times"/>
-                <OMI>
-                  16
-                </OMI>
-                <OMV name="x"/>
-              </OMA>
-            </OMA>
-            <OMI>
-              8
-            </OMI>
-          </OMA>
-          <OMA>
             <OMS cd="arith1" name="plus"/>
             <OMA>
               <OMS cd="arith1" name="minus"/>

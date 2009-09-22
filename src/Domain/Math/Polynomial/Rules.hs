@@ -20,18 +20,15 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
 import Prelude hiding (repeat, (^), replicate)
-import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
-
-
 
 ------------------------------------------------------------
 -- Rule collection
 
 linearRules :: [Rule (Context (Equation Expr))]
 linearRules = map ignoreContext $
-   [ removeDivision, ruleMulti merge, ruleOnce distribute
+   [ removeDivision, ruleMulti merge, ruleMulti distribute
    , varToLeft, coverUpNegate, coverUpTimes
    ] ++
    map ($ oneVar) 

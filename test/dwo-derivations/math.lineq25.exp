@@ -2,11 +2,6 @@
   <list>
     <elem ruleid="distribution">
       <expr>
-        -3*x+6 == 3*(x+4)-7
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
         -3*x+6 == 3*x+12-7
       </expr>
     </elem>

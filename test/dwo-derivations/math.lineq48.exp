@@ -7,11 +7,6 @@
     </elem>
     <elem ruleid="distribution">
       <expr>
-        60*x-12*x-12 == 360+5*(x-1)
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
         60*x-12*x-12 == 360+5*x-5
       </expr>
     </elem>

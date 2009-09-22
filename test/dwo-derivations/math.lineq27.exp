@@ -2,11 +2,6 @@
   <list>
     <elem ruleid="distribution">
       <expr>
-        16*x-4-2 == -3*x+3*(2*x-5)
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
         16*x-4-2 == -3*x+6*x-15
       </expr>
     </elem>

@@ -2,11 +2,6 @@
   <list>
     <elem ruleid="distribution">
       <expr>
-        4*x-16 == 5*(2*x+1)
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
         4*x-16 == 10*x+5
       </expr>
     </elem>

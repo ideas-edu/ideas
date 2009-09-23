@@ -21,7 +21,7 @@ import Domain.Math.Polynomial.CleanUp
 linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
-    $  label "Phase 1" (repeat (removeDivision <|> ruleMulti distribute <|> ruleMulti merge))
+    $  label "Phase 1" (repeat (removeDivision <|> ruleMulti (ruleSomewhere distribute) <|> ruleMulti merge))
    <*> label "Phase 2" (try varToLeft <*> try (coverUpPlus id) <*> try (coverUpTimes |> try coverUpNegate))
 
 -- helper strategy
@@ -57,7 +57,7 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       (  label "top form" $ 
          ( ruleOnce2 (ruleSomewhere merge) <|> ruleOnce cancelTerms  
            <|> ruleOnce2 (ruleSomewhere distributionSquare)
-           <|> ruleOnce2 distribute <|> ruleOnce flipEquation )
+           <|> ruleOnce2 (ruleSomewhere distribute) <|> ruleOnce flipEquation )
          |> ruleOnce moveToLeft
       )
 

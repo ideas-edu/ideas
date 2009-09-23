@@ -4,7 +4,7 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Traversable
-import Common.Uniplate (somewhereM, universe)
+import Common.Uniplate (universe)
 import Common.Utils
 import Common.View
 import Control.Monad
@@ -22,6 +22,9 @@ import Domain.Math.Power.Views
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
+
+q = applyAll (distribute) $ 5 * (x-5) * (x+5)
+ where x = Var "x"
 
 ------------------------------------------------------------
 -- Rule collection
@@ -43,7 +46,8 @@ quadraticRules =
    map (ruleOnce . ($ oneVar)) 
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
    [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
-   , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms , ruleOnce2 distribute
+   , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
+   , ruleOnce2 (ruleSomewhere distribute)
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft, ruleOnce2 (ruleSomewhere simplerSquareRoot)
    ]
@@ -285,16 +289,28 @@ divisionT e = makeTrans "division" $ \eq -> do
    guard (r /= 0)
    return $ fmap (applyD mergeT . applyD distributionT . (./. e)) eq
 
+-- This rule should consider the associativity of multiplication
+-- Combine bottom-up, for example:  5*(x-5)*(x+5) 
+{-
 distributionT :: Transformation Expr
-distributionT = makeTrans "distribute" f 
+distributionT = makeTransList "distribute" f
  where
-   f (a :*: b) =
-      case (match sumView a, match sumView b) of
-         (Just as, Just bs) | length as > 1 || length bs > 1 -> 
-            return $ build sumView [ a .*. b | a <- as, b <- bs ]
-         _ -> Nothing
-   f _ = Nothing
-
+   f expr = do
+      (b, xs) <- matchM productView expr
+      ys      <- rec xs
+      return $ build productView (b, ys)
+   
+   rec :: [Expr] -> [[Expr]]
+   rec (a:b:xs) = map (:xs) (g a b) ++ map (a:) (rec (b:xs))
+   rec _        = []
+   
+   g :: Expr -> Expr -> [Expr]
+   g a b = do 
+      as     <- matchM sumView a
+      bs     <- matchM sumView b
+      guard (length as > 1 || length bs > 1)
+      return $ build sumView [ a .*. b | a <- as, b <- bs ]
+  -}
 mergeT :: Transformation Expr
 mergeT = makeTrans "merge" $ return . collectLikeTerms
 
@@ -346,13 +362,26 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: r
    case mapMaybe f (concat zs) of
       [] -> Nothing
       ns -> return (fromInteger (foldr1 lcm ns))
-   
+
 distribute :: Rule Expr
 distribute = makeSimpleRuleList "distribution" $
-   somewhereM (\x -> applyM distributionT x >>= applyM mergeT)
+   liftM (applyD mergeT) . applyAll distributionT
 
 merge :: Rule Expr
 merge = makeSimpleRule "merge similar terms" $ \old -> do
    new <- apply mergeT old
    guard (old /= new)
    return new
+   
+------------------------
+-- Old
+
+distributionT :: Transformation Expr
+distributionT = makeTrans "distribute" f 
+ where
+   f (a :*: b) =
+      case (match sumView a, match sumView b) of
+         (Just as, Just bs) | length as > 1 || length bs > 1 -> 
+            return $ build sumView [ a .*. b | a <- as, b <- bs ]
+         _ -> Nothing
+   f _ = Nothing

@@ -81,9 +81,9 @@ instance Symbolic Expr where
       | s == timesSymbol  = a :*: b
       | s == minusSymbol  = a :-: b
       | s == divideSymbol = a :/: b
+      | s == rootSymbol && b == Nat 2 = Sqrt a
    function s [a]
       | s == negateSymbol = Negate a
-      | s == sqrtSymbol   = Sqrt a
    function s as = 
       Sym s as
    
@@ -94,7 +94,7 @@ instance Symbolic Expr where
          a :-: b  -> return (minusSymbol,  [a, b])
          Negate a -> return (negateSymbol, [a])
          a :/: b  -> return (divideSymbol, [a, b])
-         Sqrt a   -> return (sqrtSymbol,   [a])
+         Sqrt a   -> return (rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> mzero
 
@@ -164,6 +164,9 @@ showExpr = rec 0
       | otherwise        = "\"" ++ s ++ "\""
    rec i expr = 
       case getFunction expr of
+         -- To do: remove special case for sqrt
+         Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
+            parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
          Just (s, as) -> 
             case (lookup s table, as) of 
                (Just (InfixLeft, n, op), [x, y]) -> 

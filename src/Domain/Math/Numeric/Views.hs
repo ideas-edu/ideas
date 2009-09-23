@@ -99,9 +99,8 @@ optionNegate f a          = f a
 doubleSym :: Symbol -> [Double] -> Maybe Double
 doubleSym s [x, y] 
    | s == divideSymbol = fracDiv x y
-   | s == powerSymbol  = floatingPower x y 
-doubleSym s [x]    
-   | s == sqrtSymbol && x >= 0 = Just (sqrt x)
+   | s == powerSymbol  = floatingPower x y   
+   | s == rootSymbol && x >= 0 && y >= 1 = Just (x ** (1/y))
 doubleSym _ _ = Nothing
 
 -- General numeric interpretation function: constructors Sqrt and
@@ -117,7 +116,7 @@ exprToNum f = rec
          Negate a -> liftM  negate (rec a)
          Nat n    -> return (fromInteger n)
          a :/: b  -> do x <- rec a; y <- rec b; f divideSymbol [x, y]
-         Sqrt a   -> do x <- rec a; f sqrtSymbol [x]
+         Sqrt a   -> do x <- rec a; f rootSymbol [x, 2]
          Var _    -> fail "exprToNum: variable"
          Sym s xs -> mapM rec xs >>= f s
 

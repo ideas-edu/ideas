@@ -116,9 +116,9 @@ findbuggyrules :: State a -> Context a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise state
        isA     = equality ex (fromContext a) . fromContext  
-       check r =  isBuggyRule r 
-               && any isA (Apply.applyAll r (context state))
-   in filter check (ruleset ex)
+       buggies = filter isBuggyRule (ruleset ex)
+       check r = any isA (Apply.applyAll r (context state))
+   in filter check buggies
 
 -- make sure that new has a prefix (because of possible detour)
 -- when resetting the prefix, also make sure that the context is refreshed

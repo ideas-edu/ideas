@@ -128,6 +128,9 @@ coverUpDenominatorWith = coverUpBinaryRule "denominator" (flipOp . matchM divVie
 
 coverUpSqrtWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpSqrtWith = coverUpUnaryRule "square root" isSqrt (\x -> x*x)
+ where
+   isSqrt (Sqrt a) = return a
+   isSqrt _        = []
 
 ---------------------------------------------------------------------
 -- Cover-up rules for variables

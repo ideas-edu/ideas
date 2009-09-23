@@ -55,7 +55,6 @@ negateSymbol = unaryMinusSymbol
 
 absSymbol    = extraSymbol "abs"   
 signumSymbol = extraSymbol "signum" 
-sqrtSymbol   = extraSymbol "sqrt"   
 logSymbol    = extraSymbol "log"            -- in Haskell, logbase e = log
 expSymbol    = extraSymbol "exp"            -- exp 1 ~= 2.718
 tanSymbol    = extraSymbol "tan"       
@@ -76,15 +75,13 @@ fcompSymbol  = extraSymbol "compose"
 
 isPlus, isTimes, isMinus, isDivide :: 
    (Symbolic a, MonadPlus m) => a -> m (a, a)
-isNegate, isSqrt :: 
-   (Symbolic a, MonadPlus m) => a -> m a
+isNegate :: (Symbolic a, MonadPlus m) => a -> m a
    
 isPlus   = isAssoBinary plusSymbol
 isTimes  = isAssoBinary timesSymbol  
 isMinus  = isBinary     minusSymbol  
 isDivide = isBinary     divideSymbol 
 isNegate = isUnary      negateSymbol 
-isSqrt   = isUnary      sqrtSymbol  
 
 infixr 8 ^
 

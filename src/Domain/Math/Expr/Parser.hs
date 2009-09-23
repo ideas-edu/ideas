@@ -22,11 +22,11 @@ import Text.OpenMath.Dictionary.Calculus1
 
 symbols :: [Symbol]
 symbols = nubBy (\x y -> symbolName x == symbolName y) $ 
-   sqrtSymbol : concat [ arith1List, logic1List, relation1List, calculus1List ]
+   concat [ arith1List, logic1List, relation1List, calculus1List ]
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords          = map symbolName symbols
+   { keywords          = "sqrt" : map symbolName symbols
    , keywordOperators  = ["==" ]
    , specialCharacters = "+-*/^()[]{},"
    }
@@ -53,14 +53,16 @@ expr6  =  pChainl ((+) <$ pKey "+" <|> (-) <$ pKey "-") expr6u
 expr6u =  optional (Negate <$ pKey "-") id <*> expr7
 expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
 expr8  =  pChainr ((^) <$ pKey "^") term
-term   =  function <$> symb <*> pList atom
+term   =  symb <*> pList atom
       <|> atom
 atom   =  fromInteger <$> pInteger
       <|> (Var . fst) <$> pVarid
       <|> pParens pExpr
 
-symb :: TokenParser Symbol
-symb = pChoice (map (\s -> s <$ pKey (symbolName s)) symbols)
+symb :: TokenParser ([Expr] -> Expr)
+symb =  pChoice (map (\s -> function s <$ pKey (symbolName s)) symbols)
+    -- To fix: sqrt expects exactly one argument
+    <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations = pLines True . pEquation

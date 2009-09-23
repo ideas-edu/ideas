@@ -33,10 +33,6 @@ import Domain.Programming.Substitute
 import Domain.Programming.Utils
 import Prelude hiding (lookup)
 
-{- ideas:
-
-   o  Use a GADT to get the strategies typed again
--}
 
 -- Test values
 (Right m') = compile "f x y = x + y"
@@ -46,8 +42,8 @@ import Prelude hiding (lookup)
 (Right m4) = compile "f x y = x ; g x y = f x y where f x y = y"
 (Right m5) = compile "f x y = x ; g x y = f x y"
 (Right m6) = compile "f x = g x where g y = reverse y"
-
 (Right m) = compile "f n [] = 0\nf m (_:xs) = m + f m xs\ng = f 2\n"
+checkFromBin = checkExercises ["fromBin"]
 
 
 --------------------------------------------------------------------------------

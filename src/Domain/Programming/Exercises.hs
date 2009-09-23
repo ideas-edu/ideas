@@ -7,33 +7,20 @@
 -- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
 -- Portability :  unknown
---
---
+-- 
+-- An exercise for the programming domain.
+-- 
 -----------------------------------------------------------------------------
 
 module Domain.Programming.Exercises where
 
-import Common.Apply
-import Common.Context
-import Common.Exercise hiding (checkExercise)
+import Common.Exercise
 import Common.Rewriting
-import Common.Strategy hiding (fail, not)
-import Control.Monad (unless, fail)
-import Data.Generics.Biplate
-import Data.Map hiding (map)
-import Data.Maybe
---import Data.List
-import Domain.Programming.AlphaRenaming (alphaRenaming)
-import Domain.Programming.Anonymise
-import Domain.Programming.InlinePatternBindings -- (inlinePatternBindings)
+import Common.Strategy
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.Prog
-import Domain.Programming.PreludeS
-import Domain.Programming.EncodingExercises
-import Domain.Programming.Utils
-import Prelude hiding (fail)
 import Text.Parsing (SyntaxError(..))
 
 heliumExercise :: Exercise Module
@@ -58,29 +45,3 @@ heliumExercise = Exercise
    , ordering      = \_ _ -> LT
    , termGenerator = makeGenerator (const True) (return emptyProg)
    }
-
-checkFromBin = checkExercises ["fromBin"]
-
-{-
-isortExercise :: Exercise Expr
-isortExercise = Exercise   
-   { identifier    = "isort"
-   , domain        = "programming"
-   , description   = "Insertion sort"
-   , status        = Experimental
-{-   , parser        = \s -> case reads s of  
-                             [(a, rest)] | all isSpace rest -> Right a 
-                             _ -> Left $ ErrorMessage "parse error" -}
-   , parser        = parseExpr
-   , subTerm       = \_ _ -> Nothing
-   , prettyPrinter = \e -> ppExpr (e,0)
-   , equivalence   = \_ _ -> True
-   , equality      = (==)
-   , finalProperty = const True
-   , ruleset       = []
-   , strategy      = label "isort"  isortAbstractStrategy
-   , differences   = treeDiff
-   , ordering      = compare
-   , termGenerator = makeGenerator (const True) (return E.undef)
-   }
--}

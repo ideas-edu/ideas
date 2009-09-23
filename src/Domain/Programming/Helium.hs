@@ -8,6 +8,7 @@
 -- Stability   :  provisional
 -- Portability :  unknown
 --
+-- This module serves as a wrapper for the Helium compiler.
 --
 -----------------------------------------------------------------------------
 
@@ -28,31 +29,28 @@ import HeliumMessages
 import System.IO.Unsafe (unsafePerformIO)
 import CompileUtils hiding (doPhaseWithExit)
 import qualified Core
-import Id(Id)
-import UHA_Syntax
+import Id (Id, stringFromId)
 import UHA_Utils
 import UHA_Range(noRange)
 import qualified UHA_Pretty as PP (sem_Module)
 import Standard(searchPath)
 import LvmImport(lvmImportDecls)
-import Id(stringFromId)
 import CoreToImportEnv(getImportEnvironment)
 import qualified ExtractImportDecls(sem_Module)
 import Data.List(isPrefixOf)
 import Control.Monad.Trans
--- import Common.Uniplate
 
--- main = either print (\_ -> print "OK") $ compile "mysum xs = foldr (+) 0 xs"
-
--- a Module pretty printer
+-- | a Module pretty printer
 ppModule = show . PP.sem_Module
 
--- the compiler/parser
+-- | the compiler/parser
 compile :: String -> Either String Module
 compile txt = unsafePerformIO $ do
-   ea <- run $ compile_ txt [Overloading {-, Verbose-}] [ ".", "../../../heliumsystem/helium/lib"
-                                                        , "/Users/johanj/Documents/Research/ExerciseAssistants/heliumsystem/helium/lib" 
-                                                        , "/Users/alex/Documents/heliumsystem/helium/lib" ] []
+   ea <- run $ compile_ txt 
+                 [Overloading {-, Verbose-}] 
+                 [ ".", "../../../heliumsystem/helium/lib"
+                 , "/Users/johanj/Documents/Research/ExerciseAssistants/heliumsystem/helium/lib" 
+                 , "/Users/alex/Documents/heliumsystem/helium/lib" ] []
    case ea of
       Left ms -> return $ Left $ unlines ms
       Right a -> return $ Right a 
@@ -60,7 +58,7 @@ compile txt = unsafePerformIO $ do
 newtype Compile a = C { run :: IO (Either [String] a) }
 
 instance Monad Compile where
-   return a  = C (return (Right a))
+   return = C . return . Right
    C m >>= f = C $ do 
       ea <- m
       case ea of 
@@ -210,8 +208,7 @@ doPhaseWithExit phase = C $
    do result <- phase
       case result of
          Left errs ->
-            do 
-               --showErrorsAndExit errs nrOfMsgs
-               return (Left (map showMessage errs))
+            --showErrorsAndExit errs nrOfMsgs
+            return (Left (map showMessage errs))
          Right a ->
             return (Right a)

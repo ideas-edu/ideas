@@ -14,16 +14,14 @@
 module Domain.Programming.Substitute where
 
 import Data.Data
-import Data.Generics.Biplate
+import Data.Generics.Biplate ()
 import Data.Generics.PlateData
-import Data.Map
-import Domain.Programming.AlphaRenaming
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules ()
 
 -- (\x -> x + let x = 3 in x)
 subst :: Data a => (Expression, Expression) -> a -> a
-subst (x, y) expr = transformBi f $ expr
+subst (x, y) expr = transformBi f expr
   where
     f e | e == x    = y -- assume ranges are removed
         | otherwise = e

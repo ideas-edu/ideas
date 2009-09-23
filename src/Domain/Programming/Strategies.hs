@@ -72,12 +72,12 @@ fromBinInnerProductS = label "Inner product" $
            (compS sumS (compS (zipWithS # [ opS "*" Nothing Nothing
                                           , powersOfTwoS
                                           ])
-                              (reverseS)
+                               reverseS
                        )
            ) []
         ]
   where
-    powersOfTwoS  =  (iterateS # [opS "*" Nothing (Just (intS "2")), intS "1"])
+    powersOfTwoS  =  iterateS # [opS "*" Nothing (Just (intS "2")), intS "1"]
 {-                 <|> ([base^x | x <- [0..] ])
                  <|> (map (2^) [0..(length l)-1])
                  <|> (lambdaS [varS "xs"] 
@@ -129,6 +129,7 @@ instance GetRules Declaration where
                                                   getRules rhs
       Declaration_FunctionBindings _ funbs -> introFunctionBindings (length funbs) :
                                               concatMap getRules funbs
+      _                                    -> error $ "No instance for: " ++ show d
 
 instance GetRules MaybeExpression where
   getRules mexpr = 
@@ -162,6 +163,7 @@ instance GetRules Expression where
 instance GetRules LeftHandSide where
   getRules (LeftHandSide_Function _ name ps) = introLHSFun (length ps) : getRules name ++
                                                concatMap getRules ps
+  getRules lhs = error $ "No instance for: " ++ show lhs
 
 instance GetRules RightHandSide where
   getRules rhs = 
@@ -208,6 +210,7 @@ instance GetRules Literal where
     case lit of 
       Literal_Int    _ val -> [introLiteralInt val]
       Literal_String _ val -> [introLiteralString val]
+      _                    -> error $ "No instance for: " ++ show lit
 
 instance GetRules Name where
   getRules name = 

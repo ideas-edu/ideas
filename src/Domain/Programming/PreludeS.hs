@@ -8,22 +8,23 @@
 -- Stability   :  provisional
 -- Portability :  unknown
 --
---
+-- This module defines standard strategies based on Prelude functions
+-- and Haskell language constructs.
 -----------------------------------------------------------------------------
 
 module Domain.Programming.PreludeS
    ( -- * Type synonyms
      ModuleS
      -- * Prelude strategies
-   , foldlS, letS, compS, iterateS, sumS, zipWithS, reverseS
+   , foldlS, letS, whereS, compS, iterateS, sumS, zipWithS, reverseS
      -- * Smart constructors and help functions
    , varS, patS, progS, funS, declFunS, declPatS, rhsS, intS, appS, opS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
-   , patInfixConS, patWildcardS
+   , patInfixConS, patWildcardS, exprConS
    ) where
 
 import Common.Context hiding (Var)
-import Common.Strategy hiding (repeat)
+import Common.Strategy hiding (repeat, replicate)
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Prelude hiding (sequence)
@@ -112,7 +113,7 @@ varS n = introExprVariable <*> introNameIdentifier n
 exprConS :: String -> ModuleS
 exprConS n = introExprConstructor <*> introNameSpecial n 
 
-exprParenS expr = introExprParenthesized <*> expr
+exprParenS = (introExprParenthesized <*>)
 
 patS :: String -> ModuleS
 patS n = introPatternVariable <*> introNameIdentifier n
@@ -123,7 +124,7 @@ patWildcardS = toStrategy introPatternWildcard
 patConS :: String -> ModuleS
 patConS n = introPatternConstructor 0 <*> introNameSpecial n
 
-patParenS expr = introPatternParenthesized <*> expr
+patParenS = (introPatternParenthesized <*>)
 
 patInfixConS :: ModuleS -> String -> ModuleS -> ModuleS
 patInfixConS l con r = introPatternInfixConstructor <*> l <*> 
@@ -154,7 +155,7 @@ appS :: ModuleS -> [ModuleS] -> ModuleS
 appS f as  =  introExprNormalApplication (length as) <*> f <*> sequence as
 
 infixr 0 #
-f # as = appS f as
+( # ) = appS
 
 opS :: String -> Maybe ModuleS -> Maybe ModuleS -> ModuleS
 opS n l r = case (l, r) of 
@@ -163,7 +164,7 @@ opS n l r = case (l, r) of
               (Just x, Nothing)  -> infixApp True False  <*> x  <*> op
               (Nothing, Nothing) -> infixApp False False <*> op
   where 
-    infixApp l r = introExprInfixApplication l r
+    infixApp = introExprInfixApplication
     op = introExprVariable <*> introNameOperator n
 
 lambdaS :: [ModuleS] -> ModuleS -> ModuleS
@@ -173,6 +174,6 @@ lambdaS as expr = introExprLambda (length as) <*> sequence as <*> expr
 --------------------------------------------------------------------------------
 -- Help functions
 --------------------------------------------------------------------------------
-mapSeqS f = sequence . (map f)
-repeatS n = sequence . (take n) . repeat
+mapSeqS f = sequence . map f
+repeatS n = sequence . replicate n
 

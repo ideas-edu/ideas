@@ -8,14 +8,14 @@
 -- Stability   :  provisional
 -- Portability :  unknown
 --
---
+-- This module contains the domain-specific functions
 -----------------------------------------------------------------------------
 
 module Domain.Programming.Prog where
 
 import Common.Utils (safeHead)
 import Common.Context hiding (get)
-import Common.Strategy hiding (not, repeat)
+import Common.Strategy hiding (not, repeat, replicate)
 import Control.Monad.State
 import Data.Generics.Biplate
 import Data.Generics.PlateData
@@ -68,7 +68,7 @@ freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
 
 allSolutions strat = map (fromContext . snd . last . snd) 
                          (derivations strat $ inContext emptyProg)
-normalisedSolutions fs strat = map (normaliseModule fs) $ allSolutions strat
+normalisedSolutions fs = map (normaliseModule fs) . allSolutions
 isSolution fs strat m = elem (normaliseModule fs m) $ normalisedSolutions fs strat
 
 checkExercise :: [String] -> Solution -> StateT Integer IO ()
@@ -96,9 +96,9 @@ checkExercises fixedNames solutions = do
   putStrLn $ "\n" ++ percentage ++ "% has been recognised by the strategy.\n"
   return ()
 
-ppStringS i s = "| " ++ s ++ take (i - length s) (repeat ' ')
-line = take 80 $ repeat '-'
-dline = take 80 $ repeat '='
+ppStringS i s = "| " ++ s ++ replicate (i - length s) ' '
+line = replicate 80 '-'
+dline = replicate 80 '='
 
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
@@ -116,7 +116,6 @@ normalise :: Names -> Module -> Module
 normalise fs = rewrites . preprocess
   where
     preprocess =  inline fs . makeBetaReducible fs . removeExplicitApps . removeRanges . removeParens
---    preprocess =  inline fs . anonymise . removeRanges . removeParens
     rewrites = rewriteBi $  (applicationReduce
                         >->  betaReduce 
                         >->  lambdaReduce 
@@ -131,11 +130,11 @@ liftRule rule m =
    safeHead [ fill a | (h, fill) <- contextsBi m, Just a <- [rule h] ]
 
 (>->) :: (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
-f >-> g = \ x -> f x `mplus` g x
+(f >-> g) x = f x `mplus` g x
 infixr 1 >->
 
 (>>->) :: (Data a, Data b) => (a -> Maybe a) -> (b -> Maybe b) -> Module -> Maybe Module
-f >>-> g = \x -> (liftRule f) x `mplus` (liftRule g) x
+(f >>-> g) x = liftRule f x `mplus` liftRule g x
 infixr 2 >>->
 
 removeParens :: Data a => a -> a
@@ -195,7 +194,7 @@ applicationReduce expr =
     Expression_NormalApplication r  
       (Expression_NormalApplication _ f as) as' -> 
         Just $ Expression_NormalApplication r f (as ++ as')
-    Expression_NormalApplication _ f [] -> Just $ f
+    Expression_NormalApplication _ f [] -> Just f
     _ -> Nothing
 
 -- infix application rewrites, e.g. 1 `div` 2 => div 1 2 or 1 + 2 => (+) 1 2
@@ -261,20 +260,6 @@ bindingPattern d =
     Declaration_PatternBinding _ p _        -> p
     Declaration_FunctionBindings r (fb:fbs) -> pat (funName fb)
     _                                       -> error "not a function!"
-
-{-
-let2where :: RightHandSide -> Maybe RightHandSide
-let2where x = 
-  case x of
-    RightHandSide_Expression r (Expression_Let _ decls expr) maybeDecls -> 
-      case maybeDecls of
-        MaybeDeclarations_Just ds -> Just $ rhs r expr $ ds ++ decls
-        MaybeDeclarations_Nothing -> Just $ rhs r expr decls
-    _ -> Nothing
-  where
-   rhs r expr ds = RightHandSide_Expression r expr $ MaybeDeclarations_Just $ ds
--}
-
 
 --------------------------------------------------------------------------------
 -- QuickCheck properties

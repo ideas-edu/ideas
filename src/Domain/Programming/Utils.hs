@@ -79,14 +79,14 @@ name2string (Name_Identifier _ _ n) = n
 name = Name_Identifier noRange []
 var = Expression_Variable noRange
 pat = Pattern_Variable noRange
-patBinding pat expr w = Declaration_PatternBinding noRange pat $ 
-                          RightHandSide_Expression noRange expr w
-declFunBindings fbs = Declaration_FunctionBindings noRange fbs
+patBinding pat expr = Declaration_PatternBinding noRange pat .
+                        RightHandSide_Expression noRange expr 
+declFunBindings = Declaration_FunctionBindings noRange
 funBinding name ps expr = FunctionBinding_FunctionBinding noRange 
                            (LeftHandSide_Function noRange name ps) 
                            (RightHandSide_Expression noRange expr MaybeDeclarations_Nothing)                           
-lambda ps expr = Expression_Lambda noRange ps expr
-letItBe ds expr = Expression_Let noRange ds expr
+lambda = Expression_Lambda noRange
+letItBe = Expression_Let noRange
 
 pp = putStrLn . ppModule
 compExercise = (\(Right m)->m) . compile 
@@ -110,7 +110,7 @@ instance MonadMul Maybe where
   mmul _ _               = Nothing
 
 mprod :: MonadMul m => a -> [m a] -> m a
-mprod a = foldr mmul (mone a)
+mprod = foldr mmul . mone
 
 mprod1 :: MonadMul m => [m a] -> m a
 mprod1 = foldr1 mmul

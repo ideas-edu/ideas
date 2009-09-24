@@ -99,6 +99,12 @@ fromBinInnerProductS = label "Inner product" $
             "Good solution"
 -}
 
+
+-- with biplate I don't have a function (a -> b) -> c -> c or more precise (a -> b) -> c a -> c b
+--   
+-- first traversal of ast, converting 
+type 
+
 -- | Strategies derived from the abstract syntax of expressions
 stringToStrategy :: String -> Strategy (Context Module)
 stringToStrategy = sequence . stringToRules

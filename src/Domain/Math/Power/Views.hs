@@ -1,3 +1,14 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-----------------------------------------------------------------------------
 -- For now, restricted to integers in exponent:
 -- no sqrt, or roots
 module Domain.Math.Power.Views

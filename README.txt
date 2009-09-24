@@ -1,6 +1,6 @@
           Intelligent Feedback Project -- Open Universiteit Nederland
 
-Copyright 2008, Open Universiteit Nederland. The source code of this project is 
+Copyright 2009, Open Universiteit Nederland. The source code of this project is 
 distributed under the terms of the GNU General Public License. For more information, 
 see the file "LICENSE.txt", which is included in the distribution.
 

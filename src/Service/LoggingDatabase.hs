@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
--- Copyright 2008, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------

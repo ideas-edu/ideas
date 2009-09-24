@@ -7,10 +7,11 @@ VERSION = 0.5.6
 
 include Makefile.incl
 
-binaries: service solvergui ideas
+binaries: service solvergui ideas omconverter
 
 service: $(BINDIR)/service.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
+omconverter: $(BINDIR)/omconverter$(EXE)
 ideas: $(BINDIR)/ideasWX$(EXE)
 prof: $(BINDIR)/prof$(EXE)
 
@@ -35,6 +36,16 @@ ifeq ($(WX), yes)
 	$(STRIP) $@
 ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) ideasWX
+endif
+endif
+
+$(BINDIR)/omconverter$(EXE): $(HS-SOURCES) src/Presentation/ExerciseAssistant/OMConverter.hs revision
+ifeq ($(WX), yes)
+	$(MKDIR) -p $(BINDIR) $(OUTDIR)
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/OMConverter.hs
+	$(STRIP) $@
+ifeq ($(WINDOWS), no)
+	$(CD) $(BINDIR); $(MAC) omconverter
 endif
 endif
 

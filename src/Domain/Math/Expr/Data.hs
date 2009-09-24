@@ -153,10 +153,10 @@ varGenerator vars
 -- Pretty printer 
 
 instance Show Expr where
-   show = showExpr
+   show = showExpr operatorTable
 
-showExpr :: Expr -> String
-showExpr = rec 0 
+showExpr :: OperatorTable -> Expr -> String
+showExpr table = rec 0 
  where
    rec _ (Nat n) = show n
    rec _ (Var s) 
@@ -168,7 +168,7 @@ showExpr = rec 0
          Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
          Just (s, as) -> 
-            case (lookup s table, as) of 
+            case (lookup s symbolTable, as) of 
                (Just (InfixLeft, n, op), [x, y]) -> 
                   parIf (i>n) $ concat [rec n x, op, rec (n+1) y]
                (Just (InfixRight, n, op), [x, y]) -> 
@@ -180,7 +180,7 @@ showExpr = rec 0
          Nothing -> 
             error "showExpr"
 
-   table  = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] operators, (s, op) <- xs ]
+   symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"

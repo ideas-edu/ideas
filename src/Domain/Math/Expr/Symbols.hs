@@ -36,11 +36,13 @@ import Text.OpenMath.Dictionary.Transc1
 -------------------------------------------------------------
 -- Operator fixities
 
+type OperatorTable = [(Associativity, [(Symbol, String)])]
+
 data Associativity = InfixLeft | InfixRight | Prefix -- InfixNon | Postfix
    deriving (Show, Eq)
 
-operators :: [ (Associativity, [(Symbol, String)]) ]
-operators =
+operatorTable :: OperatorTable
+operatorTable =
    [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
    , (Prefix,     [(negateSymbol, "-")])                      -- 6+
    , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7

@@ -85,7 +85,7 @@ gaussianElimExercise = makeExercise
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right (simplify a)
                               (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = ppMatrixWith showExpr
+   , prettyPrinter = ppMatrixWith show
    , equivalence   = \x y -> fmap simplified x === fmap simplified y
    , ruleset       = matrixRules
    , finalProperty = inRowReducedEchelonForm

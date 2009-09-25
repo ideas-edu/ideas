@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="cover-up minus right [one var]">
       <expr>
@@ -17,17 +17,22 @@
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
-        x == -1/2+1/2*sqrt 6 or 2*x+1 == -sqrt 6
+        x == (-1+sqrt 6)/2 or 2*x+1 == -sqrt 6
       </expr>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
-        x == -1/2+1/2*sqrt 6 or 2*x == -1-sqrt 6
+        x == (-1+sqrt 6)/2 or 2*x == -1-sqrt 6
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
-        x == -1/2+1/2*sqrt 6 or x == -1/2-1/2*sqrt 6
+        x == (-1+sqrt 6)/2 or x == (-1-sqrt 6)/2
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        x == -1/2+sqrt 6/2 or x == -1/2-sqrt 6/2
       </expr>
     </elem>
   </list>

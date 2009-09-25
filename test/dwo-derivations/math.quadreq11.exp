@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="cover-up plus [one var]">
       <expr>
@@ -7,15 +7,20 @@
     </elem>
     <elem ruleid="cover-up power [vars]">
       <expr>
-        x-7 == 2*sqrt 2 or x-7 == -2*sqrt 2
+        x-7 == sqrt 8 or x-7 == -sqrt 8
       </expr>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
-        x == 7+2*sqrt 2 or x-7 == -2*sqrt 2
+        x == 7+sqrt 8 or x-7 == -sqrt 8
       </expr>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 7+sqrt 8 or x == 7-sqrt 8
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
       <expr>
         x == 7+2*sqrt 2 or x == 7-2*sqrt 2
       </expr>

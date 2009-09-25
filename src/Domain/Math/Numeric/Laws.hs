@@ -17,7 +17,6 @@ module Domain.Math.Numeric.Laws
    ) where
 
 import Test.QuickCheck
-import Common.Utils
 
 testNumLaws :: Num a => String -> Gen a -> IO ()
 testNumLaws = testNumLawsWith (==)

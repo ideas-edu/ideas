@@ -117,7 +117,7 @@ else
 endif
 
 nolicense:
-	find src -name *.hs -print0 | xargs --null grep -L "LICENSE"\
+	find src -name \*.hs -print0 | xargs --null grep -L "LICENSE"
 
 #-------------------------------------------------------------------------
 # AG sources

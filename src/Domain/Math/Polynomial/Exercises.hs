@@ -1,3 +1,14 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Exercises where
 
 import Domain.Math.Polynomial.Rules
@@ -42,7 +53,7 @@ quadraticExercise = makeExercise
    , description   = "solve a quadratic equation"
    , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = eqOrList cleanUpExpr
+   , equality      = eqOrList cleanUpExpr2
    , equivalence   = viewEquivalent quadraticEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext $ quadraticRules ++ abcBuggyRules
@@ -57,7 +68,7 @@ higherDegreeExercise = makeExercise
    , description   = "solve an equation (higher degree)"
    , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = eqOrList cleanUpExpr
+   , equality      = eqOrList cleanUpExpr2
    , equivalence   = viewEquivalent higherDegreeEquationsView
    , finalProperty = solvedEquations
    , ruleset       = map ignoreContext higherDegreeRules

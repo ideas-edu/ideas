@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="distribution">
       <expr>
@@ -12,7 +12,12 @@
     </elem>
     <elem ruleid="abc formula">
       <expr>
-        x == 5/2+1/2*sqrt 53 or x == 5/2-1/2*sqrt 53
+        x == (5+sqrt 53)/2 or x == (5-sqrt 53)/2
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        x == 5/2+sqrt 53/2 or x == 5/2-sqrt 53/2
       </expr>
     </elem>
   </list>

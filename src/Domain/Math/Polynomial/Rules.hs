@@ -19,7 +19,7 @@ import Common.Uniplate (universe)
 import Common.Utils
 import Common.View
 import Control.Monad
-import Data.List (nub, (\\), sortBy)
+import Data.List (nub, (\\), sort, sortBy)
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Data.Equation
@@ -57,7 +57,7 @@ quadraticRules =
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
    , ruleOnce2 (ruleSomewhere distribute)
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
-   , ruleOnce moveToLeft, ruleOnce2 (ruleSomewhere simplerSquareRoot)
+   , ruleOnce moveToLeft, ruleMulti2 (ruleSomewhere simplerSquareRoot)
    ]
    
 higherDegreeRules :: [Rule (OrList (Equation Expr))]
@@ -131,19 +131,23 @@ abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
 ------------------------------------------------------------
 -- General form rules: expr = 0
 
+-- Rule must be symmetric in side of equation
 mulZero :: Rule (OrList (Equation Expr))
-mulZero = makeSimpleRule "multiplication is zero" $ onceJoinM $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (_, xs) <- match productView lhs
-   guard (length xs > 1)
-   let f e = case match (polyNormalForm rationalView >>> second linearPolyView) e of
-                Just (x, (a, b)) -- special cases (simplify immediately)
-                   | a == 1 -> 
-                        Var x :==: fromRational (-b)
-                   | a == -1 -> 
-                        Var x :==: fromRational b
-                _ -> e :==: 0 
-   return $ orList $ map f xs 
+mulZero = makeSimpleRuleList "multiplication is zero" $ onceJoinM bothSides
+ where
+   bothSides eq = oneSide eq `mplus` oneSide (flipSides eq)
+   oneSide (lhs :==: rhs) = do
+      guard (rhs == 0)
+      (_, xs) <- matchM productView lhs
+      guard (length xs > 1)
+      let f e = case match (polyNormalForm rationalView >>> second linearPolyView) e of
+                   Just (x, (a, b)) -- special cases (simplify immediately)
+                      | a == 1 -> 
+                           Var x :==: fromRational (-b)
+                      | a == -1 -> 
+                           Var x :==: fromRational b
+                   _ -> e :==: 0 
+      return $ orList $ map f xs 
 
 ------------------------------------------------------------
 -- Constant form rules: expr = constant
@@ -162,12 +166,20 @@ oneVar = configCoverUp
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2
 
+-- Do not simplify (5+sqrt 53)/2
 simplerSquareRoot :: Rule Expr
 simplerSquareRoot = makeSimpleRule "simpler square root" $ \e -> do
-   guard $ not . null $ [ e | Sqrt e <- universe e ]
+   xs <- f e
+   guard (not (null xs))
    new <- canonical (SQ.squareRootViewWith rationalView) e
-   guard (new /= e)
+   ys <- f new
+   guard (xs /= ys)
    return new
+ where
+   -- return numbers under sqrt symbol
+   f :: Expr -> Maybe [Rational]
+   f e = liftM sort $ sequence [ match rationalView e | Sqrt e <- universe e ]
+ 
 
 cancelTerms :: Rule (Equation Expr)
 cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
@@ -378,8 +390,9 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: r
       ns -> return (fromInteger (foldr1 lcm ns))
 
 distribute :: Rule Expr
-distribute = makeSimpleRuleList "distribution" $
-   liftM (applyD mergeT) . applyAll distributionT
+distribute = makeSimpleRuleList "distribution" $ \expr -> do
+   new <- applyAll distributionT expr
+   return (applyD mergeT new)
 
 merge :: Rule Expr
 merge = makeSimpleRule "merge similar terms" $ \old -> do

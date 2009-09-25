@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="distribution">
       <expr>
@@ -11,6 +11,11 @@
       </expr>
     </elem>
     <elem ruleid="abc formula">
+      <expr>
+        x == (2+sqrt 32)/2 or x == (2-sqrt 32)/2
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
       <expr>
         x == 1+2*sqrt 2 or x == 1-2*sqrt 2
       </expr>

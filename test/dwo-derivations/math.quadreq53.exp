@@ -1,6 +1,11 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="abc formula">
+      <expr>
+        x == (12+sqrt 8)/2 or x == (12-sqrt 8)/2
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
       <expr>
         x == 6+sqrt 2 or x == 6-sqrt 2
       </expr>

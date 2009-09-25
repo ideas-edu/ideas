@@ -27,6 +27,11 @@
     </elem>
     <elem ruleid="cover-up power [vars]">
       <expr>
+        x == sqrt 12 or x == -sqrt 12
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
+      <expr>
         x == 2*sqrt 3 or x == -2*sqrt 3
       </expr>
     </elem>

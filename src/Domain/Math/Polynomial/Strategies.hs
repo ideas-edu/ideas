@@ -1,3 +1,14 @@
+-----------------------------------------------------------------------------
+-- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- under the terms of the GNU General Public License. For more information, 
+-- see the file "LICENSE.txt", which is included in the distribution.
+-----------------------------------------------------------------------------
+-- |
+-- Maintainer  :  bastiaan.heeren@ou.nl
+-- Stability   :  provisional
+-- Portability :  portable (depends on ghc)
+--
+-----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
    ( linearStrategy, quadraticStrategy
    , higherDegreeStrategy 
@@ -15,13 +26,15 @@ import Domain.Math.Data.Equation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
 
+repeatS s = replicate 10 (try s)
+
 ------------------------------------------------------------
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
-    $  label "Phase 1" (repeat (removeDivision <|> ruleMulti (ruleSomewhere distribute) <|> ruleMulti merge))
+    $  label "Phase 1" (repeatS (removeDivision <|> ruleMulti (ruleSomewhere distribute) <|> ruleMulti merge))
    <*> label "Phase 2" (try varToLeft <*> try (coverUpPlus id) <*> try (coverUpTimes |> try coverUpNegate))
 
 -- helper strategy
@@ -52,6 +65,10 @@ quadraticStrategy = cleanUpStrategy cleanUp $
          coverUpPower <|> ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
          <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator 
          <|> squareBothSides
+      )
+      |> -- simplification 
+      (  label "square root simplification" $ 
+         ruleMulti2 (ruleSomewhere simplerSquareRoot)
       )
       |> -- top form
       (  label "top form" $ 

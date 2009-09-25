@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="cover-up power [vars]">
       <expr>
@@ -12,17 +12,22 @@
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
-        x == -7/2+1/2*sqrt 7 or 7+2*x == -sqrt 7
+        x == (-7+sqrt 7)/2 or 7+2*x == -sqrt 7
       </expr>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
-        x == -7/2+1/2*sqrt 7 or 2*x == -7-sqrt 7
+        x == (-7+sqrt 7)/2 or 2*x == -7-sqrt 7
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
-        x == -7/2+1/2*sqrt 7 or x == -7/2-1/2*sqrt 7
+        x == (-7+sqrt 7)/2 or x == (-7-sqrt 7)/2
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        x == -7/2+sqrt 7/2 or x == -7/2-sqrt 7/2
       </expr>
     </elem>
   </list>

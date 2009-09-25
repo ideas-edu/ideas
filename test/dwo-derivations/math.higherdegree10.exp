@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="power factor">
       <expr>
@@ -27,7 +27,12 @@
     </elem>
     <elem ruleid="abc formula">
       <expr>
-        x == 1 or x == 0 or x == 3/2+1/2*sqrt 33 or x == 3/2-1/2*sqrt 33
+        x == 1 or x == 0 or x == (3+sqrt 33)/2 or x == (3-sqrt 33)/2
+      </expr>
+    </elem>
+    <elem ruleid="distribution">
+      <expr>
+        x == 1 or x == 0 or x == 3/2+sqrt 33/2 or x == 3/2-sqrt 33/2
       </expr>
     </elem>
   </list>

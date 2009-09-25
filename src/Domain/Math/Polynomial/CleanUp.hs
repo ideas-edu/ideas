@@ -10,12 +10,12 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.CleanUp 
-   ( cleanUp, cleanUpExpr, cleanUpSimple, collectLikeTerms
+   ( cleanUp, cleanUpExpr, cleanUpExpr2, cleanUpSimple, collectLikeTerms
    , normalizeSum, normalizeProduct
    ) where
 
 import qualified Prelude
-import Prelude hiding ((^))
+import Prelude hiding ((^), recip)
 import Domain.Math.Data.SquareRoot
 import Data.Maybe
 import Common.Utils
@@ -124,6 +124,10 @@ keepEquation eq@(a :==: b)
    falsity (_ :/: e) = maybe False (==0) (match rationalView e)
    falsity _         = False
 
+-- also simplify square roots
+cleanUpExpr2 :: Expr -> Expr
+cleanUpExpr2 = cleanUpExpr . transform (simplify (squareRootViewWith rationalView))
+
 cleanUpExpr :: Expr -> Expr
 cleanUpExpr = cleanUpBU2 {- e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 else error $ "\n\n\n" ++ unlines (map show
    [e, a1, a2, a3, a4])
@@ -174,16 +178,27 @@ cleanUpBU = transform (f4 . f3 . f2 . f1)
 cleanUpBU2 :: Expr -> Expr
 cleanUpBU2 = transform $ \e -> 
    case ( canonical rationalView e
-        , canonical (squareRootViewWith rationalView) e
+        , canonical specialSqrtOrder e
         , match sumView e
         ) of
       (Just a, _, _) -> a
-      (_, Just a, _) -> a -- Just simplify square roots for now
+      (_, Just a, _) -> -- Just simplify order of terms with square roots for now
+                        transform smart a
       (_, _, Just xs) | length xs > 1 -> 
          build sumView (assoPlus (powerFactorViewWith rationalView) xs)
       _ -> case canonical (powerFactorViewWith rationalView) e of
               Just a  -> a
               Nothing -> smart e
+
+specialSqrtOrder :: View Expr [Expr]
+specialSqrtOrder = sumView >>> makeView f id
+ where
+   make = match (squareRootViewWith rationalView)
+   cmp (_, x) (_, y) = g x `compare` g y
+   g = isNothing . fromSquareRoot
+   f xs = do
+      ys <- mapM make xs
+      return $ map fst $ sortBy cmp $ zip xs ys
 
 smart :: Expr -> Expr
 smart (a :*: b) = a .*. b

@@ -1,6 +1,11 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="abc formula">
+      <expr>
+        x == (-4+sqrt 32)/2 or x == (-4-sqrt 32)/2
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
       <expr>
         x == -2+2*sqrt 2 or x == -2-2*sqrt 2
       </expr>

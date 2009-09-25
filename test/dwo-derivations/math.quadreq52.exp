@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="move to left">
       <expr>
@@ -6,6 +6,11 @@
       </expr>
     </elem>
     <elem ruleid="abc formula">
+      <expr>
+        x == (6+sqrt 52)/2 or x == (6-sqrt 52)/2
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
       <expr>
         x == 3+sqrt 13 or x == 3-sqrt 13
       </expr>

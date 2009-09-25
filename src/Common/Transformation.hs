@@ -30,7 +30,7 @@ module Common.Transformation
    , inverseRule, transformations, getRewriteRules
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
-   , ruleOnce, ruleOnce2, ruleMulti, ruleSomewhere
+   , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
      -- * QuickCheck
    , checkRule, checkRuleSmart
    ) where
@@ -441,6 +441,10 @@ ruleOnce2 = ruleOnce . ruleOnce
 -- | Apply at multiple locations, but at least once
 ruleMulti :: (Switch f, Crush f) => Rule a -> Rule (f a)
 ruleMulti r = makeSimpleRuleList (name r) $ multi $ applyAll r
+
+-- | Apply at multiple locations, but at least once (in two functors)
+ruleMulti2 :: (Switch f, Crush f, Switch g, Crush g) => Rule a -> Rule (f (g a))
+ruleMulti2 = ruleMulti . ruleMulti
 
 multi :: (Switch f, Crush f) => (a -> [a]) -> f a -> [f a]
 multi f a =

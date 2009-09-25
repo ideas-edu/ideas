@@ -1,26 +1,11 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="distribution">
       <expr>
-        3*(x-2)*x+18*(x-2) == 12*x
+        (3*x-6)*(x+6) == 12*x
       </expr>
     </elem>
     <elem ruleid="distribution">
-      <expr>
-        (3*x-6)*x+18*(x-2) == 12*x
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
-        3*x^2-6*x+18*(x-2) == 12*x
-      </expr>
-    </elem>
-    <elem ruleid="distribution">
-      <expr>
-        3*x^2-6*x+18*x-36 == 12*x
-      </expr>
-    </elem>
-    <elem ruleid="merge similar terms">
       <expr>
         3*x^2+12*x-36 == 12*x
       </expr>

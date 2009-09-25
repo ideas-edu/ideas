@@ -34,9 +34,6 @@ import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
 
-q = applyAll (distribute) $ 5 * (x-5) * (x+5)
- where x = Var "x"
-
 ------------------------------------------------------------
 -- Rule collection
 
@@ -292,24 +289,30 @@ timesT :: Expr -> Transformation (Equation Expr)
 timesT e = makeTrans "times" $ \eq -> do 
    r <- match rationalView e
    guard (r /= 0)
-   return $ fmap (applyD mergeT . applyD distributionT . (e .*.)) eq
+   return $ fmap (applyD mergeT . applyD distributionOldT . (e .*.)) eq
 
 divisionT :: Expr -> Transformation (Equation Expr)
 divisionT e = makeTrans "division" $ \eq -> do
    r <- match rationalView e
    guard (r /= 0)
-   return $ fmap (applyD mergeT . applyD distributionT . (./. e)) eq
+   return $ fmap (applyD mergeT . applyD distributionOldT . (./. e)) eq
 
 -- This rule should consider the associativity of multiplication
 -- Combine bottom-up, for example:  5*(x-5)*(x+5) 
-{-
+-- However, in  -2x(2x+10)   (-2x) should be seen as "one term"
 distributionT :: Transformation Expr
 distributionT = makeTransList "distribute" f
  where
    f expr = do
       (b, xs) <- matchM productView expr
-      ys      <- rec xs
+      ys      <- rec (combine xs)
       return $ build productView (b, ys)
+   
+   combine :: [Expr] -> [Expr]
+   combine (x:y:rest) | p x && p y = combine ((x*y):rest)
+    where p = maybe False ((==1) . length) . match sumView
+   combine []     = []
+   combine (x:xs) = x : combine xs
    
    rec :: [Expr] -> [[Expr]]
    rec (a:b:xs) = map (:xs) (g a b) ++ map (a:) (rec (b:xs))
@@ -321,7 +324,7 @@ distributionT = makeTransList "distribute" f
       bs     <- matchM sumView b
       guard (length as > 1 || length bs > 1)
       return $ build sumView [ a .*. b | a <- as, b <- bs ]
-  -}
+
 mergeT :: Transformation Expr
 mergeT = makeTrans "merge" $ return . collectLikeTerms
 
@@ -387,8 +390,10 @@ merge = makeSimpleRule "merge similar terms" $ \old -> do
 ------------------------
 -- Old
 
-distributionT :: Transformation Expr
-distributionT = makeTrans "distribute" f 
+-- Temporary fix: here we don't care about the terms we apply it to. Only
+-- use for cleaning up
+distributionOldT :: Transformation Expr
+distributionOldT = makeTrans "distribute" f 
  where
    f (a :*: b) =
       case (match sumView a, match sumView b) of

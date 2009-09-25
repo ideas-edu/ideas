@@ -56,8 +56,8 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       |> -- top form
       (  label "top form" $ 
          ( ruleOnce2 (ruleSomewhere merge) <|> ruleOnce cancelTerms  
-           <|> ruleOnce2 (ruleSomewhere distributionSquare)
-           <|> ruleOnce2 (ruleSomewhere distribute) <|> ruleOnce flipEquation )
+           <|> ruleMulti2 (ruleSomewhere distributionSquare)
+           <|> ruleMulti2 (ruleSomewhere distribute) <|> ruleOnce flipEquation)
          |> ruleOnce moveToLeft
       )
 

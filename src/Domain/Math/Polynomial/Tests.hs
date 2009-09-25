@@ -31,14 +31,14 @@ tests = do
    testNumLawsWith v "polynomial" (sized polynomialGen)
 
 -- see the derivations for the DWO exercise set
-seeLE  n = printDerivation linearExercise $ concat linearEquations !! n
-seeQE  n = printDerivation quadraticExercise $ orList $ return $ concat quadraticEquations !! n
-seeHDE n = printDerivation higherDegreeExercise $ orList $ return $ higherDegreeEquations !! n
+seeLE  n = printDerivation linearExercise $ concat linearEquations !! (n-1)
+seeQE  n = printDerivation quadraticExercise $ orList $ return $ concat quadraticEquations !! (n-1)
+seeHDE n = printDerivation higherDegreeExercise $ orList $ return $ higherDegreeEquations !! (n-1)
 
 -- test strategies with DWO exercise set
-testLE  = concat $ zipWith (f linearExercise)       [0..] $ concat linearEquations
-testQE  = concat $ zipWith (f quadraticExercise)    [0..] $ map (orList . return) $ concat quadraticEquations
-testHDE = concat $ zipWith (f higherDegreeExercise) [0..] $ map (orList . return) higherDegreeEquations
+testLE  = concat $ zipWith (f linearExercise)       [1..] $ concat linearEquations
+testQE  = concat $ zipWith (f quadraticExercise)    [1..] $ map (orList . return) $ concat quadraticEquations
+testHDE = concat $ zipWith (f higherDegreeExercise) [1..] $ map (orList . return) higherDegreeEquations
 
 f s n e = map p (g (applyAll (strategy s) (inContext e))) where
   g xs | null xs   = error $ show n ++ ": " ++ show e
@@ -51,9 +51,9 @@ randomLE = quickCheck $ forAll (liftM2 (:==:) (sized linearGen) (sized linearGen
 randomQE = quickCheck $ forAll (liftM2 (:==:) (sized quadraticGen) (sized quadraticGen)) $ \eq -> 
    (>0) (sum (take 10 $ f quadraticExercise 1 (orList [eq])))
 
-eqLE = concat $ zipWith (g linearExercise) [0..] $ concat linearEquations  
-eqQE = concat $ zipWith (g quadraticExercise) [0..] $ map (orList . return) $ concat quadraticEquations
-eqHDE = concat $ zipWith (g higherDegreeExercise) [0..] $ map (orList . return) higherDegreeEquations
+eqLE = concat $ zipWith (g linearExercise) [1..] $ concat linearEquations  
+eqQE = concat $ zipWith (g quadraticExercise) [1..] $ map (orList . return) $ concat quadraticEquations
+eqHDE = concat $ zipWith (g higherDegreeExercise) [1..] $ map (orList . return) higherDegreeEquations
 
 g s n e = map p (h (derivations (unlabel $ strategy s) (inContext e))) where
   h xs | null xs   = error $ show n ++ ": " ++ show e

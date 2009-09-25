@@ -1,10 +1,5 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution">
-      <expr>
-        x^2-4*x-5 == (x-2)*(x-3)
-      </expr>
-    </elem>
     <elem ruleid="distribution">
       <expr>
         x^2-4*x-5 == x^2-5*x+6

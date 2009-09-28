@@ -30,7 +30,7 @@
         x == (3+sqrt 6)/6 or x == (3-sqrt 6)/6
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="distribution division">
       <expr>
         x == 1/2+sqrt 6/6 or x == 1/2-sqrt 6/6
       </expr>

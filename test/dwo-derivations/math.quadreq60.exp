@@ -15,7 +15,7 @@
         x == (3+sqrt 13)/2 or x == (3-sqrt 13)/2
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="distribution division">
       <expr>
         x == 3/2+sqrt 13/2 or x == 3/2-sqrt 13/2
       </expr>

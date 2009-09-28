@@ -316,9 +316,9 @@ distributionT :: Transformation Expr
 distributionT = makeTransList "distributeT" f
  where
    f expr = do
-      (b, xs) <- matchM productView expr
+      (b, xs) <- matchM simpleProductView expr
       ys      <- rec (combine xs)
-      return $ build productView (b, ys)
+      return $ build simpleProductView (b, ys)
    
    combine :: [Expr] -> [Expr]
    combine (x:y:rest) | p x && p y = combine ((x*y):rest)
@@ -393,6 +393,15 @@ distributeTimes :: Rule Expr
 distributeTimes = makeSimpleRuleList "distribution multiplication" $ \expr -> do
    new <- applyAll distributionT expr
    return (applyD mergeT new)
+
+distributeDivision :: Rule Expr
+distributeDivision = makeSimpleRule "distribution division" $ \expr -> do
+   (a, b) <- match divView expr
+   r      <- match rationalView b
+   xs     <- match sumView a
+   guard (length xs > 1)
+   let ys = map (/fromRational r) xs
+   return $ build sumView ys
 
 merge :: Rule Expr
 merge = makeSimpleRule "merge similar terms" $ \old -> do

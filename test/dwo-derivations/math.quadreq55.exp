@@ -15,7 +15,7 @@
         x == (5+sqrt 53)/2 or x == (5-sqrt 53)/2
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="distribution division">
       <expr>
         x == 5/2+sqrt 53/2 or x == 5/2-sqrt 53/2
       </expr>

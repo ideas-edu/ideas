@@ -26,15 +26,13 @@ import Domain.Math.Data.Equation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
 
-repeatS s = replicate 10 (try s)
-
 ------------------------------------------------------------
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
-    $  label "Phase 1" (repeatS (
+    $  label "Phase 1" (repeat (
           removeDivision 
           <|> ruleMulti (ruleSomewhere distributeTimes)
           <|> ruleMulti merge))
@@ -82,6 +80,7 @@ quadraticStrategy = cleanUpStrategy cleanUp $
            <|> ruleOnce cancelTerms  
            <|> ruleMulti2 (ruleSomewhere distributionSquare)
            <|> ruleMulti2 (ruleSomewhere distributeTimes) 
+           <|> ruleMulti2 (ruleSomewhere distributeDivision)
            <|> ruleOnce flipEquation)
          |> ruleOnce moveToLeft
       )

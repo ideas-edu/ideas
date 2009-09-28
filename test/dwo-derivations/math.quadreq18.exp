@@ -25,7 +25,7 @@
         x == (-7+sqrt 7)/2 or x == (-7-sqrt 7)/2
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="distribution division">
       <expr>
         x == -7/2+sqrt 7/2 or x == -7/2-sqrt 7/2
       </expr>

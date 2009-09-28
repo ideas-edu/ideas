@@ -126,6 +126,17 @@ sumView = makeView (return . ($ []) . f False) (foldl (.+.) 0)
    f n (Negate a) = f (not n) a
    f n e          = if n then (neg e:) else (e:)
 
+simpleProductView :: View Expr (Bool, [Expr])
+simpleProductView = makeView (Just . second ($ []) . f) g
+ where
+   f (a :*: b)  = f a &&& f b
+   f (Negate a) = first not (f a)
+   f e          = (False, (e:))
+   
+   (n1, g1) &&& (n2, g2) = (n1 /= n2, g1 . g2)
+   
+   g (b, xs) = (if b then neg else id) (foldl (.*.) 1 xs)
+
 productView :: View Expr (Bool, [Expr])
 productView = makeView (Just . second ($ []) . f False) g
  where

@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution">
+    <elem ruleid="distribution multiplication">
       <expr>
         3/5*x-3+5 == 7*x-14
       </expr>

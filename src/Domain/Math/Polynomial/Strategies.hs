@@ -34,8 +34,14 @@ repeatS s = replicate 10 (try s)
 linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
-    $  label "Phase 1" (repeatS (removeDivision <|> ruleMulti (ruleSomewhere distribute) <|> ruleMulti merge))
-   <*> label "Phase 2" (try varToLeft <*> try (coverUpPlus id) <*> try (coverUpTimes |> try coverUpNegate))
+    $  label "Phase 1" (repeatS (
+          removeDivision 
+          <|> ruleMulti (ruleSomewhere distributeTimes)
+          <|> ruleMulti merge))
+   <*> label "Phase 2" (
+          try varToLeft 
+          <*> try (coverUpPlus id) 
+          <*> try (coverUpTimes |> try coverUpNegate))
 
 -- helper strategy
 coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a
@@ -72,9 +78,11 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       )
       |> -- top form
       (  label "top form" $ 
-         ( ruleOnce2 (ruleSomewhere merge) <|> ruleOnce cancelTerms  
+         ( ruleOnce2 (ruleSomewhere merge) 
+           <|> ruleOnce cancelTerms  
            <|> ruleMulti2 (ruleSomewhere distributionSquare)
-           <|> ruleMulti2 (ruleSomewhere distribute) <|> ruleOnce flipEquation)
+           <|> ruleMulti2 (ruleSomewhere distributeTimes) 
+           <|> ruleOnce flipEquation)
          |> ruleOnce moveToLeft
       )
 

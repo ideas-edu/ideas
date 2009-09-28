@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution">
+    <elem ruleid="distribution multiplication">
       <expr>
         4*x-4 == 11*x-12
       </expr>

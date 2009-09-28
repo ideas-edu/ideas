@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="remove division">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -61,7 +61,7 @@
         </OMA>
       </OMOBJ>
     </elem>
-    <elem ruleid="distribution">
+    <elem ruleid="distribution multiplication">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>

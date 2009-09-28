@@ -39,7 +39,7 @@ import qualified Prelude
 
 linearRules :: [Rule (Context (Equation Expr))]
 linearRules = map ignoreContext $
-   [ removeDivision, ruleMulti merge, ruleMulti distribute
+   [ removeDivision, ruleMulti merge, ruleMulti distributeTimes
    , varToLeft, coverUpNegate, coverUpTimes
    ] ++
    map ($ oneVar) 
@@ -55,7 +55,7 @@ quadraticRules =
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
    [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
-   , ruleOnce2 (ruleSomewhere distribute)
+   , ruleOnce2 (ruleSomewhere distributeTimes)
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft, ruleMulti2 (ruleSomewhere simplerSquareRoot)
    ]
@@ -313,7 +313,7 @@ divisionT e = makeTrans "division" $ \eq -> do
 -- Combine bottom-up, for example:  5*(x-5)*(x+5) 
 -- However, in  -2x(2x+10)   (-2x) should be seen as "one term"
 distributionT :: Transformation Expr
-distributionT = makeTransList "distribute" f
+distributionT = makeTransList "distributeT" f
  where
    f expr = do
       (b, xs) <- matchM productView expr
@@ -389,8 +389,8 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: r
       [] -> Nothing
       ns -> return (fromInteger (foldr1 lcm ns))
 
-distribute :: Rule Expr
-distribute = makeSimpleRuleList "distribution" $ \expr -> do
+distributeTimes :: Rule Expr
+distributeTimes = makeSimpleRuleList "distribution multiplication" $ \expr -> do
    new <- applyAll distributionT expr
    return (applyD mergeT new)
 
@@ -406,7 +406,7 @@ merge = makeSimpleRule "merge similar terms" $ \old -> do
 -- Temporary fix: here we don't care about the terms we apply it to. Only
 -- use for cleaning up
 distributionOldT :: Transformation Expr
-distributionOldT = makeTrans "distribute" f 
+distributionOldT = makeTrans "distributeT" f 
  where
    f (a :*: b) =
       case (match sumView a, match sumView b) of

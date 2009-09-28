@@ -30,7 +30,7 @@
         x == 1 or x == 0 or x == (3+sqrt 33)/2 or x == (3-sqrt 33)/2
       </expr>
     </elem>
-    <elem ruleid="distribution">
+    <elem ruleid="distribution multiplication">
       <expr>
         x == 1 or x == 0 or x == 3/2+sqrt 33/2 or x == 3/2-sqrt 33/2
       </expr>

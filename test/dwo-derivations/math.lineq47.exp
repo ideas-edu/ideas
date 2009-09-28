@@ -1,11 +1,11 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.6">
   <list>
     <elem ruleid="remove division">
       <expr>
         5*x-1-12 == -24*x+3*(3*x-6)
       </expr>
     </elem>
-    <elem ruleid="distribution">
+    <elem ruleid="distribution multiplication">
       <expr>
         5*x-1-12 == -24*x+9*x-18
       </expr>

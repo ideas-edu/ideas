@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution">
+    <elem ruleid="distribution multiplication">
       <expr>
         4-5*x+x^2 == 3*x
       </expr>

@@ -21,27 +21,30 @@ import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.Prog
+import Test.QuickCheck hiding (defaultConfig, label)
 import Text.Parsing (SyntaxError(..))
 
 heliumExercise :: Exercise Module
-heliumExercise = Exercise   
-   { identifier    = "helium"
-   , domain        = "programming"
-   , description   = "Flexible fromBin strategy"
-   , status        = Experimental
-   , parser        = \s -> if s == "" 
-                           then Right emptyProg 
-                           else  case compile s of
-                                   Left e  -> Left $ ErrorMessage e
-                                   Right m -> Right m
-   , subTerm       = \_ _ -> Nothing
-   , prettyPrinter = ppModule
-   , equivalence   = \_ _ -> True
-   , equality      = equalModules ["fromBin"]
-   , finalProperty = const True
-   , ruleset       = []
-   , strategy      = label "fromBin :: [Int] -> Int" fromBinStrategy
-   , differences   = \_ _ -> [([], Different)]
-   , ordering      = \_ _ -> LT
-   , termGenerator = makeGenerator (const True) (return emptyProg)
+heliumExercise = makeExercise   
+   { exerciseCode   = makeCode "programming" "helium"
+   , description    = "Flexible fromBin strategy"
+   , status         = Experimental
+   , parser         = \s -> if s == "" 
+                            then Right emptyProg 
+                            else  case compile s of
+                                    Left e  -> Left $ ErrorMessage e
+                                    Right m -> Right m
+   , prettyPrinter  = ppModule
+   , equivalence    = \_ _ -> True
+   , similarity     = equalModules ["fromBin"]
+   , isReady        = const True
+   , isSuitable     = const True
+   , extraRules     = []
+   , strategy       = label "fromBin :: [Int] -> Int" fromBinStrategy
+   , differences    = \_ _ -> [([], Different)]
+   , testGenerator  = Just arbitrary
+   , randomExercise = useGenerator (const True) (return emptyProg)
    }
+
+instance Arbitrary Module where
+  arbitrary = return emptyProg

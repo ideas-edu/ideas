@@ -14,15 +14,15 @@ module Session
    ( Some(..), Exercise(..), Status(..), exerciseCode
    , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
    , thisExercise, thisExerciseFor, progressPair, undo, submitText
-   , currentDescription, currentText, derivationText, readyText, hintText, stepText, nextStep, ruleNames
-   , getRuleAtIndex, applyRuleAtIndex, subTermAtIndices
+   , currentDescription, currentText, derivationText, readyText, hintText
+   , stepText, nextStep, ruleNames
+   , getRuleAtIndex, applyRuleAtIndex
    ) where
 
 import qualified Service.TypedAbstractService as TAS
 import Service.FeedbackText (feedbackLogic)
 import Common.Context
 import Common.Exercise hiding (showDerivation)
-import Text.Parsing (indicesToRange)
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Apply
@@ -228,11 +228,6 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
          return ("Apply rule " ++ name rule ++ " at a different location", False)
       _ ->
          return ("You selected rule " ++ name rule ++ ": try a different rule", False)
-
-subTermAtIndices :: String -> Int -> Int -> Session -> IO (Maybe Location)
-subTermAtIndices s i j = withState $ \d -> do
-   let rng = indicesToRange s i j
-   return (subTerm (exercise d) s rng)
 
 --------------------------------------------------
 -- Derivations

@@ -13,7 +13,11 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise(..), Status(..), makeExercise, stepsRemaining, getRule
+     Exercise, Status(..), makeExercise, emptyExercise
+   , identifier, domain, description, status, parser, prettyPrinter
+   , equivalence, equality, finalProperty, strategy, ruleset, differences
+   , ordering, termGenerator
+   , stepsRemaining, getRule
    , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
      -- * Miscellaneous
    , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
@@ -21,10 +25,6 @@ module Common.Exercise
    , checkExercise, checkParserPretty
    , checksForList
    ) where
-
--- TODO: hide the Exercise constructor, and provide a default constructor
--- function that does not assume any class instances (as makeExercise currently
--- does)
 
 import Common.Apply
 import Common.Context
@@ -36,9 +36,7 @@ import Control.Monad.Error
 import Data.Char
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
-import Text.Parsing (Range, SyntaxError(..))
-
-
+import Text.Parsing (SyntaxError(..))
 
 data Exercise a = Exercise
    { -- identification and meta-information
@@ -48,7 +46,6 @@ data Exercise a = Exercise
    , status        :: Status
      -- parsing and pretty-printing
    , parser        :: String -> Either SyntaxError a
-   , subTerm       :: String -> Range -> Maybe Location
    , prettyPrinter :: a -> String
      -- syntactic and semantic checks
    , equivalence   :: a -> a -> Bool
@@ -76,7 +73,6 @@ makeExercise = Exercise
    , description   = "<no description>"
    , status        = Experimental
    , parser        = const $ Left $ ErrorMessage "No parser available"
-   , subTerm       = \_ _ -> Nothing
    , prettyPrinter = show
    , equivalence   = (==)
    , equality      = (==)
@@ -87,6 +83,9 @@ makeExercise = Exercise
    , strategy      = label "Succeed" succeed
    , termGenerator = simpleGenerator arbitrary
    }
+   
+emptyExercise :: Exercise a
+emptyExercise = Exercise {}
 
 ---------------------------------------------------------------
 -- Exercise generators

@@ -22,23 +22,23 @@ import Domain.Logic.Rules
 import Common.Exercise
 import Common.Strategy hiding (not, label)
 import Common.Context
-import Text.Parsing (fromRanged, subExpressionAt)
+import Text.Parsing (fromRanged)
 import Common.Rewriting
-import Control.Monad
-import Data.Maybe
+--import Control.Monad
+--import Data.Maybe
 import Test.QuickCheck
 
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
-dnfExercise = Exercise
+dnfExercise = makeExercise
    { identifier    = "dnf"
    , domain        = "logic"
    , description   = "Proposition to DNF" 
    , status        = Stable
    , parser        = either Left (Right . fromRanged) . parseLogicPars
-   , subTerm       = \s r -> case parseLogicPars s of
+{-   , subTerm       = \s r -> case parseLogicPars s of
                                 Right p -> fmap makeLocation (subExpressionAt r p)
-                                _       -> Nothing
+                                _       -> Nothing -}
    , prettyPrinter = ppLogicPars
    , equivalence   = eqLogic
    , equality      = equalLogicA
@@ -46,7 +46,6 @@ dnfExercise = Exercise
    , ruleset       = map liftToContext (logicRules ++ buggyRules)
    , strategy      = dnfStrategyDWA
    , differences   = treeDiff
-   , ordering      = compare
    , termGenerator = let isSuitable p =
                             let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
                             in countEquivalences p <= 2 && n >= 4 && n <= 12

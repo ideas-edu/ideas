@@ -19,8 +19,10 @@ module Common.Exercise
    , ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
+     -- * Exercise codes
+   , ExerciseCode, noCode, makeCode, readCode, domain, identifier
      -- * Miscellaneous
-   , ExerciseCode, domain, identifier, makeCode, readCode, restrictGenerator
+   , restrictGenerator
    , showDerivation, showDerivationWith, showDerivations, printDerivation, printDerivations
    , checkExercise, checkParserPretty
    , checksForList
@@ -90,7 +92,7 @@ emptyExercise :: Exercise a
 emptyExercise = Exercise 
    { -- identification and meta-information
      description    = "<<description>>" 
-   , exerciseCode   = emptyCode
+   , exerciseCode   = noCode
    , status         = Experimental
      -- parsing and pretty-printing
    , parser         = const $ Left $ ErrorMessage "<<no parser>>"
@@ -156,33 +158,41 @@ randomTermWith rng ex =
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
 
-emptyCode = EC [] []
-
-data ExerciseCode = EC {domain :: String, identifier :: String}
+data ExerciseCode = EC String String | NoCode
    deriving (Eq, Ord)
-
-readCode :: String -> Maybe ExerciseCode
-readCode xs =
-   case break (=='.') xs of
-      (as, _:bs) | all isAlphaNum (as++bs) -> 
-         return $ EC (map toLower as) (map toLower bs)
-      _ -> Nothing
-
-makeCode :: String -> String -> ExerciseCode
-makeCode d i = EC (map toLower d) (filter p (map toLower i))
- where p c = isAlphaNum c || c `elem` extraSymbols
-
-{-
-validateCode :: Exercise a -> Bool
-validateCode ex = all isLower (domain ex) && all p (identifier ex)
- where p c = isLower c || isDigit c || c `elem` extraSymbols
--}
-
-extraSymbols :: String
-extraSymbols = "-."
 
 instance Show ExerciseCode where
    show (EC xs ys) = xs ++ "." ++ ys
+   show NoCode     = "no code"
+
+noCode :: ExerciseCode
+noCode = NoCode
+
+makeCode :: String -> String -> ExerciseCode
+makeCode a b
+   | null a || null b || any (not . isAlphaNum) (a++b) =
+        error $ "Invalid exercise code: " ++ show (EC a b)
+   | otherwise = 
+        EC (map toLower a) (map toLower b)
+   
+readCode :: String -> Maybe ExerciseCode
+readCode xs =
+   case break (not . isAlphaNum) xs of
+      (as, '.':bs) | all isAlphaNum bs -> 
+         return $ makeCode as bs
+      _ -> Nothing
+
+domain :: ExerciseCode -> String
+domain (EC s _) = s
+domain _        = []
+
+identifier :: ExerciseCode -> String
+identifier (EC _ s) = s
+identifier _        = []
+
+
+
+
             
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 

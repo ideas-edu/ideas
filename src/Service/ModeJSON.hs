@@ -31,7 +31,7 @@ import Data.Char
 
 -- TODO: Clean-up code
 extractCode :: JSON -> ExerciseCode
-extractCode = (\s -> fromMaybe (makeCode "unknown" s) $ List.resolveExerciseCode s) . f
+extractCode = fromMaybe noCode . List.resolveExerciseCode . f
  where 
    f (String s) = s
    f (Array [String _, String _, a@(Array _)]) = f a
@@ -70,21 +70,23 @@ jsonRequest json = do
       }
 
 myHandler :: JSON_RPC_Handler
-myHandler fun arg = do
-      let code | fun=="exerciselist" = makeCode "logic" "dnf" 
-               | otherwise           = extractCode arg
-      case jsonConverter code of
-         Left err -> fail err
-         Right (Some conv) -> do
-            service <- getService fun
-            either fail return (evalService conv service arg)
+myHandler fun arg 
+   | code == noCode && fun /= "exerciselist" =
+        fail "invalid exercise code"
+   | otherwise = 
+        case jsonConverter code of
+           Some conv -> do
+              service <- getService fun
+              either fail return (evalService conv service arg)
+ where 
+   code = extractCode arg
 
-jsonConverter :: Monad m => ExerciseCode -> m (Some (Evaluator (Either String) JSON JSON))
+jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
 jsonConverter code =
-   case List.getExercise code of
-      Just (Some ex) -> 
-         return $ Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
-      Nothing -> fail $ "unknown exercise code " ++ show code
+   let f a = Some (Evaluator (jsonEncoder a) (jsonDecoder a))
+   in case List.getExercise code of
+         Just (Some a) -> f a
+         Nothing       -> f emptyExercise
 
 jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
 jsonEncoder ex = Encoder

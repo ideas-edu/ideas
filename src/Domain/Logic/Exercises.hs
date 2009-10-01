@@ -24,21 +24,15 @@ import Common.Strategy hiding (not, label)
 import Common.Context
 import Text.Parsing (fromRanged)
 import Common.Rewriting
---import Control.Monad
---import Data.Maybe
 import Test.QuickCheck
 
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
 dnfExercise = makeExercise
-   { identifier    = "dnf"
-   , domain        = "logic"
-   , description   = "Proposition to DNF" 
+   { description   = "Proposition to DNF"
+   , exerciseCode  = makeCode "logic" "dnf"
    , status        = Stable
    , parser        = either Left (Right . fromRanged) . parseLogicPars
-{-   , subTerm       = \s r -> case parseLogicPars s of
-                                Right p -> fmap makeLocation (subExpressionAt r p)
-                                _       -> Nothing -}
    , prettyPrinter = ppLogicPars
    , equivalence   = eqLogic
    , equality      = equalLogicA

@@ -1,4 +1,4 @@
 { "method" : "apply"
-, "params" : ["DeMorganOr", "[]", ["Proposition to DNF", "[]", "~(~x || ~y)", ""]]
+, "params" : ["DeMorganOr", "[]", ["logic.dnf", "[]", "~(~x || ~y)", ""]]
 , "id"     : 421
 }

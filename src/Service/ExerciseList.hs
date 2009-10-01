@@ -66,7 +66,7 @@ openMathExercises =
 
 resolveExerciseCode :: Monad m => String -> m ExerciseCode
 resolveExerciseCode txt = 
-   case findExercises (\ex -> show (exerciseCode ex) ~= txt || identifier ex ~= txt || description ex ~= txt) of
+   case findExercises (\ex -> show (exerciseCode ex) ~= txt) of
       [Some ex] -> return (exerciseCode ex)
       _         -> fail $ "Failed to resolve the exercise code " ++ show txt
  where

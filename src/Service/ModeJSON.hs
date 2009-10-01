@@ -29,8 +29,9 @@ import Control.Monad
 import Data.Maybe
 import Data.Char
 
-extractCode :: JSON -> Maybe ExerciseCode
-extractCode = List.resolveExerciseCode . f
+-- TODO: Clean-up code
+extractCode :: JSON -> ExerciseCode
+extractCode = (\s -> fromMaybe (makeCode "unknown" s) $ List.resolveExerciseCode s) . f
  where 
    f (String s) = s
    f (Array [String _, String _, a@(Array _)]) = f a
@@ -51,7 +52,7 @@ jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
               _               -> fail "Invalid method"
-   code <- liftM extractCode (lookupM "params" json)
+   code <- liftM (return . extractCode) (lookupM "params" json)
    enc  <- case lookupM "encoding" json of
               Nothing         -> return Nothing
               Just (String s) -> liftM Just (readEncoding s)
@@ -67,30 +68,23 @@ jsonRequest json = do
       , dataformat = JSON
       , encoding   = enc
       }
-{-
-jsonReply :: Request -> JSON -> Either String JSON
-jsonReply request json
-   | otherwise =  -}
-
-fakeCode = makeCode "" "" 
 
 myHandler :: JSON_RPC_Handler
-myHandler fun arg =
-   case jsonConverter (fromMaybe fakeCode $ extractCode arg) of
-      Some conv -> do
-         service <- getService fun
-         case evalService conv service arg of
-            Left err  -> fail err
-            Right txt -> return txt
+myHandler fun arg = do
+      let code | fun=="exerciselist" = makeCode "logic" "dnf" 
+               | otherwise           = extractCode arg
+      case jsonConverter code of
+         Left err -> fail err
+         Right (Some conv) -> do
+            service <- getService fun
+            either fail return (evalService conv service arg)
 
-jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
+jsonConverter :: Monad m => ExerciseCode -> m (Some (Evaluator (Either String) JSON JSON))
 jsonConverter code =
    case List.getExercise code of
       Just (Some ex) -> 
-         Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
-      -- TO DO: fix
-      _ -> Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
-        where ex = error "exercise code not found"
+         return $ Some (Evaluator (jsonEncoder ex) (jsonDecoder ex))
+      Nothing -> fail $ "unknown exercise code " ++ show code
 
 jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
 jsonEncoder ex = Encoder

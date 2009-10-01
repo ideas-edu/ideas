@@ -14,18 +14,9 @@ module Main where
 
 import Graphics.UI.WX
 import Graphics.UI.WXCore
-
---import Graphics.UI.Gtk
---import Graphics.UI.Gtk.Glade
---import System.Glib.GObject (GObjectClass)
--- import Data.Maybe
 import Data.List
 import System.Directory
 import Session
---import SupplyArguments
---import Common.Transformation
---import Control.Monad
---import Data.IORef
 import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
 --import Domain.Programming.Exercises (heliumExercise, isortExercise)
@@ -33,7 +24,7 @@ import Service.Options (versionText)
 exerciseList = {- Some heliumExercise : Some isortExercise : -} SE.exerciseList
 
 domains :: [String]
-domains = sort $ nub [ domain e | Some e <- exerciseList ]
+domains = sort $ nub [ domain (exerciseCode e) | Some e <- exerciseList ]
 
 title :: String
 title = "Exercise Assistant: " ++ versionText
@@ -292,7 +283,7 @@ newAssignmentFrame session onExit = do
 
 getExercises :: Bool -> String -> [Some Exercise]
 getExercises b d = filter p exerciseList
- where p (Some e) = domain e == d && (b || status e == Stable) 
+ where p (Some e) = domain (exerciseCode e) == d && (b || status e == Stable) 
 
 searchPath :: String -> IO (Maybe String)
 searchPath filename = rec paths

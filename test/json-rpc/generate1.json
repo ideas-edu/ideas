@@ -1,4 +1,4 @@
 { "method" : "generate"
-, "params" : ["To conjunctive normal form", 5]
+, "params" : ["relationalg.cnf", 5]
 , "id"     : 421
 }

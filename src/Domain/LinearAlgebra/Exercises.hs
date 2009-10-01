@@ -34,14 +34,10 @@ import Domain.Math.Simplification
 import Test.QuickCheck
 import Text.Parsing (SyntaxError(..))
 
-laDomain :: String
-laDomain = "linalg"
-
 gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
 gramSchmidtExercise = makeExercise
-   { identifier    = "gramschmidt"
-   , domain        = laDomain
-   , description   = "Gram-Schmidt"
+   { description   = "Gram-Schmidt"
+   , exerciseCode  = makeCode "linalg" "gramschmidt"
    , status        = Provisional
    , parser        = \s -> case parseVectorSpace s of
                               (a, [])  -> Right (fmap simplified a)
@@ -57,9 +53,8 @@ gramSchmidtExercise = makeExercise
 
 linearSystemExercise :: Exercise (Equations Expr)
 linearSystemExercise = makeExercise
-   { identifier    = "linsystem"
-   , domain        = laDomain
-   , description   = "Solve Linear System"
+   { description   = "Solve Linear System"
+   , exerciseCode  = makeCode "linalg" "linsystem"
    , status        = Stable
    , parser        = \s -> case parseSystem s of
                               (a, [])  -> Right (simplify a)
@@ -76,9 +71,8 @@ linearSystemExercise = makeExercise
    
 gaussianElimExercise :: Exercise (Matrix Expr)
 gaussianElimExercise = makeExercise
-   { identifier    = "gaussianelim"
-   , domain        = laDomain
-   , description   = "Gaussian Elimination"
+   { description   = "Gaussian Elimination"
+   , exerciseCode  = makeCode "linalg" "gaussianelim"
    , status        = Stable
    , parser        = \s -> case parseMatrix s of
                               (a, [])  -> Right (simplify a)
@@ -93,9 +87,8 @@ gaussianElimExercise = makeExercise
  
 systemWithMatrixExercise :: Exercise (Either (LinearSystem Expr) (Matrix Expr))
 systemWithMatrixExercise = makeExercise
-   { identifier    = "systemwithmatrix"
-   , domain        = laDomain
-   , description   = "Solve Linear System with Matrix"
+   { description   = "Solve Linear System with Matrix"
+   , exerciseCode  = makeCode "linalg" "systemwithmatrix"
    , status        = Provisional
    , parser        = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
                               (Right ok, _) -> Right $ Left  ok

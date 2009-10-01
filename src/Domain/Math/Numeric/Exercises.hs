@@ -30,8 +30,7 @@ import Common.Context
 
 numericExercise :: LabeledStrategy Expr -> Exercise Expr
 numericExercise s = makeExercise 
-   { domain        = "math"
-   , status        = Provisional
+   { status        = Provisional
    , parser        = parseExpr
    , equality      = (==)
    , equivalence   = viewEquivalent rationalView
@@ -41,32 +40,32 @@ numericExercise s = makeExercise
 
 naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
-   { identifier    = "natural"
-   , description   = "simplify expression (natural numbers)"
+   { description   = "simplify expression (natural numbers)"
+   , exerciseCode  = makeCode "math" "natural"
    , finalProperty = (`belongsTo` integerNormalForm)
    , termGenerator = ExerciseList (concat calculateResults)
    }
 
 integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
-   { identifier    = "integer"
-   , description   = "simplify expression (integers)"
+   { description   = "simplify expression (integers)"
+   , exerciseCode  = makeCode "math" "integer"
    , finalProperty = (`belongsTo` integerNormalForm)
    , termGenerator = ExerciseList (concat calculateResults)
    }
    
 rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
-   { identifier    = "rational"
-   , description   = "simplify expression (rational numbers)"
+   { description   = "simplify expression (rational numbers)"
+   , exerciseCode  = makeCode "math" "rational"
    , finalProperty = (`belongsTo` rationalNormalForm)
    , termGenerator = simpleGenerator (rationalGenerator 5)
    }
 
 fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
-   { identifier    = "fraction"
-   , description   = "simplify expression (fractions)"
+   { description   = "simplify expression (fractions)"
+   , exerciseCode  = makeCode "math" "fraction"
    , finalProperty = (`belongsTo` rationalNormalForm)
    , termGenerator = simpleGenerator (rationalGenerator 5)
    }

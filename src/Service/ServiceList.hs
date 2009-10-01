@@ -124,8 +124,8 @@ allExercises :: [(String, String, String, String)]
 allExercises  = map make $ sortBy cmp S.exerciseList
  where
    cmp e1 e2  = f e1 `compare` f e2
-   f (Some e) = (domain e, identifier e)
-   make (Some ex) = (domain ex, identifier ex, description ex, show (status ex))
+   f (Some e) = (domain (exerciseCode e), identifier (exerciseCode e))
+   make (Some ex) = (domain (exerciseCode ex), identifier (exerciseCode ex), description ex, show (status ex))
 
 allRules :: E.Exercise a -> [(String, Bool, Bool)]
 allRules = map make . ruleset

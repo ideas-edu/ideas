@@ -14,13 +14,13 @@
 module Common.Exercise 
    ( -- * Exercises
      Exercise, Status(..), makeExercise, emptyExercise
-   , identifier, domain, description, status, parser, prettyPrinter
+   , description, exerciseCode, status, parser, prettyPrinter
    , equivalence, equality, finalProperty, strategy, ruleset, differences
    , ordering, termGenerator
    , stepsRemaining, getRule
    , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
      -- * Miscellaneous
-   , ExerciseCode, exerciseCode, validateCode, makeCode, readCode
+   , ExerciseCode, domain, identifier, makeCode, readCode
    , showDerivation, showDerivationWith, showDerivations, printDerivation, printDerivations
    , checkExercise, checkParserPretty
    , checksForList
@@ -40,9 +40,8 @@ import Text.Parsing (SyntaxError(..))
 
 data Exercise a = Exercise
    { -- identification and meta-information
-     identifier    :: String    -- uniquely determines the exercise (in a given domain)
-   , domain        :: String    -- e.g., math, logic, linalg
-   , description   :: String    -- short sentence describing the task
+     description   :: String       -- short sentence describing the task
+   , exerciseCode  :: ExerciseCode -- uniquely determines the exercise (in a given domain)
    , status        :: Status
      -- parsing and pretty-printing
    , parser        :: String -> Either SyntaxError a
@@ -68,9 +67,8 @@ instance Apply Exercise where
 -- default values for all fields
 makeExercise :: (Arbitrary a, Ord a, Show a) => Exercise a
 makeExercise = Exercise
-   { identifier    = "<no identifier>"
-   , domain        = ""
-   , description   = "<no description>"
+   { description   = "<no description>"
+   , exerciseCode  = error "no exercise code"
    , status        = Experimental
    , parser        = const $ Left $ ErrorMessage "No parser available"
    , prettyPrinter = show
@@ -120,7 +118,7 @@ randomTermWith rng ex =
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
 
-data ExerciseCode = EC String String
+data ExerciseCode = EC {domain :: String, identifier :: String}
    deriving (Eq, Ord)
 
 readCode :: String -> Maybe ExerciseCode
@@ -134,12 +132,11 @@ makeCode :: String -> String -> ExerciseCode
 makeCode d i = EC (map toLower d) (filter p (map toLower i))
  where p c = isAlphaNum c || c `elem` extraSymbols
 
-exerciseCode :: Exercise a -> ExerciseCode
-exerciseCode ex = makeCode (domain ex) (identifier ex)
-
+{-
 validateCode :: Exercise a -> Bool
 validateCode ex = all isLower (domain ex) && all p (identifier ex)
  where p c = isLower c || isDigit c || c `elem` extraSymbols
+-}
 
 extraSymbols :: String
 extraSymbols = "-."
@@ -204,7 +201,7 @@ checkExercise = checkExerciseWith g
 
 checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
 checkExerciseWith f a = do 
-   putStrLn ("** " ++ identifier a)
+   putStrLn ("** " ++ show (exerciseCode a))
    let check txt p = putLabel txt >> quickCheck p
    check "parser/pretty printer" $ 
       checkParserPretty (equivalence a) (parser a) (prettyPrinter a)
@@ -256,7 +253,7 @@ checksForList ex =
    case termGenerator ex of
       ExerciseList xs | status ex /= Experimental -> do
          let err s = putStrLn $ "Error: " ++ s
-         putStrLn ("** " ++ identifier ex)
+         putStrLn ("** " ++ show (exerciseCode ex))
          mapM_ (either err return . checksForTerm ex) xs
       _ -> return ()
 

@@ -27,9 +27,8 @@ import Common.Transformation
 
 cnfExercise :: Exercise RelAlg
 cnfExercise = makeExercise
-   { identifier    = "cnf"
-   , domain        = "relationalg"
-   , description   = "To conjunctive normal form"
+   { description   = "To conjunctive normal form"
+   , exerciseCode  = makeCode "relationalg" "cnf"
    , status        = Provisional
    , parser        = either Left (Right . fromRanged) . parseRelAlg
    , prettyPrinter = ppRelAlg

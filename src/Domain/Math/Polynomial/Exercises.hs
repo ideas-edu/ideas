@@ -33,9 +33,8 @@ import Data.List
 
 linearExercise :: Exercise (Equation Expr)
 linearExercise = makeExercise 
-   { identifier    = "lineq"
-   , domain        = "math"
-   , description   = "solve a linear equation"
+   { description   = "solve a linear equation"
+   , exerciseCode  = makeCode "math" "lineq"
    , status        = Provisional
    , parser        = parseWith (pEquation pExpr)
    , equality      = eqEquation cleanUpSimple
@@ -48,9 +47,8 @@ linearExercise = makeExercise
 
 quadraticExercise :: Exercise (OrList (Equation Expr))
 quadraticExercise = makeExercise 
-   { identifier    = "quadreq"
-   , domain        = "math"
-   , description   = "solve a quadratic equation"
+   { description   = "solve a quadratic equation"
+   , exerciseCode  = makeCode "math" "quadreq"
    , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = eqOrList cleanUpExpr2
@@ -63,9 +61,8 @@ quadraticExercise = makeExercise
    
 higherDegreeExercise :: Exercise (OrList (Equation Expr))
 higherDegreeExercise = makeExercise 
-   { identifier    = "higherdegree"
-   , domain        = "math"
-   , description   = "solve an equation (higher degree)"
+   { description   = "solve an equation (higher degree)"
+   , exerciseCode  = makeCode "math" "higherdegree"
    , status        = Provisional
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = eqOrList cleanUpExpr2

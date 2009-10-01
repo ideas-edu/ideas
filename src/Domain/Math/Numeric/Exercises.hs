@@ -42,7 +42,7 @@ naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
    { description   = "simplify expression (natural numbers)"
    , exerciseCode  = makeCode "math" "natural"
-   , finalProperty = (`belongsTo` integerNormalForm)
+   , isReady       = (`belongsTo` integerNormalForm)
    , termGenerator = ExerciseList (concat calculateResults)
    }
 
@@ -50,7 +50,7 @@ integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
    { description   = "simplify expression (integers)"
    , exerciseCode  = makeCode "math" "integer"
-   , finalProperty = (`belongsTo` integerNormalForm)
+   , isReady       = (`belongsTo` integerNormalForm)
    , termGenerator = ExerciseList (concat calculateResults)
    }
    
@@ -58,7 +58,7 @@ rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
    { description   = "simplify expression (rational numbers)"
    , exerciseCode  = makeCode "math" "rational"
-   , finalProperty = (`belongsTo` rationalNormalForm)
+   , isReady       = (`belongsTo` rationalNormalForm)
    , termGenerator = simpleGenerator (rationalGenerator 5)
    }
 
@@ -66,6 +66,6 @@ fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
    { description   = "simplify expression (fractions)"
    , exerciseCode  = makeCode "math" "fraction"
-   , finalProperty = (`belongsTo` rationalNormalForm)
+   , isReady       = (`belongsTo` rationalNormalForm)
    , termGenerator = simpleGenerator (rationalGenerator 5)
    }

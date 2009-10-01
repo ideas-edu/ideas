@@ -37,7 +37,7 @@ cnfExercise = makeExercise
    , strategy      = toCNF
    , differences   = treeDiff
    , ordering      = compare
-   , finalProperty = ready (ruleset cnfExercise)
+   , isReady       = ready (ruleset cnfExercise)
    , termGenerator = let isSuitable p =
                             let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
                             in n >= 2 && n <= 4

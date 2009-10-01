@@ -34,7 +34,7 @@ derivativeExercise = makeExercise
    , equivalence   = \_ _ -> True
    , equality      = (==)
    , prettyPrinter = show
-   , finalProperty = noDiff
+   , isReady       = noDiff
    , ruleset       = map liftToContext derivativeRules ++ [tidyup]
    , strategy      = derivativeStrategy
    , termGenerator = ExerciseList [ex1, ex2, ex3, ex4]

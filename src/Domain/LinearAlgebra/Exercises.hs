@@ -46,7 +46,7 @@ gramSchmidtExercise = makeExercise
    , equivalence   = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
                              in f x == f y
    , ruleset       = rulesGramSchmidt
-   , finalProperty = orthonormalList . filter (not . isZero) . vectors
+   , isReady       = orthonormalList . filter (not . isZero) . vectors
    , strategy      = gramSchmidtStrategy
    , termGenerator = simpleGenerator arbitrary
    }
@@ -64,7 +64,7 @@ linearSystemExercise = makeExercise
                                    . inContext . map toStandardForm
                              in f x == f y
    , ruleset       = equationsRules
-   , finalProperty = inSolvedForm
+   , isReady       = inSolvedForm
    , strategy      = linearSystemStrategy
    , termGenerator = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
@@ -80,7 +80,7 @@ gaussianElimExercise = makeExercise
    , prettyPrinter = ppMatrixWith show
    , equivalence   = \x y -> fmap simplified x === fmap simplified y
    , ruleset       = matrixRules
-   , finalProperty = inRowReducedEchelonForm
+   , isReady       = inRowReducedEchelonForm
    , termGenerator = simpleGenerator arbMatrix
    , strategy      = gaussianElimStrategy
    }
@@ -98,7 +98,7 @@ systemWithMatrixExercise = makeExercise
    , equivalence   = \x y -> let f = either id matrixToSystem
                              in equivalence linearSystemExercise (f x) (f y)
    , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
-   , finalProperty = either inSolvedForm (const False)
+   , isReady       = either inSolvedForm (const False)
    , strategy      = systemWithMatrixStrategy
    , termGenerator = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
    }

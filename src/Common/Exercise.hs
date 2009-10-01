@@ -15,7 +15,7 @@ module Common.Exercise
    ( -- * Exercises
      Exercise, Status(..), makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
-   , equivalence, equality, finalProperty, strategy, ruleset, differences
+   , equivalence, equality, isReady, isSuitable, strategy, ruleset, differences
    , ordering, termGenerator
    , stepsRemaining, getRule
    , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
@@ -49,7 +49,8 @@ data Exercise a = Exercise
      -- syntactic and semantic checks
    , equivalence   :: a -> a -> Bool
    , equality      :: a -> a -> Bool   -- syntactic equality
-   , finalProperty :: a -> Bool
+   , isReady       :: a -> Bool
+   , isSuitable    :: a -> Bool
      -- strategies and rules
    , strategy      :: LabeledStrategy (Context a)
    , ruleset       :: [Rule (Context a)]
@@ -66,7 +67,7 @@ instance Apply Exercise where
 
 -- default values for all fields
 makeExercise :: (Arbitrary a, Ord a, Show a) => Exercise a
-makeExercise = Exercise
+makeExercise = emptyExercise
    { description   = "<no description>"
    , exerciseCode  = error "no exercise code"
    , status        = Experimental
@@ -74,7 +75,6 @@ makeExercise = Exercise
    , prettyPrinter = show
    , equivalence   = (==)
    , equality      = (==)
-   , finalProperty = const True
    , ruleset       = []
    , differences   = \_ _ -> [([], Different)]
    , ordering      = compare
@@ -83,7 +83,10 @@ makeExercise = Exercise
    }
    
 emptyExercise :: Exercise a
-emptyExercise = Exercise {}
+emptyExercise = Exercise 
+   { isReady    = const True
+   , isSuitable = const True
+   }
 
 ---------------------------------------------------------------
 -- Exercise generators
@@ -221,7 +224,7 @@ checkExerciseWith f a = do
       ExerciseGenerator p m -> do
          check "non-trivial terms" $ 
             forAll m $ \x -> 
-            let trivial  = finalProperty a x
+            let trivial  = isReady a x
                 rejected = not (p x) && not trivial
                 suitable = p x && not trivial in
             classify trivial  "trivial"  $
@@ -229,7 +232,7 @@ checkExerciseWith f a = do
             classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
             forAll m $
-               finalProperty a . fromContext . applyD (strategy a) . inContext
+               isReady a . fromContext . applyD (strategy a) . inContext
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
@@ -263,7 +266,7 @@ checksForTerm ex a =
    case derivations (unlabel $ strategy ex) (inContext a) of
       [] -> fail $ "no derivation for " ++ txt
       (_, xs):_ -> do
-         unless (finalProperty ex (last as)) $
+         unless (isReady ex (last as)) $
             fail $ "not solved: " ++ txt
          case [ (x, y) | x <- as, y <- as, not (equivalence ex x y) ] of
             (x, y):_ -> fail $ "not equivalent: " ++ prettyPrinter ex x ++ "  and  "

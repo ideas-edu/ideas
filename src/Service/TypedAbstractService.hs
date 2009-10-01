@@ -105,7 +105,7 @@ apply r loc state = maybe applyOff applyOn (prefix state)
          Nothing  -> error "apply"
        
 ready :: State a -> Bool
-ready state = finalProperty (exercise state) (term state)
+ready state = isReady (exercise state) (term state)
 
 stepsremaining :: State a -> Int
 stepsremaining = length . derivation

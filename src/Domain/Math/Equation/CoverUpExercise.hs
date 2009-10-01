@@ -38,7 +38,7 @@ coverUpExercise = makeExercise
    , parser        = parseWith (pOrList (pEquation pExpr))
    , equality      = (==)
    , equivalence   = \_ _ -> True
-   , finalProperty = solvedEquations
+   , isReady       = solvedEquations
    , ruleset       = map ignoreContext coverUpRulesOr
    , strategy      = coverUpStrategy
    , termGenerator = ExerciseList (map (orList . return) (concat (fillInResult ++ coverUpEquations)))

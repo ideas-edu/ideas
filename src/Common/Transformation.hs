@@ -463,30 +463,27 @@ ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
 
 -- | Check the soundness of a rule: the equality function is passed explicitly
 checkRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-checkRule eq = quickCheck . propRule arbitrary eq
+checkRule eq rule = 
+   quickCheck (propRule eq rule arbitrary)
 
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
-checkRuleSmart :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-checkRuleSmart eq rule =
-   quickCheck (propRule (smartGen rule) eq rule)
+checkRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> IO ()
+checkRuleSmart eq rule gen =
+   quickCheck (propRule eq rule (smartGen rule gen))
   
-propRule :: (Arbitrary a, Show a) => Gen a -> (a -> a -> Bool) -> Rule a -> (a -> Bool) -> Property
-propRule gen eq rule _ = 
+propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
+propRule eq rule gen = 
    forAll gen $ \a -> 
    forAll (smartApplyRule rule a) $ \ma -> 
       isJust ma ==> (a `eq` fromJust ma)
 
-smartGen :: Arbitrary a => Rule a -> Gen a
-smartGen r = frequency [(4, arbitrary), (1, smartGenRule r)]
-
-smartGenRule :: Arbitrary a => Rule a -> Gen a
-smartGenRule r = do
-   a <- arbitrary
-   case mapMaybe (smartGenTrans a) (transformations r) of
-      [] -> arbitrary
-      gs -> oneof gs
+smartGen :: Rule a -> Gen a -> Gen a
+smartGen r gen = frequency [(2, gen), (1, smart)]
+ where
+   smart = gen >>= \a -> 
+      oneof (gen : mapMaybe (smartGenTrans a) (transformations r))
 
 smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =

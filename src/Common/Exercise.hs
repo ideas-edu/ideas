@@ -233,62 +233,38 @@ printDerivation ex = putStrLn . showDerivation ex
 ---------------------------------------------------------------
 -- Checks for an exercise
 
--- | An instance of the Arbitrary type class is required because the random
--- | term generator that is part of an Exercise is not used for the checks:
--- | the terms produced by this generator will typically be biased.
+checkExercise :: Show a => Exercise a -> IO ()
+checkExercise ex =
+   case testGenerator ex of 
+      Nothing  -> return ()
+      Just gen -> do
+         putStrLn ("** " ++ show (exerciseCode ex))
+         let check txt p = putLabel txt >> quickCheck p
+         check "parser/pretty printer" $ forAll gen $
+            checkParserPretty (equivalence ex) (parser ex) (prettyPrinter ex)   
+         
+         putStrLn "Soundness non-buggy rules" 
+         forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
+            putLabel ("    " ++ name r)
+            let eq f a b = fromContext a `f` fromContext b
+            checkRuleSmart (eq (equivalence ex)) r (liftM inContext gen)
 
-checkExercise :: (Arbitrary a, Show a) => Exercise a -> IO ()
-checkExercise = checkExerciseWith g 
- where g eq = checkRuleSmart $ \x y -> fromContext x `eq` fromContext y
-
-checkExerciseWith :: (Arbitrary a, Show a) => ((a -> a -> Bool) -> Rule (Context a) -> IO b) -> Exercise a -> IO ()
-checkExerciseWith f a = do 
-   putStrLn ("** " ++ show (exerciseCode a))
-   let check txt p = putLabel txt >> quickCheck p
-   check "parser/pretty printer" $ 
-      checkParserPretty (equivalence a) (parser a) (prettyPrinter a)
---   check "equality relation" $ 
---      checkEquivalence (ruleset a) (equality a) 
---   check "equivalence relation" $ 
---      checkEquivalence (ruleset a) (equivalence a)
---   check "equality/equivalence" $ \x -> 
---      forAll (similar (ruleset a) x) $ \y ->
---      equality a x y ==> equivalence a x y
-   putStrLn "Soundness non-buggy rules" 
-   forM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
-      putLabel ("    " ++ name r) >> f (equivalence a) r
-   
-   case testGenerator a of 
-      Nothing -> return ()
-      Just g -> do
          check "non-trivial terms" $ 
-            forAll g $ \x -> 
-            let trivial  = isReady a x
+            forAll gen $ \x -> 
+            let trivial  = isReady ex x
                 rejected = not trivial
                 suitable = not trivial in
             classify trivial  "trivial"  $
             classify rejected "rejected" $
             classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
-            forAll g $
-               isReady a . fromContext . applyD (strategy a) . inContext
+            forAll gen $
+               isReady ex . fromContext . applyD (strategy ex) . inContext
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
 checkParserPretty eq parser pretty p = 
    either (const False) (eq p) (parser (pretty p))
-
-{-
-checkEquivalence :: (Arbitrary a, Show a) => [Rule (Context a)] -> (a -> a -> Bool) -> a -> Property
-checkEquivalence rs eq x =
-   forAll (similar rs x) $ \y ->
-   forAll (similar rs y) $ \z ->
-      eq x x && (eq x y == eq y x) && (if eq x y && eq y z then eq x z else True) 
-   
-similar :: Arbitrary a => [Rule (Context a)] -> a -> Gen a
-similar rs a =
-   let new = a : [ fromContext cb | r <- rs, cb <- applyAll r (inContext a) ]
-   in oneof [arbitrary, oneof $ map return new] -}
 
 checksForList :: Exercise a -> IO ()
 checksForList ex

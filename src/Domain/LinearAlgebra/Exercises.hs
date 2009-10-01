@@ -45,7 +45,7 @@ gramSchmidtExercise = testableExercise
    , prettyPrinter  = unlines . map show . vectors
    , equivalence    = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
                               in f x == f y
-   , ruleset        = rulesGramSchmidt
+   , extraRules     = rulesGramSchmidt
    , isReady        = orthonormalList . filter (not . isZero) . vectors
    , strategy       = gramSchmidtStrategy
    , randomExercise = simpleGenerator arbitrary
@@ -63,7 +63,7 @@ linearSystemExercise = testableExercise
    , equivalence    = \x y -> let f = getSolution . equations . applyD linearSystemStrategy 
                                     . inContext . map toStandardForm
                               in f x == f y
-   , ruleset        = equationsRules
+   , extraRules     = equationsRules
    , isReady        = inSolvedForm
    , strategy       = linearSystemStrategy
    , randomExercise = simpleGenerator (fmap matrixToSystem arbMatrix)
@@ -79,7 +79,7 @@ gaussianElimExercise = testableExercise
                                (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter  = ppMatrixWith show
    , equivalence    = \x y -> fmap simplified x === fmap simplified y
-   , ruleset        = matrixRules
+   , extraRules     = matrixRules
    , isReady        = inRowReducedEchelonForm
    , strategy       = gaussianElimStrategy
    , randomExercise = simpleGenerator arbMatrix
@@ -97,7 +97,7 @@ systemWithMatrixExercise = testableExercise
    , prettyPrinter  = either (unlines . map show) ppMatrix
    , equivalence    = \x y -> let f = either id matrixToSystem
                               in equivalence linearSystemExercise (f x) (f y)
-   , ruleset        = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
+   , extraRules     = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
    , isReady        = either inSolvedForm (const False)
    , strategy       = systemWithMatrixStrategy
    , randomExercise = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)

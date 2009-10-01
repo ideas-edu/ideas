@@ -33,7 +33,7 @@ derivativeExercise = makeExercise
    , parser       = parseExpr
    , equivalence  = \_ _ -> True
    , isReady      = noDiff
-   , ruleset      = map liftToContext derivativeRules ++ [tidyup]
+   , extraRules   = map liftToContext derivativeRules ++ [tidyup]
    , strategy     = derivativeStrategy
    , examples     = [ex1, ex2, ex3, ex4]
    }

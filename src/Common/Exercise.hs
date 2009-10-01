@@ -15,11 +15,11 @@ module Common.Exercise
    ( -- * Exercises
      Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
-   , equivalence, similarity, isReady, isSuitable, strategy, ruleset, differences
+   , equivalence, similarity, isReady, isSuitable, strategy, extraRules, differences
    , ordering, testGenerator, randomExercise, examples
    , stepsRemaining, getRule
    , simpleGenerator, useGenerator
-   , randomTerm, randomTermWith
+   , randomTerm, randomTermWith, ruleset
      -- * Miscellaneous
    , ExerciseCode, domain, identifier, makeCode, readCode, restrictGenerator
    , showDerivation, showDerivationWith, showDerivations, printDerivation, printDerivations
@@ -35,6 +35,7 @@ import Common.Transformation
 import Common.Utils
 import Control.Monad.Error
 import Data.Char
+import Data.List
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 import Text.Parsing (SyntaxError(..))
@@ -55,7 +56,7 @@ data Exercise a = Exercise
    , isSuitable     :: a -> Bool
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
-   , ruleset        :: [Rule (Context a)]
+   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , differences    :: a -> a -> [([Int], TreeDiff)]
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
@@ -103,7 +104,7 @@ emptyExercise = Exercise
    , isSuitable     = const True
      -- strategies and rules
    , strategy       = label "Succeed" succeed
-   , ruleset        = [] 
+   , extraRules     = [] 
    , differences    = \_ _ -> [([], Different)]
      -- testing and exercise generation
    , testGenerator  = Nothing
@@ -114,6 +115,13 @@ emptyExercise = Exercise
 ---------------------------------------------------------------
 -- Exercise generators
 
+-- returns a sorted list of rules (no duplicates)
+ruleset :: Exercise a -> [Rule (Context a)]
+ruleset ex = nub (sortBy cmp list)
+ where 
+   list = rulesInStrategy (strategy ex) ++ extraRules ex
+   cmp a b = name a `compare` name b
+ 
 simpleGenerator :: Gen a -> Maybe (StdGen -> a) 
 simpleGenerator = useGenerator (const True)
 

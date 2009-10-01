@@ -13,7 +13,7 @@ module Service.TypedAbstractService where
 
 import qualified Common.Apply as Apply
 import Common.Context 
-import Common.Exercise (Exercise(..), randomTermWith)
+import Common.Exercise (Exercise(..), ruleset, randomTermWith)
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)

@@ -33,7 +33,6 @@ numericExercise s = makeExercise
    { status        = Provisional
    , parser        = parseExpr
    , equivalence   = viewEquivalent rationalView
-   , ruleset       = rulesInStrategy (liftToContext s)
    , strategy      = liftToContext s
    }
 

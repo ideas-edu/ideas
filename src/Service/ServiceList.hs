@@ -129,4 +129,5 @@ allExercises  = map make $ sortBy cmp S.exerciseList
 
 allRules :: E.Exercise a -> [(String, Bool, Bool)]
 allRules = map make . ruleset
- where  make r = (name r, isBuggyRule r, isRewriteRule r)
+ where  
+   make r  = (name r, isBuggyRule r, isRewriteRule r)

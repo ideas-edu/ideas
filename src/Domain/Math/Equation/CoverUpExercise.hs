@@ -38,7 +38,7 @@ coverUpExercise = makeExercise
    , parser       = parseWith (pOrList (pEquation pExpr))
    , equivalence  = \_ _ -> True
    , isReady      = solvedEquations
-   , ruleset      = map ignoreContext coverUpRulesOr
+   , extraRules   = map ignoreContext coverUpRulesOr
    , strategy     = coverUpStrategy
    , examples     = map (orList . return) (concat (fillInResult ++ coverUpEquations))
    }

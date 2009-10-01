@@ -40,7 +40,7 @@ linearExercise = makeExercise
    , similarity   = eqEquation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
    , isReady      = solvedEquation
-   , ruleset      = linearRules
+   , extraRules   = linearRules
    , strategy     = ignoreContext linearStrategy
    , examples     = concat linearEquations
    }
@@ -54,7 +54,7 @@ quadraticExercise = makeExercise
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = viewEquivalent quadraticEquationsView
    , isReady      = solvedEquations
-   , ruleset      = map ignoreContext $ quadraticRules ++ abcBuggyRules
+   , extraRules   = map ignoreContext $ quadraticRules ++ abcBuggyRules
    , strategy     = ignoreContext quadraticStrategy
    , examples     = map (orList . return) (concat quadraticEquations)
    }
@@ -68,7 +68,7 @@ higherDegreeExercise = makeExercise
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = viewEquivalent higherDegreeEquationsView
    , isReady      = solvedEquations
-   , ruleset      = map ignoreContext higherDegreeRules
+   , extraRules   = map ignoreContext higherDegreeRules
    , strategy     = ignoreContext higherDegreeStrategy
    , examples     = map (orList . return) higherDegreeEquations
    }

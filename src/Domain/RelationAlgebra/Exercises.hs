@@ -26,22 +26,22 @@ import Common.Strategy hiding (not)
 import Common.Transformation
 
 cnfExercise :: Exercise RelAlg
-cnfExercise = makeExercise
-   { description   = "To conjunctive normal form"
-   , exerciseCode  = makeCode "relationalg" "cnf"
-   , status        = Provisional
-   , parser        = either Left (Right . fromRanged) . parseRelAlg
-   , prettyPrinter = ppRelAlg
-   , equivalence   = probablyEqual -- isEquivalent
-   , ruleset       = map liftToContext (relAlgRules ++ buggyRelAlgRules)
-   , strategy      = toCNF
-   , differences   = treeDiff
-   , ordering      = compare
-   , isReady       = ready (ruleset cnfExercise)
-   , termGenerator = let isSuitable p =
-                            let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
-                            in n >= 2 && n <= 4
-                     in makeGenerator isSuitable (templateGenerator 1)
+cnfExercise = testableExercise
+   { description    = "To conjunctive normal form"
+   , exerciseCode   = makeCode "relationalg" "cnf"
+   , status         = Provisional
+   , parser         = either Left (Right . fromRanged) . parseRelAlg
+   , prettyPrinter  = ppRelAlg
+   , equivalence    = probablyEqual -- isEquivalent
+   , ruleset        = map liftToContext (relAlgRules ++ buggyRelAlgRules)
+   , strategy       = toCNF
+   , differences    = treeDiff
+   , ordering       = compare
+   , isReady        = ready (ruleset cnfExercise)
+   , randomExercise = let ok p =
+                             let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
+                             in n >= 2 && n <= 4
+                      in useGenerator ok (templateGenerator 1)
    }
 
 {- cnfExerciseSimple :: Exercise RelAlg

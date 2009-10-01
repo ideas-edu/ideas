@@ -10,7 +10,9 @@
 --
 -----------------------------------------------------------------------------
 module Documentation.OverviewPages 
-   ( makeExerciseOverviewPage, makeServiceOverviewPage ) where
+   ( makeExerciseOverviewPage
+   , makeServiceOverviewPage 
+   ) where
 
 import Documentation.DefaultPage
 import Data.List
@@ -22,24 +24,30 @@ import Service.ServiceList
 import Text.HTML
 
 makeExerciseOverviewPage :: IO ()
-makeExerciseOverviewPage = generatePage exerciseOverviewPageFile exerciseOverviewPage
+makeExerciseOverviewPage = 
+   generatePage exerciseOverviewPageFile exerciseOverviewPage
 
 makeServiceOverviewPage :: IO ()
-makeServiceOverviewPage = generatePage serviceOverviewPageFile serviceOverviewPage
+makeServiceOverviewPage = 
+   generatePage serviceOverviewPageFile serviceOverviewPage
 
 exerciseOverviewPage :: HTML
 exerciseOverviewPage = defaultPage "Exercises" 0 $ do
-   let groups = groupBy (\x y -> f x == f y) 
-              $ sortBy (\x y -> g x `compare` g y) exerciseList
-       f (Some ex) = domain ex
-       g (Some ex) = show (exerciseCode ex)
    h1 "Exercises"
-   forM_ (zip [1..] groups) $ \(i, xs@(hd:_)) -> do
-      h2 (show i ++ ". " ++ f hd)
+   forM_ (zip [1..] groupedList) $ \(i, (dom, xs)) -> do
+      h2 (show i ++ ". " ++ dom)
       ul $ flip map xs $ \(Some ex) -> do
          link (exercisePageFile ex) $ ttText (show (exerciseCode ex))
          space
          text $ "(" ++ description ex ++ ")"
+
+groupedList :: [(String, [Some Exercise])]
+groupedList = map g (groupBy eq (sortBy cmp exerciseList))
+ where
+   cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
+   eq a b      = f a == f b
+   f (Some ex) = domain (exerciseCode ex)
+   g xs = (f (head xs), xs)
 
 serviceOverviewPage :: HTML
 serviceOverviewPage = defaultPage "Services" 0 $ do

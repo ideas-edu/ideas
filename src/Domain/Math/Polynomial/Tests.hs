@@ -54,7 +54,7 @@ testHDE = concat $ zipWith (f higherDegreeExercise) [1..] $ map (orList . return
 f s n e = map p (g (applyAll (strategy s) (inContext e))) where
   g xs | null xs   = error $ show n ++ ": " ++ show e
        | otherwise = xs
-  p a  | finalProperty s (fromContext a) = n
+  p a  | isReady s (fromContext a) = n
        | otherwise = error $ show n ++ ": " ++ show e ++ "  =>  " ++ show (fromContext a)
        
 randomLE = quickCheck $ forAll (liftM2 (:==:) (sized linearGen) (sized linearGen)) $ \eq -> 

@@ -29,22 +29,27 @@ import Test.QuickCheck
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
 dnfExercise = makeExercise
-   { description   = "Proposition to DNF"
-   , exerciseCode  = makeCode "logic" "dnf"
-   , status        = Stable
-   , parser        = either Left (Right . fromRanged) . parseLogicPars
-   , prettyPrinter = ppLogicPars
-   , equivalence   = eqLogic
-   , equality      = equalLogicA
-   , isReady       = isDNF
-   , ruleset       = map liftToContext (logicRules ++ buggyRules)
-   , strategy      = dnfStrategyDWA
-   , differences   = treeDiff
-   , termGenerator = let isSuitable p =
-                            let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
-                            in countEquivalences p <= 2 && n >= 4 && n <= 12
-                     in makeGenerator isSuitable generateLogic
+   { description    = "Proposition to DNF"
+   , exerciseCode   = makeCode "logic" "dnf"
+   , status         = Stable
+   , parser         = either Left (Right . fromRanged) . parseLogicPars
+   , prettyPrinter  = ppLogicPars
+   , equivalence    = eqLogic
+   , similarity     = equalLogicA
+   , isReady        = isDNF
+   , isSuitable     = suitable
+   , ruleset        = map liftToContext (logicRules ++ buggyRules)
+   , strategy       = dnfStrategyDWA
+   , differences    = treeDiff
+   , testGenerator  = Just (restrictGenerator suitable arbitrary)
+   , randomExercise = let ok p =
+                                let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
+                                in countEquivalences p <= 2 && n >= 4 && n <= 12
+                         in useGenerator ok generateLogic
    }
+
+suitable :: SLogic -> Bool
+suitable = (<=2) . countEquivalences
    
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)

@@ -27,17 +27,15 @@ import Domain.Math.Expr.Parser
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise
-   { description   = "Derivative"
-   , exerciseCode  = makeCode "math" "derivative"
-   , status        = Experimental
-   , parser        = parseExpr
-   , equivalence   = \_ _ -> True
-   , equality      = (==)
-   , prettyPrinter = show
-   , isReady       = noDiff
-   , ruleset       = map liftToContext derivativeRules ++ [tidyup]
-   , strategy      = derivativeStrategy
-   , termGenerator = ExerciseList [ex1, ex2, ex3, ex4]
+   { description  = "Derivative"
+   , exerciseCode = makeCode "math" "derivative"
+   , status       = Experimental
+   , parser       = parseExpr
+   , equivalence  = \_ _ -> True
+   , isReady      = noDiff
+   , ruleset      = map liftToContext derivativeRules ++ [tidyup]
+   , strategy     = derivativeStrategy
+   , examples     = [ex1, ex2, ex3, ex4]
    }
    
 noDiff :: Expr -> Bool

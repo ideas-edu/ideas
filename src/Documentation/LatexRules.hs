@@ -27,7 +27,8 @@ main :: IO ()
 main = do
    dir <- targetDirectory
    forM_ exerciseList $ \(Some ex) -> do
-      let path = dir ++ "/" ++ domain ex ++ "/" ++ filter (/= ' ') (identifier ex)
+      let code = exerciseCode ex
+          path = dir ++ "/" ++ domain code ++ "/" ++ filter (/= ' ') (identifier code)
       -- Exercise document
       let rules = concatMap getRewriteRules (ruleset ex)
       unless (null rules) $ do
@@ -38,7 +39,7 @@ main = do
          writeFile filename doc
       -- individual rules
       forM_ (ruleset ex) $ \r ->
-         case makeSingleRule (domain ex ++ "/" ++ domain ex ++ ".fmt") r of
+         case makeSingleRule (domain code ++ "/" ++ domain code ++ ".fmt") r of
             Nothing  -> return ()
             Just txt -> do
                let filename = path ++ "/rule" ++ name r ++ ".lhs"
@@ -80,9 +81,10 @@ makeSingleRule dom r
 
 makeDocument :: Exercise a -> IO String
 makeDocument ex = do
+   let code = exerciseCode ex
    time <- getClockTime
    return $ 
-      texHeader (Just $ domain ex ++ "/" ++ domain ex ++ ".fmt") ++ 
+      texHeader (Just $ domain code ++ "/" ++ domain code ++ ".fmt") ++ 
       texBody (Just $ show time) (texSectionRules ex)
 
 ------------------------------------------------------

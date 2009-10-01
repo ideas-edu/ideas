@@ -13,14 +13,15 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise, Status(..), makeExercise, emptyExercise
+     Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
-   , equivalence, equality, isReady, isSuitable, strategy, ruleset, differences
-   , ordering, termGenerator
+   , equivalence, similarity, isReady, isSuitable, strategy, ruleset, differences
+   , ordering, testGenerator, randomExercise, examples
    , stepsRemaining, getRule
-   , TermGenerator(..), makeGenerator, simpleGenerator, randomTerm, randomTermWith
+   , simpleGenerator, useGenerator
+   , randomTerm, randomTermWith
      -- * Miscellaneous
-   , ExerciseCode, domain, identifier, makeCode, readCode
+   , ExerciseCode, domain, identifier, makeCode, readCode, restrictGenerator
    , showDerivation, showDerivationWith, showDerivations, printDerivation, printDerivations
    , checkExercise, checkParserPretty
    , checksForList
@@ -40,66 +41,95 @@ import Text.Parsing (SyntaxError(..))
 
 data Exercise a = Exercise
    { -- identification and meta-information
-     description   :: String       -- short sentence describing the task
-   , exerciseCode  :: ExerciseCode -- uniquely determines the exercise (in a given domain)
-   , status        :: Status
+     description    :: String       -- short sentence describing the task
+   , exerciseCode   :: ExerciseCode -- uniquely determines the exercise (in a given domain)
+   , status         :: Status
      -- parsing and pretty-printing
-   , parser        :: String -> Either SyntaxError a
-   , prettyPrinter :: a -> String
+   , parser         :: String -> Either SyntaxError a
+   , prettyPrinter  :: a -> String
      -- syntactic and semantic checks
-   , equivalence   :: a -> a -> Bool
-   , equality      :: a -> a -> Bool   -- syntactic equality
-   , isReady       :: a -> Bool
-   , isSuitable    :: a -> Bool
+   , equivalence    :: a -> a -> Bool
+   , similarity     :: a -> a -> Bool      -- possibly more liberal than syntactic equality
+   , ordering       :: a -> a -> Ordering  -- syntactic comparison
+   , isReady        :: a -> Bool
+   , isSuitable     :: a -> Bool
      -- strategies and rules
-   , strategy      :: LabeledStrategy (Context a)
-   , ruleset       :: [Rule (Context a)]
-   , differences   :: a -> a -> [([Int], TreeDiff)]
-   , ordering      :: a -> a -> Ordering
-     -- term generation
-   , termGenerator :: TermGenerator a
+   , strategy       :: LabeledStrategy (Context a)
+   , ruleset        :: [Rule (Context a)]
+   , differences    :: a -> a -> [([Int], TreeDiff)]
+     -- testing and exercise generation
+   , testGenerator  :: Maybe (Gen a)
+   , randomExercise :: Maybe (StdGen -> a)
+   , examples       :: [a]
    }
    
 data Status = Stable | Provisional | Experimental deriving (Show, Eq)
 
+instance Eq (Exercise a) where
+   e1 == e2 = exerciseCode e1 == exerciseCode e2
+
+instance Ord (Exercise a) where
+   e1 `compare` e2 = exerciseCode e1 `compare` exerciseCode e2
+
 instance Apply Exercise where
    applyAll e = map fromContext . applyAll (strategy e) . inContext
 
--- default values for all fields
-makeExercise :: (Arbitrary a, Ord a, Show a) => Exercise a
+testableExercise :: (Arbitrary a, Show a, Ord a) => Exercise a
+testableExercise = makeExercise
+   { testGenerator = Just arbitrary
+   }
+
+makeExercise :: (Show a, Ord a) => Exercise a
 makeExercise = emptyExercise
-   { description   = "<no description>"
-   , exerciseCode  = error "no exercise code"
-   , status        = Experimental
-   , parser        = const $ Left $ ErrorMessage "No parser available"
-   , prettyPrinter = show
-   , equivalence   = (==)
-   , equality      = (==)
-   , ruleset       = []
-   , differences   = \_ _ -> [([], Different)]
+   { prettyPrinter = show
+   , similarity    = (==)
    , ordering      = compare
-   , strategy      = label "Succeed" succeed
-   , termGenerator = simpleGenerator arbitrary
    }
    
 emptyExercise :: Exercise a
 emptyExercise = Exercise 
-   { isReady    = const True
-   , isSuitable = const True
+   { -- identification and meta-information
+     description    = "<<description>>" 
+   , exerciseCode   = emptyCode
+   , status         = Experimental
+     -- parsing and pretty-printing
+   , parser         = const $ Left $ ErrorMessage "<<no parser>>"
+   , prettyPrinter  = const "<<no pretty-printer>>"
+     -- syntactic and semantic checks
+   , equivalence    = \_ _ -> True
+   , similarity     = \_ _ -> True
+   , ordering       = \_ _ -> EQ
+   , isReady        = const True
+   , isSuitable     = const True
+     -- strategies and rules
+   , strategy       = label "Succeed" succeed
+   , ruleset        = [] 
+   , differences    = \_ _ -> [([], Different)]
+     -- testing and exercise generation
+   , testGenerator  = Nothing
+   , randomExercise = Nothing
+   , examples       = []
    }
 
 ---------------------------------------------------------------
 -- Exercise generators
 
-data TermGenerator a 
-   = ExerciseList [a] 
-   | ExerciseGenerator (a -> Bool) (Gen a)
+simpleGenerator :: Gen a -> Maybe (StdGen -> a) 
+simpleGenerator = useGenerator (const True)
 
-simpleGenerator :: Gen a -> TermGenerator a
-simpleGenerator = makeGenerator (const True)
+useGenerator :: (a -> Bool) -> Gen a -> Maybe (StdGen -> a) 
+useGenerator p g = Just f
+ where
+   f rng | p a       = a
+         | otherwise = f (snd (next rng))
+    where
+      a = generate 100 rng g 
 
-makeGenerator :: (a -> Bool) -> Gen a -> TermGenerator a
-makeGenerator = ExerciseGenerator
+restrictGenerator :: (a -> Bool) -> Gen a -> Gen a
+restrictGenerator p g = do
+   a <- g 
+   if p a then return a 
+          else restrictGenerator p g
 
 randomTerm :: Exercise a -> IO a
 randomTerm ex = do
@@ -108,18 +138,18 @@ randomTerm ex = do
 
 randomTermWith :: StdGen -> Exercise a -> a
 randomTermWith rng ex = 
-   case termGenerator ex of
-      ExerciseList xs
-         | null xs   -> error "randomTermWith: empty exercise list"
-         | otherwise -> xs !! fst (randomR (0, length xs - 1) rng)
-      ExerciseGenerator p m 
-         | p a       -> a 
-         | otherwise -> randomTermWith (snd $ next rng) ex
-       where
-         a = generate 100 rng m
+   case randomExercise ex of
+      Just f  -> f rng
+      Nothing
+         | null xs   -> error "randomTermWith: no generator" 
+         | otherwise -> 
+              xs !! fst (randomR (0, length xs - 1) rng)
+       where xs = examples ex
 
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
+
+emptyCode = EC [] []
 
 data ExerciseCode = EC {domain :: String, identifier :: String}
    deriving (Eq, Ord)
@@ -216,22 +246,22 @@ checkExerciseWith f a = do
 --      forAll (similar (ruleset a) x) $ \y ->
 --      equality a x y ==> equivalence a x y
    putStrLn "Soundness non-buggy rules" 
-   forM (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
+   forM_ (filter (not . isBuggyRule) $ ruleset a) $ \r -> 
       putLabel ("    " ++ name r) >> f (equivalence a) r
    
-   case termGenerator a of 
-      ExerciseList _ -> return ()
-      ExerciseGenerator p m -> do
+   case testGenerator a of 
+      Nothing -> return ()
+      Just g -> do
          check "non-trivial terms" $ 
-            forAll m $ \x -> 
+            forAll g $ \x -> 
             let trivial  = isReady a x
-                rejected = not (p x) && not trivial
-                suitable = p x && not trivial in
+                rejected = not trivial
+                suitable = not trivial in
             classify trivial  "trivial"  $
             classify rejected "rejected" $
             classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
-            forAll m $
+            forAll g $
                isReady a . fromContext . applyD (strategy a) . inContext
 
 -- check combination of parser and pretty-printer
@@ -252,13 +282,13 @@ similar rs a =
    in oneof [arbitrary, oneof $ map return new] -}
 
 checksForList :: Exercise a -> IO ()
-checksForList ex =
-   case termGenerator ex of
-      ExerciseList xs | status ex /= Experimental -> do
+checksForList ex
+   | status ex /= Experimental || null xs = return ()
+   | otherwise = do
          let err s = putStrLn $ "Error: " ++ s
          putStrLn ("** " ++ show (exerciseCode ex))
          mapM_ (either err return . checksForTerm ex) xs
-      _ -> return ()
+ where xs = examples ex
 
 checksForTerm :: Monad m => Exercise a -> a -> m ()
 checksForTerm ex a = 
@@ -272,7 +302,7 @@ checksForTerm ex a =
             (x, y):_ -> fail $ "not equivalent: " ++ prettyPrinter ex x ++ "  and  "
                                                   ++ prettyPrinter ex y
             _        -> return ()
-         case filter (not . checkParserPretty (equality ex) (parser ex) (prettyPrinter ex)) as of
+         case filter (not . checkParserPretty (similarity ex) (parser ex) (prettyPrinter ex)) as of
             hd:_ -> let s = prettyPrinter ex hd in
                     fail $ "parse error for " ++ s ++ ": parsed as " ++
                            either show (prettyPrinter ex) (parser ex s)

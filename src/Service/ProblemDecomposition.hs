@@ -44,7 +44,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                        , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses)
                        }
                   where 
-                    witnesses   = filter (equality ex (fromContext answeredTerm) . fromContext . fst) $ take 1 answers
+                    witnesses   = filter (similarity ex (fromContext answeredTerm) . fromContext . fst) $ take 1 answers
                     newPrefix   = snd (head witnesses)
                       
             ((expected, prefix):_, maybeAnswer) ->

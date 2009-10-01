@@ -32,7 +32,6 @@ numericExercise :: LabeledStrategy Expr -> Exercise Expr
 numericExercise s = makeExercise 
    { status        = Provisional
    , parser        = parseExpr
-   , equality      = (==)
    , equivalence   = viewEquivalent rationalView
    , ruleset       = rulesInStrategy (liftToContext s)
    , strategy      = liftToContext s
@@ -40,32 +39,32 @@ numericExercise s = makeExercise
 
 naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
-   { description   = "simplify expression (natural numbers)"
-   , exerciseCode  = makeCode "math" "natural"
-   , isReady       = (`belongsTo` integerNormalForm)
-   , termGenerator = ExerciseList (concat calculateResults)
+   { description  = "simplify expression (natural numbers)"
+   , exerciseCode = makeCode "math" "natural"
+   , isReady      = (`belongsTo` integerNormalForm)
+   , examples     = concat calculateResults
    }
 
 integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
-   { description   = "simplify expression (integers)"
-   , exerciseCode  = makeCode "math" "integer"
-   , isReady       = (`belongsTo` integerNormalForm)
-   , termGenerator = ExerciseList (concat calculateResults)
+   { description  = "simplify expression (integers)"
+   , exerciseCode = makeCode "math" "integer"
+   , isReady      = (`belongsTo` integerNormalForm)
+   , examples     = concat calculateResults
    }
    
 rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
-   { description   = "simplify expression (rational numbers)"
-   , exerciseCode  = makeCode "math" "rational"
-   , isReady       = (`belongsTo` rationalNormalForm)
-   , termGenerator = simpleGenerator (rationalGenerator 5)
+   { description    = "simplify expression (rational numbers)"
+   , exerciseCode   = makeCode "math" "rational"
+   , isReady        = (`belongsTo` rationalNormalForm)
+   , randomExercise = simpleGenerator (rationalGenerator 5)
    }
 
 fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
-   { description   = "simplify expression (fractions)"
-   , exerciseCode  = makeCode "math" "fraction"
-   , isReady       = (`belongsTo` rationalNormalForm)
-   , termGenerator = simpleGenerator (rationalGenerator 5)
+   { description    = "simplify expression (fractions)"
+   , exerciseCode   = makeCode "math" "fraction"
+   , isReady        = (`belongsTo` rationalNormalForm)
+   , randomExercise = simpleGenerator (rationalGenerator 5)
    }

@@ -33,44 +33,44 @@ import Data.List
 
 linearExercise :: Exercise (Equation Expr)
 linearExercise = makeExercise 
-   { description   = "solve a linear equation"
-   , exerciseCode  = makeCode "math" "lineq"
-   , status        = Provisional
-   , parser        = parseWith (pEquation pExpr)
-   , equality      = eqEquation cleanUpSimple
-   , equivalence   = viewEquivalent linearEquationView
-   , isReady       = solvedEquation
-   , ruleset       = linearRules
-   , strategy      = ignoreContext linearStrategy
-   , termGenerator = ExerciseList (concat linearEquations)
+   { description  = "solve a linear equation"
+   , exerciseCode = makeCode "math" "lineq"
+   , status       = Provisional
+   , parser       = parseWith (pEquation pExpr)
+   , similarity   = eqEquation cleanUpSimple
+   , equivalence  = viewEquivalent linearEquationView
+   , isReady      = solvedEquation
+   , ruleset      = linearRules
+   , strategy     = ignoreContext linearStrategy
+   , examples     = concat linearEquations
    }
 
 quadraticExercise :: Exercise (OrList (Equation Expr))
 quadraticExercise = makeExercise 
-   { description   = "solve a quadratic equation"
-   , exerciseCode  = makeCode "math" "quadreq"
-   , status        = Provisional
-   , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = eqOrList cleanUpExpr2
-   , equivalence   = viewEquivalent quadraticEquationsView
-   , isReady       = solvedEquations
-   , ruleset       = map ignoreContext $ quadraticRules ++ abcBuggyRules
-   , strategy      = ignoreContext quadraticStrategy
-   , termGenerator = ExerciseList (map (orList . return) $ concat quadraticEquations)
+   { description  = "solve a quadratic equation"
+   , exerciseCode = makeCode "math" "quadreq"
+   , status       = Provisional
+   , parser       = parseWith (pOrList (pEquation pExpr))
+   , similarity   = eqOrList cleanUpExpr2
+   , equivalence  = viewEquivalent quadraticEquationsView
+   , isReady      = solvedEquations
+   , ruleset      = map ignoreContext $ quadraticRules ++ abcBuggyRules
+   , strategy     = ignoreContext quadraticStrategy
+   , examples     = map (orList . return) (concat quadraticEquations)
    }
    
 higherDegreeExercise :: Exercise (OrList (Equation Expr))
 higherDegreeExercise = makeExercise 
-   { description   = "solve an equation (higher degree)"
-   , exerciseCode  = makeCode "math" "higherdegree"
-   , status        = Provisional
-   , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = eqOrList cleanUpExpr2
-   , equivalence   = viewEquivalent higherDegreeEquationsView
-   , isReady       = solvedEquations
-   , ruleset       = map ignoreContext higherDegreeRules
-   , strategy      = ignoreContext higherDegreeStrategy
-   , termGenerator = ExerciseList (map (orList . return) higherDegreeEquations)
+   { description  = "solve an equation (higher degree)"
+   , exerciseCode = makeCode "math" "higherdegree"
+   , status       = Provisional
+   , parser       = parseWith (pOrList (pEquation pExpr))
+   , similarity   = eqOrList cleanUpExpr2
+   , equivalence  = viewEquivalent higherDegreeEquationsView
+   , isReady      = solvedEquations
+   , ruleset      = map ignoreContext higherDegreeRules
+   , strategy     = ignoreContext higherDegreeStrategy
+   , examples     = map (orList . return) higherDegreeEquations
    }
    
 --------------------------------------------

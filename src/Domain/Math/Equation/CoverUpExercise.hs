@@ -32,16 +32,15 @@ import Prelude hiding (repeat)
 
 coverUpExercise :: Exercise (OrList (Equation Expr))
 coverUpExercise = makeExercise 
-   { description   = "solve an equation by covering up"
-   , exerciseCode  = makeCode "math" "coverup"
-   , status        = Provisional
-   , parser        = parseWith (pOrList (pEquation pExpr))
-   , equality      = (==)
-   , equivalence   = \_ _ -> True
-   , isReady       = solvedEquations
-   , ruleset       = map ignoreContext coverUpRulesOr
-   , strategy      = coverUpStrategy
-   , termGenerator = ExerciseList (map (orList . return) (concat (fillInResult ++ coverUpEquations)))
+   { description  = "solve an equation by covering up"
+   , exerciseCode = makeCode "math" "coverup"
+   , status       = Provisional
+   , parser       = parseWith (pOrList (pEquation pExpr))
+   , equivalence  = \_ _ -> True
+   , isReady      = solvedEquations
+   , ruleset      = map ignoreContext coverUpRulesOr
+   , strategy     = coverUpStrategy
+   , examples     = map (orList . return) (concat (fillInResult ++ coverUpEquations))
    }
 
 ------------------------------------------------------------

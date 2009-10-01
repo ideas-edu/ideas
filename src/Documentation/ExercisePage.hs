@@ -80,14 +80,14 @@ exercisePage ex = defaultPage title 2 $ do
    title = "Exercise " ++ show (exerciseCode ex)
    
 derivationsPage :: Exercise a -> Maybe HTML
-derivationsPage ex = 
-   case termGenerator ex of
-      ExerciseList xs -> Just $ defaultPage title 2 $ do
-         h1 "Examples"
-         let f i x = do
-                h2 (show i ++ ".")
-                preText (showDerivation ex x)
-         zipWithM_ f [1 ..] xs
-      _ -> Nothing
+derivationsPage ex
+   | null xs   = Nothing
+   | otherwise = Just $ defaultPage title 2 $ do
+        h1 "Examples"
+        forM_ (zip [1 ..] xs) $ \(i, x) -> do
+            h2 (show i ++ ".")
+            preText (showDerivation ex x)
+        
  where
    title = "Derivations for " ++ show (exerciseCode ex)
+   xs    = examples ex

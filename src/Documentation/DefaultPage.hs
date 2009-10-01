@@ -65,11 +65,11 @@ up = concat . flip replicate "../"
 -- Paths and files
 
 ruleImagePath :: Exercise a -> String
-ruleImagePath ex = "exercises/" ++ f (domain ex) ++ "/" ++ f (description ex) ++ "/"
+ruleImagePath ex = "exercises/" ++ f (domain (exerciseCode ex)) ++ "/" ++ f (description ex) ++ "/"
  where f = filter isAlphaNum . map toLower
 
 exercisePagePath :: Exercise a -> String
-exercisePagePath ex = "exercises/" ++ domain ex ++ "/"
+exercisePagePath ex = "exercises/" ++ domain (exerciseCode ex) ++ "/"
 
 servicePagePath :: String
 servicePagePath = "services/" 
@@ -78,7 +78,9 @@ ruleImageFile :: Exercise a -> Rule (Context a) -> String
 ruleImageFile ex r = ruleImagePath ex ++ "rule" ++ name r ++ ".png"
 
 ruleImageFileHere :: Exercise a -> Rule (Context a) -> String
-ruleImageFileHere ex r = filter (not . isSpace) (identifier ex) ++ "/rule" ++ name r ++ ".png"
+ruleImageFileHere ex r = 
+   filter (not . isSpace) (identifier (exerciseCode ex)) 
+   ++ "/rule" ++ name r ++ ".png"
 
 exerciseOverviewPageFile :: String
 exerciseOverviewPageFile = "exercises.html"
@@ -87,10 +89,16 @@ serviceOverviewPageFile :: String
 serviceOverviewPageFile = "services.html"
 
 exercisePageFile :: Exercise a -> String
-exercisePageFile ex = exercisePagePath ex ++ filter (not . isSpace) (identifier ex) ++ ".html"
+exercisePageFile ex = 
+   exercisePagePath ex 
+   ++ filter (not . isSpace) (identifier (exerciseCode ex)) 
+   ++ ".html"
 
 exerciseDerivationsFile :: Exercise a -> String
-exerciseDerivationsFile ex = exercisePagePath ex ++ filter (not . isSpace) (identifier ex) ++ "-derivations.html"
+exerciseDerivationsFile ex = 
+   exercisePagePath ex
+   ++ filter (not . isSpace) (identifier (exerciseCode ex))
+   ++ "-derivations.html"
 
 servicePageFile :: Service a -> String
 servicePageFile srv = servicePagePath ++ serviceName srv ++ ".html"

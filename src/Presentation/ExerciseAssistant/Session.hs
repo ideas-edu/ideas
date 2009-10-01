@@ -216,7 +216,7 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
        loc     = fromMaybe (makeLocation []) mloc
        results = applyAll newRule (setLocation loc $ current d)
        answers = TAS.allfirsts (currentState d)
-       check (r, _, s) = name r==name rule && any (equality a (TAS.term s) . fromContext) results
+       check (r, _, s) = name r==name rule && any (similarity a (TAS.term s) . fromContext) results
        thisRule (r, _, _) = name r==name rule
    case safeHead (filter check answers) of
       Just (_, _, new) -> do

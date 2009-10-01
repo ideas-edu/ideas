@@ -62,7 +62,7 @@ derivation state = fromMaybe (error "derivation") $ do
    (final, p1) <- safeHead (runPrefix p0 (context state))
    let steps = drop (length (prefixToSteps p0)) (prefixToSteps p1)
        rules = stepsToRules steps
-       terms = let run x []     = [ [] | equality (exercise state) (fromContext x) (fromContext final) ]
+       terms = let run x []     = [ [] | similarity (exercise state) (fromContext x) (fromContext final) ]
                    run x (r:rs) = [ y:ys | y <- Apply.applyAll r x, ys <- run y rs ] 
                in fromMaybe [] $ safeHead (run (context state) rules)
        check = isMajorRule . fst
@@ -113,7 +113,7 @@ stepsremaining = length . derivation
 findbuggyrules :: State a -> Context a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise state
-       isA     = equality ex (fromContext a) . fromContext  
+       isA     = similarity ex (fromContext a) . fromContext  
        buggies = filter isBuggyRule (ruleset ex)
        check r = any isA (Apply.applyAll r (context state))
    in filter check buggies
@@ -134,7 +134,7 @@ submit state new
         case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 errSpace of
            ((_, _, rs), _):_ -> Buggy rs
            _                 -> NotEquivalent
-   | equality (exercise state) (term state) new =
+   | similarity (exercise state) (term state) new =
         Ok [] state
    | otherwise =        
         case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 space of
@@ -143,7 +143,7 @@ submit state new
               | otherwise -> Detour rs state { context=a, prefix=mp }
            _ -> Unknown state { context=inContext new }
  where 
-   isSame ((a, _, _), _) = equality (exercise state) new (fromContext a)
+   isSame ((a, _, _), _) = similarity (exercise state) new (fromContext a)
  
    space    = searchSpace (getOrdering state) diff (prefix state) (filter (not . isBuggyRule) $ ruleset $ exercise state) (context state)
    errSpace = searchSpace (getOrdering state) diff Nothing (ruleset $ exercise state) (context state)

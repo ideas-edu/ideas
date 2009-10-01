@@ -35,72 +35,72 @@ import Test.QuickCheck
 import Text.Parsing (SyntaxError(..))
 
 gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
-gramSchmidtExercise = makeExercise
-   { description   = "Gram-Schmidt"
-   , exerciseCode  = makeCode "linalg" "gramschmidt"
-   , status        = Provisional
-   , parser        = \s -> case parseVectorSpace s of
-                              (a, [])  -> Right (fmap simplified a)
-                              (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = unlines . map show . vectors
-   , equivalence   = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
-                             in f x == f y
-   , ruleset       = rulesGramSchmidt
-   , isReady       = orthonormalList . filter (not . isZero) . vectors
-   , strategy      = gramSchmidtStrategy
-   , termGenerator = simpleGenerator arbitrary
+gramSchmidtExercise = testableExercise
+   { description    = "Gram-Schmidt"
+   , exerciseCode   = makeCode "linalg" "gramschmidt"
+   , status         = Provisional
+   , parser         = \s -> case parseVectorSpace s of
+                               (a, [])  -> Right (fmap simplified a)
+                               (_, m:_) -> Left $ ErrorMessage $ show m
+   , prettyPrinter  = unlines . map show . vectors
+   , equivalence    = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
+                              in f x == f y
+   , ruleset        = rulesGramSchmidt
+   , isReady        = orthonormalList . filter (not . isZero) . vectors
+   , strategy       = gramSchmidtStrategy
+   , randomExercise = simpleGenerator arbitrary
    }
 
 linearSystemExercise :: Exercise (Equations Expr)
-linearSystemExercise = makeExercise
-   { description   = "Solve Linear System"
-   , exerciseCode  = makeCode "linalg" "linsystem"
-   , status        = Stable
-   , parser        = \s -> case parseSystem s of
-                              (a, [])  -> Right (simplify a)
-                              (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = unlines . map show
-   , equivalence   = \x y -> let f = getSolution . equations . applyD linearSystemStrategy 
-                                   . inContext . map toStandardForm
-                             in f x == f y
-   , ruleset       = equationsRules
-   , isReady       = inSolvedForm
-   , strategy      = linearSystemStrategy
-   , termGenerator = simpleGenerator (fmap matrixToSystem arbMatrix)
+linearSystemExercise = testableExercise
+   { description    = "Solve Linear System"
+   , exerciseCode   = makeCode "linalg" "linsystem"
+   , status         = Stable
+   , parser         = \s -> case parseSystem s of
+                               (a, [])  -> Right (simplify a)
+                               (_, m:_) -> Left $ ErrorMessage $ show m
+   , prettyPrinter  = unlines . map show
+   , equivalence    = \x y -> let f = getSolution . equations . applyD linearSystemStrategy 
+                                    . inContext . map toStandardForm
+                              in f x == f y
+   , ruleset        = equationsRules
+   , isReady        = inSolvedForm
+   , strategy       = linearSystemStrategy
+   , randomExercise = simpleGenerator (fmap matrixToSystem arbMatrix)
    }
    
 gaussianElimExercise :: Exercise (Matrix Expr)
-gaussianElimExercise = makeExercise
-   { description   = "Gaussian Elimination"
-   , exerciseCode  = makeCode "linalg" "gaussianelim"
-   , status        = Stable
-   , parser        = \s -> case parseMatrix s of
-                              (a, [])  -> Right (simplify a)
-                              (_, m:_) -> Left $ ErrorMessage $ show m
-   , prettyPrinter = ppMatrixWith show
-   , equivalence   = \x y -> fmap simplified x === fmap simplified y
-   , ruleset       = matrixRules
-   , isReady       = inRowReducedEchelonForm
-   , termGenerator = simpleGenerator arbMatrix
-   , strategy      = gaussianElimStrategy
+gaussianElimExercise = testableExercise
+   { description    = "Gaussian Elimination"
+   , exerciseCode   = makeCode "linalg" "gaussianelim"
+   , status         = Stable
+   , parser         = \s -> case parseMatrix s of
+                               (a, [])  -> Right (simplify a)
+                               (_, m:_) -> Left $ ErrorMessage $ show m
+   , prettyPrinter  = ppMatrixWith show
+   , equivalence    = \x y -> fmap simplified x === fmap simplified y
+   , ruleset        = matrixRules
+   , isReady        = inRowReducedEchelonForm
+   , strategy       = gaussianElimStrategy
+   , randomExercise = simpleGenerator arbMatrix
    }
  
 systemWithMatrixExercise :: Exercise (Either (LinearSystem Expr) (Matrix Expr))
-systemWithMatrixExercise = makeExercise
-   { description   = "Solve Linear System with Matrix"
-   , exerciseCode  = makeCode "linalg" "systemwithmatrix"
-   , status        = Provisional
-   , parser        = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
-                              (Right ok, _) -> Right $ Left  ok
-                              (_, Right ok) -> Right $ Right ok
-                              (Left _, Left _) -> Left $ ErrorMessage "Syntax error" -- FIX THIS
-   , prettyPrinter = either (unlines . map show) ppMatrix
-   , equivalence   = \x y -> let f = either id matrixToSystem
-                             in equivalence linearSystemExercise (f x) (f y)
-   , ruleset       = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
-   , isReady       = either inSolvedForm (const False)
-   , strategy      = systemWithMatrixStrategy
-   , termGenerator = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
+systemWithMatrixExercise = testableExercise
+   { description    = "Solve Linear System with Matrix"
+   , exerciseCode   = makeCode "linalg" "systemwithmatrix"
+   , status         = Provisional
+   , parser         = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
+                               (Right ok, _) -> Right $ Left  ok
+                               (_, Right ok) -> Right $ Right ok
+                               (Left _, Left _) -> Left $ ErrorMessage "Syntax error" -- FIX THIS
+   , prettyPrinter  = either (unlines . map show) ppMatrix
+   , equivalence    = \x y -> let f = either id matrixToSystem
+                              in equivalence linearSystemExercise (f x) (f y)
+   , ruleset        = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
+   , isReady        = either inSolvedForm (const False)
+   , strategy       = systemWithMatrixStrategy
+   , randomExercise = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
    }
  
 --------------------------------------------------------------

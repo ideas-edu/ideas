@@ -38,11 +38,16 @@ cnfExercise = testableExercise
    , differences    = treeDiff
    , ordering       = compare
    , isReady        = ready (ruleset cnfExercise)
-   , randomExercise = let ok p =
-                             let n = stepsRemaining (emptyPrefix toCNF) (inContext p)
-                             in n >= 2 && n <= 4
+   , randomExercise = let ok p = let n = steps p
+                                 in n >= 2 && n <= 4
                       in useGenerator ok (templateGenerator 1)
    }
+
+steps :: RelAlg -> Int
+steps p =
+   case derivations (unlabel toCNF) (inContext p) of
+      (_, xs):_ -> length (take 15 (filter (isMajorRule . fst) xs))
+      _         -> 15
 
 {- cnfExerciseSimple :: Exercise RelAlg
 cnfExerciseSimple = cnfExercise

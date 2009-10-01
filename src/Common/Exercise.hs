@@ -16,8 +16,7 @@ module Common.Exercise
      Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, strategy, extraRules, differences
-   , ordering, testGenerator, randomExercise, examples
-   , stepsRemaining, getRule
+   , ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
      -- * Miscellaneous
@@ -184,15 +183,7 @@ extraSymbols = "-."
 
 instance Show ExerciseCode where
    show (EC xs ys) = xs ++ "." ++ ys
-   
--- Temporarily. To do: replace this function by a Typed Abstract Service  
-stepsRemaining :: Prefix a -> a -> Int
-stepsRemaining p0 a = 
-   case safeHead (runPrefix p0 a) of -- run until the end
-      Nothing -> 0
-      Just (_, prefix) ->
-         length [ () | Step _ r <- drop (length $ prefixToSteps p0) (prefixToSteps prefix), isMajorRule r ] 
-         
+            
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 
    case filter ((==s) . name) (ruleset ex) of 

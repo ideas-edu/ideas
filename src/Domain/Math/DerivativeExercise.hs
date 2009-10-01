@@ -31,7 +31,6 @@ derivativeExercise = makeExercise
    , exerciseCode = makeCode "math" "derivative"
    , status       = Experimental
    , parser       = parseExpr
-   , equivalence  = \_ _ -> True
    , isReady      = noDiff
    , extraRules   = map liftToContext derivativeRules ++ [tidyup]
    , strategy     = derivativeStrategy

@@ -21,6 +21,7 @@ import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Common.Exercise
 import Common.Strategy hiding (not, label)
+import Common.Transformation (isMajorRule)
 import Common.Context
 import Text.Parsing (fromRanged)
 import Common.Rewriting
@@ -42,20 +43,25 @@ dnfExercise = makeExercise
    , strategy       = dnfStrategyDWA
    , differences    = treeDiff
    , testGenerator  = Just (restrictGenerator suitable arbitrary)
-   , randomExercise = let ok p =
-                                let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
-                                in countEquivalences p <= 2 && n >= 4 && n <= 12
+   , randomExercise = let ok p = let n = steps p
+                                 in countEquivalences p <= 2 && n >= 4 && n <= 12
                          in useGenerator ok generateLogic
    }
 
 suitable :: SLogic -> Bool
 suitable = (<=2) . countEquivalences
-   
+
+steps :: SLogic -> Int
+steps p =
+   case derivations (unlabel dnfStrategyDWA) (inContext p) of
+      (_, xs):_ -> length (take 15 (filter (isMajorRule . fst) xs))
+      _         -> 15
+
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)
 testGen :: Property
 testGen = forAll generateLogic $ \p -> 
-   let n = stepsRemaining (emptyPrefix dnfStrategyDWA) (inContext p)
+   let n = steps p
    in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True
    
 {- main :: IO ()

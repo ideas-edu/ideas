@@ -21,7 +21,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Text.OpenMath.Reply
-import Service.TypedAbstractService (State(..))
+import Service.TypedAbstractService (State(..), stepsremaining)
 
 replyError :: String -> String -> Reply a
 replyError kind = Error . ReplyError kind
@@ -41,7 +41,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                        , repOk_Location = nextTask sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           showContext (fst $ head witnesses)
-                       , repOk_Steps    = stepsRemaining newPrefix (fst $ head witnesses)
+                       , repOk_Steps    = stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
                        }
                   where 
                     witnesses   = filter (similarity ex (fromContext answeredTerm) . fromContext . fst) $ take 1 answers
@@ -54,7 +54,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                        , repInc_Expected   = fromContext expected
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
-                       , repInc_Steps      = stepsRemaining pr requestedTerm
+                       , repInc_Steps      = stepsremaining $ State ex (Just pr) requestedTerm
                        , repInc_Equivalent = maybe False (equivalence ex (fromContext expected) . fromContext) maybeAnswer
                        }  
              where

@@ -12,7 +12,9 @@
 -- "Discrete Wiskunde A (DWA)"
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Exercises (dnfExercise) where
+module Domain.Logic.Exercises 
+   ( dnfExercise, dnfUnicodeExercise
+   ) where
 
 import Domain.Logic.Generator
 import Domain.Logic.Formula
@@ -46,6 +48,15 @@ dnfExercise = makeExercise
    , randomExercise = let ok p = let n = steps p
                                  in countEquivalences p <= 2 && n >= 4 && n <= 12
                          in useGenerator ok generateLogic
+   }
+
+-- Direct support for unicode characters
+dnfUnicodeExercise :: Exercise SLogic
+dnfUnicodeExercise = dnfExercise
+   { description   = description dnfExercise ++ " (unicode support)"
+   , exerciseCode  = makeCode "logic" "dnf-unicode"
+   , parser        = either Left (Right . fromRanged) . parseLogicUnicodePars
+   , prettyPrinter = ppLogicUnicodePars
    }
 
 suitable :: SLogic -> Bool

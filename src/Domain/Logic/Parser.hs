@@ -10,21 +10,18 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser 
-   ( parseLogic, parseLogicPars, ppLogic, ppLogicPrio, ppLogicPars
+   ( parseLogic, parseLogicPars, parseLogicUnicodePars
+   , ppLogic, ppLogicPrio, ppLogicPars, ppLogicUnicodePars
    ) where
 
 import Text.Parsing
 import Domain.Logic.Formula
-
-{- testje = map make $ subs $ fst $ parseRangedLogicPars "   (T -> T) ||  (q /\\ F )"
- where
-   make (a, R (p1, p2)) = show a ++ "    ==    \"" ++  take (column p2 - column p1) (drop (column p1 - 1) input) ++ "\""
-   input = "   (T -> T) ||  (q /\\ F )"  -}
    
 logicScanner :: Scanner
 logicScanner = (makeCharsSpecial "~" defaultScanner)
    { keywords         = ["T", "F"]
-   , keywordOperators = "~" : concatMap (map fst . snd) operatorTable
+   , keywordOperators = "~" : concatMap (map fst . snd) operatorTable 
+                        ++ unicodeSyms
    }
 
 operatorTable :: OperatorTable SLogic
@@ -50,21 +47,31 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
 parseLogicPars :: String -> Either SyntaxError (Ranged SLogic)
-parseLogicPars = analyseAndParse pLogic . scanWith logicScanner
+parseLogicPars = analyseAndParse (pLogicGen asciiTuple)
+               . scanWith logicScanner
+
+parseLogicUnicodePars :: String -> Either SyntaxError (Ranged SLogic)
+parseLogicUnicodePars = analyseAndParse (pLogicGen unicodeTuple)
+                      . scanWith logicScanner
+
+pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
  where
-   basic     =  basicWithPos pLogic
-   pLogic    =  flip ($) <$> basic <*> optional composed id
-   composed  =  flip (binaryOp (:<->:)) <$ pKey "<->" <*> basic
-            <|> flip (binaryOp (:->:))  <$ pKey  "->" <*> basic
-            <|> (\xs p -> foldr1 (binaryOp (:&&:)) (p:xs)) <$> pList1 (pKey "/\\" *> basic)
-            <|> (\xs p -> foldr1 (binaryOp (:||:)) (p:xs)) <$> pList1 (pKey "||"  *> basic)
-            
+   pLogic = flip ($) <$> basic <*> optional composed id
+   basic     =  basicWithPosGen (nt, tr, fl) pLogic
+   composed  =  flip (binaryOp (:<->:)) <$ pKey equiv <*> basic
+            <|> flip (binaryOp (:->:))  <$ pKey impl  <*> basic
+            <|> (\xs p -> foldr1 (binaryOp (:&&:)) (p:xs)) <$> pList1 (pKey and *> basic)
+            <|> (\xs p -> foldr1 (binaryOp (:||:)) (p:xs)) <$> pList1 (pKey or  *> basic)
+ 
 basicWithPos :: Parser Token (Ranged SLogic) -> Parser Token (Ranged SLogic)
-basicWithPos p  =  (\(s, r) -> toRanged (Var s) r) <$> pVarid
-               <|> pParens p
-               <|> toRanged T <$> pKey "T"
-               <|> toRanged F <$> pKey "F"
-               <|> unaryOp Not <$> pKey "~" <*> basicWithPos p
+basicWithPos = basicWithPosGen ("~", "T", "F")
+
+basicWithPosGen (nt, tr, fl) p = 
+   (\(s, r) -> toRanged (Var s) r) <$> pVarid
+   <|> pParens p
+   <|> toRanged T  <$> pKey tr
+   <|> toRanged F  <$> pKey fl
+   <|> unaryOp Not <$> pKey nt <*> basicWithPos p
 
 -----------------------------------------------------------
 --- Helper-function for parentheses analyses
@@ -93,13 +100,47 @@ ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", bi
 
 -- | Pretty printer that produces extra parentheses: also see parseLogicPars
 ppLogicPars :: SLogic -> String
-ppLogicPars = ppLogicParsCode 0
-        
--- | Implementation uses the well-known trick for fast string concatenation
-ppLogicParsCode :: Int -> SLogic -> String
-ppLogicParsCode n p = foldLogic (var, binop 3 "->", binop 3 "<->", binop 1 "/\\", binop 2 "||", nott, var "T", var "F") p n ""
+ppLogicPars = ppLogicParsGen asciiTuple
+
+-- | Pretty printer with unicode characters
+ppLogicUnicodePars :: SLogic -> String
+ppLogicUnicodePars = ppLogicParsGen unicodeTuple
+
+ppLogicParsGen (impl, equiv, and, or, nt, tr, fl) p = foldLogic alg p 0 ""
  where
-   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) (p prio . ((" "++op++" ")++) . q prio)
+   alg = (var, binop 3 impl, binop 3 equiv, binop 1 and, binop 2 or, nott, var tr, var fl)
+   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) 
+                               (p prio . ((" "++op++" ")++) . q prio)
    var       = const . (++)
-   nott  p _ = ("~"++) . p 3
+   nott  p _ = (nt++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f
+
+-----------------------------------------------------------
+--- Ascii symbols
+
+--asciiSyms :: [String]
+--asciiSyms = [implASym, equivASym, andASym, orASym, notASym]
+
+asciiTuple = (implASym, equivASym, andASym, orASym, notASym, "T", "F")
+
+implASym, equivASym, andASym, orASym, notASym :: String
+implASym  = "->"
+equivASym = "<->"
+andASym   = "/\\"
+orASym    = "||"
+notASym   = "~"
+   
+-----------------------------------------------------------
+--- Unicode symbols
+
+unicodeSyms :: [String]
+unicodeSyms = [implUSym, equivUSym, andUSym, orUSym, notUSym]
+
+unicodeTuple = (implUSym, equivUSym, andUSym, orUSym, notUSym, "T", "F")
+
+implUSym, equivUSym, andUSym, orUSym, notUSym :: String
+implUSym  = ">"
+equivUSym = "="
+andUSym   = "^"
+orUSym    = "|"
+notUSym   = "-"

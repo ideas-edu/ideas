@@ -31,6 +31,12 @@
          "status": "Stable"
       },
       {
+         "domain": "logic",
+         "identifier": "dnf-unicode",
+         "description": "Proposition to DNF (unicode support)",
+         "status": "Stable"
+      },
+      {
          "domain": "math",
          "identifier": "coverup",
          "description": "solve an equation by covering up",
@@ -93,5 +99,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.5 (2193)"
+   "version": "0.5.6 (2246)"
 }

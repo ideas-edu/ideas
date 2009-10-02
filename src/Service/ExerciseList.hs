@@ -34,6 +34,7 @@ exerciseList :: [Some Exercise]
 exerciseList = 
    [ -- logic and relation-algebra
      Some Logic.dnfExercise
+   , Some Logic.dnfUnicodeExercise
    , Some RA.cnfExercise
    ] ++
    [ Some e | OMEX e <- openMathExercises ]

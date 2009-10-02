@@ -170,17 +170,21 @@ noCode = NoCode
 
 makeCode :: String -> String -> ExerciseCode
 makeCode a b
-   | null a || null b || any (not . isAlphaNum) (a++b) =
+   | null a || null b || any invalidCodeChar (a++b) =
         error $ "Invalid exercise code: " ++ show (EC a b)
    | otherwise = 
         EC (map toLower a) (map toLower b)
    
 readCode :: String -> Maybe ExerciseCode
 readCode xs =
-   case break (not . isAlphaNum) xs of
-      (as, '.':bs) | all isAlphaNum bs -> 
+   case break invalidCodeChar xs of
+      (as, '.':bs) | all validCodeChar bs -> 
          return $ makeCode as bs
       _ -> Nothing
+
+validCodeChar, invalidCodeChar :: Char -> Bool
+validCodeChar c = isAlphaNum c || c `elem` "-_"
+invalidCodeChar = not . validCodeChar
 
 domain :: ExerciseCode -> String
 domain (EC s _) = s
@@ -190,7 +194,8 @@ identifier :: ExerciseCode -> String
 identifier (EC _ s) = s
 identifier _        = []
 
-
+---------------------------------------------------------------
+-- Rest
 
 
             

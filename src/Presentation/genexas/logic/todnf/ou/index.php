@@ -48,7 +48,7 @@ function about() {
 }
 include_once("../../../common/en.php");
 function getKind() {
-	return "Proposition%20to%20DNF";
+	return "logic.dnf";
 }
 function getStudentNumber() {
 	global $studentid;

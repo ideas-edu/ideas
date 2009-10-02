@@ -6,7 +6,7 @@ function toetsen() {
 	}
 }
 function getKind() {
-	return "Proposition%20to%20DNF";
+	return "logic.dnf";
 }
 function getStudentNumber() {
 	global $studentid;

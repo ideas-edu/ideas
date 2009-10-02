@@ -1,7 +1,8 @@
 body {
 	background-color: #CCCC99;
 	background-image: url(/genexas/css/background.jpg);
-	font-family: Arial, sans-serif;
+	font-family: Lucida Sans Unicode;
+	//font-family: Arial, sans-serif;
 	position: relative;
 }
 

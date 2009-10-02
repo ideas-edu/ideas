@@ -32,6 +32,12 @@ generateStd gen = do
    stdgen <- newStdGen
    return (generate 100 stdgen gen)
 
+readInt :: String -> Maybe Int
+readInt xs 
+   | null xs                = Nothing
+   | any (not . isDigit) xs = Nothing
+   | otherwise              = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
+
 stringToHex :: String -> Maybe Int
 stringToHex = foldl op (Just 0)
  where
@@ -43,7 +49,7 @@ charToHex c
    | isDigit c = return (ord c - 48)
    | toUpper c `elem` ['A' .. 'F'] = return (ord (toUpper c) - 55)
    | otherwise = Nothing
-   
+
 subsets :: [a] -> [[a]]
 subsets = foldr op [[]]
  where op a list = list ++ map (a:) list

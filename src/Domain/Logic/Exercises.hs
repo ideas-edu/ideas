@@ -70,10 +70,11 @@ steps p =
 
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)
+{-
 testGen :: Property
 testGen = forAll generateLogic $ \p -> 
    let n = steps p
    in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True
    
-{- main :: IO ()
-main = quickCheck testGen -}
+testme :: IO ()
+testme = quickCheck testGen -}

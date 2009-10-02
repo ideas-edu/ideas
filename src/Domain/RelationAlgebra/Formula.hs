@@ -171,10 +171,9 @@ instance Uniplate RelAlg where
          _         -> ([], \[] -> term)
 
 instance MetaVar RelAlg where
-   isMetaVar (Var ('_' : xs)) | not (null xs) && all isDigit xs = 
-      return (read xs)
-   isMetaVar _ = Nothing
-   metaVar n = Var ('_' : show n)
+   isMetaVar (Var a) = isMetaVar a
+   isMetaVar _       = Nothing
+   metaVar           = Var . metaVar
 
 instance ShallowEq RelAlg where
    shallowEq expr1 expr2 = 

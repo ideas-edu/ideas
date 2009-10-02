@@ -23,7 +23,7 @@ function init() {
 	$('submitbutton').observe('click', getFeedback);
 	$('readybutton').observe('click', getReady);
 	$('undobutton').observe('click', goBack);
-	$('forwardbutton').observe('click', goForward);
+//	$('forwardbutton').observe('click', goForward);
 	
 	$('closehelpButton').observe('click', closehelp);
 	$('closeaboutButton').observe('click', closehelp);
@@ -36,7 +36,7 @@ function init() {
 	
 	// the back and forward button  and the copy button are invisable
 //	$('undobutton').hide();
-	$('forwardbutton').hide();
+//	$('forwardbutton').hide();
 //	$('copybutton').hide();
 	// OU students have to find out themselves whether they are done
 	if (id && id != "421") {

@@ -1,7 +1,40 @@
 <br/>
+<table>
+	<tr valign="top"><td>
+		<table>
+		<tr>
+		<td id="toetsenbordtitel" colspan="4">Short-keys</td>
+		</tr>
+		<tr>
+		<td>'='</td>
+	        <td width="50px">key</td>
+		<td>&#8596;</td>
+		</tr>
+		<tr>
+		<td>'i'</td>
+	        <td>key</td>	
+		<td>&rarr;</td>
+		</tr>
+		<tr>
+		<td>'a'</td>
+	        <td>key</td>	
+		<td>&and;</td>
+		</tr>
+		<tr>
+		<td>'o'</td>
+	        <td>key</td>	
+		<td>&or;</td>
+		</tr>
+		<tr>
+		<td>'-'</td>
+	        <td>key</td>	
+		<td>&#172;</td>
+		</tr>
+		</table>
+	</td><td>	
 		<table  id="toetsenbord">
 		<tr> 
-		<td id="toetsenbordtitel"  colspan="5" align="center">Keyboard</td>
+		<td id="toetsenbordtitel"  colspan="5">Keyboard</td>
 		</tr>
 		<tr>
 		<td><input title="Press the '-' key to insert a negation." id="nottoets" class="toets" value="&#172;" type="button" onclick='voegin("&#172;", "work")'></td>
@@ -25,3 +58,5 @@
 		<td><input id="falsetoets" class="toets" value="s" type="button" onclick='voegin("s", "work")' ></td>
 		<td><input id="falsetoets" class="toets" value="t" type="button" onclick='voegin("t", "work")' ></td>
 		</tr></table>
+	</td></tr>
+</table>       

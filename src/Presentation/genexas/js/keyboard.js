@@ -48,7 +48,7 @@ function controleer(e) {	// eerst  de character code ophalen
 	e = getEvent(e);
 	var code = getCode(e);	
 	if (code == 13) {
-		submitAntwoord();
+		getFeedback();
 		stop(e);
 		return false;
 	}

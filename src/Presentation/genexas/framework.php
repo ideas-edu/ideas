@@ -34,16 +34,21 @@
 	<h3><?php print WorkArea;?></h3>
 
 <!--	<textarea id="work" rows="2" cols="40" ></textarea> -->
-	<input type="text" id="work" rows="2" cols="40" ></input>
-	<input class="minibutton" id="submitbutton" type="button" value="<?php print Submit;?>" >	
-	<input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>" >
-	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >
-	<input class="minibutton" type="button" id="forwardbutton" value="<?php print Forward;?>" >
-	<br class="clear">
-	<input id="derivationbutton" style="background-color: #CCCC99; float: right; display: inline; height: 20px; position: relative; right: -45px;" type="button" value="<?php print Derivation;?>" >
-	<input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>" >
-	<input id="nextbutton"  class="minibutton" type="button" value="<?php print Step;?>" >
-	<input id="hintbutton" class="minibutton" type="button" value="<?php print Hint;?>" >
+	<input type="text" id="work" rows="2" cols="40" ></input></td>
+	<table id="work">
+		<tr>
+			<td><input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>"></td>
+			<td></td>
+			<td><input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>"></td>
+			<td><input class="minibutton" style="width: 160px;" type="button" id="submitbutton" value="<?php print Submit;?>"></td>
+		</tr>
+		<tr>
+			<td><input class="minibutton" id="hintbutton" type="button" value="<?php print Hint;?>"></td>
+			<td><input class="minibutton" id="nextbutton" type="button" value="<?php print Step;?>"></td>
+			<td><input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>"></td>
+			<td><input class="minibutton" style="width: 160px;" id="derivationbutton" type="button" value="<?php print Derivation;?>"></td>
+		</tr>
+	</table>
 	
 	<!-- <div id="progress">Steps<br>0</div> -->
 	<div id="progress"></div>

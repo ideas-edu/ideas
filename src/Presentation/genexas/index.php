@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!($_SESSION['oustudent']) || ($_SESSION['oustudent'] == "")) {
-   Header("Location: ./login.php");
+   Header("Location: login.php");
    exit();
 }
 global $studentid;
@@ -11,42 +11,21 @@ if (!isset($COOKIE['oustudent'])) {
 }
 function rules() {
 	// specific rules for the kind of exercise
-	if (file_exists("./../en/rules.html")) {
-		include_once("./../en/rules.html");
-	}
-	else {
-		// specific rules for the domain
-		if (file_exists("./../../en/rules.html")) {
-			include_once("./../../en/rules.html");
-		}
-		else {
-			// default
-			include_once("../../../common/en/rules.html");
-		}
+	if (file_exists("include/rules.html")) {
+		include_once("include/rules.html");
 	}
 }
 function help() {
-	if (file_exists("../en/help.html")) {
-		include_once("../en/help.html");
-	}
-	else {
-		if (file_exists("../../en/help.html")) {
-			include_once("../../en/help.html");
-		}
-		else {
-			include_once("../../../common/en/help.html");
-		}
+	if (file_exists("include/help.html")) {
+		include_once("include/help.html");
 	}
 }
 function about() {
-	if (file_exists("../en/about.html")) {
-		include_once("../en/about.html");
-	}
-	else {
-		include_once("../../../common/en/about.html");
+	if (file_exists("include/about.html")) {
+		include_once("include/about.html");
 	}
 }
-include_once("../../../common/en.php");
+include_once("include/en.php");
 function getKind() {
 	return "logic.dnf";
 }
@@ -66,5 +45,5 @@ function getLocal() {
 	}
 	else return "";
 }
-include_once("../../../common/framework.php");
+include_once("framework.php");
 ?>

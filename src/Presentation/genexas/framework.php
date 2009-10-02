@@ -48,7 +48,7 @@
 	<div id="progress"></div>
 	
 	<br/>
-	<div align="center" width="100%"><br/><?php include("/var/www/html/genexas/common/keys.php"); ?></div>
+	<div align="center" width="100%"><br/><?php include("include/keys.php"); ?></div>
 
 
 </div><!-- end div column left -->

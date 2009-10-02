@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Parser 
+module Domain.Logic.Parser
    ( parseLogic, parseLogicPars, parseLogicUnicodePars
    , ppLogic, ppLogicPrio, ppLogicPars, ppLogicUnicodePars
    ) where
@@ -20,10 +20,15 @@ import Domain.Logic.Formula
 logicScanner :: Scanner
 logicScanner = (makeCharsSpecial "~" defaultScanner)
    { keywords         = ["T", "F"]
-   , keywordOperators = "~" : concatMap (map fst . snd) operatorTable 
-                        ++ unicodeSyms
+   , keywordOperators = "~" : concatMap (map fst . snd) operatorTable
    }
 
+logicUnicodeScanner :: Scanner
+logicUnicodeScanner = (makeCharsSpecial (concat unicodeSyms) defaultScanner)
+   { keywords         = ["T", "F"]
+   , keywordOperators = unicodeSyms
+   }
+   
 operatorTable :: OperatorTable SLogic
 operatorTable = 
    [ (RightAssociative, [("<->", (:<->:))])
@@ -52,7 +57,7 @@ parseLogicPars = analyseAndParse (pLogicGen asciiTuple)
 
 parseLogicUnicodePars :: String -> Either SyntaxError (Ranged SLogic)
 parseLogicUnicodePars = analyseAndParse (pLogicGen unicodeTuple)
-                      . scanWith logicScanner
+                      . scanWith logicUnicodeScanner
 
 pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
  where
@@ -139,8 +144,8 @@ unicodeSyms = [implUSym, equivUSym, andUSym, orUSym, notUSym]
 unicodeTuple = (implUSym, equivUSym, andUSym, orUSym, notUSym, "T", "F")
 
 implUSym, equivUSym, andUSym, orUSym, notUSym :: String
-implUSym  = ">"
-equivUSym = "="
-andUSym   = "^"
-orUSym    = "|"
-notUSym   = "-"
+implUSym  = "\8594"
+equivUSym = "\8596"
+andUSym   = "\8743"
+orUSym    = "\8744"
+notUSym   = "\172"

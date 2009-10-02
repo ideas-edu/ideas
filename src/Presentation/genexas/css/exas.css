@@ -1,8 +1,7 @@
 body {
 	background-color: #CCCC99;
 	background-image: url(/genexas/css/background.jpg);
-	font-family: Lucida Sans Unicode;
-	//font-family: Arial, sans-serif;
+	font-family: Arial Unicode MS;
 	position: relative;
 }
 
@@ -98,11 +97,11 @@ select {
 
 
 #work {
-	font-size: medium;
-	font-weight: bold;
-	position: relative;
-	top: -10px;
-	width: 102%;
+	font-size: large;
+	padding: 10px;
+	width: 100%;
+	margin-left: 20px;
+	font-family: Lucida Unicode Sans;
 }
 
 .column {
@@ -150,10 +149,15 @@ select {
 	display: inline; 
 	float: right;
 	margin: 0px;
-	width: 25px;	
-	height: 25px;
+	width: 40px;	
+	height: 30px;
 	background-color: #FFFFFF;
 	position: relative;
+	font-family: 'Lucida Unicode Sans';
+	font-size: large;
+//        background-color: #CCCC99; 
+	display: inline;
+	text-align: center;
 }
 
 #toetsenbordtitel {

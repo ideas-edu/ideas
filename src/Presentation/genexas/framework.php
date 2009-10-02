@@ -5,24 +5,25 @@
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 
 <title>OU Exercise Assistant On-line</title>
-<link rel="stylesheet" type="text/css" href="/genexas/css/exas.css" >
-<link rel="shortcut icon" href="/genexas/css/favicon.ico" type="image/x-icon" >
-<script type="text/javascript" src="/genexas/common/javascript/prototype-1.6.0.2.js"></script> 
-<script type="text/javascript" src="/genexas/common/javascript/help.js"></script>
-<script type="text/javascript" src="/genexas/common/javascript/services.js"></script>
-<script type="text/javascript" src="/genexas/common/javascript/communication.js"></script>
+<link rel="stylesheet" type="text/css" href="css/exas.css" >
+<link rel="shortcut icon" href="css/favicon.ico" type="image/x-icon" >
+<script type="text/javascript" src="js/prototype-1.6.0.2.js"></script> 
+<script type="text/javascript" src="js/help.js"></script>
+<script type="text/javascript" src="js/services.js"></script>
+<script type="text/javascript" src="js/communication.js"></script>
 <script type="text/javascript" src="<?php print getLanguage();?>"></script>
 <script type="text/javascript">var exercisekind = <?php $kind = getKind(); echo '"'.$kind.'";'; ?>var id=421;</script>
 <?php if (getStudentNumber() != "") print getStudentNumber();?>
-<script type="text/javascript" src="/genexas/common/javascript/init.js"></script>
-<script type="text/javascript" src="/genexas/common/javascript/keyboard.js"></script>	
+<script type="text/javascript" src="js/init.js"></script>
+<script type="text/javascript" src="js/keyboard.js"></script>	
+<script type="text/javascript" src="js/en.js"></script>	
 </head>
 
 <h1>Exercise Assistant online</h1>
 <div id="exasdiv">
 <input class="menu" type="button" id="aboutButton" value="<?php print About;?>" >
 <!-- <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" > -->
-<input class="menu" type="button" onclick="window.open('http://ideas.cs.uu.nl/genexas/docs/rules.pdf','','')" value="<?php print Rules;?>" >
+<input class="menu" type="button" onclick="window.open('docs/rules.pdf','','')" value="<?php print Rules;?>" >
 <input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
 <br class="clear" >
 
@@ -32,8 +33,8 @@
 
 	<h3><?php print WorkArea;?></h3>
 
-	<textarea id="work" rows="2" cols="40" >	
-	</textarea>
+<!--	<textarea id="work" rows="2" cols="40" ></textarea> -->
+	<input type="text" id="work" rows="2" cols="40" ></input>
 	<input class="minibutton" id="submitbutton" type="button" value="<?php print Submit;?>" >	
 	<input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>" >
 	<input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>" >

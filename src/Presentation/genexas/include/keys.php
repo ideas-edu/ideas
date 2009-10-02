@@ -14,8 +14,8 @@
 		<tr>
 		<td><input id="truetoets" class="toets" value="T" type="button" onclick='voegin("T", "work")' ></td>
 		<td><input id="falsetoets" class="toets" value="F" type="button" onclick='voegin("F", "work")' ></td>
-		<td><input id="truetoets" class="toets" value=")" type="button" onclick='voegin(")", "work")' ></td>
 		<td><input id="falsetoets" class="toets" value="(" type="button" onclick='voegin("(", "work")' ></td>
+		<td><input id="truetoets" class="toets" value=")" type="button" onclick='voegin(")", "work")' ></td>
 		<td><input id="spacetoets" class="toets" value=" " type="button" onclick='voegin(" ", "work")' ></td>
 		</tr>
 		<tr>

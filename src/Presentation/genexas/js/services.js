@@ -1,16 +1,16 @@
 // The url for the services
-var url = "/cgi-bin/servicegenexas.cgi";
+var url = "cgi/service.cgi";
 
 /**
- *  Generation of a new exercise. 
+ *  Generation of a new exercise.
   * Input: an integer
-  * Output: a state object 
+  * Output: a state object
   * The output is passed to the callback function
   */
 function ss_generate(number, callback) {
-	var myAjax = new Ajax.Request(url, {   
-		parameters : 'input={ "source": "genexas", "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',	 
-		onSuccess : function(response) {	
+	var myAjax = new Ajax.Request(url, {
+		parameters : 'input={ "source": "genexas", "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',
+		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
@@ -18,16 +18,16 @@ function ss_generate(number, callback) {
 				/*                    id          locatie   formule */
 				var state = new State(result[0], result[1], presenteertekst(result[2]), result[3]);
 //				var state = new State(result[0], result[1], result[2], result[3]);
-				
+
 				callback(state);
 			}
 			else {
 				alert(error);
-			}			
+			}
          },
-		 onFailure: function() { 
-			alert(parameters); 
-		} 
+		 onFailure: function() {
+			alert(parameters);
+		}
 	});
 }
 /**
@@ -40,7 +40,7 @@ function ss_getReady(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input={ "source": "genexas", "method" : "ready" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
-         onSuccess : function(response) {		
+         onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
@@ -49,22 +49,22 @@ function ss_getReady(state, callback) {
 			}
 			else {
 				alert(response.responseText["error"] );
-			}	
+			}
          },
-		 onFailure: function() { 
-			alert(wrong); 
-		} 
+		 onFailure: function() {
+			alert(wrong);
+		}
     });
 }
 /**
- *  getHint gets a rule which can be applied, 
+ *  getHint gets a rule which can be applied,
  * Input: a location and a state object that should reflect the current state.
   * Output: a set of rules (strings)
    * The output is passed to the callback function
   */
 function ss_getHint(location, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request(url, {  
+	var myAjax = new Ajax.Request(url, {
 		parameters : 'input={ "source": "genexas", "method" :"onefirsttext", "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
 		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
@@ -84,14 +84,14 @@ function ss_getHint(location, state, callback) {
 /**
  *  getNext puts a possible rewriting in the workarea
   * Input: a state object that should reflect the current state.
-  * Output: a rulID, a location and a state 
+  * Output: a rulID, a location and a state
    * The output is passed to the callback function
   */
 function ss_getNext(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input={ "source": "genexas", "method" : "onefirsttext" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
-        onSuccess : function(response) {	
+        onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			var result = resJSON['result'];
@@ -102,10 +102,10 @@ function ss_getNext(state, callback) {
 				var newState = new State(state[0], state[1], presenteertekst(state[2]), state[3]);
 				callback(rule, valid, newState);
 			}
-			else { 
+			else {
 				alert(response.responseText["error"] );
 			}
-			
+
          }		 ,
 		 onFailure : function() {alert(wrong);}
      });
@@ -117,7 +117,7 @@ function ss_getDerivation(eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input={ "source": "genexas", "method" : "derivationtext" , "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
-        onSuccess : function(response) {	
+        onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {
@@ -132,10 +132,10 @@ function ss_getDerivation(eastate, callback) {
 				}
 				callback(setOfRules);
 			}
-			else { 
+			else {
 				alert(response.responseText["error"] );
 			}
-			
+
          }		 ,
 		 onFailure : function() {alert(wrong);}
      });
@@ -147,7 +147,7 @@ function ss_getRemaining(eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
 	var myAjax = new Ajax.Request(url, {
         parameters : 'input={ "source": "genexas", "method" :"stepsremaining", "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
-        onSuccess : function(response) {	
+        onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
 			if (error == null) {

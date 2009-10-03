@@ -1,6 +1,6 @@
 body {
 	background-color: #CCCC99;
-	background-image: url(/genexas/css/background.jpg);
+	background-image: url(background.jpg);
 	font-family: Arial Unicode MS;
 	position: relative;
 }
@@ -17,7 +17,7 @@ table {
 }
 
 h1 {
-	background-image: url(/genexas/css/ouheader.jpg);
+	background-image: url(ouheader.jpg);
 	color: #FFFFFF;
 	text-align: center;
 	font-variant: small-caps;

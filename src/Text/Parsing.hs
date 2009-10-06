@@ -19,7 +19,8 @@ module Text.Parsing
      -- * Parsing
    , Parser, CharParser, TokenParser, parse, Message
      -- * UU parser combinators
-   , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1, pChainl, pChainr, pChoice
+   , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1
+   , pChainl, pChainr, pChoice, pFail
      -- * Subexpressions
    , Ranged, Range(..), Pos(..), toRanged, fromRanged, subExpressionAt
    , pKey, pSpec, pVarid, pConid, unaryOp, binaryOp, pParens, indicesToRange
@@ -210,6 +211,9 @@ pChainr = UU.pChainr
 
 pChoice :: (Ord s, UU.Symbol s) => [Parser s a] -> Parser s a
 pChoice = foldr (<|>) UU.pFail
+
+pFail :: (Ord s, UU.Symbol s) => Parser s a
+pFail = UU.pFail
 
 ----------------------------------------------------------
 -- Subexpressions

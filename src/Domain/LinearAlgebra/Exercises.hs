@@ -101,6 +101,7 @@ systemWithMatrixExercise = testableExercise
    , isReady        = either inSolvedForm (const False)
    , strategy       = systemWithMatrixStrategy
    , randomExercise = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
+   , testGenerator  = fmap (liftM Left) (testGenerator linearSystemExercise)
    }
  
 --------------------------------------------------------------

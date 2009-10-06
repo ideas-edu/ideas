@@ -18,6 +18,7 @@ import Prelude hiding ((^))
 import Text.Parsing hiding (pParens)
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Common.Transformation
 import Domain.Math.Data.Equation
 import Domain.Math.Expr.Data
@@ -30,16 +31,27 @@ import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Logic1
 import Text.OpenMath.Dictionary.Relation1
 import Text.OpenMath.Dictionary.Calculus1
+import Text.OpenMath.Dictionary.Fns1
+import Text.OpenMath.Dictionary.Transc1
 
 symbols :: [Symbol]
 symbols = nubBy (\x y -> symbolName x == symbolName y) $ 
-   concat [ arith1List, logic1List, relation1List, calculus1List ]
+   concat dictionaries
+
+dictionaries :: [[Symbol]]
+dictionaries = 
+   [ arith1List, logic1List, relation1List, calculus1List
+   , fns1List, transc1List
+   ]
+
+dictionaryNames :: [String]
+dictionaryNames = mapMaybe dictionary (concatMap (take 1) dictionaries)
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords          = "sqrt" : map symbolName symbols
+   { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
    , keywordOperators  = ["==" ]
-   , specialCharacters = "+-*/^()[]{},"
+   , specialCharacters = "+-*/^()[]{},."
    }
 
 parseWith :: TokenParser a -> String -> Either SyntaxError a
@@ -71,9 +83,21 @@ atom   =  fromInteger <$> pInteger
       <|> pParens pExpr
 
 symb :: TokenParser ([Expr] -> Expr)
-symb =  pChoice (map (\s -> function s <$ pKey (symbolName s)) symbols)
+symb =  unqualifiedSymb
+    <|> qualifiedSymb
     -- To fix: sqrt expects exactly one argument
     <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
+
+unqualifiedSymb :: TokenParser ([Expr] -> Expr)
+unqualifiedSymb = pChoice (map (\s -> function s <$ pKey (symbolName s)) symbols)
+
+qualifiedSymb :: TokenParser ([Expr] -> Expr)
+qualifiedSymb = pChoice (map f dictionaries)
+ where
+   f xs = case map dictionary xs of
+             Just d:_ -> pKey d <* pSpec '.' *> pChoice (map g xs)
+             _        -> pFail
+   g s  = function s <$ pKey (symbolName s)
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations = pLines True . pEquation

@@ -17,6 +17,7 @@ import System.Environment
 import System.Exit
 import System.Console.GetOpt
 import Service.Revision (version, revision)
+import Service.LoggingDatabase (logEnabled)
 
 data Flag = Verbose | Version | Logging Bool | InputFile String 
  deriving (Show, Eq)
@@ -30,10 +31,11 @@ options =
      ]
 
 header :: String
-header = "Usage: service [OPTION]      (" ++ versionText ++ ")"
+header = "Usage: service [OPTION]   (" ++ versionText ++ ", logging " ++ 
+         (if logEnabled then "enabled" else "disabled") ++ ")"
 
 versionText :: String
-versionText = "version " ++ version ++ " (revision " ++ show revision ++ ")"
+versionText = "version " ++ version ++ ", revision " ++ show revision
 
 serviceOptions :: IO [Flag]
 serviceOptions = do

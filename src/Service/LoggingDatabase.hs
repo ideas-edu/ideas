@@ -12,14 +12,17 @@
 -- Facilities to create a log database
 --
 -----------------------------------------------------------------------------
-module Service.LoggingDatabase (logMessage) where
+module Service.LoggingDatabase (logMessage, logEnabled) where
 
 import Data.Time
-import Data.Maybe
 import Service.Request
 #ifdef DB
+import Data.Maybe
 import Database.HDBC
 import Database.HDBC.Sqlite3 (connectSqlite3)
+
+logEnabled :: Bool
+logEnabled = True
 
 -- | Log a message to the database (a Sqlite database).
 logMessage :: Request -> String -> String -> String -> UTCTime -> IO ()
@@ -70,5 +73,8 @@ createStmt =  "CREATE TABLE log ( service      VARCHAR(250)"
 #else
 logMessage :: Request -> String -> String -> String -> UTCTime -> IO ()
 logMessage _ _ _ _ _ = return ()
+
+logEnabled :: Bool
+logEnabled = False
 #endif
 

@@ -35,7 +35,7 @@ extractCode = fromMaybe noCode . List.resolveExerciseCode . f
  where 
    f (String s) = s
    f (Array [String _, String _, a@(Array _)]) = f a
-   f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c || c == '.')) s = f (Array tl)
+   f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c || c `elem` ".-")) s = f (Array tl)
    f (Array (hd:_)) = f hd
    f _ = ""
       

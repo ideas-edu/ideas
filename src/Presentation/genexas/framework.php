@@ -7,16 +7,16 @@
 <title>OU Exercise Assistant On-line</title>
 <link rel="stylesheet" type="text/css" href="css/exas.css" >
 <link rel="shortcut icon" href="css/favicon.ico" type="image/x-icon" >
-<script type="application/javascript" src="js/prototype-1.6.0.2.js"></script> 
-<script type="application/javascript" src="js/help.js"></script>
-<script type="application/javascript" src="js/services.js"></script>
-<script type="application/javascript" src="js/communication.js"></script>
-<script type="application/javascript" src="<?php print getLanguage();?>"></script>
-<script type="application/javascript">var exercisekind = <?php $kind = getKind(); echo '"'.$kind.'";'; ?>var id=421;</script>
+<script type="text/javascript" src="js/prototype-1.6.0.2.js"></script> 
+<script type="text/javascript" src="js/help.js"></script>
+<script type="text/javascript" src="js/services.js"></script>
+<script type="text/javascript" src="js/communication.js"></script>
+<script type="text/javascript" src="<?php print getLanguage();?>"></script>
+<script type="text/javascript">var exercisekind = <?php $kind = getKind(); echo '"'.$kind.'";'; ?>var id=421;</script>
 <?php if (getStudentNumber() != "") print getStudentNumber();?>
-<script type="application/javascript" src="js/init.js"></script>
-<script type="application/javascript" src="js/keyboard.js"></script>	
-<script type="application/javascript" src="js/en.js"></script>	
+<script type="text/javascript" src="js/init.js"></script>
+<script type="text/javascript" src="js/keyboard.js"></script>	
+<script type="text/javascript" src="js/en.js"></script>	
 </head>
 
 <h1>Exercise Assistant online</h1>

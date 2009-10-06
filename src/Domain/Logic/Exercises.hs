@@ -44,7 +44,7 @@ dnfExercise = makeExercise
    , extraRules     = map liftToContext (logicRules ++ buggyRules)
    , strategy       = dnfStrategyDWA
    , differences    = treeDiff
-   , testGenerator  = Just (restrictGenerator suitable arbitrary)
+   , testGenerator  = Just (restrictGenerator suitable generateLogic)
    , randomExercise = let ok p = let n = steps p
                                  in countEquivalences p <= 2 && n >= 4 && n <= 12
                          in useGenerator ok generateLogic

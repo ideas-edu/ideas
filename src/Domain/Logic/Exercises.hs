@@ -21,6 +21,7 @@ import Domain.Logic.Formula
 import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
+import Domain.Logic.BuggyRules
 import Common.Exercise
 import Common.Strategy hiding (not, label)
 import Common.Transformation (isMajorRule)

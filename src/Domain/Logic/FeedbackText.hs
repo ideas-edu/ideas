@@ -21,6 +21,7 @@ import Data.Maybe
 import Text.Parsing
 import Common.Transformation
 import Domain.Logic.Rules
+import Domain.Logic.BuggyRules
 
 -- This is more general than the logic domain. Perhaps it should
 -- be defined elsewhere

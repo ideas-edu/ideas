@@ -15,6 +15,7 @@ module Domain.Logic
    , module Domain.Logic.Parser
    , module Domain.Logic.Strategies
    , module Domain.Logic.Rules
+   , module Domain.Logic.BuggyRules
    , module Domain.Logic.Exercises
    , module Domain.Logic.FeedbackText
    ) where
@@ -24,6 +25,7 @@ import Domain.Logic.Generator
 import Domain.Logic.Parser
 import Domain.Logic.Strategies
 import Domain.Logic.Rules
+import Domain.Logic.BuggyRules
 import Domain.Logic.Exercises
 import Domain.Logic.FeedbackText
 

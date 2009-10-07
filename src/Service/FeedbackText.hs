@@ -30,13 +30,13 @@ import Common.Transformation (name, Rule)
 feedbackLogic :: State a -> Result a -> (String, Bool)
 feedbackLogic old result =
    case result of
-      Buggy rs        -> (feedbackBuggy rs, False)
-      NotEquivalent   -> (feedbackNotEquivalent, False)
+      Buggy rs        -> (feedbackBuggy (ready old) rs, False)
+      NotEquivalent   -> (feedbackNotEquivalent (ready old), False)
       Ok rs _
          | null rs    -> (feedbackSame, False)
          | otherwise  -> feedbackOk rs
       Detour rs _     -> feedbackDetour (ready old) (expected old) rs
-      Unknown _       -> (feedbackUnknown, False)
+      Unknown _       -> (feedbackUnknown (ready old), False)
  where
    expected = fmap fst3 . safeHead . allfirsts
 

@@ -40,65 +40,65 @@ feedbackSyntaxError syntaxError =
       Unexpected token -> 
          "Unexpected " ++ showToken token
 
-feedbackBuggy :: [Rule a] -> String
-feedbackBuggy [br] 
+feedbackBuggy :: Bool -> [Rule a] -> String
+feedbackBuggy ready [br] 
    | br ~= buggyRuleCommImp = 
-        incorrect "Did you think that implication is commutative? This is not the case. "
+        f "Did you think that implication is commutative? This is not the case. "
    | br ~= buggyRuleAssImp = 
-        incorrect "Did you think that implication is associative? This is not the case. "
+        f "Did you think that implication is associative? This is not the case. "
    | br ~= buggyRuleImplElim2 = 
-        incorrect "Make sure that you use the rule for implication elimanation, you seemed to use equivalence elimination "
+        f "Make sure that you use the rule for implication elimanation, you seemed to use equivalence elimination "
    | br ~= buggyRuleEquivElim3 = 
-        incorrect "Make sure that you use the rule for equivalence elimanation, you seemed to use implication elimination "
+        f "Make sure that you use the rule for equivalence elimanation, you seemed to use implication elimination "
    | br ~= buggyRuleIdemImp = 
-        incorrect "Did you think that implication is idempotent? This is not the case. "
+        f "Did you think that implication is idempotent? This is not the case. "
    | br ~= buggyRuleIdemEqui = 
-        incorrect "Did you think that equivalence is idempotent? This is not the case. "
+        f "Did you think that equivalence is idempotent? This is not the case. "
    | br ~= buggyRuleAndSame = 
-        incorrect "Did you think that phi AND phi is equivalent to True? This is not the case. Idempotency of AND means that phi AND phi is equivalent to phi. "
+        f "Did you think that phi AND phi is equivalent to True? This is not the case. Idempotency of AND means that phi AND phi is equivalent to phi. "
    | br ~= buggyRuleOrSame = 
-        incorrect "Did you think that phi OR phi is equivalent to True? This is not the case. Idempotency of OR means that phi OR phi is equivalent to phi. "
+        f "Did you think that phi OR phi is equivalent to True? This is not the case. Idempotency of OR means that phi OR phi is equivalent to phi. "
    | br ~= buggyRuleAndCompl = 
-        incorrect "Be careful in the application of the the complement-rules "
+        f "Be careful in the application of the the complement-rules "
    | br ~= buggyRuleOrCompl = 
-        incorrect "Be careful in the application of the the complement-rules " 
+        f "Be careful in the application of the the complement-rules " 
    | br ~= buggyRuleTrueProp = 
-        incorrect "Be careful in the application of the the True-False rules "     
+        f "Be careful in the application of the the True-False rules "     
    | br ~= buggyRuleFalseProp = 
-        incorrect "Be careful in the application of the the True-False rules " 
+        f "Be careful in the application of the the True-False rules " 
    | br ~= buggyRuleEquivElim1 = 
-        incorrect "Be careful with the elimination of an equivalence; take care of the negations. "
+        f "Be careful with the elimination of an equivalence; take care of the negations. "
    | br ~= buggyRuleEquivElim2 = 
-        incorrect "Be careful with the elimination of an equivalence; make sure that the disjunctions and the conjunctions are at the right place. "
+        f "Be careful with the elimination of an equivalence; make sure that the disjunctions and the conjunctions are at the right place. "
    | br ~= buggyRuleImplElim = 
-        incorrect "Be careful with the elimination of an implication; make sure the negation is at the right place. "
+        f "Be careful with the elimination of an implication; make sure the negation is at the right place. "
    | br ~= buggyRuleImplElim1 = 
-        incorrect "Did you try to eliminate an implication? In that case you used an AND instead of an OR "
+        f "Did you try to eliminate an implication? In that case you used an AND instead of an OR "
    | br ~= buggyRuleDeMorgan1 = 
-        incorrect "Did you try to apply DeMorgan? Be careful with the negations. " 
+        f "Did you try to apply DeMorgan? Be careful with the negations. " 
    | br ~= buggyRuleDeMorgan2 = 
-        incorrect "Did you try to apply DeMorgan? Make sure that you remove the outer negation when applying this rule "
+        f "Did you try to apply DeMorgan? Make sure that you remove the outer negation when applying this rule "
    | br ~= buggyRuleDeMorgan3 = 
-        incorrect "Did you try to apply DeMorgan? Make sure that you replace AND by OR. "
+        f "Did you try to apply DeMorgan? Make sure that you replace AND by OR. "
    | br ~= buggyRuleDeMorgan4 = 
-        incorrect "Did you try to apply DeMorgan? Make sure that you replace OR by AND. "
+        f "Did you try to apply DeMorgan? Make sure that you replace OR by AND. "
    | br ~= buggyRuleNotOverImpl = 
-        incorrect "Did you think that you can distribute a negation over an implication? This is not the case. "
+        f "Did you think that you can distribute a negation over an implication? This is not the case. "
    | br ~= buggyRuleParenth1 = 
-        incorrect "Take care of the negations and the parentheses" 
+        f "Take care of the negations and the parentheses" 
    | br ~= buggyRuleParenth2 = 
-        incorrect "Take care of the outer negation when you eliminate an equivalence. " 
+        f "Take care of the outer negation when you eliminate an equivalence. " 
    | br ~= buggyRuleParenth3 = 
-        incorrect "Did you try to apply double negation? At this place this is not allowed, because of the parenthesis between the negations. " 
+        f "Did you try to apply double negation? At this place this is not allowed, because of the parenthesis between the negations. " 
    | br ~= buggyRuleAssoc = 
-        incorrect "Did you change the negations? This is not allowed in a subformula consisting of a disjunction and a conjunction. " 
+        f "Did you change the negations? This is not allowed in a subformula consisting of a disjunction and a conjunction. " 
    | br ~= buggyRuleDistr = 
-        incorrect "Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. "  
-               -- TODO Josje: aanvullen voor overige buggy regels [Gedaan!]
-feedbackBuggy _ = incorrect ""
+        f "Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. "
+ where f = incorrect ready
+feedbackBuggy ready _ = incorrect ready ""
 
-feedbackNotEquivalent :: String
-feedbackNotEquivalent = incorrect ""
+feedbackNotEquivalent :: Bool -> String
+feedbackNotEquivalent ready = incorrect ready ""
     
 feedbackSame :: String
 feedbackSame = "You have submitted the current term."
@@ -118,10 +118,10 @@ feedbackDetour _ mexp [one] =
                     Just s  -> "However, the standard strategy suggests to use " ++ s ++ "." 
                     Nothing -> "However, the standard strategy suggests a different step."   
    in (appliedRule one ++ " This is correct. " ++ however, True)
-feedbackDetour _ _ _ = (feedbackUnknown , False)
+feedbackDetour ready _ _ = (feedbackUnknown ready, False)
 
-feedbackUnknown :: String
-feedbackUnknown = feedbackMultipleSteps ++ " " ++ backAndHint 
+feedbackUnknown :: Bool -> String
+feedbackUnknown ready = feedbackMultipleSteps ++ " " ++ backAndHint ready
 
 feedbackMultipleSteps :: String
 feedbackMultipleSteps = "You have combined multiple steps (or made a mistake)."
@@ -153,14 +153,15 @@ ruleText r
 -------------------------------------------------------------------------
 -- General text
   
-incorrect :: String -> String
-incorrect s = "This is incorrect. " ++ s ++ backAndHint
+incorrect :: Bool -> String -> String
+incorrect ready s = "This is incorrect. " ++ s ++ backAndHint ready
 
 okay :: String -> String
 okay s = "Well done! " ++ s
 
-backAndHint :: String
-backAndHint = "Press the Back button and try again. You may ask for a hint."
+backAndHint :: Bool -> String
+backAndHint ready = "Press the Back button and try again." ++
+   if ready then "" else " You may ask for a hint."
 
 -------------------------------------------------------------------------
 -- Helper functions

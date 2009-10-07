@@ -39,14 +39,12 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
     eliminateImplEquiv = somewhere $ useRules
        [ ruleDefImpl, ruleDefEquiv
        ]
-    eliminateNots = somewhere $ 
-       useRules
-          [generalRuleDeMorganAnd, generalRuleDeMorganOr ]
-       |> useRules
-          [ruleDeMorganAnd, ruleDeMorganOr]
-    orToTop = somewhere $ 
-       liftToContext generalRuleAndOverOr
-       |> liftToContext ruleAndOverOr
+    eliminateNots = somewhere $ useRules
+       [ generalRuleDeMorganAnd, generalRuleDeMorganOr
+       , ruleDeMorganAnd, ruleDeMorganOr
+       ]
+    orToTop = somewhere $ useRules 
+       [ generalRuleAndOverOr, ruleAndOverOr ]
 
 -----------------------------------------------------------------------------
 -- To DNF, in four steps

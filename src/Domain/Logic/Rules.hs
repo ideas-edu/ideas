@@ -55,7 +55,7 @@ groupFalseProperties = makeGroup "False Properties"
 groupDoubleNegation = makeGroup "Double Negation"
    [ruleNotNot]
 groupDeMorgan = makeGroup "De Morgan" 
-   [ruleDeMorganOr, ruleDeMorganAnd]
+   [ruleDeMorganOr, ruleDeMorganAnd, generalRuleDeMorganOr, generalRuleDeMorganAnd ]
 groupImplicationEliminatinon = makeGroup "Implication Elimination"
    [ruleDefImpl]
 groupEquivalenceElimination = makeGroup "Equivalence Elimination"

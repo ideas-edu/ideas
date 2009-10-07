@@ -38,10 +38,13 @@ dnfStrategy =  label "Bring to dnf"
       [ ruleDefImpl, ruleDefEquiv 
       ] 
    eliminateNots = repeat $ topDown $ useRules
-      [ ruleDeMorganAnd, ruleDeMorganOr, ruleNotNot
+      [ ruleDeMorganAnd, ruleDeMorganOr
+      , generalRuleDeMorganAnd, generalRuleDeMorganOr
+      , ruleNotNot
       ]
-   orToTop = repeat $ somewhere $ liftToContext 
-      ruleAndOverOr
+   orToTop = repeat $ somewhere $ useRules 
+      [ ruleAndOverOr, generalRuleAndOverOr
+      ]
 
 -----------------------------------------------------------------------------
 -- To DNF, with priorities (the "DWA" approachs)

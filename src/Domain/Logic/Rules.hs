@@ -17,12 +17,14 @@ import Domain.Logic.Formula
 import Common.Transformation
 import Common.Rewriting
 import Domain.Logic.Generator()
+import Control.Monad
  
 logicRules :: [Rule SLogic]
 logicRules = concat 
    [ groupCommutativity, groupAssociativity, groupDistributivity, groupIdempotency
    , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
    , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
+   , groupGeneralized
    ]
 
 buggyRules :: [Rule SLogic]
@@ -68,7 +70,12 @@ groupImplicationEliminatinon = makeGroup "Implication Elimination"
    [ruleDefImpl]
 groupEquivalenceElimination = makeGroup "Equivalence Elimination"
    [ruleDefEquiv]
-   
+
+groupGeneralized = 
+   [ generalRuleDeMorganOr, generalRuleDeMorganAnd
+   , generalRuleAndOverOr, generalRuleOrOverAnd
+   ]
+
 -----------------------------------------------------------------------------
 -- Commutativity
 
@@ -83,24 +90,25 @@ ruleCommAnd = rule "CommAnd" $
 -----------------------------------------------------------------------------
 -- Associativity (implicit)
 
-ruleAssocOr, ruleAssocAnd :: Rule SLogic
-
+ruleAssocOr :: Rule SLogic
 ruleAssocOr = minorRule $ rule "AssocOr" $
    \x y z -> (x :||: y) :||: z  :~>  x :||: (y :||: z)
-     
+
+ruleAssocAnd :: Rule SLogic
 ruleAssocAnd = minorRule $ rule "AssocAnd" $
    \x y z -> (x :&&: y) :&&: z  :~>  x :&&: (y :&&: z)
    
 -----------------------------------------------------------------------------
 -- Distributivity
 
-ruleAndOverOr, ruleOrOverAnd :: Rule SLogic 
+ruleAndOverOr :: Rule SLogic 
 
 ruleAndOverOr = ruleList "AndOverOr"
    [ \x y z -> x :&&: (y :||: z)  :~>  (x :&&: y) :||: (x :&&: z)
    , \x y z -> (x :||: y) :&&: z  :~>  (x :&&: z) :||: (y :&&: z)
    ]
 
+ruleOrOverAnd :: Rule SLogic 
 ruleOrOverAnd = ruleList "OrOverAnd"
    [ \x y z -> x :||: (y :&&: z)  :~>  (x :||: y) :&&: (x :||: z)
    , \x y z -> (x :&&: y) :||: z  :~>  (x :||: z) :&&: (y :||: z)
@@ -192,11 +200,11 @@ ruleNotNot = rule "NotNot" $
 -----------------------------------------------------------------------------
 -- De Morgan
 
-ruleDeMorganOr, ruleDeMorganAnd :: Rule SLogic 
-
+ruleDeMorganOr :: Rule SLogic 
 ruleDeMorganOr = rule "DeMorganOr" $
    \x y -> Not (x :||: y)  :~>  Not x :&&: Not y
 
+ruleDeMorganAnd :: Rule SLogic 
 ruleDeMorganAnd = rule "DeMorganAnd" $
    \x y -> Not (x :&&: y)  :~>  Not x :||: Not y
    
@@ -262,6 +270,51 @@ ruleEquivSame = rule "EquivSame" $
 ruleImplSame :: Rule SLogic 
 ruleImplSame = rule "ImplSame" $
    \x -> x :->: x  :~>  T
+
+-----------------------------------------------------------------------------
+-- Generalized rules
+
+generalRuleDeMorganOr :: Rule SLogic 
+generalRuleDeMorganOr = makeSimpleRule "GenDeMorganOr" f
+ where
+   f (Not e) = do
+      let xs = disjunctions e
+      guard (length xs > 2)
+      return (foldr1 (:&&:) (map Not xs))
+   f _ = Nothing
+
+generalRuleDeMorganAnd :: Rule SLogic 
+generalRuleDeMorganAnd = makeSimpleRule "GenDeMorganAnd" f
+ where
+   f (Not e) = do
+      let xs = conjunctions e
+      guard (length xs > 2)
+      return (foldr1 (:||:) (map Not xs))
+   f _ = Nothing
+  
+generalRuleAndOverOr :: Rule SLogic
+generalRuleAndOverOr = makeSimpleRule "GenAndOverOr" f
+ where
+   f (x :&&: y) =
+      case (disjunctions x, disjunctions y) of
+         (xs, _) | length xs > 2 ->
+            return (foldr1 (:||:) (map (:&&: y) xs))
+         (_, ys) | length ys > 2 ->
+            return (foldr1 (:||:) (map (x :&&:) ys))
+         _ -> Nothing
+   f _ = Nothing
+
+generalRuleOrOverAnd :: Rule SLogic 
+generalRuleOrOverAnd = makeSimpleRule "GenOrOverAnd" f
+ where
+   f (x :||: y) =
+      case (conjunctions x, conjunctions y) of
+         (xs, _) | length xs > 2 ->
+            return (foldr1 (:&&:) (map (:||: y) xs))
+         (_, ys) | length ys > 2 ->
+            return (foldr1 (:&&:) (map (x :||:) ys))
+         _ -> Nothing
+   f _ = Nothing
    
 -----------------------------------------------------------------------------
 -- Buggy rules

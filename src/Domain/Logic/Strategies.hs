@@ -20,33 +20,6 @@ import Common.Transformation
 import Common.Strategy
 
 -----------------------------------------------------------------------------
--- To DNF, in four steps
-
-dnfStrategy :: LabeledStrategy (Context SLogic)
-dnfStrategy =  label "Bring to dnf"
-      $  label "Eliminate constants"                 eliminateConstants
-     <*> label "Eliminate implications/equivalences" eliminateImplEquiv
-     <*> label "Eliminate nots"                      eliminateNots 
-     <*> label "Move ors to top"                     orToTop
- where
-   eliminateConstants = repeat $ topDown $ useRules
-      [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
-      , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse, ruleFalseInEquiv
-      , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
-      ]
-   eliminateImplEquiv = repeat $ bottomUp $ useRules
-      [ ruleDefImpl, ruleDefEquiv 
-      ] 
-   eliminateNots = repeat $ topDown $ useRules
-      [ ruleDeMorganAnd, ruleDeMorganOr
-      , generalRuleDeMorganAnd, generalRuleDeMorganOr
-      , ruleNotNot
-      ]
-   orToTop = repeat $ somewhere $ useRules 
-      [ ruleAndOverOr, generalRuleAndOverOr
-      ]
-
------------------------------------------------------------------------------
 -- To DNF, with priorities (the "DWA" approachs)
 
 dnfStrategyDWA :: LabeledStrategy (Context SLogic)
@@ -65,11 +38,43 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
     eliminateImplEquiv = somewhere $ useRules
        [ ruleDefImpl, ruleDefEquiv
        ]
-    eliminateNots = somewhere $ useRules
-       [ ruleDeMorganAnd, ruleDeMorganOr
-       ]
-    orToTop = somewhere $ liftToContext 
-       ruleAndOverOr
+    eliminateNots = somewhere $ 
+       useRules
+          [generalRuleDeMorganAnd, generalRuleDeMorganOr ]
+       |> useRules
+          [ruleDeMorganAnd, ruleDeMorganOr]
+    orToTop = somewhere $ 
+       liftToContext generalRuleAndOverOr
+       |> liftToContext ruleAndOverOr
+
+-----------------------------------------------------------------------------
+-- To DNF, in four steps
+
+dnfStrategy :: LabeledStrategy (Context SLogic)
+dnfStrategy =  label "Bring to dnf"
+      $  label "Eliminate constants"                 eliminateConstants
+     <*> label "Eliminate implications/equivalences" eliminateImplEquiv
+     <*> label "Eliminate nots"                      eliminateNots 
+     <*> label "Move ors to top"                     orToTop
+ where
+   eliminateConstants = repeat $ topDown $ useRules
+      [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
+      , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse, ruleFalseInEquiv
+      , ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
+      ]
+   eliminateImplEquiv = repeat $ bottomUp $ useRules
+      [ ruleDefImpl, ruleDefEquiv 
+      ] 
+   eliminateNots = repeat $ topDown $ 
+      useRules
+         [ generalRuleDeMorganAnd, generalRuleDeMorganOr ]
+      |> useRules
+         [ ruleDeMorganAnd, ruleDeMorganOr
+         , ruleNotNot
+         ]
+   orToTop = repeat $ somewhere $  
+      liftToContext generalRuleAndOverOr |> 
+      liftToContext ruleAndOverOr
       
 -- local helper function
 useRules :: [Rule SLogic] -> Strategy (Context SLogic)

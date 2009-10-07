@@ -19,6 +19,8 @@ module Domain.Logic.GeneralizedRules
    , inverseAndOverOr, inverseOrOverAnd 
    ) where
 
+-- Note: the generalized rules do not take AC-unification into account,
+-- and perhaps they should.
 import Domain.Logic.Formula
 import Common.Transformation
 import Control.Monad

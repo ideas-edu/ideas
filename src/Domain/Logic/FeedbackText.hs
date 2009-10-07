@@ -14,7 +14,9 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.FeedbackText 
    ( feedbackSyntaxError, ruleText, appliedRule
-   , feedbackBuggy, feedbackNotEquivalent, feedbackSame, feedbackOk, feedbackDetour, feedbackUnknown
+   , feedbackBuggy, feedbackNotEquivalent
+   , feedbackSame
+   , feedbackOk, feedbackDetour, feedbackUnknown
    ) where
 
 import Data.Maybe
@@ -101,7 +103,8 @@ feedbackNotEquivalent :: Bool -> String
 feedbackNotEquivalent ready = incorrect ready ""
     
 feedbackSame :: String
-feedbackSame = "You have submitted the current term."
+feedbackSame = "You have submitted a similar term. " ++ 
+   "Maybe you inserted or removed parentheses (the tool supports associativity)?"
 
 feedbackOk :: [Rule a] -> (String, Bool)
 feedbackOk [one] = (okay (appliedRule one), True)

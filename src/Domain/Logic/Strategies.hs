@@ -14,6 +14,7 @@ module Domain.Logic.Strategies
 
 import Prelude hiding (repeat)
 import Domain.Logic.Rules
+import Domain.Logic.GeneralizedRules
 import Domain.Logic.Formula
 import Common.Context (Context, liftToContext)
 import Common.Transformation

@@ -25,7 +25,7 @@ logicRules = concat
    [ groupCommutativity, groupAssociativity, groupDistributivity, groupIdempotency
    , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
    , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
-   , groupGeneralized
+   , groupGeneralized, groupInverseRules
    ]
 
 -----------------------------------------------------------------------------
@@ -66,14 +66,19 @@ groupGeneralized =
    , generalRuleAndOverOr, generalRuleOrOverAnd
    ]
 
+groupInverseRules =
+   [ inverseDeMorganOr, inverseDeMorganAnd
+   , inverseAndOverOr, inverseOrOverAnd
+   ]
+
 -----------------------------------------------------------------------------
 -- Commutativity
 
-ruleCommOr, ruleCommAnd :: Rule SLogic 
-
+ruleCommOr :: Rule SLogic  
 ruleCommOr = rule "CommOr" $
    \x y -> x :||: y  :~>  y :||: x
 
+ruleCommAnd :: Rule SLogic 
 ruleCommAnd = rule "CommAnd" $
    \x y -> x :&&: y  :~>  y :&&: x
    
@@ -260,6 +265,75 @@ ruleEquivSame = rule "EquivSame" $
 ruleImplSame :: Rule SLogic 
 ruleImplSame = rule "ImplSame" $
    \x -> x :->: x  :~>  T
+
+-----------------------------------------------------------------------------
+-- Inverse rules
+
+-- generalized (works for multiple terms)
+inverseDeMorganOr :: Rule SLogic 
+inverseDeMorganOr = makeSimpleRule "InvDeMorganOr" $ \p -> do
+   let xs = conjunctions p
+   guard (length xs > 1)
+   ys <- mapM isNot xs
+   return (Not $ foldr1 (:||:) ys)
+
+-- generalized (works for multiple terms)
+inverseDeMorganAnd :: Rule SLogic 
+inverseDeMorganAnd = makeSimpleRule "InvDeMorganAnd" $ \p -> do
+   let xs = disjunctions p
+   guard (length xs > 1)
+   ys <- mapM isNot xs
+   return (Not $ foldr1 (:&&:) ys)
+
+inverseAndOverOr :: Rule SLogic
+inverseAndOverOr = makeSimpleRule "InvAndOverOr" $ \p -> do
+   let xs = disjunctions p
+   guard (length xs > 1)
+   do pairs <- mapM isAndHead xs
+      let (as, ys) = unzip pairs
+      guard (allSame as)
+      return (head as :&&: foldr1 (:||:) ys)
+    `mplus` do
+      pairs <- mapM isAndLast xs
+      let (ys, as) = unzip pairs
+      guard (allSame as)
+      return (foldr1 (:||:) ys :&&: head as)
+
+inverseOrOverAnd :: Rule SLogic
+inverseOrOverAnd = makeSimpleRule "InvOrOverAnd" $ \p -> do
+   let xs = conjunctions p
+   guard (length xs > 1)
+   do pairs <- mapM isOrHead xs
+      let (as, ys) = unzip pairs
+      guard (allSame as)
+      return (head as :||: foldr1 (:&&:) ys)
+    `mplus` do
+      pairs <- mapM isOrLast xs
+      let (ys, as) = unzip pairs
+      guard (allSame as)
+      return (foldr1 (:&&:) ys :||: head as)      
+
+isNot :: SLogic -> Maybe SLogic
+isNot (Not p) = Just p
+isNot _       = Nothing
+
+isAndHead, isAndLast, isOrHead, isOrLast :: SLogic -> Maybe (SLogic, SLogic)
+isAndHead = useHead (:&&:) . conjunctions
+isAndLast = useLast (:&&:) . conjunctions
+isOrHead  = useHead (:||:) . disjunctions
+isOrLast  = useLast (:||:) . disjunctions
+
+useHead, useLast :: (a -> a -> a) -> [a] -> Maybe (a, a)
+useHead op (x:xs) | not (null xs) =
+   Just (x, foldr1 op xs)
+useHead _ _ = Nothing
+
+useLast op = fmap (\(x, y) -> (y, x)) . useHead (flip op) . reverse
+
+
+allSame :: Eq a => [a] -> Bool
+allSame []     = True
+allSame (x:xs) = all (==x) xs
 
 -----------------------------------------------------------------------------
 -- Generalized rules

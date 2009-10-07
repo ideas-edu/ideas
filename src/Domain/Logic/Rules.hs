@@ -22,10 +22,11 @@ import Control.Monad
  
 logicRules :: [Rule SLogic]
 logicRules = concat 
-   [ groupCommutativity, groupAssociativity, groupDistributivity, groupIdempotency
+   [ groupCommutativity, groupAssociativity, groupIdempotency
    , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
    , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
-   , groupGeneralized, groupInverseRules
+   , groupDistributionOrOverAnd, groupDistributionAndOverOr
+   , groupInverseRules
    ]
 
 -----------------------------------------------------------------------------
@@ -34,7 +35,7 @@ logicRules = concat
 makeGroup :: String -> [Rule SLogic] -> [Rule SLogic]
 makeGroup = map . addRuleToGroup
 
-groupCommutativity, groupAssociativity, groupDistributivity, groupIdempotency, 
+groupCommutativity, groupAssociativity, groupDistributionOrOverAnd, groupDistributionAndOverOr,groupIdempotency, 
    groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation,
    groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination :: [Rule SLogic]
 
@@ -42,8 +43,7 @@ groupCommutativity = makeGroup "Commutativity"
    [ruleCommOr, ruleCommAnd]
 groupAssociativity = makeGroup "Associativity"
    [ruleAssocOr, ruleAssocAnd]
-groupDistributivity = makeGroup "Distributivity"
-   [ruleAndOverOr, ruleOrOverAnd]
+
 groupIdempotency = makeGroup "Idempotency"
    [ruleIdempOr, ruleIdempAnd]
 groupAbsorption = makeGroup "Absorption"
@@ -60,7 +60,11 @@ groupImplicationEliminatinon = makeGroup "Implication Elimination"
    [ruleDefImpl]
 groupEquivalenceElimination = makeGroup "Equivalence Elimination"
    [ruleDefEquiv]
-
+groupDistributionOrOverAnd = makeGroup "DistributionOrOverAnd"
+   [generalRuleOrOverAnd, ruleOrOverAnd ]
+groupDistributionAndOverOr = makeGroup "DistributionAndOverOr"
+   [generalRuleAndOverOr, ruleAndOverOr ]
+   
 groupGeneralized = 
    [ generalRuleDeMorganOr, generalRuleDeMorganAnd
    , generalRuleAndOverOr, generalRuleOrOverAnd

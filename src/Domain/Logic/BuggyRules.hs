@@ -23,7 +23,7 @@ import Common.Transformation
 buggyRules :: [Rule SLogic]
 buggyRules = makeGroup "Common misconceptions"
    [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui
-   , buggyRuleEquivElim1, buggyRuleEquivElim2
+   , buggyRuleEquivElim1, buggyRuleImplElim2, buggyRuleEquivElim2, buggyRuleEquivElim3
    , buggyRuleImplElim, buggyRuleImplElim1, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
    , buggyRuleDeMorgan4, buggyRuleNotOverImpl, buggyRuleParenth1, buggyRuleParenth2
    , buggyRuleParenth3, buggyRuleAssoc
@@ -108,6 +108,10 @@ buggyRuleEquivElim2 = buggyRule $ ruleList "BuggyEquivElim2"
     , \x y -> x :<->: y :~> (x :&&: y) :||: (Not x :||: Not y)
     ]
     
+buggyRuleEquivElim3 :: Rule SLogic
+buggyRuleEquivElim3 = buggyRule $ rule "EquivElim3"  $  
+     \x y -> x :<->: y :~> Not x :||: y
+    
 buggyRuleImplElim :: Rule SLogic
 buggyRuleImplElim = buggyRule $ ruleList "BuggyImplElim" 
    [\x y -> x :->: y :~> Not (x :||: y)
@@ -118,6 +122,10 @@ buggyRuleImplElim = buggyRule $ ruleList "BuggyImplElim"
 buggyRuleImplElim1 :: Rule SLogic
 buggyRuleImplElim1 = buggyRule $ rule "BuggyImplElim1"  $  
      \x y -> x :->: y :~> Not x :&&: y
+
+buggyRuleImplElim2 :: Rule SLogic
+buggyRuleImplElim2 = buggyRule $ rule "BuggyImplElim2" $ 
+     \x y -> x :->: y :~>  (x :&&: y) :||: (Not x :&&: Not y) 
      
 buggyRuleDeMorgan1 :: Rule SLogic
 buggyRuleDeMorgan1 = buggyRule $ ruleList "BuggyDeMorgan1"

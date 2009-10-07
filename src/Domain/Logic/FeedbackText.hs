@@ -46,6 +46,10 @@ feedbackBuggy [br]
         incorrect "Did you think that implication is commutative? This is not the case. "
    | br ~= buggyRuleAssImp = 
         incorrect "Did you think that implication is associative? This is not the case. "
+   | br ~= buggyRuleImplElim2 = 
+        incorrect "Make sure that you use the rule for implication elimanation, you seemed to use equivalence elimination "
+   | br ~= buggyRuleEquivElim3 = 
+        incorrect "Make sure that you use the rule for equivalence elimanation, you seemed to use implication elimination "
    | br ~= buggyRuleIdemImp = 
         incorrect "Did you think that implication is idempotent? This is not the case. "
    | br ~= buggyRuleIdemEqui = 
@@ -139,8 +143,8 @@ ruleText r
    | r ~= ruleDefEquiv  = return "equivalence elimination" 
    | r `inGroup`"Commutativity" = return "commutativity"
    | r `inGroup`"Aasociativity" = return "associativity"
-   | r `inGroup`"DistributionOrOverAnd" = return "DistributionOrOverAnd"
-   | r `inGroup`"DistributionAndOverOr" = return "DistributionAndOverOr"
+   | r `inGroup`"DistributionOrOverAnd" = return "distribution of or over and"
+   | r `inGroup`"DistributionAndOverOr" = return "distribution of and over or"
    | r `inGroup`"Idempotency" = return "idempotency"
    | r `inGroup`"Absorption" = return "absorption"
    | r `inGroup`"De Morgan" = return "De Morgan"

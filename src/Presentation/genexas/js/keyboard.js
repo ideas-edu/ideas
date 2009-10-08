@@ -78,7 +78,14 @@ function controleer(e) {	// eerst  de character code ophalen
 			case 97 : 
 				voegin(String.fromCharCode(8743), "work");
 				stop(e);
-				return false;				
+				return false;
+			// laat p, q, r, t, f, T, F, ( en ) door
+			case 112 : case 113 : case 114 : case 116 : case 102 : case 84 : case 70 : case 40 : case 41 :
+			     	 return true;
+			// drop alle andere invoer
+			default :
+				stop(e);
+				return false;
 		}
 	}
 	//e.returnValue = true;

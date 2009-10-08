@@ -29,8 +29,9 @@
 <h3>Information about the tool</h3>
 <p>This tool lets you practice bringing propositions into disjunctive 
 normal form. The tool lets you submit intermediate steps, and provides
-feedback on how to continue. It is advisable to make small steps since
-	this will allow the system to provide you with more feedback.</p>
+feedback on how to continue. In order to report better feedback,
+the tool only accepts one step at a time. Therefore, it is 
+advisable to make small steps only.</p>
 <p><i>Associativity</i> of operators is implicit. For example, the
 system will not distinguish between 
 	<font color = "#0000A0">(p &#8743; q) &#8743; r</font> and 

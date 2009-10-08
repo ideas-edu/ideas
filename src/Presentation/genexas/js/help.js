@@ -292,9 +292,10 @@ function updateDerivation() {
 }
 
 // will be auto step
+// BHR: move this function to other button handlers, and rename
 function copy() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-        ss_getNext(s.get('state'), autoHandler);
+        ss_getNext('auto step button', s.get('state'), autoHandler);
 
 	/* if (snapshot.get('copy')) {
 		$('work').value = snapshot.get('copy').state.exercise;

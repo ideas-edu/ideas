@@ -20,7 +20,7 @@ function init() {
 	$('derivationbutton').observe('click', getDerivation);
 	$('nextbutton').observe('click', getNext);
 	$('readybutton').observe('click', getReady);
-	$('submitbutton').observe('click', getFeedback);
+	$('submitbutton').observe('click', getFeedbackButton);
 	$('readybutton').observe('click', getReady);
 	$('undobutton').observe('click', goBack);
 //	$('forwardbutton').observe('click', goForward);
@@ -42,7 +42,7 @@ function init() {
 	if (id && id != "421") {
 	   $('progress').hide();
 	}
-	generate();
+	generate('init');
 }
 
 						

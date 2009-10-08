@@ -2,12 +2,12 @@
  * Generate a new exercise,
  * A function to call the service and a display function
  */
-function generate() {
-	ss_generate(5, displayExercise);
+function generate(caller) {
+	ss_generate(caller, 5, displayExercise);
 }
 
 function displayNewExercise(state) {
-    generate();
+    generate('new button');
     clearFeedback();
 }
  /**
@@ -59,7 +59,7 @@ function getAuto() {
  */
 function getHint() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
-	ss_getHint(s.get('location'), s.get('state'), displayHint);
+	ss_getHint('hint button', s.get('location'), s.get('state'), displayHint);
 }
 function displayHint(hint) {
 	closeallhelp();
@@ -81,7 +81,7 @@ function displayHint(hint) {
  */
 function getNext() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	ss_getNext(s.get('state'), displayNext);
+	ss_getNext('step button', s.get('state'), displayNext);
  }
  function displayNext(rule, valid, state) {
 	var nextExpression = (state.exercise).asciiToHtml() ;
@@ -115,7 +115,7 @@ function getNext() {
  */
 function getDerivation() {
      var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-     ss_getDerivation(s.get('state'), displayDerivation);
+     ss_getDerivation('worked-out exercise button', s.get('state'), displayDerivation);
  }
  function displayDerivation(setOfRules) {
      var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
@@ -135,10 +135,14 @@ function getDerivation() {
  /**
  * React to the submit button
  */
- function getFeedback() {
+ function getFeedbackButton() {
+    getFeedback('submit button');
+ }
+ 
+ function getFeedback(caller) {
 	var workExpression = (($('work')).value).htmlToAscii();
 	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	ss_getFeedback(s.get('state'), workExpression, displayFeedback);
+	ss_getFeedback(caller, s.get('state'), workExpression, displayFeedback);
  }
 function displayFeedback(result, state) {
 	// always paste the result
@@ -162,7 +166,7 @@ function displayFeedback(result, state) {
 */
 function getReady() {
 	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	ss_getReady(s.get('state'), handleSolved);
+	ss_getReady('ready button', s.get('state'), handleSolved);
 }
 function handleSolved(solved) {
 	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];

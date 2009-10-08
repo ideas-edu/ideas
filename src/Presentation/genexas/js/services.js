@@ -1,9 +1,9 @@
 // The url for the services
 var url = "cgi/service.cgi";
 
-function makeRequest(action, method, params) {
-   return '{"source": "genexas", "action": "'
-          + action
+function makeRequest(caller, method, params) {
+   return '{"source": "genexas", "event": "'
+          + caller
 	  + '", "method": "' 
           + method 
 	  + '", "params": ' 
@@ -19,9 +19,9 @@ function makeRequest(action, method, params) {
   * Output: a state object
   * The output is passed to the callback function
   */
-function ss_generate(number, callback) {
+function ss_generate(caller, number, callback) {
 	var params  = '["' + exercisekind + '", ' + number + ']';
-	var request = makeRequest('button', 'generate', params);
+	var request = makeRequest(caller, 'generate', params);
 	var myAjax  = new Ajax.Request(url, {
 		parameters : 'input=' + request,
 		onSuccess : function(response) {
@@ -50,10 +50,10 @@ function ss_generate(number, callback) {
   * Output: a boolean
    * The output is passed to the callback function
   */
-function ss_getReady(state, callback) {
+function ss_getReady(caller, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
-	var request  = makeRequest('button', 'ready', params);
+	var request  = makeRequest(caller, 'ready', params);
 	var myAjax   = new Ajax.Request(url, {
 		parameters : 'input=' + request,
          onSuccess : function(response) {
@@ -78,10 +78,10 @@ function ss_getReady(state, callback) {
   * Output: a set of rules (strings)
    * The output is passed to the callback function
   */
-function ss_getHint(location, state, callback) {
+function ss_getHint(caller, location, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
-	var request  = makeRequest('button', 'onefirsttext', params);
+	var request  = makeRequest(caller, 'onefirsttext', params);
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input=' + request,
 		onSuccess : function(response) {
@@ -105,10 +105,10 @@ function ss_getHint(location, state, callback) {
   * Output: a rulID, a location and a state
    * The output is passed to the callback function
   */
-function ss_getNext(state, callback) {
+function ss_getNext(caller, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
-	var request  = makeRequest('button', 'onefirsttext', params);
+	var request  = makeRequest(caller, 'onefirsttext', params);
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input=' + request,
         onSuccess : function(response) {
@@ -133,10 +133,10 @@ function ss_getNext(state, callback) {
 /**
  *  getDerivation returns a complete derivation
   */
-function ss_getDerivation(eastate, callback) {
+function ss_getDerivation(caller, eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
 	var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]]';
-	var request  = makeRequest('button', 'derivationtext', params);
+	var request  = makeRequest(caller, 'derivationtext', params);
 	var myAjax   = new Ajax.Request(url, {
 		parameters : 'input=' + request,
         onSuccess : function(response) {
@@ -165,10 +165,10 @@ function ss_getDerivation(eastate, callback) {
 /**
  *  getRenmaining puts the number of remaining steps in the feedbackarea
   */
-function ss_getRemaining(eastate, callback) {
+function ss_getRemaining(caller, eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
         var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]]';
-	var request  = makeRequest('button', 'stepsremaining', params);
+	var request  = makeRequest(caller, 'stepsremaining', params);
 	var myAjax   = new Ajax.Request(url, {
         parameters : 'input=' + request,
         onSuccess : function(response) {
@@ -183,10 +183,10 @@ function ss_getRemaining(eastate, callback) {
 /**
  *  getFeedbackt shows feedback in the feedbackarea
   */
-function ss_getFeedback(state, newexpression, callback) {
+function ss_getFeedback(caller, state, newexpression, callback) {
 	var exercise = (state.exercise).htmlToAscii();
 	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"]';
-	var request  = makeRequest('button', 'submittext', params);
+	var request  = makeRequest(caller, 'submittext', params);
 	var myAjax   = new Ajax.Request(url, {
         parameters : 'input=' + request,
         onSuccess : function(response) {

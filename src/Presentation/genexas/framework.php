@@ -19,7 +19,7 @@
 <script type="text/javascript" src="js/en.js"></script>	
 </head>
 
-<h1>Exercise Assistant online</h1>
+<h1>Exercise Assistant Online</h1>
 <div id="exasdiv">
 <input class="menu" type="button" id="aboutButton" value="<?php print About;?>" >
 <!-- <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" > -->
@@ -35,7 +35,7 @@
 
 <!--	<textarea id="work" rows="2" cols="40" ></textarea> -->
 	<input type="text" id="work" rows="2" cols="40"/>
-	<table id="work">
+	<table style="margin-left: 20px;" width="500px">
 		<tr>
 			<td><input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>"></td>
 			<td></td>

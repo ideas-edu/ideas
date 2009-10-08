@@ -110,23 +110,7 @@ select {
 }
 
 .minibutton {
-//	background-color: #CCCC99;
 	width: 80px;
-}
-#numberbutton {
-	display: inline; 
-	float: right;
-	margin-right: 10px;
-	background-color: #CCCC99;
-	position: relative;
-	right: -45px;
-	height: 20px;
-	font-weight: 800;
-}
-
-
-#derivationbutton, #submitbutton {
-	margin-right: 10px;
 }
 
 #inputhulp {
@@ -148,7 +132,6 @@ select {
 	position: relative;
 	font-family: 'Lucida Unicode Sans';
 	font-size: large;
-//        background-color: #CCCC99; 
 	display: inline;
 	text-align: center;
 }
@@ -251,9 +234,4 @@ th {
 	text-align: center; 
 	font-weight: bold ;
 }
-td, th {
-//	padding-left: 10px;
-//	padding-right: 10px;
-//	padding-top: 5px;
-//	padding-bottom: 3px;
-}
+

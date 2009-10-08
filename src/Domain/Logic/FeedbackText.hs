@@ -84,18 +84,24 @@ feedbackBuggy ready [br]
         f "Did you try to apply DeMorgan? Make sure that you replace AND by OR. "
    | br ~= buggyRuleDeMorgan4 = 
         f "Did you try to apply DeMorgan? Make sure that you replace OR by AND. "
+   | br ~= buggyRuleDeMorgan5 = 
+        f "Did you try to apply DeMorgan? Take care of the  scope of the negations. "        
    | br ~= buggyRuleNotOverImpl = 
         f "Did you think that you can distribute a negation over an implication? This is not the case. "
    | br ~= buggyRuleParenth1 = 
-        f "Take care of the negations and the parentheses" 
+        f "Take care of the negations and the parentheses. " 
    | br ~= buggyRuleParenth2 = 
         f "Take care of the outer negation when you eliminate an equivalence. " 
    | br ~= buggyRuleParenth3 = 
         f "Did you try to apply double negation? At this place this is not allowed, because of the parenthesis between the negations. " 
    | br ~= buggyRuleAssoc = 
-        f "Did you change the negations? This is not allowed in a subformula consisting of a disjunction and a conjunction. " 
+        f "Did you change the parentheses? This is not allowed in a subformula consisting of a disjunction and a conjunction. "
+   | br ~= buggyRuleAbsor = 
+        f "Did you try to apply absorption? You cant't apply this rule at this place since the resulting sub formula is not a subformula of the bigger term. "        
    | br ~= buggyRuleDistr = 
         f "Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. "
+   | br ~= buggyRuleDistrNot = 
+        f "Did you try to apply distribution? Don't forget the negations!. "
  where f = incorrect ready
 feedbackBuggy ready _ = incorrect ready ""
 

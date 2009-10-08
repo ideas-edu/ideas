@@ -1,6 +1,18 @@
 // The url for the services
 var url = "cgi/service.cgi";
 
+function makeRequest(action, method, params) {
+   return '{"source": "genexas", "action": "'
+          + action
+	  + '", "method": "' 
+          + method 
+	  + '", "params": ' 
+	  + params 
+	  + ', "id" : ' 
+	  + id 
+	  + '}';
+}
+
 /**
  *  Generation of a new exercise.
   * Input: an integer
@@ -8,8 +20,10 @@ var url = "cgi/service.cgi";
   * The output is passed to the callback function
   */
 function ss_generate(number, callback) {
-	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "source": "genexas", "method" :"generate", "params" : ["'+ exercisekind + '", ' + number + '], "id" : ' + id + '}',
+	var params  = '["' + exercisekind + '", ' + number + ']';
+	var request = makeRequest('button', 'generate', params);
+	var myAjax  = new Ajax.Request(url, {
+		parameters : 'input=' + request,
 		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -38,8 +52,10 @@ function ss_generate(number, callback) {
   */
 function ss_getReady(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "source": "genexas", "method" : "ready" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
+	var request  = makeRequest('button', 'ready', params);
+	var myAjax   = new Ajax.Request(url, {
+		parameters : 'input=' + request,
          onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -64,8 +80,10 @@ function ss_getReady(state, callback) {
   */
 function ss_getHint(location, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
+	var request  = makeRequest('button', 'onefirsttext', params);
 	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "source": "genexas", "method" :"onefirsttext", "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+		parameters : 'input=' + request,
 		onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -89,8 +107,10 @@ function ss_getHint(location, state, callback) {
   */
 function ss_getNext(state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
+	var request  = makeRequest('button', 'onefirsttext', params);
 	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "source": "genexas", "method" : "onefirsttext" , "params" : [["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]], "id" : ' + id + '}',
+		parameters : 'input=' + request,
         onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -115,8 +135,10 @@ function ss_getNext(state, callback) {
   */
 function ss_getDerivation(eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request(url, {
-		parameters : 'input={ "source": "genexas", "method" : "derivationtext" , "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
+	var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]]';
+	var request  = makeRequest('button', 'derivationtext', params);
+	var myAjax   = new Ajax.Request(url, {
+		parameters : 'input=' + request,
         onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -145,8 +167,10 @@ function ss_getDerivation(eastate, callback) {
   */
 function ss_getRemaining(eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request(url, {
-        parameters : 'input={ "source": "genexas", "method" :"stepsremaining", "params" : [["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]], "id" : ' + id + '}',
+        var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]]';
+	var request  = makeRequest('button', 'stepsremaining', params);
+	var myAjax   = new Ajax.Request(url, {
+        parameters : 'input=' + request,
         onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;
@@ -161,8 +185,10 @@ function ss_getRemaining(eastate, callback) {
   */
 function ss_getFeedback(state, newexpression, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var myAjax = new Ajax.Request(url, {
-        parameters : 'input={ "source": "genexas", "method" : "submittext", "params" : [["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"], "id" : ' + id + '}',
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"]';
+	var request  = makeRequest('button', 'submittext', params);
+	var myAjax   = new Ajax.Request(url, {
+        parameters : 'input=' + request,
         onSuccess : function(response) {
 			var resJSON = parseJSON(response.responseText);
 			var error = resJSON.error;

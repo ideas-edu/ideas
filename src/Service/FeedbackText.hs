@@ -65,8 +65,10 @@ submittext :: State a -> String -> (Bool, String, State a)
 submittext state txt = 
    case parser (exercise state) txt of
       Left err -> 
-         let msg = pos ++ ": Syntax error\n" ++ show err
-             pos = commaList $ map show (errorToPositions err)
+         let msg = "Syntax error" ++ pos ++ ": " ++ show err
+             pos = case map show (errorToPositions err) of
+                      [] -> ""
+                      xs -> " at " ++ commaList xs
          in (False, msg, state)
       Right a  -> 
          let result = submit state a

@@ -1,0 +1,15 @@
+{
+   "result": [
+      false,
+      "Syntax error at (1,7): Closing parenthesis symbol ) has no matching symbol",
+      [
+         "logic.dnf",
+         "[]",
+         "~(~x || ~y)",
+         "[];"
+      ]
+   ],
+   "error": null,
+   "id": 421,
+   "version": "0.5.6 (2294)"
+}

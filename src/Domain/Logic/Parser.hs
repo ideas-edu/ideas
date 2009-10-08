@@ -15,6 +15,7 @@ module Domain.Logic.Parser
    ) where
 
 import Text.Parsing
+import Control.Arrow
 import Domain.Logic.Formula
    
 logicScanner :: Scanner
@@ -52,8 +53,14 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
 parseLogicPars :: String -> Either SyntaxError (Ranged SLogic)
-parseLogicPars = analyseAndParse (pLogicGen asciiTuple)
-               . scanWith logicScanner
+parseLogicPars s
+   = left ambiguousOperators
+   $ analyseAndParse (pLogicGen asciiTuple)
+   $ scanWith logicScanner s
+ where
+   ambiguousOperators err =
+      let msg = ErrorMessage "Ambiguous use of operators (write parentheses)"
+      in either (const err) (const msg) (parseLogic s)
 
 parseLogicUnicodePars :: String -> Either SyntaxError (Ranged SLogic)
 parseLogicUnicodePars = analyseAndParse (pLogicGen unicodeTuple)

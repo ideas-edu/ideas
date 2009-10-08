@@ -1,0 +1,4 @@
+{ "method" : "submittext"
+, "params" : [["logic.dnf", "[]", "~(~x || ~y)", ""], "p /\\ q || r"]
+, "id"     : 421
+}

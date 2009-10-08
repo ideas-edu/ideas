@@ -137,13 +137,16 @@ jsonDecoder ex = Decoder
          Tp.Term     -> useFirst $ liftM inContext . decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
          Tp.Exercise -> \json -> return (decoderExercise dec, json)
+         Tp.String   -> useFirst $ \json -> case json of 
+                                               String s -> return s
+                                               _        -> fail "not a string"
          _           -> decodeDefault dec serviceType
    
    useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)
    useFirst f (Array (x:xs)) = do
       a <- f x
       return (a, Array xs)
-   useFirst _ _ = fail "expecting an arugment"
+   useFirst _ _ = fail "expecting an argument"
          
 instance InJSON Location where
    toJSON              = toJSON . show

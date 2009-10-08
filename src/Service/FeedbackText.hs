@@ -16,13 +16,14 @@ module Service.FeedbackText
 
 import Control.Arrow
 import Common.Exercise
-import Common.Utils (safeHead, fst3)
+import Common.Utils (safeHead, fst3, commaList)
 import Data.Maybe
 import Domain.Logic.FeedbackText
 import Domain.Logic.Exercises (dnfExercise)
 import Service.TypedAbstractService
 import Common.Context
 import Common.Transformation (name, Rule)
+import Text.Parsing (errorToPositions)
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
@@ -60,11 +61,16 @@ onefirsttext state =
       (r, _, s):_ -> (True, "Use " ++ showRule (getCode state) r, s)
       _ -> (False, "Sorry, no hint available", state)
 
-submittext :: State a -> a -> (Bool, String, State a)
-submittext state a = 
-   case getResultState result of
-      Just new | b -> (True, txt, resetStateIfNeeded new)
-      _ -> (False, txt, state)
- where
-  result = submit state a
-  (txt, b) = feedbackLogic state result
+submittext :: State a -> String -> (Bool, String, State a)
+submittext state txt = 
+   case parser (exercise state) txt of
+      Left err -> 
+         let msg = pos ++ ": Syntax error\n" ++ show err
+             pos = commaList $ map show (errorToPositions err)
+         in (False, msg, state)
+      Right a  -> 
+         let result = submit state a
+             (txt, b) = feedbackLogic state result
+         in case getResultState result of
+               Just new | b -> (True, txt, resetStateIfNeeded new)
+               _ -> (False, txt, state)

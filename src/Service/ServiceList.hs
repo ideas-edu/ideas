@@ -102,8 +102,8 @@ onefirsttextS = Service "onefirsttext" $
    onefirsttext ::: State :-> Elem (Triple Bool String State)
 
 submittextS :: Service a
-submittextS = Service "submittext" $ (\a -> submittext a . fromContext) :::
-   State :-> Term :-> Elem (Triple Bool String State)
+submittextS = Service "submittext" $ 
+   submittext ::: State :-> String :-> Elem (Triple Bool String State)
 
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" $ 

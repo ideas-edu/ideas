@@ -1,4 +1,3 @@
-<br/>
 <table>
 	<tr valign="top"><td>
 		<table>
@@ -55,8 +54,8 @@
 		<td><input id="truetoets" class="toets" value="p" type="button" onclick='voegin("p", "work")' ></td>
 		<td><input id="falsetoets" class="toets" value="q" type="button" onclick='voegin("q", "work")' ></td>
 		<td><input id="truetoets" class="toets" value="r" type="button" onclick='voegin("r", "work")' ></td>
-		<td><input id="falsetoets" class="toets" value="s" type="button" onclick='voegin("s", "work")' ></td>
-		<td><input id="falsetoets" class="toets" value="t" type="button" onclick='voegin("t", "work")' ></td>
+		<td><input id="spacetoets" class="toets" value=" " type="button" onclick='voegin(" ", "work")' ></td>
+		<td><input id="spacetoets" class="toets" value=" " type="button" onclick='voegin(" ", "work")' ></td>
 		</tr></table>
 	</td></tr>
 </table>       

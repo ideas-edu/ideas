@@ -208,15 +208,15 @@ textarea {
 
 .left {
 	position: absolute;
-	top: 140px;
-	width: 45%
+	top: 115px;
+	width: 55%
 }
 
 .right {
 	position: absolute;
-	top: 140px;
+	top: 115px;
 	right: 0px;
-	width: 45%;
+	width: 40%;
 }
 
 .visible {

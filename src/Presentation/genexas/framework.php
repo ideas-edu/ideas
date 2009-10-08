@@ -53,9 +53,7 @@
 	<!-- <div id="progress">Steps<br>0</div> -->
 	<div id="progress"></div>
 	
-	<br/>
 	<div align="center" width="100%"><br/><?php include("include/keys.php"); ?></div>
-
 
 </div><!-- end div column left -->
 
@@ -71,7 +69,6 @@
 		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">
 	</td></tr></table>
 	
-	<br>
        	<h3><?php print History;?></h3>
 	<div id="history"></div><!-- end div history -->
 	

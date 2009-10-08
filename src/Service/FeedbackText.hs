@@ -15,29 +15,64 @@ module Service.FeedbackText
    ) where
 
 import Control.Arrow
+import Control.Monad
 import Common.Exercise
 import Common.Utils (safeHead, fst3, commaList)
 import Data.Maybe
+import Domain.Logic.Formula (SLogic)
 import Domain.Logic.FeedbackText
 import Domain.Logic.Exercises (dnfExercise)
+import Domain.Logic.Difference (difference)
 import Service.TypedAbstractService
 import Common.Context
+import Common.Exercise
 import Common.Transformation (name, Rule)
 import Text.Parsing (errorToPositions)
+
+-- Quick hack for determining subterms
+coerceLogic :: Exercise a -> a -> Maybe SLogic
+coerceLogic ex a =
+   case parser dnfExercise (prettyPrinter ex a) of
+      Right p | exerciseCode ex == exerciseCode dnfExercise
+        -> Just p
+      _ -> Nothing
+
+youRewroteInto :: State a -> a -> Maybe String
+youRewroteInto = rewriteIntoText "You rewrote "
+
+useToRewrite :: Rule (Context a) -> State a -> a -> Maybe String
+useToRewrite rule old = rewriteIntoText txt old
+ where
+   txt = "Use " ++ showRule (exerciseCode $ exercise old) rule
+         ++ " to rewrite "
+
+rewriteIntoText :: String -> State a -> a -> Maybe String
+rewriteIntoText txt old a = do 
+   p <- coerceLogic (exercise old) (fromContext $ context old)
+   q <- coerceLogic (exercise old) a
+   (p1, q1) <- difference p q
+   return $ txt ++ prettyPrinter dnfExercise p1 
+         ++ " into " ++ prettyPrinter dnfExercise q1 ++ ". "
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
 -- to go back to the previous state (False)
-feedbackLogic :: State a -> Result a -> (String, Bool)
-feedbackLogic old result =
+feedbackLogic :: State a -> a -> Result a -> (String, Bool)
+feedbackLogic old a result =
    case result of
-      Buggy rs        -> (feedbackBuggy (ready old) rs, False)
-      NotEquivalent   -> (feedbackNotEquivalent (ready old), False)
+      Buggy rs        -> ( fromMaybe ""  (youRewroteInto old a) ++ 
+                           feedbackBuggy (ready old) rs
+                         , False)
+      NotEquivalent   -> ( fromMaybe ""  (youRewroteInto old a) ++
+                           feedbackNotEquivalent (ready old)
+                         , False)
       Ok rs _
          | null rs    -> (feedbackSame, False)
          | otherwise  -> feedbackOk rs
       Detour rs _     -> feedbackDetour (ready old) (expected old) rs
-      Unknown _       -> (feedbackUnknown (ready old), False)
+      Unknown _       -> ( fromMaybe ""  (youRewroteInto old a) ++ 
+                           feedbackUnknown (ready old)
+                         , False)
  where
    expected = fmap fst3 . safeHead . allfirsts
 
@@ -58,7 +93,10 @@ derivationtext st = map (first (showRule (getCode st))) (derivation st)
 onefirsttext :: State a -> (Bool, String, State a)
 onefirsttext state =
    case allfirsts state of
-      (r, _, s):_ -> (True, "Use " ++ showRule (getCode state) r, s)
+      (r, _, s):_ -> 
+         case useToRewrite r state (fromContext $ context s) of
+            Just txt -> (True, txt, s)
+            Nothing  -> (True, "Use " ++ showRule (getCode state) r, s)
       _ -> (False, "Sorry, no hint available", state)
 
 submittext :: State a -> String -> (Bool, String, State a)
@@ -72,7 +110,7 @@ submittext state txt =
          in (False, msg, state)
       Right a  -> 
          let result = submit state a
-             (txt, b) = feedbackLogic state result
+             (txt, b) = feedbackLogic state a result
          in case getResultState result of
                Just new | b -> (True, txt, resetStateIfNeeded new)
                _ -> (False, txt, state)

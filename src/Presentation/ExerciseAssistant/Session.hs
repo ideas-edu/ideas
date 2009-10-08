@@ -134,7 +134,7 @@ submitTextLogic txt ref = do
       Right term -> do
          let old = currentState d
              result = TAS.submit old term
-         case (feedbackLogic old result, TAS.getResultState result) of
+         case (feedbackLogic old term result, TAS.getResultState result) of
             ((txt, True), Just n) -> do
                -- make sure that new has a prefix (because of possible detour)
                -- when resetting the prefix, also make sure that the context is refreshed

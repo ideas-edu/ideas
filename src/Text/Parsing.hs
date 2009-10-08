@@ -138,29 +138,23 @@ type CharParser  = Parser Char
 type TokenParser = Parser UU.Token
 
 instance (UU.Symbol s, Ord s) => UU.IsParser (Parser s) s where
-   (<*>)       = liftP2 (UU.<*>)
-   (<* )       = liftP2 (UU.<*)
-   ( *>)       = liftP2 (UU.*>)
-   (<|>)       = liftP2 (UU.<|>) 
-   (<$>)       = liftPr (UU.<$>)
-   (<$)        = liftPr (UU.<$ ) 
-   pSucceed    = P . UU.pSucceed
-   pFail       = P UU.pFail
-   pLow        = P . UU.pLow
-   pSym        = P . UU.pSym
-   pRange      = liftF2 UU.pRange
-   pCostRange  = liftF3 UU.pCostRange
-   pCostSym    = liftF3 UU.pCostSym
-   getfirsts   = UU.getfirsts . unP
-   setfirsts e = P . UU.setfirsts e . unP
-   getzerop    = fmap P . UU.getzerop . unP
-   getonep     = fmap P . UU.getonep  . unP 
-
--- local helper functions
-liftP2 f ~(P p) ~(P q) = P (f p q)
-liftPr f a ~(P p) = P (f a p)
-liftF2 f a   = P . f a
-liftF3 f a b = P . f a b
+   ~(P p) <*>  ~(P q)  = P (p UU.<*> q)
+   ~(P p) <*   ~(P q)  = P (p UU.<*  q)
+   ~(P p)  *>  ~(P q)  = P (p  UU.*> q)
+   ~(P p) <|>  ~(P q)  = P (p UU.<|> q) 
+   a      <$>  ~(P p)  = P (a UU.<$> p)
+   a      <$   ~(P p)  = P (a UU.<$  p) 
+   pSucceed            = P . UU.pSucceed
+   pFail               = P UU.pFail
+   pLow                = P . UU.pLow
+   pSym                = P . UU.pSym
+   pRange a            = P . UU.pRange a
+   pCostRange a b      = P . UU.pCostRange a b
+   pCostSym a b        = P . UU.pCostSym a b
+   getfirsts           = UU.getfirsts . unP
+   setfirsts e         = P . UU.setfirsts e . unP
+   getzerop            = fmap P . UU.getzerop . unP
+   getonep             = fmap P . UU.getonep  . unP 
 
 type Message s = (UU.Expecting s, Maybe s)
 

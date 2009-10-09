@@ -24,7 +24,10 @@
 <input class="menu" type="button" id="aboutButton" value="<?php print About;?>" >
 <!-- <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" > -->
 <input class="menu" type="button" onclick="window.open('docs/rules.pdf','','')" value="<?php print Rules;?>" >
-<input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
+<input type="radio" name="difficulty" value="Easy" id="Easy">Easy</input>
+	<input type="radio" name="difficulty" value="Normal" id="Normal" checked="checked">Normal</input>
+   <input type="radio" name="difficulty" value="Difficult" id="Difficult">Difficult</input>
+	<input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
 <br class="clear" >
 
 <div class="column left">

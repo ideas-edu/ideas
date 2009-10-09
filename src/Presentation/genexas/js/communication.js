@@ -3,13 +3,24 @@
  * A function to call the service and a display function
  */
 function generate(caller) {
-	ss_generate(caller, 5, displayExercise);
+	ss_generate(caller, getDifficulty(), displayExercise);
 }
 
 function displayNewExercise(state) {
     generate('new button');
     clearFeedback();
 }
+
+function getDifficulty() {
+   var diff = 2;
+   if ($('Easy').checked) {
+     diff = 1;
+   } else if ($('Difficult').checked) {
+     diff = 3;
+   }
+   return diff;
+}
+
  /**
   * Display new exercise.
   * Updates the exercise area, the work area and the history area.

@@ -42,6 +42,7 @@ function init() {
 	if (id && id != "421") {
 	   $('progress').hide();
 	}
+	$('work').focus();
 	generate('init');
 }
 

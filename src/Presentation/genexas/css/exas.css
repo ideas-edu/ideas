@@ -167,16 +167,11 @@ select {
 	font-weight: 800;
 	background-color: #CCCC99;
 }
-.menu {
-	margin-bottom: 20px;
-	display: inline; 
+
+.topmenu {
 	float: right;
 	margin-right: 20px;
-	background-color: #CCCC99;
-	position: relative;
 	font-size: small;
-	font-weight: 800;
-	top: 0px;
 }
 
 .helparea {

@@ -55,16 +55,24 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 parseLogicPars :: String -> Either SyntaxError (Ranged SLogic)
 parseLogicPars s
    = either Left suspiciousVariable 
-   $ left (ambiguousOperators s)
+   $ left (ambiguousOperators parseLogic s)
    $ analyseAndParse (pLogicGen asciiTuple)
    $ scanWith logicScanner s
 
 parseLogicUnicodePars :: String -> Either SyntaxError (Ranged SLogic)
 parseLogicUnicodePars s 
    = either Left suspiciousVariable 
-   $ left (ambiguousOperators s)
+   $ left (ambiguousOperators (parseLogic . concatMap f) s)
    $ analyseAndParse (pLogicGen unicodeTuple)
    $ scanWith logicUnicodeScanner s
+ where
+   -- quick fix (since we only need to know whether the parser succeeds)
+   f c | [c] == andUSym   = andASym
+       | [c] == orUSym    = orASym
+       | [c] == notUSym   = notASym
+       | [c] == implUSym  = implASym
+       | [c] == equivUSym = equivASym
+       | otherwise        = [c]
 
 pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
  where
@@ -97,10 +105,10 @@ analyseAndParse p ts =
                      (_, m:_) -> Left (fromMessage m)
                      (a, _)   -> Right a
 
-ambiguousOperators :: String -> SyntaxError -> SyntaxError
-ambiguousOperators s err =
+ambiguousOperators :: (String -> Either a b) -> String -> SyntaxError -> SyntaxError
+ambiguousOperators p s err =
    let msg = ErrorMessage "Ambiguous use of operators (write parentheses)"
-   in either (const err) (const msg) (parseLogic s)
+   in either (const err) (const msg) (p s)
 
 -- Report variables 
 suspiciousVariable :: Ranged SLogic -> Either SyntaxError (Ranged SLogic)

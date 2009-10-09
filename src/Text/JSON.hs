@@ -21,7 +21,9 @@ module Text.JSON
    ) where
 
 import Text.Parsing
+import Text.XML.Unicode (utf8)
 import Common.Utils (indent)
+import Data.Char
 import Data.List (intersperse)
 import Control.Monad
 import Service.Revision (version, revision)
@@ -57,12 +59,22 @@ showCompact :: JSON -> String
 showCompact json =
    case json of
       Number n  -> show n
-      String s  -> show s
+      String s  -> "\"" ++ escape s ++ "\""
       Boolean b -> if b then "true" else "false"
       Array xs  -> squareBrackets $ concat $ intersperse ", " $ map showCompact xs
       Object xs -> let f (k, v) = show k ++ ": " ++ showCompact v
                    in curlyBrackets  $ concat $ intersperse ", " $ map f xs
       Null      -> "null"
+  
+escape :: String -> String
+escape = concatMap f 
+ where
+   f c | ord c == 8743 = map chr [226, 136, 167]
+       | ord c == 8744 = map chr [226, 136, 168]
+       | ord c == 8594 = map chr [226, 134, 146]
+       | ord c == 8596 = map chr [226, 134, 148]
+       | ord c ==  172 = map chr [194, 172]
+       | otherwise = [c]
   
 showPretty :: JSON -> String
 showPretty json =
@@ -145,7 +157,7 @@ parseJSON input =
    json :: TokenParser JSON
    json =  (Number . I) <$> pInteger
        <|> (Number . F) <$> pFraction
-       <|> String <$> pString
+       <|> (String . maybe [] id . utf8) <$> pString
        <|> Boolean True <$ pKey "true"
        <|> Boolean False <$ pKey "false"
        <|> Array <$> pBracks (pCommas json)

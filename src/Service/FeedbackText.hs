@@ -28,6 +28,7 @@ import Common.Context
 import Common.Exercise
 import Common.Transformation (name, Rule)
 import Text.Parsing (errorToPositions)
+import Data.Char
 
 -- Quick hack for determining subterms
 coerceLogic :: Exercise a -> a -> Maybe SLogic

@@ -14,7 +14,7 @@
 module Text.XML.Unicode 
    ( isExtender, isLetter, isDigit, isCombiningChar
    , extenderMap, letterMap, digitMap, combiningCharMap
-   , decoding
+   , decoding, utf8
    ) where
 
 import Data.Char (chr, ord)

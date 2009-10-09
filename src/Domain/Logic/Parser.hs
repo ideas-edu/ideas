@@ -54,17 +54,17 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | parentheses are permitted
 parseLogicPars :: String -> Either SyntaxError (Ranged SLogic)
 parseLogicPars s
-   = left ambiguousOperators
+   = either Left suspiciousVariable 
+   $ left (ambiguousOperators s)
    $ analyseAndParse (pLogicGen asciiTuple)
    $ scanWith logicScanner s
- where
-   ambiguousOperators err =
-      let msg = ErrorMessage "Ambiguous use of operators (write parentheses)"
-      in either (const err) (const msg) (parseLogic s)
 
 parseLogicUnicodePars :: String -> Either SyntaxError (Ranged SLogic)
-parseLogicUnicodePars = analyseAndParse (pLogicGen unicodeTuple)
-                      . scanWith logicUnicodeScanner
+parseLogicUnicodePars s 
+   = either Left suspiciousVariable 
+   $ left (ambiguousOperators s)
+   $ analyseAndParse (pLogicGen unicodeTuple)
+   $ scanWith logicUnicodeScanner s
 
 pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
  where
@@ -78,16 +78,17 @@ pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
 basicWithPos :: Parser Token (Ranged SLogic) -> Parser Token (Ranged SLogic)
 basicWithPos = basicWithPosGen ("~", "T", "F")
 
-basicWithPosGen (nt, tr, fl) p = 
+basicWithPosGen t@(nt, tr, fl) p = 
    (\(s, r) -> toRanged (Var s) r) <$> pVarid
    <|> pParens p
    <|> toRanged T  <$> pKey tr
    <|> toRanged F  <$> pKey fl
-   <|> unaryOp Not <$> pKey nt <*> basicWithPos p
+   <|> unaryOp Not <$> pKey nt <*> basicWithPosGen t p
 
 -----------------------------------------------------------
---- Helper-function for parentheses analyses
+--- Helper-functions for syntax warnings
 
+-- analyze parentheses
 analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
 analyseAndParse p ts =
    case checkParentheses ts of
@@ -95,6 +96,21 @@ analyseAndParse p ts =
       Nothing  -> case parse p ts of
                      (_, m:_) -> Left (fromMessage m)
                      (a, _)   -> Right a
+
+ambiguousOperators :: String -> SyntaxError -> SyntaxError
+ambiguousOperators s err =
+   let msg = ErrorMessage "Ambiguous use of operators (write parentheses)"
+   in either (const err) (const msg) (parseLogic s)
+
+-- Report variables 
+suspiciousVariable :: Ranged SLogic -> Either SyntaxError (Ranged SLogic)
+suspiciousVariable r =
+   case filter p (varsLogic (fromRanged r)) of
+      v:_ -> Left $ ErrorMessage $ "Unexpected variable " ++ v
+                 ++ ". Did you forget an operator?" 
+      _   -> Right r
+ where
+   p xs = length xs > 1 && all (`elem` "pqr") xs
 
 -----------------------------------------------------------
 --- Pretty-Printer

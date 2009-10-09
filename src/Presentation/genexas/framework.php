@@ -55,10 +55,7 @@
 		</tr>
 	</table>
 	
-	<div id="progress"></div>
-	
 	<div align="center" width="100%"><br/><?php include("include/keys.php"); ?></div>
-
 </div>
 
 <div class="column right">

@@ -169,7 +169,6 @@ historyKeeper.newSnapshot = function (state) {
 	snapshot.set('feedback', $('feedback').innerHTML);
 	snapshot.set('history', $('history').innerHTML);
 	snapshot.set('work', $('work').value);
-	snapshot.set('steps', $('progress').innerHTML);
 	snapshot.set('state', state);
 	historyKeeper.addSnapshot(snapshot);
 	
@@ -183,7 +182,6 @@ historyKeeper.update = function (state) {
 	snapshot.set('feedback', $('feedback').innerHTML);
 	snapshot.set('history', $('history').innerHTML);
 	snapshot.set('work', $('work').value);
-	snapshot.set('steps', $('progress').innerHTML);
 	snapshot.set('state', state);
 	historyKeeper.addSnapshot(snapshot);
 	
@@ -215,7 +213,6 @@ function CopyContent(state, location) {
 	this.location = location;
 }
 function goBack() {
-  //if (historyKeeper.snapshotPointer > 0) {
   if (historyKeeper.historyList.length > 1  ) {
     var stateObject = historyKeeper.historyList[historyKeeper.historyList.length-1];
     if ($('work').value == stateObject.get('state').exercise) { // student didn't touch expression
@@ -224,22 +221,6 @@ function goBack() {
     } 
   }      
   fillAreas();
-}
-
-function goForward() {
-   alert('goForward()');
-   if ((historyKeeper.snapshotPointer +1) < historyKeeper.historyList.length) {
-		++(historyKeeper.snapshotPointer);
-		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
-		fillAreas(stateObject);
-		if ((historyKeeper.snapshotPointer + 1) == historyKeeper.historyList.length) {
-			$('forwardbutton').hide();
-		}
-		$('undobutton').show();
-	}
-	else {
-		alert('You can\'t move forward unless you have been there!');
-	}
 }
 
 function fillAreas() {

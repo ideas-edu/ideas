@@ -40,8 +40,7 @@ function getStudentNumber() {
 function getLocal() {
 	global $studentid;
 	if ($studentid && ($studentid != "")) {
-		$content = "$('progress').invoke('hide');";
-		return '<script type="javascript">'.$content.'</script>';
+	   return '<script type="javascript">'.$content.'</script>';
 	}
 	else return "";
 }

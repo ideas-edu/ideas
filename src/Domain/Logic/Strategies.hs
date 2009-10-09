@@ -16,7 +16,8 @@ import Prelude hiding (repeat)
 import Domain.Logic.Rules
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Formula
-import Common.Context (Context, liftToContext)
+import Common.Context (Context, liftToContext, fromContext)
+import Common.Rewriting (isOperator)
 import Common.Transformation
 import Common.Strategy
 
@@ -25,6 +26,7 @@ import Common.Strategy
 
 dnfStrategyDWA :: LabeledStrategy (Context SLogic)
 dnfStrategyDWA =  label "Bring to dnf (DWA)" $ 
+   somewhereOr $
    repeat $  label "Simplify"                            simplify
           |> label "Eliminate implications/equivalences" eliminateImplEquiv
           |> label "Eliminate nots"                      eliminateNots
@@ -45,6 +47,13 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
        ]
     orToTop = somewhere $ useRules 
        [ generalRuleAndOverOr, ruleAndOverOr ]
+
+-- A specialized variant of the somewhere traversal combinator. Apply 
+-- the strategy only at (top-level) disjuncts 
+somewhereOr :: IsStrategy f => f (Context SLogic) -> Strategy (Context SLogic)
+somewhereOr s =
+   let isOr = isOperator orOperator . fromContext
+   in fix $ \this -> s <|> check isOr <*> once this
 
 -----------------------------------------------------------------------------
 -- To DNF, in four steps

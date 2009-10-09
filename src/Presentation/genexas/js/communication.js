@@ -24,12 +24,6 @@ function displayExercise(state) {
 	$('work').value = task;
 	$('history').update(task);
 	// call a Strategytool-service
-/*	ss_getRemaining(state, function(number) {
-			$('progress').update('Steps<br> ' + number); 
-			// take a snapshot to be able to go back later
-			historyKeeper.newSnapshot(state);
-		} );
-*/		
 	historyKeeper.newSnapshot(state);
 	// adjust the dimensions of page elements to the generated exercise
 	adjustHeight($('exercise'), task, 40, 40);
@@ -64,7 +58,7 @@ function getHint() {
 function displayHint(hint) {
 	closeallhelp();
 	var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
-	var expression = presenteertekst((s.get('state')).exercise);
+	var expression = (s.get('state')).exercise;
 	var newText = '';
 	if (hint[0]) {
 		newText =   '<p><strong>' + hint[1] + '</strong></p>';

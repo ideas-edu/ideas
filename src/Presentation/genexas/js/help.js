@@ -51,7 +51,7 @@ function setKeepFeedback() {
   */ 
 String.prototype.htmlToAscii = function() {
     var s = this.replace(/\\/g, '\\\\');
-    s = werkveldNaarExas(s);
+//    s = werkveldNaarExas(s);
     return s;
 /*	this.replace(/&gt;/g, '>');
 	resultstring = resultstring.replace(/&lt;/g, '<');

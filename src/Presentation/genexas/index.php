@@ -27,7 +27,7 @@ function about() {
 }
 include_once("include/en.php");
 function getKind() {
-	return "logic.dnf";
+	return "logic.dnf-unicode";
 }
 function getStudentNumber() {
 	global $studentid;

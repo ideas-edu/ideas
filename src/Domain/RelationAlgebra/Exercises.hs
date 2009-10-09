@@ -40,7 +40,7 @@ cnfExercise = testableExercise
    , isReady        = ready (ruleset cnfExercise)
    , randomExercise = let ok p = let n = steps p
                                  in n >= 2 && n <= 4
-                      in useGenerator ok (templateGenerator 1)
+                      in useGenerator ok (\_ -> templateGenerator 1)
    }
 
 steps :: RelAlg -> Int

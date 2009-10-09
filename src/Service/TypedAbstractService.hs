@@ -54,7 +54,7 @@ generate ex level = do
    return (generateWith stdgen ex level)
 
 generateWith :: StdGen -> Exercise a -> Int -> State a
-generateWith rng ex _ = emptyState ex (randomTermWith rng ex)
+generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
 
 derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state = fromMaybe (error "derivation") $ do

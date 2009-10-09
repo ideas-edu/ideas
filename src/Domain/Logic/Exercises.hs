@@ -48,7 +48,7 @@ dnfExercise = makeExercise
    , testGenerator  = Just (restrictGenerator suitable generateLogic)
    , randomExercise = let ok p = let n = steps p
                                  in countEquivalences p <= 2 && n >= 4 && n <= 12
-                         in useGenerator ok generateLogic
+                      in useGenerator ok (\level -> generateLogic)
    }
 
 -- Direct support for unicode characters

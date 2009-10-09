@@ -61,7 +61,7 @@ data Exercise a = Exercise
    , differences    :: a -> a -> [([Int], TreeDiff)]
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
-   , randomExercise :: Maybe (StdGen -> a)
+   , randomExercise :: Maybe (StdGen -> Int -> a)
    , examples       :: [a]
    }
    
@@ -123,16 +123,17 @@ ruleset ex = nub (sortBy cmp list)
    list = rulesInStrategy (strategy ex) ++ extraRules ex
    cmp a b = name a `compare` name b
  
-simpleGenerator :: Gen a -> Maybe (StdGen -> a) 
-simpleGenerator = useGenerator (const True)
+simpleGenerator :: Gen a -> Maybe (StdGen -> Int -> a) 
+simpleGenerator = useGenerator (const True) . const
 
-useGenerator :: (a -> Bool) -> Gen a -> Maybe (StdGen -> a) 
+useGenerator :: (a -> Bool) -> (Int -> Gen a) -> Maybe (StdGen -> Int -> a) 
 useGenerator p g = Just f
  where
-   f rng | p a       = a
-         | otherwise = f (snd (next rng))
+   f rng level 
+      | p a       = a
+      | otherwise = f (snd (next rng)) level
     where
-      a = generate 100 rng g 
+      a = generate 100 rng (g level)
 
 restrictGenerator :: (a -> Bool) -> Gen a -> Gen a
 restrictGenerator p g = do
@@ -140,15 +141,15 @@ restrictGenerator p g = do
    if p a then return a 
           else restrictGenerator p g
 
-randomTerm :: Exercise a -> IO a
-randomTerm ex = do
+randomTerm :: Int -> Exercise a -> IO a
+randomTerm level ex = do
    rng <- newStdGen
-   return (randomTermWith rng ex)
+   return (randomTermWith rng level ex)
 
-randomTermWith :: StdGen -> Exercise a -> a
-randomTermWith rng ex = 
+randomTermWith :: StdGen -> Int -> Exercise a -> a
+randomTermWith rng level ex = 
    case randomExercise ex of
-      Just f  -> f rng
+      Just f  -> f rng level
       Nothing
          | null xs   -> error "randomTermWith: no generator" 
          | otherwise -> 

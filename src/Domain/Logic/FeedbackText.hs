@@ -157,6 +157,8 @@ ruleText r
    | r `inGroup`"Idempotency" = return "idempotency"
    | r `inGroup`"Absorption" = return "absorption"
    | r `inGroup`"De Morgan" = return "De Morgan"
+   | r `inGroup`"InverseDeMorgan" = return "De Morgan"
+   | r `inGroup`"InverseDistr" = return "distributivity"
     -- TODO Josje: aanvullen met alle regels (ook die ook in de DWA strategie voorkomen)
    | otherwise = Nothing
 -------------------------------------------------------------------------

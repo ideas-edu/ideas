@@ -26,7 +26,7 @@ logicRules = concat
    , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
    , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
    , groupDistributionOrOverAnd, groupDistributionAndOverOr
-   , inverseRules
+   , groupInverseDeMorgan,groupInverseDistr
    ]
 
 -----------------------------------------------------------------------------
@@ -64,7 +64,11 @@ groupDistributionOrOverAnd = makeGroup "DistributionOrOverAnd"
    [generalRuleOrOverAnd, ruleOrOverAnd ]
 groupDistributionAndOverOr = makeGroup "DistributionAndOverOr"
    [generalRuleAndOverOr, ruleAndOverOr ]
-
+groupInverseDeMorgan = makeGroup "InverseDeMorgan" 
+    [ inverseDeMorganOr, inverseDeMorganAnd]
+groupInverseDistr = makeGroup "InverseDistr"
+    [ inverseAndOverOr, inverseOrOverAnd]
+   
 -----------------------------------------------------------------------------
 -- Commutativity
 

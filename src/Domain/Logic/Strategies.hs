@@ -26,11 +26,11 @@ import Common.Strategy
 
 dnfStrategyDWA :: LabeledStrategy (Context SLogic)
 dnfStrategyDWA =  label "Bring to dnf (DWA)" $ 
-   somewhereOr $
-   repeat $  label "Simplify"                            simplify
-          |> label "Eliminate implications/equivalences" eliminateImplEquiv
-          |> label "Eliminate nots"                      eliminateNots
-          |> label "Move ors to top"                     orToTop
+   repeat $ somewhereOr $  
+      label "Simplify"                            simplify
+      |> label "Eliminate implications/equivalences" eliminateImplEquiv
+      |> label "Eliminate nots"                      eliminateNots
+      |> label "Move ors to top"                     orToTop
  where
     simplify =  somewhere $ useRules
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd

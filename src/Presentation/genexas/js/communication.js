@@ -29,14 +29,11 @@ function getDifficulty() {
 function displayExercise(state) {
 	closeallhelp();
 	historyKeeper.clear();
-	//setInvisible($('copybutton'));
 	var task = state.exercise;
 	$('exercise').update(task);
 	$('work').value = task;
 	$('history').update(task);
-	// call a Strategytool-service
 	historyKeeper.newSnapshot(state);
-	// adjust the dimensions of page elements to the generated exercise
 	adjustHeight($('exercise'), task, 40, 40);
 	adjustRows($('work'), task, 40);
 }
@@ -78,8 +75,6 @@ function displayHint(hint) {
 		newText =  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
 	}
         addToFeedback(newText);
-	// historyKeeper.addFeedback();
-	// updateDerivation();
 }
 /**
  * React to the next button
@@ -103,18 +98,8 @@ function getNext() {
         }
 
         addToFeedback(newText);
-
-        /* if (valid) {
-                var copyContent = new CopyContent(state, state[3]);
-		historyKeeper.addFeedback();
-		historyKeeper.addCopy(copyContent);
-	}
-	else {
-		historyKeeper.addFeedback();
-	}
-	$('history').scrollTop = $('history').scrollHeight;
-        updateDerivation(); */
 }
+
 /**
  * React to the derivation button
  */
@@ -135,7 +120,6 @@ function getDerivation() {
 	        newText += '<br>';
 	}
 	addToFeedback(newText);
-	// historyKeeper.addFeedback();
 }
  /**
  * React to the submit button
@@ -150,17 +134,8 @@ function getDerivation() {
 	ss_getFeedback(caller, s.get('state'), workExpression, displayFeedback);
  }
 function displayFeedback(result, state) {
-	// always paste the result
 	var newText = '<p>' + result[1] + '</p>';
         addToFeedback(newText);
-/*	if (result[0]) {
-		$('history').update($('history').innerHTML + '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp; ' + state.exercise);
-		// this call to remaining steps has a side-effect
-                ss_getRemaining(state, function(number) {$('progress').innerHTML = 'Steps<br> ' + number; historyKeeper.update(state);});
-	}
-	else {
-//		setVisible($('copybutton'));
-	} */
 	if (result[0]) {
    	   historyKeeper.newSnapshot(state);
    	   updateDerivation();

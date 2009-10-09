@@ -91,7 +91,6 @@ function controleer(e) {	// eerst  de character code ophalen
 				return false;
 		}
 	}
-	//e.returnValue = true;
 	return true;
 }
 

@@ -1,7 +1,3 @@
-/* *
-  * This file contains t some help functions, and
-  * several functions for the back and forward buttons
-  */
 /**
   * Global variable: keepFeedback
   * made global, so we wont have to check the value of the radiobutton each time
@@ -34,9 +30,9 @@ function setKeepFeedback() {
 	length = Math.floor(length) + 1;
 	length = length*height;
 	element.setStyle({height: length + 'px'});
-	//element.style.height = length + 'px';
 }
- /***
+
+/***
  * adjust the number of rows  with respect to the length of the expression
  * row is the number of characters in a row
  */
@@ -46,16 +42,13 @@ function setKeepFeedback() {
 	length = Math.floor(length) + 2;
 	element.rows =  length ;
 }
+
 /**
  * From HTML characters to ascii and back
   */ 
 String.prototype.htmlToAscii = function() {
     var s = this.replace(/\\/g, '\\\\');
-//    s = werkveldNaarExas(s);
     return s;
-/*	this.replace(/&gt;/g, '>');
-	resultstring = resultstring.replace(/&lt;/g, '<');
-	resultstring = resultstring.replace(/\\/g, '\\\\'); */
 }
 
 String.prototype.asciiToHtml = function() {
@@ -74,6 +67,7 @@ function writeArray(list) {
 	}
 	return elements;
 }
+
 /**
  * clear the feedback area
  */
@@ -90,6 +84,7 @@ function parse(json){
     }
     throw new SyntaxError('parseJSON');
 }
+
 /**
  * Een datatype voor regels en de expressie die het resultaat is van het toepassen van die regel
  */
@@ -101,6 +96,7 @@ function parse(json){
 /* * 
  *Undo functionality
 */
+
 /**
  * State is the same datatype as is used in the services
   * Note: exercise is in ASCII form, exectly how we got it from service.cgi
@@ -111,6 +107,7 @@ function State(id, prefix, exercise, simpleContext) {
 	this.exercise = exercise;
 	this.simpleContext = simpleContext;
 }
+
 /**
  * a snapshot contains:
  * - exercise. Is the exercise that is to be solved, and will stay the same until a new exercise is generated
@@ -139,8 +136,6 @@ historyKeeper.snapshotPointer = -1;
 historyKeeper.clear = function() {
 	historyKeeper.historyList = new Array();
 	historyKeeper.snapshotPointer = -1;
-	//if (visible($('undobutton'))) hide($('undobutton'));
-	//if (visible($('forwardbutton'))) hide($('forwardbutton'));
 }
 /**
  * function to add the current snapshot to the history 
@@ -176,9 +171,6 @@ historyKeeper.newSnapshot = function (state) {
 	snapshot.set('work', $('work').value);
 	snapshot.set('steps', $('progress').innerHTML);
 	snapshot.set('state', state);
-/* 	if (studentid && studentid != "") {
-		snapshot.get('state').id = studentid;
-	} */
 	historyKeeper.addSnapshot(snapshot);
 	
 }
@@ -193,9 +185,6 @@ historyKeeper.update = function (state) {
 	snapshot.set('work', $('work').value);
 	snapshot.set('steps', $('progress').innerHTML);
 	snapshot.set('state', state);
-/* 	if (studentid && studentid != "") {
-		snapshot.get('state').id = studentid;
-	} */
 	historyKeeper.addSnapshot(snapshot);
 	
 }
@@ -212,11 +201,9 @@ historyKeeper.addFeedback = function () {
 }
 historyKeeper.addCopy = function(copycontent) {
 	snapshot.set('copy', copycontent);
-//	$('copybutton').show();
 }
 historyKeeper.removeCopy = function() {
 	snapshot.unset('copy');
-//	$('copybutton').hide();
 }
  /**
   * When the user has asked a possible next step, we receive a state and a location. 
@@ -225,9 +212,6 @@ historyKeeper.removeCopy = function() {
   */
 function CopyContent(state, location) {
 	this.state = state;
-/*	if (studentid && studentid != "") {
-		this.state.id = studentid;
-	} */
 	this.location = location;
 }
 function goBack() {
@@ -236,19 +220,15 @@ function goBack() {
     var stateObject = historyKeeper.historyList[historyKeeper.historyList.length-1];
     if ($('work').value == stateObject.get('state').exercise) { // student didn't touch expression
       -- (historyKeeper.snapshotPointer);
-      //var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
       historyKeeper.historyList.pop();
-      /* if (historyKeeper.snapshotPointer == 0) {
-	  $('undobutton').hide();
-	  }
-	  $('forwardbutton').show(); */
     } 
   }      
   fillAreas();
 }
 
 function goForward() {
-	if ((historyKeeper.snapshotPointer +1) < historyKeeper.historyList.length) {
+   alert('goForward()');
+   if ((historyKeeper.snapshotPointer +1) < historyKeeper.historyList.length) {
 		++(historyKeeper.snapshotPointer);
 		var stateObject = historyKeeper.historyList[historyKeeper.snapshotPointer];
 		fillAreas(stateObject);
@@ -263,15 +243,8 @@ function goForward() {
 }
 
 function fillAreas() {
-//	$('exercise').update(stateObject.get('state').exercise);
-//	$('work').value = stateObject.get('work');
         var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
 	$('work').value = s.get('state').exercise;
-//	$('feedback').update(stateObject.get('feedback'));
-//	$('history').update(stateObject.get('history'));
-//	$('progress').update(stateObject.get('steps'));
-//	adjustHeight($('exercise'), $('exercise').innerHTML, 40, 40);
-//	adjustRows($('work'), $('work').value, 40);
         updateDerivation();
 }
 
@@ -288,7 +261,6 @@ function updateDerivation() {
    }
    $('history').update(text);
    $('history').scrollTop = $('history').scrollHeight;
-   //alert('updateDerivation');
 }
 
 // will be auto step
@@ -296,17 +268,6 @@ function updateDerivation() {
 function copy() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
         ss_getNext('auto step button', s.get('state'), autoHandler);
-
-	/* if (snapshot.get('copy')) {
-		$('work').value = snapshot.get('copy').state.exercise;
-	}
-	else {
-		if (snapshot.get('work')) {
-			$('work').value = snapshot.get('work') ;
-		}
-	}
-	historyKeeper.removeCopy();
-        updateDerivation(); */
 }
 function autoHandler(rule, valid, state) {
         addToFeedback('<strong>Auto step: </strong>' + rule + ' (has been done)');

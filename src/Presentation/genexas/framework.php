@@ -22,21 +22,23 @@
 <h1>Exercise Assistant Online</h1>
 <div id="exasdiv">
 <input class="menu" type="button" id="aboutButton" value="<?php print About;?>" >
-<!-- <input class="menu" type="button" id="helpButton" value="<?php print Help;?>" > -->
+
 <input class="menu" type="button" onclick="window.open('docs/rules.pdf','','')" value="<?php print Rules;?>" >
-<input type="radio" name="difficulty" value="Easy" id="Easy">Easy</input>
-	<input type="radio" name="difficulty" value="Normal" id="Normal" checked="checked">Normal</input>
+
+   <input type="radio" name="difficulty" value="Easy" id="Easy">Easy</input>
+   <input type="radio" name="difficulty" value="Normal" id="Normal" checked="checked">Normal</input>
    <input type="radio" name="difficulty" value="Difficult" id="Difficult">Difficult</input>
-	<input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
+   
+   <input class="menu" type="button" id="generateButton" value="<?php print NewExercise;?>" >
+
 <br class="clear" >
 
 <div class="column left">
 	<h3><?php print Exercise;?></h3>
-	<div id="exercise" ></div><!-- end div exercise -->
+	<div id="exercise" ></div>
 
 	<h3><?php print WorkArea;?></h3>
 
-<!--	<textarea id="work" rows="2" cols="40" ></textarea> -->
 	<input type="text" id="work" rows="2" cols="40"/>
 	<table style="margin-left: 20px;" width="500px">
 		<tr>
@@ -53,45 +55,43 @@
 		</tr>
 	</table>
 	
-	<!-- <div id="progress">Steps<br>0</div> -->
 	<div id="progress"></div>
 	
 	<div align="center" width="100%"><br/><?php include("include/keys.php"); ?></div>
 
-</div><!-- end div column left -->
+</div>
 
 <div class="column right">
 	<h3><?php print Feedback ?></h3>
-	<div id="feedback" class="clear"><?php print Welcome;?></div><!-- end div feedback -->
+	<div id="feedback" class="clear"><?php print Welcome;?></div>
 	<table><tr><td>
 		&nbsp;&nbsp;<input class="feedbacklabel" type="checkbox" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear">
 		<label class="feedbacklabel" for="feedbackclearchoice"><?php print ChooseClear;?></label>
-<!--	</td><tr><td>
-		<label class="feedbacklabel"><?php print ChooseKeep;?><input type="radio" name="feedbackchoice"  id="feedbackeepchoice" value="choosekeep" ></label> -->
+
 	</td><td>
 		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">
 	</td></tr></table>
 	
        	<h3><?php print History;?></h3>
-	<div id="history"></div><!-- end div history -->
+	<div id="history"></div>
 	
-</div><!-- end div column right -->
+</div>
 
 <div id="rules" class="helparea invisible">
 <input class="helpbutton" id="closerulesButton" type="button" value="<?php print Close;?>" >
 <?php rules();?>
-</div><!-- end div rules -->
+</div>
 
 <div id="help" class="helparea invisible">
 <input class="helpbutton"  id="closehelpButton" type="button" value="<?php print Close;?>" >
 <?php help();?>
-</div><!-- end div help -->
+</div>
 
 <div id="about" class="helparea invisible">
 <input class="helpbutton"  id="closeaboutButton" type="button" value="<?php print Close;?>" >
 <?php about();?>
 
-</div><!-- end div about -->
-</div><!-- end div exas -->
+</div>
+</div>
 </body>
 </html>

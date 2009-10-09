@@ -41,6 +41,11 @@
          "rewriterule": true
       },
       {
+         "name": "BuggyAbsor",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
          "name": "BuggyAssoc",
          "buggy": true,
          "rewriterule": true
@@ -66,7 +71,17 @@
          "rewriterule": true
       },
       {
+         "name": "BuggyDeMorgan5",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
          "name": "BuggyDistr",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyDistrNot",
          "buggy": true,
          "rewriterule": true
       },
@@ -87,6 +102,11 @@
       },
       {
          "name": "BuggyImplElim1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "BuggyImplElim2",
          "buggy": true,
          "rewriterule": true
       },
@@ -166,6 +186,11 @@
          "rewriterule": true
       },
       {
+         "name": "EquivElim3",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
          "name": "EquivSame",
          "buggy": false,
          "rewriterule": true
@@ -196,6 +221,26 @@
          "rewriterule": true
       },
       {
+         "name": "GenAndOverOr",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
+         "name": "GenDeMorganAnd",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
+         "name": "GenDeMorganOr",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
+         "name": "GenOrOverAnd",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
          "name": "IdemEqui",
          "buggy": true,
          "rewriterule": true
@@ -219,6 +264,26 @@
          "name": "ImplSame",
          "buggy": false,
          "rewriterule": true
+      },
+      {
+         "name": "InvAndOverOr",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
+         "name": "InvDeMorganAnd",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
+         "name": "InvDeMorganOr",
+         "buggy": false,
+         "rewriterule": false
+      },
+      {
+         "name": "InvOrOverAnd",
+         "buggy": false,
+         "rewriterule": false
       },
       {
          "name": "NotFalse",
@@ -278,5 +343,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.6 (2246)"
+   "version": "0.5.6 (2306)"
 }

@@ -19,7 +19,6 @@ import Common.Rewriting
 import Common.Uniplate
 import Domain.Logic.Formula
 import Data.Maybe
-import Common.Rewriting.TreeDiff
 import Domain.Logic.Generator()
 
 test = treeDiff ((Var "p" :||: (Var "q" :||: Var "s") :||: Var "s"))

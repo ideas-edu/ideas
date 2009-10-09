@@ -46,13 +46,14 @@ useToRewrite rule old = rewriteIntoText txt old
    txt = "Use " ++ showRule (exerciseCode $ exercise old) rule
          ++ " to rewrite "
 
+-- disabled for now
 rewriteIntoText :: String -> State a -> a -> Maybe String
-rewriteIntoText txt old a = do 
+rewriteIntoText txt old a = Nothing {- do 
    p <- coerceLogic (exercise old) (fromContext $ context old)
    q <- coerceLogic (exercise old) a
    (p1, q1) <- difference p q
    return $ txt ++ prettyPrinter dnfExercise p1 
-         ++ " into " ++ prettyPrinter dnfExercise q1 ++ ". "
+         ++ " into " ++ prettyPrinter dnfExercise q1 ++ ". " -}
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 

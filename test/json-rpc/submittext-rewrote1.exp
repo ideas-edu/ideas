@@ -1,7 +1,7 @@
 {
    "result": [
       false,
-      "Syntax error: Ambiguous use of operators (write parentheses)",
+      "This is incorrect. Press the Back button and try again. You may ask for a hint.",
       [
          "logic.dnf",
          "[]",
@@ -11,5 +11,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.6 (2294)"
+   "version": "0.5.6 (2306)"
 }

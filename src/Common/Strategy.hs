@@ -19,7 +19,7 @@ module Common.Strategy
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
      -- * Running strategies
-   , runStrategy, derivations, runWithSteps, traceStrategy, noLabels
+   , runStrategy, derivations, runWithSteps, traceStrategy, noLabels{-not nice-}
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
@@ -107,9 +107,6 @@ instance Lift (LabeledStrategy) where
 
 -----------------------------------------------------------
 --- Running strategies
-
--- todo's: merge derivations and derivations2, and replace traceStrategy
--- by an IO function
 
 -- | Run a strategy on a term (implementation of the overloaded @applyAll@ function)
 runStrategy :: Strategy a -> a -> [a]

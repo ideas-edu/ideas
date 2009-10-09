@@ -1,8 +1,8 @@
 /**
  * helpfunctie om aan een element van de DOM te komen
  */
-function getElemId(id) { 
-	return document.getElementById(id); 
+function getElemId(id) {
+	return document.getElementById(id);
 }
 
 /**
@@ -19,24 +19,24 @@ function voegin(tekst, id) {
 		prevRange.moveStart("character", -1);
 		insertAtCursor(selectie, tekst);
 		return;
-	} else if (tekstveld.selectionStart || tekstveld.selectionStart == '0') { //MOZILLA/NETSCAPE  
-		var start = tekstveld.selectionStart; 
-		var end   = tekstveld.selectionEnd; 
-		tekstveld.value = tekstveld.value.substr(0, start) 
-		+ tekst 
-		+ tekstveld.value.substr(end, tekstveld.value.length); 
+	} else if (tekstveld.selectionStart || tekstveld.selectionStart == '0') { //MOZILLA/NETSCAPE
+		var start = tekstveld.selectionStart;
+		var end   = tekstveld.selectionEnd;
+		tekstveld.value = tekstveld.value.substr(0, start)
+		+ tekst
+		+ tekstveld.value.substr(end, tekstveld.value.length);
 		tekstveld.selectionStart = start + 1;
 		tekstveld.selectionEnd = start + tekst.length;
-		return;		
+		return;
 	} else {
 	  tekstveld.value += tekst;
 	}
  }
- 
+
 /**
  * Wordt aangeroepen vanuit voegin
 * doet het eigenlijke werk
-*/ 
+*/
 function insertAtCursor(range, tekst) {
 	range.text = tekst;
 	range.collapse(false);
@@ -44,9 +44,9 @@ function insertAtCursor(range, tekst) {
 }
 
 // wordt aangeroepen wanneer de gebruiker in het werkveld typt
-function controleer(e) {	// eerst  de character code ophalen	
+function controleer(e) {	// eerst  de character code ophalen
 	e = getEvent(e);
-	var code = getCode(e);	
+	var code = getCode(e);
 	if (code == 13) {
 		getFeedback('enter key');
 		stop(e);
@@ -55,7 +55,7 @@ function controleer(e) {	// eerst  de character code ophalen
 	else {
 		switch (code) {
 			// - voor negatie
-			case 45 : 
+			case 45 :
 				voegin(String.fromCharCode(172), "work");
 				stop(e);
 				return false;
@@ -83,8 +83,11 @@ function controleer(e) {	// eerst  de character code ophalen
 			case 112 : case 113 : case 114 : case 32 : case 84 : case 70 : case 40 : case 41 :
 			     	 return true;
 			// speciale navigatie toetsen, zoals pijltjes, backspace, home
-                        case 37 : case 39 : case 46 : case 8 : case 35 : case 36 : 
+                        case 37 : case 39 : case 46 : case 8 : case 35 : case 36 :
                                  return true;
+		        // knippen en plakken
+			case 99 : case 118 : case 120 :
+                                 if (e.ctrlKey || e.metaKey) return true;
                         // drop alle andere invoer
 			default :
 				stop(e);
@@ -103,7 +106,7 @@ function addEventSimple(object,event,fn) {
         else if (object.attachEvent)
                 object.attachEvent('on'+event,fn);
 }
-						  
+
 function removeEventSimple(object,event,fn) {
         if (object.removeEventListener)
 	        object.removeEventListener(event,fn,false);
@@ -116,7 +119,7 @@ function removeEventSimple(object,event,fn) {
  */
 function getEvent(event) {
 	if (typeof event == "undefined") {
-		var event = window.event;	
+		var event = window.event;
 	}
 	return event;
 }
@@ -128,11 +131,11 @@ function getCode(event) {
 	var code;
 	if (event.keyCode) {
 		// Opera en IE
-		code = event.keyCode;	
+		code = event.keyCode;
 	}
 	else {
 		// Firefox
-		code = event.which;	
+		code = event.which;
 	}
 	return code;
 }
@@ -151,7 +154,7 @@ function stop(event) {
 
 /**
  * Om cross-browser aan de juiste selectie te komen
-*/ 
+*/
 function getRangeObject(selectionObject) {
 	if (selectionObject.getRangeAt)
 		return selectionObject.getRangeAt(0);

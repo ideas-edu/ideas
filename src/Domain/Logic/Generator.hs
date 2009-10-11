@@ -11,9 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Generator
-   ( generateLogic, generateLogicWith
-   , LogicGenConfig(..), defaultConfig
-   , equalLogicA
+   ( generateLogic, generateLevel, equalLogicA, Level(..)
    ) where
 
 import Domain.Logic.Formula
@@ -23,6 +21,10 @@ import Test.QuickCheck hiding (defaultConfig)
 import Common.Rewriting
 import Common.Uniplate
 
+-------------------------------------------------------------
+-- Code that doesn't belong here, but the arbitrary instance
+-- is needed for the Rewrite instance.
+
 instance Rewrite SLogic where
    operators = logicOperators
 
@@ -30,100 +32,97 @@ instance Rewrite SLogic where
 equalLogicA:: SLogic -> SLogic -> Bool
 equalLogicA = equalWith operators
 
+-----------------------------------------------------------
+-- Logic generator
+
+data Level = Easy | Normal | Difficult 
+   deriving Show
+
 generateLogic :: Gen SLogic
-generateLogic = generateLogicWith defaultConfig
-   
-generateLogicWith :: LogicGenConfig -> Gen SLogic
-generateLogicWith config = 
-   liftM removePartsInDNF (arbLogic config >>= preventSameVar config)
-   
-data LogicGenConfig = LogicGenConfig
-   { maxSize       :: Int
-   , differentVars :: Int
-   , freqConstant  :: Int
-   , freqVariable  :: Int
-   , freqImpl      :: Int
-   , freqEquiv     :: Int
-   , freqAnd       :: Int
-   , freqOr        :: Int
-   , freqNot       :: Int
-   }
- deriving Show
+generateLogic = normalGenerator
 
-defaultConfig :: LogicGenConfig
-defaultConfig = LogicGenConfig
-   { maxSize       = 4
-   , differentVars = 3
-   , freqConstant  = 0 -- 1
-   , freqVariable  = 4
-   , freqImpl      = 4
-   , freqEquiv     = 2
-   , freqAnd       = 6
-   , freqOr        = 6
-   , freqNot       = 6
-   }
+generateLevel :: Level -> (Gen SLogic, (Int, Int))
+generateLevel level = 
+   case level of
+      Easy      -> (easyGenerator,      (3, 6))
+      Normal    -> (normalGenerator,    (4, 12))
+      Difficult -> (difficultGenerator, (7, 15))
 
-freqLeaf :: LogicGenConfig -> Int
-freqLeaf config = freqConstant config + freqVariable config
+-- Use the propositions with 3-6 steps
+easyGenerator :: Gen SLogic 
+easyGenerator = do
+   n  <- oneof [return 2, return 4] -- , return 8]
+   sizedGen True varGen n
 
-arbLogic :: LogicGenConfig -> Gen SLogic
-arbLogic config
-   | maxSize config == 0 = arbLogicLeaf config
-   | otherwise           = arbLogicBin  config
+-- Use the propositions with 4-12 steps
+normalGenerator :: Gen SLogic
+normalGenerator = do
+   n  <- return 4 -- oneof [return 4, return 8]
+   p0 <- sizedGen False varGen n
+   p1 <- preventSameVar varList p0
+   return (removePartsInDNF p1)
 
-arbLogicLeaf :: LogicGenConfig -> Gen SLogic
-arbLogicLeaf config = frequency
-   [ (freqConstant config, oneof $ map return [F, T])
-   , (freqVariable config, oneof [ return (Var x) | x <- take (differentVars config) variableList])
-   ]
+-- Use the propositions with 7-15 steps
+difficultGenerator :: Gen SLogic
+difficultGenerator = do
+   let vars = "s" : varList
+   n  <- return 4 -- oneof [return 4, return 8]
+   p0 <- sizedGen False (oneof $ map return vars) n
+   p1 <- preventSameVar vars p0
+   return (removePartsInDNF p1)
 
-arbLogicBin :: LogicGenConfig -> Gen SLogic
-arbLogicBin config = frequency
-   [ (freqLeaf  config, arbLogicLeaf config)
-   , (freqImpl  config, op2 (:->:))
-   , (freqEquiv config, op2 (:<->:))
-   , (freqAnd   config, op2 (:&&:))
-   , (freqOr    config, op2 (:||:))
-   , (freqNot   config, op1 Not)
-   ]
+varList :: [String]
+varList = ["p", "q", "r"]
+
+varGen :: Gen String
+varGen = oneof $ map return varList
+
+sizedGen :: Bool -> Gen a -> Int -> Gen (Logic a)
+sizedGen constants gen = go 
  where
-   rec   = arbLogic config {maxSize = maxSize config `div` 2}
-   op1 f = liftM  f rec
-   op2 f = liftM2 f rec rec
+   go n
+      | n > 0 =
+           let rec   = go (n `div` 2)
+               op2 f = liftM2 f rec rec
+           in frequency 
+                 [ (2, go 0)
+                 , (2, op2 (:->:))
+                 , (1, op2 (:<->:))
+                 , (3, op2 (:&&:))
+                 , (3, op2 (:||:))
+                 , (3, liftM Not rec)
+                 ]
+      | constants = frequency
+           [(5, liftM Var gen), (1, return T), (1, return F)]
+      | otherwise = liftM Var gen
 
-preventSameVar :: LogicGenConfig -> SLogic -> Gen SLogic
-preventSameVar config = rec 
- where
-   rec p = case uniplate p of
-              ([Var x, Var y], f) | x==y -> do
-                 z <- oneof [ return z
-                            | z <- take (differentVars config) variableList
-                            , z /= x
-                            ]
-                 return (f [Var x, Var z])
-              (cs, f) -> liftM f (mapM rec cs)
+-----------------------------------------------------------------
+-- Simple tricks for creating for "nice" logic propositions
+
+preventSameVar :: Eq a => [a] -> Logic a -> Gen (Logic a)
+preventSameVar xs = transformM $ \p -> 
+   case uniplate p of
+      ([Var a, Var b], f) | a==b -> do
+         c <- oneof $ map return $ filter (/=a) xs
+         return $ f [Var a, Var c]
+      _ -> return p
 
 removePartsInDNF :: SLogic -> SLogic
-removePartsInDNF = buildOr . filter p1 . disjunctions
+removePartsInDNF = buildOr . filter (not . simple) . disjunctions
  where
    buildOr [] = T
    buildOr xs = foldl1 (:||:) xs
    
-   p1 = all (not . p2) . conjunctions
-   p2 (Var _) = True
-   p2 (Not q) = p2 q
-   p2 T       = True
-   p2 F       = True
-   p2 _       = False
-
-variableList :: [String]
-variableList = ["p", "q", "r", "s", "t"] ++ [ 'x' : show n | n <- [0..] ]
+   simple = all f . conjunctions
+    where
+      f (Not p) = null (children p)
+      f p       = null (children p) 
 
 -----------------------------------------------------------
 --- QuickCheck generator
 
 instance Arbitrary SLogic where
-   arbitrary = sized $ \n -> arbLogic defaultConfig {maxSize = n}
+   arbitrary = sized (sizedGen True varGen)
    coarbitrary logic = 
       case logic of
          Var x     -> variant 0 . coarbitrary (map ord x)

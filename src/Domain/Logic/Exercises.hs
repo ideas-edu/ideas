@@ -22,9 +22,8 @@ import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
+import Common.Derivation
 import Common.Exercise
-import Common.Strategy hiding (not, label)
-import Common.Transformation (isMajorRule)
 import Common.Context
 import Text.Parsing (fromRanged)
 import Common.Rewriting
@@ -46,9 +45,7 @@ dnfExercise = makeExercise
    , strategy       = dnfStrategyDWA
    , differences    = treeDiff
    , testGenerator  = Just (restrictGenerator suitable generateLogic)
-   , randomExercise = let ok p = let n = steps p
-                                 in countEquivalences p <= 2 && n >= 4 && n <= 12
-                      in useGenerator ok (\level -> generateLogic)
+   , randomExercise = useGenerator (const True) logicExercise
    }
 
 -- Direct support for unicode characters
@@ -60,14 +57,21 @@ dnfUnicodeExercise = dnfExercise
    , prettyPrinter = ppLogicUnicodePars
    }
 
+logicExercise :: Int -> Gen SLogic
+logicExercise n = 
+   let (gen, (minStep, maxStep)) 
+          | n == 1    = generateLevel Easy
+          | n == 3    = generateLevel Difficult 
+          | otherwise = generateLevel Normal 
+       ok p = let n = steps (maxStep+1) p
+              in countEquivalences p <= 2 && n >= minStep && n <= maxStep
+   in restrictGenerator ok gen
+
 suitable :: SLogic -> Bool
 suitable = (<=2) . countEquivalences
 
-steps :: SLogic -> Int
-steps p =
-   case derivations (unlabel dnfStrategyDWA) (inContext p) of
-      (_, xs):_ -> length (take 15 (filter (isMajorRule . fst) xs))
-      _         -> 15
+steps :: Int -> SLogic -> Int
+steps i = stepsMax i . restrictMajor . makeDerivation dnfStrategyDWA . inContext
 
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)

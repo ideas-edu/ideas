@@ -66,7 +66,7 @@ diffA eqOpt op = make . rev . f . rev . f
  where
    f (p:ps, q:qs) | not (null ps || null qs) && 
                     isNothing (diff eqOpt p q) && 
-                    equal ps qs = 
+                    (not eqOpt || equal ps qs) = 
       f (ps, qs)
    f pair = pair
    

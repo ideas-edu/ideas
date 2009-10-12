@@ -59,7 +59,7 @@ showCompact :: JSON -> String
 showCompact json =
    case json of
       Number n  -> show n
-      String s  -> escape (show s)
+      String s  -> "\"" ++ escape s ++ "\""
       Boolean b -> if b then "true" else "false"
       Array xs  -> squareBrackets $ concat $ intersperse ", " $ map showCompact xs
       Object xs -> let f (k, v) = show k ++ ": " ++ showCompact v

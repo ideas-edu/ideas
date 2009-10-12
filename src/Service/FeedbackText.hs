@@ -21,7 +21,7 @@ import Common.Utils (safeHead, fst3, commaList)
 import Data.Maybe
 import Domain.Logic.Formula (SLogic)
 import Domain.Logic.FeedbackText
-import Domain.Logic.Exercises (dnfExercise)
+import Domain.Logic.Exercises (dnfExercise, dnfUnicodeExercise)
 import Domain.Logic.Difference (difference)
 import Service.TypedAbstractService
 import Common.Context
@@ -32,11 +32,12 @@ import Data.Char
 
 -- Quick hack for determining subterms
 coerceLogic :: Exercise a -> a -> Maybe SLogic
-coerceLogic ex a =
-   case parser dnfExercise (prettyPrinter ex a) of
-      Right p | exerciseCode ex == exerciseCode dnfExercise
-        -> Just p
-      _ -> Nothing
+coerceLogic ex a
+   | exerciseCode ex == exerciseCode dnfExercise =
+        either (const Nothing) Just $ parser dnfExercise (prettyPrinter ex a)
+   | exerciseCode ex == exerciseCode dnfUnicodeExercise =
+        either (const Nothing) Just $ parser dnfUnicodeExercise (prettyPrinter ex a)
+   | otherwise = Nothing
 
 youRewroteInto :: State a -> a -> Maybe String
 youRewroteInto = rewriteIntoText "You rewrote "
@@ -47,14 +48,13 @@ useToRewrite rule old = rewriteIntoText txt old
    txt = "Use " ++ showRule (exerciseCode $ exercise old) rule
          ++ " to rewrite "
 
--- disabled for now
 rewriteIntoText :: String -> State a -> a -> Maybe String
-rewriteIntoText txt old a = Nothing {- do 
+rewriteIntoText txt old a = do
    p <- coerceLogic (exercise old) (fromContext $ context old)
    q <- coerceLogic (exercise old) a
    (p1, q1) <- difference p q
    return $ txt ++ prettyPrinter dnfExercise p1 
-         ++ " into " ++ prettyPrinter dnfExercise q1 ++ ". " -}
+         ++ " into " ++ prettyPrinter dnfExercise q1 ++ ". "
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 

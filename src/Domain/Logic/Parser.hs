@@ -118,7 +118,7 @@ suspiciousVariable r =
                  ++ ". Did you forget an operator?" 
       _   -> Right r
  where
-   p xs = length xs > 1 && all (`elem` "pqr") xs
+   p xs = length xs > 1 && all (`elem` "pqrst") xs
 
 -----------------------------------------------------------
 --- Pretty-Printer

@@ -71,7 +71,7 @@ readyS = Service "ready" $
    S.ready ::: State :-> Bool
 
 stepsremainingS :: Service a
-stepsremainingS = Service "stepsremaining" $ 
+stepsremainingS = Service "stepsremaining" $
    S.stepsremaining ::: State :-> Int
 
 applicableS :: Service a
@@ -83,8 +83,8 @@ applyS = Service "apply" $
    S.apply ::: Rule :-> Location :-> State :-> State
 
 generateS :: Service a
-generateS = Service "generate" $ flip S.generate 5 ::: 
-   Exercise :-> IO State
+generateS = Service "generate" $ S.generate ::: 
+   Exercise :-> Optional 5 Int :-> IO State
 
 findbuggyrulesS :: Service a
 findbuggyrulesS = Service "findbuggyrules" $ 

@@ -1,4 +1,4 @@
 { "method" : "generate"
-, "params" : ["logic.dnf", 1]
+, "params" : ["logic.dnf"]
 , "id"     : 421
 }

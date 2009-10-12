@@ -46,7 +46,7 @@ generateLevel level =
    case level of
       Easy      -> (easyGenerator,      (3, 6))
       Normal    -> (normalGenerator,    (4, 12))
-      Difficult -> (difficultGenerator, (7, 15))
+      Difficult -> (difficultGenerator, (7, 18))
 
 -- Use the propositions with 3-6 steps
 easyGenerator :: Gen SLogic 
@@ -62,7 +62,7 @@ normalGenerator = do
    p1 <- preventSameVar varList p0
    return (removePartsInDNF p1)
 
--- Use the propositions with 7-15 steps
+-- Use the propositions with 7-18 steps
 difficultGenerator :: Gen SLogic
 difficultGenerator = do
    let vars = "s" : varList

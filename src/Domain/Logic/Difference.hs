@@ -13,50 +13,66 @@
 -- but the current implementation does not use associativity.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Difference (difference) where
+module Domain.Logic.Difference (difference, differenceEqual) where
 
+import Control.Monad
 import Common.Rewriting
 import Common.Uniplate
 import Domain.Logic.Formula
 import Data.Maybe
 import Domain.Logic.Generator()
 
-test = treeDiff ((Var "p" :||: (Var "q" :||: Var "s") :||: Var "s"))
-                  (Var "p" :||: (Var "s" :||: Var "r") :||: Var "s")
+--test = treeDiff ((Var "p" :||: (Var "q" :||: Var "s") :||: Var "s"))
+--                  (Var "p" :||: (Var "s" :||: Var "r") :||: Var "s")
 
-difference :: Eq a => Logic a -> Logic a -> Maybe (Logic a, Logic a)
-difference p q 
+-- Workaround: this function returns the diff, except that the 
+-- returned propositions should be logically equivalent. Currently
+-- used for reporting where a rewrite rule was applied.
+differenceEqual :: SLogic -> SLogic -> Maybe (SLogic, SLogic)
+differenceEqual p q = do
+   guard (eqLogic p q)
+   diff True p q
+
+difference :: SLogic -> SLogic -> Maybe (SLogic, SLogic)
+difference = diff False
+
+-- local implementation function
+diff :: Bool -> SLogic -> SLogic -> Maybe (SLogic, SLogic)
+diff eqOpt p q 
    | shallowEq p q =
         case p of
            _ :||: _ ->
               let ps = disjunctions p
                   qs = disjunctions q
-              in differenceAssoc (:||:) (ps, qs)
+              in diffA eqOpt (:||:) (ps, qs)
            _ :&&: _ ->
               let ps = conjunctions p
                   qs = conjunctions q
-              in differenceAssoc (:&&:) (ps, qs)
-           _ -> differenceList (children p) (children q)
+              in diffA eqOpt (:&&:) (ps, qs)
+           _ -> diffList eqOpt (children p) (children q)
    | otherwise = Just (p, q)
    
-differenceList :: Eq a => [Logic a] -> [Logic a] -> Maybe (Logic a, Logic a)
-differenceList xs ys
+diffList :: Bool -> [SLogic] -> [SLogic] -> Maybe (SLogic, SLogic)
+diffList eqOpt xs ys
    | length xs /= length ys = Nothing
    | otherwise = 
-        case catMaybes (zipWith difference xs ys) of
+        case catMaybes (zipWith (diff eqOpt) xs ys) of
            [p] -> Just p
            _   -> Nothing
            
-differenceAssoc :: Eq a => (Logic a -> Logic a -> Logic a) -> 
-                           ([Logic a], [Logic a]) -> Maybe (Logic a, Logic a)
-differenceAssoc op = make . rev . f . rev . f 
+diffA :: Bool -> (SLogic -> SLogic -> SLogic) -> 
+         ([SLogic], [SLogic]) -> Maybe (SLogic, SLogic)
+diffA eqOpt op = make . rev . f . rev . f 
  where
-   f (p:ps, q:qs) | not (null ps || null qs || isJust (difference p q)) = 
+   f (p:ps, q:qs) | not (null ps || null qs) && 
+                    isNothing (diff eqOpt p q) && 
+                    equal ps qs = 
       f (ps, qs)
    f pair = pair
    
+   equal ps qs = eqLogic (foldr1 op ps) (foldr1 op qs)
    rev  (ps, qs) = (reverse ps, reverse qs)
    make pair = 
       case pair of 
-         ([p], [q]) -> difference p q
+         ([p], [q]) -> diff eqOpt p q
          (ps, qs)   -> Just (foldr1 op ps, foldr1 op qs)

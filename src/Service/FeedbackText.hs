@@ -22,7 +22,7 @@ import Data.Maybe
 import Domain.Logic.Formula (SLogic)
 import Domain.Logic.FeedbackText
 import Domain.Logic.Exercises (dnfExercise, dnfUnicodeExercise)
-import Domain.Logic.Difference (difference)
+import Domain.Logic.Difference (difference, differenceEqual)
 import Service.TypedAbstractService
 import Common.Context
 import Common.Exercise
@@ -40,22 +40,23 @@ coerceLogic ex a
    | otherwise = Nothing
 
 youRewroteInto :: State a -> a -> Maybe String
-youRewroteInto = rewriteIntoText "You rewrote "
+youRewroteInto = rewriteIntoText False "You rewrote "
 
 useToRewrite :: Rule (Context a) -> State a -> a -> Maybe String
-useToRewrite rule old = rewriteIntoText txt old
+useToRewrite rule old = rewriteIntoText True txt old
  where
    txt = "Use " ++ showRule (exerciseCode $ exercise old) rule
          ++ " to rewrite "
 
-rewriteIntoText :: String -> State a -> a -> Maybe String
-rewriteIntoText txt old a = do
+rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
+rewriteIntoText eqOption txt old a = do
    p <- coerceLogic (exercise old) (fromContext $ context old)
    q <- coerceLogic (exercise old) a
-   (p1, q1) <- difference p q
+   (p1, q1) <- if eqOption then differenceEqual p q
+                           else difference p q
    let ex | exerciseCode (exercise old) == exerciseCode dnfUnicodeExercise =
                dnfUnicodeExercise
-	  | otherwise = dnfExercise
+          | otherwise = dnfExercise
    return $ txt ++ prettyPrinter ex p1 
          ++ " into " ++ prettyPrinter ex q1 ++ ". "
 

@@ -53,8 +53,11 @@ rewriteIntoText txt old a = do
    p <- coerceLogic (exercise old) (fromContext $ context old)
    q <- coerceLogic (exercise old) a
    (p1, q1) <- difference p q
-   return $ txt ++ prettyPrinter dnfExercise p1 
-         ++ " into " ++ prettyPrinter dnfExercise q1 ++ ". "
+   let ex | exerciseCode (exercise old) == exerciseCode dnfUnicodeExercise =
+               dnfUnicodeExercise
+	  | otherwise = dnfExercise
+   return $ txt ++ prettyPrinter ex p1 
+         ++ " into " ++ prettyPrinter ex q1 ++ ". "
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
@@ -80,7 +83,7 @@ feedbackLogic old a result =
 
 showRule :: ExerciseCode -> Rule a -> String
 showRule code r 
-   | code == exerciseCode dnfExercise =
+   | code `elem` map exerciseCode [dnfExercise, dnfUnicodeExercise] =
         fromMaybe txt (ruleText r)
    | otherwise = txt
  where

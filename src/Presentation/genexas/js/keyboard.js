@@ -79,8 +79,8 @@ function controleer(e) {	// eerst  de character code ophalen
 				voegin(String.fromCharCode(8743), "work");
 				stop(e);
 				return false;
-			// laat p, q, r, T, F, ( en ) en spatie door
-			case 112 : case 113 : case 114 : case 32 : case 84 : case 70 : case 40 : case 41 :
+			// laat p, q, r, s, T, F, ( en ) en spatie door
+			case 112 : case 113 : case 114 : case 115 : case 32 : case 84 : case 70 : case 40 : case 41 :
 			     	 return true;
 			// speciale navigatie toetsen, zoals pijltjes, backspace, home
                         case 37 : case 39 : case 46 : case 8 : case 35 : case 36 :

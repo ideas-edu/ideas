@@ -42,7 +42,7 @@ generateLogic :: Gen SLogic
 generateLogic = normalGenerator
 
 generateLevel :: Level -> (Gen SLogic, (Int, Int))
-generateLevel level = 
+generateLevel level =
    case level of
       Easy      -> (easyGenerator,      (3, 6))
       Normal    -> (normalGenerator,    (4, 12))

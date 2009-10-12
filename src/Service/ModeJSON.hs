@@ -136,7 +136,12 @@ jsonDecoder ex = Decoder
          Tp.Location -> useFirst fromJSON
          Tp.Term     -> useFirst $ liftM inContext . decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
-         Tp.Exercise -> \json -> return (decoderExercise dec, json)
+         Tp.Exercise -> \json -> case json of
+                                    (Array (String s:rest)) -> return (decoderExercise dec, Array rest)
+                                    _ -> return (decoderExercise dec, json)
+         Tp.Int      -> useFirst $ \json -> case json of 
+                                               Number (I n) -> return (fromIntegral n)
+                                               _        -> fail "not an integer"
          Tp.String   -> useFirst $ \json -> case json of 
                                                String s -> return s
                                                _        -> fail "not a string"

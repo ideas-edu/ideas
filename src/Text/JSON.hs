@@ -21,10 +21,11 @@ module Text.JSON
    ) where
 
 import Text.Parsing
-import Text.XML.Unicode (utf8)
+import qualified Text.UTF8 as UTF8
 import Common.Utils (indent)
 import Data.Char
 import Data.List (intersperse)
+import Data.Maybe
 import Control.Monad
 import Service.Revision (version, revision)
 
@@ -66,15 +67,13 @@ showCompact json =
                    in curlyBrackets  $ concat $ intersperse ", " $ map f xs
       Null      -> "null"
   
+-- Escape double quote and backslash, and convert to UTF8 encoding
 escape :: String -> String
-escape = concatMap f 
+escape = concatMap f . fromMaybe "invalid UTF8 string" . UTF8.encodeM 
  where
-   f c | ord c == 8743 = map chr [226, 136, 167]
-       | ord c == 8744 = map chr [226, 136, 168]
-       | ord c == 8594 = map chr [226, 134, 146]
-       | ord c == 8596 = map chr [226, 134, 148]
-       | ord c ==  172 = map chr [194, 172]
-       | otherwise = [c]
+   f '"'  = "\\\""
+   f '\\' = "\\\\"
+   f c    = [c]
   
 showPretty :: JSON -> String
 showPretty json =
@@ -157,7 +156,7 @@ parseJSON input =
    json :: TokenParser JSON
    json =  (Number . I) <$> pInteger
        <|> (Number . F) <$> pFraction
-       <|> (String . maybe [] id . utf8) <$> pString
+       <|> (String . fromMaybe [] . UTF8.decodeM) <$> pString
        <|> Boolean True <$ pKey "true"
        <|> Boolean False <$ pKey "false"
        <|> Array <$> pBracks (pCommas json)

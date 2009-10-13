@@ -22,9 +22,13 @@ import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
+import Common.Apply
+import qualified Common.Grammar as RE
 import Common.Derivation
 import Common.Exercise
 import Common.Context
+import Common.Strategy
+import Common.Transformation
 import Text.Parsing (fromRanged)
 import Common.Rewriting
 import Test.QuickCheck
@@ -71,7 +75,22 @@ suitable :: SLogic -> Bool
 suitable = (<=2) . countEquivalences
 
 steps :: Int -> SLogic -> Int
-steps i = stepsMax i . restrictMajor . makeDerivation dnfStrategyDWA . inContext
+steps i = stepsMax i 
+        . filterIntermediates isMajorRule 
+        . makeDerivation dnfStrategyDWA 
+        . inContext
+
+-- Todo: move these two derivation functions to Common.Strategy
+makeDerivation :: LabeledStrategy a -> a -> DerivationTree (Rule a) a
+makeDerivation = grammarDerivation . noLabels . unlabel
+
+grammarDerivation :: RE.Grammar (Rule a) -> a -> DerivationTree (Rule a) a
+grammarDerivation s a = addBranches list (emptyNode a (RE.empty s))
+ where
+   list = [ (f, grammarDerivation rest b) 
+          | (f, rest) <- RE.firsts s
+          , b <- applyAll f a 
+          ]
 
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)

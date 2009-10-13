@@ -14,11 +14,11 @@
 module Text.XML.Unicode 
    ( isExtender, isLetter, isDigit, isCombiningChar
    , extenderMap, letterMap, digitMap, combiningCharMap
-   , decoding, utf8
+   , decoding
    ) where
 
 import Data.Char (chr, ord)
-import Control.Monad (liftM)
+import qualified Text.UTF8 as UTF8
 
 data Tree a = Node (Tree a) a (Tree a) | Leaf
 
@@ -169,9 +169,9 @@ decoding xs
    | take 2 xs == "\254\255" =
         return (decode16X $ drop 2 xs)
    | take 3 xs == "\239\187\191" =
-        utf8 (drop 3 xs)
+        UTF8.decodeM (drop 3 xs)
    | otherwise = 
-        utf8 xs
+        UTF8.decodeM xs
         
 decode16 :: [Char] -> [Char]
 decode16 []  = []
@@ -182,25 +182,3 @@ decode16X :: [Char] -> [Char]
 decode16X []  = []
 decode16X [x] = [x]
 decode16X (a:b:rest) = chr (ord b + ord a * 256) : decode16X rest
-
-utf8 :: Monad m => [Char] -> m [Char]
-utf8 [] = return []
-utf8 (a:rest) | ord a < 128 = 
-   let new = a
-   in liftM (new:) (utf8 rest) -- one byte
-utf8 (a:b:rest) | ord a >= 192 && ord a < 224 && ord b >= 128 && ord b < 192 =
-   let new = chr ((ord a-192)*64 + ord b-128)
-   in liftM (new:) (utf8 rest) -- two bytes
-utf8 (a:b:c:rest) | ord a >= 224 && ord a < 240 && ord b >= 128 && ord b < 192 && ord c >= 128 && ord c < 192 =
-   let new = chr ((ord a-224)*4096 + (ord b-128)*64 + ord c-128) 
-   in liftM (new:) (utf8 rest) -- three bytes
-utf8 (a:b:c:d:rest) | ord a >= 240 && ord a < 248 && ord b >= 128 && ord b < 192 && ord c >= 128 && ord c < 192 && ord d >= 128 && ord d < 192 =
-   do new <- chrSafe ((ord a-240)*262144 + (ord b-128)*4096 + (ord c-128)*64 + ord d-128) 
-      liftM (new:) (utf8 rest) -- four bytes
-utf8 _ = 
-   fail "invalid character in UTF8, skipped"
-   
-chrSafe :: Monad m => Int -> m Char
-chrSafe n
-   | n > 1114111 = fail "invalid character"
-   | otherwise   = return (chr n)

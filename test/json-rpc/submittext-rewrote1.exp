@@ -1,7 +1,7 @@
 {
    "result": [
       false,
-      "This is incorrect. Press the Back button and try again. You may ask for a hint.",
+      "You rewrote ~x || ~y into ~x /\\ ~y. This is incorrect. Press the Back button and try again. You may ask for a hint.",
       [
          "logic.dnf",
          "[]",
@@ -11,5 +11,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.6 (2306)"
+   "version": "0.5.6 (2333)"
 }

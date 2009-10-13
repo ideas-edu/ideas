@@ -9,28 +9,44 @@
 -- Portability :  portable (depends on ghc)
 --
 -- Datatype for a tree of derivations. The datatype stores all intermediate
--- results as well as the rules used.
+-- results as well as annotations for the steps.
 --
 -----------------------------------------------------------------------------
 module Common.Derivation 
-   ( restrictHeight, restrictMajor, stepsMax, makeDerivation
+   ( DerivationTree, Derivations 
+   , emptyNode, addBranch, addBranches
+   , restrictHeight, filterIntermediates, stepsMax
    ) where
 
+import Common.Utils
+import Data.Maybe
+{-
 import Common.Utils (safeHead)
 import Common.Apply
 import Common.Strategy (IsStrategy(..), LabeledStrategy, Strategy, noLabels, unlabel)
 import Common.Transformation
 import qualified Common.Grammar as RE
-import Data.Maybe
+import Data.Maybe -}
 
-data DerivationTree a = DT a Bool [(Rule a, DerivationTree a)] 
+data DerivationTree s a = DT a Bool [(s, DerivationTree s a)] 
    deriving Show
 
-type Derivations a = [Derivation a]
+type Derivations s a = [Derivation s a]
 
-data Derivation a = D a [(Rule a, a)]
+data Derivation s a = D a [(s, a)]
    deriving Show
 
+emptyNode :: a -> Bool -> DerivationTree s a 
+emptyNode a b = DT a b []
+
+addBranch :: (s, DerivationTree s a) -> DerivationTree s a -> DerivationTree s a
+addBranch = addBranches . return
+
+-- Branches are attached after the existing ones (order matters)
+addBranches :: [(s, DerivationTree s a)] -> DerivationTree s a -> DerivationTree s a
+addBranches new (DT a b xs) = DT a b (xs ++ new)
+
+{-
 showDerivation :: Show a => Derivation a -> String
 showDerivation = showDerivationWith show
 
@@ -42,25 +58,17 @@ toDerivations :: DerivationTree a -> Derivations a
 toDerivations (DT a b xs) = map (D a) $
    [ [] | b ] ++
    [ ((r,a2):ys) | (r, t) <- xs, D a2 ys <- toDerivations t ]
-
-alternatives :: DerivationTree a -> [(Rule a, DerivationTree a)] 
+-}
+alternatives :: DerivationTree s a -> [(s, DerivationTree s a)] 
 alternatives (DT _ _ xs) = xs
 
-ready :: DerivationTree a -> Bool
+ready :: DerivationTree s a -> Bool
 ready (DT _ b _) = b
 
+{-
 makeDerivation :: IsStrategy f => f a -> a -> DerivationTree a
 makeDerivation = grammarDerivation . noLabels . toStrategy
 
-grammarDerivation :: RE.Grammar (Rule a) -> a -> DerivationTree a
-grammarDerivation s a = DT a (RE.empty s) list
- where
-   list = [ (f, grammarDerivation rest b) 
-          | (f, rest) <- RE.firsts s
-          , b <- applyAll f a 
-          ]
-
-{-
 majorDerivation :: RE.Grammar (Rule a) -> a -> Derivation Rule a
 majorDerivation s a = Derivation a (RE.empty s || or bs) (concat xss)
  where
@@ -73,12 +81,12 @@ majorDerivation s a = Derivation a (RE.empty s || or bs) (concat xss)
       new = applyAll rule a
       g (Derivation _ b xs) = (b, xs) -}
 
-steps :: DerivationTree a -> Maybe Int
+steps :: DerivationTree s a -> Maybe Int
 steps (DT _ b xs) 
    | b         = Just 0
    | otherwise = fmap succ $ safeHead $ catMaybes $ map (steps . snd) xs
 
-stepsMax :: Int -> DerivationTree a -> Int
+stepsMax :: Int -> DerivationTree s a -> Int
 stepsMax n = fromMaybe n . rec 0
  where
    rec i (DT _ b xs) 
@@ -87,17 +95,17 @@ stepsMax n = fromMaybe n . rec 0
      --  | otherwise = safeHead $ catMaybes $ map (rec (i+1) . snd) xs
       | otherwise = rec (i+1) (snd $ head xs) -- early commit on a derivation path
 
-restrictHeight :: Int -> DerivationTree a -> DerivationTree a
+restrictHeight :: Int -> DerivationTree s a -> DerivationTree s a
 restrictHeight n (DT a b xs)
    | n == 0    = DT a b []
    | otherwise = DT a b (map f xs)
  where
    f (r, d) = (r, restrictHeight (n-1) d)
-
+{-
 restrictMajor :: DerivationTree a -> DerivationTree a
 restrictMajor = filterIntermediates isMajorRule
-
-filterIntermediates :: (Rule a -> Bool) -> DerivationTree a -> DerivationTree a
+-}
+filterIntermediates :: (s -> Bool) -> DerivationTree s a -> DerivationTree s a
 filterIntermediates p = rec 
  where
    rec (DT a b xs) = 

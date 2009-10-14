@@ -93,11 +93,12 @@ showRule code r
 getCode :: State a -> ExerciseCode
 getCode = exerciseCode . exercise
 
-derivationtext :: State a -> [(String, Context a)]
-derivationtext st = map (first (showRule (getCode st))) (derivation st)
-   
-onefirsttext :: State a -> (Bool, String, State a)
-onefirsttext state =
+derivationtext :: State a -> Maybe String -> [(String, Context a)]
+derivationtext st event = 
+   map (first (showRule (getCode st))) (derivation st)
+
+onefirsttext :: State a -> Maybe String -> (Bool, String, State a)
+onefirsttext state event =
    case allfirsts state of
       (r, _, s):_ -> 
          case useToRewrite r state (fromContext $ context s) of
@@ -105,8 +106,8 @@ onefirsttext state =
             Nothing  -> (True, "Use " ++ showRule (getCode state) r, s)
       _ -> (False, "Sorry, no hint available", state)
 
-submittext :: State a -> String -> (Bool, String, State a)
-submittext state txt = 
+submittext :: State a -> String -> Maybe String -> (Bool, String, State a)
+submittext state txt event = 
    case parser (exercise state) txt of
       Left err -> 
          let msg = "Syntax error" ++ pos ++ ": " ++ show err

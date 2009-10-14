@@ -11,7 +11,7 @@
 -- Services using JSON notation
 --
 -----------------------------------------------------------------------------
-module Service.ModeJSON (processJSON) where
+module Service.ModeJSON (processJSON, jsonTuple) where
 
 import Common.Context
 import Common.Utils (Some(..), distinct)

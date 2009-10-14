@@ -1,0 +1,15 @@
+{
+   "result": [
+      true,
+      "Use De Morgan to rewrite ~(~x || ~y) into ~~x /\\ ~~y. ",
+      [
+         "logic.dnf",
+         "[0,1,1,0,3]",
+         "~~x /\\ ~~y",
+         "[];"
+      ]
+   ],
+   "error": null,
+   "id": 421,
+   "version": "0.5.6 (2335)"
+}

@@ -99,15 +99,15 @@ submitS = Service "submit" $ (\a -> S.submit a . fromContext) :::
 
 onefirsttextS :: Service a
 onefirsttextS = Service "onefirsttext" $ 
-   onefirsttext ::: State :-> Elem (Triple Bool String State)
+   onefirsttext ::: State :-> Maybe String :-> Elem (Triple Bool String State)
 
 submittextS :: Service a
 submittextS = Service "submittext" $ 
-   submittext ::: State :-> String :-> Elem (Triple Bool String State)
+   submittext ::: State :-> String :-> Maybe String :-> Elem (Triple Bool String State)
 
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" $ 
-   derivationtext ::: State :-> List (Pair String Term)
+   derivationtext ::: State :-> Maybe String :-> List (Pair String Term)
    
 ------------------------------------------------------
 -- Reflective services

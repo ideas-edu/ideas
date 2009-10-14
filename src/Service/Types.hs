@@ -16,6 +16,7 @@ import Common.Context (Context, Location, fromContext)
 import Common.Exercise (Exercise)
 import Common.Transformation (Rule, name)
 import Common.Utils (commaList)
+import Control.Arrow
 import Control.Monad
 import Data.Maybe
 import Service.TypedAbstractService (State, Result)
@@ -36,6 +37,7 @@ data Type a t where
    -- Special annotations
    Tag       :: String -> Type a t1 -> Type a t1
    Optional  :: t1 -> Type a t1 -> Type a t1
+   Maybe     :: Type a t1 -> Type a (Maybe t1)
    -- Type constructors
    List      :: Type a t -> Type a [t]
    Elem      :: Type a t -> Type a t -- quick fix
@@ -58,11 +60,12 @@ instance Show (Type a t) where
    show (Triple t1 t2 t3) = "(" ++ commaList [show t1, show t2, show t3] ++ ")"
    show (Quadruple t1 t2 t3 t4) = "(" ++ commaList [show t1, show t2, show t3, show t4] ++ ")"
    show (Tag _ t)         = show t
-   show (Optional _ t)    = show t
+   show (Optional _ t)    = "(" ++ show t ++ ")?"
+   show (Maybe t)         = "(" ++ show t ++ ")?"
    show (List t)          = "[" ++ show t ++ "]"
    show (Elem t)          = show t
    show (IO t)            = show t
-   show t                 = fromMaybe "??" (groundType t)
+   show t                 = fromMaybe "unknown" (groundType t)
 
 groundType :: Type a t -> Maybe String
 groundType tp =
@@ -135,6 +138,8 @@ decodeDefault dec tp s =
          decodeType dec t1 s
       Optional a t1 -> 
          decodeType dec t1 s `mplus` return (a, s)
+      Maybe t1 -> 
+         liftM (first Just) (decodeType dec t1 s) `mplus` return (Nothing, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
 
@@ -162,6 +167,9 @@ encodeDefault enc tp tv =
       Tag _ t1      -> encodeType enc t1 tv
       Elem t1       -> encodeType enc t1 tv
       Optional _ t1 -> encodeType enc t1 tv
+      Maybe t1      -> case tv of
+                          Just a  -> encodeType enc t1 a
+                          Nothing -> return (encodeTuple enc [])
       IO t1         -> encodeType enc t1 (unsafePerformIO tv)
       Rule          -> encodeType enc String (name tv)
       Term          -> encodeTerm enc (fromContext tv)

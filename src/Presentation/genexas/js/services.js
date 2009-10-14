@@ -78,7 +78,7 @@ function ss_getReady(caller, state, callback) {
   */
 function ss_getHint(caller, location, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"], "' + caller + '"]';
 	var request  = makeRequest(caller, 'onefirsttext', params);
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input=' + request,
@@ -105,7 +105,7 @@ function ss_getHint(caller, location, state, callback) {
   */
 function ss_getNext(caller, state, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"], "' + caller + '"]';
 	var request  = makeRequest(caller, 'onefirsttext', params);
 	var myAjax = new Ajax.Request(url, {
 		parameters : 'input=' + request,
@@ -133,7 +133,8 @@ function ss_getNext(caller, state, callback) {
   */
 function ss_getDerivation(caller, eastate, callback) {
 	var exercise = (eastate.exercise).htmlToAscii();
-	var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]]';
+	var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "'
++ exercise + '", "' + eastate.simpleContext + '"], "' + caller + '"]';
 	var request  = makeRequest(caller, 'derivationtext', params);
 	var myAjax   = new Ajax.Request(url, {
 		parameters : 'input=' + request,
@@ -183,7 +184,7 @@ function ss_getRemaining(caller, eastate, callback) {
   */
 function ss_getFeedback(caller, state, newexpression, callback) {
 	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '"]';
+	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '", "' + caller + '"]';
 	var request  = makeRequest(caller, 'submittext', params);
 	var myAjax   = new Ajax.Request(url, {
         parameters : 'input=' + request,

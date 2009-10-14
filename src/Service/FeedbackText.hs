@@ -102,8 +102,10 @@ onefirsttext state event =
    case allfirsts state of
       (r, _, s):_ -> 
          case useToRewrite r state (fromContext $ context s) of
-            Just txt -> (True, txt, s)
-            Nothing  -> (True, "Use " ++ showRule (getCode state) r, s)
+            Just txt | event /= Just "hint button" -> 
+	       (True, txt, s)
+            _ -> 
+	       (True, "Use " ++ showRule (getCode state) r, s)
       _ -> (False, "Sorry, no hint available", state)
 
 submittext :: State a -> String -> Maybe String -> (Bool, String, State a)

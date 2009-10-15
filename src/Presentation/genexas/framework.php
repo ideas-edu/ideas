@@ -22,12 +22,12 @@
 <h1>Exercise Assistant Online</h1>
 <div id="exasdiv">
   <div class="topmenu">
-    <input type="button" id="generateButton" value="<?php print NewExercise;?>">
-    <input type="radio" name="difficulty" value="Easy" id="Easy">Easy</input>
-    <input type="radio" name="difficulty" value="Normal" id="Normal" checked="checked">Normal</input>
-    <input type="radio" name="difficulty" value="Difficult" id="Difficult">Difficult</input>
-    <input type="button" onclick="window.open('docs/rules.pdf','','')" value="<?php print Rules;?>" >    
-    <input type="button" id="aboutButton" value="<?php print About;?>" >
+      <input type="button" id="generateButton" value="<?php print NewExercise;?>">
+      <label for="Easy">Easy</label></td><td><input type="radio" name="difficulty" value="Easy" id="Easy">
+      <label for="Normal">Normal</label><input type="radio" name="difficulty" value="Normal" id="Normal" checked="checked">
+      <label for="Difficult">Difficult</label><input type="radio" name="difficulty" value="Difficult" id="Difficult">
+      <input type="button" onclick="window.open('docs/rules.pdf','','')" value="<?php print Rules;?>">
+      <input type="button" id="aboutButton" value="<?php print About;?>">
   </div>
 
   <br class="clear" >

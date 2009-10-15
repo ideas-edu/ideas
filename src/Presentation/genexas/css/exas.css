@@ -43,9 +43,7 @@ form {
 }
 
 input, select, label {
-//	margin-right: 40px;
 	margin-top: 5px;
-//	margin-bottom: 20px;
 }
 
 select {
@@ -153,7 +151,6 @@ select {
 	top: -10px;
 }
 #clearbutton {
-	//margin-left: 20px;
 	margin: 0px;
 	display: block; 
 	font-size: small;

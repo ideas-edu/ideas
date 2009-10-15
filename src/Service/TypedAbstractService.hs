@@ -17,8 +17,6 @@ import Common.Exercise (Exercise(..), ruleset, randomTermWith)
 import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
-import Service.SearchSpace (searchSpace)
-import Service.Progress
 import Data.Maybe
 import System.Random
 
@@ -130,29 +128,45 @@ resetStateIfNeeded s
 
 submit :: State a -> a -> Result a
 submit state new
-   | not (equivalence (exercise state) (term state) new) =        
-        case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 errSpace of
-           ((_, _, rs), _):_ -> Buggy rs
-           _                 -> NotEquivalent
+   -- Is the submitted term equivalent?
+   | not (equivalence (exercise state) (term state) new) =
+        -- Is the rule used discoverable by trying all known buggy rules?
+        case discovered True of
+           Just r -> -- report the buggy rule
+              Buggy [r]
+           Nothing -> -- unknown mistake
+              NotEquivalent
+   -- Is the submitted term (very) similar to the previous one? 
    | similarity (exercise state) (term state) new =
+        -- If yes, report this
         Ok [] state
-   | otherwise =        
-        case filter isSame $ successesAfter $ maxNumber 200 $ maxDepth 1 space of
-           ((a, mp, rs), _):_ 
-              | isJust mp -> Ok rs state { context=a, prefix=mp }
-              | otherwise -> Detour rs state { context=a, prefix=mp }
-           _ -> Unknown state { context=inContext new }
- where 
-   isSame ((a, _, _), _) = similarity (exercise state) new (fromContext a)
+   -- Was the submitted term expected by the strategy
+   | isJust expected =
+        -- If yes, return new state and rule
+        let (r, _, ns) = fromJust expected  
+        in Ok [r] ns
+   -- Is the rule used discoverable by trying all known rules?
+   | otherwise =
+        case discovered False of
+           Just r ->  -- If yes, report the found rule as a detour
+              Detour [r] state { prefix=Nothing, context=inContext new }
+           Nothing -> -- If not, we give up
+              Unknown state { prefix=Nothing, context=inContext new }
+ where
+   expected = 
+      let p (_, _, ns) = similarity (exercise state) new (term ns)
+      in safeHead (filter p (allfirsts state))
  
-   space    = searchSpace (getOrdering state) diff (prefix state) (filter (not . isBuggyRule) $ ruleset $ exercise state) (context state)
-   errSpace = searchSpace (getOrdering state) diff Nothing (ruleset $ exercise state) (context state)
-   
-   diff a = map (f a) $ differences (exercise state) new (fromContext a)
-   f a (is, td) = (setLocation (makeLocation is) a, td)
-
-getOrdering :: State a -> Context a -> Context a -> Ordering
-getOrdering state a b = ordering (exercise state) (fromContext a) (fromContext b)
+   (sub1, sub2) = fromMaybe (term state, new) $
+      newDifference (exercise state) True (term state) new
+ 
+   discovered useBuggyRules = safeHead
+      [ r
+      | r <- ruleset (exercise state)
+      , isBuggyRule r == useBuggyRules
+      , a <- Apply.applyAll r (inContext sub1)
+      , similarity (exercise state) sub2 (fromContext a)
+      ]
 
 getResultState :: Result a -> Maybe (State a)
 getResultState result =

@@ -1,0 +1,15 @@
+{
+   "result": [
+      true,
+      "You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula.",
+      [
+         "logic.dnf",
+         "[]",
+         "(r /\\ p /\\ ~s /\\ (p || r)) || (r /\\ p /\\ ~p /\\ s /\\ ~r) || (~r /\\ ~p /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (~q /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (s /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r)))",
+         "[];"
+      ]
+   ],
+   "error": null,
+   "id": 123,
+   "version": "0.5.6 (2338)"
+}

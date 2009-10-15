@@ -22,6 +22,7 @@ import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
+import Domain.Logic.Difference
 import Common.Apply
 import qualified Common.Grammar as RE
 import Common.Derivation
@@ -48,6 +49,7 @@ dnfExercise = makeExercise
    , extraRules     = map liftToContext (logicRules ++ buggyRules)
    , strategy       = dnfStrategyDWA
    , differences    = treeDiff
+   , newDifference  = \_ -> differenceEqual eqLogic
    , testGenerator  = Just (restrictGenerator suitable generateLogic)
    , randomExercise = useGenerator (const True) logicExercise
    }

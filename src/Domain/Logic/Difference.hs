@@ -18,61 +18,67 @@ module Domain.Logic.Difference (difference, differenceEqual) where
 import Control.Monad
 import Common.Rewriting
 import Common.Uniplate
-import Domain.Logic.Formula
 import Data.Maybe
-import Domain.Logic.Generator()
 
---test = treeDiff ((Var "p" :||: (Var "q" :||: Var "s") :||: Var "s"))
---                  (Var "p" :||: (Var "s" :||: Var "r") :||: Var "s")
+-- import Domain.Logic.Formula
+-- import Domain.Logic.Generator()
+-- import Domain.Logic.Parser
+-- import Text.Parsing (fromRanged)
+
+{-
+Right term1 = parseLogic "(r /\\ p /\\ ~s /\\ (p || r)) || (r /\\ p /\\ s /\\ ~p /\\ ~r) || \
+   \ (~r /\\ ~p /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (~q /\\ ((~s /\\ (p \
+   \ || r)) || (s /\\ ~p /\\ ~r))) || (s /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r) \
+   \ ))"
+Right term2 = parseLogic "(r /\\ p /\\ ~s /\\ (p || r)) || (r /\\ p /\\ ~p /\\ s /\\ ~r) || (~r /\\ ~ \
+   \ p /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (~q /\\ ((~s /\\ (p || r)) ||\
+   \(s /\\ ~p /\\ ~r))) || (s /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r)))"
+
+test = differenceEqual eqLogic (fromRanged term1) (fromRanged term2) -}
 
 -- Workaround: this function returns the diff, except that the 
 -- returned propositions should be logically equivalent. Currently
 -- used for reporting where a rewrite rule was applied.
-differenceEqual :: SLogic -> SLogic -> Maybe (SLogic, SLogic)
-differenceEqual p q = do
-   guard (eqLogic p q)
-   diff True p q
+differenceEqual :: Rewrite a => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
+differenceEqual eq p q = do
+   guard (eq p q)
+   diff eq p q
 
-difference :: SLogic -> SLogic -> Maybe (SLogic, SLogic)
-difference = diff False
+difference :: Rewrite a => a -> a -> Maybe (a, a)
+difference = diff (\_ _ -> True)
 
 -- local implementation function
-diff :: Bool -> SLogic -> SLogic -> Maybe (SLogic, SLogic)
-diff eqOpt p q 
+diff :: Rewrite a => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
+diff eq p q 
    | shallowEq p q =
-        case p of
-           _ :||: _ ->
-              let ps = disjunctions p
-                  qs = disjunctions q
-              in diffA eqOpt (:||:) (ps, qs)
-           _ :&&: _ ->
-              let ps = conjunctions p
-                  qs = conjunctions q
-              in diffA eqOpt (:&&:) (ps, qs)
-           _ -> diffList eqOpt (children p) (children q)
+        case findOperator operators p of
+           Just op | isAssociative op && not (isCommutative op) -> 
+              let ps = collectWithOperator op p
+                  qs = collectWithOperator op q
+              in diffA eq op ps qs
+           _ -> diffList eq (children p) (children q)
    | otherwise = Just (p, q)
-   
-diffList :: Bool -> [SLogic] -> [SLogic] -> Maybe (SLogic, SLogic)
-diffList eqOpt xs ys
+
+diffList :: Rewrite a => (a -> a -> Bool) -> [a] -> [a] -> Maybe (a, a)
+diffList eq xs ys
    | length xs /= length ys = Nothing
    | otherwise = 
-        case catMaybes (zipWith (diff eqOpt) xs ys) of
+        case catMaybes (zipWith (diff eq) xs ys) of
            [p] -> Just p
            _   -> Nothing
            
-diffA :: Bool -> (SLogic -> SLogic -> SLogic) -> 
-         ([SLogic], [SLogic]) -> Maybe (SLogic, SLogic)
-diffA eqOpt op = make . rev . f . rev . f 
+diffA :: Rewrite a => (a -> a -> Bool) -> Operator a -> [a] -> [a] -> Maybe (a, a)
+diffA eq op = curry (make . uncurry rev . f . uncurry rev . f)
  where
    f (p:ps, q:qs) | not (null ps || null qs) && 
-                    isNothing (diff eqOpt p q) && 
-                    (not eqOpt || equal ps qs) = 
+                    isNothing (diff eq p q) && 
+                    (equal ps qs) = 
       f (ps, qs)
    f pair = pair
    
-   equal ps qs = eqLogic (foldr1 op ps) (foldr1 op qs)
-   rev  (ps, qs) = (reverse ps, reverse qs)
-   make pair = 
+   equal ps qs = buildWithOperator op ps `eq` buildWithOperator op qs
+   rev   ps qs = (reverse ps, reverse qs)
+   make pair   = 
       case pair of 
-         ([p], [q]) -> diff eqOpt p q
-         (ps, qs)   -> Just (foldr1 op ps, foldr1 op qs)
+         ([p], [q]) -> diff eq p q
+         (ps, qs)   -> Just (buildWithOperator op ps, buildWithOperator op qs)

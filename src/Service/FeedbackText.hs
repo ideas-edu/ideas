@@ -19,7 +19,7 @@ import Control.Monad
 import Common.Exercise
 import Common.Utils (safeHead, fst3, commaList)
 import Data.Maybe
-import Domain.Logic.Formula (SLogic)
+import Domain.Logic.Formula (SLogic, eqLogic)
 import Domain.Logic.FeedbackText
 import Domain.Logic.Exercises (dnfExercise, dnfUnicodeExercise)
 import Domain.Logic.Difference (difference, differenceEqual)
@@ -52,7 +52,7 @@ rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
 rewriteIntoText eqOption txt old a = do
    p <- coerceLogic (exercise old) (fromContext $ context old)
    q <- coerceLogic (exercise old) a
-   (p1, q1) <- if eqOption then differenceEqual p q
+   (p1, q1) <- if eqOption then differenceEqual eqLogic p q
                            else difference p q
    let ex | exerciseCode (exercise old) == exerciseCode dnfUnicodeExercise =
                dnfUnicodeExercise
@@ -94,22 +94,21 @@ getCode :: State a -> ExerciseCode
 getCode = exerciseCode . exercise
 
 derivationtext :: State a -> Maybe String -> [(String, Context a)]
-derivationtext st event = 
+derivationtext st _event = 
    map (first (showRule (getCode st))) (derivation st)
 
 onefirsttext :: State a -> Maybe String -> (Bool, String, State a)
 onefirsttext state event =
    case allfirsts state of
-      (r, _, s):_ -> 
-         case useToRewrite r state (fromContext $ context s) of
-            Just txt | event /= Just "hint button" -> 
-	       (True, txt, s)
-            _ -> 
-	       (True, "Use " ++ showRule (getCode state) r, s)
+      (r, _, s):_ ->
+         let msg = case useToRewrite r state (fromContext $ context s) of
+                      Just txt | event /= Just "hint button" -> txt
+                      _ -> "Use " ++ showRule (getCode state) r
+         in (True, msg, s)
       _ -> (False, "Sorry, no hint available", state)
 
 submittext :: State a -> String -> Maybe String -> (Bool, String, State a)
-submittext state txt event = 
+submittext state txt _event = 
    case parser (exercise state) txt of
       Left err -> 
          let msg = "Syntax error" ++ pos ++ ": " ++ show err

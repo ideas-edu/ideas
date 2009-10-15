@@ -31,8 +31,8 @@ function getKind() {
 }
 function getStudentNumber() {
 	global $studentid;
-	if ($studentid && $studentid != "") {
-		$content = 'id ='.$studentid.';';
+	if ($studentid && is_numeric($studentid)) {
+		$content = 'id = '.$studentid.';';
 		return '<script type="text/javascript">'.$content.'</script>';
 	}
 	else return "";

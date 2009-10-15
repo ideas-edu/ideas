@@ -16,7 +16,7 @@ import Prelude hiding (repeat)
 import Domain.Logic.Rules
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Formula
-import Common.Context (Context, liftToContext, fromContext)
+import Common.Context (Context, liftToContext, currentFocus)
 import Common.Rewriting (isOperator)
 import Common.Transformation
 import Common.Strategy
@@ -26,13 +26,18 @@ import Common.Strategy
 
 dnfStrategyDWA :: LabeledStrategy (Context SLogic)
 dnfStrategyDWA =  label "Bring to dnf (DWA)" $ 
-   repeat $ somewhereOr $  
-      label "Simplify"                            simplify
+   repeat $ toplevel <|> somewhereOr
+      (  label "Simplify"                            simplify
       |> label "Eliminate implications/equivalences" eliminateImplEquiv
       |> label "Eliminate nots"                      eliminateNots
       |> label "Move ors to top"                     orToTop
+      )
  where
-    simplify =  somewhere $ useRules
+    toplevel = useRules 
+       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
+       , ruleAbsorpOr, ruleComplOr
+       ]
+    simplify = somewhere $ useRules
        [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
        , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse
        , ruleNotNot, ruleIdempOr, ruleIdempAnd, ruleAbsorpOr, ruleAbsorpAnd
@@ -50,10 +55,11 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
 
 -- A specialized variant of the somewhere traversal combinator. Apply 
 -- the strategy only at (top-level) disjuncts 
-somewhereOr :: IsStrategy f => f (Context SLogic) -> Strategy (Context SLogic)
+somewhereOr :: IsStrategy g => g (Context SLogic) -> Strategy (Context SLogic)
 somewhereOr s =
-   let isOr = isOperator orOperator . fromContext
-   in fix $ \this -> s <|> check isOr <*> once this
+   let isOr = maybe False (isOperator orOperator) . currentFocus
+   in fix $ \this -> check (Prelude.not . isOr) <*> s 
+                 <|> check isOr <*> once this
 
 -----------------------------------------------------------------------------
 -- To DNF, in four steps

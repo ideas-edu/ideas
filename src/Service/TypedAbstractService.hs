@@ -9,12 +9,17 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.TypedAbstractService where
+module Service.TypedAbstractService 
+   ( State(..), emptyState, term
+   , stepsremaining, findbuggyrules, submit, ready, allfirsts
+   , derivation, onefirst, applicable, apply, generate
+   , Result(..), getResultState, resetStateIfNeeded
+   ) where
 
 import qualified Common.Apply as Apply
 import Common.Context 
 import Common.Exercise (Exercise(..), ruleset, randomTermWith)
-import Common.Strategy (Prefix, emptyPrefix, runPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
+import Common.Strategy (Prefix, emptyPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Data.Maybe
@@ -54,6 +59,7 @@ generate ex level = do
 generateWith :: StdGen -> Exercise a -> Int -> State a
 generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
 
+{- Old implementation: to be removed
 derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state = fromMaybe (error "derivation") $ do
    p0 <- prefix state
@@ -64,7 +70,13 @@ derivation state = fromMaybe (error "derivation") $ do
                    run x (r:rs) = [ y:ys | y <- Apply.applyAll r x, ys <- run y rs ] 
                in fromMaybe [] $ safeHead (run (context state) rules)
        check = isMajorRule . fst
-   return $ filter check $ zip rules terms
+   return $ filter check $ zip rules terms -}
+   
+derivation :: State a -> [(Rule (Context a), Context a)]
+derivation state =
+   case allfirsts state of 
+      [] -> []
+      (r, _, next):_ -> (r, context next) : derivation next
 
 -- The last condition in the list comprehension is to avoid a very subtle case in which some steps
 -- remain to be done (in the prefix), but those steps are administrative (not even minor rules, but 

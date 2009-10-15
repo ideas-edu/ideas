@@ -103,4 +103,14 @@ testGen = forAll generateLogic $ \p ->
    in countEquivalences p <= 2 ==> label (show (n >= 4 && n <= 12)) True
    
 testme :: IO ()
-testme = quickCheck testGen -}
+testme = quickCheck testGen 
+
+
+import Service.TypedAbstractService
+
+start = ((r :<->: p) :||: (q :->: s)) :&&: (Not s :<->: (p :||: r))
+ where
+  (p, q, r, s) = (Var "p", Var "q", Var "r", Var "s")
+
+go = derivation . emptyState dnfExercise
+-}

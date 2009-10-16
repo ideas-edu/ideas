@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 <title>Exercise Assistant Online</title>
-<link rel="stylesheet" type="text/css" href="/exas/css/exas.css">
+<link rel="stylesheet" type="text/css" href="css/exas.css">
 <link rel="shortcut icon" href="/exas/css/favicon.ico" type="image/x-icon">
 </head>
 <body>

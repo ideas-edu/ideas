@@ -106,7 +106,9 @@ between a (low, high) = low <= a && a <= high
 
 -- | QuickCheck internal encoding/decoding functions
 testEncoding :: IO () 
-testEncoding = quickCheck $ forAll (sized gen) valid
+testEncoding = do
+   putStrLn "** UTF8 encoding"
+   quickCheck $ forAll (sized gen) valid
  where
    gen n = replicateM n someChar
    someChar = liftM chr $ oneof

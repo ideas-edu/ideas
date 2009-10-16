@@ -12,7 +12,7 @@
 module Service.TypedAbstractService 
    ( State(..), emptyState, term
    , stepsremaining, findbuggyrules, submit, ready, allfirsts
-   , derivation, onefirst, applicable, apply, generate
+   , derivation, onefirst, applicable, apply, generate, generateWith
    , Result(..), getResultState, resetStateIfNeeded
    ) where
 

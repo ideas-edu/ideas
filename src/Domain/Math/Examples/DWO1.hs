@@ -8,8 +8,10 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Example exercises from the Digital Mathematics Environment (DWO)
+--
 -----------------------------------------------------------------------------
-module Domain.Math.ExercisesDWO
+module Domain.Math.Examples.DWO1
    ( calculateResults, fillInResult
    , coverUpEquations, linearEquations
    , quadraticEquations, higherDegreeEquations 

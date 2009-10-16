@@ -22,7 +22,7 @@ import Domain.Math.Data.Equation
 import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
-import Domain.Math.ExercisesDWO
+import Domain.Math.Examples.DWO1
 import Domain.Math.Expr.Parser
 import Common.View
 import Common.Context

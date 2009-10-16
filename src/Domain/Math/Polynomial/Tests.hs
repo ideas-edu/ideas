@@ -19,7 +19,7 @@ import Common.Strategy
 import Common.View
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
-import Domain.Math.ExercisesDWO
+import Domain.Math.Examples.DWO1
 import Domain.Math.Polynomial.Exercises
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Views

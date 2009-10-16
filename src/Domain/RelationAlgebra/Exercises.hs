@@ -21,7 +21,7 @@ import Common.Apply
 import Common.Exercise
 import Common.Context
 import Text.Parsing (fromRanged)
-import Common.Rewriting (treeDiff)
+import Common.Rewriting (differenceMode)
 import Common.Strategy hiding (not)
 import Common.Transformation
 
@@ -35,7 +35,7 @@ cnfExercise = testableExercise
    , equivalence    = probablyEqual -- isEquivalent
    , extraRules     = map liftToContext (relAlgRules ++ buggyRelAlgRules)
    , strategy       = toCNF
-   , differences    = treeDiff
+   , difference     = differenceMode probablyEqual
    , ordering       = compare
    , isReady        = ready (ruleset cnfExercise)
    , randomExercise = let ok p = let n = steps p

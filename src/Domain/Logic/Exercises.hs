@@ -22,7 +22,6 @@ import Domain.Logic.Strategies
 import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
-import Domain.Logic.Difference
 import Common.Apply
 import qualified Common.Grammar as RE
 import Common.Derivation
@@ -31,7 +30,7 @@ import Common.Context
 import Common.Strategy
 import Common.Transformation
 import Text.Parsing (fromRanged)
-import Common.Rewriting
+import Common.Rewriting (differenceMode)
 import Test.QuickCheck
 
 -- Currently, we use the DWA strategy
@@ -48,8 +47,7 @@ dnfExercise = makeExercise
    , isSuitable     = suitable
    , extraRules     = map liftToContext (logicRules ++ buggyRules)
    , strategy       = dnfStrategyDWA
-   , differences    = treeDiff
-   , newDifference  = \_ -> differenceEqual eqLogic
+   , difference     = differenceMode eqLogic
    , testGenerator  = Just (restrictGenerator suitable generateLogic)
    , randomExercise = useGenerator (const True) logicExercise
    }

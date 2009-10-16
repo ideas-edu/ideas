@@ -22,10 +22,8 @@ import Data.Maybe
 import Domain.Logic.Formula (SLogic, eqLogic)
 import Domain.Logic.FeedbackText
 import Domain.Logic.Exercises (dnfExercise, dnfUnicodeExercise)
-import Domain.Logic.Difference (difference, differenceEqual)
 import Service.TypedAbstractService
 import Common.Context
-import Common.Exercise
 import Common.Transformation (name, Rule)
 import Text.Parsing (errorToPositions)
 import Data.Char
@@ -49,14 +47,13 @@ useToRewrite rule old = rewriteIntoText True txt old
          ++ " to rewrite "
 
 rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
-rewriteIntoText eqOption txt old a = do
-   p <- coerceLogic (exercise old) (fromContext $ context old)
-   q <- coerceLogic (exercise old) a
-   (p1, q1) <- if eqOption then differenceEqual eqLogic p q
-                           else difference p q
+rewriteIntoText mode txt old a = do
    let ex | exerciseCode (exercise old) == exerciseCode dnfUnicodeExercise =
                dnfUnicodeExercise
           | otherwise = dnfExercise
+   p <- coerceLogic (exercise old) (fromContext $ context old)
+   q <- coerceLogic (exercise old) a
+   (p1, q1) <- difference ex mode p q
    return $ txt ++ prettyPrinter ex p1 
          ++ " into " ++ prettyPrinter ex q1 ++ ". "
 

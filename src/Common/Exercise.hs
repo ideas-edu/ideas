@@ -16,22 +16,21 @@ module Common.Exercise
      Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, strategy, extraRules
-   , differences, newDifference
-   , ordering, testGenerator, randomExercise, examples, getRule
+   , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
      -- * Exercise codes
    , ExerciseCode, noCode, makeCode, readCode, domain, identifier
      -- * Miscellaneous
    , restrictGenerator
-   , showDerivation, showDerivationWith, showDerivations, printDerivation, printDerivations
+   , showDerivation, showDerivationWith, showDerivations
+   , printDerivation, printDerivations
    , checkExercise, checkParserPretty
    , checksForList
    ) where
 
 import Common.Apply
 import Common.Context
-import Common.Rewriting (TreeDiff(..))
 import Common.Strategy hiding (not, fail, replicate)
 import Common.Transformation
 import Common.Utils
@@ -59,8 +58,7 @@ data Exercise a = Exercise
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
-   , differences    :: a -> a -> [([Int], TreeDiff)]
-   , newDifference  :: Bool -> a -> a -> Maybe (a, a) 
+   , difference     :: Bool -> a -> a -> Maybe (a, a) 
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
    , randomExercise :: Maybe (StdGen -> Int -> a)
@@ -108,8 +106,7 @@ emptyExercise = Exercise
      -- strategies and rules
    , strategy       = label "Succeed" succeed
    , extraRules     = [] 
-   , differences    = \_ _ -> [([], Different)]
-   , newDifference  = \_ _ _ -> Nothing
+   , difference     = \_ _ _ -> Nothing
      -- testing and exercise generation
    , testGenerator  = Nothing
    , randomExercise = Nothing

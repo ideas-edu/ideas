@@ -168,17 +168,18 @@ submit state new
    expected = 
       let p (_, _, ns) = similarity (exercise state) new (term ns)
       in safeHead (filter p (allfirsts state))
- 
-   (sub1, sub2) = fromMaybe (term state, new) $
-      newDifference (exercise state) True (term state) new
- 
-   discovered useBuggyRules = safeHead
+
+   discovered searchForBuggy = safeHead
       [ r
       | r <- ruleset (exercise state)
-      , isBuggyRule r == useBuggyRules
+      , isBuggyRule r == searchForBuggy
       , a <- Apply.applyAll r (inContext sub1)
       , similarity (exercise state) sub2 (fromContext a)
       ]
+    where 
+      mode = not searchForBuggy
+      diff = difference (exercise state) mode (term state) new
+      (sub1, sub2) = fromMaybe (term state, new) diff 
 
 getResultState :: Result a -> Maybe (State a)
 getResultState result =

@@ -8,37 +8,27 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Compute the difference of two logical propositions, taking associativity
--- into account. Ideally, we would reuse treeDiff (see Common.Rewriting), 
--- but the current implementation does not use associativity.
+-- Compute the difference of two terms generically, taking associativity
+-- into account.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Difference (difference, differenceEqual) where
+module Common.Rewriting.Difference 
+   ( difference, differenceEqual, differenceMode
+   ) where
 
+import Common.Rewriting.AC
+import Common.Rewriting.Unification
 import Control.Monad
-import Common.Rewriting
 import Common.Uniplate
 import Data.Maybe
 
--- import Domain.Logic.Formula
--- import Domain.Logic.Generator()
--- import Domain.Logic.Parser
--- import Text.Parsing (fromRanged)
+differenceMode :: Rewrite a => (a -> a -> Bool) -> Bool -> a -> a -> Maybe (a, a)
+differenceMode eq b =
+   if b then differenceEqual eq else difference
 
-{-
-Right term1 = parseLogic "(r /\\ p /\\ ~s /\\ (p || r)) || (r /\\ p /\\ s /\\ ~p /\\ ~r) || \
-   \ (~r /\\ ~p /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (~q /\\ ((~s /\\ (p \
-   \ || r)) || (s /\\ ~p /\\ ~r))) || (s /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r) \
-   \ ))"
-Right term2 = parseLogic "(r /\\ p /\\ ~s /\\ (p || r)) || (r /\\ p /\\ ~p /\\ s /\\ ~r) || (~r /\\ ~ \
-   \ p /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))) || (~q /\\ ((~s /\\ (p || r)) ||\
-   \(s /\\ ~p /\\ ~r))) || (s /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r)))"
-
-test = differenceEqual eqLogic (fromRanged term1) (fromRanged term2) -}
-
--- Workaround: this function returns the diff, except that the 
--- returned propositions should be logically equivalent. Currently
--- used for reporting where a rewrite rule was applied.
+-- | This function returns the difference, except that the 
+-- returned terms should be logically equivalent. Nothing can signal that
+-- there is no difference, or that the terms to start with are not equivalent.
 differenceEqual :: Rewrite a => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
 differenceEqual eq p q = do
    guard (eq p q)

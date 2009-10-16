@@ -83,8 +83,8 @@ function controleer(e) {	// eerst  de character code ophalen
 			case 112 : case 113 : case 114 : case 115 : case 32 : case 84 : case 70 : case 40 : case 41 :
 			     	 return true;
 			// speciale navigatie toetsen, zoals pijltjes, backspace, home
-                        case 37 : case 39 : case 46 : case 8 : case 35 : case 36 :
-                                 return true;
+                        case 37 : case 39 : case 8 : case 35 : case 46 : case 36 :
+                                 if (!e.isChar) return true;
 		        // knippen en plakken
 			case 99 : case 118 : case 120 :
                                  if (e.ctrlKey || e.metaKey) return true;

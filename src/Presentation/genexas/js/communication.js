@@ -85,7 +85,7 @@ function getNext() {
 	var newText = '';
 
 	if (valid) {
-		newText = '<p><strong>' + rule + ' </strong></p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + 
+		newText = '<p>' + rule + ' </p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + 
 '</p><p';
         }
         else {

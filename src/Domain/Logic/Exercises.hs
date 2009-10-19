@@ -24,7 +24,7 @@ import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
 import Common.Apply
 import qualified Common.Grammar as RE
-import Common.Derivation
+import Common.Derivation hiding (steps)
 import Common.Exercise
 import Common.Context
 import Common.Strategy
@@ -32,6 +32,7 @@ import Common.Transformation
 import Text.Parsing (fromRanged)
 import Common.Rewriting (differenceMode)
 import Test.QuickCheck
+import Data.Maybe
 
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
@@ -67,16 +68,16 @@ logicExercise n =
           | n == 1    = generateLevel Easy
           | n == 3    = generateLevel Difficult 
           | otherwise = generateLevel Normal 
-       ok p = let n = steps (maxStep+1) p
+       ok p = let n = fromMaybe maxBound (steps maxStep p)
               in countEquivalences p <= 2 && n >= minStep && n <= maxStep
    in restrictGenerator ok gen
 
 suitable :: SLogic -> Bool
 suitable = (<=2) . countEquivalences
 
-steps :: Int -> SLogic -> Int
+steps :: Int -> SLogic -> Maybe Int
 steps i = stepsMax i 
-        . filterIntermediates isMajorRule 
+        . mergeSteps isMajorRule 
         . makeDerivation dnfStrategyDWA 
         . inContext
 
@@ -85,7 +86,7 @@ makeDerivation :: LabeledStrategy a -> a -> DerivationTree (Rule a) a
 makeDerivation = grammarDerivation . noLabels . unlabel
 
 grammarDerivation :: RE.Grammar (Rule a) -> a -> DerivationTree (Rule a) a
-grammarDerivation s a = addBranches list (emptyNode a (RE.empty s))
+grammarDerivation s a = addBranches list (singleNode a (RE.empty s))
  where
    list = [ (f, grammarDerivation rest b) 
           | (f, rest) <- RE.firsts s

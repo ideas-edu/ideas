@@ -23,8 +23,7 @@ module Common.Exercise
    , ExerciseCode, noCode, makeCode, readCode, domain, identifier
      -- * Miscellaneous
    , restrictGenerator
-   , showDerivation, showDerivationWith, showDerivations
-   , printDerivation, printDerivations
+   , showDerivation, printDerivation
    , checkExercise, checkParserPretty
    , checksForList
    ) where
@@ -32,6 +31,7 @@ module Common.Exercise
 import Common.Apply
 import Common.Context
 import Common.Strategy hiding (not, fail, replicate)
+import Common.Derivation
 import Common.Transformation
 import Common.Utils
 import Control.Monad.Error
@@ -197,9 +197,7 @@ identifier _        = []
 
 ---------------------------------------------------------------
 -- Rest
-
-
-            
+     
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 
    case filter ((==s) . name) (ruleset ex) of 
@@ -207,31 +205,17 @@ getRule ex s =
       []   -> fail $ "Could not find ruleid " ++ s
       _    -> fail $ "Ambiguous ruleid " ++ s
 
-showDerivations :: Exercise a -> [a] -> String
-showDerivations ex xs = unlines (zipWith f [1..] xs)
- where
-   f i x = unlines
-      [ replicate 50 '-'
-      , "-- Exercise " ++ show i ++ "\n"
-      , showDerivation ex x
-      ]
-
 showDerivation :: Exercise a -> a -> String
-showDerivation ex = showDerivationWith (prettyPrinter ex) (unlabel (strategy ex))
+showDerivation ex = 
+   let err = "<<no derivation>>"
+       f   = show . fmap (Shown . prettyPrinter ex . fromContext)
+   in maybe err f . derivation . derivationTree (strategy ex) . inContext
 
-showDerivationWith :: (a -> String) -> Strategy (Context a) -> a -> String
-showDerivationWith showf s start = unlines $ 
-   case derivations s (inContext start) of 
-      [] -> [f (inContext start), "    => no derivation"]
-      (a, xs):_ -> f a : concatMap g xs
- where
-   f a = "  " ++ showf (fromContext a)
-   g (r, a)
-      | isMinorRule r = []
-      | otherwise =  ["    => " ++ show r, f a]
-         
-printDerivations :: Exercise a -> [a] -> IO ()
-printDerivations ex = putStrLn . showDerivations ex
+-- local helper datatype
+data Shown = Shown String 
+
+instance Show Shown where
+   show (Shown s) = s
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex
@@ -284,9 +268,9 @@ checksForList ex
 checksForTerm :: Monad m => Exercise a -> a -> m ()
 checksForTerm ex a = 
    let txt = prettyPrinter ex a in
-   case derivations (unlabel $ strategy ex) (inContext a) of
-      [] -> fail $ "no derivation for " ++ txt
-      (_, xs):_ -> do
+   case derivation (derivationTree (strategy ex) (inContext a)) of
+      Nothing -> fail $ "no derivation for " ++ txt
+      Just theDerivation -> do
          unless (isReady ex (last as)) $
             fail $ "not solved: " ++ txt
          case [ (x, y) | x <- as, y <- as, not (equivalence ex x y) ] of
@@ -299,4 +283,4 @@ checksForTerm ex a =
                            either show (prettyPrinter ex) (parser ex s)
             _    -> return ()
        where
-         as = a : map (fromContext . snd) xs
+         as = map fromContext (terms theDerivation)

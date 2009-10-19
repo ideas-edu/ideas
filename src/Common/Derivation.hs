@@ -14,15 +14,16 @@
 -----------------------------------------------------------------------------
 module Common.Derivation 
    ( -- * Data types 
-     DerivationTree, Derivations, Derivation
+     DerivationTree, Derivations, Derivation(..)
      -- * Constructors
    , singleNode, addBranch, addBranches
      -- * Query
-   , root, endpoint, branches, annotations, subtrees, steps, stepsMax
+   , root, endpoint, branches, annotations, subtrees
+   , results, steps, stepsMax
      -- * Adapters
    , restrictHeight, mergeSteps, commit
      -- * Conversions
-   , derivation, derivations
+   , derivation, derivations, terms
    ) where
 
 import Common.Utils (safeHead)
@@ -136,3 +137,7 @@ derivations t = map (D (root t)) $
 -- | The first derivation (if any)
 derivation :: DerivationTree s a -> Maybe (Derivation s a)
 derivation = safeHead . derivations
+
+-- | All terms in a derivation
+terms :: Derivation s a -> [a]
+terms (D a xs) = a:map snd xs

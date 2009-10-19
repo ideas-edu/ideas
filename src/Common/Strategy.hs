@@ -19,7 +19,7 @@ module Common.Strategy
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
      -- * Running strategies
-   , runStrategy, derivations, runWithSteps, traceStrategy, noLabels{-not nice-}
+   , derivationTree -- , runWithSteps, traceStrategy
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
@@ -36,22 +36,18 @@ module Common.Strategy
    , Prefix, emptyPrefix, makePrefix
    , Step(..), runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
    , prefixToSteps, stepsToRules, lastRuleInPrefix
-     -- * Strategy inversion
-   , inverse
    ) where
 
 import Common.Apply
 import Common.Context
+import Common.Derivation
 import Common.Rewriting hiding (inverse)
 import Common.Transformation
 import Common.Uniplate (Uniplate, children)
 import Common.Utils
-import Control.Monad (liftM, when, forM)
-import Data.Maybe
 import Prelude hiding (fail, not, repeat, replicate, sequence)
 import qualified Common.Grammar as RE
 import qualified Prelude as Prelude
-
 
 -----------------------------------------------------------
 -- Data types and type classes
@@ -79,7 +75,7 @@ instance Show a => Show (LabeledStrategy a) where
 
 -- instances for Apply
 instance Apply Strategy where
-   applyAll = runStrategy
+   applyAll s = results . derivationTree s
 
 instance Apply LabeledStrategy where
    applyAll = applyAll . unlabel
@@ -108,53 +104,19 @@ instance Lift (LabeledStrategy) where
 -----------------------------------------------------------
 --- Running strategies
 
--- | Run a strategy on a term (implementation of the overloaded @applyAll@ function)
-runStrategy :: Strategy a -> a -> [a]
-runStrategy = RE.run . noLabels
-
--- | Returns all possible derivations (the first components in the pairs are 
--- the start term)
-derivations :: Strategy a -> a -> [(a, [(Rule a, a)])]
-derivations s a = zip (Prelude.repeat a) (RE.runIntermediates (noLabels s) a)
-
--- | Returns all intermediate steps (the first components in the pairs are 
--- the start term)
-runWithSteps :: LabeledStrategy a -> a -> [(a, [(Step a, a)])]
-runWithSteps s a = zip (Prelude.repeat a) (RE.runIntermediates (withMarks s) a)
-
--- | Run a strategy on a term, and traces the progress. Useful for debugging strategies
-traceStrategy :: Show a => Strategy a -> a -> IO [a]
-traceStrategy = rec 0 
+-- | Returns the derivation tree for a strategy and a term
+derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
+derivationTree = rec . noLabels . toStrategy
  where
-   indent n s = putStrLn (Prelude.replicate n ' ' ++ s)
- 
-   rec n s a = do
-      let b = empty s
-      indent n (show a ++ if b then "   (end)" else "")
-      let f (rule, rest) =
-             liftM concat $ forM (applyAll rule a) $ \b -> do
-                let n2 = n+2
-                indent n2 ("[" ++ show rule ++ "]")
-                rec n2 rest b
-      xss <- mapM f (firsts s)
-      when (null (concat xss)) (indent n "---")
-      return $ [ a | b ] ++ concat xss
-
--- local helper function 
-empty :: Strategy a -> Bool
-empty = RE.empty . noLabels
+   rec s a  = addBranches (list s a) (singleNode a (RE.empty s))
+   list s a = [ (f, rec rest b)
+              | (f, rest) <- RE.firsts s
+              , b <- applyAll f a 
+              ]
 
 -- local helper function
 noLabels :: Strategy a -> RE.Grammar (Rule a)
 noLabels = RE.join . fmap (either RE.symbol (noLabels . unlabel)) . unS
-
--- local helper function
-firsts :: Strategy a -> [(Rule a, Strategy a)]
-firsts = concatMap f . RE.firsts . unS
- where
-   f (Left r,   re) = [(r, S re)]
-   f (Right ns, re) = [ (r, s <*> S re) | (r, s) <- firsts (unlabel ns) ] ++
-                      if empty (unlabel ns) then firsts (S re) else []
 
 -----------------------------------------------------------
 --- Strategy combinators
@@ -455,15 +417,3 @@ withMarks = rec []
       let begin = RE.symbol (Begin is)
           end   = RE.symbol (End is) 
       in begin RE.<*> g RE.<*> end
-            
------------------------------------------------------------
---- Strategy inversion
-   
-inverse :: LabeledStrategy a -> LabeledStrategy a
-inverse (LS n s) = LS n (f s)
- where
-   f :: Strategy a -> Strategy a
-   f s = S (fmap (either (Left . g) (Right . inverse)) (RE.inverse (unS s)))
-   
-   g :: Rule a -> Rule a 
-   g r = fromMaybe (error $ "Rule not inversable: " ++ show (name r)) (inverseRule r)

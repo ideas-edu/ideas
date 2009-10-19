@@ -16,6 +16,7 @@ import Common.Apply
 import Common.Exercise
 import Common.Context
 import Common.Strategy
+import Common.Derivation
 import Common.View
 import Domain.Math.Data.Equation
 import Domain.Math.Data.OrList
@@ -62,18 +63,19 @@ randomLE = quickCheck $ forAll (liftM2 (:==:) (sized linearGen) (sized linearGen
 randomQE = quickCheck $ forAll (liftM2 (:==:) (sized quadraticGen) (sized quadraticGen)) $ \eq -> 
    (>0) (sum (take 10 $ f quadraticExercise 1 (orList [eq])))
 
+{-
 eqLE = concat $ zipWith (g linearExercise) [1..] $ concat linearEquations  
 eqQE = concat $ zipWith (g quadraticExercise) [1..] $ map (orList . return) $ concat quadraticEquations
 eqHDE = concat $ zipWith (g higherDegreeExercise) [1..] $ map (orList . return) higherDegreeEquations
 
-g s n e = map p (h (derivations (unlabel $ strategy s) (inContext e))) where
+g s n e = map p (h (derivations (derivationTree (strategy s) (inContext e)))) where
   h xs | null xs   = error $ show n ++ ": " ++ show e
        | otherwise = xs
   p (a, xs) = case [ (x, y) | x <- ys, y <- ys, Prelude.not (equivalence s x y) ] of
                  [] -> let l = length xs in l*l
                  (x, y):_ -> error $ show n ++ ": " ++ show x ++ "   is not   " ++ show y
    where ys = map fromContext (a : map snd xs)
-   
+-}
    
 -- e1 = match higherDegreeEquationsView $ OrList [(x :==: 2)] where x = Var "x"
 -- e2 = simplify rationalView (Sqrt ())

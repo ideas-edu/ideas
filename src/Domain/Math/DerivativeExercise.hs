@@ -20,6 +20,7 @@ import qualified Common.Strategy
 import Common.Context (Context, liftToContext)
 import Common.Exercise
 import Common.Transformation
+import Control.Monad
 import Domain.Math.Simplification
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
@@ -61,4 +62,5 @@ ex3 = diff $ lambda (Var "x") (2 * Var "x")
 ex4 = diff $ lambda (Var "x") (ln (Var "x"))
 
 main :: IO ()
-main = printDerivations derivativeExercise [ex1, ex2, ex3, ex4]
+main = forM_ [ex1, ex2, ex3, ex4] $
+   printDerivation derivativeExercise

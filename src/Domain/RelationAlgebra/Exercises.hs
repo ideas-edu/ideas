@@ -20,7 +20,9 @@ import Domain.RelationAlgebra.Parser
 import Common.Apply
 import Common.Exercise
 import Common.Context
+import Data.Maybe
 import Text.Parsing (fromRanged)
+import Common.Derivation
 import Common.Rewriting (differenceMode)
 import Common.Strategy hiding (not)
 import Common.Transformation
@@ -38,16 +40,14 @@ cnfExercise = testableExercise
    , difference     = differenceMode probablyEqual
    , ordering       = compare
    , isReady        = ready (ruleset cnfExercise)
-   , randomExercise = let ok p = let n = steps p
+   , randomExercise = let ok p = let n = fromMaybe maxBound (stepsRemaining 4 p)
                                  in n >= 2 && n <= 4
                       in useGenerator ok (\_ -> templateGenerator 1)
    }
 
-steps :: RelAlg -> Int
-steps p =
-   case derivations (unlabel toCNF) (inContext p) of
-      (_, xs):_ -> length (take 15 (filter (isMajorRule . fst) xs))
-      _         -> 15
+stepsRemaining :: Int -> RelAlg -> Maybe Int
+stepsRemaining i = 
+   stepsMax i . mergeSteps isMajorRule . derivationTree toCNF . inContext
 
 {- cnfExerciseSimple :: Exercise RelAlg
 cnfExerciseSimple = cnfExercise

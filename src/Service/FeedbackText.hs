@@ -19,7 +19,7 @@ import Control.Monad
 import Common.Exercise
 import Common.Utils (safeHead, fst3, commaList)
 import Data.Maybe
-import Domain.Logic.Formula (SLogic, eqLogic)
+import Domain.Logic.Formula (SLogic)
 import Domain.Logic.FeedbackText
 import Domain.Logic.Exercises (dnfExercise, dnfUnicodeExercise)
 import Service.TypedAbstractService

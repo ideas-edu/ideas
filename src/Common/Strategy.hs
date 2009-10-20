@@ -33,8 +33,9 @@ module Common.Strategy
    , StrategyLocation, StrategyOrRule, strategyLocations, subStrategy
    , mapRules, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
-   , Prefix, emptyPrefix, makePrefix
-   , Step(..), runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
+   , Prefix(..), emptyPrefix, makePrefix, Step(..)
+--   , runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
+   , runPrefixMajor, runPrefixLocation    -- , prefixDerivationTree, runPrefix
    , prefixToSteps, stepsToRules, lastRuleInPrefix
    ) where
 
@@ -328,7 +329,7 @@ emptyPrefix = makePrefix []
 makePrefix :: [Int] -> LabeledStrategy a -> Prefix a
 makePrefix is ls = rec [] is start
  where
-   start = withMarks ls
+   start = withSteps ls
    
    rec acc [] g = P (reverse acc) g
    rec acc (n:ns) g = 
@@ -337,18 +338,34 @@ makePrefix is ls = rec [] is start
          _        -> P [] start
 
 -- | The @Step@ data type can be used to inspect the structure of the strategy
-data Step a = Begin StrategyLocation | Step StrategyLocation (Rule a) | End StrategyLocation
-   deriving Show 
+data Step a = Begin StrategyLocation 
+            | Step StrategyLocation (Rule a) 
+            | End StrategyLocation
+   deriving (Show, Eq)
 
 instance Apply Step where
-   apply (Step _ r) = apply r
-   apply (Begin _)  = return
-   apply (End _)    = return
+   applyAll (Step _ r) = applyAll r
+   applyAll (Begin _)  = return
+   applyAll (End _)    = return
 
--- | Complete the remaining strategy
-runPrefix :: Prefix a -> a -> [(a, Prefix a)]
-runPrefix = runPrefixUntil (const False)
+instance Apply Prefix where
+   applyAll p = results . (prefixDerivationTree p)
 
+prefixDerivationTree :: Prefix a -> a -> DerivationTree (Prefix a) a
+prefixDerivationTree (P xs g) a =
+   addBranches list (singleNode a (RE.empty g))
+ where
+   add (i, (step, rest)) = P (xs ++ [(i, step)]) rest
+   list = [ (newPrefix, prefixDerivationTree newPrefix b)
+          | triple@(_, (step, _)) <- zip [0..] (RE.firsts g)
+          , let newPrefix = add triple
+          , b <- applyAll step a
+          ]
+   
+--  Complete the remaining strategy
+--runPrefix :: Prefix a -> a -> [(a, Prefix a)]
+-- runPrefix = runPrefixUntil (const False)
+{-
 -- | Continue with a prefix until a certain condition is fulfilled
 runPrefixUntil :: (Step a -> Bool) -> Prefix a -> a -> [(a, Prefix a)]
 runPrefixUntil stop (P xs0 g0) a0 = 
@@ -370,15 +387,44 @@ runPrefixUntilHelper stop a g
     where
       recStop a g
          | stop step = [(a, g, [])]
-         | otherwise = runPrefixUntilHelper stop a g
+         | otherwise = runPrefixUntilHelper stop a g -}
  
 -- | Continue with a prefix until the next major rule
 runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
-runPrefixMajor = runPrefixUntil stop
+runPrefixMajor p0 a =
+   let f (D a xs) | null xs   = (a, p0)
+                  | otherwise = let (a,b) =last xs  in (b,a)
+       stop (Step _ r) = isMajorRule r
+       stop _          = False
+       c (P xs _) = stop (snd $ last xs) -- fix me
+       tree = cutOnStep c (prefixDerivationTree p0 a)
+   in map f (derivations tree)
+
+-- | Continue with a prefix until a certain strategy location is reached. At least one
+-- major rule should have been executed
+runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
+runPrefixLocation loc p0 a = 
+   let f (D a xs) | null xs   = (a, p0)
+                  | otherwise = let (a,b) =last xs  in (b,a)
+       stop (End is)    = is==loc
+       stop (Step is _) = is==loc
+       stop _           = False
+       c (P xs _) = stop (snd $ last xs)
+       tree = cutOnStep c (prefixDerivationTree p0 a)
+   in concatMap check $ map f $ derivations tree
+ where
+   check result@(a, p)
+      | null rules            = [result]
+      | all isMinorRule rules = runPrefixLocation loc p a
+      | otherwise             = [result]
+    where
+      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
+{-
+runPrefixMajorOld = runPrefixUntil stop
  where
    stop (Step _ r) = isMajorRule r
-   stop _          = False  
-   
+   stop _          = False 
+   -} {-
 -- | Continue with a prefix until a certain strategy location is reached. At least one
 -- major rule should have been executed
 runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
@@ -393,7 +439,7 @@ runPrefixLocation loc p0 = concatMap check . runPrefixUntil stop p0
       | all isMinorRule rules = runPrefixLocation loc p a
       | otherwise             = [result]
     where
-      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
+      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p -}
 
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [Step a]
@@ -408,8 +454,8 @@ lastRuleInPrefix :: Prefix a -> Maybe (Rule a)
 lastRuleInPrefix = safeHead . reverse . stepsToRules . prefixToSteps
 
 -- local helper function
-withMarks :: LabeledStrategy a -> RE.Grammar (Step a)
-withMarks = rec [] 
+withSteps :: LabeledStrategy a -> RE.Grammar (Step a)
+withSteps = rec []
  where
    rec is = mark is . RE.join . combine f is . unS . unlabel
    f   is = either (RE.symbol . Step is) (rec is)

@@ -32,6 +32,15 @@ import Domain.Logic.Strategies
 import Test.QuickCheck
 import Text.Parsing (fromRanged)
 
+
+-- okay = runPrefix (emptyPrefix dnfStrategyDWA) (inContext $ Not (Not (Var "p") :&&: Not (Var "q")))
+{-
+ww = mergeSteps (\_ -> False) -- (\(P xs b) -> pr $ snd $ last xs)
+   $ prefixDerivationTree (emptyPrefix dnfStrategyDWA) (inContext $ Not (Not (Var "p") :&&: Not (Var "q")))
+ where
+   pr (Step _ r) = isMajorRule r
+   pr _ = False -}
+   
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
 dnfExercise = makeExercise

@@ -21,7 +21,7 @@ module Common.Derivation
    , root, endpoint, branches, annotations, subtrees
    , results, steps, stepsMax
      -- * Adapters
-   , restrictHeight, mergeSteps, commit
+   , restrictHeight, mergeSteps, cutOnStep, commit
      -- * Conversions
    , derivation, derivations, terms
    ) where
@@ -29,6 +29,7 @@ module Common.Derivation
 import Common.Utils (safeHead)
 import Control.Arrow
 import Control.Monad
+import Data.List
 import Data.Maybe
 
 -----------------------------------------------------------------------------
@@ -105,7 +106,7 @@ stepsMax n = join . fmap f . steps . commit . restrictHeight (n+1)
 -- Nodes at this particular depth are turned into endpoints
 restrictHeight :: Int -> DerivationTree s a -> DerivationTree s a
 restrictHeight n t
-   | n == 0    = t {endpoint = True, branches = []}
+   | n == 0    = singleNode (root t) True
    | otherwise = t {branches = map f (branches t)} 
  where
    f = second (restrictHeight (n-1))
@@ -115,11 +116,22 @@ restrictHeight n t
 mergeSteps :: (s -> Bool) -> DerivationTree s a -> DerivationTree s a
 mergeSteps p = rec 
  where
-   rec (DT a b xs) = 
-      DT a (or (b:map (endpoint . snd) xs)) (concatMap f xs)
-   f (r, d)
-      | p r       = [(r, rec d)]
-      | otherwise = branches (rec d)
+   rec t = addBranches (concat list) (singleNode (root t) isEnd)
+    where
+      new = map rec (subtrees t)
+      (bools, list) = unzip (zipWith f (annotations t) new)
+      isEnd = endpoint t || or bools
+      f s st
+         | p s       = (False, [(s, st)])
+         | otherwise = (endpoint st, branches st)
+
+cutOnStep :: (s -> Bool) -> DerivationTree s a -> DerivationTree s a
+cutOnStep p = rec
+ where
+   rec t = t {branches = map f (branches t)}
+   f (s, t)
+      | p s       = (s, singleNode (root t) True)
+      | otherwise = (s, rec t)
 
 -- Commit to the left-most derivation (even if this path is unsuccessful)
 commit :: DerivationTree s a -> DerivationTree s a

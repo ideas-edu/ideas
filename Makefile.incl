@@ -47,7 +47,10 @@ TESTDIR = test
 
 HS-SOURCES = $(wildcard $(SRCDIR)/*.hs $(SRCDIR)/*/*.hs $(SRCDIR)/*/*/*.hs $(SRCDIR)/*/*/*/*.hs)
 GLADE-SOURCES = $(wildcard src/Presentation/ExerciseAssistant/*.glade*)
-	
+
+show: 
+	echo $(HS-SOURCES)
+
 #---------------------------------------------------------------------------------------
 # Programs, tools, and flags
 

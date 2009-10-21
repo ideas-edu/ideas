@@ -21,7 +21,6 @@ import Common.Derivation
 import Common.Exercise
 import Common.Rewriting (differenceMode)
 import Common.Strategy
-import Common.Transformation
 import Data.Maybe
 import Domain.Logic.BuggyRules
 import Domain.Logic.Formula
@@ -31,15 +30,6 @@ import Domain.Logic.Rules
 import Domain.Logic.Strategies
 import Test.QuickCheck
 import Text.Parsing (fromRanged)
-
-
--- okay = runPrefix (emptyPrefix dnfStrategyDWA) (inContext $ Not (Not (Var "p") :&&: Not (Var "q")))
-{-
-ww = mergeSteps (\_ -> False) -- (\(P xs b) -> pr $ snd $ last xs)
-   $ prefixDerivationTree (emptyPrefix dnfStrategyDWA) (inContext $ Not (Not (Var "p") :&&: Not (Var "q")))
- where
-   pr (Step _ r) = isMajorRule r
-   pr _ = False -}
    
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
@@ -84,7 +74,7 @@ suitable = (<=2) . countEquivalences
 
 stepsRemaining :: Int -> SLogic -> Maybe Int
 stepsRemaining i = 
-   stepsMax i . mergeSteps isMajorRule . derivationTree dnfStrategyDWA . inContext
+   lengthMax i . derivationTree dnfStrategyDWA . inContext
 
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)

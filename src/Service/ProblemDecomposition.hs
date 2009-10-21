@@ -14,6 +14,7 @@ module Service.ProblemDecomposition (problemDecomposition) where
 import Common.Apply
 import Common.Context
 import Common.Exercise
+import Common.Derivation
 import Common.Strategy hiding (not, repeat)
 import Common.Transformation
 import Common.Utils
@@ -65,6 +66,25 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                       f (s, a) = (s, fromContext a)
                   in map f (makeDerivation requestedTerm rules)
 
+-- | Continue with a prefix until a certain strategy location is reached. At least one
+-- major rule should have been executed
+runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
+runPrefixLocation loc p0 = 
+   concatMap (check . f) . derivations . 
+   cutOnStep (stop . lastStepInPrefix) . prefixTree p0
+ where
+   f d = (last (terms d), if isEmpty d then p0 else last (steps d))
+   stop (Just (End is))    = is==loc
+   stop (Just (Step is _)) = is==loc
+   stop _ = False
+ 
+   check result@(a, p)
+      | null rules            = [result]
+      | all isMinorRule rules = runPrefixLocation loc p a
+      | otherwise             = [result]
+    where
+      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
+
 -- old (current) and actual (next major rule) location
 subTask :: [Int] -> [Int] -> [Int]
 subTask (i:is) (j:js)
@@ -104,9 +124,18 @@ nextMajorForPrefix p0 a = fromMaybe [] $ do
    case lastStep of
       Step is r | not (isMinorRule r) -> return is
       _ -> Nothing
-      
+
 makeDerivation :: a -> [Rule a] -> [(String, a)]
 makeDerivation _ []     = []
 makeDerivation a (r:rs) = 
    let new = applyD r a
    in [ (name r, new) | isMajorRule r ] ++ makeDerivation new rs 
+   
+-- Copied from TypedAbstractService: clean me up
+runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
+runPrefixMajor p0 = 
+   map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
+ where
+   f d = (last (terms d), if isEmpty d then p0 else last (steps d))
+   stop (Just (Step _ r)) = isMajorRule r
+   stop _ = False

@@ -14,16 +14,19 @@
 -----------------------------------------------------------------------------
 module Common.Derivation 
    ( -- * Data types 
-     DerivationTree, Derivations, Derivation(..)
+     DerivationTree, Derivations, Derivation
      -- * Constructors
    , singleNode, addBranch, addBranches
-     -- * Query
+     -- * Query 
    , root, endpoint, branches, annotations, subtrees
-   , results, steps, stepsMax
+   , results, lengthMax
      -- * Adapters
-   , restrictHeight, mergeSteps, cutOnStep, commit
+   , restrictHeight, restrictWidth, commit
+   , mergeSteps, cutOnStep
+     -- * Query a derivation
+   , isEmpty, derivationLength, terms, steps
      -- * Conversions
-   , derivation, derivations, terms
+   , derivation, derivations
    ) where
 
 import Common.Utils (safeHead)
@@ -88,21 +91,18 @@ results :: DerivationTree s a -> [a]
 results = map f . derivations
  where f (D a xs) = last (a:map snd xs)
 
--- | Returns the number of steps for the first derivation
-steps :: DerivationTree s a -> Maybe Int
-steps = fmap f . derivation
- where f (D _ xs) = length xs
-
 -- | The argument supplied is the maximum number of steps; if more steps are
 -- needed, Nothing is returned
-stepsMax :: Int -> DerivationTree s a -> Maybe Int
-stepsMax n = join . fmap f . steps . commit . restrictHeight (n+1)
- where f i = if i<=n then Just i else Nothing
+lengthMax :: Int -> DerivationTree s a -> Maybe Int
+lengthMax n = join . fmap (f . derivationLength) . derivation 
+            . commit . restrictHeight (n+1)
+ where 
+    f i = if i<=n then Just i else Nothing
 
 -----------------------------------------------------------------------------
 -- Changing a derivation tree
 
--- Restrict the height of the tree (by cutting off branches at a certain depth).
+-- | Restrict the height of the tree (by cutting off branches at a certain depth).
 -- Nodes at this particular depth are turned into endpoints
 restrictHeight :: Int -> DerivationTree s a -> DerivationTree s a
 restrictHeight n t
@@ -111,7 +111,17 @@ restrictHeight n t
  where
    f = second (restrictHeight (n-1))
 
--- Filter out intermediate steps, and merge its branches (and endpoints) with
+-- | Restrict the width of the tree (by cuttin off branches). 
+restrictWidth :: Int -> DerivationTree s a -> DerivationTree s a
+restrictWidth n = rec 
+ where
+   rec t = t {branches = map (second rec) (take n (branches t))}
+
+-- | Commit to the left-most derivation (even if this path is unsuccessful)
+commit :: DerivationTree s a -> DerivationTree s a
+commit = restrictWidth 1
+
+-- | Filter out intermediate steps, and merge its branches (and endpoints) with
 -- the rest of the derivation tree
 mergeSteps :: (s -> Bool) -> DerivationTree s a -> DerivationTree s a
 mergeSteps p = rec 
@@ -133,9 +143,24 @@ cutOnStep p = rec
       | p s       = (s, singleNode (root t) True)
       | otherwise = (s, rec t)
 
--- Commit to the left-most derivation (even if this path is unsuccessful)
-commit :: DerivationTree s a -> DerivationTree s a
-commit t = t {branches = map (second commit) (take 1 (branches t))}
+-----------------------------------------------------------------------------
+-- Inspecting a derivation
+
+-- | Tests whether the derivation is empty
+isEmpty :: Derivation s a -> Bool
+isEmpty (D _ xs) = null xs
+
+-- | Returns the number of steps in a derivation
+derivationLength :: Derivation s a -> Int
+derivationLength (D _ xs) = length xs
+
+-- | All terms in a derivation
+terms :: Derivation s a -> [a]
+terms (D a xs) = a:map snd xs
+
+-- | All steps in a derivation
+steps :: Derivation s a -> [s]
+steps (D _ xs) = map fst xs
 
 -----------------------------------------------------------------------------
 -- Conversions from a derivation tree
@@ -149,7 +174,3 @@ derivations t = map (D (root t)) $
 -- | The first derivation (if any)
 derivation :: DerivationTree s a -> Maybe (Derivation s a)
 derivation = safeHead . derivations
-
--- | All terms in a derivation
-terms :: Derivation s a -> [a]
-terms (D a xs) = a:map snd xs

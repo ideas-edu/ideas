@@ -19,7 +19,7 @@ module Common.Strategy
      Strategy, LabeledStrategy, strategyName, unlabel
    , IsStrategy(..)
      -- * Running strategies
-   , derivationTree -- , runWithSteps, traceStrategy
+   , fullDerivationTree, derivationTree
      -- * Strategy combinators
      -- ** Basic combinators
    , (<*>), (<|>), (<||>), succeed, fail, label, sequence, alternatives
@@ -33,10 +33,8 @@ module Common.Strategy
    , StrategyLocation, StrategyOrRule, strategyLocations, subStrategy
    , mapRules, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
-   , Prefix(..), emptyPrefix, makePrefix, Step(..)
---   , runPrefix, runPrefixUntil, runPrefixMajor, runPrefixLocation  
-   , runPrefixMajor, runPrefixLocation    -- , prefixDerivationTree, runPrefix
-   , prefixToSteps, stepsToRules, lastRuleInPrefix
+   , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)
+   , prefixToSteps, stepsToRules, lastStepInPrefix, lastRuleInPrefix
    ) where
 
 import Common.Apply
@@ -105,9 +103,10 @@ instance Lift (LabeledStrategy) where
 -----------------------------------------------------------
 --- Running strategies
 
--- | Returns the derivation tree for a strategy and a term
-derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-derivationTree = rec . noLabels . toStrategy
+-- | Returns the derivation tree for a strategy and a term, including all
+-- minor rules
+fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
+fullDerivationTree = rec . noLabels . toStrategy
  where
    rec s a  = addBranches (list s a) (singleNode a (RE.empty s))
    list s a = [ (f, rec rest b)
@@ -115,7 +114,10 @@ derivationTree = rec . noLabels . toStrategy
               , b <- applyAll f a 
               ]
 
--- local helper function
+-- | Returns the derivation tree for a strategy and a term with only major rules
+derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
+derivationTree s = mergeSteps isMajorRule . fullDerivationTree s
+
 noLabels :: Strategy a -> RE.Grammar (Rule a)
 noLabels = RE.join . fmap (either RE.symbol (noLabels . unlabel)) . unS
 
@@ -263,7 +265,8 @@ type StrategyLocation = [Int]
 
 type StrategyOrRule a = Either (LabeledStrategy a) (Rule a)
 
--- | Returns a list of all strategy locations, paired with the labeled substrategy or rule at that location
+-- | Returns a list of all strategy locations, paired with the labeled 
+-- substrategy or rule at that location
 strategyLocations :: LabeledStrategy a -> [(StrategyLocation, Either (LabeledStrategy a) (Rule a))]
 strategyLocations = rec [] 
  where
@@ -310,13 +313,14 @@ cleanUpStrategy f s = mapRules g (label (strategyName s) (doAfter f idRule <*> u
 -----------------------------------------------------------
 --- Prefixes
 
--- | Abstract data type for a (labeled) strategy with a prefix (a sequence of executed rules). A prefix
--- is still "aware" of the labels that appear in the strategy. A prefix is encoded as a list of integers 
--- (and can be reconstructed from such a list: see @makePrefix@).
+-- | Abstract data type for a (labeled) strategy with a prefix (a sequence of 
+-- executed rules). A prefix is still "aware" of the labels that appear in the 
+-- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
+-- from such a list: see @makePrefix@). The list is stored in reversed order.
 data Prefix a = P [(Int, Step a)] (RE.Grammar (Step a))
 
 instance Show (Prefix a) where
-   show (P xs _) = show (map fst xs)
+   show (P xs _) = show (reverse (map fst xs))
 
 instance Eq (Prefix a) where
    P xs _ == P ys _ = map fst xs == map fst ys
@@ -331,7 +335,7 @@ makePrefix is ls = rec [] is start
  where
    start = withSteps ls
    
-   rec acc [] g = P (reverse acc) g
+   rec acc [] g = P acc g
    rec acc (n:ns) g = 
       case drop n (RE.firsts g) of
          (z, h):_ -> rec ((n, z):acc) ns h
@@ -349,101 +353,23 @@ instance Apply Step where
    applyAll (End _)    = return
 
 instance Apply Prefix where
-   applyAll p = results . (prefixDerivationTree p)
+   applyAll p = results . prefixTree p
 
-prefixDerivationTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixDerivationTree (P xs g) a =
+-- | Create a derivation tree with a "prefix" as annotation.
+prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
+prefixTree (P xs g) a =
    addBranches list (singleNode a (RE.empty g))
  where
-   add (i, (step, rest)) = P (xs ++ [(i, step)]) rest
-   list = [ (newPrefix, prefixDerivationTree newPrefix b)
+   add (i, (step, rest)) = P ((i, step):xs) rest
+   list = [ (newPrefix, prefixTree newPrefix b)
           | triple@(_, (step, _)) <- zip [0..] (RE.firsts g)
           , let newPrefix = add triple
           , b <- applyAll step a
           ]
-   
---  Complete the remaining strategy
---runPrefix :: Prefix a -> a -> [(a, Prefix a)]
--- runPrefix = runPrefixUntil (const False)
-{-
--- | Continue with a prefix until a certain condition is fulfilled
-runPrefixUntil :: (Step a -> Bool) -> Prefix a -> a -> [(a, Prefix a)]
-runPrefixUntil stop (P xs0 g0) a0 = 
-   let f (a, g, xs1) = (a, P (xs0++xs1) g)
-   in map f (runPrefixUntilHelper stop a0 g0)
-
--- local helper
-runPrefixUntilHelper :: (Step a -> Bool) -> a -> RE.Grammar (Step a) -> [(a, RE.Grammar (Step a), [(Int, Step a)])]
-runPrefixUntilHelper stop a g
-   | RE.empty g = [(a, g, [])]
-   | otherwise  = concat (zipWith f [0..] (RE.firsts g))
- where
-   add n s this = [ (a, g, (n,s):xs) | (a, g, xs) <- this ]
-   f n (step, h) = add n step $ 
-      case step of
-         Begin _  -> recStop a h 
-         End _    -> recStop a h
-         Step _ r -> [ result | b <- applyAll r a, result <- recStop b h ]
-    where
-      recStop a g
-         | stop step = [(a, g, [])]
-         | otherwise = runPrefixUntilHelper stop a g -}
  
--- | Continue with a prefix until the next major rule
-runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
-runPrefixMajor p0 a =
-   let f (D a xs) | null xs   = (a, p0)
-                  | otherwise = let (a,b) =last xs  in (b,a)
-       stop (Step _ r) = isMajorRule r
-       stop _          = False
-       c (P xs _) = stop (snd $ last xs) -- fix me
-       tree = cutOnStep c (prefixDerivationTree p0 a)
-   in map f (derivations tree)
-
--- | Continue with a prefix until a certain strategy location is reached. At least one
--- major rule should have been executed
-runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
-runPrefixLocation loc p0 a = 
-   let f (D a xs) | null xs   = (a, p0)
-                  | otherwise = let (a,b) =last xs  in (b,a)
-       stop (End is)    = is==loc
-       stop (Step is _) = is==loc
-       stop _           = False
-       c (P xs _) = stop (snd $ last xs)
-       tree = cutOnStep c (prefixDerivationTree p0 a)
-   in concatMap check $ map f $ derivations tree
- where
-   check result@(a, p)
-      | null rules            = [result]
-      | all isMinorRule rules = runPrefixLocation loc p a
-      | otherwise             = [result]
-    where
-      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
-{-
-runPrefixMajorOld = runPrefixUntil stop
- where
-   stop (Step _ r) = isMajorRule r
-   stop _          = False 
-   -} {-
--- | Continue with a prefix until a certain strategy location is reached. At least one
--- major rule should have been executed
-runPrefixLocation :: StrategyLocation -> Prefix a -> a -> [(a, Prefix a)]
-runPrefixLocation loc p0 = concatMap check . runPrefixUntil stop p0
- where
-   stop (End is)    = is==loc
-   stop (Step is _) = is==loc
-   stop _           = False
-   
-   check result@(a, p)
-      | null rules            = [result]
-      | all isMinorRule rules = runPrefixLocation loc p a
-      | otherwise             = [result]
-    where
-      rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p -}
-
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [Step a]
-prefixToSteps (P xs _) = map snd xs
+prefixToSteps (P xs _) = map snd (reverse xs)
  
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step a] -> [Rule a]
@@ -451,7 +377,11 @@ stepsToRules steps = [ r | Step _ r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastRuleInPrefix :: Prefix a -> Maybe (Rule a)
-lastRuleInPrefix = safeHead . reverse . stepsToRules . prefixToSteps
+lastRuleInPrefix (P xs _) = safeHead (stepsToRules (map snd xs))
+
+-- | Returns the last rule of a prefix (if such a rule exists)
+lastStepInPrefix :: Prefix a -> Maybe (Step a)
+lastStepInPrefix (P xs _) = safeHead (map snd xs)
 
 -- local helper function
 withSteps :: LabeledStrategy a -> RE.Grammar (Step a)

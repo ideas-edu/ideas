@@ -79,16 +79,22 @@ showEnv :: Environment -> String
 showEnv = concat . intersperse "," . map f . M.toList
  where f (k, (_, v)) = k ++ "=" ++ v
 
--- | Parses a context: on a successful parse, the unit value is returned in the parsed context
+-- | Parses a context: on a successful parse, the unit value is returned 
+-- in the parsed context
 parseContext :: String -> Maybe (Context ())
 parseContext s
-   | all isSpace s = return (C (L []) M.empty ())
+   | all isSpace s = 
+        return (C (L []) M.empty ())
    | otherwise = do
-        (loc, env)  <- splitAtElem ';' s
-        if all isSpace env then return (C (read loc) M.empty ()) else do
-        pairs       <- mapM (splitAtElem '=') (splitsWithElem ',' env)
-        let f (k, v) = (k, (Nothing, v))
-        return $ C (read loc) (M.fromList $ map f pairs) ()
+        (locString, envString) <- splitAtElem ';' s
+        loc <- case reads locString of
+                  [(l, xs)] | all isSpace xs -> return l
+                  _ -> Nothing
+        env <- if all isSpace envString then return M.empty else do
+                  pairs <- mapM (splitAtElem '=') (splitsWithElem ',' envString)
+                  let f (k, v) = (k, (Nothing, v))
+                  return $ M.fromList $ map f pairs
+        return (C loc env ())
 
 ----------------------------------------------------------
 -- Manipulating the variable environment
@@ -138,10 +144,10 @@ newtype Location = L [Int] deriving (Eq, Ord)
 
 instance Show Location where
    show (L is) = show is
-
+   
 instance Read Location where
    readsPrec n s = [ (L is, rest) | (is, rest) <- readsPrec n s ]
-   
+
 -- | Returns the current location of a context
 location :: Context a -> Location
 location (C loc _ _) = loc

@@ -290,7 +290,7 @@ pCurly :: TokenParser a -> TokenParser a
 pCurly   = UU.pCurly
 
 pInteger :: TokenParser Integer
-pInteger = read <$> UU.pInteger
+pInteger = (maybe 0 fromIntegral . readInt) <$> UU.pInteger
 
 pFraction :: TokenParser Float
 pFraction = read <$> UU.pFraction

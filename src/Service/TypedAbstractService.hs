@@ -18,8 +18,9 @@ module Service.TypedAbstractService
 
 import qualified Common.Apply as Apply
 import Common.Context 
+import Common.Derivation hiding (derivation)
 import Common.Exercise (Exercise(..), ruleset, randomTermWith)
-import Common.Strategy (Prefix, emptyPrefix, prefixToSteps, stepsToRules, runPrefixMajor, lastRuleInPrefix)
+import Common.Strategy hiding (not)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Data.Maybe
@@ -58,19 +59,6 @@ generate ex level = do
 
 generateWith :: StdGen -> Exercise a -> Int -> State a
 generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
-
-{- Old implementation: to be removed
-derivation :: State a -> [(Rule (Context a), Context a)]
-derivation state = fromMaybe (error "derivation") $ do
-   p0 <- prefix state
-   (final, p1) <- safeHead (runPrefix p0 (context state))
-   let steps = drop (length (prefixToSteps p0)) (prefixToSteps p1)
-       rules = stepsToRules steps
-       terms = let run x []     = [ [] | similarity (exercise state) (fromContext x) (fromContext final) ]
-                   run x (r:rs) = [ y:ys | y <- Apply.applyAll r x, ys <- run y rs ] 
-               in fromMaybe [] $ safeHead (run (context state) rules)
-       check = isMajorRule . fst
-   return $ filter check $ zip rules terms -}
    
 derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state =
@@ -90,6 +78,16 @@ allfirsts state = fromMaybe (error "allfirsts") $ do
           | Just r <- [lastRuleInPrefix p1], isMajorRule r, stepsToRules (prefixToSteps p0) /= stepsToRules (prefixToSteps p1)
           ]
    return $ concatMap f $ runPrefixMajor p0 $ context state
+   -- last occurrence of lastRuleInPrefix?
+
+-- | Continue with a prefix until the next major rule
+runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
+runPrefixMajor p0 = 
+   map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
+ where
+   f d = (last (terms d), if isEmpty d then p0 else last (steps d))
+   stop (Just (Step _ r)) = isMajorRule r
+   stop _ = False
 
 onefirst :: State a -> (Rule (Context a), Location, State a)
 onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts

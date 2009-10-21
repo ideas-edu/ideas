@@ -19,24 +19,18 @@ module Text.XML.Parser where
 import Prelude hiding (seq)
 import Control.Monad
 import Data.Char (toUpper, ord, isSpace)
+import Data.List (foldl') -- '
 import Data.Maybe (catMaybes)
 import Text.XML.Unicode
 import Text.XML.Document hiding (versionInfo, name, content)
 import qualified Text.XML.Document as D
-import Text.XML.ParseLib --hiding ((<|>), option, optionM, choice)
---import qualified Text.XML.ParseLib as P
+import Text.XML.ParseLib
 
 letter, digit, combiningChar, extender :: Parser Char
 letter        = ranges letterMap
 digit         = ranges digitMap
 combiningChar = ranges combiningCharMap
 extender      = ranges extenderMap
-
-{- infixr 4 <|>
-p <|> q = try p P.<|> q 
-option a p = P.option a (try p)
-optionM p = P.optionM (try p)
-choice xs = foldr1 (<|>) xs -}
 
 --------------------------------------------------
 -- * 2 Documents
@@ -552,7 +546,7 @@ charRef = do
    symbol ';'
    return (CharRef n)
  where
-   p = fmap read (many1 ('0' <..> '9'))
+   p = fmap (foldl' (\a b -> a*10+ord b-48) 0) (many1 ('0' <..> '9'))
    q = fmap hexa (many1 (ranges [('0', '9'), ('a', 'f'), ('A', 'F')]))
    
 hexa :: String -> Int

@@ -3,7 +3,7 @@
  * A function to call the service and a display function
  */
 function generate(caller) {
-	ss_generate(caller, getDifficulty(), displayExercise);
+	generateService(caller, getDifficulty(), displayExercise);
 }
 
 function displayNewExercise(state) {
@@ -56,15 +56,15 @@ function addToFeedback(newText) {
  */
 function getHint() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
-	ss_getHint('hint button', s.get('location'), s.get('state'), displayHint);
+	onefirsttextService('hint button', s.get('state'), displayHint);
 }
-function displayHint(hint) {
+function displayHint(rule, valid, state) {
 	closeallhelp();
 	var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
 	var expression = (s.get('state')).exercise;
 	var newText = '';
-	if (hint[0]) {
-		newText =   '<p><strong>' + hint[1] + '</strong></p>';
+	if (valid) {
+		newText =   '<p><strong>' + rule + '</strong></p>';
 	}
 	else {
 		newText =  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
@@ -76,7 +76,7 @@ function displayHint(hint) {
  */
 function getNext() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	ss_getNext('step button', s.get('state'), displayNext);
+	onefirsttextService('step button', s.get('state'), displayNext);
  }
  function displayNext(rule, valid, state) {
 	var nextExpression = (state.exercise).asciiToHtml() ;
@@ -100,9 +100,18 @@ function getNext() {
  */
 function getDerivation() {
      var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-     ss_getDerivation('worked-out exercise button', s.get('state'), displayDerivation);
+     derivationtextService('worked-out exercise button', s.get('state'), displayDerivation);
  }
- function displayDerivation(setOfRules) {
+ function displayDerivation(result) {
+ 	   var setOfRules = new Array();
+		 var counter = 0;
+		 while (counter < result.length) {
+					var entry = result[counter];
+				    var appliedRule = new Rule(entry[0], null, entry[1]);
+					++counter;
+					setOfRules.push(appliedRule);
+				}
+
      var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
      var counter = 0;
      var newText = '<strong>' + derivationtext + '</strong><br><br>' + s.get('state').exercise + '<br>';
@@ -126,7 +135,7 @@ function getDerivation() {
  function getFeedback(caller) {
 	var workExpression = (($('work')).value).htmlToAscii();
 	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	ss_getFeedback(caller, s.get('state'), workExpression, displayFeedback);
+	submittextService(caller, s.get('state'), workExpression, displayFeedback);
  }
 function displayFeedback(result, state) {
 	var newText = '<p>' + result[1] + '</p>';
@@ -141,7 +150,7 @@ function displayFeedback(result, state) {
 */
 function getReady() {
 	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	ss_getReady('ready button', s.get('state'), handleSolved);
+	readyService('ready button', s.get('state'), handleSolved);
 }
 function handleSolved(solved) {
 	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];

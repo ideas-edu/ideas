@@ -1,214 +1,142 @@
 // The url for the services
 var url = "cgi/service.cgi";
 
-function makeRequest(caller, method, params) {
-   return '{"source": "genexas", "event": "'
-          + caller
-	  + '", "method": "' 
-          + method 
-	  + '", "params": ' 
-	  + params 
-	  + ', "id" : ' 
-	  + id 
-	  + '}';
-}
-
-/**
- *  Generation of a new exercise.
-  * Input: an integer
-  * Output: a state object
-  * The output is passed to the callback function
-  */
-function ss_generate(caller, number, callback) {
-	var params  = '["' + exercisekind + '", ' + number + ']';
+function generateService(caller, number, callback) {
+	var params  = [exercisekind, number];
 	var request = makeRequest(caller, 'generate', params);
-	var myAjax  = new Ajax.Request(url, {
-		parameters : 'input=' + request,
-		onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			if (error == null) {
-				result = resJSON.result;
-				/*                    id          locatie   formule */
-				var state = new State(result[0], result[1], result[2], result[3]);
-				callback(state);
-			}
-			else {
-				alert(error);
-			}
-         },
-		 onFailure: function() {
-			alert(parameters);
-		}
-	});
+	
+	generateCallback = function(result) {
+     var state = arrayToState(result);
+     callback(state); };
+	
+	serviceCall(request, generateCallback);
 }
-/**
- *  Is the exercise solved?
-  * Input: a state object that should reflect the current state.
-  * Output: a boolean
-   * The output is passed to the callback function
-  */
-function ss_getReady(caller, state, callback) {
-	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"]]';
+
+function readyService(caller, state, callback) {
+	var params   = [stateToArray(state)];
 	var request  = makeRequest(caller, 'ready', params);
-	var myAjax   = new Ajax.Request(url, {
-		parameters : 'input=' + request,
-         onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			if (error == null) {
-				var solved = resJSON.result;
-				callback(solved);
-			}
-			else {
-				alert(response.responseText["error"] );
-			}
-         },
-		 onFailure: function() {
-			alert(wrong);
-		}
-    });
+  
+  serviceCall(request, callback);
 }
-/**
- *  getHint gets a rule which can be applied,
- * Input: a location and a state object that should reflect the current state.
-  * Output: a set of rules (strings)
-   * The output is passed to the callback function
-  */
-function ss_getHint(caller, location, state, callback) {
-	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"], "' + caller + '"]';
-	var request  = makeRequest(caller, 'onefirsttext', params);
-	var myAjax = new Ajax.Request(url, {
-		parameters : 'input=' + request,
-		onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			//alert(response.responseText);
-			if (error == null) {
-				var result = resJSON['result'];
-				callback(result);
-			}
-			else {
-				alert(response.responseText["error"] );
-			}
-         },
-		 onFailure : function() {alert(wrong);}
-     });
-}
-/**
- *  getNext puts a possible rewriting in the workarea
-  * Input: a state object that should reflect the current state.
-  * Output: a rulID, a location and a state
-   * The output is passed to the callback function
-  */
-function ss_getNext(caller, state, callback) {
-	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "' + exercise + '", "' + state.simpleContext + '"], "' + caller + '"]';
-	var request  = makeRequest(caller, 'onefirsttext', params);
-	var myAjax = new Ajax.Request(url, {
-		parameters : 'input=' + request,
-        onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			var result = resJSON['result'];
-			if (error == null) {
-				var valid = result[0];
-				var rule = result[1];
-				var state = result[2];
-				var newState = new State(state[0], state[1], state[2], state[3]);
-				callback(rule, valid, newState);
-			}
-			else {
-				alert(response.responseText["error"] );
-			}
 
-         }		 ,
-		 onFailure : function() {alert(wrong);}
-     });
-}
-/**
- *  getDerivation returns a complete derivation
-  */
-function ss_getDerivation(caller, eastate, callback) {
-	var exercise = (eastate.exercise).htmlToAscii();
-	var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "'
-+ exercise + '", "' + eastate.simpleContext + '"], "' + caller + '"]';
-	var request  = makeRequest(caller, 'derivationtext', params);
-	var myAjax   = new Ajax.Request(url, {
-		parameters : 'input=' + request,
-        onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			if (error == null) {
-				var list = resJSON["result"];
-				var setOfRules = new Array();
-				var counter = 0;
-				while (counter < list.length) {
-					var entry = list[counter];
-				    var appliedRule = new Rule(entry[0], null, entry[1]);
-					++counter;
-					setOfRules.push(appliedRule);
-				}
-				callback(setOfRules);
-			}
-			else {
-				alert(response.responseText["error"] );
-			}
+function onefirsttextService(caller, state, callback) {
+	var params   = [stateToArray(state), caller];
+	var request  = makeRequest(caller, 'onefirsttext', params);
+	
+	onefirsttextCallback = function(result) {
+     var valid    = result[0];
+		 var rule     = result[1];
+		 var newState = arrayToState(result[2]);
+ 		 callback(rule, valid, newState); };
 
-         }		 ,
-		 onFailure : function() {alert(wrong);}
-     });
+     serviceCall(request, onefirsttextCallback);
 }
-/**
- *  getRenmaining puts the number of remaining steps in the feedbackarea
-  */
-function ss_getRemaining(caller, eastate, callback) {
-	var exercise = (eastate.exercise).htmlToAscii();
-        var params   = '[["'+ eastate.id + '", "'  + eastate.prefix + '", "' + exercise + '", "' + eastate.simpleContext + '"]]';
+
+function derivationtextService(caller, state, callback) {
+	var params   = [stateToArray(state), caller];
+	var request  = makeRequest(caller, 'derivationtext', params);			
+
+  serviceCall(request, callback);
+}
+
+function stepsremainingService(caller, state, callback) {
+  var params   = [stateToArray(state)];
 	var request  = makeRequest(caller, 'stepsremaining', params);
-	var myAjax   = new Ajax.Request(url, {
-        parameters : 'input=' + request,
-        onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			if (error == null) {
-				callback(resJSON.result);
-			}
-		}
-     });
+	
+	serviceCall(request, callback);
 }
-/**
- *  getFeedbackt shows feedback in the feedbackarea
-  */
-function ss_getFeedback(caller, state, newexpression, callback) {
-	var exercise = (state.exercise).htmlToAscii();
-	var params   = '[["'+ state.id + '", "'  + state.prefix + '", "'+ exercise + '", "' + state.simpleContext + '"], "' + newexpression + '", "' + caller + '"]';
+
+function submittextService(caller, state, newexpression, callback) {
+	var params   = [stateToArray(state), newexpression, caller];
 	var request  = makeRequest(caller, 'submittext', params);
-	var myAjax   = new Ajax.Request(url, {
-        parameters : 'input=' + request,
-        onSuccess : function(response) {
-			var resJSON = parseJSON(response.responseText);
-			var error = resJSON.error;
-			//alert(response.responseText);
-			if (error == null) {
-				var result = resJSON.result;
-				//alert(result[0]);
-				//alert(result[1]);
-				var newState = null;
-				var receivedstate = (resJSON.result)[2];
-				newState = new State(receivedstate[0], receivedstate[1], receivedstate[2], receivedstate[3]);
-				callback(result, newState);
-			}
-			else { alert(error)};
-        }
-     });
+
+	submittextCallback = function(result) {
+		 var newState = arrayToState(result[2]);
+	   callback(result, newState); };
+	
+	serviceCall(request, submittextCallback);
 }
 
 /**
  * Help functions
   */
+function makeRequest(caller, method, params) {
+	var request = { "source" : "genexas"
+		            , "event"  : caller
+		            , "method" : method
+		            , "params" : params
+		            , "id"     : id
+		            };
+	 return show(request);
+}
+
+function show(obj) {
+  if (typeof obj == "string")
+     return showString(obj);
+	if (obj.length >= 0)
+	   return showArray(obj); 
+	if (typeof obj == "object")
+	   return showObject(obj);
+  return obj;
+}
+
+function showObject(obj) {
+   var result="{";
+   for (var i in obj) {
+   	  if (result!="{") {result += ",";}
+      result += showString(i);
+      result += ": ";
+      result += show(obj[i]);
+   }
+   result += "}"
+   return result;
+}
+
+function showArray(arr) {
+   var counter = 0; 
+   var result  = "[";
+   while (counter < arr.length) {
+   	  if (result!="[") {result += ",";}
+      result += show(arr[counter]);
+      counter++;
+   } 
+   result+="]";
+   return result;
+}
+
+function showString(txt) {
+   return '"' + txt + '"';
+}
+
+function arrayToState(arr) {
+   return new State(arr[0], arr[1], arr[2], arr[3]);
+}
+
+function stateToArray(state) {
+	 return [state.id, state.prefix, state.exercise, state.simpleContext];
+}
+
+function serviceCall(request, callback) {
+	var ajaxOptions =
+		{ parameters : 'input=' + request
+		, onFailure  : serviceCallFailure
+		, onSuccess  : function(response) {
+	  	   var resJSON = parseJSON(response.responseText);
+   			 if (resJSON.error == null) {
+			      callback(resJSON.result);
+			   }
+			   else {
+				   serviceCallFailure();
+			   }
+			}
+	  };
+	new Ajax.Request(url, ajaxOptions);
+}
+
+function serviceCallFailure() {
+   alert('service call failure');
+}
+
 function parseJSON(json){
     try{
         if(/^("(\\.|[^"\\\n\r])*?"|[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t])+?$/.test(json)){

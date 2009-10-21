@@ -248,7 +248,7 @@ function updateDerivation() {
 // BHR: move this function to other button handlers, and rename
 function copy() {
         var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-        ss_getNext('auto step button', s.get('state'), autoHandler);
+        onefirsttextService('auto step button', s.get('state'), autoHandler);
 }
 function autoHandler(rule, valid, state) {
         addToFeedback('<strong>Auto step: </strong>' + rule + ' (has been done)');

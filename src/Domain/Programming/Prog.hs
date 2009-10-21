@@ -15,6 +15,7 @@ module Domain.Programming.Prog where
 
 import Common.Utils (safeHead)
 import Common.Context hiding (get)
+import Common.Derivation
 import Common.Strategy hiding (not, repeat, replicate)
 import Control.Monad.State
 import Data.Generics.Biplate
@@ -29,6 +30,7 @@ import Domain.Programming.Helium
 import Domain.Programming.HeliumRules
 import Domain.Programming.InlinePatternBindings (Env, updateEnv'
                                                 , inlinePatternBindings)
+import Domain.Programming.Strategies
 import Domain.Programming.Substitute
 import Domain.Programming.Utils
 import Prelude hiding (lookup)
@@ -65,9 +67,11 @@ collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
 
 freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
-
+{-
 allSolutions strat = map (fromContext . snd . last . snd) 
                          (derivations strat $ inContext emptyProg)
+-}
+allSolutions strategy = map fromContext $ results $ derivationTree strategy $ inContext emptyProg
 normalisedSolutions fs = map (normaliseModule fs) . allSolutions
 isSolution fs strat m = elem (normaliseModule fs m) $ normalisedSolutions fs strat
 

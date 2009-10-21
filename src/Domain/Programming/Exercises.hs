@@ -41,9 +41,9 @@ heliumExercise = makeExercise
    , isSuitable     = const True
    , extraRules     = []
    , strategy       = label "fromBin :: [Int] -> Int" fromBinStrategy
-   , differences    = \_ _ -> [([], Different)]
+--   , differences    = \_ _ -> [([], Different)]
    , testGenerator  = Just arbitrary
-   , randomExercise = useGenerator (const True) (return emptyProg)
+   , randomExercise = useGenerator (const True) (const (return emptyProg))
    }
 
 instance Arbitrary Module where

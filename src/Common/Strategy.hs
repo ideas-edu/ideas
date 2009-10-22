@@ -194,8 +194,16 @@ check p = toStrategy checkRule
 
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
-not :: Apply f => f a -> Strategy a
-not s = check (Prelude.not . applicable s)
+not :: IsStrategy f => f a -> Strategy a
+not s = check (Prelude.not . applicable (toStrategy s))
+
+{- alternative definition, with an early commit. No performance gain was
+measurable
+
+applicableOne :: Strategy a -> a -> Bool
+applicableOne s a = 
+   let tree = derivationTree s a
+   in endpoint tree || Prelude.not (null (branches tree)) -}
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a

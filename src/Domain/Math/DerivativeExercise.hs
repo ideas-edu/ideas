@@ -42,7 +42,7 @@ noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
-derivativeStrategy = -- cleanUpStrategy simplify $ 
+derivativeStrategy =
    label "Derivative" $
    try tidyup <*> Common.Strategy.repeat (derivative <*> try tidyup)
 

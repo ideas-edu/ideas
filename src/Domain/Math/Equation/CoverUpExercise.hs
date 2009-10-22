@@ -14,6 +14,7 @@ module Domain.Math.Equation.CoverUpExercise (coverUpExercise) where
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (replicate)
+import Common.Transformation
 import Common.Uniplate (transform)
 import Common.View
 import Control.Monad
@@ -47,11 +48,11 @@ coverUpExercise = makeExercise
 -- Strategy and rules
    
 coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-coverUpStrategy = cleanUpStrategy cleanUp $ label "Cover-up" $ 
-   repeat (alternatives $ map ignoreContext coverUpRulesOr)
+coverUpStrategy = label "Cover-up" $ 
+   repeat (alternatives $ map (ignoreContext . cleanUp) coverUpRulesOr)
 
-cleanUp :: Context (OrList (Equation Expr)) -> Context (OrList (Equation Expr))
-cleanUp = fmap $ fmap $ fmap cleanUpExpr
+cleanUp :: Rule (OrList (Equation Expr)) -> Rule (OrList (Equation Expr))
+cleanUp = doAfter $ fmap $ fmap cleanUpExpr
 
 cleanUpExpr :: Expr -> Expr
 cleanUpExpr = transform (simplify (makeView f fromRational))

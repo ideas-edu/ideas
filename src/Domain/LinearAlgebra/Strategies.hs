@@ -12,6 +12,7 @@
 module Domain.LinearAlgebra.Strategies 
    ( gaussianElimStrategy, linearSystemStrategy
    , gramSchmidtStrategy, systemWithMatrixStrategy
+   , forwardPass
    , isLeft, isRight, maybeInContext
    ) where
 

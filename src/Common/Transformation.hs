@@ -24,10 +24,12 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, hasInverse, isRewriteRule, ruleGroups, addRuleToGroup
-   , rule, ruleList, ruleListF, makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
+   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
+   , ruleGroups, addRuleToGroup
+   , rule, ruleList, ruleListF
+   , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
-   , inverseRule, transformations, getRewriteRules
+   , transformations, getRewriteRules
      -- * Lifting
    , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
@@ -183,7 +185,6 @@ getDescriptors rule =
       [Abstraction args _ _] -> someArguments args
       [Lift _ t] -> getDescriptors $ rule 
          { transformations = [t]
-         , getInverse      = Nothing
          , doBeforeHook    = id
          , doAfterHook     = id
          }
@@ -199,7 +200,6 @@ expectedArguments rule a =
          b <- liftPairGet lp a
          expectedArguments rule 
             { transformations = [t]
-            , getInverse      = Nothing
             , doBeforeHook    = id
             , doAfterHook     = id
             } b
@@ -281,7 +281,6 @@ data Rule a = Rule
    , transformations :: [Transformation a]
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
-   , getInverse      :: Maybe (Rule a)
    , ruleGroups      :: [String]
    , doBeforeHook    :: a -> a -- ^ Hook to perform an action before the rule is fired
    , doAfterHook     :: a -> a -- ^ Hook to perform an action after the rule has been fired
@@ -330,7 +329,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule n ts False False Nothing [] id id
+makeRuleList n ts = Rule n ts False False [] id id
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
@@ -362,22 +361,7 @@ doBefore f r = r { doBeforeHook = f }
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r { doAfterHook = f {- . (doAfterHook r) -} }
-
-hasInverse :: Rule a -> Rule a -> Rule a
-hasInverse inv r = r {getInverse = Just inv}
-
--- | Return the inverse of a transformation. Only rewrite rules can be inversed
-inverseRule :: Rule a -> Maybe (Rule a)
-inverseRule r =
-   case getInverse r of
-      Just new -> Just new
-      Nothing  -> do
-         ts <- mapM inverseTrans (transformations r)
-         return r
-            { name = name r ++ " [inverse]"
-            , transformations = ts
-            }
+doAfter f r = r { doAfterHook = f }
 
 getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
 getRewriteRules r = concatMap f (transformations r)
@@ -419,7 +403,6 @@ instance Lift Transformation where
 instance Lift Rule where
    lift lp r = r 
       { transformations = map (lift lp) (transformations r)
-      , getInverse      = fmap (lift lp) (getInverse r)
       , doBeforeHook    = liftFunction lp (doBeforeHook r)
       , doAfterHook     = liftFunction lp (doAfterHook r)
       }

@@ -12,7 +12,6 @@
 module Domain.LinearAlgebra.Exercises 
    ( gramSchmidtExercise, linearSystemExercise
    , gaussianElimExercise, systemWithMatrixExercise
-   -- , arbSolution
    ) where
 
 import Common.Apply

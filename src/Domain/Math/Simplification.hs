@@ -12,20 +12,22 @@
 module Domain.Math.Simplification 
    ( Simplify(..), smartConstructors
    , Simplified, simplified, liftS, liftS2
+   , simplifyRule
    ) where
 
 import Common.Context
-import Common.View hiding (simplify)
-import qualified Common.View as View
-import Domain.Math.Numeric.Views
-import Domain.Math.SquareRoot.Views
+import Common.Transformation
 import Common.Uniplate
+import Common.View hiding (simplify)
+import Control.Monad
 import Data.List
 import Data.Maybe
-import Control.Monad
-import Domain.Math.Expr hiding (recip)
 import Domain.Math.Data.Equation
+import Domain.Math.Expr hiding (recip)
+import Domain.Math.Numeric.Views
+import Domain.Math.SquareRoot.Views
 import Test.QuickCheck
+import qualified Common.View as View
 
 class Simplify a where
    simplify :: a -> a
@@ -45,6 +47,9 @@ instance Simplify Expr where
             . distribution 
             . View.simplify (squareRootViewWith rationalView)
             . constantFolding
+
+instance Simplify a => Simplify (Rule a) where
+   simplify = doAfter simplify -- by default, simplify afterwards
 
 data Simplified a = S a deriving (Eq, Ord)
 
@@ -104,6 +109,9 @@ liftS f (S x) = simplified (f x)
 
 liftS2 :: Simplify a => (a -> a -> a) -> Simplified a -> Simplified a -> Simplified a
 liftS2 f (S x) (S y) = simplified (f x y)
+
+simplifyRule :: Simplify a => Rule a
+simplifyRule = simplify idRule
 
 ------------------------------------------------------------
 -- Simplification with the smart constructors

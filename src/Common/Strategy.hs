@@ -229,12 +229,12 @@ fix f = S $ RE.fix $ unS . f . S
 once :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
 once s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ hasInverse ruleMoveUp $ makeSimpleRuleList "MoveDown" moveDown
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" moveDown
    moveDown c = 
       let n = maybe 0 (pred . length . children) (currentFocus c)
       in [ changeLocation (locationDown i) c | i <- [0 .. n] ]
    
-   ruleMoveUp = minorRule $ hasInverse ruleMoveDown $ makeSimpleRule "MoveUp" moveUp
+   ruleMoveUp = minorRule $ makeSimpleRule "MoveUp" moveUp
    moveUp c   = do
       new <- locationUp (location c)
       return $ setLocation new c

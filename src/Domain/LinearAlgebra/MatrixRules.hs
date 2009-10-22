@@ -11,11 +11,15 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.MatrixRules where
 
+import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
 import Common.Context
 import Common.Transformation
 import Control.Monad
 import Data.List
+
+instance Simplify a => Simplify (Matrix a) where
+   simplify = fmap simplify
 
 matrixRules :: (Argument a, Fractional a) => [Rule (Context (Matrix a))]
 matrixRules = 
@@ -31,30 +35,30 @@ ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
    i <- findIndex nonZero cols
    return (set columnJ i c)
    
-ruleExchangeNonZero :: Num a => Rule (Context (Matrix a))
-ruleExchangeNonZero = ruleExchangeRows $ \c -> do
+ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
+ruleExchangeNonZero = simplify $ ruleExchangeRows $ \c -> do
    nonEmpty c
    let col = column (get columnJ c) (subMatrix c)
    i   <- findIndex (/= 0) col
    return (get covered c, i + get covered c)
 
-ruleScaleToOne :: (Argument a, Fractional a) => Rule (Context (Matrix a))
-ruleScaleToOne = ruleScaleRow $ \c -> do
+ruleScaleToOne :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleScaleToOne = simplify $ ruleScaleRow $ \c -> do
    nonEmpty c
    let pv = entry (0, get columnJ c) (subMatrix c)
    guard (pv /= 0)
    return (get covered c, 1 / pv)
 
-ruleZerosFP :: (Argument a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosFP = ruleAddMultiple $ \c -> do
+ruleZerosFP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleZerosFP = simplify $ ruleAddMultiple $ \c -> do
    nonEmpty c
    let col = drop 1 $ column (get columnJ c) (subMatrix c)
    i   <- findIndex (/= 0) col
    let v = negate (col!!i)
    return (i + get covered c + 1, get covered c, v)
    
-ruleZerosBP :: (Argument a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosBP = ruleAddMultiple $ \c -> do
+ruleZerosBP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
+ruleZerosBP = simplify $ ruleAddMultiple $ \c -> do
    nonEmpty c
    let ri  = row 0 (subMatrix c)
        j   = length $ takeWhile (==0) ri

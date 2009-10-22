@@ -15,30 +15,38 @@ import Prelude hiding (repeat)
 import Common.Context
 import Common.Transformation
 import Common.Utils
+import Common.View hiding (simplify)
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
+import Domain.Math.Expr
 import Domain.Math.Data.Equation
+import Domain.Math.Simplification (simplify)
 import Domain.LinearAlgebra.LinearView
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.MatrixRules (covered) -- for context
-import Test.QuickCheck -- hopefully, temporarily
+import Test.QuickCheck
 
-equationsRules :: (Argument a, IsLinear a) => [Rule (Context (LinearSystem a))]
-equationsRules = [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation, ruleInconsistentSystem
-                 , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
-                 , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations ]
+equationsRules :: [Rule (Context (LinearSystem Expr))]
+equationsRules = 
+   [ ruleExchangeEquations, ruleEliminateVar, ruleDropEquation
+   , ruleInconsistentSystem
+   , ruleScaleEquation, ruleBackSubstitution, ruleIdentifyFreeVariables
+   , ruleCoverUpEquation, ruleUncoverEquation, ruleCoverAllEquations 
+   ]
 
-ruleExchangeEquations :: IsLinear a => Rule (Context (LinearSystem a))
-ruleExchangeEquations = makeRule "Exchange" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
+ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
+ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $ 
+   supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
  where
    descr  = ("equation 1", "equation 2")
    args c = do mv <- minvar c
                i  <- findIndex (elem mv . getVarsSystem . return) (remaining c)
                return (get covered c, get covered c + i)
 
-ruleEliminateVar :: (Argument a, IsLinear a) => Rule (Context (LinearSystem a))
-ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
+ruleEliminateVar :: Rule (Context (LinearSystem Expr))
+ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $ 
+   supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
    descr  = ("equation 1", "equation 2", "scale factor")
    args c = do 
@@ -50,20 +58,21 @@ ruleEliminateVar = makeRule "Eliminate variable" $ supplyLabeled3 descr args (\x
       let v = negate coef / getCoef hd
       return ( i + get covered c + 1, get covered c, v)
 
-ruleDropEquation :: IsLinear a => Rule (Context (LinearSystem a))
-ruleDropEquation = makeSimpleRule "Drop (0=0) equation" $ 
+ruleDropEquation :: Rule (Context (LinearSystem Expr))
+ruleDropEquation = simplifySystem $ makeSimpleRule "Drop (0=0) equation" $ 
    \c -> do i <- findIndex (fromMaybe False . testConstants (==)) (equations c)
             return $ change covered (\n -> if i < n then n-1 else n)
                    $ fmap (deleteIndex i) c
 
-ruleInconsistentSystem :: IsLinear a => Rule (Context (LinearSystem a))
-ruleInconsistentSystem = makeSimpleRule "Inconsistent system (0=1)" $ 
+ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
+ruleInconsistentSystem = simplifySystem $ makeSimpleRule "Inconsistent system (0=1)" $ 
    \c -> do let stop = [0 :==: 1]
             guard $ invalidSystem (equations c) && equations c /= stop
             return $ set covered 1 (fmap (const stop) c)
 
-ruleScaleEquation :: (Argument a, IsLinear a) => Rule (Context (LinearSystem a))
-ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
+ruleScaleEquation :: Rule (Context (LinearSystem Expr))
+ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $ 
+   supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
  where
    descr  = ("equation", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
@@ -73,8 +82,9 @@ ruleScaleEquation = makeRule "Scale equation to one" $ supplyLabeled2 descr args
                let coef = 1 / coefficientOf mv expr
                return (get covered c, coef)
    
-ruleBackSubstitution :: (Argument a, IsLinear a) => Rule (Context (LinearSystem a))
-ruleBackSubstitution = makeRule "Back substitution" $ supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
+ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
+ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $ 
+   supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
    descr  = ("equation 1", "equation 2", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
@@ -111,6 +121,11 @@ testConstants :: IsLinear a => (a -> a -> Bool) -> Equation a -> Maybe Bool
 testConstants f (lhs :==: rhs)
    | isConstant lhs && isConstant rhs = Just (f lhs rhs)
    | otherwise = Nothing
+
+-- simplify a linear system
+simplifySystem :: Rule (Context (LinearSystem Expr)) -> Rule (Context (LinearSystem Expr))
+simplifySystem = doAfter $ fmap (map (fmap f))
+ where f = simplifyWith (fmap simplify) linearView
 
 ---------------------------------------------------------------------------------
 -- Parameterized transformations

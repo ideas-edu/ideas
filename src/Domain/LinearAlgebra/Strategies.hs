@@ -9,7 +9,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Strategies where
+module Domain.LinearAlgebra.Strategies 
+   ( gaussianElimStrategy, linearSystemStrategy
+   , gramSchmidtStrategy, systemWithMatrixStrategy
+   , isLeft, isRight, maybeInContext
+   ) where
 
 import Prelude hiding (repeat)
 import Domain.Math.Expr
@@ -19,11 +23,10 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.LinearView (linearView)
+import Common.Apply
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
-import Common.View hiding (simplify)
 import Domain.LinearAlgebra.Vector
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
@@ -31,29 +34,27 @@ gaussianElimStrategy = label "Gaussian elimination" $
    forwardPass <*> backwardPass
 
 forwardPass :: LabeledStrategy (Context (Matrix Expr))
-forwardPass = cleanUpStrategy simplify $
-   label "Forward pass" $ 
-   repeat  $    label "Find j-th column"      ruleFindColumnJ 
+forwardPass = label "Forward pass" $ 
+   simplifyRule <*>
+   repeat   (   label "Find j-th column"      ruleFindColumnJ 
            <*>  label "Exchange rows"         (try ruleExchangeNonZero)
            <*>  label "Scale row"             (try ruleScaleToOne)
            <*>  label "Zeros in j-th column"  (repeat ruleZerosFP)
            <*>  label "Cover up top row"      ruleCoverRow
+            )
   
 backwardPass :: LabeledStrategy (Context (Matrix Expr))
-backwardPass =  cleanUpStrategy simplify $
-   label "Backward pass" $ 
-   repeat  $    label "Uncover row"  ruleUncoverRow
+backwardPass = label "Backward pass" $ 
+   simplifyRule <*>
+   repeat   (   label "Uncover row"  ruleUncoverRow
            <*>  label "Sweep"        (repeat ruleZerosBP)
-
--- simplify a linear system
-simplifySystem :: LinearSystem Expr -> LinearSystem Expr
-simplifySystem = map (fmap f) 
- where f = simplifyWith (fmap simplify) linearView
+            )
 
 backSubstitutionSimple :: LabeledStrategy (Context (LinearSystem Expr))
-backSubstitutionSimple = cleanUpStrategy (fmap simplifySystem) $
+backSubstitutionSimple =
    label "Back substitution with equally many variables and equations" $
-       label "Cover all equations" ruleCoverAllEquations
+       simplifyFirst
+   <*> label "Cover all equations" ruleCoverAllEquations
    <*> repeat (   label "Uncover one equation"  ruleUncoverEquation
               <*> label "Scale equation to one" (try ruleScaleEquation)
               <*> label "Back Substitution"     (repeat ruleBackSubstitution)
@@ -64,20 +65,22 @@ backSubstitution = label "Back substitution" $
    ruleIdentifyFreeVariables <*> backSubstitutionSimple
    
 systemToEchelonWithEEO :: LabeledStrategy (Context (LinearSystem Expr))
-systemToEchelonWithEEO = cleanUpStrategy (fmap simplifySystem) $
+systemToEchelonWithEEO =
    label "System to Echelon Form (EEO)" $
-   repeat $   dropEquation
+   simplifyFirst <*>
+   repeat  (  dropEquation
           <|> check (not . null . remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
           <*> label "Eliminate variable"        (repeat ruleEliminateVar)
           <*> label "Cover up first equation"   ruleCoverUpEquation
+           )
 
 dropEquation :: LabeledStrategy (Context (LinearSystem Expr))
-dropEquation  =  cleanUpStrategy (fmap simplifySystem) $
+dropEquation =
    label "Drop equations" $
-                 label "Inconsistent system (0=1)" ruleInconsistentSystem
-             <|> label "Drop (0=0) equation"       ruleDropEquation
+          label "Inconsistent system (0=1)" ruleInconsistentSystem
+      <|> label "Drop (0=0) equation"       ruleDropEquation
 
 linearSystemStrategy :: LabeledStrategy (Context (LinearSystem Expr))
 linearSystemStrategy = label "General solution to a linear system" $
@@ -101,6 +104,9 @@ gramSchmidtStrategy =
 vars :: Var [String]
 vars = "variables" := []
 
+simplifyFirst :: Rule (Context (LinearSystem Expr))
+simplifyFirst = simplifySystem idRule
+
 conv1 :: Rule (Context (Either (LinearSystem Expr) (Matrix Expr)))
 conv1 = translationToContext "Linear system to matrix" $ \c -> 
    let (m, vs) = systemToMatrix (fromContext c)
@@ -109,7 +115,7 @@ conv1 = translationToContext "Linear system to matrix" $ \c ->
 conv2 :: Rule (Context (Either (LinearSystem Expr) (Matrix Expr)))
 conv2 = translationFromContext "Matrix to linear system" $ \c -> 
    let linsys = matrixToSystemWith (get vars c) (fromContext c)
-   in return $ fmap (const (simplifySystem linsys)) c 
+   in return $ applyD simplifyFirst $  fmap (const linsys) c 
    
 liftLeft :: (IsStrategy f, Lift f) => f (Context a) -> f (Context (Either a b))
 liftLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
@@ -127,20 +133,11 @@ isLeft = either Just (const Nothing)
 isRight :: Either a b -> Maybe b
 isRight = either (const Nothing) Just
 
-translationTo :: String -> (a -> Maybe b) -> Rule (Either a b)
-translationTo s f = makeSimpleRule s (either (fmap Right . f) (const Nothing))
-
-translationFrom :: String -> (b -> Maybe a) -> Rule (Either a b)
-translationFrom s f = makeSimpleRule s (either (const Nothing) (fmap Left . f))
-
 translationToContext :: String -> (Context a -> Maybe (Context b)) -> Rule (Context (Either a b))
 translationToContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Right) . f) . maybeInContext . fmap isLeft)
 
 translationFromContext :: String -> (Context b -> Maybe (Context a)) -> Rule (Context (Either a b))
 translationFromContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Left) . f) . maybeInContext . fmap isRight)
-
-instance Simplify a => Simplify (Matrix a) where
-   simplify = fmap simplify
    
 instance Simplify a => Simplify (Vector a) where
    simplify = fmap simplify

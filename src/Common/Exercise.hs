@@ -208,8 +208,8 @@ getRule ex s =
 showDerivation :: Exercise a -> a -> String
 showDerivation ex = 
    let err = "<<no derivation>>"
-       f   = show . fmap (Shown . prettyPrinter ex . fromContext)
-   in maybe err f . derivation . derivationTree (strategy ex) . inContext
+       f   = show . fmap (Shown . prettyPrinter ex . fromContext) . filterDerivation (\r a -> isMajorRule r)
+   in maybe err f . derivation . fullDerivationTree (strategy ex) . inContext
 
 -- local helper datatype
 data Shown = Shown String 

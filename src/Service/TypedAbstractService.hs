@@ -10,9 +10,12 @@
 --
 -----------------------------------------------------------------------------
 module Service.TypedAbstractService 
-   ( State(..), emptyState, term
+   ( -- * Exercise state
+     State(..), emptyState, term
+     -- * Services
    , stepsremaining, findbuggyrules, submit, ready, allfirsts
    , derivation, onefirst, applicable, apply, generate, generateWith
+     -- * Result data type
    , Result(..), getResultState, resetStateIfNeeded
    ) where
 
@@ -64,30 +67,34 @@ derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state =
    case allfirsts state of 
       [] -> []
-      (r, _, next):_ -> (r, context next) : derivation next
+      (r, _, next):_ -> (r, context next) : derivation next 
 
--- The last condition in the list comprehension is to avoid a very subtle case in which some steps
--- remain to be done (in the prefix), but those steps are administrative (not even minor rules, but 
--- markers for the beginning and the end of a sub-strategy). This is a quick fix. To do: inspect other
--- locations where runPrefixUntil is called.
+-- Note that we have to inspect the last step of the prefix afterwards, because
+-- the remaining part of the derivation could consist of minor rules only.
 allfirsts :: State a -> [(Rule (Context a), Location, State a)]
-allfirsts state = fromMaybe (error "allfirsts") $ do
-   p0 <- prefix state
-   let f (a, p1) = 
-          [ (r, location a, state {context = a, prefix = Just p1})
-          | Just r <- [lastRuleInPrefix p1], isMajorRule r, stepsToRules (prefixToSteps p0) /= stepsToRules (prefixToSteps p1)
-          ]
-   return $ concatMap f $ runPrefixMajor p0 $ context state
-   -- last occurrence of lastRuleInPrefix?
-
--- | Continue with a prefix until the next major rule
-runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
-runPrefixMajor p0 = 
-   map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
+allfirsts state = 
+   case prefix state of
+      Nothing -> 
+         error "allfirsts: no prefix"
+      Just p0 ->
+         let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (context state))
+         in mapMaybe make (derivations tree)
  where
-   f d = (last (terms d), if isEmpty d then p0 else last (steps d))
    stop (Just (Step _ r)) = isMajorRule r
    stop _ = False
+   
+   make d = do
+      prefixEnd <- safeHead (reverse (steps d))
+      termEnd   <- safeHead (reverse (terms d))
+      case lastStepInPrefix prefixEnd of
+         Just (Step _ r) | isMajorRule r -> return
+            ( r
+            , location termEnd
+            , state { context = termEnd
+                    , prefix = Just prefixEnd
+                    }
+            )
+         _ -> Nothing
 
 onefirst :: State a -> (Rule (Context a), Location, State a)
 onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts

@@ -34,7 +34,7 @@ module Common.Strategy
    , mapRules, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)
-   , prefixToSteps, stepsToRules, lastStepInPrefix, lastRuleInPrefix
+   , prefixToSteps, stepsToRules, lastStepInPrefix
    ) where
 
 import Common.Apply
@@ -74,7 +74,7 @@ instance Show a => Show (LabeledStrategy a) where
 
 -- instances for Apply
 instance Apply Strategy where
-   applyAll s = results . derivationTree s
+   applyAll s = results . fullDerivationTree s
 
 instance Apply LabeledStrategy where
    applyAll = applyAll . unlabel
@@ -189,7 +189,7 @@ infixr 4 |>
 check :: (a -> Bool) -> Strategy a
 check p = toStrategy checkRule 
  where
-   checkRule = minorRule $ hasInverse checkRule $ makeSimpleRule "check" $ \a ->
+   checkRule = minorRule $ makeSimpleRule "check" $ \a ->
                   if p a then Just a else Nothing
 
 -- | Check whether or not the argument strategy cannot be applied: the result
@@ -374,10 +374,6 @@ prefixToSteps (P xs _) = map snd (reverse xs)
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step a] -> [Rule a]
 stepsToRules steps = [ r | Step _ r <- steps ]
-
--- | Returns the last rule of a prefix (if such a rule exists)
-lastRuleInPrefix :: Prefix a -> Maybe (Rule a)
-lastRuleInPrefix (P xs _) = safeHead (stepsToRules (map snd xs))
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step a)

@@ -24,7 +24,7 @@ module Common.Derivation
    , restrictHeight, restrictWidth, commit
    , mergeSteps, cutOnStep
      -- * Query a derivation
-   , isEmpty, derivationLength, terms, steps
+   , isEmpty, derivationLength, terms, steps, filterDerivation
      -- * Conversions
    , derivation, derivations
    ) where
@@ -161,6 +161,10 @@ terms (D a xs) = a:map snd xs
 -- | All steps in a derivation
 steps :: Derivation s a -> [s]
 steps (D _ xs) = map fst xs
+
+-- | Filter steps from a derivation
+filterDerivation :: (s -> a -> Bool) -> Derivation s a -> Derivation s a
+filterDerivation p (D a xs) = D a (filter (uncurry p) xs)
 
 -----------------------------------------------------------------------------
 -- Conversions from a derivation tree

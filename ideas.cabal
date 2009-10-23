@@ -15,7 +15,7 @@ license-file:           LICENSE.txt
 author:                 Bastiaan Heeren, Alex Gerdes, Arthur van Leeuwen, Harrie Passier, Johan Jeuring
 maintainer:             bastiaan.heeren@ou.nl
 stability:              provisional
-extra-source-files:     README.txt
+extra-source-files:     
 build-type:             Simple
 cabal-version:          >= 1.2.1
 tested-with:            GHC == 6.10.1

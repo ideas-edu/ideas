@@ -1,6 +1,6 @@
 AUTHORS
 
-Bastiaan Heeren, Alex gerdes, Johan Jeuring
+Bastiaan Heeren, Alex Gerdes, Johan Jeuring
 
 CREDITS
 

@@ -3,7 +3,7 @@
  * A function to call the service and a display function
  */
 function generate(caller) {
-	generateService(caller, getDifficulty(), displayExercise);
+   generateService(caller, getDifficulty(), displayExercise);
 }
 
 function displayNewExercise(state) {
@@ -32,16 +32,15 @@ function getDifficulty() {
   * A new snapshot is taken for the back button
   */
 function displayExercise(state) {
-	closeallhelp();
-	historyKeeper.clear();
-	var task = state.exercise;
-	$('exercise').update(task);
-	$('work').value = task;
-	$('history').update(task);
-	historyKeeper.newSnapshot(state);
-	adjustHeight($('exercise'), task, 40, 40);
-	adjustRows($('work'), task, 40);
+   closeallhelp();
+   historyKeeper.clear();
+   var task = state.exercise;
+   $('exercise').update(task);
+   $('work').value = task;
+   $('history').update(task);
+   historyKeeper.newSnapshot(state);
 }
+
 function addToFeedback(newText) {
    var text = '';
    if (keepFeedback) {
@@ -60,43 +59,43 @@ function addToFeedback(newText) {
  * React on the hint button
  */
 function getHint() {
-        var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
-	onefirsttextService('hint button', s.get('state'), displayHint);
+   var state = currentState();
+   onefirsttextService('hint button', state, displayHint);
 }
 function displayHint(rule, valid, state) {
-	closeallhelp();
-	var s = historyKeeper.historyList[historyKeeper.historyList.length-1];
-	var expression = (s.get('state')).exercise;
-	var newText = '';
-	if (valid) {
-		newText =   '<p><strong>' + rule + '</strong></p>';
-	}
-	else {
-		newText =  '<p>Sorry, there is no rule applicable to <strong>' + expression + '</strong></p>';
-	}
+   closeallhelp();
+   var state = currentState();
+   var expression = state.exercise;
+   var newText = '';
+   if (valid) {
+      newText =   '<p><strong>' + rule + '</strong></p>';
+   }
+   else {
+      newText =  '<p>Sorry, there is no rule applicable to <strong>' + expression + '</strong></p>';
+   }
         addToFeedback(newText);
 }
 /**
  * React to the next button
  */
 function getNext() {
-        var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	onefirsttextService('step button', s.get('state'), displayNext);
- }
- function displayNext(rule, valid, state) {
-	var nextExpression = (state.exercise).asciiToHtml() ;
-	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	var expression = ((s.get('state')).exercise).asciiToHtml();
-	var newText = '';
+   var state = currentState();
+   onefirsttextService('step button', state, displayNext);
+}
 
-	if (valid) {
-		newText = '<p>' + rule + ' </p><p>The result would be <strong>' + nextExpression + 
-		   '</strong></p><p>Press the <strong>Auto step</strong> button to execute this step automatically.</p><p';
+function displayNext(rule, valid, newState) {
+   var oldState = currentState();
+   var nextExpression = (newState.exercise).asciiToHtml() ;
+   var expression = (oldState.exercise).asciiToHtml();
+   var newText = '';
+
+   if (valid) {
+      newText = '<p>' + rule + ' </p><p>The result would be <strong>' + nextExpression + 
+         '</strong></p><p>Press the <strong>Auto step</strong> button to execute this step automatically.</p><p';
         }
         else {
                 newText = '<p>Sorry, there is no rule applicable to <strong>' + expression + '</strong></p>';
         }
-
         addToFeedback(newText);
 }
 
@@ -104,31 +103,31 @@ function getNext() {
  * React to the derivation button
  */
 function getDerivation() {
-     var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-     derivationtextService('worked-out exercise button', s.get('state'), displayDerivation);
+     var state = currentState();
+     derivationtextService('worked-out exercise button', state, displayDerivation);
  }
  function displayDerivation(result) {
- 	   var setOfRules = new Array();
-		 var counter = 0;
-		 while (counter < result.length) {
-					var entry = result[counter];
-				    var appliedRule = new Rule(entry[0], null, entry[1]);
-					++counter;
-					setOfRules.push(appliedRule);
-				}
+       var setOfRules = new Array();
+       var counter = 0;
+       while (counter < result.length) {
+               var entry = result[counter];
+                var appliedRule = new Rule(entry[0], null, entry[1]);
+               ++counter;
+               setOfRules.push(appliedRule);
+            }
 
-     var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
+     var state = currentState();
      var counter = 0;
-     var newText = '<strong>Worked-out exercise</strong><br><br>' + s.get('state').exercise + '<br>';
-	while (counter < setOfRules.length) {
-		var rule = setOfRules[counter];
-		++counter;
-		newText += '<font size="+2">&nbsp;&nbsp;&nbsp;\u21D4</font>  <strong>' + rule.name;
-		newText += '</strong><br>';
-		newText += rule.expression;
-	        newText += '<br>';
-	}
-	addToFeedback(newText);
+     var newText = '<strong>Worked-out exercise</strong><br><br>' + state.exercise + '<br>';
+   while (counter < setOfRules.length) {
+      var rule = setOfRules[counter];
+      ++counter;
+      newText += '<font size="+2">&nbsp;&nbsp;&nbsp;\u21D4</font>  <strong>' + rule.name;
+      newText += '</strong><br>';
+      newText += rule.expression;
+           newText += '<br>';
+   }
+   addToFeedback(newText);
 }
  /**
  * React to the submit button
@@ -138,37 +137,36 @@ function getDerivation() {
  }
  
  function getFeedback(caller) {
-	var workExpression = (($('work')).value).htmlToAscii();
-	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	submittextService(caller, s.get('state'), workExpression, displayFeedback);
+   var workExpression = (($('work')).value).htmlToAscii();
+   var state = currentState();
+   submittextService(caller, state, workExpression, displayFeedback);
  }
 function displayFeedback(result, state) {
-	var newText = '<p>' + result[1] + '</p>';
+   var newText = '<p>' + result[1] + '</p>';
         addToFeedback(newText);
-	if (result[0]) {
-   	   historyKeeper.newSnapshot(state);
-   	   updateDerivation();
-	}
+   if (result[0]) {
+         historyKeeper.newSnapshot(state);
+         updateDerivation();
+   }
 }
 /**
  * React to the Ready button
 */
 function getReady() {
-	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	readyService('ready button', s.get('state'), handleSolved);
+   var state = currentState();
+   readyService('ready button', state, handleSolved);
 }
 function handleSolved(solved) {
-	var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
-	var expression = (s.get('state')).exercise;
-	var newText = '';
+   var state = currentState();
+   var expression = state.exercise;
+   var newText = '';
 
-	if (solved) {
-		newText = '<p>Yes, <strong>' + expression + '</strong> is solved.</p>';
-	}
-	else {
-		newText = '<p>No, <strong>' + expression + '</strong> is <strong>not</strong> solved.</p>';
-	}
+   if (solved) {
+      newText = '<p>Yes, <strong>' + expression + '</strong> is solved.</p>';
+   }
+   else {
+      newText = '<p>No, <strong>' + expression + '</strong> is <strong>not</strong> solved.</p>';
+   }
 
-	addToFeedback(newText);
-        historyKeeper.addFeedback();
+   addToFeedback(newText);
 }

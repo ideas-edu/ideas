@@ -11,7 +11,6 @@
 <script type="text/javascript" src="js/events.js"></script>
 <script type="text/javascript" src="js/help.js"></script>
 <script type="text/javascript" src="js/services.js"></script>
-<script type="text/javascript" src="js/communication.js"></script>
 <script type="text/javascript">var exercisekind = <?php $kind = getKind(); echo '"'.$kind.'";'; ?>var id=421;</script>
 <?php if (getStudentNumber() != "") print getStudentNumber();?>
 <script type="text/javascript" src="js/init.js"></script>

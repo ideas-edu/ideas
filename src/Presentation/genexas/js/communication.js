@@ -29,16 +29,15 @@ function getDifficulty() {
  /**
   * Display new exercise.
   * Updates the exercise area, the work area and the history area.
-  * A new snapshot is taken for the back button
   */
 function displayExercise(state) {
    closeallhelp();
-   historyKeeper.clear();
-   var task = state.exercise;
+   history.clear();
+   var task = state.term;
    $('exercise').update(task);
    $('work').value = task;
    $('history').update(task);
-   historyKeeper.newSnapshot(state);
+   history.addState(state);
 }
 
 function addToFeedback(newText) {
@@ -65,7 +64,7 @@ function getHint() {
 function displayHint(rule, valid, state) {
    closeallhelp();
    var state = currentState();
-   var expression = state.exercise;
+   var expression = state.term;
    var newText = '';
    if (valid) {
       newText =   '<p><strong>' + rule + '</strong></p>';
@@ -85,8 +84,8 @@ function getNext() {
 
 function displayNext(rule, valid, newState) {
    var oldState = currentState();
-   var nextExpression = (newState.exercise).asciiToHtml() ;
-   var expression = (oldState.exercise).asciiToHtml();
+   var nextExpression = (newState.term).asciiToHtml() ;
+   var expression = (oldState.term).asciiToHtml();
    var newText = '';
 
    if (valid) {
@@ -118,7 +117,7 @@ function getDerivation() {
 
      var state = currentState();
      var counter = 0;
-     var newText = '<strong>Worked-out exercise</strong><br><br>' + state.exercise + '<br>';
+     var newText = '<strong>Worked-out exercise</strong><br><br>' + state.term + '<br>';
    while (counter < setOfRules.length) {
       var rule = setOfRules[counter];
       ++counter;
@@ -145,7 +144,7 @@ function displayFeedback(result, state) {
    var newText = '<p>' + result[1] + '</p>';
         addToFeedback(newText);
    if (result[0]) {
-         historyKeeper.newSnapshot(state);
+         history.addState(state);
          updateDerivation();
    }
 }
@@ -158,7 +157,7 @@ function getReady() {
 }
 function handleSolved(solved) {
    var state = currentState();
-   var expression = state.exercise;
+   var expression = state.term;
    var newText = '';
 
    if (solved) {

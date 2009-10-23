@@ -69,79 +69,34 @@ function parse(json){
    this.location = location;
    this.expression = expression;
  }
-/* * 
- *Undo functionality
-*/
 
-/**
- * State is the same datatype as is used in the services
-  * Note: exercise is in ASCII form, exectly how we got it from service.cgi
-  */
-function State(id, prefix, exercise, simpleContext) {
-   this.id = id;
-   this.prefix = prefix;
-   this.exercise = exercise;
-   this.simpleContext = simpleContext;
+function State(code, prefix, term, context) {
+   this.code    = code;
+   this.prefix  = prefix;
+   this.term    = term;
+   this.context = context;
 }
 
-var snapshot;
-/**
- * Our historykeeper will be an array filled with snapshot, containing the variable contents of the page elements
-  * snapshotPointer points out the index of the current snapshot within the historyList
-  */
-var historyKeeper = new Object();
-historyKeeper.historyList = new Array();
-historyKeeper.snapshotPointer = -1;
-/**
- * function that clears all memorized state
-  */
-historyKeeper.clear = function() {
-   historyKeeper.historyList = new Array();
-   historyKeeper.snapshotPointer = -1;
+var history = new Object();
+history.historyList = new Array();
+
+history.clear = function() {
+   history.historyList = new Array();
 }
-/**
- * function to add the current snapshot to the history 
- */
-historyKeeper.addSnapshot = function (snapshot) {
-   historyKeeper.historyList.push(snapshot);
-   ++historyKeeper.snapshotPointer;
-}
-/**
- * create a new snapshot, based on the values of the page elements
- */
-historyKeeper.newSnapshot = function (state) {
-   if (snapshot) {
-      var newSnapshot = snapshot.clone();
-      snapshot = newSnapshot;
-   }
-   else {
-      snapshot = new Hash();
-   }
-   snapshot.set('state', state);
-   historyKeeper.addSnapshot(snapshot);
-   
-}
-/**
- * create a new snapshot, based on the values of the page elements
- */
-historyKeeper.update = function (state) {
-   var newSnapshot = snapshot.clone();
-   snapshot = newSnapshot;
-   snapshot.set('state', state);
-   historyKeeper.addSnapshot(snapshot);
-   
+
+history.addState = function (state) {
+   history.historyList.push(state);
 }
 
 function currentState() {
-   return historyKeeper.historyList[historyKeeper.historyList.length-1].get('state');
+   return history.historyList.last();
 }
 
 function goBack() {
-  if (historyKeeper.historyList.length > 1  ) {
+  if (history.historyList.length > 1  ) {
     var state = currentState();
-    if ($('work').value == state.exercise) { // student didn't touch expression
-      -- (historyKeeper.snapshotPointer);
-      historyKeeper.historyList.pop();
+    if ($('work').value == state.term) { // student didn't touch expression
+      history.historyList.pop();
     } 
   }      
   fillAreas();
@@ -149,19 +104,19 @@ function goBack() {
 
 function fillAreas() {
    var state = currentState();
-   $('work').value = state.exercise;
+   $('work').value = state.term;
    updateDerivation();
 }
 
 function updateDerivation() {
    var i = 0;
    var text = '';
-   while (i < historyKeeper.historyList.length) {
+   while (i < history.historyList.length) {
       if (i!=0) {
          text += '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp;';
       }
-      var state = historyKeeper.historyList[i];
-      text += state.get('state').exercise;
+      var state = history.historyList[i];
+      text += state.term;
       i++;
    }
    $('history').update(text);
@@ -177,8 +132,7 @@ function copy() {
 function autoHandler(rule, valid, state) {
         addToFeedback('<strong>Auto step: </strong>' + rule + ' (has been done)');
    if (valid) {
-         historyKeeper.newSnapshot(state);
-      historyKeeper.snapshotPointer++;
+         history.addState(state);
       fillAreas();
         }
 }

@@ -97,7 +97,7 @@ function arrayToState(arr) {
 }
 
 function stateToArray(state) {
-   return [state.id, state.prefix, state.exercise, state.simpleContext];
+   return [state.code, state.prefix, state.term, state.context];
 }
 
 

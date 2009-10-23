@@ -1,22 +1,5 @@
-/**
-  * Global variable: keepFeedback
-  * made global, so we wont have to check the value of the radiobutton each time
-  */
-var keepFeedback = false;
-/**
-  * functions to choose between keepFeedback true or false
-  */
-function setClearFeedback() {
-    if ($('feedbackclearchoice').checked == true) {
-       keepFeedback = false;
-       $('clearbutton').hide();
-    } else {
-      setKeepFeedback();
-    }
-}
-function setKeepFeedback() {
-   keepFeedback = true;
-   $('clearbutton').show();
+function keepFeedback() {
+   return $('lastonlychoice').checked == false;
 }
 
 /**
@@ -44,12 +27,6 @@ function writeArray(list) {
    return elements;
 }
 
-/**
- * clear the feedback area
- */
-function clearFeedback() {
-   $('feedback').update('');
-}
 function parse(json){
     try{
         if(/^("(\\.|[^"\\\n\r])*?"|[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t])+?$/.test(json)){
@@ -92,16 +69,6 @@ function currentState() {
    return history.historyList.last();
 }
 
-function goBack() {
-  if (history.historyList.length > 1  ) {
-    var state = currentState();
-    if ($('work').value == state.term) { // student didn't touch expression
-      history.historyList.pop();
-    } 
-  }      
-  fillAreas();
-}
-
 function fillAreas() {
    var state = currentState();
    $('work').value = state.term;
@@ -122,21 +89,6 @@ function updateDerivation() {
    $('history').update(text);
    $('history').scrollTop = $('history').scrollHeight;
 }
-
-// will be auto step
-// BHR: move this function to other button handlers, and rename
-function copy() {
-        var state = currentState();
-        onefirsttextService('auto step button', state, autoHandler);
-}
-function autoHandler(rule, valid, state) {
-        addToFeedback('<strong>Auto step: </strong>' + rule + ' (has been done)');
-   if (valid) {
-         history.addState(state);
-      fillAreas();
-        }
-}
-
 
 /* 
  * Menubuttons for help, about and a set of rewriting rules.

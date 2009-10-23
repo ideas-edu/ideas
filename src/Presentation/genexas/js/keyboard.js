@@ -44,11 +44,11 @@ function insertAtCursor(range, tekst) {
 }
 
 // wordt aangeroepen wanneer de gebruiker in het werkveld typt
-function controleer(e) {	// eerst  de character code ophalen
+function onWorkKeypress(e) {	// eerst  de character code ophalen
 	e = getEvent(e);
 	var code = getCode(e);
 	if (code == 13) {
-		getFeedback('enter key');
+		onSubmit('enter key');
 		stop(e);
 		return false;
 	}

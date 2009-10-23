@@ -8,6 +8,7 @@
 <link rel="stylesheet" type="text/css" href="css/exas.css" >
 <link rel="shortcut icon" href="css/favicon.ico" type="image/x-icon" >
 <script type="text/javascript" src="js/prototype-1.6.0.2.js"></script> 
+<script type="text/javascript" src="js/events.js"></script>
 <script type="text/javascript" src="js/help.js"></script>
 <script type="text/javascript" src="js/services.js"></script>
 <script type="text/javascript" src="js/communication.js"></script>
@@ -21,7 +22,7 @@
 <h1>Exercise Assistant Online</h1>
 <div id="exasdiv">
   <div class="topmenu">
-      <input type="button" id="generateButton" value="<?php print NewExercise;?>">
+      <input type="button" id="newexercisebutton" value="<?php print NewExercise;?>">
       <label for="Easy">Easy</label></td><td><input type="radio" name="difficulty" value="Easy" id="Easy">
       <label for="Normal">Normal</label><input type="radio" name="difficulty" value="Normal" id="Normal" checked="checked">
       <label for="Difficult">Difficult</label><input type="radio" name="difficulty" value="Difficult" id="Difficult">
@@ -40,16 +41,16 @@
 	<input type="text" id="work" rows="2" cols="40"/>
 	<table style="margin-left: 20px;" width="500px">
 		<tr>
-			<td><input class="minibutton" type="button" id="undobutton" value="<?php print Back;?>"></td>
+			<td><input class="minibutton" type="button" id="backbutton" value="<?php print Back;?>"></td>
 			<td></td>
 			<td><input class="minibutton" type="button" id="readybutton" value="<?php print Ready;?>"></td>
 			<td><input class="minibutton" style="width: 160px;" type="button" id="submitbutton" value="<?php print Submit;?>"></td>
 		</tr>
 		<tr>
 			<td><input class="minibutton" id="hintbutton" type="button" value="<?php print Hint;?>"></td>
-			<td><input class="minibutton" id="nextbutton" type="button" value="<?php print Step;?>"></td>
-			<td><input class="minibutton" type="button" id="copybutton" value="<?php print Copy;?>"></td>
-			<td><input class="minibutton" style="width: 160px;" id="derivationbutton" type="button" value="<?php print Derivation;?>"></td>
+			<td><input class="minibutton" id="stepbutton" type="button" value="<?php print Step;?>"></td>
+			<td><input class="minibutton" type="button" id="autostepbutton" value="<?php print AutoStep;?>"></td>
+			<td><input class="minibutton" style="width: 160px;" id="workedoutbutton" type="button" value="<?php print Derivation;?>"></td>
 		</tr>
 	</table>
 	
@@ -60,8 +61,8 @@
 	<h3><?php print Feedback ?></h3>
 	<div id="feedback" class="clear"><?php print Welcome;?></div>
 	<table><tr><td>
-		&nbsp;&nbsp;<input class="feedbacklabel" type="checkbox" name="feedbackchoice" id="feedbackclearchoice" checked value="chooseclear">
-		<label class="feedbacklabel" for="feedbackclearchoice"><?php print ChooseClear;?></label>
+		&nbsp;&nbsp;<input class="feedbacklabel" type="checkbox" name="feedbackchoice" id="lastonlychoice" checked value="chooseclear">
+		<label class="feedbacklabel" for="lastonlychoice"><?php print ChooseClear;?></label>
 
 	</td><td>
 		<input type="button" id="clearbutton" value="<?php print Clear;?>"  style="display: none">

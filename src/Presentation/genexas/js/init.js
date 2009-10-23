@@ -28,7 +28,7 @@ function init() {
 	$('feedbackclearchoice').observe('click', setClearFeedback); 
 	$('copybutton').observe('click', copy); 
 
-        $('work').focus();
+  $('work').focus();
 	generate('init');
 }
 

@@ -143,21 +143,12 @@ historyKeeper.clear = function() {
 historyKeeper.addSnapshot = function (snapshot) {
 	historyKeeper.historyList.push(snapshot);
 	++historyKeeper.snapshotPointer;
-	if (historyKeeper.snapshotPointer >= 1) {
-		$('undobutton').show();
-	}
-	// clear any state under the copy button ( it will be outdated)	
-	historyKeeper.removeCopy();
 }
 /**
  * create a new snapshot, based on the values of the page elements
  */
 historyKeeper.newSnapshot = function (state) {
 	if (snapshot) {
-		// clear the state under 'copy'
-		if (snapshot.get('copy')) {
-			snapshot.unset('copy');
-		}
 		var newSnapshot = snapshot.clone();
 		snapshot = newSnapshot;
 	}
@@ -197,21 +188,7 @@ historyKeeper.addFeedback = function () {
 		historyKeeper.addSnapshot(snapshot);
 	}
 }
-historyKeeper.addCopy = function(copycontent) {
-	snapshot.set('copy', copycontent);
-}
-historyKeeper.removeCopy = function() {
-	snapshot.unset('copy');
-}
- /**
-  * When the user has asked a possible next step, we receive a state and a location. 
-  * Both are held available for the copy button.
-  * This function returns an object to hold the state and the location
-  */
-function CopyContent(state, location) {
-	this.state = state;
-	this.location = location;
-}
+
 function goBack() {
   if (historyKeeper.historyList.length > 1  ) {
     var stateObject = historyKeeper.historyList[historyKeeper.historyList.length-1];

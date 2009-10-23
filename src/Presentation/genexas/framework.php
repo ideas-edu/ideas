@@ -16,7 +16,6 @@
 <?php if (getStudentNumber() != "") print getStudentNumber();?>
 <script type="text/javascript" src="js/init.js"></script>
 <script type="text/javascript" src="js/keyboard.js"></script>	
-<script type="text/javascript" src="js/en.js"></script>	
 </head>
 
 <h1>Exercise Assistant Online</h1>

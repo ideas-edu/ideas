@@ -11,6 +11,11 @@ function displayNewExercise(state) {
     clearFeedback();
 }
 
+// The url for the services
+function getURL() {
+   return "cgi/service.cgi";
+}
+
 function getDifficulty() {
    var diff = 2;
    if ($('Easy').checked) {
@@ -67,7 +72,7 @@ function displayHint(rule, valid, state) {
 		newText =   '<p><strong>' + rule + '</strong></p>';
 	}
 	else {
-		newText =  '<p>' + sorry + ' <strong>' + expression + '</strong></p>';
+		newText =  '<p>Sorry, there is no rule applicable to <strong>' + expression + '</strong></p>';
 	}
         addToFeedback(newText);
 }
@@ -85,11 +90,11 @@ function getNext() {
 	var newText = '';
 
 	if (valid) {
-		newText = '<p>' + rule + ' </p><p>' + resulting + ' <strong>' + nextExpression + '</strong></p><p>' + paste + 
-'</p><p';
+		newText = '<p>' + rule + ' </p><p>The result would be <strong>' + nextExpression + 
+		   '</strong></p><p>Press the <strong>Auto step</strong> button to execute this step automatically.</p><p';
         }
         else {
-                newText = '<p>' + sorry +  ' <strong>' + expression + '</strong></p>';
+                newText = '<p>Sorry, there is no rule applicable to <strong>' + expression + '</strong></p>';
         }
 
         addToFeedback(newText);
@@ -114,7 +119,7 @@ function getDerivation() {
 
      var s = historyKeeper.historyList[historyKeeper.historyList.length - 1];
      var counter = 0;
-     var newText = '<strong>' + derivationtext + '</strong><br><br>' + s.get('state').exercise + '<br>';
+     var newText = '<strong>Worked-out exercise</strong><br><br>' + s.get('state').exercise + '<br>';
 	while (counter < setOfRules.length) {
 		var rule = setOfRules[counter];
 		++counter;
@@ -158,10 +163,10 @@ function handleSolved(solved) {
 	var newText = '';
 
 	if (solved) {
-		newText = '<p>' + yes + ', <strong>' + expression + '</strong> is ' + ready + '.</p>';
+		newText = '<p>Yes, <strong>' + expression + '</strong> is solved.</p>';
 	}
 	else {
-		newText = '<p>' + no + ', <strong>' + expression + '</strong> is <strong>' + not + '</strong> ' + ready + '.</p>';
+		newText = '<p>No, <strong>' + expression + '</strong> is <strong>not</strong> solved.</p>';
 	}
 
 	addToFeedback(newText);

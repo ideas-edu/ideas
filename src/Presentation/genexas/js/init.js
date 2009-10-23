@@ -32,6 +32,7 @@ function init() {
    
    $('work').focus();
    onNewExercise('init');
+   welcomeMessage();
 }
 
                   

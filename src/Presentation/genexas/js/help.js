@@ -133,3 +133,12 @@ function closeallhelp() {
    ($('help')).className='helparea invisible';
    ($('about')).className='helparea invisible';
 }
+
+function welcomeMessage() {
+   var msg = "<p>Welcome to the Exercise Assistant. Rewrite the expression in the work area and hit <strong>Submit</strong> after each step. Press the <strong>Ready</strong> button as soon as your proposition is in disjunctive normal form.</p>";
+   msg += "<p>If you are stuck in the exercise, you can use one of the hint buttons: ask for a hint, the next step, automatically perform the next step, or show a worked-out example.</p>";
+   msg += "<p>There is a special keyboard to insert the logical symbols, or you can use the <strong>short-keys '-', 'o', 'a', 'i', or '='</strong>.</p>";
+   msg += "<p>The Feedback area will be cleared before new feedback is written to the area. If you want to keep all messages, then disable the checkbox.</p>";
+
+   addToFeedback(msg);
+}

@@ -25,7 +25,7 @@ function about() {
 		include_once("include/about.html");
 	}
 }
-include_once("include/en.php");
+// include_once("include/en.php");
 function getKind() {
 	return "logic.dnf-unicode";
 }

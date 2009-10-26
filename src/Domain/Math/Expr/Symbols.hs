@@ -19,7 +19,8 @@ module Domain.Math.Expr.Symbols
      -- list1
    , listSymbol
      -- relation1
-   , eqSymbol
+   , eqSymbol, ltSymbol, gtSymbol, neqSymbol
+   , leqSymbol, geqSymbol
      -- calculus1
    , diffSymbol
      -- nusm1

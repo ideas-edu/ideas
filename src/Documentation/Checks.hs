@@ -53,7 +53,7 @@ main = do
    checkExercise LA.systemWithMatrixExercise
    checkExercise LA.gramSchmidtExercise
    checkExercise RA.cnfExercise
-   forM_ exerciseList $ \(Some ex) ->
+   forM_ exercises $ \(Some ex) ->
       checksForList ex
    
    -- putStrLn "* 3. Confluence checks"

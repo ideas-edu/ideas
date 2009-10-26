@@ -26,7 +26,7 @@ import System.Time
 main :: IO ()
 main = do
    dir <- targetDirectory
-   forM_ exerciseList $ \(Some ex) -> do
+   forM_ exercises $ \(Some ex) -> do
       let code = exerciseCode ex
           path = dir ++ "/" ++ domain code ++ "/" ++ filter (/= ' ') (identifier code)
       -- Exercise document

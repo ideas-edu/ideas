@@ -15,8 +15,8 @@ import Common.Exercise
 import Common.Context
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
-import Service.ExerciseList
-import Service.TypedAbstractService
+import Service.ExerciseList 
+import Service.TypedAbstractService hiding (exercise)
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -24,23 +24,23 @@ import System.Random
 import Text.HTML
 import Documentation.DefaultPage
 
-makeExercisePage :: Exercise a -> IO ()
-makeExercisePage ex = do
-   generatePage (exercisePageFile ex) (exercisePage ex)
-   case derivationsPage ex of 
+makeExercisePage :: ExercisePackage a -> IO ()
+makeExercisePage pkg = do
+   let code = exerciseCode (exercise pkg)
+   generatePage (exercisePageFile code) (exercisePage pkg)
+   case derivationsPage pkg of 
       Nothing   -> return ()
       Just this ->
-         generatePage (exerciseDerivationsFile ex) this
+         generatePage (exerciseDerivationsFile code) this
       
-
-exercisePage :: Exercise a -> HTML
-exercisePage ex = defaultPage title 2 $ do
+exercisePage :: ExercisePackage a -> HTML
+exercisePage pkg = defaultPage title 2 $ do
    h1 (description ex)
    table 
       [ [bold $ text "Code:",   ttText (show $ exerciseCode ex)]
       , [bold $ text "Status:", text (show $ status ex)]
       , [ bold $ text "OpenMath support"
-        , text $ showBool $ not $ null $ getOpenMathExercise (exerciseCode ex)
+        , text $ showBool $ withOpenMath pkg
         ]
       ]
    
@@ -74,13 +74,15 @@ exercisePage ex = defaultPage title 2 $ do
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) ex 5
    preText (showDerivation ex (fromContext $ context state))
-   when (isJust (derivationsPage ex)) $ 
-      link (up 2 ++ exerciseDerivationsFile ex) (text "More examples")
+   when (isJust (derivationsPage pkg)) $ 
+      link (up 2 ++ exerciseDerivationsFile code) (text "More examples")
  where
+   ex    = exercise pkg
+   code  = exerciseCode ex
    title = "Exercise " ++ show (exerciseCode ex)
    
-derivationsPage :: Exercise a -> Maybe HTML
-derivationsPage ex
+derivationsPage :: ExercisePackage a -> Maybe HTML
+derivationsPage pkg
    | null xs   = Nothing
    | otherwise = Just $ defaultPage title 2 $ do
         h1 "Examples"
@@ -89,5 +91,7 @@ derivationsPage ex
             preText (showDerivation ex x)
         
  where
-   title = "Derivations for " ++ show (exerciseCode ex)
+   ex    = exercise pkg
+   code  = exerciseCode ex
+   title = "Derivations for " ++ show code
    xs    = examples ex

@@ -68,8 +68,8 @@ ruleImagePath :: Exercise a -> String
 ruleImagePath ex = "exercises/" ++ f (domain (exerciseCode ex)) ++ "/" ++ f (description ex) ++ "/"
  where f = filter isAlphaNum . map toLower
 
-exercisePagePath :: Exercise a -> String
-exercisePagePath ex = "exercises/" ++ domain (exerciseCode ex) ++ "/"
+exercisePagePath :: ExerciseCode -> String
+exercisePagePath code = "exercises/" ++ domain code ++ "/"
 
 servicePagePath :: String
 servicePagePath = "services/" 
@@ -88,16 +88,16 @@ exerciseOverviewPageFile = "exercises.html"
 serviceOverviewPageFile :: String
 serviceOverviewPageFile = "services.html"
 
-exercisePageFile :: Exercise a -> String
-exercisePageFile ex = 
-   exercisePagePath ex 
-   ++ filter (not . isSpace) (identifier (exerciseCode ex)) 
+exercisePageFile :: ExerciseCode -> String
+exercisePageFile code = 
+   exercisePagePath code 
+   ++ filter (not . isSpace) (identifier code) 
    ++ ".html"
 
-exerciseDerivationsFile :: Exercise a -> String
-exerciseDerivationsFile ex = 
-   exercisePagePath ex
-   ++ filter (not . isSpace) (identifier (exerciseCode ex))
+exerciseDerivationsFile :: ExerciseCode -> String
+exerciseDerivationsFile code = 
+   exercisePagePath code
+   ++ filter (not . isSpace) (identifier code)
    ++ "-derivations.html"
 
 servicePageFile :: Service a -> String

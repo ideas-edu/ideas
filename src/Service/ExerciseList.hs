@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE Rank2Types #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -11,16 +11,18 @@
 --
 -----------------------------------------------------------------------------
 module Service.ExerciseList 
-   ( exerciseList, findExercises, getExercise
-   , openMathExercises, findOpenMathExercises, getOpenMathExercise
-   , OpenMathExercise(..)
-   , resolveExerciseCode
+   ( ExercisePackage, exercise, withOpenMath, toOpenMath, fromOpenMath
+   , getExerciseText
+   , package, packages, exercises
+   , getPackage, getExercise
    ) where
 
 import Common.Utils (Some(..))
 import Common.Exercise
-import Data.Char
+import Control.Monad
 import Domain.Math.Expr
+import Service.FeedbackText (ExerciseText)
+import Text.OpenMath.Object
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.RelationAlgebra as RA
@@ -29,67 +31,74 @@ import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Equation.CoverUpExercise as Math
 import qualified Domain.Math.Polynomial.Exercises as Math
 
--- List with all known exercises
-exerciseList :: [Some Exercise]
-exerciseList = 
+packages :: [Some ExercisePackage]
+packages =
    [ -- logic and relation-algebra
-     Some Logic.dnfExercise
-   , Some Logic.dnfUnicodeExercise
-   , Some RA.cnfExercise
-   ] ++
-   [ Some e | OMEX e <- openMathExercises ]
+     Some (package Logic.dnfExercise)
+        {getExerciseText = Just Logic.logicText}
+   , Some (package Logic.dnfUnicodeExercise)
+        {getExerciseText = Just Logic.logicText}
+   , make RA.cnfExercise
+     -- basic math
+   , makeOM Math.naturalExercise, makeOM Math.integerExercise
+   , makeOM Math.rationalExercise, makeOM Math.fractionExercise
+   , makeOM Math.coverUpExercise
+   , makeOM Math.linearExercise
+   , makeOM Math.quadraticExercise
+   , makeOM Math.higherDegreeExercise
+   , makeOM Math.derivativeExercise
+     -- linear algebra
+   , makeOM LA.gramSchmidtExercise, makeOM LA.linearSystemExercise
+   , makeOM LA.gaussianElimExercise, makeOM LA.systemWithMatrixExercise
+   ]
 
 -----------------------------------------------------------------------------
--- All mathematical exercises are supported by the OpenMath standard, and 
--- require an extra type constraint
+-- Package data type (and constructor functions)
 
-data OpenMathExercise = forall a . IsExpr a => OMEX (Exercise a)
-   
-openMathExercises :: [OpenMathExercise]
-openMathExercises = 
-   [ -- basic math
-     OMEX Math.naturalExercise, OMEX Math.integerExercise
-   , OMEX Math.rationalExercise, OMEX Math.fractionExercise
-   , OMEX Math.coverUpExercise
-   , OMEX Math.linearExercise
-   , OMEX Math.quadraticExercise
-   , OMEX Math.higherDegreeExercise
-   , OMEX Math.derivativeExercise
-     -- linear algebra
-   , OMEX LA.gramSchmidtExercise
-   , OMEX LA.linearSystemExercise
-   , OMEX LA.gaussianElimExercise
-   , OMEX LA.systemWithMatrixExercise
-   ]
-   
+data ExercisePackage a = P
+   { exercise        :: Exercise a
+   , withOpenMath    :: Bool
+   , toOpenMath      :: a -> OMOBJ 
+   , fromOpenMath    :: MonadPlus m => OMOBJ -> m a
+   , getExerciseText :: Maybe (ExerciseText a)
+   }
+
+package :: Exercise a -> ExercisePackage a
+package ex = P 
+   { exercise        = ex
+   , withOpenMath    = False
+   , toOpenMath      = error "no OpenMath support"
+   , fromOpenMath    = fail "no OpenMath support"
+   , getExerciseText = Nothing
+   }
+
+make :: Exercise a -> Some ExercisePackage
+make = Some . package
+
+makeOM :: IsExpr a => Exercise a -> Some ExercisePackage
+makeOM ex = Some $ (package ex)
+   { withOpenMath = True
+   , toOpenMath   = toOMOBJ . toExpr
+   , fromOpenMath = fromExpr . fromOMOBJ
+   }
+
 -----------------------------------------------------------------------------
 -- Utility functions for finding an exercise
 
-resolveExerciseCode :: Monad m => String -> m ExerciseCode
-resolveExerciseCode txt = 
-   case findExercises (\ex -> show (exerciseCode ex) ~= txt) of
-      [Some ex] -> return (exerciseCode ex)
-      _         -> fail $ "Failed to resolve the exercise code " ++ show txt
+exercises :: [Some Exercise]
+exercises = 
+   let f (Some pkg) = Some (exercise pkg)
+   in map f packages
+
+getPackage :: Monad m => ExerciseCode -> m (Some ExercisePackage)
+getPackage code = 
+   case filter p packages of
+      [this] -> return this
+      _      -> fail $ "Package " ++ show code ++ " not found" 
  where
-   s ~= t = f s == f t 
-   f = map toLower . filter isAlphaNum
-
-findExercises :: (forall a . Exercise a -> Bool) -> [Some Exercise]
-findExercises p = [ Some e | Some e <- exerciseList, p e ]
-
+   p (Some pkg) = exerciseCode (exercise pkg) == code
+   
 getExercise :: Monad m => ExerciseCode -> m (Some Exercise)
-getExercise code = 
-   case findExercises ((==code) . exerciseCode) of
-      [hd] -> return hd
-      []   -> fail $ "No exercise with code "   ++ show code
-      _    -> fail $ "Ambiguous exercise code " ++ show code
-      
-findOpenMathExercises :: (forall a . Exercise a -> Bool) -> [OpenMathExercise]
-findOpenMathExercises p = [ OMEX e | OMEX e <- openMathExercises, p e ]
-
-getOpenMathExercise :: Monad m => ExerciseCode -> m OpenMathExercise
-getOpenMathExercise code = 
-   case findOpenMathExercises ((==code) . exerciseCode) of
-      [hd] -> return hd
-      []   -> fail $ "No exercise with code "   ++ show code
-      _    -> fail $ "Ambiguous exercise code " ++ show code
+getExercise = 
+   let f (Some pkg) = Some (exercise pkg)
+   in liftM f . getPackage

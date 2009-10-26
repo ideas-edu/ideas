@@ -10,102 +10,54 @@
 --
 -----------------------------------------------------------------------------
 module Service.FeedbackText 
-   ( feedbackLogic
-   , onefirsttext, submittext, derivationtext
+   ( ExerciseText(..)
+   , onefirsttext, submittext, derivationtext, submitHelper
    ) where
 
 import Control.Arrow
-import Control.Monad
-import Common.Exercise
-import Common.Utils (safeHead, fst3, commaList)
-import Data.Maybe
-import Domain.Logic.Formula (SLogic)
-import Domain.Logic.FeedbackText
-import Domain.Logic.Exercises (dnfExercise, dnfUnicodeExercise)
-import Service.TypedAbstractService
 import Common.Context
-import Common.Transformation (name, Rule)
-import Text.Parsing (errorToPositions)
-import Data.Char
+import Common.Exercise
+import Common.Transformation
+import Common.Utils
+import Data.Maybe
+import Service.TypedAbstractService
+import Text.Parsing (SyntaxError, errorToPositions)
 
--- Quick hack for determining subterms
-coerceLogic :: Exercise a -> a -> Maybe SLogic
-coerceLogic ex a
-   | exerciseCode ex == exerciseCode dnfExercise =
-        either (const Nothing) Just $ parser dnfExercise (prettyPrinter ex a)
-   | exerciseCode ex == exerciseCode dnfUnicodeExercise =
-        either (const Nothing) Just $ parser dnfUnicodeExercise (prettyPrinter ex a)
-   | otherwise = Nothing
+------------------------------------------------------------
+-- Exercise Text data type
 
-youRewroteInto :: State a -> a -> Maybe String
-youRewroteInto = rewriteIntoText False "You rewrote "
+-- Exercise extension for textual feedback
+data ExerciseText a = ExerciseText
+   { ruleText              :: Rule (Context a) -> Maybe String
+   , appliedRule           :: Rule (Context a) -> String
+   , feedbackSyntaxError   :: SyntaxError -> String
+   , feedbackSame          :: String
+   , feedbackBuggy         :: Bool -> [Rule (Context a)] -> String
+   , feedbackNotEquivalent :: Bool -> String
+   , feedbackOk            :: [Rule (Context a)] -> (String, Bool)
+   , feedbackDetour        :: Bool -> Maybe (Rule (Context a)) -> [Rule (Context a)] -> (String, Bool)
+   , feedbackUnknown       :: Bool -> String
+   }
 
-useToRewrite :: Rule (Context a) -> State a -> a -> Maybe String
-useToRewrite rule old = rewriteIntoText True txt old
- where
-   txt = "Use " ++ showRule (exerciseCode $ exercise old) rule
-         ++ " to rewrite "
+------------------------------------------------------------
+-- Services
 
-rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
-rewriteIntoText mode txt old a = do
-   let ex | exerciseCode (exercise old) == exerciseCode dnfUnicodeExercise =
-               dnfUnicodeExercise
-          | otherwise = dnfExercise
-   p <- coerceLogic (exercise old) (fromContext $ context old)
-   q <- coerceLogic (exercise old) a
-   (p1, q1) <- difference ex mode p q
-   return $ txt ++ prettyPrinter ex p1 
-         ++ " into " ++ prettyPrinter ex q1 ++ ". "
+derivationtext :: ExerciseText a -> State a -> Maybe String -> [(String, Context a)]
+derivationtext exText st _event = 
+   map (first (showRule exText)) (derivation st)
 
--- Feedback messages for submit service (free student input). The boolean
--- indicates whether the student is allowed to continue (True), or forced 
--- to go back to the previous state (False)
-feedbackLogic :: State a -> a -> Result a -> (String, Bool)
-feedbackLogic old a result =
-   case result of
-      Buggy rs        -> ( fromMaybe ""  (youRewroteInto old a) ++ 
-                           feedbackBuggy (ready old) rs
-                         , False)
-      NotEquivalent   -> ( fromMaybe ""  (youRewroteInto old a) ++
-                           feedbackNotEquivalent (ready old)
-                         , False)
-      Ok rs _
-         | null rs    -> (feedbackSame, False)
-         | otherwise  -> feedbackOk rs
-      Detour rs _     -> feedbackDetour (ready old) (expected old) rs
-      Unknown _       -> ( fromMaybe ""  (youRewroteInto old a) ++ 
-                           feedbackUnknown (ready old)
-                         , False)
- where
-   expected = fmap fst3 . safeHead . allfirsts
-
-showRule :: ExerciseCode -> Rule a -> String
-showRule code r 
-   | code `elem` map exerciseCode [dnfExercise, dnfUnicodeExercise] =
-        fromMaybe txt (ruleText r)
-   | otherwise = txt
- where
-   txt = "rule " ++ name r
-
-getCode :: State a -> ExerciseCode
-getCode = exerciseCode . exercise
-
-derivationtext :: State a -> Maybe String -> [(String, Context a)]
-derivationtext st _event = 
-   map (first (showRule (getCode st))) (derivation st)
-
-onefirsttext :: State a -> Maybe String -> (Bool, String, State a)
-onefirsttext state event =
+onefirsttext :: ExerciseText a -> State a -> Maybe String -> (Bool, String, State a)
+onefirsttext exText state event =
    case allfirsts state of
       (r, _, s):_ ->
-         let msg = case useToRewrite r state (fromContext $ context s) of
+         let msg = case useToRewrite exText r state (fromContext $ context s) of
                       Just txt | event /= Just "hint button" -> txt
-                      _ -> "Use " ++ showRule (getCode state) r
+                      _ -> "Use " ++ showRule exText r
          in (True, msg, s)
       _ -> (False, "Sorry, no hint available", state)
-
-submittext :: State a -> String -> Maybe String -> (Bool, String, State a)
-submittext state txt _event = 
+      
+submittext :: ExerciseText a -> State a -> String -> Maybe String -> (Bool, String, State a)
+submittext exText state txt _event = 
    case parser (exercise state) txt of
       Left err -> 
          let msg = "Syntax error" ++ pos ++ ": " ++ show err
@@ -115,7 +67,55 @@ submittext state txt _event =
          in (False, msg, state)
       Right a  -> 
          let result = submit state a
-             (txt, b) = feedbackLogic state a result
+             (txt, b) = submitHelper exText state a result
          in case getResultState result of
                Just new | b -> (True, txt, resetStateIfNeeded new)
                _ -> (False, txt, state)
+
+-- Feedback messages for submit service (free student input). The boolean
+-- indicates whether the student is allowed to continue (True), or forced 
+-- to go back to the previous state (False)
+submitHelper :: ExerciseText a -> State a -> a -> Result a -> (String, Bool)
+submitHelper exText old a result =
+   case result of
+      Buggy rs        -> ( fromMaybe ""  (youRewroteInto old a) ++ 
+                           feedbackBuggy exText (ready old) rs
+                         , False)
+      NotEquivalent   -> ( fromMaybe ""  (youRewroteInto old a) ++
+                           feedbackNotEquivalent exText (ready old)
+                         , False)
+      Ok rs _
+         | null rs    -> (feedbackSame exText, False)
+         | otherwise  -> feedbackOk exText rs
+      Detour rs _     -> feedbackDetour exText (ready old) (expected old) rs
+      Unknown _       -> ( fromMaybe ""  (youRewroteInto old a) ++ 
+                           feedbackUnknown exText (ready old)
+                         , False)
+ where
+   expected = fmap fst3 . safeHead . allfirsts
+
+------------------------------------------------------------
+-- Helper functions
+
+showRule :: ExerciseText a -> Rule (Context a) -> String
+showRule exText r = 
+   case ruleText exText r of
+      Just s  -> s
+      Nothing -> "rule " ++ name r
+
+useToRewrite :: ExerciseText a -> Rule (Context a) -> State a -> a -> Maybe String
+useToRewrite exText rule old = rewriteIntoText True txt old
+ where
+   txt = "Use " ++ showRule exText rule
+         ++ " to rewrite "
+
+youRewroteInto :: State a -> a -> Maybe String
+youRewroteInto = rewriteIntoText False "You rewrote "
+
+rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
+rewriteIntoText mode txt old a = do
+   let ex = exercise old
+       p  = fromContext (context old)
+   (p1, a1) <- difference ex mode p a 
+   return $ txt ++ prettyPrinter ex p1 
+         ++ " into " ++ prettyPrinter ex a1 ++ ". "

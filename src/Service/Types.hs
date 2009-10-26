@@ -19,7 +19,9 @@ import Common.Utils (commaList)
 import Control.Arrow
 import Control.Monad
 import Data.Maybe
+import Service.ExerciseList (ExercisePackage, exercise, getExerciseText)
 import Service.TypedAbstractService (State, Result)
+import Service.FeedbackText (ExerciseText)
 import System.IO.Unsafe
 
 infix  2 :::
@@ -29,30 +31,31 @@ data TypedValue a = forall t . t ::: Type a t
 
 data Type a t where
    -- Function type
-   (:->)     :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
+   (:->)        :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
    -- Tuple types
-   Pair      :: Type a t1 -> Type a t2 -> Type a (t1, t2)
-   Triple    :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
-   Quadruple :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
+   Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
+   Triple       :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
+   Quadruple    :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
    -- Special annotations
-   Tag       :: String -> Type a t1 -> Type a t1
-   Optional  :: t1 -> Type a t1 -> Type a t1
-   Maybe     :: Type a t1 -> Type a (Maybe t1)
+   Tag          :: String -> Type a t1 -> Type a t1
+   Optional     :: t1 -> Type a t1 -> Type a t1
+   Maybe        :: Type a t1 -> Type a (Maybe t1)
    -- Type constructors
-   List      :: Type a t -> Type a [t]
-   Elem      :: Type a t -> Type a t -- quick fix
-   IO        :: Type a t -> Type a (IO t)
+   List         :: Type a t -> Type a [t]
+   Elem         :: Type a t -> Type a t -- quick fix
+   IO           :: Type a t -> Type a (IO t)
    -- Exercise-specific types
-   State     :: Type a (State a)
-   Exercise  :: Type a (Exercise a)
-   Rule      :: Type a (Rule (Context a))
-   Term      :: Type a (Context a)
-   Result    :: Type a (Result a)
+   State        :: Type a (State a)
+   Exercise     :: Type a (Exercise a)
+   ExerciseText :: Type a (ExerciseText a)
+   Rule         :: Type a (Rule (Context a))
+   Term         :: Type a (Context a)
+   Result       :: Type a (Result a)
    -- Basic types
-   Bool      :: Type a Bool
-   Int       :: Type a Int
-   String    :: Type a String
-   Location  :: Type a Location
+   Bool         :: Type a Bool
+   Int          :: Type a Int
+   String       :: Type a String
+   Location     :: Type a Location
 
 instance Show (Type a t) where
    show (t1 :-> t2)       = show t1 ++ " -> " ++ show t2 
@@ -70,25 +73,17 @@ instance Show (Type a t) where
 groundType :: Type a t -> Maybe String
 groundType tp =
    case tp of 
-      State    -> Just "State"
-      Exercise -> Just "Exercise"
-      Rule     -> Just "Rule"
-      Term     -> Just "Term"
-      Result   -> Just "Result"
-      Bool     -> Just "Bool"
-      Int      -> Just "Int"
-      String   -> Just "String"
-      Location -> Just "Location"
-      _        -> Nothing
-
-{- eqType :: Type a1 t1 -> Type a2 t2 -> Bool
-eqType (t1 :-> t2)       (t3 :-> t4)       = eqType t1 t3 && eqType t2 t4
-eqType (Pair t1 t2)      (Pair t3 t4)      = eqType t1 t3 && eqType t2 t4
-eqType (Triple t1 t2 t3) (Triple t4 t5 t6) = eqType t1 t4 && eqType t2 t5 && eqType t3 t6
-eqType (List t1)         (List t2)         = eqType t1 t2
-eqType (Elem t1)         (Elem t2)         = eqType t1 t2
-eqType (IO t1)           (IO t2)           = eqType t1 t2 
-eqType t1 t2 = maybe False ((groundType t1 ==) . Just) (groundType t2) -}
+      State        -> Just "State"
+      Exercise     -> Just "Exercise"
+      ExerciseText -> Just "ExerciseText"
+      Rule         -> Just "Rule"
+      Term         -> Just "Term"
+      Result       -> Just "Result"
+      Bool         -> Just "Bool"
+      Int          -> Just "Int"
+      String       -> Just "String"
+      Location     -> Just "Location"
+      _            -> Nothing
 
 data Evaluator m inp out a = Evaluator 
    { encoder :: Encoder m out a
@@ -102,10 +97,13 @@ data Encoder m s a = Encoder
    }
 
 data Decoder m s a = Decoder 
-   { decodeType :: forall t . Type a t -> s -> m (t, s)
-   , decodeTerm :: s -> m a
-   , decoderExercise :: Exercise a
+   { decodeType     :: forall t . Type a t -> s -> m (t, s)
+   , decodeTerm     :: s -> m a
+   , decoderPackage :: ExercisePackage a
    }
+
+decoderExercise :: Decoder m s a -> Exercise a
+decoderExercise = exercise . decoderPackage
 
 eval :: Monad m => Evaluator m inp out a -> TypedValue a -> inp -> m out
 eval f (tv ::: tp) s = 
@@ -140,6 +138,13 @@ decodeDefault dec tp s =
          decodeType dec t1 s `mplus` return (a, s)
       Maybe t1 -> 
          liftM (first Just) (decodeType dec t1 s) `mplus` return (Nothing, s)
+      Exercise -> do
+         return (exercise (decoderPackage dec), s)
+      ExerciseText -> do
+         exText <- case getExerciseText (decoderPackage dec) of 
+                      Just a  -> return a
+                      Nothing -> fail "No support for exercise texts"
+         return (exText, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
 

@@ -22,5 +22,5 @@ main :: IO ()
 main = do 
    makeExerciseOverviewPage
    makeServiceOverviewPage
-   mapM_ (\(Some ex) -> makeExercisePage ex) exerciseList
+   mapM_ (\(Some pkg) -> makeExercisePage pkg) packages
    mapM_ makeServicePage serviceList 

@@ -12,18 +12,28 @@
 -- by Josje Lodder.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.FeedbackText 
-   ( feedbackSyntaxError, ruleText, appliedRule
-   , feedbackBuggy, feedbackNotEquivalent
-   , feedbackSame
-   , feedbackOk, feedbackDetour, feedbackUnknown
-   ) where
+module Domain.Logic.FeedbackText (logicText) where
 
 import Data.Maybe
 import Text.Parsing
 import Common.Transformation
+import Domain.Logic.Formula
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
+import qualified Service.FeedbackText as T
+
+logicText :: T.ExerciseText SLogic
+logicText = T.ExerciseText
+   { T.ruleText              = ruleText
+   , T.appliedRule           = appliedRule
+   , T.feedbackSyntaxError   = feedbackSyntaxError
+   , T.feedbackSame          = feedbackSame
+   , T.feedbackBuggy         = feedbackBuggy
+   , T.feedbackNotEquivalent = feedbackNotEquivalent
+   , T.feedbackOk            = feedbackOk
+   , T.feedbackDetour        = feedbackDetour
+   , T.feedbackUnknown       = feedbackUnknown
+   }
 
 -- This is more general than the logic domain. Perhaps it should
 -- be defined elsewhere
@@ -192,5 +202,4 @@ showToken token = tokenText token ++ " at position " ++ tokenPos token
 tokenPos :: Token -> String
 tokenPos token = 
    let p@(l, c) = toPosition token
-   in if l==1 then show c else show p 
-   
+   in if l==1 then show c else show p

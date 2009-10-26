@@ -21,23 +21,22 @@ import Common.Utils (splitAtElem)
 import Text.OpenMath.Object
 import Data.Char
 import Data.Maybe
-import Domain.Math.Expr
 
 extractString :: String -> XML -> Either String String
 extractString s = liftM getData . findChild s
 
-xmlToRequest :: IsExpr a => XML -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
-xmlToRequest xml ex = do
+xmlToRequest :: XML -> (OMOBJ -> Maybe a) -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
+xmlToRequest xml fromOpenMath ex = do
    unless (name xml == "request") $
       fail "XML document is not a request" 
    loc     <- optional (extractLocation "location" xml)
    term    <- extractExpr "term" xml
    context <- optional (extractString "context" xml)
    answer  <- optional (extractExpr "answer" xml)
-   t  <- fromExpr $ fromOMOBJ term
+   t  <- maybe (fail "invalid omobj") return (fromOpenMath term)
    mt <- case answer of
             Nothing -> return Nothing 
-            Just o  -> return $ fromExpr $ fromOMOBJ o
+            Just o  -> return $ fromOpenMath o
    return
       ( State
            { exercise = ex

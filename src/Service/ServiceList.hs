@@ -17,9 +17,9 @@ import qualified Common.Exercise as E
 import Common.Utils (Some(..))
 import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
-import qualified Service.ExerciseList as S
+import Service.ExerciseList (exercises)
 import qualified Service.TypedAbstractService as S
-import Service.FeedbackText
+import Service.FeedbackText hiding (ExerciseText)
 import Service.Types 
 import Data.List (sortBy)
 
@@ -99,15 +99,15 @@ submitS = Service "submit" $ (\a -> S.submit a . fromContext) :::
 
 onefirsttextS :: Service a
 onefirsttextS = Service "onefirsttext" $ 
-   onefirsttext ::: State :-> Maybe String :-> Elem (Triple Bool String State)
+   onefirsttext ::: ExerciseText :-> State :-> Maybe String :-> Elem (Triple Bool String State)
 
 submittextS :: Service a
 submittextS = Service "submittext" $ 
-   submittext ::: State :-> String :-> Maybe String :-> Elem (Triple Bool String State)
+   submittext ::: ExerciseText :-> State :-> String :-> Maybe String :-> Elem (Triple Bool String State)
 
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" $ 
-   derivationtext ::: State :-> Maybe String :-> List (Pair String Term)
+   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Pair String Term)
    
 ------------------------------------------------------
 -- Reflective services
@@ -121,11 +121,13 @@ rulelistS = Service "rulelist" $
    allRules ::: Exercise :-> List (Triple (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
 allExercises :: [(String, String, String, String)]
-allExercises  = map make $ sortBy cmp S.exerciseList
+allExercises  = map make $ sortBy cmp exercises
  where
    cmp e1 e2  = f e1 `compare` f e2
-   f (Some e) = (domain (exerciseCode e), identifier (exerciseCode e))
-   make (Some ex) = (domain (exerciseCode ex), identifier (exerciseCode ex), description ex, show (status ex))
+   f (Some ex) = exerciseCode ex
+   make (Some ex) = 
+      let code = exerciseCode ex 
+      in (domain code, identifier code, description ex, show (status ex))
 
 allRules :: E.Exercise a -> [(String, Bool, Bool)]
 allRules = map make . ruleset

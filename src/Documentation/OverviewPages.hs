@@ -37,12 +37,13 @@ exerciseOverviewPage = defaultPage "Exercises" 0 $ do
    forM_ (zip [1..] groupedList) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
       ul $ flip map xs $ \(Some ex) -> do
-         link (exercisePageFile ex) $ ttText (show (exerciseCode ex))
+         let code = exerciseCode ex
+         link (exercisePageFile code) $ ttText (show code)
          space
          text $ "(" ++ description ex ++ ")"
 
 groupedList :: [(String, [Some Exercise])]
-groupedList = map g (groupBy eq (sortBy cmp exerciseList))
+groupedList = map g (groupBy eq (sortBy cmp exercises))
  where
    cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
    eq a b      = f a == f b

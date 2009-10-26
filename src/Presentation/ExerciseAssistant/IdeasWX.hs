@@ -21,7 +21,7 @@ import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
 --import Domain.Programming.Exercises (heliumExercise, isortExercise)
 
-exerciseList = {- Some heliumExercise : Some isortExercise : -} SE.exerciseList
+exerciseList = {- Some heliumExercise : Some isortExercise : -} SE.exercises
 
 domains :: [String]
 domains = sort $ nub [ domain (exerciseCode e) | Some e <- exerciseList ]

@@ -19,8 +19,9 @@ import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
+import Service.ExerciseList
 import Service.Request
-import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
+import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
 import Service.ServiceList hiding (Service)
@@ -31,7 +32,7 @@ import Data.Char
 
 -- TODO: Clean-up code
 extractCode :: JSON -> ExerciseCode
-extractCode = fromMaybe noCode . List.resolveExerciseCode . f
+extractCode = fromMaybe noCode . readCode . f
  where 
    f (String s) = s
    f (Array [String _, String _, a@(Array _)]) = f a
@@ -83,10 +84,10 @@ myHandler fun arg
 
 jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
 jsonConverter code =
-   let f a = Some (Evaluator (jsonEncoder a) (jsonDecoder a))
-   in case List.getExercise code of
-         Just (Some a) -> f a
-         Nothing       -> f emptyExercise
+   let f a = Some (Evaluator (jsonEncoder (List.exercise a)) (jsonDecoder a))
+   in case List.getPackage code of
+         Just (Some pkg) -> f pkg
+         Nothing         -> f (package emptyExercise)
 
 jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
 jsonEncoder ex = Encoder
@@ -118,11 +119,11 @@ fromState st =
 stateType :: Type a (String, String, Context a, String)
 stateType = Tp.Quadruple Tp.String Tp.String Tp.Term Tp.String
 
-jsonDecoder :: MonadPlus m => Exercise a -> Decoder m JSON a
-jsonDecoder ex = Decoder
-   { decodeType      = decode (jsonDecoder ex)
-   , decodeTerm      = reader ex
-   , decoderExercise = ex
+jsonDecoder :: MonadPlus m => ExercisePackage a -> Decoder m JSON a
+jsonDecoder pkg = Decoder
+   { decodeType     = decode (jsonDecoder pkg)
+   , decodeTerm     = reader (exercise pkg)
+   , decoderPackage = pkg
    }
  where
    reader :: Monad m => Exercise a -> JSON -> m a
@@ -137,7 +138,7 @@ jsonDecoder ex = Decoder
          Tp.Term     -> useFirst $ liftM inContext . decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
          Tp.Exercise -> \json -> case json of
-                                    (Array (String s:rest)) -> return (decoderExercise dec, Array rest)
+                                    (Array (String _:rest)) -> return (decoderExercise dec, Array rest)
                                     _ -> return (decoderExercise dec, json)
          Tp.Int      -> useFirst $ \json -> case json of 
                                                Number (I n) -> return (fromIntegral n)
@@ -164,7 +165,7 @@ instance InJSON Location where
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (TAS.State a)
 decodeState ex f (Array [a]) = decodeState ex f a
-decodeState ex f (Array [String code, String p, ce, String ctx]) = do
+decodeState ex f (Array [String _code, String p, ce, String ctx]) = do
    a    <- f ce 
    unit <- maybe (fail "invalid context") return (parseContext ctx) 
    return TAS.State 

@@ -27,8 +27,7 @@ import Service.Request
 import Service.Revision (version)
 import Service.ServiceList 
 import Service.TypedAbstractService hiding (exercise)
-import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..))
-import Domain.Math.Expr
+import Service.Types hiding (State)
 import Text.OpenMath.Object
 import Text.OpenMath.Reply (replyToXML)
 import Text.OpenMath.Request (xmlToRequest)
@@ -63,25 +62,25 @@ xmlRequest xml = do
       }
 
 xmlReply :: Request -> XML -> Either String XML
-xmlReply request xml 
+xmlReply request xml
    | service request == "mathdox" = do
         code <- maybe (fail "unknown exercise code") return (exerciseID request)
-        OMEX ex <- getOpenMathExercise code
-        (st, sloc, answer) <- xmlToRequest xml ex
-        return (replyToXML (problemDecomposition st sloc answer))
+        Some pkg <- getPackage code
+        (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
+        return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
    | otherwise =
    case encoding request of
       Just StringEncoding -> do 
          code <- maybe (fail "unknown exercise code") return (exerciseID request)
-         ex <- getExercise code
-         case stringFormatConverter ex of
+         pkg  <- getPackage code
+         case stringFormatConverter pkg of
             Some conv -> do
                srv <- getService (service request)
                res <- evalService conv srv xml 
                return (resultOk res)
       _ -> do 
          code <- maybe (fail "unknown exercise code") return (exerciseID request)
-         ex <- getOpenMathExercise code
+         ex <- getPackage code
          case openMathConverter ex of
             Some conv -> do
                srv <- getService (service request)
@@ -101,16 +100,16 @@ extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =
    case liftM (break (== '.')) (findAttribute "exerciseid" xml) of
       Just (as, _:bs) -> return (makeCode as bs)
-      Just (as, _)    -> resolveExerciseCode as
+      Just (as, _)    -> maybe (fail "invalid code") return (readCode as)
       -- being backwards compatible with early MathDox
       Nothing ->
          case fmap getData (findChild "strategy" xml) of
             Just name -> 
                let s ~= t = f s == f t 
                    f = map toLower . filter isAlphaNum
-               in case findOpenMathExercises (\ex -> name ~= description ex) of 
-                     [OMEX a] -> return (exerciseCode a)
-                     _ -> fail $ "Unknown strategy name " ++ show name 
+               in case [ exerciseCode ex | Some ex <- exercises, name ~= description ex ] of
+                     [code] -> return code
+                     _ -> fail $ "Unknown strategy name " ++ show name
             _ -> fail "no exerciseid attribute, nor a known strategy element" 
 
 resultOk :: XMLBuilder -> XML
@@ -128,29 +127,31 @@ resultError txt = makeXML "reply" $ do
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-stringFormatConverter :: Some Exercise -> Some (Evaluator (Either String) XML XMLBuilder)
-stringFormatConverter (Some ex) = 
-   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
+stringFormatConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
+stringFormatConverter (Some pkg) = 
+   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g pkg)
  where
-   f = return . element "expr" . text . prettyPrinter ex
+   ex = exercise pkg
+   f  = return . element "expr" . text . prettyPrinter ex
    g xml = do
       xml <- findChild "expr" xml -- quick fix
       -- guard (name xml == "expr")
       let input = getData xml
       either (fail . show) return (parser ex input)
         
-openMathConverter :: OpenMathExercise -> Some (Evaluator (Either String) XML XMLBuilder)
-openMathConverter (OMEX ex) = 
-   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g ex)
+openMathConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
+openMathConverter (Some pkg) =
+   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g pkg)
  where
-   f = return . builder . toXML . toOMOBJ . toExpr
-   g xml = do 
+   ex = exercise pkg
+   f = return . builder . toXML . toOpenMath pkg
+   g xml = do
       xob   <- findChild "OMOBJ" xml
       omobj <- xml2omobj xob
-      case fromExpr (fromOMOBJ omobj) of
+      case fromOpenMath pkg omobj of
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
-   
+
 xmlEncoder :: Monad m => (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
 xmlEncoder f ex = Encoder
    { encodeType  = encode (xmlEncoder f ex)
@@ -175,11 +176,11 @@ xmlEncoder f ex = Encoder
          Tp.State    -> encodeState (encodeTerm enc)
          _           -> encodeDefault enc serviceType
 
-xmlDecoder :: MonadPlus m => (XML -> m a) -> Exercise a -> Decoder m XML a
-xmlDecoder f ex = Decoder
-   { decodeType      = decode (xmlDecoder f ex)
-   , decodeTerm      = f
-   , decoderExercise = ex
+xmlDecoder :: MonadPlus m => (XML -> m a) -> ExercisePackage a -> Decoder m XML a
+xmlDecoder f pkg = Decoder
+   { decodeType     = decode (xmlDecoder f pkg)
+   , decodeTerm     = f
+   , decoderPackage = pkg
    }
  where
    decode :: MonadPlus m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
@@ -188,7 +189,6 @@ xmlDecoder f ex = Decoder
          Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)
          Tp.Location -> leave $ liftM (read . getData) . findChild "location"
          Tp.Rule     -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
-         Tp.Exercise -> leave $ const (return (decoderExercise dec))
          Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (inContext a, xml)
          _           -> decodeDefault dec serviceType
          

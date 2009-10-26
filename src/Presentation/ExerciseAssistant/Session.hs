@@ -20,7 +20,7 @@ module Session
    ) where
 
 import qualified Service.TypedAbstractService as TAS
-import Service.FeedbackText (feedbackLogic)
+import Service.FeedbackText
 import Common.Context
 import Common.Exercise hiding (showDerivation)
 import Common.Strategy (emptyPrefix)
@@ -130,11 +130,11 @@ submitTextLogic :: String -> IORef (Some Derivation) -> IO (String, Bool)
 submitTextLogic txt ref = do
    Some d <- readIORef ref
    case parser (exercise d) txt of
-      Left err -> return (feedbackSyntaxError err, False)
+      Left err -> return (feedbackSyntaxError exText err, False)
       Right term -> do
          let old = currentState d
              result = TAS.submit old term
-         case (feedbackLogic old term result, TAS.getResultState result) of
+         case (submitHelper exText old term result, TAS.getResultState result) of
             ((txt, True), Just n) -> do
                -- make sure that new has a prefix (because of possible detour)
                -- when resetting the prefix, also make sure that the context is refreshed
@@ -174,7 +174,7 @@ hintOrStep verbose = withState $ \d ->
          return "Sorry, no hint available"
       (rule, _, s):_ ->
          return $ unlines $
-            [ "Use " ++ fromMaybe ("rule " ++ name rule) (ruleText rule)
+            [ "Use " ++ fromMaybe ("rule " ++ name rule) (ruleText exText rule)
             ] ++
             [ "   with arguments " ++ showList (fromJust args)
             | let args = expectedArguments rule (current d), isJust args
@@ -196,7 +196,7 @@ nextStep (Session _ ref) = do
          return ("No more steps left to do", False)
       (rule, _, new):_ -> do
          writeIORef ref $ Some (extendDerivation new d)
-         return (appliedRule rule, True)
+         return (appliedRule exText rule, True)
 
 ruleNames :: Session -> IO [String]
 ruleNames = withState $ \d -> 
@@ -228,6 +228,8 @@ applyRuleAtIndex i mloc args (Session _ ref) = do
          return ("Apply rule " ++ name rule ++ " at a different location", False)
       _ ->
          return ("You selected rule " ++ name rule ++ ": try a different rule", False)
+
+exText = error "Fix me: exercise text for logic"
 
 --------------------------------------------------
 -- Derivations

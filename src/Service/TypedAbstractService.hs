@@ -30,9 +30,9 @@ import Data.Maybe
 import System.Random
 
 data State a = State 
-   { exercise :: Exercise a
-   , prefix   :: Maybe (Prefix (Context a))
-   , context  :: Context a
+   { exercise     :: Exercise a
+   , prefix       :: Maybe (Prefix (Context a))
+   , context      :: Context a
    }
 
 term :: State a -> a

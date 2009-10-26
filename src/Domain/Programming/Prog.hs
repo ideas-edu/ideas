@@ -30,7 +30,6 @@ import Domain.Programming.Helium
 import Domain.Programming.HeliumRules
 import Domain.Programming.InlinePatternBindings (Env, updateEnv'
                                                 , inlinePatternBindings)
-import Domain.Programming.Strategies
 import Domain.Programming.Substitute
 import Domain.Programming.Utils
 import Prelude hiding (lookup)
@@ -67,10 +66,6 @@ collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
 
 freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
-{-
-allSolutions strat = map (fromContext . snd . last . snd) 
-                         (derivations strat $ inContext emptyProg)
--}
 allSolutions strategy = map fromContext $ results $ derivationTree strategy $ inContext emptyProg
 normalisedSolutions fs = map (normaliseModule fs) . allSolutions
 isSolution fs strat m = elem (normaliseModule fs m) $ normalisedSolutions fs strat
@@ -92,6 +87,7 @@ checkExercise fixedNames s = do
 
 checkExercises :: [String] -> Solutions -> IO ()
 checkExercises fixedNames solutions = do
+  report (null fixedNames) "At least one function name should be given"
   let pps = ppStringS 20
   putStrLn $ line ++ "\n" ++ pps "Identifier" ++ pps "Is recognised" 
           ++ pps "By strategy" ++ ppStringS 40 "Remark" ++ "\n" ++ dline
@@ -103,6 +99,8 @@ checkExercises fixedNames solutions = do
 ppStringS i s = "| " ++ s ++ replicate (i - length s) ' '
 line = replicate 80 '-'
 dline = replicate 80 '='
+report b s = if b then error s
+             else return ()
 
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)

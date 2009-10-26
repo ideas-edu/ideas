@@ -16,10 +16,7 @@ module Domain.Math.Examples.DWO2 where
 import Prelude hiding ((^))
 import Domain.Math.Expr
 import Domain.Math.Data.Equation
-
-data InEq a = a :<: a | a :>: a
-
-infix 1 :<:, :>:
+import Domain.Math.Data.Inequality
 
 --------------------------------------------------------------------
 -- Algemene applet
@@ -43,7 +40,7 @@ higherDegreeEquations =
 -- Havo applets
 
 -- Havo B Voorkennis: lineaire ongelijkheden
-ineqLin1 :: [[InEq Expr]]
+ineqLin1 :: [[Inequality Expr]]
 ineqLin1 =
    let a = Var "a" in
    let x = Var "x" in
@@ -67,7 +64,7 @@ ineqLin1 =
 -- Havo B Voorkennis: kwadratische ongelijkheden 
 -- (door eerst gelijkheid op te lossen)
 -- (level 2 uit Hoofdstuk 3)
-ineqKwad1 :: [[InEq Expr]]
+ineqKwad1 :: [[Inequality Expr]]
 ineqKwad1 =
    let x = Var "x" in
    [ [ x^2 +3*x-4 :<: 0
@@ -88,7 +85,7 @@ ineqKwad1 =
 
 -- Havo B hoofdstuk 3, hogeregraadsongelijkheid exact
 -- (door eerst gelijkheid op te lossen)
-ineqHigh :: [InEq Expr]
+ineqHigh :: [Inequality Expr]
 ineqHigh = 
    let x = Var "x" in
    [ 2*x^3 :>: 54
@@ -129,7 +126,7 @@ higherEq1 =
 -- VWO A/C applets
 
 -- hoofdstuk 2
-ineqKwad2 :: [InEq Expr]
+ineqKwad2 :: [Inequality Expr]
 ineqKwad2 =
    let x = Var "x" in
    [ x^2 + 9*x :<: 3*x - 5

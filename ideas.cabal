@@ -109,7 +109,6 @@ Executable	            ideas
     Domain.Math.Strategy.Modulus ,
     Domain.Math.Strategy.SquareRootEquations ,
     Domain.Math.Strategy.SquareRootSimplification ,
-    Domain.Programming ,
     Domain.RelationAlgebra ,
     Domain.RelationAlgebra.Equivalence ,
     Domain.RelationAlgebra.Exercises ,

@@ -21,10 +21,10 @@ import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
 --import Domain.Programming.Exercises (heliumExercise, isortExercise)
 
-exerciseList = {- Some heliumExercise : Some isortExercise : -} SE.exercises
+packageList = {- Some heliumExercise : Some isortExercise : -} SE.packages
 
 domains :: [String]
-domains = sort $ nub [ domain (exerciseCode e) | Some e <- exerciseList ]
+domains = sort $ nub [ domain (exerciseCode (SE.exercise e)) | Some e <- packageList ]
 
 title :: String
 title = "Exercise Assistant: " ++ versionText
@@ -94,7 +94,7 @@ exerciseFrame = do
    mapM_ (flip textCtrlSetEditable False) [assignmentView, derivationView, feedbackView]
 
    -- initialize exercise
-   session <- makeSession (head exerciseList)
+   session <- makeSession (head packageList)
        
    {- let fillRuleBox = do
           -- names <- ruleNames session
@@ -231,31 +231,31 @@ newAssignmentFrame session onExit = do
    set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
          , size := sz 600 400]
    
-   let getExerciseList = do
+   let getPackageList = do
           i <- get domainBox selection 
           b <- get experimentalBox checked
-          return (getExercises b (domains !! i))
-       currentExercise = do
+          return (getPackages b (domains !! i))
+       currentPackage = do
           i  <- get exerciseList selection
-          xs <- getExerciseList
+          xs <- getPackageList
           return $ if i>=0 && length xs > i then Just (xs !! i) else Nothing
-       fillExerciseList = do
-          xs <- getExerciseList
-          let ys = [ description e | Some e <- xs ]
+       fillPackageList = do
+          xs <- getPackageList
+          let ys = [ description (SE.exercise pkg) | Some pkg <- xs ]
           set exerciseList [items := ys, selection := 0]
           fillOwnText
        fillOwnText = do
-          mEx <- currentExercise
-          case mEx of
-             Just se -> do
+          mPkg <- currentPackage
+          case mPkg of
+             Just (Some pkg) -> do
                 dif <- get difficultySlider selection
-                txt <- suggestTermFor dif se
+                txt <- suggestTermFor dif (Some (SE.exercise pkg))
                 set ownTextView [text := txt]
              Nothing -> return ()
-   fillExerciseList
+   fillPackageList
     
-   set domainBox       [on select  := fillExerciseList]
-   set experimentalBox [on command := fillExerciseList]
+   set domainBox       [on select  := fillPackageList]
+   set experimentalBox [on command := fillPackageList]
    set exerciseList    [on select  := fillOwnText]
    set randomButton    [on command := fillOwnText]
    set cancelButton    [on command := close f]
@@ -268,7 +268,7 @@ newAssignmentFrame session onExit = do
    
    set goButton [on command := do
       txt  <- get ownTextView text
-      mEx  <- currentExercise
+      mEx  <- currentPackage
       case mEx of 
          Just ex -> do
             merr <- thisExerciseFor txt ex session
@@ -281,9 +281,12 @@ newAssignmentFrame session onExit = do
 
    return f
 
-getExercises :: Bool -> String -> [Some Exercise]
-getExercises b d = filter p exerciseList
- where p (Some e) = domain (exerciseCode e) == d && (b || status e == Stable) 
+getPackages :: Bool -> String -> [Some SE.ExercisePackage]
+getPackages b d = filter p packageList
+ where 
+    p (Some pkg) = 
+       let ex = SE.exercise pkg
+       in domain (exerciseCode ex) == d && (b || status ex == Stable) 
 
 searchPath :: String -> IO (Maybe String)
 searchPath filename = rec paths

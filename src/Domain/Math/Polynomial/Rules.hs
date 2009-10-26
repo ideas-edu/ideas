@@ -54,6 +54,7 @@ quadraticRules =
    map (ruleOnce . ($ oneVar)) 
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
    [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
+   , ruleOnce prepareSplitSquare, ruleOnce factorLeftAsSquare
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
    , ruleOnce2 (ruleSomewhere distributeTimes)
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
@@ -207,6 +208,26 @@ squareBothSides = makeSimpleRule "square both sides" $ onceJoinM f
    f (Sym s1 [a, Nat 2] :==: Sym s2 [b, Nat 2]) | all (==powerSymbol) [s1, s2] = 
       return $ orList [a :==: b, a :==: -b]
    f _ = Nothing
+
+-- prepare splitting a square; turn lhs into x^2+bx+c s.t. (b/2)^2 is c
+prepareSplitSquare :: Rule (Equation Expr)
+prepareSplitSquare = makeSimpleRule "prepare split square" $ \(lhs :==: rhs) -> do
+   d <- match rationalView rhs
+   let myView = polyNormalForm rationalView >>> second quadraticPolyView
+   (x, (a, b, c)) <- match myView lhs
+   let newC   = (b/2)*(b/2)
+       newRHS = d + newC - c
+   guard (a==1 && b/=0 && c /= newC)
+   return (build myView (x, (a, b, newC)) :==: build rationalView newRHS)
+
+-- factor left-hand side into (ax + c)^2
+factorLeftAsSquare :: Rule (Equation Expr)
+factorLeftAsSquare = makeSimpleRule "factor left as square" $ \(lhs :==: rhs) -> do
+   guard (noVars rhs)
+   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   let h = b/2
+   guard (a==1 && b/=0 && h*h == c)
+   return ((Var x + build rationalView h)^2 :==: rhs) 
 
 -- Afterwards, merge, sort, and (possibly) change sign
 flipEquation :: Rule (Equation Expr)

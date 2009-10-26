@@ -23,10 +23,10 @@ import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Examples.DWO1
+import Domain.Math.Examples.DWO2
 import Domain.Math.Expr.Parser
 import Common.View
 import Common.Context
-import Data.List
 
 ------------------------------------------------------------
 -- Exercises
@@ -55,7 +55,7 @@ quadraticExercise = makeExercise
    , equivalence  = viewEquivalent quadraticEquationsView
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext $ quadraticRules ++ abcBuggyRules
-   , strategy     = ignoreContext quadraticStrategy
+   , strategy     = ignoreContext (quadraticStrategy True)
    , examples     = map (orList . return) (concat quadraticEquations)
    }
    
@@ -70,7 +70,14 @@ higherDegreeExercise = makeExercise
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext higherDegreeRules
    , strategy     = ignoreContext higherDegreeStrategy
-   , examples     = map (orList . return) higherDegreeEquations
+   , examples     = map (orList . return) (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
+   }
+   
+quadraticNoABCExercise :: Exercise (OrList (Equation Expr))
+quadraticNoABCExercise = quadraticExercise
+   { description  = "solve a quadratic equation without abc-formula"
+   , exerciseCode = makeCode "math" "quadreq-no-abc"
+   , strategy     = ignoreContext (quadraticStrategy False) 
    }
    
 --------------------------------------------

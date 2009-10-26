@@ -42,6 +42,9 @@ exercisePage pkg = defaultPage title 2 $ do
       , [ bold $ text "OpenMath support"
         , text $ showBool $ withOpenMath pkg
         ]
+      , [ bold $ text "Textual feedback"
+        , text $ showBool $ isJust $ getExerciseText pkg
+        ]
       ]
    
    h2 "1. Strategy"

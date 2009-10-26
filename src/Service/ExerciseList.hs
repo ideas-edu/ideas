@@ -46,6 +46,7 @@ packages =
    , makeOM Math.linearExercise
    , makeOM Math.quadraticExercise
    , makeOM Math.higherDegreeExercise
+   , makeOM Math.quadraticNoABCExercise
    , makeOM Math.derivativeExercise
      -- linear algebra
    , makeOM LA.gramSchmidtExercise, makeOM LA.linearSystemExercise

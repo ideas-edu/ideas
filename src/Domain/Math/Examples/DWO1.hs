@@ -14,7 +14,7 @@
 module Domain.Math.Examples.DWO1
    ( calculateResults, fillInResult
    , coverUpEquations, linearEquations
-   , quadraticEquations, higherDegreeEquations 
+   , quadraticEquations 
    , modulusEquations, sqrtEquations, sqrtSubstEquations, brokenEquations
    , simplerSqrt, simplerSqrt2, simplerSqrt3
    ) where
@@ -295,21 +295,6 @@ quadraticEquations = [level1, level2, level3, level4, level5, level6]
       , 2*x^2       :==: x*(x+2)+7
       , (1-x)^2     :==: x+2
       ]
-
-higherDegreeEquations :: [Equation Expr]
-higherDegreeEquations = 
-   let x = variable "x" in
-   [ x^3 + x^2 :==: 0
-   , x^3 - 5*x :==: 0
-   , x^3 - 11*x^2 + 18*x :==: 0
-   , x^3 + 36*x :==: 13*x^2
-   , x^3 + 2*x^2 :==: 24*x
-   , 7*x^3 :==: 8*x^2
-   , x^4 :==: 9*x^2
-   , 64*x^7 :==: x^5
-   , x^3 - 4*x^2 - 9*x :==: 0
-   , (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2
-   ]
    
 modulusEquations :: [[Equation Expr]]
 modulusEquations = 

@@ -14,7 +14,7 @@ module Domain.Math.Polynomial.Strategies
    , higherDegreeStrategy 
    ) where
 
-import Prelude hiding (repeat, replicate)
+import Prelude hiding (repeat, replicate, fail)
 import Common.Strategy
 import Common.Transformation
 import Common.View
@@ -49,8 +49,8 @@ coverUpPlus f = alternatives $ map (f . ($ oneVar))
 ------------------------------------------------------------
 -- Quadratic equations
 
-quadraticStrategy :: LabeledStrategy (OrList (Equation Expr))
-quadraticStrategy = cleanUpStrategy cleanUp $ 
+quadraticStrategy :: Bool -> LabeledStrategy (OrList (Equation Expr))
+quadraticStrategy canUseABC = cleanUpStrategy cleanUp $ 
    label "Quadratic Equation Strategy" $ 
    repeat $ 
          -- general form
@@ -58,7 +58,7 @@ quadraticStrategy = cleanUpStrategy cleanUp $
          ( ruleOnce commonFactorVar <|> ruleOnce noLinFormula{- or coverup -}
            <|> ruleOnce niceFactors <|> ruleOnce simplerA 
            <|> coverUpPower) -- to deal with special case x^2=0
-         |> abcFormula
+         |> (if canUseABC then toStrategy abcFormula else fail)
       )
       |> -- zero form
       (  label "zero form"
@@ -68,7 +68,7 @@ quadraticStrategy = cleanUpStrategy cleanUp $
       (  label "constant form" $ 
          coverUpPower <|> ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
          <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator 
-         <|> squareBothSides
+         <|> squareBothSides <|> ruleOnce factorLeftAsSquare 
       )
       |> -- simplification 
       (  label "square root simplification" $ 
@@ -82,8 +82,8 @@ quadraticStrategy = cleanUpStrategy cleanUp $
            <|> ruleMulti2 (ruleSomewhere distributeTimes) 
            <|> ruleMulti2 (ruleSomewhere distributeDivision)
            <|> ruleOnce flipEquation)
-         |> ruleOnce moveToLeft
-      )
+         |> (ruleOnce moveToLeft <|> ruleOnce prepareSplitSquare)
+      ) -- to do: find a better location in the strategy for splitting the square
 
 -----------------------------------------------------------
 -- Higher degree equations
@@ -92,7 +92,7 @@ higherDegreeStrategy :: LabeledStrategy (OrList (Equation Expr))
 higherDegreeStrategy = cleanUpStrategy cleanUp $
    label "higher degree" $ 
       repeat (allPowerFactors |> (mulZero <|> ruleOnce2 powerFactor <|> sameFactor))
-      <*> check isQ <*> quadraticStrategy
+      <*> check isQ <*> quadraticStrategy True
  
 isQ :: OrList (Equation Expr) -> Bool
 isQ = (`belongsTo` quadraticEquationsView)

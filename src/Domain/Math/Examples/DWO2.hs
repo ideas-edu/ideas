@@ -22,6 +22,24 @@ data InEq a = a :<: a | a :>: a
 infix 1 :<:, :>:
 
 --------------------------------------------------------------------
+-- Algemene applet
+
+higherDegreeEquations :: [Equation Expr]
+higherDegreeEquations = 
+   let x = variable "x" in
+   [ x^3 + x^2 :==: 0
+   , x^3 - 5*x :==: 0
+   , x^3 - 11*x^2 + 18*x :==: 0
+   , x^3 + 36*x :==: 13*x^2
+   , x^3 + 2*x^2 :==: 24*x
+   , 7*x^3 :==: 8*x^2
+   , x^4 :==: 9*x^2
+   , 64*x^7 :==: x^5
+   , x^3 - 4*x^2 - 9*x :==: 0
+   , (x-1)*(x^3 - 6*x) :==: 3*x^3 - 3*x^2
+   ]
+
+--------------------------------------------------------------------
 -- Havo applets
 
 -- Havo B Voorkennis: lineaire ongelijkheden

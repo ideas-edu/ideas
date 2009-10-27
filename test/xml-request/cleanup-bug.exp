@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.7">
+<reply result="ok" version="0.5.8">
   <list>
     <elem ruleid="Scale">
       []
@@ -7,7 +7,7 @@
           [0,0,0,0,0,0,0,1,0,0,0]
         </prefix>
         <context>
-          [];columnJ=0
+          <item name="columnJ" value="0"/>
         </context>
         <expr>
           1  3 4

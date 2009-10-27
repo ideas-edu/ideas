@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.8">
   <strategy>
     linalg.gaussianelim
   </strategy>
@@ -6,7 +6,7 @@
     []
   </location>
   <context>
-    [0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0];[];columnJ=1,covered=0
+    [0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0];columnJ=1,covered=0
   </context>
   <steps>
     0

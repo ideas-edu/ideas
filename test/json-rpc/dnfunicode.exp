@@ -3,9 +3,9 @@
       "logic.dnf-unicode",
       "[]",
       "(q → r) ∨ ¬(r → p)",
-      "[];"
+      ""
    ],
    "error": null,
    "id": 28051978,
-   "version": "0.5.6 (2333)"
+   "version": "0.5.8 (2396)"
 }

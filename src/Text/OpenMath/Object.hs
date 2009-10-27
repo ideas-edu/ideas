@@ -1,3 +1,4 @@
+{-# OPTIONS -XDeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -16,6 +17,7 @@ module Text.OpenMath.Object
 import Text.XML
 import Data.Char (isSpace)
 import Data.Maybe
+import Data.Typeable
 import Text.OpenMath.Symbol
 
 -- internal representation for OpenMath objects
@@ -25,7 +27,7 @@ data OMOBJ = OMI Integer
            | OMS Symbol 
            | OMA [OMOBJ] 
            | OMBIND OMOBJ [String] OMOBJ
-   deriving (Show, Eq)
+   deriving (Show, Eq, Typeable)
 
 instance InXML OMOBJ where
    toXML   = omobj2xml

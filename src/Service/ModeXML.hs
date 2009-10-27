@@ -20,6 +20,7 @@ import Common.Transformation hiding (name, defaultArgument)
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Char
+import Data.Dynamic
 import Data.Maybe
 import Service.ExerciseList
 import Service.ProblemDecomposition
@@ -200,19 +201,44 @@ decodeState ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
    let sp = maybe "[]" getData (findChild "prefix" xml)
-       sc = maybe ""   getData (findChild "context" xml)
-   --x    <- findChild "OMOBJ" xml
    expr <- f xml
-   contxt <- maybe (fail $ "invalid context" ++ show sc) return (parseContext sc)
+   contxt <- case findChild "context" xml of 
+                Just this -> decodeContext this
+                Nothing   -> return $ inContext () -- context is optional
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
        term   = fmap (const expr) contxt
    return (state, top)
 
+decodeContext :: Monad m => XML -> m (Context ())
+decodeContext xml = liftM makeContext $ do 
+   forM (children xml) $ \item -> do
+      unless (name item == "item") $ 
+         fail $ "expecting item tag, found " ++ name item
+      name  <- findAttribute "name"  item
+      case findChild "OMOBJ" item of
+         -- OpenMath object found inside item tag
+         Just this -> do
+            case xml2omobj this of
+               Left err -> fail err
+               Right omobj -> 
+                  return (name, (Just (toDyn omobj), show omobj))
+         -- Simple value in attribute
+         Nothing -> do
+            value <- findAttribute "value" item
+            return (name, (Nothing, value))
+
 encodeState :: Monad m => (a -> m XMLBuilder) -> State a -> m XMLBuilder
-encodeState f state = do
-   b <- f (term state)
-   return $ element "state" $ do
+encodeState f state = f (term state) >>= \body -> return $
+   element "state" $ do
       element "prefix"  (text $ maybe "[]" show (prefix state))
-      element "context" (text $ showContext (context state))
-      b
-   
+      encodeContext (context state)
+      body
+
+encodeContext :: Context a -> XMLBuilder
+encodeContext ctx = element "context" $ do
+   forM_ (contextPairs ctx) $ \(k, (mdyn, v)) -> do
+      element "item" $ do 
+         "name"  .=. k
+         case mdyn >>= fromDynamic of 
+            Nothing    -> "value" .=. v
+            Just omobj -> builder  (omobj2xml omobj)

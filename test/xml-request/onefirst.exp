@@ -1,13 +1,11 @@
-<reply result="ok" version="0.5.1">
+<reply result="ok" version="0.5.8">
   <elem ruleid="Tidy-up rule">
     []
     <state>
       <prefix>
         [0,0]
       </prefix>
-      <context>
-        [];
-      </context>
+      <context/>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMI>
           10

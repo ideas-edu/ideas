@@ -34,7 +34,7 @@ function keepFeedback() {
 
 /**
  * From HTML characters to ascii and back
-  */ 
+  */
 String.prototype.htmlToAscii = function() {
     var s = this.replace(/\\/g, '\\\\');
     return s;
@@ -84,23 +84,10 @@ function State(code, prefix, term, context) {
    this.context = context;
 }
 
-var history = new Object();
-history.historyList = new Array();
-
-history.clear = function() {
-   history.historyList = new Array();
-}
-
-history.addState = function (state) {
-   history.historyList.push(state);
-}
-
-function currentState() {
-   return history.historyList.last();
-}
+derivation = [];
 
 function fillAreas() {
-   var state = currentState();
+   var state = derivation.last();
    $('work').value = state.term;
    updateDerivation();
 }
@@ -108,11 +95,11 @@ function fillAreas() {
 function updateDerivation() {
    var i = 0;
    var text = '';
-   while (i < history.historyList.length) {
+   while (i < hist.length) {
       if (i!=0) {
          text += '<br><font size="+2">\u21D4</font>&nbsp;&nbsp;&nbsp;';
       }
-      var state = history.historyList[i];
+      var state = derivation[i];
       text += state.term;
       i++;
    }
@@ -120,7 +107,7 @@ function updateDerivation() {
    $('history').scrollTop = $('history').scrollHeight;
 }
 
-/* 
+/*
  * Menubuttons for help, about and a set of rewriting rules.
  * There are default files in common; there may be specific files for each kind of exercise.
  */

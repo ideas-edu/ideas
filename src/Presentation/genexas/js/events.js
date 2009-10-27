@@ -3,17 +3,17 @@
  */
  
 function onBackClick() {
-   if (history.historyList.length > 1  ) {
-      var state = currentState();
+   if (derivation.length > 1  ) {
+      var state = derivation.last();
       if ($('work').value == state.term) { // student didn't touch expression
-         history.historyList.pop();
+         derivation.pop();
       } 
    }      
    fillAreas();
 }
 
 function onReadyClick() {
-   var state = currentState();
+   var state = derivation.last();
    
    function callback(solved) {
       var expression = state.term;
@@ -35,13 +35,13 @@ function onSubmitClick() {
  
 function onSubmit(caller) {
    var workExpression = (($('work')).value).htmlToAscii();
-   var state = currentState();
+   var state = derivation.last();
    
    function callback(result, state) {
       var newText = '<p>' + result[1] + '</p>';
       addToFeedback(newText);
       if (result[0]) {
-         history.addState(state);
+         derivation.push(state);
          updateDerivation();
       } };
    
@@ -49,7 +49,7 @@ function onSubmit(caller) {
 }
 
 function onHintClick() {
-   var state = currentState();
+   var state = derivation.last();
    
    function callback(rule, valid, state) {
       closeallhelp();
@@ -66,7 +66,7 @@ function onHintClick() {
 }
 
 function onStepClick() {
-   var state = currentState();
+   var state = derivation.last();
    
    function callback(rule, valid, newState) {
       var nextExpression = (newState.term).asciiToHtml() ;
@@ -84,12 +84,12 @@ function onStepClick() {
 }
 
 function onAutoStepClick() {
-   var state = currentState();
+   var state = derivation.last();
 
    function callback(rule, valid, state) {
       addToFeedback('<strong>Auto step: </strong>' + rule + ' (has been done)');
       if (valid) {
-         history.addState(state);
+         derivation.push(state);
          fillAreas();
       } };
    
@@ -97,7 +97,7 @@ function onAutoStepClick() {
 }
 
 function onWorkedOutClick() {
-   var state = currentState();
+   var state = derivation.last();
 
    function callback(result) {
       var setOfRules = new Array();
@@ -137,12 +137,12 @@ function onNewExerciseClick(state) {
 function onNewExercise(caller) {
    function callback(state) {
       closeallhelp();
-      history.clear();
+      hist = [];
       var task = state.term;
       $('exercise').update(task);
       $('work').value = task;
       $('history').update(task);
-      history.addState(state);
+      derivation.push(state);
    }
 	
    generateService(caller, getDifficulty(), callback);

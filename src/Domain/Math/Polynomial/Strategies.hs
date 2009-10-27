@@ -22,7 +22,7 @@ import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Views
 import Domain.Math.Data.OrList
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
 

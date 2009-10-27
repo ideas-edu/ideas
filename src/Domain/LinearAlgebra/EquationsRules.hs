@@ -20,7 +20,7 @@ import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
 import Domain.Math.Expr
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Simplification (simplify)
 import Domain.LinearAlgebra.LinearView
 import Domain.LinearAlgebra.LinearSystem
@@ -52,7 +52,7 @@ ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $
    args c = do 
       mv <- minvar c
       let hd:rest = remaining c
-          getCoef = coefficientOf mv . getLHS
+          getCoef = coefficientOf mv . leftHandSide
       (i, coef) <- safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
       guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
@@ -76,7 +76,7 @@ ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $
  where
    descr  = ("equation", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
-               let expr = getLHS eq
+               let expr = leftHandSide eq
                mv <- minvar c
                guard (coefficientOf mv expr /= 0)
                let coef = 1 / coefficientOf mv expr
@@ -88,18 +88,18 @@ ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $
  where
    descr  = ("equation 1", "equation 2", "scale factor")
    args c = do eq <- safeHead $ drop (get covered c) (equations c)
-               let expr = getLHS eq
+               let expr = leftHandSide eq
                mv <- safeHead (getVars expr)
-               i  <- findIndex ((/= 0) . coefficientOf mv . getLHS) (take (get covered c) (equations c))
-               let coef = negate $ coefficientOf mv (getLHS (equations c !! i))
+               i  <- findIndex ((/= 0) . coefficientOf mv . leftHandSide) (take (get covered c) (equations c))
+               let coef = negate $ coefficientOf mv (leftHandSide (equations c !! i))
                return (i, get covered c, coef)
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $
-   \c ->  let vars = [ head ys | ys <- map (getVars . getLHS) (equations c), not (null ys) ]
+   \c ->  let vars = [ head ys | ys <- map (getVars . leftHandSide) (equations c), not (null ys) ]
               change eq =
-                 let (e1, e2) = splitLinearExpr (`notElem` vars) (getLHS eq) -- constant ends up in e1
-                 in e2 :==: getRHS eq - e1
+                 let (e1, e2) = splitLinearExpr (`notElem` vars) (leftHandSide eq) -- constant ends up in e1
+                 in e2 :==: rightHandSide eq - e1
           in return (fmap (map change) c)
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
@@ -159,6 +159,9 @@ changeCover f = makeTrans "changeCover" $ \c -> do
    return (set covered new c)
 
 -- local helper function
+combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
+combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2
+
 validEquation :: Int -> [a] -> Bool
 validEquation n xs = n >= 0 && n < length xs
   

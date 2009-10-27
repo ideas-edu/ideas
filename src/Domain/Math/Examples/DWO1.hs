@@ -20,7 +20,7 @@ module Domain.Math.Examples.DWO1
    ) where
 
 import Prelude hiding ((^))
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols

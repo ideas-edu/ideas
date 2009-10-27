@@ -18,7 +18,7 @@ import Common.Transformation
 import Common.Uniplate (universe)
 import Control.Monad
 import Domain.Math.Expr
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.View.Basic
 import Domain.Math.ExercisesDWO

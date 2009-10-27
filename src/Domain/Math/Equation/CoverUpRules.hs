@@ -24,7 +24,7 @@ module Domain.Math.Equation.CoverUpRules
 
 import Common.View
 import Domain.Math.Expr
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Control.Monad.Identity
 import Common.Transformation
 import Domain.Math.Expr.Symbols

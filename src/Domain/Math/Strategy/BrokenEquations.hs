@@ -19,7 +19,7 @@ import Common.Traversable
 import Control.Monad
 import Data.Ratio
 import Domain.Math.Expr
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.View.Basic
 import Domain.Math.ExercisesDWO

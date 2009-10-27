@@ -22,7 +22,7 @@ import Control.Monad
 import Data.List (nub, (\\), sort, sortBy)
 import Data.Maybe
 import Data.Ratio
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Expr
@@ -382,7 +382,7 @@ signT = makeTrans "sign" $ \(lhs :==: rhs) -> do
 
 varToLeft :: Rule (Equation Expr)
 varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
-   (x, a, _) <- match (linearViewWith rationalView) (getRHS eq)
+   (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
    guard (a/=0)
    return (fromRational a * Var x)
 

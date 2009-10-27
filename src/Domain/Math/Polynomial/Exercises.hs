@@ -18,7 +18,7 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.BuggyRules
 import Common.Exercise
 import Common.Rewriting
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
 import Domain.Math.Expr
 import Domain.Math.Data.OrList

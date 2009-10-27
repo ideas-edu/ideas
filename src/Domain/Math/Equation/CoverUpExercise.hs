@@ -19,7 +19,7 @@ import Common.Uniplate (transform)
 import Common.View
 import Control.Monad
 import Data.Ratio
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views

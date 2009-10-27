@@ -18,7 +18,7 @@ import Common.Context
 import Common.Strategy
 import Common.Derivation
 import Common.View
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Examples.DWO1
 import Domain.Math.Examples.DWO2

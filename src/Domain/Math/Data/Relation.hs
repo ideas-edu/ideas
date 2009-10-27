@@ -12,10 +12,15 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Relation 
-   ( Relational(..), mapLeft, mapRight, updateLeft, updateRight
+   ( -- * Type class
+     Relational(..), mapLeft, mapRight, updateLeft, updateRight
+     -- * Relation data type
    , Relation, relationType, RelationType(..)
+     -- * Constructor functions
    , makeType, (.==.), (./=.), (.<.), (.>.), (.<=.), (.>=.), (.~=.)
+     -- * Equation (or equality)
    , Equations, Equation(..), equationView
+     -- * Inequality
    , Inequality(..)
    ) where
 
@@ -164,7 +169,10 @@ equationView = makeView f g
       | op == EqualTo = return (x :==: y)
       | otherwise     = Nothing
    g (x :==: y) = x .==. y
-   
+
+-----------------------------------------------------------------------------
+-- Inequality
+
 infix 1 :<:, :>:
    
 data Inequality a = a :<: a | a :>: a

@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.LinearSystem where
 
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
 import Domain.LinearAlgebra.LinearView
 import Data.List
@@ -26,7 +26,9 @@ getVarsSystem :: IsLinear a => LinearSystem a -> [String]
 getVarsSystem = foldr (\(lhs :==: rhs) xs -> getVars lhs `union` getVars rhs `union` xs) []
 
 evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
-evalSystem f = all (evalEquation . fmap (evalLinearExpr f))
+evalSystem f = 
+   let eval (x :==: y) = x==y
+   in all (eval . fmap (evalLinearExpr f))
 
 invalidSystem :: IsLinear a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
@@ -40,8 +42,8 @@ getSolution xs = do
    guard (null (vars `intersect` frees))
    mapM make xs
  where
-   vars  = concatMap (getVars . getLHS) xs
-   frees = concatMap (getVars . getRHS) xs
+   vars  = concatMap (getVars . leftHandSide) xs
+   frees = concatMap (getVars . rightHandSide) xs
    make (lhs :==: rhs) = do
       v <- isVar lhs
       return (v, rhs)
@@ -60,7 +62,7 @@ inSolvedForm :: IsLinear a => LinearSystem a -> Bool
 inSolvedForm xs = invalidSystem xs || isJust (getSolution xs)
 
 homogeneous :: IsLinear a => LinearSystem a -> Bool
-homogeneous = all ((== 0) . getRHS)
+homogeneous = all ((== 0) . rightHandSide)
 
 -- Conversions
 systemToMatrix :: IsLinear a => LinearSystem a -> (Matrix a, [String])

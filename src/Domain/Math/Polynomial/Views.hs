@@ -27,7 +27,7 @@ import Common.View
 import Common.Traversable
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views

@@ -22,7 +22,7 @@ import Common.View hiding (simplify)
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Expr hiding (recip)
 import Domain.Math.Numeric.Views
 import Domain.Math.SquareRoot.Views

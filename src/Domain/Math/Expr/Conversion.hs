@@ -55,10 +55,8 @@ instance (IsExpr a, IsExpr b) => IsExpr (Either a b) where
 -- Conversions to the Expr data type
 
 instance IsExpr a => IsExpr (Equation a) where
-   toExpr (x :==: y) = binary eqSymbol (toExpr x) (toExpr y)
-   fromExpr expr = do
-      (e1, e2) <- isBinary eqSymbol expr
-      liftM2 (:==:) (fromExpr e1) (fromExpr e2)
+   toExpr = toExpr . build equationView
+   fromExpr expr = fromExpr expr >>= matchM equationView
    
 instance IsExpr a => IsExpr (Relation a) where
    toExpr p = 

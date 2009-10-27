@@ -14,7 +14,7 @@ module Domain.LinearAlgebra.Parser
    , parseSystem
    ) where
 
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearView (isLinear)

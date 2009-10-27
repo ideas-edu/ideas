@@ -14,24 +14,24 @@ module Domain.Math.Polynomial.CleanUp
    , normalizeSum, normalizeProduct
    ) where
 
-import qualified Prelude
-import Prelude hiding ((^), recip)
-import Domain.Math.Data.SquareRoot
-import Data.Maybe
-import Common.Utils
-import Data.Ratio
-import Data.List
-import Control.Monad
-import Common.View
-import Domain.Math.Numeric.Views
-import Domain.Math.Expr
-import Domain.Math.Power.Views
-import Domain.Math.SquareRoot.Views
 import Common.Uniplate
-import Domain.Math.Simplification (smartConstructors)
-import Domain.Math.Data.Equation
+import Common.Utils
+import Common.View
+import Control.Monad
+import Data.List
+import Data.Maybe
+import Data.Ratio
 import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
+import Domain.Math.Data.SquareRoot
+import Domain.Math.Expr
+import Domain.Math.Numeric.Views
+import Domain.Math.Power.Views
+import Domain.Math.Simplification (smartConstructors)
+import Domain.Math.SquareRoot.Views
+import Prelude hiding ((^), recip)
 import qualified Domain.Math.Data.SquareRoot as SQ
+import qualified Prelude
 
 ----------------------------------------------------------------------
 -- Expr normalization

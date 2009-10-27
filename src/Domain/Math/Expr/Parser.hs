@@ -20,7 +20,7 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Common.Transformation
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols

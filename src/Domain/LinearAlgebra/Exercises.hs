@@ -27,7 +27,7 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.Vector
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Simplification
 import Test.QuickCheck

@@ -14,7 +14,7 @@ module Domain.Math.Equation.Views
 
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
-import Domain.Math.Data.Equation
+import Domain.Math.Data.Relation
 import Common.View
 import Common.Traversable
 

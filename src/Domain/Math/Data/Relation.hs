@@ -21,7 +21,7 @@ module Domain.Math.Data.Relation
      -- * Equation (or equality)
    , Equations, Equation(..), equationView
      -- * Inequality
-   , Inequality(..)
+   , Inequality(..), inequalityView
    ) where
 
 import Common.View
@@ -72,7 +72,7 @@ instance Relational Relation where
 
 -- helpers
 showRelType :: RelationType -> String
-showRelType relType = fromMaybe "??" (lookup relType table)
+showRelType relType = relType ? table
  where
    table = [ (EqualTo, "=="), (NotEqualTo, "/="), (LessThan, "<")
            , (GreaterThan, ">"), (LessThanOrEqualTo, "<=")
@@ -84,6 +84,9 @@ flipRelType relType = fromMaybe relType (lookup relType table)
  where
    table = pairs ++ map (\(a,b) -> (b,a)) pairs
    pairs = [(LessThan, GreaterThan), (LessThanOrEqualTo, GreaterThanOrEqualTo)]
+
+(?) :: Eq a => a -> [(a, b)] -> b
+a ? xs = fromMaybe (error "Relation: Error in lookup") (lookup a xs)
 
 -----------------------------------------------------------------------------
 -- Traversable instance declarations
@@ -133,7 +136,7 @@ makeType :: RelationType -> a -> a -> Relation a
 makeType = flip R
 
 -----------------------------------------------------------------------------
--- Equation data type
+-- Equation data type (view on Relation)
 
 infix 1 :==:
 
@@ -171,8 +174,50 @@ equationView = makeView f g
    g (x :==: y) = x .==. y
 
 -----------------------------------------------------------------------------
--- Inequality
+-- Inequality (view on Relation)
 
-infix 1 :<:, :>:
+infix 1 :<:, :>:, :<=:, :>=:
    
-data Inequality a = a :<: a | a :>: a
+data Inequality a = a :<: a | a :>: a | a :<=: a | a :>=: a
+
+instance Show a => Show (Inequality a) where
+   show = show . build inequalityView
+
+instance Functor Inequality where
+   fmap f ineq = 
+      let a = leftHandSide ineq
+          b = rightHandSide ineq
+      in constructor ineq (f a) (f b)
+   
+instance Relational Inequality where
+   leftHandSide  = leftHandSide  . build inequalityView
+   rightHandSide = rightHandSide . build inequalityView
+   flipSides = fromMaybe (error "inequality: flipSides") . matchM inequalityView 
+             . flipSides . build inequalityView
+   constructor ineq = 
+      let relType = relationType (build inequalityView ineq)
+      in fst (relType ? inequalityTable)
+
+instance Once   Inequality where onceM  = onceMRelation
+instance Switch Inequality where switch = switchRelation
+instance Crush  Inequality where crush  = crushRelation
+
+instance Arbitrary a => Arbitrary (Inequality a) where
+   arbitrary = do 
+      op <- oneof $ map (return . fst . snd) inequalityTable
+      liftM2 op arbitrary arbitrary
+   coarbitrary = coarbitrary . build inequalityView
+
+inequalityView :: View (Relation a) (Inequality a)
+inequalityView = makeView f g
+ where
+   f (R x op y) = fmap (\pair -> fst pair x y) (lookup op inequalityTable)
+   g ineq =
+      let relType = relationType (build inequalityView ineq)
+      in snd (relType ? inequalityTable) (leftHandSide ineq) (rightHandSide ineq)
+
+inequalityTable :: [(RelationType, (a -> a -> Inequality a, a -> a -> Relation a))]
+inequalityTable = 
+   [ (LessThan, ((:<:), (.<.))), (LessThanOrEqualTo, ((:<=:), (.<=.)))
+   , (GreaterThan, ((:>:), (.>.))), (GreaterThanOrEqualTo, ((:>=:), (.>=.)))
+   ]

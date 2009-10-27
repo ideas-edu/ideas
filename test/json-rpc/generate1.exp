@@ -3,7 +3,8 @@
       "relationalg.cnf",
       "[]",
       "q- \\/ ((s /\\ q) ; s) /\\ V ! s",
-      ""
+      {
+      }
    ],
    "error": null,
    "id": 421,

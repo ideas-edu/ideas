@@ -104,20 +104,9 @@ jsonEncoder ex = Encoder
          Tp.Int      -> return . toJSON
          Tp.Bool     -> return . toJSON
          Tp.String   -> return . toJSON
-         Tp.State    -> encode enc stateType . fromState
+         Tp.State    -> encodeState (encodeTerm enc)
          Tp.Result   -> encodeResult enc
          _           -> encodeDefault enc serviceType
-
-fromState :: TAS.State a -> (String, String, Context a, String)
-fromState st = 
-   ( show (exerciseCode (TAS.exercise st))
-   , maybe "NoPrefix" show (TAS.prefix st)
-   , inContext (TAS.term st)
-   , showContext (TAS.context st)
-   )
-
-stateType :: Type a (String, String, Context a, String)
-stateType = Tp.Quadruple Tp.String Tp.String Tp.Term Tp.String
 
 jsonDecoder :: MonadPlus m => ExercisePackage a -> Decoder m JSON a
 jsonDecoder pkg = Decoder
@@ -163,17 +152,40 @@ instance InJSON Location where
 
 --------------------------
 
+encodeState :: Monad m => (a -> m JSON) -> TAS.State a -> m JSON
+encodeState f st = do 
+   theTerm <- f (TAS.term st)
+   return $ Array
+      [ String (show (exerciseCode (TAS.exercise st)))
+      , String (maybe "NoPrefix" show (TAS.prefix st))
+      , theTerm
+      , encodeContext (TAS.context st)
+      ]
+
+encodeContext :: Context a -> JSON
+encodeContext = Object . map f . contextPairs
+ where
+   f (k, (_, s)) = (k, String s)
+
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (TAS.State a)
 decodeState ex f (Array [a]) = decodeState ex f a
-decodeState ex f (Array [String _code, String p, ce, String ctx]) = do
+decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
    a    <- f ce 
-   unit <- maybe (fail "invalid context") return (parseContext ctx) 
+   ctx  <- decodeContext jsonContext
    return TAS.State 
       { TAS.exercise = ex
       , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
-      , TAS.context  = fmap (const a) unit
+      , TAS.context  = fmap (const a) ctx
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
+
+decodeContext :: Monad m => JSON -> m (Context ())
+decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
+decodeContext (Object xs) = liftM makeContext (mapM f xs)
+ where 
+   f (k, String s) = return (k, (Nothing, s))       
+   f _ = fail "invalid item in context"
+decodeContext json = fail $ "invalid context: " ++ show json
 
 readPrefix :: String -> Maybe [Int]
 readPrefix input =

@@ -3,7 +3,8 @@
       "logic.dnf-unicode",
       "[]",
       "(q → r) ∨ ¬(r → p)",
-      ""
+      {
+      }
    ],
    "error": null,
    "id": 28051978,

@@ -16,8 +16,7 @@ module Domain.Math.Expr.Conversion
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
-import Domain.Math.Data.Equation
-import Domain.Math.Data.Inequality
+import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Text.OpenMath.Object
 import Text.OpenMath.Symbol (extraSymbol)
@@ -61,23 +60,23 @@ instance IsExpr a => IsExpr (Equation a) where
       (e1, e2) <- isBinary eqSymbol expr
       liftM2 (:==:) (fromExpr e1) (fromExpr e2)
    
-instance IsExpr a => IsExpr (Inequality a) where
-   toExpr ineq = 
-      let (x, op, y) = toOperator ineq
-          f = fromMaybe (extraSymbol (show op)) . (`lookup` inequalitySymbols)
-      in binary (f op) (toExpr x) (toExpr y)
+instance IsExpr a => IsExpr (Relation a) where
+   toExpr p = 
+      let op  = relationType p
+          sym = fromMaybe (extraSymbol (show op)) (lookup op relationSymbols)
+      in binary sym (toExpr (leftHandSide p)) (toExpr (rightHandSide p))
    fromExpr expr = 
-      let f (op, s) = do
+      let f (relType, s) = do
              (e1, e2) <- isBinary s expr
-             liftM2 (\x y -> fromOperator (x, op, y)) (fromExpr e1) (fromExpr e2)
-      in msum (map f inequalitySymbols)
+             liftM2 (makeType relType) (fromExpr e1) (fromExpr e2)
+      in msum (map f relationSymbols) 
 
-inequalitySymbols :: [(Operator, Symbol)]
-inequalitySymbols = 
-   [ (LessThan, ltSymbol), (GreaterThan, gtSymbol), (NotEqualTo, neqSymbol)
-   , (LessThanOrEqualTo, leqSymbol), (GreaterThanOrEqualTo, geqSymbol)
+relationSymbols :: [(RelationType, Symbol)]
+relationSymbols = 
+   [ (EqualTo, eqSymbol), (NotEqualTo, neqSymbol), (LessThan, ltSymbol)
+   , (GreaterThan, gtSymbol), (LessThanOrEqualTo, leqSymbol)
+   , (GreaterThanOrEqualTo, geqSymbol), (Approximately, approxSymbol)
    ]
-
    
 instance IsExpr a => IsExpr (OrList a) where
    toExpr ors = 

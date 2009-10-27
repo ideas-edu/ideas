@@ -15,8 +15,7 @@ module Domain.Math.Examples.DWO2 where
 
 import Prelude hiding ((^))
 import Domain.Math.Expr
-import Domain.Math.Data.Equation
-import Domain.Math.Data.Inequality
+import Domain.Math.Data.Relation
 
 --------------------------------------------------------------------
 -- Algemene applet

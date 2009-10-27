@@ -11,21 +11,23 @@
 -- Mathematical equations
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Data.Equation where
+module Domain.Math.Data.Equation 
+   ( module Domain.Math.Data.Equation
+   , module Domain.Math.Data.Relation
+   ) where
 
 import Common.Uniplate
 import Common.Rewriting
-import Common.Traversable
-import Test.QuickCheck
+import Domain.Math.Data.Relation
 import Control.Monad
-
+{-
 infix 1 :==:
 
 type Equations a = [Equation a]
 
 data Equation  a = a :==: a
    deriving (Eq, Ord)
-   
+  
 instance Functor Equation where
    fmap f (x :==: y) = f x :==: f y
    
@@ -41,32 +43,20 @@ instance Crush Equation where
    
 instance Show a => Show (Equation a) where
    show (x :==: y) = show x ++ " == " ++ show y
+-} 
  
 getLHS, getRHS :: Equation a -> a
 getLHS (x :==: _) = x
 getRHS (_ :==: y) = y
 
 evalEquation :: Eq a => Equation a -> Bool
-evalEquation = evalEquationWith id
-
-evalEquationWith :: Eq b => (a -> b) -> Equation a -> Bool
-evalEquationWith f (x :==: y) = f x == f y
+evalEquation (x :==: y) = x == y
 
 substEquation :: (Uniplate a, MetaVar a) => Substitution a -> Equation a -> Equation a
-substEquation sub (x :==: y) = (sub |-> x) :==: (sub |-> y)
+substEquation sub = fmap (sub |->)
 
 substEquations :: (Uniplate a, MetaVar a) => Substitution a -> Equations a -> Equations a
 substEquations = map . substEquation
 
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
 combineWith f (x1 :==: x2) (y1 :==: y2) = f x1 y1 :==: f x2 y2
-
-flipSides :: Equation a -> Equation a
-flipSides (x :==: y) = y :==: x
-
------------------------------------------------------
--- QuickCheck generators
-
-instance Arbitrary a => Arbitrary (Equation a) where
-   arbitrary = liftM2 (:==:) arbitrary arbitrary
-   coarbitrary (x :==: y) = coarbitrary x . coarbitrary y

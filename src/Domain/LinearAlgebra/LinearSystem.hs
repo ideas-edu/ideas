@@ -26,7 +26,7 @@ getVarsSystem :: IsLinear a => LinearSystem a -> [String]
 getVarsSystem = foldr (\(lhs :==: rhs) xs -> getVars lhs `union` getVars rhs `union` xs) []
 
 evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
-evalSystem = all . evalEquationWith . evalLinearExpr
+evalSystem f = all (evalEquation . fmap (evalLinearExpr f))
 
 invalidSystem :: IsLinear a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation

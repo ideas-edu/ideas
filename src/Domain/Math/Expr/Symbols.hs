@@ -20,7 +20,7 @@ module Domain.Math.Expr.Symbols
    , listSymbol
      -- relation1
    , eqSymbol, ltSymbol, gtSymbol, neqSymbol
-   , leqSymbol, geqSymbol
+   , leqSymbol, geqSymbol, approxSymbol
      -- calculus1
    , diffSymbol
      -- nusm1

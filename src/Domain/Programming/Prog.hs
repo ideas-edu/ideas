@@ -254,7 +254,8 @@ putInEnv :: Patterns -> Module -> (Env, Module)
 putInEnv ps m = 
   let (decls, replaceDecls) = head (contextsBi m :: [(Declarations, Declarations -> Module)])
       (helpDecls, mainDecls) = partition ((`notElem` ps) . bindingPattern) decls
-  in (updateEnv' helpDecls empty, replaceDecls mainDecls)
+  in if null mainDecls then error "Please give at least one main function!"
+     else (updateEnv' helpDecls empty, replaceDecls mainDecls)
 
 bindingPattern :: Declaration -> Pattern
 bindingPattern d = 

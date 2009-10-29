@@ -33,21 +33,21 @@ checks = do
 
 propEchelon :: Matrix Rational -> Bool
 propEchelon =
-   inRowEchelonForm . matrix . applyD forwardPass . inContext . fmap fromRational
+   inRowEchelonForm . fromContext . applyD forwardPass . inContext . fmap fromRational
 
 propReducedEchelon :: Matrix Rational -> Bool
 propReducedEchelon = 
-   inRowReducedEchelonForm . matrix . applyD gaussianElimStrategy . inContext . fmap fromRational
+   inRowReducedEchelonForm . fromContext . applyD gaussianElimStrategy . inContext . fmap fromRational
    
 propSound :: Matrix Rational -> Bool
 propSound m =
-   (matrix . applyD gaussianElimStrategy . inContext . fmap fromRational) m
+   (fromContext . applyD gaussianElimStrategy . inContext . fmap fromRational) m
    == fmap fromRational (reduce m)
 
 propSolution :: Matrix Rational -> Property
 propSolution m1 =
    forAll (arbSolution m1) $ \(solution, m2) -> 
-      let m3  = (matrix . applyD gaussianElimStrategy . inContext . fmap fromRational) m2
+      let m3  = (fromContext . applyD gaussianElimStrategy . inContext . fmap fromRational) m2
           p r = simplify (sum (zipWith g (solution ++ [-1]) r)) == 0
           g   = (*) . fromRational
       in all p (rows m3)

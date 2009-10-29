@@ -1,4 +1,4 @@
-<request service="findbuggyrules" exerciseid="math.quadreq" source="dwo">\
+<request service="findbuggyrules" exerciseid="math.quadreq" source="dwo">
 <state>
 <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" 
 	cdbase="http://www.openmath.org/cd"><OMA><OMS cd="relation1" name="eq"/>

@@ -21,6 +21,7 @@ import Service.ExerciseList (exercises)
 import qualified Service.TypedAbstractService as S
 import Service.FeedbackText hiding (ExerciseText)
 import Service.Types 
+import Service.ProblemDecomposition
 import Data.List (sortBy)
 
 data Service a = Service 
@@ -38,6 +39,7 @@ serviceList =
    , submitS
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
+   , problemdecompositionS
    , exerciselistS, rulelistS
    ]
 
@@ -108,7 +110,16 @@ submittextS = Service "submittext" $
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" $ 
    derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Pair String Term)
-   
+
+------------------------------------------------------
+-- Problem decomposition service
+
+problemdecompositionS :: Service a
+problemdecompositionS = Service "problemdecomposition" $
+   f ::: State :-> List Int :-> Maybe Term :-> DecompositionReply
+ where   
+   f st loc a = problemDecomposition st loc (fmap fromContext a)
+
 ------------------------------------------------------
 -- Reflective services
    

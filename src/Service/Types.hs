@@ -23,6 +23,7 @@ import Service.ExerciseList (ExercisePackage, exercise, getExerciseText)
 import Service.TypedAbstractService (State, Result)
 import Service.FeedbackText (ExerciseText)
 import System.IO.Unsafe
+import qualified Text.OpenMath.Reply as Decomposition
 
 infix  2 :::
 infixr 3 :->
@@ -51,11 +52,13 @@ data Type a t where
    Rule         :: Type a (Rule (Context a))
    Term         :: Type a (Context a)
    Result       :: Type a (Result a)
+   Location     :: Type a Location
+   DecompositionReply :: Type a (Decomposition.Reply a)
    -- Basic types
    Bool         :: Type a Bool
    Int          :: Type a Int
    String       :: Type a String
-   Location     :: Type a Location
+   
 
 instance Show (Type a t) where
    show (t1 :-> t2)       = show t1 ++ " -> " ++ show t2 

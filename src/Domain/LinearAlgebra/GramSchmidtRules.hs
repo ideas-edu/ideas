@@ -19,8 +19,8 @@ import Control.Monad
 import Data.List
 
 varI, varJ :: Var Int
-varI = "considered" := 0
-varJ = "j"          := 0
+varI = newVar "considered" 0
+varJ = newVar "j" 0
 
 rulesGramSchmidt :: Floating a => [Rule (Context (VectorSpace a))]
 rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
@@ -28,46 +28,55 @@ rulesGramSchmidt = [ruleNormalize, ruleOrthogonal, ruleNext]
 -- Make the current vector of length 1
 -- (only applicable if this is not already the case)
 ruleNormalize :: Floating a => Rule (Context (VectorSpace a))
-ruleNormalize = makeSimpleRule "Turn into unit Vector" $
-   \c -> do v <- current c
-            guard (norm v `notElem` [0, 1])
-            setCurrent (toUnit v) c
+ruleNormalize = makeSimpleRule "Turn into unit Vector" $ withCM $ \vs -> do
+   v <- current vs
+   guard (norm v `notElem` [0, 1])
+   setCurrent (toUnit v) vs
 
 -- Make the current vector orthogonal with some other vector
 -- that has already been considered
 ruleOrthogonal :: Floating a => Rule (Context (VectorSpace a))
 ruleOrthogonal = makeRule "Make orthogonal" $ supplyLabeled2 descr args transOrthogonal
  where
-   descr  = ("vector 1", "vector 2")
-   args c = do let i = get varI c-1
-                   j = get varJ c-1
-               guard (i>j)
-               return (j, i)
+   descr = ("vector 1", "vector 2")
+   args  = evalCM $ \_ -> do
+              i <- liftM pred (readV varI)
+              j <- liftM pred (readV varJ)
+              guard (i>j)
+              return (j, i)
 
 -- Variable "j" is for administrating which vectors are already orthogonal 
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
-ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $
-   \c -> do guard (get varJ c + 1 < get varI c)
-            return (change varJ (+1) c)
+ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ withCM $ \vs -> do
+   i <- readV varI
+   j <- liftM succ (readV varJ)
+   guard (j < i)
+   writeV varJ j
+   return vs
 
 -- Consider the next vector 
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
-ruleNext = minorRule $ makeSimpleRule "Consider next vector" $
-   \c -> do guard (get varI c < length (vectors (fromContext c)))
-            return $ change varI (+1) $ set varJ 0 c 
+ruleNext = minorRule $ makeSimpleRule "Consider next vector" $ withCM $ \vs -> do
+   i <- readV varI
+   guard (i < length (vectors vs))
+   writeV varI (i+1)
+   writeV varJ 0
+   return vs
 
-current :: Context (VectorSpace a) -> Maybe (Vector a)
-current c = 
-   case drop (get varI c - 1) (vectors (fromContext c)) of
-      v:_ -> Just v
-      _   -> Nothing
+current :: VectorSpace a -> ContextMonad (Vector a)
+current vs = do
+   i <- readV varI
+   case drop (i-1) (vectors vs) of
+      v:_ -> return v
+      _   -> mzero
 
-setCurrent :: Vector a -> Context (VectorSpace a) -> Maybe (Context (VectorSpace a))
-setCurrent v c = 
-   case splitAt (get varI c - 1) (vectors (fromContext c)) of
-      (xs, _:ys) -> Just $ fmap (makeVectorSpace . const (xs ++ v:ys)) c 
-      _          -> Nothing
+setCurrent :: Vector a -> VectorSpace a -> ContextMonad (VectorSpace a)
+setCurrent v vs = do
+   i <- readV varI 
+   case splitAt (i-1) (vectors vs) of
+      (xs, _:ys) -> return $ makeVectorSpace (xs ++ v:ys)
+      _          -> mzero
 
 -- Two indices, change the second vector and make it orthogonal
 -- to the first

@@ -39,68 +39,77 @@ ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $ 
    supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
  where
-   descr  = ("equation 1", "equation 2")
-   args c = do mv <- minvar c
-               i  <- findIndex (elem mv . getVarsSystem . return) (remaining c)
-               return (get covered c, get covered c + i)
+   descr = ("equation 1", "equation 2")
+   args  = evalCM $ \ls -> do
+      mv  <- minvar ls
+      eqs <- remaining ls
+      i   <- findIndexM (elem mv . getVarsSystem . return) eqs
+      cov <- readV covered
+      return (cov, cov + i)
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $ 
    supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
-   descr  = ("equation 1", "equation 2", "scale factor")
-   args c = do 
-      mv <- minvar c
-      let hd:rest = remaining c
-          getCoef = coefficientOf mv . leftHandSide
-      (i, coef) <- safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
+   descr = ("equation 1", "equation 2", "scale factor")
+   args  = evalCM $ \ls -> do 
+      mv <- minvar ls
+      hd:rest <- remaining ls
+      let getCoef = coefficientOf mv . leftHandSide
+      (i, coef) <- maybeCM $ safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
       guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
-      return ( i + get covered c + 1, get covered c, v)
+      cov <- readV covered
+      return (i + cov + 1, cov, v)
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
-ruleDropEquation = simplifySystem $ makeSimpleRule "Drop (0=0) equation" $ 
-   \c -> do i <- findIndex (fromMaybe False . testConstants (==)) (equations c)
-            return $ change covered (\n -> if i < n then n-1 else n)
-                   $ fmap (deleteIndex i) c
+ruleDropEquation = simplifySystem $ makeSimpleRule "Drop (0=0) equation" $ withCM $ \ls -> do
+   i   <- findIndexM (fromMaybe False . testConstants (==)) ls
+   modifyV covered (\n -> if i < n then n-1 else n)
+   return (deleteIndex i ls)
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
-ruleInconsistentSystem = simplifySystem $ makeSimpleRule "Inconsistent system (0=1)" $ 
-   \c -> do let stop = [0 :==: 1]
-            guard $ invalidSystem (equations c) && equations c /= stop
-            return $ set covered 1 (fmap (const stop) c)
+ruleInconsistentSystem = simplifySystem $ makeSimpleRule "Inconsistent system (0=1)" $ withCM $ \ls -> do
+   let stop = [0 :==: 1]
+   guard (invalidSystem ls && ls /= stop)
+   writeV covered 1
+   return stop
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $ 
    supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
  where
-   descr  = ("equation", "scale factor")
-   args c = do eq <- safeHead $ drop (get covered c) (equations c)
-               let expr = leftHandSide eq
-               mv <- minvar c
-               guard (coefficientOf mv expr /= 0)
-               let coef = 1 / coefficientOf mv expr
-               return (get covered c, coef)
+   descr = ("equation", "scale factor")
+   args  = evalCM $ \ls -> do 
+      cov <- readV covered 
+      eq  <- maybeCM $ safeHead $ drop cov ls
+      let expr = leftHandSide eq
+      mv <- minvar ls
+      guard (coefficientOf mv expr /= 0)
+      let coef = 1 / coefficientOf mv expr
+      return (cov, coef)
    
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $ 
    supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
  where
-   descr  = ("equation 1", "equation 2", "scale factor")
-   args c = do eq <- safeHead $ drop (get covered c) (equations c)
-               let expr = leftHandSide eq
-               mv <- safeHead (getVars expr)
-               i  <- findIndex ((/= 0) . coefficientOf mv . leftHandSide) (take (get covered c) (equations c))
-               let coef = negate $ coefficientOf mv (leftHandSide (equations c !! i))
-               return (i, get covered c, coef)
+   descr = ("equation 1", "equation 2", "scale factor")
+   args  = evalCM $ \ls -> do 
+      cov <- readV covered
+      eq  <- maybeCM $ safeHead $ drop cov ls
+      let expr = leftHandSide eq
+      mv <- maybeCM $ safeHead (getVars expr)
+      i  <- findIndexM ((/= 0) . coefficientOf mv . leftHandSide) (take cov ls)
+      let coef = negate $ coefficientOf mv (leftHandSide (ls !! i))
+      return (i, cov, coef)
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
-ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $
-   \c ->  let vars = [ head ys | ys <- map (getVars . leftHandSide) (equations c), not (null ys) ]
-              change eq =
-                 let (e1, e2) = splitLinearExpr (`notElem` vars) (leftHandSide eq) -- constant ends up in e1
-                 in e2 :==: rightHandSide eq - e1
-          in return (fmap (map change) c)
+ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $ withCM $ \ls ->
+   let vars = [ head ys | ys <- map (getVars . leftHandSide) ls, not (null ys) ]
+       change eq =
+          let (e1, e2) = splitLinearExpr (`notElem` vars) (leftHandSide eq) -- constant ends up in e1
+          in e2 :==: rightHandSide eq - e1
+   in return (map change ls)
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
 ruleCoverUpEquation = minorRule $ makeRule "Cover up first equation" $ changeCover (+1)
@@ -109,8 +118,9 @@ ruleUncoverEquation :: Rule (Context (LinearSystem a))
 ruleUncoverEquation = minorRule $ makeRule "Uncover one equation" $ changeCover (\x -> x-1)
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
-ruleCoverAllEquations = minorRule $ makeSimpleRule "Cover all equations" $ 
-   \c -> return (set covered (length $ equations c) c)
+ruleCoverAllEquations = minorRule $ makeSimpleRule "Cover all equations" $ withCM $ \ls -> do
+   writeV covered (length ls)
+   return ls
 
 -- local helper functions
 deleteIndex :: Int -> [a] -> [a]
@@ -153,10 +163,11 @@ addEquations i j a = makeTrans "addEquations" $ \xs -> do
    return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeTrans "changeCover" $ \c -> do
-   let new = f (get covered c)
-   guard (new >= 0 && new <= length (equations c))
-   return (set covered new c)
+changeCover f = makeTrans "changeCover" $ withCM $ \ls -> do
+   new <- liftM f (readV covered)
+   guard (new >= 0 && new <= length ls)
+   writeV covered new
+   return ls
 
 -- local helper function
 combineWith :: (a -> a -> a) -> Equation a -> Equation a -> Equation a
@@ -168,22 +179,21 @@ validEquation n xs = n >= 0 && n < length xs
 --------------------
 -- TEMP
 
-equations :: Context (LinearSystem a) -> LinearSystem a
-equations = fromContext
-
 -- | The equations that remain to be solved
-remaining :: Context (LinearSystem a) -> Equations a
-remaining c = drop (get covered c) (equations c)
+remaining :: LinearSystem a -> ContextMonad (Equations a)
+remaining ls = do 
+   cov <- readV covered
+   return (drop cov ls)
 
 -- | The minimal variable in the remaining equations
-minvar :: IsLinear a => Context (LinearSystem a) -> Maybe String
-minvar c | null list = Nothing
-         | otherwise = Just (minimum list)
- where
-   list = getVarsSystem (remaining c) 
-   
+minvar :: IsLinear a => LinearSystem a -> ContextMonad String
+minvar ls = do 
+   list <- liftM getVarsSystem (remaining ls)
+   guard (not $ null list)
+   return (minimum list)
+
 liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (Context (LinearSystem a))
-liftSystemTrans = lift $ makeLiftPair (return . equations) (fmap . const)
+liftSystemTrans = lift $ makeLiftPair (return . fromContext) (fmap . const)
 
 systemInNF :: (Arbitrary a, IsLinear a) => Gen (LinearSystem a)
 systemInNF = do
@@ -195,3 +205,6 @@ toIntegerSystem = map (fmap round)
 
 fromIntegerSystem :: RealFrac a => LinearSystem Integer -> LinearSystem a
 fromIntegerSystem = map (fmap fromInteger)
+
+findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
+findIndexM p = maybe mzero return . findIndex p

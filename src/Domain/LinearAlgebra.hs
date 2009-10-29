@@ -23,7 +23,7 @@ module Domain.LinearAlgebra
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Parser
 import Domain.LinearAlgebra.MatrixRules
-import Domain.LinearAlgebra.EquationsRules hiding (changeCover)
+import Domain.LinearAlgebra.EquationsRules hiding (changeCover, findIndexM)
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Exercises

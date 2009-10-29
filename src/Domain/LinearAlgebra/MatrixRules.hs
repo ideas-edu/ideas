@@ -30,43 +30,51 @@ matrixRules =
       ]
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
-ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ \c -> do
-   let cols = columns (subMatrix c)
-   i <- findIndex nonZero cols
-   return (set columnJ i c)
+ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ withCM $ \m -> do
+   cols <- liftM columns (subMatrix m)
+   i    <- findIndexM nonZero cols
+   writeV columnJ i
+   return m
    
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
-ruleExchangeNonZero = simplify $ ruleExchangeRows $ \c -> do
-   nonEmpty c
-   let col = column (get columnJ c) (subMatrix c)
-   i   <- findIndex (/= 0) col
-   return (get covered c, i + get covered c)
+ruleExchangeNonZero = simplify $ ruleExchangeRows $ evalCM $ \m -> do
+   nonEmpty m
+   j   <- readV columnJ
+   col <- liftM (column j) (subMatrix m)
+   i   <- findIndexM (/= 0) col
+   cov <- readV covered
+   return (cov, i + cov)
 
 ruleScaleToOne :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleScaleToOne = simplify $ ruleScaleRow $ \c -> do
-   nonEmpty c
-   let pv = entry (0, get columnJ c) (subMatrix c)
+ruleScaleToOne = simplify $ ruleScaleRow $ evalCM $ \m -> do
+   nonEmpty m
+   j   <- readV columnJ
+   pv  <- liftM (entry (0, j)) (subMatrix m)
    guard (pv /= 0)
-   return (get covered c, 1 / pv)
+   cov <- readV covered
+   return (cov, 1 / pv)
 
 ruleZerosFP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosFP = simplify $ ruleAddMultiple $ \c -> do
-   nonEmpty c
-   let col = drop 1 $ column (get columnJ c) (subMatrix c)
-   i   <- findIndex (/= 0) col
+ruleZerosFP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
+   nonEmpty m
+   j   <- readV columnJ
+   col <- liftM (drop 1 . column j) (subMatrix m)
+   i   <- findIndexM (/= 0) col
+   cov <- readV covered
    let v = negate (col!!i)
-   return (i + get covered c + 1, get covered c, v)
+   return (i + cov + 1, cov, v)
    
 ruleZerosBP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
-ruleZerosBP = simplify $ ruleAddMultiple $ \c -> do
-   nonEmpty c
-   let ri  = row 0 (subMatrix c)
-       j   = length $ takeWhile (==0) ri
-       col = column j (matrix c)
+ruleZerosBP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
+   nonEmpty m
+   ri <- liftM (row 0) (subMatrix m)
+   let j   = length $ takeWhile (==0) ri
+       col = column j m
    guard (any (/= 0) ri)
-   k <- findIndex (/= 0) col
+   k <- findIndexM (/= 0) col
    let v = negate (col!!k)
-   return (k, get covered c, v)
+   cov <- readV covered
+   return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
 ruleCoverRow = minorRule $ makeRule "CoverRow" $ changeCover (+1)
@@ -108,10 +116,11 @@ rowAdd i j k = matrixTrans "rowAdd" $ \m -> do
    return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeTrans "changeCover" $ \c -> do
-   let new = f (get covered c)
-   guard (new >= 0 && new <= fst (dimensions (matrix c)))
-   return $ set covered new c --  c {get covered = new}
+changeCover f = makeTrans "changeCover" $ withCM $ \m -> do
+   new <- liftM f (readV covered)
+   guard (new >= 0 && new <= fst (dimensions m))
+   writeV covered new
+   return m
    
 matrixTrans ::  String -> (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
 matrixTrans s f = makeTrans s $ \c -> do
@@ -122,13 +131,17 @@ matrixTrans s f = makeTrans s $ \c -> do
 validRow :: Int -> Matrix a -> Bool
 validRow i m = i >= 0 && i < fst (dimensions m)
    
-nonEmpty :: Context (Matrix a) -> Maybe ()
-nonEmpty = guard . not . isEmpty . subMatrix
+nonEmpty :: Matrix a -> ContextMonad ()
+nonEmpty m = subMatrix m >>= guard . not . isEmpty
 
 covered, columnJ :: Var Int
-covered = "covered" := 0
-columnJ = "columnJ" := 0
+covered = newVar "covered" 0
+columnJ = newVar "columnJ" 0
 
-matrix, subMatrix :: Context (Matrix a) -> Matrix a
-matrix = fromContext
-subMatrix c = makeMatrix $ drop (get covered c) $ rows $ matrix c
+subMatrix :: Matrix a -> ContextMonad (Matrix a)
+subMatrix m = do 
+   cov <- readV covered
+   return $ makeMatrix $ drop cov $ rows $ m
+   
+findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
+findIndexM p = maybe mzero return . findIndex p

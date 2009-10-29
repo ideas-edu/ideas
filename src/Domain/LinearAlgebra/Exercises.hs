@@ -59,7 +59,7 @@ linearSystemExercise = testableExercise
                                (a, [])  -> Right (simplify a)
                                (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter  = unlines . map show
-   , equivalence    = \x y -> let f = getSolution . equations . applyD linearSystemStrategy 
+   , equivalence    = \x y -> let f = getSolution . fromContext . applyD linearSystemStrategy 
                                     . inContext . map toStandardForm
                               in f x == f y
    , extraRules     = equationsRules

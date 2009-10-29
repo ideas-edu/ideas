@@ -70,7 +70,7 @@ systemToEchelonWithEEO =
    label "System to Echelon Form (EEO)" $
    simplifyFirst <*>
    repeat  (  dropEquation
-          <|> check (not . null . remaining)
+          <|> check (maybe False (not . null) . evalCM remaining)
           <*> label "Exchange equations"        (try ruleExchangeEquations)
           <*> label "Scale equation to one"     (option ruleScaleEquation)
           <*> label "Eliminate variable"        (repeat ruleEliminateVar)
@@ -103,20 +103,22 @@ gramSchmidtStrategy =
    <*> label "Normalize"              (try ruleNormalize)
 
 vars :: Var [String]
-vars = "variables" := []
+vars = newVar "variables" []
 
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context (Either (LinearSystem Expr) (Matrix Expr)))
-conv1 = translationToContext "Linear system to matrix" $ \c -> 
-   let (m, vs) = systemToMatrix (fromContext c)
-   in return $ set vars vs $ fmap (const (simplify m)) c
+conv1 = translationToContext "Linear system to matrix" $ withCM $ \ls -> do
+   let (m, vs) = systemToMatrix ls
+   writeV vars vs
+   return (simplify m)
  
 conv2 :: Rule (Context (Either (LinearSystem Expr) (Matrix Expr)))
-conv2 = translationFromContext "Matrix to linear system" $ \c -> 
-   let linsys = matrixToSystemWith (get vars c) (fromContext c)
-   in return $ applyD simplifyFirst $  fmap (const linsys) c 
+conv2 = translationFromContext "Matrix to linear system" $ withCM $ \m -> do
+   vs <- readV vars
+   let linsys = matrixToSystemWith vs m
+   return $ fromContext $ applyD simplifyFirst $ inContext linsys
    
 liftLeft :: (IsStrategy f, Lift f) => f (Context a) -> f (Context (Either a b))
 liftLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)

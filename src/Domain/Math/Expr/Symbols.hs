@@ -50,13 +50,17 @@ import Text.OpenMath.Dictionary.Transc1
 
 type OperatorTable = [(Associativity, [(Symbol, String)])]
 
-data Associativity = InfixLeft | InfixRight | Prefix -- InfixNon | Postfix
+data Associativity = InfixLeft | InfixRight | PrefixNon
+                   | InfixNon
    deriving (Show, Eq)
 
 operatorTable :: OperatorTable
 operatorTable =
-   [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
-   , (Prefix,     [(negateSymbol, "-")])                      -- 6+
+   [ (InfixNon,   [ (eqSymbol, "=="), (ltSymbol, "<"), (gtSymbol, ">")
+                  , (neqSymbol, "/="), (leqSymbol, "<="), (geqSymbol, ">=")
+                  , (approxSymbol, "~=")])                    -- 1
+   , (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
+   , (PrefixNon,  [(negateSymbol, "-")])                      -- 6+
    , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7
    , (InfixRight, [(powerSymbol, "^")])                       -- 8
    ]

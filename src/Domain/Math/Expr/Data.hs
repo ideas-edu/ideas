@@ -16,6 +16,7 @@ import Data.Ratio
 import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
+import Common.Utils (commaList)
 import Common.Rewriting hiding (operators, match)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
@@ -178,13 +179,17 @@ showExpr table = rec 0
          -- To do: remove special case for sqrt
          Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
+         Just (s, xs) | s == listSymbol -> 
+            "[" ++ commaList (map (rec 0) xs) ++ "]"
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
                (Just (InfixLeft, n, op), [x, y]) -> 
                   parIf (i>n) $ concat [rec n x, op, rec (n+1) y]
                (Just (InfixRight, n, op), [x, y]) -> 
                   parIf (i>n) $ concat [rec (n+1) x, op, rec n y]
-               (Just (Prefix, n, op), [x]) -> -- i>=5 prevents "3--5"
+               (Just (InfixNon, n, op), [x, y]) -> 
+                  parIf (i>n) $ concat [rec (n+1) x, op, rec (n+1) y]
+               (Just (PrefixNon, n, op), [x]) ->
                   parIf (i>=n) $ concat [op, rec (n+1) x]
                _ -> 
                   parIf (not (null as) && i>10000) $ unwords (show s : map (rec 10001) as)

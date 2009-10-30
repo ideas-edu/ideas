@@ -40,40 +40,40 @@ ruleOrthogonal = makeRule "Make orthogonal" $ supplyLabeled2 descr args transOrt
  where
    descr = ("vector 1", "vector 2")
    args  = evalCM $ \_ -> do
-              i <- liftM pred (readV varI)
-              j <- liftM pred (readV varJ)
+              i <- liftM pred (readVar varI)
+              j <- liftM pred (readVar varJ)
               guard (i>j)
               return (j, i)
 
 -- Variable "j" is for administrating which vectors are already orthogonal 
 ruleNextOrthogonal :: Rule (Context (VectorSpace a))
 ruleNextOrthogonal = minorRule $ makeSimpleRule "Orthogonal to next" $ withCM $ \vs -> do
-   i <- readV varI
-   j <- liftM succ (readV varJ)
+   i <- readVar varI
+   j <- liftM succ (readVar varJ)
    guard (j < i)
-   writeV varJ j
+   writeVar varJ j
    return vs
 
 -- Consider the next vector 
 -- This rule should fail if there are no vectors left
 ruleNext :: Rule (Context (VectorSpace a))
 ruleNext = minorRule $ makeSimpleRule "Consider next vector" $ withCM $ \vs -> do
-   i <- readV varI
+   i <- readVar varI
    guard (i < length (vectors vs))
-   writeV varI (i+1)
-   writeV varJ 0
+   writeVar varI (i+1)
+   writeVar varJ 0
    return vs
 
 current :: VectorSpace a -> ContextMonad (Vector a)
 current vs = do
-   i <- readV varI
+   i <- readVar varI
    case drop (i-1) (vectors vs) of
       v:_ -> return v
       _   -> mzero
 
 setCurrent :: Vector a -> VectorSpace a -> ContextMonad (VectorSpace a)
 setCurrent v vs = do
-   i <- readV varI 
+   i <- readVar varI 
    case splitAt (i-1) (vectors vs) of
       (xs, _:ys) -> return $ makeVectorSpace (xs ++ v:ys)
       _          -> mzero

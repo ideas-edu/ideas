@@ -44,7 +44,7 @@ ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $
       mv  <- minvar ls
       eqs <- remaining ls
       i   <- findIndexM (elem mv . getVarsSystem . return) eqs
-      cov <- readV covered
+      cov <- readVar covered
       return (cov, cov + i)
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
@@ -59,20 +59,20 @@ ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $
       (i, coef) <- maybeCM $ safeHead [ (i, c) | (i, eq) <- zip [0..] rest, let c = getCoef eq, c /= 0 ]
       guard (getCoef hd /= 0)
       let v = negate coef / getCoef hd
-      cov <- readV covered
+      cov <- readVar covered
       return (i + cov + 1, cov, v)
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
 ruleDropEquation = simplifySystem $ makeSimpleRule "Drop (0=0) equation" $ withCM $ \ls -> do
    i   <- findIndexM (fromMaybe False . testConstants (==)) ls
-   modifyV covered (\n -> if i < n then n-1 else n)
+   modifyVar covered (\n -> if i < n then n-1 else n)
    return (deleteIndex i ls)
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
 ruleInconsistentSystem = simplifySystem $ makeSimpleRule "Inconsistent system (0=1)" $ withCM $ \ls -> do
    let stop = [0 :==: 1]
    guard (invalidSystem ls && ls /= stop)
-   writeV covered 1
+   writeVar covered 1
    return stop
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
@@ -81,7 +81,7 @@ ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $
  where
    descr = ("equation", "scale factor")
    args  = evalCM $ \ls -> do 
-      cov <- readV covered 
+      cov <- readVar covered 
       eq  <- maybeCM $ safeHead $ drop cov ls
       let expr = leftHandSide eq
       mv <- minvar ls
@@ -95,7 +95,7 @@ ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do 
-      cov <- readV covered
+      cov <- readVar covered
       eq  <- maybeCM $ safeHead $ drop cov ls
       let expr = leftHandSide eq
       mv <- maybeCM $ safeHead (getVars expr)
@@ -119,7 +119,7 @@ ruleUncoverEquation = minorRule $ makeRule "Uncover one equation" $ changeCover 
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = minorRule $ makeSimpleRule "Cover all equations" $ withCM $ \ls -> do
-   writeV covered (length ls)
+   writeVar covered (length ls)
    return ls
 
 -- local helper functions
@@ -164,9 +164,9 @@ addEquations i j a = makeTrans "addEquations" $ \xs -> do
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
 changeCover f = makeTrans "changeCover" $ withCM $ \ls -> do
-   new <- liftM f (readV covered)
+   new <- liftM f (readVar covered)
    guard (new >= 0 && new <= length ls)
-   writeV covered new
+   writeVar covered new
    return ls
 
 -- local helper function
@@ -182,7 +182,7 @@ validEquation n xs = n >= 0 && n < length xs
 -- | The equations that remain to be solved
 remaining :: LinearSystem a -> ContextMonad (Equations a)
 remaining ls = do 
-   cov <- readV covered
+   cov <- readVar covered
    return (drop cov ls)
 
 -- | The minimal variable in the remaining equations

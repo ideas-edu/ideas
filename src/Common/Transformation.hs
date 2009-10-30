@@ -31,7 +31,6 @@ module Common.Transformation
    , idRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
    , transformations, getRewriteRules
      -- * Lifting
-  -- , LiftPair, liftPairGet, liftPairSet, liftPairChange, Lift(..), makeLiftPair
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
@@ -59,14 +58,12 @@ data Transformation a
    = Function String (a -> [a])
    | RewriteRule (RewriteRule a)
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
---   | forall b . Lift (LiftPair b a) (Transformation b)
    | forall b c . LiftView (View a (b, c)) (Transformation b)
    
 instance Apply Transformation where
    applyAll (Function _ f)      = f
    applyAll (RewriteRule r)     = rewriteM r
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
---   applyAll (Lift lp t )        = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
@@ -79,11 +76,6 @@ makeTransList = Function
 
 getPatternPair :: a -> Transformation a -> Maybe (a, a)
 getPatternPair _ (RewriteRule r) = let a :~> b = rulePair r 0 in Just (a, b)
-{- getPatternPair a (Lift lp t) = do
-   let f t = liftPairSet lp t a
-   b      <- liftPairGet lp a
-   (x, y) <- getPatternPair b t
-   return (f x, f y) -}
 getPatternPair a (LiftView v t) = do
    (b, c) <- match v a
    (x, y) <- getPatternPair b t
@@ -181,11 +173,6 @@ getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
       [Abstraction args _ _] -> someArguments args
-{-      [Lift _ t] -> getDescriptors $ rule 
-         { transformations = [t]
-         , doBeforeHook    = id
-         , doAfterHook     = id
-         } -}
       [LiftView _ t] -> getDescriptors $ rule 
          { transformations = [t]
          , doBeforeHook    = id
@@ -199,13 +186,6 @@ expectedArguments rule a =
    case transformations rule of
       [Abstraction args f _] -> 
          fmap (showArguments args) (f a)
-{-      [Lift lp t] -> do 
-         b <- liftPairGet lp a
-         expectedArguments rule 
-            { transformations = [t]
-            , doBeforeHook    = id
-            , doAfterHook     = id
-            } b -}
       [LiftView v t] -> do 
          (b, _) <- match v a
          expectedArguments rule 
@@ -228,7 +208,6 @@ useArguments list rule =
    make trans = 
       case trans of
          Abstraction args _ g -> fmap g (parseArguments args list)
---         Lift lp t            -> fmap (Lift lp) (make t)     
          LiftView v t         -> fmap (LiftView v) (make t)
          _                    -> Nothing
    
@@ -319,7 +298,6 @@ isRewriteRule = all p . transformations
  where
    p :: Transformation a -> Bool
    p (RewriteRule _) = True
---   p (Lift _ t)      = p t
    p (LiftView _ t)  = p t
    p _               = False
 
@@ -382,50 +360,12 @@ getRewriteRules r = concatMap f (transformations r)
    f trans =
       case trans of
          RewriteRule rr -> [(Some rr, not $ isBuggyRule r)]      
---         Lift _ t       -> f t
          LiftView _ t   -> f t
          _              -> []
 
 -----------------------------------------------------------
 --- Lifting
-{-
--- | A lift pair consists of two functions: the first to access a value in a context (this can fail,
--- hence the Maybe), the second to update the value in its context
-data LiftPair a b = LiftPair 
-   { liftPairGet :: b -> Maybe a -- ^ Returns the accessor function of a lift pair
-   , liftPairSet :: a -> b -> b  -- ^ Returns the update function of a lift pair
-   }
--- | Update a value in a context
-liftPairChange :: LiftPair a b -> (a -> Maybe a) -> b -> Maybe b
-liftPairChange lp f b = do 
-   a   <- liftPairGet lp b
-   new <- f a
-   return (liftPairSet lp new b)
 
--- | Constructor for a lift pair
-makeLiftPair :: (b -> Maybe a) -> (a -> b -> b) -> LiftPair a b
-makeLiftPair = LiftPair
-
--- | A type class for functors that can be lifted with a lift pair
-class Lift f where
-   lift :: LiftPair a b -> f a -> f b
-
-instance Lift Transformation where
-   lift = Lift
-   
-instance Lift Rule where
-   lift lp r = r 
-      { transformations = map (lift lp) (transformations r)
-      , doBeforeHook    = liftFunction lp (doBeforeHook r)
-      , doAfterHook     = liftFunction lp (doAfterHook r)
-      }
-
-liftFunction :: LiftPair a b -> (a -> a) -> b -> b
-liftFunction lp f a =
-   case liftPairGet lp a of 
-      Just b  -> liftPairSet lp (f b) a
-      Nothing -> a
--}
 -- | Lift a rule using the Once type class
 ruleOnce :: Once f => Rule a -> Rule (f a)
 ruleOnce r = makeSimpleRuleList (name r) $ onceM $ applyAll r
@@ -503,10 +443,6 @@ smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =
    case trans of
       RewriteRule r -> return (smartGenerator r)
-{-      Lift lp t -> do 
-         b   <- liftPairGet lp a
-         gen <- smartGenTrans b t
-         return $ liftM (\c -> liftPairSet lp c a) gen -}
       LiftView v t -> do
          (b, c) <- match v a
          gen    <- smartGenTrans b t

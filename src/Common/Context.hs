@@ -27,7 +27,7 @@ module Common.Context
      -- * Lifting
    , liftToContext, ignoreContext, liftTransContext
      -- * Context Monad
-   , ContextMonad, runCM, readV, writeV, modifyV
+   , ContextMonad, runCM, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
    ) where
 
@@ -173,12 +173,12 @@ instance Read Location where
 
 -- | Returns the current location of a context
 location :: Context a -> Location
-location = fromMaybe emptyLocation . evalCM (const (readV locationVar))
+location = fromMaybe emptyLocation . evalCM (const (readVar locationVar))
 
 -- | Replaces the current location of a context
 setLocation :: Location -> Context a -> Context a 
 setLocation loc c = fromMaybe c $ withCM f c
- where f a = writeV locationVar loc >> return a
+ where f a = writeVar locationVar loc >> return a
 
 -- | Updates the current location of a context
 changeLocation :: (Location -> Location) -> Context a -> Context a
@@ -266,8 +266,8 @@ instance MonadPlus ContextMonad where
    mzero = CM (const mzero)
    mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
 
-readV :: Typeable a => Var a -> ContextMonad a
-readV var = CM $ \env -> return $
+readVar :: Typeable a => Var a -> ContextMonad a
+readVar var = CM $ \env -> return $
    let name = varName var
        txt  = fromMaybe "" $ lookupEnv name env
    in case (lookupEnv name env, varRead var txt) of
@@ -275,13 +275,13 @@ readV var = CM $ \env -> return $
          (_, Just a) -> (a, storeEnvWith (varShow var) name a env)
          _           -> (varInitial var, env)
 
-writeV  :: Typeable a => Var a -> a -> ContextMonad ()
-writeV var a = 
+writeVar  :: Typeable a => Var a -> a -> ContextMonad ()
+writeVar var a = 
    let f = storeEnvWith (varShow var) (varName var) a
    in CM $ \env -> return ((), f env)
 
-modifyV :: Typeable a => Var a -> (a -> a) -> ContextMonad ()
-modifyV var f = readV var >>= (writeV var  . f)
+modifyVar :: Typeable a => Var a -> (a -> a) -> ContextMonad ()
+modifyVar var f = readVar var >>= (writeVar var  . f)
 
 maybeCM :: Maybe a -> ContextMonad a
 maybeCM = maybe mzero return

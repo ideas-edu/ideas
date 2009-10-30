@@ -31,34 +31,34 @@ ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
 ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ withCM $ \m -> do
    cols <- liftM columns (subMatrix m)
    i    <- findIndexM nonZero cols
-   writeV columnJ i
+   writeVar columnJ i
    return m
    
 ruleExchangeNonZero :: (Simplify a, Num a) => Rule (Context (Matrix a))
 ruleExchangeNonZero = simplify $ ruleExchangeRows $ evalCM $ \m -> do
    nonEmpty m
-   j   <- readV columnJ
+   j   <- readVar columnJ
    col <- liftM (column j) (subMatrix m)
    i   <- findIndexM (/= 0) col
-   cov <- readV covered
+   cov <- readVar covered
    return (cov, i + cov)
 
 ruleScaleToOne :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleScaleToOne = simplify $ ruleScaleRow $ evalCM $ \m -> do
    nonEmpty m
-   j   <- readV columnJ
+   j   <- readVar columnJ
    pv  <- liftM (entry (0, j)) (subMatrix m)
    guard (pv /= 0)
-   cov <- readV covered
+   cov <- readVar covered
    return (cov, 1 / pv)
 
 ruleZerosFP :: (Argument a, Simplify a, Fractional a) => Rule (Context (Matrix a))
 ruleZerosFP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    nonEmpty m
-   j   <- readV columnJ
+   j   <- readVar columnJ
    col <- liftM (drop 1 . column j) (subMatrix m)
    i   <- findIndexM (/= 0) col
-   cov <- readV covered
+   cov <- readVar covered
    let v = negate (col!!i)
    return (i + cov + 1, cov, v)
    
@@ -71,7 +71,7 @@ ruleZerosBP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    guard (any (/= 0) ri)
    k <- findIndexM (/= 0) col
    let v = negate (col!!k)
-   cov <- readV covered
+   cov <- readVar covered
    return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
@@ -115,9 +115,9 @@ rowAdd i j k = matrixTrans "rowAdd" $ \m -> do
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
 changeCover f = makeTrans "changeCover" $ withCM $ \m -> do
-   new <- liftM f (readV covered)
+   new <- liftM f (readVar covered)
    guard (new >= 0 && new <= fst (dimensions m))
-   writeV covered new
+   writeVar covered new
    return m
    
 matrixTrans ::  String -> (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
@@ -138,7 +138,7 @@ columnJ = newVar "columnJ" 0
 
 subMatrix :: Matrix a -> ContextMonad (Matrix a)
 subMatrix m = do 
-   cov <- readV covered
+   cov <- readVar covered
    return $ makeMatrix $ drop cov $ rows $ m
    
 findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int

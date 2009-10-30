@@ -17,7 +17,7 @@ import Control.Monad
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (fail)
-import Common.Utils (splitAtElem)
+import Common.Utils (splitAtElem, splitsWithElem)
 import Text.OpenMath.Object
 import Data.Char
 import Data.Maybe
@@ -83,3 +83,13 @@ extractExpr n xml =
             [this] -> xml2omobj this
             _ -> fail $ "error in " ++ show (n, xml)
       _ -> fail $ "error in " ++ show (n, xml)
+
+-- Legacy code: remove!
+parseContext :: String -> Maybe (Context ())
+parseContext s
+   | all isSpace s = 
+        return $ makeContext emptyEnv ()
+   | otherwise = do
+        pairs <- mapM (splitAtElem '=') (splitsWithElem ',' s)
+        let env = foldr (uncurry storeEnv) emptyEnv pairs
+        return $ makeContext env ()

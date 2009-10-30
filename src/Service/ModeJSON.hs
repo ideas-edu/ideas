@@ -72,6 +72,8 @@ jsonRequest json = do
 
 myHandler :: JSON_RPC_Handler
 myHandler fun arg 
+--   | fun == "ping" =
+--        return (String "ok")
    | code == noCode && fun /= "exerciselist" =
         fail "invalid exercise code"
    | otherwise = 
@@ -159,32 +161,32 @@ encodeState f st = do
       [ String (show (exerciseCode (TAS.exercise st)))
       , String (maybe "NoPrefix" show (TAS.prefix st))
       , theTerm
-      , encodeContext (TAS.context st)
+      , encodeContext (getEnvironment (TAS.context st))
       ]
 
-encodeContext :: Context a -> JSON
-encodeContext = Object . map f . contextPairs
+encodeContext :: Environment -> JSON
+encodeContext env = Object (map f (keysEnv env))
  where
-   f (k, (_, s)) = (k, String s)
+   f k = (k, String $ fromMaybe "" $ lookupEnv k env)
 
 decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (TAS.State a)
 decodeState ex f (Array [a]) = decodeState ex f a
 decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
    a    <- f ce 
-   ctx  <- decodeContext jsonContext
+   env  <- decodeContext jsonContext
    return TAS.State 
       { TAS.exercise = ex
       , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
-      , TAS.context  = fmap (const a) ctx
+      , TAS.context  = makeContext env a
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
 
-decodeContext :: Monad m => JSON -> m (Context ())
+decodeContext :: Monad m => JSON -> m Environment
 decodeContext (String "") = decodeContext (Object []) -- Being backwards compatible (for now)
-decodeContext (Object xs) = liftM makeContext (mapM f xs)
+decodeContext (Object xs) = foldM add emptyEnv xs
  where 
-   f (k, String s) = return (k, (Nothing, s))       
-   f _ = fail "invalid item in context"
+   add env (k, String s) = return (storeEnv k s env)       
+   add _ _ = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
 
 readPrefix :: String -> Maybe [Int]

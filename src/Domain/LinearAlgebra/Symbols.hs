@@ -16,6 +16,7 @@ module Domain.LinearAlgebra.Symbols
 
 import Domain.Math.Expr.Conversion
 import Domain.Math.Expr.Symbolic
+import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Control.Monad
@@ -48,3 +49,15 @@ instance IsExpr a => IsExpr (VectorSpace a) where
       xs <- fromExpr expr
       guard (sameDimension xs)
       return (makeVectorSpace xs)
+      
+-------------------------------------------------------
+-- Simplification
+
+instance Simplify a => Simplify (Matrix a) where
+   simplify = fmap simplify
+
+instance Simplify a => Simplify (Vector a) where
+   simplify = fmap simplify
+   
+instance Simplify a => Simplify (VectorSpace a) where
+   simplify = fmap simplify

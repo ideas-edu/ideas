@@ -37,7 +37,7 @@ equationsRules =
 
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
 ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $ 
-   supplyLabeled2 descr args (\x y -> liftSystemTrans $ exchange x y)
+   supplyLabeled2 descr args (\x y -> liftTransContext $ exchange x y)
  where
    descr = ("equation 1", "equation 2")
    args  = evalCM $ \ls -> do
@@ -49,7 +49,7 @@ ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
 ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $ 
-   supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
+   supplyLabeled3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do 
@@ -77,7 +77,7 @@ ruleInconsistentSystem = simplifySystem $ makeSimpleRule "Inconsistent system (0
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
 ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $ 
-   supplyLabeled2 descr args (\x y -> liftSystemTrans $ scaleEquation x y)
+   supplyLabeled2 descr args (\x y -> liftTransContext $ scaleEquation x y)
  where
    descr = ("equation", "scale factor")
    args  = evalCM $ \ls -> do 
@@ -91,7 +91,7 @@ ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $
    
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
 ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $ 
-   supplyLabeled3 descr args (\x y z -> liftSystemTrans $ addEquations x y z)
+   supplyLabeled3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
    args  = evalCM $ \ls -> do 
@@ -191,9 +191,6 @@ minvar ls = do
    list <- liftM getVarsSystem (remaining ls)
    guard (not $ null list)
    return (minimum list)
-
-liftSystemTrans :: Transformation (LinearSystem a) -> Transformation (Context (LinearSystem a))
-liftSystemTrans = lift $ makeLiftPair (return . fromContext) (fmap . const)
 
 systemInNF :: (Arbitrary a, IsLinear a) => Gen (LinearSystem a)
 systemInNF = do

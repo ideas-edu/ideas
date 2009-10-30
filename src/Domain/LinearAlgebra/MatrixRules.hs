@@ -13,13 +13,11 @@ module Domain.LinearAlgebra.MatrixRules where
 
 import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
+import Domain.LinearAlgebra.Symbols ()
 import Common.Context
 import Common.Transformation
 import Control.Monad
 import Data.List
-
-instance Simplify a => Simplify (Matrix a) where
-   simplify = fmap simplify
 
 matrixRules :: (Argument a, Fractional a) => [Rule (Context (Matrix a))]
 matrixRules = 

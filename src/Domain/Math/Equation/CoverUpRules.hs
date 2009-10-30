@@ -56,9 +56,9 @@ coverUpBinary2Rule opName fm fb cfg =
 coverUpBinaryRule :: String -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
                   -> ConfigCoverUp -> Rule (Equation Expr)
 coverUpBinaryRule opName fm fb =
-   let lp = makeLiftPair (return . Identity) (const . runIdentity) 
+   let v = makeView (return . Identity) runIdentity
        fbi x y = [Identity (fb x y)]
-   in lift lp . coverUpBinary2Rule opName fm fbi
+   in liftRule v . coverUpBinary2Rule opName fm fbi
       
 coverUpUnaryRule :: String -> (Expr -> [Expr]) -> (Expr -> Expr) 
                -> ConfigCoverUp -> Rule (Equation Expr)

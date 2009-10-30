@@ -41,7 +41,7 @@ problemDecomposition st@(State ex mpr requestedTerm) sloc answer
                        { repOk_Code     = ex
                        , repOk_Location = nextTask sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
-                                          showContext (fst $ head witnesses)
+                                          show (getEnvironment $ fst $ head witnesses)
                        , repOk_Steps    = stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
                        }
                   where 

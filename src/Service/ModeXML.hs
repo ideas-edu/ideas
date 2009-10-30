@@ -20,7 +20,6 @@ import Common.Transformation hiding (name, defaultArgument)
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Char
-import Data.Dynamic
 import Data.Maybe
 import Service.ExerciseList
 import Service.ProblemDecomposition
@@ -35,7 +34,6 @@ import Text.OpenMath.Request (xmlToRequest)
 import Text.XML
 import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp
-
 
 processXML :: String -> IO (Request, String, String)
 processXML input = 
@@ -69,6 +67,8 @@ xmlReply request xml
         Some pkg <- getPackage code
         (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
+--   | service request == "ping" = do
+--        return (resultOk (return ()))
    | otherwise =
    case encoding request of
       Just StringEncoding -> do 
@@ -202,16 +202,17 @@ decodeState ex f top = do
    unless (name xml == "state") (fail "expected a state tag")
    let sp = maybe "[]" getData (findChild "prefix" xml)
    expr <- f xml
-   contxt <- case findChild "context" xml of 
-                Just this -> decodeContext this
-                Nothing   -> return $ inContext () -- context is optional
+   env  <- case findChild "context" xml of 
+              Just this -> decodeContext this
+              Nothing   -> return emptyEnv
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
-       term   = fmap (const expr) contxt
+       term   = makeContext env expr
    return (state, top)
 
-decodeContext :: Monad m => XML -> m (Context ())
-decodeContext xml = liftM makeContext $ do 
-   forM (children xml) $ \item -> do
+decodeContext :: Monad m => XML -> m Environment
+decodeContext = foldM add emptyEnv . children
+ where
+   add env item = do 
       unless (name item == "item") $ 
          fail $ "expecting item tag, found " ++ name item
       name  <- findAttribute "name"  item
@@ -221,24 +222,25 @@ decodeContext xml = liftM makeContext $ do
             case xml2omobj this of
                Left err -> fail err
                Right omobj -> 
-                  return (name, (Just (toDyn omobj), show omobj))
+                  return (storeEnv name omobj env)
          -- Simple value in attribute
          Nothing -> do
             value <- findAttribute "value" item
-            return (name, (Nothing, value))
+            return (storeEnv name value env)
 
 encodeState :: Monad m => (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState f state = f (term state) >>= \body -> return $
    element "state" $ do
       element "prefix"  (text $ maybe "[]" show (prefix state))
-      encodeContext (context state)
+      encodeContext (getEnvironment (context state))
       body
 
-encodeContext :: Context a -> XMLBuilder
-encodeContext ctx = element "context" $ do
-   forM_ (contextPairs ctx) $ \(k, (mdyn, v)) -> do
+encodeContext :: Environment -> XMLBuilder
+encodeContext env = element "context" $ do
+   forM_ (keysEnv env) $ \k -> do
       element "item" $ do 
          "name"  .=. k
-         case mdyn >>= fromDynamic of 
-            Nothing    -> "value" .=. v
+         case lookupEnv k env of 
             Just omobj -> builder  (omobj2xml omobj)
+            Nothing    -> "value" .=. fromMaybe "" (lookupEnv k env)
+            

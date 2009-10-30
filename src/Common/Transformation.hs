@@ -18,7 +18,7 @@
 module Common.Transformation 
    ( -- * Transformations
      Transformation(RewriteRule), makeTrans, makeTransList
-   , inverseTrans, getPatternPair
+   , getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
@@ -31,24 +31,25 @@ module Common.Transformation
    , idRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
    , transformations, getRewriteRules
      -- * Lifting
-   , LiftPair, liftPairGet, liftPairSet, liftPairChange, makeLiftPair, Lift(..)
+  -- , LiftPair, liftPairGet, liftPairSet, liftPairChange, Lift(..), makeLiftPair
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
+   , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , checkRule, checkRuleSmart
    ) where
 
 import Common.Apply
-import Common.Rewriting
+import Common.Rewriting hiding (match, matchM)
 import Common.Traversable
 import Common.Uniplate (Uniplate, somewhereM)
 import Common.Utils
+import Common.View
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck hiding (arguments)
-
 
 -----------------------------------------------------------
 --- Transformations
@@ -58,13 +59,15 @@ data Transformation a
    = Function String (a -> [a])
    | RewriteRule (RewriteRule a)
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
-   | forall b . Lift (LiftPair b a) (Transformation b)
+--   | forall b . Lift (LiftPair b a) (Transformation b)
+   | forall b c . LiftView (View a (b, c)) (Transformation b)
    
 instance Apply Transformation where
    applyAll (Function _ f)      = f
    applyAll (RewriteRule r)     = rewriteM r
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
-   applyAll (Lift lp t )        = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
+--   applyAll (Lift lp t )        = \b -> maybe [] (map (\new -> liftPairSet lp new b) . applyAll t) (liftPairGet lp b)
+   applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
 makeTrans :: String -> (a -> Maybe a) -> Transformation a
@@ -74,22 +77,17 @@ makeTrans s f = makeTransList s (maybe [] return . f)
 makeTransList :: String -> (a -> [a]) -> Transformation a
 makeTransList = Function
 
--- | Return the inverse of a transformation. Only transformation that are constructed with (|-) 
--- can be inversed
-inverseTrans :: Transformation a -> Maybe (Transformation a)
-inverseTrans trans = 
-   case trans of
-      RewriteRule r -> fmap RewriteRule (inverse r)
-      Lift lp t     -> fmap (Lift lp) (inverseTrans t)
-      _ -> Nothing
-
 getPatternPair :: a -> Transformation a -> Maybe (a, a)
 getPatternPair _ (RewriteRule r) = let a :~> b = rulePair r 0 in Just (a, b)
-getPatternPair a (Lift lp t) = do
+{- getPatternPair a (Lift lp t) = do
    let f t = liftPairSet lp t a
    b      <- liftPairGet lp a
    (x, y) <- getPatternPair b t
-   return (f x, f y)
+   return (f x, f y) -}
+getPatternPair a (LiftView v t) = do
+   (b, c) <- match v a
+   (x, y) <- getPatternPair b t
+   return (build v (x, c), build v (y, c))
 getPatternPair _ _ = Nothing
 
 -----------------------------------------------------------
@@ -183,7 +181,12 @@ getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
       [Abstraction args _ _] -> someArguments args
-      [Lift _ t] -> getDescriptors $ rule 
+{-      [Lift _ t] -> getDescriptors $ rule 
+         { transformations = [t]
+         , doBeforeHook    = id
+         , doAfterHook     = id
+         } -}
+      [LiftView _ t] -> getDescriptors $ rule 
          { transformations = [t]
          , doBeforeHook    = id
          , doAfterHook     = id
@@ -196,8 +199,15 @@ expectedArguments rule a =
    case transformations rule of
       [Abstraction args f _] -> 
          fmap (showArguments args) (f a)
-      [Lift lp t] -> do 
+{-      [Lift lp t] -> do 
          b <- liftPairGet lp a
+         expectedArguments rule 
+            { transformations = [t]
+            , doBeforeHook    = id
+            , doAfterHook     = id
+            } b -}
+      [LiftView v t] -> do 
+         (b, _) <- match v a
          expectedArguments rule 
             { transformations = [t]
             , doBeforeHook    = id
@@ -218,7 +228,8 @@ useArguments list rule =
    make trans = 
       case trans of
          Abstraction args _ g -> fmap g (parseArguments args list)
-         Lift lp t            -> fmap (Lift lp) (make t)     
+--         Lift lp t            -> fmap (Lift lp) (make t)     
+         LiftView v t         -> fmap (LiftView v) (make t)
          _                    -> Nothing
    
 -----------------------------------------------------------
@@ -308,7 +319,8 @@ isRewriteRule = all p . transformations
  where
    p :: Transformation a -> Bool
    p (RewriteRule _) = True
-   p (Lift _ t)      = p t
+--   p (Lift _ t)      = p t
+   p (LiftView _ t)  = p t
    p _               = False
 
 addRuleToGroup :: String -> Rule a -> Rule a
@@ -370,12 +382,13 @@ getRewriteRules r = concatMap f (transformations r)
    f trans =
       case trans of
          RewriteRule rr -> [(Some rr, not $ isBuggyRule r)]      
-         Lift _ t       -> f t
+--         Lift _ t       -> f t
+         LiftView _ t   -> f t
          _              -> []
 
 -----------------------------------------------------------
 --- Lifting
-
+{-
 -- | A lift pair consists of two functions: the first to access a value in a context (this can fail,
 -- hence the Maybe), the second to update the value in its context
 data LiftPair a b = LiftPair 
@@ -412,7 +425,7 @@ liftFunction lp f a =
    case liftPairGet lp a of 
       Just b  -> liftPairSet lp (f b) a
       Nothing -> a
-
+-}
 -- | Lift a rule using the Once type class
 ruleOnce :: Once f => Rule a -> Rule (f a)
 ruleOnce r = makeSimpleRuleList (name r) $ onceM $ applyAll r
@@ -441,6 +454,24 @@ multi f a =
 ruleSomewhere :: Uniplate a => Rule a -> Rule a
 ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
 
+liftTrans :: View a b -> Transformation b -> Transformation a
+liftTrans v = liftTransIn (v &&& identity) 
+
+liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
+liftTransIn = LiftView
+
+liftRule :: View a b -> Rule b -> Rule a
+liftRule v = liftRuleIn (v &&& identity) 
+
+liftRuleIn :: View a (b, c) -> Rule b -> Rule a
+liftRuleIn v r = r
+   { transformations = map (liftTransIn v) (transformations r)
+   , doBeforeHook    = liftFun (doBeforeHook r)
+   , doAfterHook     = liftFun (doAfterHook r)
+   }
+ where
+   liftFun f = simplifyWith (first f) v
+      
 -----------------------------------------------------------
 --- QuickCheck
 
@@ -472,10 +503,14 @@ smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
 smartGenTrans a trans =
    case trans of
       RewriteRule r -> return (smartGenerator r)
-      Lift lp t -> do 
+{-      Lift lp t -> do 
          b   <- liftPairGet lp a
          gen <- smartGenTrans b t
-         return $ liftM (\c -> liftPairSet lp c a) gen
+         return $ liftM (\c -> liftPairSet lp c a) gen -}
+      LiftView v t -> do
+         (b, c) <- match v a
+         gen    <- smartGenTrans b t
+         return $ liftM (\n -> build v (n, c)) gen
       _ -> Nothing
 
 smartApplyRule :: Rule a -> a -> Gen (Maybe a)

@@ -11,22 +11,23 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Exercises where
 
+import Common.Context
+import Common.Exercise
+import Common.Rewriting
+import Common.Strategy
+import Common.View
+import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
+import Domain.Math.Equation.Views
+import Domain.Math.Examples.DWO1
+import Domain.Math.Examples.DWO2
+import Domain.Math.Expr
+import Domain.Math.Expr.Parser
+import Domain.Math.Polynomial.BuggyRules
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Polynomial.BuggyRules
-import Common.Exercise
-import Common.Rewriting
-import Domain.Math.Data.Relation
-import Domain.Math.Equation.Views
-import Domain.Math.Expr
-import Domain.Math.Data.OrList
-import Domain.Math.Examples.DWO1
-import Domain.Math.Examples.DWO2
-import Domain.Math.Expr.Parser
-import Common.View
-import Common.Context
 
 ------------------------------------------------------------
 -- Exercises
@@ -41,7 +42,7 @@ linearExercise = makeExercise
    , equivalence  = viewEquivalent linearEquationView
    , isReady      = solvedEquation
    , extraRules   = linearRules
-   , strategy     = ignoreContext linearStrategy
+   , strategy     = mapRules ignoreContext linearStrategy
    , examples     = concat linearEquations
    }
 
@@ -55,7 +56,7 @@ quadraticExercise = makeExercise
    , equivalence  = viewEquivalent quadraticEquationsView
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext $ quadraticRules ++ abcBuggyRules
-   , strategy     = ignoreContext (quadraticStrategy True)
+   , strategy     = mapRules ignoreContext (quadraticStrategy True)
    , examples     = map (orList . return) (concat quadraticEquations)
    }
    
@@ -69,7 +70,7 @@ higherDegreeExercise = makeExercise
    , equivalence  = viewEquivalent higherDegreeEquationsView
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext higherDegreeRules
-   , strategy     = ignoreContext higherDegreeStrategy
+   , strategy     = mapRules ignoreContext higherDegreeStrategy
    , examples     = map (orList . return) (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
@@ -77,7 +78,7 @@ quadraticNoABCExercise :: Exercise (OrList (Equation Expr))
 quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
-   , strategy     = ignoreContext (quadraticStrategy False) 
+   , strategy     = mapRules ignoreContext (quadraticStrategy False) 
    }
    
 --------------------------------------------

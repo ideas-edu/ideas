@@ -84,23 +84,31 @@ gaussianElimExercise = testableExercise
    , randomExercise = simpleGenerator arbMatrix
    }
  
-systemWithMatrixExercise :: Exercise (Either (LinearSystem Expr) (Matrix Expr))
+systemWithMatrixExercise :: Exercise Expr
 systemWithMatrixExercise = testableExercise
    { description    = "Solve Linear System with Matrix"
    , exerciseCode   = makeCode "linalg" "systemwithmatrix"
    , status         = Provisional
    , parser         = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
-                               (Right ok, _) -> Right $ Left  ok
-                               (_, Right ok) -> Right $ Right ok
-                               (Left _, Left _) -> Left $ ErrorMessage "Syntax error" -- FIX THIS
-   , prettyPrinter  = either (unlines . map show) ppMatrix
-   , equivalence    = \x y -> let f = either id matrixToSystem
-                              in equivalence linearSystemExercise (f x) (f y)
-   , extraRules     = map liftRuleContextLeft equationsRules ++ map liftRuleContextRight matrixRules
-   , isReady        = either inSolvedForm (const False)
+                               (Right ok, _) -> Right $ toExpr ok
+                               (_, Right ok) -> Right $ toExpr ok
+                               (Left _, Left _) -> Left $ ErrorMessage "Syntax error"
+   , prettyPrinter  = \expr -> case (fromExpr expr, fromExpr expr) of
+                                  (Just ls, _) -> (unlines . map show) (ls :: Equations Expr)
+                                  (_, Just m)  -> ppMatrix (m :: Matrix Expr)
+                                  _            -> show expr
+   , equivalence    = \x y -> let f expr = case (fromExpr expr, fromExpr expr) of
+                                              (Just ls, _) -> Just (ls :: Equations Expr)
+                                              (_, Just m)  -> Just $ matrixToSystem (m :: Matrix Expr)
+                                              _            -> Nothing
+                              in case (f x, f y) of
+                                    (Just a, Just b) -> equivalence linearSystemExercise a b
+                                    _ -> False
+   , extraRules     = map liftExpr equationsRules ++ map liftExpr (matrixRules :: [Rule (Context (Matrix Expr))])
+   , isReady        = inSolvedForm . (fromExpr :: Expr -> Equations Expr)
    , strategy       = systemWithMatrixStrategy
-   , randomExercise = simpleGenerator (fmap (Left . matrixToSystem) arbMatrix)
-   , testGenerator  = fmap (liftM Left) (testGenerator linearSystemExercise)
+   , randomExercise = simpleGenerator (fmap (toExpr . matrixToSystem) (arbMatrix :: Gen (Matrix Expr)))
+   , testGenerator  = fmap (liftM toExpr) (testGenerator linearSystemExercise)
    }
  
 --------------------------------------------------------------
@@ -120,12 +128,6 @@ instance Arbitrary a => Arbitrary (VectorSpace a) where
 
 arbMatrix :: Num a => Gen (Matrix a)
 arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
-
-liftRuleContextLeft :: Rule (Context a) -> Rule (Context (Either a b))
-liftRuleContextLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
-
-liftRuleContextRight :: Rule (Context b) -> Rule (Context (Either a b))
-liftRuleContextRight = lift $ makeLiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
 
 instance Arbitrary a => Arbitrary (Matrix a) where
    arbitrary = do

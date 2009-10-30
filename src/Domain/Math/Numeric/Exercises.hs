@@ -33,7 +33,7 @@ numericExercise s = makeExercise
    { status        = Provisional
    , parser        = parseExpr
    , equivalence   = viewEquivalent rationalView
-   , strategy      = liftToContext s
+   , strategy      = mapRules liftToContext s
    }
 
 naturalExercise :: Exercise Expr

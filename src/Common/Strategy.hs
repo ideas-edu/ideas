@@ -93,13 +93,6 @@ instance IsStrategy Strategy where
 instance IsStrategy (LabeledStrategy) where
   toStrategy = S . RE.symbol . Right
 
--- instances for Lift
-instance Lift Strategy where
-   lift lp (S re) = S (fmap (either (Left . lift lp) (Right . lift lp)) re)
-   
-instance Lift (LabeledStrategy) where
-   lift lp (LS n s) = LS n (lift lp s)
-
 -----------------------------------------------------------
 --- Running strategies
 

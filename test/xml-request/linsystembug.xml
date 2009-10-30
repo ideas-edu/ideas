@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="linalg.linsystem" encoding="string">
+	<state>
+	<expr>
+		 3*y + 1 + x == 2
+		 2*x == 5
+	</expr></state>
+</request>

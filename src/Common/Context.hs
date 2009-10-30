@@ -1,4 +1,4 @@
-{-# OPTIONS -XDeriveDataTypeable -XTypeSynonymInstances -XMultiParamTypeClasses #-}
+{-# OPTIONS -XDeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -9,32 +9,33 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A context for a term that maintains a current focus and an environment of
+-- A context for a term that maintains an environment of
 -- key-value pairs. A context is both showable and parsable.
 --
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, inContext, fromContext, showContext, parseContext
-   , makeContext, contextPairs -- new
-     -- * Variable environment
+     Context, inContext, fromContext, makeContext, getEnvironment
+     -- * Key-value pair environment (abstract)
+   , Environment, emptyEnv, keysEnv, lookupEnv, storeEnv
+     -- * Variables
    , Var, newVar, makeVar
---   , newIntVar, newIntegerVar, newBoolVar, newListVar 
---   , readVar, writeVar, modifyVar
---   , readV, writeV, modifyV
      -- * Location (current focus)
    , Location, location, setLocation, changeLocation
    , currentFocus, changeFocus, locationDown, locationUp
    , makeLocation, fromLocation
      -- * Lifting
-   , liftToContext, ignoreContext
-   , ContextMonad, runContextMonad, readV, writeV, modifyV
-   , maybeCM, withCM, evalCM
+   , liftToContext, ignoreContext, liftTransContext
+     -- * Context Monad
+   , ContextMonad, runCM, readV, writeV, modifyV
+   , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
    ) where
 
 import Common.Transformation
+import Common.Traversable
 import Common.Uniplate
-import Common.Utils
+import Common.Utils (safeHead)
+import Common.View
 import Control.Monad
 import Data.Char
 import Data.Maybe
@@ -46,9 +47,12 @@ import qualified Data.Map as M
 ----------------------------------------------------------
 -- Abstract data type
 
--- | Abstract data type for a context: a context stores an envrionent (key-value pairs) and
--- a current focus (list of integers)
-data Context a = C Env a
+-- | Abstract data type for a context: a context stores an envrionent 
+-- (key-value pairs) and a value
+data Context a = C 
+   { getEnvironment :: Environment -- ^ Returns the environment
+   , fromContext    :: a           -- ^ Retrieve a value from its context
+   } 
 
 instance Eq a => Eq (Context a) where
    x == y = fromContext x == fromContext y
@@ -57,65 +61,77 @@ instance Ord a => Ord (Context a) where
    x `compare` y = fromContext x `compare` fromContext y
 
 instance Show a => Show (Context a) where
-   show c = showContext c ++ ";" ++ show (fromContext c)
+   show (C env a) = 
+      let rest | null (keysEnv env) = "" 
+               | otherwise = "  {" ++ show env ++ "}"
+      in show a ++ rest 
 
 instance Functor Context where
    fmap f (C env a) = C env (f a)
+
+instance Switch Context where
+   switch (C env ma) = liftM (C env) ma
+   
+instance Once Context where
+   onceM f (C env a) = switch (C env (f a))
 
 instance Arbitrary a => Arbitrary (Context a) where
    arbitrary   = liftM inContext arbitrary
    coarbitrary = coarbitrary . fromContext
 
+-- | Construct a context
+makeContext :: Environment -> a -> Context a
+makeContext = C
+
 -- | Put a value into a (default) context
 inContext :: a -> Context a
-inContext = C M.empty
-
--- | Retrieve a value from its context
-fromContext :: Context a -> a
-fromContext (C _ a) = a
-
-getEnvironment :: Context a -> Env
-getEnvironment (C env _) = env
-
-setEnvironment :: Env -> Context ()
-setEnvironment env = C env ()
+inContext = makeContext emptyEnv
 
 ----------------------------------------------------------
--- A simple parser and pretty-printer for contexts
+-- Key-value pair environment (abstract)
 
--- | Shows the context (without the embedded value)
-showContext :: Context a -> String
-showContext = showEnv . getEnvironment
+newtype Environment = Env { envMap :: M.Map String (Maybe Dynamic, String) }
 
--- local helper function
-showEnv :: Env -> String
-showEnv = concat . intersperse "," . map f . M.toList
- where f (k, (_, v)) = k ++ "=" ++ v
+instance Show Environment where
+   show = 
+      let f (k, (_, v)) = k ++ "=" ++ v
+      in concat . intersperse "," . map f . M.toList . envMap
 
--- | Parses a context: on a successful parse, the unit value is returned 
--- in the parsed context
-parseContext :: String -> Maybe (Context ())
-parseContext s
-   | all isSpace s = 
-        return $ setEnvironment M.empty
-   | otherwise = do
-        pairs <- mapM (splitAtElem '=') (splitsWithElem ',' s)
-        let f (k, v) = (trim k, (Nothing, v))
-        return $ setEnvironment (M.fromList $ map f pairs)
-        
-makeContext :: [(String, (Maybe Dynamic, String))] -> Context ()
-makeContext = setEnvironment . M.fromList
+emptyEnv :: Environment
+emptyEnv = Env M.empty
 
-contextPairs :: Context a -> [(String, (Maybe Dynamic, String))]
-contextPairs = M.toList . getEnvironment
+keysEnv :: Environment -> [String]
+keysEnv = M.keys . envMap
+
+lookupEnv :: Typeable a => String -> Environment -> Maybe a
+lookupEnv s (Env m) = result
+ where
+   result -- Special case for result type String
+    | typeOf result == typeOf (Just "") = do
+         (_, txt) <- M.lookup s m
+         cast txt
+    | otherwise = do
+         (md, _) <- M.lookup s m
+         d <- md
+         fromDynamic d
+
+storeEnv :: (Typeable a, Show a) => String -> a -> Environment -> Environment
+storeEnv = storeEnvWith show
+
+-- Generalized helper-function
+storeEnvWith :: Typeable a => (a -> String) -> String -> a -> Environment -> Environment
+storeEnvWith f s a (Env m) = Env (M.insert s pair m) 
+ where -- Special case for type String
+   pair = 
+      case cast a of 
+         Just txt -> (Nothing, txt)
+         Nothing  -> (Just (toDyn a), f a)
 
 ----------------------------------------------------------
--- Manipulating the variable environment
+-- Variables
 
--- local type synonym: can probably be simplified
-type Env = M.Map String (Maybe Dynamic, String)
-
--- | A variable has a name (for showing) and a default value (for initializing)
+-- | A variable has a name and a default value (for initializing). Each
+-- stored value must be readable and showable.
 data Var a = V 
    { varName    :: String
    , varInitial :: a
@@ -123,47 +139,28 @@ data Var a = V
    , varRead    :: String -> Maybe a
    }
 
-makeVar :: (a -> String) -> (String -> Maybe a) -> String -> a -> Var a
-makeVar showF readF s a = V s a showF readF
-
+-- | Simple constructor function for creating a variable. Uses the 
+-- Show and Read type classes
 newVar :: (Show a, Read a) => String -> a -> Var a
 newVar = makeVar show defaultRead
 
+-- | Extended constructor function for creating a variable. The show
+-- and read functions are supplied explicitly.
+makeVar :: (a -> String) -> (String -> Maybe a) -> String -> a -> Var a
+makeVar showF readF s a = V s a showF readF
+
+-- local helper
 defaultRead :: Read a => String -> Maybe a
 defaultRead s = 
    case reads s of
       [(b, rest)] | all isSpace rest -> Just b
-      _ -> Nothing      
-
--- | Returns the value of a variable stored in a context
-readVar :: Typeable a => Var a -> Context b -> a
-readVar var c = 
-   -- if something goes wrong, return the initial value
-   fromMaybe (varInitial var) $ do
-   pair <- M.lookup (varName var) (getEnvironment c)
-   case pair of
-      (Just d, _) -> -- use the stored dynamic (default value as backup)
-         fromDynamic d
-      (Nothing, s) -> -- parse the pretty-printed value (default value as backup)
-         varRead var s
-
--- | Replaces the value of a variable stored in a context
-writeVar :: Typeable a => Var a -> a -> Context b -> Context b
-writeVar var a c = 
-   let oldEnv = getEnvironment c 
-       newEnv = M.insert (varName var) (Just (toDyn a), varShow var a) oldEnv
-       value  = fromContext c
-   in fmap (const value) (setEnvironment newEnv)
-
--- | Updates the value of a variable stored in a context
-modifyVar :: Typeable a => Var a -> (a -> a) -> Context b -> Context b
-modifyVar v f c = writeVar v (f (readVar v c)) c
+      _ -> Nothing
  
 ----------------------------------------------------------
 -- Location (current focus)
 
 locationVar :: Var Location
-locationVar = newVar "location" (makeLocation [])
+locationVar = newVar "location" emptyLocation
 
 -- | Type synonym for the current location (focus)
 newtype Location = L [Int] deriving (Eq, Ord, Typeable)
@@ -176,15 +173,16 @@ instance Read Location where
 
 -- | Returns the current location of a context
 location :: Context a -> Location
-location = readVar locationVar
+location = fromMaybe emptyLocation . evalCM (const (readV locationVar))
 
 -- | Replaces the current location of a context
 setLocation :: Location -> Context a -> Context a 
-setLocation = writeVar locationVar
+setLocation loc c = fromMaybe c $ withCM f c
+ where f a = writeV locationVar loc >> return a
 
 -- | Updates the current location of a context
 changeLocation :: (Location -> Location) -> Context a -> Context a
-changeLocation = modifyVar locationVar
+changeLocation f c = setLocation (f (location c)) c
 
 -- | Returns the term which has the current focus: Nothing indicates that the current 
 -- focus is invalid
@@ -212,31 +210,46 @@ makeLocation = L
 fromLocation :: Location -> [Int]
 fromLocation (L is) = is
 
+emptyLocation :: Location
+emptyLocation = makeLocation []
+
 ----------------------------------------------------------
 -- Lifting rewrite rules
 
 -- | Lift a rule to operate on a term in a context
-liftToContext :: (Lift f, Uniplate a) => f a -> f (Context a)
-liftToContext = lift $ makeLiftPair currentFocus (changeFocus . const)
+liftToContext :: Uniplate a => Rule a -> Rule (Context a)
+liftToContext = liftRuleIn (makeView f g)
+ where
+   f ctx = currentFocus ctx >>= \a -> Just (a, ctx)
+   g (a, ctx) = changeFocus (const a) ctx
 
 -- | Lift a rule to operate on a term in a context by ignoring the context
-ignoreContext :: Lift f => f a -> f (Context a)
-ignoreContext = lift $ makeLiftPair (return . fromContext) (fmap . const)
+ignoreContext :: Rule a -> Rule (Context a)
+ignoreContext = liftRuleIn ignoreContextView
+
+liftTransContext :: Transformation a -> Transformation (Context a)
+liftTransContext = liftTransIn ignoreContextView
+
+ignoreContextView :: View (Context a) (a, Environment)
+ignoreContextView = makeView f g
+ where 
+   f c      = Just (fromContext c, getEnvironment c) 
+   g (a, e) = makeContext e a
 
 ----------------------------------------------------------
--- New: Context monad
+-- Context monad
 
-newtype ContextMonad a = CM (Env -> Maybe (a, Env))
+newtype ContextMonad a = CM (Environment -> [(a, Environment)])
 
 withCM :: (a -> ContextMonad b) -> Context a -> Maybe (Context b)
-withCM f c = runContextMonad (f (fromContext c)) (getEnvironment c)
+withCM f c = runCM (f (fromContext c)) (getEnvironment c)
 
 evalCM :: (a -> ContextMonad b) -> Context a -> Maybe b
 evalCM f = fmap fromContext . withCM f
 
-runContextMonad :: ContextMonad a -> Env -> Maybe (Context a)
-runContextMonad (CM f) env = do
-   (a, e) <- f env
+runCM :: ContextMonad a -> Environment -> Maybe (Context a)
+runCM (CM f) env = do
+   (a, e) <- safeHead (f env)
    return (C e a)
 
 instance Functor ContextMonad where
@@ -253,23 +266,19 @@ instance MonadPlus ContextMonad where
    mzero = CM (const mzero)
    mplus (CM f) (CM g) = CM (\env -> f env `mplus` g env)
 
-readV   :: Typeable a => Var a -> ContextMonad a
-readV var = make $ \env -> 
-   case M.lookup (varName var) env of
-      Just (Just d, _) -> -- use the stored dynamic
-         fromDynamic d
-      Just (Nothing, s) -> -- parse the pretty-printed value (default value as backup)
-         varRead var s
-      _ -> Nothing
- where
-   make f = CM $ \env -> 
-      return (fromMaybe (varInitial var) (f env), env)
+readV :: Typeable a => Var a -> ContextMonad a
+readV var = CM $ \env -> return $
+   let name = varName var
+       txt  = fromMaybe "" $ lookupEnv name env
+   in case (lookupEnv name env, varRead var txt) of
+         (Just a, _) -> (a, env)
+         (_, Just a) -> (a, storeEnvWith (varShow var) name a env)
+         _           -> (varInitial var, env)
 
 writeV  :: Typeable a => Var a -> a -> ContextMonad ()
-writeV var a = CM $ \env -> return ((), f env)
- where 
-    pair = (Just (toDyn a), varShow var a)
-    f    = M.insert (varName var) pair
+writeV var a = 
+   let f = storeEnvWith (varShow var) (varName var) a
+   in CM $ \env -> return ((), f env)
 
 modifyV :: Typeable a => Var a -> (a -> a) -> ContextMonad ()
 modifyV var f = readV var >>= (writeV var  . f)
@@ -277,5 +286,15 @@ modifyV var f = readV var >>= (writeV var  . f)
 maybeCM :: Maybe a -> ContextMonad a
 maybeCM = maybe mzero return
 
---listCM :: [a] -> ContextMonad a
---listCM xs = CM (zip xs . repeat)
+
+{-
+listCM :: [a] -> ContextMonad a
+listCM = foldr (mplus . return) mzero
+
+withListCM :: (a -> ContextMonad b) -> Context a -> [Context b]
+withListCM f c = runListCM (f (fromContext c)) (getEnvironment c)
+
+runListCM :: ContextMonad a -> Environment -> [Context a]
+runListCM (CM f) env = do
+   (a, e) <- f env
+   return (C e a) -}

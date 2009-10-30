@@ -13,7 +13,7 @@ module Domain.LinearAlgebra.Strategies
    ( gaussianElimStrategy, linearSystemStrategy
    , gramSchmidtStrategy, systemWithMatrixStrategy
    , forwardPass
-   , isLeft, isRight, maybeInContext
+   , liftExpr
    ) where
 
 import Prelude hiding (repeat)
@@ -24,10 +24,13 @@ import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
+import Domain.LinearAlgebra.Symbols ()
 import Common.Apply
 import Common.Strategy hiding (not)
 import Common.Transformation
+import Common.Traversable
 import Common.Context
+import Common.View hiding (simplify)
 import Domain.LinearAlgebra.Vector
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
@@ -87,13 +90,13 @@ linearSystemStrategy :: LabeledStrategy (Context (LinearSystem Expr))
 linearSystemStrategy = label "General solution to a linear system" $
    systemToEchelonWithEEO <*> backSubstitution
 
-systemWithMatrixStrategy :: LabeledStrategy (Context (Either (LinearSystem Expr) (Matrix Expr)))
+systemWithMatrixStrategy :: LabeledStrategy (Context Expr)
 systemWithMatrixStrategy = label "General solution to a linear system (matrix approach)" $
-       repeat (liftLeft dropEquation) 
+       repeat (mapRules liftExpr dropEquation) 
    <*> conv1 
-   <*> liftRight gaussianElimStrategy 
+   <*> mapRules liftExpr gaussianElimStrategy 
    <*> conv2 
-   <*> repeat (liftLeft dropEquation)
+   <*> repeat (mapRules liftExpr dropEquation)
 
 gramSchmidtStrategy :: LabeledStrategy (Context (VectorSpace (Simplified Expr)))
 gramSchmidtStrategy =
@@ -108,42 +111,19 @@ vars = newVar "variables" []
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
 
-conv1 :: Rule (Context (Either (LinearSystem Expr) (Matrix Expr)))
-conv1 = translationToContext "Linear system to matrix" $ withCM $ \ls -> do
+conv1 :: Rule (Context Expr)
+conv1 = makeSimpleRule "Linear system to matrix" $ withCM $ \expr -> do
+   ls <- fromExpr expr
    let (m, vs) = systemToMatrix ls
    writeV vars vs
-   return (simplify m)
+   return (toExpr (simplify (m :: Matrix Expr)))
  
-conv2 :: Rule (Context (Either (LinearSystem Expr) (Matrix Expr)))
-conv2 = translationFromContext "Matrix to linear system" $ withCM $ \m -> do
+conv2 :: Rule (Context Expr)
+conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    vs <- readV vars
-   let linsys = matrixToSystemWith vs m
-   return $ fromContext $ applyD simplifyFirst $ inContext linsys
-   
-liftLeft :: (IsStrategy f, Lift f) => f (Context a) -> f (Context (Either a b))
-liftLeft = lift $ makeLiftPair (maybeInContext . fmap isLeft) (\a _ -> fmap Left a)
+   m  <- fromExpr expr
+   let linsys = matrixToSystemWith vs (m :: Matrix Expr)
+   return $ toExpr $ fromContext $ applyD simplifyFirst $ inContext linsys
 
-liftRight :: (IsStrategy f, Lift f) => f (Context b) -> f (Context (Either a b))
-liftRight = lift $ 
-   makeLiftPair (maybeInContext . fmap isRight) (\b _ -> fmap Right b)
-
-maybeInContext :: Context (Maybe a) -> Maybe (Context a)
-maybeInContext c = fmap (\a -> fmap (const a) c) (fromContext c)
-
-isLeft :: Either a b -> Maybe a
-isLeft = either Just (const Nothing)
-
-isRight :: Either a b -> Maybe b
-isRight = either (const Nothing) Just
-
-translationToContext :: String -> (Context a -> Maybe (Context b)) -> Rule (Context (Either a b))
-translationToContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Right) . f) . maybeInContext . fmap isLeft)
-
-translationFromContext :: String -> (Context b -> Maybe (Context a)) -> Rule (Context (Either a b))
-translationFromContext s f = makeSimpleRule s (maybe Nothing (fmap (fmap Left) . f) . maybeInContext . fmap isRight)
-   
-instance Simplify a => Simplify (Vector a) where
-   simplify = fmap simplify
-   
-instance Simplify a => Simplify (VectorSpace a) where
-   simplify = fmap simplify
+liftExpr :: IsExpr a => Rule (Context a) -> Rule (Context Expr)
+liftExpr = liftRule (makeView (switch . fmap fromExpr) (fmap toExpr))

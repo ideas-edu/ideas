@@ -78,7 +78,7 @@ expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
 expr8  =  pChainr ((^) <$ pKey "^") term
 term   =  symb <*> pList atom
       <|> atom
-atom   =  fromInteger <$> pInteger
+atom   =  fromInteger <$> pInteger -- To do: add parser for floating-point numbers
       <|> (Var . fst) <$> pVarid
       <|> pParens pExpr
 

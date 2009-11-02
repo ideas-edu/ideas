@@ -53,11 +53,15 @@ integerView = integralView
 rationalView :: View Expr Rational
 rationalView = makeView (match realView) fromRational
 
--- No floating view
 doubleView :: View Expr Double
-doubleView = makeView (exprToNum doubleSym)
-                      (fromRational . flip approxRational 0.0001)
- 
+doubleView = makeView rec FPN
+ where
+   rec expr =
+      case expr of
+         Sym s xs -> mapM rec xs >>= doubleSym s
+         FPN d    -> return d
+         _        -> exprToNumStep rec expr
+
 -------------------------------------------------------------------
 -- Numeric views in normal form 
 
@@ -119,17 +123,22 @@ doubleSym _ _ = Nothing
 exprToNum :: (Monad m, Num a) => (Symbol -> [a] -> m a) -> Expr -> m a
 exprToNum f = rec 
  where
-   rec expr = 
-      case expr of 
-         a :+: b  -> liftM2 (+)    (rec a) (rec b)
-         a :*: b  -> liftM2 (*)    (rec a) (rec b)
-         a :-: b  -> liftM2 (-)    (rec a) (rec b)
-         Negate a -> liftM  negate (rec a)
-         Nat n    -> return (fromInteger n)
-         a :/: b  -> do x <- rec a; y <- rec b; f divideSymbol [x, y]
-         Sqrt a   -> do x <- rec a; f rootSymbol [x, 2]
-         Var _    -> fail "exprToNum: variable"
+   rec expr =
+      case expr of
          Sym s xs -> mapM rec xs >>= f s
+         _        -> exprToNumStep rec expr
+
+exprToNumStep :: (Monad m, Num a) => (Expr -> m a) -> Expr -> m a
+exprToNumStep rec expr = 
+   case expr of 
+      a :+: b  -> liftM2 (+)    (rec a) (rec b)
+      a :*: b  -> liftM2 (*)    (rec a) (rec b)
+      a :-: b  -> liftM2 (-)    (rec a) (rec b)
+      Negate a -> liftM  negate (rec a)
+      Nat n    -> return (fromInteger n)
+      a :/: b  -> rec (Sym divideSymbol [a, b])
+      Sqrt a   -> rec (Sym rootSymbol [a, 2])
+      _        -> fail "exprToNumStep"
 
 intDiv :: Integral a => a -> a -> Maybe a
 intDiv x y 

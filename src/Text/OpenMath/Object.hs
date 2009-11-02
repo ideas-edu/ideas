@@ -22,7 +22,7 @@ import Text.OpenMath.Symbol
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer 
-           | OMF Float 
+           | OMF Double 
            | OMV String 
            | OMS Symbol 
            | OMA [OMOBJ] 

@@ -74,8 +74,8 @@ runPrefixLocation loc p0 =
    cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
-   stop (Just (End is))    = is==loc
-   stop (Just (Step is _)) = is==loc
+   stop (Just (End is))           = is==loc
+   stop (Just (Step (Just is) _)) = is==loc
    stop _ = False
  
    check result@(a, p)
@@ -103,7 +103,7 @@ firstMajorInPrefix :: Prefix a -> Prefix a -> a -> ([Int], Args)
 firstMajorInPrefix p0 prefix a = fromMaybe ([], []) $ do
    let steps = prefixToSteps prefix
        newSteps = drop (length $ prefixToSteps p0) steps
-   is    <- safeHead [ is | Step is r <- newSteps, isMajorRule r ]
+   is    <- safeHead [ is | Step (Just is) r <- newSteps, isMajorRule r ]
    return (is, argumentsForSteps a newSteps)
  
 argumentsForSteps :: a -> [Step a] -> Args
@@ -122,7 +122,7 @@ nextMajorForPrefix p0 a = fromMaybe [] $ do
    let steps = prefixToSteps p1
    lastStep <- safeHead (reverse steps)
    case lastStep of
-      Step is r | not (isMinorRule r) -> return is
+      Step (Just is) r | isMajorRule r -> return is
       _ -> Nothing
 
 makeDerivation :: a -> [Rule a] -> [(String, a)]

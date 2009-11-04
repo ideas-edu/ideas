@@ -22,7 +22,7 @@ module Common.Derivation
    , results, lengthMax
      -- * Adapters
    , restrictHeight, restrictWidth, commit
-   , mergeSteps, cutOnStep
+   , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps
      -- * Query a derivation
    , isEmpty, derivationLength, terms, steps, filterDerivation
      -- * Conversions
@@ -134,6 +134,14 @@ mergeSteps p = rec
       f s st
          | p s       = (False, [(s, st)])
          | otherwise = (endpoint st, branches st)
+
+-- Change the annotation
+mapSteps :: (s -> t) -> DerivationTree s a -> DerivationTree t a
+mapSteps f t = t {branches = map g (branches t)}
+ where g (s, st) = (f s, mapSteps f st)
+
+mergeMaybeSteps :: DerivationTree (Maybe s) a -> DerivationTree s a
+mergeMaybeSteps = mapSteps fromJust . mergeSteps isJust
 
 cutOnStep :: (s -> Bool) -> DerivationTree s a -> DerivationTree s a
 cutOnStep p = rec

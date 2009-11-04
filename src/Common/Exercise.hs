@@ -55,10 +55,10 @@ data Exercise a = Exercise
    , ordering       :: a -> a -> Ordering  -- syntactic comparison
    , isReady        :: a -> Bool
    , isSuitable     :: a -> Bool
+   , difference     :: Bool -> a -> a -> Maybe (a, a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
-   , difference     :: Bool -> a -> a -> Maybe (a, a) 
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
    , randomExercise :: Maybe (StdGen -> Int -> a)
@@ -103,10 +103,10 @@ emptyExercise = Exercise
    , ordering       = \_ _ -> EQ
    , isReady        = const True
    , isSuitable     = const True
+   , difference     = \_ _ _ -> Nothing
      -- strategies and rules
    , strategy       = label "Succeed" succeed
    , extraRules     = [] 
-   , difference     = \_ _ _ -> Nothing
      -- testing and exercise generation
    , testGenerator  = Nothing
    , randomExercise = Nothing
@@ -208,7 +208,7 @@ getRule ex s =
 showDerivation :: Exercise a -> a -> String
 showDerivation ex = 
    let err = "<<no derivation>>"
-       f   = show . fmap (Shown . prettyPrinter ex . fromContext) . filterDerivation (\r a -> isMajorRule r)
+       f   = show . fmap (Shown . prettyPrinter ex . fromContext) . filterDerivation (const . isMajorRule)
    in maybe err f . derivation . fullDerivationTree (strategy ex) . inContext
 
 -- local helper datatype

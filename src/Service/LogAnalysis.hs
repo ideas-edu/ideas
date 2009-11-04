@@ -33,7 +33,7 @@ type Row = Map String SqlValue
 type Rows = [Row]
 
 -- | Settings
-dbLocation = "/tmp/service.db"
+dbLocation = "service.db"
 cgiName    = "query.cgi"
 
 -- | Main program

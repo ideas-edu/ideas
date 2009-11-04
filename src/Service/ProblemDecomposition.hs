@@ -28,7 +28,7 @@ replyError :: String -> String -> Reply a
 replyError kind = Error . ReplyError kind
 
 problemDecomposition :: State a -> StrategyLocation -> Maybe a -> Reply a
-problemDecomposition st@(State ex mpr requestedTerm) sloc answer 
+problemDecomposition (State ex mpr requestedTerm) sloc answer 
    | isNothing $ subStrategy sloc (strategy ex) =
         replyError "request error" "invalid location for strategy"
    | otherwise =
@@ -75,7 +75,6 @@ runPrefixLocation loc p0 =
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
    stop (Just (End is))           = is==loc
-   stop (Just (Step (Just is) _)) = is==loc
    stop _ = False
  
    check result@(a, p)
@@ -103,8 +102,13 @@ firstMajorInPrefix :: Prefix a -> Prefix a -> a -> ([Int], Args)
 firstMajorInPrefix p0 prefix a = fromMaybe ([], []) $ do
    let steps = prefixToSteps prefix
        newSteps = drop (length $ prefixToSteps p0) steps
-   is    <- safeHead [ is | Step (Just is) r <- newSteps, isMajorRule r ]
+   is <- firstLocation newSteps
    return (is, argumentsForSteps a newSteps)
+ where
+   firstLocation :: [Step a] -> Maybe [Int]
+   firstLocation [] = Nothing
+   firstLocation (Begin is:Step r:_) | isMajorRule r = Just is
+   firstLocation (_:rest) = firstLocation rest
  
 argumentsForSteps :: a -> [Step a] -> Args
 argumentsForSteps a = flip rec a . stepsToRules
@@ -120,11 +124,13 @@ nextMajorForPrefix :: Prefix a -> a -> [Int]
 nextMajorForPrefix p0 a = fromMaybe [] $ do
    (_, p1)  <- safeHead $ runPrefixMajor p0 a
    let steps = prefixToSteps p1
-   lastStep <- safeHead (reverse steps)
-   case lastStep of
-      Step (Just is) r | isMajorRule r -> return is
-      _ -> Nothing
-
+   rec (reverse steps)
+ where
+   rec [] = Nothing
+   rec (Begin is:_) = Just is
+   rec (End is:_)   = Just is
+   rec (_:rest)     = rec rest 
+  
 makeDerivation :: a -> [Rule a] -> [(String, a)]
 makeDerivation _ []     = []
 makeDerivation a (r:rs) = 
@@ -137,5 +143,5 @@ runPrefixMajor p0 =
    map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
-   stop (Just (Step _ r)) = isMajorRule r
+   stop (Just (Step r)) = isMajorRule r
    stop _ = False

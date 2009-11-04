@@ -14,7 +14,7 @@ module Main (main) where
 import Directory
 import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
-import Common.Grammar
+import qualified Common.Strategy.Grammar as Grammar
 import Common.Rewriting
 import Common.Transformation
 import Control.Monad
@@ -39,7 +39,7 @@ import Data.List
 main :: IO ()
 main = do
    putStrLn "* 1. Domain checks"
-   Common.Grammar.checks
+   Grammar.checks
    MathNum.main
    MathPoly.tests
    MathSqrt.tests

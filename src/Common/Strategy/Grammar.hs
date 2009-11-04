@@ -14,7 +14,7 @@
 -- "Recognizing Strategies"
 --
 -----------------------------------------------------------------------------
-module Common.Grammar
+module Common.Strategy.Grammar
    ( -- * Abstract data type
      Grammar
      -- * Smart constructor functions

@@ -80,14 +80,14 @@ allfirsts state =
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (context state))
          in mapMaybe make (derivations tree)
  where
-   stop (Just (Step _ r)) = isMajorRule r
+   stop (Just (Step r)) = isMajorRule r
    stop _ = False
    
    make d = do
       prefixEnd <- safeHead (reverse (steps d))
       termEnd   <- safeHead (reverse (terms d))
       case lastStepInPrefix prefixEnd of
-         Just (Step _ r) | isMajorRule r -> return
+         Just (Step r) | isMajorRule r -> return
             ( r
             , location termEnd
             , state { context = termEnd

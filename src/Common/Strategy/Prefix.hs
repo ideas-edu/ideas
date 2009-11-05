@@ -32,13 +32,13 @@ import Common.Strategy.Location
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [(Int, Step a)] (StrategyTree Step a)
+data Prefix a = P [Step a] (StrategyTree Step a)
 
 instance Show (Prefix a) where
-   show (P xs _) = show (reverse (map fst xs))
+   show (P _ t) = show (reverse (root t))
 
 instance Eq (Prefix a) where
-   P xs _ == P ys _ = map fst xs == map fst ys
+   P _ t1 == P _ t2 = root t1 == root t2
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> Prefix a
@@ -54,10 +54,10 @@ makePrefix is ls = rec [] is start
    forLabel (loc, _) = (Begin loc, End loc)
    forRule = Step
  
-   rec acc [] t     = P acc t
+   rec acc [] t = P acc t
    rec acc (n:ns) t =
       case drop n (branches t) of
-         (step, st):_ -> rec ((n, step):acc) ns st
+         (step, st):_ -> rec (step:acc) ns st
          _            -> P [] start -- invalid prefix: start over
 
 -- | The @Step@ data type can be used to inspect the structure of the strategy
@@ -79,17 +79,17 @@ prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
 prefixTree (P xs t) = rec xs t
  where
    rec ps t a = 
-      let list = concat (zipWith f [0..] (branches t))
-          f i (step, subTree) = 
+      let list = concatMap make (branches t)
+          make (step, subTree) = 
              [ (P new subTree, rec new subTree b)
              | b <- applyAll step a
-             , let new = (i, step):ps
+             , let new = step:ps
              ] 
       in addBranches list (singleNode a (endpoint t))
  
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [Step a]
-prefixToSteps (P xs _) = map snd (reverse xs)
+prefixToSteps (P xs _) = reverse xs
  
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step a] -> [Rule a]
@@ -97,4 +97,4 @@ stepsToRules steps = [ r | Step r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step a)
-lastStepInPrefix (P xs _) = safeHead (map snd xs)
+lastStepInPrefix (P xs _) = safeHead xs

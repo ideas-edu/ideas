@@ -17,7 +17,7 @@ module Common.Strategy.Core
    ( Core(..)
    , StrategyTree, strategyTree, runTree, makeTree 
    , mapRule, coreVars, noLabels, mapCore, catMaybeLabel
-   , mapLabel, markLabel
+   , mapLabel, markLabel, simpleTranslation, Translation
    ) where
 
 import qualified Common.Strategy.Grammar as Grammar
@@ -67,23 +67,27 @@ instance Uniplate (Core l a) where
          _         -> ([],    \_     -> core)
 
 -----------------------------------------------------------------
+-- The strategy tree (static, no term)
+
+type StrategyTree f a = DerivationTree (f a) StrategyPath
+type StrategyPath = [Int] -- in reversed order
+
+strategyTree :: Translation f l a -> Core l a -> StrategyTree f a
+strategyTree t = rec [] . toGrammar t
+ where
+   rec xs gr = 
+      let bs = zipWith make [0..] (Grammar.firsts gr)
+          make i (f, rest) = (f, rec (i:xs) rest)
+      in addBranches bs (singleNode xs (Grammar.empty gr))
+
+-----------------------------------------------------------------
 -- Running a strategy
 
 makeTree :: Core l a -> a -> DerivationTree (Rule a) a
-makeTree = runTree . strategyTree simpleTranslation
+makeTree c = fmap snd . runTree (strategyTree simpleTranslation c)
 
-type StrategyTree f a = DerivationTree (f a) ()
-
-strategyTree :: Translation f l a -> Core l a -> StrategyTree f a
-strategyTree t = rec . toGrammar t
- where
-   rec  gr = addBranches (list gr) (singleNode () (Grammar.empty gr))
-   list gr = [ (r, rec rest)
-             | (r, rest) <- Grammar.firsts gr
-             ]
-
-runTree :: Apply f => StrategyTree f a -> a -> DerivationTree (f a) a
-runTree t a = addBranches list (singleNode a (endpoint t))
+runTree :: Apply f => StrategyTree f a -> a -> DerivationTree (f a) (StrategyPath, a)
+runTree t a = addBranches list (singleNode (root t, a) (endpoint t))
  where
    list = concatMap make (branches t)
    make (f, st) = [ (f, runTree st b) | b <- applyAll f a ]
@@ -97,7 +101,7 @@ type Translation f l a =
 simpleTranslation :: Translation Rule l a
 simpleTranslation = (const id, Grammar.symbol)
 
-markLabel :: (l -> (f a ,f a)) -> (Rule a -> f a) -> Translation f l a
+markLabel :: (l -> (f a, f a)) -> (Rule a -> f a) -> Translation f l a
 markLabel f g = 
    (\l c -> let (begin, end) = f l
             in Grammar.symbol begin Grammar.<*> c Grammar.<*> Grammar.symbol end

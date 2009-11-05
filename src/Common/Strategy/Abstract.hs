@@ -20,6 +20,7 @@ module Common.Strategy.Abstract
    ) where
 
 import Common.Strategy.Core
+-- import Common.Strategy.BiasedChoice
 import Common.Apply
 import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
@@ -36,7 +37,7 @@ instance Show (Strategy a) where
    show = show . toCore
 
 instance Apply Strategy where
-   applyAll = applyAll . toCore
+   applyAll s = results . fullDerivationTree s
 
 -----------------------------------------------------------
 --- Type class
@@ -74,7 +75,7 @@ instance Show (LabeledStrategy a) where
    show s = strategyName s ++ ": " ++ show (unlabel s)
 
 instance Apply LabeledStrategy where
-   applyAll = applyAll . unlabel
+   applyAll = applyAll . toStrategy
 
 -- | Labels a strategy with a string
 label :: IsStrategy f => String -> f a -> LabeledStrategy a
@@ -86,7 +87,7 @@ label l = LS l . toStrategy
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-fullDerivationTree = makeTree . toCore . toStrategy
+fullDerivationTree = makeTree . toCore .toStrategy 
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a

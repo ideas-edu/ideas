@@ -8,8 +8,9 @@
 -- Stability   :  provisional
 -- Portability :  unknown
 --
--- Show the details of a service request. The input argument `id' should
--- correspond to record from the log database.
+-- This file produces a cgi binary that generates web pages that show the
+-- log data of the service databases. The binary can also be used from th
+-- command line.
 --
 -----------------------------------------------------------------------------
 module Main where
@@ -34,7 +35,6 @@ type Rows = [Row]
 
 -- | Settings
 dbLocation = "service.db"
-cgiName    = "query.cgi"
 
 -- | Main program
 main :: IO ()
@@ -44,32 +44,36 @@ main = do
     args <- getArgs        -- the cgi binary can be run from the command line, e.g. ./query.cgi page=last
     setEnv "QUERY_STRING" (intercalate "&" args) True
   runCGI $ handleErrors $ do
-    reply <- processRequest
+    reply   <- processRequest
     output $ renderHtml reply
 
 -- | Retrieve input parameters, query the db and process a HTML page
 processRequest :: CGIT IO Html
 processRequest = do
-  page <- getInput' "page"  
+  cgiName <- scriptName
+  page    <- getInput "page"
   case page of
-    "request" -> do 
-      id  <- getInput' "id"
-      row <- requestQuery id
-      return $ requestPage row
-    "last" -> do
-      rows <- lastQuery
-      return $ lastPage rows
-    "all" -> do
-      rows <- allQuery
-      return $ allPage rows
-    "frequency" -> do
-      rows <- freqQuery
-      return $ freqPage rows
-    "query" -> do
-      sql  <- getInput' "query"
-      rows <- query sql
-      return $ tablePage "Custom query" "" rows
-    _ -> return mainPage
+    Just s -> 
+      case s of
+        "request" -> do 
+          id  <- getInput "id"
+          case id of 
+            Just id' -> do
+              row <- requestQuery id'
+              return $ requestPage row
+            Nothing -> fail "You did not specify the id parameter" 
+        "last" -> do
+          rows <- lastQuery
+          return $ lastPage rows cgiName
+        "all" -> do
+          rows <- allQuery
+          return $ allPage rows cgiName
+        "frequency" -> do
+          rows <- freqQuery
+          return $ freqPage rows
+        _ -> return $ mainPage cgiName
+    Nothing -> 
+      return $ mainPage cgiName
 
 -- | Queries         
 requestQuery id = do 
@@ -114,34 +118,20 @@ freqPage rows =  body << h1 << "Service statistics"
              +++ p << (  "The table shows how frequent a service call is made. You "
                       ++ "can also view all service calls of the last month.")
              +++ myTable (header : cells)
-             +++ back
   where
     header = map (bold . toHtml) [ "Source", "ExerciseID", "Service"
                                  , "Average resp. time", "Min. resp. time"
                                  , "Max. resp. time", "Count" ]
     cells  = map (map toHtml . elems) rows
 
-mainPage :: Html
-mainPage =  body << h1 << "Ideas Log Analysis" 
-        +++ p << (  "You can view a number of predefined queries on the log database, "
-                 ++ "by clicking on one of the links below.")
-        +++ unordList (let link page = hotlink (cgiName ++ "?page=" ++ page) << page
-                       in  map link ["last", "all", "frequency"])
-        +++ p << (  "You can also perform a custom query. " 
-                 ++ "For example: select id from log")
-        +++ guiGet cgiName << (  hidden "page" "query"
-                             +++ textfield "query"
-                             +++ submit "submit" "Run query"
-                              )
+mainPage :: String -> Html
+mainPage cgi =  body << h1 << "Ideas Log Analysis" 
+            +++ p << (  "You can view a number of predefined queries on the log database, "
+                     ++ "by clicking on one of the links below.")
+            +++ unordList (let link page = self cgi page << page
+                           in  map link ["last", "all", "frequency"])
 
 -- | Help functions
-getInput' :: String -> CGIT IO String
-getInput' name = do
-  raw <- getInput name
-  case raw of
-    Nothing -> fail $ "You did not specify the input parameter: " ++ name
-    Just s  -> return s
-
 query :: MonadTrans t => String -> t IO Rows
 query q = lift $ do 
   conn <- connectSqlite3 dbLocation
@@ -152,13 +142,13 @@ query q = lift $ do
   commit conn >> disconnect conn
   return rows
 
-tablePage :: String -> String -> Rows ->  Html
-tablePage title msg rows =  body << h1 << title +++ p << msg 
-                        +++ myTable (header:cells) +++ back
+tablePage :: String -> String -> Rows -> String -> Html
+tablePage title msg rows cgi =  body << h1 << title +++ p << msg 
+                            +++ myTable (header:cells)
   where
     header = map (bold . toHtml . capiFst) $ keys $ head rows
     cells  = map (elems . linkId . DM.map toHtml) rows
-    linkId = let f id = Just $ toHtml $ self ("request&id=" ++ show id) << show id
+    linkId = let f id = Just $ toHtml $ self cgi ("request&id=" ++ show id) << show id
              in update f "id"
 	
 instance HTML SqlValue where
@@ -170,6 +160,4 @@ capiFst (c:cs) = toUpper c : cs
 capiFst []      = []
 
 myTable = simpleTable [border 1, cellpadding 5] []
-back = br +++ self "main" << "Go back to the main page."
-guiGet act = form ! [action act, method "GET"]
-self page = hotlink (cgiName ++ "?page=" ++ page)
+self cgiName page = hotlink (cgiName ++ "?page=" ++ page)

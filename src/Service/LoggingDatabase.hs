@@ -16,8 +16,9 @@ module Service.LoggingDatabase (logMessage, logEnabled) where
 
 import Data.Time
 import Service.Request
-#ifdef DB
+-- import System.Posix.Syslog
 import Data.Maybe
+#ifdef DB
 import Database.HDBC
 import Database.HDBC.Sqlite3 (connectSqlite3)
 
@@ -26,9 +27,9 @@ logEnabled = True
 
 -- | Log a message to the database (a Sqlite database).
 logMessage :: Request -> String -> String -> String -> UTCTime -> IO ()
-logMessage req input output ipaddress begin = do
+logMessage req input output ipaddress begin = do 
      -- make a connection with the database
-     conn <- connectSqlite3 "service.db"
+     conn <- connectSqlite3 "/tmp/service.db"
 
      -- check if the database exists, if not make one
      --tables <- getTables conn
@@ -39,7 +40,7 @@ logMessage req input output ipaddress begin = do
      let diff = diffUTCTime end begin 
 
      -- insert data into database
-     run conn "INSERT INTO log VALUES (?,?,?,?,?,?,?,?,?,?)" 
+     run conn "INSERT INTO log VALUES (?,?,?,?,?,?,?,?,?,?,?)" 
              [ toSql $ service req
              , toSql $ maybe "unknown" show (exerciseID req)
              , toSql $ fromMaybe "unknown" (source req)
@@ -50,12 +51,17 @@ logMessage req input output ipaddress begin = do
              , toSql $ ipaddress
              , toSql $ begin
              , toSql $ diff
+             , SqlNull
              ]
      commit conn
 
      -- close the connection to the database
      disconnect conn
-  `catch` \err -> do putStrLn $ "Error in logging to database: " ++ show err
+
+  `catch` \err -> do 
+    putStrLn $ "Error in logging to database: " ++ show err
+--    withSyslog "service.cgi" [PID] LOCAL0 $ do 
+--      syslog Debug $ "Error in logging to database: " ++ show err
 
 {-
 -- | Log table schema
@@ -68,13 +74,14 @@ createStmt =  "CREATE TABLE log ( service      VARCHAR(250)"
            ++                  ", output       VARCHAR(250)"
            ++                  ", ipaddress    VARCHAR(20)"
            ++                  ", time         TIME"
-           ++                  ", responsetime TIME)"
+           ++                  ", responsetime TIME"
+           ++                  ", id           INTEGER PRIMARY KEY)"
 -}
 #else
-logMessage :: Request -> String -> String -> String -> UTCTime -> IO ()
-logMessage _ _ _ _ _ = return ()
-
 logEnabled :: Bool
 logEnabled = False
+
+logMessage :: Request -> String -> String -> String -> UTCTime -> IO ()
+logMessage _ _ _ _ _ = return ()
 #endif
 

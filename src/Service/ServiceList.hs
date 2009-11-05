@@ -116,7 +116,7 @@ derivationtextS = Service "derivationtext" $
 
 problemdecompositionS :: Service a
 problemdecompositionS = Service "problemdecomposition" $
-   f ::: State :-> List Int :-> Maybe Term :-> DecompositionReply
+   f ::: State :-> StrategyLoc :-> Maybe Term :-> DecompositionReply
  where   
    f st loc a = problemDecomposition st loc (fmap fromContext a)
 

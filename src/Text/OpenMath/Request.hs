@@ -47,7 +47,7 @@ xmlToRequest xml fromOpenMath ex = do
                            Just s  -> putInContext2 s t
                            Nothing -> inContext t
            }
-      , fromMaybe [] loc
+      , fromMaybe topLocation loc
       , mt
       )
 
@@ -71,9 +71,9 @@ optional = Right . either (const Nothing) Just
 extractLocation :: String -> XML -> Either String StrategyLocation
 extractLocation s xml = do
    c <- findChild s xml
-   case reads (getData c) of
-      [(n, xs)] | all isSpace xs -> return n
-      _                          -> fail "invalid location"
+   case parseStrategyLocation (getData c) of
+      Just loc -> return loc
+      _        -> fail "invalid location"
 
 extractExpr :: String -> XML -> Either String OMOBJ
 extractExpr n xml =

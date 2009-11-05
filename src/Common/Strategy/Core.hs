@@ -15,16 +15,16 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( Core(..)
-     -- temp!
-   , mapRule, makeTree, coreVars, checkRule
-   , noLabels, collectS, mapCore, staticTree
+   , StrategyTree, strategyTree, runTree, makeTree 
+   , mapRule, coreVars, noLabels, mapCore, catMaybeLabel
+   , mapLabel, markLabel
    ) where
 
 import qualified Common.Strategy.Grammar as Grammar
 import Common.Strategy.Grammar (Grammar)
 import Common.Apply
 import Common.Derivation
-import Common.Transformation hiding (checkRule)
+import Common.Transformation
 import Common.Uniplate
 
 -----------------------------------------------------------------
@@ -70,25 +70,23 @@ instance Uniplate (Core l a) where
 -- Running a strategy
 
 makeTree :: Core l a -> a -> DerivationTree (Rule a) a
-makeTree = makeTreeWith simpleTranslation
-               
-makeTreeWith :: Apply f => Translation f l a
-                        -> Core l a -> a -> DerivationTree (f a) a
-makeTreeWith t = rec . toGrammar t
- where
-   rec  gr a = addBranches (list gr a) (singleNode a (Grammar.empty gr))
-   list gr a = [ (f, rec rest b)
-               | (f, rest) <- Grammar.firsts gr
-               , b <- applyAll f a
-               ]
+makeTree = runTree . strategyTree simpleTranslation
 
-staticTree :: Translation f l a -> Core l a -> DerivationTree (f a) ()
-staticTree t = rec . toGrammar t
+type StrategyTree f a = DerivationTree (f a) ()
+
+strategyTree :: Translation f l a -> Core l a -> StrategyTree f a
+strategyTree t = rec . toGrammar t
  where
    rec  gr = addBranches (list gr) (singleNode () (Grammar.empty gr))
    list gr = [ (r, rec rest)
              | (r, rest) <- Grammar.firsts gr
              ]
+
+runTree :: Apply f => StrategyTree f a -> a -> DerivationTree (f a) a
+runTree t a = addBranches list (singleNode a (endpoint t))
+ where
+   list = concatMap make (branches t)
+   make (f, st) = [ (f, runTree st b) | b <- applyAll f a ]
 
 -----------------------------------------------------------------
 -- Translation to Grammar data type
@@ -98,6 +96,13 @@ type Translation f l a =
 
 simpleTranslation :: Translation Rule l a
 simpleTranslation = (const id, Grammar.symbol)
+
+markLabel :: (l -> (f a ,f a)) -> (Rule a -> f a) -> Translation f l a
+markLabel f g = 
+   (\l c -> let (begin, end) = f l
+            in Grammar.symbol begin Grammar.<*> c Grammar.<*> Grammar.symbol end
+   , Grammar.symbol . g
+   )
 
 toGrammar :: Translation f l a -> Core l a -> Grammar (f a)
 toGrammar (forLabel, forRule) = rec
@@ -118,19 +123,21 @@ toGrammar (forLabel, forRule) = rec
       
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)
-      
-checkRule :: (a -> Bool) -> Rule a 
-checkRule p = minorRule $ makeSimpleRule "check" $ \a ->
-   if p a then Just a else Nothing
    
 -----------------------------------------------------------------
 -- Utility functions
+
+mapLabel :: (l -> m) -> Core l a -> Core m a
+mapLabel f = mapCore (Label . f) Rule
 
 mapRule :: (Rule a -> Rule b) -> Core l a -> Core l b
 mapRule f = mapCore Label (Rule . f)
 
 noLabels :: Core l a -> Core m a
 noLabels = mapCore (const id) Rule
+   
+catMaybeLabel :: Core (Maybe l) a -> Core l a
+catMaybeLabel = mapCore (maybe id Label) Rule
    
 mapCore :: (l -> Core m b -> Core m b) -> (Rule a -> Core m b) -> Core l a -> Core m b
 mapCore f g = rec 
@@ -151,10 +158,3 @@ mapCore f g = rec
          
 coreVars :: Core l a -> [Int]
 coreVars s = [ n | Rec n _ <- universe s ] ++ [ n | Var n <- universe s ]
-
--- For now: just major rules??
-collectS :: Core l a -> [Either (l, Core l a) (Rule a)]
-collectS (Rule r) = [Right r | isMajorRule r]
-collectS (Label l a) = [Left (l, a)]
-collectS (Not _) = [] -- [Right $ checkRule (Prelude.not . applicable (S a))]
-collectS s = concatMap collectS (children s)

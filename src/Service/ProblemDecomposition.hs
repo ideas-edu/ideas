@@ -39,7 +39,7 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
                | not (null witnesses) ->
                     Ok ReplyOk
                        { repOk_Code     = ex
-                       , repOk_Location = nextTask sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
+                       , repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           show (getEnvironment $ fst $ head witnesses)
                        , repOk_Steps    = stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
@@ -51,7 +51,7 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
             ((expected, prefix):_, maybeAnswer) ->
                     Incorrect ReplyIncorrect
                        { repInc_Code       = ex
-                       , repInc_Location   = subTask sloc loc
+                       , repInc_Location   = subTaskLocation sloc loc
                        , repInc_Expected   = fromContext expected
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
@@ -84,28 +84,14 @@ runPrefixLocation loc p0 =
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
--- old (current) and actual (next major rule) location
-subTask :: [Int] -> [Int] -> [Int]
-subTask (i:is) (j:js)
-   | i == j    = i : subTask is js
-   | otherwise = []
-subTask _ js   = take 1 js
-
--- old (current) and actual (next major rule) location
-nextTask :: [Int] -> [Int] -> [Int]
-nextTask (i:is) (j:js)
-   | i == j    = i : nextTask is js
-   | otherwise = [j] 
-nextTask _ _   = [] 
-
-firstMajorInPrefix :: Prefix a -> Prefix a -> a -> ([Int], Args)
-firstMajorInPrefix p0 prefix a = fromMaybe ([], []) $ do
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> (StrategyLocation, Args)
+firstMajorInPrefix p0 prefix a = fromMaybe (topLocation, []) $ do
    let steps = prefixToSteps prefix
        newSteps = drop (length $ prefixToSteps p0) steps
    is <- firstLocation newSteps
    return (is, argumentsForSteps a newSteps)
  where
-   firstLocation :: [Step a] -> Maybe [Int]
+   firstLocation :: [Step a] -> Maybe StrategyLocation
    firstLocation [] = Nothing
    firstLocation (Begin is:Step r:_) | isMajorRule r = Just is
    firstLocation (_:rest) = firstLocation rest
@@ -120,8 +106,8 @@ argumentsForSteps a = flip rec a . stepsToRules
                          in maybe [] (zip ds) (expectedArguments r a)
       | otherwise      = []
  
-nextMajorForPrefix :: Prefix a -> a -> [Int]
-nextMajorForPrefix p0 a = fromMaybe [] $ do
+nextMajorForPrefix :: Prefix a -> a -> StrategyLocation
+nextMajorForPrefix p0 a = fromMaybe topLocation $ do
    (_, p1)  <- safeHead $ runPrefixMajor p0 a
    let steps = prefixToSteps p1
    rec (reverse steps)

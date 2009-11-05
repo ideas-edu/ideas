@@ -15,6 +15,7 @@ module Service.Types where
 import Common.Context (Context, Location, fromContext)
 import Common.Exercise (Exercise)
 import Common.Transformation (Rule, name)
+import Common.Strategy (StrategyLocation)
 import Common.Utils (commaList)
 import Control.Arrow
 import Control.Monad
@@ -53,6 +54,7 @@ data Type a t where
    Term         :: Type a (Context a)
    Result       :: Type a (Result a)
    Location     :: Type a Location
+   StrategyLoc  :: Type a StrategyLocation
    DecompositionReply :: Type a (Decomposition.Reply a)
    -- Basic types
    Bool         :: Type a Bool

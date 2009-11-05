@@ -23,7 +23,6 @@ import Common.Strategy.Abstract
 import Common.Strategy.Core
 import Common.Transformation
 import Common.Derivation
-import qualified Common.Strategy.Grammar as Grammar
 import Common.Strategy.Location
 
 -----------------------------------------------------------
@@ -33,7 +32,7 @@ import Common.Strategy.Location
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [(Int, Step a)] (DerivationTree (Step a) ())
+data Prefix a = P [(Int, Step a)] (StrategyTree Step a)
 
 instance Show (Prefix a) where
    show (P xs _) = show (reverse (map fst xs))
@@ -49,11 +48,11 @@ emptyPrefix = makePrefix []
 makePrefix :: [Int] -> LabeledStrategy a -> Prefix a
 makePrefix is ls = rec [] is start
  where
-   mkCore = addLocation . labelMajorRules show . toCore . unlabel
-   start  = staticTree (forLabel, forRule) (mkCore ls)
-   
-   forLabel (loc, _) g = Grammar.symbol (Begin loc) Grammar.<*> g Grammar.<*> Grammar.symbol (End loc)
-   forRule r = Grammar.symbol (Step r)
+   mkCore = addLocation . toCore . toStrategy
+   start  = strategyTree (markLabel forLabel forRule) (mkCore ls)
+ 
+   forLabel (loc, _) = (Begin loc, End loc)
+   forRule = Step
  
    rec acc [] t     = P acc t
    rec acc (n:ns) t =
@@ -99,9 +98,3 @@ stepsToRules steps = [ r | Step r <- steps ]
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step a)
 lastStepInPrefix (P xs _) = safeHead (map snd xs)
-
-labelMajorRules :: (Rule a -> l) -> Core l a -> Core l a
-labelMajorRules f = mapCore Label g
- where
-   g r | isMajorRule r = Label (f r) (Rule r)
-       | otherwise     = Rule r

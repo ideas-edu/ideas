@@ -237,7 +237,7 @@ checkExercise ex =
          forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
             putLabel ("    " ++ name r)
             let eq f a b = fromContext a `f` fromContext b
-            checkRuleSmart (eq (equivalence ex)) r (liftM inContext gen)
+            testRuleSmart (eq (equivalence ex)) r (liftM inContext gen)
 
          check "non-trivial terms" $ 
             forAll gen $ \x -> 

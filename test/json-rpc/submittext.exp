@@ -4,7 +4,7 @@
       "Well done! You have applied De Morgan correctly.",
       [
          "logic.dnf",
-         "[5,1,1,0,3,0]",
+         "[0,5,1,1,0,3,0]",
          "~~x /\\ ~~y",
          {
          }
@@ -12,5 +12,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2428)"
+   "version": "0.5.8 (2432)"
 }

@@ -30,7 +30,9 @@ module Common.Strategy
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
      -- * Strategy locations
-   , StrategyLocation, StrategyOrRule, subStrategy, strategyLocations
+   , StrategyLocation, topLocation, nextLocation, downLocation
+   , subTaskLocation, nextTaskLocation, parseStrategyLocation
+   , StrategyOrRule, subStrategy
    , mapRules, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)

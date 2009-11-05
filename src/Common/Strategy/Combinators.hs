@@ -16,7 +16,7 @@ module Common.Strategy.Combinators where
 
 import Prelude hiding (not, repeat, fail, sequence)
 import Common.Context
-import Common.Transformation hiding (checkRule)
+import Common.Transformation
 import Common.Uniplate
 import Common.Strategy.Core
 import Common.Strategy.Abstract

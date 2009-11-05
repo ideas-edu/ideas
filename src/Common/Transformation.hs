@@ -28,13 +28,13 @@ module Common.Transformation
    , ruleGroups, addRuleToGroup
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
-   , idRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
+   , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
    , transformations, getRewriteRules
      -- * Lifting
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
-   , checkRule, checkRuleSmart
+   , testRule, testRuleSmart
    ) where
 
 import Common.Apply
@@ -333,6 +333,12 @@ makeSimpleRuleList n = makeRule n . makeTransList n
 idRule :: Rule a
 idRule = minorRule $ makeSimpleRule "Identity" return
 
+-- | A special (minor) rule that checks a predicate (and returns the identity
+-- if the predicate holds)
+checkRule :: (a -> Bool) -> Rule a 
+checkRule p = minorRule $ makeSimpleRule "Check" $ \a ->
+   if p a then Just a else Nothing
+
 -- | A special (minor) rule that is never applicable (i.e., this rule always fails)
 emptyRule :: Rule a
 emptyRule = minorRule $ makeSimpleRule "Empty" (const Nothing)
@@ -416,15 +422,15 @@ liftRuleIn v r = r
 --- QuickCheck
 
 -- | Check the soundness of a rule: the equality function is passed explicitly
-checkRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-checkRule eq rule = 
+testRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
+testRule eq rule = 
    quickCheck (propRule eq rule arbitrary)
 
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
-checkRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> IO ()
-checkRuleSmart eq rule gen =
+testRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> IO ()
+testRuleSmart eq rule gen =
    quickCheck (propRule eq rule (smartGen rule gen))
   
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property

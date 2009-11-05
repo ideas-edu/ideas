@@ -86,7 +86,7 @@ label l = LS l . toStrategy
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-fullDerivationTree f = makeTree (toCore (toStrategy f) )
+fullDerivationTree = makeTree . toCore . toStrategy
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a

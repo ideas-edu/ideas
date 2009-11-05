@@ -16,8 +16,8 @@
 module Common.Strategy.Core 
    ( Core(..)
      -- temp!
-   , checkRule, makeTree, makeTreeWith, notRule, toGrammar
-   , mapRule, mapCore, noLabels, coreVars, collectS
+   , mapRule, makeTree, coreVars, checkRule
+   , noLabels, collectS, mapCore, staticTree
    ) where
 
 import qualified Common.Strategy.Grammar as Grammar
@@ -72,7 +72,8 @@ instance Uniplate (Core l a) where
 makeTree :: Core l a -> a -> DerivationTree (Rule a) a
 makeTree = makeTreeWith simpleTranslation
                
-makeTreeWith :: Apply f => Translation f l a -> Core l a -> a -> DerivationTree (f a) a
+makeTreeWith :: Apply f => Translation f l a
+                        -> Core l a -> a -> DerivationTree (f a) a
 makeTreeWith t = rec . toGrammar t
  where
    rec  gr a = addBranches (list gr a) (singleNode a (Grammar.empty gr))
@@ -80,6 +81,14 @@ makeTreeWith t = rec . toGrammar t
                | (f, rest) <- Grammar.firsts gr
                , b <- applyAll f a
                ]
+
+staticTree :: Translation f l a -> Core l a -> DerivationTree (f a) ()
+staticTree t = rec . toGrammar t
+ where
+   rec  gr = addBranches (list gr) (singleNode () (Grammar.empty gr))
+   list gr = [ (r, rec rest)
+             | (r, rest) <- Grammar.firsts gr
+             ]
 
 -----------------------------------------------------------------
 -- Translation to Grammar data type

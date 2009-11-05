@@ -13,8 +13,8 @@
 --
 -----------------------------------------------------------------------------
 module Common.Strategy.Prefix 
-   ( Prefix, emptyPrefix, makePrefix, Step(..)
-   , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
+   ( Prefix, emptyPrefix, makePrefix
+   , Step(..), prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
    ) where
 
 import Common.Apply
@@ -33,7 +33,7 @@ import Common.Strategy.Location
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [(Int, Step a)] (Grammar.Grammar (Step a))
+data Prefix a = P [(Int, Step a)] (DerivationTree (Step a) ())
 
 instance Show (Prefix a) where
    show (P xs _) = show (reverse (map fst xs))
@@ -49,13 +49,17 @@ emptyPrefix = makePrefix []
 makePrefix :: [Int] -> LabeledStrategy a -> Prefix a
 makePrefix is ls = rec [] is start
  where
-   start = withSteps ls
+   mkCore = addLocation . labelMajorRules show . toCore . unlabel
+   start  = staticTree (forLabel, forRule) (mkCore ls)
    
-   rec acc [] g = P acc g
-   rec acc (n:ns) g = 
-      case drop n (Grammar.firsts g) of
-         (z, h):_ -> rec ((n, z):acc) ns h
-         _        -> P [] start
+   forLabel (loc, _) g = Grammar.symbol (Begin loc) Grammar.<*> g Grammar.<*> Grammar.symbol (End loc)
+   forRule r = Grammar.symbol (Step r)
+ 
+   rec acc [] t     = P acc t
+   rec acc (n:ns) t =
+      case drop n (branches t) of
+         (step, st):_ -> rec ((n, step):acc) ns st
+         _            -> P [] start -- invalid prefix: start over
 
 -- | The @Step@ data type can be used to inspect the structure of the strategy
 data Step a = Begin StrategyLocation 
@@ -73,15 +77,16 @@ instance Apply Prefix where
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P xs g) a =
-   addBranches list (singleNode a (Grammar.empty g))
+prefixTree (P xs t) = rec xs t
  where
-   add (i, (step, rest)) = P ((i, step):xs) rest
-   list = [ (newPrefix, prefixTree newPrefix b)
-          | triple@(_, (step, _)) <- zip [0..] (Grammar.firsts g)
-          , let newPrefix = add triple
-          , b <- applyAll step a
-          ]
+   rec ps t a = 
+      let list = concat (zipWith f [0..] (branches t))
+          f i (step, subTree) = 
+             [ (P new subTree, rec new subTree b)
+             | b <- applyAll step a
+             , let new = (i, step):ps
+             ] 
+      in addBranches list (singleNode a (endpoint t))
  
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [Step a]
@@ -95,16 +100,6 @@ stepsToRules steps = [ r | Step r <- steps ]
 lastStepInPrefix :: Prefix a -> Maybe (Step a)
 lastStepInPrefix (P xs _) = safeHead (map snd xs)
 
--- local helper function
-withSteps :: LabeledStrategy a -> Grammar.Grammar (Step a)
-withSteps s = toStepGrammar (toCore (unlabel s))
-
-toStepGrammar :: Core String a -> Grammar.Grammar (Step a)
-toStepGrammar = toGrammar (forLabel, forRule) . addLocation . labelMajorRules show
- where
-   forLabel (loc, _) g = Grammar.symbol (Begin loc) Grammar.<*> g Grammar.<*> Grammar.symbol (End loc)
-   forRule r = Grammar.symbol (Step r)
-   
 labelMajorRules :: (Rule a -> l) -> Core l a -> Core l a
 labelMajorRules f = mapCore Label g
  where

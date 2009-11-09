@@ -20,7 +20,7 @@ module Common.Strategy.Abstract
    ) where
 
 import Common.Strategy.Core
--- import Common.Strategy.BiasedChoice
+import Common.Strategy.BiasedChoice
 import Common.Apply
 import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
@@ -87,7 +87,9 @@ label l = LS l . toStrategy
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-fullDerivationTree = makeTree . toCore .toStrategy 
+fullDerivationTree = makeBiasedTree p . toCore .toStrategy 
+ where 
+   p t = endpoint t || any isMajorRule (annotations t) || any p (subtrees t)
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a

@@ -30,6 +30,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
+import Domain.Math.Polynomial.QuadraticFormula 
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
@@ -114,20 +115,6 @@ simplerA = makeSimpleRule "simpler polynomial" $ \(lhs :==: rhs) -> do
    let d = a `gcd` b `gcd` c
    guard (d `notElem` [0, 1])
    return (build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0)
-
-abcFormula :: Rule (OrList (Equation Expr))
-abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
-   let discr = sqrt (fromRational (b*b - 4 * a * c))
-   case compare discr 0 of
-      LT -> return false
-      EQ -> return $ return $ 
-         Var x :==: (-fromRational b) / (2 * fromRational a)
-      GT -> return $ orList
-         [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
-         , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
-         ]
 
 ------------------------------------------------------------
 -- General form rules: expr = 0

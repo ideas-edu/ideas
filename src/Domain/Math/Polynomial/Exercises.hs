@@ -56,7 +56,7 @@ quadraticExercise = makeExercise
    , equivalence  = viewEquivalent quadraticEquationsView
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext $ quadraticRules ++ abcBuggyRules
-   , strategy     = mapRules ignoreContext (quadraticStrategy True)
+   , strategy     = quadraticStrategy True
    , examples     = map (orList . return) (concat quadraticEquations)
    }
    
@@ -70,7 +70,7 @@ higherDegreeExercise = makeExercise
    , equivalence  = viewEquivalent higherDegreeEquationsView
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext higherDegreeRules
-   , strategy     = mapRules ignoreContext higherDegreeStrategy
+   , strategy     = higherDegreeStrategy
    , examples     = map (orList . return) (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
@@ -78,7 +78,7 @@ quadraticNoABCExercise :: Exercise (OrList (Equation Expr))
 quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
-   , strategy     = mapRules ignoreContext (quadraticStrategy False) 
+   , strategy     = quadraticStrategy False
    }
    
 --------------------------------------------

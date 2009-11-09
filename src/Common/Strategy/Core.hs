@@ -163,3 +163,24 @@ mapCore f g = rec
          
 coreVars :: Core l a -> [Int]
 coreVars s = [ n | Rec n _ <- universe s ] ++ [ n | Var n <- universe s ]
+
+{-
+mapCoreM :: Monad m => (k -> Core l b -> m (Core l b)) 
+                   -> (Rule a -> m (Core l b)) 
+                   -> Core k a -> m (Core l b)
+mapCoreM f g = rec 
+ where 
+   rec core =
+      case core of
+         a :*: b   -> liftM2 (:*:)  (rec a) (rec b)
+         a :|: b   -> liftM2 (:|:)  (rec a) (rec b)
+         a :|>: b  -> liftM2 (:|>:) (rec a) (rec b)
+         Many a    -> liftM Many (rec a)
+         Succeed   -> return Succeed
+         Fail      -> return Fail
+         Label l a -> rec a >>= f l
+         Rule r    -> g r
+         Var n     -> return (Var n)
+         Rec n a   -> liftM (Rec n) (rec a)
+         Not a     -> liftM Not (rec a)
+-}

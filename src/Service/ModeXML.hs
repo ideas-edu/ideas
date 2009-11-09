@@ -170,7 +170,8 @@ xmlEncoder f ex = Encoder
          Tp.Elem t1  -> liftM (element "elem") . encode enc t1
          Tp.Tag s t1 -> liftM (element s) . encode enc t1  -- quick fix
          Tp.Rule     -> return . ("ruleid" .=.) . Rule.name
-         Tp.Term     -> encodeTerm enc . fromContext
+         Tp.Term     -> encodeTerm enc
+         Tp.Context  -> encodeContext (encodeTerm enc)
          Tp.Location -> return . text . show
          Tp.Bool     -> return . text . show
          Tp.Int      -> return . text . show
@@ -190,7 +191,7 @@ xmlDecoder f pkg = Decoder
          Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)
          Tp.Location -> leave $ liftM (read . getData) . findChild "location"
          Tp.Rule     -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
-         Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (inContext a, xml)
+         Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (a, xml)
          _           -> decodeDefault dec serviceType
          
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
@@ -202,15 +203,16 @@ decodeState ex f top = do
    unless (name xml == "state") (fail "expected a state tag")
    let sp = maybe "[]" getData (findChild "prefix" xml)
    expr <- f xml
-   env  <- case findChild "context" xml of 
-              Just this -> decodeContext this
-              Nothing   -> return emptyEnv
+   env  <- decodeEnvironment xml
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
        term   = makeContext env expr
    return (state, top)
 
-decodeContext :: Monad m => XML -> m Environment
-decodeContext = foldM add emptyEnv . children
+decodeEnvironment :: Monad m => XML -> m Environment
+decodeEnvironment xml =
+   case findChild "context" xml of 
+      Just this -> foldM add emptyEnv (children this)
+      Nothing   -> return emptyEnv
  where
    add env item = do 
       unless (name item == "item") $ 
@@ -232,15 +234,21 @@ encodeState :: Monad m => (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState f state = f (term state) >>= \body -> return $
    element "state" $ do
       element "prefix"  (text $ maybe "[]" show (prefix state))
-      encodeContext (getEnvironment (context state))
+      encodeEnvironment (getEnvironment (context state))
       body
 
-encodeContext :: Environment -> XMLBuilder
-encodeContext env = element "context" $ do
-   forM_ (keysEnv env) $ \k -> do
-      element "item" $ do 
-         "name"  .=. k
-         case lookupEnv k env of 
-            Just omobj -> builder  (omobj2xml omobj)
-            Nothing    -> "value" .=. fromMaybe "" (lookupEnv k env)
+encodeEnvironment :: Environment -> XMLBuilder
+encodeEnvironment env
+   | nullEnv env = return ()
+   | otherwise   = element "context" $ do
+        forM_ (keysEnv env) $ \k -> do
+           element "item" $ do 
+              "name"  .=. k
+              case lookupEnv k env of 
+                 Just omobj -> builder  (omobj2xml omobj)
+                 Nothing    -> "value" .=. fromMaybe "" (lookupEnv k env)
             
+encodeContext :: Monad m => (a -> m XMLBuilder) -> Context a -> m XMLBuilder
+encodeContext f ctx = do
+   xml <- f (fromContext ctx)
+   return (xml >> encodeEnvironment (getEnvironment ctx))

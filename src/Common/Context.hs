@@ -17,7 +17,7 @@ module Common.Context
    ( -- * Abstract data type
      Context, inContext, fromContext, makeContext, getEnvironment
      -- * Key-value pair environment (abstract)
-   , Environment, emptyEnv, keysEnv, lookupEnv, storeEnv
+   , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
      -- * Variables
    , Var, newVar, makeVar
      -- * Location (current focus)
@@ -99,6 +99,9 @@ instance Show Environment where
 
 emptyEnv :: Environment
 emptyEnv = Env M.empty
+
+nullEnv :: Environment -> Bool
+nullEnv = null . keysEnv
 
 keysEnv :: Environment -> [String]
 keysEnv = M.keys . envMap

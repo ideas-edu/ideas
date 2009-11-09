@@ -126,7 +126,7 @@ jsonDecoder pkg = Decoder
       case serviceType of
          Tp.State    -> useFirst $ decodeState (decoderExercise dec) (decodeTerm dec)
          Tp.Location -> useFirst fromJSON
-         Tp.Term     -> useFirst $ liftM inContext . decodeTerm dec
+         Tp.Term     -> useFirst $ decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
          Tp.Exercise -> \json -> case json of
                                     (Array (String _:rest)) -> return (decoderExercise dec, Array rest)

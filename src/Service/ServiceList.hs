@@ -58,7 +58,7 @@ evalService f = eval f . typedValue
 
 derivationS :: Service a
 derivationS = Service "derivation" $ 
-   S.derivation ::: State :-> List (Pair Rule Term)
+   S.derivation ::: State :-> List (Pair Rule Context)
 
 allfirstsS :: Service a
 allfirstsS = Service "allfirsts" $ 
@@ -90,11 +90,13 @@ generateS = Service "generate" $ S.generate :::
 
 findbuggyrulesS :: Service a
 findbuggyrulesS = Service "findbuggyrules" $ 
-   S.findbuggyrules ::: State :-> Term :-> List Rule
+   f ::: State :-> Term :-> List Rule
+ where
+   f st a = S.findbuggyrules st (inContext a)
 
 submitS :: Service a
-submitS = Service "submit" $ (\a -> S.submit a . fromContext) :::
-   State :-> Term :-> Result
+submitS = Service "submit" $ 
+   S.submit ::: State :-> Term :-> Result
 
 ------------------------------------------------------
 -- Services with a feedback component
@@ -109,16 +111,14 @@ submittextS = Service "submittext" $
 
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" $ 
-   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Pair String Term)
+   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Pair String Context)
 
 ------------------------------------------------------
 -- Problem decomposition service
 
 problemdecompositionS :: Service a
 problemdecompositionS = Service "problemdecomposition" $
-   f ::: State :-> StrategyLoc :-> Maybe Term :-> DecompositionReply
- where   
-   f st loc a = problemDecomposition st loc (fmap fromContext a)
+   problemDecomposition ::: State :-> StrategyLoc :-> Maybe Term :-> DecompositionReply
 
 ------------------------------------------------------
 -- Reflective services

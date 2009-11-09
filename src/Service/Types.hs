@@ -51,7 +51,8 @@ data Type a t where
    Exercise     :: Type a (Exercise a)
    ExerciseText :: Type a (ExerciseText a)
    Rule         :: Type a (Rule (Context a))
-   Term         :: Type a (Context a)
+   Term         :: Type a a
+   Context      :: Type a (Context a)
    Result       :: Type a (Result a)
    Location     :: Type a Location
    StrategyLoc  :: Type a StrategyLocation
@@ -83,6 +84,7 @@ groundType tp =
       ExerciseText -> Just "ExerciseText"
       Rule         -> Just "Rule"
       Term         -> Just "Term"
+      Context      -> Just "Context"
       Result       -> Just "Result"
       Bool         -> Just "Bool"
       Int          -> Just "Int"
@@ -182,6 +184,7 @@ encodeDefault enc tp tv =
                           Nothing -> return (encodeTuple enc [])
       IO t1         -> encodeType enc t1 (unsafePerformIO tv)
       Rule          -> encodeType enc String (name tv)
-      Term          -> encodeTerm enc (fromContext tv)
+      Term          -> encodeTerm enc tv
+      Context       -> encodeType enc Term (fromContext tv)
       Location      -> encodeType enc String (show tv)
       _             -> fail "No support for result type"

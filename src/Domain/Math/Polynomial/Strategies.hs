@@ -67,8 +67,8 @@ quadraticStrategy canUseABC = cleanUpStrategy (fmap cleanUp) $
       <|> coverUpPower -- to deal with special case x^2=0
       
    generalABCForm
-      | canUseABC = -- label "abc formula" $
-              {-toStrategy (ignoreContext abcFormula)-} abcStrategy
+      | canUseABC = label "abc formula" $
+           toStrategy (ignoreContext abcFormula) -- abcStrategy
       | otherwise = 
            label "no abc formula" $ toStrategy fail
  

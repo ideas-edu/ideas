@@ -69,28 +69,29 @@ instance Uniplate (Core l a) where
 -----------------------------------------------------------------
 -- The strategy tree (static, no term)
 
-type StrategyTree f a = DerivationTree (f a) StrategyPath
-type StrategyPath = [Int] -- in reversed order
+type StrategyTree f a = DerivationTree (f a) ()
 
 strategyTree :: Translation f l a -> Core l a -> StrategyTree f a
-strategyTree t = rec [] . toGrammar t
- where
-   rec xs gr = 
-      let bs = zipWith make [0..] (Grammar.firsts gr)
-          make i (f, rest) = (f, rec (i:xs) rest)
-      in addBranches bs (singleNode xs (Grammar.empty gr))
+strategyTree t = grammarTree . toGrammar t
+
+grammarTree :: Grammar a -> DerivationTree a ()
+grammarTree gr = addBranches list node
+ where 
+   node = singleNode () (Grammar.empty gr)
+   list = [ (f, grammarTree rest) | (f, rest) <- Grammar.firsts gr ]
+               
 
 -----------------------------------------------------------------
 -- Running a strategy
 
 makeTree :: Core l a -> a -> DerivationTree (Rule a) a
-makeTree c = fmap snd . runTree (strategyTree simpleTranslation c)
+makeTree c = changeLabel fst . runTree (strategyTree simpleTranslation c)
 
-runTree :: Apply f => StrategyTree f a -> a -> DerivationTree (f a) (StrategyPath, a)
-runTree t a = addBranches list (singleNode (root t, a) (endpoint t))
+runTree :: Apply f => DerivationTree (f a) info -> a -> DerivationTree (f a, info) a
+runTree t a = addBranches list (singleNode a (endpoint t))
  where
    list = concatMap make (branches t)
-   make (f, st) = [ (f, runTree st b) | b <- applyAll f a ]
+   make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
 
 -----------------------------------------------------------------
 -- Translation to Grammar data type

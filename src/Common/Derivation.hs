@@ -22,7 +22,7 @@ module Common.Derivation
    , results, lengthMax
      -- * Adapters
    , restrictHeight, restrictWidth, commit
-   , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps
+   , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps, changeLabel
      -- * Query a derivation
    , isEmpty, derivationLength, terms, steps, filterDerivation
      -- * Conversions
@@ -139,6 +139,11 @@ mergeSteps p = rec
 mapSteps :: (s -> t) -> DerivationTree s a -> DerivationTree t a
 mapSteps f t = t {branches = map g (branches t)}
  where g (s, st) = (f s, mapSteps f st)
+
+changeLabel :: (l -> m) -> DerivationTree l a -> DerivationTree m a
+changeLabel f = rec
+ where
+   rec t = t {branches = map (\(l, st) -> (f l, rec st)) (branches t)}
 
 mergeMaybeSteps :: DerivationTree (Maybe s) a -> DerivationTree s a
 mergeMaybeSteps = mapSteps fromJust . mergeSteps isJust

@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Location 
    ( StrategyLocation, topLocation, nextLocation, downLocation
+   , locationDepth
    , subTaskLocation, nextTaskLocation, parseStrategyLocation
    , StrategyOrRule, strategyLocations, subStrategy, addLocation
    ) where
@@ -49,6 +50,9 @@ nextLocation (SL xs) =
 
 downLocation :: StrategyLocation -> StrategyLocation
 downLocation (SL xs) = SL (xs |> 0)
+
+locationDepth :: StrategyLocation -> Int
+locationDepth (SL xs) = Data.Sequence.length xs
 
 -- old (current) and actual (next major rule) location
 subTaskLocation :: StrategyLocation -> StrategyLocation -> StrategyLocation

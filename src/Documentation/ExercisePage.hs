@@ -48,7 +48,7 @@ exercisePage pkg = defaultPage title 2 $ do
       ]
    
    h2 "1. Strategy"
-   let f (loc, e)  = [text (show loc), indent (length loc) >> g e]
+   let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
        g (Left a)  = text (strategyName a)
        g (Right a) = text (name a ++ " (rule)") 
        indent n    = text (replicate (3*n) '.')

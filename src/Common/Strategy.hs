@@ -32,8 +32,9 @@ module Common.Strategy
    , hide, skip, fold
      -- * Strategy locations
    , StrategyLocation, topLocation, nextLocation, downLocation
+   , locationDepth
    , subTaskLocation, nextTaskLocation, parseStrategyLocation
-   , StrategyOrRule, subStrategy
+   , StrategyOrRule, subStrategy, strategyLocations
    , mapRules, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)

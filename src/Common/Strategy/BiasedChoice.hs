@@ -14,6 +14,7 @@ module Common.Strategy.BiasedChoice
    ) where
 
 import Common.Apply
+import Common.View
 import Common.Derivation
 import Common.Transformation
 import Common.Strategy.Core
@@ -27,20 +28,25 @@ instance Apply f => Apply (Bias f) where
    applyAll _          = return
 
 placeBiasLabels :: Core l a -> Core (Either (Bias f a) l) a
-placeBiasLabels = rec 0 . mapLabel Right
+placeBiasLabels = fst . rec 0 . mapLabel Right
  where
+   -- Left-biased choice
    rec n (a :|>: b) = 
-      let left  = Label (Left (TryFirst n)) (rec n a)
-          right = Label (Left (OrElse n))   (rec (n+count a) b)
-      in left :|: right
+      let (ra, n1) = rec n  a
+          (rb, n2) = rec n1 b
+          left     = Label (Left (TryFirst n)) ra
+          right    = Label (Left (OrElse n))   rb
+      in (left :|: right, n2)
+   -- All other cases
    rec n core = 
-      let  (cs, f) = uniplate core 
-      in f (recList n cs)
+      let (cs, f)  = uniplate core
+      in first f (recList n cs)
       
-   recList _ [] = []
-   recList n (x:xs) = rec n x : recList (n+count x) xs
-   
-   count a = length [ () | _ :|>: _ <- universe a ]
+   recList n [] = ([], n)
+   recList n (x:xs) = 
+      let (a,  n1) = rec n x
+          (as, n2) = recList n1 xs
+      in (a:as, n2)
 
 biasTranslation :: (Rule a -> f a) -> Translation (Either (Bias f a) l) a (Bias f a)
 biasTranslation f = (either Before (const Skip), Normal . f)

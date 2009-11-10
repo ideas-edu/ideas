@@ -49,7 +49,8 @@ emptyPrefix = makePrefix []
 makePrefix :: [Int] -> LabeledStrategy a -> Prefix a
 makePrefix is ls = rec [] is start
  where
-   mkCore = placeBiasLabels . addLocation . toCore . toStrategy
+   mkCore = placeBiasLabels . processLabelInfo snd
+          . addLocation . toCore . toStrategy
    start  = strategyTree biasT (mkCore ls)
  
    rec acc [] t = P acc t
@@ -58,7 +59,7 @@ makePrefix is ls = rec [] is start
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> P [] start -- invalid prefix: start over
 
-   biasT :: Translation (Either (Bias Step a) (StrategyLocation, String)) a (Bias Step a)
+   biasT :: Translation (Either (Bias Step a) (StrategyLocation, LabelInfo)) a (Bias Step a)
    biasT = (forLabel, Normal . Step)
    
    forLabel (Left bias)      = Before bias

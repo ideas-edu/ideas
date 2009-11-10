@@ -16,7 +16,7 @@
 module Common.Strategy.Core 
    ( Core(..)
    , strategyTree, runTree --, makeTree 
-   , mapRule, coreVars, noLabels --, catMaybeLabel --, mapCore, 
+   , mapRule, coreVars, noLabels, mapCore, mapCoreM --, catMaybeLabel --, , 
    , mapLabel, Translation, ForLabel(..) --, simpleTranslation
    ) where
 
@@ -26,7 +26,7 @@ import Common.Apply
 import Common.Derivation
 import Common.Transformation
 import Common.Uniplate
-import Control.Monad (join)
+import Control.Monad.Identity
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -41,7 +41,7 @@ data Core l a
    | Core l a :|:  Core l a
    | Core l a :|>: Core l a
    | Many (Core l a)
-   | Not (Core l a)
+   | Not (Core () a) -- proves that there are no labels inside
    | Label l (Core l a)
    | Succeed
    | Fail
@@ -63,9 +63,9 @@ instance Uniplate (Core l a) where
          a :|: b   -> ([a,b], \[x,y] -> x :|: y)
          a :|>: b  -> ([a,b], \[x,y] -> x :|>: y)
          Many a    -> ([a],   \[x]   -> Many x)
-         Not a     -> ([a],   \[x]   -> Not x)
          Label l a -> ([a],   \[x]   -> Label l x)
          Rec n a   -> ([a],   \[x]   -> Rec n x)
+         Not a     -> ([noLabels a], \[x] -> Not (noLabels x))
          _         -> ([],    \_     -> core)
 
 -----------------------------------------------------------------
@@ -109,7 +109,7 @@ toGrammar (f, g) = rec
       case core of
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
-         a :|>: b  -> rec (a :|: (Not a :*: b))
+         a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
          Many a    -> Grammar.many (rec a)
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
@@ -117,7 +117,7 @@ toGrammar (f, g) = rec
          Rule ml r -> (maybe id forLabel ml) (symbol (g r))
          Var n     -> Grammar.var n
          Rec n a   -> Grammar.rec n (rec a)
-         Not a     -> rec (Rule Nothing (notRule a))
+         Not a     -> symbol (g (notRule a))
    
    forLabel l g =
       case f l of
@@ -146,28 +146,15 @@ catMaybeLabel = mapCore (maybe id Label) (Rule . join)
    
 mapCore :: (l -> Core m b -> Core m b) -> (Maybe l -> Rule a -> Core m b) 
         -> Core l a -> Core m b
-mapCore f g = rec 
- where 
-   rec core =
-      case core of
-         a :*: b   -> rec a :*:  rec b
-         a :|: b   -> rec a :|:  rec b
-         a :|>: b  -> rec a :|>: rec b
-         Many a    -> Many (rec a)
-         Succeed   -> Succeed
-         Fail      -> Fail
-         Label l a -> f l (rec a)
-         Rule ml r -> g ml r
-         Var n     -> Var n
-         Rec n a   -> Rec n (rec a)
-         Not a     -> Not (rec a)
-         
-coreVars :: Core l a -> [Int]
-coreVars s = [ n | Rec n _ <- universe s ] ++ [ n | Var n <- universe s ]
+mapCore f g = 
+   let fm l = return . f l . runIdentity
+       gm l = return . g l
+   in runIdentity . mapCoreM fm gm
 
-{-
-mapCoreM :: Monad m => (k -> Core l b -> m (Core l b)) 
-                   -> (Rule a -> m (Core l b)) 
+-- The most primitive function that applies functions to the label and 
+-- rule alternatives. Monadic version.
+mapCoreM :: Monad m => (k -> m (Core l b) -> m (Core l b)) 
+                   -> (Maybe k -> Rule a -> m (Core l b)) 
                    -> Core k a -> m (Core l b)
 mapCoreM f g = rec 
  where 
@@ -179,9 +166,15 @@ mapCoreM f g = rec
          Many a    -> liftM Many (rec a)
          Succeed   -> return Succeed
          Fail      -> return Fail
-         Label l a -> rec a >>= f l
-         Rule r    -> g r
+         Label l a -> f l (rec a)
+         Rule ml r -> g ml r
          Var n     -> return (Var n)
          Rec n a   -> liftM (Rec n) (rec a)
-         Not a     -> liftM Not (rec a)
--}
+         Not a     -> do 
+            let recNot h = mapCoreM (const id) (const h)
+            b <- recNot (g Nothing) a
+            c <- recNot (return . Rule Nothing) b
+            return (Not c)
+      
+coreVars :: Core l a -> [Int]
+coreVars s = [ n | Rec n _ <- universe s ] ++ [ n | Var n <- universe s ]

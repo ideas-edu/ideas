@@ -29,6 +29,7 @@ module Common.Strategy
    , check, not, repeat, repeat1, try, (|>), exhaustive
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
+   , hide, skip, fold
      -- * Strategy locations
    , StrategyLocation, topLocation, nextLocation, downLocation
    , subTaskLocation, nextTaskLocation, parseStrategyLocation

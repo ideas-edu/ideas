@@ -72,8 +72,8 @@ quadraticStrategy canUseABC = cleanUpStrategy (fmap cleanUp) $
       | otherwise = 
            label "no abc formula" $ toStrategy fail
  
-   zeroForm = label "zero form"
-      mulZero
+   zeroForm = label "zero form" $
+      toStrategy mulZero
          
    constantForm = label "constant form" $ 
       coverUpPower <|> ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
@@ -81,9 +81,9 @@ quadraticStrategy canUseABC = cleanUpStrategy (fmap cleanUp) $
       <|> squareBothSides <|> ruleOnce factorLeftAsSquare 
          
    simplifyForm = label "square root simplification" $ 
-      ruleMulti2 (ruleSomewhere simplerSquareRoot)
+      toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot))
 
-   topForm = label "top form" $ 
+   topForm = label "top form" $
       ( ruleOnce2 (ruleSomewhere merge) 
         <|> ruleOnce cancelTerms  
         <|> ruleMulti2 (ruleSomewhere distributionSquare)

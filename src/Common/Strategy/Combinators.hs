@@ -82,15 +82,7 @@ check p = toStrategy (checkRule p)
 -- | Check whether or not the argument strategy cannot be applied: the result
 --   strategy only succeeds if this is not the case (otherwise it fails).
 not :: IsStrategy f => f a -> Strategy a
-not = liftCore Not
-
-{- alternative definition, with an early commit. No performance gain was
-measurable
-
-applicableOne :: Strategy a -> a -> Bool
-applicableOne s a = 
-   let tree = derivationTree s a
-   in endpoint tree || Prelude.not (null (branches tree)) -}
+not = liftCore (Not . noLabels)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
@@ -151,3 +143,8 @@ bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
 {- The ideal implementation does not yet work: there appears to be a strange
    interplay between the fixpoint operator (with variables) and the not combinator
    > bottomUp s = fix $ \this -> once this |> s -}
+   
+hide, fold, skip :: IsLabeled f => f a -> LabeledStrategy a
+hide = changeInfo (\info -> info {hidden  = True})
+fold = changeInfo (\info -> info {folded  = True})
+skip = changeInfo (\info -> info {skipped = True})

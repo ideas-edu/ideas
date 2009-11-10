@@ -24,6 +24,7 @@ import Common.Uniplate
 import Data.Char
 import Data.Foldable (toList)
 import Data.Sequence hiding (take)
+import Control.Monad.State
 
 -----------------------------------------------------------
 --- Strategy locations
@@ -86,8 +87,8 @@ strategyLocations = collect . addLocation . toCore . toStrategy
  where
    collect core = 
       case core of
-         Label (loc, l) s -> 
-            let this = label l (mapLabel snd s)
+         Label (loc, info) s -> 
+            let this = makeLabeledStrategy info (mapLabel snd s)
             in (loc, Left this) : collect s
          Rule (Just (loc, _)) r -> 
             [(loc, Right r)]
@@ -102,31 +103,17 @@ subStrategy loc = lookup loc . strategyLocations
 -- local helper functions that decorates interesting places with a 
 -- strategy lcations (major rules, and labels)
 addLocation :: Core l a -> Core (StrategyLocation, l) a
-addLocation = fst . ($ topLocation) . rec
+addLocation = flip evalState topLocation . mapCoreM forLabel forRule
  where
-   rec core =
-      case core of
-         -- Locations of interest
-         Label l a -> \loc -> 
-            let pair = (loc, l)
-                rest = fst (rec a (downLocation loc))
-            in (Label pair rest, nextLocation loc)
-         Rule ml r -> \loc ->
-            case ml of
-               Just l  -> (Rule (Just (loc, l)) r, nextLocation loc)
-               Nothing -> (Rule Nothing r, loc)
-         -- Remaining (recursive) cases
-         a :*: b   -> lift2 (:*:)  a b
-         a :|: b   -> lift2 (:|:)  a b
-         a :|>: b  -> lift2 (:|>:) a b
-         Many a    -> lift1 Many a
-         Rec n a   -> lift1 (Rec n) a
-         _         -> \loc -> (noLabels core, loc) -- including Not
-    where
-      lift1 f a loc = 
-         let (na, loc1) = rec a loc
-         in (f na, loc1)
-      lift2 f a b loc = 
-         let (na, loc1) = rec a loc
-             (nb, loc2) = rec b loc1
-         in (f na nb, loc2)
+   forLabel l ma = do
+      loc <- get
+      put (downLocation loc)
+      rest <- ma
+      put (nextLocation loc)
+      return (Label (loc, l) rest)
+   forRule (Just l) r = do
+      loc <- get
+      put (nextLocation loc)
+      return (Rule (Just (loc, l)) r)
+   forRule Nothing r =
+      return (Rule Nothing r)

@@ -18,9 +18,6 @@ import Common.Derivation
 import Common.Transformation
 import Common.Strategy.Core
 import Common.Uniplate
-import Data.Maybe
-import Debug.Trace
-import qualified Common.Strategy.Grammar as Grammar -- tmp
 
 data Bias f a = TryFirst BiasId | OrElse BiasId | Normal (f a) deriving Show
 type BiasId = Int
@@ -45,11 +42,8 @@ placeBiasLabels = rec 0 . mapLabel Right
    
    count a = length [ () | _ :|>: _ <- universe a ]
 
-biasTranslation :: (Rule a -> f a) -> Translation (Bias f) (Either (Bias f a) l) a
-biasTranslation f = 
-   ( \l g -> either (\b -> Grammar.symbol b Grammar.<*> g) (const g) l
-   , Grammar.symbol . Normal . f
-   )
+biasTranslation :: (Rule a -> f a) -> Translation (Either (Bias f a) l) a (Bias f a)
+biasTranslation f = (either Before (const Skip), Normal . f)
 
 biasTreeG :: (DerivationTree (f a, info) a -> Bool) -> DerivationTree (Bias f a, info) a -> DerivationTree (f a, info) a
 biasTreeG success t = t {branches = f [] (branches t)}
@@ -92,7 +86,7 @@ makeBiasedTree p core =
    biasTree p . changeLabel fst . runTree (strategyTree (biasTranslation id) (placeBiasLabels core))
     
 -------------------------
-test = makeBiasedTree (isJust . derivation) myCore 5
+test = makeBiasedTree (maybe False (const True) . derivation) myCore 5
 
 myCore = (Rule r1 :|>: Rule r2) :|: (Rule r3 :|>: Rule r4)
 
@@ -101,5 +95,5 @@ r1 = make "r1" $ \n -> trace "**1**" [n*n]
 r2 = make "r2" $ \n -> trace "**2**" [n+1]
 r3 = make "r3" $ \n -> trace "**3**" [n*2]
 r4 = make "r4" $ \n -> trace "**4**" [n `div` 2]
-
+trace _ = id
 make n = minorRule . makeSimpleRuleList n

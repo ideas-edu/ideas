@@ -25,7 +25,6 @@ import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
 import Common.Strategy.BiasedChoice
-import qualified Common.Strategy.Grammar as Grammar -- tmp
 
 -----------------------------------------------------------
 --- Prefixes
@@ -59,18 +58,12 @@ makePrefix is ls = rec [] is start
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> P [] start -- invalid prefix: start over
 
-   biasT :: Translation (Bias Step) (Either (Bias Step a) (StrategyLocation, Maybe String)) a
-   biasT = (forLabel, forRule)
+   biasT :: Translation (Either (Bias Step a) (StrategyLocation, Maybe String)) a (Bias Step a)
+   biasT = (forLabel, Normal . Step)
    
-   forLabel (Left bias) g = 
-      Grammar.symbol bias Grammar.<*> g
-   forLabel (Right (loc, _)) g = 
-      Grammar.symbol (Normal (Begin loc)) 
-         Grammar.<*> g Grammar.<*>
-      Grammar.symbol (Normal (End loc))
-   
-   forRule = Grammar.symbol . Normal . Step
-
+   forLabel (Left bias)      = Before bias
+   forLabel (Right (loc, _)) = Around (Normal (Begin loc)) (Normal (End loc))
+      
 -- | The @Step@ data type can be used to inspect the structure of the strategy
 data Step a = Begin StrategyLocation 
             | Step (Rule a) 

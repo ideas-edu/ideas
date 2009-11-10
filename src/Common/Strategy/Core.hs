@@ -15,13 +15,13 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( Core(..)
-   , StrategyTree, strategyTree, runTree, makeTree 
-   , mapRule, coreVars, noLabels, mapCore, catMaybeLabel
-   , mapLabel, markLabel, simpleTranslation, Translation
+   , strategyTree, runTree --, makeTree 
+   , mapRule, coreVars, noLabels, catMaybeLabel --, mapCore, 
+   , mapLabel, Translation, ForLabel(..) --, simpleTranslation
    ) where
 
 import qualified Common.Strategy.Grammar as Grammar
-import Common.Strategy.Grammar (Grammar)
+import Common.Strategy.Grammar (Grammar, (<*>), (<|>), symbol)
 import Common.Apply
 import Common.Derivation
 import Common.Transformation
@@ -69,9 +69,7 @@ instance Uniplate (Core l a) where
 -----------------------------------------------------------------
 -- The strategy tree (static, no term)
 
-type StrategyTree f a = DerivationTree (f a) ()
-
-strategyTree :: Translation f l a -> Core l a -> StrategyTree f a
+strategyTree :: Translation l a b -> Core l a -> DerivationTree b ()
 strategyTree t = grammarTree . toGrammar t
 
 grammarTree :: Grammar a -> DerivationTree a ()
@@ -79,7 +77,6 @@ grammarTree gr = addBranches list node
  where 
    node = singleNode () (Grammar.empty gr)
    list = [ (f, grammarTree rest) | (f, rest) <- Grammar.firsts gr ]
-               
 
 -----------------------------------------------------------------
 -- Running a strategy
@@ -96,36 +93,37 @@ runTree t a = addBranches list (singleNode a (endpoint t))
 -----------------------------------------------------------------
 -- Translation to Grammar data type
 
-type Translation f l a =
-   (l -> Grammar (f a) -> Grammar (f a), Rule a -> Grammar (f a))
+type Translation l a b = (l -> ForLabel b, Rule a -> b)
 
-simpleTranslation :: Translation Rule l a
-simpleTranslation = (const id, Grammar.symbol)
+data ForLabel a = Skip | Before a | After a | Around a a
 
-markLabel :: (l -> (f a, f a)) -> (Rule a -> f a) -> Translation f l a
-markLabel f g = 
-   (\l c -> let (begin, end) = f l
-            in Grammar.symbol begin Grammar.<*> c Grammar.<*> Grammar.symbol end
-   , Grammar.symbol . g
-   )
+simpleTranslation :: Translation l a (Rule a)
+simpleTranslation = (const Skip, id)
 
-toGrammar :: Translation f l a -> Core l a -> Grammar (f a)
-toGrammar (forLabel, forRule) = rec
+toGrammar :: Translation l a b -> Core l a -> Grammar b
+toGrammar (f, g) = rec
  where
    rec core =
       case core of
-         a :*: b   -> rec a Grammar.<*> rec b
-         a :|: b   -> rec a Grammar.<|> rec b
+         a :*: b   -> rec a <*> rec b
+         a :|: b   -> rec a <|> rec b
          a :|>: b  -> rec (a :|: (Not a :*: b))
          Many a    -> Grammar.many (rec a)
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
-         Label l a -> forLabel l (rec a)
-         Rule r    -> forRule r
+         Label l a -> forLabel (f l) (rec a)
+         Rule r    -> symbol (g r)
          Var n     -> Grammar.var n
          Rec n a   -> Grammar.rec n (rec a)
-         Not a     -> forRule (notRule a)
-      
+         Not a     -> rec (Rule (notRule a))
+   
+   forLabel mark g =
+      case mark of
+         Skip       -> g
+         Before s   -> symbol s <*> g
+         After    t -> g <*> symbol t
+         Around s t -> symbol s <*> g <*> symbol t
+
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)
    

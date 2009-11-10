@@ -11,7 +11,6 @@
 -----------------------------------------------------------------------------
 module Service.ServiceList (serviceList, Service(..), getService, evalService) where
 
-import Common.Context
 import Common.Transformation
 import qualified Common.Exercise as E
 import Common.Utils (Some(..))
@@ -90,9 +89,7 @@ generateS = Service "generate" $ S.generate :::
 
 findbuggyrulesS :: Service a
 findbuggyrulesS = Service "findbuggyrules" $ 
-   f ::: State :-> Term :-> List Rule
- where
-   f st a = S.findbuggyrules st (inContext a)
+   S.findbuggyrules ::: State :-> Term :-> List Rule
 
 submitS :: Service a
 submitS = Service "submit" $ 

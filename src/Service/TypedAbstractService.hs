@@ -125,10 +125,10 @@ ready state = isReady (exercise state) (term state)
 stepsremaining :: State a -> Int
 stepsremaining = length . derivation
 
-findbuggyrules :: State a -> Context a -> [Rule (Context a)]
+findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise state
-       isA     = similarity ex (fromContext a) . fromContext  
+       isA     = similarity ex a . fromContext  
        buggies = filter isBuggyRule (ruleset ex)
        check r = any isA (Apply.applyAll r (context state))
    in filter check buggies

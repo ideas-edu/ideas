@@ -88,12 +88,11 @@ makeBiasedTree p core =
 -------------------------
 test = makeBiasedTree (maybe False (const True) . derivation) myCore 5
 
-myCore = (Rule r1 :|>: Rule r2) :|: (Rule r3 :|>: Rule r4)
-
-r1, r2, r3, r4 :: Rule Int
-r1 = make "r1" $ \n -> trace "**1**" [n*n]
-r2 = make "r2" $ \n -> trace "**2**" [n+1]
-r3 = make "r3" $ \n -> trace "**3**" [n*2]
-r4 = make "r4" $ \n -> trace "**4**" [n `div` 2]
-trace _ = id
-make n = minorRule . makeSimpleRuleList n
+myCore = (r1 :|>: r2) :|: (r3 :|>: r4)
+ where
+   r1 = make "r1" $ \n -> trace "**1**" [n*n]
+   r2 = make "r2" $ \n -> trace "**2**" [n+1]
+   r3 = make "r3" $ \n -> trace "**3**" [n*2]
+   r4 = make "r4" $ \n -> trace "**4**" [n `div` 2]
+   trace _ = id
+   make n = Rule Nothing . minorRule . makeSimpleRuleList n

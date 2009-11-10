@@ -85,34 +85,36 @@ strategyLocations :: LabeledStrategy a -> [(StrategyLocation, StrategyOrRule a)]
 strategyLocations = collect . addLocation . toCore . toStrategy
  where
    collect core = 
-      [ (loc, result) 
-      | Label (loc, l) s <- universe core 
-      , Just result <- [make l s]
-      ]
-   
-   make Nothing (Rule r) = Just (Right r)
-   make (Just l) s = Just (Left (label l (catMaybeLabel (mapLabel snd s))))
-   make _ _        = Nothing
+      case core of
+         Label (loc, l) s -> 
+            let this = label l (mapLabel snd s)
+            in (loc, Left this) : collect s
+         Rule (Just (loc, _)) r -> 
+            [(loc, Right r)]
+         _ -> 
+            concatMap collect (children core)
 
--- | Returns the substrategy or rule at a strategy location. Nothing indicates that the location is invalid
+-- | Returns the substrategy or rule at a strategy location. Nothing 
+-- indicates that the location is invalid
 subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (StrategyOrRule a)
 subStrategy loc = lookup loc . strategyLocations 
             
 -- local helper functions that decorates interesting places with a 
 -- strategy lcations (major rules, and labels)
-addLocation :: Core l a -> Core (StrategyLocation, Maybe l) a
+addLocation :: Core l a -> Core (StrategyLocation, l) a
 addLocation = fst . ($ topLocation) . rec
  where
    rec core =
       case core of
          -- Locations of interest
          Label l a -> \loc -> 
-            let pair = (loc, Just l)
+            let pair = (loc, l)
                 rest = fst (rec a (downLocation loc))
             in (Label pair rest, nextLocation loc)
-         Rule r | isMajorRule r -> \loc ->
-            let pair = (loc, Nothing)
-            in (Label pair (Rule r), nextLocation loc)
+         Rule ml r -> \loc ->
+            case ml of
+               Just l  -> (Rule (Just (loc, l)) r, nextLocation loc)
+               Nothing -> (Rule Nothing r, loc)
          -- Remaining (recursive) cases
          a :*: b   -> lift2 (:*:)  a b
          a :|: b   -> lift2 (:|:)  a b

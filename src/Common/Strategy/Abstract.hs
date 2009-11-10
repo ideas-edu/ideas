@@ -55,8 +55,10 @@ instance IsStrategy Strategy where
 instance IsStrategy (LabeledStrategy) where
   toStrategy (LS n s) = S (Label n (toCore s))
 
-instance IsStrategy Rule where
-   toStrategy = S . Rule
+instance IsStrategy Rule where -- Major rules receive a label
+   toStrategy r
+      | isMajorRule r = S (Rule (Just (name r)) r)
+      | otherwise     = S (Rule Nothing r)
 
 instance IsStrategy RewriteRule where
    toStrategy r = 
@@ -97,7 +99,7 @@ derivationTree s = mergeSteps isMajorRule . fullDerivationTree s
 
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajorRule r ]
+rulesInStrategy f = [ r | Rule _ r <- universe (toCore (toStrategy f)), isMajorRule r ]
                     
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
@@ -107,7 +109,7 @@ mapRules f (LS n s) = LS n (S (mapRule f (toCore s)))
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategy f (LS n s) = mapRules g (LS n (S core))
  where
-   core = Rule (doAfter f idRule) :*: toCore s
+   core = Rule Nothing (doAfter f idRule) :*: toCore s
    g r | isMajorRule r = doAfter f r  
        | otherwise     = r
        
@@ -126,5 +128,5 @@ liftCore2 f = liftCore . f . toCore . toStrategy
 fixCore :: (Core l a -> Core l a) -> Core l a
 fixCore f = Rec i (f (Var i)) -- disadvantage: function f is applied twice
  where
-    s = coreVars (f (Rule idRule))
+    s = coreVars (f (Rule Nothing idRule))
     i = if null s then 0 else maximum s + 1

@@ -16,7 +16,7 @@
 module Common.Strategy.Core 
    ( Core(..)
    , strategyTree, runTree --, makeTree 
-   , mapRule, coreVars, noLabels, catMaybeLabel --, mapCore, 
+   , mapRule, coreVars, noLabels --, catMaybeLabel --, mapCore, 
    , mapLabel, Translation, ForLabel(..) --, simpleTranslation
    ) where
 
@@ -26,6 +26,7 @@ import Common.Apply
 import Common.Derivation
 import Common.Transformation
 import Common.Uniplate
+import Control.Monad (join)
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -34,6 +35,7 @@ import Common.Uniplate
 infixr 3 :|:, :|>:
 infixr 5 :*:
 
+-- Some rules receive label (but not all)
 data Core l a
    = Core l a :*:  Core l a
    | Core l a :|:  Core l a
@@ -43,7 +45,7 @@ data Core l a
    | Label l (Core l a)
    | Succeed
    | Fail
-   | Rule (Rule a)
+   | Rule (Maybe l) (Rule a)
    | Var Int
    | Rec Int (Core l a)
  deriving Show
@@ -111,14 +113,14 @@ toGrammar (f, g) = rec
          Many a    -> Grammar.many (rec a)
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
-         Label l a -> forLabel (f l) (rec a)
-         Rule r    -> symbol (g r)
+         Label l a -> forLabel l (rec a)
+         Rule ml r -> (maybe id forLabel ml) (symbol (g r))
          Var n     -> Grammar.var n
          Rec n a   -> Grammar.rec n (rec a)
-         Not a     -> rec (Rule (notRule a))
+         Not a     -> rec (Rule Nothing (notRule a))
    
-   forLabel mark g =
-      case mark of
+   forLabel l g =
+      case f l of
          Skip       -> g
          Before s   -> symbol s <*> g
          After    t -> g <*> symbol t
@@ -131,18 +133,19 @@ notRule f = checkRule (not . applicable f)
 -- Utility functions
 
 mapLabel :: (l -> m) -> Core l a -> Core m a
-mapLabel f = mapCore (Label . f) Rule
+mapLabel f = mapCore (Label . f) (Rule . fmap f)
 
 mapRule :: (Rule a -> Rule b) -> Core l a -> Core l b
-mapRule f = mapCore Label (Rule . f)
+mapRule f = mapCore Label (\ml -> Rule ml . f)
 
 noLabels :: Core l a -> Core m a
-noLabels = mapCore (const id) Rule
+noLabels = mapCore (const id) (const (Rule Nothing))
    
 catMaybeLabel :: Core (Maybe l) a -> Core l a
-catMaybeLabel = mapCore (maybe id Label) Rule
+catMaybeLabel = mapCore (maybe id Label) (Rule . join)
    
-mapCore :: (l -> Core m b -> Core m b) -> (Rule a -> Core m b) -> Core l a -> Core m b
+mapCore :: (l -> Core m b -> Core m b) -> (Maybe l -> Rule a -> Core m b) 
+        -> Core l a -> Core m b
 mapCore f g = rec 
  where 
    rec core =
@@ -154,7 +157,7 @@ mapCore f g = rec
          Succeed   -> Succeed
          Fail      -> Fail
          Label l a -> f l (rec a)
-         Rule r    -> g r
+         Rule ml r -> g ml r
          Var n     -> Var n
          Rec n a   -> Rec n (rec a)
          Not a     -> Not (rec a)

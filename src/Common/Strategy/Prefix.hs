@@ -58,7 +58,7 @@ makePrefix is ls = rec [] is start
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> P [] start -- invalid prefix: start over
 
-   biasT :: Translation (Either (Bias Step a) (StrategyLocation, Maybe String)) a (Bias Step a)
+   biasT :: Translation (Either (Bias Step a) (StrategyLocation, String)) a (Bias Step a)
    biasT = (forLabel, Normal . Step)
    
    forLabel (Left bias)      = Before bias

@@ -51,8 +51,8 @@ coverUpPlus f = alternatives $ map (f . ($ oneVar))
 ------------------------------------------------------------
 -- Quadratic equations
 
-quadraticStrategy :: Bool -> LabeledStrategy (Context (OrList (Equation Expr)))
-quadraticStrategy canUseABC = cleanUpStrategy (fmap cleanUp) $ 
+quadraticStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
+quadraticStrategy = cleanUpStrategy (fmap cleanUp) $ 
    label "Quadratic Equation Strategy" $ 
    repeat $  mapRules ignoreContext generalForm
           |> generalABCForm
@@ -66,11 +66,8 @@ quadraticStrategy canUseABC = cleanUpStrategy (fmap cleanUp) $
       <|> ruleOnce niceFactors <|> ruleOnce simplerA 
       <|> coverUpPower -- to deal with special case x^2=0
       
-   generalABCForm
-      | canUseABC = label "abc formula" $
-           toStrategy (ignoreContext abcFormula) -- abcStrategy
-      | otherwise = 
-           label "no abc formula" $ toStrategy fail
+   generalABCForm = label "abc form" $
+      toStrategy (ignoreContext abcFormula) -- abcStrategy
  
    zeroForm = label "zero form" $
       toStrategy mulZero
@@ -90,7 +87,7 @@ quadraticStrategy canUseABC = cleanUpStrategy (fmap cleanUp) $
         <|> ruleMulti2 (ruleSomewhere distributeTimes) 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)
         <|> ruleOnce flipEquation)
-      |> (ruleOnce moveToLeft <|> ruleOnce prepareSplitSquare)
+      |> (ruleOnce moveToLeft <|> hide (ruleOnce prepareSplitSquare))
    -- to do: find a better location in the strategy for splitting the square
    
 -----------------------------------------------------------
@@ -101,7 +98,7 @@ higherDegreeStrategy = cleanUpStrategy (fmap cleanUp) $
    label "higher degree" $ 
       mapRules ignoreContext higherForm
       <*> mapRules ignoreContext (label "quadratic" (check isQ) )
-      <*> quadraticStrategy True
+      <*> quadraticStrategy
  where
    higherForm = label "higher degree form" $
       repeat (allPowerFactors |> (mulZero <|> ruleOnce2 powerFactor <|> sameFactor))

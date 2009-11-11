@@ -15,6 +15,7 @@ import Common.Context
 import Common.Exercise
 import Common.Rewriting
 import Common.Strategy
+import Common.Transformation
 import Common.View
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -56,7 +57,7 @@ quadraticExercise = makeExercise
    , equivalence  = viewEquivalent quadraticEquationsView
    , isReady      = solvedEquations
    , extraRules   = map ignoreContext $ quadraticRules ++ abcBuggyRules
-   , strategy     = quadraticStrategy True
+   , strategy     = quadraticStrategy
    , examples     = map (orList . return) (concat quadraticEquations)
    }
    
@@ -78,8 +79,12 @@ quadraticNoABCExercise :: Exercise (OrList (Equation Expr))
 quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
-   , strategy     = quadraticStrategy False
+   , strategy     = configure cfg quadraticStrategy
    }
+ where
+   cfg = [ (ByName (name prepareSplitSquare), Expose)
+         , (ByName "abc form", Hide)
+         ]
    
 --------------------------------------------
 -- Equality

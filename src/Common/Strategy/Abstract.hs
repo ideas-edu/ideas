@@ -134,27 +134,24 @@ changeInfo f a = LS (f info) s
 --- Process Label Information
 
 processLabelInfo :: (l -> LabelInfo) -> Core l a -> Core l a
-processLabelInfo f = rec
+processLabelInfo getInfo = mapCore forLabel forRule
  where
-   rec core = 
-      case core of 
-         Label l c
-            | hidden info -> Fail
-            | folded info -> Rule (Just l) asRule  
-            | otherwise   -> new
-          where 
-            info   = f l
-            new    = (if skipped info then mapRule minorRule else id) (Label l (rec c))
-            asRule = makeSimpleRuleList (labelName info ++ " (folded)") (applyAll new)
-         Rule (Just l) r 
-            | hidden info  -> Fail
-            | skipped info -> Rule (Just l) (minorRule r)
-            | otherwise    -> Rule (Just l) r
-          where
-            info = f l
-         _ -> build (map rec cs)
+   forLabel l c 
+      | hidden info = Fail
+      | folded info = Rule (Just l) asRule
+      | otherwise   = new
+    where 
+      new | skipped info = mapRule minorRule (Label l c)
+          | otherwise    = Label l c
+      info   = getInfo l
+      asRule = makeSimpleRuleList (labelName info ++ " (folded)") (applyAll new)
+   forRule (Just l) r 
+      | hidden info  = Fail
+      | skipped info = Rule (Just l) (minorRule r)
+      | otherwise    = Rule (Just l) r
     where
-      (cs, build) = uniplate core
+      info = getInfo l
+   forRule _ r = Rule Nothing r
 
 -----------------------------------------------------------
 --- Remaining functions

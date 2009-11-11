@@ -4,7 +4,7 @@
       []
       <state>
         <prefix>
-          [0,0,0,0,0,0,0,1,0,0,0,0]
+          [0,0,0,0,0,0,0,1,0,0,0,0,0]
         </prefix>
         <context>
           <item name="columnJ" value="0"/>

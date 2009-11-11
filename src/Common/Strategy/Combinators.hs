@@ -90,11 +90,11 @@ repeat s = many s <*> not s
 
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: IsStrategy f => f a -> Strategy a
-repeat1 s = many1 s <*> not s
+repeat1 s = s <*> repeat s
 
 -- | Apply a certain strategy if this is possible (greedy version of 'option')
 try :: IsStrategy f => f a -> Strategy a
-try s = s <|> not s
+try s = s |> succeed
 
 -- | Left-biased choice: if the left-operand strategy can be applied, do so. Otherwise,
 --   try the right-operand strategy

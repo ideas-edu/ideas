@@ -20,6 +20,13 @@ type Function = Double -> Double
 type Approximation = [Double]
 
 ------------------------------------------------------------
+-- Precision of a floating-point number
+
+precision :: Int -> Double -> Double
+precision n = (/a) . fromIntegral . round . (*a)
+ where a = 10 Prelude.^ (max 0 n)
+
+------------------------------------------------------------
 -- Stop criteria
 
 within :: Double -> Approximation -> Double

@@ -40,7 +40,8 @@ data Core l a
    = Core l a :*:  Core l a
    | Core l a :|:  Core l a
    | Core l a :|>: Core l a
-   | Many (Core l a)
+   | Many   (Core l a)
+   | Repeat (Core l a)
    | Not (Core () a) -- proves that there are no labels inside
    | Label l (Core l a)
    | Succeed
@@ -63,6 +64,7 @@ instance Uniplate (Core l a) where
          a :|: b   -> ([a,b], \[x,y] -> x :|: y)
          a :|>: b  -> ([a,b], \[x,y] -> x :|>: y)
          Many a    -> ([a],   \[x]   -> Many x)
+         Repeat a  -> ([a],   \[x]   -> Repeat x)
          Label l a -> ([a],   \[x]   -> Label l x)
          Rec n a   -> ([a],   \[x]   -> Rec n x)
          Not a     -> ([noLabels a], \[x] -> Not (noLabels x))
@@ -111,6 +113,7 @@ toGrammar (f, g) = rec
          a :|: b   -> rec a <|> rec b
          a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
          Many a    -> Grammar.many (rec a)
+         Repeat a  -> rec (Many a :*: Not (noLabels a))
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
          Label l a -> forLabel l (rec a)
@@ -141,8 +144,8 @@ mapRule f = mapCore Label (\ml -> Rule ml . f)
 noLabels :: Core l a -> Core m a
 noLabels = mapCore (const id) (const (Rule Nothing))
    
-catMaybeLabel :: Core (Maybe l) a -> Core l a
-catMaybeLabel = mapCore (maybe id Label) (Rule . join)
+-- catMaybeLabel :: Core (Maybe l) a -> Core l a
+-- catMaybeLabel = mapCore (maybe id Label) (Rule . join)
    
 mapCore :: (l -> Core m b -> Core m b) -> (Maybe l -> Rule a -> Core m b) 
         -> Core l a -> Core m b
@@ -163,7 +166,8 @@ mapCoreM f g = rec
          a :*: b   -> liftM2 (:*:)  (rec a) (rec b)
          a :|: b   -> liftM2 (:|:)  (rec a) (rec b)
          a :|>: b  -> liftM2 (:|>:) (rec a) (rec b)
-         Many a    -> liftM Many (rec a)
+         Many a    -> liftM Many   (rec a)
+         Repeat a  -> liftM Repeat (rec a)
          Succeed   -> return Succeed
          Fail      -> return Fail
          Label l a -> f l (rec a)

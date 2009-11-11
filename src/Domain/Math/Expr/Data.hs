@@ -34,7 +34,7 @@ data Expr = -- Num
           | Expr :/: Expr
             -- Floating-point
           | Sqrt Expr
-          | FPN Double 
+          | Number Double 
             -- Symbolic
           | Var String
           | Sym Symbol [Expr]
@@ -139,7 +139,7 @@ instance Arbitrary Expr where
          Negate a -> variant 3 . coarbitrary a
          Nat n    -> variant 4 . coarbitrary n
          a :/: b  -> variant 5 . coarbitrary a . coarbitrary b
-         FPN d    -> variant 6 . coarbitrary d
+         Number d -> variant 6 . coarbitrary d
          Sqrt a   -> variant 7 . coarbitrary a
          Var s    -> variant 8 . coarbitrary s
          Sym f xs -> variant 9 . coarbitrary (show f) . coarbitrary xs
@@ -173,8 +173,8 @@ instance Show Expr where
 showExpr :: OperatorTable -> Expr -> String
 showExpr table = rec 0 
  where
-   rec _ (Nat n) = show n
-   rec _ (FPN d) = show d
+   rec _ (Nat n)    = show n
+   rec _ (Number d) = show d
    rec _ (Var s) 
       | all isAlphaNum s = s
       | otherwise        = "\"" ++ s ++ "\""
@@ -213,7 +213,7 @@ instance MetaVar Expr where
 instance ShallowEq Expr where
    shallowEq (Nat a) (Nat b) = a == b
    shallowEq (Var a) (Var b) = a == b
-   shallowEq (FPN a) (FPN b) = a == b
+   shallowEq (Number a) (Number b) = a == b
    shallowEq expr1 expr2 =
       case (getFunction expr1, getFunction expr2) of
          (Just (s1, as), Just (s2, bs)) -> 

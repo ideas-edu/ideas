@@ -54,12 +54,12 @@ rationalView :: View Expr Rational
 rationalView = makeView (match realView) fromRational
 
 doubleView :: View Expr Double
-doubleView = makeView rec FPN
+doubleView = makeView rec Number
  where
    rec expr =
       case expr of
          Sym s xs -> mapM rec xs >>= doubleSym s
-         FPN d    -> return d
+         Number d -> return d
          _        -> exprToNumStep rec expr
 
 -------------------------------------------------------------------

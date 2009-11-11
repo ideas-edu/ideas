@@ -23,6 +23,7 @@ import Control.Monad
 import Data.List (nub, (\\), sort, sortBy)
 import Data.Maybe
 import Data.Ratio
+import Domain.Math.Approximation (precision)
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
@@ -241,7 +242,7 @@ ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
    guard (not (simplify rhs `belongsTo` rationalView))
    x <- getVariable lhs
    d <- match doubleView rhs
-   let new = FPN d  
+   let new = Number (precision 4 d)
    return (Var x .~=. new)
 
 ------------------------------------------------------------

@@ -82,8 +82,8 @@ quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $
    simplifyForm = (fromEquation $ 
       label "square root simplification" $ 
            toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot)))
-       -- <|> hide (label "approximate result" $ 
-       --     toStrategy $ ignoreContext (ruleOnce ruleApproximate))
+        <|> hide (label "approximate result" $ 
+            toStrategy $ ignoreContext (ruleMulti ruleApproximate))
 
    topForm = label "top form" $
       ( ruleOnce2 (ruleSomewhere merge) 

@@ -97,8 +97,8 @@ quadraticWithApproximation = quadraticExercise
    , strategy     = configure cfg quadraticStrategy
    }
  where
-   cfg = [ --(ByName (name prepareSplitSquare), Expose)
-         -- , (ByName "abc form", Hide)
+   cfg = [ (ByName "approximate result", Expose)
+         , (ByName "square root simplification", Hide)
          ]
    
 --------------------------------------------

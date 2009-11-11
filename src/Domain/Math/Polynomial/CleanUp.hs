@@ -16,12 +16,10 @@ module Domain.Math.Polynomial.CleanUp
    ) where
 
 import Common.Uniplate
-import Common.Utils
 import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Ratio
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Data.SquareRoot
@@ -77,6 +75,7 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
 ------------------------------------------------------------
 -- Testing
 
+{-
 -- List with hard cases
 hardCases = map cleanUpExpr $ let x=Var "x" in
   [ -1/2*x*(x/1)
@@ -94,7 +93,7 @@ hardCases = map cleanUpExpr $ let x=Var "x" in
   , (-7+7*x)^2-(x*0)^2/(-3)
   , 1*(x+93)+4
   , (1*(x+(-93/5))-(-4+x/19))/8-(x^2-x+(19/2-x)-34/3*(x*(-41/2)))/9
-  ]
+  ] -}
           
 ------------------------------------------------------------
 -- Cleaning up
@@ -143,7 +142,7 @@ cleanUpExpr = cleanUpBU2 {- e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 
       
 ------------------------------------------------------------
 -- Technique 1: fixed points of views
-
+{-
 cleanUpFix :: Expr -> Expr
 cleanUpFix = fixpoint (f4 . f3 . f2 . f1)
  where
@@ -153,7 +152,7 @@ cleanUpFix = fixpoint (f4 . f3 . f2 . f1)
    f2 = use (squareRootViewWith rationalView)
    f3 = use (powerFactorViewWith rationalView)
    f4 = smartConstructors
-
+-}
 assoPlus :: View Expr a -> [Expr] -> [Expr]
 assoPlus v = rec . map (simplify v)
  where
@@ -165,7 +164,7 @@ assoPlus v = rec . map (simplify v)
 
 ------------------------------------------------------------
 -- Technique 2a: one bottom-up traversal
-
+{-
 cleanUpBU :: Expr -> Expr
 cleanUpBU = transform (f4 . f3 . f2 . f1)
  where
@@ -175,7 +174,7 @@ cleanUpBU = transform (f4 . f3 . f2 . f1)
    f2 = simplify (squareRootViewWith rationalView)
    f3 = use (powerFactorViewWith rationalView)
    f4 = smartConstructors
-
+-}
 ------------------------------------------------------------
 -- Technique 2b: one bottom-up traversal
 
@@ -217,7 +216,7 @@ smart e = e
 
 ------------------------------------------------------------
 -- Technique 3: lattice of views
-   
+{-
 data T = R Rational 
        | S (SquareRoot Rational)
        | P String Rational Int
@@ -326,4 +325,4 @@ upgr (E e) =
       _ -> E e
 upgr (S a) = maybe (S a) R (fromSquareRoot a)
 upgr (P _ a n) | n==0 = R a
-upgr t = t
+upgr t = t -}

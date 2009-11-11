@@ -86,7 +86,7 @@ not = liftCore (Not . noLabels)
 
 -- | Repeat a strategy zero or more times (greedy version of 'many')
 repeat :: IsStrategy f => f a -> Strategy a
-repeat s = many s <*> not s
+repeat = liftCore Repeat
 
 -- | Apply a certain strategy at least once (greedy version of 'many1')
 repeat1 :: IsStrategy f => f a -> Strategy a

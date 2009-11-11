@@ -18,7 +18,7 @@ module Common.Strategy.Abstract
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, fixCore, makeLabeledStrategy
    , LabelInfo, strategyName, processLabelInfo, changeInfo
-   , hidden, skipped, folded, IsLabeled(..)
+   , hidden, skipped, folded, labelName, IsLabeled(..)
    ) where
 
 import Common.Strategy.Core

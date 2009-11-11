@@ -143,8 +143,3 @@ bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
 {- The ideal implementation does not yet work: there appears to be a strange
    interplay between the fixpoint operator (with variables) and the not combinator
    > bottomUp s = fix $ \this -> once this |> s -}
-   
-hide, fold, skip :: IsLabeled f => f a -> LabeledStrategy a
-hide = changeInfo (\info -> info {hidden  = True})
-fold = changeInfo (\info -> info {folded  = True})
-skip = changeInfo (\info -> info {skipped = True})

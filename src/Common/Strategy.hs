@@ -29,7 +29,8 @@ module Common.Strategy
    , check, not, repeat, repeat1, try, (|>), exhaustive
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
-   , hide, skip, fold
+     -- * Configuration combinators
+   , module Common.Strategy.Configuration
      -- * Strategy locations
    , StrategyLocation, topLocation, nextLocation, downLocation
    , locationDepth
@@ -45,5 +46,6 @@ import Common.Strategy.Abstract
 import Common.Strategy.Combinators
 import Common.Strategy.Prefix
 import Common.Strategy.Location
+import Common.Strategy.Configuration
 
 import qualified Prelude

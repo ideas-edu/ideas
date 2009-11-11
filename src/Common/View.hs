@@ -17,10 +17,11 @@ module Common.View
    , simplify, simplifyWith, isCanonical, isCanonicalWith
    , belongsTo, viewEquivalent, viewEquivalentWith
    , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
-   , listView, conversion, ( #> )
+   , listView, switchView, conversion, ( #> )
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
+import Common.Traversable
 import Control.Arrow hiding ((>>>))
 import Control.Monad
 import Data.Maybe
@@ -145,6 +146,9 @@ instance ArrowChoice View where
 
 listView :: View a b -> View [a] [b]
 listView v = makeView (mapM (match v)) (map (build v))
+
+switchView :: Switch f => View a b -> View (f a) (f b)
+switchView v = makeView (switch . fmap (match v)) (fmap (build v))
 
 conversion :: (a -> b) -> (b -> a) -> View a b
 conversion f g = makeView (Just . f) g

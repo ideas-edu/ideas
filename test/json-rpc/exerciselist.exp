@@ -92,6 +92,12 @@
       },
       {
          "domain": "math",
+         "identifier": "quadreq-with-approx",
+         "description": "solve a quadratic equation with approximation",
+         "status": "Provisional"
+      },
+      {
+         "domain": "math",
          "identifier": "rational",
          "description": "simplify expression (rational numbers)",
          "status": "Provisional"
@@ -105,5 +111,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2382)"
+   "version": "0.5.8 (2448)"
 }

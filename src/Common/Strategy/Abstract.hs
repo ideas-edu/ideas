@@ -21,6 +21,7 @@ module Common.Strategy.Abstract
    , hidden, skipped, folded, labelName, IsLabeled(..)
    ) where
 
+import Common.Utils (commaList)
 import Common.Strategy.Core
 import Common.Strategy.BiasedChoice
 import Common.Apply
@@ -52,7 +53,12 @@ data LabelInfo = Info
    }
 
 instance Show LabelInfo where
-   show = show . labelName
+   show info = 
+      let ps = ["hidden"  | hidden info] ++ 
+               ["skipped" | skipped info] ++
+               ["folded"  | folded info]
+          extra = " (" ++ commaList ps ++ ")"
+      in show (labelName info) ++ if null ps then "" else extra
 
 makeInfo :: String -> LabelInfo
 makeInfo s = Info s False False False
@@ -102,7 +108,7 @@ strategyName :: LabeledStrategy a -> String
 strategyName = getLabel
 
 instance Show (LabeledStrategy a) where
-   show s = strategyName s ++ ": " ++ show (unlabel s)
+   show s = show (labelInfo s) ++ ": " ++ show (unlabel s)
 
 instance Apply LabeledStrategy where
    applyAll = applyAll . toStrategy

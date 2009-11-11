@@ -10,14 +10,13 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
-   ( linearStrategy, quadraticStrategy, quadraticStrategy2, thisView, switchView
+   ( linearStrategy, quadraticStrategy
    , higherDegreeStrategy 
    ) where
 
 import Prelude hiding (repeat, replicate, fail)
 import Common.Strategy
 import Common.Transformation
-import Common.Traversable
 import Common.View
 import Common.Context
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
@@ -52,27 +51,18 @@ coverUpPlus f = alternatives $ map (f . ($ oneVar))
 ------------------------------------------------------------
 -- Quadratic equations
 
-quadraticStrategy2 :: LabeledStrategy (Context (OrList (Relation Expr)))
-quadraticStrategy2 = label "Top" $
-   mapRules (liftRule thisView) quadraticStrategy <*> 
-   try (mapRules (ignoreContext) (hide (label "Approximate" (ruleMulti ruleApproximate))))
-
-thisView :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
-thisView = switchView (switchView equationView)
-
-switchView :: Switch f => View a b -> View (f a) (f b)
-switchView v = makeView (switch . fmap (match v)) (fmap (build v))
-
-quadraticStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-quadraticStrategy = cleanUpStrategy (fmap cleanUp) $ 
+quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
+quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $ 
    label "Quadratic Equation Strategy" $ 
-   repeat $  mapRules ignoreContext generalForm
-          |> generalABCForm
-          |> mapRules ignoreContext zeroForm 
-          |> mapRules ignoreContext constantForm
-          |> mapRules ignoreContext simplifyForm
-          |> mapRules ignoreContext topForm 
+   repeat $  fromEquation generalForm
+          |> mapRules (liftRule (switchView (switchView equationView))) generalABCForm
+          |> fromEquation zeroForm 
+          |> fromEquation constantForm
+          |> simplifyForm
+          |> fromEquation topForm 
  where
+   fromEquation = mapRules (ignoreContext . liftRule (switchView equationView))
+ 
    generalForm = label "general form" $ 
       ruleOnce commonFactorVar <|> ruleOnce noLinFormula{- or coverup -}
       <|> ruleOnce niceFactors <|> ruleOnce simplerA 
@@ -89,8 +79,11 @@ quadraticStrategy = cleanUpStrategy (fmap cleanUp) $
       <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator 
       <|> squareBothSides <|> ruleOnce factorLeftAsSquare 
          
-   simplifyForm = label "square root simplification" $ 
-      toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot))
+   simplifyForm = (fromEquation $ 
+      label "square root simplification" $ 
+           toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot)))
+       -- <|> hide (label "approximate result" $ 
+       --     toStrategy $ ignoreContext (ruleOnce ruleApproximate))
 
    topForm = label "top form" $
       ( ruleOnce2 (ruleSomewhere merge) 
@@ -105,15 +98,18 @@ quadraticStrategy = cleanUpStrategy (fmap cleanUp) $
 -----------------------------------------------------------
 -- Higher degree equations
 
-higherDegreeStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-higherDegreeStrategy = cleanUpStrategy (fmap cleanUp) $
+higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
+higherDegreeStrategy =
    label "higher degree" $ 
-      mapRules ignoreContext higherForm
-      <*> mapRules ignoreContext (label "quadratic" (check isQ) )
-      <*> quadraticStrategy
+      mapRules (ignoreContext . liftRule (switchView equationView)) higherForm
+      <*> (label "quadratic" (check isQ2 <*> quadraticStrategy))
  where
-   higherForm = label "higher degree form" $
+   higherForm = cleanUpStrategy cleanUp $ 
+      label "higher degree form" $
       repeat (allPowerFactors |> (mulZero <|> ruleOnce2 powerFactor <|> sameFactor))
+
+isQ2 :: Context (OrList (Relation Expr)) -> Bool
+isQ2 = maybe False isQ . match (switchView equationView) . fromContext
 
 isQ :: OrList (Equation Expr) -> Bool
 isQ = (`belongsTo` quadraticEquationsView)

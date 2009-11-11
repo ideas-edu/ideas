@@ -10,7 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.CleanUp 
-   ( cleanUp, cleanUpExpr, cleanUpExpr2, cleanUpSimple, collectLikeTerms
+   ( cleanUp, cleanUpRelation, cleanUpExpr, cleanUpExpr2
+   , cleanUpSimple, collectLikeTerms
    , normalizeSum, normalizeProduct
    ) where
 
@@ -105,7 +106,10 @@ cleanUpSimple = transform (f4 . f2 . f1)
    f1    = simplify rationalView
    f2    = use identity
    f4    = smartConstructors
-   
+
+cleanUpRelation :: OrList (Relation Expr) -> OrList (Relation Expr)
+cleanUpRelation = simplifyWith cleanUp (switchView equationView)
+
 cleanUp :: OrList (Equation Expr) -> OrList (Equation Expr)
 cleanUp = idempotent . join . fmap (keepEquation . fmap cleanUpExpr)
 

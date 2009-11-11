@@ -58,34 +58,47 @@ quadraticExercise = makeExercise
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = error "equivalence" -- viewEquivalent quadraticEquationsView
    , isReady      = solvedRelations
-   , extraRules   = map (liftRule thisView . ignoreContext) $ quadraticRules ++ abcBuggyRules
-   , strategy     = quadraticStrategy2
+   , extraRules   = map (ignoreContext . liftRule (switchView equationView)) $ 
+                       quadraticRules ++ abcBuggyRules
+   , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
    
-higherDegreeExercise :: Exercise (OrList (Equation Expr))
+higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 
    { description  = "solve an equation (higher degree)"
    , exerciseCode = makeCode "math" "higherdegree"
    , status       = Provisional
-   , parser       = parseWith (pOrList (pEquation pExpr))
+   , parser       = parser quadraticExercise
    , similarity   = eqOrList cleanUpExpr2
-   , equivalence  = viewEquivalent higherDegreeEquationsView
-   , isReady      = solvedEquations
-   , extraRules   = map ignoreContext higherDegreeRules
+   , equivalence  = error "equivalence" -- viewEquivalent higherDegreeEquationsView
+   , isReady      = solvedRelations
+   , extraRules   = map (ignoreContext . liftRule (switchView equationView)) higherDegreeRules
    , strategy     = higherDegreeStrategy
-   , examples     = map (orList . return) (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
+   , examples     = map (orList . return . build equationView) 
+                       (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
-   , strategy     = configure cfg quadraticStrategy2
+   , strategy     = configure cfg quadraticStrategy
    }
  where
    cfg = [ (ByName (name prepareSplitSquare), Expose)
          , (ByName "abc form", Hide)
+         ]
+         
+quadraticWithApproximation :: Exercise (OrList (Relation Expr))
+quadraticWithApproximation = quadraticExercise
+   { description  = "solve a quadratic equation with approximation"
+   , exerciseCode = makeCode "math" "quadreq-with-approx"
+   , strategy     = configure cfg quadraticStrategy
+   }
+ where
+   cfg = [ --(ByName (name prepareSplitSquare), Expose)
+         -- , (ByName "abc form", Hide)
          ]
    
 --------------------------------------------

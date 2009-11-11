@@ -36,8 +36,11 @@ import Control.Monad
 class Functor f => Relational f where
    leftHandSide  :: f a -> a
    rightHandSide :: f a -> a
-   flipSides     :: f a -> f a
+   flipSides     :: f a -> f a -- possibly also flips operator 
    constructor   :: f a -> (b -> b -> f b)
+   isSymmetric   :: f a -> Bool
+   -- default definitions
+   isSymmetric _ = False
 
 mapLeft, mapRight :: Relational f => (a -> a) -> f a -> f a
 mapLeft  f p = updateLeft  (f (leftHandSide p))  p
@@ -69,6 +72,7 @@ instance Relational Relation where
    rightHandSide = rhs
    flipSides (R x rt y) = R y (flipRelType rt) x
    constructor (R _ rt _) x y = R x rt y
+   isSymmetric = (`elem` [EqualTo, NotEqualTo, Approximately]) . relationType
 
 -- helpers
 showRelType :: RelationType -> String
@@ -156,6 +160,7 @@ instance Relational Equation where
    rightHandSide = rightHandSide . build equationView
    flipSides     = \(x :==: y) -> y :==: x
    constructor   = const (:==:)
+   isSymmetric   = const True
 
 instance Once   Equation where onceM  = onceMRelation
 instance Switch Equation where switch = switchRelation

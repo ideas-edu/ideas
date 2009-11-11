@@ -10,14 +10,27 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Equation.Views 
-   ( equationSolvedForm, solvedEquation, solvedEquations ) where
+   ( solvedRelations, solvedRelation
+   , equationSolvedForm, solvedEquation, solvedEquations 
+   ) where
 
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Common.View
 import Common.Traversable
+import Data.Maybe
 
+-- generalized to relation
+solvedRelations :: (Crush f, Relational g) => f (g Expr) -> Bool
+solvedRelations = all solvedRelation . crush
+
+solvedRelation :: Relational f => f Expr -> Bool
+solvedRelation r =
+   case getVariable (leftHandSide r) of
+      Nothing -> noVars (rightHandSide r)
+      Just x  -> x `notElem` collectVars (rightHandSide r)
+       
 -------------------------------------------------------------
 -- Views on equations
 

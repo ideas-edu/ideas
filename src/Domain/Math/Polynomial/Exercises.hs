@@ -39,7 +39,7 @@ linearExercise = makeExercise
    , exerciseCode = makeCode "math" "lineq"
    , status       = Provisional
    , parser       = parseWith (pEquation pExpr)
-   , similarity   = eqEquation cleanUpSimple
+   , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
    , isReady      = solvedEquation
    , extraRules   = linearRules
@@ -47,18 +47,20 @@ linearExercise = makeExercise
    , examples     = concat linearEquations
    }
 
-quadraticExercise :: Exercise (OrList (Equation Expr))
+quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise 
    { description  = "solve a quadratic equation"
    , exerciseCode = makeCode "math" "quadreq"
    , status       = Provisional
-   , parser       = parseWith (pOrList (pEquation pExpr))
+   , parser       = \input -> case parseWith (pOrList (pEquation pExpr)) input of
+                                 Left err -> Left err
+                                 Right xs -> Right (build (switchView equationView) xs)
    , similarity   = eqOrList cleanUpExpr2
-   , equivalence  = viewEquivalent quadraticEquationsView
-   , isReady      = solvedEquations
-   , extraRules   = map ignoreContext $ quadraticRules ++ abcBuggyRules
-   , strategy     = quadraticStrategy
-   , examples     = map (orList . return) (concat quadraticEquations)
+   , equivalence  = error "equivalence" -- viewEquivalent quadraticEquationsView
+   , isReady      = solvedRelations
+   , extraRules   = map (liftRule thisView . ignoreContext) $ quadraticRules ++ abcBuggyRules
+   , strategy     = quadraticStrategy2
+   , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
    
 higherDegreeExercise :: Exercise (OrList (Equation Expr))
@@ -75,11 +77,11 @@ higherDegreeExercise = makeExercise
    , examples     = map (orList . return) (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
-quadraticNoABCExercise :: Exercise (OrList (Equation Expr))
+quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
-   , strategy     = configure cfg quadraticStrategy
+   , strategy     = configure cfg quadraticStrategy2
    }
  where
    cfg = [ (ByName (name prepareSplitSquare), Expose)
@@ -89,21 +91,24 @@ quadraticNoABCExercise = quadraticExercise
 --------------------------------------------
 -- Equality
 
-eqOrList :: (Expr -> Expr) -> OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
+eqOrList :: (Relational f, Ord (f Expr)) => 
+               (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr) -> Bool
 eqOrList f x y = normOrList f x == normOrList f y
 
-eqEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr -> Bool
-eqEquation f x y = normEquation f x == normEquation f y
+eqRelation :: (Relational f, Eq (f Expr)) => 
+                 (Expr -> Expr) -> f Expr -> f Expr -> Bool
+eqRelation f x y = normRelation f x == normRelation f y
 
-normOrList :: (Expr -> Expr) -> OrList (Equation Expr) -> OrList (Equation Expr)
-normOrList f = normalize . fmap (normEquation f)
+normOrList :: (Relational f, Ord (f Expr)) => 
+                 (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr)
+normOrList f = normalize . fmap (normRelation f)
 
-normEquation :: (Expr -> Expr) -> Equation Expr -> Equation Expr
-normEquation f eq
-   | a <= b    = a :==: b
-   | otherwise = b :==: a
+normRelation :: Relational f => (Expr -> Expr) -> f Expr -> f Expr
+normRelation f rel
+   | leftHandSide new > rightHandSide new && isSymmetric new = flipSides new
+   | otherwise = new
  where
-   a :==: b = fmap (normExpr f) eq
+   new = fmap (normExpr f) rel
 
 normExpr :: (Expr -> Expr) -> Expr -> Expr
 normExpr f = normalizeWith [plusOperator, timesOperator] . f

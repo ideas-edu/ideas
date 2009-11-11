@@ -17,7 +17,8 @@ import Common.Transformation
 import Common.Traversable
 import Common.Uniplate (universe)
 import Common.Utils
-import Common.View
+import Common.View hiding (simplify)
+import Domain.Math.Simplification
 import Control.Monad
 import Data.List (nub, (\\), sort, sortBy)
 import Data.Maybe
@@ -233,6 +234,15 @@ moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
    guard (hasVars lhs && (hasVars rhs || complex))
    let new = applyD mergeT $ applyD sortT $ lhs - rhs
    return (new :==: 0)
+
+ruleApproximate :: Rule (Relation Expr)
+ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
+   lhs :==: rhs <- match equationView relation
+   guard (not (simplify rhs `belongsTo` rationalView))
+   x <- getVariable lhs
+   d <- match doubleView rhs
+   let new = FPN d  
+   return (Var x .~=. new)
 
 ------------------------------------------------------------
 -- Helpers and Rest

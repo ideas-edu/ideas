@@ -18,6 +18,7 @@ module Common.Context
      Context, inContext, fromContext, makeContext, getEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
+   , diffEnv, deleteEnv
      -- * Variables
    , Var, newVar, makeVar
      -- * Location (current focus)
@@ -34,7 +35,7 @@ module Common.Context
 import Common.Transformation
 import Common.Traversable
 import Common.Uniplate
-import Common.Utils (safeHead)
+import Common.Utils (safeHead, commaList)
 import Common.View
 import Control.Monad
 import Data.Char
@@ -95,7 +96,7 @@ newtype Environment = Env { envMap :: M.Map String (Maybe Dynamic, String) }
 instance Show Environment where
    show = 
       let f (k, (_, v)) = k ++ "=" ++ v
-      in concat . intersperse "," . map f . M.toList . envMap
+      in commaList . map f . M.toList . envMap
 
 emptyEnv :: Environment
 emptyEnv = Env M.empty
@@ -129,6 +130,13 @@ storeEnvWith f s a (Env m) = Env (M.insert s pair m)
       case cast a of 
          Just txt -> (Nothing, txt)
          Nothing  -> (Just (toDyn a), f a)
+
+diffEnv :: Environment -> Environment -> Environment
+diffEnv (Env m1) (Env m2) = Env (M.filterWithKey p m1)
+ where p k (_, s) = maybe True ((/=s) . snd) (M.lookup k m2)
+
+deleteEnv :: String -> Environment -> Environment
+deleteEnv s (Env m) = Env (M.delete s m)
 
 ----------------------------------------------------------
 -- Variables

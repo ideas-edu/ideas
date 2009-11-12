@@ -50,9 +50,9 @@ linearRules = map ignoreContext $
 
 
 quadraticRules :: [Rule (OrList (Equation Expr))]
-quadraticRules = 
+quadraticRules = -- abcFormula
    [ ruleOnce commonFactorVar, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerA, abcFormula, mulZero, coverUpPower, squareBothSides
+   , ruleOnce simplerA, mulZero, coverUpPower, squareBothSides
    ] ++
    map (ruleOnce . ($ oneVar)) 
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++

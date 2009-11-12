@@ -130,7 +130,7 @@ resultError txt = makeXML "reply" $ do
 
 stringFormatConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
 stringFormatConverter (Some pkg) = 
-   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g pkg)
+   Some $ Evaluator (xmlEncoder False f ex) (xmlDecoder False g pkg)
  where
    ex = exercise pkg
    f  = return . element "expr" . text . prettyPrinter ex
@@ -142,7 +142,7 @@ stringFormatConverter (Some pkg) =
         
 openMathConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
 openMathConverter (Some pkg) =
-   Some $ Evaluator (xmlEncoder f ex) (xmlDecoder g pkg)
+   Some $ Evaluator (xmlEncoder True f ex) (xmlDecoder True g pkg)
  where
    ex = exercise pkg
    f = return . builder . toXML . toOpenMath pkg
@@ -153,9 +153,9 @@ openMathConverter (Some pkg) =
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
 
-xmlEncoder :: Monad m => (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
-xmlEncoder f ex = Encoder
-   { encodeType  = encode (xmlEncoder f ex)
+xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
+xmlEncoder b f ex = Encoder
+   { encodeType  = encode (xmlEncoder b f ex)
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
@@ -171,16 +171,16 @@ xmlEncoder f ex = Encoder
          Tp.Tag s t1 -> liftM (element s) . encode enc t1  -- quick fix
          Tp.Rule     -> return . ("ruleid" .=.) . Rule.name
          Tp.Term     -> encodeTerm enc
-         Tp.Context  -> encodeContext (encodeTerm enc)
+         Tp.Context  -> encodeContext b (encodeTerm enc)
          Tp.Location -> return . text . show
          Tp.Bool     -> return . text . show
          Tp.Int      -> return . text . show
-         Tp.State    -> encodeState (encodeTerm enc)
+         Tp.State    -> encodeState b (encodeTerm enc)
          _           -> encodeDefault enc serviceType
 
-xmlDecoder :: MonadPlus m => (XML -> m a) -> ExercisePackage a -> Decoder m XML a
-xmlDecoder f pkg = Decoder
-   { decodeType     = decode (xmlDecoder f pkg)
+xmlDecoder :: MonadPlus m => Bool -> (XML -> m a) -> ExercisePackage a -> Decoder m XML a
+xmlDecoder b f pkg = Decoder
+   { decodeType     = decode (xmlDecoder b f pkg)
    , decodeTerm     = f
    , decoderPackage = pkg
    }
@@ -188,7 +188,7 @@ xmlDecoder f pkg = Decoder
    decode :: MonadPlus m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
    decode dec serviceType = 
       case serviceType of
-         Tp.State    -> decodeState (decoderExercise dec) (decodeTerm dec)
+         Tp.State    -> decodeState b (decoderExercise dec) (decodeTerm dec)
          Tp.Location -> leave $ liftM (read . getData) . findChild "location"
          Tp.Rule     -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (a, xml)
@@ -197,19 +197,19 @@ xmlDecoder f pkg = Decoder
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    leave f xml = liftM (\a -> (a, xml)) (f xml)
          
-decodeState :: Monad m => Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
-decodeState ex f top = do
+decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
+decodeState b ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
    let sp = maybe "[]" getData (findChild "prefix" xml)
    expr <- f xml
-   env  <- decodeEnvironment xml
+   env  <- decodeEnvironment b xml
    let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
        term   = makeContext env expr
    return (state, top)
 
-decodeEnvironment :: Monad m => XML -> m Environment
-decodeEnvironment xml =
+decodeEnvironment :: Monad m => Bool -> XML -> m Environment
+decodeEnvironment b xml =
    case findChild "context" xml of 
       Just this -> foldM add emptyEnv (children this)
       Nothing   -> return emptyEnv
@@ -220,35 +220,35 @@ decodeEnvironment xml =
       name  <- findAttribute "name"  item
       case findChild "OMOBJ" item of
          -- OpenMath object found inside item tag
-         Just this -> do
+         Just this | b -> do
             case xml2omobj this of
                Left err -> fail err
                Right omobj -> 
                   return (storeEnv name omobj env)
          -- Simple value in attribute
-         Nothing -> do
+         _ -> do
             value <- findAttribute "value" item
             return (storeEnv name value env)
 
-encodeState :: Monad m => (a -> m XMLBuilder) -> State a -> m XMLBuilder
-encodeState f state = f (term state) >>= \body -> return $
+encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
+encodeState b f state = f (term state) >>= \body -> return $
    element "state" $ do
       element "prefix"  (text $ maybe "[]" show (prefix state))
-      encodeEnvironment (getEnvironment (context state))
+      encodeEnvironment b (getEnvironment (context state))
       body
 
-encodeEnvironment :: Environment -> XMLBuilder
-encodeEnvironment env
+encodeEnvironment :: Bool -> Environment -> XMLBuilder
+encodeEnvironment b env
    | nullEnv env = return ()
    | otherwise   = element "context" $ do
         forM_ (keysEnv env) $ \k -> do
            element "item" $ do 
               "name"  .=. k
               case lookupEnv k env of 
-                 Just omobj -> builder  (omobj2xml omobj)
-                 Nothing    -> "value" .=. fromMaybe "" (lookupEnv k env)
+                 Just omobj | b -> builder  (omobj2xml omobj)
+                 _              -> "value" .=. fromMaybe "" (lookupEnv k env)
             
-encodeContext :: Monad m => (a -> m XMLBuilder) -> Context a -> m XMLBuilder
-encodeContext f ctx = do
+encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
+encodeContext b f ctx = do
    xml <- f (fromContext ctx)
-   return (xml >> encodeEnvironment (getEnvironment ctx))
+   return (xml >> encodeEnvironment b (getEnvironment ctx))

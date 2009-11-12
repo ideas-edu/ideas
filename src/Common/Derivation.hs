@@ -16,7 +16,7 @@ module Common.Derivation
    ( -- * Data types 
      DerivationTree, Derivations, Derivation
      -- * Constructors
-   , singleNode, addBranch, addBranches
+   , singleNode, addBranch, addBranches, newDerivation
      -- * Query 
    , root, endpoint, branches, annotations, subtrees
    , results, lengthMax
@@ -158,6 +158,9 @@ cutOnStep p = rec
 
 -----------------------------------------------------------------------------
 -- Inspecting a derivation
+
+newDerivation :: a -> [(s, a)] -> Derivation s a
+newDerivation = D
 
 -- | Tests whether the derivation is empty
 isEmpty :: Derivation s a -> Bool

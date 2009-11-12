@@ -207,9 +207,18 @@ getRule ex s =
 
 showDerivation :: Exercise a -> a -> String
 showDerivation ex = 
-   let err = "<<no derivation>>"
-       f   = show . fmap (Shown . prettyPrinter ex . fromContext)
-   in maybe err f . derivation . derivationTree (strategy ex) . inContext
+   maybe err (show . f) . derivation . derivationTree (strategy ex) . inContext
+ where
+   -- A bit of hack to show the delta between two environments, not including
+   -- the location variable
+   err = "<<no derivation>>"
+   f d = let t:ts = map (Shown . prettyPrinter ex . fromContext) (terms d)
+             xs   = zipWith3 present (steps d) (drop 1 (terms d)) (terms d)
+             present a x y = Shown (show a ++ extra)
+              where env = deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))
+                    extra | nullEnv env = "" 
+                          | otherwise   = "\n      " ++ show env
+         in newDerivation t (zip xs ts)
 
 -- local helper datatype
 data Shown = Shown String 

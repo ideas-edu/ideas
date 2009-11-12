@@ -10,30 +10,34 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.QuadraticFormula 
-   ( abcStrategy, abcFormula 
+   ( abcFormula 
    ) where
 
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
+import Data.Char
+import qualified Data.Map as M
 import Common.Context
 import Common.View hiding (simplify)
 import Common.Transformation
 import Common.Traversable
 import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
+import Text.OpenMath.Object
 import Control.Monad
 import Data.Maybe
-import Text.OpenMath.Object
 import Domain.Math.Simplification
 import Common.Utils
 import Common.Strategy hiding (fail)
 
-abcFormula :: Rule (OrList (Equation Expr))
-abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
+abcFormula :: Rule (Context (OrList (Equation Expr)))
+abcFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
-   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
    let discr = sqrt (fromRational (b*b - 4 * a * c))
+   addToClipboard "D" discr
    case compare discr 0 of
       LT -> return false
       EQ -> return $ return $ 
@@ -42,7 +46,8 @@ abcFormula = makeSimpleRule "abc formula" $ onceJoinM $ \(lhs :==: rhs) -> do
          [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
          , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
          ]
-         
+
+{-
 abcStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 abcStrategy = label "abc formula" $
    liftRuleIn onceV findABC <*> 
@@ -97,7 +102,7 @@ quadraticFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==
       GT -> return $ orList
          [ Var x :==: (-b + sqrt discr) / (2*a)
          , Var x :==: (-b - sqrt discr) / (2*a)
-         ]
+         ] -}
 
 ---------------------------------------------------------------------
 -- Clipboard variable helper functions
@@ -107,33 +112,52 @@ newtype ExprVar a = ExprVar (Var OMOBJ)
 exprVar :: (Show a, IsExpr a) => String -> a -> ExprVar a
 exprVar s a = 
    let omobj = toOMOBJ (toExpr a)
-       showF = show  . fromOMOBJ
+       showF = show . fromOMOBJ
        readF = either (fail . show) (return . toOMOBJ) . parseExpr
    in ExprVar (makeVar showF readF s omobj)
 
-lookupExprVar :: IsExpr a => ExprVar a -> ContextMonad a
-lookupExprVar (ExprVar var) = do  
+readExprVar :: IsExpr a => ExprVar a -> ContextMonad a
+readExprVar (ExprVar var) = do  
    omobj <- readVar var
-   maybeCM $ fromExpr (fromOMOBJ omobj)
+   maybeCM (fromExpr (fromOMOBJ omobj))
 
-changeExprVar :: IsExpr a => ExprVar a -> (a -> a) -> ContextMonad ()
-changeExprVar (ExprVar var) f = 
+writeExprVar :: IsExpr a => ExprVar a -> a -> ContextMonad ()
+writeExprVar v = modifyExprVar v . const
+
+modifyExprVar :: IsExpr a => ExprVar a -> (a -> a) -> ContextMonad ()
+modifyExprVar (ExprVar var) f = 
    let safe f a = fromMaybe a (f a)
        g = fmap (toOMOBJ . toExpr . f) . fromExpr . fromOMOBJ
    in modifyVar var (safe g)
 
 --------
-clipboard :: ExprVar (Equations Expr)
-clipboard = exprVar "clipboard" []
+newtype Key = Key String deriving (Show, Eq, Ord)
+
+instance (IsExpr k, Ord k, IsExpr a) => IsExpr (M.Map k a) where
+   toExpr = toExpr . map (\(k, a) -> toExpr k :==: toExpr a) . M.toList
+   fromExpr expr = do
+      eqs <- fromExpr expr
+      xs  <- forM eqs $ \(a :==: b) ->
+                liftM2 (,) (fromExpr a) (fromExpr b)
+      return (M.fromList xs)
+
+instance IsExpr Key where
+   toExpr (Key s) = Var s
+   fromExpr       = liftM Key . getVariable
+
+clipboard :: ExprVar (M.Map Key Expr)
+clipboard = exprVar "clipboard" M.empty
    
 addToClipboard :: String -> Expr -> ContextMonad ()
-addToClipboard s a = changeExprVar clipboard ((Var s :==: toExpr a):)
+addToClipboard s a = modifyExprVar clipboard (M.insert (Key s) a)
+
+addListToClipboard :: [String] -> [Expr] -> ContextMonad ()
+addListToClipboard = zipWithM_ addToClipboard
 
 lookupClipboard :: String -> ContextMonad Expr
 lookupClipboard s = do 
-   eqs <- lookupExprVar clipboard
-   let f eqs = safeHead [ e | Var y :==: e <- eqs, s==y ] 
-   maybeCM (f eqs)
+   m <- readExprVar clipboard
+   maybeCM (M.lookup (Key s) m)
    
 lookupListClipboard :: [String] -> ContextMonad [Expr]
 lookupListClipboard = mapM lookupClipboard

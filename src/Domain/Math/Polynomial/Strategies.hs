@@ -68,8 +68,7 @@ quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $
       <|> ruleOnce niceFactors <|> ruleOnce simplerA 
       <|> coverUpPower -- to deal with special case x^2=0
       
-   generalABCForm = label "abc form" $
-      toStrategy (ignoreContext abcFormula) -- abcStrategy
+   generalABCForm = label "abc form" abcFormula
  
    zeroForm = label "zero form" $
       toStrategy mulZero

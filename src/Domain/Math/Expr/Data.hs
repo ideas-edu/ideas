@@ -1,3 +1,4 @@
+{-# OPTIONS -XDeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -13,6 +14,7 @@ module Domain.Math.Expr.Data where
 
 import Data.Char  (isDigit, isAlphaNum)
 import Data.Ratio
+import Data.Typeable
 import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
@@ -38,7 +40,7 @@ data Expr = -- Num
             -- Symbolic
           | Var String
           | Sym Symbol [Expr]
-   deriving (Eq, Ord)
+   deriving (Eq, Ord, Typeable)
 
 -----------------------------------------------------------------------
 -- Numeric instances (and symbolic)

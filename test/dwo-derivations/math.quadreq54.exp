@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.5.8">
   <list>
     <elem ruleid="simpler polynomial">
       <expr>
@@ -9,11 +9,17 @@
       <expr>
         x == (-2+sqrt 20)/2 or x == (-2-sqrt 20)/2
       </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 20, a==1, b==2, c==-4]"/>
+      </context>
     </elem>
     <elem ruleid="simpler square root">
       <expr>
         x == -1+sqrt 5 or x == -1-sqrt 5
       </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 20, a==1, b==2, c==-4]"/>
+      </context>
     </elem>
   </list>
 </reply>

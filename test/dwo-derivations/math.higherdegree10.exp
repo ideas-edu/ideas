@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.5.8">
   <list>
     <elem ruleid="power factor">
       <expr>
@@ -29,11 +29,17 @@
       <expr>
         x == 1 or x == 0 or x == (3+sqrt 33)/2 or x == (3-sqrt 33)/2
       </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 33, a==1, b==-3, c==-6]"/>
+      </context>
     </elem>
     <elem ruleid="distribution division">
       <expr>
         x == 1 or x == 0 or x == 3/2+sqrt 33/2 or x == 3/2-sqrt 33/2
       </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 33, a==1, b==-3, c==-6]"/>
+      </context>
     </elem>
   </list>
 </reply>

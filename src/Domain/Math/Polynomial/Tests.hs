@@ -45,13 +45,13 @@ tests = do
 
 -- see the derivations for the DWO exercise set
 seeLE  n = printDerivation linearExercise $ concat linearEquations !! (n-1)
-seeQE  n = printDerivation quadraticExercise $ orList $ return $ concat quadraticEquations !! (n-1)
-seeHDE n = printDerivation higherDegreeExercise $ orList $ return $ higherDegreeEquations !! (n-1)
+seeQE  n = printDerivation quadraticExercise $ orList $ return $ build equationView $ concat quadraticEquations !! (n-1)
+seeHDE n = printDerivation higherDegreeExercise $ orList $ return $ build equationView $ higherDegreeEquations !! (n-1)
 
 -- test strategies with DWO exercise set
 testLE  = concat $ zipWith (f linearExercise)       [1..] $ concat linearEquations
-testQE  = concat $ zipWith (f quadraticExercise)    [1..] $ map (orList . return) $ concat quadraticEquations
-testHDE = concat $ zipWith (f higherDegreeExercise) [1..] $ map (orList . return) higherDegreeEquations
+testQE  = concat $ zipWith (f quadraticExercise)    [1..] $ map (orList . return . build equationView) $ concat quadraticEquations
+testHDE = concat $ zipWith (f higherDegreeExercise) [1..] $ map (orList . return . build equationView) higherDegreeEquations
 
 f s n e = map p (g (applyAll (strategy s) (inContext e))) where
   g xs | null xs   = error $ show n ++ ": " ++ show e
@@ -62,7 +62,7 @@ f s n e = map p (g (applyAll (strategy s) (inContext e))) where
 randomLE = quickCheck $ forAll (liftM2 (:==:) (sized linearGen) (sized linearGen)) $ \eq -> 
    (>0) (sum (take 10 $ f linearExercise 1 eq))
 randomQE = quickCheck $ forAll (liftM2 (:==:) (sized quadraticGen) (sized quadraticGen)) $ \eq -> 
-   (>0) (sum (take 10 $ f quadraticExercise 1 (orList [eq])))
+   (>0) (sum (take 10 $ f quadraticExercise 1 (orList [build equationView eq])))
 
 {-
 eqLE = concat $ zipWith (g linearExercise) [1..] $ concat linearEquations  

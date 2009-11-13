@@ -15,7 +15,7 @@ module Service.Types where
 import Common.Context (Context, Location, fromContext)
 import Common.Exercise (Exercise)
 import Common.Transformation (Rule, name)
-import Common.Strategy (StrategyLocation)
+import Common.Strategy (StrategyLocation, StrategyConfiguration)
 import Common.Utils (commaList)
 import Control.Arrow
 import Control.Monad
@@ -56,6 +56,7 @@ data Type a t where
    Result       :: Type a (Result a)
    Location     :: Type a Location
    StrategyLoc  :: Type a StrategyLocation
+   StrategyCfg  :: Type a StrategyConfiguration
    DecompositionReply :: Type a (Decomposition.Reply a)
    -- Basic types
    Bool         :: Type a Bool
@@ -90,6 +91,8 @@ groundType tp =
       Int          -> Just "Int"
       String       -> Just "String"
       Location     -> Just "Location"
+      StrategyLoc  -> Just "StrategyLocation"
+      StrategyCfg  -> Just "StrategyConfiguration"
       _            -> Nothing
 
 data Evaluator m inp out a = Evaluator 

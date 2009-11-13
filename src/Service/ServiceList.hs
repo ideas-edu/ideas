@@ -57,7 +57,7 @@ evalService f = eval f . typedValue
 
 derivationS :: Service a
 derivationS = Service "derivation" $ 
-   S.derivation ::: State :-> List (Pair Rule Context)
+   S.derivationNew ::: Maybe StrategyCfg :-> State :-> List (Pair Rule Context)
 
 allfirstsS :: Service a
 allfirstsS = Service "allfirsts" $ 

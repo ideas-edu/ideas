@@ -20,6 +20,7 @@ import Common.Transformation hiding (name, defaultArgument)
 import Common.Utils (Some(..))
 import Control.Monad
 import Data.Char
+import Data.List
 import Data.Maybe
 import Service.ExerciseList
 import Service.ProblemDecomposition
@@ -188,11 +189,12 @@ xmlDecoder b f pkg = Decoder
    decode :: MonadPlus m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
    decode dec serviceType = 
       case serviceType of
-         Tp.State    -> decodeState b (decoderExercise dec) (decodeTerm dec)
-         Tp.Location -> leave $ liftM (read . getData) . findChild "location"
-         Tp.Rule     -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
-         Tp.Term     -> \xml -> decodeTerm dec xml >>= \a -> return (a, xml)
-         _           -> decodeDefault dec serviceType
+         Tp.State       -> decodeState b (decoderExercise dec) (decodeTerm dec)
+         Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
+         Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
+         Tp.Term        -> \xml -> decodeTerm dec xml >>= \a -> return (a, xml)
+         Tp.StrategyCfg -> decodeConfiguration
+         _              -> decodeDefault dec serviceType
          
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    leave f xml = liftM (\a -> (a, xml)) (f xml)
@@ -229,6 +231,22 @@ decodeEnvironment b xml =
          _ -> do
             value <- findAttribute "value" item
             return (storeEnv name value env)
+
+decodeConfiguration :: MonadPlus m => XML -> m (StrategyConfiguration, XML)
+decodeConfiguration xml =
+   case findChild "configuration" xml of
+      Just this -> mapM decodeAction (children this) >>= \xs -> return (xs, xml)
+      Nothing   -> fail "no strategy configuration" 
+ where
+   decodeAction item = do 
+      guard (null (children item))
+      action <- 
+         case find (\a -> map toLower (show a) == name item) configActions of
+            Just a  -> return a
+            Nothing -> fail $ "unknown action " ++ show (name item)
+      cfgloc <- findAttribute "name" item
+      return $ (ByName cfgloc, action)
+
 
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = f (term state) >>= \body -> return $

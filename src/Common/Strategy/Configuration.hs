@@ -12,7 +12,7 @@
 module Common.Strategy.Configuration 
    ( -- Types and constructors
      StrategyConfiguration, ConfigItem
-   , ConfigLocation(..), ConfigAction(..)
+   , ConfigLocation(..), ConfigAction(..), configActions
      --  Configure
   ,  configure
      -- Combinators
@@ -37,7 +37,10 @@ data ConfigLocation
  deriving Show
  
 data ConfigAction = Hide | Expose | Fold | Unfold | Skip | Insert
-   deriving Show
+   deriving (Show, Enum)
+
+configActions :: [ConfigAction]
+configActions = [Hide .. ]
 
 ---------------------------------------------------------------------
 -- Configure

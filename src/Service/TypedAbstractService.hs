@@ -14,7 +14,8 @@ module Service.TypedAbstractService
      State(..), emptyState, term
      -- * Services
    , stepsremaining, findbuggyrules, submit, ready, allfirsts
-   , derivation, onefirst, applicable, apply, generate, generateWith
+   , derivationNew, derivation
+   , onefirst, applicable, apply, generate, generateWith
      -- * Result data type
    , Result(..), getResultState, resetStateIfNeeded
    ) where
@@ -62,7 +63,24 @@ generate ex level = do
 
 generateWith :: StdGen -> Exercise a -> Int -> State a
 generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
-   
+
+-- todo: remove old implementation of derivation (kept for being backwards
+-- compatible)
+derivationNew :: Maybe StrategyConfiguration -> State a -> [(Rule (Context a), Context a)]
+derivationNew mcfg state =
+   case (prefix state, mcfg) of 
+      (Nothing, _) -> error "derivation: no prefix"
+      -- configuration is only allowed beforehand: hence, the prefix 
+      -- should be empty (or else, the configuration is ignored). This
+      -- restriction should probably be relaxed later on.
+      (Just p, Just cfg) | null (prefixToSteps p) -> 
+         let new = configure cfg $ strategy $ exercise state
+         in derivation state 
+               { prefix   = Just (makePrefix [] new)
+               , exercise = (exercise state) {strategy=new}
+               } 
+      (Just p, _) -> derivation state
+
 derivation :: State a -> [(Rule (Context a), Context a)]
 derivation state =
    case allfirsts state of 

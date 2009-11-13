@@ -62,6 +62,7 @@ instance Monad Compile where
    C m >>= f = C $ do 
       ea <- m
       case ea of 
+
          Left err -> return (Left err)
          Right a  -> do
             let C m2 = f a

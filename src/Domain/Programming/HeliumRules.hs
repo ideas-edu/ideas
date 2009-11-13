@@ -1,3 +1,5 @@
+{-# OPTIONS -XStandaloneDeriving -XDeriveDataTypeable #-}
+
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -17,6 +19,7 @@ module Domain.Programming.HeliumRules where
 import Common.Context
 import Common.Transformation
 import Common.Utils (safeHead)
+import Common.View
 import Control.Monad
 import Data.Char
 import Data.Data hiding (Fixity)
@@ -98,9 +101,22 @@ introExprParenthesized = toRule "Intro parentheses" undefExprs f
     f = Expression_Parenthesized noRange undefExpr
 
 introExprList :: Int -> Rule (Context Module)
-introExprList = toRule "Intro expr list" undefExprs . f
+introExprList = ignoreContext . liftRuleIn (transformFirstView) . introExprList' 
+
+{- toRule "Intro expr list" undefExprs . f
   where 
     f nexprs = Expression_List noRange $ replicate nexprs undefExpr
+-}
+transformFirstView :: View Module (Expression, Expression -> Module)
+transformFirstView = makeView f g
+ where
+   f m = safeHead (undefExprs m)
+   g (e, f) = f e
+
+introExprList' :: Int -> Rule Expression
+introExprList' n = makeSimpleRule " Intro expr list" $ \e -> do
+   guard (e==undefExpr) 
+   return $ Expression_List noRange (replicate n undefExpr)
 
 introExprTuple :: Int -> Rule (Context Module)
 introExprTuple = toRule "Intro expr tuple" undefExprs . f
@@ -237,7 +253,7 @@ introNameSpecial = toRule "Introduce special name" undefNames . f
 
 type Undefs a = Module -> [(a, a -> Module)]
 
-undefs :: (Data.Data.Data a, Eq a) => a -> Undefs a
+undefs :: (Data a, Eq a) => a -> Undefs a
 undefs undef = filter ((== undef) . fst) . contextsBi
 
 undefDecls        = undefs undefDecl

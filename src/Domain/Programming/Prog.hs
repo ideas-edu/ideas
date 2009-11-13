@@ -14,7 +14,7 @@
 module Domain.Programming.Prog where
 
 import Common.Utils (safeHead)
-import Common.Context hiding (get)
+import Common.Context
 import Common.Derivation
 import Common.Strategy hiding (not, repeat, replicate)
 import Control.Monad.State
@@ -74,7 +74,7 @@ checkExercise :: [String] -> Solution -> StateT Integer IO ()
 checkExercise fixedNames s = do
     correctCount <- get
     let m = compilation
-    let isSolution = m `elem` normalisedSolutions fixedNames (unlabel (strat s))
+    let isSolution = m `elem` normalisedSolutions fixedNames (toStrategy (strat s))
     liftIO $ do putStrLn $ pps (sid s) ++ pps (show isSolution)
                         ++ pps (strategyName (strat s)) ++ ppStringS 40 (remark s)
                 putStrLn line

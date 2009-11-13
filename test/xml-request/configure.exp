@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="top form (folded)">
+      <expr>
+        x^2-3*x+1 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == (3+sqrt 5)/2 or x == (3-sqrt 5)/2
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 5, a==1, b==-3, c==1]"/>
+      </context>
+    </elem>
+    <elem ruleid="approximate">
+      <expr>
+        x ~= 2.618 or x ~= 0.382
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 5, a==1, b==-3, c==1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

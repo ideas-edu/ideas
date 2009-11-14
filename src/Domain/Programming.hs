@@ -10,20 +10,37 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Programming
-   ( module Domain.Programming.Expr
-   , module Domain.Programming.Prelude
-   , module Domain.Programming.Eval
-   , module Domain.Programming.Parser
+   ( module Domain.Programming.AlphaRenaming
+   , module Domain.Programming.Anonymise
+   , module Domain.Programming.InlinePatternBindings
    , module Domain.Programming.Strategies
-   , module Domain.Programming.Rules
-   , module Domain.Programming.Exercises
+   , module Domain.Programming.HeliumRules
+   , module Domain.Programming.Helium
+   , module Domain.Programming.Prog
+   , module Domain.Programming.PreludeS
+   , module Domain.Programming.EncodingExercises
+   , module Domain.Programming.Utils
+   , module Domain.Programming.Exercises            
    ) where
    
-import Domain.Programming.Expr
-import Domain.Programming.Prelude
-import Domain.Programming.Eval
-import Domain.Programming.Parser
+import Domain.Programming.AlphaRenaming (alphaRenaming)
+import Domain.Programming.Anonymise
+import Domain.Programming.InlinePatternBindings (inlinePatternBindings)
 import Domain.Programming.Strategies
-import Domain.Programming.Rules
+import Domain.Programming.HeliumRules
+import Domain.Programming.Helium
+import Domain.Programming.Prog
+import Domain.Programming.PreludeS
+import Domain.Programming.EncodingExercises
+import Domain.Programming.Utils
 import Domain.Programming.Exercises
 
+-- for convenience
+import Common.Apply
+import Common.Context
+import Common.Rewriting
+import Control.Monad (unless, fail)
+import Data.Generics.Biplate
+import Data.Map hiding (map)
+import Data.Maybe
+--import Data.List

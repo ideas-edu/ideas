@@ -30,6 +30,7 @@ import qualified Domain.Math.DerivativeExercise as Math
 import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Equation.CoverUpExercise as Math
 import qualified Domain.Math.Polynomial.Exercises as Math
+import qualified Domain.Math.Polynomial.IneqExercises as Math
 
 packages :: [Some ExercisePackage]
 packages =
@@ -46,6 +47,9 @@ packages =
    , makeOM Math.linearExercise
    , makeOM Math.quadraticExercise
    , makeOM Math.higherDegreeExercise
+   , makeOM Math.ineqLinearExercise
+   , makeOM Math.ineqQuadraticExercise
+   , makeOM Math.ineqHigherDegreeExercise
    , makeOM Math.quadraticNoABCExercise
    , makeOM Math.quadraticWithApproximation
    , makeOM Math.derivativeExercise

@@ -22,6 +22,7 @@ import Data.List
 import Data.Maybe
 import System.Random
 import Text.HTML
+import qualified Text.XML as XML
 import Documentation.DefaultPage
 
 makeExercisePage :: ExercisePackage a -> IO ()
@@ -88,13 +89,21 @@ derivationsPage :: ExercisePackage a -> Maybe HTML
 derivationsPage pkg
    | null xs   = Nothing
    | otherwise = Just $ defaultPage title 2 $ do
+        unless (errs==0) $ 
+           errorLine $ preText $ "Warning: " ++ show errs ++ " example(s) without a derivation"
         h1 "Examples"
-        forM_ (zip [1 ..] xs) $ \(i, x) -> do
+        forM_ (zip [1 ..] ds) $ \(i, d) -> do
             h2 (show i ++ ".")
-            preText (showDerivation ex x)
-        
+            preText d
  where
    ex    = exercise pkg
    code  = exerciseCode ex
    title = "Derivations for " ++ show code
    xs    = examples ex
+   ds    = map (showDerivation ex) xs
+   errs  = length $ filter ("<<no derivation>>" `isSuffixOf`) ds
+   
+errorLine :: HTMLBuilder -> HTMLBuilder
+errorLine b = XML.element "font" $ do
+   "color" XML..=. "red"
+   bold b

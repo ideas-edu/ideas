@@ -31,6 +31,7 @@ module Common.Exercise
 import Common.Apply
 import Common.Context
 import Common.Strategy hiding (not, fail, replicate)
+import qualified Common.Strategy as S
 import Common.Derivation
 import Common.Transformation
 import Common.Utils
@@ -105,7 +106,7 @@ emptyExercise = Exercise
    , isSuitable     = const True
    , difference     = \_ _ _ -> Nothing
      -- strategies and rules
-   , strategy       = label "Succeed" succeed
+   , strategy       = label "Fail" S.fail
    , extraRules     = [] 
      -- testing and exercise generation
    , testGenerator  = Nothing
@@ -206,13 +207,16 @@ getRule ex s =
       _    -> fail $ "Ambiguous ruleid " ++ s
 
 showDerivation :: Exercise a -> a -> String
-showDerivation ex = 
-   maybe err (show . f) . derivation . derivationTree (strategy ex) . inContext
+showDerivation ex a =
+   case derivation tree of
+      Just d  -> show (f d)
+      Nothing -> pp (root tree) ++ "\n   =>\n<<no derivation>>"
  where
+   tree = derivationTree (strategy ex) (inContext a)
    -- A bit of hack to show the delta between two environments, not including
    -- the location variable
-   err = "<<no derivation>>"
-   f d = let t:ts = map (Shown . prettyPrinter ex . fromContext) (terms d)
+   pp  = prettyPrinter ex . fromContext
+   f d = let t:ts = map (Shown . pp) (terms d)
              xs   = zipWith3 present (steps d) (drop 1 (terms d)) (terms d)
              present a x y = Shown (show a ++ extra)
               where env = deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))

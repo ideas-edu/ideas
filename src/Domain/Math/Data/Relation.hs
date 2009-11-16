@@ -218,8 +218,11 @@ inequalityView = makeView f g
  where
    f (R x op y) = fmap (\pair -> fst pair x y) (lookup op inequalityTable)
    g ineq =
-      let relType = relationType (build inequalityView ineq)
-      in snd (relType ? inequalityTable) (leftHandSide ineq) (rightHandSide ineq)
+      case ineq of 
+         x :<:  y -> x .<.  y 
+         x :>:  y -> x .>.  y
+         x :<=: y -> x .<=. y
+         x :>=: y -> x .>=. y
 
 inequalityTable :: [(RelationType, (a -> a -> Inequality a, a -> a -> Relation a))]
 inequalityTable = 

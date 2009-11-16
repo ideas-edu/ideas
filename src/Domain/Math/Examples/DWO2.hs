@@ -63,8 +63,8 @@ ineqLin1 =
 -- Havo B Voorkennis: kwadratische ongelijkheden 
 -- (door eerst gelijkheid op te lossen)
 -- (level 2 uit Hoofdstuk 3)
-ineqKwad1 :: [[Inequality Expr]]
-ineqKwad1 =
+ineqQuad1 :: [[Inequality Expr]]
+ineqQuad1 =
    let x = Var "x" in
    [ [ x^2 +3*x-4 :<: 0
      , x^2-4*x-12 :>: 0
@@ -125,8 +125,8 @@ higherEq1 =
 -- VWO A/C applets
 
 -- hoofdstuk 2
-ineqKwad2 :: [Inequality Expr]
-ineqKwad2 =
+ineqQuad2 :: [Inequality Expr]
+ineqQuad2 =
    let x = Var "x" in
    [ x^2 + 9*x :<: 3*x - 5
    , x^2 - x :>: 12

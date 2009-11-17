@@ -18,10 +18,9 @@ import Common.Context
 import Common.Derivation
 import Common.Strategy hiding (not, repeat, replicate)
 import Control.Monad.State
-import Data.Generics.Biplate
+import Data.Generics.Biplate ()
 import Data.Generics.PlateData
-import Data.Map (Map, insert, empty, lookup)
-import Data.Maybe
+import Data.Map (empty)
 import Data.Data hiding (Fixity)
 import Data.List hiding (union, lookup, insert)
 import Domain.Programming.AlphaRenaming (alphaRenaming)
@@ -66,41 +65,51 @@ collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
 
 freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
-allSolutions strategy = map fromContext $ results $ derivationTree strategy $ inContext emptyProg
-normalisedSolutions fs = map (normaliseModule fs) . allSolutions
-isSolution fs strat m = elem (normaliseModule fs m) $ normalisedSolutions fs strat
+
+allSolutions strategy = 
+  map fromContext $ results $ derivationTree strategy $ inContext emptyProg
+
+normalisedSolutions fs = 
+  map (normaliseModule fs) . allSolutions
+
+isEquivalent fs strat m = 
+  elem (normaliseModule fs m) $ normalisedSolutions fs strat
+
+isSolution :: IsStrategy s => [String] -> s (Context Module) -> Module -> Bool
+isSolution fixedNames strat =
+  (`elem` normalisedSolutions fixedNames strat) . normaliseModule fixedNames
+
+compile' :: String -> Module
+compile' = either (error "Compilation error!") id . compile
+
+printRow :: String -> String -> String -> String -> IO ()
+printRow id isCorrect strategyName remark =   
+    putStrLn $ pps id ++ pps isCorrect ++ pps strategyName 
+            ++ ppStringS 40 remark ++ "\n"
+  where
+    ppStringS i s = "| " ++ s ++ replicate (i - length s) ' '
+    pps = ppStringS 20
 
 checkExercise :: [String] -> Solution -> StateT Integer IO ()
 checkExercise fixedNames s = do
-    correctCount <- get
-    let m = compilation
-    let isSolution = m `elem` normalisedSolutions fixedNames (toStrategy (strat s))
-    liftIO $ do putStrLn $ pps (sid s) ++ pps (show isSolution)
-                        ++ pps (strategyName (strat s)) ++ ppStringS 40 (remark s)
-                putStrLn line
-    put $ if isSolution then correctCount + 1 else correctCount
-  where
-    compilation = case compile (solution s) of
-                    Right y -> normaliseModule fixedNames y
-                    _       -> error $ "no compile: " ++ sid s
-    pps = ppStringS 20
+  correctCount <- get  
+  let isCorrect = isSolution fixedNames (strat s) (compile' (solution s))
+  liftIO $ printRow (sid s) (show isCorrect) (strategyName (strat s)) (remark s)
+  liftIO line
+  put $ if isCorrect then correctCount + 1 else correctCount
 
 checkExercises :: [String] -> Solutions -> IO ()
 checkExercises fixedNames solutions = do
-  report (null fixedNames) "At least one function name should be given"
-  let pps = ppStringS 20
-  putStrLn $ line ++ "\n" ++ pps "Identifier" ++ pps "Is recognised" 
-          ++ pps "By strategy" ++ ppStringS 40 "Remark" ++ "\n" ++ dline
+  when (null fixedNames) $ error "At least one function name should be given"
+  line 
+  printRow "Identifier" "Is recognised" "By strategy" "Remark"
+  putStrLn $ replicate 80 '=' ++ "\n"
   (_, count) <- runStateT (mapM (checkExercise fixedNames) solutions) 0
   let percentage = take 4 $ show $ count * 100  `div` toInteger (length solutions)
   putStrLn $ "\n" ++ percentage ++ "% has been recognised by the strategy.\n"
   return ()
 
-ppStringS i s = "| " ++ s ++ replicate (i - length s) ' '
-line = replicate 80 '-'
-dline = replicate 80 '='
-report b s = if b then error s
-             else return ()
+line  = putStrLn $ replicate 80 '-' ++ "\n"
 
 --------------------------------------------------------------------------------
 -- Equality: rewrite to normal form and check syntatically (cannot be solved generally)
@@ -261,7 +270,7 @@ bindingPattern :: Declaration -> Pattern
 bindingPattern d = 
   case d of
     Declaration_PatternBinding _ p _        -> p
-    Declaration_FunctionBindings r (fb:fbs) -> pat (funName fb)
+    Declaration_FunctionBindings _ (fb:_) -> pat (funName fb)
     _                                       -> error "not a function!"
 
 --------------------------------------------------------------------------------

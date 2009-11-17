@@ -14,6 +14,7 @@ solvergui: $(BINDIR)/solvergui$(EXE)
 omconverter: $(BINDIR)/omconverter$(EXE)
 ideas: $(BINDIR)/ideasWX$(EXE)
 prof: $(BINDIR)/prof$(EXE)
+assess: $(BINDIR)/assess$(EXE)
 
 $(BINDIR)/service.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
@@ -59,6 +60,12 @@ $(BINDIR)/ounl.jpg: $(SRCDIR)/Presentation/ExerciseAssistant/ounl.jpg
 	$(MKDIR) -p $(BINDIR)
 	$(CP) $< $@
 
+# Create the assessment binary
+$(BINDIR)/assess$(EXE): ag
+	$(MKDIR) -p $(BINDIR) $(OUTDIR)
+	$(GHC) $(GHCFLAGS) $(HELIUMFLAGS) -o $@ $(SRCDIR)/Domain/Programming/Main.hs
+	$(STRIP) $@
+
 #---------------------------------------------------------------------------------------
 # Other directories
 
@@ -82,18 +89,17 @@ HELIUMDIR = ../../../heliumsystem/helium/src
 TOPDIR = ../../../heliumsystem/Top/src
 LVMDIR = ../../../heliumsystem/lvm/src/
 
-HELIUMFLAGS = -fglasgow-exts -XUndecidableInstances -XOverlappingInstances \
-	-i$(HELIUMDIR)/utils \
-	-i$(HELIUMDIR)/staticanalysis/staticchecks -i$(HELIUMDIR)/staticanalysis/inferencers \
-	-i$(HELIUMDIR)/staticanalysis/messages -i$(HELIUMDIR)/main -i$(TOPDIR) \
-	-i$(HELIUMDIR)/staticanalysis/miscellaneous -i$(HELIUMDIR)/syntax -i$(LVMDIR)/lib/common \
-	-i$(LVMDIR)/lib/common/ghc -i$(HELIUMDIR)/modulesystem -i$(HELIUMDIR)/staticanalysis/directives \
-	-i$(HELIUMDIR)/staticanalysis/heuristics -i$(HELIUMDIR)/parser -i$(HELIUMDIR)/codegeneration \
-	-i$(LVMDIR)/lib/lvm -i$(LVMDIR)/lib/asm -i$(LVMDIR)/lib/core
+HELIUMFLAGS = -i$(HELIUMDIR)/utils \
+		-i$(HELIUMDIR)/staticanalysis/staticchecks -i$(HELIUMDIR)/staticanalysis/inferencers \
+		-i$(HELIUMDIR)/staticanalysis/messages -i$(HELIUMDIR)/main -i$(TOPDIR) \
+		-i$(HELIUMDIR)/staticanalysis/miscellaneous -i$(HELIUMDIR)/syntax -i$(LVMDIR)/lib/common \
+		-i$(LVMDIR)/lib/common/ghc -i$(HELIUMDIR)/modulesystem -i$(HELIUMDIR)/staticanalysis/directives \
+		-i$(HELIUMDIR)/staticanalysis/heuristics -i$(HELIUMDIR)/parser -i$(HELIUMDIR)/codegeneration \
+		-i$(LVMDIR)/lib/lvm -i$(LVMDIR)/lib/asm -i$(LVMDIR)/lib/core
 
-helium: revision ag
+helium: ag # revision
 	$(MKDIR) -p $(OUTDIR)
-	$(GHCI) $(HELIUMFLAGS) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
+	$(GHCI) -optc-m32 -opta-m32 -optl-m32 $(HELIUMFLAGS) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
 
 run: ideas

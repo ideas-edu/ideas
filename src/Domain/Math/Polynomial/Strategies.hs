@@ -113,6 +113,7 @@ higherDegreeStrategy =
    list = map toStrategy  
              [ coverUpPower, ruleOnce coverUpTimes
              , mulZero, {-ruleOnce2 powerFactor,-} sameFactor
+             , ruleOnce exposeSameFactor
              ] ++ [coverUpPlus ruleOnce]
    f = mapRulesS (ignoreContext . liftRule (switchView equationView))
    

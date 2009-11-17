@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.QuadraticFormula 
-   ( abcFormula, higherSubst, substBackVar
+   ( abcFormula, higherSubst, substBackVar, exposeSameFactor
    ) where
 
 import Common.Traversable
@@ -20,6 +20,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Data.Char
 import qualified Data.Map as M
+import qualified Domain.Math.Data.Polynomial as P
 import Common.Context
 import Common.View hiding (simplify)
 import Common.Transformation
@@ -65,13 +66,36 @@ substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
          guard (p `elem` concatMap collectVars (concatMap crush (crush a)))
-         let new = rhs
          return (fmap (fmap (subst p rhs)) a)
       _ -> fail "no subst in clipboard"
  where
    subst a b (Var c) | a==c = b
    subst a b expr = build (map (subst a b) cs)
     where (cs, build) = uniplate expr
+
+exposeSameFactor :: Rule (Equation Expr)
+exposeSameFactor = makeSimpleRuleList "expose same factor" $ \(lhs :==: rhs) -> do 
+   (bx, xs) <- matchM (productView) lhs
+   (by, ys) <- matchM (productView) rhs
+   (nx, ny) <- [ (xs, new) | x <- xs, suitable x, new <- exposeList x ys ] ++
+               [ (new, ys) | y <- ys, suitable y, new <- exposeList y xs ]
+   return (build productView (bx, nx) :==: build productView (by, ny))
+ where
+   suitable p = fromMaybe False $ do 
+      (_, _, b) <- match (linearViewWith rationalView) p
+      guard (b /= 0)
+      return True
+   
+   exposeList a [] = []
+   exposeList a (b:bs) = map (++bs) (expose a b) ++ map (b:) (exposeList a bs)
+   
+   expose a b = do
+      (s1, p1) <- matchM (polyViewWith rationalView) a
+      (s2, p2) <- matchM (polyViewWith rationalView) b
+      guard (s1==s2)
+      case P.division p2 p1 of
+         Just p3 -> return $ map (\p -> build (polyViewWith rationalView) (s1,p)) [p1, p3]
+         Nothing -> []
 
 {-
 abcStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))

@@ -143,8 +143,12 @@ eval (P m) x = sum [ a * x^n | (n, a) <- IM.toList m ]
 
 -- polynomial division, no remainder
 division :: Fractional a => Polynomial a -> Polynomial a -> Maybe (Polynomial a)
-division p1 p2 = if b==0 then return a else Nothing 
- where (a, b) = longDivision p1 p2
+division p1 p2
+   | degree p1 < degree p2 = Nothing
+   | b==0      = return a
+   | otherwise = Nothing 
+ where 
+   (a, b) = longDivision p1 p2
 
 -- polynomial long division
 longDivision :: Fractional a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
@@ -155,7 +159,7 @@ longDivision p1 p2 = monicLongDivision (scale (recip a) p1) (scale (recip a) p2)
 monicLongDivision :: Num a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
 monicLongDivision p1 p2
    | d1 >= d2 && isMonic p2 = (toP quot, toP rem)
-   | otherwise = error "invalid monic division"
+   | otherwise = error $ "invalid monic division" ++ show (p1, p2)
  where
    d1 = degree p1
    d2 = degree p2

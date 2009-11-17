@@ -75,7 +75,13 @@ instance GetName Pattern where
                   Pattern_Constructor _ n _ -> n
                   _ -> error $ "No constructor instancse for: " ++ show pat
 
-name2string (Name_Identifier _ _ n) = n
+name2string :: Name -> String
+name2string name = 
+  case name of
+    Name_Identifier _ _ n -> n
+    Name_Operator   _ _ n -> n    
+    Name_Special    _ _ n -> n
+
 name = Name_Identifier noRange []
 var = Expression_Variable noRange
 pat = Pattern_Variable noRange
@@ -129,6 +135,6 @@ deconstructFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, e
     (name, ps) = deLHS lhs
     (expr, ds) = case rhs of
                     RightHandSide_Expression _ expr w -> (expr, w)
-                    RightHandSide_Guarded _ gexpr w   -> error "Todo: guarded expressions"
+                    RightHandSide_Guarded _ _ _   -> error "Todo: guarded expressions"
 
 

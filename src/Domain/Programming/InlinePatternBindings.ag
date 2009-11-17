@@ -18,11 +18,10 @@ INCLUDE "syntax/UHA_Syntax.ag"
 
 imports{
 import Data.Data hiding (Fixity)
-import Data.Generics.Biplate
+import Data.Generics.Biplate ()
 import Data.Generics.PlateData
 import Data.List (partition, (\\))
-import Data.Map hiding (map, partition, null, (\\))
-import Data.Maybe
+import Data.Map hiding (map, null, (\\))
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules ()
 import Domain.Programming.Utils

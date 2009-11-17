@@ -14,13 +14,12 @@
 
 module Domain.Programming.Exercises where
 
+import Common.Context
 import Common.Exercise
-import Common.Rewriting
 import Common.Strategy
 import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
-import Domain.Programming.Prog
 import Domain.Programming.Transformations
 import Test.QuickCheck hiding (defaultConfig, label)
 import Text.Parsing (SyntaxError(..))
@@ -41,7 +40,7 @@ heliumExercise = makeExercise
    , isReady        = const True
    , isSuitable     = const True
    , extraRules     = []
-   , strategy       = label "fromBin :: [Int] -> Int" fromBinStrategy
+   , strategy       = mapRules ignoreContext fromBinStrategy
    , testGenerator  = Just arbitrary
    , randomExercise = useGenerator (const True) (const (return undef))
    }

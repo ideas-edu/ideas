@@ -16,7 +16,6 @@ module Domain.Programming.Strategies
    , fromBinFoldlS, fromBinRecurS, fromBinInnerProductS
    )-} where
 
-import Common.Context
 import Common.Strategy
 import Common.Transformation
 import Domain.Programming.HeliumRules
@@ -26,7 +25,8 @@ import Prelude hiding (sequence)
 
 
 -- | fromBin strategy
-fromBinStrategy = fromBinFoldlS <|> fromBinRecurS <|> fromBinInnerProductS
+fromBinStrategy = label "fromBin :: [Int] -> Int" $
+  fromBinFoldlS <|> fromBinRecurS <|> fromBinInnerProductS
 
 fromBinFoldlS = label "foldl" $ 
   progS [ declPatS "fromBin" (foldlS consS nilS) [] ]
@@ -106,14 +106,14 @@ fromBinInnerProductS = label "Inner product" $
 --type 
 
 -- | Strategies derived from the abstract syntax of expressions
-stringToStrategy :: String -> Strategy (Context Module)
+stringToStrategy :: String -> Strategy Module
 stringToStrategy = sequence . stringToRules
 
-stringToRules :: String -> [Rule (Context Module)]
+stringToRules :: String -> [Rule Module]
 stringToRules = getRules . either (const (error "Compile error")) id . compile
 
 class GetRules a where
-  getRules :: a -> [Rule (Context Module)]
+  getRules :: a -> [Rule Module]
 
 instance GetRules Module where
   getRules (Module_Module _ _ _ body) = introModule : getRules body

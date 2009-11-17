@@ -13,7 +13,6 @@
 
 module Domain.Programming.Prog where
 
-import Common.Context
 import Common.Derivation
 import Common.Strategy hiding (not, repeat, replicate)
 import Control.Monad.State
@@ -29,7 +28,7 @@ import Domain.Programming.Transformations
 ------------------------------------------------------------------------------
 data Solution = Solution { solution :: String
                          , sid      :: String
-                         , strat    :: LabeledStrategy (Context Module)
+                         , strat    :: LabeledStrategy Module
                          , remark   :: String }
 
 type Solutions = [Solution]
@@ -44,8 +43,8 @@ collectNames m = nub [ s | Name_Identifier _ _ s <- universeBi m ]
 freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
 
-allSolutions strategy = 
-  map fromContext $ results $ derivationTree strategy $ inContext undef
+allSolutions :: (IsStrategy s, Undefined a) => s a -> [a]
+allSolutions strategy = results $ derivationTree strategy undef
 
 normalisedSolutions fs = 
   map (normaliseModule fs) . allSolutions
@@ -53,7 +52,7 @@ normalisedSolutions fs =
 isEquivalent fs strat m = 
   elem (normaliseModule fs m) $ normalisedSolutions fs strat
 
-isSolution :: IsStrategy s => [String] -> s (Context Module) -> Module -> Bool
+isSolution :: IsStrategy s => [String] -> s Module -> Module -> Bool
 isSolution fixedNames strat =
   (`elem` normalisedSolutions fixedNames strat) . normaliseModule fixedNames
 

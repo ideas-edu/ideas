@@ -23,7 +23,6 @@ module Domain.Programming.PreludeS
    , patInfixConS, patWildcardS, exprConS
    ) where
 
-import Common.Context hiding (Var)
 import Common.Strategy hiding (repeat, replicate)
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
@@ -32,7 +31,7 @@ import Prelude hiding (sequence)
 --------------------------------------------------------------------------------
 -- Type synonyms
 --------------------------------------------------------------------------------
-type ModuleS = Strategy (Context Module)
+type ModuleS = Strategy Module
 
 
 --------------------------------------------------------------------------------

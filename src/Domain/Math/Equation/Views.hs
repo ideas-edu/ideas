@@ -28,7 +28,7 @@ solvedRelations = all solvedRelation . crush
 solvedRelation :: Relational f => f Expr -> Bool
 solvedRelation r =
    case getVariable (leftHandSide r) of
-      Nothing -> noVars (rightHandSide r)
+      Nothing -> noVars (leftHandSide r) && noVars (rightHandSide r)
       Just x  -> x `notElem` collectVars (rightHandSide r)
        
 -------------------------------------------------------------

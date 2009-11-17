@@ -10,9 +10,11 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.QuadraticFormula 
-   ( abcFormula 
+   ( abcFormula, higherSubst, substBackVar
    ) where
 
+import Common.Traversable
+import Common.Uniplate
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Data.OrList
@@ -46,6 +48,30 @@ abcFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==: rhs)
          [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
          , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
          ]
+
+higherSubst :: Rule (Context (Equation Expr))
+higherSubst = makeSimpleRule "higher subst" $ withCM $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   let myView = polyView >>> second trinomialPolyView
+   (x, ((a, n1), (b, n2), (c, n3))) <- matchM myView lhs
+   guard (n1 == 0 && n2 > 1 && n3 `mod` n2 == 0 && x /= "p")
+   let new = build myView ("p", ((a, 0), (b, 1), (c, n3 `div` n2)))
+   addToClipboard "subst" (toExpr (Var "p" :==: Var x .^. fromIntegral n2))
+   return (new :==: 0)
+
+substBackVar :: (Crush f, Crush g) => Rule (Context (f (g Expr)))
+substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
+   expr <- lookupClipboard "subst"
+   case fromExpr expr of
+      Just (Var p :==: rhs) -> do
+         guard (p `elem` concatMap collectVars (concatMap crush (crush a)))
+         let new = rhs
+         return (fmap (fmap (subst p rhs)) a)
+      _ -> fail "no subst in clipboard"
+ where
+   subst a b (Var c) | a==c = b
+   subst a b expr = build (map (subst a b) cs)
+    where (cs, build) = uniplate expr
 
 {-
 abcStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))

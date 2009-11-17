@@ -14,7 +14,7 @@ module Common.Strategy.Abstract
    ( Strategy, IsStrategy(..)
    , LabeledStrategy, label, unlabel
    , fullDerivationTree, derivationTree, rulesInStrategy
-   , mapRules, cleanUpStrategy
+   , mapRules, mapRulesS, cleanUpStrategy
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, fixCore, makeLabeledStrategy
    , LabelInfo, strategyName, processLabelInfo, changeInfo
@@ -179,7 +179,10 @@ rulesInStrategy f = [ r | Rule _ r <- universe (toCore (toStrategy f)), isMajorR
                     
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
-mapRules f (LS n s) = LS n (S (mapRule f (toCore s)))
+mapRules f (LS n s) = LS n (mapRulesS f s)
+
+mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
+mapRulesS f = S . mapRule f . toCore
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a

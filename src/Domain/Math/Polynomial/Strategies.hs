@@ -15,6 +15,7 @@ module Domain.Math.Polynomial.Strategies
    ) where
 
 import Prelude hiding (repeat, replicate, fail)
+import Common.Apply
 import Common.Strategy
 import Common.Transformation
 import Common.View
@@ -100,15 +101,40 @@ quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $
 higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 higherDegreeStrategy =
    label "higher degree" $ 
-      mapRules (ignoreContext . liftRule (switchView equationView)) higherForm
-      <*> label "quadratic" (option (check isQ2 <*> quadraticStrategy))
+      higherForm <*> label "quadratic" ({-option (check isQ2 <*> -} quadraticStrategy)
+      <*> 
+      cleanUpStrategy (fmap cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
  where
-   higherForm = cleanUpStrategy cleanUp $ 
+   higherForm = cleanUpStrategy (fmap cleanUpRelation) $ 
       label "higher degree form" $
-      repeat (allPowerFactors |> (coverUpPower <|> coverUpPlus ruleOnce <|> ruleOnce coverUpTimes <|> mulZero <|> ruleOnce2 powerFactor <|> sameFactor))
+      repeat (f (toStrategy allPowerFactors) |> 
+         (f (alternatives list) <|> liftRule specialV (ruleOrCtxOnce higherSubst))
+            |> f (toStrategy (ruleOnce moveToLeft)))
+   list = map toStrategy  
+             [ coverUpPower, ruleOnce coverUpTimes
+             , mulZero, {-ruleOnce2 powerFactor,-} sameFactor
+             ] ++ [coverUpPlus ruleOnce]
+   f = mapRulesS (ignoreContext . liftRule (switchView equationView))
+   
+   specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
+   specialV = switchView (switchView equationView)
 
 isQ2 :: Context (OrList (Relation Expr)) -> Bool
 isQ2 = maybe False isQ . match (switchView equationView) . fromContext
 
 isQ :: OrList (Equation Expr) -> Bool
 isQ = (`belongsTo` quadraticEquationsView)
+
+-- like ruleOnce
+ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
+ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
+   let env = getEnvironment ctx
+   case disjunctions (fromContext ctx) of
+      Just xs -> f [] env xs
+      Nothing -> []
+ where
+   f acc env [] = []
+   f acc env (a:as) = 
+      case applyAll r (makeContext env a) of
+         []  -> f (a:acc) env as
+         new -> map (fmap $ \na -> orList (reverse acc++na:as)) new

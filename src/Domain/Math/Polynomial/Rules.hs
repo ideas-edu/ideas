@@ -66,7 +66,7 @@ quadraticRules = -- abcFormula
    
 higherDegreeRules :: [Rule (OrList (Equation Expr))]
 higherDegreeRules = 
-   [ allPowerFactors, ruleOnce2 powerFactor, sameFactor
+   [ allPowerFactors, sameFactor
    ] ++ quadraticRules
 
 ------------------------------------------------------------
@@ -281,6 +281,7 @@ allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ \(lhs :==: rh
       _ -> Nothing
 
 -- Factor-out variable
+{-s
 powerFactor :: Rule Expr
 powerFactor = makeSimpleRule "power factor" $ \e -> do
    xs <- match sumView e >>= mapM (match powerFactorView)
@@ -295,7 +296,7 @@ powerFactor = makeSimpleRule "power factor" $ \e -> do
          return (fromInteger g * v^fromIntegral r * foldr1 (+) (zipWith f (map (fromIntegral . (`div` g)) is) ns))
        where g = foldr1 gcd is
       _ -> 
-         return (v^fromIntegral r * build sumView (zipWith f as ns))
+         return (v^fromIntegral r * build sumView (zipWith f as ns)) -}
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))
@@ -304,7 +305,6 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
    (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
    return $ orList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
-   
 
 ---------------------------------------------------------
 -- From LinearEquations

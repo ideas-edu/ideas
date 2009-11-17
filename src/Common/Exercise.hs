@@ -209,10 +209,12 @@ getRule ex s =
 showDerivation :: Exercise a -> a -> String
 showDerivation ex a =
    case derivation tree of
-      Just d  -> show (f d)
+      Just d  -> show (f d) ++ extra d
       Nothing -> pp (root tree) ++ "\n   =>\n<<no derivation>>"
  where
-   tree = derivationTree (strategy ex) (inContext a)
+   tree  = derivationTree (strategy ex) (inContext a)
+   extra d | isReady ex (fromContext (last (terms d))) = ""
+           | otherwise = "<<not ready>>"
    -- A bit of hack to show the delta between two environments, not including
    -- the location variable
    pp  = prettyPrinter ex . fromContext

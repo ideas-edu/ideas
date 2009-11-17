@@ -90,7 +90,7 @@ derivationsPage pkg
    | null xs   = Nothing
    | otherwise = Just $ defaultPage title 2 $ do
         unless (errs==0) $ 
-           errorLine $ preText $ "Warning: " ++ show errs ++ " example(s) without a derivation"
+           errorLine $ preText $ "Warning: " ++ show errs ++ " example(s) with an incorrect derivation"
         h1 "Examples"
         forM_ (zip [1 ..] ds) $ \(i, d) -> do
             h2 (show i ++ ".")
@@ -101,7 +101,9 @@ derivationsPage pkg
    title = "Derivations for " ++ show code
    xs    = examples ex
    ds    = map (showDerivation ex) xs
-   errs  = length $ filter ("<<no derivation>>" `isSuffixOf`) ds
+   errs  = let p s =  "<<no derivation>>" `isSuffixOf` s 
+                   || "<<not ready>>" `isSuffixOf` s
+           in length $ filter p ds
    
 errorLine :: HTMLBuilder -> HTMLBuilder
 errorLine b = XML.element "font" $ do

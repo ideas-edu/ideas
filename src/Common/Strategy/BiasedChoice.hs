@@ -27,8 +27,9 @@ instance Apply f => Apply (Bias f) where
    applyAll (Normal r) = applyAll r
    applyAll _          = return
 
+-- Disabled! 
 placeBiasLabels :: Core l a -> Core (Either (Bias f a) l) a
-placeBiasLabels = fst . rec 0 . mapLabel Right
+placeBiasLabels = {-fst . rec 0 . -}mapLabel Right
  where
    -- Left-biased choice
    rec n (a :|>: b) = 

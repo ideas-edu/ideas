@@ -198,9 +198,13 @@ showExpr table = rec 0
                (Just (PrefixNon, n, op), [x]) ->
                   parIf (i>=n) $ concat [op, rec (n+1) x]
                _ -> 
-                  parIf (not (null as) && i>10000) $ unwords (show s : map (rec 10001) as)
+                  parIf (not (null as) && i>10000) $ unwords (showSymbol s : map (rec 10001) as)
          Nothing -> 
             error "showExpr"
+
+   showSymbol s
+      | s == rootSymbol = symbolName s
+      | otherwise = show s
 
    symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
 

@@ -32,16 +32,16 @@ import Prelude hiding (sequence)
 -- Type synonyms
 --------------------------------------------------------------------------------
 type ModuleS = Strategy Module
-
+type ExprS   = Strategy Expression
 
 --------------------------------------------------------------------------------
 -- Language definition strategies
 --------------------------------------------------------------------------------
-whereS :: [ModuleS] -> ModuleS -> ModuleS -- specialised let strategy, also recognizes where clauses
+whereS :: [ModuleS] -> ExprS -> ModuleS -- specialised let strategy, also recognizes where clauses
 whereS decls expr  =  rhsS expr decls
                   <|> rhsS (letS decls expr) []
 
-letS :: [ModuleS] -> ModuleS -> ModuleS
+letS :: [ModuleS] -> ExprS -> ExprS
 letS decls expr = introExprLet (length decls) <*> sequence decls <*> expr
 
 --------------------------------------------------------------------------------
@@ -129,7 +129,7 @@ patInfixConS :: ModuleS -> String -> ModuleS -> ModuleS
 patInfixConS l con r = introPatternInfixConstructor <*> l <*> 
                        introNameSpecial con <*> r
 
-funS :: String -> [ModuleS] -> ModuleS -> [ModuleS] -> ModuleS
+funS :: String -> [ModuleS] -> ExprS -> [ModuleS] -> ModuleS
 funS name args rhs ws  =  introLHSFun (length args)
                       <*> introNameIdentifier name <*> sequence args 
                       <*> rhsS rhs ws
@@ -137,15 +137,15 @@ funS name args rhs ws  =  introLHSFun (length args)
 declFunS :: [ModuleS] -> ModuleS
 declFunS fs = introFunctionBindings (length fs) <*> sequence fs -- also recognise patbinding/lambda?
 
-declPatS :: String -> ModuleS -> [ModuleS] -> ModuleS
+declPatS :: String -> ExprS -> [ModuleS] -> ModuleS
 declPatS name rhs ws = introPatternBinding <*> patS name <*> rhsS rhs ws
 
-rhsS :: ModuleS -> [ModuleS] -> ModuleS
-rhsS expr ws  =  introRHSExpr (length ws) <*> expr 
+rhsS :: ExprS -> [ModuleS] -> ModuleS
+rhsS expr ws  =  introRHSExpr (length ws) <*> liftStrategy expr 
              <*> if null ws then succeed else sequence ws -- where clause
 
-intS :: String -> ModuleS
-intS i = introExprLiteral <*> introLiteralInt i
+intS :: String -> ExprS
+intS i = introExprLiteral <*> liftRule (introLiteralInt i)
 
 progS :: [ModuleS] -> ModuleS
 progS decls = introModule <*> introDecls (length decls) <*> sequence decls
@@ -175,4 +175,4 @@ lambdaS as expr = introExprLambda (length as) <*> sequence as <*> expr
 --------------------------------------------------------------------------------
 mapSeqS f = sequence . map f
 repeatS n = sequence . replicate n
-
+liftStrategy = mapRulesS liftRule

@@ -16,7 +16,7 @@
 
 module Domain.Programming.HeliumRules where
 
-import Common.Transformation
+import Common.Transformation hiding (liftRule)
 import Common.Utils (safeHead)
 import Common.View
 import Control.Monad
@@ -31,7 +31,7 @@ import Domain.Programming.Helium
 --------------------------------------------------------------------------------
 -- | Typed holes
 --------------------------------------------------------------------------------
-undefs :: (Data a, Eq a, Undefined a) => Module -> [(a, a -> Module)]
+undefs :: (Data a, Data b, Eq a, Undefined a) => b -> [(a, a -> b)]
 undefs = filter ((== undef) . fst) . contextsBi
 
 class Undefined a where
@@ -59,8 +59,13 @@ instance Undefined Literal where
 instance Undefined Module where
   undef = Module_Module noRange MaybeName_Nothing MaybeExports_Nothing undef
 
-liftRuleInModule :: (Data a, Eq a, Undefined a) => Rule a -> Rule Module
-liftRuleInModule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
+liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
+liftRule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
+
+toRule' :: (Undefined a, Eq a) => String -> a -> Rule a
+toRule' desc a = makeSimpleRule desc $ \e -> do
+  guard (e == undef)
+  return a
 
 toRule :: String -> (Module -> [(a, a -> Module)]) -> a -> Rule Module
 toRule s u = makeSimpleRule s . replaceFirstUndef u
@@ -122,10 +127,9 @@ introExprInfixApplication hasLExpr hasRExpr = toRule "Introduce operator" undefs
                                        then MaybeExpression_Just undef
                                        else MaybeExpression_Nothing) 
 
-introExprLet :: Int -> Rule Module
-introExprLet ndecls = toRule "Introduce operator" undefs f
-  where
-    f = Expression_Let noRange (replicate ndecls undef) undef
+introExprLet :: Int -> Rule Expression
+introExprLet ndecls = toRule' "Introduce operator" $
+  Expression_Let noRange (replicate ndecls undef) undef
 
 introExprLambda :: Int -> Rule Module
 introExprLambda nps = toRule "Introduce operator" undefs f
@@ -143,12 +147,11 @@ introExprParenthesized = toRule "Intro parentheses" undefs f
     f = Expression_Parenthesized noRange undef
 
 introExprList :: Int -> Rule Module
-introExprList = liftRuleInModule . introExprList' 
+introExprList = liftRule . introExprList' 
 
 introExprList' :: Int -> Rule Expression
-introExprList' n = makeSimpleRule " Intro expr list" $ \e -> do
-   guard (e == undef) 
-   return $ Expression_List noRange $ replicate n undef
+introExprList' n = toRule' "Intro expr list" $ 
+  Expression_List noRange $ replicate n undef
 
 introExprTuple :: Int -> Rule Module
 introExprTuple = toRule "Intro expr tuple" undefs . f
@@ -162,11 +165,9 @@ introExprVariable = minorRule $ toRule "Intro variable" undefs f
     f = Expression_Variable noRange undef
 
 -- Literals
-introExprLiteral :: Rule Module
-introExprLiteral = minorRule $ toRule "Intro literal" undefs f
-  where 
-    f = Expression_Literal noRange undef
-
+introExprLiteral :: Rule Expression
+introExprLiteral = minorRule $ toRule' "Intro literal" $ 
+  Expression_Literal noRange undef
 
 --------------------------------------------------------------------------------
 -- GuardedExpressions
@@ -250,10 +251,8 @@ introPatternWildcard = toRule "Introduce wildcard pattern" undefs f
 --------------------------------------------------------------------------------
 -- Literals
 --------------------------------------------------------------------------------
-introLiteralInt :: String -> Rule Module
-introLiteralInt = toRule "Introduce a literal integer" undefs . f
-  where
-    f = Literal_Int noRange
+introLiteralInt :: String -> Rule Literal
+introLiteralInt = toRule' "Introduce a literal integer" . Literal_Int noRange
 
 introLiteralString :: String -> Rule Module
 introLiteralString = toRule "Introduce a literal string" undefs . f

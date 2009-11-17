@@ -38,12 +38,12 @@ import Prelude hiding (lookup)
 infixr 1 >->
 
 (>>->) :: (Data a, Data b) => (a -> Maybe a) -> (b -> Maybe b) -> Module -> Maybe Module
-(f >>-> g) x = liftRule f x `mplus` liftRule g x
+(f >>-> g) x = liftTrans f x `mplus` liftTrans g x
 infixr 2 >>->
 
 -- Choice do all rewrites in a Module or just one and let it to the rewriteBi
-liftRule :: (Data a, Data b) => (a -> Maybe a) -> b -> Maybe b
-liftRule rule m =
+liftTrans :: (Data a, Data b) => (a -> Maybe a) -> b -> Maybe b
+liftTrans rule m =
    safeHead [ fill a | (h, fill) <- contextsBi m, Just a <- [rule h] ]
 
 ------------------------------------------------------------------------------

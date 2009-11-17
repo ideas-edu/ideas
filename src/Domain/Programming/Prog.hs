@@ -45,7 +45,7 @@ freshVarStrings :: Module -> [String]
 freshVarStrings = (['x' : show i | i <- [1..]] \\) . collectNames
 
 allSolutions strategy = 
-  map fromContext $ results $ derivationTree strategy $ inContext emptyProg
+  map fromContext $ results $ derivationTree strategy $ inContext undef
 
 normalisedSolutions fs = 
   map (normaliseModule fs) . allSolutions

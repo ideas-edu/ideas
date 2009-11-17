@@ -21,6 +21,7 @@ import Domain.Programming.Strategies
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.Prog
+import Domain.Programming.Transformations
 import Test.QuickCheck hiding (defaultConfig, label)
 import Text.Parsing (SyntaxError(..))
 
@@ -30,7 +31,7 @@ heliumExercise = makeExercise
    , description    = "Flexible fromBin strategy"
    , status         = Experimental
    , parser         = \s -> if s == "" 
-                            then Right emptyProg 
+                            then Right undef
                             else  case compile s of
                                     Left e  -> Left $ ErrorMessage e
                                     Right m -> Right m
@@ -41,10 +42,9 @@ heliumExercise = makeExercise
    , isSuitable     = const True
    , extraRules     = []
    , strategy       = label "fromBin :: [Int] -> Int" fromBinStrategy
---   , differences    = \_ _ -> [([], Different)]
    , testGenerator  = Just arbitrary
-   , randomExercise = useGenerator (const True) (const (return emptyProg))
+   , randomExercise = useGenerator (const True) (const (return undef))
    }
 
 instance Arbitrary Module where
-  arbitrary = return emptyProg
+  arbitrary = return undef

@@ -30,149 +30,182 @@ import Data.Maybe
 import Domain.Programming.Helium
 
 --------------------------------------------------------------------------------
+-- | Typed holes
+--------------------------------------------------------------------------------
+undefs :: (Data a, Eq a, Undefined a) => Module -> [(a, a -> Module)]
+undefs = filter ((== undef) . fst) . contextsBi
+
+class Undefined a where
+  undef  :: a
+instance Undefined Declaration where
+  undef  = Declaration_Empty noRange
+instance Undefined RightHandSide where
+  undef = RightHandSide_Expression noRange undef MaybeDeclarations_Nothing
+instance Undefined LeftHandSide where
+  undef = LeftHandSide_Function noRange undef []
+instance Undefined Expression where
+  undef = Expression_Variable noRange undef
+instance Undefined Pattern where
+  undef = Pattern_Variable noRange undef
+instance Undefined FunctionBinding where
+  undef = FunctionBinding_FunctionBinding noRange undef undef
+instance Undefined GuardedExpression where
+  undef = GuardedExpression_GuardedExpression noRange undef undef
+instance Undefined Name where
+  undef = Name_Special noRange [] "undefined"
+instance Undefined Body where
+  undef = Body_Body noRange [] []
+instance Undefined Literal where
+  undef = Literal_String noRange "undefined"
+instance Undefined Module where
+  undef = Module_Module noRange MaybeName_Nothing MaybeExports_Nothing undef
+
+liftRuleInModule :: (Data a, Eq a, Undefined a) => Rule a -> Rule Module
+liftRuleInModule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
+
+toRule :: String -> (Module -> [(a, a -> Module)]) -> a -> Rule (Context Module)
+toRule s u = makeSimpleRule s . replaceFirstUndef u
+
+replaceFirstUndef :: (Module -> [(a, a -> Module)]) -> a -> (Context Module) -> Maybe (Context Module)
+replaceFirstUndef u a m = do
+  f <- safeHead $ u $ fromContext m
+  return $ inContext $ snd f a
+
+
+--------------------------------------------------------------------------------
 -- Module
 --------------------------------------------------------------------------------
 -- Empty programming AST
 introModule :: Rule (Context Module)
-introModule = minorRule $ makeSimpleRule "Intro module" $ const $ return $ inContext emptyProg
-
+introModule = minorRule $ makeSimpleRule "Intro module" $ 
+  const $ return $ inContext undef
 
 --------------------------------------------------------------------------------
 -- Body
 --------------------------------------------------------------------------------
 introDecls :: Int -> Rule (Context Module)
-introDecls = minorRule . toRule "Introduce declarations" undefBodies . f
+introDecls = minorRule . toRule "Introduce declarations" undefs . f
   where
-    f ndecls = Body_Body noRange [] $ replicate ndecls undefDecl
+    f ndecls = Body_Body noRange [] $ replicate ndecls undef
 
 
 --------------------------------------------------------------------------------
 -- Declarations
 --------------------------------------------------------------------------------
 introPatternBinding :: Rule (Context Module)
-introPatternBinding = toRule "Introduce pattern binding" undefDecls f
+introPatternBinding = toRule "Introduce pattern binding" undefs f
   where 
-    f = Declaration_PatternBinding noRange undefPattern undefRHS
+    f = Declaration_PatternBinding noRange undef undef
 
 introFunctionBindings :: Int -> Rule (Context Module)
-introFunctionBindings nbs = minorRule $ toRule "Introduce function binding" undefDecls f
+introFunctionBindings nbs = minorRule $ toRule "Introduce function binding" undefs f
   where 
-    f = Declaration_FunctionBindings noRange $ replicate nbs undefFunBind
+    f = Declaration_FunctionBindings noRange $ replicate nbs undef
 
 
 --------------------------------------------------------------------------------
 -- Expressions
 --------------------------------------------------------------------------------
 introExprNormalApplication :: Int -> Rule (Context Module)
-introExprNormalApplication = toRule "Introduce application" undefExprs . f
+introExprNormalApplication = toRule "Introduce application" undefs . f
   where 
-    f nargs = Expression_NormalApplication noRange undefExpr $ replicate nargs undefExpr
+    f nargs = Expression_NormalApplication noRange undef $ replicate nargs undef
 
 introExprInfixApplication :: Bool -> Bool -> Rule (Context Module)
-introExprInfixApplication hasLExpr hasRExpr = toRule "Introduce operator" undefExprs f
+introExprInfixApplication hasLExpr hasRExpr = toRule "Introduce operator" undefs f
   where
     f = Expression_InfixApplication noRange 
                                     (if hasLExpr 
-                                       then MaybeExpression_Just undefExpr 
+                                       then MaybeExpression_Just undef
                                        else MaybeExpression_Nothing) 
-                                    undefExpr 
+                                    undef
                                     (if hasRExpr 
-                                       then MaybeExpression_Just undefExpr 
+                                       then MaybeExpression_Just undef
                                        else MaybeExpression_Nothing) 
 
 introExprLet :: Int -> Rule (Context Module)
-introExprLet ndecls = toRule "Introduce operator" undefExprs f
+introExprLet ndecls = toRule "Introduce operator" undefs f
   where
-    f = Expression_Let noRange (replicate ndecls undefDecl) undefExpr
+    f = Expression_Let noRange (replicate ndecls undef) undef
 
 introExprLambda :: Int -> Rule (Context Module)
-introExprLambda nps = toRule "Introduce operator" undefExprs f
+introExprLambda nps = toRule "Introduce operator" undefs f
   where
-    f = Expression_Lambda noRange (replicate nps undefPattern) undefExpr
+    f = Expression_Lambda noRange (replicate nps undef) undef
 
 introExprConstructor :: Rule (Context Module)
-introExprConstructor = toRule "Intro constructor" undefExprs f
+introExprConstructor = toRule "Intro constructor" undefs f
   where 
-    f = Expression_Constructor noRange undefName
+    f = Expression_Constructor noRange undef
 
 introExprParenthesized :: Rule (Context Module)
-introExprParenthesized = toRule "Intro parentheses" undefExprs f
+introExprParenthesized = toRule "Intro parentheses" undefs f
   where 
-    f = Expression_Parenthesized noRange undefExpr
+    f = Expression_Parenthesized noRange undef
 
 introExprList :: Int -> Rule (Context Module)
-introExprList = ignoreContext . liftRuleIn (transformFirstView) . introExprList' 
-
-{- toRule "Intro expr list" undefExprs . f
-  where 
-    f nexprs = Expression_List noRange $ replicate nexprs undefExpr
--}
-transformFirstView :: View Module (Expression, Expression -> Module)
-transformFirstView = makeView f g
- where
-   f m = safeHead (undefExprs m)
-   g (e, f) = f e
+introExprList = ignoreContext . liftRuleInModule . introExprList' 
 
 introExprList' :: Int -> Rule Expression
 introExprList' n = makeSimpleRule " Intro expr list" $ \e -> do
-   guard (e==undefExpr) 
-   return $ Expression_List noRange (replicate n undefExpr)
+   guard (e == undef) 
+   return $ Expression_List noRange $ replicate n undef
 
 introExprTuple :: Int -> Rule (Context Module)
-introExprTuple = toRule "Intro expr tuple" undefExprs . f
+introExprTuple = toRule "Intro expr tuple" undefs . f
   where 
-    f nexprs = Expression_Tuple noRange $ replicate nexprs undefExpr
+    f nexprs = Expression_Tuple noRange $ replicate nexprs undef
 
 -- Variables
 introExprVariable :: Rule (Context Module)
-introExprVariable = minorRule $ toRule "Intro variable" undefExprs f
+introExprVariable = minorRule $ toRule "Intro variable" undefs f
   where 
-    f = Expression_Variable noRange undefName
+    f = Expression_Variable noRange undef
 
 -- Literals
 introExprLiteral :: Rule (Context Module)
-introExprLiteral = minorRule $ toRule "Intro literal" undefExprs f
+introExprLiteral = minorRule $ toRule "Intro literal" undefs f
   where 
-    f = Expression_Literal noRange undefLiteral
+    f = Expression_Literal noRange undef
 
 
 --------------------------------------------------------------------------------
 -- GuardedExpressions
 --------------------------------------------------------------------------------
 introGuardedExpr :: Rule (Context Module)
-introGuardedExpr = toRule "Introduce pattern variable" undefGuardedExprs f
+introGuardedExpr = toRule "Introduce pattern variable" undefs f
   where
-    f = GuardedExpression_GuardedExpression noRange undefExpr undefExpr
+    f = GuardedExpression_GuardedExpression noRange undef undef
 
 
 --------------------------------------------------------------------------------
 -- LeftHandSide
 --------------------------------------------------------------------------------
 introLHSFun :: Int -> Rule (Context Module)
-introLHSFun = toRule "Introduce function name and patterns" undefLHSs . f
+introLHSFun = toRule "Introduce function name and patterns" undefs . f
   where
-    f nps = LeftHandSide_Function noRange undefName $ replicate nps undefPattern
+    f nps = LeftHandSide_Function noRange undef $ replicate nps undef
 
 
 --------------------------------------------------------------------------------
 -- RightHandSide
 --------------------------------------------------------------------------------
 introRHSExpr :: Int -> Rule (Context Module)
-introRHSExpr ndecls = toRule "Introduce pattern variable" undefRHSs f
+introRHSExpr ndecls = toRule "Introduce pattern variable" undefs f
   where
     f = RightHandSide_Expression noRange 
-                                 undefExpr 
+                                 undef
                                  (if ndecls > 0
-                                    then MaybeDeclarations_Just (replicate ndecls undefDecl)
+                                    then MaybeDeclarations_Just (replicate ndecls undef)
                                     else MaybeDeclarations_Nothing)
 
 introRHSGuarded :: Int -> Int -> Rule (Context Module)
-introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" undefRHSs f
+introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" undefs f
   where
     f = RightHandSide_Guarded noRange 
-                              (replicate ngexprs undefGuardedExpr)
+                              (replicate ngexprs undef)
                               (if ndecls > 0
-                                 then MaybeDeclarations_Just (replicate ndecls undefDecl)
+                                 then MaybeDeclarations_Just (replicate ndecls undef)
                                  else MaybeDeclarations_Nothing)
 
 
@@ -181,37 +214,37 @@ introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" undefRHSs f
 -- Patterns
 --------------------------------------------------------------------------------
 introPatternVariable :: Rule (Context Module)
-introPatternVariable = toRule "Introduce pattern variable" undefPatterns f
+introPatternVariable = toRule "Introduce pattern variable" undefs f
   where
-    f = Pattern_Variable noRange undefName
+    f = Pattern_Variable noRange undef
 
 introPatternConstructor :: Int -> Rule (Context Module)
-introPatternConstructor = toRule "Introduce pattern constructor" undefPatterns . f
+introPatternConstructor = toRule "Introduce pattern constructor" undefs . f
   where
-    f nps = Pattern_Constructor noRange undefName $ replicate nps undefPattern
+    f nps = Pattern_Constructor noRange undef $ replicate nps undef
 
 introPatternInfixConstructor :: Rule (Context Module)
-introPatternInfixConstructor = toRule "Introduce infix pattern constructor" undefPatterns f
+introPatternInfixConstructor = toRule "Introduce infix pattern constructor" undefs f
   where
-    f = Pattern_InfixConstructor noRange undefPattern undefName undefPattern
+    f = Pattern_InfixConstructor noRange undef undef undef
 
 introPatternParenthesized :: Rule (Context Module)
-introPatternParenthesized = toRule "Introduce pattern parentheses" undefPatterns f
+introPatternParenthesized = toRule "Introduce pattern parentheses" undefs f
   where
-    f = Pattern_Parenthesized noRange undefPattern
+    f = Pattern_Parenthesized noRange undef
 
 introPatternLiteral :: Rule (Context Module)
-introPatternLiteral = toRule "Introduce literal pattern" undefPatterns f
+introPatternLiteral = toRule "Introduce literal pattern" undefs f
   where
-    f = Pattern_Literal noRange undefLiteral
+    f = Pattern_Literal noRange undef
 
 introPatternTuple :: Int -> Rule (Context Module)
-introPatternTuple nps = toRule "Introduce tuple pattern" undefPatterns f
+introPatternTuple nps = toRule "Introduce tuple pattern" undefs f
   where
-    f = Pattern_Tuple noRange $ replicate nps undefPattern
+    f = Pattern_Tuple noRange $ replicate nps undef
 
 introPatternWildcard :: Rule (Context Module)
-introPatternWildcard = toRule "Introduce wildcard pattern" undefPatterns f
+introPatternWildcard = toRule "Introduce wildcard pattern" undefs f
   where
     f = Pattern_Wildcard noRange
 
@@ -219,12 +252,12 @@ introPatternWildcard = toRule "Introduce wildcard pattern" undefPatterns f
 -- Literals
 --------------------------------------------------------------------------------
 introLiteralInt :: String -> Rule (Context Module)
-introLiteralInt = toRule "Introduce a literal integer" undefLiterals . f
+introLiteralInt = toRule "Introduce a literal integer" undefs . f
   where
     f = Literal_Int noRange
 
 introLiteralString :: String -> Rule (Context Module)
-introLiteralString = toRule "Introduce a literal string" undefLiterals . f
+introLiteralString = toRule "Introduce a literal string" undefs . f
   where
     f = Literal_String noRange
 
@@ -232,87 +265,24 @@ introLiteralString = toRule "Introduce a literal string" undefLiterals . f
 -- Names
 --------------------------------------------------------------------------------
 introNameIdentifier :: String -> Rule (Context Module)
-introNameIdentifier = toRule "Introduce identifier name" undefNames . f
+introNameIdentifier = toRule "Introduce identifier name" undefs . f
   where
     f = Name_Identifier noRange []
 
 introNameOperator :: String -> Rule (Context Module)
-introNameOperator = toRule "Introduce operator name" undefNames . f
+introNameOperator = toRule "Introduce operator name" undefs . f
   where
     f = Name_Operator noRange []
 
 introNameSpecial :: String -> Rule (Context Module)
-introNameSpecial = toRule "Introduce special name" undefNames . f
+introNameSpecial = toRule "Introduce special name" undefs . f
   where
     f = Name_Special noRange []
 
 
---------------------------------------------------------------------------------
--- Help functions
---------------------------------------------------------------------------------
-
-type Undefs a = Module -> [(a, a -> Module)]
-
-undefs :: (Data a, Eq a) => a -> Undefs a
-undefs undef = filter ((== undef) . fst) . contextsBi
-
-undefDecls        = undefs undefDecl
-undefRHSs         = undefs undefRHS
-undefLHSs         = undefs undefLHS
-undefExprs        = undefs undefExpr
-undefPatterns     = undefs undefPattern
-undefFunBinds     = undefs undefFunBind
-undefGuardedExprs = undefs undefGuardedExpr
-undefNames        = undefs undefName
-undefBodies       = undefs undefBody
-undefLiterals     = undefs undefLiteral
-
-toRule :: String -> Undefs a -> a -> Rule (Context Module)
-toRule s u = makeSimpleRule s . replaceFirstUndef u
-
-replaceFirstUndef :: Undefs a -> a -> (Context Module) -> Maybe (Context Module)
-replaceFirstUndef u a m = do
-  f <- safeHead $ u $ fromContext m
-  return $ inContext $ snd f a
-
--- Typed holes in a incomplete program
-undef = Name_Special noRange [] "undefined"
-
-undefDecl :: Declaration
-undefDecl = Declaration_Empty noRange
-
-undefBody :: Body
-undefBody = Body_Body noRange [] []
-
-undefExpr :: Expression
-undefExpr = Expression_Variable noRange undef
-
-undefGuardedExpr :: GuardedExpression
-undefGuardedExpr = GuardedExpression_GuardedExpression noRange undefExpr undefExpr
-
-undefLHS :: LeftHandSide
-undefLHS = LeftHandSide_Function noRange undef []
-
-undefRHS :: RightHandSide
-undefRHS = RightHandSide_Expression noRange undefExpr MaybeDeclarations_Nothing
-
-undefFunBind :: FunctionBinding
-undefFunBind = FunctionBinding_FunctionBinding noRange undefLHS undefRHS
-
-undefPattern :: Pattern
-undefPattern = Pattern_Variable noRange undef
-
-undefLiteral :: Literal
-undefLiteral = Literal_String noRange "undefined"
-
-undefName :: Name
-undefName = undef
-
 -- help functions
 range :: (Int, Int) -> Range
 range (line, col) = Range_Range (Position_Position "" line col) Position_Unknown
-
-emptyProg =  Module_Module noRange MaybeName_Nothing MaybeExports_Nothing undefBody
 
 
 --------------------------------------------------------------------

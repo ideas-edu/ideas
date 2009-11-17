@@ -106,8 +106,8 @@ coverUpPowerWith = coverUpBinary2Rule "power" (isBinary powerSymbol) fb
    fb rhs e2 = do
       n <- isNat e2
       guard (n > 0)
-      new1 <- canonicalM identity (makeRoot n rhs)
-      new2 <- canonicalM identity (negate (makeRoot n rhs))
+      let new1 = root rhs (fromIntegral n)
+          new2 = (neg new1)
       return $ orList $ new1 : [ new2 | new1 /= new2, even n ]
       
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
@@ -183,9 +183,3 @@ flipOp = liftM (\(x, y) -> (y, x))
 isNat :: MonadPlus m => Expr -> m Integer
 isNat (Nat n) = return n
 isNat _       = mzero
-
-makeRoot :: Integer -> Expr -> Expr
-makeRoot n a 
-   | n == 1    = a
-   | n == 2    = sqrt a
-   | otherwise = root (fromInteger n) a

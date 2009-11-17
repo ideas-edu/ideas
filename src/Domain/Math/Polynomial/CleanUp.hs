@@ -31,6 +31,23 @@ import Domain.Math.SquareRoot.Views
 import Prelude hiding ((^), recip)
 import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Prelude
+import Data.Ratio
+
+----------------------------------------------------------------------
+-- Root simplification
+
+simplerRoot :: Rational -> Integer -> Expr
+simplerRoot a b 
+   | b <  0    = 1 ./. simplerRoot a (abs b)
+   | otherwise = f (numerator a) b ./. f (denominator a) b
+ where
+   f x y
+      | x == 0              = 0
+      | y == 0 || x <= 0    = root (fromIntegral x) (fromIntegral y)
+      | a Prelude.^ y == x  = fromIntegral a
+      | otherwise           = root (fromIntegral x) (fromIntegral y)
+    where
+      a = round (fromIntegral x ** (1 / fromIntegral y))
 
 ----------------------------------------------------------------------
 -- Expr normalization
@@ -206,12 +223,14 @@ specialSqrtOrder = sumView >>> makeView f id
 smart :: Expr -> Expr
 smart (a :*: b) = a .*. b
 smart (a :/: b) = a ./. b
-smart (Sym s [x, y]) | s == powerSymbol = x .^. y
+smart expr@(Sym s [x, y]) 
+   | s == powerSymbol = x .^. y
+   | s == rootSymbol  = fromMaybe expr $ 
+        liftM2 simplerRoot (match rationalView x) (match integerView y)
 smart (Negate a) = neg a
 smart (a :+: b) = a .+. b
 smart (a :-: b) = a .-. b
-smart (Sqrt (Nat n)) | i*i == n = fromInteger i
- where i = SQ.isqrt n  
+smart (Sqrt (Nat n)) = simplerRoot (fromIntegral n) 2
 smart e = e
 
 ------------------------------------------------------------

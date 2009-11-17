@@ -101,11 +101,11 @@ higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 higherDegreeStrategy =
    label "higher degree" $ 
       mapRules (ignoreContext . liftRule (switchView equationView)) higherForm
-      <*> (label "quadratic" (check isQ2 <*> quadraticStrategy))
+      <*> label "quadratic" (option (check isQ2 <*> quadraticStrategy))
  where
    higherForm = cleanUpStrategy cleanUp $ 
       label "higher degree form" $
-      repeat (allPowerFactors |> (mulZero <|> ruleOnce2 powerFactor <|> sameFactor))
+      repeat (allPowerFactors |> (coverUpPower <|> coverUpPlus ruleOnce <|> ruleOnce coverUpTimes <|> mulZero <|> ruleOnce2 powerFactor <|> sameFactor))
 
 isQ2 :: Context (OrList (Relation Expr)) -> Bool
 isQ2 = maybe False isQ . match (switchView equationView) . fromContext

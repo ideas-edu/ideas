@@ -62,6 +62,12 @@
       },
       {
          "domain": "math",
+         "identifier": "ineqhigherdegree",
+         "description": "solve an inequation of higher degree",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
          "identifier": "integer",
          "description": "simplify expression (integers)",
          "status": "Provisional"
@@ -71,6 +77,12 @@
          "identifier": "lineq",
          "description": "solve a linear equation",
          "status": "Provisional"
+      },
+      {
+         "domain": "math",
+         "identifier": "linineq",
+         "description": "solve a linear inequation",
+         "status": "Experimental"
       },
       {
          "domain": "math",
@@ -98,6 +110,12 @@
       },
       {
          "domain": "math",
+         "identifier": "quadrineq",
+         "description": "solve a quadratic inequation",
+         "status": "Experimental"
+      },
+      {
+         "domain": "math",
          "identifier": "rational",
          "description": "simplify expression (rational numbers)",
          "status": "Provisional"
@@ -111,5 +129,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2448)"
+   "version": "0.5.8 (2464)"
 }

@@ -31,6 +31,7 @@ import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Equation.CoverUpExercise as Math
 import qualified Domain.Math.Polynomial.Exercises as Math
 import qualified Domain.Math.Polynomial.IneqExercises as Math
+import qualified Domain.RegularExpr.Exercises as RE
 
 packages :: [Some ExercisePackage]
 packages =
@@ -56,6 +57,8 @@ packages =
      -- linear algebra
    , makeOM LA.gramSchmidtExercise, makeOM LA.linearSystemExercise
    , makeOM LA.gaussianElimExercise, makeOM LA.systemWithMatrixExercise
+     -- regular expressions
+   , make RE.regexpExercise
    ]
 
 -----------------------------------------------------------------------------

@@ -121,6 +121,12 @@
          "status": "Provisional"
       },
       {
+         "domain": "regexp",
+         "identifier": "normalform",
+         "description": "Rewrite a regular expression",
+         "status": "Provisional"
+      },
+      {
          "domain": "relationalg",
          "identifier": "cnf",
          "description": "To conjunctive normal form",
@@ -129,5 +135,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2464)"
+   "version": "0.5.8 (2474)"
 }

@@ -1,10 +1,10 @@
 {-# OPTIONS -XStandaloneDeriving -XDeriveDataTypeable #-}
 
------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 -- |
 -- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
@@ -12,7 +12,7 @@
 --
 -- Refinement rules for the programming domain.
 --
------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 module Domain.Programming.HeliumRules where
 
@@ -25,15 +25,11 @@ import Data.Data hiding (Fixity)
 import Data.Generics.Biplate ()
 import Data.Generics.PlateData
 import Data.List
-import Data.Maybe
 import Domain.Programming.Helium
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- | Typed holes
---------------------------------------------------------------------------------
-undefs :: (Data a, Data b, Eq a, Undefined a) => b -> [(a, a -> b)]
-undefs = filter ((== undef) . fst) . contextsBi
-
+------------------------------------------------------------------------------
 class Undefined a where
   undef  :: a
 instance Undefined Declaration where
@@ -59,228 +55,183 @@ instance Undefined Literal where
 instance Undefined Module where
   undef = Module_Module noRange MaybeName_Nothing MaybeExports_Nothing undef
 
+undefs :: (Data a, Data b, Eq a, Undefined a) => b -> [(a, a -> b)]
+undefs = filter ((== undef) . fst) . contextsBi
+
 liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
 liftRule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
 
-toRule' :: (Undefined a, Eq a) => String -> a -> Rule a
-toRule' desc a = makeSimpleRule desc $ \e -> do
+toRule :: (Undefined a, Eq a) => String -> a -> Rule a
+toRule desc a = makeSimpleRule desc $ \e -> do
   guard (e == undef)
   return a
 
-toRule :: String -> (Module -> [(a, a -> Module)]) -> a -> Rule Module
-toRule s u = makeSimpleRule s . replaceFirstUndef u
-
-replaceFirstUndef :: (Module -> [(a, a -> Module)]) -> a -> Module -> Maybe Module
-replaceFirstUndef u a m = do
-  f <- safeHead $ u m
-  return $ snd f a
-
-
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Module
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Empty programming AST
 introModule :: Rule Module
 introModule = minorRule $ makeSimpleRule "Intro module" $ 
   const $ return undef
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Body
---------------------------------------------------------------------------------
-introDecls :: Int -> Rule Module
-introDecls = minorRule . toRule "Introduce declarations" undefs . f
-  where
-    f ndecls = Body_Body noRange [] $ replicate ndecls undef
+------------------------------------------------------------------------------
+introBody :: Int -> Rule Body
+introBody ndecls = minorRule $ toRule "Introduce declarations" $
+  Body_Body noRange [] $ replicate ndecls undef
 
-
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Declarations
---------------------------------------------------------------------------------
-introPatternBinding :: Rule Module
-introPatternBinding = toRule "Introduce pattern binding" undefs f
-  where 
-    f = Declaration_PatternBinding noRange undef undef
+------------------------------------------------------------------------------
+introDeclPatBinding :: Rule Declaration
+introDeclPatBinding = toRule "Introduce pattern binding" $
+  Declaration_PatternBinding noRange undef undef
 
-introFunctionBindings :: Int -> Rule Module
-introFunctionBindings nbs = minorRule $ toRule "Introduce function binding" undefs f
-  where 
-    f = Declaration_FunctionBindings noRange $ replicate nbs undef
+introDeclFunBindings :: Int -> Rule Declaration
+introDeclFunBindings nbs = minorRule $ toRule "Introduce function bindings" $ 
+  Declaration_FunctionBindings noRange $ replicate nbs undef
 
-
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Expressions
---------------------------------------------------------------------------------
-introExprNormalApplication :: Int -> Rule Module
-introExprNormalApplication = toRule "Introduce application" undefs . f
-  where 
-    f nargs = Expression_NormalApplication noRange undef $ replicate nargs undef
+------------------------------------------------------------------------------
+introExprNormalApplication :: Int -> Rule Expression
+introExprNormalApplication nargs = toRule "Introduce application" $
+  Expression_NormalApplication noRange undef $ replicate nargs undef
 
-introExprInfixApplication :: Bool -> Bool -> Rule Module
-introExprInfixApplication hasLExpr hasRExpr = toRule "Introduce operator" undefs f
-  where
-    f = Expression_InfixApplication noRange 
-                                    (if hasLExpr 
-                                       then MaybeExpression_Just undef
-                                       else MaybeExpression_Nothing) 
-                                    undef
-                                    (if hasRExpr 
-                                       then MaybeExpression_Just undef
-                                       else MaybeExpression_Nothing) 
+introExprInfixApplication :: Bool -> Bool -> Rule Expression
+introExprInfixApplication hasLExpr hasRExpr = toRule "Introduce operator" $ 
+  Expression_InfixApplication noRange 
+    (if hasLExpr then MaybeExpression_Just undef else MaybeExpression_Nothing) 
+    undef
+    (if hasRExpr then MaybeExpression_Just undef else MaybeExpression_Nothing) 
 
 introExprLet :: Int -> Rule Expression
-introExprLet ndecls = toRule' "Introduce operator" $
+introExprLet ndecls = toRule "Introduce operator" $
   Expression_Let noRange (replicate ndecls undef) undef
 
-introExprLambda :: Int -> Rule Module
-introExprLambda nps = toRule "Introduce operator" undefs f
-  where
-    f = Expression_Lambda noRange (replicate nps undef) undef
+introExprLambda :: Int -> Rule Expression
+introExprLambda nps = toRule "Introduce operator" $ 
+  Expression_Lambda noRange (replicate nps undef) undef
 
-introExprConstructor :: Rule Module
-introExprConstructor = toRule "Intro constructor" undefs f
-  where 
-    f = Expression_Constructor noRange undef
+introExprConstructor :: Rule Expression
+introExprConstructor = toRule "Intro constructor" $
+  Expression_Constructor noRange undef
 
-introExprParenthesized :: Rule Module
-introExprParenthesized = toRule "Intro parentheses" undefs f
-  where 
-    f = Expression_Parenthesized noRange undef
+introExprParenthesized :: Rule Expression
+introExprParenthesized = toRule "Intro parentheses" $ 
+  Expression_Parenthesized noRange undef
 
-introExprList :: Int -> Rule Module
-introExprList = liftRule . introExprList' 
-
-introExprList' :: Int -> Rule Expression
-introExprList' n = toRule' "Intro expr list" $ 
+introExprList :: Int -> Rule Expression
+introExprList n = toRule "Intro expr list" $ 
   Expression_List noRange $ replicate n undef
 
-introExprTuple :: Int -> Rule Module
-introExprTuple = toRule "Intro expr tuple" undefs . f
-  where 
-    f nexprs = Expression_Tuple noRange $ replicate nexprs undef
+introExprTuple :: Int -> Rule Expression
+introExprTuple nexprs = toRule "Intro expr tuple" $
+  Expression_Tuple noRange $ replicate nexprs undef
 
 -- Variables
-introExprVariable :: Rule Module
-introExprVariable = minorRule $ toRule "Intro variable" undefs f
-  where 
-    f = Expression_Variable noRange undef
+introExprVariable :: Rule Expression
+introExprVariable = minorRule $ toRule "Intro variable" $
+  Expression_Variable noRange undef
 
 -- Literals
 introExprLiteral :: Rule Expression
-introExprLiteral = minorRule $ toRule' "Intro literal" $ 
+introExprLiteral = minorRule $ toRule "Intro literal" $ 
   Expression_Literal noRange undef
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- GuardedExpressions
---------------------------------------------------------------------------------
-introGuardedExpr :: Rule Module
-introGuardedExpr = toRule "Introduce pattern variable" undefs f
-  where
-    f = GuardedExpression_GuardedExpression noRange undef undef
+------------------------------------------------------------------------------
+introGuardedExpr :: Rule GuardedExpression
+introGuardedExpr = toRule "Introduce pattern variable" $ 
+  GuardedExpression_GuardedExpression noRange undef undef
 
+-----------------------------------------------------------------------------
+-- FunctionBinding
+------------------------------------------------------------------------------
+introFunBinding :: Rule FunctionBinding
+introFunBinding = toRule "Introduce function binding" $ 
+  FunctionBinding_FunctionBinding noRange undef undef
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- LeftHandSide
---------------------------------------------------------------------------------
-introLHSFun :: Int -> Rule Module
-introLHSFun = toRule "Introduce function name and patterns" undefs . f
-  where
-    f nps = LeftHandSide_Function noRange undef $ replicate nps undef
+------------------------------------------------------------------------------
+introLHSFun :: Int -> Rule LeftHandSide
+introLHSFun nps = toRule "Introduce function name and patterns" $
+  LeftHandSide_Function noRange undef $ replicate nps undef
 
-
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- RightHandSide
---------------------------------------------------------------------------------
-introRHSExpr :: Int -> Rule Module
-introRHSExpr ndecls = toRule "Introduce pattern variable" undefs f
-  where
-    f = RightHandSide_Expression noRange 
-                                 undef
-                                 (if ndecls > 0
-                                    then MaybeDeclarations_Just (replicate ndecls undef)
-                                    else MaybeDeclarations_Nothing)
+------------------------------------------------------------------------------
+introRHSExpr :: Int -> Rule RightHandSide
+introRHSExpr ndecls = toRule "Introduce pattern variable" $
+  RightHandSide_Expression noRange undef
+    (if ndecls > 0 then MaybeDeclarations_Just (replicate ndecls undef)
+                   else MaybeDeclarations_Nothing)
 
-introRHSGuarded :: Int -> Int -> Rule Module
-introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" undefs f
-  where
-    f = RightHandSide_Guarded noRange 
-                              (replicate ngexprs undef)
-                              (if ndecls > 0
-                                 then MaybeDeclarations_Just (replicate ndecls undef)
-                                 else MaybeDeclarations_Nothing)
+introRHSGuarded :: Int -> Int -> Rule RightHandSide
+introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" $
+  RightHandSide_Guarded noRange (replicate ngexprs undef)
+    (if ndecls > 0 then MaybeDeclarations_Just (replicate ndecls undef)
+                   else MaybeDeclarations_Nothing)
 
-
-
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Patterns
---------------------------------------------------------------------------------
-introPatternVariable :: Rule Module
-introPatternVariable = toRule "Introduce pattern variable" undefs f
-  where
-    f = Pattern_Variable noRange undef
+------------------------------------------------------------------------------
+introPatternVariable :: Rule Pattern
+introPatternVariable = toRule "Introduce pattern variable" $ 
+  Pattern_Variable noRange undef
 
-introPatternConstructor :: Int -> Rule Module
-introPatternConstructor = toRule "Introduce pattern constructor" undefs . f
-  where
-    f nps = Pattern_Constructor noRange undef $ replicate nps undef
+introPatternConstructor :: Int -> Rule Pattern
+introPatternConstructor nps = toRule "Introduce pattern constructor" $
+  Pattern_Constructor noRange undef $ replicate nps undef
 
-introPatternInfixConstructor :: Rule Module
-introPatternInfixConstructor = toRule "Introduce infix pattern constructor" undefs f
-  where
-    f = Pattern_InfixConstructor noRange undef undef undef
+introPatternInfixConstructor :: Rule Pattern
+introPatternInfixConstructor = toRule "Introduce infix pattern constructor" $
+  Pattern_InfixConstructor noRange undef undef undef
 
-introPatternParenthesized :: Rule Module
-introPatternParenthesized = toRule "Introduce pattern parentheses" undefs f
-  where
-    f = Pattern_Parenthesized noRange undef
+introPatternParenthesized :: Rule Pattern
+introPatternParenthesized = toRule "Introduce pattern parentheses" $
+  Pattern_Parenthesized noRange undef
 
-introPatternLiteral :: Rule Module
-introPatternLiteral = toRule "Introduce literal pattern" undefs f
-  where
-    f = Pattern_Literal noRange undef
+introPatternLiteral :: Rule Pattern
+introPatternLiteral = toRule "Introduce literal pattern" $
+  Pattern_Literal noRange undef
 
-introPatternTuple :: Int -> Rule Module
-introPatternTuple nps = toRule "Introduce tuple pattern" undefs f
-  where
-    f = Pattern_Tuple noRange $ replicate nps undef
+introPatternTuple :: Int -> Rule Pattern
+introPatternTuple nps = toRule "Introduce tuple pattern" $
+  Pattern_Tuple noRange $ replicate nps undef
 
-introPatternWildcard :: Rule Module
-introPatternWildcard = toRule "Introduce wildcard pattern" undefs f
-  where
-    f = Pattern_Wildcard noRange
+introPatternWildcard :: Rule Pattern
+introPatternWildcard = toRule "Introduce wildcard pattern" $
+  Pattern_Wildcard noRange
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Literals
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 introLiteralInt :: String -> Rule Literal
-introLiteralInt = toRule' "Introduce a literal integer" . Literal_Int noRange
+introLiteralInt = toRule "Introduce a literal integer" . 
+  Literal_Int noRange
 
-introLiteralString :: String -> Rule Module
-introLiteralString = toRule "Introduce a literal string" undefs . f
-  where
-    f = Literal_String noRange
+introLiteralString :: String -> Rule Literal
+introLiteralString = toRule "Introduce a literal string" . 
+  Literal_String noRange
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Names
---------------------------------------------------------------------------------
-introNameIdentifier :: String -> Rule Module
-introNameIdentifier = toRule "Introduce identifier name" undefs . f
-  where
-    f = Name_Identifier noRange []
+------------------------------------------------------------------------------
+introNameIdentifier :: String -> Rule Name
+introNameIdentifier = toRule "Introduce identifier name" .
+  Name_Identifier noRange []
 
-introNameOperator :: String -> Rule Module
-introNameOperator = toRule "Introduce operator name" undefs . f
-  where
-    f = Name_Operator noRange []
+introNameOperator :: String -> Rule Name
+introNameOperator = toRule "Introduce operator name" .
+  Name_Operator noRange []
 
-introNameSpecial :: String -> Rule Module
-introNameSpecial = toRule "Introduce special name" undefs . f
-  where
-    f = Name_Special noRange []
-
-
--- help functions
-range :: (Int, Int) -> Range
-range (line, col) = Range_Range (Position_Position "" line col) Position_Unknown
+introNameSpecial :: String -> Rule Name
+introNameSpecial = toRule "Introduce special name" .
+  Name_Special noRange []
 
 
 --------------------------------------------------------------------

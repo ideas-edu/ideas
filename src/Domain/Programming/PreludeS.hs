@@ -13,15 +13,17 @@
 -----------------------------------------------------------------------------
 
 module Domain.Programming.PreludeS
-{-   ( -- * Type synonyms
-     ModuleS
+   ( -- * Type synonyms
+     ModuleS, ExprS, PatS, FunBindingS, RhsS, LhsS, DeclS
      -- * Prelude strategies
    , foldlS, letS, whereS, compS, iterateS, sumS, zipWithS, reverseS
      -- * Smart constructors and help functions
    , varS, patS, progS, funS, declFunS, declPatS, rhsS, intS, appS, opS
-   , lambdaS, mapSeqS, repeatS , ( # ), patConS 
-   , patInfixConS, patWildcardS, exprConS
-   ) -} where
+   , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
+   , patInfixConS, patWildcardS, exprConS, lhsS
+     -- * Lifting rules and strategies
+   , (<**>), (<***>), liftStrategy
+   ) where
 
 import Common.Strategy hiding (repeat, replicate)
 import Data.Data
@@ -188,7 +190,3 @@ infixr 6 <**>
 
 r <***> q = r <*> liftRule q
 infixr 7 <***>
-
-uncurry3 f t = f ((\(a, _, _) -> a) t) 
-                 ((\(_, b, _) -> b) t) 
-                 ((\(_, _, c) -> c) t)

@@ -20,7 +20,7 @@ imports{
 import Data.Data hiding (Fixity)
 import Data.Generics.Biplate ()
 import Data.Generics.PlateData
-import Data.List (partition, (\\))
+import Data.List ((\\))
 import Data.Map hiding (map, null, (\\))
 import Domain.Programming.Helium
 import Domain.Programming.HeliumRules ()

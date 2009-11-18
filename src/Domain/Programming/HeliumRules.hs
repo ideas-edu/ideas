@@ -54,6 +54,10 @@ instance Undefined Literal where
   undef = Literal_String noRange "undefined"
 instance Undefined Module where
   undef = Module_Module noRange MaybeName_Nothing MaybeExports_Nothing undef
+instance Undefined MaybeExpression where
+  undef = MaybeExpression_Nothing
+instance Undefined MaybeDeclarations where
+  undef = MaybeDeclarations_Nothing
 
 undefs :: (Data a, Data b, Eq a, Undefined a) => b -> [(a, a -> b)]
 undefs = filter ((== undef) . fst) . contextsBi
@@ -91,6 +95,11 @@ introDeclPatBinding = toRule "Introduce pattern binding" $
 introDeclFunBindings :: Int -> Rule Declaration
 introDeclFunBindings nbs = minorRule $ toRule "Introduce function bindings" $ 
   Declaration_FunctionBindings noRange $ replicate nbs undef
+
+introMaybeDecls :: Int -> Rule MaybeDeclarations
+introMaybeDecls ndecls = minorRule $ toRule "Introduce function bindings" $ 
+  if ndecls > 0 then MaybeDeclarations_Just (replicate ndecls undef)
+                else MaybeDeclarations_Nothing
 
 ------------------------------------------------------------------------------
 -- Expressions
@@ -139,6 +148,11 @@ introExprVariable = minorRule $ toRule "Intro variable" $
 introExprLiteral :: Rule Expression
 introExprLiteral = minorRule $ toRule "Intro literal" $ 
   Expression_Literal noRange undef
+
+-- MaybeExpressions
+introMaybeExpr :: Bool -> Rule MaybeExpression
+introMaybeExpr p = minorRule $ toRule "Intro maybeExpression" $ 
+  if p then MaybeExpression_Just undef else MaybeExpression_Nothing
 
 ------------------------------------------------------------------------------
 -- GuardedExpressions

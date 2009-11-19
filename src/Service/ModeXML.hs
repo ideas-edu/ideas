@@ -164,10 +164,16 @@ xmlEncoder b f ex = Encoder
    encode :: Monad m => Encoder m XMLBuilder a -> Type a t -> t -> m XMLBuilder
    encode enc serviceType =
       case serviceType of
-         Tp.List t1  -> \xs -> do
-            bs <- mapM (encode enc t1) xs
-            let b = mapM_ (element "elem") bs
-            return (element "list" b)
+         Tp.List t1  -> \xs -> 
+            case allAreTagged t1 of
+               Just f -> do
+                  let make = element "elem" . mapM_ (uncurry (.=.)) . f
+                  let elems = mapM_ make xs
+                  return (element "list" elems)
+               _ -> do
+                  bs <- mapM (encode enc t1) xs
+                  let elems = mapM_ (element "elem") bs
+                  return (element "list" elems)
          Tp.Elem t1  -> liftM (element "elem") . encode enc t1
          Tp.Tag s t1 -> liftM (element s) . encode enc t1  -- quick fix
          Tp.Rule     -> return . ("ruleid" .=.) . Rule.name
@@ -175,6 +181,7 @@ xmlEncoder b f ex = Encoder
          Tp.Context  -> encodeContext b (encodeTerm enc)
          Tp.Location -> return . text . show
          Tp.Bool     -> return . text . show
+         Tp.String   -> return . text
          Tp.Int      -> return . text . show
          Tp.State    -> encodeState b (encodeTerm enc)
          _           -> encodeDefault enc serviceType
@@ -198,6 +205,16 @@ xmlDecoder b f pkg = Decoder
          
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    leave f xml = liftM (\a -> (a, xml)) (f xml)
+         
+allAreTagged :: Type a t -> Maybe (t -> [(String, String)])
+allAreTagged (Triple t1 t2 t3) = do 
+   f1 <- allAreTagged t1
+   f2 <- allAreTagged t2
+   f3 <- allAreTagged t3
+   return $ \(a,b,c) -> f1 a ++ f2 b ++ f3 c
+allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, show b)]
+allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
+allAreTagged _ = Nothing
          
 decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
 decodeState b ex f top = do

@@ -65,10 +65,18 @@ undefs = filter ((== undef) . fst) . contextsBi
 liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
 liftRule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
 
-toRule :: (Undefined a, Eq a) => String -> a -> Rule a
+-- toRule zou met een contexts moeten kunnen, er worden undefs gezocht
+-- in een term van hetzelfde type
+toRule :: (Data a, Undefined a, Eq a) => String -> a -> Rule a
 toRule desc a = makeSimpleRule desc $ \e -> do
-  guard (e == undef)
-  return a
+  (_, replaceUndef) <- safeHead $ undefs e
+  return $ replaceUndef a
+{-
+  \e -> do
+  guard (e == undef) -- dit kan niet goed gaan, er moet worden gezoch naar
+  return a           -- een undefined.
+-}
+  
 
 ------------------------------------------------------------------------------
 -- Module
@@ -89,7 +97,7 @@ introBody ndecls = minorRule $ toRule "Introduce declarations" $
 -- Declarations
 ------------------------------------------------------------------------------
 introDeclPatBinding :: Rule Declaration
-introDeclPatBinding = toRule "Introduce pattern binding" $
+introDeclPatBinding = minorRule $ toRule "Introduce pattern binding" $
   Declaration_PatternBinding noRange undef undef
 
 introDeclFunBindings :: Int -> Rule Declaration
@@ -97,7 +105,7 @@ introDeclFunBindings nbs = minorRule $ toRule "Introduce function bindings" $
   Declaration_FunctionBindings noRange $ replicate nbs undef
 
 introMaybeDecls :: Int -> Rule MaybeDeclarations
-introMaybeDecls ndecls = minorRule $ toRule "Introduce function bindings" $ 
+introMaybeDecls ndecls = minorRule $ toRule "Introduce decl" $ 
   if ndecls > 0 then MaybeDeclarations_Just (replicate ndecls undef)
                 else MaybeDeclarations_Nothing
 
@@ -194,7 +202,7 @@ introRHSGuarded ngexprs ndecls = toRule "Introduce pattern variable" $
 -- Patterns
 ------------------------------------------------------------------------------
 introPatternVariable :: Rule Pattern
-introPatternVariable = toRule "Introduce pattern variable" $ 
+introPatternVariable = minorRule $ toRule "Introduce pattern variable" $ 
   Pattern_Variable noRange undef
 
 introPatternConstructor :: Int -> Rule Pattern

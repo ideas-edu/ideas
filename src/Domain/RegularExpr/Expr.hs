@@ -57,7 +57,7 @@ instance Crush RE where
    crush regexp   = concatMap crush (children regexp)
 
 instance Arbitrary RegExp where
-   arbitrary = sized (arbRE $ oneof $ map return ["P", "Q", "R", "S"])
+   arbitrary = sized (arbRE $ oneof $ map return ["a", "b", "c", "d"])
    coarbitrary = foldRE 
       (         variant 0
       ,         variant 1
@@ -78,7 +78,7 @@ arbRE g n
         ]
    | otherwise = frequency 
         [ (3, arbRE g 0)
-        , (1, unop Option), (1, unop Star), (1, unop Plus)
+        , (2, unop Star) -- (1, unop Option), (1, unop Plus)
         , (3, binop (:*:)), (3, binop (:|:))
         ]
  where

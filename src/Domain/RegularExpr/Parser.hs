@@ -14,9 +14,11 @@ module Domain.RegularExpr.Parser (parseRegExp) where
 import Domain.RegularExpr.Expr
 import Text.Parsing
 
+letters = ['a' .. 'z'] ++ ['A' .. 'Z']
+
 logicScanner :: Scanner
-logicScanner = (makeCharsSpecial ("+*?|" ++ ['A'.. 'Z']) defaultScanner)
-   { keywords         = [ [c] | c <- ['A' .. 'Z'] ]
+logicScanner = (makeCharsSpecial ("+*?|" ++ letters) defaultScanner)
+   { keywords         = [ [c] | c <- letters ]
    , keywordOperators = ["+", "*", "?", "|"]
    }
 
@@ -33,7 +35,7 @@ pRE = pOr
    pSeq  =  foldl1 (:*:) <$> pList1 pPost
    pPost =  foldl (flip ($)) <$> pAtom <*> pList pUnop
    pUnop =  Star <$ pKey "*" <|> Plus <$ pKey "+" <|> Option <$ pKey "?"
-   pAtom =  pChoice [ const (fromChar c) <$> pKey [c] | c <- ['A' .. 'Z' ] ]
+   pAtom =  pChoice [ const (fromChar c) <$> pKey [c] | c <- letters ]
         <|> pSpec '(' *> pRE <* pSpec ')'
    
    fromChar 'T' = Epsilon

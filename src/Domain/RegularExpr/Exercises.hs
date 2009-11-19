@@ -16,6 +16,9 @@ import Common.Traversable
 import Common.Rewriting hiding (difference)
 import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser
+import Domain.RegularExpr.Strategy
+import Domain.RegularExpr.Definitions
+import Data.List
 import Control.Monad
 import System.Random
 import Test.QuickCheck
@@ -29,15 +32,22 @@ regexpExercise = makeExercise
    , prettyPrinter  = ppRegExp
    , equivalence    = eqRE
    , similarity     = equalWith operators -- modulo associativity
---   , isReady        :: a -> Bool
+   , isReady        = deterministic
    , isSuitable     = (>1) . length . crush
    , difference     = differenceMode eqRE
---   , strategy       :: LabeledStrategy (Context a)
+   , strategy       = deterministicStrategy
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , testGenerator  = Just arbitrary
    , randomExercise = simpleGenerator myGen
    , examples       = generate 5 (mkStdGen 2805) (replicateM 50 myGen)
    }
+
+   
+testje = printDerivation regexpExercise $ ex2
+
+Right ex1 = parseRegExp "ABABAB|AB|T|ABAB"
+Right ex2 = parseRegExp "A|A|B|A"
+Right ex3 = parseRegExp "T+cc|d*F?"
 
 myGen :: Gen RegExp
 myGen = restrictGenerator (isSuitable regexpExercise) arbitrary
@@ -45,3 +55,18 @@ myGen = restrictGenerator (isSuitable regexpExercise) arbitrary
 -- equivalence of regular expressions
 eqRE :: Eq a => RE a -> RE a -> Bool
 eqRE = (==)
+
+{-
+checkUntil :: Ord a => Int -> RE a -> RE a -> Bool
+checkUntil n r s = empty r == empty s && (n==0 || next)
+ where
+   make = groupBy eqFst . sortBy cmpFst . firsts
+   eqFst  (a, _) (b, _) = a==b 
+   cmpFst (a, _) (b, _) = compare a b
+   
+   as = make r
+   bs = make s
+   next = and ((length as == length bs) : zipWith f as bs)
+   
+   -- f ((a, _):
+   f _ _ = False -}

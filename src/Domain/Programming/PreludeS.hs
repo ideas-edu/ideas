@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module Domain.Programming.PreludeS
-{-   ( -- * Type synonyms
+   ( -- * Type synonyms
      ModuleS, ExprS, PatS, FunBindingS, RhsS, LhsS, DeclS
      -- * Prelude strategies
    , foldlS, letS, whereS, compS, iterateS, sumS, zipWithS, reverseS
@@ -24,7 +24,7 @@ module Domain.Programming.PreludeS
      -- * Lifting rules and strategies
    -- , (<**>), (<***>)
    , liftStrategy
-   ) -} where
+   ) where
 
 import Common.Strategy hiding (repeat, replicate)
 import Data.Data
@@ -52,8 +52,7 @@ whereS decls expr  =  rhsS expr decls
                   <|> rhsS (letS decls expr) []
 
 letS :: [DeclS] -> ExprS -> ExprS
-letS decls expr =  introExprLet (length decls) <*> liftStrategy (sequence decls) 
-               <*> expr
+letS decls expr =  introExprLet (length decls) <**> sequence decls <*> expr
 
 ------------------------------------------------------------------------------
 -- Prelude definition strategies
@@ -112,16 +111,16 @@ reverseS  =  (varS "reverse")
 -- Smart constructors
 --------------------------------------------------------------------------------
 varS :: String -> ExprS
-varS n = introExprVariable <*> liftRule (introNameIdentifier n)
+varS n = introExprVariable <***> introNameIdentifier n
 
 exprConS :: String -> ExprS
-exprConS n = introExprConstructor <*> liftRule (introNameSpecial n)
+exprConS n = introExprConstructor <***> introNameSpecial n
 
 exprParenS :: ExprS -> ExprS
 exprParenS = (introExprParenthesized <*>)
 
 patS :: String -> PatS
-patS n = introPatternVariable <*> liftRule (introNameIdentifier n)
+patS n = introPatternVariable <***> introNameIdentifier n
 
 patParenS :: PatS -> PatS
 patParenS = (introPatternParenthesized <*>)
@@ -130,38 +129,34 @@ patWildcardS :: PatS
 patWildcardS = toStrategy introPatternWildcard
 
 patConS :: String -> PatS
-patConS n = introPatternConstructor 0 <*> liftRule (introNameSpecial n)
+patConS n = introPatternConstructor 0 <***> introNameSpecial n
 
 patInfixConS :: PatS -> String -> PatS -> PatS
 patInfixConS l con r =  introPatternInfixConstructor <*> l 
-                    <*> liftRule (introNameSpecial con) <*> r
+                    <***> introNameSpecial con <*> r
 
 funS :: LhsS -> RhsS -> FunBindingS
-funS lhs rhs = introFunBinding <*> liftStrategy lhs <*> liftStrategy rhs
+funS lhs rhs = introFunBinding <**> lhs <**> rhs
 
 declFunS :: [FunBindingS] -> DeclS
-declFunS fbs =  introDeclFunBindings (length fbs) 
-            <*> liftStrategy (sequence fbs)
+declFunS fbs = introDeclFunBindings (length fbs) <**> sequence fbs
 
 declPatS :: String -> RhsS -> DeclS
-declPatS name rhs =  introDeclPatBinding <*> liftStrategy (patS name) 
-                 <*> liftStrategy rhs
+declPatS name rhs =  introDeclPatBinding <**> patS name <**> rhs
 
 lhsS :: String -> [PatS] -> LhsS
-lhsS name args =  introLHSFun (length args) 
-              <*> liftRule (introNameIdentifier name)
-              <*> liftStrategy (sequence args)
+lhsS name args =   introLHSFun (length args) 
+             <***> introNameIdentifier name
+              <**> sequence args
 
 rhsS :: ExprS -> [DeclS] -> RhsS
-rhsS expr ws =  introRHSExpr (length ws) <*> liftStrategy expr
-            <*> liftStrategy (sequence ws)
+rhsS expr ws =  introRHSExpr (length ws) <**> expr <**> sequence ws
 
 intS :: String -> ExprS
-intS i = introExprLiteral <*> liftRule (introLiteralInt i)
+intS i = introExprLiteral <***> introLiteralInt i
 
 progS :: [DeclS] -> ModuleS
-progS decls =  introModule <*> liftRule (introBody (length decls)) 
-           <*> liftStrategy (sequence decls)
+progS decls =  introModule <***> introBody (length decls) <**> sequence decls
 
 appS :: ExprS -> [ExprS] -> ExprS
 appS f as = introExprNormalApplication (length as) <*> f <*> sequence as
@@ -177,11 +172,10 @@ opS n l r = case (l, r) of
               (Nothing, Nothing) -> infixApp False False <*> op
   where 
     infixApp = introExprInfixApplication
-    op       = introExprVariable <*> liftRule (introNameOperator n)
+    op       = introExprVariable <***> introNameOperator n
 
 lambdaS :: [PatS] -> ExprS -> ExprS
-lambdaS args expr =  introExprLambda (length args) 
-                 <*> liftStrategy (sequence args) <*> expr
+lambdaS args expr = introExprLambda (length args) <**> sequence args <*> expr
 
 --------------------------------------------------------------------------------
 -- Help functions
@@ -191,10 +185,9 @@ repeatS n = sequence . replicate n
 
 liftStrategy :: (Data a, Data b, Eq a, Undefined a) => Strategy a -> Strategy b
 liftStrategy s = mapRulesS liftRule s
-{-
+
 r <**> q = r <*> liftStrategy q
 infixl 6 <**>
 
 r <***> q = r <*> liftRule q
-infixl 6 <***>
--}
+infixl 7 <***>

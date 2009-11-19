@@ -147,4 +147,3 @@ diff x y = f (show x) (show y)
 printDiff :: Show a => a -> a -> IO ()
 printDiff x y = let (x', y') = diff x y in putStrLn x' >> putStrLn y'
 
-

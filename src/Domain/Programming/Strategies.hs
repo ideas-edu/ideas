@@ -12,14 +12,12 @@
 -----------------------------------------------------------------------------
 
 module Domain.Programming.Strategies
-{-   ( fromBinStrategy -- , stringToStrategy, getRules
+   ( fromBinStrategy -- , stringToStrategy, getRules
    , fromBinFoldlS, fromBinRecurS, fromBinInnerProductS
    , fromBinTuplingS
-   ) -} where
+   ) where
 
 import Common.Strategy
-import Domain.Programming.HeliumRules
-import Domain.Programming.Helium
 import Domain.Programming.PreludeS
 import Prelude hiding (sequence)
 

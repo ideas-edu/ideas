@@ -12,10 +12,10 @@
 -----------------------------------------------------------------------------
 
 module Domain.Programming.Strategies
-   ( fromBinStrategy -- , stringToStrategy, getRules
+{-   ( fromBinStrategy -- , stringToStrategy, getRules
    , fromBinFoldlS, fromBinRecurS, fromBinInnerProductS
    , fromBinTuplingS
-   ) where
+   ) -} where
 
 import Common.Strategy
 import Domain.Programming.HeliumRules
@@ -82,6 +82,7 @@ fromBinInnerProductS = label "Inner product" $
         ]
   where
     powersOfTwoS  =  iterateS # [opS "*" Nothing (Just (intS "2")), intS "1"]
+
 {-                 <|> ([base^x | x <- [0..] ])
                  <|> (map (2^) [0..(length l)-1])
                  <|> (lambdaS [varS "xs"] 

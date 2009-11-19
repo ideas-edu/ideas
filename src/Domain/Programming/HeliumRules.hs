@@ -19,7 +19,6 @@ module Domain.Programming.HeliumRules where
 import Common.Apply
 import Common.Transformation hiding (liftRule)
 import Common.Utils (safeHead)
-import Common.View
 import Control.Monad
 import Data.Char
 import Data.Data hiding (Fixity)
@@ -69,11 +68,20 @@ liftRule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
 -}
 
 liftRule :: (Data b, Undefined a) => Rule a -> Rule b
+liftRule ra = makeSimpleRule (name ra) $ \b ->
+  let (cs, build) = biplateList b
+      make i = let (xs, a:ys) = splitAt i cs in (a, \b -> xs ++ (b:ys))
+      index = [0 .. length cs - 1]
+  in safeHead [build (f a') | i <- index, let (a, f) = make i, a' <- applyAll ra a]
+
+{-
+liftRule :: (Data b, Undefined a) => Rule a -> Rule b
 liftRule ra = makeSimpleRuleList (name ra) $ \b ->
   let (cs, build) = biplateList b
-      make i = let (xs,a:ys) = splitAt i cs in (a, \b -> xs ++ (b : ys))
+      make i = let (xs, a:ys) = splitAt i cs in (a, \b -> xs ++ (b:ys))
       index = [0 .. length cs - 1]
   in [build (f a') | i <- index, let (a, f) = make i, a' <- applyAll ra a]
+-}
 
 -- toRule zou met een contexts moeten kunnen, er worden undefs gezocht
 -- in een term van hetzelfde type

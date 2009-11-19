@@ -137,4 +137,14 @@ deconstructFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, e
                     RightHandSide_Expression _ expr w -> (expr, w)
                     RightHandSide_Guarded _ _ _   -> error "Todo: guarded expressions"
 
+diff :: Show a => a -> a -> (String, String)
+diff x y = f (show x) (show y)
+  where
+    f (x:xs) (y:ys) | x == y    = f xs ys
+                    | otherwise = (x:xs, y:ys)
+    f xs ys = (xs, ys)
+
+printDiff :: Show a => a -> a -> IO ()
+printDiff x y = let (x', y') = diff x y in putStrLn x' >> putStrLn y'
+
 

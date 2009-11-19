@@ -32,13 +32,6 @@ import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Prelude hiding (sequence)
 
--- testS = (rhsS (appS (varS "f") [intS "1"]) []) 
-testS = introRHSExpr 0 <*> mapRulesS liftRule (introExprList 2
-                      <*> introExprLiteral
-                      <*> liftRule (introLiteralInt "1")
-                      <*> introExprLiteral
-                      <*> liftRule (introLiteralInt "1"))
-                      
 --------------------------------------------------------------------------------
 -- Type synonyms
 --------------------------------------------------------------------------------

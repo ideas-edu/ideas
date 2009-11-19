@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 
 module Domain.Programming.Strategies
-   ( fromBinStrategy, stringToStrategy, getRules
+   ( fromBinStrategy -- , stringToStrategy, getRules
    , fromBinFoldlS, fromBinRecurS, fromBinInnerProductS
    , fromBinTuplingS
    ) where
@@ -108,7 +108,7 @@ fromBinInnerProductS = label "Inner product" $
 --   
 -- first traversal of ast, converting 
 --type 
-
+{-
 -- | Strategies derived from the abstract syntax of expressions
 stringToStrategy :: String -> Strategy Module
 stringToStrategy = either left getRules . compile
@@ -227,5 +227,5 @@ instance GetRules Name where
       Name_Identifier _ _ name -> toStrategy $ introNameIdentifier name
       Name_Operator   _ _ name -> toStrategy $ introNameOperator name
       Name_Special    _ _ name -> toStrategy $ introNameSpecial name
-
+-}
 

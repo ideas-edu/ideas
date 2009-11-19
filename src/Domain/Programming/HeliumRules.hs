@@ -16,6 +16,7 @@
 
 module Domain.Programming.HeliumRules where
 
+import Common.Apply
 import Common.Transformation hiding (liftRule)
 import Common.Utils (safeHead)
 import Common.View
@@ -30,10 +31,10 @@ import Domain.Programming.Helium
 ------------------------------------------------------------------------------
 -- | Typed holes
 ------------------------------------------------------------------------------
-class Undefined a where
+class (Data a, Eq a) => Undefined a where
   undef  :: a
 instance Undefined Declaration where
-  undef  = Declaration_Empty noRange
+  undef = Declaration_Empty noRange
 instance Undefined RightHandSide where
   undef = RightHandSide_Expression noRange undef MaybeDeclarations_Nothing
 instance Undefined LeftHandSide where
@@ -59,15 +60,24 @@ instance Undefined MaybeExpression where
 instance Undefined MaybeDeclarations where
   undef = MaybeDeclarations_Nothing
 
-undefs :: (Data a, Data b, Eq a, Undefined a) => b -> [(a, a -> b)]
+undefs :: (Data b, Undefined a) => b -> [(a, a -> b)]
 undefs = filter ((== undef) . fst) . contextsBi
 
+{-
 liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
 liftRule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
+-}
+
+liftRule :: (Data b, Undefined a) => Rule a -> Rule b
+liftRule ra = makeSimpleRuleList (name ra) $ \b ->
+  let (cs, build) = biplateList b
+      make i = let (xs,a:ys) = splitAt i cs in (a, \b -> xs ++ (b : ys))
+      index = [0 .. length cs - 1]
+  in [build (f a') | i <- index, let (a, f) = make i, a' <- applyAll ra a]
 
 -- toRule zou met een contexts moeten kunnen, er worden undefs gezocht
 -- in een term van hetzelfde type
-toRule :: (Data a, Undefined a, Eq a) => String -> a -> Rule a
+toRule :: Undefined a => String -> a -> Rule a
 toRule desc a = makeSimpleRule desc $ \e -> do
   (_, replaceUndef) <- safeHead $ undefs e
   return $ replaceUndef a

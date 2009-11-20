@@ -12,12 +12,17 @@
 --
 -----------------------------------------------------------------------------
 module Common.View 
-   ( Match, View, makeView, Simplification, makeSimplification
-   , match, matchM, build, canonical, canonicalM, canonicalWith
-   , simplify, simplifyWith, isCanonical, isCanonicalWith
-   , belongsTo, viewEquivalent, viewEquivalentWith
-   , (>>>), Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..), identity
-   , listView, switchView, conversion, ( #> )
+   ( -- * Generalized monadic views
+     ViewM, match, build, makeView, biArr, identity, (>>>)
+   , canonical, canonicalWith
+   , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
+     -- * Simple views
+   , View, Match, belongsTo
+   , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
+   , isCanonical, isCanonicalWith, matchM, canonicalM
+     -- * Some combinators
+   , listView, switchView, ( #> )
+     -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
@@ -28,6 +33,9 @@ import Data.Maybe
 import Test.QuickCheck
 import qualified Control.Category as C
 
+----------------------------------------------------------------------------------
+-- Generalized monadic view
+
 -- For all v::View the following should hold:
 --   1) simplify v a "is equivalent to" a
 --   2) match (build b) equals Just b  
@@ -35,76 +43,38 @@ import qualified Control.Category as C
 --
 -- Derived property: simplification is idempotent
 
-type Match a b = a -> Maybe b
-
-data View a b = View 
-   { match :: Match a b
+data ViewM m a b = ViewM
+   { match :: a -> m b
    , build :: b -> a
    }
 
-type Simplification a = View a a
+makeView :: Monad m => (a -> m b) -> (b -> a) -> ViewM m a b
+makeView = ViewM
 
-matchM :: Monad m => View a b -> a -> m b
-matchM v = maybe (Prelude.fail "no match") return . match v
+biArr :: Monad m => (a -> b) -> (b -> a) -> ViewM m a b
+biArr f g = makeView (return . f) g
 
-makeView :: (a -> Maybe b) -> (b -> a) -> View a b
-makeView = View
-
-makeSimplification :: (a -> a) -> Simplification a
-makeSimplification f = makeView (return . f) id
-
-canonical :: View a b -> a -> Maybe a
+canonical :: Monad m => ViewM m a b -> a -> m a
 canonical = canonicalWith id
 
-canonicalM :: Monad m => View a b -> a -> m a
-canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
-
-canonicalWith :: (b -> b) -> View a b -> a -> Maybe a
+canonicalWith :: Monad m => (b -> b) -> ViewM m a b -> a -> m a
 canonicalWith f view = liftM (build view . f) . match view
 
-simplify :: View a b -> a -> a
-simplify = simplifyWith id
-
-simplifyWith :: (b -> b) -> View a b -> a -> a
-simplifyWith f view a = fromMaybe a (canonicalWith f view a)
-
----------------------------------------------------------------
-
-belongsTo :: a -> View a b -> Bool
-belongsTo a view = isJust (match view a)
-
-viewEquivalent :: Eq b => View a b -> a -> a -> Bool
-viewEquivalent = viewEquivalentWith (==)
-
-viewEquivalentWith :: (b -> b -> Bool) -> View a b -> a -> a -> Bool
-viewEquivalentWith eq view x y =
-   case (match view x, match view y) of
-      (Just a, Just b) -> a `eq` b
-      _                -> False
-      
-isCanonical :: Eq a => View a b -> a -> Bool
-isCanonical = isCanonicalWith (==)
-      
-isCanonicalWith :: (a -> a -> Bool) -> View a b -> a -> Bool
-isCanonicalWith eq v a = maybe False (eq a) (canonical v a)
-      
 ---------------------------------------------------------------
 -- Arrow combinators
 
-identity :: View a a 
-identity = makeView Just id
+identity :: Monad m => ViewM m a a 
+identity = makeView return id
 
-(>>>) :: View a b -> View b c -> View a c
+(>>>) :: Monad m => ViewM m a b -> ViewM m b c -> ViewM m a c
 v >>> w = makeView (\a -> match v a >>= match w) (build v . build w)
 
-instance C.Category View where
+instance Monad m => C.Category (ViewM m) where
    id    = identity
    v . w = w >>> v
-
-instance Arrow View where
-   arr f = makeView 
-      (return . f) 
-      (error "Control.View.arr: function is not invertible")
+   
+instance Monad m => Arrow (ViewM m) where
+   arr f = biArr f (error "Control.View.arr: function is not invertible")
 
    first v = makeView 
       (\(a, c) -> match v a >>= \b -> return (b, c)) 
@@ -123,7 +93,7 @@ instance Arrow View where
       (\a -> liftM2 (,) (match v a) (match w a)) 
       (\(b, _) -> build v b)
 
-instance ArrowChoice View where
+instance Monad m => ArrowChoice (ViewM m) where
    left v = makeView 
       (either (liftM Left . match v) (return . Right)) 
       (either (Left . build v) Right)
@@ -140,20 +110,55 @@ instance ArrowChoice View where
    v ||| w = makeView 
       (either (match v) (match w))
       (Left . build v)
-      
----------------------------------------------------------------
--- More combinators
 
-listView :: View a b -> View [a] [b]
+---------------------------------------------------------------
+-- Simple views (based on Maybe monad)
+
+type View      = ViewM Maybe
+type Match a b = a -> Maybe b
+
+simplify :: View a b -> a -> a
+simplify = simplifyWith id
+
+simplifyWith :: (b -> b) -> View a b -> a -> a
+simplifyWith f view a = fromMaybe a (canonicalWith f view a)
+
+belongsTo :: a -> View a b -> Bool
+belongsTo a view = isJust (match view a)
+
+viewEquivalent :: Eq b => View a b -> a -> a -> Bool
+viewEquivalent = viewEquivalentWith (==)
+
+viewEquivalentWith :: (b -> b -> Bool) -> View a b -> a -> a -> Bool
+viewEquivalentWith eq view x y =
+   case (match view x, match view y) of
+      (Just a, Just b) -> a `eq` b
+      _                -> False
+      
+isCanonical :: Eq a => View a b -> a -> Bool
+isCanonical = isCanonicalWith (==)
+      
+isCanonicalWith :: (a -> a -> Bool) -> View a b -> a -> Bool
+isCanonicalWith eq v a = maybe False (eq a) (canonical v a)
+
+-- generalized match on a ViewM Maybe
+matchM :: Monad m => View a b -> a -> m b
+matchM v = maybe (Prelude.fail "no match") return . match v
+
+-- generalized canonical element on a ViewM Maybe
+canonicalM :: Monad m => View a b -> a -> m a
+canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
+     
+---------------------------------------------------------------
+-- Some combinators
+
+listView :: Monad m => ViewM m a b -> ViewM m [a] [b]
 listView v = makeView (mapM (match v)) (map (build v))
 
-switchView :: Switch f => View a b -> View (f a) (f b)
+switchView :: (Monad m, Switch f) => ViewM m a b -> ViewM m (f a) (f b)
 switchView v = makeView (switch . fmap (match v)) (fmap (build v))
 
-conversion :: (a -> b) -> (b -> a) -> View a b
-conversion f g = makeView (Just . f) g
-
-( #> ) :: (a -> Bool) -> View a b -> View a b
+( #> ) :: MonadPlus m => (a -> Bool) -> ViewM m a b -> ViewM m a b
 p #> v = makeView f (build v)
  where f a = guard (p a) >> match v a
  

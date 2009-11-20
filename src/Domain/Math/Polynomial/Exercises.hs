@@ -13,10 +13,12 @@ module Domain.Math.Polynomial.Exercises where
 
 import Common.Context
 import Common.Exercise
-import Common.Rewriting
+import Common.Rewriting hiding (match)
 import Common.Strategy
+import Common.Traversable
 import Common.Transformation
 import Common.View
+import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
@@ -56,7 +58,7 @@ quadraticExercise = makeExercise
                                  Left err -> Left err
                                  Right xs -> Right (build (switchView equationView) xs)
    , similarity   = eqOrList cleanUpExpr2
-   , equivalence  = error "equivalence" -- viewEquivalent quadraticEquationsView
+   , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
    , isReady      = solvedRelations
    , extraRules   = map (ignoreContext . liftRule (switchView equationView)) $ 
                        quadraticRules ++ abcBuggyRules
@@ -71,7 +73,7 @@ higherDegreeExercise = makeExercise
    , status       = Provisional
    , parser       = parser quadraticExercise
    , similarity   = eqOrList cleanUpExpr2
-   , equivalence  = error "equivalence" -- viewEquivalent higherDegreeEquationsView
+   , equivalence  = equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isReady      = solvedRelations
    , extraRules   = map (ignoreContext . liftRule (switchView equationView)) higherDegreeRules
    , strategy     = higherDegreeStrategy
@@ -103,6 +105,12 @@ quadraticWithApproximation = quadraticExercise
    
 --------------------------------------------
 -- Equality
+
+equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
+equivalentRelation f ra rb = fromMaybe False $ do
+   a <- switch (fmap (match equationView) ra)
+   b <- switch (fmap (match equationView) rb)
+   return (f a b)
 
 eqOrList :: (Relational f, Ord (f Expr)) => 
                (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr) -> Bool

@@ -58,13 +58,13 @@ data Transformation a
    = Function String (a -> [a])
    | RewriteRule (RewriteRule a)
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
-   | forall b c . LiftView (View a (b, c)) (Transformation b)
+   | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
    
 instance Apply Transformation where
    applyAll (Function _ f)      = f
    applyAll (RewriteRule r)     = rewriteM r
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
-   applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- matchM v a, b <- applyAll t b0  ]
+   applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
 makeTrans :: String -> (a -> Maybe a) -> Transformation a
@@ -74,13 +74,15 @@ makeTrans s f = makeTransList s (maybe [] return . f)
 makeTransList :: String -> (a -> [a]) -> Transformation a
 makeTransList = Function
 
-getPatternPair :: a -> Transformation a -> Maybe (a, a)
-getPatternPair _ (RewriteRule r) = let a :~> b = rulePair r 0 in Just (a, b)
+getPatternPair :: a -> Transformation a -> [(a, a)]
+getPatternPair _ (RewriteRule r) = 
+   let a :~> b = rulePair r 0 
+   in return (a, b)
 getPatternPair a (LiftView v t) = do
    (b, c) <- match v a
    (x, y) <- getPatternPair b t
    return (build v (x, c), build v (y, c))
-getPatternPair _ _ = Nothing
+getPatternPair _ _ = []
 
 -----------------------------------------------------------
 --- Arguments
@@ -187,7 +189,7 @@ expectedArguments rule a =
       [Abstraction args f _] -> 
          fmap (showArguments args) (f a)
       [LiftView v t] -> do 
-         (b, _) <- match v a
+         (b, _) <- safeHead (match v a)
          expectedArguments rule 
             { transformations = [t]
             , doBeforeHook    = id
@@ -404,7 +406,7 @@ liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
 liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
-liftTransIn = LiftView
+liftTransIn = LiftView . viewList
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
@@ -443,9 +445,9 @@ smartGen :: Rule a -> Gen a -> Gen a
 smartGen r gen = frequency [(2, gen), (1, smart)]
  where
    smart = gen >>= \a -> 
-      oneof (gen : mapMaybe (smartGenTrans a) (transformations r))
+      oneof (gen : concatMap (smartGenTrans a) (transformations r))
 
-smartGenTrans :: a -> Transformation a -> Maybe (Gen a)
+smartGenTrans :: a -> Transformation a -> [Gen a]
 smartGenTrans a trans =
    case trans of
       RewriteRule r -> return (smartGenerator r)
@@ -453,7 +455,7 @@ smartGenTrans a trans =
          (b, c) <- match v a
          gen    <- smartGenTrans b t
          return $ liftM (\n -> build v (n, c)) gen
-      _ -> Nothing
+      _ -> []
 
 smartApplyRule :: Rule a -> a -> Gen (Maybe a)
 smartApplyRule r a = do

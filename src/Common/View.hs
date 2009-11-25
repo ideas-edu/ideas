@@ -17,9 +17,9 @@ module Common.View
    , canonical, canonicalWith
    , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
      -- * Simple views
-   , View, Match, belongsTo
+   , View, ViewList, Match, belongsTo
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
-   , isCanonical, isCanonicalWith, matchM, canonicalM
+   , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
    , listView, switchView, ( #> )
      -- * Properties on views
@@ -112,9 +112,10 @@ instance Monad m => ArrowChoice (ViewM m) where
       (Left . build v)
 
 ---------------------------------------------------------------
--- Simple views (based on Maybe monad)
+-- Simple views (based on a particular monad)
 
 type View      = ViewM Maybe
+type ViewList  = ViewM []
 type Match a b = a -> Maybe b
 
 simplify :: View a b -> a -> a
@@ -148,7 +149,10 @@ matchM v = maybe (Prelude.fail "no match") return . match v
 -- generalized canonical element on a ViewM Maybe
 canonicalM :: Monad m => View a b -> a -> m a
 canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
-     
+
+viewList :: View a b -> ViewList a b
+viewList v = makeView (matchM v) (build v)
+
 ---------------------------------------------------------------
 -- Some combinators
 

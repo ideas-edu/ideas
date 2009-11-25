@@ -312,11 +312,11 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
 -------------------------------------------------------
 -- Transformations
 
-plusT, minusT :: Expr -> Transformation (Equation Expr)
+plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
 plusT  e = makeTrans "plus"  $ return . fmap (applyD mergeT . (.+. e))
 minusT e = makeTrans "minus" $ return . fmap (applyD mergeT . (.-. e))
 
-timesT :: Expr -> Transformation (Equation Expr)
+timesT :: Functor f => Expr -> Transformation (f Expr)
 timesT e = makeTrans "times" $ \eq -> do 
    r <- match rationalView e
    guard (r /= 0)
@@ -378,7 +378,7 @@ signT = makeTrans "sign" $ \(lhs :==: rhs) -> do
 -------------------------------------------------------
 -- Rewrite Rules
 
-varToLeft :: Rule (Equation Expr)
+varToLeft :: Relational f => Rule (f Expr)
 varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
    (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
    guard (a/=0)
@@ -397,10 +397,11 @@ scaleToOne = makeRule "scale to one" $ flip supply1 divisionT $ \eq -> do
    guard (a `notElem` [0, 1])
    return (fromRational a) -}
 
-removeDivision :: Rule (Equation Expr)
-removeDivision = makeRule "remove division" $ flip supply1 timesT $ \(lhs :==: rhs) -> do
-   xs <- match sumView lhs
-   ys <- match sumView rhs
+-- factor is always positive due to lcm function
+removeDivision :: Relational r => Rule (r Expr)
+removeDivision = makeRule "remove division" $ flip supply1 timesT $ \eq -> do
+   xs <- match sumView (leftHandSide eq)
+   ys <- match sumView (rightHandSide eq)
    -- also consider parts without variables
    zs <- mapM (fmap snd . match productView) (xs ++ ys)
    let f = fmap snd . match (divView >>> second integerView)

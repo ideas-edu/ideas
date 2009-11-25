@@ -20,6 +20,8 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpPowerWith, coverUpTimesWith, coverUpNegateWith
    , coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
    , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
+     -- temporarily exported
+   , coverUpBinaryRule, commOp, flipOp
    ) where
 
 import Common.View
@@ -35,9 +37,10 @@ import Domain.Math.Expr.Symbolic
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules
 
-coverUpBinary2Rule :: (OnceJoin f, Switch f) => String -> (Expr -> [(Expr, Expr)]) 
+coverUpBinary2Rule :: (OnceJoin f, Switch f, Relational r) 
+                   => String -> (Expr -> [(Expr, Expr)]) 
                    -> (Expr -> Expr -> [f Expr])
-                   -> ConfigCoverUp -> Rule (f (Equation Expr))
+                   -> ConfigCoverUp -> Rule (f (r Expr))
 coverUpBinary2Rule opName fm fb cfg = 
    makeSimpleRuleList name $ onceJoinM $ \eq -> 
       (guard (coverLHS cfg) >> coverLeft eq) ++ 
@@ -46,22 +49,23 @@ coverUpBinary2Rule opName fm fb cfg =
    name       = coverUpRuleName opName (configName cfg)
    coverRight = map (fmap flipSides) . coverLeft . flipSides
    
-   coverLeft (lhs :==: rhs) = do
-      (e1, e2) <- fm lhs
+   coverLeft eq = do
+      (e1, e2) <- fm (leftHandSide eq)
       guard (predicateCovered  cfg e1)
-      new <- fb rhs e2
+      new <- fb (rightHandSide eq) e2
       switch $ fmap (guard . predicateCombined cfg) new
-      return (fmap (e1 :==:) new)
+      return (fmap (constructor eq e1) new)
 
-coverUpBinaryRule :: String -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
-                  -> ConfigCoverUp -> Rule (Equation Expr)
+coverUpBinaryRule :: Relational r => String 
+                  -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
+                  -> ConfigCoverUp -> Rule (r Expr)
 coverUpBinaryRule opName fm fb =
    let v = makeView (return . Identity) runIdentity
        fbi x y = [Identity (fb x y)]
    in liftRule v . coverUpBinary2Rule opName fm fbi
       
-coverUpUnaryRule :: String -> (Expr -> [Expr]) -> (Expr -> Expr) 
-               -> ConfigCoverUp -> Rule (Equation Expr)
+coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr) 
+               -> ConfigCoverUp -> Rule (r Expr)
 coverUpUnaryRule opName fm fb = 
    coverUpBinaryRule opName (map (\e -> (e, e)) . fm) (const . fb) 
 

@@ -1,0 +1,35 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        -12*x+3 &gt; 2-x+1
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -12*x+3 &gt; 3-x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -11*x+3 &gt; 3
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -11*x &gt; 0
+      </expr>
+    </elem>
+    <elem ruleid="flip sign">
+      <expr>
+        11*x &lt; 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times positive [vars]">
+      <expr>
+        x &lt; 0
+      </expr>
+    </elem>
+  </list>
+</reply>
+

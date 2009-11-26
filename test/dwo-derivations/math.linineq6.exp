@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        2*x+60 &gt; 3*x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -x+60 &gt; 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -x &gt; -60
+      </expr>
+    </elem>
+    <elem ruleid="flip sign">
+      <expr>
+        x &lt; 60
+      </expr>
+    </elem>
+  </list>
+</reply>
+

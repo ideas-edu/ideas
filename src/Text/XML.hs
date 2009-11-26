@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Text.XML
    ( XML, Attr, AttrList, InXML(..), Element(..)
-   , XMLBuilder, makeXML, text, element, tag, attribute
+   , XMLBuilder, makeXML, text, unescaped, element, tag, attribute
    , parseXML, showXML, compactXML, (.=.), findAttribute
    , children, Attribute(..), builder, findChild, getData {-, extract, extractText -}
    , {- isText, isTag, mkTag mkText , findChild-}
@@ -112,7 +112,12 @@ makeXML s m =
    in Element s (bsAttributes bs []) (bsElements bs [])
 
 text :: String -> XMLBuilder
-text = XMLBuilder . modify . appendElemBS . Left
+text = unescaped . escape
+
+-- Should be used with care: the argument String is not escaped, and
+-- therefore may contain xml tags or xml entities
+unescaped :: String -> XMLBuilder
+unescaped = XMLBuilder . modify . appendElemBS . Left
 
 element :: String -> XMLBuilder -> XMLBuilder
 element s = XMLBuilder . modify . appendElemBS . Right . makeXML s
@@ -128,6 +133,14 @@ n .=. s = attribute (n := s)
 
 builder :: Element -> XMLBuilder
 builder = XMLBuilder . modify . appendElemBS . Right
+
+escape :: String -> String
+escape = concatMap f
+ where
+   f '<' = "&lt;"
+   f '>' = "&gt;"
+   f '&' = "&amp;"
+   f c   = [c]
 
 ----------------------------------------------------------------
 -- XML utility functions

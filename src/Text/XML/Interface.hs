@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Text.XML.Interface where
 
+import Control.Arrow
 import Text.XML.Document (Name)
 import Text.XML.Unicode (decoding)
 import Text.XML.Parser (document, extParsedEnt)
@@ -65,11 +66,14 @@ normalize doc = toElement (D.root doc)
    refToContent (D.EntityRef s) = 
       case lookup s entities of
          Just c  -> c
-         Nothing -> [] -- error
+         Nothing -> undefined -- [] -- error
 
    entities :: [(String, Content)]
    entities = 
-      [ (n, toContent (snd ext)) | (n, ext) <- D.externals doc ]
+      [ (n, toContent (snd ext)) | (n, ext) <- D.externals doc ] ++ 
+      -- predefined entities
+      map (second (return . Left . return))
+         [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
    
    merge :: Content -> Content
    merge (Left s:Left t:rest) = Left (s++t) : merge rest

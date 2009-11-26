@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.linineq" encoding="string">
+  <state>
+    <expr>
+      5*(x-1) &lt; 7*x-1
+    </expr>
+  </state>
+</request>

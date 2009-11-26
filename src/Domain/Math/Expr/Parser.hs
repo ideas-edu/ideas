@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Parser 
    ( scannerExpr, parseExpr, parseWith, pExpr
-   , pEquations, pEquation, pOrList, pFractional
+   , pEquations, pEquation, pOrList, pFractional, pRelation
    ) where
 
 import Prelude hiding ((^))
@@ -50,8 +50,8 @@ dictionaryNames = mapMaybe dictionary (concatMap (take 1) dictionaries)
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
    { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
-   , keywordOperators  = ["==" ]
-   , specialCharacters = "+-*/^()[]{},."
+   , keywordOperators  = ["==", "<=", ">=", "<", ">"]
+   , specialCharacters = "+-*/^()[]{}<>,."
    }
 
 parseWith :: TokenParser a -> String -> Either SyntaxError a
@@ -105,6 +105,15 @@ pEquations = pLines True . pEquation
 pEquation :: TokenParser a -> TokenParser (Equation a)
 pEquation p = (:==:) <$> p <* pKey "==" <*> p
 
+pRelation :: TokenParser a -> TokenParser (Relation a)
+pRelation p = (\x f -> f x) <$> p <*> pOp <*> p
+ where
+   pOp   = pChoice (map make table)
+   make (s, f) = f <$ pKey s
+   table = [ ("==", (.==.)), ("<=", (.<=.)), (">=", (.>=.))
+           , ("<", (.<.)), (">", (.>.))
+           ]
+   
 pOrList :: TokenParser a -> TokenParser (OrList a)
 pOrList p = (join . orList) <$> pSepList pTerm (pKey "or")
  where 

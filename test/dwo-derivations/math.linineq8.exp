@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        4*x+24 &gt; 8-3*x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        7*x+24 &gt; 8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        7*x &gt; -16
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times positive [vars]">
+      <expr>
+        x &gt; -16/7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

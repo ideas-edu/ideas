@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        2*x-2-3*(x-2) &gt; 6
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        2*x-2-3*x+6 &gt; 6
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -x+4 &gt; 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -x &gt; 2
+      </expr>
+    </elem>
+    <elem ruleid="flip sign">
+      <expr>
+        x &lt; -2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

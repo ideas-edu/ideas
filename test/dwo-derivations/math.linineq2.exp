@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        4*x-12 &gt; 3*x-12
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        x-12 &gt; -12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x &gt; 0
+      </expr>
+    </elem>
+  </list>
+</reply>
+

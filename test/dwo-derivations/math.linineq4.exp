@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        5-2*a+6 &gt; 15-5*a
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        11-2*a &gt; 15-5*a
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        11+3*a &gt; 15
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        3*a &gt; 4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times positive [vars]">
+      <expr>
+        a &gt; 4/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

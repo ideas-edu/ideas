@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        6*x-2 &lt; 3+9*x
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -3*x-2 &lt; 3
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        -3*x &lt; 5
+      </expr>
+    </elem>
+    <elem ruleid="flip sign">
+      <expr>
+        3*x &gt; -5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times positive [vars]">
+      <expr>
+        x &gt; -5/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -25,6 +25,7 @@ import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Examples.DWO2
+import Domain.Math.Equation.Views
 import Domain.Math.Polynomial.Rules 
 import Domain.Math.Polynomial.CleanUp
 
@@ -32,6 +33,8 @@ ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 
    { description  = "solve a linear inequation"
    , exerciseCode = makeCode "math" "linineq"
+   , parser       = parseWith (pRelation pExpr)
+   , isReady      = solvedRelation
    , strategy     = mapRules ignoreContext ineqLinear
    , examples     = map (build inequalityView) (concat ineqLin1 ++ [extra])
    }

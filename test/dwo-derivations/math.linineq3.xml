@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.linineq" encoding="string">
+  <state>
+    <expr>
+      6*(a+1) &lt; 3*(a-2)+4
+    </expr>
+  </state>
+</request>

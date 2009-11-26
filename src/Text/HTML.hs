@@ -92,18 +92,10 @@ table rows = element "table" $ do
    mapM_ (element "tr" . mapM_ (element "td")) rows
 
 space :: HTMLBuilder
-space = XML.text "&nbsp;"
+space = XML.unescaped "&nbsp;"
 
 image :: String -> HTMLBuilder 
 image n = element "img" ("src" .=. n) 
 
 text :: String -> HTMLBuilder
-text = XML.text . escape
-
-escape :: String -> String
-escape = concatMap f 
- where
-   f '<'  = "&lt;"
-   f '>'  = "&gt;"
-   f '\n' = "<br>"
-   f c   = [c] 
+text = XML.text

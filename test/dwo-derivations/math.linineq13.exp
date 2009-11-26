@@ -1,0 +1,35 @@
+<reply result="ok" version="0.5.8">
+  <list>
+    <elem ruleid="remove division">
+      <expr>
+        -3*(x-12) &gt; 2*(x+3)
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        -3*x+36 &gt; 2*x+6
+      </expr>
+    </elem>
+    <elem ruleid="variable to left">
+      <expr>
+        -5*x+36 &gt; 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -5*x &gt; -30
+      </expr>
+    </elem>
+    <elem ruleid="flip sign">
+      <expr>
+        5*x &lt; 30
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times positive [vars]">
+      <expr>
+        x &lt; 6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

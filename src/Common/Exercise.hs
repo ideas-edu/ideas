@@ -15,7 +15,8 @@ module Common.Exercise
    ( -- * Exercises
      Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
-   , equivalence, similarity, isReady, isSuitable, strategy, extraRules
+   , equivalence, similarity, isReady, isSuitable
+   , strategy, canBeRestarted, extraRules
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
@@ -59,6 +60,7 @@ data Exercise a = Exercise
    , difference     :: Bool -> a -> a -> Maybe (a, a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
+   , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
@@ -107,6 +109,7 @@ emptyExercise = Exercise
    , difference     = \_ _ _ -> Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
+   , canBeRestarted = True
    , extraRules     = [] 
      -- testing and exercise generation
    , testGenerator  = Nothing

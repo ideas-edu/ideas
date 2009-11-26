@@ -161,7 +161,8 @@ resetStateIfNeeded s
         , context = inContext (fromContext (context s))
         } 
 
-submit :: State a -> a -> Result a
+-- To be removed, and replaced by Diagnose service
+submit :: State a -> a -> Result a 
 submit state new
    -- Is the submitted term equivalent?
    | not (equivalence (exercise state) (term state) new) =

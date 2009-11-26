@@ -46,6 +46,9 @@ exercisePage pkg = defaultPage title 2 $ do
       , [ bold $ text "Textual feedback"
         , text $ showBool $ isJust $ getExerciseText pkg
         ]
+      , [ bold $ text "Restartable strategy"
+        , text $ showBool $ canBeRestarted ex
+        ] 
       ]
    
    h2 "1. Strategy"

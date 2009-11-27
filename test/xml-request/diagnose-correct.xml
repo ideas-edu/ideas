@@ -1,0 +1,6 @@
+<request service="diagnose" exerciseid="math.lineq" encoding="string">
+  <state>
+    <expr> 2*x + 3 == 5 </expr>
+  </state>
+  <expr> x == 1 </expr>
+</request>

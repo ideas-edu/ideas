@@ -11,9 +11,10 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Exercises where
 
+import Control.Monad (mplus)
 import Common.Context
 import Common.Exercise
-import Common.Rewriting hiding (match)
+import Common.Rewriting hiding (match, matchM)
 import Common.Strategy
 import Common.Traversable
 import Common.Transformation
@@ -44,7 +45,7 @@ linearExercise = makeExercise
    , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
    , isReady      = solvedEquation
-   , extraRules   = linearRules
+   , extraRules   = ignoreContext buggyPlus : linearRules
    , strategy     = mapRules ignoreContext linearStrategy
    , examples     = concat linearEquations
    }
@@ -136,3 +137,12 @@ normExpr f = normalizeWith [plusOperator, timesOperator] . f
  where
    plusOperator  = acOperator (+) isPlus
    timesOperator = acOperator (*) isTimes
+   
+-- TODO: move this definition
+buggyPlus :: Rule (Equation Expr)
+buggyPlus = buggyRule $ makeSimpleRuleList "buggy plus" $ \(lhs :==: rhs) -> do
+   (a, b) <- matchM plusView lhs
+   [ a :==: rhs + b, b :==: rhs + a ]
+ `mplus` do
+   (a, b) <- matchM plusView rhs
+   [ lhs + a :==: b, lhs + b :==: a ]

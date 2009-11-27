@@ -1,0 +1,13 @@
+<reply result="ok" version="0.5.9">
+  <detour ready="False" ruleid="cover-up times [vars]">
+    <state>
+      <prefix>
+        []
+      </prefix>
+      <expr>
+        x+1 == 5/2
+      </expr>
+    </state>
+  </detour>
+</reply>
+

@@ -27,7 +27,8 @@ import Service.ProblemDecomposition
 import Service.Request
 import Service.Revision (version)
 import Service.ServiceList 
-import Service.TypedAbstractService hiding (exercise)
+import Service.TypedAbstractService hiding (exercise, Result(..))
+import Service.Diagnose
 import Service.Types hiding (State)
 import Text.OpenMath.Object
 import Text.OpenMath.Reply (replyToXML)
@@ -176,17 +177,18 @@ xmlEncoder b f ex = Encoder
                   bs <- mapM (encode enc t1) xs
                   let elems = mapM_ (element "elem") bs
                   return (element "list" elems)
-         Tp.Elem t1  -> liftM (element "elem") . encode enc t1
-         Tp.Tag s t1 -> liftM (element s) . encode enc t1  -- quick fix
-         Tp.Rule     -> return . ("ruleid" .=.) . Rule.name
-         Tp.Term     -> encodeTerm enc
-         Tp.Context  -> encodeContext b (encodeTerm enc)
-         Tp.Location -> return . text . show
-         Tp.Bool     -> return . text . show
-         Tp.String   -> return . text
-         Tp.Int      -> return . text . show
-         Tp.State    -> encodeState b (encodeTerm enc)
-         _           -> encodeDefault enc serviceType
+         Tp.Elem t1   -> liftM (element "elem") . encode enc t1
+         Tp.Tag s t1  -> liftM (element s) . encode enc t1  -- quick fix
+         Tp.Rule      -> return . ("ruleid" .=.) . Rule.name
+         Tp.Term      -> encodeTerm enc
+         Tp.Diagnosis -> encodeDiagnosis b (encodeTerm enc)
+         Tp.Context   -> encodeContext   b (encodeTerm enc)
+         Tp.Location  -> return . text . show
+         Tp.Bool      -> return . text . show
+         Tp.String    -> return . text
+         Tp.Int       -> return . text . show
+         Tp.State     -> encodeState b (encodeTerm enc)
+         _            -> encodeDefault enc serviceType
 
 xmlDecoder :: MonadPlus m => Bool -> (XML -> m a) -> ExercisePackage a -> Decoder m XML a
 xmlDecoder b f pkg = Decoder
@@ -294,7 +296,24 @@ encodeEnvironment b env
               case lookupEnv k env of 
                  Just omobj | b -> builder  (omobj2xml omobj)
                  _              -> "value" .=. fromMaybe "" (lookupEnv k env)
-            
+
+encodeDiagnosis :: Monad m => Bool -> (a -> m XMLBuilder) -> Diagnosis a -> m XMLBuilder
+encodeDiagnosis mode f diagnosis =
+   case diagnosis of
+      Buggy r        -> return $ element "buggy" $ "ruleid" .=. Rule.name r
+      NotEquivalent  -> return $ tag "notequiv"
+      Similar  b s   -> ok "similar"  b s Nothing
+      Expected b s r -> ok "expected" b s (Just r)
+      Detour   b s r -> ok "detour"   b s (Just r)
+      Unknown  b s   -> ok "correct"  b s Nothing
+ where
+   ok t b s mr = do
+      body <- encodeState mode f s
+      return $ element t $ do
+         "ready" .=. show b
+         maybe (return ()) (("ruleid" .=.) . Rule.name) mr
+         body
+  
 encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
    xml <- f (fromContext ctx)

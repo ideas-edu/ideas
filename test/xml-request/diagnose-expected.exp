@@ -1,0 +1,13 @@
+<reply result="ok" version="0.5.9">
+  <expected ready="False" ruleid="cover-up plus [one var]">
+    <state>
+      <prefix>
+        [0,0,0,3,0,0,1,0,0]
+      </prefix>
+      <expr>
+        2*x == 2
+      </expr>
+    </state>
+  </expected>
+</reply>
+

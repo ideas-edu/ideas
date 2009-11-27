@@ -22,6 +22,7 @@ import Control.Monad
 import Data.Maybe
 import Service.ExerciseList (ExercisePackage, exercise, getExerciseText)
 import Service.TypedAbstractService (State, Result)
+import Service.Diagnose (Diagnosis)
 import Service.FeedbackText (ExerciseText)
 import System.IO.Unsafe
 import qualified Text.OpenMath.Reply as Decomposition
@@ -54,6 +55,7 @@ data Type a t where
    Term         :: Type a a
    Context      :: Type a (Context a)
    Result       :: Type a (Result a)
+   Diagnosis    :: Type a (Diagnosis a)
    Location     :: Type a Location
    StrategyLoc  :: Type a StrategyLocation
    StrategyCfg  :: Type a StrategyConfiguration
@@ -87,6 +89,7 @@ groundType tp =
       Term         -> Just "Term"
       Context      -> Just "Context"
       Result       -> Just "Result"
+      Diagnosis    -> Just "Diagnosis"
       Bool         -> Just "Bool"
       Int          -> Just "Int"
       String       -> Just "String"

@@ -80,6 +80,8 @@ diagnose state new
       | r <- ruleset (exercise state)
       , isBuggyRule r == searchForBuggy
       , a <- applyAll r (inContext sub1)
+      -- , let s = prettyPrinter (exercise state) (fromContext a)
+      --, if s=="2*x+2 == 5" then True else error s
       , similarity (exercise state) sub2 (fromContext a)
       ]
     where 

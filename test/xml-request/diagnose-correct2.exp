@@ -1,0 +1,13 @@
+<reply result="ok" version="0.5.9">
+  <correct ready="False">
+    <state>
+      <prefix>
+        []
+      </prefix>
+      <expr>
+        5*(x-1) == 0
+      </expr>
+    </state>
+  </correct>
+</reply>
+

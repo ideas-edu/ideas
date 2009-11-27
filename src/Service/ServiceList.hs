@@ -18,6 +18,7 @@ import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
 import Service.ExerciseList (exercises)
 import qualified Service.TypedAbstractService as S
+import qualified Service.Diagnose as S
 import Service.FeedbackText hiding (ExerciseText)
 import Service.Types 
 import Service.ProblemDecomposition
@@ -35,7 +36,7 @@ serviceList :: [Service a]
 serviceList =
    [ derivationS, allfirstsS, onefirstS, readyS
    , stepsremainingS, applicableS, applyS, generateS
-   , submitS
+   , submitS, diagnoseS
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
    , problemdecompositionS
@@ -94,6 +95,10 @@ findbuggyrulesS = Service "findbuggyrules" $
 submitS :: Service a
 submitS = Service "submit" $ 
    S.submit ::: State :-> Term :-> Result
+
+diagnoseS :: Service a
+diagnoseS = Service "diagnose" $
+   S.diagnose ::: State :-> Term :-> Diagnosis
 
 ------------------------------------------------------
 -- Services with a feedback component

@@ -62,28 +62,30 @@ xmlRequest xml = do
       }
 
 xmlReply :: Request -> XML -> Either String XML
-xmlReply request xml
+xmlReply request xml 
    | service request == "mathdox" = do
         code <- maybe (fail "unknown exercise code") return (exerciseID request)
         Some pkg <- getPackage code
         (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
+
 --   | service request == "ping" = do
 --        return (resultOk (return ()))
-   | otherwise =
+
+xmlReply request xml = do
+   pkg <- case exerciseID request of 
+             Just i -> getPackage i
+             _ | service request == "exerciselist" -> return (Some (package emptyExercise))
+               | otherwise -> fail "unknown exercise code"
    case encoding request of
       Just StringEncoding -> do 
-         code <- maybe (fail "unknown exercise code") return (exerciseID request)
-         pkg  <- getPackage code
          case stringFormatConverter pkg of
             Some conv -> do
                srv <- getService (service request)
                res <- evalService conv srv xml 
                return (resultOk res)
       _ -> do 
-         code <- maybe (fail "unknown exercise code") return (exerciseID request)
-         ex <- getPackage code
-         case openMathConverter ex of
+         case openMathConverter pkg of
             Some conv -> do
                srv <- getService (service request)
                res <- evalService conv srv xml 
@@ -207,11 +209,21 @@ xmlDecoder b f pkg = Decoder
    leave f xml = liftM (\a -> (a, xml)) (f xml)
          
 allAreTagged :: Type a t -> Maybe (t -> [(String, String)])
+allAreTagged (Tuple t1 t2) = do 
+   f1 <- allAreTagged t1
+   f2 <- allAreTagged t2
+   return $ \(a,b) -> f1 a ++ f2 b
 allAreTagged (Triple t1 t2 t3) = do 
    f1 <- allAreTagged t1
    f2 <- allAreTagged t2
    f3 <- allAreTagged t3
    return $ \(a,b,c) -> f1 a ++ f2 b ++ f3 c
+allAreTagged (Quadruple t1 t2 t3 t4) = do 
+   f1 <- allAreTagged t1
+   f2 <- allAreTagged t2
+   f3 <- allAreTagged t3
+   f4 <- allAreTagged t4
+   return $ \(a,b,c,d) -> f1 a ++ f2 b ++ f3 c ++ f4 d
 allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, show b)]
 allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
 allAreTagged _ = Nothing

@@ -57,7 +57,7 @@ evalService f = eval f . typedValue
 
 derivationS :: Service a
 derivationS = Service "derivation" $ 
-   S.derivationNew ::: Maybe StrategyCfg :-> State :-> List (Pair Rule Context)
+   S.derivationNew ::: Maybe StrategyCfg :-> State :-> List (Tuple Rule Context)
 
 allfirstsS :: Service a
 allfirstsS = Service "allfirsts" $ 
@@ -108,7 +108,7 @@ submittextS = Service "submittext" $
 
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" $ 
-   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Pair String Context)
+   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Tuple String Context)
 
 ------------------------------------------------------
 -- Problem decomposition service

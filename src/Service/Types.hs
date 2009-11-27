@@ -35,7 +35,7 @@ data Type a t where
    -- Function type
    (:->)        :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
    -- Tuple types
-   Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
+   Tuple        :: Type a t1 -> Type a t2 -> Type a (t1, t2)
    Triple       :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
    Quadruple    :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
    -- Special annotations
@@ -66,7 +66,7 @@ data Type a t where
 
 instance Show (Type a t) where
    show (t1 :-> t2)       = show t1 ++ " -> " ++ show t2 
-   show (Pair t1 t2)      = "(" ++ commaList [show t1, show t2] ++ ")"
+   show (Tuple t1 t2)     = "(" ++ commaList [show t1, show t2] ++ ")"
    show (Triple t1 t2 t3) = "(" ++ commaList [show t1, show t2, show t3] ++ ")"
    show (Quadruple t1 t2 t3 t4) = "(" ++ commaList [show t1, show t2, show t3, show t4] ++ ")"
    show (Tag _ t)         = show t
@@ -127,7 +127,7 @@ eval f (tv ::: tp) s =
 decodeDefault :: MonadPlus m => Decoder m s a -> Type a t -> s -> m (t, s)
 decodeDefault dec tp s =
    case tp of
-      Pair t1 t2 -> do
+      Tuple t1 t2 -> do
          (a, s1) <- decodeType dec t1 s
          (b, s2) <- decodeType dec t2 s1
          return ((a, b), s2)
@@ -161,7 +161,7 @@ decodeDefault dec tp s =
 encodeDefault :: Monad m => Encoder m s a -> Type a t -> t -> m s
 encodeDefault enc tp tv =
    case tp of
-      Pair t1 t2 -> do
+      Tuple t1 t2 -> do
          let (a, b) = tv
          x <- encodeType enc t1 a
          y <- encodeType enc t2 b

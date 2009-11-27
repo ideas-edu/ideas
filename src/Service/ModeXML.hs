@@ -184,7 +184,7 @@ xmlEncoder b f ex = Encoder
          Tp.Diagnosis -> encodeDiagnosis b (encodeTerm enc)
          Tp.Context   -> encodeContext   b (encodeTerm enc)
          Tp.Location  -> return . text . show
-         Tp.Bool      -> return . text . show
+         Tp.Bool      -> return . text . map toLower . show
          Tp.String    -> return . text
          Tp.Int       -> return . text . show
          Tp.State     -> encodeState b (encodeTerm enc)
@@ -226,7 +226,7 @@ allAreTagged (Quadruple t1 t2 t3 t4) = do
    f3 <- allAreTagged t3
    f4 <- allAreTagged t4
    return $ \(a,b,c,d) -> f1 a ++ f2 b ++ f3 c ++ f4 d
-allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, show b)]
+allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, map toLower (show b))]
 allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
 allAreTagged _ = Nothing
          
@@ -305,12 +305,12 @@ encodeDiagnosis mode f diagnosis =
       Similar  b s   -> ok "similar"  b s Nothing
       Expected b s r -> ok "expected" b s (Just r)
       Detour   b s r -> ok "detour"   b s (Just r)
-      Unknown  b s   -> ok "correct"  b s Nothing
+      Correct  b s   -> ok "correct"  b s Nothing
  where
    ok t b s mr = do
       body <- encodeState mode f s
       return $ element t $ do
-         "ready" .=. show b
+         "ready" .=. map toLower (show b)
          maybe (return ()) (("ruleid" .=.) . Rule.name) mr
          body
   

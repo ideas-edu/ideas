@@ -1,5 +1,5 @@
 <reply result="ok" version="0.5.9">
-  <detour ready="False" ruleid="cover-up times [vars]">
+  <detour ready="false" ruleid="cover-up times [vars]">
     <state>
       <prefix>
         []

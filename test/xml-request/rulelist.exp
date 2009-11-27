@@ -1,34 +1,34 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
-    <elem name="abc formula" buggy="False" rewriterule="False"/>
-    <elem name="abc misconception minus 4ac" buggy="True" rewriterule="False"/>
-    <elem name="abc misconception minus b" buggy="True" rewriterule="False"/>
-    <elem name="abc misconception one solution" buggy="True" rewriterule="False"/>
-    <elem name="abc misconception two a" buggy="True" rewriterule="False"/>
-    <elem name="approximate" buggy="False" rewriterule="False"/>
-    <elem name="cancel terms" buggy="False" rewriterule="False"/>
-    <elem name="common factor var" buggy="False" rewriterule="False"/>
-    <elem name="cover-up minus left [one var]" buggy="False" rewriterule="False"/>
-    <elem name="cover-up minus right [one var]" buggy="False" rewriterule="False"/>
-    <elem name="cover-up negate [vars]" buggy="False" rewriterule="False"/>
-    <elem name="cover-up numerator [vars]" buggy="False" rewriterule="False"/>
-    <elem name="cover-up plus [one var]" buggy="False" rewriterule="False"/>
-    <elem name="cover-up power [vars]" buggy="False" rewriterule="False"/>
-    <elem name="cover-up times [vars]" buggy="False" rewriterule="False"/>
-    <elem name="distribution division" buggy="False" rewriterule="False"/>
-    <elem name="distribution multiplication" buggy="False" rewriterule="False"/>
-    <elem name="distribution square" buggy="False" rewriterule="False"/>
-    <elem name="factor left as square" buggy="False" rewriterule="False"/>
-    <elem name="flip equation" buggy="False" rewriterule="False"/>
-    <elem name="merge similar terms" buggy="False" rewriterule="False"/>
-    <elem name="move to left" buggy="False" rewriterule="False"/>
-    <elem name="multiplication is zero" buggy="False" rewriterule="False"/>
-    <elem name="nice factors" buggy="False" rewriterule="False"/>
-    <elem name="no linear term b" buggy="False" rewriterule="False"/>
-    <elem name="prepare split square" buggy="False" rewriterule="False"/>
-    <elem name="simpler polynomial" buggy="False" rewriterule="False"/>
-    <elem name="simpler square root" buggy="False" rewriterule="False"/>
-    <elem name="square both sides" buggy="False" rewriterule="False"/>
+    <elem name="abc formula" buggy="false" rewriterule="false"/>
+    <elem name="abc misconception minus 4ac" buggy="true" rewriterule="false"/>
+    <elem name="abc misconception minus b" buggy="true" rewriterule="false"/>
+    <elem name="abc misconception one solution" buggy="true" rewriterule="false"/>
+    <elem name="abc misconception two a" buggy="true" rewriterule="false"/>
+    <elem name="approximate" buggy="false" rewriterule="false"/>
+    <elem name="cancel terms" buggy="false" rewriterule="false"/>
+    <elem name="common factor var" buggy="false" rewriterule="false"/>
+    <elem name="cover-up minus left [one var]" buggy="false" rewriterule="false"/>
+    <elem name="cover-up minus right [one var]" buggy="false" rewriterule="false"/>
+    <elem name="cover-up negate [vars]" buggy="false" rewriterule="false"/>
+    <elem name="cover-up numerator [vars]" buggy="false" rewriterule="false"/>
+    <elem name="cover-up plus [one var]" buggy="false" rewriterule="false"/>
+    <elem name="cover-up power [vars]" buggy="false" rewriterule="false"/>
+    <elem name="cover-up times [vars]" buggy="false" rewriterule="false"/>
+    <elem name="distribution division" buggy="false" rewriterule="false"/>
+    <elem name="distribution multiplication" buggy="false" rewriterule="false"/>
+    <elem name="distribution square" buggy="false" rewriterule="false"/>
+    <elem name="factor left as square" buggy="false" rewriterule="false"/>
+    <elem name="flip equation" buggy="false" rewriterule="false"/>
+    <elem name="merge similar terms" buggy="false" rewriterule="false"/>
+    <elem name="move to left" buggy="false" rewriterule="false"/>
+    <elem name="multiplication is zero" buggy="false" rewriterule="false"/>
+    <elem name="nice factors" buggy="false" rewriterule="false"/>
+    <elem name="no linear term b" buggy="false" rewriterule="false"/>
+    <elem name="prepare split square" buggy="false" rewriterule="false"/>
+    <elem name="simpler polynomial" buggy="false" rewriterule="false"/>
+    <elem name="simpler square root" buggy="false" rewriterule="false"/>
+    <elem name="square both sides" buggy="false" rewriterule="false"/>
   </list>
 </reply>
 

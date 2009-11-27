@@ -35,7 +35,7 @@ data Diagnosis a
    | Similar        Bool (State a)
    | Expected       Bool (State a) (RuleID a)
    | Detour         Bool (State a) (RuleID a)
-   | Unknown        Bool (State a)
+   | Correct        Bool (State a)
 
 ----------------------------------------------------------------
 -- The diagnose service
@@ -69,7 +69,7 @@ diagnose state new
               Just r ->  -- If yes, report the found rule as a detour
                  Detour (ready ns) ns r
               Nothing -> -- If not, we give up
-                 Unknown (ready ns) ns
+                 Correct (ready ns) ns
  where
    expected = 
       let p (_, _, ns) = similarity (exercise state) new (term ns)

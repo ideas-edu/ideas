@@ -1,0 +1,16 @@
+<reply result="ok" version="0.5.9">
+  <expected ready="true" ruleid="abc formula">
+    <state>
+      <prefix>
+        [0,0,1,0,0,0]
+      </prefix>
+      <context>
+        <item name="clipboard" value="[D==sqrt 0, a==1, b==3, c==9/4]"/>
+      </context>
+      <expr>
+        x == -3/2
+      </expr>
+    </state>
+  </expected>
+</reply>
+

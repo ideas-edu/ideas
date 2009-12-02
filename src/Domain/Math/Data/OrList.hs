@@ -14,10 +14,14 @@ module Domain.Math.Data.OrList
    , orList, (\/), true, false
    , isTrue, isFalse
    , disjunctions, normalize, idempotent
+   , orView
    ) where
 
+import Common.View
 import Control.Monad
 import Common.Traversable
+import qualified Domain.Logic.Formula as Logic
+import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
 import Data.List (intersperse, nub, sort)
 
@@ -109,3 +113,20 @@ instance Show a => Show (OrList a) where
    show (OrList xs) 
       | null xs   = "false"
       | otherwise = unwords (intersperse "or" (map show xs))
+
+------------------------------------------------------------
+-- View to the logic data type
+ 
+orView :: View (Logic a) (OrList a)
+orView = makeView f g 
+ where
+   f p  = case p of
+             Logic.Var a -> return (return a)
+             Logic.T     -> return true
+             Logic.F     -> return false
+             a :||: b    -> liftM2 (\/) (f a) (f b)
+             _           -> Nothing
+   g xs = case disjunctions xs of
+             Nothing -> Logic.T
+             Just [] -> Logic.F
+             Just ys -> foldr1 (:||:) (map Logic.Var ys)

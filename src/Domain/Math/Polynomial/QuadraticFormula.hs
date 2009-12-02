@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.QuadraticFormula 
    ( abcFormula, higherSubst, substBackVar, exposeSameFactor
+   , addToClipboard, lookupClipboard -- TODO: move me
    ) where
 
 import Common.Traversable

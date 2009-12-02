@@ -30,7 +30,7 @@ solvedRelation r =
    case getVariable (leftHandSide r) of
       Nothing -> noVars (leftHandSide r) && noVars (rightHandSide r)
       Just x  -> x `notElem` collectVars (rightHandSide r)
-       
+
 -------------------------------------------------------------
 -- Views on equations
 

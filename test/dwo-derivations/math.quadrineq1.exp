@@ -1,0 +1,37 @@
+<reply result="ok" version="0.5.9">
+  <list>
+    <elem ruleid="turn into equation">
+      <expr>
+        x^2+3*x-4 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x^2+3*x-4<0)]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x-1)*(x+4) == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x^2+3*x-4<0)]"/>
+      </context>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 1 or x == -4
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x^2+3*x-4<0)]"/>
+      </context>
+    </elem>
+    <elem ruleid="solution inequation">
+      <expr>
+        -4 &lt; x &lt; 1
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x^2+3*x-4<0)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

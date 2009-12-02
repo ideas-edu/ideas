@@ -1,0 +1,45 @@
+<reply result="ok" version="0.5.9">
+  <list>
+    <elem ruleid="turn into equation">
+      <expr>
+        1-2*x^5 == -485
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(1-2*x^5<-485)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up minus right [one var]">
+      <expr>
+        2*x^5 == 486
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(1-2*x^5<-485)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^5 == 243
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(1-2*x^5<-485)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 3
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(1-2*x^5<-485)]"/>
+      </context>
+    </elem>
+    <elem ruleid="solution inequation">
+      <expr>
+        x &gt; 3
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(1-2*x^5<-485)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

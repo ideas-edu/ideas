@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadrineq" encoding="string">
+  <state>
+    <expr>
+      x^2-4*x-12 &gt; 0
+    </expr>
+  </state>
+</request>

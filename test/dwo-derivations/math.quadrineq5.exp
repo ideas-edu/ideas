@@ -1,0 +1,29 @@
+<reply result="ok" version="0.5.9">
+  <list>
+    <elem ruleid="turn into equation">
+      <expr>
+        1/2*x^2-3*x-8 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(1/2*x^2-3*x-8<0)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 8 or x == -2
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 25, a==1/2, b==-3, c==-8, ineq==(1/2*x^2-3*x-8<0)]"/>
+      </context>
+    </elem>
+    <elem ruleid="solution inequation">
+      <expr>
+        -2 &lt; x &lt; 8
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==sqrt 25, a==1/2, b==-3, c==-8, ineq==(1/2*x^2-3*x-8<0)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

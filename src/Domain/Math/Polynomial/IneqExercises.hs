@@ -52,21 +52,50 @@ ineqLinearExercise = makeExercise
    
 ineqQuadraticExercise :: Exercise (Logic (Relation Expr))
 ineqQuadraticExercise = makeExercise 
-   { description  = "solve a quadratic inequation"
-   , exerciseCode = makeCode "math" "quadrineq"
-   , isReady      = solvedRelations
-   , strategy     = ineqQuadratic
-   , examples     = map (Logic.Var . build inequalityView) (concat $ ineqQuad1 ++ [ineqQuad2])
+   { description   = "solve a quadratic inequation"
+   , exerciseCode  = makeCode "math" "quadrineq"
+   , parser       = parseWith (pLogicRelation pExpr)
+   , prettyPrinter = showLogicRelation
+   , isReady       = solvedRelations
+   , strategy      = ineqQuadratic
+   , examples      = map (Logic.Var . build inequalityView) 
+                         (concat $ ineqQuad1 ++ [ineqQuad2])
    }
 
 ineqHigherDegreeExercise :: Exercise (Logic (Relation Expr))
 ineqHigherDegreeExercise = makeExercise 
-   { description  = "solve an inequation of higher degree"
-   , exerciseCode = makeCode "math" "ineqhigherdegree"
-   , isReady      = solvedRelations
-   , strategy     = ineqHigherDegree
-   , examples     = map (Logic.Var . build inequalityView) ineqHigh
+   { description   = "solve an inequation of higher degree"
+   , exerciseCode  = makeCode "math" "ineqhigherdegree"
+   , parser       = parseWith (pLogicRelation pExpr)
+   , prettyPrinter = showLogicRelation
+   , isReady       = solvedRelations
+   , strategy      = ineqHigherDegree
+   , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
+
+showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
+showLogicRelation logic = 
+   case logic of
+      Logic.T     -> "true"
+      Logic.F     -> "false"
+      Logic.Var a -> show a
+      p :||: q    -> showLogicRelation p ++ " or " ++ showLogicRelation q
+      p :&&: q    -> case match betweenView logic of
+                        Just (a, b, c) -> unwords [show a, "<", show b, "<", show c]
+                        _ -> showLogicRelation p ++ " and " ++ showLogicRelation q
+      _           -> show logic
+
+betweenView :: Eq a => View (Logic (Relation a)) (a, a, a)
+betweenView = makeView f g
+ where
+   f (Logic.Var r1 :&&: Logic.Var r2) =
+      case (match inequalityView r1, match inequalityView r2) of
+         (Just (b1 :>: a), Just (b2 :<: c)) | b1 ==b2 -> 
+            Just (a, b1, c)
+         _ -> Nothing
+   f _ = Nothing
+   g (a, b, c) = Logic.Var (b .>. a) :&&: Logic.Var (b .<. c)
+
 
 ineqLinear :: LabeledStrategy (Relation Expr)
 ineqLinear = cleanUpStrategy (fmap cleanUpSimple) $
@@ -164,7 +193,7 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
       makeRight (d, e) = (d+1, Logic.Var (Var v .>. e))
       makeMiddle (d1, e1) (d2, e2) = 
          ( (d1+d2)/2
-         , Logic.Var (Var v .>. e1) :&&: Logic.Var (Var v .<. e2)
+         , build betweenView (e1, Var v, e2)
          )
       
    evalIneq :: Relation Expr -> String -> Double -> Bool

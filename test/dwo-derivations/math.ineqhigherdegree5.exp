@@ -1,0 +1,53 @@
+<reply result="ok" version="0.5.9">
+  <list>
+    <elem ruleid="turn into equation">
+      <expr>
+        -(1/2*x+2)^3 == -1
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-(1/2*x+2)^3<-1)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        (1/2*x+2)^3 == 1
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-(1/2*x+2)^3<-1)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        1/2*x+2 == 1
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-(1/2*x+2)^3<-1)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        1/2*x == -1
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-(1/2*x+2)^3<-1)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -2
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-(1/2*x+2)^3<-1)]"/>
+      </context>
+    </elem>
+    <elem ruleid="solution inequation">
+      <expr>
+        x &gt; -2
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-(1/2*x+2)^3<-1)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

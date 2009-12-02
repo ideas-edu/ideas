@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadrineq" encoding="string">
+  <state>
+    <expr>
+      4*x^2+6*x &lt; x^2+3*x+18
+    </expr>
+  </state>
+</request>

@@ -62,7 +62,11 @@ foldLogic (var, impl, equiv, and, or, not, true, false) = rec
          Not p     -> not (rec p)
          T         -> true 
          F         -> false
-              
+
+-- | The monadic join for logic
+catLogic :: Logic (Logic a) -> Logic a
+catLogic = foldLogic (id, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
+       
 -- | evalLogic takes a function that gives a logic value to a variable,
 -- | and a Logic expression, and evaluates the boolean expression.
 evalLogic :: (a -> Bool) -> Logic a -> Bool

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.ineqhigherdegree" encoding="string">
+  <state>
+    <expr>
+      (2*x-3)^4 &gt; 1
+    </expr>
+  </state>
+</request>

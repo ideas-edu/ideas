@@ -11,7 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Parser 
    ( scannerExpr, parseExpr, parseWith, pExpr
-   , pEquations, pEquation, pOrList, pFractional, pRelation
+   , pEquations, pEquation, pOrList, pFractional
+   , pRelation, pLogic, pLogicRelation
    ) where
 
 import Prelude hiding ((^))
@@ -20,6 +21,8 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Common.Transformation
+import qualified Domain.Logic.Formula as Logic
+import Domain.Logic.Formula (Logic)
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbolic
@@ -106,13 +109,22 @@ pEquation :: TokenParser a -> TokenParser (Equation a)
 pEquation p = (:==:) <$> p <* pKey "==" <*> p
 
 pRelation :: TokenParser a -> TokenParser (Relation a)
-pRelation p = (\x f -> f x) <$> p <*> pOp <*> p
+pRelation p = (\x f -> f x) <$> p <*> pRelationType <*> p
+
+pRelationChain :: TokenParser a -> TokenParser [Relation a]
+pRelationChain p = f <$> p <*> pList1 ((,) <$> pRelationType <*> p)
  where
-   pOp   = pChoice (map make table)
+   f _ [] = []
+   f a ((op, b):xs) = op a b:f b xs
+
+pRelationType :: TokenParser (a -> a -> Relation a)
+pRelationType = pChoice (map make table)
+ where 
    make (s, f) = f <$ pKey s
-   table = [ ("==", (.==.)), ("<=", (.<=.)), (">=", (.>=.))
-           , ("<", (.<.)), (">", (.>.))
-           ]
+   table = 
+      [ ("==", (.==.)), ("<=", (.<=.)), (">=", (.>=.))
+      , ("<", (.<.)), (">", (.>.))
+      ]
    
 pOrList :: TokenParser a -> TokenParser (OrList a)
 pOrList p = (join . orList) <$> pSepList pTerm (pKey "or")
@@ -121,6 +133,21 @@ pOrList p = (join . orList) <$> pSepList pTerm (pKey "or")
         <|> true   <$  pKey "true" 
         <|> false  <$  pKey "false"
    pSepList p q = (:) <$> p <*> pList (q *> p)
+
+pLogic :: TokenParser a -> TokenParser (Logic a)
+pLogic p = levelOr
+ where 
+   levelOr    =  pChainr ((Logic.:||:) <$ pKey "or")  levelAnd
+   levelAnd   =  pChainr ((Logic.:&&:) <$ pKey "and") levelAtom
+   levelAtom  =  Logic.Var <$> p
+             <|> Logic.F   <$  pKey "false"
+             <|> Logic.T   <$  pKey "true" 
+             <|> pParens levelOr
+
+pLogicRelation :: TokenParser a -> TokenParser (Logic (Relation a))
+pLogicRelation p = (Logic.catLogic . fmap f) <$> pLogic (pRelationChain p)
+ where
+   f xs = if null xs then Logic.T else foldr1 (Logic.:&&:) (map Logic.Var xs)
 
 pParens :: TokenParser a -> TokenParser a
 pParens p = pKey "(" *> p <* pKey ")"

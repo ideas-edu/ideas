@@ -13,30 +13,30 @@ module Domain.Math.Polynomial.IneqExercises
    ( ineqLinearExercise, ineqQuadraticExercise, ineqHigherDegreeExercise
    ) where
 
-import Prelude hiding (repeat)
-import Data.List (nub, sortBy)
-import Data.Maybe (fromMaybe)
-import Control.Monad
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Uniplate (uniplate)
 import Common.View
-import Domain.Math.Data.Relation
+import Control.Monad
+import Data.List (nub, sortBy)
+import Data.Maybe (fromMaybe)
+import Domain.Logic.Formula (Logic((:||:), (:&&:)))
+import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
+import Domain.Math.Equation.Views
+import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Examples.DWO2
-import Domain.Math.Equation.Views
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Rules 
 import Domain.Math.Polynomial.Strategies
-import Domain.Math.Polynomial.QuadraticFormula
-import Domain.Math.Polynomial.CleanUp
 import Domain.Math.SquareRoot.Views
+import Prelude hiding (repeat)
 import qualified Domain.Logic.Formula as Logic
-import Domain.Logic.Formula (Logic((:||:), (:&&:)))
 
 ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 

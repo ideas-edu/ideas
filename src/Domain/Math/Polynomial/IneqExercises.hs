@@ -90,11 +90,13 @@ betweenView = makeView f g
  where
    f (Logic.Var r1 :&&: Logic.Var r2) =
       case (match inequalityView r1, match inequalityView r2) of
-         (Just (b1 :>: a), Just (b2 :<: c)) | b1 ==b2 -> 
+         (Just (b1 :>: a), Just (b2 :<: c)) | b1 == b2 -> 
+            Just (a, b1, c)
+         (Just (a :<: b1), Just (b2 :<: c)) | b1 == b2 -> 
             Just (a, b1, c)
          _ -> Nothing
    f _ = Nothing
-   g (a, b, c) = Logic.Var (b .>. a) :&&: Logic.Var (b .<. c)
+   g (a, b, c) = Logic.Var (a .<. b) :&&: Logic.Var (b .<. c)
 
 
 ineqLinear :: LabeledStrategy (Relation Expr)

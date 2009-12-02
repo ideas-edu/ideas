@@ -25,11 +25,15 @@ import Data.Maybe
 solvedRelations :: (Crush f, Relational g) => f (g Expr) -> Bool
 solvedRelations = all solvedRelation . crush
 
+-- The variable may appear on one of the sides of the relation (right-hand side
+-- is thus allowed), but must be isolated
 solvedRelation :: Relational f => f Expr -> Bool
 solvedRelation r =
-   case getVariable (leftHandSide r) of
-      Nothing -> noVars (leftHandSide r) && noVars (rightHandSide r)
-      Just x  -> x `notElem` collectVars (rightHandSide r)
+   case (getVariable (leftHandSide r), getVariable (rightHandSide r)) of
+      (Just _, Just _)  -> False
+      (Just x, Nothing) -> x `notElem` collectVars (rightHandSide r)
+      (Nothing, Just x) -> x `notElem` collectVars (leftHandSide r)
+      _ -> noVars (leftHandSide r) && noVars (rightHandSide r)
 
 -------------------------------------------------------------
 -- Views on equations

@@ -15,7 +15,8 @@ module Domain.Math.Expr.Symbols
    , plusSymbol, timesSymbol, minusSymbol, divideSymbol
    , rootSymbol, powerSymbol
      -- logic1
-   , orSymbol, trueSymbol, falseSymbol
+   , trueSymbol, falseSymbol, notSymbol
+   , orSymbol, andSymbol, equivalentSymbol, impliesSymbol
      -- list1
    , listSymbol
      -- relation1

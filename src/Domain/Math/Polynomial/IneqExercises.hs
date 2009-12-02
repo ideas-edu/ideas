@@ -38,15 +38,6 @@ import Domain.Math.SquareRoot.Views
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic((:||:), (:&&:)))
 
-import Common.Traversable
-import Common.Uniplate (universe)
-instance Crush Logic where
-   crush p = [ x | Logic.Var x <- universe p ]
-instance IsExpr a => IsExpr (Logic a) where
-   toExpr   = error "toExpr"
-   fromExpr = error "fromExpr"
-   
-
 ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 
    { description  = "solve a linear inequation"

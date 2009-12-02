@@ -13,6 +13,7 @@ module Domain.Logic.Formula where
 
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
+import Common.Traversable
 import Common.Utils
 import Data.List
 import Data.Maybe
@@ -39,6 +40,9 @@ type SLogic = Logic String
 
 instance Functor Logic where
    fmap f = foldLogic (Var . f, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
+
+instance Crush Logic where
+   crush p = [ x | Var x <- universe p ]
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.

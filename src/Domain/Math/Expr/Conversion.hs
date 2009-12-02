@@ -18,6 +18,8 @@ import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
+import qualified Domain.Logic.Formula as Logic
+import Domain.Logic.Formula (Logic((:||:), (:&&:), (:<->:), (:->:)))
 import Text.OpenMath.Object
 import Text.OpenMath.Symbol (extraSymbol)
 import Common.View
@@ -77,24 +79,36 @@ relationSymbols =
    ]
    
 instance IsExpr a => IsExpr (OrList a) where
-   toExpr ors = 
-      case disjunctions ors of
-         Just []  -> symbol falseSymbol
-         Just [x] -> toExpr x
-         Just xs  -> function orSymbol (map toExpr xs)
-         Nothing  -> symbol trueSymbol 
-
-   fromExpr expr = do
-      xs <- isSymbol orSymbol expr
-      ys <- mapM fromExpr xs
-      return (orList ys)
-    `mplus` do
-      guard (isConst falseSymbol expr) >> return false
-    `mplus` do
-      guard (isConst trueSymbol  expr) >> return true
-    `mplus`
-      liftM return (fromExpr expr)
-      
+   toExpr = toExpr . build orView
+   fromExpr expr = fromExpr expr >>= matchM orView
+         
+instance IsExpr a => IsExpr (Logic a) where
+   toExpr logic = 
+      case logic of
+         Logic.T     -> symbol trueSymbol
+         Logic.F     -> symbol falseSymbol
+         Logic.Var p -> toExpr p
+         Logic.Not p -> unary  notSymbol        (toExpr p)
+         p :||:  q   -> binary orSymbol         (toExpr p) (toExpr q)
+         p :&&:  q   -> binary andSymbol        (toExpr p) (toExpr q)
+         p :<->: q   -> binary equivalentSymbol (toExpr p) (toExpr q)
+         p :->:  q   -> binary impliesSymbol    (toExpr p) (toExpr q)
+   fromExpr expr = msum
+      [ guard (isConst trueSymbol expr)  >> return Logic.T
+      , guard (isConst falseSymbol expr) >> return Logic.F
+      , do a <- isUnary notSymbol expr
+           liftM Logic.Not (fromExpr a)
+      , do (a, b) <- isBinary orSymbol expr
+           liftM2 (:||:) (fromExpr a) (fromExpr b)
+      , do (a, b) <- isBinary andSymbol expr
+           liftM2 (:&&:) (fromExpr a) (fromExpr b)
+      , do (a, b) <- isBinary equivalentSymbol expr
+           liftM2 (:<->:) (fromExpr a) (fromExpr b)
+      , do (a, b) <- isBinary impliesSymbol expr
+           liftM2 (:->:) (fromExpr a) (fromExpr b)
+      , liftM Logic.Var (fromExpr expr)
+      ]
+   
 -------------------------------------------------------------
 -- Symbol Conversion to/from OpenMath
 

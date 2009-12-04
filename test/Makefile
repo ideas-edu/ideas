@@ -47,17 +47,17 @@ test-all.log: $(ALL-OUT)
 	  diff -I "version" $$i.out $$i.exp >> test-all.log; \
 	done;
 
-mathdox-request/%.out: mathdox-request/%.txt $(BINDIR)/service.cgi
-	$(BINDIR)/service.cgi --file $< > $@
+mathdox-request/%.out: mathdox-request/%.txt $(BINDIR)/ideas.cgi
+	$(BINDIR)/ideas.cgi --file $< > $@
 
-json-rpc/%.out: json-rpc/%.json $(BINDIR)/service.cgi
-	$(BINDIR)/service.cgi --file $< > $@
+json-rpc/%.out: json-rpc/%.json $(BINDIR)/ideas.cgi
+	$(BINDIR)/ideas.cgi --file $< > $@
 
-xml-request/%.out: xml-request/%.xml $(BINDIR)/service.cgi
-	$(BINDIR)/service.cgi --file $< > $@
+xml-request/%.out: xml-request/%.xml $(BINDIR)/ideas.cgi
+	$(BINDIR)/ideas.cgi --file $< > $@
 
-dwo-derivations/%.out: dwo-derivations/%.xml $(BINDIR)/service.cgi
-	$(BINDIR)/service.cgi --file $< > $@
+dwo-derivations/%.out: dwo-derivations/%.xml $(BINDIR)/ideas.cgi
+	$(BINDIR)/ideas.cgi --file $< > $@
 	
 exp: $(ALL-EXP)
 	

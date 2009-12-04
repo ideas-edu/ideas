@@ -1,4 +1,4 @@
-default: service ideas
+default: ideas ideasWX
 all: binaries documentation
 
 SRCDIR = src
@@ -7,16 +7,16 @@ VERSION = 0.5.9
 
 include Makefile.incl
 
-binaries: service solvergui ideas omconverter
+binaries: ideas solvergui ideasWX omconverter
 
-service: $(BINDIR)/service.cgi
+ideas: $(BINDIR)/ideas.cgi
 solvergui: $(BINDIR)/solvergui$(EXE)
 omconverter: $(BINDIR)/omconverter$(EXE)
-ideas: $(BINDIR)/ideasWX$(EXE)
+ideasWX: $(BINDIR)/ideasWX$(EXE)
 prof: $(BINDIR)/prof$(EXE)
 assess: $(BINDIR)/assess$(EXE)
 
-$(BINDIR)/service.cgi: $(HS-SOURCES) revision
+$(BINDIR)/ideas.cgi: $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) -o $@ src/Service/Main.hs
 	$(STRIP) $@
@@ -75,7 +75,7 @@ documentation: docs
 unit-tests: $(TESTDIR)/test.log
 test: $(TESTDIR)/test.log
 
-$(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/service.cgi
+$(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/ideas.cgi
 	make -C $(TESTDIR) || exit 1
 
 #---------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ helium: ag # revision
 	$(GHCI) -optc-m32 -opta-m32 -optl-m32 $(HELIUMFLAGS) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
 
-run: ideas
+run: ideasWX
 ifeq ($(WINDOWS), yes)
 	$(BINDIR)/ideasWX$(EXE)
 else
@@ -162,9 +162,9 @@ ifeq ($(IDEASSERVER), yes)
 INSTALL-CGI  = /var/www/cgi-bin
 INSTALL-DOC  = /var/www/html/docs/latest
 
-install: service
+install: ideas
 	# "sudo make install"
-	$(CP) $(BINDIR)/service.cgi $(INSTALL-CGI)
+	$(CP) $(BINDIR)/ideas.cgi $(INSTALL-CGI)
 	$(CP) -r $(DOCDIR)/* $(INSTALL-DOC)
 
 endif

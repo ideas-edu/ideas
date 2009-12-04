@@ -57,9 +57,9 @@ exerciseFrame = do
    -- workedoutButton <- button bp [text := "Worked-out exerc"]
    
    -- ruleBox        <- comboBox bp [] 
-   set bp [layout := column 10
-      [ row 10 [widget backButton, hglue, widget readyButton, widget submitButton] 
-      , row 10 [widget hintButton, widget stepButton, widget autoButton {-, widget workedoutButton-}]
+   set bp [layout := grid 10 10
+      [ [widget backButton, widget readyButton, widget submitButton] 
+      , [widget hintButton, widget stepButton, widget autoButton {-, widget workedoutButton-}]
       ]]
    
    assignmentView <- textCtrl leftPanel [bgcolor := myGrey]

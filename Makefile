@@ -7,10 +7,9 @@ VERSION = 0.5.9
 
 include Makefile.incl
 
-binaries: ideas solvergui ideasWX omconverter
+binaries: ideas ideasWX omconverter
 
 ideas: $(BINDIR)/ideas.cgi
-solvergui: $(BINDIR)/solvergui$(EXE)
 omconverter: $(BINDIR)/omconverter$(EXE)
 ideasWX: $(BINDIR)/ideasWX$(EXE)
 prof: $(BINDIR)/prof$(EXE)
@@ -21,29 +20,20 @@ $(BINDIR)/ideas.cgi: $(HS-SOURCES) revision
 	$(GHC) $(GHCFLAGS) -o $@ src/Service/Main.hs
 	$(STRIP) $@
 
-$(BINDIR)/solvergui$(EXE): $(HS-SOURCES) $(GLADE-SOURCES) revision
-ifeq ($(GTK), yes)
-	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/ExerciseAssistant.hs
-	$(STRIP) $@
-	$(CP) src/Presentation/ExerciseAssistant/exerciseassistant.glade bin/
-	$(CP) src/Presentation/ExerciseAssistant/ounl.jpg bin/	
-endif
-
-$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) src/Presentation/ExerciseAssistant/IdeasWX.hs revision
+$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) tools/IdeasWX/IdeasWX.hs revision
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) $(HELIUMFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/IdeasWX.hs
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) $(HELIUMFLAGS) -itools/IdeasWX -o $@ tools/IdeasWX/IdeasWX.hs
 	$(STRIP) $@
 ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) ideasWX
 endif
 endif
 
-$(BINDIR)/omconverter$(EXE): $(HS-SOURCES) src/Presentation/ExerciseAssistant/OMConverter.hs revision
+$(BINDIR)/omconverter$(EXE): $(HS-SOURCES) tools/OMConverter.hs revision
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -isrc/Presentation/ExerciseAssistant -o $@ src/Presentation/ExerciseAssistant/OMConverter.hs
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -itools/ExerciseAssistant -o $@ tools/OMConverter.hs
 	$(STRIP) $@
 ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) omconverter
@@ -56,7 +46,7 @@ $(BINDIR)/prof$(EXE): $(HS-SOURCES) revision
 	$(GHC) -prof -auto-all -iscripts $(GHCFLAGS) -o $@ src/Documentation/Make.hs
 	$(STRIP) $@
 
-$(BINDIR)/ounl.jpg: $(SRCDIR)/Presentation/ExerciseAssistant/ounl.jpg
+$(BINDIR)/ounl.jpg: tools/IdeasWX/ounl.jpg
 	$(MKDIR) -p $(BINDIR)
 	$(CP) $< $@
 
@@ -83,7 +73,7 @@ $(TESTDIR)/test.log: $(HS-SOURCES) $(BINDIR)/ideas.cgi
 
 ghci: revision
 	$(MKDIR) -p $(OUTDIR)
-	$(GHCI) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
+	$(GHCI) -i$(SRCDIR) -itools -itools/IdeasWX -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
 HELIUMDIR = ../../../heliumsystem/helium/src
 TOPDIR = ../../../heliumsystem/Top/src
@@ -99,7 +89,7 @@ HELIUMFLAGS = -i$(HELIUMDIR)/utils \
 
 helium: ag # revision
 	$(MKDIR) -p $(OUTDIR)
-	$(GHCI) -optc-m32 -opta-m32 -optl-m32 $(HELIUMFLAGS) -i$(SRCDIR) -i$(SRCDIR)/Presentation -i$(SRCDIR)/Presentation/ExerciseAssistant -i$(SRCDIR)/Presentation/ExerciseDoc -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
+	$(GHCI) -optc-m32 -opta-m32 -optl-m32 $(HELIUMFLAGS) -i$(SRCDIR) -itools/IdeasWX -odir $(OUTDIR) -hidir $(OUTDIR) $(GHCWARN)
 
 
 run: ideasWX

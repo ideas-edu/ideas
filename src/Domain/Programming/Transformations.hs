@@ -101,22 +101,21 @@ removeRanges = transformBi (\(Range_Range  _ _) -> noRange)
 
 inline :: Names -> Module -> Module
 inline fs = go . go
-  where 
-    go = uncurry inlinePatternBindings . putInEnv (map pat fs)
+  where go = uncurry inlinePatternBindings . putInEnv (map pat fs)
 
 putInEnv :: Patterns -> Module -> (Env, Module)
 putInEnv ps m = 
   let (decls, replaceDecls) = head (contextsBi m :: [(Declarations, Declarations -> Module)])
-      (helpDecls, mainDecls) = partition ((`notElem` ps) . bindingPattern) decls
+      (helpDecls, mainDecls) = partition (maybe False (`notElem` ps) . bindingPattern) decls
   in if null mainDecls then error "Please give at least one main function!"
      else (updateEnv' helpDecls empty, replaceDecls mainDecls)
 
-bindingPattern :: Declaration -> Pattern
+bindingPattern :: Declaration -> Maybe Pattern
 bindingPattern d = 
   case d of
-    Declaration_PatternBinding _ p _        -> p
-    Declaration_FunctionBindings _ (fb:_) -> pat (funName fb)
-    _                                       -> error "not a function!"
+    Declaration_PatternBinding _ p _      -> Just p
+    Declaration_FunctionBindings _ (fb:_) -> Just $ pat (funName fb)
+    _                                     -> Nothing
 
 
 ------------------------------------------------------------------------------

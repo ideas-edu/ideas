@@ -22,7 +22,7 @@ module Domain.Programming.PreludeS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
    , patInfixConS, patWildcardS, exprConS, lhsS
      -- * Lifting rules and strategies
-   -- , (<**>), (<***>)
+   , (<**>), (<***>)
    , liftStrategy
    ) where
 
@@ -184,10 +184,10 @@ mapSeqS f = sequence . map f
 repeatS n = sequence . replicate n
 
 liftStrategy :: (Data a, Data b, Eq a, Undefined a) => Strategy a -> Strategy b
-liftStrategy s = mapRulesS liftRule s
+liftStrategy s = mapRulesS (greedyRule . liftRule) s
 
 r <**> q = r <*> liftStrategy q
 infixl 6 <**>
 
-r <***> q = r <*> liftRule q
+r <***> q = r <*> greedyRule (liftRule q)
 infixl 7 <***>

@@ -39,6 +39,7 @@ import Domain.Programming.Exercises
 import Common.Apply
 import Common.Context
 import Common.Rewriting
+import Common.Strategy
 import Control.Monad (unless, fail)
 import Data.Generics.Biplate
 import Data.Map hiding (map)

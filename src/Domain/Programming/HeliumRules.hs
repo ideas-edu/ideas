@@ -19,6 +19,7 @@ module Domain.Programming.HeliumRules where
 import Common.Apply
 import Common.Transformation hiding (liftRule)
 import Common.Utils (safeHead)
+import Common.View
 import Control.Monad
 import Data.Char
 import Data.Data hiding (Fixity)
@@ -62,26 +63,22 @@ instance Undefined MaybeDeclarations where
 undefs :: (Data b, Undefined a) => b -> [(a, a -> b)]
 undefs = filter ((== undef) . fst) . contextsBi
 
-{-
-liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
-liftRule = liftRuleIn $ makeView (safeHead . undefs) (\(e, f) -> f e)
--}
+topUndefs :: (Data a, Data b) => b -> [(a, a -> b)]
+topUndefs x = map f [0 .. length cs - 1]
+  where
+    (cs, ctx) = biplateList x
+    f i = let (xs, a:ys) = splitAt i cs 
+          in (a, \b -> ctx (xs ++ (b:ys)))
+
+--liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
+--liftRule = liftRuleIn $ makeView undefs (\(e, f) -> f e)
 
 liftRule :: (Data b, Undefined a) => Rule a -> Rule b
-liftRule ra = makeSimpleRule (name ra) $ \b ->
-  let (cs, build) = biplateList b
-      make i = let (xs, a:ys) = splitAt i cs in (a, \b -> xs ++ (b:ys))
-      index = [0 .. length cs - 1]
-  in safeHead [build (f a') | i <- index, let (a, f) = make i, a' <- applyAll ra a]
+liftRule = liftRuleIn (makeView topUndefs (\(a, f) -> f a))
 
-{-
-liftRule :: (Data b, Undefined a) => Rule a -> Rule b
-liftRule ra = makeSimpleRuleList (name ra) $ \b ->
-  let (cs, build) = biplateList b
-      make i = let (xs, a:ys) = splitAt i cs in (a, \b -> xs ++ (b:ys))
-      index = [0 .. length cs - 1]
-  in [build (f a') | i <- index, let (a, f) = make i, a' <- applyAll ra a]
--}
+greedyRule :: Rule a -> Rule a
+greedyRule rule = makeSimpleRule (name rule) $ \b ->
+  apply rule b
 
 -- toRule zou met een contexts moeten kunnen, er worden undefs gezocht
 -- in een term van hetzelfde type
@@ -89,12 +86,7 @@ toRule :: Undefined a => String -> a -> Rule a
 toRule desc a = makeSimpleRule desc $ \e -> do
   (_, replaceUndef) <- safeHead $ undefs e
   return $ replaceUndef a
-{-
-  \e -> do
-  guard (e == undef) -- dit kan niet goed gaan, er moet worden gezoch naar
-  return a           -- een undefined.
--}
-  
+
 
 ------------------------------------------------------------------------------
 -- Module

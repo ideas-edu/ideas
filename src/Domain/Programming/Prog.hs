@@ -56,8 +56,8 @@ isSolution :: IsStrategy s => [String] -> s Module -> Module -> Bool
 isSolution fixedNames strat =
   (`elem` normalisedSolutions fixedNames strat) . normaliseModule fixedNames
 
-compile' :: String -> Module
-compile' = either (error "Compilation error!") id . compile
+unsafeCompile :: String -> Module
+unsafeCompile = either (error "Compilation error!") id . compile
 
 printRow :: String -> String -> String -> String -> IO ()
 printRow id isCorrect strategyName remark =   
@@ -70,7 +70,7 @@ printRow id isCorrect strategyName remark =
 checkExercise :: [String] -> Solution -> StateT Integer IO ()
 checkExercise fixedNames s = do
   correctCount <- get  
-  let isCorrect = isSolution fixedNames (strat s) (compile' (solution s))
+  let isCorrect = isSolution fixedNames (strat s) (unsafeCompile (solution s))
   liftIO $ printRow (sid s) (show isCorrect) (strategyName (strat s)) (remark s)
   liftIO line
   put $ if isCorrect then correctCount + 1 else correctCount

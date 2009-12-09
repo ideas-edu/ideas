@@ -18,7 +18,7 @@ module Common.View
    , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
      -- * Simple views
    , View, ViewList, Match, belongsTo
-   , simplify, viewEquivalent, viewEquivalentWith
+   , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
    , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
    , listView, switchView, ( #> )
@@ -119,7 +119,10 @@ type ViewList  = ViewM []
 type Match a b = a -> Maybe b
 
 simplify :: View a b -> a -> a
-simplify view a = fromMaybe a (canonicalWith id view a)
+simplify = simplifyWith id
+
+simplifyWith :: (b -> b) -> View a b -> a -> a
+simplifyWith f view a = fromMaybe a (canonicalWith f view a)
 
 belongsTo :: a -> View a b -> Bool
 belongsTo a view = isJust (match view a)

@@ -17,8 +17,8 @@ module Common.View
    , canonical, canonicalWith
    , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
      -- * Simple views
-   , View, ViewList, Match, belongsTo, SimplifyWith
-   , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
+   , View, ViewList, Match, belongsTo
+   , simplify, viewEquivalent, viewEquivalentWith
    , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
    , listView, switchView, ( #> )
@@ -121,14 +121,6 @@ type Match a b = a -> Maybe b
 simplify :: View a b -> a -> a
 simplify view a = fromMaybe a (canonicalWith id view a)
 
-class Monad m => SimplifyWith m where
-  simplifyWith :: (b -> b) -> ViewM m a b -> a -> a
-instance SimplifyWith Maybe where
-  simplifyWith f view a = fromMaybe a (canonicalWith f view a)
-instance SimplifyWith [] where
-  simplifyWith f view a = let b = canonicalWith f view a
-                          in if null b then a else head b
-
 belongsTo :: a -> View a b -> Bool
 belongsTo a view = isJust (match view a)
 
@@ -155,7 +147,7 @@ matchM v = maybe (Prelude.fail "no match") return . match v
 canonicalM :: Monad m => View a b -> a -> m a
 canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
 
-viewList :: (Monad m, Crush m) => ViewM m a b -> ViewList a b
+viewList :: Crush m => ViewM m a b -> ViewList a b
 viewList v = makeView (crush . match v) (build v)
 
 ---------------------------------------------------------------

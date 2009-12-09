@@ -287,8 +287,6 @@ data Rule a = Rule
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , ruleGroups      :: [String]
-   , doBeforeHook    :: a -> a -- ^ Hook to perform an action before the rule is fired
-   , doAfterHook     :: a -> a -- ^ Hook to perform an action after the rule has been fired
    }
 
 instance Show (Rule a) where
@@ -299,10 +297,8 @@ instance Eq (Rule a) where
 
 instance Apply Rule where
    applyAll r a = do 
-      let b = doBeforeHook r a
       t <- transformations r
-      c <- applyAll t b
-      return (doAfterHook r c)
+      applyAll t a
 
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool
@@ -334,7 +330,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule n ts False False [] id id
+makeRuleList n ts = Rule n ts False False []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
@@ -421,21 +417,17 @@ ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
-liftTransIn :: (Monad m, Crush m) => ViewM m a (b, c) -> Transformation b -> Transformation a
+liftTransIn :: Crush m => ViewM m a (b, c) -> Transformation b -> Transformation a
 liftTransIn = LiftView . viewList
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
 
-liftRuleIn :: (SimplifyWith m, Crush m) => ViewM m a (b, c) -> Rule b -> Rule a
+liftRuleIn :: Crush m => ViewM m a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
    { transformations = map (liftTransIn v) (transformations r)
-   , doBeforeHook    = liftFun (doBeforeHook r)
-   , doAfterHook     = liftFun (doAfterHook r)
    }
- where
-   liftFun f = simplifyWith (first f) v
-      
+
 -----------------------------------------------------------
 --- QuickCheck
 

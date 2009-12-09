@@ -18,7 +18,7 @@
 module Common.Transformation 
    ( -- * Transformations
      Transformation(RewriteRule), makeTrans, makeTransList
-   , getPatternPair
+--   , getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
@@ -57,6 +57,7 @@ import Test.QuickCheck hiding (arguments)
 data Transformation a
    = Function String (a -> [a])
    | RewriteRule (RewriteRule a)
+   | Transformation a :*: Transformation a -- sequence
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
    
@@ -65,6 +66,7 @@ instance Apply Transformation where
    applyAll (RewriteRule r)     = rewriteM r
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
+   applyAll (s :*: t)           = \a -> applyAll s a >>= applyAll t
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
 makeTrans :: String -> (a -> Maybe a) -> Transformation a
@@ -74,6 +76,7 @@ makeTrans s f = makeTransList s (maybe [] return . f)
 makeTransList :: String -> (a -> [a]) -> Transformation a
 makeTransList = Function
 
+{-
 getPatternPair :: a -> Transformation a -> [(a, a)]
 getPatternPair _ (RewriteRule r) = 
    let a :~> b = rulePair r 0 
@@ -82,7 +85,8 @@ getPatternPair a (LiftView v t) = do
    (b, c) <- match v a
    (x, y) <- getPatternPair b t
    return (build v (x, c), build v (y, c))
-getPatternPair _ _ = []
+--getPatternPair _ (s :*: t)
+getPatternPair _ _ = [] -}
 
 -----------------------------------------------------------
 --- Arguments
@@ -174,28 +178,35 @@ hasArguments = not . null . getDescriptors
 getDescriptors :: Rule a -> [Some ArgDescr]
 getDescriptors rule =
    case transformations rule of
-      [Abstraction args _ _] -> someArguments args
-      [LiftView _ t] -> getDescriptors $ rule 
-         { transformations = [t]
-         , doBeforeHook    = id
-         , doAfterHook     = id
-         }
-      _                      -> []
+      [t] -> rec t
+      _   -> []
+ where 
+   rec :: Transformation a -> [Some ArgDescr]
+   rec trans = 
+      case trans of
+         Abstraction args _ _ -> someArguments args
+         LiftView _ t -> rec t
+         s :*: t -> rec s ++ rec t
+         _ -> []
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
 expectedArguments :: Rule a -> a -> Maybe [String]
 expectedArguments rule a =
    case transformations rule of
-      [Abstraction args f _] -> 
-         fmap (showArguments args) (f a)
-      [LiftView v t] -> do 
-         (b, _) <- safeHead (match v a)
-         expectedArguments rule 
-            { transformations = [t]
-            , doBeforeHook    = id
-            , doAfterHook     = id
-            } b
-      _ -> Nothing
+      [t] -> rec t a
+      _   -> Nothing
+ where
+    rec :: Transformation a -> a -> Maybe [String]
+    rec trans a =  
+       case trans of
+          Abstraction args f _ -> 
+             fmap (showArguments args) (f a)
+          LiftView v t -> do 
+             (b, _) <- safeHead (match v a)
+             rec t b
+          s :*: t -> 
+             rec s a `mplus` rec t a
+          _ -> Nothing
 
 -- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are 
 -- invalid (not parsable), or that the wrong number of arguments was supplied
@@ -211,6 +222,8 @@ useArguments list rule =
       case trans of
          Abstraction args _ g -> fmap g (parseArguments args list)
          LiftView v t         -> fmap (LiftView v) (make t)
+         s :*: t              -> fmap (:*: t) (make s) `mplus`
+                                 fmap (s :*:) (make t)
          _                    -> Nothing
    
 -----------------------------------------------------------
@@ -355,11 +368,13 @@ buggyRule r = r {isBuggyRule = True}
 
 -- | Perform the function before the rule has been fired
 doBefore :: (a -> a) -> Rule a -> Rule a
-doBefore f r = r { doBeforeHook = f }
+doBefore f r = r {transformations = map make (transformations r)}
+ where make t = makeTransList "before hook" (return . f) :*: t
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
-doAfter f r = r { doAfterHook = f }
+doAfter f r = r {transformations = map make (transformations r)}
+ where make t = t :*: makeTransList "after hook" (return . f)
 
 getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
 getRewriteRules r = concatMap f (transformations r)
@@ -369,6 +384,7 @@ getRewriteRules r = concatMap f (transformations r)
       case trans of
          RewriteRule rr -> [(Some rr, not $ isBuggyRule r)]      
          LiftView _ t   -> f t
+         s :*: t        -> f s ++ f t
          _              -> []
 
 -----------------------------------------------------------
@@ -405,13 +421,13 @@ ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
-liftTransIn :: View a (b, c) -> Transformation b -> Transformation a
+liftTransIn :: (Monad m, Crush m) => ViewM m a (b, c) -> Transformation b -> Transformation a
 liftTransIn = LiftView . viewList
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
 
-liftRuleIn :: View a (b, c) -> Rule b -> Rule a
+liftRuleIn :: (SimplifyWith m, Crush m) => ViewM m a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
    { transformations = map (liftTransIn v) (transformations r)
    , doBeforeHook    = liftFun (doBeforeHook r)
@@ -455,6 +471,8 @@ smartGenTrans a trans =
          (b, c) <- match v a
          gen    <- smartGenTrans b t
          return $ liftM (\n -> build v (n, c)) gen
+      s :*: t -> 
+         smartGenTrans a s ++ smartGenTrans a t
       _ -> []
 
 smartApplyRule :: Rule a -> a -> Gen (Maybe a)

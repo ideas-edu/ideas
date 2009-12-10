@@ -27,6 +27,7 @@ import Data.Generics.Biplate ()
 import Data.Generics.PlateData
 import Data.List
 import Domain.Programming.Helium
+import Domain.Programming.HeliumCoreInstances
 
 ------------------------------------------------------------------------------
 -- | Typed holes

@@ -14,7 +14,7 @@
 
 module Domain.Programming.Helium 
    ( compile, module UHA_Syntax, module UHA_Range, patternVars, ppModule
-   , phaseDesugarer
+   , compileToCore
    ) where
 
 import PhaseLexer
@@ -23,6 +23,7 @@ import PhaseResolveOperators
 import PhaseStaticChecks
 import PhaseTypingStrategies ()
 import PhaseTypeInferencer
+import PhaseTypingStrategies
 import PhaseDesugarer
 import UHA_Syntax
 --import Data.IORef
@@ -41,13 +42,15 @@ import CoreToImportEnv(getImportEnvironment)
 import qualified ExtractImportDecls(sem_Module)
 import Data.List(isPrefixOf)
 import Control.Monad.Trans
+import Control.Monad
+import Core (CoreModule)
 
 -- | a Module pretty printer
 ppModule = show . PP.sem_Module
 
 -- | the compiler/parser
-compile :: String -> Either String Module
-compile txt = unsafePerformIO $ do
+compile' :: String -> Either String (Module, CoreModule)
+compile' txt = unsafePerformIO $ do
    ea <- run $ compile_ txt 
                  [Overloading {-, Verbose-}] 
                  [ ".", "../../../heliumsystem/helium/lib"
@@ -55,7 +58,10 @@ compile txt = unsafePerformIO $ do
                  , "/Users/alex/Documents/heliumsystem/helium/lib" ] []
    case ea of
       Left ms -> return $ Left $ unlines ms
-      Right a -> return $ Right a 
+      Right a -> return $ Right $ a
+
+compile = fmap fst . compile'
+compileToCore = fmap snd . compile'
 
 newtype Compile a = C { run :: IO (Either [String] a) }
 
@@ -78,7 +84,7 @@ instance MonadIO Compile where
 --------------------------------------------------------------------
 -- Adjusted code from Compile
 
-compile_ :: String -> [Option] -> [String] -> [String] -> Compile Module
+compile_ :: String -> [Option] -> [String] -> [String] -> Compile (Module, CoreModule)
 compile_ contents options lvmPath doneModules =
     do
         let fullName = "..."
@@ -116,7 +122,8 @@ compile_ contents options lvmPath doneModules =
         --    showMessages staticWarnings
 
         -- Phase 6: Kind inferencing (skipped)
-        let combinedEnv = foldr combineImportEnvironments localEnv importEnvs              
+        let combinedEnv = foldr combineImportEnvironments localEnv importEnvs
+        
         -- Phase 7: Type Inference Directives (skipped)
         let beforeTypeInferEnv = combinedEnv
 
@@ -128,7 +135,16 @@ compile_ contents options lvmPath doneModules =
         --unless (NoWarnings `elem` options) $
         --    showMessages typeWarnings
 
-        return resolvedModule
+        -- Phase 9: Desugaring
+        coreModule <- liftIO $
+            phaseDesugarer dictionaryEnv
+                           fullName resolvedModule 
+                           indirectionDecls
+                           afterTypeInferEnv
+                           toplevelTypes 
+                           options  
+
+        return (resolvedModule, coreModule)
 
 --------------------------------------------------------------------
 -- Adjusted code from PhaseImport

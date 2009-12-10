@@ -25,10 +25,15 @@ makeServicePage s =
 servicePage :: Service a -> HTML
 servicePage s = defaultPage title 1 $ do
    h1 (serviceName s)
-   bold $ text "Signature:"
-   space
-   case typedValue s of
-      _ ::: t -> ttText (show t)
+   para $ do
+      bold $ text "Signature:"
+      space
+      case serviceFunction s of
+         _ ::: t -> ttText (show t)
+   para $ do
+      bold $ text "Description: "
+      br
+      text $ serviceDescription s
    h2 "XML request"
    pre $ text (XML.showXML (toRequest s))
  where
@@ -36,7 +41,7 @@ servicePage s = defaultPage title 1 $ do
    
 toRequest :: Service a -> XML.XML
 toRequest s = 
-   case typedValue s of  
+   case serviceFunction s of  
       _ ::: t -> XML.makeXML "request" (f t)
  where
    f = mapM_ (\ (Some a) -> XML.text $ show a) . arguments

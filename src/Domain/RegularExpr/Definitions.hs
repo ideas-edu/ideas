@@ -15,9 +15,37 @@ import Domain.RegularExpr.Expr
 import Common.Uniplate
 import Common.Utils (distinct)
 
-deterministic :: Eq a => RE a -> Bool
-deterministic regexp =
-   distinct (lookahead regexp) && all deterministic (children regexp)
+deterministic :: (Show a, Eq a) => RE a -> Bool
+deterministic r = deterministicSimple r {-
+   case (deterministicSimple r, det r) of
+      (b1, b2) | b1==b2 -> b1
+      _ -> error $ show r -}
+       
+deterministicSimple :: Eq a => RE a -> Bool
+deterministicSimple regexp =
+   distinct (lookahead regexp) && all deterministicSimple (children regexp)
+
+det :: Eq a => RE a -> Bool
+det regexp =
+   case regexp of
+      EmptySet -> True
+      Epsilon  -> True
+      Atom _   -> True
+      Option r -> det (r :|: Epsilon)
+      Star r   -> det r
+      Plus r   -> det (r :*: Star r)
+      r :|: s  -> lookahead r `disj` lookahead s && det r && det s
+      EmptySet  :*: r -> det r
+      Epsilon   :*: r -> det r
+      Atom _    :*: r -> det r
+      Option s  :*: r -> det ((s :|: Epsilon) :*: r)
+      Star s    :*: r -> lookahead s `disj` lookahead r && det s && det r
+      Plus s    :*: r -> det ((s :*: Star s) :*: r)
+      (q :|: s) :*: r -> det ((q :*: r) :|: (s :*: r))
+      (q :*: s) :*: r -> det (q :*: (s :*: r))
+
+
+disj xs ys = all (`notElem` xs) ys
 
 empty :: RE a -> Bool
 empty = foldRE (False, True, const (False), const True, const True, id, (&&), (||))

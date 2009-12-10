@@ -37,9 +37,9 @@ regexpExercise = makeExercise
    , difference     = differenceMode eqRE
    , strategy       = deterministicStrategy
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
-   , testGenerator  = Just arbitrary
-   , randomExercise = simpleGenerator myGen
-   , examples       = generate 5 (mkStdGen 2805) (replicateM 50 myGen)
+   , testGenerator  = Just startFormGen -- arbitrary
+   , randomExercise = simpleGenerator startFormGen -- myGen
+   , examples       = generate 5 (mkStdGen 2805) (replicateM 30 startFormGen)
    }
 
    
@@ -51,6 +51,15 @@ Right ex3 = parseRegExp "T+cc|d*F?"
 
 myGen :: Gen RegExp
 myGen = restrictGenerator (isSuitable regexpExercise) arbitrary
+
+startFormGen :: Gen RegExp
+startFormGen = do
+   i  <- oneof $ map return [1..10]
+   xs <- replicateM i $ do
+      j  <- oneof $ map return [1..5]
+      ys <- replicateM j $ oneof $ map (return . Atom . return) "abcd"
+      return $ foldr1 (:*:) ys
+   return $ foldr1 (:|:) xs   
 
 -- equivalence of regular expressions
 eqRE :: Eq a => RE a -> RE a -> Bool

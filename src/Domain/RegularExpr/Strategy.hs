@@ -24,9 +24,9 @@ deterministicStrategy = label "deterministic and precise" $
    ((liftToContext ruleLeftFactor1 <|> 
     liftToContext ruleLeftFactor2 <|> 
     liftToContext ruleIdempOr <|>
-    liftToContext ruleEpsilonSeq <|>
-    liftToContext ruleEmptySeq <|>
-    liftToContext ruleEmptyChoice <|>
+   -- liftToContext ruleEpsilonSeq <|>
+   -- liftToContext ruleEmptySeq <|>
+   -- liftToContext ruleEmptyChoice <|>
     liftToContext ruleDefOption) |>
     liftToContext ruleCommFactor))
     <*> 
@@ -41,7 +41,11 @@ ruleLeftFactor2 = ruleList "LeftFactor2" $
    [ \a x -> (a :*: x) :|: a  :~>  a :*: Option x
    , \a x -> a :|: (a :*: x)  :~>  a :*: Option x
    ]
-   
+
+ruleIdempOr :: Rule RegExp
+ruleIdempOr = rule "IdempOr" $ \a -> 
+   a :|: a  :~>  a
+ 
 ruleCommFactor :: Rule RegExp
 ruleCommFactor = ruleList "CommFactor"
    [ \a b _ _ -> a :|: b :|: a  :~>  a :|: a :|: b
@@ -50,9 +54,7 @@ ruleCommFactor = ruleList "CommFactor"
    , \a b x y -> (a :*: x) :|: b :|: (a :*: y)  :~>  (a :*: x) :|: (a :*: y) :|: b
    ]
    
-ruleIdempOr :: Rule RegExp
-ruleIdempOr = rule "IdempOr" $ \a -> 
-   a :|: a  :~>  a
+
    
 ruleDefOption :: Rule RegExp
 ruleDefOption = rule "DefOption" $ \a ->

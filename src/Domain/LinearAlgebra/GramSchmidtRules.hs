@@ -81,7 +81,7 @@ setCurrent v vs = do
 -- Two indices, change the second vector and make it orthogonal
 -- to the first
 transOrthogonal :: Floating a => Int -> Int -> Transformation (Context (VectorSpace a))
-transOrthogonal i j = contextTrans "transOrthogonal" $ \xs ->
+transOrthogonal i j = contextTrans $ \xs ->
    do guard (i /= j && i >=0 && j >= 0)
       u <- safeHead $ drop i (vectors xs)
       guard (isUnit u)
@@ -90,7 +90,7 @@ transOrthogonal i j = contextTrans "transOrthogonal" $ \xs ->
          _ -> Nothing 
 
 -- Find proper abstraction, and move this function to transformation module
-contextTrans :: String -> (a -> Maybe a) -> Transformation (Context a)
-contextTrans s f = makeTrans s $ \c -> do
+contextTrans :: (a -> Maybe a) -> Transformation (Context a)
+contextTrans f = makeTrans $ \c -> do
    new <- f (fromContext c)
    return (fmap (const new) c)

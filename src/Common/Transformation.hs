@@ -55,25 +55,25 @@ import Test.QuickCheck hiding (arguments)
 
 -- | Abstract data type for representing transformations
 data Transformation a
-   = Function String (a -> [a])
+   = Function (a -> [a])
    | RewriteRule (RewriteRule a)
    | Transformation a :*: Transformation a -- sequence
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
    
 instance Apply Transformation where
-   applyAll (Function _ f)      = f
+   applyAll (Function f)        = f
    applyAll (RewriteRule r)     = rewriteM r
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
    applyAll (s :*: t)           = \a -> applyAll s a >>= applyAll t
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
-makeTrans :: String -> (a -> Maybe a) -> Transformation a
-makeTrans s f = makeTransList s (maybe [] return . f)
+makeTrans :: (a -> Maybe a) -> Transformation a
+makeTrans f = makeTransList (maybe [] return . f)
 
 -- | Turn a function (which returns a list of results) into a transformation 
-makeTransList :: String -> (a -> [a]) -> Transformation a
+makeTransList :: (a -> [a]) -> Transformation a
 makeTransList = Function
 
 {-
@@ -334,11 +334,11 @@ makeRuleList n ts = Rule n ts False False []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
-makeSimpleRule n = makeRule n . makeTrans n
+makeSimpleRule n = makeRule n . makeTrans
 
 -- | Turn a function (which returns a list of results) into a rule: the first argument is the rule's name
 makeSimpleRuleList :: String -> (a -> [a]) -> Rule a
-makeSimpleRuleList n = makeRule n . makeTransList n
+makeSimpleRuleList n = makeRule n . makeTransList
 
 -- | A special (minor) rule that always returns the identity
 idRule :: Rule a
@@ -365,12 +365,12 @@ buggyRule r = r {isBuggyRule = True}
 -- | Perform the function before the rule has been fired
 doBefore :: (a -> a) -> Rule a -> Rule a
 doBefore f r = r {transformations = map make (transformations r)}
- where make t = makeTransList "before hook" (return . f) :*: t
+ where make t = makeTransList (return . f) :*: t
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a
 doAfter f r = r {transformations = map make (transformations r)}
- where make t = t :*: makeTransList "after hook" (return . f)
+ where make t = t :*: makeTransList (return . f)
 
 getRewriteRules :: Rule a -> [(Some RewriteRule, Bool)]
 getRewriteRules r = concatMap f (transformations r)

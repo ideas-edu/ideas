@@ -143,27 +143,27 @@ simplifySystem = doAfter $ fmap (map (fmap f))
 exchange :: Int -> Int -> Transformation [a]
 exchange i j 
    | i >  j    = exchange j i
-   | otherwise = makeTrans "exchange" $ \xs -> do
+   | otherwise = makeTrans $ \xs -> do
         guard (i/=j && validEquation i xs && validEquation j xs)
         let (begin, x:rest) = splitAt i xs
             (middle, y:end) = splitAt (j-i-1) rest
         return $ begin++[y]++middle++[x]++end
 
 scaleEquation :: IsLinear a => Int -> a -> Transformation (LinearSystem a)
-scaleEquation i a = makeTrans "scaleEquation" $ \xs -> do
+scaleEquation i a = makeTrans $ \xs -> do
    guard (a `notElem` [0,1] && validEquation i xs)
    let (begin, this:end) = splitAt i xs
    return (begin ++ [fmap (a*) this] ++ end)
       
 addEquations :: IsLinear a => Int -> Int -> a -> Transformation (LinearSystem a)
-addEquations i j a = makeTrans "addEquations" $ \xs -> do
+addEquations i j a = makeTrans $ \xs -> do
    guard (i/=j && validEquation i xs && validEquation j xs)
    let (begin, this:end) = splitAt i xs
        exprj = xs!!j
    return $ begin++[combineWith (+) this (fmap (a*) exprj)]++end
 
 changeCover :: (Int -> Int) -> Transformation (Context (LinearSystem a))
-changeCover f = makeTrans "changeCover" $ withCM $ \ls -> do
+changeCover f = makeTrans $ withCM $ \ls -> do
    new <- liftM f (readVar covered)
    guard (new >= 0 && new <= length ls)
    writeVar covered new

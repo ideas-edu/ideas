@@ -99,29 +99,29 @@ ruleAddMultiple f = makeRule "Add" (supplyLabeled3 descr f  rowAdd)
 -- Parameterized transformations
 
 rowExchange :: Int -> Int -> Transformation (Context (Matrix a))
-rowExchange i j = matrixTrans "rowExchange" $ \m -> do
+rowExchange i j = matrixTrans $ \m -> do
    guard (i /= j && validRow i m && validRow j m)
    return (switchRows i j m)
                                                                             
 rowScale :: Num a => Int -> a -> Transformation (Context (Matrix a))
-rowScale i k = matrixTrans "rowScale" $ \m -> do
+rowScale i k = matrixTrans $ \m -> do
    guard (k `notElem` [0, 1] && validRow i m)
    return (scaleRow i k m)
 
 rowAdd :: Num a => Int -> Int -> a -> Transformation (Context (Matrix a))
-rowAdd i j k = matrixTrans "rowAdd" $ \m -> do
+rowAdd i j k = matrixTrans $ \m -> do
    guard (k /= 0 && i /= j && validRow i m && validRow j m)
    return (addRow i j k m)
 
 changeCover :: (Int -> Int) -> Transformation (Context (Matrix a))
-changeCover f = makeTrans "changeCover" $ withCM $ \m -> do
+changeCover f = makeTrans $ withCM $ \m -> do
    new <- liftM f (readVar covered)
    guard (new >= 0 && new <= fst (dimensions m))
    writeVar covered new
    return m
    
-matrixTrans ::  String -> (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
-matrixTrans s f = makeTrans s $ \c -> do
+matrixTrans ::  (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
+matrixTrans f = makeTrans $ \c -> do
    new <- f (fromContext c)
    return (fmap (const new) c)
 

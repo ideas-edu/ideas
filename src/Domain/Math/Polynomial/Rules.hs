@@ -313,17 +313,17 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
 -- Transformations
 
 plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
-plusT  e = makeTrans "plus"  $ return . fmap (applyD mergeT . (.+. e))
-minusT e = makeTrans "minus" $ return . fmap (applyD mergeT . (.-. e))
+plusT  e = makeTrans $ return . fmap (applyD mergeT . (.+. e))
+minusT e = makeTrans $ return . fmap (applyD mergeT . (.-. e))
 
 timesT :: Functor f => Expr -> Transformation (f Expr)
-timesT e = makeTrans "times" $ \eq -> do 
+timesT e = makeTrans $ \eq -> do 
    r <- match rationalView e
    guard (r /= 0)
    return $ fmap (applyD mergeT . applyD distributionOldT . (e .*.)) eq
 
 divisionT :: Expr -> Transformation (Equation Expr)
-divisionT e = makeTrans "division" $ \eq -> do
+divisionT e = makeTrans $ \eq -> do
    r <- match rationalView e
    guard (r /= 0)
    return $ fmap (applyD mergeT . applyD distributionOldT . (./. e)) eq
@@ -332,7 +332,7 @@ divisionT e = makeTrans "division" $ \eq -> do
 -- Combine bottom-up, for example:  5*(x-5)*(x+5) 
 -- However, in  -2x(2x+10)   (-2x) should be seen as "one term"
 distributionT :: Transformation Expr
-distributionT = makeTransList "distributeT" f
+distributionT = makeTransList f
  where
    f expr = do
       (b, xs) <- matchM simpleProductView expr
@@ -357,11 +357,11 @@ distributionT = makeTransList "distributeT" f
       return $ build sumView [ a .*. b | a <- as, b <- bs ]
 
 mergeT :: Transformation Expr
-mergeT = makeTrans "merge" $ return . collectLikeTerms
+mergeT = makeTrans $ return . collectLikeTerms
 
 -- high exponents first, non power-factor terms at the end
 sortT :: Transformation Expr
-sortT = makeTrans "sort" $ \e -> do
+sortT = makeTrans $ \e -> do
    xs <- match sumView e
    let f  = fmap (negate . thd3) . match powerFactorView
        ps = sortBy cmp $ zip xs (map f xs)
@@ -369,7 +369,7 @@ sortT = makeTrans "sort" $ \e -> do
    return $ build sumView $ map fst ps
    
 signT :: Transformation (Equation Expr)
-signT = makeTrans "sign" $ \(lhs :==: rhs) -> do
+signT = makeTrans $ \(lhs :==: rhs) -> do
    a <- match sumView lhs >>= safeHead
    p <- match productView a
    guard (fst p)
@@ -435,7 +435,7 @@ merge = makeSimpleRule "merge similar terms" $ \old -> do
 -- Temporary fix: here we don't care about the terms we apply it to. Only
 -- use for cleaning up
 distributionOldT :: Transformation Expr
-distributionOldT = makeTrans "distributeT" f 
+distributionOldT = makeTrans f 
  where
    f (a :*: b) =
       case (match sumView a, match sumView b) of

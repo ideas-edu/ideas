@@ -14,6 +14,7 @@
 
 module Domain.Programming.Helium 
    ( compile, module UHA_Syntax, module UHA_Range, patternVars, ppModule
+   , phaseDesugarer
    ) where
 
 import PhaseLexer
@@ -22,6 +23,7 @@ import PhaseResolveOperators
 import PhaseStaticChecks
 import PhaseTypingStrategies ()
 import PhaseTypeInferencer
+import PhaseDesugarer
 import UHA_Syntax
 --import Data.IORef
 import Messages

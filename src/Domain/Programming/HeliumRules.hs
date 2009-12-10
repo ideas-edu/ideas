@@ -1,4 +1,4 @@
-{-# OPTIONS -XStandaloneDeriving -XDeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving, DeriveDataTypeable #-}
 
 ---------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
@@ -60,9 +60,12 @@ instance Undefined MaybeExpression where
 instance Undefined MaybeDeclarations where
   undef = MaybeDeclarations_Nothing
 
+-- | Collect all holes of type a in b together with a context function
 undefs :: (Data b, Undefined a) => b -> [(a, a -> b)]
 undefs = filter ((== undef) . fst) . contextsBi
 
+-- | Collect all top level holes of type a in b. This function stops at the
+--   first occurence of an a and does not collect all a's in the a.
 topUndefs :: (Data a, Data b) => b -> [(a, a -> b)]
 topUndefs x = map f [0 .. length cs - 1]
   where
@@ -70,18 +73,21 @@ topUndefs x = map f [0 .. length cs - 1]
     f i = let (xs, a:ys) = splitAt i cs 
           in (a, \b -> ctx (xs ++ (b:ys)))
 
---liftRule :: (Data a, Data b, Eq a, Undefined a) => Rule a -> Rule b
---liftRule = liftRuleIn $ makeView undefs (\(e, f) -> f e)
-
+-- | Lift a rule from a to b using generalised views
 liftRule :: (Data b, Undefined a) => Rule a -> Rule b
-liftRule = liftRuleIn (makeView topUndefs (\(a, f) -> f a))
+liftRule = liftRuleIn $ makeView topUndefs (\(a, f) -> f a)
 
+-- | A rule has possibly multiple outcomes. The greedyRule function turns a 
+--   given rule in to a rule that only uses the first outcome and discards 
+--   the rest. This rule is necessary (for now) when lifting rules, due to
+--   the fact that a strategy explicits the order of refinements.
+--   However, this solutions is far from optimal, a better solution is to 
+--   couple a hole with its refinement strategy (tbd).
 greedyRule :: Rule a -> Rule a
-greedyRule rule = makeSimpleRule (name rule) $ \b ->
-  apply rule b
+greedyRule rule = if isMinorRule rule then minorRule gr else gr
+  where gr = makeSimpleRule (name rule) (apply rule)
 
--- toRule zou met een contexts moeten kunnen, er worden undefs gezocht
--- in een term van hetzelfde type
+-- | Create a rule that refines the first occurence of a hole of type a
 toRule :: Undefined a => String -> a -> Rule a
 toRule desc a = makeSimpleRule desc $ \e -> do
   (_, replaceUndef) <- safeHead $ undefs e

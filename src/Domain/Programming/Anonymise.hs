@@ -138,7 +138,7 @@ anonymise = transformBi f
                 d' = foldr (\(a:as) -> transformBi (\y -> if y `elem` as then a else y)) d args          
                 ps = map (fromMaybe (error ("Prog.hs: no conversion from expr to pat: " ++ show args)) . expr2pat . head) args
                 d'' = transformBi (removeArgs (map head args)) d'
-                (name, _, _, _) = deconstructFunBinding (head fbs)
+                name = funName (head fbs)
             in if not (null ps) 
                then patBinding (pat name) (lambda ps (letItBe [d''] (var name))) MaybeDeclarations_Nothing
                else patBinding (pat name) (letItBe [d'] (var name)) MaybeDeclarations_Nothing

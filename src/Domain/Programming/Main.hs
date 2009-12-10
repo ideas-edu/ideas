@@ -24,13 +24,14 @@ main = do
   if length args /= 2
     then printUsage
     else do
-      model   <- readFile $ head args
-      student <- readFile $ args !! 1
-      check model student
+      check (head args) (args !! 1)
 
 check :: String -> String -> IO ()
-check model = either putStrLn p . compile
-  where p = print . isSolution ["fromBin"] fromBinStrategy
+check modelFile studentFile = do 
+  _       <- readFile modelFile
+  student <- readFile studentFile
+  either putStrLn p $ compile student
+    where p = print . isSolution ["fromBin"] fromBinStrategy
   
 printUsage :: IO ()
 printUsage = putStrLn "Usage: assess <model file> <student file>"

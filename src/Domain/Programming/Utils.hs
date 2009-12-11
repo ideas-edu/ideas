@@ -122,21 +122,29 @@ mprod1 :: MonadMul m => [m a] -> m a
 mprod1 = foldr1 mmul
 
 funName :: FunctionBinding -> Name
-funName = (\(n, _, _, _) -> n) . deconstructFunBinding
+funName (FunctionBinding_FunctionBinding _ lhs _) = fst $ deconLHS lhs
 
-deconstructFunBinding :: FunctionBinding -> (Name, Patterns, Expression, MaybeDeclarations)
-deconstructFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = (name, ps, expr, ds)
-  where
-    deLHS l = case l of 
-                LeftHandSide_Function _ n ps -> (n, ps)
-                LeftHandSide_Infix _ l op r   -> (op, [l, r])
-                LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deLHS lhs' 
-                                                        in (n, ps' ++ ps)
-    (name, ps) = deLHS lhs
-    (expr, ds) = case rhs of
-                    RightHandSide_Expression _ expr w -> (expr, w)
-                    RightHandSide_Guarded _ _ _   -> error "Todo: guarded expressions"
+deconFunBinding :: FunctionBinding -> Maybe (Name, Patterns, Expression, MaybeDeclarations)
+deconFunBinding (FunctionBinding_FunctionBinding _ lhs rhs) = do
+  (expr, w) <- deconRHS rhs
+  let (n, ps) = deconLHS lhs
+  return (n, ps, expr, w)
 
+deconRHS :: RightHandSide -> Maybe (Expression, MaybeDeclarations)
+deconRHS rhs = 
+  case rhs of
+    RightHandSide_Expression _ expr w -> Just (expr, w)
+    RightHandSide_Guarded    _ _    _ -> Nothing
+
+deconLHS :: LeftHandSide -> (Name, Patterns)
+deconLHS lhs = 
+  case lhs of 
+    LeftHandSide_Function _ n ps         -> (n, ps)
+    LeftHandSide_Infix _ l op r          -> (op, [l, r])
+    LeftHandSide_Parenthesized _ lhs' ps -> let (n, ps') = deconLHS lhs' 
+                                            in (n, ps' ++ ps)
+
+    
 diff :: Show a => a -> a -> (String, String)
 diff x y = f (show x) (show y)
   where

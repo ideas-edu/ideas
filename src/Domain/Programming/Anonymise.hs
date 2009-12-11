@@ -61,8 +61,9 @@ anonymise' = transformBi anonymiseFunBinding
   where 
     anonymiseFunBinding d@(Declaration_FunctionBindings _ [fb]) =
       if not (isRecursive d) then
-        let (name, ps, expr, w) = deconstructFunBinding fb
-        in patBinding (pat name) (lambda ps expr) w
+        case deconFunBinding fb of
+          Just (name, ps, expr, w) -> patBinding (pat name) (lambda ps expr) w
+          _                        -> d
       else d
     anonymiseFunBinding x = x
 
@@ -144,8 +145,9 @@ anonymise = transformBi f
                else patBinding (pat name) (letItBe [d'] (var name)) MaybeDeclarations_Nothing
          else 
             -- just anonymise the function
-            let (name, ps, expr, ds) = deconstructFunBinding (head fbs) 
-            in patBinding (pat name) (lambda ps expr) ds
+            case deconFunBinding (head fbs) of
+              Just (name, ps, expr, ds) -> patBinding (pat name) (lambda ps expr) ds
+              _                         -> d
         x -> x
 
 removeArgs :: Expressions -> Declaration -> Declaration
@@ -181,8 +183,8 @@ removeArgs invArgs d =
 -}
 
 funArgs :: FunctionBinding -> [[Maybe Expression]]
-funArgs fb = 
-  let (n, ps, _, _) = deconstructFunBinding fb
+funArgs fb@(FunctionBinding_FunctionBinding _ lhs _) = 
+  let (n, ps) = deconLHS lhs
       fpats = map pat2expr ps
       fargs = [map Just args | Expression_NormalApplication _ 
                                  (Expression_Variable _ vn) args <- universeBi fb

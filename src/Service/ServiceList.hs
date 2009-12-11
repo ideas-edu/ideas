@@ -116,48 +116,84 @@ generateS = Service "generate"
    S.generate ::: Exercise :-> Optional 5 Int :-> IO State
 
 findbuggyrulesS :: Service a
-findbuggyrulesS = Service "findbuggyrules" "" $ 
+findbuggyrulesS = Service "findbuggyrules" 
+   "Search for common misconceptions (buggy rules) in an expression (compared \
+   \to the current state). It is assumed that the expression is indeed not \
+   \correct. This service has been superseded by the diagnose service." $ 
    S.findbuggyrules ::: State :-> Term :-> List Rule
 
 submitS :: Service a
-submitS = Service "submit" "" $ 
+submitS = Service "submit" 
+   "Analyze an expression submitted by a student. Possible answers are Buggy, \
+   \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
+   \by the diagnose service." $ 
    S.submit ::: State :-> Term :-> Result
 
 diagnoseS :: Service a
-diagnoseS = Service "diagnose" "" $
+diagnoseS = Service "diagnose" 
+   "Diagnose an expression submitted by a student. Possible diagnosis are \
+   \Buggy (a common misconception was detected), NotEquivalent (something is \
+   \wrong, but we don't know what), Similar (the expression is pretty similar \
+   \to the last expression in the derivation), Expected (the submitted \
+   \expression was anticipated by the strategy), Detour (the submitted \
+   \expression was not expected by the strategy, but the applied rule was \
+   \detected), and Correct (it is correct, but we don't know which rule was \
+   \applied)." $
    S.diagnose ::: State :-> Term :-> Diagnosis
 
 ------------------------------------------------------
 -- Services with a feedback component
 
 onefirsttextS :: Service a
-onefirsttextS = Service "onefirsttext" "" $ 
+onefirsttextS = Service "onefirsttext" 
+   "Similar to the onefirst service, except that the result is now returned as \
+   \a formatted text message. The optional string is for announcing the event \
+   \leading to this service call (which can influence the returned result). \
+   \The boolean in the result specifies whether a suggestion was available or \
+   \not." $ 
    onefirsttext ::: ExerciseText :-> State :-> Maybe String :-> Elem (Triple Bool String State)
 
 submittextS :: Service a
-submittextS = Service "submittext" "" $ 
+submittextS = Service "submittext" 
+   "Similar to the submit service, except that the result is now returned as \
+   \a formatted text message. The expression 'submitted' by the student is sent \
+   \in plain text (and parsed by the exercise's parser). The optional string is \
+   \for announcing the event leading to this service call. The boolean in the \
+   \result specifies whether the submitted term is accepted and incorporated \
+   \in the new state." $ 
    submittext ::: ExerciseText :-> State :-> String :-> Maybe String :-> Elem (Triple Bool String State)
 
 derivationtextS :: Service a
-derivationtextS = Service "derivationtext" "" $ 
+derivationtextS = Service "derivationtext" 
+   "Similar to the derivation service, but the rules appearing in the derivation \
+   \have been replaced by a short description of the rule. The optional string is \
+   \for announcing the event leading to this service call." $ 
    derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Tuple String Context)
 
 ------------------------------------------------------
 -- Problem decomposition service
 
 problemdecompositionS :: Service a
-problemdecompositionS = Service "problemdecomposition" "" $
+problemdecompositionS = Service "problemdecomposition" 
+   "Strategy service developed for the SURF project Intelligent Feedback for a \
+   \binding with the MathDox system on linear algebra exercises. This is a \
+   \composite service, and available for backwards compatibility." $
    problemDecomposition ::: State :-> StrategyLoc :-> Maybe Term :-> DecompositionReply
 
 ------------------------------------------------------
 -- Reflective services
    
 exerciselistS :: Service a
-exerciselistS = Service "exerciselist" "" $
+exerciselistS = Service "exerciselist" 
+   "Returns all exercises known to the system. For each exercise, its domain, \
+   \identifier, a short description, and its current status are returned." $
    allExercises ::: List (Quadruple (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
 
 rulelistS :: Service a
-rulelistS = Service "rulelist" "" $ 
+rulelistS = Service "rulelist" 
+   "Returns all rules of a particular exercise. For each rule, we rewrutn its \
+   \name (or identifier), whether the rule is buggy, and whether the rule was \
+   \expressed as an observable rewrite rule." $ 
    allRules ::: Exercise :-> List (Triple (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
 allExercises :: [(String, String, String, String)]

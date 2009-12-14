@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="distribution square">
       <expr>
@@ -20,7 +20,7 @@
         x == 17/2 or x == 1/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 64, a==1, b==-9, c==17/4]"/>
+        <item name="clipboard" value="[D==64, a==1, b==-9, c==17/4]"/>
       </context>
     </elem>
   </list>

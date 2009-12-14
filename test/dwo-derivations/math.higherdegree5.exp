@@ -1,16 +1,6 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="all power factors">
-      <expr>
-        x == 0 or x^2+2*x == 24
-      </expr>
-    </elem>
-    <elem ruleid="power factor">
-      <expr>
-        x == 0 or x*(x+2) == 24
-      </expr>
-    </elem>
-    <elem ruleid="distribution multiplication">
       <expr>
         x == 0 or x^2+2*x == 24
       </expr>

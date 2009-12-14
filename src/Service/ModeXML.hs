@@ -11,7 +11,7 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Service.ModeXML (processXML) where
+module Service.ModeXML (processXML, openMathConverterTp, stringFormatConverterTp, resultOk) where
 
 import Common.Context
 import Common.Exercise
@@ -133,8 +133,11 @@ resultError txt = makeXML "reply" $ do
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
 stringFormatConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
-stringFormatConverter (Some pkg) = 
-   Some $ Evaluator (xmlEncoder False f ex) (xmlDecoder False g pkg)
+stringFormatConverter (Some pkg) = Some (stringFormatConverterTp pkg)
+
+stringFormatConverterTp :: ExercisePackage a -> Evaluator (Either String) XML XMLBuilder a
+stringFormatConverterTp pkg = 
+   Evaluator (xmlEncoder False f ex) (xmlDecoder False g pkg)
  where
    ex = exercise pkg
    f  = return . element "expr" . text . prettyPrinter ex
@@ -143,10 +146,13 @@ stringFormatConverter (Some pkg) =
       -- guard (name xml == "expr")
       let input = getData xml
       either (fail . show) return (parser ex input)
-        
+
 openMathConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
-openMathConverter (Some pkg) =
-   Some $ Evaluator (xmlEncoder True f ex) (xmlDecoder True g pkg)
+openMathConverter (Some pkg) = Some (openMathConverterTp pkg)
+        
+openMathConverterTp :: ExercisePackage a -> Evaluator (Either String) XML XMLBuilder a
+openMathConverterTp pkg =
+   Evaluator (xmlEncoder True f ex) (xmlDecoder True g pkg)
  where
    ex = exercise pkg
    f = return . builder . toXML . toOpenMath pkg

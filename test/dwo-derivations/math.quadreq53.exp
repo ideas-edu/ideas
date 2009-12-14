@@ -1,11 +1,11 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="abc formula">
       <expr>
         x == (12+sqrt 8)/2 or x == (12-sqrt 8)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 8, a==1, b==-12, c==34]"/>
+        <item name="clipboard" value="[D==8, a==1, b==-12, c==34]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">
@@ -13,7 +13,7 @@
         x == 6+sqrt 2 or x == 6-sqrt 2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 8, a==1, b==-12, c==34]"/>
+        <item name="clipboard" value="[D==8, a==1, b==-12, c==34]"/>
       </context>
     </elem>
   </list>

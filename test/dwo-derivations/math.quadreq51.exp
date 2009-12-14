@@ -1,11 +1,11 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="abc formula">
       <expr>
         x == (-4+sqrt 32)/2 or x == (-4-sqrt 32)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 32, a==1, b==4, c==-4]"/>
+        <item name="clipboard" value="[D==32, a==1, b==4, c==-4]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">
@@ -13,7 +13,7 @@
         x == -2+2*sqrt 2 or x == -2-2*sqrt 2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 32, a==1, b==4, c==-4]"/>
+        <item name="clipboard" value="[D==32, a==1, b==4, c==-4]"/>
       </context>
     </elem>
   </list>

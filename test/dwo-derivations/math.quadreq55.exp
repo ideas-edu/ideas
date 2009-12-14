@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="distribution multiplication">
       <expr>
@@ -15,7 +15,7 @@
         x == (5+sqrt 53)/2 or x == (5-sqrt 53)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 53, a==1, b==-5, c==-7]"/>
+        <item name="clipboard" value="[D==53, a==1, b==-5, c==-7]"/>
       </context>
     </elem>
     <elem ruleid="distribution division">
@@ -23,7 +23,7 @@
         x == 5/2+sqrt 53/2 or x == 5/2-sqrt 53/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 53, a==1, b==-5, c==-7]"/>
+        <item name="clipboard" value="[D==53, a==1, b==-5, c==-7]"/>
       </context>
     </elem>
   </list>

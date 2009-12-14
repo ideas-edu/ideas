@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="top form (folded)">
       <expr>
@@ -10,7 +10,7 @@
         x == (3+sqrt 5)/2 or x == (3-sqrt 5)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 5, a==1, b==-3, c==1]"/>
+        <item name="clipboard" value="[D==5, a==1, b==-3, c==1]"/>
       </context>
     </elem>
     <elem ruleid="approximate">
@@ -18,7 +18,7 @@
         x ~= 2.618 or x ~= 0.382
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 5, a==1, b==-3, c==1]"/>
+        <item name="clipboard" value="[D==5, a==1, b==-3, c==1]"/>
       </context>
     </elem>
   </list>

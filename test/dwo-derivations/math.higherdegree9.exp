@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="all power factors">
       <expr>
@@ -10,7 +10,7 @@
         x == 0 or x == (4+sqrt 52)/2 or x == (4-sqrt 52)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 52, a==1, b==-4, c==-9]"/>
+        <item name="clipboard" value="[D==52, a==1, b==-4, c==-9]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">
@@ -18,7 +18,7 @@
         x == 0 or x == 2+sqrt 13 or x == 2-sqrt 13
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 52, a==1, b==-4, c==-9]"/>
+        <item name="clipboard" value="[D==52, a==1, b==-4, c==-9]"/>
       </context>
     </elem>
   </list>

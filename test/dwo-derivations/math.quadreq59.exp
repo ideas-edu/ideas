@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="distribution multiplication">
       <expr>
@@ -15,7 +15,7 @@
         x == (2+sqrt 32)/2 or x == (2-sqrt 32)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 32, a==1, b==-2, c==-7]"/>
+        <item name="clipboard" value="[D==32, a==1, b==-2, c==-7]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">
@@ -23,7 +23,7 @@
         x == 1+2*sqrt 2 or x == 1-2*sqrt 2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 32, a==1, b==-2, c==-7]"/>
+        <item name="clipboard" value="[D==32, a==1, b==-2, c==-7]"/>
       </context>
     </elem>
   </list>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.9">
   <list>
     <elem ruleid="move to left">
       <expr>
@@ -10,7 +10,7 @@
         x == (-8+sqrt 124)/2 or x == (-8-sqrt 124)/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 124, a==1, b==8, c==-15]"/>
+        <item name="clipboard" value="[D==124, a==1, b==8, c==-15]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">
@@ -18,7 +18,7 @@
         x == -4+sqrt 31 or x == -4-sqrt 31
       </expr>
       <context>
-        <item name="clipboard" value="[D==sqrt 124, a==1, b==8, c==-15]"/>
+        <item name="clipboard" value="[D==124, a==1, b==8, c==-15]"/>
       </context>
     </elem>
   </list>

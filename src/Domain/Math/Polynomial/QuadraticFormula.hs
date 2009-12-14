@@ -34,15 +34,16 @@ abcFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==: rhs)
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
-   let discr = sqrt (fromRational (b*b - 4 * a * c))
-   addToClipboard "D" discr
+   let discr = b*b - 4 * a * c
+       sqD   = sqrt (fromRational discr)
+   addToClipboard "D" (fromRational discr)
    case compare discr 0 of
       LT -> return false
       EQ -> return $ return $ 
          Var x :==: (-fromRational b) / (2 * fromRational a)
       GT -> return $ orList
-         [ Var x :==: (-fromRational b + discr) / (2 * fromRational a)
-         , Var x :==: (-fromRational b - discr) / (2 * fromRational a)
+         [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
+         , Var x :==: (-fromRational b - sqD) / (2 * fromRational a)
          ]
 
 higherSubst :: Rule (Context (Equation Expr))

@@ -69,6 +69,7 @@ normalise fs = rewrites . preprocess
                . removeRanges 
                . removeParens
                . removeTypeSignatures
+               . removeImportDecls
     -- preform (lambda calculus) transformations
     rewrites = rewriteBi $  (applicationReduce
                         >->  betaReduce 
@@ -88,6 +89,12 @@ removeTypeSignatures = transformBi f
     isTypeSig d = case d of 
                     Declaration_TypeSignature _ _ _ -> True; 
                     _ -> False
+
+removeImportDecls :: Data a => a -> a
+removeImportDecls = transformBi f
+  where 
+    f (Body_Body r _ ds) = Body_Body r [] ds
+    f x = x
 
 removeParens :: Data a => a -> a
 removeParens = transformBi f . transformBi g

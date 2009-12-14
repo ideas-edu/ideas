@@ -12,6 +12,7 @@
 -----------------------------------------------------------------------------
 module Main where
 
+import Configuration
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import Data.List
@@ -27,13 +28,15 @@ domains :: [String]
 domains = sort $ nub [ domain (exerciseCode (SE.exercise e)) | Some e <- packageList ]
 
 title :: String
-title = "Exercise Assistant: " ++ versionText
+title = "IdeasWX Exercise Assistant: " ++ versionText
 
 main :: IO ()
 main = start exerciseFrame
 
 exerciseFrame :: IO ()
 exerciseFrame = do 
+   cfg <- readConfig
+
    f <- frame [text := title, bgcolor := white]
    
    -- Left Panel
@@ -95,11 +98,6 @@ exerciseFrame = do
 
    -- initialize exercise
    session <- makeSession (head packageList)
-       
-   {- let fillRuleBox = do
-          -- names <- ruleNames session
-          -- set ruleBox [items := names]
-          return () -}
 
    let updateAll = do
           descr <- currentDescription session
@@ -115,6 +113,7 @@ exerciseFrame = do
 
    set feedbackView [text := "Welcome to the Exercise Assistant!"]
    
+   updateAll
    assignmentFrame <- newAssignmentFrame session updateAll
    
    -- bind events
@@ -163,45 +162,11 @@ exerciseFrame = do
       (txt, ok) <- submitText cur session
       set feedbackView [text := txt]
       when ok updateAll]
-   
-   {-
-   onChanged ruleBox $ do
-      (iterBegin, iterEnd) <- textBufferGetSelectionBounds entryBuffer
-      posBegin <- textIterGetOffset iterBegin
-      posEnd   <- textIterGetOffset iterEnd
-      cur      <- get entryBuffer textBufferText
-      mloc     <- subTermAtIndices cur posBegin posEnd session
-      mi       <- comboBoxGetActive ruleBox
-
-      when (isJust mi) $ do
-         comboBoxSetActive ruleBox (-1)
-         Some rule <- getRuleAtIndex (fromJust mi) session
-         case (mloc, hasArguments rule) of
-            (Nothing, _) | posBegin /= posEnd ->
-               textBufferSetText feedbackBuffer "Invalid selection: not a subterm"
-                 
-            (_, False) -> do
-               (txt, ok) <- applyRuleAtIndex (fromJust mi) mloc [] session
-               textBufferSetText feedbackBuffer txt
-               when ok updateAll
-                    
-            _ -> do
-               ref <- newIORef Nothing 
-               w   <- argumentWindow ref rule
-               onDestroy w $ do
-                  result <- readIORef ref
-                  case result of 
-                     Nothing -> return ()
-                     Just list -> do
-                        (txt, ok) <- applyRuleAtIndex (fromJust mi) mloc list session
-                        textBufferSetText feedbackBuffer txt
-                        when ok updateAll
-               return () -}
 
 newAssignmentFrame :: Session -> IO () -> IO (Frame ())
 newAssignmentFrame session onExit = do
-   f <- frame [text := "New Assignment", bgcolor := white] 
-   windowMakeModal f True
+   f <- frame [text := "New Assignment", bgcolor := white, visible := False] 
+   -- windowMakeModal f True
    
    -- Left Panel
    leftPanel <- panel f []

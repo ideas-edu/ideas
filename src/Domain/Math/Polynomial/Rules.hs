@@ -114,7 +114,7 @@ simplerA = makeSimpleRule "simpler polynomial" $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (ra, rb, rc)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    [a, b, c] <- mapM isInt [ra, rb, rc] 
-   let d = a `gcd` b `gcd` c
+   let d = (a `gcd` b `gcd` c) * signum a
    guard (d `notElem` [0, 1])
    return (build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0)
 

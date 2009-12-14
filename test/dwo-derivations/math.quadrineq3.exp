@@ -8,6 +8,14 @@
         <item name="clipboard" value="[ineq==(-x^2-4*x+5<0)]"/>
       </context>
     </elem>
+    <elem ruleid="simpler polynomial">
+      <expr>
+        x^2+4*x-5 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(-x^2-4*x+5<0)]"/>
+      </context>
+    </elem>
     <elem ruleid="nice factors">
       <expr>
         (x-1)*(x+5) == 0

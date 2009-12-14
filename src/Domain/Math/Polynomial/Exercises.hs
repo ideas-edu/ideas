@@ -44,11 +44,13 @@ linearExercise = makeExercise
    , parser       = parseWith (pEquation pExpr)
    , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
-   , isReady      = solvedEquation
+   , isReady      = solvedRelation
    , extraRules   = ignoreContext buggyPlus : linearRules
    , strategy     = mapRules ignoreContext linearStrategy
-   , examples     = concat linearEquations
+   , examples     = concat (linearEquations ++ [specialCases])
    }
+ where
+   specialCases = let x = Var "x" in [5 :==: x, 5 :==: x + 1]
 
 quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise 

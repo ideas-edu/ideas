@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.9">
+  <list>
+    <elem ruleid="flip equation">
+      <expr>
+        x+1 == 5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == 4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

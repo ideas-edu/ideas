@@ -39,10 +39,11 @@ linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
           removeDivision 
           <|> ruleMulti (ruleSomewhere distributeTimes)
           <|> ruleMulti merge))
-   <*> label "Phase 2" (
-          try varToLeft 
-          <*> try (coverUpPlus id) 
-          <*> try (coverUpTimes |> try coverUpNegate))
+   <*> label "Phase 2" (repeat (
+          (flipEquation |> varToLeft)
+          <|> coverUpPlus id
+          <|> coverUpTimes
+          <|> coverUpNegate))
 
 -- helper strategy
 coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a

@@ -131,7 +131,8 @@ mulZero = makeSimpleRuleList "multiplication is zero" $ onceJoinM bothSides
       (_, xs) <- matchM productView lhs
       guard (length xs > 1)
       let f e = case match (polyNormalForm rationalView >>> second linearPolyView) e of
-                   Just (x, (a, b)) -- special cases (simplify immediately)
+                   -- special cases (simplify immediately, as in G&R)
+                   Just (x, (a, b)) 
                       | a == 1 -> 
                            Var x :==: fromRational (-b)
                       | a == -1 -> 

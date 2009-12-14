@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.lineq" encoding="string">
+  <state>
+    <expr>
+      5 == x
+    </expr>
+  </state>
+</request>

@@ -1,11 +1,11 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.9">
   <list>
-    <elem ruleid="variable to left">
+    <elem ruleid="flip equation">
       <expr>
-        17+10*x == 4
+        10*x-4 == -17
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus left [one var]">
       <expr>
         10*x == -13
       </expr>

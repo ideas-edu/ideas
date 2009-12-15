@@ -21,7 +21,7 @@ import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.ExerciseList
 import Service.Request
-import Service.Types (Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
+import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
 import Service.ServiceList hiding (Service)
@@ -99,17 +99,28 @@ jsonEncoder ex = Encoder
    }
  where
    encode :: Monad m => Encoder m JSON a -> Type a t -> t -> m JSON
-   encode enc serviceType =
-      case serviceType of
-         Tp.List t   -> liftM Array . mapM (encode enc t)
-         Tp.Tag s t  -> liftM (\a -> Object [(s, a)]) . encode enc t 
-         Tp.Int      -> return . toJSON
-         Tp.Bool     -> return . toJSON
-         Tp.String   -> return . toJSON
-         Tp.State    -> encodeState (encodeTerm enc)
-         Tp.Result   -> encodeResult enc
-         _           -> encodeDefault enc serviceType
-
+   encode enc serviceType a
+      | length xs > 1 =
+           liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
+      | otherwise = 
+           case serviceType of
+              Tp.List t    -> liftM Array (mapM (encode enc t) a)
+              Tp.Tag s t   -> liftM (\b -> Object [(s, b)]) (encode enc t a)
+              Tp.Int       -> return (toJSON a)
+              Tp.Bool      -> return (toJSON a)
+              Tp.String    -> return (toJSON a)
+              Tp.State     -> encodeState (encodeTerm enc) a
+              Tp.Result    -> encodeResult enc a
+              _            -> encodeDefault enc serviceType a
+    where
+      xs = tupleList (a ::: serviceType)
+    
+   tupleList :: TypedValue a -> [TypedValue a]
+   tupleList (a ::: Tp.Iso _ f t)   = tupleList (f a ::: t)
+   tupleList (p ::: Tp.Pair t1 t2) = 
+      tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
+   tupleList tv = [tv]
+         
 jsonDecoder :: MonadPlus m => ExercisePackage a -> Decoder m JSON a
 jsonDecoder pkg = Decoder
    { decodeType     = decode (jsonDecoder pkg)

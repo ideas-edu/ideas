@@ -63,7 +63,7 @@ derivationS = Service "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   S.derivationNew ::: Maybe StrategyCfg :-> State :-> List (Tuple Rule Context)
+   S.derivationNew ::: Maybe StrategyCfg :-> State :-> List (tuple2 Rule Context)
 
 allfirstsS :: Service a
 allfirstsS = Service "allfirsts" 
@@ -71,7 +71,7 @@ allfirstsS = Service "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   S.allfirsts ::: State :-> List (Triple Rule Location State)
+   S.allfirsts ::: State :-> List (tuple3 Rule Location State)
         
 onefirstS :: Service a
 onefirstS = Service "onefirst" 
@@ -79,7 +79,7 @@ onefirstS = Service "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $ 
-   S.onefirst ::: State :-> Elem (Triple Rule Location State)
+   S.onefirst ::: State :-> Elem (tuple3 Rule Location State)
   
 readyS :: Service a
 readyS = Service "ready" 
@@ -151,7 +151,7 @@ onefirsttextS = Service "onefirsttext"
    \leading to this service call (which can influence the returned result). \
    \The boolean in the result specifies whether a suggestion was available or \
    \not." $ 
-   onefirsttext ::: ExerciseText :-> State :-> Maybe String :-> Elem (Triple Bool String State)
+   onefirsttext ::: ExerciseText :-> State :-> Maybe String :-> Elem (tuple3 Bool String State)
 
 submittextS :: Service a
 submittextS = Service "submittext" 
@@ -161,14 +161,14 @@ submittextS = Service "submittext"
    \for announcing the event leading to this service call. The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: ExerciseText :-> State :-> String :-> Maybe String :-> Elem (Triple Bool String State)
+   submittext ::: ExerciseText :-> State :-> String :-> Maybe String :-> Elem (tuple3 Bool String State)
 
 derivationtextS :: Service a
 derivationtextS = Service "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
-   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (Tuple String Context)
+   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (tuple2 String Context)
 
 ------------------------------------------------------
 -- Problem decomposition service
@@ -187,14 +187,14 @@ exerciselistS :: Service a
 exerciselistS = Service "exerciselist" 
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises ::: List (Quadruple (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
+   allExercises ::: List (tuple4 (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
 
 rulelistS :: Service a
 rulelistS = Service "rulelist" 
    "Returns all rules of a particular exercise. For each rule, we rewrutn its \
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule." $ 
-   allRules ::: Exercise :-> List (Triple (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
+   allRules ::: Exercise :-> List (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
 allExercises :: [(String, String, String, String)]
 allExercises  = map make $ sortBy cmp exercises

@@ -21,7 +21,7 @@ typedExample pkg service args = do
                   stdReply (serviceName service) enc (exercise pkg) xml
    -- Construct a reply in xml
    xmlReply <- return $
-      case appls (serviceFunction service) args of
+      case foldl dynamicApply (serviceFunction service) args of
          reply ::: replyTp ->
             case encodeType (encoder evaluator) replyTp reply of
                Left err  -> resultError err
@@ -50,24 +50,21 @@ stdReply s enc ex body = makeXML "request" $ do
    body
 
 makeArgType :: [TypedValue a] -> TypedValue a
+makeArgType []   = error "makeArgType: empty list"
 makeArgType [tv] = tv
-makeArgType [a1 ::: t1, a2 ::: t2] = (a1, a2) ::: Tuple t1 t2
-makeArgType [a1 ::: t1, a2 ::: t2, a3 ::: t3] = (a1, a2, a3) ::: Triple t1 t2 t3
-makeArgType [a1 ::: t1, a2 ::: t2, a3 ::: t3, a4 ::: t4] = (a1, a2, a3, a4) ::: Quadruple t1 t2 t3 t4
-makeArgType _ = error $ "makeArgType: invalid number of arguments"
+makeArgType ((a1 ::: t1) : rest) = 
+   case makeArgType rest of
+      (a2 ::: t2) -> (a1, a2) ::: Pair t1 t2
 
-appls :: TypedValue a -> [TypedValue a] -> TypedValue a
-appls = foldl appl
-
-appl :: TypedValue a -> TypedValue a -> TypedValue a
-appl fun arg =
+dynamicApply :: TypedValue a -> TypedValue a -> TypedValue a
+dynamicApply fun arg =
    case (fun, arg) of
       (f ::: t1 :-> t2, a ::: t3) -> 
          case equal t3 t1 of 
             Just eq -> f (eq a) ::: t2
             Nothing -> error $ "mismatch (argument type): " ++ show t3 ++ " does not match " ++ show t1
       _ -> error "mismatch (not a function)"
-      
+
 equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
 equal t1 t2 = 
    case (t1, t2) of

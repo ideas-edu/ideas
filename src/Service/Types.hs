@@ -32,19 +32,33 @@ infixr 3 :->
 
 data TypedValue a = forall t . t ::: Type a t
 
+tuple2 :: Type a t1 -> Type a t2 -> Type a (t1, t2)
+tuple2 = Pair
+
+tuple3 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
+tuple3 t1 t2 t3 = Iso f g (Pair t1 (Pair t2 t3)) 
+ where
+   f (a, (b, c)) = (a, b, c)
+   g (a, b, c)   = (a, (b, c))
+   
+tuple4 :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
+tuple4 t1 t2 t3 t4 = Iso f g (Pair t1 (Pair t2 (Pair t3 t4))) 
+ where
+   f (a, (b, (c, d))) = (a, b, c, d)
+   g (a, b, c, d)     = (a, (b, (c, d)))
+
 data Type a t where
+   -- Type isomorphisms (for defining type synonyms)
+   Iso          :: (t1 -> t2) -> (t2 -> t1) -> Type a t1 -> Type a t2
    -- Function type
    (:->)        :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
-   -- Tuple types
-   Tuple        :: Type a t1 -> Type a t2 -> Type a (t1, t2)
-   Triple       :: Type a t1 -> Type a t2 -> Type a t3 -> Type a (t1, t2, t3)
-   Quadruple    :: Type a t1 -> Type a t2 -> Type a t3 -> Type a t4 -> Type a (t1, t2, t3, t4)
    -- Special annotations
    Tag          :: String -> Type a t1 -> Type a t1
    Optional     :: t1 -> Type a t1 -> Type a t1
    Maybe        :: Type a t1 -> Type a (Maybe t1)
    -- Type constructors
    List         :: Type a t -> Type a [t]
+   Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
    Elem         :: Type a t -> Type a t -- quick fix
    IO           :: Type a t -> Type a (IO t)
    -- Exercise-specific types
@@ -64,21 +78,27 @@ data Type a t where
    Bool         :: Type a Bool
    Int          :: Type a Int
    String       :: Type a String
-   
 
 instance Show (Type a t) where
-   show (t1 :-> t2)       = show t1 ++ " -> " ++ show t2 
-   show (Tuple t1 t2)     = "(" ++ commaList [show t1, show t2] ++ ")"
-   show (Triple t1 t2 t3) = "(" ++ commaList [show t1, show t2, show t3] ++ ")"
-   show (Quadruple t1 t2 t3 t4) = "(" ++ commaList [show t1, show t2, show t3, show t4] ++ ")"
-   show (Tag _ t)         = show t
-   show (Optional _ t)    = "(" ++ show t ++ ")?"
-   show (Maybe t)         = "(" ++ show t ++ ")?"
-   show (List t)          = "[" ++ show t ++ "]"
-   show (Elem t)          = show t
-   show (IO t)            = show t
-   show t                 = fromMaybe "unknown" (groundType t)
-
+   show (Iso _ _ t)    = show t
+   show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2 
+   show t@(Pair _ _)   = showTuple t
+   show (Tag _ t)      = show t
+   show (Optional _ t) = "(" ++ show t ++ ")?"
+   show (Maybe t)      = "(" ++ show t ++ ")?"
+   show (List t)       = "[" ++ show t ++ "]"
+   show (Elem t)       = show t
+   show (IO t)         = show t
+   show t              = fromMaybe "unknown" (groundType t)
+   
+showTuple :: Type a t -> String
+showTuple t = "(" ++ commaList (collect t) ++ ")"
+ where
+   collect :: Type a t -> [String]
+   collect (Pair t1 t2) = collect t1 ++ collect t2
+   collect (Iso _ _ t)  = collect t
+   collect t            = [show t]
+   
 groundType :: Type a t -> Maybe String
 groundType tp =
    case tp of 
@@ -130,21 +150,11 @@ eval f (tv ::: tp) s =
 decodeDefault :: MonadPlus m => Decoder m s a -> Type a t -> s -> m (t, s)
 decodeDefault dec tp s =
    case tp of
-      Tuple t1 t2 -> do
+      Iso f _ t  -> liftM (first f) (decodeType dec t s)
+      Pair t1 t2 -> do
          (a, s1) <- decodeType dec t1 s
          (b, s2) <- decodeType dec t2 s1
          return ((a, b), s2)
-      Triple t1 t2 t3 -> do
-         (a, s1) <- decodeType dec t1 s
-         (b, s2) <- decodeType dec t2 s1
-         (c, s3) <- decodeType dec t3 s2
-         return ((a, b, c), s3)
-      Quadruple t1 t2 t3 t4 -> do
-         (a, s1) <- decodeType dec t1 s
-         (b, s2) <- decodeType dec t2 s1
-         (c, s3) <- decodeType dec t3 s2
-         (d, s4) <- decodeType dec t4 s3
-         return ((a, b, c, d), s4)
       Tag _ t1 ->
          decodeType dec t1 s
       Optional a t1 -> 
@@ -164,24 +174,12 @@ decodeDefault dec tp s =
 encodeDefault :: Monad m => Encoder m s a -> Type a t -> t -> m s
 encodeDefault enc tp tv =
    case tp of
-      Tuple t1 t2 -> do
+      Iso _ f t  -> encodeType enc t (f tv)
+      Pair t1 t2 -> do
          let (a, b) = tv
          x <- encodeType enc t1 a
          y <- encodeType enc t2 b
          return (encodeTuple enc [x, y])
-      Triple t1 t2 t3 -> do
-         let (a, b, c) = tv
-         x <- encodeType enc t1 a
-         y <- encodeType enc t2 b
-         z <- encodeType enc t3 c
-         return (encodeTuple enc [x, y, z])
-      Quadruple t1 t2 t3 t4 -> do
-         let (a, b, c, d) = tv
-         x <- encodeType enc t1 a
-         y <- encodeType enc t2 b
-         z <- encodeType enc t3 c
-         u <- encodeType enc t4 d
-         return (encodeTuple enc [x, y, z, u])
       Tag _ t1      -> encodeType enc t1 tv
       Elem t1       -> encodeType enc t1 tv
       Optional _ t1 -> encodeType enc t1 tv

@@ -220,21 +220,11 @@ xmlDecoder b f pkg = Decoder
    leave f xml = liftM (\a -> (a, xml)) (f xml)
          
 allAreTagged :: Type a t -> Maybe (t -> [(String, String)])
-allAreTagged (Tuple t1 t2) = do 
+allAreTagged (Iso _ f t) = fmap (. f) (allAreTagged t)
+allAreTagged (Pair t1 t2) = do 
    f1 <- allAreTagged t1
    f2 <- allAreTagged t2
    return $ \(a,b) -> f1 a ++ f2 b
-allAreTagged (Triple t1 t2 t3) = do 
-   f1 <- allAreTagged t1
-   f2 <- allAreTagged t2
-   f3 <- allAreTagged t3
-   return $ \(a,b,c) -> f1 a ++ f2 b ++ f3 c
-allAreTagged (Quadruple t1 t2 t3 t4) = do 
-   f1 <- allAreTagged t1
-   f2 <- allAreTagged t2
-   f3 <- allAreTagged t3
-   f4 <- allAreTagged t4
-   return $ \(a,b,c,d) -> f1 a ++ f2 b ++ f3 c ++ f4 d
 allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, map toLower (show b))]
 allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
 allAreTagged _ = Nothing

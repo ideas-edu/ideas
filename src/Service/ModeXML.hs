@@ -11,7 +11,10 @@
 -- Services using XML notation
 --
 -----------------------------------------------------------------------------
-module Service.ModeXML (processXML, openMathConverterTp, stringFormatConverterTp, resultOk) where
+module Service.ModeXML 
+   ( processXML, xmlRequest, openMathConverterTp, stringFormatConverterTp
+   , resultOk, resultError
+   ) where
 
 import Common.Context
 import Common.Exercise
@@ -37,7 +40,7 @@ import Text.XML
 import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp
 
-processXML :: String -> IO (Request, String, String)
+processXML :: Monad m => String -> m (Request, String, String)
 processXML input = 
    either fail return $ do
       xml <- parseXML input
@@ -189,7 +192,7 @@ xmlEncoder b f ex = Encoder
          Tp.Term      -> encodeTerm enc
          Tp.Diagnosis -> encodeDiagnosis b (encodeTerm enc)
          Tp.Context   -> encodeContext   b (encodeTerm enc)
-         Tp.Location  -> return . text . show
+         Tp.Location  -> return . {-element "location" .-} text . show
          Tp.Bool      -> return . text . map toLower . show
          Tp.String    -> return . text
          Tp.Int       -> return . text . show

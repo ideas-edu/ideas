@@ -12,11 +12,20 @@
 module Documentation.ServicePage (makeServicePage) where
 
 import Documentation.DefaultPage
-import Common.Utils (Some(..))
+import Service.ExerciseList
 import Service.ServiceList
+import Service.TypedExample
 import Service.Types
+import Service.TypedAbstractService (emptyState)
 import Text.HTML
 import qualified Text.XML as XML
+import Text.XML (XML, showXML)
+import Domain.Logic
+import Domain.Math.Polynomial.Exercises
+import Domain.Math.Data.Relation
+import Domain.Math.Expr.Symbolic
+import Control.Monad
+import Common.Context
 
 makeServicePage :: Service a -> IO ()
 makeServicePage s =
@@ -34,18 +43,52 @@ servicePage s = defaultPage title 1 $ do
       bold $ text "Description: "
       br
       text $ serviceDescription s
-   h2 "XML request"
-   pre $ text (XML.showXML (toRequest s))
+   
+   let list = filter ((==serviceName s) . fst) examples
+   unless (null list) $ do
+      h2 $ "XML examples (" ++ show (length list) ++ ")"
+      forM_ (zip [1..] list) $ 
+         \(i, (_, (msg, (xmlRequest, xmlReply, xmlTest)))) -> do
+            h2 $ show i ++ ". " ++ msg
+            bold $ text "Request:"
+            preText $ showXML xmlRequest
+            bold $ text "Reply:"
+            preText $ showXML xmlReply
+            unless xmlTest $ 
+               XML.element "font" $ do
+                  "color" XML..=. "red"
+                  bold $ text "Error: invalid request/reply pair"
  where
    title = "Service " ++ show (serviceName s)
-   
-toRequest :: Service a -> XML.XML
-toRequest s = 
-   case serviceFunction s of  
-      _ ::: t -> XML.makeXML "request" (f t)
- where
-   f = mapM_ (\ (Some a) -> XML.text $ show a) . arguments
 
-arguments :: Type a t -> [Some (Type a)]
-arguments (a :-> b) = Some a : arguments b
-arguments _         = []
+-----------------------------------------------------------------------
+-- Examples
+
+examples :: [(String, (String, (XML, XML, Bool)))]
+examples = concat
+   [ logic "derivation" [Nothing ::: Maybe StrategyCfg, stLogic1]
+   , lineq "derivation" [Nothing ::: Maybe StrategyCfg, stLineq1]
+   , logic "allfirsts" [stLogic2]
+   , lineq "allfirsts" [stLineq2]
+   , logic "onefirst" [stLogic2]
+   , lineq "onefirst" [stLineq2]
+   , logic "applicable" [makeLocation [] ::: Location, stLogic1]
+   ]
+ where
+   stLogic1 = emptyState dnfExercise (Not (Var "p" :&&: Not (Var "q"))) ::: State
+   stLogic2 = emptyState dnfExercise (Not (Not (Var "p")) :&&: Not T) ::: State
+   stLineq1 = emptyState linearExercise (5*(variable "x"+1) :==: 11) ::: State
+   stLineq2 = emptyState linearExercise (5*(variable "x"+1) :==: (variable "x"-1)/2) ::: State
+   
+   logic = make "Logic" (package dnfExercise)
+   lineq fs args = concat
+      [ make msg (mkPkg linearExercise) fs args 
+      | (enc, mkPkg) <- [("string", package), ("openmath", packageOM)] 
+      , let msg = "Linear equation (" ++ enc ++ " encoding)"
+      ]
+      
+   make msg pkg fs args = 
+      [ (fs, (msg, tr))
+      | f  <- getService fs
+      , tr <- typedExample pkg f args
+      ]

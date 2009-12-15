@@ -13,7 +13,7 @@
 module Service.ExerciseList 
    ( ExercisePackage, exercise, withOpenMath, toOpenMath, fromOpenMath
    , getExerciseText
-   , package, packages, exercises
+   , package, packageOM, packages, exercises
    , getPackage, getExercise
    ) where
 
@@ -81,15 +81,18 @@ package ex = P
    , getExerciseText = Nothing
    }
 
-make :: Exercise a -> Some ExercisePackage
-make = Some . package
-
-makeOM :: IsExpr a => Exercise a -> Some ExercisePackage
-makeOM ex = Some $ (package ex)
+packageOM :: IsExpr a => Exercise a -> ExercisePackage a
+packageOM ex = (package ex)
    { withOpenMath = True
    , toOpenMath   = toOMOBJ . toExpr
    , fromOpenMath = fromExpr . fromOMOBJ
    }
+
+make :: Exercise a -> Some ExercisePackage
+make = Some . package
+
+makeOM :: IsExpr a => Exercise a -> Some ExercisePackage
+makeOM = Some. packageOM
 
 -----------------------------------------------------------------------------
 -- Utility functions for finding an exercise

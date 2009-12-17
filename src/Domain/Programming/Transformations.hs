@@ -94,7 +94,6 @@ removeImportDecls :: Data a => a -> a
 removeImportDecls = transformBi f
   where 
     f (Body_Body r _ ds) = Body_Body r [] ds
-    f x = x
 
 removeParens :: Data a => a -> a
 removeParens = transformBi f . transformBi g

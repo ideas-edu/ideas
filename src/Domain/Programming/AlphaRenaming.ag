@@ -26,7 +26,7 @@ import Prelude hiding (lookup)
 
 -- Set initialScope
 SEM Module
-  | Module loc . initialScope = [Name_Identifier noRange [] "fromBin"]
+  | Module loc . initialScope = [Name_Identifier noRange [] ""]
 
 -- Copied from StaticChecks, get the names of LHSs
 ATTR FunctionBinding FunctionBindings LeftHandSide [ | | name:Name ]
@@ -99,13 +99,26 @@ SEM Qualifier
   | Generator loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
                                                       @namesInScope @lhs.freshNames 
 
--- Correct the scope for RHSs with where, might also be necessary for Statements/Qualifiers, skipping for now
+-- Correct the scope for RHSs with where
 
-ATTR MaybeDeclarations Statements Statement Qualifier Qualifiers 
+ATTR MaybeDeclarations
      [ | nameMap : NameMap freshNames : Names | ]
 
 SEM RightHandSide
-  | Expression expression . nameMap = @where.nameMap
+  | Expression expression         . nameMap = @where.nameMap
+  | Guarded    guardedexpressions . nameMap = @where.nameMap
+
+-- might also be necessary for Statements/Qualifiers, skipping for now
+ATTR Statements Statement Qualifier Qualifiers 
+     [ | nameMap : NameMap freshNames : Names | ]
+
+SEM Expression
+  | Comprehension expression . nameMap = @qualifiers.nameMap
+--                     qualifiers . namesInScope = @lhs.namesInScope
+
+SEM Qualifier
+  | Generator expression . nameMap = @lhs.nameMap
+
 
 -- Do the renaming and make a copy of the ast
 ATTR * [ fixedNames : Names | | result : SELF ]
@@ -117,6 +130,7 @@ SEM Name
         Just n -> if @result `notElem` @lhs.fixedNames then n else @result
         _      -> @result
 
+------------------------------------------------------------------------------
 -- utility functions
 {
 type NameMap = Map Name Name

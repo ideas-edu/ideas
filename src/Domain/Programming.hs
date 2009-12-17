@@ -20,7 +20,8 @@ module Domain.Programming
    , module Domain.Programming.PreludeS
    , module Domain.Programming.EncodingExercises
    , module Domain.Programming.Utils
-   , module Domain.Programming.Exercises            
+   , module Domain.Programming.Exercises
+   , module Domain.Programming.Transformations
    ) where
    
 import Domain.Programming.AlphaRenaming (alphaRenaming)
@@ -34,6 +35,7 @@ import Domain.Programming.PreludeS
 import Domain.Programming.EncodingExercises
 import Domain.Programming.Utils
 import Domain.Programming.Exercises
+import Domain.Programming.Transformations
 
 -- for convenience
 import Common.Apply

@@ -69,6 +69,7 @@ SEM MaybeDeclarations
 SEM Expression
   | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
                                                 @namesInScope @lhs.freshNames 
+        lhs . freshNames = @declarations.freshNames
            
 SEM Statement
   | Let loc . (nameMap, freshNames) = updateMap @scopeInfo @lhs.nameMap 
@@ -105,12 +106,18 @@ ATTR MaybeDeclarations
      [ | nameMap : NameMap freshNames : Names | ]
 
 SEM RightHandSide
-  | Expression expression         . nameMap = @where.nameMap
-  | Guarded    guardedexpressions . nameMap = @where.nameMap
+  | Expression expression         . nameMap    = @where.nameMap
+                                  . freshNames = @where.freshNames
+               where              . freshNames = @lhs.freshNames
+               lhs                . freshNames = @expression.freshNames
+  | Guarded    guardedexpressions . nameMap    = @where.nameMap
+                                  . freshNames = @where.freshNames
+               where              . freshNames = @lhs.freshNames
+               lhs                . freshNames = @guardedexpressions.freshNames
 
 -- might also be necessary for Statements/Qualifiers, skipping for now
 ATTR Statements Statement Qualifier Qualifiers 
-     [ | nameMap : NameMap freshNames : Names | ]
+     [ | nameMap : NameMap  freshNames : Names | ]
 
 SEM Expression
   | Comprehension expression . nameMap = @qualifiers.nameMap
@@ -137,7 +144,7 @@ type NameMap = Map Name Name
 
 updateMap :: ScopeInfo -> NameMap -> Names -> Names -> (NameMap, Names)
 updateMap si m ks vs = let (newMap, i) = insertAllInNameMap si m ks vs
-                                  in (newMap, drop i vs)
+                       in (newMap, drop i vs)
 
 insertInNameMap :: ScopeInfo -> (Name, Name) -> (NameMap, Int) -> (NameMap, Int)
 insertInNameMap si (k, v) (m, i) | check = (insert k v m, i+1)
@@ -165,4 +172,6 @@ instance AlphaRenaming Expression where
 instance AlphaRenaming Declaration where
   alphaRenaming fixedNames d = 
     (\(_, _, x, _, _) -> x) $ sem_Declaration d fixedNames freshNames empty []
+    
+Right x = compile "f n = let j = 3 in j+n where n = 4\ng = let y = 5 in y+n where n=3"
 }

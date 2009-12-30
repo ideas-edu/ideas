@@ -15,12 +15,15 @@ module Domain.Math.Data.Interval
      -- Interval constructors
    , empty, singleton, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
-   , smallerThan, smallerThanOrEqualTo
+   , lessThan, lessThanOrEqualTo
      -- Making intervals
-   , toList, fromList, contains
+   , except, toList, fromList, contains
+   , union, intersect, complement
    ) where
 
+import Common.Utils (commaList)
 import Control.Monad
+import Data.Maybe
 
 --------------------------------------------------------------------
 -- Data declarations
@@ -35,13 +38,25 @@ data Endpoint a = Excluding a | Including a | Unbounded
    deriving Eq
 
 instance Show a => Show (Intervals a) where
-   show = show . toList
+   show xs = "{ " ++ commaList (map show (toList xs)) ++ " }"
 
 instance Show a => Show (Interval a) where
    show interval =
       case interval of
          Empty -> "{}"
          I a b -> showLeft a ++ "," ++ showRight b
+
+instance Functor Endpoint where
+   fmap f (Excluding a) = Excluding (f a)
+   fmap f (Including a) = Including (f a)
+   fmap f Unbounded     = Unbounded
+
+instance Functor Interval where
+   fmap f Empty   = Empty
+   fmap f (I a b) = I (fmap f a) (fmap f b) -- function should not change order
+
+instance Functor Intervals where
+   fmap f (IS xs) = IS (map (fmap f) xs)
 
 showLeft, showRight :: Show a => Endpoint a -> String
 showLeft  (Excluding a) = "(" ++ show a
@@ -81,11 +96,11 @@ greaterThan a = makeInterval (Excluding a) Unbounded
 greaterThanOrEqualTo :: Ord a => a -> Interval a
 greaterThanOrEqualTo a = makeInterval (Including a) Unbounded
 
-smallerThan :: Ord a => a -> Interval a
-smallerThan a = makeInterval Unbounded (Excluding a)
+lessThan :: Ord a => a -> Interval a
+lessThan a = makeInterval Unbounded (Excluding a)
 
-smallerThanOrEqualTo :: Ord a => a -> Interval a
-smallerThanOrEqualTo a = makeInterval Unbounded (Including a)
+lessThanOrEqualTo :: Ord a => a -> Interval a
+lessThanOrEqualTo a = makeInterval Unbounded (Including a)
 
 -- local constructor
 makeInterval :: Ord a => Endpoint a -> Endpoint a -> Interval a
@@ -102,8 +117,15 @@ isIncluding :: Endpoint a -> Bool
 isIncluding (Including _) = True
 isIncluding _             = False
 
+isExcluding :: Endpoint a -> Bool
+isExcluding (Excluding _) = True
+isExcluding _             = False
+
 --------------------------------------------------------------------
 -- Combining multiple intervals
+
+except :: Ord a => a -> Intervals a
+except a = fromList [lessThan a, greaterThan a]
 
 toList :: Intervals a -> [Interval a]
 toList (IS xs) = xs
@@ -130,6 +152,37 @@ contains Empty _ = False
 contains (I al ar) (I bl br) = 
    minPoint al bl == al && maxPoint ar br == ar
 
+union :: Ord a => Intervals a -> Intervals a -> Intervals a
+union xs = foldr insert xs . toList
+
+intersect :: Ord a => Intervals a -> Intervals a -> Intervals a
+intersect (IS xs) (IS ys) = fromList (f xs ys)
+ where
+   f (a@(I _ ar):as) (b@(I _ br):bs) = inBoth a b : rest
+    where
+      rest | maxPoint ar br == ar = f (a:as) bs
+           | otherwise            = f as (b:bs)
+   f _ _ = []
+
+complement :: Ord a => Intervals a -> Intervals a
+complement (IS xs) = fromList (left ++ zipWith f xs (drop 1 xs) ++ right)
+ where
+   f (I _ a) (I b _) = fromMaybe Empty (liftM2 I (g a) (g b))
+   f _ _             = Empty
+   
+   g (Including a) = Just (Excluding a)
+   g (Excluding a) = Just (Including a)
+   g Unbounded     = Nothing
+   
+   left = case xs of 
+             I al _:_ -> maybe [] (return . I Unbounded) (g al)
+             _        -> [unbounded]
+   right = case reverse xs of 
+              I _ ar:_ -> maybe [] (return . flip I Unbounded) (g ar)
+              _        -> [unbounded]
+ 
+-- q = intersect (fromList [open 1 8]) (fromList [closed 1 4, open 5 6, open 6 7])
+
 ---------------------------------------------------------------------
 -- Local helper functions
 {-
@@ -147,10 +200,23 @@ getPoint Unbounded     = Nothing
 merge :: Ord a => Interval a -> Interval a -> Maybe (Interval a)
 merge a Empty = Just a
 merge Empty b = Just b
-merge (I al ar) (I bl br) = do
-   guard (minPoint ar bl == bl)
-   guard (maxPoint al br == br)
-   return (makeInterval (minPoint al bl) (maxPoint ar br))
+merge ia@(I al ar) ib@(I bl br)
+   | minPoint al bl /= al = merge ib ia
+   | otherwise = 
+        case liftM2 compare (getPoint ar) (getPoint bl) of
+           Just LT -> Nothing
+           Just EQ
+              | isIncluding ar || isIncluding bl -> ok
+              | otherwise     -> Nothing
+           Just GT -> ok
+           Nothing -> ok
+ where
+   ok = Just (I al (maxPoint ar br))
+
+inBoth :: Ord a => Interval a -> Interval a -> Interval a
+inBoth a Empty = Empty
+inBoth Empty b = Empty
+inBoth (I al ar) (I bl br) = makeInterval (maxPoint2 al bl) (minPoint2 ar br)
 
 minPoint :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
 minPoint a b = 
@@ -169,5 +235,25 @@ maxPoint a b =
       Just EQ
          | isIncluding a -> a
          | otherwise     -> b
+      Just GT -> a
+      Nothing -> Unbounded
+      
+minPoint2 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
+minPoint2 a b = 
+   case liftM2 compare (getPoint a) (getPoint b) of
+      Just LT -> a
+      Just EQ
+         | isIncluding a -> b -- !!!!!!!!!!!!!!!!
+         | otherwise     -> a
+      Just GT -> b
+      Nothing -> Unbounded
+      
+maxPoint2 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
+maxPoint2 a b = 
+   case liftM2 compare (getPoint a) (getPoint b) of
+      Just LT -> b
+      Just EQ
+         | isIncluding a -> b -- !!!
+         | otherwise     -> a
       Just GT -> a
       Nothing -> Unbounded

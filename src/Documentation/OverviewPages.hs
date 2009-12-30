@@ -38,9 +38,9 @@ exerciseOverviewPage = defaultPage "Exercises" 0 $ do
       h2 (show i ++ ". " ++ dom)
       ul $ flip map xs $ \(Some ex) -> do
          let code = exerciseCode ex
-         link (exercisePageFile code) $ ttText (show code)
+         link (exercisePageFile code) $ ttText (show code ++ ":")
          space
-         text $ "(" ++ description ex ++ ")"
+         text $ description ex
 
 groupedList :: [(String, [Some Exercise])]
 groupedList = map g (groupBy eq (sortBy cmp exercises))

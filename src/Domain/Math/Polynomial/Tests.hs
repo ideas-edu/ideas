@@ -23,6 +23,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Examples.DWO1
 import Domain.Math.Examples.DWO2
 import Domain.Math.Polynomial.Exercises
+import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Laws
@@ -80,3 +81,16 @@ g s n e = map p (h (derivations (derivationTree (strategy s) (inContext e)))) wh
    
 -- e1 = match higherDegreeEquationsView $ OrList [(x :==: 2)] where x = Var "x"
 -- e2 = simplify rationalView (Sqrt ())
+
+goLE = eqTest ineqLinearExercise
+goQE = eqTest ineqQuadraticExercise
+
+eqTest ex = do
+   forM_ (examples ex) $ \eq -> do
+      let tree  = derivationTree (strategy ex) (inContext eq)
+      forM_ (derivations tree) $ \d -> do
+         let xs = terms d
+         forM [ (a, b) | a <- xs, b <- xs ] $ \(a, b) -> do
+            if equivalence ex (fromContext a) (fromContext b)
+             then putChar '.' 
+             else error $ unlines ["", show a, show b]

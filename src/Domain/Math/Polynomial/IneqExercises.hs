@@ -34,6 +34,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Rules 
 import Domain.Math.Polynomial.Strategies
+import Domain.Math.Polynomial.Equivalence
 import Domain.Math.SquareRoot.Views
 import Prelude hiding (repeat)
 import qualified Domain.Logic.Formula as Logic
@@ -44,6 +45,7 @@ ineqLinearExercise = makeExercise
    , exerciseCode = makeCode "math" "linineq"
    , parser       = parseWith (pRelation pExpr)
    , isReady      = solvedRelation
+   , equivalence  = linEq
    , strategy     = mapRules ignoreContext ineqLinear
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
@@ -54,9 +56,10 @@ ineqQuadraticExercise :: Exercise (Logic (Relation Expr))
 ineqQuadraticExercise = makeExercise 
    { description   = "solve a quadratic inequation"
    , exerciseCode  = makeCode "math" "quadrineq"
-   , parser       = parseWith (pLogicRelation pExpr)
+   , parser        = parseWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
+   , equivalence   = quadrEq
    , strategy      = ineqQuadratic
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2])

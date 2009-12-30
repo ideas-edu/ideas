@@ -17,6 +17,7 @@ import Common.Traversable
 import Common.Utils
 import Data.List
 import Data.Maybe
+import Control.Monad
 
 infixr 2 :<->:
 infixr 3 :->: 
@@ -43,6 +44,12 @@ instance Functor Logic where
 
 instance Crush Logic where
    crush p = [ x | Var x <- universe p ]
+
+instance Switch Logic where
+   switch = foldLogic 
+      ( liftM Var, liftM2 (:->:), liftM2 (:<->:), liftM2 (:&&:)
+      , liftM2 (:||:), liftM Not, return T, return F
+      )
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.5.10">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -37,7 +37,7 @@
         -2 &lt; x &lt; 7/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==121/4, a==1, b==-3/2, c==-7, ineq==(x^2-9/2*x<7-3*x)]"/>
+        <item name="clipboard" value="[D==121/4, a==1, b==-3/2, c==-7]"/>
       </context>
     </elem>
   </list>

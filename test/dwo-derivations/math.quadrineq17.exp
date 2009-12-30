@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.5.10">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -45,7 +45,7 @@
         -3 &lt; x &lt; 2
       </expr>
       <context>
-        <item name="clipboard" value="[ineq==(4*x^2+6*x<x^2+3*x+18)]"/>
+        <item name="clipboard" value="[]"/>
       </context>
     </elem>
   </list>

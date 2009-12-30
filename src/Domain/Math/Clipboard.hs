@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Clipboard 
    ( addToClipboard, addListToClipboard
-   , lookupClipboard, lookupListClipboard
+   , lookupClipboard, lookupListClipboard, removeClipboard
      -- generalized interface
    , addToClipboardG, addListToClipboardG
    , lookupClipboardG, lookupListClipboardG
@@ -88,6 +88,10 @@ lookupClipboard = lookupClipboardG
    
 lookupListClipboard :: [String] -> ContextMonad [Expr]
 lookupListClipboard = lookupListClipboardG
+
+removeClipboard :: String -> ContextMonad ()
+removeClipboard s = 
+   modifyExprVar clipboard (M.delete (Key s))
 
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard

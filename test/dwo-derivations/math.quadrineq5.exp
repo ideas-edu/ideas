@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.5.10">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -21,7 +21,7 @@
         -2 &lt; x &lt; 8
       </expr>
       <context>
-        <item name="clipboard" value="[D==25, a==1/2, b==-3, c==-8, ineq==(1/2*x^2-3*x-8<0)]"/>
+        <item name="clipboard" value="[D==25, a==1/2, b==-3, c==-8]"/>
       </context>
     </elem>
   </list>

@@ -174,7 +174,8 @@ turnIntoEquation = makeSimpleRule "turn into equation" $ withCM $ \r -> do
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
    ineq <- lookupClipboard "ineq" >>= fromExpr
-   xs <- maybeCM (matchM orView r >>= disjunctions)
+   removeClipboard "ineq"
+   xs   <- maybeCM (matchM orView r >>= disjunctions)
    guard (not $ null xs)
    (vs, ys) <- liftM unzip $ matchM (listView (equationView >>> equationSolvedForm)) xs
    let v  = head vs

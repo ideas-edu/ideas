@@ -1,3 +1,4 @@
+{-# OPTIONS -XGeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -135,7 +136,7 @@ linRelWith v rel =
    lhs = leftHandSide rel
    rhs = rightHandSide rel
 
-newtype Q = Q (SquareRoot Rational) deriving Eq
+newtype Q = Q (SquareRoot Rational) deriving (Show, Eq, Num, Fractional)
 
 -- Use normal (numeric) ordering on square roots
 instance Ord Q where
@@ -143,6 +144,18 @@ instance Ord Q where
     where
       f :: SquareRoot Rational -> Double
       f = eval . fmap fromRational
+
+qView :: View (SquareRoot Rational) Q
+qView = makeView (return . Q) (\(Q a) -> a)
+
+q = quadrRel (a)
+-- quadrEq (Logic.Var a) (Logic.Var b :&&: Logic.Var c)
+ where 
+   a = (1/2)*x*x -3*x -8 .==. 0
+   a2 = -x*x -4*x + 5 .<. 0
+   b = -4 .<. x
+   c = x .<. 1
+   x = Var "x"
 
 quadrEq :: Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
 quadrEq p q = fromMaybe False $ do
@@ -152,20 +165,23 @@ quadrEq p q = fromMaybe False $ do
    guard (null vs || all (==head vs) vs)
    let ix = logicIntervals (fmap snd xs)
        iy = logicIntervals (fmap snd ys)
-   return (ix == iy)
+   if ix == iy then return True else error $ show (p, q, ix, iy)
 
 quadrRel :: Relation Expr -> Maybe (String, Intervals Q)
 quadrRel rel = 
    case match (quadraticViewWith rationalView) (lhs - rhs) of
-      Nothing -> do 
-         (s, is) <- linRelWith (squareRootViewWith rationalView) rel
-         return (s, fmap Q is)
-      Just (s, a, b, c) -> do
+      Nothing ->
+         linRelWith (squareRootViewWith rationalView >>> qView) rel
+      Just (s, xa, xb, xc) -> do
+         let (tp, a, b, c) 
+                | xa<0 = 
+                     (relationType (flipSides rel), -xa, -xb, -xc)
+                | otherwise =
+                     (relationType rel, xa, xb, xc)
+             discr = b*b - 4*a*c
+             pa = Q ((-fromRational b-sqrtRational discr) / (2 * fromRational a))
+             pb = Q ((-fromRational b+sqrtRational discr) / (2 * fromRational a))
          guard (a/=0)
-         let discr = b*b - 4*a*c
-             tp = relationType $ (if a<0 then flipSides else id) rel
-             pa = Q ((-fromRational b-sqrtRational discr) / 2 * fromRational a)
-             pb = Q ((-fromRational b+sqrtRational discr) / 2 * fromRational a)
          (\is -> Just (s, is)) $
           case compare discr 0 of
             LT | tp `elem` [NotEqualTo, GreaterThan, GreaterThanOrEqualTo] ->

@@ -182,6 +182,7 @@ complement (IS xs) = fromList (left ++ zipWith f xs (drop 1 xs) ++ right)
               _        -> [unbounded]
  
 -- q = intersect (fromList [open 1 8]) (fromList [closed 1 4, open 5 6, open 6 7])
+q = fromList [greaterThan (-4)] `intersect` fromList [lessThan 1]
 
 ---------------------------------------------------------------------
 -- Local helper functions
@@ -216,7 +217,7 @@ merge ia@(I al ar) ib@(I bl br)
 inBoth :: Ord a => Interval a -> Interval a -> Interval a
 inBoth a Empty = Empty
 inBoth Empty b = Empty
-inBoth (I al ar) (I bl br) = makeInterval (maxPoint2 al bl) (minPoint2 ar br)
+inBoth (I al ar) (I bl br) = makeInterval (maxPoint3 al bl) (minPoint3 ar br)
 
 minPoint :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
 minPoint a b = 
@@ -257,3 +258,23 @@ maxPoint2 a b =
          | otherwise     -> a
       Just GT -> a
       Nothing -> Unbounded
+      
+maxPoint3 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
+maxPoint3 a b = 
+   case liftM2 compare (getPoint a) (getPoint b) of
+      Just LT -> b
+      Just EQ
+         | isIncluding a -> b -- !!!
+         | otherwise     -> a
+      Just GT -> a
+      Nothing -> if a == Unbounded then b else a
+      
+minPoint3 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
+minPoint3 a b = 
+   case liftM2 compare (getPoint a) (getPoint b) of
+      Just LT -> a
+      Just EQ
+         | isIncluding a -> b -- !!!!!!!!!!!!!!!!
+         | otherwise     -> a
+      Just GT -> b
+      Nothing -> if a == Unbounded then b else a

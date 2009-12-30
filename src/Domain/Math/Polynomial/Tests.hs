@@ -20,6 +20,8 @@ import Common.Derivation
 import Common.View
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
+import Domain.Math.Clipboard
+import Domain.Math.Expr
 import Domain.Math.Examples.DWO1
 import Domain.Math.Examples.DWO2
 import Domain.Math.Polynomial.Exercises
@@ -28,7 +30,9 @@ import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Laws
 import Domain.Math.Numeric.Views
+import Domain.Logic.Formula
 import Test.QuickCheck
+import Data.Maybe
 
 --import Common.View
 --import Domain.Math.Expr
@@ -82,15 +86,35 @@ g s n e = map p (h (derivations (derivationTree (strategy s) (inContext e)))) wh
 -- e1 = match higherDegreeEquationsView $ OrList [(x :==: 2)] where x = Var "x"
 -- e2 = simplify rationalView (Sqrt ())
 
-goLE = eqTest ineqLinearExercise
+-- goLE = eqTest ineqLinearExercise
 goQE = eqTest ineqQuadraticExercise
 
+--eqTest :: Exercise a -> IO ()
 eqTest ex = do
    forM_ (examples ex) $ \eq -> do
       let tree  = derivationTree (strategy ex) (inContext eq)
       forM_ (derivations tree) $ \d -> do
          let xs = terms d
-         forM [ (a, b) | a <- xs, b <- xs ] $ \(a, b) -> do
-            if equivalence ex (fromContext a) (fromContext b)
+         forM ([ (a, b) | a <- xs, b <- xs ]) $ \(a, b) -> do
+            if equalityIneq a b -- equivalence ex (fromContext a) (fromContext b)
              then putChar '.' 
-             else error $ unlines ["", show a, show b]
+             else error $ unlines ["", prettyPrinter ex (fromContext a), prettyPrinter ex (fromContext b)]
+
+equalityIneq :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
+equalityIneq ca cb = equivalence ineqQuadraticExercise a b
+ where
+   (a, b) = (f $ fromContext ca, f $ fromContext cb)
+   f | any clipboardHasIneq [ca,cb] = turnIntoEqualTo
+     | otherwise                    = id
+
+clipboardHasIneq :: Context a -> Bool
+clipboardHasIneq = isJust . evalCM (\_ -> lookupClipboard "ineq")
+
+turnIntoEqualTo :: Logic (Relation a) -> Logic (Relation a)
+turnIntoEqualTo = g . fmap (\rel -> 
+   leftHandSide rel .==. rightHandSide rel)
+ where
+   -- temporary fix
+   g (p :&&: q) = g p :||: g q
+   g (p :||: q) = g p :||: g q
+   g p          = p

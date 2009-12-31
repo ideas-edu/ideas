@@ -56,7 +56,7 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
                        , repInc_Steps      = stepsremaining $ State ex (Just pr) requestedTerm
-                       , repInc_Equivalent = maybe False (equivalence ex (fromContext expected) . fromContext) maybeAnswer
+                       , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
                        }  
              where
                (loc, args) = firstMajorInPrefix pr prefix requestedTerm

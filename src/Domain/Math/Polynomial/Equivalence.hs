@@ -165,7 +165,7 @@ quadrEq p q = fromMaybe False $ do
    guard (null vs || all (==head vs) vs)
    let ix = logicIntervals (fmap snd xs)
        iy = logicIntervals (fmap snd ys)
-   if ix == iy then return True else error $ show (p, q, ix, iy)
+   if ix == iy then return True else return False -- error $ show (p, q, ix, iy)
 
 quadrRel :: Relation Expr -> Maybe (String, Intervals Q)
 quadrRel rel = 

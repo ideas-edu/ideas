@@ -23,7 +23,7 @@ module Common.Exercise
      -- * Exercise codes
    , ExerciseCode, noCode, makeCode, readCode, domain, identifier
      -- * Miscellaneous
-   , restrictGenerator
+   , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
    , checkExercise, checkParserPretty
    , checksForList
@@ -202,6 +202,9 @@ identifier _        = []
 ---------------------------------------------------------------
 -- Rest
      
+equivalenceContext :: Exercise a -> Context a -> Context a -> Bool
+equivalenceContext ex a b = equivalence ex (fromContext a) (fromContext b)
+    
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 
    case filter ((==s) . name) (ruleset ex) of 
@@ -249,7 +252,7 @@ checkExercise ex =
          putStrLn ("** " ++ show (exerciseCode ex))
          let check txt p = putLabel txt >> quickCheck p
          check "parser/pretty printer" $ forAll gen $
-            checkParserPretty (equivalence ex) (parser ex) (prettyPrinter ex)   
+            checkParserPrettyEx ex   
          
          putStrLn "Soundness non-buggy rules" 
          forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
@@ -271,8 +274,12 @@ checkExercise ex =
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
-checkParserPretty eq parser pretty p = 
-   either (const False) (eq p) (parser (pretty p))
+checkParserPretty eq parser pretty a = 
+   either (const False) (eq a) (parser (pretty a))
+
+checkParserPrettyEx :: Exercise a -> a -> Bool
+checkParserPrettyEx ex = 
+   checkParserPretty (similarity ex) (parser ex) (prettyPrinter ex)
 
 checksForList :: Exercise a -> IO ()
 checksForList ex
@@ -289,16 +296,18 @@ checksForTerm ex a =
    case derivation (derivationTree (strategy ex) (inContext a)) of
       Nothing -> fail $ "no derivation for " ++ txt
       Just theDerivation -> do
-         unless (isReady ex (last as)) $
+         unless (isReady ex (fromContext (last as))) $
             fail $ "not solved: " ++ txt
-         case [ (x, y) | x <- as, y <- as, not (equivalence ex x y) ] of
-            (x, y):_ -> fail $ "not equivalent: " ++ prettyPrinter ex x ++ "  and  "
-                                                  ++ prettyPrinter ex y
+         case [ (x, y) | x <- as, y <- as, not (equivalenceContext ex x y) ] of
+            (x, y):_ -> fail $  "not equivalent: " 
+                             ++ prettyPrinter ex (fromContext x) ++ "  and  "
+                             ++ prettyPrinter ex (fromContext y)
             _        -> return ()
-         case filter (not . checkParserPretty (similarity ex) (parser ex) (prettyPrinter ex)) as of
-            hd:_ -> let s = prettyPrinter ex hd in
-                    fail $ "parse error for " ++ s ++ ": parsed as " ++
-                           either show (prettyPrinter ex) (parser ex s)
+         case filter (not . checkParserPrettyEx ex . fromContext) as of
+            hd:_ -> let s = prettyPrinter ex (fromContext hd) in
+                    fail $ "parse error for " ++ s 
+                         ++ ": parsed as " 
+                         ++ either show (prettyPrinter ex) (parser ex s)
             _    -> return ()
        where
-         as = map fromContext (terms theDerivation)
+         as = terms theDerivation

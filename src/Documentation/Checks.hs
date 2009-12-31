@@ -32,6 +32,7 @@ import qualified Service.ModeXML as ModeXML
 import qualified Domain.Math.Numeric.Tests as MathNum
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
+import qualified Domain.Math.Data.Interval as MathInterval
 
 import qualified Text.UTF8 as UTF8
 import Data.List
@@ -43,6 +44,7 @@ main = do
    MathNum.main
    MathPoly.tests
    MathSqrt.tests
+   MathInterval.testMe
    LA.checks
    UTF8.testEncoding
 

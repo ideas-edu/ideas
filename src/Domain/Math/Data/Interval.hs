@@ -8,6 +8,10 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Support for mathematical intervals (open, closed, unbounded). @Intervals@
+-- is a normalized (and sorted) list of intervals that supports testing for
+-- equality.
+--
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Interval
    ( -- Data types
@@ -17,13 +21,17 @@ module Domain.Math.Data.Interval
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
    , lessThan, lessThanOrEqualTo
      -- Making intervals
-   , except, toList, fromList, contains
+   , except, toList, fromList
    , union, intersect, complement
+   , isIn, isInInterval
+     -- QuickChecks
+   , testMe
    ) where
 
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
+import Test.QuickCheck
 
 --------------------------------------------------------------------
 -- Data declarations
@@ -49,10 +57,10 @@ instance Show a => Show (Interval a) where
 instance Functor Endpoint where
    fmap f (Excluding a) = Excluding (f a)
    fmap f (Including a) = Including (f a)
-   fmap f Unbounded     = Unbounded
+   fmap _ Unbounded     = Unbounded
 
 instance Functor Interval where
-   fmap f Empty   = Empty
+   fmap _ Empty   = Empty
    fmap f (I a b) = I (fmap f a) (fmap f b) -- function should not change order
 
 instance Functor Intervals where
@@ -143,14 +151,8 @@ insert iv@(I l _) (IS xs) = rec xs
          (Empty, _)       -> rec rest
          (_, Just new)    -> insert new (IS rest)
          (I a _, Nothing)
-            | minPoint a l == a -> let IS tl = rec rest in IS (hd:tl)
-            | otherwise         -> IS (iv:hd:rest)
-
-contains :: Ord a => Interval a -> Interval a -> Bool
-contains _ Empty = True
-contains Empty _ = False
-contains (I al ar) (I bl br) = 
-   minPoint al bl == al && maxPoint ar br == ar
+            | minPointLeft a l == a -> let IS tl = rec rest in IS (hd:tl)
+            | otherwise             -> IS (iv:hd:rest)
 
 union :: Ord a => Intervals a -> Intervals a -> Intervals a
 union xs = foldr insert xs . toList
@@ -160,8 +162,8 @@ intersect (IS xs) (IS ys) = fromList (f xs ys)
  where
    f (a@(I _ ar):as) (b@(I _ br):bs) = inBoth a b : rest
     where
-      rest | maxPoint ar br == ar = f (a:as) bs
-           | otherwise            = f as (b:bs)
+      rest | maxPointRight ar br == ar = f (a:as) bs
+           | otherwise                 = f as (b:bs)
    f _ _ = []
 
 complement :: Ord a => Intervals a -> Intervals a
@@ -180,18 +182,20 @@ complement (IS xs) = fromList (left ++ zipWith f xs (drop 1 xs) ++ right)
    right = case reverse xs of 
               I _ ar:_ -> maybe [] (return . flip I Unbounded) (g ar)
               _        -> [unbounded]
- 
--- q = intersect (fromList [open 1 8]) (fromList [closed 1 4, open 5 6, open 6 7])
-q = fromList [greaterThan (-4)] `intersect` fromList [lessThan 1]
+
+isIn :: Ord a => a -> Intervals a -> Bool
+isIn a (IS xs) = any (isInInterval a) xs
+
+isInInterval :: Ord a => a -> Interval a -> Bool
+isInInterval _ Empty   = False
+isInInterval a (I b c) = f GT b && f LT c
+ where
+   f value x = 
+      let g c = (c==EQ && isIncluding x) || c==value 
+      in maybe True (g . compare a) (getPoint x)
 
 ---------------------------------------------------------------------
 -- Local helper functions
-{-
-leftEndpoint, rightEndpoint :: Interval a -> Maybe a
-leftEndpoint  Empty    = Nothing
-leftEndpoint  (I pl _) = getPoint pl
-rightEndpoint Empty    = Nothing
-rightEndpoint (I _ pr) = getPoint pr -}
 
 getPoint :: Endpoint a -> Maybe a
 getPoint (Including a) = Just a
@@ -202,7 +206,7 @@ merge :: Ord a => Interval a -> Interval a -> Maybe (Interval a)
 merge a Empty = Just a
 merge Empty b = Just b
 merge ia@(I al ar) ib@(I bl br)
-   | minPoint al bl /= al = merge ib ia
+   | minPointLeft al bl /= al = merge ib ia
    | otherwise = 
         case liftM2 compare (getPoint ar) (getPoint bl) of
            Just LT -> Nothing
@@ -212,69 +216,130 @@ merge ia@(I al ar) ib@(I bl br)
            Just GT -> ok
            Nothing -> ok
  where
-   ok = Just (I al (maxPoint ar br))
+   ok = Just (I al (maxPointRight ar br))
 
 inBoth :: Ord a => Interval a -> Interval a -> Interval a
-inBoth a Empty = Empty
-inBoth Empty b = Empty
-inBoth (I al ar) (I bl br) = makeInterval (maxPoint3 al bl) (minPoint3 ar br)
+inBoth _ Empty = Empty
+inBoth Empty _ = Empty
+inBoth (I al ar) (I bl br) = makeInterval (maxPointLeft al bl) (minPointRight ar br)
 
-minPoint :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
-minPoint a b = 
-   case liftM2 compare (getPoint a) (getPoint b) of
-      Just LT -> a
-      Just EQ
-         | isIncluding a -> a
-         | otherwise     -> b
-      Just GT -> b
-      Nothing -> Unbounded
+minPointLeft, minPointRight, maxPointLeft, maxPointRight 
+   :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
+minPointLeft  = compareEndpoint True  True
+minPointRight = compareEndpoint True  False 
+maxPointLeft  = compareEndpoint False False
+maxPointRight = compareEndpoint False True 
 
-maxPoint :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
-maxPoint a b = 
+compareEndpoint :: Ord a => Bool -> Bool -> Endpoint a -> Endpoint a -> Endpoint a
+compareEndpoint b1 b2 a b = 
    case liftM2 compare (getPoint a) (getPoint b) of
-      Just LT -> b
-      Just EQ
-         | isIncluding a -> a
-         | otherwise     -> b
-      Just GT -> a
-      Nothing -> Unbounded
-      
-minPoint2 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
-minPoint2 a b = 
-   case liftM2 compare (getPoint a) (getPoint b) of
-      Just LT -> a
-      Just EQ
-         | isIncluding a -> b -- !!!!!!!!!!!!!!!!
-         | otherwise     -> a
-      Just GT -> b
-      Nothing -> Unbounded
-      
-maxPoint2 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
-maxPoint2 a b = 
-   case liftM2 compare (getPoint a) (getPoint b) of
-      Just LT -> b
-      Just EQ
-         | isIncluding a -> b -- !!!
-         | otherwise     -> a
-      Just GT -> a
-      Nothing -> Unbounded
-      
-maxPoint3 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
-maxPoint3 a b = 
-   case liftM2 compare (getPoint a) (getPoint b) of
-      Just LT -> b
-      Just EQ
-         | isIncluding a -> b -- !!!
-         | otherwise     -> a
-      Just GT -> a
-      Nothing -> if a == Unbounded then b else a
-      
-minPoint3 :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
-minPoint3 a b = 
-   case liftM2 compare (getPoint a) (getPoint b) of
-      Just LT -> a
-      Just EQ
-         | isIncluding a -> b -- !!!!!!!!!!!!!!!!
-         | otherwise     -> a
-      Just GT -> b
-      Nothing -> if a == Unbounded then b else a
+      Just LT                -> x
+      Just EQ | p a          -> x 
+              | otherwise    -> y
+      Just GT                -> y
+      Nothing | b2           -> Unbounded
+              | x==Unbounded -> y
+              | otherwise    -> x
+ where
+   p = if b1==b2 then isIncluding else isExcluding
+   (x, y) = if b1 then (a, b) else (b, a)
+  
+---------------------------------------------------------------------
+-- QuickCheck
+
+instance (Arbitrary a, Ord a) => Arbitrary (Endpoint a) where
+   arbitrary = frequency 
+      [ (2, liftM Excluding arbitrary)
+      , (2, liftM Including arbitrary)
+      , (1, return Unbounded)
+      ]
+   coarbitrary (Excluding a) = variant 0 . coarbitrary a
+   coarbitrary (Including a) = variant 1 . coarbitrary a
+   coarbitrary Unbounded     = variant 2
+
+instance (Arbitrary a, Ord a) => Arbitrary (Interval a) where
+   arbitrary = frequency 
+      [ (1, return Empty)
+      , (5, liftM2 makeInterval arbitrary arbitrary)
+      ]
+   coarbitrary Empty   = variant 0
+   coarbitrary (I a b) = variant 1 . coarbitrary a . coarbitrary b
+   
+instance (Arbitrary a, Ord a) => Arbitrary (Intervals a) where
+   arbitrary = do
+      n  <- choose (0, 100)
+      xs <- replicateM n arbitrary
+      return (fromList xs)
+   coarbitrary (IS xs) = coarbitrary xs
+
+testMe :: IO ()
+testMe = do
+   putStrLn "** Intervals"
+   -- Constructor functions
+   quickCheck $ op0 empty     (const False)
+   quickCheck $ op0 unbounded (const True)
+   
+   quickCheck $ op1 greaterThan (>)
+   quickCheck $ op1 greaterThanOrEqualTo (>=)
+   quickCheck $ op1 lessThan (<)
+   quickCheck $ op1 lessThanOrEqualTo (<=)
+   quickCheck $ op1 singleton (==)
+   
+   quickCheck $ op2 open      (<)  (<)
+   quickCheck $ op2 closed    (<=) (<=)
+   quickCheck $ op2 leftOpen  (<)  (<=)
+   quickCheck $ op2 rightOpen (<=) (<)
+   
+   -- From/to lists
+   quickCheck fromTo1
+   quickCheck fromTo2
+   
+   -- Combinators
+   quickCheck defExcept
+   quickCheck defUnion
+   quickCheck defIntersect
+   quickCheck defComplement
+   
+   -- Combinator properties
+   quickCheck $ selfInverse complement
+   quickCheck $ transitive  union
+   quickCheck $ commutative union
+   quickCheck $ absorption  union
+   quickCheck $ transitive  intersect
+   quickCheck $ commutative intersect
+   quickCheck $ absorption  intersect
+
+fromTo1, fromTo2 :: Intervals Int -> Bool
+fromTo1 a = fromList (toList a) == a
+fromTo2 a = fromList (reverse (toList a)) == a
+
+defExcept :: Int -> Int -> Bool
+defExcept a b = isIn a (except b) == (a/=b)
+
+defUnion, defIntersect :: Int -> Intervals Int -> Intervals Int -> Bool
+defUnion     a b c = isIn a (b `union` c) == (isIn a b || isIn a c)
+defIntersect a b c = isIn a (b `intersect` c) == (isIn a b && isIn a c)
+
+defComplement :: Int -> Intervals Int -> Bool
+defComplement a b = isIn a (complement b) == not (isIn a b)
+
+op0 :: Interval Int -> (Int -> Bool) -> Int -> Bool
+op0 g p a = isInInterval a g == p a
+
+op1 :: (Int -> Interval Int) -> (Int -> Int -> Bool) -> Int -> Int -> Bool
+op1 g op a b = isInInterval a (g b) == (a `op` b)
+
+op2 :: (Int -> Int -> Interval Int) -> (Int -> Int -> Bool) -> (Int -> Int -> Bool) -> Int -> Int -> Int -> Bool
+op2 g opl opr a b c = isInInterval a (g b c) == (b `opl` a && a `opr` c)
+
+transitive :: (Intervals Int -> Intervals Int -> Intervals Int) -> Intervals Int -> Intervals Int -> Intervals Int -> Bool
+transitive op a b c = op a (op b c) == op (op a b) c
+
+commutative :: (Intervals Int -> Intervals Int -> Intervals Int) -> Intervals Int -> Intervals Int -> Bool
+commutative op a b = op a b == op b a
+
+absorption :: (Intervals Int -> Intervals Int -> Intervals Int) -> Intervals Int -> Bool
+absorption op a = op a a == a
+
+selfInverse :: (Intervals Int -> Intervals Int) -> Intervals Int -> Bool
+selfInverse op a = op (op a) == a

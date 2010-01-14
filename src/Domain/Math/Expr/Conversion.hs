@@ -113,9 +113,10 @@ instance IsExpr a => IsExpr (Logic a) where
 -- Symbol Conversion to/from OpenMath
 
 toOMOBJ :: Expr -> OMOBJ
-toOMOBJ (Var x) = OMV x
-toOMOBJ (Nat n) = OMI n
-toOMOBJ expr    =
+toOMOBJ (Var x)    = OMV x
+toOMOBJ (Nat n)    = OMI n
+toOMOBJ (Number a) = OMF a
+toOMOBJ expr =
    case getFunction expr of
       Just (s, []) -> 
          OMS s  
@@ -130,6 +131,7 @@ fromOMOBJ :: OMOBJ -> Expr
 fromOMOBJ omobj =
    case omobj of
       OMI n -> fromInteger n
+      OMF a -> Number a
       OMV x -> Var x
       OMS s -> symbol s
       OMA (OMS s:xs) -> function s (map fromOMOBJ xs)

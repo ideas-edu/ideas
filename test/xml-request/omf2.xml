@@ -1,0 +1,19 @@
+<request encoding="openmath" service="derivation" exerciseid="math.quadreq-with-approx">
+	<state><prefix>[]</prefix><context></context>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="logic1" name="or"/>
+          <OMA>
+            <OMS cd="relation1" name="approx"/>
+            <OMV name="x"/>
+            <OMF dec="1.4142"/>
+          </OMA>
+          <OMA>
+            <OMS cd="relation1" name="approx"/>
+            <OMV name="x"/>
+            <OMF dec="-1.4142"/>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+	</state>
+</request>

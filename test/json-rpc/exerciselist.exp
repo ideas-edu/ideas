@@ -50,6 +50,12 @@
       },
       {
          "domain": "math",
+         "identifier": "factor",
+         "description": "factorize the expression",
+         "status": "Provisional"
+      },
+      {
+         "domain": "math",
          "identifier": "fraction",
          "description": "simplify expression (fractions)",
          "status": "Provisional"
@@ -135,5 +141,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2474)"
+   "version": "0.5.11 (2633)"
 }

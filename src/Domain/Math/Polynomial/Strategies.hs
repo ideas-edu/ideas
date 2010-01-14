@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
    ( linearStrategy, quadraticStrategy
-   , higherDegreeStrategy 
+   , higherDegreeStrategy, findFactorsStrategy
    ) where
 
 import Prelude hiding (repeat, replicate, fail)
@@ -66,7 +66,8 @@ quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $
    fromEquation = mapRules (ignoreContext . liftRule (switchView equationView))
  
    generalForm = label "general form" $ 
-      ruleOnce commonFactorVar <|> ruleOnce noLinFormula{- or coverup -}
+      ruleOnce commonFactorVar 
+      <|> ruleOnce noLinFormula{- or coverup -}
       <|> ruleOnce simplerA <|> ruleOnce niceFactors 
       <|> coverUpPower -- to deal with special case x^2=0
       
@@ -140,3 +141,11 @@ ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
       case applyAll r (makeContext env a) of
          []  -> f (a:acc) env as
          new -> map (fmap $ \na -> orList (reverse acc++na:as)) new
+
+-----------------------------------------------------------
+-- Finding factors in an expression
+
+findFactorsStrategy :: LabeledStrategy Expr
+findFactorsStrategy = cleanUpStrategy cleanUpSimple $
+   label "find factors" $
+   repeat (niceFactorsNew <|> commonFactorVarNew)

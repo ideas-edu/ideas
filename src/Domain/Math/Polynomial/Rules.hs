@@ -74,13 +74,16 @@ higherDegreeRules =
 
 -- ax^2 + bx = 0 
 commonFactorVar :: Rule (Equation Expr) 
-commonFactorVar = makeSimpleRule "common factor var" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
-   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+commonFactorVar = rhsIsZero commonFactorVarNew
+
+commonFactorVarNew :: Rule Expr
+commonFactorVarNew = makeSimpleRule "common factor var" $ \expr -> do
+   (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) expr
    guard (c == 0 && b /= 0)
    -- also search for constant factor
    let d = gcdFrac a b
-   return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)) :==: 0)
+   return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)))
+
 
 -- ax^2 + c = 0
 noLinFormula :: Rule (Equation Expr)
@@ -94,20 +97,29 @@ noLinFormula = makeSimpleRule "no linear term b" $ \(lhs :==: rhs) -> do
 
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Rule (Equation Expr)
-niceFactors = makeSimpleRuleList "nice factors" $ \(lhs :==: rhs) -> do
-   guard (rhs == 0)
+niceFactors = rhsIsZero niceFactorsNew
+
+-- search for (X+A)*(X+B) decomposition 
+niceFactorsNew :: Rule Expr
+niceFactorsNew = makeSimpleRuleList "nice factors" $ \expr -> do
    let sign t@(x, (a, b, c)) = if a== -1 then (x, (1, -b, -c)) else t 
-   (x, (a, rb, rc)) <- liftM sign (matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs)
+   (x, (a, rb, rc)) <- liftM sign (matchM (polyNormalForm rationalView >>> second quadraticPolyView) expr)
    guard (a==1)
    b <- isInt rb
    c <- isInt rc
    let ok (i, j) = i+j == b
        f  (i, j) 
           | i == j = -- special case
-              (Var x + fromInteger i) ^ 2 :==: 0
+              (Var x + fromInteger i) ^ 2
           | otherwise =
-              (Var x + fromInteger i) * (Var x + fromInteger j) :==: 0
+              (Var x + fromInteger i) * (Var x + fromInteger j)
    map f (filter ok (factors c))
+
+rhsIsZero :: Rule Expr -> Rule (Equation Expr)
+rhsIsZero r = makeSimpleRuleList (name r) $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   a <- applyAll r lhs
+   return (a :==: rhs)
 
 simplerA :: Rule (Equation Expr)
 simplerA = makeSimpleRule "simpler polynomial" $ \(lhs :==: rhs) -> do

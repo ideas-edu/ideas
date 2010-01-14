@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Conversion 
-   ( IsExpr(..), toOMOBJ, fromOMOBJ
+   ( IsExpr(..), toOMOBJ, fromOMOBJ, exprToSLogic
    ) where
 
 import Domain.Math.Expr.Data
@@ -24,6 +24,7 @@ import Text.OpenMath.Object
 import Text.OpenMath.Symbol (extraSymbol)
 import Common.View
 import Control.Monad
+import Common.Traversable (switch)
 import Data.Maybe
 import Data.List
 
@@ -108,7 +109,13 @@ instance IsExpr a => IsExpr (Logic a) where
            liftM2 (:->:) (fromExpr a) (fromExpr b)
       , liftM Logic.Var (fromExpr expr)
       ]
-   
+
+exprToSLogic :: MonadPlus m => Expr -> m Logic.SLogic
+exprToSLogic expr = fromExpr expr >>= switch . fmap f
+ where
+   f (Var s) = return s
+   f expr    = fail (show expr)
+
 -------------------------------------------------------------
 -- Symbol Conversion to/from OpenMath
 

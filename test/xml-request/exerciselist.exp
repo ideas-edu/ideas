@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.11">
   <list>
     <elem domain="linalg" identifier="gaussianelim" description="Gaussian Elimination" status="Stable"/>
     <elem domain="linalg" identifier="gramschmidt" description="Gram-Schmidt" status="Provisional"/>
@@ -8,6 +8,7 @@
     <elem domain="logic" identifier="dnf-unicode" description="Proposition to DNF (unicode support)" status="Stable"/>
     <elem domain="math" identifier="coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem domain="math" identifier="derivative" description="Derivative" status="Experimental"/>
+    <elem domain="math" identifier="factor" description="factorize the expression" status="Provisional"/>
     <elem domain="math" identifier="fraction" description="simplify expression (fractions)" status="Provisional"/>
     <elem domain="math" identifier="higherdegree" description="solve an equation (higher degree)" status="Provisional"/>
     <elem domain="math" identifier="ineqhigherdegree" description="solve an inequation of higher degree" status="Experimental"/>

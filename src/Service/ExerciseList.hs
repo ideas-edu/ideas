@@ -37,9 +37,17 @@ packages :: [Some ExercisePackage]
 packages =
    [ -- logic and relation-algebra
      Some (package Logic.dnfExercise)
-        {getExerciseText = Just Logic.logicText}
+        { withOpenMath    = True
+        , toOpenMath      = toOMOBJ . toExpr . fmap Var
+        , fromOpenMath    = exprToSLogic . fromOMOBJ
+        , getExerciseText = Just Logic.logicText
+        }
    , Some (package Logic.dnfUnicodeExercise)
-        {getExerciseText = Just Logic.logicText}
+        { withOpenMath    = True
+        , toOpenMath      = toOMOBJ . toExpr . fmap Var
+        , fromOpenMath    = exprToSLogic . fromOMOBJ
+        , getExerciseText = Just Logic.logicText
+        }
    , make RA.cnfExercise
      -- basic math
    , makeOM Math.naturalExercise, makeOM Math.integerExercise
@@ -48,6 +56,7 @@ packages =
    , makeOM Math.linearExercise
    , makeOM Math.quadraticExercise
    , makeOM Math.higherDegreeExercise
+   , makeOM Math.findFactorsExercise
    , makeOM Math.ineqLinearExercise
    , makeOM Math.ineqQuadraticExercise
    , makeOM Math.ineqHigherDegreeExercise

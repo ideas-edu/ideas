@@ -14,7 +14,7 @@
 module Domain.Math.Examples.DWO1
    ( calculateResults, fillInResult
    , coverUpEquations, linearEquations
-   , quadraticEquations 
+   , quadraticEquations, findFactors
    , modulusEquations, sqrtEquations, sqrtSubstEquations, brokenEquations
    , simplerSqrt, simplerSqrt2, simplerSqrt3
    ) where
@@ -295,7 +295,24 @@ quadraticEquations = [level1, level2, level3, level4, level5, level6]
       , 2*x^2       :==: x*(x+2)+7
       , (1-x)^2     :==: x+2
       ]
-   
+
+-- Ontbinden in factoren (VWO B, hoofdstuk 1)
+findFactors :: [[Expr]]
+findFactors =
+   let x = variable "x" in
+   [ -- (buiten haakjes brengen)
+     [ 4*x^2 -4*x
+     , 36*x^2+30*x
+     , -6*x^2-18*x
+     , 14*x^2-10*x
+     ] --(product-som methode)
+   , [ x^2+11*x+24
+     , x^2-8*x+15
+     , x^2-x-2
+     , x^2-11*x+28
+     ]
+   ]
+
 modulusEquations :: [[Equation Expr]]
 modulusEquations = 
    let x = variable "x" in

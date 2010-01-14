@@ -32,6 +32,7 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
+import Domain.Math.Numeric.Views
 
 ------------------------------------------------------------
 -- Exercises
@@ -105,7 +106,20 @@ quadraticWithApproximation = quadraticExercise
    cfg = [ (ByName "approximate result", Expose)
          , (ByName "square root simplification", Hide)
          ]
-   
+
+findFactorsExercise :: Exercise Expr
+findFactorsExercise = makeExercise
+   { description  = "factorize the expression"
+   , exerciseCode = makeCode "math" "factor"
+   , status       = Provisional
+   , parser       = parseWith pExpr
+   , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
+   , equivalence  = viewEquivalent (polyViewWith rationalView)
+ --  , isReady      = solvedRelations
+   , strategy     = mapRules ignoreContext findFactorsStrategy
+   , examples     = concat findFactors
+   }
+
 --------------------------------------------
 -- Equality
 

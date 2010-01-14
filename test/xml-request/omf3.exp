@@ -1,6 +1,10 @@
 <reply result="ok" version="0.5.10">
-  <list>
-    <elem ruleid="cover-up power [vars]">
+  <elem ruleid="cover-up power [vars]">
+    []
+    <state>
+      <prefix>
+        [0,0,0,4,0]
+      </prefix>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="logic1" name="or"/>
@@ -9,9 +13,7 @@
             <OMV name="x"/>
             <OMA>
               <OMS cd="arith1" name="root"/>
-              <OMI>
-                2
-              </OMI>
+              <OMF dec="2.4"/>
               <OMI>
                 2
               </OMI>
@@ -24,9 +26,7 @@
               <OMS cd="arith1" name="unary_minus"/>
               <OMA>
                 <OMS cd="arith1" name="root"/>
-                <OMI>
-                  2
-                </OMI>
+                <OMF dec="2.4"/>
                 <OMI>
                   2
                 </OMI>
@@ -35,24 +35,7 @@
           </OMA>
         </OMA>
       </OMOBJ>
-    </elem>
-    <elem ruleid="approximate">
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMA>
-          <OMS cd="logic1" name="or"/>
-          <OMA>
-            <OMS cd="relation1" name="approx"/>
-            <OMV name="x"/>
-            <OMF dec="1.4142"/>
-          </OMA>
-          <OMA>
-            <OMS cd="relation1" name="approx"/>
-            <OMV name="x"/>
-            <OMF dec="-1.4142"/>
-          </OMA>
-        </OMA>
-      </OMOBJ>
-    </elem>
-  </list>
+    </state>
+  </elem>
 </reply>
 

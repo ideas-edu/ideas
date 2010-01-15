@@ -8,16 +8,15 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Diagnose a term submitted by a student. Deprecated (see diagnose service)
+-- Diagnose a term submitted by a student. Deprecated (see diagnose service).
 --
 -----------------------------------------------------------------------------
-module Service.Submit where
+module Service.Submit (submit, Result(..), getResultState) where
 
-import qualified Common.Apply as Apply
-import Common.Exercise
 import Common.Transformation
 import Common.Context
-import Common.Utils (safeHead)
+import qualified Service.Diagnose as Diagnose
+import Service.Diagnose (Diagnosis, diagnose)
 import Service.TypedAbstractService
 import Data.Maybe
 
@@ -27,52 +26,20 @@ data Result a = Buggy  [Rule (Context a)]
               | Ok     [Rule (Context a)] (State a)  -- equivalent
               | Detour [Rule (Context a)] (State a)  -- equivalent
               | Unknown                   (State a)  -- equivalent
-              
--- To be removed, and replaced by Diagnose service
+ 
+fromDiagnose :: Diagnosis a -> Result a
+fromDiagnose diagnose =
+   case diagnose of
+      Diagnose.Buggy r        -> Buggy [r]
+      Diagnose.NotEquivalent  -> NotEquivalent
+      Diagnose.Similar _ s    -> Ok [] s
+      Diagnose.Expected _ s r -> Ok [r] s
+      Diagnose.Detour _ s r   -> Detour [r] s
+      Diagnose.Correct _ s    -> Unknown s
+          
 submit :: State a -> a -> Result a 
-submit state new
-   -- Is the submitted term equivalent?
-   | not (equivalence (exercise state) (term state) new) =
-        -- Is the rule used discoverable by trying all known buggy rules?
-        case discovered True of
-           Just r -> -- report the buggy rule
-              Buggy [r]
-           Nothing -> -- unknown mistake
-              NotEquivalent
-   -- Is the submitted term (very) similar to the previous one? 
-   | similarity (exercise state) (term state) new =
-        -- If yes, report this
-        Ok [] state
-   -- Was the submitted term expected by the strategy
-   | isJust expected =
-        -- If yes, return new state and rule
-        let (r, _, ns) = fromJust expected  
-        in Ok [r] ns
-   -- Is the rule used discoverable by trying all known rules?
-   | otherwise =
-        case discovered False of
-           Just r ->  -- If yes, report the found rule as a detour
-              Detour [r] state { prefix=Nothing, context=inContext new }
-           Nothing -> -- If not, we give up
-              Unknown state { prefix=Nothing, context=inContext new }
- where
-   expected = do
-      xs <- allfirsts state
-      let p (_, _, ns) = similarity (exercise state) new (term ns)
-      safeHead (filter p xs)
-
-   discovered searchForBuggy = safeHead
-      [ r
-      | r <- ruleset (exercise state)
-      , isBuggyRule r == searchForBuggy
-      , a <- Apply.applyAll r (inContext sub1)
-      , similarity (exercise state) sub2 (fromContext a)
-      ]
-    where 
-      mode = not searchForBuggy
-      diff = difference (exercise state) mode (term state) new
-      (sub1, sub2) = fromMaybe (term state, new) diff      
-
+submit state new = fromDiagnose (diagnose state new)
+   
 getResultState :: Result a -> Maybe (State a)
 getResultState result =
    case result of

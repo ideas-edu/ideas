@@ -20,7 +20,7 @@ import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
 import Common.Transformation hiding (name, defaultArgument)
-import Common.Utils (Some(..))
+import Common.Utils (Some(..), readM)
 import Control.Monad
 import Data.Char
 import Data.List
@@ -233,10 +233,15 @@ decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State 
 decodeState b ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
-   let sp = maybe "[]" getData (findChild "prefix" xml)
+   pr  <- case findChild "prefix" xml of
+             Nothing -> -- no tag prefix present -> restart
+                return (emptyPrefix (strategy ex))
+             Just this -> do
+                a <- readM (getData this)
+                makePrefix a (strategy ex)
    expr <- f xml
    env  <- decodeEnvironment b xml
-   let state  = State ex (Just (makePrefix (read sp) $ strategy ex)) term
+   let state  = State ex (Just pr) term
        term   = makeContext env expr
    return (state, top)
 

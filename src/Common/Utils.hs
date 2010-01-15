@@ -38,6 +38,11 @@ readInt xs
    | any (not . isDigit) xs = Nothing
    | otherwise              = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
 
+readM :: (Monad m, Read a) => String -> m a
+readM s = case reads s of
+             [(a, xs)] | all isSpace xs -> return a
+             _ -> fail ("no read: " ++ s)
+
 stringToHex :: String -> Maybe Int
 stringToHex = foldl op (Just 0)
  where

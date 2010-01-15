@@ -17,7 +17,7 @@ import Control.Monad
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (fail)
-import Common.Utils (splitAtElem, splitsWithElem)
+import Common.Utils (splitAtElem, splitsWithElem, readM)
 import Text.OpenMath.Object
 import Data.Char
 import Data.Maybe
@@ -61,9 +61,8 @@ putInContext2 s = fromMaybe inContext $ do
 getPrefix2 :: String -> LabeledStrategy (Context a) -> Prefix (Context a)
 getPrefix2 s ls = fromMaybe (emptyPrefix ls) $ do
    (s1, _) <- splitAtElem ';' s
-   case reads s1 of
-      [(is, xs)] | all isSpace xs -> return (makePrefix is ls)
-      _ -> Nothing 
+   is <- readM s1
+   makePrefix is ls
 
 optional :: Either String a -> Either String (Maybe a)
 optional = Right . either (const Nothing) Just

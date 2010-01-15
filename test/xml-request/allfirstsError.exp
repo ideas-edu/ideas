@@ -1,0 +1,6 @@
+<reply result="error" version="0.5.11">
+  <message>
+    no read: [this is not a valid prefix]
+  </message>
+</reply>
+

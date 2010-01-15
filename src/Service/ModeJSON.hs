@@ -14,7 +14,7 @@
 module Service.ModeJSON (processJSON, jsonTuple) where
 
 import Common.Context
-import Common.Utils (Some(..), distinct)
+import Common.Utils (Some(..), distinct, readM)
 import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
@@ -158,9 +158,7 @@ jsonDecoder pkg = Decoder
          
 instance InJSON Location where
    toJSON              = toJSON . show
-   fromJSON (String s) = case reads s of
-                            [(loc, rest)] | all isSpace rest -> return loc
-                            _ -> fail "invalid string"
+   fromJSON (String s) = readM s
    fromJSON _          = fail "expecting a string"
 
 --------------------------
@@ -187,7 +185,7 @@ decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
    env  <- decodeContext jsonContext
    return TAS.State 
       { TAS.exercise = ex
-      , TAS.prefix   = fmap (`makePrefix` strategy ex) (readPrefix p) 
+      , TAS.prefix   = readM p >>= (`makePrefix` strategy ex)
       , TAS.context  = makeContext env a
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
@@ -199,12 +197,6 @@ decodeContext (Object xs) = foldM add emptyEnv xs
    add env (k, String s) = return (storeEnv k s env)       
    add _ _ = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
-
-readPrefix :: String -> Maybe [Int]
-readPrefix input =
-   case reads input of
-      [(is, rest)] | all isSpace rest -> return is
-      _ -> Nothing
    
 encodeResult :: Monad m => Encoder m JSON a -> TAS.Result a -> m JSON
 encodeResult enc result =

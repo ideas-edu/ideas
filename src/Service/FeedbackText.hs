@@ -44,7 +44,7 @@ data ExerciseText a = ExerciseText
 
 derivationtext :: ExerciseText a -> State a -> Maybe String -> [(String, Context a)]
 derivationtext exText st _event = 
-   map (first (showRule exText)) (derivation st)
+   map (first (showRule exText)) (derivation Nothing st)
 
 onefirsttext :: ExerciseText a -> State a -> Maybe String -> (Bool, String, State a)
 onefirsttext exText state event =

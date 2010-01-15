@@ -63,7 +63,7 @@ derivationS = Service "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   S.derivationNew ::: Maybe StrategyCfg :-> State :-> List (tuple2 Rule Context)
+   S.derivation ::: Maybe StrategyCfg :-> State :-> List (tuple2 Rule Context)
 
 allfirstsS :: Service a
 allfirstsS = Service "allfirsts" 
@@ -79,7 +79,7 @@ onefirstS = Service "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $ 
-   S.onefirst ::: State :-> Elem (tuple3 Rule Location State)
+   S.onefirst ::: State :-> Elem (Error (tuple3 Rule Location State))
   
 readyS :: Service a
 readyS = Service "ready" 

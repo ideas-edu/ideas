@@ -56,6 +56,7 @@ data Type a t where
    Tag          :: String -> Type a t1 -> Type a t1
    Optional     :: t1 -> Type a t1 -> Type a t1
    Maybe        :: Type a t1 -> Type a (Maybe t1)
+   Error        :: Type a t -> Type a (Either String t)
    -- Type constructors
    List         :: Type a t -> Type a [t]
    Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
@@ -86,6 +87,7 @@ instance Show (Type a t) where
    show (Tag _ t)      = show t
    show (Optional _ t) = "(" ++ show t ++ ")?"
    show (Maybe t)      = "(" ++ show t ++ ")?"
+   show (Error t)      = show t
    show (List t)       = "[" ++ show t ++ "]"
    show (Elem t)       = show t
    show (IO t)         = show t
@@ -161,6 +163,8 @@ decodeDefault dec tp s =
          decodeType dec t1 s `mplus` return (a, s)
       Maybe t1 -> 
          liftM (first Just) (decodeType dec t1 s) `mplus` return (Nothing, s)
+      Error t -> 
+         liftM (first Right) (decodeType dec t s)
       Exercise -> do
          return (exercise (decoderPackage dec), s)
       ExerciseText -> do
@@ -186,6 +190,7 @@ encodeDefault enc tp tv =
       Maybe t1      -> case tv of
                           Just a  -> encodeType enc t1 a
                           Nothing -> return (encodeTuple enc [])
+      Error t       -> either fail (encodeType enc t) tv
       IO t1         -> encodeType enc t1 (unsafePerformIO tv)
       Rule          -> encodeType enc String (name tv)
       Term          -> encodeTerm enc tv

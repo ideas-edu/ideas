@@ -14,7 +14,7 @@ module Service.TypedAbstractService
      State(..), emptyState, term
      -- * Services
    , stepsremaining, findbuggyrules, submit, ready, allfirsts
-   , derivationNew, derivation
+   , derivation
    , onefirst, applicable, apply, generate, generateWith
      -- * Result data type
    , Result(..), getResultState, resetStateIfNeeded
@@ -24,7 +24,7 @@ import qualified Common.Apply as Apply
 import Common.Context 
 import Common.Derivation hiding (derivation)
 import Common.Exercise (Exercise(..), ruleset, randomTermWith)
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, fail)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Data.Maybe
@@ -64,10 +64,8 @@ generate ex level = do
 generateWith :: StdGen -> Exercise a -> Int -> State a
 generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
 
--- todo: remove old implementation of derivation (kept for being backwards
--- compatible)
-derivationNew :: Maybe StrategyConfiguration -> State a -> [(Rule (Context a), Context a)]
-derivationNew mcfg state =
+derivation :: Maybe StrategyConfiguration -> State a -> [(Rule (Context a), Context a)]
+derivation mcfg state =
    case (prefix state, mcfg) of 
       (Nothing, _) -> error "derivation: no prefix"
       -- configuration is only allowed beforehand: hence, the prefix 
@@ -75,17 +73,17 @@ derivationNew mcfg state =
       -- restriction should probably be relaxed later on.
       (Just p, Just cfg) | null (prefixToSteps p) -> 
          let new = configure cfg $ strategy $ exercise state
-         in derivation state 
-               { prefix   = Just (makePrefix [] new)
+         in rec state 
+               { prefix   = Just (emptyPrefix new)
                , exercise = (exercise state) {strategy=new}
                } 
-      (Just p, _) -> derivation state
-
-derivation :: State a -> [(Rule (Context a), Context a)]
-derivation state =
-   case allfirsts state of 
-      [] -> []
-      (r, _, next):_ -> (r, context next) : derivation next 
+      _ -> rec state
+ where
+   rec :: State a -> [(Rule (Context a), Context a)]
+   rec state =
+      case allfirsts state of 
+         [] -> []
+         (r, _, next):_ -> (r, context next) : rec next 
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
@@ -114,8 +112,11 @@ allfirsts state =
             )
          _ -> Nothing
 
-onefirst :: State a -> (Rule (Context a), Location, State a)
-onefirst = fromMaybe (error "onefirst") . safeHead . allfirsts
+onefirst :: Monad m => State a -> m (Rule (Context a), Location, State a)
+onefirst state = 
+   case allfirsts state of
+      hd:_ -> return hd
+      _    -> fail "No step possible"
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
@@ -141,7 +142,7 @@ ready :: State a -> Bool
 ready state = isReady (exercise state) (term state)
 
 stepsremaining :: State a -> Int
-stepsremaining = length . derivation
+stepsremaining = length . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =

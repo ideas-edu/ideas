@@ -25,6 +25,7 @@ import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
 import Common.Strategy.BiasedChoice
+import Data.Maybe
 
 -----------------------------------------------------------
 --- Prefixes
@@ -43,21 +44,21 @@ instance Eq (Prefix a) where
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> Prefix a
-emptyPrefix = makePrefix []
+emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
 
 -- | Construct a prefix for a given list of integers and a labeled strategy.
-makePrefix :: [Int] -> LabeledStrategy a -> Prefix a
+makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix is ls = rec [] is start
  where
    mkCore = placeBiasLabels . processLabelInfo snd
           . addLocation . toCore . toStrategy
    start  = strategyTree biasT (mkCore ls)
  
-   rec acc [] t = P acc t
+   rec acc [] t = return (P acc t)
    rec acc (n:ns) t =
       case drop n (branches t) of
          (step, st):_ -> rec ((n, step):acc) ns st
-         _            -> P [] start -- invalid prefix: start over
+         _            -> fail ("invalid prefix: " ++ show is)
 
    biasT :: Translation (Either (Bias Step a) (StrategyLocation, LabelInfo)) a (Bias Step a)
    biasT = (forLabel, Normal . Step)

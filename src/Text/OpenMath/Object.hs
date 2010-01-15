@@ -15,7 +15,7 @@ module Text.OpenMath.Object
    ) where
 
 import Text.XML
-import Data.Char (isSpace)
+import Common.Utils (readM)
 import Data.Maybe
 import Data.Typeable
 import Text.OpenMath.Symbol
@@ -55,15 +55,15 @@ xml2omobj xml =
             return (OMS (Symbol mcd name))
 
          [Left s] | name xml == "OMI" ->
-            case reads s of
-               [(i, xs)] | all isSpace xs -> return (OMI i)
-               _ -> fail "invalid integer in OMI"
+            case readM s of
+               Just i  -> return (OMI i)
+               Nothing -> fail "invalid integer in OMI"
          
          [] | name xml == "OMF" -> do
             s <- findAttribute "dec" xml 
-            case reads s of
-               [(fp, xs)] | all isSpace xs -> return (OMF fp)
-               _ -> fail "invalid floating-point in OMF"
+            case readM s of
+               Just fp -> return (OMF fp)
+               Nothing -> fail "invalid floating-point in OMF"
                     
          [] | name xml == "OMV" -> do
             s <- findAttribute "name" xml

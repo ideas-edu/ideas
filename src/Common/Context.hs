@@ -35,7 +35,7 @@ module Common.Context
 import Common.Transformation
 import Common.Traversable
 import Common.Uniplate
-import Common.Utils (safeHead, commaList)
+import Common.Utils (safeHead, commaList, readM)
 import Common.View
 import Control.Monad
 import Data.Char
@@ -153,19 +153,12 @@ data Var a = V
 -- | Simple constructor function for creating a variable. Uses the 
 -- Show and Read type classes
 newVar :: (Show a, Read a) => String -> a -> Var a
-newVar = makeVar show defaultRead
+newVar = makeVar show readM
 
 -- | Extended constructor function for creating a variable. The show
 -- and read functions are supplied explicitly.
 makeVar :: (a -> String) -> (String -> Maybe a) -> String -> a -> Var a
 makeVar showF readF s a = V s a showF readF
-
--- local helper
-defaultRead :: Read a => String -> Maybe a
-defaultRead s = 
-   case reads s of
-      [(b, rest)] | all isSpace rest -> Just b
-      _ -> Nothing
  
 ----------------------------------------------------------
 -- Location (current focus)

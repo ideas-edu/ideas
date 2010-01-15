@@ -23,6 +23,7 @@ import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate
 import Data.Char
+import Common.Utils (readM)
 import Data.Foldable (toList)
 import Data.Sequence hiding (take)
 import Control.Monad.State
@@ -78,10 +79,7 @@ nextTaskLocation (SL xs) (SL ys) = SL (rec xs ys)
          _              -> empty
 
 parseStrategyLocation :: String -> Maybe StrategyLocation
-parseStrategyLocation s =
-   case reads s of
-      [(xs, rest)] | all isSpace rest -> Just (SL (fromList xs))
-      _ -> Nothing
+parseStrategyLocation = fmap (SL . fromList) . readM
 
 -- | Returns a list of all strategy locations, paired with the labeled 
 -- substrategy or rule at that location

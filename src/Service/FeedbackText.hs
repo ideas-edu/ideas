@@ -42,14 +42,15 @@ data ExerciseText a = ExerciseText
 ------------------------------------------------------------
 -- Services
 
-derivationtext :: ExerciseText a -> State a -> Maybe String -> [(String, Context a)]
-derivationtext exText st _event = 
-   map (first (showRule exText)) (derivation Nothing st)
+derivationtext :: Monad m => ExerciseText a -> State a -> Maybe String -> m [(String, Context a)]
+derivationtext exText st _event = do
+   xs <- derivation Nothing st
+   return (map (first (showRule exText)) xs)
 
 onefirsttext :: ExerciseText a -> State a -> Maybe String -> (Bool, String, State a)
 onefirsttext exText state event =
    case allfirsts state of
-      (r, _, s):_ ->
+      Just ((r, _, s):_) ->
          let msg = case useToRewrite exText r state (fromContext $ context s) of
                       Just txt | event /= Just "hint button" -> txt
                       _ -> "Use " ++ showRule exText r
@@ -92,7 +93,9 @@ submitHelper exText old a result =
                            feedbackUnknown exText (ready old)
                          , False)
  where
-   expected = fmap fst3 . safeHead . allfirsts
+   expected s = do
+      xs <- allfirsts s
+      fmap fst3 (safeHead xs)
 
 ------------------------------------------------------------
 -- Helper functions

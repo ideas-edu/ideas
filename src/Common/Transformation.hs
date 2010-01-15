@@ -102,11 +102,7 @@ data ArgDescr a = ArgDescr
 
 -- | Constructor function for an argument descriptor that uses the Show and Read type classes
 defaultArgDescr :: (Show a, Read a, Arbitrary a) => String -> ArgDescr a
-defaultArgDescr descr = ArgDescr descr Nothing parse show arbitrary
- where 
-   parse s = case reads s of
-                [(a, xs)] | all isSpace xs -> return a
-                _ -> Nothing
+defaultArgDescr descr = ArgDescr descr Nothing readM show arbitrary
 
 -- | A type class for types which have an argument descriptor
 class Arbitrary a => Argument a where

@@ -23,6 +23,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Control.Monad
+import Common.Utils (readM)
 import System.Directory
 
 main :: IO ()
@@ -108,21 +109,13 @@ extractDate s xml = do
       _ -> fail ("invalid date (YYYY-MM-DD): " ++ txt)
 
 extractInt :: String -> XML -> Either String Int
-extractInt s xml = do
-   txt <- extractText s xml
-   case reads txt of 
-      [(n, xs)] | all isSpace xs -> 
-         return n
-      _ -> fail ("invalid number" ++ txt)
+extractInt s xml = extractText s xml >>= readM
 
 extractStatus :: XML -> Either String ContentDictionaryStatus
 extractStatus xml = do
    txt <- extractText "CDStatus" xml
    let (hd, tl) = splitAt 1 txt
-   case reads (map toUpper hd ++ map toLower tl) of
-      [(st, xs)] | all isSpace xs -> 
-         return st
-      _ -> fail ("invalid status: " ++ txt)
+   readM (map toUpper hd ++ map toLower tl)
 
 extractText :: MonadPlus m => String -> XML -> m String
 extractText s xml = do

@@ -71,9 +71,10 @@ diagnose state new
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
-   expected = 
+   expected = do
+      xs <- allfirsts (restartIfNeeded state)
       let p (_, _, ns) = similarity (exercise state) new (term ns)
-      in safeHead (filter p (allfirsts (restartIfNeeded state)))
+      safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead
       [ r

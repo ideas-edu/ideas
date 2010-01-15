@@ -29,6 +29,7 @@ import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Data.Maybe
 import System.Random
+import Control.Monad
 
 data State a = State 
    { exercise     :: Exercise a
@@ -64,10 +65,10 @@ generate ex level = do
 generateWith :: StdGen -> Exercise a -> Int -> State a
 generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
 
-derivation :: Maybe StrategyConfiguration -> State a -> [(Rule (Context a), Context a)]
+derivation :: Monad m => Maybe StrategyConfiguration -> State a -> m [(Rule (Context a), Context a)]
 derivation mcfg state =
    case (prefix state, mcfg) of 
-      (Nothing, _) -> error "derivation: no prefix"
+      (Nothing, _) -> fail "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix 
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
@@ -79,22 +80,23 @@ derivation mcfg state =
                } 
       _ -> rec state
  where
-   rec :: State a -> [(Rule (Context a), Context a)]
-   rec state =
-      case allfirsts state of 
-         [] -> []
-         (r, _, next):_ -> (r, context next) : rec next 
+   rec :: Monad m => State a -> m [(Rule (Context a), Context a)]
+   rec state = do
+      xs <- allfirsts state
+      case xs of 
+         [] -> return []
+         (r, _, next):_ -> liftM ((r, context next):) (rec next)
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
-allfirsts :: State a -> [(Rule (Context a), Location, State a)]
+allfirsts :: Monad m => State a -> m [(Rule (Context a), Location, State a)]
 allfirsts state = 
    case prefix state of
       Nothing -> 
-         error "allfirsts: no prefix"
+         fail "Prefix is required"
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (context state))
-         in mapMaybe make (derivations tree)
+         in return (mapMaybe make (derivations tree))
  where
    stop (Just (Step r)) = isMajorRule r
    stop _ = False
@@ -107,7 +109,7 @@ allfirsts state =
             ( r
             , location termEnd
             , state { context = termEnd
-                    , prefix = Just prefixEnd
+                    , prefix  = Just prefixEnd
                     }
             )
          _ -> Nothing
@@ -115,8 +117,9 @@ allfirsts state =
 onefirst :: Monad m => State a -> m (Rule (Context a), Location, State a)
 onefirst state = 
    case allfirsts state of
-      hd:_ -> return hd
-      _    -> fail "No step possible"
+      Right (hd:_) -> return hd
+      Right []     -> fail "No step possible"
+      Left msg     -> fail msg
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
@@ -126,23 +129,23 @@ applicable loc state =
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied
 -- to the current term at the given location, in which case the request is invalid.
-apply :: Rule (Context a) -> Location -> State a -> State a
+apply :: Monad m => Rule (Context a) -> Location -> State a -> m (State a)
 apply r loc state = maybe applyOff applyOn (prefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
-      fromMaybe applyOff $ safeHead
-      [ s1 | (r1, loc1, s1) <- allfirsts state, name r == name r1, loc==loc1 ]
+      maybe applyOff return $ safeHead
+      [ s1 | (r1, loc1, s1) <- fromMaybe [] $ allfirsts state, name r == name r1, loc==loc1 ]
       
    applyOff  = -- scenario 2: off-strategy
       case Apply.apply r (setLocation loc (context state)) of
-         Just new -> state { context=new }
-         Nothing  -> error "apply"
+         Just new -> return state { context=new, prefix=Nothing }
+         Nothing  -> fail ("Cannot apply " ++ show r)
        
 ready :: State a -> Bool
 ready state = isReady (exercise state) (term state)
 
-stepsremaining :: State a -> Int
-stepsremaining = length . derivation Nothing
+stepsremaining :: Monad m => State a -> m Int
+stepsremaining = liftM length . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
@@ -190,9 +193,10 @@ submit state new
            Nothing -> -- If not, we give up
               Unknown state { prefix=Nothing, context=inContext new }
  where
-   expected = 
+   expected = do
+      xs <- allfirsts state
       let p (_, _, ns) = similarity (exercise state) new (term ns)
-      in safeHead (filter p (allfirsts state))
+      safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead
       [ r

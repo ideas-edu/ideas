@@ -148,7 +148,7 @@ derivationText = withDerivation $ \d ->
 progressPair :: Session -> IO (Int, Int)
 progressPair = withDerivation $ \d -> 
    let x = derivationLength d
-       y = TAS.stepsremaining (currentState d)
+       y = fromMaybe 0 (TAS.stepsremaining (currentState d))
    in return (x, x+y)
 
 readyText :: Session -> IO String
@@ -165,9 +165,11 @@ hintOrStep verbose ref = do
           exText <- getExerciseText (getPackage ss)
           ruleText exText r
    case TAS.allfirsts (currentState d) of
-      [] -> 
+      Left msg ->
+         return ("Error: " ++ msg)
+      Right [] -> 
          return "Sorry, no hint available"
-      (rule, _, s):_ ->
+      Right ((rule, _, s):_) ->
          return $ unlines $
             [ "Use " ++ showRule rule
             ] ++
@@ -188,9 +190,11 @@ nextStep ref = do
    Some ss <- readIORef ref
    let d = getDerivation ss
    case TAS.allfirsts (currentState d) of
-      [] -> 
+      Left msg ->
+         return ("Error: " ++ msg, False)
+      Right [] -> 
          return ("No more steps left to do", False)
-      (rule, _, new):_ -> do
+      Right ((rule, _, new):_) -> do
          writeIORef ref $ Some $ ss { getDerivation = extendDerivation new d  }
          case getExerciseText (getPackage ss) of
             Just exText ->

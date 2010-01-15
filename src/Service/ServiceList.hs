@@ -63,7 +63,7 @@ derivationS = Service "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   S.derivation ::: Maybe StrategyCfg :-> State :-> List (tuple2 Rule Context)
+   S.derivation ::: Maybe StrategyCfg :-> State :-> Error (List (tuple2 Rule Context))
 
 allfirstsS :: Service a
 allfirstsS = Service "allfirsts" 
@@ -71,7 +71,7 @@ allfirstsS = Service "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   S.allfirsts ::: State :-> List (tuple3 Rule Location State)
+   S.allfirsts ::: State :-> Error (List (tuple3 Rule Location State))
         
 onefirstS :: Service a
 onefirstS = Service "onefirst" 
@@ -92,7 +92,7 @@ stepsremainingS = Service "stepsremaining"
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
    \corresponds to the one returned by the derivation service." $
-   S.stepsremaining ::: State :-> Int
+   S.stepsremaining ::: State :-> Error Int
 
 applicableS :: Service a
 applicableS = Service "applicable" 
@@ -106,7 +106,7 @@ applyS = Service "apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $ 
-   S.apply ::: Rule :-> Location :-> State :-> State
+   S.apply ::: Rule :-> Location :-> State :-> Error State
 
 generateS :: Service a
 generateS = Service "generate" 
@@ -168,7 +168,7 @@ derivationtextS = Service "derivationtext"
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
-   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> List (tuple2 String Context)
+   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> Error (List (tuple2 String Context))
 
 ------------------------------------------------------
 -- Problem decomposition service

@@ -42,7 +42,7 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
                        , repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           show (getEnvironment $ fst $ head witnesses)
-                       , repOk_Steps    = stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
+                       , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
                        }
                   where 
                     witnesses   = filter (similarity ex (fromContext answeredTerm) . fromContext . fst) $ take 1 answers
@@ -55,7 +55,7 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
                        , repInc_Expected   = fromContext expected
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
-                       , repInc_Steps      = stepsremaining $ State ex (Just pr) requestedTerm
+                       , repInc_Steps      = fromMaybe 0 $ stepsremaining $ State ex (Just pr) requestedTerm
                        , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
                        }  
              where

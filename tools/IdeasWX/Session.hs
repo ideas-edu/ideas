@@ -19,6 +19,7 @@ module Session
    ) where
 
 import qualified Service.TypedAbstractService as TAS
+import Service.Submit
 import Service.FeedbackText
 import Service.ExerciseList hiding (exercise, getPackage)
 import qualified Service.ExerciseList as List
@@ -117,20 +118,20 @@ submitText txt ref = do
             Left err -> 
                return (show err, False)
             Right term ->
-               case TAS.submit (currentState d) term of
-                  TAS.Buggy rs -> 
+               case submit (currentState d) term of
+                  Buggy rs -> 
                      return ("Incorrect: you used the buggy rule: " ++ show rs, False)
-                  TAS.NotEquivalent -> 
+                  NotEquivalent -> 
                      return ("Incorrect", False)
-                  TAS.Ok rs new 
+                  Ok rs new 
                      | null rs -> 
                           return ("You have submitted the current term.", False)
                      | otherwise -> do
                           writeIORef ref $ Some ss {getDerivation = extendDerivation new d}
                           return ("Well done! You applied rule " ++ show rs, True)
-                  TAS.Detour rs _ -> 
+                  Detour rs _ -> 
                      return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy", False)
-                  TAS.Unknown _ -> 
+                  Unknown _ -> 
                      return ("Equivalent, but not a known rule. Please retry.", False)
       
 currentText :: Session -> IO String

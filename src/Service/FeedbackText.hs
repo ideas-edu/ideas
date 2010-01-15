@@ -20,6 +20,7 @@ import Common.Exercise
 import Common.Transformation
 import Common.Utils
 import Data.Maybe
+import Service.Submit
 import Service.TypedAbstractService
 import Text.Parsing (SyntaxError, errorToPositions)
 

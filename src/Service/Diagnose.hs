@@ -22,7 +22,7 @@ import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils (safeHead)
 import Data.Maybe
-import Service.TypedAbstractService hiding (Result(..))
+import Service.TypedAbstractService
 
 ----------------------------------------------------------------
 -- Result types for diagnose service

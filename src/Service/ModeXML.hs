@@ -30,7 +30,7 @@ import Service.ProblemDecomposition
 import Service.Request
 import Service.Revision (version)
 import Service.ServiceList 
-import Service.TypedAbstractService hiding (exercise, Result(..))
+import Service.TypedAbstractService hiding (exercise)
 import Service.Diagnose
 import Service.Types hiding (State)
 import Text.OpenMath.Object

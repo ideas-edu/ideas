@@ -21,7 +21,8 @@ import Control.Arrow
 import Control.Monad
 import Data.Maybe
 import Service.ExerciseList (ExercisePackage, exercise, getExerciseText)
-import Service.TypedAbstractService (State, Result)
+import Service.TypedAbstractService (State)
+import Service.Submit (Result)
 import Service.Diagnose (Diagnosis)
 import Service.FeedbackText (ExerciseText)
 import System.IO.Unsafe

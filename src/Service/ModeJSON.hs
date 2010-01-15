@@ -24,6 +24,7 @@ import Service.Request
 import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
+import Service.Submit
 import Service.ServiceList hiding (Service)
 import qualified Service.ExerciseList as List
 import Control.Monad
@@ -198,19 +199,19 @@ decodeContext (Object xs) = foldM add emptyEnv xs
    add _ _ = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
    
-encodeResult :: Monad m => Encoder m JSON a -> TAS.Result a -> m JSON
+encodeResult :: Monad m => Encoder m JSON a -> Result a -> m JSON
 encodeResult enc result =
    case result of
       -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]
-      TAS.Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . name) rs)]
-      TAS.NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
-      TAS.Ok rs st      -> do
+      Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . name) rs)]
+      NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
+      Ok rs st      -> do
          json <- encodeType enc Tp.State st
          return $ Object [("result", String "Ok"), ("rules", Array $ map (String . name) rs), ("state", json)]
-      TAS.Detour rs st  -> do
+      Detour rs st  -> do
          json <- encodeType enc Tp.State st
          return $ Object [("result", String "Detour"), ("rules", Array $ map (String . name) rs), ("state", json)]
-      TAS.Unknown st    -> do
+      Unknown st    -> do
          json <- encodeType enc Tp.State st
          return $ Object [("result", String "Unknown"), ("state", json)]
 

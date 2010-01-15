@@ -18,6 +18,7 @@ import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
 import Service.ExerciseList (exercises)
 import qualified Service.TypedAbstractService as S
+import qualified Service.Submit as S
 import qualified Service.Diagnose as S
 import Service.FeedbackText hiding (ExerciseText)
 import Service.Types 

@@ -1,7 +1,7 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.5.11">
   <state>
     <prefix>
-      []
+      no prefix
     </prefix>
     <context>
       <item name="location" value="[0]"/>

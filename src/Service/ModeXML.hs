@@ -233,17 +233,24 @@ decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State 
 decodeState b ex f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
-   pr  <- case findChild "prefix" xml of
-             Nothing -> -- no tag prefix present -> restart
-                return (emptyPrefix (strategy ex))
-             Just this -> do
-                a <- readM (getData this)
-                makePrefix a (strategy ex)
+   mpr <- case maybe "" getData (findChild "prefix" xml) of
+             prefixText
+                | all isSpace prefixText ->
+                     return (Just (emptyPrefix (strategy ex)))
+                | prefixText ~= "no prefix" -> 
+                     return Nothing 
+                | otherwise -> do
+                     a  <- readM prefixText
+                     pr <- makePrefix a (strategy ex)
+                     return (Just pr)
    expr <- f xml
    env  <- decodeEnvironment b xml
-   let state  = State ex (Just pr) term
+   let state  = State ex mpr term
        term   = makeContext env expr
    return (state, top)
+ where
+   a ~= b = g a == g b
+   g = map toLower . filter (not . isSpace)
 
 decodeEnvironment :: Monad m => Bool -> XML -> m Environment
 decodeEnvironment b xml =
@@ -286,7 +293,7 @@ decodeConfiguration xml =
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = f (term state) >>= \body -> return $
    element "state" $ do
-      element "prefix"  (text $ maybe "[]" show (prefix state))
+      element "prefix"  (text $ maybe "no prefix" show (prefix state))
       encodeEnvironment b (getEnvironment (context state))
       body
 

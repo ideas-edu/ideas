@@ -14,11 +14,11 @@ module Common.Strategy.BiasedChoice
    ) where
 
 import Common.Apply
-import Common.View
+-- import Common.View
 import Common.Derivation
 import Common.Transformation
 import Common.Strategy.Core
-import Common.Uniplate
+-- import Common.Uniplate
 
 data Bias f a = TryFirst BiasId | OrElse BiasId | Normal (f a) deriving Show
 type BiasId = Int
@@ -30,7 +30,7 @@ instance Apply f => Apply (Bias f) where
 -- Disabled! 
 placeBiasLabels :: Core l a -> Core (Either (Bias f a) l) a
 placeBiasLabels = {-fst . rec 0 . -}mapLabel Right
- where
+ where {-
    -- Left-biased choice
    rec n (a :|>: b) = 
       let (ra, n1) = rec n  a
@@ -47,7 +47,7 @@ placeBiasLabels = {-fst . rec 0 . -}mapLabel Right
    recList n (x:xs) = 
       let (a,  n1) = rec n x
           (as, n2) = recList n1 xs
-      in (a:as, n2)
+      in (a:as, n2) -}
 
 biasTranslation :: (Rule a -> f a) -> Translation (Either (Bias f a) l) a (Bias f a)
 biasTranslation f = (either Before (const Skip), Normal . f)
@@ -93,6 +93,7 @@ makeBiasedTree p core =
    biasTree p . changeLabel fst . runTree (strategyTree (biasTranslation id) (placeBiasLabels core))
     
 -------------------------
+{-
 test = makeBiasedTree (maybe False (const True) . derivation) myCore 5
 
 myCore = (r1 :|>: r2) :|: (r3 :|>: r4)
@@ -102,4 +103,4 @@ myCore = (r1 :|>: r2) :|: (r3 :|>: r4)
    r3 = make "r3" $ \n -> trace "**3**" [n*2]
    r4 = make "r4" $ \n -> trace "**4**" [n `div` 2]
    trace _ = id
-   make n = Rule Nothing . minorRule . makeSimpleRuleList n
+   make n = Rule Nothing . minorRule . makeSimpleRuleList n -}

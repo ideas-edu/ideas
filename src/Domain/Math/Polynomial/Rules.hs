@@ -15,25 +15,26 @@ import Common.Apply
 import Common.Context
 import Common.Transformation
 import Common.Traversable
-import Common.Uniplate (universe)
+import Common.Uniplate (universe, uniplate)
 import Common.Utils
 import Common.View hiding (simplify)
-import Domain.Math.Simplification
 import Control.Monad
 import Data.List (nub, (\\), sort, sortBy)
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Approximation (precision)
-import Domain.Math.Data.Relation
+import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
-import Domain.Math.Polynomial.QuadraticFormula 
+import Domain.Math.Simplification
 import Prelude hiding (repeat, (^), replicate)
+import qualified Domain.Math.Data.Polynomial as P
 import qualified Domain.Math.SquareRoot.Views as SQ
 import qualified Prelude
 
@@ -293,24 +294,6 @@ allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ \(lhs :==: rh
          return $ orList [Var s :==: 0, make xs :==: make ys]
       _ -> Nothing
 
--- Factor-out variable
-{-s
-powerFactor :: Rule Expr
-powerFactor = makeSimpleRule "power factor" $ \e -> do
-   xs <- match sumView e >>= mapM (match powerFactorView)
-   let (vs, as, ns) = unzip3 xs
-       r = minimum ns
-       v = Var (head vs)
-       f a n = a*v^fromIntegral (n-r)
-   unless (length xs > 1 && length (nub vs) == 1 && r >= 1) Nothing
-   -- also search for gcd constant
-   case mapM (match integerView) as of 
-      Just is | g > 1 -> 
-         return (fromInteger g * v^fromIntegral r * foldr1 (+) (zipWith f (map (fromIntegral . (`div` g)) is) ns))
-       where g = foldr1 gcd is
-      _ -> 
-         return (v^fromIntegral r * build sumView (zipWith f as ns)) -}
-
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))
 sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
@@ -318,6 +301,70 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
    (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
    return $ orList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
+
+abcFormula :: Rule (Context (OrList (Equation Expr)))
+abcFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
+   let discr = b*b - 4 * a * c
+       sqD   = sqrt (fromRational discr)
+   addToClipboard "D" (fromRational discr)
+   case compare discr 0 of
+      LT -> return false
+      EQ -> return $ return $ 
+         Var x :==: (-fromRational b) / (2 * fromRational a)
+      GT -> return $ orList
+         [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
+         , Var x :==: (-fromRational b - sqD) / (2 * fromRational a)
+         ]
+
+higherSubst :: Rule (Context (Equation Expr))
+higherSubst = makeSimpleRule "higher subst" $ withCM $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   let myView = polyView >>> second trinomialPolyView
+   (x, ((a, n1), (b, n2), (c, n3))) <- matchM myView lhs
+   guard (n1 == 0 && n2 > 1 && n3 `mod` n2 == 0 && x /= "p")
+   let new = build myView ("p", ((a, 0), (b, 1), (c, n3 `div` n2)))
+   addToClipboard "subst" (toExpr (Var "p" :==: Var x .^. fromIntegral n2))
+   return (new :==: 0)
+
+substBackVar :: (Crush f, Crush g) => Rule (Context (f (g Expr)))
+substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
+   expr <- lookupClipboard "subst"
+   case fromExpr expr of
+      Just (Var p :==: rhs) -> do
+         guard (p `elem` concatMap collectVars (concatMap crush (crush a)))
+         return (fmap (fmap (subst p rhs)) a)
+      _ -> fail "no subst in clipboard"
+ where
+   subst a b (Var c) | a==c = b
+   subst a b expr = build (map (subst a b) cs)
+    where (cs, build) = uniplate expr
+
+exposeSameFactor :: Rule (Equation Expr)
+exposeSameFactor = makeSimpleRuleList "expose same factor" $ \(lhs :==: rhs) -> do 
+   (bx, xs) <- matchM (productView) lhs
+   (by, ys) <- matchM (productView) rhs
+   (nx, ny) <- [ (xs, new) | x <- xs, suitable x, new <- exposeList x ys ] ++
+               [ (new, ys) | y <- ys, suitable y, new <- exposeList y xs ]
+   return (build productView (bx, nx) :==: build productView (by, ny))
+ where
+   suitable p = fromMaybe False $ do 
+      (_, _, b) <- match (linearViewWith rationalView) p
+      guard (b /= 0)
+      return True
+   
+   exposeList _ [] = []
+   exposeList a (b:bs) = map (++bs) (expose a b) ++ map (b:) (exposeList a bs)
+   
+   expose a b = do
+      (s1, p1) <- matchM (polyViewWith rationalView) a
+      (s2, p2) <- matchM (polyViewWith rationalView) b
+      guard (s1==s2)
+      case P.division p2 p1 of
+         Just p3 -> return $ map (\p -> build (polyViewWith rationalView) (s1,p)) [p1, p3]
+         Nothing -> []
 
 ---------------------------------------------------------
 -- From LinearEquations

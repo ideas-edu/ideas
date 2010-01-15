@@ -148,6 +148,7 @@ instance Ord Q where
 qView :: View (SquareRoot Rational) Q
 qView = makeView (return . Q) (\(Q a) -> a)
 
+{-
 q = quadrRel (a)
 -- quadrEq (Logic.Var a) (Logic.Var b :&&: Logic.Var c)
  where 
@@ -155,7 +156,7 @@ q = quadrRel (a)
    a2 = -x*x -4*x + 5 .<. 0
    b = -4 .<. x
    c = x .<. 1
-   x = Var "x"
+   x = Var "x" -}
 
 quadrEq :: Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
 quadrEq p q = fromMaybe False $ do

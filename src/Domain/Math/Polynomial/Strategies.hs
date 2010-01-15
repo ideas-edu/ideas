@@ -22,8 +22,6 @@ import Common.View
 import Common.Context
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules
-import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.QuadraticFormula 
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
@@ -122,11 +120,13 @@ higherDegreeStrategy =
    specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
    specialV = switchView (switchView equationView)
 
+{-
 isQ2 :: Context (OrList (Relation Expr)) -> Bool
 isQ2 = maybe False isQ . match (switchView equationView) . fromContext
 
 isQ :: OrList (Equation Expr) -> Bool
 isQ = (`belongsTo` quadraticEquationsView)
+-}
 
 -- like ruleOnce
 ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
@@ -136,7 +136,7 @@ ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
       Just xs -> f [] env xs
       Nothing -> []
  where
-   f acc env [] = []
+   f _   _   [] = []
    f acc env (a:as) = 
       case applyAll r (makeContext env a) of
          []  -> f (a:acc) env as

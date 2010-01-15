@@ -14,7 +14,6 @@ module Common.Rewriting.MetaVar where
 
 import Common.Uniplate
 import Common.Utils (readInt)
-import Data.Char (ord, isDigit)
 import Data.List
 import qualified Data.IntSet as IS
 

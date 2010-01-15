@@ -35,7 +35,7 @@ linearView = makeView f g
    -- compositional (sumView would be a more restrictive alternative)
    f expr = 
       case expr of
-         Nat n    -> return $ LM M.empty expr
+         Nat _    -> return $ LM M.empty expr
          Var s    -> return $ LM (M.singleton s 1) 0
          a :+: b  -> liftM2 plusLM  (f a) (f b)
          a :-: b  -> liftM2 plusLM  (f a) (liftM negateLM (f b))
@@ -43,7 +43,7 @@ linearView = makeView f g
          a :*: b  -> join $ liftM2 timesLM (f a) (f b)
          a :/: b  -> join $ liftM2 divLM (f a) (f b)
          Sqrt a   -> join $ liftM sqrtLM (f a)
-         Number n -> return $ LM M.empty expr
+         Number _ -> return $ LM M.empty expr
          Sym s as -> mapM f as >>= symLM s
        
    g (LM m c) = build sumView (concatMap make (M.toList m) ++ [c | c /= 0])

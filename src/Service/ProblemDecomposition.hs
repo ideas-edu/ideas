@@ -245,9 +245,6 @@ type Args = [(String, String)]
 
 ------------------------------------------------------------------------
 -- Conversion functions to XML
- 
-replyInXML :: (a -> OMOBJ) -> Reply a -> String
-replyInXML toOpenMath = showXML . replyToXML toOpenMath
 
 replyToXML :: (a -> OMOBJ) -> Reply a -> XML
 replyToXML toOpenMath reply =

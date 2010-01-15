@@ -54,7 +54,7 @@ serviceOverviewPage :: HTML
 serviceOverviewPage = defaultPage "Services" 0 $ do
    h1 "Services"
    let list = sortBy (\x y -> serviceName x `compare` serviceName y) serviceList
-       f s = (if serviceDeprecated s then (++" (deprecated)") else id)
-             (serviceName s)
-   ul $ flip map list $ \s -> 
-      link (servicePageFile s) (ttText (f s))
+   ul $ flip map list $ \s -> do
+      link (servicePageFile s) (ttText (serviceName s))
+      when (serviceDeprecated s) $
+         space >> text "(deprecated)"

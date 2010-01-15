@@ -26,7 +26,7 @@ import Service.Submit (Result)
 import Service.Diagnose (Diagnosis)
 import Service.FeedbackText (ExerciseText)
 import System.IO.Unsafe
-import qualified Text.OpenMath.Reply as Decomposition
+import qualified Service.ProblemDecomposition as Decomposition
 
 infix  2 :::
 infixr 3 :->

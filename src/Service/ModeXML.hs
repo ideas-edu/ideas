@@ -34,8 +34,6 @@ import Service.TypedAbstractService hiding (exercise)
 import Service.Diagnose
 import Service.Types hiding (State)
 import Text.OpenMath.Object
-import Text.OpenMath.Reply (replyToXML)
-import Text.OpenMath.Request (xmlToRequest)
 import Text.XML
 import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp

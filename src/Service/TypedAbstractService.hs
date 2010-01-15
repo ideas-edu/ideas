@@ -15,8 +15,6 @@ module Service.TypedAbstractService
      -- * Services
    , stepsremaining, findbuggyrules, ready, allfirsts, derivation
    , onefirst, applicable, apply, generate, generateWith
-     -- * Result data type
-   , resetStateIfNeeded
    ) where
 
 import qualified Common.Apply as Apply
@@ -146,13 +144,3 @@ findbuggyrules state a =
        buggies = filter isBuggyRule (ruleset ex)
        check r = any isA (Apply.applyAll r (context state))
    in filter check buggies
-
--- make sure that new has a prefix (because of possible detour)
--- when resetting the prefix, also make sure that the context is refreshed
-resetStateIfNeeded :: State a -> State a
-resetStateIfNeeded s 
-   | isJust (prefix s) = s
-   | otherwise = s
-        { prefix  = Just (emptyPrefix (strategy (exercise s)))
-        , context = inContext (fromContext (context s))
-        }

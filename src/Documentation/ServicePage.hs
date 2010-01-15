@@ -34,6 +34,7 @@ makeServicePage s =
 servicePage :: Service a -> HTML
 servicePage s = defaultPage title 1 $ do
    h1 (serviceName s)
+
    para $ do
       bold $ text "Signature:"
       space
@@ -43,6 +44,9 @@ servicePage s = defaultPage title 1 $ do
       bold $ text "Description: "
       br
       text $ serviceDescription s
+
+   when (serviceDeprecated s) $ 
+      para $ bold $ text "Warning: this service is deprecated!"
    
    let list = filter ((==serviceName s) . fst) examples
    unless (null list) $ do

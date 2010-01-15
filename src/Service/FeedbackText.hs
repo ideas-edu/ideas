@@ -20,6 +20,7 @@ import Common.Exercise
 import Common.Transformation
 import Common.Utils
 import Data.Maybe
+import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.TypedAbstractService
 import Text.Parsing (SyntaxError, errorToPositions)
@@ -71,7 +72,7 @@ submittext exText state txt _event =
          let result = submit state a
              (txt, b) = submitHelper exText state a result
          in case getResultState result of
-               Just new | b -> (True, txt, resetStateIfNeeded new)
+               Just new | b -> (True, txt, restartIfNeeded new)
                _ -> (False, txt, state)
 
 -- Feedback messages for submit service (free student input). The boolean

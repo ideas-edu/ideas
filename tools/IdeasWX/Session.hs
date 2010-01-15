@@ -19,6 +19,7 @@ module Session
    ) where
 
 import qualified Service.TypedAbstractService as TAS
+import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
 import Service.ExerciseList hiding (exercise, getPackage)
@@ -109,7 +110,7 @@ submitText txt ref = do
       -- Use exercise text module
       Just exText -> do
          let (b, msg, st) = submittext exText (currentState d) txt Nothing
-             new = TAS.resetStateIfNeeded st
+             new = restartIfNeeded st
          when b $ writeIORef ref $ Some $ ss {getDerivation = extendDerivation new d}
          return (msg, b)
       -- Use default text

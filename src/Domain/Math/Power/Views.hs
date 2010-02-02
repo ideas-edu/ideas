@@ -12,15 +12,70 @@
 -- For now, restricted to integers in exponent:
 -- no sqrt, or roots
 module Domain.Math.Power.Views
-   ( powerView, powerViewFor
+   ( powerView, powerViewFor, powerViewWith, powerConsDivView, powerRatioView
+   , powerConsRatioView, powerRatioView', powerFactorisationView, myPowerView
    , powerFactorView, powerFactorViewWith, powerFactorViewForWith
+   , canonicalPower
    ) where
 
 import qualified Prelude
 import Prelude hiding ((^), recip)
+import Control.Arrow ( (>>^) )
 import Control.Monad
 import Common.View
+import Data.List
+import Data.Maybe
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
+import Domain.Math.Expr.Views
+
+
+v <&> w = makeView f g
+  where
+    f x = match v x `mplus` match w x
+    g   = build v
+
+-- | Power views
+powerConsDivView :: View Expr (Expr, (Expr, (Expr, Expr)))
+powerConsDivView = powerConsViewWith identity divView
+
+powerConsRatioView :: View Expr (Expr, (Expr, Rational))
+powerConsRatioView = powerConsViewWith identity rationalView
+
+powerRatioView' :: View Expr (Expr, (Expr, Rational))
+powerRatioView' = powerViewWith identity rationalView >>^ (,) 1
+
+powerRatioView = powerConsRatioView <&> powerRatioView'
+
+myPowerView  =  powerConsViewWith identity identity
+            <&> (powerViewWith identity identity >>^ (,) 1)
+
+powerViewWith :: View Expr a -> View Expr b -> View Expr (a, b)
+powerViewWith va vb = makeView f g
+  where
+    f expr = 
+      case expr of
+        Sym s [a, b] | s == powerSymbol -> do 
+          a' <- match va a
+          b' <- match vb b
+          return (a', b')
+        _ -> Nothing
+    g (a, b) = build va a .^. build vb b
+
+powerConsViewWith :: View Expr b -> View Expr c -> View Expr (Expr, (b, c))
+powerConsViewWith vb vc = timesView >>> second (powerViewWith vb vc)
+
+powerFactorisationView :: View Expr (Bool, [Expr])
+powerFactorisationView = productView >>> second (makeView f id)
+  where
+    f es = return $ map (\x -> build productView (False, x)) $ factorise es
+    factorise :: [Expr] -> [[Expr]]
+    factorise es =  maybe [es] split $ findIndex isPower es
+      where
+        split i = let (xs, ys) = splitAt (i+1) es in xs : factorise ys
+        isPower = isJust . match powerRatioView'
+
+canonicalPower = canonical powerFactorisationView
 
 ----------------------------------------------------------------------
 -- Simplified views (no side-conditions to worry about)

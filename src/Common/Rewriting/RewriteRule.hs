@@ -14,7 +14,7 @@ module Common.Rewriting.RewriteRule
    ( RuleSpec(..), lhs, rhs
    , RewriteRule, Builder, rewriteRule, BuilderList, rewriteRules
    , ruleName, nrOfMetaVars, rulePair
-   , inverse, bothWays, checkScope
+   , inverse, inverseM, bothWays, checkScope
    , rewrite, rewriteM, rewriteWith
    , normalForm, normalFormWith
    , smartGenerator, showRewriteRule, showRuleSpec
@@ -95,14 +95,19 @@ rewriteRule s f = R s (countVars f) (buildSpec f)
 rewriteRules :: BuilderList f a => String -> f -> [RewriteRule a]
 rewriteRules s f = map (R s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
 
-inverse :: RewriteRule a -> Maybe (RewriteRule a)
-inverse r@(R _ _ _) = if checkScope new then Just new else Nothing
- where 
-   swap (x :~> y) = y :~> x
-   new = R (ruleName r) (nrOfMetaVars r) (swap . rulePair r)
+inverse :: RewriteRule a -> RewriteRule a
+inverse r@(R _ _ _) = 
+   let swap (x :~> y) = y :~> x
+   in R (ruleName r ++ " (inv)") (nrOfMetaVars r) (swap . rulePair r)
+
+-- includes check for scope
+inverseM :: Monad m => RewriteRule a -> m (RewriteRule a)
+inverseM r@(R _ _ _)
+   | checkScope r = return (inverse r)
+   | otherwise    = fail $ "No inverse for " ++ ruleName r
 
 bothWays :: Rewrite a => [RewriteRule a] -> [RewriteRule a]
-bothWays rs = rs ++ mapMaybe inverse rs
+bothWays rs = rs ++ mapMaybe inverseM rs
 
 checkScope :: Rewrite a => RewriteRule a -> Bool
 checkScope r = IS.null (getMetaVars rhs IS.\\ getMetaVars lhs)

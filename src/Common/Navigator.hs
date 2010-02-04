@@ -1,3 +1,4 @@
+{-# OPTIONS -XExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -14,14 +15,14 @@
 module Common.Navigator 
    ( -- * Type class for navigating expressions 
      IsNavigator(..)
+     -- * Types and constructors 
+   , Navigator, NavigatorG
+   , navigator, navigatorG, noNavigator, useView
      -- * Derived navigations
-   , arity, isTop, isLeaf, ups, downs, navigateTo
+   , leave, arity, isTop, isLeaf, ups, downs, navigateTo
    , top, leafs, downFirst, downLast, left, right
-     -- * Instance based on Uniplate
-   , Navigator, navigator
-     -- * Instance based on a View
-   , ViewNavigator, viewNavigator
-   , changeG, currentG, unfocusG
+     -- * Generalized functions
+   , changeG, currentG, leaveG
    ) where
 
 import Common.Uniplate
@@ -43,7 +44,6 @@ class IsNavigator f where
    allDowns :: f a -> [f a]
    -- inspection
    current  :: Monad m => f a -> m a
-   unfocus  :: Monad m => f a -> m a
    location :: f a -> [Int]
    -- adaption 
    change   :: Monad m => (a -> a)   -> f a -> m (f a)
@@ -60,6 +60,9 @@ class IsNavigator f where
 
 ---------------------------------------------------------------
 -- Derived navigations
+
+leave  :: (IsNavigator f, Monad m) => f a -> m a
+leave a = maybe (current a) leave (up a)
 
 arity :: IsNavigator f => f a -> Int
 arity  = length . allDowns
@@ -124,116 +127,84 @@ right a0 = rec a0
 -- The uniplate function is stored in the data type to get rid of the
 -- Uniplate type class constraints in the member functions of the 
 -- Navigator type class.
-data Navigator a = U (UniplateType a) [(Int, a -> a)] a
+data UniplateNav a = UN (UniplateType a) [(Int, a -> a)] a
 
 type UniplateType a = a -> ([a], [a] -> a)
 
-navigator :: Uniplate a => a -> Navigator a
-navigator = U uniplate []
+makeUN :: Uniplate a => a -> UniplateNav a
+makeUN = UN uniplate []
 
-instance Show a => Show (Navigator a) where
-   show a = maybe "???" show (unfocus a) ++ "   { " 
+instance Show a => Show (UniplateNav a) where
+   show a = maybe "???" show (leave a) ++ "   { " 
             ++ maybe "???" show (current a) 
             ++ " @ " ++ show (location a) ++ " }"
    
-instance IsNavigator Navigator where
-   up (U _ [] _)            = fail "up"
-   up (U uni ((_, f):xs) a) = return (U uni xs (f a))
+instance IsNavigator UniplateNav where
+   up (UN _ [] _)            = fail "up"
+   up (UN uni ((_, f):xs) a) = return (UN uni xs (f a))
  
-   allDowns (U uni xs a) = zipWith make [0..] cs
+   allDowns (UN uni xs a) = zipWith make [0..] cs
     where
       (cs, build) = uni a
-      make i = U uni ((i, build . flip (update i) cs):xs)
+      make i = UN uni ((i, build . flip (update i) cs):xs)
       update _ _ []  = []
       update i x (y:ys)
          | i == 0    = x:ys
          | otherwise = y:update (i-1) x ys
    
-   location (U _ xs _) = reverse (map fst xs)
+   location (UN _ xs _) = reverse (map fst xs)
    
-   changeM f (U uni xs a) = liftM (U uni xs) (f a)  
-   current   (U _ _    a) = return a
-   unfocus   (U _ xs a)   = return (foldl (\b (_, f) -> f b) a xs)
+   changeM f (UN uni xs a) = liftM (UN uni xs) (f a)  
+   current   (UN _ _    a) = return a
 
 ---------------------------------------------------------------
 -- Instance based on a View
 
-data ViewNavigator a b = VF (View a b) (Navigator a)
+type Navigator  a   = NavigatorG a a
+data NavigatorG a b = NG (View a b) (UniplateNav a)
 
-instance Show a => Show (ViewNavigator a b) where
-   show (VF _ a) = show a
+instance Show a => Show (NavigatorG a b) where
+   show (NG _ a) = show a
    
-instance IsNavigator (ViewNavigator a) where
-   up        (VF v a) = liftM (VF v) (up a)
-   allDowns  (VF v a) = liftM (VF v) (allDowns a)
-   location  (VF _ a) = location a
-   current   (VF v a) = current a >>= matchM v
-   unfocus   (VF v a) = unfocus a >>= matchM v
-   changeM f (VF v a) = 
+instance IsNavigator (NavigatorG a) where
+   up        (NG v a) = liftM (NG v) (up a)
+   allDowns  (NG v a) = liftM (NG v) (allDowns a)
+   location  (NG _ a) = location a
+   current   (NG v a) = current a >>= matchM v
+   changeM f (NG v a) = 
       let g b = matchM v b >>= (liftM (build v) . f) 
-      in liftM (VF v) (changeM g a)
+      in liftM (NG v) (changeM g a)
 
-viewNavigator :: Uniplate a => View a b -> b -> ViewNavigator a b
-viewNavigator v a = VF v (navigator (build v a))
+coerce :: View a c -> NavigatorG a b -> NavigatorG a c
+coerce v (NG _ a) = NG v a
 
-changeG :: Monad m => View a c -> (c -> m c) -> ViewNavigator a b -> m (ViewNavigator a b)
+currentView :: NavigatorG a b -> View a b
+currentView (NG v _) = v
+   
+---------------------------------------------------------------
+-- Constructors
+
+navigator :: Uniplate a => a -> Navigator a
+navigator = NG identity . makeUN
+
+navigatorG :: Uniplate a => View a b -> b -> NavigatorG a b
+navigatorG v b = NG v (makeUN (build v b))
+
+noNavigator :: a -> Navigator a
+noNavigator = NG identity . UN (\a -> ([], const a)) []
+
+useView :: View a b -> Navigator a -> NavigatorG a b
+useView = coerce
+
+---------------------------------------------------------------
+-- Generalized functions
+
+changeG :: Monad m => View a c -> (c -> m c) -> NavigatorG a b -> m (NavigatorG a b)
 changeG v f a = g a
  where g = liftM (coerce (currentView a)) . changeM f . coerce v
 
-currentG :: Monad m => View a c -> ViewNavigator a b -> m c
+currentG :: Monad m => View a c -> NavigatorG a b -> m c
 currentG v = current . coerce v
 
-unfocusG :: Monad m => View a c -> ViewNavigator a b -> m c
-unfocusG v = unfocus . coerce v
-
-coerce :: View a c -> ViewNavigator a b -> ViewNavigator a c
-coerce v (VF _ a) = VF v a
-
-currentView :: ViewNavigator a b -> View a b
-currentView (VF v _) = v
-
-
-
-
-
-{-
-
-uniN :: Uniplate a => a -> N a
-uniN a = N (makeU a)
-
---exprN :: Expr -> N Expr
---exprN a = N (exprFocus a)
-
-noN :: a -> N a
-noN a = N (noFocus a)
-   
-data N a = forall f . IsNavigator f => N (f a)
-
-instance IsNavigator N where
-   up        (N a) = liftM N (up a)
-   allDowns  (N a) = map N (allDowns a)
-   location  (N a) = location a
-   changeM f (N a) = liftM N (changeM f a)
-   current   (N a) = current a
-   unfocus   (N a) = unfocus a
-
--------------------------------------------------
-
-newtype NoFocus a = NF a
-
-instance Show a => Show (NoFocus a) where
-   show (NF a) = show a
-   
-instance IsNavigator NoFocus where
-   up          = fail "up for nofocus" 
-   allDowns _  = []
-   location _  = []
-   current     = return . fromNoFocus
-   unfocus     = return . fromNoFocus
-   changeM f a = current a >>= liftM noFocus . f
-      
-noFocus :: a -> NoFocus a
-noFocus = NF
-
-fromNoFocus :: NoFocus a -> a
-fromNoFocus (NF a) = a -}
+leaveG :: Monad m => View a c -> NavigatorG a b -> m c
+leaveG v = leave . coerce v

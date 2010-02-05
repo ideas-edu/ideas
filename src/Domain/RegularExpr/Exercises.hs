@@ -12,6 +12,7 @@
 module Domain.RegularExpr.Exercises (regexpExercise) where
 
 import Common.Exercise
+import Common.Navigator
 import Common.Traversable
 import Common.Rewriting hiding (difference)
 import Domain.RegularExpr.Expr
@@ -36,6 +37,7 @@ regexpExercise = makeExercise
    , isSuitable     = (>1) . length . crush
    , difference     = differenceMode eqRE
    , strategy       = deterministicStrategy
+   , navigation     = navigator
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , testGenerator  = Just startFormGen -- arbitrary
    , randomExercise = simpleGenerator startFormGen -- myGen

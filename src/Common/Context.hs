@@ -24,7 +24,7 @@ module Common.Context
    , Var, newVar, makeVar
      -- * Location (current focus)
    , Location, location, setLocation, changeLocation
-   , currentFocus, changeFocus, locationDown, locationUp
+   , locationDown, locationUp
    , makeLocation, fromLocation
      -- * Lifting
    , liftToContext, ignoreContext, liftTransContext, contextView
@@ -37,7 +37,6 @@ import Common.Navigator hiding (location)
 
 import qualified Common.Navigator as Navigator
 import Common.Transformation
-import Common.Uniplate
 import Common.Utils (safeHead, commaList, readM)
 import Common.View
 import Control.Monad
@@ -155,8 +154,8 @@ makeVar showF readF s a = V s a showF readF
 ----------------------------------------------------------
 -- Location (current focus)
 
-locationVar :: Var Location
-locationVar = newVar "location" emptyLocation
+--locationVar :: Var Location
+--locationVar = newVar "location" (makeLocation [])
 
 -- | Type synonym for the current location (focus)
 newtype Location = L [Int] deriving (Eq, Ord, Typeable)
@@ -169,28 +168,16 @@ instance Read Location where
 
 -- | Returns the current location of a context
 location :: Context a -> Location
-location = fromMaybe emptyLocation . evalCM (const (readVar locationVar))
+location = makeLocation . Navigator.location
 
 -- | Replaces the current location of a context
 setLocation :: Location -> Context a -> Context a 
-setLocation loc c = fromMaybe c $ withCM f c
- where f a = writeVar locationVar loc >> return a
+setLocation loc c0 = fromMaybe c0 $ do
+   navigateTo (fromLocation loc) c0
 
 -- | Updates the current location of a context
 changeLocation :: (Location -> Location) -> Context a -> Context a
 changeLocation f c = setLocation (f (location c)) c
-
--- | Returns the term which has the current focus: Nothing indicates that the current 
--- focus is invalid
-currentFocus :: Uniplate a => Context a -> Maybe a
-currentFocus c = fromContext c >>= getTermAt (fromLocation $ location c)
-
--- | Changes the term which has the current focus. In case the focus is invalid, then
--- this function has no effect.
-changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
-changeFocus f c = fromMaybe c $ 
-   let g = applyAt (fromLocation (location c)) f
-   in liftM (change g) (top c) >>= navigateTo (Navigator.location c)
  
 -- | Go down to a certain child
 locationDown :: Int -> Location -> Location
@@ -208,18 +195,15 @@ makeLocation = L
 fromLocation :: Location -> [Int]
 fromLocation (L is) = is
 
-emptyLocation :: Location
-emptyLocation = makeLocation []
-
 ----------------------------------------------------------
 -- Lifting rewrite rules
 
 -- | Lift a rule to operate on a term in a context
-liftToContext :: Uniplate a => Rule a -> Rule (Context a)
+liftToContext :: Rule a -> Rule (Context a)
 liftToContext = liftRuleIn (makeView f g)
  where
-   f ctx = currentFocus ctx >>= \a -> Just (a, ctx)
-   g (a, ctx) = changeFocus (const a) ctx
+   f ctx = current ctx >>= \a -> Just (a, ctx)
+   g (a, ctx) = change (const a) ctx
 
 -- | Lift a rule to operate on a term in a context by ignoring the context
 ignoreContext :: Rule a -> Rule (Context a)

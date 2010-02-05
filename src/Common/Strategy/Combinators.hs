@@ -16,6 +16,7 @@ module Common.Strategy.Combinators where
 
 import Prelude hiding (not, repeat, fail, sequence)
 import Common.Context
+import Common.Navigator hiding (location)
 import Common.Transformation
 import Common.Uniplate
 import Common.Strategy.Core
@@ -118,7 +119,7 @@ once s = ruleMoveDown <*> s <*> ruleMoveUp
  where
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" moveDown
    moveDown c = 
-      let n = maybe 0 (pred . length . children) (currentFocus c)
+      let n = maybe 0 (pred . length . children) (current c)
       in [ changeLocation (locationDown i) c | i <- [0 .. n] ]
    
    ruleMoveUp = minorRule $ makeSimpleRule "MoveUp" moveUp

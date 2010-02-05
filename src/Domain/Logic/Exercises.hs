@@ -19,6 +19,7 @@ module Domain.Logic.Exercises
 import Common.Context
 import Common.Derivation
 import Common.Exercise
+import Common.Navigator
 import Common.Rewriting (differenceMode)
 import Common.Strategy
 import Data.Maybe
@@ -45,6 +46,7 @@ dnfExercise = makeExercise
    , isSuitable     = suitable
    , extraRules     = map liftToContext (logicRules ++ buggyRules)
    , strategy       = dnfStrategyDWA
+   , navigation     = navigator
    , difference     = differenceMode eqLogic
    , testGenerator  = Just (restrictGenerator suitable generateLogic)
    , randomExercise = useGenerator (const True) logicExercise

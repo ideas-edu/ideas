@@ -292,11 +292,12 @@ encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = f (term state) >>= \body -> return $
    element "state" $ do
       element "prefix"  (text $ maybe "no prefix" show (prefix state))
-      encodeEnvironment b (getEnvironment (context state))
+      let env = getEnvironment (context state)
+      encodeEnvironment b (location (context state)) env
       body
 
-encodeEnvironment :: Bool -> Environment -> XMLBuilder
-encodeEnvironment b env
+encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
+encodeEnvironment b loc env0
    | nullEnv env = return ()
    | otherwise   = element "context" $ do
         forM_ (keysEnv env) $ \k -> do
@@ -305,6 +306,9 @@ encodeEnvironment b env
               case lookupEnv k env of 
                  Just omobj | b -> builder  (omobj2xml omobj)
                  _              -> "value" .=. fromMaybe "" (lookupEnv k env)
+ where
+   env | null (fromLocation loc) = env0
+       | otherwise               = storeEnv "location" loc env0
 
 encodeDiagnosis :: Monad m => Bool -> (a -> m XMLBuilder) -> Diagnosis a -> m XMLBuilder
 encodeDiagnosis mode f diagnosis =
@@ -327,4 +331,4 @@ encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBui
 encodeContext b f ctx = do
    a   <- fromContext ctx
    xml <- f a
-   return (xml >> encodeEnvironment b (getEnvironment ctx))
+   return (xml >> encodeEnvironment b (location ctx) (getEnvironment ctx))

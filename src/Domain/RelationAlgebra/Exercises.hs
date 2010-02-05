@@ -26,6 +26,7 @@ import Common.Derivation
 import Common.Rewriting (differenceMode)
 import Common.Strategy hiding (not)
 import Common.Transformation
+import Common.Navigator
 
 cnfExercise :: Exercise RelAlg
 cnfExercise = testableExercise
@@ -37,6 +38,7 @@ cnfExercise = testableExercise
    , equivalence    = probablyEqual -- isEquivalent
    , extraRules     = map liftToContext (relAlgRules ++ buggyRelAlgRules)
    , strategy       = toCNF
+   , navigation     = navigator
    , difference     = differenceMode probablyEqual
    , ordering       = compare
    , isReady        = ready cnfExercise

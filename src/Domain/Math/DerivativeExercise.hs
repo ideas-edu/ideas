@@ -17,6 +17,7 @@ import Prelude hiding (repeat, (^))
 import Domain.Math.DerivativeRules 
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
+import Common.Navigator
 import Common.Context (Context, liftToContext)
 import Common.Exercise
 import Common.Transformation
@@ -35,6 +36,7 @@ derivativeExercise = makeExercise
    , isReady      = noDiff
    , extraRules   = map liftToContext derivativeRules ++ [tidyup]
    , strategy     = derivativeStrategy
+   , navigation   = navigator
    , examples     = [ex1, ex2, ex3, ex4]
    }
    

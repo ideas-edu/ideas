@@ -325,5 +325,6 @@ encodeDiagnosis mode f diagnosis =
   
 encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
-   xml <- f (fromContext ctx)
+   a   <- fromContext ctx
+   xml <- f a
    return (xml >> encodeEnvironment b (getEnvironment ctx))

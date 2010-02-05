@@ -28,9 +28,7 @@ import Domain.LinearAlgebra.Symbols ()
 import Common.Apply
 import Common.Strategy hiding (not)
 import Common.Transformation
-import Common.Traversable
 import Common.Context
-import Common.View hiding (simplify)
 import Domain.LinearAlgebra.Vector
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
@@ -123,7 +121,8 @@ conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    vs <- readVar vars
    m  <- fromExpr expr
    let linsys = matrixToSystemWith vs (m :: Matrix Expr)
-   return $ toExpr $ fromContext $ applyD simplifyFirst $ inContext linsys
+   a  <- fromContext $ applyD simplifyFirst $ inContext linsys
+   return $ toExpr a
 
 liftExpr :: IsExpr a => Rule (Context a) -> Rule (Context Expr)
 liftExpr = liftRule (contextView exprView)

@@ -52,26 +52,29 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
                        , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
                        }
                   where 
-                    witnesses   = filter (similarity ex (fromContext answeredTerm) . fromContext . fst) $ take 1 answers
-                    newPrefix   = snd (head witnesses)
-                      
+                    witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
+                    newPrefix   = snd (head witnesses)            
             ((expected, prefix):_, maybeAnswer) ->
                     Incorrect ReplyIncorrect
                        { repInc_Code       = ex
                        , repInc_Location   = subTaskLocation sloc loc
-                       , repInc_Expected   = fromContext expected
+                       , repInc_Expected   = fromJust (fromContext expected)
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
                        , repInc_Steps      = fromMaybe 0 $ stepsremaining $ State ex (Just pr) requestedTerm
                        , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
-                       }  
+                       }
              where
                (loc, args) = firstMajorInPrefix pr prefix requestedTerm
                derivation  = 
                   let len      = length $ prefixToSteps pr
                       rules    = stepsToRules $ drop len $ prefixToSteps prefix
-                      f (s, a) = (s, fromContext a)
+                      f (s, a) = (s, fromJust (fromContext a))
                   in map f (makeDerivation requestedTerm rules)
+
+similarityCtx :: Exercise a -> Context a -> Context a -> Bool
+similarityCtx ex a b = fromMaybe False $
+   liftM2 (similarity ex) (fromContext a) (fromContext b)
 
 -- | Continue with a prefix until a certain strategy location is reached. At least one
 -- major rule should have been executed

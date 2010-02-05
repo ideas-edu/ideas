@@ -122,7 +122,8 @@ changeCover f = makeTrans $ withCM $ \m -> do
    
 matrixTrans ::  (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
 matrixTrans f = makeTrans $ \c -> do
-   new <- f (fromContext c)
+   a   <- fromContext c
+   new <- f a
    return (replace new c)
 
 -- local helper function

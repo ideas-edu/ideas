@@ -15,7 +15,8 @@
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, inContext, update, replace, fromContext, makeContext, getEnvironment
+     Context, inContext, update, replace, fromContext
+   , makeContext, getEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
@@ -32,6 +33,9 @@ module Common.Context
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
    ) where
 
+import Common.Navigator hiding (location)
+
+import qualified Common.Navigator as Navigator
 import Common.Transformation
 import Common.Uniplate
 import Common.Utils (safeHead, commaList, readM)
@@ -41,7 +45,6 @@ import Data.Char
 import Data.Maybe
 import Data.Dynamic
 import Data.List
-import Test.QuickCheck
 import qualified Data.Map as M
 
 ----------------------------------------------------------
@@ -51,14 +54,14 @@ import qualified Data.Map as M
 -- (key-value pairs) and a value
 data Context a = C 
    { getEnvironment :: Environment -- ^ Returns the environment
-   , fromContext    :: a           -- ^ Retrieve a value from its context
+   , getNavigator   :: Navigator a -- ^ Retrieve a value from its context
    } 
 
-instance Eq a => Eq (Context a) where
-   x == y = fromContext x == fromContext y
+fromContext :: Monad m => Context a -> m a
+fromContext = leave . getNavigator
 
-instance Ord a => Ord (Context a) where
-   x `compare` y = fromContext x `compare` fromContext y
+instance Eq a => Eq (Context a) where
+   x == y = fromMaybe False $ liftM2 (==) (fromContext x) (fromContext y)
 
 instance Show a => Show (Context a) where
    show (C env a) = 
@@ -66,13 +69,16 @@ instance Show a => Show (Context a) where
                | otherwise = "  {" ++ show env ++ "}"
       in show a ++ rest 
 
-instance Arbitrary a => Arbitrary (Context a) where
-   arbitrary   = liftM inContext arbitrary
-   coarbitrary = coarbitrary . fromContext
+instance IsNavigator Context where
+   up        (C env a) = liftM (C env) (up a)
+   allDowns  (C env a) = map (C env) (allDowns a)
+   current   (C _   a) = current a
+   location  (C _   a) = Navigator.location a
+   changeM f (C env a) = liftM (C env) (changeM f a)
 
 -- | Construct a context
 makeContext :: Environment -> a -> Context a
-makeContext = C
+makeContext env = C env . noNavigator
 
 -- | Put a value into a (default) context
 inContext :: a -> Context a
@@ -84,7 +90,8 @@ replace = update . const
 update :: (a -> a) -> Context a -> Context a
 update = contextMap
 
-contextMap f (C env a) = C env (f a)
+contextMap :: (a -> b) -> Context a -> Context b
+contextMap f c@(C env _) = makeContext env (f (fromJust (fromContext c)))
 
 ----------------------------------------------------------
 -- Key-value pair environment (abstract)
@@ -189,7 +196,7 @@ changeLocation f c = setLocation (f (location c)) c
 -- | Returns the term which has the current focus: Nothing indicates that the current 
 -- focus is invalid
 currentFocus :: Uniplate a => Context a -> Maybe a
-currentFocus c = getTermAt (fromLocation $ location c) (fromContext c)
+currentFocus c = fromContext c >>= getTermAt (fromLocation $ location c)
 
 -- | Changes the term which has the current focus. In case the focus is invalid, then
 -- this function has no effect.
@@ -235,14 +242,17 @@ liftTransContext = liftTransIn ignoreContextView
 ignoreContextView :: View (Context a) (a, Environment)
 ignoreContextView = makeView f g
  where 
-   f c      = Just (fromContext c, getEnvironment c) 
+   f c      = fromContext c >>= \a -> Just (a, getEnvironment c) 
    g (a, e) = makeContext e a
 
-switchContext :: Monad m => Context (m a) -> m (Context a)
-switchContext (C env ma) = liftM (C env) ma
-
-contextView :: Monad m => ViewM m a b -> ViewM m (Context a) (Context b)
-contextView v = makeView (switchContext . contextMap (match v)) (contextMap (build v))
+contextView :: MonadPlus m => ViewM m a b -> ViewM m (Context a) (Context b)
+contextView v = makeView f (contextMap (build v))
+ where
+   f ca = do
+      guard (isTop ca)
+      a <- leave ca
+      b <- match v a
+      return (makeContext (getEnvironment ca) b)
 
 ----------------------------------------------------------
 -- Context monad
@@ -250,15 +260,15 @@ contextView v = makeView (switchContext . contextMap (match v)) (contextMap (bui
 newtype ContextMonad a = CM (Environment -> [(a, Environment)])
 
 withCM :: (a -> ContextMonad b) -> Context a -> Maybe (Context b)
-withCM f c = runCM (f (fromContext c)) (getEnvironment c)
+withCM f c = fromContext c >>= \a -> runCM (f a) (getEnvironment c)
 
 evalCM :: (a -> ContextMonad b) -> Context a -> Maybe b
-evalCM f = fmap fromContext . withCM f
+evalCM f c = withCM f c >>= fromContext
 
 runCM :: ContextMonad a -> Environment -> Maybe (Context a)
 runCM (CM f) env = do
    (a, e) <- safeHead (f env)
-   return (C e a)
+   return (makeContext e a)
 
 instance Functor ContextMonad where
    fmap = liftM

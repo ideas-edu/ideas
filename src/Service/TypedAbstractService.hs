@@ -35,7 +35,7 @@ data State a = State
    }
 
 term :: State a -> a
-term = fromContext . context
+term = fromJust . fromContext . context
 
 -----------------------------------------------------------
 
@@ -140,7 +140,7 @@ stepsremaining = liftM length . derivation Nothing
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise state
-       isA     = similarity ex a . fromContext  
+       isA     = maybe False (similarity ex a) . fromContext
        buggies = filter isBuggyRule (ruleset ex)
        check r = any isA (Apply.applyAll r (context state))
    in filter check buggies

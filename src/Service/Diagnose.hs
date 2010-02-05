@@ -80,10 +80,11 @@ diagnose state new
       [ r
       | r <- ruleset (exercise state)
       , isBuggyRule r == searchForBuggy
-      , a <- applyAll r (inContext sub1)
+      , ca <- applyAll r (inContext sub1)
       -- , let s = prettyPrinter (exercise state) (fromContext a)
       --, if s=="2*x+2 == 5" then True else error s
-      , similarity (exercise state) sub2 (fromContext a)
+      , a <- fromContext ca
+      , similarity (exercise state) sub2 a
       ]
     where 
       mode = not searchForBuggy
@@ -98,8 +99,11 @@ diagnose state new
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded s 
-   | isNothing (prefix s) && canBeRestarted (exercise s) = s
-        { prefix  = Just (emptyPrefix (strategy (exercise s)))
-        , context = inContext (fromContext (context s))
-        } 
+   | isNothing (prefix s) && canBeRestarted (exercise s) = 
+        case fromContext (context s) of 
+           Just a -> s
+              { prefix  = Just (emptyPrefix (strategy (exercise s)))
+              , context = inContext a
+              } 
+           Nothing -> s
    | otherwise = s

@@ -53,7 +53,7 @@ onefirsttext :: ExerciseText a -> State a -> Maybe String -> (Bool, String, Stat
 onefirsttext exText state event =
    case allfirsts state of
       Just ((r, _, s):_) ->
-         let msg = case useToRewrite exText r state (fromContext $ context s) of
+         let msg = case fromContext (context s) >>= useToRewrite exText r state of
                       Just txt | event /= Just "hint button" -> txt
                       _ -> "Use " ++ showRule exText r
          in (True, msg, s)
@@ -120,7 +120,7 @@ youRewroteInto = rewriteIntoText False "You rewrote "
 rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
 rewriteIntoText mode txt old a = do
    let ex = exercise old
-       p  = fromContext (context old)
+   p <- fromContext (context old)
    (p1, a1) <- difference ex mode p a 
    return $ txt ++ prettyPrinter ex p1 
          ++ " into " ++ prettyPrinter ex a1 ++ ". "

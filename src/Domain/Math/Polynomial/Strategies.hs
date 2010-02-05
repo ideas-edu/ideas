@@ -132,7 +132,8 @@ isQ = (`belongsTo` quadraticEquationsView)
 ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
 ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
    let env = getEnvironment ctx
-   case disjunctions (fromContext ctx) of
+   a <- fromContext ctx
+   case disjunctions a of
       Just xs -> f [] env xs
       Nothing -> []
  where
@@ -140,8 +141,11 @@ ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
    f acc env (a:as) = 
       case applyAll r (makeContext env a) of
          []  -> f (a:acc) env as
-         new -> map (fmapC $ \na -> orList (reverse acc++na:as)) new
-   fmapC g c = makeContext (getEnvironment c) (g (fromContext c))
+         new -> concatMap (fmapC $ \na -> orList (reverse acc++na:as)) new
+   fmapC g c = 
+      case fromContext c of
+         Just a  -> [makeContext (getEnvironment c) (g a)]
+         Nothing -> []
 
 -----------------------------------------------------------
 -- Finding factors in an expression

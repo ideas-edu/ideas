@@ -39,6 +39,7 @@ import Common.Utils
 import Control.Monad.Error
 import Data.Char
 import Data.List
+import Data.Maybe
 import System.Random
 import Test.QuickCheck hiding (label, arguments)
 import Text.Parsing (SyntaxError(..))
@@ -77,7 +78,7 @@ instance Ord (Exercise a) where
    e1 `compare` e2 = exerciseCode e1 `compare` exerciseCode e2
 
 instance Apply Exercise where
-   applyAll e = map fromContext . applyAll (strategy e) . inContext
+   applyAll e = concatMap fromContext . applyAll (strategy e) . inContext
 
 testableExercise :: (Arbitrary a, Show a, Ord a) => Exercise a
 testableExercise = makeExercise
@@ -203,7 +204,12 @@ identifier _        = []
 -- Rest
      
 equivalenceContext :: Exercise a -> Context a -> Context a -> Bool
-equivalenceContext ex a b = equivalence ex (fromContext a) (fromContext b)
+equivalenceContext ex a b = fromMaybe False $ 
+   liftM2 (equivalence ex) (fromContext a) (fromContext b)
+    
+prettyPrinterContext :: Exercise a -> Context a -> String
+prettyPrinterContext ex = 
+   maybe "<<invalid term>>" (prettyPrinter ex) . fromContext
     
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 
@@ -216,15 +222,18 @@ showDerivation :: Exercise a -> a -> String
 showDerivation ex a =
    case derivation tree of
       Just d  -> show (f d) ++ extra d
-      Nothing -> pp (root tree) ++ "\n   =>\n<<no derivation>>"
+      Nothing -> prettyPrinterContext ex (root tree)
+                 ++ "\n   =>\n<<no derivation>>"
  where
-   tree  = derivationTree (strategy ex) (inContext a)
-   extra d | isReady ex (fromContext (last (terms d))) = ""
-           | otherwise = "<<not ready>>"
+   tree = derivationTree (strategy ex) (inContext a)
+   extra d =
+      case fromContext (last (terms d)) of
+         Nothing               -> "<<invalid term>>"
+         Just a | isReady ex a -> ""
+                | otherwise    -> "<<not ready>>"
    -- A bit of hack to show the delta between two environments, not including
    -- the location variable
-   pp  = prettyPrinter ex . fromContext
-   f d = let t:ts = map (Shown . pp) (terms d)
+   f d = let t:ts = map (Shown . prettyPrinterContext ex) (terms d)
              xs   = zipWith3 present (steps d) (drop 1 (terms d)) (terms d)
              present a x y = Shown (show a ++ extra)
               where env = deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))
@@ -257,8 +266,7 @@ checkExercise ex =
          putStrLn "Soundness non-buggy rules" 
          forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
             putLabel ("    " ++ name r)
-            let eq f a b = fromContext a `f` fromContext b
-            testRuleSmart (eq (equivalence ex)) r (liftM inContext gen)
+            testRuleSmart (equivalenceContext ex) r (liftM inContext gen)
 
          check "non-trivial terms" $ 
             forAll gen $ \x -> 
@@ -270,7 +278,7 @@ checkExercise ex =
             classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
             forAll gen $
-               isReady ex . fromContext . applyD (strategy ex) . inContext
+               maybe False (isReady ex) . fromContext . applyD (strategy ex) . inContext
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
@@ -296,15 +304,15 @@ checksForTerm ex a =
    case derivation (derivationTree (strategy ex) (inContext a)) of
       Nothing -> fail $ "no derivation for " ++ txt
       Just theDerivation -> do
-         unless (isReady ex (fromContext (last as))) $
+         unless (maybe False (isReady ex) (fromContext (last as))) $
             fail $ "not solved: " ++ txt
          case [ (x, y) | x <- as, y <- as, not (equivalenceContext ex x y) ] of
             (x, y):_ -> fail $  "not equivalent: " 
-                             ++ prettyPrinter ex (fromContext x) ++ "  and  "
-                             ++ prettyPrinter ex (fromContext y)
+                             ++ prettyPrinterContext ex x ++ "  and  "
+                             ++ prettyPrinterContext ex y
             _        -> return ()
-         case filter (not . checkParserPrettyEx ex . fromContext) as of
-            hd:_ -> let s = prettyPrinter ex (fromContext hd) in
+         case filter (maybe False (not . checkParserPrettyEx ex) . fromContext) as of
+            hd:_ -> let s = prettyPrinterContext ex hd in
                     fail $ "parse error for " ++ s 
                          ++ ": parsed as " 
                          ++ either show (prettyPrinter ex) (parser ex s)

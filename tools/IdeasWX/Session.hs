@@ -90,13 +90,15 @@ suggestTerm :: Int -> Session -> IO String
 suggestTerm dif ref = do
    Some ss <- readIORef ref
    let ex = exercise (getDerivation ss)
-   a <- TAS.generate ex dif
-   return $ prettyPrinter ex $ fromContext $ TAS.context a
+   ca <- TAS.generate ex dif
+   a  <- fromContext $ TAS.context ca
+   return $ prettyPrinter ex a
 
 suggestTermFor :: Int -> Some Exercise -> IO String
 suggestTermFor dif (Some ex) = do
-   a <- TAS.generate ex dif
-   return $ prettyPrinter ex $ fromContext $ TAS.context a
+   ca <- TAS.generate ex dif
+   a  <- fromContext $ TAS.context ca
+   return $ prettyPrinter ex a
        
 undo :: Session -> IO ()
 undo ref =
@@ -136,8 +138,9 @@ submitText txt ref = do
                      return ("Equivalent, but not a known rule. Please retry.", False)
       
 currentText :: Session -> IO String
-currentText = withDerivation $ \d -> 
-   return $ prettyPrinter (exercise d) (fromContext $ current d)
+currentText = withDerivation $ \d -> do
+   a <- fromContext $ current d
+   return $ prettyPrinter (exercise d) a
 
 currentDescription :: Session -> IO String
 currentDescription = withDerivation $ \d -> 

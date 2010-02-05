@@ -92,5 +92,6 @@ transOrthogonal i j = contextTrans $ \xs ->
 -- Find proper abstraction, and move this function to transformation module
 contextTrans :: (a -> Maybe a) -> Transformation (Context a)
 contextTrans f = makeTrans $ \c -> do
-   new <- f (fromContext c)
+   a   <- fromContext c
+   new <- f a
    return (replace new c)

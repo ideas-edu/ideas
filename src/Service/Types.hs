@@ -195,6 +195,6 @@ encodeDefault enc tp tv =
       IO t1         -> encodeType enc t1 (unsafePerformIO tv)
       Rule          -> encodeType enc String (name tv)
       Term          -> encodeTerm enc tv
-      Context       -> encodeType enc Term (fromContext tv)
+      Context       -> fromContext tv >>= encodeType enc Term
       Location      -> encodeType enc String (show tv)
       _             -> fail "No support for result type"

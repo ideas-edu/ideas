@@ -33,7 +33,7 @@ class Simplify a where
    simplify :: a -> a
 
 instance Simplify a => Simplify (Context a) where
-   simplify = fmap simplify
+   simplify = update simplify
 
 instance Simplify a => Simplify (Equation a) where
    simplify = fmap simplify

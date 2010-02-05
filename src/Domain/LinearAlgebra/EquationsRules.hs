@@ -134,7 +134,7 @@ testConstants f (lhs :==: rhs)
 
 -- simplify a linear system
 simplifySystem :: Rule (Context (LinearSystem Expr)) -> Rule (Context (LinearSystem Expr))
-simplifySystem = doAfter $ fmap (map (fmap f))
+simplifySystem = doAfter $ update (map (fmap f))
  where f = simplifyWith (fmap simplify) linearView
 
 ---------------------------------------------------------------------------------

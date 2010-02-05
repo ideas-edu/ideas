@@ -52,7 +52,7 @@ coverUpPlus f = alternatives $ map (f . ($ oneVar))
 -- Quadratic equations
 
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
-quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $ 
+quadraticStrategy = cleanUpStrategy (update cleanUpRelation) $ 
    label "Quadratic Equation Strategy" $ 
    repeat $  fromEquation generalForm
           |> mapRules (liftRule (contextView (switchView equationView))) generalABCForm
@@ -103,9 +103,9 @@ higherDegreeStrategy =
    label "higher degree" $ 
       higherForm <*> label "quadratic" ({-option (check isQ2 <*> -} quadraticStrategy)
       <*> 
-      cleanUpStrategy (fmap cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
+      cleanUpStrategy (update cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
  where
-   higherForm = cleanUpStrategy (fmap cleanUpRelation) $ 
+   higherForm = cleanUpStrategy (update cleanUpRelation) $ 
       label "higher degree form" $
       repeat (f (toStrategy allPowerFactors) |> 
          (f (alternatives list) <|> liftRule specialV (ruleOrCtxOnce higherSubst))
@@ -128,7 +128,7 @@ isQ :: OrList (Equation Expr) -> Bool
 isQ = (`belongsTo` quadraticEquationsView)
 -}
 
--- like ruleOnce
+-- like ruleOnce: TODO, replace!
 ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
 ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
    let env = getEnvironment ctx
@@ -140,7 +140,8 @@ ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
    f acc env (a:as) = 
       case applyAll r (makeContext env a) of
          []  -> f (a:acc) env as
-         new -> map (fmap $ \na -> orList (reverse acc++na:as)) new
+         new -> map (fmapC $ \na -> orList (reverse acc++na:as)) new
+   fmapC g c = makeContext (getEnvironment c) (g (fromContext c))
 
 -----------------------------------------------------------
 -- Finding factors in an expression

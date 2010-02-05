@@ -123,7 +123,7 @@ changeCover f = makeTrans $ withCM $ \m -> do
 matrixTrans ::  (Matrix a -> Maybe (Matrix a)) -> Transformation (Context (Matrix a))
 matrixTrans f = makeTrans $ \c -> do
    new <- f (fromContext c)
-   return (fmap (const new) c)
+   return (replace new c)
 
 -- local helper function
 validRow :: Int -> Matrix a -> Bool

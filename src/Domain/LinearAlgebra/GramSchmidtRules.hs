@@ -93,4 +93,4 @@ transOrthogonal i j = contextTrans $ \xs ->
 contextTrans :: (a -> Maybe a) -> Transformation (Context a)
 contextTrans f = makeTrans $ \c -> do
    new <- f (fromContext c)
-   return (fmap (const new) c)
+   return (replace new c)

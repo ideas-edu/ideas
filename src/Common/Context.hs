@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, inContext, fromContext, makeContext, getEnvironment
+     Context, inContext, update, replace, fromContext, makeContext, getEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
@@ -33,7 +33,6 @@ module Common.Context
    ) where
 
 import Common.Transformation
-import Common.Traversable
 import Common.Uniplate
 import Common.Utils (safeHead, commaList, readM)
 import Common.View
@@ -67,15 +66,6 @@ instance Show a => Show (Context a) where
                | otherwise = "  {" ++ show env ++ "}"
       in show a ++ rest 
 
-instance Functor Context where
-   fmap f (C env a) = C env (f a)
-{-
-instance Switch Context where
-   switch (C env ma) = liftM (C env) ma
-   
-instance Once Context where
-   onceM f (C env a) = switch (C env (f a)) -}
-
 instance Arbitrary a => Arbitrary (Context a) where
    arbitrary   = liftM inContext arbitrary
    coarbitrary = coarbitrary . fromContext
@@ -87,6 +77,14 @@ makeContext = C
 -- | Put a value into a (default) context
 inContext :: a -> Context a
 inContext = makeContext emptyEnv
+
+replace :: a -> Context a -> Context a
+replace = update . const
+
+update :: (a -> a) -> Context a -> Context a
+update = contextMap
+
+contextMap f (C env a) = C env (f a)
 
 ----------------------------------------------------------
 -- Key-value pair environment (abstract)
@@ -196,7 +194,7 @@ currentFocus c = getTermAt (fromLocation $ location c) (fromContext c)
 -- | Changes the term which has the current focus. In case the focus is invalid, then
 -- this function has no effect.
 changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
-changeFocus f c = fmap (applyAt (fromLocation $ location c) f) c
+changeFocus f c = update (applyAt (fromLocation $ location c) f) c
 
 -- | Go down to a certain child
 locationDown :: Int -> Location -> Location
@@ -244,7 +242,7 @@ switchContext :: Monad m => Context (m a) -> m (Context a)
 switchContext (C env ma) = liftM (C env) ma
 
 contextView :: Monad m => ViewM m a b -> ViewM m (Context a) (Context b)
-contextView v = makeView (switchContext . fmap (match v)) (fmap (build v))
+contextView v = makeView (switchContext . contextMap (match v)) (contextMap (build v))
 
 ----------------------------------------------------------
 -- Context monad

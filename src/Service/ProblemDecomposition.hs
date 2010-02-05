@@ -175,8 +175,8 @@ xmlToRequest xml fromOpenMath ex = do
 putInContext2 :: String -> a -> Context a
 putInContext2 s = fromMaybe inContext $ do
    (_, s2) <- splitAtElem ';' s
-   c       <- parseContext s2
-   return (flip fmap c . const)
+   env     <- parseContext s2
+   return (makeContext env)
 
 getPrefix2 :: String -> LabeledStrategy (Context a) -> Prefix (Context a)
 getPrefix2 s ls = fromMaybe (emptyPrefix ls) $ do
@@ -204,14 +204,14 @@ extractExpr n xml =
       _ -> fail $ "error in " ++ show (n, xml)
 
 -- Legacy code: remove!
-parseContext :: String -> Maybe (Context ())
+parseContext :: String -> Maybe Environment
 parseContext s
    | all isSpace s = 
-        return $ makeContext emptyEnv ()
+        return emptyEnv
    | otherwise = do
         pairs <- mapM (splitAtElem '=') (splitsWithElem ',' s)
         let env = foldr (uncurry storeEnv) emptyEnv pairs
-        return $ makeContext env ()   
+        return env
         
 ------------------------------------------------------------------------
 -- Data types for replies

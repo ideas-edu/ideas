@@ -26,7 +26,7 @@ module Common.Context
    , currentFocus, changeFocus, locationDown, locationUp
    , makeLocation, fromLocation
      -- * Lifting
-   , liftToContext, ignoreContext, liftTransContext
+   , liftToContext, ignoreContext, liftTransContext, contextView
      -- * Context Monad
    , ContextMonad, runCM, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
@@ -69,12 +69,12 @@ instance Show a => Show (Context a) where
 
 instance Functor Context where
    fmap f (C env a) = C env (f a)
-
+{-
 instance Switch Context where
    switch (C env ma) = liftM (C env) ma
    
 instance Once Context where
-   onceM f (C env a) = switch (C env (f a))
+   onceM f (C env a) = switch (C env (f a)) -}
 
 instance Arbitrary a => Arbitrary (Context a) where
    arbitrary   = liftM inContext arbitrary
@@ -239,6 +239,12 @@ ignoreContextView = makeView f g
  where 
    f c      = Just (fromContext c, getEnvironment c) 
    g (a, e) = makeContext e a
+
+switchContext :: Monad m => Context (m a) -> m (Context a)
+switchContext (C env ma) = liftM (C env) ma
+
+contextView :: Monad m => ViewM m a b -> ViewM m (Context a) (Context b)
+contextView v = makeView (switchContext . fmap (match v)) (fmap (build v))
 
 ----------------------------------------------------------
 -- Context monad

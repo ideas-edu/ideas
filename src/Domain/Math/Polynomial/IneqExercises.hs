@@ -146,14 +146,14 @@ flipSign = makeSimpleRule "flip sign" $ \r -> do
  
 ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqQuadratic = label "Quadratic inequality" $ 
-   try (liftRule (switchView (orView >>> justOneView)) turnIntoEquation) 
-   <*> mapRules (liftRule (switchView orView)) quadraticStrategy
+   try (liftRule (contextView (orView >>> justOneView)) turnIntoEquation) 
+   <*> mapRules (liftRule (contextView orView)) quadraticStrategy
    <*> solutionInequation
 
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqHigherDegree = label "Inequality of a higher degree" $ 
-   try (liftRule (switchView (orView >>> justOneView)) turnIntoEquation) 
-   <*> mapRules (liftRule (switchView orView)) higherDegreeStrategy
+   try (liftRule (contextView (orView >>> justOneView)) turnIntoEquation) 
+   <*> mapRules (liftRule (contextView orView)) higherDegreeStrategy
    <*> solutionInequation
 
 justOneView :: View (OrList a) a

@@ -126,4 +126,4 @@ conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    return $ toExpr $ fromContext $ applyD simplifyFirst $ inContext linsys
 
 liftExpr :: IsExpr a => Rule (Context a) -> Rule (Context Expr)
-liftExpr = liftRule (makeView (switch . fmap fromExpr) (fmap toExpr))
+liftExpr = liftRule (contextView exprView)

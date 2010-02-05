@@ -55,7 +55,7 @@ quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 quadraticStrategy = cleanUpStrategy (fmap cleanUpRelation) $ 
    label "Quadratic Equation Strategy" $ 
    repeat $  fromEquation generalForm
-          |> mapRules (liftRule (switchView (switchView equationView))) generalABCForm
+          |> mapRules (liftRule (contextView (switchView equationView))) generalABCForm
           |> fromEquation zeroForm 
           |> fromEquation constantForm
           |> simplifyForm
@@ -118,7 +118,7 @@ higherDegreeStrategy =
    f = mapRulesS (ignoreContext . liftRule (switchView equationView))
    
    specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
-   specialV = switchView (switchView equationView)
+   specialV = contextView (switchView equationView)
 
 {-
 isQ2 :: Context (OrList (Relation Expr)) -> Bool

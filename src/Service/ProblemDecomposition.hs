@@ -40,7 +40,7 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
         replyError "request error" "invalid location for strategy"
    | otherwise =
    let pr = fromMaybe (emptyPrefix $ strategy ex) mpr in
-         case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext) answer) of            
+         case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
             ([], _) -> replyError "strategy error" "not able to compute an expected answer"
             (answers, Just answeredTerm)
                | not (null witnesses) ->
@@ -167,19 +167,19 @@ xmlToRequest xml fromOpenMath ex = do
                            Just s  -> Just $ getPrefix2 s (strategy ex)
                            Nothing -> Just $ emptyPrefix (strategy ex)
            , context  = case context of 
-                           Just s  -> putInContext2 s t
-                           Nothing -> inContext t
+                           Just s  -> putInContext2 ex s t
+                           Nothing -> inContext ex t
            }
       , fromMaybe topLocation loc
       , mt
       )
 
 -----------------------------------------------------------
-putInContext2 :: String -> a -> Context a
-putInContext2 s = fromMaybe inContext $ do
+putInContext2 :: Exercise a -> String -> a -> Context a
+putInContext2 ex s = fromMaybe (inContext ex) $ do
    (_, s2) <- splitAtElem ';' s
    env     <- parseContext s2
-   return (makeContext env)
+   return (makeContext ex env)
 
 getPrefix2 :: String -> LabeledStrategy (Context a) -> Prefix (Context a)
 getPrefix2 s ls = fromMaybe (emptyPrefix ls) $ do

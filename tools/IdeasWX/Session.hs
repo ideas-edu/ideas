@@ -67,7 +67,7 @@ thisExercise txt ref = do
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext a)
+         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          writeIORef ref $ Some $ ss {getDerivation = new}
          return Nothing
 
@@ -77,7 +77,7 @@ thisExerciseFor txt (Some pkg) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext a)
+         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          writeIORef ref $ Some $ SessionState pkg new
          return Nothing         
     

@@ -16,6 +16,7 @@ module Domain.Math.Simplification
    ) where
 
 import Common.Context
+import Common.Navigator
 import Common.Transformation
 import Common.Uniplate
 import Common.View hiding (simplify)
@@ -33,7 +34,7 @@ class Simplify a where
    simplify :: a -> a
 
 instance Simplify a => Simplify (Context a) where
-   simplify = update simplify
+   simplify = change simplify
 
 instance Simplify a => Simplify (Equation a) where
    simplify = fmap simplify

@@ -26,6 +26,7 @@ import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Symbols ()
 import Common.Apply
+import Common.Navigator
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
@@ -121,7 +122,7 @@ conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    vs <- readVar vars
    m  <- fromExpr expr
    let linsys = matrixToSystemWith vs (m :: Matrix Expr)
-   a  <- fromContext $ applyD simplifyFirst $ inContext linsys
+   a  <- fromContext $ applyD simplifyFirst $ newContext emptyEnv (noNavigator linsys) -- !!
    return $ toExpr a
 
 liftExpr :: IsExpr a => Rule (Context a) -> Rule (Context Expr)

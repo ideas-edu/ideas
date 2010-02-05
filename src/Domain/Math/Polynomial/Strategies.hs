@@ -17,6 +17,7 @@ module Domain.Math.Polynomial.Strategies
 import Prelude hiding (repeat, replicate, fail)
 import Common.Apply
 import Common.Strategy
+import Common.Navigator
 import Common.Transformation
 import Common.View
 import Common.Context
@@ -52,7 +53,7 @@ coverUpPlus f = alternatives $ map (f . ($ oneVar))
 -- Quadratic equations
 
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
-quadraticStrategy = cleanUpStrategy (update cleanUpRelation) $ 
+quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $ 
    label "Quadratic Equation Strategy" $ 
    repeat $  fromEquation generalForm
           |> mapRules (liftRule (contextView (switchView equationView))) generalABCForm
@@ -103,9 +104,9 @@ higherDegreeStrategy =
    label "higher degree" $ 
       higherForm <*> label "quadratic" ({-option (check isQ2 <*> -} quadraticStrategy)
       <*> 
-      cleanUpStrategy (update cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
+      cleanUpStrategy (change cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
  where
-   higherForm = cleanUpStrategy (update cleanUpRelation) $ 
+   higherForm = cleanUpStrategy (change cleanUpRelation) $ 
       label "higher degree form" $
       repeat (f (toStrategy allPowerFactors) |> 
          (f (alternatives list) <|> liftRule specialV (ruleOrCtxOnce higherSubst))
@@ -139,12 +140,12 @@ ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
  where
    f _   _   [] = []
    f acc env (a:as) = 
-      case applyAll r (makeContext env a) of
+      case applyAll r (newContext env (noNavigator a)) of
          []  -> f (a:acc) env as
          new -> concatMap (fmapC $ \na -> orList (reverse acc++na:as)) new
    fmapC g c = 
       case fromContext c of
-         Just a  -> [makeContext (getEnvironment c) (g a)]
+         Just a  -> [newContext (getEnvironment c) (noNavigator (g a))]
          Nothing -> []
 
 -----------------------------------------------------------

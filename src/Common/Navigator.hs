@@ -19,7 +19,7 @@ module Common.Navigator
    , Navigator, NavigatorG
    , navigator, navigatorG, noNavigator, useView
      -- * Derived navigations
-   , leave, arity, isTop, isLeaf, ups, downs, navigateTo
+   , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
    , top, leafs, downFirst, downLast, left, right
      -- * Generalized functions
    , changeG, currentG, leaveG
@@ -46,7 +46,7 @@ class IsNavigator f where
    current  :: Monad m => f a -> m a
    location :: f a -> [Int]
    -- adaption 
-   change   :: Monad m => (a -> a)   -> f a -> m (f a)
+   change   :: (a -> a) -> f a -> f a
    changeM  :: Monad m => (a -> m a) -> f a -> m (f a)
    -- default definitions
    down n a = 
@@ -55,14 +55,19 @@ class IsNavigator f where
          hd:_ -> return hd
    allDowns a = 
       [ fa | i <- [0 .. arity a-1], fa <- down i a ]
-   change f = 
-      changeM (return . f)
+   change f a =
+      case changeM (Just . f) a of
+         Just new -> new
+         Nothing  -> a
 
 ---------------------------------------------------------------
 -- Derived navigations
 
 leave  :: (IsNavigator f, Monad m) => f a -> m a
 leave a = maybe (current a) leave (up a)
+
+replace :: IsNavigator f => a -> f a -> f a
+replace = change . const
 
 arity :: IsNavigator f => f a -> Int
 arity  = length . allDowns

@@ -187,7 +187,7 @@ decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
    return TAS.State 
       { TAS.exercise = ex
       , TAS.prefix   = readM p >>= (`makePrefix` strategy ex)
-      , TAS.context  = makeContext env a
+      , TAS.context  = makeContext ex env a
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
 

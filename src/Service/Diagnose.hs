@@ -43,7 +43,7 @@ data Diagnosis a
 diagnose :: State a -> a -> Diagnosis a
 diagnose state new
    -- Is the submitted term equivalent?
-   | not (equivalence (exercise state) (term state) new) =
+   | not (equivalence ex (term state) new) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
            Just r -> -- report the buggy rule
@@ -52,7 +52,7 @@ diagnose state new
               NotEquivalent
               
    -- Is the submitted term (very) similar to the previous one? 
-   | similarity (exercise state) (term state) new =
+   | similarity ex (term state) new =
         -- If yes, report this
         Similar (ready state) state
         
@@ -64,31 +64,33 @@ diagnose state new
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        let ns = restartIfNeeded (state { prefix=Nothing, context=inContext new })
+        let ns = restartIfNeeded (state { prefix=Nothing, context=inContext ex new })
         in case discovered False of
               Just r ->  -- If yes, report the found rule as a detour
                  Detour (ready ns) ns r
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
+   ex = exercise state
+   
    expected = do
       xs <- allfirsts (restartIfNeeded state)
-      let p (_, _, ns) = similarity (exercise state) new (term ns)
+      let p (_, _, ns) = similarity ex new (term ns)
       safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead
       [ r
-      | r <- ruleset (exercise state)
+      | r <- ruleset ex
       , isBuggyRule r == searchForBuggy
-      , ca <- applyAll r (inContext sub1)
+      , ca <- applyAll r (inContext ex sub1)
       -- , let s = prettyPrinter (exercise state) (fromContext a)
       --, if s=="2*x+2 == 5" then True else error s
       , a <- fromContext ca
-      , similarity (exercise state) sub2 a
+      , similarity ex sub2 a
       ]
     where 
       mode = not searchForBuggy
-      diff = difference (exercise state) mode (term state) new
+      diff = difference ex mode (term state) new
       (sub1, sub2) = fromMaybe (term state, new) diff
       
 ----------------------------------------------------------------
@@ -99,11 +101,13 @@ diagnose state new
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded s 
-   | isNothing (prefix s) && canBeRestarted (exercise s) = 
+   | isNothing (prefix s) && canBeRestarted ex = 
         case fromContext (context s) of 
            Just a -> s
-              { prefix  = Just (emptyPrefix (strategy (exercise s)))
-              , context = inContext a
+              { prefix  = Just (emptyPrefix (strategy ex))
+              , context = inContext ex a
               } 
            Nothing -> s
    | otherwise = s
+ where
+   ex = exercise s

@@ -20,7 +20,7 @@ module Service.TypedAbstractService
 import qualified Common.Apply as Apply
 import Common.Context 
 import Common.Derivation hiding (derivation)
-import Common.Exercise (Exercise(..), ruleset, randomTermWith)
+import Common.Exercise (Exercise(..), ruleset, randomTermWith, inContext)
 import Common.Strategy hiding (not, fail)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
@@ -35,7 +35,7 @@ data State a = State
    }
 
 term :: State a -> a
-term = fromJust . fromContext . context
+term = fromMaybe (error "invalid term") . fromContext . context
 
 -----------------------------------------------------------
 
@@ -43,7 +43,7 @@ emptyState :: Exercise a -> a -> State a
 emptyState ex a = State
    { exercise = ex
    , prefix   = Just (emptyPrefix (strategy ex))
-   , context  = inContext a
+   , context  = inContext ex a
    }
       
 -- result must be in the IO monad to access a standard random number generator

@@ -39,7 +39,7 @@ cnfExercise = testableExercise
    , strategy       = toCNF
    , difference     = differenceMode probablyEqual
    , ordering       = compare
-   , isReady        = ready (ruleset cnfExercise)
+   , isReady        = ready cnfExercise
    , randomExercise = let ok p = let n = fromMaybe maxBound (stepsRemaining 4 p)
                                  in n >= 2 && n <= 4
                       in useGenerator ok (\_ -> templateGenerator 1)
@@ -47,7 +47,7 @@ cnfExercise = testableExercise
 
 stepsRemaining :: Int -> RelAlg -> Maybe Int
 stepsRemaining i = 
-   lengthMax i . derivationTree toCNF . inContext
+   lengthMax i . derivationTree toCNF . inContext cnfExercise
 
 {- cnfExerciseSimple :: Exercise RelAlg
 cnfExerciseSimple = cnfExercise
@@ -56,5 +56,6 @@ cnfExerciseSimple = cnfExercise
    , strategy    = label "Apply rules exhaustively" $ repeat $ somewhere $ alternatives $ ruleset cnfExercise
    } -}
    
-ready :: [Rule (Context a)] -> a -> Bool
-ready rs = null . applyAll (alternatives $ filter (not . isBuggyRule) rs) . inContext
+ready :: Exercise a -> a -> Bool
+ready ex = null . applyAll (alternatives $ filter (not . isBuggyRule) (ruleset ex)) 
+         . inContext ex

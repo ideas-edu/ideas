@@ -15,8 +15,8 @@
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, inContext, update, replace, fromContext
-   , makeContext, getEnvironment
+     Context, fromContext
+   , newContext, getEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
@@ -31,7 +31,7 @@ module Common.Context
      -- * Context Monad
    , ContextMonad, runCM, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
-   ) where
+   ) where 
 
 import Common.Navigator hiding (location)
 
@@ -77,21 +77,8 @@ instance IsNavigator Context where
    changeM f (C env a) = liftM (C env) (changeM f a)
 
 -- | Construct a context
-makeContext :: Environment -> a -> Context a
-makeContext env = C env . noNavigator
-
--- | Put a value into a (default) context
-inContext :: a -> Context a
-inContext = makeContext emptyEnv
-
-replace :: a -> Context a -> Context a
-replace = update . const
-
-update :: (a -> a) -> Context a -> Context a
-update = contextMap
-
-contextMap :: (a -> b) -> Context a -> Context b
-contextMap f c@(C env _) = makeContext env (f (fromJust (fromContext c)))
+newContext :: Environment -> Navigator a -> Context a
+newContext = C
 
 ----------------------------------------------------------
 -- Key-value pair environment (abstract)
@@ -201,8 +188,10 @@ currentFocus c = fromContext c >>= getTermAt (fromLocation $ location c)
 -- | Changes the term which has the current focus. In case the focus is invalid, then
 -- this function has no effect.
 changeFocus :: Uniplate a => (a -> a) -> Context a -> Context a
-changeFocus f c = update (applyAt (fromLocation $ location c) f) c
-
+changeFocus f c = fromMaybe c $ 
+   let g = applyAt (fromLocation (location c)) f
+   in liftM (change g) (top c) >>= navigateTo (Navigator.location c)
+ 
 -- | Go down to a certain child
 locationDown :: Int -> Location -> Location
 locationDown i (L is) = L (is ++ [i])
@@ -243,16 +232,21 @@ ignoreContextView :: View (Context a) (a, Environment)
 ignoreContextView = makeView f g
  where 
    f c      = fromContext c >>= \a -> Just (a, getEnvironment c) 
-   g (a, e) = makeContext e a
+   g (a, e) = newContext e (noNavigator a)
 
 contextView :: MonadPlus m => ViewM m a b -> ViewM m (Context a) (Context b)
-contextView v = makeView f (contextMap (build v))
+contextView v = makeView f g
  where
    f ca = do
       guard (isTop ca)
       a <- leave ca
       b <- match v a
-      return (makeContext (getEnvironment ca) b)
+      return (newContext (getEnvironment ca) (noNavigator b))
+   g cb = fromJust $ do
+      guard (isTop cb)
+      b <- leave cb
+      let a = build v b
+      return (newContext (getEnvironment cb) (noNavigator a))
 
 ----------------------------------------------------------
 -- Context monad
@@ -268,7 +262,7 @@ evalCM f c = withCM f c >>= fromContext
 runCM :: ContextMonad a -> Environment -> Maybe (Context a)
 runCM (CM f) env = do
    (a, e) <- safeHead (f env)
-   return (makeContext e a)
+   return (newContext e (noNavigator a))
 
 instance Functor ContextMonad where
    fmap = liftM

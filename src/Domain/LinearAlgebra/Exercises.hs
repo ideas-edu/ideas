@@ -60,7 +60,7 @@ linearSystemExercise = testableExercise
                                (_, m:_) -> Left $ ErrorMessage $ show m
    , prettyPrinter  = unlines . map show
    , equivalence    = \x y -> let f = fromContext . applyD linearSystemStrategy 
-                                    . inContext . map toStandardForm
+                                    . inContext linearSystemExercise . map toStandardForm
                               in case (f x, f y) of  
                                     (Just a, Just b) -> getSolution a == getSolution b
                                     _ -> False 

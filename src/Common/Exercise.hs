@@ -16,10 +16,11 @@ module Common.Exercise
      Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable
-   , strategy, canBeRestarted, extraRules
+   , strategy, navigation, canBeRestarted, extraRules
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
+   , makeContext, inContext
      -- * Exercise codes
    , ExerciseCode, noCode, makeCode, readCode, domain, identifier
      -- * Miscellaneous
@@ -34,6 +35,7 @@ import Common.Context
 import Common.Strategy hiding (not, fail, replicate)
 import qualified Common.Strategy as S
 import Common.Derivation
+import Common.Navigator
 import Common.Transformation
 import Common.Utils
 import Control.Monad.Error
@@ -61,6 +63,7 @@ data Exercise a = Exercise
    , difference     :: Bool -> a -> a -> Maybe (a, a)
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
+   , navigation     :: a -> Navigator a
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
      -- testing and exercise generation
@@ -78,7 +81,7 @@ instance Ord (Exercise a) where
    e1 `compare` e2 = exerciseCode e1 `compare` exerciseCode e2
 
 instance Apply Exercise where
-   applyAll e = concatMap fromContext . applyAll (strategy e) . inContext
+   applyAll ex = concatMap fromContext . applyAll (strategy ex) . inContext ex
 
 testableExercise :: (Arbitrary a, Show a, Ord a) => Exercise a
 testableExercise = makeExercise
@@ -110,6 +113,7 @@ emptyExercise = Exercise
    , difference     = \_ _ _ -> Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
+   , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = [] 
      -- testing and exercise generation
@@ -117,6 +121,13 @@ emptyExercise = Exercise
    , randomExercise = Nothing
    , examples       = []
    }
+   
+makeContext :: Exercise a -> Environment -> a -> Context a
+makeContext ex env = newContext env . navigation ex
+
+-- | Put a value into an empty environment
+inContext :: Exercise a -> a -> Context a
+inContext = flip makeContext emptyEnv
 
 ---------------------------------------------------------------
 -- Exercise generators
@@ -225,7 +236,7 @@ showDerivation ex a =
       Nothing -> prettyPrinterContext ex (root tree)
                  ++ "\n   =>\n<<no derivation>>"
  where
-   tree = derivationTree (strategy ex) (inContext a)
+   tree = derivationTree (strategy ex) (inContext ex a)
    extra d =
       case fromContext (last (terms d)) of
          Nothing               -> "<<invalid term>>"
@@ -266,7 +277,7 @@ checkExercise ex =
          putStrLn "Soundness non-buggy rules" 
          forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
             putLabel ("    " ++ name r)
-            testRuleSmart (equivalenceContext ex) r (liftM inContext gen)
+            testRuleSmart (equivalenceContext ex) r (liftM (inContext ex) gen)
 
          check "non-trivial terms" $ 
             forAll gen $ \x -> 
@@ -278,7 +289,7 @@ checkExercise ex =
             classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
             forAll gen $
-               maybe False (isReady ex) . fromContext . applyD (strategy ex) . inContext
+               maybe False (isReady ex) . fromContext . applyD (strategy ex) . inContext ex
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
@@ -301,7 +312,7 @@ checksForList ex
 checksForTerm :: Monad m => Exercise a -> a -> m ()
 checksForTerm ex a = 
    let txt = prettyPrinter ex a in
-   case derivation (derivationTree (strategy ex) (inContext a)) of
+   case derivation (derivationTree (strategy ex) (inContext ex a)) of
       Nothing -> fail $ "no derivation for " ++ txt
       Just theDerivation -> do
          unless (maybe False (isReady ex) (fromContext (last as))) $

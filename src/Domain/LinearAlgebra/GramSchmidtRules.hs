@@ -13,6 +13,7 @@ module Domain.LinearAlgebra.GramSchmidtRules where
 
 import Common.Context
 import Common.Transformation
+import Common.Navigator hiding (current)
 import Common.Utils
 import Domain.LinearAlgebra.Vector
 import Control.Monad

@@ -244,7 +244,7 @@ decodeState b ex f top = do
    expr <- f xml
    env  <- decodeEnvironment b xml
    let state  = State ex mpr term
-       term   = makeContext env expr
+       term   = makeContext ex env expr
    return (state, top)
  where
    a ~= b = g a == g b

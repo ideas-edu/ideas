@@ -15,6 +15,7 @@ import Prelude hiding (repeat)
 import Common.Context
 import Common.Transformation
 import Common.Utils
+import Common.Navigator
 import Common.View hiding (simplify)
 import Control.Monad
 import Data.List hiding (repeat)
@@ -134,7 +135,7 @@ testConstants f (lhs :==: rhs)
 
 -- simplify a linear system
 simplifySystem :: Rule (Context (LinearSystem Expr)) -> Rule (Context (LinearSystem Expr))
-simplifySystem = doAfter $ update (map (fmap f))
+simplifySystem = doAfter $ change (map (fmap f))
  where f = simplifyWith (fmap simplify) linearView
 
 ---------------------------------------------------------------------------------

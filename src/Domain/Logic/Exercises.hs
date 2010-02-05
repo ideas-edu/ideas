@@ -74,7 +74,7 @@ suitable = (<=2) . countEquivalences
 
 stepsRemaining :: Int -> SLogic -> Maybe Int
 stepsRemaining i = 
-   lengthMax i . derivationTree dnfStrategyDWA . inContext
+   lengthMax i . derivationTree dnfStrategyDWA . inContext dnfExercise
 
 -- QuickCheck property to monitor the number of steps needed 
 -- to normalize a random proposition (30-40% is ok)

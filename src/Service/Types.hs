@@ -12,8 +12,9 @@
 -----------------------------------------------------------------------------
 module Service.Types where
 
-import Common.Context (Context, Location, fromContext)
+import Common.Context (Context, fromContext)
 import Common.Exercise (Exercise)
+import Common.Navigator (Location)
 import Common.Transformation (Rule, name)
 import Common.Strategy (StrategyLocation, StrategyConfiguration)
 import Common.Utils (commaList)

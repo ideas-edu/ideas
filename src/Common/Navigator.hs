@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Common.Navigator 
    ( -- * Type class for navigating expressions 
-     IsNavigator(..)
+     IsNavigator(..), Location
      -- * Types and constructors 
    , Navigator, NavigatorG
    , navigator, navigatorG, noNavigator, useView
@@ -33,6 +33,8 @@ import Data.Maybe
 ---------------------------------------------------------------
 -- Type class for navigating expressions
 
+type Location = [Int]
+
 -- | For a minimal complete definition, provide an implemention for downs or
 -- allDowns. All other functions need an implementation as well, except for 
 -- change. Note that a constructor (a -> f a) is not included in the type class
@@ -44,7 +46,7 @@ class IsNavigator f where
    allDowns :: f a -> [f a]
    -- inspection
    current  :: Monad m => f a -> m a
-   location :: f a -> [Int]
+   location :: f a -> Location
    -- adaption 
    change   :: (a -> a) -> f a -> f a
    changeM  :: Monad m => (a -> m a) -> f a -> m (f a)
@@ -84,7 +86,7 @@ ups n a = foldM (const . up) a [1..n]
 downs :: (IsNavigator f, Monad m) => [Int] -> f a -> m (f a)
 downs is a = foldM (flip down) a is
 
-navigateTo :: (IsNavigator f, Monad m) => [Int] -> f a -> m (f a)
+navigateTo :: (IsNavigator f, Monad m) => Location -> f a -> m (f a)
 navigateTo is a = ups (length js - n) a >>= downs (drop n is)
  where 
    js = location a

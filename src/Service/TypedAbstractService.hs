@@ -24,6 +24,7 @@ import Common.Exercise (Exercise(..), ruleset, randomTermWith, inContext)
 import Common.Strategy hiding (not, fail)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
+import Common.Navigator
 import Data.Maybe
 import System.Random
 import Control.Monad
@@ -115,6 +116,11 @@ applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
    let check r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (context state))
    in filter check (ruleset (exercise state))
+
+-- local helper
+setLocation :: Location -> Context a -> Context a 
+setLocation loc c0 = fromMaybe c0 $ do
+   navigateTo loc c0
 
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied

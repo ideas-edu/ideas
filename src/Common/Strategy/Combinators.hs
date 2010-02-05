@@ -16,9 +16,8 @@ module Common.Strategy.Combinators where
 
 import Prelude hiding (not, repeat, fail, sequence)
 import Common.Context
-import Common.Navigator hiding (location)
+import Common.Navigator
 import Common.Transformation
-import Common.Uniplate
 import Common.Strategy.Core
 import Common.Strategy.Abstract
 
@@ -114,31 +113,24 @@ fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = fromCore (fixCore (toCore . f . fromCore))
 
 -- | Apply a strategy on (exactly) one of the term's direct children
-once :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
+once :: IsStrategy f => f (Context a) -> Strategy (Context a)
 once s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" moveDown
-   moveDown c = 
-      let n = maybe 0 (pred . length . children) (current c)
-      in [ changeLocation (locationDown i) c | i <- [0 .. n] ]
-   
-   ruleMoveUp = minorRule $ makeSimpleRule "MoveUp" moveUp
-   moveUp c   = do
-      new <- locationUp (location c)
-      return $ setLocation new c
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" allDowns   
+   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" up
 
 -- | Apply a strategy somewhere in the term
-somewhere :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
+somewhere :: IsStrategy f => f (Context a) -> Strategy (Context a)
 somewhere s = fix $ \this -> s <|> once this
 
 -- | Search for a suitable location in the term to apply the strategy using a
 -- top-down approach
-topDown :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
+topDown :: IsStrategy f => f (Context a) -> Strategy (Context a)
 topDown s = fix $ \this -> s |> once this
 
 -- | Search for a suitable location in the term to apply the strategy using a
 -- bottom-up approach
-bottomUp :: (IsStrategy f, Uniplate a) => f (Context a) -> Strategy (Context a)
+bottomUp :: IsStrategy f => f (Context a) -> Strategy (Context a)
 bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
 
 {- The ideal implementation does not yet work: there appears to be a strange

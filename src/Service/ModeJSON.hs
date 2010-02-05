@@ -137,7 +137,7 @@ jsonDecoder pkg = Decoder
    decode dec serviceType =
       case serviceType of
          Tp.State    -> useFirst $ decodeState (decoderExercise dec) (decodeTerm dec)
-         Tp.Location -> useFirst fromJSON
+         Tp.Location -> useFirst decodeLocation
          Tp.Term     -> useFirst $ decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
          Tp.Exercise -> \json -> case json of
@@ -156,11 +156,10 @@ jsonDecoder pkg = Decoder
       a <- f x
       return (a, Array xs)
    useFirst _ _ = fail "expecting an argument"
-         
-instance InJSON Location where
-   toJSON              = toJSON . show
-   fromJSON (String s) = readM s
-   fromJSON _          = fail "expecting a string"
+
+decodeLocation :: Monad m => JSON -> m [Int]
+decodeLocation (String s) = readM s
+decodeLocation _          = fail "expecting a string for a location"
 
 --------------------------
 

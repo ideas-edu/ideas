@@ -16,6 +16,7 @@ module Service.ModeXML
    , resultOk, resultError
    ) where
 
+import Common.Navigator
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
@@ -307,8 +308,8 @@ encodeEnvironment b loc env0
                  Just omobj | b -> builder  (omobj2xml omobj)
                  _              -> "value" .=. fromMaybe "" (lookupEnv k env)
  where
-   env | null (fromLocation loc) = env0
-       | otherwise               = storeEnv "location" loc env0
+   env | null loc  = env0
+       | otherwise = storeEnv "location" loc env0
 
 encodeDiagnosis :: Monad m => Bool -> (a -> m XMLBuilder) -> Diagnosis a -> m XMLBuilder
 encodeDiagnosis mode f diagnosis =

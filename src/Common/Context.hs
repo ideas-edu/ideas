@@ -22,10 +22,6 @@ module Common.Context
    , diffEnv, deleteEnv
      -- * Variables
    , Var, newVar, makeVar
-     -- * Location (current focus)
-   , Location, location, setLocation, changeLocation
-   , locationDown, locationUp
-   , makeLocation, fromLocation
      -- * Lifting
    , liftToContext, ignoreContext, liftTransContext, contextView
      -- * Context Monad
@@ -33,7 +29,7 @@ module Common.Context
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
    ) where 
 
-import Common.Navigator hiding (location)
+import Common.Navigator
 
 import qualified Common.Navigator as Navigator
 import Common.Transformation
@@ -150,50 +146,6 @@ newVar = makeVar show readM
 -- and read functions are supplied explicitly.
 makeVar :: (a -> String) -> (String -> Maybe a) -> String -> a -> Var a
 makeVar showF readF s a = V s a showF readF
- 
-----------------------------------------------------------
--- Location (current focus)
-
---locationVar :: Var Location
---locationVar = newVar "location" (makeLocation [])
-
--- | Type synonym for the current location (focus)
-newtype Location = L [Int] deriving (Eq, Ord, Typeable)
-
-instance Show Location where
-   show (L is) = show is
-   
-instance Read Location where
-   readsPrec n s = [ (L is, rest) | (is, rest) <- readsPrec n s ]
-
--- | Returns the current location of a context
-location :: Context a -> Location
-location = makeLocation . Navigator.location
-
--- | Replaces the current location of a context
-setLocation :: Location -> Context a -> Context a 
-setLocation loc c0 = fromMaybe c0 $ do
-   navigateTo (fromLocation loc) c0
-
--- | Updates the current location of a context
-changeLocation :: (Location -> Location) -> Context a -> Context a
-changeLocation f c = setLocation (f (location c)) c
- 
--- | Go down to a certain child
-locationDown :: Int -> Location -> Location
-locationDown i (L is) = L (is ++ [i])
-
--- | Go up: Nothing indicates that we were already at the top
-locationUp :: Location -> Maybe Location
-locationUp (L is)
-   | null is   = Nothing
-   | otherwise = Just (L (init is))
-
-makeLocation :: [Int] -> Location
-makeLocation = L
-
-fromLocation :: Location -> [Int]
-fromLocation (L is) = is
 
 ----------------------------------------------------------
 -- Lifting rewrite rules

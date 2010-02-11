@@ -13,22 +13,21 @@
 --
 -----------------------------------------------------------------------------
 module Common.Navigator 
-   ( -- * Type class for navigating expressions 
-     IsNavigator(..), Location
+   ( -- * Type classes for navigating expressions 
+     IsNavigator(..), TypedNavigator(..)
      -- * Types and constructors 
-   , Navigator, NavigatorG
-   , navigator, navigatorG, noNavigator, useView
+   , Navigator, Location
+   , navigator, noNavigator, viewNavigator
      -- * Derived navigations
    , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
    , top, leafs, downFirst, downLast, left, right
-     -- * Generalized functions
-   , changeG, currentG, leaveG
    ) where
 
 import Common.Uniplate
 import Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe
+import Data.Typeable
 
 ---------------------------------------------------------------
 -- Type class for navigating expressions
@@ -61,6 +60,17 @@ class IsNavigator f where
       case changeM (Just . f) a of
          Just new -> new
          Nothing  -> a
+
+class IsNavigator f => TypedNavigator f where
+   changeT  :: (Monad m, Typeable b) => (b -> m b) -> f a -> m (f a) 
+   currentT :: (Monad m, Typeable b) => f a -> m b
+   leaveT   :: (Monad m, Typeable b) => f a -> m b
+   castT    :: (Monad m, Typeable e) => View e b -> f a -> m (f b)
+   -- By default, fail
+   changeT _ _ = fail "changeT"
+   currentT _  = fail "currentT"
+   leaveT _    = fail "leaveT"
+   castT _ _   = fail "castT"
 
 ---------------------------------------------------------------
 -- Derived navigations
@@ -142,9 +152,7 @@ makeUN :: Uniplate a => a -> UniplateNav a
 makeUN = UN uniplate []
 
 instance Show a => Show (UniplateNav a) where
-   show a = maybe "???" show (leave a) ++ "   { " 
-            ++ maybe "???" show (current a) 
-            ++ " @ " ++ show (location a) ++ " }"
+   show = showNav
    
 instance IsNavigator UniplateNav where
    up (UN _ [] _)            = fail "up"
@@ -164,54 +172,90 @@ instance IsNavigator UniplateNav where
    changeM f (UN uni xs a) = liftM (UN uni xs) (f a)  
    current   (UN _ _    a) = return a
 
+showNav :: (IsNavigator f, Show a) => f a -> String
+showNav a = maybe "???" show (leave a) ++ "   { " 
+            ++ maybe "???" show (current a) 
+            ++ " @ " ++ show (location a) ++ " }"
+
 ---------------------------------------------------------------
 -- Instance based on a View
 
-type Navigator  a   = NavigatorG a a
-data NavigatorG a b = NG (View a b) (UniplateNav a)
+data ViewNav a b = VN (View a b) (UniplateNav a)
 
-instance Show a => Show (NavigatorG a b) where
-   show (NG _ a) = show a
+instance Show a => Show (ViewNav a b) where
+   show (VN _ a) = show a
    
-instance IsNavigator (NavigatorG a) where
-   up        (NG v a) = liftM (NG v) (up a)
-   allDowns  (NG v a) = liftM (NG v) (allDowns a)
-   location  (NG _ a) = location a
-   current   (NG v a) = current a >>= matchM v
-   changeM f (NG v a) = 
+instance IsNavigator (ViewNav a) where
+   up        (VN v a) = liftM (VN v) (up a)
+   allDowns  (VN v a) = liftM (VN v) (allDowns a)
+   location  (VN _ a) = location a
+   current   (VN v a) = current a >>= matchM v
+   changeM f (VN v a) = 
       let g b = matchM v b >>= (liftM (build v) . f) 
-      in liftM (NG v) (changeM g a)
+      in liftM (VN v) (changeM g a)
 
-coerce :: View a c -> NavigatorG a b -> NavigatorG a c
-coerce v (NG _ a) = NG v a
+instance Typeable a => TypedNavigator (ViewNav a) where
+   changeT f (VN v a) = do
+      new <- current a >>= castM >>= f >>= castM
+      return (VN v (replace new a))
+   currentT (VN _ a) = 
+      current a >>= castM
+   leaveT (VN _ a) =
+      leave a >>= castM
+   castT v (VN v0 a) 
+      | typeOf (getTp v) == typeOf (getTp v0) = 
+           return (VN (makeView f g) a)
+      | otherwise = 
+           fail "castT"
+    where
+      f e = castM e >>= matchM v
+      g   = fromMaybe (error "castT") . cast . build v
+      
+      getTp :: View a b -> a
+      getTp = error "castT"
 
-currentView :: NavigatorG a b -> View a b
-currentView (NG v _) = v
-   
+castM :: (Monad m, Typeable a, Typeable b) => a -> m b
+castM = maybe (fail "castM") return . cast
+
+---------------------------------------------------------------
+-- Uniform navigator type
+
+instance Show a => Show (Navigator a) where
+   show = showNav
+
+data Navigator a = forall f . TypedNavigator f => N (f a)
+data Simple    a = forall f . IsNavigator f    => S (f a)
+
+instance IsNavigator Navigator where
+   up        (N a) = liftM N (up a)
+   allDowns  (N a) = map N (allDowns a)
+   current   (N a) = current a
+   location  (N a) = location a
+   changeM f (N a) = liftM N (changeM f a)
+
+instance TypedNavigator Navigator where
+   changeT f (N a) = liftM N (changeT f a)
+   currentT  (N a) = currentT a
+   leaveT    (N a) = leaveT a
+   castT v   (N a) = liftM N (castT v a)
+
+instance IsNavigator Simple where
+   up        (S a) = liftM S (up a)
+   allDowns  (S a) = map S (allDowns a)
+   current   (S a) = current a
+   location  (S a) = location a
+   changeM f (S a) = liftM S (changeM f a)
+
+instance TypedNavigator Simple
+
 ---------------------------------------------------------------
 -- Constructors
 
 navigator :: Uniplate a => a -> Navigator a
-navigator = NG identity . makeUN
-
-navigatorG :: Uniplate a => View a b -> b -> NavigatorG a b
-navigatorG v b = NG v (makeUN (build v b))
+navigator = N . S . makeUN
 
 noNavigator :: a -> Navigator a
-noNavigator = NG identity . UN (\a -> ([], const a)) []
+noNavigator = N . S . UN (\a -> ([], const a)) []
 
-useView :: View a b -> Navigator a -> NavigatorG a b
-useView = coerce
-
----------------------------------------------------------------
--- Generalized functions
-
-changeG :: Monad m => View a c -> (c -> m c) -> NavigatorG a b -> m (NavigatorG a b)
-changeG v f a = g a
- where g = liftM (coerce (currentView a)) . changeM f . coerce v
-
-currentG :: Monad m => View a c -> NavigatorG a b -> m c
-currentG v = current . coerce v
-
-leaveG :: Monad m => View a c -> NavigatorG a b -> m c
-leaveG v = leave . coerce v
+viewNavigator :: (Uniplate a, Typeable a) => a -> Navigator a
+viewNavigator = N . VN identity . makeUN

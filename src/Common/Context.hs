@@ -155,7 +155,7 @@ liftToContext :: Rule a -> Rule (Context a)
 liftToContext = liftRuleIn (makeView f g)
  where
    f ctx = current ctx >>= \a -> Just (a, ctx)
-   g (a, ctx) = change (const a) ctx
+   g = uncurry replace
 
 -- | Lift a rule to operate on a term in a context by ignoring the context
 ignoreContext :: Rule a -> Rule (Context a)

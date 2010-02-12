@@ -62,7 +62,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
           |> simplifyForm
           |> fromEquation topForm 
  where
-   fromEquation = mapRules (ignoreContext . liftRule (switchView equationView))
+   fromEquation = mapRules (liftToContext . liftRule (switchView equationView))
  
    generalForm = label "general form" $ 
       ruleOnce commonFactorVar 
@@ -84,7 +84,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
       label "square root simplification" $ 
            toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot)))
         <|> hide (label "approximate result" $ 
-            toStrategy $ ignoreContext (ruleMulti ruleApproximate))
+            toStrategy $ liftToContext (ruleMulti ruleApproximate))
 
    topForm = label "top form" $
       ( ruleOnce2 (ruleSomewhere merge) 
@@ -116,7 +116,7 @@ higherDegreeStrategy =
              , mulZero, {-ruleOnce2 powerFactor,-} sameFactor
              , ruleOnce exposeSameFactor
              ] ++ [coverUpPlus ruleOnce]
-   f = mapRulesS (ignoreContext . liftRule (switchView equationView))
+   f = mapRulesS (liftToContext . liftRule (switchView equationView))
    
    specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
    specialV = contextView (switchView equationView)

@@ -46,7 +46,7 @@ ineqLinearExercise = makeExercise
    , parser       = parseWith (pRelation pExpr)
    , isReady      = solvedRelation
    , equivalence  = linEq
-   , strategy     = mapRules ignoreContext ineqLinear
+   , strategy     = mapRules liftToContext ineqLinear
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
                     in map (build inequalityView) (concat ineqLin1 ++ [extra])

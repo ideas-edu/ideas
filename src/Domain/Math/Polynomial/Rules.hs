@@ -42,7 +42,7 @@ import qualified Prelude
 -- Rule collection
 
 linearRules :: [Rule (Context (Equation Expr))]
-linearRules = map ignoreContext $
+linearRules = map liftToContext $
    [ removeDivision, ruleMulti merge, ruleMulti distributeTimes
    , varToLeft, coverUpNegate, coverUpTimes
    ] ++

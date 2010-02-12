@@ -39,7 +39,7 @@ coverUpExercise = makeExercise
    , parser       = parseWith (pOrList (pEquation pExpr))
    , equivalence  = \_ _ -> True
    , isReady      = solvedEquations
-   , extraRules   = map ignoreContext coverUpRulesOr
+   , extraRules   = map liftToContext coverUpRulesOr
    , strategy     = coverUpStrategy
    , examples     = map (orList . return) (concat (fillInResult ++ coverUpEquations))
    }
@@ -49,7 +49,7 @@ coverUpExercise = makeExercise
    
 coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 coverUpStrategy = label "Cover-up" $ 
-   repeat (alternatives $ map (ignoreContext . cleanUp) coverUpRulesOr)
+   repeat (alternatives $ map (liftToContext . cleanUp) coverUpRulesOr)
 
 cleanUp :: Rule (OrList (Equation Expr)) -> Rule (OrList (Equation Expr))
 cleanUp = doAfter $ fmap $ fmap cleanUpExpr

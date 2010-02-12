@@ -46,8 +46,8 @@ linearExercise = makeExercise
    , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
    , isReady      = solvedRelation
-   , extraRules   = ignoreContext buggyPlus : linearRules
-   , strategy     = mapRules ignoreContext linearStrategy
+   , extraRules   = liftToContext buggyPlus : linearRules
+   , strategy     = mapRules liftToContext linearStrategy
    , examples     = concat (linearEquations ++ [specialCases])
    }
  where
@@ -64,7 +64,7 @@ quadraticExercise = makeExercise
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
    , isReady      = solvedRelations
-   , extraRules   = map (ignoreContext . liftRule (switchView equationView)) $ 
+   , extraRules   = map (liftToContext . liftRule (switchView equationView)) $ 
                        quadraticRules ++ abcBuggyRules
    , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
@@ -79,7 +79,7 @@ higherDegreeExercise = makeExercise
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isReady      = solvedRelations
-   , extraRules   = map (ignoreContext . liftRule (switchView equationView)) higherDegreeRules
+   , extraRules   = map (liftToContext . liftRule (switchView equationView)) higherDegreeRules
    , strategy     = higherDegreeStrategy
    , examples     = map (orList . return . build equationView) 
                        (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
@@ -116,7 +116,7 @@ findFactorsExercise = makeExercise
    , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
  --  , isReady      = solvedRelations
-   , strategy     = mapRules ignoreContext findFactorsStrategy
+   , strategy     = mapRules liftToContext findFactorsStrategy
    , examples     = concat findFactors
    }
 

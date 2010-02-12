@@ -15,15 +15,14 @@
 -----------------------------------------------------------------------------
 module Common.Context 
    ( -- * Abstract data type
-     Context, fromContext
-   , newContext, getEnvironment
+     Context, fromContext, newContext, getEnvironment
      -- * Key-value pair environment (abstract)
    , Environment, emptyEnv, nullEnv, keysEnv, lookupEnv, storeEnv
    , diffEnv, deleteEnv
      -- * Variables
    , Var, newVar, makeVar
      -- * Lifting
-   , liftToContext, ignoreContext, liftTransContext, contextView
+   , liftToContext, liftTransContext, contextView
      -- * Context Monad
    , ContextMonad, runCM, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
@@ -70,6 +69,12 @@ instance IsNavigator Context where
    current   (C _   a) = current a
    location  (C _   a) = Navigator.location a
    changeM f (C env a) = liftM (C env) (changeM f a)
+
+instance TypedNavigator Context where
+   changeT f (C env a) = liftM (C env) (changeT f a)
+   currentT  (C _   a) = currentT a
+   leaveT    (C _   a) = leaveT a
+   castT v   (C env a) = liftM (C env) (castT v a)
 
 -- | Construct a context
 newContext :: Environment -> Navigator a -> Context a
@@ -152,23 +157,16 @@ makeVar showF readF s a = V s a showF readF
 
 -- | Lift a rule to operate on a term in a context
 liftToContext :: Rule a -> Rule (Context a)
-liftToContext = liftRuleIn (makeView f g)
+liftToContext = liftRuleIn thisView
+
+liftTransContext :: Transformation a -> Transformation (Context a)
+liftTransContext = liftTransIn thisView
+
+thisView :: View (Context a) (a, Context a)
+thisView = makeView f g
  where
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace
-
--- | Lift a rule to operate on a term in a context by ignoring the context
-ignoreContext :: Rule a -> Rule (Context a)
-ignoreContext = liftRuleIn ignoreContextView
-
-liftTransContext :: Transformation a -> Transformation (Context a)
-liftTransContext = liftTransIn ignoreContextView
-
-ignoreContextView :: View (Context a) (a, Environment)
-ignoreContextView = makeView f g
- where 
-   f c      = fromContext c >>= \a -> Just (a, getEnvironment c) 
-   g (a, e) = newContext e (noNavigator a)
 
 contextView :: MonadPlus m => ViewM m a b -> ViewM m (Context a) (Context b)
 contextView v = makeView f g

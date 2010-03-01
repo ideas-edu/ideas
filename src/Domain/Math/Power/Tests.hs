@@ -9,16 +9,19 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Power.Tests (main) where
+module Domain.Math.Power.Tests where
 
 import Common.Apply
 import Common.View
 import Control.Monad
+import Common.Exercise
 import Domain.Math.Expr
+import Domain.Math.Power.Strategies
 import Domain.Math.Numeric.Generators
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
+
 
 main :: IO ()
 main = do

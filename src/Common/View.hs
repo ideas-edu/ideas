@@ -21,7 +21,7 @@ module Common.View
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
    , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
-   , listView, switchView, ( #> )
+   , listView, switchView, ( #> ), associativeView
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
@@ -166,6 +166,14 @@ switchView v = makeView (switch . fmap (match v)) (fmap (build v))
 p #> v = makeView f (build v)
  where f a = guard (p a) >> match v a
  
+associativeView :: View a (a,a) -> ViewList a (a,a)
+associativeView v = makeView (reverse . f) (build v)
+ where f a = 
+         case matchM v a of
+           Just (x, y) -> [(x, y)] ++ [(x1, build v (x2, y)) | (x1, x2) <- f x]
+                                   ++ [(build v (x, y1), y2) | (y1, y2) <- f y]
+           Nothing -> []
+
 ---------------------------------------------------------------
 -- Properties on views 
 

@@ -25,13 +25,12 @@ import Domain.Math.Expr
 import Domain.Math.Expr.Parser
 import Domain.Math.Numeric.Views
 import Domain.Math.Numeric.Rules
+import Domain.Math.Numeric.Strategies
 import Domain.Math.Power.Strategies
 import Domain.Math.Power.Views
 import Domain.Math.Power.Rules
+import Domain.Math.Power.Tests
 --import Domain.Math.Power.Generators
-
-
-Just (s, es) = match productView   $ 2*Var "a"^4 * 3*Var "a"^3* 5
 
 ------------------------------------------------------------
 -- Exercises
@@ -45,9 +44,13 @@ powerExercise s = makeExercise
    }
 
 simplifyPowerExercise :: Exercise Expr
-simplifyPowerExercise = (powerExercise (label "" succeed))
+simplifyPowerExercise = (powerExercise powerStrategy)
    { description  = "simplify expression (powers)"
    , exerciseCode = makeCode "math" "simplifyPower"
 --   , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat simplerPowers
    }
+
+derivationSimplerPowers level = 
+  mapM_ putStrLn $ map (showDerivation simplifyPowerExercise) $ simplerPowers !! level
+                        

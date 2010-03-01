@@ -11,12 +11,7 @@
 -----------------------------------------------------------------------------
 -- For now, restricted to integers in exponent:
 -- no sqrt, or roots
-module Domain.Math.Power.Views
-   ( powerView, powerViewFor, powerViewWith, powerConsDivView, powerRatioView
-   , powerConsRatioView, powerRatioView', powerFactorisationView, myPowerView
-   , powerFactorView, powerFactorViewWith, powerFactorViewForWith
-   , canonicalPower
-   ) where
+module Domain.Math.Power.Views where
 
 import qualified Prelude
 import Prelude hiding ((^), recip)
@@ -36,6 +31,7 @@ v <&> w = makeView f g
     g   = build v
 
 -- | Power views
+{-
 powerConsDivView :: View Expr (Expr, (Expr, (Expr, Expr)))
 powerConsDivView = powerConsViewWith identity divView
 
@@ -47,38 +43,56 @@ powerRatioView' = powerViewWith identity rationalView >>^ (,) 1
 
 powerRatioView = powerConsRatioView <&> powerRatioView'
 
-myPowerView  =  powerConsViewWith identity identity
-            <&> (powerViewWith identity identity >>^ (,) 1)
+-- | (Var base)^b
+powerViewForWith :: String -> View Expr b -> View Expr b
+powerViewForWith base vb = (powerViewWith identity vb) >>> (makeView f g)
+  where
+    f (a, b) = if a == Var base then Just b else Nothing
+    g b = (Var base, b)
+-}
 
-powerViewWith :: View Expr a -> View Expr b -> View Expr (a, b)
-powerViewWith va vb = makeView f g
+plainPowerView :: View Expr (Expr, Expr)
+plainPowerView = makeView f g
   where
     f expr = 
       case expr of
-        Sym s [a, b] | s == powerSymbol -> do 
-          a' <- match va a
-          b' <- match vb b
-          return (a', b')
+        Sym s [a, b] | s == powerSymbol -> return (a, b)
         _ -> Nothing
-    g (a, b) = build va a .^. build vb b
+    g (a, b) = a .^. b
+    
+plainPowerConsView = timesView >>> second plainPowerView
+myPlainPowerView = plainPowerConsView <&> (plainPowerView >>^ (,) 1)
 
-powerConsViewWith :: View Expr b -> View Expr c -> View Expr (Expr, (b, c))
-powerConsViewWith vb vc = timesView >>> second (powerViewWith vb vc)
+myPowerForView pv = powerConsViewFor pv <&> (powerViewFor pv >>^ (,) 1)
 
-powerFactorisationView :: View Expr (Bool, [Expr])
-powerFactorisationView = productView >>> second (makeView f id)
+myPowerView = powerConsView <&> (powerView >>^ \(pv, n) -> (pv, (1, n)))
+
+-- | c * (Var base)^b
+powerConsViewFor :: String -> View Expr (Expr, Int)
+powerConsViewFor pv = timesView >>> second (powerViewFor pv)
+
+powerConsView :: View Expr (String, (Expr, Int))
+powerConsView = makeView f g
+  where
+    f expr = do
+      pv <- selectVar expr
+      cn <- match (powerConsViewFor pv) expr
+      return (pv, cn)
+    g (pv, cn) = build (powerConsViewFor pv) cn
+
+powerFactorisationView :: View Expr a -> View Expr (Bool, [Expr])
+powerFactorisationView v = productView >>> second (makeView f id)
   where
     f es = return $ map (\x -> build productView (False, x)) $ factorise es
     factorise :: [Expr] -> [[Expr]]
     factorise es =  maybe [es] split $ findIndex isPower es
       where
         split i = let (xs, ys) = splitAt (i+1) es in xs : factorise ys
-        isPower = isJust . match powerRatioView'
-
-canonicalPower = canonical powerFactorisationView
+        isPower = isJust . match v
 
 ----------------------------------------------------------------------
 -- Simplified views (no side-conditions to worry about)
+
 
 powerView :: View Expr (String, Int)
 powerView = makeView f g
@@ -139,6 +153,7 @@ powerFactorViewForWith pv v = makeView f g
    
    g (a, b) = build v a .*. (Var pv .^. fromIntegral b)
 
+
 ----------------------------------------------------------------------
 -- General views (that have to cope with side-conditions)
 {-
@@ -186,15 +201,15 @@ genPowerFactorView pv v1 v2 = makeView f g
             return (a, 0)
    
    g (a, b) = build v1 a .*. (Var pv .^. build v2 b)
--}
 
-{-
+
+
 powerView :: Integral a => String -> View Expr a -> View Expr a
 powerView = undefined
 
 -- helper: also generalizes over number type in exponent (not just Int)
-genPowerView :: (Num a, Num b) => String -> View Expr a -> View Expr b -> View Expr (a, b)
-genPowerView = genPowerViewWith
+--genPowerView :: (Num a, Num b) => String -> View Expr a -> View Expr b -> View Expr (a, b)
+--genPowerView = genPowerViewWith
 
 genPowerViewWith :: (Num a, Num b) => String -> View Expr a -> View Expr b -> View Expr (a, b)
 genPowerViewWith pv v1 v2 = makeView f g
@@ -227,6 +242,6 @@ genPowerViewWith pv v1 v2 = makeView f g
          _ -> liftM (\a -> (a, 0)) (match v1 expr)
       
    g (a, b) = build v1 a .*. (Var pv .^. build v2 b)
-   
+-}   
 
-test = match (genPowerView "x" identity integralView) (sqrt (Var "x" ^ 4)) -}
+--test = match (genPowerView "x" identity integralView) (sqrt (Var "x" ^ 4))

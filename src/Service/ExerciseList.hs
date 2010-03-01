@@ -32,6 +32,7 @@ import qualified Domain.Math.Equation.CoverUpExercise as Math
 import qualified Domain.Math.Polynomial.Exercises as Math
 import qualified Domain.Math.Polynomial.IneqExercises as Math
 import qualified Domain.RegularExpr.Exercises as RE
+import qualified Domain.Math.Power.Exercises as Math
 
 packages :: [Some ExercisePackage]
 packages =
@@ -63,6 +64,7 @@ packages =
    , makeOM Math.quadraticNoABCExercise
    , makeOM Math.quadraticWithApproximation
    , makeOM Math.derivativeExercise
+   , makeOM Math.simplifyPowerExercise
      -- linear algebra
    , makeOM LA.gramSchmidtExercise, makeOM LA.linearSystemExercise
    , makeOM LA.gaussianElimExercise, makeOM LA.systemWithMatrixExercise

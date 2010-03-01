@@ -10,9 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-   ( naturalStrategy, integerStrategy
-   , rationalStrategy, fractionStrategy
-   , testAll
+   ( powerStrategy
    ) where
 
 import Common.Apply
@@ -21,17 +19,23 @@ import Common.Transformation
 import Common.Uniplate
 import Common.View
 import Domain.Math.Expr
-import Domain.Math.Numeric.Rules
-import Domain.Math.Numeric.Views
+import Domain.Math.Power.Rules
+import Domain.Math.Power.Views
 import Domain.Math.Numeric.Generators
+import Domain.Math.Numeric.Rules
 import Prelude hiding (repeat)
 import Test.QuickCheck hiding (label)
 
 ------------------------------------------------------------
 -- Strategies
 
-naturalStrategy :: LabeledStrategy Expr
-naturalStrategy = label "simplify" $ repeat $ alternatives $ map swRule
+powerStrategy :: LabeledStrategy Expr
+powerStrategy = label "simplify" $ repeat $ 
+                  alternatives $ map swRule $ powerRules ++ numericRules
+
+
+-- | Allowed numeric rules
+numericRules =
    [ calcPlusWith     "nat" natView
    , calcMinusWith    "nat" natView
    , calcTimesWith    "nat" natView
@@ -53,49 +57,13 @@ naturalStrategy = label "simplify" $ repeat $ alternatives $ map swRule
       f (Nat n) = Just n
       f _       = Nothing
 
-integerStrategy :: LabeledStrategy Expr
-integerStrategy = label "simplify" $ repeat $ alternatives $ map swRule
-   [ calcPlusWith     "int" integerNormalForm
-   , calcMinusWith    "int" integerNormalForm
-   , calcTimesWith    "int" integerNormalForm
-   , calcDivisionWith "int" integerNormalForm
-   , doubleNegate
-   , negateZero
-   ]
-
-rationalStrategy :: LabeledStrategy Expr
-rationalStrategy = label "simplify" $ repeat $ alternatives $ map swRule
-   [ calcPlusWith     "rational" rationalRelaxedForm
-   , calcMinusWith    "rational" rationalRelaxedForm
-   , calcTimesWith    "rational" rationalRelaxedForm
-   , calcDivisionWith "int"      integerNormalForm
-   , doubleNegate
-   , negateZero
-   , divisionDenominator
-   , divisionNumerator
-   , simplerFraction
-   ]
-
-fractionStrategy :: LabeledStrategy Expr
-fractionStrategy = label "simplify" $ repeat $ alternatives $ map swRule
-   [ fractionPlus, fractionPlusScale, fractionTimes
-   , calcPlusWith     "int" integerNormalForm
-   , calcMinusWith    "int" integerNormalForm
-   , calcTimesWith    "int" integerNormalForm -- not needed?
-   , calcDivisionWith "int" integerNormalForm
-   , doubleNegate
-   , negateZero
-   , divisionDenominator  
-   , divisionNumerator 
-   , simplerFraction -- only apply when fractionPlusScale is not applicable
-   ]
-
 swRule :: Uniplate a => Rule a -> Rule a
 swRule r = makeSimpleRuleList (name r) (somewhereM (applyAll r))
 
 ------------------------------------------------------------
 -- Test code
 
+{-
 testAll :: IO ()
 testAll = sequence_ [test1, test2, test3, test4]
 
@@ -114,7 +82,8 @@ test3 = quickCheck $ forAll (sized rationalGenerator) $ \e ->
 test4 = quickCheck $ forAll (sized rationalGenerator) $ \e -> 
    Prelude.not (e `belongsTo` rationalView) || 
    applyD fractionStrategy e `belongsTo` rationalNormalForm
-   
+-}
+ 
 {- testC = quickCheck $ forAll (sized rationalGenerator) $ \e -> 
    let a = cleanUp e
    in a == cleanUp a -}

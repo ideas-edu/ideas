@@ -55,10 +55,17 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , examples     = concat simplerPowers
    }
 
+powerOfAExercise :: Exercise Expr
+powerOfAExercise = (powerExercise powerStrategy)
+   { description  = "write as a power of a"
+   , exerciseCode = makeCode "math" "powerOfA"
+--   , isReady      = (`belongsTo` integerNormalForm)
+   , examples     = concat powersOfA
+   }
 
 -- | test stuff
-derivationSimplerPowers level = 
-  mapM_ (putStrLn . showDerivation simplifyPowerExercise) $ simplerPowers !! level
+showDerivations ex exercises level = 
+  mapM_ (putStrLn . showDerivation ex) $ exercises !! level
                         
 a = Var "a"
 b = Var "b"

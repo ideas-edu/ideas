@@ -23,7 +23,9 @@ import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Views
 import Domain.Math.Numeric.Generators
+import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Rules
+import Domain.Math.Numeric.Views
 import Prelude hiding (repeat)
 import Test.QuickCheck hiding (label)
 
@@ -33,12 +35,12 @@ import Test.QuickCheck hiding (label)
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = cleanUpStrategy cleanup $ s powerRules
   where
-    cleanup = applyD $ s (calcPower : numericRules)
+    cleanup = applyD $ s (calcPower : naturalRules ++ rationalRules) 
     s rules = label "simplify" $ repeat $ alternatives $ 
                 map (somewhere . liftToContext) rules
 
 -- | Allowed numeric rules
-numericRules =
+naturalRules =
    [ calcPlusWith     "nat" natView
    , calcMinusWith    "nat" natView
    , calcTimesWith    "nat" natView
@@ -53,6 +55,18 @@ numericRules =
    , timesNegateRight   
    , divisionNegateLeft
    , divisionNegateRight  
+   ]
+   
+rationalRules =    
+   [ calcPlusWith     "rational" rationalRelaxedForm
+   , calcMinusWith    "rational" rationalRelaxedForm
+   , calcTimesWith    "rational" rationalRelaxedForm
+   , calcDivisionWith "int"      integerNormalForm
+   , doubleNegate
+   , negateZero
+   , divisionDenominator
+   , divisionNumerator
+   , simplerFraction
    ]
    
 natView = makeView f fromInteger

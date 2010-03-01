@@ -31,25 +31,6 @@ v <&> w = makeView f g
     g   = build v
 
 -- | Power views
-{-
-powerConsDivView :: View Expr (Expr, (Expr, (Expr, Expr)))
-powerConsDivView = powerConsViewWith identity divView
-
-powerConsRatioView :: View Expr (Expr, (Expr, Rational))
-powerConsRatioView = powerConsViewWith identity rationalView
-
-powerRatioView' :: View Expr (Expr, (Expr, Rational))
-powerRatioView' = powerViewWith identity rationalView >>^ (,) 1
-
-powerRatioView = powerConsRatioView <&> powerRatioView'
-
--- | (Var base)^b
-powerViewForWith :: String -> View Expr b -> View Expr b
-powerViewForWith base vb = (powerViewWith identity vb) >>> (makeView f g)
-  where
-    f (a, b) = if a == Var base then Just b else Nothing
-    g b = (Var base, b)
--}
 
 plainPowerView :: View Expr (Expr, Expr)
 plainPowerView = makeView f g

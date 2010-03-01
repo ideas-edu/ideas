@@ -66,7 +66,7 @@ undefs :: (Data b, Undefined a) => b -> [(a, a -> b)]
 undefs = filter ((== undef) . fst) . contextsBi
 
 -- | Collect all top level holes of type a in b. This function stops at the
---   first occurence of an a and does not collect all a's in the a.
+--   first occurence of an a and does not collect all a's in the b.
 topUndefs :: (Data a, Data b) => b -> [(a, a -> b)]
 topUndefs x = map f [0 .. length cs - 1]
   where

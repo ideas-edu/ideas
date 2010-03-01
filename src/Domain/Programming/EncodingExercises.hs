@@ -57,6 +57,15 @@ fromBinsNoCompile = [fromBin24 {- can be fixed by inlining mapAccumR -}]
 --------------------------------------------------------------------------------
 -- Solutions
 --------------------------------------------------------------------------------
+
+-- Jaap van de Woude's solution (Horners rule):
+fromBinJapie = Solution ("fromBin = f 0 where\n"
+                     ++  "  f x []     = x\n"
+                     ++  "  f x (y:ys) = f (2*x+y) ys\n")
+                         "Jaap van der Woude"
+                         fromBinFoldlS
+                         "Horners rule"
+
 -- Stefan his standard solution
 fromBin = Solution "fromBin = foldl ((+) . (* 2)) 0"
                    "Stefan"

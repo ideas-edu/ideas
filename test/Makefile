@@ -1,4 +1,4 @@
-default: test.log
+default: test-all.log
 all: test-all.log
 
 include ../Makefile.incl

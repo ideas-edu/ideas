@@ -1,0 +1,34 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        1/8*a^3-(4*a)^2*(1/4)*a
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/8*a^3-16*a^2*(1/4)*a
+      </expr>
+      <context>
+        <item name="location" value="[1,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        1/8*a^3-4*a^3
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate power minus">
+      <expr>
+        -31/8*a^3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

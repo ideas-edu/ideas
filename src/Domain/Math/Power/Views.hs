@@ -42,7 +42,15 @@ plainPowerView = makeView f g
     g (a, b) = a .^. b
     
 plainPowerConsView = timesView >>> second plainPowerView
-myPlainPowerView = plainPowerConsView <&> (plainPowerView >>^ (,) 1)
+myPlainPowerView = (plainPowerConsView <&> (plainPowerView >>^ (,) 1)) <&> negPowerView
+  where
+    negPowerView = makeView f g
+      where
+        f (Negate expr) = do 
+          (c, ax) <- match (plainPowerConsView <&> (plainPowerView >>^ (,) 1)) expr
+          return (negate c, ax)
+        f _ = Nothing
+        g = build myPlainPowerView
 
 myPowerForView pv = powerConsViewFor pv <&> (powerViewFor pv >>^ (,) 1)
 

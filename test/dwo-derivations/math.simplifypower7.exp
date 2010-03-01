@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        -16*a^4*3*a^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        -48*a^6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

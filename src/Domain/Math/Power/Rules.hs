@@ -44,7 +44,6 @@ powerRules =
    , calcBinPowerRule "plus" (+) isPlus
    ]
    
---calcBinPowerRule :: String -> (a -> a -> a) -> (e -> Maybe (e, e)) -> String -> View e a -> Rule e
 calcBinPowerRule opName op m = 
    makeSimpleRule ("calculate power " ++ opName) $ \e -> do
      (e1, e2) <- m e
@@ -54,7 +53,7 @@ calcBinPowerRule opName op m =
      return (build myPlainPowerView ((op c1 c2), a))
 
 calcPower :: Rule Expr 
-calcPower = minorRule $ makeSimpleRule "calculate power" $ \ expr -> do 
+calcPower = makeSimpleRule "calculate power" $ \ expr -> do 
   (e1, e2) <- match plainPowerView expr
   a        <- match rationalView e1
   x        <- match integralView e2
@@ -97,24 +96,24 @@ subExponents = makeSimpleRule "sub exponents" $ \ expr -> do
   (b, q)   <- match (myPowerForView x) e2
   return $ build (myPowerForView x) (a ./. b, y - q)
 
--- | (a^x)^y = a^(x*y)
+-- | (c*a^x)^y = c*a^(x*y)
 mulExponents :: Rule Expr 
 mulExponents = makeSimpleRule "mul exponents" $ \ expr -> do
-  (ax, y) <- match plainPowerView expr
-  (s, ax') <- match productView ax
-  (a, x)  <- match plainPowerView $ head ax' -- very ugly hack
-  a'      <- selectVar a  
-  return $ build plainPowerView (a, x .*. y)
+  (cax, y)    <- match plainPowerView expr
+  (c, (a, x)) <- match myPlainPowerView cax
+  guard (c == 1 || c == -1)
+  a'      <- selectVar a
+  return $ build myPlainPowerView (c, (a, x .*. y))
 
 -- | c*(a0..an)^y = c * a0^y * a1^y .. * an^y
 distributePower :: Rule Expr
 distributePower = makeSimpleRule "distribute power" $ \ expr -> do
   (c, (as', y)) <- match myPlainPowerView expr
+  y'            <- match integerView y
   (sign, as)    <- match productView as'
   guard (length as > 1)
   return $ build productView 
---    (sign, c : map (\a -> build myPlainPowerView (1, (a, y))) as)
-   (sign, c : map (\a -> a .^. y) as)
+   (if sign then odd y' else False, c : map (\a -> a .^. y) as)
 
 -- | c*a^0 = c
 zeroPower :: Rule Expr

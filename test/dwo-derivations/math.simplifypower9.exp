@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        (a^2)^7*(b^3)^7
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        a^14*(b^3)^7
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        a^14*b^21
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

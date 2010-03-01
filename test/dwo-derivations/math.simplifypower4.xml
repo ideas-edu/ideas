@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifypower" encoding="string">
+  <state>
+    <expr>
+      5*a*(-3)*a^2*2*a^3
+    </expr>
+  </state>
+</request>

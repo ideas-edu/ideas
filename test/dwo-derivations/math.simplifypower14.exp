@@ -1,0 +1,42 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        32*a^5+(1/3*a)^2*(-3*a)^3
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        32*a^5+(-(1/3*a)^2*27*a^3)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        32*a^5+(-1/9*a^2*27*a^3)
+      </expr>
+      <context>
+        <item name="location" value="[1,0,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        32*a^5+(-3*a^5)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate power plus">
+      <expr>
+        29*a^5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

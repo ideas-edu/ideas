@@ -10,13 +10,14 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-   ( powerStrategy
+   ( powerStrategy, natView
    ) where
 
 import Common.Apply
+import Common.Context
 import Common.Strategy
 import Common.Transformation
-import Common.Uniplate
+import Common.Uniplate hiding (somewhere)
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
@@ -29,10 +30,12 @@ import Test.QuickCheck hiding (label)
 ------------------------------------------------------------
 -- Strategies
 
-powerStrategy :: LabeledStrategy Expr
-powerStrategy = label "simplify" $ repeat $ 
-                  alternatives $ map swRule $ powerRules ++ numericRules
-
+powerStrategy :: LabeledStrategy (Context Expr)
+powerStrategy = cleanUpStrategy cleanup $ s powerRules
+  where
+    cleanup = applyD $ s (calcPower : numericRules)
+    s rules = label "simplify" $ repeat $ alternatives $ 
+                map (somewhere . liftToContext) rules
 
 -- | Allowed numeric rules
 numericRules =
@@ -51,14 +54,11 @@ numericRules =
    , divisionNegateLeft
    , divisionNegateRight  
    ]
- where
-   natView = makeView f fromInteger
-    where
-      f (Nat n) = Just n
-      f _       = Nothing
-
-swRule :: Uniplate a => Rule a -> Rule a
-swRule r = makeSimpleRuleList (name r) (somewhereM (applyAll r))
+   
+natView = makeView f fromInteger
+  where
+    f (Nat n) = Just n
+    f _       = Nothing
 
 ------------------------------------------------------------
 -- Test code

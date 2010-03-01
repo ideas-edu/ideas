@@ -19,7 +19,10 @@ import Common.Exercise
 import Common.Strategy
 import Common.View
 import Common.Context
+import Common.Navigator
 import Common.Uniplate
+import Common.Transformation
+import Common.Derivation (derivations, derivation)
 import Domain.Math.Examples.DWO3
 import Domain.Math.Expr
 import Domain.Math.Expr.Parser
@@ -35,12 +38,13 @@ import Domain.Math.Power.Tests
 ------------------------------------------------------------
 -- Exercises
 
-powerExercise :: LabeledStrategy Expr -> Exercise Expr
+powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 powerExercise s = makeExercise 
    { status        = Provisional
    , parser        = parseExpr
+   , navigation    = navigator                     
 --   , equivalence   = viewEquivalent rationalView
-   , strategy      = mapRules liftToContext s
+   , strategy      = s
    }
 
 simplifyPowerExercise :: Exercise Expr
@@ -51,6 +55,10 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , examples     = concat simplerPowers
    }
 
+
+-- | test stuff
 derivationSimplerPowers level = 
-  mapM_ putStrLn $ map (showDerivation simplifyPowerExercise) $ simplerPowers !! level
+  mapM_ (putStrLn . showDerivation simplifyPowerExercise) $ simplerPowers !! level
                         
+a = Var "a"
+b = Var "b"

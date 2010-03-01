@@ -21,6 +21,7 @@ import Data.List
 import Data.Maybe
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
+import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
 
@@ -29,39 +30,9 @@ import Data.Generics.PlateData
 
 ------------------------------------------------------------
 -- Rules
-
--- | a*x^y * b*x^q = a*b * x^(y+q)
-addExponents' :: Rule Expr 
-addExponents' = makeSimpleRuleList "add exponents" $ \ expr -> do
---  pv <- collectVars expr
-  case match (powerFactorisationView myPowerView) expr of
-    Just (s, fs) -> do 
-      (e, es) <- split fs
-      case apply addExponents e of
-        Just e' -> return $ build productView (s, e' : es)
-        Nothing -> fail ""  
-    Nothing -> fail ""
-  
-    
-g :: [(Expr, [Expr])] -> [Expr]
-g = map (\(x, xs) -> build productView (False, (x : xs)))
-
-split :: [Expr] -> [(Expr, [Expr])]
-split xs = f xs
-  where
-    f (y:ys) | not (null ys) = [(y * z, xs \\ [y, z]) | z <- ys] ++ f ys 
-             | otherwise     = []
-    f [] = []
-  
-  
--- | Test stuff
-a = Var "a" ; b = Var "b"
-expr = 2*3*a^6 * 5*6*a^7 * a^3 * b^2 * b^3
-
 -- | The rules
 powerRules =
    [ addExponents
-   , addExponents'
    , subExponents
    , mulExponents
    , distributePower
@@ -69,7 +40,37 @@ powerRules =
    , reciprocal
    , fracExponent
    , calcPower
+   , calcBinPowerRule "minus" (-) isMinus
+   , calcBinPowerRule "plus" (+) isPlus
    ]
+   
+--calcBinPowerRule :: String -> (a -> a -> a) -> (e -> Maybe (e, e)) -> String -> View e a -> Rule e
+calcBinPowerRule opName op m = 
+   makeSimpleRule ("calculate power " ++ opName) $ \e -> do
+     (e1, e2) <- m e
+     (c1, a)  <- match myPlainPowerView e1
+     (c2, b)  <- match myPlainPowerView e2
+     guard (a == b)
+     return (build myPlainPowerView ((op c1 c2), a))
+   
+-- | a*x^y * b*x^q = a*b * x^(y+q)
+addExponents :: Rule Expr 
+addExponents = makeSimpleRuleList "add exponents" $ \ expr -> do
+--  pv <- collectVars expr
+  case match (powerFactorisationView myPowerView) expr of
+    Just (s, fs) -> do 
+      (e, es) <- split fs
+      case apply addExponents' e of
+        Just e' -> return $ build productView (s, e' : es)
+        Nothing -> fail ""  
+    Nothing -> fail ""
+
+split :: [Expr] -> [(Expr, [Expr])]
+split xs = f xs
+  where
+    f (y:ys) | not (null ys) = [(y * z, xs \\ [y, z]) | z <- ys] ++ f ys 
+             | otherwise     = []
+    f [] = []
 
 calcPower :: Rule Expr 
 calcPower = minorRule $ makeSimpleRule "calculate power" $ \ expr -> do 
@@ -79,8 +80,8 @@ calcPower = minorRule $ makeSimpleRule "calculate power" $ \ expr -> do
   return $ Nat $ x Prelude.^ y
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
-addExponents :: Rule Expr 
-addExponents = makeSimpleRule "add exponents" $ \ expr -> do
+addExponents' :: Rule Expr 
+addExponents' = makeSimpleRule "add exponents" $ \ expr -> do
   x        <- selectVar expr
   (e1, e2) <- match timesView expr
   (a, y)   <- match (myPowerForView x) e1
@@ -96,22 +97,22 @@ subExponents = makeSimpleRule "sub exponents" $ \ expr -> do
   (b, q)   <- match (myPowerForView x) e2
   return $ build (myPowerForView x) (a ./. b, y - q)
 
--- | d*(c*a^x)^y = d*c*a^(x*y)
+-- | c*(a^x)^y = c*a^(x*y)
 mulExponents :: Rule Expr 
 mulExponents = makeSimpleRule "mul exponents" $ \ expr -> do
-  (d, (cax, y)) <- match (myPlainPowerView) expr
-  (c, (a, x))   <- match (myPlainPowerView) cax
+  (c, (ax, y)) <- match (myPlainPowerView) expr
+  (a, x)       <- match (plainPowerView) ax
   a'            <- selectVar a  
-  return $ build myPlainPowerView (d .*. c, (a, x .*. y))
+  return $ build myPlainPowerView (c, (a, x .*. y))
 
--- | c*(a0..an)^y = c*a0^y * c*a1^y .. * c*an^y
+-- | c*(a0..an)^y = c * a0^y * a1^y .. * an^y
 distributePower :: Rule Expr
 distributePower = makeSimpleRule "distribute power" $ \ expr -> do
   (c, (as', y)) <- match myPlainPowerView expr
   (sign, as)    <- match productView as'
   guard (length as > 1)
   return $ build productView 
-    (sign, map (\a -> build myPlainPowerView (c, (a, y))) as)
+    (sign, c : map (\a -> build myPlainPowerView (1, (a, y))) as)
 
 -- | c*a^0 = c
 zeroPower :: Rule Expr

@@ -41,7 +41,7 @@ simplerPowers = [level1, level2, level3, level4]
       
    level3 = 
       [ (a^2 * b^3)^7
-      , (-a)^3 * (2*b)^5 * a^2
+      , -a^3 * (2*b)^5 * a^2
       , 3*a * (-2*b)^3 * (-a*b)^2
       , (2*a*b^3)^2 * (-3*a^2*b)^3
       ]

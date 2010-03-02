@@ -62,7 +62,6 @@ calcPower = makeSimpleRule "calculate power" $ \ expr -> do
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponents :: Rule Expr 
 addExponents = makeSimpleRuleList "add exponents" $ \ expr -> do
---  pv <- collectVars expr
   case match (powerFactorisationView myPowerView) expr of
     Just (s, fs) -> do 
       (e, es) <- split fs
@@ -129,6 +128,14 @@ reciprocal = makeSimpleRule "reciprocal" $ \ expr -> do
   (d, cax) <- match divView expr
   (c, x)   <- match (myPowerForView a) cax
   return $ build (myPowerForView a) (d ./. c, negate x)
+
+-- | c*a^x = c/a^(-x)
+reciprocal' :: (Expr -> Bool) -> Rule Expr
+reciprocal' p = makeSimpleRule "reciprocal" $ \ expr -> do
+  guard (p expr)
+  a        <- selectVar expr
+  (c, x)   <- match (myPowerForView a) expr
+  return $ c ./. build (myPowerForView a) (1, negate x)
 
 -- | c*a^(p/q) = c * root q (a^p)
 fracExponent :: Rule Expr 

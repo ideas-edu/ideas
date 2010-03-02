@@ -63,6 +63,15 @@ powerOfAExercise = (powerExercise powerStrategy)
    , examples     = concat powersOfA
    }
 
+nonNegExpExercise :: Exercise Expr
+nonNegExpExercise = (powerExercise nonNegExpStrategy)
+   { description  = "write with a non-negative exponent"
+   , exerciseCode = makeCode "math" "nonNegExp"
+--   , isReady      = (`belongsTo` integerNormalForm)
+   , examples     = concat nonNegExp
+   }
+
+
 -- | test stuff
 showDerivations ex exercises level = 
   mapM_ (putStrLn . showDerivation ex) $ exercises !! level

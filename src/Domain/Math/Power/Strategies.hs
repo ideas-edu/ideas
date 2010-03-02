@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-   ( powerStrategy, natView
+   ( powerStrategy, natView, nonNegExpStrategy, hasNegExp
    ) where
 
 import Common.Apply
@@ -39,6 +39,17 @@ powerStrategy = cleanUpStrategy cleanup $ s powerRules
     s rules = label "simplify" $ repeat $ alternatives $ 
                 map (somewhere . liftToContext) rules
 
+nonNegExpStrategy :: LabeledStrategy (Context Expr)
+nonNegExpStrategy = 
+  label "non negative exponent" $ repeat $ alternatives $ 
+    map (somewhere . liftToContext) $ reciprocal' hasNegExp : naturalRules ++ rationalRules
+
+    
+hasNegExp expr = 
+      case match myPowerView expr of
+        Just (_, (_, x)) -> x < 0
+        _ -> False
+
 -- | Allowed numeric rules
 naturalRules =
    [ calcPlusWith     "nat" natView
@@ -56,6 +67,11 @@ naturalRules =
    , divisionNegateLeft
    , divisionNegateRight  
    ]
+   where
+     natView = makeView f fromInteger
+       where
+         f (Nat n) = Just n
+         f _       = Nothing
    
 rationalRules =    
    [ calcPlusWith     "rational" rationalRelaxedForm
@@ -69,10 +85,7 @@ rationalRules =
    , simplerFraction
    ]
    
-natView = makeView f fromInteger
-  where
-    f (Nat n) = Just n
-    f _       = Nothing
+
 
 ------------------------------------------------------------
 -- Test code

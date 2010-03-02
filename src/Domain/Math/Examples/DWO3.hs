@@ -84,3 +84,23 @@ powersOfA = [level1, level2, level3, level4]
       , ((a^(-2))^4 / (a^2)^3) * a
       , (1/a^(-3))^4 * (1/a)^3
       ]
+      
+nonNegExp :: [[Expr]]      
+nonNegExp = [level1, level2]
+  where
+    a = variable "a"
+    b = variable "b"
+    level1 =
+      [ a * b^(-2)
+      , a^(-1) * b^2
+      , a^(-2) * b^(-3)
+      , (1/a^(-3)) * (b^(-2))^2
+      ]
+      
+    level2 =
+      [ (1/(a*b)^(-2)) * a * b^(-1)
+      , (2*a)^(-1) / (4*b)^(-2)
+      , (4*a*b)^(-1) * (b^2)^(-3)
+      , (5*a)^(-2) * 10*b^(-1)
+      ]
+      

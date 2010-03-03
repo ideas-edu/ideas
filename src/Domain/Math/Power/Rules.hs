@@ -38,7 +38,7 @@ powerRules =
    , mulExponents
    , distributePower
    , zeroPower
---   , reciprocal
+   , reciprocal
    , fracExponent
    , calcPower
    , calcBinPowerRule "minus" (-) isMinus

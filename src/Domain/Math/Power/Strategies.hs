@@ -45,7 +45,18 @@ powerStrategy = makeStrategy
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
 nonNegExpStrategy = makeStrategy "non negative exponent" 
-  (powerRules ++ [reciprocal' hasNegExp, myFractionTimes] ++ fractionRules) 
+  ([ addExponents
+   , subExponents
+   , mulExponents
+   , distributePower
+   , zeroPower
+   , fracExponent
+   , calcPower
+   , calcBinPowerRule "minus" (-) isMinus
+   , calcBinPowerRule "plus" (+) isPlus
+   , reciprocal' hasNegExp
+   , myFractionTimes
+   ] ++ fractionRules) 
   (myFractionTimes : naturalRules)
 
     

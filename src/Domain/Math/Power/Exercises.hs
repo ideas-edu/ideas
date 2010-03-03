@@ -10,7 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Exercises    
-   ( simplifyPowerExercise ) where
+   ( simplifyPowerExercise
+   , powerOfAExercise ) where
 
 import Prelude hiding ( (^) )
 

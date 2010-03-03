@@ -61,7 +61,7 @@ nonNegExpStrategy = makeStrategy "non negative exponent"
 
     
 hasNegExp expr = 
-      case match myPowerView expr of
+      case match unitPowerView expr of
         Just (_, (_, x)) -> x < 0
         _ -> False
 
@@ -108,8 +108,8 @@ fractionRules =
    , calcDivisionWith "int" integerNormalForm
    , doubleNegate
    , negateZero
-   , divisionDenominator  
-   , divisionNumerator 
+   , smartRule divisionDenominator  
+   , smartRule divisionNumerator 
    , simplerFraction
    ]
 

@@ -14,6 +14,7 @@ module Domain.Math.Power.Rules where
 import Prelude hiding ( (^) )
 import qualified Prelude
 import Common.Apply
+import Control.Arrow ( (>>^) )
 import Common.Transformation
 import Common.View
 import Control.Monad
@@ -37,7 +38,7 @@ powerRules =
    , mulExponents
    , distributePower
    , zeroPower
-   , reciprocal
+--   , reciprocal
    , fracExponent
    , calcPower
    , calcBinPowerRule "minus" (-) isMinus
@@ -145,3 +146,11 @@ fracExponent = makeSimpleRule "add exponents" $ \ expr -> do
   guard (Var a == a')
   (p, q)        <- match divView pq
   return $ c .*. (root q (build myPlainPowerView (a', (1, p))))
+  
+myFractionTimes :: Rule Expr
+myFractionTimes = makeSimpleRule "fraction times" $ \ expr -> do
+  (e1, e2) <- match timesView expr
+  guard $ isJust $ match divView e1 `mplus` match divView e2
+  (a, b)   <- match (divView <&> (identity >>^ \e -> (e,1))) e1
+  (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
+  return $ build divView (a .*. c, b .*. d)

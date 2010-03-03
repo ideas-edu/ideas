@@ -32,17 +32,21 @@ import Test.QuickCheck hiding (label)
 ------------------------------------------------------------
 -- Strategies
 
-powerStrategy :: LabeledStrategy (Context Expr)
-powerStrategy = cleanUpStrategy cleanup $ s powerRules
+makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context Expr)
+makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategy rs
   where
-    cleanup = applyD $ s (calcPower : naturalRules ++ rationalRules) 
-    s rules = label "simplify" $ repeat $ alternatives $ 
-                map (somewhere . liftToContext) rules
+    cleanup  = applyD . strategy
+    strategy = label l . repeat . alternatives . map (somewhere . liftToContext)
+                
+
+powerStrategy :: LabeledStrategy (Context Expr)
+powerStrategy = makeStrategy 
+  "simplify" powerRules (calcPower : naturalRules ++ rationalRules)
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
-nonNegExpStrategy = 
-  label "non negative exponent" $ repeat $ alternatives $ 
-    map (somewhere . liftToContext) $ reciprocal' hasNegExp : naturalRules ++ rationalRules
+nonNegExpStrategy = makeStrategy "non negative exponent" 
+  (powerRules ++ [reciprocal' hasNegExp, myFractionTimes] ++ fractionRules) 
+  (myFractionTimes : naturalRules)
 
     
 hasNegExp expr = 
@@ -85,7 +89,18 @@ rationalRules =
    , simplerFraction
    ]
    
-
+fractionRules =
+   [ fractionPlus, fractionPlusScale, fractionTimes
+   , calcPlusWith     "int" integerNormalForm
+   , calcMinusWith    "int" integerNormalForm
+   , calcTimesWith    "int" integerNormalForm -- not needed?
+   , calcDivisionWith "int" integerNormalForm
+   , doubleNegate
+   , negateZero
+   , divisionDenominator  
+   , divisionNumerator 
+   , simplerFraction
+   ]
 
 ------------------------------------------------------------
 -- Test code

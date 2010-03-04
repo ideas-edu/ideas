@@ -1,6 +1,47 @@
-<reply result="error" version="0.5.11">
-  <message>
-    Package math.nonnegexp not found
-  </message>
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(a*b)^(-2)*a*(1/b)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/(a^(-2)*b^(-2))*a*(1/b)
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(1/a^2*b^(-2))*a*(1/b)
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(1/a^2*(1/b^2))*a*(1/b)
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        a^3*b^2/b
+      </expr>
+    </elem>
+    <elem ruleid="sub exponents">
+      <expr>
+        a^3*b
+      </expr>
+    </elem>
+  </list>
 </reply>
 

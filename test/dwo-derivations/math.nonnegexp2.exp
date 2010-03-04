@@ -1,6 +1,18 @@
-<reply result="error" version="0.5.11">
-  <message>
-    Package math.nonnegexp not found
-  </message>
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/a*b^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        b^2/a
+      </expr>
+    </elem>
+  </list>
 </reply>
 

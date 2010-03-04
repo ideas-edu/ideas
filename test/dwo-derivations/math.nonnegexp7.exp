@@ -1,6 +1,58 @@
-<reply result="error" version="0.5.11">
-  <message>
-    Package math.nonnegexp not found
-  </message>
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="mul exponents">
+      <expr>
+        (4*a*b)^(-1)*b^(-6)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        (4*a*b)^(-1)*(1/b^6)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/4*a^(-1)*b^(-1)*(1/b^6)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(4*a)*b^(-1)*(1/b^6)
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(4*a)*(1/b)*(1/b^6)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        1/(4*a*b*b^6)
+      </expr>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        1/(b^7*4*a)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
 </reply>
 

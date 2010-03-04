@@ -62,6 +62,11 @@ somewhereOr s =
    in fix $ \this -> check (Prelude.not . isOr) <*> s 
                  <|> check isOr <*> once this
 
+--check1, check2 :: (a -> Bool) -> Rule a
+--check1 p = minorRule $ makeSimpleRule "check1" $ \a -> if p a then Just a else Nothing
+--check2 p = minorRule $ makeSimpleRule "check2" $ \a -> if p a then Just a else Nothing
+
+
 -----------------------------------------------------------------------------
 -- To DNF, in four steps
 

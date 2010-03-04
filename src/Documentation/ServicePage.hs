@@ -25,7 +25,6 @@ import Domain.Math.Polynomial.Exercises
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Symbolic
 import Control.Monad
-import Common.Context
 
 makeServicePage :: Service a -> IO ()
 makeServicePage s =
@@ -76,7 +75,7 @@ examples = concat
    , lineq "allfirsts" [stLineq2]
    , logic "onefirst" [stLogic2]
    , lineq "onefirst" [stLineq2]
-   , logic "applicable" [makeLocation [] ::: Location, stLogic1]
+   , logic "applicable" [[] ::: Location, stLogic1]
    ]
  where
    stLogic1 = emptyState dnfExercise (Not (Var "p" :&&: Not (Var "q"))) ::: State

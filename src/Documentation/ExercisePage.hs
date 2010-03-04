@@ -12,7 +12,6 @@
 module Documentation.ExercisePage (makeExercisePage) where
 
 import Common.Exercise
-import Common.Context
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
 import Service.ExerciseList 
@@ -80,7 +79,7 @@ exercisePage pkg = defaultPage title 2 $ do
    
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) ex 5
-   preText (showDerivation ex (fromContext $ context state))
+   preText (showDerivation ex (term state))
    when (isJust (derivationsPage pkg)) $ 
       link (up 2 ++ exerciseDerivationsFile code) (text "More examples")
  where

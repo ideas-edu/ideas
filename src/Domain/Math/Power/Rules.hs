@@ -25,6 +25,7 @@ import Domain.Math.Expr.Symbols
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
+import Domain.Math.Polynomial.CleanUp
 
 ------------------------------------------------------------
 -- Rules
@@ -66,8 +67,9 @@ calcPower = makeSimpleRule "calculate power" $ \ expr -> do
   (e1, e2) <- match simplePowerView expr
   a        <- match rationalView e1
   x        <- match integralView e2
-  guard (x > 0)  
-  return $ fromRational $ a Prelude.^ x
+  if x > 0 
+    then return $ fromRational $ a Prelude.^ x
+    else return $ 1 ./. (e1 .^. negate e2)
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponents :: Rule Expr 
@@ -98,12 +100,17 @@ addExponents' = makeSimpleRule "add exponents" $ \ expr -> do
   
 -- | a*x^y / b*x^q = a/b * x^(y-q)
 subExponents :: Rule Expr
-subExponents = makeSimpleRule "sub exponents" $ \ expr -> do
-  x        <- selectVar expr
-  (e1, e2) <- match divView expr
-  (a, y)   <- match (unitPowerForView x) e1
-  (b, q)   <- match (unitPowerForView x) e2
-  return $ build (unitPowerForView x) (a ./. b, y - q)
+subExponents = forallVars rule
+  where
+    rule x = makeSimpleRule "sub exponents" $ \ expr -> do
+      (e1, e2) <- match divView expr
+      (a, y)   <- match (unitPowerForView x) e1
+      (b, q)   <- match (unitPowerForView x) e2
+      return $ build (unitPowerForView x) (a ./. b, y - q)
+
+forallVars :: (String -> Rule Expr) -> Rule Expr
+forallVars ruleFor = makeSimpleRuleList (name (ruleFor "")) $ \ expr -> 
+  mapMaybe (\v -> apply (ruleFor v) expr) $ collectVars expr
 
 -- | (c*a^x)^y = c*a^(x*y)
 mulExponents :: Rule Expr 
@@ -166,3 +173,9 @@ myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do
   (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
   return $ build divView (a .*. c, b .*. d)
 
+-- | simplify expression
+simplifyFraction :: Rule Expr
+simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
+  let expr' = simplifyWith (second normalizeProduct) productView $ expr
+  guard (expr /= expr')
+  return expr'

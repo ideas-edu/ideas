@@ -11,7 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Exercises    
    ( simplifyPowerExercise
-   , powerOfAExercise ) where
+   , powerOfAExercise 
+   , nonNegExpExercise ) where
 
 import Prelude hiding ( (^) )
 
@@ -34,6 +35,8 @@ import Domain.Math.Power.Strategies
 import Domain.Math.Power.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Tests
+
+import Data.Maybe
 --import Domain.Math.Power.Generators
 
 ------------------------------------------------------------

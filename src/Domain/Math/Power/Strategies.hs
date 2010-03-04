@@ -44,26 +44,25 @@ powerStrategy = makeStrategy
   "simplify" powerRules (calcPower : naturalRules ++ rationalRules)
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
-nonNegExpStrategy = makeStrategy "non negative exponent" 
-  ([ addExponents
-   , subExponents
-   , mulExponents
-   , distributePower
-   , zeroPower
-   , fracExponent
-   , calcPower
-   , calcBinPowerRule "minus" (-) isMinus
-   , calcBinPowerRule "plus" (+) isPlus
-   , reciprocal' hasNegExp
-   , myFractionTimes
-   ] ++ fractionRules) 
-  (myFractionTimes : naturalRules)
-
+nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
+  where
+    rules = [ addExponents
+            , subExponents
+            , mulExponents
+            , reciprocal' hasNegExp
+            , distributePower
+            , zeroPower
+            , fracExponent
+            , calcBinPowerRule "minus" (-) isMinus
+            , calcBinPowerRule "plus" (+) isPlus
+            , myFractionTimes
+            ] ++ fractionRules            
+    cleanupRules = calcPower : simplifyFraction : naturalRules
     
 hasNegExp expr = 
-      case match unitPowerView expr of
-        Just (_, (_, x)) -> x < 0
-        _ -> False
+  case match unitPowerView expr of
+    Just (_, (_, x)) -> x < 0
+    _ -> False    
 
 -- | Allowed numeric rules
 naturalRules =

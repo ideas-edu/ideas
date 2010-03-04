@@ -54,6 +54,7 @@ a        .*. b        = a :*: b
 a ./. Nat 1           = a
 Negate a ./. b        = neg (a ./. b)
 a        ./. Negate b = neg (a ./. b)
+(a :/: b) ./. c       = a ./. (b .*. c)
 a ./. b               = a :/: b
 
 recip :: Expr -> Expr

@@ -18,7 +18,7 @@
 module Common.Transformation 
    ( -- * Transformations
      Transformation(RewriteRule), makeTrans, makeTransList
---   , getPatternPair
+   , getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
@@ -76,7 +76,7 @@ makeTrans f = makeTransList (maybe [] return . f)
 makeTransList :: (a -> [a]) -> Transformation a
 makeTransList = Function
 
-{-
+
 getPatternPair :: a -> Transformation a -> [(a, a)]
 getPatternPair _ (RewriteRule r) = 
    let a :~> b = rulePair r 0 
@@ -86,7 +86,7 @@ getPatternPair a (LiftView v t) = do
    (x, y) <- getPatternPair b t
    return (build v (x, c), build v (y, c))
 --getPatternPair _ (s :*: t)
-getPatternPair _ _ = [] -}
+getPatternPair _ _ = []
 
 -----------------------------------------------------------
 --- Arguments

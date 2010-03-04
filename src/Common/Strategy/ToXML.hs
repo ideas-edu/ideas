@@ -18,14 +18,34 @@ import Common.Strategy.Core
 import Common.Strategy.Abstract
 import Text.XML
 --import Domain.Math.Polynomial.Strategies
-
+import Common.Strategy.Combinators
+import Common.Transformation
+import Prelude hiding (repeat)
 -- for testing
-{-
+
 main :: IO ()
 main = do
-   let txt = showXML (strategyToXML quadraticStrategy)
+   let txt = showXML (strategyToXML linearEquation)
    putStrLn txt
-   writeFile "quadreq.xml" txt -}
+   writeFile "quadreq.xml" txt 
+   
+linearEquation :: LabeledStrategy (Equation Expr)
+linearEquation = label "linear equation" 
+   (   label "prepare equation" 
+          (repeat (merge <|> distribute <|> removeDivision))
+   <*> label "basic equation"
+          (try varToLeft <*> try conToRight <*> try scaleToOne)
+   )
+
+merge = makeSimpleRule "merge" undefined
+distribute = makeSimpleRule "distribute" undefined
+removeDivision = makeSimpleRule "remove division" undefined
+varToLeft = makeSimpleRule "var to left" undefined
+conToRight = makeSimpleRule "con to right" undefined
+scaleToOne = makeSimpleRule "scale to one" undefined
+
+data Expr = Expr
+data Equation a = Equation
 
 strategyToXML :: IsStrategy f => f a -> XML
 strategyToXML = coreToXML . toCore . toStrategy
@@ -38,7 +58,7 @@ infoToXML info = do
    when (folded  info) ("folded"  .=. "true")
 
 coreToXML :: Core LabelInfo a -> XML
-coreToXML core = makeXML "strategy" $ 
+coreToXML core = makeXML "label" $ 
    case core of
       Label l a -> infoToXML l >> coreBuilder infoToXML a
       _         -> coreBuilder infoToXML core

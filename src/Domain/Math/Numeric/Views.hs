@@ -44,7 +44,8 @@ realView = makeView (exprToNum f) (fromRational . toRational)
       | s == powerSymbol = do
            let ry = toRational y
            guard (denominator ry == 1)
-           return (x Prelude.^ numerator ry)
+           let a = x Prelude.^ abs (numerator ry)
+           return (if numerator ry < 0 then 1/a else a)
    f _ _ = Nothing
    
 integerView :: View Expr Integer

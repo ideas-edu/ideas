@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="sub exponents">
       <expr>
-        1/a*b^2
+        root (x^(-2)) 3
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="write as power">
       <expr>
-        b^2/a
+        x^(-2/3)
       </expr>
     </elem>
   </list>

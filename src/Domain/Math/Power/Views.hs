@@ -20,6 +20,7 @@ import Control.Monad
 import Common.View
 import Data.List
 import Data.Maybe
+import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Expr.Views
@@ -46,10 +47,10 @@ strictPowerView  =  strictPowerConsView
         f _ = Nothing
         g = build strictPowerView        
 
-powerConsViewFor :: String -> View Expr (Expr, Int)
+powerConsViewFor :: String -> View Expr (Expr, Rational)
 powerConsViewFor pv = timesView >>> second (powerViewFor' pv)
 
-powerConsView :: View Expr (String, (Expr, Int))
+powerConsView :: View Expr (String, (Expr, Rational))
 powerConsView = makeView f g
   where
     f expr = do
@@ -58,10 +59,10 @@ powerConsView = makeView f g
       return (pv, cn)
     g (pv, cn) = build (powerConsViewFor pv) cn
     
-unitPowerForView :: String -> ViewM Maybe Expr (Expr, Int)
+unitPowerForView :: String -> ViewM Maybe Expr (Expr, Rational)
 unitPowerForView pv = powerConsViewFor pv <&> (powerViewFor' pv >>^ (,) 1)
 
-unitPowerView :: ViewM Maybe Expr (String, (Expr, Int))
+unitPowerView :: ViewM Maybe Expr (String, (Expr, Rational))
 unitPowerView = powerConsView <&> (powerView' >>^ \(pv, n) -> (pv, (1, n)))
 
 -- | Power views
@@ -84,6 +85,15 @@ powerFactorisationView v = productView >>> second (makeView f id)
         split i = let (xs, ys) = splitAt (i+1) es in xs : factorise ys
         isPower = isJust . match v
 
+rootView :: View Expr (Expr, Rational)
+rootView = makeView f g
+  where 
+    f expr = case expr of
+        Sqrt e -> return (e, 2)
+        Sym s [a, Nat b] | s == rootSymbol -> return (a, toRational b)
+        _ -> Nothing
+    g (a, b) = if b==2 then Sqrt a else root a (fromRational b)
+
 ----------------------------------------------------------------------
 -- Simplified views (no side-conditions to worry about)
 
@@ -103,7 +113,7 @@ intView = makeView f fromIntegral
 
 powerView :: View Expr (String, Int)
 powerView = powerViewWith natView
-powerView' = powerViewWith' intView
+powerView' = powerViewWith' rationalView
    
 powerViewWith :: Num a => View Expr a -> View Expr (String, a)
 powerViewWith v = makeView f g
@@ -124,7 +134,7 @@ powerViewWith' v = makeView f g
    
 powerViewFor :: String -> View Expr Int
 powerViewFor = powerViewForWith natView
-powerViewFor' = powerViewForWith' intView
+powerViewFor' = powerViewForWith' rationalView
 
 powerViewForWith :: Num a =>  View Expr a -> String -> View Expr a
 powerViewForWith v pv = makeView f g

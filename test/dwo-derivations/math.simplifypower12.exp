@@ -21,9 +21,17 @@
         <item name="location" value="[0,0,0,0]"/>
       </context>
     </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        -4*a^2*b^6*27*a^6*b^3
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0,0,1]"/>
+      </context>
+    </elem>
     <elem ruleid="add exponents">
       <expr>
-        -108*a^8*(b^3)^2*b^3
+        -108*a^8*b^6*b^3
       </expr>
     </elem>
     <elem ruleid="add exponents">

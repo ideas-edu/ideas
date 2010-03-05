@@ -2,15 +2,20 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        1/a*b^2
+        sqrt x*x^(-2)
+      </expr>
+    </elem>
+    <elem ruleid="write as power">
+      <expr>
+        x^(1/2)*x^(-2)
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="add exponents">
       <expr>
-        b^2/a
+        x^(-3/2)
       </expr>
     </elem>
   </list>

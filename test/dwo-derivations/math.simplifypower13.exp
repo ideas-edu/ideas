@@ -29,6 +29,11 @@
         -31/8*a^3
       </expr>
     </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        -31*a^3/8
+      </expr>
+    </elem>
   </list>
 </reply>
 

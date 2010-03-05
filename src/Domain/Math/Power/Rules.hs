@@ -47,7 +47,7 @@ powerRules =
    , distributePower
    , zeroPower
    , reciprocal
-   , fracExponent
+   , root2power
    , calcPower
    , calcBinPowerRule "minus" (-) isMinus
    , calcBinPowerRule "plus" (+) isPlus
@@ -156,14 +156,22 @@ reciprocal' p = makeSimpleRule "reciprocal" $ \ expr -> do
   return $ c ./. build (unitPowerForView a) (1, negate x)
 
 -- | c*a^(p/q) = c * root q (a^p)
-fracExponent :: Rule Expr 
-fracExponent = makeSimpleRule "add exponents" $ \ expr -> do
+power2root :: Rule Expr 
+power2root = makeSimpleRule "write as root" $ \ expr -> do
   a             <- selectVar expr
-  (a', (c, pq)) <- match strictPowerView expr
+  (c, (a', pq)) <- match strictPowerView expr
   guard (Var a == a')
   (p, q)        <- match divView pq
   return $ c .*. (root q (build strictPowerView (a', (1, p))))
   
+-- | root q (a^p) = a^(p/q)
+root2power :: Rule Expr 
+root2power = makeSimpleRule "write as power" $ \ expr -> do
+  (ap, q) <- match rootView expr
+  a       <- selectVar ap
+  (c, p)  <- match (unitPowerForView a) ap
+  return $ build strictPowerView (c, (Var a, fromRational (p/q)))
+
 -- | a/b * c/d = a*c / b*d  (b or else d may be one)  
 myFractionTimes :: Rule Expr
 myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do

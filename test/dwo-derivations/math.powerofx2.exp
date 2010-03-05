@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="write as power">
       <expr>
-        1/a*b^2
+        1/x^(1/4)
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="reciprocal">
       <expr>
-        b^2/a
+        x^(-1/4)
       </expr>
     </elem>
   </list>

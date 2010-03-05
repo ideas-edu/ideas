@@ -67,6 +67,7 @@ packages =
    , makeOM Math.simplifyPowerExercise
    , makeOM Math.powerOfAExercise     
    , makeOM Math.nonNegExpExercise
+   , makeOM Math.powerOfXExercise
      -- linear algebra
    , makeOM LA.gramSchmidtExercise, makeOM LA.linearSystemExercise
    , makeOM LA.gaussianElimExercise, makeOM LA.systemWithMatrixExercise

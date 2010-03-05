@@ -12,7 +12,8 @@
 module Domain.Math.Power.Exercises    
    ( simplifyPowerExercise
    , powerOfAExercise 
-   , nonNegExpExercise ) where
+   , nonNegExpExercise
+   , powerOfXExercise ) where
 
 import Prelude hiding ( (^) )
 
@@ -73,6 +74,14 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , exerciseCode = makeCode "math" "nonNegExp"
 --   , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat nonNegExp
+   }
+
+powerOfXExercise :: Exercise Expr
+powerOfXExercise = (powerExercise powerStrategy)
+   { description  = "write as a power of x"
+   , exerciseCode = makeCode "math" "powerOfX"
+--   , isReady      = (`belongsTo` integerNormalForm)
+   , examples     = concat powerOfX
    }
 
 

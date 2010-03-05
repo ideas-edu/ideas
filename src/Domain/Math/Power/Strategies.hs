@@ -52,7 +52,6 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , reciprocal' hasNegExp
             , distributePower
             , zeroPower
-            , fracExponent
             , calcBinPowerRule "minus" (-) isMinus
             , calcBinPowerRule "plus" (+) isPlus
             , myFractionTimes
@@ -63,6 +62,7 @@ hasNegExp expr =
   case match unitPowerView expr of
     Just (_, (_, x)) -> x < 0
     _ -> False    
+
 
 -- | Allowed numeric rules
 naturalRules =

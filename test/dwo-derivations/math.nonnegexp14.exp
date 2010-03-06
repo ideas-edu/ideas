@@ -1,0 +1,47 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/a/(8*b^(-2/3))
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/a/(8/b^(2/3))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        1/a/(8/root (b^2) 3)
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        1/a*root (b^2) 3/8
+      </expr>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        root (b^2) 3/a/8
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="division numerator">
+      <expr>
+        root (b^2) 3/(a*8)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        3/a^(1/4)
+      </expr>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        3/root a 4
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

@@ -48,6 +48,7 @@ powerRules =
    , zeroPower
    , reciprocal
    , root2power
+   , distributeRoot
    , calcPower
    , calcBinPowerRule "minus" (-) isMinus
    , calcBinPowerRule "plus" (+) isPlus
@@ -155,22 +156,27 @@ reciprocal' p = makeSimpleRule "reciprocal" $ \ expr -> do
   (c, x)   <- match (unitPowerForView a) expr
   return $ c ./. build (unitPowerForView a) (1, negate x)
 
--- | c*a^(p/q) = c * root q (a^p)
+-- | a^(p/q) = root (a^p) q
 power2root :: Rule Expr 
 power2root = makeSimpleRule "write as root" $ \ expr -> do
-  a             <- selectVar expr
-  (c, (a', pq)) <- match strictPowerView expr
-  guard (Var a == a')
-  (p, q)        <- match divView pq
-  return $ c .*. (root q (build strictPowerView (a', (1, p))))
+  (a, pq) <- match simplePowerView expr
+  (p, q)  <- match (rationalView >>> ratioView) pq  
+  guard (q /= 1)  
+  return $ let n =  Nat . fromIntegral in root (a .^. n p) $ n q
   
--- | root q (a^p) = a^(p/q)
+-- | root (a^p) q = a^(p/q)
 root2power :: Rule Expr 
 root2power = makeSimpleRule "write as power" $ \ expr -> do
   (ap, q) <- match rootView expr
   a       <- selectVar ap
   (c, p)  <- match (unitPowerForView a) ap
   return $ build strictPowerView (c, (Var a, fromRational (p/q)))
+
+-- | root (a/b) x = root a x / root b x
+distributeRoot = makeSimpleRule "distribute root" $ \ expr -> do
+  (ab, x) <- match rootView expr
+  (a, b)  <- match divView ab
+  return $ build divView (build rootView (a, x), build rootView (b, x))  
 
 -- | a/b * c/d = a*c / b*d  (b or else d may be one)  
 myFractionTimes :: Rule Expr

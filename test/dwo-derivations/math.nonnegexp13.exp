@@ -1,0 +1,34 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        4/(1/a*b^(1/3))
+      </expr>
+      <context>
+        <item name="location" value="[1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        4/(1/a*root b 3)
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        4/(root b 3/a)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        4*a/root b 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

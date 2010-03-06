@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="write as root">
+      <expr>
+        root (1/5) 4
+      </expr>
+    </elem>
+    <elem ruleid="distribute root">
+      <expr>
+        root 1 4/root 5 4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

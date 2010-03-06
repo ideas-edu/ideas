@@ -1,0 +1,47 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(3*a^(2/5)*(1/b))
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        1/(3*root (a^2) 5*(1/b))
+      </expr>
+      <context>
+        <item name="location" value="[1,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        1/(3*root (a^2) 5/b)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        1/3*b/root (a^2) 5
+      </expr>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        b/3/root (a^2) 5
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="division numerator">
+      <expr>
+        b/(3*root (a^2) 5)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

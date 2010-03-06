@@ -111,6 +111,12 @@ intView = makeView f fromIntegral
       return $ negate e'
     f _       = Nothing
 
+ratioView :: View Rational (Int, Int)
+ratioView = makeView f g
+  where
+    f x = return (fromIntegral (numerator x), fromIntegral (denominator x))
+    g (n,d) = (fromIntegral n) % (fromIntegral d)
+
 powerView :: View Expr (String, Int)
 powerView = powerViewWith natView
 powerView' = powerViewWith' rationalView

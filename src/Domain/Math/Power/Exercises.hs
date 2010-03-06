@@ -73,7 +73,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    { description  = "write with a non-negative exponent"
    , exerciseCode = makeCode "math" "nonNegExp"
 --   , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat nonNegExp
+   , examples     = concat $ nonNegExp ++ nonNegExp2
    }
 
 powerOfXExercise :: Exercise Expr
@@ -84,6 +84,13 @@ powerOfXExercise = (powerExercise powerStrategy)
    , examples     = concat powerOfX
    }
 
+nonNegExp2Exercise :: Exercise Expr
+nonNegExp2Exercise = (powerExercise nonNegExpStrategy)
+   { description  = "write with a non-negative exponent"
+   , exerciseCode = makeCode "math" "nonNegExp"
+--   , isReady      = (`belongsTo` integerNormalForm)
+   , examples     = concat nonNegExp2
+   }
 
 -- | test stuff
 showDerivations ex exercises level = 

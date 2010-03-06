@@ -51,6 +51,8 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , mulExponents
             , reciprocal' hasNegExp
             , distributePower
+            , power2root
+            , distributeRoot
             , zeroPower
             , calcBinPowerRule "minus" (-) isMinus
             , calcBinPowerRule "plus" (+) isPlus

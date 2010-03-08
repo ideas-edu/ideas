@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerofa" encoding="string">
-  <state>
-    <expr>
-      a^4*(1/a^2)
-    </expr>
-  </state>
-</request>

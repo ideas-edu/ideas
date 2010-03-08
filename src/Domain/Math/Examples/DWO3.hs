@@ -285,3 +285,73 @@ brokenExp3 =
    ]
  where
    x = Var "x"
+   
+----------------------------------------------------------
+-- VWO B applets (hoofdstuk 4)
+
+-- herleiden van wortelvormen
+normSqrt1 :: [[Expr]]
+normSqrt1 = 
+   [ [ 9*sqrt 5 * 7*sqrt 3, 3*sqrt 2 * 2 * sqrt 5, 5*sqrt 2*6*sqrt 7
+     , 4*sqrt 6 * 2*sqrt 7, 6*a*sqrt 3*9*sqrt 2, 5*sqrt 5 * 2 * a * sqrt 7
+     , a*sqrt 6 * 7 * sqrt 5, 8*sqrt 7*a*sqrt 3
+     ]
+   , [ sqrt 15/(6*sqrt 3), (5*sqrt 30)/sqrt 5, (4*sqrt 10)/(5*sqrt 2)
+     , (5*sqrt 21)/(2*sqrt 7), (6*a*sqrt 35)/(3*sqrt 5), (5*a*sqrt 14)/(9*sqrt 2)
+     , (a*sqrt 6)/(7*sqrt 3), (3*a*sqrt 42)/(7*sqrt 7)
+     ]
+   , [ 5/(2*sqrt 2), 2/(5*sqrt 3), 3/(2*sqrt 5), 8/(7*sqrt 6), (2*a)/(3*sqrt 7)
+     , (6*a)/(7*sqrt 10), (5*a)/(3*sqrt 11), (6*a)/(5*sqrt 13)
+     ]
+   , [ sqrt (2/3), sqrt (5+1/3), sqrt (1+1/2), sqrt (3+4/7), sqrt (5*a^2)
+     , sqrt (7*a^2), sqrt (3*a^2), sqrt (6*a^2)
+     ]
+   , [ sqrt ((2/9)*a^2), sqrt ((5/16)*a^2), sqrt ((3/25)*a^2), sqrt ((7/16)*a^2)
+     , ((1/3)*sqrt 2)^2, ((1/2)*sqrt 3)^2, ((2/7)*sqrt 5)^2, ((2/3)*sqrt 7)^2
+     ]
+   ]
+ where
+   a = Var "a"
+   
+normSqrt2 :: [[Expr]]
+normSqrt2 = 
+   [ [ ((1/7)*a*sqrt 2)^2, ((3/5)*a*sqrt 3)^2, ((1/3)*a*sqrt 5)^2
+     , ((4/7)*a*sqrt 6)^2, sqrt 8 + sqrt 2, sqrt 2 + sqrt 18
+     , sqrt 12 - sqrt 3, sqrt 7 - sqrt 28
+     ]
+   , [ sqrt 12 + sqrt 48, sqrt 18 - sqrt 8, sqrt 45 - sqrt 20, sqrt 80 + sqrt 45
+     , sqrt (50*a^2) - sqrt (32*a^2), sqrt (75*a^2) - sqrt (12*a^2)
+     , sqrt (27*a^2) + sqrt (3*a^2), sqrt (24*a^2) + sqrt (96*a^2)
+     ] 
+   , [ sqrt 27 + 1/sqrt 3, sqrt 24 + 5/sqrt 6, sqrt 72 - 7/sqrt 2
+     , sqrt 98 - 5/sqrt 2, sqrt 24 + sqrt (1+1/2), sqrt 40 - sqrt (2+1/2)
+     , sqrt 75 - sqrt (1+1/3), sqrt (1+2/3) + sqrt 60
+     ]
+   ]
+ where
+   a = Var "a"
+   
+normSqrt3 :: [[Expr]]
+normSqrt3 = 
+   [ [ (2*sqrt 7 + 7*sqrt 3)^2, (sqrt 2+6*sqrt 3)^2, (4*sqrt 3 + 3*sqrt 2)^2
+     , (2*sqrt 5 + sqrt 7)^2, (3*sqrt 6-4*sqrt 5)^2, (5*sqrt 3 - sqrt 2)^2
+     , (4*sqrt 6 - 2*sqrt 7)^2, (sqrt 5 - 2*sqrt 3)^2
+     ]
+   , [ (2*sqrt 3 - 2)^2, (5*sqrt 2-1)^2, (3+4*sqrt 3)^2, (2+3*sqrt 6)^2
+     , (4*sqrt 2 + 3)*(4*sqrt 2 - 3), (sqrt 7+sqrt 3)*(sqrt 7-sqrt 3)
+     , (2*sqrt 2 - sqrt 5)*(2*sqrt 2 + sqrt 5), (6-3*sqrt 3)*(6+3*sqrt 3)
+     ]
+   , [ (a-sqrt 3)^2, (2*sqrt 6+a)^2, (2*a+a*sqrt 5)^2, (a*sqrt 3 - 2*a*sqrt 2)^2
+     , (a-sqrt 7)*(a+sqrt 7), (3*a+2*sqrt 3)*(3*a-2*sqrt 3)
+     , (2*a+a*sqrt 2)*(2*a-a*sqrt 2), (3*a*sqrt 5 - a)*(3*a*sqrt 5 + a)
+     ]
+   , [ 4/ (sqrt 2 + 2), 3/(sqrt 5 + 1), 2 / (sqrt 3 - 3), 5/(sqrt 6-2)
+     , 6/(sqrt 7+sqrt 5), 4/(2*sqrt 3 + sqrt 6), 5/(3*sqrt 2 - sqrt 3)
+     , 2 / (sqrt 11 - sqrt 2)
+     ]
+   , [ (2*sqrt 3)/(sqrt 5 + sqrt 2), (6*sqrt 5)/(sqrt 7+sqrt 3)
+     , (4*sqrt 3)/(sqrt 5 - sqrt 3), (8*sqrt 7)/(sqrt 6 - sqrt 5)
+     ]
+   ]
+ where
+   a = Var "a"

@@ -34,12 +34,6 @@ import Domain.Logic.Formula
 import Test.QuickCheck
 import Data.Maybe
 
---import Common.View
---import Domain.Math.Expr
---import Prelude hiding ((^))
---import Domain.Math.Polynomial.Views
---import Domain.Math.Polynomial.CleanUp
-
 ------------------------------------------------------------
 -- Testing instances
 
@@ -58,11 +52,11 @@ testLE  = concat $ zipWith (f linearExercise)       [1..] $ concat linearEquatio
 testQE  = concat $ zipWith (f quadraticExercise)    [1..] $ map (orList . return . build equationView) $ concat quadraticEquations
 testHDE = concat $ zipWith (f higherDegreeExercise) [1..] $ map (orList . return . build equationView) higherDegreeEquations
 
-f s n e = map p (g (applyAll (strategy s) (inContext e))) where
+f s n e = map p (g (applyAll (strategy s) (inContext s e))) where
   g xs | null xs   = error $ show n ++ ": " ++ show e
        | otherwise = xs
-  p a  | isReady s (fromContext a) = n
-       | otherwise = error $ show n ++ ": " ++ show e ++ "  =>  " ++ show (fromContext a)
+  p a  | maybe False (isReady s) (fromContext a) = n
+       | otherwise = error $ show n ++ ": " ++ show e ++ "  =>  " ++ maybe "??" show (fromContext a)
        
 randomLE = quickCheck $ forAll (liftM2 (:==:) (sized linearGen) (sized linearGen)) $ \eq -> 
    (>0) (sum (take 10 $ f linearExercise 1 eq))
@@ -92,19 +86,21 @@ goQE = eqTest ineqQuadraticExercise
 --eqTest :: Exercise a -> IO ()
 eqTest ex = do
    forM_ (examples ex) $ \eq -> do
-      let tree  = derivationTree (strategy ex) (inContext eq)
+      let tree  = derivationTree (strategy ex) (inContext ex eq)
       forM_ (derivations tree) $ \d -> do
          let xs = terms d
+             pp = maybe "??" (prettyPrinter ex) . fromContext
          forM ([ (a, b) | a <- xs, b <- xs ]) $ \(a, b) -> do
             if equalityIneq a b -- equivalence ex (fromContext a) (fromContext b)
              then putChar '.' 
-             else error $ unlines ["", prettyPrinter ex (fromContext a), prettyPrinter ex (fromContext b)]
+             else error $ unlines ["", pp a, pp b]
 
 equalityIneq :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
-equalityIneq ca cb = equivalence ineqQuadraticExercise a b
+equalityIneq ca cb = fromMaybe False $
+   liftM2 (equivalence ineqQuadraticExercise) (f ca) (f cb)
  where
-   (a, b) = (f $ fromContext ca, f $ fromContext cb)
-   f | any clipboardHasIneq [ca,cb] = turnIntoEqualTo
+   f = fmap g . fromContext
+   g | any clipboardHasIneq [ca,cb] = turnIntoEqualTo
      | otherwise                    = id
 
 clipboardHasIneq :: Context a -> Bool
@@ -115,6 +111,6 @@ turnIntoEqualTo = g . fmap (\rel ->
    leftHandSide rel .==. rightHandSide rel)
  where
    -- temporary fix
-   g (p :&&: q) = g p :||: g q
+   g (p :&&: q) = g p :&&: g q
    g (p :||: q) = g p :||: g q
    g p          = p

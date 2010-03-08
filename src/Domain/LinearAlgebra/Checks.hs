@@ -11,14 +11,16 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Checks (checks) where
 
-import Domain.Math.Simplification (simplify)
-import Domain.LinearAlgebra hiding (getSolution)
-import Test.QuickCheck
-import Control.Monad
-import Common.Utils
-import Data.List
 import Common.Apply
 import Common.Context
+import Common.Exercise
+import Common.Utils
+import Control.Monad
+import Data.List
+import Domain.LinearAlgebra hiding (getSolution)
+import Domain.Math.Expr
+import Domain.Math.Simplification (simplify)
+import Test.QuickCheck
 
 -----------------------------------------------------------
 --- QuickCheck properties
@@ -33,24 +35,24 @@ checks = do
 
 propEchelon :: Matrix Rational -> Bool
 propEchelon =
-   inRowEchelonForm . fromContext . applyD forwardPass . inContext . fmap fromRational
+   withoutContext inRowEchelonForm . applyD forwardPass . gaussContext
 
 propReducedEchelon :: Matrix Rational -> Bool
 propReducedEchelon = 
-   inRowReducedEchelonForm . fromContext . applyD gaussianElimStrategy . inContext . fmap fromRational
+   withoutContext inRowReducedEchelonForm . applyD gaussianElimStrategy . gaussContext
    
 propSound :: Matrix Rational -> Bool
 propSound m =
-   (fromContext . applyD gaussianElimStrategy . inContext . fmap fromRational) m
-   == fmap fromRational (reduce m)
+   (fromContext . applyD gaussianElimStrategy . gaussContext) m
+   == Just (fmap fromRational (reduce m))
 
 propSolution :: Matrix Rational -> Property
 propSolution m1 =
    forAll (arbSolution m1) $ \(solution, m2) -> 
-      let m3  = (fromContext . applyD gaussianElimStrategy . inContext . fmap fromRational) m2
+      let m3  = (fromContext . applyD gaussianElimStrategy . gaussContext) m2
           p r = simplify (sum (zipWith g (solution ++ [-1]) r)) == 0
           g   = (*) . fromRational
-      in all p (rows m3)
+      in maybe False (all p . rows) m3
 
 arbSolution :: (Arbitrary a, Num a) => Matrix a -> Gen ([a], Matrix a)
 arbSolution m = do
@@ -58,3 +60,9 @@ arbSolution m = do
    let finalCol  = map (return . sum . zipWith (*) solution) (rows m)
        newMatrix = makeMatrix $ zipWith (++) (rows m) finalCol
    return (solution, newMatrix)
+   
+withoutContext :: (a -> Bool) -> Context a -> Bool
+withoutContext f = maybe False f . fromContext
+
+gaussContext :: Matrix Rational -> Context (Matrix Expr)
+gaussContext = inContext gaussianElimExercise . fmap fromRational

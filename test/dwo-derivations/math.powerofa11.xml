@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerofa" encoding="string">
-  <state>
-    <expr>
-      (a^3)^2*(1/a)
-    </expr>
-  </state>
-</request>

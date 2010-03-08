@@ -107,8 +107,8 @@ nonNegExp = [level1, level2]
       ]
 
 -- schrijf als een macht van x
-powerOfX :: [[Expr]]
-powerOfX = 
+powersOfX :: [[Expr]]
+powersOfX = 
    [ [root x 3, 1/root x 4, sqrt (1/x), (x^2) / (root (x^2) 5)]
    , [sqrt x/(x^2), root (x/(x^3)) 3, x*root x 3, root x 3 * root (1/(x^2)) 4]
    ]

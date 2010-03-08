@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.powerofx" encoding="string">
-  <state>
-    <expr>
-      sqrt (1/x)
-    </expr>
-  </state>
-</request>

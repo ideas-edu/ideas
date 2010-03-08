@@ -11,9 +11,9 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Exercises    
    ( simplifyPowerExercise
-   , powerOfAExercise 
+   , powerOfExercise 
    , nonNegExpExercise
-   , powerOfXExercise ) where
+   ) where
 
 import Prelude hiding ( (^) )
 
@@ -57,15 +57,15 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    { description  = "simplify expression (powers)"
    , exerciseCode = makeCode "math" "simplifyPower"
 --   , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat simplerPowers
+   , examples     = concat $ simplerPowers ++ powers1
    }
 
-powerOfAExercise :: Exercise Expr
-powerOfAExercise = (powerExercise powerStrategy)
+powerOfExercise :: Exercise Expr
+powerOfExercise = (powerExercise powerStrategy)
    { description  = "write as a power of a"
-   , exerciseCode = makeCode "math" "powerOfA"
+   , exerciseCode = makeCode "math" "powerOf"
 --   , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat powersOfA
+   , examples     = concat $ powersOfA ++ powersOfX
    }
 
 nonNegExpExercise :: Exercise Expr
@@ -75,23 +75,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
 --   , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat $ nonNegExp ++ nonNegExp2
    }
-
-powerOfXExercise :: Exercise Expr
-powerOfXExercise = (powerExercise powerStrategy)
-   { description  = "write as a power of x"
-   , exerciseCode = makeCode "math" "powerOfX"
---   , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat powerOfX
-   }
-
-nonNegExp2Exercise :: Exercise Expr
-nonNegExp2Exercise = (powerExercise nonNegExpStrategy)
-   { description  = "write with a non-negative exponent"
-   , exerciseCode = makeCode "math" "nonNegExp"
---   , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat nonNegExp2
-   }
-
+                   
 -- | test stuff
 showDerivations ex exercises level = 
   mapM_ (putStrLn . showDerivation ex) $ exercises !! level

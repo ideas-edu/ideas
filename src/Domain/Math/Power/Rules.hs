@@ -17,6 +17,7 @@ import Common.Apply
 import Control.Arrow ( (>>^) )
 import Common.Transformation
 import Common.View
+import Common.Utils (safeHead)
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -38,30 +39,15 @@ smartRule = doAfter f
     f (a :+: b) = a .+. b
     f (a :-: b) = a .-. b
     f e = e
-
--- | The rules
-powerRules =
-   [ addExponents
-   , subExponents
-   , mulExponents
-   , distributePower
-   , zeroPower
-   , reciprocal
-   , root2power
-   , distributeRoot
-   , calcPower
-   , calcBinPowerRule "minus" (-) isMinus
-   , calcBinPowerRule "plus" (+) isPlus
-   , myFractionTimes
-   ]
    
+calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr   
 calcBinPowerRule opName op m = 
    makeSimpleRule ("calculate power " ++ opName) $ \e -> do
-     (e1, e2) <- m e
-     (c1, a)  <- match strictPowerView e1
-     (c2, b)  <- match strictPowerView e2
-     guard (a == b)
-     return (build strictPowerView ((op c1 c2), a))
+     (e1, e2)     <- m e
+     (a, (c1, x)) <- match unitPowerView e1
+     (b, (c2, y)) <- match unitPowerView e2
+     guard (a == b && x == y)
+     return (build unitPowerView (a, ((op c1 c2), x)))
 
 calcPower :: Rule Expr 
 calcPower = makeSimpleRule "calculate power" $ \ expr -> do 
@@ -72,23 +58,40 @@ calcPower = makeSimpleRule "calculate power" $ \ expr -> do
     then return $ fromRational $ a Prelude.^ x
     else return $ 1 ./. (e1 .^. negate e2)
 
+calcPowerPlus = 
+  makeCommutative sumView (.+.) $ calcBinPowerRule "plus" (.+.) isPlus 
+
+calcPowerMinus = 
+   makeCommutative sumView (.+.) $ calcBinPowerRule "minus" (.-.) isMinus
+
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponents :: Rule Expr 
 addExponents = makeSimpleRuleList "add exponents" $ \ expr -> do
   case match (powerFactorisationView unitPowerView) expr of
     Just (s, fs) -> do 
-      (e, es) <- split fs
+      (e, es) <- split (*) fs
       case apply addExponents' e of
         Just e' -> return $ build productView (s, e' : es)
         Nothing -> fail ""  
     Nothing -> fail ""
 
-split :: [Expr] -> [(Expr, [Expr])]
-split xs = f xs
-  where
-    f (y:ys) | not (null ys) = [(y * z, xs \\ [y, z]) | z <- ys] ++ f ys 
-             | otherwise     = []
-    f [] = []
+makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
+makeCommutative view op rule = 
+  makeSimpleRuleList (name rule) $ \ expr -> do
+    case match view expr of
+      Just factors -> do
+        (e, es) <- split op factors
+        case apply rule e of
+          Just e' -> return $ build view (e' : es)
+          Nothing -> fail ""
+      Nothing -> fail ""
+    
+split :: (Expr -> Expr -> Expr) -> [Expr] -> [(Expr, [Expr])]
+split op xs = f xs
+      where
+        f (y:ys) | not (null ys) = [(y `op` z, xs \\ [y, z]) | z <- ys] ++ f ys 
+                 | otherwise     = []
+        f [] = []
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponents' :: Rule Expr 

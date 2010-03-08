@@ -32,7 +32,7 @@
         <item name="location" value="[0,1]"/>
       </context>
     </elem>
-    <elem ruleid="calculate power minus">
+    <elem ruleid="calculate power plus">
       <expr>
         22*a^12
       </expr>

@@ -42,6 +42,21 @@ makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategy rs
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = makeStrategy 
   "simplify" powerRules (calcPower : naturalRules ++ rationalRules)
+  where
+    powerRules =
+      [ addExponents
+      , subExponents
+      , mulExponents
+      , distributePower
+      , zeroPower
+      , reciprocal
+      , root2power
+      , distributeRoot
+      , calcPower
+      , calcPowerPlus
+      , calcPowerMinus
+      , myFractionTimes
+      ]
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
 nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
@@ -54,8 +69,8 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , power2root
             , distributeRoot
             , zeroPower
-            , calcBinPowerRule "minus" (-) isMinus
-            , calcBinPowerRule "plus" (+) isPlus
+            , calcPowerPlus
+            , calcPowerMinus
             , myFractionTimes
             ] ++ fractionRules            
     cleanupRules = calcPower : simplifyFraction : naturalRules

@@ -65,9 +65,8 @@ packages =
    , makeOM Math.quadraticWithApproximation
    , makeOM Math.derivativeExercise
    , makeOM Math.simplifyPowerExercise
-   , makeOM Math.powerOfAExercise     
+   , makeOM Math.powerOfExercise     
    , makeOM Math.nonNegExpExercise
-   , makeOM Math.powerOfXExercise
      -- linear algebra
    , makeOM LA.gramSchmidtExercise, makeOM LA.linearSystemExercise
    , makeOM LA.gaussianElimExercise, makeOM LA.systemWithMatrixExercise

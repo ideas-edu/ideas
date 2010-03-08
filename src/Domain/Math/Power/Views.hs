@@ -33,7 +33,7 @@ v <&> w = makeView f g
     g   = build v
 infixl <&>
 
-strictPowerView :: ViewM Maybe Expr (Expr, (Expr, Expr))
+strictPowerView :: View Expr (Expr, (Expr, Expr))
 strictPowerView  =  strictPowerConsView 
                 <&> (simplePowerView >>^ (,) 1) 
                 <&> negPowerView
@@ -46,6 +46,15 @@ strictPowerView  =  strictPowerConsView
           return (negate c, ax)
         f _ = Nothing
         g = build strictPowerView        
+
+strictPowerViewFor :: String -> View Expr (Expr, Expr)
+strictPowerViewFor pv = makeView f g
+  where
+    f expr = do
+      (c, (a, x)) <- match strictPowerView expr
+      guard (Var pv == a)
+      return (c, x)
+    g (c, x) = build strictPowerView (c, (Var pv, x))
 
 powerConsViewFor :: String -> View Expr (Expr, Rational)
 powerConsViewFor pv = timesView >>> second (powerViewFor' pv)
@@ -63,7 +72,16 @@ unitPowerForView :: String -> ViewM Maybe Expr (Expr, Rational)
 unitPowerForView pv = powerConsViewFor pv <&> (powerViewFor' pv >>^ (,) 1)
 
 unitPowerView :: ViewM Maybe Expr (String, (Expr, Rational))
-unitPowerView = powerConsView <&> (powerView' >>^ \(pv, n) -> (pv, (1, n)))
+unitPowerView = unitView <&> negUnitView 
+  where 
+    unitView = powerConsView <&> (powerView' >>^ \(pv, n) -> (pv, (1, n))) 
+    negUnitView = makeView f g
+      where
+        f (Negate expr) = do 
+          (a, (c, x)) <- match unitView expr
+          return (a, (negate c, x))
+        f _ = Nothing
+        g = build unitView      
 
 -- | Power views
 simplePowerView :: View Expr (Expr, Expr)

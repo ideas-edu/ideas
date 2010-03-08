@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="mul exponents">
+      <expr>
+        a^16/a^15
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="sub exponents">
+      <expr>
+        a
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        -32*(a^2)^5
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        -32*a^10
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

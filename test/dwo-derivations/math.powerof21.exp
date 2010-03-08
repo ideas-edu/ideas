@@ -1,0 +1,23 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        sqrt x*x^(-2)
+      </expr>
+    </elem>
+    <elem ruleid="write as power">
+      <expr>
+        x^(1/2)*x^(-2)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        x^(-3/2)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

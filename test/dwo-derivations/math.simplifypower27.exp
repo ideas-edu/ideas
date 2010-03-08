@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        2*a^6*(6*a^(-4))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        12*a^2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

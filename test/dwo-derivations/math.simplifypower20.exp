@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="add exponents">
+      <expr>
+        36*a^9
+      </expr>
+    </elem>
+  </list>
+</reply>
+

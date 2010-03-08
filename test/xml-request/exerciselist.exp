@@ -16,11 +16,14 @@
     <elem domain="math" identifier="lineq" description="solve a linear equation" status="Provisional"/>
     <elem domain="math" identifier="linineq" description="solve a linear inequation" status="Experimental"/>
     <elem domain="math" identifier="natural" description="simplify expression (natural numbers)" status="Provisional"/>
+    <elem domain="math" identifier="nonnegexp" description="write with a non-negative exponent" status="Provisional"/>
+    <elem domain="math" identifier="powerof" description="write as a power of a" status="Provisional"/>
     <elem domain="math" identifier="quadreq" description="solve a quadratic equation" status="Provisional"/>
     <elem domain="math" identifier="quadreq-no-abc" description="solve a quadratic equation without abc-formula" status="Provisional"/>
     <elem domain="math" identifier="quadreq-with-approx" description="solve a quadratic equation with approximation" status="Provisional"/>
     <elem domain="math" identifier="quadrineq" description="solve a quadratic inequation" status="Experimental"/>
     <elem domain="math" identifier="rational" description="simplify expression (rational numbers)" status="Provisional"/>
+    <elem domain="math" identifier="simplifypower" description="simplify expression (powers)" status="Provisional"/>
     <elem domain="regexp" identifier="normalform" description="Rewrite a regular expression" status="Provisional"/>
     <elem domain="relationalg" identifier="cnf" description="To conjunctive normal form" status="Provisional"/>
   </list>

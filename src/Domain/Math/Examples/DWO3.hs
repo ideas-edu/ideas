@@ -128,7 +128,7 @@ nonNegExp2 =
    b = Var "b"
    
 ----------------------------------------------------------
--- HAVO A/C applets
+-- VWO A/C applets
 
 -- herleid
 powers1 :: [[Expr]]

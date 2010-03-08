@@ -98,6 +98,18 @@
       },
       {
          "domain": "math",
+         "identifier": "nonnegexp",
+         "description": "write with a non-negative exponent",
+         "status": "Provisional"
+      },
+      {
+         "domain": "math",
+         "identifier": "powerof",
+         "description": "write as a power of a",
+         "status": "Provisional"
+      },
+      {
+         "domain": "math",
          "identifier": "quadreq",
          "description": "solve a quadratic equation",
          "status": "Provisional"
@@ -127,6 +139,12 @@
          "status": "Provisional"
       },
       {
+         "domain": "math",
+         "identifier": "simplifypower",
+         "description": "simplify expression (powers)",
+         "status": "Provisional"
+      },
+      {
          "domain": "regexp",
          "identifier": "normalform",
          "description": "Rewrite a regular expression",
@@ -141,5 +159,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.11 (2633)"
+   "version": "0.5.11 (2781)"
 }

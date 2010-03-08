@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="sub exponents">
+      <expr>
+        3*a^5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

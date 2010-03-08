@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="add exponents">
+      <expr>
+        9*a^5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="calculate power plus">
+      <expr>
+        9*a^6+7*a^2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

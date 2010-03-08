@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        27*a^3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

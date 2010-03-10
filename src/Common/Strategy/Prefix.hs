@@ -64,18 +64,18 @@ makePrefix is ls = rec [] is start
    biasT = (forLabel, Normal . Step)
    
    forLabel (Left bias)      = Before bias
-   forLabel (Right (loc, _)) = Around (Normal (Begin loc)) (Normal (End loc))
+   forLabel (Right (loc, i)) = Around (Normal (Begin loc i)) (Normal (End loc i))
       
 -- | The @Step@ data type can be used to inspect the structure of the strategy
-data Step a = Begin StrategyLocation 
+data Step a = Begin StrategyLocation LabelInfo
             | Step (Rule a) 
-            | End StrategyLocation
-   deriving (Show, Eq)
+            | End StrategyLocation LabelInfo
+   deriving Show
 
 instance Apply Step where
-   applyAll (Step r)  = applyAll r
-   applyAll (Begin _) = return
-   applyAll (End _)   = return
+   applyAll (Step r)    = applyAll r
+   applyAll (Begin _ _) = return
+   applyAll (End _ _)   = return
 
 instance Apply Prefix where
    applyAll p = results . prefixTree p

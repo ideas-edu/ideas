@@ -18,22 +18,15 @@ import Graphics.UI.WXCore
 import Data.List
 import System.Directory
 import Session
-import Service.ExerciseList
-import Service.ExercisePackage
 import Service.Options (versionText)
 import Observable
 import About
+import NewAssignmentDialog
 import ControlButtons
 import ProgressPanel
 import Data.Maybe
 import qualified Service.TypedAbstractService as TAS
 import Common.Strategy (prefixToSteps)
---import Domain.Programming.Exercises (heliumExercise, isortExercise)
-
-packageList = {- Some heliumExercise : Some isortExercise : -} packages
-
-domains :: [String]
-domains = sort $ nub [ domain (exerciseCode (exercise e)) | Some e <- packageList ]
 
 title :: String
 title = "IdeasWX Exercise Assistant"
@@ -44,7 +37,7 @@ main = start exerciseFrame
 exerciseFrame :: IO ()
 exerciseFrame = do 
    -- cfg <- readConfig
-   session <- makeSession (head packageList)
+   session <- makeSession defaultAssignment
    fontRef <- createControl (fontFixed {{- _fontFace = "Lucida Bright",-} _fontSize = 12})
 
    f <- frame [text := title, bgcolor := white]
@@ -148,105 +141,12 @@ exerciseFrame = do
    observeFont fontRef derivationView
    notifyObservers fontRef
       
-   assignmentFrame <- newAssignmentFrame session
-   
-   -- bind events
-   set f [on closing := do
-      windowDestroy assignmentFrame
-      windowDestroy f
-      return ()]
- 
+   -- bind events 
    set newButton [on command := do
       txt <- suggestTerm 5 session -- TODO: fix difficulty!!
       thisExercise txt session ]
  
-   set changeButton [on command := do
-      windowMakeModal assignmentFrame True
-      set assignmentFrame [visible := True]]
-
-   focusOn f
-
-newAssignmentFrame :: Session -> IO (Frame ())
-newAssignmentFrame session = do
-   f <- frame [text := "New Assignment", bgcolor := white, visible := False] 
-   -- windowMakeModal f True
-   
-   -- Left Panel
-   leftPanel <- panel f []
-   randomButton     <- button leftPanel [text := "Random"]
-   cancelButton     <- button leftPanel [text := "Cancel"]
-   goButton         <- button leftPanel [text := "Go"]
-   difficultySlider <- hslider leftPanel True 1 10 [selection := 5]
-   ownTextView      <- textCtrl leftPanel [bgcolor := myGrey]
-   
-   set leftPanel [layout := column 10 
-      [ hstretch $ label "Difficulty", row 10 [hfill $ widget difficultySlider, widget randomButton]
-      , hstretch $ vspace 30
-      , hstretch $ label "Enter your own assignment (or press Random button)", fill $ widget ownTextView
-      , row 10  [widget cancelButton, hglue, widget goButton]]]
-      
-   -- Right Panel
-   rightPanel <- panel f []
-   domainBox  <- radioBox rightPanel Vertical domains []
-   exerciseList <- singleListBox rightPanel []
-   experimentalBox <- checkBox rightPanel [text := "Include experimental", checked := True]
-   set rightPanel [layout := column 10 
-      [ hstretch $ label "Domain selection", hfill $ widget domainBox
-      , hstretch $ vspace 10
-      , hstretch $ label "Exercise selection", fill $ widget exerciseList
-      , hstretch $ widget experimentalBox]]
-   
-   set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
-         , size := sz 600 400]
-   
-   let getPackageList = do
-          i <- get domainBox selection 
-          b <- get experimentalBox checked
-          return (getPackages b (domains !! i))
-       currentPackage = do
-          i  <- get exerciseList selection
-          xs <- getPackageList
-          return $ if i>=0 && length xs > i then Just (xs !! i) else Nothing
-       fillPackageList = do
-          xs <- getPackageList
-          let ys = [ description (exercise pkg) | Some pkg <- xs ]
-          set exerciseList [items := ys, selection := 0]
-          fillOwnText
-       fillOwnText = do
-          mPkg <- currentPackage
-          case mPkg of
-             Just (Some pkg) -> do
-                dif <- get difficultySlider selection
-                txt <- suggestTermFor dif (Some (exercise pkg))
-                set ownTextView [text := txt]
-             Nothing -> return ()
-   fillPackageList
-    
-   set domainBox       [on select  := fillPackageList]
-   set experimentalBox [on command := fillPackageList]
-   set exerciseList    [on select  := fillOwnText]
-   set randomButton    [on command := fillOwnText]
-   set cancelButton    [on command := close f]
-   
-   set f [on closing := do 
-      windowMakeModal f False 
-      -- windowDestroy f
-      set f [visible := False] ]
-   
-   set goButton [on command := do
-      txt  <- get ownTextView text
-      mEx  <- currentPackage
-      case mEx of 
-         Just ex -> do
-            merr <- thisExerciseFor txt ex session
-            case merr of
-               Nothing -> do
-                  close f
-               Just err -> do
-                  errorDialog f "Error" ("Parse error: " ++ err)
-         _ -> errorDialog f "Error" "First select an exercise"]
-
-   return f
+   set changeButton [on command := newAssignmentDialog f session]
 
 debugFrame :: Session -> IO ()
 debugFrame session = do
@@ -288,13 +188,6 @@ observeFont ref a = addObserver ref $ \new -> do
    s <- get a text
    set a [font := new, text := s]
 
-getPackages :: Bool -> String -> [Some ExercisePackage]
-getPackages b d = filter p packageList
- where 
-    p (Some pkg) = 
-       let ex = exercise pkg
-       in domain (exerciseCode ex) == d && (b || status ex == Stable) 
-
 searchPath :: String -> IO (Maybe String)
 searchPath filename = rec paths
  where
@@ -304,5 +197,5 @@ searchPath filename = rec paths
       let full = p ++ "/" ++ filename
       b <- doesFileExist full
       if b then return (Just full) else rec ps
-
+      
 myGrey = rgb 230 230 230

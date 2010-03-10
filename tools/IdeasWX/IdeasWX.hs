@@ -10,9 +10,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Main where
+module Main (main) where
 
-import Configuration
+-- import Configuration
 import Graphics.UI.WX
 import Graphics.UI.WXCore
 import Data.List
@@ -20,6 +20,8 @@ import System.Directory
 import Session
 import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
+import Observable
+import About
 --import Domain.Programming.Exercises (heliumExercise, isortExercise)
 
 packageList = {- Some heliumExercise : Some isortExercise : -} SE.packages
@@ -28,16 +30,33 @@ domains :: [String]
 domains = sort $ nub [ domain (exerciseCode (SE.exercise e)) | Some e <- packageList ]
 
 title :: String
-title = "IdeasWX Exercise Assistant: " ++ versionText
+title = "IdeasWX Exercise Assistant"
 
 main :: IO ()
 main = start exerciseFrame
 
 exerciseFrame :: IO ()
 exerciseFrame = do 
-   cfg <- readConfig
+   -- cfg <- readConfig
 
    f <- frame [text := title, bgcolor := white]
+   bmp <- iconCreateFromFile "ideas.ico" sizeNull
+   topLevelWindowSetIcon f bmp
+   
+   -- Menu bar
+   mfile  <- menuPane [text := "&File"]
+   mexit  <- menuItem mfile [text := "&Exit", help := "Quit the application"] 
+   mhelp  <- menuPane [text := "&Help"]
+   mabout <- menuItem mhelp [text := "&About", help := "About Ideas"]
+   set f [ menuBar := [mfile, mhelp]
+         , on (menu mexit)  := close f
+         , on (menu mabout) := aboutIdeas f 
+         ] 
+   
+   -- Status bar
+   field1 <- statusField []
+   field2 <- statusField [statusWidth := 200, text := versionText]
+   set f [statusBar := [field1,field2]] 
    
    -- Left Panel
    leftPanel <- panel f []
@@ -57,7 +76,6 @@ exerciseFrame = do
    hintButton      <- button bp [text := "Hint"]
    stepButton      <- button bp [text := "Step"]
    autoButton      <- button bp [text := "Auto step"]
-   -- workedoutButton <- button bp [text := "Worked-out exerc"]
    
    -- ruleBox        <- comboBox bp [] 
    set bp [layout := grid 10 10
@@ -83,7 +101,7 @@ exerciseFrame = do
    mfull <- searchPath "ounl.jpg"
    case mfull of 
       Just full -> do imageOUNL <- imageCreateFromFile full
-                      set imagePanel [on paint := \dc _ -> drawImage dc imageOUNL (pt 0 0) [], size := sz 230 30]
+                      set imagePanel [on paint := \dc _ -> drawImage dc imageOUNL (pt 0 0) [], size := sz 233 86]
       Nothing   -> return ()
    set rightPanel [layout := column 10 
       [ hstretch $ label "Derivation", fill $ widget derivationView
@@ -98,23 +116,34 @@ exerciseFrame = do
 
    -- initialize exercise
    session <- makeSession (head packageList)
-
-   let updateAll = do
+   
+   let updateDescription = do
           descr <- currentDescription session
           set domainText [text := descr]
+          
+   let updateCurrent = do 
           txt <- currentText session
           set assignmentView [text := txt]
           set entryView [text := txt]
+          
+   let updateDerivation = do
           der <- derivationText session
           set derivationView [text := der]
+
+   let updateProgress = do 
           (x, y) <- progressPair session
           set progressLabel [text := show x ++ "/" ++ show y]
           set progressBar [selection := if y==0 then 100 else (100*x) `div` y] 
 
    set feedbackView [text := "Welcome to the Exercise Assistant!"]
    
-   updateAll
-   assignmentFrame <- newAssignmentFrame session updateAll
+   addObserver_ session updateDescription
+   addObserver_ session updateCurrent
+   addObserver_ session updateDerivation
+   addObserver_ session updateProgress
+   notifyObservers session
+  
+   assignmentFrame <- newAssignmentFrame session
    
    -- bind events
    set f [on closing := do
@@ -124,10 +153,7 @@ exerciseFrame = do
  
    set newButton [on command := do
       txt <- suggestTerm 5 session -- TODO: fix difficulty!!
-      ms  <- thisExercise txt session
-      case ms of 
-         Just _  -> return () 
-         Nothing -> updateAll]
+      thisExercise txt session ]
  
    set changeButton [on command := do
       windowMakeModal assignmentFrame True
@@ -146,25 +172,25 @@ exerciseFrame = do
       set feedbackView [text := txt]]
        
    set autoButton [on command := do
-      (txt, ok) <- nextStep session
-      set feedbackView [text := txt]
-      when ok updateAll]
+      txt <- nextStep session
+      set feedbackView [text := txt] ]
  
    set backButton [on command := do
       txt1 <- get entryView text
       txt2 <- get assignmentView text
       if txt1 == txt2 
-         then undo session >> updateAll
+         then undo session
          else set entryView [text := txt2]]
  
    set submitButton [on command := do
-      cur       <- get entryView text
-      (txt, ok) <- submitText cur session
-      set feedbackView [text := txt]
-      when ok updateAll]
+      cur <- get entryView text
+      txt <- submitText cur session
+      set feedbackView [text := txt] ]
 
-newAssignmentFrame :: Session -> IO () -> IO (Frame ())
-newAssignmentFrame session onExit = do
+   focusOn f
+
+newAssignmentFrame :: Session -> IO (Frame ())
+newAssignmentFrame session = do
    f <- frame [text := "New Assignment", bgcolor := white, visible := False] 
    -- windowMakeModal f True
    
@@ -228,8 +254,7 @@ newAssignmentFrame session onExit = do
    set f [on closing := do 
       windowMakeModal f False 
       -- windowDestroy f
-      set f [visible := False]
-      onExit]
+      set f [visible := False] ]
    
    set goButton [on command := do
       txt  <- get ownTextView text
@@ -263,5 +288,4 @@ searchPath filename = rec paths
       b <- doesFileExist full
       if b then return (Just full) else rec ps
 
-lightBlue = rgb 235 244 255
 myGrey = rgb 230 230 230

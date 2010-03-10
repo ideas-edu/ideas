@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -XRankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -31,13 +31,13 @@ import Common.Transformation
 import Common.Utils
 import Control.Monad
 import Data.List
-import Data.IORef
 import Data.Maybe
+import Observable
 
 --------------------------------------------------
 -- Sessions with logging
 
-type Session = IORef (Some SessionState)
+type Session = Control (Some SessionState)
 
 data SessionState a = SessionState 
    { getPackage    :: ExercisePackage a
@@ -46,30 +46,29 @@ data SessionState a = SessionState
 
 withDerivation :: (forall a . Derivation a -> IO b) -> Session -> IO b
 withDerivation f ref = do
-   Some d <- readIORef ref
+   Some d <- getValue ref
    f (getDerivation d)
 
 makeSession :: Some ExercisePackage -> IO Session
 makeSession pkg = do
-   ref <- newIORef (error "reference not initialized")
+   ref <- createControl (error "reference not initialized")
    newExercise 5 pkg ref
    return ref
 
 newExercise :: Int -> Some ExercisePackage -> Session -> IO ()
 newExercise dif (Some pkg) ref = do
    d <- startNewDerivation dif (List.exercise pkg)
-   writeIORef ref $ Some $ SessionState pkg d
+   setValue ref $ Some $ SessionState pkg d
 
-thisExercise :: String -> Session -> IO (Maybe String)
+thisExercise :: String -> Session -> IO ()
 thisExercise txt ref = do
-   Some ss <- readIORef ref
+   Some ss <- getValue ref
    let ex = exercise (getDerivation ss)
    case parser ex txt of
-      Left err  -> return (Just $ show err)
+      Left _  -> return ()
       Right a -> do
          let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
-         writeIORef ref $ Some $ ss {getDerivation = new}
-         return Nothing
+         setValue ref $ Some $ ss {getDerivation = new}
 
 thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
 thisExerciseFor txt (Some pkg) ref =
@@ -78,17 +77,17 @@ thisExerciseFor txt (Some pkg) ref =
       Left err  -> return (Just $ show err)
       Right a -> do
          let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
-         writeIORef ref $ Some $ SessionState pkg new
+         setValue ref $ Some $ SessionState pkg new
          return Nothing         
     
 newTerm :: Int -> Session -> IO ()
 newTerm dif ref = do
-   Some ss <- readIORef ref
+   Some ss <- getValue ref
    newExercise dif (Some (getPackage ss)) ref
    
 suggestTerm :: Int -> Session -> IO String
 suggestTerm dif ref = do
-   Some ss <- readIORef ref
+   Some ss <- getValue ref
    let ex = exercise (getDerivation ss)
    ca <- TAS.generate ex dif
    a  <- fromContext $ TAS.context ca
@@ -102,40 +101,40 @@ suggestTermFor dif (Some ex) = do
        
 undo :: Session -> IO ()
 undo ref =
-   modifyIORef ref $ \(Some ss) -> Some ss {getDerivation = undoLast (getDerivation ss)}
+   changeValue ref $ \(Some ss) -> Some ss {getDerivation = undoLast (getDerivation ss)}
 
-submitText :: String -> Session -> IO (String, Bool)
+submitText :: String -> Session -> IO String
 submitText txt ref = do
-   Some ss <- readIORef ref
+   Some ss <- getValue ref
    let d = getDerivation ss
    case getExerciseText (getPackage ss) of
       -- Use exercise text module
       Just exText -> do
          let (b, msg, st) = submittext exText (currentState d) txt Nothing
              new = restartIfNeeded st
-         when b $ writeIORef ref $ Some $ ss {getDerivation = extendDerivation new d}
-         return (msg, b)
+         when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
+         return msg
       -- Use default text
       Nothing ->
          case parser (exercise d) txt of
             Left err -> 
-               return (show err, False)
+               return (show err)
             Right term ->
                case submit (currentState d) term of
                   Buggy rs -> 
-                     return ("Incorrect: you used the buggy rule: " ++ show rs, False)
+                     return ("Incorrect: you used the buggy rule: " ++ show rs)
                   NotEquivalent -> 
-                     return ("Incorrect", False)
+                     return ("Incorrect")
                   Ok rs new 
                      | null rs -> 
-                          return ("You have submitted the current term.", False)
+                          return ("You have submitted the current term.")
                      | otherwise -> do
-                          writeIORef ref $ Some ss {getDerivation = extendDerivation new d}
-                          return ("Well done! You applied rule " ++ show rs, True)
+                          setValue ref $ Some ss {getDerivation = extendDerivation new d}
+                          return ("Well done! You applied rule " ++ show rs)
                   Detour rs _ -> 
-                     return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy", False)
+                     return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy")
                   Unknown _ -> 
-                     return ("Equivalent, but not a known rule. Please retry.", False)
+                     return ("Equivalent, but not a known rule. Please retry.")
       
 currentText :: Session -> IO String
 currentText = withDerivation $ \d -> do
@@ -164,7 +163,7 @@ readyText = withDerivation $ \d ->
 
 hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose ref = do
-   Some ss <- readIORef ref
+   Some ss <- getValue ref
    let d = getDerivation ss
        showRule r = fromMaybe ("rule" ++ name r) $ do 
           exText <- getExerciseText (getPackage ss)
@@ -190,23 +189,22 @@ hintText, stepText :: Session -> IO String
 hintText = hintOrStep False
 stepText = hintOrStep True
 
-nextStep :: Session -> IO (String, Bool)
+nextStep :: Session -> IO String
 nextStep ref = do
-   Some ss <- readIORef ref
+   Some ss <- getValue ref
    let d = getDerivation ss
    case TAS.allfirsts (currentState d) of
       Left msg ->
-         return ("Error: " ++ msg, False)
+         return ("Error: " ++ msg)
       Right [] -> 
-         return ("No more steps left to do", False)
+         return "No more steps left to do"
       Right ((rule, _, new):_) -> do
-         writeIORef ref $ Some $ ss { getDerivation = extendDerivation new d  }
+         setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
          case getExerciseText (getPackage ss) of
             Just exText ->
-               return (appliedRule exText rule, True)
+               return (appliedRule exText rule)
             Nothing -> 
-               let msg = "You have applied rule " ++ name rule ++ " correctly."
-               in return (msg, True)
+               return ("You have applied rule " ++ name rule ++ " correctly.")
 
 ruleNames :: Session -> IO [String]
 ruleNames = withDerivation $ \d -> 

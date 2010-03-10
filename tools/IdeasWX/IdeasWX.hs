@@ -24,6 +24,7 @@ import Service.Options (versionText)
 import Observable
 import About
 import ControlButtons
+import ProgressPanel
 import Data.Maybe
 import qualified Service.TypedAbstractService as TAS
 import Common.Strategy (prefixToSteps)
@@ -87,8 +88,9 @@ exerciseFrame = do
    rightPanel     <- panel f []
    derivationView <- textCtrlRich rightPanel [bgcolor := myGrey] 
    feedbackView   <- textCtrlRich rightPanel [bgcolor := myGrey]
-   progressBar    <- hgauge rightPanel 100 []
-   progressLabel  <- staticText rightPanel []
+   
+   progress <- progressPanel rightPanel session
+   
    imagePanel     <- panel rightPanel [bgcolor := white]
    mfull <- searchPath "ounl.jpg"
    case mfull of 
@@ -96,9 +98,9 @@ exerciseFrame = do
                       set imagePanel [on paint := \dc _ -> drawImage dc imageOUNL (pt 0 0) [], size := sz 233 86]
       Nothing   -> return ()
    
-   let input = get entryView text
-       output msg = set feedbackView [text := msg]
-   bp <- controlButtons leftPanel session input output
+   bp <- controlButtons leftPanel session 
+            (get entryView text)
+            (\s -> set feedbackView [text := s])
    
    set leftPanel [layout := column 10
       [ hfill $ widget domainPanel, hstretch $ label "Assignment", fill $ widget assignmentView
@@ -108,7 +110,7 @@ exerciseFrame = do
    
    set rightPanel [layout := column 10 
       [ hstretch $ label "Derivation", fill $ widget derivationView
-      , row 10 [hfill $ widget progressBar, fill $ widget progressLabel]
+      , fill (widget progress)
       , hstretch $ label "Feedback", fill $ widget feedbackView
       , row 0 [hglue, widget imagePanel]]]
    
@@ -132,17 +134,13 @@ exerciseFrame = do
           der <- derivationText session
           set derivationView [text := der]
 
-   let updateProgress = do 
-          (x, y) <- progressPair session
-          set progressLabel [text := show x ++ "/" ++ show y]
-          set progressBar [selection := if y==0 then 100 else (100*x) `div` y] 
+    
 
    set feedbackView [text := "Welcome to the Exercise Assistant!"]
    
    addObserver_ session updateDescription
    addObserver_ session updateCurrent
    addObserver_ session updateDerivation
-   addObserver_ session updateProgress
    notifyObservers session
    
    observeFont fontRef assignmentView
@@ -268,7 +266,7 @@ debugFrame session = do
    
    execObserver $ \(Some st) -> do
       let result = TAS.allfirsts (currentState (getDerivation st))
-          rs     = [ show r | (r, _, _) <- concat result ]
+          rs     = [ show r ++ " @ " ++ show p | (r, p, _) <- concat result ]
           msg    = case length rs of
                       0 -> "(no rules)"
                       1 -> "(1 rule)"

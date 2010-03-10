@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -12,35 +11,29 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
--- import Configuration
+import About
+import ControlButtons
+import Data.List
+import Data.Maybe
+import DebugFrame
 import Graphics.UI.WX
 import Graphics.UI.WXCore
-import Data.List
-import System.Directory
-import Session
-import Service.Options (versionText)
-import Observable
-import About
 import NewAssignmentDialog
-import ControlButtons
+import Observable
 import ProgressPanel
-import Data.Maybe
-import qualified Service.TypedAbstractService as TAS
-import Common.Strategy (prefixToSteps)
-
-title :: String
-title = "IdeasWX Exercise Assistant"
+import Service.Options (versionText)
+import Session
+import System.Directory
 
 main :: IO ()
 main = start exerciseFrame
 
 exerciseFrame :: IO ()
 exerciseFrame = do 
-   -- cfg <- readConfig
    session <- makeSession defaultAssignment
    fontRef <- createControl (fontFixed {{- _fontFace = "Lucida Bright",-} _fontSize = 12})
 
-   f <- frame [text := title, bgcolor := white]
+   f <- frame [text := "IdeasWX Exercise Assistant", bgcolor := white]
    bmp <- iconCreateFromFile "ideas.ico" sizeNull
    topLevelWindowSetIcon f bmp
    
@@ -111,29 +104,25 @@ exerciseFrame = do
          , size := sz 800 600]
 
    mapM_ (flip textCtrlSetEditable False) [assignmentView, derivationView, feedbackView]
-
-   -- initialize exercise
    
-   let updateDescription = do
-          descr <- currentDescription session
-          set domainText [text := descr]
+   
+   addObserver_ session $ do 
+      -- update description
+      descr <- currentDescription session
+      set domainText [text := descr]
           
-   let updateCurrent = do 
-          txt <- currentText session
-          set assignmentView [text := txt]
-          set entryView [text := txt]
+   addObserver_ session $ do
+      -- update current
+      txt <- currentText session
+      set assignmentView [text := txt]
+      set entryView [text := txt]
           
-   let updateDerivation = do
-          der <- derivationText session
-          set derivationView [text := der]
-
-    
+   addObserver_ session $ do
+      -- update derivation 
+      der <- derivationText session
+      set derivationView [text := der]
 
    set feedbackView [text := "Welcome to the Exercise Assistant!"]
-   
-   addObserver_ session updateDescription
-   addObserver_ session updateCurrent
-   addObserver_ session updateDerivation
    notifyObservers session
    
    observeFont fontRef assignmentView
@@ -147,35 +136,6 @@ exerciseFrame = do
       thisExercise txt session ]
  
    set changeButton [on command := newAssignmentDialog f session]
-
-debugFrame :: Session -> IO ()
-debugFrame session = do
-   f <- frame [text := "Debug", bgcolor := white]
-   rulebox <- singleListBox  f []
-   b   <- button f [text := "Apply", on command := do
-             n <- get rulebox selection
-             nextStep session n
-             return ()]
-   txt <- staticText f [text := "(no rules)"]
-   
-   stp <- singleListBox f []
-   
-   set f [layout := column 10 [row 10 [fill (widget rulebox), widget b, widget txt], fill (widget stp)], size := sz 400 200]
-   
-   let execObserver f = addObserver session f >> getValue session >>= f
-   
-   execObserver $ \(Some st) -> do
-      let result = TAS.allfirsts (currentState (getDerivation st))
-          rs     = [ show r ++ " @ " ++ show p | (r, p, _) <- concat result ]
-          msg    = case length rs of
-                      0 -> "(no rules)"
-                      1 -> "(1 rule)"
-                      n -> "(" ++ show n ++ " rules)"
-      set rulebox [items := rs, selection := 0]
-      set txt [text := msg]
-   execObserver $ \(Some st) -> do
-      let xs = maybe [] (map show . prefixToSteps) (TAS.prefix (currentState (getDerivation st)))
-      set stp [items := xs]
 
 changeFont :: Window a -> Observable.Control FontStyle -> IO ()
 changeFont w ref = do 

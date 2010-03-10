@@ -23,6 +23,7 @@ import Service.ExercisePackage
 import Service.Options (versionText)
 import Observable
 import About
+import ControlButtons
 import Data.Maybe
 import qualified Service.TypedAbstractService as TAS
 import Common.Strategy (prefixToSteps)
@@ -43,6 +44,7 @@ exerciseFrame :: IO ()
 exerciseFrame = do 
    -- cfg <- readConfig
    session <- makeSession (head packageList)
+   fontRef <- createControl (fontFixed {{- _fontFace = "Lucida Bright",-} _fontSize = 12})
 
    f <- frame [text := title, bgcolor := white]
    bmp <- iconCreateFromFile "ideas.ico" sizeNull
@@ -52,6 +54,7 @@ exerciseFrame = do
    mfile  <- menuPane [text := "&File"]
    mexit  <- menuItem mfile [text := "&Exit", help := "Quit the application"] 
    mview  <- menuPane [text := "&View"]
+   mfont  <- menuItem mview [text := "&Change font", help := "Change font settings for expressions"]
    mdebug <- menuItem mview [text := "&Debug frame", help := "Open a frame for debugging"]
    mhelp  <- menuPane [text := "&Help"]
    mabout <- menuItem mhelp [text := "&About", help := "About Ideas"]
@@ -59,6 +62,7 @@ exerciseFrame = do
          , on (menu mexit)  := close f
          , on (menu mabout) := aboutIdeas f 
          , on (menu mdebug) := debugFrame session
+         , on (menu mfont)  := changeFont f fontRef
          ] 
          
    -- Status bar
@@ -75,34 +79,14 @@ exerciseFrame = do
    newButton    <- button domainPanel [text := "New exercise"]
    changeButton <- button domainPanel [text := "Change exercise"]
    set domainPanel [layout := row 10 [hfill $ widget domainText, hglue, widget newButton, widget changeButton]]
-   
-   -- Button Panel
-   bp <- panel leftPanel []
-   backButton      <- button bp [text := "Back"]
-   readyButton     <- button bp [text := "Ready"]
-   submitButton    <- button bp [text := "Submit"]
-   hintButton      <- button bp [text := "Hint"]
-   stepButton      <- button bp [text := "Step"]
-   autoButton      <- button bp [text := "Auto step"]
-   
-   -- ruleBox        <- comboBox bp [] 
-   set bp [layout := grid 10 10
-      [ [widget backButton, widget readyButton, widget submitButton] 
-      , [widget hintButton, widget stepButton, widget autoButton {-, widget workedoutButton-}]
-      ]]
-   
-   assignmentView <- textCtrl leftPanel [bgcolor := myGrey]
-   entryView      <- textCtrl leftPanel [bgcolor := myGrey]
-   
-   set leftPanel [layout := column 10
-      [ hfill $ widget domainPanel, hstretch $ label "Assignment", fill $ widget assignmentView
-      , hstretch $ label "Enter modified term", fill $ widget entryView
-      , row 0 [hglue, widget bp, hglue]]]
+      
+   assignmentView <- textCtrlRich leftPanel [bgcolor := myGrey]
+   entryView      <- textCtrlRich leftPanel [bgcolor := myGrey]
    
    -- Right Panel
    rightPanel     <- panel f []
-   derivationView <- textCtrl rightPanel [bgcolor := myGrey] 
-   feedbackView   <- textCtrl rightPanel [bgcolor := myGrey]
+   derivationView <- textCtrlRich rightPanel [bgcolor := myGrey] 
+   feedbackView   <- textCtrlRich rightPanel [bgcolor := myGrey]
    progressBar    <- hgauge rightPanel 100 []
    progressLabel  <- staticText rightPanel []
    imagePanel     <- panel rightPanel [bgcolor := white]
@@ -111,6 +95,17 @@ exerciseFrame = do
       Just full -> do imageOUNL <- imageCreateFromFile full
                       set imagePanel [on paint := \dc _ -> drawImage dc imageOUNL (pt 0 0) [], size := sz 233 86]
       Nothing   -> return ()
+   
+   let input = get entryView text
+       output msg = set feedbackView [text := msg]
+   bp <- controlButtons leftPanel session input output
+   
+   set leftPanel [layout := column 10
+      [ hfill $ widget domainPanel, hstretch $ label "Assignment", fill $ widget assignmentView
+      , hstretch $ label "Enter modified term", fill $ widget entryView
+      , row 0 [hglue, widget bp, hglue]]]
+      
+   
    set rightPanel [layout := column 10 
       [ hstretch $ label "Derivation", fill $ widget derivationView
       , row 10 [hfill $ widget progressBar, fill $ widget progressLabel]
@@ -149,7 +144,12 @@ exerciseFrame = do
    addObserver_ session updateDerivation
    addObserver_ session updateProgress
    notifyObservers session
-  
+   
+   observeFont fontRef assignmentView
+   observeFont fontRef entryView
+   observeFont fontRef derivationView
+   notifyObservers fontRef
+      
    assignmentFrame <- newAssignmentFrame session
    
    -- bind events
@@ -165,34 +165,6 @@ exerciseFrame = do
    set changeButton [on command := do
       windowMakeModal assignmentFrame True
       set assignmentFrame [visible := True]]
-     
-   set readyButton [on command := do
-      txt <- readyText session
-      set feedbackView [text := txt]]
- 
-   set hintButton [on command := do
-      txt <- hintText session
-      set feedbackView [text := txt]]
-          
-   set stepButton [on command := do
-      txt <- stepText session
-      set feedbackView [text := txt]]
-       
-   set autoButton [on command := do
-      txt <- nextStep session 0
-      set feedbackView [text := txt] ]
- 
-   set backButton [on command := do
-      txt1 <- get entryView text
-      txt2 <- get assignmentView text
-      if txt1 == txt2 
-         then undo session
-         else set entryView [text := txt2]]
- 
-   set submitButton [on command := do
-      cur <- get entryView text
-      txt <- submitText cur session
-      set feedbackView [text := txt] ]
 
    focusOn f
 
@@ -306,6 +278,17 @@ debugFrame session = do
    execObserver $ \(Some st) -> do
       let xs = maybe [] (map show . prefixToSteps) (TAS.prefix (currentState (getDerivation st)))
       set stp [items := xs]
+
+changeFont :: Window a -> Observable.Control FontStyle -> IO ()
+changeFont w ref = do 
+   f   <- getValue ref
+   res <- fontDialog w f
+   maybe (return ()) (setValue ref) res
+
+observeFont :: (Textual a, Literate a) => Observable.Control FontStyle -> a -> IO ()
+observeFont ref a = addObserver ref $ \new -> do
+   s <- get a text
+   set a [font := new, text := s]
 
 getPackages :: Bool -> String -> [Some ExercisePackage]
 getPackages b d = filter p packageList

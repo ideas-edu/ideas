@@ -15,7 +15,7 @@ module Session
    , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
    , thisExercise, thisExerciseFor, progressPair, undo, submitText
    , currentDescription, currentText, derivationText, readyText, hintText
-   , stepText, nextStep, ruleNames
+   , stepText, nextStep, ruleNames, currentState, getDerivation
    ) where
 
 import qualified Service.TypedAbstractService as TAS
@@ -189,8 +189,8 @@ hintText, stepText :: Session -> IO String
 hintText = hintOrStep False
 stepText = hintOrStep True
 
-nextStep :: Session -> IO String
-nextStep ref = do
+nextStep :: Session -> Int -> IO String
+nextStep ref n = do
    Some ss <- getValue ref
    let d = getDerivation ss
    case TAS.allfirsts (currentState d) of

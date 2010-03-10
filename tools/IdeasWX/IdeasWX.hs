@@ -22,6 +22,9 @@ import qualified Service.ExerciseList as SE
 import Service.Options (versionText)
 import Observable
 import About
+import Data.Maybe
+import qualified Service.TypedAbstractService as TAS
+import Common.Strategy (prefixToSteps)
 --import Domain.Programming.Exercises (heliumExercise, isortExercise)
 
 packageList = {- Some heliumExercise : Some isortExercise : -} SE.packages
@@ -38,6 +41,7 @@ main = start exerciseFrame
 exerciseFrame :: IO ()
 exerciseFrame = do 
    -- cfg <- readConfig
+   session <- makeSession (head packageList)
 
    f <- frame [text := title, bgcolor := white]
    bmp <- iconCreateFromFile "ideas.ico" sizeNull
@@ -46,13 +50,16 @@ exerciseFrame = do
    -- Menu bar
    mfile  <- menuPane [text := "&File"]
    mexit  <- menuItem mfile [text := "&Exit", help := "Quit the application"] 
+   mview  <- menuPane [text := "&View"]
+   mdebug <- menuItem mview [text := "&Debug frame", help := "Open a frame for debugging"]
    mhelp  <- menuPane [text := "&Help"]
    mabout <- menuItem mhelp [text := "&About", help := "About Ideas"]
-   set f [ menuBar := [mfile, mhelp]
+   set f [ menuBar := [mfile, mview, mhelp]
          , on (menu mexit)  := close f
          , on (menu mabout) := aboutIdeas f 
+         , on (menu mdebug) := debugFrame session
          ] 
-   
+         
    -- Status bar
    field1 <- statusField []
    field2 <- statusField [statusWidth := 200, text := versionText]
@@ -115,7 +122,6 @@ exerciseFrame = do
    mapM_ (flip textCtrlSetEditable False) [assignmentView, derivationView, feedbackView]
 
    -- initialize exercise
-   session <- makeSession (head packageList)
    
    let updateDescription = do
           descr <- currentDescription session
@@ -172,7 +178,7 @@ exerciseFrame = do
       set feedbackView [text := txt]]
        
    set autoButton [on command := do
-      txt <- nextStep session
+      txt <- nextStep session 0
       set feedbackView [text := txt] ]
  
    set backButton [on command := do
@@ -270,6 +276,35 @@ newAssignmentFrame session = do
          _ -> errorDialog f "Error" "First select an exercise"]
 
    return f
+
+debugFrame :: Session -> IO ()
+debugFrame session = do
+   f <- frame [text := "Debug", bgcolor := white]
+   rulebox <- singleListBox  f []
+   b   <- button f [text := "Apply", on command := do
+             n <- get rulebox selection
+             nextStep session n
+             return ()]
+   txt <- staticText f [text := "(no rules)"]
+   
+   stp <- singleListBox f []
+   
+   set f [layout := column 10 [row 10 [fill (widget rulebox), widget b, widget txt], fill (widget stp)], size := sz 400 200]
+   
+   let execObserver f = addObserver session f >> getValue session >>= f
+   
+   execObserver $ \(Some st) -> do
+      let result = TAS.allfirsts (currentState (getDerivation st))
+          rs     = [ show r | (r, _, _) <- concat result ]
+          msg    = case length rs of
+                      0 -> "(no rules)"
+                      1 -> "(1 rule)"
+                      n -> "(" ++ show n ++ " rules)"
+      set rulebox [items := rs, selection := 0]
+      set txt [text := msg]
+   execObserver $ \(Some st) -> do
+      let xs = maybe [] (map show . prefixToSteps) (TAS.prefix (currentState (getDerivation st)))
+      set stp [items := xs]
 
 getPackages :: Bool -> String -> [Some SE.ExercisePackage]
 getPackages b d = filter p packageList

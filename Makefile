@@ -23,7 +23,7 @@ $(BINDIR)/ideas.cgi: $(HS-SOURCES) revision
 $(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) tools/IdeasWX/IdeasWX.hs revision
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) $(HELIUMFLAGS) -itools/IdeasWX -o $@ tools/IdeasWX/IdeasWX.hs
+	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -itools/IdeasWX -o $@ tools/IdeasWX/IdeasWX.hs
 	$(STRIP) $@
 ifeq ($(WINDOWS), no)
 	$(CD) $(BINDIR); $(MAC) ideasWX

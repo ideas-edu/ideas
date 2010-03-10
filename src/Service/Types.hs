@@ -21,7 +21,7 @@ import Common.Utils (commaList)
 import Control.Arrow
 import Control.Monad
 import Data.Maybe
-import Service.ExerciseList (ExercisePackage, exercise, getExerciseText)
+import Service.ExercisePackage (ExercisePackage, exercise, getExerciseText)
 import Service.TypedAbstractService (State)
 import Service.Submit (Result)
 import Service.Diagnose (Diagnosis)

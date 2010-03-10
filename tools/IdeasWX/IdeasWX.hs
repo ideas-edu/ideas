@@ -18,7 +18,8 @@ import Graphics.UI.WXCore
 import Data.List
 import System.Directory
 import Session
-import qualified Service.ExerciseList as SE
+import Service.ExerciseList
+import Service.ExercisePackage
 import Service.Options (versionText)
 import Observable
 import About
@@ -27,10 +28,10 @@ import qualified Service.TypedAbstractService as TAS
 import Common.Strategy (prefixToSteps)
 --import Domain.Programming.Exercises (heliumExercise, isortExercise)
 
-packageList = {- Some heliumExercise : Some isortExercise : -} SE.packages
+packageList = {- Some heliumExercise : Some isortExercise : -} packages
 
 domains :: [String]
-domains = sort $ nub [ domain (exerciseCode (SE.exercise e)) | Some e <- packageList ]
+domains = sort $ nub [ domain (exerciseCode (exercise e)) | Some e <- packageList ]
 
 title :: String
 title = "IdeasWX Exercise Assistant"
@@ -238,7 +239,7 @@ newAssignmentFrame session = do
           return $ if i>=0 && length xs > i then Just (xs !! i) else Nothing
        fillPackageList = do
           xs <- getPackageList
-          let ys = [ description (SE.exercise pkg) | Some pkg <- xs ]
+          let ys = [ description (exercise pkg) | Some pkg <- xs ]
           set exerciseList [items := ys, selection := 0]
           fillOwnText
        fillOwnText = do
@@ -246,7 +247,7 @@ newAssignmentFrame session = do
           case mPkg of
              Just (Some pkg) -> do
                 dif <- get difficultySlider selection
-                txt <- suggestTermFor dif (Some (SE.exercise pkg))
+                txt <- suggestTermFor dif (Some (exercise pkg))
                 set ownTextView [text := txt]
              Nothing -> return ()
    fillPackageList
@@ -306,11 +307,11 @@ debugFrame session = do
       let xs = maybe [] (map show . prefixToSteps) (TAS.prefix (currentState (getDerivation st)))
       set stp [items := xs]
 
-getPackages :: Bool -> String -> [Some SE.ExercisePackage]
+getPackages :: Bool -> String -> [Some ExercisePackage]
 getPackages b d = filter p packageList
  where 
     p (Some pkg) = 
-       let ex = SE.exercise pkg
+       let ex = exercise pkg
        in domain (exerciseCode ex) == d && (b || status ex == Stable) 
 
 searchPath :: String -> IO (Maybe String)

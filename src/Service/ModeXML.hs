@@ -26,6 +26,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import Service.ExercisePackage
 import Service.ExerciseList
 import Service.ProblemDecomposition
 import Service.Request
@@ -68,7 +69,7 @@ xmlReply :: Request -> XML -> Either String XML
 xmlReply request xml 
    | service request == "mathdox" = do
         code <- maybe (fail "unknown exercise code") return (exerciseID request)
-        Some pkg <- getPackage code
+        Some pkg <- getPackage packages code
         (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
 
@@ -77,7 +78,7 @@ xmlReply request xml
 
 xmlReply request xml = do
    pkg <- case exerciseID request of 
-             Just i -> getPackage i
+             Just i -> getPackage packages i
              _ | service request == "exerciselist" -> return (Some (package emptyExercise))
                | otherwise -> fail "unknown exercise code"
    case encoding request of

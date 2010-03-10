@@ -19,6 +19,7 @@ import Common.Exercise
 import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
+import Service.ExercisePackage
 import Service.ExerciseList
 import Service.Request
 import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
@@ -26,7 +27,7 @@ import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
 import Service.Submit
 import Service.ServiceList hiding (Service)
-import qualified Service.ExerciseList as List
+import qualified Service.ExercisePackage as List
 import Control.Monad
 import Data.Maybe
 import Data.Char
@@ -88,7 +89,7 @@ myHandler fun arg
 jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
 jsonConverter code =
    let f a = Some (Evaluator (jsonEncoder (List.exercise a)) (jsonDecoder a))
-   in case List.getPackage code of
+   in case List.getPackage packages code of
          Just (Some pkg) -> f pkg
          Nothing         -> f (package emptyExercise)
 

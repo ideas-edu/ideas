@@ -22,8 +22,8 @@ import qualified Service.TypedAbstractService as TAS
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
-import Service.ExerciseList hiding (exercise, getPackage)
-import qualified Service.ExerciseList as List
+import Service.ExercisePackage (getExerciseText, ExercisePackage)
+import qualified Service.ExercisePackage as List
 import Common.Context
 import Common.Exercise hiding (showDerivation)
 import Common.Strategy (emptyPrefix)

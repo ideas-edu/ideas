@@ -13,8 +13,11 @@ module NewAssignmentDialog (newAssignmentDialog, defaultAssignment) where
 
 import Graphics.UI.WX
 import Session
+import Observable
+import Control.Monad
 import Data.List
 import Data.Maybe
+import ExerciseInfoPanel
 import Service.ExerciseList
 import Service.ExercisePackage
 
@@ -42,11 +45,7 @@ newAssignmentDialog w session = do
    difficultySlider <- hslider leftPanel True 1 10 [selection := 5]
    ownTextView      <- textCtrl leftPanel [bgcolor := myGrey]
    
-   set leftPanel [layout := column 10 
-      [ hstretch $ label "Difficulty", row 10 [hfill $ widget difficultySlider, widget randomButton]
-      , hstretch $ vspace 30
-      , hstretch $ label "Enter your own assignment (or press Random button)", fill $ widget ownTextView
-      , row 10  [widget cancelButton, hglue, widget goButton]]]
+   
       
    -- Right Panel
    rightPanel <- panel f []
@@ -62,7 +61,7 @@ newAssignmentDialog w session = do
    set domainBox [selection := fromMaybe 0 (findIndex (==domain code) domains) ]
    
    set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
-         , size := sz 600 400]
+         , size := sz 600 450]
    
    let getPackageList = do
           i <- get domainBox selection 
@@ -79,40 +78,49 @@ newAssignmentDialog w session = do
               mi = if b then findIndex isCode xs else Nothing
           set exerciseList [items := ys, selection := fromMaybe 0 mi]
           fillOwnText
-       fillOwnText = do
-          mPkg <- currentPackage
-          case mPkg of
+       fillOwnText = do 
+          mpkg <- currentPackage
+          case mpkg of
+             Nothing  -> return ()
              Just (Some pkg) -> do
                 dif <- get difficultySlider selection
                 txt <- suggestTermFor dif (Some (exercise pkg))
                 set ownTextView [text := txt]
-             Nothing -> return ()
    fillPackageList True
+   
+   ref <- currentPackage >>= createControl
+   pi  <- exerciseInfoPanel leftPanel ref
+   notifyObservers ref
+   
+   set leftPanel [layout := column 10 
+      [ fill (widget pi)
+      , hstretch $ label "Difficulty", row 10 [hfill $ widget difficultySlider, widget randomButton]
+      , hstretch $ label "Enter your own assignment (or press Random button)", fill $ widget ownTextView
+      , row 10  [widget cancelButton, hglue, widget goButton]]]
+   
     
-   set domainBox       [on select  := fillPackageList False]
-   set experimentalBox [on command := fillPackageList False]
-   set exerciseList    [on select  := fillOwnText]
+   set domainBox       [on select  := fillPackageList False >> currentPackage >>= setValue ref]
+   set experimentalBox [on command := fillPackageList False >> currentPackage >>= setValue ref]
+   set exerciseList    [on select  := fillOwnText >> currentPackage >>= setValue ref]
    set randomButton    [on command := fillOwnText]
    
    -- event handler for go button
    let goCommand stop = do
           txt  <- get ownTextView text
-          mEx  <- currentPackage
-          case mEx of 
-             Just ex -> do
-                merr <- thisExerciseFor txt ex session
+          mpkg <- currentPackage
+          case mpkg of
+             Nothing  -> errorDialog f "Error" "No exercise selected"
+             Just pkg -> do  
+                merr <- thisExerciseFor txt pkg session
                 case merr of
-                   Nothing -> do
-                      stop Nothing
-                   Just err -> do
-                      errorDialog f "Error" ("Parse error: " ++ err)
-             _ -> errorDialog f "Error" "First select an exercise"
+                   Nothing  -> stop Nothing
+                   Just err -> errorDialog f "Error" ("Parse error: " ++ err)
 
    showModal f $ \stop -> do 
       set cancelButton [on command := stop Nothing]
       set goButton     [on command := goCommand stop]
    return () 
-
+   
 getPackages :: Bool -> String -> [Some ExercisePackage]
 getPackages b d = filter p packageList
  where 

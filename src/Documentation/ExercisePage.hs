@@ -48,6 +48,12 @@ exercisePage pkg = defaultPage title 2 $ do
       , [ bold $ text "Restartable strategy"
         , text $ showBool $ canBeRestarted ex
         ] 
+      , [ bold $ text "Exercise generator"
+        , text $ showBool $ isJust $ randomExercise ex
+        ]
+      , [ bold $ text "Examples"
+        , text $ show $ length $ examples ex
+        ]
       ]
    
    h2 "1. Strategy"

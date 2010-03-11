@@ -15,7 +15,7 @@ module Session
    , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
    , thisExercise, thisExerciseFor, progressPair, undo, submitText
    , currentDescription, currentText, derivationText, readyText, hintText
-   , stepText, nextStep, ruleNames, currentState, getDerivation
+   , stepText, nextStep, ruleNames, currentState, getDerivation, currentCode
    ) where
 
 import qualified Service.TypedAbstractService as TAS
@@ -23,7 +23,7 @@ import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
 import Service.ExercisePackage (getExerciseText, ExercisePackage)
-import qualified Service.ExercisePackage as List
+import qualified Service.ExercisePackage as Pkg
 import Common.Context
 import Common.Exercise hiding (showDerivation)
 import Common.Strategy (emptyPrefix)
@@ -44,6 +44,11 @@ data SessionState a = SessionState
    , getDerivation :: Derivation a
    }
 
+currentCode :: Session -> IO ExerciseCode
+currentCode ref = do
+   (Some st) <- getValue ref
+   return (exerciseCode (Pkg.exercise (getPackage st)))
+
 withDerivation :: (forall a . Derivation a -> IO b) -> Session -> IO b
 withDerivation f ref = do
    Some d <- getValue ref
@@ -57,7 +62,7 @@ makeSession pkg = do
 
 newExercise :: Int -> Some ExercisePackage -> Session -> IO ()
 newExercise dif (Some pkg) ref = do
-   d <- startNewDerivation dif (List.exercise pkg)
+   d <- startNewDerivation dif (Pkg.exercise pkg)
    setValue ref $ Some $ SessionState pkg d
 
 thisExercise :: String -> Session -> IO ()
@@ -72,7 +77,7 @@ thisExercise txt ref = do
 
 thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
 thisExerciseFor txt (Some pkg) ref =
-   let ex = List.exercise pkg in
+   let ex = Pkg.exercise pkg in
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do

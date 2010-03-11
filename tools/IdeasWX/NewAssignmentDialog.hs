@@ -14,6 +14,7 @@ module NewAssignmentDialog (newAssignmentDialog, defaultAssignment) where
 import Graphics.UI.WX
 import Session
 import Data.List
+import Data.Maybe
 import Service.ExerciseList
 import Service.ExercisePackage
 
@@ -29,8 +30,10 @@ defaultAssignment = head packages
 
 newAssignmentDialog :: Window a -> Session -> IO ()
 newAssignmentDialog w session = do
+   -- create frame
    f <- dialog w [text := "New Assignment", bgcolor := white] 
-   
+   -- current exercise
+   code <- currentCode session
    -- Left Panel
    leftPanel <- panel f []
    randomButton     <- button leftPanel [text := "Random"]
@@ -56,6 +59,8 @@ newAssignmentDialog w session = do
       , hstretch $ label "Exercise selection", fill $ widget exerciseList
       , hstretch $ widget experimentalBox]]
    
+   set domainBox [selection := fromMaybe 0 (findIndex (==domain code) domains) ]
+   
    set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
          , size := sz 600 400]
    
@@ -67,10 +72,12 @@ newAssignmentDialog w session = do
           i  <- get exerciseList selection
           xs <- getPackageList
           return $ if i>=0 && length xs > i then Just (xs !! i) else Nothing
-       fillPackageList = do
+       fillPackageList b = do
           xs <- getPackageList
           let ys = [ description (exercise pkg) | Some pkg <- xs ]
-          set exerciseList [items := ys, selection := 0]
+              isCode (Some pkg) = exerciseCode (exercise pkg) == code
+              mi = if b then findIndex isCode xs else Nothing
+          set exerciseList [items := ys, selection := fromMaybe 0 mi]
           fillOwnText
        fillOwnText = do
           mPkg <- currentPackage
@@ -80,10 +87,10 @@ newAssignmentDialog w session = do
                 txt <- suggestTermFor dif (Some (exercise pkg))
                 set ownTextView [text := txt]
              Nothing -> return ()
-   fillPackageList
+   fillPackageList True
     
-   set domainBox       [on select  := fillPackageList]
-   set experimentalBox [on command := fillPackageList]
+   set domainBox       [on select  := fillPackageList False]
+   set experimentalBox [on command := fillPackageList False]
    set exerciseList    [on select  := fillOwnText]
    set randomButton    [on command := fillOwnText]
    

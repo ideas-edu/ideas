@@ -143,7 +143,7 @@ changeFont w ref = do
    res <- fontDialog w f
    maybe (return ()) (setValue ref) res
 
-observeFont :: (Textual a, Literate a) => Observable.Control FontStyle -> a -> IO ()
+observeFont :: (Textual a, Literate a) => Observable.Control FontStyle -> a -> IO Observable.Id
 observeFont ref a = addObserver ref $ \new -> do
    s <- get a text
    set a [font := new, text := s]

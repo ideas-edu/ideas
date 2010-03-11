@@ -12,6 +12,7 @@
 module DebugFrame (debugFrame) where
 
 import Graphics.UI.WX
+import Graphics.UI.WXCore (windowDestroy)
 import Session
 import Observable
 import Service.TypedAbstractService
@@ -31,9 +32,9 @@ debugFrame session = do
    
    set f [layout := column 10 [row 10 [fill (widget rulebox), widget b, widget txt], fill (widget stp)], size := sz 400 200]
    
-   let execObserver f = addObserver session f >> getValue session >>= f
+   let execObserver f = getValue session >>= f >> addObserver session f
    
-   execObserver $ \(Some st) -> do
+   r1 <- execObserver $ \(Some st) -> do
       let result = allfirsts (currentState (getDerivation st))
           rs     = [ show r ++ " @ " ++ show p | (r, p, _) <- concat result ]
           msg    = case length rs of
@@ -42,6 +43,11 @@ debugFrame session = do
                       n -> "(" ++ show n ++ " rules)"
       set rulebox [items := rs, selection := 0]
       set txt [text := msg]
-   execObserver $ \(Some st) -> do
+   r2 <- execObserver $ \(Some st) -> do
       let xs = maybe [] (map show . prefixToSteps) (prefix (currentState (getDerivation st)))
       set stp [items := xs]
+      
+   set f [on closing := do 
+      removeObservers session [r1, r2]
+      windowDestroy f 
+      return () ]

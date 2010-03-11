@@ -14,7 +14,7 @@ module Documentation.ExercisePage (makeExercisePage) where
 import Common.Exercise
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
-import Service.ExerciseList 
+import Service.ExercisePackage
 import Service.TypedAbstractService hiding (exercise)
 import Control.Monad
 import Data.List

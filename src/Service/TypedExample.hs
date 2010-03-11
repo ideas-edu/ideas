@@ -2,7 +2,7 @@ module Service.TypedExample (typedExample) where
 
 import Data.Char
 import Service.ModeXML
-import Service.ExerciseList
+import Service.ExercisePackage
 import Service.ServiceList
 import Service.Types
 import Common.Exercise

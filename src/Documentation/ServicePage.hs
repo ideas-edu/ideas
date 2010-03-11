@@ -12,7 +12,7 @@
 module Documentation.ServicePage (makeServicePage) where
 
 import Documentation.DefaultPage
-import Service.ExerciseList
+import Service.ExercisePackage
 import Service.ServiceList
 import Service.TypedExample
 import Service.Types
@@ -86,7 +86,7 @@ examples = concat
    logic = make "Logic" (package dnfExercise)
    lineq fs args = concat
       [ make msg (mkPkg linearExercise) fs args 
-      | (enc, mkPkg) <- [("string", package), ("openmath", packageOM)] 
+      | (enc, mkPkg) <- [("string", package), ("openmath", exprPackage)] 
       , let msg = "Linear equation (" ++ enc ++ " encoding)"
       ]
       

@@ -27,6 +27,7 @@ import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
+import Domain.Math.Polynomial.Exercises (eqRelation, normRelation)
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
@@ -43,9 +44,11 @@ ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 
    { description  = "solve a linear inequation"
    , exerciseCode = makeCode "math" "linineq"
+   , status       = Provisional
    , parser       = parseWith (pRelation pExpr)
    , isReady      = solvedRelation
    , equivalence  = linEq
+   , similarity   = eqRelation cleanUpExpr2
    , strategy     = mapRules liftToContext ineqLinear
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
@@ -56,10 +59,12 @@ ineqQuadraticExercise :: Exercise (Logic (Relation Expr))
 ineqQuadraticExercise = makeExercise 
    { description   = "solve a quadratic inequation"
    , exerciseCode  = makeCode "math" "quadrineq"
+   , status        = Provisional
    , parser        = parseWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just quadrEqContext
+   , similarity    = simLogic (normRelation cleanUpExpr2)
    , strategy      = ineqQuadratic
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2])
@@ -69,9 +74,11 @@ ineqHigherDegreeExercise :: Exercise (Logic (Relation Expr))
 ineqHigherDegreeExercise = makeExercise 
    { description   = "solve an inequation of higher degree"
    , exerciseCode  = makeCode "math" "ineqhigherdegree"
+   , status        = Provisional
    , parser        = parseWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
+   , similarity    = simLogic (normRelation cleanUpExpr2)
    , strategy      = ineqHigherDegree
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }

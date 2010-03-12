@@ -70,7 +70,7 @@
          "domain": "math",
          "identifier": "ineqhigherdegree",
          "description": "solve an inequation of higher degree",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
@@ -88,7 +88,7 @@
          "domain": "math",
          "identifier": "linineq",
          "description": "solve a linear inequation",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
@@ -130,7 +130,7 @@
          "domain": "math",
          "identifier": "quadrineq",
          "description": "solve a quadratic inequation",
-         "status": "Experimental"
+         "status": "Provisional"
       },
       {
          "domain": "math",
@@ -159,5 +159,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.11 (2781)"
+   "version": "0.5.11 (2812)"
 }

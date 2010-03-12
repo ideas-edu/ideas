@@ -11,18 +11,15 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Equivalence 
-   ( linEq, quadrEqContext
+   ( linEq, quadrEqContext, simLogic
    ) where
 
---import Common.Exercise
---import Common.Derivation
---import Common.Strategy
 import Common.Context
 import Common.Traversable
 import Common.View
 import Data.Maybe
+import Data.List (sort, nub)
 import Domain.Math.Polynomial.Views
---import Domain.Math.Data.Polynomial
 import Prelude hiding ((^), sqrt)
 import Domain.Logic.Formula hiding (Var, disjunctions)
 import qualified Domain.Logic.Formula as Logic
@@ -30,12 +27,12 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Data.Relation
 import Domain.Math.Data.Interval
 import Domain.Math.SquareRoot.Views
--- import Domain.Math.Data.OrList
 import Domain.Math.Expr
--- import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Data.SquareRoot
 import Control.Monad
 import Domain.Math.Clipboard
+import Common.Rewriting hiding (match)
+import Common.Uniplate
 
 ------------------------------------------------------------------
 -- Steps for solving an inequation:
@@ -231,3 +228,31 @@ quadrRel rel =
  where
    lhs = leftHandSide rel
    rhs = rightHandSide rel
+   
+   
+-- for similarity 
+simLogic :: Ord a => (a -> a) -> Logic a -> Logic a -> Bool
+simLogic f a b 
+   | isOperator orOperator a =
+        let collect = nub . sort . trueOr . collectOr
+        in eqList (simLogic f) (collect a) (collect b)
+   | isOperator andOperator a =
+        let collect = nub . sort . falseAnd . collectAnd
+        in eqList (simLogic f) (collect a) (collect b)
+   | otherwise = 
+        shallowEq a b && eqList (simLogic f) (children a) (children b)
+ where
+   eqList eq xs ys = 
+      length xs == length ys && and (zipWith eq xs ys) 
+ 
+   collectOr (p :||: q) = collectOr p ++ collectOr q
+   collectOr F = []
+   collectOr a = [a]
+   
+   trueOr xs = if T `elem` xs then [] else xs
+   
+   collectAnd (p :&&: q) = collectAnd p ++ collectAnd q
+   collectAnd T = []
+   collectAnd a = [a]
+   
+   falseAnd xs = if F `elem` xs then [] else xs

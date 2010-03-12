@@ -59,7 +59,7 @@ ineqQuadraticExercise = makeExercise
    , parser        = parseWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
-   , equivalence   = quadrEq
+   , eqWithContext = Just quadrEqContext
    , strategy      = ineqQuadratic
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2])
@@ -69,7 +69,7 @@ ineqHigherDegreeExercise :: Exercise (Logic (Relation Expr))
 ineqHigherDegreeExercise = makeExercise 
    { description   = "solve an inequation of higher degree"
    , exerciseCode  = makeCode "math" "ineqhigherdegree"
-   , parser       = parseWith (pLogicRelation pExpr)
+   , parser        = parseWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , strategy      = ineqHigherDegree

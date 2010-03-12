@@ -15,7 +15,7 @@ module Common.Exercise
    ( -- * Exercises
      Exercise, Status(..), testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
-   , equivalence, similarity, isReady, isSuitable
+   , equivalence, similarity, isReady, isSuitable, eqWithContext
    , strategy, navigation, canBeRestarted, extraRules
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
@@ -61,6 +61,7 @@ data Exercise a = Exercise
    , isReady        :: a -> Bool
    , isSuitable     :: a -> Bool
    , difference     :: Bool -> a -> a -> Maybe (a, a)
+   , eqWithContext  :: Maybe (Context a -> Context a -> Bool) -- special equivalence with context info
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
    , navigation     :: a -> Navigator a
@@ -111,6 +112,7 @@ emptyExercise = Exercise
    , isReady        = const True
    , isSuitable     = const True
    , difference     = \_ _ _ -> Nothing
+   , eqWithContext  = Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail
    , navigation     = noNavigator
@@ -215,8 +217,11 @@ identifier _        = []
 -- Rest
      
 equivalenceContext :: Exercise a -> Context a -> Context a -> Bool
-equivalenceContext ex a b = fromMaybe False $ 
-   liftM2 (equivalence ex) (fromContext a) (fromContext b)
+equivalenceContext ex a b = 
+   case eqWithContext ex of
+      Just f  -> f a b 
+      Nothing -> fromMaybe False $ 
+         liftM2 (equivalence ex) (fromContext a) (fromContext b)
     
 prettyPrinterContext :: Exercise a -> Context a -> String
 prettyPrinterContext ex = 

@@ -11,13 +11,13 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Equivalence 
-   ( linEq, quadrEq
+   ( linEq, quadrEqContext
    ) where
 
 --import Common.Exercise
 --import Common.Derivation
 --import Common.Strategy
---import Common.Context
+import Common.Context
 import Common.Traversable
 import Common.View
 import Data.Maybe
@@ -35,6 +35,7 @@ import Domain.Math.Expr
 -- import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Data.SquareRoot
 import Control.Monad
+import Domain.Math.Clipboard
 
 ------------------------------------------------------------------
 -- Steps for solving an inequation:
@@ -148,15 +149,30 @@ instance Ord Q where
 qView :: View (SquareRoot Rational) Q
 qView = makeView (return . Q) (\(Q a) -> a)
 
-{-
-q = quadrRel (a)
--- quadrEq (Logic.Var a) (Logic.Var b :&&: Logic.Var c)
- where 
-   a = (1/2)*x*x -3*x -8 .==. 0
-   a2 = -x*x -4*x + 5 .<. 0
-   b = -4 .<. x
-   c = x .<. 1
-   x = Var "x" -}
+quadrEqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
+quadrEqContext a b = isJust $ do
+   let clipA = ineqOnClipboard a
+   let clipB = ineqOnClipboard b
+   termA <- fromContext a
+   termB <- fromContext b
+   -- test clipboard 
+   when (isJust clipA || isJust clipB) $
+      guard $ quadrEq (fromMaybe termA clipA) (fromMaybe termB clipB)
+   -- test terms
+   let f x = if isJust x then toEq else id
+   guard $ quadrEq (f clipB termA) (f clipA termB)
+
+toEq :: Logic (Relation Expr) -> Logic (Relation Expr)
+toEq (Logic.Var rel) = Logic.Var (leftHandSide rel .==. rightHandSide rel)
+toEq (p :&&: q) = toEq p :||: toEq q -- workaround for -3<x<5 
+toEq (p :||: q) = toEq p :||: toEq q
+toEq p = p
+
+ineqOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
+ineqOnClipboard = evalCM $ const $ do
+   expr <- lookupClipboard "ineq"
+   fromExpr expr
+
 
 quadrEq :: Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
 quadrEq p q = fromMaybe False $ do

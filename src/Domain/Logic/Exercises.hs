@@ -30,7 +30,6 @@ import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.Strategies
 import Test.QuickCheck
-import Text.Parsing (fromRanged)
    
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
@@ -38,7 +37,7 @@ dnfExercise = makeExercise
    { description    = "Proposition to DNF"
    , exerciseCode   = makeCode "logic" "dnf"
    , status         = Stable
-   , parser         = either Left (Right . fromRanged) . parseLogicPars
+   , parser         = parseLogicPars
    , prettyPrinter  = ppLogicPars
    , equivalence    = eqLogic
    , similarity     = equalLogicA
@@ -57,7 +56,7 @@ dnfUnicodeExercise :: Exercise SLogic
 dnfUnicodeExercise = dnfExercise
    { description   = description dnfExercise ++ " (unicode support)"
    , exerciseCode  = makeCode "logic" "dnf-unicode"
-   , parser        = either Left (Right . fromRanged) . parseLogicUnicodePars
+   , parser        = parseLogicUnicodePars
    , prettyPrinter = ppLogicUnicodePars
    }
 

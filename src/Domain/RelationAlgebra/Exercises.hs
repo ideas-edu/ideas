@@ -21,7 +21,6 @@ import Common.Apply
 import Common.Exercise
 import Common.Context
 import Data.Maybe
-import Text.Parsing (fromRanged)
 import Common.Derivation
 import Common.Rewriting (differenceMode)
 import Common.Strategy hiding (not)
@@ -33,7 +32,7 @@ cnfExercise = testableExercise
    { description    = "To conjunctive normal form"
    , exerciseCode   = makeCode "relationalg" "cnf"
    , status         = Provisional
-   , parser         = either Left (Right . fromRanged) . parseRelAlg
+   , parser         = parseRelAlg
    , prettyPrinter  = ppRelAlg
    , equivalence    = probablyEqual -- isEquivalent
    , extraRules     = map liftToContext (relAlgRules ++ buggyRelAlgRules)

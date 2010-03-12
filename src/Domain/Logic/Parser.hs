@@ -43,7 +43,7 @@ operatorTable =
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseLogic :: String -> Either SyntaxError (Ranged SLogic)
+parseLogic :: String -> Either SyntaxError SLogic
 parseLogic = analyseAndParse pLogic . scanWith logicScanner
  where
    pLogic = pOperators operatorTable (basicWithPos pLogic)
@@ -52,14 +52,14 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
-parseLogicPars :: String -> Either SyntaxError (Ranged SLogic)
+parseLogicPars :: String -> Either SyntaxError SLogic
 parseLogicPars s
    = either Left suspiciousVariable 
    $ left (ambiguousOperators parseLogic s)
    $ analyseAndParse (pLogicGen asciiTuple)
    $ scanWith logicScanner s
 
-parseLogicUnicodePars :: String -> Either SyntaxError (Ranged SLogic)
+parseLogicUnicodePars :: String -> Either SyntaxError SLogic
 parseLogicUnicodePars s 
    = either Left suspiciousVariable 
    $ left (ambiguousOperators (parseLogic . concatMap f) s)
@@ -78,20 +78,20 @@ pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
  where
    pLogic = flip ($) <$> basic <*> optional composed id
    basic     =  basicWithPosGen (nt, tr, fl) pLogic
-   composed  =  flip (binaryOp (:<->:)) <$ pKey equiv <*> basic
-            <|> flip (binaryOp (:->:))  <$ pKey impl  <*> basic
-            <|> (\xs p -> foldr1 (binaryOp (:&&:)) (p:xs)) <$> pList1 (pKey and *> basic)
-            <|> (\xs p -> foldr1 (binaryOp (:||:)) (p:xs)) <$> pList1 (pKey or  *> basic)
+   composed  =  flip (:<->:) <$ pKey equiv <*> basic
+            <|> flip (:->:)  <$ pKey impl  <*> basic
+            <|> (\xs p -> foldr1 (:&&:) (p:xs)) <$> pList1 (pKey and *> basic)
+            <|> (\xs p -> foldr1 (:||:) (p:xs)) <$> pList1 (pKey or  *> basic)
  
-basicWithPos :: Parser Token (Ranged SLogic) -> Parser Token (Ranged SLogic)
+basicWithPos :: Parser Token SLogic -> Parser Token SLogic
 basicWithPos = basicWithPosGen ("~", "T", "F")
 
 basicWithPosGen t@(nt, tr, fl) p = 
-   (\(s, r) -> toRanged (Var s) r) <$> pVarid
+       Var <$> pVarid
    <|> pParens p
-   <|> toRanged T  <$> pKey tr
-   <|> toRanged F  <$> pKey fl
-   <|> unaryOp Not <$> pKey nt <*> basicWithPosGen t p
+   <|> T  <$ pKey tr
+   <|> F  <$ pKey fl
+   <|> Not <$ pKey nt <*> basicWithPosGen t p
 
 -----------------------------------------------------------
 --- Helper-functions for syntax warnings
@@ -111,9 +111,9 @@ ambiguousOperators p s err =
    in either (const err) (const msg) (p s)
 
 -- Report variables 
-suspiciousVariable :: Ranged SLogic -> Either SyntaxError (Ranged SLogic)
+suspiciousVariable :: SLogic -> Either SyntaxError SLogic
 suspiciousVariable r =
-   case filter p (varsLogic (fromRanged r)) of
+   case filter p (varsLogic r) of
       v:_ -> Left $ ErrorMessage $ "Unexpected variable " ++ v
                  ++ ". Did you forget an operator?" 
       _   -> Right r

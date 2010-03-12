@@ -38,25 +38,25 @@ invSym  = "~"
 -----------------------------------------------------------
 --- Parser
 
-parseRelAlg  :: String -> Either SyntaxError (Ranged RelAlg)
+parseRelAlg  :: String -> Either SyntaxError RelAlg
 parseRelAlg = analyseAndParse pRelAlg . scanWith myScanner
 
-pRelAlg :: Parser Token (Ranged RelAlg)
+pRelAlg :: Parser Token RelAlg
 pRelAlg = pOperators operatorTable pTerm
 
 -- Two postfix operators
-pTerm :: Parser Token (Ranged RelAlg)
+pTerm :: Parser Token RelAlg
 pTerm = foldl (flip ($)) <$> pAtom <*> pList pUnOp
  where
-   pUnOp  =  unaryOp  Inv <$> pKey invSym 
-         <|> unaryOp  Not <$> pKey notSym
+   pUnOp  =  Inv <$ pKey invSym 
+         <|> Not <$ pKey notSym
 
-pAtom :: Parser Token (Ranged RelAlg)
-pAtom  =  (\(s, r) -> toRanged (Var s) r) <$> pVarid
+pAtom :: Parser Token RelAlg
+pAtom  =  Var <$> pVarid
       <|> pParens pRelAlg
-      <|> toRanged V     <$> pKey "V"
-      <|> toRanged empty <$> pKey "E"
-      <|> toRanged I     <$> pKey "I"
+      <|> const V     <$> pKey "V"
+      <|> const empty <$> pKey "E"
+      <|> const I     <$> pKey "I"
 
 -----------------------------------------------------------
 --- Helper-function for parentheses analyses

@@ -82,7 +82,7 @@ expr8  =  pChainr ((^) <$ pKey "^") term
 term   =  symb <*> pList atom
       <|> atom
 atom   =  fromInteger <$> pInteger -- To do: add parser for floating-point numbers
-      <|> (Var . fst) <$> pVarid
+      <|> Var <$> pVarid
       <|> pParens pExpr
 
 symb :: TokenParser ([Expr] -> Expr)

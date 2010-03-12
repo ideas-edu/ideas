@@ -23,6 +23,7 @@ module Domain.Math.Polynomial.Views
 import Prelude hiding ((^))
 import Control.Monad
 import Data.List
+import Common.Apply
 import Common.View
 import Common.Traversable
 import Common.Utils (distinct)
@@ -31,6 +32,8 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
+import Domain.Math.Equation.CoverUpRules
+import Domain.Math.Polynomial.CleanUp
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.Expr.Symbols
@@ -244,9 +247,16 @@ higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap g)
  where
    f = let make (a :==: b) = orList (normHDE (a-b))
-       in Just . normalize . join . fmap make
+       in Just . normalize . join . fmap make . cuRules
 
    g = (:==: 0)
+   
+   cuRules :: OrList (Equation Expr) -> OrList (Equation Expr)
+   cuRules xs = 
+      let new = fmap (fmap cleanUpExpr2) xs in
+      case msum (map (`apply` new) coverUpRulesOr) of
+         Just ys -> cuRules ys
+         Nothing -> new
    
 normHDE :: Expr -> [Expr]
 normHDE e =

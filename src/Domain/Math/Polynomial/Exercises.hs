@@ -108,7 +108,7 @@ quadraticWithApproximation = quadraticExercise
          , (ByName "square root simplification", Hide)
          ]
 
-go = checksForList quadraticWithApproximation
+-- fixMe = checksForList higherDegreeExercise
 
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise

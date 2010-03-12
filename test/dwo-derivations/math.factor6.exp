@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="nice factors">
+      <expr>
+        (x-3)*(x-5)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

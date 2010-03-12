@@ -33,7 +33,7 @@ import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
-
+import Control.Monad
 ------------------------------------------------------------
 -- Exercises
 
@@ -115,10 +115,26 @@ findFactorsExercise = makeExercise
    , parser       = parseWith pExpr
    , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
- --  , isReady      = solvedRelations
+   , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = mapRules liftToContext findFactorsStrategy
    , examples     = concat findFactors
    }
+
+linearFactorsView :: View Expr (Bool, [(String, Expr, Expr)])
+linearFactorsView = productView >>> second (listView myLinearView)
+ where
+   myLinearView :: View Expr (String, Expr, Expr)
+   myLinearView = makeView f (build linearView)
+   
+   f expr = do 
+      triple@(_, e1, e2) <- match linearView expr 
+      a <- match integerView e1
+      b <- match integerView e2
+      guard (a > 0 && gcd a b == 1) -- gcd 0 0 is undefined
+      return triple
+    `mplus` do
+      r <- match rationalView expr
+      return ("x", 0, expr)
 
 --------------------------------------------
 -- Equality

@@ -82,7 +82,7 @@ commonFactorVarNew = makeSimpleRule "common factor var" $ \expr -> do
    (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) expr
    guard (c == 0 && b /= 0)
    -- also search for constant factor
-   let d = gcdFrac a b
+   let d = (if a<0 && b<0 then negate else id) (gcdFrac a b)
    return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)))
 
 

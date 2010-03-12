@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="common factor var">
+      <expr>
+        6*x*(6*x+5)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

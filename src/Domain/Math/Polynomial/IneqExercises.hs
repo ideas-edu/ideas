@@ -78,10 +78,13 @@ ineqHigherDegreeExercise = makeExercise
    , parser        = parseWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
+   , eqWithContext = Just highEqContext
    , similarity    = simLogic (normRelation cleanUpExpr2)
    , strategy      = ineqHigherDegree
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
+   
+go = checksForList ineqHigherDegreeExercise
 
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
 showLogicRelation logic = 

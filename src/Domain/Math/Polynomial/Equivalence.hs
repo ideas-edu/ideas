@@ -11,18 +11,20 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Equivalence 
-   ( linEq, quadrEqContext, simLogic
+   ( linEq, quadrEqContext, highEqContext, simLogic
    ) where
 
 import Common.Context
 import Common.Traversable
 import Common.View
 import Data.Maybe
+import Domain.Math.Expr
 import Data.List (sort, nub)
 import Domain.Math.Polynomial.Views
 import Prelude hiding ((^), sqrt)
 import Domain.Logic.Formula hiding (Var, disjunctions)
 import qualified Domain.Logic.Formula as Logic
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Relation
 import Domain.Math.Data.Interval
@@ -31,7 +33,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.SquareRoot
 import Control.Monad
 import Domain.Math.Clipboard
-import Common.Rewriting hiding (match)
+import Common.Rewriting hiding (match, constructor)
 import Common.Uniplate
 
 ------------------------------------------------------------------
@@ -147,17 +149,22 @@ qView :: View (SquareRoot Rational) Q
 qView = makeView (return . Q) (\(Q a) -> a)
 
 quadrEqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
-quadrEqContext a b = isJust $ do
+quadrEqContext = eqContextWith (polyEq quadrRel)
+
+highEqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
+highEqContext = eqContextWith (polyEq highRel)
+
+eqContextWith eq a b = isJust $ do
    let clipA = ineqOnClipboard a
    let clipB = ineqOnClipboard b
    termA <- fromContext a
    termB <- fromContext b
    -- test clipboard 
    when (isJust clipA || isJust clipB) $
-      guard $ quadrEq (fromMaybe termA clipA) (fromMaybe termB clipB)
+      guard $ eq (fromMaybe termA clipA) (fromMaybe termB clipB)
    -- test terms
    let f x = if isJust x then toEq else id
-   guard $ quadrEq (f clipB termA) (f clipA termB)
+   guard $ eq (f clipB termA) (f clipA termB)
 
 toEq :: Logic (Relation Expr) -> Logic (Relation Expr)
 toEq (Logic.Var rel) = Logic.Var (leftHandSide rel .==. rightHandSide rel)
@@ -170,16 +177,68 @@ ineqOnClipboard = evalCM $ const $ do
    expr <- lookupClipboard "ineq"
    fromExpr expr
 
-
-quadrEq :: Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
-quadrEq p q = fromMaybe False $ do
-   xs <- switch (fmap quadrRel p)
-   ys <- switch (fmap quadrRel q)
+polyEq :: (Relation Expr -> Maybe (String, Intervals Q)) -> Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
+polyEq f p q = fromMaybe False $ do
+   xs <- switch (fmap f p)
+   ys <- switch (fmap f q)
    let vs = map fst (crush xs ++ crush ys)
    guard (null vs || all (==head vs) vs)
    let ix = logicIntervals (fmap snd xs)
        iy = logicIntervals (fmap snd ys)
-   if ix == iy then return True else return False -- error $ show (p, q, ix, iy)
+   if ix == iy then return True else return False
+
+cuPlus :: Relation Expr -> Maybe (Relation Expr)
+cuPlus rel = do
+   (a, b) <- match plusView (leftHandSide rel)
+   guard (noVars b && noVars (rightHandSide rel))
+   return $ constructor rel a (rightHandSide rel - b)
+ `mplus` do
+   (a, b) <- match plusView (leftHandSide rel)
+   guard (noVars a && noVars (rightHandSide rel))
+   return $ constructor rel b (rightHandSide rel - a)
+ `mplus` do
+   a <- isNegate (leftHandSide rel)
+   return $ constructor (flipSides rel) a (-rightHandSide rel)
+
+cuTimes :: Relation Expr -> Maybe (Relation Expr)
+cuTimes rel = do
+   (a, b) <- match timesView (leftHandSide rel)
+   r1 <- match rationalView a
+   r2 <- match rationalView (rightHandSide rel)
+   guard (r1 /= 0)
+   let make = if r1>0 then constructor rel else constructor (flipSides rel)
+       new   = make b (build rationalView (r2/r1))
+   return new
+
+cuPower :: Relation Expr -> Maybe (Logic (Relation Expr))
+cuPower rel = do
+   (a, b) <- isBinary powerSymbol (leftHandSide rel)
+   n <- match integerView b
+   guard (n > 0 && noVars (rightHandSide rel))
+   let expr = cleanUpExpr2 (root (rightHandSide rel) (fromIntegral n))
+       new = constructor rel a expr
+       opp = constructor (flipSides rel) a (-expr)
+       rt  = relationType rel
+   return $ if odd n 
+            then Logic.Var new 
+            else if rt `elem` [LessThan, LessThanOrEqualTo]
+                 then Logic.Var new :&&: Logic.Var opp
+                 else Logic.Var new :||: Logic.Var opp
+
+highRel2 :: Logic (Relation Expr) -> Maybe (String, Intervals Q)
+highRel2 p = do
+   xs <- switch (fmap highRel p)
+   let vs = map fst (crush xs)
+   guard (null vs || all (==head vs) vs)
+   return (head vs, logicIntervals (fmap snd xs))
+
+highRel :: Relation Expr -> Maybe (String, Intervals Q)
+highRel rel = msum 
+   [ cuTimes rel >>= highRel
+   , cuPower rel >>= highRel2
+   , cuPlus rel >>= highRel
+   , quadrRel rel 
+   ]
 
 quadrRel :: Relation Expr -> Maybe (String, Intervals Q)
 quadrRel rel = 

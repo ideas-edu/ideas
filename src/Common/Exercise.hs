@@ -307,7 +307,7 @@ checkParserPrettyEx ex =
 
 checksForList :: Exercise a -> IO ()
 checksForList ex
-   | status ex /= Experimental || null xs = return ()
+   | null xs = return ()
    | otherwise = do
          let err s = putStrLn $ "Error: " ++ s
          putStrLn ("** " ++ show (exerciseCode ex))

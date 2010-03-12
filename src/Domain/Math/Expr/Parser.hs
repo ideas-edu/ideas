@@ -53,7 +53,7 @@ dictionaryNames = mapMaybe dictionary (concatMap (take 1) dictionaries)
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
    { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
-   , keywordOperators  = ["==", "<=", ">=", "<", ">"]
+   , keywordOperators  = ["==", "<=", ">=", "<", ">", "~="]
    , specialCharacters = "+-*/^()[]{}<>,."
    }
 
@@ -123,7 +123,7 @@ pRelationType = pChoice (map make table)
    make (s, f) = f <$ pKey s
    table = 
       [ ("==", (.==.)), ("<=", (.<=.)), (">=", (.>=.))
-      , ("<", (.<.)), (">", (.>.))
+      , ("<", (.<.)), (">", (.>.)), ("~=", (.~=.))
       ]
    
 pOrList :: TokenParser a -> TokenParser (OrList a)

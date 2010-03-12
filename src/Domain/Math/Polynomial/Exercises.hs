@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Exercises where
 
-import Control.Monad (mplus)
+import Domain.Math.Approximation
 import Common.Context
 import Common.Exercise
 import Common.Rewriting hiding (match, matchM)
@@ -101,11 +101,14 @@ quadraticWithApproximation = quadraticExercise
    { description  = "solve a quadratic equation with approximation"
    , exerciseCode = makeCode "math" "quadreq-with-approx"
    , strategy     = configure cfg quadraticStrategy
+   , equivalence  = equivalentApprox
    }
  where
    cfg = [ (ByName "approximate result", Expose)
          , (ByName "square root simplification", Hide)
          ]
+
+go = checksForList quadraticWithApproximation
 
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise
@@ -139,6 +142,28 @@ linearFactorsView = productView >>> second (listView myLinearView)
 --------------------------------------------
 -- Equality
 
+equivalentApprox :: OrList (Relation Expr) -> OrList (Relation Expr) -> Bool
+equivalentApprox a b
+   | hasApprox a || hasApprox b = 
+        let norm = liftM ( normOrList cleanUpExpr 
+                         . fmap toApprox 
+                         . simplify quadraticEquationsView
+                         ) . switch . fmap toEq
+        in fromMaybe False $ liftM2 (==) (norm a) (norm b)
+   | otherwise =
+        equivalentRelation (viewEquivalent quadraticEquationsView) a b 
+ where
+   hasApprox = maybe False (any isApproximately) . disjunctions
+   isApproximately = (==Approximately) . relationType
+   toEq rel | relationType rel `elem` [EqualTo, Approximately] = 
+      Just (leftHandSide rel :==: rightHandSide rel)
+            | otherwise = Nothing
+   toApprox (a :==: b) =
+      let f x = case match doubleView x of
+                   Just d  -> Number (precision 4 d)
+                   Nothing -> x
+      in f a .~=. f b
+      
 equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
 equivalentRelation f ra rb = fromMaybe False $ do
    a <- switch (fmap (match equationView) ra)

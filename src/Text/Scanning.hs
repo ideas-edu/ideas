@@ -50,7 +50,6 @@ pReal  = (\(Real f) -> f) UU.<$> Real (fromIntegral (minBound::Int)) UU.<..> Rea
 pString = (\(String s) -> s) UU.<$> String "" UU.<..> String [maxBound]
 pBracks p = UU.pSym (Spec '[') UU.*> p UU.<* UU.pSym (Spec ']')
 pCurly p = UU.pSym (Spec '{') UU.*> p UU.<* UU.pSym (Spec '}')
--- pCommas = error "pCommas"
 
 pOParen, pCParen :: (UU.IsParser p Token) => p Token
 pCParen = UU.pSym (Spec ')')

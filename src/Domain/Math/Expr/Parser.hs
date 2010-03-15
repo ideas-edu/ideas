@@ -54,8 +54,7 @@ scannerExpr :: Scanner
 scannerExpr = defaultScanner 
    { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
    , keywordOperators  = ["==", "<=", ">=", "<", ">", "~="]
-   , specialCharacters = "()[]{}"
-   , operatorCharacters = "+-*/^.,=<>~"
+   , operatorCharacters = "+-*/^.=<>~"
    }
 
 parseWith :: TokenParser a -> String -> Either SyntaxError a

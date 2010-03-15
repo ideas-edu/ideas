@@ -37,15 +37,16 @@ data Token = ConId String | VarId String | Key String
 
 data Pos = Pos { line :: Int, column :: Int }
 
-pVarid, pConid :: UU.IsParser p Token => p String
-pInteger, pFloat, pString :: UU.IsParser p Token => p String
+pVarid, pConid, pString :: UU.IsParser p Token => p String
+pInteger :: UU.IsParser p Token => p Integer
+pFloat   :: UU.IsParser p Token => p Float
 
 pKey t = t UU.<$ UU.pSym (Key t)
 pSpec t = t UU.<$ UU.pSym (Spec t)
 pVarid = (\(VarId s) -> s) UU.<$> VarId "" UU.<..> VarId [maxBound]
 pConid = (\(ConId s) -> s) UU.<$> ConId "" UU.<..> ConId [maxBound]
-pInteger = (\(Int i) -> show i) UU.<$> Int minBound UU.<..> Int maxBound
-pFloat = (\(Float f) -> show f) UU.<$> Float (fromIntegral (minBound::Int)) UU.<..> Float (fromIntegral (maxBound::Int))
+pInteger = (\(Int i) -> fromIntegral i) UU.<$> Int minBound UU.<..> Int maxBound
+pFloat = (\(Float f) -> f) UU.<$> Float (fromIntegral (minBound::Int)) UU.<..> Float (fromIntegral (maxBound::Int))
 pString = (\(String s) -> s) UU.<$> String "" UU.<..> String [maxBound]
 pBracks p = UU.pSym (Spec '[') UU.*> p UU.<* UU.pSym (Spec ']')
 pCurly p = UU.pSym (Spec '{') UU.*> p UU.<* UU.pSym (Spec '}')
@@ -80,12 +81,16 @@ scanWith scanner = rec
                     in if (x:xs) `elem` keywords scanner
                        then Key (x:xs) : rec ys
                        else VarId (x:xs) : rec ys
-      | isDigit x = let (xs, ys) = break (not . isDigit) rest
+      | isDigit x || (unaryMinus scanner && x == '-' && not (null rest) && isDigit (head rest))
+                  = let (xs, ys) = break (not . isDigit) rest
                     in case ys of
                           ('.':a:as) | isDigit a -> 
                              let (bs, cs) = break (not . isDigit) as
                              in Float (read (x:xs++('.':a:bs))) : rec cs 
-                          _ -> Int (fromJust (readInt (x:xs))) : rec ys
+                          _ -> let n = if x=='-'
+                                       then negate (fromJust (readInt xs))
+                                       else fromJust (readInt (x:xs)) 
+                               in Int n : rec ys
       | x == '"' = case scanString rest of
                       Just (s, xs) -> String s : rec xs
                       Nothing -> Spec x : rec rest
@@ -127,6 +132,7 @@ data Scanner = Scanner
    , keywordOperators   :: [String]
    , specialCharacters  :: String
    , operatorCharacters :: String
+   , unaryMinus         :: Bool
    } deriving Show
 
 -- | A default scanner configuration (using Haskell's special characters)
@@ -136,7 +142,8 @@ defaultScanner = Scanner
    , keywords           = []
    , keywordOperators   = []
    , specialCharacters  = "(),;[]`{}"              -- Haskell's special characters 
-   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters      
+   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters
+   , unaryMinus         = False      
    }
 
 -- | Add characters to the list of special characters (and remove these from the list of operator characters)

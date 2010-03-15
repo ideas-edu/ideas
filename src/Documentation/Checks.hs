@@ -35,6 +35,7 @@ import qualified Domain.Math.SquareRoot.Tests as MathSqrt
 import qualified Domain.Math.Data.Interval as MathInterval
 
 import qualified Text.UTF8 as UTF8
+import qualified Text.JSON as JSON
 import Data.List
 
 main :: IO ()
@@ -47,6 +48,7 @@ main = do
    MathInterval.testMe
    LA.checks
    UTF8.testEncoding
+   JSON.testMe
 
    putStrLn "* 2. Exercise checks"
    checkExercise Logic.dnfExercise

@@ -35,7 +35,6 @@ module Text.Parsing
    ) where
 
 import qualified UU.Parsing as UU
-import Common.Utils
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -159,10 +158,10 @@ pCurly :: TokenParser a -> TokenParser a
 pCurly   = UU.pCurly
 
 pInteger :: TokenParser Integer
-pInteger = (maybe 0 fromIntegral . readInt) <$> UU.pInteger
+pInteger = UU.pInteger
 
 pFloat :: TokenParser Float
-pFloat = read <$> UU.pFloat
+pFloat = UU.pFloat
 
 pString :: TokenParser String
 pString = UU.pString

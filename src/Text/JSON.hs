@@ -17,7 +17,7 @@ module Text.JSON
    , InJSON(..)                           -- type class"
    , lookupM
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
-   , jsonRPC, JSON_RPC_Handler
+   , jsonRPC, JSON_RPC_Handler, testMe
    ) where
 
 import Text.Parsing
@@ -28,19 +28,8 @@ import Data.List (intersperse)
 import Data.Maybe
 import Control.Monad
 import Service.Revision (version, revision)
+import Test.QuickCheck
 
--- temporary test
-{-
-main :: IO ()
-main = do
-   input <- readFile "ex.json"
-   print (scan input)
-   putStrLn input
-   let Just json = parseJSON input
-   print json
-   print (parseJSON $ show json)
--}
-   
 data JSON 
    = Number  Number        -- integer, real, or floating point
    | String  String        -- double-quoted Unicode with backslash escapement
@@ -48,10 +37,11 @@ data JSON
    | Array   [JSON]        -- ordered sequence (comma-separated, square brackets)
    | Object  [(Key, JSON)] -- collection of key/value pairs (comma-separated, curly brackets
    | Null
+ deriving Eq
 
 type Key = String
           
-data Number = I Integer | F Float
+data Number = I Integer | F Float deriving Eq
 
 instance Show JSON where
    show = showPretty
@@ -149,10 +139,15 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
     
 parseJSON :: String -> Maybe JSON
 parseJSON input = 
-   case parse json (scanWith (makeCharsSpecial ":" defaultScanner) input) of 
+   case parse json (scanWith jsonScanner input) of 
       (result, []) -> Just result
       _            -> Nothing
  where
+   jsonScanner = makeCharsSpecial ":" defaultScanner
+      { keywords   = ["true", "false", "null"]
+      , unaryMinus = True
+      }
+ 
    json :: TokenParser JSON
    json =  (Number . I) <$> pInteger
        <|> (Number . F) <$> pFloat
@@ -250,3 +245,51 @@ jsonRPC input handler =
          return $ show $ okResponse json (requestId req)
        `catch` \e ->
            return $ show $ errorResponse (String (show e)) (requestId req)
+
+--------------------------------------------------------
+-- Testing parser/pretty-printer
+
+instance Arbitrary JSON where
+   arbitrary = sized arbJSON
+
+   coarbitrary json = 
+      case json of
+         Number a  -> variant 0 . coarbitrary a
+         String s  -> variant 1 . coarbitrary s
+         Boolean b -> variant 2 . coarbitrary b
+         Array xs  -> variant 3 . coarbitrary xs
+         Object xs -> variant 4 . coarbitrary xs
+         Null      -> variant 5
+
+instance Arbitrary Number where
+   arbitrary = oneof [liftM I arbitrary, liftM (F . fromInteger) arbitrary]
+
+   coarbitrary (I n) = variant 0 . coarbitrary n
+   coarbitrary (F f) = variant 1 . coarbitrary f
+
+arbJSON :: Int -> Gen JSON
+arbJSON n 
+   | n == 0 = oneof 
+        [ liftM Number arbitrary, liftM String arbitrary
+        , liftM Boolean arbitrary, return Null
+        ]
+   | otherwise = oneof
+        [ arbJSON 0
+        , do i  <- choose (0, 6)
+             xs <- replicateM i rec
+             return (Array xs)
+        , do i  <- choose (0, 6)
+             xs <- replicateM i arbitrary
+             ys <- replicateM i rec
+             return (Object (zip xs ys))
+        ]
+ where
+   rec = arbJSON (n `div` 2)
+   
+testMe :: IO ()
+testMe = do 
+   putStrLn "** JSON encoding"
+   quickCheck prop
+ where
+   prop :: JSON -> Bool
+   prop a = parseJSON (show a) == Just a

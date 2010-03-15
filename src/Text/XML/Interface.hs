@@ -76,7 +76,7 @@ normalize doc = toElement (D.root doc)
          [("lt",'<'), ("gt",'>'), ("amp",'&'), ("apos",'\''), ("quot",'"')]
    
    merge :: Content -> Content
-   merge (Left s:Left t:rest) = Left (s++t) : merge rest
+   merge (Left s:Left t:rest) = merge (Left (s++t) : rest)
    merge (x:xs) = x:merge xs
    merge []     = []
    

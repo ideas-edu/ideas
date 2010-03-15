@@ -17,7 +17,7 @@ import Text.Parsing
 letters = ['a' .. 'z'] ++ ['A' .. 'Z']
 
 logicScanner :: Scanner
-logicScanner = (makeCharsSpecial ("+*?|" ++ letters) defaultScanner)
+logicScanner = (specialSymbols ("+*?|" ++ letters) defaultScanner)
    { keywords         = [ [c] | c <- letters ]
    , keywordOperators = ["+", "*", "?", "|"]
    }

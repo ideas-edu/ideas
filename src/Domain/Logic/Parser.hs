@@ -19,13 +19,13 @@ import Control.Arrow
 import Domain.Logic.Formula
    
 logicScanner :: Scanner
-logicScanner = (makeCharsSpecial "~" defaultScanner)
+logicScanner = (specialSymbols "~" defaultScanner)
    { keywords         = ["T", "F"]
    , keywordOperators = "~" : concatMap (map fst . snd) operatorTable
    }
 
 logicUnicodeScanner :: Scanner
-logicUnicodeScanner = (makeCharsSpecial (concat unicodeSyms) defaultScanner)
+logicUnicodeScanner = (specialSymbols (concat unicodeSyms) defaultScanner)
    { keywords         = ["T", "F"]
    , keywordOperators = unicodeSyms
    }

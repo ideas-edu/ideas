@@ -143,7 +143,7 @@ parseJSON input =
       (result, []) -> Just result
       _            -> Nothing
  where
-   jsonScanner = makeCharsSpecial ":" defaultScanner
+   jsonScanner = specialSymbols ":" defaultScanner
       { keywords   = ["true", "false", "null"]
       , unaryMinus = True
       }

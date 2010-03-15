@@ -23,7 +23,7 @@ import Data.Maybe
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.TypedAbstractService
-import Text.Parsing (SyntaxError, errorToPositions)
+import Text.Parsing (SyntaxError, errorPositions)
 
 ------------------------------------------------------------
 -- Exercise Text data type
@@ -64,7 +64,7 @@ submittext exText state txt _event =
    case parser (exercise state) txt of
       Left err -> 
          let msg = "Syntax error" ++ pos ++ ": " ++ show err
-             pos = case map show (errorToPositions err) of
+             pos = case map show (errorPositions err) of
                       [] -> ""
                       xs -> " at " ++ commaList xs
          in (False, msg, state)

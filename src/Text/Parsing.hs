@@ -15,30 +15,25 @@
 -----------------------------------------------------------------------------
 module Text.Parsing 
    ( -- * Scaning
-     Scanner(..), defaultScanner, makeCharsSpecial, newlinesAsSpecial
-   , minusAsSpecial, scan, scanWith, Token
+     module Text.Scanning
      -- * Parsing
    , Parser, CharParser, TokenParser, parse, Message
      -- * UU parser combinators
    , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1
    , pChainl, pChainr, pChoice, pFail
      -- * Subexpressions
-   , Pos(..)
+   , fromMessage
    , pKey, pSpec, pVarid, pConid, pParens
    , pInteger, pReal, pString, pBracks, pCurly, pCommas, pLines
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
-    -- * Analyzing parentheses
-   , SyntaxError(..), fromMessage, errorToPositions
-   , checkParentheses, tokenPosition
    ) where
 
-import qualified UU.Parsing as UU
 import Data.Char
 import Data.List
 import Data.Maybe
-import Text.Scanning hiding (pCurly, pBracks, pString, pInt, pReal, pParens)
-import qualified Text.Scanning as UU
+import Text.Scanning
+import qualified UU.Parsing as UU
 
 ----------------------------------------------------------
 -- Parsing
@@ -129,13 +124,7 @@ pFail = UU.pFail
 ----------------------------------------------------------
 -- Subexpressions
 
-pParens :: TokenParser a -> TokenParser a
-pParens = UU.pParens
-
--- TODO: fix inconsistency with pParens
-pBracks :: TokenParser a -> TokenParser a
-pBracks  = UU.pBracks
-
+instance UU.Symbol Token
 -- | Parse lines, separated by the newline character. The boolean argument indicates whether empy lines should 
 -- be accepted or not. Make sure to configure the scanner to treat newlines as special characters!
 pLines :: Bool -> TokenParser a -> TokenParser [a]
@@ -145,21 +134,42 @@ pLines allowEmptyLine p = catMaybes <$> pn
         | otherwise      = Just <$> p
    pn = (:) <$> pOne <*> pList (pSpec '\n' *> pOne)
 
--- TODO: fix inconsistency with pParens
-pCurly :: TokenParser a -> TokenParser a
-pCurly   = UU.pCurly
-
 pInteger :: TokenParser Integer
-pInteger = fromIntegral <$> UU.pInt
-
-pReal :: TokenParser Double
-pReal = UU.pReal
-
-pString :: TokenParser String
-pString = UU.pString
+pInteger = fromIntegral <$> pInt
 
 pCommas :: TokenParser a -> TokenParser [a]
 pCommas p = optional ((:) <$> p <*> pList ((\_ a -> a) <$> pSpec ',' <*> p)) []
+
+pVarid, pConid, pString :: TokenParser String
+pInt :: TokenParser Int
+pReal   :: TokenParser Double
+
+pKey  :: String -> TokenParser String 
+pSpec :: Char -> TokenParser Char
+
+pKey t  = t UU.<$ TokenKeyword t minPos UU.<..> TokenKeyword t maxPos
+pSpec t = t UU.<$ TokenSpecial t minPos UU.<..> TokenSpecial t maxPos
+pVarid = (fromMaybe "" . isTokenVarId) UU.<$> TokenVarId minString minPos UU.<..> TokenVarId maxString maxPos
+pConid = (fromMaybe "" . isTokenConId) UU.<$> TokenConId minString minPos UU.<..> TokenConId maxString maxPos
+pInt = (fromMaybe 0 . isTokenInt) UU.<$> TokenInt minBound minPos UU.<..> TokenInt maxBound maxPos
+pReal  = (fromMaybe 0 . isTokenReal) UU.<$> TokenReal minDouble minPos UU.<..> TokenReal maxDouble maxPos
+pString = (fromMaybe "" . isTokenString) UU.<$> TokenString minString minPos UU.<..> TokenString maxString maxPos
+
+minPos, maxPos :: Pos
+minPos = Pos minBound minBound
+maxPos = Pos maxBound maxBound
+
+minString, maxString :: String
+minString = []
+maxString = replicate 100 maxBound
+
+minDouble, maxDouble :: Double
+minDouble = -(10^500) -- -Infinity
+maxDouble = 10^500    -- Infinity
+
+pParens p = pSpec '(' UU.*> p UU.<* pSpec ')'
+pBracks p = pSpec '[' UU.*> p UU.<* pSpec ']'
+pCurly  p = pSpec '{' UU.*> p UU.<* pSpec '}'
 
 ----------------------------------------------------------
 -- Operator table (parser)

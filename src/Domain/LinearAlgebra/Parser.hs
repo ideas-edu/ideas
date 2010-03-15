@@ -33,7 +33,7 @@ testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 
 parseSystem :: String -> (LinearSystem Expr, [String])
 parseSystem = f . parse pSystem . scanWith s
  where
-   s0 = newlinesAsSpecial scannerExpr
+   s0 = specialSymbols "\n" scannerExpr
    s  = s0 {keywordOperators = "==" : keywordOperators s0 }
    f (Nothing, xs) = ([], "System is not linear" : map show xs)
    f (Just m, xs)  = (m, map show xs)
@@ -54,7 +54,7 @@ pSystem = convertSystem <$> pEquations pExpr
 parseMatrix :: String -> (Matrix Expr, [String])
 parseMatrix = f . parse p . scanWith s
  where
-   s = newlinesAsSpecial scannerExpr
+   s = specialSymbols "\n" scannerExpr
    p = pMatrix pFractional
    f (Nothing, xs) = (makeMatrix [], "Matrix is not rectangular" : map show xs)
    f (Just m, xs)  = (m, map show xs)
@@ -67,7 +67,7 @@ pMatrix p = make <$> pLines True (pList1 p)
 parseVectorSpace :: String -> (VectorSpace Expr, [Message Token])
 parseVectorSpace = parse p . scanWith s
  where
-   s = newlinesAsSpecial scannerExpr
+   s = specialSymbols "\n" scannerExpr
    p = makeVectorSpace <$> pVectors pExpr
 
 pVectors :: TokenParser a -> TokenParser [Vector a]

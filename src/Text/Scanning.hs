@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -9,27 +8,30 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A simplified interface to the UU.Parsing and UU.Scanner libraries. This module
--- provides some additional functionality to determine valid sub-expressions.
+-- A simple scanner with some configuration facilities
 --
 -----------------------------------------------------------------------------
-module Text.Scanning where
---  ( -- * Scaning
---     Scanner(..), defaultScanner, makeCharsSpecial, newlinesAsSpecial
---   , minusAsSpecial, scan, scanWith, UU.Token, SyntaxError(..)
---   , errorToPositions, checkParentheses
---   , toPosition, tokenText
---   , UU.line, UU.column, UU.Pos
---   , UU.pCommas, UU.pString, UU.pFraction, UU.pInteger
---   , UU.pCurly, UU.pCParen, UU.pBracks, UU.pOParen
---   , UU.pConid, UU.pVarid, UU.pSpec, UU.pKey
---   ) where
+module Text.Scanning 
+   ( -- Data types
+     Pos(..), Token(..)
+     -- Token selectors
+   , isTokenConId, isTokenVarId, isTokenKeyword, isTokenSpecial
+   , isTokenString, isTokenInt, isTokenReal, tokenPosition
+     -- Scanner configuration
+   , Scanner(..), defaultScanner, specialSymbols  
+     -- Scanning
+   , scan, scanWith
+     -- Lexical analysis
+   , SyntaxError(..), checkParentheses, errorPositions
+   ) where
 
 import Common.Utils (readInt)
 import Data.List
 import Data.Maybe
 import Data.Char
-import qualified UU.Parsing as UU
+
+----------------------------------------------------------
+-- * Data types
 
 data Pos = Pos { line :: !Int, column :: !Int }
    deriving (Eq, Ord)
@@ -59,6 +61,37 @@ instance Show Token where
          TokenInt     i _ -> "integer " ++ show i
          TokenReal    d _ -> "floating-point number " ++ show d
 
+----------------------------------------------------------
+-- * Token selectors
+
+isTokenConId :: Token -> Maybe String
+isTokenConId   (TokenConId s _)   = Just s
+isTokenConId   _                  = Nothing
+
+isTokenVarId :: Token -> Maybe String
+isTokenVarId   (TokenVarId s _)   = Just s
+isTokenVarId   _                  = Nothing
+
+isTokenKeyword :: Token -> Maybe String
+isTokenKeyword (TokenKeyword s _) = Just s
+isTokenKeyword   _                = Nothing
+
+isTokenSpecial :: Token -> Maybe Char
+isTokenSpecial (TokenSpecial c _) = Just c
+isTokenSpecial   _                = Nothing
+
+isTokenString :: Token -> Maybe String
+isTokenString  (TokenString s _)  = Just s
+isTokenString   _                 = Nothing
+
+isTokenInt :: Token -> Maybe Int
+isTokenInt     (TokenInt i _)     = Just i
+isTokenInt   _                    = Nothing
+
+isTokenReal :: Token -> Maybe Double
+isTokenReal    (TokenReal d _)    = Just d
+isTokenReal   _                   = Nothing
+      
 tokenPosition :: Token -> Pos
 tokenPosition token =
    case token of
@@ -70,38 +103,41 @@ tokenPosition token =
       TokenInt     _ p -> p
       TokenReal    _ p -> p
 
-minPos, maxPos :: Pos
-minPos = Pos minBound minBound
-maxPos = Pos maxBound maxBound
+----------------------------------------------------------
+-- * Scanner configuration
 
-minString, maxString :: String
-minString = []
-maxString = replicate 100 maxBound
+-- | Data type to configure a scanner
+data Scanner = Scanner
+   { fileName           :: Maybe String
+   , keywords           :: [String]
+   , keywordOperators   :: [String]
+   , specialCharacters  :: String
+   , operatorCharacters :: String
+   , unaryMinus         :: Bool
+   } deriving Show
 
-minDouble, maxDouble :: Double
-minDouble = -(10^500) -- -Infinity
-maxDouble = 10^500    -- Infinity
+-- | A default scanner configuration (using Haskell's special characters)
+defaultScanner :: Scanner
+defaultScanner = Scanner
+   { fileName           = Nothing
+   , keywords           = []
+   , keywordOperators   = []
+   , specialCharacters  = "(),;[]`{}"              -- Haskell's special characters 
+   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters
+   , unaryMinus         = False      
+   }
 
-pVarid, pConid, pString :: UU.IsParser p Token => p String
-pInt :: UU.IsParser p Token => p Int
-pReal   :: UU.IsParser p Token => p Double
+-- | Add characters to the list of special characters (and remove these from the list of operator characters)
+specialSymbols :: String -> Scanner -> Scanner
+specialSymbols cs scanner = scanner
+   { specialCharacters = specialCharacters scanner `union` cs }
 
-pKey  :: UU.IsParser p Token => String -> p String 
-pSpec :: UU.IsParser p Token => Char -> p Char
+----------------------------------------------------------
+-- * Scanning
 
-pKey t  = t UU.<$ TokenKeyword t minPos UU.<..> TokenKeyword t maxPos
-pSpec t = t UU.<$ TokenSpecial t minPos UU.<..> TokenSpecial t maxPos
-pVarid = (\(TokenVarId s _) -> s) UU.<$> TokenVarId minString minPos UU.<..> TokenVarId maxString maxPos
-pConid = (\(TokenConId s _) -> s) UU.<$> TokenConId minString minPos UU.<..> TokenConId maxString maxPos
-pInt = (\(TokenInt i _) -> i) UU.<$> TokenInt minBound minPos UU.<..> TokenInt maxBound maxPos
-pReal  = (\(TokenReal d _) -> d) UU.<$> TokenReal minDouble minPos UU.<..> TokenReal maxDouble maxPos
-pString = (\(TokenString s _) -> s) UU.<$> TokenString minString minPos UU.<..> TokenString maxString maxPos
-
-pParens p = pSpec '(' UU.*> p UU.<* pSpec ')'
-pBracks p = pSpec '[' UU.*> p UU.<* pSpec ']'
-pCurly  p = pSpec '{' UU.*> p UU.<* pSpec '}'
-   
-instance UU.Symbol Token
+-- | Scan an input string with the default scanner configuration
+scan :: String -> [Token]
+scan = scanWith defaultScanner
 
 scanWith :: Scanner -> String -> [Token]
 scanWith scanner = rec (Pos 1 1)
@@ -156,62 +192,8 @@ scanString p ('\\':x:xs) = fmap (\(s,np,t) -> (x:s,np,t)) (scanString (advance [
 scanString p ('"':xs) = Just ("",advance ['"'] p,xs)
 scanString p (x:xs) = fmap (\(s,np, t) -> (x:s,np,t)) (scanString (advance [x] p) xs)
 
-----------------------------------------------------------
--- Scaning
-
--- | Data type to configure a scanner
-data Scanner = Scanner
-   { fileName           :: Maybe String
-   , keywords           :: [String]
-   , keywordOperators   :: [String]
-   , specialCharacters  :: String
-   , operatorCharacters :: String
-   , unaryMinus         :: Bool
-   } deriving Show
-
--- | A default scanner configuration (using Haskell's special characters)
-defaultScanner :: Scanner
-defaultScanner = Scanner
-   { fileName           = Nothing
-   , keywords           = []
-   , keywordOperators   = []
-   , specialCharacters  = "(),;[]`{}"              -- Haskell's special characters 
-   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters
-   , unaryMinus         = False      
-   }
-
--- | Add characters to the list of special characters (and remove these from the list of operator characters)
-makeCharsSpecial :: String -> Scanner -> Scanner
-makeCharsSpecial cs scanner = scanner
-   { specialCharacters  = specialCharacters scanner `union` cs
-   , operatorCharacters = operatorCharacters scanner \\ cs
-   }
-
--- Newline characters are mapped to "special" tokens
--- The current solution to deal with newlines is a hack: all characters '\n' in the input
--- are first mapped to '\001', and later the tokens are adapted
-newlinesAsSpecial :: Scanner -> Scanner
-newlinesAsSpecial = makeCharsSpecial [specialNewlinesChar, '\n']
-
-specialNewlinesChar :: Char
-specialNewlinesChar = chr 1
-
--- Minus characters are mapped to "special" tokens
--- The current solution to deal with minus is a hack: all characters '-' in the input
--- are first mapped to '\002', and later the tokens are adapted 
--- (since the scanner considers -- to be comment)
-minusAsSpecial :: Scanner -> Scanner
-minusAsSpecial = makeCharsSpecial [specialMinusChar]
-
-specialMinusChar :: Char
-specialMinusChar = chr 2
-
--- | Scan an input string with the default scanner configuration
-scan :: String -> [Token]
-scan = scanWith defaultScanner
-
 -----------------------------------------------------------
---- Syntax errors
+--- Lexical analysis
 
 data SyntaxError 
    = Unexpected Token
@@ -229,17 +211,14 @@ instance Show SyntaxError where
          ParMismatch t1 t2 -> "Opening parenthesis " ++ show t1 ++ " is closed with " ++ show t2
          ErrorMessage msg  -> msg
 
-errorToPositions :: SyntaxError -> [Pos]
-errorToPositions err = 
+errorPositions :: SyntaxError -> [Pos]
+errorPositions err = 
    case err of
       Unexpected t      -> [tokenPosition t]
       ParNotClosed t    -> [tokenPosition t]
       ParNoOpen t       -> [tokenPosition t]
       ParMismatch t1 t2 -> [tokenPosition t1, tokenPosition t2]
       ErrorMessage _    -> []
-
------------------------------------------------------------
---- Analyzing parentheses
 
 checkParentheses :: [Token] -> Maybe SyntaxError
 checkParentheses = rec []
@@ -267,5 +246,3 @@ isClosing _ = False
 match :: Token -> Token -> Bool
 match (TokenSpecial ('(') _) (TokenSpecial (')') _) = True
 match _ _ = False
-
-------------------------------------------------- 

@@ -138,7 +138,7 @@ fromOMOBJ :: OMOBJ -> Expr
 fromOMOBJ omobj =
    case omobj of
       OMI n -> fromInteger n
-      OMF a -> Number a
+      OMF a -> fromDouble a
       OMV x -> Var x
       OMS s -> symbol s
       OMA (OMS s:xs) -> function s (map fromOMOBJ xs)

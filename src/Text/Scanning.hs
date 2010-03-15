@@ -32,21 +32,21 @@ import Data.Char
 import qualified UU.Parsing as UU
 
 data Token = ConId String | VarId String | Key String 
-           | Spec Char | String String | Int Int | Float Float
+           | Spec Char | String String | Int Int | Real Double
    deriving (Show, Eq, Ord)
 
 data Pos = Pos { line :: Int, column :: Int }
 
 pVarid, pConid, pString :: UU.IsParser p Token => p String
 pInteger :: UU.IsParser p Token => p Integer
-pFloat   :: UU.IsParser p Token => p Float
+pReal   :: UU.IsParser p Token => p Double
 
 pKey t = t UU.<$ UU.pSym (Key t)
 pSpec t = t UU.<$ UU.pSym (Spec t)
 pVarid = (\(VarId s) -> s) UU.<$> VarId "" UU.<..> VarId [maxBound]
 pConid = (\(ConId s) -> s) UU.<$> ConId "" UU.<..> ConId [maxBound]
 pInteger = (\(Int i) -> fromIntegral i) UU.<$> Int minBound UU.<..> Int maxBound
-pFloat = (\(Float f) -> f) UU.<$> Float (fromIntegral (minBound::Int)) UU.<..> Float (fromIntegral (maxBound::Int))
+pReal  = (\(Real f) -> f) UU.<$> Real (fromIntegral (minBound::Int)) UU.<..> Real (fromIntegral (maxBound::Int))
 pString = (\(String s) -> s) UU.<$> String "" UU.<..> String [maxBound]
 pBracks p = UU.pSym (Spec '[') UU.*> p UU.<* UU.pSym (Spec ']')
 pCurly p = UU.pSym (Spec '{') UU.*> p UU.<* UU.pSym (Spec '}')
@@ -84,9 +84,9 @@ scanWith scanner = rec
       | isDigit x || (unaryMinus scanner && x == '-' && not (null rest) && isDigit (head rest))
                   = let (xs, ys) = break (not . isDigit) rest
                     in case ys of
-                          ('.':a:as) | isDigit a -> 
+                          ('.':a:as) | isDigit a -> -- to do: scientific notation floating-points
                              let (bs, cs) = break (not . isDigit) as
-                             in Float (read (x:xs++('.':a:bs))) : rec cs 
+                             in Real (read (x:xs++('.':a:bs))) : rec cs 
                           _ -> let n = if x=='-'
                                        then negate (fromJust (readInt xs))
                                        else fromJust (readInt (x:xs)) 

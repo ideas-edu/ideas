@@ -55,7 +55,7 @@ scannerExpr = defaultScanner
    { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
    , keywordOperators  = ["==", "<=", ">=", "<", ">", "~="]
    , specialCharacters = "()[]{}"
-   , operatorCharacters = "+-*/^.,=<>"
+   , operatorCharacters = "+-*/^.,=<>~"
    }
 
 parseWith :: TokenParser a -> String -> Either SyntaxError a
@@ -82,7 +82,8 @@ expr7  =  pChainl ((*) <$ pKey "*" <|> (/) <$ pKey "/") expr8
 expr8  =  pChainr ((^) <$ pKey "^") term
 term   =  symb <*> pList atom
       <|> atom
-atom   =  fromInteger <$> pInteger -- To do: add parser for floating-point numbers
+atom   =  fromInteger <$> pInteger
+      <|> Number <$> pReal 
       <|> Var <$> pVarid
       <|> pParens pExpr
 

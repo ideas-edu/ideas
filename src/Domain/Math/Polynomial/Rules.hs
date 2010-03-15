@@ -256,7 +256,7 @@ ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
    guard (not (simplify rhs `belongsTo` rationalView))
    x <- getVariable lhs
    d <- match doubleView rhs
-   let new = Number (precision 4 d)
+   let new = fromDouble (precision 4 d)
    return (Var x .~=. new)
 
 ------------------------------------------------------------

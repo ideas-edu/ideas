@@ -36,7 +36,7 @@ data Expr = -- Num
           | Expr :/: Expr
             -- Floating-point
           | Sqrt Expr
-          | Number Double 
+          | Number Double -- positive only
             -- Symbolic
           | Var String
           | Sym Symbol [Expr]
@@ -114,6 +114,11 @@ instance Symbolic Expr where
          Sym s as -> return (s, as)
          _ -> mzero
 
+fromDouble :: Double -> Expr
+fromDouble d
+   | d < 0     = negate (Number (abs d))
+   | otherwise = Number d
+
 -----------------------------------------------------------------------
 -- Uniplate instance
 
@@ -175,8 +180,8 @@ instance Show Expr where
 showExpr :: OperatorTable -> Expr -> String
 showExpr table = rec 0 
  where
-   rec _ (Nat n)    = show n
-   rec _ (Number d) = show d
+   rec _ (Nat n)    = if n>=0 then show n else "(ERROR)" ++ show n
+   rec _ (Number d) = if d>=0 then show d else "(ERROR)" ++ show d
    rec _ (Var s) 
       | all isAlphaNum s = s
       | otherwise        = "\"" ++ s ++ "\""

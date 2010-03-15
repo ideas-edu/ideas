@@ -25,7 +25,7 @@ module Text.Parsing
      -- * Subexpressions
    , Pos(..)
    , pKey, pSpec, pVarid, pConid, pParens
-   , pInteger, pFloat, pString, pBracks, pCurly, pCommas, pLines
+   , pInteger, pReal, pString, pBracks, pCurly, pCommas, pLines
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
     -- * Analyzing parentheses
@@ -38,7 +38,7 @@ import qualified UU.Parsing as UU
 import Data.Char
 import Data.List
 import Data.Maybe
-import Text.Scanning hiding (column, line, Pos, pCurly, pBracks, pString, pInteger, pFloat)
+import Text.Scanning hiding (column, line, Pos, pCurly, pBracks, pString, pInteger, pReal)
 import qualified Text.Scanning as UU
 
 ----------------------------------------------------------
@@ -160,8 +160,8 @@ pCurly   = UU.pCurly
 pInteger :: TokenParser Integer
 pInteger = UU.pInteger
 
-pFloat :: TokenParser Float
-pFloat = UU.pFloat
+pReal :: TokenParser Double
+pReal = UU.pReal
 
 pString :: TokenParser String
 pString = UU.pString

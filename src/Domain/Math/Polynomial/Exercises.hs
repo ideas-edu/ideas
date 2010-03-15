@@ -100,6 +100,7 @@ quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
    { description  = "solve a quadratic equation with approximation"
    , exerciseCode = makeCode "math" "quadreq-with-approx"
+   , parser       = parseWith (pOrList (pRelation pExpr))
    , strategy     = configure cfg quadraticStrategy
    , equivalence  = equivalentApprox
    }
@@ -108,7 +109,7 @@ quadraticWithApproximation = quadraticExercise
          , (ByName "square root simplification", Hide)
          ]
 
--- fixMe = checksForList higherDegreeExercise
+-- fixMe = checksForList quadraticWithApproximation
 
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise

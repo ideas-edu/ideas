@@ -41,7 +41,7 @@ data JSON
 
 type Key = String
           
-data Number = I Integer | F Float deriving Eq
+data Number = I Integer | D Double deriving Eq
 
 instance Show JSON where
    show = showPretty
@@ -79,7 +79,7 @@ showPretty json =
          
 instance Show Number where
    show (I n) = show n
-   show (F f) = show f
+   show (D d) = show d
 
 class InJSON a where
    toJSON       :: a -> JSON
@@ -100,9 +100,9 @@ instance InJSON Integer where
    fromJSON (Number (I n)) = return n
    fromJSON _              = fail "expecting a number"
 
-instance InJSON Float where 
-   toJSON = Number . F
-   fromJSON (Number (F n)) = return n
+instance InJSON Double where 
+   toJSON = Number . D
+   fromJSON (Number (D n)) = return n
    fromJSON _              = fail "expecting a number"
    
 instance InJSON Char where
@@ -150,7 +150,7 @@ parseJSON input =
  
    json :: TokenParser JSON
    json =  (Number . I) <$> pInteger
-       <|> (Number . F) <$> pFloat
+       <|> (Number . D) <$> pReal
        <|> (String . fromMaybe [] . UTF8.decodeM) <$> pString
        <|> Boolean True <$ pKey "true"
        <|> Boolean False <$ pKey "false"
@@ -262,10 +262,10 @@ instance Arbitrary JSON where
          Null      -> variant 5
 
 instance Arbitrary Number where
-   arbitrary = oneof [liftM I arbitrary, liftM (F . fromInteger) arbitrary]
+   arbitrary = oneof [liftM I arbitrary, liftM (D . fromInteger) arbitrary]
 
    coarbitrary (I n) = variant 0 . coarbitrary n
-   coarbitrary (F f) = variant 1 . coarbitrary f
+   coarbitrary (D d) = variant 1 . coarbitrary d
 
 arbJSON :: Int -> Gen JSON
 arbJSON n 

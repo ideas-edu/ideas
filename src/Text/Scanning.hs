@@ -31,99 +31,134 @@ import Data.Maybe
 import Data.Char
 import qualified UU.Parsing as UU
 
-data Token = ConId String | VarId String | Key String 
-           | Spec Char | String String | Int Int | Real Double
-   deriving (Show, Eq, Ord)
+data Pos = Pos { line :: !Int, column :: !Int }
+   deriving (Eq, Ord)
 
-data Pos = Pos { line :: Int, column :: Int }
+-- position field in last position, needed for ranged parsing
+data Token 
+   = TokenConId   String Pos
+   | TokenVarId   String Pos
+   | TokenKeyword String Pos
+   | TokenSpecial Char   Pos
+   | TokenString  String Pos
+   | TokenInt     Int    Pos
+   | TokenReal    Double Pos
+ deriving (Eq, Ord)
+
+instance Show Pos where
+   show (Pos l c) = "(" ++ show l ++ "," ++ show c ++ ")"
+
+instance Show Token where
+   show token = 
+      case token of
+         TokenConId   s _ -> "identifier " ++ s
+         TokenVarId   s _ -> "identifier " ++ s
+         TokenKeyword s _ -> "keyword " ++ s
+         TokenSpecial c _ -> "symbol " ++ [c]
+         TokenString  s _ -> "string " ++ show s
+         TokenInt     i _ -> "integer " ++ show i
+         TokenReal    d _ -> "floating-point number " ++ show d
+
+tokenPosition :: Token -> Pos
+tokenPosition token =
+   case token of
+      TokenConId   _ p -> p
+      TokenVarId   _ p -> p
+      TokenKeyword _ p -> p
+      TokenSpecial _ p -> p
+      TokenString  _ p -> p
+      TokenInt     _ p -> p
+      TokenReal    _ p -> p
+
+minPos, maxPos :: Pos
+minPos = Pos minBound minBound
+maxPos = Pos maxBound maxBound
+
+minString, maxString :: String
+minString = []
+maxString = replicate 100 maxBound
+
+minDouble, maxDouble :: Double
+minDouble = -(10^500) -- -Infinity
+maxDouble = 10^500    -- Infinity
 
 pVarid, pConid, pString :: UU.IsParser p Token => p String
-pInteger :: UU.IsParser p Token => p Integer
+pInt :: UU.IsParser p Token => p Int
 pReal   :: UU.IsParser p Token => p Double
 
-pKey t = t UU.<$ UU.pSym (Key t)
-pSpec t = t UU.<$ UU.pSym (Spec t)
-pVarid = (\(VarId s) -> s) UU.<$> VarId "" UU.<..> VarId [maxBound]
-pConid = (\(ConId s) -> s) UU.<$> ConId "" UU.<..> ConId [maxBound]
-pInteger = (\(Int i) -> fromIntegral i) UU.<$> Int minBound UU.<..> Int maxBound
-pReal  = (\(Real f) -> f) UU.<$> Real (fromIntegral (minBound::Int)) UU.<..> Real (fromIntegral (maxBound::Int))
-pString = (\(String s) -> s) UU.<$> String "" UU.<..> String [maxBound]
-pBracks p = UU.pSym (Spec '[') UU.*> p UU.<* UU.pSym (Spec ']')
-pCurly p = UU.pSym (Spec '{') UU.*> p UU.<* UU.pSym (Spec '}')
+pKey  :: UU.IsParser p Token => String -> p String 
+pSpec :: UU.IsParser p Token => Char -> p Char
 
-pOParen, pCParen :: (UU.IsParser p Token) => p Token
-pCParen = UU.pSym (Spec ')')
-pOParen = UU.pSym (Spec '(')
+pKey t  = t UU.<$ TokenKeyword t minPos UU.<..> TokenKeyword t maxPos
+pSpec t = t UU.<$ TokenSpecial t minPos UU.<..> TokenSpecial t maxPos
+pVarid = (\(TokenVarId s _) -> s) UU.<$> TokenVarId minString minPos UU.<..> TokenVarId maxString maxPos
+pConid = (\(TokenConId s _) -> s) UU.<$> TokenConId minString minPos UU.<..> TokenConId maxString maxPos
+pInt = (\(TokenInt i _) -> i) UU.<$> TokenInt minBound minPos UU.<..> TokenInt maxBound maxPos
+pReal  = (\(TokenReal d _) -> d) UU.<$> TokenReal minDouble minPos UU.<..> TokenReal maxDouble maxPos
+pString = (\(TokenString s _) -> s) UU.<$> TokenString minString minPos UU.<..> TokenString maxString maxPos
 
-tokenNoPosition :: Token -> Token
-tokenNoPosition = id
+pParens p = pSpec '(' UU.*> p UU.<* pSpec ')'
+pBracks p = pSpec '[' UU.*> p UU.<* pSpec ']'
+pCurly  p = pSpec '{' UU.*> p UU.<* pSpec '}'
    
 instance UU.Symbol Token
 
-errorToPositions :: SyntaxError -> [(Int, Int)]
-errorToPositions a = []
-tokenText a = show a 
-toPosition = const (0,0)
-checkParentheses = const Nothing
-
 scanWith :: Scanner -> String -> [Token]
-scanWith scanner = rec 
+scanWith scanner = rec (Pos 1 1)
  where
-   rec [] = []
-   rec (x:rest) 
-      | isSpace x && x `notElem` specialCharacters scanner = rec rest
+   rec _ [] = []
+   rec pos (x:rest) 
+      | isSpace x && x `notElem` specialCharacters scanner = rec (advance [x] pos) rest
       | isUpper x = let (xs, ys) = break (not . isAlphaNum) rest
+                        newp     = advance (x:xs) pos
                     in if (x:xs) `elem` keywords scanner
-                       then Key (x:xs) : rec ys
-                       else ConId (x:xs) : rec ys
+                       then TokenKeyword (x:xs) pos : rec newp ys
+                       else TokenConId (x:xs) pos : rec newp ys
       | isLower x = let (xs, ys) = break (\c -> not (isAlphaNum c) || c `elem` specialCharacters scanner) rest
+                        newp     = advance (x:xs) pos
                     in if (x:xs) `elem` keywords scanner
-                       then Key (x:xs) : rec ys
-                       else VarId (x:xs) : rec ys
+                       then TokenKeyword (x:xs) pos : rec newp ys
+                       else TokenVarId (x:xs) pos : rec newp ys
       | isDigit x || (unaryMinus scanner && x == '-' && not (null rest) && isDigit (head rest))
                   = let (xs, ys) = break (not . isDigit) rest
                     in case ys of
                           ('.':a:as) | isDigit a -> -- to do: scientific notation floating-points
                              let (bs, cs) = break (not . isDigit) as
-                             in Real (read (x:xs++('.':a:bs))) : rec cs 
+                                 newp = advance (x:xs++('.':a:bs)) pos 
+                             in TokenReal (read (x:xs++('.':a:bs))) pos : rec newp cs 
                           _ -> let n = if x=='-'
-                                       then negate (fromJust (readInt xs))
-                                       else fromJust (readInt (x:xs)) 
-                               in Int n : rec ys
-      | x == '"' = case scanString rest of
-                      Just (s, xs) -> String s : rec xs
-                      Nothing -> Spec x : rec rest
+                                       then negate (fromIntegral (fromJust (readInt xs)))
+                                       else fromIntegral (fromJust (readInt (x:xs)))
+                                   newp = advance (x:xs) pos
+                               in TokenInt n pos : rec newp ys
+      | x == '"' = case scanString pos rest of
+                      Just (s, newp, xs) -> TokenString s pos : rec newp xs
+                      Nothing -> TokenSpecial x pos : rec (advance [x] pos) rest
       | x `elem` specialCharacters scanner = 
                     if [x] `elem` keywordOperators scanner
-                    then Key [x] : rec rest
-                    else Spec x : rec rest
+                    then TokenKeyword [x] pos : rec (advance [x] pos) rest
+                    else TokenSpecial x pos : rec (advance [x] pos) rest
       | x `elem` operatorCharacters scanner = let (xs, ys) = break (\c -> c `elem` specialCharacters scanner || c `notElem` operatorCharacters scanner) rest
                            in if [x] `elem` keywordOperators scanner
-                              then Key [x] : rec rest
-                              else Key (x:xs) : rec ys
-      | otherwise = Spec x : rec rest
+                              then TokenKeyword [x] pos : rec (advance [x] pos) rest
+                              else TokenKeyword (x:xs) pos : rec (advance (x:xs) pos) ys
+      | otherwise = TokenSpecial x pos : rec (advance [x] pos) rest
 
-scanString :: String -> Maybe (String, String)
-scanString [] = Nothing
-scanString ('\\':x:xs) = fmap (\(s,t) -> (x:s,t)) (scanString xs)
-scanString ('"':xs) = Just ("",xs)
-scanString (x:xs) = fmap (\(s,t) -> (x:s,t)) (scanString xs)
+advance :: String -> Pos -> Pos
+advance [] p = p
+advance (x:xs) p 
+   | x == '\n' = advance xs p { column = column p + 1 }
+   | otherwise = advance xs p { line = line p + 1, column = 1 }
 
--- opchars = "!#$%&*+./<=>?@\\^|-~"
-
-{-
-
-import qualified UU.Scanner as UU 
-import qualified UU.Scanner.GenToken as UU
-import UU.Scanner.GenToken
-import UU.Scanner (Token, noPos)
-import Data.Char
-import Data.List
-import Data.Maybe
+scanString :: Pos -> String -> Maybe (String, Pos, String)
+scanString _ [] = Nothing
+scanString p ('\\':x:xs) = fmap (\(s,np,t) -> (x:s,np,t)) (scanString (advance ['\\',x] p) xs)
+scanString p ('"':xs) = Just ("",advance ['"'] p,xs)
+scanString p (x:xs) = fmap (\(s,np, t) -> (x:s,np,t)) (scanString (advance [x] p) xs)
 
 ----------------------------------------------------------
 -- Scaning
--}
+
 -- | Data type to configure a scanner
 data Scanner = Scanner
    { fileName           :: Maybe String
@@ -174,39 +209,10 @@ specialMinusChar = chr 2
 -- | Scan an input string with the default scanner configuration
 scan :: String -> [Token]
 scan = scanWith defaultScanner
-{-
--- | Scan an input string with the given scanner configuration
-scanWith :: Scanner -> String -> [UU.Token]
-scanWith scanner = post . uuScan . pre
- where
-   -- very special characters
-   special = or [specialNewlines, specialMinus]
-   specialNewlines = specialNewlinesChar `elem` specialCharacters scanner
-   specialMinus    = specialMinusChar    `elem` specialCharacters scanner
-   
-   pre    = if special then map changeChar  else id
-   post   = if special then map changeToken else id
-   pos    = UU.initPos $ fromMaybe "" (fileName scanner)
-   uuScan = UU.scan (keywords scanner) (keywordOperators scanner) 
-               (specialCharacters scanner) (operatorCharacters scanner) pos
-   
-   changeChar :: Char -> Char
-   changeChar c
-      | c == '\n' && specialNewlines = specialNewlinesChar
-      | c == '-'  && specialMinus    = specialMinusChar
-      | otherwise                    = c
-   
-   changeToken :: UU.Token -> UU.Token
-   changeToken t =
-      case t of
-         UU.Reserved [c] pos 
-            | c == specialNewlinesChar && specialNewlines -> UU.Reserved "\n" pos
-            | c == specialMinusChar    && specialMinus    -> UU.Reserved "-"  pos
-         _ -> t
 
 -----------------------------------------------------------
 --- Syntax errors
--}
+
 data SyntaxError 
    = Unexpected Token
    | ParNotClosed Token 
@@ -217,35 +223,23 @@ data SyntaxError
 instance Show SyntaxError where
    show err = 
       case err of
-         Unexpected t      -> "Unexpected " ++ show (tokenNoPosition t) 
-         ParNotClosed t    -> "Opening parenthesis " ++ show (tokenNoPosition t) ++ " is not closed"
-         ParNoOpen t       -> "Closing parenthesis " ++ show (tokenNoPosition t) ++ " has no matching symbol"
-         ParMismatch t1 t2 -> "Opening parenthesis " ++ show (tokenNoPosition t1) ++ " is closed with " ++ show (tokenNoPosition t2)
+         Unexpected t      -> "Unexpected " ++ show t
+         ParNotClosed t    -> "Opening parenthesis " ++ show t ++ " is not closed"
+         ParNoOpen t       -> "Closing parenthesis " ++ show t ++ " has no matching symbol"
+         ParMismatch t1 t2 -> "Opening parenthesis " ++ show t1 ++ " is closed with " ++ show t2
          ErrorMessage msg  -> msg
-{-
-errorToPositions :: SyntaxError -> [(Int, Int)]
+
+errorToPositions :: SyntaxError -> [Pos]
 errorToPositions err = 
    case err of
-      Unexpected t      -> [toPosition t]
-      ParNotClosed t    -> [toPosition t]
-      ParNoOpen t       -> [toPosition t]
-      ParMismatch t1 t2 -> [toPosition t1, toPosition t2]
+      Unexpected t      -> [tokenPosition t]
+      ParNotClosed t    -> [tokenPosition t]
+      ParNoOpen t       -> [tokenPosition t]
+      ParMismatch t1 t2 -> [tokenPosition t1, tokenPosition t2]
       ErrorMessage _    -> []
 
 -----------------------------------------------------------
 --- Analyzing parentheses
-
-tokenText :: Token -> String
-tokenText (Reserved s _)   = "symbol " ++ s
-tokenText (ValToken s v _) = show s ++ " " ++ v
-
-toPosition :: Token -> (Int, Int)
-toPosition (Reserved _ p)   = (UU.line p, UU.column p)
-toPosition (ValToken _ _ p) = (UU.line p, UU.column p)
-
-tokenNoPosition :: Token -> Token
-tokenNoPosition (Reserved a _)   = Reserved a noPos
-tokenNoPosition (ValToken a b _) = ValToken a b noPos
 
 checkParentheses :: [Token] -> Maybe SyntaxError
 checkParentheses = rec []
@@ -263,16 +257,15 @@ checkParentheses = rec []
                  | otherwise -> Just (ParMismatch x t)
       | otherwise =
            rec stack ts
-      
+
 isOpening, isClosing :: Token -> Bool
-isOpening (Reserved ("(") _) = True
+isOpening (TokenSpecial ('(') _) = True
 isOpening _ = False
-isClosing (Reserved (")") _) = True
+isClosing (TokenSpecial (')') _) = True
 isClosing _ = False
             
 match :: Token -> Token -> Bool
-match (Reserved ("(") _) (Reserved (")") _) = True
+match (TokenSpecial ('(') _) (TokenSpecial (')') _) = True
 match _ _ = False
 
 ------------------------------------------------- 
--}

@@ -30,15 +30,14 @@ module Text.Parsing
    , OperatorTable, Associativity(..), pOperators
     -- * Analyzing parentheses
    , SyntaxError(..), fromMessage, errorToPositions
-   , checkParentheses 
-   , toPosition, tokenText
+   , checkParentheses, tokenPosition
    ) where
 
 import qualified UU.Parsing as UU
 import Data.Char
 import Data.List
 import Data.Maybe
-import Text.Scanning hiding (column, line, Pos, pCurly, pBracks, pString, pInteger, pReal)
+import Text.Scanning hiding (pCurly, pBracks, pString, pInt, pReal, pParens)
 import qualified Text.Scanning as UU
 
 ----------------------------------------------------------
@@ -130,15 +129,8 @@ pFail = UU.pFail
 ----------------------------------------------------------
 -- Subexpressions
 
--- | Data type for positions
-data Pos = Pos
-   { line   :: Int
-   , column :: Int
-   }
- deriving (Show, Eq, Ord)
-
 pParens :: TokenParser a -> TokenParser a
-pParens p = UU.pOParen *> p <* UU.pCParen
+pParens = UU.pParens
 
 -- TODO: fix inconsistency with pParens
 pBracks :: TokenParser a -> TokenParser a
@@ -158,7 +150,7 @@ pCurly :: TokenParser a -> TokenParser a
 pCurly   = UU.pCurly
 
 pInteger :: TokenParser Integer
-pInteger = UU.pInteger
+pInteger = fromIntegral <$> UU.pInt
 
 pReal :: TokenParser Double
 pReal = UU.pReal

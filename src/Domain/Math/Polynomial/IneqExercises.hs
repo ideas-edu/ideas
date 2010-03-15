@@ -82,7 +82,7 @@ ineqHigherDegreeExercise = makeExercise
    , similarity    = simLogic (normRelation cleanUpExpr2)
    , strategy      = ineqHigherDegree
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
-   }	
+   }
 
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
 showLogicRelation logic = 

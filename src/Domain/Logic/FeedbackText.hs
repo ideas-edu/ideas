@@ -197,9 +197,9 @@ inGroup r n =
    in n `elem` concatMap ruleGroups rs
 
 showToken :: Token -> String
-showToken token = tokenText token ++ " at position " ++ tokenPos token
+showToken token = show token ++ " at position " ++ tokenPos token
 
 tokenPos :: Token -> String
-tokenPos token = 
-   let p@(l, c) = toPosition token
-   in if l==1 then show c else show p
+tokenPos token =
+   let p = tokenPosition token
+   in if line p==1 then show (column p) else show p

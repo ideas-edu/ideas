@@ -1,7 +1,7 @@
 {
    "result": [
       false,
-      "Syntax error at (7,1): Closing parenthesis symbol ) has no matching symbol",
+      "Syntax error at (1,7): Closing parenthesis symbol ) has no matching symbol",
       [
          "logic.dnf",
          "[]",

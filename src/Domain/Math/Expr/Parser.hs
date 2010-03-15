@@ -52,8 +52,8 @@ dictionaryNames = mapMaybe dictionary (concatMap (take 1) dictionaries)
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
-   , keywordOperators  = ["==", "<=", ">=", "<", ">", "~="]
+   { keywords           = "sqrt" : map symbolName symbols ++ dictionaryNames
+   , keywordOperators   = ["==", "<=", ">=", "<", ">", "~="]
    , operatorCharacters = "+-*/^.=<>~"
    }
 

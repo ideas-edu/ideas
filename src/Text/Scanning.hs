@@ -26,6 +26,7 @@ module Text.Scanning
    ) where
 
 import Common.Utils (readInt)
+import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Char
@@ -108,23 +109,27 @@ tokenPosition token =
 
 -- | Data type to configure a scanner
 data Scanner = Scanner
-   { fileName           :: Maybe String
-   , keywords           :: [String]
-   , keywordOperators   :: [String]
-   , specialCharacters  :: String
-   , operatorCharacters :: String
-   , unaryMinus         :: Bool
+   { fileName              :: Maybe String
+   , keywords              :: [String]
+   , keywordOperators      :: [String]
+   , isIdentifierCharacter :: Char -> Bool
+   , specialCharacters     :: String
+   , operatorCharacters    :: String
+   , unaryMinus            :: Bool
+   , qualifiedIdentifiers  :: Bool
    } deriving Show
 
 -- | A default scanner configuration (using Haskell's special characters)
 defaultScanner :: Scanner
 defaultScanner = Scanner
-   { fileName           = Nothing
-   , keywords           = []
-   , keywordOperators   = []
-   , specialCharacters  = "(),;[]`{}"              -- Haskell's special characters 
-   , operatorCharacters = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters
-   , unaryMinus         = False      
+   { fileName              = Nothing
+   , keywords              = []
+   , keywordOperators      = []
+   , isIdentifierCharacter = \c -> isAlphaNum c || c `elem` "_'"
+   , specialCharacters     = "(),;[]`{}"              -- Haskell's special characters 
+   , operatorCharacters    = "!#$%&*+./<=>?@\\^|-~"   -- The non-special characters
+   , unaryMinus            = False      
+   , qualifiedIdentifiers  = False
    }
 
 -- | Add characters to the list of special characters (and remove these from the list of operator characters)
@@ -141,21 +146,32 @@ scan = scanWith defaultScanner
 
 scanWith :: Scanner -> String -> [Token]
 scanWith scanner = rec (Pos 1 1)
- where
+ where 
+   rec :: Pos -> String -> [Token]
    rec _ [] = []
-   rec pos (x:rest) 
-      | isSpace x && x `notElem` specialCharacters scanner = rec (advance [x] pos) rest
-      | isUpper x = let (xs, ys) = break (not . isAlphaNum) rest
-                        newp     = advance (x:xs) pos
-                    in if (x:xs) `elem` keywords scanner
-                       then TokenKeyword (x:xs) pos : rec newp ys
-                       else TokenConId (x:xs) pos : rec newp ys
-      | isLower x = let (xs, ys) = break (\c -> not (isAlphaNum c) || c `elem` specialCharacters scanner) rest
-                        newp     = advance (x:xs) pos
-                    in if (x:xs) `elem` keywords scanner
-                       then TokenKeyword (x:xs) pos : rec newp ys
-                       else TokenVarId (x:xs) pos : rec newp ys
-      | isDigit x || (unaryMinus scanner && x == '-' && not (null rest) && isDigit (head rest))
+   rec pos input@(x:rest) 
+      | isSpace x = 
+           let newp = advance [x] pos
+           in if x `elem` specialCharacters scanner
+              then TokenSpecial x pos : rec newp rest
+              else rec newp rest
+      | isAlpha x =
+           case scanIdentifier scanner input of
+              -- to do: add qualified name
+              Just (Nothing, s, xs)
+                 | s `elem` keywords scanner -> make TokenKeyword
+                 | isLower (head s)          -> make TokenVarId 
+                 | otherwise                 -> make TokenConId
+               where 
+                 make f = f s pos : rec newp xs
+                 newp   = incr (length s) pos
+              _ -> error "unexpected case in scanner"
+      | isNumber input =
+           case scanNumber pos input of
+              Just (Left i,  newp, xs) -> TokenInt  i pos : rec newp xs
+              Just (Right d, newp, xs) -> TokenReal d pos : rec newp xs
+              _ -> error "unexpected case in scanner" 
+                  {-
                   = let (xs, ys) = break (not . isDigit) rest
                     in case ys of
                           ('.':a:as) | isDigit a -> -- to do: scientific notation floating-points
@@ -166,31 +182,110 @@ scanWith scanner = rec (Pos 1 1)
                                        then negate (fromIntegral (fromJust (readInt xs)))
                                        else fromIntegral (fromJust (readInt (x:xs)))
                                    newp = advance (x:xs) pos
-                               in TokenInt n pos : rec newp ys
-      | x == '"' = case scanString pos rest of
-                      Just (s, newp, xs) -> TokenString s pos : rec newp xs
-                      Nothing -> TokenSpecial x pos : rec (advance [x] pos) rest
+                               in TokenInt n pos : rec newp ys -}
+      | x == '"' = 
+           case scanString pos rest of
+              Just (s, newp, xs) -> 
+                 TokenString s pos : rec newp xs
+              Nothing -> 
+                 TokenSpecial x pos : rec (incr 1 pos) rest
       | x `elem` specialCharacters scanner = 
-                    if [x] `elem` keywordOperators scanner
-                    then TokenKeyword [x] pos : rec (advance [x] pos) rest
-                    else TokenSpecial x pos : rec (advance [x] pos) rest
-      | x `elem` operatorCharacters scanner = let (xs, ys) = break (\c -> c `elem` specialCharacters scanner || c `notElem` operatorCharacters scanner) rest
-                           in if [x] `elem` keywordOperators scanner
-                              then TokenKeyword [x] pos : rec (advance [x] pos) rest
-                              else TokenKeyword (x:xs) pos : rec (advance (x:xs) pos) ys
-      | otherwise = TokenSpecial x pos : rec (advance [x] pos) rest
+           let newp = incr 1 pos 
+           in  if [x] `elem` keywordOperators scanner
+               then TokenKeyword [x] pos : rec newp rest
+               else TokenSpecial x pos : rec newp rest
+      | x `elem` operatorCharacters scanner = 
+           let (xs, ys) = break stop rest
+               newp     = incr (length (x:xs)) pos
+               stop c   =  c `elem` specialCharacters scanner 
+                        || c `notElem` operatorCharacters scanner
+           in TokenKeyword (x:xs) pos : rec newp ys
+      | otherwise = 
+           let newp = incr 1 pos
+           in TokenSpecial x pos : rec newp rest
 
-advance :: String -> Pos -> Pos
-advance [] p = p
-advance (x:xs) p 
-   | x == '\n' = advance xs p { column = column p + 1 }
-   | otherwise = advance xs p { line = line p + 1, column = 1 }
+   isNumber :: String -> Bool
+   isNumber ('-':x:_) = isDigit x && unaryMinus scanner
+   isNumber (x:_)     = isDigit x
+   isNumber _         = False
+
+scanIdentifier :: Scanner -> String -> Maybe (Maybe String, String, String)
+scanIdentifier scanner (x:rest) | isAlpha x = 
+   case break (not . isIdentifierCharacter scanner) rest of
+      (xs, '.':y:rest2) | qualifiedIdentifiers scanner && isAlpha y -> 
+         let (ys, zs) = break (not . isIdentifierCharacter scanner) rest2
+         in Just (Just (x:xs), ys, zs)
+      (xs, ys) -> 
+         Just (Nothing, x:xs, ys)
+scanIdentifier _ _ = Nothing
+
+scanNumber :: Pos -> String -> Maybe (Either Int Double, Pos, String)
+scanNumber pos input = do
+   (i, p, xs) <- scanInt pos input
+   case fractionPart p xs of
+      Just (p1, ys) -> 
+         case powerPart p1 ys of
+            Just (p2, zs) -> 
+               let txt = take (column p2 - column pos) input
+               in return (Right (read txt), p2, zs)
+            Nothing ->
+               let txt = take (column p1 - column pos) input 
+               in return (Right (read txt), p1, ys)
+      Nothing -> 
+         case powerPart p xs of   
+            Just (p1, ys) -> 
+               let txt = take (column p1 - column pos) input
+               in return (Right (read txt), p1, ys)
+            Nothing -> 
+               return (Left i, p, xs)
+
+fractionPart :: Pos -> String -> Maybe (Pos, String)
+fractionPart pos ('.':rest) = do
+   (_, p, ys) <- scanNatural pos rest
+   return (incr 1 p, ys)
+fractionPart _ _ = Nothing
+
+powerPart :: Pos -> String -> Maybe (Pos, String)
+powerPart pos (s:rest) | s == 'e' || s == 'E' = do
+   (_, p, ys) <- scanInt pos rest
+   return (incr 1 p, ys)
+powerPart _ _ = Nothing
+
+scanInt :: Pos -> String -> Maybe (Int, Pos, String)
+scanInt pos ('-':xs) =
+   do (nat, p, rest) <- scanNatural pos xs
+      return (-nat, incr 1 p, rest)
+scanInt pos xs = 
+   scanNatural pos xs
+
+scanNatural :: Pos -> String -> Maybe (Int, Pos, String)
+scanNatural pos input = do
+   let (xs, ys) = break (not . isDigit) input
+   guard (not (null xs))
+   nat <- readInt xs
+   return (nat, incr (length xs) pos, ys)
 
 scanString :: Pos -> String -> Maybe (String, Pos, String)
-scanString _ [] = Nothing
-scanString p ('\\':x:xs) = fmap (\(s,np,t) -> (x:s,np,t)) (scanString (advance ['\\',x] p) xs)
-scanString p ('"':xs) = Just ("",advance ['"'] p,xs)
-scanString p (x:xs) = fmap (\(s,np, t) -> (x:s,np,t)) (scanString (advance [x] p) xs)
+scanString pos input =
+   case input of 
+      []        -> Nothing 
+      '\\':x:xs -> add x (scanString (incr 2 pos) xs)
+      '"':xs    -> Just ("",incr 1 pos,xs)
+      x:xs      -> add x (scanString (incr 1 pos) xs)
+ where
+   add c = fmap (\(s, np, t) -> (c:s, np, t))
+   
+advance :: String -> Pos -> Pos
+advance [] = id
+advance (x:xs)  
+   | x == '\n' = advance xs . nextline
+   | otherwise = advance xs . incr 1
+
+incr :: Int -> Pos -> Pos
+incr i p = p { column = column p + i }
+
+nextline :: Pos -> Pos
+nextline p = p { line = line p + 1, column = 1 }
 
 -----------------------------------------------------------
 --- Lexical analysis

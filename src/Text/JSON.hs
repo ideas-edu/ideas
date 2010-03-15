@@ -155,7 +155,7 @@ parseJSON input =
  where
    json :: TokenParser JSON
    json =  (Number . I) <$> pInteger
-       <|> (Number . F) <$> pFraction
+       <|> (Number . F) <$> pFloat
        <|> (String . fromMaybe [] . UTF8.decodeM) <$> pString
        <|> Boolean True <$ pKey "true"
        <|> Boolean False <$ pKey "false"
@@ -243,10 +243,10 @@ type JSON_RPC_Handler = String -> JSON -> IO JSON
 
 jsonRPC :: String -> JSON_RPC_Handler -> IO String
 jsonRPC input handler = 
-         case parseJSON input >>= fromJSON of 
-            Nothing   -> fail "Invalid request"
-            Just req -> do 
-               json <- handler (requestMethod req) (requestParams req)
-               return $ show $ okResponse json (requestId req)
-             `catch` \e ->
-               return $ show $ errorResponse (String (show e)) (requestId req)
+   case parseJSON input >>= fromJSON of 
+      Nothing   -> fail "Invalid request"
+      Just req -> do 
+         json <- handler (requestMethod req) (requestParams req)
+         return $ show $ okResponse json (requestId req)
+       `catch` \e ->
+           return $ show $ errorResponse (String (show e)) (requestId req)

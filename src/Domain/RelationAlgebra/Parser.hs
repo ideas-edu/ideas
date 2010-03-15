@@ -16,9 +16,10 @@ import Text.Parsing
 import Data.Char
 
 myScanner :: Scanner
-myScanner = minusAsSpecial $ makeCharsSpecial "~" defaultScanner
+myScanner = minusAsSpecial $ makeCharsSpecial "~;" defaultScanner
    { keywords         = ["V", "E", "I"]
-   , keywordOperators = concatMap (map fst . snd) operatorTable
+   , keywordOperators = invSym : notSym : concatMap (map fst . snd) operatorTable
+   , specialCharacters = "-"
    }
 
 operatorTable :: OperatorTable RelAlg

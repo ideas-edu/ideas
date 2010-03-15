@@ -25,7 +25,7 @@ module Text.Parsing
      -- * Subexpressions
    , Pos(..)
    , pKey, pSpec, pVarid, pConid, pParens
-   , pInteger, pFraction, pString, pBracks, pCurly, pCommas, pLines
+   , pInteger, pFloat, pString, pBracks, pCurly, pCommas, pLines
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
     -- * Analyzing parentheses
@@ -39,7 +39,7 @@ import Common.Utils
 import Data.Char
 import Data.List
 import Data.Maybe
-import Text.Scanning hiding (column, line, Pos, pCommas, pCurly, pBracks, pString, pFraction, pInteger)
+import Text.Scanning hiding (column, line, Pos, pCurly, pBracks, pString, pInteger, pFloat)
 import qualified Text.Scanning as UU
 
 ----------------------------------------------------------
@@ -161,14 +161,14 @@ pCurly   = UU.pCurly
 pInteger :: TokenParser Integer
 pInteger = (maybe 0 fromIntegral . readInt) <$> UU.pInteger
 
-pFraction :: TokenParser Float
-pFraction = read <$> UU.pFraction
+pFloat :: TokenParser Float
+pFloat = read <$> UU.pFloat
 
 pString :: TokenParser String
 pString = UU.pString
 
 pCommas :: TokenParser a -> TokenParser [a]
-pCommas = UU.pCommas
+pCommas p = optional ((:) <$> p <*> pList ((\_ a -> a) <$> pSpec ',' <*> p)) []
 
 ----------------------------------------------------------
 -- Operator table (parser)

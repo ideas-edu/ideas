@@ -54,7 +54,8 @@ scannerExpr :: Scanner
 scannerExpr = defaultScanner 
    { keywords          = "sqrt" : map symbolName symbols ++ dictionaryNames
    , keywordOperators  = ["==", "<=", ">=", "<", ">", "~="]
-   , specialCharacters = "+-*/^()[]{}<>,."
+   , specialCharacters = "()[]{}"
+   , operatorCharacters = "+-*/^.,=<>"
    }
 
 parseWith :: TokenParser a -> String -> Either SyntaxError a
@@ -150,7 +151,7 @@ pLogicRelation p = (Logic.catLogic . fmap f) <$> pLogic (pRelationChain p)
    f xs = if null xs then Logic.T else foldr1 (Logic.:&&:) (map Logic.Var xs)
 
 pParens :: TokenParser a -> TokenParser a
-pParens p = pKey "(" *> p <* pKey ")"
+pParens p = pSpec '(' *> p <* pSpec ')'
 
 -----------------------------------------------------------------------
 -- Argument descriptor (for parameterized rules)

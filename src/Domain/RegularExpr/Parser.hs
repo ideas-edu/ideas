@@ -22,10 +22,7 @@ logicScanner = (specialSymbols "+*?|" defaultScanner)
    }
 
 parseRegExp :: String -> Either SyntaxError RegExp
-parseRegExp input = 
-   case parse pRE (scanWith logicScanner input) of
-      (a, [])  -> Right a
-      (_, m:_) -> Left (fromMessage m)
+parseRegExp = parseWith logicScanner pRE
 
 pRE :: TokenParser RegExp
 pRE = pOr 

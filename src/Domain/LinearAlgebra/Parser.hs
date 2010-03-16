@@ -30,13 +30,13 @@ import Text.Parsing
 testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
             this -> this -}
 
-parseSystem :: String -> (LinearSystem Expr, [String])
-parseSystem = f . parse pSystem . scanWith s
+parseSystem :: String -> Either SyntaxError (LinearSystem Expr)
+parseSystem = either Left f . parseWith s pSystem
  where
    s0 = specialSymbols "\n" scannerExpr
    s  = s0 {keywordOperators = "==" : keywordOperators s0 }
-   f (Nothing, xs) = ([], "System is not linear" : map show xs)
-   f (Just m, xs)  = (m, map show xs)
+   f Nothing  = Left (ErrorMessage "System is not linear")
+   f (Just m) = Right m
 
 pSystem :: TokenParser (Maybe (LinearSystem Expr))
 pSystem = convertSystem <$> pEquations pExpr
@@ -51,21 +51,21 @@ pSystem = convertSystem <$> pEquations pExpr
 -----------------------------------------------------------
 --- Parser
 
-parseMatrix :: String -> (Matrix Expr, [String])
-parseMatrix = f . parse p . scanWith s
+parseMatrix :: String -> Either SyntaxError (Matrix Expr)
+parseMatrix = either Left f . parseWith s p
  where
    s = specialSymbols "\n" scannerExpr
    p = pMatrix pFractional
-   f (Nothing, xs) = (makeMatrix [], "Matrix is not rectangular" : map show xs)
-   f (Just m, xs)  = (m, map show xs)
+   f Nothing  = Left (ErrorMessage "Matrix is not rectangular")
+   f (Just m) = Right m
 
 pMatrix :: TokenParser a -> TokenParser (Maybe (Matrix a))
 pMatrix p = make <$> pLines True (pList1 p)
  where 
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-parseVectorSpace :: String -> (VectorSpace Expr, [Message Token])
-parseVectorSpace = parse p . scanWith s
+parseVectorSpace :: String -> Either SyntaxError (VectorSpace Expr)
+parseVectorSpace = parseWith s p
  where
    s = specialSymbols "\n" scannerExpr
    p = makeVectorSpace <$> pVectors pExpr

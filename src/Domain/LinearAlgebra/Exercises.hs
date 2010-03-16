@@ -39,8 +39,8 @@ gramSchmidtExercise = testableExercise
    , exerciseCode   = makeCode "linalg" "gramschmidt"
    , status         = Provisional
    , parser         = \s -> case parseVectorSpace s of
-                               (a, [])  -> Right (fmap simplified a)
-                               (_, m:_) -> Left $ ErrorMessage $ show m
+                              Right a  -> Right (fmap simplified a)
+                              Left msg -> Left msg
    , prettyPrinter  = unlines . map show . vectors
    , equivalence    = \x y -> let f = length . filter (not . isZero) . vectors . gramSchmidt
                               in f x == f y
@@ -56,8 +56,8 @@ linearSystemExercise = testableExercise
    , exerciseCode   = makeCode "linalg" "linsystem"
    , status         = Stable
    , parser         = \s -> case parseSystem s of
-                               (a, [])  -> Right (simplify a)
-                               (_, m:_) -> Left $ ErrorMessage $ show m
+                               Right a  -> Right (simplify a)
+                               Left msg -> Left msg
    , prettyPrinter  = unlines . map show
    , equivalence    = \x y -> let f = fromContext . applyD linearSystemStrategy 
                                     . inContext linearSystemExercise . map toStandardForm
@@ -76,8 +76,8 @@ gaussianElimExercise = testableExercise
    , exerciseCode   = makeCode "linalg" "gaussianelim"
    , status         = Stable
    , parser         = \s -> case parseMatrix s of
-                               (a, [])  -> Right (simplify a)
-                               (_, m:_) -> Left $ ErrorMessage $ show m
+                               Right a  -> Right (simplify a)
+                               Left msg -> Left msg
    , prettyPrinter  = ppMatrixWith show
    , equivalence    = \x y -> fmap simplified x === fmap simplified y
    , extraRules     = matrixRules

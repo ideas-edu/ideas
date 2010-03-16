@@ -139,9 +139,9 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
     
 parseJSON :: String -> Maybe JSON
 parseJSON input = 
-   case parse json (scanWith jsonScanner input) of 
-      (result, []) -> Just result
-      _            -> Nothing
+   case parseWith jsonScanner json input of 
+      Right a -> Just a
+      _       -> Nothing
  where
    jsonScanner = specialSymbols ":" defaultScanner
       { keywords   = ["true", "false", "null"]

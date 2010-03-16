@@ -9,22 +9,23 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- A simplified interface to the UU.Parsing and UU.Scanner libraries. This module
--- provides some additional functionality to determine valid sub-expressions.
+-- A simplified interface to the UU.Parsing library.
 --
 -----------------------------------------------------------------------------
 module Text.Parsing 
    ( -- * Scaning
      module Text.Scanning
      -- * Parsing
-   , Parser, CharParser, TokenParser, parse, Message
+   , Parser, CharParser, TokenParser
+   , parse, parseWith
+     -- * Primitive token parsers
+   , pVarid, pConid, pOpid, pQVarid, pQConid
+   , pKey, pSpec, pInt, pReal, pString
+     -- * Derived token parsers
+   , pParens, pBracks, pCurly, pCommas, pLines, pInteger
      -- * UU parser combinators
    , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1
    , pChainl, pChainr, pChoice, pFail
-     -- * Subexpressions
-   , fromMessage
-   , pKey, pSpec, pVarid, pConid, pParens, pOpid, pQVarid, pQConid
-   , pInteger, pReal, pString, pBracks, pCurly, pCommas, pLines
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
    ) where
@@ -49,6 +50,8 @@ type CharParser  = Parser Char
 -- | A parser with tokens as symbol type
 type TokenParser = Parser Token
 
+instance UU.Symbol Token
+
 instance (UU.Symbol s, Ord s) => UU.IsParser (Parser s) s where
    ~(P p) <*>  ~(P q)  = P (p UU.<*> q)
    ~(P p) <*   ~(P q)  = P (p UU.<*  q)
@@ -68,17 +71,93 @@ instance (UU.Symbol s, Ord s) => UU.IsParser (Parser s) s where
    getzerop            = fmap P . UU.getzerop . unP
    getonep             = fmap P . UU.getonep  . unP 
 
-type Message s = (UU.Expecting s, Maybe s)
-
 -- Parsing an input string always returns a result and a list of error messages
-parse :: UU.Symbol s => Parser s a -> [s] -> (a, [Message s])
-parse (P p) input = (result, map f messages)
+parse :: UU.Symbol s => Parser s a -> [s] -> Either (Maybe s) a
+parse (P p) input =
+   case messages of
+      []              -> Right result
+      UU.Msg _ ms _:_ -> Left ms 
  where
    steps    = UU.parse p input
-   result   = fstPair (UU.evalSteps steps)
    messages = UU.getMsgs steps
-   fstPair (UU.Pair a _) = a
-   f (UU.Msg a b _) = (a, b)
+   result   = (\(UU.Pair a _) -> a) (UU.evalSteps steps)
+   
+parseWith :: Scanner -> TokenParser a -> String -> Either SyntaxError a
+parseWith scanner p = either f Right . parse p . scanWith scanner
+ where 
+    f (Just s) = Left (Unexpected s)
+    f Nothing  = Left (ErrorMessage "Syntax error")
+
+----------------------------------------------------------
+-- Primitive token parsers
+
+pVarid, pConid, pOpid :: TokenParser String
+pQVarid, pQConid      :: TokenParser (String, String)
+pString               :: TokenParser String
+pInt                  :: TokenParser Int
+pReal                 :: TokenParser Double
+
+pKey  :: String -> TokenParser String 
+pSpec :: Char   -> TokenParser Char
+
+pVarid  = makeTokS isTokenVarId  TokenVarId
+pConid  = makeTokS isTokenConId  TokenConId
+pOpid   = makeTokS isTokenOpId   TokenOpId
+pQVarid = makeTokT isTokenQVarId TokenQVarId
+pQConid = makeTokT isTokenQConId TokenQConId
+pString = makeTokS isTokenString TokenString
+pInt    = makeTokN isTokenInt    TokenInt
+pReal   = makeTokN isTokenReal   TokenReal
+pKey    = makeTokA TokenKeyword 
+pSpec   = makeTokA TokenSpecial
+
+-- helpers
+makeTokS f con = makeTok f "" (con minString) (con maxString)
+makeTokT f con = makeTok f ("","") (con minString minString) (con maxString maxString)
+makeTokN f con = makeTok f 0 (con minBound) (con maxBound)
+makeTokA con a = makeTok (const Nothing) a (con a) (con a)
+
+makeTok f a con1 con2 = 
+   (fromMaybe a . f) UU.<$> con1 minPos UU.<..> con2 maxPos
+
+minPos, maxPos :: Pos
+minPos = Pos minBound minBound
+maxPos = Pos maxBound maxBound
+
+minString, maxString :: String
+minString = []
+maxString = replicate 100 maxBound
+
+minDouble, maxDouble :: Double
+minDouble = -(10^500) -- -Infinity
+maxDouble = 10^500    -- Infinity
+
+instance Bounded Double where
+   minBound = minDouble
+   maxBound = maxDouble
+
+----------------------------------------------------------
+-- Derived token parsers
+ 
+pParens, pBracks, pCurly :: TokenParser a -> TokenParser a
+pParens p = pSpec '(' UU.*> p UU.<* pSpec ')'
+pBracks p = pSpec '[' UU.*> p UU.<* pSpec ']'
+pCurly  p = pSpec '{' UU.*> p UU.<* pSpec '}'
+
+pCommas :: TokenParser a -> TokenParser [a]
+pCommas p = optional ((:) <$> p <*> pList ((\_ a -> a) <$> pSpec ',' <*> p)) []
+
+-- | Parse lines, separated by the newline character. The boolean argument indicates whether empy lines should 
+-- be accepted or not. Make sure to configure the scanner to treat newlines as special characters!
+pLines :: Bool -> TokenParser a -> TokenParser [a]
+pLines allowEmptyLine p = catMaybes <$> pn 
+ where
+   pOne | allowEmptyLine = optional (Just <$> p) Nothing
+        | otherwise      = Just <$> p
+   pn = (:) <$> pOne <*> pList (pSpec '\n' *> pOne)
+
+pInteger :: TokenParser Integer
+pInteger = fromIntegral <$> pInt
 
 ----------------------------------------------------------
 -- UU parser combinators
@@ -122,60 +201,6 @@ pFail :: (Ord s, UU.Symbol s) => Parser s a
 pFail = UU.pFail
 
 ----------------------------------------------------------
--- Subexpressions
-
-instance UU.Symbol Token
--- | Parse lines, separated by the newline character. The boolean argument indicates whether empy lines should 
--- be accepted or not. Make sure to configure the scanner to treat newlines as special characters!
-pLines :: Bool -> TokenParser a -> TokenParser [a]
-pLines allowEmptyLine p = catMaybes <$> pn 
- where
-   pOne | allowEmptyLine = optional (Just <$> p) Nothing
-        | otherwise      = Just <$> p
-   pn = (:) <$> pOne <*> pList (pSpec '\n' *> pOne)
-
-pInteger :: TokenParser Integer
-pInteger = fromIntegral <$> pInt
-
-pCommas :: TokenParser a -> TokenParser [a]
-pCommas p = optional ((:) <$> p <*> pList ((\_ a -> a) <$> pSpec ',' <*> p)) []
-
-pVarid, pConid, pOpid, pString :: TokenParser String
-pQVarid, pQConid :: TokenParser (String, String)
-pInt :: TokenParser Int
-pReal   :: TokenParser Double
-
-pKey  :: String -> TokenParser String 
-pSpec :: Char -> TokenParser Char
-
-pKey t  = t UU.<$ TokenKeyword t minPos UU.<..> TokenKeyword t maxPos
-pSpec t = t UU.<$ TokenSpecial t minPos UU.<..> TokenSpecial t maxPos
-pVarid = (fromMaybe "" . isTokenVarId) UU.<$> TokenVarId minString minPos UU.<..> TokenVarId maxString maxPos
-pConid = (fromMaybe "" . isTokenConId) UU.<$> TokenConId minString minPos UU.<..> TokenConId maxString maxPos
-pOpid = (fromMaybe "" . isTokenOpId) UU.<$> TokenOpId minString minPos UU.<..> TokenOpId maxString maxPos
-pQVarid = (fromMaybe ("", "") . isTokenQVarId) UU.<$> TokenQVarId minString minString minPos UU.<..> TokenQVarId maxString maxString maxPos
-pQConid = (fromMaybe ("", "") . isTokenQConId) UU.<$> TokenQConId minString minString minPos UU.<..> TokenQConId maxString maxString maxPos
-pInt = (fromMaybe 0 . isTokenInt) UU.<$> TokenInt minBound minPos UU.<..> TokenInt maxBound maxPos
-pReal  = (fromMaybe 0 . isTokenReal) UU.<$> TokenReal minDouble minPos UU.<..> TokenReal maxDouble maxPos
-pString = (fromMaybe "" . isTokenString) UU.<$> TokenString minString minPos UU.<..> TokenString maxString maxPos
-
-minPos, maxPos :: Pos
-minPos = Pos minBound minBound
-maxPos = Pos maxBound maxBound
-
-minString, maxString :: String
-minString = []
-maxString = replicate 100 maxBound
-
-minDouble, maxDouble :: Double
-minDouble = -(10^500) -- -Infinity
-maxDouble = 10^500    -- Infinity
-
-pParens p = pSpec '(' UU.*> p UU.<* pSpec ')'
-pBracks p = pSpec '[' UU.*> p UU.<* pSpec ']'
-pCurly  p = pSpec '{' UU.*> p UU.<* pSpec '}'
-
-----------------------------------------------------------
 -- Operator table (parser)
 
 -- | Type for an operator table. Operators with a low priority should appear in the front of the list.
@@ -206,7 +231,3 @@ pChain a p q = case a of
                   RightAssociative -> pChainr p q
                   NonAssociative   -> flip ($) <$> q <*> p <*> q
                   NoMix            -> pChainr p q
-
-fromMessage :: Message Token -> SyntaxError
-fromMessage (_, Just t) = Unexpected t
-fromMessage _           = ErrorMessage "Syntax error"

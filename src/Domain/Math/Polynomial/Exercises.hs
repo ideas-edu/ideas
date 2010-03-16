@@ -42,7 +42,7 @@ linearExercise = makeExercise
    { description  = "solve a linear equation"
    , exerciseCode = makeCode "math" "lineq"
    , status       = Provisional
-   , parser       = parseWith (pEquation pExpr)
+   , parser       = parseExprWith (pEquation pExpr)
    , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
    , isReady      = solvedRelation
@@ -58,7 +58,7 @@ quadraticExercise = makeExercise
    { description  = "solve a quadratic equation"
    , exerciseCode = makeCode "math" "quadreq"
    , status       = Provisional
-   , parser       = \input -> case parseWith (pOrList (pEquation pExpr)) input of
+   , parser       = \input -> case parseExprWith (pOrList (pEquation pExpr)) input of
                                  Left err -> Left err
                                  Right xs -> Right (build (switchView equationView) xs)
    , similarity   = eqOrList cleanUpExpr2
@@ -100,7 +100,7 @@ quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
    { description  = "solve a quadratic equation with approximation"
    , exerciseCode = makeCode "math" "quadreq-with-approx"
-   , parser       = parseWith (pOrList (pRelation pExpr))
+   , parser       = parseExprWith (pOrList (pRelation pExpr))
    , strategy     = configure cfg quadraticStrategy
    , equivalence  = equivalentApprox
    }
@@ -116,7 +116,7 @@ findFactorsExercise = makeExercise
    { description  = "factorize the expression"
    , exerciseCode = makeCode "math" "factor"
    , status       = Provisional
-   , parser       = parseWith pExpr
+   , parser       = parseExprWith pExpr
    , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)

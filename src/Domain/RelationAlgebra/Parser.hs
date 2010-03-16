@@ -66,9 +66,10 @@ analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
 analyseAndParse p ts =
    case checkParentheses ts of
       Just err -> Left err
-      Nothing  -> case parse p ts of
-                     (_, m:_) -> Left (fromMessage m)
-                     (a, _)   -> Right a
+      Nothing  -> either (Left . f) Right (parse p ts)
+ where
+   f (Just s) = Unexpected s
+   f Nothing  = ErrorMessage "Syntax Error"
                                         
 -----------------------------------------------------------
 --- Pretty-Printer

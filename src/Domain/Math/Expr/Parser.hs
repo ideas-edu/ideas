@@ -10,13 +10,13 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Parser 
-   ( scannerExpr, parseExpr, parseWith, pExpr
+   ( scannerExpr, parseExpr, parseExprWith, pExpr
    , pEquations, pEquation, pOrList, pFractional
    , pRelation, pLogic, pLogicRelation
    ) where
 
 import Prelude hiding ((^))
-import Text.Parsing hiding (pParens)
+import Text.Parsing
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -39,14 +39,11 @@ scannerExpr = defaultScanner
    , qualifiedIdentifiers = True
    }
 
-parseWith :: TokenParser a -> String -> Either SyntaxError a
-parseWith p = f . parse p . scanWith scannerExpr
- where 
-   f (e, []) = Right e
-   f (_, xs) = Left $ ErrorMessage $ unlines $ map show xs
+parseExprWith :: TokenParser a -> String -> Either SyntaxError a
+parseExprWith = parseWith scannerExpr
 
 parseExpr :: String -> Either SyntaxError Expr
-parseExpr = parseWith pExpr
+parseExpr = parseExprWith pExpr
 
 pExpr :: TokenParser Expr
 pExpr = expr6
@@ -123,9 +120,6 @@ pLogicRelation :: TokenParser a -> TokenParser (Logic (Relation a))
 pLogicRelation p = (Logic.catLogic . fmap f) <$> pLogic (pRelationChain p)
  where
    f xs = if null xs then Logic.T else foldr1 (Logic.:&&:) (map Logic.Var xs)
-
-pParens :: TokenParser a -> TokenParser a
-pParens p = pSpec '(' *> p <* pSpec ')'
 
 -----------------------------------------------------------------------
 -- Argument descriptor (for parameterized rules)

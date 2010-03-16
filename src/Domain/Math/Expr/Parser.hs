@@ -29,32 +29,14 @@ import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
 import Test.QuickCheck (arbitrary)
-
-import Text.OpenMath.Dictionary.Arith1
-import Text.OpenMath.Dictionary.Logic1
-import Text.OpenMath.Dictionary.Relation1
-import Text.OpenMath.Dictionary.Calculus1
-import Text.OpenMath.Dictionary.Fns1
-import Text.OpenMath.Dictionary.Transc1
-
-symbols :: [Symbol]
-symbols = nubBy (\x y -> symbolName x == symbolName y) $ 
-   concat dictionaries
-
-dictionaries :: [[Symbol]]
-dictionaries = 
-   [ arith1List, logic1List, relation1List, calculus1List
-   , fns1List, transc1List
-   ]
-
-dictionaryNames :: [String]
-dictionaryNames = mapMaybe dictionary (concatMap (take 1) dictionaries)
+import Text.OpenMath.Symbol
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords           = "sqrt" : map symbolName symbols ++ dictionaryNames
-   , keywordOperators   = ["==", "<=", ">=", "<", ">", "~="]
-   , operatorCharacters = "+-*/^.=<>~"
+   { keywords             = ["sqrt", "root", "or", "true", "false"]
+   , keywordOperators     = ["==", "<=", ">=", "<", ">", "~=", "+", "-", "*", "^", "/"]
+   , operatorCharacters   = "+-*/^.=<>~"
+   , qualifiedIdentifiers = True
    }
 
 parseWith :: TokenParser a -> String -> Either SyntaxError a
@@ -72,7 +54,7 @@ pExpr = expr6
 -- This expression could have a fraction at top-level: both the numerator
 -- and denominator are atoms, optionally preceded by a (unary) minus
 pFractional :: TokenParser Expr
-pFractional = expr6u -- flip ($) <$> expr6u <*> optional (flip (/) <$ pKey "/" <*> expr6u) id
+pFractional = expr6u 
 
 expr6, expr6u, expr7, expr8, term, atom :: TokenParser Expr
 expr6  =  pChainl ((+) <$ pKey "+" <|> (-) <$ pKey "-") expr6u
@@ -87,21 +69,13 @@ atom   =  fromInteger <$> pInteger
       <|> pParens pExpr
 
 symb :: TokenParser ([Expr] -> Expr)
-symb =  unqualifiedSymb
-    <|> qualifiedSymb
+symb = qualifiedSymb
     -- To fix: sqrt expects exactly one argument
     <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
-
-unqualifiedSymb :: TokenParser ([Expr] -> Expr)
-unqualifiedSymb = pChoice (map (\s -> function s <$ pKey (symbolName s)) symbols)
+    <|> function rootSymbol <$ pKey "root"
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
-qualifiedSymb = pChoice (map f dictionaries)
- where
-   f xs = case map dictionary xs of
-             Just d:_ -> pKey d <* pSpec '.' *> pChoice (map g xs)
-             _        -> pFail
-   g s  = function s <$ pKey (symbolName s)
+qualifiedSymb = (function . uncurry makeSymbol) <$> (pQVarid <|> pQConid)
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations = pLines True . pEquation

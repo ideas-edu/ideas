@@ -15,7 +15,8 @@ module Text.Scanning
    ( -- Data types
      Pos(..), Token(..)
      -- Token selectors
-   , isTokenConId, isTokenVarId, isTokenKeyword, isTokenSpecial
+   , isTokenConId, isTokenVarId, isTokenOpId, isTokenQConId
+   , isTokenQVarId, isTokenKeyword, isTokenSpecial
    , isTokenString, isTokenInt, isTokenReal, tokenPosition
      -- Scanner configuration
    , Scanner(..), defaultScanner, specialSymbols  
@@ -41,6 +42,9 @@ data Pos = Pos { line :: !Int, column :: !Int }
 data Token 
    = TokenConId   String Pos
    | TokenVarId   String Pos
+   | TokenOpId    String Pos
+   | TokenQConId  String String Pos
+   | TokenQVarId  String String Pos
    | TokenKeyword String Pos
    | TokenSpecial Char   Pos
    | TokenString  String Pos
@@ -54,63 +58,80 @@ instance Show Pos where
 instance Show Token where
    show token = 
       case token of
-         TokenConId   s _ -> "identifier " ++ s
-         TokenVarId   s _ -> "identifier " ++ s
-         TokenKeyword s _ -> "keyword " ++ s
-         TokenSpecial c _ -> "symbol " ++ [c]
-         TokenString  s _ -> "string " ++ show s
-         TokenInt     i _ -> "integer " ++ show i
-         TokenReal    d _ -> "floating-point number " ++ show d
+         TokenConId    s _ -> "identifier " ++ s
+         TokenVarId    s _ -> "identifier " ++ s
+         TokenOpId     s _ -> "operator " ++ s
+         TokenQConId q s _ -> "identifier " ++ q ++ "." ++ s
+         TokenQVarId q s _ -> "identifier " ++ q ++ "." ++ s
+         TokenKeyword  s _ -> "keyword " ++ s
+         TokenSpecial  c _ -> "symbol " ++ [c]
+         TokenString   s _ -> "string " ++ show s
+         TokenInt      i _ -> "integer " ++ show i
+         TokenReal     d _ -> "floating-point number " ++ show d
 
 ----------------------------------------------------------
 -- * Token selectors
 
 isTokenConId :: Token -> Maybe String
-isTokenConId   (TokenConId s _)   = Just s
-isTokenConId   _                  = Nothing
+isTokenConId (TokenConId s _) = Just s
+isTokenConId _                = Nothing
 
 isTokenVarId :: Token -> Maybe String
-isTokenVarId   (TokenVarId s _)   = Just s
-isTokenVarId   _                  = Nothing
+isTokenVarId (TokenVarId s _) = Just s
+isTokenVarId _                = Nothing
+
+isTokenOpId :: Token -> Maybe String
+isTokenOpId (TokenOpId s _) = Just s
+isTokenOpId _               = Nothing
+
+isTokenQConId :: Token -> Maybe (String, String)
+isTokenQConId (TokenQConId q s _) = Just (q, s)
+isTokenQConId _                   = Nothing
+
+isTokenQVarId :: Token -> Maybe (String, String)
+isTokenQVarId (TokenQVarId q s _) = Just (q, s)
+isTokenQVarId _                   = Nothing
 
 isTokenKeyword :: Token -> Maybe String
 isTokenKeyword (TokenKeyword s _) = Just s
-isTokenKeyword   _                = Nothing
+isTokenKeyword _                  = Nothing
 
 isTokenSpecial :: Token -> Maybe Char
 isTokenSpecial (TokenSpecial c _) = Just c
 isTokenSpecial   _                = Nothing
 
 isTokenString :: Token -> Maybe String
-isTokenString  (TokenString s _)  = Just s
-isTokenString   _                 = Nothing
+isTokenString (TokenString s _) = Just s
+isTokenString  _                = Nothing
 
 isTokenInt :: Token -> Maybe Int
-isTokenInt     (TokenInt i _)     = Just i
-isTokenInt   _                    = Nothing
+isTokenInt (TokenInt i _) = Just i
+isTokenInt _              = Nothing
 
 isTokenReal :: Token -> Maybe Double
-isTokenReal    (TokenReal d _)    = Just d
-isTokenReal   _                   = Nothing
+isTokenReal (TokenReal d _) = Just d
+isTokenReal _               = Nothing
       
 tokenPosition :: Token -> Pos
 tokenPosition token =
    case token of
-      TokenConId   _ p -> p
-      TokenVarId   _ p -> p
-      TokenKeyword _ p -> p
-      TokenSpecial _ p -> p
-      TokenString  _ p -> p
-      TokenInt     _ p -> p
-      TokenReal    _ p -> p
+      TokenConId    _ p -> p
+      TokenVarId    _ p -> p
+      TokenOpId     _ p -> p
+      TokenQConId _ _ p -> p
+      TokenQVarId _ _ p -> p
+      TokenKeyword  _ p -> p
+      TokenSpecial  _ p -> p
+      TokenString   _ p -> p
+      TokenInt      _ p -> p
+      TokenReal     _ p -> p
 
 ----------------------------------------------------------
 -- * Scanner configuration
 
 -- | Data type to configure a scanner
 data Scanner = Scanner
-   { fileName              :: Maybe String
-   , keywords              :: [String]
+   { keywords              :: [String]
    , keywordOperators      :: [String]
    , isIdentifierCharacter :: Char -> Bool
    , specialCharacters     :: String
@@ -122,8 +143,7 @@ data Scanner = Scanner
 -- | A default scanner configuration (using Haskell's special characters)
 defaultScanner :: Scanner
 defaultScanner = Scanner
-   { fileName              = Nothing
-   , keywords              = []
+   { keywords              = []
    , keywordOperators      = []
    , isIdentifierCharacter = \c -> isAlphaNum c || c `elem` "_'"
    , specialCharacters     = "(),;[]`{}"              -- Haskell's special characters 
@@ -157,7 +177,12 @@ scanWith scanner = rec (Pos 1 1)
               else rec newp rest
       | isAlpha x =
            case scanIdentifier scanner input of
-              -- to do: add qualified name
+              Just (Just q, s, xs) 
+                 | isLower (head s) -> make TokenQVarId
+                 | otherwise        -> make TokenQConId
+               where
+                 make f = f q s pos : rec newp xs
+                 newp   = incr (length q + length s + 1) pos
               Just (Nothing, s, xs)
                  | s `elem` keywords scanner -> make TokenKeyword
                  | isLower (head s)          -> make TokenVarId 
@@ -171,18 +196,6 @@ scanWith scanner = rec (Pos 1 1)
               Just (Left i,  newp, xs) -> TokenInt  i pos : rec newp xs
               Just (Right d, newp, xs) -> TokenReal d pos : rec newp xs
               _ -> error "unexpected case in scanner" 
-                  {-
-                  = let (xs, ys) = break (not . isDigit) rest
-                    in case ys of
-                          ('.':a:as) | isDigit a -> -- to do: scientific notation floating-points
-                             let (bs, cs) = break (not . isDigit) as
-                                 newp = advance (x:xs++('.':a:bs)) pos 
-                             in TokenReal (read (x:xs++('.':a:bs))) pos : rec newp cs 
-                          _ -> let n = if x=='-'
-                                       then negate (fromIntegral (fromJust (readInt xs)))
-                                       else fromIntegral (fromJust (readInt (x:xs)))
-                                   newp = advance (x:xs) pos
-                               in TokenInt n pos : rec newp ys -}
       | x == '"' = 
            case scanString pos rest of
               Just (s, newp, xs) -> 
@@ -199,7 +212,9 @@ scanWith scanner = rec (Pos 1 1)
                newp     = incr (length (x:xs)) pos
                stop c   =  c `elem` specialCharacters scanner 
                         || c `notElem` operatorCharacters scanner
-           in TokenKeyword (x:xs) pos : rec newp ys
+           in if (x:xs) `elem` keywordOperators scanner
+              then TokenKeyword (x:xs) pos : rec newp ys
+              else TokenOpId (x:xs) pos : rec newp ys
       | otherwise = 
            let newp = incr 1 pos
            in TokenSpecial x pos : rec newp rest
@@ -214,7 +229,7 @@ scanIdentifier scanner (x:rest) | isAlpha x =
    case break (not . isIdentifierCharacter scanner) rest of
       (xs, '.':y:rest2) | qualifiedIdentifiers scanner && isAlpha y -> 
          let (ys, zs) = break (not . isIdentifierCharacter scanner) rest2
-         in Just (Just (x:xs), ys, zs)
+         in Just (Just (x:xs), y:ys, zs)
       (xs, ys) -> 
          Just (Nothing, x:xs, ys)
 scanIdentifier _ _ = Nothing

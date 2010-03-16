@@ -23,7 +23,7 @@ module Text.Parsing
    , pChainl, pChainr, pChoice, pFail
      -- * Subexpressions
    , fromMessage
-   , pKey, pSpec, pVarid, pConid, pParens
+   , pKey, pSpec, pVarid, pConid, pParens, pOpid, pQVarid, pQConid
    , pInteger, pReal, pString, pBracks, pCurly, pCommas, pLines
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
@@ -140,7 +140,8 @@ pInteger = fromIntegral <$> pInt
 pCommas :: TokenParser a -> TokenParser [a]
 pCommas p = optional ((:) <$> p <*> pList ((\_ a -> a) <$> pSpec ',' <*> p)) []
 
-pVarid, pConid, pString :: TokenParser String
+pVarid, pConid, pOpid, pString :: TokenParser String
+pQVarid, pQConid :: TokenParser (String, String)
 pInt :: TokenParser Int
 pReal   :: TokenParser Double
 
@@ -151,6 +152,9 @@ pKey t  = t UU.<$ TokenKeyword t minPos UU.<..> TokenKeyword t maxPos
 pSpec t = t UU.<$ TokenSpecial t minPos UU.<..> TokenSpecial t maxPos
 pVarid = (fromMaybe "" . isTokenVarId) UU.<$> TokenVarId minString minPos UU.<..> TokenVarId maxString maxPos
 pConid = (fromMaybe "" . isTokenConId) UU.<$> TokenConId minString minPos UU.<..> TokenConId maxString maxPos
+pOpid = (fromMaybe "" . isTokenOpId) UU.<$> TokenOpId minString minPos UU.<..> TokenOpId maxString maxPos
+pQVarid = (fromMaybe ("", "") . isTokenQVarId) UU.<$> TokenQVarId minString minString minPos UU.<..> TokenQVarId maxString maxString maxPos
+pQConid = (fromMaybe ("", "") . isTokenQConId) UU.<$> TokenQConId minString minString minPos UU.<..> TokenQConId maxString maxString maxPos
 pInt = (fromMaybe 0 . isTokenInt) UU.<$> TokenInt minBound minPos UU.<..> TokenInt maxBound maxPos
 pReal  = (fromMaybe 0 . isTokenReal) UU.<$> TokenReal minDouble minPos UU.<..> TokenReal maxDouble maxPos
 pString = (fromMaybe "" . isTokenString) UU.<$> TokenString minString minPos UU.<..> TokenString maxString maxPos

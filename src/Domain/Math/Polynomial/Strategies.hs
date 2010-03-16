@@ -83,7 +83,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
    simplifyForm = (fromEquation $ 
       label "square root simplification" $ 
            toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot)))
-        <|> hide (label "approximate result" $ 
+        <|> remove (label "approximate result" $ 
             toStrategy $ liftToContext (ruleMulti ruleApproximate))
 
    topForm = label "top form" $
@@ -93,7 +93,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
         <|> ruleMulti2 (ruleSomewhere distributeTimes) 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)
         <|> ruleOnce flipEquation)
-      |> (ruleOnce moveToLeft <|> hide (ruleOnce prepareSplitSquare))
+      |> (ruleOnce moveToLeft <|> remove (ruleOnce prepareSplitSquare))
    -- to do: find a better location in the strategy for splitting the square
    
 -----------------------------------------------------------

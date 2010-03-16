@@ -1,8 +1,8 @@
 <request service="derivation" exerciseid="math.quadreq" encoding="string">
 <configuration>
-   <expose name="approximate result"/>
-   <hide   name="square root simplification"/>
-   <fold   name="top form"/>
+   <reinsert name="approximate result"/>
+   <remove   name="square root simplification"/>
+   <collapse name="top form"/>
 </configuration>
 <state>
 <expr>x^2 - 3*x == -1</expr>

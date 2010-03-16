@@ -16,11 +16,11 @@ module Common.Strategy.Configuration
      --  Configure
   ,  configure
      -- Combinators
-   , hide, expose, fold, unfold, skip, insert
+   , remove, reinsert, collapse, expand, hide, reveal
    ) where
 
 import Common.Strategy.Abstract
-import Common.Strategy.Core hiding (Skip)
+import Common.Strategy.Core
 import Common.Strategy.Location
 import Common.Transformation
 
@@ -36,11 +36,11 @@ data ConfigLocation
    | ByLocation StrategyLocation
  deriving Show
  
-data ConfigAction = Hide | Expose | Fold | Unfold | Skip | Insert
+data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
    deriving (Show, Enum)
 
 configActions :: [ConfigAction]
-configActions = [Hide .. ]
+configActions = [Remove .. ]
 
 ---------------------------------------------------------------------
 -- Configure
@@ -71,30 +71,30 @@ getActions (loc, info) groups = map snd . filter (select . fst)
 doAction :: ConfigAction -> LabelInfo -> LabelInfo
 doAction action =
    case action of
-      Hide   -> setHidden True
-      Expose -> setHidden False
-      Fold   -> setFolded True
-      Unfold -> setFolded False
-      Skip   -> setSkipped True
-      Insert -> setSkipped False
+      Remove   -> setRemoved True
+      Reinsert -> setRemoved False
+      Collapse -> setCollapsed True
+      Expand   -> setCollapsed False
+      Hide     -> setHidden True
+      Reveal   -> setHidden False
 
 ---------------------------------------------------------------------
 -- Configuration combinators
 
-hide, expose :: IsLabeled f => f a -> LabeledStrategy a
+remove, reinsert :: IsLabeled f => f a -> LabeledStrategy a
+remove   = changeInfo (doAction Remove)
+reinsert = changeInfo (doAction Reinsert)
+
+collapse, expand :: IsLabeled f => f a -> LabeledStrategy a
+collapse = changeInfo (doAction Collapse)
+expand   = changeInfo (doAction Expand)
+
+hide, reveal :: IsLabeled f => f a -> LabeledStrategy a
 hide   = changeInfo (doAction Hide)
-expose = changeInfo (doAction Expose)
-
-fold, unfold :: IsLabeled f => f a -> LabeledStrategy a
-fold   = changeInfo (doAction Fold)
-unfold = changeInfo (doAction Unfold)
-
-skip, insert :: IsLabeled f => f a -> LabeledStrategy a
-skip   = changeInfo (doAction Skip)
-insert = changeInfo (doAction Insert)
+reveal = changeInfo (doAction Reveal)
 
 -- helpers
-setHidden, setFolded, setSkipped :: Bool -> LabelInfo -> LabelInfo
-setHidden  b info = info {hidden  = b}
-setFolded  b info = info {folded  = b}
-setSkipped b info = info {skipped = b}
+setRemoved, setCollapsed, setHidden :: Bool -> LabelInfo -> LabelInfo
+setRemoved   b info = info {removed   = b}
+setCollapsed b info = info {collapsed = b}
+setHidden    b info = info {hidden    = b}

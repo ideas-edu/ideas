@@ -18,7 +18,7 @@ module Common.Strategy.Abstract
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, fixCore, makeLabeledStrategy
    , LabelInfo, strategyName, processLabelInfo, changeInfo
-   , hidden, skipped, folded, labelName, IsLabeled(..)
+   , removed, collapsed, hidden, labelName, IsLabeled(..)
    ) where
 
 import Common.Utils (commaList)
@@ -47,16 +47,16 @@ instance Apply Strategy where
 
 data LabelInfo = Info 
    { labelName :: String 
+   , removed   :: Bool
+   , collapsed :: Bool
    , hidden    :: Bool
-   , skipped   :: Bool
-   , folded    :: Bool
    }
 
 instance Show LabelInfo where
    show info = 
-      let ps = ["hidden"  | hidden info] ++ 
-               ["skipped" | skipped info] ++
-               ["folded"  | folded info]
+      let ps = ["removed"   | removed   info] ++ 
+               ["collapsed" | collapsed info] ++
+               ["hidden"    | hidden    info]
           extra = " (" ++ commaList ps ++ ")"
       in show (labelName info) ++ if null ps then "" else extra
 
@@ -143,17 +143,17 @@ processLabelInfo :: (l -> LabelInfo) -> Core l a -> Core l a
 processLabelInfo getInfo = mapCore forLabel forRule
  where
    forLabel l c 
-      | hidden info = Fail
-      | folded info = Rule (Just l) asRule
-      | otherwise   = new
+      | removed info   = Fail
+      | collapsed info = Rule (Just l) asRule
+      | otherwise      = new
     where 
-      new | skipped info = mapRule minorRule (Label l c)
-          | otherwise    = Label l c
+      new | hidden info = mapRule minorRule (Label l c)
+          | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (labelName info ++ " (folded)") (applyAll new)
+      asRule = makeSimpleRuleList (labelName info ++ " (collapsed)") (applyAll new)
    forRule (Just l) r 
-      | hidden info  = Fail
-      | skipped info = Rule (Just l) (minorRule r)
+      | removed info = Fail
+      | hidden info  = Rule (Just l) (minorRule r)
       | otherwise    = Rule (Just l) r
     where
       info = getInfo l

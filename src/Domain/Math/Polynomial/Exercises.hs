@@ -92,8 +92,8 @@ quadraticNoABCExercise = quadraticExercise
    , strategy     = configure cfg quadraticStrategy
    }
  where
-   cfg = [ (ByName (name prepareSplitSquare), Expose)
-         , (ByName "abc form", Hide)
+   cfg = [ (ByName (name prepareSplitSquare), Reinsert)
+         , (ByName "abc form", Remove)
          ]
          
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))
@@ -105,8 +105,8 @@ quadraticWithApproximation = quadraticExercise
    , equivalence  = equivalentApprox
    }
  where
-   cfg = [ (ByName "approximate result", Expose)
-         , (ByName "square root simplification", Hide)
+   cfg = [ (ByName "approximate result", Reinsert)
+         , (ByName "square root simplification", Remove)
          ]
 
 -- fixMe = checksForList quadraticWithApproximation

@@ -17,7 +17,8 @@ module Common.Strategy.Abstract
    , mapRules, mapRulesS, cleanUpStrategy
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, fixCore, makeLabeledStrategy
-   , LabelInfo, strategyName, processLabelInfo, changeInfo
+   , toLabeledStrategy
+   , LabelInfo, strategyName, processLabelInfo, changeInfo, makeInfo
    , removed, collapsed, hidden, labelName, IsLabeled(..)
    ) where
 
@@ -103,6 +104,12 @@ data LabeledStrategy a = LS
 
 makeLabeledStrategy :: IsStrategy f => LabelInfo -> f a -> LabeledStrategy a
 makeLabeledStrategy info = LS info . toStrategy
+
+toLabeledStrategy :: Monad m => Strategy a -> m (LabeledStrategy a)
+toLabeledStrategy s = 
+   case toCore s of
+      Label l c -> return (makeLabeledStrategy l (fromCore c))
+      _         -> fail "Strategy without label"
 
 strategyName :: LabeledStrategy a -> String
 strategyName = getLabel

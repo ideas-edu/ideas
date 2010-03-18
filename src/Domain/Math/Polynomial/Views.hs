@@ -76,13 +76,18 @@ polyViewForWith pv v = makeView f g
             p <- f a
             return (fmap (/c) p)
          Sym s [a, n] | s == powerSymbol ->
-           liftM2 power (f a) (match integralView n) -- non-negative??
+           liftM2 power (f a) (matchNat n)
          _ -> do 
             guard (pv `notElem` collectVars expr)
             liftM con (match v expr)
    
    g        = build sumView . map h . reverse . terms
    h (a, n) = build v a .*. (Var pv .^. fromIntegral n)
+   
+   matchNat expr = do
+      n <- match integralView expr
+      guard (n >= 0)
+      return n
 
 -------------------------------------------------------------------
 -- Quadratic view

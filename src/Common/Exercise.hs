@@ -319,8 +319,10 @@ checkExamples ex = do
          putStrLn "Passed all tests"
 
 checksForTerm :: Monad m => Exercise a -> a -> m ()
-checksForTerm ex a = 
-   let txt = prettyPrinter ex a in
+checksForTerm ex a = do
+   unless (isSuitable ex a) $
+      fail $ "not suitable: " ++ prettyPrinter ex a
+   let txt = prettyPrinter ex a
    case derivation (derivationTree (strategy ex) (inContext ex a)) of
       Nothing -> fail $ "no derivation for " ++ txt
       Just theDerivation -> do

@@ -45,6 +45,7 @@ linearExercise = makeExercise
    , parser       = parseExprWith (pEquation pExpr)
    , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
+   , isSuitable   = (`belongsTo` linearEquationView)
    , isReady      = solvedRelation
    , extraRules   = liftToContext buggyPlus : linearRules
    , strategy     = mapRules liftToContext linearStrategy
@@ -63,6 +64,7 @@ quadraticExercise = makeExercise
                                  Right xs -> Right (build (switchView equationView) xs)
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
+   , isSuitable   = (`belongsTo` (switchView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
    , extraRules   = map (liftToContext . liftRule (switchView equationView)) $ 
                        quadraticRules ++ abcBuggyRules
@@ -78,6 +80,7 @@ higherDegreeExercise = makeExercise
    , parser       = parser quadraticExercise
    , similarity   = eqOrList cleanUpExpr2
    , equivalence  = equivalentRelation (viewEquivalent higherDegreeEquationsView)
+   , isSuitable   = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
    , isReady      = solvedRelations
    , extraRules   = map (liftToContext . liftRule (switchView equationView)) higherDegreeRules
    , strategy     = higherDegreeStrategy

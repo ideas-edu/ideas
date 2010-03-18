@@ -28,6 +28,7 @@ makeExercisePage :: ExercisePackage a -> IO ()
 makeExercisePage pkg = do
    let code = exerciseCode (exercise pkg)
    generatePage (exercisePageFile code) (exercisePage pkg)
+   generatePage (exerciseStrategyFile code) (strategyPage pkg)
    case derivationsPage pkg of 
       Nothing   -> return ()
       Just this ->
@@ -36,6 +37,8 @@ makeExercisePage pkg = do
 exercisePage :: ExercisePackage a -> HTML
 exercisePage pkg = defaultPage title 2 $ do
    h1 (description ex)
+   
+   h2 "1. General information"
    table 
       [ [bold $ text "Code:",   ttText (show $ exerciseCode ex)]
       , [bold $ text "Status:", text (show $ status ex)]
@@ -56,14 +59,7 @@ exercisePage pkg = defaultPage title 2 $ do
         ]
       ]
    
-   h2 "1. Strategy"
-   let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
-       g (Left a)  = text (strategyName a)
-       g (Right a) = text (name a ++ " (rule)") 
-       indent n    = text (replicate (3*n) '.')
-   table ( [bold $ text "Location", bold $ text "Label"] 
-         : map f (strategyLocations (strategy ex))
-         )
+   para $ link (up 2 ++ exerciseStrategyFile code) (text "See strategy details")
 
    h2 "2. Rules"
    let rs = rulesInStrategy (strategy ex)
@@ -92,6 +88,24 @@ exercisePage pkg = defaultPage title 2 $ do
    ex    = exercise pkg
    code  = exerciseCode ex
    title = "Exercise " ++ show (exerciseCode ex)
+
+strategyPage :: ExercisePackage a -> HTML
+strategyPage pkg = defaultPage title 2 $ do
+   h1 ("Strategy of " ++ show code) 
+   h2 "1. Representation in XML"
+   preText (XML.showXML (XML.toXML (strategy ex)))
+   h2 "2. Locations" 
+   let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
+       g (Left a)  = text (strategyName a)
+       g (Right a) = text (name a ++ " (rule)") 
+       indent n    = text (replicate (3*n) '.')
+   table ( [bold $ text "Location", bold $ text "Label"] 
+         : map f (strategyLocations (strategy ex))
+         )
+ where
+   ex    = exercise pkg
+   code  = exerciseCode ex
+   title = "Strategy for " ++ show code
    
 derivationsPage :: ExercisePackage a -> Maybe HTML
 derivationsPage pkg

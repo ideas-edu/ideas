@@ -94,6 +94,12 @@ exercisePageFile code =
    ++ filter (not . isSpace) (identifier code) 
    ++ ".html"
 
+exerciseStrategyFile :: ExerciseCode -> String
+exerciseStrategyFile code = 
+   exercisePagePath code
+   ++ filter (not . isSpace) (identifier code)
+   ++ "-strategy.html"
+
 exerciseDerivationsFile :: ExerciseCode -> String
 exerciseDerivationsFile code = 
    exercisePagePath code

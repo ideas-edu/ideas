@@ -161,11 +161,17 @@ mulZero = makeSimpleRuleList "multiplication is zero" $ onceJoinM bothSides
 oneVar :: ConfigCoverUp
 oneVar = configCoverUp
    { configName        = Just "one var"
-   , predicateCovered  = (==1) . length . collectVars
+   , predicateCovered  = \a -> p1 a || p2 a
    , predicateCombined = noVars
    , coverLHS          = True
    , coverRHS          = True
    }
+ where 
+   p1 = (==1) . length . collectVars
+   -- predicate p2 tests for cases such as 12*(x^2-3*x)+8 == 56
+   p2 a = fromMaybe False $ do
+      (x, y) <- match timesView a
+      return (hasVars x /= hasVars y)
 
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2

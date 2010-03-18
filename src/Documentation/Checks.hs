@@ -58,7 +58,7 @@ main = do
    checkExercise LA.gramSchmidtExercise
    checkExercise RA.cnfExercise
    forM_ exercises $ \(Some ex) ->
-      checksForList ex
+      checkExamples ex
    
    -- putStrLn "* 3. Confluence checks"
    -- logicConfluence

@@ -27,7 +27,7 @@ module Common.Exercise
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
    , checkExercise, checkParserPretty
-   , checksForList
+   , checkExamples
    ) where
 
 import Common.Apply
@@ -305,14 +305,18 @@ checkParserPrettyEx :: Exercise a -> a -> Bool
 checkParserPrettyEx ex = 
    checkParserPretty (similarity ex) (parser ex) (prettyPrinter ex)
 
-checksForList :: Exercise a -> IO ()
-checksForList ex
-   | null xs = return ()
-   | otherwise = do
-         let err s = putStrLn $ "Error: " ++ s
-         putStrLn ("** " ++ show (exerciseCode ex))
-         mapM_ (either err return . checksForTerm ex) xs
- where xs = examples ex
+checkExamples :: Exercise a -> IO ()
+checkExamples ex = do
+   let xs = examples ex
+   unless (null xs) $ do
+      putStrLn ("** " ++ show (exerciseCode ex))
+      putStrLn $ "Checking " ++ show (length xs) ++ " examples"
+      bs <- forM xs $ \a -> 
+         case checksForTerm ex a of 
+            Left s  -> putStrLn ("Error: " ++ s) >> return False
+            Right _ -> return True 
+      when (and bs) $ 
+         putStrLn "Passed all tests"
 
 checksForTerm :: Monad m => Exercise a -> a -> m ()
 checksForTerm ex a = 

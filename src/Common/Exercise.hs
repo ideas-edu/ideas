@@ -326,8 +326,10 @@ checksForTerm ex a = do
    case derivation (derivationTree (strategy ex) (inContext ex a)) of
       Nothing -> fail $ "no derivation for " ++ txt
       Just theDerivation -> do
-         unless (maybe False (isReady ex) (fromContext (last as))) $
-            fail $ "not solved: " ++ txt
+         let final = fromContext (last as)
+         unless (maybe False (isReady ex)  final) $
+            fail $ "not solved: " ++ txt ++ "  =>  " ++ 
+                          maybe "" (prettyPrinter ex) final
          case [ (x, y) | x <- as, y <- as, not (equivalenceContext ex x y) ] of
             (x, y):_ -> fail $  "not equivalent: " 
                              ++ prettyPrinterContext ex x ++ "  and  "

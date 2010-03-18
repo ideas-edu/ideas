@@ -56,7 +56,7 @@ calcPower = makeSimpleRule "calculate power" $ \ expr -> do
   x        <- match integralView e2
   if x > 0 
     then return $ fromRational $ a Prelude.^ x
-    else return $ 1 ./. (e1 .^. negate e2)
+    else return $ 1 ./. (e1 .^. neg e2)
 
 calcPowerPlus = 
   makeCommutative sumView (.+.) $ calcBinPowerRule "plus" (.+.) isPlus 
@@ -196,3 +196,10 @@ simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
   let expr' = simplifyWith (second normalizeProduct) productView $ expr
   guard (expr /= expr')
   return expr'
+  
+pushNegOut :: Rule Expr
+pushNegOut = makeSimpleRule "push negation out" $ \ expr -> do
+  (a, x) <- match simplePowerView expr
+  a'     <- isNegate a
+  x'     <- match integerView x
+  return $ (if odd x' then neg else id) $ build simplePowerView (a', x)

@@ -56,6 +56,7 @@ powerStrategy = makeStrategy
       , calcPowerPlus
       , calcPowerMinus
       , myFractionTimes
+      , pushNegOut
       ]
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)

@@ -40,7 +40,7 @@ heliumExercise = makeExercise
    , isReady        = const True
    , isSuitable     = const True
    , extraRules     = []
-   , strategy       = mapRules ignoreContext fromBinStrategy
+   , strategy       = mapRules liftToContext fromBinStrategy
    , testGenerator  = Just arbitrary
    , randomExercise = useGenerator (const True) (const (return undef))
    }

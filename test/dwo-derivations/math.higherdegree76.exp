@@ -1,0 +1,45 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="higher subst">
+      <expr>
+        4*p^2-29*p-24 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        p == 8 or p == -3/4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^2 == 8 or x^2 == -3/4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == sqrt 8 or x == -sqrt 8 or x^2 == -3/4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == sqrt 8 or x == -sqrt 8
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

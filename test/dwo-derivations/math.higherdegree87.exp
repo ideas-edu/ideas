@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="all power factors">
+      <expr>
+        x == 0 or x^2-11*x+18 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        x == 0 or (x-2)*(x-9) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 0 or x == 2 or x == 9
+      </expr>
+    </elem>
+  </list>
+</reply>
+

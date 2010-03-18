@@ -1,13 +1,23 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="all power factors">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        x == 0 or x^2 == 9
+        8*x^2 == 18
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^2 == 9/4
       </expr>
     </elem>
     <elem ruleid="cover-up power [vars]">
       <expr>
-        x == 0 or x == 3 or x == -3
+        x == sqrt (9/4) or x == -sqrt (9/4)
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
+      <expr>
+        x == 3/2 or x == -3/2
       </expr>
     </elem>
   </list>

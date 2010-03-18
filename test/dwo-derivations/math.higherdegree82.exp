@@ -1,0 +1,50 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        5*x^6-39*x^3-8 == 0
+      </expr>
+    </elem>
+    <elem ruleid="higher subst">
+      <expr>
+        5*p^2-39*p-8 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        p == 8 or p == -1/5
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1681, a==5, b==-39, c==-8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^3 == 8 or x^3 == -1/5
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1681, a==5, b==-39, c==-8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x^3 == -1/5
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1681, a==5, b==-39, c==-8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == -1/root 5 3
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1681, a==5, b==-39, c==-8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

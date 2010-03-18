@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      9*x^4+14*x^2 == 8
+    </expr>
+  </state>
+</request>

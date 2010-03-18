@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        1/4*x^6 == 16
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^6 == 64
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == -2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

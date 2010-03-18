@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        3*(2*x+5)^2 == 12
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        (2*x+5)^2 == 4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        2*x+5 == 2 or 2*x+5 == -2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        2*x == -3 or 2*x+5 == -2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -3/2 or 2*x+5 == -2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -3/2 or 2*x == -7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -3/2 or x == -7/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

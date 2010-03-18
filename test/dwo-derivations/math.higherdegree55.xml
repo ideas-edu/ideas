@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      14*x == x^3+5*x^2
+    </expr>
+  </state>
+</request>

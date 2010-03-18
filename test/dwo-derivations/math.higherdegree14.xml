@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      2*(3*x-6)^6-24 == -22
+    </expr>
+  </state>
+</request>

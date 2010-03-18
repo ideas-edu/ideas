@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        1/2*x^4 == 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^4 == 14
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == root 14 4 or x == -root 14 4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

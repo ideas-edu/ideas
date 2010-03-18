@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      4*x^3-8 == 100
+    </expr>
+  </state>
+</request>

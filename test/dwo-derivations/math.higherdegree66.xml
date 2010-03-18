@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      x^4 == x^2+12
+    </expr>
+  </state>
+</request>

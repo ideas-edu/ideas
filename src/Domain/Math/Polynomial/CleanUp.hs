@@ -38,8 +38,9 @@ import Data.Ratio
 
 simplerRoot :: Rational -> Integer -> Expr
 simplerRoot a b 
-   | b <  0    = 1 ./. simplerRoot a (abs b)
-   | otherwise = f (numerator a) b ./. f (denominator a) b
+   | b < 0          = 1 ./. simplerRoot a (abs b)
+   | a < 0 && odd b = neg (simplerRoot (abs a) b)
+   | otherwise      = f (numerator a) b ./. f (denominator a) b
  where
    f x y
       | x == 0              = 0

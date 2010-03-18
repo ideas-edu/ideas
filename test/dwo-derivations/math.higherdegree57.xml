@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      x^3+6*x^2+9*x == 0
+    </expr>
+  </state>
+</request>

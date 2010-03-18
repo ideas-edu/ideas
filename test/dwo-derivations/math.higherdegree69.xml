@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      4*x^4+4 == 17*x^2
+    </expr>
+  </state>
+</request>

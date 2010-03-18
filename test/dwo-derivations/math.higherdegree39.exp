@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        32*x^3 == 4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^3 == 1/8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 1/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

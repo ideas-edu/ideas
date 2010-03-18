@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      8*x^6+31*x^3 == 4
+    </expr>
+  </state>
+</request>

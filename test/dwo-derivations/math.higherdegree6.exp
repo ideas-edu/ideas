@@ -1,13 +1,18 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="all power factors">
+    <elem ruleid="cover-up plus [one var]">
       <expr>
-        x == 0 or 7*x == 8
+        1/9*x^6 == 81
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
-        x == 0 or x == 8/7
+        x^6 == 729
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 3 or x == -3
       </expr>
     </elem>
   </list>

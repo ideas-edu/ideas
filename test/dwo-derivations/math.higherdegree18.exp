@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        4*x^5 == 44
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^5 == 11
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == root 11 5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

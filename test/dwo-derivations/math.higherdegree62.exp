@@ -1,0 +1,53 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="higher subst">
+      <expr>
+        p^2-9*p+20 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (p-4)*(p-5) == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        p == 4 or p == 5
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^2 == 4 or x^2 == 5
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == -2 or x^2 == 5
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == -2 or x == sqrt 5 or x == -sqrt 5
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

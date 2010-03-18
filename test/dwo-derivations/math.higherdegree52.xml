@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      3*(2*x+7)^3+11 == 35
+    </expr>
+  </state>
+</request>

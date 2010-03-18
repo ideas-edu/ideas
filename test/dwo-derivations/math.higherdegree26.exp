@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        5*x^6 == 105
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^6 == 21
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == root 21 6 or x == -root 21 6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

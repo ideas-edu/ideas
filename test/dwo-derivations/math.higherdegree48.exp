@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus right [one var]">
+      <expr>
+        1/2*(x-1)^5 == -4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        (x-1)^5 == -8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x-1 == -root 8 5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == -root 8 5+1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

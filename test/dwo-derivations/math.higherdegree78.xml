@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      27*x^6+8 == 217*x^3
+    </expr>
+  </state>
+</request>

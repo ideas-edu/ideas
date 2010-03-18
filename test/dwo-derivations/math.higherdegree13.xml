@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      3*(2*x+5)^2+9 == 21
+    </expr>
+  </state>
+</request>

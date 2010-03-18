@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      2*(1/2*x+3)^7-11 == -9
+    </expr>
+  </state>
+</request>

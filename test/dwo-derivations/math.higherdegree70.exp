@@ -1,0 +1,50 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        16*x^4-136*x^2+225 == 0
+      </expr>
+    </elem>
+    <elem ruleid="higher subst">
+      <expr>
+        16*p^2-136*p+225 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        p == 25/4 or p == 9/4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^2 == 25/4 or x^2 == 9/4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == sqrt (25/4) or x == -sqrt (25/4) or x^2 == 9/4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == sqrt (25/4) or x == -sqrt (25/4) or x == sqrt (9/4) or x == -sqrt (9/4)
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==4096, a==16, b==-136, c==225, subst==(p==x^2)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

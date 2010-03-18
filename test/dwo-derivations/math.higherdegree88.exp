@@ -1,0 +1,25 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="all power factors">
+      <expr>
+        x == 0 or x^2+36 == 13*x
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x == 0 or x^2-13*x+36 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        x == 0 or (x-4)*(x-9) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == 0 or x == 4 or x == 9
+      </expr>
+    </elem>
+  </list>
+</reply>
+

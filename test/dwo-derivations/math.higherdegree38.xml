@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      1/5*x^3+27 == 52
+    </expr>
+  </state>
+</request>

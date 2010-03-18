@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      4*x^8-19 == 9
+    </expr>
+  </state>
+</request>

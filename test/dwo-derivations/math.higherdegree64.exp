@@ -1,0 +1,58 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        x^4+2*x^2-24 == 0
+      </expr>
+    </elem>
+    <elem ruleid="higher subst">
+      <expr>
+        p^2+2*p-24 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (p-4)*(p+6) == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        p == 4 or p == -6
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^2 == 4 or x^2 == -6
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == -2 or x^2 == -6
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == -2
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

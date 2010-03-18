@@ -1,7 +1,7 @@
 <request service="derivation" exerciseid="math.higherdegree" encoding="string">
   <state>
     <expr>
-      x^3+36*x == 13*x^2
+      16-32*x^5 == -227
     </expr>
   </state>
 </request>

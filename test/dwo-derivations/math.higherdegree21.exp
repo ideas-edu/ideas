@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus right [one var]">
+      <expr>
+        5*x^3 == -70
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^3 == -14
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == -root 14 3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

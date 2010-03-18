@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        3*(x-2)^4 == 30
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        (x-2)^4 == 10
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x-2 == root 10 4 or x-2 == -root 10 4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == root 10 4+2 or x-2 == -root 10 4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == root 10 4+2 or x == -root 10 4+2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

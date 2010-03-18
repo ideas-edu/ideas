@@ -1,0 +1,20 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus right [one var]">
+      <expr>
+        1/9*x^8 == 5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x^8 == 45
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == root 45 8 or x == -root 45 8
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      (3-2*x)^4+23 == 279
+    </expr>
+  </state>
+</request>

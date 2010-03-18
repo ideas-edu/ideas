@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      18*x^8-11 == 7
+    </expr>
+  </state>
+</request>

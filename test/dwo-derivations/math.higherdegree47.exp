@@ -1,0 +1,30 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        1/3*(x+5)^6 == 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        (x+5)^6 == 21
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x+5 == root 21 6 or x+5 == -root 21 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == root 21 6-5 or x+5 == -root 21 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == root 21 6-5 or x == -root 21 6-5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

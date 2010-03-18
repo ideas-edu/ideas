@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      1/2*x^4+5 == 12
+    </expr>
+  </state>
+</request>

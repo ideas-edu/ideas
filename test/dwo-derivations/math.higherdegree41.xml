@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      14-2*x^3 == 700
+    </expr>
+  </state>
+</request>

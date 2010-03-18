@@ -1,18 +1,18 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="all power factors">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        x == 0 or x^2-11*x+18 == 0
+        8*x^3 == 125
       </expr>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="cover-up times [vars]">
       <expr>
-        x == 0 or (x-2)*(x-9) == 0
+        x^3 == 125/8
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="cover-up power [vars]">
       <expr>
-        x == 0 or x == 2 or x == 9
+        x == 5/2
       </expr>
     </elem>
   </list>

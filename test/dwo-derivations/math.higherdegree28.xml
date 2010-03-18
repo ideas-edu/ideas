@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      5*x^6+7 == 97
+    </expr>
+  </state>
+</request>

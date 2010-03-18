@@ -1,7 +1,7 @@
 <request service="derivation" exerciseid="math.higherdegree" encoding="string">
   <state>
     <expr>
-      x^3-5*x == 0
+      x^5-12 == 20
     </expr>
   </state>
 </request>

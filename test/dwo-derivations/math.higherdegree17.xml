@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      2*x^3+9 == 19
+    </expr>
+  </state>
+</request>

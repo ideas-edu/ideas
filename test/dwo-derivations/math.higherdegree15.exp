@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -2*(4*x-5)^4 == -8192
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        (4*x-5)^4 == 4096
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        4*x-5 == 8 or 4*x-5 == -8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        4*x == 13 or 4*x-5 == -8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 13/4 or 4*x-5 == -8
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 13/4 or 4*x == -3
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 13/4 or x == -3/4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

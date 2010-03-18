@@ -1,25 +1,29 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="all power factors">
+    <elem ruleid="cover-up plus [one var]">
       <expr>
-        x == 0 or x^2-4*x-9 == 0
+        3*(2*x-1)^3 == 648
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="cover-up times [vars]">
       <expr>
-        x == 0 or x == (4+sqrt 52)/2 or x == (4-sqrt 52)/2
+        (2*x-1)^3 == 216
       </expr>
-      <context>
-        <item name="clipboard" value="[D==52, a==1, b==-4, c==-9]"/>
-      </context>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="cover-up power [vars]">
       <expr>
-        x == 0 or x == 2+sqrt 13 or x == 2-sqrt 13
+        2*x-1 == 6
       </expr>
-      <context>
-        <item name="clipboard" value="[D==52, a==1, b==-4, c==-9]"/>
-      </context>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        2*x == 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 7/2
+      </expr>
     </elem>
   </list>
 </reply>

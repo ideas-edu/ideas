@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        2*(3*x-6)^6 == 2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        (3*x-6)^6 == 1
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        3*x-6 == 1 or 3*x-6 == -1
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        3*x == 7 or 3*x-6 == -1
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 7/3 or 3*x-6 == -1
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 7/3 or 3*x == 5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 7/3 or x == 5/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

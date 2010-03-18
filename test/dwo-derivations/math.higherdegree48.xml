@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      6-1/2*(x-1)^5 == 10
+    </expr>
+  </state>
+</request>

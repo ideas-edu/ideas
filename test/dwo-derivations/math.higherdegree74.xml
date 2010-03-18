@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      2*x^4 == x^2+3
+    </expr>
+  </state>
+</request>

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      9*x^4-28*x^2+3 == 0
+    </expr>
+  </state>
+</request>

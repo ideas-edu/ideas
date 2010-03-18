@@ -1,0 +1,66 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        -x^4+7*x^2+18 == 0
+      </expr>
+    </elem>
+    <elem ruleid="higher subst">
+      <expr>
+        -p^2+7*p+18 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="simpler polynomial">
+      <expr>
+        p^2-7*p-18 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (p+2)*(p-9) == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        p == -2 or p == 9
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^2 == -2 or x^2 == 9
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x^2 == 9
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 3 or x == -3
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^2)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,50 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        27*x^6-217*x^3+8 == 0
+      </expr>
+    </elem>
+    <elem ruleid="higher subst">
+      <expr>
+        27*p^2-217*p+8 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        p == 8 or p == 1/27
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==46225, a==27, b==-217, c==8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^3 == 8 or x^3 == 1/27
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==46225, a==27, b==-217, c==8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x^3 == 1/27
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==46225, a==27, b==-217, c==8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2 or x == 1/3
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==46225, a==27, b==-217, c==8, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

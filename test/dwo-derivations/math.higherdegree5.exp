@@ -1,23 +1,13 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="all power factors">
+    <elem ruleid="cover-up times [vars]">
       <expr>
-        x == 0 or x^2+2*x == 24
+        x^4 == 16
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="cover-up power [vars]">
       <expr>
-        x == 0 or x^2+2*x-24 == 0
-      </expr>
-    </elem>
-    <elem ruleid="nice factors">
-      <expr>
-        x == 0 or (x-4)*(x+6) == 0
-      </expr>
-    </elem>
-    <elem ruleid="multiplication is zero">
-      <expr>
-        x == 0 or x == 4 or x == -6
+        x == 2 or x == -2
       </expr>
     </elem>
   </list>

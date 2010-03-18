@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.higherdegree" encoding="string">
+  <state>
+    <expr>
+      -2*(4*x-5)^4+192 == -8000
+    </expr>
+  </state>
+</request>

@@ -1,0 +1,50 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="move to left">
+      <expr>
+        8*x^6+31*x^3-4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="higher subst">
+      <expr>
+        8*p^2+31*p-4 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        p == 1/8 or p == -4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="subst back var">
+      <expr>
+        x^3 == 1/8 or x^3 == -4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 1/2 or x^3 == -4
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 1/2 or x == -root 4 3
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

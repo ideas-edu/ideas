@@ -86,7 +86,6 @@ makeCommutative view op rule =
           Nothing -> fail ""
       Nothing -> fail ""
     
-split :: (Expr -> Expr -> Expr) -> [Expr] -> [(Expr, [Expr])]
 split op xs = f xs
       where
         f (y:ys) | not (null ys) = [(y `op` z, xs \\ [y, z]) | z <- ys] ++ f ys 

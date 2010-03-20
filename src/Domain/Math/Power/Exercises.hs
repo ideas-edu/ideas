@@ -21,7 +21,7 @@ import Prelude hiding ( (^) )
 import Common.Utils (distinct)
 import Common.Apply 
 import Common.Exercise
-import Common.Strategy
+import Common.Strategy hiding (not)
 import Common.View
 import Common.Context
 import Common.Navigator
@@ -39,7 +39,9 @@ import Domain.Math.Power.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Tests
 
+
 import Control.Monad
+import Data.List
 import Data.Maybe
 import qualified Data.Map as M
 --import Domain.Math.Power.Generators
@@ -47,25 +49,31 @@ import qualified Data.Map as M
 ------------------------------------------------------------
 -- Exercises
 
-isPower :: Expr -> Bool
-isPower (Sym s [Var _,y]) | s==powerSymbol = y `belongsTo` rationalView
-isPower _ = False
+isSimplePower :: Expr -> Bool
+isSimplePower (Sym s [Var _,y]) | s==powerSymbol = y `belongsTo` rationalView
+isSimplePower _ = False
 
-isPowerNonNeg :: Expr -> Bool
-isPowerNonNeg expr = 
+isPower :: View Expr a -> Expr -> Bool
+isPower v expr = 
      let Just (_, xs) = match productView expr 
          f (Nat 1 :/: a) = g a
          f a = g a
-         g (Sym s [Var _,Nat _]) | s==powerSymbol = True
+         g (Sym s [Var _, a]) | s==powerSymbol = True && isJust (match v a)
          g (Sym s [x, Nat _]) | s==rootSymbol = g x
          g (Sqrt x) = g x
          g (Var _) = True
          g a = a `belongsTo` rationalView
      in distinct (concatMap collectVars xs) && all f xs
+     
+isPowerAdd :: Expr -> Bool
+isPowerAdd expr =
+  let Just xs = match sumView expr
+  in all (isPower rationalView) xs && not (applicable calcPowerPlus expr)
 
-normPowerNonNeg :: View Expr (Rational, M.Map String Rational)
-normPowerNonNeg = makeView f g
+normPowerNonNeg :: View Expr (M.Map String Rational, Rational) -- (Rational, M.Map String Rational)
+normPowerNonNeg = makeView (liftM swap . f) (g . swap)
  where
+     swap (x,y) = (y,x)
      f expr = 
         case expr of
            Sym s [a,b] 
@@ -94,6 +102,9 @@ normPowerNonNeg = makeView f g
              guard (r2 /= 0)
              return (r1/r2, M.unionWith (+) m1 (M.map negate m2))
            Var s -> return (1, M.singleton s 1)
+           Negate x -> do 
+             (r, m) <- f x
+             return (negate r, m)
            _ -> do
              r <- match rationalView expr
              return (fromRational r, M.empty)
@@ -101,6 +112,16 @@ normPowerNonNeg = makeView f g
        let xs = map f (M.toList m)
            f (s, r) = Var s .^. fromRational r
        in build productView (False, fromRational r : xs)
+
+type PowerMap = (M.Map String Rational, Rational) -- (Rational, M.Map String Rational)
+
+normPowerView' :: View Expr [PowerMap]
+normPowerView' = makeView (liftM h . f) g
+  where
+    f = (mapM (match normPowerNonNeg) =<<) . match sumView
+    g = build sumView . map (build normPowerNonNeg)
+    h :: [PowerMap] -> [PowerMap]
+    h = map (foldr1 (\(x,y) (p,q) -> (x,y+q))) . groupBy (\x y -> fst x == fst y) . sort
 
 normPowerView :: View Expr (String, Rational)
 normPowerView = makeView f g
@@ -148,7 +169,9 @@ simplifyPowerExercise :: Exercise Expr
 simplifyPowerExercise = (powerExercise powerStrategy)
    { description  = "simplify expression (powers)"
    , exerciseCode = makeCode "math" "simplifyPower"
-   , isReady      = isPowerNonNeg
+   , isReady      = isPowerAdd
+   , isSuitable   = (`belongsTo` normPowerView')
+   , equivalence  = viewEquivalent normPowerView'
    , examples     = concat $ simplerPowers ++ powers1 ++ powers2
    }
 
@@ -156,7 +179,7 @@ powerOfExercise :: Exercise Expr
 powerOfExercise = (powerExercise powerStrategy)
    { description  = "write as a power of a"
    , exerciseCode = makeCode "math" "powerOf"
-   , isReady      = isPower
+   , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerView
    , examples     = concat $ powersOfA ++ powersOfX
@@ -166,7 +189,7 @@ nonNegExpExercise :: Exercise Expr
 nonNegExpExercise = (powerExercise nonNegExpStrategy)
    { description  = "write with a non-negative exponent"
    , exerciseCode = makeCode "math" "nonNegExp"
-   , isReady      = isPowerNonNeg
+   , isReady      = isPower natView
    , isSuitable   = (`belongsTo` normPowerNonNeg)
    , equivalence  = viewEquivalent normPowerNonNeg
    , examples     = concat $ nonNegExp ++ nonNegExp2

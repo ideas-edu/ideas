@@ -10,8 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-   ( powerStrategy, natView, nonNegExpStrategy, hasNegExp
-   ) where
+--   ( powerStrategy, natView, nonNegExpStrategy, hasNegExp, powerRules
+    where
 
 import Common.Apply
 import Common.Context
@@ -42,8 +42,8 @@ makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategy rs
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = makeStrategy 
   "simplify" powerRules (calcPower : naturalRules ++ rationalRules)
-  where
-    powerRules =
+
+powerRules =
       [ addExponents
       , subExponents
       , mulExponents

@@ -1,0 +1,42 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="mul exponents">
+      <expr>
+        (2*a^3)^4-6*a^3*(-a^9)
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        (2*a^3)^4-(-6*a^12)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        16*(a^3)^4-(-6*a^12)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        16*a^12-(-6*a^12)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate power plus">
+      <expr>
+        22*a^12
+      </expr>
+    </elem>
+  </list>
+</reply>
+

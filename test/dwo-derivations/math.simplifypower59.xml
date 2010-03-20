@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifypower" encoding="string">
+  <state>
+    <expr>
+      (-21*a^7)/(3*a)
+    </expr>
+  </state>
+</request>

@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        (-a)^3*32*b^5*a^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="push negation out">
+      <expr>
+        (-a^3)*32*b^5*a^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        -a^5*(32*b^5)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,28 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        3*a*(-2*b)^3*a^2*b^2
+      </expr>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        (-3*a*8*b^3)*a^2*b^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        -3*a^3*(8*b^3)*b^2
+      </expr>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        -8*b^5*(3*a^3)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

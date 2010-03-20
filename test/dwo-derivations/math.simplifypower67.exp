@@ -1,0 +1,44 @@
+<reply result="ok" version="0.5.11">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        -(2*a*b^3)^2*27*(a^2)^3*b^3
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        -(2*a*b^3)^2*27*a^6*b^3
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        -4*a^2*(b^3)^2*27*a^6*b^3
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        -4*a^2*b^6*27*a^6*b^3
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        -108*a^8*b^6*b^3
+      </expr>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        -b^9*(108*a^8)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -200,17 +200,28 @@ solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
    ineq <- lookupClipboard "ineq" >>= fromExpr
    removeClipboard "ineq"
-   xs   <- maybeCM (matchM orView r >>= disjunctions)
-   guard (not $ null xs)
-   (vs, ys) <- liftM unzip $ matchM (listView (equationView >>> equationSolvedForm)) xs
-   let v  = head vs
-       zs = nub $ map (simplify (squareRootViewWith rationalView)) ys
-   ds <- matchM (listView doubleView) zs
-   guard (all (==v) vs)
-   let cmpFst a b = fst a `compare` fst b
-       rs = makeRanges v including (sortBy cmpFst (zip ds zs))
-       including = relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
-   return $ ors [ this | (d, this) <- rs, evalIneq ineq v d ]
+   orv  <- maybeCM (matchM orView r)
+   case disjunctions orv of 
+      Nothing -> -- both sides are the same
+         if relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
+         then return Logic.T
+         else return Logic.F
+      Just [] -> do -- no solutions found for equations
+         let vs = collectVars (toExpr ineq)
+         guard (not (null vs))
+         if evalIneq ineq (head vs) 0
+            then return Logic.T 
+            else return Logic.F
+      Just xs -> do
+         (vs, ys) <- liftM unzip $ matchM (listView (equationView >>> equationSolvedForm)) xs
+         let v  = head vs
+             zs = nub $ map (simplify (squareRootViewWith rationalView)) ys
+         ds <- matchM (listView doubleView) zs
+         guard (all (==v) vs)
+         let cmpFst a b = fst a `compare` fst b
+             rs = makeRanges v including (sortBy cmpFst (zip ds zs))
+             including = relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
+         return $ ors [ this | (d, this) <- rs, evalIneq ineq v d ]
  where
    ors [] = Logic.F
    ors xs = foldr1 (:||:) xs

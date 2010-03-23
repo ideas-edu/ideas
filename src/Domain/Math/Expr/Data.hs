@@ -254,7 +254,7 @@ instance IsTerm Expr where
    fromTerm (Term.App (Term.App (Term.Con "#Number") (Term.Num x)) (Term.Num y)) =
       return (Number (encodeFloat x (fromIntegral y)))
    fromTerm t =
-      case Term.spine t of
+      case Term.getSpine t of
          (Term.Con s, xs) -> do
             ys <- mapM fromTerm xs
             return (function (readSym s) ys)

@@ -9,23 +9,20 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Unification 
-   ( ShallowEq(..), Rewrite(..)
-   , unify, unifyM, unifyWith
-   , match, matchM, matchWith
-   ) where
+module Common.Rewriting.Unification (match) where
 
+import Common.Rewriting.Term
 import Common.Rewriting.AC
 import Common.Rewriting.MetaVar
 import Common.Rewriting.Substitution
-import Common.Uniplate
 import Control.Monad
-import Test.QuickCheck
 import qualified Data.IntSet as IS
+import qualified Data.Map as M
+import Data.Maybe
 
 -----------------------------------------------------------
 -- Unification (in both ways)
-
+{-
 class ShallowEq a where 
    shallowEq :: a -> a -> Bool
 
@@ -66,32 +63,32 @@ unifyWith ops = rec
       s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
       return (s2 @@ s1)
    recList _ _ = []
-
+-}
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
-match :: Rewrite a => a -> a -> [Substitution a]
-match = matchWith operators
+match :: Operators Term -> Term -> Term -> [Substitution Term]
+match a b c = matchWith (makeMatchers a) b c
 
-matchM :: (MonadPlus m, Rewrite a) => a -> a -> m (Substitution a)
-matchM x y = msum $ map return $ match x y
-
-matchWith :: Rewrite a => [Operator a] -> a -> a -> [Substitution a]
-matchWith ops x y = do
+matchWith :: Matchers -> Term -> Term -> [Substitution Term]
+matchWith m x y = do
    s <- rec x y
    guard (IS.null $ dom s `IS.intersection` getMetaVars y)
    return s
  where
-   rec x y =
-      case isMetaVar x of
-         Just i | not (hasMetaVar i y) -> return $ singletonSubst i y
-         _ -> do
-            guard (shallowEq x y) 
-            case findOperator ops x of
-               Just op -> 
-                  concatMap (uncurry recList . unzip) (pairingsMatch op x y)
-               Nothing -> 
-                  recList (children x) (children y)    
+   rec (Meta i) y = do 
+      guard (not (hasMetaVar i y))
+      return (singletonSubst i y)
+
+   rec x y = do
+      let (a, as) = getSpine x
+          (b, bs) = getSpine y
+      case isCon a >>= (`M.lookup` m) of
+         Just f  -> 
+            concatMap (uncurry recList . unzip) (f x y)
+         Nothing -> do
+            guard (a == b)
+            recList as bs
 
    recList [] [] = return emptySubst
    recList (x:xs) (y:ys) = do
@@ -99,3 +96,14 @@ matchWith ops x y = do
       s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
       return (s2 @@ s1)
    recList _ _ = []
+
+type Matchers = M.Map String (Term -> Term -> [[(Term, Term)]])
+
+makeMatchers :: [Operator Term] -> Matchers
+makeMatchers = M.fromList . map f
+ where 
+   f op = (g op , pairingsMatch op)
+   g op = case getSpine (constructor op undefined undefined) of
+             (Con s,[_, _]) -> s
+             _              -> ""
+             

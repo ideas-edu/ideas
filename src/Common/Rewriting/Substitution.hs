@@ -8,6 +8,8 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Substitutions
+--
 -----------------------------------------------------------------------------
 module Common.Rewriting.Substitution 
    ( Substitution, emptySubst, singletonSubst, listToSubst, (@@), (@@@)
@@ -24,18 +26,8 @@ import Data.Maybe
 -----------------------------------------------------------
 --- Substitution
 
-
 -- | Abstract data type for substitutions
 newtype Substitution a = S { unS :: IM.IntMap a }
-
-invariant :: (Uniplate a, MetaVar a) => Substitution a -> Bool
-invariant s = IS.null (dom s `IS.intersection` getMetaVarsList (ran s))
-
-makeS :: (Uniplate a, MetaVar a) => IM.IntMap a -> Substitution a
-makeS m | invariant new = new
-        | otherwise     = error "Rewriting.Substitution: invariant was violated"
- where
-   new = S m
    
 infixr 4 |->
 infixr 5 @@, @@@
@@ -45,27 +37,25 @@ instance Show a => Show (Substitution a) where
 
 -- | Returns the empty substitution
 emptySubst :: (Uniplate a, MetaVar a) => Substitution a
-emptySubst = makeS IM.empty
+emptySubst = S IM.empty
 
 -- | Returns a singleton substitution
 singletonSubst :: (MetaVar a, Uniplate a) => Int -> a -> Substitution a
-singletonSubst i a
-   | isMetaVar a == Just i = emptySubst
-   | otherwise             = makeS (IM.singleton i a)
+singletonSubst i a = S (IM.singleton i a)
 
 -- | Turns a list into a substitution
 listToSubst :: (Uniplate a, MetaVar a) => [(Int, a)] -> Substitution a
-listToSubst = makeS . IM.fromListWith (error "Substitution: keys are not unique")
+listToSubst = S . IM.fromListWith (error "Substitution: keys are not unique")
 
 -- | Combines two substitutions. The left-hand side substitution is first applied to
 -- the co-domain of the right-hand side substitution
 (@@) :: (Uniplate a, MetaVar a) => Substitution a -> Substitution a -> Substitution a
-S a @@ S b = makeS $ a `IM.union` IM.map (S a |->) b
+S a @@ S b = S $ a `IM.union` IM.map (S a |->) b
 
 -- | Combines two substitutions with disjoint domains. If the domains are not disjoint,
 -- an error is reported
 (@@@) :: (Uniplate a, MetaVar a) => Substitution a -> Substitution a -> Substitution a
-S a @@@ S b = makeS (IM.unionWith err a b)
+S a @@@ S b = S (IM.unionWith err a b)
  where err _ _ = error "Unification.(@@@): domains of substitutions are not disjoint"
 
 -- | Lookups a variable in a substitution. Nothing indicates that the variable is

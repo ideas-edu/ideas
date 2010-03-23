@@ -38,7 +38,7 @@ tBin s a b = Term.App (Term.App (Term.Con s) a) b
 tUn s a = Term.App (Term.Con s) a
 
 iBin s f term = do 
-   (a, b) <- Term.isBin s term
+   (a, b) <- Term.isBinary s term
    p <- fromTerm a
    q <- fromTerm b
    return (f p q)

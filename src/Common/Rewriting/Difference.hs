@@ -17,8 +17,7 @@ module Common.Rewriting.Difference
    ) where
 
 import Common.Rewriting.AC
---import Common.Rewriting.Unification
-import Common.Rewriting.Term
+import Common.Rewriting.RewriteRule
 import Control.Monad
 import Common.Uniplate
 import Data.Maybe

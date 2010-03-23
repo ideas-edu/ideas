@@ -17,7 +17,6 @@ import Common.Utils (readInt)
 import Data.List
 import qualified Data.IntSet as IS
 
-
 -----------------------------------------------------------
 --- Meta variables
 

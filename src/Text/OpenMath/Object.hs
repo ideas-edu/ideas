@@ -11,11 +11,12 @@
 --
 -----------------------------------------------------------------------------
 module Text.OpenMath.Object 
-   ( OMOBJ(..), xml2omobj, omobj2xml
+   ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where
 
 import Text.XML
 import Common.Utils (readM)
+import Data.List (nub)
 import Data.Maybe
 import Data.Typeable
 import Text.OpenMath.Symbol
@@ -32,6 +33,14 @@ data OMOBJ = OMI Integer
 instance InXML OMOBJ where
    toXML   = omobj2xml
    fromXML = either fail return . xml2omobj
+
+getOMVs :: OMOBJ -> [String]
+getOMVs = nub . rec
+ where
+   rec (OMA xs)       = concatMap rec xs
+   rec (OMBIND q _ b) = rec q ++ rec b
+   rec (OMV s)        = [s]
+   rec _              = []
 
 ----------------------------------------------------------
 -- conversion functions: XML <-> OMOBJ

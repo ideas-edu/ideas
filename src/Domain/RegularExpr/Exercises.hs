@@ -41,7 +41,7 @@ regexpExercise = makeExercise
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , testGenerator  = Just startFormGen -- arbitrary
    , randomExercise = simpleGenerator startFormGen -- myGen
-   , examples       = generate 5 (mkStdGen 2805) (replicateM 30 startFormGen)
+   , examples       = generate 5 (mkStdGen 2805) (replicateM 15 startFormGen)
    }
 
    

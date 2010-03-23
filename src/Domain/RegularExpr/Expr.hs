@@ -13,6 +13,7 @@
 module Domain.RegularExpr.Expr where
 
 import Common.Rewriting
+import Common.Rewriting.Term
 import Common.Traversable
 import Common.Uniplate
 import Control.Monad
@@ -150,8 +151,25 @@ instance Eq a => ShallowEq (RE a) where
          (_ :|: _,  _ :|: _ ) -> True
          _                    -> False
 
-instance IsTerm (RE a)
-instance Different (RE a)
+instance Different (RE a) where
+   different = (EmptySet, Epsilon)
+
+instance IsTerm RegExp where 
+   toTerm = foldRE 
+      ( Con "EmptySet", Con "Epsilon", toTerm
+      , unary "Option", unary "Star", unary "Plus", binary ":*:", binary ":|:"
+      ) 
+   fromTerm (Var v) = return (Atom v)
+   fromTerm a = fromTermWith f a
+    where
+      f "EmptySet" [] = return EmptySet
+      f "Epsilon"  [] = return Epsilon
+      f "Option" [x]  = return (Option x)
+      f "Star" [x]    = return (Star x)
+      f "Plus" [x]    = return (Plus x)
+      f ":*:" [x,y]   = return (x :*: y)
+      f ":|:" [x,y]   = return (x :|: y)
+      f _ _ = Nothing
 
 instance Rewrite RegExp where
-   operators = [concatOp, choiceOp]
+   operators = [concatOp, choiceOp] 

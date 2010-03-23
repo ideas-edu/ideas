@@ -1,0 +1,21 @@
+<reply result="ok" version="0.5.12">
+  <list>
+    <elem ruleid="turn into equation">
+      <expr>
+        x == x
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x>=x)]"/>
+      </context>
+    </elem>
+    <elem ruleid="solution inequation">
+      <expr>
+        true
+      </expr>
+      <context>
+        <item name="clipboard" value="[]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

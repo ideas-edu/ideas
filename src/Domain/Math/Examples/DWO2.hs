@@ -223,3 +223,13 @@ higherEq2 =
       , 4*x^6 + 2 :==: -9*x^3
       ]
     ]
+
+--------------------------------------------------------------------
+-- Extra test cases
+
+extraIneqQuad :: [Inequality Expr]
+extraIneqQuad = 
+   let x = Var "x" in
+   [ x^2-x-7 :>: -100, x^2-x-7 :<: -100, x^2 :<: x^2, x :>=: x 
+   , x^2 :>=: 0, x^2 :>: 0, x^2 :<: 0, x^2 :<=: 0
+   ]

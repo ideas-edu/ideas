@@ -1,0 +1,37 @@
+<reply result="ok" version="0.5.12">
+  <list>
+    <elem ruleid="turn into equation">
+      <expr>
+        x^2-x-7 == -100
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x^2-x-7>-100)]"/>
+      </context>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-x+93 == 0
+      </expr>
+      <context>
+        <item name="clipboard" value="[ineq==(x^2-x-7>-100)]"/>
+      </context>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        false
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==-371, a==1, b==-1, c==93, ineq==(x^2-x-7>-100)]"/>
+      </context>
+    </elem>
+    <elem ruleid="solution inequation">
+      <expr>
+        true
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==-371, a==1, b==-1, c==93]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

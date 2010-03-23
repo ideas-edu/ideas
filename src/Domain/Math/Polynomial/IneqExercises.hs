@@ -68,7 +68,7 @@ ineqQuadraticExercise = makeExercise
    , similarity    = simLogic (normRelation cleanUpExpr2)
    , strategy      = ineqQuadratic
    , examples      = map (Logic.Var . build inequalityView) 
-                         (concat $ ineqQuad1 ++ [ineqQuad2])
+                         (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
    }
 
 ineqHigherDegreeExercise :: Exercise (Logic (Relation Expr))

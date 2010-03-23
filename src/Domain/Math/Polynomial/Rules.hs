@@ -477,11 +477,18 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \eq -> do
    xs <- match sumView (leftHandSide eq)
    ys <- match sumView (rightHandSide eq)
    -- also consider parts without variables
-   zs <- mapM (fmap snd . match productView) (xs ++ ys)
-   let f = fmap snd . match (divView >>> second integerView)
+   -- (but at least one participant should have a variable)
+   zs <- forM (xs ++ ys) $ \a -> do
+            (_, list) <- match productView a
+            return [ (hasVars a, e) | e <- list ]
+   let f (b, e) = do 
+          (_, this) <- match (divView >>> second integerView) e
+          return (b, this)
    case mapMaybe f (concat zs) of
       [] -> Nothing
-      ns -> return (fromInteger (foldr1 lcm ns))
+      ps -> let (bs, ns) = unzip ps
+            in if or bs then return (fromInteger (foldr1 lcm ns))
+                        else Nothing
 
 distributeTimes :: Rule Expr
 distributeTimes = makeSimpleRuleList "distribution multiplication" $ \expr -> do

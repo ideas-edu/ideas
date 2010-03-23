@@ -35,15 +35,15 @@ linearStrategy :: LabeledStrategy (Equation Expr)
 linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (
-          removeDivision 
+              removeDivision 
           <|> ruleMulti (ruleSomewhere distributeTimes)
           <|> ruleMulti merge))
    <*> label "Phase 2" (repeat (
           ((flipEquation <|> flipEquationAndNegate) |> varToLeft)
-          <|> coverUpPlus id
-          <|> coverUpTimes
-          <|> coverUpNegate))
-
+          <|> coverups))
+ where
+   coverups = coverUpPlus id <|> coverUpTimes <|> coverUpNegate
+      
 -- helper strategy
 coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a
 coverUpPlus f = alternatives $ map (f . ($ oneVar))

@@ -92,22 +92,38 @@ showLogicRelation logic =
       Logic.Var a -> show a
       p :||: q    -> showLogicRelation p ++ " or " ++ showLogicRelation q
       p :&&: q    -> case match betweenView logic of
-                        Just (a, b, c) -> unwords [show a, "<", show b, "<", show c]
+                        Just (x, o1, y, o2, z) -> 
+                           let f b = if b then "<=" else "<"
+                           in unwords [show x, f o1, show y, f o2, show z]
                         _ -> showLogicRelation p ++ " and " ++ showLogicRelation q
       _           -> show logic
 
-betweenView :: Eq a => View (Logic (Relation a)) (a, a, a)
-betweenView = makeView f g
+betweenView :: Eq a => View (Logic (Relation a)) (a, Bool, a, Bool, a)
+betweenView = makeView f h
  where
-   f (Logic.Var r1 :&&: Logic.Var r2) =
-      case (match inequalityView r1, match inequalityView r2) of
-         (Just (b1 :>: a), Just (b2 :<: c)) | b1 == b2 -> 
-            Just (a, b1, c)
-         (Just (a :<: b1), Just (b2 :<: c)) | b1 == b2 -> 
-            Just (a, b1, c)
-         _ -> Nothing
+   f (Logic.Var r1 :&&: Logic.Var r2) = do
+      ineq1 <- match inequalityView r1
+      ineq2 <- match inequalityView r2
+      let g (a :>=: b) = b :<=: a
+          g (a :>:  b) = b :<:  a
+          g ineq       = ineq
+      make (g ineq1) (g ineq2)
    f _ = Nothing
-   g (a, b, c) = Logic.Var (a .<. b) :&&: Logic.Var (b .<. c)
+   
+   make a b
+      | la == rb && ra /= lb = make b a
+      | ra == lb =
+           Just (la, op a, ra, op b, rb)
+      | otherwise = Nothing
+    where
+      (la, ra) = (leftHandSide a, rightHandSide a)
+      (lb, rb) = (leftHandSide b, rightHandSide b)
+      op (_ :<=: _) = True
+      op _          = False
+   
+   h (x, o1, y, o2, z) = 
+      let f b = if b then (.<=.) else (.<.)
+      in Logic.Var (f o1 x y) :&&: Logic.Var (f o2 y z)
 
 
 ineqLinear :: LabeledStrategy (Relation Expr)
@@ -179,6 +195,7 @@ turnIntoEquation = makeSimpleRule "turn into equation" $ withCM $ \r -> do
    ineqTypes = 
       [LessThan, GreaterThan, LessThanOrEqualTo, GreaterThanOrEqualTo]
 
+-- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
    ineq <- lookupClipboard "ineq" >>= fromExpr
@@ -191,23 +208,26 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
    ds <- matchM (listView doubleView) zs
    guard (all (==v) vs)
    let cmpFst a b = fst a `compare` fst b
-       rs = makeRanges v (sortBy cmpFst (zip ds zs))
+       rs = makeRanges v including (sortBy cmpFst (zip ds zs))
+       including = relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
    return $ ors [ this | (d, this) <- rs, evalIneq ineq v d ]
  where
    ors [] = Logic.F
    ors xs = foldr1 (:||:) xs
  
-   makeRanges :: String -> [(Double, Expr)] -> [(Double, Logic (Relation Expr))]
-   makeRanges v xs = 
+   makeRanges :: String -> Bool -> [(Double, Expr)] -> [(Double, Logic (Relation Expr))]
+   makeRanges v b xs = 
       [makeLeft $ head xs]
       ++ map (uncurry makeMiddle) (zip xs (drop 1 xs))
       ++ [makeRight $ last xs]
     where
-      makeLeft  (d, e) = (d-1, Logic.Var (Var v .<. e))
-      makeRight (d, e) = (d+1, Logic.Var (Var v .>. e))
+      makeLeft  (d, e) = if b then (d-1, Logic.Var (Var v .<=. e))
+                              else (d-1, Logic.Var (Var v .<. e))
+      makeRight (d, e) = if b then (d+1, Logic.Var (Var v .>=. e))
+                              else (d+1, Logic.Var (Var v .>. e))
       makeMiddle (d1, e1) (d2, e2) = 
          ( (d1+d2)/2
-         , build betweenView (e1, Var v, e2)
+         , build betweenView (e1, b, Var v, b, e2)
          )
       
    evalIneq :: Relation Expr -> String -> Double -> Bool

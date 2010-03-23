@@ -31,8 +31,11 @@ instance Different (Logic a) where
    different = (T, F)
 
 instance IsTerm a => IsTerm (Logic a) where
-   toTerm = foldLogic (toTerm, tBin "->", tBin "<->", tBin "&&", tBin "||", tUn "~", Term.Con "T", Term.Con "F")
-   
+   toTerm = foldLogic
+      ( toTerm, Term.binary "->", Term.binary "<->", Term.binary "&&"
+      , Term.binary "||", Term.unary "~", Term.Con "T", Term.Con "F"
+      )
+
    fromTerm (Term.Con "T") = return T
    fromTerm (Term.Con "F") = return F
    fromTerm (Term.App (Term.Con "~") a) = liftM Not (fromTerm a)
@@ -41,10 +44,6 @@ instance IsTerm a => IsTerm (Logic a) where
       , iBin "&&" (:&&:) term, iBin "||" (:||:) term
       , liftM Var (fromTerm term)
       ]
-   
-   
-tBin s a b = Term.App (Term.App (Term.Con s) a) b
-tUn s a = Term.App (Term.Con s) a
 
 iBin s f term = do 
    (a, b) <- Term.isBinary s term

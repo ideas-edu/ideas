@@ -1,0 +1,8 @@
+<request encoding="string" service="diagnose" exerciseid="math.higherdegree">
+<state>
+  <prefix>[]</prefix>
+  <context></context>
+  <expr> x^3 == 7</expr>
+</state>
+<expr>x == root 7 3</expr>
+</request>

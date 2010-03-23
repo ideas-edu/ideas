@@ -19,7 +19,13 @@ data Symbol = Symbol
 
 instance Show Symbol where
    show s = maybe "" (++".") (dictionary s) ++ symbolName s
-   
+
+instance Read Symbol where
+   readsPrec _ s = 
+      case break (=='.') s of
+         (xs,_:ys) -> [(makeSymbol xs ys, "")]
+         _         -> [(extraSymbol s, "")]
+               
 makeSymbol :: String -> String -> Symbol
 makeSymbol = Symbol . Just
 

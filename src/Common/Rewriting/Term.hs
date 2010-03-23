@@ -51,6 +51,12 @@ instance IsTerm String where
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
 
+fromTermWith :: (Monad m, IsTerm a) => (String -> [a] -> m a) -> Term -> m a
+fromTermWith f a = 
+   case getSpine a of 
+      (Con s, xs) -> mapM fromTermM xs >>= f s
+      _ -> fail "fromTermWith"
+
 -----------------------------------------------------------
 -- * Utility functions
 

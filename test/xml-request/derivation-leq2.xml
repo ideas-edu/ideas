@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.quadrineq" encoding="string">
+  <state>
+    <expr>
+     x^2 - 2*x - 15 &gt;= 0
+    </expr>
+  </state>
+</request>

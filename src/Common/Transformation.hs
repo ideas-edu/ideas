@@ -18,7 +18,6 @@
 module Common.Transformation 
    ( -- * Transformations
      Transformation(RewriteRule), makeTrans, makeTransList
-   , getPatternPair
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
@@ -76,7 +75,7 @@ makeTrans f = makeTransList (maybe [] return . f)
 makeTransList :: (a -> [a]) -> Transformation a
 makeTransList = Function
 
-
+{-
 getPatternPair :: a -> Transformation a -> [(a, a)]
 getPatternPair _ (RewriteRule r) = 
    let a :~> b = rulePair r 0 
@@ -87,6 +86,7 @@ getPatternPair a (LiftView v t) = do
    return (build v (x, c), build v (y, c))
 --getPatternPair _ (s :*: t)
 getPatternPair _ _ = []
+-}
 
 -----------------------------------------------------------
 --- Arguments
@@ -311,13 +311,13 @@ isRewriteRule = all p . transformations
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
 
-ruleList :: Builder f a => String -> [f] -> Rule a
+ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
 ruleList s = makeRuleList s . map (RewriteRule . rewriteRule s)
 
-ruleListF :: BuilderList f a => String -> f -> Rule a
+ruleListF :: (BuilderList f a, Rewrite a) => String -> f -> Rule a
 ruleListF s = makeRuleList s . map RewriteRule . rewriteRules s
 
-rule :: Builder f a => String -> f -> Rule a
+rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
 rule s = makeRule s . RewriteRule . rewriteRule s
 
 -- | Turn a transformation into a rule: the first argument is the rule's name

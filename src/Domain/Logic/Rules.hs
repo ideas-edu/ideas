@@ -262,4 +262,4 @@ ruleEquivSame = rule "EquivSame" $
 
 ruleImplSame :: Rule SLogic 
 ruleImplSame = rule "ImplSame" $
-   \x -> x :->: x  :~>  T
+   \x -> x :->: (x::SLogic)  :~>  T

@@ -27,11 +27,6 @@ data Some f = forall a . Some (f a)
 thoroughCheck :: Testable a => a -> IO ()
 thoroughCheck = check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
 
-generateStd :: Gen a -> IO a
-generateStd gen = do 
-   stdgen <- newStdGen
-   return (generate 100 stdgen gen)
-
 readInt :: String -> Maybe Int
 readInt xs 
    | null xs                = Nothing
@@ -61,13 +56,6 @@ subsets = foldr op [[]]
  
 isSubsetOf :: Eq a => [a] -> [a] -> Bool
 isSubsetOf xs ys = all (`elem` ys) xs
-
-eqListBy :: (a -> a -> Bool) -> [a] -> [a] -> Bool
-eqListBy f = rec 
- where
-   rec (x:xs) (y:ys) = f x y && rec xs ys
-   rec [] [] = True
-   rec _ _   = False
 
 cartesian :: [a] -> [b] -> [(a, b)]
 cartesian as bs = [ (a, b) | a <- as, b <- bs ]
@@ -104,11 +92,6 @@ splitsWithElem c s =
       Just (xs, ys) -> xs : splitsWithElem c ys
       Nothing       -> [s]
 
-{- safeIndex :: Int -> [a] -> Maybe a
-safeIndex 0 (x:_)  = return x
-safeIndex n (_:xs) = safeIndex (n-1) xs
-safeIndex _ _      = Nothing -}
-
 -- | Use a fixed standard "random" number generator. This generator is
 -- accessible by calling System.Random.getStdGen
 useFixedStdGen :: IO ()
@@ -117,21 +100,9 @@ useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
 trim :: String -> String
 trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
 
-isNatural :: String -> Bool
-isNatural x = all isDigit x && not (null x)
-
 fst3 (x, _, _) = x
 snd3 (_, x, _) = x
 thd3 (_, _, x) = x
-
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f (a, b, c) = f a b c
-
-mapLeft :: (a -> b) -> Either a c -> Either b c
-mapLeft f = either (Left . f) Right
-
-mapRight :: (b -> c) -> Either a b -> Either a c
-mapRight f = either Left (Right . f)
 
 commaList :: [String] -> String
 commaList = concat . intersperse ", "

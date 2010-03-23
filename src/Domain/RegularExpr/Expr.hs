@@ -150,5 +150,8 @@ instance Eq a => ShallowEq (RE a) where
          (_ :|: _,  _ :|: _ ) -> True
          _                    -> False
 
+instance IsTerm (RE a)
+instance Different (RE a)
+
 instance Rewrite RegExp where
    operators = [concatOp, choiceOp]

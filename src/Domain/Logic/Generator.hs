@@ -21,9 +21,37 @@ import Test.QuickCheck hiding (defaultConfig)
 import Common.Rewriting
 import Common.Uniplate
 
+import qualified Common.Rewriting.Term as Term
+
 -------------------------------------------------------------
 -- Code that doesn't belong here, but the arbitrary instance
 -- is needed for the Rewrite instance.
+
+instance Different (Logic a) where
+   different = (T, F)
+
+instance IsTerm a => IsTerm (Logic a) where
+   toTerm = foldLogic (toTerm, tBin "->", tBin "<->", tBin "&&", tBin "||", tUn "~", Term.Con "T", Term.Con "F")
+   
+   fromTerm (Term.Con "T") = return T
+   fromTerm (Term.Con "F") = return F
+   fromTerm (Term.App (Term.Con "~") a) = liftM Not (fromTerm a)
+   fromTerm term = msum 
+      [ iBin "->" (:->:) term, iBin "<->" (:<->:) term
+      , iBin "&&" (:&&:) term, iBin "||" (:||:) term
+      , liftM Var (fromTerm term)
+      ]
+   
+   
+tBin s a b = Term.App (Term.App (Term.Con s) a) b
+tUn s a = Term.App (Term.Con s) a
+
+iBin s f term = do 
+   (a, b) <- Term.isBin s term
+   p <- fromTerm a
+   q <- fromTerm b
+   return (f p q)
+
 
 instance Rewrite SLogic where
    operators = logicOperators

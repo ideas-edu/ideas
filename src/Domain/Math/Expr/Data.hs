@@ -19,9 +19,12 @@ import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
 import Common.Utils (commaList)
-import Common.Rewriting hiding (operators, match)
+import Common.Rewriting hiding (operators)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
+
+import Text.OpenMath.Symbol
+import qualified Common.Rewriting.Term as Term
 
 -----------------------------------------------------------------------
 -- Expression data type
@@ -232,6 +235,36 @@ instance ShallowEq Expr where
          _ -> False 
 
 instance Rewrite Expr
+
+instance Different Expr where
+   different = (Nat 0, Nat 1)
+
+instance IsTerm Expr where 
+   toTerm (Nat n)    = Term.Num n
+   toTerm (Number d) = let (x, y) = decodeFloat d
+                       in Term.App (Term.App (Term.Con "#Number") (Term.Num x)) (Term.Num (toInteger y) )
+   toTerm (Var v)    = Term.Var v
+   toTerm expr = 
+      case getFunction expr of
+         Just (s, xs) -> foldl Term.App (Term.Con (show s)) (map toTerm xs)
+         Nothing -> error "IsTerm Expr"
+
+   fromTerm (Term.Num n) = return (fromInteger n)
+   fromTerm (Term.Var v) = return (Var v)
+   fromTerm (Term.App (Term.App (Term.Con "#Number") (Term.Num x)) (Term.Num y)) =
+      return (Number (encodeFloat x (fromIntegral y)))
+   fromTerm t =
+      case Term.spine t of
+         (Term.Con s, xs) -> do
+            ys <- mapM fromTerm xs
+            return (function (readSym s) ys)
+         _ -> Nothing
+
+
+
+readSym s = case break (=='.') s of
+               (xs,_:ys) -> makeSymbol xs ys
+               _ -> extraSymbol s
 
 -----------------------------------------------------------------------
 -- AC Theory for expression

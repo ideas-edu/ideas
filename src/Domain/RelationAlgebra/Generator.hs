@@ -15,8 +15,33 @@ import Domain.RelationAlgebra.Formula
 import Common.Rewriting
 import Control.Monad
 import Test.QuickCheck 
+import qualified Common.Rewriting.Term as Term
 
 instance Rewrite RelAlg
+
+instance Different RelAlg where
+   different = (V, I)
+   
+instance IsTerm RelAlg where
+   toTerm = foldRelAlg (Term.Var, tBin ".", tBin "+", tBin "&&", tBin "||", tUn "~", tUn "-", Term.Con "V", Term.Con "I")
+   fromTerm (Term.Con "V") = return V
+   fromTerm (Term.Con "I") = return I
+   fromTerm (Term.App (Term.Con "~") a) = liftM Not (fromTerm a)
+   fromTerm (Term.App (Term.Con "-") a) = liftM Inv (fromTerm a)
+   fromTerm term = msum 
+      [ iBin "." (:.:) term, iBin "+" (:+:) term
+      , iBin "&&" (:&&:) term, iBin "||" (:||:) term
+      , liftM Var (fromTerm term)
+      ]
+
+tBin s a b = Term.App (Term.App (Term.Con s) a) b
+tUn s a = Term.App (Term.Con s) a
+
+iBin s f term = do 
+   (a, b) <- Term.isBin s term
+   p <- fromTerm a
+   q <- fromTerm b
+   return (f p q)
 
 instance Arbitrary RelAlg where
    arbitrary = sized arbRelAlg

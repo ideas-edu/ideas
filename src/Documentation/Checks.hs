@@ -15,8 +15,6 @@ import Directory
 import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import qualified Common.Strategy.Grammar as Grammar
-import Common.Rewriting
-import Common.Transformation
 import Control.Monad
 import System.Environment
 import Service.ExerciseList
@@ -69,6 +67,7 @@ main = do
    xmlRequests
    dwoDerivations
 
+{-
 logicConfluence :: IO ()
 logicConfluence = reportTest "logic rules" (isConfluent f rs)
  where
@@ -77,6 +76,7 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
    rwrs = Logic.logicRules \\ [Logic.ruleOrOverAnd, Logic.ruleCommOr, Logic.ruleCommAnd]
    rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
+-}
    
 mathdoxRequests, jsonRPCs, xmlRequests, dwoDerivations :: IO ()
 mathdoxRequests = testRequests (liftM snd3 . ModeXML.processXML)   "mathdox-request" ".txt"

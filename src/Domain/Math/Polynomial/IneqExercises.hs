@@ -20,7 +20,7 @@ import Common.Transformation
 import Common.Uniplate (uniplate)
 import Common.View
 import Control.Monad
-import Data.List (nub, sortBy)
+import Data.List (nub, sort)
 import Data.Maybe (fromMaybe)
 import Domain.Math.Data.Interval
 import Domain.Logic.Formula (Logic((:||:), (:&&:)))
@@ -219,29 +219,30 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
              zs = nub $ map (simplify (squareRootViewWith rationalView)) ys
          ds <- matchM (listView doubleView) zs
          guard (all (==v) vs)
-         let cmpFst a b = fst a `compare` fst b
-             rs = makeRanges including (sortBy cmpFst (zip ds zs))
+         let rs = makeRanges including (sort (zipWith A ds zs))
              including = relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
-         return $ fromIntervals v fromA $ 
+         return $ fromIntervals v fromDExpr $ 
             fromList [ this | (d, isP, this) <- rs, isP || evalIneq ineq v d ]
  where
-   makeRanges :: Bool -> [(Double, Expr)] -> [(Double, Bool, Interval A)]
+   makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
    makeRanges b xs =
       [makeLeft $ head xs]
       ++ concatMap (uncurry makeMiddle) (zip xs (drop 1 xs))
       ++ [makePoint (last xs) | b]
       ++ [makeRight $ last xs]
     where
-      makeLeft  (d, e) = if b then (d-1, False, lessThanOrEqualTo (A d e))
-                              else (d-1, False, lessThan (A d e))
-      makeRight (d, e) = if b then (d+1, False, greaterThanOrEqualTo (A d e))
-                              else (d+1, False, greaterThan (A d e))
-      makePoint (d, e) = (d, True, singleton (A d e))
-      makeMiddle d@(d1, e1) (d2, e2) =
-         [ makePoint d | b ] ++
+      makeLeft  a@(A d _)
+         | b         = (d-1, False, lessThanOrEqualTo a)
+         | otherwise = (d-1, False, lessThan a)
+      makeRight a@(A d _)
+         | b         = (d+1, False, greaterThanOrEqualTo a)
+         | otherwise = (d+1, False, greaterThan a)
+      makePoint a@(A d _) = (d, True, singleton a)
+      makeMiddle a1@(A d1 _) a2@(A d2 _) =
+         [ makePoint a1 | b ] ++
          [ ( (d1+d2)/2
            , False
-           , open (A d1 e1) (A d2 e2)
+           , open a1 a2
            )
          ]
       
@@ -265,16 +266,16 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
       sub expr = build (map sub cs)
        where (cs, build) = uniplate expr
 
-data A = A Double Expr
+data DExpr = A Double Expr
 
-instance Eq A where 
+instance Eq DExpr where 
    A d1 _ == A d2 _ = d1==d2
 
-instance Ord A where
+instance Ord DExpr where
    A d1 _ `compare` A d2 _ = d1 `compare` d2
 
-fromA :: A -> Expr
-fromA (A _ e) = e
+fromDExpr :: DExpr -> Expr
+fromDExpr (A _ e) = e
   
 fromIntervals :: Eq a => String -> (a -> Expr) -> Intervals a -> Logic (Relation Expr)
 fromIntervals v f = ors . map (fromInterval v f) . toList

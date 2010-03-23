@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.5.12">
   <list>
     <elem name="abc formula" buggy="false" rewriterule="false"/>
     <elem name="abc misconception minus 4ac" buggy="true" rewriterule="false"/>
@@ -20,6 +20,7 @@
     <elem name="distribution square" buggy="false" rewriterule="false"/>
     <elem name="factor left as square" buggy="false" rewriterule="false"/>
     <elem name="flip equation" buggy="false" rewriterule="false"/>
+    <elem name="flip equation and negate" buggy="false" rewriterule="false"/>
     <elem name="merge similar terms" buggy="false" rewriterule="false"/>
     <elem name="move to left" buggy="false" rewriterule="false"/>
     <elem name="multiplication is zero" buggy="false" rewriterule="false"/>

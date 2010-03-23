@@ -62,6 +62,7 @@ quadraticRules = -- abcFormula
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
    , ruleOnce2 (ruleSomewhere distributeTimes)
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
+   , ruleOnce flipEquationAndNegate
    , ruleOnce moveToLeft, ruleMulti2 (ruleSomewhere simplerSquareRoot)
    ]
    
@@ -243,7 +244,14 @@ flipEquation :: Rule (Equation Expr)
 flipEquation = makeSimpleRule "flip equation" $ \(lhs :==: rhs) -> do
    guard (hasVars rhs && noVars lhs)
    let new = fmap (applyListD [sortT, mergeT]) (rhs :==: lhs)
-   return $ applyD signT new
+   guard (not (applicable signT new))
+   return new
+
+flipEquationAndNegate :: Rule (Equation Expr)
+flipEquationAndNegate = makeSimpleRule "flip equation and negate" $ \(lhs :==: rhs) -> do
+   guard (hasVars rhs && noVars lhs)
+   let new = fmap (applyListD [sortT, mergeT]) (rhs :==: lhs)
+   apply signT new
 
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)

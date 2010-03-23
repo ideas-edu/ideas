@@ -22,6 +22,7 @@ import Common.View
 import Control.Monad
 import Data.List (nub, sortBy)
 import Data.Maybe (fromMaybe)
+import Domain.Math.Data.Interval
 import Domain.Logic.Formula (Logic((:||:), (:&&:)))
 import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
@@ -219,27 +220,30 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
          ds <- matchM (listView doubleView) zs
          guard (all (==v) vs)
          let cmpFst a b = fst a `compare` fst b
-             rs = makeRanges v including (sortBy cmpFst (zip ds zs))
+             rs = makeRanges including (sortBy cmpFst (zip ds zs))
              including = relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
-         return $ ors [ this | (d, this) <- rs, evalIneq ineq v d ]
+         return $ fromIntervals v fromA $ 
+            fromList [ this | (d, isP, this) <- rs, isP || evalIneq ineq v d ]
  where
-   ors [] = Logic.F
-   ors xs = foldr1 (:||:) xs
- 
-   makeRanges :: String -> Bool -> [(Double, Expr)] -> [(Double, Logic (Relation Expr))]
-   makeRanges v b xs = 
+   makeRanges :: Bool -> [(Double, Expr)] -> [(Double, Bool, Interval A)]
+   makeRanges b xs =
       [makeLeft $ head xs]
-      ++ map (uncurry makeMiddle) (zip xs (drop 1 xs))
+      ++ concatMap (uncurry makeMiddle) (zip xs (drop 1 xs))
+      ++ [makePoint (last xs) | b]
       ++ [makeRight $ last xs]
     where
-      makeLeft  (d, e) = if b then (d-1, Logic.Var (Var v .<=. e))
-                              else (d-1, Logic.Var (Var v .<. e))
-      makeRight (d, e) = if b then (d+1, Logic.Var (Var v .>=. e))
-                              else (d+1, Logic.Var (Var v .>. e))
-      makeMiddle (d1, e1) (d2, e2) = 
-         ( (d1+d2)/2
-         , build betweenView (e1, b, Var v, b, e2)
-         )
+      makeLeft  (d, e) = if b then (d-1, False, lessThanOrEqualTo (A d e))
+                              else (d-1, False, lessThan (A d e))
+      makeRight (d, e) = if b then (d+1, False, greaterThanOrEqualTo (A d e))
+                              else (d+1, False, greaterThan (A d e))
+      makePoint (d, e) = (d, True, singleton (A d e))
+      makeMiddle d@(d1, e1) (d2, e2) =
+         [ makePoint d | b ] ++
+         [ ( (d1+d2)/2
+           , False
+           , open (A d1 e1) (A d2 e2)
+           )
+         ]
       
    evalIneq :: Relation Expr -> String -> Double -> Bool
    evalIneq r v d = fromMaybe False $
@@ -260,3 +264,37 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
       sub (Var x) | x==v = Number d
       sub expr = build (map sub cs)
        where (cs, build) = uniplate expr
+
+data A = A Double Expr
+
+instance Eq A where 
+   A d1 _ == A d2 _ = d1==d2
+
+instance Ord A where
+   A d1 _ `compare` A d2 _ = d1 `compare` d2
+
+fromA :: A -> Expr
+fromA (A _ e) = e
+  
+fromIntervals :: Eq a => String -> (a -> Expr) -> Intervals a -> Logic (Relation Expr)
+fromIntervals v f = ors . map (fromInterval v f) . toList
+ where
+   ors [] = Logic.F
+   ors xs = foldr1 (:||:) xs
+   
+fromInterval :: Eq a => String -> (a -> Expr) -> Interval a -> Logic (Relation Expr)
+fromInterval v f i 
+   | isEmpty i = Logic.F
+   | otherwise = 
+        case (leftPoint i, rightPoint i) of
+           (Unbounded, Unbounded) -> Logic.T
+           (Unbounded, Including b) -> Logic.Var (Var v .<=. f b)
+           (Unbounded, Excluding b) -> Logic.Var (Var v .<. f b)
+           (Including a, Unbounded) -> Logic.Var (Var v .>=. f a)
+           (Excluding a, Unbounded) -> Logic.Var (Var v .>. f a)
+           (Including a, Including b) 
+              | a == b    -> Logic.Var (Var v .==. f a)
+              | otherwise -> Logic.Var (Var v .>=. f a) :&&: Logic.Var (Var v .<=. f b) 
+           (Including a, Excluding b) -> Logic.Var (Var v .>=. f a) :&&: Logic.Var (Var v .<. f b) 
+           (Excluding a, Including b) -> Logic.Var (Var v .>. f a) :&&: Logic.Var (Var v .<=. f b) 
+           (Excluding a, Excluding b) -> Logic.Var (Var v .>. f a) :&&: Logic.Var (Var v .<. f b) 

@@ -20,6 +20,8 @@ module Domain.Math.Data.Interval
    , empty, singleton, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
    , lessThan, lessThanOrEqualTo
+     -- Inspecing an interval
+   , isEmpty, leftPoint, rightPoint, Endpoint(..)
      -- Making intervals
    , except, toList, fromList
    , union, intersect, complement
@@ -128,6 +130,19 @@ isIncluding _             = False
 isExcluding :: Endpoint a -> Bool
 isExcluding (Excluding _) = True
 isExcluding _             = False
+
+--------------------------------------------------------------------
+-- Inspecting an interval
+
+isEmpty :: Interval a -> Bool
+isEmpty Empty = True
+isEmpty _     = False
+
+leftPoint, rightPoint :: Interval a -> Endpoint a
+leftPoint  (I a _) = a
+leftPoint Empty    = error "leftPoint Empty"
+rightPoint (I _ a) = a
+rightPoint Empty   = error "rightPoint Empty"
 
 --------------------------------------------------------------------
 -- Combining multiple intervals

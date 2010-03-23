@@ -36,17 +36,6 @@ import Domain.Math.Clipboard
 import Common.Rewriting hiding (match, constructor)
 import Common.Uniplate
 
-------------------------------------------------------------------
--- Steps for solving an inequation:
--- * solve as an equation
--- * determine intervals (based on solutions in previous steps)
-
-{-
-example :: Logic (Relation Expr)
-example = (atom (x^2 .>=. 4) :||: atom (x .<. 1)) :&&: atom (x ./=. 0)
- where x = Var "x"
-       atom = Logic.Var -}
-
 relationIntervals :: Ord a => RelationType -> a -> Intervals a
 relationIntervals relType a = 
    case relType of

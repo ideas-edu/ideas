@@ -11,8 +11,8 @@
 -----------------------------------------------------------------------------
 module Service.ServiceList (serviceList, Service(..), getService, evalService) where
 
-import Common.Transformation
 import qualified Common.Exercise as E
+import Common.Transformation
 import Common.Utils (Some(..))
 import Common.Exercise hiding (Exercise)
 import Control.Monad.Error
@@ -22,6 +22,7 @@ import qualified Service.Submit as S
 import qualified Service.Diagnose as S
 import Service.FeedbackText hiding (ExerciseText)
 import Service.Types 
+import Service.RulesInfo
 import Service.ProblemDecomposition
 import Data.List (sortBy)
 
@@ -43,7 +44,7 @@ serviceList =
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
    , problemdecompositionS
-   , exerciselistS, rulelistS
+   , exerciselistS, rulelistS, rulesinfoS
    ]
 
 makeService :: String -> String -> TypedValue a -> Service a
@@ -199,10 +200,17 @@ exerciselistS = makeService "exerciselist"
 
 rulelistS :: Service a
 rulelistS = makeService "rulelist" 
-   "Returns all rules of a particular exercise. For each rule, we rewrutn its \
+   "Returns all rules of a particular exercise. For each rule, we return its \
    \name (or identifier), whether the rule is buggy, and whether the rule was \
-   \expressed as an observable rewrite rule." $ 
+   \expressed as an observable rewrite rule. See rulesinfo for more details \
+   \about the rules." $ 
    allRules ::: Exercise :-> List (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
+      
+rulesinfoS :: Service a
+rulesinfoS = makeService "rulesinfo" 
+   "Returns a list of all rules of a particular exercise, with many details \
+   \including Formal Mathematical Properties (FMPs) and example applications." $
+   mkRulesInfo ::: RulesInfo
       
 allExercises :: [(String, String, String, String)]
 allExercises  = map make $ sortBy cmp exercises

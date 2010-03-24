@@ -24,7 +24,7 @@ module Common.Transformation
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, name, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , ruleGroups, addRuleToGroup
+   , ruleGroups, ruleDescription, ruleSiblings, addRuleToGroup, describe
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
@@ -74,19 +74,6 @@ makeTrans f = makeTransList (maybe [] return . f)
 -- | Turn a function (which returns a list of results) into a transformation 
 makeTransList :: (a -> [a]) -> Transformation a
 makeTransList = Function
-
-{-
-getPatternPair :: a -> Transformation a -> [(a, a)]
-getPatternPair _ (RewriteRule r) = 
-   let a :~> b = rulePair r 0 
-   in return (a, b)
-getPatternPair a (LiftView v t) = do
-   (b, c) <- match v a
-   (x, y) <- getPatternPair b t
-   return (build v (x, c), build v (y, c))
---getPatternPair _ (s :*: t)
-getPatternPair _ _ = []
--}
 
 -----------------------------------------------------------
 --- Arguments
@@ -279,10 +266,12 @@ ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
 -- | Abstract data type for representing rules
 data Rule a = Rule 
    { name            :: String -- ^ Returns the name of the rule (should be unique)
+   , ruleDescription :: String -- ^ A short description what the rule is doing
    , transformations :: [Transformation a]
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , ruleGroups      :: [String]
+   , ruleSiblings    :: [String]
    }
 
 instance Show (Rule a) where
@@ -308,6 +297,9 @@ isRewriteRule = all p . transformations
    p (LiftView _ t)  = p t
    p _               = False
 
+describe :: String -> Rule a -> Rule a
+describe txt r = r { ruleDescription = txt ++ "\n" ++ ruleDescription r}
+
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
 
@@ -326,7 +318,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule n ts False False []
+makeRuleList n ts = Rule n [] ts False False [] []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a

@@ -26,6 +26,7 @@ import Service.TypedAbstractService (State)
 import Service.Submit (Result)
 import Service.Diagnose (Diagnosis)
 import Service.FeedbackText (ExerciseText)
+import Service.RulesInfo
 import System.IO.Unsafe
 import qualified Service.ProblemDecomposition as Decomposition
 
@@ -69,6 +70,7 @@ data Type a t where
    Exercise     :: Type a (Exercise a)
    ExerciseText :: Type a (ExerciseText a)
    Rule         :: Type a (Rule (Context a))
+   RulesInfo    :: Type a (RulesInfo a)
    Term         :: Type a a
    Context      :: Type a (Context a)
    Result       :: Type a (Result a)
@@ -110,6 +112,7 @@ groundType tp =
       Exercise     -> Just "Exercise"
       ExerciseText -> Just "ExerciseText"
       Rule         -> Just "Rule"
+      RulesInfo    -> Just "RulesInfo"
       Term         -> Just "Term"
       Context      -> Just "Context"
       Result       -> Just "Result"

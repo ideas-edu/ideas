@@ -31,6 +31,7 @@ import Service.ExerciseList
 import Service.ProblemDecomposition
 import Service.Request
 import Service.Revision (version)
+import Service.RulesInfo (rulesInfoXML)
 import Service.ServiceList 
 import Service.TypedAbstractService hiding (exercise)
 import Service.Diagnose
@@ -168,13 +169,13 @@ openMathConverterTp pkg =
 
 xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
 xmlEncoder b f ex = Encoder
-   { encodeType  = encode (xmlEncoder b f ex)
+   { encodeType  = encode (xmlEncoder b f ex) ex
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
  where
-   encode :: Monad m => Encoder m XMLBuilder a -> Type a t -> t -> m XMLBuilder
-   encode enc serviceType =
+   encode :: Monad m => Encoder m XMLBuilder a -> Exercise a -> Type a t -> t -> m XMLBuilder
+   encode enc ex serviceType =
       case serviceType of
          Tp.List t1  -> \xs -> 
             case allAreTagged t1 of
@@ -183,12 +184,13 @@ xmlEncoder b f ex = Encoder
                   let elems = mapM_ make xs
                   return (element "list" elems)
                _ -> do
-                  bs <- mapM (encode enc t1) xs
+                  bs <- mapM (encode enc ex t1) xs
                   let elems = mapM_ (element "elem") bs
                   return (element "list" elems)
-         Tp.Elem t1   -> liftM (element "elem") . encode enc t1
-         Tp.Tag s t1  -> liftM (element s) . encode enc t1  -- quick fix
+         Tp.Elem t1   -> liftM (element "elem") . encode enc ex t1
+         Tp.Tag s t1  -> liftM (element s) . encode enc ex t1  -- quick fix
          Tp.Rule      -> return . ("ruleid" .=.) . Rule.name
+         Tp.RulesInfo -> \_ -> rulesInfoXML ex (encodeTerm enc)
          Tp.Term      -> encodeTerm enc
          Tp.Diagnosis -> encodeDiagnosis b (encodeTerm enc)
          Tp.Context   -> encodeContext   b (encodeTerm enc)

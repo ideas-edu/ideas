@@ -20,7 +20,7 @@ module Common.Rewriting.RewriteRule
      -- * Compiling a rewrite rule
    , rewriteRule, rewriteRules, Builder, BuilderList
      -- * Using rewrite rules
-   , rewrite, rewriteM, smartGenerator
+   , rewrite, rewriteM, showRewriteRule, smartGenerator
    ) where
 
 import Common.Uniplate hiding (rewrite, rewriteM)
@@ -49,7 +49,7 @@ class ShallowEq a where
 -- (in combination with lifting rules). The function in the RewriteRule module
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
-class (IsTerm a, Arbitrary a, Different a, ShallowEq a, Uniplate a) => Rewrite a where
+class (IsTerm a, Arbitrary a, Different a, ShallowEq a, Uniplate a, Show a) => Rewrite a where
    operators :: [Operator a]
    -- default definition: no associative/commutative operators
    operators = []
@@ -66,6 +66,9 @@ data RewriteRule a = Rewrite a => R
    , nrOfMetaVars :: Int
    , rulePair     :: Int -> RuleSpec Term 
    }
+
+instance Functor RuleSpec where
+   fmap f (a :~> b) = f a :~> f b
 
 ------------------------------------------------------
 -- Compiling a rewrite rule
@@ -148,6 +151,23 @@ rewrite r@(R _ _ _) a = do
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r
+
+-----------------------------------------------------------
+-- Pretty-print a rewriteRule
+
+showRewriteRule :: Bool -> RewriteRule a -> Maybe String
+showRewriteRule isBuggy r@(R _ _ _) = do
+   x <- fromTermTp r (sub |-> a)
+   y <- fromTermTp r (sub |-> b)
+   let op = if isBuggy then "/~>" else "~>"
+   return (show x ++ "  " ++ op ++ "  " ++ show y)
+ where
+   a :~> b = rulePair r 0
+   vs  = IS.toList (getMetaVars a `IS.union` getMetaVars b)
+   sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
+   
+   fromTermTp :: IsTerm a => RewriteRule a -> Term -> Maybe a
+   fromTermTp _ = fromTerm
 
 -----------------------------------------------------------
 -- Smart generator that creates instantiations of the left-hand side

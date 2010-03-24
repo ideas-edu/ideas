@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting 
    ( match, matchM, RewriteRule, smartGenerator, rewriteRule, rewriteRules
-   , Builder, rewriteM, RuleSpec((:~>)), rulePair, BuilderList
+   , Builder, rewriteM, RuleSpec((:~>)), rulePair, BuilderList, showRewriteRule
    , Rewrite(..), ShallowEq(..), MetaVar(..), Operator
    , associativeOperator, ruleName, Operators, collectWithOperator
    , equalWith, isOperator, constructor, difference, differenceMode

@@ -1,0 +1,4470 @@
+<reply result="ok" version="0.5.12">
+  <rule name="AbsorpAnd" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :&amp;&amp;: (Var "a" :||: Var "b")  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: (Var "b" :||: Var "a")  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "b" :||: Var "a") :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$1"/>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AbsorpOr" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :||: Var "a" :&amp;&amp;: Var "b"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :||: Var "b" :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "b" :&amp;&amp;: Var "a" :||: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$1"/>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AndComplBuggy" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&amp;&amp;: Not (Var "a")  ~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :&amp;&amp;: Var "a"  ~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Not (Var "a")  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :&amp;&amp;: Var "a"  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AndOverOr" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  /~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  /~&gt;  Var "a" :&amp;&amp;: Var "c" :||: Var "b" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AndSame" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "a"  ~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AssImp" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :-&gt;: (Var "b" :-&gt;: Var "c")  ~&gt;  (Var "a" :-&gt;: Var "b") :-&gt;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :-&gt;: Var "b") :-&gt;: Var "c"  ~&gt;  Var "a" :-&gt;: (Var "b" :-&gt;: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AssocAnd" buggy="false" rewriterule="true">
+    <group>
+      Associativity
+    </group>
+    <CMP>
+      (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: Var "c"  /~&gt;  Var "a" :&amp;&amp;: (Var "b" :&amp;&amp;: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="AssocOr" buggy="false" rewriterule="true">
+    <group>
+      Associativity
+    </group>
+    <CMP>
+      (Var "a" :||: Var "b") :||: Var "c"  /~&gt;  Var "a" :||: (Var "b" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyAbsor" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      (Var "a" :||: Var "b") :||: (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: Var "c"  ~&gt;  Var "a" :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="&&"/>
+                  <OMV name="$0"/>
+                  <OMV name="$1"/>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="||"/>
+                  <OMV name="$0"/>
+                  <OMV name="$1"/>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: (Var "a" :&amp;&amp;: Var "b" :||: Var "c")  ~&gt;  Var "a" :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="&&"/>
+                  <OMV name="$0"/>
+                  <OMV name="$1"/>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: ((Var "a" :||: Var "b") :||: Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="||"/>
+                  <OMV name="$0"/>
+                  <OMV name="$1"/>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyAssoc" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  Var "a" :||: Var "b" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  ~&gt;  Var "a" :&amp;&amp;: (Var "b" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDeMorgan1" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Var "a") :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Var "a" :||: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Var "a" :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :||: Var "b")  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :||: Var "b")  ~&gt;  Var "a" :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :||: Var "b")  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDeMorgan2" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Not (Var "a") :||: Not (Var "b"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :||: Var "b")  ~&gt;  Not (Not (Var "a") :&amp;&amp;: Not (Var "b"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDeMorgan3" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Var "a") :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDeMorgan4" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :||: Var "b")  ~&gt;  Not (Var "a") :||: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDeMorgan5" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Not (Var "a" :&amp;&amp;: Var "b") :||: Var "c")  ~&gt;  Not (Not (Var "a") :||: Not (Var "b")) :||: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMA>
+                    <OMS cd="unknown" name="&&"/>
+                    <OMV name="$0"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="||"/>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$0"/>
+                  </OMA>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Not (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: Var "c")  ~&gt;  Not (Not (Var "a") :||: Not (Var "b")) :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMA>
+                    <OMS cd="unknown" name="&&"/>
+                    <OMV name="$0"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="||"/>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$0"/>
+                  </OMA>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Not (Var "a" :||: Var "b") :||: Var "c")  ~&gt;  Not (Not (Var "a") :&amp;&amp;: Not (Var "b")) :||: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMA>
+                    <OMS cd="unknown" name="||"/>
+                    <OMV name="$0"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="&&"/>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$0"/>
+                  </OMA>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Not (Var "a" :||: Var "b") :&amp;&amp;: Var "c")  ~&gt;  Not (Not (Var "a") :&amp;&amp;: Not (Var "b")) :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMA>
+                    <OMS cd="unknown" name="||"/>
+                    <OMV name="$0"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="&&"/>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$0"/>
+                  </OMA>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDistr" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: (Var "a" :&amp;&amp;: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :&amp;&amp;: Var "c") :&amp;&amp;: (Var "b" :&amp;&amp;: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Var "a" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "c") :&amp;&amp;: (Var "b" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "b") :||: (Var "a" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  ~&gt;  (Var "a" :||: Var "c") :||: (Var "b" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  ~&gt;  Var "a" :&amp;&amp;: Var "c" :||: Var "b" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyDistrNot" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a") :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Not (Var "c")  ~&gt;  Var "a" :&amp;&amp;: Not (Var "c") :||: Var "b" :&amp;&amp;: Var "c"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$2"/>
+                </OMA>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (Var "a" :||: Var "b") :&amp;&amp;: Not (Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "c" :||: Var "b" :&amp;&amp;: Not (Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$2"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Not (Var "a") :||: Var "b") :&amp;&amp;: (Var "a" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Not (Var "a") :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Not (Var "c")  ~&gt;  (Var "a" :||: Not (Var "c")) :&amp;&amp;: (Var "b" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$2"/>
+                </OMA>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Not (Var "c")  ~&gt;  (Var "a" :||: Var "c") :&amp;&amp;: (Var "b" :||: Not (Var "c"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$2"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyEquivElim1" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a" :&amp;&amp;: Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="&&"/>
+                  <OMV name="$0"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a" :||: Not (Var "b"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="||"/>
+                  <OMV name="$0"/>
+                  <OMA>
+                    <OMS cd="unknown" name="~"/>
+                    <OMV name="$1"/>
+                  </OMA>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyEquivElim2" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Not (Var "a") :||: Not (Var "b"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: (Not (Var "a") :&amp;&amp;: Not (Var "b"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: (Not (Var "a") :||: Not (Var "b"))
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyImplElim" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :-&gt;: Var "b"  ~&gt;  Not (Var "a" :||: Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :-&gt;: Var "b"  ~&gt;  Var "a" :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :-&gt;: Var "b"  ~&gt;  Not (Var "a" :&amp;&amp;: Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyImplElim1" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :-&gt;: Var "b"  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyImplElim2" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyNotOverImpl" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :-&gt;: Var "b")  ~&gt;  Not (Var "a") :-&gt;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyParenth1" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a" :||: Var "b")  ~&gt;  Not (Var "a") :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyParenth2" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Var "a" :&lt;-&gt;: Var "b")  ~&gt;  Not (Var "a" :&amp;&amp;: Var "b") :||: Not (Var "a") :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="<->"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMA>
+                  <OMS cd="unknown" name="&&"/>
+                  <OMV name="$0"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="BuggyParenth3" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Not (Not (Var "a") :&amp;&amp;: Var "b")  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Not (Var "a") :||: Var "b")  ~&gt;  Var "a" :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Not (Var "a") :-&gt;: Var "b")  ~&gt;  Var "a" :-&gt;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Not (Var "a") :&lt;-&gt;: Var "b")  ~&gt;  Var "a" :&lt;-&gt;: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="<->"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="CommAnd" buggy="false" rewriterule="true">
+    <group>
+      Commutativity
+    </group>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b"  /~&gt;  Var "b" :&amp;&amp;: Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="CommEquiv" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  /~&gt;  Var "b" :&lt;-&gt;: Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="CommImp" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :-&gt;: Var "b"  ~&gt;  Var "b" :-&gt;: Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="CommOr" buggy="false" rewriterule="true">
+    <group>
+      Commutativity
+    </group>
+    <CMP>
+      Var "a" :||: Var "b"  /~&gt;  Var "b" :||: Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="ComplAnd" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :&amp;&amp;: Not (Var "a")  /~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :&amp;&amp;: Var "a"  /~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="ComplOr" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :||: Not (Var "a")  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :||: Var "a"  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="DeMorganAnd" buggy="false" rewriterule="true">
+    <CMP>
+      Not (Var "a" :&amp;&amp;: Var "b")  /~&gt;  Not (Var "a") :||: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="DeMorganOr" buggy="false" rewriterule="true">
+    <CMP>
+      Not (Var "a" :||: Var "b")  /~&gt;  Not (Var "a") :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="DefEquiv" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  /~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Not (Var "b")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="unknown" name="~"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="DefEquivImpls" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  /~&gt;  (Var "a" :-&gt;: Var "b") :&amp;&amp;: (Var "b" :-&gt;: Var "a")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="->"/>
+                <OMV name="$1"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="DefImpl" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :-&gt;: Var "b"  /~&gt;  Not (Var "a") :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="EquivElim3" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Not (Var "a") :||: Var "b"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="EquivSame" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "a"  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="FalseInEquiv" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      F :&lt;-&gt;: Var "a"  /~&gt;  Not (Var "a")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMS cd="unknown" name="F"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: F  /~&gt;  Not (Var "a")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="F"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="FalseInImpl" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      F :-&gt;: Var "a"  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMS cd="unknown" name="F"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :-&gt;: F  /~&gt;  Not (Var "a")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="F"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="FalseProp" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :||: F  ~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="F"/>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      F :||: Var "a"  ~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMS cd="unknown" name="F"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: F  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="F"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      F :&amp;&amp;: Var "a"  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMS cd="unknown" name="F"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="FalseZeroAnd" buggy="false" rewriterule="true">
+    <CMP>
+      F :&amp;&amp;: Var "a"  /~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMS cd="unknown" name="F"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: F  /~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="F"/>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="FalseZeroOr" buggy="false" rewriterule="true">
+    <CMP>
+      F :||: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMS cd="unknown" name="F"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :||: F  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="F"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="GenAndOverOr" buggy="false" rewriterule="false"/>
+  <rule name="GenDeMorganAnd" buggy="false" rewriterule="false"/>
+  <rule name="GenDeMorganOr" buggy="false" rewriterule="false"/>
+  <rule name="GenOrOverAnd" buggy="false" rewriterule="false">
+    <group>
+      DistributionOrOverAnd
+    </group>
+  </rule>
+  <rule name="IdemEqui" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :&lt;-&gt;: Var "a"  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="IdemImp" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :-&gt;: Var "a"  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="IdempAnd" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="IdempOr" buggy="false" rewriterule="true">
+    <CMP>
+      Var "a" :||: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="ImplSame" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      Var "a" :-&gt;: Var "a"  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="InvAndOverOr" buggy="false" rewriterule="false">
+    <group>
+      InverseDistr
+    </group>
+  </rule>
+  <rule name="InvDeMorganAnd" buggy="false" rewriterule="false">
+    <group>
+      InverseDeMorgan
+    </group>
+  </rule>
+  <rule name="InvDeMorganOr" buggy="false" rewriterule="false">
+    <group>
+      InverseDeMorgan
+    </group>
+  </rule>
+  <rule name="InvOrOverAnd" buggy="false" rewriterule="false">
+    <group>
+      InverseDistr
+    </group>
+  </rule>
+  <rule name="NotFalse" buggy="false" rewriterule="true">
+    <CMP>
+      Not F  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="neq"/>
+          <OMA>
+            <OMS cd="unknown" name="~"/>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+          <OMS cd="unknown" name="T"/>
+        </OMA>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="NotNot" buggy="false" rewriterule="true">
+    <CMP>
+      Not (Not (Var "a"))  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="~"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="NotTrue" buggy="false" rewriterule="true">
+    <CMP>
+      Not T  /~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="neq"/>
+          <OMA>
+            <OMS cd="unknown" name="~"/>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+          <OMS cd="unknown" name="F"/>
+        </OMA>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="OrComplBuggy" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :||: Not (Var "a")  ~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :||: Var "a"  ~&gt;  F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="F"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :||: Not (Var "a")  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Not (Var "a") :||: Var "a"  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="~"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="OrOverAnd" buggy="false" rewriterule="true">
+    <group>
+      DistributionOrOverAnd
+    </group>
+    <CMP>
+      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  /~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Var "a" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  /~&gt;  (Var "a" :||: Var "c") :&amp;&amp;: (Var "b" :||: Var "c")
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMA>
+                <OMS cd="unknown" name="&&"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="unknown" name="||"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="OrSame" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :||: Var "a"  ~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="TrueInEquiv" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      T :&lt;-&gt;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMS cd="unknown" name="T"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&lt;-&gt;: T  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="<->"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="T"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="TrueInImpl" buggy="false" rewriterule="true">
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      T :-&gt;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMS cd="unknown" name="T"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :-&gt;: T  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="->"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="T"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="TrueProp" buggy="true" rewriterule="true">
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      Var "a" :||: T  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="T"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      T :||: Var "a"  ~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMS cd="unknown" name="T"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: T  ~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="T"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      T :&amp;&amp;: Var "a"  ~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMS cd="unknown" name="T"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="TrueZeroAnd" buggy="false" rewriterule="true">
+    <CMP>
+      T :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMS cd="unknown" name="T"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :&amp;&amp;: T  /~&gt;  Var "a"
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="&&"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="T"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="TrueZeroOr" buggy="false" rewriterule="true">
+    <CMP>
+      T :||: Var "a"  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMS cd="unknown" name="T"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      Var "a" :||: T  /~&gt;  T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="unknown" name="||"/>
+              <OMV name="$0"/>
+              <OMS cd="unknown" name="T"/>
+            </OMA>
+            <OMS cd="unknown" name="T"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+</reply>
+

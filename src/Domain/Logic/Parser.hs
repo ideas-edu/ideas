@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser
    ( parseLogic, parseLogicPars, parseLogicUnicodePars
-   , ppLogic, ppLogicPrio, ppLogicPars, ppLogicUnicodePars
+   , ppLogicPars, ppLogicUnicodePars
    ) where
 
 import Text.Parsing
@@ -123,17 +123,6 @@ suspiciousVariable r =
 
 -----------------------------------------------------------
 --- Pretty-Printer
-
-ppLogic :: SLogic -> String
-ppLogic = ppLogicPrio 0
-        
-ppLogicPrio :: Int -> SLogic -> String
-ppLogicPrio n p = foldLogic (var, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, var "T", var "F") p n ""
- where
-   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
-   var       = const . (++)
-   nott p _  = ("~"++) . p 4
-   parIf b f = if b then ("("++) . f . (")"++) else f
 
 -- | Pretty printer that produces extra parentheses: also see parseLogicPars
 ppLogicPars :: SLogic -> String

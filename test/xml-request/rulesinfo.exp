@@ -1,7 +1,7 @@
 <reply result="ok" version="0.5.12">
   <rule name="AbsorpAnd" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :&amp;&amp;: (Var "a" :||: Var "b")  /~&gt;  Var "a"
+      "a" /\ ("a" || "b")  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -14,10 +14,10 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -28,7 +28,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: (Var "b" :||: Var "a")  /~&gt;  Var "a"
+      "a" /\ ("b" || "a")  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -41,10 +41,10 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$0"/>
               </OMA>
@@ -55,7 +55,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+      ("a" || "b") /\ "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -68,9 +68,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -82,7 +82,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "b" :||: Var "a") :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+      ("b" || "a") /\ "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -95,9 +95,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$0"/>
               </OMA>
@@ -111,7 +111,7 @@
   </rule>
   <rule name="AbsorpOr" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :||: Var "a" :&amp;&amp;: Var "b"  /~&gt;  Var "a"
+      "a" || "a" /\ "b"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -124,10 +124,10 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -138,7 +138,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :||: Var "b" :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+      "a" || "b" /\ "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -151,10 +151,10 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$0"/>
               </OMA>
@@ -165,7 +165,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Var "a"  /~&gt;  Var "a"
+      "a" /\ "b" || "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -178,9 +178,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -192,7 +192,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "b" :&amp;&amp;: Var "a" :||: Var "a"  /~&gt;  Var "a"
+      "b" /\ "a" || "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -205,9 +205,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$0"/>
               </OMA>
@@ -224,7 +224,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&amp;&amp;: Not (Var "a")  ~&gt;  T
+      "a" /\ ~"a"  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -236,20 +236,20 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :&amp;&amp;: Var "a"  ~&gt;  T
+      ~"a" /\ "a"  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -261,20 +261,20 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Not (Var "a")  ~&gt;  Var "a"
+      "a" /\ ~"a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -286,10 +286,10 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
@@ -299,7 +299,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :&amp;&amp;: Var "a"  ~&gt;  Var "a"
+      ~"a" /\ "a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -311,9 +311,9 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$0"/>
@@ -326,7 +326,7 @@
   </rule>
   <rule name="AndOverOr" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  /~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "c"
+      "a" /\ ("b" || "c")  /~&gt;  "a" /\ "b" || "a" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -340,23 +340,23 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -366,7 +366,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  /~&gt;  Var "a" :&amp;&amp;: Var "c" :||: Var "b" :&amp;&amp;: Var "c"
+      ("a" || "b") /\ "c"  /~&gt;  "a" /\ "c" || "b" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -380,23 +380,23 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -411,7 +411,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&amp;&amp;: Var "a"  ~&gt;  T
+      "a" /\ "a"  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -423,11 +423,11 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -438,7 +438,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :-&gt;: (Var "b" :-&gt;: Var "c")  ~&gt;  (Var "a" :-&gt;: Var "b") :-&gt;: Var "c"
+      "a" -&gt; "b" -&gt; "c"  ~&gt;  ("a" -&gt; "b") -&gt; "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -452,18 +452,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -474,7 +474,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :-&gt;: Var "b") :-&gt;: Var "c"  ~&gt;  Var "a" :-&gt;: (Var "b" :-&gt;: Var "c")
+      ("a" -&gt; "b") -&gt; "c"  ~&gt;  "a" -&gt; "b" -&gt; "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -488,19 +488,19 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -515,7 +515,7 @@
       Associativity
     </group>
     <CMP>
-      (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: Var "c"  /~&gt;  Var "a" :&amp;&amp;: (Var "b" :&amp;&amp;: Var "c")
+      ("a" /\ "b") /\ "c"  /~&gt;  "a" /\ "b" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -529,19 +529,19 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -556,7 +556,7 @@
       Associativity
     </group>
     <CMP>
-      (Var "a" :||: Var "b") :||: Var "c"  /~&gt;  Var "a" :||: (Var "b" :||: Var "c")
+      ("a" || "b") || "c"  /~&gt;  "a" || "b" || "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -570,19 +570,19 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -597,7 +597,7 @@
       Common misconceptions
     </group>
     <CMP>
-      (Var "a" :||: Var "b") :||: (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: Var "c"  ~&gt;  Var "a" :||: Var "b"
+      ("a" || "b") || ("a" /\ "b") /\ "c"  ~&gt;  "a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -611,16 +611,16 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="&&"/>
+                  <OMS cd="logic1" name="and"/>
                   <OMV name="$0"/>
                   <OMV name="$1"/>
                 </OMA>
@@ -628,7 +628,7 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -637,7 +637,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+      "a" /\ "b" || ("a" || "b") /\ "c"  ~&gt;  "a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -651,16 +651,16 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="||"/>
+                  <OMS cd="logic1" name="or"/>
                   <OMV name="$0"/>
                   <OMV name="$1"/>
                 </OMA>
@@ -668,7 +668,7 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -677,7 +677,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: (Var "a" :&amp;&amp;: Var "b" :||: Var "c")  ~&gt;  Var "a" :||: Var "b"
+      ("a" || "b") /\ ("a" /\ "b" || "c")  ~&gt;  "a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -691,16 +691,16 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="&&"/>
+                  <OMS cd="logic1" name="and"/>
                   <OMV name="$0"/>
                   <OMV name="$1"/>
                 </OMA>
@@ -708,7 +708,7 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -717,7 +717,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: ((Var "a" :||: Var "b") :||: Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+      ("a" /\ "b") /\ (("a" || "b") || "c")  ~&gt;  "a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -731,16 +731,16 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="||"/>
+                  <OMS cd="logic1" name="or"/>
                   <OMV name="$0"/>
                   <OMV name="$1"/>
                 </OMA>
@@ -748,7 +748,7 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -762,7 +762,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: Var "c"
+      "a" || "b" /\ "c"  ~&gt;  ("a" || "b") /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -776,18 +776,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -798,7 +798,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  Var "a" :||: Var "b" :&amp;&amp;: Var "c"
+      ("a" || "b") /\ "c"  ~&gt;  "a" || "b" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -812,19 +812,19 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -834,7 +834,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  ~&gt;  Var "a" :&amp;&amp;: (Var "b" :||: Var "c")
+      "a" /\ "b" || "c"  ~&gt;  "a" /\ ("b" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -848,19 +848,19 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -870,7 +870,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "c"
+      "a" /\ ("b" || "c")  ~&gt;  "a" /\ "b" || "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -884,18 +884,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -911,7 +911,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Var "a") :||: Var "b"
+      ~("a" /\ "b")  ~&gt;  ~"a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -924,17 +924,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -944,7 +944,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Var "a" :||: Not (Var "b")
+      ~("a" /\ "b")  ~&gt;  "a" || ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -957,18 +957,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -977,7 +977,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Var "a" :||: Var "b"
+      ~("a" /\ "b")  ~&gt;  "a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -990,15 +990,15 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -1007,7 +1007,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :||: Var "b")  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b"
+      ~("a" || "b")  ~&gt;  ~"a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1020,17 +1020,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -1040,7 +1040,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :||: Var "b")  ~&gt;  Var "a" :&amp;&amp;: Not (Var "b")
+      ~("a" || "b")  ~&gt;  "a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1053,18 +1053,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -1073,7 +1073,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :||: Var "b")  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+      ~("a" || "b")  ~&gt;  "a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1086,15 +1086,15 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -1108,7 +1108,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Not (Var "a") :||: Not (Var "b"))
+      ~("a" /\ "b")  ~&gt;  ~(~"a" || ~"b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1121,23 +1121,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -1147,7 +1147,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :||: Var "b")  ~&gt;  Not (Not (Var "a") :&amp;&amp;: Not (Var "b"))
+      ~("a" || "b")  ~&gt;  ~(~"a" /\ ~"b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1160,23 +1160,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -1191,7 +1191,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Var "a") :&amp;&amp;: Not (Var "b")
+      ~("a" /\ "b")  ~&gt;  ~"a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1204,21 +1204,21 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -1232,7 +1232,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :||: Var "b")  ~&gt;  Not (Var "a") :||: Not (Var "b")
+      ~("a" || "b")  ~&gt;  ~"a" || ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1245,21 +1245,21 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -1273,7 +1273,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Not (Var "a" :&amp;&amp;: Var "b") :||: Var "c")  ~&gt;  Not (Not (Var "a") :||: Not (Var "b")) :||: Var "c"
+      ~(~("a" /\ "b") || "c")  ~&gt;  ~(~"a" || ~"b") || "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1287,13 +1287,13 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMA>
-                    <OMS cd="unknown" name="&&"/>
+                    <OMS cd="logic1" name="and"/>
                     <OMV name="$0"/>
                     <OMV name="$1"/>
                   </OMA>
@@ -1302,17 +1302,17 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="||"/>
+                  <OMS cd="logic1" name="or"/>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$0"/>
                   </OMA>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$1"/>
                   </OMA>
                 </OMA>
@@ -1324,7 +1324,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Not (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: Var "c")  ~&gt;  Not (Not (Var "a") :||: Not (Var "b")) :&amp;&amp;: Var "c"
+      ~(~("a" /\ "b") /\ "c")  ~&gt;  ~(~"a" || ~"b") /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1338,13 +1338,13 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMA>
-                    <OMS cd="unknown" name="&&"/>
+                    <OMS cd="logic1" name="and"/>
                     <OMV name="$0"/>
                     <OMV name="$1"/>
                   </OMA>
@@ -1353,17 +1353,17 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="||"/>
+                  <OMS cd="logic1" name="or"/>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$0"/>
                   </OMA>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$1"/>
                   </OMA>
                 </OMA>
@@ -1375,7 +1375,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Not (Var "a" :||: Var "b") :||: Var "c")  ~&gt;  Not (Not (Var "a") :&amp;&amp;: Not (Var "b")) :||: Var "c"
+      ~(~("a" || "b") || "c")  ~&gt;  ~(~"a" /\ ~"b") || "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1389,13 +1389,13 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMA>
-                    <OMS cd="unknown" name="||"/>
+                    <OMS cd="logic1" name="or"/>
                     <OMV name="$0"/>
                     <OMV name="$1"/>
                   </OMA>
@@ -1404,17 +1404,17 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="&&"/>
+                  <OMS cd="logic1" name="and"/>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$0"/>
                   </OMA>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$1"/>
                   </OMA>
                 </OMA>
@@ -1426,7 +1426,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Not (Var "a" :||: Var "b") :&amp;&amp;: Var "c")  ~&gt;  Not (Not (Var "a") :&amp;&amp;: Not (Var "b")) :&amp;&amp;: Var "c"
+      ~(~("a" || "b") /\ "c")  ~&gt;  ~(~"a" /\ ~"b") /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1440,13 +1440,13 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMA>
-                    <OMS cd="unknown" name="||"/>
+                    <OMS cd="logic1" name="or"/>
                     <OMV name="$0"/>
                     <OMV name="$1"/>
                   </OMA>
@@ -1455,17 +1455,17 @@
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="&&"/>
+                  <OMS cd="logic1" name="and"/>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$0"/>
                   </OMA>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$1"/>
                   </OMA>
                 </OMA>
@@ -1482,7 +1482,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: (Var "a" :&amp;&amp;: Var "c")
+      "a" /\ ("b" || "c")  ~&gt;  ("a" /\ "b") /\ "a" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1496,23 +1496,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1522,7 +1522,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :&amp;&amp;: Var "c") :&amp;&amp;: (Var "b" :&amp;&amp;: Var "c")
+      ("a" || "b") /\ "c"  ~&gt;  ("a" /\ "c") /\ "b" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1536,23 +1536,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1562,7 +1562,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Var "a" :||: Var "c")
+      "a" /\ ("b" || "c")  ~&gt;  ("a" || "b") /\ ("a" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1576,23 +1576,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1602,7 +1602,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "c") :&amp;&amp;: (Var "b" :||: Var "c")
+      ("a" || "b") /\ "c"  ~&gt;  ("a" || "c") /\ ("b" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1616,23 +1616,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1642,7 +1642,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "b") :||: (Var "a" :||: Var "c")
+      "a" || "b" /\ "c"  ~&gt;  ("a" || "b") || "a" || "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1656,23 +1656,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1682,7 +1682,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  ~&gt;  (Var "a" :||: Var "c") :||: (Var "b" :||: Var "c")
+      "a" /\ "b" || "c"  ~&gt;  ("a" || "c") || "b" || "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1696,23 +1696,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1722,7 +1722,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "c"
+      "a" || "b" /\ "c"  ~&gt;  "a" /\ "b" || "a" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1736,23 +1736,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1762,7 +1762,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  ~&gt;  Var "a" :&amp;&amp;: Var "c" :||: Var "b" :&amp;&amp;: Var "c"
+      "a" /\ "b" || "c"  ~&gt;  "a" /\ "c" || "b" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1776,23 +1776,23 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1807,7 +1807,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a") :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "c"
+      ~"a" /\ ("b" || "c")  ~&gt;  ~"a" /\ "b" || "a" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1821,29 +1821,29 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1853,7 +1853,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :&amp;&amp;: (Var "b" :||: Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Var "c"
+      ~"a" /\ ("b" || "c")  ~&gt;  "a" /\ "b" || ~"a" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1867,28 +1867,28 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$2"/>
@@ -1899,7 +1899,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Not (Var "c")  ~&gt;  Var "a" :&amp;&amp;: Not (Var "c") :||: Var "b" :&amp;&amp;: Var "c"
+      ("a" || "b") /\ ~"c"  ~&gt;  "a" /\ ~"c" || "b" /\ "c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1913,29 +1913,29 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$2"/>
                 </OMA>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -1945,7 +1945,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (Var "a" :||: Var "b") :&amp;&amp;: Not (Var "c")  ~&gt;  Var "a" :&amp;&amp;: Var "c" :||: Var "b" :&amp;&amp;: Not (Var "c")
+      ("a" || "b") /\ ~"c"  ~&gt;  "a" /\ "c" || "b" /\ ~"c"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1959,29 +1959,29 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$2"/>
                 </OMA>
               </OMA>
@@ -1991,7 +1991,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Not (Var "a") :||: Var "b") :&amp;&amp;: (Var "a" :||: Var "c")
+      ~"a" || "b" /\ "c"  ~&gt;  (~"a" || "b") /\ ("a" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2005,29 +2005,29 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -2037,7 +2037,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :||: Var "b" :&amp;&amp;: Var "c"  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Not (Var "a") :||: Var "c")
+      ~"a" || "b" /\ "c"  ~&gt;  ("a" || "b") /\ (~"a" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2051,28 +2051,28 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$2"/>
@@ -2083,7 +2083,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Not (Var "c")  ~&gt;  (Var "a" :||: Not (Var "c")) :&amp;&amp;: (Var "b" :||: Var "c")
+      "a" /\ "b" || ~"c"  ~&gt;  ("a" || ~"c") /\ ("b" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2097,29 +2097,29 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$2"/>
                 </OMA>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -2129,7 +2129,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Not (Var "c")  ~&gt;  (Var "a" :||: Var "c") :&amp;&amp;: (Var "b" :||: Not (Var "c"))
+      "a" /\ "b" || ~"c"  ~&gt;  ("a" || "c") /\ ("b" || ~"c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2143,29 +2143,29 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$2"/>
                 </OMA>
               </OMA>
@@ -2180,7 +2180,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a" :&amp;&amp;: Var "b")
+      "a" &lt;-&gt; "b"  ~&gt;  "a" /\ "b" || ~("a" /\ "b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2193,21 +2193,21 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="&&"/>
+                  <OMS cd="logic1" name="and"/>
                   <OMV name="$0"/>
                   <OMV name="$1"/>
                 </OMA>
@@ -2218,7 +2218,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Var "b"
+      "a" &lt;-&gt; "b"  ~&gt;  "a" /\ "b" || ~"a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2231,21 +2231,21 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
@@ -2256,7 +2256,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Not (Var "b")
+      "a" &lt;-&gt; "b"  ~&gt;  "a" /\ "b" || "a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2269,22 +2269,22 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -2294,7 +2294,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Var "a" :&amp;&amp;: Var "b"
+      "a" &lt;-&gt; "b"  ~&gt;  "a" /\ "b" || "a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2307,19 +2307,19 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -2329,7 +2329,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a" :||: Not (Var "b"))
+      "a" &lt;-&gt; "b"  ~&gt;  "a" /\ "b" || ~("a" || ~"b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2342,24 +2342,24 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="||"/>
+                  <OMS cd="logic1" name="or"/>
                   <OMV name="$0"/>
                   <OMA>
-                    <OMS cd="unknown" name="~"/>
+                    <OMS cd="logic1" name="not"/>
                     <OMV name="$1"/>
                   </OMA>
                 </OMA>
@@ -2375,7 +2375,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Not (Var "a") :||: Not (Var "b"))
+      "a" &lt;-&gt; "b"  ~&gt;  ("a" || "b") /\ (~"a" || ~"b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2388,25 +2388,25 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -2416,7 +2416,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  (Var "a" :&amp;&amp;: Var "b") :&amp;&amp;: (Not (Var "a") :&amp;&amp;: Not (Var "b"))
+      "a" &lt;-&gt; "b"  ~&gt;  ("a" /\ "b") /\ ~"a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2429,25 +2429,25 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -2457,7 +2457,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: (Not (Var "a") :||: Not (Var "b"))
+      "a" &lt;-&gt; "b"  ~&gt;  "a" /\ "b" || ~"a" || ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2470,25 +2470,25 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -2503,7 +2503,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :-&gt;: Var "b"  ~&gt;  Not (Var "a" :||: Var "b")
+      "a" -&gt; "b"  ~&gt;  ~("a" || "b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2516,14 +2516,14 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -2533,7 +2533,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :-&gt;: Var "b"  ~&gt;  Var "a" :||: Var "b"
+      "a" -&gt; "b"  ~&gt;  "a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2546,12 +2546,12 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -2560,7 +2560,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :-&gt;: Var "b"  ~&gt;  Not (Var "a" :&amp;&amp;: Var "b")
+      "a" -&gt; "b"  ~&gt;  ~("a" /\ "b")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2573,14 +2573,14 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
@@ -2595,7 +2595,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :-&gt;: Var "b"  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b"
+      "a" -&gt; "b"  ~&gt;  ~"a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2608,14 +2608,14 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -2630,7 +2630,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :-&gt;: Var "b"  ~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Not (Var "b")
+      "a" -&gt; "b"  ~&gt;  "a" /\ "b" || ~"a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2643,25 +2643,25 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -2676,7 +2676,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :-&gt;: Var "b")  ~&gt;  Not (Var "a") :-&gt;: Not (Var "b")
+      ~("a" -&gt; "b")  ~&gt;  ~"a" -&gt; ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2689,21 +2689,21 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -2717,7 +2717,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  ~&gt;  Not (Var "a") :&amp;&amp;: Var "b"
+      ~("a" /\ "b")  ~&gt;  ~"a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2730,17 +2730,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -2750,7 +2750,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a" :||: Var "b")  ~&gt;  Not (Var "a") :||: Var "b"
+      ~("a" || "b")  ~&gt;  ~"a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2763,17 +2763,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -2788,7 +2788,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Var "a" :&lt;-&gt;: Var "b")  ~&gt;  Not (Var "a" :&amp;&amp;: Var "b") :||: Not (Var "a") :&amp;&amp;: Not (Var "b")
+      ~("a" &lt;-&gt; "b")  ~&gt;  ~("a" /\ "b") || ~"a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2801,31 +2801,31 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="<->"/>
+                <OMS cd="logic1" name="equivalent"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMA>
-                  <OMS cd="unknown" name="&&"/>
+                  <OMS cd="logic1" name="and"/>
                   <OMV name="$0"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -2840,7 +2840,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Not (Not (Var "a") :&amp;&amp;: Var "b")  ~&gt;  Var "a" :&amp;&amp;: Var "b"
+      ~(~"a" /\ "b")  ~&gt;  "a" /\ "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2853,18 +2853,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -2873,7 +2873,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Not (Var "a") :||: Var "b")  ~&gt;  Var "a" :||: Var "b"
+      ~(~"a" || "b")  ~&gt;  "a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2886,18 +2886,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -2906,7 +2906,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Not (Var "a") :-&gt;: Var "b")  ~&gt;  Var "a" :-&gt;: Var "b"
+      ~(~"a" -&gt; "b")  ~&gt;  "a" -&gt; "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2919,18 +2919,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -2939,7 +2939,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Not (Var "a") :&lt;-&gt;: Var "b")  ~&gt;  Var "a" :&lt;-&gt;: Var "b"
+      ~(~"a" &lt;-&gt; "b")  ~&gt;  "a" &lt;-&gt; "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2952,18 +2952,18 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="<->"/>
+                <OMS cd="logic1" name="equivalent"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
@@ -2977,7 +2977,7 @@
       Commutativity
     </group>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b"  /~&gt;  Var "b" :&amp;&amp;: Var "a"
+      "a" /\ "b"  /~&gt;  "b" /\ "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2990,12 +2990,12 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$1"/>
               <OMV name="$0"/>
             </OMA>
@@ -3009,7 +3009,7 @@
       Additional rules
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  /~&gt;  Var "b" :&lt;-&gt;: Var "a"
+      "a" &lt;-&gt; "b"  /~&gt;  "b" &lt;-&gt; "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3022,12 +3022,12 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$1"/>
               <OMV name="$0"/>
             </OMA>
@@ -3041,7 +3041,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :-&gt;: Var "b"  ~&gt;  Var "b" :-&gt;: Var "a"
+      "a" -&gt; "b"  ~&gt;  "b" -&gt; "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3054,12 +3054,12 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$1"/>
               <OMV name="$0"/>
             </OMA>
@@ -3073,7 +3073,7 @@
       Commutativity
     </group>
     <CMP>
-      Var "a" :||: Var "b"  /~&gt;  Var "b" :||: Var "a"
+      "a" || "b"  /~&gt;  "b" || "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3086,12 +3086,12 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$1"/>
               <OMV name="$0"/>
             </OMA>
@@ -3102,7 +3102,7 @@
   </rule>
   <rule name="ComplAnd" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :&amp;&amp;: Not (Var "a")  /~&gt;  F
+      "a" /\ ~"a"  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3114,20 +3114,20 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :&amp;&amp;: Var "a"  /~&gt;  F
+      ~"a" /\ "a"  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3139,14 +3139,14 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -3154,7 +3154,7 @@
   </rule>
   <rule name="ComplOr" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :||: Not (Var "a")  /~&gt;  T
+      "a" || ~"a"  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3166,20 +3166,20 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :||: Var "a"  /~&gt;  T
+      ~"a" || "a"  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3191,14 +3191,14 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -3206,7 +3206,7 @@
   </rule>
   <rule name="DeMorganAnd" buggy="false" rewriterule="true">
     <CMP>
-      Not (Var "a" :&amp;&amp;: Var "b")  /~&gt;  Not (Var "a") :||: Not (Var "b")
+      ~("a" /\ "b")  /~&gt;  ~"a" || ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3219,21 +3219,21 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -3244,7 +3244,7 @@
   </rule>
   <rule name="DeMorganOr" buggy="false" rewriterule="true">
     <CMP>
-      Not (Var "a" :||: Var "b")  /~&gt;  Not (Var "a") :&amp;&amp;: Not (Var "b")
+      ~("a" || "b")  /~&gt;  ~"a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3257,21 +3257,21 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$1"/>
               </OMA>
             </OMA>
@@ -3282,7 +3282,7 @@
   </rule>
   <rule name="DefEquiv" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  /~&gt;  Var "a" :&amp;&amp;: Var "b" :||: Not (Var "a") :&amp;&amp;: Not (Var "b")
+      "a" &lt;-&gt; "b"  /~&gt;  "a" /\ "b" || ~"a" /\ ~"b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3295,25 +3295,25 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$0"/>
                 </OMA>
                 <OMA>
-                  <OMS cd="unknown" name="~"/>
+                  <OMS cd="logic1" name="not"/>
                   <OMV name="$1"/>
                 </OMA>
               </OMA>
@@ -3328,7 +3328,7 @@
       Additional rules
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  /~&gt;  (Var "a" :-&gt;: Var "b") :&amp;&amp;: (Var "b" :-&gt;: Var "a")
+      "a" &lt;-&gt; "b"  /~&gt;  "a" -&gt; "b" /\ "b" -&gt; "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3341,19 +3341,19 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="->"/>
+                <OMS cd="logic1" name="implies"/>
                 <OMV name="$1"/>
                 <OMV name="$0"/>
               </OMA>
@@ -3365,7 +3365,7 @@
   </rule>
   <rule name="DefImpl" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :-&gt;: Var "b"  /~&gt;  Not (Var "a") :||: Var "b"
+      "a" -&gt; "b"  /~&gt;  ~"a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3378,14 +3378,14 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -3400,7 +3400,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "b"  ~&gt;  Not (Var "a") :||: Var "b"
+      "a" &lt;-&gt; "b"  ~&gt;  ~"a" || "b"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3413,14 +3413,14 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$1"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$1"/>
@@ -3435,7 +3435,7 @@
       Additional rules
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "a"  /~&gt;  T
+      "a" &lt;-&gt; "a"  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3447,11 +3447,11 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -3462,7 +3462,7 @@
       Additional rules
     </group>
     <CMP>
-      F :&lt;-&gt;: Var "a"  /~&gt;  Not (Var "a")
+      F &lt;-&gt; "a"  /~&gt;  ~"a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3474,12 +3474,12 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMS cd="logic1" name="false"/>
               <OMV name="$0"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMV name="$0"/>
             </OMA>
           </OMA>
@@ -3487,7 +3487,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: F  /~&gt;  Not (Var "a")
+      "a" &lt;-&gt; F  /~&gt;  ~"a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3499,12 +3499,12 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="false"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMV name="$0"/>
             </OMA>
           </OMA>
@@ -3517,7 +3517,7 @@
       Additional rules
     </group>
     <CMP>
-      F :-&gt;: Var "a"  /~&gt;  T
+      F -&gt; "a"  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3529,17 +3529,17 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="implies"/>
+              <OMS cd="logic1" name="false"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :-&gt;: F  /~&gt;  Not (Var "a")
+      "a" -&gt; F  /~&gt;  ~"a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3551,12 +3551,12 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="false"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMV name="$0"/>
             </OMA>
           </OMA>
@@ -3569,7 +3569,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :||: F  ~&gt;  F
+      "a" || F  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3581,17 +3581,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="false"/>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      F :||: Var "a"  ~&gt;  F
+      F || "a"  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3603,17 +3603,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="false"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: F  ~&gt;  Var "a"
+      "a" /\ F  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3625,9 +3625,9 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="false"/>
             </OMA>
             <OMV name="$0"/>
           </OMA>
@@ -3635,7 +3635,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      F :&amp;&amp;: Var "a"  ~&gt;  Var "a"
+      F /\ "a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3647,8 +3647,8 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="and"/>
+              <OMS cd="logic1" name="false"/>
               <OMV name="$0"/>
             </OMA>
             <OMV name="$0"/>
@@ -3659,7 +3659,7 @@
   </rule>
   <rule name="FalseZeroAnd" buggy="false" rewriterule="true">
     <CMP>
-      F :&amp;&amp;: Var "a"  /~&gt;  F
+      F /\ "a"  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3671,17 +3671,17 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="and"/>
+              <OMS cd="logic1" name="false"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: F  /~&gt;  F
+      "a" /\ F  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3693,11 +3693,11 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="false"/>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -3705,7 +3705,7 @@
   </rule>
   <rule name="FalseZeroOr" buggy="false" rewriterule="true">
     <CMP>
-      F :||: Var "a"  /~&gt;  Var "a"
+      F || "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3717,8 +3717,8 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="false"/>
               <OMV name="$0"/>
             </OMA>
             <OMV name="$0"/>
@@ -3727,7 +3727,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :||: F  /~&gt;  Var "a"
+      "a" || F  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3739,9 +3739,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="F"/>
+              <OMS cd="logic1" name="false"/>
             </OMA>
             <OMV name="$0"/>
           </OMA>
@@ -3762,7 +3762,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :&lt;-&gt;: Var "a"  ~&gt;  Var "a"
+      "a" &lt;-&gt; "a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3774,7 +3774,7 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
@@ -3789,7 +3789,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :-&gt;: Var "a"  ~&gt;  Var "a"
+      "a" -&gt; "a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3801,7 +3801,7 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
@@ -3813,7 +3813,7 @@
   </rule>
   <rule name="IdempAnd" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+      "a" /\ "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3825,7 +3825,7 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
@@ -3837,7 +3837,7 @@
   </rule>
   <rule name="IdempOr" buggy="false" rewriterule="true">
     <CMP>
-      Var "a" :||: Var "a"  /~&gt;  Var "a"
+      "a" || "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3849,7 +3849,7 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
@@ -3864,7 +3864,7 @@
       Additional rules
     </group>
     <CMP>
-      Var "a" :-&gt;: Var "a"  /~&gt;  T
+      "a" -&gt; "a"  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3876,11 +3876,11 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -3908,24 +3908,24 @@
   </rule>
   <rule name="NotFalse" buggy="false" rewriterule="true">
     <CMP>
-      Not F  /~&gt;  T
+      ~F  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="neq"/>
           <OMA>
-            <OMS cd="unknown" name="~"/>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="not"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
-          <OMS cd="unknown" name="T"/>
+          <OMS cd="logic1" name="true"/>
         </OMA>
       </OMOBJ>
     </FMP>
   </rule>
   <rule name="NotNot" buggy="false" rewriterule="true">
     <CMP>
-      Not (Not (Var "a"))  /~&gt;  Var "a"
+      ~~"a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3937,9 +3937,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="~"/>
+              <OMS cd="logic1" name="not"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
@@ -3951,17 +3951,17 @@
   </rule>
   <rule name="NotTrue" buggy="false" rewriterule="true">
     <CMP>
-      Not T  /~&gt;  F
+      ~T  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="neq"/>
           <OMA>
-            <OMS cd="unknown" name="~"/>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="not"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
-          <OMS cd="unknown" name="F"/>
+          <OMS cd="logic1" name="false"/>
         </OMA>
       </OMOBJ>
     </FMP>
@@ -3971,7 +3971,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :||: Not (Var "a")  ~&gt;  F
+      "a" || ~"a"  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3983,20 +3983,20 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :||: Var "a"  ~&gt;  F
+      ~"a" || "a"  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4008,20 +4008,20 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="F"/>
+            <OMS cd="logic1" name="false"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :||: Not (Var "a")  ~&gt;  Var "a"
+      "a" || ~"a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4033,10 +4033,10 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
             </OMA>
@@ -4046,7 +4046,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Not (Var "a") :||: Var "a"  ~&gt;  Var "a"
+      ~"a" || "a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4058,9 +4058,9 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="~"/>
+                <OMS cd="logic1" name="not"/>
                 <OMV name="$0"/>
               </OMA>
               <OMV name="$0"/>
@@ -4076,7 +4076,7 @@
       DistributionOrOverAnd
     </group>
     <CMP>
-      Var "a" :||: Var "b" :&amp;&amp;: Var "c"  /~&gt;  (Var "a" :||: Var "b") :&amp;&amp;: (Var "a" :||: Var "c")
+      "a" || "b" /\ "c"  /~&gt;  ("a" || "b") /\ ("a" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4090,23 +4090,23 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
@@ -4116,7 +4116,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: Var "b" :||: Var "c"  /~&gt;  (Var "a" :||: Var "c") :&amp;&amp;: (Var "b" :||: Var "c")
+      "a" /\ "b" || "c"  /~&gt;  ("a" || "c") /\ ("b" || "c")
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4130,23 +4130,23 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMA>
-                <OMS cd="unknown" name="&&"/>
+                <OMS cd="logic1" name="and"/>
                 <OMV name="$0"/>
                 <OMV name="$1"/>
               </OMA>
               <OMV name="$2"/>
             </OMA>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$0"/>
                 <OMV name="$2"/>
               </OMA>
               <OMA>
-                <OMS cd="unknown" name="||"/>
+                <OMS cd="logic1" name="or"/>
                 <OMV name="$1"/>
                 <OMV name="$2"/>
               </OMA>
@@ -4161,7 +4161,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :||: Var "a"  ~&gt;  T
+      "a" || "a"  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4173,11 +4173,11 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -4188,7 +4188,7 @@
       Additional rules
     </group>
     <CMP>
-      T :&lt;-&gt;: Var "a"  /~&gt;  Var "a"
+      T &lt;-&gt; "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4200,8 +4200,8 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMS cd="logic1" name="true"/>
               <OMV name="$0"/>
             </OMA>
             <OMV name="$0"/>
@@ -4210,7 +4210,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&lt;-&gt;: T  /~&gt;  Var "a"
+      "a" &lt;-&gt; T  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4222,9 +4222,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="<->"/>
+              <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="true"/>
             </OMA>
             <OMV name="$0"/>
           </OMA>
@@ -4237,7 +4237,7 @@
       Additional rules
     </group>
     <CMP>
-      T :-&gt;: Var "a"  /~&gt;  Var "a"
+      T -&gt; "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4249,8 +4249,8 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="implies"/>
+              <OMS cd="logic1" name="true"/>
               <OMV name="$0"/>
             </OMA>
             <OMV name="$0"/>
@@ -4259,7 +4259,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :-&gt;: T  /~&gt;  T
+      "a" -&gt; T  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4271,11 +4271,11 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="->"/>
+              <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="true"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -4286,7 +4286,7 @@
       Common misconceptions
     </group>
     <CMP>
-      Var "a" :||: T  ~&gt;  Var "a"
+      "a" || T  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4298,9 +4298,9 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="true"/>
             </OMA>
             <OMV name="$0"/>
           </OMA>
@@ -4308,7 +4308,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      T :||: Var "a"  ~&gt;  Var "a"
+      T || "a"  ~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4320,8 +4320,8 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="true"/>
               <OMV name="$0"/>
             </OMA>
             <OMV name="$0"/>
@@ -4330,7 +4330,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: T  ~&gt;  T
+      "a" /\ T  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4342,17 +4342,17 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="true"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      T :&amp;&amp;: Var "a"  ~&gt;  T
+      T /\ "a"  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4364,11 +4364,11 @@
           <OMA>
             <OMS cd="relation1" name="eq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="and"/>
+              <OMS cd="logic1" name="true"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
@@ -4376,7 +4376,7 @@
   </rule>
   <rule name="TrueZeroAnd" buggy="false" rewriterule="true">
     <CMP>
-      T :&amp;&amp;: Var "a"  /~&gt;  Var "a"
+      T /\ "a"  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4388,8 +4388,8 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="and"/>
+              <OMS cd="logic1" name="true"/>
               <OMV name="$0"/>
             </OMA>
             <OMV name="$0"/>
@@ -4398,7 +4398,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :&amp;&amp;: T  /~&gt;  Var "a"
+      "a" /\ T  /~&gt;  "a"
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4410,9 +4410,9 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="&&"/>
+              <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="true"/>
             </OMA>
             <OMV name="$0"/>
           </OMA>
@@ -4422,7 +4422,7 @@
   </rule>
   <rule name="TrueZeroOr" buggy="false" rewriterule="true">
     <CMP>
-      T :||: Var "a"  /~&gt;  T
+      T || "a"  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4434,17 +4434,17 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="true"/>
               <OMV name="$0"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>
     </FMP>
     <CMP>
-      Var "a" :||: T  /~&gt;  T
+      "a" || T  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4456,11 +4456,11 @@
           <OMA>
             <OMS cd="relation1" name="neq"/>
             <OMA>
-              <OMS cd="unknown" name="||"/>
+              <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
-              <OMS cd="unknown" name="T"/>
+              <OMS cd="logic1" name="true"/>
             </OMA>
-            <OMS cd="unknown" name="T"/>
+            <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
       </OMOBJ>

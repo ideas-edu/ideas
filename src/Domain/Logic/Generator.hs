@@ -21,6 +21,7 @@ import Test.QuickCheck hiding (defaultConfig)
 import Common.Rewriting
 import Common.Uniplate
 
+import Text.OpenMath.Dictionary.Logic1
 import qualified Common.Rewriting.Term as Term
 
 -------------------------------------------------------------
@@ -32,25 +33,27 @@ instance Different (Logic a) where
 
 instance IsTerm a => IsTerm (Logic a) where
    toTerm = foldLogic
-      ( toTerm, Term.binary "->", Term.binary "<->", Term.binary "&&"
-      , Term.binary "||", Term.unary "~", Term.Con "T", Term.Con "F"
+      ( toTerm, Term.binary (show impliesSymbol)
+      , Term.binary (show equivalentSymbol), Term.binary (show andSymbol)
+      , Term.binary (show orSymbol), Term.unary (show notSymbol)
+      , Term.Con (show trueSymbol), Term.Con (show falseSymbol)
       )
 
-   fromTerm (Term.Con "T") = return T
-   fromTerm (Term.Con "F") = return F
-   fromTerm (Term.App (Term.Con "~") a) = liftM Not (fromTerm a)
+   fromTerm (Term.Con s)
+      | read s == trueSymbol  = return T
+      | read s == falseSymbol = return F
+   fromTerm (Term.App (Term.Con s) a) 
+      | read s == notSymbol = liftM Not (fromTerm a)
    fromTerm term = msum 
-      [ iBin "->" (:->:) term, iBin "<->" (:<->:) term
-      , iBin "&&" (:&&:) term, iBin "||" (:||:) term
+      [ iBin impliesSymbol (:->:) term, iBin equivalentSymbol (:<->:) term
+      , iBin andSymbol (:&&:) term, iBin orSymbol (:||:) term
       , liftM Var (fromTerm term)
       ]
 
-iBin s f term = do 
-   (a, b) <- Term.isBinary s term
-   p <- fromTerm a
-   q <- fromTerm b
-   return (f p q)
-
+iBin :: (Show s, IsTerm a) => s -> (Logic a -> Logic a -> Logic a) -> Term.Term -> Maybe (Logic a)
+iBin sym f (Term.App (Term.App (Term.Con s) a) b) 
+   | show sym == s = liftM2 f (fromTerm a) (fromTerm b)
+iBin _ _ _ = Nothing
 
 instance Rewrite SLogic where
    operators = logicOperators

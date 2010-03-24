@@ -34,10 +34,13 @@ data Logic a = Var a
              | Not (Logic a)                    -- not
              | T                                -- true
              | F                                -- false
- deriving (Show, Eq, Ord)
+ deriving (Eq, Ord)
 
 -- | For simple use, we assume the variables to be strings
 type SLogic = Logic String
+
+instance Show a => Show (Logic a) where
+   show = ppLogic
 
 instance Functor Logic where
    fmap f = foldLogic (Var . f, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
@@ -70,6 +73,18 @@ foldLogic (var, impl, equiv, and, or, not, true, false) = rec
          T         -> true 
          F         -> false
 
+-- | Pretty-printer for propositions
+ppLogic :: Show a => Logic a -> String
+ppLogic = ppLogicPrio 0
+        
+ppLogicPrio :: Show a => Int -> Logic a -> String
+ppLogicPrio n p = foldLogic (pp . show, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, pp "T", pp "F") p n ""
+ where
+   binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
+   pp s      = const (s++)
+   nott p _  = ("~"++) . p 4
+   parIf b f = if b then ("("++) . f . (")"++) else f
+   
 -- | The monadic join for logic
 catLogic :: Logic (Logic a) -> Logic a
 catLogic = foldLogic (id, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)

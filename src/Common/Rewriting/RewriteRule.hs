@@ -156,10 +156,10 @@ rewriteM r = msum . map return . rewrite r
 -- Pretty-print a rewriteRule
 
 showRewriteRule :: Bool -> RewriteRule a -> Maybe String
-showRewriteRule isBuggy r@(R _ _ _) = do
+showRewriteRule sound r@(R _ _ _) = do
    x <- fromTermTp r (sub |-> a)
    y <- fromTermTp r (sub |-> b)
-   let op = if isBuggy then "/~>" else "~>"
+   let op = if sound then "~>" else "/~>" 
    return (show x ++ "  " ++ op ++ "  " ++ show y)
  where
    a :~> b = rulePair r 0

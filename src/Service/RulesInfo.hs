@@ -44,8 +44,10 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       "rewriterule" .=. f (isRewriteRule r)
       -- More information
       let descr = ruleDescription r
-      unless (null descr) $
-         element "description" $ text descr
+          -- to do: rules should carry descriptions 
+          txt   = if null descr then (name r) else descr 
+      unless (null txt) $
+         element "description" $ text txt
       forM_ (ruleGroups r) $ \s -> 
          element "group" $ text s
       forM_ (ruleSiblings r) $ \s -> 
@@ -67,9 +69,9 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
    combine    = liftM sequence_
    
 rewriteRuleToFMP :: Bool -> RewriteRule a -> FMP
-rewriteRuleToFMP isBuggy r 
-   | isBuggy   = buggyFMP a b
-   | otherwise = eqFMP    a b
+rewriteRuleToFMP sound r 
+   | sound     = eqFMP    a b
+   | otherwise = buggyFMP a b 
  where
    a :~> b = fmap termToOMOBJ (rulePair r 0)
    

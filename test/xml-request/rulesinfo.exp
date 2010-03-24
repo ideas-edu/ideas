@@ -1,18 +1,21 @@
 <reply result="ok" version="0.5.12">
   <rule name="AbsorpAnd" buggy="false" rewriterule="true">
+    <description>
+      AbsorpAnd
+    </description>
     <CMP>
-      a /\ (a || b)  /~&gt;  a
+      a /\ (a || b)  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -28,18 +31,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ (b || a)  /~&gt;  a
+      a /\ (b || a)  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -55,18 +58,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ a  /~&gt;  a
+      (a || b) /\ a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -82,18 +85,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (b || a) /\ a  /~&gt;  a
+      (b || a) /\ a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$1"/>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -110,19 +113,22 @@
     </FMP>
   </rule>
   <rule name="AbsorpOr" buggy="false" rewriterule="true">
+    <description>
+      AbsorpOr
+    </description>
     <CMP>
-      a || a /\ b  /~&gt;  a
+      a || a /\ b  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -138,18 +144,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || b /\ a  /~&gt;  a
+      a || b /\ a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -165,18 +171,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || a  /~&gt;  a
+      a /\ b || a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -192,18 +198,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      b /\ a || a  /~&gt;  a
+      b /\ a || a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$1"/>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -220,21 +226,24 @@
     </FMP>
   </rule>
   <rule name="AndComplBuggy" buggy="true" rewriterule="true">
+    <description>
+      AndComplBuggy
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a /\ ~a  ~&gt;  T
+      a /\ ~a  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -249,17 +258,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ a  ~&gt;  T
+      ~a /\ a  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -274,17 +283,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ ~a  ~&gt;  a
+      a /\ ~a  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -299,17 +308,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ a  ~&gt;  a
+      ~a /\ a  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -325,20 +334,23 @@
     </FMP>
   </rule>
   <rule name="AndOverOr" buggy="false" rewriterule="true">
+    <description>
+      AndOverOr
+    </description>
     <CMP>
-      a /\ (b || c)  /~&gt;  a /\ b || a /\ c
+      a /\ (b || c)  ~&gt;  a /\ b || a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -366,19 +378,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  /~&gt;  a /\ c || b /\ c
+      (a || b) /\ c  ~&gt;  a /\ c || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -407,21 +419,24 @@
     </FMP>
   </rule>
   <rule name="AndSame" buggy="true" rewriterule="true">
+    <description>
+      AndSame
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a /\ a  ~&gt;  T
+      a /\ a  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -434,23 +449,26 @@
     </FMP>
   </rule>
   <rule name="AssImp" buggy="true" rewriterule="true">
+    <description>
+      AssImp
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b -&gt; c  ~&gt;  (a -&gt; b) -&gt; c
+      a -&gt; b -&gt; c  /~&gt;  (a -&gt; b) -&gt; c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -474,19 +492,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a -&gt; b) -&gt; c  ~&gt;  a -&gt; b -&gt; c
+      (a -&gt; b) -&gt; c  /~&gt;  a -&gt; b -&gt; c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMA>
@@ -511,23 +529,26 @@
     </FMP>
   </rule>
   <rule name="AssocAnd" buggy="false" rewriterule="true">
+    <description>
+      AssocAnd
+    </description>
     <group>
       Associativity
     </group>
     <CMP>
-      (a /\ b) /\ c  /~&gt;  a /\ b /\ c
+      (a /\ b) /\ c  ~&gt;  a /\ b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -552,23 +573,26 @@
     </FMP>
   </rule>
   <rule name="AssocOr" buggy="false" rewriterule="true">
+    <description>
+      AssocOr
+    </description>
     <group>
       Associativity
     </group>
     <CMP>
-      (a || b) || c  /~&gt;  a || b || c
+      (a || b) || c  ~&gt;  a || b || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -593,23 +617,26 @@
     </FMP>
   </rule>
   <rule name="BuggyAbsor" buggy="true" rewriterule="true">
+    <description>
+      BuggyAbsor
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      (a || b) || (a /\ b) /\ c  ~&gt;  a || b
+      (a || b) || (a /\ b) /\ c  /~&gt;  a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -637,19 +664,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || (a || b) /\ c  ~&gt;  a /\ b
+      a /\ b || (a || b) /\ c  /~&gt;  a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -677,19 +704,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ (a /\ b || c)  ~&gt;  a || b
+      (a || b) /\ (a /\ b || c)  /~&gt;  a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -717,19 +744,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a /\ b) /\ ((a || b) || c)  ~&gt;  a /\ b
+      (a /\ b) /\ ((a || b) || c)  /~&gt;  a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -758,23 +785,26 @@
     </FMP>
   </rule>
   <rule name="BuggyAssoc" buggy="true" rewriterule="true">
+    <description>
+      BuggyAssoc
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a || b /\ c  ~&gt;  (a || b) /\ c
+      a || b /\ c  /~&gt;  (a || b) /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -798,19 +828,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  ~&gt;  a || b /\ c
+      (a || b) /\ c  /~&gt;  a || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -834,19 +864,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  ~&gt;  a /\ (b || c)
+      a /\ b || c  /~&gt;  a /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -870,19 +900,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ (b || c)  ~&gt;  a /\ b || c
+      a /\ (b || c)  /~&gt;  a /\ b || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -907,22 +937,25 @@
     </FMP>
   </rule>
   <rule name="BuggyDeMorgan1" buggy="true" rewriterule="true">
+    <description>
+      BuggyDeMorgan1
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  ~&gt;  ~a || b
+      ~(a /\ b)  /~&gt;  ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -944,18 +977,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a /\ b)  ~&gt;  a || ~b
+      ~(a /\ b)  /~&gt;  a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -977,18 +1010,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a /\ b)  ~&gt;  a || b
+      ~(a /\ b)  /~&gt;  a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1007,18 +1040,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  ~&gt;  ~a /\ b
+      ~(a || b)  /~&gt;  ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1040,18 +1073,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  ~&gt;  a /\ ~b
+      ~(a || b)  /~&gt;  a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1073,18 +1106,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  ~&gt;  a /\ b
+      ~(a || b)  /~&gt;  a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1104,22 +1137,25 @@
     </FMP>
   </rule>
   <rule name="BuggyDeMorgan2" buggy="true" rewriterule="true">
+    <description>
+      BuggyDeMorgan2
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  ~&gt;  ~(~a || ~b)
+      ~(a /\ b)  /~&gt;  ~(~a || ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1147,18 +1183,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  ~&gt;  ~(~a /\ ~b)
+      ~(a || b)  /~&gt;  ~(~a /\ ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1187,22 +1223,25 @@
     </FMP>
   </rule>
   <rule name="BuggyDeMorgan3" buggy="true" rewriterule="true">
+    <description>
+      BuggyDeMorgan3
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  ~&gt;  ~a /\ ~b
+      ~(a /\ b)  /~&gt;  ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1228,22 +1267,25 @@
     </FMP>
   </rule>
   <rule name="BuggyDeMorgan4" buggy="true" rewriterule="true">
+    <description>
+      BuggyDeMorgan4
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a || b)  ~&gt;  ~a || ~b
+      ~(a || b)  /~&gt;  ~a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1269,23 +1311,26 @@
     </FMP>
   </rule>
   <rule name="BuggyDeMorgan5" buggy="true" rewriterule="true">
+    <description>
+      BuggyDeMorgan5
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(~(a /\ b) || c)  ~&gt;  ~(~a || ~b) || c
+      ~(~(a /\ b) || c)  /~&gt;  ~(~a || ~b) || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1324,19 +1369,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~(a /\ b) /\ c)  ~&gt;  ~(~a || ~b) /\ c
+      ~(~(a /\ b) /\ c)  /~&gt;  ~(~a || ~b) /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1375,19 +1420,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~(a || b) || c)  ~&gt;  ~(~a /\ ~b) || c
+      ~(~(a || b) || c)  /~&gt;  ~(~a /\ ~b) || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1426,19 +1471,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~(a || b) /\ c)  ~&gt;  ~(~a /\ ~b) /\ c
+      ~(~(a || b) /\ c)  /~&gt;  ~(~a /\ ~b) /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -1478,23 +1523,26 @@
     </FMP>
   </rule>
   <rule name="BuggyDistr" buggy="true" rewriterule="true">
+    <description>
+      BuggyDistr
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a /\ (b || c)  ~&gt;  (a /\ b) /\ a /\ c
+      a /\ (b || c)  /~&gt;  (a /\ b) /\ a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -1522,19 +1570,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  ~&gt;  (a /\ c) /\ b /\ c
+      (a || b) /\ c  /~&gt;  (a /\ c) /\ b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -1562,19 +1610,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ (b || c)  ~&gt;  (a || b) /\ (a || c)
+      a /\ (b || c)  /~&gt;  (a || b) /\ (a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -1602,19 +1650,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  ~&gt;  (a || c) /\ (b || c)
+      (a || b) /\ c  /~&gt;  (a || c) /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -1642,19 +1690,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || b /\ c  ~&gt;  (a || b) || a || c
+      a || b /\ c  /~&gt;  (a || b) || a || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -1682,19 +1730,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  ~&gt;  (a || c) || b || c
+      a /\ b || c  /~&gt;  (a || c) || b || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -1722,19 +1770,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || b /\ c  ~&gt;  a /\ b || a /\ c
+      a || b /\ c  /~&gt;  a /\ b || a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -1762,19 +1810,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  ~&gt;  a /\ c || b /\ c
+      a /\ b || c  /~&gt;  a /\ c || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -1803,23 +1851,26 @@
     </FMP>
   </rule>
   <rule name="BuggyDistrNot" buggy="true" rewriterule="true">
+    <description>
+      BuggyDistrNot
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~a /\ (b || c)  ~&gt;  ~a /\ b || a /\ c
+      ~a /\ (b || c)  /~&gt;  ~a /\ b || a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -1853,19 +1904,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ (b || c)  ~&gt;  a /\ b || ~a /\ c
+      ~a /\ (b || c)  /~&gt;  a /\ b || ~a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -1899,19 +1950,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ ~c  ~&gt;  a /\ ~c || b /\ c
+      (a || b) /\ ~c  /~&gt;  a /\ ~c || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -1945,19 +1996,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ ~c  ~&gt;  a /\ c || b /\ ~c
+      (a || b) /\ ~c  /~&gt;  a /\ c || b /\ ~c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -1991,19 +2042,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || b /\ c  ~&gt;  (~a || b) /\ (a || c)
+      ~a || b /\ c  /~&gt;  (~a || b) /\ (a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -2037,19 +2088,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || b /\ c  ~&gt;  (a || b) /\ (~a || c)
+      ~a || b /\ c  /~&gt;  (a || b) /\ (~a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -2083,19 +2134,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || ~c  ~&gt;  (a || ~c) /\ (b || c)
+      a /\ b || ~c  /~&gt;  (a || ~c) /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -2129,19 +2180,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || ~c  ~&gt;  (a || c) /\ (b || ~c)
+      a /\ b || ~c  /~&gt;  (a || c) /\ (b || ~c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -2176,22 +2227,25 @@
     </FMP>
   </rule>
   <rule name="BuggyEquivElim1" buggy="true" rewriterule="true">
+    <description>
+      BuggyEquivElim1
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || ~(a /\ b)
+      a &lt;-&gt; b  /~&gt;  a /\ b || ~(a /\ b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2218,18 +2272,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || ~a /\ b
+      a &lt;-&gt; b  /~&gt;  a /\ b || ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2256,18 +2310,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || a /\ ~b
+      a &lt;-&gt; b  /~&gt;  a /\ b || a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2294,18 +2348,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || a /\ b
+      a &lt;-&gt; b  /~&gt;  a /\ b || a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2329,18 +2383,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || ~(a || ~b)
+      a &lt;-&gt; b  /~&gt;  a /\ b || ~(a || ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2371,22 +2425,25 @@
     </FMP>
   </rule>
   <rule name="BuggyEquivElim2" buggy="true" rewriterule="true">
+    <description>
+      BuggyEquivElim2
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  (a || b) /\ (~a || ~b)
+      a &lt;-&gt; b  /~&gt;  (a || b) /\ (~a || ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2416,18 +2473,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  (a /\ b) /\ ~a /\ ~b
+      a &lt;-&gt; b  /~&gt;  (a /\ b) /\ ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2457,18 +2514,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || ~a || ~b
+      a &lt;-&gt; b  /~&gt;  a /\ b || ~a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -2499,22 +2556,25 @@
     </FMP>
   </rule>
   <rule name="BuggyImplElim" buggy="true" rewriterule="true">
+    <description>
+      BuggyImplElim
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  ~&gt;  ~(a || b)
+      a -&gt; b  /~&gt;  ~(a || b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -2533,18 +2593,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; b  ~&gt;  a || b
+      a -&gt; b  /~&gt;  a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -2560,18 +2620,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; b  ~&gt;  ~(a /\ b)
+      a -&gt; b  /~&gt;  ~(a /\ b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -2591,22 +2651,25 @@
     </FMP>
   </rule>
   <rule name="BuggyImplElim1" buggy="true" rewriterule="true">
+    <description>
+      BuggyImplElim1
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  ~&gt;  ~a /\ b
+      a -&gt; b  /~&gt;  ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -2626,22 +2689,25 @@
     </FMP>
   </rule>
   <rule name="BuggyImplElim2" buggy="true" rewriterule="true">
+    <description>
+      BuggyImplElim2
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  ~&gt;  a /\ b || ~a /\ ~b
+      a -&gt; b  /~&gt;  a /\ b || ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -2672,22 +2738,25 @@
     </FMP>
   </rule>
   <rule name="BuggyNotOverImpl" buggy="true" rewriterule="true">
+    <description>
+      BuggyNotOverImpl
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a -&gt; b)  ~&gt;  ~a -&gt; ~b
+      ~(a -&gt; b)  /~&gt;  ~a -&gt; ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2713,22 +2782,25 @@
     </FMP>
   </rule>
   <rule name="BuggyParenth1" buggy="true" rewriterule="true">
+    <description>
+      BuggyParenth1
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  ~&gt;  ~a /\ b
+      ~(a /\ b)  /~&gt;  ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2750,18 +2822,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  ~&gt;  ~a || b
+      ~(a || b)  /~&gt;  ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2784,22 +2856,25 @@
     </FMP>
   </rule>
   <rule name="BuggyParenth2" buggy="true" rewriterule="true">
+    <description>
+      BuggyParenth2
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(a &lt;-&gt; b)  ~&gt;  ~(a /\ b) || ~a /\ ~b
+      ~(a &lt;-&gt; b)  /~&gt;  ~(a /\ b) || ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2836,22 +2911,25 @@
     </FMP>
   </rule>
   <rule name="BuggyParenth3" buggy="true" rewriterule="true">
+    <description>
+      BuggyParenth3
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      ~(~a /\ b)  ~&gt;  a /\ b
+      ~(~a /\ b)  /~&gt;  a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2873,18 +2951,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~a || b)  ~&gt;  a || b
+      ~(~a || b)  /~&gt;  a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2906,18 +2984,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~a -&gt; b)  ~&gt;  a -&gt; b
+      ~(~a -&gt; b)  /~&gt;  a -&gt; b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2939,18 +3017,18 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~a &lt;-&gt; b)  ~&gt;  a &lt;-&gt; b
+      ~(~a &lt;-&gt; b)  /~&gt;  a &lt;-&gt; b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -2973,22 +3051,25 @@
     </FMP>
   </rule>
   <rule name="CommAnd" buggy="false" rewriterule="true">
+    <description>
+      CommAnd
+    </description>
     <group>
       Commutativity
     </group>
     <CMP>
-      a /\ b  /~&gt;  b /\ a
+      a /\ b  ~&gt;  b /\ a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -3005,22 +3086,25 @@
     </FMP>
   </rule>
   <rule name="CommEquiv" buggy="false" rewriterule="true">
+    <description>
+      CommEquiv
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  b &lt;-&gt; a
+      a &lt;-&gt; b  ~&gt;  b &lt;-&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3037,22 +3121,25 @@
     </FMP>
   </rule>
   <rule name="CommImp" buggy="true" rewriterule="true">
+    <description>
+      CommImp
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  ~&gt;  b -&gt; a
+      a -&gt; b  /~&gt;  b -&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -3069,22 +3156,25 @@
     </FMP>
   </rule>
   <rule name="CommOr" buggy="false" rewriterule="true">
+    <description>
+      CommOr
+    </description>
     <group>
       Commutativity
     </group>
     <CMP>
-      a || b  /~&gt;  b || a
+      a || b  ~&gt;  b || a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -3101,18 +3191,21 @@
     </FMP>
   </rule>
   <rule name="ComplAnd" buggy="false" rewriterule="true">
+    <description>
+      ComplAnd
+    </description>
     <CMP>
-      a /\ ~a  /~&gt;  F
+      a /\ ~a  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -3127,17 +3220,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ a  /~&gt;  F
+      ~a /\ a  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMA>
@@ -3153,18 +3246,21 @@
     </FMP>
   </rule>
   <rule name="ComplOr" buggy="false" rewriterule="true">
+    <description>
+      ComplOr
+    </description>
     <CMP>
-      a || ~a  /~&gt;  T
+      a || ~a  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -3179,17 +3275,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || a  /~&gt;  T
+      ~a || a  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -3205,19 +3301,22 @@
     </FMP>
   </rule>
   <rule name="DeMorganAnd" buggy="false" rewriterule="true">
+    <description>
+      DeMorganAnd
+    </description>
     <CMP>
-      ~(a /\ b)  /~&gt;  ~a || ~b
+      ~(a /\ b)  ~&gt;  ~a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -3243,19 +3342,22 @@
     </FMP>
   </rule>
   <rule name="DeMorganOr" buggy="false" rewriterule="true">
+    <description>
+      DeMorganOr
+    </description>
     <CMP>
-      ~(a || b)  /~&gt;  ~a /\ ~b
+      ~(a || b)  ~&gt;  ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -3281,19 +3383,22 @@
     </FMP>
   </rule>
   <rule name="DefEquiv" buggy="false" rewriterule="true">
+    <description>
+      DefEquiv
+    </description>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || ~a /\ ~b
+      a &lt;-&gt; b  ~&gt;  a /\ b || ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3324,22 +3429,25 @@
     </FMP>
   </rule>
   <rule name="DefEquivImpls" buggy="false" rewriterule="true">
+    <description>
+      DefEquivImpls
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a -&gt; b /\ b -&gt; a
+      a &lt;-&gt; b  ~&gt;  a -&gt; b /\ b -&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3364,19 +3472,22 @@
     </FMP>
   </rule>
   <rule name="DefImpl" buggy="false" rewriterule="true">
+    <description>
+      DefImpl
+    </description>
     <CMP>
-      a -&gt; b  /~&gt;  ~a || b
+      a -&gt; b  ~&gt;  ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -3396,22 +3507,25 @@
     </FMP>
   </rule>
   <rule name="EquivElim3" buggy="true" rewriterule="true">
+    <description>
+      EquivElim3
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  ~a || b
+      a &lt;-&gt; b  /~&gt;  ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3431,21 +3545,24 @@
     </FMP>
   </rule>
   <rule name="EquivSame" buggy="false" rewriterule="true">
+    <description>
+      EquivSame
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      a &lt;-&gt; a  /~&gt;  T
+      a &lt;-&gt; a  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3458,21 +3575,24 @@
     </FMP>
   </rule>
   <rule name="FalseInEquiv" buggy="false" rewriterule="true">
+    <description>
+      FalseInEquiv
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      F &lt;-&gt; a  /~&gt;  ~a
+      F &lt;-&gt; a  ~&gt;  ~a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMS cd="logic1" name="false"/>
@@ -3487,17 +3607,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; F  /~&gt;  ~a
+      a &lt;-&gt; F  ~&gt;  ~a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3513,21 +3633,24 @@
     </FMP>
   </rule>
   <rule name="FalseInImpl" buggy="false" rewriterule="true">
+    <description>
+      FalseInImpl
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      F -&gt; a  /~&gt;  T
+      F -&gt; a  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMS cd="logic1" name="false"/>
@@ -3539,17 +3662,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; F  /~&gt;  ~a
+      a -&gt; F  ~&gt;  ~a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -3565,21 +3688,24 @@
     </FMP>
   </rule>
   <rule name="FalseProp" buggy="true" rewriterule="true">
+    <description>
+      FalseProp
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a || F  ~&gt;  F
+      a || F  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -3591,17 +3717,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      F || a  ~&gt;  F
+      F || a  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMS cd="logic1" name="false"/>
@@ -3613,17 +3739,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ F  ~&gt;  a
+      a /\ F  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -3635,17 +3761,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      F /\ a  ~&gt;  a
+      F /\ a  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMS cd="logic1" name="false"/>
@@ -3658,18 +3784,21 @@
     </FMP>
   </rule>
   <rule name="FalseZeroAnd" buggy="false" rewriterule="true">
+    <description>
+      FalseZeroAnd
+    </description>
     <CMP>
-      F /\ a  /~&gt;  F
+      F /\ a  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMS cd="logic1" name="false"/>
@@ -3681,17 +3810,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ F  /~&gt;  F
+      a /\ F  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -3704,65 +3833,11 @@
     </FMP>
   </rule>
   <rule name="FalseZeroOr" buggy="false" rewriterule="true">
+    <description>
+      FalseZeroOr
+    </description>
     <CMP>
-      F || a  /~&gt;  a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a || F  /~&gt;  a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="GenAndOverOr" buggy="false" rewriterule="false"/>
-  <rule name="GenDeMorganAnd" buggy="false" rewriterule="false"/>
-  <rule name="GenDeMorganOr" buggy="false" rewriterule="false"/>
-  <rule name="GenOrOverAnd" buggy="false" rewriterule="false">
-    <group>
-      DistributionOrOverAnd
-    </group>
-  </rule>
-  <rule name="IdemEqui" buggy="true" rewriterule="true">
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a &lt;-&gt; a  ~&gt;  a
+      F || a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3773,6 +3848,81 @@
           </OMBVAR>
           <OMA>
             <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a || F  ~&gt;  a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="GenAndOverOr" buggy="false" rewriterule="false">
+    <description>
+      GenAndOverOr
+    </description>
+  </rule>
+  <rule name="GenDeMorganAnd" buggy="false" rewriterule="false">
+    <description>
+      GenDeMorganAnd
+    </description>
+  </rule>
+  <rule name="GenDeMorganOr" buggy="false" rewriterule="false">
+    <description>
+      GenDeMorganOr
+    </description>
+  </rule>
+  <rule name="GenOrOverAnd" buggy="false" rewriterule="false">
+    <description>
+      GenOrOverAnd
+    </description>
+    <group>
+      DistributionOrOverAnd
+    </group>
+  </rule>
+  <rule name="IdemEqui" buggy="true" rewriterule="true">
+    <description>
+      IdemEqui
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a &lt;-&gt; a  /~&gt;  a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -3785,11 +3935,98 @@
     </FMP>
   </rule>
   <rule name="IdemImp" buggy="true" rewriterule="true">
+    <description>
+      IdemImp
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; a  ~&gt;  a
+      a -&gt; a  /~&gt;  a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="IdempAnd" buggy="false" rewriterule="true">
+    <description>
+      IdempAnd
+    </description>
+    <CMP>
+      a /\ a  ~&gt;  a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="IdempOr" buggy="false" rewriterule="true">
+    <description>
+      IdempOr
+    </description>
+    <CMP>
+      a || a  ~&gt;  a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="ImplSame" buggy="false" rewriterule="true">
+    <description>
+      ImplSame
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      a -&gt; a  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3805,81 +4042,6 @@
               <OMV name="$0"/>
               <OMV name="$0"/>
             </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="IdempAnd" buggy="false" rewriterule="true">
-    <CMP>
-      a /\ a  /~&gt;  a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="IdempOr" buggy="false" rewriterule="true">
-    <CMP>
-      a || a  /~&gt;  a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="ImplSame" buggy="false" rewriterule="true">
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      a -&gt; a  /~&gt;  T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
             <OMS cd="logic1" name="true"/>
           </OMA>
         </OMBIND>
@@ -3887,33 +4049,48 @@
     </FMP>
   </rule>
   <rule name="InvAndOverOr" buggy="false" rewriterule="false">
+    <description>
+      InvAndOverOr
+    </description>
     <group>
       InverseDistr
     </group>
   </rule>
   <rule name="InvDeMorganAnd" buggy="false" rewriterule="false">
+    <description>
+      InvDeMorganAnd
+    </description>
     <group>
       InverseDeMorgan
     </group>
   </rule>
   <rule name="InvDeMorganOr" buggy="false" rewriterule="false">
+    <description>
+      InvDeMorganOr
+    </description>
     <group>
       InverseDeMorgan
     </group>
   </rule>
   <rule name="InvOrOverAnd" buggy="false" rewriterule="false">
+    <description>
+      InvOrOverAnd
+    </description>
     <group>
       InverseDistr
     </group>
   </rule>
   <rule name="NotFalse" buggy="false" rewriterule="true">
+    <description>
+      NotFalse
+    </description>
     <CMP>
-      ~F  /~&gt;  T
+      ~F  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
-          <OMS cd="relation1" name="neq"/>
+          <OMS cd="relation1" name="eq"/>
           <OMA>
             <OMS cd="logic1" name="not"/>
             <OMS cd="logic1" name="false"/>
@@ -3924,18 +4101,21 @@
     </FMP>
   </rule>
   <rule name="NotNot" buggy="false" rewriterule="true">
+    <description>
+      NotNot
+    </description>
     <CMP>
-      ~~a  /~&gt;  a
+      ~~a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="not"/>
               <OMA>
@@ -3950,13 +4130,16 @@
     </FMP>
   </rule>
   <rule name="NotTrue" buggy="false" rewriterule="true">
+    <description>
+      NotTrue
+    </description>
     <CMP>
-      ~T  /~&gt;  F
+      ~T  ~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
-          <OMS cd="relation1" name="neq"/>
+          <OMS cd="relation1" name="eq"/>
           <OMA>
             <OMS cd="logic1" name="not"/>
             <OMS cd="logic1" name="true"/>
@@ -3967,21 +4150,24 @@
     </FMP>
   </rule>
   <rule name="OrComplBuggy" buggy="true" rewriterule="true">
+    <description>
+      OrComplBuggy
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a || ~a  ~&gt;  F
+      a || ~a  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -3996,17 +4182,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || a  ~&gt;  F
+      ~a || a  /~&gt;  F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -4021,17 +4207,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || ~a  ~&gt;  a
+      a || ~a  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -4046,17 +4232,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || a  ~&gt;  a
+      ~a || a  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -4072,23 +4258,26 @@
     </FMP>
   </rule>
   <rule name="OrOverAnd" buggy="false" rewriterule="true">
+    <description>
+      OrOverAnd
+    </description>
     <group>
       DistributionOrOverAnd
     </group>
     <CMP>
-      a || b /\ c  /~&gt;  (a || b) /\ (a || c)
+      a || b /\ c  ~&gt;  (a || b) /\ (a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -4116,19 +4305,19 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  /~&gt;  (a || c) /\ (b || c)
+      a /\ b || c  ~&gt;  (a || c) /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
             <OMV name="$1"/>
             <OMV name="$2"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMA>
@@ -4157,21 +4346,24 @@
     </FMP>
   </rule>
   <rule name="OrSame" buggy="true" rewriterule="true">
+    <description>
+      OrSame
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a || a  ~&gt;  T
+      a || a  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -4184,21 +4376,24 @@
     </FMP>
   </rule>
   <rule name="TrueInEquiv" buggy="false" rewriterule="true">
+    <description>
+      TrueInEquiv
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      T &lt;-&gt; a  /~&gt;  a
+      T &lt;-&gt; a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMS cd="logic1" name="true"/>
@@ -4210,17 +4405,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; T  /~&gt;  a
+      a &lt;-&gt; T  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="equivalent"/>
               <OMV name="$0"/>
@@ -4233,21 +4428,24 @@
     </FMP>
   </rule>
   <rule name="TrueInImpl" buggy="false" rewriterule="true">
+    <description>
+      TrueInImpl
+    </description>
     <group>
       Additional rules
     </group>
     <CMP>
-      T -&gt; a  /~&gt;  a
+      T -&gt; a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMS cd="logic1" name="true"/>
@@ -4259,17 +4457,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; T  /~&gt;  T
+      a -&gt; T  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="implies"/>
               <OMV name="$0"/>
@@ -4282,21 +4480,24 @@
     </FMP>
   </rule>
   <rule name="TrueProp" buggy="true" rewriterule="true">
+    <description>
+      TrueProp
+    </description>
     <group>
       Common misconceptions
     </group>
     <CMP>
-      a || T  ~&gt;  a
+      a || T  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>
@@ -4308,17 +4509,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      T || a  ~&gt;  a
+      T || a  /~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMS cd="logic1" name="true"/>
@@ -4330,17 +4531,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ T  ~&gt;  T
+      a /\ T  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -4352,17 +4553,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      T /\ a  ~&gt;  T
+      T /\ a  /~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="forall"/>
+          <OMS cd="quant1" name="exists"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="eq"/>
+            <OMS cd="relation1" name="neq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMS cd="logic1" name="true"/>
@@ -4375,18 +4576,21 @@
     </FMP>
   </rule>
   <rule name="TrueZeroAnd" buggy="false" rewriterule="true">
+    <description>
+      TrueZeroAnd
+    </description>
     <CMP>
-      T /\ a  /~&gt;  a
+      T /\ a  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMS cd="logic1" name="true"/>
@@ -4398,17 +4602,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ T  /~&gt;  a
+      a /\ T  ~&gt;  a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="and"/>
               <OMV name="$0"/>
@@ -4421,18 +4625,21 @@
     </FMP>
   </rule>
   <rule name="TrueZeroOr" buggy="false" rewriterule="true">
+    <description>
+      TrueZeroOr
+    </description>
     <CMP>
-      T || a  /~&gt;  T
+      T || a  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMS cd="logic1" name="true"/>
@@ -4444,17 +4651,17 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || T  /~&gt;  T
+      a || T  ~&gt;  T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMBIND>
-          <OMS cd="quant1" name="exists"/>
+          <OMS cd="quant1" name="forall"/>
           <OMBVAR>
             <OMV name="$0"/>
           </OMBVAR>
           <OMA>
-            <OMS cd="relation1" name="neq"/>
+            <OMS cd="relation1" name="eq"/>
             <OMA>
               <OMS cd="logic1" name="or"/>
               <OMV name="$0"/>

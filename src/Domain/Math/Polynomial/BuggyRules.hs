@@ -17,6 +17,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.Rules (abcFormula)
 import Domain.Math.Numeric.Views
 import Common.View
 import Common.Transformation
@@ -24,7 +25,9 @@ import Common.Traversable
 import Control.Monad
 
 abcBuggyRules :: [Rule (OrList (Equation Expr))]
-abcBuggyRules = [ minusB, twoA, minus4AC, oneSolution ]
+abcBuggyRules = map f [ minusB, twoA, minus4AC, oneSolution ]
+ where
+   f r = r { ruleSiblings = [name abcFormula] }
 
 abcMisconception :: (String -> Rational -> Rational -> Rational -> [OrList (Equation Expr)])
                  -> Transformation (OrList (Equation Expr))

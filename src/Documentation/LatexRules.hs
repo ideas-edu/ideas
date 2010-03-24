@@ -19,6 +19,7 @@ import Control.Monad
 import Service.ExerciseList
 import Data.Char
 import Data.List
+import Data.Maybe
 import System.Directory
 import System.Environment
 import System.Time
@@ -58,9 +59,11 @@ exerciseRulesToTeX :: Exercise a -> String
 exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex
 -}
 
-ruleToTeX :: (Some RewriteRule, Bool) -> String
-ruleToTeX (Some r, sound) = 
-   "RewriteRule " ++ filter isAlpha (ruleName r) ++ " (" ++ showRuleSpec sound r ++ ")"
+ruleToTeX :: (Some RewriteRule, Bool) -> Maybe String
+ruleToTeX (Some r, sound) = do
+   txt <- showRewriteRule sound r
+   return $ "RewriteRule " ++ filter isAlpha (ruleName r) 
+                           ++ " (" ++ txt ++ ")"
 
    
 ------------------------------------------------------
@@ -74,7 +77,7 @@ makeSingleRule dom r
       [ "\\pagestyle{empty}"
       , "\\begin{code}"
       ] ++
-      map (filter (/= '"') . ruleToTeX) (getRewriteRules r) ++
+      map (filter (/= '"') . fromMaybe "" . ruleToTeX) (getRewriteRules r) ++
       [ "\\end{code}"
       ]
 
@@ -130,9 +133,9 @@ texSectionRules ex = unlines
    makeGroup mgroup = unlines 
       [ maybe "" (\s -> "\\subsection{" ++ s ++ "}") mgroup
       , "\\begin{code}"
-      , unlines $ map (filter (/= '"') . ruleToTeX) xs
+      , unlines $ map (filter (/= '"')) xs
       , "\\end{code}"
       ]
     where
       p x = maybe (null $ ruleGroups x) (`elem` ruleGroups x) mgroup
-      xs  = concatMap getRewriteRules $ filter p $ ruleset ex
+      xs  = mapMaybe ruleToTeX $ concatMap getRewriteRules $ filter p $ ruleset ex

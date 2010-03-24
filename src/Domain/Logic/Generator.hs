@@ -14,6 +14,7 @@ module Domain.Logic.Generator
    ( generateLogic, generateLevel, equalLogicA, Level(..)
    ) where
 
+import Common.Utils (ShowString(..))
 import Domain.Logic.Formula
 import Control.Monad
 import Data.Char
@@ -95,16 +96,16 @@ normalGenerator = do
 -- Use the propositions with 7-18 steps
 difficultGenerator :: Gen SLogic
 difficultGenerator = do
-   let vars = "s" : varList
+   let vars = ShowString "s" : varList
    n  <- return 4 -- oneof [return 4, return 8]
    p0 <- sizedGen False (oneof $ map return vars) n
    p1 <- preventSameVar vars p0
    return (removePartsInDNF p1)
 
-varList :: [String]
-varList = ["p", "q", "r"]
+varList :: [ShowString]
+varList = map ShowString ["p", "q", "r"]
 
-varGen :: Gen String
+varGen :: Gen ShowString
 varGen = oneof $ map return varList
 
 sizedGen :: Bool -> Gen a -> Int -> Gen (Logic a)
@@ -155,7 +156,7 @@ instance Arbitrary SLogic where
    arbitrary = sized (sizedGen True varGen)
    coarbitrary logic = 
       case logic of
-         Var x     -> variant 0 . coarbitrary (map ord x)
+         Var x     -> variant 0 . coarbitrary (map ord (fromShowString x))
          p :->: q  -> variant 1 . coarbitrary p . coarbitrary q
          p :<->: q -> variant 2 . coarbitrary p . coarbitrary q
          p :&&: q  -> variant 3 . coarbitrary p . coarbitrary q

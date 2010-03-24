@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Service.ExerciseList (packages, exercises) where
 
-import Common.Utils (Some(..))
+import Common.Utils (Some(..), fromShowString)
 import Common.Exercise
 import Domain.Math.Expr
 import Service.ExercisePackage
@@ -31,13 +31,13 @@ packages =
    [ -- logic and relation-algebra
      Some (package Logic.dnfExercise)
         { withOpenMath    = True
-        , toOpenMath      = toOMOBJ . toExpr . fmap Var
+        , toOpenMath      = toOMOBJ . toExpr . fmap (Var . fromShowString)
         , fromOpenMath    = exprToSLogic . fromOMOBJ
         , getExerciseText = Just Logic.logicText
         }
    , Some (package Logic.dnfUnicodeExercise)
         { withOpenMath    = True
-        , toOpenMath      = toOMOBJ . toExpr . fmap Var
+        , toOpenMath      = toOMOBJ . toExpr . fmap (Var . fromShowString)
         , fromOpenMath    = exprToSLogic . fromOMOBJ
         , getExerciseText = Just Logic.logicText
         }

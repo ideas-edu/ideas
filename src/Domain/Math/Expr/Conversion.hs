@@ -24,6 +24,7 @@ import Text.OpenMath.Object
 import Text.OpenMath.Symbol (extraSymbol)
 import Common.View
 import Control.Monad
+import Common.Utils (ShowString(..))
 import Common.Traversable (switch)
 import Data.Maybe
 import Data.List
@@ -113,7 +114,7 @@ instance IsExpr a => IsExpr (Logic a) where
 exprToSLogic :: MonadPlus m => Expr -> m Logic.SLogic
 exprToSLogic expr = fromExpr expr >>= switch . fmap f
  where
-   f (Var s) = return s
+   f (Var s) = return (ShowString s)
    f expr    = fail (show expr)
 
 -------------------------------------------------------------

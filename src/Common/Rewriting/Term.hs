@@ -14,7 +14,9 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Term where
 
+import Common.Utils (ShowString(..))
 import Common.Uniplate
+import Control.Monad
 import Common.Rewriting.MetaVar
 
 -----------------------------------------------------------
@@ -47,6 +49,10 @@ instance IsTerm String where
    toTerm = Var
    fromTerm (Var s) = return s
    fromTerm _ = Nothing
+
+instance IsTerm ShowString where 
+   toTerm   = toTerm . fromShowString
+   fromTerm = liftM ShowString . fromTerm
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm

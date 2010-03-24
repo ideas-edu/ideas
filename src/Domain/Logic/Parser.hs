@@ -14,6 +14,7 @@ module Domain.Logic.Parser
    , ppLogicPars, ppLogicUnicodePars
    ) where
 
+import Common.Utils (ShowString(..))
 import Text.Parsing
 import Control.Arrow
 import Domain.Logic.Formula
@@ -87,7 +88,7 @@ basicWithPos :: Parser Token SLogic -> Parser Token SLogic
 basicWithPos = basicWithPosGen ("~", "T", "F")
 
 basicWithPosGen t@(nt, tr, fl) p = 
-       Var <$> pVarid
+       (Var . ShowString) <$> pVarid
    <|> pParens p
    <|> T  <$ pKey tr
    <|> F  <$ pKey fl
@@ -114,7 +115,7 @@ ambiguousOperators p s err =
 -- Report variables 
 suspiciousVariable :: SLogic -> Either SyntaxError SLogic
 suspiciousVariable r =
-   case filter p (varsLogic r) of
+   case filter p (map fromShowString (varsLogic r)) of
       v:_ -> Left $ ErrorMessage $ "Unexpected variable " ++ v
                  ++ ". Did you forget an operator?" 
       _   -> Right r
@@ -134,10 +135,10 @@ ppLogicUnicodePars = ppLogicParsGen unicodeTuple
 
 ppLogicParsGen (impl, equiv, and, or, nt, tr, fl) p = foldLogic alg p 0 ""
  where
-   alg = (var, binop 3 impl, binop 3 equiv, binop 1 and, binop 2 or, nott, var tr, var fl)
+   alg = (pp . fromShowString, binop 3 impl, binop 3 equiv, binop 1 and, binop 2 or, nott, pp tr, pp fl)
    binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) 
                                (p prio . ((" "++op++" ")++) . q prio)
-   var       = const . (++)
+   pp s = const (s++)
    nott  p _ = (nt++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f
 

@@ -14,7 +14,7 @@ module Domain.Logic.Formula where
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
 import Common.Traversable
-import Common.Utils
+import Common.Utils (ShowString, subsets)
 import Data.List
 import Data.Maybe
 import Control.Monad
@@ -37,7 +37,7 @@ data Logic a = Var a
  deriving (Eq, Ord)
 
 -- | For simple use, we assume the variables to be strings
-type SLogic = Logic String
+type SLogic = Logic ShowString
 
 instance Show a => Show (Logic a) where
    show = ppLogic

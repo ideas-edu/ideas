@@ -39,7 +39,7 @@ linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
           <|> ruleMulti (ruleSomewhere distributeTimes)
           <|> ruleMulti merge))
    <*> label "Phase 2" (repeat (
-          ((flipEquation <|> flipEquationAndNegate) |> varToLeft)
+          (flipEquation |> varToLeft)
           <|> coverups))
  where
    coverups = coverUpPlus id <|> coverUpTimes <|> coverUpNegate
@@ -92,8 +92,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
         <|> ruleMulti2 (ruleSomewhere distributionSquare)
         <|> ruleMulti2 (ruleSomewhere distributeTimes) 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)
-        <|> ruleOnce flipEquation
-        <|> ruleOnce flipEquationAndNegate)
+        <|> ruleOnce flipEquation)
       |> (ruleOnce moveToLeft <|> remove (ruleOnce prepareSplitSquare))
    -- to do: find a better location in the strategy for splitting the square
    

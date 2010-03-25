@@ -1,13 +1,13 @@
 <reply result="ok" version="0.5.12">
   <list>
-    <elem ruleid="flip equation and negate">
+    <elem ruleid="flip equation">
       <expr>
-        10*x-4 == -17
+        -10*x+4 == 17
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="cover-up plus [one var]">
       <expr>
-        10*x == -13
+        -10*x == 13
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

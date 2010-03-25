@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Numeric.Views
    ( integralView, realView
-   , integerView, rationalView, doubleView
+   , integerView, rationalView, doubleView, mixedFractionView
    , integerNormalForm, rationalNormalForm, rationalRelaxedForm, fractionForm
    , intDiv, fracDiv, exprToNum
    ) where
@@ -54,6 +54,15 @@ integerView = integralView
 rationalView :: View Expr Rational
 rationalView = makeView (match realView) fromRational
 
+mixedFractionView :: View Expr Rational
+mixedFractionView = makeView (match realView) mix 
+ where
+   mix r = 
+      let (d, m) = abs (numerator r) `divMod` denominator r
+          rest   = fromInteger m ./. fromInteger (denominator r)
+          sign   = if numerator r < 0 then neg else id
+      in sign (fromInteger d .+. rest)
+
 doubleView :: View Expr Double
 doubleView = makeView rec Number
  where
@@ -62,7 +71,7 @@ doubleView = makeView rec Number
          Sym s xs -> mapM rec xs >>= doubleSym s
          Number d -> return d
          _        -> exprToNumStep rec expr
-
+ 
 -------------------------------------------------------------------
 -- Numeric views in normal form 
 

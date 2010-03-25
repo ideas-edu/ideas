@@ -37,7 +37,7 @@ module Common.Transformation
    ) where
 
 import Common.Apply
-import Common.Rewriting hiding (match, matchM)
+import Common.Rewriting
 import Common.Traversable
 import Common.Uniplate (Uniplate, somewhereM)
 import Common.Utils
@@ -290,12 +290,7 @@ isMajorRule :: Rule a -> Bool
 isMajorRule = not . isMinorRule
 
 isRewriteRule :: Rule a -> Bool
-isRewriteRule = all p . transformations
- where
-   p :: Transformation a -> Bool
-   p (RewriteRule _) = True
-   p (LiftView _ t)  = p t
-   p _               = False
+isRewriteRule = not . null . getRewriteRules
 
 describe :: String -> Rule a -> Rule a
 describe txt r = r { ruleDescription = txt ++ "\n" ++ ruleDescription r}

@@ -33,7 +33,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.SquareRoot
 import Control.Monad
 import Domain.Math.Clipboard
-import Common.Rewriting hiding (match, constructor)
+import Common.Rewriting hiding (constructor)
 import Common.Uniplate
 
 relationIntervals :: Ord a => RelationType -> a -> Intervals a

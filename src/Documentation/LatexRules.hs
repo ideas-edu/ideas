@@ -43,7 +43,7 @@ main = do
          case makeSingleRule (domain code ++ "/" ++ domain code ++ ".fmt") r of
             Nothing  -> return ()
             Just txt -> do
-               let filename = path ++ "/rule" ++ name r ++ ".lhs"
+               let filename = path ++ "/rule" ++ filter isAlphaNum (name r) ++ ".lhs"
                putStrLn $ "Creating " ++ filename
                writeFile filename txt
 

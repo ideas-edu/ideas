@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting 
-   ( match, matchM, RewriteRule, smartGenerator, rewriteRule, rewriteRules
+   ( RewriteRule, smartGenerator, rewriteRule, rewriteRules
    , Builder, rewriteM, RuleSpec((:~>)), rulePair, BuilderList, showRewriteRule
    , Rewrite(..), ShallowEq(..), MetaVar(..), Operator
    , associativeOperator, ruleName, Operators, collectWithOperator
@@ -23,6 +23,3 @@ import Common.Rewriting.MetaVar
 import Common.Rewriting.Difference
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term
-
-match = ()
-matchM = ()

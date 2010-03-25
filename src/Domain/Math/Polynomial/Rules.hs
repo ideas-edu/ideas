@@ -13,7 +13,7 @@ module Domain.Math.Polynomial.Rules where
 
 import Common.Apply
 import Common.Context
-import Common.Rewriting hiding (match, matchM)
+import Common.Rewriting
 import Common.Transformation
 import Common.Traversable
 import Common.Uniplate (universe, uniplate)

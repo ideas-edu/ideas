@@ -28,7 +28,7 @@ import Common.Utils (ShowString(..))
 import Common.Traversable (switch)
 import Data.Maybe
 import Data.List
-import Common.Rewriting hiding (match, matchM)
+import Common.Rewriting
 import qualified Common.Rewriting.Term as Term
 
 instance Rewrite a => Rewrite (Equation a)

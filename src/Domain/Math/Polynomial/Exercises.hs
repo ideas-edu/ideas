@@ -14,7 +14,7 @@ module Domain.Math.Polynomial.Exercises where
 import Domain.Math.Approximation
 import Common.Context
 import Common.Exercise
-import Common.Rewriting hiding (match, matchM)
+import Common.Rewriting
 import Common.Strategy
 import Common.Traversable
 import Common.Transformation

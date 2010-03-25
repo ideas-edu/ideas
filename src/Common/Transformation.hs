@@ -28,7 +28,7 @@ module Common.Transformation
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
-   , transformations, getRewriteRules
+   , transformations, getRewriteRules, doBeforeTrans
      -- * Lifting
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
@@ -352,8 +352,11 @@ buggyRule r = r {isBuggyRule = True}
 
 -- | Perform the function before the rule has been fired
 doBefore :: (a -> a) -> Rule a -> Rule a
-doBefore f r = r {transformations = map make (transformations r)}
- where make t = makeTransList (return . f) :*: t
+doBefore f = doBeforeTrans (makeTrans (return . f))
+
+-- | Perform the function before the rule has been fired
+doBeforeTrans :: Transformation a -> Rule a -> Rule a
+doBeforeTrans t r = r {transformations = map (t :*:) (transformations r)}
 
 -- | Perform the function after the rule has been fired
 doAfter :: (a -> a) -> Rule a -> Rule a

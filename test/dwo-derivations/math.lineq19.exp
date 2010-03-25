@@ -2,12 +2,12 @@
   <list>
     <elem ruleid="flip equation">
       <expr>
-        -10*x+4 == 17
+        4-10*x == 17
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="cover-up minus right [one var]">
       <expr>
-        -10*x == 13
+        10*x == -13
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

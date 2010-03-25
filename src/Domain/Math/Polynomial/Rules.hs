@@ -13,6 +13,7 @@ module Domain.Math.Polynomial.Rules where
 
 import Common.Apply
 import Common.Context
+import Common.Rewriting hiding (match, matchM)
 import Common.Transformation
 import Common.Traversable
 import Common.Uniplate (universe, uniplate)
@@ -238,12 +239,15 @@ factorLeftAsSquare = makeSimpleRule "factor left as square" $ \(lhs :==: rhs) ->
    guard (a==1 && b/=0 && h*h == c)
    return ((Var x + build rationalView h)^2 :==: rhs) 
 
--- Afterwards, merge, sort, and (possibly) change sign
+-- flip the two sides of an equation
 flipEquation :: Rule (Equation Expr)
-flipEquation = makeSimpleRule "flip equation" $ \(lhs :==: rhs) -> do
-   guard (hasVars rhs && noVars lhs)
-   let new = fmap (applyListD [sortT, mergeT]) (rhs :==: lhs)
-   return new
+flipEquation = doBeforeTrans condition $
+   rule "flip equation" $ \a b ->
+      (a :==: b) :~> (b :==: a)
+ where
+   condition = makeTrans $ \eq@(lhs :==: rhs) -> do
+      guard (hasVars rhs && noVars lhs)
+      return eq
 
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)
@@ -433,13 +437,6 @@ sortT = makeTrans $ \e -> do
        ps = sortBy cmp $ zip xs (map f xs)
        cmp (_, ma) (_, mb) = compare ma mb
    return $ build sumView $ map fst ps
-   
-signT :: Transformation (Equation Expr)
-signT = makeTrans $ \(lhs :==: rhs) -> do
-   a <- match sumView lhs >>= safeHead
-   p <- match productView a
-   guard (fst p)
-   return (-lhs :==: -rhs)
    
 -------------------------------------------------------
 -- Rewrite Rules

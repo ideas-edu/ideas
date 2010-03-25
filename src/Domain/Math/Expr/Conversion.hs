@@ -28,6 +28,20 @@ import Common.Utils (ShowString(..))
 import Common.Traversable (switch)
 import Data.Maybe
 import Data.List
+import Common.Rewriting hiding (match, matchM)
+import qualified Common.Rewriting.Term as Term
+
+instance Rewrite a => Rewrite (Equation a)
+
+instance IsTerm a => IsTerm (Equation a) where
+   toTerm (a :==: b) = Term.binary (show eqSymbol) (toTerm a) (toTerm b)
+   fromTerm (Term.App (Term.App (Term.Con s) a) b)
+      | read s == eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
+   fromTerm _ = Nothing
+
+instance Different a => Different (Equation a) where 
+   different = (a :==: a, b :==: b)
+    where (a, b) = different
 
 -----------------------------------------------------------------------
 -- Type class for expressions

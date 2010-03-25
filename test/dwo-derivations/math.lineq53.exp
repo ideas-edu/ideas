@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.12">
+  <list>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 11/5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

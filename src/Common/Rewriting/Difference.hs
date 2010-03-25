@@ -22,23 +22,27 @@ import Control.Monad
 import Common.Uniplate
 import Data.Maybe
 
-differenceMode :: Rewrite a => (a -> a -> Bool) -> Bool -> a -> a -> Maybe (a, a)
+differenceMode :: (Rewrite a, Uniplate a, ShallowEq a) 
+               => (a -> a -> Bool) -> Bool -> a -> a -> Maybe (a, a)
 differenceMode eq b =
    if b then differenceEqual eq else difference
 
 -- | This function returns the difference, except that the 
 -- returned terms should be logically equivalent. Nothing can signal that
 -- there is no difference, or that the terms to start with are not equivalent.
-differenceEqual :: Rewrite a => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
+differenceEqual :: (Rewrite a, Uniplate a, ShallowEq a) 
+                => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
 differenceEqual eq p q = do
    guard (eq p q)
    diff eq p q
 
-difference :: Rewrite a => a -> a -> Maybe (a, a)
+difference :: (Rewrite a, Uniplate a, ShallowEq a) 
+           => a -> a -> Maybe (a, a)
 difference = diff (\_ _ -> True)
 
 -- local implementation function
-diff :: Rewrite a => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
+diff :: (Rewrite a, Uniplate a, ShallowEq a) 
+     => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
 diff eq p q 
    | shallowEq p q =
         case findOperator operators p of
@@ -49,7 +53,8 @@ diff eq p q
            _ -> diffList eq (children p) (children q)
    | otherwise = Just (p, q)
 
-diffList :: Rewrite a => (a -> a -> Bool) -> [a] -> [a] -> Maybe (a, a)
+diffList :: (Rewrite a, Uniplate a, ShallowEq a) 
+         => (a -> a -> Bool) -> [a] -> [a] -> Maybe (a, a)
 diffList eq xs ys
    | length xs /= length ys = Nothing
    | otherwise = 
@@ -57,7 +62,8 @@ diffList eq xs ys
            [p] -> Just p
            _   -> Nothing
            
-diffA :: Rewrite a => (a -> a -> Bool) -> Operator a -> [a] -> [a] -> Maybe (a, a)
+diffA :: (Rewrite a, Uniplate a, ShallowEq a) 
+      => (a -> a -> Bool) -> Operator a -> [a] -> [a] -> Maybe (a, a)
 diffA eq op = curry (make . uncurry rev . f . uncurry rev . f)
  where
    f (p:ps, q:qs) | not (null ps || null qs) && 

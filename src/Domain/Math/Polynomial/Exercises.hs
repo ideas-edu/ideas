@@ -52,7 +52,9 @@ linearExercise = makeExercise
    , examples     = concat (linearEquations ++ [specialCases])
    }
  where
-   specialCases = let x = Var "x" in [5 :==: x, 5 :==: x + 1]
+   specialCases = 
+      let x = Var "x" 
+      in [5 :==: x, 5 :==: x + 1, x - 1/5 :==: 2]
 
 quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise 

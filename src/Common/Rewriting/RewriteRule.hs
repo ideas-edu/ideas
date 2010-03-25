@@ -23,7 +23,6 @@ module Common.Rewriting.RewriteRule
    , rewrite, rewriteM, showRewriteRule, smartGenerator
    ) where
 
-import Common.Uniplate hiding (rewrite, rewriteM)
 import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
@@ -49,7 +48,7 @@ class ShallowEq a where
 -- (in combination with lifting rules). The function in the RewriteRule module
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
-class (IsTerm a, Arbitrary a, Different a, ShallowEq a, Uniplate a, Show a) => Rewrite a where
+class (IsTerm a, Arbitrary a, Different a, Show a) => Rewrite a where
    operators :: [Operator a]
    -- default definition: no associative/commutative operators
    operators = []

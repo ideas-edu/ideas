@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Exercise 
    ( -- * Exercises
-     Exercise, Status(..), testableExercise, makeExercise, emptyExercise
+     Exercise, testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, eqWithContext
    , strategy, navigation, canBeRestarted, extraRules
@@ -21,6 +21,8 @@ module Common.Exercise
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext
+     -- * Exercise status
+   , Status(..), isPublic, isPrivate
      -- * Exercise codes
    , ExerciseCode, noCode, makeCode, readCode, domain, identifier
      -- * Miscellaneous
@@ -72,8 +74,6 @@ data Exercise a = Exercise
    , randomExercise :: Maybe (StdGen -> Int -> a)
    , examples       :: [a]
    }
-   
-data Status = Stable | Provisional | Experimental deriving (Show, Eq)
 
 instance Eq (Exercise a) where
    e1 == e2 = exerciseCode e1 == exerciseCode e2
@@ -173,6 +173,24 @@ randomTermWith rng level ex =
          | otherwise -> 
               xs !! fst (randomR (0, length xs - 1) rng)
        where xs = examples ex
+
+---------------------------------------------------------------
+-- Exercise status
+
+data Status 
+   = Stable       -- ^ A released exercise that has undergone some thorough testing
+   | Provisional  -- ^ A released exercise, possibly with some deficiencies
+   | Alpha        -- ^ An exercise that is under development
+   | Experimental -- ^ An exercise for experimentation purposes only
+   deriving (Show, Eq)
+
+-- | An exercise with the status @Stable@ or @Provisional@
+isPublic :: Exercise a -> Bool
+isPublic ex = status ex `elem` [Stable, Provisional]
+
+-- | An exercise that is not public
+isPrivate :: Exercise a -> Bool
+isPrivate   = not . isPublic
 
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)

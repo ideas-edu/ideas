@@ -85,6 +85,10 @@ ruleImageFileHere ex r =
 exerciseOverviewPageFile :: String
 exerciseOverviewPageFile = "exercises.html"
 
+exerciseOverviewAllPageFile :: String
+exerciseOverviewAllPageFile = "exercises-all.html"
+
+
 serviceOverviewPageFile :: String
 serviceOverviewPageFile = "services.html"
 

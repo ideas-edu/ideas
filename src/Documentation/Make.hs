@@ -20,7 +20,7 @@ import Documentation.OverviewPages
 
 main :: IO ()
 main = do 
-   makeExerciseOverviewPage
+   makeExerciseOverviewPages
    makeServiceOverviewPage
    mapM_ (\(Some pkg) -> makeExercisePage pkg) packages
    mapM_ makeServicePage serviceList 

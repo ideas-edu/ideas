@@ -18,6 +18,7 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import ExerciseInfoPanel
+import Common.Exercise
 import Service.ExerciseList
 import Service.ExercisePackage
 
@@ -51,7 +52,7 @@ newAssignmentDialog w session = do
    rightPanel <- panel f []
    domainBox  <- radioBox rightPanel Vertical domains []
    exerciseList <- singleListBox rightPanel []
-   experimentalBox <- checkBox rightPanel [text := "Include experimental", checked := True]
+   experimentalBox <- checkBox rightPanel [text := "Include private", checked := True]
    set rightPanel [layout := column 10 
       [ hstretch $ label "Domain selection", hfill $ widget domainBox
       , hstretch $ vspace 10
@@ -126,6 +127,6 @@ getPackages b d = filter p packageList
  where 
     p (Some pkg) = 
        let ex = exercise pkg
-       in domain (exerciseCode ex) == d && (b || status ex == Stable)
+       in domain (exerciseCode ex) == d && (b || isPublic ex)
 
 myGrey = rgb 230 230 230

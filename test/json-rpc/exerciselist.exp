@@ -10,7 +10,7 @@
          "domain": "linalg",
          "identifier": "gramschmidt",
          "description": "Gram-Schmidt",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "linalg",
@@ -58,7 +58,7 @@
          "domain": "math",
          "identifier": "fraction",
          "description": "simplify expression (fractions)",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -76,7 +76,7 @@
          "domain": "math",
          "identifier": "integer",
          "description": "simplify expression (integers)",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -94,7 +94,7 @@
          "domain": "math",
          "identifier": "natural",
          "description": "simplify expression (natural numbers)",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -118,13 +118,13 @@
          "domain": "math",
          "identifier": "quadreq-no-abc",
          "description": "solve a quadratic equation without abc-formula",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "math",
          "identifier": "quadreq-with-approx",
          "description": "solve a quadratic equation with approximation",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -136,7 +136,7 @@
          "domain": "math",
          "identifier": "rational",
          "description": "simplify expression (rational numbers)",
-         "status": "Provisional"
+         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -148,16 +148,16 @@
          "domain": "regexp",
          "identifier": "normalform",
          "description": "Rewrite a regular expression",
-         "status": "Provisional"
+         "status": "Experimental"
       },
       {
          "domain": "relationalg",
          "identifier": "cnf",
          "description": "To conjunctive normal form",
-         "status": "Provisional"
+         "status": "Alpha"
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.11 (2812)"
+   "version": "0.5.12 (2858)"
 }

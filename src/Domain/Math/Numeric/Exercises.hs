@@ -30,7 +30,7 @@ import Common.Context
 
 numericExercise :: LabeledStrategy Expr -> Exercise Expr
 numericExercise s = makeExercise 
-   { status        = Provisional
+   { status        = Alpha
    , parser        = parseExpr
    , equivalence   = viewEquivalent rationalView
    , strategy      = mapRules liftToContext s

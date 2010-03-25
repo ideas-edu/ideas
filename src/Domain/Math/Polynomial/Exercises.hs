@@ -94,6 +94,7 @@ quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
+   , status       = Alpha
    , strategy     = configure cfg quadraticStrategy
    }
  where
@@ -105,6 +106,7 @@ quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
    { description  = "solve a quadratic equation with approximation"
    , exerciseCode = makeCode "math" "quadreq-with-approx"
+   , status       = Alpha
    , parser       = parseExprWith (pOrList (pRelation pExpr))
    , strategy     = configure cfg quadraticStrategy
    , equivalence  = equivalentApprox

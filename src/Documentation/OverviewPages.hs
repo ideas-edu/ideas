@@ -10,11 +10,12 @@
 --
 -----------------------------------------------------------------------------
 module Documentation.OverviewPages 
-   ( makeExerciseOverviewPage
+   ( makeExerciseOverviewPages
    , makeServiceOverviewPage 
    ) where
 
 import Documentation.DefaultPage
+import Data.Char
 import Data.List
 import Control.Monad
 import Common.Utils (Some(..))
@@ -23,32 +24,57 @@ import Service.ExerciseList
 import Service.ServiceList
 import Text.HTML
 
-makeExerciseOverviewPage :: IO ()
-makeExerciseOverviewPage = 
-   generatePage exerciseOverviewPageFile exerciseOverviewPage
+makeExerciseOverviewPages :: IO ()
+makeExerciseOverviewPages = do
+   generatePage exerciseOverviewPageFile    (exerciseOverviewPage False)
+   generatePage exerciseOverviewAllPageFile (exerciseOverviewPage True)
 
 makeServiceOverviewPage :: IO ()
 makeServiceOverviewPage = 
    generatePage serviceOverviewPageFile serviceOverviewPage
 
-exerciseOverviewPage :: HTML
-exerciseOverviewPage = defaultPage "Exercises" 0 $ do
-   h1 "Exercises"
-   forM_ (zip [1..] groupedList) $ \(i, (dom, xs)) -> do
+exerciseOverviewPage :: Bool -> HTML
+exerciseOverviewPage showAll = defaultPage title 0 $ do
+   h1 title
+   
+   unless showAll $ para $ do
+      text "Show"
+      space
+      link exerciseOverviewAllPageFile $ 
+         text "all exercises"
+      text ", including the ones under development"
+      
+   forM_ (zip [1..] (groupedList showAll)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
-      ul $ flip map xs $ \(Some ex) -> do
-         let code = exerciseCode ex
-         link (exercisePageFile code) $ ttText (show code ++ ":")
-         space
-         text $ description ex
-
-groupedList :: [(String, [Some Exercise])]
-groupedList = map g (groupBy eq (sortBy cmp exercises))
+      noBorderTable (map makeRow xs) 
  where
+   title | showAll   = "All exercises"
+         | otherwise = "Exercises"
+ 
+   makeRow (Some ex) = 
+      [ do tt bullet >> space
+           link (exercisePageFile code) $ ttText (show code)
+      , do spaces 10
+           f (status ex)
+           spaces 10
+      , text $ description ex
+      ]
+    where
+      code = exerciseCode ex
+      f st | st == Stable = return ()
+           | otherwise    = 
+                italic $ text ("(" ++ map toLower (show st) ++ ")")
+
+groupedList :: Bool -> [(String, [Some Exercise])]
+groupedList showAll = process exercises
+ where
+   process = map g . groupBy eq . sortBy cmp . filter p
+ 
    cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
    eq a b      = f a == f b
    f (Some ex) = domain (exerciseCode ex)
    g xs = (f (head xs), xs)
+   p (Some ex) = showAll || isPublic ex
 
 serviceOverviewPage :: HTML
 serviceOverviewPage = defaultPage "Services" 0 $ do

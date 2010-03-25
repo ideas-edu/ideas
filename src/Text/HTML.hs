@@ -13,13 +13,14 @@
 -----------------------------------------------------------------------------
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
-   , htmlPage, errorPage, link, h1, h2, h3, preText, ul, table
-   , text, image, space
-   , bold, italic, para, ttText, hr, br, pre, center
+   , htmlPage, errorPage, link, h1, h2, h3, preText, ul, table, noBorderTable
+   , text, image, space, tt, spaces
+   , bold, italic, para, ttText, hr, br, pre, center, bullet
    ) where
 
 import Text.XML hiding (text)
 import qualified Text.XML as XML
+import Control.Monad
 
 type HTML = XML
 
@@ -95,8 +96,17 @@ table rows = element "table" $ do
    "border" .=. "1"
    mapM_ (element "tr" . mapM_ (element "td")) rows
 
-space :: HTMLBuilder
-space = XML.unescaped "&nbsp;"
+noBorderTable :: [[HTMLBuilder]] -> HTMLBuilder
+noBorderTable rows = element "table" $ do
+   "border"      .=. "0"
+   mapM_ (element "tr" . mapM_ (element "td")) rows
+
+spaces :: Int -> HTMLBuilder
+spaces n = replicateM_ n space
+
+space, bullet :: HTMLBuilder
+space  = XML.unescaped "&nbsp;"
+bullet = XML.unescaped "&#8226;"
 
 image :: String -> HTMLBuilder 
 image n = element "img" ("src" .=. n) 

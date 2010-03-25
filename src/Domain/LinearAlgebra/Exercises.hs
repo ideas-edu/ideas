@@ -37,7 +37,7 @@ gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
 gramSchmidtExercise = testableExercise
    { description    = "Gram-Schmidt"
    , exerciseCode   = makeCode "linalg" "gramschmidt"
-   , status         = Provisional
+   , status         = Alpha
    , parser         = \s -> case parseVectorSpace s of
                               Right a  -> Right (fmap simplified a)
                               Left msg -> Left msg

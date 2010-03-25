@@ -31,7 +31,7 @@ cnfExercise :: Exercise RelAlg
 cnfExercise = testableExercise
    { description    = "To conjunctive normal form"
    , exerciseCode   = makeCode "relationalg" "cnf"
-   , status         = Provisional
+   , status         = Alpha
    , parser         = parseRelAlg
    , prettyPrinter  = ppRelAlg
    , equivalence    = probablyEqual -- isEquivalent

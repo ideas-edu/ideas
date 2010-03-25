@@ -28,7 +28,7 @@ regexpExercise :: Exercise RegExp
 regexpExercise = makeExercise
    { description    = "Rewrite a regular expression"
    , exerciseCode   = makeCode "regexp" "normalform"
-   , status         = Provisional
+   , status         = Experimental
    , parser         = parseRegExp
    , prettyPrinter  = ppRegExp
 --   , equivalence    = eqRE

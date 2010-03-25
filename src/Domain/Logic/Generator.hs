@@ -41,24 +41,24 @@ instance IsTerm a => IsTerm (Logic a) where
       )
 
    fromTerm (Term.Con s)
-      | s == trueSymbol  = return T
-      | s == falseSymbol = return F
+      | s == Term.toSymbol trueSymbol  = return T
+      | s == Term.toSymbol falseSymbol = return F
    fromTerm (Term.App (Term.Con s) a) 
-      | s == notSymbol = liftM Not (fromTerm a)
+      | s == Term.toSymbol notSymbol = liftM Not (fromTerm a)
    fromTerm term = msum 
       [ iBin impliesSymbol (:->:) term, iBin equivalentSymbol (:<->:) term
       , iBin andSymbol (:&&:) term, iBin orSymbol (:||:) term
       , liftM Var (fromTerm term)
       ]
 
-iBin :: IsTerm a => Term.Symbol -> (Logic a -> Logic a -> Logic a) -> Term.Term -> Maybe (Logic a)
+iBin :: (IsTerm a, Term.IsSymbol s) => s -> (Logic a -> Logic a -> Logic a) -> Term.Term -> Maybe (Logic a)
 iBin sym f (Term.App (Term.App (Term.Con s) a) b) 
-   | sym == s = liftM2 f (fromTerm a) (fromTerm b)
+   | Term.toSymbol sym == s = liftM2 f (fromTerm a) (fromTerm b)
 iBin _ _ _ = Nothing
 
 instance Rewrite SLogic where
    operators      = logicOperators
-   associativeOps = const [andSymbol, orSymbol]
+   associativeOps = const $ map Term.toSymbol [andSymbol, orSymbol]
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool

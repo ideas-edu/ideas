@@ -23,7 +23,11 @@ instance Different RelAlg where
    different = (V, I)
    
 instance IsTerm RelAlg where
-   toTerm = foldRelAlg (Term.Var, tBin ".", tBin "+", tBin "&&", tBin "||", tUn "~", tUn "-", Term.Con (mkSym "V"), Term.Con (mkSym "I"))
+   toTerm = foldRelAlg 
+      ( Term.Var, Term.binary ".", Term.binary "+", Term.binary "&&"
+      , Term.binary "||", Term.unary "~", Term.unary "-"
+      , Term.con "V", Term.con "I"
+      )
 
    fromTerm (Term.Con s) 
       | s == mkSym "V" = return V
@@ -36,18 +40,15 @@ instance IsTerm RelAlg where
       , iBin "&&" (:&&:) term, iBin "||" (:||:) term
       , liftM Var (fromTerm term)
       ]
-
-tBin s a b = Term.App (Term.App (Term.Con (mkSym s)) a) b
-tUn s a = Term.App (Term.Con (mkSym s)) a
-
+      
 iBin s f term = do 
-   (a, b) <- Term.isBinary (mkSym s) term
+   (a, b) <- Term.isBinary s term
    p <- fromTerm a
    q <- fromTerm b
    return (f p q)
 
 mkSym :: String -> Term.Symbol
-mkSym = Term.makeSymbol "relalg"
+mkSym = Term.toSymbol
 
 instance Arbitrary RelAlg where
    arbitrary = sized arbRelAlg

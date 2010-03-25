@@ -257,11 +257,11 @@ instance IsTerm Expr where
             return (Number (encodeFloat x (fromIntegral y)))
          (Term.Con s, xs) -> do
             ys <- mapM fromTerm xs
-            return (function s ys)
+            return (function (Term.fromSymbol s) ys)
          _ -> Nothing
 
-floatSym :: Symbol
-floatSym = makeSymbol "special" "float" 
+floatSym :: Term.Symbol
+floatSym = Term.makeSymbol "special" "float" 
 
 -----------------------------------------------------------------------
 -- AC Theory for expression

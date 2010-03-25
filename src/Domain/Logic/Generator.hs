@@ -57,7 +57,8 @@ iBin sym f (Term.App (Term.App (Term.Con s) a) b)
 iBin _ _ _ = Nothing
 
 instance Rewrite SLogic where
-   operators = logicOperators
+   operators      = logicOperators
+   associativeOps = const [show andSymbol, show orSymbol]
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool

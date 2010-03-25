@@ -39,10 +39,6 @@ instance IsTerm a => IsTerm (Equation a) where
       | read s == eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
    fromTerm _ = Nothing
 
-instance Different a => Different (Equation a) where 
-   different = (a :==: a, b :==: b)
-    where (a, b) = different
-
 -----------------------------------------------------------------------
 -- Type class for expressions
 

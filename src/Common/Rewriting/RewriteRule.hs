@@ -34,6 +34,7 @@ import Common.Apply
 import Common.Rewriting.MetaVar (getMetaVars)
 import Common.Rewriting.Unification
 import qualified Data.IntSet as IS
+import qualified Data.Map as M
 
 ------------------------------------------------------
 -- Supporting type classes
@@ -48,10 +49,12 @@ class ShallowEq a where
 -- (in combination with lifting rules). The function in the RewriteRule module
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
-class (IsTerm a, Arbitrary a, Different a, Show a) => Rewrite a where
-   operators :: [Operator a]
+class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
+   operators      :: [Operator a]
+   associativeOps :: a -> [String]
    -- default definition: no associative/commutative operators
-   operators = []
+   operators      = []
+   associativeOps = const []
 
 ------------------------------------------------------
 -- Rewrite rules and specs
@@ -119,23 +122,21 @@ fill i (App a1 a2) (App b1 b2) = App (fill i a1 b1) (fill i a2 b2)
 fill i a b 
    | a == b    = a
    | otherwise = Meta i
-   
-buildTerm :: Operators Term -> RuleSpec Term -> Term -> [Term]
-buildTerm ops (lhs :~> rhs) a = do
-   s <- match ops lhs a
-   return (s |-> rhs)
-   
+
 build :: Rewrite a => RuleSpec Term -> a -> [a]
-build p a = buildTerm (map convOp (getOp a)) p (toTerm a) >>= (maybe [] return . fromTerm)
- where
-   getOp :: Rewrite a => a -> Operators a
-   getOp _ = operators
+build (lhs :~> rhs) a = do
+   s <- match (getMatcher a) lhs (toTerm a)
+   fromTermM (s |-> rhs)
 
 rewriteRule :: (Builder f a, Rewrite a) => String -> f -> RewriteRule a
 rewriteRule s f = R s (countVars f) (buildSpec f)
 
 rewriteRules :: (BuilderList f a, Rewrite a) => String -> f -> [RewriteRule a]
 rewriteRules s f = map (R s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
+
+getMatcher :: Rewrite a => a -> Matcher
+getMatcher = M.unions . map associativeMatcher . associativeOps
+
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -145,7 +146,7 @@ instance Apply RewriteRule where
 
 rewrite :: RewriteRule a -> a -> [a]
 rewrite r@(R _ _ _) a = do
-   ext <- extendContext operators r
+   ext <- extendContext (associativeOps a) r
    build (rulePair ext 0) a
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
@@ -190,40 +191,23 @@ smartGenerator r@(R _ _ _) = do
 -- rules to take "contexts" into account. In addition to a left and a right
 -- context, we also should consider a context on both sides. If not, we 
 -- might miss some locations, as pointed out by Josje's bug report.
-extendContext :: Operators a -> RewriteRule a -> [RewriteRule a]
+extendContext :: [String] -> RewriteRule a -> [RewriteRule a]
 extendContext ops r@(R _ _ _) =
-   case findOp2 ops (lhs $ rulePair r 0) of
-      Just op | isAssociative op -> 
-         [r, extend (leftContext op) r, extend (rightContext op) r 
-         , extend (rightContext op) (extend (leftContext op) r) ]
+   case (lhs $ rulePair r 0) of
+      App (App (Con s) _) _ | s `elem` ops -> r :
+         [ extend (leftContext s) r
+         , extend (rightContext s) r 
+         , extend (rightContext s) (extend (leftContext s) r) 
+         ]
       _ -> [r]
  where
    lhs (a :~> _) = a
  
-   leftContext op a (x :~> y) =
-      constructor op a x :~> constructor op a y
+   leftContext s a (x :~> y) =
+      binary s a x :~> binary s a y
    
-   rightContext op a (x :~> y) =
-      constructor op x a :~> constructor op y a
+   rightContext s a (x :~> y) =
+      binary s x a :~> binary s y a
 
 extend :: (Term -> RuleSpec Term -> RuleSpec Term) -> RewriteRule a -> RewriteRule a
 extend f (R s n g) = R s (n+1) (\i -> f (Meta (i+n)) (g i))
-      
-findOp2 :: (IsTerm a, Different a) => Operators a -> Term -> Maybe (Operator Term)
-findOp2 [] _ = Nothing
-findOp2 (o:os) a = 
-   case findOperator [convOp o] a of
-      Just _  -> Just (convOp o)
-      Nothing -> findOp2 os a
-
-convOp :: (IsTerm a, Different a) => Operator a -> Operator Term
-convOp op = op 
-   { constructor = binary s
-   , destructor  = isBinary s
-   }
- where
-   s = let a = fst different
-       in case getSpine (toTerm (constructor op a a)) of
-             (Con s, [_,_]) -> s
-             _ -> ""
-

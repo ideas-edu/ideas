@@ -17,6 +17,7 @@ module Common.Rewriting.AC
    , isOperator, findOperator
    , normalizeWith, equalWith
    , pairings, pairingsMatch
+   , pairingsA2, onBoth
    ) where
 
 import Common.Uniplate
@@ -118,7 +119,14 @@ pairingsC op a b =
 
 -- associative pairings
 pairingsA :: Bool -> Operator a -> a -> a -> [[(a, a)]]
-pairingsA matchMode op a b = rec (collectWithOperator op a) (collectWithOperator op b)
+pairingsA matchMode op a b = map (map make) result
+ where 
+   (as, bs) = onBoth (collectWithOperator op) (a, b)
+   result   = pairingsA2 matchMode as bs
+   make     = onBoth (buildWithOperator op)
+
+pairingsA2 :: Bool -> [a] -> [a] -> [[([a], [a])]]
+pairingsA2 matchMode = rec
  where
    rec [] [] = [[]]
    rec as bs = 
@@ -128,8 +136,8 @@ pairingsA matchMode op a b = rec (collectWithOperator op a) (collectWithOperator
       , i==1 || j==1
       , let (as1, as2) = splitAt i as
       , let (bs1, bs2) = splitAt j bs
-      , let a1 = buildWithOperator op as1
-      , let b1 = buildWithOperator op bs1
+      , let a1 = as1
+      , let b1 = bs1
       , ps <- rec as2 bs2
       ]
 
@@ -176,7 +184,10 @@ splits = foldr insert [([], [])]
       let toLeft  (xs, ys) = (a:xs,   ys)
           toRight (xs, ys) = (  xs, a:ys)
       in map toLeft ps ++ map toRight ps
-      
+
+onBoth :: (a -> b) -> (a, a) -> (b, b)
+onBoth f (x, y) = (f x, f y)
+
 {-
 permutations :: [a] -> [[a]]
 permutations = foldr (concatMap . insert) [[]]

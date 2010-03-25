@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Unification (match) where
+module Common.Rewriting.Unification (match, Matcher, associativeMatcher) where
 
 import Common.Rewriting.Term
 import Common.Rewriting.AC
@@ -67,11 +67,8 @@ unifyWith ops = rec
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
-match :: Operators Term -> Term -> Term -> [Substitution Term]
-match a b c = matchWith (makeMatchers a) b c
-
-matchWith :: Matchers -> Term -> Term -> [Substitution Term]
-matchWith m x y = do
+match :: Matcher -> Term -> Term -> [Substitution Term]
+match m x y = do
    s <- rec x y
    guard (IS.null $ dom s `IS.intersection` getMetaVars y)
    return s
@@ -97,13 +94,24 @@ matchWith m x y = do
       return (s2 @@ s1)
    recList _ _ = []
 
-type Matchers = M.Map String (Term -> Term -> [[(Term, Term)]])
+type Matcher = M.Map String (Term -> Term -> [[(Term, Term)]])
 
-makeMatchers :: [Operator Term] -> Matchers
-makeMatchers = M.fromList . map f
- where 
-   f op = (g op , pairingsMatch op)
-   g op = case getSpine (constructor op undefined undefined) of
-             (Con s,[_, _]) -> s
-             _              -> ""
-             
+associativeMatcher :: String -> Matcher
+associativeMatcher s = M.singleton s f
+ where
+   f a b = map (map make) result
+    where
+      (as, bs) = onBoth collect (a, b)
+      result   = pairingsA2 True as bs
+      make     = onBoth construct
+   
+   collect = ($ []) . rec
+    where 
+      rec term =
+         case isBinary s term of
+            Just (a, b) -> rec a . rec b
+            Nothing     -> (term:)
+   
+   construct xs 
+      | null xs   = error "associativeMatcher: empty list"
+      | otherwise = foldr1 (binary s) xs

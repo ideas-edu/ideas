@@ -242,23 +242,26 @@ instance Different Expr where
 instance IsTerm Expr where 
    toTerm (Nat n)    = Term.Num n
    toTerm (Number d) = let (x, y) = decodeFloat d
-                       in Term.binary "#Number" (Term.Num x) (Term.Num (toInteger y) )
+                       in Term.binary floatSym (Term.Num x) (Term.Num (toInteger y) )
    toTerm (Var v)    = Term.Var v
    toTerm expr = 
       case getFunction expr of
-         Just (s, xs) -> Term.makeConTerm (show s) (map toTerm xs)
+         Just (s, xs) -> Term.makeConTerm s (map toTerm xs)
          Nothing      -> error "IsTerm Expr"
 
    fromTerm (Term.Num n) = return (fromInteger n)
    fromTerm (Term.Var v) = return (Var v)
    fromTerm t =
       case Term.getSpine t of
-         (Term.Con "#Number", [Term.Num x, Term.Num y]) ->
+         (Term.Con s, [Term.Num x, Term.Num y]) | s == floatSym ->
             return (Number (encodeFloat x (fromIntegral y)))
          (Term.Con s, xs) -> do
             ys <- mapM fromTerm xs
-            return (function (read s) ys)
+            return (function s ys)
          _ -> Nothing
+
+floatSym :: Symbol
+floatSym = makeSymbol "special" "float" 
 
 -----------------------------------------------------------------------
 -- AC Theory for expression

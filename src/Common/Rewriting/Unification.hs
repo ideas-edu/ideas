@@ -94,9 +94,9 @@ match m x y = do
       return (s2 @@ s1)
    recList _ _ = []
 
-type Matcher = M.Map String (Term -> Term -> [[(Term, Term)]])
+type Matcher = M.Map Symbol (Term -> Term -> [[(Term, Term)]])
 
-associativeMatcher :: String -> Matcher
+associativeMatcher :: Symbol -> Matcher
 associativeMatcher s = M.singleton s f
  where
    f a b = map (map make) result

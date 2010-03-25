@@ -34,9 +34,9 @@ import qualified Common.Rewriting.Term as Term
 instance Rewrite a => Rewrite (Equation a)
 
 instance IsTerm a => IsTerm (Equation a) where
-   toTerm (a :==: b) = Term.binary (show eqSymbol) (toTerm a) (toTerm b)
+   toTerm (a :==: b) = Term.binary eqSymbol (toTerm a) (toTerm b)
    fromTerm (Term.App (Term.App (Term.Con s) a) b)
-      | read s == eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
+      | s == eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
    fromTerm _ = Nothing
 
 -----------------------------------------------------------------------

@@ -34,31 +34,31 @@ instance Different (Logic a) where
 
 instance IsTerm a => IsTerm (Logic a) where
    toTerm = foldLogic
-      ( toTerm, Term.binary (show impliesSymbol)
-      , Term.binary (show equivalentSymbol), Term.binary (show andSymbol)
-      , Term.binary (show orSymbol), Term.unary (show notSymbol)
-      , Term.Con (show trueSymbol), Term.Con (show falseSymbol)
+      ( toTerm, Term.binary impliesSymbol
+      , Term.binary equivalentSymbol, Term.binary andSymbol
+      , Term.binary orSymbol, Term.unary notSymbol
+      , Term.con trueSymbol, Term.con falseSymbol
       )
 
    fromTerm (Term.Con s)
-      | read s == trueSymbol  = return T
-      | read s == falseSymbol = return F
+      | s == trueSymbol  = return T
+      | s == falseSymbol = return F
    fromTerm (Term.App (Term.Con s) a) 
-      | read s == notSymbol = liftM Not (fromTerm a)
+      | s == notSymbol = liftM Not (fromTerm a)
    fromTerm term = msum 
       [ iBin impliesSymbol (:->:) term, iBin equivalentSymbol (:<->:) term
       , iBin andSymbol (:&&:) term, iBin orSymbol (:||:) term
       , liftM Var (fromTerm term)
       ]
 
-iBin :: (Show s, IsTerm a) => s -> (Logic a -> Logic a -> Logic a) -> Term.Term -> Maybe (Logic a)
+iBin :: IsTerm a => Term.Symbol -> (Logic a -> Logic a -> Logic a) -> Term.Term -> Maybe (Logic a)
 iBin sym f (Term.App (Term.App (Term.Con s) a) b) 
-   | show sym == s = liftM2 f (fromTerm a) (fromTerm b)
+   | sym == s = liftM2 f (fromTerm a) (fromTerm b)
 iBin _ _ _ = Nothing
 
 instance Rewrite SLogic where
    operators      = logicOperators
-   associativeOps = const [show andSymbol, show orSymbol]
+   associativeOps = const [andSymbol, orSymbol]
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool

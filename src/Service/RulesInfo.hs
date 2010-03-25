@@ -79,7 +79,7 @@ termToOMOBJ :: Term -> OMOBJ
 termToOMOBJ term =
    case term of
       Var s   -> OMV s
-      Con s   -> OMS (read s)
+      Con s   -> OMS s
       Meta i  -> OMV ("$" ++ show i)
       Num n   -> OMI n
       App _ _ -> let (f, xs) = getSpine term

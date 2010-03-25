@@ -23,25 +23,31 @@ instance Different RelAlg where
    different = (V, I)
    
 instance IsTerm RelAlg where
-   toTerm = foldRelAlg (Term.Var, tBin ".", tBin "+", tBin "&&", tBin "||", tUn "~", tUn "-", Term.Con "V", Term.Con "I")
-   fromTerm (Term.Con "V") = return V
-   fromTerm (Term.Con "I") = return I
-   fromTerm (Term.App (Term.Con "~") a) = liftM Not (fromTerm a)
-   fromTerm (Term.App (Term.Con "-") a) = liftM Inv (fromTerm a)
+   toTerm = foldRelAlg (Term.Var, tBin ".", tBin "+", tBin "&&", tBin "||", tUn "~", tUn "-", Term.Con (mkSym "V"), Term.Con (mkSym "I"))
+
+   fromTerm (Term.Con s) 
+      | s == mkSym "V" = return V
+      | s == mkSym "I" = return I
+   fromTerm (Term.App (Term.Con s) a)
+      | s == mkSym "~" = liftM Not (fromTerm a)
+      | s == mkSym "-" = liftM Inv (fromTerm a)
    fromTerm term = msum 
       [ iBin "." (:.:) term, iBin "+" (:+:) term
       , iBin "&&" (:&&:) term, iBin "||" (:||:) term
       , liftM Var (fromTerm term)
       ]
 
-tBin s a b = Term.App (Term.App (Term.Con s) a) b
-tUn s a = Term.App (Term.Con s) a
+tBin s a b = Term.App (Term.App (Term.Con (mkSym s)) a) b
+tUn s a = Term.App (Term.Con (mkSym s)) a
 
 iBin s f term = do 
-   (a, b) <- Term.isBinary s term
+   (a, b) <- Term.isBinary (mkSym s) term
    p <- fromTerm a
    q <- fromTerm b
    return (f p q)
+
+mkSym :: String -> Term.Symbol
+mkSym = Term.makeSymbol "relalg"
 
 instance Arbitrary RelAlg where
    arbitrary = sized arbRelAlg

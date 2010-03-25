@@ -156,20 +156,26 @@ instance Different (RE a) where
 
 instance IsTerm RegExp where 
    toTerm = foldRE 
-      ( Con "EmptySet", Con "Epsilon", toTerm
-      , unary "Option", unary "Star", unary "Plus", binary ":*:", binary ":|:"
+      ( Con $ mkSym "EmptySet", Con $ mkSym "Epsilon", toTerm
+      , unary $ mkSym "Option", unary $ mkSym "Star"
+      , unary $ mkSym "Plus", binary $ mkSym ":*:"
+      , binary $ mkSym ":|:"
       ) 
+
    fromTerm (Var v) = return (Atom v)
    fromTerm a = fromTermWith f a
     where
-      f "EmptySet" [] = return EmptySet
-      f "Epsilon"  [] = return Epsilon
-      f "Option" [x]  = return (Option x)
-      f "Star" [x]    = return (Star x)
-      f "Plus" [x]    = return (Plus x)
-      f ":*:" [x,y]   = return (x :*: y)
-      f ":|:" [x,y]   = return (x :|: y)
+      f s []     | s == mkSym "EmptySet" = return EmptySet
+                 | s == mkSym "Epsilon"  = return Epsilon
+      f s [x]    | s == mkSym "Option"   = return (Option x)
+                 | s == mkSym "Star"     = return (Star x)
+                 | s == mkSym "Plus"     = return (Plus x)
+      f s [x, y] | s == mkSym ":*:"      = return (x :*: y)
+                 | s == mkSym ":|:"      = return (x :|: y)
       f _ _ = Nothing
+
+mkSym :: String -> Symbol
+mkSym = undefined
 
 instance Rewrite RegExp where
    operators = [concatOp, choiceOp] 

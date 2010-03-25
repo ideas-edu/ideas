@@ -51,7 +51,7 @@ class ShallowEq a where
 -- The show type class is added for pretty-printing rules
 class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
    operators      :: [Operator a]
-   associativeOps :: a -> [String]
+   associativeOps :: a -> [Symbol]
    -- default definition: no associative/commutative operators
    operators      = []
    associativeOps = const []
@@ -191,10 +191,10 @@ smartGenerator r@(R _ _ _) = do
 -- rules to take "contexts" into account. In addition to a left and a right
 -- context, we also should consider a context on both sides. If not, we 
 -- might miss some locations, as pointed out by Josje's bug report.
-extendContext :: [String] -> RewriteRule a -> [RewriteRule a]
+extendContext :: [Symbol] -> RewriteRule a -> [RewriteRule a]
 extendContext ops r@(R _ _ _) =
-   case (lhs $ rulePair r 0) of
-      App (App (Con s) _) _ | s `elem` ops -> r :
+   case getConSpine (lhs $ rulePair r 0) of
+      Just (s, [_, _]) | s `elem` ops -> r :
          [ extend (leftContext s) r
          , extend (rightContext s) r 
          , extend (rightContext s) (extend (leftContext s) r) 

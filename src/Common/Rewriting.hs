@@ -12,14 +12,13 @@
 module Common.Rewriting 
    ( RewriteRule, smartGenerator, rewriteRule, rewriteRules
    , Builder, rewriteM, RuleSpec((:~>)), rulePair, BuilderList, showRewriteRule
-   , Rewrite(..), ShallowEq(..), MetaVar(..), Operator
+   , Rewrite(..), ShallowEq(..), Operator
    , associativeOperator, ruleName, Operators, collectWithOperator
    , equalWith, isOperator, constructor, difference, differenceMode
    , acOperator, normalizeWith, IsTerm(..), Different(..)
    ) where
 
 import Common.Rewriting.AC
-import Common.Rewriting.MetaVar
 import Common.Rewriting.Difference
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term

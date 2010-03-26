@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Data where
 
-import Data.Char  (isDigit, isAlphaNum)
+import Data.Char (isAlphaNum)
 import Data.Ratio
 import Data.Typeable
 import Test.QuickCheck
@@ -217,11 +217,6 @@ showExpr table = rec 0
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"
-
-instance MetaVar Expr where
-   metaVar n = Var ('_' : show n)
-   isMetaVar (Var ('_':is)) | not (null is) && all isDigit is = Just (read is)
-   isMetaVar _ = Nothing
 
 instance ShallowEq Expr where
    shallowEq (Nat a) (Nat b) = a == b

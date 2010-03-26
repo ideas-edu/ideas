@@ -9,10 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.LinearAlgebra.Symbols 
-   ( -- linalg2
-     matrixSymbol, matrixrowSymbol, vectorSymbol
-   ) where
+module Domain.LinearAlgebra.Symbols () where
 
 import Domain.Math.Expr.Conversion
 import Domain.Math.Expr.Symbolic
@@ -20,26 +17,31 @@ import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Control.Monad
-import Text.OpenMath.Dictionary.Linalg2
+import qualified Text.OpenMath.Dictionary.Linalg2 as Linalg2
+
+vectorSymbol, matrixSymbol, matrixrowSymbol :: Symbol
+vectorSymbol    = toSymbol Linalg2.vectorSymbol
+matrixSymbol    = toSymbol Linalg2.matrixSymbol
+matrixrowSymbol = toSymbol Linalg2.matrixrowSymbol
 
 -------------------------------------------------------
 -- Conversion to the Expr data type
 
 instance IsExpr a => IsExpr (Matrix a) where
    toExpr = 
-      let f = function (toSymbol matrixrowSymbol) . map toExpr
-      in function (toSymbol matrixSymbol) . map f . rows
+      let f = function matrixrowSymbol . map toExpr
+      in function matrixSymbol . map f . rows
    fromExpr a = do
-      rs  <- isSymbol (toSymbol matrixSymbol) a
-      xss <- mapM (isSymbol (toSymbol matrixrowSymbol)) rs
+      rs  <- isSymbol matrixSymbol a
+      xss <- mapM (isSymbol matrixrowSymbol) rs
       yss <- mapM (mapM fromExpr) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
       
 instance IsExpr a => IsExpr (Vector a) where
-   toExpr = function (toSymbol vectorSymbol) . map toExpr . toList
+   toExpr = function vectorSymbol . map toExpr . toList
    fromExpr expr = do
-      xs <- isSymbol (toSymbol vectorSymbol) expr
+      xs <- isSymbol vectorSymbol expr
       ys <- mapM fromExpr xs
       return (fromList ys)
       

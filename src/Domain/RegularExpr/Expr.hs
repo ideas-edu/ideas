@@ -13,10 +13,10 @@
 module Domain.RegularExpr.Expr where
 
 import Common.Rewriting
-import Common.Rewriting.Term
 import Common.Traversable
 import Common.Uniplate
 import Control.Monad
+import Domain.Math.Expr.Symbolic
 import Test.QuickCheck
 
 --------------------------------------------------------------------
@@ -133,11 +133,6 @@ instance Uniplate (RE a) where
          r :*: s  -> ([r, s], \[a, b] -> a :*: b)
          r :|: s  -> ([r, s], \[a, b] -> a :|: b)
 
-instance MetaVar a => MetaVar (RE a) where
-   isMetaVar (Atom a) = isMetaVar a
-   isMetaVar _        = Nothing
-   metaVar            = Atom . metaVar
-   
 instance Eq a => ShallowEq (RE a) where
    shallowEq re1 re2 = 
       case (re1, re2) of
@@ -156,22 +151,22 @@ instance Different (RE a) where
 
 instance IsTerm RegExp where 
    toTerm = foldRE 
-      ( Con $ mkSym "EmptySet", Con $ mkSym "Epsilon", toTerm
-      , unary $ mkSym "Option", unary $ mkSym "Star"
-      , unary $ mkSym "Plus", binary $ mkSym ":*:"
-      , binary $ mkSym ":|:"
+      ( nullary "EmptySet", nullary "Epsilon", toTerm, unary "Option"
+      , unary "Star", unary "Plus", binary ":*:", binary ":|:"
       ) 
 
-   fromTerm (Var v) = return (Atom v)
-   fromTerm a = fromTermWith f a
+   fromTerm a = fromTermWith f a `mplus` liftM Atom (getVariable a)
     where
-      f s []     | s == mkSym "EmptySet" = return EmptySet
-                 | s == mkSym "Epsilon"  = return Epsilon
-      f s [x]    | s == mkSym "Option"   = return (Option x)
-                 | s == mkSym "Star"     = return (Star x)
-                 | s == mkSym "Plus"     = return (Plus x)
-      f s [x, y] | s == mkSym ":*:"      = return (x :*: y)
-                 | s == mkSym ":|:"      = return (x :|: y)
+      f s []     
+         | s == "EmptySet" = return EmptySet
+         | s == "Epsilon"  = return Epsilon
+      f s [x]    
+         | s == "Option"   = return (Option x)
+         | s == "Star"     = return (Star x)
+         | s == "Plus"     = return (Plus x)
+      f s [x, y] 
+         | s == ":*:"      = return (x :*: y)
+         | s == ":|:"      = return (x :|: y)
       f _ _ = Nothing
 
 mkSym :: String -> Symbol

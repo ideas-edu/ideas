@@ -22,40 +22,11 @@ import Test.QuickCheck hiding (defaultConfig)
 import Common.Rewriting
 import Common.Uniplate
 import Domain.Math.Expr.Symbolic
-
 import Text.OpenMath.Dictionary.Logic1
-import qualified Common.Rewriting.Term as Term
 
 -------------------------------------------------------------
 -- Code that doesn't belong here, but the arbitrary instance
 -- is needed for the Rewrite instance.
-
-instance Different (Logic a) where
-   different = (T, F)
-
-instance IsTerm a => IsTerm (Logic a) where
-   toTerm = foldLogic
-      ( toTerm, binary impliesSymbol
-      , binary equivalentSymbol, binary andSymbol
-      , binary orSymbol, unary notSymbol
-      , nullary trueSymbol, nullary falseSymbol
-      )
-
-   fromTerm (Term.Con s)
-      | s == toSymbol trueSymbol  = return T
-      | s == toSymbol falseSymbol = return F
-   fromTerm (Term.App (Term.Con s) a) 
-      | s == toSymbol notSymbol = liftM Not (fromTerm a)
-   fromTerm term = msum 
-      [ iBin impliesSymbol (:->:) term, iBin equivalentSymbol (:<->:) term
-      , iBin andSymbol (:&&:) term, iBin orSymbol (:||:) term
-      , liftM Var (fromTerm term)
-      ]
-
-iBin :: (IsTerm a, IsSymbol s) => s -> (Logic a -> Logic a -> Logic a) -> Term.Term -> Maybe (Logic a)
-iBin sym f (Term.App (Term.App (Term.Con s) a) b) 
-   | toSymbol sym == s = liftM2 f (fromTerm a) (fromTerm b)
-iBin _ _ _ = Nothing
 
 instance Rewrite SLogic where
    operators      = logicOperators

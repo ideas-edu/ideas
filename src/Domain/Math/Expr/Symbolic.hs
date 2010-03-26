@@ -108,3 +108,10 @@ isAssoBinary s a =
       Just [x, y] -> return (x, y)
       Just (x:xs) | length xs > 1 -> return (x, function (toSymbol s) xs)
       _ -> mzero
+      
+fromTermWith :: (MonadPlus m, IsSymbol s, IsTerm a) 
+             => (s -> [a] -> m a) -> Term -> m a
+fromTermWith f term = do
+   (s, xs) <- getFunction term
+   ys <- mapM fromTermM xs
+   f (fromSymbol s) ys

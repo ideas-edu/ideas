@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Formula where
 
+import Domain.Math.Expr.Symbolic
 import Common.Uniplate (Uniplate(..))
 import Common.Rewriting
 import Common.Utils
@@ -46,7 +47,6 @@ empty :: RelAlg
 empty = Not V
 
 -------------------------------------
-
 
 isAtom :: RelAlg -> Bool
 isAtom  r = 
@@ -170,11 +170,6 @@ instance Uniplate RelAlg where
          Inv s     -> ([s], \[a] -> Inv a)
          _         -> ([], \[] -> term)
 
-instance MetaVar RelAlg where
-   isMetaVar (Var a) = isMetaVar a
-   isMetaVar _       = Nothing
-   metaVar           = Var . metaVar
-
 instance ShallowEq RelAlg where
    shallowEq expr1 expr2 = 
       case (expr1, expr2) of
@@ -188,3 +183,28 @@ instance ShallowEq RelAlg where
          (V       , V       ) -> True
          (I       , I       ) -> True
          _                    -> False
+         
+instance Different RelAlg where
+   different = (V, I)
+   
+instance IsTerm RelAlg where
+   toTerm = foldRelAlg 
+      ( variable, binary ".", binary "+", binary "&&", binary "||"
+      , unary "~", unary "-", nullary "V", nullary "I"
+      )
+
+   fromTerm a = 
+      fromTermWith f a `mplus` liftM Var (getVariable a)
+    where
+      f s []
+         | s == "V"  = return V
+         | s == "I"  = return I
+      f s [x]
+         | s == "~"  = return (Not x)
+         | s == "-"  = return (Inv x)
+      f s [x, y]
+         | s == "."  = return (x :.:  y)
+         | s == "+"  = return (x :+:  y)
+         | s == "&&" = return (x :&&: y)
+         | s == "||" = return (x :||: y)
+      f _ _ = Nothing

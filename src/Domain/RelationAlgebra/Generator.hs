@@ -14,42 +14,9 @@ module Domain.RelationAlgebra.Generator (templateGenerator) where
 import Domain.RelationAlgebra.Formula
 import Common.Rewriting
 import Control.Monad
-import Test.QuickCheck 
-import Domain.Math.Expr.Symbolic
-import qualified Common.Rewriting.Term as Term
+import Test.QuickCheck
 
 instance Rewrite RelAlg
-
-instance Different RelAlg where
-   different = (V, I)
-   
-instance IsTerm RelAlg where
-   toTerm = foldRelAlg 
-      ( Term.Var, binary ".", binary "+", binary "&&"
-      , binary "||", unary "~", unary "-"
-      , nullary "V", nullary "I"
-      )
-
-   fromTerm (Term.Con s) 
-      | s == mkSym "V" = return V
-      | s == mkSym "I" = return I
-   fromTerm (Term.App (Term.Con s) a)
-      | s == mkSym "~" = liftM Not (fromTerm a)
-      | s == mkSym "-" = liftM Inv (fromTerm a)
-   fromTerm term = msum 
-      [ iBin "." (:.:) term, iBin "+" (:+:) term
-      , iBin "&&" (:&&:) term, iBin "||" (:||:) term
-      , liftM Var (fromTerm term)
-      ]
-      
-iBin s f term = do 
-   (a, b) <- Term.isBinary (toSymbol s) term
-   p <- fromTerm a
-   q <- fromTerm b
-   return (f p q)
-
-mkSym :: String -> Symbol
-mkSym = toSymbol
 
 instance Arbitrary RelAlg where
    arbitrary = sized arbRelAlg

@@ -11,6 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
+import Domain.Math.Expr.Symbolic
+import Text.OpenMath.Dictionary.Logic1
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
 import Common.Traversable
@@ -181,10 +183,30 @@ instance Eq a => ShallowEq (Logic a) where
          (F        , F        ) -> True
          _                      -> False
 
-instance MetaVar a => MetaVar (Logic a) where
-   isMetaVar (Var a) = isMetaVar a
-   isMetaVar _       = Nothing
-   metaVar           = Var . metaVar
+instance Different (Logic a) where
+   different = (T, F)
+
+instance IsTerm a => IsTerm (Logic a) where
+   toTerm = foldLogic
+      ( toTerm, binary impliesSymbol, binary equivalentSymbol
+      , binary andSymbol, binary orSymbol, unary notSymbol
+      , nullary trueSymbol, nullary falseSymbol
+      )
+
+   fromTerm a = 
+      fromTermWith f a `mplus` liftM Var (fromTerm a)
+    where
+      f s [] 
+         | s == trueSymbol       = return T
+         | s == falseSymbol      = return F
+      f s [x]
+         | s == notSymbol        = return (Not x)
+      f s [x, y]
+         | s == impliesSymbol    = return (x :->: y)
+         | s == equivalentSymbol = return (x :<->: y)
+         | s == andSymbol        = return (x :&&: y)
+         | s == orSymbol         = return (x :||: y)
+      f _ _ = Nothing
 
 logicOperators :: Operators (Logic a)
 logicOperators = [andOperator, orOperator]

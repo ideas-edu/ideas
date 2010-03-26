@@ -136,8 +136,11 @@ toOMOBJ (Nat n)    = OMI n
 toOMOBJ (Number a) = OMF a
 toOMOBJ expr =
    case getFunction expr of
-      Just (s, []) -> 
-         OMS (fromSymbol s)  
+      Just (s, []) 
+         | s == listSymbol -> 
+              OMA [OMS (fromSymbol s)]
+         | otherwise -> 
+              OMS (fromSymbol s)  
       Just (s, [Var x, e]) | s == lambdaSymbol -> 
          OMBIND (OMS (fromSymbol lambdaSymbol)) [x] (toOMOBJ e)
       Just (s, xs) -> 

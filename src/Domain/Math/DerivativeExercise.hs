@@ -41,7 +41,7 @@ derivativeExercise = makeExercise
    }
    
 noDiff :: Expr -> Bool
-noDiff e = null [ () | Sym s _ <- universe e, s == toSymbol diffSymbol ]   
+noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy =

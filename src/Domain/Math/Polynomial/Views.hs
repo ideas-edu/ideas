@@ -75,7 +75,7 @@ polyViewForWith pv v = makeView f g
             guard (pv `notElem` collectVars b)
             p <- f a
             return (fmap (/c) p)
-         Sym s [a, n] | s == toSymbol powerSymbol ->
+         Sym s [a, n] | s == powerSymbol ->
            liftM2 power (f a) (matchNat n)
          _ -> do 
             guard (pv `notElem` collectVars expr)

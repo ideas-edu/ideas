@@ -28,9 +28,9 @@ integralView :: Integral a => View Expr a
 integralView = makeView (exprToNum f) fromIntegral
  where
    f s [x, y] 
-      | s == toSymbol divideSymbol = 
+      | s == divideSymbol = 
            intDiv x y
-      | s == toSymbol powerSymbol = do
+      | s == powerSymbol = do
            guard (y >= 0)
            return (x Prelude.^ y)
    f _ _ = Nothing
@@ -39,9 +39,9 @@ realView :: RealFrac a => View Expr a
 realView = makeView (exprToNum f) (fromRational . toRational)
  where
    f s [x, y] 
-      | s == toSymbol divideSymbol = 
+      | s == divideSymbol = 
            fracDiv x y
-      | s == toSymbol powerSymbol = do
+      | s == powerSymbol = do
            let ry = toRational y
            guard (denominator ry == 1)
            let a = x Prelude.^ abs (numerator ry)
@@ -123,9 +123,9 @@ optionNegate f a          = f a
 
 doubleSym :: Symbol -> [Double] -> Maybe Double
 doubleSym s [x, y] 
-   | s == toSymbol divideSymbol = fracDiv x y
-   | s == toSymbol powerSymbol  = floatingPower x y   
-   | s == toSymbol rootSymbol && x >= 0 && y >= 1 = Just (x ** (1/y))
+   | s == divideSymbol = fracDiv x y
+   | s == powerSymbol  = floatingPower x y   
+   | s == rootSymbol && x >= 0 && y >= 1 = Just (x ** (1/y))
 doubleSym _ _ = Nothing
 
 -- General numeric interpretation function: constructors Sqrt and
@@ -146,8 +146,8 @@ exprToNumStep rec expr =
       a :-: b  -> liftM2 (-)    (rec a) (rec b)
       Negate a -> liftM  negate (rec a)
       Nat n    -> return (fromInteger n)
-      a :/: b  -> rec (Sym (toSymbol divideSymbol) [a, b])
-      Sqrt a   -> rec (Sym (toSymbol rootSymbol) [a, 2])
+      a :/: b  -> rec (Sym divideSymbol [a, b])
+      Sqrt a   -> rec (Sym rootSymbol [a, 2])
       _        -> fail "exprToNumStep"
 
 intDiv :: Integral a => a -> a -> Maybe a

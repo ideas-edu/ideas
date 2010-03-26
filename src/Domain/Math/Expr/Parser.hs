@@ -67,8 +67,8 @@ atom   =  fromInteger <$> pInteger
 symb :: TokenParser ([Expr] -> Expr)
 symb = qualifiedSymb
     -- To fix: sqrt expects exactly one argument
-    <|> (\xs -> function (toSymbol rootSymbol) (xs ++ [2])) <$ pKey "sqrt" 
-    <|> function (toSymbol rootSymbol) <$ pKey "root"
+    <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
+    <|> function rootSymbol <$ pKey "root"
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
 qualifiedSymb = (function . uncurry makeSymbol) <$> (pQVarid <|> pQConid)

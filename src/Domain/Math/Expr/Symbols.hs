@@ -8,41 +8,67 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Exports relevant OpenMath symbols, converted to the 
+-- Symbol data type from @Common.Rewriting@.
+--
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Symbols 
-   ( module Domain.Math.Expr.Symbols
-     -- arith1
-   , plusSymbol, timesSymbol, minusSymbol, divideSymbol
-   , rootSymbol, powerSymbol
-     -- logic1
-   , trueSymbol, falseSymbol, notSymbol
-   , orSymbol, andSymbol, equivalentSymbol, impliesSymbol
-     -- list1
-   , listSymbol
-     -- relation1
-   , eqSymbol, ltSymbol, gtSymbol, neqSymbol
-   , leqSymbol, geqSymbol, approxSymbol
-     -- calculus1
-   , diffSymbol
-     -- nusm1
-   , piSymbol
-     -- fns1
-   , lambdaSymbol
-     -- transc1
-   , sinSymbol, cosSymbol, lnSymbol
-   ) where
+module Domain.Math.Expr.Symbols where
 
-import Control.Arrow
 import Control.Monad
 import Domain.Math.Expr.Symbolic
-import Text.OpenMath.Dictionary.Arith1
-import Text.OpenMath.Dictionary.Logic1
-import Text.OpenMath.Dictionary.List1
-import Text.OpenMath.Dictionary.Relation1
-import Text.OpenMath.Dictionary.Calculus1 
-import Text.OpenMath.Dictionary.Nums1
-import Text.OpenMath.Dictionary.Fns1
-import Text.OpenMath.Dictionary.Transc1
+-- OpenMath dictionaries
+import qualified Text.OpenMath.Dictionary.Arith1    as Arith1
+import qualified Text.OpenMath.Dictionary.Calculus1 as Calculus1
+import qualified Text.OpenMath.Dictionary.Fns1      as Fns1
+import qualified Text.OpenMath.Dictionary.List1     as List1
+import qualified Text.OpenMath.Dictionary.Logic1    as Logic1
+import qualified Text.OpenMath.Dictionary.Nums1     as Nums1
+import qualified Text.OpenMath.Dictionary.Relation1 as Relation1
+import qualified Text.OpenMath.Dictionary.Transc1   as Transc1
+
+-------------------------------------------------------------
+-- Converted OpenMath symbols
+
+plusSymbol, timesSymbol, minusSymbol, divideSymbol,
+   rootSymbol, powerSymbol, negateSymbol :: Symbol
+plusSymbol       = toSymbol Arith1.plusSymbol
+timesSymbol      = toSymbol Arith1.timesSymbol
+minusSymbol      = toSymbol Arith1.minusSymbol 
+divideSymbol     = toSymbol Arith1.divideSymbol
+rootSymbol       = toSymbol Arith1.rootSymbol
+powerSymbol      = toSymbol Arith1.powerSymbol
+negateSymbol     = toSymbol Arith1.unaryMinusSymbol
+
+trueSymbol, falseSymbol, notSymbol, orSymbol, andSymbol, 
+   equivalentSymbol, impliesSymbol :: Symbol
+trueSymbol       = toSymbol Logic1.trueSymbol
+falseSymbol      = toSymbol Logic1.falseSymbol
+notSymbol        = toSymbol Logic1.notSymbol
+orSymbol         = toSymbol Logic1.orSymbol
+andSymbol        = toSymbol Logic1.andSymbol
+equivalentSymbol = toSymbol Logic1.equivalentSymbol
+impliesSymbol    = toSymbol Logic1.impliesSymbol
+
+eqSymbol, ltSymbol, gtSymbol, neqSymbol, leqSymbol, 
+   geqSymbol, approxSymbol :: Symbol
+eqSymbol         = toSymbol Relation1.eqSymbol
+ltSymbol         = toSymbol Relation1.ltSymbol
+gtSymbol         = toSymbol Relation1.gtSymbol
+neqSymbol        = toSymbol Relation1.neqSymbol
+leqSymbol        = toSymbol Relation1.leqSymbol
+geqSymbol        = toSymbol Relation1.geqSymbol
+approxSymbol     = toSymbol Relation1.approxSymbol
+
+sinSymbol, cosSymbol, lnSymbol :: Symbol
+sinSymbol        = toSymbol Transc1.sinSymbol
+cosSymbol        = toSymbol Transc1.cosSymbol
+lnSymbol         = toSymbol Transc1.lnSymbol
+
+diffSymbol, piSymbol, lambdaSymbol, listSymbol :: Symbol
+diffSymbol       = toSymbol Calculus1.diffSymbol
+piSymbol         = toSymbol Nums1.piSymbol
+lambdaSymbol     = toSymbol Fns1.lambdaSymbol
+listSymbol       = toSymbol List1.listSymbol
 
 -------------------------------------------------------------
 -- Operator fixities
@@ -54,7 +80,7 @@ data Associativity = InfixLeft | InfixRight | PrefixNon
    deriving (Show, Eq)
 
 operatorTable :: OperatorTable
-operatorTable = map (second (map (first toSymbol)))
+operatorTable =
    [ (InfixNon,   [ (eqSymbol, "=="), (ltSymbol, "<"), (gtSymbol, ">")
                   , (neqSymbol, "/="), (leqSymbol, "<="), (geqSymbol, ">=")
                   , (approxSymbol, "~=")])                    -- 1
@@ -66,9 +92,6 @@ operatorTable = map (second (map (first toSymbol)))
 
 -------------------------------------------------------------
 -- Extra math symbols
-
--- rename
-negateSymbol = unaryMinusSymbol
 
 absSymbol    = toSymbol "abs"   
 signumSymbol = toSymbol "signum" 

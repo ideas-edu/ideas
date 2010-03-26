@@ -69,7 +69,7 @@ instance Fractional Expr where
            fromIntegral (numerator r) :/: fromIntegral (denominator r)
 
 instance Floating Expr where
-   pi      = symbol (toSymbol piSymbol)
+   pi      = symbol piSymbol
    sqrt    = Sqrt
    (**)    = binary powerSymbol
    logBase = binary logSymbol
@@ -95,24 +95,24 @@ instance Symbolic Expr where
    getVariable _       = mzero
    
    function s [a, b] 
-      | s == toSymbol plusSymbol   = a :+: b
-      | s == toSymbol timesSymbol  = a :*: b
-      | s == toSymbol minusSymbol  = a :-: b
-      | s == toSymbol divideSymbol = a :/: b
-      | s == toSymbol rootSymbol && b == Nat 2 = Sqrt a
+      | s == plusSymbol   = a :+: b
+      | s == timesSymbol  = a :*: b
+      | s == minusSymbol  = a :-: b
+      | s == divideSymbol = a :/: b
+      | s == rootSymbol && b == Nat 2 = Sqrt a
    function s [a]
-      | s == toSymbol negateSymbol = Negate a
+      | s == negateSymbol = Negate a
    function s as = 
       Sym s as
    
    getFunction expr =
       case expr of
-         a :+: b  -> return (toSymbol plusSymbol,   [a, b])
-         a :*: b  -> return (toSymbol timesSymbol,  [a, b])
-         a :-: b  -> return (toSymbol minusSymbol,  [a, b])
-         Negate a -> return (toSymbol negateSymbol, [a])
-         a :/: b  -> return (toSymbol divideSymbol, [a, b])
-         Sqrt a   -> return (toSymbol rootSymbol,   [a, Nat 2])
+         a :+: b  -> return (plusSymbol,   [a, b])
+         a :*: b  -> return (timesSymbol,  [a, b])
+         a :-: b  -> return (minusSymbol,  [a, b])
+         Negate a -> return (negateSymbol, [a])
+         a :/: b  -> return (divideSymbol, [a, b])
+         Sqrt a   -> return (rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> mzero
 
@@ -190,9 +190,9 @@ showExpr table = rec 0
    rec i expr = 
       case getFunction expr of
          -- To do: remove special case for sqrt
-         Just (s, [a, b]) | s == toSymbol rootSymbol && b == Nat 2 -> 
+         Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
-         Just (s, xs) | s == toSymbol listSymbol -> 
+         Just (s, xs) | s == listSymbol -> 
             "[" ++ commaList (map (rec 0) xs) ++ "]"
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
@@ -210,7 +210,7 @@ showExpr table = rec 0
             error "showExpr"
 
    showSymbol s
-      | s == toSymbol rootSymbol = "root"
+      | s == rootSymbol = "root"
       | otherwise = show s
 
    symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]

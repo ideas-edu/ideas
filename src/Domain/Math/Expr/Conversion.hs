@@ -36,7 +36,7 @@ instance Rewrite a => Rewrite (Equation a)
 instance IsTerm a => IsTerm (Equation a) where
    toTerm (a :==: b) = binary eqSymbol (toTerm a) (toTerm b)
    fromTerm (Term.App (Term.App (Term.Con s) a) b)
-      | s == toSymbol eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
+      | s == eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
    fromTerm _ = Nothing
 
 -----------------------------------------------------------------------
@@ -56,8 +56,8 @@ instance IsExpr Expr where
    exprView = identity
    
 instance IsExpr a => IsExpr [a] where
-   toExpr = function (toSymbol listSymbol) . map toExpr
-   fromExpr expr = isSymbol (toSymbol listSymbol) expr >>= mapM fromExpr
+   toExpr = function listSymbol . map toExpr
+   fromExpr expr = isSymbol listSymbol expr >>= mapM fromExpr
 
 instance (IsExpr a, IsExpr b) => IsExpr (Either a b) where
    toExpr = either toExpr toExpr
@@ -84,7 +84,7 @@ instance IsExpr a => IsExpr (Relation a) where
       in msum (map f relationSymbols) 
 
 relationSymbols :: [(RelationType, Symbol)]
-relationSymbols = map (second toSymbol)
+relationSymbols =
    [ (EqualTo, eqSymbol), (NotEqualTo, neqSymbol), (LessThan, ltSymbol)
    , (GreaterThan, gtSymbol), (LessThanOrEqualTo, leqSymbol)
    , (GreaterThanOrEqualTo, geqSymbol), (Approximately, approxSymbol)
@@ -97,8 +97,8 @@ instance IsExpr a => IsExpr (OrList a) where
 instance IsExpr a => IsExpr (Logic a) where
    toExpr logic = 
       case logic of
-         Logic.T     -> symbol (toSymbol trueSymbol)
-         Logic.F     -> symbol (toSymbol falseSymbol)
+         Logic.T     -> symbol trueSymbol
+         Logic.F     -> symbol falseSymbol
          Logic.Var p -> toExpr p
          Logic.Not p -> unary  notSymbol        (toExpr p)
          p :||:  q   -> binary orSymbol         (toExpr p) (toExpr q)
@@ -138,8 +138,8 @@ toOMOBJ expr =
    case getFunction expr of
       Just (s, []) -> 
          OMS (fromSymbol s)  
-      Just (s, [Var x, e]) | s == toSymbol lambdaSymbol -> 
-         OMBIND (OMS lambdaSymbol) [x] (toOMOBJ e)
+      Just (s, [Var x, e]) | s == lambdaSymbol -> 
+         OMBIND (OMS (fromSymbol lambdaSymbol)) [x] (toOMOBJ e)
       Just (s, xs) -> 
          OMA (OMS (fromSymbol s):map toOMOBJ xs)
       Nothing -> 

@@ -32,19 +32,17 @@ module Domain.Math.Expr.Symbols
    , sinSymbol, cosSymbol, lnSymbol
    ) where
 
+import Control.Arrow
 import Control.Monad
 import Domain.Math.Expr.Symbolic
-import Text.OpenMath.Symbol
 import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Logic1
 import Text.OpenMath.Dictionary.List1
 import Text.OpenMath.Dictionary.Relation1
-import Text.OpenMath.Dictionary.Calculus1
+import Text.OpenMath.Dictionary.Calculus1 
 import Text.OpenMath.Dictionary.Nums1
 import Text.OpenMath.Dictionary.Fns1
 import Text.OpenMath.Dictionary.Transc1
-
--- Check (rationalSymbol  , oms "nums1" "rational")
 
 -------------------------------------------------------------
 -- Operator fixities
@@ -56,7 +54,7 @@ data Associativity = InfixLeft | InfixRight | PrefixNon
    deriving (Show, Eq)
 
 operatorTable :: OperatorTable
-operatorTable =
+operatorTable = map (second (map (first toSymbol)))
    [ (InfixNon,   [ (eqSymbol, "=="), (ltSymbol, "<"), (gtSymbol, ">")
                   , (neqSymbol, "/="), (leqSymbol, "<="), (geqSymbol, ">=")
                   , (approxSymbol, "~=")])                    -- 1
@@ -72,22 +70,22 @@ operatorTable =
 -- rename
 negateSymbol = unaryMinusSymbol
 
-absSymbol    = extraSymbol "abs"   
-signumSymbol = extraSymbol "signum" 
-logSymbol    = extraSymbol "log"            -- in Haskell, logbase e = log
-expSymbol    = extraSymbol "exp"            -- exp 1 ~= 2.718
-tanSymbol    = extraSymbol "tan"       
-asinSymbol   = extraSymbol "asin"   
-atanSymbol   = extraSymbol "atan"   
-acosSymbol   = extraSymbol "acos"   
-sinhSymbol   = extraSymbol "sinh"   
-tanhSymbol   = extraSymbol "tanh"   
-coshSymbol   = extraSymbol "cosh"   
-asinhSymbol  = extraSymbol "asinh"  
-atanhSymbol  = extraSymbol "atanh" 
-acoshSymbol  = extraSymbol "acosh"  
-bottomSymbol = extraSymbol "error"
-fcompSymbol  = extraSymbol "compose"
+absSymbol    = toSymbol "abs"   
+signumSymbol = toSymbol "signum" 
+logSymbol    = toSymbol "log"            -- in Haskell, logbase e = log
+expSymbol    = toSymbol "exp"            -- exp 1 ~= 2.718
+tanSymbol    = toSymbol "tan"       
+asinSymbol   = toSymbol "asin"   
+atanSymbol   = toSymbol "atan"   
+acosSymbol   = toSymbol "acos"   
+sinhSymbol   = toSymbol "sinh"   
+tanhSymbol   = toSymbol "tanh"   
+coshSymbol   = toSymbol "cosh"   
+asinhSymbol  = toSymbol "asinh"  
+atanhSymbol  = toSymbol "atanh" 
+acoshSymbol  = toSymbol "acosh"  
+bottomSymbol = toSymbol "error"
+fcompSymbol  = toSymbol "compose"
 
 -------------------------------------------------------------
 -- Some match functions

@@ -29,7 +29,6 @@ import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
 import Test.QuickCheck (arbitrary)
-import Text.OpenMath.Symbol
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
@@ -68,8 +67,8 @@ atom   =  fromInteger <$> pInteger
 symb :: TokenParser ([Expr] -> Expr)
 symb = qualifiedSymb
     -- To fix: sqrt expects exactly one argument
-    <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
-    <|> function rootSymbol <$ pKey "root"
+    <|> (\xs -> function (toSymbol rootSymbol) (xs ++ [2])) <$ pKey "sqrt" 
+    <|> function (toSymbol rootSymbol) <$ pKey "root"
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
 qualifiedSymb = (function . uncurry makeSymbol) <$> (pQVarid <|> pQConid)

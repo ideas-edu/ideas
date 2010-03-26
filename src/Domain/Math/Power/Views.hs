@@ -89,7 +89,7 @@ simplePowerView = makeView f g
   where
     f expr = 
       case expr of
-        Sym s [a, b] | s == powerSymbol -> return (a, b)
+        Sym s [a, b] | s == toSymbol powerSymbol -> return (a, b)
         _ -> Nothing
     g (a, b) = a .^. b   
 
@@ -108,7 +108,7 @@ rootView = makeView f g
   where 
     f expr = case expr of
         Sqrt e -> return (e, 2)
-        Sym s [a, Nat b] | s == rootSymbol -> return (a, toRational b)
+        Sym s [a, Nat b] | s == toSymbol rootSymbol -> return (a, toRational b)
         _ -> Nothing
     g (a, b) = if b==2 then Sqrt a else root a (fromRational b)
 
@@ -167,7 +167,7 @@ powerViewForWith v pv = makeView f g
       case expr of
          Var s | pv == s -> match v 1
          e1 :*: e2 -> liftM2 (+) (f e1) (f e2) 
-         Sym s [e, n] | s == powerSymbol -> do
+         Sym s [e, n] | s == toSymbol powerSymbol -> do
            n'<- match v n
            liftM (* n') (f e)
          _ -> Nothing
@@ -179,7 +179,7 @@ powerViewForWith' v pv = makeView f g
    f expr = 
       case expr of
         Var s | pv == s -> match v 1
-        Sym s [Var s', n] | s' == pv && s == powerSymbol -> do
+        Sym s [Var s', n] | s' == pv && s == toSymbol powerSymbol -> do
           match v n
         _ -> Nothing
    
@@ -211,7 +211,7 @@ powerFactorViewForWith pv v = makeView f g
             (a2, b2) <- f e2
             return (a1*a2, b1+b2)
          Sym s [e1, Nat n]
-            | s == powerSymbol -> do 
+            | s == toSymbol powerSymbol -> do 
                  (a1, b1) <- f e1
                  a <- match v (build v a1 ^ Nat n)
                  return (a, b1 * fromInteger n)

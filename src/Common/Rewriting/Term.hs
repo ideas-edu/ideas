@@ -18,34 +18,12 @@ import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Control.Monad
 import Common.Rewriting.MetaVar
-import qualified Text.OpenMath.Symbol as OM
-
-data Symbol = S (Maybe String) String
-   deriving (Eq, Ord)
-
-instance Show Symbol where
-   show (S ma b) = maybe b (\a -> a++ "." ++ b) ma
-
-class IsSymbol a where
-   toSymbol :: a -> Symbol
-
-instance IsSymbol Symbol where
-   toSymbol = id
-
-instance IsSymbol String where
-   toSymbol = S Nothing
-
-instance IsSymbol OM.Symbol where
-   toSymbol s = S (OM.dictionary s) (OM.symbolName s) 
-   
-makeSymbol :: String -> String -> Symbol
-makeSymbol = S . Just
-
-fromSymbol :: Symbol -> OM.Symbol
-fromSymbol (S ma b) = maybe (OM.extraSymbol b) (\a -> OM.makeSymbol a b) ma
 
 -----------------------------------------------------------
 -- * Data type for terms
+
+data Symbol = S (Maybe String) String
+   deriving (Eq, Ord)
 
 data Term = Var  String 
           | Con  Symbol 
@@ -53,6 +31,9 @@ data Term = Var  String
           | Num  Integer 
           | Meta Int
  deriving (Show, Eq, Ord)
+
+instance Show Symbol where
+   show (S ma b) = maybe b (\a -> a++ "." ++ b) ma
 
 instance MetaVar Term where 
    metaVar = Meta
@@ -67,7 +48,7 @@ instance Uniplate Term where
 -- * Type class for conversion to/from terms
 
 class IsTerm a where
-   toTerm :: a -> Term
+   toTerm   :: a -> Term
    fromTerm :: Term -> Maybe a
 
 instance IsTerm String where
@@ -96,37 +77,37 @@ getSpine = rec []
    rec xs (App f a) = rec (a:xs) f
    rec xs a         = (a, xs)
 
-getConSpine :: Term -> Maybe (Symbol, [Term])
-getConSpine a = fmap (\s -> (s, xs)) (isCon b)
+getConSpine :: Monad m => Term -> m (Symbol, [Term])
+getConSpine a = liftM (\s -> (s, xs)) (isCon b)
  where (b, xs) = getSpine a
-
 
 makeTerm :: Term -> [Term] -> Term
 makeTerm = foldl App
 
-makeConTerm :: IsSymbol s => s -> [Term] -> Term
-makeConTerm = makeTerm . con
+makeConTerm :: Symbol -> [Term] -> Term
+makeConTerm = makeTerm . Con
 
-unary :: IsSymbol s => s -> Term -> Term
-unary = App . con
+unary :: Symbol -> Term -> Term
+unary = App . Con
 
-binary :: IsSymbol s => s -> Term -> Term -> Term
-binary s = App . App (con s)
+binary :: Symbol -> Term -> Term -> Term
+binary s = App . App (Con s)
 
-isUnary :: IsSymbol s => s -> Term -> Maybe Term
+isUnary :: Symbol -> Term -> Maybe Term
 isUnary s term =
    case getSpine term of
-      (t, [a]) | isCon t == Just (toSymbol s) -> Just a
+      (t, [a]) | isCon t == Just s -> Just a
       _ -> Nothing
 
-isBinary :: IsSymbol s => s -> Term -> Maybe (Term, Term)
+isBinary :: Symbol -> Term -> Maybe (Term, Term)
 isBinary s term =
    case getSpine term of
-      (t, [a, b]) | isCon t == Just (toSymbol s) -> Just (a, b)
+      (t, [a, b]) | isCon t == Just s -> Just (a, b)
       _ -> Nothing
-      
-con :: IsSymbol s => s  -> Term
-con = Con . toSymbol
+
+isVar :: Monad m => Term -> m String
+isVar (Var s) = return s
+isVar _       = fail "isVar"
 
 isCon :: Monad m => Term -> m Symbol
 isCon (Con s) = return s

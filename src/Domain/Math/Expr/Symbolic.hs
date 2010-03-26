@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2009, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -10,12 +11,39 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Symbolic 
-   ( Symbol(..)
-   , module Domain.Math.Expr.Symbolic
+   ( module Domain.Math.Expr.Symbolic, Symbol
    ) where
 
 import Control.Monad
-import Text.OpenMath.Symbol
+import Common.Rewriting.Term
+import qualified Text.OpenMath.Symbol as OM
+
+makeSymbol :: String -> String -> Symbol
+makeSymbol = S . Just
+
+class IsSymbol a where
+   toSymbol   :: a -> Symbol
+   fromSymbol :: Symbol -> a
+
+instance IsSymbol Symbol where
+   toSymbol   = id
+   fromSymbol = id
+
+instance IsSymbol String where
+   toSymbol = S Nothing
+   fromSymbol (S (Just a) b) = a ++ "." ++ b
+   fromSymbol (S Nothing  b) = b
+
+instance IsSymbol OM.Symbol where
+   toSymbol s = S (OM.dictionary s) (OM.symbolName s) 
+   fromSymbol (S (Just a) b) = OM.makeSymbol a b
+   fromSymbol (S Nothing  b) = OM.extraSymbol b
+
+stringToSymbol :: String -> Symbol
+stringToSymbol s = 
+   case break (=='.') s of
+      (xs, _:ys) -> S (Just xs) ys
+      _          -> S Nothing s
 
 -------------------------------------------------------------------
 -- Type class for symbolic representations
@@ -41,31 +69,42 @@ class Symbolic a where
       guard (s==t)
       return as
    
-unary :: Symbolic a => Symbol -> a -> a
-unary f a = function f [a]
+instance Symbolic Term where 
+   variable    = Var
+   symbol      = Con
+   function    = makeConTerm
+   getVariable = isVar
+   getSymbol   = isCon
+   getFunction = getConSpine
+   
+nullary :: (IsSymbol s, Symbolic a) => s -> a
+nullary = symbol . toSymbol
+   
+unary :: (IsSymbol s, Symbolic a) => s -> a -> a
+unary f a = function (toSymbol f) [a]
 
-binary :: Symbolic a => Symbol -> a -> a -> a
-binary f a b = function f [a, b]
+binary :: (IsSymbol s, Symbolic a) => s -> a -> a -> a
+binary f a b = function (toSymbol f) [a, b]
 
-isConst :: Symbolic a => Symbol -> a -> Bool
-isConst s = maybe False null . isSymbol s 
+isConst :: (IsSymbol s, Symbolic a) => s -> a -> Bool
+isConst s = maybe False null . isSymbol (toSymbol s) 
 
-isUnary :: (Symbolic a, MonadPlus m) => Symbol -> a -> m a
+isUnary :: (IsSymbol s, Symbolic a, MonadPlus m) => s -> a -> m a
 isUnary s a = 
-   case isSymbol s a of
+   case isSymbol (toSymbol s) a of
       Just [x] -> return x
       _ -> mzero
 
-isBinary :: (Symbolic a, MonadPlus m) => Symbol -> a -> m (a, a)
+isBinary :: (IsSymbol s, Symbolic a, MonadPlus m) => s -> a -> m (a, a)
 isBinary s a = 
-   case isSymbol s a of
+   case isSymbol (toSymbol s) a of
       Just [x, y] -> return (x, y)
       _ -> mzero
 
 -- left-associative by default
-isAssoBinary :: (Symbolic a, MonadPlus m) => Symbol -> a -> m (a, a)
+isAssoBinary :: (IsSymbol s, Symbolic a, MonadPlus m) => s -> a -> m (a, a)
 isAssoBinary s a =
-   case isSymbol s a of
+   case isSymbol (toSymbol s) a of
       Just [x, y] -> return (x, y)
-      Just (x:xs) | length xs > 1 -> return (x, function s xs)
+      Just (x:xs) | length xs > 1 -> return (x, function (toSymbol s) xs)
       _ -> mzero

@@ -21,9 +21,9 @@ import Domain.Math.Data.OrList
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic((:||:), (:&&:), (:<->:), (:->:)))
 import Text.OpenMath.Object
-import Text.OpenMath.Symbol (extraSymbol)
 import Common.View
 import Control.Monad
+import Common.Rewriting.Term (Symbol)
 import Common.Utils (ShowString(..))
 import Common.Traversable (switch)
 import Data.Maybe
@@ -34,9 +34,9 @@ import qualified Common.Rewriting.Term as Term
 instance Rewrite a => Rewrite (Equation a)
 
 instance IsTerm a => IsTerm (Equation a) where
-   toTerm (a :==: b) = Term.binary eqSymbol (toTerm a) (toTerm b)
+   toTerm (a :==: b) = binary eqSymbol (toTerm a) (toTerm b)
    fromTerm (Term.App (Term.App (Term.Con s) a) b)
-      | s == Term.toSymbol eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
+      | s == toSymbol eqSymbol = liftM2 (:==:) (fromTerm a) (fromTerm b)
    fromTerm _ = Nothing
 
 -----------------------------------------------------------------------
@@ -56,8 +56,8 @@ instance IsExpr Expr where
    exprView = identity
    
 instance IsExpr a => IsExpr [a] where
-   toExpr = function listSymbol . map toExpr
-   fromExpr expr = isSymbol listSymbol expr >>= mapM fromExpr
+   toExpr = function (toSymbol listSymbol) . map toExpr
+   fromExpr expr = isSymbol (toSymbol listSymbol) expr >>= mapM fromExpr
 
 instance (IsExpr a, IsExpr b) => IsExpr (Either a b) where
    toExpr = either toExpr toExpr
@@ -75,7 +75,7 @@ instance IsExpr a => IsExpr (Equation a) where
 instance IsExpr a => IsExpr (Relation a) where
    toExpr p = 
       let op  = relationType p
-          sym = fromMaybe (extraSymbol (show op)) (lookup op relationSymbols)
+          sym = fromMaybe (toSymbol (show op)) (lookup op relationSymbols)
       in binary sym (toExpr (leftHandSide p)) (toExpr (rightHandSide p))
    fromExpr expr = 
       let f (relType, s) = do
@@ -84,7 +84,7 @@ instance IsExpr a => IsExpr (Relation a) where
       in msum (map f relationSymbols) 
 
 relationSymbols :: [(RelationType, Symbol)]
-relationSymbols = 
+relationSymbols = map (second toSymbol)
    [ (EqualTo, eqSymbol), (NotEqualTo, neqSymbol), (LessThan, ltSymbol)
    , (GreaterThan, gtSymbol), (LessThanOrEqualTo, leqSymbol)
    , (GreaterThanOrEqualTo, geqSymbol), (Approximately, approxSymbol)
@@ -97,8 +97,8 @@ instance IsExpr a => IsExpr (OrList a) where
 instance IsExpr a => IsExpr (Logic a) where
    toExpr logic = 
       case logic of
-         Logic.T     -> symbol trueSymbol
-         Logic.F     -> symbol falseSymbol
+         Logic.T     -> symbol (toSymbol trueSymbol)
+         Logic.F     -> symbol (toSymbol falseSymbol)
          Logic.Var p -> toExpr p
          Logic.Not p -> unary  notSymbol        (toExpr p)
          p :||:  q   -> binary orSymbol         (toExpr p) (toExpr q)
@@ -137,11 +137,11 @@ toOMOBJ (Number a) = OMF a
 toOMOBJ expr =
    case getFunction expr of
       Just (s, []) -> 
-         OMS s  
-      Just (s, [Var x, e]) | s == lambdaSymbol -> 
+         OMS (fromSymbol s)  
+      Just (s, [Var x, e]) | s == toSymbol lambdaSymbol -> 
          OMBIND (OMS lambdaSymbol) [x] (toOMOBJ e)
       Just (s, xs) -> 
-         OMA (OMS s:map toOMOBJ xs)
+         OMA (OMS (fromSymbol s):map toOMOBJ xs)
       Nothing -> 
          error $ "toOMOBJ: " ++ show expr
 
@@ -151,8 +151,8 @@ fromOMOBJ omobj =
       OMI n -> fromInteger n
       OMF a -> fromDouble a
       OMV x -> Var x
-      OMS s -> symbol s
-      OMA (OMS s:xs) -> function s (map fromOMOBJ xs)
+      OMS s -> symbol (toSymbol s)
+      OMA (OMS s:xs) -> function (toSymbol s) (map fromOMOBJ xs)
       OMBIND (OMS s) [x] body ->
          binary s (Var x) (fromOMOBJ body)
-      _ -> symbol $ Symbol Nothing $ show omobj
+      _ -> symbol $ toSymbol $ show omobj

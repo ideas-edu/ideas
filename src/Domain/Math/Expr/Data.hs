@@ -23,7 +23,6 @@ import Common.Rewriting hiding (operators)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 
-import Text.OpenMath.Symbol
 import qualified Common.Rewriting.Term as Term
 
 -----------------------------------------------------------------------
@@ -70,7 +69,7 @@ instance Fractional Expr where
            fromIntegral (numerator r) :/: fromIntegral (denominator r)
 
 instance Floating Expr where
-   pi      = symbol piSymbol
+   pi      = symbol (toSymbol piSymbol)
    sqrt    = Sqrt
    (**)    = binary powerSymbol
    logBase = binary logSymbol
@@ -96,24 +95,24 @@ instance Symbolic Expr where
    getVariable _       = mzero
    
    function s [a, b] 
-      | s == plusSymbol   = a :+: b
-      | s == timesSymbol  = a :*: b
-      | s == minusSymbol  = a :-: b
-      | s == divideSymbol = a :/: b
-      | s == rootSymbol && b == Nat 2 = Sqrt a
+      | s == toSymbol plusSymbol   = a :+: b
+      | s == toSymbol timesSymbol  = a :*: b
+      | s == toSymbol minusSymbol  = a :-: b
+      | s == toSymbol divideSymbol = a :/: b
+      | s == toSymbol rootSymbol && b == Nat 2 = Sqrt a
    function s [a]
-      | s == negateSymbol = Negate a
+      | s == toSymbol negateSymbol = Negate a
    function s as = 
       Sym s as
    
    getFunction expr =
       case expr of
-         a :+: b  -> return (plusSymbol,   [a, b])
-         a :*: b  -> return (timesSymbol,  [a, b])
-         a :-: b  -> return (minusSymbol,  [a, b])
-         Negate a -> return (negateSymbol, [a])
-         a :/: b  -> return (divideSymbol, [a, b])
-         Sqrt a   -> return (rootSymbol,   [a, Nat 2])
+         a :+: b  -> return (toSymbol plusSymbol,   [a, b])
+         a :*: b  -> return (toSymbol timesSymbol,  [a, b])
+         a :-: b  -> return (toSymbol minusSymbol,  [a, b])
+         Negate a -> return (toSymbol negateSymbol, [a])
+         a :/: b  -> return (toSymbol divideSymbol, [a, b])
+         Sqrt a   -> return (toSymbol rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> mzero
 
@@ -191,9 +190,9 @@ showExpr table = rec 0
    rec i expr = 
       case getFunction expr of
          -- To do: remove special case for sqrt
-         Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
+         Just (s, [a, b]) | s == toSymbol rootSymbol && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
-         Just (s, xs) | s == listSymbol -> 
+         Just (s, xs) | s == toSymbol listSymbol -> 
             "[" ++ commaList (map (rec 0) xs) ++ "]"
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
@@ -211,7 +210,7 @@ showExpr table = rec 0
             error "showExpr"
 
    showSymbol s
-      | s == rootSymbol = symbolName s
+      | s == toSymbol rootSymbol = "root"
       | otherwise = show s
 
    symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
@@ -257,11 +256,11 @@ instance IsTerm Expr where
             return (Number (encodeFloat x (fromIntegral y)))
          (Term.Con s, xs) -> do
             ys <- mapM fromTerm xs
-            return (function (Term.fromSymbol s) ys)
+            return (function s ys)
          _ -> Nothing
 
 floatSym :: Term.Symbol
-floatSym = Term.makeSymbol "special" "float" 
+floatSym = makeSymbol "special" "float" 
 
 -----------------------------------------------------------------------
 -- AC Theory for expression

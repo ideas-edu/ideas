@@ -205,9 +205,9 @@ cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
 distributionSquare :: Rule Expr
 distributionSquare = makeSimpleRule "distribution square" f
  where
-   f (Sym s [a :+: b, Nat 2]) | s == powerSymbol =
+   f (Sym s [a :+: b, Nat 2]) | s == toSymbol powerSymbol =
       return ((a .^. 2) .+. (2 .*. a .*. b) + (b .^. 2))
-   f (Sym s [a :-: b, Nat 2]) | s == powerSymbol =
+   f (Sym s [a :-: b, Nat 2]) | s == toSymbol powerSymbol =
       return ((a .^. 2) .-. (2 .*. a .*. b) + (b .^. 2))
    f _ = Nothing
 
@@ -215,7 +215,7 @@ distributionSquare = makeSimpleRule "distribution square" f
 squareBothSides :: Rule (OrList (Equation Expr))
 squareBothSides = makeSimpleRule "square both sides" $ onceJoinM f 
  where
-   f (Sym s1 [a, Nat 2] :==: Sym s2 [b, Nat 2]) | all (==powerSymbol) [s1, s2] = 
+   f (Sym s1 [a, Nat 2] :==: Sym s2 [b, Nat 2]) | all (==toSymbol powerSymbol) [s1, s2] = 
       return $ orList [a :==: b, a :==: -b]
    f _ = Nothing
 

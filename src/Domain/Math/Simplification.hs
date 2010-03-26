@@ -125,7 +125,7 @@ smartConstructors = transform $ \expr ->
       Negate a -> neg a
       a :*: b  -> a .*. b
       a :/: b  -> a ./. b
-      Sym s [a, b] | s == powerSymbol -> 
+      Sym s [a, b] | s == toSymbol powerSymbol -> 
          a .^. b
       _        -> expr
 

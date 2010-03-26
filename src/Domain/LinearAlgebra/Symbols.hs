@@ -27,19 +27,19 @@ import Text.OpenMath.Dictionary.Linalg2
 
 instance IsExpr a => IsExpr (Matrix a) where
    toExpr = 
-      let f = function matrixrowSymbol . map toExpr
-      in function matrixSymbol . map f . rows
+      let f = function (toSymbol matrixrowSymbol) . map toExpr
+      in function (toSymbol matrixSymbol) . map f . rows
    fromExpr a = do
-      rs  <- isSymbol matrixSymbol a
-      xss <- mapM (isSymbol matrixrowSymbol) rs
+      rs  <- isSymbol (toSymbol matrixSymbol) a
+      xss <- mapM (isSymbol (toSymbol matrixrowSymbol)) rs
       yss <- mapM (mapM fromExpr) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
       
 instance IsExpr a => IsExpr (Vector a) where
-   toExpr = function vectorSymbol . map toExpr . toList
+   toExpr = function (toSymbol vectorSymbol) . map toExpr . toList
    fromExpr expr = do
-      xs <- isSymbol vectorSymbol expr
+      xs <- isSymbol (toSymbol vectorSymbol) expr
       ys <- mapM fromExpr xs
       return (fromList ys)
       

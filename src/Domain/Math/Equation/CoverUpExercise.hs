@@ -59,7 +59,7 @@ cleanUpExpr = transform (simplify (makeView f fromRational))
  where
    f (Negate a) = liftM negate (f a)
    f (Sqrt a)   = match rationalView a >>= rootedRational 2
-   f (Sym s [Nat n, a]) | s == rootSymbol =
+   f (Sym s [Nat n, a]) | s == toSymbol rootSymbol =
       match rationalView a >>= rootedRational n
    f e = match rationalView e
 

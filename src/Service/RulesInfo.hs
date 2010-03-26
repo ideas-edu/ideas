@@ -20,6 +20,7 @@ import Common.Rewriting.Term
 import Common.Strategy (derivationTree)
 import Common.Transformation
 import Data.Char
+import Domain.Math.Expr.Symbolic
 import Control.Monad
 import Text.OpenMath.Object
 import Text.OpenMath.FMP

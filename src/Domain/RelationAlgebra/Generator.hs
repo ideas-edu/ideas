@@ -15,6 +15,7 @@ import Domain.RelationAlgebra.Formula
 import Common.Rewriting
 import Control.Monad
 import Test.QuickCheck 
+import Domain.Math.Expr.Symbolic
 import qualified Common.Rewriting.Term as Term
 
 instance Rewrite RelAlg
@@ -24,9 +25,9 @@ instance Different RelAlg where
    
 instance IsTerm RelAlg where
    toTerm = foldRelAlg 
-      ( Term.Var, Term.binary ".", Term.binary "+", Term.binary "&&"
-      , Term.binary "||", Term.unary "~", Term.unary "-"
-      , Term.con "V", Term.con "I"
+      ( Term.Var, binary ".", binary "+", binary "&&"
+      , binary "||", unary "~", unary "-"
+      , nullary "V", nullary "I"
       )
 
    fromTerm (Term.Con s) 
@@ -42,13 +43,13 @@ instance IsTerm RelAlg where
       ]
       
 iBin s f term = do 
-   (a, b) <- Term.isBinary s term
+   (a, b) <- Term.isBinary (toSymbol s) term
    p <- fromTerm a
    q <- fromTerm b
    return (f p q)
 
-mkSym :: String -> Term.Symbol
-mkSym = Term.toSymbol
+mkSym :: String -> Symbol
+mkSym = toSymbol
 
 instance Arbitrary RelAlg where
    arbitrary = sized arbRelAlg

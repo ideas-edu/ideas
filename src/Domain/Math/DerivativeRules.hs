@@ -81,17 +81,17 @@ ruleDerivCon :: Rule Expr
 ruleDerivCon = makeSimpleRule "Constant Term" f
  where 
    f (Sym d [Sym l [Var v, e]]) 
-      | d == diffSymbol && l == lambdaSymbol && v `notElem` collectVars e = return 0
+      | d == toSymbol diffSymbol && l == toSymbol lambdaSymbol && v `notElem` collectVars e = return 0
    f _ = Nothing
  
 ruleDerivMultiple :: Rule Expr
 ruleDerivMultiple = makeSimpleRule "Constant Multiple" f
  where 
     f (Sym d [Sym l [x@(Var v), n :*: e]]) 
-       | d == diffSymbol && l == lambdaSymbol && v `notElem` collectVars n = 
+       | d == toSymbol diffSymbol && l == toSymbol lambdaSymbol && v `notElem` collectVars n = 
        return $ n * diff (lambda x e)
     f (Sym d [Sym l [x@(Var v), e :*: n]]) 
-       | d == diffSymbol && l == lambdaSymbol && v `notElem` collectVars n = 
+       | d == toSymbol diffSymbol && l == toSymbol lambdaSymbol && v `notElem` collectVars n = 
        return $ n * diff (lambda x e)
     f _ = Nothing 
 
@@ -99,7 +99,7 @@ ruleDerivPower :: Rule Expr
 ruleDerivPower = makeSimpleRule "Power" f
  where 
    f (Sym d [Sym l [x@(Var v), Sym p [x1, n]]]) 
-      | d == diffSymbol && l == lambdaSymbol && p == powerSymbol && x==x1 && v `notElem` collectVars n =
+      | d == toSymbol diffSymbol && l == toSymbol lambdaSymbol && p == toSymbol powerSymbol && x==x1 && v `notElem` collectVars n =
       return $ n * (x ^ (n-1)) 
    f _ = Nothing
 
@@ -107,6 +107,6 @@ ruleDerivChainPowerExprs :: Rule Expr
 ruleDerivChainPowerExprs = makeSimpleRule "Chain Rule for Power Exprs" f 
  where 
    f (Sym d [Sym l [x@(Var v), Sym p [g, n]]]) 
-      | d == diffSymbol && l == lambdaSymbol && p == powerSymbol && v `notElem` collectVars n =
+      | d == toSymbol diffSymbol && l == toSymbol lambdaSymbol && p == toSymbol powerSymbol && v `notElem` collectVars n =
       return $ n * (g ^ (n-1)) * diff (lambda x g)
    f _ = Nothing

@@ -18,6 +18,7 @@ module Domain.LinearAlgebra.Strategies
 
 import Prelude hiding (repeat)
 import Domain.Math.Expr
+import Common.Rewriting
 import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
@@ -125,7 +126,7 @@ conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    a  <- fromContext $ applyD simplifyFirst $ newContext emptyEnv (noNavigator linsys) -- !!
    return $ toExpr a
 
-liftExpr :: IsExpr a => Rule (Context a) -> Rule (Context Expr)
+liftExpr :: IsTerm a => Rule (Context a) -> Rule (Context Expr)
 liftExpr r = makeSimpleRuleList (name r) $ \a -> do
    b <- castT exprView a 
    c <- applyAll r b

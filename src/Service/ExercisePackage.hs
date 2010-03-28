@@ -23,7 +23,8 @@ module Service.ExercisePackage
 import Common.Utils (Some(..))
 import Common.Exercise
 import Control.Monad
-import Domain.Math.Expr (IsExpr(..), toOMOBJ, fromOMOBJ)
+import Common.Rewriting
+import Domain.Math.Expr (toExpr, fromExpr, toOMOBJ, fromOMOBJ)
 import Service.FeedbackText (ExerciseText)
 import Text.OpenMath.Object
 
@@ -47,7 +48,7 @@ package ex = P
    , getExerciseText = Nothing
    }
 
-exprPackage :: IsExpr a => Exercise a -> ExercisePackage a
+exprPackage :: IsTerm a => Exercise a -> ExercisePackage a
 exprPackage ex = (package ex)
    { withOpenMath = True
    , toOpenMath   = toOMOBJ . toExpr
@@ -57,7 +58,7 @@ exprPackage ex = (package ex)
 somePackage :: Exercise a -> Some ExercisePackage
 somePackage = Some . package
 
-someExprPackage :: IsExpr a => Exercise a -> Some ExercisePackage
+someExprPackage :: IsTerm a => Exercise a -> Some ExercisePackage
 someExprPackage = Some . exprPackage
 
 -----------------------------------------------------------------------------

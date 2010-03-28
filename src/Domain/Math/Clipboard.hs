@@ -22,6 +22,7 @@ module Domain.Math.Clipboard
 
 import Common.Context
 import Control.Monad
+import Common.Rewriting
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
@@ -33,14 +34,14 @@ import qualified Data.Map as M
 
 newtype ExprVar a = ExprVar (Var OMOBJ)
 
-exprVar :: (Show a, IsExpr a) => String -> a -> ExprVar a
+exprVar :: (Show a, IsTerm a) => String -> a -> ExprVar a
 exprVar s a = 
    let omobj = toOMOBJ (toExpr a)
        showF = show . fromOMOBJ
        readF = either (fail . show) (return . toOMOBJ) . parseExpr
    in ExprVar (makeVar showF readF s omobj)
 
-readExprVar :: IsExpr a => ExprVar a -> ContextMonad a
+readExprVar :: IsTerm a => ExprVar a -> ContextMonad a
 readExprVar (ExprVar var) = do  
    omobj <- readVar var
    maybeCM (fromExpr (fromOMOBJ omobj))
@@ -48,7 +49,7 @@ readExprVar (ExprVar var) = do
 --writeExprVar :: IsExpr a => ExprVar a -> a -> ContextMonad ()
 --writeExprVar v = modifyExprVar v . const
 
-modifyExprVar :: IsExpr a => ExprVar a -> (a -> a) -> ContextMonad ()
+modifyExprVar :: IsTerm a => ExprVar a -> (a -> a) -> ContextMonad ()
 modifyExprVar (ExprVar var) f = 
    let safe f a = fromMaybe a (f a)
        g = fmap (toOMOBJ . toExpr . f) . fromExpr . fromOMOBJ
@@ -59,17 +60,17 @@ modifyExprVar (ExprVar var) f =
 
 newtype Key = Key String deriving (Show, Eq, Ord)
 
-instance (IsExpr k, Ord k, IsExpr a) => IsExpr (M.Map k a) where
-   toExpr = toExpr . map (\(k, a) -> toExpr k :==: toExpr a) . M.toList
-   fromExpr expr = do
-      eqs <- fromExpr expr
+instance (IsTerm k, Ord k, IsTerm a) => IsTerm (M.Map k a) where
+   toTerm = toTerm . map (\(k, a) -> toTerm k :==: toTerm a) . M.toList
+   fromTerm expr = do
+      eqs <- fromTerm expr
       xs  <- forM eqs $ \(a :==: b) ->
-                liftM2 (,) (fromExpr a) (fromExpr b)
+                liftM2 (,) (fromTerm a) (fromTerm b)
       return (M.fromList xs)
 
-instance IsExpr Key where
-   toExpr (Key s) = Var s
-   fromExpr       = liftM Key . getVariable
+instance IsTerm Key where
+   toTerm (Key s) = variable s
+   fromTerm       = liftM Key . getVariable
 
 clipboard :: ExprVar (M.Map Key Expr)
 clipboard = exprVar "clipboard" M.empty
@@ -96,17 +97,17 @@ removeClipboard s =
 ---------------------------------------------------------------------
 -- Generalized interface to work with clipboard
 
-addToClipboardG :: IsExpr a => String -> a -> ContextMonad ()
+addToClipboardG :: IsTerm a => String -> a -> ContextMonad ()
 addToClipboardG s a = modifyExprVar clipboard (M.insert (Key s) (toExpr a))
 
-addListToClipboardG :: IsExpr a => [String] -> [a] -> ContextMonad ()
+addListToClipboardG :: IsTerm a => [String] -> [a] -> ContextMonad ()
 addListToClipboardG = zipWithM_ addToClipboardG
 
-lookupClipboardG :: IsExpr a => String -> ContextMonad a
+lookupClipboardG :: IsTerm a => String -> ContextMonad a
 lookupClipboardG s = do 
    m    <- readExprVar clipboard
    expr <- maybeCM (M.lookup (Key s) m)
    fromExpr expr
    
-lookupListClipboardG :: IsExpr a => [String] -> ContextMonad [a]
+lookupListClipboardG :: IsTerm a => [String] -> ContextMonad [a]
 lookupListClipboardG = mapM lookupClipboardG

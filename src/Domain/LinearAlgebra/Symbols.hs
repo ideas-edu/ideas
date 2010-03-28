@@ -18,6 +18,7 @@ import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Control.Monad
 import qualified Text.OpenMath.Dictionary.Linalg2 as Linalg2
+import Common.Rewriting.Term
 
 vectorSymbol, matrixSymbol, matrixrowSymbol :: Symbol
 vectorSymbol    = toSymbol Linalg2.vectorSymbol
@@ -27,31 +28,31 @@ matrixrowSymbol = toSymbol Linalg2.matrixrowSymbol
 -------------------------------------------------------
 -- Conversion to the Expr data type
 
-instance IsExpr a => IsExpr (Matrix a) where
-   toExpr = 
-      let f = function matrixrowSymbol . map toExpr
+instance IsTerm a => IsTerm (Matrix a) where
+   toTerm = 
+      let f = function matrixrowSymbol . map toTerm
       in function matrixSymbol . map f . rows
-   fromExpr a = do
+   fromTerm a = do
       rs  <- isSymbol matrixSymbol a
       xss <- mapM (isSymbol matrixrowSymbol) rs
-      yss <- mapM (mapM fromExpr) xss
+      yss <- mapM (mapM fromTerm) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
-      
-instance IsExpr a => IsExpr (Vector a) where
-   toExpr = function vectorSymbol . map toExpr . toList
-   fromExpr expr = do
+
+instance IsTerm a => IsTerm (Vector a) where
+   toTerm = function vectorSymbol . map toTerm . toList
+   fromTerm expr = do
       xs <- isSymbol vectorSymbol expr
-      ys <- mapM fromExpr xs
+      ys <- mapM fromTerm xs
       return (fromList ys)
       
-instance IsExpr a => IsExpr (VectorSpace a) where
-   toExpr = toExpr . vectors
-   fromExpr expr = do
-      xs <- fromExpr expr
+instance IsTerm a => IsTerm (VectorSpace a) where
+   toTerm = toTerm . vectors
+   fromTerm expr = do
+      xs <- fromTerm expr
       guard (sameDimension xs)
       return (makeVectorSpace xs)
-      
+
 -------------------------------------------------------
 -- Simplification
 

@@ -151,7 +151,7 @@ instance Different (RE a) where
 
 instance IsTerm RegExp where 
    toTerm = foldRE 
-      ( nullary "EmptySet", nullary "Epsilon", toTerm, unary "Option"
+      ( nullary "EmptySet", nullary "Epsilon", variable, unary "Option"
       , unary "Star", unary "Plus", binary ":*:", binary ":|:"
       ) 
 

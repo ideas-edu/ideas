@@ -32,13 +32,13 @@ packages =
      Some (package Logic.dnfExercise)
         { withOpenMath    = True
         , toOpenMath      = toOMOBJ . toExpr . fmap (Var . fromShowString)
-        , fromOpenMath    = exprToSLogic . fromOMOBJ
+        , fromOpenMath    = fromExpr . fromOMOBJ
         , getExerciseText = Just Logic.logicText
         }
    , Some (package Logic.dnfUnicodeExercise)
         { withOpenMath    = True
         , toOpenMath      = toOMOBJ . toExpr . fmap (Var . fromShowString)
-        , fromOpenMath    = exprToSLogic . fromOMOBJ
+        , fromOpenMath    = fromExpr . fromOMOBJ
         , getExerciseText = Just Logic.logicText
         }
    , somePackage RA.cnfExercise

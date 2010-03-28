@@ -51,14 +51,20 @@ class IsTerm a where
    toTerm   :: a -> Term
    fromTerm :: Term -> Maybe a
 
-instance IsTerm String where
-   toTerm = Var
-   fromTerm (Var s) = return s
-   fromTerm _ = Nothing
+instance IsTerm Term where
+   toTerm   = id
+   fromTerm = return
 
 instance IsTerm ShowString where 
-   toTerm   = toTerm . fromShowString
-   fromTerm = liftM ShowString . fromTerm
+   toTerm = Var . fromShowString
+   fromTerm (Var s) = return (ShowString s)
+   fromTerm _       = Nothing
+
+instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
+   toTerm = either toTerm toTerm
+   fromTerm expr =
+      liftM Left  (fromTerm expr) `mplus`
+      liftM Right (fromTerm expr) 
 
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm

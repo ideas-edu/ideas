@@ -25,11 +25,12 @@ import Common.Rewriting.MetaVar
 data Symbol = S (Maybe String) String
    deriving (Eq, Ord)
 
-data Term = Var  String 
-          | Con  Symbol 
-          | App  Term Term
-          | Num  Integer 
-          | Meta Int
+data Term = Var   String 
+          | Con   Symbol 
+          | App   Term Term
+          | Num   Integer 
+          | Float Double
+          | Meta  Int
  deriving (Show, Eq, Ord)
 
 instance Show Symbol where
@@ -117,4 +118,4 @@ isVar _       = fail "isVar"
 
 isCon :: Monad m => Term -> m Symbol
 isCon (Con s) = return s
-isCon _        = fail "isCon"
+isCon _       = fail "isCon"

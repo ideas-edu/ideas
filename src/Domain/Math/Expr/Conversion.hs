@@ -11,33 +11,16 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Conversion 
    ( toOMOBJ, fromOMOBJ
-   , toExpr, fromExpr, exprView
    ) where
 
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Text.OpenMath.Object
-import Common.View
 import Control.Monad
 import Data.Maybe
 import Data.List
 import Common.Rewriting
-
------------------------------------------------------------------------
--- Type class for expressions
-
-toExpr :: IsTerm a => a -> Expr
-toExpr a =
-   case fromTerm (toTerm a) of
-      Just expr -> expr
-      Nothing   -> error "Invalid term"
-
-fromExpr :: (MonadPlus m, IsTerm a) => Expr -> m a
-fromExpr = fromTerm . toTerm
-
-exprView :: IsTerm a => View Expr a
-exprView = makeView fromExpr toExpr
 
 instance IsTerm a => IsTerm [a] where
    toTerm = function listSymbol . map toTerm

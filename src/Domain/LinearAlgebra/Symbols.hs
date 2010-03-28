@@ -11,7 +11,6 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Symbols () where
 
-import Domain.Math.Expr.Conversion
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix

@@ -193,8 +193,8 @@ smartGenerator r@(R _ _ _) = do
 -- might miss some locations, as pointed out by Josje's bug report.
 extendContext :: [Symbol] -> RewriteRule a -> [RewriteRule a]
 extendContext ops r@(R _ _ _) =
-   case getConSpine (lhs $ rulePair r 0) of
-      Just (s, [_, _]) | s `elem` ops -> r :
+   case getSpine (lhs $ rulePair r 0) of
+      (Con s, [_, _]) | s `elem` ops -> r :
          [ extend (leftContext s) r
          , extend (rightContext s) r 
          , extend (rightContext s) (extend (leftContext s) r) 

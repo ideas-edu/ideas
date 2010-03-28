@@ -15,7 +15,7 @@ module Domain.Math.Data.Relation
    ( -- * Type class
      Relational(..), mapLeft, mapRight, updateLeft, updateRight
      -- * Relation data type
-   , Relation, relationType, RelationType(..)
+   , Relation, relationType, RelationType(..), relationSymbols
      -- * Constructor functions
    , makeType, (.==.), (./=.), (.<.), (.>.), (.<=.), (.>=.), (.~=.)
      -- * Equation (or equality)
@@ -28,7 +28,7 @@ import Common.View
 import Common.Rewriting (IsTerm(..), Rewrite)
 import Common.Traversable
 import Domain.Math.Expr.Symbolic
-import Domain.Math.Expr.Symbols
+import qualified Text.OpenMath.Dictionary.Relation1 as Relation1
 import Data.Maybe
 import Test.QuickCheck
 import Control.Monad
@@ -80,29 +80,26 @@ instance Relational Relation where
 instance IsTerm a => IsTerm (Relation a) where
    toTerm p = 
       let op  = relationType p
-          sym = fromMaybe (toSymbol (show op)) (lookup op relationSymbols)
+          sym = maybe (toSymbol (show op)) snd (lookup op relationSymbols)
       in binary sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
    fromTerm a = 
-      let f (relType, s) = do
+      let f (relType, (_, s)) = do
              (e1, e2) <- isBinary s a
              liftM2 (makeType relType) (fromTerm e1) (fromTerm e2)
       in msum (map f relationSymbols) 
 
--- helpers
-relationSymbols :: [(RelationType, Symbol)]
+relationSymbols :: [(RelationType, (String, Symbol))]
 relationSymbols =
-   [ (EqualTo, eqSymbol), (NotEqualTo, neqSymbol), (LessThan, ltSymbol)
-   , (GreaterThan, gtSymbol), (LessThanOrEqualTo, leqSymbol)
-   , (GreaterThanOrEqualTo, geqSymbol), (Approximately, approxSymbol)
+   [ (EqualTo, ("==", eqSymbol)), (NotEqualTo, ("/=", neqSymbol))
+   , (LessThan, ("<", ltSymbol)), (GreaterThan, (">", gtSymbol))
+   , (LessThanOrEqualTo, ("<=", leqSymbol))
+   , (GreaterThanOrEqualTo, (">=", geqSymbol))
+   , (Approximately, ("~=", approxSymbol))
    ]
-   
+
+-- helpers   
 showRelType :: RelationType -> String
-showRelType relType = relType ? table
- where
-   table = [ (EqualTo, "=="), (NotEqualTo, "/="), (LessThan, "<")
-           , (GreaterThan, ">"), (LessThanOrEqualTo, "<=")
-           , (GreaterThanOrEqualTo, ">="), (Approximately, "~=")
-           ]
+showRelType = fst . (? relationSymbols)
 
 flipRelType :: RelationType -> RelationType
 flipRelType relType = fromMaybe relType (lookup relType table)
@@ -256,3 +253,16 @@ inequalityTable =
    [ (LessThan, ((:<:), (.<.))), (LessThanOrEqualTo, ((:<=:), (.<=.)))
    , (GreaterThan, ((:>:), (.>.))), (GreaterThanOrEqualTo, ((:>=:), (.>=.)))
    ]
+
+-----------------------------------------------------------------------------
+-- OpenMath symbols
+
+eqSymbol, ltSymbol, gtSymbol, neqSymbol, leqSymbol, 
+   geqSymbol, approxSymbol :: Symbol
+eqSymbol         = toSymbol Relation1.eqSymbol
+ltSymbol         = toSymbol Relation1.ltSymbol
+gtSymbol         = toSymbol Relation1.gtSymbol
+neqSymbol        = toSymbol Relation1.neqSymbol
+leqSymbol        = toSymbol Relation1.leqSymbol
+geqSymbol        = toSymbol Relation1.geqSymbol
+approxSymbol     = toSymbol Relation1.approxSymbol

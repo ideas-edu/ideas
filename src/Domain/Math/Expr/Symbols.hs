@@ -16,14 +16,14 @@ module Domain.Math.Expr.Symbols where
 
 import Control.Monad
 import Domain.Math.Expr.Symbolic
+import Domain.Math.Data.Relation (relationSymbols)
+
 -- OpenMath dictionaries
 import qualified Text.OpenMath.Dictionary.Arith1    as Arith1
 import qualified Text.OpenMath.Dictionary.Calculus1 as Calculus1
 import qualified Text.OpenMath.Dictionary.Fns1      as Fns1
 import qualified Text.OpenMath.Dictionary.List1     as List1
-import qualified Text.OpenMath.Dictionary.Logic1    as Logic1
 import qualified Text.OpenMath.Dictionary.Nums1     as Nums1
-import qualified Text.OpenMath.Dictionary.Relation1 as Relation1
 import qualified Text.OpenMath.Dictionary.Transc1   as Transc1
 
 -------------------------------------------------------------
@@ -38,26 +38,6 @@ divideSymbol     = toSymbol Arith1.divideSymbol
 rootSymbol       = toSymbol Arith1.rootSymbol
 powerSymbol      = toSymbol Arith1.powerSymbol
 negateSymbol     = toSymbol Arith1.unaryMinusSymbol
-
-trueSymbol, falseSymbol, notSymbol, orSymbol, andSymbol, 
-   equivalentSymbol, impliesSymbol :: Symbol
-trueSymbol       = toSymbol Logic1.trueSymbol
-falseSymbol      = toSymbol Logic1.falseSymbol
-notSymbol        = toSymbol Logic1.notSymbol
-orSymbol         = toSymbol Logic1.orSymbol
-andSymbol        = toSymbol Logic1.andSymbol
-equivalentSymbol = toSymbol Logic1.equivalentSymbol
-impliesSymbol    = toSymbol Logic1.impliesSymbol
-
-eqSymbol, ltSymbol, gtSymbol, neqSymbol, leqSymbol, 
-   geqSymbol, approxSymbol :: Symbol
-eqSymbol         = toSymbol Relation1.eqSymbol
-ltSymbol         = toSymbol Relation1.ltSymbol
-gtSymbol         = toSymbol Relation1.gtSymbol
-neqSymbol        = toSymbol Relation1.neqSymbol
-leqSymbol        = toSymbol Relation1.leqSymbol
-geqSymbol        = toSymbol Relation1.geqSymbol
-approxSymbol     = toSymbol Relation1.approxSymbol
 
 sinSymbol, cosSymbol, lnSymbol :: Symbol
 sinSymbol        = toSymbol Transc1.sinSymbol
@@ -81,10 +61,8 @@ data Associativity = InfixLeft | InfixRight | PrefixNon
 
 operatorTable :: OperatorTable
 operatorTable =
-   [ (InfixNon,   [ (eqSymbol, "=="), (ltSymbol, "<"), (gtSymbol, ">")
-                  , (neqSymbol, "/="), (leqSymbol, "<="), (geqSymbol, ">=")
-                  , (approxSymbol, "~=")])                    -- 1
-   , (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
+     (InfixNon, [ (s, op) | (_, (op, s)) <- relationSymbols]) :
+   [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
    , (PrefixNon,  [(negateSymbol, "-")])                      -- 6+
    , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7
    , (InfixRight, [(powerSymbol, "^")])                       -- 8

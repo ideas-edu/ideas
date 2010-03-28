@@ -19,6 +19,7 @@ import Test.QuickCheck
 import Control.Monad
 import Common.Uniplate
 import Common.Utils (commaList)
+import Common.View
 import Common.Rewriting hiding (operators)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
@@ -235,27 +236,34 @@ instance Different Expr where
 
 instance IsTerm Expr where 
    toTerm (Nat n)    = Term.Num n
-   toTerm (Number d) = let (x, y) = decodeFloat d
-                       in Term.binary floatSym (Term.Num x) (Term.Num (toInteger y) )
+   toTerm (Number d) = Term.Float d
    toTerm (Var v)    = Term.Var v
    toTerm expr = 
       case getFunction expr of
          Just (s, xs) -> Term.makeConTerm s (map toTerm xs)
          Nothing      -> error "IsTerm Expr"
 
-   fromTerm (Term.Num n) = return (fromInteger n)
-   fromTerm (Term.Var v) = return (Var v)
+   fromTerm (Term.Num n)   = return (fromInteger n)
+   fromTerm (Term.Float d) = return (Number d)
+   fromTerm (Term.Var v)   = return (Var v)
    fromTerm t =
       case Term.getSpine t of
-         (Term.Con s, [Term.Num x, Term.Num y]) | s == floatSym ->
-            return (Number (encodeFloat x (fromIntegral y)))
          (Term.Con s, xs) -> do
             ys <- mapM fromTerm xs
             return (function s ys)
          _ -> fail "fromTerm"
 
-floatSym :: Term.Symbol
-floatSym = makeSymbol "special" "float" 
+toExpr :: IsTerm a => a -> Expr
+toExpr a =
+   case fromTerm (toTerm a) of
+      Just expr -> expr
+      Nothing   -> error "Invalid term"
+
+fromExpr :: (MonadPlus m, IsTerm a) => Expr -> m a
+fromExpr = fromTerm . toTerm
+
+exprView :: IsTerm a => View Expr a
+exprView = makeView fromExpr toExpr
 
 -----------------------------------------------------------------------
 -- AC Theory for expression

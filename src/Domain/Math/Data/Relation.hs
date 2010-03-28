@@ -88,6 +88,8 @@ instance IsTerm a => IsTerm (Relation a) where
              liftM2 (makeType relType) (fromTerm e1) (fromTerm e2)
       in msum (map f relationSymbols) 
 
+instance Rewrite a => Rewrite (Relation a)
+
 relationSymbols :: [(RelationType, (String, Symbol))]
 relationSymbols =
    [ (EqualTo, ("==", eqSymbol)), (NotEqualTo, ("/=", neqSymbol))
@@ -236,6 +238,12 @@ instance Arbitrary a => Arbitrary (Inequality a) where
       op <- oneof $ map (return . fst . snd) inequalityTable
       liftM2 op arbitrary arbitrary
    coarbitrary = coarbitrary . build inequalityView
+
+instance IsTerm a => IsTerm (Inequality a) where
+   toTerm = toTerm . build inequalityView
+   fromTerm a = fromTerm a >>= matchM inequalityView
+
+instance Rewrite a => Rewrite (Inequality a)
 
 inequalityView :: View (Relation a) (Inequality a)
 inequalityView = makeView f g

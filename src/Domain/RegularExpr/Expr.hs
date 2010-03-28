@@ -167,7 +167,7 @@ instance IsTerm RegExp where
       f s [x, y] 
          | s == ":*:"      = return (x :*: y)
          | s == ":|:"      = return (x :|: y)
-      f _ _ = Nothing
+      f _ _ = fail "fromExpr"
 
 mkSym :: String -> Symbol
 mkSym = undefined

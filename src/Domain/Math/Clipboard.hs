@@ -62,8 +62,8 @@ newtype Key = Key String deriving (Show, Eq, Ord)
 
 instance (IsTerm k, Ord k, IsTerm a) => IsTerm (M.Map k a) where
    toTerm = toTerm . map (\(k, a) -> toTerm k :==: toTerm a) . M.toList
-   fromTerm expr = do
-      eqs <- fromTerm expr
+   fromTerm term = do
+      eqs <- fromTerm term
       xs  <- forM eqs $ \(a :==: b) ->
                 liftM2 (,) (fromTerm a) (fromTerm b)
       return (M.fromList xs)

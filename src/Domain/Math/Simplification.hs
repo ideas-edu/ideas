@@ -97,7 +97,7 @@ instance Simplify (Simplified a) where
 
 instance (Simplify a, IsTerm a) => IsTerm (Simplified a) where
    toTerm (S x) = toTerm x
-   fromTerm = liftM simplified . fromTerm
+   fromTerm     = liftM simplified . fromTerm
 
 instance (Arbitrary a, Simplify a) => Arbitrary (Simplified a) where
    arbitrary = liftM simplified arbitrary

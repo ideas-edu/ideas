@@ -25,7 +25,10 @@ module Domain.Math.Data.Relation
    ) where
 
 import Common.View
+import Common.Rewriting (IsTerm(..), Rewrite)
 import Common.Traversable
+import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbols
 import Data.Maybe
 import Test.QuickCheck
 import Control.Monad
@@ -74,7 +77,25 @@ instance Relational Relation where
    constructor (R _ rt _) x y = R x rt y
    isSymmetric = (`elem` [EqualTo, NotEqualTo, Approximately]) . relationType
 
+instance IsTerm a => IsTerm (Relation a) where
+   toTerm p = 
+      let op  = relationType p
+          sym = fromMaybe (toSymbol (show op)) (lookup op relationSymbols)
+      in binary sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
+   fromTerm a = 
+      let f (relType, s) = do
+             (e1, e2) <- isBinary s a
+             liftM2 (makeType relType) (fromTerm e1) (fromTerm e2)
+      in msum (map f relationSymbols) 
+
 -- helpers
+relationSymbols :: [(RelationType, Symbol)]
+relationSymbols =
+   [ (EqualTo, eqSymbol), (NotEqualTo, neqSymbol), (LessThan, ltSymbol)
+   , (GreaterThan, gtSymbol), (LessThanOrEqualTo, leqSymbol)
+   , (GreaterThanOrEqualTo, geqSymbol), (Approximately, approxSymbol)
+   ]
+   
 showRelType :: RelationType -> String
 showRelType relType = relType ? table
  where
@@ -169,6 +190,12 @@ instance Crush  Equation where crush  = crushRelation
 instance Arbitrary a => Arbitrary (Equation a) where
    arbitrary   = liftM2 (:==:) arbitrary arbitrary
    coarbitrary = coarbitrary . build equationView
+
+instance IsTerm a => IsTerm (Equation a) where
+   toTerm = toTerm . build equationView
+   fromTerm a = fromTerm a >>= matchM equationView
+
+instance Rewrite a => Rewrite (Equation a)
 
 equationView :: View (Relation a) (Equation a)
 equationView = makeView f g

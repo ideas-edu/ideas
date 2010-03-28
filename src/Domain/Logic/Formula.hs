@@ -206,7 +206,7 @@ instance IsTerm a => IsTerm (Logic a) where
          | s == equivalentSymbol = return (x :<->: y)
          | s == andSymbol        = return (x :&&: y)
          | s == orSymbol         = return (x :||: y)
-      f _ _ = Nothing
+      f _ _ = fail "fromTerm"
 
 logicOperators :: Operators (Logic a)
 logicOperators = [andOperator, orOperator]

@@ -41,15 +41,15 @@ instance IsTerm a => IsTerm (Matrix a) where
 
 instance IsTerm a => IsTerm (Vector a) where
    toTerm = function vectorSymbol . map toTerm . toList
-   fromTerm expr = do
-      xs <- isSymbol vectorSymbol expr
+   fromTerm a = do
+      xs <- isSymbol vectorSymbol a
       ys <- mapM fromTerm xs
       return (fromList ys)
       
 instance IsTerm a => IsTerm (VectorSpace a) where
    toTerm = toTerm . vectors
-   fromTerm expr = do
-      xs <- fromTerm expr
+   fromTerm a = do
+      xs <- fromTerm a
       guard (sameDimension xs)
       return (makeVectorSpace xs)
 

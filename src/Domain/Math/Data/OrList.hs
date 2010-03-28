@@ -20,6 +20,7 @@ module Domain.Math.Data.OrList
 import Common.View
 import Control.Monad
 import Common.Traversable
+import Common.Rewriting.Term
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
@@ -99,6 +100,10 @@ instance OnceJoin OrList where
       rec []     = mzero
       rec (x:xs) = liftM (\/ orList xs) (f x) `mplus`
                    liftM (return x \/) (rec xs)
+
+instance IsTerm a => IsTerm (OrList a) where
+   toTerm = toTerm . build orView
+   fromTerm expr = fromTerm expr >>= matchM orView
 
 instance Arbitrary a => Arbitrary (OrList a) where
    arbitrary = do 

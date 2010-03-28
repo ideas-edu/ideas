@@ -252,7 +252,7 @@ instance IsTerm Expr where
          (Term.Con s, xs) -> do
             ys <- mapM fromTerm xs
             return (function s ys)
-         _ -> Nothing
+         _ -> fail "fromTerm"
 
 floatSym :: Term.Symbol
 floatSym = makeSymbol "special" "float" 

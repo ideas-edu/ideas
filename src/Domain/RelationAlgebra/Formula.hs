@@ -18,7 +18,6 @@ import Common.Utils
 import Control.Monad
 import Data.Char
 import Data.List
-import Data.Maybe
 import qualified Data.Set as S
 import System.Random (StdGen, mkStdGen, split)
 import Test.QuickCheck
@@ -207,4 +206,4 @@ instance IsTerm RelAlg where
          | s == "+"  = return (x :+:  y)
          | s == "&&" = return (x :&&: y)
          | s == "||" = return (x :||: y)
-      f _ _ = Nothing
+      f _ _ = fail "fromTerm"

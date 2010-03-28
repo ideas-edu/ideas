@@ -49,7 +49,7 @@ instance Uniplate Term where
 
 class IsTerm a where
    toTerm   :: a -> Term
-   fromTerm :: Term -> Maybe a
+   fromTerm :: MonadPlus m => Term -> m a
 
 instance IsTerm Term where
    toTerm   = id
@@ -58,7 +58,7 @@ instance IsTerm Term where
 instance IsTerm ShowString where 
    toTerm = Var . fromShowString
    fromTerm (Var s) = return (ShowString s)
-   fromTerm _       = Nothing
+   fromTerm _       = fail "fromTerm"
 
 instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
    toTerm = either toTerm toTerm

@@ -26,6 +26,7 @@ import Data.List
 import Common.Apply
 import Common.View
 import Common.Traversable
+import Common.Uniplate (transform)
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -258,11 +259,18 @@ higherDegreeEquationsView = makeView f (fmap g)
    
    cuRules :: OrList (Equation Expr) -> OrList (Equation Expr)
    cuRules xs = 
-      let new = fmap (fmap cleanUpExpr2) xs in
+      let new = fmap (fmap (cleanUpExpr2 . distr)) xs in
       case msum (map (`apply` new) coverUpRulesOr) of
          Just ys -> cuRules ys
          Nothing -> new
-   
+
+distr :: Expr -> Expr
+distr = transform f
+ where
+   f ((a :+: b) :/: c) = (a ./. c) .+. (b ./. c)
+   f ((a :-: b) :/: c) = (a ./. c) .-. (b ./. c)
+   f a = a
+
 normHDE :: Expr -> [Expr]
 normHDE e =
    case match (polyViewWith rationalView) e of

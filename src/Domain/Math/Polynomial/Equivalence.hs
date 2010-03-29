@@ -19,6 +19,7 @@ import Common.Traversable
 import Common.View
 import Data.Maybe
 import Domain.Math.Expr
+import Domain.Math.Data.Polynomial hiding (eval)
 import Data.List (sort, nub)
 import Domain.Math.Polynomial.Views
 import Prelude hiding ((^), sqrt)
@@ -60,46 +61,6 @@ logicIntervals = foldLogic
    , fromList [unbounded]
    , fromList [empty]
    )
- 
- {-  
-test :: Maybe (Logic (SquareRoot Rational))
-test = fmap (catLogic . fmap orToLogic) $ switch $ fmap (fmap (fmap snd) . match quadraticEquationView . toEquation) example
- where
-   toEquation r = leftHandSide r :==: rightHandSide r
-   orToLogic :: OrList a -> Logic a
-   orToLogic xs = case disjunctions xs of
-                     Just ys -> if null ys then F else foldr1 (:||:) (map Logic.Var ys)
-                     Nothing -> T
-       
--- Precondition: argument list is sorted      
-regions :: (Fractional a, Ord a) => [a] -> [(a, Interval a)]
-regions []        = [(0, unbounded)]
-regions as@(a:_)  = (a-1, lessThan a) : f as
- where
-   f xs@(x:_)     = (x, singleton x) : g xs
-   f []           = []
-   g (x:xs@(y:_)) = ((x+y)/2, open x y) : f xs
-   g [x]          = [(x+1, greaterThan x)]
-   g _            = []
-   
-solvedView :: View (Equation Expr) (OrList (Equation Expr))
-solvedView = makeView f g 
- where
-   f eq = do
-      as <- match higherDegreeEquationsView (return eq)
-      let f a = return (a :==: 0)
-      switch (fmap f as)
-   g xs = case disjunctions xs of
-             Just ds -> 
-                let list = [ a-b | a :==: b <- ds ]
-                in build productView (False, list) :==: 0 
-             Nothing -> 
-                0 :==: 0
-   
-q = match solvedView ex 
- where
-   ex = x^2 - 3*x + 4 :==: 5 - x
-   x  = Var "x" -}
 
 -----------------------------------------------------------
              
@@ -113,7 +74,23 @@ linRelWith :: (Ord a, Fractional a)
            => View Expr a -> Relation Expr -> Maybe (String, Intervals a)
 linRelWith v rel =
    case match (linearViewWith v) (lhs - rhs) of
-      Nothing -> Nothing
+      Nothing -> 
+         case match (polyViewWith v) (lhs - rhs) of
+            Just (s, p) | degree p == 0 -> 
+               case compare (coefficient 0 p) 0 of
+                  LT | relationType rel `elem` [LessThan, LessThanOrEqualTo] -> 
+                          return (s, fromList [unbounded])
+                     | otherwise ->
+                          return (s, fromList [empty])
+                  EQ | relationType rel `elem` [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo] -> 
+                          return (s, fromList [unbounded])
+                     | otherwise -> 
+                          return (s, fromList [empty])
+                  GT | relationType rel `elem` [GreaterThan, GreaterThanOrEqualTo] -> 
+                          return (s, fromList [unbounded])
+                     | otherwise ->
+                          return (s, fromList [empty])
+            _ -> Nothing
       Just (s, a, b) 
          | a==0 -> 
               return (s, fromList [ unbounded | b==0 ])
@@ -144,22 +121,17 @@ highEqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Exp
 highEqContext = eqContextWith (polyEq highRel)
 
 eqContextWith eq a b = isJust $ do
-   let clipA = ineqOnClipboard a
-   let clipB = ineqOnClipboard b
    termA <- fromContext a
    termB <- fromContext b
-   -- test clipboard 
-   when (isJust clipA || isJust clipB) $
-      guard $ eq (fromMaybe termA clipA) (fromMaybe termB clipB)
-   -- test terms
-   let f x = if isJust x then toEq else id
-   guard $ eq (f clipB termA) (f clipA termB)
-
-toEq :: Logic (Relation Expr) -> Logic (Relation Expr)
-toEq (Logic.Var rel) = Logic.Var (leftHandSide rel .==. rightHandSide rel)
-toEq (p :&&: q) = toEq p :||: toEq q -- workaround for -3<x<5 
-toEq (p :||: q) = toEq p :||: toEq q
-toEq p = p
+   guard $ 
+      case (ineqOnClipboard a, ineqOnClipboard b) of 
+         (Just a,  Just b)  -> eq a b && eq termA termB
+         (Just a,  Nothing) -> eq (fmap toEq a) termA && eq a termB
+         (Nothing, Just b)  -> eq (fmap toEq b) termB && eq termA b
+         (Nothing, Nothing) -> eq termA termB
+ where
+   toEq :: Relation Expr -> Relation Expr
+   toEq r = leftHandSide r .==. rightHandSide r
 
 ineqOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
 ineqOnClipboard = evalCM $ const $ do

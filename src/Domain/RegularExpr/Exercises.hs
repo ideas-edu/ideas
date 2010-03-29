@@ -44,13 +44,6 @@ regexpExercise = makeExercise
    , examples       = generate 5 (mkStdGen 2805) (replicateM 15 startFormGen)
    }
 
-   
-testje = printDerivation regexpExercise $ ex2
-
-Right ex1 = parseRegExp "ABABAB|AB|T|ABAB"
-Right ex2 = parseRegExp "A|A|B|A"
-Right ex3 = parseRegExp "T+cc|d*F?"
-
 myGen :: Gen RegExp
 myGen = restrictGenerator (isSuitable regexpExercise) arbitrary
 

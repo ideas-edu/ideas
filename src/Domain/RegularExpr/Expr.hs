@@ -169,8 +169,6 @@ instance IsTerm RegExp where
          | s == ":|:"      = return (x :|: y)
       f _ _ = fail "fromExpr"
 
-mkSym :: String -> Symbol
-mkSym = undefined
-
 instance Rewrite RegExp where
-   operators = [concatOp, choiceOp] 
+   operators = [concatOp, choiceOp]
+   associativeOps = const $ map toSymbol [":*:", ":|:"]

@@ -32,7 +32,7 @@ import Test.QuickCheck (arbitrary)
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords             = ["sqrt", "root", "or", "true", "false"]
+   { keywords             = ["sqrt", "root", "and", "or", "true", "false"]
    , keywordOperators     = ["==", "<=", ">=", "<", ">", "~=", "+", "-", "*", "^", "/"]
    , operatorCharacters   = "+-*/^.=<>~"
    , qualifiedIdentifiers = True

@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Equivalence 
-   ( linEq, quadrEqContext, highEqContext, simLogic
+   ( linEq, quadrEqContext, highEqContext, simLogic, flipGT
    ) where
 
 import Common.Context
@@ -277,21 +277,30 @@ quadrRel rel =
    lhs = leftHandSide rel
    rhs = rightHandSide rel
    
-   
+flipGT :: Relation a -> Relation a
+flipGT r 
+   | relationType r == GreaterThan = 
+        rightHandSide r .<. leftHandSide r
+   | relationType r == GreaterThanOrEqualTo = 
+        rightHandSide r .<=. leftHandSide r 
+   | otherwise = r
+
 -- for similarity 
 simLogic :: Ord a => (a -> a) -> Logic a -> Logic a -> Bool
-simLogic f a b 
-   | isOperator orOperator a =
-        let collect = nub . sort . trueOr . collectOr
-        in eqList (simLogic f) (collect a) (collect b)
-   | isOperator andOperator a =
-        let collect = nub . sort . falseAnd . collectAnd
-        in eqList (simLogic f) (collect a) (collect b)
-   | otherwise = 
-        shallowEq a b && eqList (simLogic f) (children a) (children b)
+simLogic f a b = rec (fmap f a) (fmap f b)
  where
-   eqList eq xs ys = 
-      length xs == length ys && and (zipWith eq xs ys) 
+   rec a b   
+      | isOperator orOperator a =
+           let collect = nub . sort . trueOr . collectOr
+           in recList (collect a) (collect b)
+      | isOperator andOperator a =
+           let collect = nub . sort . falseAnd . collectAnd
+           in recList (collect a) (collect b)
+      | otherwise = 
+           shallowEq a b && recList (children a) (children b)
+ 
+   recList xs ys = 
+      length xs == length ys && and (zipWith rec xs ys) 
  
    collectOr (p :||: q) = collectOr p ++ collectOr q
    collectOr F = []

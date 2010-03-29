@@ -31,7 +31,7 @@ pRE = pOr
    pSeq  =  foldl1 (:*:) <$> pList1 pPost
    pPost =  foldl (flip ($)) <$> pAtom <*> pList pUnop
    pUnop =  Star <$ pKey "*" <|> Plus <$ pKey "+" <|> Option <$ pKey "?"
-   pAtom =  Atom <$> pVarid
+   pAtom =  Atom <$> (pVarid <|> pConid)
         <|> Epsilon  <$ pKey "T"
         <|> EmptySet <$ pKey "F"
         <|> pSpec '(' *> pRE <* pSpec ')'

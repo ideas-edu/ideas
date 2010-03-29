@@ -65,7 +65,7 @@ ineqQuadraticExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just quadrEqContext
-   , similarity    = simLogic (normRelation cleanUpExpr2)
+   , similarity    = simLogic (normRelation cleanUpExpr2 . flipGT)
    , strategy      = ineqQuadratic
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
@@ -80,7 +80,7 @@ ineqHigherDegreeExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just highEqContext
-   , similarity    = simLogic (normRelation cleanUpExpr2)
+   , similarity    = simLogic (normRelation cleanUpExpr2 . flipGT)
    , strategy      = ineqHigherDegree
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }

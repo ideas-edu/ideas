@@ -32,8 +32,10 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.Equivalence
 import Domain.Math.Numeric.Views
 import Control.Monad
+
 ------------------------------------------------------------
 -- Exercises
 
@@ -76,18 +78,19 @@ quadraticExercise = makeExercise
    
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 
-   { description  = "solve an equation (higher degree)"
-   , exerciseCode = makeCode "math" "higherdegree"
-   , status       = Provisional
-   , parser       = parser quadraticExercise
-   , similarity   = eqOrList cleanUpExpr2
-   , equivalence  = equivalentRelation (viewEquivalent higherDegreeEquationsView)
-   , isSuitable   = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
-   , isReady      = solvedRelations
-   , extraRules   = map (liftToContext . liftRule (switchView equationView)) higherDegreeRules
-   , strategy     = higherDegreeStrategy
-   , examples     = map (orList . return . build equationView) 
-                       (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
+   { description   = "solve an equation (higher degree)"
+   , exerciseCode  = makeCode "math" "higherdegree"
+   , status        = Provisional
+   , parser        = parser quadraticExercise
+   , similarity    = eqOrList cleanUpExpr2
+   , eqWithContext = Just $ eqAfterSubstitution $ 
+                        equivalentRelation (viewEquivalent higherDegreeEquationsView)
+   , isSuitable    = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
+   , isReady       = solvedRelations
+   , extraRules    = map (liftToContext . liftRule (switchView equationView)) higherDegreeRules
+   , strategy      = higherDegreeStrategy
+   , examples      = map (orList . return . build equationView) 
+                        (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))

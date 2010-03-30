@@ -350,7 +350,7 @@ checksForTerm ex a = do
                           maybe "" (prettyPrinter ex) final
          case [ (x, y) | x <- as, y <- as, not (equivalenceContext ex x y) ] of
             (x, y):_ -> fail $  "not equivalent: " 
-                             ++ prettyPrinterContext ex x ++ "  and  "
+                             ++ prettyPrinterContext ex x ++ "  with  "
                              ++ prettyPrinterContext ex y
             _        -> return ()
          case filter (maybe False (not . checkParserPrettyEx ex) . fromContext) as of

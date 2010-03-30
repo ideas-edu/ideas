@@ -12,6 +12,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Equivalence 
    ( linEq, quadrEqContext, highEqContext, simLogic, flipGT
+   , eqAfterSubstitution
    ) where
 
 import Common.Context
@@ -285,3 +286,24 @@ simLogic f a b = rec (fmap f a) (fmap f b)
    collectAnd a = [a]
    
    falseAnd xs = if F `elem` xs then [] else xs
+   
+eqAfterSubstitution :: (Functor f, Functor g) 
+   => (f (g Expr) -> f (g Expr) -> Bool) -> Context (f (g Expr)) -> Context (f (g Expr)) -> Bool
+eqAfterSubstitution eq ca cb = fromMaybe False $ do 
+   a <- fromContext ca
+   b <- fromContext cb
+   let f = maybe id (fmap . fmap . substitute) . substOnClipboard
+   return (f ca a `eq` f cb b)
+
+substitute :: (String, Expr) -> Expr -> Expr
+substitute (s, a) (Var b) | s==b = a
+substitute pair expr = f (map (substitute pair) cs)
+ where 
+   (cs, f) = uniplate expr
+
+substOnClipboard :: Context a -> Maybe (String, Expr)
+substOnClipboard = evalCM $ const $ do
+   eq <- lookupClipboardG "subst"
+   case eq of
+      Var s :==: a -> return (s, a)
+      _            -> fail "not a substitution"

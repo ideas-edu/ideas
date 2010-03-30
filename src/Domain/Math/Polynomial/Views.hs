@@ -26,7 +26,7 @@ import Data.List
 import Common.Apply
 import Common.View
 import Common.Traversable
-import Common.Uniplate (transform)
+import Common.Uniplate (transform, uniplate, children)
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -252,7 +252,7 @@ quadraticEquationView = makeView f g
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap g)
  where
-   f = let make (a :==: b) = orList (normHDE (a-b))
+   f = let make (a :==: b) = orList (filter (not . hasNegSqrt) $ map cleanUpExpr2 (normHDE (a-b)))
        in Just . normalize . join . fmap make . cuRules
 
    g = (:==: 0)
@@ -264,6 +264,18 @@ higherDegreeEquationsView = makeView f (fmap g)
          Just ys -> cuRules ys
          Nothing -> new
 
+hasNegSqrt :: Expr -> Bool
+hasNegSqrt (Sqrt a) = 
+   case match rationalView a of
+      Just r | r < 0 -> True
+      _ -> hasNegSqrt a
+hasNegSqrt (Sym s [a, b]) | s == rootSymbol = 
+   case (match rationalView a, match integerView b) of
+      (Just r, Just n) | r < 0 && even n -> True
+      _ -> hasNegSqrt a || hasNegSqrt b
+hasNegSqrt a = 
+   any hasNegSqrt (children a)
+
 distr :: Expr -> Expr
 distr = transform f
  where
@@ -274,7 +286,7 @@ distr = transform f
 normHDE :: Expr -> [Expr]
 normHDE e =
    case match (polyViewWith rationalView) e of
-      Just (x, p)  -> concatMap (g x) $ factorize p
+      Just (x, p)  -> g x p
       Nothing -> fromMaybe [e] $ do
          (x, a) <- match (linearEquationViewWith (squareRootViewWith rationalView)) (e :==: 0)
          return [ Var x .+. build (squareRootViewWith rationalView) (-a) ] 
@@ -292,5 +304,31 @@ normHDE e =
                    [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
                    , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
                    ]
-       | otherwise     = [build (polyViewWith rationalView) (x, p)]
-    where d = degree p
+       | otherwise = 
+            case terms p of 
+               [(c, 0), (b, e1), (a, e2)] | e1 > 1 && e2 `mod` e1 == 0 -> 
+                  let list = [(c, 0), (b, 1), (a, e2 `div` e1)]
+                      newp = sum (map (\(x, y) -> scale x (power var y)) list)
+                      sub  = map (substitute (x, Var x^fromIntegral e1))
+                  in concatMap normHDE (sub (g x newp))
+               [(c, 0), (a, n)]
+                  | odd n  -> if c/a >= 0 
+                              then [Var x + root (fromRational (c/a)) (fromIntegral n)]
+                              else [Var x - root (fromRational (abs (c/a))) (fromIntegral n)]
+                  | even n -> if c/a > 0
+                              then []
+                              else [ Var x + root (fromRational (abs (c/a))) (fromIntegral n) 
+                                   , Var x - root (fromRational (abs (c/a))) (fromIntegral n)
+                                   ]
+               _ -> 
+                  case factorize p of
+                     ps | length ps > 1 -> concatMap (g x) ps
+                     _ -> [build (polyViewWith rationalView) (x, p)]
+    where 
+      d = degree p
+      
+substitute :: (String, Expr) -> Expr -> Expr
+substitute (s, a) (Var b) | s==b = a
+substitute pair expr = f (map (substitute pair) cs)
+ where 
+   (cs, f) = uniplate expr

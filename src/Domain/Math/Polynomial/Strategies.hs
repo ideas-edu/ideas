@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
-   ( linearStrategy, quadraticStrategy
+   ( linearStrategy, linearMixedStrategy, quadraticStrategy
    , higherDegreeStrategy, findFactorsStrategy
    ) where
 
@@ -19,10 +19,12 @@ import Common.Apply
 import Common.Strategy
 import Common.Navigator
 import Common.Transformation
+import Common.Uniplate (transform)
 import Common.View
 import Common.Context
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Polynomial.Rules
+import Domain.Math.Numeric.Views
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
@@ -32,7 +34,14 @@ import Domain.Math.Polynomial.CleanUp
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Equation Expr)
-linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
+linearStrategy = linearStrategyWith cleanUpSimple
+
+linearMixedStrategy :: LabeledStrategy (Equation Expr)
+linearMixedStrategy = linearStrategyWith (f . cleanUpSimple)
+ where f = transform (simplify mixedFractionView) -- quick solution
+
+linearStrategyWith :: (Expr -> Expr) -> LabeledStrategy (Equation Expr)
+linearStrategyWith f = cleanUpStrategy (fmap f) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (
               removeDivision 

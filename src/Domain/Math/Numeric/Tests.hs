@@ -36,7 +36,7 @@ main = do
    let f v = forM_ numGenerators $ \g ->
           quickCheck $ propNormalForm g v
    f integerNormalForm
-   f rationalNormalForm
+    -- f rationalNormalForm -- no longer a normal form
 
    putStrLn "** Correctness generators"
    let f g v = quickCheck $ forAll (sized g) (`belongsTo` v)

@@ -86,6 +86,12 @@
       },
       {
          "domain": "math",
+         "identifier": "lineq-mixed",
+         "description": "solve a linear equation with mixed fractions",
+         "status": "Provisional"
+      },
+      {
+         "domain": "math",
          "identifier": "linineq",
          "description": "solve a linear inequation",
          "status": "Provisional"
@@ -159,5 +165,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.12 (2858)"
+   "version": "0.5.12 (2883)"
 }

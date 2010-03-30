@@ -49,6 +49,7 @@ packages =
    , someExprPackage Math.fractionExercise
    , someExprPackage Math.coverUpExercise
    , someExprPackage Math.linearExercise
+   , someExprPackage Math.linearMixedExercise
    , someExprPackage Math.quadraticExercise
    , someExprPackage Math.higherDegreeExercise
    , someExprPackage Math.findFactorsExercise

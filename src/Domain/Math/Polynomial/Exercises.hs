@@ -59,6 +59,14 @@ linearExercise = makeExercise
    specialCases = 
       let x = Var "x" 
       in [5 :==: x, 5 :==: x + 1, x - 1/5 :==: 2]
+      
+linearMixedExercise :: Exercise (Equation Expr)
+linearMixedExercise = linearExercise 
+   { description  = "solve a linear equation with mixed fractions"
+   , exerciseCode = makeCode "math" "lineq-mixed"
+   , isReady      = solvedRelationWith (`belongsTo` mixedFractionNormalForm)
+   , strategy     = mapRules liftToContext linearMixedStrategy
+   } 
 
 quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise 

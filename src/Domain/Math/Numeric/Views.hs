@@ -61,7 +61,7 @@ mixedFractionView = makeView (match realView) mix
    mix r = 
       let (d, m) = abs (numerator r) `divMod` denominator r
           rest   = fromInteger m ./. fromInteger (denominator r)
-          sign   = if numerator r < 0 then neg else id
+          sign   = if numerator r < 0 then negate else id
       in sign (fromInteger d .+. rest)
 
 doubleView :: View Expr Double

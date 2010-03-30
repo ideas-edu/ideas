@@ -14,6 +14,7 @@
     <elem domain="math" identifier="ineqhigherdegree" description="solve an inequation of higher degree" status="Provisional"/>
     <elem domain="math" identifier="integer" description="simplify expression (integers)" status="Alpha"/>
     <elem domain="math" identifier="lineq" description="solve a linear equation" status="Provisional"/>
+    <elem domain="math" identifier="lineq-mixed" description="solve a linear equation with mixed fractions" status="Provisional"/>
     <elem domain="math" identifier="linineq" description="solve a linear inequation" status="Provisional"/>
     <elem domain="math" identifier="natural" description="simplify expression (natural numbers)" status="Alpha"/>
     <elem domain="math" identifier="nonnegexp" description="write with a non-negative exponent" status="Provisional"/>

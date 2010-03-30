@@ -12,6 +12,7 @@
 module Domain.Math.Equation.Views 
    ( solvedRelations, solvedRelation
    , equationSolvedForm, solvedEquation, solvedEquations 
+   , solvedRelationWith
    ) where
 
 import Domain.Math.Expr
@@ -34,6 +35,11 @@ solvedRelation r =
       (Just x, Nothing) -> x `notElem` collectVars (rightHandSide r)
       (Nothing, Just x) -> x `notElem` collectVars (leftHandSide r)
       _ -> noVars (leftHandSide r) && noVars (rightHandSide r)
+
+-- The variable must appear on the left
+solvedRelationWith :: Relational f => (Expr -> Bool) -> f Expr -> Bool
+solvedRelationWith p r =
+   isVariable (leftHandSide r) && p (rightHandSide r)
 
 -------------------------------------------------------------
 -- Views on equations

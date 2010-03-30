@@ -269,6 +269,12 @@ ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
    let new = fromDouble (precision 4 d)
    return (Var x .~=. new)
 
+ruleNormalizeRational :: Rule Expr
+ruleNormalizeRational = makeSimpleRule "normalize rational number" $ \a -> do
+   b <- canonical rationalView a
+   guard (a /= b)
+   return b
+
 ------------------------------------------------------------
 -- Helpers and Rest
 
@@ -421,8 +427,8 @@ distributionT = makeTransList f
    
    g :: Expr -> Expr -> [Expr]
    g a b = do 
-      as     <- matchM sumView a
-      bs     <- matchM sumView b
+      as <- matchM sumView a
+      bs <- matchM sumView b
       guard (length as > 1 || length bs > 1)
       return $ build sumView [ a .*. b | a <- as, b <- bs ]
 
@@ -446,19 +452,6 @@ varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
    (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
    guard (a/=0)
    return (fromRational a * Var x)
-
-{-
-conToRight :: Rule (Equation Expr)
-conToRight = makeRule "constant to right" $ flip supply1 minusT $ \eq -> do
-   (_, _, b) <- match (linearViewWith rationalView) (getLHS eq)
-   guard (b/=0)
-   return (fromRational b)
-
-scaleToOne :: Rule (Equation Expr)
-scaleToOne = makeRule "scale to one" $ flip supply1 divisionT $ \eq -> do
-   (_, a, _) <- match (linearViewWith rationalView) (getLHS eq)
-   guard (a `notElem` [0, 1])
-   return (fromRational a) -}
 
 -- factor is always positive due to lcm function
 removeDivision :: Relational r => Rule (r Expr)

@@ -21,7 +21,7 @@ import Common.Uniplate
 import Data.Maybe 
 import Common.View hiding (simplify)
 import GHC.Real
-import Domain.Math.Expr
+import Domain.Math.Expr hiding (isVariable)
 import qualified Data.Map as M
 
 data LinearMap a = LM { lmMap :: M.Map String a, lmConstant :: a }

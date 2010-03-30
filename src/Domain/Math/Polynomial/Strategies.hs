@@ -41,6 +41,7 @@ linearStrategy = cleanUpStrategy (fmap cleanUpSimple) $
    <*> label "Phase 2" (repeat (
           (flipEquation |> varToLeft)
           <|> coverups))
+   <*> try (ruleMulti ruleNormalizeRational)
  where
    coverups = coverUpPlus id <|> coverUpTimes <|> coverUpNegate
       

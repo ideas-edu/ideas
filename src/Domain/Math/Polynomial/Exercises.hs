@@ -48,7 +48,9 @@ linearExercise = makeExercise
    , similarity   = eqRelation cleanUpSimple
    , equivalence  = viewEquivalent linearEquationView
    , isSuitable   = (`belongsTo` linearEquationView)
-   , isReady      = solvedRelation
+   , isReady      = solvedRelationWith $ \a -> 
+                       a `belongsTo` mixedFractionNormalForm || 
+                       a `belongsTo` rationalNormalForm
    , extraRules   = liftToContext buggyPlus : linearRules
    , strategy     = mapRules liftToContext linearStrategy
    , examples     = concat (linearEquations ++ [specialCases])
@@ -147,7 +149,7 @@ linearFactorsView = productView >>> second (listView myLinearView)
       guard (a > 0 && gcd a b == 1) -- gcd 0 0 is undefined
       return triple
     `mplus` do
-      r <- match rationalView expr
+      guard (expr `belongsTo` rationalView)
       return ("x", 0, expr)
 
 --------------------------------------------

@@ -15,6 +15,7 @@ module Domain.Math.Expr.Symbolic
    ) where
 
 import Control.Monad
+import Data.Maybe
 import Common.Rewriting.Term
 import qualified Text.OpenMath.Symbol as OM
 
@@ -88,6 +89,9 @@ binary f a b = function (toSymbol f) [a, b]
 
 isConst :: (IsSymbol s, Symbolic a) => s -> a -> Bool
 isConst s = maybe False null . isSymbol (toSymbol s) 
+
+isVariable :: Symbolic a => a -> Bool
+isVariable = isJust . getVariable
 
 isUnary :: (IsSymbol s, Symbolic a, MonadPlus m) => s -> a -> m a
 isUnary s a = 

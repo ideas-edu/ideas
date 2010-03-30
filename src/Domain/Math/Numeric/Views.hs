@@ -12,7 +12,8 @@
 module Domain.Math.Numeric.Views
    ( integralView, realView
    , integerView, rationalView, doubleView, mixedFractionView
-   , integerNormalForm, rationalNormalForm, rationalRelaxedForm, fractionForm
+   , integerNormalForm, rationalNormalForm, mixedFractionNormalForm
+   , rationalRelaxedForm, fractionForm
    , intDiv, fracDiv, exprToNum
    ) where
 
@@ -82,14 +83,35 @@ integerNormalForm = makeView (optionNegate f) fromInteger
    f (Nat n) = Just n
    f _       = Nothing
 
+-- 5, -(2/5), (-2)/5, but not 2/(-5), 6/8, or -((-2)/5)
 rationalNormalForm :: View Expr Rational
-rationalNormalForm = makeView (optionNegate f) fromRational
+rationalNormalForm = makeView f fromRational
  where   
-   f (Nat a :/: Nat b) = do
-      guard (a > 0 && b > 1 && gcd a b == 1)
-      Just (fromInteger a / fromInteger b)
-   f (Nat n) = Just (fromInteger n)
-   f _       = Nothing
+   f (Nat a :/: Nat b) = simple a b
+   f (Negate (Nat a :/: Nat b)) = fmap negate (simple a b)
+   f (Negate (Nat a) :/: Nat b) = fmap negate (simple a b)
+   f a = fmap fromInteger (match integerNormalForm a)
+   
+   simple a b
+      | a > 0 && b > 1 && gcd a b == 1 = 
+           Just (fromInteger a / fromInteger b)
+      | otherwise = Nothing
+
+mixedFractionNormalForm :: View Expr Rational
+mixedFractionNormalForm = makeView f fromRational
+ where
+   f (Negate (Nat a) :-: (Nat b :/: Nat c)) | a > 0 = fmap (negate . (fromInteger a+)) (simple b c)
+   f (Negate (Nat a :+: (Nat b :/: Nat c))) | a > 0 = fmap (negate . (fromInteger a+)) (simple b c)
+   f (Nat a :+: (Nat b :/: Nat c)) | a > 0 = fmap (fromInteger a+) (simple b c)
+   f (Nat a :/: Nat b) = simple a b
+   f (Negate (Nat a :/: Nat b)) = fmap negate (simple a b)
+   f (Negate (Nat a) :/: Nat b) = fmap negate (simple a b)
+   f a = fmap fromInteger (match integerNormalForm a)
+   
+   simple a b
+      | a > 0 && b > 1 && gcd a b == 1 && a < b = 
+           Just (fromInteger a / fromInteger b)
+      | otherwise = Nothing
 
 fractionForm :: View Expr (Integer, Integer)
 fractionForm = makeView f (\(a, b) -> (fromInteger a :/: fromInteger b))

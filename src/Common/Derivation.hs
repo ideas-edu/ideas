@@ -24,9 +24,9 @@ module Common.Derivation
    , restrictHeight, restrictWidth, commit
    , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps, changeLabel
      -- * Query a derivation
-   , isEmpty, derivationLength, terms, steps, filterDerivation
+   , isEmpty, derivationLength, terms, steps, triples, filterDerivation
      -- * Conversions
-   , derivation, derivations
+   , derivation, randomDerivation, derivations
    ) where
 
 import Common.Utils (safeHead)
@@ -34,6 +34,7 @@ import Control.Arrow
 import Control.Monad
 import Data.List
 import Data.Maybe
+import System.Random
 
 -----------------------------------------------------------------------------
 -- Data type definitions for derivation trees and derivation lists
@@ -178,6 +179,11 @@ terms (D a xs) = a:map snd xs
 steps :: Derivation s a -> [s]
 steps (D _ xs) = map fst xs
 
+-- | The triples of a derivation, consisting of the before term, the 
+-- step, and the after term.
+triples :: Derivation s a -> [(a, s, a)]
+triples d = zip3 (terms d) (steps d) (tail (terms d))
+
 -- | Filter steps from a derivation
 filterDerivation :: (s -> a -> Bool) -> Derivation s a -> Derivation s a
 filterDerivation p (D a xs) = D a (filter (uncurry p) xs)
@@ -194,3 +200,24 @@ derivations t = map (D (root t)) $
 -- | The first derivation (if any)
 derivation :: DerivationTree s a -> Maybe (Derivation s a)
 derivation = safeHead . derivations
+
+-- | Return  a random derivation (if any exists at all)
+randomDerivation :: RandomGen g => g -> DerivationTree s a -> Maybe (Derivation s a)
+randomDerivation g t = msum xs
+ where
+   (xs, g0) = shuffle g list
+   list     = map (fmap (D (root t))) $ 
+                [ Just [] | endpoint t ] ++ map make (branches t)
+   make (r, st) = do 
+      D a2 ys <- randomDerivation g0 st
+      return ((r,a2):ys)
+      
+shuffle :: RandomGen g => g -> [a] -> ([a], g)
+shuffle g0 xs = rec g0 [] (length xs) xs
+ where
+   rec g acc n xs = 
+      case splitAt i xs of
+         (as, b:bs) -> rec g1 (b:acc) (n-1) (as++bs)
+         _ -> (acc, g)
+    where
+      (i, g1) = randomR (0, n-1) g

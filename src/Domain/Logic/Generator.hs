@@ -126,7 +126,7 @@ removePartsInDNF = buildOr . filter (not . simple) . disjunctions
 --- QuickCheck generator
 
 instance Arbitrary SLogic where
-   arbitrary = sized (sizedGen True varGen)
+   arbitrary = sized (\i -> sizedGen True varGen (i `min` 4))
    coarbitrary logic = 
       case logic of
          Var x     -> variant 0 . coarbitrary (map ord (fromShowString x))

@@ -47,7 +47,7 @@ dnfExercise = makeExercise
    , strategy       = dnfStrategyDWA
    , navigation     = navigator
    , difference     = differenceMode eqLogic
-   , testGenerator  = Just (restrictGenerator suitable generateLogic)
+   , testGenerator  = Just (restrictGenerator suitable arbitrary)
    , randomExercise = useGenerator (const True) logicExercise
    }
 

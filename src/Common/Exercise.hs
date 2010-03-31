@@ -39,7 +39,8 @@ import qualified Common.Strategy as S
 import Common.Derivation
 import Common.Navigator
 import Common.Transformation
-import Common.Utils
+import Common.Utils (putLabel)
+import Common.View (makeView)
 import Control.Monad.Error
 import Data.Char
 import Data.List
@@ -286,33 +287,81 @@ printDerivation ex = putStrLn . showDerivation ex
          
 ---------------------------------------------------------------
 -- Checks for an exercise
+{-
+checkExercise :: Exercise a -> IO ()
+checkExercise ex = do 
+   putStrLn ("** " ++ show (exerciseCode ex))
+   -- Derivations for examples
+   checkExamples ex
+   -- Derivations for test generator
+   case testGenerator ex of
+      Nothing  -> return ()
+      Just gen -> do 
+         putStrLn "Checking with test generator"
+         forM_ [0 .. 100] $ \i -> do 
+            -- putChar '.'
+            g <- newStdGen
+            checksForTerm False ex (generate i g gen)
+            return ()
+   -- Derivations for random exercise generator
+   case randomExercise ex of
+      Nothing  -> return ()
+      Just f -> do 
+         putStrLn "Checking with random exercise generator"
+         forM_ [0 .. 109] $ \i -> do 
+            -- putChar '.'
+            g <- newStdGen
+            checksForTerm False ex (f g (i `div` 10))
+            return ()
+   -- Soundness of rules
+   case testGenerator ex of
+      Nothing  -> return ()
+      Just gen -> do
+         putStrLn "Soundness of rules with test generator"
+         forM_ (filter (not . isBuggyRule) (ruleset ex)) $ \r -> do
+            putStr ("[" ++ show r ++ "]   ")
+            xs <- generateIO 300 (smartGen r (liftM (inContext ex) gen))
+            let list = [ (x, y) | x <- xs, y <- applyAll r x ]
+                p (x, y) = not (equivalenceContext ex x y)               
+            case filter p list of
+               [] | null list -> putStrLn "Warning: no applications found" 
+                  | otherwise -> putStrLn "Ok"
+               (x, y):_ -> report $ 
+                  "counter example: " ++ prettyPrinterContext ex x
+                  ++ "  =>  " ++ prettyPrinterContext ex y -}
 
-checkExercise :: Show a => Exercise a -> IO ()
-checkExercise ex =
+checkExercise :: Exercise a -> IO ()
+checkExercise ex = do
+   putStrLn ("** " ++ show (exerciseCode ex))
+   checkExamples ex
    case testGenerator ex of 
       Nothing  -> return ()
       Just gen -> do
-         putStrLn ("** " ++ show (exerciseCode ex))
-         let check txt p = putLabel txt >> quickCheck p
-         check "parser/pretty printer" $ forAll gen $
-            checkParserPrettyEx ex   
-         
+         let showAsGen = showAs (prettyPrinter ex) gen
+             check txt p = putLabel txt >> quickCheck p
+         check "parser/pretty printer" $ forAll showAsGen $
+            checkParserPrettyEx ex . from
+
          putStrLn "Soundness non-buggy rules" 
          forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
             putLabel ("    " ++ name r)
-            testRuleSmart (equivalenceContext ex) r (liftM (inContext ex) gen)
+            let eq a b = equivalenceContext ex (from a) (from b)
+                myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
+                myView = makeView (return . from) (S (prettyPrinterContext ex))
+            testRuleSmart eq (liftRule myView r) myGen
 
-         check "non-trivial terms" $ 
-            forAll gen $ \x -> 
-            let trivial  = isReady ex x
-                rejected = not trivial
-                suitable = not trivial in
-            classify trivial  "trivial"  $
-            classify rejected "rejected" $
-            classify suitable "suitable" $ property True 
          check "soundness strategy/generator" $ 
-            forAll gen $
-               maybe False (isReady ex) . fromContext . applyD (strategy ex) . inContext ex
+            forAll showAsGen $
+               maybe False (isReady ex) . fromContext
+               . applyD (strategy ex) . inContext ex . from
+
+data ShowAs a = S {showS :: a -> String, from :: a}
+
+instance Show (ShowAs a) where
+   show a = showS a (from a)
+
+showAs :: (a -> String) -> Gen a -> Gen (ShowAs a)
+showAs f = liftM (S f)
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
@@ -327,37 +376,98 @@ checkExamples :: Exercise a -> IO ()
 checkExamples ex = do
    let xs = examples ex
    unless (null xs) $ do
-      putStrLn ("** " ++ show (exerciseCode ex))
       putStrLn $ "Checking " ++ show (length xs) ++ " examples"
-      bs <- forM xs $ \a -> 
-         case checksForTerm ex a of 
-            Left s  -> putStrLn ("Error: " ++ s) >> return False
-            Right _ -> return True 
+      bs <- forM xs $ \a -> checksForTerm True ex a
       when (and bs) $ 
          putStrLn "Passed all tests"
 
-checksForTerm :: Monad m => Exercise a -> a -> m ()
-checksForTerm ex a = do
-   unless (isSuitable ex a) $
-      fail $ "not suitable: " ++ prettyPrinter ex a
-   let txt = prettyPrinter ex a
-   case derivation (derivationTree (strategy ex) (inContext ex a)) of
-      Nothing -> fail $ "no derivation for " ++ txt
-      Just theDerivation -> do
-         let final = fromContext (last as)
-         unless (maybe False (isReady ex)  final) $
-            fail $ "not solved: " ++ txt ++ "  =>  " ++ 
-                          maybe "" (prettyPrinter ex) final
-         case [ (x, y) | x <- as, y <- as, not (equivalenceContext ex x y) ] of
-            (x, y):_ -> fail $  "not equivalent: " 
-                             ++ prettyPrinterContext ex x ++ "  with  "
-                             ++ prettyPrinterContext ex y
-            _        -> return ()
-         case filter (maybe False (not . checkParserPrettyEx ex) . fromContext) as of
-            hd:_ -> let s = prettyPrinterContext ex hd in
-                    fail $ "parse error for " ++ s 
-                         ++ ": parsed as " 
-                         ++ either show (prettyPrinter ex) (parser ex s)
-            _    -> return ()
-       where
-         as = terms theDerivation
+checksForTerm :: Bool -> Exercise a -> a -> IO Bool
+checksForTerm leftMost ex a = do
+   let tree = derivationTree (strategy ex) (inContext ex a)
+   -- Left-most derivation
+   b1 <- if not leftMost then return True else
+         case derivation tree of
+            Just d  -> checksForDerivation ex d
+            Nothing -> do 
+               report $ "no derivation for " ++ prettyPrinter ex a
+               return False
+   -- Random derivation
+   g  <- getStdGen
+   b2 <- case randomDerivation g tree of
+            Just d  -> checksForDerivation ex d
+            Nothing -> return True 
+   return $ and [b1, b2]
+         
+checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -> IO Bool
+checksForDerivation ex d = do
+   -- Conditions on starting term
+   let start = head (terms d)
+   b1 <- do let b = maybe False (isSuitable ex) (fromContext start)
+            unless b $ report $ 
+               "start term not suitable: " ++ prettyPrinterContext ex start
+            return b
+
+   b2 <- do let b = False -- maybe True (isReady ex) (fromContext start)
+            when b $ report $ 
+               "start term is ready: " ++ prettyPrinterContext ex start
+            return b
+   -- Conditions on final term
+   let final = last (terms d)
+   b3 <- do let b = False -- maybe True (isSuitable ex) (fromContext final)
+            when b $ report $ 
+               "final term is suitable: " ++ prettyPrinterContext ex start
+               ++ "  =>  " ++ prettyPrinterContext ex final
+            return b
+   b4 <- do let b = maybe False (isReady ex) (fromContext final)
+            unless b $ report $ 
+               "final term not ready: " ++ prettyPrinterContext ex start
+               ++ "  =>  " ++ prettyPrinterContext ex final
+            return b
+   -- Parser/pretty printer on terms
+   let ts = terms d
+       p  = maybe False (not . checkParserPrettyEx ex) . fromContext
+   b5 <- case filter p ts of
+            []   -> return True
+            hd:_ -> do
+               let s = prettyPrinterContext ex hd 
+               report $  "parse error for " ++ s ++ ": parsed as " 
+                      ++ either show (prettyPrinter ex) (parser ex s)
+               return False
+   -- Equivalences between terms
+   let pairs    = [ (x, y) | x <- ts, y <- ts ]
+       p (x, y) = not (equivalenceContext ex x y)
+   b6 <- case filter p pairs of
+            []       -> return True
+            (x, y):_ -> do
+               report $  "not equivalent: " ++ prettyPrinterContext ex x
+                      ++ "  with  " ++ prettyPrinterContext ex y
+               return False
+   -- Similarity of terms
+   let p (x, _, y) = False 
+                     {-
+                     fromMaybe False $ 
+                        liftM2 (similarity ex) (fromContext x) (fromContext y) -}
+   b7 <- case filter p (triples d) of
+            [] -> return True
+            (x, r, y):_ -> do
+               report $ "similar subsequent terms: " ++ prettyPrinterContext ex x
+                      ++ "  with  " ++ prettyPrinterContext ex y
+                      ++ "  using  " ++ show r
+               return False
+   let xs = [ x | cx <- terms d, x <- fromContext cx, not (similarity ex x x) ]
+   b8 <- case xs of
+            [] -> return True
+            hd:_ -> do
+               report $ "term not similar to itself: " ++ prettyPrinter ex hd
+               return False
+   -- Result
+   return $ and [b1, b2, b3, b4, b5, b6, b7, b8]
+
+report :: String -> IO ()
+report txt = putStrLn ("Error: " ++ txt)
+
+{-
+generateIO :: Int -> Gen a -> IO [a]
+generateIO n gen = forM [0..n] $ \i -> do
+   std <- newStdGen
+   return (generate i std gen) -}

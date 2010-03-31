@@ -19,11 +19,7 @@ import Control.Monad
 import System.Environment
 import Service.ExerciseList
 
-import qualified Domain.Logic as Logic
 import qualified Domain.LinearAlgebra.Checks as LA
-import qualified Domain.LinearAlgebra as LA
-import qualified Domain.RelationAlgebra as RA
-
 import qualified Service.ModeJSON as ModeJSON
 import qualified Service.ModeXML as ModeXML
 
@@ -49,14 +45,14 @@ main = do
    JSON.testMe
 
    putStrLn "* 2. Exercise checks"
-   checkExercise Logic.dnfExercise
-   checkExercise LA.gaussianElimExercise
-   checkExercise LA.linearSystemExercise
-   checkExercise LA.systemWithMatrixExercise
-   checkExercise LA.gramSchmidtExercise
-   checkExercise RA.cnfExercise
+   --checkExercise Logic.dnfExercise
+   --checkExercise LA.gaussianElimExercise
+   --checkExercise LA.linearSystemExercise
+   --checkExercise LA.systemWithMatrixExercise
+   --checkExercise LA.gramSchmidtExercise
+   --checkExercise RA.cnfExercise
    forM_ exercises $ \(Some ex) ->
-      checkExamples ex
+      checkExercise ex
    
    -- putStrLn "* 3. Confluence checks"
    -- logicConfluence

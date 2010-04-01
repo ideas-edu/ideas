@@ -44,7 +44,7 @@ import qualified Prelude
 
 linearRules :: [Rule (Context (Equation Expr))]
 linearRules = map liftToContext $
-   [ removeDivision, ruleMulti merge, ruleMulti distributeTimes
+   [ removeDivision, ruleMulti merge, ruleMulti distributeTimesSomewhere
    , varToLeft, coverUpNegate, coverUpTimes
    ] ++
    map ($ oneVar) 
@@ -61,7 +61,7 @@ quadraticRules = -- abcFormula
    [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
    , ruleOnce prepareSplitSquare, ruleOnce factorLeftAsSquare
    , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
-   , ruleOnce2 (ruleSomewhere distributeTimes)
+   , ruleOnce2 distributeTimesSomewhere
    , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
    , ruleOnce moveToLeft, ruleMulti2 (ruleSomewhere simplerSquareRoot)
    ]
@@ -471,6 +471,12 @@ removeDivision = makeRule "remove division" $ flip supply1 timesT $ \eq -> do
       ps -> let (bs, ns) = unzip ps
             in if or bs then return (fromInteger (foldr1 lcm ns))
                         else Nothing
+
+-- Bug fix for distribution in -2*(x+1)    (duplicate result)
+-- This should be a temporary fix
+distributeTimesSomewhere :: Rule Expr
+distributeTimesSomewhere = makeSimpleRuleList (name distributeTimes) $
+   nub . map cleanUpSimple . applyAll (ruleSomewhere distributeTimes)
 
 distributeTimes :: Rule Expr
 distributeTimes = makeSimpleRuleList "distribution multiplication" $ \expr -> do

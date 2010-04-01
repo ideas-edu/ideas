@@ -45,7 +45,7 @@ linearStrategyWith f = cleanUpStrategy (fmap f) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (
               removeDivision 
-          <|> ruleMulti (ruleSomewhere distributeTimes)
+          <|> ruleMulti distributeTimesSomewhere
           <|> ruleMulti merge))
    <*> label "Phase 2" (repeat (
           (flipEquation |> varToLeft)
@@ -100,7 +100,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
       ( ruleOnce2 (ruleSomewhere merge) 
         <|> ruleOnce cancelTerms  
         <|> ruleMulti2 (ruleSomewhere distributionSquare)
-        <|> ruleMulti2 (ruleSomewhere distributeTimes) 
+        <|> ruleMulti2 distributeTimesSomewhere 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)
         <|> ruleOnce flipEquation)
       |> (ruleOnce moveToLeft <|> remove (ruleOnce prepareSplitSquare))

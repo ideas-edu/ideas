@@ -270,8 +270,16 @@ ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
    return (Var x .~=. new)
 
 ruleNormalizeRational :: Rule Expr
-ruleNormalizeRational = makeSimpleRule "normalize rational number" $ \a -> do
-   b <- canonical rationalView a
+ruleNormalizeRational = 
+   ruleFromView "normalize rational number" rationalView
+
+ruleNormalizeMixedFraction :: Rule Expr
+ruleNormalizeMixedFraction = 
+   ruleFromView "normalize mixed fraction" mixedFractionView
+
+ruleFromView :: Eq a => String -> View a b -> Rule a
+ruleFromView s v = makeSimpleRuleList s $ \a -> do
+   b <- canonicalM v a
    guard (a /= b)
    return b
 

@@ -34,14 +34,13 @@ import Domain.Math.Polynomial.CleanUp
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Equation Expr)
-linearStrategy = linearStrategyWith cleanUpSimple
+linearStrategy = linearStrategyWith False
 
 linearMixedStrategy :: LabeledStrategy (Equation Expr)
-linearMixedStrategy = linearStrategyWith (f . cleanUpSimple)
- where f = transform (simplify mixedFractionView) -- quick solution
+linearMixedStrategy = linearStrategyWith True
 
-linearStrategyWith :: (Expr -> Expr) -> LabeledStrategy (Equation Expr)
-linearStrategyWith f = cleanUpStrategy (fmap f) $
+linearStrategyWith :: Bool -> LabeledStrategy (Equation Expr)
+linearStrategyWith mixed = cleanUpStrategy (fmap clean) $
    label "Linear Equation" 
     $  label "Phase 1" (repeat (
               removeDivision 
@@ -50,9 +49,16 @@ linearStrategyWith f = cleanUpStrategy (fmap f) $
    <*> label "Phase 2" (repeat (
           (flipEquation |> varToLeft)
           <|> coverups))
-   <*> try (ruleMulti ruleNormalizeRational)
+   <*> try (ruleMulti final)
  where
    coverups = coverUpPlus id <|> coverUpTimes <|> coverUpNegate
+   (clean, final) 
+      | mixed = 
+           ( transform (simplify mixedFractionView) . cleanUpSimple
+           , ruleNormalizeMixedFraction
+           )
+      | otherwise = 
+          (cleanUpSimple, ruleNormalizeRational)
       
 -- helper strategy
 coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a

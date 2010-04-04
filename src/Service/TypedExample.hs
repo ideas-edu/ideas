@@ -14,7 +14,9 @@ typedExample pkg service args = do
    -- Construct a request in xml
    xmlRequest <- 
       case makeArgType args of
-         reqTuple ::: reqTp -> 
+         Nothing -> return $  
+            stdReply (serviceName service) enc (exercise pkg) (return ())
+         Just (reqTuple ::: reqTp) ->
             case encodeType (encoder evaluator) reqTp reqTuple of
                Left err  -> fail err
                Right xml -> return $ 
@@ -49,12 +51,12 @@ stdReply s enc ex body = makeXML "request" $ do
    "encoding"   .=. enc
    body
 
-makeArgType :: [TypedValue a] -> TypedValue a
-makeArgType []   = error "makeArgType: empty list"
-makeArgType [tv] = tv
-makeArgType ((a1 ::: t1) : rest) = 
-   case makeArgType rest of
-      (a2 ::: t2) -> (a1, a2) ::: Pair t1 t2
+makeArgType :: [TypedValue a] -> Maybe (TypedValue a)
+makeArgType []   = fail "makeArgType: empty list"
+makeArgType [tv] = return tv
+makeArgType ((a1 ::: t1) : rest) = do
+   a2 ::: t2 <- makeArgType rest
+   return $ (a1, a2) ::: Pair t1 t2
 
 dynamicApply :: TypedValue a -> TypedValue a -> TypedValue a
 dynamicApply fun arg =

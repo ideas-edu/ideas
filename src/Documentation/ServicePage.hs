@@ -77,6 +77,7 @@ examples = concat
    , logic "onefirst" [stLogic2]
    , lineq "onefirst" [stLineq2]
    , logic "applicable" [[] ::: Location, stLogic1]
+   , lineq "rulesinfo" []
    ]
  where
    strVar   = Var . ShowString

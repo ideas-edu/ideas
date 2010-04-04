@@ -9,7 +9,10 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.RulesInfo (RulesInfo, mkRulesInfo, rulesInfoXML) where
+module Service.RulesInfo 
+   ( RulesInfo, mkRulesInfo, rulesInfoXML
+   , rewriteRuleToFMP, collectExamples
+   ) where
 
 import Common.Utils (Some(..))
 import Common.Context
@@ -83,6 +86,7 @@ termToOMOBJ term =
       Con s   -> OMS (fromSymbol s)
       Meta i  -> OMV ("$" ++ show i)
       Num n   -> OMI n
+      Float d -> OMF d
       App _ _ -> let (f, xs) = getSpine term
                  in OMA (map termToOMOBJ (f:xs))
                  

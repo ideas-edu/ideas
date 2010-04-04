@@ -88,7 +88,6 @@ exerciseOverviewPageFile = "exercises.html"
 exerciseOverviewAllPageFile :: String
 exerciseOverviewAllPageFile = "exercises-all.html"
 
-
 serviceOverviewPageFile :: String
 serviceOverviewPageFile = "services.html"
 
@@ -103,6 +102,12 @@ exerciseStrategyFile code =
    exercisePagePath code
    ++ filter (not . isSpace) (identifier code)
    ++ "-strategy.html"
+
+exerciseRulesFile :: ExerciseCode -> String
+exerciseRulesFile code = 
+   exercisePagePath code
+   ++ filter (not . isSpace) (identifier code)
+   ++ "-rules.html"
 
 exerciseDerivationsFile :: ExerciseCode -> String
 exerciseDerivationsFile code = 

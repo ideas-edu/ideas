@@ -122,11 +122,12 @@ rulesPage pkg = defaultPage title 2 $ do
    h1 title
    -- Groups
    let groups = sort (nub (concatMap ruleGroups (ruleset ex)))
-   ul $ flip map groups $ \g -> do
-      bold $ text $ g ++ ":"
-      space
-      let elems = filter ((g `elem`) . ruleGroups) (ruleset ex)
-      text $ commaList $ map name elems
+   unless (null groups) $ do
+      ul $ flip map groups $ \g -> do
+         bold $ text $ g ++ ":"
+         space
+         let elems = filter ((g `elem`) . ruleGroups) (ruleset ex)
+         text $ commaList $ map name elems
       
    -- General info
    forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do

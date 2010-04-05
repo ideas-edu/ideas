@@ -12,6 +12,7 @@
 module Service.ServiceList (serviceList, Service(..), getService, evalService) where
 
 import qualified Common.Exercise as E
+import Common.Strategy (toStrategy)
 import Common.Transformation
 import Common.Utils (Some(..))
 import Common.Exercise hiding (Exercise)
@@ -44,7 +45,7 @@ serviceList =
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
    , problemdecompositionS
-   , exerciselistS, rulelistS, rulesinfoS
+   , exerciselistS, rulelistS, rulesinfoS, strategyinfoS
    ]
 
 makeService :: String -> String -> TypedValue a -> Service a
@@ -211,7 +212,12 @@ rulesinfoS = makeService "rulesinfo"
    "Returns a list of all rules of a particular exercise, with many details \
    \including Formal Mathematical Properties (FMPs) and example applications." $
    mkRulesInfo ::: RulesInfo
-      
+
+strategyinfoS :: Service a
+strategyinfoS = makeService "strategyinfo"
+   "Returns the representation of the strategy of a particular exercise." $ 
+   (toStrategy . strategy) ::: Exercise :-> Strategy 
+   
 allExercises :: [(String, String, String, String)]
 allExercises  = map make $ sortBy cmp exercises
  where

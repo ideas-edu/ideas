@@ -189,6 +189,7 @@ xmlEncoder b f ex = Encoder
                   return (element "list" elems)
          Tp.Elem t1   -> liftM (element "elem") . encode enc ex t1
          Tp.Tag s t1  -> liftM (element s) . encode enc ex t1  -- quick fix
+         Tp.Strategy  -> return . builder . toXML
          Tp.Rule      -> return . ("ruleid" .=.) . Rule.name
          Tp.RulesInfo -> \_ -> rulesInfoXML ex (encodeTerm enc)
          Tp.Term      -> encodeTerm enc

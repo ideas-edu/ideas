@@ -16,7 +16,7 @@ import Common.Context (Context, fromContext)
 import Common.Exercise (Exercise)
 import Common.Navigator (Location)
 import Common.Transformation (Rule, name)
-import Common.Strategy (StrategyLocation, StrategyConfiguration)
+import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
 import Common.Utils (commaList)
 import Control.Arrow
 import Control.Monad
@@ -68,6 +68,7 @@ data Type a t where
    -- Exercise-specific types
    State        :: Type a (State a)
    Exercise     :: Type a (Exercise a)
+   Strategy     :: Type a (Strategy (Context a))
    ExerciseText :: Type a (ExerciseText a)
    Rule         :: Type a (Rule (Context a))
    RulesInfo    :: Type a (RulesInfo a)
@@ -110,6 +111,7 @@ groundType tp =
    case tp of 
       State        -> Just "State"
       Exercise     -> Just "Exercise"
+      Strategy     -> Just "Strategy"
       ExerciseText -> Just "ExerciseText"
       Rule         -> Just "Rule"
       RulesInfo    -> Just "RulesInfo"

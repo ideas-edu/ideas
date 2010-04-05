@@ -1,0 +1,37 @@
+<reply result="ok" version="0.5.12">
+  <label name="Linear Equation">
+    <sequence>
+      <rule name="Identity"/>
+      <label name="Phase 1">
+        <repeat>
+          <choice>
+            <rule name="remove division"/>
+            <rule name="distribution multiplication"/>
+            <rule name="merge similar terms"/>
+          </choice>
+        </repeat>
+      </label>
+      <label name="Phase 2">
+        <repeat>
+          <choice>
+            <orelse>
+              <rule name="flip equation"/>
+              <rule name="variable to left"/>
+            </orelse>
+            <rule name="cover-up plus [one var]"/>
+            <rule name="cover-up minus left [one var]"/>
+            <rule name="cover-up minus right [one var]"/>
+            <fail/>
+            <rule name="cover-up times [vars]"/>
+            <rule name="cover-up negate [vars]"/>
+          </choice>
+        </repeat>
+      </label>
+      <orelse>
+        <rule name="normalize rational number"/>
+        <succeed/>
+      </orelse>
+    </sequence>
+  </label>
+</reply>
+

@@ -53,6 +53,7 @@ stdReply s enc ex body = makeXML "request" $ do
 
 makeArgType :: [TypedValue a] -> Maybe (TypedValue a)
 makeArgType []   = fail "makeArgType: empty list"
+makeArgType [_ ::: Exercise] = fail "makeArgType: empty list"
 makeArgType [tv] = return tv
 makeArgType ((a1 ::: t1) : rest) = do
    a2 ::: t2 <- makeArgType rest
@@ -74,6 +75,7 @@ equal t1 t2 =
       (StrategyCfg, StrategyCfg) -> Just id
       (State, State) -> Just id
       (Location, Location) -> Just id
+      (Exercise, Exercise) -> Just id
       _ -> Nothing
       
 {-

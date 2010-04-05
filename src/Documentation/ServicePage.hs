@@ -78,6 +78,8 @@ examples = concat
    , lineq "onefirst" [stLineq2]
    , logic "applicable" [[] ::: Location, stLogic1]
    , lineq "rulesinfo" []
+   , lineq "rulelist" [linearExercise ::: Exercise]
+   , lineq "strategyinfo" [linearExercise ::: Exercise]
    ]
  where
    strVar   = Var . ShowString

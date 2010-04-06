@@ -219,7 +219,7 @@ squareBothSides = makeSimpleRule "square both sides" $ onceJoinM f
       return $ orList [a :==: b, a :==: -b]
    f _ = Nothing
 
--- prepare splitting a square; turn lhs into x^2+bx+c s.t. (b/2)^2 is c
+-- prepare splitting a square; turn lhs into x^2+bx+c such that (b/2)^2 is c
 prepareSplitSquare :: Rule (Equation Expr)
 prepareSplitSquare = makeSimpleRule "prepare split square" $ \(lhs :==: rhs) -> do
    d <- match rationalView rhs

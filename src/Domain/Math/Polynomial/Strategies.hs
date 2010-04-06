@@ -80,6 +80,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
  where
    fromEquation = mapRules (liftToContext . liftRule (switchView equationView))
  
+   -- ax^2 + bx + c == 0, without square formula
    generalForm = label "general form" $ 
       ruleOnce commonFactorVar 
       <|> ruleOnce noLinFormula{- or coverup -}
@@ -90,12 +91,15 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
  
    zeroForm = label "zero form" $
       toStrategy mulZero
-         
+    
+   -- expr == c
    constantForm = label "constant form" $ 
-      coverUpPower <|> ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
+      -- coverUpPower <|> -- never used, see coverUpPower rule in general form
+      ruleOnce coverUpTimes <|> coverUpPlus ruleOnce
       <|> ruleOnce coverUpNegate <|> ruleOnce coverUpNumerator 
       <|> squareBothSides <|> ruleOnce factorLeftAsSquare 
-         
+
+   -- simplifies square roots, or do an approximation 
    simplifyForm = (fromEquation $ 
       label "square root simplification" $ 
            toStrategy (ruleMulti2 (ruleSomewhere simplerSquareRoot)))

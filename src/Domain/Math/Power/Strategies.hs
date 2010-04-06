@@ -33,11 +33,11 @@ import Test.QuickCheck hiding (label)
 -- Strategies
 
 makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context Expr)
-makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategy rs
+makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategise l rs
   where
-    cleanup  = applyD . strategy
-    strategy = label l . repeat . alternatives . map (somewhere . liftToContext)
-                
+    cleanup  = applyD . strategise l
+
+strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
 
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = makeStrategy 

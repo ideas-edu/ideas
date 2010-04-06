@@ -195,6 +195,16 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , examples     = concat $ nonNegExp ++ nonNegExp2
    }
 
+calcPowerExercise :: Exercise Expr
+calcPowerExercise = (powerExercise (makeStrategy "calcPower" (calcPower : rationalRules) rationalRules))
+   { description  = "simplify expression (powers)"
+   , exerciseCode = makeCode "math" "simplifyPower"
+   , isReady      = isPowerAdd
+   , isSuitable   = (`belongsTo` normPowerView')
+   , equivalence  = viewEquivalent normPowerView'
+   , examples     = concat $ negExp3
+   }
+
 -- | test stuff
 showDerivations ex exercises level = 
   mapM_ (putStrLn . showDerivation ex) $ exercises !! level

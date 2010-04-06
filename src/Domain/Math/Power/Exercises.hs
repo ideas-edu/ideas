@@ -21,7 +21,7 @@ import Prelude hiding ( (^) )
 import Common.Utils (distinct)
 import Common.Apply 
 import Common.Exercise
-import Common.Strategy hiding (not)
+import Common.Strategy hiding (not, replicate)
 import Common.View
 import Common.Context
 import Common.Navigator
@@ -206,8 +206,11 @@ calcPowerExercise = (powerExercise (makeStrategy "calcPower" (calcPower : ration
    }
 
 -- | test stuff
-showDerivations ex exercises level = 
-  mapM_ (putStrLn . showDerivation ex) $ exercises !! level
+showDerivations ex es = 
+  mapM_ (putStrLn . showDerivation ex) es
+
+showAllDerivations ex = 
+  mapM_ (\es -> putStrLn (replicate 80 '-') >> showDerivations ex es)
                         
 a = Var "a"
 b = Var "b"

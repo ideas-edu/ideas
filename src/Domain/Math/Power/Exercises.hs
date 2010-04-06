@@ -172,7 +172,8 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'
-   , examples     = concat $ simplerPowers ++ powers1 ++ powers2
+   , examples     = concat $  simplerPowers ++ powers1 ++ powers2 
+                           ++ negExp1                               
    }
 
 powerOfExercise :: Exercise Expr

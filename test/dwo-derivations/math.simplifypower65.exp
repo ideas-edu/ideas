@@ -1,25 +1,25 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="distribute power">
       <expr>
-        (-a)^3*32*b^5*a^2
+        (a^2)^7*(b^3)^7
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        a^14*(b^3)^7
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="push negation out">
+    <elem ruleid="mul exponents">
       <expr>
-        (-a^3)*32*b^5*a^2
+        a^14*b^21
       </expr>
       <context>
-        <item name="location" value="[0,0,0]"/>
+        <item name="location" value="[1]"/>
       </context>
-    </elem>
-    <elem ruleid="add exponents">
-      <expr>
-        -a^5*(32*b^5)
-      </expr>
     </elem>
   </list>
 </reply>

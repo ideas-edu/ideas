@@ -1,26 +1,24 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="distribute power">
       <expr>
-        3*a*(-2*b)^3*a^2*b^2
-      </expr>
-    </elem>
-    <elem ruleid="distribute power">
-      <expr>
-        (-3*a*8*b^3)*a^2*b^2
+        (-a)^3*32*b^5*a^2
       </expr>
       <context>
-        <item name="location" value="[0,0]"/>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="push negation out">
+      <expr>
+        (-a^3)*32*b^5*a^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0]"/>
       </context>
     </elem>
     <elem ruleid="add exponents">
       <expr>
-        -3*a^3*(8*b^3)*b^2
-      </expr>
-    </elem>
-    <elem ruleid="add exponents">
-      <expr>
-        -8*b^5*(3*a^3)
+        -a^5*(32*b^5)
       </expr>
     </elem>
   </list>

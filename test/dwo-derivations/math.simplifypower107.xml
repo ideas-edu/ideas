@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifypower" encoding="string">
+  <state>
+    <expr>
+      (a^(-1))^2/a^3
+    </expr>
+  </state>
+</request>

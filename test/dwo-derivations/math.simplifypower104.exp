@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        (a^(-3))^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        a^(-6)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

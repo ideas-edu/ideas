@@ -1,0 +1,39 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="mul exponents">
+      <expr>
+        a^(-8)/(a^2)^3*a
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        1/(a^2)^3*a^(-7)
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        1/a^6*a^(-7)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        a^(-6)*a^(-7)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        a^(-13)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

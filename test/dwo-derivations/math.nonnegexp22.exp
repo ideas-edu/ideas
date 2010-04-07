@@ -1,0 +1,47 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        1/2*a^(-1)/(4*b)^(-2)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(2*a)/(4*b)^(-2)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/(2*a)/(1/16*b^(-2))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(2*a)/(1/(16*b^2))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        8/a*b^2
+      </expr>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        8*b^2/a
+      </expr>
+    </elem>
+  </list>
+</reply>
+

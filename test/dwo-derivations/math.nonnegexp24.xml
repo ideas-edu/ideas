@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
+  <state>
+    <expr>
+      (5*a)^(-2)*10*b^(-1)
+    </expr>
+  </state>
+</request>

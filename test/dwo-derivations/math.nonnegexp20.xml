@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
+  <state>
+    <expr>
+      1/a^(-3)*(b^(-2))^2
+    </expr>
+  </state>
+</request>

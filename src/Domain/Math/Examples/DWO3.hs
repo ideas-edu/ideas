@@ -262,7 +262,7 @@ brokenExp1' =
     , a*root (a^2) 3, a^3*root (a^2) 5, a^2*root (a^3) 5, a^4*root (a^5) 6
     ] 
   , [ 1/sqrt a, a/root a 3, a^2/sqrt a, 1/root a 5, 1/(a*root a 3)
-    , a^2/(a*sqrt a), 1/(a^3*sqrt a), a^3/(a^2/root a 3)
+    , a^2/(a*sqrt a), 1/(a^3*sqrt a), a^3/(a^2*root a 3)
     ]
   ]
  where

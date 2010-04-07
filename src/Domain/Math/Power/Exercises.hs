@@ -184,7 +184,7 @@ powerOfExercise = (powerExercise powerStrategy)
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerView
-   , examples     = concat $ powersOfA ++ powersOfX
+   , examples     = concat $ powersOfA ++ powersOfX ++ brokenExp1'
    }
 
 nonNegExpExercise :: Exercise Expr

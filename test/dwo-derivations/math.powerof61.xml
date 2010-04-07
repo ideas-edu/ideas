@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.powerof" encoding="string">
+  <state>
+    <expr>
+      sqrt x/x^2
+    </expr>
+  </state>
+</request>

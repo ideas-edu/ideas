@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.powerof" encoding="string">
+  <state>
+    <expr>
+      sqrt (a^6)
+    </expr>
+  </state>
+</request>

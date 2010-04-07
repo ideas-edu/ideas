@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="write as power">
+      <expr>
+        a^3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

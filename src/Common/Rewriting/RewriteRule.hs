@@ -160,7 +160,7 @@ showRewriteRule sound r@(R _ _ _) = do
    x <- fromTermTp r (sub |-> a)
    y <- fromTermTp r (sub |-> b)
    let op = if sound then "~>" else "/~>" 
-   return (show x ++ "  " ++ op ++ "  " ++ show y)
+   return (show x ++ " " ++ op ++ " " ++ show y)
  where
    a :~> b = rulePair r 0
    vs  = IS.toList (getMetaVars a `IS.union` getMetaVars b)

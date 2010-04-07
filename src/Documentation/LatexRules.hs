@@ -62,7 +62,7 @@ exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ru
 ruleToTeX :: (Some RewriteRule, Bool) -> Maybe String
 ruleToTeX (Some r, sound) = do
    txt <- showRewriteRule sound r
-   return $ "RewriteRule " ++ filter isAlpha (ruleName r) 
+   return $ "RewriteRule " ++ withoutDigits (ruleName r) 
                            ++ " (" ++ txt ++ ")"
 
    
@@ -75,6 +75,7 @@ makeSingleRule dom r
  where
    content = unlines $
       [ "\\pagestyle{empty}"
+      , formatRuleName (name r)
       , "\\begin{code}"
       ] ++
       map (filter (/= '"') . fromMaybe "" . ruleToTeX) (getRewriteRules r) ++
@@ -97,12 +98,12 @@ texHeader fmt = unlines
    [ "\\documentclass{article}"
    , ""
    , "%include lhs2TeX.fmt"
-   , "%format RewriteRule (a) (b) = a\": \"b"
-   , "%format :~> = \"\\:\\leadsto\\:\""
-   , "%format :/~> = \"\\:\\not\\leadsto\\:\""
+   , "%format RewriteRule (a) (b) = \"\\rewriterule{\"a\"}{\"b\"}\""
+   , "%format ~> = \"\\:\\leadsto\\:\""
+   , "%format /~> = \"\\:\\not\\leadsto\\:\""
    , maybe "" ("%include "++) fmt
    , "" 
-   , "\\newcommand{\\rewriterule}[2]{#1: #2}"
+   , "\\newcommand{\\rewriterule}[2]{#1:\\quad #2}"
    , "\\newcommand{\\rulename}[1]{\\mbox{\\sc #1}}"
    ]
    
@@ -126,8 +127,7 @@ texSectionRules ex = unlines
    groups  = nub (concatMap ruleGroups (ruleset ex))
    names   = let f (Some r, _) = ruleName r 
              in nub (map f rules)
-   formats = unlines (map make names)
-   make  s = "%format " ++ s ++ " = \"\\rulename{" ++ s ++ "}\"" 
+   formats = unlines (map formatRuleName names)
    
    makeGroup :: Maybe String -> String
    makeGroup mgroup = unlines 
@@ -139,3 +139,13 @@ texSectionRules ex = unlines
     where
       p x = maybe (null $ ruleGroups x) (`elem` ruleGroups x) mgroup
       xs  = mapMaybe ruleToTeX $ concatMap getRewriteRules $ filter p $ ruleset ex
+      
+formatRuleName :: String -> String
+formatRuleName s = "%format " ++ withoutDigits s ++ " = \"\\rulename{" ++ s ++ "}\""
+
+withoutDigits :: String -> String
+withoutDigits = concatMap f 
+ where
+   f c | isAlpha c = [c]
+       | isDigit c = "QX" ++ [chr (ord c + 49)]
+       | otherwise = []

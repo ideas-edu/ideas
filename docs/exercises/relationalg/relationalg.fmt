@@ -7,7 +7,7 @@
 %format Var a = a
 %format V     = "V"
 %format I     = "I"
-%format _0    = "q"
-%format _1    = "r"
-%format _2    = "s"
-%format _3    = "t"
+%format a     = "{q}"
+%format b     = "{r}"
+%format c     = "{s}"
+%format d     = "{t}"

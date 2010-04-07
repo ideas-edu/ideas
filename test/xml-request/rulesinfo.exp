@@ -1,10 +1,10 @@
-<reply result="ok" version="0.5.12">
+<reply result="ok" version="0.5.13">
   <rule name="AbsorpAnd" buggy="false" rewriterule="true">
     <description>
       AbsorpAnd
     </description>
     <CMP>
-      a /\ (a || b)  ~&gt;  a
+      a /\ (a || b) ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -31,7 +31,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ (b || a)  ~&gt;  a
+      a /\ (b || a) ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -58,7 +58,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ a  ~&gt;  a
+      (a || b) /\ a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -85,7 +85,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (b || a) /\ a  ~&gt;  a
+      (b || a) /\ a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -117,7 +117,7 @@
       AbsorpOr
     </description>
     <CMP>
-      a || a /\ b  ~&gt;  a
+      a || a /\ b ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -144,7 +144,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || b /\ a  ~&gt;  a
+      a || b /\ a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -171,7 +171,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || a  ~&gt;  a
+      a /\ b || a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -198,7 +198,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      b /\ a || a  ~&gt;  a
+      b /\ a || a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -233,7 +233,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a /\ ~a  /~&gt;  T
+      a /\ ~a /~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -258,7 +258,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ a  /~&gt;  T
+      ~a /\ a /~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -283,7 +283,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ ~a  /~&gt;  a
+      a /\ ~a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -308,7 +308,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ a  /~&gt;  a
+      ~a /\ a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -338,7 +338,7 @@
       AndOverOr
     </description>
     <CMP>
-      a /\ (b || c)  ~&gt;  a /\ b || a /\ c
+      a /\ (b || c) ~&gt; a /\ b || a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -378,7 +378,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  ~&gt;  a /\ c || b /\ c
+      (a || b) /\ c ~&gt; a /\ c || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -426,7 +426,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a /\ a  /~&gt;  T
+      a /\ a /~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -456,7 +456,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b -&gt; c  /~&gt;  (a -&gt; b) -&gt; c
+      a -&gt; b -&gt; c /~&gt; (a -&gt; b) -&gt; c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -492,7 +492,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a -&gt; b) -&gt; c  /~&gt;  a -&gt; b -&gt; c
+      (a -&gt; b) -&gt; c /~&gt; a -&gt; b -&gt; c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -536,7 +536,7 @@
       Associativity
     </group>
     <CMP>
-      (a /\ b) /\ c  ~&gt;  a /\ b /\ c
+      (a /\ b) /\ c ~&gt; a /\ b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -580,7 +580,7 @@
       Associativity
     </group>
     <CMP>
-      (a || b) || c  ~&gt;  a || b || c
+      (a || b) || c ~&gt; a || b || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -624,7 +624,7 @@
       Common misconceptions
     </group>
     <CMP>
-      (a || b) || (a /\ b) /\ c  /~&gt;  a || b
+      (a || b) || (a /\ b) /\ c /~&gt; a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -664,7 +664,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || (a || b) /\ c  /~&gt;  a /\ b
+      a /\ b || (a || b) /\ c /~&gt; a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -704,7 +704,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ (a /\ b || c)  /~&gt;  a || b
+      (a || b) /\ (a /\ b || c) /~&gt; a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -744,7 +744,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a /\ b) /\ ((a || b) || c)  /~&gt;  a /\ b
+      (a /\ b) /\ ((a || b) || c) /~&gt; a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -792,7 +792,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a || b /\ c  /~&gt;  (a || b) /\ c
+      a || b /\ c /~&gt; (a || b) /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -828,7 +828,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  /~&gt;  a || b /\ c
+      (a || b) /\ c /~&gt; a || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -864,7 +864,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  /~&gt;  a /\ (b || c)
+      a /\ b || c /~&gt; a /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -900,7 +900,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ (b || c)  /~&gt;  a /\ b || c
+      a /\ (b || c) /~&gt; a /\ b || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -944,7 +944,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  /~&gt;  ~a || b
+      ~(a /\ b) /~&gt; ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -977,7 +977,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a /\ b)  /~&gt;  a || ~b
+      ~(a /\ b) /~&gt; a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1010,7 +1010,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a /\ b)  /~&gt;  a || b
+      ~(a /\ b) /~&gt; a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1040,7 +1040,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  /~&gt;  ~a /\ b
+      ~(a || b) /~&gt; ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1073,7 +1073,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  /~&gt;  a /\ ~b
+      ~(a || b) /~&gt; a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1106,7 +1106,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  /~&gt;  a /\ b
+      ~(a || b) /~&gt; a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1144,7 +1144,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  /~&gt;  ~(~a || ~b)
+      ~(a /\ b) /~&gt; ~(~a || ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1183,7 +1183,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  /~&gt;  ~(~a /\ ~b)
+      ~(a || b) /~&gt; ~(~a /\ ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1230,7 +1230,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  /~&gt;  ~a /\ ~b
+      ~(a /\ b) /~&gt; ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1274,7 +1274,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a || b)  /~&gt;  ~a || ~b
+      ~(a || b) /~&gt; ~a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1318,7 +1318,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(~(a /\ b) || c)  /~&gt;  ~(~a || ~b) || c
+      ~(~(a /\ b) || c) /~&gt; ~(~a || ~b) || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1369,7 +1369,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~(a /\ b) /\ c)  /~&gt;  ~(~a || ~b) /\ c
+      ~(~(a /\ b) /\ c) /~&gt; ~(~a || ~b) /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1420,7 +1420,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~(a || b) || c)  /~&gt;  ~(~a /\ ~b) || c
+      ~(~(a || b) || c) /~&gt; ~(~a /\ ~b) || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1471,7 +1471,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~(a || b) /\ c)  /~&gt;  ~(~a /\ ~b) /\ c
+      ~(~(a || b) /\ c) /~&gt; ~(~a /\ ~b) /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1530,7 +1530,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a /\ (b || c)  /~&gt;  (a /\ b) /\ a /\ c
+      a /\ (b || c) /~&gt; (a /\ b) /\ a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1570,7 +1570,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  /~&gt;  (a /\ c) /\ b /\ c
+      (a || b) /\ c /~&gt; (a /\ c) /\ b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1610,7 +1610,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ (b || c)  /~&gt;  (a || b) /\ (a || c)
+      a /\ (b || c) /~&gt; (a || b) /\ (a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1650,7 +1650,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ c  /~&gt;  (a || c) /\ (b || c)
+      (a || b) /\ c /~&gt; (a || c) /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1690,7 +1690,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || b /\ c  /~&gt;  (a || b) || a || c
+      a || b /\ c /~&gt; (a || b) || a || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1730,7 +1730,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  /~&gt;  (a || c) || b || c
+      a /\ b || c /~&gt; (a || c) || b || c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1770,7 +1770,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || b /\ c  /~&gt;  a /\ b || a /\ c
+      a || b /\ c /~&gt; a /\ b || a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1810,7 +1810,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  /~&gt;  a /\ c || b /\ c
+      a /\ b || c /~&gt; a /\ c || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1858,7 +1858,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~a /\ (b || c)  /~&gt;  ~a /\ b || a /\ c
+      ~a /\ (b || c) /~&gt; ~a /\ b || a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1904,7 +1904,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ (b || c)  /~&gt;  a /\ b || ~a /\ c
+      ~a /\ (b || c) /~&gt; a /\ b || ~a /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1950,7 +1950,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ ~c  /~&gt;  a /\ ~c || b /\ c
+      (a || b) /\ ~c /~&gt; a /\ ~c || b /\ c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -1996,7 +1996,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      (a || b) /\ ~c  /~&gt;  a /\ c || b /\ ~c
+      (a || b) /\ ~c /~&gt; a /\ c || b /\ ~c
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2042,7 +2042,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || b /\ c  /~&gt;  (~a || b) /\ (a || c)
+      ~a || b /\ c /~&gt; (~a || b) /\ (a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2088,7 +2088,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || b /\ c  /~&gt;  (a || b) /\ (~a || c)
+      ~a || b /\ c /~&gt; (a || b) /\ (~a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2134,7 +2134,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || ~c  /~&gt;  (a || ~c) /\ (b || c)
+      a /\ b || ~c /~&gt; (a || ~c) /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2180,7 +2180,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || ~c  /~&gt;  (a || c) /\ (b || ~c)
+      a /\ b || ~c /~&gt; (a || c) /\ (b || ~c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2234,7 +2234,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || ~(a /\ b)
+      a &lt;-&gt; b /~&gt; a /\ b || ~(a /\ b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2272,7 +2272,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || ~a /\ b
+      a &lt;-&gt; b /~&gt; a /\ b || ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2310,7 +2310,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || a /\ ~b
+      a &lt;-&gt; b /~&gt; a /\ b || a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2348,7 +2348,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || a /\ b
+      a &lt;-&gt; b /~&gt; a /\ b || a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2383,7 +2383,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || ~(a || ~b)
+      a &lt;-&gt; b /~&gt; a /\ b || ~(a || ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2432,7 +2432,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  (a || b) /\ (~a || ~b)
+      a &lt;-&gt; b /~&gt; (a || b) /\ (~a || ~b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2473,7 +2473,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  (a /\ b) /\ ~a /\ ~b
+      a &lt;-&gt; b /~&gt; (a /\ b) /\ ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2514,7 +2514,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  a /\ b || ~a || ~b
+      a &lt;-&gt; b /~&gt; a /\ b || ~a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2563,7 +2563,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  /~&gt;  ~(a || b)
+      a -&gt; b /~&gt; ~(a || b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2593,7 +2593,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; b  /~&gt;  a || b
+      a -&gt; b /~&gt; a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2620,7 +2620,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; b  /~&gt;  ~(a /\ b)
+      a -&gt; b /~&gt; ~(a /\ b)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2658,7 +2658,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  /~&gt;  ~a /\ b
+      a -&gt; b /~&gt; ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2696,7 +2696,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  /~&gt;  a /\ b || ~a /\ ~b
+      a -&gt; b /~&gt; a /\ b || ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2745,7 +2745,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a -&gt; b)  /~&gt;  ~a -&gt; ~b
+      ~(a -&gt; b) /~&gt; ~a -&gt; ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2789,7 +2789,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a /\ b)  /~&gt;  ~a /\ b
+      ~(a /\ b) /~&gt; ~a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2822,7 +2822,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(a || b)  /~&gt;  ~a || b
+      ~(a || b) /~&gt; ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2863,7 +2863,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(a &lt;-&gt; b)  /~&gt;  ~(a /\ b) || ~a /\ ~b
+      ~(a &lt;-&gt; b) /~&gt; ~(a /\ b) || ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2918,7 +2918,7 @@
       Common misconceptions
     </group>
     <CMP>
-      ~(~a /\ b)  /~&gt;  a /\ b
+      ~(~a /\ b) /~&gt; a /\ b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2951,7 +2951,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~a || b)  /~&gt;  a || b
+      ~(~a || b) /~&gt; a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -2984,7 +2984,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~a -&gt; b)  /~&gt;  a -&gt; b
+      ~(~a -&gt; b) /~&gt; a -&gt; b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3017,7 +3017,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~(~a &lt;-&gt; b)  /~&gt;  a &lt;-&gt; b
+      ~(~a &lt;-&gt; b) /~&gt; a &lt;-&gt; b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3058,7 +3058,7 @@
       Commutativity
     </group>
     <CMP>
-      a /\ b  ~&gt;  b /\ a
+      a /\ b ~&gt; b /\ a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3093,7 +3093,7 @@
       Additional rules
     </group>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  b &lt;-&gt; a
+      a &lt;-&gt; b ~&gt; b &lt;-&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3128,7 +3128,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; b  /~&gt;  b -&gt; a
+      a -&gt; b /~&gt; b -&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3163,7 +3163,7 @@
       Commutativity
     </group>
     <CMP>
-      a || b  ~&gt;  b || a
+      a || b ~&gt; b || a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3195,7 +3195,7 @@
       ComplAnd
     </description>
     <CMP>
-      a /\ ~a  ~&gt;  F
+      a /\ ~a ~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3220,7 +3220,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a /\ a  ~&gt;  F
+      ~a /\ a ~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3250,7 +3250,7 @@
       ComplOr
     </description>
     <CMP>
-      a || ~a  ~&gt;  T
+      a || ~a ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3275,7 +3275,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || a  ~&gt;  T
+      ~a || a ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3305,7 +3305,7 @@
       DeMorganAnd
     </description>
     <CMP>
-      ~(a /\ b)  ~&gt;  ~a || ~b
+      ~(a /\ b) ~&gt; ~a || ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3346,7 +3346,7 @@
       DeMorganOr
     </description>
     <CMP>
-      ~(a || b)  ~&gt;  ~a /\ ~b
+      ~(a || b) ~&gt; ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3387,7 +3387,7 @@
       DefEquiv
     </description>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a /\ b || ~a /\ ~b
+      a &lt;-&gt; b ~&gt; a /\ b || ~a /\ ~b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3436,7 +3436,7 @@
       Additional rules
     </group>
     <CMP>
-      a &lt;-&gt; b  ~&gt;  a -&gt; b /\ b -&gt; a
+      a &lt;-&gt; b ~&gt; a -&gt; b /\ b -&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3476,7 +3476,7 @@
       DefImpl
     </description>
     <CMP>
-      a -&gt; b  ~&gt;  ~a || b
+      a -&gt; b ~&gt; ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3514,7 +3514,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; b  /~&gt;  ~a || b
+      a &lt;-&gt; b /~&gt; ~a || b
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3552,7 +3552,7 @@
       Additional rules
     </group>
     <CMP>
-      a &lt;-&gt; a  ~&gt;  T
+      a &lt;-&gt; a ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3582,7 +3582,7 @@
       Additional rules
     </group>
     <CMP>
-      F &lt;-&gt; a  ~&gt;  ~a
+      F &lt;-&gt; a ~&gt; ~a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3607,7 +3607,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; F  ~&gt;  ~a
+      a &lt;-&gt; F ~&gt; ~a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3640,7 +3640,7 @@
       Additional rules
     </group>
     <CMP>
-      F -&gt; a  ~&gt;  T
+      F -&gt; a ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3662,7 +3662,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; F  ~&gt;  ~a
+      a -&gt; F ~&gt; ~a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3695,7 +3695,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a || F  /~&gt;  F
+      a || F /~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3717,7 +3717,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      F || a  /~&gt;  F
+      F || a /~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3739,7 +3739,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ F  /~&gt;  a
+      a /\ F /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3761,7 +3761,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      F /\ a  /~&gt;  a
+      F /\ a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3788,7 +3788,7 @@
       FalseZeroAnd
     </description>
     <CMP>
-      F /\ a  ~&gt;  F
+      F /\ a ~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3810,7 +3810,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ F  ~&gt;  F
+      a /\ F ~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3837,7 +3837,7 @@
       FalseZeroOr
     </description>
     <CMP>
-      F || a  ~&gt;  a
+      F || a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3859,7 +3859,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || F  ~&gt;  a
+      a || F ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3912,7 +3912,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a &lt;-&gt; a  /~&gt;  a
+      a &lt;-&gt; a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3942,7 +3942,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a -&gt; a  /~&gt;  a
+      a -&gt; a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3969,7 +3969,7 @@
       IdempAnd
     </description>
     <CMP>
-      a /\ a  ~&gt;  a
+      a /\ a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -3996,7 +3996,7 @@
       IdempOr
     </description>
     <CMP>
-      a || a  ~&gt;  a
+      a || a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4026,7 +4026,7 @@
       Additional rules
     </group>
     <CMP>
-      a -&gt; a  ~&gt;  T
+      a -&gt; a ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4085,7 +4085,7 @@
       NotFalse
     </description>
     <CMP>
-      ~F  ~&gt;  T
+      ~F ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4105,7 +4105,7 @@
       NotNot
     </description>
     <CMP>
-      ~~a  ~&gt;  a
+      ~~a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4134,7 +4134,7 @@
       NotTrue
     </description>
     <CMP>
-      ~T  ~&gt;  F
+      ~T ~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4157,7 +4157,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a || ~a  /~&gt;  F
+      a || ~a /~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4182,7 +4182,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || a  /~&gt;  F
+      ~a || a /~&gt; F
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4207,7 +4207,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || ~a  /~&gt;  a
+      a || ~a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4232,7 +4232,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      ~a || a  /~&gt;  a
+      ~a || a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4265,7 +4265,7 @@
       DistributionOrOverAnd
     </group>
     <CMP>
-      a || b /\ c  ~&gt;  (a || b) /\ (a || c)
+      a || b /\ c ~&gt; (a || b) /\ (a || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4305,7 +4305,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ b || c  ~&gt;  (a || c) /\ (b || c)
+      a /\ b || c ~&gt; (a || c) /\ (b || c)
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4353,7 +4353,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a || a  /~&gt;  T
+      a || a /~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4383,7 +4383,7 @@
       Additional rules
     </group>
     <CMP>
-      T &lt;-&gt; a  ~&gt;  a
+      T &lt;-&gt; a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4405,7 +4405,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a &lt;-&gt; T  ~&gt;  a
+      a &lt;-&gt; T ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4435,7 +4435,7 @@
       Additional rules
     </group>
     <CMP>
-      T -&gt; a  ~&gt;  a
+      T -&gt; a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4457,7 +4457,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a -&gt; T  ~&gt;  T
+      a -&gt; T ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4487,7 +4487,7 @@
       Common misconceptions
     </group>
     <CMP>
-      a || T  /~&gt;  a
+      a || T /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4509,7 +4509,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      T || a  /~&gt;  a
+      T || a /~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4531,7 +4531,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ T  /~&gt;  T
+      a /\ T /~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4553,7 +4553,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      T /\ a  /~&gt;  T
+      T /\ a /~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4580,7 +4580,7 @@
       TrueZeroAnd
     </description>
     <CMP>
-      T /\ a  ~&gt;  a
+      T /\ a ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4602,7 +4602,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a /\ T  ~&gt;  a
+      a /\ T ~&gt; a
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4629,7 +4629,7 @@
       TrueZeroOr
     </description>
     <CMP>
-      T || a  ~&gt;  T
+      T || a ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
@@ -4651,7 +4651,7 @@
       </OMOBJ>
     </FMP>
     <CMP>
-      a || T  ~&gt;  T
+      a || T ~&gt; T
     </CMP>
     <FMP>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">

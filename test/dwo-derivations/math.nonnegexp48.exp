@@ -2,15 +2,7 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        (4*a)^(-2)/(1/b^4)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="distribute power">
-      <expr>
-        1/16*a^(-2)/(1/b^4)
+        1/(4*a)^2/b^(-4)
       </expr>
       <context>
         <item name="location" value="[0]"/>
@@ -18,10 +10,18 @@
     </elem>
     <elem ruleid="reciprocal">
       <expr>
+        1/(4*a)^2/(1/b^4)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
         1/(16*a^2)/(1/b^4)
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[0,1]"/>
       </context>
     </elem>
     <elem ruleid="division denominator">

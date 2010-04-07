@@ -1,11 +1,27 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="reciprocal">
       <expr>
-        27/8*a^(-3)
+        1/(2/3*a)^3
       </expr>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="distribute power">
+      <expr>
+        1/(8/27*a^3)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        1/(8*a^3/27)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
       <expr>
         27/(8*a^3)
       </expr>

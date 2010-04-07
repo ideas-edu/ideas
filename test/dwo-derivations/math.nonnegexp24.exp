@@ -2,29 +2,34 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        (5*a)^(-2)*10*(1/b)
+        (5*a)^(-2)*10/b
+      </expr>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(5*a)^2*10/b
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0,0]"/>
       </context>
     </elem>
     <elem ruleid="distribute power">
       <expr>
-        1/25*a^(-2)*10*(1/b)
+        1/(25*a^2)*10/b
       </expr>
       <context>
-        <item name="location" value="[0,0]"/>
-      </context>
-    </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        1/(25*a^2)*10*(1/b)
-      </expr>
-      <context>
-        <item name="location" value="[0,0]"/>
+        <item name="location" value="[0,0,1]"/>
       </context>
     </elem>
     <elem ruleid="fraction times">
+      <expr>
+        2/(5*a^2)/b
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="division numerator">
       <expr>
         2/(5*a^2*b)
       </expr>

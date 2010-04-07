@@ -154,9 +154,9 @@ reciprocal = makeSimpleRule "reciprocal" $ \ expr -> do
 reciprocal' :: (Expr -> Bool) -> Rule Expr
 reciprocal' p = makeSimpleRule "reciprocal" $ \ expr -> do
   guard (p expr)
-  a        <- selectVar expr
-  (c, x)   <- match (unitPowerForView a) expr
-  return $ c ./. build (unitPowerForView a) (1, negate x)
+--  a        <- selectVar expr
+  (c, (a, x))   <- match strictPowerView expr
+  return $ c ./. build strictPowerView (1, (a, neg x))
 
 -- | a^(p/q) = root (a^p) q
 power2root :: Rule Expr 
@@ -187,6 +187,8 @@ myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do
   guard $ isJust $ match divView e1 `mplus` match divView e2
   (a, b)   <- match (divView <&> (identity >>^ \e -> (e,1))) e1
   (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
+--  (a, b)   <- match divView e1
+--  (c, d)   <- match divView e2
   return $ build divView (a .*. c, b .*. d)
 
 -- | simplify expression
@@ -194,6 +196,7 @@ simplifyFraction :: Rule Expr
 simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
   let expr' = simplifyWith (second normalizeProduct) productView $ expr
   guard (expr /= expr')
+  guard $ not $ applicable myFractionTimes expr' -- a hack, need to come up with a constructive solution
   return expr'
   
 pushNegOut :: Rule Expr

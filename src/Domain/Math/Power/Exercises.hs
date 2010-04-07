@@ -60,7 +60,7 @@ isPower v expr =
          f (Nat 1 :/: a) = g a
          f a = g a
          g (Sym s [Var _, a]) | s==powerSymbol = True && isJust (match v a)
-         g (Sym s [x, Nat _]) | s==rootSymbol = g x
+         g (Sym s [x, Nat _]) | s==rootSymbol = isPower v x 
          g (Sqrt x) = g x
          g (Var _) = True
          g a = a `belongsTo` rationalView
@@ -194,7 +194,8 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , isReady      = isPower natView
    , isSuitable   = (`belongsTo` normPowerNonNeg)
    , equivalence  = viewEquivalent normPowerNonNeg
-   , examples     = concat $ nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5
+   , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
+                           ++ brokenExp1
    }
 
 calcPowerExercise :: Exercise Expr

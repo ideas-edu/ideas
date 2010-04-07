@@ -1,0 +1,13 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="write as root">
+      <expr>
+        3*root (a^2) 5
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

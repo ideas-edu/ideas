@@ -2,14 +2,6 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        5*a*(1/b^3)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="fraction times">
-      <expr>
         5*a/b^3
       </expr>
     </elem>

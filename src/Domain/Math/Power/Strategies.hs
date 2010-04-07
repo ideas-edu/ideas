@@ -37,6 +37,7 @@ makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategise l rs
   where
     cleanup  = applyD . strategise l
 
+--strategise l = label l . Common.Strategy.replicate 6 . alternatives . map (somewhere . liftToContext)
 strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
 
 powerStrategy :: LabeledStrategy (Context Expr)
@@ -74,13 +75,20 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , calcPowerMinus
             , myFractionTimes
             ] ++ fractionRules            
-    cleanupRules = calcPower : simplifyFraction : naturalRules
-    
+    cleanupRules = calcPower : simplifyFraction  : naturalRules
+
+hasNegExp expr = 
+  case match strictPowerView expr of
+    Just (_, (_, x)) -> case match rationalView x of
+      Just x' -> x' < 0
+      _       -> False
+    _ -> False
+{-
 hasNegExp expr = 
   case match unitPowerView expr of
     Just (_, (_, x)) -> x < 0
     _ -> False    
-
+-}
 
 -- | Allowed numeric rules
 naturalRules =

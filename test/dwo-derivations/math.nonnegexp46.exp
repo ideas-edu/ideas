@@ -1,19 +1,19 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="reciprocal">
       <expr>
-        1/8*a^(-3)/b^2
+        1/(2*a)^3/b^2
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="distribute power">
       <expr>
         1/(8*a^3)/b^2
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[0,1]"/>
       </context>
     </elem>
     <elem ruleid="division numerator">

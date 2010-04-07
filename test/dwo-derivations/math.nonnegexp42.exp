@@ -2,7 +2,12 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        4/a^2*(3*b)^(-2)
+        4*a^(-2)/(3*b)^2
+      </expr>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        4/a^2/(3*b)^2
       </expr>
       <context>
         <item name="location" value="[0]"/>
@@ -10,18 +15,13 @@
     </elem>
     <elem ruleid="distribute power">
       <expr>
-        4/(9*a^2)*b^(-2)
-      </expr>
-    </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        4/(9*a^2)*(1/b^2)
+        4/a^2/(9*b^2)
       </expr>
       <context>
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="division numerator">
       <expr>
         4/(9*a^2*b^2)
       </expr>

@@ -1,22 +1,19 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        1/a^2*b^(-3)
+        a^(-2)/b^3
+      </expr>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/a^2/b^3
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        1/a^2*(1/b^3)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="division numerator">
       <expr>
         1/(a^2*b^3)
       </expr>

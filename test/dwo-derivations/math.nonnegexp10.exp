@@ -1,14 +1,17 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="write as root">
+    <elem ruleid="reciprocal">
       <expr>
-        root (1/5) 4
+        1/5^(1/4)
       </expr>
     </elem>
-    <elem ruleid="distribute root">
+    <elem ruleid="write as root">
       <expr>
-        root 1 4/root 5 4
+        1/root 5 4
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
   </list>
 </reply>

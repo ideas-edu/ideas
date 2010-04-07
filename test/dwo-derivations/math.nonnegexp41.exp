@@ -2,29 +2,26 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        (2*a)^(-3)*(1/b^4)
+        (2*a)^(-3)/b^4
+      </expr>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(2*a)^3/b^4
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="distribute power">
       <expr>
-        1/8*a^(-3)*(1/b^4)
+        1/(8*a^3)/b^4
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[0,1]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        1/(8*a^3)*(1/b^4)
-      </expr>
-      <context>
-        <item name="location" value="[0]"/>
-      </context>
-    </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="division numerator">
       <expr>
         1/(8*a^3*b^4)
       </expr>

@@ -2,14 +2,6 @@
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        a*(1/b^2)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="fraction times">
-      <expr>
         a/b^2
       </expr>
     </elem>

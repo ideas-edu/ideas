@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="mul exponents">
       <expr>
@@ -10,37 +10,18 @@
     </elem>
     <elem ruleid="reciprocal">
       <expr>
-        (4*a*b)^(-1)*(1/b^6)
+        (4*a*b)^(-1)/b^6
       </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="reciprocal">
       <expr>
-        1/4*a^(-1)*b^(-1)*(1/b^6)
+        1/(4*a*b)/b^6
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        1/(4*a)*b^(-1)*(1/b^6)
-      </expr>
-      <context>
-        <item name="location" value="[0,0]"/>
-      </context>
-    </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        1/(4*a)*(1/b)*(1/b^6)
-      </expr>
-      <context>
-        <item name="location" value="[0,1]"/>
-      </context>
-    </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="division numerator">
       <expr>
         1/(4*a*b*b^6)
       </expr>

@@ -1,16 +1,13 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="reciprocal">
       <expr>
-        3*a^(1/4)*(1/b^(1/2))
+        3*a^(1/4)/b^(1/2)
       </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
     </elem>
     <elem ruleid="write as root">
       <expr>
-        3*root a 4*(1/b^(1/2))
+        3*root a 4/b^(1/2)
       </expr>
       <context>
         <item name="location" value="[0,1]"/>
@@ -18,16 +15,11 @@
     </elem>
     <elem ruleid="write as root">
       <expr>
-        3*root a 4*(1/sqrt b)
-      </expr>
-      <context>
-        <item name="location" value="[1,1]"/>
-      </context>
-    </elem>
-    <elem ruleid="fraction times">
-      <expr>
         3*root a 4/sqrt b
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
   </list>
 </reply>

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
+  <state>
+    <expr>
+      (2*a)^(-4/7)
+    </expr>
+  </state>
+</request>

@@ -10,21 +10,26 @@
     </elem>
     <elem ruleid="reciprocal">
       <expr>
-        1/(1/a^3)*b^(-4)
+        1/(a^(-3)*b^4)
       </expr>
-      <context>
-        <item name="location" value="[0,1]"/>
-      </context>
     </elem>
     <elem ruleid="reciprocal">
       <expr>
-        1/(1/a^3)*(1/b^4)
+        1/(1/a^3*b^4)
+      </expr>
+      <context>
+        <item name="location" value="[1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        1/(b^4/a^3)
       </expr>
       <context>
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="division denominator">
       <expr>
         a^3/b^4
       </expr>

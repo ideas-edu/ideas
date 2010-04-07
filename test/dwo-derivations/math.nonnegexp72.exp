@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(2*a)^(4/7)
+      </expr>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        1/root ((2*a)^4) 7
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/root (16*a^4) 7
+      </expr>
+      <context>
+        <item name="location" value="[1,0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

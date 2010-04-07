@@ -241,7 +241,7 @@ negExp5 =
    a = Var "a"
    b = Var "b"
    
-brokenExp1 :: [[Expr]]
+brokenExp1, brokenExp1' :: [[Expr]]
 brokenExp1 = 
   [ [ 5*a^(1/2), 7*a^(1/3), (2*a)^(1/4), (3*a)^(1/5)
     , 4*a^(2/3), 2*a^(3/4), 3*a^(2/5), 4*a^(3/5)
@@ -253,7 +253,12 @@ brokenExp1 =
     , 3*a^(-(3/5))*b^(1/3), (2*a)^(-(2/3)), (6*a)^(-(2/5))
     , (3*a)^(-(3/5)), (2*a)^(-(4/7))
     ]
-  , [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7
+  ]
+ where
+   a = Var "a"
+   b = Var "b"
+brokenExp1' = 
+  [ [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7
     , a*root (a^2) 3, a^3*root (a^2) 5, a^2*root (a^3) 5, a^4*root (a^5) 6
     ] 
   , [ 1/sqrt a, a/root a 3, a^2/sqrt a, 1/root a 5, 1/(a*root a 3)

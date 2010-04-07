@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.calcpower" encoding="string">
+  <state>
+    <expr>
+      1/3/6^(-2)
+    </expr>
+  </state>
+</request>

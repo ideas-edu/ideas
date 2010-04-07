@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        3*a^2*(1/b)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        3*a^2/b
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        125/8*a^(-3)
+      </expr>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        125/(8*a^3)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

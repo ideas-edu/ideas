@@ -1,0 +1,31 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/a^3/b^(-3)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/a^3/(1/b^3)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        1/a^3*b^3
+      </expr>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        b^3/a^3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

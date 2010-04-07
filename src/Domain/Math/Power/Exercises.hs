@@ -194,7 +194,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , isReady      = isPower natView
    , isSuitable   = (`belongsTo` normPowerNonNeg)
    , equivalence  = viewEquivalent normPowerNonNeg
-   , examples     = concat $ nonNegExp ++ nonNegExp2 ++ negExp4
+   , examples     = concat $ nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5
    }
 
 calcPowerExercise :: Exercise Expr

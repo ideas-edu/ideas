@@ -1,0 +1,34 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        (4*a)^(-3)*7*(1/b^5)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/64*a^(-3)*7*(1/b^5)
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(64*a^3)*7*(1/b^5)
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        7/(64*a^3*b^5)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

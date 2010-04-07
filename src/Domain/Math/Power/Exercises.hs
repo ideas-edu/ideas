@@ -13,6 +13,7 @@ module Domain.Math.Power.Exercises
    ( simplifyPowerExercise
    , powerOfExercise 
    , nonNegExpExercise
+   , calcPowerExercise
    ) where
 
 import qualified Prelude
@@ -199,7 +200,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
 calcPowerExercise :: Exercise Expr
 calcPowerExercise = (powerExercise (makeStrategy "calcPower" (calcPower : rationalRules) rationalRules))
    { description  = "simplify expression (powers)"
-   , exerciseCode = makeCode "math" "simplifyPower"
+   , exerciseCode = makeCode "math" "calcPower"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'

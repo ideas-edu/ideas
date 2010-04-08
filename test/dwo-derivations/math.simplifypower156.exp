@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        8*(a^2)^3*(b^3)^3
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        8*a^6*(b^3)^3
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        8*a^6*b^9
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

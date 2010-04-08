@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        81*(a^2)^4*(b^2)^4
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        81*a^8*(b^2)^4
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        81*a^8*b^8
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

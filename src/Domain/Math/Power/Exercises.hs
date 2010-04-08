@@ -175,6 +175,7 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , equivalence  = viewEquivalent normPowerView'
    , examples     = concat $  simplerPowers ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
+                           ++ normPower1
    }
 
 powerOfExercise :: Exercise Expr
@@ -200,7 +201,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    }
 
 calcPowerExercise :: Exercise Expr
-calcPowerExercise = (powerExercise (makeStrategy "calcPower" (calcPower : rationalRules) rationalRules))
+calcPowerExercise = (powerExercise calcPowerStrategy)
    { description  = "simplify expression (powers)"
    , exerciseCode = makeCode "math" "calcPower"
    , isReady      = isPowerAdd

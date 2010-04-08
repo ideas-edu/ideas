@@ -83,12 +83,14 @@ hasNegExp expr =
       Just x' -> x' < 0
       _       -> False
     _ -> False
-{-
-hasNegExp expr = 
-  case match unitPowerView expr of
-    Just (_, (_, x)) -> x < 0
-    _ -> False    
--}
+
+calcPowerStrategy = makeStrategy "calcPower" rules cleanupRules
+  where
+    rules = calcPower 
+          : mulRootCom
+          : divRoot 
+          : rationalRules
+    cleanupRules = rationalRules ++ naturalRules
 
 -- | Allowed numeric rules
 naturalRules =

@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="calculate power minus">
+      <expr>
+        6*a^6+2*a^3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

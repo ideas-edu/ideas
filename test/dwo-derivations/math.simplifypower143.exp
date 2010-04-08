@@ -1,0 +1,26 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        16*(a^3)^2*2*a^4
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        16*a^6*2*a^4
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        32*a^10
+      </expr>
+    </elem>
+  </list>
+</reply>
+

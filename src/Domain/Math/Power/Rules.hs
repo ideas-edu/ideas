@@ -158,6 +158,9 @@ reciprocal' p = makeSimpleRule "reciprocal" $ \ expr -> do
   (c, (a, x))   <- match strictPowerView expr
   return $ c ./. build strictPowerView (1, (a, neg x))
 
+
+-- | Root rules ----------------------------------------------------------------
+
 -- | a^(p/q) = root (a^p) q
 power2root :: Rule Expr 
 power2root = makeSimpleRule "write as root" $ \ expr -> do
@@ -175,10 +178,41 @@ root2power = makeSimpleRule "write as power" $ \ expr -> do
   return $ build strictPowerView (c, (Var a, fromRational (p/q)))
 
 -- | root (a/b) x = root a x / root b x
+distributeRoot :: Rule Expr
 distributeRoot = makeSimpleRule "distribute root" $ \ expr -> do
   (ab, x) <- match rootView expr
   (a, b)  <- match divView ab
   return $ build divView (build rootView (a, x), build rootView (b, x))  
+
+-- | c1 root a x * c2 root b x = c1*c2 * root (a*b) x
+mulRoot :: Rule Expr
+mulRoot = makeSimpleRule "multipy base of root" $ \ expr -> do
+  (r1, r2)      <- match timesView expr
+  (c1, (a, x))  <- match rootConsView r1
+  (c2, (b, x')) <- match rootConsView r2
+  guard (x == x')
+  return $ build rootConsView (c1 .*. c2, (a .*. b, x))
+
+mulRootCom = makeCommutative (myProductView (powerFactorisationView rootView)) (.*.) mulRoot
+
+myProductView :: View Expr (Bool, [Expr]) -> View Expr [Expr]
+myProductView v = v >>> makeView f g
+  where
+    f (s, (x:xs)) = return $ if s then neg x : xs else x:xs
+    f _           = fail ""
+    g = (,) False 
+
+-- | c1 * root a x / c2 * root b x = c1*c2 * root (a/b) x
+divRoot :: Rule Expr
+divRoot = makeSimpleRule "divide base of root" $ \ expr -> do
+  (r1, r2) <- match divView expr
+  (c1, (a, x))  <- match rootConsView r1
+  (c2, (b, x')) <- match rootConsView r2
+  guard (x == x' && b /= 0)
+  return $ build rootConsView (c1 .*. c2, (a ./. b, x))
+
+
+-- | Common rules --------------------------------------------------------------
 
 -- | a/b * c/d = a*c / b*d  (b or else d may be one)  
 myFractionTimes :: Rule Expr

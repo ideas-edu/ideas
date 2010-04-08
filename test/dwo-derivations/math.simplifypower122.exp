@@ -1,0 +1,15 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        a^2*8*a^(-1)
+      </expr>
+    </elem>
+    <elem ruleid="add exponents">
+      <expr>
+        8*a
+      </expr>
+    </elem>
+  </list>
+</reply>
+

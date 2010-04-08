@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="distribute power">
+      <expr>
+        16*(a^5)^2
+      </expr>
+    </elem>
+    <elem ruleid="mul exponents">
+      <expr>
+        16*a^10
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

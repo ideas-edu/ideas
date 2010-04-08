@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.powerof" encoding="string">
+  <state>
+    <expr>
+      a^4*root (a^5) 6
+    </expr>
+  </state>
+</request>

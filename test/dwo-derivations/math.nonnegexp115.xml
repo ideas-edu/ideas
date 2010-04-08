@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.nonnegexp" encoding="string">
+  <state>
+    <expr>
+      4*a^(1/2)*b^(-1/5)
+    </expr>
+  </state>
+</request>

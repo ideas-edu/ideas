@@ -443,11 +443,11 @@ normPower4' =    -- schrijf zonder negatieve exponenten
    a = Var "a"
    b = Var "b"
    
-normPower5 :: [[Expr]]
+normPower5, normPower5' :: [[Expr]]
 normPower5 =
   [ -- schrijf zonder negatieve en gebroken exponent
     [ 5*a^(1/2), 7*a^(1/3), (2*a)^(1/4), (3*a)^(1/5), (4*a)^(2/3)
-    , 2*a^(3/4), (3*a)^(2/5), (4*a)^(3/5)
+    , 2*a^(3/4), (3*a)^(2/5), 4*a^(3/5)
     ]
   , [ 6*a^(-1/2), 4*a^(-1/3), 2*(3*a)^(-1/4), (3*a)^(-1/5), 5*a^(-2/3)
     , 7*a^(-3/4), 6*a^(-2/5), 2*a^(-3/7)
@@ -455,8 +455,12 @@ normPower5 =
   , [ (1/2)*a^(1/3)*b^(-1/2), (1/7)*a^(-1/4)*b^(2/3), 4*a^(1/2)*b^(-1/5)
     , 3*a^(-3/5)*b^(1/3), (2*a)^(-2/3), (6*a)^(-2/5), (3*a)^(-3/5), (2*a)^(-4/7)
     ]
-    -- schrijf als macht van a
-  , [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7, a*root (a^2) 3
+  ]
+ where
+   a = Var "a"
+   b = Var "b"  
+normPower5' =    -- schrijf als macht van a
+  [ [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7, a*root (a^2) 3
     , a^3*root (a^2) 5, a^2*root (a^3) 5, a^4*root (a^5) 6
     ]
   , [ 1/sqrt a, a/root a 3, a^2/sqrt a, 1/root a 5, 1/(a*root a 3)

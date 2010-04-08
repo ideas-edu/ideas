@@ -1,0 +1,39 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/2*a^(1/3)/b^(1/2)
+      </expr>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        1/2*root a 3/b^(1/2)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        1/2*root a 3/sqrt b
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        root a 3/2/sqrt b
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="division numerator">
+      <expr>
+        root a 3/(2*sqrt b)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

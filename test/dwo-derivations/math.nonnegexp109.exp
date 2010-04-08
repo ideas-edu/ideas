@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        5/a^(2/3)
+      </expr>
+    </elem>
+    <elem ruleid="write as root">
+      <expr>
+        5/root (a^2) 3
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

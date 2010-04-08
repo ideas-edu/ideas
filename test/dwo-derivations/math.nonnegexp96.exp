@@ -1,0 +1,39 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(4*a)^2/b^(-4)
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(4*a)^2/(1/b^4)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/(16*a^2)/(1/b^4)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        1/(16*a^2)*b^4
+      </expr>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        b^4/(16*a^2)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

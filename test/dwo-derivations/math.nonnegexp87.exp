@@ -1,0 +1,31 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        1/(2/5*a)^3
+      </expr>
+    </elem>
+    <elem ruleid="distribute power">
+      <expr>
+        1/(8/125*a^3)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
+        1/(8*a^3/125)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        125/(8*a^3)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

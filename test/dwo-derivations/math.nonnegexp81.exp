@@ -1,0 +1,10 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        3/a
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -197,7 +197,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , isSuitable   = (`belongsTo` normPowerNonNeg)
    , equivalence  = viewEquivalent normPowerNonNeg
    , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
-                           ++ brokenExp1
+                           ++ brokenExp1 ++ normPower4'
    }
 
 calcPowerExercise :: Exercise Expr

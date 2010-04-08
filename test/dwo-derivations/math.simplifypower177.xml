@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifypower" encoding="string">
+  <state>
+    <expr>
+      a^6/(1/a^5)
+    </expr>
+  </state>
+</request>

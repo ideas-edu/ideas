@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="add exponents">
+      <expr>
+        1/a^7
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="reciprocal">
+      <expr>
+        a^(-7)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

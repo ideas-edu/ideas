@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifypower" encoding="string">
+  <state>
+    <expr>
+      1/a^(-6)
+    </expr>
+  </state>
+</request>

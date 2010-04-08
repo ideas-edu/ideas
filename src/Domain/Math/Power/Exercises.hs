@@ -207,7 +207,7 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'
-   , examples     = concat $ negExp3 ++ normPower3'
+   , examples     = concat $ negExp3 ++ normPower3' ++ normPower4
    }
 
 -- | test stuff

@@ -420,14 +420,15 @@ normPower3' = -- bereken zonder rekenmachine
  where
    a = Var "a"
    
-normPower4 :: [[Expr]]
+normPower4, normPower4' :: [[Expr]]
 normPower4 =
   [  -- bereken zonder rekenmachine
     [ (1/3)/6^(-2), (1/2)/8^(-2), (1/8)/4^(-2), (1/10)/5^(-2)
     , 5*10^(-2), 4*10^(-3), 8*10^(-4), 6*10^(-3)
     ]
-    -- schrijf zonder negatieve exponenten
-  , [ 2*a^(-2)*b^2, 4*a^(-5)*b^3, 3*a^2*b^(-1), 5*a*b^(-3)
+  ]
+normPower4' =    -- schrijf zonder negatieve exponenten
+  [ [ 2*a^(-2)*b^2, 4*a^(-5)*b^3, 3*a^2*b^(-1), 5*a*b^(-3)
     , (1/7)*a^(-2), (1/3)*a^(-4), (1/5)*a^(-6), (1/2)*a^(-3)
     ]
   , [ 3*a^(-1), 4*a^(-4), 5*a^(-3), 2*a^(-7)

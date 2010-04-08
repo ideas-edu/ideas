@@ -1,0 +1,18 @@
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="reciprocal">
+      <expr>
+        sqrt (a^(-2))
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="write as power">
+      <expr>
+        a^(-1)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

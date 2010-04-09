@@ -5,22 +5,22 @@ include ../Makefile.incl
 
 BINDIR = ../bin
 
-TESTS1 = $(wildcard mathdox-request/*.txt)
-OUTS1  = $(patsubst %.txt,%.out,$(TESTS1))
+# -- JSON 
+TESTS1 = $(wildcard */*.json)
+OUTS1  = $(patsubst %.json,%.out,$(TESTS1))
 
-TESTS2 = $(wildcard json-rpc/*.json)
-OUTS2  = $(patsubst %.json,%.out,$(TESTS2))
+# -- XML
+TESTS2 = $(wildcard */*.xml)
+OUTS2  = $(patsubst %.xml,%.out,$(TESTS2))
 
-TESTS3 = $(wildcard xml-request/*.xml)
+# -- XML dwo-derivations
+TESTS3 = $(wildcard dwo-derivations/*/*.xml)
 OUTS3  = $(patsubst %.xml,%.out,$(TESTS3))
 
-TESTS4 = $(wildcard dwo-derivations/*.xml)
-OUTS4  = $(patsubst %.xml,%.out,$(TESTS4))
-
-SOME-OUT     = $(OUTS1) $(OUTS2) $(OUTS3)
+SOME-OUT     = $(OUTS1) $(OUTS2)
 SOME-WITHOUT = $(patsubst %.out,%,$(SOME-OUT))
 
-ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3) $(OUTS4)
+ALL-OUT     = $(OUTS1) $(OUTS2) $(OUTS3)
 ALL-EXP     = $(patsubst %.out,%.exp,$(ALL-OUT))
 ALL-WITHOUT = $(patsubst %.out,%,$(ALL-OUT))
 
@@ -47,18 +47,12 @@ test-all.log: $(ALL-OUT)
 	  diff -I "version" $$i.out $$i.exp >> test-all.log; \
 	done;
 
-mathdox-request/%.out: mathdox-request/%.txt $(BINDIR)/ideas.cgi
+%.out: %.xml $(BINDIR)/ideas.cgi
 	$(BINDIR)/ideas.cgi --file $< > $@
 
-json-rpc/%.out: json-rpc/%.json $(BINDIR)/ideas.cgi
+%.out: %.json $(BINDIR)/ideas.cgi
 	$(BINDIR)/ideas.cgi --file $< > $@
 
-xml-request/%.out: xml-request/%.xml $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --file $< > $@
-
-dwo-derivations/%.out: dwo-derivations/%.xml $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --file $< > $@
-	
 exp: $(ALL-EXP)
 	
 %.exp: %.out

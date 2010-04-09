@@ -40,7 +40,9 @@ testsPage input = defaultPage "Tests" 0 $ do
       | "* " `isPrefixOf` s =
            (h2 (drop 2 s), True)
       | "** " `isPrefixOf` s =
-           (bold (text $ drop 3 s), True)
+           (br >> bold (text (drop 3 s)), True)
+      | "*** " `isPrefixOf` s =
+           (br >> bold (text (drop 4 s)), True)
       | any (`elem` ws) ["failed", "error", "error:", "falsifiable"] =
            (errorLine (ttText (htmlString s)), False)
       | otherwise = 

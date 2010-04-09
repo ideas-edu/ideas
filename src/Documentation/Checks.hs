@@ -11,13 +11,15 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
-import Directory
-import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
+import System.Directory
+import Data.Maybe
+import Common.Utils (safeHead, reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
 import System.Environment
 import Service.ExerciseList
+import Service.Request
 
 import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Service.ModeJSON as ModeJSON
@@ -45,23 +47,66 @@ main = do
    JSON.testMe
 
    putStrLn "* 2. Exercise checks"
-   --checkExercise Logic.dnfExercise
-   --checkExercise LA.gaussianElimExercise
-   --checkExercise LA.linearSystemExercise
-   --checkExercise LA.systemWithMatrixExercise
-   --checkExercise LA.gramSchmidtExercise
-   --checkExercise RA.cnfExercise
    forM_ exercises $ \(Some ex) ->
       checkExercise ex
-   
-   -- putStrLn "* 3. Confluence checks"
-   -- logicConfluence
-   
+
    putStrLn "* 3. Unit tests"
-   mathdoxRequests
-   jsonRPCs
-   xmlRequests
-   dwoDerivations
+   n <- unitTests
+   putStrLn $ "Number of unit tests: " ++ show n
+
+-- Returns the number of tests performed
+unitTests :: IO Int
+unitTests = do
+   args <- getArgs
+   let dir = fromMaybe "test" (safeHead args)
+   visit 0 dir
+ where
+   visit i path = do
+      valid <- doesDirectoryExist path
+      if not valid then return 0 else do
+         -- analyse content
+         xs <- getDirectoryContents path
+         let xml  = filter (".xml"  `isSuffixOf`) xs
+             json = filter (".json" `isSuffixOf`) xs
+         putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
+         -- perform tests
+         forM json $ \x -> 
+            performUnitTest JSON (path ++ "/" ++ x)
+         forM xml $ \x -> 
+            performUnitTest XML (path ++ "/" ++ x)
+         -- recursively visit subdirectories
+         is <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
+                  visit (i+1) (path ++ "/" ++ x)
+         return (length (xml ++ json) + sum is)
+
+performUnitTest :: DataFormat -> FilePath -> IO ()
+performUnitTest format path = do
+   useFixedStdGen -- fix the random number generator
+   txt <- readFile path
+   exp <- readFile expPath
+   out <- case format of 
+             JSON -> liftM snd3 (ModeJSON.processJSON txt)
+             XML  -> liftM snd3 (ModeXML.processXML   txt)
+   reportTest (stripDirectoryPart path) (out ~= exp)
+ `catch` \_ -> 
+    putStrLn $ "Error: testing " ++ path
+ where
+   expPath = baseOf path ++ ".exp"
+   baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
+   x ~= y  = filterVersion x == filterVersion y
+   
+   filterVersion = 
+      let p s = not (null s || "version" `isInfixOf` s)
+      in unlines . filter p . lines
+
+simplerDirectory :: String -> String
+simplerDirectory s
+   | "../"   `isPrefixOf` s = simplerDirectory (drop 3 s)
+   | "test/" `isPrefixOf` s = simplerDirectory (drop 5 s)
+   | otherwise = s
+
+stripDirectoryPart :: String -> String
+stripDirectoryPart = reverse . takeWhile (/= '/') . reverse
 
 {-
 logicConfluence :: IO ()
@@ -73,37 +118,3 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
    rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
 -}
-   
-mathdoxRequests, jsonRPCs, xmlRequests, dwoDerivations :: IO ()
-mathdoxRequests = testRequests (liftM snd3 . ModeXML.processXML)   "mathdox-request" ".txt"
-jsonRPCs        = testRequests (liftM snd3 . ModeJSON.processJSON) "json-rpc"        ".json"
-xmlRequests     = testRequests (liftM snd3 . ModeXML.processXML)   "xml-request"     ".xml"
-dwoDerivations  = testRequests (liftM snd3 . ModeXML.processXML)   "dwo-derivations" ".xml"
-
-
-testRequests :: (String -> IO String) -> String -> String -> IO ()
-testRequests eval subDir suffix = do
-   path <- makePath subDir
-   xs   <- getDirectoryContents path
-   let names = map f $ filter (suffix `isSuffixOf`) xs
-       f = reverse . drop (length suffix) . reverse
-   forM_ names $ \base -> do
-      useFixedStdGen -- fix the random number generator
-      txt <- readFile (path ++ "/" ++ base ++ suffix)
-                `catch` \_ -> return ""
-      exp <- readFile (path ++ "/" ++ base ++ ".exp")
-                `catch` \_ -> return "" 
-      out <- eval txt
-      reportTest (base ++ suffix) (out ~= exp)
- where
-   x ~= y = filterVersion x == filterVersion y
- 
-   filterVersion :: String -> String
-   filterVersion = unlines . filter (not . null) . filter (not . ("version" `isInfixOf`)) . lines
-   
-   makePath :: String -> IO String
-   makePath s = do
-      args <- getArgs 
-      case args of
-         []  -> return $ "test/"  ++ s
-         x:_ -> return $ x ++ "/" ++ s

@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
-   , htmlPage, errorPage, link, h1, h2, h3, preText, ul, table, noBorderTable
+   , htmlPage, errorPage, link, h1, h2, h3, h4, preText, ul, table, noBorderTable
    , text, image, space, tt, spaces
    , bold, italic, para, ttText, hr, br, pre, center, bullet
    ) where
@@ -62,6 +62,10 @@ h2 = element "h2" . text
 
 h3 :: String -> HTMLBuilder
 h3 = element "h3" . text
+
+h4 :: String -> HTMLBuilder
+h4 = element "h4" . text
+
 
 bold, italic :: HTMLBuilder -> HTMLBuilder
 bold   = element "b" 

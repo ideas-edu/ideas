@@ -122,7 +122,9 @@ primes = rec [2..]
    rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
 
 putLabel :: String -> IO ()
-putLabel = putStr . take 40 . (++ repeat ' ')
+putLabel s = 
+   let n = (40 - length s) `max` 3
+   in putStr (s ++ replicate n ' ')
 
 reportTest :: String -> Bool -> IO ()
 reportTest s b = putLabel s >> putStrLn (if b then "OK" else "FAILED")

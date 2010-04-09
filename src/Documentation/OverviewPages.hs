@@ -61,9 +61,7 @@ exerciseOverviewPage showAll = defaultPage title 0 $ do
       ]
     where
       code = exerciseCode ex
-      f st | st == Stable = return ()
-           | otherwise    = 
-                italic $ text ("(" ++ map toLower (show st) ++ ")")
+      f st = italic $ text ("(" ++ map toLower (show st) ++ ")")
 
 groupedList :: Bool -> [(String, [Some Exercise])]
 groupedList showAll = process exercises

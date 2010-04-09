@@ -52,7 +52,7 @@ main = do
 
    putStrLn "* 3. Unit tests"
    n <- unitTests
-   putStrLn $ "Number of unit tests: " ++ show n
+   putStrLn $ "** Number of unit tests: " ++ show n
 
 -- Returns the number of tests performed
 unitTests :: IO Int

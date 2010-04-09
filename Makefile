@@ -3,7 +3,7 @@ all: binaries documentation
 
 SRCDIR = src
 
-VERSION = 0.5.13
+VERSION = 0.5.14
 
 include Makefile.incl
 
@@ -20,7 +20,7 @@ $(BINDIR)/ideas.cgi: $(HS-SOURCES) revision
 	$(GHC) $(GHCFLAGS) -o $@ src/Service/Main.hs
 	$(STRIP) $@
 
-$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(HS-SOURCES) tools/IdeasWX/IdeasWX.hs revision
+$(BINDIR)/ideasWX$(EXE): $(BINDIR)/ounl.jpg $(BINDIR)/ideas.ico $(BINDIR)/ideas.jpg $(HS-SOURCES) tools/IdeasWX/IdeasWX.hs revision
 ifeq ($(WX), yes)
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
 	$(GHC) $(GHCFLAGS) $(GHCGUIFLAGS) -itools/IdeasWX -o $@ tools/IdeasWX/IdeasWX.hs
@@ -47,6 +47,14 @@ $(BINDIR)/prof$(EXE): $(HS-SOURCES) revision
 	$(STRIP) $@
 
 $(BINDIR)/ounl.jpg: tools/IdeasWX/ounl.jpg
+	$(MKDIR) -p $(BINDIR)
+	$(CP) $< $@
+
+$(BINDIR)/ideas.ico: tools/IdeasWX/ideas.ico
+	$(MKDIR) -p $(BINDIR)
+	$(CP) $< $@
+
+$(BINDIR)/ideas.jpg: tools/IdeasWX/ideas.jpg
 	$(MKDIR) -p $(BINDIR)
 	$(CP) $< $@
 

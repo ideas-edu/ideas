@@ -1,6 +1,23 @@
-<reply result="error" version="0.5.13">
-  <message>
-    Package math.calcpower not found
-  </message>
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="calculate power">
+      <expr>
+        1/(1/2)^4
+      </expr>
+    </elem>
+    <elem ruleid="calculate power">
+      <expr>
+        1/(1/16)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        16
+      </expr>
+    </elem>
+  </list>
 </reply>
 

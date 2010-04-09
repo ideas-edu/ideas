@@ -62,6 +62,7 @@ packages =
    , someExprPackage Math.simplifyPowerExercise
    , someExprPackage Math.powerOfExercise     
    , someExprPackage Math.nonNegExpExercise
+   , someExprPackage Math.calcPowerExercise
      -- linear algebra
    , someExprPackage LA.gramSchmidtExercise
    , someExprPackage LA.linearSystemExercise

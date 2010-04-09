@@ -1,6 +1,26 @@
-<reply result="error" version="0.5.13">
-  <message>
-    Package math.calcpower not found
-  </message>
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="calculate power">
+      <expr>
+        7*(1/2^5)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate power">
+      <expr>
+        7*(1/32)
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate times [rational]">
+      <expr>
+        7/32
+      </expr>
+    </elem>
+  </list>
 </reply>
 

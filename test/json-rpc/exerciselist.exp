@@ -38,6 +38,12 @@
       },
       {
          "domain": "math",
+         "identifier": "calcpower",
+         "description": "simplify expression (powers)",
+         "status": "Provisional"
+      },
+      {
+         "domain": "math",
          "identifier": "coverup",
          "description": "solve an equation by covering up",
          "status": "Provisional"
@@ -165,5 +171,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.12 (2883)"
+   "version": "0.5.13 (3010)"
 }

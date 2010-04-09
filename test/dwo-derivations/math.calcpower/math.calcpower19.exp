@@ -1,6 +1,34 @@
-<reply result="error" version="0.5.13">
-  <message>
-    Package math.calcpower not found
-  </message>
+<reply result="ok" version="0.5.13">
+  <list>
+    <elem ruleid="calculate power">
+      <expr>
+        1/(8*(1/4^2))
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate power">
+      <expr>
+        1/(8*(1/16))
+      </expr>
+      <context>
+        <item name="location" value="[1,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculate times [rational]">
+      <expr>
+        1/(1/2)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="division denominator">
+      <expr>
+        2
+      </expr>
+    </elem>
+  </list>
 </reply>
 

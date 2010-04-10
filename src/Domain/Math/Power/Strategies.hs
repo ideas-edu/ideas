@@ -22,6 +22,7 @@ import Common.View
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Views
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Generators
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Rules
@@ -33,16 +34,24 @@ import Test.QuickCheck hiding (label)
 -- Strategies
 
 makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context Expr)
-makeStrategy l rs cs = cleanUpStrategy (cleanup cs) $ strategise l rs
+makeStrategy l rs cs = cleanUpStrategy (f1) $ strategise l rs
   where
-    cleanup  = applyD . strategise l
+    f1 = applyD $ strategise l cs
+    f2 = applyD $ liftToContext $ makeSimpleRule "clean up" (return . cleanUpExpr) 
 
---strategise l = label l . Common.Strategy.replicate 6 . alternatives . map (somewhere . liftToContext)
 strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
 
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = makeStrategy 
   "simplify" powerRules (calcPower : naturalRules ++ rationalRules)
+
+powerOfStrategy = makeStrategy
+  "write as power of" powerRules (calcPower : simplifyRoot : simplifyFraction : naturalRules ++ rationalRules) 
+
+cleanUpExprRule :: Rule Expr
+cleanUpExprRule = makeSimpleRule "Clean up" $ \ expr ->
+  let expr' = cleanUpExpr expr 
+  in  if expr /= expr' then Just expr' else Nothing
 
 powerRules =
       [ addExponents
@@ -68,6 +77,7 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , mulExponents
             , reciprocal' hasNegExp
             , distributePower
+            , distributePowerDiv
             , power2root
             , distributeRoot
             , zeroPower

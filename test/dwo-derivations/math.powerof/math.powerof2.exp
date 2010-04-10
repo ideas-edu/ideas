@@ -1,14 +1,6 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
-      <expr>
-        a^4*a^(-2)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="sub exponents">
       <expr>
         a^2
       </expr>

@@ -2,10 +2,10 @@
   <list>
     <elem ruleid="write as power">
       <expr>
-        a^(1/2)*a^2/1
+        a^(1/2)*a^2
       </expr>
       <context>
-        <item name="location" value="[0,0]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="add exponents">

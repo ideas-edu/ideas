@@ -1,22 +1,14 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="mul exponents">
       <expr>
-        a^6*(1/a)
+        a^6/a
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        a^6*a^(-1)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="sub exponents">
       <expr>
         a^5
       </expr>

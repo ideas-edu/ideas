@@ -1,22 +1,14 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="add exponents">
       <expr>
-        a^(-2)*(1/a^4)
-      </expr>
-      <context>
-        <item name="location" value="[0]"/>
-      </context>
-    </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        a^(-2)*a^(-4)
+        1/a^6
       </expr>
       <context>
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="reciprocal">
       <expr>
         a^(-6)
       </expr>

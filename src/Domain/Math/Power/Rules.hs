@@ -134,6 +134,14 @@ distributePower = makeSimpleRule "distribute power" $ \ expr -> do
   return $ build productView 
    (if sign then odd y' else False, c : map (\a -> a .^. y) as)
 
+-- | c * (a/b)^y = c * (a^y / b^y)
+distributePowerDiv :: Rule Expr
+distributePowerDiv = makeSimpleRule "distribute power" $ \ expr -> do
+  (c, (ab, y)) <- match strictPowerView expr
+  y'           <- match integerView y
+  (a, b)       <- match divView ab
+  return $ c .*. build divView (a .^. y, b .^. y)
+
 -- | c*a^0 = c
 zeroPower :: Rule Expr
 zeroPower = makeSimpleRule "zero power" $ \ expr -> do
@@ -174,8 +182,8 @@ root2power :: Rule Expr
 root2power = makeSimpleRule "write as power" $ \ expr -> do
   (ap, q) <- match rootView expr
   a       <- selectVar ap
-  (c, p)  <- match (unitPowerForView a) ap
-  return $ build strictPowerView (c, (Var a, fromRational (p/q)))
+  p       <- match (powerViewFor' a) ap
+  return $ build (powerViewFor' a) (fromRational (p /  q))
 
 -- | root (a/b) x = root a x / root b x
 distributeRoot :: Rule Expr
@@ -210,6 +218,21 @@ divRoot = makeSimpleRule "divide base of root" $ \ expr -> do
   (c2, (b, x')) <- match rootConsView r2
   guard (x == x' && b /= 0)
   return $ build rootConsView (c1 .*. c2, (a ./. b, x))
+
+
+simplifyRoot :: Rule Expr
+simplifyRoot = makeSimpleRule "simplify root" $ \e -> f e `mplus` g e
+ where
+  f expr = do
+    (e1, _) <- match rootView expr
+    x       <- match integerView e1
+    case x of
+      0 -> Just 0
+      1 -> Just 1
+      _ -> Nothing
+  g expr = do
+    (e1, e2) <- match rootView expr
+    if e2 == 1 then Just e1 else Nothing
 
 
 -- | Common rules --------------------------------------------------------------

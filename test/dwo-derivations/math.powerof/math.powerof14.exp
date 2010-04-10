@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.13">
   <list>
     <elem ruleid="mul exponents">
       <expr>

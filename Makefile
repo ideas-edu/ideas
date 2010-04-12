@@ -67,7 +67,7 @@ $(BINDIR)/assess$(EXE): ag
 #---------------------------------------------------------------------------------------
 # Other directories
 
-documentation: docs
+documentation: docs $(BINDIR)/ideas.cgi
 	make -C $(DOCDIR) || exit 1
 
 unit-tests: $(TESTDIR)/test.log

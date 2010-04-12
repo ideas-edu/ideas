@@ -9,15 +9,14 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Main (main) where
+module Documentation.Checks (execute) where
 
 import System.Directory
-import Data.Maybe
-import Common.Utils (safeHead, reportTest, useFixedStdGen, Some(..), snd3)
+import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
-import System.Environment
+import Service.Options
 import Service.ExerciseList
 import Service.Request
 
@@ -34,8 +33,8 @@ import qualified Text.UTF8 as UTF8
 import qualified Text.JSON as JSON
 import Data.List
 
-main :: IO ()
-main = do
+execute :: IO ()
+execute = do
    putStrLn "* 1. Domain checks"
    Grammar.checks
    MathNum.main
@@ -57,8 +56,10 @@ main = do
 -- Returns the number of tests performed
 unitTests :: IO Int
 unitTests = do
-   args <- getArgs
-   let dir = fromMaybe "test" (safeHead args)
+   flags <- serviceOptions
+   dir   <- case [ s | SelfCheck s <- flags ] of
+               [s] -> return s
+               _   -> return "test"
    visit 0 dir
  where
    visit i path = do

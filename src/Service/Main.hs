@@ -20,6 +20,7 @@ import Service.ModeXML  (processXML)
 import Service.ModeJSON (processJSON)
 import Service.Request
 import Service.LoggingDatabase
+import Documentation.Make
 import Network.CGI
 import Control.Monad.Trans
 import Control.Monad
@@ -35,16 +36,20 @@ main = do
    logRef    <- newIORef (return ())
    
    case withInputFile flags of
+      -- documentation mode
+      _ | documentationMode flags -> do
+         makeDocumentation flags
+      
       -- from file
       Just file -> do  
-         useFixedStdGen                 -- use a predictable "random" number generator
+         when (FixRNG `elem` flags) 
+            useFixedStdGen -- use a predictable "random" number generator
          input    <- readFile file
          (req, txt, _) <- process input
          when (Logging True `elem` flags) $ 
             writeIORef logRef $ -- save logging action for later
                logMessage req input txt "local" startTime
          putStrLn txt
-         
          
       -- cgi binary
       Nothing -> runCGI $ do
@@ -69,13 +74,3 @@ process input =
       Just XML  -> processXML  input
       Just JSON -> processJSON input
       _         -> fail "Invalid input"
-
--- Convert escaped characters ('%')   
-{-
-convert :: String -> String
-convert [] = []
-convert ('%':c1:c2:cs) =
-   case stringToHex [c1, c2] of
-      Just i  -> chr i : convert cs
-      Nothing -> '%' : convert (c1:c2:cs)
-convert (c:cs) = c : convert cs -}

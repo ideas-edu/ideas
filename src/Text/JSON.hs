@@ -270,7 +270,7 @@ instance CoArbitrary Number where
 arbJSON :: Int -> Gen JSON
 arbJSON n 
    | n == 0 = oneof 
-        [ liftM Number arbitrary, liftM String arbitrary
+        [ liftM Number arbitrary, liftM String myStringGen
         , liftM Boolean arbitrary, return Null
         ]
    | otherwise = oneof
@@ -279,12 +279,18 @@ arbJSON n
              xs <- replicateM i rec
              return (Array xs)
         , do i  <- choose (0, 6)
-             xs <- replicateM i arbitrary
+             xs <- replicateM i myStringGen
              ys <- replicateM i rec
              return (Object (zip xs ys))
         ]
  where
    rec = arbJSON (n `div` 2)
+   
+myStringGen :: Gen String
+myStringGen = do 
+   n <- choose (1, 10)
+   replicateM n $ oneof $ map return $ 
+      ['A' .. 'Z'] ++ ['a' .. 'z'] ++ ['0' .. '9']
    
 testMe :: IO ()
 testMe = do 

@@ -17,7 +17,7 @@ import Common.Transformation
 import Control.Monad
 import Service.ServiceList
 import Service.Revision
-import System.Environment
+import Service.Options hiding (header)
 import System.Directory
 import System.FilePath
 import Text.HTML
@@ -126,7 +126,7 @@ showBool b = if b then "yes" else "no"
 
 targetDirectory :: IO String
 targetDirectory = do
-   args <- getArgs
-   case args of
+   flags <- serviceOptions
+   case [ s | MakePages s <- flags ] of
       [dir] -> return dir
       _     -> return "docs"

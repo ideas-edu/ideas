@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.TestsPage (main) where
 
+import Control.Monad
 import Data.Char
 import Data.List
 import Documentation.DefaultPage
@@ -24,7 +25,8 @@ main = do
    case args of
       [fileIn, fileOut] -> do
          input <- readFile fileIn
-         generatePage (up 1 ++ fileOut) (testsPage input)
+         withArgs [] $ 
+            generatePage (up 1 ++ fileOut) (testsPage input)
       _ -> fail "Invalid invocation"
    
 testsPage :: String -> HTML
@@ -37,16 +39,16 @@ testsPage input = defaultPage "Tests" 0 $ do
  where
    format :: String -> (HTMLBuilder, Bool)
    format s
+      | any (`elem` ws) ["failed", "error", "error:", "falsifiable"] =
+           (errorLine (ttText s), False)
       | "* " `isPrefixOf` s =
            (h2 (drop 2 s), True)
       | "** " `isPrefixOf` s =
            (br >> bold (text (drop 3 s)), True)
       | "*** " `isPrefixOf` s =
            (br >> bold (text (drop 4 s)), True)
-      | any (`elem` ws) ["failed", "error", "error:", "falsifiable"] =
-           (errorLine (ttText (htmlString s)), False)
       | otherwise = 
-           (ttText (htmlString s), True)
+           (fromString s, True)
     where
       ws = map (map toLower . filter isAlpha) (words s)
       
@@ -54,17 +56,27 @@ testsPage input = defaultPage "Tests" 0 $ do
 brs :: [HTMLBuilder] -> HTMLBuilder
 brs = mapM_ (>> br)
 
--- no backspaces
-htmlString :: String -> String
-htmlString = reverse . f 0 . reverse
+fromString :: String -> HTMLBuilder
+fromString = f []
  where
-   f _[] = []
-   f i (x:xs) 
-      | x == chr 8 = f (i+1) xs
-      | i >  0     = f (i-1) xs
-      | otherwise  = x:f 0 xs
-      
+   f acc []     = ttText (reverse acc)
+   f acc list@(x:xs) 
+      | "+++" `isPrefixOf` list = do
+           f acc [] 
+           unless (null acc) (spaces 3)
+           okLine (ttText (drop 3 list))
+      | "*** Gave up!" `isPrefixOf` list = do
+           f acc []
+           unless (null acc) (spaces 3)
+           ttText (drop 3 list)
+      | otherwise = f (x:acc) xs
+
 errorLine :: HTMLBuilder -> HTMLBuilder
 errorLine b = XML.element "font" $ do
    "color" XML..=. "red"
    bold b
+   
+okLine :: HTMLBuilder -> HTMLBuilder
+okLine b = XML.element "font" $ do
+   "color" XML..=. "gray"
+   b

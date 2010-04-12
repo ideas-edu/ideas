@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.LatexRules (main) where
+module Documentation.LatexRules (makeLatexRules) where
 
 import Common.Exercise
 import Common.Rewriting
@@ -17,15 +17,15 @@ import Common.Transformation
 import Common.Utils
 import Control.Monad
 import Service.ExerciseList
+import Service.Options
 import Data.Char
 import Data.List
 import Data.Maybe
 import System.Directory
-import System.Environment
 import System.Time
 
-main :: IO ()
-main = do
+makeLatexRules :: IO ()
+makeLatexRules = do
    dir <- targetDirectory
    forM_ exercises $ \(Some ex) -> do
       let code = exerciseCode ex
@@ -49,11 +49,10 @@ main = do
 
 targetDirectory :: IO String
 targetDirectory = do
-   args <- getArgs
-   case args of
-      []    -> return "."
-      dir:_ -> return dir
-
+   flags <- serviceOptions
+   case [ s | MakeRules s <- flags ] of
+      [dir] -> return dir
+      _     -> return "docs"
 {- 
 exerciseRulesToTeX :: Exercise a -> String
 exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex

@@ -31,7 +31,7 @@ instance Show ShowString where
    show = fromShowString
 
 thoroughCheck :: Testable a => a -> IO ()
-thoroughCheck = quickCheckWith $ stdArgs {maxSize = 1000, maxSuccess = 5000} -- check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
+thoroughCheck = quickCheckWith $ stdArgs {maxSize = 500, maxSuccess = 500} -- check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
 
 readInt :: String -> Maybe Int
 readInt xs 

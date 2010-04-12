@@ -48,10 +48,10 @@ test-all.log: $(ALL-OUT)
 	done;
 
 %.out: %.xml $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --file $< > $@
+	$(BINDIR)/ideas.cgi --fixed-rng --file $< > $@
 
 %.out: %.json $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --file $< > $@
+	$(BINDIR)/ideas.cgi --fixed-rng --file $< > $@
 
 exp: $(ALL-EXP)
 	

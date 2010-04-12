@@ -141,6 +141,7 @@ instance Arbitrary Expr where
       {-
       let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
       in sized (symbolGenerator (const [natGenerator]) syms) -}
+instance CoArbitrary Expr where      
    coarbitrary expr =
       case expr of 
          a :+: b  -> variant 0 . coarbitrary a . coarbitrary b

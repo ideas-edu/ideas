@@ -101,6 +101,7 @@ instance (Simplify a, IsTerm a) => IsTerm (Simplified a) where
 
 instance (Arbitrary a, Simplify a) => Arbitrary (Simplified a) where
    arbitrary = liftM simplified arbitrary
+instance (CoArbitrary a, Simplify a) => CoArbitrary (Simplified a) where
    coarbitrary (S x) = coarbitrary x
 
 simplified :: Simplify a => a -> Simplified a

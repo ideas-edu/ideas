@@ -47,7 +47,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ratio
-import Test.QuickCheck hiding (arguments)
+import Test.QuickCheck
 
 -----------------------------------------------------------
 --- Transformations

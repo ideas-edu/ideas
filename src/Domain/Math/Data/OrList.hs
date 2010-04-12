@@ -110,6 +110,7 @@ instance Arbitrary a => Arbitrary (OrList a) where
       n  <- choose (1, 3)
       xs <- vector n
       return (OrList xs)
+instance CoArbitrary a => CoArbitrary (OrList a) where
    coarbitrary T           = variant 0
    coarbitrary (OrList xs) = variant 1 . coarbitrary xs
 

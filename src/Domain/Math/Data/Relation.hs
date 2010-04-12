@@ -136,10 +136,12 @@ crushRelation p = [leftHandSide p, rightHandSide p]
 
 instance Arbitrary a => Arbitrary (Relation a) where
    arbitrary = liftM3 R arbitrary arbitrary arbitrary
+instance CoArbitrary a => CoArbitrary (Relation a) where
    coarbitrary p = coarbitrary (relationType p) . coarbitrary (crush p)
    
 instance Arbitrary RelationType where
    arbitrary = oneof $ map return [EqualTo .. Approximately]
+instance CoArbitrary RelationType where
    coarbitrary op = variant (fromEnum op)
 
 -----------------------------------------------------------------------------
@@ -188,6 +190,7 @@ instance Crush  Equation where crush  = crushRelation
 
 instance Arbitrary a => Arbitrary (Equation a) where
    arbitrary   = liftM2 (:==:) arbitrary arbitrary
+instance CoArbitrary a => CoArbitrary (Equation a) where
    coarbitrary = coarbitrary . build equationView
 
 instance IsTerm a => IsTerm (Equation a) where
@@ -237,6 +240,7 @@ instance Arbitrary a => Arbitrary (Inequality a) where
    arbitrary = do 
       op <- oneof $ map (return . fst . snd) inequalityTable
       liftM2 op arbitrary arbitrary
+instance CoArbitrary a => CoArbitrary (Inequality a) where
    coarbitrary = coarbitrary . build inequalityView
 
 instance IsTerm a => IsTerm (Inequality a) where

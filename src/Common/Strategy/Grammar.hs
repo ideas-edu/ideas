@@ -243,6 +243,7 @@ mapSymbol _ Fail        =  Fail
 
 instance Arbitrary a => Arbitrary (Grammar a) where
    arbitrary = sized (arbGrammar [])
+instance CoArbitrary a => CoArbitrary (Grammar a) where
    coarbitrary grammar =
       case grammar of
          p :*: q  -> variant 0 . coarbitrary p . coarbitrary q

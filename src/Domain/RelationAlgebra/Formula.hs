@@ -12,6 +12,7 @@
 module Domain.RelationAlgebra.Formula where
 
 import Domain.Math.Expr.Symbolic
+import Common.Exercise (generate)
 import Common.Uniplate (Uniplate(..))
 import Common.Rewriting
 import Common.Utils

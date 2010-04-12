@@ -118,6 +118,7 @@ systemWithMatrixExercise = testableExercise
                   
 instance Arbitrary a => Arbitrary (Vector a) where
    arbitrary   = liftM fromList $ oneof $ map vector [0..2]
+instance CoArbitrary a => CoArbitrary (Vector a) where
    coarbitrary = coarbitrary . toList
 
 instance Arbitrary a => Arbitrary (VectorSpace a) where
@@ -126,6 +127,7 @@ instance Arbitrary a => Arbitrary (VectorSpace a) where
       j <- choose (0, 10 `div` i)
       xs <- replicateM i (liftM fromList $ replicateM j arbitrary)
       return $ makeVectorSpace xs
+instance CoArbitrary a => CoArbitrary (VectorSpace a) where
    coarbitrary = coarbitrary . vectors
 
 arbMatrix :: Num a => Gen (Matrix a)
@@ -135,6 +137,7 @@ instance Arbitrary a => Arbitrary (Matrix a) where
    arbitrary = do
       (i, j) <- arbitrary
       arbSizedMatrix (i `mod` 5, j `mod` 5)
+instance CoArbitrary a => CoArbitrary (Matrix a) where
    coarbitrary = coarbitrary . rows
    
 arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)

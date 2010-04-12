@@ -31,7 +31,7 @@ instance Show ShowString where
    show = fromShowString
 
 thoroughCheck :: Testable a => a -> IO ()
-thoroughCheck = check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
+thoroughCheck = quickCheckWith $ stdArgs {maxSize = 1000, maxSuccess = 5000} -- check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
 
 readInt :: String -> Maybe Int
 readInt xs 
@@ -131,22 +131,29 @@ reportTest s b = putLabel s >> putStrLn (if b then "OK" else "FAILED")
 
 instance Show (a -> b) where
    show _ = "<function>"
-   
+
+{-
 instance Arbitrary Char where
    arbitrary = let chars = ['a' .. 'z'] ++ ['A' .. 'Z']
                in oneof (map return chars)
+instance CoArbitrary Char where
    coarbitrary = coarbitrary . ord
-   
+-}
+
 instance (Ord k, Arbitrary k, Arbitrary a) => Arbitrary (M.Map k a) where
    arbitrary   = liftM M.fromList arbitrary
+instance (Ord k, CoArbitrary k, CoArbitrary a) => CoArbitrary (M.Map k a) where
    coarbitrary = coarbitrary . M.toList
-   
+
+{-
 -- Generating arbitrary random rational numbers
 instance Integral a => Arbitrary (Ratio a) where
    arbitrary     = sized (\n -> ratioGen n (n `div` 4))
+instance Integral a => CoArbitrary (Ratio a) where
    coarbitrary r = f (numerator r) . f (denominator r)
-    where f = variant . fromIntegral
-   
+     where f = variant . fromIntegral
+-}
+
 -- | Prevents a bias towards small numbers
 ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)
 ratioGen n m = do 

@@ -20,6 +20,7 @@ instance Rewrite RelAlg
 
 instance Arbitrary RelAlg where
    arbitrary = sized arbRelAlg
+instance CoArbitrary RelAlg where
    coarbitrary term =
       case term of
          Var x    -> variant 0 . coarbitrary x

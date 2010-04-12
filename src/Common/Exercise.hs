@@ -29,7 +29,7 @@ module Common.Exercise
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
    , checkExercise, checkParserPretty
-   , checkExamples
+   , checkExamples, generate
    ) where
 
 import Common.Apply
@@ -46,7 +46,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import System.Random
-import Test.QuickCheck hiding (label, arguments)
+import Test.QuickCheck hiding (label) --, arguments)
+import Test.QuickCheck.Gen
 import Text.Parsing (SyntaxError(..))
 
 data Exercise a = Exercise
@@ -153,6 +154,12 @@ useGenerator p g = Just f
       | otherwise = f (snd (next rng)) level
     where
       a = generate 100 rng (g level)
+        where
+
+generate :: Int -> StdGen -> Gen a -> a
+generate n rnd (MkGen m) = m rnd' size
+  where
+    (size, rnd') = randomR (0, n) rnd
 
 restrictGenerator :: (a -> Bool) -> Gen a -> Gen a
 restrictGenerator p g = do

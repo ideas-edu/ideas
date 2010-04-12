@@ -251,7 +251,7 @@ jsonRPC input handler =
 
 instance Arbitrary JSON where
    arbitrary = sized arbJSON
-
+instance CoArbitrary JSON where
    coarbitrary json = 
       case json of
          Number a  -> variant 0 . coarbitrary a
@@ -263,7 +263,7 @@ instance Arbitrary JSON where
 
 instance Arbitrary Number where
    arbitrary = oneof [liftM I arbitrary, liftM (D . fromInteger) arbitrary]
-
+instance CoArbitrary Number where
    coarbitrary (I n) = variant 0 . coarbitrary n
    coarbitrary (D d) = variant 1 . coarbitrary d
 

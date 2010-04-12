@@ -59,6 +59,7 @@ instance Crush RE where
 
 instance Arbitrary RegExp where
    arbitrary = sized (arbRE $ oneof $ map return ["a", "b", "c", "d"])
+instance CoArbitrary RegExp where
    coarbitrary = foldRE 
       (         variant 0
       ,         variant 1

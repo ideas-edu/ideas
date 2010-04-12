@@ -18,7 +18,7 @@ import Common.Utils (ShowString(..))
 import Domain.Logic.Formula
 import Control.Monad
 import Data.Char
-import Test.QuickCheck hiding (defaultConfig)
+import Test.QuickCheck
 import Common.Rewriting
 import Common.Uniplate
 import Domain.Math.Expr.Symbolic
@@ -127,6 +127,7 @@ removePartsInDNF = buildOr . filter (not . simple) . disjunctions
 
 instance Arbitrary SLogic where
    arbitrary = sized (\i -> sizedGen True varGen (i `min` 4))
+instance CoArbitrary SLogic where
    coarbitrary logic = 
       case logic of
          Var x     -> variant 0 . coarbitrary (map ord (fromShowString x))

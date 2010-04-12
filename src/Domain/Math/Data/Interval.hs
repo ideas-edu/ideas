@@ -268,6 +268,7 @@ instance (Arbitrary a, Ord a) => Arbitrary (Endpoint a) where
       , (2, liftM Including arbitrary)
       , (1, return Unbounded)
       ]
+instance (CoArbitrary a, Ord a) => CoArbitrary (Endpoint a) where
    coarbitrary (Excluding a) = variant 0 . coarbitrary a
    coarbitrary (Including a) = variant 1 . coarbitrary a
    coarbitrary Unbounded     = variant 2
@@ -277,6 +278,7 @@ instance (Arbitrary a, Ord a) => Arbitrary (Interval a) where
       [ (1, return Empty)
       , (5, liftM2 makeInterval arbitrary arbitrary)
       ]
+instance (CoArbitrary a, Ord a) => CoArbitrary (Interval a) where
    coarbitrary Empty   = variant 0
    coarbitrary (I a b) = variant 1 . coarbitrary a . coarbitrary b
    
@@ -285,6 +287,7 @@ instance (Arbitrary a, Ord a) => Arbitrary (Intervals a) where
       n  <- choose (0, 100)
       xs <- replicateM n arbitrary
       return (fromList xs)
+instance (CoArbitrary a, Ord a) => CoArbitrary (Intervals a) where
    coarbitrary (IS xs) = coarbitrary xs
 
 testMe :: IO ()

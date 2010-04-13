@@ -19,7 +19,7 @@ import Test.QuickCheck
 instance Rewrite RelAlg
 
 instance Arbitrary RelAlg where
-   arbitrary = sized arbRelAlg
+   arbitrary = sized (arbRelAlg . min 8)
 instance CoArbitrary RelAlg where
    coarbitrary term =
       case term of

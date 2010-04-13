@@ -427,7 +427,8 @@ testRule eq rule =
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
 testRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> IO ()
 testRuleSmart eq rule gen =
-   quickCheck (propRule eq rule (smartGen rule gen))
+   let cfg = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
+   in quickCheckWith cfg (propRule eq rule (smartGen rule gen))
   
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
 propRule eq rule gen = 

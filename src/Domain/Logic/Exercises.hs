@@ -30,7 +30,7 @@ import Domain.Logic.Parser
 import Domain.Logic.Rules
 import Domain.Logic.Strategies
 import Test.QuickCheck
-   
+
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
 dnfExercise = makeExercise

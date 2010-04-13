@@ -53,7 +53,7 @@ $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix
-	$(CD) $(HPCTMPDIR); ./checks$(EXE) --self-check=../../test $(PROFILERTS) > tests.txt || ($(RM) -f checks$(EXE).tix; exit 1);
+	$(CD) $(HPCTMPDIR); ./checks$(EXE) --self-check=../../test $(PROFILERTS) > tests.txt 2> /dev/null || ($(RM) -f checks$(EXE).tix; exit 1);
 
 tests.html: $(HPCTMPDIR)/checks$(EXE).tix
 	$(RUNHASKELL) -i$(SRCDIR) -odir$(OUTDIR) -hidir$(OUTDIR) $(SRCDIR)/Documentation/TestsPage.hs $(HPCTMPDIR)/tests.txt $@

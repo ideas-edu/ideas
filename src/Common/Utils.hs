@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -31,7 +31,7 @@ instance Show ShowString where
    show = fromShowString
 
 thoroughCheck :: Testable a => a -> IO ()
-thoroughCheck = quickCheckWith $ stdArgs {maxSize = 500, maxSuccess = 500} -- check $ defaultConfig {configMaxTest = 1000, configMaxFail = 5000}
+thoroughCheck = quickCheckWith $ stdArgs {maxSize = 500, maxSuccess = 500}
 
 readInt :: String -> Maybe Int
 readInt xs 
@@ -77,6 +77,7 @@ safeHead _     = Nothing
 fixpoint :: Eq a => (a -> a) -> a -> a
 fixpoint f = stop . iterate f 
  where
+   stop []           = error "Common.Utils: empty list"
    stop (x:xs)
       | x == head xs = x
       | otherwise    = stop xs
@@ -119,8 +120,9 @@ indent n = unlines . map (\s -> replicate n ' ' ++ s) . lines
 primes :: [Int]
 primes = rec [2..]
  where
+   rec []     = error "Common.Utils: empty list"
    rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
-
+   
 putLabel :: String -> IO ()
 putLabel s = 
    let n = (40 - length s) `max` 3

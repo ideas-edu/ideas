@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -413,18 +413,19 @@ checksForDerivation ex d = do
             unless b $ report $ 
                "start term not suitable: " ++ prettyPrinterContext ex start
             return b
-
+   {-
    b2 <- do let b = False -- maybe True (isReady ex) (fromContext start)
             when b $ report $ 
                "start term is ready: " ++ prettyPrinterContext ex start
-            return b
+            return b-}
    -- Conditions on final term
    let final = last (terms d)
+   {-
    b3 <- do let b = False -- maybe True (isSuitable ex) (fromContext final)
             when b $ report $ 
                "final term is suitable: " ++ prettyPrinterContext ex start
                ++ "  =>  " ++ prettyPrinterContext ex final
-            return b
+            return b -}
    b4 <- do let b = maybe False (isReady ex) (fromContext final)
             unless b $ report $ 
                "final term not ready: " ++ prettyPrinterContext ex start
@@ -450,17 +451,16 @@ checksForDerivation ex d = do
                       ++ "  with  " ++ prettyPrinterContext ex y
                return False
    -- Similarity of terms
-   let p (x, _, y) = False 
-                     {-
-                     fromMaybe False $ 
-                        liftM2 (similarity ex) (fromContext x) (fromContext y) -}
+   {-
+   let p (x, _, y) = fromMaybe False $ 
+                        liftM2 (similarity ex) (fromContext x) (fromContext y)
    b7 <- case filter p (triples d) of
             [] -> return True
             (x, r, y):_ -> do
                report $ "similar subsequent terms: " ++ prettyPrinterContext ex x
                       ++ "  with  " ++ prettyPrinterContext ex y
                       ++ "  using  " ++ show r
-               return False
+               return False -}
    let xs = [ x | cx <- terms d, x <- fromContext cx, not (similarity ex x x) ]
    b8 <- case xs of
             [] -> return True
@@ -468,7 +468,7 @@ checksForDerivation ex d = do
                report $ "term not similar to itself: " ++ prettyPrinter ex hd
                return False
    -- Result
-   return $ and [b1, b2, b3, b4, b5, b6, b7, b8]
+   return $ and [b1, b4, b5, b6, b8]
 
 report :: String -> IO ()
 report txt = putStrLn ("Error: " ++ txt)

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.14">
   <list>
     <elem ruleid="distribution square">
       <expr>
@@ -15,12 +15,12 @@
         10*x^2+20*x+50 == 40
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="same constant factor">
       <expr>
-        10*x^2+20*x+10 == 0
+        x^2+2*x+5 == 4
       </expr>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="move to left">
       <expr>
         x^2+2*x+1 == 0
       </expr>

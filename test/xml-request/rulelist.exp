@@ -26,6 +26,7 @@
     <elem name="nice factors" buggy="false" rewriterule="false"/>
     <elem name="no linear term b" buggy="false" rewriterule="false"/>
     <elem name="prepare split square" buggy="false" rewriterule="false"/>
+    <elem name="same constant factor" buggy="false" rewriterule="false"/>
     <elem name="same factor" buggy="false" rewriterule="false"/>
     <elem name="simpler polynomial" buggy="false" rewriterule="false"/>
     <elem name="simpler square root" buggy="false" rewriterule="false"/>

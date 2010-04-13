@@ -1,0 +1,5 @@
+<request service="allfirsts" exerciseid="math.quadreq" encoding="string">
+<state><expr>
+   3*(x^2 + 1/2) == 6 + 6*x
+</expr></state>
+</request>

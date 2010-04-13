@@ -1,13 +1,18 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.5.14">
   <list>
+    <elem ruleid="same constant factor">
+      <expr>
+        x^2 == 2*x
+      </expr>
+    </elem>
     <elem ruleid="move to left">
       <expr>
-        3*x^2-6*x == 0
+        x^2-2*x == 0
       </expr>
     </elem>
     <elem ruleid="common factor var">
       <expr>
-        3*x*(x-2) == 0
+        x*(x-2) == 0
       </expr>
     </elem>
     <elem ruleid="multiplication is zero">

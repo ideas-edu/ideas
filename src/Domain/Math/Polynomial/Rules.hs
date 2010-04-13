@@ -326,6 +326,31 @@ sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
    return $ orList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
+-- N*(A+B) = N*C + N*D   recognize a constant factor on both sides
+-- Example: 3(x^2+1/2) = 6+6x
+sameConFactor :: Rule (Equation Expr)
+sameConFactor = makeSimpleRule "same constant factor" $ \(lhs :==: rhs) -> do
+   xs <- match sumView lhs
+   ys <- match sumView rhs
+   ps <- mapM (match productView) (xs ++ ys) 
+   let (bs, zs) = unzip ps
+       (rs, es) = unzip (map (f 1 []) zs)
+       f r acc []     = (r, reverse acc)
+       f r acc (x:xs) = case match rationalView x of
+                           Just r2 -> f (r*r2) acc xs
+                           Nothing -> f r (x:acc) xs
+   con <- whichCon rs
+   guard (con /= 1)
+   let make b r e = build productView (b, (fromRational (r/con):e))
+       (newLeft, newRight) = splitAt (length xs) (zipWith3 make bs rs es)
+   return (build sumView newLeft :==: build sumView newRight)
+ where
+   whichCon :: [Rational] -> Maybe Rational
+   whichCon xs 
+      | all (\x -> denominator x == 1 && x /= 0) xs =
+           Just (fromInteger (foldr1 gcd (map numerator xs)))
+      | otherwise = Nothing
+
 abcFormula :: Rule (Context (OrList (Equation Expr)))
 abcFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)

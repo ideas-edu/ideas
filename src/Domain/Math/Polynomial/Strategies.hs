@@ -109,7 +109,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
    topForm = label "top form" $
       ( ruleOnce2 (ruleSomewhere merge) 
         <|> ruleOnce cancelTerms  
-        <|> sameFactor
+        <|> sameFactor <|> ruleOnce sameConFactor
         <|> ruleMulti2 (ruleSomewhere distributionSquare)
         <|> ruleMulti2 distributeTimesSomewhere 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)
@@ -136,7 +136,7 @@ higherDegreeStrategy =
              [ coverUpPower, ruleOnce coverUpTimes
              , mulZero, {-ruleOnce2 powerFactor,-} sameFactor
              , ruleOnce exposeSameFactor
-             ] ++ [coverUpPlus ruleOnce]
+             ] ++ [coverUpPlus ruleOnce] ++ [toStrategy (ruleOnce sameConFactor)]
    f = mapRulesS (liftToContext . liftRule (switchView equationView))
    
    specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))

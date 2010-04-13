@@ -1,0 +1,27 @@
+<reply result="ok" version="0.5.14">
+  <list>
+    <elem ruleid="same factor">
+      []
+      <state>
+        <prefix>
+          [0,0,1,1,1,1,1,0,2,0]
+        </prefix>
+        <expr>
+          x-2 == 0 or x == 3
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      []
+      <state>
+        <prefix>
+          [0,0,1,1,1,1,1,0,4,0]
+        </prefix>
+        <expr>
+          x^2-2*x == 3*x-6
+        </expr>
+      </state>
+    </elem>
+  </list>
+</reply>
+

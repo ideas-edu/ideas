@@ -109,6 +109,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
    topForm = label "top form" $
       ( ruleOnce2 (ruleSomewhere merge) 
         <|> ruleOnce cancelTerms  
+        <|> sameFactor
         <|> ruleMulti2 (ruleSomewhere distributionSquare)
         <|> ruleMulti2 distributeTimesSomewhere 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)

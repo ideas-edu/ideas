@@ -1,0 +1,5 @@
+<request service="allfirsts" exerciseid="math.quadreq" encoding="string">
+<state><expr>
+   x*(x-2) == 3*(x-2)
+</expr></state>
+</request>

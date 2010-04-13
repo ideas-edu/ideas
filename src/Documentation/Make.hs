@@ -25,15 +25,21 @@ import Documentation.OverviewPages
 makeDocumentation :: [Flag] -> IO ()
 makeDocumentation flags = do
    -- make pages
-   unless (null [ () | MakePages _ <- flags ]) makePages
+   case [ s | MakePages s <- flags ] of
+      [dir] -> makePages dir
+      _     -> return ()
    -- make rules
-   unless (null [ () | MakeRules _ <- flags ]) makeLatexRules
+   case [ s | MakeRules s <- flags ] of
+      [dir] -> makeLatexRules dir
+      _     -> return ()
    -- perform a self-check
-   unless (null [ () | SelfCheck _ <- flags ]) execute
+   case [ () | SelfCheck _ <- flags ] of
+      [] -> return ()
+      _  -> execute
 
-makePages :: IO ()
-makePages = do 
-   makeExerciseOverviewPages
-   makeServiceOverviewPage
-   mapM_ (\(Some pkg) -> makeExercisePage pkg) packages
-   mapM_ makeServicePage serviceList 
+makePages :: String -> IO ()
+makePages dir = do 
+   makeExerciseOverviewPages dir
+   makeServiceOverviewPage dir
+   mapM_ (\(Some pkg) -> makeExercisePage dir pkg) packages
+   mapM_ (makeServicePage dir) serviceList

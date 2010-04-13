@@ -25,8 +25,7 @@ main = do
    case args of
       [fileIn, fileOut] -> do
          input <- readFile fileIn
-         withArgs [] $ 
-            generatePage (up 1 ++ fileOut) (testsPage input)
+         generatePage "docs" (up 1 ++ fileOut) (testsPage input)
       _ -> fail "Invalid invocation"
    
 testsPage :: String -> HTML

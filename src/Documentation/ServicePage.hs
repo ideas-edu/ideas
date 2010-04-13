@@ -27,9 +27,9 @@ import Domain.Math.Expr.Symbolic
 import Control.Monad
 import Common.Utils (ShowString(..))
 
-makeServicePage :: Service a -> IO ()
-makeServicePage s =
-   generatePage (servicePageFile s) (servicePage s)
+makeServicePage :: String -> Service a -> IO ()
+makeServicePage dir s =
+   generatePage dir (servicePageFile s) (servicePage s)
 
 servicePage :: Service a -> HTML
 servicePage s = defaultPage title 1 $ do

@@ -29,16 +29,16 @@ import Text.OpenMath.FMP
 import qualified Text.XML as XML
 import Documentation.DefaultPage
 
-makeExercisePage :: ExercisePackage a -> IO ()
-makeExercisePage pkg = do
+makeExercisePage :: String -> ExercisePackage a -> IO ()
+makeExercisePage dir pkg = do
    let code = exerciseCode (exercise pkg)
-   generatePage (exercisePageFile code) (exercisePage pkg)
-   generatePage (exerciseStrategyFile code) (strategyPage pkg)
-   generatePage (exerciseRulesFile code) (rulesPage pkg)
+   generatePage dir (exercisePageFile code) (exercisePage pkg)
+   generatePage dir (exerciseStrategyFile code) (strategyPage pkg)
+   generatePage dir (exerciseRulesFile code) (rulesPage pkg)
    case derivationsPage pkg of 
       Nothing   -> return ()
       Just this ->
-         generatePage (exerciseDerivationsFile code) this
+         generatePage dir (exerciseDerivationsFile code) this
       
 exercisePage :: ExercisePackage a -> HTML
 exercisePage pkg = defaultPage title 2 $ do

@@ -17,16 +17,14 @@ import Common.Transformation
 import Common.Utils
 import Control.Monad
 import Service.ExerciseList
-import Service.Options
 import Data.Char
 import Data.List
 import Data.Maybe
 import System.Directory
 import System.Time
 
-makeLatexRules :: IO ()
-makeLatexRules = do
-   dir <- targetDirectory
+makeLatexRules :: String -> IO ()
+makeLatexRules dir =
    forM_ exercises $ \(Some ex) -> do
       let code = exerciseCode ex
           path = dir ++ "/" ++ domain code ++ "/" ++ filter (/= ' ') (identifier code)
@@ -46,13 +44,6 @@ makeLatexRules = do
                let filename = path ++ "/rule" ++ filter isAlphaNum (name r) ++ ".lhs"
                putStrLn $ "Creating " ++ filename
                writeFile filename txt
-
-targetDirectory :: IO String
-targetDirectory = do
-   flags <- serviceOptions
-   case [ s | MakeRules s <- flags ] of
-      [dir] -> return dir
-      _     -> return "docs"
 {- 
 exerciseRulesToTeX :: Exercise a -> String
 exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex

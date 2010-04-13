@@ -24,14 +24,14 @@ import Service.ExerciseList
 import Service.ServiceList
 import Text.HTML
 
-makeExerciseOverviewPages :: IO ()
-makeExerciseOverviewPages = do
-   generatePage exerciseOverviewPageFile    (exerciseOverviewPage False)
-   generatePage exerciseOverviewAllPageFile (exerciseOverviewPage True)
+makeExerciseOverviewPages :: String -> IO ()
+makeExerciseOverviewPages dir = do
+   generatePage dir exerciseOverviewPageFile    (exerciseOverviewPage False)
+   generatePage dir exerciseOverviewAllPageFile (exerciseOverviewPage True)
 
-makeServiceOverviewPage :: IO ()
-makeServiceOverviewPage = 
-   generatePage serviceOverviewPageFile serviceOverviewPage
+makeServiceOverviewPage :: String -> IO ()
+makeServiceOverviewPage dir = 
+   generatePage dir serviceOverviewPageFile serviceOverviewPage
 
 exerciseOverviewPage :: Bool -> HTML
 exerciseOverviewPage showAll = defaultPage title 0 $ do

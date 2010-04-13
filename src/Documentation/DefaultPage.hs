@@ -17,15 +17,13 @@ import Common.Transformation
 import Control.Monad
 import Service.ServiceList
 import Service.Revision
-import Service.Options hiding (header)
 import System.Directory
 import System.FilePath
 import Text.HTML
 import Data.Char
 
-generatePage :: String -> HTML -> IO ()
-generatePage txt doc = do
-   dir <- targetDirectory
+generatePage :: String -> String -> HTML -> IO ()
+generatePage dir txt doc = do
    let filename = dir ++ "/" ++ txt
        dirpart  = takeDirectory filename
    putStrLn $ "Generating " ++ filename
@@ -123,10 +121,3 @@ servicePageFile srv = servicePagePath ++ serviceName srv ++ ".html"
 
 showBool :: Bool -> String 
 showBool b = if b then "yes" else "no"
-
-targetDirectory :: IO String
-targetDirectory = do
-   flags <- serviceOptions
-   case [ s | MakePages s <- flags ] of
-      [dir] -> return dir
-      _     -> return "docs"

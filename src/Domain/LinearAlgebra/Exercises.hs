@@ -34,7 +34,7 @@ import Test.QuickCheck
 import Text.Parsing (SyntaxError(..))
 
 gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
-gramSchmidtExercise = testableExercise
+gramSchmidtExercise = makeExercise
    { description    = "Gram-Schmidt"
    , exerciseCode   = makeCode "linalg" "gramschmidt"
    , status         = Alpha
@@ -47,12 +47,12 @@ gramSchmidtExercise = testableExercise
    , extraRules     = rulesGramSchmidt
    , isReady        = orthonormalList . filter (not . isZero) . vectors
    , strategy       = gramSchmidtStrategy
-   , testGenerator  = let f = simplified . fromInteger . (`mod` 25)
-                      in Just (liftM (fmap f) arbitrary)
+   , randomExercise = let f = simplified . fromInteger . (`mod` 25)
+                      in simpleGenerator (liftM (fmap f) arbitrary)
    }
 
 linearSystemExercise :: Exercise (Equations Expr)
-linearSystemExercise = testableExercise
+linearSystemExercise = makeExercise
    { description    = "Solve Linear System"
    , exerciseCode   = makeCode "linalg" "linsystem"
    , status         = Stable
@@ -72,7 +72,7 @@ linearSystemExercise = testableExercise
    }
    
 gaussianElimExercise :: Exercise (Matrix Expr)
-gaussianElimExercise = testableExercise
+gaussianElimExercise = makeExercise
    { description    = "Gaussian Elimination"
    , exerciseCode   = makeCode "linalg" "gaussianelim"
    , status         = Stable
@@ -88,7 +88,7 @@ gaussianElimExercise = testableExercise
    }
  
 systemWithMatrixExercise :: Exercise Expr
-systemWithMatrixExercise = testableExercise
+systemWithMatrixExercise = makeExercise
    { description    = "Solve Linear System with Matrix"
    , exerciseCode   = makeCode "linalg" "systemwithmatrix"
    , status         = Provisional

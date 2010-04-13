@@ -47,7 +47,8 @@ gramSchmidtExercise = testableExercise
    , extraRules     = rulesGramSchmidt
    , isReady        = orthonormalList . filter (not . isZero) . vectors
    , strategy       = gramSchmidtStrategy
-   , randomExercise = simpleGenerator arbitrary
+   , testGenerator  = let f = simplified . fromInteger . (`mod` 25)
+                      in Just (liftM (fmap f) arbitrary)
    }
 
 linearSystemExercise :: Exercise (Equations Expr)

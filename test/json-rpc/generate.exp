@@ -2,11 +2,11 @@
    "result": [
       "logic.dnf",
       "[]",
-      "r /\\ r /\\ (q <-> r)",
+      "(r /\\ q) -> (q -> F)",
       {
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2396)"
+   "version": "0.5.14 (3019)"
 }

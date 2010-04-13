@@ -2,11 +2,11 @@
    "result": [
       "logic.dnf-unicode",
       "[]",
-      "(q → r) ∨ ¬(r → p)",
+      "¬(q ∨ p) ↔ ((p ∧ q) → ¬q)",
       {
       }
    ],
    "error": null,
    "id": 28051978,
-   "version": "0.5.8 (2396)"
+   "version": "0.5.14 (3019)"
 }

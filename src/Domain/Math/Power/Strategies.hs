@@ -1,10 +1,10 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
 -- |
--- Maintainer  :  bastiaan.heeren@ou.nl
+-- Maintainer  :  alex.gerdes@ou.nl
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
@@ -17,18 +17,14 @@ import Common.Apply
 import Common.Context
 import Common.Strategy
 import Common.Transformation
-import Common.Uniplate hiding (somewhere)
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Numeric.Generators
-import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Prelude hiding (repeat)
-import Test.QuickCheck hiding (label)
 
 ------------------------------------------------------------
 -- Strategies
@@ -37,7 +33,7 @@ makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context
 makeStrategy l rs cs = cleanUpStrategy (f1) $ strategise l rs
   where
     f1 = applyD $ strategise l cs
-    f2 = applyD $ liftToContext $ makeSimpleRule "clean up" (return . cleanUpExpr) 
+    -- f2 = applyD $ liftToContext $ makeSimpleRule "clean up" (return . cleanUpExpr) 
 
 strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
 

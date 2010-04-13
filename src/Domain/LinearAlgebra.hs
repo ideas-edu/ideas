@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -17,7 +17,6 @@ module Domain.LinearAlgebra
    , module Domain.LinearAlgebra.Strategies
    , module Domain.LinearAlgebra.LinearSystem
    , module Domain.LinearAlgebra.Exercises
-   , module Domain.LinearAlgebra.Symbols
    ) where
    
 import Domain.LinearAlgebra.Matrix
@@ -27,4 +26,3 @@ import Domain.LinearAlgebra.EquationsRules hiding (changeCover, findIndexM)
 import Domain.LinearAlgebra.Strategies
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.Exercises
-import Domain.LinearAlgebra.Symbols

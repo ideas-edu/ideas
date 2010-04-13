@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -17,13 +17,11 @@ import Common.Apply
 import Control.Arrow ( (>>^) )
 import Common.Transformation
 import Common.View
-import Common.Utils (safeHead)
 import Control.Monad
 import Data.List
 import Data.Maybe
 import Domain.Math.Expr
 import Domain.Math.Expr.Symbols
-import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
@@ -121,7 +119,7 @@ mulExponents = makeSimpleRule "mul exponents" $ \ expr -> do
   (cax, y)    <- match simplePowerView expr
   (c, (a, x)) <- match strictPowerView cax
   guard (c == 1 || c == -1)
-  a'      <- selectVar a
+  selectVar a
   return $ build strictPowerView (c, (a, x .*. y))
 
 -- | c*(a0..an)^y = c * a0^y * a1^y .. * an^y
@@ -138,7 +136,7 @@ distributePower = makeSimpleRule "distribute power" $ \ expr -> do
 distributePowerDiv :: Rule Expr
 distributePowerDiv = makeSimpleRule "distribute power" $ \ expr -> do
   (c, (ab, y)) <- match strictPowerView expr
-  y'           <- match integerView y
+  match integerView y
   (a, b)       <- match divView ab
   return $ c .*. build divView (a .^. y, b .^. y)
 

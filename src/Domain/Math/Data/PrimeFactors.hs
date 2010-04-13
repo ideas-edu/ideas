@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -64,6 +64,7 @@ primes :: [Int]
 primes = take 1000 $ rec [2..]
  where
    rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
+   rec []     = error "PrimeFactors: empty list"
 
 -------------------------------------------------------------
 -- Type class instances

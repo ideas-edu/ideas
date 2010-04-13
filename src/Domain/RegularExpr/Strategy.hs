@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -67,6 +67,7 @@ ruleIntroOption = ruleList "IntroOption"
    ]
    
 ---
+{-
 ruleEpsilonSeq :: Rule RegExp
 ruleEpsilonSeq = ruleList "EpsilonSeq" 
    [ \a -> Epsilon :*: a  :~>  a
@@ -84,7 +85,7 @@ ruleEmptyChoice = ruleList "EmptyChoice"
    [ \a -> EmptySet :|: a  :~> a
    , \a -> a :|: EmptySet  :~> a
    ]
-   
+-} 
 -----------------
 {-
 ruleComm :: Rule RegExp

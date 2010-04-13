@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -257,6 +257,7 @@ brokenExp1 =
  where
    a = Var "a"
    b = Var "b"
+
 brokenExp1' = 
   [ [ a*sqrt a, a^2*root a 3, a^5*root a 4, a^3*root a 7
     , a*root (a^2) 3, a^3*root (a^2) 5, a^2*root (a^3) 5, a^4*root (a^5) 6
@@ -267,7 +268,6 @@ brokenExp1' =
   ]
  where
    a = Var "a"
-   b = Var "b"
    
 brokenExp2 :: [[Expr]]
 brokenExp2 =
@@ -417,8 +417,6 @@ normPower3' = -- bereken zonder rekenmachine
     , 6*5^(-2), 4*7^(-2)
     ]
   ]
- where
-   a = Var "a"
    
 normPower4, normPower4' :: [[Expr]]
 normPower4 =
@@ -469,7 +467,6 @@ normPower5' =    -- schrijf als macht van a
   ]
  where
    a = Var "a"
-   b = Var "b"
    
 normPower6 :: [[Expr]]
 normPower6 =
@@ -484,4 +481,3 @@ normPower6 =
   ]
  where
    a = Var "a"
-   b = Var "b"

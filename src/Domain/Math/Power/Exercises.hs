@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Copyright 2009, Open Universiteit Nederland. This file is distributed 
+-- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
 -- see the file "LICENSE.txt", which is included in the distribution.
 -----------------------------------------------------------------------------
@@ -16,36 +16,26 @@ module Domain.Math.Power.Exercises
    , calcPowerExercise
    ) where
 
-import qualified Prelude
-import Prelude hiding ( (^) )
-
-import Common.Utils (distinct)
 import Common.Apply 
-import Common.Exercise
-import Common.Strategy hiding (not, replicate)
-import Common.View
 import Common.Context
+import Common.Exercise
 import Common.Navigator
-import Common.Uniplate
-import Common.Transformation
-import Common.Derivation (derivations, derivation)
+import Common.Strategy hiding (not, replicate)
+import Common.Utils (distinct)
+import Common.View
+import Control.Monad
+import Data.List
+import Data.Maybe
 import Domain.Math.Examples.DWO3
 import Domain.Math.Expr
 import Domain.Math.Expr.Parser
 import Domain.Math.Numeric.Views
-import Domain.Math.Numeric.Rules
-import Domain.Math.Numeric.Strategies
+import Domain.Math.Power.Rules
 import Domain.Math.Power.Strategies
 import Domain.Math.Power.Views
-import Domain.Math.Power.Rules
-import Domain.Math.Power.Tests
-import Domain.Math.Polynomial.CleanUp
-
-import Control.Monad
-import Data.List
-import Data.Maybe
+import Prelude hiding ( (^) )
 import qualified Data.Map as M
---import Domain.Math.Power.Generators
+import qualified Prelude
 
 ------------------------------------------------------------
 -- Exercises
@@ -159,7 +149,7 @@ normPowerView' = makeView (liftM h . f) g
     f = (mapM (match normPowerNonNegRatio) =<<) . match sumView
     g = build sumView . map (build normPowerNonNegRatio)
     h :: [PowerMap] -> [PowerMap]
-    h = map (foldr1 (\(x,y) (p,q) -> (x,y+q))) . groupBy (\x y -> fst x == fst y) . sort
+    h = map (foldr1 (\(x,y) (_,q) -> (x,y+q))) . groupBy (\x y -> fst x == fst y) . sort
 
 normPowerView :: View Expr (String, Rational)
 normPowerView = makeView f g
@@ -248,7 +238,8 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
    , examples     = concat $ negExp3 ++ normPower3' ++ normPower4
    }
 
--- | test stuff
+-- test stuff
+{-
 showDerivations ex es = 
   mapM_ (putStrLn . showDerivation ex) es
 
@@ -257,3 +248,4 @@ showAllDerivations ex =
                         
 a = Var "a"
 b = Var "b"
+-}

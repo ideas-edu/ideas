@@ -1,0 +1,209 @@
+// !$*UTF8*$!
+{
+	1D6058900D05DD3D006BFB54 /* iExas */ = {
+		activeExec = 0;
+		executables = (
+			FA96FF861175983000B12F77 /* iExas */,
+		);
+	};
+	28D7ACF60DDB3853001CB0EB /* iExasViewController.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {774, 526}}";
+			sepNavSelRange = "{255, 0}";
+			sepNavVisRange = "{0, 279}";
+		};
+	};
+	28D7ACF70DDB3853001CB0EB /* iExasViewController.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1174, 1157}}";
+			sepNavSelRange = "{1711, 0}";
+			sepNavVisRange = "{1319, 1043}";
+		};
+	};
+	29B97313FDCFA39411CA2CEA /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeExecutable = FA96FF861175983000B12F77 /* iExas */;
+		activeTarget = 1D6058900D05DD3D006BFB54 /* iExas */;
+		addToTargets = (
+			1D6058900D05DD3D006BFB54 /* iExas */,
+		);
+		breakpoints = (
+			FA96FFD911759C0F00B12F77 /* iExasViewController.m:37 */,
+			FA9600C51175B43F00B12F77 /* iExasViewController.m:57 */,
+		);
+		codeSenseManager = FA96FF9F1175984F00B12F77 /* Code sense */;
+		executables = (
+			FA96FF861175983000B12F77 /* iExas */,
+		);
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					596,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXConfiguration.PBXFileTableDataSource3.XCSCMDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					20,
+					572,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_SCM_ColumnID,
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 292928157;
+			PBXWorkspaceStateSaveDate = 292928157;
+		};
+		perUserProjectItems = {
+			FA45DB801175BA7800F45A1C /* PBXTextBookmark */ = FA45DB801175BA7800F45A1C /* PBXTextBookmark */;
+			FA96FFDD11759C1200B12F77 /* PBXTextBookmark */ = FA96FFDD11759C1200B12F77 /* PBXTextBookmark */;
+			FAC8779F1175BABD0005F516 /* PBXTextBookmark */ = FAC8779F1175BABD0005F516 /* PBXTextBookmark */;
+		};
+		sourceControlManager = FA96FF9E1175984F00B12F77 /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	FA45DB801175BA7800F45A1C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 28D7ACF70DDB3853001CB0EB /* iExasViewController.m */;
+		name = "iExasViewController.m: 59";
+		rLen = 0;
+		rLoc = 1711;
+		rType = 0;
+		vrLen = 1043;
+		vrLoc = 1319;
+	};
+	FA9600C51175B43F00B12F77 /* iExasViewController.m:57 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 28D7ACF70DDB3853001CB0EB /* iExasViewController.m */;
+		functionName = "-connection:didReceiveData:";
+		hitCount = 1;
+		ignoreCount = 0;
+		lineNumber = 57;
+		location = iExas;
+		modificationTime = 292926772.6315;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	FA96FF861175983000B12F77 /* iExas */ = {
+		isa = PBXExecutable;
+		activeArgIndices = (
+		);
+		argumentStrings = (
+		);
+		autoAttachOnCrash = 1;
+		breakpointsEnabled = 1;
+		configStateDict = {
+		};
+		customDataFormattersEnabled = 1;
+		dataTipCustomDataFormattersEnabled = 1;
+		dataTipShowTypeColumn = 1;
+		dataTipSortType = 0;
+		debuggerPlugin = GDBDebugging;
+		disassemblyDisplayState = 0;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		executableSystemSymbolLevel = 0;
+		executableUserSymbolLevel = 0;
+		libgmallocEnabled = 0;
+		name = iExas;
+		savedGlobals = {
+		};
+		showTypeColumn = 0;
+		sourceDirectories = (
+		);
+		variableFormatDictionary = {
+		};
+	};
+	FA96FF9E1175984F00B12F77 /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+			repositoryNamesForRoots = {
+				"" = Ideas;
+			};
+		};
+	};
+	FA96FF9F1175984F00B12F77 /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	FA96FFD911759C0F00B12F77 /* iExasViewController.m:37 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 28D7ACF70DDB3853001CB0EB /* iExasViewController.m */;
+		functionName = "-viewDidLoad";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 37;
+		location = iExas;
+		modificationTime = 292926771.426055;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	FA96FFDD11759C1200B12F77 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 28D7ACF60DDB3853001CB0EB /* iExasViewController.h */;
+		name = "iExasViewController.h: 13";
+		rLen = 0;
+		rLoc = 255;
+		rType = 0;
+		vrLen = 279;
+		vrLoc = 0;
+	};
+	FAC8779F1175BABD0005F516 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 28D7ACF70DDB3853001CB0EB /* iExasViewController.m */;
+		name = "iExasViewController.m: 59";
+		rLen = 0;
+		rLoc = 1711;
+		rType = 0;
+		vrLen = 1043;
+		vrLoc = 1319;
+	};
+}

@@ -194,8 +194,8 @@ hintText, stepText :: Session -> IO String
 hintText = hintOrStep False
 stepText = hintOrStep True
 
-nextStep :: Session -> Int -> IO String
-nextStep ref n = do
+nextStep :: Session -> IO String
+nextStep ref = do
    Some ss <- getValue ref
    let d = getDerivation ss
    case TAS.allfirsts (currentState d) of

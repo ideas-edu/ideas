@@ -40,7 +40,7 @@ controlButtons w session input output = do
       output txt ]
        
    set autoButton [on command := do
-      txt <- nextStep session 0
+      txt <- nextStep session
       output txt ]
 
    set backButton [ on command := do

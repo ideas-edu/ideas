@@ -13,8 +13,6 @@ module Main (main) where
 
 import About
 import ControlButtons
-import Data.List
-import Data.Maybe
 import DebugFrame
 import Graphics.UI.WX
 import Graphics.UI.WXCore

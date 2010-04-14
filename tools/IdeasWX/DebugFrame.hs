@@ -23,8 +23,7 @@ debugFrame session = do
    f <- frame [text := "Debug", bgcolor := white]
    rulebox <- singleListBox  f []
    b   <- button f [text := "Apply", on command := do
-             n <- get rulebox selection
-             nextStep session n
+             nextStep session
              return ()]
    txt <- staticText f [text := "(no rules)"]
    

@@ -1,0 +1,40 @@
+<reply result="ok" version="0.5.14">
+  <list>
+    <elem ruleid="bring a to one">
+      <expr>
+        x^2+2*x-1/2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="prepare split square">
+      <expr>
+        x^2+2*x+1 == 3/2
+      </expr>
+    </elem>
+    <elem ruleid="factor left as square">
+      <expr>
+        (x+1)^2 == 3/2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x+1 == sqrt (3/2) or x+1 == -sqrt (3/2)
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1+sqrt (3/2) or x+1 == -sqrt (3/2)
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        x == -1+sqrt (3/2) or x == -1-sqrt (3/2)
+      </expr>
+    </elem>
+    <elem ruleid="simpler square root">
+      <expr>
+        x == -1+1/2*sqrt 6 or x == -1-1/2*sqrt 6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

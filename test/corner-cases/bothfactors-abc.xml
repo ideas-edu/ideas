@@ -1,0 +1,6 @@
+<!-- Find both factors -2 and 2 -->
+<request service="allfirsts" exerciseid="math.quadreq" encoding="string">
+<state><expr>
+   -2*x^2 + 4*x - 8  == 0
+</expr></state>
+</request>

@@ -144,7 +144,17 @@ simplerPoly = makeSimpleRuleList "simpler polynomial" $ \(lhs :==: rhs) -> do
            return $ Prelude.recip $ fromIntegral $ foldr1 gcd $ map numerator rs
       | otherwise = 
            return $ fromIntegral $ foldr1 lcm $ map denominator rs
-   
+
+-- Simplified variant of simplerPoly: just bring a to 1.
+-- Needed for quadratic strategy without square formula
+bringAToOne :: Rule (Equation Expr)
+bringAToOne = makeSimpleRule "bring a to one" $ \(lhs :==: rhs) -> do
+   guard (rhs == 0)
+   let thisView = polyNormalForm rationalView >>> second quadraticPolyView
+   (x, (a, b, c)) <- matchM thisView lhs
+   guard (a `notElem` [0, 1])
+   return (build thisView (x, (1, b/a, c/a)) :==: 0)
+
 ------------------------------------------------------------
 -- General form rules: expr = 0
 

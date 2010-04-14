@@ -111,7 +111,9 @@ quadraticNoABCExercise = quadraticExercise
    }
  where
    cfg = [ (ByName (name prepareSplitSquare), Reinsert)
+         , (ByName (name bringAToOne), Reinsert)
          , (ByName "abc form", Remove)
+         , (ByName (name simplerPoly), Remove)
          ]
          
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))

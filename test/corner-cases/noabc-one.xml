@@ -1,0 +1,8 @@
+<!-- Test for bring "a" to one rule: this is needed for splitting the square-->
+<request service="derivation" exerciseid="math.quadreq-no-abc" encoding="string">
+  <state>
+    <expr>
+      2*x^2+4*x-1 == 0
+    </expr>
+  </state>
+</request>

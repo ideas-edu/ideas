@@ -49,7 +49,7 @@ isPower v expr =
      let Just (_, xs) = match productView expr 
          f (Nat 1 :/: a) = g a
          f a = g a
-         g (Sym s [Var _, a]) | s==powerSymbol = True && isJust (match v a)
+         g (Sym s [Var _, a]) | s==powerSymbol = isJust (match v a)
          g (Sym s [x, Nat _]) | s==rootSymbol = isPower v x 
          g (Sqrt x) = g x
          g (Var _) = True
@@ -116,7 +116,7 @@ normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
           | s==powerSymbol -> do
             (x, m) <- f a
             y      <- match rationalView b
-            return (x ** (fromRational y), M.map (*y) m)
+            return (x ** fromRational y, M.map (*y) m)
           | s==rootSymbol -> f (Sym powerSymbol [a, 1/b])
         Sqrt a -> f (Sym rootSymbol [a,2])
         a :*: b -> do
@@ -240,8 +240,7 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
 
 -- test stuff
 {-
-showDerivations ex es = 
-  mapM_ (putStrLn . showDerivation ex) es
+showDerivations ex = mapM_ (putStrLn . showDerivation ex)
 
 showAllDerivations ex = 
   mapM_ (\es -> putStrLn (replicate 80 '-') >> showDerivations ex es)

@@ -15,7 +15,6 @@ import Prelude hiding (recip, (^))
 import Common.View
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
-import Control.Monad
 import Data.List (nub)
 
 ------------------------------------------------------------

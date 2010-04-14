@@ -12,7 +12,6 @@
 module Documentation.Make (makeDocumentation) where
 
 import Common.Utils (Some(..))
-import Control.Monad
 import Service.ExerciseList
 import Service.Options
 import Service.ServiceList

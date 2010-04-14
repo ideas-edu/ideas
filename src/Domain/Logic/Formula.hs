@@ -18,7 +18,6 @@ import Common.Rewriting
 import Common.Traversable
 import Common.Utils (ShowString, subsets)
 import Data.List
-import Data.Maybe
 import Control.Monad
 
 infixr 2 :<->:

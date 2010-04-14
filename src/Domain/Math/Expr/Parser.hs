@@ -18,8 +18,6 @@ module Domain.Math.Expr.Parser
 import Prelude hiding ((^))
 import Text.Parsing
 import Control.Monad
-import Data.List
-import Data.Maybe
 import Common.Transformation
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic)

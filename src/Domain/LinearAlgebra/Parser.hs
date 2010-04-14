@@ -19,11 +19,7 @@ import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearView (isLinear)
 import Domain.LinearAlgebra.Vector
-import Control.Monad
-import Data.List
-import Data.Char
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser
 import Text.Parsing
 
 {-

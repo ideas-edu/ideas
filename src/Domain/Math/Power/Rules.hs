@@ -21,7 +21,6 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Domain.Math.Expr
-import Domain.Math.Expr.Symbols
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp

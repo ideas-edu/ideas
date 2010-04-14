@@ -18,7 +18,6 @@ import Common.Rewriting.Substitution
 import Control.Monad
 import qualified Data.IntSet as IS
 import qualified Data.Map as M
-import Data.Maybe
 
 -----------------------------------------------------------
 -- Unification (in both ways)

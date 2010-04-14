@@ -19,7 +19,6 @@ import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser
 import Domain.RegularExpr.Strategy
 import Domain.RegularExpr.Definitions
-import Data.List
 import Control.Monad
 import System.Random
 import Test.QuickCheck

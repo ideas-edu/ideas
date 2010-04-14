@@ -24,8 +24,6 @@ import Common.Transformation
 import Control.Monad
 import Domain.Math.Simplification
 import Domain.Math.Expr
-import Domain.Math.Expr.Symbols
-import Domain.Math.Expr.Parser
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise

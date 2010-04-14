@@ -35,10 +35,8 @@ import Common.Transformation
 import Common.Utils (safeHead, commaList, readM)
 import Common.View
 import Control.Monad
-import Data.Char
 import Data.Maybe
 import Data.Dynamic
-import Data.List
 import qualified Data.Map as M
 
 ----------------------------------------------------------

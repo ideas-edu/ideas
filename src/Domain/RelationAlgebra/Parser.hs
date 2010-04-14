@@ -13,7 +13,6 @@ module Domain.RelationAlgebra.Parser (parseRelAlg, ppRelAlg) where
 
 import Domain.RelationAlgebra.Formula
 import Text.Parsing
-import Data.Char
 
 myScanner :: Scanner
 myScanner = defaultScanner

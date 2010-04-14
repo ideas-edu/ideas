@@ -17,7 +17,6 @@ import Common.Navigator hiding (current)
 import Common.Utils
 import Domain.LinearAlgebra.Vector
 import Control.Monad
-import Data.List
 
 varI, varJ :: Var Int
 varI = newVar "considered" 0

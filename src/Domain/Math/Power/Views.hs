@@ -13,7 +13,6 @@
 -- no sqrt, or roots
 module Domain.Math.Power.Views where
 
-import qualified Prelude
 import Prelude hiding ((^), recip)
 import Control.Arrow ( (>>^) )
 import Control.Monad
@@ -23,7 +22,6 @@ import Data.Maybe
 import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Expr.Views
 
 -- | Combined power views
 (<&>) :: (MonadPlus m) => ViewM m a b -> ViewM m a b -> ViewM m a b

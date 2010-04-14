@@ -24,8 +24,6 @@ import Documentation.Make
 import Network.CGI
 import Control.Monad.Trans
 import Control.Monad
-import Data.Maybe
-import Data.Char
 import Data.IORef
 import Data.Time
 

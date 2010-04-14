@@ -22,7 +22,6 @@ module Domain.Math.Polynomial.Views
 
 import Prelude hiding ((^))
 import Control.Monad
-import Data.List
 import Common.Apply
 import Common.View
 import Common.Traversable
@@ -37,7 +36,6 @@ import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Polynomial.CleanUp
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
-import Domain.Math.Expr.Symbols
 import Domain.Math.SquareRoot.Views
 import Domain.Math.Power.Views (powerFactorViewForWith)
 

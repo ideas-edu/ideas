@@ -22,7 +22,6 @@ import Common.Strategy.Abstract
 import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate
-import Data.Char
 import Common.Utils (readM)
 import Data.Foldable (toList)
 import Data.Sequence hiding (take)

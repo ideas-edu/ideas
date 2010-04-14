@@ -23,8 +23,6 @@ module Text.XML
 import Common.Utils (trim)
 import Control.Monad.State
 import Control.Monad.Error ()
-import Data.Char
-import Data.List
 import Data.Monoid
 import Text.XML.Interface hiding (parseXML)
 import qualified Text.XML.Interface as I

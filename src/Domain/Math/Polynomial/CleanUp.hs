@@ -22,14 +22,13 @@ import Data.List
 import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
-import Domain.Math.Data.SquareRoot
+import Domain.Math.Data.SquareRoot (fromSquareRoot)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.SquareRoot.Views
 import Prelude hiding ((^), recip)
-import qualified Domain.Math.Data.SquareRoot as SQ
 import qualified Prelude
 import Data.Ratio
 

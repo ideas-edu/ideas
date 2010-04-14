@@ -16,7 +16,6 @@ import Common.Strategy (toStrategy)
 import Common.Transformation
 import Common.Utils (Some(..))
 import Common.Exercise hiding (Exercise)
-import Control.Monad.Error
 import Service.ExerciseList (exercises)
 import qualified Service.TypedAbstractService as S
 import qualified Service.Submit as S

@@ -28,7 +28,6 @@ import Data.List
 import Data.Maybe
 import Domain.Math.Examples.DWO3
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Strategies

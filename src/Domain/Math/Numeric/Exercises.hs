@@ -18,7 +18,6 @@ import Common.Exercise
 import Common.Strategy
 import Common.View
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
 import Domain.Math.Numeric.Generators

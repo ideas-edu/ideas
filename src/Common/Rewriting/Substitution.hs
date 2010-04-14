@@ -20,7 +20,6 @@ import Common.Uniplate
 import Common.Rewriting.MetaVar
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
-import Data.List
 import Data.Maybe
 
 -----------------------------------------------------------

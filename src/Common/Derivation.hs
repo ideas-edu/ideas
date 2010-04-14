@@ -32,7 +32,6 @@ module Common.Derivation
 import Common.Utils (safeHead)
 import Control.Arrow
 import Control.Monad
-import Data.List
 import Data.Maybe
 import System.Random
 

@@ -18,7 +18,6 @@ import Common.Context
 import qualified Service.Diagnose as Diagnose
 import Service.Diagnose (Diagnosis, diagnose)
 import Service.TypedAbstractService
-import Data.Maybe
 
 -- Note that in the typed setting there is no syntax error
 data Result a = Buggy  [Rule (Context a)]   

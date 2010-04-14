@@ -19,7 +19,6 @@ import Common.Context
 import Common.Traversable
 import Common.View
 import Data.Maybe
-import Domain.Math.Expr
 import Domain.Math.Data.Polynomial hiding (eval)
 import Data.List (sort, nub)
 import Domain.Math.Polynomial.Views

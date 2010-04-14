@@ -21,7 +21,6 @@ import Common.Navigator
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not, fail)
-import Common.Transformation hiding (name, defaultArgument)
 import Common.Utils (Some(..), readM)
 import Control.Monad
 import Data.Char

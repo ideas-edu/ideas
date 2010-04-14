@@ -15,8 +15,6 @@ import Common.Apply
 import Common.Context
 import Common.Exercise
 import Common.Utils
-import Control.Monad
-import Data.List
 import Domain.LinearAlgebra hiding (getSolution)
 import Domain.Math.Expr
 import Domain.Math.Simplification (simplify)

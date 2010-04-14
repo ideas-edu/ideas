@@ -29,10 +29,8 @@ import Domain.Math.Expr
 import Domain.Math.Data.Relation
 import Control.Monad.Identity
 import Common.Transformation
-import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
 import Common.Traversable
-import Domain.Math.Expr.Symbolic
 
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules

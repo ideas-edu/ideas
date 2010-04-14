@@ -26,7 +26,6 @@ import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO1
 import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
-import Domain.Math.Expr.Parser
 import Domain.Math.Polynomial.BuggyRules
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Rules

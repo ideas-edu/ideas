@@ -22,7 +22,6 @@ import Common.Strategy hiding (not, repeat, fail)
 import Common.Transformation 
 import Common.Utils
 import Data.Char
-import Data.List
 import Data.Maybe
 import Service.TypedAbstractService (State(..), stepsremaining)
 import Text.XML hiding (name)

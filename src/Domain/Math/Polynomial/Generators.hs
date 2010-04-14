@@ -16,7 +16,6 @@ module Domain.Math.Polynomial.Generators
 
 import Prelude hiding ((^))
 import Domain.Math.Expr
-import Domain.Math.Expr.Symbols
 import Domain.Math.Numeric.Generators
 import Test.QuickCheck
 import Control.Monad

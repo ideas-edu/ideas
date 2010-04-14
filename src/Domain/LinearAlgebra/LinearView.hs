@@ -18,9 +18,7 @@ module Domain.LinearAlgebra.LinearView
 import Control.Monad
 import Data.List
 import Common.Uniplate
-import Data.Maybe 
 import Common.View hiding (simplify)
-import GHC.Real
 import Domain.Math.Expr hiding (isVariable)
 import qualified Data.Map as M
 

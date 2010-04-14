@@ -23,7 +23,6 @@ module Text.JSON
 import Text.Parsing
 import qualified Text.UTF8 as UTF8
 import Common.Utils (indent)
-import Data.Char
 import Data.List (intersperse)
 import Data.Maybe
 import Control.Monad

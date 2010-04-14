@@ -16,8 +16,6 @@ module Domain.Math.Examples.DWO3 where
 
 import Prelude hiding ((^))
 import Domain.Math.Expr
-import Domain.Math.Expr.Symbolic
-import Domain.Math.Expr.Symbols
 
 ----------------------------------------------------------
 -- HAVO B applets

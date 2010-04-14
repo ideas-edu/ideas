@@ -14,8 +14,6 @@ module Domain.Math.DerivativeRules where
 import Prelude hiding ((^))
 import Common.Transformation
 import Domain.Math.Expr
-import Domain.Math.Expr.Symbolic
-import Domain.Math.Expr.Symbols
 import Common.Rewriting
 
 derivativeRules :: [Rule Expr]

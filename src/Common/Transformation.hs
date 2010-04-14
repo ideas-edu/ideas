@@ -44,7 +44,6 @@ import Common.Utils
 import Common.View
 import Control.Monad
 import Data.Char
-import Data.List
 import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck

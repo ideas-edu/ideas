@@ -29,7 +29,6 @@ module Text.Scanning
 import Common.Utils (readInt)
 import Control.Monad
 import Data.List
-import Data.Maybe
 import Data.Char
 
 ----------------------------------------------------------

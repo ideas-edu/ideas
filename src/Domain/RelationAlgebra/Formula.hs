@@ -17,7 +17,6 @@ import Common.Uniplate (Uniplate(..))
 import Common.Rewriting
 import Common.Utils
 import Control.Monad
-import Data.Char
 import Data.List
 import qualified Data.Set as S
 import System.Random (StdGen, mkStdGen, split)

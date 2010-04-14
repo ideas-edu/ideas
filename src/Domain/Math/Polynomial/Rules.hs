@@ -37,7 +37,6 @@ import Domain.Math.Simplification
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.Polynomial as P
 import qualified Domain.Math.SquareRoot.Views as SQ
-import qualified Prelude
 
 ------------------------------------------------------------
 -- Rule collection

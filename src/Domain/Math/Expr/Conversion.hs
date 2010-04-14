@@ -17,9 +17,6 @@ import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Text.OpenMath.Object
-import Control.Monad
-import Data.Maybe
-import Data.List
 import Common.Rewriting
 
 instance IsTerm a => IsTerm [a] where

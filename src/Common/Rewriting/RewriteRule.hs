@@ -27,8 +27,6 @@ import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Control.Monad
-import Data.List
-import Data.Maybe
 import Test.QuickCheck
 import Common.Apply
 import Common.Rewriting.MetaVar (getMetaVars)

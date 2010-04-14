@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.10">
+<reply result="ok" version="0.5.14">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -16,20 +16,20 @@
         <item name="clipboard" value="[ineq==(x^2-9/2*x<7-3*x)]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="simpler polynomial">
       <expr>
-        x == (3/2+sqrt (121/4))/2 or x == (3/2-sqrt (121/4))/2
+        2*x^2-3*x-14 == 0
       </expr>
       <context>
-        <item name="clipboard" value="[D==121/4, a==1, b==-3/2, c==-7, ineq==(x^2-9/2*x<7-3*x)]"/>
+        <item name="clipboard" value="[ineq==(x^2-9/2*x<7-3*x)]"/>
       </context>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="abc formula">
       <expr>
         x == 7/2 or x == -2
       </expr>
       <context>
-        <item name="clipboard" value="[D==121/4, a==1, b==-3/2, c==-7, ineq==(x^2-9/2*x<7-3*x)]"/>
+        <item name="clipboard" value="[D==121, a==2, b==-3, c==-14, ineq==(x^2-9/2*x<7-3*x)]"/>
       </context>
     </elem>
     <elem ruleid="solution inequation">
@@ -37,7 +37,7 @@
         -2 &lt; x &lt; 7/2
       </expr>
       <context>
-        <item name="clipboard" value="[D==121/4, a==1, b==-3/2, c==-7]"/>
+        <item name="clipboard" value="[D==121, a==2, b==-3, c==-14]"/>
       </context>
     </elem>
   </list>

@@ -54,7 +54,7 @@ linearRules = map liftToContext $
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = -- abcFormula
    [ ruleOnce commonFactorVar, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerA, mulZero, coverUpPower, squareBothSides
+   , ruleOnce simplerPoly, mulZero, coverUpPower, squareBothSides
    ] ++
    map (ruleOnce . ($ oneVar)) 
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
@@ -123,15 +123,29 @@ rhsIsZero r = makeSimpleRuleList (name r) $ \(lhs :==: rhs) -> do
    a <- applyAll r lhs
    return (a :==: rhs)
 
-simplerA :: Rule (Equation Expr)
-simplerA = makeSimpleRule "simpler polynomial" $ \(lhs :==: rhs) -> do
+-- Simplify polynomial by multiplying (or dividing) the terms:
+-- 1) If a,b,c are ints, then find gcd
+-- 2) If any of a,b,c is a fraction, find lcm of denominators
+-- 3) If a<0, then also suggest to change sign (return two solutions)
+simplerPoly :: Rule (Equation Expr)
+simplerPoly = makeSimpleRuleList "simpler polynomial" $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
-   (x, (ra, rb, rc)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
-   [a, b, c] <- mapM isInt [ra, rb, rc] 
-   let d = (a `gcd` b `gcd` c) * signum a
+   let thisView = polyNormalForm rationalView >>> second quadraticPolyView
+   (x, (a, b, c)) <- matchM thisView lhs
+   r <- findFactor [a, b, c]
+   d <- if a >= 0 then [r] else [-r, r]
    guard (d `notElem` [0, 1])
-   return (build quadraticView (x, fromInteger (a `div` d), fromInteger (b `div` d), fromInteger (c `div` d)) :==: 0)
-
+   return (build thisView (x, (a*d, b*d, c*d)) :==: 0)
+ where
+   findFactor :: Monad m => [Rational] -> m Rational
+   findFactor rs
+      | null rs || any (==0) rs = 
+           fail "no factor"
+      | all ((==1) . denominator) rs = 
+           return $ Prelude.recip $ fromIntegral $ foldr1 gcd $ map numerator rs
+      | otherwise = 
+           return $ fromIntegral $ foldr1 lcm $ map denominator rs
+   
 ------------------------------------------------------------
 -- General form rules: expr = 0
 

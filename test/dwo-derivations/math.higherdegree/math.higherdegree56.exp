@@ -1,17 +1,24 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.5.14">
   <list>
     <elem ruleid="all power factors">
       <expr>
         x == 0 or 1/2*x^2+3*x+4 == 0
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="simpler polynomial">
+      <expr>
+        x == 0 or x^2+6*x+8 == 0
+      </expr>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        x == 0 or (x+2)*(x+4) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
       <expr>
         x == 0 or x == -2 or x == -4
       </expr>
-      <context>
-        <item name="clipboard" value="[D==1, a==1/2, b==3, c==4]"/>
-      </context>
     </elem>
   </list>
 </reply>

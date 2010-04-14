@@ -170,7 +170,7 @@ hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose ref = do
    Some ss <- getValue ref
    let d = getDerivation ss
-       showRule r = fromMaybe ("rule" ++ name r) $ do 
+       showRule r = fromMaybe ("rule " ++ name r) $ do 
           exText <- getExerciseText (getPackage ss)
           ruleText exText r
    case TAS.allfirsts (currentState d) of

@@ -1,24 +1,27 @@
 <reply result="ok" version="0.5.14">
   <list>
-    <elem ruleid="same factor">
+    <elem ruleid="nice factors">
       []
       <state>
         <prefix>
-          [0,0,2,1,1,1,0,2,0]
+          [0,0,0,3,0]
         </prefix>
         <expr>
-          x-2 == 0 or x == 3
+          (x-12)*(x-13) == 0
         </expr>
       </state>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="abc formula">
       []
       <state>
         <prefix>
-          [0,0,2,1,1,1,0,5,0]
+          [0,0,1,0,0]
         </prefix>
+        <context>
+          <item name="clipboard" value="[D==1, a==1, b==-25, c==156]"/>
+        </context>
         <expr>
-          x^2-2*x == 3*x-6
+          x == 13 or x == 12
         </expr>
       </state>
     </elem>

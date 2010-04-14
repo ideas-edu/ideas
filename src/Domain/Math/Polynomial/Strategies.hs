@@ -71,8 +71,10 @@ coverUpPlus f = alternatives $ map (f . ($ oneVar))
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $ 
    label "Quadratic Equation Strategy" $ 
-   repeat $  fromEquation generalForm
-          |> mapRules (liftRule (contextView (switchView equationView))) generalABCForm
+   repeat $  -- Relaxed strategy: even if there are "nice" factors, allow use of square formula
+          (  fromEquation generalForm
+         <|> mapRules (liftRule (contextView (switchView equationView))) generalABCForm
+          )
           |> fromEquation zeroForm 
           |> fromEquation constantForm
           |> simplifyForm

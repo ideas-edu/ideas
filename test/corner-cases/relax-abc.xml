@@ -1,0 +1,5 @@
+<request service="allfirsts" exerciseid="math.quadreq" encoding="string">
+<state><expr>
+   x^2 - 25*x + 156 == 0
+</expr></state>
+</request>

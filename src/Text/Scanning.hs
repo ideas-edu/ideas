@@ -21,12 +21,11 @@ module Text.Scanning
      -- Scanner configuration
    , Scanner(..), defaultScanner, specialSymbols  
      -- Scanning
-   , scan, scanWith
+   , scan, scanWith, scanInt, scanNumber
      -- Lexical analysis
    , SyntaxError(..), checkParentheses, errorPositions
    ) where
 
-import Common.Utils (readInt)
 import Control.Monad
 import Data.List
 import Data.Char
@@ -137,7 +136,7 @@ data Scanner = Scanner
    , operatorCharacters    :: String
    , unaryMinus            :: Bool
    , qualifiedIdentifiers  :: Bool
-   } deriving Show
+   }
 
 -- | A default scanner configuration (using Haskell's special characters)
 defaultScanner :: Scanner
@@ -276,7 +275,7 @@ scanNatural :: Pos -> String -> Maybe (Int, Pos, String)
 scanNatural pos input = do
    let (xs, ys) = break (not . isDigit) input
    guard (not (null xs))
-   nat <- readInt xs
+   let nat = foldl' (\a b -> a*10+ord b-48) 0 xs
    return (nat, incr (length xs) pos, ys)
 
 scanString :: Pos -> String -> Maybe (String, Pos, String)

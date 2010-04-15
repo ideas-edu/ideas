@@ -16,14 +16,13 @@ module Text.XML
    ( XML, Attr, AttrList, InXML(..), Element(..)
    , XMLBuilder, makeXML, text, unescaped, element, tag, attribute
    , parseXML, showXML, compactXML, (.=.), findAttribute
-   , children, Attribute(..), builder, findChild, getData {-, extract, extractText -}
-   , {- isText, isTag, mkTag mkText , findChild-}
+   , children, Attribute(..), builder, findChild, getData
    ) where
 
-import Common.Utils (trim)
-import Control.Monad.State
 import Control.Monad.Error ()
+import Control.Monad.State
 import Data.Monoid
+import Text.XML.Document (trim)
 import Text.XML.Interface hiding (parseXML)
 import qualified Text.XML.Interface as I
 

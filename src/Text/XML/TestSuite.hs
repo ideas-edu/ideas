@@ -15,7 +15,7 @@
 module Main (main) where
 
 import Text.XML.Interface
-import Common.Utils (trim)
+import Text.XML.Document (trim)
 import Control.Monad.Error
 import Data.List
 import Data.Maybe

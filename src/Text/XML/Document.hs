@@ -244,6 +244,9 @@ doubleQuote s = "\"" ++ s ++ "\""
 parenthesize :: String -> String
 parenthesize s = "(" ++ s ++ ")"
 
+trim :: String -> String
+trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
+
 ---------------------------------------------------
 
 type M = [Either String Element]

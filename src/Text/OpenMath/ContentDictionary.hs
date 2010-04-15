@@ -18,12 +18,12 @@ module Text.OpenMath.ContentDictionary
    ) where
 
 import Text.OpenMath.Object (OMOBJ, xml2omobj)
+import Text.Scanning (scanInt, Pos(..))
 import Text.XML
 import Data.Char
 import Data.List
 import Data.Maybe
 import Control.Monad
-import Common.Utils (readM)
 import System.Directory
 
 main :: IO ()
@@ -109,13 +109,22 @@ extractDate s xml = do
       _ -> fail ("invalid date (YYYY-MM-DD): " ++ txt)
 
 extractInt :: String -> XML -> Either String Int
-extractInt s xml = extractText s xml >>= readM
+extractInt s xml = do 
+   txt <- extractText s xml
+   case scanInt (Pos 0 0) txt of
+      Just (i, _, rest) | all isSpace rest
+         -> return i
+      _  -> fail "Not an int"
 
 extractStatus :: XML -> Either String ContentDictionaryStatus
 extractStatus xml = do
    txt <- extractText "CDStatus" xml
    let (hd, tl) = splitAt 1 txt
-   readM (map toUpper hd ++ map toLower tl)
+       list     = [Official, Experimental, Private, Obsolete]
+       table    = [ (show s, s) | s <- list ]
+   case lookup (map toUpper hd ++ map toLower tl) table of
+      Just hd -> return hd
+      _       -> fail "Unknown status"
 
 extractText :: MonadPlus m => String -> XML -> m String
 extractText s xml = do
@@ -138,7 +147,8 @@ data ContentDictionary = CD
 type VersionNumber = (Int, Int) -- major and minor part
 type Date = (Int, Int, Int) -- YYYY-MM-DD
 
-data ContentDictionaryStatus = Official | Experimental | Private | Obsolete deriving (Read,Show)
+data ContentDictionaryStatus = Official | Experimental | Private | Obsolete 
+   deriving Show
 
 data Definition = Definition 
    { symbolName          :: String
@@ -147,4 +157,5 @@ data Definition = Definition
    , commentedProperties :: [String]
    , formalProperties    :: [OMOBJ]
    , examples            :: [[XML]]
-   } deriving Show
+   } 
+ deriving Show

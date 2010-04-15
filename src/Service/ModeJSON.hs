@@ -23,6 +23,7 @@ import Text.JSON
 import Service.ExercisePackage
 import Service.ExerciseList
 import Service.Request
+import Service.Revision (version, revision)
 import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
@@ -42,16 +43,23 @@ extractCode = fromMaybe noCode . readCode . f
    f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c || c `elem` ".-")) s = f (Array tl)
    f (Array (hd:_)) = f hd
    f _ = ""
-      
+
 processJSON :: String -> IO (Request, String, String)
 processJSON input = do
-   txt <- jsonRPC input myHandler
-   case fmap jsonRequest (parseJSON input) of
-      Just (Right req) -> return (req, txt, "application/json")
-      Just (Left err)  -> fail err
-      _                -> fail "no parse"
+   json <- parseJSON input
+   req  <- jsonRequest json
+   resp <- jsonRPC input myHandler
+   return (req, show (addVersion (toJSON resp)), "application/json")
 
-jsonRequest :: JSON -> Either String Request
+addVersion :: JSON -> JSON
+addVersion json = 
+   case json of
+      Object xs -> Object (xs ++ [info])
+      _         -> json
+ where
+   info = ("version", String $ version ++ " (" ++ show revision ++ ")")
+
+jsonRequest :: Monad m => JSON -> m Request
 jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
@@ -75,8 +83,6 @@ jsonRequest json = do
 
 myHandler :: JSON_RPC_Handler
 myHandler fun arg 
---   | fun == "ping" =
---        return (String "ok")
    | code == noCode && fun /= "exerciselist" =
         fail "invalid exercise code"
    | otherwise = 

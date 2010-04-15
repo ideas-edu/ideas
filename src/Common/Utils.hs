@@ -104,18 +104,12 @@ splitsWithElem c s =
 useFixedStdGen :: IO ()
 useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
 
-trim :: String -> String
-trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
-
 fst3 (x, _, _) = x
 snd3 (_, x, _) = x
 thd3 (_, _, x) = x
 
 commaList :: [String] -> String
 commaList = concat . intersperse ", "
-
-indent :: Int -> String -> String
-indent n = unlines . map (\s -> replicate n ' ' ++ s) . lines
 
 primes :: [Int]
 primes = rec [2..]

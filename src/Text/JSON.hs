@@ -22,11 +22,9 @@ module Text.JSON
 
 import Text.Parsing
 import qualified Text.UTF8 as UTF8
-import Common.Utils (indent)
 import Data.List (intersperse)
 import Data.Maybe
 import Control.Monad
-import Service.Revision (version, revision)
 import Test.QuickCheck
 
 data JSON 
@@ -136,11 +134,11 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    fromJSON (Array [a, b, c, d]) = liftM4 (,,,) (fromJSON a) (fromJSON b) (fromJSON c) (fromJSON d)
    fromJSON _                    = fail "expecting an array with 4 elements"
     
-parseJSON :: String -> Maybe JSON
+parseJSON :: Monad m => String -> m JSON
 parseJSON input = 
-   case parseWith jsonScanner json input of 
-      Right a -> Just a
-      _       -> Nothing
+   case parseWith jsonScanner json input of
+      Left err -> fail (show err)
+      Right a  -> return a
  where
    jsonScanner = specialSymbols ":" defaultScanner
       { keywords   = ["true", "false", "null"]
@@ -204,7 +202,6 @@ instance InJSON JSON_RPC_Response where
       [ ("result", responseResult resp)
       , ("error" , responseError resp)
       , ("id"    , responseId resp)
-      , ("version", String $ version ++ " (" ++ show revision ++ ")")
       ]
    fromJSON obj = do
       rj <- lookupM "result" obj
@@ -230,20 +227,23 @@ lookupM :: Monad m => String -> JSON -> m JSON
 lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (lookup x xs)
 lookupM _ _ = fail "expecting a JSON object"
 
+indent :: Int -> String -> String
+indent n = unlines . map (\s -> replicate n ' ' ++ s) . lines
+
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 
 type JSON_RPC_Handler = String -> JSON -> IO JSON
 
-jsonRPC :: String -> JSON_RPC_Handler -> IO String
+jsonRPC :: String -> JSON_RPC_Handler -> IO JSON_RPC_Response
 jsonRPC input handler = 
    case parseJSON input >>= fromJSON of 
       Nothing   -> fail "Invalid request"
       Just req -> do 
          json <- handler (requestMethod req) (requestParams req)
-         return $ show $ okResponse json (requestId req)
+         return $ okResponse json (requestId req)
        `catch` \e ->
-           return $ show $ errorResponse (String (show e)) (requestId req)
+           return $ errorResponse (String (show e)) (requestId req)
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer

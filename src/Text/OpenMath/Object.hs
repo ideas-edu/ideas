@@ -14,12 +14,13 @@ module Text.OpenMath.Object
    ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where
 
-import Text.XML
-import Common.Utils (readM)
+import Data.Char (isSpace)
 import Data.List (nub)
 import Data.Maybe
 import Data.Typeable
 import Text.OpenMath.Symbol
+import Text.Scanning (scanInt, scanNumber, Pos(..))
+import Text.XML
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer 
@@ -64,15 +65,17 @@ xml2omobj xml =
             return (OMS (Symbol mcd name))
 
          [Left s] | name xml == "OMI" ->
-            case readM s of
-               Just i  -> return (OMI i)
-               Nothing -> fail "invalid integer in OMI"
+            case scanInt (Pos 0 0) s of
+               Just (i, _, rest) | all isSpace rest
+                  -> return (OMI (toInteger i))
+               _  -> fail "invalid integer in OMI"
          
          [] | name xml == "OMF" -> do
             s <- findAttribute "dec" xml 
-            case readM s of
-               Just fp -> return (OMF fp)
-               Nothing -> fail "invalid floating-point in OMF"
+            case scanNumber (Pos 0 0) s of
+               Just (nr, _, rest) | all isSpace rest 
+                  -> return (OMF (either fromIntegral id nr))
+               _  -> fail "invalid floating-point in OMF"
                     
          [] | name xml == "OMV" -> do
             s <- findAttribute "name" xml
@@ -92,7 +95,7 @@ xml2omobj xml =
                f this = fail $ "expected tag OMV in OMBVAR, but found " ++ show this
            in mapM (f . rec) (children xml)
       | otherwise = 
-           fail ("expected tag OMVAR, but found " ++ show tag)
+           fail ("expected tag OMVAR, but found " ++ show (name xml))
    
 omobj2xml :: OMOBJ -> XML
 omobj2xml object = makeXML "OMOBJ" $ do

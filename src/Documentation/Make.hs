@@ -9,32 +9,28 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.Make (makeDocumentation) where
+module Documentation.Make 
+   ( Documentation(..), makeDocumentation
+   ) where
 
 import Common.Utils (Some(..))
 import Service.ExerciseList
-import Service.Options
 import Service.ServiceList
-import Documentation.Checks
+import Documentation.SelfCheck
 import Documentation.LatexRules
 import Documentation.ExercisePage
 import Documentation.ServicePage
 import Documentation.OverviewPages 
 
-makeDocumentation :: [Flag] -> IO ()
-makeDocumentation flags = do
-   -- make pages
-   case [ s | MakePages s <- flags ] of
-      [dir] -> makePages dir
-      _     -> return ()
-   -- make rules
-   case [ s | MakeRules s <- flags ] of
-      [dir] -> makeLatexRules dir
-      _     -> return ()
-   -- perform a self-check
-   case [ () | SelfCheck _ <- flags ] of
-      [] -> return ()
-      _  -> execute
+data Documentation = Pages String | LatexRules String | SelfCheck String
+   deriving Eq
+
+makeDocumentation :: [Documentation] -> IO ()
+makeDocumentation = mapM_ $ \doc -> 
+   case doc of
+      Pages      dir -> makePages dir
+      LatexRules dir -> makeLatexRules dir
+      SelfCheck  dir -> performSelfCheck dir
 
 makePages :: String -> IO ()
 makePages dir = do 

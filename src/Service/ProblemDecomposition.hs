@@ -28,7 +28,6 @@ import Text.XML hiding (name)
 import qualified Text.XML as XML
 import Control.Monad
 import Text.OpenMath.Object
-import Service.Revision
 
 replyError :: String -> String -> Reply a
 replyError kind = Error . ReplyError kind
@@ -288,5 +287,5 @@ replyErrorToXML r = makeReply (repErr_Kind r) (text $ repErr_Message r)
 makeReply :: String -> XMLBuilder -> XML
 makeReply kind body = makeXML "reply" $ do
    "result"  .=. kind
-   "version" .=. version
+   "version" .=. "deprecated" -- fix me
    body

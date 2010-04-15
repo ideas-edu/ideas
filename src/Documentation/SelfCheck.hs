@@ -9,14 +9,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.Checks (execute) where
+module Documentation.SelfCheck (performSelfCheck) where
 
 import System.Directory
 import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
-import Service.Options
 import Service.ExerciseList
 import Service.Request
 
@@ -34,8 +33,8 @@ import qualified Text.JSON as JSON
 import Data.List
 import System.Time
 
-execute :: IO ()
-execute = totalDiff $ do
+performSelfCheck :: String -> IO ()
+performSelfCheck dir = totalDiff $ do
    timeDiff $ do
       putStrLn "* 1. Domain checks"
       Grammar.checks
@@ -53,17 +52,12 @@ execute = totalDiff $ do
 
    timeDiff $ do
       putStrLn "* 3. Unit tests"
-      n <- unitTests
+      n <- unitTests dir
       putStrLn $ "** Number of unit tests: " ++ show n
    
 -- Returns the number of tests performed
-unitTests :: IO Int
-unitTests = do
-   flags <- serviceOptions
-   dir   <- case [ s | SelfCheck s <- flags ] of
-               [s] -> return s
-               _   -> return "test"
-   visit 0 dir
+unitTests :: String -> IO Int
+unitTests = visit 0
  where
    visit i path = do
       valid <- doesDirectoryExist path

@@ -33,11 +33,7 @@ main = do
    flags     <- serviceOptions
    logRef    <- newIORef (return ())
    
-   case withInputFile flags of
-      -- documentation mode
-      _ | documentationMode flags -> do
-         makeDocumentation flags
-      
+   case withInputFile flags of      
       -- from file
       Just file -> do  
          when (FixRNG `elem` flags) 
@@ -48,7 +44,11 @@ main = do
             writeIORef logRef $ -- save logging action for later
                logMessage req input txt "local" startTime
          putStrLn txt
-         
+
+      -- documentation mode
+      _ | documentationMode flags ->
+         makeDocumentation (docItems flags)
+
       -- cgi binary
       Nothing -> runCGI $ do
          addr  <- remoteAddr           -- the IP address of the remote host making the request          

@@ -19,10 +19,11 @@ import System.Exit
 import System.Console.GetOpt
 import Service.Revision (version, revision)
 import Service.LoggingDatabase (logEnabled)
+import Documentation.Make
 
-data Flag = Version | Help | Logging Bool | InputFile String | FixRNG
-          | MakePages String | MakeRules String | SelfCheck String
- deriving (Show, Eq)
+data Flag = Version | Help | Logging Bool | InputFile String 
+          | FixRNG | DocItem Documentation
+   deriving Eq
 
 header :: String
 header = 
@@ -45,10 +46,13 @@ options =
      , Option []  ["no-logging"] (NoArg $ Logging False)   "disable logging (default on local machine)"
      , Option "f" ["file"]       (ReqArg InputFile "FILE") "use input FILE as request"
      , Option ""  ["fixed-rng"]  (NoArg FixRNG)            "use a fixed random-number generator"
-     , Option ""  ["make-pages"] (OptArg (MakePages . fromMaybe "docs") "DIR")   "generate pages for exercises and services"
-     , Option ""  ["make-rules"] (OptArg (MakeRules . fromMaybe "docs") "DIR")   "generate latex code for rewrite rules"
-     , Option ""  ["self-check"] (OptArg (SelfCheck . fromMaybe "test") "DIR")   "perform a self-check"
+     , Option ""  ["make-pages"] (docItemDescr (Pages      . fromMaybe "docs")) "generate pages for exercises and services"
+     , Option ""  ["make-rules"] (docItemDescr (LatexRules . fromMaybe "docs")) "generate latex code for rewrite rules"
+     , Option ""  ["self-check"] (docItemDescr (SelfCheck  . fromMaybe "test")) "perform a self-check"
      ]
+
+docItemDescr :: (Maybe String -> Documentation) -> ArgDescr Flag
+docItemDescr f = OptArg (DocItem . f) "DIR"
 
 serviceOptions :: IO [Flag]
 serviceOptions = do
@@ -64,11 +68,11 @@ serviceOptions = do
          putStrLn (concat errs ++ usageInfo header options)
          exitFailure 
 
+docItems :: [Flag] -> [Documentation]
+docItems flags = [ x | DocItem x <- flags ]
+
 documentationMode :: [Flag] -> Bool
-documentationMode flags = or $
-   [ True | MakePages _ <- flags ] ++ 
-   [ True | MakeRules _ <- flags ] ++
-   [ True | SelfCheck _ <- flags ]
+documentationMode = not . null . docItems
 
 withLogging :: [Flag] -> Bool
 withLogging flags = and [ b | Logging b <- flags ]

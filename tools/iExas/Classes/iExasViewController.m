@@ -34,16 +34,25 @@
     [super viewDidLoad];
 
 	// Create a service url
-	NSString * urlString = @"http://ideas.cs.uu.nl/cgi-bin/ideas.cgi?input=%7B%22method%22:%22generate%22%2C%22params%22:%5B%22logic.dnf%22%2C1%5D%2C%22id%22:421%7D";
+	NSString * urlString = @"http://ideas.cs.uu.nl/cgi-bin/ideas.cgi?input=%7B%22method%22:%22generate%22%2C%22params%22:%5B%22logic.dnf%22%2C1%5D%2C%22id%22:421%2C%22source%22:%22iphone%22%7D";
 
+	NSString * encodedUrlString = @"http://ideas.cs.uu.nl/cgi/ideas.cgi?input="
+	                              @"{\"method\" : \"generate\", \"params\" : [\"logic.dnf\", 1], \"id\" : 421}");
+	
 	// Create NSURL string from formatted string
-	NSURL *url = [NSURL URLWithString:urlString];
+	NSURL *url = [NSURL URLWithString:encodedUrlString];
 	
 	// Setup and start async download
 	NSURLRequest *request = [[NSURLRequest alloc] initWithURL: url];
 	NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
 	[connection release];
 	[request release];
+}
+
+id urlEncodeValue (NSString * str)
+{
+	NSString *result = (NSString *) CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)str, NULL, CFSTR(":?#[]@!$&’()*+,;=\""), kCFStringEncodingUTF8);
+	return [result autorelease];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data 
@@ -56,7 +65,9 @@
 
 	NSArray * r = [results objectForKey:@"result"];
 	
-	label.text = [r objectAtIndex:2];
+	NSString * exercise = [r objectAtIndex:2];
+
+	label.text = @"Beta is \u2227"; //exercise;
 }
 
 

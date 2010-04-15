@@ -13,5 +13,8 @@
 	NSMutableData    *responseData;
 }
 
+int add2 (int i);
+id urlEncodeValue (NSString * str);
+
 @end
 

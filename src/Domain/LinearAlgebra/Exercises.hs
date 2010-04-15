@@ -31,7 +31,6 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Simplification
 import Test.QuickCheck
-import Text.Parsing (SyntaxError(..))
 
 gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
 gramSchmidtExercise = makeExercise
@@ -95,7 +94,7 @@ systemWithMatrixExercise = makeExercise
    , parser         = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
                                (Right ok, _) -> Right $ toExpr ok
                                (_, Right ok) -> Right $ toExpr ok
-                               (Left _, Left _) -> Left $ ErrorMessage "Syntax error"
+                               (Left _, Left _) -> Left "Syntax error"
    , prettyPrinter  = \expr -> case (fromExpr expr, fromExpr expr) of
                                   (Just ls, _) -> (unlines . map show) (ls :: Equations Expr)
                                   (_, Just m)  -> ppMatrix (m :: Matrix Expr)

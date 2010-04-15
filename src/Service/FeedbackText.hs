@@ -23,7 +23,6 @@ import Data.Maybe
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.TypedAbstractService
-import Text.Parsing (SyntaxError, errorPositions)
 
 ------------------------------------------------------------
 -- Exercise Text data type
@@ -32,7 +31,7 @@ import Text.Parsing (SyntaxError, errorPositions)
 data ExerciseText a = ExerciseText
    { ruleText              :: Rule (Context a) -> Maybe String
    , appliedRule           :: Rule (Context a) -> String
-   , feedbackSyntaxError   :: SyntaxError -> String
+   , feedbackSyntaxError   :: String -> String
    , feedbackSame          :: String
    , feedbackBuggy         :: Bool -> [Rule (Context a)] -> String
    , feedbackNotEquivalent :: Bool -> String
@@ -63,11 +62,7 @@ submittext :: ExerciseText a -> State a -> String -> Maybe String -> (Bool, Stri
 submittext exText state txt _event = 
    case parser (exercise state) txt of
       Left err -> 
-         let msg = "Syntax error" ++ pos ++ ": " ++ show err
-             pos = case map show (errorPositions err) of
-                      [] -> ""
-                      xs -> " at " ++ commaList xs
-         in (False, msg, state)
+         (False, feedbackSyntaxError exText err, state)
       Right a  -> 
          let result = submit state a
              (txt, b) = submitHelper exText state a result

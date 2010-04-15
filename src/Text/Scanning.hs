@@ -311,13 +311,20 @@ data SyntaxError
    | ErrorMessage String
 
 instance Show SyntaxError where
-   show err = 
+   show err = prefixPosition err ++
       case err of
          Unexpected t      -> "Unexpected " ++ show t
          ParNotClosed t    -> "Opening parenthesis " ++ show t ++ " is not closed"
          ParNoOpen t       -> "Closing parenthesis " ++ show t ++ " has no matching symbol"
          ParMismatch t1 t2 -> "Opening parenthesis " ++ show t1 ++ " is closed with " ++ show t2
          ErrorMessage msg  -> msg
+
+prefixPosition :: SyntaxError -> String
+prefixPosition err
+   | null xs   = ""
+   | otherwise = concat (intersperse "," xs) ++ ": "
+ where
+   xs = map show (errorPositions err)
 
 errorPositions :: SyntaxError -> [Pos]
 errorPositions err = 

@@ -46,9 +46,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import System.Random
-import Test.QuickCheck hiding (label) --, arguments)
+import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
-import Text.Parsing (SyntaxError(..))
 
 data Exercise a = Exercise
    { -- identification and meta-information
@@ -56,7 +55,7 @@ data Exercise a = Exercise
    , exerciseCode   :: ExerciseCode -- uniquely determines the exercise (in a given domain)
    , status         :: Status
      -- parsing and pretty-printing
-   , parser         :: String -> Either SyntaxError a
+   , parser         :: String -> Either String a
    , prettyPrinter  :: a -> String
      -- syntactic and semantic checks
    , equivalence    :: a -> a -> Bool
@@ -105,7 +104,7 @@ emptyExercise = Exercise
    , exerciseCode   = noCode
    , status         = Experimental
      -- parsing and pretty-printing
-   , parser         = const $ Left $ ErrorMessage "<<no parser>>"
+   , parser         = const (Left "<<no parser>>")
    , prettyPrinter  = const "<<no pretty-printer>>"
      -- syntactic and semantic checks
    , equivalence    = \_ _ -> True

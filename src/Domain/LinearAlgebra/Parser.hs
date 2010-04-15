@@ -26,12 +26,12 @@ import Text.Parsing
 testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
             this -> this -}
 
-parseSystem :: String -> Either SyntaxError (LinearSystem Expr)
-parseSystem = either Left f . parseWith s pSystem
+parseSystem :: String -> Either String (LinearSystem Expr)
+parseSystem = either Left f . parseWithM s pSystem
  where
    s0 = specialSymbols "\n" scannerExpr
    s  = s0 {keywordOperators = "==" : keywordOperators s0 }
-   f Nothing  = Left (ErrorMessage "System is not linear")
+   f Nothing  = Left "System is not linear"
    f (Just m) = Right m
 
 pSystem :: TokenParser (Maybe (LinearSystem Expr))
@@ -47,12 +47,12 @@ pSystem = convertSystem <$> pEquations pExpr
 -----------------------------------------------------------
 --- Parser
 
-parseMatrix :: String -> Either SyntaxError (Matrix Expr)
-parseMatrix = either Left f . parseWith s p
+parseMatrix :: String -> Either String (Matrix Expr)
+parseMatrix = either Left f . parseWithM s p
  where
    s = specialSymbols "\n" scannerExpr
    p = pMatrix pFractional
-   f Nothing  = Left (ErrorMessage "Matrix is not rectangular")
+   f Nothing  = Left "Matrix is not rectangular"
    f (Just m) = Right m
 
 pMatrix :: TokenParser a -> TokenParser (Maybe (Matrix a))
@@ -60,8 +60,8 @@ pMatrix p = make <$> pLines True (pList1 p)
  where 
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
-parseVectorSpace :: String -> Either SyntaxError (VectorSpace Expr)
-parseVectorSpace = parseWith s p
+parseVectorSpace :: String -> Either String (VectorSpace Expr)
+parseVectorSpace = parseWithM s p
  where
    s = specialSymbols "\n" scannerExpr
    p = makeVectorSpace <$> pVectors pExpr

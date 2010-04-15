@@ -14,8 +14,8 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.FeedbackText (logicText) where
 
+import Data.List
 import Data.Maybe
-import Text.Parsing
 import Common.Transformation
 import Domain.Logic.Formula
 import Domain.Logic.Rules
@@ -35,22 +35,11 @@ logicText = T.ExerciseText
    , T.feedbackUnknown       = feedbackUnknown
    }
 
--- This is more general than the logic domain. Perhaps it should
--- be defined elsewhere
-feedbackSyntaxError :: SyntaxError -> String
-feedbackSyntaxError syntaxError =
-   case syntaxError of
-      ParNotClosed token -> 
-         "Opening parenthesis symbol '(' at position " ++ tokenPos token ++ " is not closed."
-      ParNoOpen token -> 
-         "Closing parenthesis symbol ')' at position " ++ tokenPos token ++ " has no matching opening parenthesis."
-      ParMismatch token1 token2 -> 
-         "The openening parenthesis at position " ++ tokenPos token1 ++ 
-         " does not match with the closing parenthesis at position " ++ tokenPos token2 ++ "."
-      ErrorMessage txt -> 
-         txt
-      Unexpected token -> 
-         "Unexpected " ++ showToken token
+feedbackSyntaxError :: String -> String 
+feedbackSyntaxError msg
+   | take 1 msg == "("               = "Syntax error at " ++ msg
+   | "Syntax error" `isPrefixOf` msg = msg
+   | otherwise                       = "Syntax error: " ++ msg
 
 feedbackBuggy :: Bool -> [Rule a] -> String
 feedbackBuggy ready [br] 
@@ -195,11 +184,3 @@ inGroup :: Rule a -> String -> Bool
 inGroup r n = 
    let rs = filter (~= r) (logicRules ++ buggyRules)
    in n `elem` concatMap ruleGroups rs
-
-showToken :: Token -> String
-showToken token = show token ++ " at position " ++ tokenPos token
-
-tokenPos :: Token -> String
-tokenPos token =
-   let p = tokenPosition token
-   in if line p==1 then show (column p) else show p

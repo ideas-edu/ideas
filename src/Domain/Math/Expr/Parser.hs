@@ -36,10 +36,10 @@ scannerExpr = defaultScanner
    , qualifiedIdentifiers = True
    }
 
-parseExprWith :: TokenParser a -> String -> Either SyntaxError a
-parseExprWith = parseWith scannerExpr
+parseExprWith :: TokenParser a -> String -> Either String a
+parseExprWith = parseWithM scannerExpr
 
-parseExpr :: String -> Either SyntaxError Expr
+parseExpr :: String -> Either String Expr
 parseExpr = parseExprWith pExpr
 
 pExpr :: TokenParser Expr

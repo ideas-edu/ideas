@@ -17,7 +17,7 @@ module Text.Parsing
      module Text.Scanning
      -- * Parsing
    , Parser, CharParser, TokenParser
-   , parse, parseWith
+   , parse, parseWith, parseWithM
      -- * Primitive token parsers
    , pVarid, pConid, pOpid, pQVarid, pQConid
    , pKey, pSpec, pInt, pReal, pString
@@ -30,6 +30,7 @@ module Text.Parsing
    , OperatorTable, Associativity(..), pOperators
    ) where
 
+import Data.List
 import Data.Maybe
 import Text.Scanning
 import qualified UU.Parsing as UU
@@ -69,7 +70,6 @@ instance (UU.Symbol s, Ord s) => UU.IsParser (Parser s) s where
    getzerop            = fmap P . UU.getzerop . unP
    getonep             = fmap P . UU.getonep  . unP 
 
--- Parsing an input string always returns a result and a list of error messages
 parse :: UU.Symbol s => Parser s a -> [s] -> Either (Maybe s) a
 parse (P p) input =
    case messages of
@@ -85,6 +85,9 @@ parseWith scanner p = either f Right . parse p . scanWith scanner
  where 
     f (Just s) = Left (Unexpected s)
     f Nothing  = Left (ErrorMessage "Syntax error")
+
+parseWithM :: Monad m => Scanner -> TokenParser a -> String -> m a
+parseWithM scanner p = either (fail . show) return . parseWith scanner p
 
 ----------------------------------------------------------
 -- Primitive token parsers

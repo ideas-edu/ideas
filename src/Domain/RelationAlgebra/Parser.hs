@@ -38,7 +38,7 @@ invSym  = "~"
 -----------------------------------------------------------
 --- Parser
 
-parseRelAlg  :: String -> Either SyntaxError RelAlg
+parseRelAlg  :: String -> Either String RelAlg
 parseRelAlg = analyseAndParse pRelAlg . scanWith myScanner
 
 pRelAlg :: Parser Token RelAlg
@@ -61,15 +61,15 @@ pAtom  =  Var <$> pVarid
 -----------------------------------------------------------
 --- Helper-function for parentheses analyses
 
-analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
+analyseAndParse :: Parser Token a -> [Token] -> Either String a
 analyseAndParse p ts =
    case checkParentheses ts of
-      Just err -> Left err
+      Just err -> Left (show err)
       Nothing  -> either (Left . f) Right (parse p ts)
  where
-   f (Just s) = Unexpected s
-   f Nothing  = ErrorMessage "Syntax Error"
-                                        
+   f (Just t) = show (tokenPosition t) ++ ": Unexpected " ++ show t
+   f Nothing  = "Syntax error"
+                               
 -----------------------------------------------------------
 --- Pretty-Printer
 

@@ -21,8 +21,8 @@ logicScanner = (specialSymbols "+*?|" defaultScanner)
    , isIdentifierCharacter = const False
    }
 
-parseRegExp :: String -> Either SyntaxError RegExp
-parseRegExp = parseWith logicScanner pRE
+parseRegExp :: String -> Either String RegExp
+parseRegExp = parseWithM logicScanner pRE
 
 pRE :: TokenParser RegExp
 pRE = pOr 

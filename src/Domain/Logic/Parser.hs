@@ -44,7 +44,7 @@ operatorTable =
 
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
-parseLogic :: String -> Either SyntaxError SLogic
+parseLogic :: String -> Either String SLogic
 parseLogic = analyseAndParse pLogic . scanWith logicScanner
  where
    pLogic = pOperators operatorTable (basicWithPos pLogic)
@@ -53,14 +53,14 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
 -- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
 -- | parentheses are permitted
-parseLogicPars :: String -> Either SyntaxError SLogic
+parseLogicPars :: String -> Either String SLogic
 parseLogicPars s
    = either Left suspiciousVariable 
    $ left (ambiguousOperators parseLogic s)
    $ analyseAndParse (pLogicGen asciiTuple)
    $ scanWith logicScanner s
 
-parseLogicUnicodePars :: String -> Either SyntaxError SLogic
+parseLogicUnicodePars :: String -> Either String SLogic
 parseLogicUnicodePars s 
    = either Left suspiciousVariable 
    $ left (ambiguousOperators (parseLogic . concatMap f) s)
@@ -98,25 +98,25 @@ basicWithPosGen t@(nt, tr, fl) p =
 --- Helper-functions for syntax warnings
 
 -- analyze parentheses
-analyseAndParse :: Parser Token a -> [Token] -> Either SyntaxError a
+analyseAndParse :: Parser Token a -> [Token] -> Either String a
 analyseAndParse p ts =
    case checkParentheses ts of
-      Just err -> Left err
+      Just err -> Left (show err)
       Nothing  -> either (Left . f) Right (parse p ts)
  where
-   f (Just s) = Unexpected s
-   f Nothing  = ErrorMessage "Syntax Error"
+   f (Just t) = show (tokenPosition t) ++ ": Unexpected " ++ show t
+   f Nothing  = "Syntax error"
 
-ambiguousOperators :: (String -> Either a b) -> String -> SyntaxError -> SyntaxError
+ambiguousOperators :: (String -> Either a b) -> String -> String -> String
 ambiguousOperators p s err =
-   let msg = ErrorMessage "Ambiguous use of operators (write parentheses)"
+   let msg = "Ambiguous use of operators (write parentheses)"
    in either (const err) (const msg) (p s)
 
 -- Report variables 
-suspiciousVariable :: SLogic -> Either SyntaxError SLogic
+suspiciousVariable :: SLogic -> Either String SLogic
 suspiciousVariable r =
    case filter p (map fromShowString (varsLogic r)) of
-      v:_ -> Left $ ErrorMessage $ "Unexpected variable " ++ v
+      v:_ -> Left $ "Unexpected variable " ++ v
                  ++ ". Did you forget an operator?" 
       _   -> Right r
  where

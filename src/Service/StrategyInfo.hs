@@ -11,12 +11,12 @@
 -- Converting a strategy to XML, and the other way around.
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Representation (strategyToXML, xmlToStrategy) where
+module Service.StrategyInfo (strategyToXML, xmlToStrategy) where
 
 import Data.Char
 import Data.Maybe
 import Control.Monad
-import Common.Strategy.Core
+import Common.Strategy.Core (Core(..), noLabels)
 import Common.Strategy.Abstract
 import Text.XML
 import Common.Transformation hiding (name)

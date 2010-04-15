@@ -88,9 +88,6 @@ testGen = forAll generateLogic $ \p ->
 testme :: IO ()
 testme = quickCheck testGen 
 
-
-import Service.TypedAbstractService
-
 start = ((r :<->: p) :||: (q :->: s)) :&&: (Not s :<->: (p :||: r))
  where
   (p, q, r, s) = (Var "p", Var "q", Var "r", Var "s")

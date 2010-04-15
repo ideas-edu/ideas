@@ -47,6 +47,5 @@ import Common.Strategy.Combinators
 import Common.Strategy.Prefix
 import Common.Strategy.Location
 import Common.Strategy.Configuration
-import Common.Strategy.Representation () -- only XML instance
 
 import qualified Prelude ()

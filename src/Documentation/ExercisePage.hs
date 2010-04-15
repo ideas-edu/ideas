@@ -15,6 +15,7 @@ import Common.Exercise
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
 import Service.ExercisePackage
+import Service.StrategyInfo
 import Service.TypedAbstractService hiding (exercise)
 import Control.Monad
 import Data.List
@@ -103,7 +104,7 @@ strategyPage :: ExercisePackage a -> HTML
 strategyPage pkg = defaultPage title 2 $ do
    h1 title
    h2 "1. Representation in XML"
-   preText (XML.showXML (XML.toXML (strategy ex)))
+   preText (XML.showXML (strategyToXML (strategy ex)))
    h2 "2. Locations" 
    let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
        g (Left a)  = text (strategyName a)

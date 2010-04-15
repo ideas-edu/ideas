@@ -30,7 +30,6 @@ module Text.Parsing
    , OperatorTable, Associativity(..), pOperators
    ) where
 
-import Data.List
 import Data.Maybe
 import Text.Scanning
 import qualified UU.Parsing as UU

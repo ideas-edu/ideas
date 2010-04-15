@@ -9,7 +9,19 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Power.Rules where
+module Domain.Math.Power.Rules 
+  ( -- * Power rules
+    calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
+  , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
+  , reciprocalInv
+    -- * Root rules
+  , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
+  , simplifyRoot
+    -- * Common rules
+  , myFractionTimes, simplifyFraction, pushNegOut
+    -- * Help functions
+  , smartRule
+  ) where
 
 import Prelude hiding ( (^) )
 import qualified Prelude
@@ -25,26 +37,8 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
 
-------------------------------------------------------------
--- Rules
-smartRule :: Rule Expr -> Rule Expr
-smartRule = doAfter f
-  where
-    f (a :*: b) = a .*. b
-    f (a :/: b) = a ./. b
-    f (Negate a) = neg a
-    f (a :+: b) = a .+. b
-    f (a :-: b) = a .-. b
-    f e = e
-   
-calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr   
-calcBinPowerRule opName op m = 
-   makeSimpleRule ("calculate power " ++ opName) $ \e -> do
-     (e1, e2)     <- m e
-     (a, (c1, x)) <- match unitPowerView e1
-     (b, (c2, y)) <- match unitPowerView e2
-     guard (a == b && x == y)
-     return (build unitPowerView (a, ((op c1 c2), x)))
+
+-- | Power rules --------------------------------------------------------------
 
 calcPower :: Rule Expr 
 calcPower = makeSimpleRule "calculate power" $ \ expr -> do 
@@ -55,9 +49,11 @@ calcPower = makeSimpleRule "calculate power" $ \ expr -> do
     then return $ fromRational $ a Prelude.^ x
     else return $ 1 ./. (e1 .^. neg e2)
 
+calcPowerPlus :: Rule Expr 
 calcPowerPlus = 
   makeCommutative sumView (.+.) $ calcBinPowerRule "plus" (.+.) isPlus 
 
+calcPowerMinus :: Rule Expr 
 calcPowerMinus = 
    makeCommutative sumView (.+.) $ calcBinPowerRule "minus" (.-.) isMinus
 
@@ -71,23 +67,6 @@ addExponents = makeSimpleRuleList "add exponents" $ \ expr -> do
         Just e' -> return $ build productView (s, e' : es)
         Nothing -> fail ""  
     Nothing -> fail ""
-
-makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
-makeCommutative view op rule = 
-  makeSimpleRuleList (name rule) $ \ expr -> do
-    case match view expr of
-      Just factors -> do
-        (e, es) <- split op factors
-        case apply rule e of
-          Just e' -> return $ build view (e' : es)
-          Nothing -> fail ""
-      Nothing -> fail ""
-    
-split op xs = f xs
-      where
-        f (y:ys) | not (null ys) = [(y `op` z, xs \\ [y, z]) | z <- ys] ++ f ys 
-                 | otherwise     = []
-        f [] = []
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponents' :: Rule Expr 
@@ -107,10 +86,6 @@ subExponents = forallVars rule
       (a, y)   <- match (unitPowerForView x) e1
       (b, q)   <- match (unitPowerForView x) e2
       return $ build (unitPowerForView x) (a ./. b, y - q)
-
-forallVars :: (String -> Rule Expr) -> Rule Expr
-forallVars ruleFor = makeSimpleRuleList (name (ruleFor "")) $ \ expr -> 
-  mapMaybe (\v -> apply (ruleFor v) expr) $ collectVars expr
 
 -- | (c*a^x)^y = c*a^(x*y)
 mulExponents :: Rule Expr 
@@ -156,8 +131,8 @@ reciprocal = makeSimpleRule "reciprocal" $ \ expr -> do
   return $ build (unitPowerForView a) (d ./. c, negate x)
 
 -- | c*a^x = c/a^(-x)
-reciprocal' :: (Expr -> Bool) -> Rule Expr
-reciprocal' p = makeSimpleRule "reciprocal" $ \ expr -> do
+reciprocalInv :: (Expr -> Bool) -> Rule Expr
+reciprocalInv p = makeSimpleRule "reciprocal" $ \ expr -> do
   guard (p expr)
 --  a        <- selectVar expr
   (c, (a, x))   <- match strictPowerView expr
@@ -198,14 +173,16 @@ mulRoot = makeSimpleRule "multipy base of root" $ \ expr -> do
   guard (x == x')
   return $ build rootConsView (c1 .*. c2, (a .*. b, x))
 
+-- | commutative version of the mulRoot rule
+mulRootCom :: Rule Expr
 mulRootCom = makeCommutative (myProductView (powerFactorisationView rootView)) (.*.) mulRoot
-
-myProductView :: View Expr (Bool, [Expr]) -> View Expr [Expr]
-myProductView v = v >>> makeView f g
-  where
-    f (s, (x:xs)) = return $ if s then neg x : xs else x:xs
-    f _           = fail ""
-    g = (,) False 
+ where
+   myProductView :: View Expr (Bool, [Expr]) -> View Expr [Expr]
+   myProductView v = v >>> makeView f g
+     where
+       f (s, (x:xs)) = return $ if s then neg x : xs else x:xs
+       f _           = fail ""
+       g = (,) False 
 
 -- | c1 * root a x / c2 * root b x = c1*c2 * root (a/b) x
 divRoot :: Rule Expr
@@ -216,7 +193,7 @@ divRoot = makeSimpleRule "divide base of root" $ \ expr -> do
   guard (x == x' && b /= 0)
   return $ build rootConsView (c1 .*. c2, (a ./. b, x))
 
-
+-- | root 0 x = 0  ;  root 1 x = 1  ;  root a 1 = a
 simplifyRoot :: Rule Expr
 simplifyRoot = makeSimpleRule "simplify root" $ \e -> f e `mplus` g e
  where
@@ -252,10 +229,55 @@ simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
   guard (expr /= expr')
   guard $ not $ applicable myFractionTimes expr' -- a hack, need to come up with a constructive solution
   return expr'
-  
+
+-- | (-a)^x = (-)a^x
 pushNegOut :: Rule Expr
 pushNegOut = makeSimpleRule "push negation out" $ \ expr -> do
   (a, x) <- match simplePowerView expr
   a'     <- isNegate a
   x'     <- match integerView x
   return $ (if odd x' then neg else id) $ build simplePowerView (a', x)
+
+
+-- | Help functions -----------------------------------------------------------
+
+smartRule :: Rule Expr -> Rule Expr
+smartRule = doAfter f
+  where
+    f (a :*: b) = a .*. b
+    f (a :/: b) = a ./. b
+    f (Negate a) = neg a
+    f (a :+: b) = a .+. b
+    f (a :-: b) = a .-. b
+    f e = e
+   
+calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr   
+calcBinPowerRule opName op m = 
+   makeSimpleRule ("calculate power " ++ opName) $ \e -> do
+     (e1, e2)     <- m e
+     (a, (c1, x)) <- match unitPowerView e1
+     (b, (c2, y)) <- match unitPowerView e2
+     guard (a == b && x == y)
+     return (build unitPowerView (a, ((op c1 c2), x)))
+
+makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
+makeCommutative view op rule = 
+  makeSimpleRuleList (name rule) $ \ expr -> do
+    case match view expr of
+      Just factors -> do
+        (e, es) <- split op factors
+        case apply rule e of
+          Just e' -> return $ build view (e' : es)
+          Nothing -> fail ""
+      Nothing -> fail ""
+
+split :: (Eq a) => (a -> a -> t) -> [a] -> [(t, [a])]    
+split op xs = f xs
+      where
+        f (y:ys) | not (null ys) = [(y `op` z, xs \\ [y, z]) | z <- ys] ++ f ys 
+                 | otherwise     = []
+        f [] = []
+
+forallVars :: (String -> Rule Expr) -> Rule Expr
+forallVars ruleFor = makeSimpleRuleList (name (ruleFor "")) $ \ expr -> 
+  mapMaybe (\v -> apply (ruleFor v) expr) $ collectVars expr

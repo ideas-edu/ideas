@@ -10,8 +10,11 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
---   ( powerStrategy, natView, nonNegExpStrategy, hasNegExp, powerRules
-    where
+   ( powerStrategy
+   , powerOfStrategy
+   , calcPowerStrategy
+   , nonNegExpStrategy
+   ) where
 
 import Common.Apply
 import Common.Context
@@ -21,7 +24,6 @@ import Common.View
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Views
-import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Prelude hiding (repeat)
@@ -29,25 +31,57 @@ import Prelude hiding (repeat)
 ------------------------------------------------------------
 -- Strategies
 
-makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context Expr)
-makeStrategy l rs cs = cleanUpStrategy (f1) $ strategise l rs
-  where
-    f1 = applyD $ strategise l cs
-    -- f2 = applyD $ liftToContext $ makeSimpleRule "clean up" (return . cleanUpExpr) 
-
-strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
-
 powerStrategy :: LabeledStrategy (Context Expr)
-powerStrategy = makeStrategy 
-  "simplify" powerRules (calcPower : naturalRules ++ rationalRules)
+powerStrategy = makeStrategy "simplify" rules cleanupRules
+  where 
+    rules = powerRules 
+    cleanupRules = calcPower : naturalRules ++ rationalRules
 
-powerOfStrategy = makeStrategy
-  "write as power of" powerRules (calcPower : simplifyRoot : simplifyFraction : naturalRules ++ rationalRules) 
+powerOfStrategy :: LabeledStrategy (Context Expr)
+powerOfStrategy = makeStrategy "write as power of" rules cleanupRules
+  where
+   rules = powerRules 
+   cleanupRules = calcPower 
+                : simplifyRoot 
+                : simplifyFraction 
+                : naturalRules 
+               ++ rationalRules
 
-cleanUpExprRule :: Rule Expr
-cleanUpExprRule = makeSimpleRule "Clean up" $ \ expr ->
-  let expr' = cleanUpExpr expr 
-  in  if expr /= expr' then Just expr' else Nothing
+nonNegExpStrategy :: LabeledStrategy (Context Expr)
+nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
+  where
+    rules = [ addExponents
+            , subExponents
+            , mulExponents
+            , reciprocalInv hasNegExp
+            , distributePower
+            , distributePowerDiv
+            , power2root
+            , distributeRoot
+            , zeroPower
+            , calcPowerPlus
+            , calcPowerMinus
+            , myFractionTimes
+            ] ++ fractionRules            
+    cleanupRules = calcPower : simplifyFraction  : naturalRules
+
+calcPowerStrategy :: LabeledStrategy (Context Expr)
+calcPowerStrategy = makeStrategy "calcPower" rules cleanupRules
+  where
+    rules = calcPower 
+          : mulRootCom
+          : divRoot 
+          : rationalRules
+    cleanupRules = rationalRules ++ naturalRules
+
+------------------------------------------------------------
+-- | Help functions
+
+makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context Expr)
+makeStrategy l rs cs = cleanUpStrategy f $ strategise l rs
+  where
+    f = applyD $ strategise l cs
+    strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
 
 powerRules =
       [ addExponents
@@ -65,24 +99,6 @@ powerRules =
       , pushNegOut
       ]
 
-nonNegExpStrategy :: LabeledStrategy (Context Expr)
-nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
-  where
-    rules = [ addExponents
-            , subExponents
-            , mulExponents
-            , reciprocal' hasNegExp
-            , distributePower
-            , distributePowerDiv
-            , power2root
-            , distributeRoot
-            , zeroPower
-            , calcPowerPlus
-            , calcPowerMinus
-            , myFractionTimes
-            ] ++ fractionRules            
-    cleanupRules = calcPower : simplifyFraction  : naturalRules
-
 hasNegExp expr = 
   case match strictPowerView expr of
     Just (_, (_, x)) -> case match rationalView x of
@@ -90,13 +106,6 @@ hasNegExp expr =
       _       -> False
     _ -> False
 
-calcPowerStrategy = makeStrategy "calcPower" rules cleanupRules
-  where
-    rules = calcPower 
-          : mulRootCom
-          : divRoot 
-          : rationalRules
-    cleanupRules = rationalRules ++ naturalRules
 
 -- | Allowed numeric rules
 naturalRules =
@@ -120,7 +129,7 @@ naturalRules =
        where
          f (Nat n) = Just n
          f _       = Nothing
-   
+ 
 rationalRules =    
    [ calcPlusWith     "rational" rationalRelaxedForm
    , calcMinusWith    "rational" rationalRelaxedForm
@@ -145,31 +154,3 @@ fractionRules =
    , smartRule divisionNumerator 
    , simplerFraction
    ]
-
-------------------------------------------------------------
--- Test code
-
-{-
-testAll :: IO ()
-testAll = sequence_ [test1, test2, test3, test4]
-
-test1 = quickCheck $ forAll (sized integerGenerator) $ \e -> 
-   Prelude.not (e `belongsTo` integerView) || 
-   applyD naturalStrategy e `belongsTo` integerNormalForm
-   
-test2 = quickCheck $ forAll (sized integerGenerator) $ \e -> 
-   Prelude.not (e `belongsTo` integerView) || 
-   applyD integerStrategy e `belongsTo` integerNormalForm
-   
-test3 = quickCheck $ forAll (sized rationalGenerator) $ \e -> 
-   Prelude.not (e `belongsTo` rationalView) || 
-   applyD rationalStrategy e `belongsTo` rationalNormalForm
-   
-test4 = quickCheck $ forAll (sized rationalGenerator) $ \e -> 
-   Prelude.not (e `belongsTo` rationalView) || 
-   applyD fractionStrategy e `belongsTo` rationalNormalForm
--}
- 
-{- testC = quickCheck $ forAll (sized rationalGenerator) $ \e -> 
-   let a = cleanUp e
-   in a == cleanUp a -}

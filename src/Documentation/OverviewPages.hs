@@ -9,7 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.OverviewPages (makeOverviewPages) where
+module Documentation.OverviewPages 
+   ( makeOverviewExercises, makeOverviewServices
+   ) where
 
 import Documentation.DefaultPage
 import Data.Char
@@ -20,14 +22,17 @@ import Common.Exercise
 import Service.ServiceList
 import Text.HTML
 
-makeOverviewPages :: String -> String -> [Some Exercise] -> IO ()
-makeOverviewPages version dir list = do
+makeOverviewExercises :: String -> String -> [Some Exercise] -> IO ()
+makeOverviewExercises version dir list = do
    generatePage dir exerciseOverviewPageFile $ 
       defaultPage version "Exercises" 0 $ exerciseOverviewPage False list
    generatePage dir exerciseOverviewAllPageFile $ 
       defaultPage version "All exercises" 0 $ exerciseOverviewPage True list
+
+makeOverviewServices :: String -> String -> [Service a] -> IO ()
+makeOverviewServices version dir list =
    generatePage dir serviceOverviewPageFile $
-      defaultPage version "Services" 0 serviceOverviewPage
+      defaultPage version "Services" 0 (serviceOverviewPage list)
 
 exerciseOverviewPage :: Bool -> [Some Exercise] -> HTMLBuilder
 exerciseOverviewPage showAll list = do
@@ -69,11 +74,11 @@ exerciseOverviewPage showAll list = do
       g xs = (f (head xs), xs)
       p (Some ex) = showAll || isPublic ex
 
-serviceOverviewPage :: HTMLBuilder
-serviceOverviewPage = do
+serviceOverviewPage :: [Service a] -> HTMLBuilder
+serviceOverviewPage list = do
    h1 "Services"
-   let list = sortBy (\x y -> serviceName x `compare` serviceName y) serviceList
-   ul $ flip map list $ \s -> do
+   let sorted = sortBy (\x y -> serviceName x `compare` serviceName y) list
+   ul $ flip map sorted $ \s -> do
       link (servicePageFile s) (ttText (serviceName s))
       when (serviceDeprecated s) $
          space >> text "(deprecated)"

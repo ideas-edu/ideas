@@ -27,7 +27,6 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Service.ExercisePackage
-import Service.ExerciseList
 import Service.ProblemDecomposition
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
@@ -41,12 +40,12 @@ import Text.XML
 import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp
 
-processXML :: Monad m => Maybe String -> String -> m (Request, String, String)
-processXML version input = 
+processXML :: Monad m => [Some ExercisePackage] -> Maybe String -> String -> m (Request, String, String)
+processXML list version input = 
    either fail return $ do
       xml  <- parseXML input
       req  <- xmlRequest xml
-      resp <- xmlRequestHandler xml
+      resp <- xmlRequestHandler list req xml
       let out = showXML (maybe id addVersion version resp)
       return (req, out, "application/xml") 
 
@@ -54,6 +53,12 @@ addVersion :: String -> XML -> XML
 addVersion s xml = 
    let info = [ "version" := s ]
    in xml { attributes = attributes xml ++ info }
+
+xmlRequestHandler :: Monad m => [Some ExercisePackage] -> Request -> XML -> m XML
+xmlRequestHandler list request xml =
+   case xmlReply list request xml of
+      Left err     -> return (resultError err)
+      Right result -> return result
 
 xmlRequest :: XML -> Either String Request
 xmlRequest xml = do   
@@ -72,19 +77,26 @@ xmlRequest xml = do
       , encoding   = enc
       }
 
-xmlReply :: Request -> XML -> Either String XML
-xmlReply request xml 
+xmlReply :: [Some ExercisePackage] -> Request -> XML -> Either String XML
+xmlReply list request xml 
    | service request == "mathdox" = do
         code <- maybe (fail "unknown exercise code") return (exerciseID request)
-        Some pkg <- getPackage packages code
+        Some pkg <- getPackage list code
         (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
 
-xmlReply request xml = do
+   | service request == "exerciselist" = do 
+        let pkg  = Some (package emptyExercise)
+            srv  = exerciselistS list
+        case stringFormatConverter pkg of
+           Some conv -> do
+              res <- evalService conv srv xml 
+              return (resultOk res)
+
+xmlReply list request xml = do
    pkg <- case exerciseID request of 
-             Just i -> getPackage packages i
-             _ | service request == "exerciselist" -> return (Some (package emptyExercise))
-               | otherwise -> fail "unknown exercise code"
+             Just i  -> getPackage list i
+             Nothing -> fail "unknown exercise code"      
    case encoding request of
       Just StringEncoding -> do 
          case stringFormatConverter pkg of
@@ -99,29 +111,21 @@ xmlReply request xml = do
                res <- evalService conv srv xml 
                return (resultOk res)
 
-xmlRequestHandler :: Monad m => XML -> m XML
-xmlRequestHandler xml =
-   case xmlRequest xml of 
-      Left err -> return (resultError err)
-      Right request ->  
-         case xmlReply request xml of
-            Left err     -> return (resultError err)
-            Right result -> return result
-
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =
    case liftM (break (== '.')) (findAttribute "exerciseid" xml) of
       Just (as, _:bs) -> return (makeCode as bs)
       Just (as, _)    -> maybe (fail "invalid code") return (readCode as)
       -- being backwards compatible with early MathDox
-      Nothing ->
-         case fmap getData (findChild "strategy" xml) of
-            Just name -> 
-               let s ~= t = f s == f t 
-                   f = map toLower . filter isAlphaNum
-               in case [ exerciseCode ex | Some ex <- exercises, name ~= description ex ] of
-                     [code] -> return code
-                     _ -> fail $ "Unknown strategy name " ++ show name
+      Nothing -> do
+         let getName = map toLower . filter isAlphaNum . getData
+             linalg  = return . makeCode "linalg"
+         case fmap getName (findChild "strategy" xml) of
+            Just name
+               | name == "gaussianelimination"         -> linalg "gaussianelim"
+               | name == "gramschmidt"                 -> linalg "gramschmidt"
+               | name == "solvelinearsystem"           -> linalg "linsystem"
+               | name == "solvelinearsystemwithmatrix" -> linalg "systemwithmatrix"
             _ -> fail "no exerciseid attribute, nor a known strategy element" 
 
 resultOk :: XMLBuilder -> XML

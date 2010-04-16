@@ -12,6 +12,7 @@
 -----------------------------------------------------------------------------
 module Service.TypedExample (typedExample) where
 
+import Common.Utils (Some(..))
 import Data.Char
 import Service.ModeXML
 import Service.ExercisePackage
@@ -42,7 +43,7 @@ typedExample pkg service args = do
                Right xml -> resultOk xml
    -- Check request/reply pair
    xmlTest <- return $
-      case processXML Nothing (show xmlRequest) of
+      case processXML [Some pkg] Nothing (show xmlRequest) of
          Left s -> False `const` (s::String)
          Right (_, textReply, _) ->
             let p = filter (not . isSpace)

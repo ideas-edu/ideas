@@ -19,7 +19,7 @@ import Data.List
 import Data.Maybe
 import ExerciseInfoPanel
 import Common.Exercise
-import Service.ExerciseList
+import Main.ExerciseList
 import Service.ExercisePackage
 
 packageList :: [Some ExercisePackage]

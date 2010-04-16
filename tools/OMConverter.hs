@@ -14,7 +14,9 @@ module Main (main) where
 import Graphics.UI.WX
 import Domain.Math.Expr
 import Data.List
+import Data.Maybe
 import Main.Options (versionText)
+import Service.ExercisePackage (omobjToTerm, termToOMOBJ)
 import Text.OpenMath.Object
 import Text.XML (parseXML)
 
@@ -70,10 +72,11 @@ fromOpenMath :: String -> Either String Expr
 fromOpenMath txt = do 
    xml   <- parseXML txt
    omobj <- xml2omobj xml
-   return (fromOMOBJ omobj)
+   term  <- omobjToTerm omobj
+   return (toExpr term)
 
 fromText :: String -> Either String Expr
-fromText = either (Left . show) Right . parseExpr 
+fromText = either (Left . show) Right . parseExpr
 
 ----------------------------------------------------------
 -- To
@@ -85,7 +88,8 @@ toChoice n
    | otherwise = toOpenMath -- default
 
 toOpenMath :: Expr -> String
-toOpenMath = show . omobj2xml . toOMOBJ
+toOpenMath expr = 
+   maybe (show expr) (show . omobj2xml . termToOMOBJ) (fromExpr expr)
 
 toText :: Expr -> String
 toText = show

@@ -21,14 +21,13 @@ import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.ExercisePackage
-import Service.ExerciseList
 import Service.Request
 import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
 import Service.Submit
 import Service.ServiceList hiding (Service)
-import qualified Service.ExercisePackage as List
+import Service.ExercisePackage 
 import Control.Monad
 import Data.Maybe
 import Data.Char
@@ -43,11 +42,11 @@ extractCode = fromMaybe noCode . readCode . f
    f (Array (hd:_)) = f hd
    f _ = ""
 
-processJSON :: Maybe String -> String -> IO (Request, String, String)
-processJSON version input = do
+processJSON :: [Some ExercisePackage] -> Maybe String -> String -> IO (Request, String, String)
+processJSON list version input = do
    json <- parseJSON input
    req  <- jsonRequest json
-   resp <- jsonRPC input myHandler
+   resp <- jsonRPC input (myHandler list)
    let out = show (maybe id addVersion version (toJSON resp))
    return (req, out, "application/json")
 
@@ -81,8 +80,12 @@ jsonRequest json = do
       , encoding   = enc
       }
 
-myHandler :: JSON_RPC_Handler
-myHandler fun arg 
+myHandler :: [Some ExercisePackage] -> JSON_RPC_Handler
+myHandler list fun arg
+   | fun == "exerciselist" = do
+        let service = exerciselistS list 
+        case jsonConverter noCode of
+           Some conv -> either fail return (evalService conv service arg)
    | code == noCode && fun /= "exerciselist" =
         fail "invalid exercise code"
    | otherwise = 
@@ -93,10 +96,9 @@ myHandler fun arg
  where 
    code = extractCode arg
 
-jsonConverter :: ExerciseCode -> Some (Evaluator (Either String) JSON JSON)
-jsonConverter code =
-   let f a = Some (Evaluator (jsonEncoder (List.exercise a)) (jsonDecoder a))
-   in case List.getPackage packages code of
+   jsonConverter code = do
+      let f a = Some (Evaluator (jsonEncoder (exercise a)) (jsonDecoder a))
+      case getPackage list code of
          Just (Some pkg) -> f pkg
          Nothing         -> f (package emptyExercise)
 

@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.ExerciseList (packages, exercises) where
+module Main.ExerciseList (packages, exercises) where
 
 import Common.Utils (Some(..), fromShowString)
 import Common.Exercise

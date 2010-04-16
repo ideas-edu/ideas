@@ -30,12 +30,14 @@ makeDocumentation :: String -> [Some ExercisePackage] -> Documentation -> IO ()
 makeDocumentation version list doc =
    case doc of
       Pages dir -> do 
-         makeOverviewPages version dir exList
+         makeOverviewExercises version dir exList
+         makeOverviewServices version dir srvList
          forM_ list $ \(Some pkg) -> makeExercisePage version dir pkg
-         mapM_ (makeServicePage version dir) serviceList
+         mapM_ (makeServicePage version dir) srvList
       SelfCheck dir -> 
-         performSelfCheck dir exList
+         performSelfCheck dir list
       LatexRules dir -> 
          forM_ exList $ \(Some ex) -> makeLatexRules dir ex
  where
-   exList = map (\(Some pkg) -> Some (exercise pkg)) list
+   exList  = map (\(Some pkg) -> Some (exercise pkg)) list
+   srvList = exerciselistS list : serviceList

@@ -14,6 +14,7 @@ module Documentation.SelfCheck (performSelfCheck) where
 import System.Directory
 import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
+import Service.ExercisePackage
 import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
 import Service.Request
@@ -32,7 +33,7 @@ import qualified Text.JSON as JSON
 import Data.List
 import System.Time
 
-performSelfCheck :: String -> [Some Exercise] -> IO ()
+performSelfCheck :: String -> [Some ExercisePackage] -> IO ()
 performSelfCheck dir list = totalDiff $ do
    timeDiff $ do
       putStrLn "* 1. Domain checks"
@@ -46,17 +47,17 @@ performSelfCheck dir list = totalDiff $ do
       JSON.testMe
 
    putStrLn "* 2. Exercise checks"
-   forM_ list $ \(Some ex) ->
-      timeDiff $ checkExercise ex
+   forM_ list $ \(Some pkg) ->
+      timeDiff $ checkExercise (exercise pkg)
 
    timeDiff $ do
       putStrLn "* 3. Unit tests"
-      n <- unitTests dir
+      n <- unitTests list dir
       putStrLn $ "** Number of unit tests: " ++ show n
    
 -- Returns the number of tests performed
-unitTests :: String -> IO Int
-unitTests = visit 0
+unitTests :: [Some ExercisePackage] -> String -> IO Int
+unitTests list = visit 0
  where
    visit i path = do
       valid <- doesDirectoryExist path
@@ -68,22 +69,22 @@ unitTests = visit 0
          putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
          -- perform tests
          forM json $ \x -> 
-            performUnitTest JSON (path ++ "/" ++ x)
+            performUnitTest list JSON (path ++ "/" ++ x)
          forM xml $ \x -> 
-            performUnitTest XML (path ++ "/" ++ x)
+            performUnitTest list XML (path ++ "/" ++ x)
          -- recursively visit subdirectories
          is <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
                   visit (i+1) (path ++ "/" ++ x)
          return (length (xml ++ json) + sum is)
 
-performUnitTest :: DataFormat -> FilePath -> IO ()
-performUnitTest format path = do
+performUnitTest :: [Some ExercisePackage] -> DataFormat -> FilePath -> IO ()
+performUnitTest list format path = do
    useFixedStdGen -- fix the random number generator
    txt <- readFile path
    exp <- readFile expPath
    out <- case format of 
-             JSON -> liftM snd3 (ModeJSON.processJSON (Just "self-check") txt)
-             XML  -> liftM snd3 (ModeXML.processXML   (Just "self-check") txt)
+             JSON -> liftM snd3 (ModeJSON.processJSON list (Just "self-check") txt)
+             XML  -> liftM snd3 (ModeXML.processXML   list (Just "self-check") txt)
    reportTest (stripDirectoryPart path) (out ~= exp)
  `catch` \_ -> 
     putStrLn $ "Error: testing " ++ path

@@ -19,10 +19,10 @@ import Control.Monad.Trans
 import Data.IORef
 import Data.Time
 import Documentation.Make
+import Main.ExerciseList
 import Main.LoggingDatabase
 import Main.Options
 import Network.CGI
-import Service.ExerciseList
 import Service.ModeJSON (processJSON)
 import Service.ModeXML  (processXML)
 import Service.Request
@@ -69,6 +69,6 @@ main = do
 process :: String -> IO (Request, String, String)
 process input =
    case discoverDataFormat input of
-      Just XML  -> processXML  (Just shortVersion) input
-      Just JSON -> processJSON (Just shortVersion) input
+      Just XML  -> processXML  packages (Just shortVersion) input
+      Just JSON -> processJSON packages (Just shortVersion) input
       _         -> fail "Invalid input"

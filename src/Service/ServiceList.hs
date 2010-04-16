@@ -9,22 +9,25 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.ServiceList (serviceList, Service(..), getService, evalService) where
+module Service.ServiceList 
+   ( serviceList, exerciselistS
+   , Service(..), getService, evalService
+   ) where
 
-import qualified Common.Exercise as E
+import Common.Exercise hiding (Exercise)
 import Common.Strategy (toStrategy)
 import Common.Transformation
 import Common.Utils (Some(..))
-import Common.Exercise hiding (Exercise)
-import Service.ExerciseList (exercises)
-import qualified Service.TypedAbstractService as S
-import qualified Service.Submit as S
-import qualified Service.Diagnose as S
-import Service.FeedbackText hiding (ExerciseText)
-import Service.Types 
-import Service.RulesInfo
-import Service.ProblemDecomposition
 import Data.List (sortBy)
+import Service.FeedbackText hiding (ExerciseText)
+import Service.ProblemDecomposition
+import Service.ExercisePackage
+import Service.RulesInfo
+import Service.Types 
+import qualified Common.Exercise as E
+import qualified Service.Diagnose as S
+import qualified Service.Submit as S
+import qualified Service.TypedAbstractService as S
 
 data Service a = Service 
    { serviceName        :: String
@@ -44,7 +47,7 @@ serviceList =
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
    , problemdecompositionS
-   , exerciselistS, rulelistS, rulesinfoS, strategyinfoS
+   , rulelistS, rulesinfoS, strategyinfoS
    ]
 
 makeService :: String -> String -> TypedValue a -> Service a
@@ -192,11 +195,11 @@ problemdecompositionS = makeService "problemdecomposition"
 ------------------------------------------------------
 -- Reflective services
    
-exerciselistS :: Service a
-exerciselistS = makeService "exerciselist" 
+exerciselistS :: [Some ExercisePackage] -> Service a
+exerciselistS list = makeService "exerciselist" 
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises ::: List (tuple4 (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
+   allExercises list ::: List (tuple4 (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
 
 rulelistS :: Service a
 rulelistS = makeService "rulelist" 
@@ -217,13 +220,14 @@ strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $ 
    (toStrategy . strategy) ::: Exercise :-> Strategy 
    
-allExercises :: [(String, String, String, String)]
-allExercises  = map make $ sortBy cmp exercises
+allExercises :: [Some ExercisePackage] -> [(String, String, String, String)]
+allExercises = map make . sortBy cmp
  where
    cmp e1 e2  = f e1 `compare` f e2
-   f (Some ex) = exerciseCode ex
-   make (Some ex) = 
-      let code = exerciseCode ex 
+   f (Some pkg) = exerciseCode (exercise pkg)
+   make (Some pkg) = 
+      let ex   = exercise pkg
+          code = exerciseCode ex 
       in (domain code, identifier code, description ex, show (status ex))
 
 allRules :: E.Exercise a -> [(String, Bool, Bool)]

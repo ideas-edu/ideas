@@ -269,10 +269,10 @@ decodeEnvironment b xml =
       case findChild "OMOBJ" item of
          -- OpenMath object found inside item tag
          Just this | b -> do
-            case xml2omobj this of
+            case xml2omobj this >>= omobjToTerm of
                Left err -> fail err
-               Right omobj -> 
-                  return (storeEnv name omobj env)
+               Right term -> 
+                  return (storeEnv name term env)
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
@@ -310,8 +310,8 @@ encodeEnvironment b loc env0
            element "item" $ do 
               "name"  .=. k
               case lookupEnv k env of 
-                 Just omobj | b -> builder  (omobj2xml omobj)
-                 _              -> "value" .=. fromMaybe "" (lookupEnv k env)
+                 Just term | b -> builder  (omobj2xml (termToOMOBJ term))
+                 _             -> "value" .=. fromMaybe "" (lookupEnv k env)
  where
    env | null loc  = env0
        | otherwise = storeEnv "location" loc env0

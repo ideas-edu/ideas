@@ -19,15 +19,14 @@ import Common.Context
 import Common.Derivation
 import Common.Exercise hiding (getRule)
 import Common.Rewriting
-import Common.Rewriting.Term
 import Common.Strategy (derivationTree)
 import Common.Transformation
 import Data.Char
-import Domain.Math.Expr.Symbolic
 import Control.Monad
 import Text.OpenMath.Object
 import Text.OpenMath.FMP
 import Text.XML hiding (name)
+import Service.ExercisePackage (termToOMOBJ)
 import qualified Data.Map as M
 
 data RulesInfo a = I
@@ -78,18 +77,7 @@ rewriteRuleToFMP sound r
    | otherwise = buggyFMP a b 
  where
    a :~> b = fmap termToOMOBJ (rulePair r 0)
-   
-termToOMOBJ :: Term -> OMOBJ
-termToOMOBJ term =
-   case term of
-      Var s   -> OMV s
-      Con s   -> OMS (fromSymbol s)
-      Meta i  -> OMV ("$" ++ show i)
-      Num n   -> OMI n
-      Float d -> OMF d
-      App _ _ -> let (f, xs) = getSpine term
-                 in OMA (map termToOMOBJ (f:xs))
-                 
+              
 collectExamples :: Exercise a -> M.Map String [(a, a)]
 collectExamples ex = foldr add M.empty (examples ex)
  where

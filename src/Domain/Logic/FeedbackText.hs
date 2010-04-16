@@ -20,7 +20,7 @@ import Common.Transformation
 import Domain.Logic.Formula
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
-import qualified Service.FeedbackText as T
+import qualified Service.FeedbackText as T (ExerciseText(..))
 
 logicText :: T.ExerciseText SLogic
 logicText = T.ExerciseText

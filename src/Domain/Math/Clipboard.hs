@@ -23,36 +23,32 @@ module Domain.Math.Clipboard
 import Common.Context
 import Control.Monad
 import Common.Rewriting
+import Common.Rewriting.Term (Term)
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
-import Text.OpenMath.Object
 import qualified Data.Map as M
 
 ---------------------------------------------------------------------
 -- Expression variables (internal)
 
-newtype ExprVar a = ExprVar (Var OMOBJ)
+newtype ExprVar a = ExprVar (Var Term)
 
 exprVar :: (Show a, IsTerm a) => String -> a -> ExprVar a
-exprVar s a = 
-   let omobj = toOMOBJ (toExpr a)
-       showF = show . fromOMOBJ
-       readF = either (fail . show) (return . toOMOBJ) . parseExpr
-   in ExprVar (makeVar showF readF s omobj)
+exprVar s a = ExprVar (makeVar showF readF s (toTerm a))
+ where
+   showF = show . toExpr -- pretty-print as an Expr
+   readF = either (fail . show) (return . toTerm) . parseExpr
 
 readExprVar :: IsTerm a => ExprVar a -> ContextMonad a
 readExprVar (ExprVar var) = do  
-   omobj <- readVar var
-   maybeCM (fromExpr (fromOMOBJ omobj))
-
---writeExprVar :: IsExpr a => ExprVar a -> a -> ContextMonad ()
---writeExprVar v = modifyExprVar v . const
+   term <- readVar var
+   maybeCM (fromTerm term)
 
 modifyExprVar :: IsTerm a => ExprVar a -> (a -> a) -> ContextMonad ()
-modifyExprVar (ExprVar var) f = 
+modifyExprVar (ExprVar var) f =
    let safe f a = fromMaybe a (f a)
-       g = fmap (toOMOBJ . toExpr . f) . fromExpr . fromOMOBJ
+       g = fmap (toTerm . f) . fromTerm
    in modifyVar var (safe g)
 
 ---------------------------------------------------------------------

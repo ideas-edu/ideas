@@ -254,6 +254,10 @@ instance IsTerm Expr where
             return (function s ys)
          _ -> fail "fromTerm"
 
+instance IsTerm a => IsTerm [a] where
+   toTerm = function listSymbol . map toTerm
+   fromTerm a = isSymbol listSymbol a >>= mapM fromTerm
+
 toExpr :: IsTerm a => a -> Expr
 toExpr a =
    case fromTerm (toTerm a) of

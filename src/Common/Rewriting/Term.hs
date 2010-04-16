@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -18,6 +18,7 @@ import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Control.Monad
 import Common.Rewriting.MetaVar
+import Data.Typeable
 
 -----------------------------------------------------------
 -- * Data type for terms
@@ -31,7 +32,7 @@ data Term = Var   String
           | Num   Integer 
           | Float Double
           | Meta  Int
- deriving (Show, Eq, Ord)
+ deriving (Show, Eq, Ord, Typeable)
 
 instance Show Symbol where
    show (S ma b) = maybe b (\a -> a++ "." ++ b) ma

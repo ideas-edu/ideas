@@ -15,18 +15,21 @@ module Service.ExercisePackage
      ExercisePackage, exercise, withOpenMath
    , toOpenMath, fromOpenMath, getExerciseText
      -- Constructors
-   , package, exprPackage, somePackage, someExprPackage
+   , package, termPackage, somePackage, someTermPackage
      -- Search functions
-   , getPackage, getExercise
+   , getPackage, getExercise, termToOMOBJ, omobjToTerm
    ) where
 
 import Common.Utils (Some(..))
 import Common.Exercise
 import Control.Monad
-import Common.Rewriting
-import Domain.Math.Expr (toExpr, fromExpr, toOMOBJ, fromOMOBJ)
+import Common.Rewriting.Term
+import Data.Char
+import Data.List
 import Service.FeedbackText (ExerciseText)
 import Text.OpenMath.Object
+import Text.OpenMath.Symbol
+import Text.OpenMath.Dictionary.Fns1
 
 -----------------------------------------------------------------------------
 -- Package data type (and constructor functions)
@@ -48,19 +51,56 @@ package ex = P
    , getExerciseText = Nothing
    }
 
-exprPackage :: IsTerm a => Exercise a -> ExercisePackage a
-exprPackage ex = (package ex)
+termPackage :: IsTerm a => Exercise a -> ExercisePackage a
+termPackage ex = (package ex)
    { withOpenMath = True
-   , toOpenMath   = toOMOBJ . toExpr
-   , fromOpenMath = fromExpr . fromOMOBJ
+   , toOpenMath   = termToOMOBJ . toTerm
+   , fromOpenMath = (>>= fromTerm) . omobjToTerm
    }
 
 somePackage :: Exercise a -> Some ExercisePackage
 somePackage = Some . package
 
-someExprPackage :: IsTerm a => Exercise a -> Some ExercisePackage
-someExprPackage = Some . exprPackage
+someTermPackage :: IsTerm a => Exercise a -> Some ExercisePackage
+someTermPackage = Some . termPackage
 
+-----------------------------------------------------------------------------
+-- Utility functions for conversion to/from OpenMath
+
+termToOMOBJ :: Term -> OMOBJ
+termToOMOBJ term =
+   case term of
+      Var s   -> OMV s
+      Con s   -> case s of
+                    S (Just a) b -> OMS (makeSymbol a b)
+                    S Nothing  b -> OMS (extraSymbol b)
+      Meta i  -> OMV ("$" ++ show i)
+      Num n   -> OMI n
+      Float d -> OMF d
+      App _ _ -> let (f, xs) = getSpine term
+                 in make (map termToOMOBJ (f:xs))
+ where
+   make [OMS s, OMV x, body] | s == lambdaSymbol = 
+      OMBIND (OMS s) [x] body
+   make xs = OMA xs
+
+omobjToTerm :: MonadPlus m => OMOBJ -> m Term
+omobjToTerm omobj =
+   case omobj of 
+      OMV x -> case isMeta x of
+                  Just n  -> return (Meta n)
+                  Nothing -> return (Var x)
+      OMS s -> return (Con (S (dictionary s) (symbolName s)))
+      OMI n -> return (Num n)
+      OMF a -> return (Float a)
+      OMA (x:xs) -> liftM2 makeTerm (omobjToTerm x) (mapM omobjToTerm xs)
+      OMBIND binder xs body ->
+         omobjToTerm (OMA (binder:map OMV xs++[body]))
+      _ -> fail "Invalid OpenMath object"
+ where
+   isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
+   isMeta _        = Nothing
+      
 -----------------------------------------------------------------------------
 -- Utility functions for finding an exercise
 

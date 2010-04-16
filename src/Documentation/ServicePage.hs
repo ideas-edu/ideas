@@ -91,7 +91,7 @@ examples = concat
    logic = make "Logic" (package dnfExercise)
    lineq fs args = concat
       [ make msg (mkPkg linearExercise) fs args 
-      | (enc, mkPkg) <- [("string", package), ("openmath", exprPackage)] 
+      | (enc, mkPkg) <- [("string", package), ("openmath", termPackage)] 
       , let msg = "Linear equation (" ++ enc ++ " encoding)"
       ]
       

@@ -13,6 +13,7 @@ module Service.ExerciseList (packages, exercises) where
 
 import Common.Utils (Some(..), fromShowString)
 import Common.Exercise
+import Common.Rewriting
 import Domain.Math.Expr
 import Service.ExercisePackage
 import qualified Domain.LinearAlgebra as LA
@@ -31,43 +32,43 @@ packages =
    [ -- logic and relation-algebra
      Some (package Logic.dnfExercise)
         { withOpenMath    = True
-        , toOpenMath      = toOMOBJ . toExpr . fmap (Var . fromShowString)
-        , fromOpenMath    = fromExpr . fromOMOBJ
+        , toOpenMath      = termToOMOBJ . toTerm . fmap (Var . fromShowString)
+        , fromOpenMath    = (>>= fromTerm) . omobjToTerm
         , getExerciseText = Just Logic.logicText
         }
    , Some (package Logic.dnfUnicodeExercise)
         { withOpenMath    = True
-        , toOpenMath      = toOMOBJ . toExpr . fmap (Var . fromShowString)
-        , fromOpenMath    = fromExpr . fromOMOBJ
+        , toOpenMath      = termToOMOBJ . toTerm . fmap (Var . fromShowString)
+        , fromOpenMath    = (>>= fromTerm) . omobjToTerm
         , getExerciseText = Just Logic.logicText
         }
    , somePackage RA.cnfExercise
      -- basic math
-   , someExprPackage Math.naturalExercise
-   , someExprPackage Math.integerExercise
-   , someExprPackage Math.rationalExercise
-   , someExprPackage Math.fractionExercise
-   , someExprPackage Math.coverUpExercise
-   , someExprPackage Math.linearExercise
-   , someExprPackage Math.linearMixedExercise
-   , someExprPackage Math.quadraticExercise
-   , someExprPackage Math.higherDegreeExercise
-   , someExprPackage Math.findFactorsExercise
-   , someExprPackage Math.ineqLinearExercise
-   , someExprPackage Math.ineqQuadraticExercise
-   , someExprPackage Math.ineqHigherDegreeExercise
-   , someExprPackage Math.quadraticNoABCExercise
-   , someExprPackage Math.quadraticWithApproximation
-   , someExprPackage Math.derivativeExercise
-   , someExprPackage Math.simplifyPowerExercise
-   , someExprPackage Math.powerOfExercise     
-   , someExprPackage Math.nonNegExpExercise
-   , someExprPackage Math.calcPowerExercise
+   , someTermPackage Math.naturalExercise
+   , someTermPackage Math.integerExercise
+   , someTermPackage Math.rationalExercise
+   , someTermPackage Math.fractionExercise
+   , someTermPackage Math.coverUpExercise
+   , someTermPackage Math.linearExercise
+   , someTermPackage Math.linearMixedExercise
+   , someTermPackage Math.quadraticExercise
+   , someTermPackage Math.higherDegreeExercise
+   , someTermPackage Math.findFactorsExercise
+   , someTermPackage Math.ineqLinearExercise
+   , someTermPackage Math.ineqQuadraticExercise
+   , someTermPackage Math.ineqHigherDegreeExercise
+   , someTermPackage Math.quadraticNoABCExercise
+   , someTermPackage Math.quadraticWithApproximation
+   , someTermPackage Math.derivativeExercise
+   , someTermPackage Math.simplifyPowerExercise
+   , someTermPackage Math.powerOfExercise     
+   , someTermPackage Math.nonNegExpExercise
+   , someTermPackage Math.calcPowerExercise
      -- linear algebra
-   , someExprPackage LA.gramSchmidtExercise
-   , someExprPackage LA.linearSystemExercise
-   , someExprPackage LA.gaussianElimExercise
-   , someExprPackage LA.systemWithMatrixExercise
+   , someTermPackage LA.gramSchmidtExercise
+   , someTermPackage LA.linearSystemExercise
+   , someTermPackage LA.gaussianElimExercise
+   , someTermPackage LA.systemWithMatrixExercise
      -- regular expressions
    , somePackage RE.regexpExercise
    ]

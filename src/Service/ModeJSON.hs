@@ -23,7 +23,6 @@ import Text.JSON
 import Service.ExercisePackage
 import Service.ExerciseList
 import Service.Request
-import Service.Revision (version, revision)
 import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
 import qualified Service.Types as Tp
 import qualified Service.TypedAbstractService as TAS
@@ -44,20 +43,21 @@ extractCode = fromMaybe noCode . readCode . f
    f (Array (hd:_)) = f hd
    f _ = ""
 
-processJSON :: String -> IO (Request, String, String)
-processJSON input = do
+processJSON :: Maybe String -> String -> IO (Request, String, String)
+processJSON version input = do
    json <- parseJSON input
    req  <- jsonRequest json
    resp <- jsonRPC input myHandler
-   return (req, show (addVersion (toJSON resp)), "application/json")
+   let out = show (maybe id addVersion version (toJSON resp))
+   return (req, out, "application/json")
 
-addVersion :: JSON -> JSON
-addVersion json = 
+addVersion :: String -> JSON -> JSON
+addVersion version json = 
    case json of
       Object xs -> Object (xs ++ [info])
       _         -> json
  where
-   info = ("version", String $ version ++ " (" ++ show revision ++ ")")
+   info = ("version", String version)
 
 jsonRequest :: Monad m => JSON -> m Request
 jsonRequest json = do

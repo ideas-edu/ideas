@@ -23,7 +23,6 @@ import Common.Navigator
 import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
-import Data.List
 import Data.Maybe
 import Domain.Math.Examples.DWO3
 import Domain.Math.Expr

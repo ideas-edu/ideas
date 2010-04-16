@@ -286,6 +286,5 @@ replyErrorToXML r = makeReply (repErr_Kind r) (text $ repErr_Message r)
    
 makeReply :: String -> XMLBuilder -> XML
 makeReply kind body = makeXML "reply" $ do
-   "result"  .=. kind
-   "version" .=. "deprecated" -- fix me
+   "result" .=. kind
    body

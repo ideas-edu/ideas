@@ -9,10 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.OverviewPages 
-   ( makeExerciseOverviewPages
-   , makeServiceOverviewPage 
-   ) where
+module Documentation.OverviewPages (makeOverviewPages) where
 
 import Documentation.DefaultPage
 import Data.Char
@@ -20,21 +17,20 @@ import Data.List
 import Control.Monad
 import Common.Utils (Some(..))
 import Common.Exercise
-import Service.ExerciseList
 import Service.ServiceList
 import Text.HTML
 
-makeExerciseOverviewPages :: String -> IO ()
-makeExerciseOverviewPages dir = do
-   generatePage dir exerciseOverviewPageFile    (exerciseOverviewPage False)
-   generatePage dir exerciseOverviewAllPageFile (exerciseOverviewPage True)
+makeOverviewPages :: String -> String -> [Some Exercise] -> IO ()
+makeOverviewPages version dir list = do
+   generatePage dir exerciseOverviewPageFile $ 
+      defaultPage version "Exercises" 0 $ exerciseOverviewPage False list
+   generatePage dir exerciseOverviewAllPageFile $ 
+      defaultPage version "All exercises" 0 $ exerciseOverviewPage True list
+   generatePage dir serviceOverviewPageFile $
+      defaultPage version "Services" 0 serviceOverviewPage
 
-makeServiceOverviewPage :: String -> IO ()
-makeServiceOverviewPage dir = 
-   generatePage dir serviceOverviewPageFile serviceOverviewPage
-
-exerciseOverviewPage :: Bool -> HTML
-exerciseOverviewPage showAll = defaultPage title 0 $ do
+exerciseOverviewPage :: Bool -> [Some Exercise] -> HTMLBuilder
+exerciseOverviewPage showAll list = do
    h1 title
    
    unless showAll $ para $ do
@@ -44,7 +40,7 @@ exerciseOverviewPage showAll = defaultPage title 0 $ do
          text "all exercises"
       text ", including the ones under development"
       
-   forM_ (zip [1..] (groupedList showAll)) $ \(i, (dom, xs)) -> do
+   forM_ (zip [1..] groupedList) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
       noBorderTable (map makeRow xs) 
  where
@@ -63,19 +59,18 @@ exerciseOverviewPage showAll = defaultPage title 0 $ do
       code = exerciseCode ex
       f st = italic $ text ("(" ++ map toLower (show st) ++ ")")
 
-groupedList :: Bool -> [(String, [Some Exercise])]
-groupedList showAll = process exercises
- where
-   process = map g . groupBy eq . sortBy cmp . filter p
- 
-   cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
-   eq a b      = f a == f b
-   f (Some ex) = domain (exerciseCode ex)
-   g xs = (f (head xs), xs)
-   p (Some ex) = showAll || isPublic ex
+   groupedList = process list
+    where
+      process = map g . groupBy eq . sortBy cmp . filter p
+    
+      cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
+      eq a b      = f a == f b
+      f (Some ex) = domain (exerciseCode ex)
+      g xs = (f (head xs), xs)
+      p (Some ex) = showAll || isPublic ex
 
-serviceOverviewPage :: HTML
-serviceOverviewPage = defaultPage "Services" 0 $ do
+serviceOverviewPage :: HTMLBuilder
+serviceOverviewPage = do
    h1 "Services"
    let list = sortBy (\x y -> serviceName x `compare` serviceName y) serviceList
    ul $ flip map list $ \s -> do

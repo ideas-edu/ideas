@@ -16,6 +16,7 @@ import Data.Char
 import Data.List
 import Documentation.DefaultPage
 import System.Environment
+import Service.Revision
 import Text.HTML
 import qualified Text.XML as XML
 
@@ -27,9 +28,12 @@ main = do
          input <- readFile fileIn
          generatePage "docs" (up 1 ++ fileOut) (testsPage input)
       _ -> fail "Invalid invocation"
-   
+
+fullVersion :: String
+fullVersion = "version " ++ version ++ "  (revision " ++ show revision ++ ", " ++ lastChanged ++ ")"
+
 testsPage :: String -> HTML
-testsPage input = defaultPage "Tests" 0 $ do 
+testsPage input = defaultPage fullVersion "Tests" 0 $ do 
    h1 "Tests"
    let (hs, bs) = unzip (map format (lines input))
    bold (text "Failures: ") 

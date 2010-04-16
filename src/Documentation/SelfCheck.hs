@@ -16,7 +16,6 @@ import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
-import Service.ExerciseList
 import Service.Request
 
 import qualified Domain.LinearAlgebra.Checks as LA
@@ -33,8 +32,8 @@ import qualified Text.JSON as JSON
 import Data.List
 import System.Time
 
-performSelfCheck :: String -> IO ()
-performSelfCheck dir = totalDiff $ do
+performSelfCheck :: String -> [Some Exercise] -> IO ()
+performSelfCheck dir list = totalDiff $ do
    timeDiff $ do
       putStrLn "* 1. Domain checks"
       Grammar.checks
@@ -47,7 +46,7 @@ performSelfCheck dir = totalDiff $ do
       JSON.testMe
 
    putStrLn "* 2. Exercise checks"
-   forM_ exercises $ \(Some ex) ->
+   forM_ list $ \(Some ex) ->
       timeDiff $ checkExercise ex
 
    timeDiff $ do
@@ -83,8 +82,8 @@ performUnitTest format path = do
    txt <- readFile path
    exp <- readFile expPath
    out <- case format of 
-             JSON -> liftM snd3 (ModeJSON.processJSON txt)
-             XML  -> liftM snd3 (ModeXML.processXML   txt)
+             JSON -> liftM snd3 (ModeJSON.processJSON (Just "self-check") txt)
+             XML  -> liftM snd3 (ModeXML.processXML   (Just "self-check") txt)
    reportTest (stripDirectoryPart path) (out ~= exp)
  `catch` \_ -> 
     putStrLn $ "Error: testing " ++ path

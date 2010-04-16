@@ -42,7 +42,7 @@ typedExample pkg service args = do
                Right xml -> resultOk xml
    -- Check request/reply pair
    xmlTest <- return $
-      case processXML (show xmlRequest) of
+      case processXML Nothing (show xmlRequest) of
          Left s -> False `const` (s::String)
          Right (_, textReply, _) ->
             let p = filter (not . isSpace)

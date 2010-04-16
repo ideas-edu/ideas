@@ -13,9 +13,10 @@ module Documentation.Make
    ( Documentation(..), makeDocumentation
    ) where
 
+import Control.Monad
 import Common.Utils (Some(..))
-import Service.ExerciseList
 import Service.ServiceList
+import Service.ExercisePackage
 import Documentation.SelfCheck
 import Documentation.LatexRules
 import Documentation.ExercisePage
@@ -25,16 +26,16 @@ import Documentation.OverviewPages
 data Documentation = Pages String | LatexRules String | SelfCheck String
    deriving Eq
 
-makeDocumentation :: [Documentation] -> IO ()
-makeDocumentation = mapM_ $ \doc -> 
+makeDocumentation :: String -> [Some ExercisePackage] -> Documentation -> IO ()
+makeDocumentation version list doc =
    case doc of
-      Pages      dir -> makePages dir
-      LatexRules dir -> makeLatexRules dir
-      SelfCheck  dir -> performSelfCheck dir
-
-makePages :: String -> IO ()
-makePages dir = do 
-   makeExerciseOverviewPages dir
-   makeServiceOverviewPage dir
-   mapM_ (\(Some pkg) -> makeExercisePage dir pkg) packages
-   mapM_ (makeServicePage dir) serviceList
+      Pages dir -> do 
+         makeOverviewPages version dir exList
+         forM_ list $ \(Some pkg) -> makeExercisePage version dir pkg
+         mapM_ (makeServicePage version dir) serviceList
+      SelfCheck dir -> 
+         performSelfCheck dir exList
+      LatexRules dir -> 
+         forM_ exList $ \(Some ex) -> makeLatexRules dir ex
+ where
+   exList = map (\(Some pkg) -> Some (exercise pkg)) list

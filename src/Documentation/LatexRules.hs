@@ -16,34 +16,33 @@ import Common.Rewriting
 import Common.Transformation
 import Common.Utils
 import Control.Monad
-import Service.ExerciseList
 import Data.Char
 import Data.List
 import Data.Maybe
 import System.Directory
 import System.Time
 
-makeLatexRules :: String -> IO ()
-makeLatexRules dir =
-   forM_ exercises $ \(Some ex) -> do
-      let code = exerciseCode ex
-          path = dir ++ "/" ++ domain code ++ "/" ++ filter (/= ' ') (identifier code)
-      -- Exercise document
-      let rules = concatMap getRewriteRules (ruleset ex)
-      unless (null rules) $ do
-         createDirectoryIfMissing True path
-         doc <- makeDocument ex
-         let filename = path ++ "/overview.lhs"
-         putStrLn $ "Creating " ++ filename
-         writeFile filename doc
-      -- individual rules
-      forM_ (ruleset ex) $ \r ->
-         case makeSingleRule (domain code ++ "/" ++ domain code ++ ".fmt") r of
-            Nothing  -> return ()
-            Just txt -> do
-               let filename = path ++ "/rule" ++ filter isAlphaNum (name r) ++ ".lhs"
-               putStrLn $ "Creating " ++ filename
-               writeFile filename txt
+makeLatexRules :: String -> Exercise a -> IO ()
+makeLatexRules dir ex = do
+   let code = exerciseCode ex
+       path = dir ++ "/" ++ domain code ++ "/" ++ filter (/= ' ') (identifier code)
+   -- Exercise document
+   let rules = concatMap getRewriteRules (ruleset ex)
+   unless (null rules) $ do
+      createDirectoryIfMissing True path
+      doc <- makeDocument ex
+      let filename = path ++ "/overview.lhs"
+      putStrLn $ "Creating " ++ filename
+      writeFile filename doc
+   -- individual rules
+   forM_ (ruleset ex) $ \r ->
+       case makeSingleRule (domain code ++ "/" ++ domain code ++ ".fmt") r of
+          Nothing  -> return ()
+          Just txt -> do
+             let filename = path ++ "/rule" ++ filter isAlphaNum (name r) ++ ".lhs"
+             putStrLn $ "Creating " ++ filename
+             writeFile filename txt
+
 {- 
 exerciseRulesToTeX :: Exercise a -> String
 exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex

@@ -16,7 +16,6 @@ import Common.Exercise
 import Common.Transformation
 import Control.Monad
 import Service.ServiceList
-import Service.Revision
 import System.Directory
 import System.FilePath
 import Text.HTML
@@ -30,11 +29,12 @@ generatePage dir txt doc = do
    unless (null dirpart) (createDirectoryIfMissing True dirpart)
    writeFile filename (showHTML doc)
 
-defaultPage :: String -> Int -> HTMLBuilder -> HTML
-defaultPage title level builder = htmlPage title (Just (up level ++ "ideas.css")) $ do
-   header level
-   builder
-   footer 
+defaultPage :: String -> String -> Int -> HTMLBuilder -> HTML
+defaultPage version title level builder = 
+   htmlPage title (Just (up level ++ "ideas.css")) $ do
+      header level
+      builder
+      footer version
 
 header :: Int -> HTMLBuilder
 header level = center $ do
@@ -50,11 +50,10 @@ header level = center $ do
    f $ link (up level ++ "api/index.html")  $ text "API"
    hr
 
-footer :: HTMLBuilder
-footer = do 
+footer :: String -> HTMLBuilder
+footer version = do 
    hr 
-   italic $ text $ "Automatically generated from sources: version " ++
-      version ++ "  (revision " ++ show revision ++ ", " ++ lastChanged ++ ")"
+   italic $ text $ "Automatically generated from sources: " ++ version
 
 up :: Int -> String
 up = concat . flip replicate "../"

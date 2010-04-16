@@ -30,19 +30,27 @@ import Text.OpenMath.FMP
 import qualified Text.XML as XML
 import Documentation.DefaultPage
 
-makeExercisePage :: String -> ExercisePackage a -> IO ()
-makeExercisePage dir pkg = do
-   let code = exerciseCode (exercise pkg)
-   generatePage dir (exercisePageFile code) (exercisePage pkg)
-   generatePage dir (exerciseStrategyFile code) (strategyPage pkg)
-   generatePage dir (exerciseRulesFile code) (rulesPage pkg)
-   case derivationsPage pkg of 
-      Nothing   -> return ()
-      Just this ->
-         generatePage dir (exerciseDerivationsFile code) this
-      
-exercisePage :: ExercisePackage a -> HTML
-exercisePage pkg = defaultPage title 2 $ do
+makeExercisePage :: String -> String -> ExercisePackage a -> IO ()
+makeExercisePage version dir pkg = do
+   generatePage dir (exercisePageFile code) $ 
+      let title = "Exercise " ++ show code
+      in defaultPage version title 2 $ exercisePage pkg
+   generatePage dir (exerciseStrategyFile code) $ 
+      let title = "Strategy for " ++ show code
+      in defaultPage version title 2 $ strategyPage ex
+   generatePage dir (exerciseRulesFile code) $
+      let title = "Strategy for " ++ show code
+      in defaultPage version title 2 $ rulesPage ex
+   unless (null (examples (exercise pkg))) $
+      generatePage dir (exerciseDerivationsFile code) $ 
+         let title = "Derivations for " ++ show code
+         in defaultPage version title 2 $ derivationsPage ex            
+ where
+   ex   = exercise pkg
+   code = exerciseCode ex
+
+exercisePage :: ExercisePackage a -> HTMLBuilder
+exercisePage pkg = do
    h1 (description ex)
    
    h2 "1. General information"
@@ -93,15 +101,14 @@ exercisePage pkg = defaultPage title 2 $ do
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) ex 5
    preText (showDerivation ex (term state))
-   when (isJust (derivationsPage pkg)) $ 
+   unless (null (examples ex)) $ 
       link (up 2 ++ exerciseDerivationsFile code) (text "More examples")
  where
-   ex    = exercise pkg
-   code  = exerciseCode ex
-   title = "Exercise " ++ show (exerciseCode ex)
+   ex   = exercise pkg
+   code = exerciseCode ex
 
-strategyPage :: ExercisePackage a -> HTML
-strategyPage pkg = defaultPage title 2 $ do
+strategyPage :: Exercise a -> HTMLBuilder
+strategyPage ex = do
    h1 title
    h2 "1. Representation in XML"
    preText (XML.showXML (strategyToXML (strategy ex)))
@@ -114,12 +121,11 @@ strategyPage pkg = defaultPage title 2 $ do
          : map f (strategyLocations (strategy ex))
          )
  where
-   ex    = exercise pkg
    code  = exerciseCode ex
    title = "Strategy for " ++ show code
 
-rulesPage :: ExercisePackage a -> HTML
-rulesPage pkg = defaultPage title 2 $ do
+rulesPage :: Exercise a -> HTMLBuilder
+rulesPage ex = do
    h1 title
    -- Groups
    let groups = sort (nub (concatMap ruleGroups (ruleset ex)))
@@ -158,30 +164,23 @@ rulesPage pkg = defaultPage title 2 $ do
             ttText $ show $ XML.makeXML "FMP" $ 
                XML.builder (omobj2xml (toObject fmp))
  where
-   ex    = exercise pkg
    code  = exerciseCode ex
    title = "Strategy for " ++ show code
    exampleMap = collectExamples ex
 
-derivationsPage :: ExercisePackage a -> Maybe HTML
-derivationsPage pkg
-   | null xs   = Nothing
-   | otherwise = Just $ defaultPage title 2 $ do
-        unless (errs==0) $ 
-           errorLine $ preText $ "Warning: " ++ show errs ++ " example(s) with an incorrect derivation"
-        h1 "Examples"
-        forM_ (zip [1 ..] ds) $ \(i, d) -> do
-            h2 (show i ++ ".")
-            preText d
+derivationsPage :: Exercise a -> HTMLBuilder
+derivationsPage ex = do
+   unless (errs==0) $ 
+      errorLine $ preText $ "Warning: " ++ show errs ++ " example(s) with an incorrect derivation"
+   h1 "Examples"
+   forM_ (zip [1 ..] ds) $ \(i, d) -> do
+      h2 (show i ++ ".")
+      preText d
  where
-   ex    = exercise pkg
-   code  = exerciseCode ex
-   title = "Derivations for " ++ show code
-   xs    = examples ex
-   ds    = map (showDerivation ex) xs
-   errs  = let p s =  "<<no derivation>>" `isSuffixOf` s 
-                   || "<<not ready>>" `isSuffixOf` s
-           in length $ filter p ds
+   ds   = map (showDerivation ex) (examples ex)
+   errs = let p s =  "<<no derivation>>" `isSuffixOf` s 
+                  || "<<not ready>>" `isSuffixOf` s
+          in length $ filter p ds
    
 errorLine :: HTMLBuilder -> HTMLBuilder
 errorLine b = XML.element "font" $ do

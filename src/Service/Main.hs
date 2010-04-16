@@ -13,13 +13,14 @@
 -----------------------------------------------------------------------------
 module Main (main) where
 
--- import Common.Logging
 import Common.Utils (useFixedStdGen)
 import Service.Options
 import Service.ModeXML  (processXML)
 import Service.ModeJSON (processJSON)
 import Service.Request
+import Service.Revision
 import Service.LoggingDatabase
+import Service.ExerciseList
 import Documentation.Make
 import Network.CGI
 import Control.Monad.Trans
@@ -47,7 +48,7 @@ main = do
 
       -- documentation mode
       _ | documentationMode flags ->
-         makeDocumentation (docItems flags)
+         mapM_ (makeDocumentation fullVersion packages) (docItems flags)
 
       -- cgi binary
       Nothing -> runCGI $ do
@@ -69,6 +70,11 @@ main = do
 process :: String -> IO (Request, String, String)
 process input =
    case discoverDataFormat input of
-      Just XML  -> processXML  input
-      Just JSON -> processJSON input
+      Just XML  -> processXML  info input
+      Just JSON -> processJSON info input
       _         -> fail "Invalid input"
+ where
+   info = Just (version ++ " (" ++ show revision ++ ")")
+
+fullVersion :: String
+fullVersion = "version " ++ version ++ "  (revision " ++ show revision ++ ", " ++ lastChanged ++ ")"

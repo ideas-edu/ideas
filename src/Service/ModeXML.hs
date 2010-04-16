@@ -30,7 +30,6 @@ import Service.ExercisePackage
 import Service.ExerciseList
 import Service.ProblemDecomposition
 import Service.Request
-import Service.Revision (version)
 import Service.RulesInfo (rulesInfoXML)
 import Service.ServiceList 
 import Service.StrategyInfo
@@ -42,13 +41,19 @@ import Text.XML
 import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp
 
-processXML :: Monad m => String -> m (Request, String, String)
-processXML input = 
+processXML :: Monad m => Maybe String -> String -> m (Request, String, String)
+processXML version input = 
    either fail return $ do
-      xml <- parseXML input
-      req <- xmlRequest xml
-      out <- xmlRequestHandler xml
-      return (req, showXML out, "application/xml") 
+      xml  <- parseXML input
+      req  <- xmlRequest xml
+      resp <- xmlRequestHandler xml
+      let out = showXML (maybe id addVersion version resp)
+      return (req, out, "application/xml") 
+
+addVersion :: String -> XML -> XML
+addVersion s xml = 
+   let info = [ "version" := s ]
+   in xml { attributes = attributes xml ++ info }
 
 xmlRequest :: XML -> Either String Request
 xmlRequest xml = do   
@@ -74,9 +79,6 @@ xmlReply request xml
         Some pkg <- getPackage packages code
         (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
-
---   | service request == "ping" = do
---        return (resultOk (return ()))
 
 xmlReply request xml = do
    pkg <- case exerciseID request of 
@@ -124,14 +126,12 @@ extractExerciseCode xml =
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
-   "result"  .=. "ok"
-   "version" .=. version
+   "result" .=. "ok"
    body
 
 resultError :: String -> XML
 resultError txt = makeXML "reply" $ do 
-   "result"  .=. "error"
-   "version" .=. version
+   "result" .=. "error"
    element "message" (text txt)
 
 ------------------------------------------------------------

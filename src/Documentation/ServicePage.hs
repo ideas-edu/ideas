@@ -27,12 +27,14 @@ import Domain.Math.Expr.Symbolic
 import Control.Monad
 import Common.Utils (ShowString(..))
 
-makeServicePage :: String -> Service a -> IO ()
-makeServicePage dir s =
-   generatePage dir (servicePageFile s) (servicePage s)
+makeServicePage :: String -> String -> Service a -> IO ()
+makeServicePage version dir s =
+   generatePage dir (servicePageFile s) $ 
+      let title = "Service " ++ show (serviceName s)
+      in defaultPage version title 1 $ servicePage s
 
-servicePage :: Service a -> HTML
-servicePage s = defaultPage title 1 $ do
+servicePage :: Service a -> HTMLBuilder
+servicePage s = do
    h1 (serviceName s)
 
    para $ do
@@ -62,8 +64,6 @@ servicePage s = defaultPage title 1 $ do
                XML.element "font" $ do
                   "color" XML..=. "red"
                   bold $ text "Error: invalid request/reply pair"
- where
-   title = "Service " ++ show (serviceName s)
 
 -----------------------------------------------------------------------
 -- Examples

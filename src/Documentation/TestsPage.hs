@@ -16,7 +16,7 @@ import Data.Char
 import Data.List
 import Documentation.DefaultPage
 import System.Environment
-import Service.Revision
+import Main.Revision
 import Text.HTML
 import qualified Text.XML as XML
 

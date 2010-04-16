@@ -12,7 +12,7 @@
 module About (aboutIdeas) where
 
 import Graphics.UI.WX
-import Service.Options (versionText)
+import Main.Options (versionText)
 
 aboutIdeas :: Window a -> IO ()
 aboutIdeas w = do

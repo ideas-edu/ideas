@@ -11,15 +11,15 @@
 -- Options and command-line flags for services
 --
 -----------------------------------------------------------------------------
-module Service.Options where
+module Main.Options where
 
 import Data.Maybe
+import Documentation.Make
+import Main.LoggingDatabase (logEnabled)
+import Main.Revision
+import System.Console.GetOpt
 import System.Environment
 import System.Exit
-import System.Console.GetOpt
-import Service.Revision (version, revision)
-import Service.LoggingDatabase (logEnabled)
-import Documentation.Make
 
 data Flag = Version | Help | Logging Bool | InputFile String 
           | FixRNG | DocItem Documentation
@@ -37,6 +37,13 @@ versionText :: String
 versionText = 
   "version " ++ version ++ ", revision " ++ show revision ++
   ", logging " ++ (if logEnabled then "enabled" else "disabled")
+
+fullVersion :: String
+fullVersion = "version " ++ version ++ " (revision " 
+           ++ show revision ++ ", " ++ lastChanged ++ ")"
+
+shortVersion :: String
+shortVersion = version ++ " (" ++ show revision ++ ")"
 
 options :: [OptDescr Flag]
 options =

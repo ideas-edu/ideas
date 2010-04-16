@@ -14,7 +14,7 @@ module Main (main) where
 import Graphics.UI.WX
 import Domain.Math.Expr
 import Data.List
-import Service.Options (versionText)
+import Main.Options (versionText)
 import Text.OpenMath.Object
 import Text.XML (parseXML)
 

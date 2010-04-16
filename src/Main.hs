@@ -14,19 +14,18 @@
 module Main (main) where
 
 import Common.Utils (useFixedStdGen)
-import Service.Options
-import Service.ModeXML  (processXML)
-import Service.ModeJSON (processJSON)
-import Service.Request
-import Service.Revision
-import Service.LoggingDatabase
-import Service.ExerciseList
-import Documentation.Make
-import Network.CGI
-import Control.Monad.Trans
 import Control.Monad
+import Control.Monad.Trans
 import Data.IORef
 import Data.Time
+import Documentation.Make
+import Main.LoggingDatabase
+import Main.Options
+import Network.CGI
+import Service.ExerciseList
+import Service.ModeJSON (processJSON)
+import Service.ModeXML  (processXML)
+import Service.Request
 
 main :: IO ()
 main = do
@@ -70,11 +69,6 @@ main = do
 process :: String -> IO (Request, String, String)
 process input =
    case discoverDataFormat input of
-      Just XML  -> processXML  info input
-      Just JSON -> processJSON info input
+      Just XML  -> processXML  (Just shortVersion) input
+      Just JSON -> processJSON (Just shortVersion) input
       _         -> fail "Invalid input"
- where
-   info = Just (version ++ " (" ++ show revision ++ ")")
-
-fullVersion :: String
-fullVersion = "version " ++ version ++ "  (revision " ++ show revision ++ ", " ++ lastChanged ++ ")"

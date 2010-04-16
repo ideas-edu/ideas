@@ -35,7 +35,7 @@ latexrules: $(EXERCISEDIR) $(PDFTARGETS)
 coverage: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
-	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../$(DOCDIR)/$(HADDOCKDIR) --prologue=../$(DOCDIR)/$(HADDOCKDIR)/prologue Service/Main.hs
+	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../$(DOCDIR)/$(HADDOCKDIR) --prologue=../$(DOCDIR)/$(HADDOCKDIR)/prologue Main.hs
 
 exercises.html: $(BINDIR)/ideas.cgi
 	$(BINDIR)/ideas.cgi --make-pages=.
@@ -49,7 +49,7 @@ $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	$(MKDIR) -p $(HPCTMPDIR)
 	$(GHC) -fhpc --make $(PROFILEFLAGS) -hpcdir $(HPCTMPDIR) \
 	   -i$(SRCDIR) -odir $(HPCTMPDIR) -hidir $(HPCTMPDIR) \
-	   -o $@ $(SRCDIR)/Service/Main.hs
+	   -o $@ $(SRCDIR)/Main.hs
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix

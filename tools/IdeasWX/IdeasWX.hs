@@ -19,7 +19,7 @@ import Graphics.UI.WXCore
 import NewAssignmentDialog
 import Observable
 import ProgressPanel
-import Service.Options (versionText)
+import Main.Options (versionText)
 import Session
 import System.Directory
 

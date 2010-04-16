@@ -23,7 +23,7 @@ tested-with:            GHC == 6.10.1
 --------------------------------------------------------------------------------
 
 Executable	            ideas
-  Main-is:				Service/Main.hs
+  Main-is:				Main.hs
   ghc-options:          -W -fwarn-tabs -fwarn-duplicate-exports
   hs-source-dirs:       src
   other-modules:        

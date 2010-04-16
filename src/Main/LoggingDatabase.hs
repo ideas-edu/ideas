@@ -12,7 +12,7 @@
 -- Facilities to create a log database
 --
 -----------------------------------------------------------------------------
-module Service.LoggingDatabase (logMessage, logEnabled) where
+module Main.LoggingDatabase (logMessage, logEnabled) where
 
 import Data.Time
 import Service.Request

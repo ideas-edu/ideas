@@ -12,28 +12,13 @@
 -- by Josje Lodder.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.FeedbackText (logicText) where
+module Domain.Logic.FeedbackText where
 
 import Data.List
 import Data.Maybe
 import Common.Transformation
-import Domain.Logic.Formula
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
-import qualified Service.FeedbackText as T (ExerciseText(..))
-
-logicText :: T.ExerciseText SLogic
-logicText = T.ExerciseText
-   { T.ruleText              = ruleText
-   , T.appliedRule           = appliedRule
-   , T.feedbackSyntaxError   = feedbackSyntaxError
-   , T.feedbackSame          = feedbackSame
-   , T.feedbackBuggy         = feedbackBuggy
-   , T.feedbackNotEquivalent = feedbackNotEquivalent
-   , T.feedbackOk            = feedbackOk
-   , T.feedbackDetour        = feedbackDetour
-   , T.feedbackUnknown       = feedbackUnknown
-   }
 
 feedbackSyntaxError :: String -> String 
 feedbackSyntaxError msg

@@ -9,15 +9,16 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Main.ExerciseList (packages, exercises) where
+module Main.ExerciseList (packages) where
 
 import Common.Utils (Some(..), fromShowString)
-import Common.Exercise
 import Common.Rewriting
 import Domain.Math.Expr
 import Service.ExercisePackage
+import Service.FeedbackText
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
+import qualified Domain.Logic.FeedbackText as Logic
 import qualified Domain.RelationAlgebra as RA
 import qualified Domain.Math.DerivativeExercise as Math
 import qualified Domain.Math.Numeric.Exercises as Math
@@ -34,13 +35,13 @@ packages =
         { withOpenMath    = True
         , toOpenMath      = termToOMOBJ . toTerm . fmap (Var . fromShowString)
         , fromOpenMath    = (>>= fromTerm) . omobjToTerm
-        , getExerciseText = Just Logic.logicText
+        , getExerciseText = Just logicText
         }
    , Some (package Logic.dnfUnicodeExercise)
         { withOpenMath    = True
         , toOpenMath      = termToOMOBJ . toTerm . fmap (Var . fromShowString)
         , fromOpenMath    = (>>= fromTerm) . omobjToTerm
-        , getExerciseText = Just Logic.logicText
+        , getExerciseText = Just logicText
         }
    , somePackage RA.cnfExercise
      -- basic math
@@ -72,8 +73,16 @@ packages =
      -- regular expressions
    , somePackage RE.regexpExercise
    ]
-
-exercises :: [Some Exercise]
-exercises = 
-   let f (Some pkg) = Some (exercise pkg)
-   in map f packages
+   
+logicText :: ExerciseText Logic.SLogic
+logicText = ExerciseText
+   { ruleText              = Logic.ruleText
+   , appliedRule           = Logic.appliedRule
+   , feedbackSyntaxError   = Logic.feedbackSyntaxError
+   , feedbackSame          = Logic.feedbackSame
+   , feedbackBuggy         = Logic.feedbackBuggy
+   , feedbackNotEquivalent = Logic.feedbackNotEquivalent
+   , feedbackOk            = Logic.feedbackOk
+   , feedbackDetour        = Logic.feedbackDetour
+   , feedbackUnknown       = Logic.feedbackUnknown
+   }

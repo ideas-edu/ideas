@@ -28,11 +28,11 @@ generatePage = generatePageAt 0
 
 generatePageAt :: Int -> String -> String -> HTMLBuilder -> DomainReasoner ()
 generatePageAt n dir txt body = do
-   version <- getVersion
+   version <- getFullVersion
    let filename = dir ++ "/" ++ txt
        dirpart  = takeDirectory filename
        doc      = defaultPage version (findTitle body) n body
-   lift $ do
+   liftIO $ do
       putStrLn $ "Generating " ++ filename
       unless (null dirpart) (createDirectoryIfMissing True dirpart)
       writeFile filename (showHTML doc)

@@ -90,10 +90,11 @@ logicText = ExerciseText
    , feedbackUnknown       = Logic.feedbackUnknown
    }
    
-useIDEAS :: Monad m => DomainReasonerT m a -> m a
+useIDEAS :: DomainReasoner a -> IO a
 useIDEAS action = runDomainReasoner $ do
-   setVersion shortVersion
-   addPackages packages
-   addServices serviceList
-   addPkgService exerciselistS
+   setVersion     shortVersion
+   setFullVersion fullVersion
+   addPackages    packages
+   addServices    serviceList
+   addPkgService  exerciselistS
    action

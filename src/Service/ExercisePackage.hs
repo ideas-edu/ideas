@@ -17,7 +17,8 @@ module Service.ExercisePackage
      -- Constructors
    , package, termPackage, somePackage, someTermPackage
      -- Search functions
-   , getPackage, getExercise, termToOMOBJ, omobjToTerm
+   , getPackage, getExercise
+   , termToOMOBJ, omobjToTerm
    ) where
 
 import Common.Utils (Some(..))

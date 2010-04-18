@@ -41,10 +41,10 @@ import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp
 import Service.DomainReasoner
 
-processXML :: String -> DomainReasonerT (Either String) (Request, String, String)
+processXML :: String -> DomainReasoner (Request, String, String)
 processXML input = do
-   xml  <- lift (parseXML input)
-   req  <- lift (xmlRequest xml)
+   xml  <- liftEither (parseXML input)
+   req  <- liftEither (xmlRequest xml)
    resp <- xmlRequestHandler req xml
    vers <- getVersion
    let out = showXML (if null vers then resp else addVersion vers resp)
@@ -55,7 +55,7 @@ addVersion s xml =
    let info = [ "version" := s ]
    in xml { attributes = attributes xml ++ info }
 
-xmlRequestHandler :: Request -> XML -> DomainReasonerT (Either String) XML
+xmlRequestHandler :: Request -> XML -> DomainReasoner XML
 xmlRequestHandler request xml = do
    list <- getPackages
    case xmlReply list request xml of

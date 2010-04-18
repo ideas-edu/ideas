@@ -1,3 +1,4 @@
+{-# OPTIONS -XMultiParamTypeClasses #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -10,65 +11,96 @@
 --
 -----------------------------------------------------------------------------
 module Service.DomainReasoner 
-   ( DomainReasoner, DomainReasonerT
+   ( DomainReasoner
    , setVersion, addPackages, addServices, addPkgService
-   , getPackages, getExercises, getServices, getVersion, lift, runDomainReasoner
-   , liftIO, setFullVersion, toDomainReasoner, addPackage, addService
+   , getPackages, getExercises, getServices, getVersion, runDomainReasoner
+   , liftIO, setFullVersion, addPackage, addService
+   , getFullVersion, runDomainReasoner2, liftEither, onFail --, findPackage
    ) where
 
 import Common.Exercise
 import Common.Utils (Some(..))
+import Control.Monad.Error
 import Control.Monad.State
 import Service.ServiceList
 import Service.ExercisePackage
 
 data Content = Content
-   { packages :: [Some ExercisePackage]
-   , services :: [Some ExercisePackage] -> [Some Service]
-   , version  :: String
+   { packages    :: [Some ExercisePackage]
+   , services    :: [Some ExercisePackage] -> [Some Service]
+   , version     :: String
+   , fullVersion :: Maybe String
    }
    
 emptyState :: Content
-emptyState = Content [] (const []) []
+emptyState = Content [] (const []) [] Nothing
 
-type DomainReasonerT = StateT Content 
-type DomainReasoner  = DomainReasonerT IO
+newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
 
-runDomainReasoner :: Monad m => DomainReasonerT m a -> m a
-runDomainReasoner = flip evalStateT emptyState
+instance Monad DomainReasoner where
+   return a   = DR (return a)
+   DR m >>= f = DR (m >>= unDR . f)
+   fail s     = DR (fail s)
 
-addPackages :: Monad m => [Some ExercisePackage] -> DomainReasonerT m ()
+instance MonadState Content DomainReasoner where
+   get   = DR get
+   put s = DR (put s)
+
+instance MonadIO DomainReasoner where
+   liftIO m = DR (liftIO m)
+
+runDomainReasoner :: DomainReasoner a -> IO a
+runDomainReasoner m = runDomainReasoner2 m >>= either fail return
+
+runDomainReasoner2 :: DomainReasoner a -> IO (Either String a)
+runDomainReasoner2 m = do
+   evalStateT (runErrorT (unDR m)) emptyState
+
+onFail :: DomainReasoner a -> a -> DomainReasoner a
+onFail m a = join $ DR $ do 
+   ea <- lift (lift (runDomainReasoner2 m))
+   case ea of
+      Left _  -> return (return a)
+      Right _ -> return m
+
+liftEither :: Either String a -> DomainReasoner a
+liftEither = either fail return
+
+addPackages :: [Some ExercisePackage] -> DomainReasoner ()
 addPackages xs = modify $ \c -> c { packages = xs ++ packages c }
 
-addPackage :: Monad m => Some ExercisePackage -> DomainReasonerT m ()
+addPackage :: Some ExercisePackage -> DomainReasoner ()
 addPackage pkg = addPackages [pkg]
 
-addServices :: Monad m => [Service a] -> DomainReasonerT m ()
+addServices :: [Service a] -> DomainReasoner ()
 addServices = mapM_ (addPkgService . const)
 
-addService :: Monad m => Service a -> DomainReasonerT m ()
+addService :: Service a -> DomainReasoner ()
 addService s = addServices [s]
 
-addPkgService :: Monad m => ([Some ExercisePackage] -> Service a) -> DomainReasonerT m ()
+addPkgService :: ([Some ExercisePackage] -> Service a) -> DomainReasoner ()
 addPkgService f = modify $ \c -> c { services = \xs -> Some (f xs) : services c xs }
 
-setVersion :: Monad m => String -> DomainReasonerT m ()
+setVersion :: String -> DomainReasoner ()
 setVersion s = modify $ \c -> c { version = s }
 
-setFullVersion :: Monad m => String -> DomainReasonerT m ()
-setFullVersion s = modify $ \c -> c  { version = s }
+setFullVersion :: String -> DomainReasoner ()
+setFullVersion s = modify $ \c -> c  { fullVersion = Just s }
 
-getPackages :: Monad m => DomainReasonerT m [Some ExercisePackage]
+getPackages :: DomainReasoner [Some ExercisePackage]
 getPackages = gets packages
 
-getExercises :: Monad m => DomainReasonerT m [Some Exercise]
+getExercises :: DomainReasoner [Some Exercise]
 getExercises = gets (map (\(Some pkg) -> Some (exercise pkg)) . packages)
 
-getServices :: Monad m => DomainReasonerT m [Some Service]
+getServices :: DomainReasoner [Some Service]
 getServices = gets (\c -> services c (packages c))
 
-getVersion :: Monad m => DomainReasonerT m String
+getVersion :: DomainReasoner String
 getVersion = gets version
 
-toDomainReasoner :: Monad m => (m a -> IO a) -> DomainReasonerT m a -> DomainReasoner a
-toDomainReasoner f m = get >>= lift . f . evalStateT m
+getFullVersion :: DomainReasoner String
+getFullVersion = gets fullVersion >>= maybe getVersion return
+
+--findPackage :: ExerciseCode -> DomainReasonerT m (Some ExercisePackage)
+--findPackage = undefined

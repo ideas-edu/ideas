@@ -37,7 +37,7 @@ import System.Time
 
 performSelfCheck :: String -> DomainReasoner ()
 performSelfCheck dir = totalDiff $ do
-   timeDiff $ lift $ do
+   timeDiff $ liftIO $ do
       putStrLn "* 1. Domain checks"
       Grammar.checks
       MathNum.main
@@ -48,28 +48,28 @@ performSelfCheck dir = totalDiff $ do
       UTF8.testEncoding
       JSON.testMe
 
-   lift $ putStrLn "* 2. Exercise checks"
+   liftIO $ putStrLn "* 2. Exercise checks"
    pkgs <- getPackages
    forM_ pkgs $ \(Some pkg) ->
-      timeDiff $ lift $ checkExercise (exercise pkg)
+      timeDiff $ liftIO $ checkExercise (exercise pkg)
 
    timeDiff $ do
-      lift $ putStrLn "* 3. Unit tests"
+      liftIO $ putStrLn "* 3. Unit tests"
       n <- unitTests dir
-      lift $ putStrLn $ "** Number of unit tests: " ++ show n
+      liftIO $ putStrLn $ "** Number of unit tests: " ++ show n
    
 -- Returns the number of tests performed
 unitTests :: String -> DomainReasoner Int
 unitTests = visit 0
  where
    visit i path = do
-      valid <- lift $ doesDirectoryExist path
+      valid <- liftIO $ doesDirectoryExist path
       if not valid then return 0 else do
          -- analyse content
-         xs <- lift $ getDirectoryContents path
+         xs <- liftIO $ getDirectoryContents path
          let xml  = filter (".xml"  `isSuffixOf`) xs
              json = filter (".json" `isSuffixOf`) xs
-         lift $ putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
+         liftIO $ putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
          -- perform tests
          forM json $ \x -> 
             performUnitTest JSON (path ++ "/" ++ x)
@@ -82,14 +82,13 @@ unitTests = visit 0
 
 performUnitTest :: DataFormat -> FilePath -> DomainReasoner ()
 performUnitTest format path = do
-   lift useFixedStdGen -- fix the random number generator
-   txt <- lift $ readFile path
-   exp <- lift $ readFile expPath
+   liftIO useFixedStdGen -- fix the random number generator
+   txt <- liftIO $ readFile path
+   exp <- liftIO $ readFile expPath
    out <- case format of 
              JSON -> liftM snd3 (processJSON txt)
-             XML  -> toDomainReasoner (either return return) $ 
-                        liftM snd3 (processXML txt)
-   lift $ reportTest (stripDirectoryPart path) (out ~= exp)
+             XML  -> liftM snd3 (processXML txt) `onFail` "Error"
+   liftIO $ reportTest (stripDirectoryPart path) (out ~= exp)
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse

@@ -26,7 +26,6 @@ import Network.CGI
 import Service.ModeJSON (processJSON)
 import Service.ModeXML  (processXML)
 import Service.Request
-import Service.DomainReasoner
 
 main :: IO ()
 main = do
@@ -69,8 +68,8 @@ main = do
       join (readIORef logRef)
    
 process :: String -> IO (Request, String, String)
-process input =
+process input = useIDEAS $ 
    case discoverDataFormat input of
-      Just XML -> either fail return $ useIDEAS $ processXML input
-      Just JSON -> useIDEAS $ processJSON input
+      Just XML  -> processXML input
+      Just JSON -> processJSON input
       _ -> fail "Invalid input"

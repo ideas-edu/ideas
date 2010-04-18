@@ -35,4 +35,4 @@ makeDocumentation doc =
          performSelfCheck dir
       LatexRules dir ->
          let f (Some ex) = makeLatexRules dir ex
-         in getExercises >>= lift . mapM_ f
+         in getExercises >>= liftIO . mapM_ f

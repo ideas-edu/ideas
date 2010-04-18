@@ -1,4 +1,4 @@
-{-# OPTIONS -XMultiParamTypeClasses #-}
+{-# OPTIONS -XMultiParamTypeClasses -XTypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -15,7 +15,8 @@ module Service.DomainReasoner
    , setVersion, addPackages, addServices, addPkgService
    , getPackages, getExercises, getServices, getVersion, runDomainReasoner
    , liftIO, setFullVersion, addPackage, addService
-   , getFullVersion, runDomainReasoner2, liftEither, onFail --, findPackage
+   , getFullVersion, runDomainReasoner2, liftEither, catchError
+   , findPackage
    ) where
 
 import Common.Exercise
@@ -42,6 +43,10 @@ instance Monad DomainReasoner where
    DR m >>= f = DR (m >>= unDR . f)
    fail s     = DR (fail s)
 
+instance MonadError String DomainReasoner where
+   throwError     = fail
+   catchError m f = DR (unDR m `catchError` (unDR . f))
+
 instance MonadState Content DomainReasoner where
    get   = DR get
    put s = DR (put s)
@@ -55,13 +60,6 @@ runDomainReasoner m = runDomainReasoner2 m >>= either fail return
 runDomainReasoner2 :: DomainReasoner a -> IO (Either String a)
 runDomainReasoner2 m = do
    evalStateT (runErrorT (unDR m)) emptyState
-
-onFail :: DomainReasoner a -> a -> DomainReasoner a
-onFail m a = join $ DR $ do 
-   ea <- lift (lift (runDomainReasoner2 m))
-   case ea of
-      Left _  -> return (return a)
-      Right _ -> return m
 
 liftEither :: Either String a -> DomainReasoner a
 liftEither = either fail return
@@ -102,5 +100,7 @@ getVersion = gets version
 getFullVersion :: DomainReasoner String
 getFullVersion = gets fullVersion >>= maybe getVersion return
 
---findPackage :: ExerciseCode -> DomainReasonerT m (Some ExercisePackage)
---findPackage = undefined
+findPackage :: ExerciseCode -> DomainReasoner (Some ExercisePackage)
+findPackage code = do
+   list <- getPackages 
+   getPackage list code

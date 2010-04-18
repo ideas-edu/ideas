@@ -12,10 +12,8 @@
 -----------------------------------------------------------------------------
 module Service.TypedExample (typedExample) where
 
---import Common.Utils
 import Data.Char
 import Service.ModeXML
---import Service.DomainReasoner
 import Service.ExercisePackage
 import Service.ServiceList
 import Service.Types
@@ -23,7 +21,7 @@ import Common.Exercise
 import Text.XML
    
 typedExample :: Monad m => 
-               ExercisePackage a -> Service a -> [TypedValue a] -> m (XML, XML, Bool)
+               ExercisePackage a -> Service a -> [TypedValue a] -> m (XML, XML)
 typedExample pkg service args = do
    -- Construct a request in xml
    xmlRequest <- 
@@ -43,13 +41,13 @@ typedExample pkg service args = do
                Left err  -> resultError err
                Right xml -> resultOk xml
    -- Check request/reply pair
-   let xmlTest = True {-
+   {- let xmlTest = True
           addPackage (Some pkg)
           addService service
           (_, txt, _) <- processXML (show xmlRequest)
           let p = filter (not . isSpace)
           return (p txt == p (show xmlReply)) -}
-   return (xmlRequest, xmlReply, xmlTest)
+   return (xmlRequest, xmlReply)
  where
    (evaluator, enc)
       | withOpenMath pkg = (openMathConverterTp pkg, "openmath")

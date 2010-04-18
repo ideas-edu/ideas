@@ -53,21 +53,22 @@ servicePage s = do
    unless (null list) $ do
       h2 $ "XML examples (" ++ show (length list) ++ ")"
       forM_ (zip [1..] list) $ 
-         \(i, (_, (msg, (xmlRequest, xmlReply, xmlTest)))) -> do
+         \(i, (_, (msg, (xmlRequest, xmlReply)))) -> do
             h2 $ show i ++ ". " ++ msg
             bold $ text "Request:"
             preText $ showXML xmlRequest
             bold $ text "Reply:"
             preText $ showXML xmlReply
+            {-
             unless xmlTest $ 
                XML.element "font" $ do
                   "color" XML..=. "red"
-                  bold $ text "Error: invalid request/reply pair"
+                  bold $ text "Error: invalid request/reply pair" -}
 
 -----------------------------------------------------------------------
 -- Examples
 
-examples :: [(String, (String, (XML, XML, Bool)))]
+examples :: [(String, (String, (XML, XML)))]
 examples = concat
    [ logic "derivation" [Nothing ::: Maybe StrategyCfg, stLogic1]
    , lineq "derivation" [Nothing ::: Maybe StrategyCfg, stLineq1]

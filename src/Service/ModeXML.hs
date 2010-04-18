@@ -45,7 +45,8 @@ processXML :: String -> DomainReasoner (Request, String, String)
 processXML input = do
    xml  <- liftEither (parseXML input)
    req  <- liftEither (xmlRequest xml)
-   resp <- xmlRequestHandler req xml
+   resp <- xmlReply req xml
+              `catchError` \msg -> return (resultError msg)
    vers <- getVersion
    let out = showXML (if null vers then resp else addVersion vers resp)
    return (req, out, "application/xml")
@@ -54,13 +55,6 @@ addVersion :: String -> XML -> XML
 addVersion s xml = 
    let info = [ "version" := s ]
    in xml { attributes = attributes xml ++ info }
-
-xmlRequestHandler :: Request -> XML -> DomainReasoner XML
-xmlRequestHandler request xml = do
-   list <- getPackages
-   case xmlReply list request xml of
-      Left err     -> return (resultError err)
-      Right result -> return result
 
 xmlRequest :: XML -> Either String Request
 xmlRequest xml = do   
@@ -79,38 +73,39 @@ xmlRequest xml = do
       , encoding   = enc
       }
 
-xmlReply :: [Some ExercisePackage] -> Request -> XML -> Either String XML
-xmlReply list request xml 
+xmlReply :: Request -> XML -> DomainReasoner XML
+xmlReply request xml 
    | service request == "mathdox" = do
         code <- maybe (fail "unknown exercise code") return (exerciseID request)
-        Some pkg <- getPackage list code
-        (st, sloc, answer) <-  xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
+        Some pkg <- findPackage code
+        (st, sloc, answer) <- liftEither $ xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
 
-   | service request == "exerciselist" = do 
+   | service request == "exerciselist" = do
+        list <- getPackages 
         let pkg  = Some (package emptyExercise)
-            srv  = exerciselistS list
+            srv  = exerciselistS list 
         case stringFormatConverter pkg of
            Some conv -> do
-              res <- evalService conv srv xml 
+              res <- liftEither $ evalService conv srv xml
               return (resultOk res)
 
-xmlReply list request xml = do
-   pkg <- case exerciseID request of 
-             Just i  -> getPackage list i
-             Nothing -> fail "unknown exercise code"      
+xmlReply request xml = do
+   pkg <- case exerciseID request of
+             Just code -> findPackage code
+             Nothing   -> fail "unknown exercise code"      
    case encoding request of
       Just StringEncoding -> do 
          case stringFormatConverter pkg of
             Some conv -> do
                srv <- getService (service request)
-               res <- evalService conv srv xml 
+               res <- liftEither $ evalService conv srv xml 
                return (resultOk res)
       _ -> do 
          case openMathConverter pkg of
             Some conv -> do
                srv <- getService (service request)
-               res <- evalService conv srv xml 
+               res <- liftEither $ evalService conv srv xml 
                return (resultOk res)
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode

@@ -87,7 +87,8 @@ performUnitTest format path = do
    exp <- liftIO $ readFile expPath
    out <- case format of 
              JSON -> liftM snd3 (processJSON txt)
-             XML  -> liftM snd3 (processXML txt) `onFail` "Error"
+             XML  -> liftM snd3 (processXML txt) 
+                        `catchError` \_ -> return "Error"
    liftIO $ reportTest (stripDirectoryPart path) (out ~= exp)
  where
    expPath = baseOf path ++ ".exp"

@@ -9,13 +9,14 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Main.ExerciseList (packages) where
+module Main.ExerciseList (packages, useIDEAS) where
 
 import Common.Utils (Some(..), fromShowString)
 import Common.Rewriting
 import Domain.Math.Expr
 import Service.ExercisePackage
 import Service.FeedbackText
+import Service.DomainReasoner
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.FeedbackText as Logic
@@ -27,6 +28,8 @@ import qualified Domain.Math.Polynomial.Exercises as Math
 import qualified Domain.Math.Polynomial.IneqExercises as Math
 import qualified Domain.RegularExpr.Exercises as RE
 import qualified Domain.Math.Power.Exercises as Math
+import Main.Options
+import Service.ServiceList
 
 packages :: [Some ExercisePackage]
 packages =
@@ -86,3 +89,11 @@ logicText = ExerciseText
    , feedbackDetour        = Logic.feedbackDetour
    , feedbackUnknown       = Logic.feedbackUnknown
    }
+   
+useIDEAS :: Monad m => DomainReasonerT m a -> m a
+useIDEAS action = runDomainReasoner $ do
+   setVersion shortVersion
+   addPackages packages
+   addServices serviceList
+   addPkgService exerciselistS
+   action

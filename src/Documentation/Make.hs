@@ -9,35 +9,30 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.Make 
-   ( Documentation(..), makeDocumentation
-   ) where
+module Documentation.Make (DocItem(..), makeDocumentation) where
 
 import Control.Monad
 import Common.Utils (Some(..))
-import Service.ServiceList
-import Service.ExercisePackage
+import Service.DomainReasoner
 import Documentation.SelfCheck
 import Documentation.LatexRules
 import Documentation.ExercisePage
 import Documentation.ServicePage
-import Documentation.OverviewPages 
+import Documentation.OverviewPages
 
-data Documentation = Pages String | LatexRules String | SelfCheck String
+data DocItem = Pages String | LatexRules String | SelfCheck String
    deriving Eq
 
-makeDocumentation :: String -> [Some ExercisePackage] -> Documentation -> IO ()
-makeDocumentation version list doc =
+makeDocumentation :: DocItem -> DomainReasoner ()
+makeDocumentation doc =
    case doc of
       Pages dir -> do 
-         makeOverviewExercises version dir exList
-         makeOverviewServices version dir srvList
-         forM_ list $ \(Some pkg) -> makeExercisePage version dir pkg
-         mapM_ (makeServicePage version dir) srvList
+         makeOverviewExercises dir
+         makeOverviewServices  dir
+         getPackages >>= mapM_ (\(Some pkg) -> makeExercisePage dir pkg)
+         getServices >>= mapM_ (\(Some s)   -> makeServicePage dir s)
       SelfCheck dir -> 
-         performSelfCheck dir list
-      LatexRules dir -> 
-         forM_ exList $ \(Some ex) -> makeLatexRules dir ex
- where
-   exList  = map (\(Some pkg) -> Some (exercise pkg)) list
-   srvList = exerciselistS list : serviceList
+         performSelfCheck dir
+      LatexRules dir ->
+         let f (Some ex) = makeLatexRules dir ex
+         in getExercises >>= lift . mapM_ f

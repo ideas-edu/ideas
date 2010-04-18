@@ -20,19 +20,21 @@ import Control.Monad
 import Common.Utils (Some(..))
 import Common.Exercise
 import Service.ServiceList
+import Service.DomainReasoner
 import Text.HTML
 
-makeOverviewExercises :: String -> String -> [Some Exercise] -> IO ()
-makeOverviewExercises version dir list = do
+makeOverviewExercises :: String -> DomainReasoner ()
+makeOverviewExercises dir = do
+   list <- getExercises
    generatePage dir exerciseOverviewPageFile $ 
-      defaultPage version "Exercises" 0 $ exerciseOverviewPage False list
+      exerciseOverviewPage False list
    generatePage dir exerciseOverviewAllPageFile $ 
-      defaultPage version "All exercises" 0 $ exerciseOverviewPage True list
+      exerciseOverviewPage True list
 
-makeOverviewServices :: String -> String -> [Service a] -> IO ()
-makeOverviewServices version dir list =
-   generatePage dir serviceOverviewPageFile $
-      defaultPage version "Services" 0 (serviceOverviewPage list)
+makeOverviewServices :: String -> DomainReasoner ()
+makeOverviewServices dir = do
+   list <- getServices
+   generatePage dir serviceOverviewPageFile (serviceOverviewPage list)
 
 exerciseOverviewPage :: Bool -> [Some Exercise] -> HTMLBuilder
 exerciseOverviewPage showAll list = do
@@ -74,11 +76,11 @@ exerciseOverviewPage showAll list = do
       g xs = (f (head xs), xs)
       p (Some ex) = showAll || isPublic ex
 
-serviceOverviewPage :: [Service a] -> HTMLBuilder
+serviceOverviewPage :: [Some Service] -> HTMLBuilder
 serviceOverviewPage list = do
    h1 "Services"
-   let sorted = sortBy (\x y -> serviceName x `compare` serviceName y) list
-   ul $ flip map sorted $ \s -> do
+   let sorted = sortBy (\(Some x) (Some y) -> serviceName x `compare` serviceName y) list
+   ul $ flip map sorted $ \(Some s) -> do
       link (servicePageFile s) (ttText (serviceName s))
       when (serviceDeprecated s) $
          space >> text "(deprecated)"

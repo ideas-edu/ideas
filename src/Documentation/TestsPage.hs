@@ -15,6 +15,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Documentation.DefaultPage
+import Service.DomainReasoner
 import System.Environment
 import Main.Revision
 import Text.HTML
@@ -26,14 +27,16 @@ main = do
    case args of
       [fileIn, fileOut] -> do
          input <- readFile fileIn
-         generatePage "docs" (up 1 ++ fileOut) (testsPage input)
+         runDomainReasoner $ do
+            setFullVersion fullVersion
+            generatePage "docs" (up 1 ++ fileOut) (testsPage input)
       _ -> fail "Invalid invocation"
 
 fullVersion :: String
 fullVersion = "version " ++ version ++ "  (revision " ++ show revision ++ ", " ++ lastChanged ++ ")"
 
-testsPage :: String -> HTML
-testsPage input = defaultPage fullVersion "Tests" 0 $ do 
+testsPage :: String -> HTMLBuilder
+testsPage input = do 
    h1 "Tests"
    let (hs, bs) = unzip (map format (lines input))
    bold (text "Failures: ") 

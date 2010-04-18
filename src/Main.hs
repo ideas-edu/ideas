@@ -26,6 +26,7 @@ import Network.CGI
 import Service.ModeJSON (processJSON)
 import Service.ModeXML  (processXML)
 import Service.Request
+import Service.DomainReasoner
 
 main :: IO ()
 main = do
@@ -46,8 +47,9 @@ main = do
          putStrLn txt
 
       -- documentation mode
-      _ | documentationMode flags ->
-         mapM_ (makeDocumentation fullVersion packages) (docItems flags)
+      _ | documentationMode flags -> 
+             useIDEAS $ 
+         mapM_ makeDocumentation (docItems flags)
 
       -- cgi binary
       Nothing -> runCGI $ do
@@ -69,6 +71,6 @@ main = do
 process :: String -> IO (Request, String, String)
 process input =
    case discoverDataFormat input of
-      Just XML  -> processXML  packages (Just shortVersion) input
-      Just JSON -> processJSON packages (Just shortVersion) input
-      _         -> fail "Invalid input"
+      Just XML -> either fail return $ useIDEAS $ processXML input
+      Just JSON -> useIDEAS $ processJSON input
+      _ -> fail "Invalid input"

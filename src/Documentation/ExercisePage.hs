@@ -16,6 +16,7 @@ import Common.Strategy hiding (not, replicate)
 import Common.Transformation
 import Service.ExercisePackage
 import Service.StrategyInfo
+import Service.DomainReasoner
 import Service.TypedAbstractService hiding (exercise)
 import Control.Monad
 import Data.List
@@ -30,24 +31,15 @@ import Text.OpenMath.FMP
 import qualified Text.XML as XML
 import Documentation.DefaultPage
 
-makeExercisePage :: String -> String -> ExercisePackage a -> IO ()
-makeExercisePage version dir pkg = do
-   generatePage dir (exercisePageFile code) $ 
-      let title = "Exercise " ++ show code
-      in defaultPage version title 2 $ exercisePage pkg
-   generatePage dir (exerciseStrategyFile code) $ 
-      let title = "Strategy for " ++ show code
-      in defaultPage version title 2 $ strategyPage ex
-   generatePage dir (exerciseRulesFile code) $
-      let title = "Strategy for " ++ show code
-      in defaultPage version title 2 $ rulesPage ex
+makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
+makeExercisePage dir pkg = do
+   let ex   = exercise pkg
+       make = generatePageAt 2 dir . ($ (exerciseCode ex))
+   make exercisePageFile     (exercisePage pkg)
+   make exerciseStrategyFile (strategyPage ex)
+   make exerciseRulesFile    (rulesPage ex)
    unless (null (examples (exercise pkg))) $
-      generatePage dir (exerciseDerivationsFile code) $ 
-         let title = "Derivations for " ++ show code
-         in defaultPage version title 2 $ derivationsPage ex            
- where
-   ex   = exercise pkg
-   code = exerciseCode ex
+       make exerciseDerivationsFile (derivationsPage ex)
 
 exercisePage :: ExercisePackage a -> HTMLBuilder
 exercisePage pkg = do

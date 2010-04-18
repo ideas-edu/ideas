@@ -15,19 +15,27 @@ import Common.Context
 import Common.Exercise
 import Common.Transformation
 import Control.Monad
+import Service.DomainReasoner
 import Service.ServiceList
 import System.Directory
 import System.FilePath
 import Text.HTML
+import qualified Text.XML as XML
 import Data.Char
 
-generatePage :: String -> String -> HTML -> IO ()
-generatePage dir txt doc = do
+generatePage :: String -> String -> HTMLBuilder -> DomainReasoner ()
+generatePage = generatePageAt 0
+
+generatePageAt :: Int -> String -> String -> HTMLBuilder -> DomainReasoner ()
+generatePageAt n dir txt body = do
+   version <- getVersion
    let filename = dir ++ "/" ++ txt
        dirpart  = takeDirectory filename
-   putStrLn $ "Generating " ++ filename
-   unless (null dirpart) (createDirectoryIfMissing True dirpart)
-   writeFile filename (showHTML doc)
+       doc      = defaultPage version (findTitle body) n body
+   lift $ do
+      putStrLn $ "Generating " ++ filename
+      unless (null dirpart) (createDirectoryIfMissing True dirpart)
+      writeFile filename (showHTML doc)
 
 defaultPage :: String -> String -> Int -> HTMLBuilder -> HTML
 defaultPage version title level builder = 
@@ -57,6 +65,9 @@ footer version = do
 
 up :: Int -> String
 up = concat . flip replicate "../"
+
+findTitle :: HTMLBuilder -> String
+findTitle = maybe "" XML.getData . XML.findChild "h1" . XML.makeXML "page"
 
 ------------------------------------------------------------
 -- Paths and files

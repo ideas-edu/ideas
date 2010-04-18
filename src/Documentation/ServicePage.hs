@@ -16,6 +16,7 @@ import Service.ExercisePackage
 import Service.ServiceList
 import Service.TypedExample
 import Service.Types
+import Service.DomainReasoner
 import Service.TypedAbstractService (emptyState)
 import Text.HTML
 import qualified Text.XML as XML
@@ -27,11 +28,9 @@ import Domain.Math.Expr.Symbolic
 import Control.Monad
 import Common.Utils (ShowString(..))
 
-makeServicePage :: String -> String -> Service a -> IO ()
-makeServicePage version dir s =
-   generatePage dir (servicePageFile s) $ 
-      let title = "Service " ++ show (serviceName s)
-      in defaultPage version title 1 $ servicePage s
+makeServicePage :: String -> Service a -> DomainReasoner ()
+makeServicePage dir s =
+   generatePageAt 1 dir (servicePageFile s)  (servicePage s)
 
 servicePage :: Service a -> HTMLBuilder
 servicePage s = do

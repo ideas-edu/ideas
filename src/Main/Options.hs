@@ -22,7 +22,7 @@ import System.Environment
 import System.Exit
 
 data Flag = Version | Help | Logging Bool | InputFile String 
-          | FixRNG | DocItem Documentation
+          | FixRNG | DocItem DocItem
    deriving Eq
 
 header :: String
@@ -58,7 +58,7 @@ options =
      , Option ""  ["self-check"] (docItemDescr (SelfCheck  . fromMaybe "test")) "perform a self-check"
      ]
 
-docItemDescr :: (Maybe String -> Documentation) -> ArgDescr Flag
+docItemDescr :: (Maybe String -> DocItem) -> ArgDescr Flag
 docItemDescr f = OptArg (DocItem . f) "DIR"
 
 serviceOptions :: IO [Flag]
@@ -75,7 +75,7 @@ serviceOptions = do
          putStrLn (concat errs ++ usageInfo header options)
          exitFailure 
 
-docItems :: [Flag] -> [Documentation]
+docItems :: [Flag] -> [DocItem]
 docItems flags = [ x | DocItem x <- flags ]
 
 documentationMode :: [Flag] -> Bool

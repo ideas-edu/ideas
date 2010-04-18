@@ -12,9 +12,10 @@
 -----------------------------------------------------------------------------
 module Service.TypedExample (typedExample) where
 
-import Common.Utils (Some(..))
+import Common.Utils
 import Data.Char
 import Service.ModeXML
+import Service.DomainReasoner
 import Service.ExercisePackage
 import Service.ServiceList
 import Service.Types
@@ -42,19 +43,18 @@ typedExample pkg service args = do
                Left err  -> resultError err
                Right xml -> resultOk xml
    -- Check request/reply pair
-   xmlTest <- return $
-      case processXML [Some pkg] Nothing (show xmlRequest) of
-         Left s -> False `const` (s::String)
-         Right (_, textReply, _) ->
-            let p = filter (not . isSpace)
-            in p textReply == p (show xmlReply)
+   let xmlTest = either (const False) id $ runDomainReasoner $ do
+          addPackage (Some pkg)
+          addService service
+          (_, txt, _) <- processXML (show xmlRequest)
+          let p = filter (not . isSpace)
+          return (p txt == p (show xmlReply))
 
    return (xmlRequest, xmlReply, xmlTest)
  where
    (evaluator, enc)
       | withOpenMath pkg = (openMathConverterTp pkg, "openmath")
       | otherwise        = (stringFormatConverterTp pkg, "string")
-         
 
 stdReply :: String -> String -> Exercise a -> XMLBuilder -> XML
 stdReply s enc ex body = makeXML "request" $ do 

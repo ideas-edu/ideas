@@ -39,23 +39,25 @@ import Text.OpenMath.Object
 import Text.XML
 import qualified Common.Transformation as Rule
 import qualified Service.Types as Tp
+import Service.DomainReasoner
 
-processXML :: Monad m => [Some ExercisePackage] -> Maybe String -> String -> m (Request, String, String)
-processXML list version input = 
-   either fail return $ do
-      xml  <- parseXML input
-      req  <- xmlRequest xml
-      resp <- xmlRequestHandler list req xml
-      let out = showXML (maybe id addVersion version resp)
-      return (req, out, "application/xml") 
+processXML :: String -> DomainReasonerT (Either String) (Request, String, String)
+processXML input = do
+   xml  <- lift (parseXML input)
+   req  <- lift (xmlRequest xml)
+   resp <- xmlRequestHandler req xml
+   vers <- getVersion
+   let out = showXML (if null vers then resp else addVersion vers resp)
+   return (req, out, "application/xml")
 
 addVersion :: String -> XML -> XML
 addVersion s xml = 
    let info = [ "version" := s ]
    in xml { attributes = attributes xml ++ info }
 
-xmlRequestHandler :: Monad m => [Some ExercisePackage] -> Request -> XML -> m XML
-xmlRequestHandler list request xml =
+xmlRequestHandler :: Request -> XML -> DomainReasonerT (Either String) XML
+xmlRequestHandler request xml = do
+   list <- getPackages
    case xmlReply list request xml of
       Left err     -> return (resultError err)
       Right result -> return result

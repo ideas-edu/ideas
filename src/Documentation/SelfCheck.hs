@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.SelfCheck (performSelfCheck) where
 
+import Control.Monad.Trans
 import System.Directory
 import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
@@ -18,10 +19,11 @@ import Service.ExercisePackage
 import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
 import Service.Request
+import Service.DomainReasoner
 
 import qualified Domain.LinearAlgebra.Checks as LA
-import qualified Service.ModeJSON as ModeJSON
-import qualified Service.ModeXML as ModeXML
+import Service.ModeJSON
+import Service.ModeXML
 
 import qualified Domain.Math.Numeric.Tests as MathNum
 import qualified Domain.Math.Polynomial.Tests as MathPoly
@@ -33,9 +35,9 @@ import qualified Text.JSON as JSON
 import Data.List
 import System.Time
 
-performSelfCheck :: String -> [Some ExercisePackage] -> IO ()
-performSelfCheck dir list = totalDiff $ do
-   timeDiff $ do
+performSelfCheck :: String -> DomainReasoner ()
+performSelfCheck dir = totalDiff $ do
+   timeDiff $ lift $ do
       putStrLn "* 1. Domain checks"
       Grammar.checks
       MathNum.main
@@ -46,48 +48,48 @@ performSelfCheck dir list = totalDiff $ do
       UTF8.testEncoding
       JSON.testMe
 
-   putStrLn "* 2. Exercise checks"
-   forM_ list $ \(Some pkg) ->
-      timeDiff $ checkExercise (exercise pkg)
+   lift $ putStrLn "* 2. Exercise checks"
+   pkgs <- getPackages
+   forM_ pkgs $ \(Some pkg) ->
+      timeDiff $ lift $ checkExercise (exercise pkg)
 
    timeDiff $ do
-      putStrLn "* 3. Unit tests"
-      n <- unitTests list dir
-      putStrLn $ "** Number of unit tests: " ++ show n
+      lift $ putStrLn "* 3. Unit tests"
+      n <- unitTests dir
+      lift $ putStrLn $ "** Number of unit tests: " ++ show n
    
 -- Returns the number of tests performed
-unitTests :: [Some ExercisePackage] -> String -> IO Int
-unitTests list = visit 0
+unitTests :: String -> DomainReasoner Int
+unitTests = visit 0
  where
    visit i path = do
-      valid <- doesDirectoryExist path
+      valid <- lift $ doesDirectoryExist path
       if not valid then return 0 else do
          -- analyse content
-         xs <- getDirectoryContents path
+         xs <- lift $ getDirectoryContents path
          let xml  = filter (".xml"  `isSuffixOf`) xs
              json = filter (".json" `isSuffixOf`) xs
-         putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
+         lift $ putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
          -- perform tests
          forM json $ \x -> 
-            performUnitTest list JSON (path ++ "/" ++ x)
+            performUnitTest JSON (path ++ "/" ++ x)
          forM xml $ \x -> 
-            performUnitTest list XML (path ++ "/" ++ x)
+            performUnitTest XML (path ++ "/" ++ x)
          -- recursively visit subdirectories
          is <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
                   visit (i+1) (path ++ "/" ++ x)
          return (length (xml ++ json) + sum is)
 
-performUnitTest :: [Some ExercisePackage] -> DataFormat -> FilePath -> IO ()
-performUnitTest list format path = do
-   useFixedStdGen -- fix the random number generator
-   txt <- readFile path
-   exp <- readFile expPath
+performUnitTest :: DataFormat -> FilePath -> DomainReasoner ()
+performUnitTest format path = do
+   lift useFixedStdGen -- fix the random number generator
+   txt <- lift $ readFile path
+   exp <- lift $ readFile expPath
    out <- case format of 
-             JSON -> liftM snd3 (ModeJSON.processJSON list (Just "self-check") txt)
-             XML  -> liftM snd3 (ModeXML.processXML   list (Just "self-check") txt)
-   reportTest (stripDirectoryPart path) (out ~= exp)
- `catch` \_ -> 
-    putStrLn $ "Error: testing " ++ path
+             JSON -> liftM snd3 (processJSON txt)
+             XML  -> toDomainReasoner (either return return) $ 
+                        liftM snd3 (processXML txt)
+   lift $ reportTest (stripDirectoryPart path) (out ~= exp)
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse
@@ -118,18 +120,18 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
 -}
 
 -- Helper functions
-showDiffWith :: (TimeDiff -> IO ()) -> IO a -> IO a
+showDiffWith :: MonadIO m => (TimeDiff -> IO ()) -> m a -> m a
 showDiffWith f action = do
-   t0 <- getClockTime
+   t0 <- liftIO getClockTime
    a  <- action
-   t1 <- getClockTime
-   f (diffClockTimes t1 t0)
+   t1 <- liftIO getClockTime
+   liftIO (f (diffClockTimes t1 t0))
    return a
 
-totalDiff :: IO a -> IO a
+totalDiff :: MonadIO m => m a -> m a
 totalDiff = showDiffWith (putStrLn . ("*** Total time: "++) . formatDiff)
    
-timeDiff :: IO a -> IO a
+timeDiff :: MonadIO m => m a -> m a
 timeDiff = showDiffWith (putStrLn . ("+++ Time: "++) . formatDiff) 
 
 formatDiff :: TimeDiff -> String

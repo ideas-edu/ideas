@@ -27,6 +27,7 @@ import qualified Service.TypedAbstractService as TAS
 import Service.Submit
 import Service.ServiceList hiding (Service)
 import Service.ExercisePackage 
+import Service.DomainReasoner
 import Control.Monad
 import Data.Maybe
 import Data.Char
@@ -41,12 +42,14 @@ extractCode = fromMaybe noCode . readCode . f
    f (Array (hd:_)) = f hd
    f _ = ""
 
-processJSON :: [Some ExercisePackage] -> Maybe String -> String -> IO (Request, String, String)
-processJSON list version input = do
-   json <- parseJSON input
-   req  <- jsonRequest json
-   resp <- jsonRPC input (myHandler list)
-   let out = show (maybe id addVersion version (toJSON resp))
+processJSON :: String -> DomainReasoner (Request, String, String)
+processJSON input = do
+   json <- lift (parseJSON input)
+   req  <- lift (jsonRequest json)
+   list <- getPackages
+   resp <- lift (jsonRPC input (myHandler list))
+   vers <- getVersion
+   let out = show $ (if null vers then id else addVersion vers) (toJSON resp)
    return (req, out, "application/json")
 
 addVersion :: String -> JSON -> JSON

@@ -87,7 +87,6 @@ Executable              ideas
     Domain.Logic
     Domain.Math.Approximation
     Domain.Math.Clipboard
-    Domain.Math.Data
     Domain.Math.Data.Interval
     Domain.Math.Data.OrList
     Domain.Math.Data.Polynomial
@@ -192,16 +191,18 @@ Executable              ideas
     Text.XML.TestSuite
     Text.XML.Unicode
     Text.XML
-  build-depends:        base >= 3.0 && < 4.0,
+  build-depends:        base >= 4.0,
+                        directory,
                         time,
                         mtl,
                         cgi,
                         containers,
-                        QuickCheck,
+                        QuickCheck >= 2.1.0.1,
                         random,
                         uulib,
                         filepath,
-                        parsec
+                        parsec,
+                        old-time
 
 --------------------------------------------------------------------------------
 

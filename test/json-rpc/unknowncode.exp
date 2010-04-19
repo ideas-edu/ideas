@@ -1,6 +1,6 @@
 {
    "result": null,
-   "error": "user error (invalid exercise code)",
+   "error": "Package no code not found",
    "id": 421,
-   "version": "0.5.6 (2246)"
+   "version": "0.5.14 (3055)"
 }

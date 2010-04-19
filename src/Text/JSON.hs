@@ -24,7 +24,7 @@ import Text.Parsing
 import qualified Text.UTF8 as UTF8
 import Data.List (intersperse)
 import Data.Maybe
-import Control.Monad
+import Control.Monad.Error
 import Test.QuickCheck
 
 data JSON 
@@ -233,23 +233,25 @@ indent n = unlines . map (\s -> replicate n ' ' ++ s) . lines
 --------------------------------------------------------
 -- JSON-RPC over HTTP
 
-type JSON_RPC_Handler = String -> JSON -> IO JSON
+type JSON_RPC_Handler m = String -> JSON -> m JSON
 
-jsonRPC :: String -> JSON_RPC_Handler -> IO JSON_RPC_Response
+jsonRPC :: (MonadError a m, InJSON a) 
+        => JSON -> JSON_RPC_Handler m -> m JSON_RPC_Response
 jsonRPC input handler = 
-   case parseJSON input >>= fromJSON of 
-      Nothing   -> fail "Invalid request"
-      Just req -> do 
+   case fromJSON input of 
+      Nothing  -> return (errorResponse (String "Invalid request") Null)
+      Just req -> do
          json <- handler (requestMethod req) (requestParams req)
-         return $ okResponse json (requestId req)
-       `catch` \e ->
-           return $ errorResponse (String (show e)) (requestId req)
+         return (okResponse json (requestId req))
+       `catchError` \msg ->
+          return (errorResponse (toJSON msg) (requestId req))
 
 --------------------------------------------------------
 -- Testing parser/pretty-printer
 
 instance Arbitrary JSON where
    arbitrary = sized arbJSON
+
 instance CoArbitrary JSON where
    coarbitrary json = 
       case json of

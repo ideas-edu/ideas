@@ -44,11 +44,10 @@ extractCode = fromMaybe noCode . readCode . f
 
 processJSON :: String -> DomainReasoner (Request, String, String)
 processJSON input = do
-   json <- liftIO (parseJSON input)
-   req  <- liftIO (jsonRequest json)
-   list <- getPackages
-   resp <- liftIO (jsonRPC input (myHandler list))
+   json <- parseJSON input
+   req  <- jsonRequest json
    vers <- getVersion
+   resp <- jsonRPC json myHandler
    let out = show $ (if null vers then id else addVersion vers) (toJSON resp)
    return (req, out, "application/json")
 
@@ -82,27 +81,26 @@ jsonRequest json = do
       , encoding   = enc
       }
 
-myHandler :: [Some ExercisePackage] -> JSON_RPC_Handler
-myHandler list fun arg
+myHandler :: JSON_RPC_Handler DomainReasoner
+myHandler fun arg
    | fun == "exerciselist" = do
+        list <- getPackages
+        let pkg = Some (package emptyExercise)
         let service = exerciselistS list 
-        case jsonConverter noCode of
+        case jsonConverter pkg of
            Some conv -> either fail return (evalService conv service arg)
-   | code == noCode && fun /= "exerciselist" =
-        fail "invalid exercise code"
-   | otherwise = 
-        case jsonConverter code of
+   | otherwise = do
+        pkg <- findPackage code
+        case jsonConverter pkg of
            Some conv -> do
-              service <- getService fun
-              either fail return (evalService conv service arg)
+              srv <- getService fun
+              either fail return (evalService conv srv arg)
  where 
    code = extractCode arg
 
-   jsonConverter code = do
-      let f a = Some (Evaluator (jsonEncoder (exercise a)) (jsonDecoder a))
-      case getPackage list code of
-         Just (Some pkg) -> f pkg
-         Nothing         -> f (package emptyExercise)
+jsonConverter :: Some ExercisePackage -> Some (Evaluator (Either String) JSON JSON)
+jsonConverter (Some pkg) =
+   Some (Evaluator (jsonEncoder (exercise pkg)) (jsonDecoder pkg))
 
 jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
 jsonEncoder ex = Encoder

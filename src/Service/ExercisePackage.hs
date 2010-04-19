@@ -16,8 +16,7 @@ module Service.ExercisePackage
    , toOpenMath, fromOpenMath, getExerciseText
      -- Constructors
    , package, termPackage, somePackage, someTermPackage
-     -- Search functions
-   , getPackage, getExercise
+     -- Conversion functions to/from OpenMath
    , termToOMOBJ, omobjToTerm
    ) where
 
@@ -101,19 +100,3 @@ omobjToTerm omobj =
  where
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing
-      
------------------------------------------------------------------------------
--- Utility functions for finding an exercise
-
-getPackage :: Monad m => [Some ExercisePackage] -> ExerciseCode -> m (Some ExercisePackage)
-getPackage pkgs code = 
-   case filter p pkgs of
-      [this] -> return this
-      _      -> fail $ "Package " ++ show code ++ " not found" 
- where
-   p (Some pkg) = exerciseCode (exercise pkg) == code
-   
-getExercise :: Monad m => [Some ExercisePackage] -> ExerciseCode -> m (Some Exercise)
-getExercise pkgs = 
-   let f (Some pkg) = Some (exercise pkg)
-   in liftM f . getPackage pkgs

@@ -102,5 +102,8 @@ getFullVersion = gets fullVersion >>= maybe getVersion return
 
 findPackage :: ExerciseCode -> DomainReasoner (Some ExercisePackage)
 findPackage code = do
-   list <- getPackages 
-   getPackage list code
+   pkgs <- getPackages 
+   let p (Some pkg) = exerciseCode (exercise pkg) == code
+   case filter p pkgs of
+      [this] -> return this
+      _      -> fail $ "Package " ++ show code ++ " not found"

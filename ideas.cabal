@@ -17,8 +17,8 @@ maintainer:             bastiaan.heeren@ou.nl
 stability:              provisional
 extra-source-files:     CREDITS.txt
 build-type:             Simple
-cabal-version:          >= 1.2.1
-tested-with:            GHC == 6.10.1, GHC == 6.12.1
+cabal-version:          >= 1.8.0.2
+tested-with:            GHC == 6.12.1
 
 --------------------------------------------------------------------------------
 
@@ -191,13 +191,13 @@ Executable              ideas
     Text.XML.TestSuite
     Text.XML.Unicode
     Text.XML
-  build-depends:        base >= 4.0,
+  build-depends:        base >= 4.2,
                         directory,
                         time,
                         mtl,
                         cgi,
                         containers,
-                        QuickCheck >= 2.1.0.1,
+                        QuickCheck >= 2.1.0.3,
                         random,
                         uulib,
                         filepath,

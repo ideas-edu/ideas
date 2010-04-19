@@ -11,7 +11,6 @@
 -----------------------------------------------------------------------------
 module Documentation.Make (DocItem(..), makeDocumentation) where
 
-import Control.Monad
 import Common.Utils (Some(..))
 import Service.DomainReasoner
 import Documentation.SelfCheck

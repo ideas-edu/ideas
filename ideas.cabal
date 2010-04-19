@@ -191,7 +191,7 @@ Executable              ideas
     Text.XML.TestSuite
     Text.XML.Unicode
     Text.XML
-  build-depends:        base >= 4.2,
+  build-depends:        base >= 4.2 && < 5,
                         directory,
                         time,
                         mtl,

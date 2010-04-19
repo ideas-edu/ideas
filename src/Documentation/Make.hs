@@ -30,7 +30,7 @@ makeDocumentation doc =
          makeOverviewExercises dir
          makeOverviewServices  dir
          getPackages >>= mapM_ (\(Some pkg) -> makeExercisePage dir pkg)
-         getServices >>= mapM_ (\(Some s)   -> makeServicePage dir s)
+         getServices >>= mapM_ (\s          -> makeServicePage dir s)
       SelfCheck dir -> 
          performSelfCheck dir
       LatexRules dir ->

@@ -13,6 +13,7 @@
 module Service.TypedExample (typedExample) where
 
 import Data.Char
+import Service.DomainReasoner
 import Service.ModeXML
 import Service.ExercisePackage
 import Service.ServiceList
@@ -20,8 +21,7 @@ import Service.Types
 import Common.Exercise
 import Text.XML
    
-typedExample :: Monad m => 
-               ExercisePackage a -> Service a -> [TypedValue a] -> m (XML, XML)
+typedExample :: ExercisePackage a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
 typedExample pkg service args = do
    -- Construct a request in xml
    xmlRequest <- 
@@ -41,13 +41,15 @@ typedExample pkg service args = do
                Left err  -> resultError err
                Right xml -> resultOk xml
    -- Check request/reply pair
-   {- let xmlTest = True
-          addPackage (Some pkg)
-          addService service
-          (_, txt, _) <- processXML (show xmlRequest)
-          let p = filter (not . isSpace)
-          return (p txt == p (show xmlReply)) -}
-   return (xmlRequest, xmlReply)
+   vers <- getVersion
+   xmlTest <- do
+      (_, txt, _) <- processXML (show xmlRequest)
+      let p   = filter (not . isSpace)
+          out = showXML (if null vers then xmlReply else addVersion vers xmlReply)
+      return (p txt == p out)
+     `catchError` 
+      const (return False)
+   return (xmlRequest, xmlReply, xmlTest)
  where
    (evaluator, enc)
       | withOpenMath pkg = (openMathConverterTp pkg, "openmath")
@@ -87,13 +89,3 @@ equal t1 t2 =
       (Location, Location) -> Just id
       (Exercise, Exercise) -> Just id
       _ -> Nothing
-      
-{-
-showVal :: Exercise a -> TypedValue a -> String
-showVal ex tv = 
-   case tv of
-      xs  ::: List t -> "[" ++ commaList (map (showVal ex . (::: t)) xs) ++ "]"
-      pr ::: Tuple t1 t2 -> "(" ++ showVal ex (fst pr:::t1) ++ "," ++ showVal ex (snd pr:::t2) ++ ")"
-      r   ::: Rule -> show r
-      ctx ::: Context -> prettyPrinter ex (fromContext ctx)
-      _ -> "(typed value)" -}

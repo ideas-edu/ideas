@@ -76,11 +76,11 @@ exerciseOverviewPage showAll list = do
       g xs = (f (head xs), xs)
       p (Some ex) = showAll || isPublic ex
 
-serviceOverviewPage :: [Some Service] -> HTMLBuilder
+serviceOverviewPage :: [Service] -> HTMLBuilder
 serviceOverviewPage list = do
    h1 "Services"
-   let sorted = sortBy (\(Some x) (Some y) -> serviceName x `compare` serviceName y) list
-   ul $ flip map sorted $ \(Some s) -> do
+   let sorted = sortBy (\x y -> serviceName x `compare` serviceName y) list
+   ul $ flip map sorted $ \s -> do
       link (servicePageFile s) (ttText (serviceName s))
       when (serviceDeprecated s) $
          space >> text "(deprecated)"

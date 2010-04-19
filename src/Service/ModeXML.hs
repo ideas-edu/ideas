@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Service.ModeXML 
    ( processXML, xmlRequest, openMathConverterTp, stringFormatConverterTp
-   , resultOk, resultError
+   , resultOk, resultError, addVersion
    ) where
 
 import Common.Navigator
@@ -81,32 +81,22 @@ xmlReply request xml
         (st, sloc, answer) <- liftEither $ xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
 
-   | service request == "exerciselist" = do
-        list <- getPackages 
-        let pkg  = Some (package emptyExercise)
-            srv  = exerciselistS list 
-        case stringFormatConverter pkg of
-           Some conv -> do
-              res <- liftEither $ evalService conv srv xml
-              return (resultOk res)
-
 xmlReply request xml = do
-   pkg <- case exerciseID request of
-             Just code -> findPackage code
-             Nothing   -> fail "unknown exercise code"      
-   case encoding request of
-      Just StringEncoding -> do 
-         case stringFormatConverter pkg of
-            Some conv -> do
-               srv <- getService (service request)
-               res <- liftEither $ evalService conv srv xml 
-               return (resultOk res)
-      _ -> do 
-         case openMathConverter pkg of
-            Some conv -> do
-               srv <- getService (service request)
-               res <- liftEither $ evalService conv srv xml 
-               return (resultOk res)
+   srv <- findService (service request)
+   pkg <- 
+      case exerciseID request of
+         Just code -> findPackage code
+         Nothing   
+            | service request == "exerciselist" ->
+                 return (Some (package emptyExercise))
+            | otherwise -> 
+                 fail "unknown exercise code"
+   Some conv <- return $ 
+      case encoding request of
+         Just StringEncoding -> stringFormatConverter pkg
+         _                   -> openMathConverter pkg
+   res <- liftEither $ evalService conv srv xml
+   return (resultOk res)
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
 extractExerciseCode xml =

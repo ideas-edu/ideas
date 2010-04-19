@@ -28,12 +28,13 @@ import Domain.Math.Expr.Symbolic
 import Control.Monad
 import Common.Utils (ShowString(..))
 
-makeServicePage :: String -> Service a -> DomainReasoner ()
-makeServicePage dir s =
-   generatePageAt 1 dir (servicePageFile s)  (servicePage s)
+makeServicePage :: String -> Service -> DomainReasoner ()
+makeServicePage dir s = do
+   xs <- examplesFor (serviceName s)
+   generatePageAt 1 dir (servicePageFile s)  (servicePage xs s)
 
-servicePage :: Service a -> HTMLBuilder
-servicePage s = do
+servicePage :: [Example] -> Service -> HTMLBuilder
+servicePage examples s = do
    h1 (serviceName s)
 
    para $ do
@@ -49,39 +50,40 @@ servicePage s = do
    when (serviceDeprecated s) $ 
       para $ bold $ text "Warning: this service is deprecated!"
    
-   let list = filter ((==serviceName s) . fst) examples
-   unless (null list) $ do
-      h2 $ "XML examples (" ++ show (length list) ++ ")"
-      forM_ (zip [1..] list) $ 
-         \(i, (_, (msg, (xmlRequest, xmlReply)))) -> do
+   unless (null examples) $ do
+      h2 $ "XML examples (" ++ show (length examples) ++ ")"
+      forM_ (zip [1..] examples) $ 
+         \(i, (msg, (xmlRequest, xmlReply, xmlTest))) -> do
             h2 $ show i ++ ". " ++ msg
             bold $ text "Request:"
             preText $ showXML xmlRequest
             bold $ text "Reply:"
             preText $ showXML xmlReply
-            {-
             unless xmlTest $ 
                XML.element "font" $ do
                   "color" XML..=. "red"
-                  bold $ text "Error: invalid request/reply pair" -}
+                  bold $ text "Error: invalid request/reply pair"
 
 -----------------------------------------------------------------------
 -- Examples
 
-examples :: [(String, (String, (XML, XML)))]
-examples = concat
-   [ logic "derivation" [Nothing ::: Maybe StrategyCfg, stLogic1]
-   , lineq "derivation" [Nothing ::: Maybe StrategyCfg, stLineq1]
-   , logic "allfirsts" [stLogic2]
-   , lineq "allfirsts" [stLineq2]
-   , logic "onefirst" [stLogic2]
-   , lineq "onefirst" [stLineq2]
-   , logic "applicable" [[] ::: Location, stLogic1]
-   , lineq "rulesinfo" []
-   , lineq "rulelist" [linearExercise ::: Exercise]
-   , lineq "strategyinfo" [linearExercise ::: Exercise]
-   ]
+type Example = (String, (XML, XML, Bool))
+
+examplesFor :: String -> DomainReasoner [Example]
+examplesFor s = sequence [ m | (t, m) <- list, s == t ]
  where
+   list = 
+      [ logic "derivation" [Nothing ::: Maybe StrategyCfg, stLogic1]
+      , lineq "derivation" [Nothing ::: Maybe StrategyCfg, stLineq1]
+      , logic "allfirsts" [stLogic2]
+      , lineq "allfirsts" [stLineq2]
+      , logic "onefirst" [stLogic2]
+      , lineq "onefirst" [stLineq2]
+--      , logic "applicable" [[] ::: Location, stLogic1]
+      , lineq "rulesinfo" []
+      , lineq "rulelist" [linearExercise ::: Exercise]
+      , lineq "strategyinfo" [linearExercise ::: Exercise]
+      ]
    strVar   = Var . ShowString
    stLogic1 = emptyState dnfExercise (Not (strVar "p" :&&: Not (strVar "q"))) ::: State
    stLogic2 = emptyState dnfExercise (Not (Not (strVar "p")) :&&: Not T) ::: State
@@ -89,14 +91,9 @@ examples = concat
    stLineq2 = emptyState linearExercise (5*(variable "x"+1) :==: (variable "x"-1)/2) ::: State
    
    logic = make "Logic" (package dnfExercise)
-   lineq fs args = concat
-      [ make msg (mkPkg linearExercise) fs args 
-      | (enc, mkPkg) <- [("string", package), ("openmath", termPackage)] 
-      , let msg = "Linear equation (" ++ enc ++ " encoding)"
-      ]
+   lineq = make "Linear equation" (termPackage linearExercise)
       
-   make msg pkg fs args = 
-      [ (fs, (msg, tr))
-      | f  <- getService fs
-      , tr <- typedExample pkg f args
-      ]
+   make msg pkg fs args = (fs, do
+      srv <- findService fs
+      tr  <- typedExample pkg srv args
+      return (msg, tr))

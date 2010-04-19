@@ -11,12 +11,17 @@
 --
 -----------------------------------------------------------------------------
 module Service.DomainReasoner 
-   ( DomainReasoner
-   , setVersion, addPackages, addServices, addPkgService
-   , getPackages, getExercises, getServices, getVersion, runDomainReasoner
-   , liftIO, setFullVersion, addPackage, addService
-   , getFullVersion, runDomainReasoner2, liftEither, catchError
-   , findPackage
+   ( -- * Domain Reasoner data type
+     DomainReasoner, runDomainReasoner
+   , liftEither, liftIO, catchError 
+     -- * Update functions
+   , addPackages, addPackage, addPkgService
+   , addServices, addService
+   , setVersion, setFullVersion
+     -- * Accessor functions
+   , getPackages, getExercises, getServices
+   , getVersion, getFullVersion
+   , findPackage, findService
    ) where
 
 import Common.Exercise
@@ -26,17 +31,33 @@ import Control.Monad.State
 import Service.ServiceList
 import Service.ExercisePackage
 
+-----------------------------------------------------------------------
+-- Domain Reasoner data type
+
+newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
+
 data Content = Content
    { packages    :: [Some ExercisePackage]
-   , services    :: [Some ExercisePackage] -> [Some Service]
+   , services    :: [Some ExercisePackage] -> [Service]
    , version     :: String
    , fullVersion :: Maybe String
    }
    
-emptyState :: Content
-emptyState = Content [] (const []) [] Nothing
+noContent :: Content
+noContent = Content [] (const []) [] Nothing
 
-newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
+runDomainReasoner :: DomainReasoner a -> IO a
+runDomainReasoner m = do
+   result <- evalStateT (runErrorT (unDR m)) noContent
+   case result of
+      Left msg -> fail msg
+      Right a  -> return a
+
+liftEither :: Either String a -> DomainReasoner a
+liftEither = either fail return
+
+-----------------------------------------------------------------------
+-- Instance declarations
 
 instance Monad DomainReasoner where
    return a   = DR (return a)
@@ -54,15 +75,8 @@ instance MonadState Content DomainReasoner where
 instance MonadIO DomainReasoner where
    liftIO m = DR (liftIO m)
 
-runDomainReasoner :: DomainReasoner a -> IO a
-runDomainReasoner m = runDomainReasoner2 m >>= either fail return
-
-runDomainReasoner2 :: DomainReasoner a -> IO (Either String a)
-runDomainReasoner2 m = do
-   evalStateT (runErrorT (unDR m)) emptyState
-
-liftEither :: Either String a -> DomainReasoner a
-liftEither = either fail return
+-----------------------------------------------------------------------
+-- Update functions
 
 addPackages :: [Some ExercisePackage] -> DomainReasoner ()
 addPackages xs = modify $ \c -> c { packages = xs ++ packages c }
@@ -70,14 +84,15 @@ addPackages xs = modify $ \c -> c { packages = xs ++ packages c }
 addPackage :: Some ExercisePackage -> DomainReasoner ()
 addPackage pkg = addPackages [pkg]
 
-addServices :: [Service a] -> DomainReasoner ()
-addServices = mapM_ (addPkgService . const)
+addPkgService :: ([Some ExercisePackage] -> Service) -> DomainReasoner ()
+addPkgService f = modify $ \c -> 
+   c { services = \xs -> f xs : services c xs }
 
-addService :: Service a -> DomainReasoner ()
+addServices :: [Service] -> DomainReasoner ()
+addServices = mapM_ addPkgService . map const
+
+addService :: Service -> DomainReasoner ()
 addService s = addServices [s]
-
-addPkgService :: ([Some ExercisePackage] -> Service a) -> DomainReasoner ()
-addPkgService f = modify $ \c -> c { services = \xs -> Some (f xs) : services c xs }
 
 setVersion :: String -> DomainReasoner ()
 setVersion s = modify $ \c -> c { version = s }
@@ -85,13 +100,16 @@ setVersion s = modify $ \c -> c { version = s }
 setFullVersion :: String -> DomainReasoner ()
 setFullVersion s = modify $ \c -> c  { fullVersion = Just s }
 
+-----------------------------------------------------------------------
+-- Accessor functions
+
 getPackages :: DomainReasoner [Some ExercisePackage]
 getPackages = gets packages
 
 getExercises :: DomainReasoner [Some Exercise]
 getExercises = gets (map (\(Some pkg) -> Some (exercise pkg)) . packages)
 
-getServices :: DomainReasoner [Some Service]
+getServices :: DomainReasoner [Service]
 getServices = gets (\c -> services c (packages c))
 
 getVersion :: DomainReasoner String
@@ -107,3 +125,11 @@ findPackage code = do
    case filter p pkgs of
       [this] -> return this
       _      -> fail $ "Package " ++ show code ++ " not found"
+      
+findService :: String -> DomainReasoner Service
+findService txt = do
+   srvs <- getServices
+   case filter ((==txt) . serviceName) srvs of
+      [hd] -> return hd
+      []   -> fail $ "No service " ++ txt
+      _    -> fail $ "Ambiguous service " ++ txt

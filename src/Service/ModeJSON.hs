@@ -82,21 +82,14 @@ jsonRequest json = do
       }
 
 myHandler :: JSON_RPC_Handler DomainReasoner
-myHandler fun arg
-   | fun == "exerciselist" = do
-        list <- getPackages
-        let pkg = Some (package emptyExercise)
-        let service = exerciselistS list 
-        case jsonConverter pkg of
-           Some conv -> either fail return (evalService conv service arg)
-   | otherwise = do
-        pkg <- findPackage code
-        case jsonConverter pkg of
-           Some conv -> do
-              srv <- getService fun
-              either fail return (evalService conv srv arg)
- where 
-   code = extractCode arg
+myHandler fun arg = do
+   pkg <- if fun == "exerciselist" 
+          then return (Some (package emptyExercise))
+          else findPackage (extractCode arg)
+   srv <- findService fun
+   case jsonConverter pkg of
+      Some conv -> do
+         either fail return (evalService conv srv arg)
 
 jsonConverter :: Some ExercisePackage -> Some (Evaluator (Either String) JSON JSON)
 jsonConverter (Some pkg) =

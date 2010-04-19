@@ -123,7 +123,7 @@ exerciseDerivationsFile code =
    ++ filter (not . isSpace) (identifier code)
    ++ "-derivations.html"
 
-servicePageFile :: Service a -> String
+servicePageFile :: Service -> String
 servicePageFile srv = servicePagePath ++ serviceName srv ++ ".html"
 
 ------------------------------------------------------------

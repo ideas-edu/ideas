@@ -19,21 +19,19 @@ import Data.List
 import Data.Maybe
 import ExerciseInfoPanel
 import Common.Exercise
-import Main.ExerciseList
+import Main.IDEAS
+import Service.DomainReasoner
 import Service.ExercisePackage
 
-packageList :: [Some ExercisePackage]
-packageList = packages
-
-domains :: [String]
-domains = sort $ nub 
-   [ domain (exerciseCode (exercise e)) | Some e <- packageList ]
-
-defaultAssignment :: Some ExercisePackage
-defaultAssignment = head packages
+defaultAssignment :: IO (Some ExercisePackage)
+defaultAssignment = useIDEAS (liftM head getPackages)
 
 newAssignmentDialog :: Window a -> Session -> IO ()
 newAssignmentDialog w session = do
+   -- packages and domains
+   pkgs <- useIDEAS getPackages
+   let domains = sort $ nub 
+          [ domain (exerciseCode (exercise e)) | Some e <- pkgs ]
    -- create frame
    f <- dialog w [text := "New Assignment", bgcolor := white] 
    -- current exercise
@@ -45,8 +43,6 @@ newAssignmentDialog w session = do
    goButton         <- button leftPanel [text := "Go"]
    difficultySlider <- hslider leftPanel True 1 10 [selection := 5]
    ownTextView      <- textCtrl leftPanel [bgcolor := myGrey]
-   
-   
       
    -- Right Panel
    rightPanel <- panel f []
@@ -67,7 +63,7 @@ newAssignmentDialog w session = do
    let getPackageList = do
           i <- get domainBox selection 
           b <- get experimentalBox checked
-          return (getPackages b (domains !! i))
+          return (selectPackages b (domains !! i) pkgs)
        currentPackage = do
           i  <- get exerciseList selection
           xs <- getPackageList
@@ -122,11 +118,9 @@ newAssignmentDialog w session = do
       set goButton     [on command := goCommand stop]
    return () 
    
-getPackages :: Bool -> String -> [Some ExercisePackage]
-getPackages b d = filter p packageList
- where 
-    p (Some pkg) = 
-       let ex = exercise pkg
-       in domain (exerciseCode ex) == d && (b || isPublic ex)
+selectPackages :: Bool -> String -> [Some ExercisePackage] -> [Some ExercisePackage]
+selectPackages b d = filter $ \(Some pkg) ->  
+   let ex = exercise pkg
+   in domain (exerciseCode ex) == d && (b || isPublic ex)
 
 myGrey = rgb 230 230 230

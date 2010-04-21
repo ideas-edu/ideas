@@ -103,7 +103,7 @@ strategyPage :: Exercise a -> HTMLBuilder
 strategyPage ex = do
    h1 title
    h2 "1. Representation in XML"
-   preText (XML.showXML (strategyToXML (strategy ex)))
+   highlightXML True (strategyToXML (strategy ex))
    h2 "2. Locations" 
    let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
        g (Left a)  = text (strategyName a)
@@ -153,7 +153,7 @@ rulesPage ex = do
          h3 "Formal Mathematical Properties"
          forM_ xs $ \(Some rr, b) -> para $ do
             let fmp = rewriteRuleToFMP b rr
-            ttText $ show $ XML.makeXML "FMP" $ 
+            highlightXML False $ XML.makeXML "FMP" $ 
                XML.builder (omobj2xml (toObject fmp))
  where
    code  = exerciseCode ex

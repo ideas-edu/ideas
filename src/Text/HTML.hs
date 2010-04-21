@@ -14,13 +14,15 @@
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
    , htmlPage, errorPage, link, h1, h2, h3, h4, preText, ul, table, noBorderTable
-   , text, image, space, tt, spaces
+   , text, image, space, tt, spaces, highlightXML
    , bold, italic, para, ttText, hr, br, pre, center, bullet
    ) where
 
 import Text.XML hiding (text)
 import qualified Text.XML as XML
 import Control.Monad
+import Data.Char
+import Data.List
 
 type HTML = XML
 
@@ -117,3 +119,33 @@ image n = element "img" ("src" .=. n)
 
 text :: String -> HTMLBuilder
 text = XML.text
+   
+-- A simple XML highlighter
+highlightXML :: Bool -> XML -> HTMLBuilder
+highlightXML nice
+   | nice      = builder . highlight . makeXML "pre" . text . showXML
+   | otherwise = builder . highlight . makeXML "tt"  . text . compactXML
+ where
+   highlight :: HTML -> HTML
+   highlight html = html {content = map (either (Left . f) Right) (content html)}
+   
+   -- find <
+   f :: String -> String
+   f [] = []
+   f list@(x:xs)
+      | "&lt;/" `isPrefixOf` list = -- close tag
+           let (as, bs) = break (not . isAlphaNum) (drop 5 list) 
+           in "<font color='blue'>&lt;/" ++ as ++ "<font color='green'>" ++ g bs
+      | "&lt;" `isPrefixOf` list = -- open tag
+           let (as, bs) = break (not . isAlphaNum) (drop 4 list) 
+           in "<font color='blue'>&lt;" ++ as ++ "<font color='green'>" ++ g bs
+      | otherwise = x : f xs
+   -- find >
+   g [] = []
+   g list@(x:xs) 
+      | "/&gt;" `isPrefixOf` list =
+           "</font>/&gt;</font>" ++ f (drop 5 list)
+      | "&gt;" `isPrefixOf` list =
+           "</font>&gt;</font>" ++ f (drop 4 list)
+      | x=='=' = "<font color='orange'>=</font>" ++ g xs
+      | otherwise = x : g xs

@@ -16,11 +16,11 @@ module Service.DomainReasoner
    , liftEither, liftIO, catchError 
      -- * Update functions
    , addPackages, addPackage, addPkgService
-   , addServices, addService
+   , addServices, addService, addCheck, addChecks
    , setVersion, setFullVersion
      -- * Accessor functions
    , getPackages, getExercises, getServices
-   , getVersion, getFullVersion
+   , getVersion, getFullVersion, doChecks
    , findPackage, findService
    ) where
 
@@ -39,12 +39,13 @@ newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
 data Content = Content
    { packages    :: [Some ExercisePackage]
    , services    :: [Some ExercisePackage] -> [Service]
+   , checks      :: [IO ()]
    , version     :: String
    , fullVersion :: Maybe String
    }
    
 noContent :: Content
-noContent = Content [] (const []) [] Nothing
+noContent = Content [] (const []) [] [] Nothing
 
 runDomainReasoner :: DomainReasoner a -> IO a
 runDomainReasoner m = do
@@ -67,6 +68,10 @@ instance Monad DomainReasoner where
 instance MonadError String DomainReasoner where
    throwError     = fail
    catchError m f = DR (unDR m `catchError` (unDR . f))
+
+instance MonadPlus DomainReasoner where
+   mzero       = DR mzero
+   a `mplus` b = DR (unDR a `mplus` unDR b)
 
 instance MonadState Content DomainReasoner where
    get   = DR get
@@ -94,6 +99,12 @@ addServices = mapM_ addPkgService . map const
 addService :: Service -> DomainReasoner ()
 addService s = addServices [s]
 
+addCheck :: IO () -> DomainReasoner ()
+addCheck m = modify $ \c -> c { checks = checks c ++ [m] }
+
+addChecks :: [IO ()] -> DomainReasoner ()
+addChecks = mapM_ addCheck
+
 setVersion :: String -> DomainReasoner ()
 setVersion s = modify $ \c -> c { version = s }
 
@@ -117,6 +128,13 @@ getVersion = gets version
 
 getFullVersion :: DomainReasoner String
 getFullVersion = gets fullVersion >>= maybe getVersion return
+
+doChecks :: DomainReasoner ()
+doChecks = do
+   xs <- gets checks
+   liftIO $ do
+      sequence_ xs
+      putStrLn ("(" ++ show (length xs) ++ " checks)")
 
 findPackage :: ExerciseCode -> DomainReasoner (Some ExercisePackage)
 findPackage code = do

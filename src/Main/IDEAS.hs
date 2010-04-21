@@ -9,40 +9,63 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Main.ExerciseList (packages, useIDEAS) where
+module Main.IDEAS (useIDEAS) where
 
-import Common.Utils (Some(..), fromShowString)
 import Common.Rewriting
-import Domain.Math.Expr
+import Common.Utils (Some(..), fromShowString)
+import Main.Options
+import Service.DomainReasoner
 import Service.ExercisePackage
 import Service.FeedbackText
-import Service.DomainReasoner
+import Service.ServiceList
 import qualified Domain.LinearAlgebra as LA
+import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.FeedbackText as Logic
-import qualified Domain.RelationAlgebra as RA
+import qualified Domain.Math.Expr as Math
+import qualified Domain.Math.Data.Interval as MathInterval
 import qualified Domain.Math.DerivativeExercise as Math
-import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Equation.CoverUpExercise as Math
+import qualified Domain.Math.Numeric.Exercises as Math
+import qualified Domain.Math.Numeric.Tests as MathNum
 import qualified Domain.Math.Polynomial.Exercises as Math
 import qualified Domain.Math.Polynomial.IneqExercises as Math
-import qualified Domain.RegularExpr.Exercises as RE
+import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.Power.Exercises as Math
-import Main.Options
-import Service.ServiceList
+import qualified Domain.Math.SquareRoot.Tests as MathSqrt
+import qualified Domain.RegularExpr.Exercises as RE
+import qualified Domain.RelationAlgebra as RA
+
+useIDEAS :: DomainReasoner a -> IO a
+useIDEAS action = runDomainReasoner $ do
+   -- version information
+   setVersion     shortVersion
+   setFullVersion fullVersion
+   -- exercise packages
+   addPackages    packages
+   -- services
+   addServices    serviceList
+   addPkgService  exerciselistS
+   -- domain checks
+   addChecks
+      [ MathNum.main, MathPoly.tests, MathSqrt.tests
+      , MathInterval.testMe, LA.checks
+      ]
+   -- do the rest
+   action
 
 packages :: [Some ExercisePackage]
 packages =
    [ -- logic and relation-algebra
      Some (package Logic.dnfExercise)
         { withOpenMath    = True
-        , toOpenMath      = termToOMOBJ . toTerm . fmap (Var . fromShowString)
+        , toOpenMath      = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
         , fromOpenMath    = (>>= fromTerm) . omobjToTerm
         , getExerciseText = Just logicText
         }
    , Some (package Logic.dnfUnicodeExercise)
         { withOpenMath    = True
-        , toOpenMath      = termToOMOBJ . toTerm . fmap (Var . fromShowString)
+        , toOpenMath      = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
         , fromOpenMath    = (>>= fromTerm) . omobjToTerm
         , getExerciseText = Just logicText
         }
@@ -89,12 +112,3 @@ logicText = ExerciseText
    , feedbackDetour        = Logic.feedbackDetour
    , feedbackUnknown       = Logic.feedbackUnknown
    }
-   
-useIDEAS :: DomainReasoner a -> IO a
-useIDEAS action = runDomainReasoner $ do
-   setVersion     shortVersion
-   setFullVersion fullVersion
-   addPackages    packages
-   addServices    serviceList
-   addPkgService  exerciselistS
-   action

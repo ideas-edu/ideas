@@ -19,7 +19,7 @@ import Graphics.UI.WXCore
 import NewAssignmentDialog
 import Observable
 import ProgressPanel
-import Main.Options (versionText)
+import Main.Options (shortVersion)
 import Session
 import System.Directory
 
@@ -28,7 +28,8 @@ main = start exerciseFrame
 
 exerciseFrame :: IO ()
 exerciseFrame = do 
-   session <- makeSession defaultAssignment
+   somePkg <- defaultAssignment
+   session <- makeSession somePkg
    fontRef <- createControl (fontFixed {{- _fontFace = "Lucida Bright",-} _fontSize = 12})
 
    f <- frame [text := "IdeasWX Exercise Assistant", bgcolor := white]
@@ -52,7 +53,7 @@ exerciseFrame = do
          
    -- Status bar
    field1 <- statusField []
-   field2 <- statusField [statusWidth := 200, text := versionText]
+   field2 <- statusField [statusWidth := 200, text := "version " ++ shortVersion]
    set f [statusBar := [field1,field2]] 
    
    -- Left Panel

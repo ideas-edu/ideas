@@ -21,14 +21,9 @@ import Control.Monad
 import Service.Request
 import Service.DomainReasoner
 
-import qualified Domain.LinearAlgebra.Checks as LA
+
 import Service.ModeJSON
 import Service.ModeXML
-
-import qualified Domain.Math.Numeric.Tests as MathNum
-import qualified Domain.Math.Polynomial.Tests as MathPoly
-import qualified Domain.Math.SquareRoot.Tests as MathSqrt
-import qualified Domain.Math.Data.Interval as MathInterval
 
 import qualified Text.UTF8 as UTF8
 import qualified Text.JSON as JSON
@@ -38,29 +33,28 @@ import System.Time
 performSelfCheck :: String -> DomainReasoner ()
 performSelfCheck dir = totalDiff $ do
    timeDiff $ liftIO $ do
-      putStrLn "* 1. Domain checks"
+      putStrLn "* 1. Framework checks"
       Grammar.checks
-      MathNum.main
-      MathPoly.tests
-      MathSqrt.tests
-      MathInterval.testMe
-      LA.checks
       UTF8.testEncoding
       JSON.testMe
 
-   liftIO $ putStrLn "* 2. Exercise checks"
+   timeDiff $ do
+      liftIO $ putStrLn "* 2. Domain checks"
+      doChecks
+
+   liftIO $ putStrLn "* 3. Exercise checks"
    pkgs <- getPackages
    forM_ pkgs $ \(Some pkg) ->
       timeDiff $ liftIO $ checkExercise (exercise pkg)
 
    timeDiff $ do
-      liftIO $ putStrLn "* 3. Unit tests"
-      n <- unitTests dir
-      liftIO $ putStrLn $ "** Number of unit tests: " ++ show n
+      liftIO $ putStrLn "* 4. Black box tests"
+      n <- blackBoxTests dir
+      liftIO $ putStrLn $ "** Number of black box tests: " ++ show n
    
 -- Returns the number of tests performed
-unitTests :: String -> DomainReasoner Int
-unitTests = visit 0
+blackBoxTests :: String -> DomainReasoner Int
+blackBoxTests = visit 0
  where
    visit i path = do
       valid <- liftIO $ doesDirectoryExist path
@@ -72,16 +66,16 @@ unitTests = visit 0
          liftIO $ putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
          -- perform tests
          forM json $ \x -> 
-            performUnitTest JSON (path ++ "/" ++ x)
+            doBlackBoxTest JSON (path ++ "/" ++ x)
          forM xml $ \x -> 
-            performUnitTest XML (path ++ "/" ++ x)
+            doBlackBoxTest XML (path ++ "/" ++ x)
          -- recursively visit subdirectories
          is <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
                   visit (i+1) (path ++ "/" ++ x)
          return (length (xml ++ json) + sum is)
 
-performUnitTest :: DataFormat -> FilePath -> DomainReasoner ()
-performUnitTest format path = do
+doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner ()
+doBlackBoxTest format path = do
    liftIO useFixedStdGen -- fix the random number generator
    txt <- liftIO $ readFile path
    exp <- liftIO $ readFile expPath

@@ -19,7 +19,7 @@ import Control.Monad.Trans
 import Data.IORef
 import Data.Time
 import Documentation.Make
-import Main.ExerciseList
+import Main.IDEAS
 import Main.LoggingDatabase
 import Main.Options
 import Network.CGI

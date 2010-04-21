@@ -1,3 +1,4 @@
+{-# OPTIONS -XRankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -20,13 +21,10 @@ import Service.DomainReasoner
 import Service.TypedAbstractService (emptyState)
 import Text.HTML
 import qualified Text.XML as XML
-import Text.XML (XML, showXML)
-import Domain.Logic
-import Domain.Math.Polynomial.Exercises
-import Domain.Math.Data.Relation
-import Domain.Math.Expr.Symbolic
+import Text.XML (XML)
 import Control.Monad
-import Common.Utils (ShowString(..))
+import Common.Exercise
+import Common.Utils (Some(..))
 
 makeServicePage :: String -> Service -> DomainReasoner ()
 makeServicePage dir s = do
@@ -56,9 +54,9 @@ servicePage examples s = do
          \(i, (msg, (xmlRequest, xmlReply, xmlTest))) -> do
             h2 $ show i ++ ". " ++ msg
             bold $ text "Request:"
-            preText $ showXML xmlRequest
+            highlightXML True xmlRequest
             bold $ text "Reply:"
-            preText $ showXML xmlReply
+            highlightXML True xmlReply
             unless xmlTest $ 
                XML.element "font" $ do
                   "color" XML..=. "red"
@@ -70,30 +68,55 @@ servicePage examples s = do
 type Example = (String, (XML, XML, Bool))
 
 examplesFor :: String -> DomainReasoner [Example]
-examplesFor s = sequence [ m | (t, m) <- list, s == t ]
+examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
  where
    list = 
-      [ logic "derivation" [Nothing ::: Maybe StrategyCfg, stLogic1]
-      , lineq "derivation" [Nothing ::: Maybe StrategyCfg, stLineq1]
-      , logic "allfirsts" [stLogic2]
-      , lineq "allfirsts" [stLineq2]
-      , logic "onefirst" [stLogic2]
-      , lineq "onefirst" [stLineq2]
---      , logic "applicable" [[] ::: Location, stLogic1]
-      , lineq "rulesinfo" []
-      , lineq "rulelist" [linearExercise ::: Exercise]
-      , lineq "strategyinfo" [linearExercise ::: Exercise]
+      [ ("derivation",   makeExample "logic.dnf"  (noCfg +++ logic1))
+      , ("derivation",   makeExample "math.lineq" (noCfg +++ lineq1))
+      , ("allfirsts",    makeExample "logic.dnf"  logic2)
+      , ("allfirsts",    makeExample "math.lineq" lineq2)
+      , ("onefirst",     makeExample "logic.dnf"  logic2)
+      , ("onefirst",     makeExample "math.lineq" lineq2)
+      , ("rulesinfo",    makeExample "math.lineq" noArgs)
+      , ("rulelist",     makeExample "math.lineq" exArgs)
+      , ("strategyinfo", makeExample "math.lineq" exArgs)
       ]
-   strVar   = Var . ShowString
-   stLogic1 = emptyState dnfExercise (Not (strVar "p" :&&: Not (strVar "q"))) ::: State
-   stLogic2 = emptyState dnfExercise (Not (Not (strVar "p")) :&&: Not T) ::: State
-   stLineq1 = emptyState linearExercise (5*(variable "x"+1) :==: 11) ::: State
-   stLineq2 = emptyState linearExercise (5*(variable "x"+1) :==: (variable "x"-1)/2) ::: State
    
-   logic = make "Logic" (package dnfExercise)
-   lineq = make "Linear equation" (termPackage linearExercise)
+   logic1, logic2 :: Args
+   logic1 pkg = newState pkg "~(p /\\ ~q)"
+   logic2 pkg = newState pkg "~~p /\\ T"
+   
+   lineq1, lineq2 :: Args
+   lineq1 pkg = newState pkg "5*(x+1) == 11"
+   lineq2 pkg = newState pkg "5*(x+1) == (x-1)/2"
+   
+   (f +++ g) pkg = f pkg ++ g pkg
+   
+   noCfg _    = [Nothing ::: Maybe StrategyCfg]
+   noArgs _   = []
+   exArgs pkg = [exercise pkg ::: Exercise]
+
+tryAll :: [DomainReasoner a] -> DomainReasoner [a]
+tryAll xs = 
+   let f m = liftM return m `catchError` const (return [])
+   in liftM concat (mapM f xs)
       
-   make msg pkg fs args = (fs, do
-      srv <- findService fs
-      tr  <- typedExample pkg srv args
-      return (msg, tr))
+newState :: Monad m => ExercisePackage a -> String -> m (TypedValue a)
+newState pkg s = do
+   let ex = exercise pkg
+   case parser ex s of
+      Left msg -> fail ("newState: " ++ msg)
+      Right a  -> return (emptyState ex a ::: State)
+      
+type Args = forall a . ExercisePackage a -> [TypedValue a]
+
+makeExample :: String -> Args -> String -> DomainReasoner Example
+makeExample pkgName f srvName = do
+   Some pkg <- case readCode pkgName of
+                  Just pkg -> findPackage pkg
+                  Nothing  -> fail "unknown package name"
+   let ex  = exercise pkg
+       msg = show (exerciseCode ex)
+   srv <- findService srvName
+   tr  <- typedExample pkg srv (f pkg)
+   return (msg, tr)

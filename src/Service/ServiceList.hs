@@ -10,10 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.ServiceList 
-   ( serviceList, exerciselistS
-   , Service(..), evalService
-   ) where
+module Service.ServiceList (serviceList, exerciselistS) where
 
 import Common.Exercise hiding (Exercise)
 import Common.Strategy (toStrategy)
@@ -24,18 +21,11 @@ import Service.FeedbackText hiding (ExerciseText)
 import Service.ProblemDecomposition
 import Service.ExercisePackage
 import Service.RulesInfo
-import Service.Types 
+import Service.Definitions 
 import qualified Common.Exercise as E
 import qualified Service.Diagnose as S
 import qualified Service.Submit as S
 import qualified Service.TypedAbstractService as S
-
-data Service = Service 
-   { serviceName        :: String
-   , serviceDescription :: String
-   , serviceDeprecated  :: Bool
-   , serviceFunction    :: forall a . TypedValue a
-   }
 
 ------------------------------------------------------
 -- Querying a service
@@ -50,15 +40,6 @@ serviceList =
    , problemdecompositionS
    , rulelistS, rulesinfoS, strategyinfoS
    ]
-
-makeService :: String -> String -> (forall a . TypedValue a) -> Service
-makeService name descr f = Service name descr False f
-
-deprecate :: Service -> Service
-deprecate s = s { serviceDeprecated = True }
-
-evalService :: Monad m => Evaluator m inp out a -> Service -> inp -> m out
-evalService f = eval f . serviceFunction
    
 ------------------------------------------------------
 -- Basic services

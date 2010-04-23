@@ -21,11 +21,12 @@ import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.Request
-import Service.Types (TypedValue(..), Evaluator(..), Type, encodeDefault, decodeDefault, Encoder(..), Decoder(..), decoderExercise)
-import qualified Service.Types as Tp
+import qualified Service.Definitions
 import qualified Service.TypedAbstractService as TAS
+import qualified Service.Definitions as Tp
+import Service.Definitions (Type, TypedValue(..))
 import Service.Submit
-import Service.ServiceList hiding (Service)
+import Service.Evaluator
 import Service.ExercisePackage 
 import Service.DomainReasoner
 import Control.Monad
@@ -89,20 +90,20 @@ myHandler fun arg = do
    srv <- findService fun
    case jsonConverter pkg of
       Some conv -> do
-         either fail return (evalService conv srv arg)
+         evalService conv srv arg
 
-jsonConverter :: Some ExercisePackage -> Some (Evaluator (Either String) JSON JSON)
+jsonConverter :: Some ExercisePackage -> Some (Evaluator JSON JSON)
 jsonConverter (Some pkg) =
    Some (Evaluator (jsonEncoder (exercise pkg)) (jsonDecoder pkg))
 
-jsonEncoder :: Monad m => Exercise a -> Encoder m JSON a
+jsonEncoder :: Exercise a -> Encoder JSON a
 jsonEncoder ex = Encoder
    { encodeType  = encode (jsonEncoder ex)
    , encodeTerm  = return . String . prettyPrinter ex
    , encodeTuple = jsonTuple
    }
  where
-   encode :: Monad m => Encoder m JSON a -> Type a t -> t -> m JSON
+   encode :: Encoder JSON a -> Type a t -> t -> DomainReasoner JSON
    encode enc serviceType a
       | length xs > 1 =
            liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
@@ -125,7 +126,7 @@ jsonEncoder ex = Encoder
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
    tupleList tv = [tv]
          
-jsonDecoder :: MonadPlus m => ExercisePackage a -> Decoder m JSON a
+jsonDecoder :: ExercisePackage a -> Decoder JSON a
 jsonDecoder pkg = Decoder
    { decodeType     = decode (jsonDecoder pkg)
    , decodeTerm     = reader (exercise pkg)
@@ -136,7 +137,7 @@ jsonDecoder pkg = Decoder
    reader ex (String s) = either (fail . show) return (parser ex s)
    reader _  _          = fail "Expecting a string when reading a term"
  
-   decode :: MonadPlus m => Decoder m JSON a -> Type a t -> JSON -> m (t, JSON) 
+   decode :: Decoder JSON a -> Type a t -> JSON -> DomainReasoner (t, JSON) 
    decode dec serviceType =
       case serviceType of
          Tp.State    -> useFirst $ decodeState (decoderExercise dec) (decodeTerm dec)
@@ -201,7 +202,7 @@ decodeContext (Object xs) = foldM add emptyEnv xs
    add _ _ = fail "invalid item in context"
 decodeContext json = fail $ "invalid context: " ++ show json
    
-encodeResult :: Monad m => Encoder m JSON a -> Result a -> m JSON
+encodeResult :: Encoder JSON a -> Result a -> DomainReasoner JSON
 encodeResult enc result =
    case result of
       -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]

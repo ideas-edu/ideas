@@ -14,9 +14,8 @@ module Documentation.ServicePage (makeServicePage) where
 
 import Documentation.DefaultPage
 import Service.ExercisePackage
-import Service.ServiceList
 import Service.TypedExample
-import Service.Types
+import Service.Definitions
 import Service.DomainReasoner
 import Service.TypedAbstractService (emptyState)
 import Text.HTML

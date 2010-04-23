@@ -10,25 +10,46 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.Types where
+module Service.Definitions 
+   ( -- * Services
+     Service, makeService, deprecate 
+   , serviceName, serviceDescription, serviceDeprecated, serviceFunction
+     -- * Types
+   , Type(..), TypedValue(..), tuple2, tuple3, tuple4
+   ) where
 
-import Common.Context (Context, fromContext)
+import Common.Context (Context)
 import Common.Exercise (Exercise)
 import Common.Navigator (Location)
-import Common.Transformation (Rule, name)
+import Common.Transformation (Rule)
 import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
 import Common.Utils (commaList)
-import Control.Arrow
-import Control.Monad
 import Data.Maybe
-import Service.ExercisePackage (ExercisePackage, exercise, getExerciseText)
 import Service.TypedAbstractService (State)
 import Service.Submit (Result)
 import Service.Diagnose (Diagnosis)
 import Service.FeedbackText (ExerciseText)
-import Service.RulesInfo
-import System.IO.Unsafe
+import Service.RulesInfo (RulesInfo)
 import qualified Service.ProblemDecomposition as Decomposition
+
+-----------------------------------------------------------------------------
+-- Services
+
+data Service = Service 
+   { serviceName        :: String
+   , serviceDescription :: String
+   , serviceDeprecated  :: Bool
+   , serviceFunction    :: forall a . TypedValue a
+   }
+   
+makeService :: String -> String -> (forall a . TypedValue a) -> Service
+makeService name descr f = Service name descr False f
+
+deprecate :: Service -> Service
+deprecate s = s { serviceDeprecated = True }
+
+-----------------------------------------------------------------------------
+-- Types
 
 infix  2 :::
 infixr 3 :->
@@ -126,81 +147,3 @@ groundType tp =
       StrategyLoc  -> Just "StrategyLocation"
       StrategyCfg  -> Just "StrategyConfiguration"
       _            -> Nothing
-
-data Evaluator m inp out a = Evaluator 
-   { encoder :: Encoder m out a
-   , decoder :: Decoder m inp a
-   }
-
-data Encoder m s a = Encoder 
-   { encodeType  :: forall t . Type a t -> t -> m s
-   , encodeTerm  :: a -> m s
-   , encodeTuple :: [s] -> s
-   }
-
-data Decoder m s a = Decoder 
-   { decodeType     :: forall t . Type a t -> s -> m (t, s)
-   , decodeTerm     :: s -> m a
-   , decoderPackage :: ExercisePackage a
-   }
-
-decoderExercise :: Decoder m s a -> Exercise a
-decoderExercise = exercise . decoderPackage
-
-eval :: Monad m => Evaluator m inp out a -> TypedValue a -> inp -> m out
-eval f (tv ::: tp) s = 
-   case tp of 
-      t1 :-> t2 -> do
-         (a, s1) <- decodeType (decoder f) t1 s
-         eval f (tv a ::: t2) s1
-      _ ->
-         encodeType (encoder f) tp tv
-
-decodeDefault :: MonadPlus m => Decoder m s a -> Type a t -> s -> m (t, s)
-decodeDefault dec tp s =
-   case tp of
-      Iso f _ t  -> liftM (first f) (decodeType dec t s)
-      Pair t1 t2 -> do
-         (a, s1) <- decodeType dec t1 s
-         (b, s2) <- decodeType dec t2 s1
-         return ((a, b), s2)
-      Tag _ t1 ->
-         decodeType dec t1 s
-      Optional a t1 -> 
-         decodeType dec t1 s `mplus` return (a, s)
-      Maybe t1 -> 
-         liftM (first Just) (decodeType dec t1 s) `mplus` return (Nothing, s)
-      Error t -> 
-         liftM (first Right) (decodeType dec t s)
-      Exercise -> do
-         return (exercise (decoderPackage dec), s)
-      ExerciseText -> do
-         exText <- case getExerciseText (decoderPackage dec) of 
-                      Just a  -> return a
-                      Nothing -> fail "No support for exercise texts"
-         return (exText, s)
-      _ ->
-         fail $ "No support for argument type: " ++ show tp
-
-encodeDefault :: Monad m => Encoder m s a -> Type a t -> t -> m s
-encodeDefault enc tp tv =
-   case tp of
-      Iso _ f t  -> encodeType enc t (f tv)
-      Pair t1 t2 -> do
-         let (a, b) = tv
-         x <- encodeType enc t1 a
-         y <- encodeType enc t2 b
-         return (encodeTuple enc [x, y])
-      Tag _ t1      -> encodeType enc t1 tv
-      Elem t1       -> encodeType enc t1 tv
-      Optional _ t1 -> encodeType enc t1 tv
-      Maybe t1      -> case tv of
-                          Just a  -> encodeType enc t1 a
-                          Nothing -> return (encodeTuple enc [])
-      Error t       -> either fail (encodeType enc t) tv
-      IO t1         -> encodeType enc t1 (unsafePerformIO tv)
-      Rule          -> encodeType enc String (name tv)
-      Term          -> encodeTerm enc tv
-      Context       -> fromContext tv >>= encodeType enc Term
-      Location      -> encodeType enc String (show tv)
-      _             -> fail ("No support for result type: " ++ show tp)

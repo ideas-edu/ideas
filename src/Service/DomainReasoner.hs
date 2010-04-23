@@ -13,7 +13,7 @@
 module Service.DomainReasoner 
    ( -- * Domain Reasoner data type
      DomainReasoner, runDomainReasoner
-   , liftEither, liftIO, catchError 
+   , liftEither, MonadIO(..), catchError 
      -- * Update functions
    , addPackages, addPackage, addPkgService
    , addServices, addService, addTestSuite
@@ -29,7 +29,7 @@ import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
-import Service.ServiceList
+import Service.Definitions
 import Service.ExercisePackage
 
 -----------------------------------------------------------------------

@@ -19,8 +19,8 @@ import Data.List
 import Control.Monad
 import Common.Utils (Some(..))
 import Common.Exercise
-import Service.ServiceList
 import Service.DomainReasoner
+import Service.Definitions
 import Text.HTML
 
 makeOverviewExercises :: String -> DomainReasoner ()

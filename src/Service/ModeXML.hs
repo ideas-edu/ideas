@@ -30,15 +30,15 @@ import Service.ExercisePackage
 import Service.ProblemDecomposition
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
-import Service.ServiceList 
 import Service.StrategyInfo
 import Service.TypedAbstractService hiding (exercise)
 import Service.Diagnose
-import Service.Types hiding (State)
+import Service.Definitions hiding (State)
+import qualified Service.Definitions as Tp
+import Service.Evaluator
 import Text.OpenMath.Object
 import Text.XML
 import qualified Common.Transformation as Rule
-import qualified Service.Types as Tp
 import Service.DomainReasoner
 
 processXML :: String -> DomainReasoner (Request, String, String)
@@ -91,11 +91,11 @@ xmlReply request xml = do
                  return (Some (package emptyExercise))
             | otherwise -> 
                  fail "unknown exercise code"
-   Some conv <- return $ 
+   Some conv <-
       case encoding request of
-         Just StringEncoding -> stringFormatConverter pkg
-         _                   -> openMathConverter pkg
-   res <- liftEither $ evalService conv srv xml
+         Just StringEncoding -> return (stringFormatConverter pkg)
+         _                   -> return (openMathConverter pkg)
+   res <- evalService conv srv xml
    return (resultOk res)
 
 extractExerciseCode :: Monad m => XML -> m ExerciseCode
@@ -128,10 +128,10 @@ resultError txt = makeXML "reply" $ do
 ------------------------------------------------------------
 -- Mixing abstract syntax (OpenMath format) and concrete syntax (string)
 
-stringFormatConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
+stringFormatConverter :: Some ExercisePackage -> Some (Evaluator XML XMLBuilder)
 stringFormatConverter (Some pkg) = Some (stringFormatConverterTp pkg)
 
-stringFormatConverterTp :: ExercisePackage a -> Evaluator (Either String) XML XMLBuilder a
+stringFormatConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
 stringFormatConverterTp pkg = 
    Evaluator (xmlEncoder False f ex) (xmlDecoder False g pkg)
  where
@@ -143,10 +143,10 @@ stringFormatConverterTp pkg =
       let input = getData xml
       either (fail . show) return (parser ex input)
 
-openMathConverter :: Some ExercisePackage -> Some (Evaluator (Either String) XML XMLBuilder)
+openMathConverter :: Some ExercisePackage -> Some (Evaluator XML XMLBuilder)
 openMathConverter (Some pkg) = Some (openMathConverterTp pkg)
         
-openMathConverterTp :: ExercisePackage a -> Evaluator (Either String) XML XMLBuilder a
+openMathConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
 openMathConverterTp pkg =
    Evaluator (xmlEncoder True f ex) (xmlDecoder True g pkg)
  where
@@ -154,19 +154,19 @@ openMathConverterTp pkg =
    f = return . builder . toXML . toOpenMath pkg
    g xml = do
       xob   <- findChild "OMOBJ" xml
-      omobj <- xml2omobj xob
+      omobj <- liftEither (xml2omobj xob)
       case fromOpenMath pkg omobj of
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
 
-xmlEncoder :: Monad m => Bool -> (a -> m XMLBuilder) -> Exercise a -> Encoder m XMLBuilder a
+xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
 xmlEncoder b f ex = Encoder
    { encodeType  = encode (xmlEncoder b f ex) ex
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
  where
-   encode :: Monad m => Encoder m XMLBuilder a -> Exercise a -> Type a t -> t -> m XMLBuilder
+   encode :: Encoder XMLBuilder a -> Exercise a -> Type a t -> t -> DomainReasoner XMLBuilder
    encode enc ex serviceType =
       case serviceType of
          Tp.List t1  -> \xs -> 
@@ -194,14 +194,14 @@ xmlEncoder b f ex = Encoder
          Tp.State     -> encodeState b (encodeTerm enc)
          _            -> encodeDefault enc serviceType
 
-xmlDecoder :: MonadPlus m => Bool -> (XML -> m a) -> ExercisePackage a -> Decoder m XML a
+xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
 xmlDecoder b f pkg = Decoder
    { decodeType     = decode (xmlDecoder b f pkg)
    , decodeTerm     = f
    , decoderPackage = pkg
    }
  where
-   decode :: MonadPlus m => Decoder m XML a -> Type a t -> XML -> m (t, XML)
+   decode :: Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
    decode dec serviceType = 
       case serviceType of
          Tp.State       -> decodeState b (decoderExercise dec) (decodeTerm dec)

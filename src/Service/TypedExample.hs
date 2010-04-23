@@ -16,8 +16,8 @@ import Data.Char
 import Service.DomainReasoner
 import Service.ModeXML
 import Service.ExercisePackage
-import Service.ServiceList
-import Service.Types
+import Service.Evaluator
+import Service.Definitions
 import Common.Exercise
 import Text.XML
    
@@ -28,18 +28,18 @@ typedExample pkg service args = do
       case makeArgType args of
          Nothing -> return $  
             stdReply (serviceName service) enc (exercise pkg) (return ())
-         Just (reqTuple ::: reqTp) ->
-            case encodeType (encoder evaluator) reqTp reqTuple of
-               Left err  -> fail err
-               Right xml -> return $ 
-                  stdReply (serviceName service) enc (exercise pkg) xml
+         Just (reqTuple ::: reqTp) -> do
+            xml <- encodeType (encoder evaluator) reqTp reqTuple
+            return $ 
+               stdReply (serviceName service) enc (exercise pkg) xml
    -- Construct a reply in xml
-   xmlReply <- return $
+   xmlReply <-
       case foldl dynamicApply (serviceFunction service) args of
-         reply ::: replyTp ->
-            case encodeType (encoder evaluator) replyTp reply of
-               Left err  -> resultError err
-               Right xml -> resultOk xml
+         reply ::: replyTp -> do
+            xml <- encodeType (encoder evaluator) replyTp reply
+            return (resultOk xml) 
+    `catchError` 
+      \msg -> return (resultError msg)
    -- Check request/reply pair
    vers <- getVersion
    xmlTest <- do

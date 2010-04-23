@@ -78,11 +78,7 @@ doBlackBoxTest format path = do
              XML  -> liftM snd3 (processXML txt) 
            `catchError` 
              \_ -> return "Error"
-   let name = stripDirectoryPart path
-   -- Silly code, to force evaluation of boolean
-   if out ~= exp 
-      then return (assertTrue name True)
-      else return (assertTrue name False)
+   return (assertTrue (stripDirectoryPart path) (out ~= exp))
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse

@@ -9,12 +9,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.SelfCheck (performSelfCheck) where
+module Documentation.SelfCheck (selfCheck) where
 
-import Control.Monad.Trans
 import System.Directory
 import Common.TestSuite
-import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
+import Common.Utils (useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import Service.ExercisePackage
 import qualified Common.Strategy.Grammar as Grammar
@@ -28,52 +27,48 @@ import qualified Text.JSON as JSON
 import Data.List
 import System.Time
 
-performSelfCheck :: String -> DomainReasoner ()
-performSelfCheck dir = totalDiff $ do
-   timeDiff $ liftIO $ do
-      putStrLn "* 1. Framework checks"
-      Grammar.checks
-      runTestSuite $ suite "Text encodings" $ do
-         addProperty "UTF8 encoding" UTF8.propEncoding
-         addProperty "JSON encoding" JSON.propEncoding
-
-   timeDiff $ do
-      liftIO $ putStrLn "* 2. Domain checks"
-      getTestSuite >>= liftIO . runTestSuite
-
-   liftIO $ putStrLn "* 3. Exercise checks"
-   pkgs <- getPackages
-   forM_ pkgs $ \(Some pkg) ->
-      timeDiff $ liftIO $ checkExercise (exercise pkg)
-
-   timeDiff $ do
-      liftIO $ putStrLn "* 4. Black box tests"
-      n <- blackBoxTests dir
-      liftIO $ putStrLn $ "** Number of black box tests: " ++ show n
+selfCheck :: String -> DomainReasoner TestSuite
+selfCheck dir = do
+   pkgs          <- getPackages
+   domainSuite   <- getTestSuite
+   blackboxSuite <- blackBoxTests dir
    
--- Returns the number of tests performed
-blackBoxTests :: String -> DomainReasoner Int
-blackBoxTests = visit 0
- where
-   visit i path = do
-      valid <- liftIO $ doesDirectoryExist path
-      if not valid then return 0 else do
-         -- analyse content
-         xs <- liftIO $ getDirectoryContents path
-         let xml  = filter (".xml"  `isSuffixOf`) xs
-             json = filter (".json" `isSuffixOf`) xs
-         liftIO $ putStrLn $ replicate (i+1) '*' ++ " " ++ simplerDirectory path
-         -- perform tests
-         forM json $ \x -> 
-            doBlackBoxTest JSON (path ++ "/" ++ x)
-         forM xml $ \x -> 
-            doBlackBoxTest XML (path ++ "/" ++ x)
-         -- recursively visit subdirectories
-         is <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
-                  visit (i+1) (path ++ "/" ++ x)
-         return (length (xml ++ json) + sum is)
+   return $ do
+      suite "Framework checks" $ do
+         Grammar.testMe
+         suite "Text encodings" $ do
+            addProperty "UTF8 encoding" UTF8.propEncoding
+            addProperty "JSON encoding" JSON.propEncoding
 
-doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner ()
+      suite "Domain checks" domainSuite
+
+      suite "Exercise checks" $
+         forM_ pkgs $ \(Some pkg) ->
+            exerciseTestSuite (exercise pkg)
+      
+      suite "Black box tests" blackboxSuite
+
+-- Returns the number of tests performed
+blackBoxTests :: String -> DomainReasoner TestSuite
+blackBoxTests path = do
+   valid <- liftIO $ doesDirectoryExist path
+   if not valid then return (return ()) else do
+      -- analyse content
+      xs <- liftIO $ getDirectoryContents path
+      let xml  = filter (".xml"  `isSuffixOf`) xs
+          json = filter (".json" `isSuffixOf`) xs
+      -- perform tests
+      ts1 <- forM json $ \x -> 
+                doBlackBoxTest JSON (path ++ "/" ++ x)
+      ts2 <- forM xml $ \x -> 
+                doBlackBoxTest XML (path ++ "/" ++ x)
+      -- recursively visit subdirectories
+      ts3 <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
+                blackBoxTests (path ++ "/" ++ x)
+      return $ suite (simplerDirectory path) $ 
+         sequence_ (ts1 ++ ts2 ++ ts3)
+
+doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner TestSuite
 doBlackBoxTest format path = do
    liftIO useFixedStdGen -- fix the random number generator
    txt <- liftIO $ readFile path
@@ -81,8 +76,13 @@ doBlackBoxTest format path = do
    out <- case format of 
              JSON -> liftM snd3 (processJSON txt)
              XML  -> liftM snd3 (processXML txt) 
-                        `catchError` \_ -> return "Error"
-   liftIO $ reportTest (stripDirectoryPart path) (out ~= exp)
+           `catchError` 
+             \_ -> return "Error"
+   let name = stripDirectoryPart path
+   -- Silly code, to force evaluation of boolean
+   if out ~= exp 
+      then return (assertTrue name True)
+      else return (assertTrue name False)
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse

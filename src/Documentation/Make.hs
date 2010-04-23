@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.Make (DocItem(..), makeDocumentation) where
 
+import Common.TestSuite
 import Common.Utils (Some(..))
 import Service.DomainReasoner
 import Documentation.SelfCheck
@@ -30,8 +31,9 @@ makeDocumentation doc =
          makeOverviewServices  dir
          getPackages >>= mapM_ (\(Some pkg) -> makeExercisePage dir pkg)
          getServices >>= mapM_ (\s          -> makeServicePage dir s)
-      SelfCheck dir -> 
-         performSelfCheck dir
+      SelfCheck dir -> do
+         suite <- selfCheck dir
+         liftIO (runTestSuite suite)
       LatexRules dir ->
          let f (Some ex) = makeLatexRules dir ex
          in getExercises >>= liftIO . mapM_ f

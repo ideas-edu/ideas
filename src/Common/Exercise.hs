@@ -29,7 +29,7 @@ module Common.Exercise
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
    , checkExercise, checkParserPretty
-   , checkExamples, generate
+   , checkExamples, generate, exerciseTestSuite
    ) where
 
 import Common.Apply
@@ -38,8 +38,8 @@ import Common.Strategy hiding (not, fail, replicate)
 import qualified Common.Strategy as S
 import Common.Derivation
 import Common.Navigator
+import Common.TestSuite
 import Common.Transformation
-import Common.Utils (putLabel)
 import Common.View (makeView)
 import Control.Monad.Error
 import Data.Char
@@ -337,26 +337,28 @@ checkExercise ex = do
                   ++ "  =>  " ++ prettyPrinterContext ex y -}
 
 checkExercise :: Exercise a -> IO ()
-checkExercise ex = do
-   putStrLn ("** " ++ show (exerciseCode ex))
+checkExercise = runTestSuite . exerciseTestSuite
+
+exerciseTestSuite :: Exercise a -> TestSuite
+exerciseTestSuite ex = suite (show (exerciseCode ex)) $ do
    checkExamples ex
    case testGenerator ex of 
       Nothing  -> return ()
       Just gen -> do
          let showAsGen = showAs (prettyPrinter ex) gen
-             check txt p = putLabel txt >> quickCheck p
-         check "parser/pretty printer" $ forAll showAsGen $
+         addProperty "parser/pretty printer" $ forAll showAsGen $
             checkParserPrettyEx ex . from
 
-         putStrLn "Soundness non-buggy rules" 
-         forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> do 
-            putLabel ("    " ++ name r)
-            let eq a b = equivalenceContext ex (from a) (from b)
-                myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
-                myView = makeView (return . from) (S (prettyPrinterContext ex))
-            testRuleSmart eq (liftRule myView r) myGen
-
-         check "soundness strategy/generator" $ 
+         suite "Soundness non-buggy rules" $ do
+            forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> 
+               let eq a b = equivalenceContext ex (from a) (from b)
+                   myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
+                   myView = makeView (return . from) (S (prettyPrinterContext ex))
+                   args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
+               in addPropertyWith (name r) args $ 
+                     propRuleSmart eq (liftRule myView r) myGen 
+ 
+         addProperty "soundness strategy/generator" $ 
             forAll showAsGen $
                maybe False (isReady ex) . fromContext
                . applyD (strategy ex) . inContext ex . from
@@ -378,40 +380,34 @@ checkParserPrettyEx :: Exercise a -> a -> Bool
 checkParserPrettyEx ex = 
    checkParserPretty (similarity ex) (parser ex) (prettyPrinter ex)
 
-checkExamples :: Exercise a -> IO ()
+checkExamples :: Exercise a -> TestSuite
 checkExamples ex = do
    let xs = examples ex
-   unless (null xs) $ do
-      putStrLn $ "Checking " ++ show (length xs) ++ " examples"
-      bs <- forM xs $ \a -> checksForTerm True ex a
-      when (and bs) $ 
-         putStrLn "Passed all tests"
+   unless (null xs) $ suite "Examples" $
+      mapM_ (checksForTerm True ex) xs
 
-checksForTerm :: Bool -> Exercise a -> a -> IO Bool
+checksForTerm :: Bool -> Exercise a -> a -> TestSuite
 checksForTerm leftMost ex a = do
    let tree = derivationTree (strategy ex) (inContext ex a)
    -- Left-most derivation
-   b1 <- if not leftMost then return True else
-         case derivation tree of
-            Just d  -> checksForDerivation ex d
-            Nothing -> do 
-               report $ "no derivation for " ++ prettyPrinter ex a
-               return False
+   if not leftMost then return () else
+      case derivation tree of
+         Just d  -> checksForDerivation ex d
+         Nothing -> do 
+            fail $ "no derivation for " ++ prettyPrinter ex a
    -- Random derivation
-   g  <- getStdGen
-   b2 <- case randomDerivation g tree of
-            Just d  -> checksForDerivation ex d
-            Nothing -> return True 
-   return $ and [b1, b2]
+   g <- liftIO getStdGen
+   case randomDerivation g tree of
+      Just d  -> checksForDerivation ex d
+      Nothing -> return () 
          
-checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -> IO Bool
+checksForDerivation :: Exercise a -> Derivation (Rule (Context a)) (Context a) -> TestSuite
 checksForDerivation ex d = do
    -- Conditions on starting term
    let start = head (terms d)
-   b1 <- do let b = maybe False (isSuitable ex) (fromContext start)
-            unless b $ report $ 
-               "start term not suitable: " ++ prettyPrinterContext ex start
-            return b
+   assertTrue ("start term not suitable: " ++ prettyPrinterContext ex start) $
+      maybe False (isSuitable ex) (fromContext start)
+   
    {-
    b2 <- do let b = False -- maybe True (isReady ex) (fromContext start)
             when b $ report $ 
@@ -425,49 +421,34 @@ checksForDerivation ex d = do
                "final term is suitable: " ++ prettyPrinterContext ex start
                ++ "  =>  " ++ prettyPrinterContext ex final
             return b -}
-   b4 <- do let b = maybe False (isReady ex) (fromContext final)
-            unless b $ report $ 
-               "final term not ready: " ++ prettyPrinterContext ex start
-               ++ "  =>  " ++ prettyPrinterContext ex final
-            return b
+   assertTrue ("final term not ready: " ++ prettyPrinterContext ex start
+               ++ "  =>  " ++ prettyPrinterContext ex final) $ 
+      maybe False (isReady ex) (fromContext final)
+
    -- Parser/pretty printer on terms
-   let ts = terms d
-       p  = maybe False (not . checkParserPrettyEx ex) . fromContext
-   b5 <- case filter p ts of
-            []   -> return True
-            hd:_ -> do
-               let s = prettyPrinterContext ex hd 
-               report $  "parse error for " ++ s ++ ": parsed as " 
-                      ++ either show (prettyPrinter ex) (parser ex s)
-               return False
+   let ts  = terms d
+       p   = maybe False (not . checkParserPrettyEx ex) . fromContext
+   assertNull $ take 1 $ flip map (filter p ts) $ \hd -> 
+      let s = prettyPrinterContext ex hd 
+      in "parse error for " ++ s ++ ": parsed as " 
+         ++ either show (prettyPrinter ex) (parser ex s)
+
+
    -- Equivalences between terms
    let pairs    = [ (x, y) | x <- ts, y <- ts ]
        p (x, y) = not (equivalenceContext ex x y)
-   b6 <- case filter p pairs of
-            []       -> return True
-            (x, y):_ -> do
-               report $  "not equivalent: " ++ prettyPrinterContext ex x
-                      ++ "  with  " ++ prettyPrinterContext ex y
-               return False
+   assertNull $ take 1 $ flip map (filter p pairs) $ \(x, y) ->
+      "not equivalent: " ++ prettyPrinterContext ex x
+      ++ "  with  " ++ prettyPrinterContext ex y
+
    -- Similarity of terms
-   {-
    let p (x, _, y) = fromMaybe False $ 
                         liftM2 (similarity ex) (fromContext x) (fromContext y)
-   b7 <- case filter p (triples d) of
-            [] -> return True
-            (x, r, y):_ -> do
-               report $ "similar subsequent terms: " ++ prettyPrinterContext ex x
-                      ++ "  with  " ++ prettyPrinterContext ex y
-                      ++ "  using  " ++ show r
-               return False -}
+   assertNull $ take 1 $ flip map (filter p (triples d)) $ \(x, r, y) -> 
+      "similar subsequent terms: " ++ prettyPrinterContext ex x
+      ++ "  with  " ++ prettyPrinterContext ex y
+      ++ "  using  " ++ show r
+               
    let xs = [ x | cx <- terms d, x <- fromContext cx, not (similarity ex x x) ]
-   b8 <- case xs of
-            [] -> return True
-            hd:_ -> do
-               report $ "term not similar to itself: " ++ prettyPrinter ex hd
-               return False
-   -- Result
-   return $ and [b1, b4, b5, b6, b8]
-
-report :: String -> IO ()
-report txt = putStrLn ("Error: " ++ txt)
+   assertNull $ take 1 $ flip map xs $ \hd -> 
+      "term not similar to itself: " ++ prettyPrinter ex hd

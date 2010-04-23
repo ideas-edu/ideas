@@ -16,11 +16,14 @@
 -----------------------------------------------------------------------------
 module Common.TestSuite 
    ( addProperty, suite, runTestSuite, TestSuite
+   , assertTrue, assertNull, MonadIO(..), addPropertyWith
+   , blackboxWith
    ) where
 
 import Data.List
 import Test.QuickCheck
 import System.Random
+import Common.Utils (commaList)
 import Control.Monad.State
 
 main :: IO ()
@@ -42,7 +45,7 @@ p3 xs = head (sort xs) == minimum (xs::[Int])
 p4 xs = sort (nub xs) == nub (sort (xs::[Int]))
 p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int]))
 
-newtype TestSuiteM a = TSM { unTSM :: State TestState a }
+newtype TestSuiteM a = TSM { unTSM :: StateT TestState IO a }
  
 type TestSuite = TestSuiteM ()
  
@@ -54,45 +57,56 @@ data TestTree a = Labeled String (TestTree a)
                 | Single a
  deriving Show
 
-data Test = QuickCheck String Property
+data Test = QuickCheck String Args Property
           | Assert String (IO Bool)
                
 instance Monad TestSuiteM where
    return  = TSM . return
    m >>= f = TSM (unTSM m >>= unTSM . f)
 
+instance MonadIO TestSuiteM where
+   liftIO =  TSM . liftIO
+
 suite :: String -> TestSuite -> TestSuite
-suite s m = TSM (modify (:+: new)) 
- where
-   new = Labeled s (suiteToState m)
+suite s m = TSM $ do
+   tree <- liftIO $ execStateT (unTSM m) Empty
+   let new = Labeled s tree
+   modify (:+: new)
 
 addProperty :: Testable prop => String -> prop -> TestSuite
-addProperty s p = TSM (modify (:+: new))
+addProperty = flip addPropertyWith stdArgs
+
+addPropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
+addPropertyWith s args p = TSM (modify (:+: new))
  where
-   new = Single (QuickCheck s (property p))
+   new = Single (QuickCheck s args (property p))
 
 assertIO :: String -> IO Bool -> TestSuite
-assertIO msg io = TSM (modify (:+: new))
- where
-   new = Single (Assert msg io)
+assertIO msg io = TSM $ do
+   let new = Single (Assert msg io)
+   modify (:+: new)
 
 assertTrue :: String -> Bool -> TestSuite
 assertTrue msg = assertIO msg . return
+
+assertNull :: [String] -> TestSuite
+assertNull xs =
+   assertTrue (commaList xs) (null xs)
 
 assertEquals :: (Eq a, Show a) => a -> a -> TestSuite
 assertEquals x y = 
    let msg = "Not equal: " ++ show x ++ " and " ++ show y
    in assertTrue msg (x==y)
 
-blackbox :: (String -> String) -> FilePath -> FilePath -> TestSuite
+blackbox :: (String -> IO String) -> FilePath -> FilePath -> TestSuite
 blackbox = blackboxWith (==)
 
-blackboxWith :: (String -> String -> Bool) -> (String -> String) -> FilePath -> FilePath -> TestSuite
+blackboxWith :: (String -> String -> Bool) -> (String -> IO String) -> FilePath -> FilePath -> TestSuite
 blackboxWith equalTo f fileInput fileExpected = 
    assertIO ("Unexpected output for " ++ show fileInput) $ do
       input    <- readFile fileInput
       expected <- readFile fileExpected
-      let output = f input
+      output   <- f input
       return (output `equalTo` expected)
      `catch` \_ -> return False
 
@@ -100,9 +114,8 @@ type TestReport = TestTree Result
 
 runTestSuite :: TestSuite -> IO ()
 runTestSuite suite = do
-   report <- run (suiteToState suite)
-   --putStrLn (replicate 40 '-')
-   --print report
+   state <- execStateT (unTSM suite) Empty
+   run state
    return ()
  where
    run :: TestState -> IO TestReport
@@ -116,18 +129,18 @@ runTestSuite suite = do
    runTest :: Test -> IO Result
    runTest test =
       case test of
-         QuickCheck s p -> do
+         QuickCheck s args p -> do
             unless (null s) $ putStr (s ++ ": ")
-            quickCheckResult p
+            quickCheckWithResult args p
          Assert msg io -> do
+            putChar '.'
             b <- io
-            return (if b then success else failure msg)
+            if b then return success else do
+               putStrLn $ "Assertion failed: " ++ msg
+               return (failure msg)
 
 success :: Result
 success = Success []
 
 failure :: String -> Result
 failure s = Failure (mkStdGen 0) 0 s []
-
-suiteToState :: TestSuite -> TestState
-suiteToState = flip execState Empty . unTSM

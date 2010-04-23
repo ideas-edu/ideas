@@ -33,7 +33,7 @@ module Common.Transformation
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
-   , testRule, testRuleSmart
+   , testRule, propRuleSmart
    ) where
 
 import Common.Apply
@@ -424,10 +424,8 @@ testRule eq rule =
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
-testRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> IO ()
-testRuleSmart eq rule gen =
-   let cfg = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
-   in quickCheckWith cfg (propRule eq rule (smartGen rule gen))
+propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
+propRuleSmart eq rule = propRule eq rule . smartGen rule
   
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
 propRule eq rule gen = 

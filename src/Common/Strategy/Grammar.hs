@@ -26,7 +26,7 @@ module Common.Strategy.Grammar
      -- * Additional functions
    , collectSymbols, join, withIndex
      -- * QuickCheck properties
-   , checks
+   , testMe
    ) where
 
 import Common.Uniplate
@@ -338,8 +338,8 @@ absorb      op e p    =  (e `op` p === e) && (p `op` e === e)
 propStar         p    =  many p === succeed <|> (p <*> many p)
 propStarStar     p    =  many (many p) === many p
 
-checks :: IO ()
-checks = runTestSuite $ suite "Grammar combinators" $ do
+testMe :: TestSuite
+testMe = suite "Grammar combinators" $ do
    addProperty "map" propMap
    addProperty "join" propJoin
    addProperty "symbols" propSymbols

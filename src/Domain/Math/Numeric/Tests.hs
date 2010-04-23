@@ -12,6 +12,7 @@
 module Domain.Math.Numeric.Tests (main) where
 
 import Common.Apply
+import Common.TestSuite
 import Common.View
 import Control.Monad
 import Domain.Math.Expr
@@ -20,50 +21,51 @@ import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
 
-main :: IO ()
-main = do
-   putStrLn "** Correctness numeric views"
-   let f v = forM_ numGenerators $ \g -> do
-          quickCheck $ propIdempotence g v
-          quickCheck $ propSoundness semEqDouble g v
-   f integerView
-   f rationalView
-   f integerNormalForm
-   f rationalNormalForm
-   f rationalRelaxedForm
-   
-   putStrLn "** Normal forms"
-   let f v = forM_ numGenerators $ \g ->
-          quickCheck $ propNormalForm g v
-   f integerNormalForm
+main :: TestSuite
+main = suite "Numeric tests" $ do
+
+   suite "Correctness numeric views" $ do
+      let f s v = forM_ numGenerators $ \g -> do
+             addProperty ("idempotence " ++ s) $ propIdempotence g v
+             addProperty ("soundness " ++ s)   $ propSoundness semEqDouble g v
+      f "integer view"          integerView
+      f "rational view"         rationalView
+      f "integer normal form"   integerNormalForm
+      f "rational normal form"  rationalNormalForm
+      f "rational relaxed form" rationalRelaxedForm
+
+   suite "Normal forms" $ do
+      let f s v = forM_ numGenerators $ \g ->
+             addProperty s $ propNormalForm g v
+      f "integer normal form" integerNormalForm
     -- f rationalNormalForm -- no longer a normal form
 
-   putStrLn "** Correctness generators"
-   let f g v = quickCheck $ forAll (sized g) (`belongsTo` v)
-   f integerGenerator integerView
-   f rationalGenerator rationalView
-   f ratioExprGen rationalNormalForm
-   f ratioExprGenNonZero rationalNormalForm
-   
-   putStrLn "** View relations"
-   let va .>. vb = forM_ numGenerators $ \g -> 
-          quickCheck $ forAll g $ \a -> 
-             not (a `belongsTo` va) || a `belongsTo` vb
-   integerNormalForm .>. integerView
-   rationalNormalForm .>. rationalRelaxedForm
-   rationalRelaxedForm .>. rationalView
-   integerNormalForm .>. rationalNormalForm
-   integerView .>. rationalView
-   
-   putStrLn "** Pre/post conditions strategies"
-   let f s pre post = forM_ numGenerators $ \g -> 
-          quickCheck $ forAll g $ \a ->
-             not (a `belongsTo` pre) || applyD s a `belongsTo` post
-   f naturalStrategy  integerView  integerNormalForm
-   f integerStrategy  integerView  integerNormalForm
-   f rationalStrategy rationalView rationalNormalForm
-   f fractionStrategy rationalView rationalNormalForm
-   
+   suite "Correctness generators" $ do
+      let f s g v = addProperty s $ forAll (sized g) (`belongsTo` v)
+      f "integer" integerGenerator integerView
+      f "rational" rationalGenerator rationalView
+      f "ratio expr" ratioExprGen rationalNormalForm
+      f "ratio expr nonzero" ratioExprGenNonZero rationalNormalForm
+
+   suite "View relations" $ do
+      let va .>. vb = forM_ numGenerators $ \g -> 
+             addProperty "" $ forAll g $ \a -> 
+                not (a `belongsTo` va) || a `belongsTo` vb
+      integerNormalForm .>. integerView
+      rationalNormalForm .>. rationalRelaxedForm
+      rationalRelaxedForm .>. rationalView
+      integerNormalForm .>. rationalNormalForm
+      integerView .>. rationalView
+
+   suite "Pre/post conditions strategies" $ do
+      let f s pre post = forM_ numGenerators $ \g -> 
+             addProperty "" $ forAll g $ \a ->
+                not (a `belongsTo` pre) || applyD s a `belongsTo` post
+      f naturalStrategy  integerView  integerNormalForm
+      f integerStrategy  integerView  integerNormalForm
+      f rationalStrategy rationalView rationalNormalForm
+      f fractionStrategy rationalView rationalNormalForm
+
 numGenerators :: [Gen Expr]
 numGenerators = map sized 
    [ integerGenerator, rationalGenerator

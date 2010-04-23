@@ -30,6 +30,7 @@ module Common.Strategy.Grammar
    ) where
 
 import Common.Uniplate
+import Common.TestSuite
 import Control.Monad (liftM, liftM2)
 import Data.List
 import Prelude hiding (fail)
@@ -333,35 +334,34 @@ idempotent  op p      =  p `op` p === p
 leftUnit    op e p    =  e `op` p === p
 rightUnit   op e p    =  p `op` e === p
 unit        op e p    =  leftUnit op e p && rightUnit op e p
-absorbe     op e p    =  (e `op` p === e) && (p `op` e === e)
+absorb      op e p    =  (e `op` p === e) && (p `op` e === e)
 propStar         p    =  many p === succeed <|> (p <*> many p)
 propStarStar     p    =  many (many p) === many p
 
 checks :: IO ()
-checks = do
-   putStrLn "** Grammar combinators"
-   quickCheck propMap
-   quickCheck propJoin
-   quickCheck propSymbols
-   quickCheck propIndexId
-   quickCheck propIndexUnique
-   quickCheck propSound
-   quickCheck propEmpty
-   quickCheck propNonEmpty
-   quickCheck propSplitSucceed
-   quickCheck propFirsts
-   quickCheck propRec
-   quickCheck propStar
-   quickCheck propStarStar
-   quickCheck propSucceed
-   quickCheck $ associative (<|>)
-   quickCheck $ commutative (<|>)
-   quickCheck $ idempotent  (<|>)
-   quickCheck $ unit (<|>) fail
-   quickCheck $ associative (<*>)
-   quickCheck $ unit (<*>) succeed
-   quickCheck $ absorbe (<*>) fail
-   quickCheck $ associative (<||>)
-   quickCheck $ commutative (<||>)
-   quickCheck $ unit (<||>) succeed
-   quickCheck $ absorbe (<||>) fail
+checks = runTestSuite $ suite "Grammar combinators" $ do
+   addProperty "map" propMap
+   addProperty "join" propJoin
+   addProperty "symbols" propSymbols
+   addProperty "index" propIndexId
+   addProperty "index unique" propIndexUnique
+   addProperty "sound" propSound
+   addProperty "empty" propEmpty
+   addProperty "nonempty" propNonEmpty
+   addProperty "split succeed" propSplitSucceed
+   addProperty "firsts" propFirsts
+   addProperty "rec" propRec
+   addProperty "star" propStar
+   addProperty "star star" propStarStar
+   addProperty "succeed" propSucceed
+   addProperty "associative or" $ associative (<|>)
+   addProperty "commutative or" $ commutative (<|>)
+   addProperty "idempotent or" $ idempotent  (<|>)
+   addProperty "unit or" $ unit (<|>) fail
+   addProperty "associative and" $ associative (<*>)
+   addProperty "unit and" $ unit (<*>) succeed
+   addProperty "absorb and" $ absorb (<*>) fail
+   addProperty "associative parallel" $ associative (<||>)
+   addProperty "commutative parallel" $ commutative (<||>)
+   addProperty "unit parallel" $ unit (<||>) succeed
+   addProperty "absorb parallel" $ absorb (<||>) fail

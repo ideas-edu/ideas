@@ -14,7 +14,7 @@ module Domain.LinearAlgebra.Checks (checks) where
 import Common.Apply
 import Common.Context
 import Common.Exercise
-import Common.Utils
+import Common.TestSuite
 import Domain.LinearAlgebra hiding (getSolution)
 import Domain.Math.Expr
 import Domain.Math.Simplification (simplify)
@@ -23,13 +23,12 @@ import Test.QuickCheck
 -----------------------------------------------------------
 --- QuickCheck properties
 
-checks :: IO ()
-checks = do
-   putStrLn "** Linear algebra"
-   thoroughCheck propEchelon
-   thoroughCheck propReducedEchelon
-   thoroughCheck propSound
-   thoroughCheck propSolution
+checks :: TestSuite
+checks = suite "Linear algebra" $ do
+   addProperty "echelon"         propEchelon
+   addProperty "reduced echelon" propReducedEchelon
+   addProperty "sound"           propSound
+   addProperty "solution"        propSolution
 
 propEchelon :: Matrix Rational -> Bool
 propEchelon =

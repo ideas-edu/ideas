@@ -16,25 +16,24 @@ module Domain.Math.Numeric.Laws
    , fracLaws, testFracLaws, testFracLawsWith
    ) where
 
+import Common.TestSuite
 import Test.QuickCheck
 
-testNumLaws :: Num a => String -> Gen a -> IO ()
+testNumLaws :: Num a => String -> Gen a -> TestSuite
 testNumLaws = testNumLawsWith (==)
 
-testNumLawsWith :: Num a => (a -> a -> Bool) -> String -> Gen a -> IO ()
-testNumLawsWith eq s g = do
-   putStrLn $ "Testing Num instance for " ++ s
+testNumLawsWith :: Num a => (a -> a -> Bool) -> String -> Gen a -> TestSuite
+testNumLawsWith eq s g = suite ("Num instance for " ++ s) $
    mapM_ ($ g) (numLaws eq)
 
-testFracLaws :: Fractional a => String -> Gen a -> IO ()
+testFracLaws :: Fractional a => String -> Gen a -> TestSuite
 testFracLaws = testFracLawsWith (==)
 
-testFracLawsWith :: Fractional a => (a -> a -> Bool) -> String -> Gen a -> IO ()
-testFracLawsWith eq s g = do
-   putStrLn $ "Testing Fractional instance for " ++ s
+testFracLawsWith :: Fractional a => (a -> a -> Bool) -> String -> Gen a -> TestSuite
+testFracLawsWith eq s g = suite ("Fractional instance for " ++ s) $ 
    mapM_ ($ g) (fracLaws eq)
 
-numLaws :: Num a => (a -> a -> Bool) -> [Gen a -> IO ()]
+numLaws :: Num a => (a -> a -> Bool) -> [Gen a -> TestSuite]
 numLaws eq =
    [ law1 "plus zero left"     $ \a      ->      0+a == a
    , law1 "plus zero right"    $ \a      ->      a+0 == a
@@ -64,7 +63,7 @@ numLaws eq =
    infix 4 ==
    a == b = property (a `eq` b)
 
-fracLaws :: Fractional a => (a -> a -> Bool) -> [Gen a -> IO ()]
+fracLaws :: Fractional a => (a -> a -> Bool) -> [Gen a -> TestSuite]
 fracLaws eq =
    [ law3 "division numerator"   $ \a b c  ->      (a/b)/c == a/(b*c)          <| b/=0 && c/=0
    , law3 "division denominator" $ \a b c  ->      a/(b/c) == a*(c/b)          <| b/=0 && c/=0
@@ -91,16 +90,13 @@ fracLaws eq =
    p <| b = b ==> p
 
 -- local helper-functions
-report :: String -> Property -> IO ()
-report s p = putStr (take 30 ("- " ++ s ++ repeat ' ')) >> quickCheck p
+law1 :: Show a => String -> (a -> Property) -> Gen a -> TestSuite
+law1 s p g = addProperty s (make g id p)
 
-law1 :: Show a => String -> (a -> Property) -> Gen a -> IO ()
-law1 s p g = report s (make g id p)
+law2 :: Show a => String -> (a -> a -> Property) -> Gen a -> TestSuite
+law2 s p g = addProperty s (make g (make g id) p)
 
-law2 :: Show a => String -> (a -> a -> Property) -> Gen a -> IO ()
-law2 s p g = report s (make g (make g id) p)
-
-law3 :: Show a => String -> (a -> a -> a -> Property) -> Gen a -> IO ()
-law3 s p g = report s (make g (make g (make g id)) p)
+law3 :: Show a => String -> (a -> a -> a -> Property) -> Gen a -> TestSuite
+law3 s p g = addProperty s (make g (make g (make g id)) p)
 
 make g c p = forAll g (c . p)

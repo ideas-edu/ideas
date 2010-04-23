@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Text.UTF8 
    ( encode, encodeM, decode, decodeM
-   , isUTF8, allBytes, testEncoding
+   , isUTF8, allBytes, propEncoding
    ) where
 
 import Data.Char
@@ -105,10 +105,8 @@ between a (low, high) = low <= a && a <= high
 -- Test encoding
 
 -- | QuickCheck internal encoding/decoding functions
-testEncoding :: IO () 
-testEncoding = do
-   putStrLn "** UTF8 encoding"
-   quickCheck $ forAll (sized gen) valid
+propEncoding :: Property
+propEncoding = forAll (sized gen) valid
  where
    gen n = replicateM n someChar
    someChar = liftM chr $ oneof

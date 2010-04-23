@@ -16,6 +16,7 @@ import Common.Apply
 import Common.Exercise
 import Common.Context
 import Common.Strategy
+import Common.TestSuite
 import Common.Derivation
 import Common.View
 import Domain.Math.Data.Relation
@@ -37,7 +38,7 @@ import Data.Maybe
 ------------------------------------------------------------
 -- Testing instances
 
-tests :: IO ()
+tests :: TestSuite
 tests = do 
    let v = viewEquivalent (polyViewWith rationalView)
    testNumLawsWith v "polynomial" (sized polynomialGen)

@@ -30,6 +30,7 @@ module Domain.Math.Data.Interval
    , testMe
    ) where
 
+import Common.TestSuite
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
@@ -290,42 +291,42 @@ instance (Arbitrary a, Ord a) => Arbitrary (Intervals a) where
 instance (CoArbitrary a, Ord a) => CoArbitrary (Intervals a) where
    coarbitrary (IS xs) = coarbitrary xs
 
-testMe :: IO ()
-testMe = do
-   putStrLn "** Intervals"
-   -- Constructor functions
-   quickCheck $ op0 empty     (const False)
-   quickCheck $ op0 unbounded (const True)
+testMe :: TestSuite
+testMe = suite "Intervals" $ do
+
+   suite "Constructor functions" $ do
+     addProperty "empty"     $ op0 empty     (const False)
+     addProperty "unbounded" $ op0 unbounded (const True)
    
-   quickCheck $ op1 greaterThan (>)
-   quickCheck $ op1 greaterThanOrEqualTo (>=)
-   quickCheck $ op1 lessThan (<)
-   quickCheck $ op1 lessThanOrEqualTo (<=)
-   quickCheck $ op1 singleton (==)
+     addProperty "greater than"             $ op1 greaterThan (>)
+     addProperty "greater than or equal to" $ op1 greaterThanOrEqualTo (>=)
+     addProperty "less than"                $ op1 lessThan (<)
+     addProperty "less than or equal to"    $ op1 lessThanOrEqualTo (<=)
+     addProperty "singleton"                $ op1 singleton (==)
    
-   quickCheck $ op2 open      (<)  (<)
-   quickCheck $ op2 closed    (<=) (<=)
-   quickCheck $ op2 leftOpen  (<)  (<=)
-   quickCheck $ op2 rightOpen (<=) (<)
+     addProperty "open"       $ op2 open      (<)  (<)
+     addProperty "closed"     $ op2 closed    (<=) (<=)
+     addProperty "left open"  $ op2 leftOpen  (<)  (<=)
+     addProperty "right open" $ op2 rightOpen (<=) (<)
    
-   -- From/to lists
-   quickCheck fromTo1
-   quickCheck fromTo2
+   suite "From/to lists" $ do
+      addProperty "" fromTo1
+      addProperty "" fromTo2
    
-   -- Combinators
-   quickCheck defExcept
-   quickCheck defUnion
-   quickCheck defIntersect
-   quickCheck defComplement
+   suite "Combinators" $ do
+      addProperty "except"     defExcept
+      addProperty "union"      defUnion
+      addProperty "intersect"  defIntersect
+      addProperty "complement" defComplement
    
-   -- Combinator properties
-   quickCheck $ selfInverse complement
-   quickCheck $ transitive  union
-   quickCheck $ commutative union
-   quickCheck $ absorption  union
-   quickCheck $ transitive  intersect
-   quickCheck $ commutative intersect
-   quickCheck $ absorption  intersect
+   suite "Combinator properties" $ do
+      addProperty "inverse complement"    $ selfInverse complement
+      addProperty "transitive union"      $ transitive  union
+      addProperty "commutative union"     $ commutative union
+      addProperty "absorption union"      $ absorption  union
+      addProperty "transitive intersect"  $ transitive  intersect
+      addProperty "commutative intersect" $ commutative intersect
+      addProperty "absorption intersect"  $ absorption  intersect
 
 fromTo1, fromTo2 :: Intervals Int -> Bool
 fromTo1 a = fromList (toList a) == a

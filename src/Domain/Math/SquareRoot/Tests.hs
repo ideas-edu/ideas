@@ -15,12 +15,12 @@ import Control.Monad
 import Test.QuickCheck
 import Domain.Math.Data.SquareRoot
 import Domain.Math.Numeric.Laws
-import Common.Utils ()
+import Common.TestSuite
 
 -------------------------------------------------------------------
 -- Testing
  
-tests :: IO ()
+tests :: TestSuite
 tests = 
    testNumLaws  "square roots" squareRootGen
    -- 	testFracLaws "square roots" squareRootGen

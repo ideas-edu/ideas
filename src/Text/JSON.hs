@@ -17,7 +17,7 @@ module Text.JSON
    , InJSON(..)                           -- type class"
    , lookupM
    , parseJSON, showCompact, showPretty   -- parser and pretty-printers
-   , jsonRPC, JSON_RPC_Handler, testMe
+   , jsonRPC, JSON_RPC_Handler, propEncoding
    ) where
 
 import Text.Parsing
@@ -293,10 +293,6 @@ myStringGen = do
    replicateM n $ oneof $ map return $ 
       ['A' .. 'Z'] ++ ['a' .. 'z'] ++ ['0' .. '9']
    
-testMe :: IO ()
-testMe = do 
-   putStrLn "** JSON encoding"
-   quickCheck prop
- where
-   prop :: JSON -> Bool
-   prop a = parseJSON (show a) == Just a
+propEncoding :: Property
+propEncoding = property $ \a ->  
+   parseJSON (show a) == Just a

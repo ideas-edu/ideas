@@ -471,9 +471,3 @@ checksForDerivation ex d = do
 
 report :: String -> IO ()
 report txt = putStrLn ("Error: " ++ txt)
-
-{-
-generateIO :: Int -> Gen a -> IO [a]
-generateIO n gen = forM [0..n] $ \i -> do
-   std <- newStdGen
-   return (generate i std gen) -}

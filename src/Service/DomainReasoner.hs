@@ -16,15 +16,16 @@ module Service.DomainReasoner
    , liftEither, liftIO, catchError 
      -- * Update functions
    , addPackages, addPackage, addPkgService
-   , addServices, addService, addCheck, addChecks
+   , addServices, addService, addTestSuite
    , setVersion, setFullVersion
      -- * Accessor functions
    , getPackages, getExercises, getServices
-   , getVersion, getFullVersion, doChecks
+   , getVersion, getFullVersion, getTestSuite
    , findPackage, findService
    ) where
 
 import Common.Exercise
+import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
@@ -39,13 +40,13 @@ newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
 data Content = Content
    { packages    :: [Some ExercisePackage]
    , services    :: [Some ExercisePackage] -> [Service]
-   , checks      :: [IO ()]
+   , testSuite   :: TestSuite
    , version     :: String
    , fullVersion :: Maybe String
    }
    
 noContent :: Content
-noContent = Content [] (const []) [] [] Nothing
+noContent = Content [] (const []) (return ()) [] Nothing
 
 runDomainReasoner :: DomainReasoner a -> IO a
 runDomainReasoner m = do
@@ -99,11 +100,8 @@ addServices = mapM_ addPkgService . map const
 addService :: Service -> DomainReasoner ()
 addService s = addServices [s]
 
-addCheck :: IO () -> DomainReasoner ()
-addCheck m = modify $ \c -> c { checks = checks c ++ [m] }
-
-addChecks :: [IO ()] -> DomainReasoner ()
-addChecks = mapM_ addCheck
+addTestSuite :: TestSuite -> DomainReasoner ()
+addTestSuite m = modify $ \c -> c { testSuite = testSuite c >> m }
 
 setVersion :: String -> DomainReasoner ()
 setVersion s = modify $ \c -> c { version = s }
@@ -129,12 +127,8 @@ getVersion = gets version
 getFullVersion :: DomainReasoner String
 getFullVersion = gets fullVersion >>= maybe getVersion return
 
-doChecks :: DomainReasoner ()
-doChecks = do
-   xs <- gets checks
-   liftIO $ do
-      sequence_ xs
-      putStrLn ("(" ++ show (length xs) ++ " checks)")
+getTestSuite :: DomainReasoner TestSuite
+getTestSuite = gets testSuite
 
 findPackage :: ExerciseCode -> DomainReasoner (Some ExercisePackage)
 findPackage code = do

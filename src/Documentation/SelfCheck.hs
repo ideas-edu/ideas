@@ -13,6 +13,7 @@ module Documentation.SelfCheck (performSelfCheck) where
 
 import Control.Monad.Trans
 import System.Directory
+import Common.TestSuite
 import Common.Utils (reportTest, useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import Service.ExercisePackage
@@ -20,11 +21,8 @@ import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
 import Service.Request
 import Service.DomainReasoner
-
-
 import Service.ModeJSON
 import Service.ModeXML
-
 import qualified Text.UTF8 as UTF8
 import qualified Text.JSON as JSON
 import Data.List
@@ -35,12 +33,13 @@ performSelfCheck dir = totalDiff $ do
    timeDiff $ liftIO $ do
       putStrLn "* 1. Framework checks"
       Grammar.checks
-      UTF8.testEncoding
-      JSON.testMe
+      runTestSuite $ suite "Text encodings" $ do
+         addProperty "UTF8 encoding" UTF8.propEncoding
+         addProperty "JSON encoding" JSON.propEncoding
 
    timeDiff $ do
       liftIO $ putStrLn "* 2. Domain checks"
-      doChecks
+      getTestSuite >>= liftIO . runTestSuite
 
    liftIO $ putStrLn "* 3. Exercise checks"
    pkgs <- getPackages

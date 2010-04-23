@@ -47,10 +47,12 @@ useIDEAS action = runDomainReasoner $ do
    addServices    serviceList
    addPkgService  exerciselistS
    -- domain checks
-   addChecks
-      [ MathNum.main, MathPoly.tests, MathSqrt.tests
-      , MathInterval.testMe, LA.checks
-      ]
+   addTestSuite $ do
+      MathNum.main
+      MathPoly.tests
+      MathSqrt.tests
+      MathInterval.testMe
+      LA.checks
    -- do the rest
    action
 

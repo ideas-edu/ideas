@@ -115,28 +115,27 @@ runTestSuiteResult suite = liftM TSR $ getDiff $ do
       (t, diff) <- getDiff (putStrLn (s ++ ":") >> run ts)
       return (Labeled (s, diff) t)
 
-   forTests ts = do
-      runTests False [] ts
-         
-   runTests b acc [] = do
-      when b (putChar '\n')
-      return (foldr ((:+:) . Single) Empty (reverse acc))
+   forTests = rec False []
+    where
+      rec b acc [] = do
+         when b (putChar '\n')
+         return (foldr ((:+:) . Single) Empty (reverse acc))
    
-   runTests b acc (QuickCheck s args p : rest) = do
-      putStr $ [ '\n' | b ] ++ "   "
-      unless (null s) $ putStr (s ++ ": ")
-      r <- quickCheckWithResult args p
-      runTests False ((s, maxSuccess args, r) : acc) rest
+      rec b acc (QuickCheck s args p : rest) = do
+         putStr $ [ '\n' | b ] ++ "   "
+         unless (null s) $ putStr (s ++ ": ")
+         r <- quickCheckWithResult args p
+         rec False ((s, maxSuccess args, r) : acc) rest
    
-   runTests b acc (Assert s io msg : rest) = io >>= \ok ->
-      if ok then do
-         putStr $ if b then "." else "   ."
-         runTests True ((s, 1, success) : acc) rest
-         else do
-         when b $ putStr "\n   "
-         unless (null s) $ putStr $ s ++ ": "
-         putStrLn msg
-         runTests False ((s, 1, failure msg) : acc) rest
+      rec b acc (Assert s io msg : rest) = io >>= \ok ->
+         if ok then do
+            putStr $ if b then "." else "   ."
+            rec True ((s, 1, success) : acc) rest
+            else do
+            when b $ putStr "\n   "
+            unless (null s) $ putStr $ s ++ ": "
+            putStrLn msg
+            rec False ((s, 1, failure msg) : acc) rest
 
 ----------------------------------------------------------------
 -- Test Suite Result
@@ -182,7 +181,7 @@ makeTestLog :: TestSuiteResult -> String
 makeTestLog (TSR (tree, diff)) = unlines (make [] tree) ++ totalTime
  where
    totalTime  = "\n(Total time: " ++ formatDiff diff ++ ")"
-   make loc t = concatMap (either (map forTest) forSuite) xs
+   make loc t = concatMap (either forTests forSuite) xs
     where
       xs = reverse $ snd $ foldl op (1::Int, []) (collectLevel t)
       op (i, ys) y = case y of 
@@ -192,15 +191,24 @@ makeTestLog (TSR (tree, diff)) = unlines (make [] tree) ++ totalTime
       forSuite (nl, ((s, d), t)) = 
          (showLoc nl ++ ". " ++ s) : make nl t 
          ++ ["  (" ++ formatDiff d ++ " for " ++ s ++ ")"]
+      
+      forTests [] = []
+      forTests list@(x:xs) 
+         | isSuccess (thd3 x) = 
+              let (ys, zs) = break (not . isSuccess . thd3) list
+              in ("   " ++ concatMap forTest ys) : forTests zs
+         | otherwise = 
+              ("   " ++ forTest x) : forTests xs
+              
       forTest (s, n, r)
-         | null s    = result
-         | otherwise = "  " ++ s ++ ": " ++ result
+         | null s || isSuccess r = result
+         | otherwise             = s ++ ": " ++ result
        where
          result = 
             case r of
                Success _
-                  | n > 1     -> "Ok (" ++ show n ++ " tests)"
-                  | otherwise -> "Ok "
+                  | n > 1     -> "(" ++ show n ++ " tests)"
+                  | otherwise -> "."
                GaveUp n _ -> "Warning: passed only " ++ show n ++ " tests."
                Failure _ _ msg _   -> "Error: " ++ msg
                NoExpectedFailure _ -> "Error: no expected failure" 
@@ -229,12 +237,15 @@ collectInfo tree = (length tests, length failures, length warnings)
    failures = filter (isFailure . thd3) tests
    warnings = filter (isWarning . thd3) tests
 
-   isFailure (Failure _ _ _ _)     = True
-   isFailure (NoExpectedFailure _) = True
-   isFailure _ = False
+isFailure (Failure _ _ _ _)     = True
+isFailure (NoExpectedFailure _) = True
+isFailure _ = False
    
-   isWarning (GaveUp _ _) = True
-   isWarning _ = False
+isWarning (GaveUp _ _) = True
+isWarning _ = False
+
+isSuccess (Success _) = True
+isSuccess _ = False
 
 subtrees :: Tree a b -> [(a, Tree a b)]
 subtrees t = [ p | Right p <- collectLevel t ]
@@ -299,7 +310,7 @@ main = do
          assertTrue "sorted" (sort [3,2,1] == [1,2,3])
          assertEquals "eq" (sort [1,2,2]) (nub [1,2,2]) 
    printSummary r
-   --printTestLog r
+   printTestLog r
    --print r
    --print (subResults r)
  where      

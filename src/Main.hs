@@ -48,7 +48,8 @@ main = do
       -- documentation mode
       _ | documentationMode flags -> 
              useIDEAS $ 
-         mapM_ makeDocumentation (docItems flags)
+                let f = makeDocumentation (docDir flags) (testDir flags)
+                in mapM_ f (docItems flags)
 
       -- cgi binary
       Nothing -> runCGI $ do

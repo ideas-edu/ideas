@@ -22,7 +22,7 @@ import System.Environment
 import System.Exit
 
 data Flag = Version | Help | Logging Bool | InputFile String 
-          | FixRNG | DocItem DocItem
+          | FixRNG | DocItem DocItem | DocDir String | TestDir String
    deriving Eq
 
 header :: String
@@ -47,19 +47,22 @@ shortVersion = version ++ " (" ++ show revision ++ ")"
 
 options :: [OptDescr Flag]
 options =
-     [ Option []  ["version"]    (NoArg Version)           "show version number"
-     , Option "?" ["help"]       (NoArg Help)              "show options"
-     , Option "l" ["logging"]    (NoArg $ Logging True)    "enable logging"
-     , Option []  ["no-logging"] (NoArg $ Logging False)   "disable logging (default on local machine)"
-     , Option "f" ["file"]       (ReqArg InputFile "FILE") "use input FILE as request"
-     , Option ""  ["fixed-rng"]  (NoArg FixRNG)            "use a fixed random-number generator"
-     , Option ""  ["make-pages"] (docItemDescr (Pages      . fromMaybe "docs")) "generate pages for exercises and services"
-     , Option ""  ["make-rules"] (docItemDescr (LatexRules . fromMaybe "docs")) "generate latex code for rewrite rules"
-     , Option ""  ["self-check"] (docItemDescr (SelfCheck  . fromMaybe "test")) "perform a self-check"
+     [ Option []  ["version"]    (NoArg Version)              "show version number"
+     , Option "?" ["help"]       (NoArg Help)                 "show options"
+     , Option "l" ["logging"]    (NoArg $ Logging True)       "enable logging"
+     , Option []  ["no-logging"] (NoArg $ Logging False)      "disable logging (default on local machine)"
+     , Option "f" ["file"]       (ReqArg InputFile "FILE")    "use input FILE as request"
+     , Option ""  ["fixed-rng"]  (NoArg FixRNG)               "use a fixed random-number generator"
+     , Option ""  ["make-pages"] (NoArg $ DocItem Pages)      "generate pages for exercises and services"
+     , Option ""  ["make-rules"] (NoArg $ DocItem LatexRules) "generate latex code for rewrite rules"
+     , Option ""  ["self-check"] (NoArg $ DocItem SelfCheck)  "perform a self-check"
+     , Option ""  ["test"]       (OptArg testArg "DIR")       "run tests on directory (default: 'test')"
+     , Option ""  ["docs-dir"]   (ReqArg DocDir "DIR")        "directory for documentation (default: 'docs')" 
+     , Option ""  ["test-dir"]   (ReqArg TestDir "DIR")       "directory with tests (default: 'test')"
      ]
 
-docItemDescr :: (Maybe String -> DocItem) -> ArgDescr Flag
-docItemDescr f = OptArg (DocItem . f) "DIR"
+testArg :: Maybe String -> Flag
+testArg = DocItem . BlackBox
 
 serviceOptions :: IO [Flag]
 serviceOptions = do
@@ -77,6 +80,16 @@ serviceOptions = do
 
 docItems :: [Flag] -> [DocItem]
 docItems flags = [ x | DocItem x <- flags ]
+
+docDir :: [Flag] -> String
+docDir flags = case [ d | DocDir d <- flags ] of
+                  d:_ -> d
+                  _   -> "docs"
+
+testDir :: [Flag] -> String
+testDir flags = case [ d | TestDir d <- flags ] of
+                  d:_ -> d
+                  _   -> "test"
 
 documentationMode :: [Flag] -> Bool
 documentationMode = not . null . docItems

@@ -13,27 +13,45 @@ module Documentation.Make (DocItem(..), makeDocumentation) where
 
 import Common.TestSuite
 import Common.Utils (Some(..))
+import Data.Maybe
 import Service.DomainReasoner
 import Documentation.SelfCheck
 import Documentation.LatexRules
 import Documentation.ExercisePage
+import Documentation.TestsPage
 import Documentation.ServicePage
 import Documentation.OverviewPages
 
-data DocItem = Pages String | LatexRules String | SelfCheck String
+data DocItem = Pages | LatexRules | SelfCheck | BlackBox (Maybe String)
    deriving Eq
 
-makeDocumentation :: DocItem -> DomainReasoner ()
-makeDocumentation doc =
-   case doc of
-      Pages dir -> do 
-         makeOverviewExercises dir
-         makeOverviewServices  dir
-         getPackages >>= mapM_ (\(Some pkg) -> makeExercisePage dir pkg)
-         getServices >>= mapM_ (\s          -> makeServicePage dir s)
-      SelfCheck dir -> do
-         suite <- selfCheck dir
+makeDocumentation :: String -> String -> DocItem -> DomainReasoner ()
+makeDocumentation docDir testDir item =
+   case item of
+      Pages -> do 
+         report "Generating overview pages"
+         makeOverviewExercises docDir
+         makeOverviewServices  docDir
+         report "Generating exercise pages"
+         getPackages >>= mapM_ (\(Some pkg) -> makeExercisePage docDir pkg)
+         report "Generating service pages"
+         getServices >>= mapM_ (\s          -> makeServicePage docDir s)
+         report "Running tests"
+         makeTestsPage docDir testDir
+      SelfCheck -> do
+         suite <- selfCheck testDir
          liftIO (runTestSuite suite)
-      LatexRules dir ->
-         let f (Some ex) = makeLatexRules dir ex
+      BlackBox mdir -> do
+         suite  <- blackBoxTests (fromMaybe testDir mdir)
+         result <- liftIO (runTestSuiteResult suite)
+         liftIO (printSummary result)
+      LatexRules ->
+         let f (Some ex) = makeLatexRules docDir ex
          in getExercises >>= liftIO . mapM_ f
+         
+report :: String -> DomainReasoner ()
+report s = liftIO $ do
+   let line = replicate 75 '-'
+   putStrLn line
+   putStrLn ("--- " ++ s)
+   putStrLn line

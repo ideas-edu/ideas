@@ -24,7 +24,7 @@ import Service.Request
 import qualified Service.Definitions
 import qualified Service.TypedAbstractService as TAS
 import qualified Service.Definitions as Tp
-import Service.Definitions (Type, TypedValue(..))
+import Service.Definitions (Type, TypedValue(..), resultTypeSynonym, isSynonym)
 import Service.Submit
 import Service.Evaluator
 import Service.ExercisePackage 
@@ -109,13 +109,15 @@ jsonEncoder ex = Encoder
            liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
       | otherwise = 
            case serviceType of
+              Tp.Tag s _ | s == "Result" -> 
+                 isSynonym resultTypeSynonym (a ::: serviceType) 
+                 >>= encodeResult enc
               Tp.List t    -> liftM Array (mapM (encode enc t) a)
               Tp.Tag s t   -> liftM (\b -> Object [(s, b)]) (encode enc t a)
               Tp.Int       -> return (toJSON a)
               Tp.Bool      -> return (toJSON a)
               Tp.String    -> return (toJSON a)
               Tp.State     -> encodeState (encodeTerm enc) a
-              Tp.Result    -> encodeResult enc a
               _            -> encodeDefault enc serviceType a
     where
       xs = tupleList (a ::: serviceType)
@@ -125,7 +127,7 @@ jsonEncoder ex = Encoder
    tupleList (p ::: Tp.Pair t1 t2) = 
       tupleList (fst p ::: t1) ++ tupleList (snd p ::: t2)
    tupleList tv = [tv]
-         
+
 jsonDecoder :: ExercisePackage a -> Decoder JSON a
 jsonDecoder pkg = Decoder
    { decodeType     = decode (jsonDecoder pkg)

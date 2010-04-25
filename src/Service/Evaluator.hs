@@ -89,6 +89,10 @@ encodeDefault enc tp tv =
          x <- encodeType enc t1 a
          y <- encodeType enc t2 b
          return (encodeTuple enc [x, y])
+      t1 :|: t2     -> case tv of
+                          Left  a -> encodeType enc t1 a
+                          Right b -> encodeType enc t2 b
+      Unit          -> return (encodeTuple enc [])
       Tag _ t1      -> encodeType enc t1 tv
       Elem t1       -> encodeType enc t1 tv
       Optional _ t1 -> encodeType enc t1 tv

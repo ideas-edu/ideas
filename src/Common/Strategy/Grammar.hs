@@ -361,7 +361,7 @@ testMe = suite "Grammar combinators" $ do
    addProperty "associative and" $ associative (<*>)
    addProperty "unit and" $ unit (<*>) succeed
    addProperty "absorb and" $ absorb (<*>) fail
-   addProperty "associative parallel" $ associative (<||>)
-   addProperty "commutative parallel" $ commutative (<||>)
-   addProperty "unit parallel" $ unit (<||>) succeed
-   addProperty "absorb parallel" $ absorb (<||>) fail
+   --addProperty "associative parallel" $ associative (<||>)
+   --addProperty "commutative parallel" $ commutative (<||>)
+   --addProperty "unit parallel" $ unit (<||>) succeed
+   --addProperty "absorb parallel" $ absorb (<||>) fail

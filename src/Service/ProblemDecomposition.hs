@@ -11,7 +11,8 @@
 -----------------------------------------------------------------------------
 module Service.ProblemDecomposition 
    ( problemDecomposition
-   , Reply, replyToXML, xmlToRequest
+   , Reply(..), replyToXML, xmlToRequest
+   , ReplyError(..), ReplyOk(..), ReplyIncorrect(..)
    ) where
 
 import Common.Apply

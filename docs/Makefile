@@ -25,12 +25,11 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-all: api pages tests coverage latexrules
+all: api coverage latexrules
 documentation: all
 
 api: $(HADDOCKDIR)/index.html
 pages: exercises.html
-tests: tests.html
 latexrules: $(EXERCISEDIR) $(PDFTARGETS)
 coverage: $(COVERAGEDIR)/hpc_index.html
 
@@ -38,10 +37,10 @@ $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
 	$(CD) $(SRCDIR); $(HADDOCK) --html -o ../$(DOCDIR)/$(HADDOCKDIR) --prologue=../$(DOCDIR)/$(HADDOCKDIR)/prologue Main.hs
 
 exercises.html: $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --make-pages=.
+	$(BINDIR)/ideas.cgi --make-pages --docs-dir=. --test-dir=../test
 
 $(EXERCISEDIR): $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --make-rules=exercises
+	$(BINDIR)/ideas.cgi --make-rules --docs-dir=exercises
 	make -C $(EXERCISEDIR) all
 	$(TOUCH) $(EXERCISEDIR) # To get a timestamp
 
@@ -53,10 +52,7 @@ $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	
 $(HPCTMPDIR)/checks$(EXE).tix: $(HPCTMPDIR)/checks$(EXE)
 	$(RM) -f $(HPCTMPDIR)/checks$(EXE).tix
-	$(CD) $(HPCTMPDIR); ./checks$(EXE) --self-check=../../test $(PROFILERTS) > tests.txt 2> /dev/null || ($(RM) -f checks$(EXE).tix; exit 1);
-
-tests.html: $(HPCTMPDIR)/checks$(EXE).tix
-	$(RUNHASKELL) -i$(SRCDIR) -odir$(OUTDIR) -hidir$(OUTDIR) $(SRCDIR)/Documentation/TestsPage.hs $(HPCTMPDIR)/tests.txt $@
+	$(CD) $(HPCTMPDIR); ./checks$(EXE) --make-pages --docs-dir=../../docs --test-dir=../../test $(PROFILERTS) || ($(RM) -f checks$(EXE).tix; exit 1);
 
 $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 	$(HPC) markup --hpcdir=$(HPCTMPDIR) --destdir=$(COVERAGEDIR) $(HPCTMPDIR)/checks$(EXE)

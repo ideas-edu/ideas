@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.SelfCheck (selfCheck) where
+module Documentation.SelfCheck (selfCheck, blackBoxTests) where
 
 import System.Directory
 import Common.TestSuite
@@ -25,7 +25,6 @@ import Service.ModeXML
 import qualified Text.UTF8 as UTF8
 import qualified Text.JSON as JSON
 import Data.List
-import System.Time
 
 selfCheck :: String -> DomainReasoner TestSuite
 selfCheck dir = do
@@ -45,7 +44,7 @@ selfCheck dir = do
       suite "Exercise checks" $
          forM_ pkgs $ \(Some pkg) ->
             exerciseTestSuite (exercise pkg)
-      
+
       suite "Black box tests" blackboxSuite
 
 -- Returns the number of tests performed
@@ -107,33 +106,3 @@ logicConfluence = reportTest "logic rules" (isConfluent f rs)
    rs   = [ r | RewriteRule r <- concatMap transformations rwrs ]
    -- eqs  = bothWays [ r | RewriteRule r <- concatMap transformations Logic.logicRules ]
 -}
-
--- Helper functions
-showDiffWith :: MonadIO m => (TimeDiff -> IO ()) -> m a -> m a
-showDiffWith f action = do
-   t0 <- liftIO getClockTime
-   a  <- action
-   t1 <- liftIO getClockTime
-   liftIO (f (diffClockTimes t1 t0))
-   return a
-
-totalDiff :: MonadIO m => m a -> m a
-totalDiff = showDiffWith (putStrLn . ("*** Total time: "++) . formatDiff)
-   
-timeDiff :: MonadIO m => m a -> m a
-timeDiff = showDiffWith (putStrLn . ("+++ Time: "++) . formatDiff) 
-
-formatDiff :: TimeDiff -> String
-formatDiff d@(TimeDiff z1 z2 z3 h m s p)
-   | any (/=0) [z1,z2,z3] = timeDiffToString d
-   | s >= 60      = formatDiff (timeDiff ((h*60+m)*60+s) p)
-   | h==0 && m==0 = show inSec ++ " secs"
-   | otherwise    = show (60*h+m) ++ ":" ++ digSec ++ " mins" 
- where
-   milSec = 1000*toInteger s + p `div` 1000000000
-   inSec  = fromIntegral milSec / 1000
-   digSec = (if s < 10 then ('0' :) else id) (show s)
-   timeDiff n p = 
-      let (rest, s) = n `divMod` 60
-          (h, m)    = rest `divMod` 60
-      in TimeDiff 0 0 0 h m s p

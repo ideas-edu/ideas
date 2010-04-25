@@ -10,8 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.RulesInfo 
-   ( RulesInfo, mkRulesInfo, rulesInfoXML
-   , rewriteRuleToFMP, collectExamples
+   ( rulesInfoXML, rewriteRuleToFMP, collectExamples
    ) where
 
 import Common.Utils (Some(..))
@@ -28,11 +27,6 @@ import Text.OpenMath.FMP
 import Text.XML hiding (name)
 import Service.ExercisePackage (termToOMOBJ)
 import qualified Data.Map as M
-
-data RulesInfo a = I
-
-mkRulesInfo :: RulesInfo a
-mkRulesInfo = I
 
 rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder
 rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do

@@ -9,80 +9,23 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.TestsPage (main) where
+module Documentation.TestsPage (makeTestsPage) where
 
-import Control.Monad
-import Data.Char
-import Data.List
+import Common.TestSuite
 import Documentation.DefaultPage
+import Documentation.SelfCheck
 import Service.DomainReasoner
-import System.Environment
-import Main.Revision
 import Text.HTML
-import qualified Text.XML as XML
 
-main :: IO ()
-main = do
-   args <- getArgs
-   case args of
-      [fileIn, fileOut] -> do
-         input <- readFile fileIn
-         runDomainReasoner $ do
-            setFullVersion fullVersion
-            generatePage "docs" (up 1 ++ fileOut) (testsPage input)
-      _ -> fail "Invalid invocation"
+makeTestsPage :: String -> String -> DomainReasoner ()
+makeTestsPage docDir testDir = do
+   suite  <- selfCheck testDir
+   result <- liftIO (runTestSuiteResult suite)
+   generatePage docDir testsPageFile (testsPage result)
 
-fullVersion :: String
-fullVersion = "version " ++ version ++ "  (revision " ++ show revision ++ ", " ++ lastChanged ++ ")"
-
-testsPage :: String -> HTMLBuilder
-testsPage input = do 
+testsPage :: TestSuiteResult -> HTMLBuilder
+testsPage result = do 
+   h1 "Summary"
+   preText (makeSummary result)
    h1 "Tests"
-   let (hs, bs) = unzip (map format (lines input))
-   bold (text "Failures: ") 
-   text $ show $ length $ filter not bs
-   brs hs
- where
-   format :: String -> (HTMLBuilder, Bool)
-   format s
-      | any (`elem` ws) ["failed", "error", "error:", "falsifiable"] =
-           (errorLine (ttText s), False)
-      | "* " `isPrefixOf` s =
-           (h2 (drop 2 s), True)
-      | "** " `isPrefixOf` s =
-           (br >> bold (text (drop 3 s)), True)
-      | "*** " `isPrefixOf` s =
-           (br >> bold (text (drop 4 s)), True)
-      | otherwise = 
-           (fromString s, True)
-    where
-      ws = map (map toLower . filter isAlpha) (words s)
-      
-      
-brs :: [HTMLBuilder] -> HTMLBuilder
-brs = mapM_ (>> br)
-
-fromString :: String -> HTMLBuilder
-fromString = f []
- where
-   f acc []     = ttText (reverse acc)
-   f acc list@(x:xs) 
-      | "+++" `isPrefixOf` list = do
-           f acc [] 
-           unless (null acc) (spaces 3)
-           okLine (ttText (drop 3 list))
-      | "*** Gave up!" `isPrefixOf` list = do
-           f acc []
-           unless (null acc) (spaces 3)
-           ttText (drop 3 list)
-      | otherwise = f (x:acc) xs
-
-errorLine :: HTMLBuilder -> HTMLBuilder
-errorLine b = XML.element "font" $ do
-   "color" XML..=. "red"
-   bold b
-   
-okLine :: HTMLBuilder -> HTMLBuilder
-okLine b = XML.element "font" $ do
-   "color" XML..=. "gray"
-   b
+   preText (makeTestLog result)

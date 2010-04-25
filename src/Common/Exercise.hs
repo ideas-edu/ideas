@@ -428,7 +428,7 @@ checksForDerivation ex d = do
    -- Parser/pretty printer on terms
    let ts  = terms d
        p   = maybe False (not . checkParserPrettyEx ex) . fromContext
-   assertNull $ take 1 $ flip map (filter p ts) $ \hd -> 
+   assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p ts) $ \hd -> 
       let s = prettyPrinterContext ex hd 
       in "parse error for " ++ s ++ ": parsed as " 
          ++ either show (prettyPrinter ex) (parser ex s)
@@ -437,18 +437,18 @@ checksForDerivation ex d = do
    -- Equivalences between terms
    let pairs    = [ (x, y) | x <- ts, y <- ts ]
        p (x, y) = not (equivalenceContext ex x y)
-   assertNull $ take 1 $ flip map (filter p pairs) $ \(x, y) ->
+   assertNull "equivalences" $ take 1 $ flip map (filter p pairs) $ \(x, y) ->
       "not equivalent: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
 
    -- Similarity of terms
    let p (x, _, y) = fromMaybe False $ 
                         liftM2 (similarity ex) (fromContext x) (fromContext y)
-   assertNull $ take 1 $ flip map (filter p (triples d)) $ \(x, r, y) -> 
+   assertNull  "similars" $ take 1 $ flip map (filter p (triples d)) $ \(x, r, y) -> 
       "similar subsequent terms: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
       ++ "  using  " ++ show r
                
    let xs = [ x | cx <- terms d, x <- fromContext cx, not (similarity ex x x) ]
-   assertNull $ take 1 $ flip map xs $ \hd -> 
+   assertNull "self similarity" $ take 1 $ flip map xs $ \hd -> 
       "term not similar to itself: " ++ prettyPrinter ex hd

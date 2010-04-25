@@ -126,6 +126,9 @@ exerciseDerivationsFile code =
 servicePageFile :: Service -> String
 servicePageFile srv = servicePagePath ++ serviceName srv ++ ".html"
 
+testsPageFile :: String
+testsPageFile = "tests.html"
+
 ------------------------------------------------------------
 -- Utility functions
 

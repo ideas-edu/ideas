@@ -18,9 +18,8 @@ import Common.Transformation
 import Common.Utils (Some(..))
 import Data.List (sortBy)
 import Service.FeedbackText hiding (ExerciseText)
-import Service.ProblemDecomposition
+import Service.ProblemDecomposition (problemDecomposition)
 import Service.ExercisePackage
-import Service.RulesInfo
 import Service.Definitions 
 import qualified Common.Exercise as E
 import qualified Service.Diagnose as S
@@ -114,7 +113,7 @@ submitS = deprecate $ makeService "submit"
    "Analyze an expression submitted by a student. Possible answers are Buggy, \
    \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
    \by the diagnose service." $ 
-   S.submit ::: State :-> Term :-> Result
+   S.submit ::: State :-> Term :-> resultType
 
 diagnoseS :: Service
 diagnoseS = makeService "diagnose" 
@@ -126,7 +125,7 @@ diagnoseS = makeService "diagnose"
    \expression was not expected by the strategy, but the applied rule was \
    \detected), and Correct (it is correct, but we don't know which rule was \
    \applied)." $
-   S.diagnose ::: State :-> Term :-> Diagnosis
+   S.diagnose ::: State :-> Term :-> diagnosisType
 
 ------------------------------------------------------
 -- Services with a feedback component
@@ -165,7 +164,7 @@ problemdecompositionS = makeService "problemdecomposition"
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: State :-> StrategyLoc :-> Maybe Term :-> DecompositionReply
+   problemDecomposition ::: State :-> StrategyLoc :-> Maybe Term :-> replyType
 
 ------------------------------------------------------
 -- Reflective services
@@ -188,7 +187,7 @@ rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo" 
    "Returns a list of all rules of a particular exercise, with many details \
    \including Formal Mathematical Properties (FMPs) and example applications." $
-   mkRulesInfo ::: RulesInfo
+   () ::: rulesInfoType
 
 strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"

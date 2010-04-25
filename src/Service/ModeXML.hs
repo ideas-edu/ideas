@@ -169,6 +169,12 @@ xmlEncoder b f ex = Encoder
    encode :: Encoder XMLBuilder a -> Exercise a -> Type a t -> t -> DomainReasoner XMLBuilder
    encode enc ex serviceType =
       case serviceType of
+         Tp.Tag s _ 
+            | s == "Diagnosis" -> \a -> do
+                 d <- isSynonym diagnosisTypeSynonym (a ::: serviceType)
+                 encodeDiagnosis b (encodeTerm enc) d
+            | s == "RulesInfo" -> \_ ->
+                 rulesInfoXML ex (encodeTerm enc)
          Tp.List t1  -> \xs -> 
             case allAreTagged t1 of
                Just f -> do
@@ -183,9 +189,7 @@ xmlEncoder b f ex = Encoder
          Tp.Tag s t1  -> liftM (element s) . encode enc ex t1  -- quick fix
          Tp.Strategy  -> return . builder . strategyToXML
          Tp.Rule      -> return . ("ruleid" .=.) . Rule.name
-         Tp.RulesInfo -> \_ -> rulesInfoXML ex (encodeTerm enc)
          Tp.Term      -> encodeTerm enc
-         Tp.Diagnosis -> encodeDiagnosis b (encodeTerm enc)
          Tp.Context   -> encodeContext   b (encodeTerm enc)
          Tp.Location  -> return . {-element "location" .-} text . show
          Tp.Bool      -> return . text . map toLower . show

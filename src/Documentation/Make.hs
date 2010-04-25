@@ -40,7 +40,8 @@ makeDocumentation docDir testDir item =
          makeTestsPage docDir testDir
       SelfCheck -> do
          suite <- selfCheck testDir
-         liftIO (runTestSuite suite)
+         result <- liftIO (runTestSuiteResult suite)
+         liftIO (printSummary result)
       BlackBox mdir -> do
          suite  <- blackBoxTests (fromMaybe testDir mdir)
          result <- liftIO (runTestSuiteResult suite)

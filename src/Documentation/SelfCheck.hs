@@ -62,9 +62,13 @@ blackBoxTests path = do
       ts2 <- forM xml $ \x -> 
                 doBlackBoxTest XML (path ++ "/" ++ x)
       -- recursively visit subdirectories
-      ts3 <- forM (filter ((/= ".") . take 1) xs) $ \x -> 
-                blackBoxTests (path ++ "/" ++ x)
-      return $ suite (simplerDirectory path) $ 
+      ts3 <- forM (filter ((/= ".") . take 1) xs) $ \x -> do
+                let p = path ++ "/" ++ x
+                valid <- liftIO $ doesDirectoryExist p
+                if not valid 
+                   then return (return ())
+                   else liftM (suite $ simplerDirectory p) (blackBoxTests p)
+      return $ 
          sequence_ (ts1 ++ ts2 ++ ts3)
 
 doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner TestSuite

@@ -19,7 +19,7 @@ module Common.TestSuite
      TestSuite, MonadIO(..)
      -- * Test suite constructors
    , suite, addProperty, addPropertyWith
-   , assertTrue, assertNull, assertEquals, assertIO
+   , assertTrue, assertTrueMsg, assertNull, assertEquals, assertIO
      -- * Running a test suite
    , runTestSuite, runTestSuiteResult
      -- * Test Suite Result
@@ -78,6 +78,9 @@ addPropertyWith s args p = TSM (modify (:+: new))
 assertTrue :: String -> Bool -> TestSuite
 assertTrue msg = assertIO msg . return
 
+assertTrueMsg :: String -> String -> Bool -> TestSuite
+assertTrueMsg s msg = addAssertion msg s . return
+
 assertNull :: Show a => String -> [a] -> TestSuite
 assertNull s xs = addAssertion msg s (return (null xs))
  where msg = commaList (map show xs)
@@ -100,32 +103,40 @@ runTestSuite :: TestSuite -> IO ()
 runTestSuite suite = runTestSuiteResult suite >> return ()
 
 runTestSuiteResult :: TestSuite -> IO TestSuiteResult
-runTestSuiteResult suite = 
-   liftM TSR $ getDiff $ 
-      execStateT (unTSM suite) Empty >>= run
+runTestSuiteResult suite = liftM TSR $ getDiff $ do
+   tree <- execStateT (unTSM suite) Empty
+   run tree
  where
-   run state = 
-      case state of
-         Labeled s ts -> do
-            (t, diff) <- getDiff (putStrLn (s ++ ":") >> run ts)
-            return (Labeled (s, diff) t)
-         t1 :+: t2    -> liftM2 (:+:) (run t1) (run t2)
-         Empty        -> return Empty
-         Single t     -> putStr "  " >> liftM Single (runTest t)
+   run tree = do
+      xs <- mapM (either forTests forSuite) (collectLevel tree)
+      return (foldr (:+:) Empty xs)
+
+   forSuite (s, ts) = do 
+      (t, diff) <- getDiff (putStrLn (s ++ ":") >> run ts)
+      return (Labeled (s, diff) t)
+
+   forTests ts = do
+      runTests False [] ts
          
-   runTest :: Test -> IO (String, Int, Result)
-   runTest test =
-      case test of
-         QuickCheck s args p -> do
-            unless (null s) $ putStr (s ++ ": ")
-            r <- quickCheckWithResult args p
-            return (s, maxSuccess args, r)
-         Assert s io msg -> do
-            unless (null s) $ putStr (s ++ ": ")
-            b <- io
-            r <- if b then putStrLn "Ok" >> return success
-                      else putStrLn msg  >> return (failure msg)
-            return (s, 1, r)
+   runTests b acc [] = do
+      when b (putChar '\n')
+      return (foldr ((:+:) . Single) Empty (reverse acc))
+   
+   runTests b acc (QuickCheck s args p : rest) = do
+      putStr $ [ '\n' | b ] ++ "   "
+      unless (null s) $ putStr (s ++ ": ")
+      r <- quickCheckWithResult args p
+      runTests False ((s, maxSuccess args, r) : acc) rest
+   
+   runTests b acc (Assert s io msg : rest) = io >>= \ok ->
+      if ok then do
+         putStr $ if b then "." else "   ."
+         runTests True ((s, 1, success) : acc) rest
+         else do
+         when b $ putStr "\n   "
+         unless (null s) $ putStr $ s ++ ": "
+         putStrLn msg
+         runTests False ((s, 1, failure msg) : acc) rest
 
 ----------------------------------------------------------------
 -- Test Suite Result
@@ -155,9 +166,8 @@ makeSummary result@(TSR (tree, diff)) = unlines $
    , "Tests    : " ++ show n
    , "Failures : " ++ show nf
    , "Warnings : " ++ show nw
-   , "Time     : " ++ formatDiff diff
-   , ""
-   , "Suites: "
+   , "\nTime     : " ++ formatDiff diff
+   , "\nSuites: "
    ] ++ map f (subResults result) 
      ++ [line]
  where
@@ -172,7 +182,7 @@ makeTestLog :: TestSuiteResult -> String
 makeTestLog (TSR (tree, diff)) = unlines (make [] tree) ++ totalTime
  where
    totalTime  = "\n(Total time: " ++ formatDiff diff ++ ")"
-   make loc t = concatMap (either forTest forSuite) xs
+   make loc t = concatMap (either (map forTest) forSuite) xs
     where
       xs = reverse $ snd $ foldl op (1::Int, []) (collectLevel t)
       op (i, ys) y = case y of 
@@ -182,7 +192,9 @@ makeTestLog (TSR (tree, diff)) = unlines (make [] tree) ++ totalTime
       forSuite (nl, ((s, d), t)) = 
          (showLoc nl ++ ". " ++ s) : make nl t 
          ++ ["  (" ++ formatDiff d ++ " for " ++ s ++ ")"]
-      forTest (s, n, r) = ["  " ++ s ++ ": " ++ result]
+      forTest (s, n, r)
+         | null s    = result
+         | otherwise = "  " ++ s ++ ": " ++ result
        where
          result = 
             case r of
@@ -228,15 +240,21 @@ subtrees :: Tree a b -> [(a, Tree a b)]
 subtrees t = [ p | Right p <- collectLevel t ]
 
 flatten :: Tree a b -> [b]
-flatten t = [ b | x <- collectLevel t, b <- either return (flatten . snd) x ]
+flatten t = [ b | x <- collectLevel t, b <- either id (flatten . snd) x ]
 
-collectLevel :: Tree a b -> [Either b (a, Tree a b)]
-collectLevel = ($ []) . rec
+collectLevel :: Tree a b -> [Either [b] (a, Tree a b)]
+collectLevel = combine [] . ($ []) . rec
  where
+   combine acc [] = left acc
+   combine acc (Left a:rest) = combine (a:acc) rest
+   combine acc (Right b:rest) = left acc ++ (Right b : rest)
+   
+   left acc = [ Left (concat (reverse acc)) | not (null acc) ] 
+ 
    rec tree =
       case tree of
          Labeled a t -> (Right (a, t):)
-         Single b    -> (Left b:) 
+         Single b    -> (Left [b]:) 
          s :+: t     -> rec s . rec t
          Empty       -> id
 
@@ -263,7 +281,7 @@ formatDiff d@(TimeDiff z1 z2 z3 h m s p)
       in TimeDiff 0 0 0 h m s p
 
 -- Example
-{-
+
 main :: IO ()
 main = do
    r <- runTestSuiteResult $ do
@@ -281,7 +299,7 @@ main = do
          assertTrue "sorted" (sort [3,2,1] == [1,2,3])
          assertEquals "eq" (sort [1,2,2]) (nub [1,2,2]) 
    printSummary r
-   printTestLog r
+   --printTestLog r
    --print r
    --print (subResults r)
  where      
@@ -289,4 +307,4 @@ main = do
    p2 xs = reverse (reverse xs) == (xs::[Int])
    p3 xs = head (sort xs) == minimum (xs::[Int])
    p4 xs = sort (nub xs) == nub (sort (xs::[Int]))
-   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int])) -}
+   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int]))

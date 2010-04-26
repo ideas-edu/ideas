@@ -75,8 +75,8 @@ blackBoxTests path = do
 doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner TestSuite
 doBlackBoxTest format path = do
    liftIO useFixedStdGen -- fix the random number generator
-   txt <- liftIO $ readFile path
-   exp <- liftIO $ readFile expPath
+   txt <- liftIO $ readFile path    `catch` (return . show)
+   exp <- liftIO $ readFile expPath `catch` (return . show)
    out <- case format of 
              JSON -> liftM snd3 (processJSON txt)
              XML  -> liftM snd3 (processXML txt) 

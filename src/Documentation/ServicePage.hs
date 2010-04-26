@@ -79,6 +79,7 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
       , ("rulesinfo",    makeExample "math.lineq" noArgs)
       , ("rulelist",     makeExample "math.lineq" exArgs)
       , ("strategyinfo", makeExample "math.lineq" exArgs)
+      , ("examples",     makeExample "math.lineq" exArgs)
       ]
    
    logic1, logic2 :: Args

@@ -33,7 +33,7 @@ serviceList :: [Service]
 serviceList =
    [ derivationS, allfirstsS, onefirstS, readyS
    , stepsremainingS, applicableS, applyS, generateS
-   , submitS, diagnoseS
+   , examplesS, submitS, diagnoseS
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
    , problemdecompositionS
@@ -100,6 +100,14 @@ generateS = makeService "generate"
    \returns an initial state with a freshly generated expression. The meaning \
    \of the difficulty level (an integer) depends on the exercise at hand." $ 
    S.generate ::: Exercise :-> Optional 5 Int :-> IO State
+
+examplesS :: Service
+examplesS = makeService "examples"
+   "This services returns a list of example expresssions that can be solved \
+   \with an exercise. These are the examples that appear at the page generated \
+   \for each exercise. Also see the generate service, which returns a random \
+   \start term." $
+   examples ::: Exercise :-> List Term
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules" 

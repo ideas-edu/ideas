@@ -23,7 +23,7 @@ import Common.Strategy
 import Common.Navigator
 
 -----------------------------------------------------------------------------
--- To DNF, with priorities (the "DWA" approachs)
+-- To DNF, with priorities (the "DWA" approach)
 
 dnfStrategyDWA :: LabeledStrategy (Context SLogic)
 dnfStrategyDWA =  label "Bring to dnf (DWA)" $ 

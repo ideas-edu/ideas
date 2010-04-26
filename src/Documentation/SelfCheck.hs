@@ -67,7 +67,8 @@ blackBoxTests path = do
                 valid <- liftIO $ doesDirectoryExist p
                 if not valid 
                    then return (return ())
-                   else liftM (suite $ simplerDirectory p) (blackBoxTests p)
+                   else liftM (suite $ "Directory " ++ simplerDirectory p) 
+                              (blackBoxTests p)
       return $ 
          sequence_ (ts1 ++ ts2 ++ ts3)
 

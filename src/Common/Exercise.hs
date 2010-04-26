@@ -340,7 +340,7 @@ checkExercise :: Exercise a -> IO ()
 checkExercise = runTestSuite . exerciseTestSuite
 
 exerciseTestSuite :: Exercise a -> TestSuite
-exerciseTestSuite ex = suite (show (exerciseCode ex)) $ do
+exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseCode ex)) $ do
    checkExamples ex
    case testGenerator ex of 
       Nothing  -> return ()

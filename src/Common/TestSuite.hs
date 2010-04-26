@@ -25,15 +25,18 @@ module Common.TestSuite
      -- * Test Suite Result
    , TestSuiteResult, subResults
    , makeSummary, printSummary
-   , makeTestLog, printTestLog
+   , makeTestLog, makeTestLogWith, printTestLog
+     -- * Formatting
+   , FormatLog(..), formatLog, formatTimeDiff
    ) where
 
 import Data.List
+import Data.Monoid
 import Test.QuickCheck
 import System.Random
 import Common.Utils (commaList, thd3)
 import Control.Monad.State
-import System.Time
+import System.Time hiding (formatTimeDiff)
 
 ----------------------------------------------------------------
 -- Test Suite Monad
@@ -52,6 +55,10 @@ instance Monad TestSuiteM where
 
 instance MonadIO TestSuiteM where
    liftIO =  TSM . liftIO
+
+instance Monoid a => Monoid (TestSuiteM a) where
+   mempty  = return mempty
+   mappend = (>>)
 
 ----------------------------------------------------------------
 -- Test suite constructors
@@ -149,7 +156,7 @@ instance Show TestSuiteResult where
    show (TSR (tree, diff)) = 
       let (n, nf, nw) = collectInfo tree
       in "(tests: " ++ show n ++ ", failures: " ++ show nf ++
-         ", warnings: " ++ show nw ++ ", " ++ formatDiff diff ++ ")"
+         ", warnings: " ++ show nw ++ ", " ++ formatTimeDiff diff ++ ")"
 
 subResults :: TestSuiteResult -> [(String, TestSuiteResult)]
 subResults (TSR (tree, _)) = 
@@ -165,7 +172,7 @@ makeSummary result@(TSR (tree, diff)) = unlines $
    , "Tests    : " ++ show n
    , "Failures : " ++ show nf
    , "Warnings : " ++ show nw
-   , "\nTime     : " ++ formatDiff diff
+   , "\nTime     : " ++ formatTimeDiff diff
    , "\nSuites: "
    ] ++ map f (subResults result) 
      ++ [line]
@@ -178,40 +185,77 @@ printTestLog :: TestSuiteResult -> IO ()
 printTestLog = putStrLn . makeTestLog
 
 makeTestLog :: TestSuiteResult -> String
-makeTestLog (TSR (tree, diff)) = unlines (make [] tree) ++ totalTime
+makeTestLog = unlines . makeTestLogWith formatLog
+
+makeTestLogWith :: Monoid a => FormatLog a -> TestSuiteResult -> a
+makeTestLogWith fm (TSR (tree, diff)) = formatRoot fm diff (make [] tree)
  where
-   totalTime  = "\n(Total time: " ++ formatDiff diff ++ ")"
-   make loc t = concatMap (either forTests forSuite) xs
+   make loc = mconcat . map (either forTests forSuite) . treeToList
     where
-      xs = reverse $ snd $ foldl op (1::Int, []) (collectLevel t)
-      op (i, ys) y = case y of 
-                        Left b  -> (i, Left b:ys)
-                        Right p -> (i+1, Right (loc ++ [i], p):ys)
-      
+      treeToList = 
+         let op (i, ys) y = 
+                case y of 
+                   Left b  -> (i, Left b:ys)
+                   Right p -> (i+1, Right (loc ++ [i], p):ys)
+         in reverse . snd . foldl op (1, []) . collectLevel
+
       forSuite (nl, ((s, d), t)) = 
-         (showLoc nl ++ ". " ++ s) : make nl t 
-         ++ ["  (" ++ formatDiff d ++ " for " ++ s ++ ")"]
+         formatSuite fm nl s (collectInfo t) d (make nl t)
       
-      forTests [] = []
-      forTests list@(x:xs) 
-         | isSuccess (thd3 x) = 
-              let (ys, zs) = break (not . isSuccess . thd3) list
-              in ("   " ++ concatMap forTest ys) : forTests zs
-         | otherwise = 
-              ("   " ++ forTest x) : forTests xs
-              
-      forTest (s, n, r)
-         | null s || isSuccess r = result
-         | otherwise             = s ++ ": " ++ result
+      forTests [] = mempty
+      forTests list@((s, _, result) : rest) = 
+         case result of
+            Success _ ->
+                     let (ys, zs) = break (not . isSuccess . thd3) list
+                         sucs     = [ (s, n) | (s, n, _) <- ys ]
+                     in formatSuccesses fm sucs `mappend` forTests zs
+            Failure _ _ msg _   -> next (formatFailure fm s msg)
+            NoExpectedFailure _ -> next (formatFailure fm s "no expected failure")
+            GaveUp n _          -> next (formatGaveUp fm s n)
        where
-         result = 
-            case r of
-               Success _
-                  | n > 1     -> "(" ++ show n ++ " tests)"
-                  | otherwise -> "."
-               GaveUp n _ -> "Warning: passed only " ++ show n ++ " tests."
-               Failure _ _ msg _   -> "Error: " ++ msg
-               NoExpectedFailure _ -> "Error: no expected failure" 
+         next a = a `mappend` forTests rest
+        
+data FormatLog a = FormatLog
+   { formatRoot      :: TimeDiff -> a -> a
+   , formatSuite     :: [Int] -> String -> (Int, Int, Int) -> TimeDiff -> a -> a
+   , formatSuccesses :: [(String, Int)] -> a
+   , formatFailure   :: String -> String -> a
+   , formatGaveUp    :: String -> Int -> a
+   }
+
+formatLog :: FormatLog [String]
+formatLog = FormatLog
+   { formatRoot = \td a -> 
+        a ++ ["\n(Total time: " ++ formatTimeDiff td ++ ")"]
+   , formatSuite = \loc s _ td a -> 
+        [showLoc loc ++ ". " ++ s] ++ a ++ 
+        ["  (" ++ formatTimeDiff td ++ " for " ++ s ++ ")"]
+   , formatSuccesses = \xs -> 
+        let f (_, n) = if n==1 then "." else "(" ++ show n ++ " tests)"
+        in ["   " ++ concatMap f xs]
+   , formatFailure = \s msg ->
+        ["   " ++ putLabel s ++ "Error: " ++ msg]
+   , formatGaveUp = \s n ->
+        ["   " ++ putLabel s ++ "Warning: passed only " 
+            ++ show n ++ " tests"]
+   }
+ where 
+   putLabel s = if null s then "" else s ++ ": "
+
+formatTimeDiff :: TimeDiff -> String
+formatTimeDiff d@(TimeDiff z1 z2 z3 h m s p)
+   | any (/=0) [z1,z2,z3] = timeDiffToString d
+   | s >= 60      = formatTimeDiff (timeDiff ((h*60+m)*60+s) p)
+   | h==0 && m==0 = show inSec ++ " secs"
+   | otherwise    = show (60*h+m) ++ ":" ++ digSec ++ " mins" 
+ where
+   milSec = 1000*toInteger s + p `div` 1000000000
+   inSec  = fromIntegral milSec / 1000
+   digSec = (if s < 10 then ('0' :) else id) (show s)
+   timeDiff n p = 
+      let (rest, s) = n `divMod` 60
+          (h, m)    = rest `divMod` 60
+      in TimeDiff 0 0 0 h m s p
 
 -----------------------------------------------------
 -- Utility functions
@@ -276,23 +320,8 @@ getDiff action = do
    t1 <- liftIO getClockTime
    return (a, diffClockTimes t1 t0)
 
-formatDiff :: TimeDiff -> String
-formatDiff d@(TimeDiff z1 z2 z3 h m s p)
-   | any (/=0) [z1,z2,z3] = timeDiffToString d
-   | s >= 60      = formatDiff (timeDiff ((h*60+m)*60+s) p)
-   | h==0 && m==0 = show inSec ++ " secs"
-   | otherwise    = show (60*h+m) ++ ":" ++ digSec ++ " mins" 
- where
-   milSec = 1000*toInteger s + p `div` 1000000000
-   inSec  = fromIntegral milSec / 1000
-   digSec = (if s < 10 then ('0' :) else id) (show s)
-   timeDiff n p = 
-      let (rest, s) = n `divMod` 60
-          (h, m)    = rest `divMod` 60
-      in TimeDiff 0 0 0 h m s p
-
 -- Example
-
+{-
 main :: IO ()
 main = do
    r <- runTestSuiteResult $ do
@@ -318,4 +347,4 @@ main = do
    p2 xs = reverse (reverse xs) == (xs::[Int])
    p3 xs = head (sort xs) == minimum (xs::[Int])
    p4 xs = sort (nub xs) == nub (sort (xs::[Int]))
-   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int]))
+   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int])) -}

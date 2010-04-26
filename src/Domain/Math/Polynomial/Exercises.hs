@@ -196,20 +196,22 @@ eqOrList :: (Relational f, Ord (f Expr)) =>
                (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr) -> Bool
 eqOrList f x y = normOrList f x == normOrList f y
 
-eqRelation :: (Relational f, Eq (f Expr)) => 
-                 (Expr -> Expr) -> f Expr -> f Expr -> Bool
-eqRelation f x y = normRelation f x == normRelation f y
+eqRelation :: (Relational f, Eq (f Expr)) => (Expr -> Expr) -> f Expr -> f Expr -> Bool
+eqRelation f x y = fmap f x == fmap f y
 
+-- Normalize the order of disjunctions. Simplify the expression with the function
+-- passed as argument, but do not change (flip) the sides of the relation.
 normOrList :: (Relational f, Ord (f Expr)) => 
                  (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr)
-normOrList f = normalize . fmap (normRelation f)
+normOrList f = normalize . fmap (fmap (normExpr f))
 
+{-
 normRelation :: Relational f => (Expr -> Expr) -> f Expr -> f Expr
 normRelation f rel
    | leftHandSide new > rightHandSide new && isSymmetric new = flipSides new
    | otherwise = new
  where
-   new = fmap (normExpr f) rel
+   new = fmap (normExpr f) rel -}
 
 normExpr :: (Expr -> Expr) -> Expr -> Expr
 normExpr f = normalizeWith [plusOperator, timesOperator] . f

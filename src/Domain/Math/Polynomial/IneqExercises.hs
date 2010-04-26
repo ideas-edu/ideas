@@ -28,7 +28,7 @@ import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
-import Domain.Math.Polynomial.Exercises (eqRelation, normRelation)
+import Domain.Math.Polynomial.Exercises (eqRelation, normExpr)
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
@@ -65,7 +65,7 @@ ineqQuadraticExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just quadrEqContext
-   , similarity    = simLogic (normRelation cleanUpExpr2 . flipGT)
+   , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqQuadratic
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
@@ -80,7 +80,7 @@ ineqHigherDegreeExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just highEqContext
-   , similarity    = simLogic (normRelation cleanUpExpr2 . flipGT)
+   , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqHigherDegree
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }

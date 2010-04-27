@@ -13,10 +13,8 @@ module Common.Rewriting.Unification (match, Matcher, associativeMatcher) where
 
 import Common.Rewriting.Term
 import Common.Rewriting.AC
-import Common.Rewriting.MetaVar
 import Common.Rewriting.Substitution
 import Control.Monad
-import qualified Data.IntSet as IS
 import qualified Data.Map as M
 
 -----------------------------------------------------------
@@ -66,10 +64,10 @@ unifyWith ops = rec
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
-match :: Matcher -> Term -> Term -> [Substitution Term]
+match :: Matcher -> Term -> Term -> [Substitution]
 match m x y = do
    s <- rec x y
-   guard (IS.null $ dom s `IS.intersection` getMetaVars y)
+   guard $ all (`notElem` getMetaVars y) (dom s)
    return s
  where
    rec (Meta i) y = do 

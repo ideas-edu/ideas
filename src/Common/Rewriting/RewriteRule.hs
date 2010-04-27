@@ -16,7 +16,7 @@ module Common.Rewriting.RewriteRule
    ( -- * Supporting type classes
      Rewrite(..), ShallowEq(..), Different(..)
      -- * Rewrite rules and specs
-   , RewriteRule(ruleName, rulePair), RuleSpec(..)
+   , RewriteRule(..), RuleSpec(..)
      -- * Compiling a rewrite rule
    , rewriteRule, rewriteRules, Builder, BuilderList
      -- * Using rewrite rules
@@ -29,9 +29,8 @@ import Common.Rewriting.Term
 import Control.Monad
 import Test.QuickCheck
 import Common.Apply
-import Common.Rewriting.MetaVar (getMetaVars)
 import Common.Rewriting.Unification
-import qualified Data.IntSet as IS
+import Data.List
 import qualified Data.Map as M
 
 ------------------------------------------------------
@@ -161,7 +160,7 @@ showRewriteRule sound r@(R _ _ _) = do
    return (show x ++ " " ++ op ++ " " ++ show y)
  where
    a :~> b = rulePair r 0
-   vs  = IS.toList (getMetaVars a `IS.union` getMetaVars b)
+   vs  = (getMetaVars a `union` getMetaVars b)
    sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
    
    fromTermTp :: IsTerm a => RewriteRule a -> Term -> Maybe a
@@ -173,8 +172,8 @@ showRewriteRule sound r@(R _ _ _) = do
 smartGenerator :: RewriteRule a -> Gen a
 smartGenerator r@(R _ _ _) = do 
    let a :~> _ = rulePair r 0
-   let vs      = IS.toList (getMetaVars a)
-   list <- vector (length vs) 
+   let vs      = getMetaVars a
+   list <- vector (length vs)
    let sub = listToSubst (zip vs (map (tpToTerm r) list))
    case fromTerm (sub |-> a) of
       Just a  -> return a

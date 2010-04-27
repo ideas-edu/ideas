@@ -9,88 +9,115 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Confluence 
-   ( isConfluent, confluence, confluenceWith, confluentFunction
-   , testConfluence, testConfluenceWith, testConfluentFunction
-   ) where
+module Common.Rewriting.Confluence (isConfluent, checkConfluence) where
 
-import Common.Rewriting.AC
-import Common.Rewriting.MetaVar
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
+import Common.Rewriting.Term
 import Common.Uniplate (subtermsAt, applyAtM, somewhereM)
+import Control.Monad
 import Data.List
 import Data.Maybe
+import qualified Data.Map as M
 
+unifyM :: Term -> Term -> [Substitution] -- temporary (partial) implementation
+unifyM (Con s) (Con t) = [ emptySubst | s == t ]
+unifyM (Meta i) (Meta j) = [if i==j then emptySubst else singletonSubst i (Meta j)]
+unifyM (Meta i) t = [ singletonSubst i t | not (i `hasMetaVar` t) ]
+unifyM t (Meta i) = unifyM (Meta i) t
+unifyM (App a b) (App c d) = do
+   s1 <- unifyM a c
+   s2 <- unifyM (s1 |-> b) (s1 |-> d)
+   return (s1 @@ s2)
+unifyM (App _ _) (Con _) = []
+unifyM (Con _) (App _ _) = []
+unifyM x y = error ("unifyM: " ++ show (x, y))
+
+normalForm :: [RewriteRule a] -> Term -> Term
+normalForm rs = run []
+ where
+   run hist a = 
+      case [ b | r <- rs, b <- somewhereM (rewriteTerm r) a, b `notElem` hist ] of
+         []   -> a
+         hd:_ -> run (a:hist) hd 
+
+rewriteTerm :: RewriteRule a -> Term -> [Term]
+rewriteTerm r t = do
+   let lhs :~> rhs = rulePair r 0
+   sub <- match M.empty lhs t
+   return (sub |-> rhs)
 
 ----------------------------------------------------
 
-superImpose :: Rewrite a => RewriteRule a -> RewriteRule a -> [([Int], a)]
+superImpose :: RewriteRule a -> RewriteRule a -> [([Int], Term)]
 superImpose r1 r2 =
    [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
  where
-    lhs1 = lhs (rulePair r1 0)
-    lhs2 = lhs (rulePair r2 (nrOfMetaVars r1))
+    lhs1 :~> _ = rulePair r1 0
+    lhs2 :~> _ = rulePair r2 (nrOfMetaVars r1)
     
-    make a
-       | isJust (isMetaVar a) = []
-       | otherwise            = unifyM lhs1 a
+    make (Meta _) = []
+    make a        = unifyM lhs1 a
 
-criticalPairs :: (Rewrite a, Eq a) => [RewriteRule a] -> [(a, (RewriteRule a, a), (RewriteRule a, a))]
+criticalPairs :: [RewriteRule a] -> [(Term, (RewriteRule a, Term), (RewriteRule a, Term))]
 criticalPairs rs = 
    [ (a, (r1, b1), (r2, b2)) 
    | r1       <- rs
    , r2       <- rs
    , (loc, a) <- superImpose r1 r2
-   , b1       <- rewriteM r1 a
-   , b2       <- applyAtM loc (rewriteM r2) a
+   , b1       <- rewriteTerm r1 a
+   , b2       <- applyAtM loc (rewriteTerm r2) a
    , b1 /= b2 
    ]
 
-noDiamondPairs :: (Rewrite a, Eq a) => (a -> a) -> [RewriteRule a] -> [(a, (RewriteRule a, a, a), (RewriteRule a, a, a))]
-noDiamondPairs f rs =
+noDiamondPairs :: [RewriteRule a] -> [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))]
+noDiamondPairs rs = noDiamondPairsWith (normalForm rs) rs
+
+noDiamondPairsWith :: (Term -> Term) -> [RewriteRule a] -> [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))]
+noDiamondPairsWith f rs =
    [ (a, (r1, e1, nf1), (r2, e2, nf2)) 
    | (a, (r1, e1), (r2, e2)) <- criticalPairs rs
    , let (nf1, nf2) = (f e1, f e2)
    , nf1 /= nf2
    ]
 
-reportPairs :: (Show a, Eq a) => [(a, (RewriteRule a, a, a), (RewriteRule a, a, a))] -> IO ()
+reportPairs :: [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))] -> IO ()
 reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
  where
-   f i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
-      [ show i ++ ") " ++ show a
-      , "  "   ++ show r1
-      , "    " ++ show e1 ++ if e1==nf1 then "" else "   -->   " ++ show nf1
-      , "  "   ++ show r2
-      , "    " ++ show e2 ++ if e2==nf2 then "" else "   -->   " ++ show nf2
+   f i (a, (r1@(R _ _ _), e1, nf1), (r2, e2, nf2)) = unlines
+      [ show i ++ ") " ++ showTerm a
+      , "  "   ++ ruleName r1
+      , "    " ++ showTerm e1 ++ if e1==nf1 then "" else "   -->   " ++ showTerm nf1
+      , "  "   ++ ruleName r2
+      , "    " ++ showTerm e2 ++ if e2==nf2 then "" else "   -->   " ++ showTerm nf2
       ]
+    where
+      showTerm term = 
+         case fromTerm term `asTypeOf` rewriteM r1 undefined of
+            Just a  -> show a
+            Nothing -> show term
 
 ----------------------------------------------------
 
-isConfluent :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> Bool
-isConfluent f = null . noDiamondPairs f
+isConfluent :: [RewriteRule a] -> Bool
+isConfluent = null . noDiamondPairs
 
-confluentFunction :: (Eq a, Show a, Rewrite a) => (a -> a) -> [RewriteRule a] -> IO ()
-confluentFunction f = reportPairs . noDiamondPairs f
-
-confluenceWith :: (Ord a, Show a, Rewrite a) => [Operator a] -> [RewriteRule a] -> IO ()
-confluenceWith ops rs = confluentFunction (normalizeWith ops . normalFormWith ops rs) rs
-
-confluence :: (Ord a, Show a, Rewrite a) => [RewriteRule a] -> IO ()
-confluence = confluenceWith operators
+checkConfluence :: [RewriteRule a] -> IO ()
+checkConfluence = reportPairs . noDiamondPairs 
 
 ----------------------------------------------------
+-- Example
+{-
+r1, r2, r3, r4, r5 :: RewriteRule SLogic
+r1 = rewriteRule "R1" $ \p q r -> p :||: (q :||: r) :~> (p :||: q) :||: r 
+r2 = rewriteRule "R2" $ \p q   -> p :||: q :~> q :||: p
+r3 = rewriteRule "R3" $ \p     -> p :||: p :~> p
+r4 = rewriteRule "R4" $ \p     -> p :||: T :~> T
+r5 = rewriteRule "R5" $ \p     -> p :||: F :~> p
 
-testConfluentFunction :: (Eq a, Rewrite a) => (a -> a) -> [RewriteRule a] -> a -> Bool
-testConfluentFunction f rs a = 
-   case nub [ f b | r <- rs, b <- somewhereM (rewriteM r) a ] of
-      _:_:_ -> False
-      _     -> True
-      
-testConfluenceWith :: (Ord a, Rewrite a) => [Operator a] -> [RewriteRule a] -> a -> Bool
-testConfluenceWith ops rs = testConfluentFunction (normalFormWith ops rs) rs
+this = [r1, r2, r3, r4, r5, r6]
+go = reportPairs $ noDiamondPairs this
 
-testConfluence :: (Ord a, Rewrite a) => [RewriteRule a] -> a -> Bool
-testConfluence = testConfluenceWith operators
+r6 :: RewriteRule SLogic
+r6 = rewriteRule "R6" $ \p -> p :||: T :~> F -}

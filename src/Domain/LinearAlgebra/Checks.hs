@@ -25,10 +25,11 @@ import Test.QuickCheck
 
 checks :: TestSuite
 checks = suite "Linear algebra" $ do
-   addProperty "echelon"         propEchelon
-   addProperty "reduced echelon" propReducedEchelon
-   addProperty "sound"           propSound
-   addProperty "solution"        propSolution
+   let thorough = stdArgs {maxSize = 500, maxSuccess = 500}
+   addPropertyWith "echelon"         thorough propEchelon
+   addPropertyWith "reduced echelon" thorough propReducedEchelon
+   addPropertyWith "sound"           thorough propSound
+   addPropertyWith "solution"        thorough propSolution
 
 propEchelon :: Matrix Rational -> Bool
 propEchelon =

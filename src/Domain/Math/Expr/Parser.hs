@@ -18,6 +18,7 @@ module Domain.Math.Expr.Parser
 import Prelude hiding ((^))
 import Text.Parsing
 import Control.Monad
+import Control.Monad.Error ()
 import Common.Transformation
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic)

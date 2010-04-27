@@ -17,12 +17,13 @@ module Common.Rewriting.Term where
 import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Control.Monad
-import Common.Rewriting.MetaVar
+import Data.List
 import Data.Typeable
 
 -----------------------------------------------------------
 -- * Data type for terms
 
+-- To do: hide symbol constructor S
 data Symbol = S (Maybe String) String
    deriving (Eq, Ord)
 
@@ -36,11 +37,6 @@ data Term = Var   String
 
 instance Show Symbol where
    show (S ma b) = maybe b (\a -> a++ "." ++ b) ma
-
-instance MetaVar Term where 
-   metaVar = Meta
-   isMetaVar (Meta n) = Just n
-   isMetaVar _ = Nothing
  
 instance Uniplate Term where
    uniplate (App f a) = ([f,a], \[g,b] -> App g b)
@@ -120,3 +116,9 @@ isVar _       = fail "isVar"
 isCon :: Monad m => Term -> m Symbol
 isCon (Con s) = return s
 isCon _       = fail "isCon"
+
+getMetaVars :: Term -> [Int]
+getMetaVars a = sort $ nub [ i | Meta i <- universe a ]
+
+hasMetaVar :: Int -> Term -> Bool
+hasMetaVar i = (i `elem`) . getMetaVars

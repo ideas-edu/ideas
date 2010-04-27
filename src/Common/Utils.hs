@@ -20,7 +20,6 @@ import Data.List
 import Data.Ratio
 import System.Random
 import Test.QuickCheck
-import qualified Data.Map as M
 
 data Some f = forall a . Some (f a)
 
@@ -29,9 +28,6 @@ data ShowString = ShowString { fromShowString :: String }
 
 instance Show ShowString where
    show = fromShowString
-
-thoroughCheck :: Testable a => a -> IO ()
-thoroughCheck = quickCheckWith $ stdArgs {maxSize = 500, maxSuccess = 500}
 
 readInt :: String -> Maybe Int
 readInt xs 
@@ -111,44 +107,8 @@ thd3 (_, _, x) = x
 commaList :: [String] -> String
 commaList = concat . intersperse ", "
 
-primes :: [Int]
-primes = rec [2..]
- where
-   rec []     = error "Common.Utils: empty list"
-   rec (x:xs) = x : rec (filter (\y -> y `mod` x /= 0) xs)
-   
-putLabel :: String -> IO ()
-putLabel s = 
-   let n = (40 - length s) `max` 3
-   in putStr (s ++ replicate n ' ')
-
-reportTest :: String -> Bool -> IO ()
-reportTest s b = putLabel s >> putStrLn (if b then "OK" else "FAILED")
-
 instance Show (a -> b) where
    show _ = "<function>"
-
-{-
-instance Arbitrary Char where
-   arbitrary = let chars = ['a' .. 'z'] ++ ['A' .. 'Z']
-               in oneof (map return chars)
-instance CoArbitrary Char where
-   coarbitrary = coarbitrary . ord
--}
-
-instance (Ord k, Arbitrary k, Arbitrary a) => Arbitrary (M.Map k a) where
-   arbitrary   = liftM M.fromList arbitrary
-instance (Ord k, CoArbitrary k, CoArbitrary a) => CoArbitrary (M.Map k a) where
-   coarbitrary = coarbitrary . M.toList
-
-{-
--- Generating arbitrary random rational numbers
-instance Integral a => Arbitrary (Ratio a) where
-   arbitrary     = sized (\n -> ratioGen n (n `div` 4))
-instance Integral a => CoArbitrary (Ratio a) where
-   coarbitrary r = f (numerator r) . f (denominator r)
-     where f = variant . fromIntegral
--}
 
 -- | Prevents a bias towards small numbers
 ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)

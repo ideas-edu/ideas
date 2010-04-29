@@ -1,0 +1,11 @@
+<!-- 2 is niet vermenigvuldigd -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      (6*x+2)/6 == 5
+    </expr>
+  </state>
+  <expr>
+    x+2 == 30
+  </expr>
+</request>

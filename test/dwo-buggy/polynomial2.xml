@@ -1,0 +1,11 @@
+<!-- min-teken verkeerd -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      19-3*x == -5
+    </expr>
+  </state>
+  <expr>
+    19+3*x == 5
+  </expr>
+</request>

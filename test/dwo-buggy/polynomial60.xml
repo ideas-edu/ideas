@@ -1,0 +1,11 @@
+<!-- distributie keer over keer -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      3*(x-2)*(x+6) == 12*x
+    </expr>
+  </state>
+  <expr>
+    (3*x-6)*(3*x+18) == 12*x
+  </expr>
+</request>

@@ -44,10 +44,10 @@ formatHTML = FormatLog
         tt space
         ttText msg
         br
-   , formatGaveUp = \s n -> colorOrange $ do
+   , formatWarning = \s msg -> colorOrange $ do
         ttText ("Warning" ++ putLabel s)
         tt space
-        ttText ("passed only " ++ show n ++ " tests")
+        ttText msg
         br
    }
  where 

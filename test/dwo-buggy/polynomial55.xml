@@ -1,0 +1,11 @@
+<!-- worteltrekken op termen -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      (x+1)^2+(x-3)^2 == 25
+    </expr>
+  </state>
+  <expr>
+    x+1+(x-3) == 5
+  </expr>
+</request>

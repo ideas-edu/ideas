@@ -74,6 +74,8 @@ blackBoxTests path = do
 
 doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner TestSuite
 doBlackBoxTest format path = do
+   b <- liftIO $ doesFileExist expPath
+   if not b then return $ warn $ expPath ++ " does not exist"  else do
    liftIO useFixedStdGen -- fix the random number generator
    txt <- liftIO $ readFile path    `catch` (return . show)
    exp <- liftIO $ readFile expPath `catch` (return . show)

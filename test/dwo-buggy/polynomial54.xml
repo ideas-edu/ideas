@@ -1,0 +1,11 @@
+<!-- tweede oplossing bij abc-formule -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      x^2+8*x-15 == 0
+    </expr>
+  </state>
+  <expr>
+    x == (-8+sqrt 124)/2
+  </expr>
+</request>

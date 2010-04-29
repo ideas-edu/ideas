@@ -1,0 +1,11 @@
+<!-- oplossing x=0 vergeten -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      x*(x-5) == 0
+    </expr>
+  </state>
+  <expr>
+    x == 5
+  </expr>
+</request>

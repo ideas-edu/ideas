@@ -1,0 +1,11 @@
+<!-- verkeerd toepassen distributie -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      1/4*(x-3) == 1/2*x-4
+    </expr>
+  </state>
+  <expr>
+    1/4*x-3 == 1/2*x-4
+  </expr>
+</request>

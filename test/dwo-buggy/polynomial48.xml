@@ -1,0 +1,11 @@
+<!-- min-teken fout in een factor -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      x*(x-6) == 0
+    </expr>
+  </state>
+  <expr>
+    x == 0 or x == -6
+  </expr>
+</request>

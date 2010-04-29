@@ -1,0 +1,11 @@
+<!-- uit 6 moet ook factor 3 gehaald worden -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      3*x^2-6*x == 0
+    </expr>
+  </state>
+  <expr>
+    3*x*(x-6) == 0
+  </expr>
+</request>

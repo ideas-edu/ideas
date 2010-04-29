@@ -1,0 +1,11 @@
+<!-- haakjes verkeerd weggewerkt -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      4*x-(x-2) == 12+5*(x-1)
+    </expr>
+  </state>
+  <expr>
+    4*x-2-2 == 12+5*(x-1)
+  </expr>
+</request>

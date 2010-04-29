@@ -1,0 +1,11 @@
+<!-- oneven macht -->
+<request service="diagnose" exerciseid="math.higherdegree" encoding="string" source="test">
+  <state>
+    <expr>
+      x^3 == 27
+    </expr>
+  </state>
+  <expr>
+    x == 3 or x == -3
+  </expr>
+</request>

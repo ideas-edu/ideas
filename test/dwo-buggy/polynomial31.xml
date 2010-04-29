@@ -1,0 +1,11 @@
+<!-- prioriteiten operatoren plus en keer -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      3/4*x-(x-1) == 3+(2+1/2)*(x-1)
+    </expr>
+  </state>
+  <expr>
+    3/4*x-(x-1) == (5+1/2)*(x-1)
+  </expr>
+</request>

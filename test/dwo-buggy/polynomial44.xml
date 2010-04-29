@@ -1,0 +1,11 @@
+<!-- vergeten om ook de wortel te delen -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      2*x == -1+sqrt 6
+    </expr>
+  </state>
+  <expr>
+    x == -1/2+sqrt 6
+  </expr>
+</request>

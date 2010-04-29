@@ -1,0 +1,11 @@
+<!-- delen door x -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      x^2 == 5*x
+    </expr>
+  </state>
+  <expr>
+    x == 5
+  </expr>
+</request>

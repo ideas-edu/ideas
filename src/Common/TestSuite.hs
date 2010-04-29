@@ -19,7 +19,8 @@ module Common.TestSuite
      TestSuite, MonadIO(..)
      -- * Test suite constructors
    , suite, addProperty, addPropertyWith
-   , assertTrue, assertTrueMsg, assertNull, assertEquals, assertIO
+   , assertTrue, assertTrueMsg, assertNull, assertEquals
+   , assertIO, warn
      -- * Running a test suite
    , runTestSuite, runTestSuiteResult
      -- * Test Suite Result
@@ -33,8 +34,6 @@ module Common.TestSuite
 import Data.List
 import Data.Monoid
 import Test.QuickCheck
-import System.Random
-import Common.Utils (commaList, thd3)
 import Control.Monad.State
 import System.Time hiding (formatTimeDiff)
 
@@ -47,11 +46,13 @@ type TestSuite = TestSuiteM ()
 type TestState = Tree String Test
 
 data Test = QuickCheck String Args Property
-          | Assert     String (IO Bool) String
+          | Assert     String (IO Bool) TestResult
 
 instance Monad TestSuiteM where
    return  = TSM . return
    m >>= f = TSM (unTSM m >>= unTSM . f)
+   fail s  = do assertTrueMsg "" s False
+                return (error "TestSuite.fail: do not bind result")
 
 instance MonadIO TestSuiteM where
    liftIO =  TSM . liftIO
@@ -86,21 +87,24 @@ assertTrue :: String -> Bool -> TestSuite
 assertTrue msg = assertIO msg . return
 
 assertTrueMsg :: String -> String -> Bool -> TestSuite
-assertTrueMsg s msg = addAssertion msg s . return
+assertTrueMsg s msg = addAssertion (Error msg) s . return
 
 assertNull :: Show a => String -> [a] -> TestSuite
-assertNull s xs = addAssertion msg s (return (null xs))
- where msg = commaList (map show xs)
+assertNull s xs = addAssertion (f xs) s (return (null xs))
+ where f = Error . concat . intersperse "\n" . map show
  
 assertEquals :: (Eq a, Show a) => String -> a -> a -> TestSuite
 assertEquals s x y = addAssertion msg s (return (x==y))
- where msg = "Not equal: " ++ show x ++ " and " ++ show y
+ where msg = Error ("Not equal: " ++ show x ++ " and " ++ show y)
 
 assertIO :: String -> IO Bool -> TestSuite
-assertIO = addAssertion "Assertion failed"
+assertIO = addAssertion (Error "Assertion failed")
+
+warn :: String -> TestSuite
+warn msg = addAssertion (Warning msg) "" (return False)
 
 -- local helper
-addAssertion :: String -> String -> IO Bool -> TestSuite
+addAssertion :: TestResult -> String -> IO Bool -> TestSuite
 addAssertion msg s io = TSM $ modify (:+: Single (Assert s io msg))
 
 ----------------------------------------------------------------
@@ -127,29 +131,37 @@ runTestSuiteResult suite = liftM TSR $ getDiff $ do
       rec b acc [] = do
          when b (putChar '\n')
          return (foldr ((:+:) . Single) Empty (reverse acc))
-   
+
       rec b acc (QuickCheck s args p : rest) = do
          putStr $ [ '\n' | b ] ++ "   "
          unless (null s) $ putStr (s ++ ": ")
          r <- quickCheckWithResult args p
-         rec False ((s, maxSuccess args, r) : acc) rest
-   
+         rec False ((s, toTestResult (maxSuccess args) r) : acc) rest
+
       rec b acc (Assert s io msg : rest) = io >>= \ok ->
          if ok then do
             putStr $ if b then "." else "   ."
-            rec True ((s, 1, success) : acc) rest
+            rec True ((s, Ok 1) : acc) rest
             else do
-            when b $ putStr "\n   "
+            when b $ putChar '\n'
+            putStr "   "
             unless (null s) $ putStr $ s ++ ": "
-            putStrLn msg
-            rec False ((s, 1, failure msg) : acc) rest
+            print msg
+            rec False ((s, msg) : acc) rest
 
 ----------------------------------------------------------------
 -- Test Suite Result
 
 newtype TestSuiteResult = TSR (ResultTree, TimeDiff)
 
-type ResultTree = Tree (String, TimeDiff) (String, Int, Result)
+type ResultTree = Tree (String, TimeDiff) (String, TestResult)
+
+data TestResult = Ok Int | Error String | Warning String
+
+instance Show TestResult where
+   show (Ok _)        = "Ok"
+   show (Error msg)   = "Error: "   ++ msg
+   show (Warning msg) = "Warning: " ++ msg
 
 -- one-line summary
 instance Show TestSuiteResult where
@@ -203,24 +215,23 @@ makeTestLogWith fm (TSR (tree, diff)) = formatRoot fm diff (make [] tree)
          formatSuite fm nl s (collectInfo t) d (make nl t)
       
       forTests [] = mempty
-      forTests list@((s, _, result) : rest) = 
-         case result of
-            Success _ ->
-                     let (ys, zs) = break (not . isSuccess . thd3) list
-                         sucs     = [ (s, n) | (s, n, _) <- ys ]
-                     in formatSuccesses fm sucs `mappend` forTests zs
-            Failure _ _ msg _   -> next (formatFailure fm s msg)
-            NoExpectedFailure _ -> next (formatFailure fm s "no expected failure")
-            GaveUp n _          -> next (formatGaveUp fm s n)
+      forTests list@((s, result) : rest) = 
+         case result of            
+            Warning msg -> next (formatWarning fm s msg)
+            Error msg   -> next (formatFailure fm s msg)
+            Ok _        ->
+               let (ys, zs) = break (not . isOk . snd) list
+                   sucs     = [ (s, n) | (s, Ok n) <- ys ]
+               in formatSuccesses fm sucs `mappend` forTests zs
        where
          next a = a `mappend` forTests rest
-        
+
 data FormatLog a = FormatLog
    { formatRoot      :: TimeDiff -> a -> a
    , formatSuite     :: [Int] -> String -> (Int, Int, Int) -> TimeDiff -> a -> a
    , formatSuccesses :: [(String, Int)] -> a
    , formatFailure   :: String -> String -> a
-   , formatGaveUp    :: String -> Int -> a
+   , formatWarning   :: String -> String -> a
    }
 
 formatLog :: FormatLog [String]
@@ -235,9 +246,8 @@ formatLog = FormatLog
         in ["   " ++ concatMap f xs]
    , formatFailure = \s msg ->
         ["   " ++ putLabel s ++ "Error: " ++ msg]
-   , formatGaveUp = \s n ->
-        ["   " ++ putLabel s ++ "Warning: passed only " 
-            ++ show n ++ " tests"]
+   , formatWarning = \s msg ->
+        ["   " ++ putLabel s ++ "Warning: " ++ msg]
    }
  where 
    putLabel s = if null s then "" else s ++ ": "
@@ -264,32 +274,28 @@ data Tree a b = Labeled a (Tree a b)
               | Tree a b :+: Tree a b
               | Empty
               | Single b
-
-success :: Result
-success = Success []
-
-failure :: String -> Result
-failure s = Failure (mkStdGen 0) 0 s []
-         
+        
+toTestResult :: Int -> Result -> TestResult
+toTestResult n result = 
+   case result of
+      Success _           -> Ok n
+      Failure _ _ msg _   -> Error msg
+      NoExpectedFailure _ -> Error "no expected failure"
+      GaveUp n _          -> Warning ("passed only " ++ show n ++ " tests")
+            
 showLoc :: [Int] -> String
 showLoc = concat . intersperse "." . map show
 
-collectInfo :: Tree a (String, Int, Result) -> (Int, Int, Int)
+collectInfo :: Tree a (String, TestResult) -> (Int, Int, Int)
 collectInfo tree = (length tests, length failures, length warnings)
  where
    tests    = flatten tree
-   failures = filter (isFailure . thd3) tests
-   warnings = filter (isWarning . thd3) tests
+   failures = [ msg | (_, Error msg)   <- tests ]
+   warnings = [ msg | (_, Warning msg) <- tests ]
 
-isFailure (Failure _ _ _ _)     = True
-isFailure (NoExpectedFailure _) = True
-isFailure _ = False
-   
-isWarning (GaveUp _ _) = True
-isWarning _ = False
-
-isSuccess (Success _) = True
-isSuccess _ = False
+isOk :: TestResult -> Bool
+isOk (Ok _) = True
+isOk _      = False
 
 subtrees :: Tree a b -> [(a, Tree a b)]
 subtrees t = [ p | Right p <- collectLevel t ]
@@ -337,7 +343,10 @@ main = do
       suite "C" $ do
          addProperty "p5" p5
          assertTrue "sorted" (sort [3,2,1] == [1,2,3])
+         fail "This is a failure"
+         warn "This is a warning"
          assertEquals "eq" (sort [1,2,2]) (nub [1,2,2]) 
+         
    printSummary r
    printTestLog r
    --print r

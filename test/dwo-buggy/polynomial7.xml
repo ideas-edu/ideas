@@ -1,0 +1,11 @@
+<!-- breuk verkeerd om -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      6*x == 14
+    </expr>
+  </state>
+  <expr>
+    x == 6/14
+  </expr>
+</request>

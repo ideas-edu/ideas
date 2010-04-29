@@ -1,0 +1,11 @@
+<!-- min-teken fout bij samenvoegen x-termen -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      4*x-6 == 7*x-14
+    </expr>
+  </state>
+  <expr>
+    3*x-6 == -14
+  </expr>
+</request>

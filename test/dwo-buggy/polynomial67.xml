@@ -1,0 +1,11 @@
+<!-- term uit teller niet gedeeld -->
+<request service="diagnose" exerciseid="math.higherdegree" encoding="string" source="test">
+  <state>
+    <expr>
+      x == (root 5 3+1)/2
+    </expr>
+  </state>
+  <expr>
+    x == root 5 3/2+1
+  </expr>
+</request>

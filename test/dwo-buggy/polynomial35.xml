@@ -1,0 +1,11 @@
+<!-- negatieve wortel vergeten -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      x^2 == 2
+    </expr>
+  </state>
+  <expr>
+    x == sqrt 2
+  </expr>
+</request>

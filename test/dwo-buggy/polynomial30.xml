@@ -1,0 +1,11 @@
+<!-- rechts vergeten keer twee -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      (x+4)/2 == 5*(1/2*x+1+1/2)
+    </expr>
+  </state>
+  <expr>
+    x+4 == 5*(1/2*x+1+1/2)
+  </expr>
+</request>

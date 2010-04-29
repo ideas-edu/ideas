@@ -1,0 +1,11 @@
+<!-- delen slechts aan een kant -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      3*x+3 == 21
+    </expr>
+  </state>
+  <expr>
+    x+1 == 21
+  </expr>
+</request>

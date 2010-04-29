@@ -1,0 +1,11 @@
+<!-- vermenigvuldigen ipv delen -->
+<request service="diagnose" exerciseid="math.quadreq" encoding="string" source="test">
+  <state>
+    <expr>
+      2*x^2 == 8
+    </expr>
+  </state>
+  <expr>
+    x^2 == 16
+  </expr>
+</request>

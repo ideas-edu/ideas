@@ -1,0 +1,11 @@
+<!-- min-teken vergeten bij verschuiven van term -->
+<request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
+  <state>
+    <expr>
+      11*x-12 == 21
+    </expr>
+  </state>
+  <expr>
+    11*x == 9
+  </expr>
+</request>

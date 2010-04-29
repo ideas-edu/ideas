@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 module Service.DomainReasoner 
    ( -- * Domain Reasoner data type
-     DomainReasoner, runDomainReasoner
+     DomainReasoner, runDomainReasoner, runWithCurrent
    , liftEither, MonadIO(..), catchError 
      -- * Update functions
    , addPackages, addPackage, addPkgService
@@ -54,6 +54,11 @@ runDomainReasoner m = do
    case result of
       Left msg -> fail msg
       Right a  -> return a
+
+-- | Returns a run function, based on the current state, inside the monad
+runWithCurrent :: DomainReasoner (DomainReasoner a -> IO a)
+runWithCurrent =
+   get >>= \st -> return (runDomainReasoner . (put st >>))
 
 liftEither :: Either String a -> DomainReasoner a
 liftEither = either fail return

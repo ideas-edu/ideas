@@ -50,41 +50,44 @@ selfCheck dir = do
 -- Returns the number of tests performed
 blackBoxTests :: String -> DomainReasoner TestSuite
 blackBoxTests path = do
-   valid <- liftIO $ doesDirectoryExist path
-   if not valid then return (return ()) else do
-      -- analyse content
-      xs <- liftIO $ getDirectoryContents path
-      let xml  = filter (".xml"  `isSuffixOf`) xs
-          json = filter (".json" `isSuffixOf`) xs
-      -- perform tests
-      ts1 <- forM json $ \x -> 
-                doBlackBoxTest JSON (path ++ "/" ++ x)
-      ts2 <- forM xml $ \x -> 
-                doBlackBoxTest XML (path ++ "/" ++ x)
-      -- recursively visit subdirectories
-      ts3 <- forM (filter ((/= ".") . take 1) xs) $ \x -> do
-                let p = path ++ "/" ++ x
-                valid <- liftIO $ doesDirectoryExist p
-                if not valid 
-                   then return (return ())
-                   else liftM (suite $ "Directory " ++ simplerDirectory p) 
-                              (blackBoxTests p)
-      return $ 
-         sequence_ (ts1 ++ ts2 ++ ts3)
+   liftIO $ putStrLn ("Scanning " ++ path)
+   -- analyse content
+   xs0 <- liftIO $ getDirectoryContents path
+   let (xml,  xs1) = partition (".xml"  `isSuffixOf`) xs0
+       (json, xs2) = partition (".json" `isSuffixOf`) xs1
+   -- perform tests
+   ts1 <- forM json $ \x -> 
+             doBlackBoxTest JSON (path ++ "/" ++ x)
+   ts2 <- forM xml $ \x -> 
+             doBlackBoxTest XML (path ++ "/" ++ x)
+   -- recursively visit subdirectories
+   ts3 <- forM (filter ((/= ".") . take 1) xs2) $ \x -> do
+             let p = path ++ "/" ++ x
+             valid <- liftIO $ doesDirectoryExist p
+             if not valid 
+                then return (return ())
+                else liftM (suite $ "Directory " ++ simplerDirectory p) 
+                           (blackBoxTests p)
+   return $ 
+      sequence_ (ts1 ++ ts2 ++ ts3)
 
 doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner TestSuite
 doBlackBoxTest format path = do
-   b <- liftIO $ doesFileExist expPath
-   if not b then return $ warn $ expPath ++ " does not exist"  else do
-   liftIO useFixedStdGen -- fix the random number generator
-   txt <- liftIO $ readFile path    `catch` (return . show)
-   exp <- liftIO $ readFile expPath `catch` (return . show)
-   out <- case format of 
-             JSON -> liftM snd3 (processJSON txt)
-             XML  -> liftM snd3 (processXML txt) 
-           `catchError` 
-             \_ -> return "Error"
-   return (assertTrue (stripDirectoryPart path) (out ~= exp))
+   run <- runWithCurrent
+   b   <- liftIO $ doesFileExist expPath
+   return $ if not b 
+      then warn $ expPath ++ " does not exist"
+      else assertIO (stripDirectoryPart path) $ run $ do 
+         -- Comparing output with expected output
+         liftIO useFixedStdGen -- fix the random number generator
+         txt <- liftIO $ readFile path
+         exp <- liftIO $ readFile expPath
+         out <- case format of 
+                   JSON -> liftM snd3 (processJSON txt)
+                   XML  -> liftM snd3 (processXML txt) 
+         return (out ~= exp)
+       `catchError` 
+         \_ -> return False
  where
    expPath = baseOf path ++ ".exp"
    baseOf  = reverse . drop 1 . dropWhile (/= '.') . reverse

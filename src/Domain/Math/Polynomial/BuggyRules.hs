@@ -28,10 +28,11 @@ import Control.Monad
 buggyRulesEquation :: [Rule (Equation Expr)]
 buggyRulesEquation = 
    [ buggyPlus, buggyNegateOneSide, buggyFlipNegateOneSide, buggyNegateAll
-   , buggyDivNegate, buggyDivNumDenom 
+   , buggyDivNegate, buggyDivNumDenom, buggyCancelMinus
    ] ++ map (ruleOnce . ruleSomewhere) 
    [ buggyDistrTimes, buggyDistrTimesForget, buggyDistrTimesSign
-   , buggyDistrTimesTooMany, buggyMinusMinus
+   , buggyDistrTimesTooMany, buggyDistrTimesDenom
+   , buggyMinusMinus, buggyPriorityTimes
    ]
 
 buggyPlus :: Rule (Equation Expr)
@@ -135,6 +136,17 @@ buggyDistrTimesTooMany = describe "Strange distribution of times over plus: \
       ((a, (b, c)), d) <- matchM (plusView >>> first (timesView >>> second plusView)) expr
       [cleanUpExpr $ a*b+a*c+a*d]
 
+buggyDistrTimesDenom :: Rule Expr
+buggyDistrTimesDenom = describe "Incorrct distribution of times over plus: \
+   \one of the terms is a fraction, and the outer expression is multiplied by \
+   \the fraction's denominator." $
+   buggyRule $ makeSimpleRuleList "buggy distr times denom" $ \expr -> do
+      (a, (b, c)) <- matchM (timesView >>> second plusView) expr
+      [(1/a)*b + a*c, a*b + (1/a)*c]
+    `mplus` do
+      ((a, b), c) <- matchM (timesView >>> first plusView) expr
+      [a*(1/c) + b*c, a*c + b*(1/c)]
+
 buggyMinusMinus :: Rule Expr
 buggyMinusMinus = describe "Incorrect rewriting of a-(b-c): forgetting to \
    \change sign." $
@@ -143,6 +155,28 @@ buggyMinusMinus = describe "Incorrect rewriting of a-(b-c): forgetting to \
          a :-: (b :-: c)  -> Just (a-b-c)
          Negate (a :-: b) -> Just (a-b) 
          _ -> Nothing
+
+buggyCancelMinus :: Rule (Equation Expr)
+buggyCancelMinus = describe "Cancel terms on both sides, but terms have \
+   \different signs." $
+   buggyRule $ makeSimpleRuleList "buggy cancel minus" $ \(lhs :==: rhs) -> do
+      xs <- matchM sumView lhs
+      ys <- matchM sumView rhs  
+      [ eq | (i, x) <- zip [0..] xs, (j, y) <- zip [0..] ys
+           , cleanUpExpr x == cleanUpExpr (-y) 
+           , let f n as = build sumView $ take n as ++ drop (n+1) as
+           , let eq = f i xs :==: f j ys
+           ]
+
+buggyPriorityTimes :: Rule Expr
+buggyPriorityTimes = describe "Prioity of operators is changed, possibly by \
+   \ignoring some parentheses." $
+   buggyRule $ makeSimpleRuleList "buggy priority times" $ \expr -> do
+      (a, (b, c)) <- matchM (plusView >>> second timesView) expr
+      [(a+b)*c]
+    `mplus` do
+      ((a, b), c) <- matchM (plusView >>> first timesView) expr
+      [a*(b+c)]
 
 ---------------------------------------------------------
 -- ABC formula misconceptions

@@ -1,4 +1,4 @@
-<!-- 2 is niet vermenigvuldigd -->
+<!-- factor 6 (links, boven de streep), is weggevallen -->
 <request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
   <state>
     <expr>

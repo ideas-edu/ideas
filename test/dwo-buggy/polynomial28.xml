@@ -1,4 +1,4 @@
-<!-- wegschreven termen; of een min-teken fout -->
+<!-- wegstrepen termen; of een min-teken fout -->
 <request service="diagnose" exerciseid="math.lineq" encoding="string" source="test">
   <state>
     <expr>

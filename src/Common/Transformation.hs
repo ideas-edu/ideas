@@ -373,7 +373,7 @@ getRewriteRules r = concatMap f (transformations r)
 
 -- | Lift a rule using the Once type class
 ruleOnce :: Once f => Rule a -> Rule (f a)
-ruleOnce r = makeSimpleRuleList (name r) $ onceM $ applyAll r
+ruleOnce r = r { transformations = [makeTransList (onceM (applyAll r))] }
 
 -- | Apply a rule once (in two functors)
 ruleOnce2 :: (Once f, Once g) => Rule a -> Rule (f (g a))
@@ -381,7 +381,7 @@ ruleOnce2 = ruleOnce . ruleOnce
 
 -- | Apply at multiple locations, but at least once
 ruleMulti :: (Switch f, Crush f) => Rule a -> Rule (f a)
-ruleMulti r = makeSimpleRuleList (name r) $ multi $ applyAll r
+ruleMulti r = r { transformations = [makeTransList (multi (applyAll r))] }
 
 -- | Apply at multiple locations, but at least once (in two functors)
 ruleMulti2 :: (Switch f, Crush f, Switch g, Crush g) => Rule a -> Rule (f (g a))
@@ -397,7 +397,7 @@ multi f a =
    in map (fmap snd) (filter p xs)
 
 ruleSomewhere :: Uniplate a => Rule a -> Rule a
-ruleSomewhere r = makeSimpleRuleList (name r) $ somewhereM $ applyAll r
+ruleSomewhere r = r { transformations = [makeTransList (somewhereM (applyAll r))] }
 
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 

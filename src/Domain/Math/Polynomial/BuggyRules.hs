@@ -8,7 +8,7 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Some buggy rules catching common misconceptions on the abc-formula
+-- Some buggy rules catching common misconceptions (also on the abc-formula)
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BuggyRules where
@@ -23,6 +23,77 @@ import Common.View
 import Common.Transformation
 import Common.Traversable
 import Control.Monad
+
+buggyRulesEquation :: [Rule (Equation Expr)]
+buggyRulesEquation = 
+   [ buggyPlus, buggyNegateOneSide, buggyFlipNegateOneSide, buggyNegateAll
+   , buggyDivNegate, buggyDivNumDenom 
+   , ruleOnce (ruleSomewhere buggyDistrTimes)
+   ]
+
+buggyPlus :: Rule (Equation Expr)
+buggyPlus = describe "Moving a term from the left-hand side to the \
+   \right-hand side (or the other way around), but forgetting to change \
+   \the sign." $ 
+   buggyRule $ makeSimpleRuleList "buggy plus" $ \(lhs :==: rhs) -> do
+      (a, b) <- matchM plusView lhs
+      [ a :==: rhs + b, b :==: rhs + a ]
+    `mplus` do
+      (a, b) <- matchM plusView rhs
+      [ lhs + a :==: b, lhs + b :==: a ]
+
+buggyNegateOneSide :: Rule (Equation Expr)
+buggyNegateOneSide = describe "Negate terms on one side only." $
+   buggyRule $ makeSimpleRuleList "buggy negate one side" $ \(lhs :==: rhs) -> do
+      [ -lhs :==: rhs, lhs :==: -rhs  ] 
+
+buggyFlipNegateOneSide :: Rule (Equation Expr)
+buggyFlipNegateOneSide = describe "Negate terms on one side only." $
+   buggyRule $ makeSimpleRuleList "buggy flip negate one side" $ \(lhs :==: rhs) -> do
+      [ -rhs :==: lhs, rhs :==: -lhs  ]
+
+buggyNegateAll :: Rule (Equation Expr)
+buggyNegateAll = describe "Negating all terms (on both sides of the equation, \
+   \but forgetting one term." $
+   buggyRule $ makeSimpleRuleList "buggy negate all" $ \(lhs :==: rhs) -> do 
+      xs <- matchM sumView lhs
+      ys <- matchM sumView rhs
+      let makeL i = makeEq (zipWith (f i) [0..] xs) (map negate ys)
+          makeR i = makeEq (map negate xs) (zipWith (f i) [0..] ys)
+          makeEq as bs = build sumView as :==: build sumView bs
+          f i j = if i==j then id else negate
+          len as = let n = length as in if n < 2 then -1 else n
+      map makeL [0 .. len xs] ++ map makeR [0 .. len ys]
+
+buggyDivNegate :: Rule (Equation Expr)
+buggyDivNegate = describe "Dividing, but wrong sign." $
+   buggyRule $ makeSimpleRuleList "buggy divide negate" $ \(lhs :==: rhs) -> do
+      (a, b) <- matchM timesView lhs
+      [ b :==: rhs/(-a) | noVars a ] ++ [ a :==: rhs/(-b) | noVars b ]
+    `mplus` do
+      (a, b) <- matchM timesView rhs
+      [ lhs/(-a) :==: b | noVars a ] ++ [ lhs/(-b) :==: a | noVars b ]
+
+buggyDivNumDenom :: Rule (Equation Expr)
+buggyDivNumDenom = describe "Dividing, but flipping numerator/denominator." $
+   buggyRule $ makeSimpleRuleList "buggy divide numdenom" $ \(lhs :==: rhs) -> do
+      (a, b) <- matchM timesView lhs
+      [ b :==: a/rhs | noVars rhs ] ++ [ a :==: b/rhs | noVars rhs ]
+    `mplus` do
+      (a, b) <- matchM timesView rhs
+      [ a/lhs :==: b | noVars lhs ] ++ [ b/lhs :==: a | noVars lhs ]
+
+buggyDistrTimes :: Rule Expr
+buggyDistrTimes = describe "Incorrect distribution of times over plus." $
+   buggyRule $ makeSimpleRuleList "buggy distr times plus" $ \expr -> do
+      (a, (b, c)) <- matchM (timesView >>> second plusView) expr
+      [ a*b+c, b+a*c ]
+    `mplus` do
+      ((a, b), c) <- matchM (timesView >>> first plusView) expr
+      [ a*c+b, a+b*c ]
+
+---------------------------------------------------------
+-- ABC formula misconceptions
 
 abcBuggyRules :: [Rule (OrList (Equation Expr))]
 abcBuggyRules = map f [ minusB, twoA, minus4AC, oneSolution ]

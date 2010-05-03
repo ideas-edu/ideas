@@ -19,6 +19,7 @@ import Common.Strategy
 import Common.Traversable
 import Common.Transformation
 import Common.View
+import Data.List
 import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -44,13 +45,13 @@ linearExercise = makeExercise
    , exerciseCode = makeCode "math" "lineq"
    , status       = Provisional
    , parser       = parseExprWith (pEquation pExpr)
-   , similarity   = eqRelation cleanUpSimple
+   , similarity   = eqRelation (acExpr . cleanUpSimple)
    , equivalence  = viewEquivalent linearEquationView
    , isSuitable   = (`belongsTo` linearEquationView)
    , isReady      = solvedRelationWith $ \a -> 
                        a `belongsTo` mixedFractionNormalForm || 
                        a `belongsTo` rationalNormalForm
-   , extraRules   = liftToContext buggyPlus : linearRules
+   , extraRules   = map liftToContext buggyRulesEquation ++ linearRules
    , strategy     = mapRules liftToContext linearStrategy
    , examples     = concat (linearEquations ++ [specialCases])
    }
@@ -218,12 +219,3 @@ normExpr f = normalizeWith [plusOperator, timesOperator] . f
  where
    plusOperator  = acOperator (+) isPlus
    timesOperator = acOperator (*) isTimes
-   
--- TODO: move this definition
-buggyPlus :: Rule (Equation Expr)
-buggyPlus = buggyRule $ makeSimpleRuleList "buggy plus" $ \(lhs :==: rhs) -> do
-   (a, b) <- matchM plusView lhs
-   [ a :==: rhs + b, b :==: rhs + a ]
- `mplus` do
-   (a, b) <- matchM plusView rhs
-   [ lhs + a :==: b, lhs + b :==: a ]

@@ -12,7 +12,7 @@
 module Domain.Math.Polynomial.CleanUp 
    ( cleanUp, cleanUpRelation, cleanUpExpr, cleanUpExpr2
    , cleanUpSimple, collectLikeTerms
-   , normalizeSum, normalizeProduct
+   , normalizeSum, normalizeProduct, acExpr
    ) where
 
 import Common.Uniplate
@@ -156,7 +156,20 @@ cleanUpExpr = cleanUpBU2 {- e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 
    a2 = cleanUpBU e
    a3 = cleanUpBU2 e
    a4 = cleanUpLattice e -}
-      
+
+-- normalize expr with associativity and commutative rules for + and *
+acExpr :: Expr -> Expr
+acExpr expr = 
+   case (match sumView expr, match productView expr) of
+      (Just xs, _) | length xs > 1 -> 
+         build sumView $ sort $ map acExpr xs
+      (_, Just (b, xs)) | length xs > 1 -> 
+         build productView (b, sort $ map acExpr xs)
+      _ -> 
+         f (map acExpr cs)      
+ where
+   (cs, f) = uniplate expr
+   
 ------------------------------------------------------------
 -- Technique 1: fixed points of views
 {-

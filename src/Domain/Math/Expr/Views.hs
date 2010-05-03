@@ -20,6 +20,10 @@ import Data.List (nub)
 ------------------------------------------------------------
 -- Smart constructors
 
+infixr 8 .^.
+infixl 7 .*., ./.
+infixl 6 .-., .+.
+
 (.+.) :: Expr -> Expr -> Expr
 Nat 0 .+. b        = b
 a     .+. Nat 0    = a

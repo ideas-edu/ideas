@@ -6,6 +6,6 @@
     </expr>
   </state>
   <expr>
-    -3*x-6 == 3*x+12-7
+    -3*x-6 == 3*(x+4)-7
   </expr>
 </request>

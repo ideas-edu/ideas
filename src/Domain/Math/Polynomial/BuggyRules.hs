@@ -18,6 +18,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules (abcFormula)
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Views
 import Common.View
 import Common.Transformation
@@ -28,7 +29,9 @@ buggyRulesEquation :: [Rule (Equation Expr)]
 buggyRulesEquation = 
    [ buggyPlus, buggyNegateOneSide, buggyFlipNegateOneSide, buggyNegateAll
    , buggyDivNegate, buggyDivNumDenom 
-   , ruleOnce (ruleSomewhere buggyDistrTimes)
+   ] ++ map (ruleOnce . ruleSomewhere) 
+   [ buggyDistrTimes, buggyDistrTimesForget, buggyDistrTimesSign
+   , buggyDistrTimesTooMany, buggyMinusMinus
    ]
 
 buggyPlus :: Rule (Equation Expr)
@@ -84,13 +87,62 @@ buggyDivNumDenom = describe "Dividing, but flipping numerator/denominator." $
       [ a/lhs :==: b | noVars lhs ] ++ [ b/lhs :==: a | noVars lhs ]
 
 buggyDistrTimes :: Rule Expr
-buggyDistrTimes = describe "Incorrect distribution of times over plus." $
+buggyDistrTimes = describe "Incorrect distribution of times over plus: one \
+   \term is not multiplied." $
    buggyRule $ makeSimpleRuleList "buggy distr times plus" $ \expr -> do
       (a, (b, c)) <- matchM (timesView >>> second plusView) expr
       [ a*b+c, b+a*c ]
     `mplus` do
       ((a, b), c) <- matchM (timesView >>> first plusView) expr
       [ a*c+b, a+b*c ]
+
+buggyDistrTimesForget :: Rule Expr
+buggyDistrTimesForget = describe "Incorrect distribution of times over plus: \
+   \one term is forgotten." $
+   buggyRule $ makeSimpleRuleList "buggy distr times plus forget" $ \expr -> do
+      (a, (b, c)) <- matchM (timesView >>> second plusView) expr
+      [ a*bn+a*c | bn <- forget b ] ++ [ a*b+a*cn | cn <- forget c ]
+    `mplus` do
+      ((a, b), c) <- matchM (timesView >>> first plusView) expr
+      [ an*c+b*c | an <- forget a] ++ [ a*c+bn*c | bn <- forget b]
+ where
+   forget :: Expr -> [Expr]
+   forget expr =
+      case match productView expr of
+         Just (b, xs) | n > 1 -> 
+            [ build productView (b, make i) | i <- [0..n-1] ]
+          where
+            make i = [ x | (j, x) <- zip [0..] xs, i/=j ]
+            n = length xs
+         _ -> [0]
+
+-- The use of cleanUpExpr is a quick fix; this function is more aggressive
+-- than cleanUpSimple, used in for instance math.lineq
+buggyDistrTimesSign :: Rule Expr
+buggyDistrTimesSign = describe "Incorrect distribution of times over plus: \
+   \changing sign of addition." $
+   buggyRule $ makeSimpleRuleList "buggy distr times plus sign" $ \expr -> do
+      (a, (b, c)) <- matchM (timesView >>> second plusView) expr
+      [ a.*.b .-. a.*.c ]
+    `mplus` do
+      ((a, b), c) <- matchM (timesView >>> first plusView) expr
+      [ a.*.c .-. b.*.c ]
+
+buggyDistrTimesTooMany :: Rule Expr
+buggyDistrTimesTooMany = describe "Strange distribution of times over plus: \
+   \a*(b+c)+d, where 'a' is also multiplied to d." $ 
+   buggyRule $ makeSimpleRuleList "buggy distr times too many" $ \expr -> do
+      ((a, (b, c)), d) <- matchM (plusView >>> first (timesView >>> second plusView)) expr
+      [cleanUpExpr $ a*b+a*c+a*d]
+
+buggyMinusMinus :: Rule Expr
+buggyMinusMinus = describe "Incorrect rewriting of a-(b-c): forgetting to \
+   \change sign." $
+   buggyRule $ makeSimpleRule "buggy minus minus" $ \expr ->
+      case expr of
+         a :-: (b :-: c)  -> Just (a-b-c)
+         Negate (a :-: b) -> Just (a-b) 
+         _ -> Nothing
 
 ---------------------------------------------------------
 -- ABC formula misconceptions

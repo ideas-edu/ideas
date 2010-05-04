@@ -20,7 +20,7 @@ module Common.Exercise
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
-   , makeContext, inContext
+   , makeContext, inContext, recognizeRule
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Exercise codes
@@ -180,6 +180,10 @@ randomTermWith rng level ex =
          | otherwise -> 
               xs !! fst (randomR (0, length xs - 1) rng)
        where xs = examples ex
+
+recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
+recognizeRule ex = ruleRecognizer $ \ca cb -> fromMaybe False $
+   liftM2 (similarity ex) (fromContext ca) (fromContext cb)
 
 ---------------------------------------------------------------
 -- Exercise status

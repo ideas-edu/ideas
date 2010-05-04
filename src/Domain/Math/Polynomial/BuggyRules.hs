@@ -20,6 +20,8 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules (abcFormula)
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Views
+import Domain.Math.Data.Polynomial
+import Common.Apply
 import Common.View
 import Common.Transformation
 import Common.Traversable
@@ -29,6 +31,7 @@ buggyRulesEquation :: [Rule (Equation Expr)]
 buggyRulesEquation = 
    [ buggyPlus, buggyNegateOneSide, buggyFlipNegateOneSide, buggyNegateAll
    , buggyDivNegate, buggyDivNumDenom, buggyCancelMinus
+   , buggyMultiplyOneSide, buggyMultiplyForgetOne
    ] ++ map (ruleOnce . ruleSomewhere) 
    [ buggyDistrTimes, buggyDistrTimesForget, buggyDistrTimesSign
    , buggyDistrTimesTooMany, buggyDistrTimesDenom
@@ -177,6 +180,60 @@ buggyPriorityTimes = describe "Prioity of operators is changed, possibly by \
     `mplus` do
       ((a, b), c) <- matchM (plusView >>> first timesView) expr
       [a*(b+c)]
+
+buggyMultiplyOneSide :: Rule (Equation Expr)
+buggyMultiplyOneSide = describe "Multiplication on one side of the equation only" $
+   buggyRule $ makeRule "buggy multiply one side" $ 
+   useRecognizer recognizeEq $ supply1 (const (Just 2)) multiplyOneSide
+ where
+   recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
+      let p r  = r `notElem` [-1, 0, 1] && 
+                 any (myEq eq2) (applyAll (multiplyOneSide r) eq1)
+      in maybe False p (recognizeMultiplication a1 b1) 
+      || maybe False p (recognizeMultiplication a2 b2)
+
+recognizeMultiplication :: Expr -> Expr -> Maybe Rational
+recognizeMultiplication a b = do
+   (_, pa) <- match (polyViewWith rationalView) a 
+   (_, pb) <- match (polyViewWith rationalView) b
+   return (coefficient (degree pb) pb / coefficient (degree pa) pa)
+   
+multiplyOneSide :: Rational -> Transformation (Equation Expr)
+multiplyOneSide r = makeTransList $ \(lhs :==: rhs) -> do
+      xs <- matchM sumView lhs
+      ys <- matchM sumView rhs
+      let f = map (*fromRational r)
+      [build sumView (f xs) :==: rhs, lhs :==: build sumView (f ys)]
+
+buggyMultiplyForgetOne :: Rule (Equation Expr)
+buggyMultiplyForgetOne = describe "Multiply the terms on both sides of the \
+   \equation, but forget one." $
+   buggyRule $ makeRule "buggy multiply forget one" $ 
+   useRecognizer recognizeEq $ supply1 (const (Just 2)) multiplyForgetOne
+ where
+   recognizeEq eq1@(a1 :==: a2) eq2@(b1 :==: b2) =
+      let p r  = r `notElem` [-1, 0, 1] && 
+                 any (myEq eq2) (applyAll (multiplyForgetOne r) eq1)
+      in maybe False p (recognizeMultiplication a1 b1) 
+      || maybe False p (recognizeMultiplication a2 b2)
+
+multiplyForgetOne :: Rational -> Transformation (Equation Expr)
+multiplyForgetOne r = makeTransList $ \(lhs :==: rhs) -> do
+   xs <- matchM sumView lhs
+   ys <- matchM sumView rhs
+   let makeL i = f (zipWith (mul . (/=i)) [0..] xs) (map (mul True) ys)
+       makeR i = f (map (mul True) xs) (zipWith (mul . (/=i)) [0..] ys) 
+       f as bs = build sumView as :==: build sumView bs
+       mul b   = if b then (*fromRational r) else id
+   do guard (length xs > 1) 
+      map makeL [0 .. length xs-1]
+    `mplus` do
+      guard (length ys > 1)
+      map makeR [0 .. length ys-1]
+
+-- Redundant function; should come from exercise
+myEq :: Equation Expr -> Equation Expr -> Bool
+myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
 
 ---------------------------------------------------------
 -- ABC formula misconceptions

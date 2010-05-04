@@ -29,6 +29,7 @@ module Common.Transformation
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
    , transformations, getRewriteRules, doBeforeTrans
+   , ruleRecognizer, useRecognizer
      -- * Lifting
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
@@ -58,6 +59,7 @@ data Transformation a
    | Transformation a :*: Transformation a -- sequence
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
+   | Recognizer (a -> a -> Bool) (Transformation a)
    
 instance Apply Transformation where
    applyAll (Function f)        = f
@@ -65,6 +67,7 @@ instance Apply Transformation where
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
    applyAll (s :*: t)           = \a -> applyAll s a >>= applyAll t
+   applyAll (Recognizer _ t)    = applyAll t
    
 -- | Turn a function (which returns its result in the Maybe monad) into a transformation 
 makeTrans :: (a -> Maybe a) -> Transformation a
@@ -167,8 +170,9 @@ getDescriptors rule =
    rec trans = 
       case trans of
          Abstraction args _ _ -> someArguments args
-         LiftView _ t -> rec t
-         s :*: t -> rec s ++ rec t
+         LiftView _ t   -> rec t
+         Recognizer _ t -> rec t
+         s :*: t        -> rec s ++ rec t
          _ -> []
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
@@ -188,6 +192,8 @@ expectedArguments rule a =
              rec t b
           s :*: t -> 
              rec s a `mplus` rec t a
+          Recognizer _ t ->
+             rec t a
           _ -> Nothing
 
 -- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are 
@@ -204,6 +210,7 @@ useArguments list rule =
       case trans of
          Abstraction args _ g -> fmap g (parseArguments args list)
          LiftView v t         -> fmap (LiftView v) (make t)
+         Recognizer f t       -> fmap (Recognizer f) (make t)
          s :*: t              -> fmap (:*: t) (make s) `mplus`
                                  fmap (s :*:) (make t)
          _                    -> Nothing
@@ -367,6 +374,25 @@ getRewriteRules r = concatMap f (transformations r)
          LiftView _ t   -> f t
          s :*: t        -> f s ++ f t
          _              -> []
+
+ruleRecognizer :: (a -> a -> Bool) -> Rule a -> a -> a -> Bool
+ruleRecognizer eq r a b = or 
+   [ transRecognizer eq t a b | t <- transformations r ]
+
+transRecognizer :: (a -> a -> Bool) -> Transformation a -> a -> a -> Bool
+transRecognizer eq trans a b =
+   case trans of
+      Recognizer f t -> f a b || transRecognizer eq t a b
+      LiftView v t   -> or 
+         [ transRecognizer (\x y -> eq (f x) (f y)) t av bv
+         | (av, c) <- match v a 
+         , (bv, _) <- match v b
+         , let f z = build v (z, c)
+         ]
+      _ -> any (`eq` b) (applyAll trans a)
+
+useRecognizer :: (a -> a -> Bool) -> Transformation a -> Transformation a
+useRecognizer = Recognizer
 
 -----------------------------------------------------------
 --- Lifting

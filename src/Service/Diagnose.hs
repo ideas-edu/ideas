@@ -15,7 +15,6 @@ module Service.Diagnose
    ( Diagnosis(..), RuleID, diagnose, restartIfNeeded
    ) where 
 
-import Common.Apply
 import Common.Context
 import Common.Exercise
 import Common.Strategy (emptyPrefix)
@@ -82,17 +81,14 @@ diagnose state new
       [ r
       | r <- ruleset ex
       , isBuggyRule r == searchForBuggy
-      , ca <- applyAll r (inContext ex sub1)
-      -- , let s = prettyPrinter (exercise state) (fromContext a)
-      --, if s=="2*x+2 == 5" then True else error s
-      , a <- fromContext ca
-      , similarity ex sub2 a
+      , recognizeRule ex r sub1 sub2
       ]
     where 
-      mode = not searchForBuggy
-      diff = difference ex mode (term state) new
-      (sub1, sub2) = fromMaybe (term state, new) diff
-      
+      (sub1, sub2) = 
+         case difference ex (not searchForBuggy) (term state) new of 
+            Just (a, b) -> (inContext ex a, inContext ex b) 
+            Nothing     -> (context state, inContext ex new)
+ 
 ----------------------------------------------------------------
 -- Helpers
 

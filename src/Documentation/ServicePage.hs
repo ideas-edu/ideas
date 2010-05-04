@@ -92,7 +92,7 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
    
    (f +++ g) pkg = f pkg ++ g pkg
    
-   noCfg _    = [Nothing ::: Maybe StrategyCfg]
+   noCfg _    = [Nothing ::: maybeTp StrategyCfg]
    noArgs _   = []
    exArgs pkg = [exercise pkg ::: Exercise]
 

@@ -62,14 +62,13 @@ decodeDefault dec tp s =
          (a, s1) <- decodeType dec t1 s
          (b, s2) <- decodeType dec t2 s1
          return ((a, b), s2)
+      t1 :|: t2 ->
+         liftM (first Left)  (decodeType dec t1 s) `mplus`
+         liftM (first Right) (decodeType dec t2 s)
+      Unit -> 
+         return ((), s)
       Tag _ t1 ->
          decodeType dec t1 s
-      Optional a t1 -> 
-         decodeType dec t1 s `mplus` return (a, s)
-      Maybe t1 -> 
-         liftM (first Just) (decodeType dec t1 s) `mplus` return (Nothing, s)
-      Error t -> 
-         liftM (first Right) (decodeType dec t s)
       Exercise -> do
          return (exercise (decoderPackage dec), s)
       ExerciseText -> do
@@ -94,13 +93,13 @@ encodeDefault enc tp tv =
                           Right b -> encodeType enc t2 b
       Unit          -> return (encodeTuple enc [])
       Tag _ t1      -> encodeType enc t1 tv
-      Elem t1       -> encodeType enc t1 tv
-      Optional _ t1 -> encodeType enc t1 tv
-      Maybe t1      -> case tv of
-                          Just a  -> encodeType enc t1 a
-                          Nothing -> return (encodeTuple enc [])
-      Error t       -> either fail (encodeType enc t) tv
-      IO t1         -> liftIO tv >>= encodeType enc t1
+      IO t1         -> do let pp s | take 12 s == "user error (" = init (drop 12 s)
+                                   | otherwise = s
+                          result <- liftIO $ 
+                             liftM Right tv `catch` (return . Left . pp . show)
+                          case result of 
+                             Left msg -> fail msg
+                             Right a  -> encodeType enc t1 a
       Rule          -> encodeType enc String (name tv)
       Term          -> encodeTerm enc tv
       Context       -> fromContext tv >>= encodeType enc Term

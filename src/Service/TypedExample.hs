@@ -79,13 +79,3 @@ dynamicApply fun arg =
             Just eq -> f (eq a) ::: t2
             Nothing -> error $ "mismatch (argument type): " ++ show t3 ++ " does not match " ++ show t1
       _ -> error "mismatch (not a function)"
-
-equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
-equal t1 t2 = 
-   case (t1, t2) of
-      (Maybe a, Maybe b) -> fmap fmap (equal a b)
-      (StrategyCfg, StrategyCfg) -> Just id
-      (State, State) -> Just id
-      (Location, Location) -> Just id
-      (Exercise, Exercise) -> Just id
-      _ -> Nothing

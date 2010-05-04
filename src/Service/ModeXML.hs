@@ -185,7 +185,6 @@ xmlEncoder b f ex = Encoder
                   bs <- mapM (encode enc ex t1) xs
                   let elems = mapM_ (element "elem") bs
                   return (element "list" elems)
-         Tp.Elem t1   -> liftM (element "elem") . encode enc ex t1
          Tp.Tag s t1  -> liftM (element s) . encode enc ex t1  -- quick fix
          Tp.Strategy  -> return . builder . strategyToXML
          Tp.Rule      -> return . ("ruleid" .=.) . Rule.name

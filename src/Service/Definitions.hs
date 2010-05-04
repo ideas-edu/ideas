@@ -15,8 +15,8 @@ module Service.Definitions
      Service, makeService, deprecate 
    , serviceName, serviceDescription, serviceDeprecated, serviceFunction
      -- * Types
-   , Type(..), TypedValue(..), tuple2, tuple3, tuple4
-   , isSynonym
+   , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
+   , errorTp, equal, isSynonym
    , resultType, resultTypeSynonym
    , diagnosisType, diagnosisTypeSynonym
    , rulesInfoType
@@ -53,8 +53,6 @@ makeService name descr f = Service name descr False f
 deprecate :: Service -> Service
 deprecate s = s { serviceDeprecated = True }
 
-
-
 equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
 equal (a :|: b) (c :|: d) = liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
 equal (List a) (List b) = liftM map (equal a b)
@@ -62,6 +60,9 @@ equal Rule Rule = Just id
 equal Unit Unit = Just id
 equal (Pair a b) (Pair c d) = liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
 equal State State = Just id
+equal StrategyCfg StrategyCfg = Just id
+equal Location Location = Just id
+equal Exercise Exercise = Just id
 equal Bool Bool = Just id
 equal (Iso _ f a) b = fmap (. f) (equal a b)
 equal a (Iso f _ b) = fmap (f .) (equal a b)
@@ -92,6 +93,21 @@ tuple4 t1 t2 t3 t4 = Iso f g (Pair t1 (Pair t2 (Pair t3 t4)))
    f (a, (b, (c, d))) = (a, b, c, d)
    g (a, b, c, d)     = (a, (b, (c, d)))
 
+maybeTp :: Type a t1 -> Type a (Maybe t1)
+maybeTp t = Iso f g (t :|: Unit)
+ where
+   f = either Just (const Nothing)
+   g = maybe (Right ()) Left
+
+optionTp :: t1 -> Type a t1 -> Type a t1
+optionTp a t = Iso (fromMaybe a) Just (maybeTp t)
+
+errorTp :: Type a t -> Type a (Either String t)
+errorTp t = Iso f g (t :|: IO Unit)
+ where
+   f = either Right (const (Left "errorTp"))
+   g = either (Right . fail) Left
+
 data Type a t where
    -- Type isomorphisms (for defining type synonyms)
    Iso          :: (t1 -> t2) -> (t2 -> t1) -> Type a t1 -> Type a t2
@@ -99,15 +115,11 @@ data Type a t where
    (:->)        :: Type a t1 -> Type a t2 -> Type a (t1 -> t2)
    -- Special annotations
    Tag          :: String -> Type a t1 -> Type a t1
-   Optional     :: t1 -> Type a t1 -> Type a t1
-   Maybe        :: Type a t1 -> Type a (Maybe t1)
-   Error        :: Type a t -> Type a (Either String t)
    -- Type constructors
    List         :: Type a t -> Type a [t]
    Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
    (:|:)        :: Type a t1 -> Type a t2 -> Type a (Either t1 t2)
    Unit         :: Type a ()
-   Elem         :: Type a t -> Type a t -- quick fix
    IO           :: Type a t -> Type a (IO t)
    -- Exercise-specific types
    State        :: Type a (State a)
@@ -131,11 +143,7 @@ instance Show (Type a t) where
    show t@(Pair _ _)   = showTuple t
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s t)      = s ++ "@(" ++ show t ++ ")"
-   show (Optional _ t) = "(" ++ show t ++ ")?"
-   show (Maybe t)      = "(" ++ show t ++ ")?"
-   show (Error t)      = show t
    show (List t)       = "[" ++ show t ++ "]"
-   show (Elem t)       = show t
    show (IO t)         = show t
    show t              = fromMaybe "unknown" (groundType t)
    
@@ -180,7 +188,6 @@ typeSynonym name to from tp = TS
    { synonymName = name
    , useSynonym  = Tag name (Iso to from tp)
    , isSynonym   = maybe (fail name) return . match
-        
    }
  where
    match (a ::: t0) = do

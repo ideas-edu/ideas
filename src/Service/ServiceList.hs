@@ -49,7 +49,7 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   S.derivation ::: Maybe StrategyCfg :-> State :-> Error (List (tuple2 Rule Context))
+   S.derivation ::: maybeTp StrategyCfg :-> State :-> errorTp (List (tuple2 Rule Context))
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts" 
@@ -57,7 +57,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   S.allfirsts ::: State :-> Error (List (tuple3 Rule Location State))
+   S.allfirsts ::: State :-> errorTp (List (tuple3 Rule Location State))
         
 onefirstS :: Service
 onefirstS = makeService "onefirst" 
@@ -65,7 +65,7 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $ 
-   S.onefirst ::: State :-> Elem (Error (tuple3 Rule Location State))
+   S.onefirst ::: State :-> elemTp (errorTp (tuple3 Rule Location State))
   
 readyS :: Service
 readyS = makeService "ready" 
@@ -78,7 +78,7 @@ stepsremainingS = makeService "stepsremaining"
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
    \corresponds to the one returned by the derivation service." $
-   S.stepsremaining ::: State :-> Error Int
+   S.stepsremaining ::: State :-> errorTp Int
 
 applicableS :: Service
 applicableS = makeService "applicable" 
@@ -92,14 +92,14 @@ applyS = makeService "apply"
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $ 
-   S.apply ::: Rule :-> Location :-> State :-> Error State
+   S.apply ::: Rule :-> Location :-> State :-> errorTp State
 
 generateS :: Service
 generateS = makeService "generate" 
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression. The meaning \
    \of the difficulty level (an integer) depends on the exercise at hand." $ 
-   S.generate ::: Exercise :-> Optional 5 Int :-> IO State
+   S.generate ::: Exercise :-> optionTp 5 Int :-> IO State
 
 examplesS :: Service
 examplesS = makeService "examples"
@@ -145,7 +145,7 @@ onefirsttextS = makeService "onefirsttext"
    \leading to this service call (which can influence the returned result). \
    \The boolean in the result specifies whether a suggestion was available or \
    \not." $ 
-   onefirsttext ::: ExerciseText :-> State :-> Maybe String :-> Elem (tuple3 Bool String State)
+   onefirsttext ::: ExerciseText :-> State :-> maybeTp String :-> elemTp (tuple3 Bool String State)
 
 submittextS :: Service
 submittextS = makeService "submittext" 
@@ -155,14 +155,14 @@ submittextS = makeService "submittext"
    \for announcing the event leading to this service call. The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: ExerciseText :-> State :-> String :-> Maybe String :-> Elem (tuple3 Bool String State)
+   submittext ::: ExerciseText :-> State :-> String :-> maybeTp String :-> elemTp (tuple3 Bool String State)
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
-   derivationtext ::: ExerciseText :-> State :-> Maybe String :-> Error (List (tuple2 String Context))
+   derivationtext ::: ExerciseText :-> State :-> maybeTp String :-> errorTp (List (tuple2 String Context))
 
 ------------------------------------------------------
 -- Problem decomposition service
@@ -172,7 +172,7 @@ problemdecompositionS = makeService "problemdecomposition"
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: State :-> StrategyLoc :-> Maybe Term :-> replyType
+   problemDecomposition ::: State :-> StrategyLoc :-> maybeTp Term :-> replyType
 
 ------------------------------------------------------
 -- Reflective services
@@ -216,3 +216,6 @@ allRules :: E.Exercise a -> [(String, Bool, Bool)]
 allRules = map make . ruleset
  where  
    make r  = (name r, isBuggyRule r, isRewriteRule r)
+   
+elemTp :: Type a t -> Type a t
+elemTp = Tag "elem"

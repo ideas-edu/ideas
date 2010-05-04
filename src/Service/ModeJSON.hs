@@ -109,9 +109,11 @@ jsonEncoder ex = Encoder
            liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
       | otherwise = 
            case serviceType of
-              Tp.Tag s _ | s == "Result" -> 
+              Tp.Tag s t | s == "Result" -> 
                  isSynonym resultTypeSynonym (a ::: serviceType) 
                  >>= encodeResult enc
+                         | s == "elem" -> 
+                 encode enc t a
               Tp.List t    -> liftM Array (mapM (encode enc t) a)
               Tp.Tag s t   -> liftM (\b -> Object [(s, b)]) (encode enc t a)
               Tp.Int       -> return (toJSON a)

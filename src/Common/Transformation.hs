@@ -28,7 +28,7 @@ module Common.Transformation
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
-   , transformations, getRewriteRules, doBeforeTrans
+   , siblingOf, transformations, getRewriteRules, doBeforeTrans
    , ruleRecognizer, useRecognizer
      -- * Lifting
    , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
@@ -300,6 +300,9 @@ isRewriteRule = not . null . getRewriteRules
 
 describe :: String -> Rule a -> Rule a
 describe txt r = r { ruleDescription = txt ++ "\n" ++ ruleDescription r}
+
+siblingOf :: Rule b -> Rule a -> Rule a 
+siblingOf sib r = r { ruleSiblings = name sib : ruleSiblings r }
 
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }

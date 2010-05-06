@@ -20,8 +20,8 @@ module Service.TypedAbstractService
 import qualified Common.Apply as Apply
 import Common.Context 
 import Common.Derivation hiding (derivation)
-import Common.Exercise (Exercise(..), ruleset, randomTermWith, inContext)
-import Common.Strategy hiding (not, fail)
+import Common.Exercise   hiding (generate)
+import Common.Strategy   hiding (not, fail)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Common.Navigator
@@ -146,7 +146,6 @@ stepsremaining = liftM length . derivation Nothing
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise state
-       isA     = maybe False (similarity ex a) . fromContext
        buggies = filter isBuggyRule (ruleset ex)
-       check r = any isA (Apply.applyAll r (context state))
+       check r = recognizeRule ex r (context state) (inContext ex a)
    in filter check buggies

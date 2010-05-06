@@ -17,7 +17,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.Rules (abcFormula)
+import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
@@ -27,16 +27,23 @@ import Common.Transformation
 import Common.Traversable
 import Control.Monad
 
-buggyRulesEquation :: [Rule (Equation Expr)]
-buggyRulesEquation = 
-   [ buggyPlus, buggyNegateOneSide, buggyFlipNegateOneSide, buggyNegateAll
-   , buggyDivNegate, buggyDivNumDenom, buggyCancelMinus
-   , buggyMultiplyOneSide, buggyMultiplyForgetOne
-   ] ++ map (ruleOnce . ruleSomewhere) 
+buggyRulesExpr :: [Rule Expr]
+buggyRulesExpr = map ruleSomewhere $
+   map (siblingOf distributeTimesSomewhere)
    [ buggyDistrTimes, buggyDistrTimesForget, buggyDistrTimesSign
    , buggyDistrTimesTooMany, buggyDistrTimesDenom
-   , buggyMinusMinus, buggyPriorityTimes
+   ] ++
+   [ buggyMinusMinus, buggyPriorityTimes -- no sibling defined
    ]
+
+buggyRulesEquation :: [Rule (Equation Expr)]
+buggyRulesEquation = 
+   [ buggyPlus, buggyNegateOneSide, siblingOf flipEquation buggyFlipNegateOneSide
+   , buggyNegateAll
+   , buggyDivNegate, buggyDivNumDenom, buggyCancelMinus
+   , buggyMultiplyOneSide, buggyMultiplyForgetOne
+   ] ++ 
+   map ruleOnce buggyRulesExpr
 
 buggyPlus :: Rule (Equation Expr)
 buggyPlus = describe "Moving a term from the left-hand side to the \
@@ -82,7 +89,8 @@ buggyDivNegate = describe "Dividing, but wrong sign." $
       [ lhs/(-a) :==: b | noVars a ] ++ [ lhs/(-b) :==: a | noVars b ]
 
 buggyDivNumDenom :: Rule (Equation Expr)
-buggyDivNumDenom = describe "Dividing, but flipping numerator/denominator." $
+buggyDivNumDenom = describe "Dividing both sides, but swapping \
+   \numerator/denominator." $
    buggyRule $ makeSimpleRuleList "buggy divide numdenom" $ \(lhs :==: rhs) -> do
       (a, b) <- matchM timesView lhs
       [ b :==: a/rhs | noVars rhs ] ++ [ a :==: b/rhs | noVars rhs ]
@@ -239,9 +247,7 @@ myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
 -- ABC formula misconceptions
 
 abcBuggyRules :: [Rule (OrList (Equation Expr))]
-abcBuggyRules = map f [ minusB, twoA, minus4AC, oneSolution ]
- where
-   f r = r { ruleSiblings = [name abcFormula] }
+abcBuggyRules = map (siblingOf abcFormula) [ minusB, twoA, minus4AC, oneSolution ]
 
 abcMisconception :: (String -> Rational -> Rational -> Rational -> [OrList (Equation Expr)])
                  -> Transformation (OrList (Equation Expr))

@@ -81,7 +81,8 @@ quadraticExercise = makeExercise
    , isSuitable   = (`belongsTo` (switchView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
    , extraRules   = map (liftToContext . liftRule (switchView equationView)) $ 
-                       quadraticRules ++ abcBuggyRules
+                       quadraticRules ++ abcBuggyRules ++
+                       map ruleOnce buggyRulesEquation
    , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
@@ -97,7 +98,9 @@ higherDegreeExercise = makeExercise
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isSuitable    = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
    , isReady       = solvedRelations
-   , extraRules    = map (liftToContext . liftRule (switchView equationView)) higherDegreeRules
+   , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
+                     higherDegreeRules ++ abcBuggyRules ++
+                     map ruleOnce buggyRulesEquation
    , strategy      = higherDegreeStrategy
    , examples      = map (orList . return . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
@@ -143,6 +146,7 @@ findFactorsExercise = makeExercise
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = mapRules liftToContext findFactorsStrategy
+   , extraRules   = map liftToContext buggyRulesExpr
    , examples     = concat findFactors
    }
 

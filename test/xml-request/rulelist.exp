@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.14">
+<reply result="ok" version="0.6.1 (3119)">
   <list>
     <elem name="abc formula" buggy="false" rewriterule="false"/>
     <elem name="abc misconception minus 4ac" buggy="true" rewriterule="false"/>
@@ -7,6 +7,22 @@
     <elem name="abc misconception two a" buggy="true" rewriterule="false"/>
     <elem name="approximate" buggy="false" rewriterule="false"/>
     <elem name="bring a to one" buggy="false" rewriterule="false"/>
+    <elem name="buggy cancel minus" buggy="true" rewriterule="false"/>
+    <elem name="buggy distr times denom" buggy="true" rewriterule="false"/>
+    <elem name="buggy distr times plus" buggy="true" rewriterule="false"/>
+    <elem name="buggy distr times plus forget" buggy="true" rewriterule="false"/>
+    <elem name="buggy distr times plus sign" buggy="true" rewriterule="false"/>
+    <elem name="buggy distr times too many" buggy="true" rewriterule="false"/>
+    <elem name="buggy divide negate" buggy="true" rewriterule="false"/>
+    <elem name="buggy divide numdenom" buggy="true" rewriterule="false"/>
+    <elem name="buggy flip negate one side" buggy="true" rewriterule="false"/>
+    <elem name="buggy minus minus" buggy="true" rewriterule="false"/>
+    <elem name="buggy multiply forget one" buggy="true" rewriterule="false"/>
+    <elem name="buggy multiply one side" buggy="true" rewriterule="false"/>
+    <elem name="buggy negate all" buggy="true" rewriterule="false"/>
+    <elem name="buggy negate one side" buggy="true" rewriterule="false"/>
+    <elem name="buggy plus" buggy="true" rewriterule="false"/>
+    <elem name="buggy priority times" buggy="true" rewriterule="false"/>
     <elem name="cancel terms" buggy="false" rewriterule="false"/>
     <elem name="common factor var" buggy="false" rewriterule="false"/>
     <elem name="cover-up minus left [one var]" buggy="false" rewriterule="false"/>

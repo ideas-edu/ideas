@@ -130,7 +130,7 @@ compile_ contents options lvmPath doneModules =
         -- Phase 8: Type inferencing
         (dictionaryEnv, afterTypeInferEnv, toplevelTypes, typeWarnings) <- 
             doPhaseWithExit $ 
-               phaseTypeInferencer fullName resolvedModule {-doneModules-} localEnv beforeTypeInferEnv options
+               phaseTypeInferencer "." fullName resolvedModule {-doneModules-} localEnv beforeTypeInferEnv options
 
         --unless (NoWarnings `elem` options) $
         --    showMessages typeWarnings

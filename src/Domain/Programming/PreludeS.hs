@@ -15,8 +15,13 @@
 module Domain.Programming.PreludeS
    ( -- * Type synonyms
      ModuleS, ExprS, PatS, FunBindingS, RhsS, LhsS, DeclS
-     -- * Prelude strategies
-   , foldlS, letS, whereS, compS, iterateS, sumS, zipWithS, reverseS
+     -- * Language definition strategies
+   , letS, whereS
+     -- * General prelude functions strategies
+   , compS, idS, constS, flipS
+     -- * Prelude list functions strategies
+   , foldrS, foldr1S, foldlS, iterateS, sumS, zipWithS, reverseS
+   , headS, initS, lastS
      -- * Smart constructors and help functions
    , varS, patS, progS, funS, declFunS, declPatS, rhsS, intS, appS, opS
    , lambdaS, mapSeqS, repeatS , ( # ), patConS, patParenS, exprParenS
@@ -35,6 +40,7 @@ import Prelude hiding (sequence)
 --------------------------------------------------------------------------------
 -- Type synonyms
 --------------------------------------------------------------------------------
+
 type ModuleS     = Strategy Module
 type ExprS       = Strategy Expression
 type PatS        = Strategy Pattern
@@ -46,17 +52,61 @@ type DeclS       = Strategy Declaration
 --------------------------------------------------------------------------------
 -- Language definition strategies
 --------------------------------------------------------------------------------
+
+-- At the moment there is no distinction between Module strategies and 
+-- Expression strategies: both are denoted by components with an S postfix.
+-- Would it be useful to distinguish the two?
+
 -- specialised where strategy, also recognizes let expressions
+letS :: [DeclS] -> ExprS -> ExprS
+letS decls expr =  introExprLet (length decls) <**> sequence decls <*> expr
+
 whereS :: [DeclS] -> ExprS -> RhsS 
 whereS decls expr  =  rhsS expr decls
                   <|> rhsS (letS decls expr) []
 
-letS :: [DeclS] -> ExprS -> ExprS
-letS decls expr =  introExprLet (length decls) <**> sequence decls <*> expr
+-------------------------------------------------------------------------------
+-- General prelude functions strategies
+-------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------
--- Prelude definition strategies
-------------------------------------------------------------------------------
+compS :: ExprS -> ExprS -> ExprS -- f . g -> \x -> f (g x) 
+compS f g  =  opS "." (Just f) (Just g)
+          <|> lambdaS [patS "x"] (f # [appS g [varS "x"]])
+
+idS  :: ExprS
+idS  =  varS "id"
+    <|> lambdaS [patS "x"] (varS "x")
+
+constS    :: ExprS -> ExprS
+constS x  =  (varS "const" # [x])
+         <|> lambdaS [patS "y"] x
+
+-- Question: does # have higher precedence than <|>? From the error-messages it
+-- looks lower. I don't think this is a good choice.
+
+flipS :: ExprS -> ExprS
+flipS f  =  (varS "flip" # [f])
+        <|> lambdaS [patS "x", patS "y"] (f # [varS "y", varS "x"])
+
+-------------------------------------------------------------------------------
+-- Prelude list functions strategies
+-------------------------------------------------------------------------------
+
+foldrS :: ExprS -> ExprS -> ExprS
+foldrS consS nilS  =  (varS "foldr" # [consS, nilS])
+                  <|> letS [ declFunS [ funS (lhsS "f" [ patConS "[]" ]) (rhsS nilS [])
+                                      , funS (lhsS "f" [ patInfixConS (patS "x") ":" (patS "xs") ]) 
+                                             (rhsS (consS # [ varS "x", varS "f" # [ varS "xs" ] ]) []) 
+                                      ]
+                           ] {- in -} (varS "f")
+
+foldr1S :: ExprS -> ExprS
+foldr1S consS  =  (varS "foldr1" # [consS])
+              <|> letS [ declFunS [ funS (lhsS "f" [ patInfixConS (patS "x") ":" (patS "xs") ]) 
+                                         (rhsS (consS # [ varS "x", varS "f" # [ varS "xs" ] ]) []) 
+                                  ]
+                       ] {- in -} (varS "f")
+
 foldlS :: ExprS -> ExprS -> ExprS
 foldlS consS nilS 
        -- Normal usage
@@ -72,22 +122,6 @@ foldlS consS nilS
        -- Bastiaan's theorem, ie. foldl op e == foldr (flip op) e . reverse
    <|> compS (foldrS (flipS consS) nilS) (varS "reverse")
 
-foldrS :: ExprS -> ExprS -> ExprS
-foldrS consS nilS  =  (varS "foldr" # [consS, nilS])
-                  <|> letS [ declFunS [ funS (lhsS "f" [ patConS "[]" ]) (rhsS nilS [])
-                                      , funS (lhsS "f" [ patInfixConS (patS "x") ":" (patS "xs") ]) 
-                                             (rhsS (consS # [ varS "x", varS "f" # [ varS "xs" ] ]) []) 
-                                      ]
-                           ] {- in -} (varS "f")
-
-compS :: ExprS -> ExprS -> ExprS -- f . g -> \x -> f (g x) 
-compS f g  =  opS "." (Just f) (Just g)
-          <|> lambdaS [patS "x"] (f # [appS g [varS "x"]])
-
-flipS :: ExprS -> ExprS
-flipS f  =  (varS "flip" # [f])
-        <|> lambdaS [patS "x", patS "y"] (f # [varS "y", varS "x"])
-
 sumS :: ExprS
 sumS =  varS "sum"  
 --    <|> foldlS (opS "+" Nothing Nothing) (intS "0")
@@ -97,14 +131,18 @@ iterateS  =  varS "iterate"
 
 zipWithS :: ExprS
 zipWithS = varS "zipWith"
-{-
-zipWith :: (a->b->c) -> [a]->[b]->[c]
-zipWith f (a:as) (b:bs) = f a b : zipWith f as bs
-zipWith _ _      _      = []
--}
+
+headS :: ExprS
+headS = varS "head"
+
+initS :: ExprS
+initS = varS "init"
+
+lastS :: ExprS
+lastS = varS "last"
 
 reverseS :: ExprS
-reverseS  =  (varS "reverse")
+reverseS  =  varS "reverse"
 --         <|> foldlS (flipS (opS ":" Nothing Nothing)) (exprConS "[]")
 
 --------------------------------------------------------------------------------

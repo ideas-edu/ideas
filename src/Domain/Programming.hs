@@ -14,6 +14,7 @@ module Domain.Programming
    , module Domain.Programming.Anonymise
    , module Domain.Programming.InlinePatternBindings
    , module Domain.Programming.Strategies
+   , module Domain.Programming.Strategies99
    , module Domain.Programming.HeliumRules
    , module Domain.Programming.Helium
    , module Domain.Programming.Prog
@@ -28,6 +29,7 @@ import Domain.Programming.AlphaRenaming (alphaRenaming)
 import Domain.Programming.Anonymise
 import Domain.Programming.InlinePatternBindings (inlinePatternBindings)
 import Domain.Programming.Strategies
+import Domain.Programming.Strategies99
 import Domain.Programming.HeliumRules
 import Domain.Programming.Helium
 import Domain.Programming.Prog

@@ -14,6 +14,7 @@
 module Main where
 
 import Domain.Programming.Strategies
+import Domain.Programming.Strategies99
 import Domain.Programming.Helium
 import Domain.Programming.Prog
 import System.Environment

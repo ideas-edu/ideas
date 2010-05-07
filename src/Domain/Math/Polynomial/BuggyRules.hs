@@ -13,6 +13,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BuggyRules where
 
+import Prelude hiding ((^))
+import Common.Rewriting
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
@@ -248,9 +250,14 @@ myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
 -- Quadratic and Higher-Degree Polynomials
 
 buggyQuadratic :: [Rule (OrList (Equation Expr))]
-buggyQuadratic = 
-   [ ruleOnce buggyCoverUpEvenPower, buggyCoverUpEvenPowerTooEarly
-   , buggyCoverUpEvenPowerForget]
+buggyQuadratic = map ruleOnce 
+   ( [ buggyCoverUpTimesMul, buggyCoverUpEvenPower ] ++
+     map (ruleOnce . ruleSomewhere)
+     [ buggyDistributionSquare, buggyDistributionSquareForget
+     , buggySquareMultiplication
+     ]) ++
+   [ buggyCoverUpEvenPowerTooEarly, buggyCoverUpEvenPowerForget
+   ]
 
 buggyCoverUpEvenPower :: Rule (Equation Expr)
 buggyCoverUpEvenPower = describe "Covering up an even power, but forgetting \
@@ -293,6 +300,48 @@ helperBuggyCUPower mode (lhs :==: rhs) =
               | otherwise = a
           rb  = root c (fromInteger n)
       return $ orList [opa `equals` rb, opa `equals` (-rb)]
+
+buggyCoverUpTimesMul :: Rule (Equation Expr)
+buggyCoverUpTimesMul = describe "Covering-up a multiplication, but instead of \
+   \dividing the right-hand side, multiplication is used." $
+   buggyRule $ siblingOf coverUpTimes $ 
+   makeSimpleRuleList "buggy cover-up times mul" $ \(lhs :==: rhs) -> do
+      (a, b) <- isTimes lhs
+      [a :==: rhs*b, b :==: rhs*a]
+    `mplus` do
+      (a, b) <- isTimes rhs
+      [lhs*a :==: b, lhs*b :==: a]
+
+buggyDistributionSquare :: Rule Expr
+buggyDistributionSquare = describe "Incorrect removal of parentheses in a squared \
+   \addition: forgetting the 2ab term" $ 
+   buggyRule $ siblingOf distributionSquare $
+   ruleList "buggy distribution square" $ 
+      [ \a b -> (a+b)^2 :~> a^2+b^2
+      , \a b -> (a-b)^2 :~> a^2-b^2
+      , \a b -> (a-b)^2 :~> a^2+b^2
+      ]
+
+buggyDistributionSquareForget :: Rule Expr
+buggyDistributionSquareForget = describe "Incorrect removal of parentheses in a squared \
+   \addition: squaring only one term" $ 
+   buggyRule $ siblingOf distributionSquare $
+   ruleList "buggy distribution square forget" $ 
+      [ \a b -> (a+b)^2 :~> a^2+b
+      , \a b -> (a+b)^2 :~> a+b^2
+      , \a b -> (a-b)^2 :~> a^2-b
+      , \a b -> (a-b)^2 :~> a-b^2
+      ]
+
+buggySquareMultiplication :: Rule Expr
+buggySquareMultiplication = describe "Incorrect square of a term that involves \
+   \a multiplication." $ buggyRule $
+   ruleList "buggy square multiplication" $
+      [ \a b -> (a*b)^2 :~> a*b^2
+      , \a b -> (a*b)^2 :~> a^2*b
+      , \a b -> a*b^2   :~> (a*b)^2
+      , \a b -> a^2*b   :~> (a*b)^2
+      ] 
 
 ---------------------------------------------------------
 -- ABC formula misconceptions

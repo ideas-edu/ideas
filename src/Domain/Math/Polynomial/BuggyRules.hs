@@ -251,12 +251,16 @@ myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
 
 buggyQuadratic :: [Rule (OrList (Equation Expr))]
 buggyQuadratic = map ruleOnce 
-   ( [ buggyCoverUpTimesMul, buggyCoverUpEvenPower ] ++
+   ( [ buggyCoverUpTimesMul, buggyCoverUpEvenPower
+     , buggyCoverUpTimesWithPlus, buggyDivisionByVarBoth
+     , buggyDivisionByVarZero
+     ] ++
      map (ruleOnce . ruleSomewhere)
      [ buggyDistributionSquare, buggyDistributionSquareForget
      , buggySquareMultiplication
      ]) ++
    [ buggyCoverUpEvenPowerTooEarly, buggyCoverUpEvenPowerForget
+   , buggyCoverUpSquareMinus
    ]
 
 buggyCoverUpEvenPower :: Rule (Equation Expr)
@@ -306,9 +310,11 @@ buggyCoverUpTimesMul = describe "Covering-up a multiplication, but instead of \
    \dividing the right-hand side, multiplication is used." $
    buggyRule $ siblingOf coverUpTimes $ 
    makeSimpleRuleList "buggy cover-up times mul" $ \(lhs :==: rhs) -> do
+      guard (rhs /= 0)
       (a, b) <- isTimes lhs
       [a :==: rhs*b, b :==: rhs*a]
     `mplus` do
+      guard (lhs /= 0)
       (a, b) <- isTimes rhs
       [lhs*a :==: b, lhs*b :==: a]
 
@@ -342,6 +348,53 @@ buggySquareMultiplication = describe "Incorrect square of a term that involves \
       , \a b -> a*b^2   :~> (a*b)^2
       , \a b -> a^2*b   :~> (a*b)^2
       ] 
+
+buggyCoverUpSquareMinus :: Rule (OrList (Equation Expr))
+buggyCoverUpSquareMinus = describe "A squared term is equal to a negative term \
+   \on the right-hand side, resulting in an error in the signs" $
+   buggyRule $ makeSimpleRule "buggy cover-up square minus" $ onceJoinM $ \eq -> 
+      case eq of
+         Sym s [a, 2] :==: b | s == powerSymbol -> 
+            Just $ orList [a :==: sqrt b, a :==: sqrt (-b)]
+         _ -> Nothing
+
+buggyCoverUpTimesWithPlus :: Rule (Equation Expr)
+buggyCoverUpTimesWithPlus = describe "Covering-up a multiplication, with an \
+   \addition on the other side. Only one of the terms is divided." $ 
+   buggyRule $ makeSimpleRuleList "buggy cover-up times with plus" $ 
+   \(lhs :==: rhs) -> make (:==:) lhs rhs ++ make (flip (:==:)) rhs lhs
+ where
+   make equals ab cd = do
+      (a, b) <- isTimes ab
+      (c, d) <- isPlus cd
+      [ a `equals` (c/b+d), a `equals` (c+d/b), 
+        b `equals` (c/a+d), b `equals` (c+d/a) ]
+        
+buggyDivisionByVarBoth :: Rule (Equation Expr)
+buggyDivisionByVarBoth = describe "Divide both sides by variable, without \
+   \introducing the x=0 alternative." $ 
+   buggyRule $ makeSimpleRule "buggy division by var both" $ 
+   \(lhs :==: rhs) -> do
+      (s1, p1) <- match polyView lhs
+      (s2, p2) <- match polyView rhs
+      let n = lowestDegree p1 `min` lowestDegree p2
+      guard (n > 0 && s1==s2)
+      let f p = build polyView (s1, raise (-n) p)
+      return (f p1 :==: f p2)
+
+buggyDivisionByVarZero :: Rule (Equation Expr)
+buggyDivisionByVarZero = describe "Divide both sides by variable, without \
+   \introducing the x=0 alternative." $ 
+   buggyRule $ makeSimpleRuleList "buggy division by var zero" $ 
+   \(lhs :==: rhs) -> do
+      guard (rhs == 0)
+      (s, p) <- matchM polyView lhs
+      let n = lowestDegree p
+      guard (n > 0)
+      -- Quick fix to do some trivial steps for a linear equation, so that
+      -- buggy rules are recognized. 
+      let eq = build polyView (s, raise (-n) p) :==: 0
+      eq : applyM coverUpPlus eq
 
 ---------------------------------------------------------
 -- ABC formula misconceptions

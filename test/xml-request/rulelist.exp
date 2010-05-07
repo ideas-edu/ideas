@@ -11,13 +11,20 @@
     <elem name="buggy cover-up even power" buggy="true" rewriterule="false"/>
     <elem name="buggy cover-up even power forget" buggy="true" rewriterule="false"/>
     <elem name="buggy cover-up even power too early" buggy="true" rewriterule="false"/>
+    <elem name="buggy cover-up square minus" buggy="true" rewriterule="false"/>
+    <elem name="buggy cover-up times mul" buggy="true" rewriterule="false"/>
+    <elem name="buggy cover-up times with plus" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times denom" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times plus" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times plus forget" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times plus sign" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times too many" buggy="true" rewriterule="false"/>
+    <elem name="buggy distribution square" buggy="true" rewriterule="false"/>
+    <elem name="buggy distribution square forget" buggy="true" rewriterule="false"/>
     <elem name="buggy divide negate" buggy="true" rewriterule="false"/>
     <elem name="buggy divide numdenom" buggy="true" rewriterule="false"/>
+    <elem name="buggy division by var both" buggy="true" rewriterule="false"/>
+    <elem name="buggy division by var zero" buggy="true" rewriterule="false"/>
     <elem name="buggy flip negate one side" buggy="true" rewriterule="false"/>
     <elem name="buggy minus minus" buggy="true" rewriterule="false"/>
     <elem name="buggy multiply forget one" buggy="true" rewriterule="false"/>
@@ -26,6 +33,7 @@
     <elem name="buggy negate one side" buggy="true" rewriterule="false"/>
     <elem name="buggy plus" buggy="true" rewriterule="false"/>
     <elem name="buggy priority times" buggy="true" rewriterule="false"/>
+    <elem name="buggy square multiplication" buggy="true" rewriterule="false"/>
     <elem name="cancel terms" buggy="false" rewriterule="false"/>
     <elem name="common factor var" buggy="false" rewriterule="false"/>
     <elem name="cover-up minus left [one var]" buggy="false" rewriterule="false"/>

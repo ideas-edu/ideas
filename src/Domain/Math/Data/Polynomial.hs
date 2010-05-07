@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Polynomial 
    ( Polynomial, var, con, raise, power, scale
-   , degree, coefficient, terms
+   , degree, lowestDegree, coefficient, terms
    , isMonic, toMonic, isRoot, positiveRoots, negativeRoots
    , derivative, eval, division, longDivision, polynomialGCD
    , factorize
@@ -96,6 +96,13 @@ degree (P m)
    | IS.null is = 0
    | otherwise  = IS.findMax is
  where is = IM.keysSet m
+
+lowestDegree :: Polynomial a -> Int
+lowestDegree (P m)
+   | IS.null is = 0
+   | otherwise  = IS.findMin is
+ where is = IM.keysSet m
+
 
 coefficient :: Num a => Int -> Polynomial a -> a
 coefficient n (P m) = IM.findWithDefault 0 n m

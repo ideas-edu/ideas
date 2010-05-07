@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.1 (3119)">
+<reply result="ok" version="0.6.2 (3124)">
   <list>
     <elem name="abc formula" buggy="false" rewriterule="false"/>
     <elem name="abc misconception minus 4ac" buggy="true" rewriterule="false"/>
@@ -8,6 +8,9 @@
     <elem name="approximate" buggy="false" rewriterule="false"/>
     <elem name="bring a to one" buggy="false" rewriterule="false"/>
     <elem name="buggy cancel minus" buggy="true" rewriterule="false"/>
+    <elem name="buggy cover-up even power" buggy="true" rewriterule="false"/>
+    <elem name="buggy cover-up even power forget" buggy="true" rewriterule="false"/>
+    <elem name="buggy cover-up even power too early" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times denom" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times plus" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times plus forget" buggy="true" rewriterule="false"/>

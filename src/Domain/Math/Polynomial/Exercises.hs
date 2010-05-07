@@ -82,6 +82,7 @@ quadraticExercise = makeExercise
    , isReady      = solvedRelations
    , extraRules   = map (liftToContext . liftRule (switchView equationView)) $ 
                        quadraticRules ++ abcBuggyRules ++
+                       buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
    , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)

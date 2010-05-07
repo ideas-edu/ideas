@@ -21,6 +21,7 @@ import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
+import Domain.Math.Equation.CoverUpRules
 import Common.Apply
 import Common.View
 import Common.Transformation
@@ -242,6 +243,56 @@ multiplyForgetOne r = makeTransList $ \(lhs :==: rhs) -> do
 -- Redundant function; should come from exercise
 myEq :: Equation Expr -> Equation Expr -> Bool
 myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
+
+---------------------------------------------------------
+-- Quadratic and Higher-Degree Polynomials
+
+buggyQuadratic :: [Rule (OrList (Equation Expr))]
+buggyQuadratic = 
+   [ ruleOnce buggyCoverUpEvenPower, buggyCoverUpEvenPowerTooEarly
+   , buggyCoverUpEvenPowerForget]
+
+buggyCoverUpEvenPower :: Rule (Equation Expr)
+buggyCoverUpEvenPower = describe "Covering up an even power, but forgetting \
+   \the negative root" $ buggyRule $ siblingOf coverUpPower $
+   makeSimpleRuleList "buggy cover-up even power" $ \(lhs :==: rhs) ->
+      make (:==:) lhs rhs ++ make (flip (:==:)) rhs lhs
+ where
+   make equals ab c = do 
+      (a, b) <- isBinary powerSymbol ab
+      n <- matchM integerView b
+      guard (n > 0 && even n)
+      return (a `equals` root c (fromInteger n))
+
+buggyCoverUpEvenPowerTooEarly :: Rule (OrList (Equation Expr))
+buggyCoverUpEvenPowerTooEarly = describe "Trying to cover up an even power, \
+   \but there is some other operation to be done first. Example: x^2+1=9" $
+   buggyRule $ siblingOf coverUpPower $ 
+   makeSimpleRuleList "buggy cover-up even power too early" $ 
+      onceJoinM $ helperBuggyCUPower True
+
+buggyCoverUpEvenPowerForget :: Rule (OrList (Equation Expr))
+buggyCoverUpEvenPowerForget = describe "Trying to cover up an even power, \
+   \but there is some other operation to be done first. Example: 9*x^2=81, \
+   \ and rewriting this into x=9 or x=-9." $
+   buggyRule $ siblingOf coverUpPower $ 
+   makeSimpleRuleList "buggy cover-up even power forget" $ 
+      onceJoinM $ helperBuggyCUPower False
+
+helperBuggyCUPower :: Bool -> Equation Expr -> [OrList (Equation Expr)]
+helperBuggyCUPower mode (lhs :==: rhs) =
+   make (:==:) lhs rhs ++ make (flip (:==:)) rhs lhs
+ where
+   make equals ab c = do
+      (sym, xs) <- getFunction ab
+      (i, x)    <- zip [0..] xs
+      (a, b)    <- isBinary powerSymbol x
+      n         <- matchM integerView b
+      guard (n > 0 && even n)
+      let opa | mode      = function sym (take i xs ++ [a] ++ drop (i+1) xs)
+              | otherwise = a
+          rb  = root c (fromInteger n)
+      return $ orList [opa `equals` rb, opa `equals` (-rb)]
 
 ---------------------------------------------------------
 -- ABC formula misconceptions

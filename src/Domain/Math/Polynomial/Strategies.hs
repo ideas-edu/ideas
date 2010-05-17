@@ -86,7 +86,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
    generalForm = label "general form" $ 
       ruleOnce commonFactorVar 
       <|> ruleOnce noLinFormula{- or coverup -}
-      <|> ruleOnce simplerPoly <|> remove (ruleOnce bringAToOne)
+      <|> ruleOnce simplerPolynomial <|> remove (ruleOnce bringAToOne)
       <|> ruleOnce niceFactors 
       <|> coverUpPower -- to deal with special case x^2=0
       

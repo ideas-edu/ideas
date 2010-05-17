@@ -24,6 +24,7 @@ import Common.Strategy   hiding (not, fail)
 import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Common.Navigator
+import Data.List
 import Data.Maybe
 import System.Random
 import Control.Monad
@@ -83,11 +84,10 @@ derivation mcfg state =
       _ -> rec state
  where
    rec :: Monad m => State a -> m [(Rule (Context a), Context a)]
-   rec state = do
-      xs <- allfirsts state
-      case xs of 
-         [] -> return []
-         (r, _, next):_ -> liftM ((r, context next):) (rec next)
+   rec state = 
+      case onefirst state of
+         Nothing           -> return []
+         Just (r, _, next) -> liftM ((r, context next):) (rec next)
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
@@ -117,11 +117,13 @@ allfirsts state =
          _ -> Nothing
 
 onefirst :: Monad m => State a -> m (Rule (Context a), Location, State a)
-onefirst state = 
-   case allfirsts state of
-      Right (hd:_) -> return hd
-      Right []     -> fail "No step possible"
-      Left msg     -> fail msg
+onefirst state = do
+   xs <- allfirsts state
+   case sortBy f xs of
+      hd:_ -> return hd
+      []   -> fail "No step possible"
+ where
+   f (r1, _, _) (r2, _, _) = ruleOrdering (exercise state) r1 r2
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =

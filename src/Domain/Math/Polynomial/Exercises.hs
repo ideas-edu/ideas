@@ -34,6 +34,7 @@ import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Equivalence
 import Domain.Math.Numeric.Views
+import Domain.Math.Equation.CoverUpRules
 import Control.Monad
 
 ------------------------------------------------------------
@@ -84,9 +85,30 @@ quadraticExercise = makeExercise
                        quadraticRules ++ abcBuggyRules ++
                        buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
+   , ruleOrdering = ruleNameOrderingWith 
+                       [ name coverUpTimes, name simplerPolynomial, name commonFactorVar
+                       , name niceFactors, name noLinFormula, name cancelTerms
+                       , name sameConFactor, name distributionSquare
+                       ]
    , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
+   
+ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
+ruleOrderingWith xs r1 r2 = 
+   case (elemIndex r1 xs, elemIndex r2 xs) of
+      (Just i,  Just j ) -> i `compare` j
+      (Just _,  Nothing) -> LT
+      (Nothing, Just _ ) -> GT
+      (Nothing, Nothing) -> name r1 `compare` name r2
+ 
+ruleNameOrderingWith :: [String] -> Rule a -> Rule a -> Ordering
+ruleNameOrderingWith xs r1 r2 =
+   case (findIndex (==name r1) xs, findIndex (==name r2) xs) of
+      (Just i,  Just j ) -> i `compare` j
+      (Just _,  Nothing) -> LT
+      (Nothing, Just _ ) -> GT
+      (Nothing, Nothing) -> name r1 `compare` name r2
    
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 
@@ -102,6 +124,7 @@ higherDegreeExercise = makeExercise
    , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
                      higherDegreeRules ++ abcBuggyRules ++
                      map ruleOnce buggyRulesEquation
+   , ruleOrdering  = \_ _ -> LT
    , strategy      = higherDegreeStrategy
    , examples      = map (orList . return . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
@@ -118,7 +141,7 @@ quadraticNoABCExercise = quadraticExercise
    cfg = [ (ByName (name prepareSplitSquare), Reinsert)
          , (ByName (name bringAToOne), Reinsert)
          , (ByName "abc form", Remove)
-         , (ByName (name simplerPoly), Remove)
+         , (ByName (name simplerPolynomial), Remove)
          ]
          
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))

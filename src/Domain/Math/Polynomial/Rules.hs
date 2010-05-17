@@ -53,7 +53,7 @@ linearRules = map liftToContext $
 quadraticRules :: [Rule (OrList (Equation Expr))]
 quadraticRules = -- abcFormula
    [ ruleOnce commonFactorVar, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerPoly, mulZero, coverUpPower, squareBothSides
+   , ruleOnce simplerPolynomial, mulZero, coverUpPower, squareBothSides
    ] ++
    map (ruleOnce . ($ oneVar)) 
      [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
@@ -126,8 +126,8 @@ rhsIsZero r = makeSimpleRuleList (name r) $ \(lhs :==: rhs) -> do
 -- 1) If a,b,c are ints, then find gcd
 -- 2) If any of a,b,c is a fraction, find lcm of denominators
 -- 3) If a<0, then also suggest to change sign (return two solutions)
-simplerPoly :: Rule (Equation Expr)
-simplerPoly = makeSimpleRuleList "simpler polynomial" $ \(lhs :==: rhs) -> do
+simplerPolynomial :: Rule (Equation Expr)
+simplerPolynomial = makeSimpleRuleList "simpler polynomial" $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let thisView = polyNormalForm rationalView >>> second quadraticPolyView
    (x, (a, b, c)) <- matchM thisView lhs

@@ -16,7 +16,7 @@ module Common.Exercise
      Exercise, testableExercise, makeExercise, emptyExercise
    , description, exerciseCode, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, eqWithContext
-   , strategy, navigation, canBeRestarted, extraRules
+   , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
@@ -70,6 +70,7 @@ data Exercise a = Exercise
    , navigation     :: a -> Navigator a
    , canBeRestarted :: Bool                -- By default, assumed to be the case
    , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
+   , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
    , randomExercise :: Maybe (StdGen -> Int -> a)
@@ -118,7 +119,8 @@ emptyExercise = Exercise
    , strategy       = label "Fail" S.fail
    , navigation     = noNavigator
    , canBeRestarted = True
-   , extraRules     = [] 
+   , extraRules     = []
+   , ruleOrdering   = \r1 r2 -> name r1 `compare` name r2
      -- testing and exercise generation
    , testGenerator  = Nothing
    , randomExercise = Nothing

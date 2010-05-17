@@ -36,8 +36,8 @@ derivationtext state _event = do
 
 onefirsttext :: Monad m => State a -> Maybe String -> m (Bool, String, State a)
 onefirsttext state event =
-   case allfirsts state of
-      Just ((r, _, s):_) -> do
+   case onefirst state of
+      Just (r, _, s) -> do
          exText <- exerciseText state
          let mtxt = fromContext (context s) >>= useToRewrite exText r state
              msg  = case mtxt of

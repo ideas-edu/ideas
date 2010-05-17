@@ -79,7 +79,7 @@ makeControlPanel cfg (itemsRef, workLoad, details) w = do
    st4 <- staticText p []
    hg  <- hgauge p 0 []
    bGo <- button p [text := "Go!"]
-   bSh <- button p []
+   bSh <- button p [text := "Show details"]
    bCh <- button p [text := "Change"]
    tmr <- timer  p [enabled := False, interval := 100]
    

@@ -21,7 +21,7 @@ import Text.XML.ParseLib (parse)
 import Control.Monad.Error ()
 import qualified Text.XML.Document as D
 import System.FilePath (takeDirectory, pathSeparator)
-import Data.Char (chr)
+import Data.Char (chr, ord)
 
 data Element = Element
    { name       :: Name
@@ -92,13 +92,21 @@ extend e = D.XMLDoc
  where
    toElement :: Element -> D.Element
    toElement (Element n as c) =
-      D.Element n (map toAttribute as) (map toXML c)
+      D.Element n (map toAttribute as) (concatMap toXML c)
    
    toAttribute :: Attribute -> D.Attribute
    toAttribute (n := s) = (D.:=) n (map Left s)
    
-   toXML :: Either String Element -> D.XML
-   toXML = either D.CharData (D.Tagged . toElement)
+   toXML :: Either String Element -> [D.XML]
+   toXML = either fromString (return . D.Tagged . toElement)
+   
+   fromString :: String -> [D.XML]
+   fromString [] = []
+   fromString xs@(hd:tl) 
+      | null xs1  = D.Reference (D.CharRef (ord hd)) : fromString tl
+      | otherwise = D.CharData xs1 : fromString xs2
+    where
+      (xs1, xs2) = break ((> 127) . ord) xs
 
 -----------------------------------------------------
 

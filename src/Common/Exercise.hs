@@ -21,6 +21,7 @@ module Common.Exercise
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule
+   , ruleOrderingWith, ruleNameOrderingWith
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Exercise codes
@@ -186,6 +187,17 @@ randomTermWith rng level ex =
 recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
 recognizeRule ex = ruleRecognizer $ \ca cb -> fromMaybe False $
    liftM2 (similarity ex) (fromContext ca) (fromContext cb)
+
+ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
+ruleOrderingWith = ruleNameOrderingWith . map name
+ 
+ruleNameOrderingWith :: [String] -> Rule a -> Rule a -> Ordering
+ruleNameOrderingWith xs r1 r2 =
+   case (findIndex (==name r1) xs, findIndex (==name r2) xs) of
+      (Just i,  Just j ) -> i `compare` j
+      (Just _,  Nothing) -> LT
+      (Nothing, Just _ ) -> GT
+      (Nothing, Nothing) -> name r1 `compare` name r2
 
 ---------------------------------------------------------------
 -- Exercise status

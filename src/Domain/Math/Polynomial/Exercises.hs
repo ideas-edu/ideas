@@ -19,7 +19,6 @@ import Common.Strategy
 import Common.Traversable
 import Common.Transformation
 import Common.View
-import Data.List
 import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -53,6 +52,10 @@ linearExercise = makeExercise
                        a `belongsTo` mixedFractionNormalForm || 
                        a `belongsTo` rationalNormalForm
    , extraRules   = map liftToContext buggyRulesEquation ++ linearRules
+   , ruleOrdering = ruleNameOrderingWith 
+                       [ name coverUpTimes, name flipEquation
+                       , name (removeDivision :: Rule (Equation Expr))
+                       ]
    , strategy     = mapRules liftToContext linearStrategy
    , examples     = concat (linearEquations ++ [specialCases])
    }
@@ -85,30 +88,15 @@ quadraticExercise = makeExercise
                        quadraticRules ++ abcBuggyRules ++
                        buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
-   , ruleOrdering = ruleNameOrderingWith 
-                       [ name coverUpTimes, name simplerPolynomial, name commonFactorVar
+   , ruleOrdering = ruleNameOrderingWith
+                       [ name coverUpTimes, name coverUpPower
+                       , name simplerPolynomial, name commonFactorVar
                        , name niceFactors, name noLinFormula, name cancelTerms
                        , name sameConFactor, name distributionSquare
                        ]
    , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
-   
-ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
-ruleOrderingWith xs r1 r2 = 
-   case (elemIndex r1 xs, elemIndex r2 xs) of
-      (Just i,  Just j ) -> i `compare` j
-      (Just _,  Nothing) -> LT
-      (Nothing, Just _ ) -> GT
-      (Nothing, Nothing) -> name r1 `compare` name r2
- 
-ruleNameOrderingWith :: [String] -> Rule a -> Rule a -> Ordering
-ruleNameOrderingWith xs r1 r2 =
-   case (findIndex (==name r1) xs, findIndex (==name r2) xs) of
-      (Just i,  Just j ) -> i `compare` j
-      (Just _,  Nothing) -> LT
-      (Nothing, Just _ ) -> GT
-      (Nothing, Nothing) -> name r1 `compare` name r2
    
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 

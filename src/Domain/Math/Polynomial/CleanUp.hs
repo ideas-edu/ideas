@@ -244,6 +244,7 @@ smart (Negate a) = neg a
 smart (a :+: b) = a .+. b
 smart (a :-: b) = a .-. b
 smart (Sqrt (Nat n)) = simplerRoot (fromIntegral n) 2
+-- smart (Sqrt a)  = maybe (Sqrt a) (`simplerRoot` 2) (match rationalView a)
 smart e = e
 
 ------------------------------------------------------------

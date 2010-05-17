@@ -11,13 +11,12 @@
 -----------------------------------------------------------------------------
 module Service.TypedAbstractService 
    ( -- * Exercise state
-     State(..), emptyState, term
+     State(..), emptyState, exercise, term
      -- * Services
    , stepsremaining, findbuggyrules, ready, allfirsts, derivation
    , onefirst, applicable, apply, generate, generateWith
    ) where
 
-import qualified Common.Apply as Apply
 import Common.Context 
 import Common.Derivation hiding (derivation)
 import Common.Exercise   hiding (generate)
@@ -28,33 +27,43 @@ import Common.Navigator
 import Data.Maybe
 import System.Random
 import Control.Monad
+import Service.ExercisePackage (ExercisePackage)
+import qualified Common.Apply as Apply
+import qualified Service.ExercisePackage as Pkg
 
 data State a = State 
-   { exercise     :: Exercise a
-   , prefix       :: Maybe (Prefix (Context a))
-   , context      :: Context a
+   { exercisePkg :: ExercisePackage a
+   , prefix      :: Maybe (Prefix (Context a))
+   , context     :: Context a
    }
+
+exercise :: State a -> Exercise a
+exercise = Pkg.exercise . exercisePkg
 
 term :: State a -> a
 term = fromMaybe (error "invalid term") . fromContext . context
 
 -----------------------------------------------------------
 
-emptyState :: Exercise a -> a -> State a
-emptyState ex a = State
-   { exercise = ex
-   , prefix   = Just (emptyPrefix (strategy ex))
-   , context  = inContext ex a
+emptyState :: ExercisePackage a -> a -> State a
+emptyState pkg a = State
+   { exercisePkg = pkg
+   , prefix      = Just (emptyPrefix (strategy ex))
+   , context     = inContext ex a
    }
+ where
+   ex = Pkg.exercise pkg
       
 -- result must be in the IO monad to access a standard random number generator
-generate :: Exercise a -> Int -> IO (State a)
-generate ex level = do 
+generate :: ExercisePackage a -> Int -> IO (State a)
+generate pkg level = do 
    stdgen <- newStdGen
-   return (generateWith stdgen ex level)
+   return (generateWith stdgen pkg level)
 
-generateWith :: StdGen -> Exercise a -> Int -> State a
-generateWith rng ex level = emptyState ex (randomTermWith rng level ex)
+generateWith :: StdGen -> ExercisePackage a -> Int -> State a
+generateWith rng pkg level = 
+   let ex = Pkg.exercise pkg
+   in emptyState pkg (randomTermWith rng level ex)
 
 derivation :: Monad m => Maybe StrategyConfiguration -> State a -> m [(Rule (Context a), Context a)]
 derivation mcfg state =
@@ -64,10 +73,12 @@ derivation mcfg state =
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
       (Just p, Just cfg) | null (prefixToSteps p) -> 
-         let new = configure cfg $ strategy $ exercise state
+         let newStrategy   = configure cfg $ strategy $ exercise state
+             updatePkg pkg = pkg {Pkg.exercise = updateEx (Pkg.exercise pkg)}
+             updateEx  ex  = ex  {strategy = newStrategy} 
          in rec state 
-               { prefix   = Just (emptyPrefix new)
-               , exercise = (exercise state) {strategy=new}
+               { prefix      = Just (emptyPrefix newStrategy)
+               , exercisePkg = updatePkg (exercisePkg state)
                } 
       _ -> rec state
  where

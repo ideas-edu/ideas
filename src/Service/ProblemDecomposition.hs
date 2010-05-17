@@ -13,6 +13,7 @@ module Service.ProblemDecomposition
    ( problemDecomposition
    , Reply(..), replyToXML, xmlToRequest
    , ReplyError(..), ReplyOk(..), ReplyIncorrect(..)
+   , replyType
    ) where
 
 import Common.Apply
@@ -24,6 +25,8 @@ import Common.Transformation
 import Common.Utils
 import Data.Char
 import Data.Maybe
+import Service.Definitions hiding (State)
+import Service.ExercisePackage (ExercisePackage, fromOpenMath, exercise)
 import Service.TypedAbstractService (State(..), stepsremaining)
 import Text.XML hiding (name)
 import qualified Text.XML as XML
@@ -34,7 +37,7 @@ replyError :: String -> String -> Reply a
 replyError kind = Error . ReplyError kind
 
 problemDecomposition :: State a -> StrategyLocation -> Maybe a -> Reply a
-problemDecomposition (State ex mpr requestedTerm) sloc answer 
+problemDecomposition (State pkg mpr requestedTerm) sloc answer 
    | isNothing $ subStrategy sloc (strategy ex) =
         replyError "request error" "invalid location for strategy"
    | otherwise =
@@ -44,23 +47,23 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
             (answers, Just answeredTerm)
                | not (null witnesses) ->
                     Ok ReplyOk
-                       { repOk_Code     = ex
+                       { repOk_Code     = pkg
                        , repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           show (getEnvironment $ fst $ head witnesses)
-                       , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State ex (Just newPrefix) (fst $ head witnesses)
+                       , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State pkg (Just newPrefix) (fst $ head witnesses)
                        }
                   where 
                     witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
                     newPrefix   = snd (head witnesses)            
             ((expected, prefix):_, maybeAnswer) ->
                     Incorrect ReplyIncorrect
-                       { repInc_Code       = ex
+                       { repInc_Code       = pkg
                        , repInc_Location   = subTaskLocation sloc loc
                        , repInc_Expected   = fromJust (fromContext expected)
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
-                       , repInc_Steps      = fromMaybe 0 $ stepsremaining $ State ex (Just pr) requestedTerm
+                       , repInc_Steps      = fromMaybe 0 $ stepsremaining $ State pkg (Just pr) requestedTerm
                        , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
                        }
              where
@@ -70,7 +73,9 @@ problemDecomposition (State ex mpr requestedTerm) sloc answer
                       rules    = stepsToRules $ drop len $ prefixToSteps prefix
                       f (s, a) = (s, fromJust (fromContext a))
                   in map f (makeDerivation requestedTerm rules)
-
+ where
+   ex = exercise pkg
+   
 similarityCtx :: Exercise a -> Context a -> Context a -> Bool
 similarityCtx ex a b = fromMaybe False $
    liftM2 (similarity ex) (fromContext a) (fromContext b)
@@ -147,27 +152,28 @@ runPrefixMajor p0 =
 extractString :: String -> XML -> Either String String
 extractString s = liftM getData . findChild s
 
-xmlToRequest :: XML -> (OMOBJ -> Maybe a) -> Exercise a -> Either String (State a, StrategyLocation, Maybe a)
-xmlToRequest xml fromOpenMath ex = do
+xmlToRequest :: XML -> ExercisePackage a -> Either String (State a, StrategyLocation, Maybe a)
+xmlToRequest xml pkg = do
+   let ex = exercise pkg
    unless (XML.name xml == "request") $
       fail "XML document is not a request" 
    loc     <- optional (extractLocation "location" xml)
    term    <- extractExpr "term" xml
    context <- optional (extractString "context" xml)
    answer  <- optional (extractExpr "answer" xml)
-   t  <- maybe (fail "invalid omobj") return (fromOpenMath term)
+   t  <- maybe (fail "invalid omobj") return (fromOpenMath pkg term)
    mt <- case answer of
             Nothing -> return Nothing 
-            Just o  -> return $ fromOpenMath o
+            Just o  -> return $ fromOpenMath pkg o
    return
       ( State
-           { exercise = ex
-           , prefix   = case context of
-                           Just s  -> Just $ getPrefix2 s (strategy ex)
-                           Nothing -> Just $ emptyPrefix (strategy ex)
-           , context  = case context of 
-                           Just s  -> putInContext2 ex s t
-                           Nothing -> inContext ex t
+           { exercisePkg = pkg
+           , prefix  = case context of
+                          Just s  -> Just $ getPrefix2 s (strategy ex)
+                          Nothing -> Just $ emptyPrefix (strategy ex)
+           , context = case context of 
+                          Just s  -> putInContext2 ex s t
+                          Nothing -> inContext ex t
            }
       , fromMaybe topLocation loc
       , mt
@@ -222,14 +228,14 @@ parseContext s
 data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a) | Error ReplyError
 
 data ReplyOk a = ReplyOk
-   { repOk_Code     :: Exercise a
+   { repOk_Code     :: ExercisePackage a
    , repOk_Location :: StrategyLocation
    , repOk_Context  :: String
    , repOk_Steps    :: Int
    }
    
 data ReplyIncorrect a = ReplyIncorrect
-   { repInc_Code       :: Exercise a
+   { repInc_Code       :: ExercisePackage a
    , repInc_Location   :: StrategyLocation
    , repInc_Expected   :: a
    , repInc_Derivation :: [(String, a)]
@@ -257,14 +263,14 @@ replyToXML toOpenMath reply =
 
 replyOkToXML :: ReplyOk a -> XML
 replyOkToXML r = makeReply "ok" $ do
-   element "strategy" (text $ show $ exerciseCode $ repOk_Code r)
+   element "strategy" (text $ show $ exerciseCode $ exercise $ repOk_Code r)
    element "location" (text $ show $ repOk_Location r)
    element "context"  (text $ repOk_Context r)
    element "steps"    (text $ show $ repOk_Steps r)
 
 replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XML
 replyIncorrectToXML toOpenMath r = makeReply "incorrect" $ do
-   element "strategy"   (text $ show $ exerciseCode $ repInc_Code r)
+   element "strategy"   (text $ show $ exerciseCode $ exercise $ repInc_Code r)
    element "location"   (text $ show $ repInc_Location r)
    element "expected"   (builder $ omobj2xml $ toOpenMath $ repInc_Expected r)
    element "steps"      (text $ show $ repInc_Steps r)
@@ -289,3 +295,28 @@ makeReply :: String -> XMLBuilder -> XML
 makeReply kind body = makeXML "reply" $ do
    "result" .=. kind
    body
+
+replyType :: Type a (Reply a)
+replyType = useSynonym replyTypeSynonym
+
+replyTypeSynonym :: TypeSynonym a (Reply a)
+replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
+ where
+   to (Left (a, b, c, d)) = 
+      Ok (ReplyOk a b c d)
+   to (Right (Left ((a, b, c), (d, e, f, g)))) =
+      Incorrect (ReplyIncorrect a b c d e f g)
+   to (Right (Right (a, b))) = 
+      Error (ReplyError a b)
+   
+   from (Ok (ReplyOk a b c d)) = Left (a, b, c, d)
+   from (Incorrect (ReplyIncorrect a b c d e f g)) =
+      Right (Left ((a, b, c), (d, e, f, g)))
+   from (Error (ReplyError a b)) = Right (Right (a, b))
+   
+   tp  =  tuple4 ExercisePkg StrategyLoc String Int
+      :|: Pair (tuple3 ExercisePkg StrategyLoc Term) 
+               (tuple4 derTp argsTp Int Bool)
+      :|: Pair String String
+   derTp  = List (Pair String Term)
+   argsTp = List (Pair String String)

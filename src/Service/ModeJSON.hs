@@ -21,10 +21,9 @@ import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.Request
-import qualified Service.Definitions
 import qualified Service.TypedAbstractService as TAS
 import qualified Service.Definitions as Tp
-import Service.Definitions (Type, TypedValue(..), resultTypeSynonym, isSynonym)
+import Service.Definitions (Type, TypedValue(..), isSynonym)
 import Service.Submit
 import Service.Evaluator
 import Service.ExercisePackage 
@@ -110,7 +109,7 @@ jsonEncoder ex = Encoder
       | otherwise = 
            case serviceType of
               Tp.Tag s t | s == "Result" -> 
-                 isSynonym resultTypeSynonym (a ::: serviceType) 
+                 isSynonym submitTypeSynonym (a ::: serviceType) 
                  >>= encodeResult enc
                          | s == "elem" -> 
                  encode enc t a
@@ -144,13 +143,13 @@ jsonDecoder pkg = Decoder
    decode :: Decoder JSON a -> Type a t -> JSON -> DomainReasoner (t, JSON) 
    decode dec serviceType =
       case serviceType of
-         Tp.State    -> useFirst $ decodeState (decoderExercise dec) (decodeTerm dec)
+         Tp.State    -> useFirst $ decodeState (decoderPackage dec) (decodeTerm dec)
          Tp.Location -> useFirst decodeLocation
          Tp.Term     -> useFirst $ decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
-         Tp.Exercise -> \json -> case json of
-                                    (Array (String _:rest)) -> return (decoderExercise dec, Array rest)
-                                    _ -> return (decoderExercise dec, json)
+         Tp.ExercisePkg -> \json -> case json of
+                                       Array (String _:rest) -> return (decoderPackage dec, Array rest)
+                                       _ -> return (decoderPackage dec, json)
          Tp.Int      -> useFirst $ \json -> case json of 
                                                Number (I n) -> return (fromIntegral n)
                                                _        -> fail "not an integer"
@@ -186,15 +185,16 @@ encodeContext env = Object (map f (keysEnv env))
  where
    f k = (k, String $ fromMaybe "" $ lookupEnv k env)
 
-decodeState :: Monad m => Exercise a -> (JSON -> m a) -> JSON -> m (TAS.State a)
-decodeState ex f (Array [a]) = decodeState ex f a
-decodeState ex f (Array [String _code, String p, ce, jsonContext]) = do
+decodeState :: Monad m => ExercisePackage a -> (JSON -> m a) -> JSON -> m (TAS.State a)
+decodeState pkg f (Array [a]) = decodeState pkg f a
+decodeState pkg f (Array [String _code, String p, ce, jsonContext]) = do
+   let ex = exercise pkg
    a    <- f ce 
    env  <- decodeContext jsonContext
    return TAS.State 
-      { TAS.exercise = ex
-      , TAS.prefix   = readM p >>= (`makePrefix` strategy ex)
-      , TAS.context  = makeContext ex env a
+      { TAS.exercisePkg = pkg
+      , TAS.prefix      = readM p >>= (`makePrefix` strategy ex)
+      , TAS.context     = makeContext ex env a
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
 

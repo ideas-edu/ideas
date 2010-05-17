@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.RulesInfo 
-   ( rulesInfoXML, rewriteRuleToFMP, collectExamples
+   ( rulesInfoXML, rewriteRuleToFMP, collectExamples, rulesInfoType
    ) where
 
 import Common.Utils (Some(..))
@@ -26,6 +26,7 @@ import Text.OpenMath.Object
 import Text.OpenMath.FMP
 import Text.XML hiding (name)
 import Service.ExercisePackage (termToOMOBJ)
+import Service.Definitions
 import qualified Data.Map as M
 
 rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder
@@ -80,3 +81,6 @@ collectExamples ex = foldr add M.empty (examples ex)
                  f (Just d) = foldr g m (zip3 (terms d) (steps d) (drop 1 (terms d)))
                  g (a, r, b) = M.insertWith (++) (name r) (liftM2 (,) (fromContext a) (fromContext b))
              in f (derivation tree) 
+
+rulesInfoType :: Type a ()
+rulesInfoType = useSynonym (typeSynonym "RulesInfo" id id Unit)

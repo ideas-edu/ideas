@@ -81,7 +81,7 @@ newAssignmentDialog w session = do
              Nothing  -> return ()
              Just (Some pkg) -> do
                 dif <- get difficultySlider selection
-                txt <- suggestTermFor dif (Some (exercise pkg))
+                txt <- suggestTermFor dif (Some pkg)
                 set ownTextView [text := txt]
    fillPackageList True
    

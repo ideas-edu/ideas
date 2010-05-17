@@ -13,7 +13,6 @@
 -----------------------------------------------------------------------------
 module Main.Options where
 
-import Data.Maybe
 import Documentation.Make
 import Main.LoggingDatabase (logEnabled)
 import Main.Revision

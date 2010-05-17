@@ -16,7 +16,6 @@ import Common.Utils (Some(..), fromShowString)
 import Main.Options
 import Service.DomainReasoner
 import Service.ExercisePackage
-import Service.FeedbackText
 import Service.ServiceList
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA

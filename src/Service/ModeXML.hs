@@ -78,7 +78,7 @@ xmlReply request xml
    | service request == "mathdox" = do
         code <- maybe (fail "unknown exercise code") return (exerciseID request)
         Some pkg <- findPackage code
-        (st, sloc, answer) <- liftEither $ xmlToRequest xml (fromOpenMath pkg) (exercise pkg)
+        (st, sloc, answer) <- liftEither $ xmlToRequest xml pkg
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
 
 xmlReply request xml = do
@@ -207,7 +207,7 @@ xmlDecoder b f pkg = Decoder
    decode :: Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
    decode dec serviceType = 
       case serviceType of
-         Tp.State       -> decodeState b (decoderExercise dec) (decodeTerm dec)
+         Tp.State       -> decodeState b (decoderPackage dec) (decodeTerm dec)
          Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
          Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Term        -> \xml -> decodeTerm dec xml >>= \a -> return (a, xml)
@@ -227,8 +227,8 @@ allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, map toLower (show b))]
 allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
 allAreTagged _ = Nothing
          
-decodeState :: Monad m => Bool -> Exercise a -> (XML -> m a) -> XML -> m (State a, XML)
-decodeState b ex f top = do
+decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a, XML)
+decodeState b pkg f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
    mpr <- case maybe "" getData (findChild "prefix" xml) of
@@ -243,10 +243,11 @@ decodeState b ex f top = do
                      return (Just pr)
    expr <- f xml
    env  <- decodeEnvironment b xml
-   let state  = State ex mpr term
+   let state  = State pkg mpr term
        term   = makeContext ex env expr
    return (state, top)
  where
+   ex = exercise pkg
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
 

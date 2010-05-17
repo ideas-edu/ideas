@@ -21,54 +21,44 @@ import Common.Transformation
 import Common.Utils
 import Data.Maybe
 import Service.Diagnose (restartIfNeeded)
+import Service.ExercisePackage hiding (exercise)
 import Service.Submit
 import Service.TypedAbstractService
 
 ------------------------------------------------------------
--- Exercise Text data type
-
--- Exercise extension for textual feedback
-data ExerciseText a = ExerciseText
-   { ruleText              :: Rule (Context a) -> Maybe String
-   , appliedRule           :: Rule (Context a) -> String
-   , feedbackSyntaxError   :: String -> String
-   , feedbackSame          :: String
-   , feedbackBuggy         :: Bool -> [Rule (Context a)] -> String
-   , feedbackNotEquivalent :: Bool -> String
-   , feedbackOk            :: [Rule (Context a)] -> (String, Bool)
-   , feedbackDetour        :: Bool -> Maybe (Rule (Context a)) -> [Rule (Context a)] -> (String, Bool)
-   , feedbackUnknown       :: Bool -> String
-   }
-
-------------------------------------------------------------
 -- Services
 
-derivationtext :: Monad m => ExerciseText a -> State a -> Maybe String -> m [(String, Context a)]
-derivationtext exText st _event = do
-   xs <- derivation Nothing st
+derivationtext :: Monad m => State a -> Maybe String -> m [(String, Context a)]
+derivationtext state _event = do
+   exText <- exerciseText state
+   xs     <- derivation Nothing state
    return (map (first (showRule exText)) xs)
 
-onefirsttext :: ExerciseText a -> State a -> Maybe String -> (Bool, String, State a)
-onefirsttext exText state event =
+onefirsttext :: Monad m => State a -> Maybe String -> m (Bool, String, State a)
+onefirsttext state event =
    case allfirsts state of
-      Just ((r, _, s):_) ->
-         let msg = case fromContext (context s) >>= useToRewrite exText r state of
-                      Just txt | event /= Just "hint button" -> txt
-                      _ -> "Use " ++ showRule exText r
-         in (True, msg, s)
-      _ -> (False, "Sorry, no hint available", state)
+      Just ((r, _, s):_) -> do
+         exText <- exerciseText state
+         let mtxt = fromContext (context s) >>= useToRewrite exText r state
+             msg  = case mtxt of
+                       Just txt | event /= Just "hint button" -> txt
+                       _ -> "Use " ++ showRule exText r
+         return (True, msg, s)
+      _ -> return (False, "Sorry, no hint available", state)
       
-submittext :: ExerciseText a -> State a -> String -> Maybe String -> (Bool, String, State a)
-submittext exText state txt _event = 
-   case parser (exercise state) txt of
-      Left err -> 
-         (False, feedbackSyntaxError exText err, state)
-      Right a  -> 
-         let result = submit state a
-             (txt, b) = submitHelper exText state a result
-         in case getResultState result of
-               Just new | b -> (True, txt, restartIfNeeded new)
-               _ -> (False, txt, state)
+submittext :: Monad m => State a -> String -> Maybe String -> m (Bool, String, State a)
+submittext state txt _event = do
+   exText <- exerciseText state
+   return $
+      case parser (exercise state) txt of
+         Left err -> 
+            (False, feedbackSyntaxError exText err, state)
+         Right a  -> 
+            let result = submit state a
+                (txt, b) = submitHelper exText state a result
+            in case getResultState result of
+                  Just new | b -> (True, txt, restartIfNeeded new)
+                  _ -> (False, txt, state)
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
@@ -119,3 +109,8 @@ rewriteIntoText mode txt old a = do
    (p1, a1) <- difference ex mode p a 
    return $ txt ++ prettyPrinter ex p1 
          ++ " into " ++ prettyPrinter ex a1 ++ ". "
+
+exerciseText :: Monad m => State a -> m (ExerciseText a)
+exerciseText = 
+   let msg = "No support for textual feedback"
+   in maybe (fail msg) return . getExerciseText . exercisePkg

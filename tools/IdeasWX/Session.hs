@@ -62,17 +62,18 @@ makeSession pkg = do
 
 newExercise :: Int -> Some ExercisePackage -> Session -> IO ()
 newExercise dif (Some pkg) ref = do
-   d <- startNewDerivation dif (Pkg.exercise pkg)
+   d <- startNewDerivation dif pkg
    setValue ref $ Some $ SessionState pkg d
 
 thisExercise :: String -> Session -> IO ()
 thisExercise txt ref = do
    Some ss <- getValue ref
-   let ex = exercise (getDerivation ss)
+   let pkg = getPackage ss
+       ex  = Pkg.exercise pkg
    case parser ex txt of
       Left _  -> return ()
       Right a -> do
-         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = makeDerivation $ TAS.State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ ss {getDerivation = new}
 
 thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
@@ -81,7 +82,7 @@ thisExerciseFor txt (Some pkg) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = makeDerivation $ TAS.State ex (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = makeDerivation $ TAS.State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ SessionState pkg new
          return Nothing         
     
@@ -93,16 +94,17 @@ newTerm dif ref = do
 suggestTerm :: Int -> Session -> IO String
 suggestTerm dif ref = do
    Some ss <- getValue ref
-   let ex = exercise (getDerivation ss)
-   ca <- TAS.generate ex dif
+   let pkg = getPackage ss  
+       ex  = Pkg.exercise pkg
+   ca <- TAS.generate pkg dif
    a  <- fromContext $ TAS.context ca
    return $ prettyPrinter ex a
 
-suggestTermFor :: Int -> Some Exercise -> IO String
-suggestTermFor dif (Some ex) = do
-   ca <- TAS.generate ex dif
+suggestTermFor :: Int -> Some ExercisePackage -> IO String
+suggestTermFor dif (Some pkg) = do
+   ca <- TAS.generate pkg dif
    a  <- fromContext $ TAS.context ca
-   return $ prettyPrinter ex a
+   return $ prettyPrinter (Pkg.exercise pkg) a
        
 undo :: Session -> IO ()
 undo ref =
@@ -114,9 +116,9 @@ submitText txt ref = do
    let d = getDerivation ss
    case getExerciseText (getPackage ss) of
       -- Use exercise text module
-      Just exText -> do
-         let (b, msg, st) = submittext exText (currentState d) txt Nothing
-             new = restartIfNeeded st
+      Just _ -> do
+         (b, msg, st) <- submittext (currentState d) txt Nothing
+         let new = restartIfNeeded st
          when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
          return msg
       -- Use default text
@@ -256,9 +258,9 @@ exercise _ = error "Session.exercise: empty list"
 
 newtype Derivation a = D [TAS.State a]
 
-startNewDerivation :: Int -> Exercise a -> IO (Derivation a)
-startNewDerivation dif ex = do 
-   state <- TAS.generate ex dif
+startNewDerivation :: Int -> ExercisePackage a -> IO (Derivation a)
+startNewDerivation dif pkg = do 
+   state <- TAS.generate pkg dif
    return $ makeDerivation state
 
 makeDerivation :: TAS.State a -> Derivation a

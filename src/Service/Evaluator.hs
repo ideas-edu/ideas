@@ -17,8 +17,7 @@ import Common.Exercise (Exercise)
 import Common.Transformation (Rule, name)
 import Control.Arrow
 import Control.Monad
-import Data.Maybe
-import Service.ExercisePackage (ExercisePackage, exercise, getExerciseText)
+import Service.ExercisePackage
 import Service.Definitions
 import Service.DomainReasoner
 
@@ -69,13 +68,8 @@ decodeDefault dec tp s =
          return ((), s)
       Tag _ t1 ->
          decodeType dec t1 s
-      Exercise -> do
-         return (exercise (decoderPackage dec), s)
-      ExerciseText -> do
-         exText <- case getExerciseText (decoderPackage dec) of 
-                      Just a  -> return a
-                      Nothing -> fail "No support for exercise texts"
-         return (exText, s)
+      ExercisePkg -> do
+         return (decoderPackage dec, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
 

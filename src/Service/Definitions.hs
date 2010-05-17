@@ -16,26 +16,18 @@ module Service.Definitions
    , serviceName, serviceDescription, serviceDeprecated, serviceFunction
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
-   , errorTp, equal, isSynonym
-   , resultType, resultTypeSynonym
-   , diagnosisType, diagnosisTypeSynonym
-   , rulesInfoType
-   , replyType, replyTypeSynonym
+   , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym
    ) where
 
 import Common.Context (Context)
-import Common.Exercise (Exercise)
 import Common.Navigator (Location)
 import Common.Transformation (Rule)
 import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
+import Service.ExercisePackage
 import Service.TypedAbstractService (State)
-import Service.FeedbackText (ExerciseText)
-import qualified Service.Diagnose as Diagnose
-import qualified Service.Submit as Submit
-import qualified Service.ProblemDecomposition as Decomposition
 
 -----------------------------------------------------------------------------
 -- Services
@@ -62,7 +54,7 @@ equal (Pair a b) (Pair c d) = liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (eq
 equal State State = Just id
 equal StrategyCfg StrategyCfg = Just id
 equal Location Location = Just id
-equal Exercise Exercise = Just id
+equal ExercisePkg ExercisePkg = Just id
 equal Bool Bool = Just id
 equal (Iso _ f a) b = fmap (. f) (equal a b)
 equal a (Iso f _ b) = fmap (f .) (equal a b)
@@ -123,9 +115,8 @@ data Type a t where
    IO           :: Type a t -> Type a (IO t)
    -- Exercise-specific types
    State        :: Type a (State a)
-   Exercise     :: Type a (Exercise a)
+   ExercisePkg  :: Type a (ExercisePackage a)
    Strategy     :: Type a (Strategy (Context a))
-   ExerciseText :: Type a (ExerciseText a)
    Rule         :: Type a (Rule (Context a))
    Term         :: Type a a
    Context      :: Type a (Context a)
@@ -159,9 +150,8 @@ groundType :: Type a t -> Maybe String
 groundType tp =
    case tp of 
       State        -> Just "State"
-      Exercise     -> Just "Exercise"
+      ExercisePkg  -> Just "ExercisePkg"
       Strategy     -> Just "Strategy"
-      ExerciseText -> Just "ExerciseText"
       Rule         -> Just "Rule"
       Term         -> Just "Term"
       Context      -> Just "Context"
@@ -199,82 +189,3 @@ typeSynonym name to from tp = TS
 isTag :: Type a t -> Maybe (String, Type a t)
 isTag (Tag s t) = Just (s, t)
 isTag _         = Nothing
-
-resultType :: Type a (Submit.Result a)
-resultType = useSynonym resultTypeSynonym
-
-resultTypeSynonym :: TypeSynonym a (Submit.Result a)
-resultTypeSynonym = typeSynonym "Result" to from tp
- where
-   to (Left rs) = Submit.Buggy rs
-   to (Right (Left ())) = Submit.NotEquivalent
-   to (Right (Right (Left (rs, s)))) = Submit.Ok rs s
-   to (Right (Right (Right (Left (rs, s))))) = Submit.Detour rs s
-   to (Right (Right (Right (Right s)))) = Submit.Unknown s
-
-   from (Submit.Buggy rs)      = Left rs
-   from (Submit.NotEquivalent) = Right (Left ())
-   from (Submit.Ok rs s)       = Right (Right (Left (rs, s)))
-   from (Submit.Detour rs s)   = Right (Right (Right (Left (rs, s))))
-   from (Submit.Unknown s)     = Right (Right (Right (Right s))) 
-
-   tp  =  List Rule 
-      :|: Unit
-      :|: Pair (List Rule) State
-      :|: Pair (List Rule) State
-      :|: State
-
-diagnosisType :: Type a (Diagnose.Diagnosis a)
-diagnosisType = useSynonym diagnosisTypeSynonym
-
-diagnosisTypeSynonym :: TypeSynonym a (Diagnose.Diagnosis a)
-diagnosisTypeSynonym = typeSynonym "Diagnosis" to from tp
- where
-   to (Left r) = Diagnose.Buggy r
-   to (Right (Left ())) = Diagnose.NotEquivalent
-   to (Right (Right (Left (b, s)))) = Diagnose.Similar b s
-   to (Right (Right (Right (Left (b, s, r))))) = Diagnose.Expected b s r
-   to (Right (Right (Right (Right (Left (b, s, r)))))) = Diagnose.Detour b s r
-   to (Right (Right (Right (Right (Right (b, s)))))) = Diagnose.Correct b s
-   
-   from (Diagnose.Buggy r)        = Left r
-   from (Diagnose.NotEquivalent)  = Right (Left ())
-   from (Diagnose.Similar b s)    = Right (Right (Left (b, s)))
-   from (Diagnose.Expected b s r) = Right (Right (Right (Left (b, s, r))))
-   from (Diagnose.Detour b s r)   = Right (Right (Right (Right (Left (b, s, r)))))
-   from (Diagnose.Correct b s)    = Right (Right (Right (Right (Right (b, s)))))
-   
-   tp  =  Rule
-      :|: Unit
-      :|: Pair Bool State
-      :|: tuple3 Bool State Rule
-      :|: tuple3 Bool State Rule
-      :|: Pair Bool State
-      
-rulesInfoType :: Type a ()
-rulesInfoType = useSynonym (typeSynonym "RulesInfo" id id Unit) 
-
-replyType :: Type a (Decomposition.Reply a)
-replyType = useSynonym replyTypeSynonym
-
-replyTypeSynonym :: TypeSynonym a (Decomposition.Reply a)
-replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
- where
-   to (Left (a, b, c, d)) = 
-      Decomposition.Ok (Decomposition.ReplyOk a b c d)
-   to (Right (Left ((a, b, c), (d, e, f, g)))) =
-      Decomposition.Incorrect (Decomposition.ReplyIncorrect a b c d e f g)
-   to (Right (Right (a, b))) = 
-      Decomposition.Error (Decomposition.ReplyError a b)
-   
-   from (Decomposition.Ok (Decomposition.ReplyOk a b c d)) = Left (a, b, c, d)
-   from (Decomposition.Incorrect (Decomposition.ReplyIncorrect a b c d e f g)) =
-      Right (Left ((a, b, c), (d, e, f, g)))
-   from (Decomposition.Error (Decomposition.ReplyError a b)) = Right (Right (a, b))
-   
-   tp  =  tuple4 Exercise StrategyLoc String Int
-      :|: Pair (tuple3 Exercise StrategyLoc Term) 
-               (tuple4 derTp argsTp Int Bool)
-      :|: Pair String String
-   derTp  = List (Pair String Term)
-   argsTp = List (Pair String String)

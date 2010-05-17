@@ -91,7 +91,7 @@ exercisePage pkg = do
    
    
    h2 "3. Example"
-   let state = generateWith (mkStdGen 0) ex 5
+   let state = generateWith (mkStdGen 0) pkg 5
    preText (showDerivation ex (term state))
    unless (null (examples ex)) $ 
       link (up 2 ++ exerciseDerivationsFile code) (text "More examples")

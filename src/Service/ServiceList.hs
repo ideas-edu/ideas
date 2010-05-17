@@ -12,19 +12,19 @@
 -----------------------------------------------------------------------------
 module Service.ServiceList (serviceList, exerciselistS) where
 
-import Common.Exercise hiding (Exercise)
+import Common.Exercise hiding (Exercise, generate)
 import Common.Strategy (toStrategy)
 import Common.Transformation
 import Common.Utils (Some(..))
 import Data.List (sortBy)
-import Service.FeedbackText hiding (ExerciseText)
-import Service.ProblemDecomposition (problemDecomposition)
+import Service.FeedbackText
+import Service.ProblemDecomposition (problemDecomposition, replyType)
 import Service.ExercisePackage
 import Service.Definitions 
-import qualified Common.Exercise as E
-import qualified Service.Diagnose as S
-import qualified Service.Submit as S
-import qualified Service.TypedAbstractService as S
+import Service.RulesInfo
+import qualified Service.Diagnose as Diagnose
+import qualified Service.Submit as Submit
+import Service.TypedAbstractService hiding (State, exercise)
 
 ------------------------------------------------------
 -- Querying a service
@@ -49,7 +49,7 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   S.derivation ::: maybeTp StrategyCfg :-> State :-> errorTp (List (tuple2 Rule Context))
+   derivation ::: maybeTp StrategyCfg :-> State :-> errorTp (List (tuple2 Rule Context))
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts" 
@@ -57,7 +57,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   S.allfirsts ::: State :-> errorTp (List (tuple3 Rule Location State))
+   allfirsts ::: State :-> errorTp (List (tuple3 Rule Location State))
         
 onefirstS :: Service
 onefirstS = makeService "onefirst" 
@@ -65,41 +65,41 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $ 
-   S.onefirst ::: State :-> elemTp (errorTp (tuple3 Rule Location State))
+   onefirst ::: State :-> elemTp (errorTp (tuple3 Rule Location State))
   
 readyS :: Service
 readyS = makeService "ready" 
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $ 
-   S.ready ::: State :-> Bool
+   ready ::: State :-> Bool
 
 stepsremainingS :: Service
 stepsremainingS = makeService "stepsremaining" 
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
    \corresponds to the one returned by the derivation service." $
-   S.stepsremaining ::: State :-> errorTp Int
+   stepsremaining ::: State :-> errorTp Int
 
 applicableS :: Service
 applicableS = makeService "applicable" 
    "Given a current expression and a location in this expression, this service \
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $ 
-   S.applicable ::: Location :-> State :-> List Rule
+   applicable ::: Location :-> State :-> List Rule
 
 applyS :: Service
 applyS = makeService "apply" 
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $ 
-   S.apply ::: Rule :-> Location :-> State :-> errorTp State
+   apply ::: Rule :-> Location :-> State :-> errorTp State
 
 generateS :: Service
 generateS = makeService "generate" 
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression. The meaning \
    \of the difficulty level (an integer) depends on the exercise at hand." $ 
-   S.generate ::: Exercise :-> optionTp 5 Int :-> IO State
+   generate ::: ExercisePkg :-> optionTp 5 Int :-> IO State
 
 examplesS :: Service
 examplesS = makeService "examples"
@@ -107,21 +107,21 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   examples ::: Exercise :-> List Term
+   (examples . exercise) ::: ExercisePkg :-> List Term
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules" 
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose service." $ 
-   S.findbuggyrules ::: State :-> Term :-> List Rule
+   findbuggyrules ::: State :-> Term :-> List Rule
 
 submitS :: Service
 submitS = deprecate $ makeService "submit" 
    "Analyze an expression submitted by a student. Possible answers are Buggy, \
    \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
    \by the diagnose service." $ 
-   S.submit ::: State :-> Term :-> resultType
+   Submit.submit ::: State :-> Term :-> Submit.submitType
 
 diagnoseS :: Service
 diagnoseS = makeService "diagnose" 
@@ -133,7 +133,7 @@ diagnoseS = makeService "diagnose"
    \expression was not expected by the strategy, but the applied rule was \
    \detected), and Correct (it is correct, but we don't know which rule was \
    \applied)." $
-   S.diagnose ::: State :-> Term :-> diagnosisType
+   Diagnose.diagnose ::: State :-> Term :-> Diagnose.diagnosisType
 
 ------------------------------------------------------
 -- Services with a feedback component
@@ -145,7 +145,7 @@ onefirsttextS = makeService "onefirsttext"
    \leading to this service call (which can influence the returned result). \
    \The boolean in the result specifies whether a suggestion was available or \
    \not." $ 
-   onefirsttext ::: ExerciseText :-> State :-> maybeTp String :-> elemTp (tuple3 Bool String State)
+   onefirsttext ::: State :-> maybeTp String :-> errorTp (elemTp (tuple3 Bool String State))
 
 submittextS :: Service
 submittextS = makeService "submittext" 
@@ -155,14 +155,14 @@ submittextS = makeService "submittext"
    \for announcing the event leading to this service call. The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: ExerciseText :-> State :-> String :-> maybeTp String :-> elemTp (tuple3 Bool String State)
+   submittext ::: State :-> String :-> maybeTp String :-> errorTp (elemTp (tuple3 Bool String State))
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
-   derivationtext ::: ExerciseText :-> State :-> maybeTp String :-> errorTp (List (tuple2 String Context))
+   derivationtext ::: State :-> maybeTp String :-> errorTp (List (tuple2 String Context))
 
 ------------------------------------------------------
 -- Problem decomposition service
@@ -189,7 +189,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $ 
-   allRules ::: Exercise :-> List (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
+   allRules ::: ExercisePkg :-> List (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo" 
@@ -200,7 +200,7 @@ rulesinfoS = makeService "rulesinfo"
 strategyinfoS :: Service
 strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $ 
-   (toStrategy . strategy) ::: Exercise :-> Strategy 
+   (toStrategy . strategy . exercise) ::: ExercisePkg :-> Strategy
    
 allExercises :: [Some ExercisePackage] -> [(String, String, String, String)]
 allExercises = map make . sortBy cmp
@@ -212,8 +212,8 @@ allExercises = map make . sortBy cmp
           code = exerciseCode ex 
       in (domain code, identifier code, description ex, show (status ex))
 
-allRules :: E.Exercise a -> [(String, Bool, Bool)]
-allRules = map make . ruleset
+allRules :: ExercisePackage a -> [(String, Bool, Bool)]
+allRules = map make . ruleset . exercise
  where  
    make r  = (name r, isBuggyRule r, isRewriteRule r)
    

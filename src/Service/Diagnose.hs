@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module Service.Diagnose 
    ( Diagnosis(..), RuleID, diagnose, restartIfNeeded
+   , diagnosisType, diagnosisTypeSynonym
    ) where 
 
 import Common.Context
@@ -21,7 +22,9 @@ import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils (safeHead)
 import Data.Maybe
+import Service.Definitions hiding (State)
 import Service.TypedAbstractService
+import qualified Service.Definitions as Tp
 
 ----------------------------------------------------------------
 -- Result types for diagnose service
@@ -107,3 +110,30 @@ restartIfNeeded s
    | otherwise = s
  where
    ex = exercise s
+   
+diagnosisType :: Type a (Diagnosis a)
+diagnosisType = useSynonym diagnosisTypeSynonym
+
+diagnosisTypeSynonym :: TypeSynonym a (Diagnosis a)
+diagnosisTypeSynonym = typeSynonym "Diagnosis" to from tp
+ where
+   to (Left r) = Buggy r
+   to (Right (Left ())) = NotEquivalent
+   to (Right (Right (Left (b, s)))) = Similar b s
+   to (Right (Right (Right (Left (b, s, r))))) = Expected b s r
+   to (Right (Right (Right (Right (Left (b, s, r)))))) = Detour b s r
+   to (Right (Right (Right (Right (Right (b, s)))))) = Correct b s
+   
+   from (Buggy r)        = Left r
+   from (NotEquivalent)  = Right (Left ())
+   from (Similar b s)    = Right (Right (Left (b, s)))
+   from (Expected b s r) = Right (Right (Right (Left (b, s, r))))
+   from (Detour b s r)   = Right (Right (Right (Right (Left (b, s, r)))))
+   from (Correct b s)    = Right (Right (Right (Right (Right (b, s)))))
+   
+   tp  =  Rule
+      :|: Unit
+      :|: Pair   Bool Tp.State
+      :|: tuple3 Bool Tp.State Rule
+      :|: tuple3 Bool Tp.State Rule
+      :|: Pair   Bool Tp.State

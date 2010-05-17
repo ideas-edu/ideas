@@ -11,13 +11,18 @@
 -- Diagnose a term submitted by a student. Deprecated (see diagnose service).
 --
 -----------------------------------------------------------------------------
-module Service.Submit (submit, Result(..), getResultState) where
+module Service.Submit 
+   ( submit, Result(..), getResultState
+   , submitType, submitTypeSynonym
+   ) where
 
 import Common.Transformation
 import Common.Context
 import qualified Service.Diagnose as Diagnose
 import Service.Diagnose (Diagnosis, diagnose)
 import Service.TypedAbstractService
+import Service.Definitions hiding (State)
+import qualified Service.Definitions as Tp
 
 -- Note that in the typed setting there is no syntax error
 data Result a = Buggy  [Rule (Context a)]   
@@ -46,3 +51,27 @@ getResultState result =
       Detour _ st -> return st
       Unknown st  -> return st
       _           -> Nothing
+      
+submitType :: Type a (Result a)
+submitType = useSynonym submitTypeSynonym
+
+submitTypeSynonym :: TypeSynonym a (Result a)
+submitTypeSynonym = typeSynonym "Result" to from tp
+ where
+   to (Left rs) = Buggy rs
+   to (Right (Left ())) = NotEquivalent
+   to (Right (Right (Left (rs, s)))) = Ok rs s
+   to (Right (Right (Right (Left (rs, s))))) = Detour rs s
+   to (Right (Right (Right (Right s)))) = Unknown s
+
+   from (Buggy rs)      = Left rs
+   from (NotEquivalent) = Right (Left ())
+   from (Ok rs s)       = Right (Right (Left (rs, s)))
+   from (Detour rs s)   = Right (Right (Right (Left (rs, s))))
+   from (Unknown s)     = Right (Right (Right (Right s))) 
+
+   tp  =  List Rule 
+      :|: Unit
+      :|: Pair (List Rule) Tp.State
+      :|: Pair (List Rule) Tp.State
+      :|: Tp.State

@@ -18,15 +18,18 @@ module Service.ExercisePackage
    , package, termPackage, somePackage, someTermPackage
      -- Conversion functions to/from OpenMath
    , termToOMOBJ, omobjToTerm
+     -- ExerciseText datatype
+   , ExerciseText(..)
    ) where
 
+import Common.Context (Context)
+import Common.Transformation (Rule)
 import Common.Utils (Some(..))
 import Common.Exercise
 import Control.Monad
 import Common.Rewriting.Term
 import Data.Char
 import Data.List
-import Service.FeedbackText (ExerciseText)
 import Text.OpenMath.Object
 import Text.OpenMath.Symbol
 import Text.OpenMath.Dictionary.Fns1
@@ -63,7 +66,7 @@ somePackage = Some . package
 
 someTermPackage :: IsTerm a => Exercise a -> Some ExercisePackage
 someTermPackage = Some . termPackage
-
+   
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
 
@@ -100,3 +103,20 @@ omobjToTerm omobj =
  where
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing
+   
+------------------------------------------------------------
+-- Exercise Text data type
+--    Note: ideally, this should be defined elsewhere
+
+-- Exercise extension for textual feedback
+data ExerciseText a = ExerciseText
+   { ruleText              :: Rule (Context a) -> Maybe String
+   , appliedRule           :: Rule (Context a) -> String
+   , feedbackSyntaxError   :: String -> String
+   , feedbackSame          :: String
+   , feedbackBuggy         :: Bool -> [Rule (Context a)] -> String
+   , feedbackNotEquivalent :: Bool -> String
+   , feedbackOk            :: [Rule (Context a)] -> (String, Bool)
+   , feedbackDetour        :: Bool -> Maybe (Rule (Context a)) -> [Rule (Context a)] -> (String, Bool)
+   , feedbackUnknown       :: Bool -> String
+   }

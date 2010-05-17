@@ -29,7 +29,7 @@ import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
-import Service.Definitions
+import Service.Types
 import Service.ExercisePackage
 
 -----------------------------------------------------------------------

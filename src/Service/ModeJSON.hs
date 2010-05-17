@@ -22,8 +22,8 @@ import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.Request
 import qualified Service.TypedAbstractService as TAS
-import qualified Service.Definitions as Tp
-import Service.Definitions (Type, TypedValue(..), isSynonym)
+import qualified Service.Types as Tp
+import Service.Types (Type, TypedValue(..), isSynonym)
 import Service.Submit
 import Service.Evaluator
 import Service.ExercisePackage 

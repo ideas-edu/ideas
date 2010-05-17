@@ -18,7 +18,7 @@ import Common.Transformation (Rule, name)
 import Control.Arrow
 import Control.Monad
 import Service.ExercisePackage
-import Service.Definitions
+import Service.Types
 import Service.DomainReasoner
 
 evalService :: Evaluator inp out a -> Service -> inp -> DomainReasoner out

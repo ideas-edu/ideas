@@ -33,8 +33,8 @@ import Service.RulesInfo (rulesInfoXML)
 import Service.StrategyInfo
 import Service.TypedAbstractService hiding (exercise)
 import Service.Diagnose
-import Service.Definitions hiding (State)
-import qualified Service.Definitions as Tp
+import Service.Types hiding (State)
+import qualified Service.Types as Tp
 import Service.Evaluator
 import Text.OpenMath.Object
 import Text.XML

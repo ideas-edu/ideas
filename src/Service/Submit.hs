@@ -21,8 +21,8 @@ import Common.Context
 import qualified Service.Diagnose as Diagnose
 import Service.Diagnose (Diagnosis, diagnose)
 import Service.TypedAbstractService
-import Service.Definitions hiding (State)
-import qualified Service.Definitions as Tp
+import Service.Types hiding (State)
+import qualified Service.Types as Tp
 
 -- Note that in the typed setting there is no syntax error
 data Result a = Buggy  [Rule (Context a)]   

@@ -20,7 +20,7 @@ import Control.Monad
 import Common.Utils (Some(..))
 import Common.Exercise
 import Service.DomainReasoner
-import Service.Definitions
+import Service.Types
 import Text.HTML
 
 makeOverviewExercises :: String -> DomainReasoner ()

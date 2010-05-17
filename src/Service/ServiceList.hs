@@ -20,7 +20,7 @@ import Data.List (sortBy)
 import Service.FeedbackText
 import Service.ProblemDecomposition (problemDecomposition, replyType)
 import Service.ExercisePackage
-import Service.Definitions 
+import Service.Types 
 import Service.RulesInfo
 import qualified Service.Diagnose as Diagnose
 import qualified Service.Submit as Submit

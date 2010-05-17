@@ -16,7 +16,7 @@ import Common.Exercise
 import Common.Transformation
 import Control.Monad
 import Service.DomainReasoner
-import Service.Definitions
+import Service.Types
 import System.Directory
 import System.FilePath
 import Text.HTML

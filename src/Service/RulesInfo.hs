@@ -26,7 +26,7 @@ import Text.OpenMath.Object
 import Text.OpenMath.FMP
 import Text.XML hiding (name)
 import Service.ExercisePackage (termToOMOBJ)
-import Service.Definitions
+import Service.Types
 import qualified Data.Map as M
 
 rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder

@@ -17,7 +17,7 @@ import Service.DomainReasoner
 import Service.ModeXML
 import Service.ExercisePackage
 import Service.Evaluator
-import Service.Definitions
+import Service.Types
 import Common.Exercise
 import Text.XML
    

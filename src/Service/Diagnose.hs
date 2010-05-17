@@ -22,9 +22,9 @@ import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils (safeHead)
 import Data.Maybe
-import Service.Definitions hiding (State)
+import Service.Types hiding (State)
 import Service.TypedAbstractService
-import qualified Service.Definitions as Tp
+import qualified Service.Types as Tp
 
 ----------------------------------------------------------------
 -- Result types for diagnose service

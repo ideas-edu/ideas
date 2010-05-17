@@ -10,7 +10,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.Definitions 
+module Service.Types 
    ( -- * Services
      Service, makeService, deprecate 
    , serviceName, serviceDescription, serviceDeprecated, serviceFunction

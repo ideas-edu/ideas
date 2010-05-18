@@ -44,17 +44,29 @@ readConfiguration = do
       }
 
 commandText :: Configuration -> String
-commandText cfg = head (words (commandLine cfg))
+commandText = fst . splitCommand . commandLine
 
-commandArgs :: Configuration -> String -> [String]
-commandArgs cfg file = map f (tail (words (commandLine cfg)))
+commandArgs :: String -> Configuration -> [String]
+commandArgs file  = map f . snd . splitCommand . commandLine
  where 
    f []           = []
    f ('%':'f':xs) = file ++ f xs
    f (x:xs)       = x:f xs
 
+diffCommand :: Configuration -> String
+diffCommand = fst . splitCommand . diffTool
+
+diffArgs :: Configuration -> [String]
+diffArgs = snd . splitCommand . diffTool
+
 diffFilter :: Configuration -> String -> Bool
 diffFilter cfg s = not (any (`isInfixOf` s) (filteredWords cfg))
+
+splitCommand :: String -> (String, [String])
+splitCommand s = 
+   case words s of
+      x:xs -> (x, xs)
+      _    -> (s, [])
 
 readProperty :: String -> Maybe (String, String)
 readProperty s = 

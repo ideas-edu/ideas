@@ -17,7 +17,7 @@ import Configuration
 import System.Directory
 import Data.List
 import Data.Maybe
-import Control.Monad
+import Control.Monad hiding (when)
 import System.Process
 import System.FilePath
 import System.Time
@@ -68,7 +68,8 @@ makeControlPanel :: Configuration -> ControlArgs -> Window a -> IO (Panel ())
 makeControlPanel cfg (itemsRef, workLoad, details) w = do
    -- References
    startTime <- createControl Nothing
-   workList  <- createControl (0, [])
+   done      <- createControl 0
+   workList  <- createControl []
    testDir   <- createControl (testDirectory cfg)
    
    -- Create widgets
@@ -79,21 +80,25 @@ makeControlPanel cfg (itemsRef, workLoad, details) w = do
    st4 <- staticText p []
    hg  <- hgauge p 0 []
    bGo <- button p [text := "Go!"]
+   bSt <- button p [text := "Stop", enabled := False]
    bSh <- button p [text := "Show details"]
    bCh <- button p [text := "Change"]
    tmr <- timer  p [enabled := False, interval := 100]
    
    -- Event handlers
-   set p   [on idle    := onIdle workList]
+   set p   [on idle    := onIdle done workList]
    set tmr [on command := notifyObservers startTime]
-   set bGo [on command := getValue testDir >>= onCommandGo startTime workList]
+   set bGo [on command := getValue testDir >>= onCommandGo startTime done workList]
+   set bSt [on command := setValue workList []]
    set bSh [on command := changeValue details not]
    set bCh [on command := onCommandChangeDir testDir p]
-   addObserver workList $ \(len, xs) -> do
-      total <- getValue workLoad
-      set hg [selection := total-len]
+   addObserver workList $ \xs -> do
+      set bGo [enabled := null xs]
+      set bCh [enabled := null xs]
+      set bSt [enabled := not (null xs)]
       case xs of 
-         []       -> do set st1 [text := testDirectory cfg]
+         []       -> do d <- getValue testDir
+                        set st1 [text := d]
                         set st2 [text := ""]
                         setValue startTime Nothing
          (d, f):_ -> do set st1 [text := d]
@@ -105,7 +110,13 @@ makeControlPanel cfg (itemsRef, workLoad, details) w = do
       set tmr [enabled := isJust mct ]
    addObserver details $ \b -> 
       set bSh [text := (if b then "Hide" else "Show") ++ " details"]
+   addObserver testDir $ \d -> do
+      set st1 [text := d]
+      setValue startTime Nothing
+      setValue done 0
    addObserver workLoad (gaugeSetRange hg)
+   addObserver done $ \n -> 
+      set hg [selection := n]
    notifyObservers workList
    
    -- Return panel
@@ -117,35 +128,37 @@ makeControlPanel cfg (itemsRef, workLoad, details) w = do
            ], widget bCh ]
       , hfill $ widget hg
       , hfill $ vspace 5
-      , row 0 [hglue, widget bGo, hglue, widget bSh]
+      , row 0 [hglue, widget bGo, hspace 30, widget bSt, hglue, widget bSh]
       ]]
    return p
  where
-   onCommandGo startTime workList dir = do
+   onCommandGo startTime done workList dir = do
       testFiles <- findTestFiles (testExtensions cfg) dir
       clockTime <- getClockTime
-      let len = length testFiles
-      setValue workLoad len
+      setValue workLoad (length testFiles)
       setValue itemsRef []
       setValue startTime (Just clockTime)
-      setValue workList (len, testFiles)
+      setValue done 0
+      setValue workList testFiles
 
-   onIdle workList = do 
-      (len, work) <- getValue workList
+   onIdle done workList = do 
+      work <- getValue workList
       case work of
          (d, file):rest -> do
             mItem <- testFile cfg d file
             case mItem of 
                Just item -> changeValue itemsRef (++ [item])
                Nothing   -> return ()
-            setValue workList (len-1, rest)
+            setValue workList rest
+            changeValue done (+1)
             return True
          _ ->
             return False -- no more work to do
 
    onCommandChangeDir testDir w = do 
       let msg = "Select directory with test files"
-      result <- dirOpenDialog w False msg (testDirectory cfg)
+      oldDir <- getValue testDir
+      result <- dirOpenDialog w False msg oldDir
       case result of
          Just d  -> setValue testDir d
          Nothing -> return ()
@@ -160,19 +173,25 @@ makeItemPanel cfg itemsRef w = do
    lc <- singleListBox p []
    rb <- radioBox p Horizontal (map show modes) [selection := 3]
    tc <- textCtrl p []
-   b  <- button p [text := "Create"]
+   b  <- button p [text := "Create", enabled := False]
    textCtrlSetEditable tc False
    
    -- Event handlers
    set rb [on select  := get rb selection  >>= onSelectRadioBox selected]
    set lc [on select  := get lc selection  >>= onSelectList selected]
    set b  [on command := getValue selected >>= onCreate]
-   addObserver selected (onShowItem tc)
+   addObserver selected $ \pair@(_, m) -> do
+      onShowItem tc pair
+      set b [enabled := isJust m]
    addObserver itemsRef $ \xs -> do
-      i <- get lc selection 
+      when (null xs) $
+         changeValue selected (\(m, _) -> (m, Nothing))
+      i <- get lc selection
       let f item = inputFile item ++ extra (isJust (expectedText item))
           extra b = if b then "" else " (no expected)" 
-      set lc [items := map f xs, selection := i] 
+      set lc [items := map f xs, selection := i `max` 0]
+      when (not (null xs) && i<0) $
+         changeValue selected (\(m, _) -> (m, Just (head xs))) 
    
    -- Return panel
    set p [layout := column 10
@@ -235,7 +254,7 @@ findTestFiles exts = find
 
 testFile :: Configuration -> String -> String -> IO (Maybe Item)
 testFile cfg dir file = do
-   out <- readProcess (commandText cfg) (commandArgs cfg sourceFile) []
+   out <- readProcess (commandText cfg) (commandArgs sourceFile cfg) []
              `catch` (return . show)
    exp <- liftM Just (readFile expFile)
              `catch` (const $ return Nothing)
@@ -258,7 +277,8 @@ normalizeNewlines = rec
 
 difference :: Configuration -> FilePath -> String -> IO String
 difference cfg expFile out = do
-   (_, txt, _) <- readProcessWithExitCode (diffTool cfg) [expFile, "-"] out
+   (_, txt, _) <- readProcessWithExitCode (diffCommand cfg) 
+                     (diffArgs cfg ++ [expFile, "-"]) out
    return txt
  `catch` 
    \e -> return (show e)

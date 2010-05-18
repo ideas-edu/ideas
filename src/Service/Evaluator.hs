@@ -98,4 +98,5 @@ encodeDefault enc tp tv =
       Term          -> encodeTerm enc tv
       Context       -> fromContext tv >>= encodeType enc Term
       Location      -> encodeType enc String (show tv)
+      ExercisePkg   -> return (encodeTuple enc [])
       _             -> fail ("No support for result type: " ++ show tp)

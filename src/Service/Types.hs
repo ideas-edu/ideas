@@ -16,18 +16,22 @@ module Service.Types
    , serviceName, serviceDescription, serviceDeprecated, serviceFunction
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
-   , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym
+   , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym, stateTp
+   , stateTypeSynonym, equalM
    ) where
 
 import Common.Context (Context)
 import Common.Navigator (Location)
 import Common.Transformation (Rule)
 import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
-import Common.Utils (commaList)
+import Common.Utils (commaList, readM)
 import Control.Monad
 import Data.Maybe
 import Service.ExercisePackage
 import Service.TypedAbstractService (State)
+import qualified Service.TypedAbstractService as TAS
+import Common.Strategy (makePrefix)
+import Common.Exercise (strategy)
 
 -----------------------------------------------------------------------------
 -- Services
@@ -45,19 +49,25 @@ makeService name descr f = Service name descr False f
 deprecate :: Service -> Service
 deprecate s = s { serviceDeprecated = True }
 
+equalM :: Monad m => Type a t1 -> Type a t2 -> m (t1 -> t2)
+equalM t1 t2 = maybe (fail msg) return (equal t1 t2)
+ where msg = "Types not equal: " ++ show t1 ++ " and " ++ show t2
+
 equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
 equal (a :|: b) (c :|: d) = liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
 equal (List a) (List b) = liftM map (equal a b)
 equal Rule Rule = Just id
 equal Unit Unit = Just id
 equal (Pair a b) (Pair c d) = liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
-equal State State = Just id
 equal StrategyCfg StrategyCfg = Just id
 equal Location Location = Just id
 equal ExercisePkg ExercisePkg = Just id
+equal Context Context = Just id
 equal Bool Bool = Just id
+equal String String = Just id
 equal (Iso _ f a) b = fmap (. f) (equal a b)
 equal a (Iso f _ b) = fmap (f .) (equal a b)
+equal (Tag s1 a) (Tag s2 b) = guard (s1==s2) >> equal a b
 equal _ _ = Nothing
 
 infixr 5 :|:
@@ -100,6 +110,23 @@ errorTp t = Iso f g (t :|: IO Unit)
    f = either Right (const (Left "errorTp"))
    g = either (Right . fail) Left
 
+stateTp :: Type a (State a)
+stateTp = useSynonym stateTypeSynonym
+
+stateTypeSynonym :: TypeSynonym a (State a)
+stateTypeSynonym = typeSynonym "state" to from tp
+ where
+   to (pkg, mp, ctx) =
+      let str = strategy (exercise pkg)
+          f   = fromMaybe [] . readM
+      in TAS.State pkg (mp >>= flip makePrefix str . f) ctx
+   from st = 
+      ( TAS.exercisePkg st
+      , fmap show (TAS.prefix st)
+      , TAS.context st
+      )
+   tp = tuple3 ExercisePkg (maybeTp String) Context
+
 data Type a t where
    -- Type isomorphisms (for defining type synonyms)
    Iso          :: (t1 -> t2) -> (t2 -> t1) -> Type a t1 -> Type a t2
@@ -114,7 +141,6 @@ data Type a t where
    Unit         :: Type a ()
    IO           :: Type a t -> Type a (IO t)
    -- Exercise-specific types
-   State        :: Type a (State a)
    ExercisePkg  :: Type a (ExercisePackage a)
    Strategy     :: Type a (Strategy (Context a))
    Rule         :: Type a (Rule (Context a))
@@ -149,7 +175,6 @@ showTuple t = "(" ++ commaList (collect t) ++ ")"
 groundType :: Type a t -> Maybe String
 groundType tp =
    case tp of 
-      State        -> Just "State"
       ExercisePkg  -> Just "ExercisePkg"
       Strategy     -> Just "Strategy"
       Rule         -> Just "Rule"

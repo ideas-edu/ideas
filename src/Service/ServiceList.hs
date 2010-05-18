@@ -20,7 +20,7 @@ import Data.List (sortBy)
 import Service.FeedbackText
 import Service.ProblemDecomposition (problemDecomposition, replyType)
 import Service.ExercisePackage
-import Service.Types 
+import Service.Types
 import Service.RulesInfo
 import qualified Service.Diagnose as Diagnose
 import qualified Service.Submit as Submit
@@ -49,7 +49,7 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   derivation ::: maybeTp StrategyCfg :-> State :-> errorTp (List (tuple2 Rule Context))
+   derivation ::: maybeTp StrategyCfg :-> stateTp :-> errorTp (List (tuple2 Rule Context))
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts" 
@@ -57,7 +57,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   allfirsts ::: State :-> errorTp (List (tuple3 Rule Location State))
+   allfirsts ::: stateTp :-> errorTp (List (tuple3 Rule Location stateTp))
         
 onefirstS :: Service
 onefirstS = makeService "onefirst" 
@@ -65,41 +65,41 @@ onefirstS = makeService "onefirst"
    \service to get all possible steps that are allowed by the strategy. In \
    \addition to a new state, the rule used and the location where to apply \
    \this rule are returned." $ 
-   onefirst ::: State :-> elemTp (errorTp (tuple3 Rule Location State))
+   onefirst ::: stateTp :-> elemTp (errorTp (tuple3 Rule Location stateTp))
   
 readyS :: Service
 readyS = makeService "ready" 
    "Test if the current expression is in a form accepted as a final answer. \
    \For this, the strategy is not used." $ 
-   ready ::: State :-> Bool
+   ready ::: stateTp :-> Bool
 
 stepsremainingS :: Service
 stepsremainingS = makeService "stepsremaining" 
    "Computes how many steps are remaining to be done, according to the \
    \strategy. For this, only the first derivation is considered, which \
    \corresponds to the one returned by the derivation service." $
-   stepsremaining ::: State :-> errorTp Int
+   stepsremaining ::: stateTp :-> errorTp Int
 
 applicableS :: Service
 applicableS = makeService "applicable" 
    "Given a current expression and a location in this expression, this service \
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $ 
-   applicable ::: Location :-> State :-> List Rule
+   applicable ::: Location :-> stateTp :-> List Rule
 
 applyS :: Service
 applyS = makeService "apply" 
    "Apply a rule at a certain location to the current expression. If this rule \
    \was not expected by the strategy, we deviate from it. If the rule cannot \
    \be applied, this service call results in an error." $ 
-   apply ::: Rule :-> Location :-> State :-> errorTp State
+   apply ::: Rule :-> Location :-> stateTp :-> errorTp stateTp
 
 generateS :: Service
 generateS = makeService "generate" 
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression. The meaning \
    \of the difficulty level (an integer) depends on the exercise at hand." $ 
-   generate ::: ExercisePkg :-> optionTp 5 Int :-> IO State
+   generate ::: ExercisePkg :-> optionTp 5 Int :-> IO stateTp
 
 examplesS :: Service
 examplesS = makeService "examples"
@@ -114,14 +114,14 @@ findbuggyrulesS = makeService "findbuggyrules"
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose service." $ 
-   findbuggyrules ::: State :-> Term :-> List Rule
+   findbuggyrules ::: stateTp :-> Term :-> List Rule
 
 submitS :: Service
 submitS = deprecate $ makeService "submit" 
    "Analyze an expression submitted by a student. Possible answers are Buggy, \
    \NotEquivalent, Ok, Detour, and Unknown. This service has been superseded \
    \by the diagnose service." $ 
-   Submit.submit ::: State :-> Term :-> Submit.submitType
+   Submit.submit ::: stateTp :-> Term :-> Submit.submitType
 
 diagnoseS :: Service
 diagnoseS = makeService "diagnose" 
@@ -133,7 +133,7 @@ diagnoseS = makeService "diagnose"
    \expression was not expected by the strategy, but the applied rule was \
    \detected), and Correct (it is correct, but we don't know which rule was \
    \applied)." $
-   Diagnose.diagnose ::: State :-> Term :-> Diagnose.diagnosisType
+   Diagnose.diagnose ::: stateTp :-> Term :-> Diagnose.diagnosisType
 
 ------------------------------------------------------
 -- Services with a feedback component
@@ -145,7 +145,7 @@ onefirsttextS = makeService "onefirsttext"
    \leading to this service call (which can influence the returned result). \
    \The boolean in the result specifies whether a suggestion was available or \
    \not." $ 
-   onefirsttext ::: State :-> maybeTp String :-> errorTp (elemTp (tuple3 Bool String State))
+   onefirsttext ::: stateTp :-> maybeTp String :-> errorTp (elemTp (tuple3 Bool String stateTp))
 
 submittextS :: Service
 submittextS = makeService "submittext" 
@@ -155,14 +155,14 @@ submittextS = makeService "submittext"
    \for announcing the event leading to this service call. The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: State :-> String :-> maybeTp String :-> errorTp (elemTp (tuple3 Bool String State))
+   submittext ::: stateTp :-> String :-> maybeTp String :-> errorTp (elemTp (tuple3 Bool String stateTp))
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
-   derivationtext ::: State :-> maybeTp String :-> errorTp (List (tuple2 String Context))
+   derivationtext ::: stateTp :-> maybeTp String :-> errorTp (List (tuple2 String Context))
 
 ------------------------------------------------------
 -- Problem decomposition service
@@ -172,7 +172,7 @@ problemdecompositionS = makeService "problemdecomposition"
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: State :-> StrategyLoc :-> maybeTp Term :-> replyType
+   problemDecomposition ::: stateTp :-> StrategyLoc :-> maybeTp Term :-> replyType
 
 ------------------------------------------------------
 -- Reflective services

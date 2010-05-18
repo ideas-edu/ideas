@@ -106,7 +106,7 @@ newState pkg s = do
    let ex = exercise pkg
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
-      Right a  -> return (emptyState pkg a ::: State)
+      Right a  -> return (emptyState pkg a ::: stateTp)
       
 type Args = forall a . ExercisePackage a -> [TypedValue a]
 

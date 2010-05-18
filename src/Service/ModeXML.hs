@@ -33,7 +33,7 @@ import Service.RulesInfo (rulesInfoXML)
 import Service.StrategyInfo
 import Service.TypedAbstractService hiding (exercise)
 import Service.Diagnose
-import Service.Types hiding (State)
+import Service.Types
 import qualified Service.Types as Tp
 import Service.Evaluator
 import Text.OpenMath.Object
@@ -175,6 +175,9 @@ xmlEncoder b f ex = Encoder
                  encodeDiagnosis b (encodeTerm enc) d
             | s == "RulesInfo" -> \_ ->
                  rulesInfoXML ex (encodeTerm enc)
+            | s == "state" -> \a -> do
+                 st <- isSynonym stateTypeSynonym (a ::: serviceType)
+                 encodeState b (encodeTerm enc) st
          Tp.List t1  -> \xs -> 
             case allAreTagged t1 of
                Just f -> do
@@ -189,12 +192,11 @@ xmlEncoder b f ex = Encoder
          Tp.Strategy  -> return . builder . strategyToXML
          Tp.Rule      -> return . ("ruleid" .=.) . Rule.name
          Tp.Term      -> encodeTerm enc
-         Tp.Context   -> encodeContext   b (encodeTerm enc)
+         Tp.Context   -> encodeContext b (encodeTerm enc)
          Tp.Location  -> return . {-element "location" .-} text . show
          Tp.Bool      -> return . text . map toLower . show
          Tp.String    -> return . text
          Tp.Int       -> return . text . show
-         Tp.State     -> encodeState b (encodeTerm enc)
          _            -> encodeDefault enc serviceType
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
@@ -207,12 +209,17 @@ xmlDecoder b f pkg = Decoder
    decode :: Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
    decode dec serviceType = 
       case serviceType of
-         Tp.State       -> decodeState b (decoderPackage dec) (decodeTerm dec)
+         Tp.Context     -> leave $ decodeContext b (decoderPackage dec) (decodeTerm dec)
          Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
          Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
-         Tp.Term        -> \xml -> decodeTerm dec xml >>= \a -> return (a, xml)
+         Tp.Term        -> leave $ decodeTerm dec
          Tp.StrategyCfg -> decodeConfiguration
-         _              -> decodeDefault dec serviceType
+         Tp.Tag s _   
+            | s == "state" -> \xml -> do 
+                 f  <- equalM Tp.stateTp serviceType
+                 st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
+                 return (f st, xml)
+         _ -> decodeDefault dec serviceType
          
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    leave f xml = liftM (\a -> (a, xml)) (f xml)
@@ -227,29 +234,35 @@ allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, map toLower (show b))]
 allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
 allAreTagged _ = Nothing
          
-decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a, XML)
+decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a)
 decodeState b pkg f top = do
    xml <- findChild "state" top
    unless (name xml == "state") (fail "expected a state tag")
-   mpr <- case maybe "" getData (findChild "prefix" xml) of
-             prefixText
-                | all isSpace prefixText ->
-                     return (Just (emptyPrefix (strategy ex)))
-                | prefixText ~= "no prefix" -> 
-                     return Nothing 
-                | otherwise -> do
-                     a  <- readM prefixText
-                     pr <- makePrefix a (strategy ex)
-                     return (Just pr)
-   expr <- f xml
-   env  <- decodeEnvironment b xml
-   let state  = State pkg mpr term
-       term   = makeContext ex env expr
-   return (state, top)
+   mpr  <- decodePrefix pkg xml
+   term <- decodeContext b pkg f xml
+   return (State pkg mpr term)
+
+decodePrefix :: Monad m => ExercisePackage a -> XML -> m (Maybe (Prefix (Context a)))
+decodePrefix pkg xml
+   | all isSpace prefixText =
+        return (Just (emptyPrefix str))
+   | prefixText ~= "no prefix" =
+        return Nothing 
+   | otherwise = do
+        a  <- readM prefixText
+        pr <- makePrefix a str
+        return (Just pr)
  where
-   ex = exercise pkg
+   prefixText = maybe "" getData (findChild "prefix" xml)
+   str = strategy (exercise pkg)
    a ~= b = g a == g b
    g = map toLower . filter (not . isSpace)
+   
+decodeContext :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (Context a)
+decodeContext b pkg f xml = do
+   expr <- f xml
+   env  <- decodeEnvironment b xml
+   return (makeContext (exercise pkg) env expr)
 
 decodeEnvironment :: Monad m => Bool -> XML -> m Environment
 decodeEnvironment b xml =

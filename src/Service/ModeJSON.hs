@@ -23,7 +23,7 @@ import Text.JSON
 import Service.Request
 import qualified Service.TypedAbstractService as TAS
 import qualified Service.Types as Tp
-import Service.Types (Type, TypedValue(..), isSynonym)
+import Service.Types hiding (String)
 import Service.Submit
 import Service.Evaluator
 import Service.ExercisePackage 
@@ -108,17 +108,20 @@ jsonEncoder ex = Encoder
            liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
       | otherwise = 
            case serviceType of
-              Tp.Tag s t | s == "Result" -> 
-                 isSynonym submitTypeSynonym (a ::: serviceType) 
-                 >>= encodeResult enc
+              Tp.Tag s t | s == "Result" -> do
+                 result <- isSynonym submitTypeSynonym (a ::: serviceType) 
+                 encodeResult enc result
                          | s == "elem" -> 
                  encode enc t a
+                         | s == "state" -> do
+                 st <- isSynonym Tp.stateTypeSynonym (a ::: serviceType)
+                 encodeState (encodeTerm enc) st
+                 
               Tp.List t    -> liftM Array (mapM (encode enc t) a)
               Tp.Tag s t   -> liftM (\b -> Object [(s, b)]) (encode enc t a)
               Tp.Int       -> return (toJSON a)
               Tp.Bool      -> return (toJSON a)
               Tp.String    -> return (toJSON a)
-              Tp.State     -> encodeState (encodeTerm enc) a
               _            -> encodeDefault enc serviceType a
     where
       xs = tupleList (a ::: serviceType)
@@ -143,7 +146,6 @@ jsonDecoder pkg = Decoder
    decode :: Decoder JSON a -> Type a t -> JSON -> DomainReasoner (t, JSON) 
    decode dec serviceType =
       case serviceType of
-         Tp.State    -> useFirst $ decodeState (decoderPackage dec) (decodeTerm dec)
          Tp.Location -> useFirst decodeLocation
          Tp.Term     -> useFirst $ decodeTerm dec
          Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
@@ -156,7 +158,10 @@ jsonDecoder pkg = Decoder
          Tp.String   -> useFirst $ \json -> case json of 
                                                String s -> return s
                                                _        -> fail "not a string"
-         _           -> decodeDefault dec serviceType
+         Tp.Tag s _ | s == "state" -> do 
+            f <- equalM Tp.stateTp serviceType
+            useFirst (liftM f . decodeState (decoderPackage dec) (decodeTerm dec))
+         _ -> decodeDefault dec serviceType
    
    useFirst :: Monad m => (JSON -> m a) -> JSON -> m (a, JSON)
    useFirst f (Array (x:xs)) = do
@@ -213,13 +218,13 @@ encodeResult enc result =
       Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . name) rs)]
       NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
       Ok rs st      -> do
-         json <- encodeType enc Tp.State st
+         json <- encodeType enc stateTp st
          return $ Object [("result", String "Ok"), ("rules", Array $ map (String . name) rs), ("state", json)]
       Detour rs st  -> do
-         json <- encodeType enc Tp.State st
+         json <- encodeType enc stateTp st
          return $ Object [("result", String "Detour"), ("rules", Array $ map (String . name) rs), ("state", json)]
       Unknown st    -> do
-         json <- encodeType enc Tp.State st
+         json <- encodeType enc stateTp st
          return $ Object [("result", String "Unknown"), ("state", json)]
 
 jsonTuple :: [JSON] -> JSON

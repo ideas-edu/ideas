@@ -25,7 +25,7 @@ import Common.Transformation
 import Common.Utils
 import Data.Char
 import Data.Maybe
-import Service.Types hiding (State)
+import Service.Types
 import Service.ExercisePackage (ExercisePackage, fromOpenMath, exercise)
 import Service.TypedAbstractService (State(..), stepsremaining)
 import Text.XML hiding (name)

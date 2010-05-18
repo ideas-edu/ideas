@@ -22,7 +22,7 @@ import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils (safeHead)
 import Data.Maybe
-import Service.Types hiding (State)
+import Service.Types
 import Service.TypedAbstractService
 import qualified Service.Types as Tp
 
@@ -133,7 +133,7 @@ diagnosisTypeSynonym = typeSynonym "Diagnosis" to from tp
    
    tp  =  Rule
       :|: Unit
-      :|: Pair   Bool Tp.State
-      :|: tuple3 Bool Tp.State Rule
-      :|: tuple3 Bool Tp.State Rule
-      :|: Pair   Bool Tp.State
+      :|: Pair   Bool stateTp
+      :|: tuple3 Bool stateTp Rule
+      :|: tuple3 Bool stateTp Rule
+      :|: Pair   Bool stateTp

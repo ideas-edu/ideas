@@ -18,14 +18,15 @@ module Session
    , stepText, nextStep, ruleNames, currentState, getDerivation, currentCode
    ) where
 
-import qualified Service.TypedAbstractService as TAS
+import Service.BasicServices
+import Service.State
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
 import Service.ExercisePackage (getExerciseText, ExercisePackage)
 import qualified Service.ExercisePackage as Pkg
 import Common.Context
-import Common.Exercise hiding (showDerivation)
+import Common.Exercise hiding (generate, showDerivation)
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils
@@ -73,7 +74,7 @@ thisExercise txt ref = do
    case parser ex txt of
       Left _  -> return ()
       Right a -> do
-         let new = makeDerivation $ TAS.State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = makeDerivation $ State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ ss {getDerivation = new}
 
 thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
@@ -82,7 +83,7 @@ thisExerciseFor txt (Some pkg) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = makeDerivation $ TAS.State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = makeDerivation $ State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ SessionState pkg new
          return Nothing         
     
@@ -96,14 +97,14 @@ suggestTerm dif ref = do
    Some ss <- getValue ref
    let pkg = getPackage ss  
        ex  = Pkg.exercise pkg
-   ca <- TAS.generate pkg dif
-   a  <- fromContext $ TAS.context ca
+   ca <- generate pkg dif
+   a  <- fromContext $ context ca
    return $ prettyPrinter ex a
 
 suggestTermFor :: Int -> Some ExercisePackage -> IO String
 suggestTermFor dif (Some pkg) = do
-   ca <- TAS.generate pkg dif
-   a  <- fromContext $ TAS.context ca
+   ca <- generate pkg dif
+   a  <- fromContext $ context ca
    return $ prettyPrinter (Pkg.exercise pkg) a
        
 undo :: Session -> IO ()
@@ -159,12 +160,12 @@ derivationText = withDerivation $ \d ->
 progressPair :: Session -> IO (Int, Int)
 progressPair = withDerivation $ \d -> 
    let x = derivationLength d
-       y = fromMaybe 0 (TAS.stepsremaining (currentState d))
+       y = fromMaybe 0 (stepsremaining (currentState d))
    in return (x, x+y)
 
 readyText :: Session -> IO String
 readyText = withDerivation $ \d -> 
-   if TAS.ready (currentState d)
+   if ready (currentState d)
    then return "Congratulations: you have reached a solution!"
    else return "Sorry, you have not yet reached a solution"
 
@@ -175,7 +176,7 @@ hintOrStep verbose ref = do
        showRule r = fromMaybe ("rule " ++ name r) $ do 
           exText <- getExerciseText (getPackage ss)
           ruleText exText r
-   case TAS.allfirsts (currentState d) of
+   case allfirsts (currentState d) of
       Left msg ->
          return ("Error: " ++ msg)
       Right [] -> 
@@ -189,7 +190,7 @@ hintOrStep verbose ref = do
             , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
             ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter (exercise d) (TAS.term s)
+            , prettyPrinter (exercise d) (term s)
             ] else []
 
 hintText, stepText :: Session -> IO String
@@ -200,7 +201,7 @@ nextStep :: Session -> IO String
 nextStep ref = do
    Some ss <- getValue ref
    let d = getDerivation ss
-   case TAS.allfirsts (currentState d) of
+   case allfirsts (currentState d) of
       Left msg ->
          return ("Error: " ++ msg)
       Right [] -> 
@@ -231,8 +232,8 @@ applyRuleAtIndex i mloc args ref = do
        newRule = fromMaybe rule (useArguments args rule)
        loc     = fromMaybe (makeLocation []) mloc
        results = applyAll newRule (setLocation loc $ current d)
-       answers = TAS.allfirsts (currentState d)
-       check (r, _, s) = name r==name rule && any (similarity a (TAS.term s) . fromContext) results
+       answers = allfirsts (currentState d)
+       check (r, _, s) = name r==name rule && any (similarity a (term s) . fromContext) results
        thisRule (r, _, _) = name r==name rule
    case safeHead (filter check answers) of
       Just (_, _, new) -> do
@@ -250,38 +251,38 @@ applyRuleAtIndex i mloc args ref = do
 -- Session state
 
 exercise :: Derivation a -> Exercise a
-exercise (D (s:_)) = TAS.exercise s
+exercise (D (s:_)) = Pkg.exercise (exercisePkg s)
 exercise _ = error "Session.exercise: empty list"
 
 --------------------------------------------------
 -- Derivations
 
-newtype Derivation a = D [TAS.State a]
+newtype Derivation a = D [State a]
 
 startNewDerivation :: Int -> ExercisePackage a -> IO (Derivation a)
 startNewDerivation dif pkg = do 
-   state <- TAS.generate pkg dif
+   state <- generate pkg dif
    return $ makeDerivation state
 
-makeDerivation :: TAS.State a -> Derivation a
+makeDerivation :: State a -> Derivation a
 makeDerivation state = D [state]
 
 undoLast :: Derivation a -> Derivation a
 undoLast (D [x]) = D [x]
 undoLast (D xs)  = D (drop 1 xs)
 
-extendDerivation :: TAS.State a -> Derivation a -> Derivation a
+extendDerivation :: State a -> Derivation a -> Derivation a
 extendDerivation x (D xs) = D (x:xs)
 
 current :: Derivation a -> Context a
-current (D (s:_)) = TAS.context s
+current (D (s:_)) = context s
 current _ = error "Session.current: empty list"
 
-currentState :: Derivation a -> TAS.State a
+currentState :: Derivation a -> State a
 currentState (D xs) = head xs
 
 showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (TAS.term s) | s <- xs ] 
+showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (term s) | s <- xs ] 
 
 derivationLength :: Derivation a -> Int
 derivationLength (D xs) = length xs - 1

@@ -21,7 +21,7 @@ import Common.Strategy (makePrefix)
 import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.Request
-import qualified Service.TypedAbstractService as TAS
+import Service.State
 import qualified Service.Types as Tp
 import Service.Types hiding (String)
 import Service.Submit
@@ -113,8 +113,8 @@ jsonEncoder ex = Encoder
                  encodeResult enc result
                          | s == "elem" -> 
                  encode enc t a
-                         | s == "state" -> do
-                 st <- isSynonym Tp.stateTypeSynonym (a ::: serviceType)
+                         | s == "State" -> do
+                 st <- isSynonym stateTypeSynonym (a ::: serviceType)
                  encodeState (encodeTerm enc) st
                  
               Tp.List t    -> liftM Array (mapM (encode enc t) a)
@@ -158,8 +158,8 @@ jsonDecoder pkg = Decoder
          Tp.String   -> useFirst $ \json -> case json of 
                                                String s -> return s
                                                _        -> fail "not a string"
-         Tp.Tag s _ | s == "state" -> do 
-            f <- equalM Tp.stateTp serviceType
+         Tp.Tag s _ | s == "State" -> do 
+            f <- equalM stateTp serviceType
             useFirst (liftM f . decodeState (decoderPackage dec) (decodeTerm dec))
          _ -> decodeDefault dec serviceType
    
@@ -175,14 +175,14 @@ decodeLocation _          = fail "expecting a string for a location"
 
 --------------------------
 
-encodeState :: Monad m => (a -> m JSON) -> TAS.State a -> m JSON
+encodeState :: Monad m => (a -> m JSON) -> State a -> m JSON
 encodeState f st = do 
-   theTerm <- f (TAS.term st)
+   theTerm <- f (term st)
    return $ Array
-      [ String (show (exerciseCode (TAS.exercise st)))
-      , String (maybe "NoPrefix" show (TAS.prefix st))
+      [ String (show (exerciseCode (exercise (exercisePkg st))))
+      , String (maybe "NoPrefix" show (prefix st))
       , theTerm
-      , encodeContext (getEnvironment (TAS.context st))
+      , encodeContext (getEnvironment (context st))
       ]
 
 encodeContext :: Environment -> JSON
@@ -190,16 +190,16 @@ encodeContext env = Object (map f (keysEnv env))
  where
    f k = (k, String $ fromMaybe "" $ lookupEnv k env)
 
-decodeState :: Monad m => ExercisePackage a -> (JSON -> m a) -> JSON -> m (TAS.State a)
+decodeState :: Monad m => ExercisePackage a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState pkg f (Array [a]) = decodeState pkg f a
 decodeState pkg f (Array [String _code, String p, ce, jsonContext]) = do
    let ex = exercise pkg
    a    <- f ce 
    env  <- decodeContext jsonContext
-   return TAS.State 
-      { TAS.exercisePkg = pkg
-      , TAS.prefix      = readM p >>= (`makePrefix` strategy ex)
-      , TAS.context     = makeContext ex env a
+   return State 
+      { exercisePkg = pkg
+      , prefix      = readM p >>= (`makePrefix` strategy ex)
+      , context     = makeContext ex env a
       }
 decodeState _ _ s = fail $ "invalid state" ++ show s
 
@@ -214,7 +214,7 @@ decodeContext json = fail $ "invalid context: " ++ show json
 encodeResult :: Encoder JSON a -> Result a -> DomainReasoner JSON
 encodeResult enc result =
    case result of
-      -- TAS.SyntaxError _ -> [("result", String "SyntaxError")]
+      -- SyntaxError _ -> [("result", String "SyntaxError")]
       Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . name) rs)]
       NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
       Ok rs st      -> do

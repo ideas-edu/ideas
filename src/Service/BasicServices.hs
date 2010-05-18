@@ -9,11 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Service.TypedAbstractService 
-   ( -- * Exercise state
-     State(..), emptyState, exercise, term
-     -- * Services
-   , stepsremaining, findbuggyrules, ready, allfirsts, derivation
+module Service.BasicServices 
+   ( -- * Basic Services
+     stepsremaining, findbuggyrules, ready, allfirsts, derivation
    , onefirst, applicable, apply, generate, generateWith
    ) where
 
@@ -28,32 +26,9 @@ import Data.List
 import Data.Maybe
 import System.Random
 import Control.Monad
-import Service.ExercisePackage (ExercisePackage)
+import Service.ExercisePackage
+import Service.State
 import qualified Common.Apply as Apply
-import qualified Service.ExercisePackage as Pkg
-
-data State a = State 
-   { exercisePkg :: ExercisePackage a
-   , prefix      :: Maybe (Prefix (Context a))
-   , context     :: Context a
-   }
-
-exercise :: State a -> Exercise a
-exercise = Pkg.exercise . exercisePkg
-
-term :: State a -> a
-term = fromMaybe (error "invalid term") . fromContext . context
-
------------------------------------------------------------
-
-emptyState :: ExercisePackage a -> a -> State a
-emptyState pkg a = State
-   { exercisePkg = pkg
-   , prefix      = Just (emptyPrefix (strategy ex))
-   , context     = inContext ex a
-   }
- where
-   ex = Pkg.exercise pkg
       
 -- result must be in the IO monad to access a standard random number generator
 generate :: ExercisePackage a -> Int -> IO (State a)
@@ -63,8 +38,7 @@ generate pkg level = do
 
 generateWith :: StdGen -> ExercisePackage a -> Int -> State a
 generateWith rng pkg level = 
-   let ex = Pkg.exercise pkg
-   in emptyState pkg (randomTermWith rng level ex)
+   emptyState pkg (randomTermWith rng level (exercise pkg))
 
 derivation :: Monad m => Maybe StrategyConfiguration -> State a -> m [(Rule (Context a), Context a)]
 derivation mcfg state =
@@ -74,8 +48,9 @@ derivation mcfg state =
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
       (Just p, Just cfg) | null (prefixToSteps p) -> 
-         let newStrategy   = configure cfg $ strategy $ exercise state
-             updatePkg pkg = pkg {Pkg.exercise = updateEx (Pkg.exercise pkg)}
+         let oldStrategy   = strategy (exercise (exercisePkg state))
+             newStrategy   = configure cfg oldStrategy
+             updatePkg pkg = pkg {exercise = updateEx (exercise pkg)}
              updateEx  ex  = ex  {strategy = newStrategy} 
          in rec state 
                { prefix      = Just (emptyPrefix newStrategy)
@@ -98,7 +73,8 @@ allfirsts state =
          fail "Prefix is required"
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (context state))
-             f (r1, _, _) (r2, _, _) = ruleOrdering (exercise state) r1 r2
+             f (r1, _, _) (r2, _, _) = 
+                ruleOrdering (exercise (exercisePkg state)) r1 r2
          in return (sortBy f (mapMaybe make (derivations tree)))
  where
    stop (Just (Step r)) = isMajorRule r
@@ -127,7 +103,7 @@ onefirst state = do
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
    let check r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (context state))
-   in filter check (ruleset (exercise state))
+   in filter check (ruleset (exercise (exercisePkg state)))
 
 -- local helper
 setLocation :: Location -> Context a -> Context a 
@@ -150,14 +126,14 @@ apply r loc state = maybe applyOff applyOn (prefix state)
          Nothing  -> fail ("Cannot apply " ++ show r)
        
 ready :: State a -> Bool
-ready state = isReady (exercise state) (term state)
+ready state = isReady (exercise (exercisePkg state)) (term state)
 
 stepsremaining :: Monad m => State a -> m Int
 stepsremaining = liftM length . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
-   let ex      = exercise state
+   let ex      = exercise (exercisePkg state)
        buggies = filter isBuggyRule (ruleset ex)
        check r = recognizeRule ex r (context state) (inContext ex a)
    in filter check buggies

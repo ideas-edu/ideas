@@ -16,22 +16,18 @@ module Service.Types
    , serviceName, serviceDescription, serviceDeprecated, serviceFunction
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
-   , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym, stateTp
-   , stateTypeSynonym, equalM
+   , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym
+   , equalM
    ) where
 
 import Common.Context (Context)
 import Common.Navigator (Location)
 import Common.Transformation (Rule)
 import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
-import Common.Utils (commaList, readM)
+import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
 import Service.ExercisePackage
-import Service.TypedAbstractService (State)
-import qualified Service.TypedAbstractService as TAS
-import Common.Strategy (makePrefix)
-import Common.Exercise (strategy)
 
 -----------------------------------------------------------------------------
 -- Services
@@ -109,23 +105,6 @@ errorTp t = Iso f g (t :|: IO Unit)
  where
    f = either Right (const (Left "errorTp"))
    g = either (Right . fail) Left
-
-stateTp :: Type a (State a)
-stateTp = useSynonym stateTypeSynonym
-
-stateTypeSynonym :: TypeSynonym a (State a)
-stateTypeSynonym = typeSynonym "state" to from tp
- where
-   to (pkg, mp, ctx) =
-      let str = strategy (exercise pkg)
-          f   = fromMaybe [] . readM
-      in TAS.State pkg (mp >>= flip makePrefix str . f) ctx
-   from st = 
-      ( TAS.exercisePkg st
-      , fmap show (TAS.prefix st)
-      , TAS.context st
-      )
-   tp = tuple3 ExercisePkg (maybeTp String) Context
 
 data Type a t where
    -- Type isomorphisms (for defining type synonyms)

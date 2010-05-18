@@ -22,9 +22,10 @@ import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils (safeHead)
 import Data.Maybe
+import Service.ExercisePackage
+import Service.State
+import Service.BasicServices
 import Service.Types
-import Service.TypedAbstractService
-import qualified Service.Types as Tp
 
 ----------------------------------------------------------------
 -- Result types for diagnose service
@@ -73,7 +74,7 @@ diagnose state new
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
-   ex = exercise state
+   ex = exercise (exercisePkg state)
    
    expected = do
       xs <- allfirsts (restartIfNeeded state)
@@ -99,17 +100,17 @@ diagnose state new
 -- Make sure that the new state has a prefix
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
-restartIfNeeded s 
-   | isNothing (prefix s) && canBeRestarted ex = 
-        case fromContext (context s) of 
-           Just a -> s
+restartIfNeeded state 
+   | isNothing (prefix state) && canBeRestarted ex = 
+        case fromContext (context state) of 
+           Just a -> state
               { prefix  = Just (emptyPrefix (strategy ex))
               , context = inContext ex a
               } 
-           Nothing -> s
-   | otherwise = s
+           Nothing -> state
+   | otherwise = state
  where
-   ex = exercise s
+   ex = exercise (exercisePkg state)
    
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = useSynonym diagnosisTypeSynonym

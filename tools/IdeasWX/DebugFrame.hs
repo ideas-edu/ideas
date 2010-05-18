@@ -15,7 +15,8 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore (windowDestroy)
 import Session
 import Observable
-import Service.TypedAbstractService
+import Service.BasicServices
+import Service.State
 import Common.Strategy
 
 debugFrame :: Session -> IO ()

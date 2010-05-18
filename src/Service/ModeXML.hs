@@ -31,7 +31,7 @@ import Service.ProblemDecomposition
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
 import Service.StrategyInfo
-import Service.TypedAbstractService hiding (exercise)
+import Service.State
 import Service.Diagnose
 import Service.Types
 import qualified Service.Types as Tp
@@ -175,7 +175,7 @@ xmlEncoder b f ex = Encoder
                  encodeDiagnosis b (encodeTerm enc) d
             | s == "RulesInfo" -> \_ ->
                  rulesInfoXML ex (encodeTerm enc)
-            | s == "state" -> \a -> do
+            | s == "State" -> \a -> do
                  st <- isSynonym stateTypeSynonym (a ::: serviceType)
                  encodeState b (encodeTerm enc) st
          Tp.List t1  -> \xs -> 
@@ -215,8 +215,8 @@ xmlDecoder b f pkg = Decoder
          Tp.Term        -> leave $ decodeTerm dec
          Tp.StrategyCfg -> decodeConfiguration
          Tp.Tag s _   
-            | s == "state" -> \xml -> do 
-                 f  <- equalM Tp.stateTp serviceType
+            | s == "State" -> \xml -> do 
+                 f  <- equalM stateTp serviceType
                  st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
                  return (f st, xml)
          _ -> decodeDefault dec serviceType
@@ -301,15 +301,18 @@ decodeConfiguration xml =
       cfgloc <- findAttribute "name" item
       return $ (ByName cfgloc, action)
 
-
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
-encodeState b f state = f (term state) >>= \body -> return $
-   element "state" $ do
-      element "prefix"  (text $ maybe "no prefix" show (prefix state))
+encodeState b f state = do
+   body <- f (term state)
+   return $ element "state" $ do
+      encodePrefix (prefix state)
       let env = getEnvironment (context state)
       encodeEnvironment b (location (context state)) env
       body
 
+encodePrefix :: Maybe (Prefix a) -> XMLBuilder
+encodePrefix = element "prefix"  . text . maybe "no prefix" show
+   
 encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
 encodeEnvironment b loc env0
    | nullEnv env = return ()

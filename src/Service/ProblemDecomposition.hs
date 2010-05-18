@@ -18,20 +18,21 @@ module Service.ProblemDecomposition
 
 import Common.Apply
 import Common.Context
-import Common.Exercise
 import Common.Derivation
+import Common.Exercise
 import Common.Strategy hiding (not, repeat, fail)
 import Common.Transformation 
 import Common.Utils
+import Control.Monad
 import Data.Char
 import Data.Maybe
+import Service.BasicServices (stepsremaining)
+import Service.ExercisePackage
+import Service.State
 import Service.Types
-import Service.ExercisePackage (ExercisePackage, fromOpenMath, exercise)
-import Service.TypedAbstractService (State(..), stepsremaining)
+import Text.OpenMath.Object
 import Text.XML hiding (name)
 import qualified Text.XML as XML
-import Control.Monad
-import Text.OpenMath.Object
 
 replyError :: String -> String -> Reply a
 replyError kind = Error . ReplyError kind

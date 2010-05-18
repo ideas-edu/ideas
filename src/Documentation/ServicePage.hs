@@ -17,7 +17,7 @@ import Service.ExercisePackage
 import Service.TypedExample
 import Service.Types
 import Service.DomainReasoner
-import Service.TypedAbstractService (emptyState)
+import Service.State
 import Text.HTML
 import qualified Text.XML as XML
 import Text.XML (XML)

@@ -17,7 +17,8 @@ import Common.Transformation
 import Service.ExercisePackage
 import Service.StrategyInfo
 import Service.DomainReasoner
-import Service.TypedAbstractService hiding (exercise)
+import Service.State
+import Service.BasicServices
 import Control.Monad
 import Data.List
 import Common.Utils (commaList, Some(..))

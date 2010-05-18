@@ -20,7 +20,7 @@ import Common.Transformation
 import Common.Context
 import qualified Service.Diagnose as Diagnose
 import Service.Diagnose (Diagnosis, diagnose)
-import Service.TypedAbstractService
+import Service.State
 import Service.Types
 
 -- Note that in the typed setting there is no syntax error

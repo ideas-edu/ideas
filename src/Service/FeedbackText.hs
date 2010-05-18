@@ -18,13 +18,14 @@ import Control.Arrow
 import Common.Context
 import Common.Exercise
 import Common.Transformation
-import Common.Utils
 import Data.Maybe
+import Common.Utils
 import Service.Diagnose (restartIfNeeded)
-import Service.ExercisePackage hiding (exercise)
+import Service.ExercisePackage
+import Service.State
 import Service.Submit
-import Service.TypedAbstractService
-
+import Service.BasicServices
+ 
 ------------------------------------------------------------
 -- Services
 
@@ -50,7 +51,7 @@ submittext :: Monad m => State a -> String -> Maybe String -> m (Bool, String, S
 submittext state txt _event = do
    exText <- exerciseText state
    return $
-      case parser (exercise state) txt of
+      case parser (exercise (exercisePkg state)) txt of
          Left err -> 
             (False, feedbackSyntaxError exText err, state)
          Right a  -> 
@@ -104,7 +105,7 @@ youRewroteInto = rewriteIntoText False "You rewrote "
 
 rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
 rewriteIntoText mode txt old a = do
-   let ex = exercise old
+   let ex = exercise (exercisePkg old)
    p <- fromContext (context old)
    (p1, a1) <- difference ex mode p a 
    return $ txt ++ prettyPrinter ex p1 

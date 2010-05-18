@@ -22,9 +22,10 @@ import Service.ProblemDecomposition (problemDecomposition, replyType)
 import Service.ExercisePackage
 import Service.Types
 import Service.RulesInfo
+import Service.State
+import Service.BasicServices
 import qualified Service.Diagnose as Diagnose
 import qualified Service.Submit as Submit
-import Service.TypedAbstractService hiding (State, exercise)
 
 ------------------------------------------------------
 -- Querying a service

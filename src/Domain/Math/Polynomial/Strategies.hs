@@ -110,13 +110,14 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
             toStrategy $ liftToContext (ruleMulti ruleApproximate))
 
    topForm = label "top form" $
-      ( ruleOnce2 (ruleSomewhere merge) 
-        <|> ruleOnce cancelTerms  
-        <|> sameFactor <|> ruleOnce sameConFactor
+        (ruleOnce cancelTerms  <|> sameFactor)
+      |> (  ruleOnce sameConFactor
+        <|> ruleOnce2  (ruleSomewhere merge) 
         <|> ruleMulti2 (ruleSomewhere distributionSquare)
         <|> ruleMulti2 distributeTimesSomewhere 
         <|> ruleMulti2 (ruleSomewhere distributeDivision)
-        <|> ruleOnce flipEquation)
+        <|> ruleOnce flipEquation
+         )
       |> (ruleOnce moveToLeft <|> remove (ruleOnce prepareSplitSquare))
    -- to do: find a better location in the strategy for splitting the square
    

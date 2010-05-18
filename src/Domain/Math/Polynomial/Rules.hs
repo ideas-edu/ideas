@@ -70,6 +70,16 @@ higherDegreeRules =
    [ allPowerFactors, sameFactor
    ] ++ quadraticRules
 
+quadraticRuleOrder :: [String]
+quadraticRuleOrder = 
+   [ name coverUpTimes, name (coverUpMinusRightWith oneVar)
+   , name (coverUpMinusLeftWith oneVar), name (coverUpPlusWith oneVar)
+   , name coverUpPower
+   , name simplerPolynomial
+   , name commonFactorVar, name niceFactors, name noLinFormula
+   , name cancelTerms, name sameConFactor, name distributionSquare
+   ]
+
 ------------------------------------------------------------
 -- General form rules: ax^2 + bx + c = 0
 
@@ -433,7 +443,7 @@ exposeSameFactor = makeSimpleRuleList "expose same factor" $ \(lhs :==: rhs) -> 
    expose a b = do
       (s1, p1) <- matchM (polyViewWith rationalView) a
       (s2, p2) <- matchM (polyViewWith rationalView) b
-      guard (s1==s2)
+      guard (s1==s2 && p1/=p2)
       case P.division p2 p1 of
          Just p3 -> return $ map (\p -> build (polyViewWith rationalView) (s1,p)) [p1, p3]
          Nothing -> []

@@ -98,7 +98,8 @@ allfirsts state =
          fail "Prefix is required"
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (context state))
-         in return (mapMaybe make (derivations tree))
+             f (r1, _, _) (r2, _, _) = ruleOrdering (exercise state) r1 r2
+         in return (sortBy f (mapMaybe make (derivations tree)))
  where
    stop (Just (Step r)) = isMajorRule r
    stop _ = False
@@ -119,11 +120,9 @@ allfirsts state =
 onefirst :: Monad m => State a -> m (Rule (Context a), Location, State a)
 onefirst state = do
    xs <- allfirsts state
-   case sortBy f xs of
+   case xs of
       hd:_ -> return hd
       []   -> fail "No step possible"
- where
-   f (r1, _, _) (r2, _, _) = ruleOrdering (exercise state) r1 r2
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =

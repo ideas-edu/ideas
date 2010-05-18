@@ -88,12 +88,7 @@ quadraticExercise = makeExercise
                        quadraticRules ++ abcBuggyRules ++
                        buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
-   , ruleOrdering = ruleNameOrderingWith
-                       [ name coverUpTimes, name coverUpPower
-                       , name simplerPolynomial, name commonFactorVar
-                       , name niceFactors, name noLinFormula, name cancelTerms
-                       , name sameConFactor, name distributionSquare
-                       ]
+   , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
    , strategy     = quadraticStrategy
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
@@ -112,7 +107,7 @@ higherDegreeExercise = makeExercise
    , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
                      higherDegreeRules ++ abcBuggyRules ++
                      map ruleOnce buggyRulesEquation
-   , ruleOrdering  = \_ _ -> LT
+   , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , examples      = map (orList . return . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])

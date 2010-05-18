@@ -22,6 +22,7 @@ import Common.Exercise
 import Common.Navigator
 import Common.Rewriting (differenceMode)
 import Common.Strategy
+import Common.Transformation
 import Data.Maybe
 import Domain.Logic.BuggyRules
 import Domain.Logic.Formula

@@ -67,12 +67,7 @@ ineqQuadraticExercise = makeExercise
    , eqWithContext = Just quadrEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqQuadratic
-   , ruleOrdering  = ruleNameOrderingWith
-                       [ name coverUpTimes, name coverUpPower
-                       , name simplerPolynomial, name commonFactorVar
-                       , name niceFactors, name noLinFormula, name cancelTerms
-                       , name sameConFactor, name distributionSquare
-                       ]
+   , ruleOrdering  = ruleNameOrderingWith quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
    }
@@ -88,6 +83,7 @@ ineqHigherDegreeExercise = makeExercise
    , eqWithContext = Just highEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqHigherDegree
+   , ruleOrdering  = ruleNameOrderingWith quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
 

@@ -21,7 +21,7 @@ module Common.View
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
    , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
-   , listView, switchView, ( #> ), associativeView
+   , swapView, listView, switchView, ( #> ), associativeView
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
@@ -155,6 +155,11 @@ viewList v = makeView (crush . match v) (build v)
 
 ---------------------------------------------------------------
 -- Some combinators
+
+swapView :: View (a, b) (b, a)
+swapView = 
+   let swap (a, b) = (b, a)
+   in biArr swap swap
 
 listView :: Monad m => ViewM m a b -> ViewM m [a] [b]
 listView v = makeView (mapM (match v)) (map (build v))

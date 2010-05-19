@@ -20,7 +20,7 @@ module Domain.Math.Data.OrList
 import Common.View
 import Control.Monad
 import Common.Traversable
-import Common.Rewriting.Term
+import Common.Rewriting
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
@@ -73,6 +73,8 @@ idempotent (OrList xs) = OrList (nub xs)
 -- local helper
 joinOr :: OrList (OrList a) -> OrList a
 joinOr = maybe T (foldr (\/) false) . disjunctions
+
+instance Rewrite a => Rewrite (OrList a)
 
 instance Functor OrList where
    fmap _ T           = T

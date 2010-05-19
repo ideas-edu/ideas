@@ -7,7 +7,7 @@ VERSION = 0.6.2
 
 include Makefile.incl
 
-binaries: ideas ideasWX omconverter
+binaries: ideas ideasWX
 
 ideas: $(BINDIR)/ideas.cgi
 omconverter: $(BINDIR)/omconverter$(EXE)

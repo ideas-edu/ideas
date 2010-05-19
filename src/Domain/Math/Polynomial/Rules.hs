@@ -28,6 +28,7 @@ import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
+import Domain.Math.Equation.BalanceRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
@@ -37,38 +38,6 @@ import Domain.Math.Simplification
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.Polynomial as P
 import qualified Domain.Math.SquareRoot.Views as SQ
-
-------------------------------------------------------------
--- Rule collection
-
-linearRules :: [Rule (Context (Equation Expr))]
-linearRules = map liftToContext $
-   [ removeDivision, ruleMulti merge, ruleMulti distributeTimesSomewhere
-   , varToLeft, coverUpNegate, coverUpTimes
-   ] ++
-   map ($ oneVar) 
-   [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith]
-
-
-quadraticRules :: [Rule (OrList (Equation Expr))]
-quadraticRules = -- abcFormula
-   [ ruleOnce commonFactorVar, ruleOnce noLinFormula, ruleOnce niceFactors
-   , ruleOnce simplerPolynomial, mulZero, coverUpPower, squareBothSides
-   ] ++
-   map (ruleOnce . ($ oneVar)) 
-     [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith] ++
-   [ ruleOnce coverUpTimes, ruleOnce coverUpNegate, ruleOnce coverUpNumerator
-   , ruleOnce prepareSplitSquare, ruleOnce factorLeftAsSquare
-   , ruleOnce2 (ruleSomewhere merge), ruleOnce cancelTerms
-   , ruleOnce2 distributeTimesSomewhere
-   , ruleOnce2 (ruleSomewhere distributionSquare), ruleOnce flipEquation 
-   , ruleOnce moveToLeft, ruleMulti2 (ruleSomewhere simplerSquareRoot)
-   ]
-   
-higherDegreeRules :: [Rule (OrList (Equation Expr))]
-higherDegreeRules = 
-   [ allPowerFactors, sameFactor
-   ] ++ quadraticRules
 
 quadraticRuleOrder :: [String]
 quadraticRuleOrder = 
@@ -223,7 +192,6 @@ simplerSquareRoot = makeSimpleRule "simpler square root" $ \e -> do
    -- return numbers under sqrt symbol
    f :: Expr -> Maybe [Rational]
    f e = liftM sort $ sequence [ match rationalView e | Sqrt e <- universe e ]
- 
 
 cancelTerms :: Rule (Equation Expr)
 cancelTerms = makeSimpleRule "cancel terms" $ \(lhs :==: rhs) -> do
@@ -285,13 +253,16 @@ flipEquation = doBeforeTrans condition $
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)
 moveToLeft = makeSimpleRule "move to left" $ \(lhs :==: rhs) -> do
-   guard (rhs /= 0)
-   let complex = case fmap (filter hasVars) $ match sumView (applyD merge lhs) of
-                    Just xs | length xs >= 2 -> True
-                    _ -> False
-   guard (hasVars lhs && (hasVars rhs || complex))
-   let new = applyD mergeT $ applyD sortT $ lhs - rhs
-   return (new :==: 0)
+   guard (rhs /= 0 && hasVars lhs && (hasVars rhs || isComplex lhs))
+   return (collectLikeTerms (sorted (lhs - rhs)) :==: 0)
+ where
+   isComplex = maybe False ((>= 2) . length . filter hasVars) 
+             . match sumView . applyD merge
+ 
+   -- high exponents first, non power-factor terms at the end
+   sorted = simplifyWith (sortBy f) sumView
+   f a b  = toPF a `compare` toPF b
+   toPF   = fmap (negate . thd3) . match powerFactorView
 
 ruleApproximate :: Rule (Relation Expr)
 ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
@@ -451,24 +422,14 @@ exposeSameFactor = makeSimpleRuleList "expose same factor" $ \(lhs :==: rhs) -> 
 ---------------------------------------------------------
 -- From LinearEquations
 
--------------------------------------------------------
--- Transformations
-
-plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
-plusT  e = makeTrans $ return . fmap (applyD mergeT . (.+. e))
-minusT e = makeTrans $ return . fmap (applyD mergeT . (.-. e))
-
-timesT :: Functor f => Expr -> Transformation (f Expr)
-timesT e = makeTrans $ \eq -> do 
-   r <- match rationalView e
-   guard (r /= 0)
-   return $ fmap (applyD mergeT . applyD distributionOldT . (e .*.)) eq
-
-divisionT :: Expr -> Transformation (Equation Expr)
-divisionT e = makeTrans $ \eq -> do
-   r <- match rationalView e
-   guard (r /= 0)
-   return $ fmap (applyD mergeT . applyD distributionOldT . (./. e)) eq
+-- Only used for cleaning up
+distributeAll :: Expr -> Expr
+distributeAll expr = 
+   case expr of 
+      a :*: b -> let as = fromMaybe [a] (match sumView a)
+                     bs = fromMaybe [b] (match sumView b)
+                 in build sumView [ a .*. b | a <- as, b <- bs ]
+      _ -> expr
 
 -- This rule should consider the associativity of multiplication
 -- Combine bottom-up, for example:  5*(x-5)*(x+5) 
@@ -498,45 +459,35 @@ distributionT = makeTransList f
       guard (length as > 1 || length bs > 1)
       return $ build sumView [ a .*. b | a <- as, b <- bs ]
 
-mergeT :: Transformation Expr
-mergeT = makeTrans $ return . collectLikeTerms
-
--- high exponents first, non power-factor terms at the end
-sortT :: Transformation Expr
-sortT = makeTrans $ \e -> do
-   xs <- match sumView e
-   let f  = fmap (negate . thd3) . match powerFactorView
-       ps = sortBy cmp $ zip xs (map f xs)
-       cmp (_, ma) (_, mb) = compare ma mb
-   return $ build sumView $ map fst ps
-   
 -------------------------------------------------------
 -- Rewrite Rules
 
 varToLeft :: Relational f => Rule (f Expr)
-varToLeft = makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
-   (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
-   guard (a/=0)
-   return (fromRational a * Var x)
+varToLeft = doAfter (fmap collectLikeTerms) $ 
+   makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
+      (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
+      guard (a/=0)
+      return (fromRational a * Var x)
 
 -- factor is always positive due to lcm function
 removeDivision :: Relational r => Rule (r Expr)
-removeDivision = makeRule "remove division" $ flip supply1 timesT $ \eq -> do
-   xs <- match sumView (leftHandSide eq)
-   ys <- match sumView (rightHandSide eq)
-   -- also consider parts without variables
-   -- (but at least one participant should have a variable)
-   zs <- forM (xs ++ ys) $ \a -> do
-            (_, list) <- match productView a
-            return [ (hasVars a, e) | e <- list ]
-   let f (b, e) = do 
-          (_, this) <- match (divView >>> second integerView) e
-          return (b, this)
-   case mapMaybe f (concat zs) of
-      [] -> Nothing
-      ps -> let (bs, ns) = unzip ps
-            in if or bs then return (fromInteger (foldr1 lcm ns))
-                        else Nothing
+removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
+   makeRule "remove division" $ flip supply1 timesT $ \eq -> do
+      xs <- match sumView (leftHandSide eq)
+      ys <- match sumView (rightHandSide eq)
+      -- also consider parts without variables
+      -- (but at least one participant should have a variable)
+      zs <- forM (xs ++ ys) $ \a -> do
+               (_, list) <- match productView a
+               return [ (hasVars a, e) | e <- list ]
+      let f (b, e) = do 
+             (_, this) <- match (divView >>> second integerView) e
+             return (b, this)
+      case mapMaybe f (concat zs) of
+         [] -> Nothing
+         ps -> let (bs, ns) = unzip ps
+               in if or bs then return (fromInteger (foldr1 lcm ns))
+                           else Nothing
 
 -- Bug fix for distribution in -2*(x+1)    (duplicate result)
 -- This should be a temporary fix
@@ -547,7 +498,7 @@ distributeTimesSomewhere = makeSimpleRuleList (name distributeTimes) $
 distributeTimes :: Rule Expr
 distributeTimes = makeSimpleRuleList "distribution multiplication" $ \expr -> do
    new <- applyAll distributionT expr
-   return (applyD mergeT new)
+   return (collectLikeTerms new)
 
 distributeDivision :: Rule Expr
 distributeDivision = makeSimpleRule "distribution division" $ \expr -> do
@@ -560,21 +511,6 @@ distributeDivision = makeSimpleRule "distribution division" $ \expr -> do
 
 merge :: Rule Expr
 merge = makeSimpleRule "merge similar terms" $ \old -> do
-   new <- apply mergeT old
+   let new = collectLikeTerms old
    guard (old /= new)
    return new
-   
-------------------------
--- Old
-
--- Temporary fix: here we don't care about the terms we apply it to. Only
--- use for cleaning up
-distributionOldT :: Transformation Expr
-distributionOldT = makeTrans f 
- where
-   f (a :*: b) =
-      case (match sumView a, match sumView b) of
-         (Just as, Just bs) | length as > 1 || length bs > 1 -> 
-            return $ build sumView [ a .*. b | a <- as, b <- bs ]
-         _ -> Nothing
-   f _ = Nothing

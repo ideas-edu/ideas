@@ -51,7 +51,7 @@ linearExercise = makeExercise
    , isReady      = solvedRelationWith $ \a -> 
                        a `belongsTo` mixedFractionNormalForm || 
                        a `belongsTo` rationalNormalForm
-   , extraRules   = map liftToContext buggyRulesEquation ++ linearRules
+   , extraRules   = map liftToContext buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith 
                        [ name coverUpTimes, name flipEquation
                        , name (removeDivision :: Rule (Equation Expr))
@@ -85,8 +85,7 @@ quadraticExercise = makeExercise
    , isSuitable   = (`belongsTo` (switchView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
    , extraRules   = map (liftToContext . liftRule (switchView equationView)) $ 
-                       quadraticRules ++ abcBuggyRules ++
-                       buggyQuadratic ++
+                       abcBuggyRules ++ buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
    , strategy     = quadraticStrategy
@@ -105,8 +104,7 @@ higherDegreeExercise = makeExercise
    , isSuitable    = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
    , isReady       = solvedRelations
    , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
-                     higherDegreeRules ++ abcBuggyRules ++
-                     map ruleOnce buggyRulesEquation
+                     abcBuggyRules ++ map ruleOnce buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , examples      = map (orList . return . build equationView) 
@@ -140,8 +138,6 @@ quadraticWithApproximation = quadraticExercise
    cfg = [ (ByName "approximate result", Reinsert)
          , (ByName "square root simplification", Remove)
          ]
-
--- fixMe = checksForList quadraticWithApproximation
 
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise
@@ -216,14 +212,6 @@ eqRelation f x y = fmap f x == fmap f y
 normOrList :: (Relational f, Ord (f Expr)) => 
                  (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr)
 normOrList f = normalize . fmap (fmap (normExpr f))
-
-{-
-normRelation :: Relational f => (Expr -> Expr) -> f Expr -> f Expr
-normRelation f rel
-   | leftHandSide new > rightHandSide new && isSymmetric new = flipSides new
-   | otherwise = new
- where
-   new = fmap (normExpr f) rel -}
 
 normExpr :: (Expr -> Expr) -> Expr -> Expr
 normExpr f = normalizeWith [plusOperator, timesOperator] . f

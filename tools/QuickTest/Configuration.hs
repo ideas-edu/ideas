@@ -21,7 +21,7 @@ data Configuration = Cfg
    , testDirectory  :: String
    , testExtensions :: [String]
    , expExtension   :: String
-   , diffTool       :: String
+   , diffTool       :: Maybe String
    , filteredWords  :: [String]
    }
 
@@ -39,7 +39,7 @@ readConfiguration = do
       , testDirectory  = fromMaybe "." (lookup "DIRECTORY" props)
       , testExtensions = [ b | (key, a) <- props, key=="EXTENSION", b <- commas a ]
       , expExtension   = fromMaybe ".exp" (lookup "EXPECTED" props)
-      , diffTool       = fromMaybe "diff" (lookup "DIFF" props)
+      , diffTool       = lookup "DIFF" props
       , filteredWords  = [ b | (key, a) <- props, key=="FILTER", b <- commas a ]
       }
 
@@ -53,11 +53,8 @@ commandArgs file  = map f . snd . splitCommand . commandLine
    f ('%':'f':xs) = file ++ f xs
    f (x:xs)       = x:f xs
 
-diffCommand :: Configuration -> String
-diffCommand = fst . splitCommand . diffTool
-
-diffArgs :: Configuration -> [String]
-diffArgs = snd . splitCommand . diffTool
+diffCommand :: Configuration -> Maybe (String, [String])
+diffCommand = fmap splitCommand . diffTool
 
 diffFilter :: Configuration -> String -> Bool
 diffFilter cfg s = not (any (`isInfixOf` s) (filteredWords cfg))

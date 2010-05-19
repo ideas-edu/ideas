@@ -14,6 +14,7 @@
 module Main (main) where
 
 import Configuration
+import Diff
 import System.Directory
 import Data.List
 import Data.Maybe
@@ -275,13 +276,21 @@ normalizeNewlines = rec
    rec ('\r' : '\n' : xs) = '\n' : rec xs
    rec (x:xs) = x : rec xs
 
-difference :: Configuration -> FilePath -> String -> IO String
-difference cfg expFile out = do
-   (_, txt, _) <- readProcessWithExitCode (diffCommand cfg) 
-                     (diffArgs cfg ++ [expFile, "-"]) out
-   return txt
+difference :: Configuration -> Item -> IO String
+difference cfg item =
+   case diffCommand cfg of
+      Just (cmd, args1) -> do
+         (_, txt, _) <- readProcessWithExitCode cmd (args1++args2) outText
+         return txt
+      Nothing -> 
+         return (diff triple expText outText)
  `catch` 
-   \e -> return (show e)
+   \e -> return (show e) 
+ where
+   outText = outputText item
+   expText = fromMaybe "" (expectedText item)
+   triple  = ("Expected", "Output", filteredWords cfg)
+   args2   = [expectedFile item, "-"]
    
 areEquivalent :: Configuration -> String -> String -> Bool
 areEquivalent cfg s1 s2 = 
@@ -308,8 +317,8 @@ showItem cfg mode item =
       Input      -> return (inputText item)
       Output     -> return (outputText item)
       Expected   -> return (fromMaybe msg $ expectedText item)
-      Difference 
-         | hasExp    -> difference cfg (expectedFile item) (outputText item)
+      Difference
+         | hasExp    -> difference cfg item
          | otherwise -> return msg
  where 
    hasExp = isJust (expectedText item)

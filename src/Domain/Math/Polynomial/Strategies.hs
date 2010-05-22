@@ -33,11 +33,11 @@ import Domain.Math.Polynomial.CleanUp
 ------------------------------------------------------------
 -- Linear equations
 
-linearStrategy :: LabeledStrategy (Equation Expr)
-linearStrategy = linearStrategyWith False
+linearStrategy :: LabeledStrategy (Context (Equation Expr))
+linearStrategy = mapRules liftToContext (linearStrategyWith False)
 
-linearMixedStrategy :: LabeledStrategy (Equation Expr)
-linearMixedStrategy = linearStrategyWith True
+linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
+linearMixedStrategy = mapRules liftToContext (linearStrategyWith True)
 
 linearStrategyWith :: Bool -> LabeledStrategy (Equation Expr)
 linearStrategyWith mixed = cleanUpStrategy (fmap clean) $
@@ -146,15 +146,7 @@ higherDegreeStrategy =
    specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
    specialV = contextView (switchView equationView)
 
-{-
-isQ2 :: Context (OrList (Relation Expr)) -> Bool
-isQ2 = maybe False isQ . match (switchView equationView) . fromContext
-
-isQ :: OrList (Equation Expr) -> Bool
-isQ = (`belongsTo` quadraticEquationsView)
--}
-
--- like ruleOnce: TODO, replace!
+{-# DEPRECATED ruleOrCtxOnce "Replace ruleOrCtxOnce" #-}
 ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
 ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
    let env = getEnvironment ctx

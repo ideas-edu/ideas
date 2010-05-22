@@ -166,6 +166,7 @@ thisView = makeView f g
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace
 
+{-# DEPRECATED contextView "Don't use this; it removes the navigator." #-}
 contextView :: MonadPlus m => ViewM m a b -> ViewM m (Context a) (Context b)
 contextView v = makeView f g
  where

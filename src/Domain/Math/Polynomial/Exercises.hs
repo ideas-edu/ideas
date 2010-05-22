@@ -56,7 +56,7 @@ linearExercise = makeExercise
                        [ name coverUpTimes, name flipEquation
                        , name (removeDivision :: Rule (Equation Expr))
                        ]
-   , strategy     = mapRules liftToContext linearStrategy
+   , strategy     = linearStrategy
    , examples     = concat (linearEquations ++ [specialCases])
    }
  where
@@ -69,7 +69,7 @@ linearMixedExercise = linearExercise
    { description  = "solve a linear equation with mixed fractions"
    , exerciseCode = makeCode "math" "lineq-mixed"
    , isReady      = solvedRelationWith (`belongsTo` mixedFractionNormalForm)
-   , strategy     = mapRules liftToContext linearMixedStrategy
+   , strategy     = linearMixedStrategy
    } 
 
 quadraticExercise :: Exercise (OrList (Relation Expr))

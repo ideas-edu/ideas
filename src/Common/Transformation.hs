@@ -400,6 +400,9 @@ useRecognizer = Recognizer
 -----------------------------------------------------------
 --- Lifting
 
+{-# DEPRECATED ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere 
+       "To be replaced by navigator" #-}
+
 -- | Lift a rule using the Once type class
 ruleOnce :: Once f => Rule a -> Rule (f a)
 ruleOnce r = r { transformations = [makeTransList (onceM (applyAll r))] }

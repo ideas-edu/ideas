@@ -21,6 +21,7 @@ module Common.Navigator
      -- * Derived navigations
    , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
    , top, leafs, downFirst, downLast, left, right
+   , replaceT
    ) where
 
 import Common.Uniplate
@@ -213,6 +214,9 @@ instance Typeable a => TypedNavigator (ViewNav a) where
       
       getTp :: View a b -> a
       getTp = error "castT"
+
+replaceT :: (Monad m, TypedNavigator f, Typeable b) =>  b -> f a -> m (f a)
+replaceT = changeT . const . return
 
 castM :: (Monad m, Typeable a, Typeable b) => a -> m b
 castM = maybe (fail "castM") return . cast

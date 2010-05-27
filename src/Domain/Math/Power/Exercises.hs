@@ -21,6 +21,7 @@ import Common.Context
 import Common.Exercise
 import Common.Navigator
 import Common.Strategy hiding (not, replicate)
+import Common.Transformation (name)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
@@ -41,7 +42,7 @@ powerExercise s = makeExercise
    , parser        = parseExpr
    , navigation    = navigator                     
    , strategy      = s
-   , ruleOrdering  = \_ _ -> LT
+--   , ruleOrdering  = \_ _ -> LT
    }
 
 simplifyPowerExercise :: Exercise Expr
@@ -54,6 +55,13 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , examples     = concat $  simplerPowers ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
+   , ruleOrdering = ruleNameOrderingWith 
+                    [ name addExponents
+                    , name mulExponents
+                    , name subExponents
+                    , name distributePower
+                    , name reciprocal
+                    ]                    
    }
 
 powerOfExercise :: Exercise Expr

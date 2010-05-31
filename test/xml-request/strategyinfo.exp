@@ -73,7 +73,10 @@
       <repeat>
         <sequence>
           <rule name="MoveDown"/>
-          <rule name="normalize rational number"/>
+          <choice>
+            <rule name="normalize rational number"/>
+            <rule name="normalize mixed fraction" removed="true"/>
+          </choice>
           <rule name="MoveUp"/>
         </sequence>
       </repeat>

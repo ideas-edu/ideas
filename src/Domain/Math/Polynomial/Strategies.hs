@@ -29,30 +29,8 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
-
 import Common.Rewriting (IsTerm)
 import Data.Maybe
-
-linearStrategyNew :: LabeledStrategy (Context (Equation Expr))
-linearStrategyNew = cleanUpStrategy (cleanExpr cleanUpSimple) linearStrategyNewG
-
-linearStrategyNewG :: IsTerm a => LabeledStrategy (Context a)
-linearStrategyNewG =
-   label "Linear Equation" $
-       label "Phase 1" (repeat (
-               useEq removeDivision
-          <|>  multi "distribution multiplication" (somewhere (useC parentNotNegCheck <*> use distributeTimes))
-          <|>  multi "merge similar terms" (once (use merge))))
-   <*> label "Phase 2" (repeat (
-              (use flipEquation |> useEq varToLeft)
-          <|> use (coverUpPlusWith oneVar) 
-          <|> use (coverUpMinusLeftWith oneVar)
-          <|> use (coverUpMinusRightWith oneVar)
-          <|> use coverUpTimes 
-          <|> use coverUpNegate
-           ))
-   <*> repeat 
-          (once (use ruleNormalizeRational))
 
 use :: IsTerm a => Rule a -> Rule (Context b)
 use = liftRuleIn (makeView f g)
@@ -92,32 +70,36 @@ parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c ->
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = linearStrategyNew -- mapRules liftToContext (linearStrategyWith False)
+linearStrategy = cleanUpStrategy (cleanExpr cleanUpSimple) linearStrategyG
 
 linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
-linearMixedStrategy = mapRules liftToContext (linearStrategyWith True)
+linearMixedStrategy = 
+   let f   = cleanExpr (transform (simplify mixedFractionView) . cleanUpSimple)
+       cfg = [ (ByName (name ruleNormalizeMixedFraction), Reinsert)
+             , (ByName (name ruleNormalizeRational), Remove)
+             ] 
+   in configure cfg (cleanUpStrategy f linearStrategyG)
 
-linearStrategyWith :: Bool -> LabeledStrategy (Equation Expr)
-linearStrategyWith mixed = cleanUpStrategy (fmap clean) $
-   label "Linear Equation" 
-    $  label "Phase 1" (repeat (
-              removeDivision 
-          <|> ruleMulti distributeTimesSomewhere
-          <|> ruleMulti merge))
+linearStrategyG :: IsTerm a => LabeledStrategy (Context a)
+linearStrategyG =
+   label "Linear Equation" $
+       label "Phase 1" (repeat (
+               useEq removeDivision
+          <|>  multi "distribution multiplication" (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+          <|>  multi "merge similar terms" (once (use merge))))
    <*> label "Phase 2" (repeat (
-          (flipEquation |> varToLeft)
-          <|> coverups))
-   <*> try (ruleMulti final)
- where
-   coverups = coverUpPlus id <|> coverUpTimes <|> coverUpNegate
-   (clean, final) 
-      | mixed = 
-           ( transform (simplify mixedFractionView) . cleanUpSimple
-           , ruleNormalizeMixedFraction
-           )
-      | otherwise = 
-          (cleanUpSimple, ruleNormalizeRational)
-      
+              (use flipEquation |> useEq varToLeft)
+          <|> use (coverUpPlusWith oneVar) 
+          <|> use (coverUpMinusLeftWith oneVar)
+          <|> use (coverUpMinusRightWith oneVar)
+          <|> use coverUpTimes 
+          <|> use coverUpNegate
+           ))
+   <*> repeat (once 
+          (  use ruleNormalizeRational
+         <|> remove (use ruleNormalizeMixedFraction)
+          ))
+   
 -- helper strategy
 coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a
 coverUpPlus f = alternatives $ map (f . ($ oneVar))

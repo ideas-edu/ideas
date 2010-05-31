@@ -157,7 +157,7 @@ processLabelInfo getInfo = mapCore forLabel forRule
       new | hidden info = mapRule minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (labelName info ++ " (collapsed)") (applyAll new)
+      asRule = makeSimpleRuleList (labelName info{- ++ " (collapsed)"-}) (applyAll new)
    forRule (Just l) r 
       | removed info = Fail
       | hidden info  = Rule (Just l) (minorRule r)

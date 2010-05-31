@@ -20,7 +20,7 @@ module Common.Navigator
    , navigator, noNavigator, viewNavigator
      -- * Derived navigations
    , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
-   , top, leafs, downFirst, downLast, left, right
+   , navigateTowards, top, leafs, downFirst, downLast, left, right
    , replaceT
    ) where
 
@@ -102,6 +102,18 @@ navigateTo is a = ups (length js - n) a >>= downs (drop n is)
  where 
    js = location a
    n  = length (takeWhile id (zipWith (==) is js))
+
+navigateTowards :: IsNavigator f => Location -> f a -> f a
+navigateTowards is a = 
+   case ups (length js - n) a of 
+      Just b  -> safeDowns (drop n is) b
+      Nothing -> a
+ where 
+   js = location a
+   n  = length (takeWhile id (zipWith (==) is js))
+   
+   safeDowns []     a = a
+   safeDowns (i:is) a = maybe a (safeDowns is) (down i a)
 
 top :: (IsNavigator f, Monad m) => f a -> m (f a)
 top = navigateTo []

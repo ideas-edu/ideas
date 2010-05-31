@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
    ( linearStrategy, linearMixedStrategy, quadraticStrategy
-   , higherDegreeStrategy, findFactorsStrategy
+   , higherDegreeStrategy, findFactorsStrategy, exprNavigator
    ) where
 
 import Prelude hiding (repeat, replicate, fail)
@@ -30,11 +30,69 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
 
+import Common.Rewriting (IsTerm)
+import Data.Maybe
+
+linearStrategyNew :: LabeledStrategy (Context (Equation Expr))
+linearStrategyNew = cleanUpStrategy (cleanExpr cleanUpSimple) linearStrategyNewG
+
+linearStrategyNewG :: IsTerm a => LabeledStrategy (Context a)
+linearStrategyNewG =
+   label "Linear Equation" $
+       label "Phase 1" (repeat (
+               useEq removeDivision
+          <|>  multi "distribution multiplication" (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+          <|>  multi "merge similar terms" (once (use merge))))
+   <*> label "Phase 2" (repeat (
+              (use flipEquation |> useEq varToLeft)
+          <|> use (coverUpPlusWith oneVar) 
+          <|> use (coverUpMinusLeftWith oneVar)
+          <|> use (coverUpMinusRightWith oneVar)
+          <|> use coverUpTimes 
+          <|> use coverUpNegate
+           ))
+   <*> repeat 
+          (once (use ruleNormalizeRational))
+
+use :: IsTerm a => Rule a -> Rule (Context b)
+use = liftRuleIn (makeView f g)
+ where
+   f c = currentT c >>= fromExpr >>= \b -> Just (b, c)
+   g (e, c) = fromJust (replaceT (toExpr e) c)
+
+useEq :: IsTerm a => Rule (Equation a) -> Rule (Context b)
+useEq = use
+
+useC :: IsTerm a => Rule (Context Expr) -> Rule (Context a)
+useC = liftRule (makeView f g)
+ where
+   f = castT exprView
+   g = fromJust . castT exprView
+
+cleanExpr :: (Expr -> Expr) -> Context a -> Context a
+cleanExpr f c = case top c >>= changeT (return . f) of
+                  Just ok -> navigateTowards (location c) ok
+                  Nothing -> c
+
+exprNavigator :: IsTerm a => a -> Navigator a
+exprNavigator a = 
+   let f = castT exprView . viewNavigator . toExpr
+   in fromMaybe (noNavigator a) (f a)
+
+multi :: IsStrategy f => String -> f a -> LabeledStrategy a
+multi s = collapse . label s . repeat1
+
+parentNotNegCheck :: Rule (Context Expr)
+parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c -> 
+   case up c >>= current of
+      Just (Negate _) -> Nothing
+      _               -> Just c
+
 ------------------------------------------------------------
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = mapRules liftToContext (linearStrategyWith False)
+linearStrategy = linearStrategyNew -- mapRules liftToContext (linearStrategyWith False)
 
 linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
 linearMixedStrategy = mapRules liftToContext (linearStrategyWith True)

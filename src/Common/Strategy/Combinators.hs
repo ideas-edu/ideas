@@ -117,7 +117,9 @@ once :: IsStrategy f => f (Context a) -> Strategy (Context a)
 once s = ruleMoveDown <*> s <*> ruleMoveUp
  where
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" allDowns   
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" up
+   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   
+   safeUp a = maybe (Just a) Just (up a)
 
 -- | Apply a strategy somewhere in the term
 somewhere :: IsStrategy f => f (Context a) -> Strategy (Context a)

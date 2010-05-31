@@ -57,6 +57,7 @@ linearExercise = makeExercise
                        , name (removeDivision :: Rule (Equation Expr))
                        ]
    , strategy     = linearStrategy
+   , navigation   = exprNavigator
    , examples     = concat (linearEquations ++ [specialCases])
    }
  where

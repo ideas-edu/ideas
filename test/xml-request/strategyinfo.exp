@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.12">
+<reply result="ok" version="0.6.2 (0)">
   <label name="Linear Equation">
     <sequence>
       <rule name="Identity"/>
@@ -6,8 +6,52 @@
         <repeat>
           <choice>
             <rule name="remove division"/>
-            <rule name="distribution multiplication"/>
-            <rule name="merge similar terms"/>
+            <label name="distribution multiplication" collapsed="true">
+              <sequence>
+                <rec var="0">
+                  <choice>
+                    <sequence>
+                      <rule name="parent not negate check"/>
+                      <rule name="distribution multiplication"/>
+                    </sequence>
+                    <sequence>
+                      <rule name="MoveDown"/>
+                      <var var="0"/>
+                      <rule name="MoveUp"/>
+                    </sequence>
+                  </choice>
+                </rec>
+                <repeat>
+                  <rec var="0">
+                    <choice>
+                      <sequence>
+                        <rule name="parent not negate check"/>
+                        <rule name="distribution multiplication"/>
+                      </sequence>
+                      <sequence>
+                        <rule name="MoveDown"/>
+                        <var var="0"/>
+                        <rule name="MoveUp"/>
+                      </sequence>
+                    </choice>
+                  </rec>
+                </repeat>
+              </sequence>
+            </label>
+            <label name="merge similar terms" collapsed="true">
+              <sequence>
+                <rule name="MoveDown"/>
+                <rule name="merge similar terms"/>
+                <rule name="MoveUp"/>
+                <repeat>
+                  <sequence>
+                    <rule name="MoveDown"/>
+                    <rule name="merge similar terms"/>
+                    <rule name="MoveUp"/>
+                  </sequence>
+                </repeat>
+              </sequence>
+            </label>
           </choice>
         </repeat>
       </label>
@@ -21,16 +65,18 @@
             <rule name="cover-up plus [one var]"/>
             <rule name="cover-up minus left [one var]"/>
             <rule name="cover-up minus right [one var]"/>
-            <fail/>
             <rule name="cover-up times [vars]"/>
             <rule name="cover-up negate [vars]"/>
           </choice>
         </repeat>
       </label>
-      <orelse>
-        <rule name="normalize rational number"/>
-        <succeed/>
-      </orelse>
+      <repeat>
+        <sequence>
+          <rule name="MoveDown"/>
+          <rule name="normalize rational number"/>
+          <rule name="MoveUp"/>
+        </sequence>
+      </repeat>
     </sequence>
   </label>
 </reply>

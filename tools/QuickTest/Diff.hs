@@ -17,9 +17,10 @@ import Data.List (isInfixOf)
 
 diff :: (String, String, [String]) -> String -> String -> String
 diff (title1, title2, without) xs ys = 
-   unlines $ concatMap present $ diffList (==) (f xs) (f ys)
+   unlines $ concatMap present $ diffList eq (f xs) (f ys)
  where
    f = filter p . number . lines
+   eq (_, s) (_, t) = s==t
    p (_, s) = all (not . (`isInfixOf` s)) without
 
    present = either (block title1 ">  ") (block title2 "<  ")

@@ -40,6 +40,7 @@ import Domain.Math.Polynomial.Equivalence
 import Domain.Math.SquareRoot.Views
 import Prelude hiding (repeat)
 import qualified Domain.Logic.Formula as Logic
+import Common.Rewriting (IsTerm)
 
 ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 
@@ -50,7 +51,8 @@ ineqLinearExercise = makeExercise
    , isReady      = solvedRelation
    , equivalence  = linEq
    , similarity   = eqRelation cleanUpExpr2
-   , strategy     = mapRules liftToContext ineqLinear
+   , strategy     = ineqLinear
+   , navigation   = exprNavigator
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
                     in map (build inequalityView) (concat ineqLin1 ++ [extra])
@@ -67,6 +69,7 @@ ineqQuadraticExercise = makeExercise
    , eqWithContext = Just quadrEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqQuadratic
+   , navigation   = exprNavigator
    , ruleOrdering  = ruleNameOrderingWith quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
@@ -83,6 +86,7 @@ ineqHigherDegreeExercise = makeExercise
    , eqWithContext = Just highEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqHigherDegree
+   , navigation   = exprNavigator
    , ruleOrdering  = ruleNameOrderingWith quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
@@ -128,28 +132,35 @@ betweenView = makeView f h
       let f b = if b then (.<=.) else (.<.)
       in Logic.Var (f o1 x y) :&&: Logic.Var (f o2 y z)
 
+ineqLinear :: LabeledStrategy (Context (Relation Expr))
+ineqLinear = cleanUpStrategy (cleanTop (fmap cleanUpSimple)) ineqLinearG
 
-ineqLinear :: LabeledStrategy (Relation Expr)
-ineqLinear = cleanUpStrategy (fmap cleanUpSimple) $
-   label "Linear inequation" $
-      label "Phase 1" (repeat (
-             removeDivision
-         <|> ruleMulti (ruleSomewhere distributeTimes)
-         <|> ruleMulti merge))
-      <*>  
-      label "Phase 2" (
-         try varToLeft 
-         <*> try (coverUpPlus id)
-         <*> try flipSign
-         <*> try coverUpTimesPositive)
+ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
+ineqLinearG = label "Linear inequation" $
+   label "Phase 1" (repeat 
+       (  useR removeDivision
+      <|> multi (name distributeTimes) 
+             (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+      <|> multi (name merge) (once (use merge))
+       ))
+   <*>  
+   label "Phase 2" 
+       (  try (useR varToLeft)
+      <*> try coverUpPlus
+      <*> try (use flipSign)
+      <*> try (use coverUpTimesPositive)
+       )
 
--- helper strategy
-coverUpPlus :: (Rule (Relation Expr) -> Rule a) -> Strategy a
-coverUpPlus f = alternatives $ map (f . ($ oneVar))
-   [ coverUpBinaryRule "plus" (commOp . isPlus) (-) 
-   , coverUpBinaryRule "minus left" isMinus (+)
-   , coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-))
-   ] -- [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith]
+useR :: IsTerm a => Rule (Relation a) -> Rule (Context b)
+useR = use
+
+-- helper strategy (todo: fix needed, because the original rules do not 
+-- work on relations)
+coverUpPlus :: Strategy (Context a) 
+coverUpPlus
+    =  useR (coverUpBinaryRule "plus" (commOp . isPlus) (-) oneVar)
+   <|> useR (coverUpBinaryRule "minus left" isMinus (+) oneVar)
+   <|> useR (coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-)) oneVar)
    
 coverUpTimesPositive :: Rule (Relation Expr)
 coverUpTimesPositive = coverUpBinaryRule "times positive" (commOp . m) (/) varConfig
@@ -172,22 +183,24 @@ flipSign = makeSimpleRule "flip sign" $ \r -> do
       maybe False fst (match productView expr)
  
 ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqQuadratic = label "Quadratic inequality" $ 
-   try (liftRule (contextView (orView >>> justOneView)) turnIntoEquation) 
-   <*> mapRules (liftRule (contextView orView)) quadraticStrategy
-   <*> solutionInequation
+ineqQuadratic = cleanUpStrategy (cleanTop cleanUpLogicRelation) $ 
+   label "Quadratic inequality" $ 
+      try (useC turnIntoEquation) 
+      <*> quadraticStrategyNEWG
+      <*> useC solutionInequation
 
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqHigherDegree = label "Inequality of a higher degree" $ 
-   try (liftRule (contextView (orView >>> justOneView)) turnIntoEquation) 
-   <*> mapRules (liftRule (contextView orView)) higherDegreeStrategy
-   <*> solutionInequation
+ineqHigherDegree = cleanUpStrategy (cleanTop cleanUpLogicRelation) $
+   label "Inequality of a higher degree" $ 
+      try (useC turnIntoEquation) 
+      <*> higherDegreeStrategyNEWG
+      <*> useC solutionInequation
 
-justOneView :: View (OrList a) a
-justOneView = makeView (f . disjunctions) return
- where
-   f (Just [r]) = Just r
-   f _          = Nothing
+cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
+cleanUpLogicRelation p = 
+   case match orView p of
+      Just xs -> build orView (cleanUpRelation xs)
+      Nothing -> fmap (fmap cleanUpExpr) p
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = makeSimpleRule "turn into equation" $ withCM $ \r -> do

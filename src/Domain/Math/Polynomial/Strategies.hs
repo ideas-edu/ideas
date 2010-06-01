@@ -11,7 +11,9 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
    ( linearStrategy, linearMixedStrategy, quadraticStrategy, quadraticStrategyNEW
-   , higherDegreeStrategy, findFactorsStrategy, exprNavigator, higherDegreeStrategyNEW
+   , findFactorsStrategy, exprNavigator, higherDegreeStrategyNEW
+   , quadraticStrategyNEWG, cleanTop, useC, use, multi, parentNotNegCheck
+   , higherDegreeStrategyNEWG
    ) where
 
 import Prelude hiding (repeat, replicate, fail)

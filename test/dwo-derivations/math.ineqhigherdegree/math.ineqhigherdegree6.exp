@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.10">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -30,6 +30,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==(1/4*(1/2*x-2)^4<4)]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -38,6 +39,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==(1/4*(1/2*x-2)^4<4)]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
@@ -46,6 +48,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==(1/4*(1/2*x-2)^4<4)]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -54,6 +57,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==(1/4*(1/2*x-2)^4<4)]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="solution inequation">

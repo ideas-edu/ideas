@@ -1,8 +1,8 @@
-<reply result="ok" version="0.5.12">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="turn into equation">
       <expr>
-        x^2 == x^2
+        true
       </expr>
       <context>
         <item name="clipboard" value="[ineq==(x^2<x^2)]"/>

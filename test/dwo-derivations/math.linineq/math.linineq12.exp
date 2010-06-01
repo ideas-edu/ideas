@@ -1,10 +1,5 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="distribution multiplication">
-      <expr>
-        2*x-2-3*(x-2) &gt; 6
-      </expr>
-    </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         2*x-2-3*x+6 &gt; 6

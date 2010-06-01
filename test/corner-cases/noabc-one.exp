@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.14">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="bring a to one">
       <expr>
@@ -24,11 +24,17 @@
       <expr>
         x == -1+sqrt (3/2) or x+1 == -sqrt (3/2)
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
         x == -1+sqrt (3/2) or x == -1-sqrt (3/2)
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="simpler square root">
       <expr>

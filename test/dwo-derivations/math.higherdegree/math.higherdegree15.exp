@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="cover-up plus [one var]">
       <expr>
@@ -19,21 +19,33 @@
       <expr>
         4*x == 13 or 4*x-5 == -8
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 13/4 or 4*x-5 == -8
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         x == 13/4 or 4*x == -3
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 13/4 or x == -3/4
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
   </list>
 </reply>

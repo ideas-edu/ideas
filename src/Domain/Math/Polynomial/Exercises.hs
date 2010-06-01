@@ -108,7 +108,8 @@ higherDegreeExercise = makeExercise
    , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
                      abcBuggyRules ++ map ruleOnce buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
-   , strategy      = higherDegreeStrategy
+   , strategy      = higherDegreeStrategyNEW
+   , navigation   = exprNavigator
    , examples      = map (orList . return . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
@@ -118,7 +119,7 @@ quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
    , status       = Alpha
-   , strategy     = configure cfg quadraticStrategy
+   , strategy     = configure cfg quadraticStrategyNEW
    }
  where
    cfg = [ (ByName (name prepareSplitSquare), Reinsert)
@@ -133,7 +134,7 @@ quadraticWithApproximation = quadraticExercise
    , exerciseCode = makeCode "math" "quadreq-with-approx"
    , status       = Alpha
    , parser       = parseExprWith (pOrList (pRelation pExpr))
-   , strategy     = configure cfg quadraticStrategy
+   , strategy     = configure cfg quadraticStrategyNEW
    , equivalence  = equivalentApprox
    }
  where
@@ -151,6 +152,7 @@ findFactorsExercise = makeExercise
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = mapRules liftToContext findFactorsStrategy
+   , navigation   = exprNavigator
    , extraRules   = map liftToContext buggyRulesExpr
    , examples     = concat findFactors
    }

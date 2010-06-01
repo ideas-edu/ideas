@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
@@ -19,11 +19,17 @@
       <expr>
         x == root 21 6-5 or x+5 == -root 21 6
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
         x == root 21 6-5 or x == -root 21 6-5
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
   </list>
 </reply>

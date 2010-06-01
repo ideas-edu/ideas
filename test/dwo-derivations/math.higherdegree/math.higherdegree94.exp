@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="expose same factor">
       <expr>
@@ -19,11 +19,17 @@
       <expr>
         x == 1 or x == 0 or x^2-6 == 3*x
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         x == 1 or x == 0 or x^2-3*x-6 == 0
       </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
     </elem>
     <elem ruleid="abc formula">
       <expr>

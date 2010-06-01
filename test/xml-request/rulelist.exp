@@ -19,8 +19,8 @@
     <elem name="buggy distr times plus forget" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times plus sign" buggy="true" rewriterule="false"/>
     <elem name="buggy distr times too many" buggy="true" rewriterule="false"/>
-    <elem name="buggy distribution square" buggy="true" rewriterule="false"/>
-    <elem name="buggy distribution square forget" buggy="true" rewriterule="false"/>
+    <elem name="buggy distribution square" buggy="true" rewriterule="true"/>
+    <elem name="buggy distribution square forget" buggy="true" rewriterule="true"/>
     <elem name="buggy divide negate" buggy="true" rewriterule="false"/>
     <elem name="buggy divide numdenom" buggy="true" rewriterule="false"/>
     <elem name="buggy division by var both" buggy="true" rewriterule="false"/>
@@ -33,7 +33,7 @@
     <elem name="buggy negate one side" buggy="true" rewriterule="false"/>
     <elem name="buggy plus" buggy="true" rewriterule="false"/>
     <elem name="buggy priority times" buggy="true" rewriterule="false"/>
-    <elem name="buggy square multiplication" buggy="true" rewriterule="false"/>
+    <elem name="buggy square multiplication" buggy="true" rewriterule="true"/>
     <elem name="cancel terms" buggy="false" rewriterule="false"/>
     <elem name="common factor var" buggy="false" rewriterule="false"/>
     <elem name="cover-up minus left [one var]" buggy="false" rewriterule="false"/>

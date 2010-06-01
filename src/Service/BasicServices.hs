@@ -135,5 +135,5 @@ findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise (exercisePkg state)
        buggies = filter isBuggyRule (ruleset ex)
-       check r = recognizeRule ex r (context state) (inContext ex a)
+       check r = ruleIsRecognized ex r (context state) (inContext ex a)
    in filter check buggies

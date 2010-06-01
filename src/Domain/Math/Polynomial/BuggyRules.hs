@@ -21,17 +21,19 @@ import Domain.Math.Data.OrList
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Strategies (use)
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
 import Domain.Math.Equation.CoverUpRules
 import Common.Apply
+import Common.Context
 import Common.View
 import Common.Transformation
 import Common.Traversable
 import Control.Monad
 
 buggyRulesExpr :: [Rule Expr]
-buggyRulesExpr = map ruleSomewhere $
+buggyRulesExpr = 
    map (siblingOf distributeTimes)
    [ buggyDistrTimes, buggyDistrTimesForget, buggyDistrTimesSign
    , buggyDistrTimesTooMany, buggyDistrTimesDenom
@@ -45,8 +47,7 @@ buggyRulesEquation =
    , buggyNegateAll
    , buggyDivNegate, buggyDivNumDenom, buggyCancelMinus
    , buggyMultiplyOneSide, buggyMultiplyForgetOne
-   ] ++ 
-   map ruleOnce buggyRulesExpr
+   ]
 
 buggyPlus :: Rule (Equation Expr)
 buggyPlus = describe "Moving a term from the left-hand side to the \
@@ -207,7 +208,9 @@ recognizeMultiplication :: Expr -> Expr -> Maybe Rational
 recognizeMultiplication a b = do
    (_, pa) <- match (polyViewWith rationalView) a 
    (_, pb) <- match (polyViewWith rationalView) b
-   return (coefficient (degree pb) pb / coefficient (degree pa) pa)
+   let d = coefficient (degree pa) pa
+   guard (d /= 0)
+   return (coefficient (degree pb) pb / d)
    
 multiplyOneSide :: Rational -> Transformation (Equation Expr)
 multiplyOneSide r = makeTransList $ \(lhs :==: rhs) -> do
@@ -249,19 +252,21 @@ myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
 ---------------------------------------------------------
 -- Quadratic and Higher-Degree Polynomials
 
-buggyQuadratic :: [Rule (OrList (Equation Expr))]
-buggyQuadratic = map ruleOnce 
-   ( [ buggyCoverUpTimesMul, buggyCoverUpEvenPower
-     , buggyCoverUpTimesWithPlus, buggyDivisionByVarBoth
-     , buggyDivisionByVarZero
-     ] ++
-     map (ruleOnce . ruleSomewhere)
-     [ buggyDistributionSquare, buggyDistributionSquareForget
-     , buggySquareMultiplication
-     ]) ++
-   [ buggyCoverUpEvenPowerTooEarly, buggyCoverUpEvenPowerForget
-   , buggyCoverUpSquareMinus
-   ]
+buggyQuadratic :: IsTerm a => [Rule (Context a)]
+buggyQuadratic =
+   map use
+      [ buggyCoverUpTimesMul, buggyCoverUpEvenPower
+      , buggyCoverUpTimesWithPlus, buggyDivisionByVarBoth
+      , buggyDivisionByVarZero
+      ] ++
+   map use
+      [ buggyDistributionSquare, buggyDistributionSquareForget
+      , buggySquareMultiplication
+      ] ++
+   map use
+      [ buggyCoverUpEvenPowerTooEarly, buggyCoverUpEvenPowerForget
+      , buggyCoverUpSquareMinus
+      ]
 
 buggyCoverUpEvenPower :: Rule (Equation Expr)
 buggyCoverUpEvenPower = describe "Covering up an even power, but forgetting \

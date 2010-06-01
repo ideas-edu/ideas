@@ -31,7 +31,7 @@ module Common.Transformation
    , siblingOf, transformations, getRewriteRules, doBeforeTrans
    , ruleRecognizer, useRecognizer
      -- * Lifting
-   , ruleOnce, ruleOnce2, ruleSomewhere
+   , ruleOnce -- , ruleOnce2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , testRule, propRuleSmart
@@ -386,7 +386,8 @@ transRecognizer :: (a -> a -> Bool) -> Transformation a -> a -> a -> Bool
 transRecognizer eq trans a b =
    case trans of
       Recognizer f t -> f a b || transRecognizer eq t a b
-      LiftView v t   -> or 
+      LiftView v t   -> 
+         any (`eq` b) (applyAll trans a) || or  -- ?? Quick Fix
          [ transRecognizer (\x y -> eq (f x) (f y)) t av bv
          | (av, c) <- match v a 
          , (bv, _) <- match v b

@@ -153,7 +153,7 @@ ineqLinearG = label "Linear inequation" $
 
 -- helper strategy (todo: fix needed, because the original rules do not 
 -- work on relations)
-coverUpPlus :: Strategy (Context a) 
+coverUpPlus :: IsTerm a => Strategy (Context a) 
 coverUpPlus = alternatives (map (use . ($ oneVar)) coverUps)
  where
    coverUps :: [ConfigCoverUp -> Rule (Relation Expr)]

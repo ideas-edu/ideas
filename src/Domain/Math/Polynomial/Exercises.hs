@@ -51,7 +51,8 @@ linearExercise = makeExercise
    , isReady      = solvedRelationWith $ \a -> 
                        a `belongsTo` mixedFractionNormalForm || 
                        a `belongsTo` rationalNormalForm
-   , extraRules   = map liftToContext buggyRulesEquation
+   , extraRules   = map use buggyRulesEquation ++
+                    map use buggyRulesExpr 
    , ruleOrdering = ruleNameOrderingWith 
                        [ name coverUpTimes, name flipEquation
                        , name removeDivision
@@ -85,10 +86,10 @@ quadraticExercise = makeExercise
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
    , isSuitable   = (`belongsTo` (switchView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
-   , extraRules   = map (liftToContext . liftRule (switchView equationView)) $ 
-                       abcBuggyRules ++ buggyQuadratic ++
-                       map ruleOnce buggyRulesEquation
-   , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
+   , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
+                    map use buggyRulesEquation ++ map use buggyRulesExpr 
+   , ruleOrdering = ruleNameOrderingWith $ 
+                       quadraticRuleOrder ++ [name buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = exprNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
@@ -105,8 +106,8 @@ higherDegreeExercise = makeExercise
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isSuitable    = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
    , isReady       = solvedRelations
-   , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
-                     abcBuggyRules ++ map ruleOnce buggyRulesEquation
+   , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
+                     map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation   = exprNavigator

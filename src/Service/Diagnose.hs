@@ -21,6 +21,7 @@ import Common.Exercise
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils (safeHead)
+import Data.List (sortBy)
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
@@ -83,9 +84,9 @@ diagnose state new
 
    discovered searchForBuggy = safeHead
       [ r
-      | r <- ruleset ex
+      | r <- sortBy (ruleOrdering ex) (ruleset ex)
       , isBuggyRule r == searchForBuggy
-      , recognizeRule ex r sub1 sub2
+      , ruleIsRecognized ex r sub1 sub2
       ]
     where 
       (sub1, sub2) = 

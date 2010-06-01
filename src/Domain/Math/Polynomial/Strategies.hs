@@ -34,11 +34,8 @@ import Domain.Math.Polynomial.CleanUp
 import Common.Rewriting (IsTerm)
 import Data.Maybe
 
-use :: IsTerm a => Rule a -> Rule (Context b)
-use = liftRuleIn (makeView f g)
- where
-   f c = currentT c >>= fromExpr >>= \b -> Just (b, c)
-   g (e, c) = fromJust (replaceT (toExpr e) c)
+use :: (IsTerm a, IsTerm b) => Rule a -> Rule (Context b)
+use = useC . liftToContext
 
 useC :: (IsTerm a, IsTerm b) => Rule (Context a) -> Rule (Context b)
 useC = liftRule (makeView (castT exprView) (fromJust . castT exprView))

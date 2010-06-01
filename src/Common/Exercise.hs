@@ -20,7 +20,7 @@ module Common.Exercise
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
-   , makeContext, inContext, recognizeRule
+   , makeContext, inContext, recognizeRule, ruleIsRecognized
    , ruleOrderingWith, ruleNameOrderingWith
      -- * Exercise status
    , Status(..), isPublic, isPrivate
@@ -184,9 +184,16 @@ randomTermWith rng level ex =
               xs !! fst (randomR (0, length xs - 1) rng)
        where xs = examples ex
 
-recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
-recognizeRule ex = ruleRecognizer $ \ca cb -> fromMaybe False $
-   liftM2 (similarity ex) (fromContext ca) (fromContext cb)
+ruleIsRecognized :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
+ruleIsRecognized ex r ca = not . null . recognizeRule ex r ca
+
+-- Recognize a rule at (possibly multiple) locations
+recognizeRule :: Exercise a -> Rule (Context a) -> Context a -> Context a -> [Location]
+recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
+ where
+   rec x = [ location x | here r x cb ] ++ concatMap rec (allDowns x)
+   here  = ruleRecognizer $ \cx cy -> fromMaybe False $
+      liftM2 (similarity ex) (fromContext cx) (fromContext cy)
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleNameOrderingWith . map name

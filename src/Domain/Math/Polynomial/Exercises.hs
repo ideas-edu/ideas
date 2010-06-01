@@ -54,7 +54,7 @@ linearExercise = makeExercise
    , extraRules   = map liftToContext buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith 
                        [ name coverUpTimes, name flipEquation
-                       , name (removeDivision :: Rule (Equation Expr))
+                       , name removeDivision
                        ]
    , strategy     = linearStrategy
    , navigation   = exprNavigator
@@ -89,7 +89,7 @@ quadraticExercise = makeExercise
                        abcBuggyRules ++ buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
-   , strategy     = quadraticStrategyNEW
+   , strategy     = quadraticStrategy
    , navigation   = exprNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
@@ -108,7 +108,7 @@ higherDegreeExercise = makeExercise
    , extraRules    = map (liftToContext . liftRule (switchView equationView)) $ 
                      abcBuggyRules ++ map ruleOnce buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
-   , strategy      = higherDegreeStrategyNEW
+   , strategy      = higherDegreeStrategy
    , navigation   = exprNavigator
    , examples      = map (orList . return . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
@@ -119,7 +119,7 @@ quadraticNoABCExercise = quadraticExercise
    { description  = "solve a quadratic equation without abc-formula"
    , exerciseCode = makeCode "math" "quadreq-no-abc"
    , status       = Alpha
-   , strategy     = configure cfg quadraticStrategyNEW
+   , strategy     = configure cfg quadraticStrategy
    }
  where
    cfg = [ (ByName (name prepareSplitSquare), Reinsert)
@@ -134,7 +134,7 @@ quadraticWithApproximation = quadraticExercise
    , exerciseCode = makeCode "math" "quadreq-with-approx"
    , status       = Alpha
    , parser       = parseExprWith (pOrList (pRelation pExpr))
-   , strategy     = configure cfg quadraticStrategyNEW
+   , strategy     = configure cfg quadraticStrategy
    , equivalence  = equivalentApprox
    }
  where

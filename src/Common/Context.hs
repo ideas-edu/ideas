@@ -22,10 +22,10 @@ module Common.Context
      -- * Variables
    , Var, newVar, makeVar
      -- * Lifting
-   , liftToContext, liftTransContext, contextView
+   , liftToContext, liftTransContext
      -- * Context Monad
    , ContextMonad, readVar, writeVar, modifyVar
-   , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
+   , maybeCM, withCM, evalCM
    ) where 
 
 import Common.Navigator
@@ -165,21 +165,6 @@ thisView = makeView f g
  where
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace
-
-{-# DEPRECATED contextView "Don't use this; it removes the navigator." #-}
-contextView :: MonadPlus m => ViewM m a b -> ViewM m (Context a) (Context b)
-contextView v = makeView f g
- where
-   f ca = do
-      guard (isTop ca)
-      a <- leave ca
-      b <- match v a
-      return (newContext (getEnvironment ca) (noNavigator b))
-   g cb = fromJust $ do
-      guard (isTop cb)
-      b <- leave cb
-      let a = build v b
-      return (newContext (getEnvironment cb) (noNavigator a))
 
 ----------------------------------------------------------
 -- Context monad

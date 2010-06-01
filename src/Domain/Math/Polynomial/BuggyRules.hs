@@ -32,7 +32,7 @@ import Control.Monad
 
 buggyRulesExpr :: [Rule Expr]
 buggyRulesExpr = map ruleSomewhere $
-   map (siblingOf distributeTimesSomewhere)
+   map (siblingOf distributeTimes)
    [ buggyDistrTimes, buggyDistrTimesForget, buggyDistrTimesSign
    , buggyDistrTimesTooMany, buggyDistrTimesDenom
    ] ++

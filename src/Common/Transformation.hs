@@ -31,7 +31,7 @@ module Common.Transformation
    , siblingOf, transformations, getRewriteRules, doBeforeTrans
    , ruleRecognizer, useRecognizer
      -- * Lifting
-   , ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere
+   , ruleOnce, ruleOnce2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , testRule, propRuleSmart
@@ -400,7 +400,7 @@ useRecognizer = Recognizer
 -----------------------------------------------------------
 --- Lifting
 
-{-# DEPRECATED ruleOnce, ruleOnce2, ruleMulti, ruleMulti2, ruleSomewhere 
+{-# DEPRECATED ruleOnce, ruleOnce2, ruleSomewhere 
        "To be replaced by navigator" #-}
 
 -- | Lift a rule using the Once type class
@@ -410,23 +410,6 @@ ruleOnce r = r { transformations = [makeTransList (onceM (applyAll r))] }
 -- | Apply a rule once (in two functors)
 ruleOnce2 :: (Once f, Once g) => Rule a -> Rule (f (g a))
 ruleOnce2 = ruleOnce . ruleOnce
-
--- | Apply at multiple locations, but at least once
-ruleMulti :: (Switch f, Crush f) => Rule a -> Rule (f a)
-ruleMulti r = r { transformations = [makeTransList (multi (applyAll r))] }
-
--- | Apply at multiple locations, but at least once (in two functors)
-ruleMulti2 :: (Switch f, Crush f, Switch g, Crush g) => Rule a -> Rule (f (g a))
-ruleMulti2 = ruleMulti . ruleMulti
-
-multi :: (Switch f, Crush f) => (a -> [a]) -> f a -> [f a]
-multi f a =
-   let g a = case f a of 
-                [] -> [(False, a)]
-                xs -> zip (repeat True) xs
-       xs = switch (fmap g a)
-       p = any fst . crush
-   in map (fmap snd) (filter p xs)
 
 ruleSomewhere :: Uniplate a => Rule a -> Rule a
 ruleSomewhere r = r { transformations = [makeTransList (somewhereM (applyAll r))] }

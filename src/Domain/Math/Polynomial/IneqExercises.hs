@@ -138,29 +138,30 @@ ineqLinear = cleanUpStrategy (cleanTop (fmap cleanUpSimple)) ineqLinearG
 ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
 ineqLinearG = label "Linear inequation" $
    label "Phase 1" (repeat 
-       (  useR removeDivision
+       (  use removeDivision
       <|> multi (name distributeTimes) 
              (somewhere (useC parentNotNegCheck <*> use distributeTimes))
       <|> multi (name merge) (once (use merge))
        ))
    <*>  
    label "Phase 2" 
-       (  try (useR varToLeft)
+       (  try (use varToLeft)
       <*> try coverUpPlus
       <*> try (use flipSign)
       <*> try (use coverUpTimesPositive)
        )
 
-useR :: IsTerm a => Rule (Relation a) -> Rule (Context b)
-useR = use
-
 -- helper strategy (todo: fix needed, because the original rules do not 
 -- work on relations)
 coverUpPlus :: Strategy (Context a) 
-coverUpPlus
-    =  useR (coverUpBinaryRule "plus" (commOp . isPlus) (-) oneVar)
-   <|> useR (coverUpBinaryRule "minus left" isMinus (+) oneVar)
-   <|> useR (coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-)) oneVar)
+coverUpPlus = alternatives (map (use . ($ oneVar)) coverUps)
+ where
+   coverUps :: [ConfigCoverUp -> Rule (Relation Expr)]
+   coverUps = 
+      [ coverUpBinaryRule "plus" (commOp . isPlus) (-)
+      , coverUpBinaryRule "minus left" isMinus (+)
+      , coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-))
+      ]
    
 coverUpTimesPositive :: Rule (Relation Expr)
 coverUpTimesPositive = coverUpBinaryRule "times positive" (commOp . m) (/) varConfig
@@ -186,14 +187,14 @@ ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqQuadratic = cleanUpStrategy (cleanTop cleanUpLogicRelation) $ 
    label "Quadratic inequality" $ 
       try (useC turnIntoEquation) 
-      <*> quadraticStrategyNEWG
+      <*> quadraticStrategyG
       <*> useC solutionInequation
 
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqHigherDegree = cleanUpStrategy (cleanTop cleanUpLogicRelation) $
    label "Inequality of a higher degree" $ 
       try (useC turnIntoEquation) 
-      <*> higherDegreeStrategyNEWG
+      <*> higherDegreeStrategyG
       <*> useC solutionInequation
 
 cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)

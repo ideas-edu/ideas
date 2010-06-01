@@ -353,13 +353,13 @@ higherSubst = makeSimpleRule "higher subst" $ withCM $ \(lhs :==: rhs) -> do
    addToClipboard "subst" (toExpr (Var "p" :==: Var x .^. fromIntegral n2))
    return (new :==: 0)
 
-substBackVar :: (Crush f, Crush g) => Rule (Context (f (g Expr)))
+substBackVar :: Rule (Context Expr)
 substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
    expr <- lookupClipboard "subst"
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
-         guard (p `elem` concatMap collectVars (concatMap crush (crush a)))
-         return (fmap (fmap (subst p rhs)) a)
+         guard (p `elem` collectVars a)
+         return (subst p rhs a)
       _ -> fail "no subst in clipboard"
  where
    subst a b (Var c) | a==c = b
@@ -432,7 +432,7 @@ distributionT = makeTransList f
 -------------------------------------------------------
 -- Rewrite Rules
 
-varToLeft :: Relational f => Rule (f Expr)
+varToLeft :: Rule (Relation Expr)
 varToLeft = doAfter (fmap collectLikeTerms) $ 
    makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
       (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
@@ -440,7 +440,7 @@ varToLeft = doAfter (fmap collectLikeTerms) $
       return (fromRational a * Var x)
 
 -- factor is always positive due to lcm function
-removeDivision :: Relational r => Rule (r Expr)
+removeDivision :: Rule (Relation Expr)
 removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
    makeRule "remove division" $ flip supply1 timesT $ \eq -> do
       xs <- match sumView (leftHandSide eq)
@@ -458,12 +458,6 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
          ps -> let (bs, ns) = unzip ps
                in if or bs then return (fromInteger (foldr1 lcm ns))
                            else Nothing
-
--- Bug fix for distribution in -2*(x+1)    (duplicate result)
--- This should be a temporary fix
-distributeTimesSomewhere :: Rule Expr
-distributeTimesSomewhere = makeSimpleRuleList (name distributeTimes) $
-   nub . map cleanUpSimple . applyAll (ruleSomewhere distributeTimes)
 
 distributeTimes :: Rule Expr
 distributeTimes = makeSimpleRuleList "distribution multiplication" $

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.5">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="move to left">
       <expr>
@@ -19,11 +19,17 @@
       <expr>
         x == 0 or -2*x == -3
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 0 or x == 3/2
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
   </list>
 </reply>

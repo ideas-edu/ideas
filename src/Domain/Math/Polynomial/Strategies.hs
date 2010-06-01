@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
-   ( linearStrategy, linearMixedStrategy, quadraticStrategy
+   ( linearStrategy, linearMixedStrategy, quadraticStrategy, quadraticStrategyNEW
    , higherDegreeStrategy, findFactorsStrategy, exprNavigator
    ) where
 
@@ -41,17 +41,20 @@ use = liftRuleIn (makeView f g)
 useEq :: IsTerm a => Rule (Equation a) -> Rule (Context b)
 useEq = use
 
-useC :: IsTerm a => Rule (Context Expr) -> Rule (Context a)
-useC = liftRule (makeView f g)
- where
-   f = castT exprView
-   g = fromJust . castT exprView
-
+useC :: (IsTerm a, IsTerm b) => Rule (Context a) -> Rule (Context b)
+useC = liftRule (makeView (castT exprView) (fromJust . castT exprView))
+   
 cleanExpr :: (Expr -> Expr) -> Context a -> Context a
 cleanExpr f c = case top c >>= changeT (return . f) of
                   Just ok -> navigateTowards (location c) ok
                   Nothing -> c
-
+                  
+cleanTop :: (a -> a) -> Context a -> Context a
+cleanTop f c = 
+   case top c of 
+      Just ok -> navigateTowards (location c) (change f ok)
+      Nothing -> c
+                  
 exprNavigator :: IsTerm a => a -> Navigator a
 exprNavigator a = 
    let f = castT exprView . viewNavigator . toExpr
@@ -85,7 +88,7 @@ linearStrategyG =
    label "Linear Equation" $
        label "Phase 1" (repeat (
                useEq removeDivision
-          <|>  multi "distribution multiplication" (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+          <|>  multi (name distributeTimes) (somewhere (useC parentNotNegCheck <*> use distributeTimes))
           <|>  multi "merge similar terms" (once (use merge))))
    <*> label "Phase 2" (repeat (
               (use flipEquation |> useEq varToLeft)
@@ -100,14 +103,122 @@ linearStrategyG =
          <|> remove (use ruleNormalizeMixedFraction)
           ))
    
--- helper strategy
-coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a
-coverUpPlus f = alternatives $ map (f . ($ oneVar))
-   [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith]
-
 ------------------------------------------------------------
 -- Quadratic equations
 
+quadraticStrategyNEW :: LabeledStrategy (Context (OrList (Relation Expr)))
+quadraticStrategyNEW = cleanUpStrategy (cleanTop cleanUpRelation) quadraticStrategyNEWG
+
+quadraticStrategyNEWG :: IsTerm a => LabeledStrategy (Context a)
+quadraticStrategyNEWG = 
+   label "Quadratic Equation Strategy" $ repeat $
+   -- Relaxed strategy: even if there are "nice" factors, allow use of quadratic formula
+         (generalForm <|> generalABCForm)
+      |> zeroForm 
+      |> somewhere constantForm
+      |> simplifyForm
+      |> topForm 
+ where
+   -- ax^2 + bx + c == 0, without quadratic formula
+   generalForm = label "general form" $ 
+          use commonFactorVar
+      <|> use noLinFormula
+      <|> use simplerPolynomial
+      <|> remove (use bringAToOne)
+      <|> use niceFactors
+      <|> use coverUpPower -- to deal with special case x^2=0
+            
+   generalABCForm = label "abc form" $ 
+      useC abcFormula
+      
+   zeroForm = label "zero form" $
+      use mulZero
+    
+   -- expr == c
+   constantForm = label "constant form" $
+          use (coverUpPlusWith oneVar)
+      <|> use (coverUpMinusLeftWith oneVar)
+      <|> use (coverUpMinusRightWith oneVar)
+      <|> use coverUpTimes
+      <|> use coverUpNegate
+      <|> use coverUpNumerator
+      <|> use squareBothSides 
+      <|> use factorLeftAsSquare
+      
+   -- simplifies square roots, or do an approximation 
+   simplifyForm =
+      label "square root simplification" (
+         multi (name simplerSquareRoot) (somewhere (use simplerSquareRoot)))
+      <|> 
+      remove (label "approximate result" (
+         multi (name ruleApproximate) (somewhere (use ruleApproximate))))
+
+   topForm = label "top form" $
+        (use cancelTerms  <|> use sameFactor)
+      |> (  use sameConFactor
+        <|> multi (name merge) (somewhere (use merge))
+        <|> somewhere (use distributionSquare)
+        <|> multi (name distributeTimes) (somewhere 
+               (useC parentNotNegCheck <*> use distributeTimes))
+        <|> multi (name distributeDivision) (somewhere 
+               (once (use distributeDivision)))
+        <|> use flipEquation
+         )
+      |> somewhere (use moveToLeft <|> remove (use prepareSplitSquare))
+
+-----------------------------------------------------------
+-- Higher degree equations
+
+higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
+higherDegreeStrategy =
+   label "higher degree" $ 
+      higherForm <*> label "quadratic" ({-option (check isQ2 <*> -} quadraticStrategy)
+      <*> 
+      cleanUpStrategy (change cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
+ where
+   higherForm = cleanUpStrategy (change cleanUpRelation) $ 
+      label "higher degree form" $
+      repeat (f (toStrategy allPowerFactors) |> 
+         (f (alternatives list) <|> liftRule specialV (ruleOrCtxOnce higherSubst))
+            |> f (toStrategy (ruleOnce moveToLeft)))
+   list = map toStrategy  
+             [ coverUpPower, ruleOnce coverUpTimes
+             , mulZero, {-ruleOnce2 powerFactor,-} sameFactor
+             , ruleOnce exposeSameFactor
+             ] ++ [coverUpPlus ruleOnce] ++ [toStrategy (ruleOnce sameConFactor)]
+   f = mapRulesS (liftToContext . liftRule (switchView equationView))
+   
+   specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
+   specialV = contextView (switchView equationView)
+
+{-# DEPRECATED ruleOrCtxOnce "Replace ruleOrCtxOnce" #-}
+ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
+ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
+   let env = getEnvironment ctx
+   a <- fromContext ctx
+   case disjunctions a of
+      Just xs -> f [] env xs
+      Nothing -> []
+ where
+   f _   _   [] = []
+   f acc env (a:as) = 
+      case applyAll r (newContext env (noNavigator a)) of
+         []  -> f (a:acc) env as
+         new -> concatMap (fmapC $ \na -> orList (reverse acc++na:as)) new
+   fmapC g c = 
+      case fromContext c of
+         Just a  -> [newContext (getEnvironment c) (noNavigator (g a))]
+         Nothing -> []
+
+-----------------------------------------------------------
+-- Finding factors in an expression
+
+findFactorsStrategy :: LabeledStrategy Expr
+findFactorsStrategy = cleanUpStrategy cleanUpSimple $
+   label "find factors" $
+   repeat (niceFactorsNew <|> commonFactorVarNew)
+   
+   
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $ 
    label "Quadratic Equation Strategy" $ 
@@ -161,54 +272,7 @@ quadraticStrategy = cleanUpStrategy (change cleanUpRelation) $
       |> (ruleOnce moveToLeft <|> remove (ruleOnce prepareSplitSquare))
    -- to do: find a better location in the strategy for splitting the square
    
------------------------------------------------------------
--- Higher degree equations
-
-higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
-higherDegreeStrategy =
-   label "higher degree" $ 
-      higherForm <*> label "quadratic" ({-option (check isQ2 <*> -} quadraticStrategy)
-      <*> 
-      cleanUpStrategy (change cleanUpRelation) (label "afterwards" (try (substBackVar <*> f (repeat coverUpPower))))
- where
-   higherForm = cleanUpStrategy (change cleanUpRelation) $ 
-      label "higher degree form" $
-      repeat (f (toStrategy allPowerFactors) |> 
-         (f (alternatives list) <|> liftRule specialV (ruleOrCtxOnce higherSubst))
-            |> f (toStrategy (ruleOnce moveToLeft)))
-   list = map toStrategy  
-             [ coverUpPower, ruleOnce coverUpTimes
-             , mulZero, {-ruleOnce2 powerFactor,-} sameFactor
-             , ruleOnce exposeSameFactor
-             ] ++ [coverUpPlus ruleOnce] ++ [toStrategy (ruleOnce sameConFactor)]
-   f = mapRulesS (liftToContext . liftRule (switchView equationView))
-   
-   specialV :: View (Context (OrList (Relation Expr))) (Context (OrList (Equation Expr)))
-   specialV = contextView (switchView equationView)
-
-{-# DEPRECATED ruleOrCtxOnce "Replace ruleOrCtxOnce" #-}
-ruleOrCtxOnce :: Rule (Context a) -> Rule (Context (OrList a))
-ruleOrCtxOnce r = makeSimpleRuleList (name r) $ \ctx -> do
-   let env = getEnvironment ctx
-   a <- fromContext ctx
-   case disjunctions a of
-      Just xs -> f [] env xs
-      Nothing -> []
- where
-   f _   _   [] = []
-   f acc env (a:as) = 
-      case applyAll r (newContext env (noNavigator a)) of
-         []  -> f (a:acc) env as
-         new -> concatMap (fmapC $ \na -> orList (reverse acc++na:as)) new
-   fmapC g c = 
-      case fromContext c of
-         Just a  -> [newContext (getEnvironment c) (noNavigator (g a))]
-         Nothing -> []
-
------------------------------------------------------------
--- Finding factors in an expression
-
-findFactorsStrategy :: LabeledStrategy Expr
-findFactorsStrategy = cleanUpStrategy cleanUpSimple $
-   label "find factors" $
-   repeat (niceFactorsNew <|> commonFactorVarNew)
+-- helper strategy
+coverUpPlus :: (Rule (Equation Expr) -> Rule a) -> Strategy a
+coverUpPlus f = alternatives $ map (f . ($ oneVar))
+   [coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith]

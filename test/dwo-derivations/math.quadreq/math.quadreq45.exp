@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="distribution multiplication">
       <expr>
@@ -29,11 +29,17 @@
       <expr>
         x == 0 or 7*x == -9
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 0 or x == -9/7
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
   </list>
 </reply>

@@ -68,10 +68,10 @@ class IsNavigator f => TypedNavigator f where
    leaveT   :: (Monad m, Typeable b) => f a -> m b
    castT    :: (Monad m, Typeable e) => View e b -> f a -> m (f b)
    -- By default, fail
-   changeT _ _ = fail "changeT"
-   currentT _  = fail "currentT"
-   leaveT _    = fail "leaveT"
-   castT _ _   = fail "castT"
+   changeT _ _ = fail "changeT: not defined"
+   currentT _  = fail "currentT: not defined"
+   leaveT _    = fail "leaveT: not defined"
+   castT _ _   = fail "castT: not defined"
 
 ---------------------------------------------------------------
 -- Derived navigations
@@ -216,22 +216,26 @@ instance Typeable a => TypedNavigator (ViewNav a) where
    leaveT (VN _ a) =
       leave a >>= castM
    castT v (VN v0 a) 
-      | typeOf (getTp v) == typeOf (getTp v0) = 
-           return (VN (makeView f g) a)
-      | otherwise = 
-           fail "castT"
+      | tp1 == tp2 = return (VN (castView v) a)
+      | otherwise  = fail $ "castT: " ++ show tp1 ++ " and " ++ show tp2
     where
-      f e = castM e >>= matchM v
-      g   = fromMaybe (error "castT") . cast . build v
+      tp1 = typeOf (getTp v)
+      tp2 = typeOf (getTp v0)
       
       getTp :: View a b -> a
-      getTp = error "castT"
+      getTp = error "castT: getTp"
 
 replaceT :: (Monad m, TypedNavigator f, Typeable b) =>  b -> f a -> m (f a)
 replaceT = changeT . const . return
 
 castM :: (Monad m, Typeable a, Typeable b) => a -> m b
 castM = maybe (fail "castM") return . cast
+
+castView :: (Typeable c, Typeable a) => View a b -> View c b
+castView v = makeView f g
+ where
+   f e = castM e >>= matchM v
+   g   = fromMaybe (error "castT: build") . castM . build v
 
 ---------------------------------------------------------------
 -- Uniform navigator type

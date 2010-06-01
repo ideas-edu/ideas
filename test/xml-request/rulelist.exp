@@ -45,9 +45,9 @@
     <elem name="cover-up times [vars]" buggy="false" rewriterule="false"/>
     <elem name="distribution division" buggy="false" rewriterule="false"/>
     <elem name="distribution multiplication" buggy="false" rewriterule="false"/>
-    <elem name="distribution square" buggy="false" rewriterule="false"/>
+    <elem name="distribution square" buggy="false" rewriterule="true"/>
     <elem name="factor left as square" buggy="false" rewriterule="false"/>
-    <elem name="flip equation" buggy="false" rewriterule="false"/>
+    <elem name="flip equation" buggy="false" rewriterule="true"/>
     <elem name="merge similar terms" buggy="false" rewriterule="false"/>
     <elem name="move to left" buggy="false" rewriterule="false"/>
     <elem name="multiplication is zero" buggy="false" rewriterule="false"/>

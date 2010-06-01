@@ -471,9 +471,7 @@ distributeTimes = makeSimpleRuleList "distribution multiplication" $
 
 distributeDivision :: Rule Expr
 distributeDivision = makeSimpleRule "distribution division" $ \expr -> do
-   (a, b) <- match divView expr
-   r      <- match rationalView b
-   xs     <- match sumView a
+   (xs, r) <- match (divView >>> (sumView *** rationalView)) expr
    guard (length xs > 1)
    let ys = map (/fromRational r) xs
    return $ build sumView ys

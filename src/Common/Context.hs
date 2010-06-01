@@ -24,7 +24,7 @@ module Common.Context
      -- * Lifting
    , liftToContext, liftTransContext, contextView
      -- * Context Monad
-   , ContextMonad, runCM, readVar, writeVar, modifyVar
+   , ContextMonad, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM -- , listCM, runListCM, withListCM
    ) where 
 
@@ -32,7 +32,7 @@ import Common.Navigator
 
 import qualified Common.Navigator as Navigator
 import Common.Transformation
-import Common.Utils (safeHead, commaList, readM)
+import Common.Utils (commaList, readM)
 import Common.View
 import Control.Monad
 import Data.Maybe
@@ -184,18 +184,20 @@ contextView v = makeView f g
 ----------------------------------------------------------
 -- Context monad
 
-newtype ContextMonad a = CM (Environment -> [(a, Environment)])
+newtype ContextMonad a = CM { unCM :: Environment -> Maybe (a, Environment) }
 
-withCM :: (a -> ContextMonad b) -> Context a -> Maybe (Context b)
-withCM f c = fromContext c >>= \a -> runCM (f a) (getEnvironment c)
+withCM :: (a -> ContextMonad a) -> Context a -> Maybe (Context a)
+withCM f c = do 
+   a0       <- current c
+   (a, env) <- unCM (f a0) (getEnvironment c)
+   let nav = replace a (getNavigator c)
+   return (newContext env nav)
 
 evalCM :: (a -> ContextMonad b) -> Context a -> Maybe b
-evalCM f c = withCM f c >>= fromContext
-
-runCM :: ContextMonad a -> Environment -> Maybe (Context a)
-runCM (CM f) env = do
-   (a, e) <- safeHead (f env)
-   return (newContext e (noNavigator a))
+evalCM f c = do
+   a0     <- current c
+   (b, _) <- unCM (f a0) (getEnvironment c)
+   return b
 
 instance Functor ContextMonad where
    fmap = liftM
@@ -230,16 +232,3 @@ modifyVar var f = readVar var >>= (writeVar var  . f)
 
 maybeCM :: Maybe a -> ContextMonad a
 maybeCM = maybe mzero return
-
-
-{-
-listCM :: [a] -> ContextMonad a
-listCM = foldr (mplus . return) mzero
-
-withListCM :: (a -> ContextMonad b) -> Context a -> [Context b]
-withListCM f c = runListCM (f (fromContext c)) (getEnvironment c)
-
-runListCM :: ContextMonad a -> Environment -> [Context a]
-runListCM (CM f) env = do
-   (a, e) <- f env
-   return (C e a) -}

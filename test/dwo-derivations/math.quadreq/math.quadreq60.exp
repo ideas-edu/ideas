@@ -1,9 +1,12 @@
-<reply result="ok" version="0.5.9">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="distribution square">
       <expr>
         1-2*x+x^2 == x+2
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>

@@ -89,7 +89,8 @@ quadraticExercise = makeExercise
                        abcBuggyRules ++ buggyQuadratic ++
                        map ruleOnce buggyRulesEquation
    , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
-   , strategy     = quadraticStrategy
+   , strategy     = quadraticStrategyNEW
+   , navigation   = exprNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
    

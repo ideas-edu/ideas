@@ -23,6 +23,7 @@ module Domain.Math.Polynomial.Views
 import Prelude hiding ((^))
 import Control.Monad
 import Common.Apply
+import Common.Context
 import Common.View
 import Common.Traversable
 import Common.Uniplate (transform, uniplate, children)
@@ -32,7 +33,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Equation.CoverUpRules
+import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Polynomial.CleanUp
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
@@ -257,10 +258,15 @@ higherDegreeEquationsView = makeView f (fmap g)
    
    cuRules :: OrList (Equation Expr) -> OrList (Equation Expr)
    cuRules xs = 
-      let new = fmap (fmap (cleanUpExpr2 . distr)) xs in
+      let new  = fmap (fmap (cleanUpExpr2 . distr)) xs
+          newc = newContext emptyEnv (exprNavigator new)
+      in case apply coverUpStrategy newc >>= fromContext of
+            Just ys -> cuRules ys
+            Nothing -> new
+      {-
       case msum (map (`apply` new) coverUpRulesOr) of
          Just ys -> cuRules ys
-         Nothing -> new
+         Nothing -> new -}
 
 hasNegSqrt :: Expr -> Bool
 hasNegSqrt (Sqrt a) = 

@@ -15,6 +15,7 @@ import Common.Apply
 import Common.Context
 import Common.Rewriting
 import Common.Transformation
+import Common.Navigator
 import Common.Traversable
 import Common.Uniplate (universe, uniplate)
 import Common.Utils
@@ -507,3 +508,9 @@ findFactor rs
         return $ Prelude.recip $ fromIntegral $ foldr1 gcd $ map numerator rs
    | otherwise = 
         return $ fromIntegral $ foldr1 lcm $ map denominator rs
+        
+parentNotNegCheck :: Rule (Context Expr)
+parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c -> 
+   case up c >>= current of
+      Just (Negate _) -> Nothing
+      _               -> Just c

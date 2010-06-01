@@ -9,7 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Equation.CoverUpExercise (coverUpExercise) where
+module Domain.Math.Equation.CoverUpExercise 
+   ( coverUpExercise, coverUpStrategy 
+   ) where
 
 import Common.Context
 import Common.Exercise
@@ -39,8 +41,9 @@ coverUpExercise = makeExercise
    , parser       = parseExprWith (pOrList (pEquation pExpr))
    , equivalence  = \_ _ -> True
    , isReady      = solvedEquations
-   , extraRules   = map liftToContext coverUpRulesOr
+   , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy
+   , navigation   = exprNavigator
    , examples     = map (orList . return) (concat (fillInResult ++ coverUpEquations))
    }
 
@@ -49,7 +52,7 @@ coverUpExercise = makeExercise
    
 coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 coverUpStrategy = label "Cover-up" $ 
-   repeat (alternatives $ map (liftToContext . cleanUp) coverUpRulesOr)
+   repeat $ somewhere $ alternatives coverUpRulesOr
 
 cleanUp :: Rule (OrList (Equation Expr)) -> Rule (OrList (Equation Expr))
 cleanUp = doAfter $ fmap $ fmap cleanUpExpr

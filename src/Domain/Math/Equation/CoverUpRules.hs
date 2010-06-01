@@ -24,6 +24,8 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpBinaryRule, commOp, flipOp
    ) where
 
+import Common.Context
+import Common.Rewriting (IsTerm)
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
@@ -148,8 +150,8 @@ coverUpSqrtWith = coverUpUnaryRule "square root" isSqrt (\x -> x*x)
 ---------------------------------------------------------------------
 -- Cover-up rules for variables
 
-coverUpRulesOr :: [Rule (OrList (Equation Expr))]
-coverUpRulesOr = coverUpPower : map ruleOnce coverUpRules
+coverUpRulesOr :: IsTerm a => [Rule (Context a)]
+coverUpRulesOr = use coverUpPower : map use coverUpRules
 
 coverUpRules :: [Rule (Equation Expr)]
 coverUpRules = 

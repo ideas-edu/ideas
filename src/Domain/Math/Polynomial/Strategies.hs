@@ -13,13 +13,10 @@ module Domain.Math.Polynomial.Strategies
    ( linearStrategy, linearMixedStrategy, findFactorsStrategy
    , quadraticStrategy, quadraticStrategyG
    , higherDegreeStrategy, higherDegreeStrategyG
-   , exprNavigator
-   , cleanTop, useC, use, multi, parentNotNegCheck
    ) where
 
 import Prelude hiding (repeat, replicate, fail)
 import Common.Strategy
-import Common.Navigator
 import Common.Transformation
 import Common.Uniplate (transform)
 import Common.View
@@ -32,33 +29,6 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
 import Common.Rewriting (IsTerm)
-import Data.Maybe
-
-use :: (IsTerm a, IsTerm b) => Rule a -> Rule (Context b)
-use = useC . liftToContext
-
-useC :: (IsTerm a, IsTerm b) => Rule (Context a) -> Rule (Context b)
-useC = liftRule (makeView (castT exprView) (fromJust . castT exprView))
-               
-cleanTop :: (a -> a) -> Context a -> Context a
-cleanTop f c = 
-   case top c of 
-      Just ok -> navigateTowards (location c) (change f ok)
-      Nothing -> c
-                  
-exprNavigator :: IsTerm a => a -> Navigator a
-exprNavigator a = 
-   let f = castT exprView . viewNavigator . toExpr
-   in fromMaybe (noNavigator a) (f a)
-
-multi :: IsStrategy f => String -> f a -> LabeledStrategy a
-multi s = collapse . label s . repeat1
-
-parentNotNegCheck :: Rule (Context Expr)
-parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c -> 
-   case up c >>= current of
-      Just (Negate _) -> Nothing
-      _               -> Just c
 
 ------------------------------------------------------------
 -- Linear equations

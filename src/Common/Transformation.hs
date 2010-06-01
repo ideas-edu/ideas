@@ -31,7 +31,7 @@ module Common.Transformation
    , siblingOf, transformations, getRewriteRules, doBeforeTrans
    , ruleRecognizer, useRecognizer
      -- * Lifting
-   , ruleOnce -- , ruleOnce2, ruleSomewhere
+   -- , ruleOnce, ruleOnce2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , testRule, propRuleSmart
@@ -40,7 +40,6 @@ module Common.Transformation
 import Common.Apply
 import Common.Rewriting
 import Common.Traversable
-import Common.Uniplate (Uniplate, somewhereM)
 import Common.Utils
 import Common.View
 import Control.Monad
@@ -401,20 +400,6 @@ useRecognizer = Recognizer
 -----------------------------------------------------------
 --- Lifting
 
-{-# DEPRECATED ruleOnce, ruleOnce2, ruleSomewhere 
-       "To be replaced by navigator" #-}
-
--- | Lift a rule using the Once type class
-ruleOnce :: Once f => Rule a -> Rule (f a)
-ruleOnce r = r { transformations = [makeTransList (onceM (applyAll r))] }
-
--- | Apply a rule once (in two functors)
-ruleOnce2 :: (Once f, Once g) => Rule a -> Rule (f (g a))
-ruleOnce2 = ruleOnce . ruleOnce
-
-ruleSomewhere :: Uniplate a => Rule a -> Rule a
-ruleSomewhere r = r { transformations = [makeTransList (somewhereM (applyAll r))] }
-
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
@@ -426,8 +411,7 @@ liftRule v = liftRuleIn (v &&& identity)
 
 liftRuleIn :: Crush m => ViewM m a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
-   { transformations = map (liftTransIn v) (transformations r)
-   }
+   { transformations = map (liftTransIn v) (transformations r) }
 
 -----------------------------------------------------------
 --- QuickCheck

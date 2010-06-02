@@ -48,21 +48,30 @@ derivation mcfg state =
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
       (Just p, Just cfg) | null (prefixToSteps p) -> 
-         let oldStrategy   = strategy (exercise (exercisePkg state))
+         let oldStrategy   = strategy ex
              newStrategy   = configure cfg oldStrategy
              updatePkg pkg = pkg {exercise = updateEx (exercise pkg)}
              updateEx  ex  = ex  {strategy = newStrategy} 
-         in rec state 
+         in rec timeout [] state 
                { prefix      = Just (emptyPrefix newStrategy)
                , exercisePkg = updatePkg (exercisePkg state)
                } 
-      _ -> rec state
+      _ -> rec timeout [] state
  where
-   rec :: Monad m => State a -> m [(Rule (Context a), Context a)]
-   rec state = 
+   ex = exercise (exercisePkg state)
+   timeout = 50
+ 
+   rec i acc state = 
       case onefirst state of
-         Nothing           -> return []
-         Just (r, _, next) -> liftM ((r, context next):) (rec next)
+         Nothing           -> return (reverse acc)
+         Just (r, _, next)
+            |  i <= 0      -> fail msg
+            | otherwise    -> rec (i-1) ((r, context next) : acc) next
+    where
+      msg = "Time out after " ++ show timeout ++ " steps. " ++ 
+            concatMap f (reverse acc)
+      f (r, c) = let s = maybe "???" (prettyPrinter ex) (fromContext c)
+                 in "[" ++ show r ++ "]  " ++ s ++ "; "
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.

@@ -14,7 +14,7 @@ module Common.Strategy.Configuration
      StrategyConfiguration, ConfigItem
    , ConfigLocation(..), ConfigAction(..), configActions
      --  Configure
-  ,  configure
+  ,  configure, configureNow
      -- Combinators
    , remove, reinsert, collapse, expand, hide, reveal
    ) where
@@ -23,6 +23,7 @@ import Common.Strategy.Abstract
 import Common.Strategy.Core
 import Common.Strategy.Location
 import Common.Transformation
+import Data.Maybe
 
 ---------------------------------------------------------------------
 -- Types and constructors
@@ -44,6 +45,13 @@ configActions = [Remove .. ]
 
 ---------------------------------------------------------------------
 -- Configure
+
+configureNow :: LabeledStrategy a -> LabeledStrategy a
+configureNow = 
+   let lsToCore = toCore . toStrategy
+       coreToLS = fromMaybe err . toLabeledStrategy . toStrategy
+       err      = error "configureNow: label disappeared"
+   in coreToLS . processLabelInfo id . lsToCore
 
 configure :: StrategyConfiguration -> LabeledStrategy a -> LabeledStrategy a
 configure cfg ls = 

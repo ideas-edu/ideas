@@ -42,7 +42,7 @@ linearMixedStrategy =
        cfg = [ (ByName (name ruleNormalizeMixedFraction), Reinsert)
              , (ByName (name ruleNormalizeRational), Remove)
              ] 
-   in configure cfg (cleanUpStrategy f linearStrategyG)
+   in cleanUpStrategy f (configureNow (configure cfg linearStrategyG))
 
 linearStrategyG :: IsTerm a => LabeledStrategy (Context a)
 linearStrategyG =

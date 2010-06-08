@@ -261,12 +261,8 @@ higherDegreeEquationsView = makeView f (fmap g)
       let new  = fmap (fmap (cleanUpExpr2 . distr)) xs
           newc = newContext emptyEnv (exprNavigator new)
       in case apply coverUpStrategy newc >>= fromContext of
-            Just ys -> cuRules ys
-            Nothing -> new
-      {-
-      case msum (map (`apply` new) coverUpRulesOr) of
-         Just ys -> cuRules ys
-         Nothing -> new -}
+            Just ys | xs /= ys -> cuRules ys
+            _ -> new
 
 hasNegSqrt :: Expr -> Bool
 hasNegSqrt (Sqrt a) = 

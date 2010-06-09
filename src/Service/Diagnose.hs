@@ -47,7 +47,7 @@ data Diagnosis a
 diagnose :: State a -> a -> Diagnosis a
 diagnose state new
    -- Is the submitted term equivalent?
-   | not (equivalence ex (term state) new) =
+   | not (equivalenceContext ex (context state) newc) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
            Just r -> -- report the buggy rule
@@ -68,14 +68,15 @@ diagnose state new
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        let ns = restartIfNeeded (state { prefix=Nothing, context=inContext ex new })
+        let ns = restartIfNeeded (state { prefix=Nothing, context=newc })
         in case discovered False of
               Just r ->  -- If yes, report the found rule as a detour
                  Detour (ready ns) ns r
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
-   ex = exercise (exercisePkg state)
+   ex   = exercise (exercisePkg state)
+   newc = inContext ex new
    
    expected = do
       xs <- allfirsts (restartIfNeeded state)
@@ -92,7 +93,7 @@ diagnose state new
       (sub1, sub2) = 
          case difference ex (not searchForBuggy) (term state) new of 
             Just (a, b) -> (inContext ex a, inContext ex b) 
-            Nothing     -> (context state, inContext ex new)
+            Nothing     -> (context state, newc)
  
 ----------------------------------------------------------------
 -- Helpers

@@ -62,8 +62,9 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , calcPowerPlus
             , calcPowerMinus
             , myFractionTimes
+            , reciprocalFrac
             ] ++ fractionRules            
-    cleanupRules = calcPower : simplifyFraction  : naturalRules
+    cleanupRules = calcPower : simplifyFraction : naturalRules
 
 calcPowerStrategy :: LabeledStrategy (Context Expr)
 calcPowerStrategy = makeStrategy "calcPower" rules cleanupRules
@@ -82,6 +83,7 @@ makeStrategy l rs cs = cleanUpStrategy f $ strategise l rs
   where
     f = applyD $ strategise l cs
     strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
+--    strategise l = label l . Common.Strategy.replicate 100 . try . alternatives . map (somewhere . liftToContext)
 
 powerRules =
       [ addExponents
@@ -98,14 +100,6 @@ powerRules =
       , myFractionTimes
       , pushNegOut
       ]
-
-hasNegExp expr = 
-  case match strictPowerView expr of
-    Just (_, (_, x)) -> case match rationalView x of
-      Just x' -> x' < 0
-      _       -> False
-    _ -> False
-
 
 -- | Allowed numeric rules
 naturalRules =

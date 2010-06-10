@@ -13,14 +13,14 @@ module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
-  , reciprocalInv
+  , reciprocalInv, reciprocalFrac
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
     -- * Common rules
   , myFractionTimes, simplifyFraction, pushNegOut
     -- * Help functions
-  , smartRule
+  , smartRule, powerRuleOrder, hasNegExp
   ) where
 
 import Prelude hiding ( (^) )
@@ -37,6 +37,14 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
 
+-- | Rule ordering ------------------------------------------------------------
+powerRuleOrder =  
+  [ name addExponents
+  , name mulExponents
+  , name subExponents
+  , name distributePower
+  , name reciprocal
+  ]  
 
 -- | Power rules --------------------------------------------------------------
 
@@ -135,9 +143,22 @@ reciprocalInv :: (Expr -> Bool) -> Rule Expr
 reciprocalInv p = makeSimpleRule "reciprocal" $ \ expr -> do
   guard (p expr)
 --  a        <- selectVar expr
-  (c, (a, x))   <- match strictPowerView expr
+  (c, (a, x)) <- match strictPowerView expr
   return $ c ./. build strictPowerView (1, (a, neg x))
 
+-- | c / d*a^(-x)*b^(-y)...p^r... = c*a^x*b^y.../d*p^r...
+reciprocalFrac :: Rule Expr
+reciprocalFrac = makeSimpleRule "reciprocal fraction" $ \ expr -> do
+  (e1, e2) <- match divView expr
+  (s, xs)  <- match productView e2
+  let (ys, zs) = partition hasNegExp xs
+  guard (not $ null ys)
+  return $ e1 .*. build productView (s, map f ys) ./. build productView (False, zs)
+    where
+      f e = case match strictPowerView e of
+              Just (c, (a, x)) -> build strictPowerView (c, (a, neg x))
+              Nothing          -> e
+  
 
 -- | Root rules ----------------------------------------------------------------
 
@@ -216,10 +237,9 @@ myFractionTimes :: Rule Expr
 myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do
   (e1, e2) <- match timesView expr
   guard $ isJust $ match divView e1 `mplus` match divView e2
+  guard $ not $ isJust $ match rationalView e1 `mplus` match rationalView e2
   (a, b)   <- match (divView <&> (identity >>^ \e -> (e,1))) e1
   (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
---  (a, b)   <- match divView e1
---  (c, d)   <- match divView e2
   return $ build divView (a .*. c, b .*. d)
 
 -- | simplify expression
@@ -227,7 +247,6 @@ simplifyFraction :: Rule Expr
 simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
   let expr' = simplifyWith (second normalizeProduct) productView $ expr
   guard (expr /= expr')
-  guard $ not $ applicable myFractionTimes expr' -- a hack, need to come up with a constructive solution
   return expr'
 
 -- | (-a)^x = (-)a^x
@@ -281,3 +300,10 @@ split op xs = f xs
 forallVars :: (String -> Rule Expr) -> Rule Expr
 forallVars ruleFor = makeSimpleRuleList (name (ruleFor "")) $ \ expr -> 
   mapMaybe (\v -> apply (ruleFor v) expr) $ collectVars expr
+
+hasNegExp expr = 
+  case match strictPowerView expr of
+    Just (_, (_, x)) -> case match rationalView x of
+      Just x' -> x' < 0
+      _       -> False
+    _ -> False

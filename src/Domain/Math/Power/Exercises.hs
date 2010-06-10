@@ -55,13 +55,7 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , examples     = concat $  simplerPowers ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
-   , ruleOrdering = ruleNameOrderingWith 
-                    [ name addExponents
-                    , name mulExponents
-                    , name subExponents
-                    , name distributePower
-                    , name reciprocal
-                    ]                    
+   , ruleOrdering = ruleNameOrderingWith powerRuleOrder                  
    }
 
 powerOfExercise :: Exercise Expr
@@ -74,6 +68,7 @@ powerOfExercise = (powerExercise powerOfStrategy)
    , examples     = concat $  powersOfA ++ powersOfX ++ brokenExp1' 
                            ++ brokenExp2 ++ brokenExp3 ++ normPower5'
                            ++ normPower6
+   , ruleOrdering = ruleNameOrderingWith powerRuleOrder             
    }
 
 nonNegExpExercise :: Exercise Expr
@@ -85,6 +80,10 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , equivalence  = viewEquivalent normPowerNonNegDouble
    , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
                            ++ brokenExp1 ++ normPower4' ++ normPower5
+   , ruleOrdering = ruleNameOrderingWith [ name mulExponents
+                                         , name reciprocalFrac
+                                         , name $ reciprocalInv $ const False
+                                         , name power2root]
    }
 
 calcPowerExercise :: Exercise Expr

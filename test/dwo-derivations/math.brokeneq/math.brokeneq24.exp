@@ -1,0 +1,35 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="crossMultiply">
+      <expr>
+        (x-3)*5 == (1-x)*7
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        (x-3)*5-(1-x)*7 == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        5*x-22+7*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        12*x-22 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        12*x == 22
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 11/6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

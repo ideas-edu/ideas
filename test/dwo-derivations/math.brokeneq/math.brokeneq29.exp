@@ -1,0 +1,30 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="cover-up plus [vars]">
+      <expr>
+        (x+5)/(2*x) == 3
+      </expr>
+    </elem>
+    <elem ruleid="multiplyOneDiv">
+      <expr>
+        x+5 == 6*x
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        -5*x+5 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -5*x == -5
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.brokeneq" encoding="string">
+  <state>
+    <expr>
+      (x-2)/(x-3) == x/2
+    </expr>
+  </state>
+</request>

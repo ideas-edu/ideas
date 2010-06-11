@@ -1,0 +1,23 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="sameDivisor">
+      <expr>
+        x^2+2*x-4 == 4*x+11
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-2*x-15 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 5 or x == -3
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==64, a==1, b==-2, c==-15]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

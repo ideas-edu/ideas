@@ -1,0 +1,55 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="sameDividend">
+      <expr>
+        x^2-3*x == 0 or 2*x-6 == 4*x+2
+      </expr>
+    </elem>
+    <elem ruleid="all power factors">
+      <expr>
+        x == 0 or x-3 == 0 or 2*x-6 == 4*x+2
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 0 or x == 3 or 2*x-6 == 4*x+2
+      </expr>
+      <context>
+        <item name="location" value="[1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="same constant factor">
+      <expr>
+        x == 0 or x == 3 or x-3 == 2*x+1
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x == 0 or x == 3 or -x-4 == 0
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 0 or x == 3 or -x == 4
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        x == 0 or x == 3 or x == -4
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

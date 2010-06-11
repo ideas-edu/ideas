@@ -1,0 +1,40 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="crossMultiply">
+      <expr>
+        4*x == (x+1)*7
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        -(x+1)*7+4*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        -7*x-7+4*x == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -3*x-7 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        -3*x == 7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        3*x == -7
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -7/3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

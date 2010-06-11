@@ -1,0 +1,33 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="cover-up plus [vars]">
+      <expr>
+        x^2/(2*x-3) == 4
+      </expr>
+    </elem>
+    <elem ruleid="multiplyOneDiv">
+      <expr>
+        x^2 == (2*x-3)*4
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        -(2*x-3)*4+x^2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        -8*x+12+x^2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 6 or x == 2
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==16, a==1, b==-8, c==12]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

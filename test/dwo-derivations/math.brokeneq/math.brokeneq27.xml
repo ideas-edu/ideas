@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.brokeneq" encoding="string">
+  <state>
+    <expr>
+      (3*x+6)/(3*x-1) == (x+4)/(x+1)
+    </expr>
+  </state>
+</request>

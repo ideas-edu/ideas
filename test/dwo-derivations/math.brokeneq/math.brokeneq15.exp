@@ -1,0 +1,47 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="sameDividend">
+      <expr>
+        3*x-2 == 0 or 2*x^2 == x^2+4
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        3*x == 2 or 2*x^2 == x^2+4
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 2/3 or 2*x^2 == x^2+4
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x == 2/3 or x^2-4 == 0
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        x == 2/3 or x^2 == 4
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cover-up power [vars]">
+      <expr>
+        x == 2/3 or x == 2 or x == -2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

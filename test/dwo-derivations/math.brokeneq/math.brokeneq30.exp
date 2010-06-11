@@ -1,0 +1,45 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="cover-up minus left [vars]">
+      <expr>
+        (3*x+4)/(x+2) == 5
+      </expr>
+    </elem>
+    <elem ruleid="multiplyOneDiv">
+      <expr>
+        3*x+4 == (x+2)*5
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        -(x+2)*5+3*x+4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        -5*x-10+3*x+4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -2*x-6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        -2*x == 6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        2*x == -6
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

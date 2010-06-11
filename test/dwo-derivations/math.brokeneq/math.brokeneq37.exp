@@ -1,0 +1,33 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="crossMultiply">
+      <expr>
+        (x+1)*(2*x-4) == (x+2)*(7*x+1)
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        (x+1)*(2*x-4)-(x+2)*(7*x+1) == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        2*x^2-2*x-4-7*x^2-15*x-2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -5*x^2-17*x-6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == -3 or x == -2/5
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==169, a==-5, b==-17, c==-6]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

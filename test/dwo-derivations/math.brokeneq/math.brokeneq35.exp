@@ -1,0 +1,33 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="crossMultiply">
+      <expr>
+        (x+2)*(x+1) == (x+4)*2
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        (x+2)*(x+1)-(x+4)*2 == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        x^2+3*x+2-2*x-8 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        x^2+x-6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 2 or x == -3
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==25, a==1, b==1, c==-6]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

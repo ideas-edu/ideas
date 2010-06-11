@@ -1,0 +1,28 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="cover-up plus [vars]">
+      <expr>
+        x^2/(5*x+6) == 1
+      </expr>
+    </elem>
+    <elem ruleid="divisionIsOne">
+      <expr>
+        x^2 == 5*x+6
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-5*x-6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 6 or x == -1
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==49, a==1, b==-5, c==-6]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,40 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="crossMultiply">
+      <expr>
+        (x+2)*(2*x-3) == (2*x+5)*(x+4)
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        (x+2)*(2*x-3)-(2*x+5)*(x+4) == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        2*x^2+x-6-2*x^2-13*x-20 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -12*x-26 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up minus left [one var]">
+      <expr>
+        -12*x == 26
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        12*x == -26
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == -13/6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

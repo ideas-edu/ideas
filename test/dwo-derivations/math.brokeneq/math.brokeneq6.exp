@@ -1,0 +1,23 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="sameDivisor">
+      <expr>
+        x^2+2 == x+8
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        x^2-x-6 == 0
+      </expr>
+    </elem>
+    <elem ruleid="abc formula">
+      <expr>
+        x == 3 or x == -2
+      </expr>
+      <context>
+        <item name="clipboard" value="[D==25, a==1, b==-1, c==-6]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

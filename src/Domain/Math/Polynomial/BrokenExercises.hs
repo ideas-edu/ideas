@@ -13,7 +13,7 @@ module Domain.Math.Polynomial.BrokenExercises
    ( brokenEquationExercise, normalizeBrokenExercise
    ) where
 
-import Prelude hiding (repeat, (^))
+import Prelude hiding (repeat, until, (^))
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not)
@@ -28,8 +28,10 @@ import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
+import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Strategies (higherDegreeStrategyG)
 import Domain.Math.Polynomial.Exercises (eqOrList)
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
@@ -48,7 +50,7 @@ brokenEquationExercise = makeExercise
    , exerciseCode = makeCode "math" "brokeneq"
    , status       = Alpha -- Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
-   , isReady      = (`belongsTo` switchView (switchView polyView))
+   , isReady      = solvedRelations
 --   , equivalence  = ??
    , similarity   = eqOrList cleanUpExpr2
    , strategy     = brokenEquationStrategy
@@ -69,15 +71,24 @@ normalizeBrokenExercise = makeExercise
    , navigation   = exprNavigator
    , examples     = concat (normBroken ++ normBroken2)
    }
-   
+  
 brokenEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 brokenEquationStrategy = cleanUpStrategy (cleanTop (fmap (fmap cleanUpExpr2))) $
-   label "Broken equation" $ repeat $ 
-   (  use divisionIsZero <|> use divisionIsOne 
-  <|> use sameDivisor <|> use sameDividend
-  <|> use coverUpPlus <|> use coverUpMinusLeft <|> use coverUpMinusRight
-  <|> use coverUpNegate) |>
-   (use crossMultiply <|> use multiplyOneDiv)
+   label "Broken equation" $ 
+       brokenFormToPoly <*> higherDegreeStrategyG
+ where
+   brokenFormToPoly = label "broken form to polynomial" $ until allArePoly $
+      (  use divisionIsZero <|> use divisionIsOne 
+     <|> use sameDivisor <|> use sameDividend
+     <|> use coverUpPlus <|> use coverUpMinusLeft <|> use coverUpMinusRight
+     <|> use coverUpNegate
+      ) |>    
+      (  use crossMultiply <|> use multiplyOneDiv  )
+
+allArePoly :: Context (OrList (Equation Expr)) -> Bool
+allArePoly = 
+   let f a = a `belongsTo` polyView
+   in maybe False (all f . concatMap crush . crush) .  fromContext
 
 normalizeBrokenStrategy :: LabeledStrategy (Context Expr)
 normalizeBrokenStrategy = cleanUpStrategy (cleanTop cleanUpExpr2) $

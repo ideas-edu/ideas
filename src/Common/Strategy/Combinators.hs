@@ -14,6 +14,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Combinators where
 
+import qualified Prelude
 import Prelude hiding (not, repeat, fail, sequence)
 import Common.Context
 import Common.Navigator
@@ -100,6 +101,14 @@ try s = s |> succeed
 --   try the right-operand strategy
 (|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
 (|>) = liftCore2 (:|>:)
+
+-- | Repeat the strategy as long as the predicate holds
+while :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
+while p s = repeat (check p <*> s)
+
+-- | Repeat the strategy until the predicate holds
+until :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
+until p = while (Prelude.not . p)
 
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a

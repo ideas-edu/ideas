@@ -1,0 +1,40 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="crossMultiply">
+      <expr>
+        (3*x+6)*(x+1) == (3*x-1)*(x+4)
+      </expr>
+    </elem>
+    <elem ruleid="move to left">
+      <expr>
+        (3*x+6)*(x+1)-(3*x-1)*(x+4) == 0
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        3*x^2+9*x+6-3*x^2-11*x+4 == 0
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        -2*x+10 == 0
+      </expr>
+    </elem>
+    <elem ruleid="cover-up plus [one var]">
+      <expr>
+        -2*x == -10
+      </expr>
+    </elem>
+    <elem ruleid="cover-up negate [vars]">
+      <expr>
+        2*x == 10
+      </expr>
+    </elem>
+    <elem ruleid="cover-up times [vars]">
+      <expr>
+        x == 5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

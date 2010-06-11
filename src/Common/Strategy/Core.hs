@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( Core(..)
-   , strategyTree, runTree --, makeTree 
+   , strategyTree, runTree, makeTree 
    , mapRule, coreVars, noLabels, mapCore, mapCoreM --, catMaybeLabel --, , 
    , mapLabel, Translation, ForLabel(..) --, simpleTranslation
    ) where

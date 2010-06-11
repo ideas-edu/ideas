@@ -8,17 +8,35 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Implementation currently disabled.
+--
 -----------------------------------------------------------------------------
 module Common.Strategy.BiasedChoice 
    ( Bias(..), placeBiasLabels, biasTreeG, makeBiasedTree
    ) where
-
+    
 import Common.Apply
--- import Common.View
 import Common.Derivation
 import Common.Transformation
 import Common.Strategy.Core
--- import Common.Uniplate
+--import Common.Uniplate
+--import Common.View
+    
+newtype Bias f a = Normal (f a)
+
+instance Apply f => Apply (Bias f) where
+   applyAll (Normal r) = applyAll r
+
+placeBiasLabels :: Core l a -> Core (Either (Bias f a) l) a
+placeBiasLabels = mapLabel Right
+
+makeBiasedTree :: (DerivationTree (Rule a) a -> Bool) -> Core l a -> a -> DerivationTree (Rule a) a
+makeBiasedTree _ = makeTree
+
+biasTreeG :: (DerivationTree (f a, info) a -> Bool) -> DerivationTree (Bias f a, info) a -> DerivationTree (f a, info) a
+biasTreeG _ = changeLabel (\(Normal r, info) -> (r, info))
+
+{-
 
 data Bias f a = TryFirst BiasId | OrElse BiasId | Normal (f a) deriving Show
 type BiasId = Int
@@ -29,8 +47,8 @@ instance Apply f => Apply (Bias f) where
 
 -- Disabled! 
 placeBiasLabels :: Core l a -> Core (Either (Bias f a) l) a
-placeBiasLabels = {-fst . rec 0 . -}mapLabel Right
- where {-
+placeBiasLabels = fst . rec 0 . mapLabel Right
+ where
    -- Left-biased choice
    rec n (a :|>: b) = 
       let (ra, n1) = rec n  a
@@ -47,7 +65,7 @@ placeBiasLabels = {-fst . rec 0 . -}mapLabel Right
    recList n (x:xs) = 
       let (a,  n1) = rec n x
           (as, n2) = recList n1 xs
-      in (a:as, n2) -}
+      in (a:as, n2)
 
 biasTranslation :: (Rule a -> f a) -> Translation (Either (Bias f a) l) a (Bias f a)
 biasTranslation f = (either Before (const Skip), Normal . f)
@@ -84,14 +102,14 @@ biasTree success t = t {branches = f [] (branches t)}
             | n `elem` env -> f env xs
             | otherwise    -> branches (biasTree success st) ++ f env xs
          Normal r   -> (r, biasTree success st):f env xs
-{-
-   success :: DerivationTree s a -> Bool
-   success = isJust . derivation -}
+
+--   success :: DerivationTree s a -> Bool
+--   success = isJust . derivation
    
 makeBiasedTree :: (DerivationTree (Rule a) a -> Bool) -> Core l a -> a -> DerivationTree (Rule a) a
 makeBiasedTree p core = 
    biasTree p . changeLabel fst . runTree (strategyTree (biasTranslation id) (placeBiasLabels core))
-    
+-}
 -------------------------
 {-
 test = makeBiasedTree (maybe False (const True) . derivation) myCore 5

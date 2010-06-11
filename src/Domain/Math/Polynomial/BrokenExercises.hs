@@ -13,10 +13,11 @@ module Domain.Math.Polynomial.BrokenExercises
    ( brokenEquationExercise, normalizeBrokenExercise
    ) where
 
-import Prelude hiding (repeat)
+import Prelude hiding (repeat, (^))
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not)
+import Common.TestSuite
 import Common.Transformation
 import Common.Traversable
 import Common.Uniplate
@@ -34,6 +35,9 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
 import Domain.Math.Numeric.Views
 import Data.Ratio
+import Data.List hiding (repeat)
+import Data.Maybe
+import Test.QuickCheck hiding (label)
 
 go  = checkExercise brokenEquationExercise
 go2 = checkExercise normalizeBrokenExercise
@@ -78,7 +82,7 @@ brokenEquationStrategy = cleanUpStrategy (cleanTop (fmap (fmap cleanUpExpr2))) $
 normalizeBrokenStrategy :: LabeledStrategy (Context Expr)
 normalizeBrokenStrategy = cleanUpStrategy (cleanTop cleanUpExpr2) $
    label "Normalize broken expression" $
-   repeat (use fractionScale <|> use fractionPlus)
+   repeat (use fractionPlus <|> use fractionScale <|> use turnIntoFraction)
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Equation Expr)
@@ -130,26 +134,34 @@ multiplyOneDiv = makeSimpleRuleList "multiplyOneDiv" $ \(lhs :==: rhs) ->
 -- a/c + b/c = a+b/c   (also see Numeric.Rules)
 fractionPlus :: Rule Expr -- also minus
 fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
-   (e1, e2) <- match plusView expr
-   (a, b)   <- match divView e1
-   (c, d)   <- match divView e2
+   ((a, b), (c, d)) <- match myView expr
    guard (b == d)
    return (build divView (a+c, b))
-
+ where
+   myView = plusView >>> (divView *** divView)
+   
 fractionScale :: Rule Expr
-fractionScale = makeSimpleRule "fraction scale" $ \expr -> do
-   let subView = powerFactorViewWith rationalView
-   ((a, e1), (b, e2)) <- match (plusView >>> (divView *** divView)) expr
-   (x1, r1, n1) <- match subView e1
-   (x2, r2, n2) <- match subView e2
-   guard (x1==x2 && r1/=0 && r2/=0 && e1/=e2)
-   let f r  = numerator r * denominator r
-       r3   = fromIntegral (f r1 `lcm` f r2)
-       m    = n1 `max` n2
-       e3   = build subView (x1, r3, m)
-       newa = a * build subView (x1, r3 / r1, m-n1)
-       newb = b * build subView (x1, r3 / r2, m-n2)
-   return $ build (plusView >>> (divView *** divView)) ((newa, e3), (newb, e3))
+fractionScale = liftRule myView $ 
+   makeSimpleRule "fraction scale" $ \((a, e1), (b, e2)) -> do
+      guard (e1 /= e2)
+      let e3 = lcmExpr e1 e2
+      ma <- divisionExpr e3 e1
+      mb <- divisionExpr e3 e2
+      guard (ma /= 1 || mb /= 1)
+      return $ ((ma*a, e3), (mb*b, e3))
+ where
+   myView = plusView >>> (divView *** divView)
+   
+turnIntoFraction :: Rule Expr
+turnIntoFraction = liftRule plusView $
+   makeSimpleRule "turn into fraction" $ \(a, b) ->
+      liftM (\c -> (c, b)) (f a b) `mplus` 
+      liftM (\c -> (a, c)) (f b a)
+ where
+   f a b = do
+      guard (not (a `belongsTo` divView))
+      (_, e) <- match divView b
+      return $ build divView (a*e, e)
 
 isNormBroken :: Expr -> Bool
 isNormBroken (a :/: b) = noVarInDivisor a && noVarInDivisor b
@@ -157,3 +169,117 @@ isNormBroken e = noVarInDivisor e
 
 noVarInDivisor :: Expr -> Bool
 noVarInDivisor expr = and [ noVars a | _ :/: a <- universe expr ]
+
+lcmExpr :: Expr -> Expr -> Expr
+lcmExpr a b = fromMaybe (a*b) $ do
+   (ar, as) <- match powerProductView a
+   (br, bs) <- match powerProductView b
+   return $ build powerProductView (lcmR ar br, merge as bs)
+ where   
+   lcmR :: Rational -> Rational -> Rational
+   lcmR r1 r2 = 
+      let f r = numerator r * denominator r
+      in fromIntegral (lcm (f r1) (f r2))
+   
+   merge :: [(Expr, Integer)] -> [(Expr, Integer)] -> [(Expr, Integer)]
+   merge = foldr op id
+    where
+      op (e, n1) f ys = 
+         let n2   = fromMaybe 0 (lookup e ys)
+             rest = filter ((/=e) . fst) ys
+         in (e, n1 `max` n2) : f rest
+
+divisionExpr :: Expr -> Expr -> Maybe Expr
+divisionExpr a b = do
+   (ar, as) <- match powerProductView a
+   (br, bs) <- match powerProductView b
+   xs       <- as `without` bs
+   return $ build powerProductView (ar/br, xs)
+ where
+   without :: [(Expr, Integer)] -> [(Expr, Integer)] -> Maybe [(Expr, Integer)]
+   without [] ys =
+      guard (null ys) >> return []
+   without ((e,n1):xs) ys = 
+      let n2   = fromMaybe 0 (lookup e ys)
+          rest = filter ((/=e) . fst) ys
+      in liftM ((e,n1-n2):) (without xs rest)
+
+powerProductView :: View Expr (Rational, [(Expr, Integer)])
+powerProductView = makeView f g
+ where
+   f expr = do
+      (b, xs) <- match productView expr
+      let (r, ys) = collect xs
+      return (if b then -r else r, merge ys)
+         
+   g (r, xs) =
+      build productView (False, fromRational r : map (build pvn) xs)
+   
+   pvn :: View Expr (Expr, Integer)
+   pvn = simplePowerView >>> second integerView
+
+   collect :: [Expr] -> (Rational, [(Expr, Integer)])
+   collect = foldr op (1, [])
+    where
+      op e (r, xs) = 
+         let mr   = match rationalView e 
+             f r2 = (r*r2, xs)
+             pair = fromMaybe (e,1) (match pvn e)
+         in maybe (r, pair:xs) f mr
+
+   merge :: [(Expr, Integer)] -> [(Expr, Integer)]
+   merge [] = []
+   merge xs@((e, _) : _) = 
+      let (xs1, xs2) = partition ((==e) . fst) xs
+          n = sum (map snd xs1) 
+      in (e, n) : merge xs2
+
+test = e4
+ where 
+   a  = Var "a"
+   b  = Var "b"
+   
+   e1 = 6*a*b*a
+   e2 = -4*b^2*a*2
+   e3 = lcmExpr e1 e2
+   e4 = divisionExpr e3 e1
+   e5 = divisionExpr e3 e2
+   
+testLCM :: TestSuite
+testLCM = suite "lcmExpr" $ do
+   addProperty "transitivity" $ f3 $ \a b c -> 
+      lcmExpr a (lcmExpr b c) ~= lcmExpr (lcmExpr a b) c
+   addProperty "commutativity" $ f2 $ \a b -> 
+      lcmExpr a b ~= lcmExpr b a
+   addProperty "idempotency" $ f1 $ \a -> 
+      lcmExpr a a ~= absExpr a
+   addProperty "zero" $ f1 $ \a -> 
+      lcmExpr a 0 ~= 0
+   addProperty "one" $ f1 $ \a -> 
+      lcmExpr a 1 ~= absExpr a
+   addProperty "sign" $ f2 $ \a b -> 
+      lcmExpr a b ~= lcmExpr (-a) b
+ where 
+   f1 g = liftM  g genExpr
+   f2 g = liftM2 g genExpr genExpr
+   f3 g = liftM3 g genExpr genExpr genExpr
+ 
+   genExpr, genTerm, genAtom :: Gen Expr
+   genExpr = do
+      n  <- choose (0, 10)
+      b  <- arbitrary
+      xs <- replicateM n genTerm
+      return $ build productView (b, xs)
+   
+   genTerm = frequency [(3, genAtom), (1, liftM fromInteger arbitrary)]
+   
+   genAtom = do
+      v <- oneof $ map (return . Var) ["a", "b", "c"]
+      i <- choose (-10, 10)
+      n <- choose (0, 10)
+      p <- frequency [(3, return v), (1, return (v .+. fromInteger i))]
+      frequency [(3, return p), (1, return (p^fromInteger n))]
+
+   x ~= y = let f = simplifyWith (second sort) powerProductView 
+            in f x == f y
+   absExpr = simplifyWith (first (const False)) productView

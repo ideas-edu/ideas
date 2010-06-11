@@ -38,6 +38,12 @@
       },
       {
          "domain": "math",
+         "identifier": "brokeneq",
+         "description": "solve a broken equation (with a variable in a divisor)",
+         "status": "Alpha"
+      },
+      {
+         "domain": "math",
          "identifier": "calcpower",
          "description": "simplify expression (powers)",
          "status": "Provisional"
@@ -116,6 +122,12 @@
       },
       {
          "domain": "math",
+         "identifier": "normbroken",
+         "description": "normalize a broken expression (with a variable in a divisor)",
+         "status": "Alpha"
+      },
+      {
+         "domain": "math",
          "identifier": "powerof",
          "description": "write as a power of a",
          "status": "Provisional"
@@ -171,5 +183,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.13 (3010)"
+   "version": "0.6.2 (0)"
 }

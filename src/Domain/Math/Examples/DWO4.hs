@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Examples.DWO4 
-   ( brokenEquations, normBroken, normBroken2, normBrokenCon
+   ( brokenEquations, normBroken, normBroken2, normBrokenCon, deelUit
    ) where
 
 import Prelude hiding ((^))
@@ -341,7 +341,6 @@ normBroken2 =
    let x = Var "x" in
    let a = Var "a" in
    let p = Var "p" in
-   let t = Var "t" in
    [ [ (x^2+4*x-5)/(x^2+5*x-6), (x^2+2*x-8)/(x^2+10*x+24)
      , (x^2-7*x+12)/(x^2+x-20), (x^2+7*x+12)/(x^2+5*x+6)
      , (a^2-a-2)/(a^2+4*a-12), (a^2-3*a-10)/(a^2-a-20)
@@ -355,10 +354,20 @@ normBroken2 =
      , (x^2+5*x+6)/(x^3-x^2-6*x), (x^2+3*x-4)/(x^3-6*x^2+5*x)
      , (a^3+7*a^2+12*a)/(a^2+6*a+9), (a^3+7*a^2+10*a)/(a^2-a-6)
      , (a^2-9)/(a^3-4*a^2+3*a), (a^2-2*a-15)/(a^3-3*a^2-10*a)
-     ] -- laatste sommen, niveau 5
-   , [ (-6*a^2-1)/a, -2*p^2+3/(7*p), (7*t^2+4)/(-4*t), (9*x^2+8)/(8*x)
-     ] -- sommen (2a)
-   , [ (-7*a^2-4*a-6)/(-6*a), (3*p^2+6*p-8)/p, (2*t^2-9*t-8)/(-2*t)
+     ]
+   ]
+   
+deelUit :: [[Expr]]
+deelUit =
+   let x = Var "x" in
+   let a = Var "a" in
+   let p = Var "p" in
+   let t = Var "t" in
+   [ -- laatste sommen van gebroken vorm herleiden (2), niveau 5
+     [ (-6*a^2-1)/a, -2*p^2+3/(7*p), (7*t^2+4)/(-4*t), (9*x^2+8)/(8*x)
+     ]
+   , -- sommen (2a)
+     [ (-7*a^2-4*a-6)/(-6*a), (3*p^2+6*p-8)/p, (2*t^2-9*t-8)/(-2*t)
      , (x^2+5*x+5)/(2*x), (5*a^3-4*a+2)/(9*a), (5*p^3-7*p^2+9)/(2*p)
      , (-3*t^3+6*t-4)/(3*t), (4*x^3-3*x^2+4)/(7*x)
      ]

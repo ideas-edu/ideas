@@ -10,28 +10,29 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.BrokenExercises 
-   ( brokenEquationExercise, normalizeBrokenExercise
+   ( brokenEquationExercise
+   , normalizeBrokenExercise, divisionBrokenExercise
    ) where
 
 import Prelude hiding (repeat, until, (^))
 import Common.Context
 import Common.Exercise
+import Common.Navigator
 import Common.Strategy hiding (not)
 import Common.TestSuite
 import Common.Transformation
-import Common.Traversable
+import Common.Traversable (crush, onceJoinM)
 import Common.Uniplate
 import Common.View
 import Control.Monad
 import Domain.Math.Expr
-import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
 import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Polynomial.Strategies (higherDegreeStrategyG)
+import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Exercises (eqOrList)
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
@@ -71,7 +72,15 @@ normalizeBrokenExercise = makeExercise
    , navigation   = exprNavigator
    , examples     = concat (normBroken ++ normBroken2)
    }
-  
+   
+divisionBrokenExercise :: Exercise Expr
+divisionBrokenExercise = normalizeBrokenExercise
+   { description  = "divide a broken fraction ('uitdelen')"
+   , exerciseCode = makeCode "math" "divbroken"
+   , strategy     = label "divide broken fraction" succeed
+   , examples     = concat deelUit
+   }
+
 brokenEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 brokenEquationStrategy = cleanUpStrategy (cleanTop (fmap (fmap cleanUpExpr2))) $
    label "Broken equation" $ 
@@ -93,7 +102,20 @@ allArePoly =
 normalizeBrokenStrategy :: LabeledStrategy (Context Expr)
 normalizeBrokenStrategy = cleanUpStrategy (cleanTop cleanUpExpr2) $
    label "Normalize broken expression" $
-   repeat (use fractionPlus <|> use fractionScale <|> use turnIntoFraction)
+      phaseOneDiv <*> phaseSimplerDiv
+ where
+   phaseOneDiv = label "Write as division" $
+      until isDivC $ 
+         use fractionPlus <|> use fractionScale <|> use turnIntoFraction
+   phaseSimplerDiv = label "Simplify division" $
+      repeat (use cancelTermsDiv)
+       -- onceDiv findFactorsStrategyG
+       
+onceDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+onceDiv s = check isDivC <*> once s
+
+isDivC :: Context a -> Bool
+isDivC = maybe False (isJust . isDivide :: Expr -> Bool) . currentT
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Equation Expr)
@@ -150,7 +172,21 @@ fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
    return (build divView (a+c, b))
  where
    myView = plusView >>> (divView *** divView)
-   
+
+-- ab/ac  =>  b/c  (if a/=0)
+cancelTermsDiv :: Rule Expr
+cancelTermsDiv = liftRule myView $ 
+   makeSimpleRule "cancel terms div" $ \((b, xs), (c, ys)) -> do
+      let (ps, qs) = rec xs ys
+      guard (length ps < length xs)
+      return ((b, ps), (c, qs))
+ where
+   myView = divView >>> (productView *** productView)
+   rec xs ys = foldr add (xs, []) ys
+   add y (xs, ys) 
+      | y `elem` xs = (delete y xs, ys)
+      | otherwise   = (xs, y:ys)
+
 fractionScale :: Rule Expr
 fractionScale = liftRule myView $ 
    makeSimpleRule "fraction scale" $ \((a, e1), (b, e2)) -> do

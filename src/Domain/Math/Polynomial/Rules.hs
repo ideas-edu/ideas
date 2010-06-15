@@ -26,6 +26,7 @@ import Data.Maybe
 import Data.Ratio
 import Domain.Math.Approximation (precision)
 import Domain.Math.Clipboard
+import Domain.Math.Data.Polynomial
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
@@ -57,6 +58,7 @@ quadraticRuleOrder =
 commonFactorVar :: Rule (Equation Expr) 
 commonFactorVar = rhsIsZero commonFactorVarNew
 
+-- Maybe to be replaced by more general factorVariablePower??
 commonFactorVarNew :: Rule Expr
 commonFactorVarNew = makeSimpleRule "common factor var" $ \expr -> do
    (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) expr
@@ -281,18 +283,30 @@ ruleNormalizeMixedFraction =
 -------- Rules From HDE
 
 -- X*A + X*B = X*C + X*D
+-- New implementation, but slightly different than original
+-- This one does not factor constants
+
 allPowerFactors :: Rule (OrList (Equation Expr))
-allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ \(lhs :==: rhs) -> do
-   xs <- match (sumView >>> listView powerFactorView) lhs
-   ys <- match (sumView >>> listView powerFactorView) rhs
-   case unzip3 (filter ((/=0) . snd3) (xs ++ ys)) of
-      (s:ss, _, ns) | all (==s) ss -> do
-         let m = minimum ns 
-             make = build (sumView >>> listView powerFactorView) . map f
-             f (s, i, n) = (s, i, n-m)
-         guard (m > 0 && length ns > 1)
-         return $ orList [Var s :==: 0, make xs :==: make ys]
-      _ -> Nothing
+allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ 
+   \(lhs :==: rhs) -> do
+      let myView = polyNormalForm rationalView
+      (s1, p1) <- match myView lhs
+      (s2, p2) <- match myView rhs
+      let n | p1 == 0   = lowestDegree p2
+            | p2 == 0   = lowestDegree p1 
+            | otherwise = lowestDegree p1 `min` lowestDegree p2
+          ts  = terms p1 ++ terms p2
+          f p = build myView (s1, raise (-n) p)
+      guard ((s1==s2 || p1==0 || p2==0) && n > 0 && length ts > 1)
+      return $ orList [Var s1 :==: 0, f p1 :==: f p2] 
+
+factorVariablePower :: Rule Expr
+factorVariablePower = makeSimpleRule "factor variable power" $ \expr -> do
+   let myView = polyNormalForm rationalView
+   (s, p) <- match (polyNormalForm rationalView) expr
+   let n = lowestDegree p
+   guard (n > 0 && length (terms p) > 1)
+   return $ Var s .^. (fromIntegral n) * build myView (s, raise (-n) p)
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))

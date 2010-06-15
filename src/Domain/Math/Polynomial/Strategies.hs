@@ -10,9 +10,10 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
-   ( linearStrategy, linearMixedStrategy, findFactorsStrategy
+   ( linearStrategy, linearMixedStrategy
    , quadraticStrategy, quadraticStrategyG
    , higherDegreeStrategy, higherDegreeStrategyG
+   , findFactorsStrategy, findFactorsStrategyG
    ) where
 
 import Prelude hiding (repeat, replicate, fail)
@@ -163,7 +164,10 @@ higherDegreeStrategyG = label "higher degree" $
 -----------------------------------------------------------
 -- Finding factors in an expression
 
-findFactorsStrategy :: LabeledStrategy Expr
-findFactorsStrategy = cleanUpStrategy cleanUpSimple $
-   label "find factors" $
-   repeat (niceFactorsNew <|> commonFactorVarNew)
+findFactorsStrategy :: LabeledStrategy (Context Expr)
+findFactorsStrategy = cleanUpStrategy (cleanTop cleanUpSimple) $
+   label "find factors" $ repeat findFactorsStrategyG
+   
+findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
+findFactorsStrategyG = label "find factor step" $
+   use niceFactorsNew <|> use commonFactorVarNew -- factorVariablePower

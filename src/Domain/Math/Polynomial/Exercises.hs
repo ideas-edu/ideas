@@ -152,7 +152,7 @@ findFactorsExercise = makeExercise
    , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)
-   , strategy     = mapRules liftToContext findFactorsStrategy
+   , strategy     = findFactorsStrategy
    , navigation   = exprNavigator
    , extraRules   = map liftToContext buggyRulesExpr
    , examples     = concat findFactors

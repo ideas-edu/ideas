@@ -10,6 +10,7 @@
     <elem domain="math" identifier="calcpower" description="simplify expression (powers)" status="Provisional"/>
     <elem domain="math" identifier="coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem domain="math" identifier="derivative" description="Derivative" status="Experimental"/>
+    <elem domain="math" identifier="divbroken" description="divide a broken fraction ('uitdelen')" status="Alpha"/>
     <elem domain="math" identifier="factor" description="factorize the expression" status="Provisional"/>
     <elem domain="math" identifier="fraction" description="simplify expression (fractions)" status="Alpha"/>
     <elem domain="math" identifier="higherdegree" description="solve an equation (higher degree)" status="Provisional"/>

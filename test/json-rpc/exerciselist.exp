@@ -62,6 +62,12 @@
       },
       {
          "domain": "math",
+         "identifier": "divbroken",
+         "description": "divide a broken fraction ('uitdelen')",
+         "status": "Alpha"
+      },
+      {
+         "domain": "math",
          "identifier": "factor",
          "description": "factorize the expression",
          "status": "Provisional"

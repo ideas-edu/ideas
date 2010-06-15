@@ -88,6 +88,7 @@ packages =
    , someTermPackage Math.ineqHigherDegreeExercise
    , someTermPackage Math.brokenEquationExercise
    , someTermPackage Math.normalizeBrokenExercise
+   , someTermPackage Math.divisionBrokenExercise
    , someTermPackage Math.quadraticNoABCExercise
    , someTermPackage Math.quadraticWithApproximation
    , someTermPackage Math.derivativeExercise

@@ -1,24 +1,24 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.2 (3188)">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="reciprocal fraction">
       <expr>
-        1/(a*b)^(-2)*a/b
+        (a*b)^2*a*b^(-1)
       </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
     </elem>
     <elem ruleid="reciprocal">
       <expr>
-        1/(1/(a*b)^2)*a/b
+        (a*b)^2*a/b
       </expr>
-      <context>
-        <item name="location" value="[0,0,1]"/>
-      </context>
     </elem>
     <elem ruleid="distribute power">
       <expr>
-        1/(1/(a^2*b^2))*a/b
+        a^2*b^2*a/b
       </expr>
       <context>
-        <item name="location" value="[0,0,1,1]"/>
+        <item name="location" value="[0,0]"/>
       </context>
     </elem>
     <elem ruleid="add exponents">

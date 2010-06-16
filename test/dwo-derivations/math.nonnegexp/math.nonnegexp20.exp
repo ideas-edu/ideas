@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.2 (3188)">
   <list>
     <elem ruleid="mul exponents">
       <expr>
@@ -8,28 +8,15 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="reciprocal fraction">
       <expr>
-        1/(a^(-3)*b^4)
-      </expr>
-    </elem>
-    <elem ruleid="reciprocal">
-      <expr>
-        1/(1/a^3*b^4)
+        a^3*b^(-4)
       </expr>
       <context>
-        <item name="location" value="[1,0]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
-      <expr>
-        1/(b^4/a^3)
-      </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
-    </elem>
-    <elem ruleid="division denominator">
+    <elem ruleid="reciprocal">
       <expr>
         a^3/b^4
       </expr>

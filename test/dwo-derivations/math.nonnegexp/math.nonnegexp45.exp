@@ -1,22 +1,11 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.2 (3188)">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="reciprocal fraction">
       <expr>
-        a^5/(1/(2*b)^2)
+        a^5*(2*b)^2
       </expr>
-      <context>
-        <item name="location" value="[1]"/>
-      </context>
     </elem>
     <elem ruleid="distribute power">
-      <expr>
-        a^5/(1/(4*b^2))
-      </expr>
-      <context>
-        <item name="location" value="[1,1]"/>
-      </context>
-    </elem>
-    <elem ruleid="division denominator">
       <expr>
         a^5*4*b^2
       </expr>

@@ -10,9 +10,9 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Views
-   ( polyView, polyViewFor, polyViewWith, polyViewForWith
-   , quadraticView, quadraticViewFor, quadraticViewWith, quadraticViewForWith
-   , linearView, linearViewFor, linearViewWith, linearViewForWith
+   ( polyView, polyViewWith -- polyViewFor, polyViewForWith
+   , quadraticView, quadraticViewWith --, quadraticViewFor quadraticViewForWith
+   , linearView, linearViewWith -- linearViewFor linearViewForWith
    , constantPolyView, linearPolyView, quadraticPolyView, cubicPolyView
    , monomialPolyView, binomialPolyView, trinomialPolyView
    , polyNormalForm
@@ -46,22 +46,15 @@ import Domain.Math.Power.Views (powerFactorViewForWith)
 polyView :: View Expr (String, Polynomial Expr)
 polyView = polyViewWith identity
 
-polyViewFor :: String -> View Expr (Polynomial Expr)
-polyViewFor v = polyViewForWith v identity
-
 polyViewWith :: Fractional a => View Expr a -> View Expr (String, Polynomial a)
-polyViewWith v = makeView f (uncurry g)
+polyViewWith v = makeView matchPoly (uncurry buildPoly)
  where
-   f expr = do 
+   matchPoly expr = do 
       pv <- selectVar expr
-      p  <- match (polyViewForWith pv v) expr
+      p  <- matchPolyFor pv expr
       return (pv, p) 
-   g pv = build (polyViewForWith pv v)
-            
-polyViewForWith :: Fractional a => String -> View Expr a -> View Expr (Polynomial a)
-polyViewForWith pv v = makeView f g
- where
-   f expr = 
+
+   matchPolyFor pv expr =
       case expr of
          Var s | pv == s -> Just var
          Nat n    -> Just (fromIntegral n)
@@ -80,9 +73,13 @@ polyViewForWith pv v = makeView f g
          _ -> do 
             guard (pv `notElem` collectVars expr)
             liftM con (match v expr)
+    where
+      f = matchPolyFor pv
    
-   g        = build sumView . map h . reverse . terms
-   h (a, n) = build v a .*. (Var pv .^. fromIntegral n)
+   buildPoly pv = 
+      let f (a, n) = build v a .*. (Var pv .^. fromIntegral n)
+      in build sumView . map f . reverse . terms
+   
    
    matchNat expr = do
       n <- match integralView expr
@@ -95,17 +92,11 @@ polyViewForWith pv v = makeView f g
 quadraticView :: View Expr (String, Expr, Expr, Expr)
 quadraticView = quadraticViewWith identity
 
-quadraticViewFor :: String -> View Expr (Expr, Expr, Expr)
-quadraticViewFor v = quadraticViewForWith v identity
-
 quadraticViewWith :: Fractional a => View Expr a -> View Expr (String, a, a, a)
 quadraticViewWith v = polyViewWith v >>> second quadraticPolyView >>> makeView f g
  where
    f (s, (a, b, c)) = return (s, a, b, c)
    g (s, a, b, c)   = (s, (a, b, c))
-
-quadraticViewForWith :: Fractional a => String -> View Expr a -> View Expr (a, a, a)
-quadraticViewForWith pv v = polyViewForWith pv v >>> quadraticPolyView
 
 -------------------------------------------------------------------
 -- Linear view
@@ -113,17 +104,11 @@ quadraticViewForWith pv v = polyViewForWith pv v >>> quadraticPolyView
 linearView :: View Expr (String, Expr, Expr)
 linearView = linearViewWith identity
 
-linearViewFor :: String -> View Expr (Expr, Expr)
-linearViewFor v = linearViewForWith v identity
-
 linearViewWith :: Fractional a => View Expr a -> View Expr (String, a, a)
 linearViewWith v = polyViewWith v >>> second linearPolyView >>> makeView f g
  where
    f (s, (a, b)) = return (s, a, b)
    g (s, a, b)   = (s, (a, b))
-
-linearViewForWith :: Fractional a => String -> View Expr a -> View Expr (a, a)
-linearViewForWith pv v = polyViewForWith pv v >>> linearPolyView
 
 -------------------------------------------------------------------
 -- Views on polynomials (degree)

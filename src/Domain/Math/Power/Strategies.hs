@@ -10,11 +10,11 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-   ( powerStrategy
+{-   ( powerStrategy
    , powerOfStrategy
    , calcPowerStrategy
    , nonNegExpStrategy
-   ) where
+   ) -}where
 
 import Common.Apply
 import Common.Context
@@ -23,10 +23,9 @@ import Common.Transformation
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
-import Domain.Math.Power.Views
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
-import Prelude hiding (repeat)
+import Prelude hiding (repeat, not)
 
 ------------------------------------------------------------
 -- Strategies
@@ -48,7 +47,7 @@ powerOfStrategy = makeStrategy "write as power of" rules cleanupRules
                ++ rationalRules
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
-nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
+nonNegExpStrategy = cleanUpStrategy cleanup $ strategise "non neg exponent" rules
   where
     rules = [ addExponents
             , subExponents
@@ -63,8 +62,10 @@ nonNegExpStrategy = makeStrategy "non negative exponent" rules cleanupRules
             , calcPowerMinus
             , myFractionTimes
             , reciprocalFrac
-            ] ++ fractionRules            
-    cleanupRules = calcPower : simplifyFraction : naturalRules
+            ] ++ fractionRules
+    cleanup = applyD $ repeat $ alternatives $
+                simp : (map (somewhere . liftToContext) $ calcPower : naturalRules)
+    simp = (liftToContext simplifyFraction) <*> not (somewhere $ liftToContext myFractionTimes)
 
 calcPowerStrategy :: LabeledStrategy (Context Expr)
 calcPowerStrategy = makeStrategy "calcPower" rules cleanupRules
@@ -82,7 +83,8 @@ makeStrategy :: String -> [Rule Expr] -> [Rule Expr] -> LabeledStrategy (Context
 makeStrategy l rs cs = cleanUpStrategy f $ strategise l rs
   where
     f = applyD $ strategise l cs
-    strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
+
+strategise l = label l . repeat . alternatives . map (somewhere . liftToContext)
 --    strategise l = label l . Common.Strategy.replicate 100 . try . alternatives . map (somewhere . liftToContext)
 
 powerRules =

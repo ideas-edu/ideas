@@ -237,7 +237,7 @@ myFractionTimes :: Rule Expr
 myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do
   (e1, e2) <- match timesView expr
   guard $ isJust $ match divView e1 `mplus` match divView e2
-  guard $ not $ isJust $ match rationalView e1 `mplus` match rationalView e2
+--  guard $ not $ isJust $ match rationalView e1 `mplus` match rationalView e2
   (a, b)   <- match (divView <&> (identity >>^ \e -> (e,1))) e1
   (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
   return $ build divView (a .*. c, b .*. d)
@@ -247,6 +247,7 @@ simplifyFraction :: Rule Expr
 simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
   let expr' = simplifyWith (second normalizeProduct) productView $ expr
   guard (expr /= expr')
+  guard $ not $ applicable myFractionTimes expr'
   return expr'
 
 -- | (-a)^x = (-)a^x

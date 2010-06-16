@@ -41,7 +41,6 @@ powerExercise s = makeExercise
    , parser        = parseExpr
    , navigation    = navigator                     
    , strategy      = s
---   , ruleOrdering  = \_ _ -> LT
    }
 
 simplifyPowerExercise :: Exercise Expr

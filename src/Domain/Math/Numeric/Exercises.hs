@@ -27,12 +27,13 @@ import Common.Context
 ------------------------------------------------------------
 -- Exercises
 
-numericExercise :: LabeledStrategy Expr -> Exercise Expr
+numericExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 numericExercise s = makeExercise 
    { status        = Alpha
    , parser        = parseExpr
    , equivalence   = viewEquivalent rationalView
-   , strategy      = mapRules liftToContext s
+   , strategy      = s
+   , navigation   = exprNavigator
    }
 
 naturalExercise :: Exercise Expr

@@ -144,7 +144,7 @@ fractionPlusScale = makeSimpleRuleList "fraction plus scale" $ \expr -> do
    (e1, e2) <- matchM plusView expr
    (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e1))
    (c, d)   <- (matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e2))
-   guard (b /= 0 && d /= 0)
+   guard (b /= 0 && d /= 0 && b /= d)
    let bd  = lcm b d
        e1n = build fractionForm (a * (bd `div` b), bd)
        e2n = build fractionForm (c * (bd `div` d), bd)

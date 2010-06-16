@@ -32,7 +32,7 @@ import qualified Data.Map as M
 rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder
 rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
    
-   let pairs = M.findWithDefault [] (showId r) exampleMap
+   let pairs = M.findWithDefault [] (getId r) exampleMap
    examples <- forM (take 3 pairs) $ \(a, b) ->
                   liftM2 (,) (enc a) (enc b)
                      
@@ -73,13 +73,13 @@ rewriteRuleToFMP sound r
  where
    a :~> b = fmap termToOMOBJ (rulePair r 0)
               
-collectExamples :: Exercise a -> M.Map String [(a, a)]
+collectExamples :: Exercise a -> M.Map Id [(a, a)]
 collectExamples ex = foldr add M.empty (examples ex)
  where
    add a m = let tree = derivationTree (strategy ex) (inContext ex a)
                  f Nothing = m
                  f (Just d) = foldr g m (zip3 (terms d) (steps d) (drop 1 (terms d)))
-                 g (a, r, b) = M.insertWith (++) (showId r) (liftM2 (,) (fromContext a) (fromContext b))
+                 g (a, r, b) = M.insertWith (++) (getId r) (liftM2 (,) (fromContext a) (fromContext b))
              in f (derivation tree) 
 
 rulesInfoType :: Type a ()

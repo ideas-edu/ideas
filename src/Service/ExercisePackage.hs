@@ -23,7 +23,6 @@ module Service.ExercisePackage
    ) where
 
 import Common.Context (Context)
-import qualified Common.Id as Id
 import Common.Transformation (Rule)
 import Common.Utils (Some(..))
 import Common.Exercise
@@ -46,9 +45,9 @@ data ExercisePackage a = P
    , getExerciseText :: Maybe (ExerciseText a)
    }
 
-instance Id.HasId (ExercisePackage a) where
-   getId = Id.getId . exercise
-   changeId f pkg = pkg { exercise = Id.changeId f (exercise pkg) }
+instance HasId (ExercisePackage a) where
+   getId = getId . exercise
+   changeId f pkg = pkg { exercise = changeId f (exercise pkg) }
 
 package :: Exercise a -> ExercisePackage a
 package ex = P 

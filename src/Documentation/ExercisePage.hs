@@ -141,7 +141,7 @@ rulesPage ex = do
       when (isRewriteRule r) $ para $
          image (ruleImageFileHere ex r)
       -- Examples
-      let ys = M.findWithDefault [] (showId r) exampleMap
+      let ys = M.findWithDefault [] (getId r) exampleMap
       unless (null ys) $ do
          h3 "Examples"
          forM_ (take 3 ys) $ \(a, b) -> para $ tt $ 

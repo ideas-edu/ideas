@@ -135,7 +135,7 @@ getFullVersion = gets fullVersion >>= maybe getVersion return
 getTestSuite :: DomainReasoner TestSuite
 getTestSuite = gets testSuite
 
-findPackage :: ExerciseCode -> DomainReasoner (Some ExercisePackage)
+findPackage :: Id -> DomainReasoner (Some ExercisePackage)
 findPackage code = do
    pkgs <- getPackages 
    let p (Some pkg) = exerciseCode (exercise pkg) == code

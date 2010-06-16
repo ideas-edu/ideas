@@ -18,7 +18,6 @@ import Common.Context
 import Common.Utils (Some(..), distinct, readM)
 import Common.Exercise
 import Common.Strategy (makePrefix)
-import Common.Transformation hiding (ruleList, defaultArgument)
 import Text.JSON
 import Service.Request
 import Service.State
@@ -33,16 +32,15 @@ import Data.Maybe
 import Data.Char
 
 -- TODO: Clean-up code
-extractCode :: Monad m => JSON -> m ExerciseCode
-extractCode json =
+extractExerciseId :: Monad m => JSON -> m Id
+extractExerciseId json =
    case json of
-      String s -> maybe (invalid s) return (readCode s)
-      Array [String _, String _, a@(Array _)] -> extractCode a
-      Array (String s:tl) | any p s -> extractCode (Array tl)
-      Array (hd:_) -> extractCode hd
+      String s -> newIdM s
+      Array [String _, String _, a@(Array _)] -> extractExerciseId a
+      Array (String s:tl) | any p s -> extractExerciseId (Array tl)
+      Array (hd:_) -> extractExerciseId hd
       _ -> fail "no code"
  where 
-   invalid s = fail ("invalid code: " ++ s)
    p c = not (isAlphaNum c || isSpace c || c `elem` ".-")
 
 processJSON :: String -> DomainReasoner (Request, String, String)
@@ -67,7 +65,7 @@ jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
               _               -> fail "Invalid method"
-   let code = (lookupM "params" json >>= extractCode)
+   let a = (lookupM "params" json >>= extractExerciseId)
    enc  <- case lookupM "encoding" json of
               Nothing         -> return Nothing
               Just (String s) -> liftM Just (readEncoding s)
@@ -78,7 +76,7 @@ jsonRequest json = do
               _               -> fail "Invalid source"
    return Request 
       { service    = srv
-      , exerciseID = code
+      , exerciseID = a
       , source     = src
       , dataformat = JSON
       , encoding   = enc
@@ -88,7 +86,7 @@ myHandler :: JSON_RPC_Handler DomainReasoner
 myHandler fun arg = do
    pkg  <- if fun == "exerciselist" 
            then return (Some (package emptyExercise))
-           else extractCode arg >>= findPackage
+           else extractExerciseId arg >>= findPackage
    srv  <- findService fun
    case jsonConverter pkg of
       Some conv -> do

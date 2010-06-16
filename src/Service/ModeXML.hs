@@ -61,13 +61,13 @@ xmlRequest xml = do
    unless (name xml == "request") $
       fail "expected xml tag request"
    srv  <- findAttribute "service" xml
-   let code = extractExerciseCode xml
+   let a = extractExerciseId xml
    enc  <- case findAttribute "encoding" xml of
               Just s  -> liftM Just (readEncoding s)
               Nothing -> return Nothing 
    return Request 
       { service    = srv
-      , exerciseID = code
+      , exerciseID = a
       , source     = findAttribute "source" xml
       , dataformat = XML
       , encoding   = enc
@@ -98,11 +98,11 @@ xmlReply request xml = do
    res <- evalService conv srv xml
    return (resultOk res)
 
-extractExerciseCode :: Monad m => XML -> m ExerciseCode
-extractExerciseCode xml =
+extractExerciseId :: Monad m => XML -> m Id
+extractExerciseId xml =
    case liftM (break (== '.')) (findAttribute "exerciseid" xml) of
       Just (as, _:bs) -> return (makeCode as bs)
-      Just (as, _)    -> maybe (fail "invalid code") return (readCode as)
+      Just (as, _)    -> newIdM as
       -- being backwards compatible with early MathDox
       Nothing -> do
          let getName = map toLower . filter isAlphaNum . getData

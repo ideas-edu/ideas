@@ -25,7 +25,7 @@ module Common.Exercise
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Exercise codes
-   , ExerciseCode, makeCode, readCode, Id.qualification
+   , makeCode, Id.newIdM, Id.qualification, Id.showId, Id.Id
      -- * Miscellaneous
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
@@ -53,7 +53,7 @@ import Test.QuickCheck.Gen
 
 data Exercise a = Exercise
    { -- identification and meta-information
-     exerciseCode   :: ExerciseCode -- uniquely determines the exercise (in a given domain)
+     exerciseCode   :: Id.Id -- uniquely determines the exercise (in a given domain)
    , status         :: Status
      -- parsing and pretty-printing
    , parser         :: String -> Either String a
@@ -79,10 +79,10 @@ data Exercise a = Exercise
    }
 
 instance Eq (Exercise a) where
-   e1 == e2 = exerciseCode e1 == exerciseCode e2
+   e1 == e2 = getId e1 == getId e2
 
 instance Ord (Exercise a) where
-   e1 `compare` e2 = exerciseCode e1 `compare` exerciseCode e2
+   e1 `compare` e2 = getId e1 `compare` getId e2
 
 instance Apply Exercise where
    applyAll ex = concatMap fromContext . applyAll (strategy ex) . inContext ex
@@ -230,25 +230,8 @@ isPrivate = not . isPublic
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
 
-type ExerciseCode = Id.Id
-
-makeCode :: String -> String -> ExerciseCode
-makeCode a b
-   | null a || null b || any invalidCodeChar (a++b) =
-        error $ "Invalid exercise code: " ++ show (Id.newQId Id.IdExercise a b)
-   | otherwise = 
-        Id.newQId Id.IdExercise (map toLower a) (map toLower b)
-   
-readCode :: String -> Maybe ExerciseCode
-readCode xs =
-   case break invalidCodeChar xs of
-      (as, '.':bs) | all validCodeChar bs -> 
-         return $ makeCode as bs
-      _ -> Nothing
-
-validCodeChar, invalidCodeChar :: Char -> Bool
-validCodeChar c = isAlphaNum c || c `elem` "-_"
-invalidCodeChar = not . validCodeChar
+makeCode :: String -> String -> Id.Id
+makeCode a b = Id.newId (map toLower (a ++ "." ++ b))
 
 ---------------------------------------------------------------
 -- Rest

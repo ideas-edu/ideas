@@ -15,7 +15,7 @@ module Session
    , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
    , thisExercise, thisExerciseFor, progressPair, undo, submitText
    , currentDescription, currentText, derivationText, readyText, hintText
-   , stepText, nextStep, currentState, getDerivation, currentCode
+   , stepText, nextStep, currentState, getDerivation, currentExerciseId
    ) where
 
 import Service.BasicServices
@@ -33,7 +33,7 @@ import Common.Utils
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Observable
+import Observable hiding (Id)
 
 --------------------------------------------------
 -- Sessions with logging
@@ -45,8 +45,8 @@ data SessionState a = SessionState
    , getDerivation :: Derivation a
    }
 
-currentCode :: Session -> IO ExerciseCode
-currentCode ref = do
+currentExerciseId :: Session -> IO Id
+currentExerciseId ref = do
    (Some st) <- getValue ref
    return (exerciseCode (Pkg.exercise (getPackage st)))
 

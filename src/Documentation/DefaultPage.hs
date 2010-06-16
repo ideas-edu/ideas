@@ -76,8 +76,8 @@ ruleImagePath :: Exercise a -> String
 ruleImagePath ex = "exercises/" ++ f (qualification ex) ++ "/" ++ f (description ex) ++ "/"
  where f = filter isAlphaNum . map toLower
 
-exercisePagePath :: ExerciseCode -> String
-exercisePagePath code = "exercises/" ++ qualification code ++ "/"
+exercisePagePath :: Id -> String
+exercisePagePath a = "exercises/" ++ qualification a ++ "/"
 
 servicePagePath :: String
 servicePagePath = "services/" 
@@ -99,28 +99,28 @@ exerciseOverviewAllPageFile = "exercises-all.html"
 serviceOverviewPageFile :: String
 serviceOverviewPageFile = "services.html"
 
-exercisePageFile :: ExerciseCode -> String
-exercisePageFile code = 
-   exercisePagePath code 
-   ++ filter (not . isSpace) (identifier code) 
+exercisePageFile :: Id -> String
+exercisePageFile a = 
+   exercisePagePath a 
+   ++ filter (not . isSpace) (identifier a) 
    ++ ".html"
 
-exerciseStrategyFile :: ExerciseCode -> String
-exerciseStrategyFile code = 
-   exercisePagePath code
-   ++ filter (not . isSpace) (identifier code)
+exerciseStrategyFile :: Id -> String
+exerciseStrategyFile a = 
+   exercisePagePath a
+   ++ filter (not . isSpace) (identifier a)
    ++ "-strategy.html"
 
-exerciseRulesFile :: ExerciseCode -> String
-exerciseRulesFile code = 
-   exercisePagePath code
-   ++ filter (not . isSpace) (identifier code)
+exerciseRulesFile :: Id -> String
+exerciseRulesFile a = 
+   exercisePagePath a
+   ++ filter (not . isSpace) (identifier a)
    ++ "-rules.html"
 
-exerciseDerivationsFile :: ExerciseCode -> String
-exerciseDerivationsFile code = 
-   exercisePagePath code
-   ++ filter (not . isSpace) (identifier code)
+exerciseDerivationsFile :: Id -> String
+exerciseDerivationsFile a = 
+   exercisePagePath a
+   ++ filter (not . isSpace) (identifier a)
    ++ "-derivations.html"
 
 servicePageFile :: Service -> String

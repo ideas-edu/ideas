@@ -18,7 +18,7 @@ import Data.List
 data Id = Id 
    { idName        :: String
    , idQualifiers  :: [String]
-   , idType        :: IdType
+   , idType        :: Maybe String
    , idDescription :: String
    }
    
@@ -32,13 +32,6 @@ instance Ord Id where
    a `compare` b = f a `compare` f b
     where f x = (idQualifiers x, idName x)
    
-data IdType = IdExercise | IdRule
-   deriving (Eq, Ord)
-
-instance Show IdType where
-   show IdExercise = "Exercise"
-   show IdRule     = "Rule"
-
 identifier :: HasId a => a -> String
 identifier = idName . getId
 
@@ -57,11 +50,24 @@ description = idDescription . getId
 showId :: HasId a => a -> String
 showId = show . getId
 
-newId :: IdType -> String -> Id
-newId tp s = Id s [] tp ""
+-- For now, all characters are allowed. To do: make this 
+-- more strict, e.g. by removing spaces.
+readId :: Monad m => String -> m ([String], String)
+readId a = f [] a
+ where
+   f acc s =
+      case break (== '.') s of
+         (xs, _:ys) | not (null xs) -> f (xs:acc) ys
+         (xs, [])   | not (null xs) -> return (reverse acc, xs)
+         _ -> fail $ "Invalid id: " ++ a
 
-newQId :: IdType -> String -> String -> Id
-newQId tp q s = Id s [q] tp ""
+newId :: String -> Id
+newId = either error id . newIdM
+
+newIdM :: Monad m => String -> m Id
+newIdM a = do 
+   (qs, n) <- readId a
+   return (Id n qs Nothing "")
 
 class HasId a where
    getId    :: a -> Id

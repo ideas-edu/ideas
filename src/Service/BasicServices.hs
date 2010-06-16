@@ -19,7 +19,7 @@ import Common.Context
 import Common.Derivation hiding (derivation)
 import Common.Exercise   hiding (generate)
 import Common.Strategy   hiding (not, fail)
-import Common.Transformation (Rule, showId, isMajorRule, isBuggyRule)
+import Common.Transformation (Rule, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Common.Navigator
 import Data.List

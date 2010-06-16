@@ -35,7 +35,7 @@ newAssignmentDialog w session = do
    -- create frame
    f <- dialog w [text := "New Assignment", bgcolor := white] 
    -- current exercise
-   code <- currentCode session
+   exid <- currentExerciseId session
    -- Left Panel
    leftPanel <- panel f []
    randomButton     <- button leftPanel [text := "Random"]
@@ -55,7 +55,7 @@ newAssignmentDialog w session = do
       , hstretch $ label "Exercise selection", fill $ widget exerciseList
       , hstretch $ widget experimentalBox]]
    
-   set domainBox [selection := fromMaybe 0 (findIndex (==qualification code) domains) ]
+   set domainBox [selection := fromMaybe 0 (findIndex (==qualification exid) domains) ]
    
    set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
          , size := sz 600 450]
@@ -71,7 +71,7 @@ newAssignmentDialog w session = do
        fillPackageList b = do
           xs <- getPackageList
           let ys = [ description (exercise pkg) | Some pkg <- xs ]
-              isCode (Some pkg) = exerciseCode (exercise pkg) == code
+              isCode (Some pkg) = exerciseCode (exercise pkg) == exid
               mi = if b then findIndex isCode xs else Nothing
           set exerciseList [items := ys, selection := fromMaybe 0 mi]
           fillOwnText

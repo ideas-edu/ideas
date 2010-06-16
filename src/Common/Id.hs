@@ -18,6 +18,7 @@ module Common.Id
    ) where
 
 import Data.List
+import Control.Monad.Error ()
 
 data Id = Id 
    { idName        :: String

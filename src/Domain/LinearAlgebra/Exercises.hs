@@ -65,7 +65,7 @@ linearSystemExercise = makeExercise
                                     (Just a, Just b) -> getSolution a == getSolution b
                                     _ -> False 
    , extraRules     = equationsRules
-   , ruleOrdering   = ruleNameOrderingWith [showId ruleScaleEquation]
+   , ruleOrdering   = ruleOrderingWithId [getId ruleScaleEquation]
    , isReady        = inSolvedForm
    , strategy       = linearSystemStrategy
    , randomExercise = simpleGenerator (fmap matrixToSystem arbMatrix)

@@ -49,7 +49,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       forM_ (ruleGroups r) $ \s -> 
          element "group" $ text s
       forM_ (ruleSiblings r) $ \s -> 
-         element "sibling" $ text s
+         element "sibling" $ text $ showId s
       -- FMPs and CMPs
       forM_ (getRewriteRules r) $ \(Some rr, b) -> do
          let fmp = rewriteRuleToFMP b rr

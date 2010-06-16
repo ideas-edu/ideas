@@ -21,7 +21,7 @@ module Common.Exercise
    , simpleGenerator, useGenerator
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
-   , ruleOrderingWith, ruleNameOrderingWith
+   , ruleOrderingWith, ruleOrderingWithId
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
@@ -197,11 +197,11 @@ recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
       liftM2 (similarity ex) (fromContext cx) (fromContext cy)
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
-ruleOrderingWith = ruleNameOrderingWith . map showId
+ruleOrderingWith = ruleOrderingWithId . map getId
  
-ruleNameOrderingWith :: [String] -> Rule a -> Rule a -> Ordering
-ruleNameOrderingWith xs r1 r2 =
-   case (findIndex (==showId r1) xs, findIndex (==showId r2) xs) of
+ruleOrderingWithId :: [Id] -> Rule a -> Rule a -> Ordering
+ruleOrderingWithId xs r1 r2 =
+   case (findIndex (==getId r1) xs, findIndex (==getId r2) xs) of
       (Just i,  Just j ) -> i `compare` j
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT

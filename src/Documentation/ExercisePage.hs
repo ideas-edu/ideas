@@ -136,7 +136,7 @@ rulesPage ex = do
          [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
          , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
          , [bold $ text "Groups", text $ commaList $ ruleGroups r]
-         , [bold $ text "Siblings", text $ commaList $ ruleSiblings r] 
+         , [bold $ text "Siblings", text $ commaList $ map showId $ ruleSiblings r] 
          ]
       when (isRewriteRule r) $ para $
          image (ruleImageFileHere ex r)

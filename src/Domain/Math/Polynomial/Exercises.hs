@@ -52,9 +52,9 @@ linearExercise = makeExercise
                        a `belongsTo` rationalNormalForm
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr 
-   , ruleOrdering = ruleNameOrderingWith 
-                       [ showId coverUpTimes, showId flipEquation
-                       , showId removeDivision
+   , ruleOrdering = ruleOrderingWithId
+                       [ getId coverUpTimes, getId flipEquation
+                       , getId removeDivision
                        ]
    , strategy     = linearStrategy
    , navigation   = exprNavigator
@@ -87,8 +87,8 @@ quadraticExercise = makeExercise
    , isReady      = solvedRelations
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
                     map use buggyRulesEquation ++ map use buggyRulesExpr 
-   , ruleOrdering = ruleNameOrderingWith $ 
-                       quadraticRuleOrder ++ [showId buggySquareMultiplication]
+   , ruleOrdering = ruleOrderingWithId $ 
+                       quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = exprNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
@@ -107,7 +107,7 @@ higherDegreeExercise = makeExercise
    , isReady       = solvedRelations
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
-   , ruleOrdering = ruleNameOrderingWith quadraticRuleOrder
+   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation   = exprNavigator
    , examples      = map (orList . return . build equationView) 

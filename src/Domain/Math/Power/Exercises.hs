@@ -21,7 +21,6 @@ import Common.Context
 import Common.Exercise
 import Common.Navigator
 import Common.Strategy hiding (not, replicate)
-import Common.Transformation (showId)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
@@ -55,7 +54,7 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    , examples     = concat $  simplerPowers ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
-   , ruleOrdering = ruleNameOrderingWith powerRuleOrder                  
+   , ruleOrdering = ruleOrderingWithId powerRuleOrder                  
    }
 
 powerOfExercise :: Exercise Expr
@@ -68,7 +67,7 @@ powerOfExercise = (powerExercise powerOfStrategy)
    , examples     = concat $  powersOfA ++ powersOfX ++ brokenExp1' 
                            ++ brokenExp2 ++ brokenExp3 ++ normPower5'
                            ++ normPower6
-   , ruleOrdering = ruleNameOrderingWith powerRuleOrder             
+   , ruleOrdering = ruleOrderingWithId powerRuleOrder             
    }
 
 nonNegExpExercise :: Exercise Expr
@@ -80,10 +79,10 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , equivalence  = viewEquivalent normPowerNonNegDouble
    , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
                            ++ brokenExp1 ++ normPower4' ++ normPower5
-   , ruleOrdering = ruleNameOrderingWith [ showId mulExponents
-                                         , showId reciprocalFrac
-                                         , showId $ reciprocalInv $ const False
-                                         , showId power2root]
+   , ruleOrdering = ruleOrderingWithId [ getId mulExponents
+                                       , getId reciprocalFrac
+                                       , getId $ reciprocalInv $ const False
+                                       , getId power2root]
    }
 
 calcPowerExercise :: Exercise Expr

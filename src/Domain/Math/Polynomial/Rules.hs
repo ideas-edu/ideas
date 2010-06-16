@@ -41,14 +41,14 @@ import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.Polynomial as P
 import qualified Domain.Math.SquareRoot.Views as SQ
 
-quadraticRuleOrder :: [String]
+quadraticRuleOrder :: [Id]
 quadraticRuleOrder = 
-   [ showId coverUpTimes, showId (coverUpMinusRightWith oneVar)
-   , showId (coverUpMinusLeftWith oneVar), showId (coverUpPlusWith oneVar)
-   , showId coverUpPower
-   , showId commonFactorVar, showId simplerPolynomial
-   , showId niceFactors, showId noLinFormula
-   , showId cancelTerms, showId sameConFactor, showId distributionSquare
+   [ getId coverUpTimes, getId (coverUpMinusRightWith oneVar)
+   , getId (coverUpMinusLeftWith oneVar), getId (coverUpPlusWith oneVar)
+   , getId coverUpPower
+   , getId commonFactorVar, getId simplerPolynomial
+   , getId niceFactors, getId noLinFormula
+   , getId cancelTerms, getId sameConFactor, getId distributionSquare
    ]
 
 ------------------------------------------------------------

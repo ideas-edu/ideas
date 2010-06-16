@@ -38,12 +38,12 @@ import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
 
 -- | Rule ordering ------------------------------------------------------------
-powerRuleOrder =  
-  [ showId addExponents
-  , showId mulExponents
-  , showId subExponents
-  , showId distributePower
-  , showId reciprocal
+powerRuleOrder = map getId
+  [ addExponents
+  , mulExponents
+  , subExponents
+  , distributePower
+  , reciprocal
   ]  
 
 -- | Power rules --------------------------------------------------------------

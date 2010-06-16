@@ -276,7 +276,7 @@ data Rule a = Rule
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
    , ruleGroups      :: [String]
-   , ruleSiblings    :: [String]
+   , ruleSiblings    :: [Id]
    }
 
 instance Show (Rule a) where
@@ -301,8 +301,8 @@ isMajorRule = not . isMinorRule
 isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules
 
-siblingOf :: Rule b -> Rule a -> Rule a 
-siblingOf sib r = r { ruleSiblings = showId sib : ruleSiblings r }
+siblingOf :: HasId b => b -> Rule a -> Rule a 
+siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }

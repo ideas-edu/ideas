@@ -25,7 +25,7 @@ import Test.QuickCheck
 
 main :: TestSuite
 main = suite "Numeric tests" $ do
-{-
+
    suite "Correctness numeric views" $ do
       let f s v = forM_ numGenerators $ \g -> do
              addProperty ("idempotence " ++ s) $ propIdempotence g v
@@ -58,16 +58,16 @@ main = suite "Numeric tests" $ do
       rationalRelaxedForm .>. rationalView
       integerNormalForm .>. rationalNormalForm
       integerView .>. rationalView
--}
+
    suite "Pre/post conditions strategies" $ do
       let f l s pre post = forM_ numGenerators $ \g -> 
              addProperty l $ forAll g $ \a ->
                 let run = fromMaybe a . fromContext . applyD s 
                         . newContext emptyEnv . exprNavigator
                 in not (a `belongsTo` pre) || run a `belongsTo` post
-  --    f "natural"  naturalStrategy  integerView  integerNormalForm
-  --    f "integer"  integerStrategy  integerView  integerNormalForm
-  --    f "rational" rationalStrategy rationalView rationalNormalForm
+      f "natural"  naturalStrategy  integerView  integerNormalForm
+      f "integer"  integerStrategy  integerView  integerNormalForm
+      f "rational" rationalStrategy rationalView rationalNormalForm
       f "fraction" fractionStrategy rationalView rationalNormalForm
 
 numGenerators :: [Gen Expr]

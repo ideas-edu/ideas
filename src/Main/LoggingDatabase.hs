@@ -41,7 +41,7 @@ logMessage req input output ipaddress begin = do
      -- insert data into database
      run conn "INSERT INTO log VALUES (?,?,?,?,?,?,?,?,?,?)" 
              [ toSql $ service req
-             , toSql $ maybe "unknown" show (exerciseID req)
+             , toSql $ maybe "unknown" show (exerciseId req)
              , toSql $ fromMaybe "unknown" (source req)
              , toSql $ show (dataformat req)
              , toSql $ maybe "unknown" show (encoding req)
@@ -60,7 +60,7 @@ logMessage req input output ipaddress begin = do
 {-
 -- | Log table schema
 createStmt =  "CREATE TABLE log ( service      VARCHAR(250)"
-           ++                  ", exerciseID   VARCHAR(250)"
+           ++                  ", exerciseId   VARCHAR(250)"
            ++                  ", source       VARCHAR(250)"
            ++                  ", dataformat   VARCHAR(250)"
            ++                  ", encoding     VARCHAR(250)"

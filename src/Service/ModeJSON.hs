@@ -16,7 +16,7 @@ module Service.ModeJSON (processJSON, jsonTuple) where
 
 import Common.Context
 import Common.Utils (Some(..), distinct, readM)
-import Common.Exercise
+import Common.Exercise hiding (exerciseId)
 import Common.Strategy (makePrefix)
 import Text.JSON
 import Service.Request
@@ -76,7 +76,7 @@ jsonRequest json = do
               _               -> fail "Invalid source"
    return Request 
       { service    = srv
-      , exerciseID = a
+      , exerciseId = a
       , source     = src
       , dataformat = JSON
       , encoding   = enc

@@ -13,21 +13,16 @@ module Domain.LinearAlgebra.Strategies
    ( gaussianElimStrategy, linearSystemStrategy
    , gramSchmidtStrategy, systemWithMatrixStrategy
    , forwardPass
-   , liftExpr
    ) where
 
 import Prelude hiding (repeat)
 import Domain.Math.Expr
-import Common.Rewriting
 import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.MatrixRules
 import Domain.LinearAlgebra.EquationsRules
 import Domain.LinearAlgebra.GramSchmidtRules
 import Domain.LinearAlgebra.LinearSystem
-import Domain.LinearAlgebra.Symbols ()
-import Common.Apply
-import Common.Navigator
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
@@ -92,11 +87,11 @@ linearSystemStrategy = label "General solution to a linear system" $
 
 systemWithMatrixStrategy :: LabeledStrategy (Context Expr)
 systemWithMatrixStrategy = label "General solution to a linear system (matrix approach)" $
-       repeat (mapRules liftExpr dropEquation) 
+       repeat (mapRules useC dropEquation) 
    <*> conv1 
-   <*> mapRules liftExpr gaussianElimStrategy 
+   <*> mapRules useC gaussianElimStrategy 
    <*> conv2 
-   <*> repeat (mapRules liftExpr dropEquation)
+   <*> repeat (mapRules useC dropEquation)
 
 gramSchmidtStrategy :: LabeledStrategy (Context (VectorSpace (Simplified Expr)))
 gramSchmidtStrategy =
@@ -123,11 +118,4 @@ conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    vs <- readVar vars
    m  <- fromExpr expr
    let linsys = matrixToSystemWith vs (m :: Matrix Expr)
-   a  <- fromContext $ applyD simplifyFirst $ newContext emptyEnv (noNavigator linsys) -- !!
-   return $ toExpr a
-
-liftExpr :: IsTerm a => Rule (Context a) -> Rule (Context Expr)
-liftExpr r = makeSimpleRuleList (showId r) $ \a -> do
-   b <- castT exprView a 
-   c <- applyAll r b
-   castT exprView c
+   return $ simplify $ toExpr linsys

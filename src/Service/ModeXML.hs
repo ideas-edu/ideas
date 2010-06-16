@@ -19,7 +19,7 @@ module Service.ModeXML
 
 import Common.Navigator
 import Common.Context
-import Common.Exercise
+import Common.Exercise hiding (exerciseId)
 import Common.Strategy hiding (not, fail)
 import Common.Utils (Some(..), readM)
 import Control.Monad
@@ -67,7 +67,7 @@ xmlRequest xml = do
               Nothing -> return Nothing 
    return Request 
       { service    = srv
-      , exerciseID = a
+      , exerciseId = a
       , source     = findAttribute "source" xml
       , dataformat = XML
       , encoding   = enc
@@ -76,7 +76,7 @@ xmlRequest xml = do
 xmlReply :: Request -> XML -> DomainReasoner XML
 xmlReply request xml 
    | service request == "mathdox" = do
-        code <- maybe (fail "unknown exercise code") return (exerciseID request)
+        code <- maybe (fail "unknown exercise code") return (exerciseId request)
         Some pkg <- findPackage code
         (st, sloc, answer) <- liftEither $ xmlToRequest xml pkg
         return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
@@ -84,7 +84,7 @@ xmlReply request xml
 xmlReply request xml = do
    srv <- findService (service request)
    pkg <- 
-      case exerciseID request of
+      case exerciseId request of
          Just code -> findPackage code
          Nothing   
             | service request == "exerciselist" ->

@@ -107,7 +107,7 @@ systemWithMatrixExercise = makeExercise
                               in case (f x, f y) of
                                     (Just a, Just b) -> equivalence linearSystemExercise a b
                                     _ -> False
-   , extraRules     = map liftExpr equationsRules ++ map liftExpr (matrixRules :: [Rule (Context (Matrix Expr))])
+   , extraRules     = map useC equationsRules ++ map useC (matrixRules :: [Rule (Context (Matrix Expr))])
    , isReady        = inSolvedForm . (fromExpr :: Expr -> Equations Expr)
    , strategy       = systemWithMatrixStrategy
    , randomExercise = simpleGenerator (fmap (toExpr . matrixToSystem) (arbMatrix :: Gen (Matrix Expr)))

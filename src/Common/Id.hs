@@ -52,6 +52,7 @@ showId = show . getId
 
 -- For now, all characters are allowed. To do: make this 
 -- more strict, e.g. by removing spaces.
+-- Proposal: allow alphanum + '-'
 readId :: Monad m => String -> m ([String], String)
 readId a = f [] a
  where

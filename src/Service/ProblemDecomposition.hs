@@ -264,14 +264,14 @@ replyToXML toOpenMath reply =
 
 replyOkToXML :: ReplyOk a -> XML
 replyOkToXML r = makeReply "ok" $ do
-   element "strategy" (text $ show $ exerciseCode $ exercise $ repOk_Code r)
+   element "strategy" (text $ showId $ repOk_Code r)
    element "location" (text $ show $ repOk_Location r)
    element "context"  (text $ repOk_Context r)
    element "steps"    (text $ show $ repOk_Steps r)
 
 replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XML
 replyIncorrectToXML toOpenMath r = makeReply "incorrect" $ do
-   element "strategy"   (text $ show $ exerciseCode $ exercise $ repInc_Code r)
+   element "strategy"   (text $ showId $ repInc_Code r)
    element "location"   (text $ show $ repInc_Location r)
    element "expected"   (builder $ omobj2xml $ toOpenMath $ repInc_Expected r)
    element "steps"      (text $ show $ repInc_Steps r)

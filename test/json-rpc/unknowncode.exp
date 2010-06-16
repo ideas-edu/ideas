@@ -1,6 +1,6 @@
 {
    "result": null,
-   "error": "invalid code: unknowncode",
+   "error": "Package unknowncode not found",
    "id": 421,
    "version": "0.6.2 (0)"
 }

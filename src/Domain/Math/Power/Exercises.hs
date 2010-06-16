@@ -47,8 +47,8 @@ powerExercise s = makeExercise
 
 simplifyPowerExercise :: Exercise Expr
 simplifyPowerExercise = (powerExercise powerStrategy)
-   { exerciseCode = describe "simplify expression (powers)" $ 
-                       makeCode "math" "simplifyPower"
+   { exerciseId   = describe "simplify expression (powers)" $ 
+                       newId "math.simplifypower"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'
@@ -60,8 +60,8 @@ simplifyPowerExercise = (powerExercise powerStrategy)
 
 powerOfExercise :: Exercise Expr
 powerOfExercise = (powerExercise powerOfStrategy)
-   { exerciseCode = describe "write as a power of a" $ 
-                       makeCode "math" "powerOf"
+   { exerciseId   = describe "write as a power of a" $ 
+                       newId "math.powerof"
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerNonNegRatio
@@ -73,8 +73,8 @@ powerOfExercise = (powerExercise powerOfStrategy)
 
 nonNegExpExercise :: Exercise Expr
 nonNegExpExercise = (powerExercise nonNegExpStrategy)
-   { exerciseCode = describe "write with a non-negative exponent" $ 
-                       makeCode "math" "nonNegExp"
+   { exerciseId   = describe "write with a non-negative exponent" $ 
+                       newId "math.nonnegexp"
    , isReady      = isPower natView
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
    , equivalence  = viewEquivalent normPowerNonNegDouble
@@ -88,8 +88,8 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
 
 calcPowerExercise :: Exercise Expr
 calcPowerExercise = (powerExercise calcPowerStrategy)
-   { exerciseCode = describe "simplify expression (powers)" $ 
-                       makeCode "math" "calcPower"
+   { exerciseId   = describe "simplify expression (powers)" $ 
+                       newId "math.calcpower"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'

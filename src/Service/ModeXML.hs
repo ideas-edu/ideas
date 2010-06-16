@@ -100,13 +100,12 @@ xmlReply request xml = do
 
 extractExerciseId :: Monad m => XML -> m Id
 extractExerciseId xml =
-   case liftM (break (== '.')) (findAttribute "exerciseid" xml) of
-      Just (as, _:bs) -> return (makeCode as bs)
-      Just (as, _)    -> newIdM as
+   case findAttribute "exerciseid" xml of
+      Just s  -> newIdM s
       -- being backwards compatible with early MathDox
       Nothing -> do
          let getName = map toLower . filter isAlphaNum . getData
-             linalg  = return . makeCode "linalg"
+             linalg  = return . newId . ("linalg." ++)
          case fmap getName (findChild "strategy" xml) of
             Just name
                | name == "gaussianelimination"         -> linalg "gaussianelim"

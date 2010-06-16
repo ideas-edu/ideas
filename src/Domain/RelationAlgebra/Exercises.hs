@@ -29,8 +29,8 @@ import Common.Navigator
 
 cnfExercise :: Exercise RelAlg
 cnfExercise = testableExercise
-   { exerciseCode   = describe "To conjunctive normal form" $
-                         makeCode "relationalg" "cnf"
+   { exerciseId     = describe "To conjunctive normal form" $
+                         newId "relationalg.cnf"
    , status         = Alpha
    , parser         = parseRelAlg
    , prettyPrinter  = ppRelAlg

@@ -58,7 +58,7 @@ typedExample pkg service args = do
 stdReply :: String -> String -> Exercise a -> XMLBuilder -> XML
 stdReply s enc ex body = makeXML "request" $ do 
    "service"    .=. s
-   "exerciseid" .=. show (exerciseCode ex)
+   "exerciseid" .=. showId ex
    "source"     .=. "test"
    "encoding"   .=. enc
    body

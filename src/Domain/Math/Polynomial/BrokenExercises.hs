@@ -47,8 +47,8 @@ go2 = checkExercise normalizeBrokenExercise
 
 brokenEquationExercise :: Exercise (OrList (Equation Expr))
 brokenEquationExercise = makeExercise 
-   { exerciseCode = describe "solve a broken equation (with a variable in a divisor)" $ 
-                       makeCode "math" "brokeneq"
+   { exerciseId   = describe "solve a broken equation (with a variable in a divisor)" $ 
+                       newId "math.brokeneq"
    , status       = Alpha -- Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
    , isReady      = solvedRelations
@@ -61,8 +61,8 @@ brokenEquationExercise = makeExercise
    
 normalizeBrokenExercise :: Exercise Expr
 normalizeBrokenExercise = makeExercise
-   { exerciseCode = describe "normalize a broken expression (with a variable in a divisor)" $ 
-                       makeCode "math" "normbroken"
+   { exerciseId   = describe "normalize a broken expression (with a variable in a divisor)" $ 
+                       newId "math.normbroken"
    , status       = Alpha -- Provisional
    , parser       = parseExpr
    , isReady      = isNormBroken
@@ -75,8 +75,8 @@ normalizeBrokenExercise = makeExercise
    
 divisionBrokenExercise :: Exercise Expr
 divisionBrokenExercise = normalizeBrokenExercise
-   { exerciseCode = describe "divide a broken fraction ('uitdelen')" $ 
-                       makeCode "math" "divbroken"
+   { exerciseId   = describe "divide a broken fraction ('uitdelen')" $ 
+                       newId "math.divbroken"
    , strategy     = label "divide broken fraction" succeed
    , examples     = concat deelUit
    }

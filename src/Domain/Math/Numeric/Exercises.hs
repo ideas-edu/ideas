@@ -37,32 +37,32 @@ numericExercise s = makeExercise
 
 naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
-   { exerciseCode = describe "simplify expression (natural numbers)" $ 
-                       makeCode "math" "natural"
+   { exerciseId   = describe "simplify expression (natural numbers)" $ 
+                       newId "math.natural"
    , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat calculateResults
    }
 
 integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
-   { exerciseCode = describe "simplify expression (integers)" $ 
-                       makeCode "math" "integer"
+   { exerciseId   = describe "simplify expression (integers)" $ 
+                       newId "math.integer"
    , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat calculateResults
    }
    
 rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
-   { exerciseCode   = describe "simplify expression (rational numbers)" $ 
-                         makeCode "math" "rational"
+   { exerciseId     = describe "simplify expression (rational numbers)" $ 
+                         newId "math.rational"
    , isReady        = (`belongsTo` rationalNormalForm)
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
 
 fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
-   { exerciseCode   = describe "simplify expression (fractions)" $ 
-                         makeCode "math" "fraction"
+   { exerciseId     = describe "simplify expression (fractions)" $ 
+                         newId "math.fraction"
    , isReady        = (`belongsTo` rationalNormalForm)
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }

@@ -14,7 +14,7 @@
 module Common.Exercise 
    ( -- * Exercises
      Exercise, testableExercise, makeExercise, emptyExercise
-   , Id.description, Id.describe, exerciseCode, status, parser, prettyPrinter
+   , Id.description, Id.describe, exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, eqWithContext
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
@@ -25,7 +25,7 @@ module Common.Exercise
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Exercise codes
-   , makeCode, Id.newIdM, Id.qualification, Id.showId, Id.Id
+   , Id.newIdM, Id.qualification, Id.showId, Id.Id, Id.newId, Id.getId
      -- * Miscellaneous
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
@@ -44,7 +44,6 @@ import Common.TestSuite
 import Common.Transformation
 import Common.View (makeView)
 import Control.Monad.Error
-import Data.Char
 import Data.List
 import Data.Maybe
 import System.Random
@@ -53,7 +52,7 @@ import Test.QuickCheck.Gen
 
 data Exercise a = Exercise
    { -- identification and meta-information
-     exerciseCode   :: Id.Id -- uniquely determines the exercise (in a given domain)
+     exerciseId     :: Id.Id -- identifier that uniquely determines the exercise
    , status         :: Status
      -- parsing and pretty-printing
    , parser         :: String -> Either String a
@@ -88,8 +87,8 @@ instance Apply Exercise where
    applyAll ex = concatMap fromContext . applyAll (strategy ex) . inContext ex
 
 instance Id.HasId (Exercise a) where
-   getId = exerciseCode
-   changeId f ex = ex { exerciseCode = f (exerciseCode ex) }
+   getId = exerciseId
+   changeId f ex = ex { exerciseId = f (exerciseId ex) }
 
 testableExercise :: (Arbitrary a, Show a, Ord a) => Exercise a
 testableExercise = makeExercise
@@ -106,7 +105,7 @@ makeExercise = emptyExercise
 emptyExercise :: Exercise a
 emptyExercise = Exercise 
    { -- identification and meta-information
-     exerciseCode   = error "no exercise code"
+     exerciseId     = error "no exercise code"
    , status         = Experimental
      -- parsing and pretty-printing
    , parser         = const (Left "<<no parser>>")
@@ -228,12 +227,6 @@ isPrivate :: Exercise a -> Bool
 isPrivate = not . isPublic
 
 ---------------------------------------------------------------
--- Exercise codes (unique identification)
-
-makeCode :: String -> String -> Id.Id
-makeCode a b = Id.newId (map toLower (a ++ "." ++ b))
-
----------------------------------------------------------------
 -- Rest
      
 equivalenceContext :: Exercise a -> Context a -> Context a -> Bool
@@ -335,7 +328,7 @@ checkExercise :: Exercise a -> IO ()
 checkExercise = runTestSuite . exerciseTestSuite
 
 exerciseTestSuite :: Exercise a -> TestSuite
-exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseCode ex)) $ do
+exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
    checkExamples ex
    case testGenerator ex of 
       Nothing  -> return ()

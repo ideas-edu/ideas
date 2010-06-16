@@ -35,7 +35,7 @@ import Documentation.DefaultPage
 makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
 makeExercisePage dir pkg = do
    let ex   = exercise pkg
-       make = generatePageAt 2 dir . ($ (exerciseCode ex))
+       make = generatePageAt 2 dir . ($ (getId pkg))
    make exercisePageFile     (exercisePage pkg)
    make exerciseStrategyFile (strategyPage ex)
    make exerciseRulesFile    (rulesPage ex)
@@ -48,7 +48,7 @@ exercisePage pkg = do
    
    h2 "1. General information"
    table 
-      [ [bold $ text "Code",   ttText (show $ exerciseCode ex)]
+      [ [bold $ text "Code",   ttText (showId ex)]
       , [bold $ text "Status", text (show $ status ex)]
       , [ bold $ text "OpenMath support"
         , text $ showBool $ withOpenMath pkg
@@ -67,7 +67,7 @@ exercisePage pkg = do
         ]
       ]
    
-   para $ link (up 2 ++ exerciseStrategyFile code) $
+   para $ link (up 2 ++ exerciseStrategyFile exid) $
       text "See strategy details"
 
    h2 "2. Rules"
@@ -87,7 +87,7 @@ exercisePage pkg = do
            ]
          : map f (ruleset ex)
          )
-   para $ link (up 2 ++ exerciseRulesFile code) $
+   para $ link (up 2 ++ exerciseRulesFile exid) $
       text "See rule details"
    
    
@@ -95,10 +95,10 @@ exercisePage pkg = do
    let state = generateWith (mkStdGen 0) pkg 5
    preText (showDerivation ex (term state))
    unless (null (examples ex)) $ 
-      link (up 2 ++ exerciseDerivationsFile code) (text "More examples")
+      link (up 2 ++ exerciseDerivationsFile exid) (text "More examples")
  where
    ex   = exercise pkg
-   code = exerciseCode ex
+   exid = getId ex
 
 strategyPage :: Exercise a -> HTMLBuilder
 strategyPage ex = do
@@ -114,8 +114,7 @@ strategyPage ex = do
          : map f (strategyLocations (strategy ex))
          )
  where
-   code  = exerciseCode ex
-   title = "Strategy for " ++ show code
+   title = "Strategy for " ++ show (getId ex)
 
 rulesPage :: Exercise a -> HTMLBuilder
 rulesPage ex = do
@@ -157,8 +156,7 @@ rulesPage ex = do
             highlightXML False $ XML.makeXML "FMP" $ 
                XML.builder (omobj2xml (toObject fmp))
  where
-   code  = exerciseCode ex
-   title = "Strategy for " ++ show code
+   title = "Strategy for " ++ show (getId ex)
    exampleMap = collectExamples ex
 
 derivationsPage :: Exercise a -> HTMLBuilder

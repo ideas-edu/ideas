@@ -47,7 +47,7 @@ exerciseOverviewPage showAll list = do
          text "all exercises"
       text ", including the ones under development"
       
-   forM_ (zip [1..] groupedList) $ \(i, (dom, xs)) -> do
+   forM_ (zip [1..] (grouping list)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
       noBorderTable (map makeRow xs) 
  where
@@ -63,16 +63,14 @@ exerciseOverviewPage showAll list = do
       , text $ description ex
       ]
     where
-      code = exerciseCode ex
+      code = getId ex
       f st = italic $ text ("(" ++ map toLower (show st) ++ ")")
 
-   groupedList = process list
+   grouping = map g . groupBy eq . sortBy cmp . filter p
     where
-      process = map g . groupBy eq . sortBy cmp . filter p
-    
-      cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
+      cmp (Some a) (Some b) = exerciseId a `compare` exerciseId b
       eq a b      = f a == f b
-      f (Some ex) = qualification (exerciseCode ex)
+      f (Some ex) = qualification (exerciseId ex)
       g xs = (f (head xs), xs)
       p (Some ex) = showAll || isPublic ex
 

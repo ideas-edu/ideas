@@ -180,7 +180,7 @@ encodeState :: Monad m => (a -> m JSON) -> State a -> m JSON
 encodeState f st = do 
    theTerm <- f (term st)
    return $ Array
-      [ String (show (exerciseCode (exercise (exercisePkg st))))
+      [ String (showId (exercisePkg st))
       , String (maybe "NoPrefix" show (prefix st))
       , theTerm
       , encodeContext (getEnvironment (context st))

@@ -138,8 +138,7 @@ getTestSuite = gets testSuite
 findPackage :: Id -> DomainReasoner (Some ExercisePackage)
 findPackage code = do
    pkgs <- getPackages 
-   let p (Some pkg) = exerciseCode (exercise pkg) == code
-   case filter p pkgs of
+   case [ a | a@(Some pkg) <- pkgs, getId pkg == code ] of
       [this] -> return this
       _      -> fail $ "Package " ++ show code ++ " not found"
       

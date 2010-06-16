@@ -87,7 +87,7 @@ ruleImageFile ex r = ruleImagePath ex ++ "rule" ++ showId r ++ ".png"
 
 ruleImageFileHere :: Exercise a -> Rule (Context a) -> String
 ruleImageFileHere ex r = 
-   filter (not . isSpace) (identifier (exerciseCode ex)) 
+   filter (not . isSpace) (identifier ex)
    ++ "/rule" ++ filter isAlphaNum (showId r) ++ ".png"
 
 exerciseOverviewPageFile :: String

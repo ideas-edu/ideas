@@ -25,8 +25,8 @@ import Test.QuickCheck
 
 regexpExercise :: Exercise RegExp
 regexpExercise = makeExercise
-   { exerciseCode   = describe "Rewrite a regular expression" $
-                         makeCode "regexp" "normalform"
+   { exerciseId     = describe "Rewrite a regular expression" $
+                         newId "regexp.normalform"
    , status         = Experimental
    , parser         = parseRegExp
    , prettyPrinter  = ppRegExp

@@ -24,7 +24,7 @@ module Common.Transformation
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
    , Rule, name, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , ruleGroups, ruleDescription, ruleSiblings, addRuleToGroup, describe
+   , ruleGroups, ruleSiblings, addRuleToGroup, Id.describe, Id.description
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
@@ -47,6 +47,7 @@ import Data.Char
 import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck
+import qualified Common.Id as Id
 
 -----------------------------------------------------------
 --- Transformations
@@ -270,8 +271,7 @@ ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
 
 -- | Abstract data type for representing rules
 data Rule a = Rule 
-   { name            :: String -- ^ Returns the name of the rule (should be unique)
-   , ruleDescription :: String -- ^ A short description what the rule is doing
+   { ruleId          :: Id.Id  -- ^ Unique identifier of the rule
    , transformations :: [Transformation a]
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
@@ -290,15 +290,20 @@ instance Apply Rule where
       t <- transformations r
       applyAll t a
 
+instance Id.HasId (Rule a) where
+   getId        = ruleId
+   changeId f r = r { ruleId = f (ruleId r) } 
+
+-- | Returns the name of the rule
+name :: Rule a -> String
+name = show . ruleId
+
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool
 isMajorRule = not . isMinorRule
 
 isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules
-
-describe :: String -> Rule a -> Rule a
-describe txt r = r { ruleDescription = txt ++ "\n" ++ ruleDescription r}
 
 siblingOf :: Rule b -> Rule a -> Rule a 
 siblingOf sib r = r { ruleSiblings = name sib : ruleSiblings r }
@@ -321,7 +326,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule n [] ts False False [] []
+makeRuleList n ts = Rule (Id.newId n) ts False False [] []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a

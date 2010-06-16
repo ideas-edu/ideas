@@ -33,14 +33,17 @@ import Data.Maybe
 import Data.Char
 
 -- TODO: Clean-up code
-extractCode :: JSON -> ExerciseCode
-extractCode = fromMaybe noCode . readCode . f
+extractCode :: Monad m => JSON -> m ExerciseCode
+extractCode json =
+   case json of
+      String s -> maybe (invalid s) return (readCode s)
+      Array [String _, String _, a@(Array _)] -> extractCode a
+      Array (String s:tl) | any p s -> extractCode (Array tl)
+      Array (hd:_) -> extractCode hd
+      _ -> fail "no code"
  where 
-   f (String s) = s
-   f (Array [String _, String _, a@(Array _)]) = f a
-   f (Array (String s:tl)) | any (\c -> not (isAlphaNum c || isSpace c || c `elem` ".-")) s = f (Array tl)
-   f (Array (hd:_)) = f hd
-   f _ = ""
+   invalid s = fail ("invalid code: " ++ s)
+   p c = not (isAlphaNum c || isSpace c || c `elem` ".-")
 
 processJSON :: String -> DomainReasoner (Request, String, String)
 processJSON input = do
@@ -64,7 +67,7 @@ jsonRequest json = do
    srv  <- case lookupM "method" json of
               Just (String s) -> return s
               _               -> fail "Invalid method"
-   code <- liftM (return . extractCode) (lookupM "params" json)
+   let code = (lookupM "params" json >>= extractCode)
    enc  <- case lookupM "encoding" json of
               Nothing         -> return Nothing
               Just (String s) -> liftM Just (readEncoding s)
@@ -83,10 +86,10 @@ jsonRequest json = do
 
 myHandler :: JSON_RPC_Handler DomainReasoner
 myHandler fun arg = do
-   pkg <- if fun == "exerciselist" 
-          then return (Some (package emptyExercise))
-          else findPackage (extractCode arg)
-   srv <- findService fun
+   pkg  <- if fun == "exerciselist" 
+           then return (Some (package emptyExercise))
+           else extractCode arg >>= findPackage
+   srv  <- findService fun
    case jsonConverter pkg of
       Some conv -> do
          evalService conv srv arg

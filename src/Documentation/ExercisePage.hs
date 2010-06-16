@@ -132,7 +132,7 @@ rulesPage ex = do
    -- General info
    forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do
       h2 (show i ++ ". " ++ show r)
-      para $ text (ruleDescription r)
+      para $ text (description r)
       para $ table 
          [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
          , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]

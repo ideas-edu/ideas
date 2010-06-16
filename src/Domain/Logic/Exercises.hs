@@ -34,8 +34,8 @@ import Test.QuickCheck
 -- Currently, we use the DWA strategy
 dnfExercise :: Exercise SLogic
 dnfExercise = makeExercise
-   { description    = "Proposition to DNF"
-   , exerciseCode   = makeCode "logic" "dnf"
+   { exerciseCode   = describe "Proposition to DNF" $
+                         makeCode "logic" "dnf"
    , status         = Stable
    , parser         = parseLogicPars
    , prettyPrinter  = ppLogicPars
@@ -54,8 +54,8 @@ dnfExercise = makeExercise
 -- Direct support for unicode characters
 dnfUnicodeExercise :: Exercise SLogic
 dnfUnicodeExercise = dnfExercise
-   { description   = description dnfExercise ++ " (unicode support)"
-   , exerciseCode  = makeCode "logic" "dnf-unicode"
+   { exerciseCode  = describe "Proposition to DNF (unicode support)" $
+                        makeCode "logic" "dnf-unicode"
    , parser        = parseLogicUnicodePars
    , prettyPrinter = ppLogicUnicodePars
    }

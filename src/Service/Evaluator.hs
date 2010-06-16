@@ -14,7 +14,7 @@ module Service.Evaluator where
 
 import Common.Context (fromContext)
 import Common.Exercise (Exercise)
-import Common.Transformation (Rule, name)
+import Common.Transformation (name)
 import Control.Arrow
 import Control.Monad
 import Service.ExercisePackage

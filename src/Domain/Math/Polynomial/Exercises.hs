@@ -41,8 +41,8 @@ import Control.Monad
 
 linearExercise :: Exercise (Equation Expr)
 linearExercise = makeExercise 
-   { description  = "solve a linear equation"
-   , exerciseCode = makeCode "math" "lineq"
+   { exerciseCode = describe "solve a linear equation" $ 
+                       makeCode "math" "lineq"
    , status       = Provisional
    , parser       = parseExprWith (pEquation pExpr)
    , similarity   = eqRelation (acExpr . cleanUpExpr)
@@ -68,16 +68,16 @@ linearExercise = makeExercise
       
 linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise 
-   { description  = "solve a linear equation with mixed fractions"
-   , exerciseCode = makeCode "math" "lineq-mixed"
+   { exerciseCode = describe "solve a linear equation with mixed fractions" $ 
+                       makeCode "math" "lineq-mixed"
    , isReady      = solvedRelationWith (`belongsTo` mixedFractionNormalForm)
    , strategy     = linearMixedStrategy
    } 
 
 quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise 
-   { description  = "solve a quadratic equation"
-   , exerciseCode = makeCode "math" "quadreq"
+   { exerciseCode = describe "solve a quadratic equation" $ 
+                       makeCode "math" "quadreq"
    , status       = Provisional
    , parser       = \input -> case parseExprWith (pOrList (pEquation pExpr)) input of
                                  Left err -> Left err
@@ -97,8 +97,8 @@ quadraticExercise = makeExercise
    
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 
-   { description   = "solve an equation (higher degree)"
-   , exerciseCode  = makeCode "math" "higherdegree"
+   { exerciseCode  = describe "solve an equation (higher degree)" $
+                        makeCode "math" "higherdegree"
    , status        = Provisional
    , parser        = parser quadraticExercise
    , similarity    = eqOrList cleanUpExpr2
@@ -117,8 +117,8 @@ higherDegreeExercise = makeExercise
    
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
-   { description  = "solve a quadratic equation without abc-formula"
-   , exerciseCode = makeCode "math" "quadreq-no-abc"
+   { exerciseCode = describe "solve a quadratic equation without abc-formula" $ 
+                       makeCode "math" "quadreq-no-abc"
    , status       = Alpha
    , strategy     = configure cfg quadraticStrategy
    }
@@ -131,8 +131,8 @@ quadraticNoABCExercise = quadraticExercise
          
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
-   { description  = "solve a quadratic equation with approximation"
-   , exerciseCode = makeCode "math" "quadreq-with-approx"
+   { exerciseCode = describe "solve a quadratic equation with approximation" $ 
+                       makeCode "math" "quadreq-with-approx"
    , status       = Alpha
    , parser       = parseExprWith (pOrList (pRelation pExpr))
    , strategy     = configure cfg quadraticStrategy
@@ -145,8 +145,8 @@ quadraticWithApproximation = quadraticExercise
 
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise
-   { description  = "factorize the expression"
-   , exerciseCode = makeCode "math" "factor"
+   { exerciseCode = describe "factorize the expression" $ 
+                       makeCode "math" "factor"
    , status       = Provisional
    , parser       = parseExprWith pExpr
    , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b

@@ -34,8 +34,8 @@ import Test.QuickCheck
 
 gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
 gramSchmidtExercise = makeExercise
-   { description    = "Gram-Schmidt"
-   , exerciseCode   = makeCode "linalg" "gramschmidt"
+   { exerciseCode   = describe "Gram-Schmidt" $
+                         makeCode "linalg" "gramschmidt"
    , status         = Alpha
    , parser         = \s -> case parseVectorSpace s of
                               Right a  -> Right (fmap simplified a)
@@ -52,8 +52,8 @@ gramSchmidtExercise = makeExercise
 
 linearSystemExercise :: Exercise (Equations Expr)
 linearSystemExercise = makeExercise
-   { description    = "Solve Linear System"
-   , exerciseCode   = makeCode "linalg" "linsystem"
+   { exerciseCode   = describe "Solve Linear System" $
+                         makeCode "linalg" "linsystem"
    , status         = Stable
    , parser         = \s -> case parseSystem s of
                                Right a  -> Right (simplify a)
@@ -73,8 +73,8 @@ linearSystemExercise = makeExercise
    
 gaussianElimExercise :: Exercise (Matrix Expr)
 gaussianElimExercise = makeExercise
-   { description    = "Gaussian Elimination"
-   , exerciseCode   = makeCode "linalg" "gaussianelim"
+   { exerciseCode   = describe "Gaussian Elimination" $ 
+                         makeCode "linalg" "gaussianelim"
    , status         = Stable
    , parser         = \s -> case parseMatrix s of
                                Right a  -> Right (simplify a)
@@ -89,8 +89,8 @@ gaussianElimExercise = makeExercise
  
 systemWithMatrixExercise :: Exercise Expr
 systemWithMatrixExercise = makeExercise
-   { description    = "Solve Linear System with Matrix"
-   , exerciseCode   = makeCode "linalg" "systemwithmatrix"
+   { exerciseCode   = describe "Solve Linear System with Matrix" $ 
+                         makeCode "linalg" "systemwithmatrix"
    , status         = Provisional
    , parser         = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
                                (Right ok, _) -> Right $ toExpr ok

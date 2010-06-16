@@ -35,8 +35,8 @@ import Prelude hiding (repeat)
 
 coverUpExercise :: Exercise (OrList (Equation Expr))
 coverUpExercise = makeExercise 
-   { description  = "solve an equation by covering up"
-   , exerciseCode = makeCode "math" "coverup"
+   { exerciseCode = describe "solve an equation by covering up" $
+                       makeCode "math" "coverup"
    , status       = Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
    , equivalence  = \_ _ -> True

@@ -27,8 +27,7 @@ import Domain.Math.Expr
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise
-   { description  = "Derivative"
-   , exerciseCode = makeCode "math" "derivative"
+   { exerciseCode = describe "Derivative" $ makeCode "math" "derivative"
    , status       = Experimental
    , parser       = parseExpr
    , isReady      = noDiff

@@ -41,7 +41,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       "buggy"       .=. f (isBuggyRule r)
       "rewriterule" .=. f (isRewriteRule r)
       -- More information
-      let descr = ruleDescription r
+      let descr = description r
           -- to do: rules should carry descriptions 
           txt   = if null descr then (name r) else descr 
       unless (null txt) $

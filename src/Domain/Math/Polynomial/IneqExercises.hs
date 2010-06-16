@@ -44,8 +44,8 @@ import Common.Rewriting (IsTerm)
 
 ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 
-   { description  = "solve a linear inequation"
-   , exerciseCode = makeCode "math" "linineq"
+   { exerciseCode = describe "solve a linear inequation" $ 
+                       makeCode "math" "linineq"
    , status       = Provisional
    , parser       = parseExprWith (pRelation pExpr)
    , isReady      = solvedRelation
@@ -60,8 +60,8 @@ ineqLinearExercise = makeExercise
    
 ineqQuadraticExercise :: Exercise (Logic (Relation Expr))
 ineqQuadraticExercise = makeExercise 
-   { description   = "solve a quadratic inequation"
-   , exerciseCode  = makeCode "math" "quadrineq"
+   { exerciseCode  = describe "solve a quadratic inequation" $ 
+                        makeCode "math" "quadrineq"
    , status        = Provisional
    , parser        = parseExprWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation
@@ -77,8 +77,8 @@ ineqQuadraticExercise = makeExercise
 
 ineqHigherDegreeExercise :: Exercise (Logic (Relation Expr))
 ineqHigherDegreeExercise = makeExercise 
-   { description   = "solve an inequation of higher degree"
-   , exerciseCode  = makeCode "math" "ineqhigherdegree"
+   { exerciseCode  = describe "solve an inequation of higher degree" $ 
+                        makeCode "math" "ineqhigherdegree"
    , status        = Provisional
    , parser        = parseExprWith (pLogicRelation pExpr)
    , prettyPrinter = showLogicRelation

@@ -47,8 +47,8 @@ powerExercise s = makeExercise
 
 simplifyPowerExercise :: Exercise Expr
 simplifyPowerExercise = (powerExercise powerStrategy)
-   { description  = "simplify expression (powers)"
-   , exerciseCode = makeCode "math" "simplifyPower"
+   { exerciseCode = describe "simplify expression (powers)" $ 
+                       makeCode "math" "simplifyPower"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'
@@ -60,8 +60,8 @@ simplifyPowerExercise = (powerExercise powerStrategy)
 
 powerOfExercise :: Exercise Expr
 powerOfExercise = (powerExercise powerOfStrategy)
-   { description  = "write as a power of a"
-   , exerciseCode = makeCode "math" "powerOf"
+   { exerciseCode = describe "write as a power of a" $ 
+                       makeCode "math" "powerOf"
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerNonNegRatio
@@ -73,8 +73,8 @@ powerOfExercise = (powerExercise powerOfStrategy)
 
 nonNegExpExercise :: Exercise Expr
 nonNegExpExercise = (powerExercise nonNegExpStrategy)
-   { description  = "write with a non-negative exponent"
-   , exerciseCode = makeCode "math" "nonNegExp"
+   { exerciseCode = describe "write with a non-negative exponent" $ 
+                       makeCode "math" "nonNegExp"
    , isReady      = isPower natView
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
    , equivalence  = viewEquivalent normPowerNonNegDouble
@@ -88,8 +88,8 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
 
 calcPowerExercise :: Exercise Expr
 calcPowerExercise = (powerExercise calcPowerStrategy)
-   { description  = "simplify expression (powers)"
-   , exerciseCode = makeCode "math" "calcPower"
+   { exerciseCode = describe "simplify expression (powers)" $ 
+                       makeCode "math" "calcPower"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'

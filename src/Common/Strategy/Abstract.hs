@@ -18,8 +18,8 @@ module Common.Strategy.Abstract
      -- Accessors to the underlying representation
    , toCore, fromCore, liftCore, liftCore2, fixCore, makeLabeledStrategy
    , toLabeledStrategy
-   , LabelInfo, strategyName, processLabelInfo, changeInfo, makeInfo
-   , removed, collapsed, hidden, labelName, IsLabeled(..)
+   , LabelInfo, processLabelInfo, changeInfo, makeInfo
+   , removed, collapsed, hidden, IsLabeled(..)
    ) where
 
 import Common.Utils (commaList)
@@ -47,7 +47,7 @@ instance Apply Strategy where
 --- The information used as label in a strategy
 
 data LabelInfo = Info 
-   { labelName :: String 
+   { labelId   :: Id 
    , removed   :: Bool
    , collapsed :: Bool
    , hidden    :: Bool
@@ -59,10 +59,14 @@ instance Show LabelInfo where
                ["collapsed" | collapsed info] ++
                ["hidden"    | hidden    info]
           extra = " (" ++ commaList ps ++ ")"
-      in show (labelName info) ++ if null ps then "" else extra
+      in showId info ++ if null ps then "" else extra
 
+instance HasId LabelInfo where
+   getId = labelId
+   changeId f info = info { labelId = f (labelId info) }
+   
 makeInfo :: String -> LabelInfo
-makeInfo s = Info s False False False
+makeInfo s = Info (newId s) False False False
 
 -----------------------------------------------------------
 --- Type class
@@ -80,7 +84,7 @@ instance IsStrategy Strategy where
 instance IsStrategy (LabeledStrategy) where
   toStrategy (LS info (S core)) = 
      case core of
-        Rule Nothing r | showId r == labelName info -> 
+        Rule Nothing r | getId r == getId info -> 
              S (Rule (Just info) r)
         _ -> S (Label info core)
 
@@ -111,14 +115,15 @@ toLabeledStrategy s =
       Label l c -> return (makeLabeledStrategy l (fromCore c))
       _         -> fail "Strategy without label"
 
-strategyName :: LabeledStrategy a -> String
-strategyName = getLabel
-
 instance Show (LabeledStrategy a) where
    show s = show (labelInfo s) ++ ": " ++ show (unlabel s)
 
 instance Apply LabeledStrategy where
    applyAll = applyAll . toStrategy
+
+instance HasId (LabeledStrategy a) where
+   getId = getId . labelInfo
+   changeId = changeInfo . changeId
 
 class IsLabeled f where
    toLabeled :: f a -> LabeledStrategy a
@@ -135,9 +140,6 @@ instance IsLabeled RewriteRule where
 -- | Labels a strategy with a string
 label :: IsStrategy f => String -> f a -> LabeledStrategy a
 label l = LS (makeInfo l) . toStrategy
-
-getLabel :: IsLabeled f => f a -> String
-getLabel = labelName . labelInfo . toLabeled
 
 changeInfo :: IsLabeled f => (LabelInfo -> LabelInfo) -> f a -> LabeledStrategy a
 changeInfo f a = LS (f info) s
@@ -157,7 +159,7 @@ processLabelInfo getInfo = mapCore forLabel forRule
       new | hidden info = mapRule minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (labelName info{- ++ " (collapsed)"-}) (applyAll new)
+      asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) (applyAll new)
    forRule (Just l) r 
       | removed info = Fail
       | hidden info  = Rule (Just l) (minorRule r)

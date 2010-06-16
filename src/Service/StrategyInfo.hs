@@ -38,7 +38,7 @@ strategyToXML = coreToXML . toCore . toStrategy
 
 infoToXML :: LabelInfo -> XMLBuilder
 infoToXML info = do
-   "name" .=. labelName info
+   "name" .=. showId info
    when (removed   info) ("removed"   .=. "true")
    when (collapsed info) ("collapsed" .=. "true")
    when (hidden    info) ("hidden"    .=. "true")
@@ -92,9 +92,9 @@ isOrElse _ = Nothing
 xmlToStrategy :: Monad m => (String -> Maybe (Rule a)) ->  XML -> m (Strategy a)
 xmlToStrategy f = liftM fromCore . readStrategy xmlToInfo g
  where
-   g info = case f (labelName info) of
+   g info = case f (showId info) of
                Just r  -> return r
-               Nothing -> fail $ "Unknown rule: " ++ show (labelName info) 
+               Nothing -> fail $ "Unknown rule: " ++ showId info
 
 xmlToInfo :: Monad m => XML -> m LabelInfo
 xmlToInfo xml = do

@@ -107,7 +107,7 @@ strategyPage ex = do
    highlightXML True (strategyToXML (strategy ex))
    h2 "2. Locations" 
    let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
-       g (Left a)  = text (strategyName a)
+       g (Left a)  = text (showId a)
        g (Right a) = text (showId a ++ " (rule)") 
        indent n    = text (replicate (3*n) '.')
    table ( [bold $ text "Location", bold $ text "Label"] 
@@ -136,7 +136,8 @@ rulesPage ex = do
          [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
          , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
          , [bold $ text "Groups", text $ commaList $ ruleGroups r]
-         , [bold $ text "Siblings", text $ commaList $ map showId $ ruleSiblings r] 
+         , [bold $ text "Siblings", text $ commaList $ map showId 
+         $ ruleSiblings r] 
          ]
       when (isRewriteRule r) $ para $
          image (ruleImageFileHere ex r)

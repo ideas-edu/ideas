@@ -55,7 +55,7 @@ configureNow =
 
 configure :: StrategyConfiguration -> LabeledStrategy a -> LabeledStrategy a
 configure cfg ls = 
-   label (strategyName ls) (configureCore cfg (toCore (unlabel ls)))
+   label (showId ls) (configureCore cfg (toCore (unlabel ls)))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
 configureCore cfg = mapCore f g . addLocation
@@ -72,7 +72,7 @@ getActions :: (StrategyLocation, LabelInfo) -> [String]
            -> StrategyConfiguration -> [ConfigAction]
 getActions (loc, info) groups = map snd . filter (select . fst)
  where
-   select (ByName s)     = labelName info == s
+   select (ByName s)     = showId info == s
    select (ByGroup s)    = s `elem` groups
    select (ByLocation l) = loc == l
 

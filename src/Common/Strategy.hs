@@ -16,7 +16,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy 
    ( -- * Data types and type classes
-     Strategy, LabeledStrategy, strategyName
+     Strategy, LabeledStrategy
    , IsStrategy(..)
      -- * Running strategies
    , fullDerivationTree, derivationTree

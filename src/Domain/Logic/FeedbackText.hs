@@ -162,7 +162,7 @@ backAndHint ready = "Press the Back button and try again." ++
 -- Helper functions
 
 (~=) :: Rule a -> Rule b -> Bool
-r1 ~= r2 = name r1 == name r2
+r1 ~= r2 = getId r1 == getId r2
 
 -- Quick and dirty fix!
 inGroup :: Rule a -> String -> Bool

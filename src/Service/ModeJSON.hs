@@ -218,14 +218,14 @@ encodeResult :: Encoder JSON a -> Result a -> DomainReasoner JSON
 encodeResult enc result =
    case result of
       -- SyntaxError _ -> [("result", String "SyntaxError")]
-      Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . name) rs)]
+      Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . showId) rs)]
       NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
       Ok rs st      -> do
          json <- encodeType enc stateTp st
-         return $ Object [("result", String "Ok"), ("rules", Array $ map (String . name) rs), ("state", json)]
+         return $ Object [("result", String "Ok"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Detour rs st  -> do
          json <- encodeType enc stateTp st
-         return $ Object [("result", String "Detour"), ("rules", Array $ map (String . name) rs), ("state", json)]
+         return $ Object [("result", String "Detour"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Unknown st    -> do
          json <- encodeType enc stateTp st
          return $ Object [("result", String "Unknown"), ("state", json)]

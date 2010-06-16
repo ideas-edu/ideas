@@ -136,7 +136,7 @@ makeDerivation :: a -> [Rule a] -> [(String, a)]
 makeDerivation _ []     = []
 makeDerivation a (r:rs) = 
    let new = applyD r a
-   in [ (name r, new) | isMajorRule r ] ++ makeDerivation new rs 
+   in [ (showId r, new) | isMajorRule r ] ++ makeDerivation new rs 
    
 -- Copied from TypedAbstractService: clean me up
 runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]

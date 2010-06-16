@@ -124,7 +124,7 @@ emptyExercise = Exercise
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []
-   , ruleOrdering   = \r1 r2 -> name r1 `compare` name r2
+   , ruleOrdering   = \r1 r2 -> getId r1 `compare` getId r2
      -- testing and exercise generation
    , testGenerator  = Nothing
    , randomExercise = Nothing
@@ -146,7 +146,7 @@ ruleset :: Exercise a -> [Rule (Context a)]
 ruleset ex = nub (sortBy cmp list)
  where 
    list = rulesInStrategy (strategy ex) ++ extraRules ex
-   cmp a b = name a `compare` name b
+   cmp a b = getId a `compare` getId b
  
 simpleGenerator :: Gen a -> Maybe (StdGen -> Int -> a) 
 simpleGenerator = useGenerator (const True) . const
@@ -199,15 +199,15 @@ recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
       liftM2 (similarity ex) (fromContext cx) (fromContext cy)
 
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
-ruleOrderingWith = ruleNameOrderingWith . map name
+ruleOrderingWith = ruleNameOrderingWith . map showId
  
 ruleNameOrderingWith :: [String] -> Rule a -> Rule a -> Ordering
 ruleNameOrderingWith xs r1 r2 =
-   case (findIndex (==name r1) xs, findIndex (==name r2) xs) of
+   case (findIndex (==showId r1) xs, findIndex (==showId r2) xs) of
       (Just i,  Just j ) -> i `compare` j
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT
-      (Nothing, Nothing) -> name r1 `compare` name r2
+      (Nothing, Nothing) -> getId r1 `compare` getId r2
 
 ---------------------------------------------------------------
 -- Exercise status
@@ -225,7 +225,7 @@ isPublic ex = status ex `elem` [Stable, Provisional]
 
 -- | An exercise that is not public
 isPrivate :: Exercise a -> Bool
-isPrivate   = not . isPublic
+isPrivate = not . isPublic
 
 ---------------------------------------------------------------
 -- Exercise codes (unique identification)
@@ -235,9 +235,9 @@ type ExerciseCode = Id.Id
 makeCode :: String -> String -> ExerciseCode
 makeCode a b
    | null a || null b || any invalidCodeChar (a++b) =
-        error $ "Invalid exercise code: " ++ show (Id.newQId a b)
+        error $ "Invalid exercise code: " ++ show (Id.newQId Id.IdExercise a b)
    | otherwise = 
-        Id.newQId (map toLower a) (map toLower b)
+        Id.newQId Id.IdExercise (map toLower a) (map toLower b)
    
 readCode :: String -> Maybe ExerciseCode
 readCode xs =
@@ -252,9 +252,6 @@ invalidCodeChar = not . validCodeChar
 
 domain :: ExerciseCode -> String
 domain = concat . intersperse "." . Id.quantifiers
-
-identifier :: ExerciseCode -> String
-identifier = Id.identifier
 
 ---------------------------------------------------------------
 -- Rest
@@ -272,7 +269,7 @@ prettyPrinterContext ex =
     
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 
-   case filter ((==s) . name) (ruleset ex) of 
+   case filter ((==s) . showId) (ruleset ex) of 
       [hd] -> return hd
       []   -> fail $ "Could not find ruleid " ++ s
       _    -> fail $ "Ambiguous ruleid " ++ s
@@ -373,7 +370,7 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseCode ex)) $ do
                    myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
                    myView = makeView (return . from) (S (prettyPrinterContext ex))
                    args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
-               in addPropertyWith (name r) args $ 
+               in addPropertyWith (showId r) args $ 
                      propRuleSmart eq (liftRule myView r) myGen 
  
          addProperty "soundness strategy/generator" $ 

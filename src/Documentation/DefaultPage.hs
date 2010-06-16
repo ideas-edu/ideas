@@ -83,12 +83,12 @@ servicePagePath :: String
 servicePagePath = "services/" 
 
 ruleImageFile :: Exercise a -> Rule (Context a) -> String
-ruleImageFile ex r = ruleImagePath ex ++ "rule" ++ name r ++ ".png"
+ruleImageFile ex r = ruleImagePath ex ++ "rule" ++ showId r ++ ".png"
 
 ruleImageFileHere :: Exercise a -> Rule (Context a) -> String
 ruleImageFileHere ex r = 
    filter (not . isSpace) (identifier (exerciseCode ex)) 
-   ++ "/rule" ++ filter isAlphaNum (name r) ++ ".png"
+   ++ "/rule" ++ filter isAlphaNum (showId r) ++ ".png"
 
 exerciseOverviewPageFile :: String
 exerciseOverviewPageFile = "exercises.html"

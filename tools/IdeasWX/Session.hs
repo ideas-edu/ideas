@@ -15,7 +15,7 @@ module Session
    , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
    , thisExercise, thisExerciseFor, progressPair, undo, submitText
    , currentDescription, currentText, derivationText, readyText, hintText
-   , stepText, nextStep, ruleNames, currentState, getDerivation, currentCode
+   , stepText, nextStep, currentState, getDerivation, currentCode
    ) where
 
 import Service.BasicServices
@@ -173,7 +173,7 @@ hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose ref = do
    Some ss <- getValue ref
    let d = getDerivation ss
-       showRule r = fromMaybe ("rule " ++ name r) $ do 
+       showRule r = fromMaybe ("rule " ++ showId r) $ do 
           exText <- getExerciseText (getPackage ss)
           ruleText exText r
    case allfirsts (currentState d) of
@@ -212,11 +212,7 @@ nextStep ref = do
             Just exText ->
                return (appliedRule exText rule)
             Nothing -> 
-               return ("You have applied rule " ++ name rule ++ " correctly.")
-
-ruleNames :: Session -> IO [String]
-ruleNames = withDerivation $ \d -> 
-   return $ map name $ filter isMajorRule $ ruleset $ exercise d
+               return ("You have applied rule " ++ showId rule ++ " correctly.")
 
 {-
 getRuleAtIndex :: Int -> Session -> IO (Some Rule)

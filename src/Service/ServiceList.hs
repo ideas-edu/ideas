@@ -216,7 +216,7 @@ allExercises = map make . sortBy cmp
 allRules :: ExercisePackage a -> [(String, Bool, Bool)]
 allRules = map make . ruleset . exercise
  where  
-   make r  = (name r, isBuggyRule r, isRewriteRule r)
+   make r  = (showId r, isBuggyRule r, isRewriteRule r)
    
 elemTp :: Type a t -> Type a t
 elemTp = Tag "elem"

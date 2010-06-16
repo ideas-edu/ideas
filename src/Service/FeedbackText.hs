@@ -92,7 +92,7 @@ showRule :: ExerciseText a -> Rule (Context a) -> String
 showRule exText r = 
    case ruleText exText r of
       Just s  -> s
-      Nothing -> "rule " ++ name r
+      Nothing -> "rule " ++ showId r
 
 useToRewrite :: ExerciseText a -> Rule (Context a) -> State a -> a -> Maybe String
 useToRewrite exText rule old = rewriteIntoText True txt old

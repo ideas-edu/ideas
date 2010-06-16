@@ -14,7 +14,7 @@ module Service.Evaluator where
 
 import Common.Context (fromContext)
 import Common.Exercise (Exercise)
-import Common.Transformation (name)
+import Common.Transformation (showId)
 import Control.Arrow
 import Control.Monad
 import Service.ExercisePackage
@@ -94,7 +94,7 @@ encodeDefault enc tp tv =
                           case result of 
                              Left msg -> fail msg
                              Right a  -> encodeType enc t1 a
-      Rule          -> encodeType enc String (name tv)
+      Rule          -> encodeType enc String (showId tv)
       Term          -> encodeTerm enc tv
       Context       -> fromContext tv >>= encodeType enc Term
       Location      -> encodeType enc String (show tv)

@@ -23,15 +23,14 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, name, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , ruleGroups, ruleSiblings, addRuleToGroup, Id.describe, Id.description
+   , Rule, Id.showId, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
+   , ruleGroups, ruleSiblings, addRuleToGroup, Id.identifier, Id.describe, Id.description, Id.getId
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
    , siblingOf, transformations, getRewriteRules, doBeforeTrans
    , ruleRecognizer, useRecognizer
      -- * Lifting
-   -- , ruleOnce, ruleOnce2, ruleSomewhere
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , testRule, propRuleSmart
@@ -280,10 +279,10 @@ data Rule a = Rule
    }
 
 instance Show (Rule a) where
-   show = name
+   show = Id.showId
 
 instance Eq (Rule a) where
-   r1 == r2 = name r1 == name r2
+   r1 == r2 = ruleId r1 == ruleId r2
 
 instance Apply Rule where
    applyAll r a = do 
@@ -294,10 +293,6 @@ instance Id.HasId (Rule a) where
    getId        = ruleId
    changeId f r = r { ruleId = f (ruleId r) } 
 
--- | Returns the name of the rule
-name :: Rule a -> String
-name = show . ruleId
-
 -- | Returns whether or not the rule is major (i.e., not minor)
 isMajorRule :: Rule a -> Bool
 isMajorRule = not . isMinorRule
@@ -306,7 +301,7 @@ isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules
 
 siblingOf :: Rule b -> Rule a -> Rule a 
-siblingOf sib r = r { ruleSiblings = name sib : ruleSiblings r }
+siblingOf sib r = r { ruleSiblings = Id.showId sib : ruleSiblings r }
 
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
@@ -326,7 +321,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule (Id.newId n) ts False False [] []
+makeRuleList n ts = Rule (Id.newId Id.IdRule n) ts False False [] []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a

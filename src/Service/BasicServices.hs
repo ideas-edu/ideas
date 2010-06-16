@@ -19,7 +19,7 @@ import Common.Context
 import Common.Derivation hiding (derivation)
 import Common.Exercise   hiding (generate)
 import Common.Strategy   hiding (not, fail)
-import Common.Transformation (Rule, name, isMajorRule, isBuggyRule)
+import Common.Transformation (Rule, showId, isMajorRule, isBuggyRule)
 import Common.Utils (safeHead)
 import Common.Navigator
 import Data.List
@@ -127,7 +127,7 @@ apply r loc state = maybe applyOff applyOn (prefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
       maybe applyOff return $ safeHead
-      [ s1 | (r1, loc1, s1) <- fromMaybe [] $ allfirsts state, name r == name r1, loc==loc1 ]
+      [ s1 | (r1, loc1, s1) <- fromMaybe [] $ allfirsts state, showId r == showId r1, loc==loc1 ]
       
    applyOff  = -- scenario 2: off-strategy
       case Apply.apply r (setLocation loc (context state)) of

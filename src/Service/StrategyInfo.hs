@@ -19,7 +19,7 @@ import Control.Monad
 import Common.Strategy.Core (Core(..), noLabels)
 import Common.Strategy.Abstract
 import Text.XML
-import Common.Transformation hiding (name)
+import Common.Transformation
 import Common.Utils (readInt)
 
 instance InXML (LabeledStrategy a) where

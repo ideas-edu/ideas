@@ -21,7 +21,7 @@ import Common.Context
 import Common.Exercise
 import Common.Navigator
 import Common.Strategy hiding (not, replicate)
-import Common.Transformation (name)
+import Common.Transformation (showId)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
@@ -80,10 +80,10 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , equivalence  = viewEquivalent normPowerNonNegDouble
    , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
                            ++ brokenExp1 ++ normPower4' ++ normPower5
-   , ruleOrdering = ruleNameOrderingWith [ name mulExponents
-                                         , name reciprocalFrac
-                                         , name $ reciprocalInv $ const False
-                                         , name power2root]
+   , ruleOrdering = ruleNameOrderingWith [ showId mulExponents
+                                         , showId reciprocalFrac
+                                         , showId $ reciprocalInv $ const False
+                                         , showId power2root]
    }
 
 calcPowerExercise :: Exercise Expr

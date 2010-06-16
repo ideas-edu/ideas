@@ -40,8 +40,8 @@ linearStrategy = cleanUpStrategy (cleanTop (fmap cleanUpSimple)) linearStrategyG
 linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
 linearMixedStrategy = 
    let f   = cleanTop (fmap (transform (simplify mixedFractionView) . cleanUpSimple))
-       cfg = [ (ByName (name ruleNormalizeMixedFraction), Reinsert)
-             , (ByName (name ruleNormalizeRational), Remove)
+       cfg = [ (ByName (showId ruleNormalizeMixedFraction), Reinsert)
+             , (ByName (showId ruleNormalizeRational), Remove)
              ] 
    in cleanUpStrategy f (configureNow (configure cfg linearStrategyG))
 
@@ -50,7 +50,7 @@ linearStrategyG =
    label "Linear Equation" $
        label "Phase 1" (repeat (
                use removeDivision
-          <|>  multi (name distributeTimes) (somewhere (useC parentNotNegCheck <*> use distributeTimes))
+          <|>  multi (showId distributeTimes) (somewhere (useC parentNotNegCheck <*> use distributeTimes))
           <|>  multi "merge similar terms" (once (use merge))))
    <*> label "Phase 2" (repeat (
               (use flipEquation |> use varToLeft)
@@ -112,19 +112,19 @@ quadraticStrategyG =
    -- simplifies square roots, or do an approximation 
    simplifyForm =
       label "square root simplification" (
-         multi (name simplerSquareRoot) (somewhere (use simplerSquareRoot)))
+         multi (showId simplerSquareRoot) (somewhere (use simplerSquareRoot)))
       <|> 
       remove (label "approximate result" (
-         multi (name ruleApproximate) (somewhere (use ruleApproximate))))
+         multi (showId ruleApproximate) (somewhere (use ruleApproximate))))
 
    topForm = label "top form" $
         somewhere (use cancelTerms  <|> use sameFactor)
       |> (  somewhere (use sameConFactor)
-        <|> multi (name merge) (somewhere (use merge))
+        <|> multi (showId merge) (somewhere (use merge))
         <|> somewhere (use distributionSquare)
-        <|> multi (name distributeTimes) (somewhere 
+        <|> multi (showId distributeTimes) (somewhere 
                (useC parentNotNegCheck <*> use distributeTimes))
-        <|> multi (name distributeDivision) (somewhere 
+        <|> multi (showId distributeDivision) (somewhere 
                (once (use distributeDivision)))
         <|> somewhere (use flipEquation)
          )

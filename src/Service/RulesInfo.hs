@@ -32,18 +32,18 @@ import qualified Data.Map as M
 rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder
 rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
    
-   let pairs = M.findWithDefault [] (name r) exampleMap
+   let pairs = M.findWithDefault [] (showId r) exampleMap
    examples <- forM (take 3 pairs) $ \(a, b) ->
                   liftM2 (,) (enc a) (enc b)
                      
    return $ element "rule" $ do
-      "name"        .=. name r
+      "name"        .=. showId r
       "buggy"       .=. f (isBuggyRule r)
       "rewriterule" .=. f (isRewriteRule r)
       -- More information
       let descr = description r
           -- to do: rules should carry descriptions 
-          txt   = if null descr then (name r) else descr 
+          txt   = if null descr then (showId r) else descr 
       unless (null txt) $
          element "description" $ text txt
       forM_ (ruleGroups r) $ \s -> 
@@ -79,7 +79,7 @@ collectExamples ex = foldr add M.empty (examples ex)
    add a m = let tree = derivationTree (strategy ex) (inContext ex a)
                  f Nothing = m
                  f (Just d) = foldr g m (zip3 (terms d) (steps d) (drop 1 (terms d)))
-                 g (a, r, b) = M.insertWith (++) (name r) (liftM2 (,) (fromContext a) (fromContext b))
+                 g (a, r, b) = M.insertWith (++) (showId r) (liftM2 (,) (fromContext a) (fromContext b))
              in f (derivation tree) 
 
 rulesInfoType :: Type a ()

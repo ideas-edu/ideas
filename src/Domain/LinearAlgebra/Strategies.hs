@@ -127,7 +127,7 @@ conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
    return $ toExpr a
 
 liftExpr :: IsTerm a => Rule (Context a) -> Rule (Context Expr)
-liftExpr r = makeSimpleRuleList (name r) $ \a -> do
+liftExpr r = makeSimpleRuleList (showId r) $ \a -> do
    b <- castT exprView a 
    c <- applyAll r b
    castT exprView c

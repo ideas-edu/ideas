@@ -72,7 +72,7 @@ exercisePage pkg = do
 
    h2 "2. Rules"
    let rs = rulesInStrategy (strategy ex)
-       f r = [ text (name r)
+       f r = [ text (showId r)
              , text $ showBool $ isBuggyRule r
              , text $ showBool $ hasArguments r
              , text $ showBool $ r `elem` rs
@@ -108,7 +108,7 @@ strategyPage ex = do
    h2 "2. Locations" 
    let f (loc, e)  = [text (show loc), indent (locationDepth loc) >> g e]
        g (Left a)  = text (strategyName a)
-       g (Right a) = text (name a ++ " (rule)") 
+       g (Right a) = text (showId a ++ " (rule)") 
        indent n    = text (replicate (3*n) '.')
    table ( [bold $ text "Location", bold $ text "Label"] 
          : map f (strategyLocations (strategy ex))
@@ -127,7 +127,7 @@ rulesPage ex = do
          bold $ text $ g ++ ":"
          space
          let elems = filter ((g `elem`) . ruleGroups) (ruleset ex)
-         text $ commaList $ map name elems
+         text $ commaList $ map showId elems
       
    -- General info
    forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do
@@ -142,7 +142,7 @@ rulesPage ex = do
       when (isRewriteRule r) $ para $
          image (ruleImageFileHere ex r)
       -- Examples
-      let ys = M.findWithDefault [] (name r) exampleMap
+      let ys = M.findWithDefault [] (showId r) exampleMap
       unless (null ys) $ do
          h3 "Examples"
          forM_ (take 3 ys) $ \(a, b) -> para $ tt $ 

@@ -16,33 +16,46 @@ module Common.Id where
 import Data.List
 
 data Id = Id 
-   { quantifiers :: [String]
-   , identifier  :: String
-   , idType      :: IdType
+   { idName        :: String
+   , idQuantifiers :: [String]
+   , idType        :: IdType
    , idDescription :: String
    }
    
 instance Show Id where
-   show a = concat (intersperse "." (quantifiers a ++ [identifier a]))
+   show a = concat (intersperse "." (idQuantifiers a ++ [idName a]))
 
 instance Eq Id where
    a == b = a `compare` b == EQ
 
 instance Ord Id where 
    a `compare` b = f a `compare` f b
-    where f x = (quantifiers x, identifier x)
+    where f x = (idQuantifiers x, idName x)
    
-data IdType = IdExercise 
+data IdType = IdExercise | IdRule
    deriving (Eq, Ord)
 
 instance Show IdType where
    show IdExercise = "Exercise"
+   show IdRule     = "Rule"
 
-newId :: String -> Id
-newId s = Id [] s IdExercise ""
+identifier :: HasId a => a -> String
+identifier = idName . getId
 
-newQId :: String -> String -> Id
-newQId q s = Id [q] s IdExercise ""
+quantifiers :: HasId a => a -> [String]
+quantifiers = idQuantifiers . getId
+
+description :: HasId a => a -> String 
+description = idDescription . getId
+
+showId :: HasId a => a -> String
+showId = show . getId
+
+newId :: IdType -> String -> Id
+newId tp s = Id s [] tp ""
+
+newQId :: IdType -> String -> String -> Id
+newQId tp q s = Id s [q] tp ""
 
 class HasId a where
    getId    :: a -> Id
@@ -54,9 +67,6 @@ instance HasId Id where
 
 describe :: HasId a => String -> a -> a
 describe = changeId . describeId
-
-description :: HasId a => a -> String 
-description = idDescription . getId
 
 describeId :: String -> Id -> Id
 describeId s a

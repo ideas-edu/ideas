@@ -39,11 +39,11 @@ import Domain.Math.Polynomial.CleanUp
 
 -- | Rule ordering ------------------------------------------------------------
 powerRuleOrder =  
-  [ name addExponents
-  , name mulExponents
-  , name subExponents
-  , name distributePower
-  , name reciprocal
+  [ showId addExponents
+  , showId mulExponents
+  , showId subExponents
+  , showId distributePower
+  , showId reciprocal
   ]  
 
 -- | Power rules --------------------------------------------------------------
@@ -281,7 +281,7 @@ calcBinPowerRule opName op m =
 
 makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
 makeCommutative view op rule = 
-  makeSimpleRuleList (name rule) $ \ expr -> do
+  makeSimpleRuleList (showId rule) $ \ expr -> do
     case match view expr of
       Just factors -> do
         (e, es) <- split op factors
@@ -298,7 +298,7 @@ split op xs = f xs
         f [] = []
 
 forallVars :: (String -> Rule Expr) -> Rule Expr
-forallVars ruleFor = makeSimpleRuleList (name (ruleFor "")) $ \ expr -> 
+forallVars ruleFor = makeSimpleRuleList (showId (ruleFor "")) $ \ expr -> 
   mapMaybe (\v -> apply (ruleFor v) expr) $ collectVars expr
 
 hasNegExp expr = 

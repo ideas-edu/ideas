@@ -139,9 +139,9 @@ ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
 ineqLinearG = label "Linear inequation" $
    label "Phase 1" (repeat 
        (  use removeDivision
-      <|> multi (name distributeTimes) 
+      <|> multi (showId distributeTimes) 
              (somewhere (useC parentNotNegCheck <*> use distributeTimes))
-      <|> multi (name merge) (once (use merge))
+      <|> multi (showId merge) (once (use merge))
        ))
    <*>  
    label "Phase 2" 

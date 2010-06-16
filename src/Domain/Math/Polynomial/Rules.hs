@@ -43,12 +43,12 @@ import qualified Domain.Math.SquareRoot.Views as SQ
 
 quadraticRuleOrder :: [String]
 quadraticRuleOrder = 
-   [ name coverUpTimes, name (coverUpMinusRightWith oneVar)
-   , name (coverUpMinusLeftWith oneVar), name (coverUpPlusWith oneVar)
-   , name coverUpPower
-   , name commonFactorVar, name simplerPolynomial
-   , name niceFactors, name noLinFormula
-   , name cancelTerms, name sameConFactor, name distributionSquare
+   [ showId coverUpTimes, showId (coverUpMinusRightWith oneVar)
+   , showId (coverUpMinusLeftWith oneVar), showId (coverUpPlusWith oneVar)
+   , showId coverUpPower
+   , showId commonFactorVar, showId simplerPolynomial
+   , showId niceFactors, showId noLinFormula
+   , showId cancelTerms, showId sameConFactor, showId distributionSquare
    ]
 
 ------------------------------------------------------------
@@ -498,7 +498,7 @@ ruleFromView s v = makeSimpleRuleList s $ \a -> do
    return b
    
 rhsIsZero :: Rule Expr -> Rule (Equation Expr)
-rhsIsZero r = makeSimpleRuleList (name r) $ \(lhs :==: rhs) -> do
+rhsIsZero r = makeSimpleRuleList (showId r) $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    a <- applyAll r lhs
    return (a :==: rhs)

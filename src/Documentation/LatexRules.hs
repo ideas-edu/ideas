@@ -39,14 +39,9 @@ makeLatexRules dir ex = do
        case makeSingleRule (domain code ++ "/" ++ domain code ++ ".fmt") r of
           Nothing  -> return ()
           Just txt -> do
-             let filename = path ++ "/rule" ++ filter isAlphaNum (name r) ++ ".lhs"
+             let filename = path ++ "/rule" ++ filter isAlphaNum (showId r) ++ ".lhs"
              putStrLn $ "Creating " ++ filename
              writeFile filename txt
-
-{- 
-exerciseRulesToTeX :: Exercise a -> String
-exerciseRulesToTeX ex = unlines . map ruleToTeX . concatMap getRewriteRules . ruleset $ ex
--}
 
 ruleToTeX :: (Some RewriteRule, Bool) -> Maybe String
 ruleToTeX (Some r, sound) = do
@@ -54,7 +49,6 @@ ruleToTeX (Some r, sound) = do
    return $ "RewriteRule " ++ withoutDigits (ruleName r) 
                            ++ " (" ++ txt ++ ")"
 
-   
 ------------------------------------------------------
 
 makeSingleRule :: String -> Rule a -> Maybe String
@@ -64,7 +58,7 @@ makeSingleRule dom r
  where
    content = unlines $
       [ "\\pagestyle{empty}"
-      , formatRuleName (name r)
+      , formatRuleName (showId r)
       , "\\begin{code}"
       ] ++
       map (filter (/= '"') . fromMaybe "" . ruleToTeX) (getRewriteRules r) ++

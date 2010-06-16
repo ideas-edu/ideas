@@ -80,7 +80,7 @@ instance IsStrategy Strategy where
 instance IsStrategy (LabeledStrategy) where
   toStrategy (LS info (S core)) = 
      case core of
-        Rule Nothing r | name r == labelName info -> 
+        Rule Nothing r | showId r == labelName info -> 
              S (Rule (Just info) r)
         _ -> S (Label info core)
 
@@ -127,7 +127,7 @@ instance IsLabeled LabeledStrategy where
    toLabeled = id
 
 instance IsLabeled Rule where
-   toLabeled r = LS (makeInfo (name r)) (S (Rule Nothing r))
+   toLabeled r = LS (makeInfo (showId r)) (S (Rule Nothing r))
 
 instance IsLabeled RewriteRule where
    toLabeled r = toLabeled (makeRule (ruleName r) (RewriteRule r))

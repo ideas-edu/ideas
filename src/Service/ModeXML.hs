@@ -190,7 +190,7 @@ xmlEncoder b f ex = Encoder
                   return (element "list" elems)
          Tp.Tag s t1  -> liftM (element s) . encode enc ex t1  -- quick fix
          Tp.Strategy  -> return . builder . strategyToXML
-         Tp.Rule      -> return . ("ruleid" .=.) . Rule.name
+         Tp.Rule      -> return . ("ruleid" .=.) . Rule.showId
          Tp.Term      -> encodeTerm enc
          Tp.Context   -> encodeContext b (encodeTerm enc)
          Tp.Location  -> return . {-element "location" .-} text . show
@@ -330,18 +330,18 @@ encodeEnvironment b loc env0
 encodeDiagnosis :: Monad m => Bool -> (a -> m XMLBuilder) -> Diagnosis a -> m XMLBuilder
 encodeDiagnosis mode f diagnosis =
    case diagnosis of
-      Buggy r        -> return $ element "buggy" $ "ruleid" .=. Rule.name r
+      Buggy r        -> return $ element "buggy" $ "ruleid" .=. Rule.showId r
       NotEquivalent  -> return $ tag "notequiv"
       Similar  b s   -> ok "similar"  b s Nothing
-      Expected b s r -> ok "expected" b s (Just r)
-      Detour   b s r -> ok "detour"   b s (Just r)
+      Expected b s r -> ok "expected" b s (Just (Rule.showId r))
+      Detour   b s r -> ok "detour"   b s (Just (Rule.showId r))
       Correct  b s   -> ok "correct"  b s Nothing
  where
    ok t b s mr = do
       body <- encodeState mode f s
       return $ element t $ do
          "ready" .=. map toLower (show b)
-         maybe (return ()) (("ruleid" .=.) . Rule.name) mr
+         maybe (return ()) ("ruleid" .=.) mr
          body
   
 encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder

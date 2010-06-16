@@ -91,7 +91,7 @@ fractionStrategy = label "simplify" $ repeat $ alternatives $ map swRule
    ]
 
 swRule :: Uniplate a => Rule a -> Rule a
-swRule r = makeSimpleRuleList (name r) (somewhereM (applyAll r))
+swRule r = makeSimpleRuleList (showId r) (somewhereM (applyAll r))
 
 ------------------------------------------------------------
 -- Test code

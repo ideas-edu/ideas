@@ -54,8 +54,8 @@ linearExercise = makeExercise
    , extraRules   = map use buggyRulesEquation ++
                     map use buggyRulesExpr 
    , ruleOrdering = ruleNameOrderingWith 
-                       [ name coverUpTimes, name flipEquation
-                       , name removeDivision
+                       [ showId coverUpTimes, showId flipEquation
+                       , showId removeDivision
                        ]
    , strategy     = linearStrategy
    , navigation   = exprNavigator
@@ -89,7 +89,7 @@ quadraticExercise = makeExercise
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
                     map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering = ruleNameOrderingWith $ 
-                       quadraticRuleOrder ++ [name buggySquareMultiplication]
+                       quadraticRuleOrder ++ [showId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = exprNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
@@ -123,10 +123,10 @@ quadraticNoABCExercise = quadraticExercise
    , strategy     = configure cfg quadraticStrategy
    }
  where
-   cfg = [ (ByName (name prepareSplitSquare), Reinsert)
-         , (ByName (name bringAToOne), Reinsert)
+   cfg = [ (ByName (showId prepareSplitSquare), Reinsert)
+         , (ByName (showId bringAToOne), Reinsert)
          , (ByName "abc form", Remove)
-         , (ByName (name simplerPolynomial), Remove)
+         , (ByName (showId simplerPolynomial), Remove)
          ]
          
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (3188)">
+<reply result="ok" version="0.6.2 (3229)">
   <list>
     <elem ruleid="reciprocal fraction">
       <expr>
@@ -15,8 +15,16 @@
     </elem>
     <elem ruleid="distribute power">
       <expr>
+        1/(2*a)*16*b^2
+      </expr>
+    </elem>
+    <elem ruleid="fraction times">
+      <expr>
         8/a*b^2
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
     <elem ruleid="fraction times">
       <expr>

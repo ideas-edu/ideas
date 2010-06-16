@@ -72,7 +72,7 @@ exerciseOverviewPage showAll list = do
     
       cmp (Some a) (Some b) = exerciseCode a `compare` exerciseCode b
       eq a b      = f a == f b
-      f (Some ex) = domain (exerciseCode ex)
+      f (Some ex) = qualification (exerciseCode ex)
       g xs = (f (head xs), xs)
       p (Some ex) = showAll || isPublic ex
 

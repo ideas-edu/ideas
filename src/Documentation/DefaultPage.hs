@@ -73,11 +73,11 @@ findTitle = maybe "" XML.getData . XML.findChild "h1" . XML.makeXML "page"
 -- Paths and files
 
 ruleImagePath :: Exercise a -> String
-ruleImagePath ex = "exercises/" ++ f (domain (exerciseCode ex)) ++ "/" ++ f (description ex) ++ "/"
+ruleImagePath ex = "exercises/" ++ f (qualification ex) ++ "/" ++ f (description ex) ++ "/"
  where f = filter isAlphaNum . map toLower
 
 exercisePagePath :: ExerciseCode -> String
-exercisePagePath code = "exercises/" ++ domain code ++ "/"
+exercisePagePath code = "exercises/" ++ qualification code ++ "/"
 
 servicePagePath :: String
 servicePagePath = "services/" 

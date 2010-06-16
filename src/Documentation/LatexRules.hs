@@ -24,8 +24,7 @@ import System.Time
 
 makeLatexRules :: String -> Exercise a -> IO ()
 makeLatexRules dir ex = do
-   let code = exerciseCode ex
-       path = dir ++ "/" ++ domain code ++ "/" ++ filter (/= ' ') (identifier code)
+   let path = dir ++ "/" ++ qualification ex ++ "/" ++ filter (/= ' ') (identifier ex)
    -- Exercise document
    let rules = concatMap getRewriteRules (ruleset ex)
    unless (null rules) $ do
@@ -36,7 +35,7 @@ makeLatexRules dir ex = do
       writeFile filename doc
    -- individual rules
    forM_ (ruleset ex) $ \r ->
-       case makeSingleRule (domain code ++ "/" ++ domain code ++ ".fmt") r of
+       case makeSingleRule (qualification ex ++ "/" ++ qualification ex ++ ".fmt") r of
           Nothing  -> return ()
           Just txt -> do
              let filename = path ++ "/rule" ++ filter isAlphaNum (showId r) ++ ".lhs"
@@ -68,10 +67,9 @@ makeSingleRule dom r
 
 makeDocument :: Exercise a -> IO String
 makeDocument ex = do
-   let code = exerciseCode ex
    time <- getClockTime
    return $ 
-      texHeader (Just $ domain code ++ "/" ++ domain code ++ ".fmt") ++ 
+      texHeader (Just $ qualification ex ++ "/" ++ qualification ex ++ ".fmt") ++ 
       texBody (Just $ show time) (texSectionRules ex)
 
 ------------------------------------------------------

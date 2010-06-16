@@ -17,20 +17,20 @@ import Data.List
 
 data Id = Id 
    { idName        :: String
-   , idQuantifiers :: [String]
+   , idQualifiers  :: [String]
    , idType        :: IdType
    , idDescription :: String
    }
    
 instance Show Id where
-   show a = concat (intersperse "." (idQuantifiers a ++ [idName a]))
+   show a = concat (intersperse "." (idQualifiers a ++ [idName a]))
 
 instance Eq Id where
    a == b = a `compare` b == EQ
 
 instance Ord Id where 
    a `compare` b = f a `compare` f b
-    where f x = (idQuantifiers x, idName x)
+    where f x = (idQualifiers x, idName x)
    
 data IdType = IdExercise | IdRule
    deriving (Eq, Ord)
@@ -42,8 +42,14 @@ instance Show IdType where
 identifier :: HasId a => a -> String
 identifier = idName . getId
 
-quantifiers :: HasId a => a -> [String]
-quantifiers = idQuantifiers . getId
+qualifiers :: HasId a => a -> [String]
+qualifiers = idQualifiers . getId
+
+qualification :: HasId a => a -> String
+qualification = concat . intersperse "." . qualifiers
+
+unqualified :: HasId a => a -> String
+unqualified = idName . getId
 
 description :: HasId a => a -> String 
 description = idDescription . getId

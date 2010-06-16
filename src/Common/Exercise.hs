@@ -25,7 +25,7 @@ module Common.Exercise
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Exercise codes
-   , ExerciseCode, makeCode, readCode, domain, identifier
+   , ExerciseCode, makeCode, readCode, Id.qualification
      -- * Miscellaneous
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
@@ -249,9 +249,6 @@ readCode xs =
 validCodeChar, invalidCodeChar :: Char -> Bool
 validCodeChar c = isAlphaNum c || c `elem` "-_"
 invalidCodeChar = not . validCodeChar
-
-domain :: ExerciseCode -> String
-domain = concat . intersperse "." . Id.quantifiers
 
 ---------------------------------------------------------------
 -- Rest

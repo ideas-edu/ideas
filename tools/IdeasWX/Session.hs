@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Session
-   ( Some(..), Exercise(..), domain, Status(..)
+   ( Some(..), Exercise(..), qualification, Status(..)
    , Session, makeSession, newTerm, suggestTerm, suggestTermFor, newExercise
    , thisExercise, thisExerciseFor, progressPair, undo, submitText
    , currentDescription, currentText, derivationText, readyText, hintText

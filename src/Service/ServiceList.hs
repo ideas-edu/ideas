@@ -209,9 +209,7 @@ allExercises = map make . sortBy cmp
    cmp e1 e2  = f e1 `compare` f e2
    f (Some pkg) = exerciseCode (exercise pkg)
    make (Some pkg) = 
-      let ex   = exercise pkg
-          code = exerciseCode ex 
-      in (domain code, identifier code, description ex, show (status ex))
+      (qualification pkg, identifier pkg, description pkg, show (status (exercise pkg)))
 
 allRules :: ExercisePackage a -> [(String, Bool, Bool)]
 allRules = map make . ruleset . exercise

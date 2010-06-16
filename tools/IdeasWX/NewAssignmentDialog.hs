@@ -31,7 +31,7 @@ newAssignmentDialog w session = do
    -- packages and domains
    pkgs <- useIDEAS getPackages
    let domains = sort $ nub 
-          [ domain (exerciseCode (exercise e)) | Some e <- pkgs ]
+          [ qualification pkg | Some pkg <- pkgs ]
    -- create frame
    f <- dialog w [text := "New Assignment", bgcolor := white] 
    -- current exercise
@@ -55,7 +55,7 @@ newAssignmentDialog w session = do
       , hstretch $ label "Exercise selection", fill $ widget exerciseList
       , hstretch $ widget experimentalBox]]
    
-   set domainBox [selection := fromMaybe 0 (findIndex (==domain code) domains) ]
+   set domainBox [selection := fromMaybe 0 (findIndex (==qualification code) domains) ]
    
    set f [ layout := margin 20 $ row 30 [fill $ widget leftPanel, fill $ widget rightPanel]
          , size := sz 600 450]
@@ -120,7 +120,6 @@ newAssignmentDialog w session = do
    
 selectPackages :: Bool -> String -> [Some ExercisePackage] -> [Some ExercisePackage]
 selectPackages b d = filter $ \(Some pkg) ->  
-   let ex = exercise pkg
-   in domain (exerciseCode ex) == d && (b || isPublic ex)
+   qualification pkg == d && (b || isPublic (exercise pkg))
 
 myGrey = rgb 230 230 230

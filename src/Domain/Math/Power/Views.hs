@@ -131,7 +131,7 @@ rootView = makeView f g
     g (a, b) = if b==2 then Sqrt a else root a (fromRational b)
 
 rootConsView :: View Expr (Expr, (Expr, Rational))
-rootConsView =   timesView >>> second rootView
+rootConsView =  (timesView >>> second rootView)
             <&> (rootView >>^ (,) 1)
 
 

@@ -1,3 +1,4 @@
+{-# OPTIONS -XGADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -8,7 +9,8 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- This module defines views on data-types
+-- This module defines views on data-types, as described in "Canonical Forms
+-- in Interactive Exercise Assistants"
 --
 -----------------------------------------------------------------------------
 module Common.View 
@@ -21,13 +23,13 @@ module Common.View
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
    , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
-   , swapView, listView, switchView, ( #> ), associativeView
+   , swapView, listView, switchView, associativeView
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
 import Common.Traversable
-import Control.Arrow hiding ((>>>))
+import Control.Arrow
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
@@ -36,80 +38,80 @@ import qualified Control.Category as C
 ----------------------------------------------------------------------------------
 -- Generalized monadic view
 
--- For all v::View the following should hold:
---   1) simplify v a "is equivalent to" a
---   2) match (build b) equals Just b  
---         (but only for b that have at least one "a")
---
--- Derived property: simplification is idempotent
+data ViewM m a b where
+   Prim    :: (a -> m b) -> (b -> a) -> ViewM m a b
+   (:>>>:) :: ViewM m a b -> ViewM m b c -> ViewM m a c 
+   First   :: ViewM m a b -> ViewM m (a, c) (b, c)
+   Second  :: ViewM m b c -> ViewM m (a, b) (a, c)
+   (:***:) :: ViewM m a c -> ViewM m b d -> ViewM m (a, b) (c, d)
+   (:&&&:) :: ViewM m a b -> ViewM m a c -> ViewM m a (b, c)
+   VLeft   :: ViewM m a b -> ViewM m (Either a c) (Either b c)
+   VRight  :: ViewM m b c -> ViewM m (Either a b) (Either a c)
+   (:+++:) :: ViewM m a c -> ViewM m b d -> ViewM m (Either a b) (Either c d)
+   (:|||:) :: ViewM m a c -> ViewM m b c -> ViewM m (Either a b) c
 
-data ViewM m a b = ViewM
-   { match :: a -> m b
-   , build :: b -> a
-   }
+instance Monad m => C.Category (ViewM m) where
+   id    = Prim return id
+   v . w = w :>>>: v
+
+instance Monad m => Arrow (ViewM m) where
+   arr f  = Prim (return . f) (error "Control.View.arr: function is not invertible")
+   first  = First
+   second = Second
+   (***)  = (:***:)
+   (&&&)  = (:&&&:)
+
+instance Monad m => ArrowChoice (ViewM m) where
+   left  = VLeft
+   right = VRight
+   (+++) = (:+++:)
+   (|||) = (:|||:)
+
+----------------------------------------------------------------------------------
+-- Operations on a view
 
 makeView :: Monad m => (a -> m b) -> (b -> a) -> ViewM m a b
-makeView = ViewM
+makeView = Prim
 
 biArr :: Monad m => (a -> b) -> (b -> a) -> ViewM m a b
 biArr f g = makeView (return . f) g
+
+identity :: Monad m => ViewM m a a 
+identity = biArr id id
+
+match :: Monad m => ViewM m a b -> a -> m b
+match view =
+   case view of
+      Prim f _  -> f
+      v :>>>: w -> \a      -> match v a >>= match w
+      First v   -> \(a, c) -> match v a >>= \b -> return (b, c)
+      Second v  -> \(a, b) -> match v b >>= \c -> return (a, c)
+      v :***: w -> \(a, c) -> liftM2 (,) (match v a) (match w c)
+      v :&&&: w -> \a      -> liftM2 (,) (match v a) (match w a)
+      VLeft v   -> either (liftM Left . match v) (return . Right)
+      VRight v  -> either (return . Left) (liftM Right . match v)
+      v :+++: w -> either (liftM Left . match v) (liftM Right . match w)
+      v :|||: w -> either (match v) (match w)
+
+build :: ViewM m a b -> b -> a
+build view = 
+   case view of
+      Prim _ f  -> f
+      v :>>>: w -> build v . build w
+      First v   -> first (build v)
+      Second v  -> second (build v)
+      v :***: w -> build v *** build w
+      v :&&&: _ -> build v . fst -- left-biased
+      VLeft v   -> either (Left . build v) Right
+      VRight v  -> either Left (Right . build v)
+      v :+++: w -> either (Left . build v) (Right . build w)
+      v :|||: _ -> Left . build v -- left-biased
 
 canonical :: Monad m => ViewM m a b -> a -> m a
 canonical = canonicalWith id
 
 canonicalWith :: Monad m => (b -> b) -> ViewM m a b -> a -> m a
 canonicalWith f view = liftM (build view . f) . match view
-
----------------------------------------------------------------
--- Arrow combinators
-
-identity :: Monad m => ViewM m a a 
-identity = makeView return id
-
-(>>>) :: Monad m => ViewM m a b -> ViewM m b c -> ViewM m a c
-v >>> w = makeView (\a -> match v a >>= match w) (build v . build w)
-
-instance Monad m => C.Category (ViewM m) where
-   id    = identity
-   v . w = w >>> v
-   
-instance Monad m => Arrow (ViewM m) where
-   arr f = biArr f (error "Control.View.arr: function is not invertible")
-
-   first v = makeView 
-      (\(a, c) -> match v a >>= \b -> return (b, c)) 
-      (first (build v))
-
-   second v = makeView 
-      (\(a, b) -> match v b >>= \c -> return (a, c)) 
-      (second (build v))
-
-   v *** w = makeView 
-      (\(a, c) -> liftM2 (,) (match v a) (match w c)) 
-      (build v *** build w)
-
-   -- left-biased builder
-   v &&& w = makeView 
-      (\a -> liftM2 (,) (match v a) (match w a)) 
-      (\(b, _) -> build v b)
-
-instance Monad m => ArrowChoice (ViewM m) where
-   left v = makeView 
-      (either (liftM Left . match v) (return . Right)) 
-      (either (Left . build v) Right)
-
-   right v = makeView 
-      (either (return . Left) (liftM Right . match v)) 
-      (either Left (Right . build v))
-
-   v +++ w = makeView 
-      (either (liftM Left . match v) (liftM Right . match w))  
-      (either (Left . build v) (Right . build w))
-
-   -- left-biased builder
-   v ||| w = makeView 
-      (either (match v) (match w))
-      (Left . build v)
 
 ---------------------------------------------------------------
 -- Simple views (based on a particular monad)
@@ -150,7 +152,7 @@ matchM v = maybe (Prelude.fail "no match") return . match v
 canonicalM :: Monad m => View a b -> a -> m a
 canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
 
-viewList :: Crush m => ViewM m a b -> ViewList a b
+viewList :: (Crush m, Monad m) => ViewM m a b -> ViewList a b
 viewList v = makeView (crush . match v) (build v)
 
 ---------------------------------------------------------------
@@ -166,12 +168,8 @@ listView v = makeView (mapM (match v)) (map (build v))
 
 switchView :: (Monad m, Switch f) => ViewM m a b -> ViewM m (f a) (f b)
 switchView v = makeView (switch . fmap (match v)) (fmap (build v))
-
-( #> ) :: MonadPlus m => (a -> Bool) -> ViewM m a b -> ViewM m a b
-p #> v = makeView f (build v)
- where f a = guard (p a) >> match v a
  
-associativeView :: View a (a,a) -> ViewList a (a,a)
+associativeView :: View a (a, a) -> ViewList a (a, a)
 associativeView v = makeView (reverse . f) (build v)
  where f a = 
          case matchM v a of

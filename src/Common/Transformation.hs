@@ -404,13 +404,13 @@ useRecognizer = Recognizer
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
-liftTransIn :: Crush m => ViewM m a (b, c) -> Transformation b -> Transformation a
+liftTransIn :: (Crush m, Monad m) => ViewM m a (b, c) -> Transformation b -> Transformation a
 liftTransIn = LiftView . viewList
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
 
-liftRuleIn :: Crush m => ViewM m a (b, c) -> Rule b -> Rule a
+liftRuleIn :: (Crush m, Monad m) => ViewM m a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
    { transformations = map (liftTransIn v) (transformations r) }
 

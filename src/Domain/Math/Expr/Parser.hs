@@ -70,7 +70,8 @@ symb = qualifiedSymb
     <|> function rootSymbol <$ pKey "root"
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
-qualifiedSymb = (function . uncurry makeSymbol) <$> (pQVarid <|> pQConid)
+qualifiedSymb = f <$> (pQVarid <|> pQConid)
+ where f (a, b) = function $ toSymbol $ a ++ "." ++ b
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations = pLines True . pEquation

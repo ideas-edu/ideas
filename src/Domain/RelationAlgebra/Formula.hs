@@ -188,8 +188,8 @@ instance Different RelAlg where
    
 instance IsTerm RelAlg where
    toTerm = foldRelAlg 
-      ( variable, binary ".", binary "+", binary "&&", binary "||"
-      , unary "~", unary "-", nullary "V", nullary "I"
+      ( variable, binary "comp", binary "cross", binary "and", binary "or"
+      , unary "inv", unary "not", nullary "V", nullary "I"
       )
 
    fromTerm a = 
@@ -199,11 +199,11 @@ instance IsTerm RelAlg where
          | s == "V"  = return V
          | s == "I"  = return I
       f s [x]
-         | s == "~"  = return (Not x)
-         | s == "-"  = return (Inv x)
+         | s == "not" = return (Not x)
+         | s == "inv" = return (Inv x)
       f s [x, y]
-         | s == "."  = return (x :.:  y)
-         | s == "+"  = return (x :+:  y)
-         | s == "&&" = return (x :&&: y)
-         | s == "||" = return (x :||: y)
+         | s == "comp"  = return (x :.:  y)
+         | s == "cross" = return (x :+:  y)
+         | s == "and"   = return (x :&&: y)
+         | s == "or"    = return (x :||: y)
       f _ _ = fail "fromTerm"

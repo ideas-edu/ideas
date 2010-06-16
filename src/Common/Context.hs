@@ -155,13 +155,13 @@ makeVar showF readF s a = V s a showF readF
 
 -- | Lift a rule to operate on a term in a context
 liftToContext :: Rule a -> Rule (Context a)
-liftToContext = liftRuleIn thisView
+liftToContext = liftRuleIn contextView
 
 liftTransContext :: Transformation a -> Transformation (Context a)
-liftTransContext = liftTransIn thisView
+liftTransContext = liftTransIn contextView
 
-thisView :: View (Context a) (a, Context a)
-thisView = makeView f g
+contextView :: View (Context a) (a, Context a)
+contextView = newView "views.contextView" f g
  where
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace

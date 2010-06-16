@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.View 
    ( -- * Generalized monadic views
-     ViewM, match, build, makeView, biArr, identity, (>>>)
+     ViewM, match, build, newView, makeView, biArr, identity, (>>>)
    , canonical, canonicalWith
    , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
      -- * Simple views
@@ -28,6 +28,7 @@ module Common.View
    , propIdempotence, propSoundness, propNormalForm
    ) where
 
+import Common.Id
 import Common.Traversable
 import Control.Arrow
 import Control.Monad
@@ -39,7 +40,7 @@ import qualified Control.Category as C
 -- Generalized monadic view
 
 data ViewM m a b where
-   Prim    :: (a -> m b) -> (b -> a) -> ViewM m a b
+   Prim    :: Id -> (a -> m b) -> (b -> a) -> ViewM m a b
    (:>>>:) :: ViewM m a b -> ViewM m b c -> ViewM m a c 
    First   :: ViewM m a b -> ViewM m (a, c) (b, c)
    Second  :: ViewM m b c -> ViewM m (a, b) (a, c)
@@ -51,11 +52,11 @@ data ViewM m a b where
    (:|||:) :: ViewM m a c -> ViewM m b c -> ViewM m (Either a b) c
 
 instance Monad m => C.Category (ViewM m) where
-   id    = Prim return id
+   id    = identity
    v . w = w :>>>: v
 
 instance Monad m => Arrow (ViewM m) where
-   arr f  = Prim (return . f) (error "Control.View.arr: function is not invertible")
+   arr f  = Prim (newId "views.arr") (return . f) (error "Control.View.arr: function is not invertible")
    first  = First
    second = Second
    (***)  = (:***:)
@@ -70,42 +71,43 @@ instance Monad m => ArrowChoice (ViewM m) where
 ----------------------------------------------------------------------------------
 -- Operations on a view
 
+-- The preferred way of constructing a view
+newView :: Monad m => String -> (a -> m b) -> (b -> a) -> ViewM m a b
+newView = Prim . newId
+
 makeView :: Monad m => (a -> m b) -> (b -> a) -> ViewM m a b
-makeView = Prim
+makeView = newView "views.makeView"
 
 biArr :: Monad m => (a -> b) -> (b -> a) -> ViewM m a b
 biArr f g = makeView (return . f) g
 
-identity :: Monad m => ViewM m a a 
-identity = biArr id id
-
 match :: Monad m => ViewM m a b -> a -> m b
 match view =
    case view of
-      Prim f _  -> f
-      v :>>>: w -> \a      -> match v a >>= match w
-      First v   -> \(a, c) -> match v a >>= \b -> return (b, c)
-      Second v  -> \(a, b) -> match v b >>= \c -> return (a, c)
-      v :***: w -> \(a, c) -> liftM2 (,) (match v a) (match w c)
-      v :&&&: w -> \a      -> liftM2 (,) (match v a) (match w a)
-      VLeft v   -> either (liftM Left . match v) (return . Right)
-      VRight v  -> either (return . Left) (liftM Right . match v)
-      v :+++: w -> either (liftM Left . match v) (liftM Right . match w)
-      v :|||: w -> either (match v) (match w)
+      Prim _ f _ -> f
+      v :>>>: w  -> \a      -> match v a >>= match w
+      First v    -> \(a, c) -> match v a >>= \b -> return (b, c)
+      Second v   -> \(a, b) -> match v b >>= \c -> return (a, c)
+      v :***: w  -> \(a, c) -> liftM2 (,) (match v a) (match w c)
+      v :&&&: w  -> \a      -> liftM2 (,) (match v a) (match w a)
+      VLeft v    -> either (liftM Left . match v) (return . Right)
+      VRight v   -> either (return . Left) (liftM Right . match v)
+      v :+++: w  -> either (liftM Left . match v) (liftM Right . match w)
+      v :|||: w  -> either (match v) (match w)
 
 build :: ViewM m a b -> b -> a
 build view = 
    case view of
-      Prim _ f  -> f
-      v :>>>: w -> build v . build w
-      First v   -> first (build v)
-      Second v  -> second (build v)
-      v :***: w -> build v *** build w
-      v :&&&: _ -> build v . fst -- left-biased
-      VLeft v   -> either (Left . build v) Right
-      VRight v  -> either Left (Right . build v)
-      v :+++: w -> either (Left . build v) (Right . build w)
-      v :|||: _ -> Left . build v -- left-biased
+      Prim _ _ f -> f
+      v :>>>: w  -> build v . build w
+      First v    -> first (build v)
+      Second v   -> second (build v)
+      v :***: w  -> build v *** build w
+      v :&&&: _  -> build v . fst -- left-biased
+      VLeft v    -> either (Left . build v) Right
+      VRight v   -> either Left (Right . build v)
+      v :+++: w  -> either (Left . build v) (Right . build w)
+      v :|||: _  -> Left . build v -- left-biased
 
 canonical :: Monad m => ViewM m a b -> a -> m a
 canonical = canonicalWith id
@@ -158,10 +160,13 @@ viewList v = makeView (crush . match v) (build v)
 ---------------------------------------------------------------
 -- Some combinators
 
+identity :: Monad m => ViewM m a a 
+identity = newView "views.identity" return id
+
 swapView :: View (a, b) (b, a)
 swapView = 
    let swap (a, b) = (b, a)
-   in biArr swap swap
+   in newView "views.swap" (return . swap) swap
 
 listView :: Monad m => ViewM m a b -> ViewM m [a] [b]
 listView v = makeView (mapM (match v)) (map (build v))
@@ -192,3 +197,21 @@ propSoundness semEq g v = forAll g $ \a ->
    
 propNormalForm :: (Show a, Eq a) => Gen a -> View a b -> Property
 propNormalForm g v = forAll g $ \a -> a == simplify v a
+
+{- proving a parameterized view equivalent to one with a "context"
+
+abstr1 :: (a -> View b c) -> View (a, b) (a, c)
+abstr1 fun = makeView f g
+ where
+   f (a, b) = do
+      c <- match (fun a) b
+      return (a, c)
+   g (a, c) = (a, build (fun a) c)
+   
+abstr2 :: View (a, b) (a, c) -> (a -> View b c)
+abstr2 v a = makeView f g
+ where
+   f b = do 
+      (_, c) <- match v (a, b)
+      return c
+   g c = snd (build v (a, c)) -}

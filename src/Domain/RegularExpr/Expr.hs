@@ -153,7 +153,7 @@ instance Different (RE a) where
 instance IsTerm RegExp where 
    toTerm = foldRE 
       ( nullary "EmptySet", nullary "Epsilon", variable, unary "Option"
-      , unary "Star", unary "Plus", binary ":*:", binary ":|:"
+      , unary "Star", unary "Plus", binary "Seq", binary "Choice"
       ) 
 
    fromTerm a = fromTermWith f a `mplus` liftM Atom (getVariable a)
@@ -166,8 +166,8 @@ instance IsTerm RegExp where
          | s == "Star"     = return (Star x)
          | s == "Plus"     = return (Plus x)
       f s [x, y] 
-         | s == ":*:"      = return (x :*: y)
-         | s == ":|:"      = return (x :|: y)
+         | s == "Seq"      = return (x :*: y)
+         | s == "Choice"   = return (x :|: y)
       f _ _ = fail "fromExpr"
 
 instance Rewrite RegExp where

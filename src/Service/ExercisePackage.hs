@@ -27,7 +27,7 @@ import Common.Transformation (Rule)
 import Common.Utils (Some(..))
 import Common.Exercise
 import Control.Monad
-import Common.Rewriting.Term
+import Common.Rewriting.Term hiding (Symbol)
 import Data.Char
 import Data.List
 import Text.OpenMath.Object
@@ -78,9 +78,7 @@ termToOMOBJ :: Term -> OMOBJ
 termToOMOBJ term =
    case term of
       Var s   -> OMV s
-      Con s   -> case s of
-                    S (Just a) b -> OMS (makeSymbol a b)
-                    S Nothing  b -> OMS (extraSymbol b)
+      Con s   -> OMS (idToSymbol (getId s))
       Meta i  -> OMV ("$" ++ show i)
       Num n   -> OMI n
       Float d -> OMF d
@@ -97,7 +95,7 @@ omobjToTerm omobj =
       OMV x -> case isMeta x of
                   Just n  -> return (Meta n)
                   Nothing -> return (Var x)
-      OMS s -> return (Con (S (dictionary s) (symbolName s)))
+      OMS s -> return (Con (newSymbol (show s)))
       OMI n -> return (Num n)
       OMF a -> return (Float a)
       OMA (x:xs) -> liftM2 makeTerm (omobjToTerm x) (mapM omobjToTerm xs)
@@ -107,7 +105,14 @@ omobjToTerm omobj =
  where
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing
-   
+
+idToSymbol :: Id -> Symbol
+idToSymbol a
+   | null (qualifiers a) = 
+        extraSymbol (unqualified a)
+   | otherwise = 
+        makeSymbol (qualification a) (unqualified a)
+
 ------------------------------------------------------------
 -- Exercise Text data type
 --    Note: ideally, this should be defined elsewhere

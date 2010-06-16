@@ -14,13 +14,11 @@ module Domain.Math.Expr.Symbolic
    ( module Domain.Math.Expr.Symbolic, Symbol
    ) where
 
+import Common.Id
 import Control.Monad
 import Data.Maybe
 import Common.Rewriting.Term
 import qualified Text.OpenMath.Symbol as OM
-
-makeSymbol :: String -> String -> Symbol
-makeSymbol = S . Just
 
 class IsSymbol a where
    toSymbol   :: a -> Symbol
@@ -31,20 +29,14 @@ instance IsSymbol Symbol where
    fromSymbol = id
 
 instance IsSymbol String where
-   toSymbol = S Nothing
-   fromSymbol (S (Just a) b) = a ++ "." ++ b
-   fromSymbol (S Nothing  b) = b
+   toSymbol   = newSymbol
+   fromSymbol = show 
 
 instance IsSymbol OM.Symbol where
-   toSymbol s = S (OM.dictionary s) (OM.symbolName s) 
-   fromSymbol (S (Just a) b) = OM.makeSymbol a b
-   fromSymbol (S Nothing  b) = OM.extraSymbol b
-
-stringToSymbol :: String -> Symbol
-stringToSymbol s = 
-   case break (=='.') s of
-      (xs, _:ys) -> S (Just xs) ys
-      _          -> S Nothing s
+   toSymbol = newSymbol . show
+   fromSymbol s = f (unqualified s)
+      where f | null (qualifiers s) = OM.extraSymbol
+              | otherwise = OM.makeSymbol (qualification s)
 
 -------------------------------------------------------------------
 -- Type class for symbolic representations

@@ -12,8 +12,16 @@
 -- A simple data type for term rewriting
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Term where
+module Common.Rewriting.Term 
+   ( Symbol, newSymbol
+   , Term(..), IsTerm(..)
+   , fromTermM, fromTermWith
+   , getSpine, getConSpine, makeTerm, makeConTerm
+   , unary, binary, isUnary, isBinary, isVar, isCon
+   , hasMetaVar, getMetaVars
+   ) where
 
+import Common.Id
 import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Control.Monad
@@ -23,9 +31,18 @@ import Data.Typeable
 -----------------------------------------------------------
 -- * Data type for terms
 
--- To do: hide symbol constructor S
-data Symbol = S (Maybe String) String
+data Symbol = S { symbolId :: Id }
    deriving (Eq, Ord)
+
+newSymbol :: String -> Symbol
+newSymbol = S . newId
+
+instance Show Symbol where
+   show = showId
+
+instance HasId Symbol where
+   getId      = symbolId
+   changeId f = S . f . symbolId 
 
 data Term = Var   String 
           | Con   Symbol 
@@ -34,9 +51,6 @@ data Term = Var   String
           | Float Double
           | Meta  Int
  deriving (Show, Eq, Ord, Typeable)
-
-instance Show Symbol where
-   show (S ma b) = maybe b (\a -> a++ "." ++ b) ma
  
 instance Uniplate Term where
    uniplate (App f a) = ([f,a], \[g,b] -> App g b)

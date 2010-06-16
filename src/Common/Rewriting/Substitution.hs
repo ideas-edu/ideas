@@ -17,7 +17,7 @@ module Common.Rewriting.Substitution
    ) where
 
 import Common.Uniplate
-import Common.Rewriting.Term hiding (S)
+import Common.Rewriting.Term
 import qualified Data.IntMap as IM
 import Data.Maybe
 

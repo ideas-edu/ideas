@@ -71,7 +71,7 @@ newAssignmentDialog w session = do
        fillPackageList b = do
           xs <- getPackageList
           let ys = [ description (exercise pkg) | Some pkg <- xs ]
-              isCode (Some pkg) = exerciseCode (exercise pkg) == exid
+              isCode (Some pkg) = exerciseId (exercise pkg) == exid
               mi = if b then findIndex isCode xs else Nothing
           set exerciseList [items := ys, selection := fromMaybe 0 mi]
           fillOwnText

@@ -11,14 +11,17 @@
 -- Identification of entities
 --
 -----------------------------------------------------------------------------
-module Common.Id where
+module Common.Id 
+   ( Id, HasId(..), newId, newIdM
+   , unqualified, qualifiers, qualification
+   , describe, description, showId
+   ) where
 
 import Data.List
 
 data Id = Id 
    { idName        :: String
    , idQualifiers  :: [String]
-   , idType        :: Maybe String
    , idDescription :: String
    }
    
@@ -32,17 +35,14 @@ instance Ord Id where
    a `compare` b = f a `compare` f b
     where f x = (idQualifiers x, idName x)
    
-identifier :: HasId a => a -> String
-identifier = idName . getId
+unqualified :: HasId a => a -> String
+unqualified = idName . getId
 
 qualifiers :: HasId a => a -> [String]
 qualifiers = idQualifiers . getId
 
 qualification :: HasId a => a -> String
 qualification = concat . intersperse "." . qualifiers
-
-unqualified :: HasId a => a -> String
-unqualified = idName . getId
 
 description :: HasId a => a -> String 
 description = idDescription . getId
@@ -68,7 +68,7 @@ newId = either error id . newIdM
 newIdM :: Monad m => String -> m Id
 newIdM a = do 
    (qs, n) <- readId a
-   return (Id n qs Nothing "")
+   return (Id n qs "")
 
 class HasId a where
    getId    :: a -> Id

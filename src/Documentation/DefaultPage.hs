@@ -87,7 +87,7 @@ ruleImageFile ex r = ruleImagePath ex ++ "rule" ++ showId r ++ ".png"
 
 ruleImageFileHere :: Exercise a -> Rule (Context a) -> String
 ruleImageFileHere ex r = 
-   filter (not . isSpace) (identifier ex)
+   filter (not . isSpace) (unqualified ex)
    ++ "/rule" ++ filter isAlphaNum (showId r) ++ ".png"
 
 exerciseOverviewPageFile :: String
@@ -102,25 +102,25 @@ serviceOverviewPageFile = "services.html"
 exercisePageFile :: Id -> String
 exercisePageFile a = 
    exercisePagePath a 
-   ++ filter (not . isSpace) (identifier a) 
+   ++ filter (not . isSpace) (unqualified a)
    ++ ".html"
 
 exerciseStrategyFile :: Id -> String
 exerciseStrategyFile a = 
    exercisePagePath a
-   ++ filter (not . isSpace) (identifier a)
+   ++ filter (not . isSpace) (unqualified a)
    ++ "-strategy.html"
 
 exerciseRulesFile :: Id -> String
 exerciseRulesFile a = 
    exercisePagePath a
-   ++ filter (not . isSpace) (identifier a)
+   ++ filter (not . isSpace) (unqualified a)
    ++ "-rules.html"
 
 exerciseDerivationsFile :: Id -> String
 exerciseDerivationsFile a = 
    exercisePagePath a
-   ++ filter (not . isSpace) (identifier a)
+   ++ filter (not . isSpace) (unqualified a)
    ++ "-derivations.html"
 
 servicePageFile :: Service -> String

@@ -48,7 +48,7 @@ exerciseInfoPanel w ref = do
          Just (Some pkg) -> do
             let ex = exercise pkg
             set descr        [text := description ex]
-            set txtCode      [text := show (exerciseCode ex)]
+            set txtCode      [text := showId ex]
             set txtStatus    [text := show (status ex)]
             set txtOpenMath  [text := showBool (withOpenMath pkg)]
             set txtTextual   [text := showBool (isJust (getExerciseText pkg))]

@@ -24,7 +24,7 @@ import System.Time
 
 makeLatexRules :: String -> Exercise a -> IO ()
 makeLatexRules dir ex = do
-   let path = dir ++ "/" ++ qualification ex ++ "/" ++ filter (/= ' ') (identifier ex)
+   let path = dir ++ "/" ++ qualification ex ++ "/" ++ filter (/= ' ') (unqualified ex)
    -- Exercise document
    let rules = concatMap getRewriteRules (ruleset ex)
    unless (null rules) $ do

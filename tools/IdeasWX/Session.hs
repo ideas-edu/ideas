@@ -48,7 +48,7 @@ data SessionState a = SessionState
 currentExerciseId :: Session -> IO Id
 currentExerciseId ref = do
    (Some st) <- getValue ref
-   return (exerciseCode (Pkg.exercise (getPackage st)))
+   return (getId (getPackage st))
 
 withDerivation :: (forall a . Derivation a -> IO b) -> Session -> IO b
 withDerivation f ref = do

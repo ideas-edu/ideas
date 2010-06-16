@@ -23,8 +23,8 @@ module Common.Transformation
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
    , hasArguments, expectedArguments, getDescriptors, useArguments
      -- * Rules
-   , Rule, Id.showId, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
-   , ruleGroups, ruleSiblings, addRuleToGroup, Id.identifier, Id.describe, Id.description, Id.getId
+   , Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
+   , ruleGroups, ruleSiblings, addRuleToGroup
    , rule, ruleList, ruleListF
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
@@ -34,6 +34,7 @@ module Common.Transformation
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , testRule, propRuleSmart
+   , module Common.Id -- for backwards compatibility
    ) where
 
 import Common.Apply
@@ -46,7 +47,7 @@ import Data.Char
 import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck
-import qualified Common.Id as Id
+import Common.Id
 
 -----------------------------------------------------------
 --- Transformations
@@ -270,7 +271,7 @@ ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
 
 -- | Abstract data type for representing rules
 data Rule a = Rule 
-   { ruleId          :: Id.Id  -- ^ Unique identifier of the rule
+   { ruleId          :: Id  -- ^ Unique identifier of the rule
    , transformations :: [Transformation a]
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
@@ -279,7 +280,7 @@ data Rule a = Rule
    }
 
 instance Show (Rule a) where
-   show = Id.showId
+   show = showId
 
 instance Eq (Rule a) where
    r1 == r2 = ruleId r1 == ruleId r2
@@ -289,7 +290,7 @@ instance Apply Rule where
       t <- transformations r
       applyAll t a
 
-instance Id.HasId (Rule a) where
+instance HasId (Rule a) where
    getId        = ruleId
    changeId f r = r { ruleId = f (ruleId r) } 
 
@@ -301,7 +302,7 @@ isRewriteRule :: Rule a -> Bool
 isRewriteRule = not . null . getRewriteRules
 
 siblingOf :: Rule b -> Rule a -> Rule a 
-siblingOf sib r = r { ruleSiblings = Id.showId sib : ruleSiblings r }
+siblingOf sib r = r { ruleSiblings = showId sib : ruleSiblings r }
 
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
@@ -321,7 +322,7 @@ makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
 makeRuleList :: String -> [Transformation a] -> Rule a
-makeRuleList n ts = Rule (Id.newId n) ts False False [] []
+makeRuleList n ts = Rule (newId n) ts False False [] []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
 makeSimpleRule :: String -> (a -> Maybe a) -> Rule a

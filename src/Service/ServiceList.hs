@@ -209,7 +209,7 @@ allExercises = map make . sortBy cmp
    cmp e1 e2  = f e1 `compare` f e2
    f (Some pkg) = exerciseId (exercise pkg)
    make (Some pkg) = 
-      (qualification pkg, identifier pkg, description pkg, show (status (exercise pkg)))
+      (qualification pkg, unqualified pkg, description pkg, show (status (exercise pkg)))
 
 allRules :: ExercisePackage a -> [(String, Bool, Bool)]
 allRules = map make . ruleset . exercise

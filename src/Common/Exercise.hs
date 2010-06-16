@@ -14,7 +14,7 @@
 module Common.Exercise 
    ( -- * Exercises
      Exercise, testableExercise, makeExercise, emptyExercise
-   , Id.description, Id.describe, exerciseId, status, parser, prettyPrinter
+   , exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, eqWithContext
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
@@ -24,13 +24,12 @@ module Common.Exercise
    , ruleOrderingWith, ruleNameOrderingWith
      -- * Exercise status
    , Status(..), isPublic, isPrivate
-     -- * Exercise codes
-   , Id.newIdM, Id.qualification, Id.showId, Id.Id, Id.newId, Id.getId
      -- * Miscellaneous
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
    , checkExercise, checkParserPretty
    , checkExamples, generate, exerciseTestSuite
+   , module Common.Id -- for backwards compatibility
    ) where
 
 import Common.Apply
@@ -38,7 +37,7 @@ import Common.Context
 import Common.Strategy hiding (not, fail, replicate)
 import qualified Common.Strategy as S
 import Common.Derivation
-import qualified Common.Id as Id
+import Common.Id
 import Common.Navigator
 import Common.TestSuite
 import Common.Transformation
@@ -52,7 +51,7 @@ import Test.QuickCheck.Gen
 
 data Exercise a = Exercise
    { -- identification and meta-information
-     exerciseId     :: Id.Id -- identifier that uniquely determines the exercise
+     exerciseId     :: Id -- identifier that uniquely determines the exercise
    , status         :: Status
      -- parsing and pretty-printing
    , parser         :: String -> Either String a
@@ -86,7 +85,7 @@ instance Ord (Exercise a) where
 instance Apply Exercise where
    applyAll ex = concatMap fromContext . applyAll (strategy ex) . inContext ex
 
-instance Id.HasId (Exercise a) where
+instance HasId (Exercise a) where
    getId = exerciseId
    changeId f ex = ex { exerciseId = f (exerciseId ex) }
 

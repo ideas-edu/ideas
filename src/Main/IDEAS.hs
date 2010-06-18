@@ -71,6 +71,7 @@ packages =
         , fromOpenMath    = (>>= fromTerm) . omobjToTerm
         , getExerciseText = Just logicText
         }
+   , somePackage Logic.proofExercise
    , somePackage RA.cnfExercise
      -- basic math
    , someTermPackage Math.naturalExercise

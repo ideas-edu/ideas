@@ -18,6 +18,7 @@ module Domain.Logic
    , module Domain.Logic.BuggyRules
    , module Domain.Logic.GeneralizedRules
    , module Domain.Logic.Exercises
+   , module Domain.Logic.Proofs
    ) where
    
 import Domain.Logic.Formula
@@ -28,4 +29,4 @@ import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Exercises
-
+import Domain.Logic.Proofs

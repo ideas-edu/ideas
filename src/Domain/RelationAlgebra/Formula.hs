@@ -15,6 +15,7 @@ import Domain.Math.Expr.Symbolic
 import Common.Exercise (generate)
 import Common.Uniplate (Uniplate(..))
 import Common.Rewriting
+import Common.Rewriting.Term (newSymbol)
 import Common.Utils
 import Control.Monad
 import Data.List
@@ -185,25 +186,37 @@ instance ShallowEq RelAlg where
          
 instance Different RelAlg where
    different = (V, I)
-   
+   --(var, comp, add, conj, disj, not, inverse, universe, ident)
 instance IsTerm RelAlg where
    toTerm = foldRelAlg 
-      ( variable, binary "comp", binary "cross", binary "and", binary "or"
-      , unary "inv", unary "not", nullary "V", nullary "I"
+      ( variable, binary compSymbol, binary addSymbol, binary conjSymbol
+      , binary disjSymbol, unary notSymbol, unary invSymbol
+      , nullary universeSymbol, nullary identSymbol
       )
 
    fromTerm a = 
       fromTermWith f a `mplus` liftM Var (getVariable a)
     where
       f s []
-         | s == "V"  = return V
-         | s == "I"  = return I
+         | s == universeSymbol  = return V
+         | s == identSymbol     = return I
       f s [x]
-         | s == "not" = return (Not x)
-         | s == "inv" = return (Inv x)
+         | s == notSymbol       = return (Not x)
+         | s == invSymbol       = return (Inv x)
       f s [x, y]
-         | s == "comp"  = return (x :.:  y)
-         | s == "cross" = return (x :+:  y)
-         | s == "and"   = return (x :&&: y)
-         | s == "or"    = return (x :||: y)
+         | s == compSymbol      = return (x :.:  y)
+         | s == addSymbol       = return (x :+:  y)
+         | s == conjSymbol      = return (x :&&: y)
+         | s == disjSymbol      = return (x :||: y)
       f _ _ = fail "fromTerm"
+      
+compSymbol, addSymbol, conjSymbol, disjSymbol,
+   notSymbol, invSymbol, universeSymbol, identSymbol :: Symbol
+compSymbol     = newSymbol "relalg.comp"
+addSymbol      = newSymbol "relalg.add"
+conjSymbol     = newSymbol "relalg.conj"
+disjSymbol     = newSymbol "relalg.disj"
+notSymbol      = newSymbol "relalg.not"
+invSymbol      = newSymbol "relalg.inv"
+universeSymbol = newSymbol "relalg.universe"
+identSymbol    = newSymbol "relalg.ident"

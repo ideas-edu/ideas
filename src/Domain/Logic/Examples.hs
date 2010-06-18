@@ -35,7 +35,10 @@ exampleProofs = [(Not(p :||: (Not (p) :&&: q)), Not(p :||: q)),
                 ((p :->: Not(q)):->:q, (s :||:(s :->:(q :||: p))) :&&: q),
                 (p :->: (q :->: r), (p :->: q) :->: (p :->:r)),
                 (Not((p :->: q) :->: Not(q :->: p)), (p :<->: q)),
-                 (((p :->: q):->: (p :->: s)), (Not (q) :->: Not(p)) :->: (Not(s) :->: Not(p)))]
+                 (((p :->: q):->: (p :->: s)), (Not (q) :->: Not(p)) :->: (Not(s) :->: Not(p))),
+                (Not((p :->:q) :->: (p:&&:q)), (p :->: q) :&&: (Not(p) :||: Not(q))),
+                (Not((p :<->: q) :->: (p :||: (p :<->: q))), F)]
+                
  where
    p = Var (ShowString "p")
    q = Var (ShowString "q")

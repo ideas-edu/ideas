@@ -10,11 +10,12 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser
-   ( parseLogic, parseLogicPars, parseLogicUnicodePars
+   ( parseLogic, parseLogicPars, parseLogicUnicodePars, parseLogicProof
    , ppLogicPars, ppLogicUnicodePars
    ) where
 
 import Common.Utils (ShowString(..))
+import Control.Monad
 import Text.Parsing
 import Control.Arrow
 import Domain.Logic.Formula
@@ -93,6 +94,18 @@ basicWithPosGen t@(nt, tr, fl) p =
    <|> T  <$ pKey tr
    <|> F  <$ pKey fl
    <|> Not <$ pKey nt <*> basicWithPosGen t p
+
+parseLogicProof :: String -> Either String (SLogic, SLogic)
+parseLogicProof s
+   = either Left susp
+   $ left (ambiguousOperators parseLogic s)
+   $ analyseAndParse pProof
+   $ scanWith extScanner s
+ where
+   pProof = (,) <$> pLogicGen asciiTuple <* pKey "==" <*> pLogicGen asciiTuple
+   susp (p, q) = liftM2 (,) (suspiciousVariable p) (suspiciousVariable q)
+   extScanner = logicScanner 
+      {keywordOperators = "==" : keywordOperators logicScanner}
 
 -----------------------------------------------------------
 --- Helper-functions for syntax warnings

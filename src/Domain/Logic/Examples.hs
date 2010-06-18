@@ -15,7 +15,7 @@ module Domain.Logic.Examples
    ( exampleProofs
    ) where
 
-import Domain.Logic.Examples
+import Domain.Logic.Formula
 
-exampleProofs :: [(Logic, Logic)]
+exampleProofs :: [(SLogic, SLogic)]
 exampleProofs = undefined

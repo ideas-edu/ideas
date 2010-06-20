@@ -10,7 +10,7 @@
         2*x == -3 or 6-2*x == -9
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -18,7 +18,7 @@
         x == -3/2 or 6-2*x == -9
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up minus right [one var]">
@@ -26,7 +26,7 @@
         x == -3/2 or 2*x == 15
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -34,7 +34,7 @@
         x == -3/2 or x == 15/2
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
   </list>

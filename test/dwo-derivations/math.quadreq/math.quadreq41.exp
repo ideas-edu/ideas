@@ -5,7 +5,7 @@
         9*x^2+30*x+25+(x-5)^2 == 40
       </expr>
       <context>
-        <item name="location" value="[0,0]"/>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="distribution square">
@@ -13,7 +13,7 @@
         9*x^2+30*x+25+x^2-10*x+25 == 40
       </expr>
       <context>
-        <item name="location" value="[0,1]"/>
+        <item name="location" value="[1,2]"/>
       </context>
     </elem>
     <elem ruleid="merge similar terms">

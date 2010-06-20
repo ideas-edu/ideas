@@ -10,7 +10,7 @@
         x == 0 or (x-2)*(x-9) == 0
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="multiplication is zero">

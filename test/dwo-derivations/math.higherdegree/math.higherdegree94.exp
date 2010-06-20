@@ -20,7 +20,7 @@
         x == 1 or x == 0 or x^2-6 == 3*x
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="move to left">
@@ -28,7 +28,7 @@
         x == 1 or x == 0 or x^2-3*x-6 == 0
       </expr>
       <context>
-        <item name="location" value="[1,1]"/>
+        <item name="location" value="[2,2]"/>
       </context>
     </elem>
     <elem ruleid="abc formula">

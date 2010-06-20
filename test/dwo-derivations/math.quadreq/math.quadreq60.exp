@@ -5,7 +5,7 @@
         1-2*x+x^2 == x+2
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="move to left">

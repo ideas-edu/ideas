@@ -15,7 +15,7 @@
         x == -9+sqrt 8 or x+9 == -sqrt 8
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
@@ -23,7 +23,7 @@
         x == -9+sqrt 8 or x == -9-sqrt 8
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">

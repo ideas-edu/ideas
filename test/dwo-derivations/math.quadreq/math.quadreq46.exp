@@ -5,7 +5,7 @@
         3*x^2-11 == 9+12*x+4*x^2
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="move to left">

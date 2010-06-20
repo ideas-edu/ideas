@@ -22,7 +22,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -31,7 +31,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
@@ -40,7 +40,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -49,7 +49,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="solution inequation">

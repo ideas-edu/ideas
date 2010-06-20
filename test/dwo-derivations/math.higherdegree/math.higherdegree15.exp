@@ -20,7 +20,7 @@
         4*x == 13 or 4*x-5 == -8
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -28,7 +28,7 @@
         x == 13/4 or 4*x-5 == -8
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
@@ -36,7 +36,7 @@
         x == 13/4 or 4*x == -3
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -44,7 +44,7 @@
         x == 13/4 or x == -3/4
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
   </list>

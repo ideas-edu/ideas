@@ -15,7 +15,7 @@
         2*x == -3+sqrt 6 or 2*x+3 == -sqrt 6
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -23,7 +23,7 @@
         x == (-3+sqrt 6)/2 or 2*x+3 == -sqrt 6
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
@@ -31,7 +31,7 @@
         x == (-3+sqrt 6)/2 or 2*x == -3-sqrt 6
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
@@ -39,7 +39,7 @@
         x == (-3+sqrt 6)/2 or x == (-3-sqrt 6)/2
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="distribution division">

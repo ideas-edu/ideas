@@ -20,7 +20,7 @@
         x == root 21 6-5 or x+5 == -root 21 6
       </expr>
       <context>
-        <item name="location" value="[0]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
@@ -28,7 +28,7 @@
         x == root 21 6-5 or x == -root 21 6-5
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
   </list>

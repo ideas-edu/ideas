@@ -15,7 +15,7 @@
         x == 0 or x == -5 or 2*x^2 == x^2+4
       </expr>
       <context>
-        <item name="location" value="[1,0]"/>
+        <item name="location" value="[2,1]"/>
       </context>
     </elem>
     <elem ruleid="move to left">
@@ -23,7 +23,7 @@
         x == 0 or x == -5 or x^2-4 == 0
       </expr>
       <context>
-        <item name="location" value="[1,1]"/>
+        <item name="location" value="[2,2]"/>
       </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
@@ -31,7 +31,7 @@
         x == 0 or x == -5 or x^2 == 4
       </expr>
       <context>
-        <item name="location" value="[1,1]"/>
+        <item name="location" value="[2,2]"/>
       </context>
     </elem>
     <elem ruleid="cover-up power [vars]">

@@ -46,15 +46,15 @@ instance HasId Symbol where
 
 data Term = Var   String 
           | Con   Symbol 
-          | App   Term Term
+          | Apply [Term]
           | Num   Integer 
           | Float Double
           | Meta  Int
  deriving (Show, Eq, Ord, Typeable)
  
 instance Uniplate Term where
-   uniplate (App f a) = ([f,a], \[g,b] -> App g b)
-   uniplate term      = ([], \_ -> term)
+   uniplate (Apply xs) = (xs, Apply)
+   uniplate term       = ([], \_ -> term)
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
@@ -90,26 +90,24 @@ fromTermWith f a =
 -- * Utility functions
 
 getSpine :: Term -> (Term, [Term])
-getSpine = rec []
- where
-   rec xs (App f a) = rec (a:xs) f
-   rec xs a         = (a, xs)
+getSpine (Apply (x:xs)) = (x, xs)
+getSpine a = (a, [])
 
 getConSpine :: Monad m => Term -> m (Symbol, [Term])
 getConSpine a = liftM (\s -> (s, xs)) (isCon b)
  where (b, xs) = getSpine a
 
 makeTerm :: Term -> [Term] -> Term
-makeTerm = foldl App
+makeTerm x xs = Apply (x:xs)
 
 makeConTerm :: Symbol -> [Term] -> Term
 makeConTerm = makeTerm . Con
 
 unary :: Symbol -> Term -> Term
-unary = App . Con
+unary s a = Apply [Con s, a]
 
 binary :: Symbol -> Term -> Term -> Term
-binary s = App . App (Con s)
+binary s a b = Apply [Con s, a, b]
 
 isUnary :: Symbol -> Term -> Maybe Term
 isUnary s term =

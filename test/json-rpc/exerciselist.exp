@@ -37,6 +37,12 @@
          "status": "Stable"
       },
       {
+         "domain": "logic",
+         "identifier": "proof",
+         "description": "Prove two propositions equivalent",
+         "status": "Experimental"
+      },
+      {
          "domain": "math",
          "identifier": "brokeneq",
          "description": "solve a broken equation (with a variable in a divisor)",

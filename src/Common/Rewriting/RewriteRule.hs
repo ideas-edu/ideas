@@ -115,7 +115,8 @@ buildFunction n f = fill n a1 a2 :~> fill n b1 b2
    a2 :~> b2 = f (snd different)
 
 fill :: Int -> Term -> Term -> Term
-fill i (App a1 a2) (App b1 b2) = App (fill i a1 b1) (fill i a2 b2)
+fill i (Apply xs) (Apply ys) | length xs == length ys =
+   Apply (zipWith (fill i) xs ys)
 fill i a b 
    | a == b    = a
    | otherwise = Meta i

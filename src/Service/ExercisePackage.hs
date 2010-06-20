@@ -82,7 +82,7 @@ termToOMOBJ term =
       Meta i  -> OMV ("$" ++ show i)
       Num n   -> OMI n
       Float d -> OMF d
-      App _ _ -> let (f, xs) = getSpine term
+      Apply _ -> let (f, xs) = getSpine term
                  in make (map termToOMOBJ (f:xs))
  where
    make [OMS s, OMV x, body] | s == lambdaSymbol = 

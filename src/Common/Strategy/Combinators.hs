@@ -21,6 +21,7 @@ import Common.Navigator
 import Common.Transformation
 import Common.Strategy.Core
 import Common.Strategy.Abstract
+import Common.Strategy.Configuration
 
 -----------------------------------------------------------
 --- Strategy combinators
@@ -109,6 +110,10 @@ while p s = repeat (check p <*> s)
 -- | Repeat the strategy until the predicate holds
 until :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
 until p = while (Prelude.not . p)
+
+-- | Apply a strategy at least once, but collapse into a single step
+multi :: IsStrategy f => String -> f a -> LabeledStrategy a
+multi s = collapse . label s . repeat1
 
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)
 exhaustive :: IsStrategy f => [f a] -> Strategy a

@@ -244,7 +244,7 @@ higherDegreeEquationsView = makeView f (fmap g)
    cuRules :: OrList (Equation Expr) -> OrList (Equation Expr)
    cuRules xs = 
       let new  = fmap (fmap (cleanUpExpr2 . distr)) xs
-          newc = newContext emptyEnv (exprNavigator new)
+          newc = newContext emptyEnv (termNavigator new)
       in case apply coverUpStrategy newc >>= fromContext of
             Just ys | xs /= ys -> cuRules ys
             _ -> new

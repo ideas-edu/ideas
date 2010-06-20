@@ -55,7 +55,7 @@ brokenEquationExercise = makeExercise
 --   , equivalence  = ??
    , similarity   = eqOrList cleanUpExpr2
    , strategy     = brokenEquationStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples     = map return (concat brokenEquations)
    }
    
@@ -69,7 +69,7 @@ normalizeBrokenExercise = makeExercise
 --   , equivalence  = ??
    , similarity   = \x y -> cleanUpExpr2 x == cleanUpExpr2 y
    , strategy     = normalizeBrokenStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples     = concat (normBroken ++ normBroken2)
    }
    
@@ -82,7 +82,7 @@ divisionBrokenExercise = normalizeBrokenExercise
    }
 
 brokenEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-brokenEquationStrategy = cleanUpStrategy (cleanTop (fmap (fmap cleanUpExpr2))) $
+brokenEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr2))) $
    label "Broken equation" $ 
        brokenFormToPoly <*> higherDegreeStrategyG
  where
@@ -100,7 +100,7 @@ allArePoly =
    in maybe False (all f . concatMap crush . crush) .  fromContext
 
 normalizeBrokenStrategy :: LabeledStrategy (Context Expr)
-normalizeBrokenStrategy = cleanUpStrategy (cleanTop cleanUpExpr2) $
+normalizeBrokenStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
    label "Normalize broken expression" $
       phaseOneDiv <*> phaseSimplerDiv
  where

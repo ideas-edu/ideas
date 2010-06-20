@@ -57,7 +57,7 @@ linearExercise = makeExercise
                        , getId removeDivision
                        ]
    , strategy     = linearStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples     = concat (linearEquations ++ [specialCases])
    }
  where
@@ -90,7 +90,7 @@ quadraticExercise = makeExercise
    , ruleOrdering = ruleOrderingWithId $ 
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
    
@@ -109,7 +109,7 @@ higherDegreeExercise = makeExercise
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
    , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples      = map (orList . return . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
@@ -152,7 +152,7 @@ findFactorsExercise = makeExercise
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = findFactorsStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , extraRules   = map liftToContext buggyRulesExpr
    , examples     = concat findFactors
    }

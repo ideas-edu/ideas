@@ -30,7 +30,6 @@ import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
 import Domain.Logic.Examples 
 import Domain.Logic.Strategies
-import Domain.Math.Expr (useC, use, exprNavigator)
 import Common.Uniplate hiding (somewhere)
 
 -- Currently, we use the DWA strategy
@@ -46,7 +45,7 @@ proofExercise = makeExercise
    , isSuitable     = \(p, q) -> eqLogic p q
    , isReady        = \(p, q) -> isDNF p && isDNF q
    , strategy       = proofStrategy
-   , navigation     = exprNavigator
+   , navigation     = termNavigator
    , examples       = exampleProofs
    }
    

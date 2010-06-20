@@ -33,7 +33,7 @@ numericExercise s = makeExercise
    , parser        = parseExpr
    , equivalence   = viewEquivalent rationalView
    , strategy      = s
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    }
 
 naturalExercise :: Exercise Expr

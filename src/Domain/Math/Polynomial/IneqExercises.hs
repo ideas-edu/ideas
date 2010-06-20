@@ -52,7 +52,7 @@ ineqLinearExercise = makeExercise
    , equivalence  = linEq
    , similarity   = eqRelation cleanUpExpr2
    , strategy     = ineqLinear
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
                     in map (build inequalityView) (concat ineqLin1 ++ [extra])
@@ -69,7 +69,7 @@ ineqQuadraticExercise = makeExercise
    , eqWithContext = Just quadrEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqQuadratic
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
@@ -86,7 +86,7 @@ ineqHigherDegreeExercise = makeExercise
    , eqWithContext = Just highEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
    , strategy      = ineqHigherDegree
-   , navigation    = exprNavigator
+   , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
@@ -133,7 +133,7 @@ betweenView = makeView f h
       in Logic.Var (f o1 x y) :&&: Logic.Var (f o2 y z)
 
 ineqLinear :: LabeledStrategy (Context (Relation Expr))
-ineqLinear = cleanUpStrategy (cleanTop (fmap cleanUpSimple)) ineqLinearG
+ineqLinear = cleanUpStrategy (applyTop (fmap cleanUpSimple)) ineqLinearG
 
 ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
 ineqLinearG = label "Linear inequation" $
@@ -184,14 +184,14 @@ flipSign = makeSimpleRule "flip sign" $ \r -> do
       maybe False fst (match productView expr)
  
 ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqQuadratic = cleanUpStrategy (cleanTop cleanUpLogicRelation) $ 
+ineqQuadratic = cleanUpStrategy (applyTop cleanUpLogicRelation) $ 
    label "Quadratic inequality" $ 
       try (useC turnIntoEquation) 
       <*> quadraticStrategyG
       <*> useC solutionInequation
 
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
-ineqHigherDegree = cleanUpStrategy (cleanTop cleanUpLogicRelation) $
+ineqHigherDegree = cleanUpStrategy (applyTop cleanUpLogicRelation) $
    label "Inequality of a higher degree" $ 
       try (useC turnIntoEquation) 
       <*> higherDegreeStrategyG

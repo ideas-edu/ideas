@@ -43,7 +43,7 @@ coverUpExercise = makeExercise
    , isReady      = solvedEquations
    , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy
-   , navigation   = exprNavigator
+   , navigation   = termNavigator
    , examples     = map (orList . return) (concat (fillInResult ++ coverUpEquations))
    }
 

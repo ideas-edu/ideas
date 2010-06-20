@@ -23,14 +23,14 @@ module Common.Context
    , Var, newVar, makeVar
      -- * Lifting
    , liftToContext, liftTransContext
+   , use, useC, termNavigator, applyTop
      -- * Context Monad
    , ContextMonad, readVar, writeVar, modifyVar
    , maybeCM, withCM, evalCM
    ) where 
 
 import Common.Navigator
-
-import qualified Common.Navigator as Navigator
+import Common.Rewriting.Term
 import Common.Transformation
 import Common.Utils (commaList, readM)
 import Common.View
@@ -65,7 +65,7 @@ instance IsNavigator Context where
    up        (C env a) = liftM (C env) (up a)
    allDowns  (C env a) = map (C env) (allDowns a)
    current   (C _   a) = current a
-   location  (C _   a) = Navigator.location a
+   location  (C _   a) = location a
    changeM f (C env a) = liftM (C env) (changeM f a)
 
 instance TypedNavigator Context where
@@ -160,11 +160,33 @@ liftToContext = liftRuleIn contextView
 liftTransContext :: Transformation a -> Transformation (Context a)
 liftTransContext = liftTransIn contextView
 
+-- | Apply a function at top-level. Afterwards, try to return the focus 
+-- to the old position
+applyTop :: (a -> a) -> Context a -> Context a
+applyTop f c = 
+   case top c of 
+      Just ok -> navigateTowards (location c) (change f ok)
+      Nothing -> c
+
+termNavigator :: IsTerm a => a -> Navigator a
+termNavigator a = 
+   let f = castT termView . viewNavigator . toTerm
+   in fromMaybe (noNavigator a) (f a)
+
+use :: (IsTerm a, IsTerm b) => Rule a -> Rule (Context b)
+use = useC . liftToContext
+
+useC :: (IsTerm a, IsTerm b) => Rule (Context a) -> Rule (Context b)
+useC = liftRule (makeView (castT termView) (fromJust . castT termView))
+
 contextView :: View (Context a) (a, Context a)
 contextView = newView "views.contextView" f g
  where
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace
+
+termView :: IsTerm a => View Term a
+termView = makeView fromTerm toTerm
 
 ----------------------------------------------------------
 -- Context monad

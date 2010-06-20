@@ -27,7 +27,7 @@ module Common.Strategy
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
    , check, not, repeat, repeat1, try, (|>), exhaustive
-   , while, until
+   , while, until, multi
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
      -- * Configuration combinators

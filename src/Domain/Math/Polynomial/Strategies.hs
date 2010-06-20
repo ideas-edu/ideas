@@ -35,11 +35,11 @@ import Common.Rewriting (IsTerm)
 -- Linear equations
 
 linearStrategy :: LabeledStrategy (Context (Equation Expr))
-linearStrategy = cleanUpStrategy (cleanTop (fmap cleanUpSimple)) linearStrategyG
+linearStrategy = cleanUpStrategy (applyTop (fmap cleanUpSimple)) linearStrategyG
 
 linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
 linearMixedStrategy = 
-   let f   = cleanTop (fmap (transform (simplify mixedFractionView) . cleanUpSimple))
+   let f   = applyTop (fmap (transform (simplify mixedFractionView) . cleanUpSimple))
        cfg = [ (ByName (showId ruleNormalizeMixedFraction), Reinsert)
              , (ByName (showId ruleNormalizeRational), Remove)
              ] 
@@ -70,7 +70,7 @@ linearStrategyG =
 
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 quadraticStrategy = 
-   cleanUpStrategy (cleanTop cleanUpRelation) quadraticStrategyG
+   cleanUpStrategy (applyTop cleanUpRelation) quadraticStrategyG
 
 quadraticStrategyG :: IsTerm a => LabeledStrategy (Context a)
 quadraticStrategyG = 
@@ -135,7 +135,7 @@ quadraticStrategyG =
 
 higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 higherDegreeStrategy = 
-   cleanUpStrategy (cleanTop cleanUpRelation) higherDegreeStrategyG
+   cleanUpStrategy (applyTop cleanUpRelation) higherDegreeStrategyG
 
 higherDegreeStrategyG :: IsTerm a => LabeledStrategy (Context a)
 higherDegreeStrategyG = label "higher degree" $ 
@@ -165,7 +165,7 @@ higherDegreeStrategyG = label "higher degree" $
 -- Finding factors in an expression
 
 findFactorsStrategy :: LabeledStrategy (Context Expr)
-findFactorsStrategy = cleanUpStrategy (cleanTop cleanUpSimple) $
+findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
    label "find factors" $ repeat findFactorsStrategyG
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)

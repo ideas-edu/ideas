@@ -63,7 +63,7 @@ main = suite "Numeric tests" $ do
       let f l s pre post = forM_ numGenerators $ \g -> 
              addProperty l $ forAll g $ \a ->
                 let run = fromMaybe a . fromContext . applyD s 
-                        . newContext emptyEnv . exprNavigator
+                        . newContext emptyEnv . termNavigator
                 in not (a `belongsTo` pre) || run a `belongsTo` post
       f "natural"  naturalStrategy  integerView  integerNormalForm
       f "integer"  integerStrategy  integerView  integerNormalForm

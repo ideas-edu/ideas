@@ -14,7 +14,7 @@ module Domain.Math.Data.OrList
    , orList, (\/), true, false
    , isTrue, isFalse
    , disjunctions, normalize, idempotent
-   , orView
+   , oneDisjunct, orView
    ) where
 
 import Common.View
@@ -66,6 +66,12 @@ normalize (OrList xs) = OrList (nub $ sort xs)
 idempotent :: Eq a => OrList a -> OrList a
 idempotent T           = T
 idempotent (OrList xs) = OrList (nub xs)
+
+oneDisjunct :: Monad m => (a -> m (OrList a)) -> OrList a -> m (OrList a)
+oneDisjunct f xs = 
+   case disjunctions xs of 
+      Just [a] -> f a
+      _ -> fail "oneDisjunct"
 
 ------------------------------------------------------------
 -- Instances

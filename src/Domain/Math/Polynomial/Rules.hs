@@ -16,7 +16,6 @@ import Common.Context
 import Common.Rewriting
 import Common.Transformation
 import Common.Navigator
-import Common.Traversable
 import Common.Uniplate (universe, uniplate)
 import Common.Utils
 import Common.View hiding (simplify)
@@ -143,7 +142,7 @@ bringAToOne = rhsIsZero $ liftRuleIn thisView $
 
 -- Rule must be symmetric in side of equation
 mulZero :: Rule (OrList (Equation Expr))
-mulZero = makeSimpleRuleList "multiplication is zero" $ onceJoinM bothSides
+mulZero = makeSimpleRuleList "multiplication is zero" $ oneDisjunct bothSides
  where
    bothSides eq = oneSide eq `mplus` oneSide (flipSides eq)
    oneSide (lhs :==: rhs) = do
@@ -287,7 +286,7 @@ ruleNormalizeMixedFraction =
 -- This one does not factor constants
 
 allPowerFactors :: Rule (OrList (Equation Expr))
-allPowerFactors = makeSimpleRule "all power factors" $ onceJoinM $ 
+allPowerFactors = makeSimpleRule "all power factors" $ oneDisjunct $ 
    \(lhs :==: rhs) -> do
       let myView = polyNormalForm rationalView
       (s1, p1) <- match myView lhs
@@ -310,7 +309,7 @@ factorVariablePower = makeSimpleRule "factor variable power" $ \expr -> do
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))
-sameFactor = makeSimpleRule "same factor" $ onceJoinM $ \(lhs :==: rhs) -> do
+sameFactor = makeSimpleRule "same factor" $ oneDisjunct $ \(lhs :==: rhs) -> do
    (b1, xs) <- match productView lhs
    (b2, ys) <- match productView rhs
    (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
@@ -342,7 +341,7 @@ sameConFactor = liftRule myView $
       | otherwise = Nothing
 
 abcFormula :: Rule (Context (OrList (Equation Expr)))
-abcFormula = makeSimpleRule "abc formula" $ withCM $ onceJoinM $ \(lhs :==: rhs) -> do
+abcFormula = makeSimpleRule "abc formula" $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs
    addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])

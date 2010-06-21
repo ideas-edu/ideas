@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="move to left">
       <expr>
@@ -51,6 +51,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[subst==(p==x^2)]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up power [vars]">

@@ -144,7 +144,7 @@ higherDegreeStrategyG = label "higher degree" $
    <*> afterSubst
  where
    higherForm = label "higher degree form" $ repeat $
-      use allPowerFactors 
+      somewhere (use allPowerFactors)
       |> somewhere (
               use coverUpPower
           <|> use mulZero

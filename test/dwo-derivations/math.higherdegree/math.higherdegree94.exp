@@ -14,6 +14,9 @@
       <expr>
         x-1 == 0 or x == 0 or x^2-6 == 3*x
       </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
@@ -37,6 +40,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D==33, a==1, b==-3, c==-6]"/>
+        <item name="location" value="[2,2]"/>
       </context>
     </elem>
     <elem ruleid="distribution division">

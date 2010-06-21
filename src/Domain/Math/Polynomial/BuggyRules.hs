@@ -28,7 +28,6 @@ import Common.Apply
 import Common.Context
 import Common.View
 import Common.Transformation
-import Common.Traversable
 import Control.Monad
 
 buggyRulesExpr :: [Rule Expr]
@@ -284,7 +283,7 @@ buggyCoverUpEvenPowerTooEarly = describe "Trying to cover up an even power, \
    \but there is some other operation to be done first. Example: x^2+1=9" $
    buggyRule $ siblingOf coverUpPower $ 
    makeSimpleRuleList "buggy cover-up even power too early" $ 
-      onceJoinM $ helperBuggyCUPower True
+      oneDisjunct $ helperBuggyCUPower True
 
 buggyCoverUpEvenPowerForget :: Rule (OrList (Equation Expr))
 buggyCoverUpEvenPowerForget = describe "Trying to cover up an even power, \
@@ -292,7 +291,7 @@ buggyCoverUpEvenPowerForget = describe "Trying to cover up an even power, \
    \ and rewriting this into x=9 or x=-9." $
    buggyRule $ siblingOf coverUpPower $ 
    makeSimpleRuleList "buggy cover-up even power forget" $ 
-      onceJoinM $ helperBuggyCUPower False
+      oneDisjunct $ helperBuggyCUPower False
 
 helperBuggyCUPower :: Bool -> Equation Expr -> [OrList (Equation Expr)]
 helperBuggyCUPower mode (lhs :==: rhs) =
@@ -356,7 +355,7 @@ buggySquareMultiplication = describe "Incorrect square of a term that involves \
 buggyCoverUpSquareMinus :: Rule (OrList (Equation Expr))
 buggyCoverUpSquareMinus = describe "A squared term is equal to a negative term \
    \on the right-hand side, resulting in an error in the signs" $
-   buggyRule $ makeSimpleRule "buggy cover-up square minus" $ onceJoinM $ \eq -> 
+   buggyRule $ makeSimpleRule "buggy cover-up square minus" $ oneDisjunct $ \eq -> 
       case eq of
          Sym s [a, 2] :==: b | s == powerSymbol -> 
             Just $ orList [a :==: sqrt b, a :==: sqrt (-b)]
@@ -409,7 +408,7 @@ abcBuggyRules = map (siblingOf abcFormula) [ minusB, twoA, minus4AC, oneSolution
 abcMisconception :: (String -> Rational -> Rational -> Rational -> [OrList (Equation Expr)])
                  -> Transformation (OrList (Equation Expr))
 abcMisconception f = makeTransList $ 
-   onceJoinM $ \(lhs :==: rhs) -> do
+   oneDisjunct $ \(lhs :==: rhs) -> do
       guard (rhs == 0)
       (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs
       f x a b c

@@ -33,6 +33,9 @@
       <expr>
         x == 0 or x == 2 or x == 3
       </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
     </elem>
   </list>
 </reply>

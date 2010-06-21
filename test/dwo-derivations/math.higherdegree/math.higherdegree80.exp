@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="move to left">
       <expr>
@@ -35,6 +35,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up power [vars]">
@@ -43,6 +44,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
   </list>

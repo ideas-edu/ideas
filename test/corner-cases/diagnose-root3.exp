@@ -1,8 +1,8 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <expected ready="true" ruleid="cover-up power [vars]">
     <state>
       <prefix>
-        [0,0,0,1,0,0]
+        [0,0,0,2,0,0]
       </prefix>
       <expr>
         x == root 7 3

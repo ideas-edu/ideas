@@ -17,6 +17,9 @@
       <expr>
         x == 0 or x+3 == 0
       </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>

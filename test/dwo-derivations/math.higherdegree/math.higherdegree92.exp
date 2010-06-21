@@ -17,6 +17,9 @@
       <expr>
         x == 0 or x == sqrt (1/64) or x == -sqrt (1/64)
       </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
     </elem>
     <elem ruleid="simpler square root">
       <expr>

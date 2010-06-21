@@ -9,6 +9,9 @@
       <expr>
         x == 0 or x-3 == 0 or 2*x-6 == 4*x+2
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>

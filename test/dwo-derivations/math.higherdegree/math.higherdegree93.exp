@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="all power factors">
       <expr>
@@ -11,6 +11,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D==52, a==1, b==-4, c==-9]"/>
+        <item name="location" value="[2]"/>
       </context>
     </elem>
     <elem ruleid="simpler square root">

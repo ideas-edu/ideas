@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.2 (0)">
   <list>
     <elem ruleid="higher subst">
       <expr>
@@ -30,6 +30,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
     <elem ruleid="cover-up power [vars]">
@@ -38,6 +39,7 @@
       </expr>
       <context>
         <item name="clipboard" value="[D==1225, a==4, b==-29, c==-24, subst==(p==x^2)]"/>
+        <item name="location" value="[2,2]"/>
       </context>
     </elem>
   </list>

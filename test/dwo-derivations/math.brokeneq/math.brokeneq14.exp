@@ -17,6 +17,9 @@
       <expr>
         x == 3 or x == -3 or 4*x-1 == 2*x+7
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>

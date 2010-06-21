@@ -21,7 +21,7 @@ import Common.Navigator
 import Common.Strategy hiding (not)
 import Common.TestSuite
 import Common.Transformation
-import Common.Traversable (crush, onceJoinM)
+import Common.Traversable (crush)
 import Common.Uniplate
 import Common.View
 import Control.Monad
@@ -141,7 +141,7 @@ sameDivisor = makeSimpleRule "sameDivisor" $ \(lhs :==: rhs) -> do
    
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
 sameDividend :: Rule (OrList (Equation Expr))
-sameDividend = makeSimpleRule "sameDividend" $ onceJoinM $ \(lhs :==: rhs) -> do
+sameDividend = makeSimpleRule "sameDividend" $ oneDisjunct $ \(lhs :==: rhs) -> do
    (a1, b) <- match divView lhs
    (a2, c) <- match divView rhs
    guard (a1==a2)

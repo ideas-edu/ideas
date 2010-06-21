@@ -37,18 +37,15 @@ import Common.Traversable
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules
 
-coverUpBinary2Rule :: (OnceJoin f, Switch f, Relational r) 
-                   => String -> (Expr -> [(Expr, Expr)]) 
+coverUpFunction :: (Switch f, Relational r) 
+                   => (Expr -> [(Expr, Expr)]) 
                    -> (Expr -> Expr -> [f Expr])
-                   -> ConfigCoverUp -> Rule (f (r Expr))
-coverUpBinary2Rule opName fm fb cfg = 
-   makeSimpleRuleList name $ onceJoinM $ \eq -> 
-      (guard (coverLHS cfg) >> coverLeft eq) ++ 
-      (guard (coverRHS cfg) >> coverRight eq)
+                   -> ConfigCoverUp -> r Expr -> [f (r Expr)]
+coverUpFunction fm fb cfg eq = 
+   (guard (coverLHS cfg) >> coverLeft eq) ++ 
+   (guard (coverRHS cfg) >> coverRight eq)
  where
-   name       = coverUpRuleName opName (configName cfg)
-   coverRight = map (fmap flipSides) . coverLeft . flipSides
-   
+   coverRight   = map (fmap flipSides) . coverLeft . flipSides
    coverLeft eq = do
       (e1, e2) <- fm (leftHandSide eq)
       guard (predicateCovered  cfg e1)
@@ -56,13 +53,21 @@ coverUpBinary2Rule opName fm fb cfg =
       switch $ fmap (guard . predicateCombined cfg) new
       return (fmap (constructor eq e1) new)
 
+coverUpBinaryOrRule :: Relational r
+                   => String -> (Expr -> [(Expr, Expr)]) 
+                   -> (Expr -> Expr -> [OrList Expr])
+                   -> ConfigCoverUp -> Rule (OrList (r Expr))
+coverUpBinaryOrRule opName fm fb cfg =
+   let name = coverUpRuleName opName (configName cfg)
+   in makeSimpleRuleList name $ oneDisjunct $ coverUpFunction fm fb cfg
+   
 coverUpBinaryRule :: Relational r => String 
                   -> (Expr -> [(Expr, Expr)]) -> (Expr -> Expr -> Expr) 
                   -> ConfigCoverUp -> Rule (r Expr)
-coverUpBinaryRule opName fm fb =
-   let v = makeView (return . Identity) runIdentity
-       fbi x y = [Identity (fb x y)]
-   in liftRule v . coverUpBinary2Rule opName fm fbi
+coverUpBinaryRule opName fm fb cfg = 
+   let name = coverUpRuleName opName (configName cfg)
+       fb2 a b = [Identity (fb a b)]
+   in makeSimpleRuleList name $ map runIdentity . coverUpFunction fm fb2 cfg 
       
 coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr) 
                -> ConfigCoverUp -> Rule (r Expr)
@@ -105,7 +110,7 @@ varConfig = configCoverUp
 -- Parameterized cover-up rules
 
 coverUpPowerWith :: ConfigCoverUp -> Rule (OrList (Equation Expr))
-coverUpPowerWith = coverUpBinary2Rule "power" (isBinary powerSymbol) fb
+coverUpPowerWith = coverUpBinaryOrRule "power" (isBinary powerSymbol) fb
  where
    fb rhs e2 = do
       n <- isNat e2

@@ -15,7 +15,7 @@ import Domain.Math.Expr.Symbolic
 import Text.OpenMath.Dictionary.Logic1
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
-import Common.Traversable
+import Common.Classes
 import Common.Utils (ShowString, subsets)
 import Data.List
 import Control.Monad

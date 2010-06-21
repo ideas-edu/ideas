@@ -19,7 +19,7 @@ module Domain.Math.Data.OrList
 
 import Common.View
 import Control.Monad
-import Common.Traversable
+import Common.Classes
 import Common.Rewriting
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic((:||:)))

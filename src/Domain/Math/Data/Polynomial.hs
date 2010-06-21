@@ -21,7 +21,7 @@ import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 import Data.Char
 import Control.Monad
-import Common.Traversable
+import Common.Classes
 import Data.List  (nub)
 import Data.Ratio (approxRational)
 import Domain.Math.Approximation (newton, within)

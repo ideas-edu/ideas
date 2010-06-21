@@ -18,7 +18,7 @@ module Domain.LinearAlgebra.Vector
    ) where
 
 import Control.Monad
-import Common.Traversable
+import Common.Classes
 import Data.List
 
 -------------------------------------------------------------------------------

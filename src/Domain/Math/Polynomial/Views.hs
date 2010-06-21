@@ -25,7 +25,7 @@ import Control.Monad
 import Common.Apply
 import Common.Context
 import Common.View
-import Common.Traversable
+import Common.Classes
 import Common.Uniplate (transform, uniplate, children)
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial

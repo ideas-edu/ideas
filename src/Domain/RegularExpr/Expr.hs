@@ -13,7 +13,7 @@
 module Domain.RegularExpr.Expr where
 
 import Common.Rewriting
-import Common.Traversable
+import Common.Classes
 import Common.Uniplate
 import Control.Monad
 import Domain.Math.Expr.Symbolic

@@ -16,7 +16,7 @@ import Common.Context
 import Common.Exercise
 import Common.Rewriting
 import Common.Strategy
-import Common.Traversable
+import Common.Classes
 import Common.View
 import Data.Maybe
 import Domain.Math.Data.OrList

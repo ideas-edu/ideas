@@ -26,7 +26,7 @@ module Domain.Math.Data.Relation
 
 import Common.View
 import Common.Rewriting (IsTerm(..), Rewrite)
-import Common.Traversable
+import Common.Classes
 import Domain.Math.Expr.Symbolic
 import qualified Text.OpenMath.Dictionary.Relation1 as Relation1
 import Data.Maybe

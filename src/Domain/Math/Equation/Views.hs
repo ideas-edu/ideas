@@ -19,7 +19,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Common.View
-import Common.Traversable
+import Common.Classes
 
 -- generalized to relation
 solvedRelations :: (Crush f, Relational g) => f (g Expr) -> Bool

@@ -32,7 +32,7 @@ import Domain.Math.Data.Relation
 import Control.Monad.Identity
 import Common.Transformation
 import Domain.Math.Data.OrList
-import Common.Traversable
+import Common.Classes
 
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules

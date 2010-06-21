@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Traversable 
+module Common.Classes 
    ( Switch(..), Crush(..)
    ) where
 

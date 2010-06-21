@@ -21,7 +21,7 @@ import Common.Navigator
 import Common.Strategy hiding (not)
 import Common.TestSuite
 import Common.Transformation
-import Common.Traversable (crush)
+import Common.Classes (crush)
 import Common.Uniplate
 import Common.View
 import Control.Monad

@@ -29,7 +29,7 @@ module Common.View
    ) where
 
 import Common.Id
-import Common.Traversable
+import Common.Classes
 import Control.Arrow
 import Control.Monad
 import Data.Maybe

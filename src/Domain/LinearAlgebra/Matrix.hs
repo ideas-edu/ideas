@@ -24,7 +24,7 @@ module Domain.LinearAlgebra.Matrix
 import Control.Monad
 import Data.Maybe
 import Data.List hiding (transpose)
-import Common.Traversable
+import Common.Classes
 import qualified Data.List as L
 import qualified Data.Map as M
 

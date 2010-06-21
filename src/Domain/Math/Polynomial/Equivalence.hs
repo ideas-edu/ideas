@@ -16,7 +16,7 @@ module Domain.Math.Polynomial.Equivalence
    ) where
 
 import Common.Context
-import Common.Traversable
+import Common.Classes
 import Common.View
 import Data.Maybe
 import Domain.Math.Data.Polynomial hiding (eval)

@@ -13,7 +13,7 @@ module Domain.RegularExpr.Exercises (regexpExercise) where
 
 import Common.Exercise
 import Common.Navigator
-import Common.Traversable
+import Common.Classes
 import Common.Rewriting hiding (difference)
 import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser

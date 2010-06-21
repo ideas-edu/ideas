@@ -39,7 +39,7 @@ module Common.Transformation
 
 import Common.Apply
 import Common.Rewriting
-import Common.Traversable
+import Common.Classes
 import Common.Utils
 import Common.View
 import Control.Monad

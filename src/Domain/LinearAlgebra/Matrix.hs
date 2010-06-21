@@ -38,11 +38,6 @@ type Column a = [a]
 instance Functor Matrix where 
    fmap f (M rows) = M (map (map f) rows)
 
-instance Once Matrix where 
-   onceM f (M xss) = do 
-      yss <- onceM (onceM f) xss
-      return (M yss)
-
 instance Switch Matrix where
    switch (M xss) = liftM M (mapM sequence xss)
 

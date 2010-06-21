@@ -36,9 +36,6 @@ newtype VectorSpace a = VS [Vector a]
 instance Functor Vector where
    fmap f (V xs) = V (map f xs)
 
-instance Once Vector where
-   onceM f (V xs) = liftM V (onceM f xs)
-
 instance Switch Vector where
    switch (V xs) = liftM V (switch xs)
 

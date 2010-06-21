@@ -50,9 +50,6 @@ instance Num a => Show (Polynomial a) where
 instance Functor Polynomial where
    fmap f (P m) = P (IM.map f m)
 
-instance Once Polynomial where
-   onceM f (P m) = liftM P (onceM f m)
-
 instance Switch Polynomial where
    switch (P m) = liftM P (switch m)
 

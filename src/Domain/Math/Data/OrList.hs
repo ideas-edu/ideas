@@ -90,9 +90,6 @@ instance Monad OrList where
    return  = OrList . return
    m >>= f = joinOr (fmap f m)
 
-instance Once OrList where
-   onceM = useOnceJoin
-
 instance Switch OrList where
    switch T           = return T
    switch (OrList xs) = liftM orList (sequence xs)
@@ -100,14 +97,6 @@ instance Switch OrList where
 instance Crush OrList where
    crush T           = []
    crush (OrList xs) = xs
-
-instance OnceJoin OrList where
-   onceJoinM _ T = mzero
-   onceJoinM f (OrList xs) = rec xs
-    where
-      rec []     = mzero
-      rec (x:xs) = liftM (\/ orList xs) (f x) `mplus`
-                   liftM (return x \/) (rec xs)
 
 instance IsTerm a => IsTerm (OrList a) where
    toTerm = toTerm . build orView

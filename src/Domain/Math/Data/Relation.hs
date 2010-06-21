@@ -115,18 +115,12 @@ a ? xs = fromMaybe (error "Relation: Error in lookup") (lookup a xs)
 -----------------------------------------------------------------------------
 -- Traversable instance declarations
 
-instance Once   Relation where onceM  = onceMRelation
 instance Switch Relation where switch = switchRelation
 instance Crush  Relation where crush  = crushRelation
 
 switchRelation :: (Relational f, Monad m) => f (m a) -> m (f a)
 switchRelation p =
    liftM2 (constructor p) (leftHandSide p) (rightHandSide p)
- 
-onceMRelation :: (Relational f, MonadPlus m) => (a -> m a) -> f a -> m (f a)
-onceMRelation f p =
-   liftM (`updateLeft` p) (f (leftHandSide p)) `mplus` 
-   liftM (`updateRight` p) (f (rightHandSide p))
             
 crushRelation :: Relational f => f a -> [a]
 crushRelation p = [leftHandSide p, rightHandSide p]
@@ -184,7 +178,6 @@ instance Relational Equation where
    constructor   = const (:==:)
    isSymmetric   = const True
 
-instance Once   Equation where onceM  = onceMRelation
 instance Switch Equation where switch = switchRelation
 instance Crush  Equation where crush  = crushRelation
 
@@ -232,7 +225,6 @@ instance Relational Inequality where
       let relType = relationType (build inequalityView ineq)
       in fst (relType ? inequalityTable)
 
-instance Once   Inequality where onceM  = onceMRelation
 instance Switch Inequality where switch = switchRelation
 instance Crush  Inequality where crush  = crushRelation
 

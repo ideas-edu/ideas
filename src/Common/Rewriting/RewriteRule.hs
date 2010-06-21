@@ -28,7 +28,7 @@ import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Control.Monad
 import Test.QuickCheck
-import Common.Apply
+import Common.Classes
 import Common.Rewriting.Unification
 import Data.List
 import qualified Data.Map as M

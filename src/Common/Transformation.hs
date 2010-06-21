@@ -37,7 +37,6 @@ module Common.Transformation
    , module Common.Id -- for backwards compatibility
    ) where
 
-import Common.Apply
 import Common.Rewriting
 import Common.Classes
 import Common.Utils

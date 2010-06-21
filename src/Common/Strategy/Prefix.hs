@@ -17,7 +17,7 @@ module Common.Strategy.Prefix
    , Step(..), prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
    ) where
 
-import Common.Apply
+import Common.Classes
 import Common.Utils
 import Common.Strategy.Abstract
 import Common.Strategy.Core

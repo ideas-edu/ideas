@@ -22,7 +22,7 @@ module Common.Strategy.Core
 
 import qualified Common.Strategy.Grammar as Grammar
 import Common.Strategy.Grammar (Grammar, (<*>), (<|>), symbol)
-import Common.Apply
+import Common.Classes
 import Common.Derivation
 import Common.Transformation
 import Common.Uniplate

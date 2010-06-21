@@ -8,14 +8,44 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
+-- Type classes and instances.
+--
 -----------------------------------------------------------------------------
 module Common.Classes 
-   ( Switch(..), Crush(..)
+   ( Apply(..), applicable, applyD, applyM
+   , Switch(..), Crush(..)
    ) where
 
+import Common.Utils (safeHead)
+import Data.Maybe
 import Control.Monad.Identity
 import qualified Data.IntMap as IM 
 import qualified Data.Map as M
+
+-----------------------------------------------------------
+-- * Type class |Apply|
+
+-- | A type class for functors that can be applied to a value. Transformation, Rule, and
+-- Strategy are all instances of this type class. Minimal complete definition: only one of
+-- the two member functions should be defined.
+class Apply t where
+   apply    :: t a -> a -> Maybe a     -- ^ Returns zero or one results
+   applyAll :: t a -> a -> [a]         -- ^ Returns zero or more results
+   -- default definitions
+   apply    ta = safeHead . applyAll ta
+   applyAll ta = maybe [] return . apply ta
+
+-- | Checks whether the functor is applicable (at least one result)
+applicable :: Apply t => t a -> a -> Bool
+applicable ta = isJust . apply ta
+
+-- | If not applicable, return the current value (as default)
+applyD :: Apply t => t a -> a -> a
+applyD ta a = fromMaybe a (apply ta a)
+
+-- | Same as apply, except that the result (at most one) is returned in some monad
+applyM :: (Apply t, Monad m) => t a -> a -> m a
+applyM ta = maybe (fail "applyM") return . apply ta
 
 -----------------------------------------------------------
 -- * Type class |Switch|

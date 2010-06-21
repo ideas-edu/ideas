@@ -16,7 +16,7 @@ module Domain.Math.Power.Strategies
    , nonNegExpStrategy
    ) -}where
 
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.Strategy
 import Common.Transformation

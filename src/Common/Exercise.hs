@@ -32,7 +32,7 @@ module Common.Exercise
    , module Common.Id -- for backwards compatibility
    ) where
 
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.Strategy hiding (not, fail, replicate)
 import qualified Common.Strategy as S

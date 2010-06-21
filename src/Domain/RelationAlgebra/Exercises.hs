@@ -17,7 +17,7 @@ import Domain.RelationAlgebra.Generator
 import Domain.RelationAlgebra.Strategies
 import Domain.RelationAlgebra.Rules
 import Domain.RelationAlgebra.Parser
-import Common.Apply
+import Common.Classes
 import Common.Exercise
 import Common.Context
 import Data.Maybe

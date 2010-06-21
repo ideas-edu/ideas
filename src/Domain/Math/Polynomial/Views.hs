@@ -22,7 +22,6 @@ module Domain.Math.Polynomial.Views
 
 import Prelude hiding ((^))
 import Control.Monad
-import Common.Apply
 import Common.Context
 import Common.View
 import Common.Classes

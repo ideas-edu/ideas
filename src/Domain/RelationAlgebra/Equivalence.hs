@@ -14,7 +14,7 @@ module Domain.RelationAlgebra.Equivalence (isEquivalent) where
 import Data.List
 import Data.Maybe
 import Domain.RelationAlgebra.Formula
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Domain.RelationAlgebra.Strategies
 {-

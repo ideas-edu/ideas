@@ -30,7 +30,7 @@ import Domain.RelationAlgebra.Parser
 import Test.QuickCheck 
 import System.Random
 import Data.List
-import Common.Apply
+import Common.Classes
 import Common.Context 
 import Control.Monad
 

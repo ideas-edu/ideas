@@ -12,7 +12,7 @@
 module Domain.Math.Polynomial.Tests where
 
 import Control.Monad
-import Common.Apply
+import Common.Classes
 import Common.Exercise
 import Common.Context
 import Common.Strategy

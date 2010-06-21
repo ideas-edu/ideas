@@ -16,7 +16,7 @@ module Domain.Math.Power.Exercises
    , calcPowerExercise
    ) where
 
-import Common.Apply 
+import Common.Classes 
 import Common.Context
 import Common.Exercise
 import Common.Navigator

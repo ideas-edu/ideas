@@ -25,7 +25,7 @@ module Common.Strategy.Abstract
 import Common.Utils (commaList)
 import Common.Strategy.Core
 import Common.Strategy.BiasedChoice
-import Common.Apply
+import Common.Classes
 import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation

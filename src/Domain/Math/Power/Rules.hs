@@ -25,7 +25,7 @@ module Domain.Math.Power.Rules
 
 import Prelude hiding ( (^) )
 import qualified Prelude
-import Common.Apply
+import Common.Classes
 import Control.Arrow ( (>>^) )
 import Common.Transformation
 import Common.View

@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Checks (checks) where
 
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.TestSuite

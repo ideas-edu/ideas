@@ -24,7 +24,7 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
 import Domain.Math.Equation.CoverUpRules
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.View
 import Common.Transformation

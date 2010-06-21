@@ -28,7 +28,7 @@ import System.Random
 import Control.Monad
 import Service.ExercisePackage
 import Service.State
-import qualified Common.Apply as Apply
+import qualified Common.Classes as Apply
       
 -- result must be in the IO monad to access a standard random number generator
 generate :: ExercisePackage a -> Int -> IO (State a)

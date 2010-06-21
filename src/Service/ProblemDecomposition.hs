@@ -16,7 +16,7 @@ module Service.ProblemDecomposition
    , replyType
    ) where
 
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.Derivation
 import Common.Exercise

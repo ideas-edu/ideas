@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Numeric.Tests (main) where
 
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.TestSuite
 import Common.View

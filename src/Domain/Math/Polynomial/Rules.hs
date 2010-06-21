@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Rules where
 
-import Common.Apply
+import Common.Classes
 import Common.Context
 import Common.Rewriting
 import Common.Transformation

@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Proofs (proofExercise) where
 
-import Common.Apply
+import Common.Classes
 import Prelude hiding (repeat)
 import Common.Context
 import Common.Rewriting

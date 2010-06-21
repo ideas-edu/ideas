@@ -15,7 +15,7 @@ module Common.Strategy.BiasedChoice
    ( Bias(..), placeBiasLabels, biasTreeG, makeBiasedTree
    ) where
     
-import Common.Apply
+import Common.Classes
 import Common.Derivation
 import Common.Transformation
 import Common.Strategy.Core

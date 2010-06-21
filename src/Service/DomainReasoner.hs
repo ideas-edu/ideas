@@ -145,7 +145,7 @@ findPackage code = do
 findService :: String -> DomainReasoner Service
 findService txt = do
    srvs <- getServices
-   case filter ((==txt) . serviceName) srvs of
+   case filter ((==txt) . showId) srvs of
       [hd] -> return hd
       []   -> fail $ "No service " ++ txt
       _    -> fail $ "Ambiguous service " ++ txt

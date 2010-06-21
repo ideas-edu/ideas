@@ -77,8 +77,8 @@ exerciseOverviewPage showAll list = do
 serviceOverviewPage :: [Service] -> HTMLBuilder
 serviceOverviewPage list = do
    h1 "Services"
-   let sorted = sortBy (\x y -> serviceName x `compare` serviceName y) list
+   let sorted = sortBy (\x y -> getId x `compare` getId y) list
    ul $ flip map sorted $ \s -> do
-      link (servicePageFile s) (ttText (serviceName s))
+      link (servicePageFile s) (ttText (showId s))
       when (serviceDeprecated s) $
          space >> text "(deprecated)"

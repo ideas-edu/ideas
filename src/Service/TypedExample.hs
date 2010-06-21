@@ -27,11 +27,11 @@ typedExample pkg service args = do
    xmlRequest <- 
       case makeArgType args of
          Nothing -> return $  
-            stdReply (serviceName service) enc (exercise pkg) (return ())
+            stdReply (showId service) enc (exercise pkg) (return ())
          Just (reqTuple ::: reqTp) -> do
             xml <- encodeType (encoder evaluator) reqTp reqTuple
             return $ 
-               stdReply (serviceName service) enc (exercise pkg) xml
+               stdReply (showId service) enc (exercise pkg) xml
    -- Construct a reply in xml
    xmlReply <-
       case foldl dynamicApply (serviceFunction service) args of

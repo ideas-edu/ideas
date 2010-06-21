@@ -124,7 +124,7 @@ exerciseDerivationsFile a =
    ++ "-derivations.html"
 
 servicePageFile :: Service -> String
-servicePageFile srv = servicePagePath ++ serviceName srv ++ ".html"
+servicePageFile srv = servicePagePath ++ showId srv ++ ".html"
 
 testsPageFile :: String
 testsPageFile = "tests.html"

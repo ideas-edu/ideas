@@ -13,7 +13,7 @@
 module Service.Types 
    ( -- * Services
      Service, makeService, deprecate 
-   , serviceName, serviceDescription, serviceDeprecated, serviceFunction
+   , serviceDeprecated, serviceFunction
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
    , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym
@@ -21,6 +21,7 @@ module Service.Types
    ) where
 
 import Common.Context (Context)
+import Common.Id
 import Common.Navigator (Location)
 import Common.Transformation (Rule)
 import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
@@ -33,14 +34,17 @@ import Service.ExercisePackage
 -- Services
 
 data Service = Service 
-   { serviceName        :: String
-   , serviceDescription :: String
-   , serviceDeprecated  :: Bool
-   , serviceFunction    :: forall a . TypedValue a
+   { serviceId         :: Id
+   , serviceDeprecated :: Bool
+   , serviceFunction   :: forall a . TypedValue a
    }
    
+instance HasId Service where
+   getId = serviceId
+   changeId f a = a { serviceId = f (serviceId a) }
+   
 makeService :: String -> String -> (forall a . TypedValue a) -> Service
-makeService name descr f = Service name descr False f
+makeService s descr f = describe descr (Service (newId s) False f)
 
 deprecate :: Service -> Service
 deprecate s = s { serviceDeprecated = True }

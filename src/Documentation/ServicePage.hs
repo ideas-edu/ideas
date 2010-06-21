@@ -27,12 +27,12 @@ import Common.Utils (Some(..))
 
 makeServicePage :: String -> Service -> DomainReasoner ()
 makeServicePage dir s = do
-   xs <- examplesFor (serviceName s)
+   xs <- examplesFor (showId s)
    generatePageAt 1 dir (servicePageFile s)  (servicePage xs s)
 
 servicePage :: [Example] -> Service -> HTMLBuilder
 servicePage examples s = do
-   h1 (serviceName s)
+   h1 (showId s)
 
    para $ do
       bold $ text "Signature:"
@@ -42,7 +42,7 @@ servicePage examples s = do
    para $ do
       bold $ text "Description: "
       br
-      text $ serviceDescription s
+      text $ description s
 
    when (serviceDeprecated s) $ 
       para $ bold $ text "Warning: this service is deprecated!"

@@ -168,7 +168,7 @@ power2root = makeSimpleRule "write as root" $ \ expr -> do
   (a, pq) <- match simplePowerView expr
   (p, q)  <- match (rationalView >>> ratioView) pq  
   guard (q /= 1)  
-  return $ let n =  Nat . fromIntegral in root (a .^. n p) $ n q
+  return $ let n =  fromInteger . fromIntegral in root (a .^. n p) $ n q
   
 -- | root (a^p) q = a^(p/q)
 root2power :: Rule Expr 

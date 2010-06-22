@@ -1,0 +1,39 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="nice factors">
+      <expr>
+        (a^3+7*a^2+12*a)/(a+3)^2
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="factor variable power">
+      <expr>
+        a*(a^2+7*a+12)/(a+3)^2
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        a*((a+3)*(a+4))/(a+3)^2
+      </expr>
+      <context>
+        <item name="location" value="[1,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="cancel terms div">
+      <expr>
+        a*(a+4)/(a+3)
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        (a^2+4*a)/(a+3)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

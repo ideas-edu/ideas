@@ -43,14 +43,16 @@ import Data.Ratio
 import Data.List hiding (repeat)
 import Data.Maybe
 import Test.QuickCheck hiding (label)
+import Domain.Math.Polynomial.Exercises
 
 go  = checkExercise brokenEquationExercise
 go2 = checkExercise normalizeBrokenExercise
 
 see n = printDerivation normalizeBrokenExercise (examples normalizeBrokenExercise !! (n-1))
-
-go3 = apply cancelTermsDiv $ ((x-1)^2)/((x+1)*(x-1))
+       
+go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
+       a = Var "a"
 
 brokenEquationExercise :: Exercise (OrList (Equation Expr))
 brokenEquationExercise = makeExercise 
@@ -117,7 +119,7 @@ normalizeBrokenStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
    phaseSimplerDiv = label "Simplify division" $
       repeat $
          (onlyInLowerDiv findFactorsStrategyG <|> somewhere (use cancelTermsDiv)
-            <|> commit (onlyInUpperDiv findFactorsStrategyG <*> use cancelTermsDiv))
+            <|> commit (onlyInUpperDiv (repeat findFactorsStrategyG) <*> use cancelTermsDiv))
          |> ( somewhere (use merge) 
          <|> multi (showId distributeTimes) (notInLowerDiv (use distributeTimes))
           )
@@ -129,8 +131,9 @@ isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
 -- propagated correctly to predicate in check combinator, hence the use of
 -- cleanUpStrategy (which is not desirable here).
 commit :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
-commit s = let cs = cleanUpStrategy (applyTop cleanUpExpr2) (label "" s)
-           in check (applicable cs) <*> s
+commit s = let cs  = cleanUpStrategy (applyTop cleanUpExpr2) (label "" s)
+               f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
+           in check (applicable cs . f) <*> s
 
 -- copy/paste from Strategy.Combinators
 notInLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)

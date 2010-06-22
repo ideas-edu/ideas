@@ -489,6 +489,14 @@ merge = makeSimpleRule "merge similar terms" $ \old -> do
    let new = collectLikeTerms old
    guard (old /= new)
    return new
+
+simplerLinearFactor :: Rule Expr
+simplerLinearFactor = makeSimpleRule "simpler linear factor" $ \expr -> do
+   let myView = polyNormalForm rationalView >>> second linearPolyView
+   (x, (a, b)) <- match myView expr
+   let d = (if a<0 then negate else id) (gcdFrac a b)
+   guard (a /= 0 && b /= 0 && d /= 1 && d /= -1)
+   return $ fromRational d * build myView (x, (a/d, b/d))
    
 ruleFromView :: Eq a => String -> View a b -> Rule a
 ruleFromView s v = makeSimpleRuleList s $ \a -> do

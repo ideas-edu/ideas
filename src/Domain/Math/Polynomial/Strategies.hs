@@ -18,6 +18,7 @@ module Domain.Math.Polynomial.Strategies
 
 import Prelude hiding (repeat, replicate, fail)
 import Common.Strategy
+import Common.Navigator
 import Common.Transformation
 import Common.Uniplate (transform)
 import Common.View
@@ -29,7 +30,8 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
-import Common.Rewriting (IsTerm)
+import Data.Maybe
+import Common.Rewriting.Term
 
 ------------------------------------------------------------
 -- Linear equations
@@ -166,8 +168,22 @@ higherDegreeStrategyG = label "higher degree" $
 
 findFactorsStrategy :: LabeledStrategy (Context Expr)
 findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
-   label "find factors" $ repeat findFactorsStrategyG
+   label "find factors" $ replicate 10 $ try $ findFactorsStrategyG
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
 findFactorsStrategyG = label "find factor step" $
-   use niceFactorsNew <|> use commonFactorVarNew <|> use factorVariablePower
+   somewhereTimes $ 
+      use niceFactorsNew <|> use commonFactorVarNew 
+      <|> use factorVariablePower <|> use simplerLinearFactor
+
+somewhereTimes :: IsStrategy f => f (Context a) -> Strategy (Context a)
+somewhereTimes s = fix $ \this -> s <|> once this
+ where
+   once s = ruleMoveDown <*> s <*> ruleMoveUp
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDownTimes" $ \c ->
+      if (isTimesC c) then allDowns c else []
+   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   safeUp a     = maybe (Just a) Just (up a)
+   
+isTimesC :: Context a -> Bool
+isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT

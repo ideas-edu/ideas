@@ -1,0 +1,39 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="nice factors">
+      <expr>
+        (x^3+3*x^2+2*x)/(x+2)^2
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="factor variable power">
+      <expr>
+        x*(x^2+3*x+2)/(x+2)^2
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        x*((x+1)*(x+2))/(x+2)^2
+      </expr>
+      <context>
+        <item name="location" value="[1,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="cancel terms div">
+      <expr>
+        x*(x+1)/(x+2)
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        (x^2+x)/(x+2)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,34 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="factor variable power">
+      <expr>
+        (a^2-9)/(a*(a^2-4*a+3))
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (a^2-9)/(a*((a-1)*(a-3)))
+      </expr>
+      <context>
+        <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (a+3)*(a-3)/(a*((a-1)*(a-3)))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cancel terms div">
+      <expr>
+        (a+3)/(a*(a-1))
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,34 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="factor variable power">
+      <expr>
+        (x^2+3*x-4)/(x*(x^2-6*x+5))
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x^2+3*x-4)/(x*((x-1)*(x-5)))
+      </expr>
+      <context>
+        <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (x-1)*(x+4)/(x*((x-1)*(x-5)))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cancel terms div">
+      <expr>
+        (x+4)/(x*(x-5))
+      </expr>
+    </elem>
+  </list>
+</reply>
+

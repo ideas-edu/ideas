@@ -1,0 +1,28 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="fraction scale">
+      <expr>
+        (x+5)*(x+5)/((x+3)*(x+5))+(x+3)*(-x-3)/((x+3)*(x+5))
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        ((x+5)*(x+5)+(x+3)*(-x-3))/((x+3)*(x+5))
+      </expr>
+    </elem>
+    <elem ruleid="distribution multiplication">
+      <expr>
+        (x^2+10*x+25-x^2-6*x-9)/((x+3)*(x+5))
+      </expr>
+    </elem>
+    <elem ruleid="merge similar terms">
+      <expr>
+        (4*x+16)/((x+3)*(x+5))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

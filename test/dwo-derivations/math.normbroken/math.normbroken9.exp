@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="fraction scale">
+      <expr>
+        y/(x*y)+x/(x*y)
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        (y+x)/(x*y)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

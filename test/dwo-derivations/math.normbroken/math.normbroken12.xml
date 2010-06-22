@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.normbroken" encoding="string">
+  <state>
+    <expr>
+      2/(x*y)-7/(5*y)
+    </expr>
+  </state>
+</request>

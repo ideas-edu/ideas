@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="fraction scale">
+      <expr>
+        20*b/(15*a*b)-6*a/(15*a*b)
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        (20*b-6*a)/(15*a*b)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

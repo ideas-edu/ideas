@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.normbroken" encoding="string">
+  <state>
+    <expr>
+      5/(3*a)+1
+    </expr>
+  </state>
+</request>

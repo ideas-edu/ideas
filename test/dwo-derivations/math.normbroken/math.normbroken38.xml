@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.normbroken" encoding="string">
+  <state>
+    <expr>
+      (x+5)/(x+3)-(x+3)/(x+5)
+    </expr>
+  </state>
+</request>

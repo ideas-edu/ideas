@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="turn into fraction">
+      <expr>
+        6*x/(2*x)+1/(2*x)
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        (6*x+1)/(2*x)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

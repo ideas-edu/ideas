@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.normbroken" encoding="string">
+  <state>
+    <expr>
+      6/(x-1)-3/(x-2)
+    </expr>
+  </state>
+</request>

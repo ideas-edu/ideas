@@ -1,0 +1,26 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="common factor var">
+      <expr>
+        (p^2-4)/(4*p*(p+2))
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (p+2)*(p-2)/(4*p*(p+2))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cancel terms div">
+      <expr>
+        (p-2)/(4*p)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,26 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="nice factors">
+      <expr>
+        (a^2-3*a-10)/((a+4)*(a-5))
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="nice factors">
+      <expr>
+        (a+2)*(a-5)/((a+4)*(a-5))
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="cancel terms div">
+      <expr>
+        (a+2)/(a+4)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

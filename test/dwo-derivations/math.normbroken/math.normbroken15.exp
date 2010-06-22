@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="fraction scale">
+      <expr>
+        6/(3*a*b)+4*b/(3*a*b)
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        (6+4*b)/(3*a*b)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

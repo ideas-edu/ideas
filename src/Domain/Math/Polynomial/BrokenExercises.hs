@@ -21,8 +21,9 @@ import Common.Navigator
 import Common.Strategy hiding (not)
 import Common.TestSuite
 import Common.Transformation
-import Common.Classes (crush)
-import Common.Uniplate
+import Common.Classes
+import Common.Rewriting.Term (Term)
+import Common.Uniplate hiding (somewhere)
 import Common.View
 import Control.Monad
 import Domain.Math.Expr
@@ -35,6 +36,7 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Exercises (eqOrList)
 import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.Rules
 import Domain.Math.Power.Views
 import Domain.Math.Numeric.Views
 import Data.Ratio
@@ -44,6 +46,11 @@ import Test.QuickCheck hiding (label)
 
 go  = checkExercise brokenEquationExercise
 go2 = checkExercise normalizeBrokenExercise
+
+see n = printDerivation normalizeBrokenExercise (examples normalizeBrokenExercise !! (n-1))
+
+go3 = apply cancelTermsDiv $ ((x-1)^2)/((x+1)*(x-1))
+ where x = Var "x"
 
 brokenEquationExercise :: Exercise (OrList (Equation Expr))
 brokenEquationExercise = makeExercise 
@@ -108,14 +115,48 @@ normalizeBrokenStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
       until isDivC $ 
          use fractionPlus <|> use fractionScale <|> use turnIntoFraction
    phaseSimplerDiv = label "Simplify division" $
-      repeat (use cancelTermsDiv)
-       -- onceDiv findFactorsStrategyG
-       
-onceDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onceDiv s = check isDivC <*> once s
+      repeat $
+         (onlyInLowerDiv findFactorsStrategyG <|> somewhere (use cancelTermsDiv)
+            <|> commit (onlyInUpperDiv findFactorsStrategyG <*> use cancelTermsDiv))
+         |> ( somewhere (use merge) 
+         <|> multi (showId distributeTimes) (notInLowerDiv (use distributeTimes))
+          )
 
 isDivC :: Context a -> Bool
-isDivC = maybe False (isJust . isDivide :: Expr -> Bool) . currentT
+isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
+
+-- First check that the whole strategy can be executed. Cleaning up is not 
+-- propagated correctly to predicate in check combinator, hence the use of
+-- cleanUpStrategy (which is not desirable here).
+commit :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
+commit s = let cs = cleanUpStrategy (applyTop cleanUpExpr2) (label "" s)
+           in check (applicable cs) <*> s
+
+-- copy/paste from Strategy.Combinators
+notInLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+notInLowerDiv s = fix $ \this -> s <|> once this
+ where
+   once s = ruleMoveDown <*> s <*> ruleMoveUp
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDownNotLower" $ \c ->
+      if (isDivC c) then (down 1 c) else allDowns c
+   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   safeUp a     = maybe (Just a) Just (up a)
+
+onlyInLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+onlyInLowerDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
+ where
+   once s = ruleMoveDown <*> s <*> ruleMoveUp
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown2" (down 2)
+   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   safeUp a     = maybe (Just a) Just (up a)
+
+onlyInUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+onlyInUpperDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
+ where
+   once s = ruleMoveDown <*> s <*> ruleMoveUp
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown1" (down 1)
+   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
+   safeUp a     = maybe (Just a) Just (up a)
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Equation Expr)
@@ -174,18 +215,31 @@ fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
    myView = plusView >>> (divView *** divView)
 
 -- ab/ac  =>  b/c  (if a/=0)
+-- Note that the common term can be squared (in one of the parts)
 cancelTermsDiv :: Rule Expr
 cancelTermsDiv = liftRule myView $ 
    makeSimpleRule "cancel terms div" $ \((b, xs), (c, ys)) -> do
-      let (ps, qs) = rec xs ys
-      guard (length ps < length xs)
-      return ((b, ps), (c, qs))
+      let (ps, qs) = rec (map f xs) (map f ys)
+      guard (sum (map snd ps) < sum (map (snd . f) xs))
+      return ((b, map g ps), (c, map g qs))
  where
    myView = divView >>> (productView *** productView)
-   rec xs ys = foldr add (xs, []) ys
-   add y (xs, ys) 
-      | y `elem` xs = (delete y xs, ys)
-      | otherwise   = (xs, y:ys)
+   powInt = simplePowerView >>> second integerView
+   f a = fromMaybe (a, 1) (match powInt a)
+   g a = build powInt a
+   rec ((_, 0):xs) ys = rec xs ys
+   rec (pair@(a, n):xs) ys =
+      case break ((==a) . fst) ys of
+         (ys1, (b, m):ys2)
+            | m == 0 ->
+                 rec (pair:xs) (ys1++ys2)
+            | otherwise ->
+                 let i = n `min` m 
+                 in rec ((a, n-i):xs) (ys1++(b,m-i):ys2)
+         _ -> 
+            let (ps,qs) = rec xs ys 
+            in (pair:ps, qs)
+   rec xs ys = (xs, ys)
 
 fractionScale :: Rule Expr
 fractionScale = liftRule myView $ 
@@ -211,6 +265,7 @@ turnIntoFraction = liftRule plusView $
       return $ build divView (a*e, e)
 
 isNormBroken :: Expr -> Bool
+isNormBroken (Negate a) = isNormBroken a
 isNormBroken (a :/: b) = noVarInDivisor a && noVarInDivisor b
 isNormBroken e = noVarInDivisor e
 

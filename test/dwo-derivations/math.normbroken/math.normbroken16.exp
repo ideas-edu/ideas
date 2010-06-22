@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="fraction scale">
+      <expr>
+        7*b/(4*a*b)+3*a/(4*a*b)
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        (7*b+3*a)/(4*a*b)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.normbroken" encoding="string">
+  <state>
+    <expr>
+      (a^2-a-2)/(a^2+4*a-12)
+    </expr>
+  </state>
+</request>

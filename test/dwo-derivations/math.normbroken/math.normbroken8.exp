@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.2 (0)">
+  <list>
+    <elem ruleid="fraction scale">
+      <expr>
+        18/(10*a)-5/(10*a)
+      </expr>
+    </elem>
+    <elem ruleid="fraction plus">
+      <expr>
+        13/(10*a)
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -170,4 +170,4 @@ findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
 findFactorsStrategyG = label "find factor step" $
-   use niceFactorsNew <|> use commonFactorVarNew -- factorVariablePower
+   use niceFactorsNew <|> use commonFactorVarNew <|> use factorVariablePower

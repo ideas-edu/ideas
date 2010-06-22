@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem domain="linalg" identifier="gaussianelim" description="Gaussian Elimination" status="Stable"/>
     <elem domain="linalg" identifier="gramschmidt" description="Gram-Schmidt" status="Alpha"/>
@@ -6,21 +6,17 @@
     <elem domain="linalg" identifier="systemwithmatrix" description="Solve Linear System with Matrix" status="Provisional"/>
     <elem domain="logic" identifier="dnf" description="Proposition to DNF" status="Stable"/>
     <elem domain="logic" identifier="dnf-unicode" description="Proposition to DNF (unicode support)" status="Stable"/>
-    <elem domain="logic" identifier="proof" description="Prove two propositions equivalent" status="Experimental"/>
     <elem domain="math" identifier="brokeneq" description="solve a broken equation (with a variable in a divisor)" status="Alpha"/>
     <elem domain="math" identifier="calcpower" description="simplify expression (powers)" status="Provisional"/>
     <elem domain="math" identifier="coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem domain="math" identifier="derivative" description="Derivative" status="Experimental"/>
-    <elem domain="math" identifier="divbroken" description="divide a broken fraction ('uitdelen')" status="Alpha"/>
     <elem domain="math" identifier="factor" description="factorize the expression" status="Provisional"/>
     <elem domain="math" identifier="fraction" description="simplify expression (fractions)" status="Alpha"/>
     <elem domain="math" identifier="higherdegree" description="solve an equation (higher degree)" status="Provisional"/>
     <elem domain="math" identifier="ineqhigherdegree" description="solve an inequation of higher degree" status="Provisional"/>
-    <elem domain="math" identifier="integer" description="simplify expression (integers)" status="Alpha"/>
     <elem domain="math" identifier="lineq" description="solve a linear equation" status="Provisional"/>
     <elem domain="math" identifier="lineq-mixed" description="solve a linear equation with mixed fractions" status="Provisional"/>
     <elem domain="math" identifier="linineq" description="solve a linear inequation" status="Provisional"/>
-    <elem domain="math" identifier="natural" description="simplify expression (natural numbers)" status="Alpha"/>
     <elem domain="math" identifier="nonnegexp" description="write with a non-negative exponent" status="Provisional"/>
     <elem domain="math" identifier="normbroken" description="normalize a broken expression (with a variable in a divisor)" status="Alpha"/>
     <elem domain="math" identifier="powerof" description="write as a power of a" status="Provisional"/>
@@ -28,9 +24,7 @@
     <elem domain="math" identifier="quadreq-no-abc" description="solve a quadratic equation without abc-formula" status="Alpha"/>
     <elem domain="math" identifier="quadreq-with-approx" description="solve a quadratic equation with approximation" status="Alpha"/>
     <elem domain="math" identifier="quadrineq" description="solve a quadratic inequation" status="Provisional"/>
-    <elem domain="math" identifier="rational" description="simplify expression (rational numbers)" status="Alpha"/>
     <elem domain="math" identifier="simplifypower" description="simplify expression (powers)" status="Provisional"/>
-    <elem domain="regexp" identifier="normalform" description="Rewrite a regular expression" status="Experimental"/>
     <elem domain="relationalg" identifier="cnf" description="To conjunctive normal form" status="Alpha"/>
   </list>
 </reply>

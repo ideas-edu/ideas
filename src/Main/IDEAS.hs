@@ -33,7 +33,7 @@ import qualified Domain.Math.Polynomial.BrokenExercises as Math
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.Power.Exercises as Math
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
-import qualified Domain.RegularExpr.Exercises as RE
+-- import qualified Domain.RegularExpr.Exercises as RE
 import qualified Domain.RelationAlgebra as RA
 
 useIDEAS :: DomainReasoner a -> IO a
@@ -71,12 +71,12 @@ packages =
         , fromOpenMath    = (>>= fromTerm) . omobjToTerm
         , getExerciseText = Just logicText
         }
-   , somePackage Logic.proofExercise
+   -- , somePackage Logic.proofExercise
    , somePackage RA.cnfExercise
      -- basic math
-   , someTermPackage Math.naturalExercise
-   , someTermPackage Math.integerExercise
-   , someTermPackage Math.rationalExercise
+   -- , someTermPackage Math.naturalExercise
+   -- , someTermPackage Math.integerExercise
+   -- , someTermPackage Math.rationalExercise
    , someTermPackage Math.fractionExercise
    , someTermPackage Math.coverUpExercise
    , someTermPackage Math.linearExercise
@@ -89,7 +89,7 @@ packages =
    , someTermPackage Math.ineqHigherDegreeExercise
    , someTermPackage Math.brokenEquationExercise
    , someTermPackage Math.normalizeBrokenExercise
-   , someTermPackage Math.divisionBrokenExercise
+   -- , someTermPackage Math.divisionBrokenExercise
    , someTermPackage Math.quadraticNoABCExercise
    , someTermPackage Math.quadraticWithApproximation
    , someTermPackage Math.derivativeExercise
@@ -103,7 +103,7 @@ packages =
    , someTermPackage LA.gaussianElimExercise
    , someTermPackage LA.systemWithMatrixExercise
      -- regular expressions
-   , somePackage RE.regexpExercise
+   -- , somePackage RE.regexpExercise
    ]
    
 logicText :: ExerciseText Logic.SLogic

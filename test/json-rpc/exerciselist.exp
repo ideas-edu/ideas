@@ -37,12 +37,6 @@
          "status": "Stable"
       },
       {
-         "domain": "logic",
-         "identifier": "proof",
-         "description": "Prove two propositions equivalent",
-         "status": "Experimental"
-      },
-      {
          "domain": "math",
          "identifier": "brokeneq",
          "description": "solve a broken equation (with a variable in a divisor)",
@@ -65,12 +59,6 @@
          "identifier": "derivative",
          "description": "Derivative",
          "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "divbroken",
-         "description": "divide a broken fraction ('uitdelen')",
-         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -98,12 +86,6 @@
       },
       {
          "domain": "math",
-         "identifier": "integer",
-         "description": "simplify expression (integers)",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
          "identifier": "lineq",
          "description": "solve a linear equation",
          "status": "Provisional"
@@ -119,12 +101,6 @@
          "identifier": "linineq",
          "description": "solve a linear inequation",
          "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "natural",
-         "description": "simplify expression (natural numbers)",
-         "status": "Alpha"
       },
       {
          "domain": "math",
@@ -170,21 +146,9 @@
       },
       {
          "domain": "math",
-         "identifier": "rational",
-         "description": "simplify expression (rational numbers)",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
          "identifier": "simplifypower",
          "description": "simplify expression (powers)",
          "status": "Provisional"
-      },
-      {
-         "domain": "regexp",
-         "identifier": "normalform",
-         "description": "Rewrite a regular expression",
-         "status": "Experimental"
       },
       {
          "domain": "relationalg",
@@ -195,5 +159,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.2 (0)"
+   "version": "0.6.3 (0)"
 }

@@ -3,7 +3,7 @@ all: binaries documentation
 
 SRCDIR = src
 
-VERSION = 0.6.2
+VERSION = 0.6.3
 
 include Makefile.incl
 

@@ -130,8 +130,6 @@ buggyDistrTimesForget = describe "Incorrect distribution of times over plus: \
             n = length xs
          _ -> [0]
 
--- The use of cleanUpExpr is a quick fix; this function is more aggressive
--- than cleanUpSimple, used in for instance math.lineq
 buggyDistrTimesSign :: Rule Expr
 buggyDistrTimesSign = describe "Incorrect distribution of times over plus: \
    \changing sign of addition." $
@@ -147,7 +145,7 @@ buggyDistrTimesTooMany = describe "Strange distribution of times over plus: \
    \a*(b+c)+d, where 'a' is also multiplied to d." $ 
    buggyRule $ makeSimpleRuleList "buggy distr times too many" $ \expr -> do
       ((a, (b, c)), d) <- matchM (plusView >>> first (timesView >>> second plusView)) expr
-      [cleanUpExpr $ a*b+a*c+a*d]
+      [cleanUpExpr2 $ a*b+a*c+a*d]
 
 buggyDistrTimesDenom :: Rule Expr
 buggyDistrTimesDenom = describe "Incorrct distribution of times over plus: \
@@ -176,7 +174,7 @@ buggyCancelMinus = describe "Cancel terms on both sides, but terms have \
       xs <- matchM sumView lhs
       ys <- matchM sumView rhs  
       [ eq | (i, x) <- zip [0..] xs, (j, y) <- zip [0..] ys
-           , cleanUpExpr x == cleanUpExpr (-y) 
+           , cleanUpExpr2 x == cleanUpExpr2 (-y) 
            , let f n as = build sumView $ take n as ++ drop (n+1) as
            , let eq = f i xs :==: f j ys
            ]
@@ -245,7 +243,7 @@ multiplyForgetOne r = makeTransList $ \(lhs :==: rhs) -> do
 
 -- Redundant function; should come from exercise
 myEq :: Equation Expr -> Equation Expr -> Bool
-myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr)
+myEq = let eqR f x y = fmap f x == fmap f y in eqR (acExpr . cleanUpExpr2)
 
 ---------------------------------------------------------
 -- Quadratic and Higher-Degree Polynomials

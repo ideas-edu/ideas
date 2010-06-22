@@ -148,7 +148,6 @@ notInLowerDiv s = fix $ \this -> s <|> once this
 onlyInLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyInLowerDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
  where
-   once s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown2" (down 2)
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    safeUp a     = maybe (Just a) Just (up a)
@@ -156,7 +155,6 @@ onlyInLowerDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
 onlyInUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyInUpperDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
  where
-   once s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown1" (down 1)
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    safeUp a     = maybe (Just a) Just (up a)

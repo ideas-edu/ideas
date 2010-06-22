@@ -201,7 +201,7 @@ cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
 cleanUpLogicRelation p = 
    case match orView p of
       Just xs -> build orView (cleanUpRelation xs)
-      Nothing -> fmap (fmap cleanUpExpr) p
+      Nothing -> fmap (fmap cleanUpExpr2) p
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = makeSimpleRule "turn into equation" $ withCM $ \r -> do

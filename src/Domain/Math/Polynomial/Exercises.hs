@@ -44,7 +44,7 @@ linearExercise = makeExercise
                        newId "math.lineq"
    , status       = Provisional
    , parser       = parseExprWith (pEquation pExpr)
-   , similarity   = eqRelation (acExpr . cleanUpExpr)
+   , similarity   = eqRelation (acExpr . cleanUpExpr2)
    , equivalence  = viewEquivalent linearEquationView
    , isSuitable   = (`belongsTo` linearEquationView)
    , isReady      = solvedRelationWith $ \a -> 
@@ -148,7 +148,7 @@ findFactorsExercise = makeExercise
                        newId "math.factor"
    , status       = Provisional
    , parser       = parseExprWith pExpr
-   , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
+   , similarity   = \a b -> cleanUpExpr2 a == cleanUpExpr2 b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = findFactorsStrategy
@@ -179,7 +179,7 @@ linearFactorsView = productView >>> second (listView myLinearView)
 equivalentApprox :: OrList (Relation Expr) -> OrList (Relation Expr) -> Bool
 equivalentApprox a b
    | hasApprox a || hasApprox b = 
-        let norm = liftM ( normOrList cleanUpExpr 
+        let norm = liftM ( normOrList cleanUpExpr2 
                          . fmap toApprox 
                          . simplify quadraticEquationsView
                          ) . switch . fmap toEq

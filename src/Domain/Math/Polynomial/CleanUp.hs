@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.CleanUp 
-   ( cleanUp, cleanUpRelation, cleanUpExpr, cleanUpExpr2
+   ( cleanUp, cleanUpRelation, cleanUpExpr2
    , cleanUpSimple, collectLikeTerms
    , normalizeSum, normalizeProduct, acExpr
    ) where
@@ -127,7 +127,7 @@ cleanUpRelation :: OrList (Relation Expr) -> OrList (Relation Expr)
 cleanUpRelation = simplifyWith cleanUp (switchView equationView)
 
 cleanUp :: OrList (Equation Expr) -> OrList (Equation Expr)
-cleanUp = idempotent . join . fmap (keepEquation . fmap cleanUpExpr)
+cleanUp = idempotent . join . fmap (keepEquation . fmap cleanUpBU2)
 
 keepEquation :: Equation Expr -> OrList (Equation Expr)
 keepEquation eq@(a :==: b)
@@ -146,16 +146,7 @@ keepEquation eq@(a :==: b)
 
 -- also simplify square roots
 cleanUpExpr2 :: Expr -> Expr
-cleanUpExpr2 = cleanUpExpr . transform (simplify (squareRootViewWith rationalView))
-
-cleanUpExpr :: Expr -> Expr
-cleanUpExpr = cleanUpBU2 {- e = if a1==a2 && a2==a3 && a3==a3 && a3==a4 then a1 else error $ "\n\n\n" ++ unlines (map show
-   [e, a1, a2, a3, a4])
- where
-   a1 = cleanUpFix e
-   a2 = cleanUpBU e
-   a3 = cleanUpBU2 e
-   a4 = cleanUpLattice e -}
+cleanUpExpr2 = cleanUpBU2 . transform (simplify (squareRootViewWith rationalView))
 
 -- normalize expr with associativity and commutative rules for + and *
 acExpr :: Expr -> Expr

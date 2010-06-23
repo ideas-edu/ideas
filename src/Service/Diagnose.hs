@@ -41,6 +41,16 @@ data Diagnosis a
    | Detour         Bool (State a) (RuleID a)
    | Correct        Bool (State a)
 
+instance Show (Diagnosis a) where
+   show diagnosis = 
+      case diagnosis of
+         Buggy r        -> "Buggy rule " ++ show (show r)
+         NotEquivalent  -> "Unknown mistake" 
+         Similar _ _    -> "Very similar"
+         Expected _ _ r -> "Rule " ++ show (show r) ++ ", expected by strategy"
+         Detour _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
+         Correct _ _    -> "Unknown step"
+
 ----------------------------------------------------------------
 -- The diagnose service
 

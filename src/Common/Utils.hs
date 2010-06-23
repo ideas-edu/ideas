@@ -95,6 +95,14 @@ splitsWithElem c s =
       Just (xs, ys) -> xs : splitsWithElem c ys
       Nothing       -> [s]
 
+splitAtSequence :: Eq a => [a] -> [a] -> Maybe ([a], [a])
+splitAtSequence cs = f []
+ where
+   f _   [] = Nothing
+   f acc list@(x:xs)
+      | cs `isPrefixOf` list = Just (reverse acc, drop (length cs) list)
+      | otherwise            = f (x:acc) xs
+
 -- | Use a fixed standard "random" number generator. This generator is
 -- accessible by calling System.Random.getStdGen
 useFixedStdGen :: IO ()

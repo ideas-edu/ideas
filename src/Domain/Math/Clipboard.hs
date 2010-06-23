@@ -18,6 +18,7 @@ module Domain.Math.Clipboard
      -- generalized interface
    , addToClipboardG, addListToClipboardG
    , lookupClipboardG, lookupListClipboardG
+   , maybeOnClipboardG
    ) where
 
 import Common.Context
@@ -104,6 +105,11 @@ lookupClipboardG s = do
    m    <- readExprVar clipboard
    expr <- maybeCM (M.lookup (Key s) m)
    fromExpr expr
-   
+
+maybeOnClipboardG :: IsTerm a => String -> ContextMonad (Maybe a)
+maybeOnClipboardG s = do 
+   m <- readExprVar clipboard
+   return (M.lookup (Key s) m >>= fromExpr)
+
 lookupListClipboardG :: IsTerm a => [String] -> ContextMonad [a]
 lookupListClipboardG = mapM lookupClipboardG

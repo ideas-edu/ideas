@@ -79,6 +79,9 @@ ruleImagePath ex = "exercises/" ++ f (qualification ex) ++ "/" ++ f (description
 exercisePagePath :: Id -> String
 exercisePagePath a = "exercises/" ++ qualification a ++ "/"
 
+diagnosisExampleFile :: Id -> String
+diagnosisExampleFile a = exercisePagePath a ++ unqualified a ++ ".txt"
+
 servicePagePath :: String
 servicePagePath = "services/" 
 
@@ -122,6 +125,12 @@ exerciseDerivationsFile a =
    exercisePagePath a
    ++ filter (not . isSpace) (unqualified a)
    ++ "-derivations.html"
+
+exerciseDiagnosisFile :: Id -> String
+exerciseDiagnosisFile a = 
+   exercisePagePath a
+   ++ filter (not . isSpace) (unqualified a)
+   ++ "-diagnosis.html"
 
 servicePageFile :: Service -> String
 servicePageFile srv = servicePagePath ++ showId srv ++ ".html"

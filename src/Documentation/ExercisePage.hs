@@ -14,36 +14,47 @@ module Documentation.ExercisePage (makeExercisePage) where
 import Common.Exercise
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
-import Service.ExercisePackage
-import Service.StrategyInfo
-import Service.DomainReasoner
-import Service.State
-import Service.BasicServices
+import Common.Utils (commaList, Some(..), splitAtSequence)
 import Control.Monad
+import Data.Char
 import Data.List
-import Common.Utils (commaList, Some(..))
 import Data.Maybe
-import System.Random
-import qualified Data.Map as M
-import Service.RulesInfo (rewriteRuleToFMP, collectExamples)
-import Text.HTML
-import Text.OpenMath.Object
-import Text.OpenMath.FMP
-import qualified Text.XML as XML
 import Documentation.DefaultPage
+import Service.BasicServices
+import Service.Diagnose
+import Service.DomainReasoner
+import Service.ExercisePackage
+import Service.RulesInfo (rewriteRuleToFMP, collectExamples)
+import Service.State
+import Service.StrategyInfo
+import System.Directory
+import System.Random
+import Text.HTML
+import Text.OpenMath.FMP
+import Text.OpenMath.Object
+import qualified Data.Map as M
+import qualified Text.XML as XML
 
 makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
 makeExercisePage dir pkg = do
-   let ex   = exercise pkg
-       make = generatePageAt 2 dir . ($ (getId pkg))
-   make exercisePageFile     (exercisePage pkg)
+   let ex     = exercise pkg
+       make   = generatePageAt 2 dir . ($ (getId pkg))
+       exFile = dir ++ "/" ++ diagnosisExampleFile (getId ex)
+
+   exampleFileExists <- liftIO (doesFileExist exFile)
+
+   make exercisePageFile     (exercisePage exampleFileExists pkg)
    make exerciseStrategyFile (strategyPage ex)
    make exerciseRulesFile    (rulesPage ex)
    unless (null (examples (exercise pkg))) $
        make exerciseDerivationsFile (derivationsPage ex)
+   when (exampleFileExists) $ do
+      xs <- liftIO (readFile exFile)
+      make exerciseDiagnosisFile (diagnosisPage xs pkg)
+    `catchError` \_ -> return ()
 
-exercisePage :: ExercisePackage a -> HTMLBuilder
-exercisePage pkg = do
+exercisePage :: Bool -> ExercisePackage a -> HTMLBuilder
+exercisePage exampleFileExists pkg = do
    h1 (description ex)
    
    h2 "1. General information"
@@ -87,10 +98,14 @@ exercisePage pkg = do
            ]
          : map f (ruleset ex)
          )
-   para $ link (up 2 ++ exerciseRulesFile exid) $
-      text "See rule details"
-   
-   
+   para $ do
+      link (up 2 ++ exerciseRulesFile exid) $
+         text "See rule details"
+      when exampleFileExists $ do
+         link (up 2 ++ exerciseDiagnosisFile exid) $ do
+            br
+            text "See diagnosis examples"
+
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) pkg 5
    preText (showDerivation ex (term state))
@@ -114,7 +129,7 @@ strategyPage ex = do
          : map f (strategyLocations (strategy ex))
          )
  where
-   title = "Strategy for " ++ show (getId ex)
+   title = "Strategy for " ++ showId ex
 
 rulesPage :: Exercise a -> HTMLBuilder
 rulesPage ex = do
@@ -157,7 +172,7 @@ rulesPage ex = do
             highlightXML False $ XML.makeXML "FMP" $ 
                XML.builder (omobj2xml (toObject fmp))
  where
-   title = "Strategy for " ++ show (getId ex)
+   title = "Rules for " ++ showId ex
    exampleMap = collectExamples ex
 
 derivationsPage :: Exercise a -> HTMLBuilder
@@ -173,6 +188,35 @@ derivationsPage ex = do
    errs = let p s =  "<<no derivation>>" `isSuffixOf` s 
                   || "<<not ready>>" `isSuffixOf` s
           in length $ filter p ds
+
+diagnosisPage :: String -> ExercisePackage a -> HTMLBuilder
+diagnosisPage xs pkg = do
+   h1 ("Diagnosis examples for " ++ showId pkg)
+   forM_ (zip [1..] (mapMaybe f (lines xs))) $ \(i, (t0, t1, expl)) -> do 
+      h2 (show i ++ ".")
+      preText (t0 ++ "\n  =>\n" ++ t1)
+      para $ do
+         unless (null expl) $ do 
+            bold $ text "Description:"
+            space
+            text expl
+            br
+            bold $ text "Diagnosis:"
+            space
+            text (getDiagnosis t0 t1)
+ where
+   ex  = exercise pkg
+   f a = do 
+      (x, b) <- splitAtSequence "==>" a
+      let (y, z) = fromMaybe (b, "") (splitAtSequence ":::" b)
+          trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+      return (trim x, trim y, trim z)
+      
+   getDiagnosis t0 t1 = 
+      case (parser ex t0, parser ex t1) of
+         (Left msg, _) -> "parse error (before): " ++ msg
+         (_, Left msg) -> "parse error (afterr): " ++ msg
+         (Right a, Right b) -> show (diagnose (emptyState pkg a) b)
    
 errorLine :: HTMLBuilder -> HTMLBuilder
 errorLine b = XML.element "font" $ do

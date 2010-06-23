@@ -14,36 +14,38 @@ module Domain.Math.Polynomial.BrokenExercises
    , normalizeBrokenExercise, divisionBrokenExercise
    ) where
 
-import Prelude hiding (repeat, until, (^))
+import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.Navigator
+import Common.Rewriting.Term (Term)
 import Common.Strategy hiding (not)
 import Common.TestSuite
 import Common.Transformation
-import Common.Classes
-import Common.Rewriting.Term (Term)
 import Common.Uniplate hiding (somewhere)
 import Common.View
 import Control.Monad
-import Domain.Math.Expr
-import Domain.Math.Data.Relation
+import Data.List hiding (repeat)
+import Data.Maybe
+import Data.Ratio
+import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
-import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Polynomial.Strategies
-import Domain.Math.Polynomial.Exercises (eqOrList)
-import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.Rules
-import Domain.Math.Power.Views
+import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Data.Ratio
-import Data.List hiding (repeat)
-import Data.Maybe
-import Test.QuickCheck hiding (label)
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Exercises
+import Domain.Math.Polynomial.Exercises (eqOrList)
+import Domain.Math.Polynomial.Rules
+import Domain.Math.Polynomial.Strategies
+import Domain.Math.Polynomial.Views
+import Domain.Math.Power.Views
+import Prelude hiding (repeat, until, (^))
+import Test.QuickCheck hiding (label)
+import qualified Domain.Logic.Formula as Logic
 
 go  = checkExercise brokenEquationExercise
 go2 = checkExercise normalizeBrokenExercise
@@ -96,12 +98,12 @@ brokenEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr2))) $
        brokenFormToPoly <*> higherDegreeStrategyG
  where
    brokenFormToPoly = label "broken form to polynomial" $ until allArePoly $
-      (  use divisionIsZero <|> use divisionIsOne 
-     <|> use sameDivisor <|> use sameDividend
+      (  useC divisionIsZero <|> useC divisionIsOne 
+     <|> useC sameDivisor <|> useC sameDividend
      <|> use coverUpPlus <|> use coverUpMinusLeft <|> use coverUpMinusRight
      <|> use coverUpNegate
       ) |>    
-      (  use crossMultiply <|> use multiplyOneDiv  )
+      (  useC crossMultiply <|> useC multiplyOneDiv  )
 
 allArePoly :: Context (OrList (Equation Expr)) -> Bool
 allArePoly = 
@@ -118,8 +120,8 @@ normalizeBrokenStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
          use fractionPlus <|> use fractionScale <|> use turnIntoFraction
    phaseSimplerDiv = label "Simplify division" $
       repeat $
-         (onlyInLowerDiv findFactorsStrategyG <|> somewhere (use cancelTermsDiv)
-            <|> commit (onlyInUpperDiv (repeat findFactorsStrategyG) <*> use cancelTermsDiv))
+         (onlyInLowerDiv findFactorsStrategyG <|> somewhere (useC cancelTermsDiv)
+            <|> commit (onlyInUpperDiv (repeat findFactorsStrategyG) <*> useC cancelTermsDiv))
          |> ( somewhere (use merge) 
          <|> multi (showId distributeTimes) (notInLowerDiv (use distributeTimes))
           )
@@ -160,50 +162,58 @@ onlyInUpperDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
    safeUp a     = maybe (Just a) Just (up a)
 
 -- a/b = 0  iff  a=0 (and b/=0)
-divisionIsZero :: Rule (Equation Expr)
-divisionIsZero = makeSimpleRule "divisionIsZero" $ \(lhs :==: rhs) -> do
+divisionIsZero :: Rule (Context (Equation Expr))
+divisionIsZero = makeSimpleRule "divisionIsZero" $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
-   (a, _) <- match divView lhs
+   (a, b) <- matchM divView lhs
+   conditionNotZero b
    return (a :==: 0)
    
 -- a/b = 1  iff  a=b (and b/=0)
-divisionIsOne :: Rule (Equation Expr)
-divisionIsOne = makeSimpleRule "divisionIsOne" $ \(lhs :==: rhs) -> do
+divisionIsOne :: Rule (Context (Equation Expr))
+divisionIsOne = makeSimpleRule "divisionIsOne" $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 1)
-   (a, b) <- match divView lhs
+   (a, b) <- matchM divView lhs
+   conditionNotZero b
    return (a :==: b)
 
 -- a/c = b/c  iff  a=b (and c/=0)
-sameDivisor :: Rule (Equation Expr)
-sameDivisor = makeSimpleRule "sameDivisor" $ \(lhs :==: rhs) -> do
-   (a, c1) <- match divView lhs
-   (b, c2) <- match divView rhs
+sameDivisor :: Rule (Context (Equation Expr))
+sameDivisor = makeSimpleRule "sameDivisor" $ withCM $ \(lhs :==: rhs) -> do
+   (a, c1) <- matchM divView lhs
+   (b, c2) <- matchM divView rhs
    guard (c1==c2)
+   conditionNotZero c1
    return (a :==: b)
    
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
-sameDividend :: Rule (OrList (Equation Expr))
-sameDividend = makeSimpleRule "sameDividend" $ oneDisjunct $ \(lhs :==: rhs) -> do
-   (a1, b) <- match divView lhs
-   (a2, c) <- match divView rhs
+sameDividend :: Rule (Context (OrList (Equation Expr)))
+sameDividend = makeSimpleRule "sameDividend" $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+   (a1, b) <- matchM divView lhs
+   (a2, c) <- matchM divView rhs
    guard (a1==a2)
+   conditionNotZero b
+   conditionNotZero c
    return $ orList [a1 :==: 0, b :==: c]
    
--- a/b = c/d  iff  a*d = b*c
-crossMultiply :: Rule (Equation Expr)
-crossMultiply = makeSimpleRule "crossMultiply" $ \(lhs :==: rhs) -> do
-   (a, b) <- match divView lhs
-   (c, d) <- match divView rhs
+-- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
+crossMultiply :: Rule (Context (Equation Expr))
+crossMultiply = makeSimpleRule "crossMultiply" $ withCM $ \(lhs :==: rhs) -> do
+   (a, b) <- matchM divView lhs
+   (c, d) <- matchM divView rhs
+   conditionNotZero b
+   conditionNotZero d
    return (a*d :==: b*c)
    
--- a/b = c  iff  a = b*c
-multiplyOneDiv :: Rule (Equation Expr)
-multiplyOneDiv = makeSimpleRuleList "multiplyOneDiv" $ \(lhs :==: rhs) -> 
-   f (:==:) lhs rhs ++ f (flip (:==:)) rhs lhs
+-- a/b = c  iff  a = b*c  (and b/=0)
+multiplyOneDiv :: Rule (Context (Equation Expr))
+multiplyOneDiv = makeSimpleRule "multiplyOneDiv" $ withCM $ \(lhs :==: rhs) -> 
+   f (:==:) lhs rhs `mplus` f (flip (:==:)) rhs lhs
  where
    f eq ab c = do 
       guard (not (c `belongsTo` divView))
       (a, b) <- matchM divView ab
+      conditionNotZero b
       return (a `eq` (b*c))
       
 -- a/c + b/c = a+b/c   (also see Numeric.Rules)
@@ -217,12 +227,13 @@ fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
 
 -- ab/ac  =>  b/c  (if a/=0)
 -- Note that the common term can be squared (in one of the parts)
-cancelTermsDiv :: Rule Expr
-cancelTermsDiv = liftRule myView $ 
-   makeSimpleRule "cancel terms div" $ \((b, xs), (c, ys)) -> do
-      let (ps, qs) = rec (map f xs) (map f ys)
-      guard (sum (map snd ps) < sum (map (snd . f) xs))
-      return ((b, map g ps), (c, map g qs))
+cancelTermsDiv :: Rule (Context Expr)
+cancelTermsDiv = makeSimpleRule "cancel terms div" $ withCM $ \expr -> do
+   ((b, xs), (c, ys)) <- matchM myView expr
+   let (ps, qs, rs) = rec (map f xs) (map f ys)
+   guard (not (null rs))
+   conditionNotZero (build productView (False, map g rs))
+   return $ build myView ((b, map g ps), (c, map g qs))
  where
    myView = divView >>> (productView *** productView)
    powInt = simplePowerView >>> second integerView
@@ -236,11 +247,12 @@ cancelTermsDiv = liftRule myView $
                  rec (pair:xs) (ys1++ys2)
             | otherwise ->
                  let i = n `min` m 
-                 in rec ((a, n-i):xs) (ys1++(b,m-i):ys2)
+                     (ps,qs,rs) = rec ((a, n-i):xs) (ys1++(b,m-i):ys2)
+                 in (ps, qs, (a,i):rs)
          _ -> 
-            let (ps,qs) = rec xs ys 
-            in (pair:ps, qs)
-   rec xs ys = (xs, ys)
+            let (ps,qs,rs) = rec xs ys 
+            in (pair:ps, qs,rs)
+   rec xs ys = (xs, ys, [])
 
 fractionScale :: Rule Expr
 fractionScale = liftRule myView $ 
@@ -386,3 +398,12 @@ testLCM = suite "lcmExpr" $ do
    x ~= y = let f = simplifyWith (second sort) powerProductView 
             in f x == f y
    absExpr = simplifyWith (first (const False)) productView
+   
+condition :: Relation Expr -> ContextMonad ()
+condition rel = return () {- do
+   mp <- maybeOnClipboardG "condition"
+   let f = maybe id (Logic.:&&:) mp
+   addToClipboardG "condition" (f (Logic.Var rel)) -}
+
+conditionNotZero :: Expr -> ContextMonad ()
+conditionNotZero e = condition (e ./=. 0)

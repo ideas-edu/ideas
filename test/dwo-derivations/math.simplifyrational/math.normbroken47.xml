@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
+  <state>
+    <expr>
+      (x^2-7*x+12)/(x^2+x-20)
+    </expr>
+  </state>
+</request>

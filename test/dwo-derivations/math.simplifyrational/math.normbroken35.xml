@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
+  <state>
+    <expr>
+      (x+3)/(x-1)+(x+2)/(x-4)
+    </expr>
+  </state>
+</request>

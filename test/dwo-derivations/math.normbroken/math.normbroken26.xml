@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.normbroken" encoding="string">
-  <state>
-    <expr>
-      3/(x-1)+2/(x+3)
-    </expr>
-  </state>
-</request>

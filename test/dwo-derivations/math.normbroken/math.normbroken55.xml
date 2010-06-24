@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.normbroken" encoding="string">
-  <state>
-    <expr>
-      (x^2-9)/(x^2+6*x+9)
-    </expr>
-  </state>
-</request>

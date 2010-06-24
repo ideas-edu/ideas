@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.normbroken" encoding="string">
-  <state>
-    <expr>
-      9/(5*a)-1/(2*a)
-    </expr>
-  </state>
-</request>

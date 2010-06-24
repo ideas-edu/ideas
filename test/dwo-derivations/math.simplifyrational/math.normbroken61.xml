@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
+  <state>
+    <expr>
+      (x^3+3*x^2+2*x)/(x^2+4*x+4)
+    </expr>
+  </state>
+</request>

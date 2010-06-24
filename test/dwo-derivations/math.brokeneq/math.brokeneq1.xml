@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.brokeneq" encoding="string">
-  <state>
-    <expr>
-      (2*x^2-10)/(x^2+3) == 0
-    </expr>
-  </state>
-</request>

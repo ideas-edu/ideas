@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.brokeneq" encoding="string">
-  <state>
-    <expr>
-      (x+1)/(x+2) == (7*x+1)/(2*x-4)
-    </expr>
-  </state>
-</request>

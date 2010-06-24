@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.normbroken" encoding="string">
-  <state>
-    <expr>
-      (p^2-4)/(4*p^2+8*p)
-    </expr>
-  </state>
-</request>

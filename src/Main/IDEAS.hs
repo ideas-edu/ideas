@@ -29,7 +29,7 @@ import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Numeric.Tests as MathNum
 import qualified Domain.Math.Polynomial.Exercises as Math
 import qualified Domain.Math.Polynomial.IneqExercises as Math
-import qualified Domain.Math.Polynomial.BrokenExercises as Math
+import qualified Domain.Math.Polynomial.RationalExercises as Math
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.Power.Exercises as Math
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
@@ -87,8 +87,8 @@ packages =
    , someTermPackage Math.ineqLinearExercise
    , someTermPackage Math.ineqQuadraticExercise
    , someTermPackage Math.ineqHigherDegreeExercise
-   , someTermPackage Math.brokenEquationExercise
-   , someTermPackage Math.normalizeBrokenExercise
+   , someTermPackage Math.rationalEquationExercise
+   , someTermPackage Math.simplifyRationalExercise
    -- , someTermPackage Math.divisionBrokenExercise
    , someTermPackage Math.quadraticNoABCExercise
    , someTermPackage Math.quadraticWithApproximation

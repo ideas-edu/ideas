@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.normbroken" encoding="string">
-  <state>
-    <expr>
-      (a^3+7*a^2+10*a)/(a^2-a-6)
-    </expr>
-  </state>
-</request>

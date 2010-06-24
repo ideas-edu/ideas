@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.rationaleq" encoding="string">
+  <state>
+    <expr>
+      (x^2+6)/(x-3) == 5*x/(x-3)
+    </expr>
+  </state>
+</request>

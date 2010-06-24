@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.brokeneq" encoding="string">
-  <state>
-    <expr>
-      (-3)/(x-5) == (x+3)/(x+1)
-    </expr>
-  </state>
-</request>

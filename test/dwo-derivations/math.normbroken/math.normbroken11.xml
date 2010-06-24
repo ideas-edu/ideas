@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.normbroken" encoding="string">
-  <state>
-    <expr>
-      3/(x^2*y)-5/(2*x*y)
-    </expr>
-  </state>
-</request>

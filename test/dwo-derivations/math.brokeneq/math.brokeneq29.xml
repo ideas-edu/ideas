@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.brokeneq" encoding="string">
-  <state>
-    <expr>
-      (x+5)/(2*x)+2 == 5
-    </expr>
-  </state>
-</request>

@@ -38,12 +38,6 @@
       },
       {
          "domain": "math",
-         "identifier": "brokeneq",
-         "description": "solve a broken equation (with a variable in a divisor)",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
          "identifier": "calcpower",
          "description": "simplify expression (powers)",
          "status": "Provisional"
@@ -110,12 +104,6 @@
       },
       {
          "domain": "math",
-         "identifier": "normbroken",
-         "description": "normalize a broken expression (with a variable in a divisor)",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
          "identifier": "powerof",
          "description": "write as a power of a",
          "status": "Provisional"
@@ -146,9 +134,21 @@
       },
       {
          "domain": "math",
+         "identifier": "rationaleq",
+         "description": "solve a rational equation (with a variable in a divisor)",
+         "status": "Alpha"
+      },
+      {
+         "domain": "math",
          "identifier": "simplifypower",
          "description": "simplify expression (powers)",
          "status": "Provisional"
+      },
+      {
+         "domain": "math",
+         "identifier": "simplifyrational",
+         "description": "simplify a rational expression (with a variable in a divisor)",
+         "status": "Alpha"
       },
       {
          "domain": "relationalg",

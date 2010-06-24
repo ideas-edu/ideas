@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="math.simplifyrational" encoding="string">
+  <state>
+    <expr>
+      3+1/(2*x)
+    </expr>
+  </state>
+</request>

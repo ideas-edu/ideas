@@ -1,7 +1,0 @@
-<request service="derivation" exerciseid="math.brokeneq" encoding="string">
-  <state>
-    <expr>
-      (7*x^2-21)/(2*x^2-5) == 0
-    </expr>
-  </state>
-</request>

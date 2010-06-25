@@ -147,8 +147,4 @@ topDown s = fix $ \this -> s |> once this
 -- | Search for a suitable location in the term to apply the strategy using a
 -- bottom-up approach
 bottomUp :: IsStrategy f => f (Context a) -> Strategy (Context a)
-bottomUp s = fix $ \this -> once this <|> (not (once (bottomUp s)) <*> s)
-
-{- The ideal implementation does not yet work: there appears to be a strange
-   interplay between the fixpoint operator (with variables) and the not combinator
-   > bottomUp s = fix $ \this -> once this |> s -}
+bottomUp s = fix $ \this -> once this |> s

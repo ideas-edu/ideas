@@ -18,10 +18,10 @@ module Common.Strategy.Grammar
    ( -- * Abstract data type
      Grammar
      -- * Smart constructor functions
-   , (<*>), (<|>), var, rec, fix, many, succeed, fail, symbol
+   , (<*>), (<|>), var, rec, fix, succeed, fail, symbol
      -- * Elementary operations
    , empty, firsts 
-   -- , nonempty 
+   -- , nonempty, many
    -- Membership and generated language
    --, member, language, languageBF
    -- Additional functions

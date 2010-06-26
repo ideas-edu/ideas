@@ -50,7 +50,7 @@ makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix is ls = rec [] is start
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
-   start  = strategyTree biasT (mkCore ls)
+   start  = strategyTree stepTranslation (mkCore ls)
  
    rec acc [] t = return (P acc t)
    rec acc (n:ns) t =
@@ -58,8 +58,8 @@ makePrefix is ls = rec [] is start
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> fail ("invalid prefix: " ++ show is)
 
-   biasT :: Translation (StrategyLocation, LabelInfo) a (Step a)
-   biasT = (forLabel, Step)
+   stepTranslation :: Translation (StrategyLocation, LabelInfo) a (Step a)
+   stepTranslation = (forLabel, Step)
    
    forLabel (loc, i) = Around (Begin loc i) (End loc i)
       

@@ -112,7 +112,8 @@ toGrammar (f, g) = recWith []
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
          a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
-         Many a    -> Grammar.many (rec a)
+         Many a    -> rec (coreMany a)
+                      --Grammar.many (rec a)
          Repeat a  -> rec (Many a :*: Not (noLabels a))
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
@@ -143,7 +144,17 @@ toGrammar (f, g) = recWith []
 
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)
-   
+
+coreMany :: Core l a -> Core l a
+coreMany p = Rec n (Succeed :|: (p :*: Var n))
+ where n = nextVar p
+
+nextVar :: Core l a -> Int
+nextVar p
+   | null xs   = 0
+   | otherwise = maximum xs + 1
+ where xs = coreVars p
+
 -----------------------------------------------------------------
 -- Utility functions
 
@@ -193,4 +204,8 @@ mapCoreM f g = rec
             return (Not c)
       
 coreVars :: Core l a -> [Int]
-coreVars s = [ n | Rec n _ <- universe s ] ++ [ n | Var n <- universe s ]
+coreVars core = 
+   case core of
+      Var n   -> [n]
+      Rec n a -> n : coreVars a
+      _       -> concatMap coreVars (children core)

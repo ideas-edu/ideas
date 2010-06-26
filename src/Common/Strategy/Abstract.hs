@@ -24,7 +24,6 @@ module Common.Strategy.Abstract
 
 import Common.Utils (commaList)
 import Common.Strategy.Core
-import Common.Strategy.BiasedChoice
 import Common.Classes
 import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
@@ -174,9 +173,7 @@ processLabelInfo getInfo = mapCore forLabel forRule
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-fullDerivationTree = makeBiasedTree p . processLabelInfo id . toCore . toStrategy 
- where 
-   p t = endpoint t || any isMajorRule (annotations t) || any p (subtrees t)
+fullDerivationTree = makeTree . processLabelInfo id . toCore . toStrategy 
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a

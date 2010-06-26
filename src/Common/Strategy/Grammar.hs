@@ -18,14 +18,15 @@ module Common.Strategy.Grammar
    ( -- * Abstract data type
      Grammar
      -- * Smart constructor functions
-   , (<*>), (<|>), (<||>), var, rec, fix, many, succeed, fail, symbol
+   , (<*>), (<|>), var, rec, fix, many, succeed, fail, symbol
      -- * Elementary operations
-   , empty, firsts, nonempty 
-     -- * Membership and generated language
-   , member, language, languageBF
-     -- * Additional functions
-   , collectSymbols, join, withIndex
-     -- * QuickCheck properties
+   , empty, firsts 
+   -- , nonempty 
+   -- Membership and generated language
+   --, member, language, languageBF
+   -- Additional functions
+   --, collectSymbols, join, withIndex
+   -- * QuickCheck properties
    , testMe
    ) where
 
@@ -42,12 +43,10 @@ import qualified Data.Set as S
 
 data Grammar a  =  Grammar a :*:  Grammar a 
                 |  Grammar a :|:  Grammar a 
-                |  Grammar a :||: Grammar a
                 |  Rec Int (Grammar a) 
                 |  Symbol a | Var Int | Succeed | Fail  deriving Show
 
 infixr 3 :|:, <|>
-infixr 4 :||:, <||>
 infixr 5 :*:, <*>
 
 ----------------------------------------------------------------------
@@ -82,15 +81,6 @@ s          <|> Fail    = s
 Succeed    <|> Succeed = Succeed
 s          <|> t       = s :|: t
 
--- | Smart constructor for parallel execution: removes fails and succeeds in the operands
-(<||>) :: Grammar a -> Grammar a -> Grammar a
-Succeed     <||> t        = t
-s           <||> Succeed  = s
-Fail        <||> _        = fail
-_           <||> Fail     = fail
-(s :||: t)  <||> u        = s :||: (t <||> u)
-s           <||> t        = s :||: t
-
 -- | For constructing a recursive grammar
 rec :: Int -> Grammar a -> Grammar a
 rec i s = if i `S.member` freeVars s then Rec i s else s
@@ -121,7 +111,6 @@ many s = rec i (succeed <|> (nonempty s <*> var i))
 empty :: Grammar a -> Bool
 empty (s :*: t)   =  empty s && empty t
 empty (s :|: t)   =  empty s || empty t
-empty (s :||: t)  =  empty s && empty t
 empty (Rec _ s)   =  empty s
 empty Succeed     =  True
 empty _           =  False
@@ -132,8 +121,6 @@ firsts :: Grammar a -> [(a, Grammar a)]
 firsts (s :*: t)   =  [ (a, s' <*> t) | (a, s') <- firsts s ] ++
                       (if empty s then firsts t else [])
 firsts (s :|: t)   =  firsts s ++ firsts t
-firsts (s :||: t)  =  [ (a, s'  <||>  t   ) | (a, s') <- firsts s ] ++
-                      [ (a, s   <||>  t'  ) | (a, t') <- firsts t]
 firsts (Rec i s)   =  firsts (replaceVar i (Rec i s) s)
 firsts (Symbol a)  =  [(a, succeed)]
 firsts _           =  []
@@ -187,9 +174,6 @@ withIndex = snd . rec 0
          p :|: q   -> let (n1, a) = rec n  p
                           (n2, b) = rec n1 q
                       in (n2, a :|: b)
-         p :||: q  -> let (n1, a) = rec n  p
-                          (n2, b) = rec n1 q
-                      in (n2, a :||: b)
          Rec i s   -> let (n1, a) = rec n s
                       in (n1, Rec i a)
          Var i     -> (n, Var i)
@@ -203,7 +187,6 @@ withIndex = snd . rec 0
 instance Uniplate (Grammar a) where
    uniplate (s :*: t)  = ([s,t], \[a,b] -> a :*: b)
    uniplate (s :|: t)  = ([s,t], \[a,b] -> a :|: b)
-   uniplate (s :||: t) = ([s,t], \[a,b] -> a :||: b)
    uniplate (Rec i s)  = ([s]  , \[a]   -> Rec i a)
    uniplate g          = ([]   , \[]    -> g)
 
@@ -232,7 +215,6 @@ replaceVar i new = rec
 mapSymbol :: (a -> Grammar b) -> Grammar a -> Grammar b
 mapSymbol f (p :*: q)   =  mapSymbol f p  <*>   mapSymbol f q
 mapSymbol f (p :|: q)   =  mapSymbol f p  <|>   mapSymbol f q
-mapSymbol f (p :||: q)  =  mapSymbol f p  <||>  mapSymbol f q
 mapSymbol f (Rec i p)   =  Rec i (mapSymbol f p) 
 mapSymbol _ (Var i)     =  Var i
 mapSymbol f (Symbol a)  =  f a
@@ -249,12 +231,11 @@ instance CoArbitrary a => CoArbitrary (Grammar a) where
       case grammar of
          p :*: q  -> variant 0 . coarbitrary p . coarbitrary q
          p :|: q  -> variant 1 . coarbitrary p . coarbitrary q
-         p :||: q -> variant 2 . coarbitrary p . coarbitrary q
-         Rec i p  -> variant 3 . coarbitrary i . coarbitrary p
-         Var i    -> variant 4 . coarbitrary i
-         Symbol a -> variant 5 . coarbitrary a
-         Succeed  -> variant 6
-         Fail     -> variant 7
+         Rec i p  -> variant 2 . coarbitrary i . coarbitrary p
+         Var i    -> variant 3 . coarbitrary i
+         Symbol a -> variant 4 . coarbitrary a
+         Succeed  -> variant 5
+         Fail     -> variant 6
 
 -- Use smart constructors here
 arbGrammar :: Arbitrary a => [Grammar a] -> Int -> Gen (Grammar a)
@@ -266,7 +247,6 @@ arbGrammar xs n
         [ arbGrammar xs 0
         , liftM2 (<*>)  rec rec
         , liftM2 (<|>)  rec rec
-        , liftM2 (<||>) rec rec
         , liftM many rec
 --         , liftM fix (promote (\x -> arbGrammar (x:xs) (n `div` 2)))
 {-        , do i <- oneof $ map return [1::Int ..5]
@@ -361,7 +341,3 @@ testMe = suite "Grammar combinators" $ do
    addProperty "associative and" $ associative (<*>)
    addProperty "unit and" $ unit (<*>) succeed
    addProperty "absorb and" $ absorb (<*>) fail
-   --addProperty "associative parallel" $ associative (<||>)
-   --addProperty "commutative parallel" $ commutative (<||>)
-   --addProperty "unit parallel" $ unit (<||>) succeed
-   --addProperty "absorb parallel" $ absorb (<||>) fail

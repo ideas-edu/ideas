@@ -24,7 +24,6 @@ import Common.Strategy.Core
 import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
-import Common.Strategy.BiasedChoice
 import Data.Maybe
 
 -----------------------------------------------------------
@@ -34,7 +33,7 @@ import Data.Maybe
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [(Int, Bias Step a)] (DerivationTree (Bias Step a) ())
+data Prefix a = P [(Int, Step a)] (DerivationTree (Step a) ())
 
 instance Show (Prefix a) where
    show (P xs _) = show (reverse (map fst xs))
@@ -50,8 +49,7 @@ emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
 makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix is ls = rec [] is start
  where
-   mkCore = placeBiasLabels . processLabelInfo snd
-          . addLocation . toCore . toStrategy
+   mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
    start  = strategyTree biasT (mkCore ls)
  
    rec acc [] t = return (P acc t)
@@ -60,11 +58,10 @@ makePrefix is ls = rec [] is start
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> fail ("invalid prefix: " ++ show is)
 
-   biasT :: Translation (Either (Bias Step a) (StrategyLocation, LabelInfo)) a (Bias Step a)
-   biasT = (forLabel, Normal . Step)
+   biasT :: Translation (StrategyLocation, LabelInfo) a (Step a)
+   biasT = (forLabel, Step)
    
-   forLabel (Left bias)      = Before bias
-   forLabel (Right (loc, i)) = Around (Normal (Begin loc i)) (Normal (End loc i))
+   forLabel (loc, i) = Around (Begin loc i) (End loc i)
       
 -- | The @Step@ data type can be used to inspect the structure of the strategy
 data Step a = Begin StrategyLocation LabelInfo
@@ -82,13 +79,9 @@ instance Apply Prefix where
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P xs t) = changeLabel snd . biasTreeG suc . runTree (decorate xs t)
- where
-  suc t = endpoint t || any p (annotations t) || any suc (subtrees t)
-  p (Step r, _) = isMajorRule r
-  p _ = False
- 
-decorate :: [(Int, Bias Step a)] -> DerivationTree (Bias Step a) () -> DerivationTree (Bias Step a) (Prefix a)
+prefixTree (P xs t) = changeLabel snd . runTree (decorate xs t)
+
+decorate :: [(Int, Step a)] -> DerivationTree (Step a) () -> DerivationTree (Step a) (Prefix a)
 decorate xs t =
    let list = zipWith make [0..] (branches t)
        make i (s, st) = (s, decorate ((i,s):xs) st)
@@ -96,7 +89,7 @@ decorate xs t =
  
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [Step a]
-prefixToSteps (P xs _) = [ step | (_, Normal step) <- reverse xs ]
+prefixToSteps (P xs _) = [ step | (_, step) <- reverse xs ]
  
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step a] -> [Rule a]
@@ -104,4 +97,4 @@ stepsToRules steps = [ r | Step r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (Step a)
-lastStepInPrefix (P xs _) = safeHead [ step | (_, Normal step) <- xs ]
+lastStepInPrefix (P xs _) = safeHead [ step | (_, step) <- xs ]

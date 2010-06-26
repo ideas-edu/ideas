@@ -105,9 +105,9 @@ simpleTranslation :: Translation l a (Rule a)
 simpleTranslation = (const Skip, id)
 
 toGrammar :: Translation l a b -> Core l a -> Grammar b
-toGrammar (f, g) = rec
+toGrammar (f, g) = recWith []
  where
-   rec core =
+   recWith xs core =
       case core of
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
@@ -119,15 +119,27 @@ toGrammar (f, g) = rec
          Label l a -> forLabel l (rec a)
          Rule ml r -> (maybe id forLabel ml) (symbol (g r))
          Var n     -> Grammar.var n
-         Rec n a   -> Grammar.rec n (rec a)
-         Not a     -> symbol (g (notRule a))
-   
+         Rec n a   -> Grammar.rec n (recWith ((n, core):xs) a)
+         Not a     -> symbol (g (notRule (replaceVars xs a)))
+    where
+      rec = recWith xs
+      
    forLabel l g =
       case f l of
          Skip       -> g
          Before s   -> symbol s <*> g
          After    t -> g <*> symbol t
          Around s t -> symbol s <*> g <*> symbol t
+
+   replaceVars xs core = core {- trace ("replace " ++ show core) $
+      case core of
+         Rec n a -> replaceVars (filter ((/=n) . fst) xs) a
+         Var n -> case lookup n xs of
+                     Just a  -> trace "!" $ replaceVars xs (noLabels a)
+                     Nothing -> core
+         _ -> make (map (replaceVars xs) cs)
+    where
+      (cs, make) = uniplate core -}
 
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="crossMultiply">
       <expr>
@@ -20,13 +20,15 @@
         x^2+7*x+10 == 0
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="nice factors">
+      <expr>
+        (x+2)*(x+5) == 0
+      </expr>
+    </elem>
+    <elem ruleid="multiplication is zero">
       <expr>
         x == -2 or x == -5
       </expr>
-      <context>
-        <item name="clipboard" value="[D==9, a==1, b==7, c==10]"/>
-      </context>
     </elem>
   </list>
 </reply>

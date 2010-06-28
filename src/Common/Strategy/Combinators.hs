@@ -124,7 +124,7 @@ exhaustive = repeat . alternatives
 -- | A fix-point combinator on strategies (to model recursion). Powerful
 -- (but dangerous) combinator
 fix :: (Strategy a -> Strategy a) -> Strategy a
-fix f = fromCore (fixCore (toCore . f . fromCore))
+fix f = fromCore (coreFix (toCore . f . fromCore))
 
 -- | Apply a strategy on (exactly) one of the term's direct children
 once :: IsStrategy f => f (Context a) -> Strategy (Context a)

@@ -78,10 +78,9 @@ quadraticStrategyG :: IsTerm a => LabeledStrategy (Context a)
 quadraticStrategyG = 
    label "Quadratic Equation Strategy" $ repeat $
    -- Relaxed strategy: even if there are "nice" factors, allow use of quadratic formula
-      somewhere (
-         (generalForm <|> generalABCForm)
-         |> zeroForm 
-         |> constantForm)
+      somewhere (generalForm <|> generalABCForm)
+      |> somewhere zeroForm 
+      |> somewhere constantForm
       |> simplifyForm
       |> topForm 
  where

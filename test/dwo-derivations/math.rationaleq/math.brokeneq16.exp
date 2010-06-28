@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="sameDividend">
       <expr>
@@ -29,12 +29,19 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="nice factors">
       <expr>
-        x == -1/2 or x == 4 or x == -2
+        x == -1/2 or (x+2)*(x-4) == 0
       </expr>
       <context>
-        <item name="clipboard" value="[D==36, a==1, b==-2, c==-8]"/>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="multiplication is zero">
+      <expr>
+        x == -1/2 or x == -2 or x == 4
+      </expr>
+      <context>
         <item name="location" value="[2]"/>
       </context>
     </elem>

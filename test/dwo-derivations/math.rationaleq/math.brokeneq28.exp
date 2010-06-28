@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="crossMultiply">
       <expr>
@@ -23,11 +23,6 @@
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         -12*x == 26
-      </expr>
-    </elem>
-    <elem ruleid="cover-up negate [vars]">
-      <expr>
-        12*x == -26
       </expr>
     </elem>
     <elem ruleid="cover-up times [vars]">

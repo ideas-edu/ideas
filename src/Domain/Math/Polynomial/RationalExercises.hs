@@ -66,6 +66,7 @@ rationalEquationExercise = makeExercise
 --   , equivalence  = ??
    , similarity   = eqOrList cleanUpExpr2
    , strategy     = rationalEquationStrategy
+   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , navigation   = termNavigator
    , examples     = map return (concat brokenEquations)
    }

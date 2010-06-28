@@ -48,6 +48,7 @@ quadraticRuleOrder =
    , getId commonFactorVar, getId simplerPolynomial
    , getId niceFactors, getId noLinFormula
    , getId cancelTerms, getId sameConFactor, getId distributionSquare
+   , getId allPowerFactors
    ]
 
 ------------------------------------------------------------

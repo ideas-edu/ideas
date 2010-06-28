@@ -16,8 +16,8 @@
 module Common.Strategy.Core 
    ( Core(..)
    , strategyTree, runTree, makeTree 
-   , mapRule, coreVars, noLabels, mapCore, mapCoreM --, catMaybeLabel --, , 
-   , mapLabel, Translation, ForLabel(..) --, simpleTranslation
+   , mapRule, coreVars, noLabels, mapCore, mapCoreM
+   , mapLabel, Translation, ForLabel(..), coreFix
    ) where
 
 import qualified Common.Strategy.Grammar as Grammar
@@ -105,23 +105,22 @@ simpleTranslation :: Translation l a (Rule a)
 simpleTranslation = (const Skip, id)
 
 toGrammar :: Translation l a b -> Core l a -> Grammar b
-toGrammar (f, g) = recWith []
+toGrammar (f, g) core = recWith (Env []) (checkCoreFree "toGrammar.top" [] core)
  where
    recWith xs core =
       case core of
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
          a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
-         Many a    -> rec (coreMany a)
-                      --Grammar.many (rec a)
-         Repeat a  -> rec (Many a :*: Not (noLabels a))
+         Many a    -> rec (coreMany xs a)
+         Repeat a  -> rec (coreRepeat a)
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
          Label l a -> forLabel l (rec a)
          Rule ml r -> (maybe id forLabel ml) (symbol (g r))
          Var n     -> Grammar.var n
-         Rec n a   -> Grammar.rec n (recWith ((n, core):xs) a)
-         Not a     -> symbol (g (notRule (replaceVars xs a)))
+         Rec n a   -> Grammar.rec n (recWith (addToEnv n core xs) a)
+         Not a     -> symbol (g (notRule (checkCoreFree "toGrammar.Not" [] (replaceVars xs a))))
     where
       rec = recWith xs
       
@@ -132,22 +131,51 @@ toGrammar (f, g) = recWith []
          After    t -> g <*> symbol t
          Around s t -> symbol s <*> g <*> symbol t
 
-   replaceVars xs core = core {- trace ("replace " ++ show core) $
+   replaceVars xs core =
       case core of
-         Rec n a -> replaceVars (filter ((/=n) . fst) xs) a
-         Var n -> case lookup n xs of
-                     Just a  -> trace "!" $ replaceVars xs (noLabels a)
-                     Nothing -> core
+         Rec n a -> Rec n (replaceVars (filterEnv n xs) a)
+         Var n -> case findInEnv n xs of
+                     Just (ys, a) -> replaceVars ys (noLabels a)
+                     Nothing      -> core
          _ -> make (map (replaceVars xs) cs)
     where
-      (cs, make) = uniplate core -}
+      (cs, make) = uniplate core
+
+checkCoreFree :: String -> [Int] -> Core l a -> Core l a
+checkCoreFree msg ns core =
+   case core of
+      Rec n a -> Rec n (checkCoreFree msg (n:ns) a)
+      Var n -> if n `elem` ns then core else error ("checkFree! " ++ msg)
+      _ -> f (map (checkCoreFree msg ns) cs)
+ where
+   (cs, f) = uniplate core 
+
+data Env l a = Env [(Int, (Env l a, Core l a))]
+  
+addToEnv :: Int -> Core l a -> Env l a -> Env l a
+addToEnv n a env@(Env xs) = Env ((n, (env, a)) : xs)
+  
+findInEnv :: Int -> Env l a -> Maybe (Env l a, Core l a)
+findInEnv n (Env xs) = lookup n xs
+
+filterEnv :: Int -> Env l a -> Env l a
+filterEnv n (Env xs) = Env (filter ((/= n) . fst) xs)
 
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)
 
-coreMany :: Core l a -> Core l a
-coreMany p = Rec n (Succeed :|: (p :*: Var n))
- where n = nextVar p
+coreMany :: Env l a -> Core l a -> Core l a
+coreMany (Env xs) p = Rec n (Succeed :|: (p :*: Var n))
+ where n2 = nextVar p
+       n = if n2 `elem` map fst xs then maximum (map fst xs) + 1 else n2
+
+coreRepeat :: Core l a -> Core l a
+coreRepeat p = Many p :*: Not (noLabels p)
+
+coreFix :: (Core l a -> Core l a) -> Core l a
+coreFix f = -- disadvantage: function f is applied twice
+   let i = nextVar (f (Var (-1)))
+   in Rec i (f (Var i))
 
 nextVar :: Core l a -> Int
 nextVar p

@@ -16,7 +16,7 @@ module Common.Strategy.Abstract
    , fullDerivationTree, derivationTree, rulesInStrategy
    , mapRules, mapRulesS, cleanUpStrategy
      -- Accessors to the underlying representation
-   , toCore, fromCore, liftCore, liftCore2, fixCore, makeLabeledStrategy
+   , toCore, fromCore, liftCore, liftCore2, makeLabeledStrategy
    , toLabeledStrategy
    , LabelInfo, processLabelInfo, changeInfo, makeInfo
    , removed, collapsed, hidden, IsLabeled(..)
@@ -209,9 +209,3 @@ liftCore f = fromCore . f . toCore . toStrategy
 
 liftCore2 :: (IsStrategy f, IsStrategy g) => (Core LabelInfo a -> Core LabelInfo a -> Core LabelInfo a) -> f a -> g a -> Strategy a
 liftCore2 f = liftCore . f . toCore . toStrategy
-
-fixCore :: (Core l a -> Core l a) -> Core l a
-fixCore f = Rec i (f (Var i)) -- disadvantage: function f is applied twice
- where
-    s = coreVars (f (Rule Nothing idRule))
-    i = if null s then 0 else maximum s + 1

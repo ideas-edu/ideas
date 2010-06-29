@@ -18,15 +18,17 @@ module Common.Strategy.Core
    , strategyTree, runTree, makeTree 
    , mapRule, coreVars, noLabels, mapCore, mapCoreM
    , mapLabel, Translation, ForLabel(..), coreFix
+   , CoreEnv, emptyEnv, insertEnv, replaceVars
    ) where
 
-import qualified Common.Strategy.Grammar as Grammar
 import Common.Strategy.Grammar (Grammar, (<*>), (<|>), symbol)
 import Common.Classes
 import Common.Derivation
 import Common.Transformation
 import Common.Uniplate
 import Control.Monad.Identity
+import qualified Common.Strategy.Grammar as Grammar
+import qualified Data.IntMap as IM
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -95,6 +97,35 @@ runTree t a = addBranches list (singleNode a (endpoint t))
    make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
 
 -----------------------------------------------------------------
+-- Core environment
+
+-- A core environment stores the recursive bindings in a core 
+-- expression (Rec/Var pairs)
+newtype CoreEnv l a = Env (IM.IntMap (CoreEnv l a, Core l a))
+
+emptyEnv :: CoreEnv l a
+emptyEnv = Env IM.empty
+
+insertEnv :: Int -> Core l a -> CoreEnv l a -> CoreEnv l a
+insertEnv n a env@(Env m) = Env (IM.insert n (env, a) m)
+
+deleteEnv :: Int -> CoreEnv l a -> CoreEnv l a
+deleteEnv n (Env m) = Env (IM.delete n m)
+  
+lookupEnv :: Int -> CoreEnv l a -> Maybe (CoreEnv l a, Core l a)
+lookupEnv n (Env m) = IM.lookup n m
+
+replaceVars :: CoreEnv l a -> Core l a -> Core l a
+replaceVars env core =
+   case core of
+      Rec n a -> Rec n (replaceVars (deleteEnv n env) a)
+      Var n   -> case lookupEnv n env of
+                    Just (xs, a) -> replaceVars xs (noLabels a)
+                    Nothing      -> core
+      _       -> let (cs, make) = uniplate core
+                 in make (map (replaceVars env) cs)
+
+-----------------------------------------------------------------
 -- Translation to Grammar data type
 
 type Translation l a b = (l -> ForLabel b, Rule a -> b)
@@ -105,24 +136,24 @@ simpleTranslation :: Translation l a (Rule a)
 simpleTranslation = (const Skip, id)
 
 toGrammar :: Translation l a b -> Core l a -> Grammar b
-toGrammar (f, g) core = recWith (Env []) (checkCoreFree "toGrammar.top" [] core)
+toGrammar (f, g) core = recWith emptyEnv (checkCoreFree "toGrammar.top" [] core)
  where
-   recWith xs core =
+   recWith env core =
       case core of
          a :*: b   -> rec a <*> rec b
          a :|: b   -> rec a <|> rec b
          a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
-         Many a    -> rec (coreMany xs a)
+         Many a    -> rec (coreMany a)
          Repeat a  -> rec (coreRepeat a)
          Succeed   -> Grammar.succeed
          Fail      -> Grammar.fail
          Label l a -> forLabel l (rec a)
          Rule ml r -> (maybe id forLabel ml) (symbol (g r))
          Var n     -> Grammar.var n
-         Rec n a   -> Grammar.rec n (recWith (addToEnv n core xs) a)
-         Not a     -> symbol (g (notRule (checkCoreFree "toGrammar.Not" [] (replaceVars xs a))))
+         Rec n a   -> Grammar.rec n (recWith (insertEnv n core env) a)
+         Not a     -> symbol (g (notRule (checkCoreFree "toGrammar.Not" [] (replaceVars env (noLabels a)))))
     where
-      rec = recWith xs
+      rec = recWith env
       
    forLabel l g =
       case f l of
@@ -131,16 +162,7 @@ toGrammar (f, g) core = recWith (Env []) (checkCoreFree "toGrammar.top" [] core)
          After    t -> g <*> symbol t
          Around s t -> symbol s <*> g <*> symbol t
 
-   replaceVars xs core =
-      case core of
-         Rec n a -> Rec n (replaceVars (filterEnv n xs) a)
-         Var n -> case findInEnv n xs of
-                     Just (ys, a) -> replaceVars ys (noLabels a)
-                     Nothing      -> core
-         _ -> make (map (replaceVars xs) cs)
-    where
-      (cs, make) = uniplate core
-
+-- Safety check
 checkCoreFree :: String -> [Int] -> Core l a -> Core l a
 checkCoreFree msg ns core =
    case core of
@@ -150,24 +172,12 @@ checkCoreFree msg ns core =
  where
    (cs, f) = uniplate core 
 
-data Env l a = Env [(Int, (Env l a, Core l a))]
-  
-addToEnv :: Int -> Core l a -> Env l a -> Env l a
-addToEnv n a env@(Env xs) = Env ((n, (env, a)) : xs)
-  
-findInEnv :: Int -> Env l a -> Maybe (Env l a, Core l a)
-findInEnv n (Env xs) = lookup n xs
-
-filterEnv :: Int -> Env l a -> Env l a
-filterEnv n (Env xs) = Env (filter ((/= n) . fst) xs)
-
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)
 
-coreMany :: Env l a -> Core l a -> Core l a
-coreMany (Env xs) p = Rec n (Succeed :|: (p :*: Var n))
- where n2 = nextVar p
-       n = if n2 `elem` map fst xs then maximum (map fst xs) + 1 else n2
+coreMany :: Core l a -> Core l a
+coreMany p = Rec n (Succeed :|: (p :*: Var n))
+ where n = nextVar p
 
 coreRepeat :: Core l a -> Core l a
 coreRepeat p = Many p :*: Not (noLabels p)

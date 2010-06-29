@@ -148,9 +148,18 @@ changeInfo f a = LS (f info) s
 --- Process Label Information
 
 processLabelInfo :: (l -> LabelInfo) -> Core l a -> Core l a
-processLabelInfo getInfo = mapCore forLabel forRule
+processLabelInfo getInfo = rec emptyEnv
  where
-   forLabel l c 
+   rec env core = 
+      case core of 
+         Rec n a   -> Rec n (rec (insertEnv n core env) a)
+         Label l a -> forLabel env l (rec env a)
+         Rule ml r -> forRule ml r
+         _ -> f (map (rec env) cs)
+    where
+      (cs, f) = uniplate core
+ 
+   forLabel env l c 
       | removed info   = Fail
       | collapsed info = Rule (Just l) asRule
       | otherwise      = new
@@ -158,7 +167,8 @@ processLabelInfo getInfo = mapCore forLabel forRule
       new | hidden info = mapRule minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) (applyAll new)
+      asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) 
+                  (applyAll (replaceVars env new))
    forRule (Just l) r 
       | removed info = Fail
       | hidden info  = Rule (Just l) (minorRule r)

@@ -37,7 +37,6 @@ import Domain.Math.Examples.DWO4
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Polynomial.Exercises
 import Domain.Math.Polynomial.Exercises (eqOrList)
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
@@ -46,32 +45,22 @@ import Domain.Math.Power.Views
 import Prelude hiding (repeat, until, (^))
 import Test.QuickCheck hiding (label)
 import qualified Domain.Logic.Formula as Logic
-import Domain.Logic.Formula(Logic(T, F, (:&&:), (:||:), Not))
-
-go0 = checkExercise rationalEquationExercise
-go2 = checkExercise simplifyRationalExercise
-
-see n = printDerivation ex (examples ex !! (n-1))
- where ex = rationalEquationExercise -- simplifyRationalExercise
-       
-go4 = printDerivation findFactorsExercise $ -a + 4
- where x = Var "x"
-       a = Var "a"
+import Domain.Logic.Formula hiding (disjunctions, Var)
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
-   { exerciseId   = describe "solve a rational equation (with a variable in a divisor)" $ 
-                       newId "math.rationaleq"
-   , status       = Alpha -- Provisional
-   , parser       = parseExprWith (pOrList (pEquation pExpr))
- -- isSuitable
-   , isReady      = solvedRelations
---   , equivalence  = ??
-   , similarity   = eqOrList cleanUpExpr2
-   , strategy     = rationalEquationStrategy
-   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
-   , navigation   = termNavigator
-   , examples     = map return (concat brokenEquations)
+   { exerciseId    = describe "solve a rational equation (with a variable in a divisor)" $ 
+                        newId "math.rationaleq"
+   , status        = Alpha -- Provisional
+   , parser        = parseExprWith (pOrList (pEquation pExpr))
+ -- isSuitable 
+   , isReady       = solvedRelations
+   , eqWithContext = Just eqRationalEquation
+   , similarity    = eqOrList cleanUpExpr2
+   , strategy      = rationalEquationStrategy
+   , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
+   , navigation    = termNavigator
+   , examples      = map return (concat brokenEquations)
    }
    
 simplifyRationalExercise :: Exercise Expr
@@ -373,17 +362,6 @@ powerProductView = makeView f g
       let (xs1, xs2) = partition ((==e) . fst) xs
           n = sum (map snd xs1) 
       in (e, n) : merge xs2
-
-test = e4
- where 
-   a  = Var "a"
-   b  = Var "b"
-   
-   e1 = 6*a*b*a
-   e2 = -4*b^2*a*2
-   e3 = lcmExpr e1 e2
-   e4 = divisionExpr e3 e1
-   e5 = divisionExpr e3 e2
    
 testLCM :: TestSuite
 testLCM = suite "lcmExpr" $ do
@@ -460,7 +438,8 @@ eqToRel F = F
 eqToRel (Not (Logic.Var (a :==: b))) = Logic.Var (a ./=. b)
 eqToRel (Not p) = Not (eqToRel p)
 eqToRel (Logic.Var (a :==: b)) = Logic.Var (a .==. b)
-
+eqToRel (p :<->: q) = eqToRel p :<->: eqToRel q
+eqToRel (p :->: q) = eqToRel p :->: eqToRel q
 
 conditionNotZero :: Expr -> ContextMonad ()
 conditionNotZero expr = condition (eqToRel (nott xs))
@@ -471,19 +450,45 @@ conditionNotZero expr = condition (eqToRel (nott xs))
            Nothing -> Logic.Var (expr :==: 0)
                  
 
-go = putStrLn $ unlines $ map show $ zip [1..] $ map brokenEq (concat brokenEquations)
+go = putStrLn $ unlines $ map show $ zip [1..] $ map (brokenEq []) (concat brokenEquations)
 
--- brokenEq :: Equation Expr -> (Expr, [Relation Expr])
-brokenEq eq = 
+brokenEqs :: [Relation Expr] -> OrList (Equation Expr) -> Maybe (OrList Expr)
+brokenEqs cs p = do
+   xs  <- disjunctions p
+   yss <- mapM (brokenEq cs) xs
+   return (joinOr (orList yss))
+
+brokenEq :: [Relation Expr] -> Equation Expr -> Maybe (OrList Expr) -- rewrite me
+brokenEq cs2 eq = do
    let (lhs :==: rhs) = doCovers eq
        (a, b, cs) = brokenExpr (lhs .-. rhs)
        as = maybe [a] snd (match productView a)
        bs = maybe [b] snd (match productView b)
        new1 = match higherDegreeEquationsView $ orList $ map (:==: 0) as
        new2 = match higherDegreeEquationsView $ orList $ map conv $ 
-                 concatMap notZero bs ++ cs
+                 concatMap notZero bs ++ cs2 ++ cs
        conv r = leftHandSide r :==: rightHandSide r
-   in (new1, new2)
+       xs = fromMaybe [] (new2 >>= disjunctions)
+   ys <- new1 >>= disjunctions
+   return (orList (filter (`notElem` xs) ys))
+
+eqRationalEquation :: Context (OrList (Equation Expr)) -> Context (OrList (Equation Expr)) -> Bool
+eqRationalEquation ca cb = fromMaybe False $ do
+   a  <- fromContext ca
+   b  <- fromContext cb
+   let f c = fromMaybe [] $ do
+                p  <- conditionOnClipboard c
+                qs <- match andView p
+                return qs
+       csa = f ca
+       csb = f cb
+   xs <- brokenEqs csa a >>= disjunctions
+   ys <- brokenEqs csb b >>= disjunctions
+   return (sort xs == sort ys)
+   
+conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
+conditionOnClipboard = evalCM $ const $
+   lookupClipboardG "condition"
 
 -- write expression as a/b, under certain conditions
 brokenExpr :: Expr -> (Expr, Expr, [Relation Expr])
@@ -496,9 +501,7 @@ brokenExpr expr =
       a :/: b  -> brokenExpr a `fTimes` fRecip (brokenExpr b)
       Sym s [a, b] | s == powerSymbol -> 
          fPower (brokenExpr a) b
-      Nat _ -> (expr, 1, [])
-      Var _ -> (expr, 1, [])
-      _ -> error $ show expr
+      _ -> (expr, 1, [])
  where
    fNeg   (a, b, cs)   = (neg a, b, cs)
    fRecip (a, b, cs)   = (b, a, notZero b ++ cs)
@@ -514,9 +517,6 @@ brokenExpr expr =
                | otherwise    -> (a1 .*. a3 .+. b1 .*. b3, c2, cs)
             _ -> (a1 .*. b2 .+. b1 .*. a2, a2 .*. b2, cs)
 
-raar = brokenExpr $ x^2/(5*x+6) + 1
- where x = Var "x"
-
 doCovers :: Equation Expr -> Equation Expr
 doCovers eq = 
    case [ new | r <- rs, new <- applyAll r eq ] of
@@ -527,3 +527,32 @@ doCovers eq =
 
 notZero (Nat 1) = []
 notZero a = [a ./=. 0]
+
+-----------------
+-- test code
+
+{-
+raar = brokenExpr $ x^2/(5*x+6) + 1
+ where x = Var "x"
+ 
+go0 = checkExercise rationalEquationExercise
+go2 = checkExercise simplifyRationalExercise
+
+see n = printDerivation ex (examples ex !! (n-1))
+ where ex = rationalEquationExercise -- simplifyRationalExercise
+       
+go4 = printDerivation findFactorsExercise $ -a + 4
+ where x = Var "x"
+       a = Var "a"
+       
+test = e4
+ where 
+   a  = Var "a"
+   b  = Var "b"
+   
+   e1 = 6*a*b*a
+   e2 = -4*b^2*a*2
+   e3 = lcmExpr e1 e2
+   e4 = divisionExpr e3 e1
+   e5 = divisionExpr e3 e2
+-}

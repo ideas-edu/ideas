@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="nice factors">
       <expr>
@@ -20,6 +20,9 @@
       <expr>
         2*p/(p-4)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(p/=-4)]"/>
+      </context>
     </elem>
   </list>
 </reply>

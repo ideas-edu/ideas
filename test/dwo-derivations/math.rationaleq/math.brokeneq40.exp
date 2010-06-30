@@ -1,31 +1,43 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="crossMultiply">
       <expr>
         (3*x-7)*(3*x-3) == (x-2)*(7-x)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         (3*x-7)*(3*x-3)-(x-2)*(7-x) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         9*x^2-30*x+21-9*x+x^2+14 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="merge similar terms">
       <expr>
         10*x^2-39*x+35 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="abc formula">
       <expr>
         x == 5/2 or x == 7/5
       </expr>
       <context>
-        <item name="clipboard" value="[D==121, a==10, b==-39, c==35]"/>
+        <item name="clipboard" value="[D==121, a==10, b==-39, c==35, condition==logic1.and (x/=2) (x/=1)]"/>
       </context>
     </elem>
   </list>

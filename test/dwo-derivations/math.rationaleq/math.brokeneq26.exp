@@ -1,34 +1,52 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="crossMultiply">
       <expr>
         (2*x+3)*(x-2) == (x-1)*(2*x-1)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         (2*x+3)*(x-2)-(x-1)*(2*x-1) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         2*x^2-x-6-2*x^2+3*x-1 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="merge similar terms">
       <expr>
         2*x-7 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         2*x == 7
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 7/2
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=1) (x/=2)]"/>
+      </context>
     </elem>
   </list>
 </reply>

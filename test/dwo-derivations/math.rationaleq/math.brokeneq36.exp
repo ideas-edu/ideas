@@ -4,36 +4,57 @@
       <expr>
         -3*(x+1) == (x-5)*(x+3)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         -3*(x+1)-(x-5)*(x+3) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         -3*x-3-x^2+2*x+15 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
     <elem ruleid="merge similar terms">
       <expr>
         -x+12-x^2 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
     <elem ruleid="simpler polynomial">
       <expr>
         x^2+x-12 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
     <elem ruleid="nice factors">
       <expr>
         (x-3)*(x+4) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
         x == 3 or x == -4
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=-1)]"/>
+      </context>
     </elem>
   </list>
 </reply>

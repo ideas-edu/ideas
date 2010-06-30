@@ -1,24 +1,36 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="divisionIsZero">
       <expr>
         4*x^2-24 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         4*x^2 == 24
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x^2 == 6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up power [vars]">
       <expr>
         x == sqrt 6 or x == -sqrt 6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-1/3*sqrt 3) (x/=1/3*sqrt 3)]"/>
+      </context>
     </elem>
   </list>
 </reply>

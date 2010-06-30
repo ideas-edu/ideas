@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="nice factors">
       <expr>
@@ -28,11 +28,17 @@
       <expr>
         a*(a+4)/(a+3)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(a/=-3)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         (a^2+4*a)/(a+3)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(a/=-3)]"/>
+      </context>
     </elem>
   </list>
 </reply>

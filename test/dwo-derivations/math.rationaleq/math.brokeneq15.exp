@@ -1,15 +1,19 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="sameDividend">
       <expr>
         3*x-2 == 0 or 2*x^2 == x^2+4
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         3*x == 2 or 2*x^2 == x^2+4
       </expr>
       <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -18,6 +22,7 @@
         x == 2/3 or 2*x^2 == x^2+4
       </expr>
       <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -26,6 +31,7 @@
         x == 2/3 or x^2-4 == 0
       </expr>
       <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
         <item name="location" value="[2]"/>
       </context>
     </elem>
@@ -34,6 +40,7 @@
         x == 2/3 or x^2 == 4
       </expr>
       <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
         <item name="location" value="[2]"/>
       </context>
     </elem>
@@ -42,6 +49,7 @@
         x == 2/3 or x == 2 or x == -2
       </expr>
       <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
         <item name="location" value="[2]"/>
       </context>
     </elem>

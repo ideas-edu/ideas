@@ -1,29 +1,44 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="crossMultiply">
       <expr>
         (x+2)*3 == 12*x
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="same constant factor">
       <expr>
         x+2 == 4*x
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         -3*x+2 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
         -3*x == -2
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 2/3
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
   </list>
 </reply>

@@ -4,21 +4,41 @@
       <expr>
         x^2+4*x == 3*x+6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         x^2+x-6 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="nice factors">
       <expr>
         (x-2)*(x+3) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+      </context>
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
         x == 2 or x == -3
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+      </context>
+    </elem>
+    <elem ruleid="check solution">
+      <expr>
+        x == -3
+      </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
+      </context>
     </elem>
   </list>
 </reply>

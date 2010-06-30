@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="common factor var">
       <expr>
@@ -20,6 +20,9 @@
       <expr>
         (p-2)/(4*p)
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(p/=-2)]"/>
+      </context>
     </elem>
   </list>
 </reply>

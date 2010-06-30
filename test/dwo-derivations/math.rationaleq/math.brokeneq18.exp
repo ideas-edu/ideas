@@ -1,15 +1,19 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="sameDividend">
       <expr>
         x^2-4 == 0 or 3*x-6 == 2*x+1
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         x^2 == 4 or 3*x-6 == 2*x+1
       </expr>
       <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -18,6 +22,7 @@
         x == 2 or x == -2 or 3*x-6 == 2*x+1
       </expr>
       <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
         <item name="location" value="[1]"/>
       </context>
     </elem>
@@ -26,6 +31,7 @@
         x == 2 or x == -2 or x-7 == 0
       </expr>
       <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
@@ -34,7 +40,16 @@
         x == 2 or x == -2 or x == 7
       </expr>
       <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
         <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="check solution">
+      <expr>
+        x == -2 or x == 7
+      </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
       </context>
     </elem>
   </list>

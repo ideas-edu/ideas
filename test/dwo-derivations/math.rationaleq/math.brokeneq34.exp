@@ -4,31 +4,49 @@
       <expr>
         (x+9)*x == (x-5)*2
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         (x+9)*x-(x-5)*2 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         x^2+9*x-2*x+10 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="merge similar terms">
       <expr>
         x^2+7*x+10 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="nice factors">
       <expr>
         (x+2)*(x+5) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
         x == -2 or x == -5
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=0)]"/>
+      </context>
     </elem>
   </list>
 </reply>

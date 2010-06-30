@@ -1,34 +1,52 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="crossMultiply">
       <expr>
         (x-3)*5 == (1-x)*7
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         (x-3)*5-(1-x)*7 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         5*x-22+7*x == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="merge similar terms">
       <expr>
         12*x-22 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up minus left [one var]">
       <expr>
         12*x == 22
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=1)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 11/6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=1)]"/>
+      </context>
     </elem>
   </list>
 </reply>

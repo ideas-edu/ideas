@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="factor variable power">
       <expr>
@@ -28,6 +28,9 @@
       <expr>
         (a+3)/(a*(a+2))
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(a/=5)]"/>
+      </context>
     </elem>
   </list>
 </reply>

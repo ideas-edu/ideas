@@ -46,11 +46,13 @@ import Domain.Math.Power.Views
 import Prelude hiding (repeat, until, (^))
 import Test.QuickCheck hiding (label)
 import qualified Domain.Logic.Formula as Logic
+import Domain.Logic.Formula(Logic(T, F, (:&&:), (:||:), Not))
 
 go0 = checkExercise rationalEquationExercise
 go2 = checkExercise simplifyRationalExercise
 
-see n = printDerivation simplifyRationalExercise (examples simplifyRationalExercise !! (n-1))
+see n = printDerivation ex (examples ex !! (n-1))
+ where ex = rationalEquationExercise -- simplifyRationalExercise
        
 go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
@@ -62,6 +64,7 @@ rationalEquationExercise = makeExercise
                        newId "math.rationaleq"
    , status       = Alpha -- Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
+ -- isSuitable
    , isReady      = solvedRelations
 --   , equivalence  = ??
    , similarity   = eqOrList cleanUpExpr2
@@ -77,10 +80,12 @@ simplifyRationalExercise = makeExercise
                        newId "math.simplifyrational"
    , status       = Alpha -- Provisional
    , parser       = parseExpr
+-- isSuitable
    , isReady      = isNormBroken
 --   , equivalence  = ??
    , similarity   = \x y -> cleanUpExpr2 x == cleanUpExpr2 y
    , strategy     = simplifyRationalStrategy
+   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , navigation   = termNavigator
    , examples     = concat (normBroken ++ normBroken2)
    }
@@ -96,7 +101,7 @@ divisionRationalExercise = simplifyRationalExercise
 rationalEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr2))) $
    label "Rational equation" $ 
-       brokenFormToPoly <*> higherDegreeStrategyG
+       brokenFormToPoly <*> higherDegreeStrategyG <*> checkSolutionStrategy
  where
    brokenFormToPoly = label "rational form to polynomial" $ until allArePoly $
       (  useC divisionIsZero <|> useC divisionIsOne 
@@ -105,6 +110,8 @@ rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr2)))
      <|> use coverUpNegate
       ) |>    
       (  useC crossMultiply <|> useC multiplyOneDiv  )
+   checkSolutionStrategy = label "check solutions" $ 
+      try (multi (showId checkSolution) (somewhere checkSolution))
 
 allArePoly :: Context (OrList (Equation Expr)) -> Bool
 allArePoly = 
@@ -278,6 +285,23 @@ turnIntoFraction = liftRule plusView $
       (_, e) <- match divView b
       return $ build divView (a*e, e)
 
+checkSolution :: Rule (Context (OrList (Equation Expr)))
+checkSolution = makeSimpleRule "check solution" $ 
+   withCM $ oneDisjunct $ \(x :==: a) -> do
+      c  <- lookupClipboardG "condition"
+      xs <- matchM andView c
+      guard ((x ./=. a) `elem` xs)
+      return false
+
+andView :: View (Logic a) [a]
+andView = makeView f g 
+ where
+   f (p :&&: q)    = liftM2 (++) (f p) (f q)
+   f (Logic.Var a) = return [a]
+   f T             = return []
+   f _             = Nothing
+   g xs = if null xs then T else foldr1 (:&&:) (map Logic.Var xs)
+
 isNormBroken :: Expr -> Bool
 isNormBroken (Negate a) = isNormBroken a
 isNormBroken (a :/: b) = noVarInDivisor a && noVarInDivisor b
@@ -400,14 +424,52 @@ testLCM = suite "lcmExpr" $ do
             in f x == f y
    absExpr = simplifyWith (first (const False)) productView
    
-condition :: Relation Expr -> ContextMonad ()
-condition rel = return () {- do
+condition :: Logic (Relation Expr) -> ContextMonad ()
+condition c = do
    mp <- maybeOnClipboardG "condition"
-   let f = maybe id (Logic.:&&:) mp
-   addToClipboardG "condition" (f (Logic.Var rel)) -}
+   let a = maybe id (.&&.) mp c
+   unless (a==T) (addToClipboardG "condition" a)
+
+(.&&.) :: Logic a -> Logic a -> Logic a
+T .&&. p = p
+p .&&. T = p
+F .&&. _ = F
+_ .&&. F = F
+p .&&. q = p :&&: q
+
+(.||.) :: Logic a -> Logic a -> Logic a
+T .||. _ = T
+_ .||. T = T
+F .||. p = p
+p .||. F = p
+p .||. q = p :||: q
+
+nott :: Logic a -> Logic a -- push not inside
+nott (Not p)    = p
+nott (p :&&: q) = nott p .||. nott q
+nott (p :||: q) = nott p .&&. nott q
+nott T          = F
+nott F          = T
+nott p          = Not p
+
+eqToRel :: Logic (Equation a) -> Logic (Relation a)
+eqToRel (p :&&: q) = eqToRel p :&&: eqToRel q
+eqToRel (p :||: q) = eqToRel p :||: eqToRel q
+eqToRel T = T
+eqToRel F = F
+eqToRel (Not (Logic.Var (a :==: b))) = Logic.Var (a ./=. b)
+eqToRel (Not p) = Not (eqToRel p)
+eqToRel (Logic.Var (a :==: b)) = Logic.Var (a .==. b)
+
 
 conditionNotZero :: Expr -> ContextMonad ()
-conditionNotZero e = condition (e ./=. 0)
+conditionNotZero expr = condition (eqToRel (nott xs))
+ where
+   xs = fmap (fmap cleanUpExpr2 . doCovers) $ 
+        case match higherDegreeEquationsView (return (expr :==: 0)) of
+           Just ys -> build orView (build higherDegreeEquationsView ys)
+           Nothing -> Logic.Var (expr :==: 0)
+                 
 
 go = putStrLn $ unlines $ map show $ zip [1..] $ map brokenEq (concat brokenEquations)
 

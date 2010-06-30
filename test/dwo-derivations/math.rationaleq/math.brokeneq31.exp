@@ -9,21 +9,33 @@
       <expr>
         x^2 == 5*x+6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=-6/5)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         x^2-5*x-6 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=-6/5)]"/>
+      </context>
     </elem>
     <elem ruleid="nice factors">
       <expr>
         (x+1)*(x-6) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=-6/5)]"/>
+      </context>
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
         x == -1 or x == 6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=-6/5)]"/>
+      </context>
     </elem>
   </list>
 </reply>

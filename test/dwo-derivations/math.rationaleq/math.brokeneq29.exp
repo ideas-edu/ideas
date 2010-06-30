@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <list>
     <elem ruleid="cover-up plus [vars]">
       <expr>
@@ -9,21 +9,33 @@
       <expr>
         x+5 == 6*x
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         -5*x+5 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up plus [one var]">
       <expr>
         -5*x == -5
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
     <elem ruleid="cover-up times [vars]">
       <expr>
         x == 1
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=0)]"/>
+      </context>
     </elem>
   </list>
 </reply>

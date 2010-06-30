@@ -9,26 +9,41 @@
       <expr>
         x^2 == (2*x-3)*4
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=3/2)]"/>
+      </context>
     </elem>
     <elem ruleid="move to left">
       <expr>
         -(2*x-3)*4+x^2 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=3/2)]"/>
+      </context>
     </elem>
     <elem ruleid="distribution multiplication">
       <expr>
         -8*x+12+x^2 == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=3/2)]"/>
+      </context>
     </elem>
     <elem ruleid="nice factors">
       <expr>
         (x-2)*(x-6) == 0
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=3/2)]"/>
+      </context>
     </elem>
     <elem ruleid="multiplication is zero">
       <expr>
         x == 2 or x == 6
       </expr>
+      <context>
+        <item name="clipboard" value="[condition==(x/=3/2)]"/>
+      </context>
     </elem>
   </list>
 </reply>

@@ -22,7 +22,7 @@ module Common.Strategy
    , fullDerivationTree, derivationTree
      -- * Strategy combinators
      -- ** Basic combinators
-   , (<*>), (<|>), succeed, fail, label, sequence, alternatives -- <||>
+   , (<*>), (<|>), succeed, fail, label, sequence, alternatives
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators
@@ -30,6 +30,7 @@ module Common.Strategy
    , while, until, multi
      -- ** Traversal combinators
    , fix, once, somewhere, topDown, bottomUp
+   , onceWith, somewhereWith
      -- * Configuration combinators
    , module Common.Strategy.Configuration
      -- * Strategy locations

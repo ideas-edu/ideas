@@ -20,7 +20,6 @@ import Common.Exercise
 import Common.Navigator
 import Common.Rewriting.Term (Term)
 import Common.Strategy hiding (not)
-import Common.Transformation
 import Common.Uniplate hiding (somewhere)
 import Common.View
 import Control.Monad
@@ -114,10 +113,10 @@ simplifyRationalStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
          use fractionPlus <|> use fractionScale <|> use turnIntoFraction
    phaseSimplerDiv = label "Simplify division" $
       repeat $
-         (onlyInLowerDiv findFactorsStrategyG <|> somewhere (useC cancelTermsDiv)
-            <|> commit (onlyInUpperDiv (repeat findFactorsStrategyG) <*> useC cancelTermsDiv))
+         (onlyLowerDiv findFactorsStrategyG <|> somewhere (useC cancelTermsDiv)
+            <|> commit (onlyUpperDiv (repeat findFactorsStrategyG) <*> useC cancelTermsDiv))
          |> ( somewhere (use merge) 
-         <|> multi (showId distributeTimes) (notInLowerDiv (use distributeTimes))
+         <|> multi (showId distributeTimes) (exceptLowerDiv (use distributeTimes))
           )
 
 isDivC :: Context a -> Bool
@@ -131,30 +130,16 @@ commit s = let cs  = cleanUpStrategy (applyTop cleanUpExpr2) (label "" s)
                f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
            in check (applicable cs . f) <*> s
 
--- copy/paste from Strategy.Combinators
-notInLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-notInLowerDiv s = fix $ \this -> s <|> once this
- where
-   once s = ruleMoveDown <*> s <*> ruleMoveUp
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDownNotLower" $ \c ->
-      if (isDivC c) then (down 1 c) else allDowns c
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   safeUp a     = maybe (Just a) Just (up a)
+exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 
+   if (isDivC a) then [1] else [0 .. arity a-1]
 
-onlyInLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onlyInLowerDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
- where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown2" (down 2)
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   safeUp a     = maybe (Just a) Just (up a)
-
-onlyInUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
-onlyInUpperDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
- where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown1" (down 1)
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   safeUp a     = maybe (Just a) Just (up a)
-
+onlyUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 1 | isDivC a ]
+   
+onlyLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
+onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 2 | isDivC a ]
+   
 isNormBroken :: Expr -> Bool
 isNormBroken (Negate a) = isNormBroken a
 isNormBroken (a :/: b) = noVarInDivisor a && noVarInDivisor b

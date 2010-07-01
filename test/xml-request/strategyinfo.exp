@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.3 (0)">
   <label name="Linear Equation">
     <sequence>
       <rule name="Identity"/>
@@ -15,9 +15,9 @@
                       <rule name="distribution multiplication"/>
                     </sequence>
                     <sequence>
-                      <rule name="MoveDown"/>
+                      <rule name="navigation.down.all"/>
                       <var var="0"/>
-                      <rule name="MoveUp"/>
+                      <rule name="navigation.up"/>
                     </sequence>
                   </choice>
                 </rec>
@@ -29,9 +29,9 @@
                         <rule name="distribution multiplication"/>
                       </sequence>
                       <sequence>
-                        <rule name="MoveDown"/>
+                        <rule name="navigation.down.all"/>
                         <var var="0"/>
-                        <rule name="MoveUp"/>
+                        <rule name="navigation.up"/>
                       </sequence>
                     </choice>
                   </rec>
@@ -40,14 +40,14 @@
             </label>
             <label name="merge similar terms" collapsed="true">
               <sequence>
-                <rule name="MoveDown"/>
+                <rule name="navigation.down.all"/>
                 <rule name="merge similar terms"/>
-                <rule name="MoveUp"/>
+                <rule name="navigation.up"/>
                 <repeat>
                   <sequence>
-                    <rule name="MoveDown"/>
+                    <rule name="navigation.down.all"/>
                     <rule name="merge similar terms"/>
-                    <rule name="MoveUp"/>
+                    <rule name="navigation.up"/>
                   </sequence>
                 </repeat>
               </sequence>
@@ -72,12 +72,12 @@
       </label>
       <repeat>
         <sequence>
-          <rule name="MoveDown"/>
+          <rule name="navigation.down.all"/>
           <choice>
             <rule name="normalize rational number"/>
             <rule name="normalize mixed fraction" removed="true"/>
           </choice>
-          <rule name="MoveUp"/>
+          <rule name="navigation.up"/>
         </sequence>
       </repeat>
     </sequence>

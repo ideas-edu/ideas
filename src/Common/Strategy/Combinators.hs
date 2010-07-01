@@ -126,18 +126,32 @@ exhaustive = repeat . alternatives
 fix :: (Strategy a -> Strategy a) -> Strategy a
 fix f = fromCore (coreFix (toCore . f . fromCore))
 
+-- | Apply a strategy on (exactly) one of the term's direct children. The
+-- function selects which children are visited.
+onceWith :: IsStrategy f => String -> (Context a -> [Int]) -> f (Context a) -> Strategy (Context a)
+onceWith n f s = ruleMoveDown <*> s <*> ruleMoveUp
+ where
+   ruleMoveDown = minorRule $ makeSimpleRuleList ("navigation.down." ++ n) $ \a -> 
+      concatMap (`down` a) (f a)
+   ruleMoveUp = minorRule $ makeSimpleRule "navigation.up" $ \a ->
+      maybe (Just a) Just (up a)
+
+-- | Apply a strategy somewhere in the term. The function selects which 
+-- children are visited
+somewhereWith :: IsStrategy f => String -> (Context a -> [Int]) -> f (Context a) -> Strategy (Context a)
+somewhereWith n f s = fix $ \this -> s <|> onceWith n f this
+
 -- | Apply a strategy on (exactly) one of the term's direct children
 once :: IsStrategy f => f (Context a) -> Strategy (Context a)
-once s = ruleMoveDown <*> s <*> ruleMoveUp
- where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" allDowns   
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   
-   safeUp a = maybe (Just a) Just (up a)
+once = onceWith "all" visitAll
 
 -- | Apply a strategy somewhere in the term
 somewhere :: IsStrategy f => f (Context a) -> Strategy (Context a)
-somewhere s = fix $ \this -> s <|> once this
+somewhere = somewhereWith "all" visitAll
+
+-- local helper
+visitAll :: Context a -> [Int]
+visitAll a = [ 0 .. arity a-1 ]
 
 -- | Search for a suitable location in the term to apply the strategy using a
 -- top-down approach

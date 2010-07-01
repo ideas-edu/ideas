@@ -246,6 +246,8 @@ getRule ex s =
       []   -> fail $ "Could not find ruleid " ++ s
       _    -> fail $ "Ambiguous ruleid " ++ s
 
+-- |Shows a derivation for a given start term. The specified rule ordering
+-- is used for selection.
 showDerivation :: Exercise a -> a -> String
 showDerivation ex a =
    case derivation tree of
@@ -253,7 +255,8 @@ showDerivation ex a =
       Nothing -> prettyPrinterContext ex (root tree)
                  ++ "\n   =>\n<<no derivation>>"
  where
-   tree = derivationTree (strategy ex) (inContext ex a)
+   tree = sortTree (ruleOrdering ex) $ 
+             derivationTree (strategy ex) $ inContext ex a
    extra d =
       case fromContext (last (terms d)) of
          Nothing               -> "<<invalid term>>"

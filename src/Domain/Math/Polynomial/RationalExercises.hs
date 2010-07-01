@@ -34,6 +34,7 @@ import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Exercises (eqOrList)
 import Domain.Math.Polynomial.LeastCommonMultiple
@@ -141,9 +142,11 @@ onlyLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 2 | isDivC a ]
    
 isNormBroken :: Expr -> Bool
-isNormBroken (Negate a) = isNormBroken a
-isNormBroken (a :/: b) = noVarInDivisor a && noVarInDivisor b
-isNormBroken e = noVarInDivisor e
+isNormBroken expr =
+   case expr of
+      Negate a -> isNormBroken a
+      a :/: b  -> noVarInDivisor a && noVarInDivisor b
+      _        -> noVarInDivisor expr
 
 noVarInDivisor :: Expr -> Bool
 noVarInDivisor expr = and [ noVars a | _ :/: a <- universe expr ]
@@ -214,8 +217,10 @@ brokenExpr expr =
             _ -> (a1 .*. b2 .+. b1 .*. a2, a2 .*. b2, cs)
 
 notZero :: Expr -> [Relation Expr]
-notZero (Nat 1) = []
-notZero a       = [a ./=. 0]
+notZero expr =
+   case match rationalView expr of
+      Just r | r /= 0 -> []
+      _ -> [expr ./=. 0]
 
 -----------------
 -- test code
@@ -226,10 +231,10 @@ raar = brokenExpr $ x^2/(5*x+6) + 1
  
 go0 = checkExercise rationalEquationExercise
 go2 = checkExercise simplifyRationalExercise
-
+-}
 see n = printDerivation ex (examples ex !! (n-1))
  where ex = rationalEquationExercise -- simplifyRationalExercise
-       
+  {-     
 go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
        a = Var "a"

@@ -22,7 +22,8 @@ module Common.Derivation
    , results, lengthMax
      -- * Adapters
    , restrictHeight, restrictWidth, commit
-   , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps, changeLabel
+   , mergeSteps, cutOnStep, mapSteps, mergeMaybeSteps
+   , changeLabel, sortTree
      -- * Query a derivation
    , isEmpty, derivationLength, terms, steps, triples, filterDerivation
      -- * Conversions
@@ -32,6 +33,7 @@ module Common.Derivation
 import Common.Utils (safeHead)
 import Control.Arrow
 import Control.Monad
+import Data.List
 import Data.Maybe
 import System.Random
 
@@ -144,6 +146,12 @@ changeLabel :: (l -> m) -> DerivationTree l a -> DerivationTree m a
 changeLabel f = rec
  where
    rec t = t {branches = map (\(l, st) -> (f l, rec st)) (branches t)}
+
+sortTree :: (l -> l -> Ordering) -> DerivationTree l a -> DerivationTree l a
+sortTree f t = t {branches = change (branches t) }
+ where
+   change = map (second (sortTree f)) . sortBy cmp
+   cmp (l1, _) (l2, _) = f l1 l2
 
 mergeMaybeSteps :: DerivationTree (Maybe s) a -> DerivationTree s a
 mergeMaybeSteps = mapSteps fromJust . mergeSteps isJust

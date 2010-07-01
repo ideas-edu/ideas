@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Equation.CoverUpRules 
    ( coverUpRules, coverUpRulesOr
+   , coverUp, coverUpOrs
    , coverUpPower, coverUpPlus, coverUpMinusLeft, coverUpMinusRight 
    , coverUpTimes, coverUpNegate
    , coverUpNumerator, coverUpDenominator, coverUpSqrt 
@@ -24,15 +25,16 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpBinaryRule, commOp, flipOp
    ) where
 
+import Common.Classes
 import Common.Context
 import Common.Rewriting (IsTerm)
-import Common.View
-import Domain.Math.Expr
-import Domain.Math.Data.Relation
-import Control.Monad.Identity
 import Common.Transformation
+import Common.View
+import Control.Monad.Identity
+import Data.Maybe
 import Domain.Math.Data.OrList
-import Common.Classes
+import Domain.Math.Data.Relation
+import Domain.Math.Expr
 
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules
@@ -154,6 +156,20 @@ coverUpSqrtWith = coverUpUnaryRule "square root" isSqrt (\x -> x*x)
 
 ---------------------------------------------------------------------
 -- Cover-up rules for variables
+
+coverUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
+coverUpOrs = join . fmap (f . coverUp)
+ where
+   f :: Equation Expr -> OrList (Equation Expr)
+   f eq = case apply coverUpPower (return eq) of
+             Just xs -> coverUpOrs xs
+             Nothing -> return eq
+                 
+coverUp :: Equation Expr -> Equation Expr
+coverUp eq = 
+   case mapMaybe (`apply` eq) coverUpRules of
+      hd:_ -> coverUp hd
+      _    -> eq
 
 coverUpRulesOr :: IsTerm a => [Rule (Context a)]
 coverUpRulesOr = use coverUpPower : map use coverUpRules

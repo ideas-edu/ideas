@@ -15,12 +15,10 @@ module Domain.Math.Polynomial.RationalRules
    , fractionScale, turnIntoFraction, checkSolution
    ) where
 
-import Common.Classes
 import Common.Context
 import Common.Transformation
 import Common.View
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Domain.Logic.Formula hiding (disjunctions, Var)
 import Domain.Logic.Views
@@ -34,7 +32,6 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.LeastCommonMultiple
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
-import Prelude hiding (repeat, until, (^))
 import qualified Domain.Logic.Formula as Logic
 
 ---------------------------------------------------------------
@@ -179,15 +176,7 @@ conditionNotZero expr = condition (f xs)
  where
    f  = pushNotWith (Logic.Var . notRelation) . nott
    eq = expr :==: 0
-   xs = fmap (build equationView . fmap cleanUpExpr2 . doCovers) $ 
+   xs = fmap (build equationView . fmap cleanUpExpr2) $ 
         case match higherDegreeEquationsView (return eq) of
-           Just ys -> build orListView (build higherDegreeEquationsView ys)
-           Nothing -> Logic.Var eq
-                 
-doCovers :: Equation Expr -> Equation Expr
-doCovers eq = 
-   case [ new | r <- rs, new <- applyAll r eq ] of
-      hd:_ -> doCovers hd
-      _    -> eq
- where
-   rs = [coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpNegate]
+           Just ys -> build orListView (coverUpOrs (build higherDegreeEquationsView ys))
+           Nothing -> Logic.Var (coverUp eq)

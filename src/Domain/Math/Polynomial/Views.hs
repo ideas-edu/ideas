@@ -22,7 +22,6 @@ module Domain.Math.Polynomial.Views
 
 import Prelude hiding ((^))
 import Control.Monad
-import Common.Context
 import Common.View
 import Common.Classes
 import Common.Uniplate (transform, uniplate, children)
@@ -32,8 +31,8 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Equation.CoverUpRules
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.SquareRoot.Views
@@ -233,20 +232,18 @@ quadraticEquationView = makeView f g
             in build productView (False, map make xs) :==: 0
 
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
-higherDegreeEquationsView = makeView f (fmap g)
+higherDegreeEquationsView = makeView f (fmap (:==: 0))
  where
-   f = let make (a :==: b) = orList (filter (not . hasNegSqrt) $ map cleanUpExpr2 (normHDE (a-b)))
-       in Just . normalize . join . fmap make . cuRules
+   f    = Just . normalize . join . fmap make . coverUpOrs
+   make = orList . filter (not . hasNegSqrt) 
+        . map (cleanUpExpr2 . distr) . normHDE . sub
+   sub (a :==: b) = a-b
 
-   g = (:==: 0)
-   
-   cuRules :: OrList (Equation Expr) -> OrList (Equation Expr)
-   cuRules xs = 
-      let new  = fmap (fmap (cleanUpExpr2 . distr)) xs
-          newc = newContext emptyEnv (termNavigator new)
-      in case apply coverUpStrategy newc >>= fromContext of
-            Just ys | xs /= ys -> cuRules ys
-            _ -> new
+   distr = transform g
+    where
+      g ((a :+: b) :/: c) = (a ./. c) .+. (b ./. c)
+      g ((a :-: b) :/: c) = (a ./. c) .-. (b ./. c)
+      g a = a
 
 hasNegSqrt :: Expr -> Bool
 hasNegSqrt (Sqrt a) = 
@@ -259,13 +256,6 @@ hasNegSqrt (Sym s [a, b]) | s == rootSymbol =
       _ -> hasNegSqrt a || hasNegSqrt b
 hasNegSqrt a = 
    any hasNegSqrt (children a)
-
-distr :: Expr -> Expr
-distr = transform f
- where
-   f ((a :+: b) :/: c) = (a ./. c) .+. (b ./. c)
-   f ((a :-: b) :/: c) = (a ./. c) .-. (b ./. c)
-   f a = a
 
 normHDE :: Expr -> [Expr]
 normHDE e =

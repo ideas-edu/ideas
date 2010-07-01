@@ -39,7 +39,7 @@ coverUpExercise = makeExercise
                        newId "math.coverup"
    , status       = Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
-   , equivalence  = \_ _ -> True
+   -- , equivalence  = \_ _ -> True
    , isReady      = solvedEquations
    , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy

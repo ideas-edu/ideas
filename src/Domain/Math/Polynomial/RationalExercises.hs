@@ -171,7 +171,7 @@ brokenEqs cs p = do
 
 brokenEq :: [Relation Expr] -> Equation Expr -> Maybe (OrList Expr) -- rewrite me
 brokenEq cs2 eq = do
-   let (lhs :==: rhs) = doCovers eq
+   let (lhs :==: rhs) = coverUp eq
        (a, b, cs) = brokenExpr (lhs .-. rhs)
        as = maybe [a] snd (match productView a)
        bs = maybe [b] snd (match productView b)
@@ -227,14 +227,6 @@ brokenExpr expr =
                | a1 == neg b1 -> (a1 .*. (a3 .-. b3), c2, cs)
                | otherwise    -> (a1 .*. a3 .+. b1 .*. b3, c2, cs)
             _ -> (a1 .*. b2 .+. b1 .*. a2, a2 .*. b2, cs)
-
-doCovers :: Equation Expr -> Equation Expr
-doCovers eq = 
-   case [ new | r <- rs, new <- applyAll r eq ] of
-      hd:_ -> doCovers hd
-      _    -> eq
- where
-   rs = [coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpNegate]
 
 notZero :: Expr -> [Relation Expr]
 notZero (Nat 1) = []

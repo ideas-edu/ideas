@@ -199,8 +199,8 @@ ineqHigherDegree = cleanUpStrategy (applyTop cleanUpLogicRelation) $
 
 cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
 cleanUpLogicRelation p = 
-   case match orView p of
-      Just xs -> build orView (cleanUpRelation xs)
+   case match orListView p of
+      Just xs -> build orListView (cleanUpRelation xs)
       Nothing -> fmap (fmap cleanUpExpr2) p
 
 turnIntoEquation :: Rule (Context (Relation Expr))
@@ -217,7 +217,7 @@ solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
    ineq <- lookupClipboard "ineq" >>= fromExpr
    removeClipboard "ineq"
-   orv  <- maybeCM (matchM orView r)
+   orv  <- maybeCM (matchM orListView r)
    case disjunctions orv of 
       Nothing -> -- both sides are the same
          if relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]

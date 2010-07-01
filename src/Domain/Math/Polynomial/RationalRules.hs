@@ -20,9 +20,10 @@ import Common.Context
 import Common.Transformation
 import Common.View
 import Control.Monad
-import Data.List hiding (repeat)
+import Data.List
 import Data.Maybe
 import Domain.Logic.Formula hiding (disjunctions, Var)
+import Domain.Logic.Views
 import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -166,15 +167,6 @@ checkSolution = makeSimpleRule "check solution" $
 
 ---------------------------------------------------------------
 -- Helper-code
-
-andView :: View (Logic a) [a]
-andView = makeView f g 
- where
-   f (p :&&: q)    = liftM2 (++) (f p) (f q)
-   f (Logic.Var a) = return [a]
-   f T             = return []
-   f _             = Nothing
-   g xs = if null xs then T else foldr1 (:&&:) (map Logic.Var xs)
    
 condition :: Logic (Relation Expr) -> ContextMonad ()
 condition c = do
@@ -182,46 +174,15 @@ condition c = do
    let a = maybe id (.&&.) mp c
    unless (a==T) (addToClipboardG "condition" a)
 
-(.&&.) :: Logic a -> Logic a -> Logic a
-T .&&. p = p
-p .&&. T = p
-F .&&. _ = F
-_ .&&. F = F
-p .&&. q = p :&&: q
-
-(.||.) :: Logic a -> Logic a -> Logic a
-T .||. _ = T
-_ .||. T = T
-F .||. p = p
-p .||. F = p
-p .||. q = p :||: q
-
-nott :: Logic a -> Logic a -- push not inside
-nott (Not p)    = p
-nott (p :&&: q) = nott p .||. nott q
-nott (p :||: q) = nott p .&&. nott q
-nott T          = F
-nott F          = T
-nott p          = Not p
-
-eqToRel :: Logic (Equation a) -> Logic (Relation a)
-eqToRel (p :&&: q) = eqToRel p :&&: eqToRel q
-eqToRel (p :||: q) = eqToRel p :||: eqToRel q
-eqToRel T = T
-eqToRel F = F
-eqToRel (Not (Logic.Var (a :==: b))) = Logic.Var (a ./=. b)
-eqToRel (Not p) = Not (eqToRel p)
-eqToRel (Logic.Var (a :==: b)) = Logic.Var (a .==. b)
-eqToRel (p :<->: q) = eqToRel p :<->: eqToRel q
-eqToRel (p :->: q) = eqToRel p :->: eqToRel q
-
 conditionNotZero :: Expr -> ContextMonad ()
-conditionNotZero expr = condition (eqToRel (nott xs))
+conditionNotZero expr = condition (f xs)
  where
-   xs = fmap (fmap cleanUpExpr2 . doCovers) $ 
-        case match higherDegreeEquationsView (return (expr :==: 0)) of
-           Just ys -> build orView (build higherDegreeEquationsView ys)
-           Nothing -> Logic.Var (expr :==: 0)
+   f  = pushNotWith (Logic.Var . notRelation) . nott
+   eq = expr :==: 0
+   xs = fmap (build equationView . fmap cleanUpExpr2 . doCovers) $ 
+        case match higherDegreeEquationsView (return eq) of
+           Just ys -> build orListView (build higherDegreeEquationsView ys)
+           Nothing -> Logic.Var eq
                  
 doCovers :: Equation Expr -> Equation Expr
 doCovers eq = 

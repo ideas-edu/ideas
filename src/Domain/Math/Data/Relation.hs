@@ -15,7 +15,7 @@ module Domain.Math.Data.Relation
    ( -- * Type class
      Relational(..), mapLeft, mapRight, updateLeft, updateRight
      -- * Relation data type
-   , Relation, relationType, RelationType(..), relationSymbols
+   , Relation, relationType, RelationType(..), relationSymbols, notRelation
      -- * Constructor functions
    , makeType, (.==.), (./=.), (.<.), (.>.), (.<=.), (.>=.), (.~=.)
      -- * Equation (or equality)
@@ -98,6 +98,16 @@ relationSymbols =
    , (GreaterThanOrEqualTo, (">=", geqSymbol))
    , (Approximately, ("~=", approxSymbol))
    ]
+
+notRelation :: Relation a -> Relation a
+notRelation r = r { relationType = relationType r ? table }
+ where
+   table = xs ++ map swap xs ++ [(Approximately, Approximately)]
+   swap (x, y) = (y, x)
+   xs = [ (EqualTo, NotEqualTo)
+        , (LessThan, GreaterThanOrEqualTo)
+        , (LessThanOrEqualTo, GreaterThan) 
+        ]
 
 -- helpers   
 showRelType :: RelationType -> String

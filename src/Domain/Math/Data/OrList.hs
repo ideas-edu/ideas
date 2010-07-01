@@ -14,7 +14,7 @@ module Domain.Math.Data.OrList
    , orList, (\/), true, false
    , isTrue, isFalse
    , disjunctions, normalize, idempotent
-   , oneDisjunct, orView, joinOr
+   , oneDisjunct, orListView
    ) where
 
 import Common.View
@@ -99,8 +99,8 @@ instance Crush OrList where
    crush (OrList xs) = xs
 
 instance IsTerm a => IsTerm (OrList a) where
-   toTerm = toTerm . build orView
-   fromTerm expr = fromTerm expr >>= matchM orView
+   toTerm = toTerm . build orListView
+   fromTerm expr = fromTerm expr >>= matchM orListView
 
 instance Arbitrary a => Arbitrary (OrList a) where
    arbitrary = do 
@@ -120,8 +120,8 @@ instance Show a => Show (OrList a) where
 ------------------------------------------------------------
 -- View to the logic data type
  
-orView :: View (Logic a) (OrList a)
-orView = makeView f g 
+orListView :: View (Logic a) (OrList a)
+orListView = makeView f g 
  where
    f p  = case p of
              Logic.Var a -> return (return a)

@@ -26,8 +26,8 @@ import Common.View
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
-import Data.Ratio
-import Domain.Logic.Formula hiding (disjunctions, Var)
+import Domain.Logic.Formula (Logic)
+import Domain.Logic.Views
 import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -35,16 +35,14 @@ import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
 import Domain.Math.Expr
-import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Exercises (eqOrList)
+import Domain.Math.Polynomial.LeastCommonMultiple
 import Domain.Math.Polynomial.RationalRules
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
-import Domain.Math.Power.Views
 import Prelude hiding (repeat, until, (^))
-import qualified Domain.Logic.Formula as Logic
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
@@ -157,15 +155,6 @@ onlyInUpperDiv s = check isDivC <*> ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    safeUp a     = maybe (Just a) Just (up a)
 
-andView :: View (Logic a) [a]
-andView = makeView f g 
- where
-   f (p :&&: q)    = liftM2 (++) (f p) (f q)
-   f (Logic.Var a) = return [a]
-   f T             = return []
-   f _             = Nothing
-   g xs = if null xs then T else foldr1 (:&&:) (map Logic.Var xs)
-
 isNormBroken :: Expr -> Bool
 isNormBroken (Negate a) = isNormBroken a
 isNormBroken (a :/: b) = noVarInDivisor a && noVarInDivisor b
@@ -173,76 +162,12 @@ isNormBroken e = noVarInDivisor e
 
 noVarInDivisor :: Expr -> Bool
 noVarInDivisor expr = and [ noVars a | _ :/: a <- universe expr ]
-
-lcmExpr :: Expr -> Expr -> Expr
-lcmExpr a b = fromMaybe (a*b) $ do
-   (ar, as) <- match powerProductView a
-   (br, bs) <- match powerProductView b
-   return $ build powerProductView (lcmR ar br, merge as bs)
- where   
-   lcmR :: Rational -> Rational -> Rational
-   lcmR r1 r2 = 
-      let f r = numerator r * denominator r
-      in fromIntegral (lcm (f r1) (f r2))
-   
-   merge :: [(Expr, Integer)] -> [(Expr, Integer)] -> [(Expr, Integer)]
-   merge = foldr op id
-    where
-      op (e, n1) f ys = 
-         let n2   = fromMaybe 0 (lookup e ys)
-             rest = filter ((/=e) . fst) ys
-         in (e, n1 `max` n2) : f rest
-
-divisionExpr :: Expr -> Expr -> Maybe Expr
-divisionExpr a b = do
-   (ar, as) <- match powerProductView a
-   (br, bs) <- match powerProductView b
-   xs       <- as `without` bs
-   return $ build powerProductView (ar/br, xs)
- where
-   without :: [(Expr, Integer)] -> [(Expr, Integer)] -> Maybe [(Expr, Integer)]
-   without [] ys =
-      guard (null ys) >> return []
-   without ((e,n1):xs) ys = 
-      let n2   = fromMaybe 0 (lookup e ys)
-          rest = filter ((/=e) . fst) ys
-      in liftM ((e,n1-n2):) (without xs rest)
-
-powerProductView :: View Expr (Rational, [(Expr, Integer)])
-powerProductView = makeView f g
- where
-   f expr = do
-      (b, xs) <- match productView expr
-      let (r, ys) = collect xs
-      return (if b then -r else r, merge ys)
-         
-   g (r, xs) =
-      build productView (False, fromRational r : map (build pvn) xs)
-   
-   pvn :: View Expr (Expr, Integer)
-   pvn = simplePowerView >>> second integerView
-
-   collect :: [Expr] -> (Rational, [(Expr, Integer)])
-   collect = foldr op (1, [])
-    where
-      op e (r, xs) = 
-         let mr   = match rationalView e 
-             f r2 = (r*r2, xs)
-             pair = fromMaybe (e,1) (match pvn e)
-         in maybe (r, pair:xs) f mr
-
-   merge :: [(Expr, Integer)] -> [(Expr, Integer)]
-   merge [] = []
-   merge xs@((e, _) : _) = 
-      let (xs1, xs2) = partition ((==e) . fst) xs
-          n = sum (map snd xs1) 
-      in (e, n) : merge xs2
                  
 brokenEqs :: [Relation Expr] -> OrList (Equation Expr) -> Maybe (OrList Expr)
 brokenEqs cs p = do
    xs  <- disjunctions p
    yss <- mapM (brokenEq cs) xs
-   return (joinOr (orList yss))
+   return (join (orList yss))
 
 brokenEq :: [Relation Expr] -> Equation Expr -> Maybe (OrList Expr) -- rewrite me
 brokenEq cs2 eq = do
@@ -311,8 +236,9 @@ doCovers eq =
  where
    rs = [coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpNegate]
 
+notZero :: Expr -> [Relation Expr]
 notZero (Nat 1) = []
-notZero a = [a ./=. 0]
+notZero a       = [a ./=. 0]
 
 -----------------
 -- test code

@@ -14,7 +14,7 @@ module Domain.Math.Data.OrList
    , orList, (\/), true, false
    , isTrue, isFalse
    , disjunctions, normalize, idempotent
-   , oneDisjunct, orView
+   , oneDisjunct, orView, joinOr
    ) where
 
 import Common.View

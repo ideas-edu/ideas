@@ -33,6 +33,7 @@ import qualified Domain.Math.Polynomial.RationalExercises as Math
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.Power.Exercises as Math
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
+import qualified Domain.Math.Polynomial.LeastCommonMultiple as MathLCM
 -- import qualified Domain.RegularExpr.Exercises as RE
 import qualified Domain.RelationAlgebra as RA
 
@@ -52,6 +53,7 @@ useIDEAS action = runDomainReasoner $ do
       MathPoly.tests
       MathSqrt.tests
       MathInterval.testMe
+      MathLCM.testLCM
       LA.checks
    -- do the rest
    action

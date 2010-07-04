@@ -25,7 +25,9 @@ import Common.View
 import Control.Monad
 import Data.List hiding (repeat)
 import Data.Maybe
-import Domain.Logic.Formula (Logic)
+import Domain.Logic.Formula hiding (disjunctions, Var)
+import qualified Domain.Logic as Logic
+import qualified Domain.Logic.Views as Logic
 import Domain.Logic.Views
 import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
@@ -42,6 +44,7 @@ import Domain.Math.Polynomial.RationalRules
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
+import Domain.Math.SquareRoot.Views
 import Prelude hiding (repeat, until, (^))
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
@@ -151,76 +154,98 @@ isNormBroken expr =
 noVarInDivisor :: Expr -> Bool
 noVarInDivisor expr = and [ noVars a | _ :/: a <- universe expr ]
                  
-brokenEqs :: [Relation Expr] -> OrList (Equation Expr) -> Maybe (OrList Expr)
-brokenEqs cs p = do
-   xs  <- disjunctions p
-   yss <- mapM (brokenEq cs) xs
-   return (join (orList yss))
-
-brokenEq :: [Relation Expr] -> Equation Expr -> Maybe (OrList Expr) -- rewrite me
-brokenEq cs2 eq = do
+rationalEquations :: OrList (Equation Expr) -> Maybe (OrList Expr)
+rationalEquations = maybe (return true) f . disjunctions
+ where 
+   f xs = do 
+      yss <- mapM rationalEquation xs
+      return (join (orList yss))
+ 
+rationalEquation :: Equation Expr -> Maybe (OrList Expr)
+rationalEquation eq = do
    let (lhs :==: rhs) = coverUp eq
-       (a, b, cs) = brokenExpr (lhs .-. rhs)
-       as = maybe [a] snd (match productView a)
-       bs = maybe [b] snd (match productView b)
-       new1 = match higherDegreeEquationsView $ orList $ map (:==: 0) as
-       new2 = match higherDegreeEquationsView $ orList $ map conv $ 
-                 concatMap notZero bs ++ cs2 ++ cs
-       conv r = leftHandSide r :==: rightHandSide r
-       xs = fromMaybe [] (new2 >>= disjunctions)
-   ys <- new1 >>= disjunctions
-   return (orList (filter (`notElem` xs) ys))
+       (a, b, c) = rationalExpr (lhs .-. rhs)
+   (_, as) <- match productView a
+   (_, bs) <- match productView b
+   let condition = foldr (.&&.) c (map notZero bs)
+   new1    <- match higherDegreeEquationsView $ orList $ map (:==: 0) as
+   return (restrictOrList condition new1)
+
+restrictOrList :: Logic (Relation Expr) -> OrList Expr -> OrList Expr
+restrictOrList p0 = maybe true (orList . filter check) . disjunctions
+ where
+   check zeroExpr = 
+      case coverUp (zeroExpr :==: 0) of 
+         Var x :==: a -> -- returns true if a contradiction was not found
+            substVar x (cleanUpExpr2 a) p0 /= F 
+         _ -> True
+
+   substVar x a = Logic.simplify . catLogic . fmap (simpler . fmap (cleanUpExpr2 . subst))
+    where 
+      subst (Var s) | x == s = a
+      subst expr = make (map subst cs)
+       where (cs, make) = uniplate expr
+       
+   simpler r = fromMaybe (Logic.Var r) $ do
+      a <- match (squareRootViewWith rationalView) (leftHandSide r)
+      b <- match (squareRootViewWith rationalView) (rightHandSide r)
+      case (a==b, relationType r) of
+         (True,  EqualTo)    -> return T
+         (False, EqualTo)    -> return F 
+         (True,  NotEqualTo) -> return F
+         (False, NotEqualTo) -> return T
+         _ -> Nothing
+
 
 eqRationalEquation :: Context (OrList (Equation Expr)) -> Context (OrList (Equation Expr)) -> Bool
-eqRationalEquation ca cb = fromMaybe False $ do
-   a  <- fromContext ca
-   b  <- fromContext cb
-   let f c = fromMaybe [] $ do
-                p  <- conditionOnClipboard c
-                qs <- match andView p
-                return qs
-       csa = f ca
-       csb = f cb
-   xs <- brokenEqs csa a >>= disjunctions
-   ys <- brokenEqs csb b >>= disjunctions
-   return (sort xs == sort ys)
+eqRationalEquation ca cb = fromMaybe False $
+   liftM2 (==) (solve ca) (solve cb)
+ where
+   solve ctx = do 
+      let f = fromMaybe T . conditionOnClipboard
+      a  <- fromContext ctx 
+      xs <- rationalEquations a
+      ys <- disjunctions (restrictOrList (f ctx) xs)
+      return (sort (nub ys))
    
 conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
 conditionOnClipboard = evalCM $ const $
    lookupClipboardG "condition"
 
 -- write expression as a/b, under certain conditions
-brokenExpr :: Expr -> (Expr, Expr, [Relation Expr])
-brokenExpr expr =
-   case expr of 
-      a :+: b  -> brokenExpr a `fPlus` brokenExpr b
-      a :-: b  -> brokenExpr (a :+: Negate b)
-      Negate a -> fNeg (brokenExpr a)
-      a :*: b  -> brokenExpr a `fTimes` brokenExpr b
-      a :/: b  -> brokenExpr a `fTimes` fRecip (brokenExpr b)
+rationalExpr :: Expr -> (Expr, Expr, Logic (Relation Expr))
+rationalExpr expr =
+   case expr of
+      a :+: b  -> rationalExpr a `fPlus` rationalExpr b
+      a :-: b  -> rationalExpr (a :+: Negate b)
+      Negate a -> fNeg (rationalExpr a)
+      a :*: b  -> rationalExpr a `fTimes` rationalExpr b
+      a :/: b  -> rationalExpr a `fTimes` fRecip (rationalExpr b)
       Sym s [a, b] | s == powerSymbol -> 
-         fPower (brokenExpr a) b
-      _ -> (expr, 1, [])
+         fPower (rationalExpr a) b
+      _ -> (expr, 1, T)
  where
-   fNeg   (a, b, cs)   = (neg a, b, cs)
-   fRecip (a, b, cs)   = (b, a, notZero b ++ cs)
-   fPower (a, b, cs) n = (a .^. n, b .^. n, cs)
-   fTimes (a1, a2, acs) (b1, b2, bcs) = (a1 .*. b1, a2 .*. b2, acs++bcs)
-   fPlus  (a1, a2, acs) (b1, b2, bcs) =
-      let c2 = lcmExpr a2 b2
-          cs = acs++bcs
-      in case (divisionExpr c2 a2, divisionExpr c2 b2) of 
-            (Just a3, Just b3) 
-               | a1 == b1     -> (a1 .*. (a3 .+. b3), c2, cs)
-               | a1 == neg b1 -> (a1 .*. (a3 .-. b3), c2, cs)
-               | otherwise    -> (a1 .*. a3 .+. b1 .*. b3, c2, cs)
-            _ -> (a1 .*. b2 .+. b1 .*. a2, a2 .*. b2, cs)
+   fNeg   (a, b, p)   = (neg a, b, p)
+   fRecip (a, b, p)   = (b, a, notZero b .&&. p)
+   fPower (a, b, p) n = (a .^. n, b .^. n, p)
+   fTimes (a1, a2, p) (b1, b2, q) = (a1 .*. b1, a2 .*. b2, p .&&. q)
+   fPlus  (a1, a2, p) (b1, b2, q) =
+      case (divisionExpr c2 a2, divisionExpr c2 b2) of 
+         (Just a3, Just b3) 
+            | a1 == b1     -> (a1 .*. (a3 .+. b3), c2, pq)
+            | a1 == neg b1 -> (a1 .*. (a3 .-. b3), c2, pq)
+            | otherwise    -> (a1 .*. a3 .+. b1 .*. b3, c2, pq)
+         _ -> (a1 .*. b2 .+. b1 .*. a2, a2 .*. b2, pq)
+    where
+      c2 = lcmExpr a2 b2
+      pq = p .&&. q
 
-notZero :: Expr -> [Relation Expr]
+notZero :: Expr -> Logic (Relation Expr)
 notZero expr =
    case match rationalView expr of
-      Just r | r /= 0 -> []
-      _ -> [expr ./=. 0]
+      Just r | r /= 0    -> T
+             | otherwise -> F
+      _ -> Logic.Var (expr ./=. 0)
 
 -----------------
 -- test code
@@ -228,13 +253,14 @@ notZero expr =
 {-
 raar = brokenExpr $ x^2/(5*x+6) + 1
  where x = Var "x"
- 
+
 go0 = checkExercise rationalEquationExercise
+
 go2 = checkExercise simplifyRationalExercise
--}
+
 see n = printDerivation ex (examples ex !! (n-1))
  where ex = rationalEquationExercise -- simplifyRationalExercise
-  {-     
+      
 go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
        a = Var "a"

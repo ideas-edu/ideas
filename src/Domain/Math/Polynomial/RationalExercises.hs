@@ -50,7 +50,7 @@ import Prelude hiding (repeat, until, (^))
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
    { exerciseId    = describe "solve a rational equation (with a variable in a divisor)" $ 
-                        newId "math.rationaleq"
+                        newId "algebra.equations.rational"
    , status        = Provisional
    , parser        = parseExprWith (pOrList (pEquation pExpr))
    , isSuitable    = isJust . rationalEquations
@@ -280,13 +280,13 @@ raar = brokenExpr $ x^2/(5*x+6) + 1
  where x = Var "x"
 -
 go0 = checkExercise rationalEquationExercise
--}
+
 go = checkExercise simplifyRationalExercise
 
 see n = printDerivation ex (examples ex !! (n-1))
  where ex = --rationalEquationExercise  
             simplifyRationalExercise
-{-      
+      
 go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
        a = Var "a"

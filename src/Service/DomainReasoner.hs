@@ -29,6 +29,7 @@ import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
+import Data.Maybe
 import Service.Types
 import Service.ExercisePackage
 
@@ -136,11 +137,11 @@ getTestSuite :: DomainReasoner TestSuite
 getTestSuite = gets testSuite
 
 findPackage :: Id -> DomainReasoner (Some ExercisePackage)
-findPackage code = do
+findPackage i = do
    pkgs <- getPackages 
-   case [ a | a@(Some pkg) <- pkgs, getId pkg == code ] of
+   case [ a | a@(Some pkg) <- pkgs, getId pkg == resolveId i ] of
       [this] -> return this
-      _      -> fail $ "Package " ++ show code ++ " not found"
+      _      -> fail $ "Package " ++ show i ++ " not found"
       
 findService :: String -> DomainReasoner Service
 findService txt = do
@@ -149,3 +150,20 @@ findService txt = do
       [hd] -> return hd
       []   -> fail $ "No service " ++ txt
       _    -> fail $ "Ambiguous service " ++ txt
+
+-----------------------------------------------------------------------
+-- Identifier aliases (temporary)
+
+resolveId :: Id -> Id
+resolveId i = fromMaybe i (lookup i table)
+ where
+   table = map (\(a, b) -> (newId a, newId b)) $ 
+      [ ("math.coverup",             "algebra.equations.coverup")
+      , ("math.lineq",               "algebra.equations.linear")
+      , ("math.lineq-mixed",         "algebra.equations.linear.mixed")
+      , ("math.quadreq",             "algebra.equations.quadratic")         
+      , ("math.quadreq-no-abc",      "algebra.equations.quadratic.no-abc")    
+      , ("math.quadreq-with-approx", "algebra.equations.quadratic.approximate")
+      , ("math.higherdegree",        "algebra.equations.polynomial")
+      , ("math.rationaleq",          "algebra.equations.rational")
+      ]

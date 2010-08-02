@@ -1,6 +1,54 @@
 {
    "result": [
       {
+         "domain": "algebra.equations",
+         "identifier": "coverup",
+         "description": "solve an equation by covering up",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.equations",
+         "identifier": "linear",
+         "description": "solve a linear equation",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.equations",
+         "identifier": "polynomial",
+         "description": "solve an equation (higher degree)",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.equations",
+         "identifier": "quadratic",
+         "description": "solve a quadratic equation",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.equations",
+         "identifier": "rational",
+         "description": "solve a rational equation (with a variable in a divisor)",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.equations.linear",
+         "identifier": "mixed",
+         "description": "solve a linear equation with mixed fractions",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.equations.quadratic",
+         "identifier": "approximate",
+         "description": "solve a quadratic equation with approximation",
+         "status": "Alpha"
+      },
+      {
+         "domain": "algebra.equations.quadratic",
+         "identifier": "no-abc",
+         "description": "solve a quadratic equation without abc-formula",
+         "status": "Alpha"
+      },
+      {
          "domain": "linalg",
          "identifier": "gaussianelim",
          "description": "Gaussian Elimination",
@@ -44,12 +92,6 @@
       },
       {
          "domain": "math",
-         "identifier": "coverup",
-         "description": "solve an equation by covering up",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
          "identifier": "derivative",
          "description": "Derivative",
          "status": "Experimental"
@@ -68,26 +110,8 @@
       },
       {
          "domain": "math",
-         "identifier": "higherdegree",
-         "description": "solve an equation (higher degree)",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
          "identifier": "ineqhigherdegree",
          "description": "solve an inequation of higher degree",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "lineq",
-         "description": "solve a linear equation",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "lineq-mixed",
-         "description": "solve a linear equation with mixed fractions",
          "status": "Provisional"
       },
       {
@@ -110,32 +134,8 @@
       },
       {
          "domain": "math",
-         "identifier": "quadreq",
-         "description": "solve a quadratic equation",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "quadreq-no-abc",
-         "description": "solve a quadratic equation without abc-formula",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
-         "identifier": "quadreq-with-approx",
-         "description": "solve a quadratic equation with approximation",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
          "identifier": "quadrineq",
          "description": "solve a quadratic inequation",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "rationaleq",
-         "description": "solve a rational equation (with a variable in a divisor)",
          "status": "Provisional"
       },
       {

@@ -41,7 +41,7 @@ import Control.Monad
 linearExercise :: Exercise (Equation Expr)
 linearExercise = makeExercise 
    { exerciseId   = describe "solve a linear equation" $ 
-                       newId "math.lineq"
+                       newId "algebra.equations.linear"
    , status       = Provisional
    , parser       = parseExprWith (pEquation pExpr)
    , similarity   = eqRelation (acExpr . cleanUpExpr2)
@@ -68,7 +68,7 @@ linearExercise = makeExercise
 linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise 
    { exerciseId   = describe "solve a linear equation with mixed fractions" $ 
-                       newId "math.lineq-mixed"
+                       newId "algebra.equations.linear.mixed"
    , isReady      = solvedRelationWith (`belongsTo` mixedFractionNormalForm)
    , strategy     = linearMixedStrategy
    } 
@@ -76,7 +76,7 @@ linearMixedExercise = linearExercise
 quadraticExercise :: Exercise (OrList (Relation Expr))
 quadraticExercise = makeExercise 
    { exerciseId   = describe "solve a quadratic equation" $ 
-                       newId "math.quadreq"
+                       newId "algebra.equations.quadratic"
    , status       = Provisional
    , parser       = \input -> case parseExprWith (pOrList (pEquation pExpr)) input of
                                  Left err -> Left err
@@ -97,7 +97,7 @@ quadraticExercise = makeExercise
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 
    { exerciseId    = describe "solve an equation (higher degree)" $
-                        newId "math.higherdegree"
+                        newId "algebra.equations.polynomial"
    , status        = Provisional
    , parser        = parser quadraticExercise
    , similarity    = eqOrList cleanUpExpr2
@@ -117,7 +117,7 @@ higherDegreeExercise = makeExercise
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
 quadraticNoABCExercise = quadraticExercise
    { exerciseId   = describe "solve a quadratic equation without abc-formula" $ 
-                       newId "math.quadreq-no-abc"
+                       newId "algebra.equations.quadratic.no-abc"
    , status       = Alpha
    , strategy     = configure cfg quadraticStrategy
    }
@@ -131,7 +131,7 @@ quadraticNoABCExercise = quadraticExercise
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))
 quadraticWithApproximation = quadraticExercise
    { exerciseId   = describe "solve a quadratic equation with approximation" $ 
-                       newId "math.quadreq-with-approx"
+                       newId "algebra.equations.quadratic.approximate"
    , status       = Alpha
    , parser       = parseExprWith (pOrList (pRelation pExpr))
    , strategy     = configure cfg quadraticStrategy

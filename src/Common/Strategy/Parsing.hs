@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Parsing where
+module Common.Strategy.Parsing (runCore, Step(..)) where
   
 import Prelude hiding (repeat)
 import Common.Classes
@@ -17,15 +17,16 @@ import Common.Strategy.Core hiding (Skip)
 import Common.Transformation
 import Common.Uniplate
 import Control.Monad
+import qualified Data.IntMap as IM
 import Data.Maybe
 
-data Env l a = Env [(Int, (Env l a, Core l a))]
+newtype Env l a = Env (IM.IntMap (Env l a, Core l a))
   
 addToEnv :: Int -> Core l a -> Env l a -> Env l a
-addToEnv n a env@(Env xs) = Env ((n, (env, a)) : xs)
+addToEnv n a env@(Env m) = Env (IM.insert n (env, Rec n a) m)
   
 findInEnv :: Int -> Env l a -> Maybe (Env l a, Core l a)
-findInEnv n (Env xs) = lookup n xs
+findInEnv n (Env m) = IM.lookup n m
 
 data State l a = S 
    { grammar     :: Core l a                         -- current core strategy
@@ -33,22 +34,31 @@ data State l a = S
    , environment :: Env l a                          -- env for fixpoints
    , trace       :: [Step l a]                       -- steps so far
    , choices     :: [Bool]                           -- choices made
-   , counter     :: Int                              -- number of steps
-   , lastIsSkip  :: Bool                             -- last step was without step
+   , counter     :: !Int                             -- number of steps
+   , lastIsSkip  :: Bool                             -- last step was without value
    , value       :: Maybe a                          -- current value (if one)
    }
 
-data Step l a = Enter l | Exit l | Apply (Maybe l) (Rule a)
+data Step l a = Enter l | Exit l | RuleStep (Maybe l) (Rule a)
+   deriving Show
+
+instance Apply (Step l) where
+   applyAll (RuleStep _ r) = applyAll r
+   applyAll _              = return
 
 empty :: State l a -> Bool
 empty state = isReadyState state || any p (step state)
  where
    p st = lastIsSkip st && empty st
 
-run :: State l a -> [a]
-run state = 
+runCore :: Core l a -> a -> [a]
+runCore core a = -- error $ (show :: Core () a -> String) $ noLabels core
+   runState $ S core [] (Env IM.empty) [] [] 0 False (Just a)
+
+runState :: State l a -> [a]
+runState state = 
    (maybe id (:) (guard (empty state) >> value state))
-   [ b | n <- step state, b <- run n ] 
+   [ b | n <- step state, b <- runState n ] 
 
 isReadyState :: State l a -> Bool
 isReadyState state = 
@@ -68,10 +78,10 @@ step state = update $
                       Right (x, e):xs -> replaceBy x (setEnvironment e (state {stack = xs }))
       Fail      -> []
       Label l p -> return (state { grammar = p }, Just (Enter l))
-      Rule l r  -> [ (state { grammar = Succeed, value = Just b }, Just (Apply l r))
+      Rule l r  -> [ (state { grammar = Succeed, value = Just b }, Just (RuleStep l r))
                    | b <- maybe [] (applyAll r) (value state)
                    ]
-      Not p     -> do guard $ null $ run $ 
+      Not p     -> do guard $ null $ runState $ 
                          state { grammar = noLabels p, stack = [] }
                       replaceBy Succeed state
       Rec n p   -> replaceBy p (changeEnvironment (addToEnv n p) state)
@@ -106,7 +116,7 @@ changeEnvironment f state =
    state { environment = f (environment state) } 
 
 setEnvironment :: Env l a -> State l a -> State l a
-setEnvironment = changeEnvironment . const
+setEnvironment a = changeEnvironment (\_ -> a)
 
 pushCoreStack :: Core l a -> State l a -> State l a
 pushCoreStack a state = 

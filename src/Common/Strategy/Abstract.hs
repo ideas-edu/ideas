@@ -29,6 +29,7 @@ import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate
+import Common.Strategy.Parsing (runCore)
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -40,7 +41,8 @@ instance Show (Strategy a) where
    show = show . toCore
 
 instance Apply Strategy where
-   applyAll s = results . fullDerivationTree s
+   applyAll s = runCore (toCore s)
+      -- results . fullDerivationTree s
 
 -----------------------------------------------------------
 --- The information used as label in a strategy

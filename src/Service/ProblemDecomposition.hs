@@ -89,7 +89,7 @@ runPrefixLocation loc p0 =
    cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
-   stop (Just (End is _)) = is==loc
+   stop (Just (Exit (is, _))) = is==loc
    stop _ = False
  
    check result@(a, p)
@@ -106,12 +106,12 @@ firstMajorInPrefix p0 prefix a = fromMaybe (topLocation, []) $ do
    is <- firstLocation newSteps
    return (is, argumentsForSteps a newSteps)
  where
-   firstLocation :: [Step a] -> Maybe StrategyLocation
+   firstLocation :: [Step (StrategyLocation, l) a] -> Maybe StrategyLocation
    firstLocation [] = Nothing
-   firstLocation (Begin is _:Step r:_) | isMajorRule r = Just is
+   firstLocation (Enter (is, _):RuleStep _ r:_) | isMajorRule r = Just is
    firstLocation (_:rest) = firstLocation rest
  
-argumentsForSteps :: a -> [Step a] -> Args
+argumentsForSteps :: a -> [Step l a] -> Args
 argumentsForSteps a = flip rec a . stepsToRules
  where
    rec [] _ = []
@@ -128,9 +128,9 @@ nextMajorForPrefix p0 a = fromMaybe topLocation $ do
    rec (reverse steps)
  where
    rec [] = Nothing
-   rec (Begin is _:_) = Just is
-   rec (End is _:_)   = Just is
-   rec (_:rest)       = rec rest 
+   rec (Enter (is, _):_) = Just is
+   rec (Exit (is, _):_)  = Just is
+   rec (_:rest)          = rec rest
   
 makeDerivation :: a -> [Rule a] -> [(String, a)]
 makeDerivation _ []     = []
@@ -144,7 +144,7 @@ runPrefixMajor p0 =
    map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
-   stop (Just (Step r)) = isMajorRule r
+   stop (Just (RuleStep _ r)) = isMajorRule r
    stop _ = False
 
 ------------------------------------------------------------------------

@@ -24,6 +24,7 @@ import Common.Strategy.Core
 import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
+import Common.Strategy.Parsing (Step(..))
 import Data.Maybe
 
 -----------------------------------------------------------
@@ -33,7 +34,9 @@ import Data.Maybe
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [(Int, Step a)] (DerivationTree (Step a) ())
+data Prefix a = P [(Int, PStep a)] (DerivationTree (PStep a) ())
+
+type PStep = Step (StrategyLocation, LabelInfo)
 
 instance Show (Prefix a) where
    show (P xs _) = show (reverse (map fst xs))
@@ -58,21 +61,10 @@ makePrefix is ls = rec [] is start
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> fail ("invalid prefix: " ++ show is)
 
-   stepTranslation :: Translation (StrategyLocation, LabelInfo) a (Step a)
-   stepTranslation = (forLabel, Step)
+   stepTranslation :: Translation (StrategyLocation, LabelInfo) a (PStep a)
+   stepTranslation = (forLabel, RuleStep Nothing)
    
-   forLabel (loc, i) = Around (Begin loc i) (End loc i)
-      
--- | The @Step@ data type can be used to inspect the structure of the strategy
-data Step a = Begin StrategyLocation LabelInfo
-            | Step (Rule a) 
-            | End StrategyLocation LabelInfo
-   deriving Show
-
-instance Apply Step where
-   applyAll (Step r)    = applyAll r
-   applyAll (Begin _ _) = return
-   applyAll (End _ _)   = return
+   forLabel (loc, i) = Around (Enter (loc, i)) (Exit (loc, i))
 
 instance Apply Prefix where
    applyAll p = results . prefixTree p
@@ -81,20 +73,20 @@ instance Apply Prefix where
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
 prefixTree (P xs t) = changeLabel snd . runTree (decorate xs t)
 
-decorate :: [(Int, Step a)] -> DerivationTree (Step a) () -> DerivationTree (Step a) (Prefix a)
+decorate :: [(Int, PStep a)] -> DerivationTree (PStep a) () -> DerivationTree (PStep a) (Prefix a)
 decorate xs t =
    let list = zipWith make [0..] (branches t)
        make i (s, st) = (s, decorate ((i,s):xs) st)
    in addBranches list (singleNode (P xs t) (endpoint t))
  
 -- | Returns the steps that belong to the prefix
-prefixToSteps :: Prefix a -> [Step a]
+prefixToSteps :: Prefix a -> [PStep a]
 prefixToSteps (P xs _) = [ step | (_, step) <- reverse xs ]
  
 -- | Retrieves the rules from a list of steps
-stepsToRules :: [Step a] -> [Rule a]
-stepsToRules steps = [ r | Step r <- steps ]
+stepsToRules :: [Step l a] -> [Rule a]
+stepsToRules steps = [ r | RuleStep _ r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
-lastStepInPrefix :: Prefix a -> Maybe (Step a)
+lastStepInPrefix :: Prefix a -> Maybe (PStep a)
 lastStepInPrefix (P xs _) = safeHead [ step | (_, step) <- xs ]

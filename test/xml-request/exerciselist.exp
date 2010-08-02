@@ -22,7 +22,7 @@
     <elem domain="math" identifier="quadreq-no-abc" description="solve a quadratic equation without abc-formula" status="Alpha"/>
     <elem domain="math" identifier="quadreq-with-approx" description="solve a quadratic equation with approximation" status="Alpha"/>
     <elem domain="math" identifier="quadrineq" description="solve a quadratic inequation" status="Provisional"/>
-    <elem domain="math" identifier="rationaleq" description="solve a rational equation (with a variable in a divisor)" status="Alpha"/>
+    <elem domain="math" identifier="rationaleq" description="solve a rational equation (with a variable in a divisor)" status="Provisional"/>
     <elem domain="math" identifier="simplifypower" description="simplify expression (powers)" status="Provisional"/>
     <elem domain="math" identifier="simplifyrational" description="simplify a rational expression (with a variable in a divisor)" status="Alpha"/>
     <elem domain="relationalg" identifier="cnf" description="To conjunctive normal form" status="Alpha"/>

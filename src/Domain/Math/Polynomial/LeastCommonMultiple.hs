@@ -10,7 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.LeastCommonMultiple 
-   ( lcmExpr, divisionExpr, testLCM 
+   ( lcmExpr, divisionExpr, noCommonFactor, equalFactors, testLCM 
+   , powerProductView
    ) where
 
 import Prelude hiding ((^))
@@ -126,6 +127,12 @@ testLCM = suite "lcmExpr" $ do
       p <- frequency [(3, return v), (1, return (v .+. fromInteger i))]
       frequency [(3, return p), (1, return (p^fromInteger n))]
 
-   x ~= y = let f = simplifyWith (second sort) powerProductView 
-            in f x == f y
+   (~=)    = equalFactors
    absExpr = simplifyWith (first (const False)) productView
+
+noCommonFactor :: Expr -> Expr -> Bool
+noCommonFactor x y = lcmExpr x y `equalFactors` (x*y)
+   
+equalFactors :: Expr -> Expr -> Bool
+equalFactors x y = f x == f y
+ where f = simplifyWith (second sort) powerProductView 

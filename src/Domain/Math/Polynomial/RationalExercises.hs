@@ -51,9 +51,9 @@ rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
    { exerciseId    = describe "solve a rational equation (with a variable in a divisor)" $ 
                         newId "math.rationaleq"
-   , status        = Alpha -- Provisional
+   , status        = Provisional
    , parser        = parseExprWith (pOrList (pEquation pExpr))
- -- isSuitable 
+   , isSuitable    = isJust . rationalEquations
    , isReady       = solvedRelations
    , eqWithContext = Just eqRationalEquation
    , similarity    = eqOrList cleanUpExpr2
@@ -65,18 +65,18 @@ rationalEquationExercise = makeExercise
    
 simplifyRationalExercise :: Exercise Expr
 simplifyRationalExercise = makeExercise
-   { exerciseId   = describe "simplify a rational expression (with a variable in a divisor)" $ 
-                       newId "math.simplifyrational"
-   , status       = Alpha -- Provisional
-   , parser       = parseExpr
+   { exerciseId    = describe "simplify a rational expression (with a variable in a divisor)" $ 
+                        newId "math.simplifyrational"
+   , status        = Alpha -- Provisional
+   , parser        = parseExpr
 -- isSuitable
-   , isReady      = isNormBroken
---   , equivalence  = ??
-   , similarity   = \x y -> cleanUpExpr2 x == cleanUpExpr2 y
-   , strategy     = simplifyRationalStrategy
-   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
-   , navigation   = termNavigator
-   , examples     = concat (normBroken ++ normBroken2)
+   , isReady       = simplifiedRational
+   -- , eqWithContext = Just eqSimplifyRational
+   , similarity    = \x y -> cleanUpExpr2 x == cleanUpExpr2 y
+   , strategy      = simplifyRationalStrategy
+   , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
+   , navigation    = termNavigator
+   , examples      = concat (normBroken ++ normBroken2)
    }
    
 divisionRationalExercise :: Exercise Expr
@@ -144,16 +144,25 @@ onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 1 | isDivC a ]
 onlyLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyLowerDiv = onceWith "only-lower-div" $ \a -> [ 2 | isDivC a ]
    
-isNormBroken :: Expr -> Bool
-isNormBroken expr =
+simplifiedRational :: Expr -> Bool
+simplifiedRational expr =
    case expr of
-      Negate a -> isNormBroken a
-      a :/: b  -> noVarInDivisor a && noVarInDivisor b
-      _        -> noVarInDivisor expr
+      Negate a -> simplifiedRational a
+      _        -> f expr
+ where
+   f (a :/: b) = inPolyForm a && noCommonFactor a b && inFactorForm b
+   f _ = False
 
-noVarInDivisor :: Expr -> Bool
-noVarInDivisor expr = and [ noVars a | _ :/: a <- universe expr ]
-                 
+   inPolyForm :: Expr -> Bool
+   inPolyForm expr =
+      expr `belongsTo` (polyNormalForm identity) ||
+      length (nub (collectVars expr)) > 1
+          
+   inFactorForm :: Expr -> Bool
+   inFactorForm = flip belongsTo $
+      let v = first (polyNormalForm identity >>> second linearPolyView)
+      in powerProductView >>> second (listView v)
+
 rationalEquations :: OrList (Equation Expr) -> Maybe (OrList Expr)
 rationalEquations = maybe (return true) f . disjunctions
  where 
@@ -196,7 +205,6 @@ restrictOrList p0 = maybe true (orList . filter check) . disjunctions
          (False, NotEqualTo) -> return T
          _ -> Nothing
 
-
 eqRationalEquation :: Context (OrList (Equation Expr)) -> Context (OrList (Equation Expr)) -> Bool
 eqRationalEquation ca cb = fromMaybe False $
    liftM2 (==) (solve ca) (solve cb)
@@ -207,6 +215,23 @@ eqRationalEquation ca cb = fromMaybe False $
       xs <- rationalEquations a
       ys <- disjunctions (restrictOrList (f ctx) xs)
       return (sort (nub ys))
+   
+eqSimplifyRational :: Context Expr -> Context Expr -> Bool
+eqSimplifyRational ca cb = fromMaybe False $ do
+   a <- fromContext ca
+   b <- fromContext cb
+   let t1@(a1, a2, pa) = rationalExpr a
+       t2@(b1, b2, pb) = rationalExpr b
+       a1c = cleanUpExpr2 a1
+       b1c = cleanUpExpr2 b1
+       manyVars = length (nub (collectVars a ++ collectVars b)) > 1
+   if manyVars then return True else do
+   p1 <- match (polyViewWith rationalView) a1c
+   p2 <- match (polyViewWith rationalView) b1c
+   return (if manyVars || p1==p2 then True else error $ show a)
+
+q = lcmExpr  (x^2+4*x-5) (x^2+5*x-6)
+ where x = Var "x"
    
 conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
 conditionOnClipboard = evalCM $ const $
@@ -253,14 +278,15 @@ notZero expr =
 {-
 raar = brokenExpr $ x^2/(5*x+6) + 1
  where x = Var "x"
-
+-
 go0 = checkExercise rationalEquationExercise
-
-go2 = checkExercise simplifyRationalExercise
+-}
+go = checkExercise simplifyRationalExercise
 
 see n = printDerivation ex (examples ex !! (n-1))
- where ex = rationalEquationExercise -- simplifyRationalExercise
-      
+ where ex = --rationalEquationExercise  
+            simplifyRationalExercise
+{-      
 go4 = printDerivation findFactorsExercise $ -a + 4
  where x = Var "x"
        a = Var "a"

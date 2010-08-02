@@ -30,7 +30,7 @@ import Common.Navigator
 cnfExercise :: Exercise RelAlg
 cnfExercise = testableExercise
    { exerciseId     = describe "To conjunctive normal form" $
-                         newId "relationalg.cnf"
+                         newId "relationalgebra.cnf"
    , status         = Alpha
    , parser         = parseRelAlg
    , prettyPrinter  = ppRelAlg

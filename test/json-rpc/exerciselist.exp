@@ -49,109 +49,109 @@
          "status": "Alpha"
       },
       {
-         "domain": "linalg",
-         "identifier": "gaussianelim",
-         "description": "Gaussian Elimination",
-         "status": "Stable"
-      },
-      {
-         "domain": "linalg",
-         "identifier": "gramschmidt",
-         "description": "Gram-Schmidt",
-         "status": "Alpha"
-      },
-      {
-         "domain": "linalg",
-         "identifier": "linsystem",
-         "description": "Solve Linear System",
-         "status": "Stable"
-      },
-      {
-         "domain": "linalg",
-         "identifier": "systemwithmatrix",
-         "description": "Solve Linear System with Matrix",
-         "status": "Provisional"
-      },
-      {
-         "domain": "logic",
-         "identifier": "dnf",
-         "description": "Proposition to DNF",
-         "status": "Stable"
-      },
-      {
-         "domain": "logic",
-         "identifier": "dnf-unicode",
-         "description": "Proposition to DNF (unicode support)",
-         "status": "Stable"
-      },
-      {
-         "domain": "math",
-         "identifier": "calcpower",
-         "description": "simplify expression (powers)",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "derivative",
-         "description": "Derivative",
-         "status": "Experimental"
-      },
-      {
-         "domain": "math",
-         "identifier": "factor",
-         "description": "factorize the expression",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "fraction",
-         "description": "simplify expression (fractions)",
-         "status": "Alpha"
-      },
-      {
-         "domain": "math",
-         "identifier": "ineqhigherdegree",
-         "description": "solve an inequation of higher degree",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "linineq",
+         "domain": "algebra.inequalities",
+         "identifier": "linear",
          "description": "solve a linear inequation",
          "status": "Provisional"
       },
       {
-         "domain": "math",
-         "identifier": "nonnegexp",
+         "domain": "algebra.inequalities",
+         "identifier": "polynomial",
+         "description": "solve an inequation of higher degree",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.inequalities",
+         "identifier": "quadratic",
+         "description": "solve a quadratic inequation",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.manipulation.exponents",
+         "identifier": "nonnegative",
          "description": "write with a non-negative exponent",
          "status": "Provisional"
       },
       {
-         "domain": "math",
+         "domain": "algebra.manipulation.exponents",
          "identifier": "powerof",
          "description": "write as a power of a",
          "status": "Provisional"
       },
       {
-         "domain": "math",
-         "identifier": "quadrineq",
-         "description": "solve a quadratic inequation",
-         "status": "Provisional"
-      },
-      {
-         "domain": "math",
-         "identifier": "simplifypower",
+         "domain": "algebra.manipulation.exponents",
+         "identifier": "simplify",
          "description": "simplify expression (powers)",
          "status": "Provisional"
       },
       {
-         "domain": "math",
-         "identifier": "simplifyrational",
+         "domain": "algebra.manipulation.polynomial",
+         "identifier": "factor",
+         "description": "factorize the expression",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.manipulation.rational",
+         "identifier": "simplify",
          "description": "simplify a rational expression (with a variable in a divisor)",
          "status": "Alpha"
       },
       {
-         "domain": "relationalg",
+         "domain": "arithmetic",
+         "identifier": "exponents",
+         "description": "simplify expression (powers)",
+         "status": "Provisional"
+      },
+      {
+         "domain": "arithmetic",
+         "identifier": "fractions",
+         "description": "simplify expression (fractions)",
+         "status": "Alpha"
+      },
+      {
+         "domain": "calculus",
+         "identifier": "differentiation",
+         "description": "Derivative",
+         "status": "Experimental"
+      },
+      {
+         "domain": "linearalgebra",
+         "identifier": "gaussianelim",
+         "description": "Gaussian Elimination",
+         "status": "Stable"
+      },
+      {
+         "domain": "linearalgebra",
+         "identifier": "gramschmidt",
+         "description": "Gram-Schmidt",
+         "status": "Alpha"
+      },
+      {
+         "domain": "linearalgebra",
+         "identifier": "linsystem",
+         "description": "Solve Linear System",
+         "status": "Stable"
+      },
+      {
+         "domain": "linearalgebra",
+         "identifier": "systemwithmatrix",
+         "description": "Solve Linear System with Matrix",
+         "status": "Provisional"
+      },
+      {
+         "domain": "logic.propositional",
+         "identifier": "dnf",
+         "description": "Proposition to DNF",
+         "status": "Stable"
+      },
+      {
+         "domain": "logic.propositional.dnf",
+         "identifier": "unicode",
+         "description": "Proposition to DNF (unicode support)",
+         "status": "Stable"
+      },
+      {
+         "domain": "relationalgebra",
          "identifier": "cnf",
          "description": "To conjunctive normal form",
          "status": "Alpha"

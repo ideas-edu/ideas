@@ -66,7 +66,7 @@ rationalEquationExercise = makeExercise
 simplifyRationalExercise :: Exercise Expr
 simplifyRationalExercise = makeExercise
    { exerciseId    = describe "simplify a rational expression (with a variable in a divisor)" $ 
-                        newId "math.simplifyrational"
+                        newId "algebra.manipulation.rational.simplify"
    , status        = Alpha -- Provisional
    , parser        = parseExpr
 -- isSuitable

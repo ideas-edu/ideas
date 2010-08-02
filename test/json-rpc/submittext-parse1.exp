@@ -3,7 +3,7 @@
       false,
       "Syntax error at (1,7): Closing parenthesis symbol ) has no matching symbol",
       [
-         "logic.dnf",
+         "logic.propositional.dnf",
          "[]",
          "~(~x || ~y)",
          {
@@ -12,5 +12,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.11 (2812)"
+   "version": "0.6.3 (0)"
 }

@@ -35,7 +35,7 @@ import Test.QuickCheck
 dnfExercise :: Exercise SLogic
 dnfExercise = makeExercise
    { exerciseId     = describe "Proposition to DNF" $
-                         newId "logic.dnf"
+                         newId "logic.propositional.dnf"
    , status         = Stable
    , parser         = parseLogicPars
    , prettyPrinter  = ppLogicPars
@@ -55,7 +55,7 @@ dnfExercise = makeExercise
 dnfUnicodeExercise :: Exercise SLogic
 dnfUnicodeExercise = dnfExercise
    { exerciseId    = describe "Proposition to DNF (unicode support)" $
-                        newId "logic.dnf-unicode"
+                        newId "logic.propositional.dnf.unicode"
    , parser        = parseLogicUnicodePars
    , prettyPrinter = ppLogicUnicodePars
    }

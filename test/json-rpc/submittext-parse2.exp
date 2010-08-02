@@ -3,7 +3,7 @@
       false,
       "Syntax error: Ambiguous use of operators (write parentheses)",
       [
-         "logic.dnf",
+         "logic.propositional.dnf",
          "[]",
          "~(~x || ~y)",
          {
@@ -12,5 +12,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2396)"
+   "version": "0.6.3 (0)"
 }

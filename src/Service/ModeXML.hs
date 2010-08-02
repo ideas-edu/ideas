@@ -104,15 +104,9 @@ extractExerciseId xml =
       Just s  -> newIdM s
       -- being backwards compatible with early MathDox
       Nothing -> do
-         let getName = map toLower . filter isAlphaNum . getData
-             linalg  = return . newId . ("linalg." ++)
-         case fmap getName (findChild "strategy" xml) of
-            Just name
-               | name == "gaussianelimination"         -> linalg "gaussianelim"
-               | name == "gramschmidt"                 -> linalg "gramschmidt"
-               | name == "solvelinearsystem"           -> linalg "linsystem"
-               | name == "solvelinearsystemwithmatrix" -> linalg "systemwithmatrix"
-            _ -> fail "no exerciseid attribute, nor a known strategy element" 
+         a <- findChild "strategy" xml
+         let f = map toLower . filter isAlphaNum . getData
+         newIdM (f a)
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 

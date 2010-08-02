@@ -35,7 +35,7 @@ import Test.QuickCheck
 gramSchmidtExercise :: Exercise (VectorSpace (Simplified Expr))
 gramSchmidtExercise = makeExercise
    { exerciseId     = describe "Gram-Schmidt" $
-                         newId "linalg.gramschmidt"
+                         newId "linearalgebra.gramschmidt"
    , status         = Alpha
    , parser         = \s -> case parseVectorSpace s of
                               Right a  -> Right (fmap simplified a)
@@ -53,7 +53,7 @@ gramSchmidtExercise = makeExercise
 linearSystemExercise :: Exercise (Equations Expr)
 linearSystemExercise = makeExercise
    { exerciseId     = describe "Solve Linear System" $
-                         newId "linalg.linsystem"
+                         newId "linearalgebra.linsystem"
    , status         = Stable
    , parser         = \s -> case parseSystem s of
                                Right a  -> Right (simplify a)
@@ -74,7 +74,7 @@ linearSystemExercise = makeExercise
 gaussianElimExercise :: Exercise (Matrix Expr)
 gaussianElimExercise = makeExercise
    { exerciseId     = describe "Gaussian Elimination" $ 
-                         newId "linalg.gaussianelim"
+                         newId "linearalgebra.gaussianelim"
    , status         = Stable
    , parser         = \s -> case parseMatrix s of
                                Right a  -> Right (simplify a)
@@ -90,7 +90,7 @@ gaussianElimExercise = makeExercise
 systemWithMatrixExercise :: Exercise Expr
 systemWithMatrixExercise = makeExercise
    { exerciseId     = describe "Solve Linear System with Matrix" $ 
-                         newId "linalg.systemwithmatrix"
+                         newId "linearalgebra.systemwithmatrix"
    , status         = Provisional
    , parser         = \s -> case (parser linearSystemExercise s, parser gaussianElimExercise s) of
                                (Right ok, _) -> Right $ toExpr ok

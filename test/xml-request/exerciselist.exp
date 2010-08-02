@@ -8,24 +8,24 @@
     <elem domain="algebra.equations.linear" identifier="mixed" description="solve a linear equation with mixed fractions" status="Provisional"/>
     <elem domain="algebra.equations.quadratic" identifier="approximate" description="solve a quadratic equation with approximation" status="Alpha"/>
     <elem domain="algebra.equations.quadratic" identifier="no-abc" description="solve a quadratic equation without abc-formula" status="Alpha"/>
-    <elem domain="linalg" identifier="gaussianelim" description="Gaussian Elimination" status="Stable"/>
-    <elem domain="linalg" identifier="gramschmidt" description="Gram-Schmidt" status="Alpha"/>
-    <elem domain="linalg" identifier="linsystem" description="Solve Linear System" status="Stable"/>
-    <elem domain="linalg" identifier="systemwithmatrix" description="Solve Linear System with Matrix" status="Provisional"/>
-    <elem domain="logic" identifier="dnf" description="Proposition to DNF" status="Stable"/>
-    <elem domain="logic" identifier="dnf-unicode" description="Proposition to DNF (unicode support)" status="Stable"/>
-    <elem domain="math" identifier="calcpower" description="simplify expression (powers)" status="Provisional"/>
-    <elem domain="math" identifier="derivative" description="Derivative" status="Experimental"/>
-    <elem domain="math" identifier="factor" description="factorize the expression" status="Provisional"/>
-    <elem domain="math" identifier="fraction" description="simplify expression (fractions)" status="Alpha"/>
-    <elem domain="math" identifier="ineqhigherdegree" description="solve an inequation of higher degree" status="Provisional"/>
-    <elem domain="math" identifier="linineq" description="solve a linear inequation" status="Provisional"/>
-    <elem domain="math" identifier="nonnegexp" description="write with a non-negative exponent" status="Provisional"/>
-    <elem domain="math" identifier="powerof" description="write as a power of a" status="Provisional"/>
-    <elem domain="math" identifier="quadrineq" description="solve a quadratic inequation" status="Provisional"/>
-    <elem domain="math" identifier="simplifypower" description="simplify expression (powers)" status="Provisional"/>
-    <elem domain="math" identifier="simplifyrational" description="simplify a rational expression (with a variable in a divisor)" status="Alpha"/>
-    <elem domain="relationalg" identifier="cnf" description="To conjunctive normal form" status="Alpha"/>
+    <elem domain="algebra.inequalities" identifier="linear" description="solve a linear inequation" status="Provisional"/>
+    <elem domain="algebra.inequalities" identifier="polynomial" description="solve an inequation of higher degree" status="Provisional"/>
+    <elem domain="algebra.inequalities" identifier="quadratic" description="solve a quadratic inequation" status="Provisional"/>
+    <elem domain="algebra.manipulation.exponents" identifier="nonnegative" description="write with a non-negative exponent" status="Provisional"/>
+    <elem domain="algebra.manipulation.exponents" identifier="powerof" description="write as a power of a" status="Provisional"/>
+    <elem domain="algebra.manipulation.exponents" identifier="simplify" description="simplify expression (powers)" status="Provisional"/>
+    <elem domain="algebra.manipulation.polynomial" identifier="factor" description="factorize the expression" status="Provisional"/>
+    <elem domain="algebra.manipulation.rational" identifier="simplify" description="simplify a rational expression (with a variable in a divisor)" status="Alpha"/>
+    <elem domain="arithmetic" identifier="exponents" description="simplify expression (powers)" status="Provisional"/>
+    <elem domain="arithmetic" identifier="fractions" description="simplify expression (fractions)" status="Alpha"/>
+    <elem domain="calculus" identifier="differentiation" description="Derivative" status="Experimental"/>
+    <elem domain="linearalgebra" identifier="gaussianelim" description="Gaussian Elimination" status="Stable"/>
+    <elem domain="linearalgebra" identifier="gramschmidt" description="Gram-Schmidt" status="Alpha"/>
+    <elem domain="linearalgebra" identifier="linsystem" description="Solve Linear System" status="Stable"/>
+    <elem domain="linearalgebra" identifier="systemwithmatrix" description="Solve Linear System with Matrix" status="Provisional"/>
+    <elem domain="logic.propositional" identifier="dnf" description="Proposition to DNF" status="Stable"/>
+    <elem domain="logic.propositional.dnf" identifier="unicode" description="Proposition to DNF (unicode support)" status="Stable"/>
+    <elem domain="relationalgebra" identifier="cnf" description="To conjunctive normal form" status="Alpha"/>
   </list>
 </reply>
 

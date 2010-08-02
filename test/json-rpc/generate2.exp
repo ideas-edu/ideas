@@ -1,6 +1,6 @@
 {
    "result": [
-      "logic.dnf",
+      "logic.propositional.dnf",
       "[]",
       "~(q || p) <-> ((p /\\ q) -> ~q)",
       {
@@ -8,5 +8,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.14 (3019)"
+   "version": "0.6.3 (0)"
 }

@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.3 (0)">
   <strategy>
-    linalg.gaussianelim
+    linearalgebra.gaussianelim
   </strategy>
   <location>
     []

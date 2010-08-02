@@ -5,7 +5,7 @@
          "DeMorganOr"
       ],
       "state": [
-         "logic.dnf",
+         "logic.propositional.dnf",
          "[0,5,1,1,0,3,0]",
          "~~x /\\ ~~y",
          {
@@ -14,5 +14,5 @@
    },
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2467)"
+   "version": "0.6.3 (0)"
 }

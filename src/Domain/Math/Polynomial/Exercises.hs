@@ -145,7 +145,7 @@ quadraticWithApproximation = quadraticExercise
 findFactorsExercise :: Exercise Expr
 findFactorsExercise = makeExercise
    { exerciseId   = describe "factorize the expression" $ 
-                       newId "math.factor"
+                       newId "algebra.manipulation.polynomial.factor"
    , status       = Provisional
    , parser       = parseExprWith pExpr
    , similarity   = \a b -> cleanUpExpr2 a == cleanUpExpr2 b

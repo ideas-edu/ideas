@@ -39,7 +39,7 @@ numericExercise s = makeExercise
 naturalExercise :: Exercise Expr
 naturalExercise = (numericExercise naturalStrategy)
    { exerciseId   = describe "simplify expression (natural numbers)" $ 
-                       newId "math.natural"
+                       newId "numbers.natural"
    , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat calculateResults
    }
@@ -47,7 +47,7 @@ naturalExercise = (numericExercise naturalStrategy)
 integerExercise :: Exercise Expr
 integerExercise = (numericExercise integerStrategy)
    { exerciseId   = describe "simplify expression (integers)" $ 
-                       newId "math.integer"
+                       newId "numbers.integers"
    , isReady      = (`belongsTo` integerNormalForm)
    , examples     = concat calculateResults
    }
@@ -55,7 +55,7 @@ integerExercise = (numericExercise integerStrategy)
 rationalExercise :: Exercise Expr
 rationalExercise = (numericExercise rationalStrategy)
    { exerciseId     = describe "simplify expression (rational numbers)" $ 
-                         newId "math.rational"
+                         newId "numbers.rational"
    , isReady        = (`belongsTo` rationalNormalForm)
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
@@ -63,7 +63,7 @@ rationalExercise = (numericExercise rationalStrategy)
 fractionExercise :: Exercise Expr
 fractionExercise = (numericExercise fractionStrategy)
    { exerciseId     = describe "simplify expression (fractions)" $ 
-                         newId "math.fraction"
+                         newId "arithmetic.fractions"
    , isReady        = (`belongsTo` rationalNormalForm)
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }

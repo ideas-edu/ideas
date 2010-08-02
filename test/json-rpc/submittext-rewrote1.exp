@@ -3,7 +3,7 @@
       false,
       "You rewrote ~x || ~y into ~x /\\ ~y. This is incorrect. Press the Back button and try again. You may ask for a hint.",
       [
-         "logic.dnf",
+         "logic.propositional.dnf",
          "[]",
          "~(~x || ~y)",
          {
@@ -12,5 +12,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.8 (2396)"
+   "version": "0.6.3 (0)"
 }

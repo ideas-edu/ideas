@@ -46,7 +46,7 @@ powerExercise s = makeExercise
 simplifyPowerExercise :: Exercise Expr
 simplifyPowerExercise = (powerExercise powerStrategy)
    { exerciseId   = describe "simplify expression (powers)" $ 
-                       newId "math.simplifypower"
+                       newId "algebra.manipulation.exponents.simplify"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'
@@ -59,7 +59,7 @@ simplifyPowerExercise = (powerExercise powerStrategy)
 powerOfExercise :: Exercise Expr
 powerOfExercise = (powerExercise powerOfStrategy)
    { exerciseId   = describe "write as a power of a" $ 
-                       newId "math.powerof"
+                       newId "algebra.manipulation.exponents.powerof"
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerNonNegRatio
@@ -72,7 +72,7 @@ powerOfExercise = (powerExercise powerOfStrategy)
 nonNegExpExercise :: Exercise Expr
 nonNegExpExercise = (powerExercise nonNegExpStrategy)
    { exerciseId   = describe "write with a non-negative exponent" $ 
-                       newId "math.nonnegexp"
+                       newId "algebra.manipulation.exponents.nonnegative"
    , isReady      = isPower natView
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
    , equivalence  = viewEquivalent normPowerNonNegDouble
@@ -87,7 +87,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
 calcPowerExercise :: Exercise Expr
 calcPowerExercise = (powerExercise calcPowerStrategy)
    { exerciseId   = describe "simplify expression (powers)" $ 
-                       newId "math.calcpower"
+                       newId "arithmetic.exponents"
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerView')
    , equivalence  = viewEquivalent normPowerView'

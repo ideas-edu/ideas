@@ -29,7 +29,7 @@ import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate
-import Common.Strategy.Parsing (runCore)
+import Common.Strategy.Parsing (runCore, treeCore)
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -185,7 +185,7 @@ processLabelInfo getInfo = rec emptyEnv
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-fullDerivationTree = makeTree . processLabelInfo id . toCore . toStrategy 
+fullDerivationTree = treeCore . processLabelInfo id . toCore . toStrategy 
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a

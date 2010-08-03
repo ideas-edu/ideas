@@ -9,11 +9,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Parsing (runCore, Step(..)) where
+module Common.Strategy.Parsing (runCore, treeCore, Step(..)) where
   
 import Prelude hiding (repeat)
 import Common.Classes
-import Common.Strategy.Core hiding (Skip)
+import Common.Derivation
+import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate
 import Control.Monad
@@ -51,14 +52,32 @@ empty state = isReadyState state || any p (step state)
  where
    p st = lastIsSkip st && empty st
 
+makeState :: Core l a -> a -> State l a
+makeState core a = S core [] (Env IM.empty) [] [] 0 False (Just a)
+
+instance Apply (Core l) where
+   applyAll = runCore
+
 runCore :: Core l a -> a -> [a]
-runCore core a = -- error $ (show :: Core () a -> String) $ noLabels core
-   runState $ S core [] (Env IM.empty) [] [] 0 False (Just a)
+runCore core = runState . makeState core
+
+stateToTree :: State l a -> DerivationTree (Maybe (Step l a)) (State l a)
+stateToTree state = addBranches list (singleNode state (isReadyState state))
+ where
+   list = [ (f s, stateToTree s) | s <- step state ]
+   f s  = case trace s of
+             hd:_ | not (lastIsSkip s) -> Just hd
+             _ -> Nothing
+
+treeCore :: Core l a -> a -> DerivationTree (Rule a) a
+treeCore core a = f (mergeSteps p (stateToTree (makeState core a)))
+ where
+   p (Just (RuleStep _ _)) = True
+   p _                     = False
+   f = mapSteps (\(Just (RuleStep _ r)) -> r) . fmap (fromJust . value)
 
 runState :: State l a -> [a]
-runState state = 
-   (maybe id (:) (guard (empty state) >> value state))
-   [ b | n <- step state, b <- runState n ] 
+runState state = catMaybes $ map value $ results $ stateToTree state
 
 isReadyState :: State l a -> Bool
 isReadyState state = 

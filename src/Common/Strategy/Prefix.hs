@@ -18,9 +18,12 @@ module Common.Strategy.Prefix
    ) where
 
 import Common.Classes
+import Common.Uniplate
 import Common.Utils
 import Common.Strategy.Abstract
 import Common.Strategy.Core
+import qualified Common.Strategy.Grammar as Grammar
+import Common.Strategy.Grammar (Grammar, (<*>), (<|>), symbol)
 import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
@@ -53,18 +56,13 @@ makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix is ls = rec [] is start
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
-   start  = strategyTree stepTranslation (mkCore ls)
+   start  = strategyTree (mkCore ls)
  
    rec acc [] t = return (P acc t)
    rec acc (n:ns) t =
       case drop n (branches t) of
          (step, st):_ -> rec ((n, step):acc) ns st
          _            -> fail ("invalid prefix: " ++ show is)
-
-   stepTranslation :: Translation (StrategyLocation, LabelInfo) a (PStep a)
-   stepTranslation = (forLabel, RuleStep Nothing)
-   
-   forLabel (loc, i) = Around (Enter (loc, i)) (Exit (loc, i))
 
 instance Apply Prefix where
    applyAll p = results . prefixTree p
@@ -90,3 +88,57 @@ stepsToRules steps = [ r | RuleStep _ r <- steps ]
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (PStep a)
 lastStepInPrefix (P xs _) = safeHead [ step | (_, step) <- xs ]
+
+-------------------------------------------------------------------
+-- Copied from core
+
+strategyTree :: Core (StrategyLocation, LabelInfo) a -> DerivationTree (PStep a) ()
+strategyTree = grammarTree . toGrammar
+
+grammarTree :: Grammar a -> DerivationTree a ()
+grammarTree gr = addBranches list node
+ where 
+   node = singleNode () (Grammar.empty gr)
+   list = [ (f, grammarTree rest) | (f, rest) <- Grammar.firsts gr ]
+
+runTree :: Apply f => DerivationTree (f a) info -> a -> DerivationTree (f a, info) a
+runTree t a = addBranches list (singleNode a (endpoint t))
+ where
+   list = concatMap make (branches t)
+   make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
+
+toGrammar :: Core (StrategyLocation, LabelInfo) a -> Grammar (PStep a)
+toGrammar core = recWith emptyEnv (checkCoreFree "toGrammar.top" [] core)
+ where
+   recWith env core =
+      case core of
+         a :*: b   -> rec a <*> rec b
+         a :|: b   -> rec a <|> rec b
+         a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
+         Many a    -> rec (coreMany a)
+         Repeat a  -> rec (coreRepeat a)
+         Succeed   -> Grammar.succeed
+         Fail      -> Grammar.fail
+         Label l a -> forLabel l (rec a)
+         Rule ml r -> (maybe id forLabel ml) (symbol (RuleStep Nothing r))
+         Var n     -> Grammar.var n
+         Rec n a   -> Grammar.rec n (recWith (insertEnv n core env) a)
+         Not a     -> symbol (RuleStep Nothing (notRule (checkCoreFree "toGrammar.Not" [] (replaceVars env (noLabels a)))))
+    where
+      rec = recWith env
+      
+   forLabel (loc, i) g =
+      symbol (Enter (loc, i)) <*> g <*> symbol (Exit (loc, i))
+         
+notRule :: Apply f => f a -> Rule a
+notRule f = checkRule (not . applicable f)
+
+-- Safety check
+checkCoreFree :: String -> [Int] -> Core l a -> Core l a
+checkCoreFree msg ns core =
+   case core of
+      Rec n a -> Rec n (checkCoreFree msg (n:ns) a)
+      Var n -> if n `elem` ns then core else error ("checkFree! " ++ msg)
+      _ -> f (map (checkCoreFree msg ns) cs)
+ where
+   (cs, f) = uniplate core 

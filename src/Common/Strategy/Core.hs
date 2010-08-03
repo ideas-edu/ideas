@@ -15,19 +15,15 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( Core(..)
-   , strategyTree, runTree, makeTree 
    , mapRule, coreVars, noLabels, mapCore, mapCoreM
-   , mapLabel, Translation, ForLabel(..), coreFix
+   , mapLabel, coreFix
    , CoreEnv, emptyEnv, insertEnv, replaceVars
+   , coreMany, coreRepeat
    ) where
 
-import Common.Strategy.Grammar (Grammar, (<*>), (<|>), symbol)
-import Common.Classes
-import Common.Derivation
 import Common.Transformation
 import Common.Uniplate
 import Control.Monad.Identity
-import qualified Common.Strategy.Grammar as Grammar
 import qualified Data.IntMap as IM
 
 -----------------------------------------------------------------
@@ -56,9 +52,6 @@ data Core l a
 -----------------------------------------------------------------
 -- Useful instances
 
-instance Apply (Core l) where 
-   applyAll core = results . makeTree core
-
 instance Uniplate (Core l a) where
    uniplate core =
       case core of
@@ -71,30 +64,6 @@ instance Uniplate (Core l a) where
          Rec n a   -> ([a],   \[x]   -> Rec n x)
          Not a     -> ([noLabels a], \[x] -> Not (noLabels x))
          _         -> ([],    \_     -> core)
-
------------------------------------------------------------------
--- The strategy tree (static, no term)
-
-strategyTree :: Translation l a b -> Core l a -> DerivationTree b ()
-strategyTree t = grammarTree . toGrammar t
-
-grammarTree :: Grammar a -> DerivationTree a ()
-grammarTree gr = addBranches list node
- where 
-   node = singleNode () (Grammar.empty gr)
-   list = [ (f, grammarTree rest) | (f, rest) <- Grammar.firsts gr ]
-
------------------------------------------------------------------
--- Running a strategy
-
-makeTree :: Core l a -> a -> DerivationTree (Rule a) a
-makeTree c = changeLabel fst . runTree (strategyTree simpleTranslation c)
-
-runTree :: Apply f => DerivationTree (f a) info -> a -> DerivationTree (f a, info) a
-runTree t a = addBranches list (singleNode a (endpoint t))
- where
-   list = concatMap make (branches t)
-   make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
 
 -----------------------------------------------------------------
 -- Core environment
@@ -125,55 +94,7 @@ replaceVars env core =
       _       -> let (cs, make) = uniplate core
                  in make (map (replaceVars env) cs)
 
------------------------------------------------------------------
--- Translation to Grammar data type
 
-type Translation l a b = (l -> ForLabel b, Rule a -> b)
-
-data ForLabel a = Skip | Before a | After a | Around a a
-
-simpleTranslation :: Translation l a (Rule a)
-simpleTranslation = (const Skip, id)
-
-toGrammar :: Translation l a b -> Core l a -> Grammar b
-toGrammar (f, g) core = recWith emptyEnv (checkCoreFree "toGrammar.top" [] core)
- where
-   recWith env core =
-      case core of
-         a :*: b   -> rec a <*> rec b
-         a :|: b   -> rec a <|> rec b
-         a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
-         Many a    -> rec (coreMany a)
-         Repeat a  -> rec (coreRepeat a)
-         Succeed   -> Grammar.succeed
-         Fail      -> Grammar.fail
-         Label l a -> forLabel l (rec a)
-         Rule ml r -> (maybe id forLabel ml) (symbol (g r))
-         Var n     -> Grammar.var n
-         Rec n a   -> Grammar.rec n (recWith (insertEnv n core env) a)
-         Not a     -> symbol (g (notRule (checkCoreFree "toGrammar.Not" [] (replaceVars env (noLabels a)))))
-    where
-      rec = recWith env
-      
-   forLabel l g =
-      case f l of
-         Skip       -> g
-         Before s   -> symbol s <*> g
-         After    t -> g <*> symbol t
-         Around s t -> symbol s <*> g <*> symbol t
-
--- Safety check
-checkCoreFree :: String -> [Int] -> Core l a -> Core l a
-checkCoreFree msg ns core =
-   case core of
-      Rec n a -> Rec n (checkCoreFree msg (n:ns) a)
-      Var n -> if n `elem` ns then core else error ("checkFree! " ++ msg)
-      _ -> f (map (checkCoreFree msg ns) cs)
- where
-   (cs, f) = uniplate core 
-
-notRule :: Apply f => f a -> Rule a
-notRule f = checkRule (not . applicable f)
 
 coreMany :: Core l a -> Core l a
 coreMany p = Rec n (Succeed :|: (p :*: Var n))
@@ -204,9 +125,6 @@ mapRule f = mapCore Label (\ml -> Rule ml . f)
 
 noLabels :: Core l a -> Core m a
 noLabels = mapCore (const id) (const (Rule Nothing))
-   
--- catMaybeLabel :: Core (Maybe l) a -> Core l a
--- catMaybeLabel = mapCore (maybe id Label) (Rule . join)
    
 mapCore :: (l -> Core m b -> Core m b) -> (Maybe l -> Rule a -> Core m b) 
         -> Core l a -> Core m b

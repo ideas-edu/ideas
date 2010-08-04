@@ -16,7 +16,6 @@ import Common.TestSuite
 import Common.Utils (useFixedStdGen, Some(..), snd3)
 import Common.Exercise
 import Service.ExercisePackage
-import qualified Common.Strategy.Grammar as Grammar
 import Control.Monad
 import Service.Request
 import Service.DomainReasoner
@@ -34,7 +33,6 @@ selfCheck dir = do
    
    return $ do
       suite "Framework checks" $ do
-         Grammar.testMe
          suite "Text encodings" $ do
             addProperty "UTF8 encoding" UTF8.propEncoding
             addProperty "JSON encoding" JSON.propEncoding

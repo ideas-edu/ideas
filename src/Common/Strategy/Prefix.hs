@@ -14,16 +14,14 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Prefix 
    ( Prefix, emptyPrefix, makePrefix
-   , Step(..), prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
+   , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
    ) where
 
 import Common.Classes
-import Common.Uniplate
 import Common.Utils
 import Common.Strategy.Abstract
 import Common.Strategy.Core
 import qualified Common.Strategy.Grammar as Grammar
-import Common.Strategy.Grammar (Grammar, (<*>), (<|>), symbol)
 import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
@@ -95,7 +93,7 @@ lastStepInPrefix (P xs _) = safeHead [ step | (_, step) <- xs ]
 strategyTree :: Core (StrategyLocation, LabelInfo) a -> DerivationTree (PStep a) ()
 strategyTree = grammarTree . toGrammar
 
-grammarTree :: Grammar a -> DerivationTree a ()
+grammarTree :: Grammar.Grammar (PStep a) -> DerivationTree (PStep a) ()
 grammarTree gr = addBranches list node
  where 
    node = singleNode () (Grammar.empty gr)
@@ -107,38 +105,29 @@ runTree t a = addBranches list (singleNode a (endpoint t))
    list = concatMap make (branches t)
    make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
 
-toGrammar :: Core (StrategyLocation, LabelInfo) a -> Grammar (PStep a)
-toGrammar core = recWith emptyEnv (checkCoreFree "toGrammar.top" [] core)
+toGrammar :: Core (StrategyLocation, LabelInfo) a -> Grammar.Grammar (PStep a)
+toGrammar = recWith emptyEnv
  where
    recWith env core =
       case core of
-         a :*: b   -> rec a <*> rec b
-         a :|: b   -> rec a <|> rec b
+         a :*: b   -> rec a Grammar.:*: rec b
+         a :|: b   -> rec a Grammar.:|: rec b
          a :|>: b  -> rec (a :|: (Not (noLabels a) :*: b))
          Many a    -> rec (coreMany a)
          Repeat a  -> rec (coreRepeat a)
-         Succeed   -> Grammar.succeed
-         Fail      -> Grammar.fail
+         Succeed   -> Grammar.Succeed
+         Fail      -> Grammar.Fail
          Label l a -> forLabel l (rec a)
-         Rule ml r -> (maybe id forLabel ml) (symbol (RuleStep Nothing r))
-         Var n     -> Grammar.var n
-         Rec n a   -> Grammar.rec n (recWith (insertEnv n core env) a)
-         Not a     -> symbol (RuleStep Nothing (notRule (checkCoreFree "toGrammar.Not" [] (replaceVars env (noLabels a)))))
+         Rule ml r -> -- Grammar.Symbol (RuleStep ml r)
+                      (maybe id forLabel ml) (Grammar.Symbol (RuleStep Nothing r))
+         Var n     -> Grammar.Var n
+         Rec n a   -> Grammar.Rec n (recWith (insertEnv n core env) a)
+         Not a     -> Grammar.Symbol (RuleStep Nothing (notRule (replaceVars env (noLabels a))))
     where
       rec = recWith env
       
    forLabel (loc, i) g =
-      symbol (Enter (loc, i)) <*> g <*> symbol (Exit (loc, i))
+      Grammar.Symbol (Enter (loc, i)) Grammar.:*: g Grammar.:*: Grammar.Symbol (Exit (loc, i))
          
 notRule :: Apply f => f a -> Rule a
 notRule f = checkRule (not . applicable f)
-
--- Safety check
-checkCoreFree :: String -> [Int] -> Core l a -> Core l a
-checkCoreFree msg ns core =
-   case core of
-      Rec n a -> Rec n (checkCoreFree msg (n:ns) a)
-      Var n -> if n `elem` ns then core else error ("checkFree! " ++ msg)
-      _ -> f (map (checkCoreFree msg ns) cs)
- where
-   (cs, f) = uniplate core 

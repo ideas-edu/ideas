@@ -19,14 +19,17 @@ instance Apply (Step l) where
 ----------------------------------------------------------------------
 -- Abstract data type
 
-data State l a = S 
+data State l a = S
    { grammar     :: Core l a
    , stack       :: [Either l (Core l a, Env l a)]
    , environment :: Env l a
    }
 
+makeState :: Core l a -> State l a
+makeState core = S core [] emptyEnv
+
 makeTree :: Core l a -> DerivationTree (Step l a) ()
-makeTree g = f (S g [] emptyEnv)
+makeTree = f . makeState
  where
    f st = addBranches list node
     where
@@ -59,24 +62,23 @@ firsts = concatMap f . smallStep
 smallStep :: State l a -> [(Maybe (Step l a), State l a)]
 smallStep state =
    case grammar state of
-      s :*: t ->  [(Nothing, state {grammar = s, stack = Right (t, environment state) : stack state})]
-      s :|: t ->  replaceBy s ++ replaceBy t
-      Rec i s -> [(Nothing, state {grammar = s, environment = addToEnv i s (environment state) })]
-      Var i -> case findInEnv i (environment state) of
-                  Just (e, s)  -> [(Nothing, (state {grammar = s, environment = e}))]
-                  Nothing -> error "free var in core expression"
-      Rule  Nothing a ->  [(Just (RuleStep a), succeed)]
-      Rule  (Just l) a -> replaceBy (Label l (Rule Nothing a))
+      s :*: t   -> [(Nothing, state {grammar = s, stack = Right (t, environment state) : stack state})]
+      s :|: t   -> replaceBy s ++ replaceBy t
+      Rec i s   -> [(Nothing, state {grammar = s, environment = addToEnv i s (environment state) })]
+      Var i     -> case findInEnv i (environment state) of
+                      Just (e, s)  -> [(Nothing, (state {grammar = s, environment = e}))]
+                      Nothing -> error "free var in core expression"
+      Rule  r   -> [(Just (RuleStep r), succeed)]
       Label l s -> [(Just (Enter l), state {grammar = s, stack = Left l : stack state})]
-      Not s -> replaceBy (Rule Nothing (notRule (environment state) (noLabels s)))
-      s :|>: t -> replaceBy (s :|: (Not (noLabels s) :*: t))
-      Many s   -> replaceBy (coreMany s)
-      Repeat s -> replaceBy (coreRepeat s)
-      Fail     -> []
-      Succeed -> case stack state of 
-              Right (x,e):xs -> [(Nothing, state {grammar = x, stack = xs, environment = e})]
-              Left l:xs -> [(Just (Exit l), state {stack = xs})]
-              [] -> []
+      Not s     -> replaceBy (Rule (notRule (environment state) (noLabels s)))
+      s :|>: t  -> replaceBy (s :|: (Not s :*: t))
+      Many s    -> replaceBy (coreMany s)
+      Repeat s  -> replaceBy (coreRepeat s)
+      Fail      -> []
+      Succeed   -> case stack state of 
+                      Right (x,e):xs -> [(Nothing, state {grammar = x, stack = xs, environment = e})]
+                      Left l:xs -> [(Just (Exit l), state {stack = xs})]
+                      [] -> []
  where
    succeed = state {grammar = Succeed}
    replaceBy s = return (Nothing, state {grammar = s})
@@ -91,7 +93,7 @@ treeCore :: Core l a -> a -> DerivationTree (Step l a) a
 treeCore = treeCoreWith emptyEnv
 
 treeCoreWith :: Env l a -> Core l a -> a -> DerivationTree (Step l a) a
-treeCoreWith env core = treeState (S core [] env)
+treeCoreWith env core = treeState ((makeState core) {environment = env})
 
 treeState :: State l a -> a -> DerivationTree (Step l a) a
 treeState state a = addBranches list node

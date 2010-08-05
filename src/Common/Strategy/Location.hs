@@ -91,8 +91,8 @@ strategyLocations = collect . addLocation . toCore . toStrategy
          Label (loc, info) s -> 
             let this = makeLabeledStrategy info (mapLabel snd s)
             in (loc, Left this) : collect s
-         Rule (Just (loc, _)) r -> 
-            [(loc, Right r)]
+--         Rule (Just (loc, _)) r -> 
+--            [(loc, Right r)]
          _ -> 
             concatMap collect (children core)
 
@@ -104,7 +104,7 @@ subStrategy loc = lookup loc . strategyLocations
 -- local helper functions that decorates interesting places with a 
 -- strategy lcations (major rules, and labels)
 addLocation :: Core l a -> Core (StrategyLocation, l) a
-addLocation = flip evalState topLocation . mapCoreM forLabel forRule
+addLocation = flip evalState topLocation . mapCoreM forLabel (return . Rule)
  where
    forLabel l ma = do
       loc <- get
@@ -112,9 +112,10 @@ addLocation = flip evalState topLocation . mapCoreM forLabel forRule
       rest <- ma
       put (nextLocation loc)
       return (Label (loc, l) rest)
+   {-
    forRule (Just l) r = do
       loc <- get
       put (nextLocation loc)
       return (Rule (Just (loc, l)) r)
    forRule Nothing r =
-      return (Rule Nothing r)
+      return (Rule Nothing r) -}

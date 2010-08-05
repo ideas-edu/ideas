@@ -49,7 +49,7 @@ coreToXML core = makeXML "label" $
       Label l a -> infoToXML l >> coreBuilder infoToXML a
       _         -> coreBuilder infoToXML core
 
-coreBuilder :: (l -> XMLBuilder) -> Core l a -> XMLBuilder
+coreBuilder :: HasId l => (l -> XMLBuilder) -> Core l a -> XMLBuilder
 coreBuilder f = rec
  where
    rec core = 
@@ -59,10 +59,11 @@ coreBuilder f = rec
          _ :|>: _  -> asList  "orelse"   isOrElse
          Many a    -> element "many"     (rec a)
          Repeat a  -> element "repeat"   (rec a)
+         Label l (Rule r) | getId l == getId r -> element "rule"     (f l)
          Label l a -> element "label"    (f l >> rec a)
          Rec n a   -> element "rec"      (("var" .=. show n) >> rec a)
          Not a     -> element "not"      (recNot a)
-         Rule l r  -> element "rule"     (maybe ("name" .=. show r) f l)
+         Rule r    -> element "rule"     ("name" .=. show r)
          Var n     -> element "var"      ("var" .=. show n)
          Succeed   -> tag     "succeed"
          Fail      -> tag     "fail"
@@ -143,7 +144,7 @@ readStrategy f g xml = do
    buildRule = do
       info <- f xml
       rule <- g info
-      return (Rule (Just info) rule)
+      return (Label info (Rule rule))
    buildRec x = do
       s <- findAttribute "var" xml
       i <- maybe (fail "var: not an int") return (readInt s)

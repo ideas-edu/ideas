@@ -40,11 +40,11 @@ data Core l a
    | Core l a :|>: Core l a
    | Many   (Core l a)
    | Repeat (Core l a)
-   | Not (Core () a) -- proves that there are no labels inside
+   | Not (Core l a)
    | Label l (Core l a)
    | Succeed
    | Fail
-   | Rule (Maybe l) (Rule a)
+   | Rule (Rule a)
    | Var Int
    | Rec Int (Core l a)
  deriving Show
@@ -62,7 +62,7 @@ instance Uniplate (Core l a) where
          Repeat a  -> ([a],   \[x]   -> Repeat x)
          Label l a -> ([a],   \[x]   -> Label l x)
          Rec n a   -> ([a],   \[x]   -> Rec n x)
-         Not a     -> ([noLabels a], \[x] -> Not (noLabels x))
+         Not a     -> ([a],   \[x]   -> Not x)
          _         -> ([],    \_     -> core)
 
 -----------------------------------------------------------------
@@ -89,19 +89,17 @@ replaceVars env core =
    case core of
       Rec n a -> Rec n (replaceVars (deleteEnv n env) a)
       Var n   -> case lookupEnv n env of
-                    Just (xs, a) -> replaceVars xs (noLabels a)
+                    Just (xs, a) -> replaceVars xs a
                     Nothing      -> core
       _       -> let (cs, make) = uniplate core
                  in make (map (replaceVars env) cs)
-
-
 
 coreMany :: Core l a -> Core l a
 coreMany p = Rec n (Succeed :|: (p :*: Var n))
  where n = nextVar p
 
 coreRepeat :: Core l a -> Core l a
-coreRepeat p = Many p :*: Not (noLabels p)
+coreRepeat p = Many p :*: Not p
 
 coreFix :: (Core l a -> Core l a) -> Core l a
 coreFix f = -- disadvantage: function f is applied twice
@@ -118,26 +116,26 @@ nextVar p
 -- Utility functions
 
 mapLabel :: (l -> m) -> Core l a -> Core m a
-mapLabel f = mapCore (Label . f) (Rule . fmap f)
+mapLabel f = mapCore (Label . f) Rule
 
 mapRule :: (Rule a -> Rule b) -> Core l a -> Core l b
-mapRule f = mapCore Label (\ml -> Rule ml . f)
+mapRule f = mapCore Label (Rule . f)
 
 noLabels :: Core l a -> Core m a
-noLabels = mapCore (const id) (const (Rule Nothing))
+noLabels = mapCore (const id) Rule
    
-mapCore :: (l -> Core m b -> Core m b) -> (Maybe l -> Rule a -> Core m b) 
+mapCore :: (l -> Core m b -> Core m b) -> (Rule a -> Core m b) 
         -> Core l a -> Core m b
 mapCore f g = 
    let fm l = return . f l . runIdentity
-       gm l = return . g l
+       gm   = return . g
    in runIdentity . mapCoreM fm gm
 
 -- The most primitive function that applies functions to the label and 
 -- rule alternatives. Monadic version.
 mapCoreM :: Monad m => (k -> m (Core l b) -> m (Core l b)) 
-                   -> (Maybe k -> Rule a -> m (Core l b)) 
-                   -> Core k a -> m (Core l b)
+                    -> (Rule a -> m (Core l b)) 
+                    -> Core k a -> m (Core l b)
 mapCoreM f g = rec 
  where 
    rec core =
@@ -150,14 +148,10 @@ mapCoreM f g = rec
          Succeed   -> return Succeed
          Fail      -> return Fail
          Label l a -> f l (rec a)
-         Rule ml r -> g ml r
+         Rule r    -> g r
          Var n     -> return (Var n)
          Rec n a   -> liftM (Rec n) (rec a)
-         Not a     -> do 
-            let recNot h = mapCoreM (const id) (const h)
-            b <- recNot (g Nothing) a
-            c <- recNot (return . Rule Nothing) b
-            return (Not c)
+         Not a     -> liftM Not (rec a) 
       
 coreVars :: Core l a -> [Int]
 coreVars core = 

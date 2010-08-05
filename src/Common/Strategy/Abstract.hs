@@ -82,16 +82,12 @@ instance IsStrategy Strategy where
    toStrategy = id
 
 instance IsStrategy (LabeledStrategy) where
-  toStrategy (LS info (S core)) = 
-     case core of
-        Rule Nothing r | getId r == getId info -> 
-             S (Rule (Just info) r)
-        _ -> S (Label info core)
+  toStrategy (LS info (S core)) = S (Label info core)
 
 instance IsStrategy Rule where -- Major rules receive a label
    toStrategy r
       | isMajorRule r = toStrategy (toLabeled r)
-      | otherwise     = S (Rule Nothing r)
+      | otherwise     = S (Rule r)
 
 instance IsStrategy RewriteRule where
    toStrategy r = 
@@ -132,7 +128,7 @@ instance IsLabeled LabeledStrategy where
    toLabeled = id
 
 instance IsLabeled Rule where
-   toLabeled r = LS (makeInfo (showId r)) (S (Rule Nothing r))
+   toLabeled r = LS (makeInfo (showId r)) (S (Rule r))
 
 instance IsLabeled RewriteRule where
    toLabeled r = toLabeled (makeRule (ruleName r) (RewriteRule r))
@@ -155,14 +151,14 @@ processLabelInfo getInfo = rec emptyEnv
       case core of 
          Rec n a   -> Rec n (rec (insertEnv n core env) a)
          Label l a -> forLabel env l (rec env a)
-         Rule ml r -> forRule ml r
+         Rule r -> Rule r
          _ -> f (map (rec env) cs)
     where
       (cs, f) = uniplate core
  
    forLabel env l c 
       | removed info   = Fail
-      | collapsed info = Rule (Just l) asRule
+      | collapsed info = Label l (Rule asRule) -- !!
       | otherwise      = new
     where 
       new | hidden info = mapRule minorRule (Label l c)
@@ -170,13 +166,6 @@ processLabelInfo getInfo = rec emptyEnv
       info   = getInfo l
       asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) 
                   (applyAll (replaceVars env new))
-   forRule (Just l) r 
-      | removed info = Fail
-      | hidden info  = Rule (Just l) (minorRule r)
-      | otherwise    = Rule (Just l) r
-    where
-      info = getInfo l
-   forRule _ r = Rule Nothing r
 
 -----------------------------------------------------------
 --- Remaining functions
@@ -195,7 +184,7 @@ derivationTree s = mergeMaybeSteps . mapSteps f . fullDerivationTree s
    
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
-rulesInStrategy f = [ r | Rule _ r <- universe (toCore (toStrategy f)), isMajorRule r ]
+rulesInStrategy f = [ r | Rule r <- universe (toCore (toStrategy f)), isMajorRule r ]
                     
 -- | Apply a function to all the rules that make up a labeled strategy
 mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
@@ -208,7 +197,7 @@ mapRulesS f = S . mapRule f . toCore
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a
 cleanUpStrategy f (LS n s) = mapRules g (LS n (S core))
  where
-   core = Rule Nothing (doAfter f idRule) :*: toCore s
+   core = Rule (doAfter f idRule) :*: toCore s
    g r | isMajorRule r = doAfter f r  
        | otherwise     = r
        

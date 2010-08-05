@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Parsing (runCore, stateToStepTree, treeCore, replay, counter, choices, State, value, trace, makeState {-, stateToTree -}) where
+mod ule Common.Strategy.Parsing (runCore, stateToStepTree, treeCore, replay, counter, choices, State, value, trace, makeState {-, stateToTree -}) where
   
 import Prelude hiding (repeat)
 import Common.Classes

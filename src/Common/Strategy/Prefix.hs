@@ -33,15 +33,15 @@ import Data.Maybe
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [(Int, PStep a)] (DerivationTree (PStep a) ())
+data Prefix a = P [Int] [PStep a] (DerivationTree (PStep a) ())
 
 type PStep = Step (StrategyLocation, LabelInfo)
 
 instance Show (Prefix a) where
-   show (P xs _) = show (reverse (map fst xs))
+   show (P xs _ _) = show (reverse xs)
 
 instance Eq (Prefix a) where
-   P xs _ == P ys _ = map fst xs == map fst ys
+   P xs _ _ == P ys _ _ = xs == ys
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> Prefix a
@@ -54,7 +54,9 @@ makePrefix is ls = rec [] is start
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
    start  = makeTree (mkCore ls)
  
-   rec acc [] t = return (P acc t)
+   rec acc [] t = 
+      let (xs, ys) = unzip acc
+      in return (P xs ys t)
    rec acc (n:ns) t =
       case drop n (branches t) of
          (step, st):_ -> rec ((n, step):acc) ns st
@@ -65,17 +67,17 @@ instance Apply Prefix where
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P xs t) = changeLabel snd . runTree (decorate xs t)
+prefixTree (P xs ys t) = changeLabel snd . runTree (decorate xs ys t)
 
-decorate :: [(Int, PStep a)] -> DerivationTree (PStep a) () -> DerivationTree (PStep a) (Prefix a)
-decorate xs t =
+decorate :: [Int] -> [PStep a] -> DerivationTree (PStep a) () -> DerivationTree (PStep a) (Prefix a)
+decorate xs ys t =
    let list = zipWith make [0..] (branches t)
-       make i (s, st) = (s, decorate ((i,s):xs) st)
-   in addBranches list (singleNode (P xs t) (endpoint t))
+       make i (s, st) = (s, decorate (i:xs) (s:ys) st)
+   in addBranches list (singleNode (P xs ys t) (endpoint t))
  
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [PStep a]
-prefixToSteps (P xs _) = [ step | (_, step) <- reverse xs ]
+prefixToSteps (P _ xs _) = reverse xs
  
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step l a] -> [Rule a]
@@ -83,7 +85,7 @@ stepsToRules steps = [ r | RuleStep _ r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (PStep a)
-lastStepInPrefix (P xs _) = safeHead [ step | (_, step) <- xs ]
+lastStepInPrefix (P _ xs _) = safeHead xs
 
 -------------------------------------------------------------------
 -- Copied from core

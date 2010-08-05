@@ -29,8 +29,7 @@ import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate
-import Common.Strategy.Grammar (runCore)
-import Common.Strategy.Parsing (treeCore)
+import Common.Strategy.Grammar (Step(..), treeCore)
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -42,8 +41,7 @@ instance Show (Strategy a) where
    show = show . toCore
 
 instance Apply Strategy where
-   applyAll s = runCore (toCore s)
-      -- results . fullDerivationTree s
+   applyAll = applyAll . toCore
 
 -----------------------------------------------------------
 --- The information used as label in a strategy
@@ -185,13 +183,16 @@ processLabelInfo getInfo = rec emptyEnv
 
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
-fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
+fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Step LabelInfo a) a
 fullDerivationTree = treeCore . processLabelInfo id . toCore . toStrategy 
 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
-derivationTree s = mergeSteps isMajorRule . fullDerivationTree s
-
+derivationTree s = mergeMaybeSteps . mapSteps f . fullDerivationTree s
+ where
+   f (RuleStep _ r) | isMajorRule r = Just r
+   f _ = Nothing
+   
 -- | Returns a list of all major rules that are part of a labeled strategy
 rulesInStrategy :: IsStrategy f => f a -> [Rule a]
 rulesInStrategy f = [ r | Rule _ r <- universe (toCore (toStrategy f)), isMajorRule r ]

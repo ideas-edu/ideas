@@ -1,10 +1,10 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.4 (0)">
   <list>
     <elem ruleid="Scale">
       []
       <state>
         <prefix>
-          [0,0,0,0,0,0,0,1,0,0,0,0]
+          [0,0,0,1,0,0,0,1,0,0,0,0]
         </prefix>
         <context>
           <item name="columnJ" value="0"/>

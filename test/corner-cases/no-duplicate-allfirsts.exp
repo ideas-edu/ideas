@@ -1,10 +1,10 @@
-<reply result="ok" version="0.5.12">
+<reply result="ok" version="0.6.4 (0)">
   <list>
     <elem ruleid="distribution multiplication">
       []
       <state>
         <prefix>
-          [0,0,0,1,0]
+          [0,0,0,2,0]
         </prefix>
         <expr>
           -2*x-2 == 0

@@ -4,7 +4,7 @@
       "Well done! You have applied De Morgan correctly.",
       [
          "logic.propositional.dnf",
-         "[0,5,1,1,0,3,0]",
+         "[0,6,1,1,0,3,0]",
          "~x /\\ ~y",
          {
          }
@@ -12,5 +12,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.3 (0)"
+   "version": "0.6.4 (0)"
 }

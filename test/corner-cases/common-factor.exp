@@ -1,10 +1,10 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.4 (0)">
   <list>
     <elem ruleid="same factor">
       []
       <state>
         <prefix>
-          [0,0,3,2,2,1,0,1,0]
+          [0,0,4,2,2,1,0,1,0]
         </prefix>
         <expr>
           x-2 == 0 or x == 3

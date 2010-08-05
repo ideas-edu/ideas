@@ -1,8 +1,8 @@
-<reply result="ok" version="0.5.12">
+<reply result="ok" version="0.6.4 (0)">
   <expected ready="false" ruleid="cover-up plus [one var]">
     <state>
       <prefix>
-        [0,0,0,3,0,0,2,0]
+        [0,0,0,0,0,0,3,0]
       </prefix>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>

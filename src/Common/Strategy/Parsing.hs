@@ -111,7 +111,16 @@ isReadyState state =
       _       -> False
 
 step :: State l a -> [State l a]
-step state = update $
+step = map fst . tinyStep
+
+oneStep :: State l a -> [(State l a, Step l a)]
+oneStep = concatMap f . tinyStep
+ where
+   f (state, Just step) = [(state, step)]
+   f (state, Nothing)   = oneStep state
+
+tinyStep :: State l a -> [(State l a, Maybe (Step l a))]
+tinyStep state = update $
    case grammar state of
       p :*: q   -> replaceBy p (pushCoreStack q state)
       p :|: q   -> replaceBy p (choose True  state) ++
@@ -136,11 +145,11 @@ step state = update $
       Many p    -> replaceBy (many p) state
       Repeat p  -> replaceBy (repeat p) state
  where
-   update = map $ \(s, mstep) -> s
+   update = map $ \(s, mstep) -> (s
       { counter    = counter s + 1
       , trace      = maybe id (:) mstep (trace s)
       , lastIsSkip = isNothing mstep
-      }
+      }, mstep)
 
 replay :: Monad m => Int -> [Bool] -> State l a -> m (State l a)
 replay 0 _  state = return state

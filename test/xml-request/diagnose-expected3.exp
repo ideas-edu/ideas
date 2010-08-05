@@ -1,8 +1,8 @@
-<reply result="ok" version="0.5.14">
+<reply result="ok" version="0.6.4 (0)">
   <expected ready="true" ruleid="abc formula">
     <state>
       <prefix>
-        [0,0,1,0,0]
+        [0,0,2,0,0]
       </prefix>
       <context>
         <item name="clipboard" value="[D==0, a==1, b==3, c==9/4]"/>

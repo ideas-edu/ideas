@@ -190,7 +190,7 @@ fullDerivationTree = treeCore . processLabelInfo id . toCore . toStrategy
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
 derivationTree s = mergeMaybeSteps . mapSteps f . fullDerivationTree s
  where
-   f (RuleStep _ r) | isMajorRule r = Just r
+   f (RuleStep r) | isMajorRule r = Just r
    f _ = Nothing
    
 -- | Returns a list of all major rules that are part of a labeled strategy

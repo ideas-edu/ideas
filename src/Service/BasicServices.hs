@@ -86,14 +86,14 @@ allfirsts state =
                 ruleOrdering (exercise (exercisePkg state)) r1 r2
          in return (sortBy f (mapMaybe make (derivations tree)))
  where
-   stop (Just (RuleStep _ r)) = isMajorRule r
+   stop (Just (RuleStep r)) = isMajorRule r
    stop _ = False
    
    make d = do
       prefixEnd <- safeHead (reverse (steps d))
       termEnd   <- safeHead (reverse (terms d))
       case lastStepInPrefix prefixEnd of
-         Just (RuleStep _ r) | isMajorRule r -> return
+         Just (RuleStep r) | isMajorRule r -> return
             ( r
             , location termEnd
             , state { context = termEnd

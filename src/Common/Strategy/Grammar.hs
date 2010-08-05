@@ -9,12 +9,12 @@ import Common.Transformation
 import Data.Maybe
 import qualified Data.IntMap as IM
 
-data Step l a = Enter l | Exit l | RuleStep (Maybe l) (Rule a)
+data Step l a = Enter l | Exit l | RuleStep (Rule a)
    deriving Show
 
 instance Apply (Step l) where
-   applyAll (RuleStep _ r) = applyAll r
-   applyAll _              = return
+   applyAll (RuleStep r) = applyAll r
+   applyAll _            = return
 
 ----------------------------------------------------------------------
 -- Abstract data type
@@ -65,7 +65,7 @@ smallStep state =
       Var i -> case findInEnv i (environment state) of
                   Just (e, s)  -> [(Nothing, (state {grammar = s, environment = e}))]
                   Nothing -> error "free var in core expression"
-      Rule  Nothing a ->  [(Just (RuleStep Nothing a), succeed)]
+      Rule  Nothing a ->  [(Just (RuleStep a), succeed)]
       Rule  (Just l) a -> replaceBy (Label l (Rule Nothing a))
       Label l s -> [(Just (Enter l), state {grammar = s, stack = Left l : stack state})]
       Not s -> replaceBy (Rule Nothing (notRule (environment state) (noLabels s)))

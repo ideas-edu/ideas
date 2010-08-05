@@ -108,7 +108,7 @@ firstMajorInPrefix p0 prefix a = fromMaybe (topLocation, []) $ do
  where
    firstLocation :: [Step (StrategyLocation, l) a] -> Maybe StrategyLocation
    firstLocation [] = Nothing
-   firstLocation (Enter (is, _):RuleStep _ r:_) | isMajorRule r = Just is
+   firstLocation (Enter (is, _):RuleStep r:_) | isMajorRule r = Just is
    firstLocation (_:rest) = firstLocation rest
  
 argumentsForSteps :: a -> [Step l a] -> Args
@@ -144,7 +144,7 @@ runPrefixMajor p0 =
    map f . derivations . cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
-   stop (Just (RuleStep _ r)) = isMajorRule r
+   stop (Just (RuleStep r)) = isMajorRule r
    stop _ = False
 
 ------------------------------------------------------------------------

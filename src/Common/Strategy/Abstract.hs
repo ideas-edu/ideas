@@ -29,7 +29,8 @@ import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate
-import Common.Strategy.Parsing (runCore, treeCore)
+import Common.Strategy.Grammar (runCore)
+import Common.Strategy.Parsing (treeCore)
 
 -----------------------------------------------------------
 --- Strategy data-type

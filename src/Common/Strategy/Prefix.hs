@@ -20,13 +20,10 @@ module Common.Strategy.Prefix
 import Common.Classes
 import Common.Utils
 import Common.Strategy.Abstract
-import Common.Strategy.Core
-import qualified Common.Strategy.Grammar as Grammar
+import Common.Strategy.Grammar
 import Common.Transformation
 import Common.Derivation
-import Common.Uniplate
 import Common.Strategy.Location
-import Common.Strategy.Parsing (Step(..))
 import Data.Maybe
 
 -----------------------------------------------------------
@@ -55,7 +52,7 @@ makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix is ls = rec [] is start
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
-   start  = strategyTree (mkCore ls)
+   start  = makeTree (mkCore ls)
  
    rec acc [] t = return (P acc t)
    rec acc (n:ns) t =
@@ -91,29 +88,8 @@ lastStepInPrefix (P xs _) = safeHead [ step | (_, step) <- xs ]
 -------------------------------------------------------------------
 -- Copied from core
 
-strategyTree :: Core (StrategyLocation, LabelInfo) a -> DerivationTree (PStep a) ()
-strategyTree = Grammar.makeTree . simplerCore
-
 runTree :: Apply f => DerivationTree (f a) info -> a -> DerivationTree (f a, info) a
 runTree t a = addBranches list (singleNode a (endpoint t))
  where
    list = concatMap make (branches t)
    make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
-         
-simplerCore :: Core l a -> Core l a
-simplerCore = recWith emptyEnv
- where
-   recWith env core =
-      case core of
-         a :|>: b -> rec (a :|: (Not (noLabels a) :*: b))
-         Many a   -> rec (coreMany a)
-         Repeat a -> rec (coreRepeat a)
-         Not a    -> rec (Rule Nothing (notRule (replaceVars env (noLabels a))))
-         Rec n a  -> Rec n (recWith (insertEnv n core env) a)
-         _        -> f (map rec cs)
-    where
-      (cs, f) = uniplate core
-      rec = recWith env
-
-notRule :: Apply f => f a -> Rule a
-notRule f = checkRule (not . applicable f)

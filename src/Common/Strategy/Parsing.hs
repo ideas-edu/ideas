@@ -9,11 +9,12 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Strategy.Parsing (runCore, stateToStepTree, treeCore, replay, Step(..), counter, choices, State, value, trace, makeState {-, stateToTree -}) where
+module Common.Strategy.Parsing (runCore, stateToStepTree, treeCore, replay, counter, choices, State, value, trace, makeState {-, stateToTree -}) where
   
 import Prelude hiding (repeat)
 import Common.Classes
 import Common.Derivation
+import Common.Strategy.Grammar (Step(..))
 import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate
@@ -41,13 +42,6 @@ data State l a = S
    , value       :: a                                -- current value
    }
 
-data Step l a = Enter l | Exit l | RuleStep (Maybe l) (Rule a)
-   deriving Show
-
-instance Apply (Step l) where
-   applyAll (RuleStep _ r) = applyAll r
-   applyAll _              = return
-
 {-
 empty :: State l a -> Bool
 empty state = isReadyState state || any p (step state)
@@ -57,8 +51,6 @@ empty state = isReadyState state || any p (step state)
 makeState :: Core l a -> a -> State l a
 makeState core a = S core [] (Env IM.empty) [] [] 0 False a
 
-instance Apply (Core l) where
-   applyAll = runCore
 
 runCore :: Core l a -> a -> [a]
 runCore core = runState . makeState core

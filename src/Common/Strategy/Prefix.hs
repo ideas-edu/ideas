@@ -25,6 +25,7 @@ import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
 import Data.Maybe
+import Control.Monad
 
 -----------------------------------------------------------
 --- Prefixes
@@ -33,57 +34,54 @@ import Data.Maybe
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [Int] (DerivationTree (PStep a) (State PInfo a))
+data Prefix a = P (State PInfo a)
+
+prefixPair :: Prefix a -> (Int, [Bool])
+prefixPair (P s) = (length (trace s), reverse (choices s))
+
+prefixIntList :: Prefix a -> [Int]
+prefixIntList = f . prefixPair
+ where
+   f (0, []) = []
+   f (n, bs) = n : map (\b -> if b then 0 else 1) bs
 
 type PStep = Step PInfo
 type PInfo = (StrategyLocation, LabelInfo)
 
 instance Show (Prefix a) where
-   show (P xs _) = show (reverse xs)
+   show = show . prefixIntList
 
 instance Eq (Prefix a) where
-   P xs _ == P ys _ = xs == ys
+   a == b = prefixPair a == prefixPair b
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> Prefix a
 emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
 
+-- replay :: Monad m => Int -> [Bool] -> State l a -> m (State l a)
+
 -- | Construct a prefix for a given list of integers and a labeled strategy.
 makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
-makePrefix is ls = rec start is
+makePrefix []     ls = makePrefix [0] ls
+makePrefix (i:is) ls = liftM P $ 
+   replay i (map (==0) is) (makeState (mkCore ls))
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
-   start  = stateTree (makeState (mkCore ls))
- 
-   rec t [] = 
-      return (P (reverse is) t)
-   rec t (n:ns) =
-      case drop n (subtrees t) of
-         st:_ -> rec st ns
-         _    -> fail ("invalid prefix: " ++ show is)
 
 instance Apply Prefix where
    applyAll p = results . prefixTree p
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P xs t) = runTree (decorate xs t)
+prefixTree (P s) a = f (stateTree s {value = Just a})
  where
-   runTree :: DerivationTree (Step PInfo a) (Prefix a) -> a -> DerivationTree (Prefix a) a
-   runTree t a = addBranches list (singleNode a (endpoint t))
+   f t = addBranches list (singleNode (fromJust $ value $ root t) (endpoint t))
     where
-      list = concatMap make (branches t)
-      make (f, st) = [ (root st, runTree st b) | b <- applyAll f a ]
+      list = map g (branches t)
+      g (_, st) = (P (root st), f st)
 
-   decorate :: [Int] -> DerivationTree (Step PInfo a) (State PInfo a) -> DerivationTree (Step PInfo a) (Prefix a)
-   decorate xs t =
-      let list = zipWith make [0..] (branches t)
-          make i (s, st) = (s, decorate (i:xs) st)
-      in addBranches list (singleNode (P xs t) (endpoint t))
- 
--- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [PStep a]
-prefixToSteps (P _ t) = reverse (trace (root t))
+prefixToSteps (P t) = reverse (trace t)
  
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step l a] -> [Rule a]
@@ -91,4 +89,4 @@ stepsToRules steps = [ r | RuleStep r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (PStep a)
-lastStepInPrefix (P _ t) = safeHead (trace (root t))
+lastStepInPrefix (P t) = safeHead (trace t)

@@ -1,5 +1,6 @@
 module Common.Strategy.Grammar
-   ( Step(..), stateTree, treeCore, makeState, State, trace, value
+   ( Step(..), stateTree, treeCore, makeState, State, trace, value, choices, replay
+   , firsts
    ) where
 
 import Common.Classes
@@ -24,10 +25,11 @@ data State l a = S
    { grammar     :: Core l a
    , stack       :: [Either l (Core l a, Env l a)]
    , environment :: Env l a
-   , choices     :: [Int]
+   , choices     :: [Bool]
    , trace       :: [Step l a]
    , value       :: Maybe a
    }
+ deriving Show
 
 makeState :: Core l a -> State l a
 makeState core = S core [] emptyEnv [] [] Nothing
@@ -64,25 +66,24 @@ firsts = concatMap f . smallStep
    f (Nothing, s)   = firsts s
    f (Just step, s) = [(step, s)]
 
-{-
 replay :: Monad m => Int -> [Bool] -> State l a -> m (State l a)
 replay 0 _  state = return state
 replay n bs state =
    case grammar state of
-      Rule r  -> replay (n-1) bs state {grammar = Succeed}
+      Rule r  -> replay (n-1) bs state {grammar = Succeed, trace = RuleStep r : trace state}
       s :|: t -> case bs of
-                    x:xs -> replay (n-1) xs state {grammar = if x then s else t}
+                    x:xs -> replay n xs state {grammar = if x then s else t, choices = x : choices state}
                     []   -> fail "replay failed"
       _       -> case smallStep state of
-                    [(_, new)] -> replay (n-1) bs new
-                    _ -> fail "replay failed" -}
+                    [(m, new)] -> replay (if isJust m then n-1 else n) bs new
+                    _          -> fail "replay failed"
 
 smallStep :: State l a -> [(Maybe (Step l a), State l a)]
 smallStep state =
    update $
    case grammar state of
       s :*: t   -> [(Nothing, state {grammar = s, stack = Right (t, environment state) : stack state})]
-      s :|: t   -> chooseFor 0 s ++ chooseFor 1 t
+      s :|: t   -> chooseFor True s ++ chooseFor False t
       Rec i s   -> [(Nothing, state {grammar = s, environment = addToEnv i s (environment state) })]
       Var i     -> case findInEnv i (environment state) of
                       Just (e, s)  -> [(Nothing, (state {grammar = s, environment = e}))]
@@ -117,7 +118,7 @@ instance Apply (Core l) where
 ----------------------------------------------------------------------
 -- Local helper functions and instances
 
-newtype Env l a = Env (IM.IntMap (Env l a, Core l a))
+newtype Env l a = Env (IM.IntMap (Env l a, Core l a)) deriving Show
 
 emptyEnv :: Env l a
 emptyEnv = Env IM.empty

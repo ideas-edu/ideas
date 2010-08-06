@@ -3,7 +3,7 @@
     []
     <state>
       <prefix>
-        [0,0,1,4,0]
+        [5,1,0,0,0,1,1,1,1,1]
       </prefix>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>

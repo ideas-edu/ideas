@@ -33,15 +33,16 @@ import Data.Maybe
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P [Int] [PStep a] (DerivationTree (PStep a) ())
+data Prefix a = P [Int] (DerivationTree (PStep a) (State PInfo a))
 
-type PStep = Step (StrategyLocation, LabelInfo)
+type PStep = Step PInfo
+type PInfo = (StrategyLocation, LabelInfo)
 
 instance Show (Prefix a) where
-   show (P xs _ _) = show (reverse xs)
+   show (P xs _) = show (reverse xs)
 
 instance Eq (Prefix a) where
-   P xs _ _ == P ys _ _ = xs == ys
+   P xs _ == P ys _ = xs == ys
 
 -- | Construct the empty prefix for a labeled strategy
 emptyPrefix :: LabeledStrategy a -> Prefix a
@@ -49,35 +50,40 @@ emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
 
 -- | Construct a prefix for a given list of integers and a labeled strategy.
 makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
-makePrefix is ls = rec [] is start
+makePrefix is ls = rec start is
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
-   start  = makeTree (mkCore ls)
+   start  = stateTree (makeState (mkCore ls))
  
-   rec acc [] t = 
-      let (xs, ys) = unzip acc
-      in return (P xs ys t)
-   rec acc (n:ns) t =
-      case drop n (branches t) of
-         (step, st):_ -> rec ((n, step):acc) ns st
-         _            -> fail ("invalid prefix: " ++ show is)
+   rec t [] = 
+      return (P (reverse is) t)
+   rec t (n:ns) =
+      case drop n (subtrees t) of
+         st:_ -> rec st ns
+         _    -> fail ("invalid prefix: " ++ show is)
 
 instance Apply Prefix where
    applyAll p = results . prefixTree p
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P xs ys t) = changeLabel snd . runTree (decorate xs ys t)
+prefixTree (P xs t) = runTree (decorate xs t)
+ where
+   runTree :: DerivationTree (Step PInfo a) (Prefix a) -> a -> DerivationTree (Prefix a) a
+   runTree t a = addBranches list (singleNode a (endpoint t))
+    where
+      list = concatMap make (branches t)
+      make (f, st) = [ (root st, runTree st b) | b <- applyAll f a ]
 
-decorate :: [Int] -> [PStep a] -> DerivationTree (PStep a) () -> DerivationTree (PStep a) (Prefix a)
-decorate xs ys t =
-   let list = zipWith make [0..] (branches t)
-       make i (s, st) = (s, decorate (i:xs) (s:ys) st)
-   in addBranches list (singleNode (P xs ys t) (endpoint t))
+   decorate :: [Int] -> DerivationTree (Step PInfo a) (State PInfo a) -> DerivationTree (Step PInfo a) (Prefix a)
+   decorate xs t =
+      let list = zipWith make [0..] (branches t)
+          make i (s, st) = (s, decorate (i:xs) st)
+      in addBranches list (singleNode (P xs t) (endpoint t))
  
 -- | Returns the steps that belong to the prefix
 prefixToSteps :: Prefix a -> [PStep a]
-prefixToSteps (P _ xs _) = reverse xs
+prefixToSteps (P _ t) = reverse (trace (root t))
  
 -- | Retrieves the rules from a list of steps
 stepsToRules :: [Step l a] -> [Rule a]
@@ -85,13 +91,4 @@ stepsToRules steps = [ r | RuleStep r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
 lastStepInPrefix :: Prefix a -> Maybe (PStep a)
-lastStepInPrefix (P _ xs _) = safeHead xs
-
--------------------------------------------------------------------
--- Copied from core
-
-runTree :: Apply f => DerivationTree (f a) info -> a -> DerivationTree (f a, info) a
-runTree t a = addBranches list (singleNode a (endpoint t))
- where
-   list = concatMap make (branches t)
-   make (f, st) = [ ((f, root st), runTree st b) | b <- applyAll f a ]
+lastStepInPrefix (P _ t) = safeHead (trace (root t))

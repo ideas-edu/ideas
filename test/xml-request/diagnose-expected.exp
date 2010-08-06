@@ -2,7 +2,7 @@
   <expected ready="false" ruleid="cover-up plus [one var]">
     <state>
       <prefix>
-        [8,0,1,1,0]
+        [7,0,1,1,0]
       </prefix>
       <expr>
         2*x == 2

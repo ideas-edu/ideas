@@ -58,13 +58,11 @@ instance Eq (Prefix a) where
 emptyPrefix :: LabeledStrategy a -> Prefix a
 emptyPrefix = fromMaybe (error "emptyPrefix") . makePrefix []
 
--- replay :: Monad m => Int -> [Bool] -> State l a -> m (State l a)
-
 -- | Construct a prefix for a given list of integers and a labeled strategy.
 makePrefix :: Monad m => [Int] -> LabeledStrategy a -> m (Prefix a)
 makePrefix []     ls = makePrefix [0] ls
 makePrefix (i:is) ls = liftM P $ 
-   replay i (map (==0) is) (makeState (mkCore ls))
+   replay i (map (==0) is) (mkCore ls)
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
 
@@ -73,9 +71,9 @@ instance Apply Prefix where
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P s) a = f (stateTree s {value = Just a})
+prefixTree (P s) a = f (stateTree s {value = a})
  where
-   f t = addBranches list (singleNode (fromJust $ value $ root t) (endpoint t))
+   f t = addBranches list (singleNode (value $ root t) (endpoint t))
     where
       list = map g (branches t)
       g (_, st) = (P (root st), f st)

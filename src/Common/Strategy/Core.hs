@@ -15,15 +15,13 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( Core(..)
-   , mapRule, coreVars, noLabels, mapCore, mapCoreM
-   , mapLabel, coreFix
-   , coreMany, coreRepeat
+   , mapRule, mapLabel, noLabels
+   , coreMany, coreRepeat, coreOrElse, coreFix
    , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv
    ) where
 
 import Common.Transformation
 import Common.Uniplate
-import Control.Monad.Identity
 import qualified Data.IntMap as IM
 
 -----------------------------------------------------------------
@@ -82,13 +80,18 @@ lookupCoreEnv n (CE m) = do
    return (e, Rec n a)
 
 
+-----------------------------------------------------------------
+-- Definitions
 
 coreMany :: Core l a -> Core l a
-coreMany p = Rec n (Succeed :|: (p :*: Var n))
- where n = nextVar p
+coreMany a = Rec n (Succeed :|: (a :*: Var n))
+ where n = nextVar a
 
 coreRepeat :: Core l a -> Core l a
-coreRepeat p = Many p :*: Not p
+coreRepeat a = Many a :*: Not a
+
+coreOrElse :: Core l a -> Core l a -> Core l a
+coreOrElse a b = a :|: (Not a :*: b)
 
 coreFix :: (Core l a -> Core l a) -> Core l a
 coreFix f = -- disadvantage: function f is applied twice
@@ -100,6 +103,13 @@ nextVar p
    | null xs   = 0
    | otherwise = maximum xs + 1
  where xs = coreVars p
+
+coreVars :: Core l a -> [Int]
+coreVars core = 
+   case core of
+      Var n   -> [n]
+      Rec n a -> n : coreVars a
+      _       -> concatMap coreVars (children core)
 
 -----------------------------------------------------------------
 -- Utility functions
@@ -115,36 +125,19 @@ noLabels = mapCore (const id) Rule
    
 mapCore :: (l -> Core m b -> Core m b) -> (Rule a -> Core m b) 
         -> Core l a -> Core m b
-mapCore f g = 
-   let fm l = return . f l . runIdentity
-       gm   = return . g
-   in runIdentity . mapCoreM fm gm
-
--- The most primitive function that applies functions to the label and 
--- rule alternatives. Monadic version.
-mapCoreM :: Monad m => (k -> m (Core l b) -> m (Core l b)) 
-                    -> (Rule a -> m (Core l b)) 
-                    -> Core k a -> m (Core l b)
-mapCoreM f g = rec 
- where 
+mapCore f g = rec
+ where
    rec core =
       case core of
-         a :*: b   -> liftM2 (:*:)  (rec a) (rec b)
-         a :|: b   -> liftM2 (:|:)  (rec a) (rec b)
-         a :|>: b  -> liftM2 (:|>:) (rec a) (rec b)
-         Many a    -> liftM Many   (rec a)
-         Repeat a  -> liftM Repeat (rec a)
-         Succeed   -> return Succeed
-         Fail      -> return Fail
+         a :*: b   -> rec a :*:  rec b
+         a :|: b   -> rec a :|:  rec b
+         a :|>: b  -> rec a :|>: rec b
+         Many a    -> Many   (rec a)
+         Repeat a  -> Repeat (rec a)
+         Succeed   -> Succeed
+         Fail      -> Fail
          Label l a -> f l (rec a)
          Rule r    -> g r
-         Var n     -> return (Var n)
-         Rec n a   -> liftM (Rec n) (rec a)
-         Not a     -> liftM Not (rec a) 
-      
-coreVars :: Core l a -> [Int]
-coreVars core = 
-   case core of
-      Var n   -> [n]
-      Rec n a -> n : coreVars a
-      _       -> concatMap coreVars (children core)
+         Var n     -> Var n
+         Rec n a   -> Rec n (rec a)
+         Not a     -> Not (rec a)

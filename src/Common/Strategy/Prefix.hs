@@ -19,7 +19,7 @@ module Common.Strategy.Prefix
 
 import Common.Utils
 import Common.Strategy.Abstract
-import Common.Strategy.Grammar
+import Common.Strategy.Parsing
 import Common.Transformation
 import Common.Derivation
 import Common.Strategy.Location
@@ -67,7 +67,7 @@ makePrefix (i:is) ls = liftM P $
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
-prefixTree (P s) a = f (stateTree s {value = a})
+prefixTree (P s) a = f (parseDerivationTree s {value = a})
  where
    f t = addBranches list (singleNode (value $ root t) (endpoint t))
     where

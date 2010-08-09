@@ -29,7 +29,7 @@ import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate
-import Common.Strategy.Grammar
+import Common.Strategy.Parsing
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -84,7 +84,7 @@ instance IsStrategy Strategy where
 instance IsStrategy (LabeledStrategy) where
   toStrategy (LS info (S core)) = S (Label info core)
 
-instance IsStrategy Rule where -- Major rules receive a label
+instance IsStrategy Rule where
    toStrategy r
       | isMajorRule r = toStrategy (toLabeled r)
       | otherwise     = S (Rule r)
@@ -172,8 +172,10 @@ processLabelInfo getInfo = rec emptyCoreEnv
 -- | Returns the derivation tree for a strategy and a term, including all
 -- minor rules
 fullDerivationTree :: IsStrategy f => f a -> a -> DerivationTree (Step LabelInfo a) a
-fullDerivationTree = treeCore . processLabelInfo id . toCore . toStrategy 
-
+fullDerivationTree = make . processLabelInfo id . toCore . toStrategy 
+ where 
+   make core = fmap value . parseDerivationTree . makeState core
+ 
 -- | Returns the derivation tree for a strategy and a term with only major rules
 derivationTree :: IsStrategy f => f a -> a -> DerivationTree (Rule a) a
 derivationTree s = mergeMaybeSteps . mapSteps f . fullDerivationTree s

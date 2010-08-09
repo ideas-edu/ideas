@@ -24,8 +24,7 @@ import Common.Transformation
 import Common.Uniplate
 import Common.Utils (readM)
 import Data.Foldable (toList)
-import Data.Sequence hiding (take)
-import Control.Monad.State
+import Data.Sequence hiding (take, reverse)
 
 -----------------------------------------------------------
 --- Strategy locations
@@ -91,31 +90,27 @@ strategyLocations = collect . addLocation . toCore . toStrategy
          Label (loc, info) s -> 
             let this = makeLabeledStrategy info (mapLabel snd s)
             in (loc, Left this) : collect s
---         Rule (Just (loc, _)) r -> 
---            [(loc, Right r)]
-         _ -> 
-            concatMap collect (children core)
+         Not _ -> []
+         _     -> concatMap collect (children core)
 
 -- | Returns the substrategy or rule at a strategy location. Nothing 
 -- indicates that the location is invalid
 subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (StrategyOrRule a)
-subStrategy loc = lookup loc . strategyLocations 
+subStrategy loc = lookup loc . strategyLocations
             
 -- local helper functions that decorates interesting places with a 
 -- strategy lcations (major rules, and labels)
 addLocation :: Core l a -> Core (StrategyLocation, l) a
-addLocation = flip evalState topLocation . mapCoreM forLabel (return . Rule)
+addLocation = snd . rec topLocation . mapLabel (\l -> (error "no location", l))
  where
-   forLabel l ma = do
-      loc <- get
-      put (downLocation loc)
-      rest <- ma
-      put (nextLocation loc)
-      return (Label (loc, l) rest)
-   {-
-   forRule (Just l) r = do
-      loc <- get
-      put (nextLocation loc)
-      return (Rule (Just (loc, l)) r)
-   forRule Nothing r =
-      return (Rule Nothing r) -}
+   rec loc core =
+      case core of
+         Label (_, l) a -> 
+            let new = snd (rec (downLocation loc) a)
+            in (nextLocation loc, Label (loc, l) new)
+         Not a -> (loc, Not (noLabels a))
+         _ -> 
+            let (cs, f) = uniplate core
+                (l, xs) = foldl op (loc, [])  cs
+                op (l1, as) x = let (l2, a) = rec l1 x in (l2, a:as)
+            in (l, f (reverse xs))

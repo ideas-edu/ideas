@@ -58,11 +58,9 @@ configure cfg ls =
    label (showId ls) (configureCore cfg (toCore (unlabel ls)))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
-configureCore cfg = mapCore f Rule . addLocation
+configureCore cfg = mapLabel (change []) . addLocation
  where
-   f pair        a = Label (change pair []) a
-   
-   change pair@(_, info) groups = 
+   change groups pair@(_, info) = 
       let actions = getActions pair groups cfg
       in foldr doAction info actions
    

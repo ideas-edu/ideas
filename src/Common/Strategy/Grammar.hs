@@ -1,14 +1,14 @@
 module Common.Strategy.Grammar
    ( Step(..), stateTree, treeCore, State, trace, value, choices, replay
+   , runCore, runCoreWith
    ) where
 
 import Common.Classes
-import Common.Derivation
-import Common.Strategy.Core hiding (emptyEnv)
+import Common.Derivation hiding (isEmpty)
+import Common.Strategy.Core
 import Common.Transformation
+import Control.Monad
 import Control.Arrow
-import Data.Maybe
-import qualified Data.IntMap as IM
 
 data Step l a = Enter l | Exit l | RuleStep (Rule a)
    deriving Show
@@ -24,15 +24,15 @@ instance Apply (Core l) where
 -- Abstract data type
 
 data State l a = S
-   { stack       :: [Either l (Core l a, Env l a)]
-   , environment :: Env l a
+   { stack       :: [Either l (CoreEnv l a, Core l a)]
+   , environment :: CoreEnv l a
    , choices     :: [Bool]
    , trace       :: [Step l a]
    , value       :: a
    }
 
 makeState :: Core l a -> a -> State l a
-makeState core a = push core (S [] emptyEnv [] [] a)
+makeState core a = push core (S [] emptyCoreEnv [] [] a)
 
 treeCore :: Core l a -> a -> DerivationTree (Step l a) a
 treeCore core = fmap value . stateTree . makeState core
@@ -40,25 +40,14 @@ treeCore core = fmap value . stateTree . makeState core
 stateTree :: State l a -> DerivationTree (Step l a) (State l a)
 stateTree state = addBranches list node
  where
-   node = singleNode state (empty state)
+   node = singleNode state (isEmpty state)
    list = map (second stateTree) (firsts state)
 
 ----------------------------------------------------------------------
 -- Elementary operations
 
-empty :: State l a -> Bool
-empty state = 
-   let p (m, s) = isNothing m && empty s
-   in isEmptyState state || any p (smallStep state)
-
-isEmptyState :: State l a -> Bool
-isEmptyState = null . stack
-
-firsts :: State l a -> [(Step l a, State l a)]
-firsts = concatMap f . smallStep
- where
-   f (Nothing, s)   = firsts s
-   f (Just step, s) = [(step, s)]
+isEmpty :: State l a -> Bool
+isEmpty = null . stack
 
 replay :: Monad m => Int -> [Bool] -> Core l a -> m (State l a)
 replay n bs core = rec n bs (makeState core noValue)
@@ -70,54 +59,55 @@ replay n bs core = rec n bs (makeState core noValue)
       case pop state of
          Nothing              -> return state
          Just (Left l, s)     -> rec (n-1) bs (s {trace = Exit l : trace s})
-         Just (Right core, s) ->
-            case core of
-               Rule r  -> rec (n-1) bs s {trace = RuleStep r : trace s}
-               Not _   -> rec n bs s
-               a :|: b -> 
-                  case bs of
-                     x:xs -> rec n xs (makeChoice x (if x then push a s else push b s))
-                     []   -> fail "replay failed"
-               _ -> 
-                  case smallCoreStep core s of
-                     [(m, new)] -> rec (if isJust m then n-1 else n) bs new
-                     _          -> fail "replay failed"
+         Just (Right core, s) -> replayStep n bs core s
+                     
+   replayStep n bs core state =
+      case core of
+         s :*: t   -> rec n bs (push s (push t state))
+         a :|: b -> 
+            case bs of
+               x:xs -> rec n xs (makeChoice x (if x then push a state else push b state))
+               []   -> fail "replay failed"
+         Rec i s   -> rec n bs (push s (addEnv i s state))
+         Var i     -> withEnv (replayStep n bs) i state
+         Rule r  -> rec (n-1) bs state {trace = RuleStep r : trace state}
+         Label l s -> rec (n-1) bs (push s (pushExit l state {trace = Enter l : trace state}))
+         Not _   -> rec n bs state
+         s :|>: t  -> replayStep n bs (s :|: (Not s :*: t)) state
+         Many s    -> replayStep n bs (coreMany s) state
+         Repeat s  -> replayStep n bs (coreRepeat s) state
+         Fail      -> fail "replay failed"
+         Succeed   -> rec n bs state
 
-smallStep :: State l a -> [(Maybe (Step l a), State l a)]
-smallStep state = 
+firsts :: State l a -> [(Step l a, State l a)]
+firsts state =
    case pop state of 
       Nothing              -> []
-      Just (Left l, s)     -> [(Just (Exit l), s {trace = Exit l : trace s})]
-      Just (Right core, s) -> smallCoreStep core s
-      
-smallCoreStep :: Core l a -> State l a -> [(Maybe (Step l a), State l a)]
-smallCoreStep core state = 
-   case core of
-      s :*: t   -> [(Nothing, push s (push t state))]
-      s :|: t   -> chooseFor True s ++ chooseFor False t
-      Rec i s   -> [(Nothing, push s state {environment = addToEnv i s (environment state) })]
-      Var i     -> case findInEnv i (environment state) of
-                      Just (e, s)  -> [(Nothing, (push s state {environment = e}))]
-                      Nothing -> error "free var in core expression"
-      Rule  r   -> hasStep (RuleStep r) [ state {value = b} | b <- applyAll r (value state) ]
-      Label l s -> hasStep (Enter l) [push s (pushExit l state)]
-      Not s     -> if null (runCoreWith (environment state) s (value state))
-                   then replaceBy Succeed
-                   else []
-      s :|>: t  -> replaceBy (s :|: (Not s :*: t))
-      Many s    -> replaceBy (coreMany s)
-      Repeat s  -> replaceBy (coreRepeat s)
-      Fail      -> []
-      Succeed   -> [(Nothing, state)]
+      Just (Left l, s)     -> [(Exit l, s {trace = Exit l : trace s})]
+      Just (Right core, s) -> firstsStep core s
  where
-   replaceBy s = return (Nothing, push s state)
-   chooseFor b a = map (second (makeChoice b)) (replaceBy a)
-   hasStep step xs = [ (Just step, s {trace = step : trace s}) | s <- xs ]
+   firstsStep core state =
+      case core of
+         s :*: t   -> firstsStep s (push t state)
+         s :|: t   -> chooseFor True s ++ chooseFor False t
+         Rec i s   -> firstsStep s (addEnv i s state)
+         Var i     -> withEnv firstsStep i state
+         Rule  r   -> hasStep (RuleStep r) (useRule r state)
+         Label l s -> hasStep (Enter l) [push s (pushExit l state)]
+         Not s     -> guard (checkNot s state) >> firsts state
+         s :|>: t  -> firstsStep (s :|: (Not s :*: t)) state
+         Many s    -> firstsStep (coreMany s) state
+         Repeat s  -> firstsStep (coreRepeat s) state
+         Fail      -> []
+         Succeed   -> firsts state
+    where
+      chooseFor b core = firstsStep core (makeChoice b state)
+      hasStep step xs = [ (step, s {trace = step : trace s}) | s <- xs ]
 
 runCore :: Core l a -> a -> [a]
 runCore core = runState . makeState core
 
-runCoreWith :: Env l a -> Core l a -> a -> [a]
+runCoreWith :: CoreEnv l a -> Core l a -> a -> [a]
 runCoreWith env core = runState . setEnv . makeState core
  where setEnv s = s {environment = env}
 
@@ -132,15 +122,11 @@ runState state =
       case core of
          s :*: t   -> runStep s (push t state)
          s :|: t   -> runStep s state ++ runStep t state
-         Rec i s   -> runStep s state {environment = addToEnv i s (environment state)}
-         Var i     -> case findInEnv i (environment state) of
-                         Just (e, s)  -> runStep s state {environment = e}
-                         Nothing -> error "free var in core expression"
-         Rule  r   -> [ s | b <- applyAll r (value state), s <- runState state {value = b} ]
+         Rec i s   -> runStep s (addEnv i s state)
+         Var i     -> withEnv runStep i state
+         Rule  r   -> concatMap runState (useRule r state)
          Label _ s -> runStep s state
-         Not s     -> if null (runCoreWith (environment state) s (value state))
-                      then runState state
-                      else []
+         Not s     -> guard (checkNot s state) >> runState state
          s :|>: t  -> let xs = runStep s state
                       in if null xs then runStep t state else xs
          Many s    -> runStep (coreMany s) state
@@ -148,24 +134,25 @@ runState state =
          Fail      -> []
          Succeed   -> runState state
 
+addEnv :: Int -> Core l a -> State l a -> State l a
+addEnv i c s = s {environment = insertCoreEnv i c (environment s)}
+
+withEnv :: (Core l a -> State l a -> b) -> Int -> State l a -> b
+withEnv f i s = case lookupCoreEnv i (environment s) of
+                         Just (e, a)  -> f a s {environment = e}
+                         Nothing -> error "free var in core expression"
+
+checkNot :: Core l a -> State l a -> Bool
+checkNot core state = null (runCoreWith (environment state) core (value state))
+
+useRule :: Rule a -> State l a -> [State l a]
+useRule r state = [ state {value = b} | b <- applyAll r (value state) ]
+
 ----------------------------------------------------------------------
 -- Local helper functions and instances
-
-newtype Env l a = Env (IM.IntMap (Env l a, Core l a)) 
-
-emptyEnv :: Env l a
-emptyEnv = Env IM.empty
-  
-addToEnv :: Int -> Core l a -> Env l a -> Env l a
-addToEnv n a env@(Env m) = Env (IM.insert n (env, a) m)
-  
-findInEnv :: Int -> Env l a -> Maybe (Env l a, Core l a)
-findInEnv n (Env m) = do
-   (e, a) <- IM.lookup n m
-   return (e, Rec n a)
    
 push :: Core l a -> State l a -> State l a
-push core s = s {stack = Right (core, environment s) : stack s}
+push core s = s {stack = Right (environment s, core) : stack s}
 
 pushExit :: l -> State l a -> State l a
 pushExit l s = s {stack = Left l : stack s}
@@ -176,7 +163,7 @@ pop s = case stack s of
            x:xs -> Just (either f g x s {stack = xs})
  where
    f l         s = (Left l, s)
-   g (core, e) s = (Right core, s {environment = e})
+   g (e, core) s = (Right core, s {environment = e})
    
 makeChoice :: Bool -> State l a -> State l a
 makeChoice b s = s {choices = b : choices s}

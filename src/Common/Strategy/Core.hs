@@ -17,8 +17,8 @@ module Common.Strategy.Core
    ( Core(..)
    , mapRule, coreVars, noLabels, mapCore, mapCoreM
    , mapLabel, coreFix
-   , CoreEnv, emptyEnv, insertEnv, replaceVars
    , coreMany, coreRepeat
+   , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv
    ) where
 
 import Common.Transformation
@@ -68,31 +68,20 @@ instance Uniplate (Core l a) where
 -----------------------------------------------------------------
 -- Core environment
 
--- A core environment stores the recursive bindings in a core 
--- expression (Rec/Var pairs)
-newtype CoreEnv l a = Env (IM.IntMap (CoreEnv l a, Core l a))
+newtype CoreEnv l a = CE (IM.IntMap (CoreEnv l a, Core l a)) 
 
-emptyEnv :: CoreEnv l a
-emptyEnv = Env IM.empty
-
-insertEnv :: Int -> Core l a -> CoreEnv l a -> CoreEnv l a
-insertEnv n a env@(Env m) = Env (IM.insert n (env, a) m)
-
-deleteEnv :: Int -> CoreEnv l a -> CoreEnv l a
-deleteEnv n (Env m) = Env (IM.delete n m)
+emptyCoreEnv :: CoreEnv l a
+emptyCoreEnv = CE IM.empty
   
-lookupEnv :: Int -> CoreEnv l a -> Maybe (CoreEnv l a, Core l a)
-lookupEnv n (Env m) = IM.lookup n m
+insertCoreEnv :: Int -> Core l a -> CoreEnv l a -> CoreEnv l a
+insertCoreEnv n a env@(CE m) = CE (IM.insert n (env, a) m)
+  
+lookupCoreEnv :: Int -> CoreEnv l a -> Maybe (CoreEnv l a, Core l a)
+lookupCoreEnv n (CE m) = do
+   (e, a) <- IM.lookup n m
+   return (e, Rec n a)
 
-replaceVars :: CoreEnv l a -> Core l a -> Core l a
-replaceVars env core =
-   case core of
-      Rec n a -> Rec n (replaceVars (deleteEnv n env) a)
-      Var n   -> case lookupEnv n env of
-                    Just (xs, a) -> replaceVars xs a
-                    Nothing      -> core
-      _       -> let (cs, make) = uniplate core
-                 in make (map (replaceVars env) cs)
+
 
 coreMany :: Core l a -> Core l a
 coreMany p = Rec n (Succeed :|: (p :*: Var n))

@@ -29,7 +29,7 @@ import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate
-import Common.Strategy.Grammar (Step(..), treeCore)
+import Common.Strategy.Grammar
 
 -----------------------------------------------------------
 --- Strategy data-type
@@ -145,13 +145,12 @@ changeInfo f a = LS (f info) s
 --- Process Label Information
 
 processLabelInfo :: (l -> LabelInfo) -> Core l a -> Core l a
-processLabelInfo getInfo = rec emptyEnv
+processLabelInfo getInfo = rec emptyCoreEnv
  where
    rec env core = 
       case core of 
-         Rec n a   -> Rec n (rec (insertEnv n core env) a)
+         Rec n a   -> Rec n (rec (insertCoreEnv n core env) a)
          Label l a -> forLabel env l (rec env a)
-         Rule r -> Rule r
          _ -> f (map (rec env) cs)
     where
       (cs, f) = uniplate core
@@ -165,7 +164,7 @@ processLabelInfo getInfo = rec emptyEnv
           | otherwise   = Label l c
       info   = getInfo l
       asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) 
-                  (applyAll (replaceVars env new))
+                  (runCoreWith env new)
 
 -----------------------------------------------------------
 --- Remaining functions

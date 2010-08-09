@@ -17,7 +17,6 @@ module Common.Strategy.Prefix
    , prefixToSteps, prefixTree, stepsToRules, lastStepInPrefix
    ) where
 
-import Common.Classes
 import Common.Utils
 import Common.Strategy.Abstract
 import Common.Strategy.Grammar
@@ -65,9 +64,6 @@ makePrefix (i:is) ls = liftM P $
    replay i (map (==0) is) (mkCore ls)
  where
    mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
-
-instance Apply Prefix where
-   applyAll p = results . prefixTree p
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a

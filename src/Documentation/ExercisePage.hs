@@ -122,8 +122,7 @@ strategyPage ex = do
    highlightXML True (strategyToXML (strategy ex))
    h2 "2. Locations" 
    let f (loc, a) = 
-          [text (show loc), indent (locationDepth loc) >> text (showId a)]
-       indent n = text (replicate (3*n) '.')
+          [text (show loc), text (showId a)]
    table ( [bold $ text "Location", bold $ text "Label"] 
          : map f (strategyLocations (strategy ex))
          )

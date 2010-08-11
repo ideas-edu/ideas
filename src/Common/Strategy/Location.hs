@@ -12,8 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Strategy.Location 
-   ( StrategyLocation, topLocation, nextLocation, downLocation
-   , locationDepth
+   ( StrategyLocation, topLocation -- , nextLocation, downLocation
    , subTaskLocation, nextTaskLocation, parseStrategyLocation
    , strategyLocations, subStrategy
    , locationToId, idToLocation
@@ -25,59 +24,41 @@ import Common.Transformation
 import Common.Uniplate
 import Common.Utils (readM, safeHead)
 import Control.Monad
-import Data.Foldable (toList)
-import Data.Sequence hiding (filter, take, reverse, zipWith)
 
 -----------------------------------------------------------
 --- Strategy locations
 
 -- | A strategy location corresponds to a substrategy or a rule
-newtype StrategyLocation = SL (Seq Int)
+newtype StrategyLocation = SL [Int]
    deriving Eq
 
 instance Show StrategyLocation where
-   show (SL xs) = show (toList xs)
+   show (SL xs) = show xs
 
 topLocation :: StrategyLocation 
-topLocation = SL empty
-
-nextLocation :: StrategyLocation -> StrategyLocation
-nextLocation (SL xs) =
-   case viewr xs of
-      EmptyR  -> topLocation -- invalid
-      ys :> a -> SL (ys |> (a+1))
-
-downLocation :: StrategyLocation -> StrategyLocation
-downLocation (SL xs) = SL (xs |> 0)
-
-locationDepth :: StrategyLocation -> Int
-locationDepth (SL xs) = Data.Sequence.length xs
+topLocation = SL []
 
 -- old (current) and actual (next major rule) location
 subTaskLocation :: StrategyLocation -> StrategyLocation -> StrategyLocation
 subTaskLocation (SL xs) (SL ys) = SL (rec xs ys)
  where
-   rec xs ys =
-      case (viewl xs, viewl ys) of
-         (i :< is, j :< js) 
-            | i == j    -> i <| rec is js 
-            | otherwise -> empty
-         (_, j :< _)    -> singleton j
-         _              -> empty
+   rec (i:is) (j:js)
+      | i == j    = i : rec is js 
+      | otherwise = []
+   rec _ (j:_)    = [j]
+   rec _ _        = []
 
 -- old (current) and actual (next major rule) location
 nextTaskLocation :: StrategyLocation -> StrategyLocation -> StrategyLocation
 nextTaskLocation (SL xs) (SL ys) = SL (rec xs ys)
  where
-   rec xs ys =
-      case (viewl xs, viewl ys) of
-         (i :< is, j :< js)
-            | i == j    -> i <| rec is js
-            | otherwise -> singleton j
-         _              -> empty
+   rec (i:is) (j:js)
+      | i == j    = i : rec is js
+      | otherwise = [j]
+   rec _ _        = []
 
 parseStrategyLocation :: Monad m => String -> m StrategyLocation
-parseStrategyLocation = liftM (SL . fromList) . readM
+parseStrategyLocation = liftM SL . readM
 
 -- | Returns a list of all strategy locations, paired with the labeled 
 -- substrategy or rule at that location
@@ -87,7 +68,7 @@ strategyLocations s = (topLocation, s) : rec [] (toCore (unlabel s))
    rec is = concat . zipWith make (map (:is) [0..]) . collect
    
    make is (l, core) = 
-      let loc = SL (fromList is)
+      let loc = SL is
           ls  = makeLabeledStrategy l (toStrategy core)
       in (loc, ls) : rec is core
    

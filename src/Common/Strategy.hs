@@ -34,15 +34,14 @@ module Common.Strategy
      -- * Configuration combinators
    , module Common.Strategy.Configuration
      -- * Strategy locations
-   , StrategyLocation, topLocation, nextLocation, downLocation
-   , locationDepth
+   , StrategyLocation, topLocation, strategyLocations, subStrategy
    , subTaskLocation, nextTaskLocation, parseStrategyLocation
-   , subStrategy, strategyLocations
    , locationToId, idToLocation
-   , mapRules, mapRulesS, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)
    , prefixToSteps, stepsToRules, lastStepInPrefix
+     -- * Misc
+   , cleanUpStrategy, rulesInStrategy, mapRules, mapRulesS
    ) where
 
 import Common.Strategy.Abstract

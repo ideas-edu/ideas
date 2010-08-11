@@ -61,10 +61,13 @@ equal Unit Unit = Just id
 equal (Pair a b) (Pair c d) = liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
 equal StrategyCfg StrategyCfg = Just id
 equal Location Location = Just id
+equal StrategyLoc StrategyLoc = Just id
+equal Term Term = Just id
 equal ExercisePkg ExercisePkg = Just id
 equal Context Context = Just id
 equal Bool Bool = Just id
 equal String String = Just id
+equal Int Int = Just id
 equal (Iso _ f a) b = fmap (. f) (equal a b)
 equal a (Iso f _ b) = fmap (f .) (equal a b)
 equal (Tag s1 a) (Tag s2 b) = guard (s1==s2) >> equal a b

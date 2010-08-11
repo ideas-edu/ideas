@@ -74,13 +74,6 @@ xmlRequest xml = do
       }
 
 xmlReply :: Request -> XML -> DomainReasoner XML
-xmlReply request xml 
-   | service request == "mathdox" = do
-        code <- maybe (fail "unknown exercise code") return (exerciseId request)
-        Some pkg <- findPackage code
-        (st, sloc, answer) <- liftEither $ xmlToRequest xml pkg
-        return (replyToXML (toOpenMath pkg) (problemDecomposition st sloc answer))
-
 xmlReply request xml = do
    srv <- findService (service request)
    pkg <- 
@@ -99,14 +92,8 @@ xmlReply request xml = do
    return (resultOk res)
 
 extractExerciseId :: Monad m => XML -> m Id
-extractExerciseId xml =
-   case findAttribute "exerciseid" xml of
-      Just s  -> newIdM s
-      -- being backwards compatible with early MathDox
-      Nothing -> do
-         a <- findChild "strategy" xml
-         let f = map toLower . filter isAlphaNum . getData
-         newIdM (f a)
+extractExerciseId xml = 
+   findAttribute "exerciseid" xml >>= newIdM
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
@@ -126,7 +113,7 @@ stringFormatConverter (Some pkg) = Some (stringFormatConverterTp pkg)
 
 stringFormatConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
 stringFormatConverterTp pkg = 
-   Evaluator (xmlEncoder False f ex) (xmlDecoder False g pkg)
+   Evaluator (xmlEncoder False f pkg) (xmlDecoder False g pkg)
  where
    ex = exercise pkg
    f  = return . element "expr" . text . prettyPrinter ex
@@ -141,9 +128,8 @@ openMathConverter (Some pkg) = Some (openMathConverterTp pkg)
         
 openMathConverterTp :: ExercisePackage a -> Evaluator XML XMLBuilder a
 openMathConverterTp pkg =
-   Evaluator (xmlEncoder True f ex) (xmlDecoder True g pkg)
+   Evaluator (xmlEncoder True f pkg) (xmlDecoder True g pkg)
  where
-   ex = exercise pkg
    f = return . builder . toXML . toOpenMath pkg
    g xml = do
       xob   <- findChild "OMOBJ" xml
@@ -152,22 +138,25 @@ openMathConverterTp pkg =
          Just a  -> return a
          Nothing -> fail "Unknown OpenMath object"
 
-xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> Exercise a -> Encoder XMLBuilder a
-xmlEncoder b f ex = Encoder
-   { encodeType  = encode (xmlEncoder b f ex) ex
+xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> ExercisePackage a -> Encoder XMLBuilder a
+xmlEncoder b f pkg = Encoder
+   { encodeType  = encode (xmlEncoder b f pkg) pkg
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
  where
-   encode :: Encoder XMLBuilder a -> Exercise a -> Type a t -> t -> DomainReasoner XMLBuilder
-   encode enc ex serviceType =
+   encode :: Encoder XMLBuilder a -> ExercisePackage a -> Type a t -> t -> DomainReasoner XMLBuilder
+   encode enc pkg serviceType =
       case serviceType of
          Tp.Tag s _ 
             | s == "Diagnosis" -> \a -> do
                  d <- isSynonym diagnosisTypeSynonym (a ::: serviceType)
                  encodeDiagnosis b (encodeTerm enc) d
+            | s == "DecompositionReply" -> \a -> do
+                 reply <- isSynonym replyTypeSynonym (a ::: serviceType)
+                 return (replyToXML (toOpenMath pkg) reply)
             | s == "RulesInfo" -> \_ ->
-                 rulesInfoXML ex (encodeTerm enc)
+                 rulesInfoXML (exercise pkg) (encodeTerm enc)
             | s == "State" -> \a -> do
                  st <- isSynonym stateTypeSynonym (a ::: serviceType)
                  encodeState b (encodeTerm enc) st
@@ -178,15 +167,16 @@ xmlEncoder b f ex = Encoder
                   let elems = mapM_ make xs
                   return (element "list" elems)
                _ -> do
-                  bs <- mapM (encode enc ex t1) xs
+                  bs <- mapM (encode enc pkg t1) xs
                   let elems = mapM_ (element "elem") bs
                   return (element "list" elems)
-         Tp.Tag s t1  -> liftM (element s) . encode enc ex t1  -- quick fix
+         Tp.Tag s t1  -> liftM (element s) . encode enc pkg t1  -- quick fix
          Tp.Strategy  -> return . builder . strategyToXML
          Tp.Rule      -> return . ("ruleid" .=.) . Rule.showId
          Tp.Term      -> encodeTerm enc
          Tp.Context   -> encodeContext b (encodeTerm enc)
          Tp.Location  -> return . {-element "location" .-} text . show
+         Tp.StrategyLoc -> return . text . show
          Tp.Bool      -> return . text . map toLower . show
          Tp.String    -> return . text
          Tp.Int       -> return . text . show
@@ -204,14 +194,19 @@ xmlDecoder b f pkg = Decoder
       case serviceType of
          Tp.Context     -> leave $ decodeContext b (decoderPackage dec) (decodeTerm dec)
          Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
+         Tp.StrategyLoc -> leave $ \xml -> do
+                              a <- findChild "location" xml
+                              parseStrategyLocation (getData a)
          Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Term        -> leave $ decodeTerm dec
          Tp.StrategyCfg -> decodeConfiguration
-         Tp.Tag s _   
+         Tp.Tag s t
             | s == "State" -> \xml -> do 
                  f  <- equalM stateTp serviceType
                  st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
                  return (f st, xml)
+            | s == "answer" -> \xml ->
+                 findChild "answer" xml >>= decode dec t
          _ -> decodeDefault dec serviceType
          
    leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)

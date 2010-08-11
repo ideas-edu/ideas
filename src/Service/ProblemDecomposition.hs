@@ -11,9 +11,9 @@
 -----------------------------------------------------------------------------
 module Service.ProblemDecomposition 
    ( problemDecomposition
-   , Reply(..), replyToXML, xmlToRequest
-   , ReplyError(..), ReplyOk(..), ReplyIncorrect(..)
-   , replyType
+   , Reply(..), replyToXML
+   , ReplyIncorrect(..)
+   , replyType, replyTypeSynonym
    ) where
 
 import Common.Classes
@@ -24,7 +24,6 @@ import Common.Strategy hiding (not, repeat, fail)
 import Common.Transformation 
 import Common.Utils
 import Control.Monad
-import Data.Char
 import Data.Maybe
 import Service.BasicServices (stepsremaining)
 import Service.ExercisePackage
@@ -32,22 +31,18 @@ import Service.State
 import Service.Types
 import Text.OpenMath.Object
 import Text.XML hiding (name)
-import qualified Text.XML as XML
 
-replyError :: String -> String -> Reply a
-replyError kind = Error . ReplyError kind
-
-problemDecomposition :: State a -> StrategyLocation -> Maybe a -> Reply a
-problemDecomposition (State pkg mpr requestedTerm) sloc answer 
+problemDecomposition :: Monad m => StrategyLocation -> State a -> Maybe a -> m (Reply a)
+problemDecomposition sloc (State pkg mpr requestedTerm) answer 
    | isNothing $ subStrategy sloc (strategy ex) =
-        replyError "request error" "invalid location for strategy"
+        fail "request error: invalid location for strategy"
    | otherwise =
    let pr = fromMaybe (emptyPrefix $ strategy ex) mpr in
          case (runPrefixLocation ex sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
-            ([], _) -> replyError "strategy error" "not able to compute an expected answer"
+            ([], _) -> fail "strategy error: not able to compute an expected answer"
             (answers, Just answeredTerm)
                | not (null witnesses) ->
-                    Ok ReplyOk
+                    return $ Ok ReplyOk
                        { repOk_Code     = pkg
                        , repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix ex newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
@@ -58,7 +53,7 @@ problemDecomposition (State pkg mpr requestedTerm) sloc answer
                     witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
                     newPrefix   = snd (head witnesses)            
             ((expected, prefix):_, maybeAnswer) ->
-                    Incorrect ReplyIncorrect
+                    return $ Incorrect ReplyIncorrect
                        { repInc_Code       = pkg
                        , repInc_Location   = subTaskLocation sloc loc
                        , repInc_Expected   = fromJust (fromContext expected)
@@ -146,87 +141,11 @@ runPrefixMajor p0 =
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
    stop (Just (RuleStep r)) = isMajorRule r
    stop _ = False
-
-------------------------------------------------------------------------
--- Requests
-
-extractString :: String -> XML -> Either String String
-extractString s = liftM getData . findChild s
-
-xmlToRequest :: XML -> ExercisePackage a -> Either String (State a, StrategyLocation, Maybe a)
-xmlToRequest xml pkg = do
-   let ex = exercise pkg
-   unless (XML.name xml == "request") $
-      fail "XML document is not a request" 
-   loc     <- optional (extractLocation "location" xml)
-   term    <- extractExpr "term" xml
-   context <- optional (extractString "context" xml)
-   answer  <- optional (extractExpr "answer" xml)
-   t  <- maybe (fail "invalid omobj") return (fromOpenMath pkg term)
-   mt <- case answer of
-            Nothing -> return Nothing 
-            Just o  -> return $ fromOpenMath pkg o
-   return
-      ( State
-           { exercisePkg = pkg
-           , prefix  = case context of
-                          Just s  -> Just $ getPrefix2 s (strategy ex)
-                          Nothing -> Just $ emptyPrefix (strategy ex)
-           , context = case context of 
-                          Just s  -> putInContext2 ex s t
-                          Nothing -> inContext ex t
-           }
-      , fromMaybe topLocation loc
-      , mt
-      )
-
------------------------------------------------------------
-putInContext2 :: Exercise a -> String -> a -> Context a
-putInContext2 ex s = fromMaybe (inContext ex) $ do
-   (_, s2) <- splitAtElem ';' s
-   env     <- parseContext s2
-   return (makeContext ex env)
-
-getPrefix2 :: String -> LabeledStrategy (Context a) -> Prefix (Context a)
-getPrefix2 s ls = fromMaybe (emptyPrefix ls) $ do
-   (s1, _) <- splitAtElem ';' s
-   is <- readM s1
-   makePrefix is ls
-
-optional :: Either String a -> Either String (Maybe a)
-optional = Right . either (const Nothing) Just
-
-extractLocation :: String -> XML -> Either String StrategyLocation
-extractLocation s xml = do
-   c <- findChild s xml
-   case parseStrategyLocation (getData c) of
-      Just loc -> return loc
-      _        -> fail "invalid location"
-
-extractExpr :: String -> XML -> Either String OMOBJ
-extractExpr n xml =
-   case findChild n xml of 
-      Just expr -> 
-         case children expr of 
-            [this] -> xml2omobj this
-            _ -> fail $ "error in " ++ show (n, xml)
-      _ -> fail $ "error in " ++ show (n, xml)
-
--- Legacy code: remove!
-parseContext :: String -> Maybe Environment
-parseContext s
-   | all isSpace s = 
-        return emptyEnv
-   | otherwise = do
-        pairs <- mapM (splitAtElem '=') (splitsWithElem ',' s)
-        let env = foldr (uncurry storeEnv) emptyEnv pairs
-        return env
         
 ------------------------------------------------------------------------
 -- Data types for replies
 
--- There are three possible replies: ok, incorrect, or an error in the protocol (e.g., a parse error)
-data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a) | Error ReplyError
+data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a)
 
 data ReplyOk a = ReplyOk
    { repOk_Code     :: ExercisePackage a
@@ -244,33 +163,27 @@ data ReplyIncorrect a = ReplyIncorrect
    , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
    }
- 
-data ReplyError = ReplyError
-   { repErr_Kind    :: String
-   , repErr_Message :: String
-   }
 
 type Args = [(String, String)]
 
 ------------------------------------------------------------------------
 -- Conversion functions to XML
 
-replyToXML :: (a -> OMOBJ) -> Reply a -> XML
+replyToXML :: (a -> OMOBJ) -> Reply a -> XMLBuilder
 replyToXML toOpenMath reply =
    case reply of
       Ok r        -> replyOkToXML r
       Incorrect r -> replyIncorrectToXML toOpenMath r 
-      Error r     -> replyErrorToXML r
 
-replyOkToXML :: ReplyOk a -> XML
-replyOkToXML r = makeReply "ok" $ do
+replyOkToXML :: ReplyOk a -> XMLBuilder
+replyOkToXML r = element "correct" $ do
    element "strategy" (text $ showId $ repOk_Code r)
    element "location" (text $ show $ repOk_Location r)
    element "context"  (text $ repOk_Context r)
    element "steps"    (text $ show $ repOk_Steps r)
 
-replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XML
-replyIncorrectToXML toOpenMath r = makeReply "incorrect" $ do
+replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XMLBuilder
+replyIncorrectToXML toOpenMath r = element "incorrect" $ do
    element "strategy"   (text $ showId $ repInc_Code r)
    element "location"   (text $ show $ repInc_Location r)
    element "expected"   (builder $ omobj2xml $ toOpenMath $ repInc_Expected r)
@@ -289,14 +202,6 @@ replyIncorrectToXML toOpenMath r = makeReply "incorrect" $ do
              builder (omobj2xml (toOpenMath y))
       in element "derivation" $ mapM_ f (repInc_Derivation r)
 
-replyErrorToXML :: ReplyError -> XML
-replyErrorToXML r = makeReply (repErr_Kind r) (text $ repErr_Message r)
-   
-makeReply :: String -> XMLBuilder -> XML
-makeReply kind body = makeXML "reply" $ do
-   "result" .=. kind
-   body
-
 replyType :: Type a (Reply a)
 replyType = useSynonym replyTypeSynonym
 
@@ -305,19 +210,16 @@ replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
  where
    to (Left (a, b, c, d)) = 
       Ok (ReplyOk a b c d)
-   to (Right (Left ((a, b, c), (d, e, f, g)))) =
+   to (Right ((a, b, c), (d, e, f, g))) =
       Incorrect (ReplyIncorrect a b c d e f g)
-   to (Right (Right (a, b))) = 
-      Error (ReplyError a b)
    
    from (Ok (ReplyOk a b c d)) = Left (a, b, c, d)
    from (Incorrect (ReplyIncorrect a b c d e f g)) =
-      Right (Left ((a, b, c), (d, e, f, g)))
-   from (Error (ReplyError a b)) = Right (Right (a, b))
+      Right ((a, b, c), (d, e, f, g))
    
    tp  =  tuple4 ExercisePkg StrategyLoc String Int
       :|: Pair (tuple3 ExercisePkg StrategyLoc Term) 
                (tuple4 derTp argsTp Int Bool)
-      :|: Pair String String
+
    derTp  = List (Pair String Term)
    argsTp = List (Pair String String)

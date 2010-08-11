@@ -1,8 +1,5 @@
-<request service="mathdox">
- <strategy>
-   Gaussian elimination
- </strategy>
- <term>
+<request service="problemdecomposition" exerciseid="linearalgebra.gaussianelim" source="test">
+ <state>
 <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
   <OMA>
     <OMS cd="linalg2" name="matrix"/>
@@ -20,5 +17,5 @@
     </OMA>
   </OMA>
 </OMOBJ>
- </term>
+ </state>
 </request>

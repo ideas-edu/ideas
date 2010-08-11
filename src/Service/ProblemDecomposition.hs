@@ -43,8 +43,7 @@ problemDecomposition sloc (State pkg mpr requestedTerm) answer
             (answers, Just answeredTerm)
                | not (null witnesses) ->
                     return $ Ok ReplyOk
-                       { repOk_Code     = pkg
-                       , repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix ex newPrefix (fst $ head witnesses)
+                       { repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix ex newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           show (getEnvironment $ fst $ head witnesses)
                        , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State pkg (Just newPrefix) (fst $ head witnesses)
@@ -54,8 +53,7 @@ problemDecomposition sloc (State pkg mpr requestedTerm) answer
                     newPrefix   = snd (head witnesses)            
             ((expected, prefix):_, maybeAnswer) ->
                     return $ Incorrect ReplyIncorrect
-                       { repInc_Code       = pkg
-                       , repInc_Location   = subTaskLocation sloc loc
+                       { repInc_Location   = subTaskLocation sloc loc
                        , repInc_Expected   = fromJust (fromContext expected)
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
@@ -148,15 +146,13 @@ runPrefixMajor p0 =
 data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a)
 
 data ReplyOk a = ReplyOk
-   { repOk_Code     :: ExercisePackage a
-   , repOk_Location :: StrategyLocation
+   { repOk_Location :: StrategyLocation
    , repOk_Context  :: String
    , repOk_Steps    :: Int
    }
    
 data ReplyIncorrect a = ReplyIncorrect
-   { repInc_Code       :: ExercisePackage a
-   , repInc_Location   :: StrategyLocation
+   { repInc_Location   :: StrategyLocation
    , repInc_Expected   :: a
    , repInc_Derivation :: [(String, a)]
    , repInc_Arguments  :: Args
@@ -177,14 +173,12 @@ replyToXML toOpenMath reply =
 
 replyOkToXML :: ReplyOk a -> XMLBuilder
 replyOkToXML r = element "correct" $ do
-   element "strategy" (text $ showId $ repOk_Code r)
    element "location" (text $ show $ repOk_Location r)
    element "context"  (text $ repOk_Context r)
    element "steps"    (text $ show $ repOk_Steps r)
 
 replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XMLBuilder
 replyIncorrectToXML toOpenMath r = element "incorrect" $ do
-   element "strategy"   (text $ showId $ repInc_Code r)
    element "location"   (text $ show $ repInc_Location r)
    element "expected"   (builder $ omobj2xml $ toOpenMath $ repInc_Expected r)
    element "steps"      (text $ show $ repInc_Steps r)
@@ -208,18 +202,18 @@ replyType = useSynonym replyTypeSynonym
 replyTypeSynonym :: TypeSynonym a (Reply a)
 replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
  where
-   to (Left (a, b, c, d)) = 
-      Ok (ReplyOk a b c d)
-   to (Right ((a, b, c), (d, e, f, g))) =
-      Incorrect (ReplyIncorrect a b c d e f g)
+   to (Left (a, b, c)) = 
+      Ok (ReplyOk a b c)
+   to (Right ((a, b, c), (d, e, f))) =
+      Incorrect (ReplyIncorrect a b c d e f)
    
-   from (Ok (ReplyOk a b c d)) = Left (a, b, c, d)
-   from (Incorrect (ReplyIncorrect a b c d e f g)) =
-      Right ((a, b, c), (d, e, f, g))
+   from (Ok (ReplyOk a b c)) = Left (a, b, c)
+   from (Incorrect (ReplyIncorrect a b c d e f)) =
+      Right ((a, b, c), (d, e, f))
    
-   tp  =  tuple4 ExercisePkg StrategyLoc String Int
-      :|: Pair (tuple3 ExercisePkg StrategyLoc Term) 
-               (tuple4 derTp argsTp Int Bool)
+   tp  =  tuple3 StrategyLoc String Int
+      :|: Pair (tuple3 StrategyLoc Term derTp) 
+               (tuple3 argsTp Int Bool)
 
    derTp  = List (Pair String Term)
    argsTp = List (Pair String String)

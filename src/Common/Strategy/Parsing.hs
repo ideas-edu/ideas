@@ -5,11 +5,10 @@ module Common.Strategy.Parsing
    ) where
 
 import Common.Classes
-import Common.Derivation hiding (isEmpty)
+import Common.Derivation
 import Common.Strategy.Core
 import Common.Transformation
 import Control.Monad
-import Control.Arrow
 
 ----------------------------------------------------------------------
 -- Step data type
@@ -44,17 +43,16 @@ makeState core a = push core (S [] emptyCoreEnv [] [] a)
 parseDerivationTree :: State l a -> DerivationTree (Step l a) (State l a)
 parseDerivationTree state = addBranches list node
  where
-   node = singleNode state (isEmpty state)
-   list = map (second parseDerivationTree) (firsts state)
+   results = firsts state
+   empty   = not (null [ () | (Ready, _) <- results ])
+   node    = singleNode state empty
+   list    = [ (step, parseDerivationTree s) | (Result step, s) <- results ] 
 
-isEmpty :: State l a -> Bool
-isEmpty = null . stack
-
-firsts :: State l a -> [(Step l a, State l a)]
+firsts :: State l a -> [(Result (Step l a), State l a)]
 firsts state =
    case pop state of 
-      Nothing              -> []
-      Just (Left l, s)     -> [(Exit l, traceExit l s)]
+      Nothing              -> [(Ready, state)]
+      Just (Left l, s)     -> [(Result (Exit l), traceExit l s)]
       Just (Right core, s) -> firstsStep core s
  where
    firstsStep core state =
@@ -73,7 +71,10 @@ firsts state =
          Succeed   -> firsts state
     where
       chooseFor b core = firstsStep core (makeChoice b state)
-      hasStep step xs  = [ (step, traceStep step s) | s <- xs ]
+      hasStep step xs  = [ (Result step, traceStep step s) | s <- xs ]
+
+-- helper datatype
+data Result a = Result a | Ready
 
 ----------------------------------------------------------------------
 -- Running the parser
@@ -116,16 +117,17 @@ replay n bs core = replayState n bs (makeState core noValue)
  where
    noValue = error "no value in replay"
  
-   replayState 0 _  state = return state
    replayState n bs state = 
       case pop state of
+         _ | n==0             -> return state
          Nothing              -> return state
          Just (Left l, s)     -> replayState (n-1) bs (traceExit l s)
          Just (Right core, s) -> replayStep n bs core s
-                     
+             
    replayStep n bs core state =
       case core of
-         a :*: b  -> replayStep n bs a (push b state)
+         _ | n==0  -> return state
+         a :*: b   -> replayStep n bs a (push b state)
          a :|: b   -> case bs of
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b

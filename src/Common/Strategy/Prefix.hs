@@ -22,7 +22,6 @@ import Common.Strategy.Abstract
 import Common.Strategy.Parsing
 import Common.Transformation
 import Common.Derivation
-import Common.Strategy.Location
 import Data.Maybe
 import Control.Monad
 
@@ -33,7 +32,7 @@ import Control.Monad
 -- executed rules). A prefix is still "aware" of the labels that appear in the 
 -- strategy. A prefix is encoded as a list of integers (and can be reconstructed 
 -- from such a list: see @makePrefix@). The list is stored in reversed order.
-data Prefix a = P (State PInfo a)
+data Prefix a = P (State LabelInfo a)
 
 prefixPair :: Prefix a -> (Int, [Bool])
 prefixPair (P s) = (length (trace s), reverse (choices s))
@@ -43,9 +42,6 @@ prefixIntList = f . prefixPair
  where
    f (0, []) = []
    f (n, bs) = n : map (\b -> if b then 0 else 1) bs
-
-type PStep = Step PInfo
-type PInfo = (StrategyLocation, LabelInfo)
 
 instance Show (Prefix a) where
    show = show . prefixIntList
@@ -63,7 +59,7 @@ makePrefix []     ls = makePrefix [0] ls
 makePrefix (i:is) ls = liftM P $ 
    replay i (map (==0) is) (mkCore ls)
  where
-   mkCore = processLabelInfo snd . addLocation . toCore . toStrategy
+   mkCore = processLabelInfo id . toCore . toStrategy
 
 -- | Create a derivation tree with a "prefix" as annotation.
 prefixTree :: Prefix a -> a -> DerivationTree (Prefix a) a
@@ -74,7 +70,7 @@ prefixTree (P s) a = f (parseDerivationTree s {value = a})
       list = map g (branches t)
       g (_, st) = (P (root st), f st)
 
-prefixToSteps :: Prefix a -> [PStep a]
+prefixToSteps :: Prefix a -> [Step LabelInfo a]
 prefixToSteps (P t) = reverse (trace t)
  
 -- | Retrieves the rules from a list of steps
@@ -82,5 +78,5 @@ stepsToRules :: [Step l a] -> [Rule a]
 stepsToRules steps = [ r | RuleStep r <- steps ]
 
 -- | Returns the last rule of a prefix (if such a rule exists)
-lastStepInPrefix :: Prefix a -> Maybe (PStep a)
+lastStepInPrefix :: Prefix a -> Maybe (Step LabelInfo a)
 lastStepInPrefix (P t) = safeHead (trace t)

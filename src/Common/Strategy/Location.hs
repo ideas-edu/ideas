@@ -15,16 +15,17 @@ module Common.Strategy.Location
    ( StrategyLocation, topLocation, nextLocation, downLocation
    , locationDepth
    , subTaskLocation, nextTaskLocation, parseStrategyLocation
-   , StrategyOrRule, strategyLocations, subStrategy, addLocation
+   , strategyLocations, subStrategy
+   , locationToId, idToLocation
    ) where
 
 import Common.Strategy.Abstract
 import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate
-import Common.Utils (readM)
+import Common.Utils (readM, safeHead)
 import Data.Foldable (toList)
-import Data.Sequence hiding (take, reverse)
+import Data.Sequence hiding (filter, take, reverse, zipWith)
 
 -----------------------------------------------------------
 --- Strategy locations
@@ -35,8 +36,6 @@ newtype StrategyLocation = SL (Seq Int)
 
 instance Show StrategyLocation where
    show (SL xs) = show (toList xs)
-
-type StrategyOrRule a = Either (LabeledStrategy a) (Rule a)
 
 topLocation :: StrategyLocation 
 topLocation = SL empty
@@ -81,36 +80,30 @@ parseStrategyLocation = fmap (SL . fromList) . readM
 
 -- | Returns a list of all strategy locations, paired with the labeled 
 -- substrategy or rule at that location
-
-strategyLocations :: LabeledStrategy a -> [(StrategyLocation, StrategyOrRule a)]
-strategyLocations = collect . addLocation . toCore . toStrategy
- where
-   collect core = 
+strategyLocations :: LabeledStrategy a -> [(StrategyLocation, LabeledStrategy a)]
+strategyLocations s = (topLocation, s) : rec [] (toCore (unlabel s))
+ where 
+   rec is = concat . zipWith make (map (:is) [0..]) . collect
+   
+   make is (l, core) = 
+      let loc = SL (fromList is)
+          ls  = makeLabeledStrategy l (toStrategy core)
+      in (loc, ls) : rec is core
+   
+   collect core =
       case core of
-         Label (loc, info) s -> 
-            let this = makeLabeledStrategy info (mapLabel snd s)
-            in (loc, Left this) : collect s
-         Not _ -> []
-         _     -> concatMap collect (children core)
+         Label l s -> [(l, s)]
+         Not _     -> []
+         _         -> concatMap collect (children core)
+
+locationToId :: LabeledStrategy a -> StrategyLocation -> Maybe Id
+locationToId s loc = fmap getId (lookup loc (strategyLocations s))
+
+idToLocation :: LabeledStrategy a -> Id -> Maybe StrategyLocation
+idToLocation s i = 
+   fmap fst (safeHead (filter ((==i) . getId . snd) (strategyLocations s)))
 
 -- | Returns the substrategy or rule at a strategy location. Nothing 
 -- indicates that the location is invalid
-subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (StrategyOrRule a)
+subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
 subStrategy loc = lookup loc . strategyLocations
-            
--- local helper functions that decorates interesting places with a 
--- strategy lcations (major rules, and labels)
-addLocation :: Core l a -> Core (StrategyLocation, l) a
-addLocation = snd . rec topLocation . mapLabel (\l -> (error "no location", l))
- where
-   rec loc core =
-      case core of
-         Label (_, l) a -> 
-            let new = snd (rec (downLocation loc) a)
-            in (nextLocation loc, Label (loc, l) new)
-         Not a -> (loc, Not (noLabels a))
-         _ -> 
-            let (cs, f) = uniplate core
-                (l, xs) = foldl op (loc, [])  cs
-                op (l1, as) x = let (l2, a) = rec l1 x in (l2, a:as)
-            in (l, f (reverse xs))

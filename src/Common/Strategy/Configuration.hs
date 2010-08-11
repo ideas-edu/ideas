@@ -21,7 +21,6 @@ module Common.Strategy.Configuration
 
 import Common.Strategy.Abstract
 import Common.Strategy.Core
-import Common.Strategy.Location
 import Common.Transformation
 import Data.Maybe
 
@@ -34,7 +33,6 @@ type ConfigItem = (ConfigLocation, ConfigAction)
 data ConfigLocation
    = ByName     String
    | ByGroup    String
-   | ByLocation StrategyLocation
  deriving Show
  
 data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
@@ -58,19 +56,18 @@ configure cfg ls =
    label (showId ls) (configureCore cfg (toCore (unlabel ls)))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
-configureCore cfg = mapLabel (change []) . addLocation
+configureCore cfg = mapLabel (change [])
  where
-   change groups pair@(_, info) = 
-      let actions = getActions pair groups cfg
+   change groups info = 
+      let actions = getActions info groups cfg
       in foldr doAction info actions
    
-getActions :: (StrategyLocation, LabelInfo) -> [String] 
+getActions :: LabelInfo -> [String] 
            -> StrategyConfiguration -> [ConfigAction]
-getActions (loc, info) groups = map snd . filter (select . fst)
+getActions info groups = map snd . filter (select . fst)
  where
    select (ByName s)     = showId info == s
    select (ByGroup s)    = s `elem` groups
-   select (ByLocation l) = loc == l
 
 doAction :: ConfigAction -> LabelInfo -> LabelInfo
 doAction action =

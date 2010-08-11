@@ -79,6 +79,10 @@ instance HasId Id where
    getId    = id
    changeId = id
 
+instance (HasId a, HasId b) => HasId (Either a b) where
+   getId      = either getId getId
+   changeId f = either (Left . changeId f) (Right . changeId f)
+
 describe :: HasId a => String -> a -> a
 describe = changeId . describeId
 

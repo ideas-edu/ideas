@@ -37,7 +37,8 @@ module Common.Strategy
    , StrategyLocation, topLocation, nextLocation, downLocation
    , locationDepth
    , subTaskLocation, nextTaskLocation, parseStrategyLocation
-   , StrategyOrRule, subStrategy, strategyLocations
+   , subStrategy, strategyLocations
+   , locationToId, idToLocation
    , mapRules, mapRulesS, rulesInStrategy, cleanUpStrategy
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)

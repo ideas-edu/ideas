@@ -12,36 +12,26 @@
 --
 -----------------------------------------------------------------------------
 module Common.Strategy.Location 
-   ( StrategyLocation, topLocation -- , nextLocation, downLocation
-   , subTaskLocation, nextTaskLocation, parseStrategyLocation
+   ( subTaskLocation, nextTaskLocation
    , strategyLocations, subStrategy
-   , locationToId, idToLocation
    ) where
 
 import Common.Strategy.Abstract
 import Common.Strategy.Core
 import Common.Transformation
 import Common.Uniplate
-import Common.Utils (readM, safeHead)
-import Control.Monad
+import Common.Utils (safeHead)
+import Data.Maybe
 
 -----------------------------------------------------------
 --- Strategy locations
 
--- | A strategy location corresponds to a substrategy or a rule
-newtype StrategyLocation = SL [Int]
-   deriving Eq
-
-instance Show StrategyLocation where
-   show (SL xs) = show xs
-
-topLocation :: StrategyLocation 
-topLocation = SL []
-
 -- old (current) and actual (next major rule) location
-subTaskLocation :: StrategyLocation -> StrategyLocation -> StrategyLocation
-subTaskLocation (SL xs) (SL ys) = SL (rec xs ys)
+subTaskLocation :: LabeledStrategy a -> Id -> Id -> Id
+subTaskLocation s xs ys = g (rec (f xs) (f ys))
  where
+   f = fromMaybe [] . toLoc s
+   g = fromMaybe (getId s) . fromLoc s
    rec (i:is) (j:js)
       | i == j    = i : rec is js 
       | otherwise = []
@@ -49,28 +39,26 @@ subTaskLocation (SL xs) (SL ys) = SL (rec xs ys)
    rec _ _        = []
 
 -- old (current) and actual (next major rule) location
-nextTaskLocation :: StrategyLocation -> StrategyLocation -> StrategyLocation
-nextTaskLocation (SL xs) (SL ys) = SL (rec xs ys)
+nextTaskLocation :: LabeledStrategy a -> Id -> Id -> Id
+nextTaskLocation s xs ys = g (rec (f xs) (f ys))
  where
+   f = fromMaybe [] . toLoc s
+   g = fromMaybe (getId s) . fromLoc s
    rec (i:is) (j:js)
       | i == j    = i : rec is js
       | otherwise = [j]
    rec _ _        = []
 
-parseStrategyLocation :: Monad m => String -> m StrategyLocation
-parseStrategyLocation = liftM SL . readM
-
 -- | Returns a list of all strategy locations, paired with the labeled 
--- substrategy or rule at that location
-strategyLocations :: LabeledStrategy a -> [(StrategyLocation, LabeledStrategy a)]
-strategyLocations s = (topLocation, s) : rec [] (toCore (unlabel s))
+-- substrategy at that location
+strategyLocations :: LabeledStrategy a -> [([Int], LabeledStrategy a)]
+strategyLocations s = ([], s) : rec [] (toCore (unlabel s))
  where 
    rec is = concat . zipWith make (map (:is) [0..]) . collect
    
    make is (l, core) = 
-      let loc = SL is
-          ls  = makeLabeledStrategy l (toStrategy core)
-      in (loc, ls) : rec is core
+      let ls  = makeLabeledStrategy l (toStrategy core)
+      in (is, ls) : rec is core
    
    collect core =
       case core of
@@ -78,14 +66,15 @@ strategyLocations s = (topLocation, s) : rec [] (toCore (unlabel s))
          Not _     -> []
          _         -> concatMap collect (children core)
 
-locationToId :: LabeledStrategy a -> StrategyLocation -> Maybe Id
-locationToId s loc = fmap getId (lookup loc (strategyLocations s))
-
-idToLocation :: LabeledStrategy a -> Id -> Maybe StrategyLocation
-idToLocation s i = 
-   fmap fst (safeHead (filter ((==i) . getId . snd) (strategyLocations s)))
-
 -- | Returns the substrategy or rule at a strategy location. Nothing 
 -- indicates that the location is invalid
-subStrategy :: StrategyLocation -> LabeledStrategy a -> Maybe (LabeledStrategy a)
-subStrategy loc = lookup loc . strategyLocations
+subStrategy :: Id -> LabeledStrategy a -> Maybe (LabeledStrategy a)
+subStrategy loc = 
+   fmap snd . safeHead . filter ((==loc) . getId . snd) . strategyLocations
+
+fromLoc :: LabeledStrategy a -> [Int] -> Maybe Id
+fromLoc s loc = fmap getId (lookup loc (strategyLocations s))
+
+toLoc :: LabeledStrategy a -> Id -> Maybe [Int]
+toLoc s i = 
+   fmap fst (safeHead (filter ((==i) . getId . snd) (strategyLocations s)))

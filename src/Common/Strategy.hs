@@ -34,9 +34,8 @@ module Common.Strategy
      -- * Configuration combinators
    , module Common.Strategy.Configuration
      -- * Strategy locations
-   , StrategyLocation, topLocation, strategyLocations, subStrategy
-   , subTaskLocation, nextTaskLocation, parseStrategyLocation
-   , locationToId, idToLocation
+   , strategyLocations, subStrategy
+   , subTaskLocation, nextTaskLocation
      -- * Prefixes
    , Prefix, emptyPrefix, makePrefix, prefixTree, Step(..)
    , prefixToSteps, stepsToRules, lastStepInPrefix

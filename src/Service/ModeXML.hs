@@ -196,7 +196,7 @@ xmlDecoder b f pkg = Decoder
          Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
          Tp.StrategyLoc -> leave $ \xml -> do
                               a <- findChild "location" xml
-                              parseStrategyLocation (getData a)
+                              newIdM (getData a)
          Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Term        -> leave $ decodeTerm dec
          Tp.StrategyCfg -> decodeConfiguration

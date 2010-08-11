@@ -13,7 +13,7 @@
 module Service.ServiceList (serviceList, exerciselistS) where
 
 import Common.Exercise hiding (Exercise, generate)
-import Common.Strategy (toStrategy, topLocation)
+import Common.Strategy (toStrategy)
 import Common.Transformation
 import Common.Utils (Some(..))
 import Data.List (sortBy)
@@ -168,12 +168,13 @@ derivationtextS = makeService "derivationtext"
 ------------------------------------------------------
 -- Problem decomposition service
 
+
 problemdecompositionS :: Service
 problemdecompositionS = makeService "problemdecomposition" 
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: optionTp topLocation StrategyLoc  :-> stateTp :-> maybeTp (Tag "answer" Term) :-> errorTp replyType
+   problemDecomposition ::: maybeTp StrategyLoc  :-> stateTp :-> maybeTp (Tag "answer" Term) :-> errorTp replyType
 
 ------------------------------------------------------
 -- Reflective services

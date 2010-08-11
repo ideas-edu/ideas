@@ -1,5 +1,5 @@
 <request service="problemdecomposition" exerciseid="linearalgebra.gaussianelim" source="test">
-  <location>[]</location>
+  <location>Gaussian elimination</location>
   <state><OMOBJ xmlns="..." version="2.0" cdbase="...">
     <OMA><OMS cd="linalg2" name="matrix"/>
          <OMA><OMS cd="linalg2" name="matrixrow"/>

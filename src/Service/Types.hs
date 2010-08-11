@@ -24,7 +24,7 @@ import Common.Context (Context)
 import Common.Id
 import Common.Navigator (Location)
 import Common.Transformation (Rule)
-import Common.Strategy (Strategy, StrategyLocation, StrategyConfiguration)
+import Common.Strategy (Strategy, StrategyConfiguration)
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
@@ -133,7 +133,7 @@ data Type a t where
    Term         :: Type a a
    Context      :: Type a (Context a)
    Location     :: Type a Location
-   StrategyLoc  :: Type a StrategyLocation
+   StrategyLoc  :: Type a Id
    StrategyCfg  :: Type a StrategyConfiguration
    -- Basic types
    Bool         :: Type a Bool

@@ -1,7 +1,7 @@
 <reply result="ok" version="0.6.5 (0)">
   <correct>
     <location>
-      []
+      Gaussian elimination
     </location>
     <context>
       [48,1,1,0,0,1,1,0,0,0,1,0,1,0,0];columnJ=1, covered=0

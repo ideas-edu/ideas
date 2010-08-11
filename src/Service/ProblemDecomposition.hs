@@ -32,18 +32,19 @@ import Service.Types
 import Text.OpenMath.Object
 import Text.XML hiding (name)
 
-problemDecomposition :: Monad m => StrategyLocation -> State a -> Maybe a -> m (Reply a)
-problemDecomposition sloc (State pkg mpr requestedTerm) answer 
+problemDecomposition :: Monad m => Maybe Id -> State a -> Maybe a -> m (Reply a)
+problemDecomposition msloc (State pkg mpr requestedTerm) answer 
    | isNothing $ subStrategy sloc (strategy ex) =
         fail "request error: invalid location for strategy"
    | otherwise =
    let pr = fromMaybe (emptyPrefix $ strategy ex) mpr in
-         case (runPrefixLocation ex sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
+         case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
             ([], _) -> fail "strategy error: not able to compute an expected answer"
             (answers, Just answeredTerm)
                | not (null witnesses) ->
                     return $ Ok ReplyOk
-                       { repOk_Location = nextTaskLocation sloc $ nextMajorForPrefix ex newPrefix (fst $ head witnesses)
+                       { repOk_Location = nextTaskLocation (strategy ex) sloc $ 
+                                             fromMaybe top $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           show (getEnvironment $ fst $ head witnesses)
                        , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State pkg (Just newPrefix) (fst $ head witnesses)
@@ -53,7 +54,7 @@ problemDecomposition sloc (State pkg mpr requestedTerm) answer
                     newPrefix   = snd (head witnesses)            
             ((expected, prefix):_, maybeAnswer) ->
                     return $ Incorrect ReplyIncorrect
-                       { repInc_Location   = subTaskLocation sloc loc
+                       { repInc_Location   = subTaskLocation (strategy ex) sloc loc
                        , repInc_Expected   = fromJust (fromContext expected)
                        , repInc_Derivation = derivation
                        , repInc_Arguments  = args
@@ -61,14 +62,17 @@ problemDecomposition sloc (State pkg mpr requestedTerm) answer
                        , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
                        }
              where
-               (loc, args) = firstMajorInPrefix ex pr prefix requestedTerm
+               (loc, args) = fromMaybe (top, []) $ 
+                                firstMajorInPrefix pr prefix requestedTerm
                derivation  = 
                   let len      = length $ prefixToSteps pr
                       rules    = stepsToRules $ drop len $ prefixToSteps prefix
                       f (s, a) = (s, fromJust (fromContext a))
                   in map f (makeDerivation requestedTerm rules)
  where
-   ex = exercise pkg
+   ex   = exercise pkg
+   top  = getId (strategy ex)
+   sloc = fromMaybe top msloc
    
 similarityCtx :: Exercise a -> Context a -> Context a -> Bool
 similarityCtx ex a b = fromMaybe False $
@@ -76,32 +80,32 @@ similarityCtx ex a b = fromMaybe False $
 
 -- | Continue with a prefix until a certain strategy location is reached. At least one
 -- major rule should have been executed
-runPrefixLocation :: Exercise a -> StrategyLocation -> Prefix (Context a) -> Context a -> [(Context a, Prefix (Context a))]
-runPrefixLocation ex loc p0 = -- type variable specialized to context due to exercise
+runPrefixLocation :: Id -> Prefix a -> a -> [(a, Prefix a)]
+runPrefixLocation loc p0 =
    concatMap (check . f) . derivations . 
    cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
-   stop (Just (Exit info)) = maybe False (getId info ==) $ locationToId (strategy ex) loc
+   stop (Just (Exit info)) = getId info == loc
    stop _ = False
  
    check result@(a, p)
       | null rules            = [result]
-      | all isMinorRule rules = runPrefixLocation ex loc p a
+      | all isMinorRule rules = runPrefixLocation loc p a
       | otherwise             = [result]
     where
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
-firstMajorInPrefix :: Exercise a -> Prefix (Context a) -> Prefix (Context a) -> Context a -> (StrategyLocation, Args)
-firstMajorInPrefix ex p0 prefix a = fromMaybe (topLocation, []) $ do -- type variable specialized to context due to exercise
+firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, Args)
+firstMajorInPrefix p0 prefix a = do
    let steps = prefixToSteps prefix
        newSteps = drop (length $ prefixToSteps p0) steps
    is <- firstLocation newSteps
    return (is, argumentsForSteps a newSteps)
  where
-   firstLocation :: HasId l => [Step l a] -> Maybe StrategyLocation
+   firstLocation :: HasId l => [Step l a] -> Maybe Id
    firstLocation [] = Nothing
-   firstLocation (Enter info:RuleStep r:_) | isMajorRule r = idToLocation (strategy ex) (getId info)
+   firstLocation (Enter info:RuleStep r:_) | isMajorRule r = Just (getId info)
    firstLocation (_:rest) = firstLocation rest
  
 argumentsForSteps :: a -> [Step l a] -> Args
@@ -114,15 +118,15 @@ argumentsForSteps a = flip rec a . stepsToRules
                          in maybe [] (zip ds) (expectedArguments r a)
       | otherwise      = []
  
-nextMajorForPrefix :: Exercise a -> Prefix (Context a) -> Context a -> StrategyLocation
-nextMajorForPrefix ex p0 a = fromMaybe topLocation $ do -- type variable specialized to context due to exercise
+nextMajorForPrefix :: Prefix a -> a -> Maybe Id
+nextMajorForPrefix p0 a = do
    (_, p1)  <- safeHead $ runPrefixMajor p0 a
    let steps = prefixToSteps p1
    rec (reverse steps)
  where
    rec [] = Nothing
-   rec (Enter info:_) = idToLocation (strategy ex) (getId info)
-   rec (Exit  info:_) = idToLocation (strategy ex) (getId info)
+   rec (Enter info:_) = Just (getId info)
+   rec (Exit  info:_) = Just (getId info)
    rec (_:rest)       = rec rest
   
 makeDerivation :: a -> [Rule a] -> [(String, a)]
@@ -146,13 +150,13 @@ runPrefixMajor p0 =
 data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a)
 
 data ReplyOk a = ReplyOk
-   { repOk_Location :: StrategyLocation
+   { repOk_Location :: Id
    , repOk_Context  :: String
    , repOk_Steps    :: Int
    }
    
 data ReplyIncorrect a = ReplyIncorrect
-   { repInc_Location   :: StrategyLocation
+   { repInc_Location   :: Id
    , repInc_Expected   :: a
    , repInc_Derivation :: [(String, a)]
    , repInc_Arguments  :: Args

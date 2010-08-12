@@ -25,7 +25,6 @@ import Common.Transformation
 import Common.Utils
 import Control.Monad
 import Data.Maybe
-import Service.BasicServices (stepsremaining)
 import Service.ExercisePackage
 import Service.State
 import Service.Types
@@ -47,7 +46,6 @@ problemDecomposition msloc (State pkg mpr requestedTerm) answer
                                              fromMaybe top $ nextMajorForPrefix newPrefix (fst $ head witnesses)
                        , repOk_Context  = show newPrefix ++ ";" ++ 
                                           show (getEnvironment $ fst $ head witnesses)
-                       , repOk_Steps    = fromMaybe 0 $ stepsremaining $ State pkg (Just newPrefix) (fst $ head witnesses)
                        }
                   where 
                     witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
@@ -56,19 +54,12 @@ problemDecomposition msloc (State pkg mpr requestedTerm) answer
                     return $ Incorrect ReplyIncorrect
                        { repInc_Location   = subTaskLocation (strategy ex) sloc loc
                        , repInc_Expected   = fromJust (fromContext expected)
-                       , repInc_Derivation = derivation
                        , repInc_Arguments  = args
-                       , repInc_Steps      = fromMaybe 0 $ stepsremaining $ State pkg (Just pr) requestedTerm
                        , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
                        }
              where
                (loc, args) = fromMaybe (top, []) $ 
                                 firstMajorInPrefix pr prefix requestedTerm
-               derivation  = 
-                  let len      = length $ prefixToSteps pr
-                      rules    = stepsToRules $ drop len $ prefixToSteps prefix
-                      f (s, a) = (s, fromJust (fromContext a))
-                  in map f (makeDerivation requestedTerm rules)
  where
    ex   = exercise pkg
    top  = getId (strategy ex)
@@ -128,12 +119,6 @@ nextMajorForPrefix p0 a = do
    rec (Enter info:_) = Just (getId info)
    rec (Exit  info:_) = Just (getId info)
    rec (_:rest)       = rec rest
-  
-makeDerivation :: a -> [Rule a] -> [(String, a)]
-makeDerivation _ []     = []
-makeDerivation a (r:rs) = 
-   let new = applyD r a
-   in [ (showId r, new) | isMajorRule r ] ++ makeDerivation new rs 
    
 -- Copied from TypedAbstractService: clean me up
 runPrefixMajor :: Prefix a -> a -> [(a, Prefix a)]
@@ -152,15 +137,12 @@ data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a)
 data ReplyOk a = ReplyOk
    { repOk_Location :: Id
    , repOk_Context  :: String
-   , repOk_Steps    :: Int
    }
    
 data ReplyIncorrect a = ReplyIncorrect
    { repInc_Location   :: Id
    , repInc_Expected   :: a
-   , repInc_Derivation :: [(String, a)]
    , repInc_Arguments  :: Args
-   , repInc_Steps      :: Int
    , repInc_Equivalent :: Bool
    }
 
@@ -179,13 +161,11 @@ replyOkToXML :: ReplyOk a -> XMLBuilder
 replyOkToXML r = element "correct" $ do
    element "location" (text $ show $ repOk_Location r)
    element "context"  (text $ repOk_Context r)
-   element "steps"    (text $ show $ repOk_Steps r)
 
 replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XMLBuilder
 replyIncorrectToXML toOpenMath r = element "incorrect" $ do
    element "location"   (text $ show $ repInc_Location r)
    element "expected"   (builder $ omobj2xml $ toOpenMath $ repInc_Expected r)
-   element "steps"      (text $ show $ repInc_Steps r)
    element "equivalent" (text $ show $ repInc_Equivalent r)
    
    unless (null $ repInc_Arguments r) $
@@ -194,30 +174,22 @@ replyIncorrectToXML toOpenMath r = element "incorrect" $ do
               text y
        in element "arguments" $ mapM_ f (repInc_Arguments r)
 
-   unless (null $  repInc_Derivation r) $
-      let f (x,y) = element "elem" $ do 
-             "ruleid" .=. x 
-             builder (omobj2xml (toOpenMath y))
-      in element "derivation" $ mapM_ f (repInc_Derivation r)
-
 replyType :: Type a (Reply a)
 replyType = useSynonym replyTypeSynonym
 
 replyTypeSynonym :: TypeSynonym a (Reply a)
 replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
  where
-   to (Left (a, b, c)) = 
-      Ok (ReplyOk a b c)
-   to (Right ((a, b, c), (d, e, f))) =
-      Incorrect (ReplyIncorrect a b c d e f)
+   to (Left (a, b)) = 
+      Ok (ReplyOk a b)
+   to (Right (a, b, c, d)) =
+      Incorrect (ReplyIncorrect a b c d)
    
-   from (Ok (ReplyOk a b c)) = Left (a, b, c)
-   from (Incorrect (ReplyIncorrect a b c d e f)) =
-      Right ((a, b, c), (d, e, f))
+   from (Ok (ReplyOk a b)) = Left (a, b)
+   from (Incorrect (ReplyIncorrect a b c d)) =
+      Right (a, b, c, d)
    
-   tp  =  tuple3 Id String Int
-      :|: Pair (tuple3 Id Term derTp) 
-               (tuple3 argsTp Int Bool)
+   tp  =  tuple2 Id String
+      :|: tuple4 Id Term argsTp Bool
 
-   derTp  = List (Pair String Term)
    argsTp = List (Pair String String)

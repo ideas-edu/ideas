@@ -1,0 +1,21 @@
+<request service="stepsremaining" exerciseid="linearalgebra.gaussianelim" source="test">
+ <state>
+<OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+  <OMA>
+    <OMS cd="linalg2" name="matrix"/>
+    <OMA>
+      <OMS cd="linalg2" name="matrixrow"/>
+      <OMI> -1 </OMI>
+      <OMI> -1 </OMI>
+      <OMV name="a"/>
+    </OMA>
+    <OMA>
+      <OMS cd="linalg2" name="matrixrow"/>
+      <OMI> 2 </OMI>
+      <OMI> 4 </OMI>
+      <OMI> 2 </OMI>
+    </OMA>
+  </OMA>
+</OMOBJ>
+ </state>
+</request>

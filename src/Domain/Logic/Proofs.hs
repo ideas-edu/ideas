@@ -30,7 +30,7 @@ import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
 import Domain.Logic.Examples 
 import Domain.Logic.Strategies
-import Common.Uniplate hiding (somewhere)
+import Common.Uniplate
 
 -- Currently, we use the DWA strategy
 proofExercise :: Exercise (SLogic, SLogic)

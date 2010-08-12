@@ -20,7 +20,7 @@ import Common.Exercise
 import Common.Navigator
 import Common.Rewriting.Term (Term)
 import Common.Strategy hiding (not)
-import Common.Uniplate hiding (somewhere)
+import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.List hiding (repeat)

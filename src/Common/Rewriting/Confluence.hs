@@ -15,10 +15,8 @@ import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
 import Common.Rewriting.Term
-import Common.Uniplate (subtermsAt, applyAtM, somewhereM)
+import Common.Uniplate hiding (rewriteM)
 import Control.Monad
-import Data.List
-import Data.Maybe
 import qualified Data.Map as M
 
 unifyM :: Term -> Term -> [Substitution] -- temporary (partial) implementation
@@ -26,13 +24,20 @@ unifyM (Con s) (Con t) = [ emptySubst | s == t ]
 unifyM (Meta i) (Meta j) = [if i==j then emptySubst else singletonSubst i (Meta j)]
 unifyM (Meta i) t = [ singletonSubst i t | not (i `hasMetaVar` t) ]
 unifyM t (Meta i) = unifyM (Meta i) t
-unifyM (App a b) (App c d) = do
-   s1 <- unifyM a c
-   s2 <- unifyM (s1 |-> b) (s1 |-> d)
-   return (s1 @@ s2)
-unifyM (App _ _) (Con _) = []
-unifyM (Con _) (App _ _) = []
+unifyM (Apply xs) (Apply ys) = unifyListM xs ys
+unifyM (Apply _) (Con _) = []
+unifyM (Con _) (Apply _) = []
 unifyM x y = error ("unifyM: " ++ show (x, y))
+
+unifyListM :: [Term] -> [Term] -> [Substitution]
+unifyListM (x:xs) (y:ys) = do 
+   s1 <- unifyM x y
+   let f = map (s1 |->)
+   s2 <- unifyListM (f xs) (f ys)
+   return (s1 @@ s2)
+unifyListM xs ys = do
+   guard (null xs && null ys)
+   return emptySubst
 
 normalForm :: [RewriteRule a] -> Term -> Term
 normalForm rs = run []
@@ -47,6 +52,25 @@ rewriteTerm r t = do
    let lhs :~> rhs = rulePair r 0
    sub <- match M.empty lhs t
    return (sub |-> rhs)
+
+-- uniplate-like helper-functions
+somewhereM :: (MonadPlus m, Uniplate a) => (a -> m a) -> a -> m a
+somewhereM f a = msum $ f a : map g [0..n-1]
+ where 
+   n   = length (children a)
+   g i = applyToM i (somewhereM f) a
+
+applyToM :: (Monad m, Uniplate a) => Int -> (a -> m a) -> a -> m a
+applyToM n f a = 
+   let (as, build) = uniplate a 
+       g (i, b) = if i==n then f b else return b
+   in liftM build $ mapM g (zip [0..] as)
+
+subtermsAt :: Uniplate a => a -> [([Int], a)]
+subtermsAt a = ([], a) : [ (i:is, b) | (i, c) <- zip [0..] (children a), (is, b) <- subtermsAt c ]
+
+applyAtM :: (Monad m, Uniplate a) => [Int] -> (a -> m a) -> a -> m a
+applyAtM is f = foldr applyToM f is
 
 ----------------------------------------------------
 

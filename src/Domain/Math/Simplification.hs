@@ -135,7 +135,9 @@ smartConstructors = transform $ \expr ->
 -- Distribution of constants
 
 distribution :: Expr -> Expr
-distribution = transformTD $ \expr ->
+distribution = descend distribution . f
+ where
+  f expr =
    fromMaybe expr $ do
    case expr of
       a :*: b -> do

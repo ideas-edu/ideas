@@ -49,5 +49,4 @@ import Common.Strategy.Prefix
 import Common.Strategy.Location
 import Common.Strategy.Configuration
 import Common.Strategy.Parsing
-
-import qualified Prelude ()
+import Prelude ()

@@ -31,7 +31,7 @@ import Data.Typeable
 -----------------------------------------------------------
 -- * Data type for terms
 
-data Symbol = S { symbolId :: Id }
+newtype Symbol = S { symbolId :: Id }
    deriving (Eq, Ord)
 
 newSymbol :: String -> Symbol

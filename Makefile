@@ -43,7 +43,7 @@ endif
 # For profiling purposes
 $(BINDIR)/prof$(EXE): $(HS-SOURCES) revision
 	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) -prof -auto-all -iscripts $(GHCFLAGS) -o $@ src/Documentation/Make.hs
+	$(GHC) -prof -auto-all -iscripts $(GHCFLAGS) -o $@ src/Inf.hs
 	$(STRIP) $@
 
 $(BINDIR)/ounl.jpg: tools/IdeasWX/ounl.jpg

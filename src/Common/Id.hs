@@ -27,14 +27,14 @@ data Id = Id
    }
    
 instance Show Id where
-   show a = concat (intersperse "." (idQualifiers a ++ [idName a]))
+   show a = foldr (\x y -> x ++ "." ++ y) (idName a) (idQualifiers a)
 
 instance Eq Id where
    a == b = a `compare` b == EQ
 
 instance Ord Id where 
    a `compare` b = f a `compare` f b
-    where f x = (idQualifiers x, idName x)
+    where f x = (idQualifiers x, idName x) -- gives a nice order
    
 unqualified :: HasId a => a -> String
 unqualified = idName . getId

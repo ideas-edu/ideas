@@ -20,11 +20,7 @@ module Service.Types
    , equalM
    ) where
 
-import Common.Context (Context)
-import Common.Id
-import Common.Navigator (Location)
-import Common.Transformation (Rule)
-import Common.Strategy (Strategy, StrategyConfiguration)
+import Common.Library
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe

@@ -16,8 +16,7 @@ module Service.Submit
    , submitType, submitTypeSynonym
    ) where
 
-import Common.Transformation
-import Common.Context
+import Common.Library
 import qualified Service.Diagnose as Diagnose
 import Service.Diagnose (Diagnosis, diagnose)
 import Service.State

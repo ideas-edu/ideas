@@ -16,11 +16,10 @@ module Service.StrategyInfo (strategyToXML, xmlToStrategy) where
 import Data.Char
 import Data.Maybe
 import Control.Monad
-import Common.Id
+import Common.Library
 import Common.Strategy.Core (Core(..), noLabels)
 import Common.Strategy.Abstract
 import Text.XML
-import Common.Transformation
 import Common.Utils (readInt)
 
 instance InXML (LabeledStrategy a) where

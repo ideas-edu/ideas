@@ -12,9 +12,7 @@
 -----------------------------------------------------------------------------
 module Service.ServiceList (serviceList, exerciselistS) where
 
-import Common.Exercise hiding (Exercise, generate)
-import Common.Strategy (toStrategy)
-import Common.Transformation
+import Common.Library hiding (apply, applicable, derivation)
 import Common.Utils (Some(..))
 import Data.List (sortBy)
 import Service.FeedbackText

@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Service.Request where
 
-import Common.Exercise
+import Common.Library hiding (exerciseId)
 import Data.Char
 
 data Request = Request

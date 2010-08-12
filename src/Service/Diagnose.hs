@@ -16,10 +16,7 @@ module Service.Diagnose
    , diagnosisType, diagnosisTypeSynonym
    ) where 
 
-import Common.Context
-import Common.Exercise
-import Common.Strategy (emptyPrefix)
-import Common.Transformation
+import Common.Library
 import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe

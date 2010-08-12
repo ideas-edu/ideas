@@ -19,9 +19,7 @@ module Service.State
    , stateTp, stateTypeSynonym
    ) where
 
-import Common.Context
-import Common.Exercise
-import Common.Strategy
+import Common.Library
 import Common.Utils (readM)
 import Service.Types
 import Data.Maybe

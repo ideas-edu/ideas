@@ -18,7 +18,7 @@ import Service.ModeXML
 import Service.ExercisePackage
 import Service.Evaluator
 import Service.Types
-import Common.Exercise
+import Common.Library
 import Text.XML
    
 typedExample :: ExercisePackage a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)

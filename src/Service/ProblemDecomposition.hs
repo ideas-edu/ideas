@@ -14,12 +14,7 @@ module Service.ProblemDecomposition
    , replyType, replyTypeSynonym, encodeReply
    ) where
 
-import Common.Classes
-import Common.Context
-import Common.Derivation
-import Common.Exercise
-import Common.Strategy hiding (not, repeat, fail)
-import Common.Transformation 
+import Common.Library
 import Common.Utils
 import Control.Monad
 import Data.Maybe

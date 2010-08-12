@@ -14,10 +14,8 @@
 -----------------------------------------------------------------------------
 module Service.ModeJSON (processJSON, jsonTuple) where
 
-import Common.Context
+import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), distinct, readM)
-import Common.Exercise hiding (exerciseId)
-import Common.Strategy (makePrefix)
 import Text.JSON
 import Service.Request
 import Service.State

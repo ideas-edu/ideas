@@ -12,9 +12,7 @@
 -----------------------------------------------------------------------------
 module Service.Evaluator where
 
-import Common.Context (fromContext)
-import Common.Exercise (Exercise, showId)
-import Control.Arrow
+import Common.Library
 import Control.Monad
 import Service.ExercisePackage
 import Service.Types

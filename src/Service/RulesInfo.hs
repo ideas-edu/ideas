@@ -13,13 +13,8 @@ module Service.RulesInfo
    ( rulesInfoXML, rewriteRuleToFMP, collectExamples, rulesInfoType
    ) where
 
+import Common.Library
 import Common.Utils (Some(..))
-import Common.Context
-import Common.Derivation
-import Common.Exercise hiding (getRule)
-import Common.Rewriting
-import Common.Strategy (derivationTree)
-import Common.Transformation
 import Data.Char
 import Control.Monad
 import Text.OpenMath.Object

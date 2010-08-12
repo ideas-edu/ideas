@@ -22,12 +22,10 @@ module Service.ExercisePackage
    , ExerciseText(..)
    ) where
 
-import Common.Context (Context)
-import Common.Transformation (Rule)
+import Common.Library
 import Common.Utils (Some(..))
-import Common.Exercise
-import Control.Monad
 import Common.Rewriting.Term hiding (Symbol)
+import Control.Monad
 import Data.Char
 import Data.List
 import Text.OpenMath.Object

@@ -25,6 +25,6 @@ import Common.Derivation
 import Common.Exercise
 import Common.Navigator
 import Common.Rewriting hiding (difference)
-import Common.Strategy
+import Common.Strategy hiding (fail, not)
 import Common.Transformation
 import Common.View hiding (left, right)

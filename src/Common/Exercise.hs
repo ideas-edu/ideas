@@ -28,7 +28,7 @@ module Common.Exercise
    , equivalenceContext, restrictGenerator
    , showDerivation, printDerivation
    , checkExercise, checkParserPretty
-   , checkExamples, generate, exerciseTestSuite
+   , checkExamples, exerciseTestSuite
    , module Common.Id -- for backwards compatibility
    ) where
 
@@ -150,19 +150,14 @@ simpleGenerator :: Gen a -> Maybe (StdGen -> Int -> a)
 simpleGenerator = useGenerator (const True) . const
 
 useGenerator :: (a -> Bool) -> (Int -> Gen a) -> Maybe (StdGen -> Int -> a) 
-useGenerator p g = Just f
+useGenerator p makeGen = Just (\rng -> rec rng . makeGen)
  where
-   f rng level 
+   rec rng gen@(MkGen f)
       | p a       = a
-      | otherwise = f (snd (next rng)) level
+      | otherwise = rec (snd (next rng)) gen
     where
-      a = generate 100 rng (g level)
-        where
-
-generate :: Int -> StdGen -> Gen a -> a
-generate n rnd (MkGen m) = m rnd' size
-  where
-    (size, rnd') = randomR (0, n) rnd
+      (size, r) = randomR (0, 100) rng
+      a         = f r size
 
 restrictGenerator :: (a -> Bool) -> Gen a -> Gen a
 restrictGenerator p g = do

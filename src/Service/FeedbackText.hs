@@ -14,10 +14,7 @@ module Service.FeedbackText
    , onefirsttext, submittext, derivationtext, submitHelper
    ) where
 
-import Control.Arrow
-import Common.Context
-import Common.Exercise
-import Common.Transformation
+import Common.Library hiding (derivation)
 import Data.Maybe
 import Common.Utils
 import Service.Diagnose (restartIfNeeded)

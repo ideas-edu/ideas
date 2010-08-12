@@ -15,13 +15,8 @@ module Service.BasicServices
    , onefirst, applicable, apply, generate, generateWith
    ) where
 
-import Common.Context 
-import Common.Derivation hiding (derivation)
-import Common.Exercise   hiding (generate)
-import Common.Strategy   hiding (not, fail)
-import Common.Transformation (Rule, isMajorRule, isBuggyRule)
+import Common.Library hiding (derivation, applicable, apply)
 import Common.Utils (safeHead)
-import Common.Navigator
 import Data.List
 import Data.Maybe
 import System.Random

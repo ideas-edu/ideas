@@ -17,10 +17,7 @@ module Service.ModeXML
    , resultOk, resultError, addVersion
    ) where
 
-import Common.Navigator
-import Common.Context
-import Common.Exercise hiding (exerciseId)
-import Common.Strategy hiding (not, fail)
+import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), readM)
 import Control.Monad
 import Data.Char

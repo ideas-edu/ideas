@@ -24,7 +24,7 @@ module Service.DomainReasoner
    , findPackage, findService
    ) where
 
-import Common.Exercise
+import Common.Library
 import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error

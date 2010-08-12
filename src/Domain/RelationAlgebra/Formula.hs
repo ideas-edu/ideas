@@ -12,7 +12,6 @@
 module Domain.RelationAlgebra.Formula where
 
 import Domain.Math.Expr.Symbolic
-import Common.Exercise (generate)
 import Common.Uniplate (Uniplate(..))
 import Common.Rewriting
 import Common.Rewriting.Term (newSymbol)
@@ -20,8 +19,9 @@ import Common.Utils
 import Control.Monad
 import Data.List
 import qualified Data.Set as S
-import System.Random (StdGen, mkStdGen, split)
+import System.Random (StdGen, mkStdGen, split, randomR)
 import Test.QuickCheck
+import Test.QuickCheck.Gen
 
 infixr 2 :.:
 infixr 3 :+: 
@@ -124,11 +124,10 @@ probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 50 rng)
    makeRngs n g
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2
-   eval g = evalRelAlg (generate 100 g (arbRelations as)) as
-
-inspect :: [Int]
-inspect = map f [1..100]
- where f i = S.size $ generate 100 (mkStdGen i) (arbRelations [0..9]) "p"
+   eval g = 
+      let MkGen f   = arbRelations as
+          (size, a) = randomR (0, 100) g
+      in evalRelAlg (f a size) as
 
 arbRelations :: Eq a => [a] -> Gen (String -> Relation a)
 arbRelations as = promote (\s -> coarbitrary s (arbRelation as))

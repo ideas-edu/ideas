@@ -1,9 +1,15 @@
 <reply result="ok" version="0.6.5 (0)">
-  <incorrect>
+  <incorrect equivalent="False">
     <location>
       Scale
     </location>
-    <expected>
+    <state>
+      <prefix>
+        [12,1,1,0]
+      </prefix>
+      <context>
+        <item name="columnJ" value="0"/>
+      </context>
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="linalg2" name="matrix"/>
@@ -33,10 +39,7 @@
           </OMA>
         </OMA>
       </OMOBJ>
-    </expected>
-    <equivalent>
-      False
-    </equivalent>
+    </state>
     <arguments>
       <elem descr="row">
         0

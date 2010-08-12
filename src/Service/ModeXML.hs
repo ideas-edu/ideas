@@ -153,7 +153,7 @@ xmlEncoder b f pkg = Encoder
                  encodeDiagnosis b (encodeTerm enc) d
             | s == "DecompositionReply" -> \a -> do
                  reply <- isSynonym replyTypeSynonym (a ::: serviceType)
-                 return (replyToXML (toOpenMath pkg) reply)
+                 encodeReply (encodeState b (encodeTerm enc)) reply
             | s == "RulesInfo" -> \_ ->
                  rulesInfoXML (exercise pkg) (encodeTerm enc)
             | s == "State" -> \a -> do

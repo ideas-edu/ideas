@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.5 (0)">
-  <incorrect equivalent="False">
+  <incorrect equivalent="True">
     <location>
       Forward pass
     </location>
     <state>
       <prefix>
-        [54,1,1,0,1,0,1,1,0,0,0,1,1,0,1,0,0]
+        [48,1,1,0,0,1,1,0,0,0,1,0,1,0,0]
       </prefix>
       <context>
         <item name="columnJ" value="1"/>
@@ -22,9 +22,6 @@
             <OMI>
               0
             </OMI>
-            <OMI>
-              2
-            </OMI>
           </OMA>
           <OMA>
             <OMS cd="linalg2" name="matrixrow"/>
@@ -34,12 +31,6 @@
             <OMI>
               1
             </OMI>
-            <OMA>
-              <OMS cd="arith1" name="unary_minus"/>
-              <OMI>
-                1
-              </OMI>
-            </OMA>
           </OMA>
         </OMA>
       </OMOBJ>

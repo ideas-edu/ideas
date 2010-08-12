@@ -11,9 +11,7 @@
 -----------------------------------------------------------------------------
 module Service.ProblemDecomposition 
    ( problemDecomposition
-   , Reply(..), replyToXML
-   , ReplyIncorrect(..)
-   , replyType, replyTypeSynonym
+   , replyType, replyTypeSynonym, encodeReply
    ) where
 
 import Common.Classes
@@ -28,7 +26,6 @@ import Data.Maybe
 import Service.ExercisePackage
 import Service.State
 import Service.Types
-import Text.OpenMath.Object
 import Text.XML hiding (name)
 
 problemDecomposition :: Monad m => Maybe Id -> State a -> Maybe a -> m (Reply a)
@@ -40,26 +37,22 @@ problemDecomposition msloc (State pkg mpr requestedTerm) answer
          case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
             ([], _) -> fail "strategy error: not able to compute an expected answer"
             (answers, Just answeredTerm)
-               | not (null witnesses) ->
-                    return $ Ok ReplyOk
-                       { repOk_Location = nextTaskLocation (strategy ex) sloc $ 
-                                             fromMaybe top $ nextMajorForPrefix newPrefix (fst $ head witnesses)
-                       , repOk_Context  = show newPrefix ++ ";" ++ 
-                                          show (getEnvironment $ fst $ head witnesses)
-                       }
+               | not (null witnesses) -> return $
+                    Ok newLocation newState
                   where 
                     witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
-                    newPrefix   = snd (head witnesses)            
-            ((expected, prefix):_, maybeAnswer) ->
-                    return $ Incorrect ReplyIncorrect
-                       { repInc_Location   = subTaskLocation (strategy ex) sloc loc
-                       , repInc_Expected   = fromJust (fromContext expected)
-                       , repInc_Arguments  = args
-                       , repInc_Equivalent = maybe False (equivalenceContext ex expected) maybeAnswer
-                       }
+                    (newContext, newPrefix) = head witnesses
+                    newLocation = nextTaskLocation (strategy ex) sloc $ 
+                                     fromMaybe top $ nextMajorForPrefix newPrefix newContext
+                    newState    = State pkg (Just newPrefix) newContext
+            ((expected, prefix):_, maybeAnswer) -> return $
+                    Incorrect isEquiv newLocation expState arguments
              where
-               (loc, args) = fromMaybe (top, []) $ 
-                                firstMajorInPrefix pr prefix requestedTerm
+               newLocation = subTaskLocation (strategy ex) sloc loc
+               expState = State pkg (Just prefix) expected
+               isEquiv  = maybe False (equivalenceContext ex expected) maybeAnswer
+               (loc, arguments) = fromMaybe (top, []) $ 
+                                     firstMajorInPrefix pr prefix requestedTerm
  where
    ex   = exercise pkg
    top  = getId (strategy ex)
@@ -132,47 +125,35 @@ runPrefixMajor p0 =
 ------------------------------------------------------------------------
 -- Data types for replies
 
-data Reply a = Ok (ReplyOk a) | Incorrect (ReplyIncorrect a)
-
-data ReplyOk a = ReplyOk
-   { repOk_Location :: Id
-   , repOk_Context  :: String
-   }
-   
-data ReplyIncorrect a = ReplyIncorrect
-   { repInc_Location   :: Id
-   , repInc_Expected   :: a
-   , repInc_Arguments  :: Args
-   , repInc_Equivalent :: Bool
-   }
+data Reply a = Ok Id (State a)
+             | Incorrect Bool Id (State a) Args
 
 type Args = [(String, String)]
 
 ------------------------------------------------------------------------
 -- Conversion functions to XML
 
-replyToXML :: (a -> OMOBJ) -> Reply a -> XMLBuilder
-replyToXML toOpenMath reply =
+encodeReply :: Monad m => (State a -> m XMLBuilder) -> Reply a -> m XMLBuilder
+encodeReply showState reply = 
    case reply of
-      Ok r        -> replyOkToXML r
-      Incorrect r -> replyIncorrectToXML toOpenMath r 
-
-replyOkToXML :: ReplyOk a -> XMLBuilder
-replyOkToXML r = element "correct" $ do
-   element "location" (text $ show $ repOk_Location r)
-   element "context"  (text $ repOk_Context r)
-
-replyIncorrectToXML :: (a -> OMOBJ) -> ReplyIncorrect a -> XMLBuilder
-replyIncorrectToXML toOpenMath r = element "incorrect" $ do
-   element "location"   (text $ show $ repInc_Location r)
-   element "expected"   (builder $ omobj2xml $ toOpenMath $ repInc_Expected r)
-   element "equivalent" (text $ show $ repInc_Equivalent r)
-   
-   unless (null $ repInc_Arguments r) $
-       let f (x, y) = element "elem" $ do 
-              "descr" .=. x 
-              text y
-       in element "arguments" $ mapM_ f (repInc_Arguments r)
+      Ok loc state -> do
+         stateXML <- showState state
+         return $
+            element "correct" $ do
+               element "location" (text $ show loc)
+               stateXML
+      Incorrect b loc state args -> do 
+         stateXML <- showState state 
+         return $ 
+            element "incorrect" $ do
+               "equivalent" .=. show b
+               element "location" (text $ show loc)
+               stateXML
+               let f (x, y) = element "elem" $ do 
+                     "descr" .=. x 
+                     text y
+               unless (null args) $
+                  element "arguments" $ mapM_ f args
 
 replyType :: Type a (Reply a)
 replyType = useSynonym replyTypeSynonym
@@ -180,16 +161,13 @@ replyType = useSynonym replyTypeSynonym
 replyTypeSynonym :: TypeSynonym a (Reply a)
 replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
  where
-   to (Left (a, b)) = 
-      Ok (ReplyOk a b)
-   to (Right (a, b, c, d)) =
-      Incorrect (ReplyIncorrect a b c d)
+   to (Left (a, b))        = Ok a b
+   to (Right (a, b, c, d)) = Incorrect a b c d
    
-   from (Ok (ReplyOk a b)) = Left (a, b)
-   from (Incorrect (ReplyIncorrect a b c d)) =
-      Right (a, b, c, d)
+   from (Ok a b)            = Left (a, b)
+   from (Incorrect a b c d) = Right (a, b, c, d)
    
-   tp  =  tuple2 Id String
-      :|: tuple4 Id Term argsTp Bool
+   tp  =  tuple2 Id stateTp
+      :|: tuple4 Bool Id stateTp argsTp
 
    argsTp = List (Pair String String)

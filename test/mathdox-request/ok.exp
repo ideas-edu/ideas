@@ -3,9 +3,38 @@
     <location>
       Gaussian elimination
     </location>
-    <context>
-      [48,1,1,0,0,1,1,0,0,0,1,0,1,0,0];columnJ=1, covered=0
-    </context>
+    <state>
+      <prefix>
+        [48,1,1,0,0,1,1,0,0,0,1,0,1,0,0]
+      </prefix>
+      <context>
+        <item name="columnJ" value="1"/>
+        <item name="covered" value="0"/>
+      </context>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="linalg2" name="matrix"/>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              1
+            </OMI>
+            <OMI>
+              0
+            </OMI>
+          </OMA>
+          <OMA>
+            <OMS cd="linalg2" name="matrixrow"/>
+            <OMI>
+              0
+            </OMI>
+            <OMI>
+              1
+            </OMI>
+          </OMA>
+        </OMA>
+      </OMOBJ>
+    </state>
   </correct>
 </reply>
 

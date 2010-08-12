@@ -19,9 +19,9 @@ module Common.Strategy.Configuration
    , remove, reinsert, collapse, expand, hide, reveal
    ) where
 
+import Common.Id
 import Common.Strategy.Abstract
 import Common.Strategy.Core
-import Common.Transformation
 import Data.Maybe
 
 ---------------------------------------------------------------------

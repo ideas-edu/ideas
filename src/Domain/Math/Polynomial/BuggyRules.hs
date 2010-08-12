@@ -14,6 +14,7 @@
 module Domain.Math.Polynomial.BuggyRules where
 
 import Prelude hiding ((^))
+import Common.Id
 import Common.Rewriting
 import Domain.Math.Expr
 import Domain.Math.Data.Relation

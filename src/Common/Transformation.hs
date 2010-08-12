@@ -34,7 +34,6 @@ module Common.Transformation
    , liftRule, liftTrans, liftRuleIn, liftTransIn
      -- * QuickCheck
    , testRule, propRuleSmart
-   , module Common.Id -- for backwards compatibility
    ) where
 
 import Common.Rewriting

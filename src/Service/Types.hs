@@ -61,7 +61,7 @@ equal Unit Unit = Just id
 equal (Pair a b) (Pair c d) = liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
 equal StrategyCfg StrategyCfg = Just id
 equal Location Location = Just id
-equal StrategyLoc StrategyLoc = Just id
+equal Id Id = Just id
 equal Term Term = Just id
 equal ExercisePkg ExercisePkg = Just id
 equal Context Context = Just id
@@ -133,7 +133,7 @@ data Type a t where
    Term         :: Type a a
    Context      :: Type a (Context a)
    Location     :: Type a Location
-   StrategyLoc  :: Type a Id
+   Id           :: Type a Id
    StrategyCfg  :: Type a StrategyConfiguration
    -- Basic types
    Bool         :: Type a Bool
@@ -171,7 +171,7 @@ groundType tp =
       Int          -> Just "Int"
       String       -> Just "String"
       Location     -> Just "Location"
-      StrategyLoc  -> Just "StrategyLocation"
+      Id           -> Just "Id"
       StrategyCfg  -> Just "StrategyConfiguration"
       _            -> Nothing
       

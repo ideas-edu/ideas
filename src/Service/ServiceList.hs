@@ -174,7 +174,7 @@ problemdecompositionS = makeService "problemdecomposition"
    "Strategy service developed for the SURF project Intelligent Feedback for a \
    \binding with the MathDox system on linear algebra exercises. This is a \
    \composite service, and available for backwards compatibility." $
-   problemDecomposition ::: maybeTp StrategyLoc  :-> stateTp :-> maybeTp (Tag "answer" Term) :-> errorTp replyType
+   problemDecomposition ::: maybeTp Id  :-> stateTp :-> maybeTp (Tag "answer" Term) :-> errorTp replyType
 
 ------------------------------------------------------
 -- Reflective services

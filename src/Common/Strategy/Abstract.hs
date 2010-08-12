@@ -22,6 +22,7 @@ module Common.Strategy.Abstract
    , removed, collapsed, hidden, IsLabeled(..)
    ) where
 
+import Common.Id
 import Common.Utils (commaList)
 import Common.Strategy.Core
 import Common.Classes

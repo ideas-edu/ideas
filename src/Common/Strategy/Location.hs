@@ -16,9 +16,9 @@ module Common.Strategy.Location
    , strategyLocations, subStrategy
    ) where
 
+import Common.Id
 import Common.Strategy.Abstract
 import Common.Strategy.Core
-import Common.Transformation
 import Common.Uniplate
 import Common.Utils (safeHead)
 import Data.Maybe

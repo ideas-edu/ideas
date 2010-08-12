@@ -20,6 +20,7 @@ import Prelude hiding (repeat, replicate, fail)
 import Common.Strategy
 import Common.Navigator
 import Common.Transformation
+import Common.Id
 import Common.Uniplate (transform)
 import Common.View
 import Common.Context

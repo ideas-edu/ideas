@@ -38,7 +38,6 @@ import qualified Service.Types as Tp
 import Service.Evaluator
 import Text.OpenMath.Object
 import Text.XML
-import qualified Common.Transformation as Rule
 import Service.DomainReasoner
 
 processXML :: String -> DomainReasoner (Request, String, String)
@@ -172,11 +171,11 @@ xmlEncoder b f pkg = Encoder
                   return (element "list" elems)
          Tp.Tag s t1  -> liftM (element s) . encode enc pkg t1  -- quick fix
          Tp.Strategy  -> return . builder . strategyToXML
-         Tp.Rule      -> return . ("ruleid" .=.) . Rule.showId
+         Tp.Rule      -> return . ("ruleid" .=.) . showId
          Tp.Term      -> encodeTerm enc
          Tp.Context   -> encodeContext b (encodeTerm enc)
          Tp.Location  -> return . {-element "location" .-} text . show
-         Tp.StrategyLoc -> return . text . show
+         Tp.Id        -> return . text . show
          Tp.Bool      -> return . text . map toLower . show
          Tp.String    -> return . text
          Tp.Int       -> return . text . show
@@ -194,7 +193,7 @@ xmlDecoder b f pkg = Decoder
       case serviceType of
          Tp.Context     -> leave $ decodeContext b (decoderPackage dec) (decodeTerm dec)
          Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
-         Tp.StrategyLoc -> leave $ \xml -> do
+         Tp.Id          -> leave $ \xml -> do
                               a <- findChild "location" xml
                               newIdM (getData a)
          Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
@@ -318,11 +317,11 @@ encodeEnvironment b loc env0
 encodeDiagnosis :: Monad m => Bool -> (a -> m XMLBuilder) -> Diagnosis a -> m XMLBuilder
 encodeDiagnosis mode f diagnosis =
    case diagnosis of
-      Buggy r        -> return $ element "buggy" $ "ruleid" .=. Rule.showId r
+      Buggy r        -> return $ element "buggy" $ "ruleid" .=. showId r
       NotEquivalent  -> return $ tag "notequiv"
       Similar  b s   -> ok "similar"  b s Nothing
-      Expected b s r -> ok "expected" b s (Just (Rule.showId r))
-      Detour   b s r -> ok "detour"   b s (Just (Rule.showId r))
+      Expected b s r -> ok "expected" b s (Just (showId r))
+      Detour   b s r -> ok "detour"   b s (Just (showId r))
       Correct  b s   -> ok "correct"  b s Nothing
  where
    ok t b s mr = do

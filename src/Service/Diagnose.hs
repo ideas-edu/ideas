@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.Diagnose 
-   ( Diagnosis(..), RuleID, diagnose, restartIfNeeded
+   ( Diagnosis(..), diagnose, restartIfNeeded
    , diagnosisType, diagnosisTypeSynonym
    ) where 
 
@@ -31,14 +31,12 @@ import Service.Types
 ----------------------------------------------------------------
 -- Result types for diagnose service
 
-type RuleID a = Rule (Context a)
-
 data Diagnosis a
-   = Buggy          (RuleID a)
+   = Buggy          (Rule (Context a))
    | NotEquivalent  
    | Similar        Bool (State a)
-   | Expected       Bool (State a) (RuleID a)
-   | Detour         Bool (State a) (RuleID a)
+   | Expected       Bool (State a) (Rule (Context a))
+   | Detour         Bool (State a) (Rule (Context a))
    | Correct        Bool (State a)
 
 instance Show (Diagnosis a) where

@@ -13,8 +13,7 @@
 module Service.Evaluator where
 
 import Common.Context (fromContext)
-import Common.Exercise (Exercise)
-import Common.Transformation (showId)
+import Common.Exercise (Exercise, showId)
 import Control.Arrow
 import Control.Monad
 import Service.ExercisePackage

@@ -12,6 +12,7 @@
 module Domain.Math.Polynomial.Rules where
 
 import Common.Classes
+import Common.Id
 import Common.Context
 import Common.Rewriting
 import Common.Transformation

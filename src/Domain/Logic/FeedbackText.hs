@@ -16,6 +16,7 @@ module Domain.Logic.FeedbackText where
 
 import Data.List
 import Data.Maybe
+import Common.Id
 import Common.Transformation
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules

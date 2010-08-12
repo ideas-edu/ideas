@@ -215,8 +215,8 @@ replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
    from (Incorrect (ReplyIncorrect a b c d e f)) =
       Right ((a, b, c), (d, e, f))
    
-   tp  =  tuple3 StrategyLoc String Int
-      :|: Pair (tuple3 StrategyLoc Term derTp) 
+   tp  =  tuple3 Id String Int
+      :|: Pair (tuple3 Id Term derTp) 
                (tuple3 argsTp Int Bool)
 
    derTp  = List (Pair String Term)

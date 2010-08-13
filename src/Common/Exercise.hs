@@ -122,7 +122,7 @@ emptyExercise = Exercise
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []
-   , ruleOrdering   = \r1 r2 -> getId r1 `compare` getId r2
+   , ruleOrdering   = \r1 r2 -> showId r1 `compare` showId r2
      -- testing and exercise generation
    , testGenerator  = Nothing
    , randomExercise = Nothing

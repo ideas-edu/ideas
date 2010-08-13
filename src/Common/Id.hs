@@ -34,7 +34,7 @@ instance Eq Id where
 
 instance Ord Id where 
    a `compare` b = f a `compare` f b
-    where f x = (idQualifiers x, idName x) -- gives a nice order
+    where f x = (idName x, idQualifiers x)
    
 unqualified :: HasId a => a -> String
 unqualified = idName . getId

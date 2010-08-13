@@ -9,13 +9,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Unification (match, Matcher, associativeMatcher) where
+module Common.Rewriting.Unification (match) where
 
 import Common.Rewriting.Term
 import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Control.Monad
-import qualified Data.Map as M
+-- import qualified Data.Map as M
 
 -----------------------------------------------------------
 -- Unification (in both ways)
@@ -64,8 +64,8 @@ unifyWith ops = rec
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
-match :: Matcher -> Term -> Term -> [Substitution]
-match m x y = do
+match :: [Symbol] -> Term -> Term -> [Substitution]
+match assocSymbols x y = do
    s <- rec x y
    guard $ all (`notElem` getMetaVars y) (dom s)
    return s
@@ -77,10 +77,10 @@ match m x y = do
    rec x y = do
       let (a, as) = getSpine x
           (b, bs) = getSpine y
-      case isCon a >>= (`M.lookup` m) of
-         Just f  -> 
-            concatMap (uncurry recList . unzip) (f x y)
-         Nothing -> do
+      case isCon a of
+         Just s | s `elem` assocSymbols ->
+            concatMap (uncurry recList . unzip) (associativeMatch s x y)
+         _ -> do
             guard (a == b)
             recList as bs
 
@@ -90,17 +90,13 @@ match m x y = do
       s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
       return (s2 @@ s1)
    recList _ _ = []
-
-type Matcher = M.Map Symbol (Term -> Term -> [[(Term, Term)]])
-
-associativeMatcher :: Symbol -> Matcher
-associativeMatcher s = M.singleton s f
+      
+associativeMatch :: Symbol -> Term -> Term -> [[(Term, Term)]]
+associativeMatch s a b = map (map make) result
  where
-   f a b = map (map make) result
-    where
-      (as, bs) = onBoth collect (a, b)
-      result   = pairingsA2 True as bs
-      make     = onBoth construct
+   (as, bs) = onBoth collect (a, b)
+   result   = pairingsA2 True as bs
+   make     = onBoth construct
    
    collect = ($ []) . rec
     where 

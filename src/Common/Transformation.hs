@@ -53,7 +53,7 @@ import Common.Id
 -- | Abstract data type for representing transformations
 data Transformation a
    = Function (a -> [a])
-   | RewriteRule (RewriteRule a)
+   | RewriteRule (RewriteRule a) (a -> [a])
    | Transformation a :*: Transformation a -- sequence
    | forall b . Abstraction (ArgumentList b) (a -> Maybe b) (b -> Transformation a)
    | forall b c . LiftView (ViewList a (b, c)) (Transformation b)
@@ -61,7 +61,7 @@ data Transformation a
    
 instance Apply Transformation where
    applyAll (Function f)        = f
-   applyAll (RewriteRule r)     = rewriteM r
+   applyAll (RewriteRule _ f)   = f
    applyAll (Abstraction _ f g) = \a -> maybe [] (\b -> applyAll (g b) a) (f a)
    applyAll (LiftView v t)      = \a -> [ build v (b, c) | (b0, c) <- match v a, b <- applyAll t b0  ]
    applyAll (s :*: t)           = \a -> applyAll s a >>= applyAll t
@@ -77,7 +77,7 @@ makeTransList = Function
 
 -- | Turn a rewrite rule into a transformation
 makeRewriteTrans :: RewriteRule a -> Transformation a
-makeRewriteTrans r = RewriteRule r
+makeRewriteTrans r = RewriteRule r (rewriteM r)
 
 -----------------------------------------------------------
 --- Arguments
@@ -375,10 +375,10 @@ getRewriteRules r = concatMap f (transformations r)
    f :: Transformation a -> [(Some RewriteRule, Bool)]
    f trans =
       case trans of
-         RewriteRule rr -> [(Some rr, not $ isBuggyRule r)]      
-         LiftView _ t   -> f t
-         s :*: t        -> f s ++ f t
-         _              -> []
+         RewriteRule rr _ -> [(Some rr, not $ isBuggyRule r)]      
+         LiftView _ t     -> f t
+         s :*: t          -> f s ++ f t
+         _                -> []
 
 ruleRecognizer :: (a -> a -> Bool) -> Rule a -> a -> a -> Bool
 ruleRecognizer eq r a b = or 
@@ -445,7 +445,7 @@ smartGen r gen = frequency [(2, gen), (1, smart)]
 smartGenTrans :: a -> Transformation a -> [Gen a]
 smartGenTrans a trans =
    case trans of
-      RewriteRule r -> return (smartGenerator r)
+      RewriteRule r _ -> return (smartGenerator r)
       LiftView v t -> do
          (b, c) <- match v a
          gen    <- smartGenTrans b t

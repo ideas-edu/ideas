@@ -206,7 +206,7 @@ allExercises :: [Some ExercisePackage] -> [(String, String, String, String)]
 allExercises = map make . sortBy cmp
  where
    cmp e1 e2  = f e1 `compare` f e2
-   f (Some pkg) = exerciseId (exercise pkg)
+   f (Some pkg) = showId (exercise pkg)
    make (Some pkg) = 
       (qualification pkg, unqualified pkg, description pkg, show (status (exercise pkg)))
 

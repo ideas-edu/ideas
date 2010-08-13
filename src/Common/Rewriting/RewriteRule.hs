@@ -31,7 +31,7 @@ import Test.QuickCheck
 import Common.Classes
 import Common.Rewriting.Unification
 import Data.List
-import qualified Data.Map as M
+import Data.Maybe
 
 ------------------------------------------------------
 -- Supporting type classes
@@ -48,10 +48,8 @@ class ShallowEq a where
 -- The show type class is added for pretty-printing rules
 class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
    operators      :: [Operator a]
-   associativeOps :: a -> [Symbol]
    -- default definition: no associative/commutative operators
    operators      = []
-   associativeOps = const []
 
 ------------------------------------------------------
 -- Rewrite rules and specs
@@ -123,9 +121,9 @@ fill i = rec
       | a == b    = a
       | otherwise = Meta i
 
-build :: Rewrite a => RuleSpec Term -> a -> [a]
-build (lhs :~> rhs) a = do
-   s <- match (getMatcher a) lhs (toTerm a)
+build :: Rewrite a => [Symbol] -> RuleSpec Term -> a -> [a]
+build ops (lhs :~> rhs) a = do
+   s <- match ops lhs (toTerm a)
    fromTermM (s |-> rhs)
 
 rewriteRule :: (Builder f a, Rewrite a) => String -> f -> RewriteRule a
@@ -134,9 +132,6 @@ rewriteRule s f = R s (countVars f) (buildSpec f)
 rewriteRules :: (BuilderList f a, Rewrite a) => String -> f -> [RewriteRule a]
 rewriteRules s f = map (R s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
 
-getMatcher :: Rewrite a => a -> Matcher
-getMatcher = M.unions . map associativeMatcher . associativeOps
-
 ------------------------------------------------------
 -- Using a rewrite rule
 
@@ -144,12 +139,28 @@ instance Apply RewriteRule where
    applyAll = rewrite
 
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r@(R _ _ _) a = do
-   ext <- extendContext (associativeOps a) r
-   build (rulePair ext 0) a
+rewrite r@(R _ _ _) =
+   let ops  = associativeOps r
+       rs   = extendContext ops r
+       make = build ops . (`rulePair` 0)
+   in \a -> concatMap (`make` a) rs
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r
+
+-- Quick fix: not an ideal solution
+associativeOps :: RewriteRule a -> [Symbol]
+associativeOps r@(R _ _ _ ) = mapMaybe opToSym (getOps r)
+ where
+   getOps :: RewriteRule a -> Operators a
+   getOps (R _ _ _ ) = filter isAssociative operators
+   
+   opToSym :: IsTerm a => Operator a -> Maybe Symbol
+   opToSym op = 
+      let err = error "Common.Rewriting: opToSymbol"
+      in case toTerm (constructor op err err) of
+            Apply (Con s:_) -> Just s
+            _               -> Nothing
 
 -----------------------------------------------------------
 -- Pretty-print a rewriteRule

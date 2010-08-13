@@ -21,8 +21,6 @@ import Data.Char
 import Test.QuickCheck
 import Common.Rewriting
 import Common.Uniplate
-import Domain.Math.Expr.Symbolic
-import Text.OpenMath.Dictionary.Logic1
 
 -------------------------------------------------------------
 -- Code that doesn't belong here, but the arbitrary instance
@@ -30,7 +28,6 @@ import Text.OpenMath.Dictionary.Logic1
 
 instance Rewrite SLogic where
    operators      = logicOperators
-   associativeOps = const $ map toSymbol [andSymbol, orSymbol]
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool

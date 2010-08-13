@@ -13,6 +13,12 @@
          "status": "Provisional"
       },
       {
+         "domain": "algebra.equations.linear",
+         "identifier": "mixed",
+         "description": "solve a linear equation with mixed fractions",
+         "status": "Provisional"
+      },
+      {
          "domain": "algebra.equations",
          "identifier": "polynomial",
          "description": "solve an equation (higher degree)",
@@ -22,18 +28,6 @@
          "domain": "algebra.equations",
          "identifier": "quadratic",
          "description": "solve a quadratic equation",
-         "status": "Provisional"
-      },
-      {
-         "domain": "algebra.equations",
-         "identifier": "rational",
-         "description": "solve a rational equation (with a variable in a divisor)",
-         "status": "Provisional"
-      },
-      {
-         "domain": "algebra.equations.linear",
-         "identifier": "mixed",
-         "description": "solve a linear equation with mixed fractions",
          "status": "Provisional"
       },
       {
@@ -47,6 +41,12 @@
          "identifier": "no-abc",
          "description": "solve a quadratic equation without abc-formula",
          "status": "Alpha"
+      },
+      {
+         "domain": "algebra.equations",
+         "identifier": "rational",
+         "description": "solve a rational equation (with a variable in a divisor)",
+         "status": "Provisional"
       },
       {
          "domain": "algebra.inequalities",
@@ -159,5 +159,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.3 (0)"
+   "version": "0.6.5 (0)"
 }

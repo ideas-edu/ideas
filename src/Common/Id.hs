@@ -19,22 +19,24 @@ module Common.Id
 
 import Data.List
 import Control.Monad.Error ()
+import Common.StringRef
 
 data Id = Id 
    { idName        :: String
    , idQualifiers  :: [String]
    , idDescription :: String
+   , idRef         :: StringRef
    }
    
 instance Show Id where
    show a = foldr (\x y -> x ++ "." ++ y) (idName a) (idQualifiers a)
+   -- show a = toString (idRef a)
 
 instance Eq Id where
-   a == b = a `compare` b == EQ
+   a == b = idRef a == idRef b
 
 instance Ord Id where 
-   a `compare` b = f a `compare` f b
-    where f x = (idName x, idQualifiers x)
+   a `compare` b = idRef a `compare` idRef b
    
 unqualified :: HasId a => a -> String
 unqualified = idName . getId
@@ -69,7 +71,7 @@ newId = either error id . newIdM
 newIdM :: Monad m => String -> m Id
 newIdM a = do 
    (qs, n) <- readId a
-   return (Id n qs "")
+   return (Id n qs "" (stringRef a))
 
 class HasId a where
    getId    :: a -> Id
@@ -89,6 +91,6 @@ describe = changeId . describeId
 describeId :: String -> Id -> Id
 describeId s a
    | null (idDescription a) = 
-        a { idDescription = s }
+        a {idDescription = s}
    | otherwise =
-        a { idDescription = s ++ " " ++ idDescription a }
+        a {idDescription = s ++ " " ++ idDescription a}

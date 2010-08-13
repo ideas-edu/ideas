@@ -144,7 +144,7 @@ ruleset :: Exercise a -> [Rule (Context a)]
 ruleset ex = nub (sortBy cmp list)
  where 
    list = rulesInStrategy (strategy ex) ++ extraRules ex
-   cmp a b = getId a `compare` getId b
+   cmp a b = showId a `compare` showId b
  
 simpleGenerator :: Gen a -> Maybe (StdGen -> Int -> a) 
 simpleGenerator = useGenerator (const True) . const
@@ -200,7 +200,7 @@ ruleOrderingWithId xs r1 r2 =
       (Just i,  Just j ) -> i `compare` j
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT
-      (Nothing, Nothing) -> getId r1 `compare` getId r2
+      (Nothing, Nothing) -> showId r1 `compare` showId r2
 
 ---------------------------------------------------------------
 -- Exercise status

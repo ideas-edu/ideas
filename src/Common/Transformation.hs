@@ -17,7 +17,7 @@
 -----------------------------------------------------------------------------
 module Common.Transformation 
    ( -- * Transformations
-     Transformation(RewriteRule), makeTrans, makeTransList
+     Transformation, makeTrans, makeTransList, makeRewriteTrans
      -- * Arguments
    , ArgDescr(..), defaultArgDescr, Argument(..)
    , supply1, supply2, supply3, supplyLabeled1, supplyLabeled2, supplyLabeled3, supplyWith1
@@ -74,6 +74,10 @@ makeTrans f = makeTransList (maybe [] return . f)
 -- | Turn a function (which returns a list of results) into a transformation 
 makeTransList :: (a -> [a]) -> Transformation a
 makeTransList = Function
+
+-- | Turn a rewrite rule into a transformation
+makeRewriteTrans :: RewriteRule a -> Transformation a
+makeRewriteTrans r = RewriteRule r
 
 -----------------------------------------------------------
 --- Arguments
@@ -306,13 +310,13 @@ addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
 
 ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList s = makeRuleList s . map (RewriteRule . rewriteRule s)
+ruleList s = makeRuleList s . map (makeRewriteTrans . rewriteRule s)
 
 ruleListF :: (BuilderList f a, Rewrite a) => String -> f -> Rule a
-ruleListF s = makeRuleList s . map RewriteRule . rewriteRules s
+ruleListF s = makeRuleList s . map makeRewriteTrans . rewriteRules s
 
 rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
-rule s = makeRule s . RewriteRule . rewriteRule s
+rule s = makeRule s . makeRewriteTrans . rewriteRule s
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
 makeRule :: String -> Transformation a -> Rule a

@@ -29,7 +29,7 @@ import Common.Classes
 import Common.Rewriting (RewriteRule(..))
 import Common.Transformation
 import Common.Derivation
-import Common.Uniplate
+import Common.Uniplate hiding (rewriteM)
 import Common.Strategy.Parsing
 
 -----------------------------------------------------------
@@ -92,7 +92,7 @@ instance IsStrategy Rule where
 
 instance IsStrategy RewriteRule where
    toStrategy r = 
-      toStrategy (makeRule (ruleName r) (RewriteRule r))
+      toStrategy (makeRule (ruleName r) (makeRewriteTrans r))
 
 -----------------------------------------------------------
 --- Labeled Strategy data-type
@@ -132,7 +132,7 @@ instance IsLabeled Rule where
    toLabeled r = LS (makeInfo (showId r)) (S (Rule r))
 
 instance IsLabeled RewriteRule where
-   toLabeled r = toLabeled (makeRule (ruleName r) (RewriteRule r))
+   toLabeled r = toLabeled (makeRule (ruleName r) (makeRewriteTrans r))
 
 -- | Labels a strategy with a string
 label :: IsStrategy f => String -> f a -> LabeledStrategy a

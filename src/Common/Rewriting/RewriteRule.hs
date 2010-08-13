@@ -115,11 +115,13 @@ buildFunction n f = fill n a1 a2 :~> fill n b1 b2
    a2 :~> b2 = f (snd different)
 
 fill :: Int -> Term -> Term -> Term
-fill i (Apply xs) (Apply ys) | length xs == length ys =
-   Apply (zipWith (fill i) xs ys)
-fill i a b 
-   | a == b    = a
-   | otherwise = Meta i
+fill i = rec
+ where
+   rec (Apply xs) (Apply ys) {- | length xs == length ys -} =
+      Apply (zipWith rec xs ys)
+   rec a b 
+      | a == b    = a
+      | otherwise = Meta i
 
 build :: Rewrite a => RuleSpec Term -> a -> [a]
 build (lhs :~> rhs) a = do
@@ -134,7 +136,6 @@ rewriteRules s f = map (R s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
 
 getMatcher :: Rewrite a => a -> Matcher
 getMatcher = M.unions . map associativeMatcher . associativeOps
-
 
 ------------------------------------------------------
 -- Using a rewrite rule

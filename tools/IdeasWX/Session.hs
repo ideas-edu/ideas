@@ -26,7 +26,7 @@ import Service.FeedbackText
 import Service.ExercisePackage (getExerciseText, ExercisePackage)
 import qualified Service.ExercisePackage as Pkg
 import Common.Context
-import Common.Exercise hiding (generate, showDerivation)
+import Common.Exercise hiding (showDerivation)
 import Common.Strategy (emptyPrefix)
 import Common.Transformation
 import Common.Utils

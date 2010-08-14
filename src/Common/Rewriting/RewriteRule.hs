@@ -115,8 +115,9 @@ buildFunction n f = fill n a1 a2 :~> fill n b1 b2
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
-   rec (Apply xs) (Apply ys) {- | length xs == length ys -} =
-      Apply (zipWith rec xs ys)
+   rec (Apply xs) (Apply ys) = Apply (zipWith rec xs ys)
+   -- removed | length xs == length ys 
+      
    rec a b 
       | a == b    = a
       | otherwise = Meta i

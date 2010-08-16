@@ -49,7 +49,7 @@ normalForm rs = run []
 
 rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
-   let lhs :~> rhs = rulePair r 0
+   let lhs :~> rhs = rulePairZero r
    sub <- match M.empty lhs t
    return (sub |-> rhs)
 
@@ -78,7 +78,7 @@ superImpose :: RewriteRule a -> RewriteRule a -> [([Int], Term)]
 superImpose r1 r2 =
    [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
  where
-    lhs1 :~> _ = rulePair r1 0
+    lhs1 :~> _ = rulePairZero r1
     lhs2 :~> _ = rulePair r2 (nrOfMetaVars r1)
     
     make (Meta _) = []

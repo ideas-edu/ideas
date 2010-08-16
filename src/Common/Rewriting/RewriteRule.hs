@@ -16,7 +16,8 @@ module Common.Rewriting.RewriteRule
    ( -- * Supporting type classes
      Rewrite(..), ShallowEq(..), Different(..)
      -- * Rewrite rules and specs
-   , RewriteRule(..), RuleSpec(..)
+   , RewriteRule, RuleSpec(..)
+   , rulePair, rulePairZero, ruleName
      -- * Compiling a rewrite rule
    , rewriteRule, rewriteRules, Builder, BuilderList
      -- * Using rewrite rules
@@ -61,11 +62,16 @@ data RuleSpec a = a :~> a deriving Show
 data RewriteRule a = Rewrite a => R 
    { ruleName     :: String
    , nrOfMetaVars :: Int
-   , rulePair     :: Int -> RuleSpec Term 
+   , rulePair     :: Int -> RuleSpec Term
+   , rulePairZero :: RuleSpec Term
    }
 
 instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b
+
+-- private constructor
+makeR :: Rewrite a => String -> Int -> (Int -> RuleSpec Term) -> RewriteRule a
+makeR s n f = R s n f (f 0)
 
 ------------------------------------------------------
 -- Compiling a rewrite rule
@@ -73,10 +79,6 @@ instance Functor RuleSpec where
 class Builder t a | t -> a where
    buildSpec :: t -> Int -> RuleSpec Term
    countVars :: t -> Int
-
-instance IsTerm a => Builder (RewriteRule a) a where
-   buildSpec = rulePair
-   countVars = nrOfMetaVars
 
 instance IsTerm a => Builder (RuleSpec a) a where
    buildSpec (a :~> b) _ = toTerm a :~> toTerm b
@@ -128,10 +130,11 @@ build ops (lhs :~> rhs) a = do
    fromTermM (s |-> rhs)
 
 rewriteRule :: (Builder f a, Rewrite a) => String -> f -> RewriteRule a
-rewriteRule s f = R s (countVars f) (buildSpec f)
+rewriteRule s f = makeR s (countVars f) (buildSpec f)
 
 rewriteRules :: (BuilderList f a, Rewrite a) => String -> f -> [RewriteRule a]
-rewriteRules s f = map (R s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
+rewriteRules s f = 
+   map (makeR s (countVarsL f) . getSpecNr f) [0 .. countSpecsL f-1]
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -140,10 +143,10 @@ instance Apply RewriteRule where
    applyAll = rewrite
 
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r@(R _ _ _) =
+rewrite r@(R _ _ _ _) =
    let ops  = associativeOps r
        rs   = extendContext ops r
-       make = build ops . (`rulePair` 0)
+       make = build ops . rulePairZero
    in \a -> concatMap (`make` a) rs
 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
@@ -151,10 +154,10 @@ rewriteM r = msum . map return . rewrite r
 
 -- Quick fix: not an ideal solution
 associativeOps :: RewriteRule a -> [Symbol]
-associativeOps r@(R _ _ _ ) = mapMaybe opToSym (getOps r)
+associativeOps r@(R _ _ _ _) = mapMaybe opToSym (getOps r)
  where
    getOps :: RewriteRule a -> Operators a
-   getOps (R _ _ _ ) = filter isAssociative operators
+   getOps (R _ _ _ _) = filter isAssociative operators
    
    opToSym :: IsTerm a => Operator a -> Maybe Symbol
    opToSym op = 
@@ -167,13 +170,13 @@ associativeOps r@(R _ _ _ ) = mapMaybe opToSym (getOps r)
 -- Pretty-print a rewriteRule
 
 showRewriteRule :: Bool -> RewriteRule a -> Maybe String
-showRewriteRule sound r@(R _ _ _) = do
+showRewriteRule sound r@(R _ _ _ _) = do
    x <- fromTermTp r (sub |-> a)
    y <- fromTermTp r (sub |-> b)
    let op = if sound then "~>" else "/~>" 
    return (show x ++ " " ++ op ++ " " ++ show y)
  where
-   a :~> b = rulePair r 0
+   a :~> b = rulePairZero r
    vs  = (getMetaVars a `union` getMetaVars b)
    sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
    
@@ -184,8 +187,8 @@ showRewriteRule sound r@(R _ _ _) = do
 -- Smart generator that creates instantiations of the left-hand side
 
 smartGenerator :: RewriteRule a -> Gen a
-smartGenerator r@(R _ _ _) = do 
-   let a :~> _ = rulePair r 0
+smartGenerator r@(R _ _ _ _) = do 
+   let a :~> _ = rulePairZero r
    let vs      = getMetaVars a
    list <- vector (length vs)
    let sub = listToSubst (zip vs (map (tpToTerm r) list))
@@ -203,8 +206,8 @@ smartGenerator r@(R _ _ _) = do
 -- context, we also should consider a context on both sides. If not, we 
 -- might miss some locations, as pointed out by Josje's bug report.
 extendContext :: [Symbol] -> RewriteRule a -> [RewriteRule a]
-extendContext ops r@(R _ _ _) =
-   case getSpine (lhs $ rulePair r 0) of
+extendContext ops r@(R _ _ _ _) =
+   case getSpine (lhs $ rulePairZero r) of
       (Con s, [_, _]) | s `elem` ops -> r :
          [ extend (leftContext s) r
          , extend (rightContext s) r 
@@ -221,4 +224,4 @@ extendContext ops r@(R _ _ _) =
       binary s x a :~> binary s y a
 
 extend :: (Term -> RuleSpec Term -> RuleSpec Term) -> RewriteRule a -> RewriteRule a
-extend f (R s n g) = R s (n+1) (\i -> f (Meta (i+n)) (g i))
+extend f (R s n g _) = makeR s (n+1) (\i -> f (Meta (i+n)) (g i)) 

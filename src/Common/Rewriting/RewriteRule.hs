@@ -108,15 +108,18 @@ fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
    rec (Apply f a) (Apply g b) = Apply (rec f g) (rec a b)
-   -- removed | length xs == length ys       
    rec a b 
       | a == b    = a
       | otherwise = Meta i
 
-build :: Rewrite a => [Symbol] -> RuleSpec Term -> a -> [a]
+build :: IsTerm a => [Symbol] -> RuleSpec Term -> a -> [a]
 build ops (lhs :~> rhs) a = do
    s <- match ops lhs (toTerm a)
-   fromTermM (s |-> rhs)
+   let (b1, b2) = (specialLeft `elem` dom s, specialRight `elem` dom s)
+       sym      = maybe (error "build") fst (getConSpine lhs)
+       extLeft  a = if b1 then binary sym (Meta specialLeft) a else a
+       extRight a = if b2 then binary sym a (Meta specialRight) else a
+   fromTermM (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (Builder f a, Rewrite a) => String -> f -> RewriteRule a
 rewriteRule s = newRule s . buildSpec
@@ -132,12 +135,8 @@ instance Apply RewriteRule where
    applyAll = rewrite
 
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r@(R _ _) =
-   let ops  = associativeOps r
-       rs   = extendContext ops r
-       make = build ops . rulePair
-   in \a -> concatMap (`make` a) rs
-
+rewrite r@(R _ _) = build (associativeOps r) (rulePair r)
+ 
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r
 
@@ -187,34 +186,6 @@ smartGenerator r@(R _ _) = do
    tpToTerm _ = toTerm
 
 ------------------------------------------------------
-
--- Bug fix 4/3/2009: for associative operators, we need to extend rewrite
--- rules to take "contexts" into account. In addition to a left and a right
--- context, we also should consider a context on both sides. If not, we 
--- might miss some locations, as pointed out by Josje's bug report.
-extendContext :: [Symbol] -> RewriteRule a -> [RewriteRule a]
-extendContext ops r =
-   case getSpine lhs of
-      (Con s, [_, _]) | s `elem` ops -> r :
-         [ extend (leftContext s) r
-         , extend (rightContext s) r 
-         , extend (rightContext s) (extend (leftContext s) r) 
-         ]
-      _ -> [r]
- where
-   lhs :~> _ = rulePair r
- 
-   leftContext s a (x :~> y) =
-      binary s a x :~> binary s a y
-   
-   rightContext s a (x :~> y) =
-      binary s x a :~> binary s y a
-
-extend :: (Term -> RuleSpec Term -> RuleSpec Term) -> RewriteRule a -> RewriteRule a
-extend f r = r {rulePair = f (Meta n) (rulePair r)}
- where
-   xs = metaInRewriteRule r
-   n  = if null xs then 0 else maximum xs + 1
 
 -- some helpers
 metaInRewriteRule :: RewriteRule a -> [Int]

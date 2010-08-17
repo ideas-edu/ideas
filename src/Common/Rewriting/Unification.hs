@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Unification (match) where
+module Common.Rewriting.Unification (match, specialLeft, specialRight) where
 
 import Common.Rewriting.Term
 import Common.Rewriting.AC
@@ -64,47 +64,60 @@ unifyWith ops = rec
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
+-- second term should not have meta variables
+
 match :: [Symbol] -> Term -> Term -> [Substitution]
 match assocSymbols x y = do
-   s <- rec x y
-   guard $ all (`notElem` getMetaVars y) (dom s)
+   s <- rec True x y
+  -- guard $ all (`notElem` getMetaVars y) (dom s)
    return s
  where
-   rec (Meta i) y = do 
-      guard (not (hasMetaVar i y))
+   rec _ (Meta i) y = do 
+  -- guard (not (hasMetaVar i y))
       return (singletonSubst i y)
 
-   rec x y = do
-      let (a, as) = getSpine x
-          (b, bs) = getSpine y
-      case isCon a of
-         Just s | s `elem` assocSymbols ->
-            concatMap (uncurry recList . unzip) (associativeMatch s x y)
-         _ -> do
+   rec isTop x y = do
+      case getSpine x of
+         (Con s, [a1, a2]) | s `elem` assocSymbols ->
+            concatMap (uncurry recList . unzip) (associativeMatch isTop s a1 a2 y)
+         (a, as) -> do
+            let (b, bs) = getSpine y
             guard (a == b)
             recList as bs
 
    recList [] [] = return emptySubst
    recList (x:xs) (y:ys) = do
-      s1 <- rec x y
+      s1 <- rec False x y
       s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
-      return (s2 @@ s1)
+      return (s2 @@@ s1)
    recList _ _ = []
       
-associativeMatch :: Symbol -> Term -> Term -> [[(Term, Term)]]
-associativeMatch s a b = map (map make) result
+associativeMatch :: Bool -> Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
+associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2) 
+   | s==t = map (map make) result
  where
-   (as, bs) = onBoth collect (a, b)
-   result   = pairingsA2 True as bs
+   as = collect a1 . collect a2 $ []
+   bs = collect b1 . collect b2 $ []
+   list | isTop     = map ($ as) [id, extLeft, extRight, extBoth]
+        | otherwise = [as]
+        
+   extLeft  = (Meta specialLeft:)
+   extRight = (++[Meta specialRight])
+   extBoth  = extLeft . extRight
+   
+   result   = concatMap (\zs -> pairingsA2 True zs bs) list
    make     = onBoth construct
    
-   collect = ($ []) . rec
-    where 
-      rec term =
-         case isBinary s term of
-            Just (a, b) -> rec a . rec b
-            Nothing     -> (term:)
+   collect term =
+      case isBinary s term of
+         Just (a, b) -> collect a . collect b
+         Nothing     -> (term:)
    
    construct xs 
       | null xs   = error "associativeMatcher: empty list"
       | otherwise = foldr1 (binary s) xs
+associativeMatch _ _ _ _ _ = []
+
+specialLeft, specialRight :: Int -- special meta variables for context extension
+specialLeft  = maxBound
+specialRight = pred specialLeft

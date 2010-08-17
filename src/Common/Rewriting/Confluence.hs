@@ -24,9 +24,9 @@ unifyM (Con s) (Con t) = [ emptySubst | s == t ]
 unifyM (Meta i) (Meta j) = [if i==j then emptySubst else singletonSubst i (Meta j)]
 unifyM (Meta i) t = [ singletonSubst i t | not (i `hasMetaVar` t) ]
 unifyM t (Meta i) = unifyM (Meta i) t
-unifyM (Apply xs) (Apply ys) = unifyListM xs ys
-unifyM (Apply _) (Con _) = []
-unifyM (Con _) (Apply _) = []
+unifyM (Apply f a) (Apply g b) = unifyListM [f, a] [g, b]
+unifyM (Apply _ _) (Con _) = []
+unifyM (Con _) (Apply _ _) = []
 unifyM x y = error ("unifyM: " ++ show (x, y))
 
 unifyListM :: [Term] -> [Term] -> [Substitution]

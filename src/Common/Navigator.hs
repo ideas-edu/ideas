@@ -17,7 +17,7 @@ module Common.Navigator
      IsNavigator(..), TypedNavigator(..)
      -- * Types and constructors 
    , Navigator, Location
-   , navigator, noNavigator, viewNavigator
+   , navigator, noNavigator, viewNavigator, viewNavigatorWith
      -- * Derived navigations
    , leave, replace, arity, isTop, isLeaf, ups, downs, navigateTo
    , navigateTowards, top, leafs, downFirst, downLast, left, right
@@ -161,8 +161,8 @@ data UniplateNav a = UN (HolesType a) [(Int, a -> a)] a
 
 type HolesType a = a -> [(a, a -> a)]
 
-makeUN :: Uniplate a => a -> UniplateNav a
-makeUN = UN holes []
+makeUN :: HolesType a -> a -> UniplateNav a
+makeUN f = UN f []
 
 instance Show a => Show (UniplateNav a) where
    show = showNav
@@ -267,10 +267,13 @@ instance TypedNavigator Simple
 -- Constructors
 
 navigator :: Uniplate a => a -> Navigator a
-navigator = N . S . makeUN
+navigator = N . S . makeUN holes
 
 noNavigator :: a -> Navigator a
 noNavigator = N . S . UN (const []) []
 
 viewNavigator :: (Uniplate a, Typeable a) => a -> Navigator a
-viewNavigator = N . VN identity . makeUN
+viewNavigator = viewNavigatorWith holes
+
+viewNavigatorWith :: Typeable a => HolesType a -> a -> Navigator a
+viewNavigatorWith f = N . VN identity . makeUN f

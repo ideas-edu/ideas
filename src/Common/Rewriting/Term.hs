@@ -46,15 +46,15 @@ instance HasId Symbol where
 
 data Term = Var   String 
           | Con   Symbol 
-          | Apply [Term]
+          | Apply Term Term
           | Num   Integer 
           | Float Double
           | Meta  Int
  deriving (Show, Eq, Ord, Typeable)
  
 instance Uniplate Term where
-   uniplate (Apply xs) = (xs, Apply)
-   uniplate term       = ([], \_ -> term)
+   uniplate (Apply f a) = ([f, a], \[g, b] -> Apply g b)
+   uniplate term        = ([], \_ -> term)
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
@@ -90,36 +90,34 @@ fromTermWith f a =
 -- * Utility functions
 
 getSpine :: Term -> (Term, [Term])
-getSpine (Apply (x:xs)) = (x, xs)
-getSpine a = (a, [])
+getSpine = rec [] 
+ where
+   rec xs (Apply f a) = rec (a:xs) f
+   rec xs a           = (a, xs)
 
 getConSpine :: Monad m => Term -> m (Symbol, [Term])
 getConSpine a = liftM (\s -> (s, xs)) (isCon b)
  where (b, xs) = getSpine a
 
 makeTerm :: Term -> [Term] -> Term
-makeTerm x xs = Apply (x:xs)
+makeTerm = foldl Apply
 
 makeConTerm :: Symbol -> [Term] -> Term
 makeConTerm = makeTerm . Con
 
 unary :: Symbol -> Term -> Term
-unary s a = Apply [Con s, a]
+unary = Apply . Con
 
 binary :: Symbol -> Term -> Term -> Term
-binary s a b = Apply [Con s, a, b]
+binary s = Apply . Apply (Con s)
 
 isUnary :: Symbol -> Term -> Maybe Term
-isUnary s term =
-   case getSpine term of
-      (t, [a]) | isCon t == Just s -> Just a
-      _ -> Nothing
+isUnary s (Apply (Con t) a) | s==t = Just a
+isUnary _ _ = Nothing
 
 isBinary :: Symbol -> Term -> Maybe (Term, Term)
-isBinary s term =
-   case getSpine term of
-      (t, [a, b]) | isCon t == Just s -> Just (a, b)
-      _ -> Nothing
+isBinary s (Apply (Apply (Con t) a) b) | s==t = Just (a, b)
+isBinary _ _ = Nothing
 
 isVar :: Monad m => Term -> m String
 isVar (Var s) = return s

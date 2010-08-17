@@ -248,8 +248,8 @@ instance IsTerm Expr where
    fromTerm (Term.Float d) = return (Number d)
    fromTerm (Term.Var v)   = return (Var v)
    fromTerm t =
-      case Term.getSpine t of
-         (Term.Con s, xs) -> do
+      case Term.getConSpine t of
+         Just (s, xs) -> do
             ys <- mapM fromTerm xs
             return (function s ys)
          _ -> fail "fromTerm"

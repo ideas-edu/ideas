@@ -75,13 +75,13 @@ someTermPackage = Some . termPackage
 termToOMOBJ :: Term -> OMOBJ
 termToOMOBJ term =
    case term of
-      Var s   -> OMV s
-      Con s   -> OMS (idToSymbol (getId s))
-      Meta i  -> OMV ("$" ++ show i)
-      Num n   -> OMI n
-      Float d -> OMF d
-      Apply _ -> let (f, xs) = getSpine term
-                 in make (map termToOMOBJ (f:xs))
+      Var s     -> OMV s
+      Con s     -> OMS (idToSymbol (getId s))
+      Meta i    -> OMV ("$" ++ show i)
+      Num n     -> OMI n
+      Float d   -> OMF d
+      Apply _ _ -> let (f, xs) = getSpine term
+                   in make (map termToOMOBJ (f:xs))
  where
    make [OMS s, OMV x, body] | s == lambdaSymbol = 
       OMBIND (OMS s) [x] body

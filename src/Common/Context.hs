@@ -169,9 +169,21 @@ applyTop f c =
       Nothing -> c
 
 termNavigator :: IsTerm a => a -> Navigator a
-termNavigator a = 
-   let f = castT termView . viewNavigator . toTerm
-   in fromMaybe (noNavigator a) (f a)
+termNavigator a = fromMaybe (noNavigator a) (make a)
+ where
+   make = castT termView . viewNavigatorWith spineHoles . toTerm
+
+   spineHoles :: Term -> [(Term, Term -> Term)]
+   spineHoles term
+      | null xs   = []
+      | otherwise = (x, flip makeTerm xs) : zipWith f [0..] xs
+    where
+      (x, xs)    = getSpine term
+      f i y      = (y, makeTerm x . change i)
+      change i b = 
+         case splitAt i xs of
+            (ys, _:zs) -> ys ++ b:zs
+            _          -> xs
 
 use :: (IsTerm a, IsTerm b) => Rule a -> Rule (Context b)
 use = useC . liftToContext

@@ -107,7 +107,7 @@ buildFunction n f = fill n a1 a2 :~> fill n b1 b2
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
-   rec (Apply xs) (Apply ys) = Apply (zipWith rec xs ys)
+   rec (Apply f a) (Apply g b) = Apply (rec f g) (rec a b)
    -- removed | length xs == length ys       
    rec a b 
       | a == b    = a
@@ -151,9 +151,7 @@ associativeOps r@(R _ _) = mapMaybe opToSym (getOps r)
    opToSym :: IsTerm a => Operator a -> Maybe Symbol
    opToSym op = 
       let err = error "Common.Rewriting: opToSymbol"
-      in case toTerm (constructor op err err) of
-            Apply (Con s:_) -> Just s
-            _               -> Nothing
+      in fmap fst (getConSpine (toTerm (constructor op err err)))
 
 -----------------------------------------------------------
 -- Pretty-print a rewriteRule

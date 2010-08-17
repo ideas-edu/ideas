@@ -45,7 +45,7 @@ makeLatexRules dir ex = do
 ruleToTeX :: (Some RewriteRule, Bool) -> Maybe String
 ruleToTeX (Some r, sound) = do
    txt <- showRewriteRule sound r
-   return $ "RewriteRule " ++ withoutDigits (ruleName r) 
+   return $ "RewriteRule " ++ withoutDigits (showId r) 
                            ++ " (" ++ txt ++ ")"
 
 ------------------------------------------------------
@@ -106,7 +106,7 @@ texSectionRules ex = unlines
  where
    rules   = concatMap getRewriteRules (ruleset ex)
    groups  = nub (concatMap ruleGroups (ruleset ex))
-   names   = let f (Some r, _) = ruleName r 
+   names   = let f (Some r, _) = (showId :: RewriteRule a -> String) r 
              in nub (map f rules)
    formats = unlines (map formatRuleName names)
    

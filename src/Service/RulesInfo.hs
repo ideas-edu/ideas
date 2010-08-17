@@ -66,7 +66,7 @@ rewriteRuleToFMP sound r
    | sound     = eqFMP    a b
    | otherwise = buggyFMP a b 
  where
-   a :~> b = fmap termToOMOBJ (rulePair r 0)
+   a :~> b = fmap termToOMOBJ (rulePair r)
               
 collectExamples :: Exercise a -> M.Map Id [(a, a)]
 collectExamples ex = foldr add M.empty (examples ex)

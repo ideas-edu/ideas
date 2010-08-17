@@ -11,13 +11,13 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Confluence (isConfluent, checkConfluence) where
 
+import Common.Id
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
 import Common.Rewriting.Term
 import Common.Uniplate hiding (rewriteM)
 import Control.Monad
-import qualified Data.Map as M
 
 unifyM :: Term -> Term -> [Substitution] -- temporary (partial) implementation
 unifyM (Con s) (Con t) = [ emptySubst | s == t ]
@@ -49,8 +49,8 @@ normalForm rs = run []
 
 rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
-   let lhs :~> rhs = rulePairZero r
-   sub <- match M.empty lhs t
+   let lhs :~> rhs = rulePair r
+   sub <- match [] lhs t
    return (sub |-> rhs)
 
 -- uniplate-like helper-functions
@@ -78,11 +78,15 @@ superImpose :: RewriteRule a -> RewriteRule a -> [([Int], Term)]
 superImpose r1 r2 =
    [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
  where
-    lhs1 :~> _ = rulePairZero r1
-    lhs2 :~> _ = rulePair r2 (nrOfMetaVars r1)
+    lhs1 :~> _ = rulePair r1
+    lhs2 :~> _ = rulePair (change r1 r2)
     
     make (Meta _) = []
     make a        = unifyM lhs1 a
+    
+    change r = case metaInRewriteRule r of
+                  [] -> id
+                  xs -> renumberRewriteRule (maximum xs + 1)
 
 criticalPairs :: [RewriteRule a] -> [(Term, (RewriteRule a, Term), (RewriteRule a, Term))]
 criticalPairs rs = 
@@ -109,15 +113,15 @@ noDiamondPairsWith f rs =
 reportPairs :: [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))] -> IO ()
 reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
  where
-   f i (a, (r1@(R _ _ _), e1, nf1), (r2, e2, nf2)) = unlines
+   f i (a, (r1@(R _ _), e1, nf1), (r2, e2, nf2)) = unlines
       [ show i ++ ") " ++ showTerm a
-      , "  "   ++ ruleName r1
+      , "  "   ++ showId r1
       , "    " ++ showTerm e1 ++ if e1==nf1 then "" else "   -->   " ++ showTerm nf1
-      , "  "   ++ ruleName r2
+      , "  "   ++ showId r2
       , "    " ++ showTerm e2 ++ if e2==nf2 then "" else "   -->   " ++ showTerm nf2
       ]
     where
-      showTerm term = 
+      showTerm term =
          case fromTerm term `asTypeOf` rewriteM r1 undefined of
             Just a  -> show a
             Nothing -> show term

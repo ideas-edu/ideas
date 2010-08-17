@@ -13,7 +13,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Difference 
-   ( difference, differenceEqual, differenceMode
+   ( ShallowEq(..), difference, differenceEqual, differenceMode
    ) where
 
 import Common.Rewriting.AC
@@ -21,6 +21,9 @@ import Common.Rewriting.RewriteRule
 import Control.Monad
 import Common.Uniplate
 import Data.Maybe
+
+class ShallowEq a where 
+   shallowEq :: a -> a -> Bool
 
 differenceMode :: (Rewrite a, Uniplate a, ShallowEq a) 
                => (a -> a -> Bool) -> Bool -> a -> a -> Maybe (a, a)

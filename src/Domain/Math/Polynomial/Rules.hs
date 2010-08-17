@@ -17,7 +17,7 @@ import Common.Context
 import Common.Rewriting
 import Common.Transformation
 import Common.Navigator
-import Common.Uniplate (universe, uniplate)
+import Common.Uniplate (universe, descend)
 import Common.Utils
 import Common.View hiding (simplify)
 import Control.Monad
@@ -379,8 +379,7 @@ substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
       _ -> fail "no subst in clipboard"
  where
    subst a b (Var c) | a==c = b
-   subst a b expr = build (map (subst a b) cs)
-    where (cs, build) = uniplate expr
+   subst a b expr = descend (subst a b) expr
 
 exposeSameFactor :: Rule (Equation Expr)
 exposeSameFactor = liftRule (bothSidesView productView) $ 

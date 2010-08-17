@@ -162,8 +162,7 @@ constantFolding :: Expr -> Expr
 constantFolding expr = 
    case match rationalView expr of
       Just r  -> fromRational r
-      Nothing -> let (xs, f) = uniplate expr
-                 in f (map constantFolding xs)
+      Nothing -> descend constantFolding expr
                  
 ----------------------------------------------------------------------
 -- merge alike for sums and products

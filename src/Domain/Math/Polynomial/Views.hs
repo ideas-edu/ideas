@@ -24,7 +24,7 @@ import Prelude hiding ((^))
 import Control.Monad
 import Common.View
 import Common.Classes
-import Common.Uniplate (transform, uniplate, children)
+import Common.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -303,6 +303,4 @@ normHDE e =
       
 substitute :: (String, Expr) -> Expr -> Expr
 substitute (s, a) (Var b) | s==b = a
-substitute pair expr = f (map (substitute pair) cs)
- where 
-   (cs, f) = uniplate expr
+substitute pair expr = descend (substitute pair) expr

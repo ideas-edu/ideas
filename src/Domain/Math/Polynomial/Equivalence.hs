@@ -296,9 +296,7 @@ eqAfterSubstitution eq ca cb = fromMaybe False $ do
 
 substitute :: (String, Expr) -> Expr -> Expr
 substitute (s, a) (Var b) | s==b = a
-substitute pair expr = f (map (substitute pair) cs)
- where 
-   (cs, f) = uniplate expr
+substitute pair expr = descend (substitute pair) expr
 
 substOnClipboard :: Context a -> Maybe (String, Expr)
 substOnClipboard = evalCM $ const $ do

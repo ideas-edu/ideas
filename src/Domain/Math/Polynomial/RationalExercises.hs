@@ -192,8 +192,7 @@ restrictOrList p0 = maybe true (orList . filter check) . disjunctions
    substVar x a = Logic.simplify . catLogic . fmap (simpler . fmap (cleanUpExpr2 . subst))
     where 
       subst (Var s) | x == s = a
-      subst expr = make (map subst cs)
-       where (cs, make) = uniplate expr
+      subst expr = descend subst expr
        
    simpler r = fromMaybe (Logic.Var r) $ do
       a <- match (squareRootViewWith rationalView) (leftHandSide r)

@@ -123,17 +123,13 @@ evalLinearExpr :: (IsLinear a, Uniplate a) => (String -> a) -> a -> a
 evalLinearExpr f a =
    case isVariable a of
       Just s  -> f s
-      Nothing -> g $ map (evalLinearExpr f) cs
- where
-   (cs, g) = uniplate a
+      Nothing -> descend (evalLinearExpr f) a
 
 renameVariables :: (IsLinear a, Uniplate a) => (String -> String) -> a -> a
 renameVariables f a = 
    case isVariable a of
       Just s  -> variable (f s)
-      Nothing -> g $ map (renameVariables f) cs
- where
-   (cs, g) = uniplate a
+      Nothing -> descend (renameVariables f) a
 
 isConstant :: IsLinear a => a -> Bool
 isConstant = null . getVars

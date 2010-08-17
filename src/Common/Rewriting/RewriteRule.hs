@@ -16,7 +16,7 @@ module Common.Rewriting.RewriteRule
    ( -- * Supporting type classes
      Rewrite(..), Different(..)
      -- * Rewrite rules and specs
-   , RewriteRule(..), RuleSpec(..), rulePair
+   , RewriteRule(..), RuleSpec(..)
      -- * Compiling a rewrite rule
    , rewriteRule, rewriteRules, Builder, BuilderList
      -- * Using rewrite rules

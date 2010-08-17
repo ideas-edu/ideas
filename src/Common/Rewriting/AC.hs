@@ -81,8 +81,7 @@ normalizeWith ops = rec
          Just op -> 
             buildWithOperator op $ (if isCommutative op then sort else id) $ map rec $ collectWithOperator op a
          Nothing -> 
-            let (cs, f) = uniplate a
-            in f (map rec cs)
+            descend rec a
 
 equalWith :: (Uniplate a, Ord a) => Operators a -> a -> a -> Bool
 equalWith ops x y = normalizeWith ops x == normalizeWith ops y

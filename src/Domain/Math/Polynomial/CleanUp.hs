@@ -157,9 +157,7 @@ acExpr expr =
       (_, Just (b, xs)) | length xs > 1 -> 
          build productView (b, sort $ map acExpr xs)
       _ -> 
-         f (map acExpr cs)      
- where
-   (cs, f) = uniplate expr
+         descend acExpr expr
    
 ------------------------------------------------------------
 -- Technique 1: fixed points of views

@@ -17,7 +17,7 @@ import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (not)
 import Common.Transformation
-import Common.Uniplate (uniplate)
+import Common.Uniplate (descend)
 import Common.View
 import Control.Monad
 import Data.List (nub, sort)
@@ -279,8 +279,7 @@ solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
             Approximately        -> \a b -> abs (a-b) < 0.001
       
       sub (Var x) | x==v = Number d
-      sub expr = build (map sub cs)
-       where (cs, build) = uniplate expr
+      sub expr = descend sub expr
 
 data DExpr = A Double Expr
 

@@ -90,8 +90,7 @@ evalM expr = do
 substExpr :: String -> Expr -> Expr -> Expr
 substExpr s e (Var x) | x==s = e
 substExpr s _ e@(Lambda x _) | x==s = e
-substExpr s e expr = f $ map (substExpr s e) cs
- where (cs, f) = uniplate expr
+substExpr s e expr = descend (substExpr s e) expr
  
 ---------------------------------------------------------------------
 -- Testing

@@ -70,6 +70,4 @@ dom = IM.keys . unS
 s |-> term = 
    case term of
       Meta i -> fromMaybe term (lookupVar i s)
-      _      -> f (map (s |->) cs)
- where
-   (cs, f) = uniplate term
+      _      -> descend (s |->) term

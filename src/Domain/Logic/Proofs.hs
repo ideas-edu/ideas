@@ -114,8 +114,7 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
        new = head (vars \\ (varsLogic p `union` varsLogic q))
        sub a this
           | a == this = Var new
-          | otherwise = mk (map (sub a) cs)
-        where (cs, mk) = uniplate this
+          | otherwise = descend (sub a) this
    case xs of 
       hd:_ -> return (sub hd p, sub hd q)
       _ -> fail "not applicable"

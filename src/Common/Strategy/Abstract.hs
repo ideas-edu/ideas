@@ -152,9 +152,7 @@ processLabelInfo getInfo = rec emptyCoreEnv
       case core of 
          Rec n a   -> Rec n (rec (insertCoreEnv n core env) a)
          Label l a -> forLabel env l (rec env a)
-         _ -> f (map (rec env) cs)
-    where
-      (cs, f) = uniplate core
+         _ -> descend (rec env) core
  
    forLabel env l c 
       | removed info   = Fail

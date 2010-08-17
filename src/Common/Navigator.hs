@@ -24,7 +24,7 @@ module Common.Navigator
    , replaceT
    ) where
 
-import Common.Uniplate
+import Common.Uniplate hiding (leafs)
 import Common.View hiding (left, right)
 import Control.Monad
 import Data.Maybe
@@ -157,12 +157,12 @@ right a0 = rec a0
 -- The uniplate function is stored in the data type to get rid of the
 -- Uniplate type class constraints in the member functions of the 
 -- Navigator type class.
-data UniplateNav a = UN (UniplateType a) [(Int, a -> a)] a
+data UniplateNav a = UN (HolesType a) [(Int, a -> a)] a
 
-type UniplateType a = a -> ([a], [a] -> a)
+type HolesType a = a -> [(a, a -> a)]
 
 makeUN :: Uniplate a => a -> UniplateNav a
-makeUN = UN uniplate []
+makeUN = UN holes []
 
 instance Show a => Show (UniplateNav a) where
    show = showNav
@@ -171,14 +171,9 @@ instance IsNavigator UniplateNav where
    up (UN _ [] _)            = fail "up"
    up (UN uni ((_, f):xs) a) = return (UN uni xs (f a))
  
-   allDowns (UN uni xs a) = zipWith make [0..] cs
-    where
-      (cs, build) = uni a
-      make i = UN uni ((i, build . flip (update i) cs):xs)
-      update _ _ []  = []
-      update i x (y:ys)
-         | i == 0    = x:ys
-         | otherwise = y:update (i-1) x ys
+   allDowns (UN uni xs a) = 
+      let make i (b, f) = UN uni ((i, f):xs) b
+      in zipWith make [0..] (uni a)
    
    location (UN _ xs _) = reverse (map fst xs)
    
@@ -275,7 +270,7 @@ navigator :: Uniplate a => a -> Navigator a
 navigator = N . S . makeUN
 
 noNavigator :: a -> Navigator a
-noNavigator = N . S . UN (\a -> ([], const a)) []
+noNavigator = N . S . UN (const []) []
 
 viewNavigator :: (Uniplate a, Typeable a) => a -> Navigator a
 viewNavigator = N . VN identity . makeUN

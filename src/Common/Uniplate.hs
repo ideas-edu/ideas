@@ -13,11 +13,18 @@
 -----------------------------------------------------------------------------
 module Common.Uniplate
    ( -- * Uniplate type class and utility functions
-     Uniplate(..), universe, children
-   , transform, transformM, descend, rewrite, rewriteM
+     Uniplate(..), universe, children, holes
+   , transform, transformM, descend, descendM, rewrite, rewriteM
+     -- * Additional functions
+   , leafs
    ) where
 
 import Data.Generics.Uniplate
+
+leafs :: Uniplate a => a -> [a]
+leafs a = case children a of
+             [] -> [a]
+             xs -> concatMap leafs xs
 
 {-
 ---------------------------------------------------------

@@ -101,12 +101,13 @@ sizedGen constants gen = go
 -- Simple tricks for creating for "nice" logic propositions
 
 preventSameVar :: Eq a => [a] -> Logic a -> Gen (Logic a)
-preventSameVar xs = transformM $ \p -> 
-   case uniplate p of
-      ([Var a, Var b], f) | a==b -> do
-         c <- oneof $ map return $ filter (/=a) xs
-         return $ f [Var a, Var c]
-      _ -> return p
+preventSameVar xs = rec 
+ where
+   rec p = case holes p of
+              [(Var a, _), (Var b, update)] | a==b -> do
+                 c <- oneof $ map return $ filter (/=a) xs
+                 return $ update (Var c)
+              _ -> descendM rec p
 
 removePartsInDNF :: SLogic -> SLogic
 removePartsInDNF = buildOr . filter (not . simple) . disjunctions

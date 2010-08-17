@@ -30,7 +30,7 @@ import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Unification
-import Common.Uniplate (descend, universe)
+import Common.Uniplate (descend, leafs)
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -222,8 +222,8 @@ extend f r = r {rulePair = f (Meta n) (rulePair r)}
 metaInRewriteRule :: RewriteRule a -> [Int]
 metaInRewriteRule r =
    let lhs :~> rhs = rulePair r
-   in [ n | Meta n <- universe lhs ++ universe rhs ]
-   
+   in [ n | Meta n <- leafs lhs ++ leafs rhs ]
+
 renumberRewriteRule :: Int -> RewriteRule a -> RewriteRule a
 renumberRewriteRule n r = r {rulePair = f lhs :~> f rhs}
  where

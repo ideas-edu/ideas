@@ -130,7 +130,7 @@ isCon (Con s) = return s
 isCon _       = fail "isCon"
 
 getMetaVars :: Term -> [Int]
-getMetaVars a = sort $ nub [ i | Meta i <- universe a ]
+getMetaVars a = sort $ nub [ i | Meta i <- leafs a ]
 
 hasMetaVar :: Int -> Term -> Bool
 hasMetaVar i = (i `elem`) . getMetaVars

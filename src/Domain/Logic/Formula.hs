@@ -105,13 +105,6 @@ eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs
    xs = varsLogic p `union` varsLogic q
    fs = map (flip elem) (subsets xs) 
 
--- | Functions noNot, noOr, and noAnd determine whether or not a Logic 
--- | expression contains a not, or, and and constructor, respectively.
-noNot, noOr, noAnd :: Logic a -> Bool
-noNot = foldLogic (const True, (&&), (&&), (&&), (&&), const False, True, True)
-noOr  = foldLogic (const True, (&&), (&&), (&&), \_ _ -> False, id, True, True)
-noAnd = foldLogic (const True, (&&), (&&), \_ _ -> False, (&&), id, True, True)
-
 -- | A Logic expression is atomic if it is a variable or a constant True or False.
 isAtomic :: Logic a -> Bool
 isAtomic logic = 
@@ -137,23 +130,10 @@ disjunctions = collectWithOperator orOperator
 -- | operator at the top level.
 conjunctions :: Logic a -> [Logic a]
 conjunctions = collectWithOperator andOperator
-
--- | Count the number of implicationsations :: Logic -> Int
-countImplications :: Logic a -> Int
-countImplications p = length [ () | _ :->: _ <- universe p ] 
  
 -- | Count the number of equivalences
 countEquivalences :: Logic a -> Int
 countEquivalences p = length [ () | _ :<->: _ <- universe p ]
-
--- | Count the number of binary operators
-countBinaryOperators :: Logic a -> Int
-countBinaryOperators = foldLogic (const 0, binop, binop, binop, binop, id, 0, 0)
- where binop x y = x + y + 1
-
--- | Count the number of double negations 
-countDoubleNegations :: Logic a -> Int
-countDoubleNegations p = length [ () | Not (Not _) <- universe p ] 
 
 -- | Function varsLogic returns the variables that appear in a Logic expression.
 varsLogic :: Eq a => Logic a -> [a]
@@ -203,8 +183,9 @@ instance IsTerm a => IsTerm (Logic a) where
       f s [x, y]
          | s == impliesSymbol    = return (x :->: y)
          | s == equivalentSymbol = return (x :<->: y)
-         | s == andSymbol        = return (x :&&: y)
-         | s == orSymbol         = return (x :||: y)
+      f s xs@(_:_)
+         | s == andSymbol        = return (buildWithOperator andOperator xs)
+         | s == orSymbol         = return (buildWithOperator orOperator xs)
       f _ _ = fail "fromTerm"
 
 logicOperators :: Operators (Logic a)

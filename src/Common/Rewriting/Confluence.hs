@@ -113,18 +113,13 @@ noDiamondPairsWith f rs =
 reportPairs :: [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))] -> IO ()
 reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
  where
-   f i (a, (r1@(R _ _), e1, nf1), (r2, e2, nf2)) = unlines
-      [ show i ++ ") " ++ showTerm a
+   f i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
+      [ show i ++ ") " ++ show a
       , "  "   ++ showId r1
-      , "    " ++ showTerm e1 ++ if e1==nf1 then "" else "   -->   " ++ showTerm nf1
+      , "    " ++ show e1 ++ if e1==nf1 then "" else "   -->   " ++ show nf1
       , "  "   ++ showId r2
-      , "    " ++ showTerm e2 ++ if e2==nf2 then "" else "   -->   " ++ showTerm nf2
+      , "    " ++ show e2 ++ if e2==nf2 then "" else "   -->   " ++ show nf2
       ]
-    where
-      showTerm term =
-         case fromTerm term `asTypeOf` rewriteM r1 undefined of
-            Just a  -> show a
-            Nothing -> show term
 
 ----------------------------------------------------
 

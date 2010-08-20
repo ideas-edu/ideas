@@ -82,9 +82,10 @@ fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
 
 fromTermWith :: (Monad m, IsTerm a) => (Symbol -> [a] -> m a) -> Term -> m a
-fromTermWith f a = 
-   case getSpine a of 
-      (t, xs) -> isCon t >>= \s -> mapM fromTermM xs >>= f s
+fromTermWith f a = do
+   (s, xs) <- getConSpine a
+   ys <-  mapM fromTermM xs
+   f s ys
 
 -----------------------------------------------------------
 -- * Utility functions
@@ -110,6 +111,15 @@ unary = Apply . Con
 
 binary :: Symbol -> Term -> Term -> Term
 binary s = Apply . Apply (Con s)
+
+{-
+binaryA :: Symbol -> Term -> Term -> Term
+binaryA s a b = makeConTerm s (collect  a++ collect b)
+ where
+   collect term = 
+      case getConSpine term of
+         Just (t, xs) | s==t -> xs
+         _ -> [term] -}
 
 isUnary :: Symbol -> Term -> Maybe Term
 isUnary s (Apply (Con t) a) | s==t = Just a

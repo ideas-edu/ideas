@@ -38,6 +38,10 @@ instance IsSymbol OM.Symbol where
       where f | null (qualifiers s) = OM.extraSymbol
               | otherwise = OM.makeSymbol (qualification s)
 
+instance HasId OM.Symbol where
+   getId    = newId . show
+   changeId = const id -- cannot be changed
+
 -------------------------------------------------------------------
 -- Type class for symbolic representations
 
@@ -78,6 +82,15 @@ unary f a = function (toSymbol f) [a]
 
 binary :: (IsSymbol s, Symbolic a) => s -> a -> a -> a
 binary f a b = function (toSymbol f) [a, b]
+
+binaryA :: (IsSymbol s, Symbolic a) => s -> a -> a -> a
+binaryA f a b = function fs (collect a ++ collect b)
+ where
+   fs = toSymbol f
+   collect t =
+      case getFunction t of
+         Just (s, xs) | fs==s -> xs
+         _ -> [t]
 
 isConst :: (IsSymbol s, Symbolic a) => s -> a -> Bool
 isConst s = maybe False null . isSymbol (toSymbol s) 

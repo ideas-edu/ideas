@@ -27,11 +27,11 @@ import Common.Uniplate
 -- is needed for the Rewrite instance.
 
 instance Rewrite SLogic where
-   operators      = logicOperators
+   operators = logicOperators
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool
-equalLogicA = equalWith operators
+equalLogicA = equalWith (map fst operators)
 
 -----------------------------------------------------------
 -- Logic generator

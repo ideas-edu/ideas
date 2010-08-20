@@ -33,7 +33,6 @@ import Common.Rewriting.Unification
 import Common.Uniplate (descend, leafs)
 import Control.Monad
 import Data.List
-import Data.Maybe
 import Test.QuickCheck
 
 ------------------------------------------------------
@@ -44,7 +43,7 @@ import Test.QuickCheck
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
 class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
-   operators :: [Operator a]
+   operators :: [(Operator a, Symbol)]
    -- default definition: no special operators
    operators = []
 
@@ -135,22 +134,13 @@ instance Apply RewriteRule where
    applyAll = rewrite
 
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r@(R _ _) = build (associativeOps r) (rulePair r)
+rewrite r@(R _ _) a = build (getOps a operators) (rulePair r) a
+ where
+   getOps :: a -> [(Operator a, Symbol)] -> [Symbol]
+   getOps = const (map snd)
  
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r
-
--- Quick fix: not an ideal solution
-associativeOps :: RewriteRule a -> [Symbol]
-associativeOps r@(R _ _) = mapMaybe opToSym (getOps r)
- where
-   getOps :: RewriteRule a -> Operators a
-   getOps (R _ _) = filter isAssociative operators
-   
-   opToSym :: IsTerm a => Operator a -> Maybe Symbol
-   opToSym op = 
-      let err = error "Common.Rewriting: opToSymbol"
-      in fmap fst (getConSpine (toTerm (constructor op err err)))
 
 -----------------------------------------------------------
 -- Pretty-print a rewriteRule

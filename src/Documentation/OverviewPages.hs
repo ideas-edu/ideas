@@ -16,8 +16,9 @@ module Documentation.OverviewPages
 import Documentation.DefaultPage
 import Data.Char
 import Data.List
+import Data.Maybe
 import Control.Monad
-import Common.Utils (Some(..))
+import Common.Utils (Some(..), safeHead)
 import Common.Exercise
 import Service.DomainReasoner
 import Service.Types
@@ -68,17 +69,20 @@ exerciseOverviewPage showAll list = do
 
    grouping = map g . groupBy eq . sortBy cmp . filter p
     where
-      cmp (Some a) (Some b) = exerciseId a `compare` exerciseId b
+      cmp (Some a) (Some b) = compareId (exerciseId a) (exerciseId b)
       eq a b      = f a == f b
-      f (Some ex) = qualification (exerciseId ex)
-      g xs = (f (head xs), xs)
+      f (Some ex) = safeHead (qualifiers (exerciseId ex))
+      g xs        = (fromMaybe "" (f (head xs)), xs)
       p (Some ex) = showAll || isPublic ex
 
 serviceOverviewPage :: [Service] -> HTMLBuilder
 serviceOverviewPage list = do
    h1 "Services"
-   let sorted = sortBy (\x y -> getId x `compare` getId y) list
-   ul $ flip map sorted $ \s -> do
-      link (servicePageFile s) (ttText (showId s))
-      when (serviceDeprecated s) $
-         space >> text "(deprecated)"
+   let (xs, ys) = partition serviceDeprecated (sortBy compareId list)
+       make s   = link (servicePageFile s) (ttText (showId s))
+   ul $ map make ys
+   unless (null xs) $ do
+      h2 "Deprecated"
+      ul $ map make xs
+
+   

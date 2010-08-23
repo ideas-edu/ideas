@@ -141,7 +141,7 @@ instance Show (Type a t) where
    show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2 
    show t@(Pair _ _)   = showTuple t
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
-   show (Tag s t)      = s ++ "@(" ++ show t ++ ")"
+   show (Tag s t)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
    show (IO t)         = show t
    show t              = fromMaybe "unknown" (groundType t)

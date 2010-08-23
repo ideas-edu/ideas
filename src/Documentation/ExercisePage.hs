@@ -38,7 +38,8 @@ import qualified Text.XML as XML
 makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
 makeExercisePage dir pkg = do
    let ex     = exercise pkg
-       make   = generatePageAt 2 dir . ($ (getId pkg))
+       level  = length (qualifiers pkg)
+       make   = generatePageAt level dir . ($ (getId pkg))
        exFile = dir ++ "/" ++ diagnosisExampleFile (getId ex)
 
    exampleFileExists <- liftIO (doesFileExist exFile)
@@ -78,7 +79,7 @@ exercisePage exampleFileExists pkg = do
         ]
       ]
    
-   para $ link (up 2 ++ exerciseStrategyFile exid) $
+   para $ link (up level ++ exerciseStrategyFile exid) $
       text "See strategy details"
 
    h2 "2. Rules"
@@ -89,7 +90,7 @@ exercisePage exampleFileExists pkg = do
              , text $ showBool $ r `elem` rs
              , text $ concat $ intersperse "," (ruleGroups r)
              , when (isRewriteRule r) $
-                  image (ruleImageFileHere ex r)
+                  image (ruleImageFile ex r)
              ]
    table ( [bold $ text "Rule name", bold $ text "Buggy"
            , bold $ text "Args" 
@@ -99,10 +100,10 @@ exercisePage exampleFileExists pkg = do
          : map f (ruleset ex)
          )
    para $ do
-      link (up 2 ++ exerciseRulesFile exid) $
+      link (up level ++ exerciseRulesFile exid) $
          text "See rule details"
       when exampleFileExists $ do
-         link (up 2 ++ exerciseDiagnosisFile exid) $ do
+         link (up level ++ exerciseDiagnosisFile exid) $ do
             br
             text "See diagnosis examples"
 
@@ -110,10 +111,11 @@ exercisePage exampleFileExists pkg = do
    let state = generateWith (mkStdGen 0) pkg 5
    preText (showDerivation ex (term state))
    unless (null (examples ex)) $ 
-      link (up 2 ++ exerciseDerivationsFile exid) (text "More examples")
+      link (up level ++ exerciseDerivationsFile exid) (text "More examples")
  where
-   ex   = exercise pkg
-   exid = getId ex
+   ex    = exercise pkg
+   exid  = getId ex
+   level = length (qualifiers pkg)
 
 strategyPage :: Exercise a -> HTMLBuilder
 strategyPage ex = do
@@ -154,7 +156,7 @@ rulesPage ex = do
          $ ruleSiblings r] 
          ]
       when (isRewriteRule r) $ para $
-         image (ruleImageFileHere ex r)
+         image (ruleImageFile ex r)
       -- Examples
       let ys = M.findWithDefault [] (getId r) exampleMap
       unless (null ys) $ do

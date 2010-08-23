@@ -14,7 +14,7 @@
 module Common.Id 
    ( Id, HasId(..), newId, newIdM
    , unqualified, qualifiers, qualification
-   , describe, description, showId
+   , describe, description, showId, compareId
    ) where
 
 import Data.List
@@ -52,6 +52,9 @@ description = idDescription . getId
 
 showId :: HasId a => a -> String
 showId = show . getId
+
+compareId :: HasId a => a -> a -> Ordering
+compareId a b = showId a `compare` showId b
 
 -- For now, all characters are allowed. To do: make this 
 -- more strict, e.g. by removing spaces.

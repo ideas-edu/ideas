@@ -21,7 +21,6 @@ import System.Directory
 import System.FilePath
 import Text.HTML
 import qualified Text.XML as XML
-import Data.Char
 
 generatePage :: String -> String -> HTMLBuilder -> DomainReasoner ()
 generatePage = generatePageAt 0
@@ -69,74 +68,36 @@ up = concat . flip replicate "../"
 findTitle :: HTMLBuilder -> String
 findTitle = maybe "" XML.getData . XML.findChild "h1" . XML.makeXML "page"
 
+filePathId :: HasId a => a -> FilePath
+filePathId a = foldr (\x y -> x ++ "/" ++ y) (unqualified a) (qualifiers a)
+
 ------------------------------------------------------------
 -- Paths and files
 
-ruleImagePath :: Exercise a -> String
-ruleImagePath ex = "exercises/" ++ f (qualification ex) ++ "/" ++ f (description ex) ++ "/"
- where f = filter isAlphaNum . map toLower
+exerciseOverviewPageFile, exerciseOverviewAllPageFile, 
+   serviceOverviewPageFile, testsPageFile :: String
 
-exercisePagePath :: Id -> String
-exercisePagePath a = "exercises/" ++ qualification a ++ "/"
+exerciseOverviewPageFile    = "exercises.html"
+exerciseOverviewAllPageFile = "exercises-all.html"
+serviceOverviewPageFile     = "services.html"
+testsPageFile               = "tests.html"
 
-diagnosisExampleFile :: Id -> String
-diagnosisExampleFile a = exercisePagePath a ++ unqualified a ++ ".txt"
-
-servicePagePath :: String
-servicePagePath = "services/" 
+exercisePageFile, exerciseDerivationsFile, exerciseStrategyFile,
+   exerciseRulesFile, exerciseDiagnosisFile :: HasId a => a -> FilePath
+exercisePageFile        a = filePathId a ++ ".html"
+exerciseDerivationsFile a = filePathId a ++ "-derivations.html"
+exerciseStrategyFile    a = filePathId a ++ "-strategy.html"
+exerciseRulesFile       a = filePathId a ++ "-rules.html"
+exerciseDiagnosisFile   a = filePathId a ++ "-diagnosis.html"
 
 ruleImageFile :: Exercise a -> Rule (Context a) -> String
-ruleImageFile ex r = ruleImagePath ex ++ "rule" ++ showId r ++ ".png"
-
-ruleImageFileHere :: Exercise a -> Rule (Context a) -> String
-ruleImageFileHere ex r = 
-   filter (not . isSpace) (unqualified ex)
-   ++ "/rule" ++ filter isAlphaNum (showId r) ++ ".png"
-
-exerciseOverviewPageFile :: String
-exerciseOverviewPageFile = "exercises.html"
-
-exerciseOverviewAllPageFile :: String
-exerciseOverviewAllPageFile = "exercises-all.html"
-
-serviceOverviewPageFile :: String
-serviceOverviewPageFile = "services.html"
-
-exercisePageFile :: Id -> String
-exercisePageFile a = 
-   exercisePagePath a 
-   ++ filter (not . isSpace) (unqualified a)
-   ++ ".html"
-
-exerciseStrategyFile :: Id -> String
-exerciseStrategyFile a = 
-   exercisePagePath a
-   ++ filter (not . isSpace) (unqualified a)
-   ++ "-strategy.html"
-
-exerciseRulesFile :: Id -> String
-exerciseRulesFile a = 
-   exercisePagePath a
-   ++ filter (not . isSpace) (unqualified a)
-   ++ "-rules.html"
-
-exerciseDerivationsFile :: Id -> String
-exerciseDerivationsFile a = 
-   exercisePagePath a
-   ++ filter (not . isSpace) (unqualified a)
-   ++ "-derivations.html"
-
-exerciseDiagnosisFile :: Id -> String
-exerciseDiagnosisFile a = 
-   exercisePagePath a
-   ++ filter (not . isSpace) (unqualified a)
-   ++ "-diagnosis.html"
+ruleImageFile ex r = unqualified ex ++ unqualified r ++ ".png"
 
 servicePageFile :: Service -> String
-servicePageFile srv = servicePagePath ++ showId srv ++ ".html"
+servicePageFile srv = "services/" ++ filePathId srv ++ ".html"
 
-testsPageFile :: String
-testsPageFile = "tests.html"
+diagnosisExampleFile :: Id -> String
+diagnosisExampleFile a = filePathId a ++ "-examples.txt"
 
 ------------------------------------------------------------
 -- Utility functions

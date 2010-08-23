@@ -1,0 +1,34 @@
+11*x-12 == 21  ==>  11*x == 9  ::: min-teken vergeten bij verschuiven van term
+19-3*x == -5  ==>  19+3*x == 5  ::: min-teken verkeerd
+19-3*x == -5  ==>  -19+3*x == -5  ::: alleen links min-teken
+-3*x == 24  ==>  x == 8  ::: delen door negatief getal
+3*x+3 == 21  ==>  x+1 == 21  ::: delen slechts aan een kant
+3*x+3 == 21  ==>  x+3 == 7  ::: delen, maar een term vergeten te delen
+6*x == 14  ==>  x == 6/14  ::: breuk verkeerd om
+6*x-2 == 2*x+14  ==>  8*x-2 == 14  ::: min-teken fout bij samenvoegen x-termen
+4*x-6 == 7*x-14  ==>  3*x-6 == -14  ::: min-teken fout bij samenvoegen x-termen
+17 == 4-10*x  ==>  10*x-4 == 17  ::: slechts een kant negatie
+17 == 4-10*x  ==>  17-10*x == 4  ::: alleen -10x naar andere kant gehaald
+4*(x-1) == 11*x-12  ==>  4*x-1 == 11*x-12  ::: haakjes verkeerd weggewerkt
+4*(x-4) == 5*(2*x+1)  ==>  4*(x-4) == 5*x+5  ::: 2 is vergeten
+4*(x-4) == 5*(2*x+1)  ==>  4*(x-4) == 2*x+5  ::: 5 is vergeten
+4*(x-4) == 5*(2*x+1)  ==>  4*(x-4) == 7*x+5  ::: 5+2=7, maar had 5*2 moeten zijn
+2*(5-3*x) == 6-x  ==>  10-3*x == 6-x  ::: x-term niet met 2 vermenigvuldigd
+2*(5-3*x) == 6-x  ==>  10-2*x == 6-x  ::: 3 raakt kwijt
+2*(5-3*x) == 6-x  ==>  10+6*x == 6-x  ::: min raakt kwijt
+4*x-(x-2) == 12+5*(x-1)  ==>  4*x-x-2 == 12+5*(x-1)  ::: haakjes verkeerd weggewerkt
+-3*(x-2) == 3*(x+4)-7  ==>  -3*x-6 == 3*(x+4)-7  ::: min-tekens
+4*(4*x-1)-2 == -3*x+3*(2*x-5)  ==>  16*x-4-8 == -3*x+3*(2*x-5)  ::: vermenigvuldigen gaat te lang door
+1/2*x-4 == 2*x+2+1/2  ==>  x-4 == 4*x+5  ::: term keer 2 vergeten
+1/2*x-4 == 2*x+2+1/2  ==>  x-8 == 2*x+2+1/2  ::: alleen links vermenigvuldigd
+1/2*x-4 == 2*x+2+1/2  ==>  x-8 == 4*x+4+1/4  ::: Geen idee; 2*2 + 1/(2*2)...
+1/4*x+1/2 == 5/2*x+2  ==>  x+2 == 5*x+4  ::: links met 4, rechts met 2
+1/4*x+1/2 == 5/2*x+2  ==>  x+1/2 == 10*x+8  ::: de 1/2 blijft staan
+-1/3*x+3/4 == 1/4*x+1/6  ==>  -x+1/4 == 3/4*x+3/6  ::: 3*(3/4), maar eigenlijk door drie gedeeld
+3*x+5 == 5-3*x  ==>  5 == 5  ::: wegstrepen termen; of een min-teken fout
+1/4*(x-3) == 1/2*x-4  ==>  1/4*x-3 == 1/2*x-4  ::: verkeerd toepassen distributie
+(x+4)/2 == 5*(1/2*x+1+1/2)  ==>  x+4 == 5*(1/2*x+1+1/2)  ::: rechts vergeten keer twee
+3/4*x-(x-1) == 3+(2+1/2)*(x-1)  ==>  3/4*x-(x-1) == (5+1/2)*(x-1)  ::: prioriteiten operatoren plus en keer
+3/4*x-x+1 == 5  ==>  3/4+1 == 5  ::: want x-x=0
+3*(1/5*x-1)+5 == 7*x-14  ==>  1/15*x-3+5 == 7*x-14  ::: 3 vermenigvuldigd met de noemer
+(6*x+2)/6 == 5  ==>  x+2 == 30  ::: factor 6 (links, boven de streep), is weggevallen

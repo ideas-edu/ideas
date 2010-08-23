@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.LatexRules (makeLatexRules) where
+module Documentation.LatexRules (ruleToHTML, rewriteRuleToHTML) where
 
 import Common.Exercise
 import Common.Rewriting
@@ -21,6 +21,18 @@ import Data.List
 import Data.Maybe
 import System.Directory
 import System.Time
+import Text.HTML
+
+ruleToHTML :: Rule a -> HTMLBuilder
+ruleToHTML r = 
+   forM_ (getRewriteRules r) $ \(Some rr, b) -> 
+      rewriteRuleToHTML b rr
+
+rewriteRuleToHTML :: Bool -> RewriteRule a -> HTMLBuilder
+rewriteRuleToHTML sound r = 
+   case showRewriteRule sound r of
+      Just s  -> ttText ("[" ++ unqualified r ++ "] " ++ s) >> br
+      Nothing -> return ()
 
 makeLatexRules :: String -> Exercise a -> IO ()
 makeLatexRules dir ex = do

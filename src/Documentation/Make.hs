@@ -16,13 +16,12 @@ import Common.Utils (Some(..))
 import Data.Maybe
 import Service.DomainReasoner
 import Documentation.SelfCheck
-import Documentation.LatexRules
 import Documentation.ExercisePage
 import Documentation.TestsPage
 import Documentation.ServicePage
 import Documentation.OverviewPages
 
-data DocItem = Pages | LatexRules | SelfCheck | BlackBox (Maybe String)
+data DocItem = Pages | SelfCheck | BlackBox (Maybe String)
    deriving Eq
 
 makeDocumentation :: String -> String -> DocItem -> DomainReasoner ()
@@ -46,9 +45,6 @@ makeDocumentation docDir testDir item =
          suite  <- blackBoxTests (fromMaybe testDir mdir)
          result <- liftIO (runTestSuiteResult suite)
          liftIO (printSummary result)
-      LatexRules ->
-         let f (Some ex) = makeLatexRules docDir ex
-         in getExercises >>= liftIO . mapM_ f
          
 report :: String -> DomainReasoner ()
 report s = liftIO $ do

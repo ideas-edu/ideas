@@ -1,0 +1,27 @@
+x^2 == 2  ==>  x == sqrt 2  ::: negatieve wortel vergeten
+x^2+1 == 9  ==>  x+1 == 3 or x+1 == -3  ::: worteltrekken alvast gedaan
+9*x^2 == 81  ==>  x == 9 or x == -9  ::: factor voor x^2 is vergeten
+9*x^2 == 81  ==>  9*x == 9 or 9*x == -9  ::: worteltrekken alvast gedaan
+2*x^2 == 8  ==>  x^2 == 16  ::: vermenigvuldigen ipv delen
+(x+2)^2 == 5  ==>  x^2+4 == 5  ::: distributie van machtsverheffen verkeerd
+(x+2)^2 == 5  ==>  x^2+2 == 5  ::: distributie van machtsverheffen verkeerd
+9*x^2 == 81  ==>  (9*x)^2 == 81  ::: verkeerde term kwadrateren
+x^2 == -17  ==>  x == sqrt (-17) or x == sqrt 17  ::: negatieve wortel, en raar met mintekens
+2*x == -1+sqrt 6  ==>  x == -1/2+sqrt 6  ::: vergeten om ook de wortel te delen
+(7*x+7)^2 == 7  ==>  (x+1)^2 == 1  ::: allerlei termen delen
+x^2 == 5*x  ==>  x == 5  ::: delen door x
+x*(x-5) == 0  ==>  x == 5  ::: oplossing x=0 vergeten
+x*(x-6) == 0  ==>  x == 0 or x == -6  ::: min-teken fout in een factor
+x*(x+6) == 0  ==>  x == 0 or x == 6  ::: min-teken fout in een factor
+3*x^2-6*x == 0  ==>  3*x*(x-6) == 0  ::: uit 6 moet ook factor 3 gehaald worden
+-2*x^2+3*x == 0  ==>  -x*(2*x+3) == 0  ::: min-teken fout
+x^2-2*x-3 == 0  ==>  (x-1)*(x+3) == 0  ::: plus en min omgedraaid
+x*(x-1) == 30  ==>  x == 30 or x-1 == 30  ::: factoren gelijkstellen aan rechterkant
+x^2+8*x-15 == 0  ==>  x == (-8+sqrt 124)/2  ::: tweede oplossing bij abc-formule
+(x+1)^2+(x-3)^2 == 25  ==>  x+1+(x-3) == 5  ::: worteltrekken op termen
+(3*x+5)^2 == 5  ==>  3*x^2+30*x+25 == 5  ::: 3 niet mee kwadrateer
+(x-5)^2 == 7  ==>  x^2-10*x-25 == 7  ::: min teken bij constante term
+(x+1)^2 == 0  ==>  x == 1 or x == -1  ::: op twee oplossingen willen uitkomen
+4*(10-x^2) == -2*x*(2*x+10)  ==>  40-4*x^2 == -4*x^2-20  ::: factor x vergeten aan het einde van de rechterkant
+3*(x-2)*(x+6) == 12*x  ==>  (3*x-6)*(3*x+18) == 12*x  ::: distributie keer over keer
+(x-7/2)^2 == 2*(x+4)  ==>  x^2-7*x+49/2 == 2*(x+4)  ::: vergeten om de noemer ook de kwadrateren

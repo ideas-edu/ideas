@@ -11,9 +11,7 @@
 -----------------------------------------------------------------------------
 module Documentation.DefaultPage where
 
-import Common.Context
 import Common.Exercise
-import Common.Transformation
 import Control.Monad
 import Service.DomainReasoner
 import Service.Types
@@ -90,14 +88,11 @@ exerciseStrategyFile    a = filePathId a ++ "-strategy.html"
 exerciseRulesFile       a = filePathId a ++ "-rules.html"
 exerciseDiagnosisFile   a = filePathId a ++ "-diagnosis.html"
 
-ruleImageFile :: Exercise a -> Rule (Context a) -> String
-ruleImageFile ex r = unqualified ex ++ unqualified r ++ ".png"
-
 servicePageFile :: Service -> String
 servicePageFile srv = "services/" ++ filePathId srv ++ ".html"
 
 diagnosisExampleFile :: Id -> String
-diagnosisExampleFile a = filePathId a ++ "-examples.txt"
+diagnosisExampleFile a = "examples/" ++ showId a ++ ".txt"
 
 ------------------------------------------------------------
 -- Utility functions

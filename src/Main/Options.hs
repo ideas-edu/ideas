@@ -53,7 +53,6 @@ options =
      , Option "f" ["file"]       (ReqArg InputFile "FILE")    "use input FILE as request"
      , Option ""  ["fixed-rng"]  (NoArg FixRNG)               "use a fixed random-number generator"
      , Option ""  ["make-pages"] (NoArg $ DocItem Pages)      "generate pages for exercises and services"
-     , Option ""  ["make-rules"] (NoArg $ DocItem LatexRules) "generate latex code for rewrite rules"
      , Option ""  ["self-check"] (NoArg $ DocItem SelfCheck)  "perform a self-check"
      , Option ""  ["test"]       (OptArg testArg "DIR")       "run tests on directory (default: 'test')"
      , Option ""  ["docs-dir"]   (ReqArg DocDir "DIR")        "directory for documentation (default: 'docs')" 

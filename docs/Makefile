@@ -13,7 +13,6 @@ HPCTMPDIR = $(OUTDIR)/hpc-tmp
 # Directories
 
 HADDOCKDIR  = api
-EXERCISEDIR = exercises
 COVERAGEDIR = coverage
 
 #---------------------------------------------------------------------------------------
@@ -25,12 +24,11 @@ PROFILERTS   = # +RTS -p -hc
 #---------------------------------------------------------------------------------------
 # Documentation targets 
 
-all: api coverage latexrules
+all: api coverage
 documentation: all
 
 api: $(HADDOCKDIR)/index.html
 pages: exercises.html
-latexrules: $(EXERCISEDIR) $(PDFTARGETS)
 coverage: $(COVERAGEDIR)/hpc_index.html
 
 $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
@@ -38,11 +36,6 @@ $(HADDOCKDIR)/index.html: $(HS-SOURCES) $(HADDOCKDIR)/prologue
 
 exercises.html: $(BINDIR)/ideas.cgi
 	$(BINDIR)/ideas.cgi --make-pages --docs-dir=. --test-dir=../test
-
-$(EXERCISEDIR): $(BINDIR)/ideas.cgi
-	$(BINDIR)/ideas.cgi --make-rules --docs-dir=exercises
-	make -C $(EXERCISEDIR) all
-	$(TOUCH) $(EXERCISEDIR) # To get a timestamp
 
 $(HPCTMPDIR)/checks$(EXE): $(HS-SOURCES)
 	$(MKDIR) -p $(HPCTMPDIR)
@@ -62,6 +55,4 @@ $(COVERAGEDIR)/hpc_index.html: $(HPCTMPDIR)/checks$(EXE).tix
 
 clean:
 	$(RM) -rf $(COVERAGEDIR)/*.html
-	$(RM) -rf wikipages
 	$(RM) -f  $(HADDOCKDIR)/*.html $(HADDOCKDIR)/*.gif $(HADDOCKDIR)/*.css $(HADDOCKDIR)/*.js
-	make -C $(EXERCISEDIR) clean

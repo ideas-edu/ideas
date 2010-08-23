@@ -1,8 +1,0 @@
-%format Atom a   = a
-%format EmptySet = "{\emptyset}"
-%format Epsilon  = "{\epsilon}"
-%format Star a   = a"*"
-%format Plus a   = a"+"
-%format Option a = a"?" 
-%format :|:      = "\mathbin{\mid}"
-%format :*:      = "{\empty}"

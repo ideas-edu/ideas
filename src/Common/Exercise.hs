@@ -236,7 +236,7 @@ prettyPrinterContext ex =
     
 getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
 getRule ex s = 
-   case filter ((==s) . showId) (ruleset ex) of 
+   case filter ((newId s ==) . getId) (ruleset ex) of 
       [hd] -> return hd
       []   -> fail $ "Could not find ruleid " ++ s
       _    -> fail $ "Ambiguous ruleid " ++ s

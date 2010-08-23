@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="cover-up minus left [vars]">
       <expr>
         (3*x+4)/(x+2) == 5
       </expr>
     </elem>
-    <elem ruleid="multiplyOneDiv">
+    <elem ruleid="multiplyonediv">
       <expr>
         3*x+4 == (x+2)*5
       </expr>

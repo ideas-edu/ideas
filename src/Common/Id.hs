@@ -17,6 +17,7 @@ module Common.Id
    , describe, description, showId, compareId
    ) where
 
+import Data.Char
 import Data.List
 import Control.Monad.Error ()
 import Common.StringRef
@@ -72,9 +73,10 @@ newId :: String -> Id
 newId = either error id . newIdM
 
 newIdM :: Monad m => String -> m Id
-newIdM a = do 
-   (qs, n) <- readId a
-   return (Id n qs "" (stringRef a))
+newIdM a = do
+   let na = map toLower a
+   (qs, n) <- readId na
+   return (Id n qs "" (stringRef na))
 
 class HasId a where
    getId    :: a -> Id

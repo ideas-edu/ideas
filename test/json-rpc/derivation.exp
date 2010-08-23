@@ -1,19 +1,19 @@
 {
    "result": [
       [
-         "DeMorganOr",
+         "demorganor",
          "~~x /\\ ~~y"
       ],
       [
-         "NotNot",
+         "notnot",
          "x /\\ ~~y"
       ],
       [
-         "NotNot",
+         "notnot",
          "x /\\ y"
       ]
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.1 (1788)"
+   "version": "0.6.5 (0)"
 }

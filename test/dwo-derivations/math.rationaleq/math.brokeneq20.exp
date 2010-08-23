@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="sameDividend">
+    <elem ruleid="samedividend">
       <expr>
         x^2-3*x == 0 or 2*x-6 == 4*x+2
       </expr>

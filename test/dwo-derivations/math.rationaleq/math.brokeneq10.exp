@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="sameDivisor">
+    <elem ruleid="samedivisor">
       <expr>
         x^2+6 == 5*x
       </expr>

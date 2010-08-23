@@ -1,347 +1,347 @@
 {
    "result": [
       {
-         "name": "AbsorpAnd",
+         "name": "absorpand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "AbsorpOr",
+         "name": "absorpor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "AndComplBuggy",
+         "name": "andcomplbuggy",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "AndOverOr",
+         "name": "andoveror",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "AndSame",
+         "name": "andsame",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "AssImp",
+         "name": "assimp",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "AssocAnd",
+         "name": "assocand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "AssocOr",
+         "name": "assocor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "BuggyAbsor",
+         "name": "buggyabsor",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyAssoc",
+         "name": "buggyassoc",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDeMorgan1",
+         "name": "buggydemorgan1",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDeMorgan2",
+         "name": "buggydemorgan2",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDeMorgan3",
+         "name": "buggydemorgan3",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDeMorgan4",
+         "name": "buggydemorgan4",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDeMorgan5",
+         "name": "buggydemorgan5",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDistr",
+         "name": "buggydistr",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyDistrNot",
+         "name": "buggydistrnot",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyEquivElim1",
+         "name": "buggyequivelim1",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyEquivElim2",
+         "name": "buggyequivelim2",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyImplElim",
+         "name": "buggyimplelim",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyImplElim1",
+         "name": "buggyimplelim1",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyImplElim2",
+         "name": "buggyimplelim2",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyNotOverImpl",
+         "name": "buggynotoverimpl",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyParenth1",
+         "name": "buggyparenth1",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyParenth2",
+         "name": "buggyparenth2",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "BuggyParenth3",
+         "name": "buggyparenth3",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "CommAnd",
+         "name": "command",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "CommEquiv",
+         "name": "commequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "CommImp",
+         "name": "commimp",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "CommOr",
+         "name": "commor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "ComplAnd",
+         "name": "compland",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "ComplOr",
+         "name": "complor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "DeMorganAnd",
+         "name": "defequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "DeMorganOr",
+         "name": "defequivimpls",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "DefEquiv",
+         "name": "defimpl",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "DefEquivImpls",
+         "name": "demorganand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "DefImpl",
+         "name": "demorganor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "EquivElim3",
+         "name": "equivelim3",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "EquivSame",
+         "name": "equivsame",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "FalseInEquiv",
+         "name": "falseinequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "FalseInImpl",
+         "name": "falseinimpl",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "FalseProp",
+         "name": "falseprop",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "FalseZeroAnd",
+         "name": "falsezeroand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "FalseZeroOr",
+         "name": "falsezeroor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "GenAndOverOr",
+         "name": "genandoveror",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "GenDeMorganAnd",
+         "name": "gendemorganand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "GenDeMorganOr",
+         "name": "gendemorganor",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "GenOrOverAnd",
+         "name": "genoroverand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "IdemEqui",
+         "name": "idemequi",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "IdemImp",
+         "name": "idemimp",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "IdempAnd",
+         "name": "idempand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "IdempOr",
+         "name": "idempor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "ImplSame",
+         "name": "implsame",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "InvAndOverOr",
+         "name": "invandoveror",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "InvDeMorganAnd",
+         "name": "invdemorganand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "InvDeMorganOr",
+         "name": "invdemorganor",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "InvOrOverAnd",
+         "name": "invoroverand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "NotFalse",
+         "name": "notfalse",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "NotNot",
+         "name": "notnot",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "NotTrue",
+         "name": "nottrue",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "OrComplBuggy",
+         "name": "orcomplbuggy",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "OrOverAnd",
+         "name": "oroverand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "OrSame",
+         "name": "orsame",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "TrueInEquiv",
+         "name": "trueinequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "TrueInImpl",
+         "name": "trueinimpl",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "TrueProp",
+         "name": "trueprop",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "TrueZeroAnd",
+         "name": "truezeroand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "TrueZeroOr",
+         "name": "truezeroor",
          "buggy": false,
          "rewriterule": true
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.5.6 (2306)"
+   "version": "0.6.5 (0)"
 }

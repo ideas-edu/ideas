@@ -1,6 +1,6 @@
-<reply result="ok" version="0.1">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="Tidy-up rule"/>
+    <elem ruleid="tidy-up rule"/>
   </list>
 </reply>
 

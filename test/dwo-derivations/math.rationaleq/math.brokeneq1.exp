@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="divisionIsZero">
+    <elem ruleid="divisioniszero">
       <expr>
         2*x^2-10 == 0
       </expr>

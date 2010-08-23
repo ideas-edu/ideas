@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.4">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="BuggyDeMorgan4"/>
+    <elem ruleid="buggydemorgan4"/>
   </list>
 </reply>
 

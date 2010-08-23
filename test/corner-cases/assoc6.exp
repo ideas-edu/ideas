@@ -1,7 +1,7 @@
 {
    "result": [
       [
-         "IdempOr",
+         "idempor",
          "[]",
          [
             "logic.propositional.dnf",
@@ -12,7 +12,7 @@
          ]
       ],
       [
-         "IdempOr",
+         "idempor",
          "[]",
          [
             "logic.propositional.dnf",
@@ -25,5 +25,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.4 (0)"
+   "version": "0.6.5 (0)"
 }

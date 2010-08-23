@@ -1,8 +1,8 @@
-<reply result="ok" version="0.6.3 (0)">
-  <label name="Linear Equation">
+<reply result="ok" version="0.6.5 (0)">
+  <label name="linear equation">
     <sequence>
-      <rule name="Identity"/>
-      <label name="Phase 1">
+      <rule name="identity"/>
+      <label name="phase 1">
         <repeat>
           <choice>
             <rule name="remove division"/>
@@ -55,7 +55,7 @@
           </choice>
         </repeat>
       </label>
-      <label name="Phase 2">
+      <label name="phase 2">
         <repeat>
           <choice>
             <orelse>

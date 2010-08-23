@@ -2,7 +2,7 @@
    "result": {
       "result": "Ok",
       "rules": [
-         "DeMorganOr"
+         "demorganor"
       ],
       "state": [
          "logic.propositional.dnf",

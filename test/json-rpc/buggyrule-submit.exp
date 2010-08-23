@@ -2,10 +2,10 @@
    "result": {
       "result": "Buggy",
       "rules": [
-         "BuggyDeMorgan1"
+         "buggydemorgan1"
       ]
    },
    "error": null,
    "id": 2805,
-   "version": "0.5.0 (1688)"
+   "version": "0.6.5 (0)"
 }

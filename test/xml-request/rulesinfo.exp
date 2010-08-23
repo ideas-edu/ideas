@@ -1,7 +1,7 @@
-<reply result="ok" version="0.5.13">
-  <rule name="AbsorpAnd" buggy="false" rewriterule="true">
+<reply result="ok" version="0.6.5 (0)">
+  <rule name="absorpand" buggy="false" rewriterule="true">
     <description>
-      AbsorpAnd
+      absorpand
     </description>
     <CMP>
       a /\ (a || b) ~&gt; a
@@ -112,9 +112,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AbsorpOr" buggy="false" rewriterule="true">
+  <rule name="absorpor" buggy="false" rewriterule="true">
     <description>
-      AbsorpOr
+      absorpor
     </description>
     <CMP>
       a || a /\ b ~&gt; a
@@ -225,9 +225,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AndComplBuggy" buggy="true" rewriterule="true">
+  <rule name="andcomplbuggy" buggy="true" rewriterule="true">
     <description>
-      AndComplBuggy
+      andcomplbuggy
     </description>
     <group>
       Common misconceptions
@@ -333,9 +333,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AndOverOr" buggy="false" rewriterule="true">
+  <rule name="andoveror" buggy="false" rewriterule="true">
     <description>
-      AndOverOr
+      andoveror
     </description>
     <CMP>
       a /\ (b || c) ~&gt; a /\ b || a /\ c
@@ -418,9 +418,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AndSame" buggy="true" rewriterule="true">
+  <rule name="andsame" buggy="true" rewriterule="true">
     <description>
-      AndSame
+      andsame
     </description>
     <group>
       Common misconceptions
@@ -448,9 +448,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AssImp" buggy="true" rewriterule="true">
+  <rule name="assimp" buggy="true" rewriterule="true">
     <description>
-      AssImp
+      assimp
     </description>
     <group>
       Common misconceptions
@@ -528,9 +528,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AssocAnd" buggy="false" rewriterule="true">
+  <rule name="assocand" buggy="false" rewriterule="true">
     <description>
-      AssocAnd
+      assocand
     </description>
     <group>
       Associativity
@@ -572,9 +572,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="AssocOr" buggy="false" rewriterule="true">
+  <rule name="assocor" buggy="false" rewriterule="true">
     <description>
-      AssocOr
+      assocor
     </description>
     <group>
       Associativity
@@ -616,9 +616,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyAbsor" buggy="true" rewriterule="true">
+  <rule name="buggyabsor" buggy="true" rewriterule="true">
     <description>
-      BuggyAbsor
+      buggyabsor
     </description>
     <group>
       Common misconceptions
@@ -784,9 +784,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyAssoc" buggy="true" rewriterule="true">
+  <rule name="buggyassoc" buggy="true" rewriterule="true">
     <description>
-      BuggyAssoc
+      buggyassoc
     </description>
     <group>
       Common misconceptions
@@ -936,9 +936,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDeMorgan1" buggy="true" rewriterule="true">
+  <rule name="buggydemorgan1" buggy="true" rewriterule="true">
     <description>
-      BuggyDeMorgan1
+      buggydemorgan1
     </description>
     <group>
       Common misconceptions
@@ -1136,9 +1136,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDeMorgan2" buggy="true" rewriterule="true">
+  <rule name="buggydemorgan2" buggy="true" rewriterule="true">
     <description>
-      BuggyDeMorgan2
+      buggydemorgan2
     </description>
     <group>
       Common misconceptions
@@ -1222,9 +1222,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDeMorgan3" buggy="true" rewriterule="true">
+  <rule name="buggydemorgan3" buggy="true" rewriterule="true">
     <description>
-      BuggyDeMorgan3
+      buggydemorgan3
     </description>
     <group>
       Common misconceptions
@@ -1266,9 +1266,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDeMorgan4" buggy="true" rewriterule="true">
+  <rule name="buggydemorgan4" buggy="true" rewriterule="true">
     <description>
-      BuggyDeMorgan4
+      buggydemorgan4
     </description>
     <group>
       Common misconceptions
@@ -1310,9 +1310,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDeMorgan5" buggy="true" rewriterule="true">
+  <rule name="buggydemorgan5" buggy="true" rewriterule="true">
     <description>
-      BuggyDeMorgan5
+      buggydemorgan5
     </description>
     <group>
       Common misconceptions
@@ -1522,9 +1522,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDistr" buggy="true" rewriterule="true">
+  <rule name="buggydistr" buggy="true" rewriterule="true">
     <description>
-      BuggyDistr
+      buggydistr
     </description>
     <group>
       Common misconceptions
@@ -1850,9 +1850,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyDistrNot" buggy="true" rewriterule="true">
+  <rule name="buggydistrnot" buggy="true" rewriterule="true">
     <description>
-      BuggyDistrNot
+      buggydistrnot
     </description>
     <group>
       Common misconceptions
@@ -2226,9 +2226,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyEquivElim1" buggy="true" rewriterule="true">
+  <rule name="buggyequivelim1" buggy="true" rewriterule="true">
     <description>
-      BuggyEquivElim1
+      buggyequivelim1
     </description>
     <group>
       Common misconceptions
@@ -2424,9 +2424,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyEquivElim2" buggy="true" rewriterule="true">
+  <rule name="buggyequivelim2" buggy="true" rewriterule="true">
     <description>
-      BuggyEquivElim2
+      buggyequivelim2
     </description>
     <group>
       Common misconceptions
@@ -2555,9 +2555,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyImplElim" buggy="true" rewriterule="true">
+  <rule name="buggyimplelim" buggy="true" rewriterule="true">
     <description>
-      BuggyImplElim
+      buggyimplelim
     </description>
     <group>
       Common misconceptions
@@ -2650,9 +2650,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyImplElim1" buggy="true" rewriterule="true">
+  <rule name="buggyimplelim1" buggy="true" rewriterule="true">
     <description>
-      BuggyImplElim1
+      buggyimplelim1
     </description>
     <group>
       Common misconceptions
@@ -2688,9 +2688,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyImplElim2" buggy="true" rewriterule="true">
+  <rule name="buggyimplelim2" buggy="true" rewriterule="true">
     <description>
-      BuggyImplElim2
+      buggyimplelim2
     </description>
     <group>
       Common misconceptions
@@ -2737,9 +2737,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyNotOverImpl" buggy="true" rewriterule="true">
+  <rule name="buggynotoverimpl" buggy="true" rewriterule="true">
     <description>
-      BuggyNotOverImpl
+      buggynotoverimpl
     </description>
     <group>
       Common misconceptions
@@ -2781,9 +2781,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyParenth1" buggy="true" rewriterule="true">
+  <rule name="buggyparenth1" buggy="true" rewriterule="true">
     <description>
-      BuggyParenth1
+      buggyparenth1
     </description>
     <group>
       Common misconceptions
@@ -2855,9 +2855,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyParenth2" buggy="true" rewriterule="true">
+  <rule name="buggyparenth2" buggy="true" rewriterule="true">
     <description>
-      BuggyParenth2
+      buggyparenth2
     </description>
     <group>
       Common misconceptions
@@ -2910,9 +2910,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="BuggyParenth3" buggy="true" rewriterule="true">
+  <rule name="buggyparenth3" buggy="true" rewriterule="true">
     <description>
-      BuggyParenth3
+      buggyparenth3
     </description>
     <group>
       Common misconceptions
@@ -3050,9 +3050,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="CommAnd" buggy="false" rewriterule="true">
+  <rule name="command" buggy="false" rewriterule="true">
     <description>
-      CommAnd
+      command
     </description>
     <group>
       Commutativity
@@ -3085,9 +3085,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="CommEquiv" buggy="false" rewriterule="true">
+  <rule name="commequiv" buggy="false" rewriterule="true">
     <description>
-      CommEquiv
+      commequiv
     </description>
     <group>
       Additional rules
@@ -3120,9 +3120,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="CommImp" buggy="true" rewriterule="true">
+  <rule name="commimp" buggy="true" rewriterule="true">
     <description>
-      CommImp
+      commimp
     </description>
     <group>
       Common misconceptions
@@ -3155,9 +3155,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="CommOr" buggy="false" rewriterule="true">
+  <rule name="commor" buggy="false" rewriterule="true">
     <description>
-      CommOr
+      commor
     </description>
     <group>
       Commutativity
@@ -3190,9 +3190,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="ComplAnd" buggy="false" rewriterule="true">
+  <rule name="compland" buggy="false" rewriterule="true">
     <description>
-      ComplAnd
+      compland
     </description>
     <CMP>
       a /\ ~a ~&gt; F
@@ -3245,9 +3245,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="ComplOr" buggy="false" rewriterule="true">
+  <rule name="complor" buggy="false" rewriterule="true">
     <description>
-      ComplOr
+      complor
     </description>
     <CMP>
       a || ~a ~&gt; T
@@ -3300,91 +3300,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="DeMorganAnd" buggy="false" rewriterule="true">
+  <rule name="defequiv" buggy="false" rewriterule="true">
     <description>
-      DeMorganAnd
-    </description>
-    <CMP>
-      ~(a /\ b) ~&gt; ~a || ~b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMA>
-                <OMS cd="logic1" name="and"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="DeMorganOr" buggy="false" rewriterule="true">
-    <description>
-      DeMorganOr
-    </description>
-    <CMP>
-      ~(a || b) ~&gt; ~a /\ ~b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMA>
-                <OMS cd="logic1" name="or"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="DefEquiv" buggy="false" rewriterule="true">
-    <description>
-      DefEquiv
+      defequiv
     </description>
     <CMP>
       a &lt;-&gt; b ~&gt; a /\ b || ~a /\ ~b
@@ -3428,9 +3346,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="DefEquivImpls" buggy="false" rewriterule="true">
+  <rule name="defequivimpls" buggy="false" rewriterule="true">
     <description>
-      DefEquivImpls
+      defequivimpls
     </description>
     <group>
       Additional rules
@@ -3471,9 +3389,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="DefImpl" buggy="false" rewriterule="true">
+  <rule name="defimpl" buggy="false" rewriterule="true">
     <description>
-      DefImpl
+      defimpl
     </description>
     <CMP>
       a -&gt; b ~&gt; ~a || b
@@ -3506,9 +3424,91 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="EquivElim3" buggy="true" rewriterule="true">
+  <rule name="demorganand" buggy="false" rewriterule="true">
     <description>
-      EquivElim3
+      demorganand
+    </description>
+    <CMP>
+      ~(a /\ b) ~&gt; ~a || ~b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMA>
+                <OMS cd="logic1" name="and"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="demorganor" buggy="false" rewriterule="true">
+    <description>
+      demorganor
+    </description>
+    <CMP>
+      ~(a || b) ~&gt; ~a /\ ~b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMA>
+                <OMS cd="logic1" name="or"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="equivelim3" buggy="true" rewriterule="true">
+    <description>
+      equivelim3
     </description>
     <group>
       Common misconceptions
@@ -3544,9 +3544,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="EquivSame" buggy="false" rewriterule="true">
+  <rule name="equivsame" buggy="false" rewriterule="true">
     <description>
-      EquivSame
+      equivsame
     </description>
     <group>
       Additional rules
@@ -3574,9 +3574,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="FalseInEquiv" buggy="false" rewriterule="true">
+  <rule name="falseinequiv" buggy="false" rewriterule="true">
     <description>
-      FalseInEquiv
+      falseinequiv
     </description>
     <group>
       Additional rules
@@ -3632,9 +3632,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="FalseInImpl" buggy="false" rewriterule="true">
+  <rule name="falseinimpl" buggy="false" rewriterule="true">
     <description>
-      FalseInImpl
+      falseinimpl
     </description>
     <group>
       Additional rules
@@ -3687,9 +3687,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="FalseProp" buggy="true" rewriterule="true">
+  <rule name="falseprop" buggy="true" rewriterule="true">
     <description>
-      FalseProp
+      falseprop
     </description>
     <group>
       Common misconceptions
@@ -3783,9 +3783,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="FalseZeroAnd" buggy="false" rewriterule="true">
+  <rule name="falsezeroand" buggy="false" rewriterule="true">
     <description>
-      FalseZeroAnd
+      falsezeroand
     </description>
     <CMP>
       F /\ a ~&gt; F
@@ -3832,9 +3832,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="FalseZeroOr" buggy="false" rewriterule="true">
+  <rule name="falsezeroor" buggy="false" rewriterule="true">
     <description>
-      FalseZeroOr
+      falsezeroor
     </description>
     <CMP>
       F || a ~&gt; a
@@ -3881,32 +3881,32 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="GenAndOverOr" buggy="false" rewriterule="false">
+  <rule name="genandoveror" buggy="false" rewriterule="false">
     <description>
-      GenAndOverOr
+      genandoveror
     </description>
   </rule>
-  <rule name="GenDeMorganAnd" buggy="false" rewriterule="false">
+  <rule name="gendemorganand" buggy="false" rewriterule="false">
     <description>
-      GenDeMorganAnd
+      gendemorganand
     </description>
   </rule>
-  <rule name="GenDeMorganOr" buggy="false" rewriterule="false">
+  <rule name="gendemorganor" buggy="false" rewriterule="false">
     <description>
-      GenDeMorganOr
+      gendemorganor
     </description>
   </rule>
-  <rule name="GenOrOverAnd" buggy="false" rewriterule="false">
+  <rule name="genoroverand" buggy="false" rewriterule="false">
     <description>
-      GenOrOverAnd
+      genoroverand
     </description>
     <group>
       DistributionOrOverAnd
     </group>
   </rule>
-  <rule name="IdemEqui" buggy="true" rewriterule="true">
+  <rule name="idemequi" buggy="true" rewriterule="true">
     <description>
-      IdemEqui
+      idemequi
     </description>
     <group>
       Common misconceptions
@@ -3934,9 +3934,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="IdemImp" buggy="true" rewriterule="true">
+  <rule name="idemimp" buggy="true" rewriterule="true">
     <description>
-      IdemImp
+      idemimp
     </description>
     <group>
       Common misconceptions
@@ -3964,9 +3964,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="IdempAnd" buggy="false" rewriterule="true">
+  <rule name="idempand" buggy="false" rewriterule="true">
     <description>
-      IdempAnd
+      idempand
     </description>
     <CMP>
       a /\ a ~&gt; a
@@ -3991,9 +3991,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="IdempOr" buggy="false" rewriterule="true">
+  <rule name="idempor" buggy="false" rewriterule="true">
     <description>
-      IdempOr
+      idempor
     </description>
     <CMP>
       a || a ~&gt; a
@@ -4018,9 +4018,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="ImplSame" buggy="false" rewriterule="true">
+  <rule name="implsame" buggy="false" rewriterule="true">
     <description>
-      ImplSame
+      implsame
     </description>
     <group>
       Additional rules
@@ -4048,41 +4048,41 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="InvAndOverOr" buggy="false" rewriterule="false">
+  <rule name="invandoveror" buggy="false" rewriterule="false">
     <description>
-      InvAndOverOr
+      invandoveror
     </description>
     <group>
       InverseDistr
     </group>
   </rule>
-  <rule name="InvDeMorganAnd" buggy="false" rewriterule="false">
+  <rule name="invdemorganand" buggy="false" rewriterule="false">
     <description>
-      InvDeMorganAnd
+      invdemorganand
     </description>
     <group>
       InverseDeMorgan
     </group>
   </rule>
-  <rule name="InvDeMorganOr" buggy="false" rewriterule="false">
+  <rule name="invdemorganor" buggy="false" rewriterule="false">
     <description>
-      InvDeMorganOr
+      invdemorganor
     </description>
     <group>
       InverseDeMorgan
     </group>
   </rule>
-  <rule name="InvOrOverAnd" buggy="false" rewriterule="false">
+  <rule name="invoroverand" buggy="false" rewriterule="false">
     <description>
-      InvOrOverAnd
+      invoroverand
     </description>
     <group>
       InverseDistr
     </group>
   </rule>
-  <rule name="NotFalse" buggy="false" rewriterule="true">
+  <rule name="notfalse" buggy="false" rewriterule="true">
     <description>
-      NotFalse
+      notfalse
     </description>
     <CMP>
       ~F ~&gt; T
@@ -4100,9 +4100,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="NotNot" buggy="false" rewriterule="true">
+  <rule name="notnot" buggy="false" rewriterule="true">
     <description>
-      NotNot
+      notnot
     </description>
     <CMP>
       ~~a ~&gt; a
@@ -4129,9 +4129,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="NotTrue" buggy="false" rewriterule="true">
+  <rule name="nottrue" buggy="false" rewriterule="true">
     <description>
-      NotTrue
+      nottrue
     </description>
     <CMP>
       ~T ~&gt; F
@@ -4149,9 +4149,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="OrComplBuggy" buggy="true" rewriterule="true">
+  <rule name="orcomplbuggy" buggy="true" rewriterule="true">
     <description>
-      OrComplBuggy
+      orcomplbuggy
     </description>
     <group>
       Common misconceptions
@@ -4257,9 +4257,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="OrOverAnd" buggy="false" rewriterule="true">
+  <rule name="oroverand" buggy="false" rewriterule="true">
     <description>
-      OrOverAnd
+      oroverand
     </description>
     <group>
       DistributionOrOverAnd
@@ -4345,9 +4345,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="OrSame" buggy="true" rewriterule="true">
+  <rule name="orsame" buggy="true" rewriterule="true">
     <description>
-      OrSame
+      orsame
     </description>
     <group>
       Common misconceptions
@@ -4375,9 +4375,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="TrueInEquiv" buggy="false" rewriterule="true">
+  <rule name="trueinequiv" buggy="false" rewriterule="true">
     <description>
-      TrueInEquiv
+      trueinequiv
     </description>
     <group>
       Additional rules
@@ -4427,9 +4427,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="TrueInImpl" buggy="false" rewriterule="true">
+  <rule name="trueinimpl" buggy="false" rewriterule="true">
     <description>
-      TrueInImpl
+      trueinimpl
     </description>
     <group>
       Additional rules
@@ -4479,9 +4479,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="TrueProp" buggy="true" rewriterule="true">
+  <rule name="trueprop" buggy="true" rewriterule="true">
     <description>
-      TrueProp
+      trueprop
     </description>
     <group>
       Common misconceptions
@@ -4575,9 +4575,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="TrueZeroAnd" buggy="false" rewriterule="true">
+  <rule name="truezeroand" buggy="false" rewriterule="true">
     <description>
-      TrueZeroAnd
+      truezeroand
     </description>
     <CMP>
       T /\ a ~&gt; a
@@ -4624,9 +4624,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="TrueZeroOr" buggy="false" rewriterule="true">
+  <rule name="truezeroor" buggy="false" rewriterule="true">
     <description>
-      TrueZeroOr
+      truezeroor
     </description>
     <CMP>
       T || a ~&gt; T

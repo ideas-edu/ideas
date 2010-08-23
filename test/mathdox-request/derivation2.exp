@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="Scale">
+    <elem ruleid="scale">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="linalg2" name="matrix"/>
@@ -34,7 +34,7 @@
         <item name="columnJ" value="0"/>
       </context>
     </elem>
-    <elem ruleid="Add">
+    <elem ruleid="add">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="linalg2" name="matrix"/>
@@ -68,7 +68,7 @@
         <item name="columnJ" value="0"/>
       </context>
     </elem>
-    <elem ruleid="Scale">
+    <elem ruleid="scale">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="linalg2" name="matrix"/>
@@ -103,7 +103,7 @@
         <item name="covered" value="1"/>
       </context>
     </elem>
-    <elem ruleid="Add">
+    <elem ruleid="add">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="linalg2" name="matrix"/>

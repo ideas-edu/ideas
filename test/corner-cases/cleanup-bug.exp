@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.4 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="Scale">
+    <elem ruleid="scale">
       []
       <state>
         <prefix>

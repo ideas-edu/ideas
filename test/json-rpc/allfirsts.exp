@@ -1,7 +1,7 @@
 {
    "result": [
       [
-         "DeMorganOr",
+         "demorganor",
          "[]",
          [
             "logic.propositional.dnf",

@@ -20,7 +20,7 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Documentation.DefaultPage
-import Documentation.LatexRules
+import Documentation.RulePresenter
 import Service.BasicServices
 import Service.Diagnose
 import Service.DomainReasoner
@@ -91,7 +91,7 @@ exercisePage exampleFileExists pkg = do
              , text $ showBool $ r `elem` rs
              , text $ concat $ intersperse "," (ruleGroups r)
              , when (isRewriteRule r) $
-                  ruleToHTML r
+                  ruleToHTML (Some ex) r
              ]
    table ( [bold $ text "Rule name", bold $ text "Buggy"
            , bold $ text "Args" 
@@ -157,7 +157,7 @@ rulesPage ex = do
          $ ruleSiblings r] 
          ]
       when (isRewriteRule r) $ para $
-         ruleToHTML r
+         ruleToHTML (Some ex) r
 
       -- Examples
       let ys = M.findWithDefault [] (getId r) exampleMap

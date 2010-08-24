@@ -13,8 +13,9 @@ module Domain.RelationAlgebra.Rules where
 
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator()
-import Common.Transformation
+import Common.Transformation (Rule, addRuleToGroup, buggyRule)
 import Common.Rewriting
+import qualified Common.Transformation as Rule
 
 invRules :: [Rule RelAlg]
 invRules = [ ruleInvOverUnion, ruleInvOverIntersec, ruleInvOverComp
@@ -38,6 +39,12 @@ buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
                    , buggyRuleAssoc, buggyRuleInvOverComp, buggyRuleInvOverAdd
                    , buggyRuleCompOverIntersec, buggyRuleAddOverUnion, buggyRuleRemCompl
                    ]
+
+rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
+rule s = Rule.rule ("relationalgebra." ++ s)
+
+ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
+ruleList s = Rule.ruleList ("relationalgebra." ++ s)
                    
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
@@ -220,7 +227,8 @@ ruleRemRedunExprs = simplificationGroup "RemRedunExprs"
       
 -- Buggy rules:
 
-buggyGroup s = addRuleToGroup "Buggy" . buggyRule . ruleList s
+buggyGroup s = addRuleToGroup "Buggy" . buggyRule 
+             . Rule.ruleList ("relationalgebra.buggy." ++ s)
     
 buggyRuleIdemComp :: Rule RelAlg
 buggyRuleIdemComp = buggyGroup "IdemComp" 
@@ -233,7 +241,7 @@ buggyRuleIdemAdd = buggyGroup "IdemAdd"
    ]
 
 buggyRuleDeMorgan :: Rule RelAlg
-buggyRuleDeMorgan = buggyGroup "BuggyDeMorgan" 
+buggyRuleDeMorgan = buggyGroup "DeMorgan" 
     [ \q r -> Not (q :&&: r) :~> Not q :||: r
     , \q r -> Not (q :&&: r) :~> q :||: Not r
     , \q r -> Not (q :&&: r) :~> Not (Not q :||: Not r)
@@ -243,7 +251,7 @@ buggyRuleDeMorgan = buggyGroup "BuggyDeMorgan"
     ]
     
 buggyRuleNotOverAdd :: Rule RelAlg
-buggyRuleNotOverAdd = buggyGroup "BuggyNotOverAdd" 
+buggyRuleNotOverAdd = buggyGroup "NotOverAdd" 
      [ \q r -> Not (q :+: r) :~> Not q :+: Not r
      , \q r -> Not (q :+: r) :~> Not q :.: r
      , \q r -> Not (q :+: r) :~> Not q :+: r
@@ -251,7 +259,7 @@ buggyRuleNotOverAdd = buggyGroup "BuggyNotOverAdd"
      ]
      
 buggyRuleNotOverComp :: Rule RelAlg
-buggyRuleNotOverComp = buggyGroup "BuggyNotOverComp" 
+buggyRuleNotOverComp = buggyGroup "NotOverComp" 
      [ \q r -> Not (q :.: r) :~> Not q :.: Not r
      , \q r -> Not (q :.: r) :~> Not q :.: r
      , \q r -> Not (q :.: r) :~> Not q :+: r
@@ -259,7 +267,7 @@ buggyRuleNotOverComp = buggyGroup "BuggyNotOverComp"
      ]
      
 buggyRuleParenth :: Rule RelAlg
-buggyRuleParenth = buggyGroup "BuggyParenth" 
+buggyRuleParenth = buggyGroup "Parenth" 
     [ \q r -> Not (q :&&: r)     :~> Not q :&&: r
     , \q r -> Not (q :||: r)     :~> Not q :||: r
     , \q r -> Not (Not q :&&: r) :~> q :&&: r 
@@ -275,7 +283,7 @@ buggyRuleParenth = buggyGroup "BuggyParenth"
     ]
     
 buggyRuleAssoc :: Rule RelAlg
-buggyRuleAssoc = buggyGroup "BuggyAssoc"  
+buggyRuleAssoc = buggyGroup "Assoc"  
     [ \q r s -> q :||: (r :&&: s) :~> (q :||: r) :&&: s
     , \q r s -> (q :||: r) :&&: s :~> q :||: (r :&&: s)
     , \q r s -> (q :&&: r) :||: s :~> q :&&: (r :||: s)
@@ -291,28 +299,28 @@ buggyRuleAssoc = buggyGroup "BuggyAssoc"
     ]
 
 buggyRuleInvOverComp :: Rule RelAlg
-buggyRuleInvOverComp = buggyGroup "BuggyInvOverComp"
+buggyRuleInvOverComp = buggyGroup "InvOverComp"
    [ \r s -> Inv (r :.: s) :~> Inv r :.: Inv s
    ]
 
 buggyRuleInvOverAdd :: Rule RelAlg
-buggyRuleInvOverAdd = buggyGroup "BuggyInvOverAdd"
+buggyRuleInvOverAdd = buggyGroup "InvOverAdd"
    [ \r s -> Inv (r :+: s) :~> Inv r :+: Inv s
    ]
    
 buggyRuleCompOverIntersec :: Rule RelAlg
-buggyRuleCompOverIntersec = buggyGroup "BuggyCompOverIntersec" 
+buggyRuleCompOverIntersec = buggyGroup "CompOverIntersec" 
    [ \q r s -> q :.: (r :&&: s) :~> (q :.: r) :&&: (q :.: s)  --alleen toegestaan als q een functie is!
    , \q r s -> (q :&&: r) :.: s :~> (q :.: s) :&&: (r :.: s)  --idem
    ]
 buggyRuleAddOverUnion :: Rule RelAlg
-buggyRuleAddOverUnion = buggyGroup "BuggyAddOverUnion" 
+buggyRuleAddOverUnion = buggyGroup "AddOverUnion" 
    [ \q r s -> q :+: (r :||: s) :~> (q :+: r) :||: (q :+: s) --alleen toegestaan als q een functie is!
    , \q r s -> (q :||: r) :+: s :~> (q :+: s) :||: (r :+: s) --idem
    ]
    
 buggyRuleRemCompl :: Rule RelAlg
-buggyRuleRemCompl = buggyGroup "BuggyRemCompl" 
+buggyRuleRemCompl = buggyGroup "RemCompl" 
    [ \r -> r :&&: Not r :~> V
    , \r -> Not r :&&: r :~> V
    , \r -> r :||: Not r :~> empty

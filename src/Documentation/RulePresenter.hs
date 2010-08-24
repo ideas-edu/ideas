@@ -73,14 +73,19 @@ specialSymbol :: Symbol -> [Term] -> Maybe [Either String Term]
 specialSymbol s [] 
    | s == newSymbol "logic1.true"  = con "T"
    | s == newSymbol "logic1.false" = con "F"
+   | s == newSymbol "relalg.universe" = con "V" -- universe
+   | s == newSymbol "relalg.ident"    = con "I" -- identity
  where
    con s = return [Left s]
 -- unary symbols
 specialSymbol s [a]
    | s == newSymbol "logic1.not"         = pre "\172" -- "~"
    | s == newSymbol "arith1.unary_minus" = pre "-"
+   | s == newSymbol "relalg.not" = post "\x203E"
+   | s == newSymbol "relalg.inv" = post "~"
  where
-   pre s = return [Left s, Right a]
+   pre s  = return [Left s, Right a]
+   post s = return [Right a, Left s]
 -- binary symbols
 specialSymbol s [a, b]
    | s == newSymbol "logic1.or"         = bin " \8744 " -- "||"
@@ -92,6 +97,10 @@ specialSymbol s [a, b]
    | s == newSymbol "arith1.minus"      = bin "-"
    | s == newSymbol "arith1.power"      = bin "^"
    | s == newSymbol "arith1.times"      = bin "\x00B7" -- "*"
+   | s == newSymbol "relalg.conj"       = bin " \x2229 " -- intersect
+   | s == newSymbol "relalg.disj"       = bin " \x222A " -- union
+   | s == newSymbol "relalg.comp"       = bin " ; " -- composition
+   | s == newSymbol "relalg.add"       = bin " \x2020 " -- relative addition/dagger
  where
    bin s = return [Right a, Left s, Right b]
 specialSymbol _ _ = Nothing
@@ -99,4 +108,5 @@ specialSymbol _ _ = Nothing
 showMeta :: Exercise a -> Int -> String
 showMeta ex n
    | safeHead (qualifiers ex) == Just "logic" = [ [c] | c <- ['p'..] ] !! n
+   | safeHead (qualifiers ex) == Just "relationalgebra" = [ [c] | c <- ['r'..] ] !! n
    | otherwise = [ [c] | c <- ['a'..] ] !! n

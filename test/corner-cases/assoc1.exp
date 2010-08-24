@@ -1,7 +1,7 @@
 {
    "result": [
-      "commor",
-      "idempor"
+      "logic.propositional.commor",
+      "logic.propositional.idempor"
    ],
    "error": null,
    "id": 421,

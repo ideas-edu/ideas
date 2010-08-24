@@ -1,342 +1,342 @@
 {
    "result": [
       {
-         "name": "absorpand",
+         "name": "logic.propositional.absorpand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "absorpor",
+         "name": "logic.propositional.absorpor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "andcomplbuggy",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "andoveror",
+         "name": "logic.propositional.andoveror",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "andsame",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "assimp",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "assocand",
+         "name": "logic.propositional.assocand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "assocor",
+         "name": "logic.propositional.assocor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "buggyabsor",
+         "name": "logic.propositional.buggy.absor",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyassoc",
+         "name": "logic.propositional.buggy.andcompl",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydemorgan1",
+         "name": "logic.propositional.buggy.andsame",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydemorgan2",
+         "name": "logic.propositional.buggy.assimp",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydemorgan3",
+         "name": "logic.propositional.buggy.assoc",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydemorgan4",
+         "name": "logic.propositional.buggy.commimp",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydemorgan5",
+         "name": "logic.propositional.buggy.demorgan1",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydistr",
+         "name": "logic.propositional.buggy.demorgan2",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggydistrnot",
+         "name": "logic.propositional.buggy.demorgan3",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyequivelim1",
+         "name": "logic.propositional.buggy.demorgan4",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyequivelim2",
+         "name": "logic.propositional.buggy.demorgan5",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyimplelim",
+         "name": "logic.propositional.buggy.distr",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyimplelim1",
+         "name": "logic.propositional.buggy.distrnot",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyimplelim2",
+         "name": "logic.propositional.buggy.equivelim1",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggynotoverimpl",
+         "name": "logic.propositional.buggy.equivelim2",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyparenth1",
+         "name": "logic.propositional.buggy.equivelim3",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyparenth2",
+         "name": "logic.propositional.buggy.falseprop",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "buggyparenth3",
+         "name": "logic.propositional.buggy.idemequi",
          "buggy": true,
          "rewriterule": true
       },
       {
-         "name": "command",
+         "name": "logic.propositional.buggy.idemimp",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.implelim",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.implelim1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.implelim2",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.notoverimpl",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.orcompl",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.orsame",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.parenth1",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.parenth2",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.parenth3",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.buggy.trueprop",
+         "buggy": true,
+         "rewriterule": true
+      },
+      {
+         "name": "logic.propositional.command",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "commequiv",
+         "name": "logic.propositional.commequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "commimp",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "commor",
+         "name": "logic.propositional.commor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "compland",
+         "name": "logic.propositional.compland",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "complor",
+         "name": "logic.propositional.complor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "defequiv",
+         "name": "logic.propositional.defequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "defequivimpls",
+         "name": "logic.propositional.defequivimpls",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "defimpl",
+         "name": "logic.propositional.defimpl",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "demorganand",
+         "name": "logic.propositional.demorganand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "demorganor",
+         "name": "logic.propositional.demorganor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "equivelim3",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "equivsame",
+         "name": "logic.propositional.equivsame",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "falseinequiv",
+         "name": "logic.propositional.falseinequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "falseinimpl",
+         "name": "logic.propositional.falseinimpl",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "falseprop",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "falsezeroand",
+         "name": "logic.propositional.falsezeroand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "falsezeroor",
+         "name": "logic.propositional.falsezeroor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "genandoveror",
+         "name": "logic.propositional.genandoveror",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "gendemorganand",
+         "name": "logic.propositional.gendemorganand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "gendemorganor",
+         "name": "logic.propositional.gendemorganor",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "genoroverand",
+         "name": "logic.propositional.genoroverand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "idemequi",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "idemimp",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "idempand",
+         "name": "logic.propositional.idempand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "idempor",
+         "name": "logic.propositional.idempor",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "implsame",
+         "name": "logic.propositional.implsame",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "invandoveror",
+         "name": "logic.propositional.invandoveror",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "invdemorganand",
+         "name": "logic.propositional.invdemorganand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "invdemorganor",
+         "name": "logic.propositional.invdemorganor",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "invoroverand",
+         "name": "logic.propositional.invoroverand",
          "buggy": false,
          "rewriterule": false
       },
       {
-         "name": "notfalse",
+         "name": "logic.propositional.notfalse",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "notnot",
+         "name": "logic.propositional.notnot",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "nottrue",
+         "name": "logic.propositional.nottrue",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "orcomplbuggy",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "oroverand",
+         "name": "logic.propositional.oroverand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "orsame",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "trueinequiv",
+         "name": "logic.propositional.trueinequiv",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "trueinimpl",
+         "name": "logic.propositional.trueinimpl",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "trueprop",
-         "buggy": true,
-         "rewriterule": true
-      },
-      {
-         "name": "truezeroand",
+         "name": "logic.propositional.truezeroand",
          "buggy": false,
          "rewriterule": true
       },
       {
-         "name": "truezeroor",
+         "name": "logic.propositional.truezeroor",
          "buggy": false,
          "rewriterule": true
       }

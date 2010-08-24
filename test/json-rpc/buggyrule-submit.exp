@@ -2,7 +2,7 @@
    "result": {
       "result": "Buggy",
       "rules": [
-         "buggydemorgan1"
+         "logic.propositional.buggy.demorgan1"
       ]
    },
    "error": null,

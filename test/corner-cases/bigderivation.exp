@@ -1,83 +1,83 @@
 {
    "result": [
       [
-         "defequiv",
+         "logic.propositional.defequiv",
          "((r /\\ p) || (~r /\\ ~p) || (q -> s)) /\\ (~s <-> (p || r))"
       ],
       [
-         "defequiv",
+         "logic.propositional.defequiv",
          "((r /\\ p) || (~r /\\ ~p) || (q -> s)) /\\ ((~s /\\ (p || r)) || (~~s /\\ ~(p || r)))"
       ],
       [
-         "notnot",
+         "logic.propositional.notnot",
          "((r /\\ p) || (~r /\\ ~p) || (q -> s)) /\\ ((~s /\\ (p || r)) || (s /\\ ~(p || r)))"
       ],
       [
-         "defimpl",
+         "logic.propositional.defimpl",
          "((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ((~s /\\ (p || r)) || (s /\\ ~(p || r)))"
       ],
       [
-         "demorganor",
+         "logic.propositional.demorganor",
          "((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ((~s /\\ (p || r)) || (s /\\ ~p /\\ ~r))"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ (p || r)) || (((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ s /\\ ~p /\\ ~r)"
       ],
       [
-         "absorpand",
+         "logic.propositional.absorpand",
          "(((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ (p || r)) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ p) || (((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(r /\\ p /\\ ~s /\\ p) || (((~r /\\ ~p) || ~q || s) /\\ ~s /\\ p) || (((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || ((~q || s) /\\ ~s /\\ p) || (((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (s /\\ ~s /\\ p) || (((r /\\ p) || (~r /\\ ~p) || ~q || s) /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (s /\\ ~s /\\ p) || (r /\\ p /\\ ~s /\\ r) || (((~r /\\ ~p) || ~q || s) /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (s /\\ ~s /\\ p) || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || ((~q || s) /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "andoveror",
+         "logic.propositional.andoveror",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (s /\\ ~s /\\ p) || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || (s /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "compland",
+         "logic.propositional.compland",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (F /\\ p) || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || (s /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "compland",
+         "logic.propositional.compland",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (F /\\ p) || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || (F /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "falsezeroand",
+         "logic.propositional.falsezeroand",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || F || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || (F /\\ r) || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "falsezeroand",
+         "logic.propositional.falsezeroand",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || F || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || F || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "falsezeroor",
+         "logic.propositional.falsezeroor",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || F || (s /\\ ~p /\\ ~r)"
       ],
       [
-         "falsezeroor",
+         "logic.propositional.falsezeroor",
          "(r /\\ p /\\ ~s /\\ p) || (~r /\\ ~p /\\ ~s /\\ p) || (~q /\\ ~s /\\ p) || (r /\\ p /\\ ~s /\\ r) || (~r /\\ ~p /\\ ~s /\\ r) || (~q /\\ ~s /\\ r) || (s /\\ ~p /\\ ~r)"
       ]
    ],

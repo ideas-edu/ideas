@@ -22,7 +22,8 @@ module Domain.Logic.GeneralizedRules
 -- Note: the generalized rules do not take AC-unification into account,
 -- and perhaps they should.
 import Domain.Logic.Formula
-import Common.Transformation
+import Common.Transformation (Rule)
+import qualified Common.Transformation as Rule
 import Control.Monad
 
 generalRules :: [Rule SLogic]
@@ -36,6 +37,9 @@ inverseRules =
    [ inverseDeMorganOr, inverseDeMorganAnd
    , inverseAndOverOr, inverseOrOverAnd
    ]
+
+makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
+makeSimpleRule s = Rule.makeSimpleRule ("logic.propositional." ++ s)
 
 -----------------------------------------------------------------------------
 -- Inverse rules

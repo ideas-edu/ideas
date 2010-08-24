@@ -1,7 +1,7 @@
 <reply result="ok" version="0.6.5 (0)">
-  <rule name="absorpand" buggy="false" rewriterule="true">
+  <rule name="logic.propositional.absorpand" buggy="false" rewriterule="true">
     <description>
-      absorpand
+      logic.propositional.absorpand
     </description>
     <CMP>
       a /\ (a || b) ~&gt; a
@@ -112,9 +112,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="absorpor" buggy="false" rewriterule="true">
+  <rule name="logic.propositional.absorpor" buggy="false" rewriterule="true">
     <description>
-      absorpor
+      logic.propositional.absorpor
     </description>
     <CMP>
       a || a /\ b ~&gt; a
@@ -225,117 +225,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="andcomplbuggy" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.andoveror" buggy="false" rewriterule="true">
     <description>
-      andcomplbuggy
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a /\ ~a /~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      ~a /\ a /~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a /\ ~a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      ~a /\ a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="andoveror" buggy="false" rewriterule="true">
-    <description>
-      andoveror
+      logic.propositional.andoveror
     </description>
     <CMP>
       a /\ (b || c) ~&gt; a /\ b || a /\ c
@@ -418,119 +310,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="andsame" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.assocand" buggy="false" rewriterule="true">
     <description>
-      andsame
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a /\ a /~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="assimp" buggy="true" rewriterule="true">
-    <description>
-      assimp
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a -&gt; b -&gt; c /~&gt; (a -&gt; b) -&gt; c
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-            <OMV name="$2"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="implies"/>
-                <OMV name="$1"/>
-                <OMV name="$2"/>
-              </OMA>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMA>
-                <OMS cd="logic1" name="implies"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-              <OMV name="$2"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      (a -&gt; b) -&gt; c /~&gt; a -&gt; b -&gt; c
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-            <OMV name="$2"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMA>
-                <OMS cd="logic1" name="implies"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-              <OMV name="$2"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="implies"/>
-                <OMV name="$1"/>
-                <OMV name="$2"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="assocand" buggy="false" rewriterule="true">
-    <description>
-      assocand
+      logic.propositional.assocand
     </description>
     <group>
       Associativity
@@ -572,9 +354,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="assocor" buggy="false" rewriterule="true">
+  <rule name="logic.propositional.assocor" buggy="false" rewriterule="true">
     <description>
-      assocor
+      logic.propositional.assocor
     </description>
     <group>
       Associativity
@@ -616,9 +398,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyabsor" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.absor" buggy="true" rewriterule="true">
     <description>
-      buggyabsor
+      logic.propositional.buggy.absor
     </description>
     <group>
       Common misconceptions
@@ -784,9 +566,227 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyassoc" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.andcompl" buggy="true" rewriterule="true">
     <description>
-      buggyassoc
+      logic.propositional.buggy.andcompl
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a /\ ~a /~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      ~a /\ a /~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a /\ ~a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      ~a /\ a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.andsame" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.andsame
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a /\ a /~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.assimp" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.assimp
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a -&gt; b -&gt; c /~&gt; (a -&gt; b) -&gt; c
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="implies"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMA>
+                <OMS cd="logic1" name="implies"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      (a -&gt; b) -&gt; c /~&gt; a -&gt; b -&gt; c
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMA>
+                <OMS cd="logic1" name="implies"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="implies"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.assoc" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.assoc
     </description>
     <group>
       Common misconceptions
@@ -936,9 +936,44 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydemorgan1" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.commimp" buggy="true" rewriterule="true">
     <description>
-      buggydemorgan1
+      logic.propositional.buggy.commimp
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a -&gt; b /~&gt; b -&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.demorgan1" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.demorgan1
     </description>
     <group>
       Common misconceptions
@@ -1136,9 +1171,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydemorgan2" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.demorgan2" buggy="true" rewriterule="true">
     <description>
-      buggydemorgan2
+      logic.propositional.buggy.demorgan2
     </description>
     <group>
       Common misconceptions
@@ -1222,9 +1257,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydemorgan3" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.demorgan3" buggy="true" rewriterule="true">
     <description>
-      buggydemorgan3
+      logic.propositional.buggy.demorgan3
     </description>
     <group>
       Common misconceptions
@@ -1266,9 +1301,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydemorgan4" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.demorgan4" buggy="true" rewriterule="true">
     <description>
-      buggydemorgan4
+      logic.propositional.buggy.demorgan4
     </description>
     <group>
       Common misconceptions
@@ -1310,9 +1345,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydemorgan5" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.demorgan5" buggy="true" rewriterule="true">
     <description>
-      buggydemorgan5
+      logic.propositional.buggy.demorgan5
     </description>
     <group>
       Common misconceptions
@@ -1522,9 +1557,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydistr" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.distr" buggy="true" rewriterule="true">
     <description>
-      buggydistr
+      logic.propositional.buggy.distr
     </description>
     <group>
       Common misconceptions
@@ -1850,9 +1885,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggydistrnot" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.distrnot" buggy="true" rewriterule="true">
     <description>
-      buggydistrnot
+      logic.propositional.buggy.distrnot
     </description>
     <group>
       Common misconceptions
@@ -2226,9 +2261,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyequivelim1" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.equivelim1" buggy="true" rewriterule="true">
     <description>
-      buggyequivelim1
+      logic.propositional.buggy.equivelim1
     </description>
     <group>
       Common misconceptions
@@ -2424,9 +2459,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyequivelim2" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.equivelim2" buggy="true" rewriterule="true">
     <description>
-      buggyequivelim2
+      logic.propositional.buggy.equivelim2
     </description>
     <group>
       Common misconceptions
@@ -2555,9 +2590,203 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyimplelim" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.equivelim3" buggy="true" rewriterule="true">
     <description>
-      buggyimplelim
+      logic.propositional.buggy.equivelim3
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a &lt;-&gt; b /~&gt; ~a || b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.falseprop" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.falseprop
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a || F /~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      F || a /~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a /\ F /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      F /\ a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.idemequi" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.idemequi
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a &lt;-&gt; a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.idemimp" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.idemimp
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a -&gt; a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.implelim" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.implelim
     </description>
     <group>
       Common misconceptions
@@ -2650,9 +2879,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyimplelim1" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.implelim1" buggy="true" rewriterule="true">
     <description>
-      buggyimplelim1
+      logic.propositional.buggy.implelim1
     </description>
     <group>
       Common misconceptions
@@ -2688,9 +2917,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyimplelim2" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.implelim2" buggy="true" rewriterule="true">
     <description>
-      buggyimplelim2
+      logic.propositional.buggy.implelim2
     </description>
     <group>
       Common misconceptions
@@ -2737,9 +2966,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggynotoverimpl" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.notoverimpl" buggy="true" rewriterule="true">
     <description>
-      buggynotoverimpl
+      logic.propositional.buggy.notoverimpl
     </description>
     <group>
       Common misconceptions
@@ -2781,9 +3010,147 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyparenth1" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.orcompl" buggy="true" rewriterule="true">
     <description>
-      buggyparenth1
+      logic.propositional.buggy.orcompl
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a || ~a /~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      ~a || a /~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a || ~a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      ~a || a /~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.orsame" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.orsame
+    </description>
+    <group>
+      Common misconceptions
+    </group>
+    <CMP>
+      a || a /~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="exists"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="neq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.buggy.parenth1" buggy="true" rewriterule="true">
+    <description>
+      logic.propositional.buggy.parenth1
     </description>
     <group>
       Common misconceptions
@@ -2855,9 +3222,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyparenth2" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.parenth2" buggy="true" rewriterule="true">
     <description>
-      buggyparenth2
+      logic.propositional.buggy.parenth2
     </description>
     <group>
       Common misconceptions
@@ -2910,9 +3277,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="buggyparenth3" buggy="true" rewriterule="true">
+  <rule name="logic.propositional.buggy.parenth3" buggy="true" rewriterule="true">
     <description>
-      buggyparenth3
+      logic.propositional.buggy.parenth3
     </description>
     <group>
       Common misconceptions
@@ -3050,1438 +3417,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="command" buggy="false" rewriterule="true">
+  <rule name="logic.propositional.buggy.trueprop" buggy="true" rewriterule="true">
     <description>
-      command
-    </description>
-    <group>
-      Commutativity
-    </group>
-    <CMP>
-      a /\ b ~&gt; b /\ a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$1"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="commequiv" buggy="false" rewriterule="true">
-    <description>
-      commequiv
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      a &lt;-&gt; b ~&gt; b &lt;-&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$1"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="commimp" buggy="true" rewriterule="true">
-    <description>
-      commimp
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a -&gt; b /~&gt; b -&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$1"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="commor" buggy="false" rewriterule="true">
-    <description>
-      commor
-    </description>
-    <group>
-      Commutativity
-    </group>
-    <CMP>
-      a || b ~&gt; b || a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$1"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="compland" buggy="false" rewriterule="true">
-    <description>
-      compland
-    </description>
-    <CMP>
-      a /\ ~a ~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      ~a /\ a ~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="complor" buggy="false" rewriterule="true">
-    <description>
-      complor
-    </description>
-    <CMP>
-      a || ~a ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      ~a || a ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="defequiv" buggy="false" rewriterule="true">
-    <description>
-      defequiv
-    </description>
-    <CMP>
-      a &lt;-&gt; b ~&gt; a /\ b || ~a /\ ~b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="and"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="and"/>
-                <OMA>
-                  <OMS cd="logic1" name="not"/>
-                  <OMV name="$0"/>
-                </OMA>
-                <OMA>
-                  <OMS cd="logic1" name="not"/>
-                  <OMV name="$1"/>
-                </OMA>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="defequivimpls" buggy="false" rewriterule="true">
-    <description>
-      defequivimpls
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      a &lt;-&gt; b ~&gt; a -&gt; b /\ b -&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="implies"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="implies"/>
-                <OMV name="$1"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="defimpl" buggy="false" rewriterule="true">
-    <description>
-      defimpl
-    </description>
-    <CMP>
-      a -&gt; b ~&gt; ~a || b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$1"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="demorganand" buggy="false" rewriterule="true">
-    <description>
-      demorganand
-    </description>
-    <CMP>
-      ~(a /\ b) ~&gt; ~a || ~b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMA>
-                <OMS cd="logic1" name="and"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="demorganor" buggy="false" rewriterule="true">
-    <description>
-      demorganor
-    </description>
-    <CMP>
-      ~(a || b) ~&gt; ~a /\ ~b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMA>
-                <OMS cd="logic1" name="or"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$1"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="equivelim3" buggy="true" rewriterule="true">
-    <description>
-      equivelim3
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a &lt;-&gt; b /~&gt; ~a || b
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMV name="$1"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$1"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="equivsame" buggy="false" rewriterule="true">
-    <description>
-      equivsame
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      a &lt;-&gt; a ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="falseinequiv" buggy="false" rewriterule="true">
-    <description>
-      falseinequiv
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      F &lt;-&gt; a ~&gt; ~a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a &lt;-&gt; F ~&gt; ~a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="falseinimpl" buggy="false" rewriterule="true">
-    <description>
-      falseinimpl
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      F -&gt; a ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a -&gt; F ~&gt; ~a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMV name="$0"/>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="falseprop" buggy="true" rewriterule="true">
-    <description>
-      falseprop
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a || F /~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      F || a /~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a /\ F /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      F /\ a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="falsezeroand" buggy="false" rewriterule="true">
-    <description>
-      falsezeroand
-    </description>
-    <CMP>
-      F /\ a ~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a /\ F ~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="falsezeroor" buggy="false" rewriterule="true">
-    <description>
-      falsezeroor
-    </description>
-    <CMP>
-      F || a ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMS cd="logic1" name="false"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a || F ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="false"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="genandoveror" buggy="false" rewriterule="false">
-    <description>
-      genandoveror
-    </description>
-  </rule>
-  <rule name="gendemorganand" buggy="false" rewriterule="false">
-    <description>
-      gendemorganand
-    </description>
-  </rule>
-  <rule name="gendemorganor" buggy="false" rewriterule="false">
-    <description>
-      gendemorganor
-    </description>
-  </rule>
-  <rule name="genoroverand" buggy="false" rewriterule="false">
-    <description>
-      genoroverand
-    </description>
-    <group>
-      DistributionOrOverAnd
-    </group>
-  </rule>
-  <rule name="idemequi" buggy="true" rewriterule="true">
-    <description>
-      idemequi
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a &lt;-&gt; a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="idemimp" buggy="true" rewriterule="true">
-    <description>
-      idemimp
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a -&gt; a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="idempand" buggy="false" rewriterule="true">
-    <description>
-      idempand
-    </description>
-    <CMP>
-      a /\ a ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="idempor" buggy="false" rewriterule="true">
-    <description>
-      idempor
-    </description>
-    <CMP>
-      a || a ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="implsame" buggy="false" rewriterule="true">
-    <description>
-      implsame
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      a -&gt; a ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="invandoveror" buggy="false" rewriterule="false">
-    <description>
-      invandoveror
-    </description>
-    <group>
-      InverseDistr
-    </group>
-  </rule>
-  <rule name="invdemorganand" buggy="false" rewriterule="false">
-    <description>
-      invdemorganand
-    </description>
-    <group>
-      InverseDeMorgan
-    </group>
-  </rule>
-  <rule name="invdemorganor" buggy="false" rewriterule="false">
-    <description>
-      invdemorganor
-    </description>
-    <group>
-      InverseDeMorgan
-    </group>
-  </rule>
-  <rule name="invoroverand" buggy="false" rewriterule="false">
-    <description>
-      invoroverand
-    </description>
-    <group>
-      InverseDistr
-    </group>
-  </rule>
-  <rule name="notfalse" buggy="false" rewriterule="true">
-    <description>
-      notfalse
-    </description>
-    <CMP>
-      ~F ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMA>
-          <OMS cd="relation1" name="eq"/>
-          <OMA>
-            <OMS cd="logic1" name="not"/>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-          <OMS cd="logic1" name="true"/>
-        </OMA>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="notnot" buggy="false" rewriterule="true">
-    <description>
-      notnot
-    </description>
-    <CMP>
-      ~~a ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="not"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="nottrue" buggy="false" rewriterule="true">
-    <description>
-      nottrue
-    </description>
-    <CMP>
-      ~T ~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMA>
-          <OMS cd="relation1" name="eq"/>
-          <OMA>
-            <OMS cd="logic1" name="not"/>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-          <OMS cd="logic1" name="false"/>
-        </OMA>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="orcomplbuggy" buggy="true" rewriterule="true">
-    <description>
-      orcomplbuggy
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a || ~a /~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      ~a || a /~&gt; F
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="false"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a || ~a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      ~a || a /~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="not"/>
-                <OMV name="$0"/>
-              </OMA>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="oroverand" buggy="false" rewriterule="true">
-    <description>
-      oroverand
-    </description>
-    <group>
-      DistributionOrOverAnd
-    </group>
-    <CMP>
-      a || b /\ c ~&gt; (a || b) /\ (a || c)
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-            <OMV name="$2"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMA>
-                <OMS cd="logic1" name="and"/>
-                <OMV name="$1"/>
-                <OMV name="$2"/>
-              </OMA>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="or"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="or"/>
-                <OMV name="$0"/>
-                <OMV name="$2"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a /\ b || c ~&gt; (a || c) /\ (b || c)
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-            <OMV name="$1"/>
-            <OMV name="$2"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMA>
-                <OMS cd="logic1" name="and"/>
-                <OMV name="$0"/>
-                <OMV name="$1"/>
-              </OMA>
-              <OMV name="$2"/>
-            </OMA>
-            <OMA>
-              <OMS cd="logic1" name="and"/>
-              <OMA>
-                <OMS cd="logic1" name="or"/>
-                <OMV name="$0"/>
-                <OMV name="$2"/>
-              </OMA>
-              <OMA>
-                <OMS cd="logic1" name="or"/>
-                <OMV name="$1"/>
-                <OMV name="$2"/>
-              </OMA>
-            </OMA>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="orsame" buggy="true" rewriterule="true">
-    <description>
-      orsame
-    </description>
-    <group>
-      Common misconceptions
-    </group>
-    <CMP>
-      a || a /~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="exists"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="neq"/>
-            <OMA>
-              <OMS cd="logic1" name="or"/>
-              <OMV name="$0"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="trueinequiv" buggy="false" rewriterule="true">
-    <description>
-      trueinequiv
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      T &lt;-&gt; a ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMS cd="logic1" name="true"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a &lt;-&gt; T ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="equivalent"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="true"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="trueinimpl" buggy="false" rewriterule="true">
-    <description>
-      trueinimpl
-    </description>
-    <group>
-      Additional rules
-    </group>
-    <CMP>
-      T -&gt; a ~&gt; a
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMS cd="logic1" name="true"/>
-              <OMV name="$0"/>
-            </OMA>
-            <OMV name="$0"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-    <CMP>
-      a -&gt; T ~&gt; T
-    </CMP>
-    <FMP>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMBIND>
-          <OMS cd="quant1" name="forall"/>
-          <OMBVAR>
-            <OMV name="$0"/>
-          </OMBVAR>
-          <OMA>
-            <OMS cd="relation1" name="eq"/>
-            <OMA>
-              <OMS cd="logic1" name="implies"/>
-              <OMV name="$0"/>
-              <OMS cd="logic1" name="true"/>
-            </OMA>
-            <OMS cd="logic1" name="true"/>
-          </OMA>
-        </OMBIND>
-      </OMOBJ>
-    </FMP>
-  </rule>
-  <rule name="trueprop" buggy="true" rewriterule="true">
-    <description>
-      trueprop
+      logic.propositional.buggy.trueprop
     </description>
     <group>
       Common misconceptions
@@ -4575,9 +3513,1071 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="truezeroand" buggy="false" rewriterule="true">
+  <rule name="logic.propositional.command" buggy="false" rewriterule="true">
     <description>
-      truezeroand
+      logic.propositional.command
+    </description>
+    <group>
+      Commutativity
+    </group>
+    <CMP>
+      a /\ b ~&gt; b /\ a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.commequiv" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.commequiv
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      a &lt;-&gt; b ~&gt; b &lt;-&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.commor" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.commor
+    </description>
+    <group>
+      Commutativity
+    </group>
+    <CMP>
+      a || b ~&gt; b || a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$1"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.compland" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.compland
+    </description>
+    <CMP>
+      a /\ ~a ~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      ~a /\ a ~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.complor" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.complor
+    </description>
+    <CMP>
+      a || ~a ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      ~a || a ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.defequiv" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.defequiv
+    </description>
+    <CMP>
+      a &lt;-&gt; b ~&gt; a /\ b || ~a /\ ~b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="and"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="and"/>
+                <OMA>
+                  <OMS cd="logic1" name="not"/>
+                  <OMV name="$0"/>
+                </OMA>
+                <OMA>
+                  <OMS cd="logic1" name="not"/>
+                  <OMV name="$1"/>
+                </OMA>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.defequivimpls" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.defequivimpls
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      a &lt;-&gt; b ~&gt; a -&gt; b /\ b -&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="implies"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="implies"/>
+                <OMV name="$1"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.defimpl" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.defimpl
+    </description>
+    <CMP>
+      a -&gt; b ~&gt; ~a || b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMV name="$1"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMV name="$1"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.demorganand" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.demorganand
+    </description>
+    <CMP>
+      ~(a /\ b) ~&gt; ~a || ~b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMA>
+                <OMS cd="logic1" name="and"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.demorganor" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.demorganor
+    </description>
+    <CMP>
+      ~(a || b) ~&gt; ~a /\ ~b
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMA>
+                <OMS cd="logic1" name="or"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$1"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.equivsame" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.equivsame
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      a &lt;-&gt; a ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.falseinequiv" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.falseinequiv
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      F &lt;-&gt; a ~&gt; ~a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a &lt;-&gt; F ~&gt; ~a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.falseinimpl" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.falseinimpl
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      F -&gt; a ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a -&gt; F ~&gt; ~a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMV name="$0"/>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.falsezeroand" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.falsezeroand
+    </description>
+    <CMP>
+      F /\ a ~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a /\ F ~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.falsezeroor" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.falsezeroor
+    </description>
+    <CMP>
+      F || a ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMS cd="logic1" name="false"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a || F ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="false"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.genandoveror" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.genandoveror
+    </description>
+  </rule>
+  <rule name="logic.propositional.gendemorganand" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.gendemorganand
+    </description>
+  </rule>
+  <rule name="logic.propositional.gendemorganor" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.gendemorganor
+    </description>
+  </rule>
+  <rule name="logic.propositional.genoroverand" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.genoroverand
+    </description>
+    <group>
+      DistributionOrOverAnd
+    </group>
+  </rule>
+  <rule name="logic.propositional.idempand" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.idempand
+    </description>
+    <CMP>
+      a /\ a ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.idempor" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.idempor
+    </description>
+    <CMP>
+      a || a ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.implsame" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.implsame
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      a -&gt; a ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.invandoveror" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.invandoveror
+    </description>
+    <group>
+      InverseDistr
+    </group>
+  </rule>
+  <rule name="logic.propositional.invdemorganand" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.invdemorganand
+    </description>
+    <group>
+      InverseDeMorgan
+    </group>
+  </rule>
+  <rule name="logic.propositional.invdemorganor" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.invdemorganor
+    </description>
+    <group>
+      InverseDeMorgan
+    </group>
+  </rule>
+  <rule name="logic.propositional.invoroverand" buggy="false" rewriterule="false">
+    <description>
+      logic.propositional.invoroverand
+    </description>
+    <group>
+      InverseDistr
+    </group>
+  </rule>
+  <rule name="logic.propositional.notfalse" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.notfalse
+    </description>
+    <CMP>
+      ~F ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="logic1" name="not"/>
+            <OMS cd="logic1" name="false"/>
+          </OMA>
+          <OMS cd="logic1" name="true"/>
+        </OMA>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.notnot" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.notnot
+    </description>
+    <CMP>
+      ~~a ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="not"/>
+              <OMA>
+                <OMS cd="logic1" name="not"/>
+                <OMV name="$0"/>
+              </OMA>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.nottrue" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.nottrue
+    </description>
+    <CMP>
+      ~T ~&gt; F
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMA>
+          <OMS cd="relation1" name="eq"/>
+          <OMA>
+            <OMS cd="logic1" name="not"/>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+          <OMS cd="logic1" name="false"/>
+        </OMA>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.oroverand" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.oroverand
+    </description>
+    <group>
+      DistributionOrOverAnd
+    </group>
+    <CMP>
+      a || b /\ c ~&gt; (a || b) /\ (a || c)
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMV name="$0"/>
+              <OMA>
+                <OMS cd="logic1" name="and"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="or"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="or"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a /\ b || c ~&gt; (a || c) /\ (b || c)
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+            <OMV name="$1"/>
+            <OMV name="$2"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="or"/>
+              <OMA>
+                <OMS cd="logic1" name="and"/>
+                <OMV name="$0"/>
+                <OMV name="$1"/>
+              </OMA>
+              <OMV name="$2"/>
+            </OMA>
+            <OMA>
+              <OMS cd="logic1" name="and"/>
+              <OMA>
+                <OMS cd="logic1" name="or"/>
+                <OMV name="$0"/>
+                <OMV name="$2"/>
+              </OMA>
+              <OMA>
+                <OMS cd="logic1" name="or"/>
+                <OMV name="$1"/>
+                <OMV name="$2"/>
+              </OMA>
+            </OMA>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.trueinequiv" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.trueinequiv
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      T &lt;-&gt; a ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMS cd="logic1" name="true"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a &lt;-&gt; T ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="equivalent"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="true"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.trueinimpl" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.trueinimpl
+    </description>
+    <group>
+      Additional rules
+    </group>
+    <CMP>
+      T -&gt; a ~&gt; a
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMS cd="logic1" name="true"/>
+              <OMV name="$0"/>
+            </OMA>
+            <OMV name="$0"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+    <CMP>
+      a -&gt; T ~&gt; T
+    </CMP>
+    <FMP>
+      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
+        <OMBIND>
+          <OMS cd="quant1" name="forall"/>
+          <OMBVAR>
+            <OMV name="$0"/>
+          </OMBVAR>
+          <OMA>
+            <OMS cd="relation1" name="eq"/>
+            <OMA>
+              <OMS cd="logic1" name="implies"/>
+              <OMV name="$0"/>
+              <OMS cd="logic1" name="true"/>
+            </OMA>
+            <OMS cd="logic1" name="true"/>
+          </OMA>
+        </OMBIND>
+      </OMOBJ>
+    </FMP>
+  </rule>
+  <rule name="logic.propositional.truezeroand" buggy="false" rewriterule="true">
+    <description>
+      logic.propositional.truezeroand
     </description>
     <CMP>
       T /\ a ~&gt; a
@@ -4624,9 +4624,9 @@
       </OMOBJ>
     </FMP>
   </rule>
-  <rule name="truezeroor" buggy="false" rewriterule="true">
+  <rule name="logic.propositional.truezeroor" buggy="false" rewriterule="true">
     <description>
-      truezeroor
+      logic.propositional.truezeroor
     </description>
     <CMP>
       T || a ~&gt; T

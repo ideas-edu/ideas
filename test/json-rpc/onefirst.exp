@@ -1,6 +1,6 @@
 {
    "result": [
-      "demorganor",
+      "logic.propositional.demorganor",
       "[]",
       [
          "logic.propositional.dnf",

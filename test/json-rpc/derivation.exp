@@ -1,15 +1,15 @@
 {
    "result": [
       [
-         "demorganor",
+         "logic.propositional.demorganor",
          "~~x /\\ ~~y"
       ],
       [
-         "notnot",
+         "logic.propositional.notnot",
          "x /\\ ~~y"
       ],
       [
-         "notnot",
+         "logic.propositional.notnot",
          "x /\\ y"
       ]
    ],

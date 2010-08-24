@@ -15,10 +15,11 @@
 module Domain.Logic.Rules where
 
 import Domain.Logic.Formula
-import Common.Transformation
+import Common.Transformation (Rule, addRuleToGroup, minorRule)
 import Common.Rewriting
 import Domain.Logic.Generator()
 import Domain.Logic.GeneralizedRules
+import qualified Common.Transformation as Rule
  
 logicRules :: [Rule SLogic]
 logicRules = concat 
@@ -28,6 +29,12 @@ logicRules = concat
    , groupDistributionOrOverAnd, groupDistributionAndOverOr
    , groupInverseDeMorgan,groupInverseDistr
    ]
+
+rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
+rule s = Rule.rule ("logic.propositional." ++ s)
+
+ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
+ruleList s = Rule.ruleList ("logic.propositional." ++ s)
 
 -----------------------------------------------------------------------------
 -- Grouping DWA rules

@@ -26,6 +26,7 @@ import Domain.LinearAlgebra.LinearSystem
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Context
+import Common.Id
 import Domain.LinearAlgebra.Vector
 
 gaussianElimStrategy :: LabeledStrategy (Context (Matrix Expr))
@@ -107,15 +108,17 @@ simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
 
 conv1 :: Rule (Context Expr)
-conv1 = makeSimpleRule "Linear system to matrix" $ withCM $ \expr -> do
-   ls <- fromExpr expr
-   let (m, vs) = systemToMatrix ls
-   writeVar vars vs
-   return (toExpr (simplify (m :: Matrix Expr)))
+conv1 = describe "Convert linear system to matrix" $
+   makeSimpleRule "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
+      ls <- fromExpr expr
+      let (m, vs) = systemToMatrix ls
+      writeVar vars vs
+      return (toExpr (simplify (m :: Matrix Expr)))
  
 conv2 :: Rule (Context Expr)
-conv2 = makeSimpleRule "Matrix to linear system" $ withCM $ \expr -> do
-   vs <- readVar vars
-   m  <- fromExpr expr
-   let linsys = matrixToSystemWith vs (m :: Matrix Expr)
-   return $ simplify $ toExpr linsys
+conv2 = describe "Convert matrix to linear system" $ 
+   makeSimpleRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
+      vs <- readVar vars
+      m  <- fromExpr expr
+      let linsys = matrixToSystemWith vs (m :: Matrix Expr)
+      return $ simplify $ toExpr linsys

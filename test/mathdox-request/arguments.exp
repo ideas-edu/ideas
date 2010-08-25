@@ -1,7 +1,7 @@
 <reply result="ok" version="0.6.5 (0)">
   <incorrect equivalent="False">
     <location>
-      scale
+      linearalgebra.gaussianelim.scale
     </location>
     <state>
       <prefix>

@@ -29,7 +29,7 @@ matrixRules =
       ]
 
 ruleFindColumnJ :: Num a => Rule (Context (Matrix a))
-ruleFindColumnJ = minorRule $ makeSimpleRule "FindColumnJ" $ withCM $ \m -> do
+ruleFindColumnJ = minorRule $ makeSimpleRule "linearalgebra.gaussianelim.FindColumnJ" $ withCM $ \m -> do
    cols <- liftM columns (subMatrix m)
    i    <- findIndexM nonZero cols
    writeVar columnJ i
@@ -76,24 +76,24 @@ ruleZerosBP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
-ruleCoverRow = minorRule $ makeRule "CoverRow" $ changeCover (+1)
+ruleCoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.CoverRow" $ changeCover (+1)
 
 ruleUncoverRow :: Rule (Context (Matrix a))
-ruleUncoverRow = minorRule $ makeRule "UncoverRow" $ changeCover (\x -> x-1)
+ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ changeCover (\x -> x-1)
 
 ---------------------------------------------------------------------------------
 -- Parameterized rules
 
 ruleScaleRow :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, a)) -> Rule (Context (Matrix a))
-ruleScaleRow f = makeRule "Scale" (supplyLabeled2 descr f rowScale)
+ruleScaleRow f = makeRule "linearalgebra.gaussianelim.scale" (supplyLabeled2 descr f rowScale)
  where descr  = ("row", "scale factor")
       
 ruleExchangeRows :: Num a => (Context (Matrix a) -> Maybe (Int, Int)) -> Rule (Context (Matrix a))
-ruleExchangeRows f = makeRule "Exchange" (supplyLabeled2 descr f rowExchange)
+ruleExchangeRows f = makeRule "linearalgebra.gaussianelim.exchange" (supplyLabeled2 descr f rowExchange)
  where descr = ("row 1", "row 2")
 
 ruleAddMultiple :: (Argument a, Fractional a) => (Context (Matrix a) -> Maybe (Int, Int, a)) -> Rule (Context (Matrix a))
-ruleAddMultiple f = makeRule "Add" (supplyLabeled3 descr f  rowAdd)
+ruleAddMultiple f = makeRule "linearalgebra.gaussianelim.add" (supplyLabeled3 descr f  rowAdd)
  where descr  = ("row 1", "row2", "scale factor")
       
 ---------------------------------------------------------------------------------

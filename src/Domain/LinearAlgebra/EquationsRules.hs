@@ -16,6 +16,7 @@ import Common.Context
 import Common.Transformation
 import Common.Utils
 import Common.Navigator
+import Common.Id
 import Common.View hiding (simplify)
 import Control.Monad
 import Data.List hiding (repeat)
@@ -37,7 +38,8 @@ equationsRules =
    ]
 
 ruleExchangeEquations :: Rule (Context (LinearSystem Expr))
-ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $ 
+ruleExchangeEquations = describe "Exchange two equations" $ 
+   simplifySystem $ makeRule "linearalgebra.linsystem.exchange" $ 
    supplyLabeled2 descr args (\x y -> liftTransContext $ exchange x y)
  where
    descr = ("equation 1", "equation 2")
@@ -49,7 +51,8 @@ ruleExchangeEquations = simplifySystem $ makeRule "Exchange" $
       return (cov, cov + i)
 
 ruleEliminateVar :: Rule (Context (LinearSystem Expr))
-ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $ 
+ruleEliminateVar = describe "Eliminate a variable (using addition)" $
+   simplifySystem $ makeRule "linearalgebra.linsystem.eliminate" $ 
    supplyLabeled3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
@@ -64,20 +67,23 @@ ruleEliminateVar = simplifySystem $ makeRule "Eliminate variable" $
       return (i + cov + 1, cov, v)
 
 ruleDropEquation :: Rule (Context (LinearSystem Expr))
-ruleDropEquation = simplifySystem $ makeSimpleRule "Drop (0=0) equation" $ withCM $ \ls -> do
-   i   <- findIndexM (fromMaybe False . testConstants (==)) ls
-   modifyVar covered (\n -> if i < n then n-1 else n)
-   return (deleteIndex i ls)
+ruleDropEquation = describe "Drop trivial equations (such as 0=0)" $
+   simplifySystem $ makeSimpleRule "linearalgebra.linsystem.trivial" $ withCM $ \ls -> do
+      i   <- findIndexM (fromMaybe False . testConstants (==)) ls
+      modifyVar covered (\n -> if i < n then n-1 else n)
+      return (deleteIndex i ls)
 
 ruleInconsistentSystem :: Rule (Context (LinearSystem Expr))
-ruleInconsistentSystem = simplifySystem $ makeSimpleRule "Inconsistent system (0=1)" $ withCM $ \ls -> do
-   let stop = [0 :==: 1]
-   guard (invalidSystem ls && ls /= stop)
-   writeVar covered 1
-   return stop
+ruleInconsistentSystem = describe "Inconsistent system (0=1)" $
+   simplifySystem $ makeSimpleRule "linearalgebra.linsystem.inconsistent" $ withCM $ \ls -> do
+      let stop = [0 :==: 1]
+      guard (invalidSystem ls && ls /= stop)
+      writeVar covered 1
+      return stop
 
 ruleScaleEquation :: Rule (Context (LinearSystem Expr))
-ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $ 
+ruleScaleEquation = describe "Scale equation to one" $ 
+   simplifySystem $ makeRule "linearalgebra.linsystem.scale" $ 
    supplyLabeled2 descr args (\x y -> liftTransContext $ scaleEquation x y)
  where
    descr = ("equation", "scale factor")
@@ -91,7 +97,8 @@ ruleScaleEquation = simplifySystem $ makeRule "Scale equation to one" $
       return (cov, coef)
    
 ruleBackSubstitution :: Rule (Context (LinearSystem Expr))
-ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $ 
+ruleBackSubstitution = describe "Back substitution" $
+   simplifySystem $ makeRule "linearalgebra.linsystem.subst" $ 
    supplyLabeled3 descr args (\x y z -> liftTransContext $ addEquations x y z)
  where
    descr = ("equation 1", "equation 2", "scale factor")
@@ -105,7 +112,8 @@ ruleBackSubstitution = simplifySystem $ makeRule "Back substitution" $
       return (i, cov, coef)
 
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
-ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables" $ withCM $ \ls ->
+ruleIdentifyFreeVariables = describe "Identify free variables" $ 
+   minorRule $ makeSimpleRule "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
    let vars = [ head ys | ys <- map (getVars . leftHandSide) ls, not (null ys) ]
        change eq =
           let (e1, e2) = splitLinearExpr (`notElem` vars) (leftHandSide eq) -- constant ends up in e1
@@ -113,15 +121,18 @@ ruleIdentifyFreeVariables = minorRule $ makeSimpleRule "Identify free variables"
    in return (map change ls)
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
-ruleCoverUpEquation = minorRule $ makeRule "Cover up first equation" $ changeCover (+1)
+ruleCoverUpEquation = describe "Cover up first equation" $ 
+   minorRule $ makeRule "linearalgebra.linsystem.coverup" $ changeCover (+1)
 
 ruleUncoverEquation :: Rule (Context (LinearSystem a))
-ruleUncoverEquation = minorRule $ makeRule "Uncover one equation" $ changeCover (\x -> x-1)
+ruleUncoverEquation = describe "Uncover one equation" $ 
+   minorRule $ makeRule "linearalgebra.linsystem.uncover" $ changeCover (\x -> x-1)
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
-ruleCoverAllEquations = minorRule $ makeSimpleRule "Cover all equations" $ withCM $ \ls -> do
-   writeVar covered (length ls)
-   return ls
+ruleCoverAllEquations = describe "Cove all equations" $ 
+   minorRule $ makeSimpleRule "linearalgebra.linsystem.coverall" $ withCM $ \ls -> do
+      writeVar covered (length ls)
+      return ls
 
 -- local helper functions
 deleteIndex :: Int -> [a] -> [a]

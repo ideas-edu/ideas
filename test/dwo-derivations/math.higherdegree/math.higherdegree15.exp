@@ -1,21 +1,21 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         -2*(4*x-5)^4 == -8192
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         (4*x-5)^4 == 4096
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         4*x-5 == 8 or 4*x-5 == -8
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         4*x == 13 or 4*x-5 == -8
       </expr>
@@ -23,7 +23,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 13/4 or 4*x-5 == -8
       </expr>
@@ -31,7 +31,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 13/4 or 4*x == -3
       </expr>
@@ -39,7 +39,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 13/4 or x == -3/4
       </expr>

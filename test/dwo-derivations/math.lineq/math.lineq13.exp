@@ -5,12 +5,12 @@
         3*x+7 == -10
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         3*x == -17
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == -17/3
       </expr>

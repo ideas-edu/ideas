@@ -5,7 +5,7 @@
         -x+5 &lt; -3
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         -x &lt; -8
       </expr>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="distribution multiplication">
       <expr>
@@ -10,7 +10,7 @@
         -3*x-2 &lt; 3
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus left">
       <expr>
         -3*x &lt; 5
       </expr>
@@ -20,7 +20,7 @@
         3*x &gt; -5
       </expr>
     </elem>
-    <elem ruleid="cover-up times positive [vars]">
+    <elem ruleid="algebra.equations.coverup.times positive">
       <expr>
         x &gt; -5/3
       </expr>

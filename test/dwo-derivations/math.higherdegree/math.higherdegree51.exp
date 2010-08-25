@@ -1,21 +1,21 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         4*(1/2*x+2)^6 == 4
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         (1/2*x+2)^6 == 1
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         1/2*x+2 == 1 or 1/2*x+2 == -1
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         1/2*x == -1 or 1/2*x+2 == -1
       </expr>
@@ -23,7 +23,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == -2 or 1/2*x+2 == -1
       </expr>
@@ -31,7 +31,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -2 or 1/2*x == -3
       </expr>
@@ -39,7 +39,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == -2 or x == -6
       </expr>

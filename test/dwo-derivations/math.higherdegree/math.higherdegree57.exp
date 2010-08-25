@@ -13,7 +13,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 0 or x+3 == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == 0 or x == -3
       </expr>

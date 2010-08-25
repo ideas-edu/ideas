@@ -37,7 +37,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x^2 == 3
       </expr>
@@ -46,7 +46,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == sqrt 3 or x == -sqrt 3
       </expr>

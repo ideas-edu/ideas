@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=-1/2)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x^2 == 4 or 3*x-6 == 2*x+1
       </expr>
@@ -17,7 +17,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 2 or x == -2 or 3*x-6 == 2*x+1
       </expr>
@@ -35,7 +35,7 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 2 or x == -2 or x == 7
       </expr>

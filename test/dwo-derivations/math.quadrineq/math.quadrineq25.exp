@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.12">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==(x^2<0)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 0
       </expr>

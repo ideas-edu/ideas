@@ -25,7 +25,7 @@ module Common.Transformation
      -- * Rules
    , Rule, isMinorRule, isMajorRule, isBuggyRule, isRewriteRule
    , ruleGroups, ruleSiblings, addRuleToGroup
-   , rule, ruleList, ruleListF
+   , rule, ruleList
    , makeRule, makeRuleList, makeSimpleRule, makeSimpleRuleList
    , idRule, checkRule, emptyRule, minorRule, buggyRule, doBefore, doAfter
    , siblingOf, transformations, getRewriteRules, doBeforeTrans
@@ -311,9 +311,6 @@ addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
 
 ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
 ruleList s = makeRuleList s . map (makeRewriteTrans . rewriteRule s)
-
-ruleListF :: (BuilderList f a, Rewrite a) => String -> f -> Rule a
-ruleListF s = makeRuleList s . map makeRewriteTrans . rewriteRules s
 
 rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
 rule s = makeRule s . makeRewriteTrans . rewriteRule s

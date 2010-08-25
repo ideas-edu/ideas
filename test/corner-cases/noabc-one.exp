@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="bring a to one">
       <expr>
@@ -15,12 +15,12 @@
         (x+1)^2 == 3/2
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x+1 == sqrt (3/2) or x+1 == -sqrt (3/2)
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -1+sqrt (3/2) or x+1 == -sqrt (3/2)
       </expr>
@@ -28,7 +28,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -1+sqrt (3/2) or x == -1-sqrt (3/2)
       </expr>

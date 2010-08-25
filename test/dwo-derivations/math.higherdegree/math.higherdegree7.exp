@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="cover-up minus right [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         8*x^2 == 18
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x^2 == 9/4
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == sqrt (9/4) or x == -sqrt (9/4)
       </expr>

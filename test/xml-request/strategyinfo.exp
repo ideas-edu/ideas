@@ -62,11 +62,11 @@
               <rule name="flip equation"/>
               <rule name="variable to left"/>
             </orelse>
-            <rule name="cover-up plus [one var]"/>
-            <rule name="cover-up minus left [one var]"/>
-            <rule name="cover-up minus right [one var]"/>
-            <rule name="cover-up times [vars]"/>
-            <rule name="cover-up negate [vars]"/>
+            <rule name="algebra.equations.coverup.onevar.plus"/>
+            <rule name="algebra.equations.coverup.onevar.minus-left"/>
+            <rule name="algebra.equations.coverup.onevar.minus-right"/>
+            <rule name="algebra.equations.coverup.times"/>
+            <rule name="algebra.equations.coverup.negate"/>
           </choice>
         </repeat>
       </label>

@@ -32,7 +32,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 2 or x == -2 or x^2 == 5
       </expr>
@@ -41,7 +41,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 2 or x == -2 or x == sqrt 5 or x == -sqrt 5
       </expr>

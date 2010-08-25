@@ -1,10 +1,17 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem name="abc formula" buggy="false" rewriterule="false"/>
     <elem name="abc misconception minus 4ac" buggy="true" rewriterule="false"/>
     <elem name="abc misconception minus b" buggy="true" rewriterule="false"/>
     <elem name="abc misconception one solution" buggy="true" rewriterule="false"/>
     <elem name="abc misconception two a" buggy="true" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.negate" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.numerator" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.onevar.minus-left" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.onevar.minus-right" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.onevar.plus" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.power" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.coverup.times" buggy="false" rewriterule="false"/>
     <elem name="approximate" buggy="false" rewriterule="false"/>
     <elem name="bring a to one" buggy="false" rewriterule="false"/>
     <elem name="buggy cancel minus" buggy="true" rewriterule="false"/>
@@ -36,13 +43,6 @@
     <elem name="buggy square multiplication" buggy="true" rewriterule="true"/>
     <elem name="cancel terms" buggy="false" rewriterule="false"/>
     <elem name="common factor var" buggy="false" rewriterule="false"/>
-    <elem name="cover-up minus left [one var]" buggy="false" rewriterule="false"/>
-    <elem name="cover-up minus right [one var]" buggy="false" rewriterule="false"/>
-    <elem name="cover-up negate [vars]" buggy="false" rewriterule="false"/>
-    <elem name="cover-up numerator [vars]" buggy="false" rewriterule="false"/>
-    <elem name="cover-up plus [one var]" buggy="false" rewriterule="false"/>
-    <elem name="cover-up power [vars]" buggy="false" rewriterule="false"/>
-    <elem name="cover-up times [vars]" buggy="false" rewriterule="false"/>
     <elem name="distribution division" buggy="false" rewriterule="false"/>
     <elem name="distribution multiplication" buggy="false" rewriterule="false"/>
     <elem name="distribution square" buggy="false" rewriterule="true"/>

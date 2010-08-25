@@ -10,12 +10,12 @@
         -12*x+35 == 9
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         -12*x == -26
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 13/6
       </expr>

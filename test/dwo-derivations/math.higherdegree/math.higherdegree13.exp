@@ -1,21 +1,21 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         3*(2*x+5)^2 == 12
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         (2*x+5)^2 == 4
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         2*x+5 == 2 or 2*x+5 == -2
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         2*x == -3 or 2*x+5 == -2
       </expr>
@@ -23,7 +23,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == -3/2 or 2*x+5 == -2
       </expr>
@@ -31,7 +31,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -3/2 or 2*x == -7
       </expr>
@@ -39,7 +39,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == -3/2 or x == -7/2
       </expr>

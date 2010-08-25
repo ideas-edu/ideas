@@ -15,7 +15,7 @@
         5*x == -14
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == -14/5
       </expr>

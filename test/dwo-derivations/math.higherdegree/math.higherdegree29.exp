@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="cover-up minus right [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         7*x^4 == 56
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x^4 == 8
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == root 8 4 or x == -root 8 4
       </expr>

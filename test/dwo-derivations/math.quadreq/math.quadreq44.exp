@@ -20,7 +20,7 @@
         x^2 == 12
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == sqrt 12 or x == -sqrt 12
       </expr>

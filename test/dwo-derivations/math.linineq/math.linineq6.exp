@@ -10,7 +10,7 @@
         -x+60 &gt; 0
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         -x &gt; -60
       </expr>

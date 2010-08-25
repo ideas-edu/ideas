@@ -1,16 +1,16 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         (x+9)^2 == 8
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x+9 == sqrt 8 or x+9 == -sqrt 8
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -9+sqrt 8 or x+9 == -sqrt 8
       </expr>
@@ -18,7 +18,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -9+sqrt 8 or x == -9-sqrt 8
       </expr>

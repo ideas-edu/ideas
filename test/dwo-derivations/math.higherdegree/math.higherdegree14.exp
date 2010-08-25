@@ -1,21 +1,21 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         2*(3*x-6)^6 == 2
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         (3*x-6)^6 == 1
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         3*x-6 == 1 or 3*x-6 == -1
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         3*x == 7 or 3*x-6 == -1
       </expr>
@@ -23,7 +23,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 7/3 or 3*x-6 == -1
       </expr>
@@ -31,7 +31,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 7/3 or 3*x == 5
       </expr>
@@ -39,7 +39,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 7/3 or x == 5/3
       </expr>

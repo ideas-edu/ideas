@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="cover-up minus right [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         3*x == 24
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 8
       </expr>

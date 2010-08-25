@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="cover-up plus [vars]">
+    <elem ruleid="algebra.equations.coverup.plus">
       <expr>
         (x+5)/(2*x) == 3
       </expr>
@@ -21,7 +21,7 @@
         <item name="clipboard" value="[condition==(x/=0)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         -5*x == -5
       </expr>
@@ -29,7 +29,7 @@
         <item name="clipboard" value="[condition==(x/=0)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 1
       </expr>

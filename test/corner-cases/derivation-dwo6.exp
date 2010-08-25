@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="square both sides">
       <expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         3*x == 8 or x-5 == -3+2*x
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 8/3 or x-5 == -3+2*x
       </expr>
@@ -37,7 +37,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 8/3 or -x == 2
       </expr>
@@ -45,7 +45,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up negate [vars]">
+    <elem ruleid="algebra.equations.coverup.negate">
       <expr>
         x == 8/3 or x == -2
       </expr>

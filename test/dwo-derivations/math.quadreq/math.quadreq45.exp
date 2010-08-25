@@ -25,7 +25,7 @@
         x == 0 or 7*x+9 == 0
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == 0 or 7*x == -9
       </expr>
@@ -33,7 +33,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 0 or x == -9/7
       </expr>

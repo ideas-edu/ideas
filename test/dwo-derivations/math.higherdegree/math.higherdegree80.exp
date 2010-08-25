@@ -29,7 +29,7 @@
         <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 1/2 or x^3 == -4
       </expr>
@@ -38,7 +38,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 1/2 or x == -root 4 3
       </expr>

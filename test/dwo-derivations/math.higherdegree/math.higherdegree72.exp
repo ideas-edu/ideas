@@ -24,7 +24,7 @@
         <item name="clipboard" value="[D==676, a==9, b==-28, c==3, subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == sqrt 3 or x == -sqrt 3 or x^2 == 1/9
       </expr>
@@ -33,7 +33,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == sqrt 3 or x == -sqrt 3 or x == sqrt (1/9) or x == -sqrt (1/9)
       </expr>

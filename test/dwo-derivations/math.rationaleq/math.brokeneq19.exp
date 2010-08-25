@@ -17,7 +17,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == 0 or x == -5 or 2*x^2 == x^2+4
       </expr>
@@ -35,7 +35,7 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 0 or x == -5 or x^2 == 4
       </expr>
@@ -44,7 +44,7 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 0 or x == -5 or x == 2 or x == -2
       </expr>

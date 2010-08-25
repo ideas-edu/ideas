@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         2*x-3 == 1 or 2*x-3 == -1
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[ineq==((2*x-3)^4>1)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         2*x == 4 or 2*x-3 == -1
       </expr>
@@ -25,7 +25,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 2 or 2*x-3 == -1
       </expr>
@@ -34,7 +34,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 2 or 2*x == 2
       </expr>
@@ -43,7 +43,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 2 or x == 1
       </expr>

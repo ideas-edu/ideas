@@ -1,5 +1,5 @@
-<reply result="ok" version="0.6.4 (0)">
-  <elem ruleid="cover-up power [vars]">
+<reply result="ok" version="0.6.5 (0)">
+  <elem ruleid="algebra.equations.coverup.power">
     []
     <state>
       <prefix>

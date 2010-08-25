@@ -15,12 +15,12 @@
         63-8*x == 36
       </expr>
     </elem>
-    <elem ruleid="cover-up minus right [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         8*x == 27
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 27/8
       </expr>

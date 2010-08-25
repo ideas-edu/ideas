@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="cover-up minus right [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         7*x^5 == -42
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x^5 == -6
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == -root 6 5
       </expr>

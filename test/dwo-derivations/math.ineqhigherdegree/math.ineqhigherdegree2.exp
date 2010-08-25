@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.10">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==(-1/2*x^4<-81/2)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x^4 == 81
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[ineq==(-1/2*x^4<-81/2)]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 3 or x == -3
       </expr>

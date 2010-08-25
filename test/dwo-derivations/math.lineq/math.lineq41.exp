@@ -10,12 +10,12 @@
         -x-3 == -16
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         -x == -13
       </expr>
     </elem>
-    <elem ruleid="cover-up negate [vars]">
+    <elem ruleid="algebra.equations.coverup.negate">
       <expr>
         x == 13
       </expr>

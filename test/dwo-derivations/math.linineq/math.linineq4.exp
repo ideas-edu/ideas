@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="distribution multiplication">
       <expr>
@@ -15,12 +15,12 @@
         11+3*a &gt; 15
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         3*a &gt; 4
       </expr>
     </elem>
-    <elem ruleid="cover-up times positive [vars]">
+    <elem ruleid="algebra.equations.coverup.times positive">
       <expr>
         a &gt; 4/3
       </expr>

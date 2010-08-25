@@ -5,7 +5,7 @@
         x == 0 or 7*x == 8
       </expr>
     </elem>
-    <elem ruleid="cover-up times [vars]">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x == 0 or x == 8/7
       </expr>

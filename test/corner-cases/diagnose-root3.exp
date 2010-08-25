@@ -1,5 +1,5 @@
-<reply result="ok" version="0.6.4 (0)">
-  <expected ready="true" ruleid="cover-up power [vars]">
+<reply result="ok" version="0.6.5 (0)">
+  <expected ready="true" ruleid="algebra.equations.coverup.power">
     <state>
       <prefix>
         [5,1,1,0,0,0]

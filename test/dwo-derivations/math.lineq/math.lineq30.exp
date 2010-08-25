@@ -15,7 +15,7 @@
         14+x == 8
       </expr>
     </elem>
-    <elem ruleid="cover-up plus [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         x == -6
       </expr>

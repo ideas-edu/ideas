@@ -1,16 +1,16 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="variable to left">
       <expr>
         2*x-12 &lt; 3
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus left">
       <expr>
         2*x &lt; 15
       </expr>
     </elem>
-    <elem ruleid="cover-up times positive [vars]">
+    <elem ruleid="algebra.equations.coverup.times positive">
       <expr>
         x &lt; 15/2
       </expr>

@@ -5,7 +5,7 @@
         x == 0 or x^2-5 == 0
       </expr>
     </elem>
-    <elem ruleid="cover-up minus left [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         x == 0 or x^2 == 5
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         x == 0 or x == sqrt 5 or x == -sqrt 5
       </expr>

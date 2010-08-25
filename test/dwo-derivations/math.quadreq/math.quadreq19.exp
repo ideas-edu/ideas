@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="cover-up minus right [one var]">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         x^2/10 == -2
       </expr>
     </elem>
-    <elem ruleid="cover-up numerator [vars]">
+    <elem ruleid="algebra.equations.coverup.numerator">
       <expr>
         x^2 == -20
       </expr>
     </elem>
-    <elem ruleid="cover-up power [vars]">
+    <elem ruleid="algebra.equations.coverup.power">
       <expr>
         false
       </expr>

@@ -168,7 +168,7 @@ mulZero = makeSimpleRuleList "multiplication is zero" $ oneDisjunct bothSides
 -- Prevent    (x^2+3x)+5 = 0   to be covered up
 oneVar :: ConfigCoverUp
 oneVar = configCoverUp
-   { configName        = Just "one var"
+   { configName        = "onevar"
    , predicateCovered  = \a -> p1 a || p2 a
    , predicateCombined = noVars
    , coverLHS          = True

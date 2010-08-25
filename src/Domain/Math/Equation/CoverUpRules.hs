@@ -17,7 +17,7 @@ module Domain.Math.Equation.CoverUpRules
    , coverUpNumerator, coverUpDenominator, coverUpSqrt 
      -- parameterized rules
    , ConfigCoverUp, configName, predicateCovered, predicateCombined
-   , coverLHS, coverRHS, configCoverUp, varConfig
+   , coverLHS, coverRHS, configCoverUp
    , coverUpPowerWith, coverUpTimesWith, coverUpNegateWith
    , coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
    , coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
@@ -76,36 +76,30 @@ coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr)
 coverUpUnaryRule opName fm fb = 
    coverUpBinaryRule opName (map (\e -> (e, e)) . fm) (const . fb) 
 
-coverUpRuleName :: String -> Maybe String -> String
-coverUpRuleName opName viewName =
-   "cover-up " ++ opName ++ maybe "" (\s -> " [" ++ s ++ "]") viewName
+coverUpRuleName :: String -> String -> String
+coverUpRuleName opName cfg =
+   let f = if null cfg then id else ((cfg++) . ('.':))
+   in "algebra.equations.coverup." ++ f opName
 
 ---------------------------------------------------------------------
 -- Configuration for cover-up rules
 
 data ConfigCoverUp = Config
-   { configName        :: Maybe String
+   { configName        :: String
    , predicateCovered  :: Expr -> Bool
    , predicateCombined :: Expr -> Bool
    , coverLHS          :: Bool
    , coverRHS          :: Bool
    }
 
+-- Default configuration: cover-up part with variables
 configCoverUp :: ConfigCoverUp
 configCoverUp = Config
-   { configName        = Nothing
-   , predicateCovered  = const True
-   , predicateCombined = const True
-   , coverLHS          = True
-   , coverRHS          = True
-   }
-
--- default configuration
-varConfig :: ConfigCoverUp 
-varConfig = configCoverUp
-   { configName        = Just "vars"
+   { configName        = ""
    , predicateCovered  = hasVars
    , predicateCombined = noVars
+   , coverLHS          = True
+   , coverRHS          = True
    }
 
 ---------------------------------------------------------------------
@@ -125,10 +119,10 @@ coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . isPlus) (-)
 
 coverUpMinusLeftWith :: ConfigCoverUp -> Rule (Equation Expr)
-coverUpMinusLeftWith = coverUpBinaryRule "minus left" isMinus (+)
+coverUpMinusLeftWith = coverUpBinaryRule "minus-left" isMinus (+)
 
 coverUpMinusRightWith :: ConfigCoverUp -> Rule (Equation Expr)
-coverUpMinusRightWith = coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-))
+coverUpMinusRightWith = coverUpBinaryRule "minus-right" (flipOp . isMinus) (flip (-))
 
 -- | Negations are pushed inside
 coverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
@@ -149,7 +143,7 @@ coverUpDenominatorWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpDenominatorWith = coverUpBinaryRule "denominator" (flipOp . matchM divView) (flip (/))
 
 coverUpSqrtWith :: ConfigCoverUp -> Rule (Equation Expr)
-coverUpSqrtWith = coverUpUnaryRule "square root" isSqrt (\x -> x*x)
+coverUpSqrtWith = coverUpUnaryRule "sqrt" isSqrt (\x -> x*x)
  where
    isSqrt (Sqrt a) = return a
    isSqrt _        = []
@@ -184,15 +178,15 @@ coverUpPower :: Rule (OrList (Equation Expr))
 coverUpPlus, coverUpMinusLeft, coverUpMinusRight, coverUpTimes, coverUpNegate, 
    coverUpNumerator, coverUpDenominator, coverUpSqrt :: Rule (Equation Expr)
 
-coverUpPower       = coverUpPowerWith       varConfig
-coverUpPlus        = coverUpPlusWith        varConfig
-coverUpMinusLeft   = coverUpMinusLeftWith   varConfig
-coverUpMinusRight  = coverUpMinusRightWith  varConfig
-coverUpTimes       = coverUpTimesWith       varConfig
-coverUpNegate      = coverUpNegateWith      varConfig
-coverUpNumerator   = coverUpNumeratorWith   varConfig
-coverUpDenominator = coverUpDenominatorWith varConfig
-coverUpSqrt        = coverUpSqrtWith        varConfig
+coverUpPower       = coverUpPowerWith       configCoverUp
+coverUpPlus        = coverUpPlusWith        configCoverUp
+coverUpMinusLeft   = coverUpMinusLeftWith   configCoverUp
+coverUpMinusRight  = coverUpMinusRightWith  configCoverUp
+coverUpTimes       = coverUpTimesWith       configCoverUp
+coverUpNegate      = coverUpNegateWith      configCoverUp
+coverUpNumerator   = coverUpNumeratorWith   configCoverUp
+coverUpDenominator = coverUpDenominatorWith configCoverUp
+coverUpSqrt        = coverUpSqrtWith        configCoverUp
 
 ---------------------------------------------------------------------
 -- Some helper-functions

@@ -164,7 +164,7 @@ coverUpPlus = alternatives (map (use . ($ oneVar)) coverUps)
       ]
    
 coverUpTimesPositive :: Rule (Relation Expr)
-coverUpTimesPositive = coverUpBinaryRule "times positive" (commOp . m) (/) varConfig
+coverUpTimesPositive = coverUpBinaryRule "times positive" (commOp . m) (/) configCoverUp
  where
    m expr = do
       (a, b) <- matchM timesView expr

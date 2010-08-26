@@ -33,7 +33,7 @@ import Data.Char
 extractExerciseId :: Monad m => JSON -> m Id
 extractExerciseId json =
    case json of
-      String s -> newIdM s
+      String s -> return (newId s)
       Array [String _, String _, a@(Array _)] -> extractExerciseId a
       Array (String s:tl) | any p s -> extractExerciseId (Array tl)
       Array (hd:_) -> extractExerciseId hd

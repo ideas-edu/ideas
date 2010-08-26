@@ -88,8 +88,7 @@ xmlReply request xml = do
    return (resultOk res)
 
 extractExerciseId :: Monad m => XML -> m Id
-extractExerciseId xml = 
-   findAttribute "exerciseid" xml >>= newIdM
+extractExerciseId = liftM newId . findAttribute "exerciseid"
 
 resultOk :: XMLBuilder -> XML
 resultOk body = makeXML "reply" $ do 
@@ -192,7 +191,7 @@ xmlDecoder b f pkg = Decoder
          Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
          Tp.Id          -> leave $ \xml -> do
                               a <- findChild "location" xml
-                              newIdM (getData a)
+                              return (newId (getData a))
          Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . getData) . findChild "ruleid"
          Tp.Term        -> leave $ decodeTerm dec
          Tp.StrategyCfg -> decodeConfiguration

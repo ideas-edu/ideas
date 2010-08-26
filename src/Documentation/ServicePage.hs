@@ -112,7 +112,7 @@ type Args = forall a . ExercisePackage a -> [TypedValue a]
 
 makeExample :: String -> Args -> String -> DomainReasoner Example
 makeExample pkgName f srvName = do
-   a        <- newIdM pkgName
+   let a = newId pkgName
    Some pkg <- findPackage a
    srv      <- findService srvName
    tr       <- typedExample pkg srv (f pkg)

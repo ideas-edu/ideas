@@ -27,6 +27,7 @@ module Domain.Math.Equation.CoverUpRules
 
 import Common.Classes
 import Common.Context
+import Common.Id
 import Common.Rewriting (IsTerm)
 import Common.Transformation
 import Common.View
@@ -76,10 +77,10 @@ coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr)
 coverUpUnaryRule opName fm fb = 
    coverUpBinaryRule opName (map (\e -> (e, e)) . fm) (const . fb) 
 
-coverUpRuleName :: String -> String -> String
+coverUpRuleName :: String -> String -> Id
 coverUpRuleName opName cfg =
-   let f = if null cfg then id else ((cfg++) . ('.':))
-   in "algebra.equations.coverup." ++ f opName
+   let f = if null cfg then newId else (cfg #)
+   in "algebra.equations.coverup" # f opName
 
 ---------------------------------------------------------------------
 -- Configuration for cover-up rules

@@ -309,26 +309,28 @@ siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 addRuleToGroup :: String -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
 
-ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList s = makeRuleList s . map (makeRewriteTrans . rewriteRule s)
-
-rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
-rule s = makeRule s . makeRewriteTrans . rewriteRule s
+ruleList :: (IsId n, Builder f a, Rewrite a) => n -> [f] -> Rule a
+ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule (show a))
+ where a = newId n
+ 
+rule :: (IsId n, Builder f a, Rewrite a) => n -> f -> Rule a
+rule n = makeRule a . makeRewriteTrans . rewriteRule (showId a)
+ where a = newId n
 
 -- | Turn a transformation into a rule: the first argument is the rule's name
-makeRule :: String -> Transformation a -> Rule a
+makeRule :: IsId n => n -> Transformation a -> Rule a
 makeRule n = makeRuleList n . return
 
 -- | Turn a list of transformations into a single rule: the first argument is the rule's name
-makeRuleList :: String -> [Transformation a] -> Rule a
+makeRuleList :: IsId n => n -> [Transformation a] -> Rule a
 makeRuleList n ts = Rule (newId n) ts False False [] []
 
 -- | Turn a function (which returns its result in the Maybe monad) into a rule: the first argument is the rule's name
-makeSimpleRule :: String -> (a -> Maybe a) -> Rule a
+makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
 makeSimpleRule n = makeRule n . makeTrans
 
 -- | Turn a function (which returns a list of results) into a rule: the first argument is the rule's name
-makeSimpleRuleList :: String -> (a -> [a]) -> Rule a
+makeSimpleRuleList :: IsId n => n -> (a -> [a]) -> Rule a
 makeSimpleRuleList n = makeRule n . makeTransList
 
 -- | A special (minor) rule that always returns the identity

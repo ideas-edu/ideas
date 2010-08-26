@@ -37,7 +37,7 @@ makeSimpleRule     = buggyName Rule.makeSimpleRule
 makeSimpleRuleList = buggyName Rule.makeSimpleRuleList
 ruleList           = buggyName Rule.ruleList
 
-buggyName f s = f ("algebra.equations.buggy." ++ s)
+buggyName f s = f ("algebra.equations.buggy" # s)
 
 buggyRulesExpr :: [Rule Expr]
 buggyRulesExpr = 

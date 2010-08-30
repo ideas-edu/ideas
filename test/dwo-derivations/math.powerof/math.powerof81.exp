@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         sqrt (a^(-2))
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="write as power">
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
         a^(-1)
       </expr>

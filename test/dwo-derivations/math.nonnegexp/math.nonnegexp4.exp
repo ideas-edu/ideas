@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (3188)">
   <list>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         1/a^(-3)*b^(-4)
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal fraction">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-frac">
       <expr>
         a^3*b^(-4)
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         a^3/b^4
       </expr>

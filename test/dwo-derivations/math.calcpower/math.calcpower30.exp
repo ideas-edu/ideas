@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="calculate power">
+    <elem ruleid="arithmetic.operation.rational.power">
       <expr>
         1/(1/7)^2
       </expr>
     </elem>
-    <elem ruleid="calculate power">
+    <elem ruleid="arithmetic.operation.rational.power">
       <expr>
         1/(1/49)
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="division denominator">
+    <elem ruleid="algebra.manipulation.division-denominator">
       <expr>
         49
       </expr>

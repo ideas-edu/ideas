@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         a^(-8)/(a^2)^3*a
       </expr>
@@ -8,12 +8,12 @@
         <item name="location" value="[0,0]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         1/(a^2)^3*a^(-7)
       </expr>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         1/a^6*a^(-7)
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[0,1]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         a^(-6)*a^(-7)
       </expr>
@@ -29,7 +29,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         a^(-13)
       </expr>

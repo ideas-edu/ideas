@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         1/a^7
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         a^(-7)
       </expr>

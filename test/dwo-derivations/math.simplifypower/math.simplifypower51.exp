@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         4*a^3*25*(a^6)^2
       </expr>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         4*a^3*25*a^12
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         100*a^15
       </expr>

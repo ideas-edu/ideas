@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="write as root">
+    <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         4*root (a^3) 5
       </expr>

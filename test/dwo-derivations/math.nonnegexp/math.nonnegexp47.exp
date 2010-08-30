@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (3188)">
   <list>
-    <elem ruleid="reciprocal fraction">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-frac">
       <expr>
         a^(-3)*b^3
       </expr>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         1/a^3*b^3
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="algebra.manipulation.exponents.fraction-times">
       <expr>
         b^3/a^3
       </expr>

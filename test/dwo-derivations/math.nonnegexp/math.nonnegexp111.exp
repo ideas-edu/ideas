@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         6/a^(2/5)
       </expr>
     </elem>
-    <elem ruleid="write as root">
+    <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         6/root (a^2) 5
       </expr>

@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="calculate power">
+    <elem ruleid="arithmetic.operation.rational.power">
       <expr>
         7*(1/2^5)
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="calculate power">
+    <elem ruleid="arithmetic.operation.rational.power">
       <expr>
         7*(1/32)
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[1,1]"/>
       </context>
     </elem>
-    <elem ruleid="calculate times [rational]">
+    <elem ruleid="arithmetic.operation.rational.times">
       <expr>
         7/32
       </expr>

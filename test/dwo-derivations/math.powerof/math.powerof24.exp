@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         root x 3*root (x^(-2)) 4
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[1,0]"/>
       </context>
     </elem>
-    <elem ruleid="write as power">
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
         x^(1/3)*root (x^(-2)) 4
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="write as power">
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
         x^(1/3)*x^(-1/2)
       </expr>
@@ -24,7 +24,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         x^(-1/6)
       </expr>

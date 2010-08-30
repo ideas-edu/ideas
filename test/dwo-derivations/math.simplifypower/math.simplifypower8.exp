@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         81*a^4/(9*a^2)
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="sub exponents">
+    <elem ruleid="algebra.manipulation.exponents.sub-exponents">
       <expr>
         9*a^2
       </expr>

@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         sqrt x*x^(-2)
       </expr>
     </elem>
-    <elem ruleid="write as power">
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
         x^(1/2)*x^(-2)
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         x^(-3/2)
       </expr>

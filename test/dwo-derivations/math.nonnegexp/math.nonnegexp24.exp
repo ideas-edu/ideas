@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         (5*a)^(-2)*10/b
       </expr>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         1/(5*a)^2*10/b
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[0,0]"/>
       </context>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         1/(25*a^2)*10/b
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[0,0,1]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="algebra.manipulation.exponents.fraction-times">
       <expr>
         2/(5*a^2)/b
       </expr>
@@ -29,7 +29,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="division numerator">
+    <elem ruleid="algebra.manipulation.division-numerator">
       <expr>
         2/(5*a^2*b)
       </expr>

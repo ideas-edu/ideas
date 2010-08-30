@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="calculate power minus">
+    <elem ruleid="algebra.manipulation.exponents.calc-power.minus">
       <expr>
         4*a^2+2*a^4
       </expr>

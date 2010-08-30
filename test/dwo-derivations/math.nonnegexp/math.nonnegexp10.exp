@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         1/5^(1/4)
       </expr>
     </elem>
-    <elem ruleid="write as root">
+    <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         1/root 5 4
       </expr>

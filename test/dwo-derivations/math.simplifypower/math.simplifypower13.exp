@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         1/8*a^3-(4*a)^2*(1/4)*a
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         1/8*a^3-16*a^2*(1/4)*a
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[1,0,0]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         1/8*a^3-4*a^3
       </expr>
@@ -24,12 +24,12 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="calculate power minus">
+    <elem ruleid="algebra.manipulation.exponents.calc-power.minus">
       <expr>
         -31/8*a^3
       </expr>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="algebra.manipulation.exponents.fraction-times">
       <expr>
         -31*a^3/8
       </expr>

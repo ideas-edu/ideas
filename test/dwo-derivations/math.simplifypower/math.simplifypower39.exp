@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         16*(a^3)^2
       </expr>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         16*a^6
       </expr>

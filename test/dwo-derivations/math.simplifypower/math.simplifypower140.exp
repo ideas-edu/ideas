@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="calculate power plus">
+    <elem ruleid="algebra.manipulation.exponents.calc-power.plus">
       <expr>
         7*a^7-5*a^2
       </expr>

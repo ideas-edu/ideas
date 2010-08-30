@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         (4*a*b)^(-1)*b^(-6)
       </expr>
@@ -8,12 +8,12 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         (4*a*b)^(-1)/b^6
       </expr>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         1/(4*a*b)/b^6
       </expr>
@@ -21,12 +21,12 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="division numerator">
+    <elem ruleid="algebra.manipulation.division-numerator">
       <expr>
         1/(4*a*b*b^6)
       </expr>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         1/(b^7*4*a)
       </expr>

@@ -47,10 +47,12 @@ powerRuleOrder = map getId
   , reciprocal
   ]  
 
+power = "algebra.manipulation.exponents"
+
 -- | Power rules --------------------------------------------------------------
 
 calcPower :: Rule Expr 
-calcPower = makeSimpleRule "calculate power" $ \ expr -> do 
+calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 
   (e1, e2) <- match simplePowerView expr
   a        <- match rationalView e1
   x        <- match integralView e2
@@ -68,18 +70,18 @@ calcPowerMinus =
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
 addExponents :: Rule Expr 
-addExponents = makeSimpleRuleList "add exponents" $ \ expr -> do
+addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
   case match (powerFactorisationView unitPowerView) expr of
     Just (s, fs) -> do 
       (e, es) <- split (*) fs
-      case apply addExponents' e of
+      case apply addExponentsT e of
         Just e' -> return $ build productView (s, e' : es)
         Nothing -> fail ""  
     Nothing -> fail ""
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)
-addExponents' :: Rule Expr 
-addExponents' = makeSimpleRule "add exponents" $ \ expr -> do
+addExponentsT :: Transformation Expr 
+addExponentsT = makeTrans $ \ expr -> do
   x        <- selectVar expr
   (e1, e2) <- match timesView expr
   (a, y)   <- match (unitPowerForView x) e1
@@ -90,7 +92,7 @@ addExponents' = makeSimpleRule "add exponents" $ \ expr -> do
 subExponents :: Rule Expr
 subExponents = forallVars rule
   where
-    rule x = makeSimpleRule "sub exponents" $ \ expr -> do
+    rule x = makeSimpleRule (power, "sub-exponents") $ \ expr -> do
       (e1, e2) <- match divView expr
       (a, y)   <- match (unitPowerForView x) e1
       (b, q)   <- match (unitPowerForView x) e2
@@ -98,7 +100,7 @@ subExponents = forallVars rule
 
 -- | (c*a^x)^y = c*a^(x*y)
 mulExponents :: Rule Expr 
-mulExponents = makeSimpleRule "mul exponents" $ \ expr -> do
+mulExponents = makeSimpleRule (power, "mul-exponents") $ \ expr -> do
   (cax, y)    <- match simplePowerView expr
   (c, (a, x)) <- match strictPowerView cax
   guard (c == 1 || c == -1)
@@ -107,7 +109,7 @@ mulExponents = makeSimpleRule "mul exponents" $ \ expr -> do
 
 -- | c*(a0..an)^y = c * a0^y * a1^y .. * an^y
 distributePower :: Rule Expr
-distributePower = makeSimpleRule "distribute power" $ \ expr -> do
+distributePower = makeSimpleRule (power, "distr-power") $ \ expr -> do
   (c, (as', y)) <- match strictPowerView expr
   y'            <- match integerView y
   (sign, as)    <- match productView as'
@@ -117,7 +119,7 @@ distributePower = makeSimpleRule "distribute power" $ \ expr -> do
 
 -- | c * (a/b)^y = c * (a^y / b^y)
 distributePowerDiv :: Rule Expr
-distributePowerDiv = makeSimpleRule "distribute power" $ \ expr -> do
+distributePowerDiv = makeSimpleRule (power, "distr-power-div") $ \ expr -> do
   (c, (ab, y)) <- match strictPowerView expr
   match integerView y
   (a, b)       <- match divView ab
@@ -125,7 +127,7 @@ distributePowerDiv = makeSimpleRule "distribute power" $ \ expr -> do
 
 -- | c*a^0 = c
 zeroPower :: Rule Expr
-zeroPower = makeSimpleRule "zero power" $ \ expr -> do
+zeroPower = makeSimpleRule (power, "zero-power") $ \ expr -> do
   (_, (c, y)) <- match strictPowerView expr
   y' <- match integerView y
   guard (y'==0)
@@ -133,15 +135,17 @@ zeroPower = makeSimpleRule "zero power" $ \ expr -> do
 
 -- | d/c*a^x = d*a^(-x)/c
 reciprocal :: Rule Expr
-reciprocal = makeSimpleRule "reciprocal" $ \ expr -> do
+reciprocal = makeSimpleRule (power, "reciprocal") $ \ expr -> do
   a        <- selectVar expr
   (d, cax) <- match divView expr
   (c, x)   <- match (unitPowerForView a) cax
   return $ build (unitPowerForView a) (d ./. c, negate x)
 
 -- | c*a^x = c/a^(-x)
+
+-- DIFFERENT RULES SHOULD NOT HAVE THE SAME IDENTIFIER. FIX ME!
 reciprocalInv :: (Expr -> Bool) -> Rule Expr
-reciprocalInv p = makeSimpleRule "reciprocal" $ \ expr -> do
+reciprocalInv p = makeSimpleRule (power, "reciprocal") $ \ expr -> do
   guard (p expr)
 --  a        <- selectVar expr
   (c, (a, x)) <- match strictPowerView expr
@@ -149,7 +153,7 @@ reciprocalInv p = makeSimpleRule "reciprocal" $ \ expr -> do
 
 -- | c / d*a^(-x)*b^(-y)...p^r... = c*a^x*b^y.../d*p^r...
 reciprocalFrac :: Rule Expr
-reciprocalFrac = makeSimpleRule "reciprocal fraction" $ \ expr -> do
+reciprocalFrac = makeSimpleRule (power, "reciprocal-frac") $ \ expr -> do
   (e1, e2) <- match divView expr
   (s, xs)  <- match productView e2
   let (ys, zs) = partition hasNegExp xs
@@ -165,7 +169,7 @@ reciprocalFrac = makeSimpleRule "reciprocal fraction" $ \ expr -> do
 
 -- | a^(p/q) = root (a^p) q
 power2root :: Rule Expr 
-power2root = makeSimpleRule "write as root" $ \ expr -> do
+power2root = makeSimpleRule (power, "write-as-root") $ \ expr -> do
   (a, pq) <- match simplePowerView expr
   (p, q)  <- match (rationalView >>> ratioView) pq  
   guard (q /= 1)  
@@ -173,7 +177,7 @@ power2root = makeSimpleRule "write as root" $ \ expr -> do
   
 -- | root (a^p) q = a^(p/q)
 root2power :: Rule Expr 
-root2power = makeSimpleRule "write as power" $ \ expr -> do
+root2power = makeSimpleRule (power, "write-as-power") $ \ expr -> do
   (ap, q) <- match rootView expr
   a       <- selectVar ap
   p       <- match (powerViewFor' a) ap
@@ -181,14 +185,15 @@ root2power = makeSimpleRule "write as power" $ \ expr -> do
 
 -- | root (a/b) x = root a x / root b x
 distributeRoot :: Rule Expr
-distributeRoot = makeSimpleRule "distribute root" $ \ expr -> do
+distributeRoot = makeSimpleRule (power, "distr-root") $ \ expr -> do
   (ab, x) <- match rootView expr
   (a, b)  <- match divView ab
   return $ build divView (build rootView (a, x), build rootView (b, x))  
 
 -- | c1 root a x * c2 root b x = c1*c2 * root (a*b) x
 mulRoot :: Rule Expr
-mulRoot = makeSimpleRule "multipy base of root" $ \ expr -> do
+mulRoot = describe "Multiply base of root" $ 
+   makeSimpleRule (power, "multipy-base") $ \ expr -> do
   (r1, r2)      <- match timesView expr
   (c1, (a, x))  <- match rootConsView r1
   (c2, (b, x')) <- match rootConsView r2
@@ -208,7 +213,8 @@ mulRootCom = makeCommutative (myProductView (powerFactorisationView rootView)) (
 
 -- | c1 * root a x / c2 * root b x = c1*c2 * root (a/b) x
 divRoot :: Rule Expr
-divRoot = makeSimpleRule "divide base of root" $ \ expr -> do
+divRoot = describe "divide base of root" $
+   makeSimpleRule (power, "divide-base") $ \ expr -> do
   (r1, r2) <- match divView expr
   (c1, (a, x))  <- match rootConsView r1
   (c2, (b, x')) <- match rootConsView r2
@@ -217,7 +223,7 @@ divRoot = makeSimpleRule "divide base of root" $ \ expr -> do
 
 -- | root 0 x = 0  ;  root 1 x = 1  ;  root a 1 = a
 simplifyRoot :: Rule Expr
-simplifyRoot = makeSimpleRule "simplify root" $ \e -> f e `mplus` g e
+simplifyRoot = makeSimpleRule (power, "simplify-root") $ \e -> f e `mplus` g e
  where
   f expr = do
     (e1, _) <- match rootView expr
@@ -235,7 +241,7 @@ simplifyRoot = makeSimpleRule "simplify root" $ \e -> f e `mplus` g e
 
 -- | a/b * c/d = a*c / b*d  (b or else d may be one)  
 myFractionTimes :: Rule Expr
-myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do
+myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr -> do
   (e1, e2) <- match timesView expr
   guard $ isJust $ match divView e1 `mplus` match divView e2
 --  guard $ not $ isJust $ match rationalView e1 `mplus` match rationalView e2
@@ -245,7 +251,7 @@ myFractionTimes = smartRule $ makeSimpleRule "fraction times" $ \ expr -> do
 
 -- | simplify expression
 simplifyFraction :: Rule Expr
-simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
+simplifyFraction = makeSimpleRule (power, "simplify-fraction") $ \ expr -> do
   let expr' = simplifyWith (second normalizeProduct) productView $ expr
   guard (expr /= expr')
   guard $ not $ applicable myFractionTimes expr'
@@ -253,7 +259,7 @@ simplifyFraction = makeSimpleRule "simplify fraction" $ \ expr -> do
 
 -- | (-a)^x = (-)a^x
 pushNegOut :: Rule Expr
-pushNegOut = makeSimpleRule "push negation out" $ \ expr -> do
+pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do
   (a, x) <- match simplePowerView expr
   a'     <- isNegate a
   x'     <- match integerView x
@@ -274,7 +280,7 @@ smartRule = doAfter f
    
 calcBinPowerRule :: String -> (Expr -> Expr -> Expr) -> (Expr -> Maybe (Expr, Expr)) -> Rule Expr   
 calcBinPowerRule opName op m = 
-   makeSimpleRule ("calculate power " ++ opName) $ \e -> do
+   makeSimpleRule (power, "calc-power", opName) $ \e -> do
      (e1, e2)     <- m e
      (a, (c1, x)) <- match unitPowerView e1
      (b, (c2, y)) <- match unitPowerView e2
@@ -283,7 +289,7 @@ calcBinPowerRule opName op m =
 
 makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
 makeCommutative view op rule = 
-  makeSimpleRuleList (showId rule) $ \ expr -> do
+  makeSimpleRuleList (getId rule) $ \ expr -> do
     case match view expr of
       Just factors -> do
         (e, es) <- split op factors
@@ -300,7 +306,7 @@ split op xs = f xs
         f [] = []
 
 forallVars :: (String -> Rule Expr) -> Rule Expr
-forallVars ruleFor = makeSimpleRuleList (showId (ruleFor "")) $ \ expr -> 
+forallVars ruleFor = makeSimpleRuleList (getId (ruleFor "")) $ \ expr -> 
   mapMaybe (\v -> apply (ruleFor v) expr) $ collectVars expr
 
 hasNegExp expr = 

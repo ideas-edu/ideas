@@ -28,10 +28,10 @@ import Prelude hiding (repeat)
 naturalStrategy :: LabeledStrategy (Context Expr)
 naturalStrategy = label "simplify" $ 
    repeat $ somewhere $ alternatives $ map use
-      [ calcPlusWith     "nat" natView
-      , calcMinusWith    "nat" natView
-      , calcTimesWith    "nat" natView
-      , calcDivisionWith "nat" natView
+      [ calcPlusWith     "natural" natView
+      , calcMinusWith    "natural" natView
+      , calcTimesWith    "natural" natView
+      , calcDivisionWith "natural" natView
       , doubleNegate, negateZero, plusNegateLeft, plusNegateRight
       , minusNegateLeft, minusNegateRight, timesNegateLeft
       , timesNegateRight, divisionNegateLeft, divisionNegateRight  
@@ -45,10 +45,10 @@ naturalStrategy = label "simplify" $
 integerStrategy :: LabeledStrategy (Context Expr)
 integerStrategy = label "simplify" $ 
    repeat $ somewhere $ alternatives $ map use
-      [ calcPlusWith     "int" integerNormalForm
-      , calcMinusWith    "int" integerNormalForm
-      , calcTimesWith    "int" integerNormalForm
-      , calcDivisionWith "int" integerNormalForm
+      [ calcPlusWith     "integer" integerNormalForm
+      , calcMinusWith    "integer" integerNormalForm
+      , calcTimesWith    "integer" integerNormalForm
+      , calcDivisionWith "integer" integerNormalForm
       , doubleNegate, negateZero
       ]
 
@@ -58,7 +58,7 @@ rationalStrategy = label "simplify" $
       [ calcPlusWith     "rational" rationalRelaxedForm
       , calcMinusWith    "rational" rationalRelaxedForm
       , calcTimesWith    "rational" rationalRelaxedForm
-      , calcDivisionWith "int"      integerNormalForm
+      , calcDivisionWith "integer"      integerNormalForm
       , doubleNegate, negateZero, divisionDenominator
       , divisionNumerator, simplerFraction
       ]
@@ -67,10 +67,10 @@ fractionStrategy :: LabeledStrategy (Context Expr)
 fractionStrategy = label "simplify" $ 
    repeat $ 
       somewhere 
-         (  use (calcPlusWith     "int" integerNormalForm)
-        <|> use (calcMinusWith    "int" integerNormalForm)
-        <|> use (calcTimesWith    "int" integerNormalForm) -- not needed?
-        -- <|> use (calcDivisionWith "int" integerNormalForm)  -- not needed?
+         (  use (calcPlusWith     "integer" integerNormalForm)
+        <|> use (calcMinusWith    "integer" integerNormalForm)
+        <|> use (calcTimesWith    "integer" integerNormalForm) -- not needed?
+        -- <|> use (calcDivisionWith "integer" integerNormalForm)  -- not needed?
          ) |> 
       somewhere
          (  use doubleNegate <|> use negateZero <|> use divisionDenominator  

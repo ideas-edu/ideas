@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="write as root">
+    <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         root ((4*a)^2) 3
       </expr>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         root (16*a^2) 3
       </expr>

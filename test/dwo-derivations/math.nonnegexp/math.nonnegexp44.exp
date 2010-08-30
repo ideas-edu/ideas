@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         9*a^(-7)/(2*b)^4
       </expr>
     </elem>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         9/a^7/(2*b)^4
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         9/a^7/(16*b^4)
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="division numerator">
+    <elem ruleid="algebra.manipulation.division-numerator">
       <expr>
         9/(16*a^7*b^4)
       </expr>

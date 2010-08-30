@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         3*a^(1/4)/b^(1/2)
       </expr>
     </elem>
-    <elem ruleid="write as root">
+    <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         3*root a 4/b^(1/2)
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[0,1]"/>
       </context>
     </elem>
-    <elem ruleid="write as root">
+    <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         3*root a 4/sqrt b
       </expr>

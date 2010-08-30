@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         (-2*a^6)^2+a^12
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         4*(a^6)^2+a^12
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         4*a^12+a^12
       </expr>
@@ -24,7 +24,7 @@
         <item name="location" value="[0,1]"/>
       </context>
     </elem>
-    <elem ruleid="calculate power plus">
+    <elem ruleid="algebra.manipulation.exponents.calc-power.plus">
       <expr>
         5*a^12
       </expr>

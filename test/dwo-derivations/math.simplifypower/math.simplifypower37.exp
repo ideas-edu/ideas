@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         -a^30
       </expr>

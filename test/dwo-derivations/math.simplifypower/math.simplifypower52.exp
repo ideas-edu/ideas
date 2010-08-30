@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         6*a^7*8*(a^4)^3
       </expr>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         6*a^7*8*a^12
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         48*a^19
       </expr>

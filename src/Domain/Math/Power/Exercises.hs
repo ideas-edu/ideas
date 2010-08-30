@@ -81,7 +81,8 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , ruleOrdering = ruleOrderingWithId [ getId mulExponents
                                        , getId reciprocalFrac
                                        , getId $ reciprocalInv $ const False
-                                       , getId power2root]
+                                       , getId power2root
+                                       , getId distributePower ]
    }
 
 calcPowerExercise :: Exercise Expr

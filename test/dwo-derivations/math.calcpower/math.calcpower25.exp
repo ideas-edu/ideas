@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="calculate power">
+    <elem ruleid="arithmetic.operation.rational.power">
       <expr>
         1/4^2
       </expr>
     </elem>
-    <elem ruleid="calculate power">
+    <elem ruleid="arithmetic.operation.rational.power">
       <expr>
         1/16
       </expr>

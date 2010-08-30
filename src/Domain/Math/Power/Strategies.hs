@@ -130,7 +130,7 @@ rationalRules =
    [ calcPlusWith     "rational" rationalRelaxedForm
    , calcMinusWith    "rational" rationalRelaxedForm
    , calcTimesWith    "rational" rationalRelaxedForm
-   , calcDivisionWith "int"      integerNormalForm
+   , calcDivisionWith "integer"  integerNormalForm
    , doubleNegate
    , negateZero
    , divisionDenominator
@@ -140,10 +140,10 @@ rationalRules =
    
 fractionRules =
    [ fractionPlus, fractionPlusScale, fractionTimes
-   , calcPlusWith     "int" integerNormalForm
-   , calcMinusWith    "int" integerNormalForm
-   , calcTimesWith    "int" integerNormalForm -- not needed?
-   , calcDivisionWith "int" integerNormalForm
+   , calcPlusWith     "integer" integerNormalForm
+   , calcMinusWith    "integer" integerNormalForm
+   , calcTimesWith    "integer" integerNormalForm -- not needed?
+   , calcDivisionWith "integer" integerNormalForm
    , doubleNegate
    , negateZero
    , smartRule divisionDenominator  

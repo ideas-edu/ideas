@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         -27*(a^2)^3+(4*a^3)^2
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         -27*a^6+(4*a^3)^2
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[0,0,1]"/>
       </context>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         -27*a^6+16*(a^3)^2
       </expr>
@@ -24,7 +24,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="mul exponents">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         -27*a^6+16*a^6
       </expr>
@@ -32,7 +32,7 @@
         <item name="location" value="[1,1]"/>
       </context>
     </elem>
-    <elem ruleid="calculate power plus">
+    <elem ruleid="algebra.manipulation.exponents.calc-power.plus">
       <expr>
         -11*a^6
       </expr>

@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (3229)">
   <list>
-    <elem ruleid="reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
       <expr>
         1/(2/5*a)^3
       </expr>
     </elem>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         1/(8*(1/125)*a^3)
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="algebra.manipulation.exponents.fraction-times">
       <expr>
         1/(8/125*a^3)
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[1,0]"/>
       </context>
     </elem>
-    <elem ruleid="fraction times">
+    <elem ruleid="algebra.manipulation.exponents.fraction-times">
       <expr>
         1/(8*a^3/125)
       </expr>
@@ -29,7 +29,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="division denominator">
+    <elem ruleid="algebra.manipulation.division-denominator">
       <expr>
         125/(8*a^3)
       </expr>

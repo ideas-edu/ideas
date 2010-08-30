@@ -20,9 +20,11 @@ import Common.View
 ------------------------------------------------------------
 -- Rules
 
+alg = "algebra.manipulation"
+
 calcRuleName :: String -> String -> String
 calcRuleName opName viewName =
-   "calculate " ++ opName ++ " [" ++ viewName ++ "]"
+   "arithmetic.operation." ++ viewName ++ "." ++ opName
       
 calcBinRule :: String -> (a -> a -> a) -> (e -> Maybe (e, e)) -> String -> View e a -> Rule e
 calcBinRule opName op m viewName v = 
@@ -52,87 +54,87 @@ calcDivisionWith viewName v =
       return (build v d)
 
 negateZero :: Rule Expr 
-negateZero = makeSimpleRule "negate zero" f
+negateZero = makeSimpleRule (alg, "negate-zero") f
  where
    f (Negate (Nat n)) | n == 0 = Just 0
    f _                         = Nothing
 
 doubleNegate :: Rule Expr 
-doubleNegate = makeSimpleRule "double negate" f
+doubleNegate = makeSimpleRule (alg, "double-negate") f
  where
    f (Negate (Negate a)) = Just a
    f _                   = Nothing
 
 plusNegateLeft :: Rule Expr
-plusNegateLeft = makeSimpleRule "plus negate left" f
+plusNegateLeft = makeSimpleRule (alg, "plus-negate-left") f
  where
    f (Negate a :+: b) = Just (b :-: a)
    f _                = Nothing
 
 plusNegateRight :: Rule Expr
-plusNegateRight = makeSimpleRule "plus negate right" f
+plusNegateRight = makeSimpleRule (alg, "plus-negate-right") f
  where
    f (a :+: Negate b) = Just (a :-: b)
    f _                = Nothing
 
 minusNegateLeft :: Rule Expr
-minusNegateLeft = makeSimpleRule "minus negate left" f
+minusNegateLeft = makeSimpleRule (alg, "minus-negate-left") f
  where
    f (Negate a :-: b) = Just (Negate (a :+: b))
    f _                = Nothing
 
 minusNegateRight :: Rule Expr
-minusNegateRight = makeSimpleRule "minus negate right" f
+minusNegateRight = makeSimpleRule (alg, "minus-negate-right") f
  where
    f (a :-: Negate b) = Just (a :+: b)
    f _                = Nothing
 
 timesNegateLeft :: Rule Expr
-timesNegateLeft = makeSimpleRule "times negate left" f
+timesNegateLeft = makeSimpleRule (alg, "times-negate-left") f
  where
    f (Negate a :*: b) = Just (Negate (a :*: b))
    f _                = Nothing
 
 timesNegateRight :: Rule Expr
-timesNegateRight = makeSimpleRule "times negate right" f
+timesNegateRight = makeSimpleRule (alg, "times-negate-right") f
  where
    f (a :*: Negate b) = Just (Negate (a :*: b))
    f _                = Nothing
 
 divisionNegateLeft :: Rule Expr
-divisionNegateLeft = makeSimpleRule "division negate left" f
+divisionNegateLeft = makeSimpleRule (alg, "division-negate-left") f
  where
    f (Negate a :/: b) = Just (Negate (a :/: b))
    f _                = Nothing
 
 divisionNegateRight :: Rule Expr
-divisionNegateRight = makeSimpleRule "division negate right" f
+divisionNegateRight = makeSimpleRule (alg, "division-negate-right") f
  where
    f (a :/: Negate b) = Just (Negate (a :/: b))
    f _                = Nothing
 
 divisionNumerator :: Rule Expr
-divisionNumerator = makeSimpleRule "division numerator" f
+divisionNumerator = makeSimpleRule (alg, "division-numerator") f
  where
    f ((a :/: b) :/: c)        = Just (a :/: (b :*: c))
    f (Negate (a :/: b) :/: c) = Just (Negate (a :/: (b :*: c)))
    f _                        = Nothing
 
 divisionDenominator :: Rule Expr
-divisionDenominator = makeSimpleRule "division denominator" f
+divisionDenominator = makeSimpleRule (alg, "division-denominator") f
  where
    f (a :/: (b :/: c))        = Just ((a :*: c) :/: b)
    f (a :/: Negate (b :/: c)) = Just (Negate ((a :*: c) :/: b))
    f _                        = Nothing
 
 simplerFraction :: Rule Expr
-simplerFraction = makeSimpleRule "simpler fraction" $ \expr -> do
+simplerFraction = makeSimpleRule (alg, "simpler-fraction") $ \expr -> do
    new <- canonical rationalRelaxedForm expr
    guard (expr /= new)
    return new
 
 fractionPlus :: Rule Expr -- also minus
-fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
+fractionPlus = makeSimpleRule (alg, "fraction-plus") $ \expr -> do
    (e1, e2) <- match plusView expr
    (a, b)   <- match fractionForm e1
    (c, d)   <- match fractionForm e2
@@ -140,7 +142,7 @@ fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
    return (build fractionForm (a+c, b))
 
 fractionPlusScale :: Rule Expr -- also minus
-fractionPlusScale = makeSimpleRuleList "fraction plus scale" $ \expr -> do
+fractionPlusScale = makeSimpleRuleList (alg, "fraction-plus-scale") $ \expr -> do
    (e1, e2) <- matchM plusView expr
    (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e1))
    (c, d)   <- (matchM fractionForm e2 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e2))
@@ -152,7 +154,7 @@ fractionPlusScale = makeSimpleRuleList "fraction plus scale" $ \expr -> do
      build plusView (e1, e2n) | d /= bd ]
 
 fractionTimes :: Rule Expr
-fractionTimes = makeSimpleRule "fraction times" f 
+fractionTimes = makeSimpleRule (alg, "fraction-times") f 
  where
    f (e1 :*: e2) = do
       (a, b)   <- (matchM fractionForm e1 `mplus` liftM (\n -> (n, 1)) (matchM integerNormalForm e1))

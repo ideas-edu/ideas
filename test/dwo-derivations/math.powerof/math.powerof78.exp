@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.13">
   <list>
-    <elem ruleid="write as power">
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
         a^2/(a*a^(1/2))
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[1,1]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         a^2/a^(3/2)
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="sub exponents">
+    <elem ruleid="algebra.manipulation.exponents.sub-exponents">
       <expr>
         a^(1/2)
       </expr>

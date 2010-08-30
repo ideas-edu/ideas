@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="distribute power">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
         -16*a^4*(3*a^2)
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[0,0]"/>
       </context>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         -48*a^6
       </expr>

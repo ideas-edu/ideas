@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         -15*a^3*(2*a^3)
       </expr>
     </elem>
-    <elem ruleid="add exponents">
+    <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
         -30*a^6
       </expr>

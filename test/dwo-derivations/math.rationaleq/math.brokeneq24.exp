@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==(x/=1)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         (x-3)*5-(1-x)*7 == 0
       </expr>

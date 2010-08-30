@@ -8,7 +8,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (p-4)*(p-5) == 0
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         p == 4 or p == 5
       </expr>

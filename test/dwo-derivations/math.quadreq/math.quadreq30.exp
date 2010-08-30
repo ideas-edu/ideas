@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         3*x-1 == 0 or x == -3
       </expr>

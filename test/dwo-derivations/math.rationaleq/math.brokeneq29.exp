@@ -13,7 +13,7 @@
         <item name="clipboard" value="[condition==(x/=0)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         -5*x+5 == 0
       </expr>

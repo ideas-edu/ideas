@@ -26,7 +26,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x == 3 or x == -3 or 2*x-8 == 0
       </expr>

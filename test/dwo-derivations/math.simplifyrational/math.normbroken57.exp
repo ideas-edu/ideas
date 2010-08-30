@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (2*p^2+8*p)/((p+4)*(p-4))
       </expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="common factor var">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
         2*p*(p+4)/((p+4)*(p-4))
       </expr>

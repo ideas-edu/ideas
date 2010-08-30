@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.9">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2+8*x-15 == 0
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == (-8+sqrt 124)/2 or x == (-8-sqrt 124)/2
       </expr>
@@ -13,7 +13,7 @@
         <item name="clipboard" value="[D==124, a==1, b==8, c==-15]"/>
       </context>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
       <expr>
         x == -4+sqrt 31 or x == -4-sqrt 31
       </expr>

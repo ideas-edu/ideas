@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (a^3+7*a^2+10*a)/((a+2)*(a-3))
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         a*((a+2)*(a+5))/((a+2)*(a-3))
       </expr>

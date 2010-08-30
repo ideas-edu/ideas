@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         2*x^4-x^2-3 == 0
       </expr>
@@ -13,7 +13,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         p == 3/2 or p == -1
       </expr>

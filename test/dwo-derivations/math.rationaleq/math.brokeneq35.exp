@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-4) (x/=-1)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         (x+2)*(x+1)-(x+4)*2 == 0
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-4) (x/=-1)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x-2)*(x+3) == 0
       </expr>
@@ -40,7 +40,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-4) (x/=-1)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 2 or x == -3
       </expr>

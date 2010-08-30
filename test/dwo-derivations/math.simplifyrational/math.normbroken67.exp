@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.3 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="factor variable power">
       <expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (a^2-9)/(a*((a-1)*(a-3)))
       </expr>
@@ -16,7 +16,7 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (a+3)*(a-3)/(a*((a-1)*(a-3)))
       </expr>

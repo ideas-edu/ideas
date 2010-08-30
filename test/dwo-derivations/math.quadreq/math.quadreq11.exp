@@ -26,7 +26,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
       <expr>
         x == 7+2*sqrt 2 or x == 7-2*sqrt 2
       </expr>

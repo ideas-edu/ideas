@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="common factor var">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
         x*(x+6) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == -6
       </expr>

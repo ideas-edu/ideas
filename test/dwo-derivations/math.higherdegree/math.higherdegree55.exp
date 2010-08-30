@@ -13,7 +13,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x == 0 or x^2+5*x-14 == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         x == 0 or (x-2)*(x+7) == 0
       </expr>
@@ -29,7 +29,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == 2 or x == -7
       </expr>

@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="same constant factor">
+    <elem ruleid="algebra.equations.quadratic.same-con-factor">
       <expr>
         x^4+x^2 == 6
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^4+x^2-6 == 0
       </expr>
@@ -18,7 +18,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (p-2)*(p+3) == 0
       </expr>
@@ -26,7 +26,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         p == 2 or p == -3
       </expr>

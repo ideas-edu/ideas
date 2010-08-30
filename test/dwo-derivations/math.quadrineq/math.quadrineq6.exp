@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==(-2*x^2+10*x>0)]"/>
       </context>
     </elem>
-    <elem ruleid="common factor var">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
         2*x*(-x+5) == 0
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[ineq==(-2*x^2+10*x>0)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == 5
       </expr>

@@ -42,7 +42,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="distribution division">
+    <elem ruleid="algebra.equations.quadratic.distr-div">
       <expr>
         x == 1/2+sqrt 6/6 or x == 1/2-sqrt 6/6
       </expr>

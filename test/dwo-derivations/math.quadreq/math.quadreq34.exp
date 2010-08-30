@@ -5,17 +5,17 @@
         x^2+2*x == 8
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2+2*x-8 == 0
       </expr>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x-2)*(x+4) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 2 or x == -4
       </expr>

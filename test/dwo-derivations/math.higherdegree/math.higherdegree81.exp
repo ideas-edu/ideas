@@ -8,7 +8,7 @@
         <item name="clipboard" value="[subst==(p==x^3)]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         p == 27 or p == -1/3
       </expr>

@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==(1/2*x^2-3*x-8<0)]"/>
       </context>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
         x^2-6*x-16 == 0
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[ineq==(1/2*x^2-3*x-8<0)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+2)*(x-8) == 0
       </expr>
@@ -24,7 +24,7 @@
         <item name="clipboard" value="[ineq==(1/2*x^2-3*x-8<0)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == -2 or x == 8
       </expr>

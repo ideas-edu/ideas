@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^4-x^2-12 == 0
       </expr>
@@ -13,7 +13,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (p+3)*(p-4) == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         p == -3 or p == 4
       </expr>

@@ -5,17 +5,17 @@
         x^2-3*x == 4
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2-3*x-4 == 0
       </expr>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+1)*(x-4) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == -1 or x == 4
       </expr>

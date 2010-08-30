@@ -1,6 +1,5 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem name="abc formula" buggy="false" rewriterule="false"/>
     <elem name="algebra.equations.buggy.abc.minus-4ac" buggy="true" rewriterule="false"/>
     <elem name="algebra.equations.buggy.abc.minus-b" buggy="true" rewriterule="false"/>
     <elem name="algebra.equations.buggy.abc.one-solution" buggy="true" rewriterule="false"/>
@@ -42,23 +41,24 @@
     <elem name="algebra.equations.linear.distr-times" buggy="false" rewriterule="false"/>
     <elem name="algebra.equations.linear.flip" buggy="false" rewriterule="true"/>
     <elem name="algebra.equations.linear.merge" buggy="false" rewriterule="false"/>
-    <elem name="approximate" buggy="false" rewriterule="false"/>
-    <elem name="bring a to one" buggy="false" rewriterule="false"/>
-    <elem name="cancel terms" buggy="false" rewriterule="false"/>
-    <elem name="common factor var" buggy="false" rewriterule="false"/>
-    <elem name="distribution division" buggy="false" rewriterule="false"/>
-    <elem name="distribution square" buggy="false" rewriterule="true"/>
-    <elem name="factor left as square" buggy="false" rewriterule="false"/>
-    <elem name="move to left" buggy="false" rewriterule="false"/>
-    <elem name="multiplication is zero" buggy="false" rewriterule="false"/>
-    <elem name="nice factors" buggy="false" rewriterule="false"/>
-    <elem name="no linear term b" buggy="false" rewriterule="false"/>
-    <elem name="prepare split square" buggy="false" rewriterule="false"/>
-    <elem name="same constant factor" buggy="false" rewriterule="false"/>
-    <elem name="same factor" buggy="false" rewriterule="false"/>
-    <elem name="simpler polynomial" buggy="false" rewriterule="false"/>
-    <elem name="simpler square root" buggy="false" rewriterule="false"/>
-    <elem name="square both sides" buggy="false" rewriterule="true"/>
+    <elem name="algebra.equations.quadratic.abc" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.approx" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.cancel" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.common-factor" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.distr-div" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.distr-square" buggy="false" rewriterule="true"/>
+    <elem name="algebra.equations.quadratic.left-square" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.move-left" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.nice-factors" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.no-lin" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.prepare-split" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.product-zero" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.same-con-factor" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.same-factor" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.scale" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.simpler-poly" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.simpler-sqrt" buggy="false" rewriterule="false"/>
+    <elem name="algebra.equations.quadratic.square-both" buggy="false" rewriterule="true"/>
   </list>
 </reply>
 

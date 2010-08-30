@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.14">
   <list>
-    <elem ruleid="same constant factor">
+    <elem ruleid="algebra.equations.quadratic.same-con-factor">
       <expr>
         2*(10-x^2) == -x*(2*x+10)
       </expr>
@@ -10,7 +10,7 @@
         20-2*x^2 == -2*x^2-10*x
       </expr>
     </elem>
-    <elem ruleid="cancel terms">
+    <elem ruleid="algebra.equations.quadratic.cancel">
       <expr>
         20 == -10*x
       </expr>

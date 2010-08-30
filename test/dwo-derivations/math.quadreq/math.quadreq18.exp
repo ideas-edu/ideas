@@ -37,7 +37,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="distribution division">
+    <elem ruleid="algebra.equations.quadratic.distr-div">
       <expr>
         x == -7/2+sqrt 7/2 or x == -7/2-sqrt 7/2
       </expr>

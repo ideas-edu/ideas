@@ -5,12 +5,12 @@
         x^2-4*x-5 == x^2-5*x+6
       </expr>
     </elem>
-    <elem ruleid="cancel terms">
+    <elem ruleid="algebra.equations.quadratic.cancel">
       <expr>
         -4*x-5 == -5*x+6
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x-11 == 0
       </expr>

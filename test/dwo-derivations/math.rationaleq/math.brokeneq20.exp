@@ -26,7 +26,7 @@
         <item name="location" value="[2,1]"/>
       </context>
     </elem>
-    <elem ruleid="same constant factor">
+    <elem ruleid="algebra.equations.quadratic.same-con-factor">
       <expr>
         x == 0 or x == 3 or x-3 == 2*x+1
       </expr>
@@ -35,7 +35,7 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x == 0 or x == 3 or -x-4 == 0
       </expr>

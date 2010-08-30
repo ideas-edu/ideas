@@ -20,7 +20,7 @@
         x == (root 5 3+1)/2
       </expr>
     </elem>
-    <elem ruleid="distribution division">
+    <elem ruleid="algebra.equations.quadratic.distr-div">
       <expr>
         x == root 5 3/2+1/2
       </expr>

@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         (x+1)*(2*x-4)-(x+2)*(7*x+1) == 0
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
       </context>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
         5*x^2+17*x+6 == 0
       </expr>
@@ -40,7 +40,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == -2/5 or x == -3
       </expr>

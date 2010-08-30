@@ -5,7 +5,7 @@
         x == 0 or x^2+36 == 13*x
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x == 0 or x^2-13*x+36 == 0
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         x == 0 or (x-4)*(x-9) == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == 4 or x == 9
       </expr>

@@ -5,12 +5,12 @@
         x^2-3*x == 3*x-6
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2-6*x+6 == 0
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == (6+sqrt 12)/2 or x == (6-sqrt 12)/2
       </expr>
@@ -18,7 +18,7 @@
         <item name="clipboard" value="[D==12, a==1, b==-6, c==6]"/>
       </context>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
       <expr>
         x == 3+sqrt 3 or x == 3-sqrt 3
       </expr>

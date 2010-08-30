@@ -1,16 +1,16 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         -2*x^2+3*x == 0
       </expr>
     </elem>
-    <elem ruleid="common factor var">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
         x*(-2*x+3) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or -2*x+3 == 0
       </expr>

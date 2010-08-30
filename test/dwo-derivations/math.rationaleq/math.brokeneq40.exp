@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=1)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         (3*x-7)*(3*x-3)-(x-2)*(7-x) == 0
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=2) (x/=1)]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == 5/2 or x == 7/5
       </expr>

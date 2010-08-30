@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or 2*x-4 == 0
       </expr>

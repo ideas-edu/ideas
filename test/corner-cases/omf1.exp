@@ -36,7 +36,7 @@
         </OMA>
       </OMOBJ>
     </elem>
-    <elem ruleid="approximate">
+    <elem ruleid="algebra.equations.quadratic.approx">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="logic1" name="or"/>

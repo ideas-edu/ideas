@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==(x^2-x>12)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2-x-12 == 0
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[ineq==(x^2-x>12)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+3)*(x-4) == 0
       </expr>
@@ -24,7 +24,7 @@
         <item name="clipboard" value="[ineq==(x^2-x>12)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == -3 or x == 4
       </expr>

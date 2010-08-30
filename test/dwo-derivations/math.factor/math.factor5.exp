@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.11">
   <list>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+3)*(x+8)
       </expr>

@@ -1,21 +1,21 @@
 <reply result="ok" version="0.5.9">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         -x^2+2*x+15 == 0
       </expr>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
         x^2-2*x-15 == 0
       </expr>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+3)*(x-5) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == -3 or x == 5
       </expr>

@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2-5*x == 0
       </expr>
     </elem>
-    <elem ruleid="common factor var">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
         x*(x-5) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == 5
       </expr>

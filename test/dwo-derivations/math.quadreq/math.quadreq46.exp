@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="distribution square">
+    <elem ruleid="algebra.equations.quadratic.distr-square">
       <expr>
         3*x^2-11 == 9+12*x+4*x^2
       </expr>
@@ -8,22 +8,22 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         -x^2-12*x-20 == 0
       </expr>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
         x^2+12*x+20 == 0
       </expr>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+2)*(x+10) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == -2 or x == -10
       </expr>

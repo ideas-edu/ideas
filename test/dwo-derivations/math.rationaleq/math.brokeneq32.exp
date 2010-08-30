@@ -13,7 +13,7 @@
         <item name="clipboard" value="[condition==(x/=3/2)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         -(2*x-3)*4+x^2 == 0
       </expr>
@@ -29,7 +29,7 @@
         <item name="clipboard" value="[condition==(x/=3/2)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x-2)*(x-6) == 0
       </expr>
@@ -37,7 +37,7 @@
         <item name="clipboard" value="[condition==(x/=3/2)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 2 or x == 6
       </expr>

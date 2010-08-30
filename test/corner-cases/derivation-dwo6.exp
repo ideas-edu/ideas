@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="square both sides">
+    <elem ruleid="algebra.equations.quadratic.square-both">
       <expr>
         x-5 == 3-2*x or x-5 == -3+2*x
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         3*x-8 == 0 or x-5 == -3+2*x
       </expr>
@@ -29,7 +29,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x == 8/3 or -x-2 == 0
       </expr>

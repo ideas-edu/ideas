@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="top form">
       <expr>
         x^2-3*x+1 == 0
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == (3+sqrt 5)/2 or x == (3-sqrt 5)/2
       </expr>
@@ -13,7 +13,7 @@
         <item name="clipboard" value="[D==5, a==1, b==-3, c==1]"/>
       </context>
     </elem>
-    <elem ruleid="approximate">
+    <elem ruleid="algebra.equations.quadratic.approx">
       <expr>
         x ~= 2.618 or x ~= 0.382
       </expr>

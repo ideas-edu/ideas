@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         8*x^6+31*x^3-4 == 0
       </expr>
@@ -13,7 +13,7 @@
         <item name="clipboard" value="[subst==(p==x^3)]"/>
       </context>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         p == 1/8 or p == -4
       </expr>

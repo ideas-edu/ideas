@@ -5,7 +5,7 @@
         x == 0 or 1/2*x^2+3*x+4 == 0
       </expr>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
         x == 0 or x^2+6*x+8 == 0
       </expr>
@@ -13,7 +13,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         x == 0 or (x+2)*(x+4) == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == -2 or x == -4
       </expr>

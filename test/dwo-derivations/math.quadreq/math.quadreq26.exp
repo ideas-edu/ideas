@@ -1,21 +1,21 @@
 <reply result="ok" version="0.5.14">
   <list>
-    <elem ruleid="same constant factor">
+    <elem ruleid="algebra.equations.quadratic.same-con-factor">
       <expr>
         x^2 == 2*x
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2-2*x == 0
       </expr>
     </elem>
-    <elem ruleid="common factor var">
+    <elem ruleid="algebra.equations.quadratic.common-factor">
       <expr>
         x*(x-2) == 0
       </expr>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == 0 or x == 2
       </expr>

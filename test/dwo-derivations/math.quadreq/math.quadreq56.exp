@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="distribution square">
+    <elem ruleid="algebra.equations.quadratic.distr-square">
       <expr>
         x^2-7*x+49/4 == 2*(x+4)
       </expr>
@@ -13,17 +13,17 @@
         x^2-7*x+49/4 == 2*x+8
       </expr>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         x^2-9*x+17/4 == 0
       </expr>
     </elem>
-    <elem ruleid="simpler polynomial">
+    <elem ruleid="algebra.equations.quadratic.simpler-poly">
       <expr>
         4*x^2-36*x+17 == 0
       </expr>
     </elem>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == 17/2 or x == 1/2
       </expr>

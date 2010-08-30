@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="turn into equation">
       <expr>
@@ -8,7 +8,7 @@
         <item name="clipboard" value="[ineq==(x^2-2*x-15>=0)]"/>
       </context>
     </elem>
-    <elem ruleid="nice factors">
+    <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
         (x+3)*(x-5) == 0
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[ineq==(x^2-2*x-15>=0)]"/>
       </context>
     </elem>
-    <elem ruleid="multiplication is zero">
+    <elem ruleid="algebra.equations.quadratic.product-zero">
       <expr>
         x == -3 or x == 5
       </expr>

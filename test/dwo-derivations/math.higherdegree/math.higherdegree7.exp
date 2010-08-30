@@ -15,7 +15,7 @@
         x == sqrt (9/4) or x == -sqrt (9/4)
       </expr>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
       <expr>
         x == 3/2 or x == -3/2
       </expr>

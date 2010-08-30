@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=1/3) (x/=-1)]"/>
       </context>
     </elem>
-    <elem ruleid="move to left">
+    <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         (3*x+6)*(x+1)-(3*x-1)*(x+4) == 0
       </expr>

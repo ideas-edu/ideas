@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.9">
   <list>
-    <elem ruleid="abc formula">
+    <elem ruleid="algebra.equations.quadratic.abc">
       <expr>
         x == (12+sqrt 8)/2 or x == (12-sqrt 8)/2
       </expr>
@@ -8,7 +8,7 @@
         <item name="clipboard" value="[D==8, a==1, b==-12, c==34]"/>
       </context>
     </elem>
-    <elem ruleid="simpler square root">
+    <elem ruleid="algebra.equations.quadratic.simpler-sqrt">
       <expr>
         x == 6+sqrt 2 or x == 6-sqrt 2
       </expr>

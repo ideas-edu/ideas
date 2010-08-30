@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==(x/=0)]"/>
       </context>
     </elem>
-    <elem ruleid="all power factors">
+    <elem ruleid="algebra.equations.polynomial.power-factors">
       <expr>
         x == 0 or x+5 == 0 or 2*x^2 == x^2+4
       </expr>

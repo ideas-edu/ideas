@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="higher subst">
+    <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
         3*p^2-80*p-27 == 0
       </expr>
@@ -16,7 +16,7 @@
         <item name="clipboard" value="[D==6724, a==3, b==-80, c==-27, subst==(p==x^3)]"/>
       </context>
     </elem>
-    <elem ruleid="subst back var">
+    <elem ruleid="algebra.equations.polynomial.back-subst">
       <expr>
         x^3 == 27 or x^3 == -1/3
       </expr>

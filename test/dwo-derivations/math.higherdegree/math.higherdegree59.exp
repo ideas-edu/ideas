@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="all power factors">
+    <elem ruleid="algebra.equations.polynomial.power-factors">
       <expr>
         x == 0 or x^2-5*x == 6
       </expr>

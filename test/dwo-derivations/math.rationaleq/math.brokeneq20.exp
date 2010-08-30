@@ -8,7 +8,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=3) (x/=-1/2)]"/>
       </context>
     </elem>
-    <elem ruleid="all power factors">
+    <elem ruleid="algebra.equations.polynomial.power-factors">
       <expr>
         x == 0 or x-3 == 0 or 2*x-6 == 4*x+2
       </expr>

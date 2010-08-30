@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="higher subst">
+    <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
         p^2-9*p+20 == 0
       </expr>
@@ -24,7 +24,7 @@
         <item name="clipboard" value="[subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="subst back var">
+    <elem ruleid="algebra.equations.polynomial.back-subst">
       <expr>
         x^2 == 4 or x^2 == 5
       </expr>

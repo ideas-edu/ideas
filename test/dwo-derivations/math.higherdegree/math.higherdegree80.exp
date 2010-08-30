@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         8*x^6+31*x^3-4 == 0
       </expr>
     </elem>
-    <elem ruleid="higher subst">
+    <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
         8*p^2+31*p-4 == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="clipboard" value="[D==1089, a==8, b==31, c==-4, subst==(p==x^3)]"/>
       </context>
     </elem>
-    <elem ruleid="subst back var">
+    <elem ruleid="algebra.equations.polynomial.back-subst">
       <expr>
         x^3 == 1/8 or x^3 == -4
       </expr>

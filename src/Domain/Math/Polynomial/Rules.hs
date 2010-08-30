@@ -54,6 +54,7 @@ quadraticRuleOrder =
 
 lineq   = "algebra.equations.linear"
 quadreq = "algebra.equations.quadratic"
+polyeq  = "algebra.equations.polynomial"
 
 ------------------------------------------------------------
 -- General form rules: ax^2 + bx + c = 0
@@ -307,7 +308,8 @@ ruleNormalizeMixedFraction =
 -- This one does not factor constants
 
 allPowerFactors :: Rule (OrList (Equation Expr))
-allPowerFactors = makeSimpleRule "all power factors" $ oneDisjunct $ 
+allPowerFactors = describe "all power factors" $
+   makeSimpleRule (polyeq, "power-factors") $ oneDisjunct $ 
    \(lhs :==: rhs) -> do
       let myView = polyNormalForm rationalView
       (s1, p1) <- match myView lhs
@@ -383,7 +385,8 @@ abcFormula = describe "quadratic formula (abc formule)" $
          ]
 
 higherSubst :: Rule (Context (Equation Expr))
-higherSubst = makeSimpleRule "higher subst" $ withCM $ \(lhs :==: rhs) -> do
+higherSubst = describe "Substitute variable" $
+   makeSimpleRule (polyeq, "subst") $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    let myView = polyView >>> second trinomialPolyView
    (x, ((a, n1), (b, n2), (c, n3))) <- matchM myView lhs
@@ -393,7 +396,8 @@ higherSubst = makeSimpleRule "higher subst" $ withCM $ \(lhs :==: rhs) -> do
    return (new :==: 0)
 
 substBackVar :: Rule (Context Expr)
-substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
+substBackVar = describe "Substitute back a variable" $ 
+   makeSimpleRule (polyeq, "back-subst") $ withCM $ \a -> do
    expr <- lookupClipboard "subst"
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
@@ -405,8 +409,9 @@ substBackVar = makeSimpleRule "subst back var" $ withCM $ \a -> do
    subst a b expr = descend (subst a b) expr
 
 exposeSameFactor :: Rule (Equation Expr)
-exposeSameFactor = liftRule (bothSidesView productView) $ 
-   makeSimpleRuleList "expose same factor" $ \((bx, xs) :==: (by, ys)) -> do 
+exposeSameFactor = describe "expose same factor" $ 
+   liftRule (bothSidesView productView) $ 
+   makeSimpleRuleList (polyeq, "expose-factor") $ \((bx, xs) :==: (by, ys)) -> do 
       (nx, ny) <- [ (xs, new) | x <- xs, suitable x, new <- exposeList x ys ] ++
                   [ (new, ys) | y <- ys, suitable y, new <- exposeList y xs ]
       return ((bx, nx) :==: (by, ny))

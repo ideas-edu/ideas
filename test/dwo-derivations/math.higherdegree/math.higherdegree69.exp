@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.move-left">
       <expr>
         4*x^4-17*x^2+4 == 0
       </expr>
     </elem>
-    <elem ruleid="higher subst">
+    <elem ruleid="algebra.equations.polynomial.subst">
       <expr>
         4*p^2-17*p+4 == 0
       </expr>
@@ -21,7 +21,7 @@
         <item name="clipboard" value="[D==225, a==4, b==-17, c==4, subst==(p==x^2)]"/>
       </context>
     </elem>
-    <elem ruleid="subst back var">
+    <elem ruleid="algebra.equations.polynomial.back-subst">
       <expr>
         x^2 == 4 or x^2 == 1/4
       </expr>

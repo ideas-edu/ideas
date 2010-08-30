@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
         -6*x+35 == 6*x+9
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -12*x+35 == 9
       </expr>

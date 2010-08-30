@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         6*x-2 &lt; 3+9*x
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -3*x-2 &lt; 3
       </expr>

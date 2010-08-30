@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
         9*(7-2/3*x) == 36+2*x
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         63-6*x == 36+2*x
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         63-8*x == 36
       </expr>

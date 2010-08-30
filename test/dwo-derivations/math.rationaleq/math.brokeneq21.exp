@@ -16,7 +16,7 @@
         <item name="clipboard" value="[condition==(x/=-1)]"/>
       </context>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         -7*x-7+4*x == 0
       </expr>
@@ -24,7 +24,7 @@
         <item name="clipboard" value="[condition==(x/=-1)]"/>
       </context>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         -3*x-7 == 0
       </expr>

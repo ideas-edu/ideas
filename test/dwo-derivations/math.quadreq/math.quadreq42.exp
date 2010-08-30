@@ -5,7 +5,7 @@
         2*(10-x^2) == -x*(2*x+10)
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         20-2*x^2 == -2*x^2-10*x
       </expr>
@@ -20,7 +20,7 @@
         -2 == x
       </expr>
     </elem>
-    <elem ruleid="flip equation">
+    <elem ruleid="algebra.equations.linear.flip">
       <expr>
         x == -2
       </expr>

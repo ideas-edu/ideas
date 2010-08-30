@@ -5,14 +5,14 @@
       <label name="phase 1">
         <repeat>
           <choice>
-            <rule name="remove division"/>
-            <label name="distribution multiplication" collapsed="true">
+            <rule name="algebra.equations.linear.remove-div"/>
+            <label name="algebra.equations.linear.distr-times" collapsed="true">
               <sequence>
                 <rec var="0">
                   <choice>
                     <sequence>
                       <rule name="parent not negate check"/>
-                      <rule name="distribution multiplication"/>
+                      <rule name="algebra.equations.linear.distr-times"/>
                     </sequence>
                     <sequence>
                       <rule name="navigation.down.all"/>
@@ -26,7 +26,7 @@
                     <choice>
                       <sequence>
                         <rule name="parent not negate check"/>
-                        <rule name="distribution multiplication"/>
+                        <rule name="algebra.equations.linear.distr-times"/>
                       </sequence>
                       <sequence>
                         <rule name="navigation.down.all"/>
@@ -41,12 +41,12 @@
             <label name="merge similar terms" collapsed="true">
               <sequence>
                 <rule name="navigation.down.all"/>
-                <rule name="merge similar terms"/>
+                <rule name="algebra.equations.linear.merge"/>
                 <rule name="navigation.up"/>
                 <repeat>
                   <sequence>
                     <rule name="navigation.down.all"/>
-                    <rule name="merge similar terms"/>
+                    <rule name="algebra.equations.linear.merge"/>
                     <rule name="navigation.up"/>
                   </sequence>
                 </repeat>
@@ -59,8 +59,8 @@
         <repeat>
           <choice>
             <orelse>
-              <rule name="flip equation"/>
-              <rule name="variable to left"/>
+              <rule name="algebra.equations.linear.flip"/>
+              <rule name="algebra.equations.linear.var-left"/>
             </orelse>
             <rule name="algebra.equations.coverup.onevar.plus"/>
             <rule name="algebra.equations.coverup.onevar.minus-left"/>
@@ -74,8 +74,8 @@
         <sequence>
           <rule name="navigation.down.all"/>
           <choice>
-            <rule name="normalize rational number"/>
-            <rule name="normalize mixed fraction" removed="true"/>
+            <rule name="algebra.equations.linear.norm-rational"/>
+            <rule name="algebra.equations.linear.norm-mixed" removed="true"/>
           </choice>
           <rule name="navigation.up"/>
         </sequence>

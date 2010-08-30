@@ -32,7 +32,7 @@
         <item name="clipboard" value="[condition==(a/=-2)]"/>
       </context>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         (a^2+5*a)/(a-3)
       </expr>

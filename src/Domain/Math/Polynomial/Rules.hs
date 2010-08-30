@@ -52,6 +52,8 @@ quadraticRuleOrder =
    , getId allPowerFactors
    ]
 
+lineq = "algebra.equations.linear"
+
 ------------------------------------------------------------
 -- General form rules: ax^2 + bx + c = 0
 
@@ -242,7 +244,8 @@ factorLeftAsSquare = makeSimpleRule "factor left as square" $ \(lhs :==: rhs) ->
 -- flip the two sides of an equation
 flipEquation :: Rule (Equation Expr)
 flipEquation = doBeforeTrans condition $
-   rule "flip equation" $ \a b ->
+   describe "flip equation" $
+   rule (lineq, "flip") $ \a b ->
       (a :==: b) :~> (b :==: a)
  where
    condition = makeTrans $ \eq@(lhs :==: rhs) -> do
@@ -273,12 +276,14 @@ ruleApproximate = makeSimpleRule "approximate" $ \relation -> do
    return (Var x .~=. new)
 
 ruleNormalizeRational :: Rule Expr
-ruleNormalizeRational = 
-   ruleFromView "normalize rational number" rationalView
+ruleNormalizeRational =
+   describe "normalize rational number" $ 
+   ruleFromView (lineq, "norm-rational") rationalView
 
 ruleNormalizeMixedFraction :: Rule Expr
 ruleNormalizeMixedFraction = 
-   ruleFromView "normalize mixed fraction" mixedFractionView
+   describe "normalize mixed fraction" $
+   ruleFromView (lineq, "norm-mixed") mixedFractionView
 
 -----------------------------------------------------------
 -------- Rules From HDE
@@ -449,7 +454,8 @@ distributionT = makeTransList f
 
 varToLeft :: Rule (Relation Expr)
 varToLeft = doAfter (fmap collectLikeTerms) $ 
-   makeRule "variable to left" $ flip supply1 minusT $ \eq -> do
+   describe "variable to left" $ 
+   makeRule (lineq, "var-left") $ flip supply1 minusT $ \eq -> do
       (x, a, _) <- match (linearViewWith rationalView) (rightHandSide eq)
       guard (a/=0)
       return (fromRational a * Var x)
@@ -457,7 +463,8 @@ varToLeft = doAfter (fmap collectLikeTerms) $
 -- factor is always positive due to lcm function
 removeDivision :: Rule (Relation Expr)
 removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
-   makeRule "remove division" $ flip supply1 timesT $ \eq -> do
+   describe "remove division" $ 
+   makeRule (lineq, "remove-div") $ flip supply1 timesT $ \eq -> do
       xs <- match sumView (leftHandSide eq)
       ys <- match sumView (rightHandSide eq)
       -- also consider parts without variables
@@ -475,8 +482,9 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
                            else Nothing
 
 distributeTimes :: Rule Expr
-distributeTimes = makeSimpleRuleList "distribution multiplication" $
-   liftM collectLikeTerms . applyAll distributionT
+distributeTimes = describe "distribution multiplication" $ 
+   makeSimpleRuleList (lineq, "distr-times") $
+      liftM collectLikeTerms . applyAll distributionT
 
 distributeDivision :: Rule Expr
 distributeDivision = makeSimpleRule "distribution division" $ \expr -> do
@@ -486,10 +494,11 @@ distributeDivision = makeSimpleRule "distribution division" $ \expr -> do
    return $ build sumView ys
 
 merge :: Rule Expr
-merge = makeSimpleRule "merge similar terms" $ \old -> do
-   let new = collectLikeTerms old
-   guard (old /= new)
-   return new
+merge = describe "merge similar terms" $ 
+   makeSimpleRule (lineq, "merge") $ \old -> do
+      let new = collectLikeTerms old
+      guard (old /= new)
+      return new
 
 simplerLinearFactor :: Rule Expr
 simplerLinearFactor = makeSimpleRule "simpler linear factor" $ \expr -> do
@@ -499,7 +508,7 @@ simplerLinearFactor = makeSimpleRule "simpler linear factor" $ \expr -> do
    guard (a /= 0 && b /= 0 && d /= 1 && d /= -1)
    return $ fromRational d * build myView (x, (a/d, b/d))
    
-ruleFromView :: Eq a => String -> View a b -> Rule a
+ruleFromView :: (IsId n, Eq a) => n -> View a b -> Rule a
 ruleFromView s v = makeSimpleRuleList s $ \a -> do
    b <- canonicalM v a
    guard (a /= b)

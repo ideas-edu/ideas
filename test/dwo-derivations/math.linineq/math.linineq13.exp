@@ -1,16 +1,16 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
         -3*(x-12) &gt; 2*(x+3)
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         -3*x+36 &gt; 2*x+6
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -5*x+36 &gt; 6
       </expr>

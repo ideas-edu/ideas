@@ -16,7 +16,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=7/3)]"/>
       </context>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         6*x^2-35*x+49-4*x-5+x^2 == 0
       </expr>
@@ -24,7 +24,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=5) (x/=7/3)]"/>
       </context>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         7*x^2-39*x+44 == 0
       </expr>

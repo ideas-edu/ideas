@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         12*x-3+3 == 7*x-14
       </expr>
@@ -10,7 +10,7 @@
         12*x == 7*x-14
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         5*x == -14
       </expr>

@@ -1,16 +1,16 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         5-2*a+6 &gt; 15-5*a
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         11-2*a &gt; 15-5*a
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         11+3*a &gt; 15
       </expr>

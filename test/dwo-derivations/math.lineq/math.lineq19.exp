@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.12">
   <list>
-    <elem ruleid="flip equation">
+    <elem ruleid="algebra.equations.linear.flip">
       <expr>
         4-10*x == 17
       </expr>

@@ -10,12 +10,12 @@
         ((x-2)*6-(x-1)*3)/((x-1)*(x-2))
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         (6*x-12-3*x+3)/((x-1)*(x-2))
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         (3*x-9)/((x-1)*(x-2))
       </expr>

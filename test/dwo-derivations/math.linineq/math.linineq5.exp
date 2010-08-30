@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.8">
   <list>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -x+5 &lt; -3
       </expr>

@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         4*x-x+2 == 12+5*x-5
       </expr>
@@ -10,7 +10,7 @@
         3*x+2 == 7+5*x
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -2*x+2 == 7
       </expr>

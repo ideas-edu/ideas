@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.9">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         x^2-5*x+4 == 11
       </expr>

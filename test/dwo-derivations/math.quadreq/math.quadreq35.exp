@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         x^2-3*x == 4
       </expr>

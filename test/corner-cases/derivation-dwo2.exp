@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>
@@ -61,7 +61,7 @@
         </OMA>
       </OMOBJ>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>
@@ -143,7 +143,7 @@
         </OMA>
       </OMOBJ>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
         <OMA>
           <OMS cd="relation1" name="eq"/>

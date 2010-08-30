@@ -10,12 +10,12 @@
         ((x+1)*(4*x)-(x+2)*(2*x))/((x+2)*(x+1))
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         (4*x^2+4*x-2*x^2-4*x)/((x+2)*(x+1))
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         2*x^2/((x+2)*(x+1))
       </expr>

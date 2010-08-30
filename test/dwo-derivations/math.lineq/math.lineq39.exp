@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
         10*x-30 == 3*x-9
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         7*x-30 == -9
       </expr>

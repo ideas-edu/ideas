@@ -1,11 +1,11 @@
 <reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         4*x-4 == 11*x-12
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -7*x-4 == -12
       </expr>

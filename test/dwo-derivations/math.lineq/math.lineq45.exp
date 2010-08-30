@@ -1,11 +1,11 @@
-<reply result="ok" version="0.5.6">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
         -5*(x-7) == 3*(x+2)-18
       </expr>
     </elem>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         -5*x+35 == 3*x+6-18
       </expr>
@@ -15,7 +15,7 @@
         -5*x+35 == 3*x-12
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -8*x+35 == -12
       </expr>

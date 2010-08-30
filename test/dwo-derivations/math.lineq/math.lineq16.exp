@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.5">
   <list>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -1-8*x == -20
       </expr>

@@ -1,16 +1,16 @@
 <reply result="ok" version="0.5.6">
   <list>
-    <elem ruleid="distribution multiplication">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
         3/5*x-3+5 == 7*x-14
       </expr>
     </elem>
-    <elem ruleid="remove division">
+    <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
         3*x+10 == 35*x-70
       </expr>
     </elem>
-    <elem ruleid="variable to left">
+    <elem ruleid="algebra.equations.linear.var-left">
       <expr>
         -32*x+10 == -70
       </expr>

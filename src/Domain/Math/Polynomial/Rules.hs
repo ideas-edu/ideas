@@ -323,7 +323,8 @@ allPowerFactors = describe "all power factors" $
       return $ orList [Var s1 :==: 0, f p1 :==: f p2] 
 
 factorVariablePower :: Rule Expr
-factorVariablePower = makeSimpleRule "factor variable power" $ \expr -> do
+factorVariablePower = describe "factor variable power" $ 
+   makeSimpleRule (polyeq, "factor-varpower") $ \expr -> do
    let myView = polyNormalForm rationalView
    (s, p) <- match (polyNormalForm rationalView) expr
    let n = lowestDegree p
@@ -525,7 +526,8 @@ merge = describe "merge similar terms" $
       return new
 
 simplerLinearFactor :: Rule Expr
-simplerLinearFactor = makeSimpleRule "simpler linear factor" $ \expr -> do
+simplerLinearFactor = describe "simpler linear factor" $ 
+   makeSimpleRule (polyeq, "simpler-linfactor") $ \expr -> do
    let myView = polyNormalForm rationalView >>> second linearPolyView
    (x, (a, b)) <- match myView expr
    let d = (if a<0 then negate else id) (gcdFrac a b)

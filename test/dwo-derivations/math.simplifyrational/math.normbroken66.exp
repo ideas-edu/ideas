@@ -8,7 +8,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="factor variable power">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
         a*(a^2+7*a+10)/((a+2)*(a-3))
       </expr>

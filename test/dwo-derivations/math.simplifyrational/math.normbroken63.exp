@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="factor variable power">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
         (x^2+5*x+6)/(x*(x^2-x-6))
       </expr>

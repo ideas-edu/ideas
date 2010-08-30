@@ -15,7 +15,7 @@
         -3*x &lt; 5
       </expr>
     </elem>
-    <elem ruleid="flip sign">
+    <elem ruleid="algebra.inequalities.flip-sign">
       <expr>
         3*x &gt; -5
       </expr>

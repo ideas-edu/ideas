@@ -10,7 +10,7 @@
         -4*x &lt; 4
       </expr>
     </elem>
-    <elem ruleid="flip sign">
+    <elem ruleid="algebra.inequalities.flip-sign">
       <expr>
         4*x &gt; -4
       </expr>

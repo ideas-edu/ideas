@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.14">
   <list>
-    <elem ruleid="turn into equation">
+    <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         1/2*x^2-3*x-8 == 0
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[ineq==(1/2*x^2-3*x-8<0)]"/>
       </context>
     </elem>
-    <elem ruleid="solution inequation">
+    <elem ruleid="algebra.inequalities.give-solution">
       <expr>
         -2 &lt; x &lt; 8
       </expr>

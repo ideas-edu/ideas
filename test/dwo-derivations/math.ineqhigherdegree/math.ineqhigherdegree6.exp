@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="turn into equation">
+    <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         1/4*(1/2*x-2)^4 == 4
       </expr>
@@ -60,7 +60,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="solution inequation">
+    <elem ruleid="algebra.inequalities.give-solution">
       <expr>
         0 &lt; x &lt; 8
       </expr>

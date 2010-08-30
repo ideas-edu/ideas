@@ -91,6 +91,8 @@ ineqHigherDegreeExercise = makeExercise
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
 
+ineq = "algebra.inequalities"
+
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
 showLogicRelation logic = 
    case logic of
@@ -173,7 +175,8 @@ coverUpTimesPositive = coverUpBinaryRule "times positive" (commOp . m) (/) confi
       return (a, b)
       
 flipSign :: Rule (Relation Expr)
-flipSign = makeSimpleRule "flip sign" $ \r -> do
+flipSign = describe "Flip sign of inequality" $
+   makeSimpleRule (ineq, "flip-sign") $ \r -> do
    let lhs = leftHandSide r
        rhs = rightHandSide r
    guard (isNegative lhs) 
@@ -204,7 +207,8 @@ cleanUpLogicRelation p =
       Nothing -> fmap (fmap cleanUpExpr2) p
 
 turnIntoEquation :: Rule (Context (Relation Expr))
-turnIntoEquation = makeSimpleRule "turn into equation" $ withCM $ \r -> do
+turnIntoEquation = describe "Turn into equation" $ 
+   makeSimpleRule (ineq, "to-equation") $ withCM $ \r -> do
    guard (relationType r `elem` ineqTypes)
    addToClipboard "ineq" (toExpr r)
    return (leftHandSide r .==. rightHandSide r)
@@ -214,7 +218,8 @@ turnIntoEquation = makeSimpleRule "turn into equation" $ withCM $ \r -> do
 
 -- Todo: cleanup this function
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
-solutionInequation = makeSimpleRule "solution inequation" $ withCM $ \r -> do
+solutionInequation = describe "Determine solution for inequality" $ 
+   makeSimpleRule (ineq, "give-solution") $ withCM $ \r -> do
    ineq <- lookupClipboard "ineq" >>= fromExpr
    removeClipboard "ineq"
    orv  <- maybeCM (matchM orListView r)

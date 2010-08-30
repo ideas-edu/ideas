@@ -20,7 +20,7 @@
         -5*x &gt; -30
       </expr>
     </elem>
-    <elem ruleid="flip sign">
+    <elem ruleid="algebra.inequalities.flip-sign">
       <expr>
         5*x &lt; 30
       </expr>

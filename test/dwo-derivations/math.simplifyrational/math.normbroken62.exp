@@ -8,7 +8,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="factor variable power">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
         x*(x^2+10*x+24)/((x+1)*(x+6))
       </expr>

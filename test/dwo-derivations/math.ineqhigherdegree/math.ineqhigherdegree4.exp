@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="turn into equation">
+    <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         (2*x-3)^4 == 1
       </expr>
@@ -52,7 +52,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="solution inequation">
+    <elem ruleid="algebra.inequalities.give-solution">
       <expr>
         x &lt; 1 or x &gt; 2
       </expr>

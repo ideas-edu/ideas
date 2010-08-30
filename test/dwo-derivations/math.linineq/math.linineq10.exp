@@ -20,7 +20,7 @@
         -11*x &gt; 0
       </expr>
     </elem>
-    <elem ruleid="flip sign">
+    <elem ruleid="algebra.inequalities.flip-sign">
       <expr>
         11*x &lt; 0
       </expr>

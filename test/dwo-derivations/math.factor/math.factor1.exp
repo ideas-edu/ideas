@@ -1,9 +1,17 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="algebra.equations.quadratic.common-factor">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
-        4*x*(x-1)
+        x*(4*x-4)
       </expr>
+    </elem>
+    <elem ruleid="algebra.equations.polynomial.simpler-linfactor">
+      <expr>
+        x*(4*(x-1))
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
     </elem>
   </list>
 </reply>

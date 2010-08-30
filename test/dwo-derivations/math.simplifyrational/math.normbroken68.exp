@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="factor variable power">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
         (a^2-2*a-15)/(a*(a^2-3*a-10))
       </expr>

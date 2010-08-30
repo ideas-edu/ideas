@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.10">
   <list>
-    <elem ruleid="turn into equation">
+    <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         2*x^2+6*x-10 == x^2+2*x-5
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[ineq==(2*x^2+6*x-10>x^2+2*x-5)]"/>
       </context>
     </elem>
-    <elem ruleid="solution inequation">
+    <elem ruleid="algebra.inequalities.give-solution">
       <expr>
         x &lt; -5 or x &gt; 1
       </expr>

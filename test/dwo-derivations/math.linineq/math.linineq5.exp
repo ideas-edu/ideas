@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.var-left">
       <expr>
@@ -10,7 +10,7 @@
         -x &lt; -8
       </expr>
     </elem>
-    <elem ruleid="flip sign">
+    <elem ruleid="algebra.inequalities.flip-sign">
       <expr>
         x &gt; 8
       </expr>

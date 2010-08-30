@@ -1,6 +1,6 @@
 <reply result="ok" version="0.5.14">
   <list>
-    <elem ruleid="turn into equation">
+    <elem ruleid="algebra.inequalities.to-equation">
       <expr>
         x^2-9/2*x == 7-3*x
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[D==121, a==2, b==-3, c==-14, ineq==(x^2-9/2*x<7-3*x)]"/>
       </context>
     </elem>
-    <elem ruleid="solution inequation">
+    <elem ruleid="algebra.inequalities.give-solution">
       <expr>
         -2 &lt; x &lt; 7/2
       </expr>

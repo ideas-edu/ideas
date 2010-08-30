@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (0)">
+<reply result="ok" version="0.6.5 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
@@ -15,7 +15,7 @@
         -x &gt; 2
       </expr>
     </elem>
-    <elem ruleid="flip sign">
+    <elem ruleid="algebra.inequalities.flip-sign">
       <expr>
         x &lt; -2
       </expr>

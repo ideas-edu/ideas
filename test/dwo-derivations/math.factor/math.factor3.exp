@@ -1,8 +1,13 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="algebra.equations.quadratic.common-factor">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
-        -6*x*(x+3)
+        x*(-6*x-18)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.polynomial.simpler-linfactor">
+      <expr>
+        -x*(6*(x+3))
       </expr>
     </elem>
   </list>

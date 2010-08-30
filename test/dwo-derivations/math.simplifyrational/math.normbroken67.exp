@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="factor variable power">
+    <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
         (a^2-9)/(a*(a^2-4*a+3))
       </expr>

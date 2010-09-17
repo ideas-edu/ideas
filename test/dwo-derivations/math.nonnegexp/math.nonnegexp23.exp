@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.5 (3536)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
@@ -8,12 +8,12 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         (4*a*b)^(-1)/b^6
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         1/(4*a*b)/b^6
       </expr>

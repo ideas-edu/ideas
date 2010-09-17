@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.2 (3188)">
+<reply result="ok" version="0.6.5 (3536)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-frac">
       <expr>
@@ -8,7 +8,7 @@
         <item name="location" value="[0,0]"/>
       </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         (a*b)^2*a/b
       </expr>

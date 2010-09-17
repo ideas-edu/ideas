@@ -1,11 +1,11 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.5 (3536)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         (4*a)^(-3)*7/b^5
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         1/(4*a)^3*7/b^5
       </expr>

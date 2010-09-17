@@ -80,7 +80,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
                            ++ brokenExp1 ++ normPower4' ++ normPower5
    , ruleOrdering = ruleOrderingWithId [ getId mulExponents
                                        , getId reciprocalFrac
-                                       , getId $ reciprocalInv $ const False
+                                       , getId reciprocalInv
                                        , getId power2root
                                        , getId distributePower ]
    }
@@ -126,7 +126,7 @@ showDerivations ex = mapM_ (putStrLn . showDerivation ex)
 
 showAllDerivations ex = 
   mapM_ (\es -> putStrLn (replicate 80 '-') >> showDerivations ex es)
-                        
+-}                        
 a = Var "a"
 b = Var "b"
--}
+

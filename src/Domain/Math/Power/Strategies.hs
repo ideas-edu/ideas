@@ -52,7 +52,7 @@ nonNegExpStrategy = cleanUpStrategy cleanup $ strategise "non neg exponent" rule
     rules = [ addExponents
             , subExponents
             , mulExponents
-            , reciprocalInv hasNegExp
+            , reciprocalInv
             , distributePower
             , distributePowerDiv
             , power2root

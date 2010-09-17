@@ -142,11 +142,9 @@ reciprocal = makeSimpleRule (power, "reciprocal") $ \ expr -> do
   return $ build (unitPowerForView a) (d ./. c, negate x)
 
 -- | c*a^x = c/a^(-x)
-
--- DIFFERENT RULES SHOULD NOT HAVE THE SAME IDENTIFIER. FIX ME!
-reciprocalInv :: (Expr -> Bool) -> Rule Expr
-reciprocalInv p = makeSimpleRule (power, "reciprocal") $ \ expr -> do
-  guard (p expr)
+reciprocalInv ::  Rule Expr
+reciprocalInv = makeSimpleRule (power, "reciprocal-inverse") $ \ expr -> do
+  guard (hasNegExp expr)
 --  a        <- selectVar expr
   (c, (a, x)) <- match strictPowerView expr
   return $ c ./. build strictPowerView (1, (a, neg x))

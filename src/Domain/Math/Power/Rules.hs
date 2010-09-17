@@ -33,6 +33,7 @@ import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Domain.Math.Data.PrimeFactors (greatestPower)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views

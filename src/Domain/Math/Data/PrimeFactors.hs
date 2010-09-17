@@ -13,7 +13,7 @@ module Domain.Math.Data.PrimeFactors
    ( PrimeFactors
    , factors, multiplicity, coprime
    , square, power, splitPower
-   , primes
+   , primes, greatestPower
    ) where
 
 import qualified Data.IntMap as IM
@@ -121,6 +121,11 @@ square = (`power` 2)
 
 power :: PrimeFactors -> Int -> PrimeFactors
 power (PF a m) i = PF (a^i) (IM.map (*i) m)
+
+greatestPower :: Integer -> Maybe (Int, Int)
+greatestPower n = let (as, (x:xs)) = unzip (factors (fromInteger n)) 
+                  in if and (map (==x) xs) && x > 1 then Just (product as, x) 
+                                                    else Nothing
 
 -- splitPower i a = (b,c)  
 --  => b^i * c = a

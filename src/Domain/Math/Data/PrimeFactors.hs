@@ -17,6 +17,8 @@ module Domain.Math.Data.PrimeFactors
    ) where
 
 import qualified Data.IntMap as IM
+import Control.Monad
+import Debug.Trace
 
 -------------------------------------------------------------
 -- Representation
@@ -123,9 +125,15 @@ power :: PrimeFactors -> Int -> PrimeFactors
 power (PF a m) i = PF (a^i) (IM.map (*i) m)
 
 greatestPower :: Integer -> Maybe (Int, Int)
-greatestPower n = let (as, (x:xs)) = unzip (factors (fromInteger n)) 
-                  in if and (map (==x) xs) && x > 1 then Just (product as, x) 
-                                                    else Nothing
+greatestPower n = do
+  guard (n > 1) 
+  let (as, (x:xs)) = unzip $ factors $ fromInteger n
+  guard (and (map (==x) xs) && x > 1)
+  return (product as, x)
+
+-- n == a^x with (a,x) == greatestPower n
+prop_greatestPower n = traceShow n $ 
+  maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
 
 -- splitPower i a = (b,c)  
 --  => b^i * c = a

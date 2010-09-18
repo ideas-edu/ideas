@@ -24,7 +24,10 @@ import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
+import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
 import Domain.Math.Examples.DWO3
+import Domain.Math.Examples.DWO4 (powerEquations)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
@@ -34,6 +37,17 @@ import Prelude hiding ( (^) )
 
 ------------------------------------------------------------
 -- Exercises
+
+powerEquationExercise :: Exercise (OrList (Equation Expr))
+powerEquationExercise = makeExercise
+  { status         = Provisional
+  , parser         = parseExprWith (pOrList (pEquation pExpr))
+  , strategy       = label "" succeed
+  , navigation     = termNavigator
+  , exerciseId     = describe "los algebraisch op" $ 
+                       newId "algebra.manipulation.exponents.equation"
+  , examples       = [return $ head $ head powerEquations]
+  }
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 powerExercise s = makeExercise 

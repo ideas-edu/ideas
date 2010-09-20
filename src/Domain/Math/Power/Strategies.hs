@@ -21,6 +21,8 @@ import Common.Context
 import Common.Strategy
 import Common.Transformation
 import Common.View
+import Domain.Math.Data.OrList
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules
@@ -29,6 +31,9 @@ import Prelude hiding (repeat, not)
 
 ------------------------------------------------------------
 -- Strategies
+
+--powerEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
+--powerEquationStrategy = strategise "los algebraisch op" [greatestPower]
 
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = makeStrategy "simplify" rules cleanupRules

@@ -124,12 +124,12 @@ square = (`power` 2)
 power :: PrimeFactors -> Int -> PrimeFactors
 power (PF a m) i = PF (a^i) (IM.map (*i) m)
 
-greatestPower :: Integer -> Maybe (Int, Int)
+greatestPower :: Integer -> Maybe (Integer, Integer)
 greatestPower n = do
   guard (n > 1) 
   let (as, (x:xs)) = unzip $ factors $ fromInteger n
   guard (and (map (==x) xs) && x > 1)
-  return (product as, x)
+  return (fromIntegral (product as), fromIntegral x)
 
 -- n == a^x with (a,x) == greatestPower n
 prop_greatestPower n = traceShow n $ 

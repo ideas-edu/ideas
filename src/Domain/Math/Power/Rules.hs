@@ -13,7 +13,7 @@ module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
-  , reciprocalInv, reciprocalFrac
+  , reciprocalInv, reciprocalFrac, greatestPower
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
@@ -33,7 +33,8 @@ import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Domain.Math.Data.PrimeFactors (greatestPower)
+import qualified Domain.Math.Data.PrimeFactors as PF
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Views
@@ -50,7 +51,26 @@ powerRuleOrder = map getId
 
 power = "algebra.manipulation.exponents"
 
+
+-- | Power equation rules -----------------------------------------------------
+
+-- a/c = b/c  iff  a=b (and c/=0)
+-- sameDivisor :: Rule (Context (Equation Expr))
+-- sameDivisor = makeSimpleRule "sameDivisor" $ withCM $ \(lhs :==: rhs) -> do
+--    (a, c1) <- matchM divView lhs
+--    (b, c2) <- matchM divView rhs
+--    guard (c1==c2)
+--    conditionNotZero c1
+--    return (a :==: b)
+
+
 -- | Power rules --------------------------------------------------------------
+
+greatestPower :: Rule Expr
+greatestPower = makeSimpleRule (power, "greatest-exponent") $ \ expr -> do
+  n      <- match integerView expr
+  (a, x) <- PF.greatestPower n
+  return $ fromInteger a .^. fromInteger x
 
 calcPower :: Rule Expr 
 calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 

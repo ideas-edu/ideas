@@ -26,6 +26,7 @@ module Domain.Math.Power.Rules
 import Prelude hiding ( (^) )
 import qualified Prelude
 import Common.Classes
+import Common.Context
 import Control.Arrow ( (>>^) )
 import Common.Id
 import Common.Transformation
@@ -34,6 +35,7 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import qualified Domain.Math.Data.PrimeFactors as PF
+import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
@@ -52,25 +54,25 @@ powerRuleOrder = map getId
 power = "algebra.manipulation.exponents"
 
 
--- | Power equation rules -----------------------------------------------------
+-- | Power relation rules -----------------------------------------------------
 
--- a/c = b/c  iff  a=b (and c/=0)
--- sameDivisor :: Rule (Context (Equation Expr))
--- sameDivisor = makeSimpleRule "sameDivisor" $ withCM $ \(lhs :==: rhs) -> do
---    (a, c1) <- matchM divView lhs
---    (b, c2) <- matchM divView rhs
---    guard (c1==c2)
---    conditionNotZero c1
---    return (a :==: b)
+-- x = n  =>  x = a^e  (with e /= 1)
+greatestPower :: Rule (Equation Expr)
+greatestPower = makeSimpleRule (power, "greatest-power") $ \(lhs :==: rhs) -> do
+    n      <- match integerView rhs
+    (a, x) <- PF.greatestPower n
+    return $ lhs :==: (fromInteger a .^. fromInteger x)
+
+-- a^x = b^y  =>  a^(x-y) = b  (with x >= y) else a = b^(y-x)
+commonPower :: Rule (Equation Expr)
+commonPower = makeSimpleRule (power, "common-power") $ \(lhs :==: rhs) -> do
+    n      <- match integerView rhs
+    (a, x) <- PF.greatestPower n
+    return $ lhs :==: (fromInteger a .^. fromInteger x)
+
 
 
 -- | Power rules --------------------------------------------------------------
-
-greatestPower :: Rule Expr
-greatestPower = makeSimpleRule (power, "greatest-exponent") $ \ expr -> do
-  n      <- match integerView expr
-  (a, x) <- PF.greatestPower n
-  return $ fromInteger a .^. fromInteger x
 
 calcPower :: Rule Expr 
 calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 

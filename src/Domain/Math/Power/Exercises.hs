@@ -38,16 +38,19 @@ import Prelude hiding ( (^) )
 ------------------------------------------------------------
 -- Exercises
 
-powerEquationExercise :: Exercise (OrList (Equation Expr))
+powerEquationExercise :: Exercise (Relation Expr)
 powerEquationExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pOrList (pEquation pExpr))
-  , strategy       = label "" succeed
+  , parser         = parseExprWith (pRelation pExpr)
+  , strategy       = label "" $ somewhere (use greatestPower) <*> 
+                                use commonPower <*> use nthRoot <*> liftToContext approxPower
   , navigation     = termNavigator
   , exerciseId     = describe "los algebraisch op" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = [return $ head $ head powerEquations]
+  , examples       = map (build equationView) [head $ head powerEquations]
   }
+
+e = inContext powerEquationExercise $ Var "x" ^ 14 .==. 25
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 powerExercise s = makeExercise 

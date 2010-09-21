@@ -13,7 +13,8 @@ module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
-  , reciprocalInv, reciprocalFrac, greatestPower
+  , reciprocalInv, reciprocalFrac, greatestPower, commonPower, nthRoot
+  , approxPower
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
@@ -34,6 +35,7 @@ import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Domain.Math.Approximation (precision)
 import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -57,19 +59,38 @@ power = "algebra.manipulation.exponents"
 -- | Power relation rules -----------------------------------------------------
 
 -- x = n  =>  x = a^e  (with e /= 1)
-greatestPower :: Rule (Equation Expr)
-greatestPower = makeSimpleRule (power, "greatest-power") $ \(lhs :==: rhs) -> do
-    n      <- match integerView rhs
-    (a, x) <- PF.greatestPower n
-    return $ lhs :==: (fromInteger a .^. fromInteger x)
+greatestPower :: Rule Expr
+greatestPower = makeSimpleRule (power, "greatest-power") $ \ expr -> do
+    n      <- match natView expr
+    (a, x) <- PF.greatestPower $ toInteger n
+    return $ fromInteger a .^. fromInteger x
 
--- a^x = b^y  =>  a^(x-y) = b  (with x >= y) else a = b^(y-x)
+-- a^x = b^y  =>  a^(x/c) = b^(y/c)  where c = gcd x y
 commonPower :: Rule (Equation Expr)
 commonPower = makeSimpleRule (power, "common-power") $ \(lhs :==: rhs) -> do
-    n      <- match integerView rhs
-    (a, x) <- PF.greatestPower n
-    return $ lhs :==: (fromInteger a .^. fromInteger x)
+    (a, x) <- match simplePowerView lhs
+    x'     <- match integerView x
+    (b, y) <- match simplePowerView rhs
+    y'     <- match integerView y
+    let c = gcd x' y'
+    guard (c > 1)
+    return $ a .^. build integerView (x' `div` c) :==: 
+             b .^. build integerView (y' `div` c)
 
+-- a^x = b^y  =>  a = b^(y/x) = root x (b^y)  (y may be 1)
+nthRoot :: Rule (Equation Expr)
+nthRoot = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
+    (a, x) <- match simplePowerView lhs
+    (b, y) <- match (simplePowerView <&> (identity >>^ (\x->(x,1)))) rhs
+    return $ a :==: b .^. (y ./. x)
+
+approxPower :: Rule (Relation Expr)
+approxPower = makeSimpleRule (power, "approx-power") $ \ expr ->
+  match equationView expr >>= f
+  where
+    f (Var x :==: d) = match doubleView d >>= Just . (Var x .~=.) . Number . precision 3 
+    f (d :==: Var x) = match doubleView d >>= Just . (.~=. Var x) . Number . precision 3
+    f _              = Nothing
 
 
 -- | Power rules --------------------------------------------------------------

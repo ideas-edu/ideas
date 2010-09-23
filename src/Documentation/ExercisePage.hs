@@ -25,7 +25,7 @@ import Service.BasicServices
 import Service.Diagnose
 import Service.DomainReasoner
 import Service.ExercisePackage
-import Service.RulesInfo (rewriteRuleToFMP, collectExamples)
+import Service.RulesInfo (rewriteRuleToFMP, collectExamples, ExampleMap)
 import Service.State
 import Service.StrategyInfo
 import System.Directory
@@ -38,18 +38,21 @@ import qualified Text.XML as XML
 
 makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
 makeExercisePage dir pkg = do
-   let ex     = exercise pkg
-       level  = length (qualifiers pkg)
-       make   = generatePageAt level dir . ($ (getId pkg))
-       exFile = dir ++ "/" ++ diagnosisExampleFile (getId ex)
+   let ex       = exercise pkg
+       make     = makeId pkg
+       makeId a = generatePageAt (length (qualifiers a)) dir . ($ (getId a))
+       exFile   = dir ++ "/" ++ diagnosisExampleFile (getId ex)
+       exMap    = collectExamples ex
 
    exampleFileExists <- liftIO (doesFileExist exFile)
 
    make exercisePageFile     (exercisePage exampleFileExists pkg)
    make exerciseStrategyFile (strategyPage ex)
-   make exerciseRulesFile    (rulesPage ex)
+   make exerciseRulesFile    (rulesPage ex exMap)
    unless (null (examples (exercise pkg))) $
        make exerciseDerivationsFile (derivationsPage ex)
+   forM (ruleset ex) $ \r ->
+      makeId r ruleFile (rulePage ex exMap r)
    when (exampleFileExists) $ do
       xs <- liftIO (readFile exFile)
       make exerciseDiagnosisFile (diagnosisPage xs pkg)
@@ -133,8 +136,8 @@ strategyPage ex = do
  where
    title = "Strategy for " ++ showId ex
 
-rulesPage :: Exercise a -> HTMLBuilder
-rulesPage ex = do
+rulesPage :: Exercise a -> ExampleMap a -> HTMLBuilder
+rulesPage ex exMap = do
    h1 title
    -- Groups
    let groups = sort (nub (concatMap ruleGroups (ruleset ex)))
@@ -148,36 +151,44 @@ rulesPage ex = do
    -- General info
    forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do
       h2 (show i ++ ". " ++ show r)
-      para $ text (description r)
-      para $ table 
-         [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
-         , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
-         , [bold $ text "Groups", text $ commaList $ ruleGroups r]
-         , [bold $ text "Siblings", text $ commaList $ map showId 
-         $ ruleSiblings r] 
-         ]
-      when (isRewriteRule r) $ para $
-         ruleToHTML (Some ex) r
-
-      -- Examples
-      let ys = M.findWithDefault [] (getId r) exampleMap
-      unless (null ys) $ do
-         h3 "Examples"
-         forM_ (take 3 ys) $ \(a, b) -> para $ tt $ 
-            preText $ prettyPrinter ex a ++ "\n   =>\n" ++ prettyPrinter ex b
-         
-      -- FMPS
-      let xs = getRewriteRules r
-      unless (null xs) $ do
-         h3 "Formal Mathematical Properties"
-         forM_ xs $ \(Some rr, b) -> para $ do
-            let fmp = rewriteRuleToFMP b rr
-            highlightXML False $ XML.makeXML "FMP" $ 
-               XML.builder (omobj2xml (toObject fmp))
+      rulePageBuilder ex exMap r
  where
    title = "Rules for " ++ showId ex
-   exampleMap = collectExamples ex
 
+rulePage :: Exercise a -> ExampleMap a -> Rule b -> HTMLBuilder
+rulePage ex exMap r = do
+   h1 (showId r)
+   rulePageBuilder ex exMap r
+
+rulePageBuilder :: Exercise a -> ExampleMap a -> Rule b -> HTMLBuilder
+rulePageBuilder ex exMap r = do
+   para $ text (description r)
+   para $ table 
+      [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
+      , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
+      , [bold $ text "Groups", text $ commaList $ ruleGroups r]
+      , [bold $ text "Siblings", text $ commaList $ map showId 
+      $ ruleSiblings r] 
+      ]
+   when (isRewriteRule r) $ para $
+      ruleToHTML (Some ex) r
+
+   -- Examples
+   let ys = M.findWithDefault [] (getId r) exMap
+   unless (null ys) $ do
+      h3 "Examples"
+      forM_ (take 3 ys) $ \(a, b) -> para $ tt $ 
+         preText $ prettyPrinter ex a ++ "\n   =>\n" ++ prettyPrinter ex b
+         
+   -- FMPS
+   let xs = getRewriteRules r
+   unless (null xs) $ do
+      h3 "Formal Mathematical Properties"
+      forM_ xs $ \(Some rr, b) -> para $ do
+         let fmp = rewriteRuleToFMP b rr
+         highlightXML False $ XML.makeXML "FMP" $ 
+            XML.builder (omobj2xml (toObject fmp))
+               
 derivationsPage :: Exercise a -> HTMLBuilder
 derivationsPage ex = do
    unless (errs==0) $ 

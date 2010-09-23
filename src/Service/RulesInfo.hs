@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.RulesInfo 
-   ( rulesInfoXML, rewriteRuleToFMP, collectExamples, rulesInfoType
+   ( rulesInfoXML, rewriteRuleToFMP, collectExamples, ExampleMap, rulesInfoType
    ) where
 
 import Common.Library
@@ -67,8 +67,10 @@ rewriteRuleToFMP sound r
    | otherwise = buggyFMP a b 
  where
    a :~> b = fmap termToOMOBJ (rulePair r)
-              
-collectExamples :: Exercise a -> M.Map Id [(a, a)]
+
+type ExampleMap a = M.Map Id [(a, a)]
+
+collectExamples :: Exercise a -> ExampleMap a
 collectExamples ex = foldr add M.empty (examples ex)
  where
    add a m = let tree = derivationTree (strategy ex) (inContext ex a)

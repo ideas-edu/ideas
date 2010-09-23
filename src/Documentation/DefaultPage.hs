@@ -81,12 +81,13 @@ serviceOverviewPageFile     = "services.html"
 testsPageFile               = "tests.html"
 
 exercisePageFile, exerciseDerivationsFile, exerciseStrategyFile,
-   exerciseRulesFile, exerciseDiagnosisFile :: HasId a => a -> FilePath
+   exerciseRulesFile, exerciseDiagnosisFile, ruleFile :: HasId a => a -> FilePath
 exercisePageFile        a = filePathId a ++ ".html"
 exerciseDerivationsFile a = filePathId a ++ "-derivations.html"
 exerciseStrategyFile    a = filePathId a ++ "-strategy.html"
 exerciseRulesFile       a = filePathId a ++ "-rules.html"
 exerciseDiagnosisFile   a = filePathId a ++ "-diagnosis.html"
+ruleFile                a = filePathId a ++ ".html"
 
 servicePageFile :: Service -> String
 servicePageFile srv = "services/" ++ filePathId srv ++ ".html"

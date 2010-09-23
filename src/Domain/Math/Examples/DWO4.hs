@@ -32,7 +32,7 @@ powerEquations =
   [ [ x^14 :==: 25
     , x^(-7) :==: 110
     , 2*x^(Number 3.5) :==: 70
-    , 8*x^(Number (-9.2)) :==: 1000
+    , 8*x^(-(Number 9.2)) :==: 1000
     ]
   , [ root x 5 :==: Number 2.9
     , 5 * root x 3 :==: 7

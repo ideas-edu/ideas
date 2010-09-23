@@ -66,6 +66,10 @@ distinct :: Eq a => [a] -> Bool
 distinct []     = True
 distinct (x:xs) = all (/=x) xs && distinct xs 
 
+allsame :: Eq a => [a] -> Bool
+allsame []     = True
+allsame (x:xs) = and $ map (==x) xs
+
 safeHead :: [a] -> Maybe a
 safeHead (x:_) = return x
 safeHead _     = Nothing

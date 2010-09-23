@@ -17,6 +17,7 @@ module Domain.Math.Data.PrimeFactors
    ) where
 
 import qualified Data.IntMap as IM
+import Common.Utils
 import Control.Monad
 import Debug.Trace
 
@@ -127,8 +128,9 @@ power (PF a m) i = PF (a^i) (IM.map (*i) m)
 greatestPower :: Integer -> Maybe (Integer, Integer)
 greatestPower n = do
   guard (n > 1) 
-  let (as, (x:xs)) = unzip $ factors $ fromInteger n
-  guard (and (map (==x) xs) && x > 1)
+  let (as, xs) = unzip $ factors $ fromInteger n
+  x <- safeHead xs
+  guard (allsame xs && x > 1)
   return (fromIntegral (product as), fromIntegral x)
 
 -- n == a^x with (a,x) == greatestPower n

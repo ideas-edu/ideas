@@ -24,6 +24,7 @@ import Common.View
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
+import Domain.Math.Polynomial.Rules (sameConFactor)
 import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
@@ -32,8 +33,15 @@ import Prelude hiding (repeat, not)
 ------------------------------------------------------------
 -- Strategies
 
---powerEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
---powerEquationStrategy = strategise "los algebraisch op" [greatestPower]
+powerEquationStrategy :: LabeledStrategy (Context (Relation Expr))
+powerEquationStrategy = label "" $  
+      try (use sameConFactor)
+  <*> option (somewhere (use greatestPower) <*> use commonPower)
+  <*> use nthRoot 
+  <*> liftToContext approxPower
+
+
+------------------------------------------------------------------------------
 
 powerStrategy :: LabeledStrategy (Context Expr)
 powerStrategy = makeStrategy "simplify" rules cleanupRules

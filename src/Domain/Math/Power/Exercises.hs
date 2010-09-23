@@ -14,6 +14,7 @@ module Domain.Math.Power.Exercises
    , powerOfExercise 
    , nonNegExpExercise
    , calcPowerExercise
+   , powerEquationExercise
    ) where
 
 import Common.Classes 
@@ -42,15 +43,12 @@ powerEquationExercise :: Exercise (Relation Expr)
 powerEquationExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pRelation pExpr)
-  , strategy       = label "" $ somewhere (use greatestPower) <*> 
-                                use commonPower <*> use nthRoot <*> liftToContext approxPower
+  , strategy       = powerEquationStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "los algebraisch op" $ 
+  , exerciseId     = describe "solve algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = map (build equationView) [head $ head powerEquations]
+  , examples       = concatMap (map (build equationView)) powerEquations
   }
-
-e = inContext powerEquationExercise $ Var "x" ^ 14 .==. 25
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 powerExercise s = makeExercise 
@@ -138,12 +136,12 @@ isPowerAdd expr =
   in all (isPower rationalView) xs && not (applicable calcPowerPlus expr)
 
 -- test stuff
-{-
+
 showDerivations ex = mapM_ (putStrLn . showDerivation ex)
 
 showAllDerivations ex = 
   mapM_ (\es -> putStrLn (replicate 80 '-') >> showDerivations ex es)
--}                        
+                        
 a = Var "a"
 b = Var "b"
 

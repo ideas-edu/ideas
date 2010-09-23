@@ -84,6 +84,7 @@ nthRoot = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
     (b, y) <- match (simplePowerView <&> (identity >>^ (\x->(x,1)))) rhs
     return $ a :==: b .^. (y ./. x)
 
+-- x = a^x  =>  x ~= d
 approxPower :: Rule (Relation Expr)
 approxPower = makeSimpleRule (power, "approx-power") $ \ expr ->
   match equationView expr >>= f

@@ -26,6 +26,7 @@ module Common.Derivation
    , changeLabel, sortTree
      -- * Query a derivation
    , isEmpty, derivationLength, terms, steps, triples, filterDerivation
+   , mapStepsDerivation, derivationM
      -- * Conversions
    , derivation, randomDerivation, derivations
    ) where
@@ -174,6 +175,9 @@ newDerivation = D
 isEmpty :: Derivation s a -> Bool
 isEmpty (D _ xs) = null xs
 
+mapStepsDerivation :: (s -> t) -> Derivation s a -> Derivation t a
+mapStepsDerivation f (D a xs) = D a (map (first f) xs)
+
 -- | Returns the number of steps in a derivation
 derivationLength :: Derivation s a -> Int
 derivationLength (D _ xs) = length xs
@@ -194,6 +198,10 @@ triples d = zip3 (terms d) (steps d) (tail (terms d))
 -- | Filter steps from a derivation
 filterDerivation :: (s -> a -> Bool) -> Derivation s a -> Derivation s a
 filterDerivation p (D a xs) = D a (filter (uncurry p) xs)
+
+-- | Apply a monadic function to each term, and to each step
+derivationM :: Monad m => (s -> m ()) -> (a -> m ()) -> Derivation s a -> m ()
+derivationM f g (D a xs) = g a >> mapM_ (\(s, b) -> f s >> g b) xs
 
 -----------------------------------------------------------------------------
 -- Conversions from a derivation tree

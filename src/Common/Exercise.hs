@@ -25,8 +25,9 @@ module Common.Exercise
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
+   , prettyPrinterContext
    , equivalenceContext, restrictGenerator
-   , showDerivation, printDerivation
+   , showDerivation, printDerivation, defaultDerivation
    , checkExercise, checkParserPretty
    , checkExamples, exerciseTestSuite
    , module Common.Id -- for backwards compatibility
@@ -41,8 +42,10 @@ import Common.Id
 import Common.Navigator
 import Common.TestSuite
 import Common.Transformation
+import Common.Utils (ShowString(..))
 import Common.View (makeView)
 import Control.Monad.Error
+import Control.Arrow
 import Data.List
 import Data.Maybe
 import System.Random
@@ -244,34 +247,35 @@ getRule ex s =
 -- |Shows a derivation for a given start term. The specified rule ordering
 -- is used for selection.
 showDerivation :: Exercise a -> a -> String
-showDerivation ex a =
-   case derivation tree of
-      Just d  -> show (f d) ++ extra d
-      Nothing -> prettyPrinterContext ex (root tree)
-                 ++ "\n   =>\n<<no derivation>>"
+showDerivation ex a = show (present der) ++ extra
  where
-   tree = sortTree (ruleOrdering ex) $ 
-             derivationTree (strategy ex) $ inContext ex a
-   extra d =
-      case fromContext (last (terms d)) of
+   der   = defaultDerivation ex a
+   extra =
+      case fromContext (last (terms der)) of
          Nothing               -> "<<invalid term>>"
          Just a | isReady ex a -> ""
                 | otherwise    -> "<<not ready>>"
+   present = mapStepsDerivation (ShowString . uncurry f) 
+           . fmap (ShowString . prettyPrinterContext ex)
+   f b env | nullEnv env = showId b
+           | otherwise   = showId b ++ "\n      " ++ show env
+
+defaultDerivation :: Exercise a -> a -> Derivation (Id, Environment) (Context a)
+defaultDerivation ex a =
+   let ca     = inContext ex a
+       tree   = sortTree (ruleOrdering ex) (derivationTree (strategy ex) ca)
+       single = newDerivation ca []
+       der    = fromMaybe single (derivation tree)
+   in mapStepsDerivation (first getId) (derivationDiffEnv der)
+
+derivationDiffEnv :: Derivation b (Context a) -> Derivation (b, Environment) (Context a)
+derivationDiffEnv d =
    -- A bit of hack to show the delta between two environments, not including
    -- the location variable
-   f d = let t:ts = map (Shown . prettyPrinterContext ex) (terms d)
-             xs   = zipWith3 present (steps d) (drop 1 (terms d)) (terms d)
-             present a x y = Shown (show a ++ extra)
-              where env = deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))
-                    extra | nullEnv env = "" 
-                          | otherwise   = "\n      " ++ show env
-         in newDerivation t (zip xs ts)
-
--- local helper datatype
-data Shown = Shown String 
-
-instance Show Shown where
-   show (Shown s) = s
+   let t:ts = terms d
+       xs   = zipWith3 f (steps d) (drop 1 (terms d)) (terms d)
+       f b x y = (b, deleteEnv "location" (diffEnv (getEnvironment x) (getEnvironment y))) -- ShowString (show a ++ extra)
+   in newDerivation t (zip xs ts)
 
 printDerivation :: Exercise a -> a -> IO ()
 printDerivation ex = putStrLn . showDerivation ex

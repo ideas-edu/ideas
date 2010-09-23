@@ -12,6 +12,44 @@ h1, h2, h3 {
    color: rgb(41,134,189);
 }
 
+div.derivation {
+    background-color: rgb(225,225,225);
+    padding-top:      0.5ex;
+    padding-bottom:   0.5ex;
+    padding-left:     3ex;
+    padding-right:    3ex;
+    border-color:     black;
+    border-width:     1px;
+    border-style:     solid;
+}
+
+table {
+   border-style: solid;
+   border-color: black;
+   border-width: 1px;
+}
+
+td {
+   border-style: none;
+   padding-top: 4px;
+   padding-bottom: 4px;
+   padding-left: 1ex;
+   padding-right: 1ex;
+}
+
+tr.topRow {
+   background-color: rgb(225,225,225);
+   /* color: rgb(255,255,255); */
+}
+
+tr.evenRow {
+   background-color: rgb(225,225,225);
+}
+
+tr.oddRow {
+   background-color: rgb(255,255,255);
+}
+
 ul {
    list-style-type: square;
 }

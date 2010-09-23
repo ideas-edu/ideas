@@ -11,7 +11,9 @@
 -----------------------------------------------------------------------------
 module Documentation.ExercisePage (makeExercisePage) where
 
+import Common.Context
 import Common.Exercise
+import Common.Derivation
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
 import Common.Utils (commaList, Some(..), splitAtSequence)
@@ -113,8 +115,8 @@ exercisePage exampleFileExists pkg = do
 
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) pkg 5
-   preText (showDerivation ex (term state))
-   unless (null (examples ex)) $ 
+   derivationHTML ex (term state)
+   para $ unless (null (examples ex)) $ 
       link (up level ++ exerciseDerivationsFile exid) (text "More examples")
  where
    ex    = exercise pkg
@@ -191,17 +193,31 @@ rulePageBuilder ex exMap r = do
                
 derivationsPage :: Exercise a -> HTMLBuilder
 derivationsPage ex = do
-   unless (errs==0) $ 
-      errorLine $ preText $ "Warning: " ++ show errs ++ " example(s) with an incorrect derivation"
    h1 "Examples"
-   forM_ (zip [1 ..] ds) $ \(i, d) -> do
+   forM_ (zip [1 ..] (examples ex)) $ \(i, a) -> do
       h2 (show i ++ ".")
-      preText d
+      derivationHTML ex a
+
+derivationHTML :: Exercise a -> a -> HTMLBuilder
+derivationHTML ex = divClass "derivation" . pre 
+                  . derivationM forStep forTerm . defaultDerivation ex
  where
-   ds   = map (showDerivation ex) (examples ex)
-   errs = let p s =  "<<no derivation>>" `isSuffixOf` s 
-                  || "<<not ready>>" `isSuffixOf` s
-          in length $ filter p ds
+   forStep (i, env) = do 
+      spaces 3
+      text "=>"
+      space
+      let target = up (length (qualifiers ex)) ++ ruleFile i
+          make | null (description i) = link target
+               | otherwise = linkTitle target (description i)
+      make (text (unqualified i))
+      br
+      unless (nullEnv env) $ do
+         spaces 6
+         text (show env)
+         br
+   forTerm ca = do
+      text (prettyPrinterContext ex ca)
+      br
 
 diagnosisPage :: String -> ExercisePackage a -> HTMLBuilder
 diagnosisPage xs pkg = do
@@ -231,8 +247,3 @@ diagnosisPage xs pkg = do
          (Left msg, _) -> "parse error (before): " ++ msg
          (_, Left msg) -> "parse error (afterr): " ++ msg
          (Right a, Right b) -> show (diagnose (emptyState pkg a) b)
-   
-errorLine :: HTMLBuilder -> HTMLBuilder
-errorLine b = XML.element "font" $ do
-   "color" XML..=. "red"
-   bold b

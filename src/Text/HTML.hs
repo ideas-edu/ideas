@@ -13,9 +13,10 @@
 -----------------------------------------------------------------------------
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
-   , htmlPage, errorPage, link, h1, h2, h3, h4, preText, ul, table, noBorderTable
+   , htmlPage, errorPage, link, linkTitle
+   , h1, h2, h3, h4, preText, ul, table, noBorderTable
    , text, image, space, tt, spaces, highlightXML
-   , bold, italic, para, ttText, hr, br, pre, center, bullet
+   , bold, italic, para, ttText, hr, br, pre, center, bullet, divClass
    ) where
 
 import Text.XML hiding (text)
@@ -52,6 +53,10 @@ errorPage s = htmlPage "Error" Nothing $ do
 link :: String -> HTMLBuilder -> HTMLBuilder
 link url body = element "a" $ 
    ("href" .=. url) >> body
+
+linkTitle :: String -> String -> HTMLBuilder -> HTMLBuilder
+linkTitle url title body = element "a" $ 
+   ("href" .=. url) >> ("title" .=. title) >> body
 
 center :: HTMLBuilder -> HTMLBuilder
 center = element "center"
@@ -100,7 +105,15 @@ ul = element "ul" . mapM_ (element "li")
 table :: [[HTMLBuilder]] -> HTMLBuilder
 table rows = element "table" $ do
    "border" .=. "1"
-   mapM_ (element "tr" . mapM_ (element "td")) rows
+   forM_ (zip [0..] rows) $ \(i, r) ->
+      element "tr" $ do
+         "class" .=. getClass i
+         mapM_ (element "td") r
+ where
+   getClass i
+      | i == 0    = "topRow"
+      | even i    = "evenRow"
+      | otherwise = "oddRow" 
 
 noBorderTable :: [[HTMLBuilder]] -> HTMLBuilder
 noBorderTable rows = element "table" $ do
@@ -119,7 +132,10 @@ image n = element "img" ("src" .=. n)
 
 text :: String -> HTMLBuilder
 text = XML.text
-   
+
+divClass :: String -> HTMLBuilder -> HTMLBuilder
+divClass n body = element "div" ("class" .=. n >> body)
+
 -- A simple XML highlighter
 highlightXML :: Bool -> XML -> HTMLBuilder
 highlightXML nice

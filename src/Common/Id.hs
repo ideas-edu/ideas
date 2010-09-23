@@ -107,15 +107,14 @@ appendId a b
  where
    ref = stringRef (show a ++ "." ++ show b)
 
--- For now, all characters are allowed. To do: make this 
--- more strict, e.g. by removing spaces.
--- Proposal: allow alphanum + '-'
+-- Only allow alphanum and '-' ('.' has a special meaning)
 stringId :: String -> Id
 stringId txt = Id (make s) "" (stringRef s)
  where
-   s    = normalize txt
+   s    = norm txt
    make = filter (not . null) . splitsWithElem '.'
-   normalize = map toLower
+   norm = filter ok . map toLower
+   ok c = True -- isAlphaNum c || c `elem` ".-_"
 
 ---------------------------------------------------------------------
 -- Additional functionality (overloaded)

@@ -14,7 +14,7 @@ module Domain.Math.Power.Rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
   , reciprocalInv, reciprocalFrac, greatestPower, commonPower, nthRoot
-  , approxPower
+  , nthPower, approxPower, scaleConFactor
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
@@ -77,21 +77,38 @@ commonPower = makeSimpleRule (power, "common-power") $ \(lhs :==: rhs) -> do
     return $ a .^. build integerView (x' `div` c) :==: 
              b .^. build integerView (y' `div` c)
 
--- a^x = b^y  =>  a = b^(y/x) = root x (b^y)  (y may be 1)
+-- a^x = b^y  =>  a = b^(y/x) = root x b^y  where y may be one
 nthRoot :: Rule (Equation Expr)
 nthRoot = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
-    (a, x) <- match simplePowerView lhs
-    (b, y) <- match (simplePowerView <&> (identity >>^ (\x->(x,1)))) rhs
-    return $ a :==: b .^. (y ./. x)
+  guard $ hasVars lhs
+  (a, x) <- match simplePowerView lhs
+  (b, y) <- match (simplePowerView <&> (identity >>^ \x -> (x,1))) rhs
+  return $ a :==: b .^. (y ./. x)
+
+-- root a x = b^y  =>  a = b^(y/x)  where y may be one 
+nthPower :: Rule (Equation Expr)
+nthPower = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
+  guard $ hasVars lhs
+  (a, x) <- match simpleRootView lhs
+  (b, y) <- match (simplePowerView <&> (identity >>^ \x -> (x,1))) rhs
+  return $ a :==: b .^. (y ./. x)
 
 -- x = a^x  =>  x ~= d
 approxPower :: Rule (Relation Expr)
 approxPower = makeSimpleRule (power, "approx-power") $ \ expr ->
   match equationView expr >>= f
   where
-    f (Var x :==: d) = match doubleView d >>= Just . (Var x .~=.) . Number . precision 3 
-    f (d :==: Var x) = match doubleView d >>= Just . (.~=. Var x) . Number . precision 3
+    f (Var x :==: d) = match doubleView d >>= Just . (Var x .~=.) . Number . precision 2 
+    f (d :==: Var x) = match doubleView d >>= Just . (.~=. Var x) . Number . precision 2
     f _              = Nothing
+
+scaleConFactor :: Rule (Equation Expr)
+scaleConFactor = makeSimpleRule (power, "scale-factor") $ \(lhs :==: rhs) -> do
+  guard $ hasVars lhs
+  (sign, xs) <- match productView lhs
+  guard $ length xs > 1
+  return $ let (cs, ys) = partition ((flip belongsTo) doubleView) xs
+           in build productView (sign, ys) :==: rhs ./. build productView (False, cs)
 
 
 -- | Power rules --------------------------------------------------------------

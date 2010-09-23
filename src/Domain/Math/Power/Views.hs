@@ -17,7 +17,7 @@ module Domain.Math.Power.Views
    , powerFactorViewWith, powerViewFor', powerFactorViewForWith
    , powerViewFor, powerFactorView
      -- * Root views
-   , rootView, rootConsView
+   , rootView, rootConsView, simpleRootView
      -- * View combinator
    , (<&>)
      -- * Normalising views
@@ -121,14 +121,25 @@ powerFactorisationView v = productView >>> second (makeView f id)
 
 -- | Root views ---------------------------------------------------------------
 
-rootView :: View Expr (Expr, Rational)
-rootView = makeView f g
+simpleRootView :: View Expr (Expr, Expr)
+simpleRootView = makeView f g
   where 
     f expr = case expr of
         Sqrt e -> return (e, 2)
-        Sym s [a, Nat b] | s == rootSymbol -> return (a, toRational b)
+        Sym s [a, b] | s == rootSymbol -> return (a, b)
         _ -> Nothing
-    g (a, b) = if b==2 then Sqrt a else root a (fromRational b)
+    g (a, b) = if b == Nat 2 then Sqrt a else root a b
+
+rootView = simpleRootView >>> second rationalView
+
+-- rootView :: View Expr (Expr, Rational)
+-- rootView = makeView f g
+--   where 
+--     f expr = case expr of
+--         Sqrt e -> return (e, 2)
+--         Sym s [a, Nat b] | s == rootSymbol -> return (a, toRational b)
+--         _ -> Nothing
+--     g (a, b) = if b==2 then Sqrt a else root a (fromRational b)
 
 rootConsView :: View Expr (Expr, (Expr, Rational))
 rootConsView =  (timesView >>> second rootView)

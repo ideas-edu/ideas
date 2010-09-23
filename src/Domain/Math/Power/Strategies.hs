@@ -34,12 +34,16 @@ import Prelude hiding (repeat, not)
 -- Strategies
 
 powerEquationStrategy :: LabeledStrategy (Context (Relation Expr))
-powerEquationStrategy = label "" $  
-      try (use sameConFactor)
-  <*> option (somewhere (use greatestPower) <*> use commonPower)
-  <*> use nthRoot 
-  <*> liftToContext approxPower
-
+powerEquationStrategy = cleanUpStrategy cleanup strat
+  where 
+    strat = label "" $
+      repeat (  try (use scaleConFactor)
+            <*> option (somewhere (use greatestPower) <*> use commonPower)
+            <*> (use nthRoot <|> use nthPower)
+             )
+            <*> try (liftToContext approxPower)
+    
+    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) naturalRules
 
 ------------------------------------------------------------------------------
 

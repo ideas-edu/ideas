@@ -41,7 +41,7 @@ powerEquations =
     ]
   , [ 4*x^(-12) :==: 28 
     , 7*x^(Number 5.1) + 16 :==: 100
-    , 8*x^(Number (-1.9)) - 5 :==: 2
+    , 8*x^(-(Number (1.9))) - 5 :==: 2
     , Number 0.8 * x^(Number 0.7) + 7 :==: Number 12.5
     ]
   , [ 4*root x 7 + 7 :==: Number 11.8

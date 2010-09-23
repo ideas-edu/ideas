@@ -20,7 +20,7 @@
         3*a &lt; -8
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.times positive">
+    <elem ruleid="algebra.equations.coverup.times-positive">
       <expr>
         a &lt; -8/3
       </expr>

@@ -5,7 +5,7 @@
         18-8*x-4 == 7*x-16*x+8
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         14-8*x == -9*x+8
       </expr>

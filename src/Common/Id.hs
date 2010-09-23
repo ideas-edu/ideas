@@ -114,7 +114,7 @@ stringId txt = Id (make s) "" (stringRef s)
    s    = norm txt
    make = filter (not . null) . splitsWithElem '.'
    norm = filter ok . map toLower
-   ok c = True -- isAlphaNum c || c `elem` ".-_"
+   ok c = isAlphaNum c || c `elem` ".-_"
 
 ---------------------------------------------------------------------
 -- Additional functionality (overloaded)

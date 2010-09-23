@@ -15,7 +15,7 @@
         7*x &gt; -16
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.times positive">
+    <elem ruleid="algebra.equations.coverup.times-positive">
       <expr>
         x &gt; -16/7
       </expr>

@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="top form">
+    <elem ruleid="topform">
       <expr>
         x^2-3*x+1 == 0
       </expr>

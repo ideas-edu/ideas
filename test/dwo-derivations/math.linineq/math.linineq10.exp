@@ -25,7 +25,7 @@
         11*x &lt; 0
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.times positive">
+    <elem ruleid="algebra.equations.coverup.times-positive">
       <expr>
         x &lt; 0
       </expr>

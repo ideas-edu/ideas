@@ -5,7 +5,7 @@
         12*x-3+3 == 7*x-14
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         12*x == 7*x-14
       </expr>

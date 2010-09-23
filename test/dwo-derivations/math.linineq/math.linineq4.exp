@@ -20,7 +20,7 @@
         3*a &gt; 4
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.times positive">
+    <elem ruleid="algebra.equations.coverup.times-positive">
       <expr>
         a &gt; 4/3
       </expr>

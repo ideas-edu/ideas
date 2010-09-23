@@ -5,7 +5,7 @@
         4*x-x+2 == 12+5*x-5
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         3*x+2 == 7+5*x
       </expr>

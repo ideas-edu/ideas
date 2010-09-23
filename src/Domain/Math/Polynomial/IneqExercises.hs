@@ -161,12 +161,12 @@ coverUpPlus = alternatives (map (use . ($ oneVar)) coverUps)
    coverUps :: [ConfigCoverUp -> Rule (Relation Expr)]
    coverUps = 
       [ coverUpBinaryRule "plus" (commOp . isPlus) (-)
-      , coverUpBinaryRule "minus left" isMinus (+)
-      , coverUpBinaryRule "minus right" (flipOp . isMinus) (flip (-))
+      , coverUpBinaryRule "minus-left" isMinus (+)
+      , coverUpBinaryRule "minus-right" (flipOp . isMinus) (flip (-))
       ]
    
 coverUpTimesPositive :: Rule (Relation Expr)
-coverUpTimesPositive = coverUpBinaryRule "times positive" (commOp . m) (/) configCoverUp
+coverUpTimesPositive = coverUpBinaryRule "times-positive" (commOp . m) (/) configCoverUp
  where
    m expr = do
       (a, b) <- matchM timesView expr

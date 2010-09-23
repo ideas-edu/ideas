@@ -5,7 +5,7 @@
         -3*x+6 == 3*x+12-7
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         -3*x+6 == 3*x+5
       </expr>

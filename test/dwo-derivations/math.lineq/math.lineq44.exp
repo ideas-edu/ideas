@@ -10,7 +10,7 @@
         -x+4 == 12+10*x-10
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         -x+4 == 2+10*x
       </expr>

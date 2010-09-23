@@ -10,7 +10,7 @@
         5*x-1-12 == -24*x+9*x-18
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         5*x-13 == -15*x-18
       </expr>

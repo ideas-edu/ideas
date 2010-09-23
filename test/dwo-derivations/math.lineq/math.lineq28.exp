@@ -5,7 +5,7 @@
         2*x-3*x-5 == 10+5*x-5
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         -x-5 == 5+5*x
       </expr>

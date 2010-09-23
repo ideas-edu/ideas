@@ -10,7 +10,7 @@
         60*x-12*x-12 == 360+5*x-5
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         48*x-12 == 355+5*x
       </expr>

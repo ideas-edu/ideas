@@ -66,7 +66,7 @@ getActions :: LabelInfo -> [String]
            -> StrategyConfiguration -> [ConfigAction]
 getActions info groups = map snd . filter (select . fst)
  where
-   select (ByName s)     = showId info == s
+   select (ByName s)     = getId info == newId s
    select (ByGroup s)    = s `elem` groups
 
 doAction :: ConfigAction -> LabelInfo -> LabelInfo

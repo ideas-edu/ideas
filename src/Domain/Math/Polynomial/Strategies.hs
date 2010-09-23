@@ -54,7 +54,7 @@ linearStrategyG =
        label "Phase 1" (repeat (
                use removeDivision
           <|>  multi (showId distributeTimes) (somewhere (useC parentNotNegCheck <*> use distributeTimes))
-          <|>  multi "merge similar terms" (once (use merge))))
+          <|>  multi (showId merge) (once (use merge))))
    <*> label "Phase 2" (repeat (
               (use flipEquation |> use varToLeft)
           <|> use (coverUpPlusWith oneVar) 

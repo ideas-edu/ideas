@@ -1,8 +1,8 @@
 <reply result="ok" version="0.6.5 (0)">
-  <label name="linear equation">
+  <label name="linearequation">
     <sequence>
       <rule name="identity"/>
-      <label name="phase 1">
+      <label name="phase1">
         <repeat>
           <choice>
             <rule name="algebra.equations.linear.remove-div"/>
@@ -11,7 +11,7 @@
                 <rec var="0">
                   <choice>
                     <sequence>
-                      <rule name="parent not negate check"/>
+                      <rule name="parentnotnegatecheck"/>
                       <rule name="algebra.equations.linear.distr-times"/>
                     </sequence>
                     <sequence>
@@ -25,7 +25,7 @@
                   <rec var="0">
                     <choice>
                       <sequence>
-                        <rule name="parent not negate check"/>
+                        <rule name="parentnotnegatecheck"/>
                         <rule name="algebra.equations.linear.distr-times"/>
                       </sequence>
                       <sequence>
@@ -38,7 +38,7 @@
                 </repeat>
               </sequence>
             </label>
-            <label name="merge similar terms" collapsed="true">
+            <label name="algebra.equations.linear.merge" collapsed="true">
               <sequence>
                 <rule name="navigation.down.all"/>
                 <rule name="algebra.equations.linear.merge"/>
@@ -55,7 +55,7 @@
           </choice>
         </repeat>
       </label>
-      <label name="phase 2">
+      <label name="phase2">
         <repeat>
           <choice>
             <orelse>

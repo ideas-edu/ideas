@@ -10,7 +10,7 @@
         12-16*x-8 == 36*x-15*x+3
       </expr>
     </elem>
-    <elem ruleid="merge similar terms">
+    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         4-16*x == 21*x+3
       </expr>

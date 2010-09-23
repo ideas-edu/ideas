@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="fraction scale">
+    <elem ruleid="algebra.equations.rational.rational-scale">
       <expr>
         (x+5)*(x+5)/((x+3)*(x+5))+(x+3)*(-x-3)/((x+3)*(x+5))
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         ((x+5)*(x+5)+(x+3)*(-x-3))/((x+3)*(x+5))
       </expr>

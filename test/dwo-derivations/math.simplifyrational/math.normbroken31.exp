@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="fraction scale">
+    <elem ruleid="algebra.equations.rational.rational-scale">
       <expr>
         (x+1)*7/((x-3)*(x+1))-(x-3)*2/((x-3)*(x+1))
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         ((x+1)*7-(x-3)*2)/((x-3)*(x+1))
       </expr>

@@ -24,7 +24,7 @@
         <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="cancel terms div">
+    <elem ruleid="algebra.equations.rational.cancel-div">
       <expr>
         (x+3)/(x*(x-3))
       </expr>

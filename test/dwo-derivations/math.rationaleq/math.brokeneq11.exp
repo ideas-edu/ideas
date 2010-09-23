@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="samedivisor">
+    <elem ruleid="algebra.equations.rational.same-divisor">
       <expr>
         x^2+4*x == 3*x+6
       </expr>
@@ -32,7 +32,7 @@
         <item name="clipboard" value="[condition==logic1.and (x/=-2) (x/=2)]"/>
       </context>
     </elem>
-    <elem ruleid="check solution">
+    <elem ruleid="algebra.equations.rational.check-solution">
       <expr>
         x == -3
       </expr>

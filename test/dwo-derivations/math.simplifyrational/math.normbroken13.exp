@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="fraction scale">
+    <elem ruleid="algebra.equations.rational.rational-scale">
       <expr>
         2*b/(a*b)-3*a/(a*b)
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         (2*b-3*a)/(a*b)
       </expr>

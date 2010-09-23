@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="turn into fraction">
+    <elem ruleid="algebra.equations.rational.to-rational">
       <expr>
         21*x/(7*x)-5/(7*x)
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         (21*x-5)/(7*x)
       </expr>

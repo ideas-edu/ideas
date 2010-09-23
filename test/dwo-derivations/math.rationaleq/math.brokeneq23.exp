@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="crossmultiply">
+    <elem ruleid="algebra.equations.rational.cross-multiply">
       <expr>
         (2*x+3)*2 == (x-1)*7
       </expr>

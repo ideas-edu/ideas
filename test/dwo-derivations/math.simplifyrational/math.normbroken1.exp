@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="fraction scale">
+    <elem ruleid="algebra.equations.rational.rational-scale">
       <expr>
         35/(10*x)+6/(10*x)
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         41/(10*x)
       </expr>

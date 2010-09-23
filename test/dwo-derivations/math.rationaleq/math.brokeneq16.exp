@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="samedividend">
+    <elem ruleid="algebra.equations.rational.same-dividend">
       <expr>
         2*x+1 == 0 or x^2+3*x == 5*x+8
       </expr>

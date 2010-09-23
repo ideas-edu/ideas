@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="divisioniszero">
+    <elem ruleid="algebra.equations.rational.division-zero">
       <expr>
         4*x^2-24 == 0
       </expr>

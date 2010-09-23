@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="fraction scale">
+    <elem ruleid="algebra.equations.rational.rational-scale">
       <expr>
         10/(5*x*y)-7*x/(5*x*y)
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         (10-7*x)/(5*x*y)
       </expr>

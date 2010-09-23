@@ -1,5 +1,5 @@
 <reply result="ok" version="0.6.5 (0)">
-  <elem ruleid="tidy-up rule">
+  <elem ruleid="calculus.differentiation.tidy-up">
     []
     <state>
       <prefix>

@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="samedividend">
+    <elem ruleid="algebra.equations.rational.same-dividend">
       <expr>
         x^2-9 == 0 or 4*x-1 == 2*x+7
       </expr>

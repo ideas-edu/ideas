@@ -24,7 +24,7 @@
         <item name="location" value="[1,2]"/>
       </context>
     </elem>
-    <elem ruleid="cancel terms div">
+    <elem ruleid="algebra.equations.rational.cancel-div">
       <expr>
         x*(x+4)/(x+1)
       </expr>

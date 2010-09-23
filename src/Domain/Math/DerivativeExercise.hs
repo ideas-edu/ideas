@@ -27,7 +27,7 @@ import Domain.Math.Expr
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise
-   { exerciseId   = describe "Derivative" $ newId "calculus.differentiation"
+   { exerciseId   = describe "Derivative" diffId
    , status       = Experimental
    , parser       = parseExpr
    , isReady      = noDiff
@@ -46,7 +46,7 @@ derivativeStrategy =
    try tidyup <*> Common.Strategy.repeat (derivative <*> try tidyup)
 
 tidyup :: Rule (Context Expr)
-tidyup = liftToContext $ makeSimpleRule "Tidy-up rule" $ \old -> 
+tidyup = liftToContext $ makeSimpleRule (diffId, "tidy-up") $ \old -> 
    let new = simplify old
    in if old==new then Nothing else Just new
    

@@ -1,5 +1,5 @@
 <request service="apply" exerciseid="math.derivative">
-<ruleid>Tidy-up rule</ruleid>
+<ruleid>calculus.differentiation.tidy-up</ruleid>
 <location>[0]</location>
 <state>
 <prefix>[]</prefix>

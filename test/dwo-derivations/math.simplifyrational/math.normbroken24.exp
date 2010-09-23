@@ -1,11 +1,11 @@
 <reply result="ok" version="0.6.2 (0)">
   <list>
-    <elem ruleid="turn into fraction">
+    <elem ruleid="algebra.equations.rational.to-rational">
       <expr>
         7/(5*a)-10*a/(5*a)
       </expr>
     </elem>
-    <elem ruleid="fraction plus">
+    <elem ruleid="algebra.equations.rational.rational-plus">
       <expr>
         (7-10*a)/(5*a)
       </expr>

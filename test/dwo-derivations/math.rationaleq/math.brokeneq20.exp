@@ -1,6 +1,6 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="samedividend">
+    <elem ruleid="algebra.equations.rational.same-dividend">
       <expr>
         x^2-3*x == 0 or 2*x-6 == 4*x+2
       </expr>
@@ -62,7 +62,7 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="check solution">
+    <elem ruleid="algebra.equations.rational.check-solution">
       <expr>
         x == 0 or x == -4
       </expr>

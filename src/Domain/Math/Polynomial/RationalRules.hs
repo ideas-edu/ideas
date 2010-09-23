@@ -16,6 +16,7 @@ module Domain.Math.Polynomial.RationalRules
    ) where
 
 import Common.Context
+import Common.Id
 import Common.Transformation
 import Common.View
 import Control.Monad
@@ -34,12 +35,15 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views
 import qualified Domain.Logic.Formula as Logic
 
+ratId :: Id
+ratId = newId "algebra.equations.rational"
+
 ---------------------------------------------------------------
 -- Rules for rational expressions and rational equations
 
 -- a/b = 0  iff  a=0 (and b/=0)
 divisionIsZero :: Rule (Context (Equation Expr))
-divisionIsZero = makeSimpleRule "divisionIsZero" $ withCM $ \(lhs :==: rhs) -> do
+divisionIsZero = makeSimpleRule (ratId, "division-zero") $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
    (a, b) <- matchM divView lhs
    conditionNotZero b
@@ -47,7 +51,7 @@ divisionIsZero = makeSimpleRule "divisionIsZero" $ withCM $ \(lhs :==: rhs) -> d
    
 -- a/b = 1  iff  a=b (and b/=0)
 divisionIsOne :: Rule (Context (Equation Expr))
-divisionIsOne = makeSimpleRule "divisionIsOne" $ withCM $ \(lhs :==: rhs) -> do
+divisionIsOne = makeSimpleRule (ratId, "division-one") $ withCM $ \(lhs :==: rhs) -> do
    guard (rhs == 1)
    (a, b) <- matchM divView lhs
    conditionNotZero b
@@ -55,7 +59,7 @@ divisionIsOne = makeSimpleRule "divisionIsOne" $ withCM $ \(lhs :==: rhs) -> do
 
 -- a/c = b/c  iff  a=b (and c/=0)
 sameDivisor :: Rule (Context (Equation Expr))
-sameDivisor = makeSimpleRule "sameDivisor" $ withCM $ \(lhs :==: rhs) -> do
+sameDivisor = makeSimpleRule (ratId, "same-divisor") $ withCM $ \(lhs :==: rhs) -> do
    (a, c1) <- matchM divView lhs
    (b, c2) <- matchM divView rhs
    guard (c1==c2)
@@ -64,7 +68,7 @@ sameDivisor = makeSimpleRule "sameDivisor" $ withCM $ \(lhs :==: rhs) -> do
    
 -- a/b = a/c  iff  a=0 or b=c (and b/=0 and c/=0)
 sameDividend :: Rule (Context (OrList (Equation Expr)))
-sameDividend = makeSimpleRule "sameDividend" $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
+sameDividend = makeSimpleRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
    (a1, b) <- matchM divView lhs
    (a2, c) <- matchM divView rhs
    guard (a1==a2)
@@ -74,7 +78,7 @@ sameDividend = makeSimpleRule "sameDividend" $ withCM $ oneDisjunct $ \(lhs :==:
    
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
-crossMultiply = makeSimpleRule "crossMultiply" $ withCM $ \(lhs :==: rhs) -> do
+crossMultiply = makeSimpleRule (ratId, "cross-multiply") $ withCM $ \(lhs :==: rhs) -> do
    (a, b) <- matchM divView lhs
    (c, d) <- matchM divView rhs
    conditionNotZero b
@@ -83,7 +87,7 @@ crossMultiply = makeSimpleRule "crossMultiply" $ withCM $ \(lhs :==: rhs) -> do
    
 -- a/b = c  iff  a = b*c  (and b/=0)
 multiplyOneDiv :: Rule (Context (Equation Expr))
-multiplyOneDiv = makeSimpleRule "multiplyOneDiv" $ withCM $ \(lhs :==: rhs) -> 
+multiplyOneDiv = makeSimpleRule (ratId, "multiply-one-div") $ withCM $ \(lhs :==: rhs) -> 
    f (:==:) lhs rhs `mplus` f (flip (:==:)) rhs lhs
  where
    f eq ab c = do 
@@ -94,7 +98,7 @@ multiplyOneDiv = makeSimpleRule "multiplyOneDiv" $ withCM $ \(lhs :==: rhs) ->
       
 -- a/c + b/c = a+b/c   (also see Numeric.Rules)
 fractionPlus :: Rule Expr -- also minus
-fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
+fractionPlus = makeSimpleRule (ratId, "rational-plus") $ \expr -> do
    ((a, b), (c, d)) <- match myView expr
    guard (b == d)
    return (build divView (a+c, b))
@@ -104,7 +108,7 @@ fractionPlus = makeSimpleRule "fraction plus" $ \expr -> do
 -- ab/ac  =>  b/c  (if a/=0)
 -- Note that the common term can be squared (in one of the parts)
 cancelTermsDiv :: Rule (Context Expr)
-cancelTermsDiv = makeSimpleRule "cancel terms div" $ withCM $ \expr -> do
+cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ withCM $ \expr -> do
    ((b, xs), (c, ys)) <- matchM myView expr
    let (ps, qs, rs) = rec (map f xs) (map f ys)
    guard (not (null rs))
@@ -132,7 +136,7 @@ cancelTermsDiv = makeSimpleRule "cancel terms div" $ withCM $ \expr -> do
 
 fractionScale :: Rule Expr
 fractionScale = liftRule myView $ 
-   makeSimpleRule "fraction scale" $ \((a, e1), (b, e2)) -> do
+   makeSimpleRule (ratId, "rational-scale") $ \((a, e1), (b, e2)) -> do
       guard (e1 /= e2)
       let e3 = lcmExpr e1 e2
       ma <- divisionExpr e3 e1
@@ -144,7 +148,7 @@ fractionScale = liftRule myView $
    
 turnIntoFraction :: Rule Expr
 turnIntoFraction = liftRule plusView $
-   makeSimpleRule "turn into fraction" $ \(a, b) ->
+   makeSimpleRule (ratId, "to-rational") $ \(a, b) ->
       liftM (\c -> (c, b)) (f a b) `mplus` 
       liftM (\c -> (a, c)) (f b a)
  where
@@ -155,7 +159,7 @@ turnIntoFraction = liftRule plusView $
 
 -- A simple implementation that considers the condition stored in the context
 checkSolution :: Rule (Context (OrList (Equation Expr)))
-checkSolution = makeSimpleRule "check solution" $ 
+checkSolution = makeSimpleRule (ratId, "check-solution") $ 
    withCM $ oneDisjunct $ \(x :==: a) -> do
       c  <- lookupClipboardG "condition"
       xs <- matchM andView c

@@ -68,6 +68,12 @@
       },
       {
          "domain": "algebra.manipulation.exponents",
+         "identifier": "equation",
+         "description": "solve algebraically",
+         "status": "Provisional"
+      },
+      {
+         "domain": "algebra.manipulation.exponents",
          "identifier": "nonnegative",
          "description": "write with a non-negative exponent",
          "status": "Provisional"

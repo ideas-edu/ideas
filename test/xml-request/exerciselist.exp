@@ -11,6 +11,7 @@
     <elem domain="algebra.inequalities" identifier="linear" description="solve a linear inequation" status="Provisional"/>
     <elem domain="algebra.inequalities" identifier="polynomial" description="solve an inequation of higher degree" status="Provisional"/>
     <elem domain="algebra.inequalities" identifier="quadratic" description="solve a quadratic inequation" status="Provisional"/>
+    <elem domain="algebra.manipulation.exponents" identifier="equation" description="solve algebraically" status="Provisional"/>
     <elem domain="algebra.manipulation.exponents" identifier="nonnegative" description="write with a non-negative exponent" status="Provisional"/>
     <elem domain="algebra.manipulation.exponents" identifier="powerof" description="write as a power of a" status="Provisional"/>
     <elem domain="algebra.manipulation.exponents" identifier="simplify" description="simplify expression (powers)" status="Provisional"/>

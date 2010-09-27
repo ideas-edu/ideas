@@ -13,8 +13,10 @@ module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
-  , reciprocalInv, reciprocalFrac, greatestPower, commonPower, nthRoot
-  , nthPower, approxPower, scaleConFactor
+  , reciprocalInv, reciprocalFrac
+    -- * Power equation rules
+  , greatestPower, commonPower, nthRoot
+  , nthPower, approxPower, scaleConFactor, varLeftConRight
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
@@ -102,6 +104,7 @@ approxPower = makeSimpleRule (power, "approx-power") $ \ expr ->
     f (d :==: Var x) = match doubleView d >>= Just . (.~=. Var x) . Number . precision 2
     f _              = Nothing
 
+-- c*x = y  =>  x = y/c
 scaleConFactor :: Rule (Equation Expr)
 scaleConFactor = makeSimpleRule (power, "scale-factor") $ \(lhs :==: rhs) -> do
   guard $ hasVars lhs
@@ -109,6 +112,16 @@ scaleConFactor = makeSimpleRule (power, "scale-factor") $ \(lhs :==: rhs) -> do
   guard $ length xs > 1
   return $ let (cs, ys) = partition ((flip belongsTo) doubleView) xs
            in build productView (sign, ys) :==: rhs ./. build productView (False, cs)
+
+-- a*x + c = b*y + d  =>  a*x - b*y = d - c   (move vars to the left, cons to the right)
+varLeftConRight :: Rule (Equation Expr)
+varLeftConRight = makeSimpleRule (power, "var-left-con-right") $ 
+  \(lhs :==: rhs) -> do
+    (xs, cs) <- match sumView lhs >>= return . partition hasVars
+    (ys, ds) <- match sumView rhs >>= return . partition hasVars
+    guard $ length cs > 0 || length ys > 0
+    return $ build sumView (xs ++ map neg ys) :==: 
+             build sumView (ds ++ map neg cs)
 
 
 -- | Power rules --------------------------------------------------------------

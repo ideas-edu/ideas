@@ -22,7 +22,7 @@ module Domain.Math.Power.Views
    , (<&>)
      -- * Normalising views
    , normPowerView, normPowerView', normPowerNonNegRatio
-   , normPowerNonNegDouble
+   , normPowerNonNegDouble, normPowerEqView
      -- * Other views
    , ratioView, natView
    ) where
@@ -36,6 +36,7 @@ import Data.List
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Ratio
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 
@@ -363,3 +364,29 @@ normPowerView = makeView f g
            _ -> Nothing
              
    g (s, r) = Var s .^. fromRational r
+
+normPowerEqView :: View (Relation Expr) (RelationType, Expr, Expr)
+normPowerEqView = makeView f g
+  where
+    f rel = case relationType rel of
+      EqualTo -> do 
+        let l = leftHandSide rel; r = rightHandSide rel
+        (l', r') <- varLConR l r
+        
+        return (EqualTo, l', r')
+      Approximately -> Nothing
+
+    g (relType, l, r) = case relType of
+      EqualTo       -> l .==. r
+      Approximately -> l .~=. r
+
+    consPair a (b,c) = (a, b,c)
+
+
+varLConR lhs rhs = do
+      (xs, cs) <- match sumView lhs >>= return . partition hasVars
+      (ys, ds) <- match sumView rhs >>= return . partition hasVars
+      guard $ length cs > 0 || length ys > 0
+      return $ ( build sumView (xs ++ map neg ys)
+               , build sumView (ds ++ map neg cs))
+  

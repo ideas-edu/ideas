@@ -39,7 +39,7 @@ powerEquationStrategy = cleanUpStrategy cleanup strat
     strat = label "" $
       repeat (  try (use scaleConFactor)
             <*> option (somewhere (use greatestPower) <*> use commonPower)
-            <*> (use nthRoot <|> use nthPower)
+            <*> (use nthRoot <|> use nthPower <|> use varLeftConRight)
              )
             <*> try (liftToContext approxPower)
     

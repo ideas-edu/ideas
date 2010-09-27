@@ -23,7 +23,7 @@ import qualified Domain.Logic as Logic
 import qualified Domain.Logic.FeedbackText as Logic
 import qualified Domain.Math.Expr as Math
 import qualified Domain.Math.Data.Interval as MathInterval
-import qualified Domain.Math.DerivativeExercise as Math
+import qualified Domain.Math.Derivative.Exercise as Math
 import qualified Domain.Math.Equation.CoverUpExercise as Math
 import qualified Domain.Math.Numeric.Exercises as Math
 import qualified Domain.Math.Numeric.Tests as MathNum

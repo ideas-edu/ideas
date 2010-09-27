@@ -1,5 +1,5 @@
 body { 
-	background-color: white;
+  background-color: white;
   color:            black;
   font-family:      sans-serif;
 }
@@ -12,7 +12,39 @@ h1, h2, h3 {
    color: rgb(41,134,189);
 }
 
-div.derivation {
+div.error {
+   color: rgb(255,0,0);
+   font-weight:      bold;
+}
+
+div.idbox {
+    background-color: white;
+    padding-top:      0.5ex;
+    padding-bottom:   0.5ex;
+    padding-left:     3ex;
+    padding-right:    3ex;
+    border-color:     rgb(41,134,189);
+    border-width:     3px;
+    border-style:     double;
+}
+
+font.id {
+   color: rgb(41,134,189);
+   font-size: 12pt;
+   font-weight: bold;
+}
+
+
+/*
+div.derivation:before {
+   content: "Before";
+}
+
+div.derivation:after {
+   content: "After";
+} */
+
+div.derivation, div.step {
     background-color: rgb(225,225,225);
     padding-top:      0.5ex;
     padding-bottom:   0.5ex;

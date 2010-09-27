@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.DerivativeRules where
+module Domain.Math.Derivative.Rules where
 
 import Prelude hiding ((^))
 import Common.Transformation
@@ -19,7 +19,7 @@ import Common.Rewriting
 
 derivativeRules :: [Rule Expr]
 derivativeRules =
-   [ ruleDerivCon, ruleDerivPlus, ruleDerivMin
+   [ ruleDerivCon, ruleDerivPlus, ruleDerivMin, ruleDerivNegate
    , ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
    , ruleDerivProduct, ruleDerivQuotient {-, ruleDerivChain-}, ruleDerivChainPowerExprs
    , ruleSine, ruleLog 
@@ -58,6 +58,10 @@ ruleDerivPlus = rule (diffId, "plus") $
 ruleDerivMin :: Rule Expr
 ruleDerivMin = rule (diffId, "min") $
    \x f g -> diff (lambda x (f - g))  :~>  diff (lambda x f) - diff (lambda x g)
+
+ruleDerivNegate :: Rule Expr
+ruleDerivNegate = rule (diffId, "negate") $
+   \x f -> diff (lambda x (-f))  :~>  -diff (lambda x f)
 
 ruleDerivVar :: Rule Expr
 ruleDerivVar = rule (diffId, "var") $

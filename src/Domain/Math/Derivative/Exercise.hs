@@ -10,11 +10,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.DerivativeExercise where
+module Domain.Math.Derivative.Exercise where
 
 import Common.Uniplate (universe)
 import Prelude hiding (repeat, (^))
-import Domain.Math.DerivativeRules 
+import Domain.Math.Derivative.Rules 
 import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
 import qualified Common.Strategy
 import Common.Navigator
@@ -22,6 +22,7 @@ import Common.Context (Context, liftToContext)
 import Common.Exercise
 import Common.Transformation
 import Control.Monad
+import Domain.Math.Examples.DWO5
 import Domain.Math.Simplification
 import Domain.Math.Expr
 
@@ -34,7 +35,9 @@ derivativeExercise = makeExercise
    , extraRules   = map liftToContext derivativeRules ++ [tidyup]
    , strategy     = derivativeStrategy
    , navigation   = navigator
-   , examples     = [ex1, ex2, ex3, ex4]
+   , examples     = [ex1, ex2, ex3, ex4] ++
+                    concat (diffSet1++diffSet2++diffSet3++diffSet4++
+                            diffSet5++diffSet6++diffSet7++diffSet8)
    }
    
 noDiff :: Expr -> Bool

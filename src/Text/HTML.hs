@@ -14,9 +14,9 @@
 module Text.HTML 
    ( HTML, HTMLBuilder, showHTML
    , htmlPage, errorPage, link, linkTitle
-   , h1, h2, h3, h4, preText, ul, table, noBorderTable
+   , h1, h2, h3, h4, preText, ul, table
    , text, image, space, tt, spaces, highlightXML
-   , bold, italic, para, ttText, hr, br, pre, center, bullet, divClass
+   , font, bold, italic, para, ttText, hr, br, pre, center, bullet, divClass
    ) where
 
 import Text.XML hiding (text)
@@ -73,6 +73,8 @@ h3 = element "h3" . text
 h4 :: String -> HTMLBuilder
 h4 = element "h4" . text
 
+font :: String -> HTMLBuilder -> HTMLBuilder
+font n = element "font" . ("class" .=. n >>)
 
 bold, italic :: HTMLBuilder -> HTMLBuilder
 bold   = element "b" 
@@ -114,11 +116,6 @@ table rows = element "table" $ do
       | i == 0    = "topRow"
       | even i    = "evenRow"
       | otherwise = "oddRow" 
-
-noBorderTable :: [[HTMLBuilder]] -> HTMLBuilder
-noBorderTable rows = element "table" $ do
-   "border"      .=. "0"
-   mapM_ (element "tr" . mapM_ (element "td")) rows
 
 spaces :: Int -> HTMLBuilder
 spaces n = replicateM_ n space

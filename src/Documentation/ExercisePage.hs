@@ -62,7 +62,7 @@ makeExercisePage dir pkg = do
 
 exercisePage :: Bool -> ExercisePackage a -> HTMLBuilder
 exercisePage exampleFileExists pkg = do
-   h1 (description ex)
+   idboxHTML "strategy" (getId pkg)
    
    h2 "1. General information"
    table 
@@ -153,18 +153,13 @@ rulesPage ex exMap = do
    -- General info
    forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do
       h2 (show i ++ ". " ++ show r)
-      rulePageBuilder ex exMap r
+      rulePage ex exMap r
  where
    title = "Rules for " ++ showId ex
 
 rulePage :: Exercise a -> ExampleMap a -> Rule b -> HTMLBuilder
 rulePage ex exMap r = do
-   h1 (showId r)
-   rulePageBuilder ex exMap r
-
-rulePageBuilder :: Exercise a -> ExampleMap a -> Rule b -> HTMLBuilder
-rulePageBuilder ex exMap r = do
-   para $ text (description r)
+   idboxHTML "rule" (getId r)
    para $ table 
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
@@ -176,11 +171,14 @@ rulePageBuilder ex exMap r = do
       ruleToHTML (Some ex) r
 
    -- Examples
-   let ys = M.findWithDefault [] (getId r) exMap
+   let ys  = M.findWithDefault [] (getId r) exMap
+       ups = length (qualifiers (getId r))
    unless (null ys) $ do
       h3 "Examples"
-      forM_ (take 3 ys) $ \(a, b) -> para $ tt $ 
-         preText $ prettyPrinter ex a ++ "\n   =>\n" ++ prettyPrinter ex b
+      forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do 
+         forTerm ex (inContext ex a)
+         forStep ups (getId r, emptyEnv)
+         forTerm ex (inContext ex b)
          
    -- FMPS
    let xs = getRewriteRules r
@@ -199,25 +197,23 @@ derivationsPage ex = do
       derivationHTML ex a
 
 derivationHTML :: Exercise a -> a -> HTMLBuilder
-derivationHTML ex = divClass "derivation" . pre 
-                  . derivationM forStep forTerm . defaultDerivation ex
+derivationHTML ex a = divClass "derivation" $ do 
+   pre $ derivationM (forStep ups) (forTerm ex) der
+   unless (ok der) $
+      divClass "error" $ text "<<not ready>>"
  where
-   forStep (i, env) = do 
+   ups = length (qualifiers ex)
+   der = defaultDerivation ex a 
+   ok  = maybe False (isReady ex) . fromContext . last . terms
+
+idboxHTML :: String -> Id -> HTMLBuilder
+idboxHTML kind i = divClass "idbox" $ do
+   para $ do 
+      font "id" $ ttText (showId i)
       spaces 3
-      text "=>"
-      space
-      let target = up (length (qualifiers ex)) ++ ruleFile i
-          make | null (description i) = link target
-               | otherwise = linkTitle target (description i)
-      make (text (unqualified i))
-      br
-      unless (nullEnv env) $ do
-         spaces 6
-         text (show env)
-         br
-   forTerm ca = do
-      text (prettyPrinterContext ex ca)
-      br
+      text $ "(" ++ kind ++ ")"
+   unless (null $ description i) $
+      para $ italic $ text (description i)
 
 diagnosisPage :: String -> ExercisePackage a -> HTMLBuilder
 diagnosisPage xs pkg = do
@@ -247,3 +243,23 @@ diagnosisPage xs pkg = do
          (Left msg, _) -> "parse error (before): " ++ msg
          (_, Left msg) -> "parse error (afterr): " ++ msg
          (Right a, Right b) -> show (diagnose (emptyState pkg a) b)
+       
+forStep :: Int -> (Id, Environment) -> HTMLBuilder  
+forStep n (i, env) = do 
+      spaces 3
+      text "=>"
+      space
+      let target = up n ++ ruleFile i
+          make | null (description i) = link target
+               | otherwise = linkTitle target (description i)
+      make (text (unqualified i))
+      br
+      unless (nullEnv env) $ do
+         spaces 6
+         text (show env)
+         br
+
+forTerm :: Exercise a -> Context a -> HTMLBuilder
+forTerm ex ca = do
+   text (prettyPrinterContext ex ca)
+   br

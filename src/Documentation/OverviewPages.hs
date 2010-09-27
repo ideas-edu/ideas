@@ -50,14 +50,13 @@ exerciseOverviewPage showAll list = do
       
    forM_ (zip [1..] (grouping list)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
-      noBorderTable (map makeRow xs) 
+      table (map makeRow xs) 
  where
    title | showAll   = "All exercises"
          | otherwise = "Exercises"
  
    makeRow (Some ex) = 
-      [ do tt bullet >> space
-           link (exercisePageFile code) $ ttText (show code)
+      [ link (exercisePageFile code) $ ttText (show code)
       , do spaces 10
            f (status ex)
            spaces 10

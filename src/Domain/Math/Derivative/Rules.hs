@@ -21,8 +21,8 @@ derivativeRules :: [Rule Expr]
 derivativeRules =
    [ ruleDerivCon, ruleDerivPlus, ruleDerivMin, ruleDerivNegate
    , ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
-   , ruleDerivProduct, ruleDerivQuotient {-, ruleDerivChain-}, ruleDerivChainPowerExprs
-   , ruleSine, ruleLog 
+   , ruleDerivProduct, ruleDerivQuotient {-, ruleDerivChain-}, ruleDerivPowerChain
+   , ruleSine, ruleLog, ruleDerivSqrt, ruleDerivSqrtChain, ruleDefRoot
    ]
 
 diff :: Expr -> Expr
@@ -109,10 +109,30 @@ ruleDerivPower = makeSimpleRule (diffId, "power") f
       return $ n * (x ^ (n-1)) 
    f _ = Nothing
 
-ruleDerivChainPowerExprs :: Rule Expr
-ruleDerivChainPowerExprs = makeSimpleRule (diffId, "chain-rule-power") f 
+ruleDerivPowerChain :: Rule Expr
+ruleDerivPowerChain = makeSimpleRule (diffId, "chain-power") f 
  where 
-   f (Sym d [Sym l [x@(Var v), Sym p [g, n]]]) 
+   f (Sym d [Sym l [x@(Var v), Sym p [a, n]]]) 
       | d == diffSymbol && l == lambdaSymbol && p == powerSymbol && v `notElem` collectVars n =
-      return $ n * (g ^ (n-1)) * diff (lambda x g)
+      return $ n * (a ^ (n-1)) * diff (lambda x a)
    f _ = Nothing
+   
+ruleDerivSqrt :: Rule Expr
+ruleDerivSqrt = makeSimpleRule (diffId, "sqrt") f
+ where
+   f (Sym d [Sym l [x@(Var _), Sqrt x1]]) 
+      | d == diffSymbol && l == lambdaSymbol && x==x1 =
+      return $ 1 / (2 * sqrt x) 
+   f _ = Nothing 
+   
+ruleDerivSqrtChain :: Rule Expr
+ruleDerivSqrtChain = makeSimpleRule (diffId, "chain-sqrt") f
+ where
+   f (Sym d [Sym l [x@(Var _), Sqrt a]]) 
+      | d == diffSymbol && l == lambdaSymbol =
+      return $ (1 / (2 * sqrt a)) * diff (lambda x a)
+   f _ = Nothing 
+   
+ruleDefRoot :: Rule Expr
+ruleDefRoot = rule (diffId, "def-root") $
+   \a b -> root a b :~> a ^ (1/b)

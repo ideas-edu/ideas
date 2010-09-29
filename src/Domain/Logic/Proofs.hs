@@ -17,10 +17,10 @@ import Common.Classes
 import Prelude hiding (repeat)
 import Common.Context
 import Common.Rewriting
-import Common.Rewriting.Term hiding (Var)-- (newSymbol, getConSpine, Symbol, binary)
+import Common.Rewriting.Term hiding (Var)
 import Common.Strategy hiding (fail, not)
 import Common.Exercise
-import Common.Utils (safeHead, subsets, ShowString(..), isSubsetOf)
+import Common.Utils
 import Common.Transformation
 import Common.Navigator
 import Data.List hiding (repeat)
@@ -30,25 +30,36 @@ import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
 import Domain.Logic.Examples 
 import Domain.Logic.Strategies
+import Domain.Math.Expr ()
 import Common.Uniplate
 
 -- Currently, we use the DWA strategy
-proofExercise :: Exercise (SLogic, SLogic)
+proofExercise :: Exercise [(SLogic, SLogic)]
 proofExercise = makeExercise
    { exerciseId     = describe "Prove two propositions equivalent" $
                          newId "logic.proof"
    , status         = Experimental
-   , parser         = parseLogicProof
-   , prettyPrinter  = \(p, q) -> ppLogicPars p ++ " == " ++ ppLogicPars q
-   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s
-   , similarity     = \(p, q) (r, s) -> equalLogicA p r && equalLogicA q s
-   , isSuitable     = \(p, q) -> eqLogic p q
-   , isReady        = \(p, q) -> isDNF p && isDNF q
+--   , parser         = parseLogicProof
+   , prettyPrinter  = let f (p, q) = ppLogicPars p ++ " == " ++ ppLogicPars q
+                      in commaList . map f
+--   , equivalence    = \(p, _) (r, s) -> eqLogic p r && eqLogic r s
+--   , similarity     = \(p, q) (r, s) -> equalLogicA p r && equalLogicA q s
+   , isSuitable     = all (uncurry eqLogic)
+   , isReady        = all (uncurry equalLogicA)
    , strategy       = proofStrategy
    , navigation     = termNavigator
-   , examples       = exampleProofs
+   , examples       = map return exampleProofs
    }
    
+{-
+instance IsTerm a => IsTerm [a] where
+   toTerm = makeConTerm listSymbol . map toTerm
+   fromTerm term = 
+      case getConSpine term of
+         Just (s, xs) | s == listSymbol ->
+            mapM fromTerm xs
+         _ -> fail "not a list" -}
+
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
    toTerm (a, b) = binary tupleSymbol (toTerm a) (toTerm b)
    fromTerm term =
@@ -57,18 +68,21 @@ instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
             liftM2 (,) (fromTerm a) (fromTerm b)
          _ -> fail "not a tuple"
    
+--listSymbol :: Symbol
+--listSymbol = newSymbol "basic.list"
+   
 tupleSymbol :: Symbol
 tupleSymbol = newSymbol "basic.tuple"
 
-proofStrategy :: LabeledStrategy (Context (SLogic, SLogic))
+proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
 proofStrategy = label "proof equivalent" $ 
-   try (useC commonExprAtom) <*>
-   onceLeft  (mapRules useC dnfStrategyDWA) <*>
-   onceRight (mapRules useC dnfStrategyDWA) <*>
-   repeat (onceLeft simpler <|> onceRight simpler) <*>
-   try (use normLogicRule)
+   try (once (useC commonExprAtom)) <*>
+   once (onceLeft  (mapRules useC dnfStrategyDWA)) <*>
+   once (onceRight (mapRules useC dnfStrategyDWA)) <*> 
+   repeat (once (onceLeft simpler <|> onceRight simpler)) <*>
+   try (once (use normLogicRule))
  where
-   simpler :: Strategy (Context (SLogic, SLogic))
+   simpler :: Strategy (Context [(SLogic, SLogic)])
    simpler =  use tautologyOr <|> onceOrs (use idempotencyAnd <|> use contradictionAnd)
           <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
 
@@ -78,7 +92,7 @@ onceOrs s = somewhere s -- to do: improve for efficiency
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 0)   
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 1)   
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    
    safeUp a = maybe (Just a) Just (up a)
@@ -86,12 +100,15 @@ onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
 onceRight :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
  where
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 1)   
+   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 2)   
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    
    safeUp a = maybe (Just a) Just (up a)
 
-go n = printDerivation proofExercise (exampleProofs !! n) --(p :||: Not p, Not F)
+testje :: Rule (Context SLogic)
+testje = makeSimpleRule "testje" $ \a -> error $ show a
+
+go n = printDerivation proofExercise [exampleProofs !! n] --(p :||: Not p, Not F)
  --where p = Var (ShowString "p")
  
 normLogicRule :: Rule (SLogic, SLogic)
@@ -116,13 +133,18 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
           | a == this = Var new
           | otherwise = descend (sub a) this
    case xs of 
-      hd:_ -> return (sub hd p, sub hd q)
+      hd:_ -> do modifyVar substVar ((show new, show hd):)
+                 return (sub hd p, sub hd q)
       _ -> fail "not applicable"
    
-go2 = apply commonExprAtom $ inContext proofExercise (p :<->: q, p :<->: q)
+substVar :: Var [(String, String)]
+substVar = newVar "subst" []
+   
+{-
+go2 = apply commonExprAtom $ inContext proofExercise [(p :<->: q, p :<->: q)]
  where
    p = Var (ShowString "p")
-   q = Var (ShowString "q")
+   q = Var (ShowString "q") -}
    
 vars :: [ShowString]
 vars = [ ShowString [c] | c <- ['a'..] ]
@@ -211,8 +233,9 @@ fakeAbsorptionNot = makeSimpleRuleList "fakeAbsorptionNot" $ \p -> do
    ~p \/ ... \/ (p /\ q /\ r)  ~> ~p \/ ... \/ (q /\ r)
          (p is hier een losse variabele)
 
-3. rijtjes sorteren
-   rijtjes aanvullen
+3. a) elimineren wat aan een kant helemaal niet voorkomt (zie regel hieronder)
+   b) rijtjes sorteren
+   c) rijtjes aanvullen
    
 Twijfelachtige regel bij stap 3: samennemen in plaats van aanvullen:
    (p /\ q /\ r) \/ ... \/ (~p /\ q /\ r)   ~> q /\ r

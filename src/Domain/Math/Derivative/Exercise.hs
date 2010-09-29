@@ -10,16 +10,16 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Derivative.Exercise where
+module Domain.Math.Derivative.Exercise (derivativeExercise) where
 
 import Common.Uniplate (universe)
 import Prelude hiding (repeat, (^))
 import Domain.Math.Derivative.Rules 
 import Common.Strategy
+import Common.Transformation
 import Common.Navigator
 import Common.Context
 import Common.Exercise
-import Control.Monad
 import Domain.Math.Examples.DWO5
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
@@ -31,25 +31,25 @@ derivativeExercise = makeExercise
    , parser       = parseExpr
    , isReady      = noDiff
    , strategy     = derivativeStrategy
+   , ruleOrdering = derivativeOrdering
    , navigation   = navigator
    , examples     = [ex1, ex2, ex3, ex4] ++
                     concat (diffSet1++diffSet2++diffSet3++diffSet4++
                             diffSet5++diffSet6++diffSet7++diffSet8)
    }
-   
+
+derivativeOrdering :: Rule a -> Rule b -> Ordering
+derivativeOrdering x y =
+   let i = getId ruleDefRoot
+   in (getId x == i, showId x) `compare` (getId y == i, showId y)
+
 noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
-   label "Derivative" $ repeat $ somewhere $ alternatives $ 
-      map liftToContext derivativeRules
-
-{-
-tidyup :: Rule (Context Expr)
-tidyup = liftToContext $ makeSimpleRule (diffId, "tidy-up") $ \old -> 
-   let new = simplify old
-   in if old==new then Nothing else Just new -}
+   label "Derivative" $ repeat $ somewhere $ 
+      alternatives (map liftToContext derivativeRules)
 
 ex1, ex2, ex3 :: Expr
 ex1 = diff $ lambda (Var "x") $ Var "x" ^ 2
@@ -57,7 +57,3 @@ ex2 = diff $ lambda (Var "x") $ ((1/3) :*: (x ^ fromInteger 3)) :+: (fromInteger
  where x = Var "x"
 ex3 = diff $ lambda (Var "x") (2 * Var "x") 
 ex4 = diff $ lambda (Var "x") (ln (Var "x"))
-
-main :: IO ()
-main = forM_ [ex1, ex2, ex3, ex4] $
-   printDerivation derivativeExercise

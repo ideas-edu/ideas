@@ -81,8 +81,8 @@ specialSymbol s []
 specialSymbol s [a]
    | s == newSymbol "logic1.not"         = pre "\172" -- "~"
    | s == newSymbol "arith1.unary_minus" = pre "-"
-   | s == newSymbol "relalg.not" = post "\x203E"
-   | s == newSymbol "relalg.inv" = post "~"
+   | s == newSymbol "relalg.not"         = post "\x203E"
+   | s == newSymbol "relalg.inv"         = post "~"
  where
    pre s  = return [Left s, Right a]
    post s = return [Right a, Left s]
@@ -100,9 +100,13 @@ specialSymbol s [a, b]
    | s == newSymbol "relalg.conj"       = bin " \x2229 " -- intersect
    | s == newSymbol "relalg.disj"       = bin " \x222A " -- union
    | s == newSymbol "relalg.comp"       = bin " ; " -- composition
-   | s == newSymbol "relalg.add"       = bin " \x2020 " -- relative addition/dagger
+   | s == newSymbol "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
    bin s = return [Right a, Left s, Right b]
+specialSymbol s1 [a] -- Apply (Apply (Con s2) (x)) a] 
+   | s1 == newSymbol "calculus1.diff" = -- && s2 == newSymbol "fns1.lambda" = 
+        return [Left "D", Right a] 
+        -- [Left $ "(d/d" ++ show x ++ ")", Right a]
 specialSymbol _ _ = Nothing
 
 showMeta :: Exercise a -> Int -> String

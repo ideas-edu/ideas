@@ -1,24 +1,33 @@
-<reply result="ok" version="0.5.8">
+<reply result="ok" version="0.6.5 (0)">
   <state>
     <prefix>
       []
     </prefix>
     <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
       <OMA>
-        <OMS cd="calculus1" name="diff"/>
-        <OMBIND>
-          <OMS cd="fns1" name="lambda"/>
-          <OMBVAR>
-            <OMV name="x"/>
-          </OMBVAR>
+        <OMS cd="relation1" name="eq"/>
+        <OMA>
+          <OMS cd="arith1" name="minus"/>
           <OMA>
-            <OMS cd="arith1" name="times"/>
-            <OMI>
-              2
-            </OMI>
-            <OMV name="x"/>
+            <OMS cd="arith1" name="unary_minus"/>
+            <OMA>
+              <OMS cd="arith1" name="times"/>
+              <OMI>
+                4
+              </OMI>
+              <OMV name="x"/>
+            </OMA>
           </OMA>
-        </OMBIND>
+          <OMI>
+            13
+          </OMI>
+        </OMA>
+        <OMA>
+          <OMS cd="arith1" name="unary_minus"/>
+          <OMI>
+            11
+          </OMI>
+        </OMA>
       </OMA>
     </OMOBJ>
   </state>

@@ -1,15 +1,13 @@
 <reply result="ok" version="0.6.5 (0)">
-  <elem ruleid="calculus.differentiation.tidy-up">
+  <elem ruleid="algebra.equations.linear.remove-div">
     []
     <state>
       <prefix>
-        [3,0]
+        [5,1,0]
       </prefix>
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMI>
-          10
-        </OMI>
-      </OMOBJ>
+      <expr>
+        10*(x-1) == x
+      </expr>
     </state>
   </elem>
 </reply>

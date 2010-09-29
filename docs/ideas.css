@@ -17,6 +17,27 @@ div.error {
    font-weight:      bold;
 }
 
+div.menu {
+   text-align: center;
+   background-color: white;
+   padding-top:       0ex;
+    padding-bottom:   2ex;
+    padding-left:     3ex;
+    padding-right:    3ex;
+    margin-bottom: 3ex;
+}
+
+/* div.menu:before {
+   content:url(ideas.png);
+   float: left;
+}
+
+div.menu:after {
+   content:url(ounl-small.jpg);
+   float: right;
+} */
+
+
 div.idbox {
     background-color: white;
     padding-top:      0.5ex;

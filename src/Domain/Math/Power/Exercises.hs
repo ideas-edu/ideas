@@ -49,7 +49,7 @@ powerEquationExercise = makeExercise
   , exerciseId     = describe "solve algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
   , examples       = concatMap (map (build equationView)) powerEquations
-  , isReady        = undefined
+--  , isReady        = undefined
 --  , isReady      = isPowerAdd
 --  , isSuitable   = (`belongsTo` normPowerView')
   , equivalence    = on (viewEquivalent normPowerView') 

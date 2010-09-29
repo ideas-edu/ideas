@@ -1,6 +1,7 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="calculus.differentiation.tidy-up"/>
+    <elem ruleid="algebra.equations.linear.remove-div"/>
+    <elem ruleid="algebra.equations.linear.var-left"/>
   </list>
 </reply>
 

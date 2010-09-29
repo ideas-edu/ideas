@@ -1,11 +1,29 @@
 <reply result="ok" version="0.6.5 (0)">
   <list>
-    <elem ruleid="calculus.differentiation.tidy-up">
-      <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-        <OMI>
-          10
-        </OMI>
-      </OMOBJ>
+    <elem ruleid="algebra.equations.linear.remove-div">
+      <expr>
+        10*(x-1) == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        10*x-10 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.var-left">
+      <expr>
+        9*x-10 == 0
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
+      <expr>
+        9*x == 10
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 10/9
+      </expr>
     </elem>
   </list>
 </reply>

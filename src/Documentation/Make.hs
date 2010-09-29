@@ -13,10 +13,12 @@ module Documentation.Make (DocItem(..), makeDocumentation) where
 
 import Common.TestSuite
 import Common.Utils (Some(..))
+import Control.Monad
 import Data.Maybe
 import Service.DomainReasoner
 import Documentation.SelfCheck
 import Documentation.ExercisePage
+import Documentation.RulePage
 import Documentation.TestsPage
 import Documentation.ServicePage
 import Documentation.OverviewPages
@@ -32,9 +34,12 @@ makeDocumentation docDir testDir item =
          makeOverviewExercises docDir
          makeOverviewServices  docDir
          report "Generating exercise pages"
-         getPackages >>= mapM_ (\(Some pkg) -> makeExercisePage docDir pkg)
+         pkgs <- getPackages
+         forM_ pkgs $ \(Some pkg) -> do 
+            makeExercisePage docDir pkg
+            makeRulePage docDir pkg
          report "Generating service pages"
-         getServices >>= mapM_ (\s          -> makeServicePage docDir s)
+         getServices >>= mapM_ (makeServicePage docDir)
          report "Running tests"
          makeTestsPage docDir testDir
       SelfCheck -> do

@@ -1,28 +1,11 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.5 (0)">
   <state>
     <prefix>
-      no prefix
+      [5,1,0]
     </prefix>
-    <context>
-      <item name="location" value="[0]"/>
-    </context>
-    <OMOBJ xmlns="http://www.openmath.org/OpenMath" version="2.0" cdbase="http://www.openmath.org/cd">
-      <OMA>
-        <OMS cd="arith1" name="plus"/>
-        <OMI>
-          3
-        </OMI>
-        <OMA>
-          <OMS cd="arith1" name="plus"/>
-          <OMI>
-            3
-          </OMI>
-          <OMI>
-            4
-          </OMI>
-        </OMA>
-      </OMA>
-    </OMOBJ>
+    <expr>
+      10*(x-1) == x
+    </expr>
   </state>
 </reply>
 

@@ -42,19 +42,16 @@ defaultPage version title level builder =
       footer version
 
 header :: Int -> HTMLBuilder
-header level = center $ do
-   let f m = text "[" >> space >> m >> space >> text "]"
-   f $ link (up level ++ exerciseOverviewPageFile) $ text "Exercises"
-   replicateM_ 5 space
-   f $ link (up level ++ "services.html")  $ text "Services"
-   replicateM_ 5 space
-   f $ link (up level ++ "tests.html")  $ text "Tests"
-   replicateM_ 5 space
-   f $ link (up level ++ "coverage/hpc_index.html")  $ text "Coverage"
-   replicateM_ 5 space
-   f $ link (up level ++ "api/index.html")  $ text "API"
-   hr
-
+header level = divClass "menu" $ do
+   make exerciseOverviewPageFile  "Exercises"
+   make "services.html"           "Services"
+   make "tests.html"              "Tests"
+   make "coverage/hpc_index.html" "Coverage"
+   make "api/index.html"          "API"
+ where
+   make target s = f $ link (up level ++ target) $ text s
+   f m = spaces 3 >> text "[" >> space >> m >> space >> text "]" >> spaces 3
+   
 footer :: String -> HTMLBuilder
 footer version = do 
    hr 
@@ -81,11 +78,10 @@ serviceOverviewPageFile     = "services.html"
 testsPageFile               = "tests.html"
 
 exercisePageFile, exerciseDerivationsFile, exerciseStrategyFile,
-   exerciseRulesFile, exerciseDiagnosisFile, ruleFile :: HasId a => a -> FilePath
+   exerciseDiagnosisFile, ruleFile :: HasId a => a -> FilePath
 exercisePageFile        a = filePathId a ++ ".html"
 exerciseDerivationsFile a = filePathId a ++ "-derivations.html"
 exerciseStrategyFile    a = filePathId a ++ "-strategy.html"
-exerciseRulesFile       a = filePathId a ++ "-rules.html"
 exerciseDiagnosisFile   a = filePathId a ++ "-diagnosis.html"
 ruleFile                a = filePathId a ++ ".html"
 

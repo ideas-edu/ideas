@@ -15,16 +15,14 @@ module Domain.Math.Derivative.Exercise where
 import Common.Uniplate (universe)
 import Prelude hiding (repeat, (^))
 import Domain.Math.Derivative.Rules 
-import Common.Strategy (Strategy, somewhere, (<*>), alternatives, label, LabeledStrategy, try)
-import qualified Common.Strategy
+import Common.Strategy
 import Common.Navigator
-import Common.Context (Context, liftToContext)
+import Common.Context
 import Common.Exercise
-import Common.Transformation
 import Control.Monad
 import Domain.Math.Examples.DWO5
-import Domain.Math.Simplification
 import Domain.Math.Expr
+import Domain.Math.Polynomial.CleanUp
 
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise
@@ -32,7 +30,6 @@ derivativeExercise = makeExercise
    , status       = Experimental
    , parser       = parseExpr
    , isReady      = noDiff
-   , extraRules   = map liftToContext derivativeRules ++ [tidyup]
    , strategy     = derivativeStrategy
    , navigation   = navigator
    , examples     = [ex1, ex2, ex3, ex4] ++
@@ -44,17 +41,15 @@ noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
-derivativeStrategy =
-   label "Derivative" $
-   try tidyup <*> Common.Strategy.repeat (derivative <*> try tidyup)
+derivativeStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
+   label "Derivative" $ repeat $ somewhere $ alternatives $ 
+      map liftToContext derivativeRules
 
+{-
 tidyup :: Rule (Context Expr)
 tidyup = liftToContext $ makeSimpleRule (diffId, "tidy-up") $ \old -> 
    let new = simplify old
-   in if old==new then Nothing else Just new
-   
-derivative :: Strategy (Context Expr)
-derivative = somewhere $ alternatives (map liftToContext derivativeRules)
+   in if old==new then Nothing else Just new -}
 
 ex1, ex2, ex3 :: Expr
 ex1 = diff $ lambda (Var "x") $ Var "x" ^ 2

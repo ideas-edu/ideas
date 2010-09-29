@@ -16,7 +16,7 @@ import Common.Exercise
 import Common.Derivation
 import Common.Strategy hiding (not, replicate)
 import Common.Transformation
-import Common.Utils (commaList, Some(..), splitAtSequence)
+import Common.Utils (Some(..), splitAtSequence)
 import Control.Monad
 import Data.Char
 import Data.List
@@ -27,16 +27,11 @@ import Service.BasicServices
 import Service.Diagnose
 import Service.DomainReasoner
 import Service.ExercisePackage
-import Service.RulesInfo (rewriteRuleToFMP, collectExamples, ExampleMap)
 import Service.State
 import Service.StrategyInfo
 import System.Directory
 import System.Random
 import Text.HTML
-import Text.OpenMath.FMP
-import Text.OpenMath.Object
-import qualified Data.Map as M
-import qualified Text.XML as XML
 
 makeExercisePage :: String -> ExercisePackage a -> DomainReasoner ()
 makeExercisePage dir pkg = do
@@ -44,17 +39,13 @@ makeExercisePage dir pkg = do
        make     = makeId pkg
        makeId a = generatePageAt (length (qualifiers a)) dir . ($ (getId a))
        exFile   = dir ++ "/" ++ diagnosisExampleFile (getId ex)
-       exMap    = collectExamples ex
 
    exampleFileExists <- liftIO (doesFileExist exFile)
 
    make exercisePageFile     (exercisePage exampleFileExists pkg)
    make exerciseStrategyFile (strategyPage ex)
-   make exerciseRulesFile    (rulesPage ex exMap)
    unless (null (examples (exercise pkg))) $
        make exerciseDerivationsFile (derivationsPage ex)
-   forM (ruleset ex) $ \r ->
-      makeId r ruleFile (rulePage ex exMap r)
    when (exampleFileExists) $ do
       xs <- liftIO (readFile exFile)
       make exerciseDiagnosisFile (diagnosisPage xs pkg)
@@ -105,13 +96,10 @@ exercisePage exampleFileExists pkg = do
            ]
          : map f (ruleset ex)
          )
-   para $ do
-      link (up level ++ exerciseRulesFile exid) $
-         text "See rule details"
-      when exampleFileExists $ do
-         link (up level ++ exerciseDiagnosisFile exid) $ do
-            br
-            text "See diagnosis examples"
+   when exampleFileExists $ do
+      para $ link (up level ++ exerciseDiagnosisFile exid) $ do
+         br
+         text "See diagnosis examples"
 
    h2 "3. Example"
    let state = generateWith (mkStdGen 0) pkg 5
@@ -138,57 +126,6 @@ strategyPage ex = do
  where
    title = "Strategy for " ++ showId ex
 
-rulesPage :: Exercise a -> ExampleMap a -> HTMLBuilder
-rulesPage ex exMap = do
-   h1 title
-   -- Groups
-   let groups = sort (nub (concatMap ruleGroups (ruleset ex)))
-   unless (null groups) $ do
-      ul $ flip map groups $ \g -> do
-         bold $ text $ g ++ ":"
-         space
-         let elems = filter ((g `elem`) . ruleGroups) (ruleset ex)
-         text $ commaList $ map showId elems
-      
-   -- General info
-   forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do
-      h2 (show i ++ ". " ++ show r)
-      rulePage ex exMap r
- where
-   title = "Rules for " ++ showId ex
-
-rulePage :: Exercise a -> ExampleMap a -> Rule b -> HTMLBuilder
-rulePage ex exMap r = do
-   idboxHTML "rule" (getId r)
-   para $ table 
-      [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
-      , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
-      , [bold $ text "Groups", text $ commaList $ ruleGroups r]
-      , [bold $ text "Siblings", text $ commaList $ map showId 
-      $ ruleSiblings r] 
-      ]
-   when (isRewriteRule r) $ para $
-      ruleToHTML (Some ex) r
-
-   -- Examples
-   let ys  = M.findWithDefault [] (getId r) exMap
-       ups = length (qualifiers (getId r))
-   unless (null ys) $ do
-      h3 "Examples"
-      forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do 
-         forTerm ex (inContext ex a)
-         forStep ups (getId r, emptyEnv)
-         forTerm ex (inContext ex b)
-         
-   -- FMPS
-   let xs = getRewriteRules r
-   unless (null xs) $ do
-      h3 "Formal Mathematical Properties"
-      forM_ xs $ \(Some rr, b) -> para $ do
-         let fmp = rewriteRuleToFMP b rr
-         highlightXML False $ XML.makeXML "FMP" $ 
-            XML.builder (omobj2xml (toObject fmp))
-               
 derivationsPage :: Exercise a -> HTMLBuilder
 derivationsPage ex = do
    h1 "Examples"

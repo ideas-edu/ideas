@@ -51,3 +51,5 @@ ex3 = diff $ lambda (Var "x") (2 * Var "x")
 ex4 = diff $ lambda (Var "x") (ln (Var "x"))
 
 go n = printDerivation derivativeExercise (examples derivativeExercise !! n)
+
+--raar = 5*(2*(x-3)) where x = Var "x"

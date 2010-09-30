@@ -21,7 +21,7 @@ import Domain.Math.Polynomial.CleanUp
 import Prelude hiding (repeat)
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
-derivativeStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
+derivativeStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
    label "Derivative" $ repeat $ somewhere $ 
       alternatives (map liftToContext derivativeRules)
       <|> check isDiffC <*> once (once (liftToContext ruleDefRoot))

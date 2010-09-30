@@ -31,7 +31,7 @@ import Test.QuickCheck (arbitrary)
 
 scannerExpr :: Scanner
 scannerExpr = defaultScanner 
-   { keywords             = ["sqrt", "root", "and", "or", "true", "false"]
+   { keywords             = ["sqrt", "root", "and", "or", "true", "false", "D"]
    , keywordOperators     = ["==", "<=", ">=", "<", ">", "~=", "+", "-", "*", "^", "/"]
    , operatorCharacters   = "+-*/^.=<>~"
    , qualifiedIdentifiers = True
@@ -68,6 +68,10 @@ symb = qualifiedSymb
     -- To fix: sqrt expects exactly one argument
     <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
     <|> function rootSymbol <$ pKey "root"
+    <|> makeDiff <$ pKey "D"
+ where
+   makeDiff [x,a] = unary diffSymbol (binary lambdaSymbol x a)
+   makeDiff _     = nullary bottomSymbol
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
 qualifiedSymb = f <$> (pQVarid <|> pQConid)

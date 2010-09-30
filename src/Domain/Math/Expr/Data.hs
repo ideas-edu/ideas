@@ -191,6 +191,8 @@ showExpr table = rec 0
       | otherwise        = "\"" ++ s ++ "\""
    rec i expr = 
       case getFunction expr of
+         Just (s1, [Sym s2 [Var x, a]]) | s1 == diffSymbol && s2 == lambdaSymbol ->
+            parIf (i>10000) $ "D(" ++ x ++ ") " ++ rec 10001 a
          -- To do: remove special case for sqrt
          Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]

@@ -22,7 +22,7 @@ derivativeRules =
    [ ruleDerivCon, ruleDerivPlus, ruleDerivMin, ruleDerivNegate
    , ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
    , ruleDerivProduct, ruleDerivQuotient {-, ruleDerivChain-}, ruleDerivPowerChain
-   , ruleSine, ruleLog, ruleDerivSqrt, ruleDerivSqrtChain, ruleDefRoot
+   , ruleSine, ruleLog, ruleDerivSqrt, ruleDerivSqrtChain
    ]
 
 diff :: Expr -> Expr

@@ -9,13 +9,14 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Documentation.RulePage (makeRulePage) where
+module Documentation.RulePage (makeRulePages) where
 
 import Common.Context
 import Common.Exercise
 import Common.Transformation
 import Common.Utils (commaList, Some(..))
 import Control.Monad
+import Data.List
 import Documentation.DefaultPage
 import Documentation.RulePresenter
 import Service.DomainReasoner
@@ -27,37 +28,33 @@ import Text.OpenMath.Object
 import qualified Data.Map as M
 import qualified Text.XML as XML
 
-makeRulePage :: String -> ExercisePackage a -> DomainReasoner ()
-makeRulePage dir pkg = do
-   let ex       = exercise pkg
-       makeId a = generatePageAt (length (qualifiers a)) dir . ($ (getId a))
-       exMap    = collectExamples ex
+data ExItem a = EI (ExercisePackage a) (ExampleMap a)
 
-   forM_ (ruleset ex) $ \r ->
-      makeId r ruleFile (rulePage ex exMap r)
+makeRulePages :: String -> DomainReasoner ()
+makeRulePages dir = do
+   pkgs <- getPackages 
+   let exMap = M.fromList 
+          [ (getId pkg, Some (EI pkg (collectExamples (exercise pkg))))
+          | Some pkg <- pkgs
+          ]
+       ruleMap = M.fromListWith (++)
+          [ (getId r, [Some pkg]) 
+          | Some pkg <- pkgs
+          , r <- ruleset (exercise pkg) 
+          ]
+   forM_ (M.toList ruleMap) $ \(ruleId, list@(Some pkg:_)) -> do
+      let noExamples = Some (EI pkg M.empty) 
+          level      = length (qualifiers ruleId)
+          usedIn     = sortBy compareId [ getId pkg | Some pkg <- list ]
+      case M.findWithDefault noExamples (getId pkg) exMap of
+         Some (EI pkg e) -> do
+            let ex = exercise pkg
+            forM_ (getRule ex ruleId) $ \r ->
+               generatePageAt level dir (ruleFile ruleId) $
+                  rulePage ex e usedIn r
 
-{-
-rulesPage :: Exercise a -> ExampleMap a -> HTMLBuilder
-rulesPage ex exMap = do
-   h1 title
-   -- Groups
-   let groups = sort (nub (concatMap ruleGroups (ruleset ex)))
-   unless (null groups) $ do
-      ul $ flip map groups $ \g -> do
-         bold $ text $ g ++ ":"
-         space
-         let elems = filter ((g `elem`) . ruleGroups) (ruleset ex)
-         text $ commaList $ map showId elems
-      
-   -- General info
-   forM_ (zip [1..] (ruleset ex)) $ \(i, r) -> do
-      h2 (show i ++ ". " ++ show r)
-      rulePage ex exMap r
- where
-   title = "Rules for " ++ showId ex
--}
-rulePage :: Exercise a -> ExampleMap a -> Rule (Context a) -> HTMLBuilder
-rulePage ex exMap r = do
+rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuilder
+rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
    para $ table 
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
@@ -68,6 +65,11 @@ rulePage ex exMap r = do
       ]
    when (isRewriteRule r) $ para $
       ruleToHTML (Some ex) r
+
+   h3 "Used in exercises"
+   let f a = link (ups ++ exercisePageFile a) (tt $ text $ show a)
+       ups = up (length (qualifiers r))
+   ul $ map f usedIn
 
    -- Examples
    let ys  = M.findWithDefault [] (getId r) exMap

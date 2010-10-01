@@ -97,16 +97,16 @@ specialSymbol s [a, b]
    | s == newSymbol "arith1.minus"      = bin "-"
    | s == newSymbol "arith1.power"      = bin "^"
    | s == newSymbol "arith1.times"      = bin "\x00B7" -- "*"
+   | s == newSymbol "arith1.divide"     = bin "/"
    | s == newSymbol "relalg.conj"       = bin " \x2229 " -- intersect
    | s == newSymbol "relalg.disj"       = bin " \x222A " -- union
    | s == newSymbol "relalg.comp"       = bin " ; " -- composition
    | s == newSymbol "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
    bin s = return [Right a, Left s, Right b]
-specialSymbol s1 [a] -- Apply (Apply (Con s2) (x)) a] 
-   | s1 == newSymbol "calculus1.diff" = -- && s2 == newSymbol "fns1.lambda" = 
-        return [Left "D", Right a] 
-        -- [Left $ "(d/d" ++ show x ++ ")", Right a]
+specialSymbol s1 [Apply (Apply (Con s2) x) a] 
+   | s1 == newSymbol "calculus1.diff" && s2 == newSymbol "fns1.lambda" = 
+        return [Left "D(", Right x, Left ") ", Right a] 
 specialSymbol _ _ = Nothing
 
 showMeta :: Exercise a -> Int -> String

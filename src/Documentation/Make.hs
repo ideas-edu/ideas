@@ -35,9 +35,10 @@ makeDocumentation docDir testDir item =
          makeOverviewServices  docDir
          report "Generating exercise pages"
          pkgs <- getPackages
-         forM_ pkgs $ \(Some pkg) -> do 
+         forM_ pkgs $ \(Some pkg) -> 
             makeExercisePage docDir pkg
-            makeRulePage docDir pkg
+         report "Generating rule pages"
+         makeRulePages docDir
          report "Generating service pages"
          getServices >>= mapM_ (makeServicePage docDir)
          report "Running tests"

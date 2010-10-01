@@ -42,12 +42,14 @@ defaultPage version title level builder =
       footer version
 
 header :: Int -> HTMLBuilder
-header level = divClass "menu" $ do
-   make exerciseOverviewPageFile  "Exercises"
-   make "services.html"           "Services"
-   make "tests.html"              "Tests"
-   make "coverage/hpc_index.html" "Coverage"
-   make "api/index.html"          "API"
+header level = do 
+   divClass "menu" $ do
+      make exerciseOverviewPageFile  "Exercises"
+      make "services.html"           "Services"
+      make "tests.html"              "Tests"
+      make "coverage/hpc_index.html" "Coverage"
+      make "api/index.html"          "API"
+   hr
  where
    make target s = f $ link (up level ++ target) $ text s
    f m = spaces 3 >> text "[" >> space >> m >> space >> text "]" >> spaces 3

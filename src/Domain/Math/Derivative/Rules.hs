@@ -45,11 +45,11 @@ diffId = newId "calculus.differentiation"
 
 ruleSine :: Rule Expr
 ruleSine = rule (diffId, "sine") $ 
-   \x -> diff (lambda x (sin x))  :~>  lambda x (cos x)
+   \x -> diff (lambda x (sin x))  :~>  cos x
 
 ruleLog :: Rule Expr
 ruleLog = rule (diffId, "logarithmic") $
-   \x -> diff (lambda x (ln x))  :~>  lambda x (1/x)
+   \x -> diff (lambda x (ln x))  :~>  1/x
        
 ruleDerivPlus :: Rule Expr
 ruleDerivPlus = rule (diffId, "plus") $

@@ -20,31 +20,28 @@ div.error {
 div.menu {
    text-align: center;
    background-color: white;
-   padding-top:       0ex;
-    padding-bottom:   2ex;
-    padding-left:     3ex;
-    padding-right:    3ex;
-    margin-bottom: 3ex;
+   padding-top:      10px;
+   padding-bottom:   10px;
 }
 
-/* div.menu:before {
+hr {
+   border: 1px solid rgb(200,200,255);
+   margin-top: 15px;
+   margin-bottom: 15px;
+}
+
+body:before {
    content:url(ideas.png);
    float: left;
 }
 
-div.menu:after {
-   content:url(ounl-small.jpg);
-   float: right;
-} */
-
-
 div.idbox {
     background-color: white;
-    padding-top:      0.5ex;
-    padding-bottom:   0.5ex;
+    padding-top:      2px;
+    padding-bottom:   2px;
     padding-left:     3ex;
     padding-right:    3ex;
-    border-color:     rgb(41,134,189);
+    border-color:     rgb(200,200,255);
     border-width:     3px;
     border-style:     double;
 }
@@ -132,16 +129,9 @@ a:visited
     text-decoration:  none;
   }
 
-a.link:link
-  { color: rgb(41,134,189);
-  	text-decoration:  underline;
-    font-weight:      bold;
-  }
-
-a.link:visited
-  { color: rgb(41,134,189);
-  	text-decoration:  underline;
-    font-weight:      bold;
+a:hover 
+  { text-decoration: underline;
+  , background: rgb(255,0,0);
   }
     
 dt.header

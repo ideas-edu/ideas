@@ -140,17 +140,17 @@ derivationHTML ex a = divClass "derivation" $ do
       divClass "error" $ text "<<not ready>>"
  where
    ups = length (qualifiers ex)
-   der = defaultDerivation ex a 
+   der = derivationDiffEnv (defaultDerivation ex a)
    ok  = maybe False (isReady ex) . fromContext . last . terms
 
 idboxHTML :: String -> Id -> HTMLBuilder
 idboxHTML kind i = divClass "idbox" $ do
-   para $ do 
-      font "id" $ ttText (showId i)
-      spaces 3
-      text $ "(" ++ kind ++ ")"
-   unless (null $ description i) $
-      para $ italic $ text (description i)
+   font "id" $ ttText (showId i)
+   spaces 3
+   text $ "(" ++ kind ++ ")"
+   unless (null $ description i) $ do
+      br
+      italic (text (description i))
 
 diagnosisPage :: String -> ExercisePackage a -> HTMLBuilder
 diagnosisPage xs pkg = do
@@ -181,7 +181,7 @@ diagnosisPage xs pkg = do
          (_, Left msg) -> "parse error (afterr): " ++ msg
          (Right a, Right b) -> show (diagnose (emptyState pkg a) b)
        
-forStep :: Int -> (Id, Environment) -> HTMLBuilder  
+forStep :: HasId a => Int -> (a, Environment) -> HTMLBuilder  
 forStep n (i, env) = do 
       spaces 3
       text "=>"

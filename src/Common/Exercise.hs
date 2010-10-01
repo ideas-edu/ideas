@@ -27,7 +27,8 @@ module Common.Exercise
      -- * Miscellaneous
    , prettyPrinterContext
    , equivalenceContext, restrictGenerator
-   , showDerivation, printDerivation, defaultDerivation
+   , showDerivation, printDerivation
+   , ExerciseDerivation, defaultDerivation, derivationDiffEnv
    , checkExercise, checkParserPretty
    , checkExamples, exerciseTestSuite
    , module Common.Id -- for backwards compatibility
@@ -45,7 +46,6 @@ import Common.Transformation
 import Common.Utils (ShowString(..))
 import Common.View (makeView)
 import Control.Monad.Error
-import Control.Arrow
 import Data.List
 import Data.Maybe
 import System.Random
@@ -237,19 +237,19 @@ prettyPrinterContext :: Exercise a -> Context a -> String
 prettyPrinterContext ex = 
    maybe "<<invalid term>>" (prettyPrinter ex) . fromContext
     
-getRule :: Monad m => Exercise a -> String -> m (Rule (Context a))
-getRule ex s = 
-   case filter ((newId s ==) . getId) (ruleset ex) of 
+getRule :: Monad m => Exercise a -> Id -> m (Rule (Context a))
+getRule ex a = 
+   case filter ((a ==) . getId) (ruleset ex) of 
       [hd] -> return hd
-      []   -> fail $ "Could not find ruleid " ++ s
-      _    -> fail $ "Ambiguous ruleid " ++ s
+      []   -> fail $ "Could not find ruleid " ++ showId a
+      _    -> fail $ "Ambiguous ruleid " ++ showId a
 
 -- |Shows a derivation for a given start term. The specified rule ordering
 -- is used for selection.
 showDerivation :: Exercise a -> a -> String
 showDerivation ex a = show (present der) ++ extra
  where
-   der   = defaultDerivation ex a
+   der   = derivationDiffEnv (defaultDerivation ex a)
    extra =
       case fromContext (last (terms der)) of
          Nothing               -> "<<invalid term>>"
@@ -260,15 +260,16 @@ showDerivation ex a = show (present der) ++ extra
    f b env | nullEnv env = showId b
            | otherwise   = showId b ++ "\n      " ++ show env
 
-defaultDerivation :: Exercise a -> a -> Derivation (Id, Environment) (Context a)
+type ExerciseDerivation a = Derivation (Rule (Context a)) (Context a)
+
+defaultDerivation :: Exercise a -> a -> ExerciseDerivation a
 defaultDerivation ex a =
    let ca     = inContext ex a
        tree   = sortTree (ruleOrdering ex) (derivationTree (strategy ex) ca)
        single = newDerivation ca []
-       der    = fromMaybe single (derivation tree)
-   in mapStepsDerivation (first getId) (derivationDiffEnv der)
+   in fromMaybe single (derivation tree)
 
-derivationDiffEnv :: Derivation b (Context a) -> Derivation (b, Environment) (Context a)
+derivationDiffEnv :: Derivation s (Context a) -> Derivation (s, Environment) (Context a)
 derivationDiffEnv d =
    -- A bit of hack to show the delta between two environments, not including
    -- the location variable

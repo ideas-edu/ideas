@@ -147,7 +147,7 @@ jsonDecoder pkg = Decoder
       case serviceType of
          Tp.Location -> useFirst decodeLocation
          Tp.Term     -> useFirst $ decodeTerm dec
-         Tp.Rule     -> useFirst $ \x -> fromJSON x >>= getRule (decoderExercise dec)
+         Tp.Rule     -> useFirst $ \x -> jsonToId x >>= getRule (decoderExercise dec)
          Tp.ExercisePkg -> \json -> case json of
                                        Array (String _:rest) -> return (decoderPackage dec, Array rest)
                                        _ -> return (decoderPackage dec, json)
@@ -167,6 +167,9 @@ jsonDecoder pkg = Decoder
       a <- f x
       return (a, Array xs)
    useFirst _ _ = fail "expecting an argument"
+
+jsonToId :: Monad m => JSON -> m Id
+jsonToId = liftM (newId :: String -> Id) . fromJSON
 
 decodeLocation :: Monad m => JSON -> m [Int]
 decodeLocation (String s) = readM s

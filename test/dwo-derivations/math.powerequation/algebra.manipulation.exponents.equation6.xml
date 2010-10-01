@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      5*root x 3 == 7
+    </expr>
+  </state>
+</request>

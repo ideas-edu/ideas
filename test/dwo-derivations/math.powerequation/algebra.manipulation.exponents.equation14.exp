@@ -1,0 +1,13 @@
+<reply result="ok" version="0.6.5 (3554)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.greatest-power">
+      <expr>
+        3^2*x^(16/5)+17 == 37
+      </expr>
+      <context>
+        <item name="location" value="[1,1,1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

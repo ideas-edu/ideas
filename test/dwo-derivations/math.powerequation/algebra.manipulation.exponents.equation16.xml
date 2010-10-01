@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      7/10*x^(-11/10)+17 == 40
+    </expr>
+  </state>
+</request>

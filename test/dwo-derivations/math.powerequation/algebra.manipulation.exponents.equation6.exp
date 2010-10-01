@@ -1,0 +1,20 @@
+<reply result="ok" version="0.6.5 (3554)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.scale-factor">
+      <expr>
+        root x 3 == 7/5
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == (7/5)^3
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 2.74
+      </expr>
+    </elem>
+  </list>
+</reply>
+

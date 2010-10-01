@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      root (x^3) 4 == 720
+    </expr>
+  </state>
+</request>

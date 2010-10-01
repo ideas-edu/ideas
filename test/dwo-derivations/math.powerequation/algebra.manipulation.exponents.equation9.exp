@@ -1,0 +1,20 @@
+<reply result="ok" version="0.6.5 (3554)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.scale-factor">
+      <expr>
+        x^(-12) == 7
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == 7^(-1/12)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 0.85
+      </expr>
+    </elem>
+  </list>
+</reply>
+

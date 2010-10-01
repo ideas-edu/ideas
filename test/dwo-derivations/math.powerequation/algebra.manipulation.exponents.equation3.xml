@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      2*x^(7/2) == 70
+    </expr>
+  </state>
+</request>

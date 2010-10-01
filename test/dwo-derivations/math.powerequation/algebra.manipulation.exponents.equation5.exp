@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.5 (3554)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == (29/10)^5
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 205.11
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,25 @@
+<reply result="ok" version="0.6.5 (3554)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+      <expr>
+        7/10*x^(-11/10) == 23
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.scale-factor">
+      <expr>
+        x^(-11/10) == 230/7
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == (230/7)^(-10/11)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 4.0e-2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

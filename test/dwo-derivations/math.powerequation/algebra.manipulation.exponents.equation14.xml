@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      9*x^(16/5)+17 == 37
+    </expr>
+  </state>
+</request>

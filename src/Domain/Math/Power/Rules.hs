@@ -87,13 +87,12 @@ nthRoot = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
   (b, y) <- match (simplePowerView <&> (identity >>^ \x -> (x,1))) rhs
   return $ a :==: b .^. (y ./. x)
 
--- root a x = b^y  =>  a = b^(y/x)  where y may be one 
+-- root a x = b  =>  a = b^x
 nthPower :: Rule (Equation Expr)
 nthPower = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
   guard $ hasVars lhs
   (a, x) <- match simpleRootView lhs
-  (b, y) <- match (simplePowerView <&> (identity >>^ \x -> (x,1))) rhs
-  return $ a :==: b .^. (y ./. x)
+  return $ a :==: rhs .^. x
 
 -- x = a^x  =>  x ~= d
 approxPower :: Rule (Relation Expr)

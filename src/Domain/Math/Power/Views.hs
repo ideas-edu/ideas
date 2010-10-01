@@ -22,7 +22,7 @@ module Domain.Math.Power.Views
    , (<&>)
      -- * Normalising views
    , normPowerView, normPowerView', normPowerNonNegRatio
-   , normPowerNonNegDouble, normPowerEqView
+   , normPowerNonNegDouble, normPowerEqApproxView
      -- * Other views
    , ratioView, natView
    ) where
@@ -36,6 +36,7 @@ import Data.List
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Ratio
+import Domain.Math.Approximation (precision)
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
@@ -365,28 +366,27 @@ normPowerView = makeView f g
              
    g (s, r) = Var s .^. fromRational r
 
-normPowerEqView :: View (Relation Expr) (RelationType, Expr, Expr)
-normPowerEqView = makeView f g
+normPowerEqApproxView :: Int -> View (Relation Expr) (Expr, Expr)
+normPowerEqApproxView d = makeView f (uncurry (.~=.))
   where
-    f rel = case relationType rel of
-      EqualTo -> do 
-        let l = leftHandSide rel; r = rightHandSide rel
-        (l', r') <- varLConR l r
-        
-        return (EqualTo, l', r')
-      Approximately -> Nothing
+    f rel = let lhs = leftHandSide rel; rhs = rightHandSide rel in do  
+      v            <- selectVar (lhs .-. rhs)
+      -- selected var to the left, the rest to the right
+      (lhs', rhs') <- varLConR v lhs rhs
+      -- match power
+      (c, ax)      <- match (timesView <&> (identity >>^ (,) 1)) $
+                        simplify normPowerView lhs'
+      (a, x)       <- match myPowerView ax
+      -- simplify, scale and take root
+      return (a, simplifyWith (precision d) doubleView ((rhs' ./. c) .^. (1 ./. x)))
 
-    g (relType, l, r) = case relType of
-      EqualTo       -> l .==. r
-      Approximately -> l .~=. r
+    myPowerView =  simplePowerView 
+               <&> (simpleRootView >>> second (makeView (\a->Just (1 ./. a)) (\b->1 ./. b)))
+               <&> (identity >>^ \a->(a,1))
 
-    consPair a (b,c) = (a, b,c)
+    varLConR v lhs rhs = do
+      (xs, cs) <- match sumView lhs >>= return . partition (elem v . collectVars)
+      (ys, ds) <- match sumView rhs >>= return . partition (elem v . collectVars)
+      return ( build sumView (xs ++ map neg ys)
+             , build sumView (ds ++ map neg cs) )
 
-
-varLConR lhs rhs = do
-      (xs, cs) <- match sumView lhs >>= return . partition hasVars
-      (ys, ds) <- match sumView rhs >>= return . partition hasVars
-      guard $ length cs > 0 || length ys > 0
-      return $ ( build sumView (xs ++ map neg ys)
-               , build sumView (ds ++ map neg cs))
-  

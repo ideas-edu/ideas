@@ -43,7 +43,8 @@ powerEquationStrategy = cleanUpStrategy cleanup strat
              )
             <*> try (liftToContext approxPower)
     
-    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) naturalRules
+    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
+                naturalRules ++ rationalRules
 
 ------------------------------------------------------------------------------
 
@@ -166,4 +167,10 @@ fractionRules =
    , smartRule divisionDenominator  
    , smartRule divisionNumerator 
    , simplerFraction
+   ]
+
+doubleRules =
+   [ calcPlusWith     "double" doubleView
+   , calcMinusWith    "double" doubleView
+   , calcTimesWith    "double" doubleView
    ]

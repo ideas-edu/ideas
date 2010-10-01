@@ -24,7 +24,6 @@ import Common.Navigator
 import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
-import Data.Function (on)
 import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -49,11 +48,12 @@ powerEquationExercise = makeExercise
   , exerciseId     = describe "solve algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
   , examples       = concatMap (map (build equationView)) powerEquations
---  , isReady        = undefined
---  , isReady      = isPowerAdd
---  , isSuitable   = (`belongsTo` normPowerView')
-  , equivalence    = on (viewEquivalent normPowerView') 
-                        (\ rel -> leftHandSide rel .-. rightHandSide rel)
+  , isReady        = \ rel -> isVariable (leftHandSide rel) 
+                           && case rightHandSide rel of
+                                Number _ -> True
+                                _        -> False
+  , isSuitable   = (`belongsTo` (normPowerEqApproxView 2))
+  , equivalence    = viewEquivalent (normPowerEqApproxView 2)
   }
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr

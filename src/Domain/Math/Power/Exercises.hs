@@ -28,7 +28,7 @@ import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Examples.DWO3
-import Domain.Math.Examples.DWO4 (powerEquations)
+import Domain.Math.Examples.DWO4 (powerEquations, expEquations)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
@@ -45,7 +45,7 @@ powerEquationExercise = makeExercise
   , parser         = parseExprWith (pRelation pExpr)
   , strategy       = powerEquationStrategy
   , navigation     = termNavigator
-  , exerciseId     = describe "solve algebraically" $ 
+  , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
                        newId "algebra.manipulation.exponents.equation"
   , examples       = concatMap (map (build equationView)) powerEquations
   , isReady        = \ rel -> isVariable (leftHandSide rel) 
@@ -55,6 +55,22 @@ powerEquationExercise = makeExercise
   , isSuitable   = (`belongsTo` (normPowerEqApproxView 2))
   , equivalence    = viewEquivalent (normPowerEqApproxView 2)
   }
+  
+expEquationExercise :: Exercise (Equation Expr)
+expEquationExercise = makeExercise
+  { status         = Provisional
+  , parser         = parseExprWith (pEquation pExpr)
+  , strategy       = expEqStrategy
+  , navigation     = termNavigator
+  , exerciseId     = describe "solve exponential equation algebraically" $ 
+                       newId "algebra.manipulation.exponential.equation"
+  , examples       = head expEquations
+--  , isReady        = \ rel -> isVariable (leftHandSide rel) 
+--                           && True
+--  , isSuitable   = (`belongsTo` (normPowerEqApproxView 2))
+--  , equivalence    = viewEquivalent (normPowerEqApproxView 2)
+  }
+
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 powerExercise s = makeExercise 

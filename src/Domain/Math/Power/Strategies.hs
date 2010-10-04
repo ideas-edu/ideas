@@ -1,3 +1,4 @@
+{-# OPTIONS -XNoMonomorphismRestriction #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -25,6 +26,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.Rules (sameConFactor)
+import Domain.Math.Equation.CoverUpRules (coverUpNegate, coverUpRules)
 import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
@@ -44,7 +46,27 @@ powerEquationStrategy = cleanUpStrategy cleanup strat
             <*> try (liftToContext approxPower)
     
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
+                fractionPlus : naturalRules
+
+expEqStrategy :: LabeledStrategy (Context (Equation Expr))
+expEqStrategy = cleanUpStrategy cleanup strat
+  where 
+    strat = label "" $
+          coverup
+      <*> try (somewhere (use greatestPower))
+      <*> powerS
+      <*> use sameBase
+      <*> coverup
+    
+    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 naturalRules ++ rationalRules
+
+    coverup = repeat $ alternatives $ map use coverUpRules
+    powerS = repeat $ somewhere $  use root2powerG
+                               <|> use addExponentsG
+                               <|> use subExponents
+                               <|> use mulExponents
+                               <|> use reciprocalG
 
 ------------------------------------------------------------------------------
 

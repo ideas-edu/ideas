@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Examples.DWO4 
    ( brokenEquations, normBroken, normBroken2, normBrokenCon, deelUit
-   , powerEquations
+   , powerEquations, expEquations
    ) where
 
 import Prelude hiding ((^))
@@ -61,7 +61,7 @@ expEquations =
     , 3^(x-1) :==: 81
     , 3^(x+5) :==: 243/(sqrt 3)
     ]
-  , [ 5^(2-x) :==: Number 0.04
+  , [ 5^(2-x) :==: 0.04
     , 3^(2*x) :==: 1/9
     , 3^(1-3*x) :==: 81
     , 3^(3*x-2) :==: 3*sqrt 3
@@ -142,7 +142,7 @@ higherPowerEquations =
     ]
     -- Geef in twee decimalen nauwkeurig
   , [ 3*x^5+7 :==: 15
-    , Number 0.7 * x^4 - Number 1.3 :==: 2
+    , 0.7 * x^4 - 1.3 :==: 2
     , (1/3)*x^7 :==: 720
     ]
   ]

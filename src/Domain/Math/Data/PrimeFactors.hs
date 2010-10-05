@@ -13,12 +13,13 @@ module Domain.Math.Data.PrimeFactors
    ( PrimeFactors
    , factors, multiplicity, coprime
    , square, power, splitPower
-   , primes, greatestPower
+   , primes, greatestPower, allPowers
    ) where
 
 import qualified Data.IntMap as IM
 import Common.Utils
 import Control.Monad
+import Data.List (unfoldr)
 import Debug.Trace
 
 -------------------------------------------------------------
@@ -127,15 +128,23 @@ power (PF a m) i = PF (a^i) (IM.map (*i) m)
 
 greatestPower :: Integer -> Maybe (Integer, Integer)
 greatestPower n = do
-  guard (n > 1) 
+  guard $ n > 1
   let (as, xs) = unzip $ factors $ fromInteger n
   x <- safeHead xs
-  guard (allsame xs && x > 1)
+  guard $ allsame xs && x > 1
   return (fromIntegral (product as), fromIntegral x)
 
 -- n == a^x with (a,x) == greatestPower n
 prop_greatestPower n = traceShow n $ 
   maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
+
+allPowers :: Integer -> [(Integer, Integer)]
+allPowers = maybe [] (unfoldr f . (,) 1) . greatestPower
+  where
+    f (i, (base, exp)) = do
+      let e = exp `div` i 
+      guard $ e > 1 
+      return ((base^i, e), (i+1, (base, exp)))
 
 -- splitPower i a = (b,c)  
 --  => b^i * c = a

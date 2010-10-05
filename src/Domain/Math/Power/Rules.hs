@@ -17,8 +17,8 @@ module Domain.Math.Power.Rules
     -- * General power rules
   , addExponentsG, reciprocalG, root2powerG
     -- * Power equation rules
-  , greatestPower, commonPower, nthRoot, sameBase
-  , nthPower, approxPower, scaleConFactor, varLeftConRight
+  , factorAsPower, commonPower, nthRoot, sameBase, greatestPower, equalsOne
+  , nthPower, approxPower, scaleConFactor, varLeftConRight, reciprocalFor
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
@@ -114,8 +114,8 @@ varLeftConRight = makeSimpleRule (power, "var-left-con-right") $
     (xs, cs) <- match sumView lhs >>= return . partition hasVars
     (ys, ds) <- match sumView rhs >>= return . partition hasVars
     guard $ length cs > 0 || length ys > 0
-    return $ build sumView (xs ++ map neg ys) :==: 
-             build sumView (ds ++ map neg cs)
+    return $ fmap collectLikeTerms $ 
+      build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
 
 -- a^x = a^y  =>  x = y
 sameBase :: Rule (Equation Expr)
@@ -125,9 +125,33 @@ sameBase = makeSimpleRule (power, "same-base") $ \(lhs :==: rhs) -> do
     guard (a == b)
     return $ x :==: y
 
+-- | c*a^x = d*(1/a)^y  => c*a^x = d*a^-y
+-- this reciprocal rule is more strict, it demands a same base on the lhs
+-- of the equation. Perhaps do this via the enviroment?
+reciprocalFor :: Rule (Equation Expr)
+reciprocalFor = makeSimpleRule (power, "reciprocal-for-base") $ \ (lhs :==: rhs) -> do
+  (c, (a,  x)) <- match strictPowerView lhs
+  (d, (a', y)) <- match strictPowerView rhs
+  (one, a'')   <- match divView a'
+  guard $ one == 1 && a'' == a
+  return $ lhs :==: d .*. a'' .^. (negate y)
+
+-- | a^x = 1  =>  x = 0
+equalsOne :: Rule (Equation Expr)
+equalsOne = makeSimpleRule (power, "equals-one") $ \ (lhs :==: rhs) -> do
+  guard $ rhs == 1
+  (a, x) <- match simplePowerView lhs
+  return $ x :==: 0
+
 -- | Power rules --------------------------------------------------------------
 
 -- n  =>  a^e  (with e /= 1)
+factorAsPower :: Rule Expr
+factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
+    n      <- maybeToList $ match natView expr
+    (a, x) <- PF.allPowers $ toInteger n
+    return $ fromInteger a .^. fromInteger x
+
 greatestPower :: Rule Expr
 greatestPower = makeSimpleRule (power, "greatest-power") $ \ expr -> do
     n      <- match natView expr
@@ -363,16 +387,23 @@ simplifyFraction = makeSimpleRule (power, "simplify-fraction") $ \ expr -> do
   guard $ not $ applicable myFractionTimes expr'
   return expr'
 
-
 -- | simplify product
-simplifyProduct = minorRule $ makeSimpleRule (power, "simplify-product") $ \ expr -> do
+simplifyProduct = makeSimpleRule (power, "simplify-product") $ \ expr -> do
   (sign, ps) <- match productView expr
-  let (cs, xs) = partition (isJust . match rationalView) ps
+  let (cs, xs) = partition (isJust . match myRationalView) ps
   let expr' = simplify rationalView (build productView (sign, cs)) .*. 
                                      build productView (False, xs)
   guard (expr /= expr')
   return expr'
 
+myRationalView :: View Expr Rational
+myRationalView = makeView (exprToNum f) fromRational
+ where
+   f s [x, y] 
+      | s == divideSymbol = 
+           fracDiv x y
+   f _ _ = Nothing
+   
 -- | (-a)^x = (-)a^x
 pushNegOut :: Rule Expr
 pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do

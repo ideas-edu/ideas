@@ -26,7 +26,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.Rules (sameConFactor)
-import Domain.Math.Equation.CoverUpRules (coverUpNegate, coverUpRules)
+import Domain.Math.Equation.CoverUpRules --(coverUpNegate, coverUpRules)
 import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
@@ -46,27 +46,38 @@ powerEquationStrategy = cleanUpStrategy cleanup strat
             <*> try (liftToContext approxPower)
     
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-                fractionPlus : naturalRules
+                fractionPlus : naturalRules ++ rationalRules
 
 expEqStrategy :: LabeledStrategy (Context (Equation Expr))
 expEqStrategy = cleanUpStrategy cleanup strat
   where 
-    strat = label "" $
-          coverup
-      <*> try (somewhere (use greatestPower))
-      <*> powerS
-      <*> use sameBase
-      <*> coverup
+    strat =  label "" 
+          $  coverup
+         <*> try (somewhere (use factorAsPower))
+         <*> powerS 
+         <*> (use sameBase <|> use equalsOne)
+         <*> try (use varLeftConRight)
+         <*> coverup
     
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-                naturalRules ++ rationalRules
+                simplifyProduct : natRules ++ rationalRules
+    natRules =
+      [ calcPlusWith     "nat" myNatView
+      , calcMinusWith    "nat" myNatView
+      , calcTimesWith    "nat" myNatView
+      , calcDivisionWith "nat" myNatView
+      , doubleNegate
+      , negateZero
+      ]
 
     coverup = repeat $ alternatives $ map use coverUpRules
+
     powerS = repeat $ somewhere $  use root2powerG
                                <|> use addExponentsG
                                <|> use subExponents
                                <|> use mulExponents
                                <|> use reciprocalG
+                               <|> use reciprocalFor
 
 ------------------------------------------------------------------------------
 
@@ -145,10 +156,10 @@ powerRules =
 
 -- | Allowed numeric rules
 naturalRules =
-   [ calcPlusWith     "nat" natView
-   , calcMinusWith    "nat" natView
-   , calcTimesWith    "nat" natView
-   , calcDivisionWith "nat" natView
+   [ calcPlusWith     "nat" myNatView
+   , calcMinusWith    "nat" myNatView
+   , calcTimesWith    "nat" myNatView
+   , calcDivisionWith "nat" myNatView
    , doubleNegate
    , negateZero
    , plusNegateLeft
@@ -160,11 +171,11 @@ naturalRules =
    , divisionNegateLeft
    , divisionNegateRight  
    ]
-   where
-     natView = makeView f fromInteger
-       where
-         f (Nat n) = Just n
-         f _       = Nothing
+
+myNatView = makeView f fromInteger
+  where
+    f (Nat n) = Just n
+    f _       = Nothing
  
 rationalRules =    
    [ calcPlusWith     "rational" rationalRelaxedForm

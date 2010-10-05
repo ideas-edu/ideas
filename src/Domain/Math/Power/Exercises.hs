@@ -64,12 +64,14 @@ expEquationExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve exponential equation algebraically" $ 
                        newId "algebra.manipulation.exponential.equation"
-  , examples       = head expEquations
---  , isReady        = \ rel -> isVariable (leftHandSide rel) 
---                           && True
---  , isSuitable   = (`belongsTo` (normPowerEqApproxView 2))
---  , equivalence    = viewEquivalent (normPowerEqApproxView 2)
+  , examples       = concat expEquations
+  , isReady        = \ rel -> isVariable (leftHandSide rel) 
+                           && (rightHandSide rel) `belongsTo` rationalView
+  , isSuitable     = (`belongsTo` normPowerEqView)
+  , equivalence    = viewEquivalent normPowerEqView
   }
+
+e = inContext expEquationExercise $ 5^(Var "x" -2^2) :==: 5^(-(2* Var "x" +1))
 
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr

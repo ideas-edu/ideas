@@ -22,7 +22,7 @@ module Domain.Math.Power.Views
    , (<&>)
      -- * Normalising views
    , normPowerView, normPowerView', normPowerNonNegRatio
-   , normPowerNonNegDouble, normPowerEqApproxView
+   , normPowerNonNegDouble, normPowerEqApproxView, normPowerEqView
      -- * Other views
    , ratioView, natView
    ) where
@@ -368,8 +368,16 @@ normPowerView = makeView f g
 
 normPowerEqApproxView :: Int -> View (Relation Expr) (Expr, Expr)
 normPowerEqApproxView d = makeView f (uncurry (.~=.))
+   where
+     f rel = case relationType rel of 
+      EqualTo       ->  match (equationView >>> normPowerEqView) rel 
+                    >>= return . \(l, r) -> (l, simplifyWith (precision d) doubleView r)
+      Approximately -> return (leftHandSide rel, rightHandSide rel)
+
+normPowerEqView :: View (Equation Expr) (Expr, Expr)
+normPowerEqView = makeView f (uncurry (:==:))
   where
-    f rel = let lhs = leftHandSide rel; rhs = rightHandSide rel in do  
+    f (lhs :==: rhs) = do
       v            <- selectVar (lhs .-. rhs)
       -- selected var to the left, the rest to the right
       (lhs', rhs') <- varLConR v lhs rhs
@@ -378,15 +386,23 @@ normPowerEqApproxView d = makeView f (uncurry (.~=.))
                         simplify normPowerView lhs'
       (a, x)       <- match myPowerView ax
       -- simplify, scale and take root
-      return (a, simplifyWith (precision d) doubleView ((rhs' ./. c) .^. (1 ./. x)))
+      return (a, simplify rationalView ((rhs' ./. c) .^. (1 ./. x)))
 
     myPowerView =  simplePowerView 
                <&> (simpleRootView >>> second (makeView (\a->Just (1 ./. a)) (\b->1 ./. b)))
                <&> (identity >>^ \a->(a,1))
 
-    varLConR v lhs rhs = do
-      (xs, cs) <- match sumView lhs >>= return . partition (elem v . collectVars)
-      (ys, ds) <- match sumView rhs >>= return . partition (elem v . collectVars)
-      return ( build sumView (xs ++ map neg ys)
-             , build sumView (ds ++ map neg cs) )
-
+varLConR v lhs rhs = do
+  (xs, cs) <- match sumView lhs >>= return . partition (elem v . collectVars)
+  (ys, ds) <- match sumView rhs >>= return . partition (elem v . collectVars)
+  return ( build sumView (xs ++ map neg ys)
+         , build sumView (ds ++ map neg cs) )
+   
+normExpEqView :: View (Equation Expr) (Expr, Expr)
+normExpEqView = makeView f (uncurry (:==:))
+  where
+    f (lhs :==: rhs) = do
+      v            <- selectVar (lhs .-. rhs)
+      (lhs', rhs') <- varLConR v lhs rhs
+      (c, (b, e))  <- match strictPowerView lhs'
+      return (lhs, rhs ./. c)

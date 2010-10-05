@@ -82,8 +82,10 @@ doBlackBoxTest format path = do
          exp <- liftIO $ readFile expPath
          out <- case format of 
                    JSON -> liftM snd3 (processJSON txt)
-                   XML  -> liftM snd3 (processXML txt) 
-         return (out ~= exp)
+                   XML  -> liftM snd3 (processXML txt)
+         -- Conditional forces evaluation of the result, to make sure that
+         -- all file handles are closed afterwards.
+         if out ~= exp then return True else return False
        `catchError` 
          \_ -> return False
  where

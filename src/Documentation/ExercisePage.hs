@@ -56,32 +56,38 @@ exercisePage exampleFileExists pkg = do
    idboxHTML "strategy" (getId pkg)
    
    h2 "1. General information"
-   table 
-      [ [bold $ text "Code",   ttText (showId ex)]
-      , [bold $ text "Status", text (show $ status ex)]
-      , [ bold $ text "OpenMath support"
+
+   let bolds (x:xs) = bold x:xs
+       bolds []     = []
+
+   table $ map bolds
+      [ [ text "Code",   ttText (showId ex)]
+      , [ text "Status", text (show $ status ex)]
+      , [ text "Strategy"
+        , link (up level ++ exerciseStrategyFile exid) $
+             text (showId $ strategy ex)
+        ]
+      , [ text "OpenMath support"
         , text $ showBool $ withOpenMath pkg
         ]
-      , [ bold $ text "Textual feedback"
+      , [ text "Textual feedback"
         , text $ showBool $ isJust $ getExerciseText pkg
         ]
-      , [ bold $ text "Restartable strategy"
+      , [ text "Restartable strategy"
         , text $ showBool $ canBeRestarted ex
         ] 
-      , [ bold $ text "Exercise generator"
+      , [ text "Exercise generator"
         , text $ showBool $ isJust $ randomExercise ex
         ]
-      , [ bold $ text "Examples"
+      , [ text "Examples"
         , text $ show $ length $ examples ex
         ]
       ]
-   
-   para $ link (up level ++ exerciseStrategyFile exid) $
-      text "See strategy details"
 
    h2 "2. Rules"
-   let rs = rulesInStrategy (strategy ex)
-       f r = [ text (showId r)
+   let rs  = rulesInStrategy (strategy ex)
+       ups = up (length (qualifiers pkg)) 
+       f r = [ link (ups ++ ruleFile r) $ ttText (showId r)
              , text $ showBool $ isBuggyRule r
              , text $ showBool $ hasArguments r
              , text $ showBool $ r `elem` rs

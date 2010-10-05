@@ -66,7 +66,7 @@ instance HasId LabelInfo where
    getId = labelId
    changeId f info = info { labelId = f (labelId info) }
    
-makeInfo :: String -> LabelInfo
+makeInfo :: IsId a => a -> LabelInfo
 makeInfo s = Info (newId s) False False False
 
 -----------------------------------------------------------
@@ -135,7 +135,7 @@ instance IsLabeled RewriteRule where
    toLabeled r = toLabeled (makeRule (showId r) (makeRewriteTrans r))
 
 -- | Labels a strategy with a string
-label :: IsStrategy f => String -> f a -> LabeledStrategy a
+label :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a
 label l = LS (makeInfo l) . toStrategy
 
 changeInfo :: IsLabeled f => (LabelInfo -> LabelInfo) -> f a -> LabeledStrategy a

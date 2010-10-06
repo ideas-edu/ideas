@@ -27,52 +27,52 @@ import Data.List
 
 selfCheck :: String -> DomainReasoner TestSuite
 selfCheck dir = do
-   pkgs          <- getPackages
-   domainSuite   <- getTestSuite
-   blackboxSuite <- blackBoxTests dir
+   pkgs        <- getPackages
+   domainSuite <- getTestSuite
+   run         <- runWithCurrent
    
    return $ do
       suite "Framework checks" $ do
          suite "Text encodings" $ do
             addProperty "UTF8 encoding" UTF8.propEncoding
             addProperty "JSON encoding" JSON.propEncoding
-
+      
       suite "Domain checks" domainSuite
-
+      
       suite "Exercise checks" $
          forM_ pkgs $ \(Some pkg) ->
             exerciseTestSuite (exercise pkg)
-
-      suite "Black box tests" blackboxSuite
+      
+      suite "Black box tests" $ do 
+         liftIO (blackBoxTests run dir) >>= id
 
 -- Returns the number of tests performed
-blackBoxTests :: String -> DomainReasoner TestSuite
-blackBoxTests path = do
-   liftIO $ putStrLn ("Scanning " ++ path)
+blackBoxTests :: (DomainReasoner Bool -> IO Bool) -> String -> IO TestSuite
+blackBoxTests run path = do
+   putStrLn ("Scanning " ++ path)
    -- analyse content
-   xs0 <- liftIO $ getDirectoryContents path
+   xs0 <- getDirectoryContents path
    let (xml,  xs1) = partition (".xml"  `isSuffixOf`) xs0
        (json, xs2) = partition (".json" `isSuffixOf`) xs1
    -- perform tests
-   ts1 <- forM json $ \x -> 
-             doBlackBoxTest JSON (path ++ "/" ++ x)
-   ts2 <- forM xml $ \x -> 
-             doBlackBoxTest XML (path ++ "/" ++ x)
+   ts1 <- forM json $ \x ->
+             doBlackBoxTest run JSON (path ++ "/" ++ x)
+   ts2 <- forM xml $ \x ->
+             doBlackBoxTest run XML (path ++ "/" ++ x)
    -- recursively visit subdirectories
    ts3 <- forM (filter ((/= ".") . take 1) xs2) $ \x -> do
              let p = path ++ "/" ++ x
-             valid <- liftIO $ doesDirectoryExist p
+             valid <- doesDirectoryExist p
              if not valid 
                 then return (return ())
                 else liftM (suite $ "Directory " ++ simplerDirectory p) 
-                           (blackBoxTests p)
+                           (blackBoxTests run p)
    return $ 
       sequence_ (ts1 ++ ts2 ++ ts3)
 
-doBlackBoxTest :: DataFormat -> FilePath -> DomainReasoner TestSuite
-doBlackBoxTest format path = do
-   run <- runWithCurrent
-   b   <- liftIO $ doesFileExist expPath
+doBlackBoxTest :: (DomainReasoner Bool -> IO Bool) -> DataFormat -> FilePath -> IO TestSuite
+doBlackBoxTest run format path = do
+   b <- doesFileExist expPath
    return $ if not b 
       then warn $ expPath ++ " does not exist"
       else assertIO (stripDirectoryPart path) $ run $ do 

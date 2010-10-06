@@ -349,7 +349,7 @@ getDiff action = do
    return (a, diffClockTimes t1 t0)
 
 -- Example
-
+{-
 main :: IO ()
 main = do
    r <- runTestSuiteResult $ do
@@ -380,6 +380,6 @@ main = do
    p3 xs = head (sort xs) == minimum (xs::[Int])
    p4 xs = sort (nub xs) == nub (sort (xs::[Int]))
    p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int]))
-{-
+
 main = runTestSuite $ suite "A" $ assertIO "B" (return True) >> 
    assertIO "D" (fail "boe") >> assertIO "C" (return True) -}

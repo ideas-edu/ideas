@@ -48,8 +48,9 @@ makeDocumentation docDir testDir item =
          result <- liftIO (runTestSuiteResult suite)
          liftIO (printSummary result)
       BlackBox mdir -> do
-         suite  <- blackBoxTests (fromMaybe testDir mdir)
-         result <- liftIO (runTestSuiteResult suite)
+         run    <- runWithCurrent
+         suite  <- liftIO $ blackBoxTests run (fromMaybe testDir mdir)
+         result <- liftIO $ runTestSuiteResult suite
          liftIO (printSummary result)
          
 report :: String -> DomainReasoner ()

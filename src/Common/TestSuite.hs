@@ -31,8 +31,11 @@ module Common.TestSuite
    , FormatLog(..), formatLog, formatTimeDiff
    ) where
 
+import Control.Arrow
 import Data.List
 import Data.Monoid
+import qualified Data.Sequence as S
+import Data.Foldable (toList)
 import Test.QuickCheck
 import Control.Monad.State
 import System.Time hiding (formatTimeDiff)
@@ -40,13 +43,12 @@ import System.Time hiding (formatTimeDiff)
 ----------------------------------------------------------------
 -- Test Suite Monad
 
-newtype TestSuiteM a = TSM { unTSM :: StateT TestState IO a }
+-- Integer corresponds to the number of characters on the current line, and
+-- is used for formatting
+newtype TestSuiteM a = TSM { unTSM :: M a }
 
-type TestSuite = TestSuiteM ()  
-type TestState = Tree String Test
-
-data Test = QuickCheck String Args Property
-          | Assert     String (IO Bool) TestResult
+type M a = StateT (Int, ResultTree) IO a
+type TestSuite = TestSuiteM ()
 
 instance Monad TestSuiteM where
    return  = TSM . return
@@ -67,9 +69,11 @@ instance Monoid a => Monoid (TestSuiteM a) where
 -- | Construct a (named) test suite containing tests and other suites
 suite :: String -> TestSuite -> TestSuite
 suite s m = TSM $ do
-   tree <- liftIO $ execStateT (unTSM m) Empty
-   let new = Labeled s tree
-   modify (:+: new)
+   newline
+   liftIO $ putStrLn s
+   reset
+   (t, td) <- getDiff (withEmptyTree (unTSM m))
+   addTree (labeled (s, td) t)
 
 -- | Add a QuickCheck property to the test suite. The first argument is 
 -- a label for the property
@@ -79,9 +83,11 @@ addProperty = flip addPropertyWith stdArgs
 -- | Add a QuickCheck property to the test suite, also providing a test
 -- configuration (Args)
 addPropertyWith :: Testable prop => String -> Args -> prop -> TestSuite
-addPropertyWith s args p = TSM (modify (:+: new))
- where
-   new = Single (QuickCheck s args (property p))
+addPropertyWith s args p = TSM $ do
+   newlineIndent
+   r <- liftIO $ quickCheckWithResult args p
+   reset
+   addResult s (toTestResult (maxSuccess args) r)
 
 assertTrue :: String -> Bool -> TestSuite
 assertTrue msg = assertIO msg . return
@@ -103,9 +109,56 @@ assertIO = addAssertion (Error "Assertion failed")
 warn :: String -> TestSuite
 warn msg = addAssertion (Warning msg) "" (return False)
 
--- local helper
+-- local helpers
 addAssertion :: TestResult -> String -> IO Bool -> TestSuite
-addAssertion msg s io = TSM $ modify (:+: Single (Assert s io msg))
+addAssertion msg s io = TSM $ do
+   b <- liftIO (io `catch` \_ -> return False)
+   if b then do 
+      dot
+      addResult s (Ok 1)
+    else do
+      newlineIndent
+      liftIO $ putStrLn (s ++ ": " ++ show msg)
+      reset
+      addResult s msg
+
+addResult :: String -> TestResult -> M ()
+addResult s r = addTree (single (s, r))
+
+addTree :: ResultTree -> M ()
+addTree t = modify (second (`mappend` t))
+
+withEmptyTree :: M () -> M ResultTree
+withEmptyTree m = do
+   t0 <- gets snd
+   modify (second (const mempty))
+   m
+   tr <- gets snd
+   modify (second (const t0))
+   return tr
+
+-- formatting helpers
+newline :: M ()
+newline = do
+   i <- gets fst
+   when (i>0) (liftIO $ putChar '\n')
+   reset
+
+newlineIndent :: M ()
+newlineIndent = do
+   newline
+   liftIO $ putStr "   "
+   modify (first (const 3))
+
+dot :: M ()
+dot = do
+   i <- gets fst
+   unless (i>0 && i<60) newlineIndent
+   liftIO $ putChar '.'
+   modify (first (+1))
+
+reset :: M ()
+reset = modify (first (const 0))
 
 ----------------------------------------------------------------
 -- Running a test suite
@@ -114,40 +167,8 @@ runTestSuite :: TestSuite -> IO ()
 runTestSuite suite = runTestSuiteResult suite >> return ()
 
 runTestSuiteResult :: TestSuite -> IO TestSuiteResult
-runTestSuiteResult suite = liftM TSR $ getDiff $ do
-   tree <- execStateT (unTSM suite) Empty
-   run tree
- where
-   run tree = do
-      xs <- mapM (either forTests forSuite) (collectLevel tree)
-      return (foldr (:+:) Empty xs)
-
-   forSuite (s, ts) = do 
-      (t, diff) <- getDiff (putStrLn (s ++ ":") >> run ts)
-      return (Labeled (s, diff) t)
-
-   forTests = rec False []
-    where
-      rec b acc [] = do
-         when b (putChar '\n')
-         return (foldr ((:+:) . Single) Empty (reverse acc))
-
-      rec b acc (QuickCheck s args p : rest) = do
-         putStr $ [ '\n' | b ] ++ "   "
-         unless (null s) $ putStr (s ++ ": ")
-         r <- quickCheckWithResult args p
-         rec False ((s, toTestResult (maxSuccess args) r) : acc) rest
-
-      rec b acc (Assert s io msg : rest) = io >>= \ok ->
-         if ok then do
-            putStr $ if b then "." else "   ."
-            rec True ((s, Ok 1) : acc) rest
-            else do
-            when b $ putChar '\n'
-            putStr "   "
-            unless (null s) $ putStr $ s ++ ": "
-            print msg
-            rec False ((s, msg) : acc) rest
+runTestSuiteResult suite = liftM TSR $ getDiff $ liftM snd $
+   execStateT (unTSM suite >> newline) (0, mempty)
 
 ----------------------------------------------------------------
 -- Test Suite Result
@@ -156,7 +177,7 @@ newtype TestSuiteResult = TSR (ResultTree, TimeDiff)
 
 type ResultTree = Tree (String, TimeDiff) (String, TestResult)
 
-data TestResult = Ok Int | Error String | Warning String
+data TestResult = Ok !Int | Error String | Warning String
 
 instance Show TestResult where
    show (Ok _)        = "Ok"
@@ -270,11 +291,19 @@ formatTimeDiff d@(TimeDiff z1 z2 z3 h m s p)
 -----------------------------------------------------
 -- Utility functions
 
-data Tree a b = Labeled a (Tree a b) 
-              | Tree a b :+: Tree a b
-              | Empty
-              | Single b
-        
+-- A sequence of leafs (Left) or labeled items (Right)
+newtype Tree a b = T { unT :: S.Seq (Either b (a, Tree a b)) }
+
+instance Monoid (Tree a b) where
+   mempty = T mempty
+   mappend (T a) (T b) = T (mappend a b)
+  
+single :: b -> Tree a b
+single = T . S.singleton . Left
+
+labeled :: a -> Tree a b -> Tree a b
+labeled a t = T (S.singleton (Right (a, t)))
+  
 toTestResult :: Int -> Result -> TestResult
 toTestResult n result = 
    case result of
@@ -304,22 +333,15 @@ flatten :: Tree a b -> [b]
 flatten t = [ b | x <- collectLevel t, b <- either id (flatten . snd) x ]
 
 collectLevel :: Tree a b -> [Either [b] (a, Tree a b)]
-collectLevel = combine [] . ($ []) . rec
+collectLevel = combine [] . toList . unT
  where
-   combine acc [] = left acc
-   combine acc (Left a:rest) = combine (a:acc) rest
-   combine acc (Right b:rest) = left acc ++ (Right b : rest)
+   combine acc []             = left acc
+   combine acc (Left a:rest)  = combine (a:acc) rest
+   combine acc (Right b:rest) = left acc ++ (Right b : combine [] rest)
    
-   left acc = [ Left (concat (reverse acc)) | not (null acc) ] 
- 
-   rec tree =
-      case tree of
-         Labeled a t -> (Right (a, t):)
-         Single b    -> (Left [b]:) 
-         s :+: t     -> rec s . rec t
-         Empty       -> id
+   left acc = [ Left (reverse acc) | not (null acc) ] 
 
-getDiff :: IO a -> IO (a, TimeDiff)
+getDiff :: MonadIO m => m a -> m (a, TimeDiff)
 getDiff action = do
    t0 <- liftIO getClockTime
    a  <- action
@@ -327,7 +349,7 @@ getDiff action = do
    return (a, diffClockTimes t1 t0)
 
 -- Example
-{-
+
 main :: IO ()
 main = do
    r <- runTestSuiteResult $ do
@@ -346,6 +368,7 @@ main = do
          fail "This is a failure"
          warn "This is a warning"
          assertEquals "eq" (sort [1,2,2]) (nub [1,2,2]) 
+         assertTrue "yes" True
          
    printSummary r
    printTestLog r
@@ -356,4 +379,7 @@ main = do
    p2 xs = reverse (reverse xs) == (xs::[Int])
    p3 xs = head (sort xs) == minimum (xs::[Int])
    p4 xs = sort (nub xs) == nub (sort (xs::[Int]))
-   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int])) -}
+   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int]))
+{-
+main = runTestSuite $ suite "A" $ assertIO "B" (return True) >> 
+   assertIO "D" (fail "boe") >> assertIO "C" (return True) -}

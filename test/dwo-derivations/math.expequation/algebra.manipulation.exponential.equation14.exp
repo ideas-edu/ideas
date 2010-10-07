@@ -1,0 +1,26 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.equations.coverup.plus">
+      <expr>
+        4^(3*x) == 64
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        (2^2)^(3*x) == 64
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
+      <expr>
+        2^(6*x) == 64
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

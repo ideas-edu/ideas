@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
+  <state>
+    <expr>
+      3^(3*x-2) == 3*sqrt 3
+    </expr>
+  </state>
+</request>

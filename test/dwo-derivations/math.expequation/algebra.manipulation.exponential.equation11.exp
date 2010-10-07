@@ -1,0 +1,18 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        7^(4*x-1) == 49
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        7^(2^2*x-1) == 49
+      </expr>
+      <context>
+        <item name="location" value="[1,2,1,1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

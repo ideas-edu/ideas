@@ -1,0 +1,44 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        2^(x-1) == 4*sqrt 2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        2^(x-1) == 2^2*sqrt 2
+      </expr>
+      <context>
+        <item name="location" value="[2,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.write-as-power-generic">
+      <expr>
+        2^(x-1) == 2^2*2^(1/2)
+      </expr>
+      <context>
+        <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.add-exponents-generic">
+      <expr>
+        2^(x-1) == 2^(5/2)
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        x-1 == 5/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+      <expr>
+        x == 7/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

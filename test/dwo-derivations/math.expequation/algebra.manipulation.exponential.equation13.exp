@@ -1,0 +1,23 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.equations.coverup.minus-left">
+      <expr>
+        2^x == 16
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        2^x == 2^4
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        x == 4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

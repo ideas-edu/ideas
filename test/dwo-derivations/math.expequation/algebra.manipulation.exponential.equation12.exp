@@ -1,0 +1,54 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        3^(5-2*x) == 9*sqrt 3
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        3^(5-2*x) == 3^2*sqrt 3
+      </expr>
+      <context>
+        <item name="location" value="[2,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.write-as-power-generic">
+      <expr>
+        3^(5-2*x) == 3^2*3^(1/2)
+      </expr>
+      <context>
+        <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.add-exponents-generic">
+      <expr>
+        3^(5-2*x) == 3^(5/2)
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        5-2*x == 5/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+      <expr>
+        -2*x == -5/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.negate">
+      <expr>
+        2*x == 5/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 5/4
+      </expr>
+    </elem>
+  </list>
+</reply>
+

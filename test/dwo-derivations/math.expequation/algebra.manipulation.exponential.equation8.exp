@@ -1,0 +1,36 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.write-as-power-generic">
+      <expr>
+        3^(3*x-2) == 3*3^(1/2)
+      </expr>
+      <context>
+        <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.add-exponents-generic">
+      <expr>
+        3^(3*x-2) == 3^(3/2)
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        3*x-2 == 3/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+      <expr>
+        3*x == 7/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 7/6
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,33 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        5^(x-2^2) == (1/5)^(2*x+1)
+      </expr>
+      <context>
+        <item name="location" value="[1,2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-for-base">
+      <expr>
+        5^(x-2^2) == 5^(-2*x-1)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        x-2^2 == -2*x-1
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+      <expr>
+        3*x == 3
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

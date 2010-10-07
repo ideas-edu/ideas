@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponential.equation" encoding="string">
+  <state>
+    <expr>
+      7*3^(2*x+1) == 189
+    </expr>
+  </state>
+</request>

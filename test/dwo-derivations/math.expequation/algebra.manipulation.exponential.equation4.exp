@@ -1,0 +1,47 @@
+<reply result="ok" version="0.6.5 (3574)">
+  <list>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        3^(x+5) == 3^5/sqrt 3
+      </expr>
+      <context>
+        <item name="location" value="[2,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.write-as-power-generic">
+      <expr>
+        3^(x+5) == 3^5/3^(1/2)
+      </expr>
+      <context>
+        <item name="location" value="[2,2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-generic">
+      <expr>
+        3^(x+5) == 3^5*3^(-1/2)
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.add-exponents-generic">
+      <expr>
+        3^(x+5) == 3^(9/2)
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        x+5 == 9/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+      <expr>
+        x == -1/2
+      </expr>
+    </elem>
+  </list>
+</reply>
+

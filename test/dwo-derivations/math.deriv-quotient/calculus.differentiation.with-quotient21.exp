@@ -1,0 +1,42 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.quotient">
+      <expr>
+        ((x+4)*D(x) (1-x^3)-(1-x^3)*D(x) (x+4))/(x+4)^2
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        (-(x+4)*(3*x^2)-(1-x^3)*D(x) (x+4))/(x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        (-(x+4)*(3*x^2)-1+x^3)/(x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (-3*x^3-12*x^2-1+x^3)/(x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.merge">
+      <expr>
+        (-2*x^3-12*x^2-1)/(x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

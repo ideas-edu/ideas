@@ -1,0 +1,50 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.quotient">
+      <expr>
+        ((4*x-1)*D(x) (2*x+3)-(2*x+3)*D(x) (4*x-1))/(4*x-1)^2
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        ((4*x-1)*2-(2*x+3)*D(x) (4*x-1))/(4*x-1)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        ((4*x-1)*2-(2*x+3)*4)/(4*x-1)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (8*x-2-(2*x+3)*4)/(4*x-1)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (8*x-2-8*x-12)/(4*x-1)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.merge">
+      <expr>
+        -14/(4*x-1)^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,26 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.quotient">
+      <expr>
+        ((x+2)*D(x) 3-3*D(x) (x+2))/(x+2)^2
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        -3*D(x) (x+2)/(x+2)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        -3/(x+2)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

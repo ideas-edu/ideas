@@ -1,0 +1,26 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.quotient">
+      <expr>
+        ((4*x+3)*D(x) (-2)+2*D(x) (4*x+3))/(4*x+3)^2
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        2*D(x) (4*x+3)/(4*x+3)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        8/(4*x+3)^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

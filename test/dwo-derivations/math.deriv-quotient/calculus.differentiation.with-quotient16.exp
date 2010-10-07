@@ -1,0 +1,50 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.quotient">
+      <expr>
+        ((3*x+4)*D(x) (5*x-2)-(5*x-2)*D(x) (3*x+4))/(3*x+4)^2
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        ((3*x+4)*5-(5*x-2)*D(x) (3*x+4))/(3*x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        ((3*x+4)*5-(5*x-2)*3)/(3*x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (15*x+20-(5*x-2)*3)/(3*x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (15*x+20-15*x+6)/(3*x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.merge">
+      <expr>
+        26/(3*x+4)^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

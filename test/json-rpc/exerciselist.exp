@@ -67,6 +67,12 @@
          "status": "Provisional"
       },
       {
+         "domain": "algebra.manipulation.exponential",
+         "identifier": "equation",
+         "description": "solve exponential equation algebraically",
+         "status": "Provisional"
+      },
+      {
          "domain": "algebra.manipulation.exponents",
          "identifier": "equation",
          "description": "solve power equation algebraically with x > 0",
@@ -130,6 +136,12 @@
          "domain": "calculus.differentiation",
          "identifier": "with-product",
          "description": "Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer.",
+         "status": "Provisional"
+      },
+      {
+         "domain": "calculus.differentiation",
+         "identifier": "with-quotient",
+         "description": "Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator.",
          "status": "Provisional"
       },
       {

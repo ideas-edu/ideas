@@ -1,0 +1,42 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.quotient">
+      <expr>
+        ((5*x^2+7)*D(x) (3*x^3)-3*x^3*D(x) (5*x^2+7))/(5*x^2+7)^2
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        ((5*x^2+7)*(9*x^2)-3*x^3*D(x) (5*x^2+7))/(5*x^2+7)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        ((5*x^2+7)*(9*x^2)-30*x^4)/(5*x^2+7)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        (45*x^4+63*x^2-30*x^4)/(5*x^2+7)^2
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.merge">
+      <expr>
+        (15*x^4+63*x^2)/(5*x^2+7)^2
+      </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

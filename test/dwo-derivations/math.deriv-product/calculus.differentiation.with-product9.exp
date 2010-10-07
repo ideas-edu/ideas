@@ -1,0 +1,34 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.polynomial.def-power-nat">
+      <expr>
+        D(x) ((3*x+1)*(3*x+1))
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.product">
+      <expr>
+        D(x) (3*x+1)*(3*x+1)+(3*x+1)*D(x) (3*x+1)
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        3*(3*x+1)+(3*x+1)*D(x) (3*x+1)
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        3*(3*x+1)+(3*x+1)*3
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

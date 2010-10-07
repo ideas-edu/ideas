@@ -1,0 +1,34 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.polynomial.def-power-nat">
+      <expr>
+        D(x) ((3*x^2+2)*(3*x^2+2))
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.product">
+      <expr>
+        D(x) (3*x^2+2)*(3*x^2+2)+(3*x^2+2)*D(x) (3*x^2+2)
+      </expr>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        6*x*(3*x^2+2)+(3*x^2+2)*D(x) (3*x^2+2)
+      </expr>
+      <context>
+        <item name="location" value="[0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        6*x*(3*x^2+2)+(3*x^2+2)*(6*x)
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
+  </list>
+</reply>
+

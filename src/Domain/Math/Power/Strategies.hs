@@ -22,10 +22,8 @@ import Common.Context
 import Common.Strategy
 import Common.Transformation
 import Common.View
-import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
-import Domain.Math.Polynomial.Rules (sameConFactor)
 import Domain.Math.Equation.CoverUpRules --(coverUpNegate, coverUpRules)
 import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules

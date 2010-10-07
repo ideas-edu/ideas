@@ -102,6 +102,7 @@ packages =
    , someTermPackage Math.nonNegExpExercise
    , someTermPackage Math.calcPowerExercise
    , someTermPackage Math.powerEquationExercise
+   , someTermPackage Math.expEquationExercise
      -- linear algebra
    , someTermPackage LA.gramSchmidtExercise
    , someTermPackage LA.linearSystemExercise

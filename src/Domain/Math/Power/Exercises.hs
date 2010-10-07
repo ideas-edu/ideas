@@ -15,6 +15,7 @@ module Domain.Math.Power.Exercises
    , nonNegExpExercise
    , calcPowerExercise
    , powerEquationExercise
+   , expEquationExercise
    ) where
 
 import Common.Classes 
@@ -25,7 +26,6 @@ import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
-import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Examples.DWO3
 import Domain.Math.Examples.DWO4 (powerEquations, expEquations)
@@ -33,6 +33,7 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Strategies
+import Domain.Math.Power.NormViews
 import Domain.Math.Power.Views
 import Prelude hiding ( (^) )
 
@@ -67,12 +68,9 @@ expEquationExercise = makeExercise
   , examples       = concat expEquations
   , isReady        = \ rel -> isVariable (leftHandSide rel) 
                            && (rightHandSide rel) `belongsTo` rationalView
-  , isSuitable     = (`belongsTo` normPowerEqView)
-  , equivalence    = viewEquivalent normPowerEqView
+  , isSuitable     = (`belongsTo` normExpEqView)
+  , equivalence    = viewEquivalent normExpEqView
   }
-
-e = inContext expEquationExercise $ 5^(Var "x" -2^2) :==: 5^(-(2* Var "x" +1))
-
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 powerExercise s = makeExercise 

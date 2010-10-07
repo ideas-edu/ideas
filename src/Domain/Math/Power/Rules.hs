@@ -31,7 +31,6 @@ module Domain.Math.Power.Rules
 import Prelude hiding ( (^) )
 import qualified Prelude
 import Common.Classes
-import Common.Context
 import Control.Arrow ( (>>^) )
 import Common.Id
 import Common.Transformation
@@ -41,7 +40,6 @@ import Data.List
 import Data.Maybe
 import Domain.Math.Approximation (precision)
 import qualified Domain.Math.Data.PrimeFactors as PF
-import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
@@ -130,7 +128,7 @@ sameBase = makeSimpleRule (power, "same-base") $ \(lhs :==: rhs) -> do
 -- of the equation. Perhaps do this via the enviroment?
 reciprocalFor :: Rule (Equation Expr)
 reciprocalFor = makeSimpleRule (power, "reciprocal-for-base") $ \ (lhs :==: rhs) -> do
-  (c, (a,  x)) <- match strictPowerView lhs
+  (_, (a,  _)) <- match strictPowerView lhs
   (d, (a', y)) <- match strictPowerView rhs
   (one, a'')   <- match divView a'
   guard $ one == 1 && a'' == a
@@ -140,7 +138,7 @@ reciprocalFor = makeSimpleRule (power, "reciprocal-for-base") $ \ (lhs :==: rhs)
 equalsOne :: Rule (Equation Expr)
 equalsOne = makeSimpleRule (power, "equals-one") $ \ (lhs :==: rhs) -> do
   guard $ rhs == 1
-  (a, x) <- match simplePowerView lhs
+  (_, x) <- match simplePowerView lhs
   return $ x :==: 0
 
 -- | Power rules --------------------------------------------------------------

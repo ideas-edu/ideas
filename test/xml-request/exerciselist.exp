@@ -20,6 +20,7 @@
     <elem domain="arithmetic" identifier="exponents" description="simplify expression (powers)" status="Provisional"/>
     <elem domain="arithmetic" identifier="fractions" description="simplify expression (fractions)" status="Alpha"/>
     <elem domain="calculus" identifier="differentiation" description="Derivative" status="Experimental"/>
+    <elem domain="calculus.differentiation" identifier="polynomial" description="Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules." status="Provisional"/>
     <elem domain="linearalgebra" identifier="gaussianelim" description="Gaussian Elimination" status="Stable"/>
     <elem domain="linearalgebra" identifier="gramschmidt" description="Gram-Schmidt" status="Alpha"/>
     <elem domain="linearalgebra" identifier="linsystem" description="Solve Linear System" status="Stable"/>

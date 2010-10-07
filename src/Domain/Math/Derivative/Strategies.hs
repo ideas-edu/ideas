@@ -10,25 +10,50 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Derivative.Strategies (derivativeStrategy) where
+module Domain.Math.Derivative.Strategies 
+   ( derivativeStrategy, derivativePolyStrategy, getDiffExpr
+   ) where
 
-import Common.Context
-import Common.Navigator
-import Common.Strategy
+import Common.Library
+import Data.Maybe
 import Domain.Math.Derivative.Rules 
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
-import Prelude hiding (repeat)
+import Domain.Math.Polynomial.Views
+import Domain.Math.Polynomial.Rules
+import Domain.Math.Numeric.Views
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
-   label "Derivative" $ repeat $ somewhere $ 
+   label "Derivative" $ repeatS $ somewhere $ 
       alternatives (map liftToContext derivativeRules)
+      <|> derivativePolyStepStrategy
       <|> check isDiffC <*> once (once (liftToContext ruleDefRoot))
  where
    isDiffC = maybe False isDiff . current
-   
+
+derivativePolyStrategy :: LabeledStrategy (Context Expr)
+derivativePolyStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
+   label "derivative-polynomial" $
+      repeatS (somewhere (alternatives list))
+      <*> derivativePolyStepStrategy
+ where
+   list = map liftToContext
+      [ distributionSquare, distributeTimes, merge
+      , distributeDivision, noDivisionConstant
+      ]
+
+derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
+derivativePolyStepStrategy = label "derivative-poly-step" $
+   check polyDiff <*> liftToContext ruleDerivPolynomial
+ where
+   polyDiff = maybe False nfPoly . (>>= getDiffExpr) . current
+   nfPoly   = (`belongsTo` polyNormalForm rationalView)
+
 isDiff :: Expr -> Bool
-isDiff (Sym d [Sym l [Var _, _]]) = 
-   d == diffSymbol && l == lambdaSymbol
-isDiff _ = False
+isDiff = isJust . getDiffExpr
+
+getDiffExpr :: Expr -> Maybe Expr
+getDiffExpr (Sym d [Sym l [Var _, expr]]) | 
+   d == diffSymbol && l == lambdaSymbol = Just expr
+getDiffExpr _ = Nothing

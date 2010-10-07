@@ -121,6 +121,12 @@
          "status": "Experimental"
       },
       {
+         "domain": "calculus.differentiation",
+         "identifier": "polynomial",
+         "description": "Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules.",
+         "status": "Provisional"
+      },
+      {
          "domain": "linearalgebra",
          "identifier": "gaussianelim",
          "description": "Gaussian Elimination",

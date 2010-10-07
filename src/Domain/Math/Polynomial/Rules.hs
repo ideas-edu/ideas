@@ -571,3 +571,19 @@ parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c ->
    case up c >>= current of
       Just (Negate _) -> Nothing
       _               -> Just c
+      
+noDivisionConstant :: Rule Expr
+noDivisionConstant = makeSimpleRule (lineq, "no-div-con") f
+ where
+   f (a :/: b) | noVars b && hasVars a = 
+      return ((1/b) * a)
+   f _ = Nothing
+   
+{-
+defPowerNat :: Rule Expr
+defPowerNat = makeSimpleRule (polyeq, "def-power-nat") f
+ where
+   f (Sym _ [Var _, _]) = Nothing -- should not work on x^5
+   f (Sym s [a, Nat n]) | s == powerSymbol = 
+      return (build productView (False, replicate (fromInteger n) a))
+   f _ = Nothing -}

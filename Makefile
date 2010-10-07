@@ -70,6 +70,9 @@ $(BINDIR)/assess$(EXE): ag
 documentation: docs $(BINDIR)/ideas.cgi
 	make -C $(DOCDIR) || exit 1
 
+pages: docs $(BINDIR)/ideas.cgi
+	make -C $(DOCDIR) pages || exit 1
+
 unit-tests: $(TESTDIR)/test.log
 test: $(TESTDIR)/test.log
 

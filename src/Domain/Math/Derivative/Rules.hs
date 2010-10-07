@@ -13,15 +13,20 @@ module Domain.Math.Derivative.Rules where
 
 import Prelude hiding ((^))
 import Common.Transformation
+import Common.View
+import Control.Monad
 import Domain.Math.Expr
 import Common.Id
 import Common.Rewriting
+import Domain.Math.Polynomial.Views
+import Domain.Math.Numeric.Views
+import Domain.Math.Data.Polynomial
 
 derivativeRules :: [Rule Expr]
 derivativeRules =
    [ ruleDerivCon, ruleDerivPlus, ruleDerivMin, ruleDerivNegate
    , ruleDerivMultiple, ruleDerivPower, ruleDerivVar 
-   , ruleDerivProduct, ruleDerivQuotient {-, ruleDerivChain-}, ruleDerivPowerChain
+   , ruleDerivProduct, ruleDerivQuotient, ruleDerivPowerChain
    , ruleSine, ruleLog, ruleDerivSqrt, ruleDerivSqrtChain
    ]
 
@@ -33,9 +38,6 @@ ln = unary lnSymbol
 
 lambda :: Expr -> Expr -> Expr
 lambda = binary lambdaSymbol
-
-fcomp :: Expr -> Expr -> Expr
-fcomp = binary fcompSymbol
 
 diffId :: Id
 diffId = newId "calculus.differentiation"
@@ -75,11 +77,19 @@ ruleDerivQuotient :: Rule Expr
 ruleDerivQuotient = rule (diffId, "quotient") $ 
    \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g^2)
 
-{- ruleDerivChain :: Rule Expr
-ruleDerivChain = rule "Chain Rule" f
- where f (Diff x (f :.: g)) = return $ (Diff x f :.: g) :*: Diff x g
-       f _                        = Nothing -}
-
+ruleDerivPolynomial :: Rule Expr
+ruleDerivPolynomial = describe "This rule returns the derivative for all \
+   \expressions that can be turned into a polynomial (of rational numbers). \
+   \The polynomial does not have to be in standard form." $ 
+   makeSimpleRule (diffId, "deriv-of-poly") f
+ where
+   f (Sym d [Sym l [Var v, expr]]) | d == diffSymbol && l == lambdaSymbol = do
+      let myView = polyViewWith rationalView
+      (s, p) <- match myView expr
+      guard (s==v)
+      return (build myView (s, derivative p))
+   f _ = Nothing
+   
 -----------------------------------
 -- Special rules (not defined with unification)
 

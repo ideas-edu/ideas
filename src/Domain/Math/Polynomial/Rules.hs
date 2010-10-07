@@ -522,7 +522,8 @@ merge :: Rule Expr
 merge = describe "merge similar terms" $ 
    makeSimpleRule (lineq, "merge") $ \old -> do
       let new = collectLikeTerms old
-      guard (old /= new)
+          f = maybe 0 length . match sumView
+      guard (f old > f new)
       return new
 
 simplerLinearFactor :: Rule Expr

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
+  <state>
+    <expr>
+      D(x) ((5*x+7)*(4-3*x))
+    </expr>
+  </state>
+</request>

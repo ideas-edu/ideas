@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
+  <state>
+    <expr>
+      D(r) (-2/3*r^6+1/4*r^4-3*r+7)
+    </expr>
+  </state>
+</request>

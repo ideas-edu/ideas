@@ -1,0 +1,18 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (10*x^4-15*x^2+26*x-14*x^3-7)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        40*x^3-42*x^2-30*x+26
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,18 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (12*x^5+28*x^4-3*x^3-7*x^2)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        60*x^4+112*x^3-9*x^2-14*x
+      </expr>
+    </elem>
+  </list>
+</reply>
+

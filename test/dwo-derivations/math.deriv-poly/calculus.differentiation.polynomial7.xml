@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="calculus.differentiation.polynomial" encoding="string">
+  <state>
+    <expr>
+      D(q) (3/5*q^5-q^3+4*q)
+    </expr>
+  </state>
+</request>

@@ -1,0 +1,18 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (-x-15*x^2+28)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        -30*x-1
+      </expr>
+    </elem>
+  </list>
+</reply>
+

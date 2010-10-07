@@ -1,0 +1,34 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.quadratic.distr-square">
+      <expr>
+        D(x) (5*(x^2-6*x+9)+5*x)
+      </expr>
+      <context>
+        <item name="location" value="[0,1,0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (5*x^2-30*x+45+5*x)
+      </expr>
+      <context>
+        <item name="location" value="[0,1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.merge">
+      <expr>
+        D(x) (5*x^2-25*x+45)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        10*x-25
+      </expr>
+    </elem>
+  </list>
+</reply>
+

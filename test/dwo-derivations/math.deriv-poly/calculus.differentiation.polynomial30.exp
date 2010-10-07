@@ -1,0 +1,42 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (-(3*x-3)*(5-9*x)-8*(x-7))
+      </expr>
+      <context>
+        <item name="location" value="[0,1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (-42*x+27*x^2+15-8*(x-7))
+      </expr>
+      <context>
+        <item name="location" value="[0,1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(x) (-42*x+27*x^2+15-8*x+56)
+      </expr>
+      <context>
+        <item name="location" value="[0,1,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.linear.merge">
+      <expr>
+        D(x) (-50*x+27*x^2+71)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        54*x-50
+      </expr>
+    </elem>
+  </list>
+</reply>
+

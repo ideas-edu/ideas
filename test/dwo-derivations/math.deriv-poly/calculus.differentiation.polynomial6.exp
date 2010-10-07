@@ -1,0 +1,10 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        -8*p^3+5
+      </expr>
+    </elem>
+  </list>
+</reply>
+

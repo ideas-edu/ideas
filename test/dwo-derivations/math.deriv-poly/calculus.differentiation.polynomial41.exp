@@ -1,0 +1,18 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.quadratic.distr-square">
+      <expr>
+        D(x) (4*x^2+28*x+49)
+      </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        8*x+28
+      </expr>
+    </elem>
+  </list>
+</reply>
+

@@ -1,0 +1,18 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      <expr>
+        D(q) (q^6-q^4+3*q^2+4)
+      </expr>
+      <context>
+        <item name="location" value="[0,1,0,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="calculus.differentiation.deriv-of-poly">
+      <expr>
+        6*q^5-4*q^3+6*q
+      </expr>
+    </elem>
+  </list>
+</reply>
+

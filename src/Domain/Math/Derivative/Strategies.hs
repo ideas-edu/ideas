@@ -11,7 +11,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Strategies 
-   ( derivativeStrategy, derivativePolyStrategy, getDiffExpr
+   ( derivativeStrategy, derivativePolyStrategy
+   , derivativeProductStrategy, getDiffExpr
    ) where
 
 import Common.Library
@@ -41,6 +42,17 @@ derivativePolyStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
    list = map liftToContext
       [ distributionSquare, distributeTimes, merge
       , distributeDivision, noDivisionConstant
+      ]
+
+derivativeProductStrategy :: LabeledStrategy (Context Expr)
+derivativeProductStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
+   label "derivative-product" $
+      repeatS (somewhere (derivativePolyStepStrategy |> alternatives list))
+ where
+   list = map liftToContext
+      [ distributeDivision, noDivisionConstant
+      , ruleDerivProduct, defPowerNat
+      , ruleDerivNegate, ruleDerivPlus, ruleDerivMin
       ]
 
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)

@@ -71,7 +71,7 @@ ruleDerivVar = rule (diffId, "var") $
 
 ruleDerivProduct :: Rule Expr
 ruleDerivProduct = rule (diffId, "product") $
-   \x f g -> diff (lambda x (f * g))  :~>  f*diff (lambda x g) + g*diff (lambda x f)
+   \x f g -> diff (lambda x (f * g))  :~>  diff (lambda x f)*g + f*diff (lambda x g)
        
 ruleDerivQuotient :: Rule Expr
 ruleDerivQuotient = rule (diffId, "quotient") $ 

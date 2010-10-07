@@ -127,6 +127,12 @@
          "status": "Provisional"
       },
       {
+         "domain": "calculus.differentiation",
+         "identifier": "with-product",
+         "description": "Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer.",
+         "status": "Provisional"
+      },
+      {
          "domain": "linearalgebra",
          "identifier": "gaussianelim",
          "description": "Gaussian Elimination",

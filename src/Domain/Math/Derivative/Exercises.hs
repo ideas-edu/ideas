@@ -11,14 +11,17 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Exercises 
    ( derivativeExercise, derivativePolyExercise
+   , derivativeProductExercise
    ) where
 
 import Common.Uniplate (universe)
 import Control.Monad
+import Data.Maybe
 import Prelude hiding (repeat, (^))
 import Domain.Math.Derivative.Rules 
 import Domain.Math.Derivative.Strategies
 import Common.Library
+import Common.Uniplate (descend)
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.CleanUp
@@ -35,7 +38,7 @@ derivativePolyExercise = describe
    { exerciseId    = diffId # "polynomial"
    , status        = Provisional
    , parser        = parseExpr
-   , isReady       = noDiff
+   , isReady       = (`belongsTo` polyNormalForm rationalView)
    , isSuitable    = isPolyDiff
    , equivalence   = eqPolyDiff
    , similarity    = simPolyDiff
@@ -44,6 +47,17 @@ derivativePolyExercise = describe
    , examples      = concat (diffSet1 ++ diffSet2 ++ diffSet3)
    , testGenerator = Just $ liftM (diff . lambda (Var "x")) $ 
                         sized quadraticGen
+   }
+
+derivativeProductExercise :: Exercise Expr
+derivativeProductExercise = describe
+   "Use the product-rule to find the derivative of a polynomial. Keep \
+   \the parentheses in your answer." $ 
+   derivativePolyExercise
+   { exerciseId    = diffId # "with-product"
+   , isReady       = noDiff
+   , strategy      = derivativeProductStrategy
+   , examples      = concat diffSet3
    }
 
 derivativeExercise :: Exercise Expr
@@ -55,7 +69,7 @@ derivativeExercise = makeExercise
    , strategy     = derivativeStrategy
    , ruleOrdering = derivativeOrdering
    , navigation   = navigator
-   , examples     = concat (diffSet1++diffSet2++diffSet3++diffSet4++
+   , examples     = concat (diffSet3++diffSet4++
                             diffSet5++diffSet6++diffSet7++diffSet8)
    }
 
@@ -71,7 +85,7 @@ isPolyDiff = maybe False (`belongsTo` polyViewWith rationalView) . getDiffExpr
 
 eqPolyDiff :: Expr -> Expr -> Bool
 eqPolyDiff x y = 
-   let f = applyD ruleDerivPolynomial
+   let f a = fromMaybe (descend f a) (apply ruleDerivPolynomial a)
    in viewEquivalent (polyViewWith rationalView) (f x) (f y)
 
 simPolyDiff :: Expr -> Expr -> Bool
@@ -82,4 +96,9 @@ simPolyDiff x y =
 noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
--- go = checkExercise derivativePolyExercise
+go = checkExercise derivativeProductExercise
+
+raar = printDerivation derivativeProductExercise expr
+ where 
+   x = Var "x"
+   expr = diff $ lambda (Var "x")  $ (-27/2*((-13/2-x)*(85/6-x)+54/7*(x^2/(-58/7))))

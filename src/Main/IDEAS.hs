@@ -96,6 +96,7 @@ packages =
    , someTermPackage Math.quadraticWithApproximation
    , someTermPackage Math.derivativeExercise
    , someTermPackage Math.derivativePolyExercise
+   , someTermPackage Math.derivativeProductExercise
    , someTermPackage Math.simplifyPowerExercise
    , someTermPackage Math.powerOfExercise     
    , someTermPackage Math.nonNegExpExercise

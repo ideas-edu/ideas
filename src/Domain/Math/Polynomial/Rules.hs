@@ -21,7 +21,7 @@ import Common.Uniplate (universe, descend)
 import Common.Utils
 import Common.View hiding (simplify)
 import Control.Monad
-import Data.List (nub, (\\), sort, sortBy)
+import Data.List (nub, (\\), sort, sortBy, replicate)
 import Data.Maybe
 import Data.Ratio
 import Domain.Math.Approximation (precision)
@@ -579,11 +579,10 @@ noDivisionConstant = makeSimpleRule (lineq, "no-div-con") f
       return ((1/b) * a)
    f _ = Nothing
    
-{-
 defPowerNat :: Rule Expr
 defPowerNat = makeSimpleRule (polyeq, "def-power-nat") f
  where
    f (Sym _ [Var _, _]) = Nothing -- should not work on x^5
    f (Sym s [a, Nat n]) | s == powerSymbol = 
       return (build productView (False, replicate (fromInteger n) a))
-   f _ = Nothing -}
+   f _ = Nothing

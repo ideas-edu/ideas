@@ -1,0 +1,5 @@
+<request service="allapplications" exerciseid="logic.dnf" encoding="string">
+<state>
+<expr>~(p /\ ~q)</expr>
+</state>
+</request>

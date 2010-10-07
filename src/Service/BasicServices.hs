@@ -12,7 +12,7 @@
 module Service.BasicServices 
    ( -- * Basic Services
      stepsremaining, findbuggyrules, ready, allfirsts, derivation
-   , onefirst, applicable, apply, generate, generateWith
+   , onefirst, applicable, allapplications, apply, generate, generateWith
    ) where
 
 import Common.Library hiding (derivation, applicable, apply)
@@ -108,6 +108,21 @@ applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
    let check r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (context state))
    in filter check (ruleset (exercise (exercisePkg state)))
+
+allapplications :: State a -> [(Rule (Context a), Location, State a)]
+allapplications state = xs ++ ys
+ where
+   ex = exercise (exercisePkg state)
+   xs = concat (allfirsts state)
+   ps = [ (r, loc) | (r, loc, _) <- xs ]
+   ys = maybe [] f (top (context state))
+           
+   f c = g c ++ concatMap f (allDowns c)
+   g c = [ (r, location new, state { context = new, prefix = Nothing })
+         | r   <- ruleset ex
+         , (r, location c) `notElem` ps
+         , new <- applyAll r c
+         ]
 
 -- local helper
 setLocation :: Location -> Context a -> Context a 

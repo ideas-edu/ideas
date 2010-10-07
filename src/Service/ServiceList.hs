@@ -31,7 +31,8 @@ import qualified Service.Submit as Submit
 serviceList :: [Service]
 serviceList =
    [ derivationS, allfirstsS, onefirstS, readyS
-   , stepsremainingS, applicableS, applyS, generateS
+   , stepsremainingS, applicableS, allapplicationsS
+   , applyS, generateS
    , examplesS, submitS, diagnoseS
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
@@ -85,6 +86,13 @@ applicableS = makeService "applicable"
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $ 
    applicable ::: Location :-> stateTp :-> List Rule
+
+allapplicationsS :: Service
+allapplicationsS = makeService "allapplications" 
+   "Given a current expression, this service yields all rules that can be \
+   \applied at a certain location, regardless wether the rule used is buggy \
+   \or not. Some results are within the strategys, others are not." $  
+   allapplications ::: stateTp :-> List (tuple3 Rule Location stateTp)
 
 applyS :: Service
 applyS = makeService "apply" 

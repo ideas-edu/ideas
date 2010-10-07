@@ -1,0 +1,227 @@
+<reply result="ok" version="0.6.5 (0)">
+  <list>
+    <elem ruleid="algebra.equations.linear.remove-div">
+      []
+      <state>
+        <prefix>
+          [5,1,0]
+        </prefix>
+        <expr>
+          10*(x-1) == x
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      []
+      <state>
+        <prefix>
+          [5,1,1,0]
+        </prefix>
+        <expr>
+          5*x-5 == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.divide-negate">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          x-1 == x/2/(-5)
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.flip-negate-one-side">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          -x/2 == 5*(x-1)
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.flip-negate-one-side">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          x/2 == -5*(x-1)
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.multiply-one-side">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          5*(x-1)*2 == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.multiply-one-side">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          5*(x-1) == x/2*2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.negate-one-side">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          -5*(x-1) == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.negate-one-side">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          5*(x-1) == -x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.linear.var-left">
+      []
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <expr>
+          5*(x-1)-1/2*x == x/2-1/2*x
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-denom">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          1/5*x+5*(-1) == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-denom">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          5*x+1/5*(-1) == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-plus">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          5*x+(-1) == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-plus">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          x+5*(-1) == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-plus-forget">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          5*0+5*(-1) == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-plus-forget">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          5*x+5*0 == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.buggy.distr-times-plus-sign">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          5*x+5 == x/2
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="algebra.equations.linear.distr-times">
+      [1]
+      <state>
+        <prefix>
+          no prefix
+        </prefix>
+        <context>
+          <item name="location" value="[1]"/>
+        </context>
+        <expr>
+          5*x-5 == x/2
+        </expr>
+      </state>
+    </elem>
+  </list>
+</reply>
+

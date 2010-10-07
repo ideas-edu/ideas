@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Exercises 
    ( derivativeExercise, derivativePolyExercise
-   , derivativeProductExercise
+   , derivativeProductExercise, derivativeQuotientExercise
    ) where
 
 import Common.Uniplate (universe)
@@ -25,6 +25,7 @@ import Common.Uniplate (descend)
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Numeric.Views
 import Domain.Math.Examples.DWO5
 import Domain.Math.Expr
@@ -60,6 +61,21 @@ derivativeProductExercise = describe
    , examples      = concat diffSet3
    }
 
+derivativeQuotientExercise :: Exercise Expr
+derivativeQuotientExercise = describe
+   "Use the quotient-rule to find the derivative of a polynomial. Only \
+   \remove parentheses in the numerator." $ 
+   derivativePolyExercise
+   { exerciseId    = diffId # "with-quotient"
+   , isReady       = readyQuotientDiff
+   , isSuitable    = isQuotientDiff
+   , equivalence   = eqQuotientDiff
+   , strategy      = derivativeQuotientStrategy
+   , ruleOrdering  = ruleOrderingWithId [ruleDerivQuotient]
+   , examples      = concat diffSet4
+   , testGenerator = Nothing
+   }
+
 derivativeExercise :: Exercise Expr
 derivativeExercise = makeExercise
    { exerciseId   = describe "Derivative" diffId
@@ -83,10 +99,39 @@ derivativeOrdering x y = f x `compare` f y
 isPolyDiff :: Expr -> Bool
 isPolyDiff = maybe False (`belongsTo` polyViewWith rationalView) . getDiffExpr
 
+isQuotientDiff :: Expr -> Bool
+isQuotientDiff de = fromMaybe False $ do
+   expr <- getDiffExpr de
+   xs   <- match sumView expr
+   let f a = maybe [a] (\(x, y) -> [x, y]) (match divView a)
+       ys  = concatMap f xs
+       isp = (`belongsTo` polyViewWith rationalView)
+   return (all isp ys)
+
 eqPolyDiff :: Expr -> Expr -> Bool
 eqPolyDiff x y = 
    let f a = fromMaybe (descend f a) (apply ruleDerivPolynomial a)
    in viewEquivalent (polyViewWith rationalView) (f x) (f y)
+
+eqQuotientDiff :: Expr -> Expr -> Bool
+eqQuotientDiff a b = eqSimplifyRational (make a) (make b)
+ where
+   make = inContext derivativeQuotientExercise . f
+   rs   = [ ruleDerivPolynomial, ruleDerivQuotient, ruleDerivProduct
+          , ruleDerivNegate, ruleDerivPlus, ruleDerivMin
+          ]
+   f a  = case mapMaybe (`apply` a) rs of
+             x:_ -> f x
+             []  -> descend f a
+
+readyQuotientDiff :: Expr -> Bool
+readyQuotientDiff expr = fromMaybe False $ do
+   xs <- match sumView expr
+   let f a      = fromMaybe (a, 1) (match divView a) -- ANDERSOM
+       (ys, zs) = unzip (map f xs)
+       isp = (`belongsTo` polyViewWith rationalView)
+       nfp = (`belongsTo` polyNormalForm rationalView)
+   return (all nfp ys && all isp zs)
 
 simPolyDiff :: Expr -> Expr -> Bool
 simPolyDiff x y =
@@ -96,7 +141,7 @@ simPolyDiff x y =
 noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
-go = checkExercise derivativeProductExercise
+go = checkExercise derivativeQuotientExercise
 
 raar = printDerivation derivativeProductExercise expr
  where 

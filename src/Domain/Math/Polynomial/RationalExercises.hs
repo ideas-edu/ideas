@@ -12,6 +12,7 @@
 module Domain.Math.Polynomial.RationalExercises 
    ( rationalEquationExercise
    , simplifyRationalExercise, divisionRationalExercise
+   , eqSimplifyRational
    ) where
 
 import Common.Classes
@@ -227,7 +228,7 @@ eqSimplifyRational ca cb = fromMaybe False $ do
    if manyVars then return True else do
    p1 <- match (polyViewWith rationalView) a1c
    p2 <- match (polyViewWith rationalView) b1c
-   return (if manyVars || p1==p2 then True else error $ show a)
+   return (if manyVars || p1==p2 then True else False)
 
 q = lcmExpr  (x^2+4*x-5) (x^2+5*x-6)
  where x = Var "x"

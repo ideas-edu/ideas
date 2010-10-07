@@ -72,10 +72,15 @@ ruleDerivVar = rule (diffId, "var") $
 ruleDerivProduct :: Rule Expr
 ruleDerivProduct = rule (diffId, "product") $
    \x f g -> diff (lambda x (f * g))  :~>  diff (lambda x f)*g + f*diff (lambda x g)
-       
+
+-- The second rewrite rule should not have been necessary, except that cleaning
+-- up an expression will typically put the negate in front of the division: this
+-- makes sure the rule is triggered anyway.
 ruleDerivQuotient :: Rule Expr
-ruleDerivQuotient = rule (diffId, "quotient") $ 
-   \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g^2)
+ruleDerivQuotient = ruleList (diffId, "quotient") 
+   [ \x f g -> diff (lambda x (f/g))  :~>  (g*diff (lambda x f) - f*diff (lambda x g)) / (g^2)
+   , \x f g -> diff (lambda x (-f/g))  :~>  (g*diff (lambda x (-f)) - (-f)*diff (lambda x g)) / (g^2)
+   ]
 
 ruleDerivPolynomial :: Rule Expr
 ruleDerivPolynomial = describe "This rule returns the derivative for all \

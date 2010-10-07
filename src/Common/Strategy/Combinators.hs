@@ -16,6 +16,7 @@ module Common.Strategy.Combinators where
 
 import qualified Prelude
 import Prelude hiding (not, repeat, fail, sequence)
+import Common.Id
 import Common.Context
 import Common.Navigator
 import Common.Transformation
@@ -122,7 +123,7 @@ until :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
 until p = while (Prelude.not . p)
 
 -- | Apply a strategy at least once, but collapse into a single step
-multi :: IsStrategy f => String -> f a -> LabeledStrategy a
+multi :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a
 multi s = collapse . label s . repeat1
 
 -- | Apply the strategies from the list exhaustively (until this is no longer possible)

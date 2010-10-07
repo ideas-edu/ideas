@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Strategies 
    ( derivativeStrategy, derivativePolyStrategy
-   , derivativeProductStrategy, getDiffExpr
+   , derivativeProductStrategy, derivativeQuotientStrategy, getDiffExpr
    ) where
 
 import Common.Library
@@ -23,6 +23,8 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Numeric.Views
+
+import Prelude hiding ((^))
 
 derivativeStrategy :: LabeledStrategy (Context Expr)
 derivativeStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
@@ -36,13 +38,14 @@ derivativeStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
 derivativePolyStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
    label "derivative-polynomial" $
-      repeatS (somewhere (alternatives list))
+      repeatS (somewhere (alternatives (map liftToContext rulesPolyNF)))
       <*> derivativePolyStepStrategy
- where
-   list = map liftToContext
-      [ distributionSquare, distributeTimes, merge
-      , distributeDivision, noDivisionConstant
-      ]
+
+rulesPolyNF :: [Rule Expr]
+rulesPolyNF =
+   [ distributionSquare, distributeTimes, merge
+   , distributeDivision, noDivisionConstant
+   ]
 
 derivativeProductStrategy :: LabeledStrategy (Context Expr)
 derivativeProductStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
@@ -55,12 +58,29 @@ derivativeProductStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
       , ruleDerivNegate, ruleDerivPlus, ruleDerivMin
       ]
 
+derivativeQuotientStrategy :: LabeledStrategy (Context Expr)
+derivativeQuotientStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
+   label "derivative-quotient" $
+   repeatS (somewhere (derivativePolyStepStrategy |> alternatives list))
+   <*> repeatS (exceptLowerDiv (alternatives (map liftToContext rulesPolyNF)))
+ where
+   list = map liftToContext
+      [ ruleDerivQuotient, ruleDerivPlus, ruleDerivMin, ruleDerivNegate ]
+      
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStepStrategy = label "derivative-poly-step" $
    check polyDiff <*> liftToContext ruleDerivPolynomial
  where
    polyDiff = maybe False nfPoly . (>>= getDiffExpr) . current
    nfPoly   = (`belongsTo` polyNormalForm rationalView)
+
+exceptLowerDiv :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
+exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 
+   if (isDivC a) then [0] else [0 .. arity a-1]
+ where 
+   isDivC = maybe False isDiv . current
+   isDiv (_ :/: _) = True
+   isDiv _         = False
 
 isDiff :: Expr -> Bool
 isDiff = isJust . getDiffExpr

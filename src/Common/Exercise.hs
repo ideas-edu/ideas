@@ -197,8 +197,9 @@ recognizeRule ex r ca cb = rec (fromMaybe ca (top ca))
 ruleOrderingWith :: [Rule a] -> Rule a -> Rule a -> Ordering
 ruleOrderingWith = ruleOrderingWithId . map getId
  
-ruleOrderingWithId :: [Id] -> Rule a -> Rule a -> Ordering
-ruleOrderingWithId xs r1 r2 =
+ruleOrderingWithId :: HasId b => [b] -> Rule a -> Rule a -> Ordering
+ruleOrderingWithId bs r1 r2 =
+   let xs = map getId bs in
    case (findIndex (==getId r1) xs, findIndex (==getId r2) xs) of
       (Just i,  Just j ) -> i `compare` j
       (Just _,  Nothing) -> LT

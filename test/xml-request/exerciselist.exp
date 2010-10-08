@@ -22,8 +22,9 @@
     <elem domain="arithmetic" identifier="fractions" description="simplify expression (fractions)" status="Alpha"/>
     <elem domain="calculus" identifier="differentiation" description="Derivative" status="Experimental"/>
     <elem domain="calculus.differentiation" identifier="polynomial" description="Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules." status="Provisional"/>
-    <elem domain="calculus.differentiation" identifier="with-product" description="Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer." status="Provisional"/>
-    <elem domain="calculus.differentiation" identifier="with-quotient" description="Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator." status="Provisional"/>
+    <elem domain="calculus.differentiation" identifier="power" description="First write as a power, then find the derivative. Rewrite negative or rational exponents." status="Experimental"/>
+    <elem domain="calculus.differentiation" identifier="product" description="Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer." status="Provisional"/>
+    <elem domain="calculus.differentiation" identifier="quotient" description="Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator." status="Provisional"/>
     <elem domain="linearalgebra" identifier="gaussianelim" description="Gaussian Elimination" status="Stable"/>
     <elem domain="linearalgebra" identifier="gramschmidt" description="Gram-Schmidt" status="Alpha"/>
     <elem domain="linearalgebra" identifier="linsystem" description="Solve Linear System" status="Stable"/>

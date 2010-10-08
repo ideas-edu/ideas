@@ -1,4 +1,4 @@
-<request service="derivation" exerciseid="calculus.differentiation.with-product" encoding="string">
+<request service="derivation" exerciseid="calculus.differentiation.product" encoding="string">
   <state>
     <expr>
       D(x) ((3*x^3+4*x)*(x^2-2))

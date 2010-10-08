@@ -134,13 +134,19 @@
       },
       {
          "domain": "calculus.differentiation",
-         "identifier": "with-product",
+         "identifier": "power",
+         "description": "First write as a power, then find the derivative. Rewrite negative or rational exponents.",
+         "status": "Experimental"
+      },
+      {
+         "domain": "calculus.differentiation",
+         "identifier": "product",
          "description": "Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer.",
          "status": "Provisional"
       },
       {
          "domain": "calculus.differentiation",
-         "identifier": "with-quotient",
+         "identifier": "quotient",
          "description": "Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator.",
          "status": "Provisional"
       },

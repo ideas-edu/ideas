@@ -56,7 +56,7 @@ derivativeProductExercise = describe
    "Use the product-rule to find the derivative of a polynomial. Keep \
    \the parentheses in your answer." $ 
    derivativePolyExercise
-   { exerciseId    = diffId # "with-product"
+   { exerciseId    = diffId # "product"
    , isReady       = noDiff
    , strategy      = derivativeProductStrategy
    , examples      = concat diffSet3
@@ -67,7 +67,7 @@ derivativeQuotientExercise = describe
    "Use the quotient-rule to find the derivative of a polynomial. Only \
    \remove parentheses in the numerator." $ 
    derivativePolyExercise
-   { exerciseId    = diffId # "with-quotient"
+   { exerciseId    = diffId # "quotient"
    , isReady       = readyQuotientDiff
    , isSuitable    = isQuotientDiff
    , equivalence   = eqQuotientDiff
@@ -82,7 +82,7 @@ derivativePowerExercise = describe
    "First write as a power, then find the derivative. Rewrite negative or \
    \rational exponents." $ 
    derivativePolyExercise
-   { exerciseId    = diffId # "as-power"
+   { exerciseId    = diffId # "power"
    , status        = Experimental
    , isReady       = noDiff
    -- , isSuitable    = isQuotientDiff

@@ -85,7 +85,7 @@ exercisePageFile        a = filePathId a ++ ".html"
 exerciseDerivationsFile a = filePathId a ++ "-derivations.html"
 exerciseStrategyFile    a = filePathId a ++ "-strategy.html"
 exerciseDiagnosisFile   a = filePathId a ++ "-diagnosis.html"
-ruleFile                a = filePathId a ++ ".html"
+ruleFile                a = filePathId ("rule" # getId a) ++ ".html"
 
 servicePageFile :: Service -> String
 servicePageFile srv = "services/" ++ filePathId srv ++ ".html"

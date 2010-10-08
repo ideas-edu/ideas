@@ -12,7 +12,7 @@
 
 module Domain.Math.Power.NormViews 
    ( -- * Normalising views
-     normPowerView, normPowerView', normPowerNonNegRatio, normExpEqView
+     normPowerView, normPowerMapView, normPowerNonNegRatio, normExpEqView
    , normPowerNonNegDouble, normPowerEqApproxView, normPowerEqView
    ) where
 
@@ -116,8 +116,8 @@ normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
 
 type PowerMap = (M.Map String Rational, Rational)
 
-normPowerView' :: View Expr [PowerMap]
-normPowerView' = makeView (liftM h . f) g
+normPowerMapView :: View Expr [PowerMap]
+normPowerMapView = makeView (liftM h . f) g
   where
     f = (mapM (match normPowerNonNegRatio) =<<) . match sumView
     g = build sumView . map (build normPowerNonNegRatio)

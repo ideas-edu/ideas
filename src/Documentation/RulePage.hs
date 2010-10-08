@@ -44,7 +44,7 @@ makeRulePages dir = do
           ]
    forM_ (M.toList ruleMap) $ \(ruleId, list@(Some pkg:_)) -> do
       let noExamples = Some (EI pkg M.empty) 
-          level      = length (qualifiers ruleId)
+          level      = length (qualifiers ruleId) + 1
           usedIn     = sortBy compareId [ getId pkg | Some pkg <- list ]
       case M.findWithDefault noExamples (getId pkg) exMap of
          Some (EI pkg e) -> do
@@ -68,12 +68,12 @@ rulePage ex exMap usedIn r = do
 
    h3 "Used in exercises"
    let f a = link (ups ++ exercisePageFile a) (tt $ text $ show a)
-       ups = up (length (qualifiers r))
+       ups = up (length (qualifiers r) + 1)
    ul $ map f usedIn
 
    -- Examples
    let ys  = M.findWithDefault [] (getId r) exMap
-       ups = length (qualifiers (getId r))
+       ups = length (qualifiers r) + 1
    unless (null ys) $ do
       h3 "Examples"
       forM_ (take 3 ys) $ \(a, b) -> para $ divClass "step" $ pre $ do 

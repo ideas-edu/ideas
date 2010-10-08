@@ -1,4 +1,3 @@
-{-# OPTIONS -fno-case-merge #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -25,6 +24,7 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Strategies
+import Domain.Math.Power.Rules
 
 import Prelude hiding ((^))
 
@@ -73,12 +73,13 @@ derivativePowerStrategy :: LabeledStrategy (Context Expr)
 derivativePowerStrategy = label "derivative-power" $ 
    cleanUpStrategy (applyTop cleanUpExpr2) (label "split-rational" 
       (repeatS (somewhere (liftToContext ruleSplitRational)))) <*>
-   powerOfStrategy <*>
+   configure mycfg powerOfStrategy <*>
    cleanUpStrategy (applyTop cleanUpExpr2) (label "use-derivative-rules" 
       (repeatS (somewhere (alternatives list))))
  where
    list = map liftToContext
       [ ruleDerivPlus, ruleDerivMin, ruleDerivNegate, ruleDerivPowerFactor ]
+   mycfg = [(ByName (showId myFractionTimes), Remove)]
       
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStepStrategy = label "derivative-poly-step" $

@@ -85,8 +85,8 @@ simplifyPowerExercise = (powerExercise powerStrategy)
    { exerciseId   = describe "simplify expression (powers)" $ 
                        newId "algebra.manipulation.exponents.simplify"
    , isReady      = isPowerAdd
-   , isSuitable   = (`belongsTo` normPowerView')
-   , equivalence  = viewEquivalent normPowerView'
+   , isSuitable   = (`belongsTo` normPowerMapView)
+   , equivalence  = viewEquivalent normPowerMapView
    , examples     = concat $  simplerPowers ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
@@ -127,8 +127,8 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
    { exerciseId   = describe "simplify expression (powers)" $ 
                        newId "arithmetic.exponents"
    , isReady      = isPowerAdd
-   , isSuitable   = (`belongsTo` normPowerView')
-   , equivalence  = viewEquivalent normPowerView'
+   , isSuitable   = (`belongsTo` normPowerMapView)
+   , equivalence  = viewEquivalent normPowerMapView
    , examples     = concat $ negExp3 ++ normPower3' ++ normPower4
    }
 

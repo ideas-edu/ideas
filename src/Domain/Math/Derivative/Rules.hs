@@ -18,9 +18,11 @@ import Control.Monad
 import Domain.Math.Expr
 import Common.Id
 import Common.Rewriting
+import Data.Maybe
 import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
+import Domain.Math.Power.Views
 
 derivativeRules :: [Rule Expr]
 derivativeRules =
@@ -151,3 +153,47 @@ ruleDerivSqrtChain = makeSimpleRule (diffId, "chain-sqrt") f
 ruleDefRoot :: Rule Expr
 ruleDefRoot = rule (diffId, "def-root") $
    \a b -> root a b :~> a ^ (1/b)
+   
+ruleDerivPowerFactor :: Rule Expr
+ruleDerivPowerFactor = makeSimpleRule (diffId, "power-factor") $ \de -> do
+   expr <- getDiffExpr de
+   (a, x, r) <- match myPowerView expr
+   return $ build myPowerView (a*fromRational r, x, r-1)
+   
+-- (a+b)/c  ~>  a/c + b/c
+ruleSplitRational :: Rule Expr
+ruleSplitRational = makeSimpleRule (diffId, "split-rational") $ \expr -> do
+   (up, c) <- match divView expr
+   (a, b)  <- match plusView up
+   return (a/c + b/c)
+   
+myPowerView :: View Expr (Expr, String, Rational)
+myPowerView = makeView f g
+ where
+   f expr = case match timesView expr of
+               Just (a, b) -> do
+                  guard (noVars a)
+                  (x, r) <- match powView b
+                  return (a, x, r)
+                `mplus` do
+                  guard (noVars b)
+                  (x, r) <- match powView a
+                  return (b, x, r)
+               Nothing -> do
+                  (x, r) <- match powView expr
+                  return (1, x, r)
+   g (a, x, r) = a .*. (Var x .^. fromRational r) 
+  
+   powView = simplePowerView >>> varView *** rationalView
+   varView = makeView isVar Var
+   
+   isVar (Var x) = Just x
+   isVar _       = Nothing
+   
+isDiff :: Expr -> Bool
+isDiff = isJust . getDiffExpr
+
+getDiffExpr :: Expr -> Maybe Expr
+getDiffExpr (Sym d [Sym l [Var _, expr]]) | 
+   d == diffSymbol && l == lambdaSymbol = Just expr
+getDiffExpr _ = Nothing

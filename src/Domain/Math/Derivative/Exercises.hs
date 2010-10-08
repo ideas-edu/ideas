@@ -12,6 +12,7 @@
 module Domain.Math.Derivative.Exercises 
    ( derivativeExercise, derivativePolyExercise
    , derivativeProductExercise, derivativeQuotientExercise
+   , derivativePowerExercise
    ) where
 
 import Common.Uniplate (universe)
@@ -73,6 +74,21 @@ derivativeQuotientExercise = describe
    , strategy      = derivativeQuotientStrategy
    , ruleOrdering  = ruleOrderingWithId [ruleDerivQuotient]
    , examples      = concat diffSet4
+   , testGenerator = Nothing
+   }
+
+derivativePowerExercise :: Exercise Expr
+derivativePowerExercise = describe
+   "First write as a power, then find the derivative. Rewrite negative or \
+   \rational exponents." $ 
+   derivativePolyExercise
+   { exerciseId    = diffId # "as-power"
+   , status        = Experimental
+   , isReady       = noDiff
+   -- , isSuitable    = isQuotientDiff
+   -- , equivalence   = eqQuotientDiff
+   , strategy      = derivativePowerStrategy
+   , examples      = concat (diffSet5 ++ diffSet6)
    , testGenerator = Nothing
    }
 

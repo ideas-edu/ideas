@@ -12,7 +12,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Derivative.Strategies 
    ( derivativeStrategy, derivativePolyStrategy
-   , derivativeProductStrategy, derivativeQuotientStrategy, getDiffExpr
+   , derivativeProductStrategy, derivativeQuotientStrategy
+   , derivativePowerStrategy, getDiffExpr
    ) where
 
 import Common.Library
@@ -23,6 +24,7 @@ import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Numeric.Views
+import Domain.Math.Power.Strategies
 
 import Prelude hiding ((^))
 
@@ -67,6 +69,17 @@ derivativeQuotientStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
    list = map liftToContext
       [ ruleDerivQuotient, ruleDerivPlus, ruleDerivMin, ruleDerivNegate ]
       
+derivativePowerStrategy :: LabeledStrategy (Context Expr)
+derivativePowerStrategy = label "derivative-power" $ 
+   cleanUpStrategy (applyTop cleanUpExpr2) (label "split-rational" 
+      (repeatS (somewhere (liftToContext ruleSplitRational)))) <*>
+   powerOfStrategy <*>
+   cleanUpStrategy (applyTop cleanUpExpr2) (label "use-derivative-rules" 
+      (repeatS (somewhere (alternatives list))))
+ where
+   list = map liftToContext
+      [ ruleDerivPlus, ruleDerivMin, ruleDerivNegate, ruleDerivPowerFactor ]
+      
 derivativePolyStepStrategy :: LabeledStrategy (Context Expr)
 derivativePolyStepStrategy = label "derivative-poly-step" $
    check polyDiff <*> liftToContext ruleDerivPolynomial
@@ -81,11 +94,3 @@ exceptLowerDiv = somewhereWith "except-lower-div" $ \a ->
    isDivC = maybe False isDiv . current
    isDiv (_ :/: _) = True
    isDiv _         = False
-
-isDiff :: Expr -> Bool
-isDiff = isJust . getDiffExpr
-
-getDiffExpr :: Expr -> Maybe Expr
-getDiffExpr (Sym d [Sym l [Var _, expr]]) | 
-   d == diffSymbol && l == lambdaSymbol = Just expr
-getDiffExpr _ = Nothing

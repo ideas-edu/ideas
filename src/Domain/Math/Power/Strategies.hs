@@ -11,11 +11,14 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-{-   ( powerStrategy
+   ( powerStrategy
    , powerOfStrategy
    , calcPowerStrategy
    , nonNegExpStrategy
-   ) -}where
+   , powerEquationStrategy
+   , expEqStrategy
+   , logEqStrategy
+   ) where
 
 import Common.Classes
 import Common.Context
@@ -23,6 +26,7 @@ import Common.Strategy
 import Common.Transformation
 import Common.View
 import Domain.Math.Data.Relation
+import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpRules --(coverUpNegate, coverUpRules)
 import Domain.Math.Power.Rules
@@ -32,6 +36,15 @@ import Prelude hiding (repeat, not)
 
 ------------------------------------------------------------
 -- Strategies
+
+logEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
+logEqStrategy = cleanUpStrategy cleanup strat
+  where 
+    strat =  label "" $ use logarithm
+    
+    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
+                naturalRules ++ rationalRules
+
 
 powerEquationStrategy :: LabeledStrategy (Context (Relation Expr))
 powerEquationStrategy = cleanUpStrategy cleanup strat
@@ -198,10 +211,4 @@ fractionRules =
    , smartRule divisionDenominator  
    , smartRule divisionNumerator 
    , simplerFraction
-   ]
-
-doubleRules =
-   [ calcPlusWith     "double" doubleView
-   , calcMinusWith    "double" doubleView
-   , calcTimesWith    "double" doubleView
    ]

@@ -26,9 +26,11 @@ import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
+import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO3
-import Domain.Math.Examples.DWO4 (powerEquations, expEquations)
+import Domain.Math.Examples.DWO4 (powerEquations, expEquations, logEquations)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
@@ -70,6 +72,20 @@ expEquationExercise = makeExercise
                            && (rightHandSide rel) `belongsTo` rationalView
   , isSuitable     = (`belongsTo` normExpEqView)
   , equivalence    = viewEquivalent normExpEqView
+  }
+
+logEquationExercise :: Exercise (OrList (Equation Expr))
+logEquationExercise = makeExercise
+  { status         = Provisional
+  , parser         = parseExprWith (pOrList (pEquation pExpr))
+  , strategy       = logEqStrategy
+  , navigation     = termNavigator
+  , exerciseId     = describe "solve logarithmic equation algebraically" $ 
+                       newId "algebra.manipulation.logarithmic.equation"
+  , examples       = map (orList . return) (concat logEquations)
+  , isReady        = solvedEquations
+  , isSuitable     = (`belongsTo` normLogEqView)
+  , equivalence    = viewEquivalent normLogEqView
   }
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr

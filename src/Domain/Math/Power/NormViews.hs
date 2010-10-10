@@ -14,25 +14,29 @@ module Domain.Math.Power.NormViews
    ( -- * Normalising views
      normPowerView, normPowerMapView, normPowerNonNegRatio, normExpEqView
    , normPowerNonNegDouble, normPowerEqApproxView, normPowerEqView
+   , normLogEqView
    ) where
 
 import Prelude hiding ((^), recip)
 import qualified Prelude
 import Control.Arrow ( (>>^) )
 import Control.Monad
+import Common.Classes
 import Common.View
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
+import Data.Ratio
 import Domain.Math.Approximation (precision)
 import Domain.Math.Data.PrimeFactors (allPowers, greatestPower)
 import Domain.Math.Data.Relation
+import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.Views (linearEquationView)
+import Domain.Math.Polynomial.Views (linearEquationView, quadraticEquationsView)
 import Domain.Math.Polynomial.CleanUp (normalizeProduct, normalizeSum)
 import Domain.Math.Power.Views
-
+import qualified Domain.Math.Data.SquareRoot as SQ
 
 normPowerNonNegRatio :: View Expr (M.Map String Rational, Rational) -- (Rational, M.Map String Rational)
 normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
@@ -205,6 +209,14 @@ normExpEqView = makeView f id >>> linearEquationView
         Just (b, x) -> x :==: simplify normLogView (logBase b r)
         Nothing     -> l :==: r
 
+normLogEqView :: View (OrList (Equation Expr)) (OrList (String, SQ.SquareRoot Rational))
+normLogEqView = makeView (switch . fmap f) id >>> quadraticEquationsView
+  where
+    f expr@(lhs :==: rhs) = do
+      return $ case match logView lhs of
+        Just (b, x) -> x :==: b .^. rhs
+        Nothing     -> expr
+
 normLogView :: View Expr Expr
 normLogView = makeView g id
   where
@@ -232,3 +244,26 @@ normLogView = makeView g id
           | s == powerSymbol -> y .*. f b x
           | s == rootSymbol  -> f b (x .^. (1 ./. y))
         e         -> e
+
+-- misschien deze naar rationalView verplaatsen?
+normConstPowerView :: View Expr Integer
+normConstPowerView = makeView f fromRational
+  where 
+    f expr = 
+      case expr of
+        Sym s [x, y] 
+          | s == powerSymbol -> do
+              base <- f
+              (n, d)  <- match (divView >>> rationalView *** rationalView) y
+              if denominator exp == 1 
+                then return $ base Prelude.^ exp
+                else f (fromRational base)
+--                else f ((fromRational base) .^. (fromRational (numerator exp))) 
+--                >>=           f . root (numerator exp)
+          | s == rootSymbol -> do
+              n <- f x
+              e <- f y
+              if denominator e == 1
+                then liftM fromInteger $ lookup (fromRational n) $ allPowers (numerator e)
+                else Nothing
+        e -> match rationalView e

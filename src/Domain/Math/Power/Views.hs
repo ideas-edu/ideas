@@ -18,6 +18,8 @@ module Domain.Math.Power.Views
    , powerViewFor, powerFactorView
      -- * Root views
    , rootView, rootConsView, simpleRootView
+     -- * Log vies
+   , logView
      -- * View combinator
    , (<&>)
      -- * Other views
@@ -138,6 +140,16 @@ rootView = simpleRootView >>> second rationalView
 rootConsView :: View Expr (Expr, (Expr, Rational))
 rootConsView =  (timesView >>> second rootView)
             <&> (rootView >>^ (,) 1)
+
+
+-- | Log views ----------------------------------------------------------------
+
+logView :: View Expr (Expr, Expr)
+logView = makeView f (uncurry logBase)
+  where 
+    f expr = case expr of
+        Sym s [a, b] | s == logSymbol -> return (a, b)
+        _ -> Nothing
 
 
 -- | Bastiaan's power views ---------------------------------------------------

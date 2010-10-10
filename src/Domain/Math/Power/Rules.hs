@@ -22,6 +22,8 @@ module Domain.Math.Power.Rules
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
+    -- * Log rules
+  , logarithm
     -- * Common rules
   , myFractionTimes, simplifyFraction, pushNegOut, simplifyProduct
     -- * Help functions
@@ -56,6 +58,14 @@ powerRuleOrder = map getId
   ]  
 
 power = "algebra.manipulation.exponents"
+logarithmic = "algebra.manipulation.logarithmic"
+
+
+-- | Logarithmic relation rules -----------------------------------------------
+logarithm :: Rule (Equation Expr)
+logarithm = makeSimpleRule (logarithmic, "common-power") $ \(lhs :==: rhs) -> do
+    (b, x) <- match logView lhs
+    return $ x :==: b .^. rhs
 
 
 -- | Power relation rules -----------------------------------------------------

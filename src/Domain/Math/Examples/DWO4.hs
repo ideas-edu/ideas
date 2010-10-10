@@ -88,14 +88,14 @@ logEquations :: [[Equation Expr]]
 logEquations =
   -- los algebraisch op
   let x = Var "x" in
-  [ [ logBase x 2 :==: 7
-    , logBase (x-2) 3 :==: 2
-    , logBase (x-3) 4 :==: 1+(1/2)
-    , logBase ((1/10)*x-3) 5 :==: -1
-    , logBase 7 x :==: 1
-    , logBase 4 x :==: -1
-    , logBase (x^2-1) 2 :==: 3
-    , logBase (1-5*x) (1/3) :==: -1
+  [ [ logBase 2 x :==: 7
+    , logBase 3 (x-2) :==: 2
+    , logBase 4 (x-3) :==: 1+(1/2)
+    , logBase 5 ((1/10)*x-3) :==: -1
+    , logBase x 7 :==: 1
+    , logBase x 4 :==: -1
+    , logBase 2 (x^2-1) :==: 3
+    , logBase (1/3) (1-5*x) :==: -1
     ]
   ]
 

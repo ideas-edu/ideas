@@ -22,14 +22,18 @@ module Domain.Math.Power.Strategies
 
 import Common.Classes
 import Common.Context
+import Common.Exercise
 import Common.Strategy
 import Common.Transformation
 import Common.View
+import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpRules --(coverUpNegate, coverUpRules)
+import Domain.Math.Polynomial.Strategies (quadraticStrategy)
 import Domain.Math.Power.Rules
+import Domain.Math.Power.NormViews (myRationalView)
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Prelude hiding (repeat, not)
@@ -37,14 +41,11 @@ import Prelude hiding (repeat, not)
 ------------------------------------------------------------
 -- Strategies
 
-logEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
+logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = cleanUpStrategy cleanup strat
   where 
-    strat =  label "" $ use logarithm
-    
-    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-                naturalRules ++ rationalRules
-
+    strat   = label "" $ (use logarithm) <*> quadraticStrategy
+    cleanup = applyTop (fmap (mapRight (simplify myRationalView)))
 
 powerEquationStrategy :: LabeledStrategy (Context (Relation Expr))
 powerEquationStrategy = cleanUpStrategy cleanup strat

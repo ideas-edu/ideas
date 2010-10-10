@@ -14,7 +14,7 @@ module Domain.Math.Power.NormViews
    ( -- * Normalising views
      normPowerView, normPowerMapView, normPowerNonNegRatio, normExpEqView
    , normPowerNonNegDouble, normPowerEqApproxView, normPowerEqView
-   , normLogEqView
+   , normLogEqView, myRationalView
    ) where
 
 import Prelude hiding ((^), recip)
@@ -214,7 +214,7 @@ normLogEqView = makeView (switch . fmap f) id >>> quadraticEquationsView
   where
     f expr@(lhs :==: rhs) = do
       return $ case match logView lhs of
-        Just (b, x) -> x :==: b .^. rhs
+        Just (b, x) -> x :==: simplify myRationalView (b .^. rhs)
         Nothing     -> expr
 
 normLogView :: View Expr Expr
@@ -245,25 +245,23 @@ normLogView = makeView g id
           | s == rootSymbol  -> f b (x .^. (1 ./. y))
         e         -> e
 
--- misschien deze naar rationalView verplaatsen?
-normConstPowerView :: View Expr Integer
-normConstPowerView = makeView f fromRational
-  where 
-    f expr = 
-      case expr of
-        Sym s [x, y] 
-          | s == powerSymbol -> do
-              base <- f
-              (n, d)  <- match (divView >>> rationalView *** rationalView) y
-              if denominator exp == 1 
-                then return $ base Prelude.^ exp
-                else f (fromRational base)
---                else f ((fromRational base) .^. (fromRational (numerator exp))) 
---                >>=           f . root (numerator exp)
-          | s == rootSymbol -> do
-              n <- f x
-              e <- f y
-              if denominator e == 1
-                then liftM fromInteger $ lookup (fromRational n) $ allPowers (numerator e)
-                else Nothing
-        e -> match rationalView e
+myRationalView :: View Expr Rational
+myRationalView = makeView (exprToNum f) id >>> rationalView
+  where
+    f s [x, y] 
+      | s == divideSymbol = 
+          fracDiv x y
+      | s == powerSymbol = do
+          ry <- match rationalView y
+          if denominator ry == 1 
+            then do 
+              let a = x Prelude.^ abs (numerator ry)
+              return (if numerator ry < 0 then 1/a else a)
+            else
+              f rootSymbol [ fromInteger (denominator ry)
+                           , x Prelude.^ (numerator ry) ]
+      | s == rootSymbol = do
+          n <- match integerView y
+          b <- match integerView x
+          liftM fromInteger $ lookup b $ map (\(a,b)->(b,a)) (allPowers n)
+    f _ _ = Nothing

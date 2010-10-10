@@ -63,7 +63,7 @@ logarithmic = "algebra.manipulation.logarithmic"
 
 -- | Logarithmic relation rules -----------------------------------------------
 logarithm :: Rule (Equation Expr)
-logarithm = makeSimpleRule (logarithmic, "common-power") $ \(lhs :==: rhs) -> do
+logarithm = makeSimpleRule (logarithmic, "logarithm") $ \(lhs :==: rhs) -> do
     (b, x) <- match logView lhs
     return $ x :==: b .^. rhs
 

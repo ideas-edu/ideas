@@ -16,6 +16,7 @@ module Domain.Math.Power.Exercises
    , calcPowerExercise
    , powerEquationExercise
    , expEquationExercise
+   , logEquationExercise
    ) where
 
 import Common.Classes 
@@ -74,18 +75,18 @@ expEquationExercise = makeExercise
   , equivalence    = viewEquivalent normExpEqView
   }
 
-logEquationExercise :: Exercise (OrList (Equation Expr))
+logEquationExercise :: Exercise (OrList (Relation Expr))
 logEquationExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pOrList (pEquation pExpr))
+  , parser         = parseExprWith (pOrList (pRelation pExpr))
   , strategy       = logEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
                        newId "algebra.manipulation.logarithmic.equation"
-  , examples       = map (orList . return) (concat logEquations)
-  , isReady        = solvedEquations
-  , isSuitable     = (`belongsTo` normLogEqView)
-  , equivalence    = viewEquivalent normLogEqView
+  , examples       = map (orList . return . build equationView) (concat logEquations)
+  , isReady        = solvedRelations
+  , isSuitable     = (`belongsTo` (switchView equationView >>> normLogEqView))
+  , equivalence    = viewEquivalent (switchView equationView >>> normLogEqView)
   }
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr

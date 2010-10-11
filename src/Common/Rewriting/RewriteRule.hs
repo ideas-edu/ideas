@@ -64,7 +64,7 @@ instance Functor RuleSpec where
 
 instance HasId (RewriteRule a) where
    getId        = ruleId
-   changeId f r = r {ruleId = f (ruleId r)}
+   changeId f r@(R _ _) = R {ruleId = f (ruleId r), rulePair = rulePair r}
 
 -- constructor
 newRule :: Rewrite a => String -> (Int -> RuleSpec Term) -> RewriteRule a
@@ -184,7 +184,7 @@ metaInRewriteRule r =
    in [ n | Meta n <- leafs lhs ++ leafs rhs ]
 
 renumberRewriteRule :: Int -> RewriteRule a -> RewriteRule a
-renumberRewriteRule n r = r {rulePair = f lhs :~> f rhs}
+renumberRewriteRule n r@(R _ _) = R {ruleId = ruleId r, rulePair = f lhs :~> f rhs}
  where
    lhs :~> rhs = rulePair r
    f (Meta i) = Meta (i+n)

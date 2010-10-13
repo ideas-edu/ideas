@@ -277,7 +277,7 @@ data Rule a = Rule
    , transformations :: [Transformation a]
    , isBuggyRule     :: Bool -- ^ Inspect whether or not the rule is buggy (unsound)
    , isMinorRule     :: Bool -- ^ Returns whether or not the rule is minor (i.e., an administrative step that is automatically performed by the system)
-   , ruleGroups      :: [String]
+   , ruleGroups      :: [Id]
    , ruleSiblings    :: [Id]
    }
 
@@ -306,8 +306,8 @@ isRewriteRule = not . null . getRewriteRules
 siblingOf :: HasId b => b -> Rule a -> Rule a 
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
-addRuleToGroup :: String -> Rule a -> Rule a
-addRuleToGroup group r = r { ruleGroups = group : ruleGroups r }
+addRuleToGroup :: HasId b => b -> Rule a -> Rule a
+addRuleToGroup group r = r { ruleGroups = getId group : ruleGroups r }
 
 ruleList :: (IsId n, Builder f a, Rewrite a) => n -> [f] -> Rule a
 ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule (show a))

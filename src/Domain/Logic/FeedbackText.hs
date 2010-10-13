@@ -105,7 +105,7 @@ feedbackOk _     = ("You have combined multiple steps. Press the Back button and
 feedbackDetour :: Bool -> Maybe (Rule a) -> [Rule a] -> (String, Bool)
 feedbackDetour True _ [one] = (appliedRule one ++ " " ++ feedbackFinished, True)
 feedbackDetour True _ _     = (feedbackMultipleSteps ++ " " ++ feedbackFinished, True)
-feedbackDetour _ _ [one] | one `inGroup`"Commutativity" =
+feedbackDetour _ _ [one] | one `inGroup` groupCommutativity =
    ("You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula.", True)
 feedbackDetour _ mexp [one] = 
    let however = case mexp >>= ruleText of
@@ -135,15 +135,15 @@ ruleText r
    | r ~= ruleNotNot  = return "double negation" 
    | r ~= ruleDefImpl  = return "implication elimination" 
    | r ~= ruleDefEquiv  = return "equivalence elimination" 
-   | r `inGroup`"Commutativity" = return "commutativity"
-   | r `inGroup`"Aasociativity" = return "associativity"
-   | r `inGroup`"DistributionOrOverAnd" = return "distribution of or over and"
-   | r `inGroup`"DistributionAndOverOr" = return "distribution of and over or"
-   | r `inGroup`"Idempotency" = return "idempotency"
-   | r `inGroup`"Absorption" = return "absorption"
-   | r `inGroup`"De Morgan" = return "De Morgan"
-   | r `inGroup`"InverseDeMorgan" = return "De Morgan"
-   | r `inGroup`"InverseDistr" = return "distributivity"
+   | r `inGroup` groupCommutativity = return "commutativity"
+   | r `inGroup` groupAssociativity = return "associativity"
+   | r `inGroup` groupDistributionOrOverAnd = return "distribution of or over and"
+   | r `inGroup` groupDistributionAndOverOr = return "distribution of and over or"
+   | r `inGroup` groupIdempotency = return "idempotency"
+   | r `inGroup` groupAbsorption = return "absorption"
+   | r `inGroup` groupDeMorgan = return "De Morgan"
+   | r `inGroup` groupInverseDeMorgan = return "De Morgan"
+   | r `inGroup` groupInverseDistr = return "distributivity"
     -- TODO Josje: aanvullen met alle regels (ook die ook in de DWA strategie voorkomen)
    | otherwise = Nothing
 -------------------------------------------------------------------------
@@ -166,7 +166,7 @@ backAndHint ready = "Press the Back button and try again." ++
 r1 ~= r2 = getId r1 == getId r2
 
 -- Quick and dirty fix!
-inGroup :: Rule a -> String -> Bool
+inGroup :: Rule a -> (Id, b) -> Bool
 inGroup r n = 
    let rs = filter (~= r) (logicRules ++ buggyRules)
-   in n `elem` concatMap ruleGroups rs
+   in fst n `elem` concatMap ruleGroups rs

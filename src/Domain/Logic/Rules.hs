@@ -15,6 +15,7 @@
 module Domain.Logic.Rules where
 
 import Domain.Logic.Formula
+import Common.Id
 import Common.Transformation (Rule, addRuleToGroup, minorRule)
 import Common.Rewriting
 import Domain.Logic.Generator()
@@ -22,7 +23,7 @@ import Domain.Logic.GeneralizedRules
 import qualified Common.Transformation as Rule
  
 logicRules :: [Rule SLogic]
-logicRules = concat 
+logicRules = concatMap snd
    [ groupCommutativity, groupAssociativity, groupIdempotency
    , groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation
    , groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination, groupAdditional
@@ -30,27 +31,33 @@ logicRules = concat
    , groupInverseDeMorgan,groupInverseDistr
    ]
 
+logic :: IsId a => a -> Id
+logic = (#) "logic.propositional" 
+
 rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
-rule s = Rule.rule ("logic.propositional." ++ s)
+rule = Rule.rule . logic
 
 ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList s = Rule.ruleList ("logic.propositional." ++ s)
+ruleList = Rule.ruleList . logic
 
 -----------------------------------------------------------------------------
 -- Grouping DWA rules
 
-makeGroup :: String -> [Rule SLogic] -> [Rule SLogic]
-makeGroup = map . addRuleToGroup
+makeGroup :: String -> [Rule SLogic] -> (Id, [Rule SLogic])
+makeGroup s rs =  
+   let a = logic s
+   in (a, map (addRuleToGroup a) rs)
 
-groupCommutativity, groupAssociativity, groupDistributionOrOverAnd, groupDistributionAndOverOr,groupIdempotency, 
-   groupAbsorption, groupTrueProperties, groupFalseProperties, groupDoubleNegation,
-   groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination :: [Rule SLogic]
+groupCommutativity, groupAssociativity, groupDistributionOrOverAnd, 
+   groupDistributionAndOverOr,groupIdempotency, groupAbsorption, 
+   groupTrueProperties, groupFalseProperties, groupDoubleNegation,
+   groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination 
+   :: (Id, [Rule SLogic])
 
 groupCommutativity = makeGroup "Commutativity" 
    [ruleCommOr, ruleCommAnd]
 groupAssociativity = makeGroup "Associativity"
    [ruleAssocOr, ruleAssocAnd]
-
 groupIdempotency = makeGroup "Idempotency"
    [ruleIdempOr, ruleIdempAnd]
 groupAbsorption = makeGroup "Absorption"
@@ -72,9 +79,9 @@ groupDistributionOrOverAnd = makeGroup "DistributionOrOverAnd"
 groupDistributionAndOverOr = makeGroup "DistributionAndOverOr"
    [generalRuleAndOverOr, ruleAndOverOr ]
 groupInverseDeMorgan = makeGroup "InverseDeMorgan" 
-    [ inverseDeMorganOr, inverseDeMorganAnd]
+   [inverseDeMorganOr, inverseDeMorganAnd]
 groupInverseDistr = makeGroup "InverseDistr"
-    [ inverseAndOverOr, inverseOrOverAnd]
+   [inverseAndOverOr, inverseOrOverAnd]
    
 -----------------------------------------------------------------------------
 -- Commutativity
@@ -225,7 +232,7 @@ ruleDefEquiv = rule "DefEquiv" $
 -----------------------------------------------------------------------------
 -- Additional rules, not in the DWA course
 
-groupAdditional :: [Rule SLogic]
+groupAdditional :: (Id, [Rule SLogic])
 groupAdditional = makeGroup "Additional rules"
    [ ruleFalseInEquiv, ruleTrueInEquiv, ruleFalseInImpl, ruleTrueInImpl
    , ruleCommEquiv, ruleDefEquivImpls, ruleEquivSame, ruleImplSame

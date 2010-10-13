@@ -43,8 +43,8 @@ linearStrategy = cleanUpStrategy (applyTop (fmap cleanUpSimple)) linearStrategyG
 linearMixedStrategy :: LabeledStrategy (Context (Equation Expr))
 linearMixedStrategy = 
    let f   = applyTop (fmap (transform (simplify mixedFractionView) . cleanUpSimple))
-       cfg = [ (ByName (showId ruleNormalizeMixedFraction), Reinsert)
-             , (ByName (showId ruleNormalizeRational), Remove)
+       cfg = [ (byName ruleNormalizeMixedFraction, Reinsert)
+             , (byName ruleNormalizeRational, Remove)
              ] 
    in cleanUpStrategy f (configureNow (configure cfg linearStrategyG))
 

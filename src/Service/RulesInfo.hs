@@ -42,7 +42,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       unless (null txt) $
          element "description" $ text txt
       forM_ (ruleGroups r) $ \s -> 
-         element "group" $ text s
+         element "group" $ text (showId s)
       forM_ (ruleSiblings r) $ \s -> 
          element "sibling" $ text $ showId s
       -- FMPs and CMPs

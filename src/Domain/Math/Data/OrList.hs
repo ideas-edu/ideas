@@ -13,7 +13,7 @@ module Domain.Math.Data.OrList
    ( OrList
    , orList, (\/), true, false
    , isTrue, isFalse
-   , disjunctions, normalize, idempotent
+   , disjunctions, normalize, idempotent, fromBool
    , oneDisjunct, orListView
    ) where
 
@@ -72,6 +72,9 @@ oneDisjunct f xs =
    case disjunctions xs of 
       Just [a] -> f a
       _ -> fail "oneDisjunct"
+
+fromBool :: Bool -> OrList a
+fromBool b = if b then true else false
 
 ------------------------------------------------------------
 -- Instances

@@ -15,14 +15,15 @@ module Domain.Logic.BuggyRules where
 
 import Domain.Logic.Formula
 import Domain.Logic.Generator()
-import Domain.Logic.Rules (makeGroup)
+import Domain.Logic.Rules (makeGroup, logic)
+import Common.Id
 import Common.Rewriting
 import Common.Transformation (Rule, buggyRule)
 import qualified Common.Transformation as Rule
 
 -- Collection of all known buggy rules
 buggyRules :: [Rule SLogic]
-buggyRules = makeGroup "Common misconceptions"
+buggyRules = snd $ makeGroup "Common misconceptions"
    [ buggyRuleCommImp, buggyRuleAssImp, buggyRuleIdemImp, buggyRuleIdemEqui
    , buggyRuleEquivElim1, buggyRuleImplElim2, buggyRuleEquivElim2, buggyRuleEquivElim3
    , buggyRuleImplElim, buggyRuleImplElim1, buggyRuleDeMorgan1, buggyRuleDeMorgan2, buggyRuleDeMorgan3
@@ -33,10 +34,10 @@ buggyRules = makeGroup "Common misconceptions"
    ]
 
 rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
-rule s = Rule.rule ("logic.propositional.buggy." ++ s)
+rule = Rule.rule . logic . ("buggy" #)
 
 ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList s = Rule.ruleList ("logic.propositional.buggy." ++ s)
+ruleList = Rule.ruleList . logic . ("buggy" #)
 
 -----------------------------------------------------------------------------
 -- Buggy rules

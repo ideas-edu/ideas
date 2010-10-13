@@ -236,7 +236,7 @@ higherDegreeEquationsView = makeView f (fmap (:==: 0))
  where
    f    = Just . normalize . join . fmap make . coverUpOrs
    make = orList . filter (not . hasNegSqrt) 
-        . map (cleanUpExpr2 . distr) . normHDE . sub
+        . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b
 
    distr = transform g

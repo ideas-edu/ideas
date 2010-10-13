@@ -84,9 +84,9 @@ derivativePowerExercise = describe
    derivativePolyExercise
    { exerciseId    = diffId # "power"
    , status        = Experimental
-   , isReady       = noDiff
-   -- , isSuitable    = isQuotientDiff
-   -- , equivalence   = eqQuotientDiff
+   , isReady       = \a -> noDiff a && onlyNatPower a
+   , isSuitable    = const True
+   , equivalence   = \_ _ -> True -- to do
    , strategy      = derivativePowerStrategy
    , examples      = concat (diffSet5 ++ diffSet6)
    , testGenerator = Nothing
@@ -143,7 +143,7 @@ eqQuotientDiff a b = eqSimplifyRational (make a) (make b)
 readyQuotientDiff :: Expr -> Bool
 readyQuotientDiff expr = fromMaybe False $ do
    xs <- match sumView expr
-   let f a      = fromMaybe (a, 1) (match divView a) -- ANDERSOM
+   let f a      = fromMaybe (a, 1) (match divView a)
        (ys, zs) = unzip (map f xs)
        isp = (`belongsTo` polyViewWith rationalView)
        nfp = (`belongsTo` polyNormalForm rationalView)
@@ -151,15 +151,23 @@ readyQuotientDiff expr = fromMaybe False $ do
 
 simPolyDiff :: Expr -> Expr -> Bool
 simPolyDiff x y =
-   let f = acExpr . cleanUpExpr2
+   let f = acExpr . cleanUpExpr
    in f x == f y
 
 noDiff :: Expr -> Bool
 noDiff e = null [ () | Sym s _ <- universe e, s == diffSymbol ]   
 
-go = checkExercise derivativeQuotientExercise
+onlyNatPower :: Expr -> Bool
+onlyNatPower e = and [ isNat a | Sym s [_, a] <- universe e, s == powerSymbol ]
+ where
+   isNat (Nat _) = True
+   isNat _       = False
+
+{-
+go = checkExercise derivativePowerExercise
 
 raar = printDerivation derivativeProductExercise expr
  where 
    x = Var "x"
    expr = diff $ lambda (Var "x")  $ (-27/2*((-13/2-x)*(85/6-x)+54/7*(x^2/(-58/7))))
+-}

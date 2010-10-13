@@ -184,8 +184,9 @@ myPowerView = makeView f g
                   return (1, x, r)
    g (a, x, r) = a .*. (Var x .^. fromRational r) 
   
-   powView = simplePowerView >>> varView *** rationalView
+   powView = (simplePowerView <&> noPowerView) >>> varView *** rationalView
    varView = makeView isVar Var
+   noPowerView = makeView (\expr -> Just (expr, 1)) (build simplePowerView)
    
    isVar (Var x) = Just x
    isVar _       = Nothing

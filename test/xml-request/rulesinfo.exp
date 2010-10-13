@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <rule name="logic.propositional.absorpand" buggy="false" rewriterule="true">
     <description>
       logic.propositional.absorpand
@@ -315,7 +315,7 @@
       logic.propositional.assocand
     </description>
     <group>
-      Associativity
+      logic.propositional.associativity
     </group>
     <CMP>
       (a /\ b) /\ c ~&gt; a /\ b /\ c
@@ -359,7 +359,7 @@
       logic.propositional.assocor
     </description>
     <group>
-      Associativity
+      logic.propositional.associativity
     </group>
     <CMP>
       (a || b) || c ~&gt; a || b || c
@@ -403,7 +403,7 @@
       logic.propositional.buggy.absor
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       (a || b) || (a /\ b) /\ c /~&gt; a || b
@@ -571,7 +571,7 @@
       logic.propositional.buggy.andcompl
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a /\ ~a /~&gt; T
@@ -679,7 +679,7 @@
       logic.propositional.buggy.andsame
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a /\ a /~&gt; T
@@ -709,7 +709,7 @@
       logic.propositional.buggy.assimp
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a -&gt; b -&gt; c /~&gt; (a -&gt; b) -&gt; c
@@ -789,7 +789,7 @@
       logic.propositional.buggy.assoc
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a || b /\ c /~&gt; (a || b) /\ c
@@ -941,7 +941,7 @@
       logic.propositional.buggy.commimp
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a -&gt; b /~&gt; b -&gt; a
@@ -976,7 +976,7 @@
       logic.propositional.buggy.demorgan1
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a /\ b) /~&gt; ~a || b
@@ -1176,7 +1176,7 @@
       logic.propositional.buggy.demorgan2
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a /\ b) /~&gt; ~(~a || ~b)
@@ -1262,7 +1262,7 @@
       logic.propositional.buggy.demorgan3
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a /\ b) /~&gt; ~a /\ ~b
@@ -1306,7 +1306,7 @@
       logic.propositional.buggy.demorgan4
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a || b) /~&gt; ~a || ~b
@@ -1350,7 +1350,7 @@
       logic.propositional.buggy.demorgan5
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(~(a /\ b) || c) /~&gt; ~(~a || ~b) || c
@@ -1562,7 +1562,7 @@
       logic.propositional.buggy.distr
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a /\ (b || c) /~&gt; (a /\ b) /\ a /\ c
@@ -1890,7 +1890,7 @@
       logic.propositional.buggy.distrnot
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~a /\ (b || c) /~&gt; ~a /\ b || a /\ c
@@ -2266,7 +2266,7 @@
       logic.propositional.buggy.equivelim1
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a &lt;-&gt; b /~&gt; a /\ b || ~(a /\ b)
@@ -2464,7 +2464,7 @@
       logic.propositional.buggy.equivelim2
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a &lt;-&gt; b /~&gt; (a || b) /\ (~a || ~b)
@@ -2595,7 +2595,7 @@
       logic.propositional.buggy.equivelim3
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a &lt;-&gt; b /~&gt; ~a || b
@@ -2633,7 +2633,7 @@
       logic.propositional.buggy.falseprop
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a || F /~&gt; F
@@ -2729,7 +2729,7 @@
       logic.propositional.buggy.idemequi
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a &lt;-&gt; a /~&gt; a
@@ -2759,7 +2759,7 @@
       logic.propositional.buggy.idemimp
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a -&gt; a /~&gt; a
@@ -2789,7 +2789,7 @@
       logic.propositional.buggy.implelim
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a -&gt; b /~&gt; ~(a || b)
@@ -2884,7 +2884,7 @@
       logic.propositional.buggy.implelim1
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a -&gt; b /~&gt; ~a /\ b
@@ -2922,7 +2922,7 @@
       logic.propositional.buggy.implelim2
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a -&gt; b /~&gt; a /\ b || ~a /\ ~b
@@ -2971,7 +2971,7 @@
       logic.propositional.buggy.notoverimpl
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a -&gt; b) /~&gt; ~a -&gt; ~b
@@ -3015,7 +3015,7 @@
       logic.propositional.buggy.orcompl
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a || ~a /~&gt; F
@@ -3123,7 +3123,7 @@
       logic.propositional.buggy.orsame
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a || a /~&gt; T
@@ -3153,7 +3153,7 @@
       logic.propositional.buggy.parenth1
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a /\ b) /~&gt; ~a /\ b
@@ -3227,7 +3227,7 @@
       logic.propositional.buggy.parenth2
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(a &lt;-&gt; b) /~&gt; ~(a /\ b) || ~a /\ ~b
@@ -3282,7 +3282,7 @@
       logic.propositional.buggy.parenth3
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       ~(~a /\ b) /~&gt; a /\ b
@@ -3422,7 +3422,7 @@
       logic.propositional.buggy.trueprop
     </description>
     <group>
-      Common misconceptions
+      logic.propositional.commonmisconceptions
     </group>
     <CMP>
       a || T /~&gt; a
@@ -3518,7 +3518,7 @@
       logic.propositional.command
     </description>
     <group>
-      Commutativity
+      logic.propositional.commutativity
     </group>
     <CMP>
       a /\ b ~&gt; b /\ a
@@ -3553,7 +3553,7 @@
       logic.propositional.commequiv
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       a &lt;-&gt; b ~&gt; b &lt;-&gt; a
@@ -3588,7 +3588,7 @@
       logic.propositional.commor
     </description>
     <group>
-      Commutativity
+      logic.propositional.commutativity
     </group>
     <CMP>
       a || b ~&gt; b || a
@@ -3779,7 +3779,7 @@
       logic.propositional.defequivimpls
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       a &lt;-&gt; b ~&gt; a -&gt; b /\ b -&gt; a
@@ -3939,7 +3939,7 @@
       logic.propositional.equivsame
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       a &lt;-&gt; a ~&gt; T
@@ -3969,7 +3969,7 @@
       logic.propositional.falseinequiv
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       F &lt;-&gt; a ~&gt; ~a
@@ -4027,7 +4027,7 @@
       logic.propositional.falseinimpl
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       F -&gt; a ~&gt; T
@@ -4195,7 +4195,7 @@
       logic.propositional.genoroverand
     </description>
     <group>
-      DistributionOrOverAnd
+      logic.propositional.distributionoroverand
     </group>
   </rule>
   <rule name="logic.propositional.idempand" buggy="false" rewriterule="true">
@@ -4257,7 +4257,7 @@
       logic.propositional.implsame
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       a -&gt; a ~&gt; T
@@ -4287,7 +4287,7 @@
       logic.propositional.invandoveror
     </description>
     <group>
-      InverseDistr
+      logic.propositional.inversedistr
     </group>
   </rule>
   <rule name="logic.propositional.invdemorganand" buggy="false" rewriterule="false">
@@ -4295,7 +4295,7 @@
       logic.propositional.invdemorganand
     </description>
     <group>
-      InverseDeMorgan
+      logic.propositional.inversedemorgan
     </group>
   </rule>
   <rule name="logic.propositional.invdemorganor" buggy="false" rewriterule="false">
@@ -4303,7 +4303,7 @@
       logic.propositional.invdemorganor
     </description>
     <group>
-      InverseDeMorgan
+      logic.propositional.inversedemorgan
     </group>
   </rule>
   <rule name="logic.propositional.invoroverand" buggy="false" rewriterule="false">
@@ -4311,7 +4311,7 @@
       logic.propositional.invoroverand
     </description>
     <group>
-      InverseDistr
+      logic.propositional.inversedistr
     </group>
   </rule>
   <rule name="logic.propositional.notfalse" buggy="false" rewriterule="true">
@@ -4388,7 +4388,7 @@
       logic.propositional.oroverand
     </description>
     <group>
-      DistributionOrOverAnd
+      logic.propositional.distributionoroverand
     </group>
     <CMP>
       a || b /\ c ~&gt; (a || b) /\ (a || c)
@@ -4476,7 +4476,7 @@
       logic.propositional.trueinequiv
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       T &lt;-&gt; a ~&gt; a
@@ -4528,7 +4528,7 @@
       logic.propositional.trueinimpl
     </description>
     <group>
-      Additional rules
+      logic.propositional.additionalrules
     </group>
     <CMP>
       T -&gt; a ~&gt; a

@@ -44,7 +44,7 @@ linearExercise = makeExercise
                        newId "algebra.equations.linear"
    , status       = Provisional
    , parser       = parseExprWith (pEquation pExpr)
-   , similarity   = eqRelation (acExpr . cleanUpExpr2)
+   , similarity   = eqRelation (acExpr . cleanUpExpr)
    , equivalence  = viewEquivalent linearEquationView
    , isSuitable   = (`belongsTo` linearEquationView)
    , isReady      = solvedRelationWith $ \a -> 
@@ -81,7 +81,7 @@ quadraticExercise = makeExercise
    , parser       = \input -> case parseExprWith (pOrList (pEquation pExpr)) input of
                                  Left err -> Left err
                                  Right xs -> Right (build (switchView equationView) xs)
-   , similarity   = eqOrList cleanUpExpr2
+   , similarity   = eqOrList cleanUpExpr
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
    , isSuitable   = (`belongsTo` (switchView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
@@ -100,7 +100,7 @@ higherDegreeExercise = makeExercise
                         newId "algebra.equations.polynomial"
    , status        = Provisional
    , parser        = parser quadraticExercise
-   , similarity    = eqOrList cleanUpExpr2
+   , similarity    = eqOrList cleanUpExpr
    , eqWithContext = Just $ eqAfterSubstitution $ 
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isSuitable    = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
@@ -122,10 +122,10 @@ quadraticNoABCExercise = quadraticExercise
    , strategy     = configure cfg quadraticStrategy
    }
  where
-   cfg = [ (ByName (showId prepareSplitSquare), Reinsert)
-         , (ByName (showId bringAToOne), Reinsert)
-         , (ByName "abc form", Remove)
-         , (ByName (showId simplerPolynomial), Remove)
+   cfg = [ (byName prepareSplitSquare, Reinsert)
+         , (byName bringAToOne, Reinsert)
+         , (byName (newId "abc form"), Remove)
+         , (byName simplerPolynomial, Remove)
          ]
          
 quadraticWithApproximation :: Exercise (OrList (Relation Expr))
@@ -138,8 +138,8 @@ quadraticWithApproximation = quadraticExercise
    , equivalence  = equivalentApprox
    }
  where
-   cfg = [ (ByName "approximate result", Reinsert)
-         , (ByName "square root simplification", Remove)
+   cfg = [ (byName (newId "approximate result"), Reinsert)
+         , (byName (newId "square root simplification"), Remove)
          ]
 
 findFactorsExercise :: Exercise Expr
@@ -148,7 +148,7 @@ findFactorsExercise = makeExercise
                        newId "algebra.manipulation.polynomial.factor"
    , status       = Provisional
    , parser       = parseExprWith pExpr
-   , similarity   = \a b -> cleanUpExpr2 a == cleanUpExpr2 b
+   , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)
    , strategy     = findFactorsStrategy
@@ -179,7 +179,7 @@ linearFactorsView = productView >>> second (listView myLinearView)
 equivalentApprox :: OrList (Relation Expr) -> OrList (Relation Expr) -> Bool
 equivalentApprox a b
    | hasApprox a || hasApprox b = 
-        let norm = liftM ( normOrList cleanUpExpr2 
+        let norm = liftM ( normOrList cleanUpExpr 
                          . fmap toApprox 
                          . simplify quadraticEquationsView
                          ) . switch . fmap toEq

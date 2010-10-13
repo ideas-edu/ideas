@@ -56,12 +56,12 @@ makeRulePages dir = do
 rulePage :: Exercise a -> ExampleMap a -> [Id] ->  Rule (Context a) -> HTMLBuilder
 rulePage ex exMap usedIn r = do
    idboxHTML "rule" (getId r)
+   let idList = text . commaList . map showId
    para $ table 
       [ [bold $ text "Buggy", text $ showBool (isBuggyRule r)]
       , [bold $ text "Rewrite rule", text $ showBool (isRewriteRule r)]
-      , [bold $ text "Groups", text $ commaList $ ruleGroups r]
-      , [bold $ text "Siblings", text $ commaList $ map showId 
-      $ ruleSiblings r] 
+      , [bold $ text "Groups", idList $ ruleGroups r]
+      , [bold $ text "Siblings", idList $ ruleSiblings r] 
       ]
    when (isRewriteRule r) $ para $
       ruleToHTML (Some ex) r

@@ -282,7 +282,7 @@ decodeConfiguration xml =
             Just a  -> return a
             Nothing -> fail $ "unknown action " ++ show (name item)
       cfgloc <- findAttribute "name" item
-      return $ (ByName cfgloc, action)
+      return $ (byName (newId cfgloc), action)
 
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = do

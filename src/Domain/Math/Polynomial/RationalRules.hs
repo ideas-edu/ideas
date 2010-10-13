@@ -180,7 +180,7 @@ conditionNotZero expr = condition (f xs)
  where
    f  = pushNotWith (Logic.Var . notRelation) . nott
    eq = expr :==: 0
-   xs = fmap (build equationView . fmap cleanUpExpr2) $ 
+   xs = fmap (build equationView . fmap cleanUpExpr) $ 
         case match higherDegreeEquationsView (return eq) of
            Just ys -> build orListView (coverUpOrs (build higherDegreeEquationsView ys))
            Nothing -> Logic.Var (coverUp eq)

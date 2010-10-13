@@ -15,27 +15,27 @@ module Domain.Math.Polynomial.Equivalence
    , eqAfterSubstitution
    ) where
 
-import Common.Context
 import Common.Classes
-import Common.View
-import Data.Maybe
-import Domain.Math.Data.Polynomial hiding (eval)
-import Data.List (sort, nub)
-import Domain.Math.Polynomial.Views
-import Prelude hiding ((^), sqrt)
-import Domain.Logic.Formula hiding (Var, disjunctions)
-import qualified Domain.Logic.Formula as Logic
-import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Numeric.Views
-import Domain.Math.Data.Relation
-import Domain.Math.Data.Interval
-import Domain.Math.SquareRoot.Views
-import Domain.Math.Expr
-import Domain.Math.Data.SquareRoot
-import Control.Monad
-import Domain.Math.Clipboard
+import Common.Context
 import Common.Rewriting hiding (constructor)
 import Common.Uniplate
+import Common.View
+import Control.Monad
+import Data.List (sort, nub)
+import Data.Maybe
+import Domain.Logic.Formula hiding (Var, disjunctions)
+import Domain.Math.Clipboard
+import Domain.Math.Data.Interval
+import Domain.Math.Data.Polynomial hiding (eval)
+import Domain.Math.Data.Relation hiding (eval)
+import Domain.Math.Data.SquareRoot
+import Domain.Math.Expr
+import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Views
+import Domain.Math.SquareRoot.Views
+import Prelude hiding ((^), sqrt)
+import qualified Domain.Logic.Formula as Logic
 
 relationIntervals :: Ord a => RelationType -> a -> Intervals a
 relationIntervals relType a = 
@@ -176,7 +176,7 @@ cuPower rel = do
    (a, b) <- isBinary powerSymbol (leftHandSide rel)
    n <- match integerView b
    guard (n > 0 && noVars (rightHandSide rel))
-   let expr = cleanUpExpr2 (root (rightHandSide rel) (fromIntegral n))
+   let expr = cleanUpExpr (root (rightHandSide rel) (fromIntegral n))
        new = constructor rel a expr
        opp = constructor (flipSides rel) a (-expr)
        rt  = relationType rel

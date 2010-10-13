@@ -12,7 +12,8 @@
 module Common.Strategy.Configuration 
    ( -- Types and constructors
      StrategyConfiguration, ConfigItem
-   , ConfigLocation(..), ConfigAction(..), configActions
+   , ConfigLocation, byName, byGroup
+   , ConfigAction(..), configActions
      --  Configure
   ,  configure, configureNow
      -- Combinators
@@ -31,8 +32,8 @@ type StrategyConfiguration = [ConfigItem]
 type ConfigItem = (ConfigLocation, ConfigAction)
 
 data ConfigLocation
-   = ByName     String
-   | ByGroup    String
+   = ByName  Id
+   | ByGroup Id
  deriving Show
  
 data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
@@ -40,6 +41,12 @@ data ConfigAction = Remove | Reinsert | Collapse | Expand | Hide | Reveal
 
 configActions :: [ConfigAction]
 configActions = [Remove .. ]
+
+byName :: HasId a => a -> ConfigLocation
+byName = ByName . getId
+
+byGroup :: HasId a => a -> ConfigLocation
+byGroup = ByGroup . getId
 
 ---------------------------------------------------------------------
 -- Configure
@@ -66,8 +73,8 @@ getActions :: LabelInfo -> [String]
            -> StrategyConfiguration -> [ConfigAction]
 getActions info groups = map snd . filter (select . fst)
  where
-   select (ByName s)     = getId info == newId s
-   select (ByGroup s)    = s `elem` groups
+   select (ByName a)  = getId info == a
+   select (ByGroup s) = showId s `elem` groups
 
 doAction :: ConfigAction -> LabelInfo -> LabelInfo
 doAction action =

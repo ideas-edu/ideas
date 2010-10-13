@@ -13,6 +13,7 @@ module Domain.RelationAlgebra.Rules where
 
 import Domain.RelationAlgebra.Formula
 import Domain.RelationAlgebra.Generator()
+import Common.Id
 import Common.Transformation (Rule, addRuleToGroup, buggyRule)
 import Common.Rewriting
 import qualified Common.Transformation as Rule
@@ -40,15 +41,19 @@ buggyRelAlgRules = [buggyRuleIdemComp, buggyRuleIdemAdd, buggyRuleDeMorgan
                    , buggyRuleCompOverIntersec, buggyRuleAddOverUnion, buggyRuleRemCompl
                    ]
 
+relalg :: IsId a => a -> Id
+relalg = (#) "relationalgebra"
+
 rule :: (Builder f a, Rewrite a) => String -> f -> Rule a
-rule s = Rule.rule ("relationalgebra." ++ s)
+rule = Rule.rule . relalg
 
 ruleList :: (Builder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList s = Rule.ruleList ("relationalgebra." ++ s)
+ruleList = Rule.ruleList . relalg
                    
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
-conversionGroup s =  addRuleToGroup "Conversion" . rule s
+conversionGroup s = 
+   addRuleToGroup (relalg "Conversion") . rule s
 
 ruleInvOverUnion :: Rule RelAlg
 ruleInvOverUnion = conversionGroup "InvOverUnion" $ 
@@ -79,7 +84,8 @@ ruleDoubleInv = conversionGroup "DoubleInv" $
 
 -- | 2. Alle ; en + operatoren zoveel mogelijk naar binnen verplaatsen 
 
-distributionGroup s =  addRuleToGroup "Distribution" . ruleList s
+distributionGroup s = 
+   addRuleToGroup (relalg "Distribution") . ruleList s
 
 ruleCompOverUnion :: Rule RelAlg
 ruleCompOverUnion = distributionGroup "CompOverUnion" 
@@ -113,7 +119,8 @@ ruleUnionOverIntersec = distributionGroup "UnionOverIntersec"
 
 -- | 4. De Morgan rules
 
-deMorganGroup s = addRuleToGroup "DeMorgan" . rule s
+deMorganGroup s = 
+   addRuleToGroup (relalg "DeMorgan") . rule s
 
 ruleDeMorganOr :: Rule RelAlg
 ruleDeMorganOr = deMorganGroup "DeMorganOr" $
@@ -125,7 +132,8 @@ ruleDeMorganAnd = deMorganGroup "DeMorganAnd" $
 
 -- | 5. Idempotency
 
-idempotencyGroup s = addRuleToGroup "Idempotency" . rule s
+idempotencyGroup s = 
+   addRuleToGroup (relalg "Idempotency") . rule s
 
 ruleIdempOr :: Rule RelAlg
 ruleIdempOr = idempotencyGroup "IdempotencyOr" $
@@ -137,7 +145,8 @@ ruleIdempAnd = idempotencyGroup "IdempotencyAnd" $
 
 -- | 6. Complement
 
-complementGroup s = addRuleToGroup "Complement" . ruleList s
+complementGroup s = 
+   addRuleToGroup (relalg "Complement") . ruleList s
 
 ruleDoubleNegation :: Rule RelAlg
 ruleDoubleNegation = complementGroup "DoubleNegation"
@@ -166,7 +175,8 @@ ruleNotOverAdd = complementGroup "NotOverAdd"
   
 -- | 7. Absorption complement
 
-absorptionGroup s = addRuleToGroup "Absorption" . ruleList s
+absorptionGroup s = 
+   addRuleToGroup (relalg "Absorption") . ruleList s
 
 ruleAbsorpCompl :: Rule RelAlg
 ruleAbsorpCompl = absorptionGroup "AbsorpCompl" 
@@ -194,7 +204,8 @@ ruleAbsorp = absorptionGroup "Absorp"
 
 -- | 8. Remove redundant expressions
 
-simplificationGroup s = addRuleToGroup "Simplification" . ruleList s
+simplificationGroup s = 
+   addRuleToGroup (relalg "Simplification") . ruleList s
 
 ruleRemRedunExprs :: Rule RelAlg
 ruleRemRedunExprs = simplificationGroup "RemRedunExprs"  
@@ -227,7 +238,7 @@ ruleRemRedunExprs = simplificationGroup "RemRedunExprs"
       
 -- Buggy rules:
 
-buggyGroup s = addRuleToGroup "Buggy" . buggyRule 
+buggyGroup s = addRuleToGroup (relalg "Buggy") . buggyRule 
              . Rule.ruleList ("relationalgebra.buggy." ++ s)
     
 buggyRuleIdemComp :: Rule RelAlg

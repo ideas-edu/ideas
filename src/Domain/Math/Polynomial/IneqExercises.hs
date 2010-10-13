@@ -50,7 +50,7 @@ ineqLinearExercise = makeExercise
    , parser       = parseExprWith (pRelation pExpr)
    , isReady      = solvedRelation
    , equivalence  = linEq
-   , similarity   = eqRelation cleanUpExpr2
+   , similarity   = eqRelation cleanUpExpr
    , strategy     = ineqLinear
    , navigation   = termNavigator
    , examples     = let x = Var "x"
@@ -67,7 +67,7 @@ ineqQuadraticExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just quadrEqContext
-   , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
+   , similarity    = simLogic (fmap (normExpr cleanUpExpr) . flipGT)
    , strategy      = ineqQuadratic
    , navigation   = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -84,7 +84,7 @@ ineqHigherDegreeExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just highEqContext
-   , similarity    = simLogic (fmap (normExpr cleanUpExpr2) . flipGT)
+   , similarity    = simLogic (fmap (normExpr cleanUpExpr) . flipGT)
    , strategy      = ineqHigherDegree
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -204,7 +204,7 @@ cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
 cleanUpLogicRelation p = 
    case match orListView p of
       Just xs -> build orListView (cleanUpRelation xs)
-      Nothing -> fmap (fmap cleanUpExpr2) p
+      Nothing -> fmap (fmap cleanUpExpr) p
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $ 

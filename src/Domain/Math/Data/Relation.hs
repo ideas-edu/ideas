@@ -15,7 +15,8 @@ module Domain.Math.Data.Relation
    ( -- * Type class
      Relational(..), mapLeft, mapRight, updateLeft, updateRight
      -- * Relation data type
-   , Relation, relationType, RelationType(..), relationSymbols, notRelation
+   , Relation, relationType, RelationType(..), relationSymbols
+   , notRelation, eval
      -- * Constructor functions
    , makeType, (.==.), (./=.), (.<.), (.>.), (.<=.), (.>=.), (.~=.)
      -- * Equation (or equality)
@@ -108,6 +109,17 @@ notRelation r = r { relationType = relationType r ? table }
         , (LessThan, GreaterThanOrEqualTo)
         , (LessThanOrEqualTo, GreaterThan) 
         ]
+
+eval :: Ord a => RelationType -> a -> a -> Bool
+eval relType =
+   case relType of
+      EqualTo              -> (==)
+      NotEqualTo           -> (/=)
+      LessThan             -> (<)
+      GreaterThan          -> (>)
+      LessThanOrEqualTo    -> (<=)
+      GreaterThanOrEqualTo -> (>=)
+      Approximately        -> (==)
 
 -- helpers   
 showRelType :: RelationType -> String

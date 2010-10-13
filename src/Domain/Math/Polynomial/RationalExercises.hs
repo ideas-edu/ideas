@@ -57,7 +57,7 @@ rationalEquationExercise = makeExercise
    , isSuitable    = isJust . rationalEquations
    , isReady       = solvedRelations
    , eqWithContext = Just eqRationalEquation
-   , similarity    = eqOrList cleanUpExpr2
+   , similarity    = eqOrList cleanUpExpr
    , strategy      = rationalEquationStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
@@ -73,7 +73,7 @@ simplifyRationalExercise = makeExercise
 -- isSuitable
    , isReady       = simplifiedRational
    -- , eqWithContext = Just eqSimplifyRational
-   , similarity    = \x y -> cleanUpExpr2 x == cleanUpExpr2 y
+   , similarity    = \x y -> cleanUpExpr x == cleanUpExpr y
    , strategy      = simplifyRationalStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
@@ -89,7 +89,7 @@ divisionRationalExercise = simplifyRationalExercise
    }
 
 rationalEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr2))) $
+rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr))) $
    label "Rational equation" $ 
        brokenFormToPoly <*> higherDegreeStrategyG <*> checkSolutionStrategy
  where
@@ -109,7 +109,7 @@ allArePoly =
    in maybe False (all f . concatMap crush . crush) .  fromContext
 
 simplifyRationalStrategy :: LabeledStrategy (Context Expr)
-simplifyRationalStrategy = cleanUpStrategy (applyTop cleanUpExpr2) $
+simplifyRationalStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
    label "Simplify rational expression" $
       phaseOneDiv <*> phaseSimplerDiv
  where
@@ -131,7 +131,7 @@ isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
 -- propagated correctly to predicate in check combinator, hence the use of
 -- cleanUpStrategy (which is not desirable here).
 commit :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
-commit s = let cs  = cleanUpStrategy (applyTop cleanUpExpr2) (label "" s)
+commit s = let cs  = cleanUpStrategy (applyTop cleanUpExpr) (label "" s)
                f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
            in check (applicable cs . f) <*> s
 
@@ -187,10 +187,10 @@ restrictOrList p0 = maybe true (orList . filter check) . disjunctions
    check zeroExpr = 
       case coverUp (zeroExpr :==: 0) of 
          Var x :==: a -> -- returns true if a contradiction was not found
-            substVar x (cleanUpExpr2 a) p0 /= F 
+            substVar x (cleanUpExpr a) p0 /= F 
          _ -> True
 
-   substVar x a = Logic.simplify . catLogic . fmap (simpler . fmap (cleanUpExpr2 . subst))
+   substVar x a = Logic.simplify . catLogic . fmap (simpler . fmap (cleanUpExpr . subst))
     where 
       subst (Var s) | x == s = a
       subst expr = descend subst expr
@@ -222,8 +222,8 @@ eqSimplifyRational ca cb = fromMaybe False $ do
    b <- fromContext cb
    let t1@(a1, a2, pa) = rationalExpr a
        t2@(b1, b2, pb) = rationalExpr b
-       a1c = cleanUpExpr2 a1
-       b1c = cleanUpExpr2 b1
+       a1c = cleanUpExpr a1
+       b1c = cleanUpExpr b1
        manyVars = length (nub (collectVars a ++ collectVars b)) > 1
    if manyVars then return True else do
    p1 <- match (polyViewWith rationalView) a1c

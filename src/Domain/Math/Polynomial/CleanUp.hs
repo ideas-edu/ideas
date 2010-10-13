@@ -15,7 +15,7 @@ module Domain.Math.Polynomial.CleanUp
    , normalizeSum, normalizeProduct, acExpr, smart
    ) where
 
--- import Common.Utils (fixpoint)
+import Common.Utils (fixpoint)
 import Common.Uniplate
 import Common.View
 import Control.Monad
@@ -94,7 +94,7 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
 -- Cleaning up
 
 cleanUpSimple :: Expr -> Expr
-cleanUpSimple = transform (f2 . f1)
+cleanUpSimple = fixpoint (transform (f2 . f1))
  where
    use v = simplifyWith (assocPlus v) sumView
    f1 = use rationalView
@@ -126,7 +126,8 @@ cleanUpRelation = f . fmap cleanUpBU
    
 -- also simplify square roots
 cleanUpExpr :: Expr -> Expr
-cleanUpExpr = cleanUpBU . transform (simplify (squareRootViewWith rationalView))
+cleanUpExpr = fixpoint $ 
+   cleanUpBU . transform (simplify (squareRootViewWith rationalView))
 
 -- normalize expr with associativity and commutative rules for + and *
 acExpr :: Expr -> Expr

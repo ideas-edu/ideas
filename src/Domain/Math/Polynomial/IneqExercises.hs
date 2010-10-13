@@ -198,7 +198,8 @@ ineqQuadratic = cleanUpStrategy (applyTop cleanUpLogicRelation) $
 ineqHigherDegree :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqHigherDegree = cleanUpStrategy (applyTop cleanUpLogicRelation) $
    label "Inequality of a higher degree" $ 
-      try (useC turnIntoEquation) 
+      use trivialRelation
+       |> try (useC turnIntoEquation) 
       <*> higherDegreeStrategyG
       <*> useC solutionInequation
 

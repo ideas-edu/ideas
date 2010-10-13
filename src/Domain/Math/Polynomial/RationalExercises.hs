@@ -24,12 +24,12 @@ import Common.Strategy hiding (not)
 import Common.Uniplate
 import Common.View
 import Control.Monad
-import Data.List hiding (repeat)
+import Data.List hiding (repeat, replicate)
 import Data.Maybe
 import Domain.Logic.Formula hiding (disjunctions, Var)
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
-import Domain.Logic.Views
+import Domain.Logic.Views hiding (simplify)
 import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -46,7 +46,8 @@ import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Domain.Math.SquareRoot.Views
-import Prelude hiding (repeat, until, (^))
+import Domain.Math.Power.Views
+import Prelude hiding (repeat, replicate, until, (^))
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
@@ -79,6 +80,8 @@ simplifyRationalExercise = makeExercise
    , navigation    = termNavigator
    , examples      = concat (normBroken ++ normBroken2)
    }
+  
+bug = printDerivation simplifyRationalExercise  (examples simplifyRationalExercise !! 0)
    
 divisionRationalExercise :: Exercise Expr
 divisionRationalExercise = simplifyRationalExercise
@@ -89,10 +92,15 @@ divisionRationalExercise = simplifyRationalExercise
    }
 
 rationalEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleanUpExpr))) $
+rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleaner))) $
    label "Rational equation" $ 
        brokenFormToPoly <*> higherDegreeStrategyG <*> checkSolutionStrategy
  where
+   -- a custom-made clean-up function. (Standard) cleanUpExpr function 
+   -- has some strange interaction with the rules
+   cleaner = transform (simplify (powerFactorViewWith rationalView)) 
+           . cleanUpSimple . transform smart
+   
    brokenFormToPoly = label "rational form to polynomial" $ until allArePoly $
       (  useC divisionIsZero <|> useC divisionIsOne 
      <|> useC sameDivisor <|> useC sameDividend
@@ -109,10 +117,14 @@ allArePoly =
    in maybe False (all f . concatMap crush . crush) .  fromContext
 
 simplifyRationalStrategy :: LabeledStrategy (Context Expr)
-simplifyRationalStrategy = cleanUpStrategy (applyTop cleanUpExpr) $
+simplifyRationalStrategy = cleanUpStrategy (applyTop cleaner) $
    label "Simplify rational expression" $
       phaseOneDiv <*> phaseSimplerDiv
  where
+   -- a custom-made clean-up function. (Standard) cleanUpExpr function 
+   -- has some strange interaction with the rules
+   cleaner = transform (simplify (powerFactorViewWith rationalView)) . cleanUpSimple
+ 
    phaseOneDiv = label "Write as division" $
       until isDivC $ 
          use fractionPlus <|> use fractionScale <|> use turnIntoFraction

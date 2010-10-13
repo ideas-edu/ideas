@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.remove-div">
       <expr>
@@ -6,11 +6,6 @@
       </expr>
     </elem>
     <elem ruleid="algebra.equations.linear.distr-times">
-      <expr>
-        -3*x-6 == 36*x+18-10
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         -3*x-6 == 36*x+8
       </expr>

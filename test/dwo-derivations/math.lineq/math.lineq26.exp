@@ -1,11 +1,6 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="algebra.equations.linear.distr-times">
-      <expr>
-        12*x-3+3 == 7*x-14
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.linear.merge">
       <expr>
         12*x == 7*x-14
       </expr>

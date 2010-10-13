@@ -12,7 +12,7 @@
 module Domain.Math.Polynomial.CleanUp 
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
    , cleanUpSimple, collectLikeTerms
-   , normalizeSum, normalizeProduct, acExpr
+   , normalizeSum, normalizeProduct, acExpr, smart
    ) where
 
 -- import Common.Utils (fixpoint)
@@ -94,12 +94,11 @@ normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
 -- Cleaning up
 
 cleanUpSimple :: Expr -> Expr
-cleanUpSimple = transform (f4 . f2 . f1)
+cleanUpSimple = transform (f2 . f1)
  where
    use v = simplifyWith (assocPlus v) sumView
-   f1    = simplify rationalView
-   f2    = use identity
-   f4    = smartConstructors
+   f1 = use rationalView
+   f2 = smartConstructors
 
 cleanUpRelations :: OrList (Relation Expr) -> OrList (Relation Expr)
 cleanUpRelations = idempotent . join . fmap cleanUpRelation
@@ -185,12 +184,11 @@ cleanUpBU = {- fixpoint $ -} transform $ \e ->
          assocPlus myView xs
     `mplus` do
       canonical myView e
-      {-
     `mplus` do
       (b, xs) <- match productView e
       guard (length xs > 1)
       return $ build productView 
-         (b, assoTimes myView xs) -}
+         (b, assocTimes myView xs)
  where
    myView = powerFactorViewWith rationalView
 

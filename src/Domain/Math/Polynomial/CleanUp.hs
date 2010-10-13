@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.CleanUp 
-   ( cleanUpRelation, cleanUpExpr
+   ( cleanUpRelations, cleanUpRelation, cleanUpExpr
    , cleanUpSimple, collectLikeTerms
    , normalizeSum, normalizeProduct, acExpr
    ) where
@@ -101,14 +101,15 @@ cleanUpSimple = transform (f4 . f2 . f1)
    f2    = use identity
    f4    = smartConstructors
 
-cleanUpRelation :: OrList (Relation Expr) -> OrList (Relation Expr)
-cleanUpRelation = idempotent . join . fmap (keep . fmap cleanUpBU)
+cleanUpRelations :: OrList (Relation Expr) -> OrList (Relation Expr)
+cleanUpRelations = idempotent . join . fmap cleanUpRelation
+
+cleanUpRelation :: Relation Expr -> OrList (Relation Expr)
+cleanUpRelation = f . fmap cleanUpBU
  where
-   keep :: Relation Expr -> OrList (Relation Expr)
-   keep rel
+   f rel
       | any falsity (universe a ++ universe b) = false
-      | a == b && relationType rel == EqualTo =  -- TODO: remove (==EqualTo) condition
-           fromBool (relationType rel `elem` equals)
+      | a == b    = fromBool (relationType rel `elem` equals)
       | otherwise = 
            case (match rationalView a, match rationalView b) of
               (Just r, Just s) -> fromBool (eval (relationType rel) r s)
@@ -116,8 +117,8 @@ cleanUpRelation = idempotent . join . fmap (keep . fmap cleanUpBU)
     where
       (a, b) = (leftHandSide rel, rightHandSide rel)
 
-      equals = 
-         [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo, Approximately]
+   equals = 
+      [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo, Approximately]
 
    falsity :: Expr -> Bool
    falsity (Sqrt e)  = maybe False (<0)  (match rationalView e)

@@ -73,7 +73,7 @@ linearStrategyG =
 
 quadraticStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 quadraticStrategy = 
-   cleanUpStrategy (applyTop cleanUpRelation) quadraticStrategyG
+   cleanUpStrategy (applyTop cleanUpRelations) quadraticStrategyG
 
 quadraticStrategyG :: IsTerm a => LabeledStrategy (Context a)
 quadraticStrategyG = 
@@ -137,7 +137,7 @@ quadraticStrategyG =
 
 higherDegreeStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 higherDegreeStrategy = 
-   cleanUpStrategy (applyTop cleanUpRelation) higherDegreeStrategyG
+   cleanUpStrategy (applyTop cleanUpRelations) higherDegreeStrategyG
 
 higherDegreeStrategyG :: IsTerm a => LabeledStrategy (Context a)
 higherDegreeStrategyG = label "higher degree" $ 

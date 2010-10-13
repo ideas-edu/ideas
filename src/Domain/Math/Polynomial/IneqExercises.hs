@@ -23,7 +23,7 @@ import Control.Monad
 import Data.List (nub, sort)
 import Data.Maybe (fromMaybe)
 import Domain.Math.Data.Interval
-import Domain.Logic.Formula (Logic((:||:), (:&&:)))
+import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
 import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -40,6 +40,7 @@ import Domain.Math.Polynomial.Equivalence
 import Domain.Math.SquareRoot.Views
 import Prelude hiding (repeat)
 import qualified Domain.Logic.Formula as Logic
+import qualified Domain.Logic.Views as Logic
 import Common.Rewriting (IsTerm)
 
 ineqLinearExercise :: Exercise (Relation Expr)
@@ -69,7 +70,7 @@ ineqQuadraticExercise = makeExercise
    , eqWithContext = Just quadrEqContext
    , similarity    = simLogic (fmap (normExpr cleanUpExpr) . flipGT)
    , strategy      = ineqQuadratic
-   , navigation   = termNavigator
+   , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , examples      = map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
@@ -189,7 +190,8 @@ flipSign = describe "Flip sign of inequality" $
 ineqQuadratic :: LabeledStrategy (Context (Logic (Relation Expr)))
 ineqQuadratic = cleanUpStrategy (applyTop cleanUpLogicRelation) $ 
    label "Quadratic inequality" $ 
-      try (useC turnIntoEquation) 
+      use trivialRelation
+       |> try (useC turnIntoEquation) 
       <*> quadraticStrategyG
       <*> useC solutionInequation
 
@@ -200,11 +202,22 @@ ineqHigherDegree = cleanUpStrategy (applyTop cleanUpLogicRelation) $
       <*> higherDegreeStrategyG
       <*> useC solutionInequation
 
+-- First, cleanup expression. Then, cleanup equations only (there is an 
+-- explicit rule for the other relations). Finally, simplify the logical
+-- proposition (including impotency or).
 cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
-cleanUpLogicRelation p = 
-   case match orListView p of
-      Just xs -> build orListView (cleanUpRelation xs)
-      Nothing -> fmap (fmap cleanUpExpr) p
+cleanUpLogicRelation = 
+   let f a | relationType a == EqualTo = build orListView (cleanUpRelation a)
+           | otherwise                 = Logic.Var a
+   in simplifyWith idempotent orListView . Logic.simplify 
+    . catLogic . fmap (f . fmap cleanUpExpr)
+   
+trivialRelation :: Rule (OrList (Relation Expr))
+trivialRelation = describe "" $ 
+   makeSimpleRule (ineq, "trivial") $ oneDisjunct $ \a -> do
+      let new = cleanUpRelation a
+      guard (isTrue new || isFalse new)
+      return new
 
 turnIntoEquation :: Rule (Context (Relation Expr))
 turnIntoEquation = describe "Turn into equation" $ 

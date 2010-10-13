@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
@@ -18,7 +18,7 @@
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
-        x*((x+4)*(x+6))/((x+1)*(x+6))
+        x*(x+4)*(x+6)/((x+1)*(x+6))
       </expr>
       <context>
         <item name="location" value="[1,2]"/>

@@ -25,10 +25,11 @@ infixl 7 .*., ./.
 infixl 6 .-., .+.
 
 (.+.) :: Expr -> Expr -> Expr
-Nat 0 .+. b        = b
-a     .+. Nat 0    = a
-a     .+. Negate b = a .-. b
-a     .+. b        = a :+: b
+Nat 0 .+. b         = b
+a     .+. Nat 0     = a
+a     .+. Negate b  = a .-. b
+a     .+. (b :+: c) = (a .+. b) .+. c
+a     .+. b         = a :+: b
 
 (.-.) :: Expr -> Expr -> Expr
 Nat 0 .-. b        = neg b
@@ -44,14 +45,15 @@ neg (a :-: b)  = neg a .+. b
 neg a          = Negate a
 
 (.*.) :: Expr -> Expr -> Expr
-Nat 0    .*. _        = Nat 0
-_        .*. Nat 0    = Nat 0
-Nat 1    .*. b        = b
-a        .*. Nat 1    = a
-Negate a .*. b        = neg (a .*. b)
-a        .*. Negate b = neg (a .*. b)
+Nat 0    .*. _             = Nat 0
+_        .*. Nat 0         = Nat 0
+Nat 1    .*. b             = b
+a        .*. Nat 1         = a
+Negate a .*. b             = neg (a .*. b)
+a        .*. Negate b      = neg (a .*. b)
 a        .*. (Nat 1 :/: b) = a ./. b
-a        .*. b        = a :*: b
+a        .*. (b :*: c)     = (a .*. b) .*. c
+a        .*. b             = a :*: b
 
 (./.) :: Expr -> Expr -> Expr
 a ./. Nat 1           = a

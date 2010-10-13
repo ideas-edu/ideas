@@ -21,14 +21,14 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Expr
 
 plusT, minusT :: Functor f => Expr -> Transformation (f Expr)
-plusT  e = makeTrans $ return . fmap (.+. e)
-minusT e = makeTrans $ return . fmap (.-. e)
+plusT  e = makeTrans $ return . fmap (:+: e)
+minusT e = makeTrans $ return . fmap (:-: e)
 
 timesT :: Functor f => Expr -> Transformation (f Expr)
-timesT e = makeTrans $ unlessZero e . fmap (e .*.)
+timesT e = makeTrans $ unlessZero e . fmap (e :*:)
 
 divisionT :: Expr -> Transformation (Equation Expr)
-divisionT e = makeTrans $ unlessZero e . fmap (./. e)
+divisionT e = makeTrans $ unlessZero e . fmap (:/: e)
 
 unlessZero :: MonadPlus m => Expr -> a -> m a
 unlessZero e a = do

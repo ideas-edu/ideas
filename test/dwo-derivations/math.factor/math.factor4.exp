@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
@@ -7,7 +7,7 @@
     </elem>
     <elem ruleid="algebra.equations.polynomial.simpler-linfactor">
       <expr>
-        x*(2*(7*x-5))
+        x*2*(7*x-5)
       </expr>
       <context>
         <item name="location" value="[2]"/>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="calculus.differentiation.plus">
       <expr>
@@ -23,7 +23,7 @@
     </elem>
     <elem ruleid="calculus.differentiation.deriv-of-poly">
       <expr>
-        (-x^2-1-(2-x)*(2*x))/(x^2+1)^2+D(x) (2*x^3)
+        (-x^2-1-(2-x)*2*x)/(x^2+1)^2+D(x) (2*x^3)
       </expr>
       <context>
         <item name="location" value="[0,0,1,1]"/>
@@ -31,7 +31,7 @@
     </elem>
     <elem ruleid="calculus.differentiation.deriv-of-poly">
       <expr>
-        (-x^2-1-(2-x)*(2*x))/(x^2+1)^2+6*x^2
+        (-x^2-1-(2-x)*2*x)/(x^2+1)^2+6*x^2
       </expr>
       <context>
         <item name="location" value="[1]"/>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="calculus.differentiation.quotient">
       <expr>
@@ -7,7 +7,7 @@
     </elem>
     <elem ruleid="calculus.differentiation.deriv-of-poly">
       <expr>
-        ((5*x^2+7)*(9*x^2)-3*x^3*D(x) (5*x^2+7))/(5*x^2+7)^2
+        ((5*x^2+7)*9*x^2-3*x^3*D(x) (5*x^2+7))/(5*x^2+7)^2
       </expr>
       <context>
         <item name="location" value="[0,0,1]"/>
@@ -15,7 +15,7 @@
     </elem>
     <elem ruleid="calculus.differentiation.deriv-of-poly">
       <expr>
-        ((5*x^2+7)*(9*x^2)-30*x^4)/(5*x^2+7)^2
+        ((5*x^2+7)*9*x^2-30*x^4)/(5*x^2+7)^2
       </expr>
       <context>
         <item name="location" value="[0,1,1]"/>

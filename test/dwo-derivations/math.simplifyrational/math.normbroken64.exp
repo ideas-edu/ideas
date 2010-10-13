@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.6.6 (0)">
   <list>
     <elem ruleid="algebra.equations.polynomial.factor-varpower">
       <expr>
@@ -10,7 +10,7 @@
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
-        (x^2+3*x-4)/(x*((x-1)*(x-5)))
+        (x^2+3*x-4)/(x*(x-1)*(x-5))
       </expr>
       <context>
         <item name="location" value="[2,2]"/>
@@ -18,7 +18,7 @@
     </elem>
     <elem ruleid="algebra.equations.quadratic.nice-factors">
       <expr>
-        (x-1)*(x+4)/(x*((x-1)*(x-5)))
+        (x-1)*(x+4)/(x*(x-1)*(x-5))
       </expr>
       <context>
         <item name="location" value="[1]"/>

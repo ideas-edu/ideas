@@ -11,11 +11,11 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.NormViews 
-   ( -- * Normalising views
+{-   ( -- * Normalising views
      normPowerView, normPowerMapView, normPowerNonNegRatio, normExpEqView
    , normPowerNonNegDouble, normPowerEqApproxView, normPowerEqView
    , normLogEqView, myRationalView
-   ) where
+   ) -} where
 
 import Prelude hiding ((^), recip)
 import qualified Prelude
@@ -169,7 +169,7 @@ normPowerEqApproxView d = makeView f (uncurry (.~=.))
       Approximately ->  return (leftHandSide rel, rightHandSide rel)
       _             ->  Nothing
 
-normPowerEqView :: View (Equation Expr) (Expr, Expr)
+normPowerEqView :: View (Equation Expr) (Expr, Expr) -- with x>0!
 normPowerEqView = makeView f (uncurry (:==:))
   where
     f expr = do
@@ -189,7 +189,12 @@ normPowerEqView = makeView f (uncurry (:==:))
 constRight (lhs :==: rhs) = do
   (vs, cs) <- match sumView lhs >>= return . partition (not . null . collectVars)
   let rhs' = rhs .+. build sumView (map neg cs)
-  return $ build sumView vs :==: simplifyWith normalizeSum sumView rhs'
+  return $ negateEq $ build sumView vs :==: simplifyWith normalizeSum sumView rhs'
+
+negateEq (lhs :==: rhs) = 
+  case lhs of
+    Negate lhs' -> lhs' :==: neg rhs
+    _           -> lhs  :==: rhs
 
 varLeft (lhs :==: rhs) = do
   (vs, cs) <- match sumView rhs >>= return . partition (not . null . collectVars)
@@ -209,13 +214,14 @@ normExpEqView = makeView f id >>> linearEquationView
         Just (b, x) -> x :==: simplify normLogView (logBase b r)
         Nothing     -> l :==: r
 
-normLogEqView :: View (OrList (Equation Expr)) (OrList (String, SQ.SquareRoot Rational))
-normLogEqView = makeView (switch . fmap f) id >>> quadraticEquationsView
+normLogEqView :: View (OrList (Equation Expr)) (OrList (Equation Expr))
+normLogEqView = makeView (liftM g . switch . fmap f) id  -- AG: needs to be replaced by higherOrderEqView
   where
-    f expr@(lhs :==: rhs) = do
-      return $ case match logView lhs of
+    f expr@(lhs :==: rhs) = return $
+      case match logView lhs of
         Just (b, x) -> x :==: simplify myRationalView (b .^. rhs)
         Nothing     -> expr
+    g = fmap (simplify normPowerEqView) . simplify quadraticEquationsView 
 
 normLogView :: View Expr Expr
 normLogView = makeView g id

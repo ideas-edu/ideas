@@ -11,14 +11,14 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-   ( powerStrategy
+{-   ( powerStrategy
    , powerOfStrategy
    , calcPowerStrategy
    , nonNegExpStrategy
    , powerEquationStrategy
    , expEqStrategy
    , logEqStrategy
-   ) where
+   ) -} where
 
 import Common.Classes
 import Common.Context
@@ -32,6 +32,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpRules --(coverUpNegate, coverUpRules)
 import Domain.Math.Polynomial.Strategies (quadraticStrategy)
+import Domain.Math.Polynomial.Rules (flipEquation)
 import Domain.Math.Power.Rules
 import Domain.Math.Power.NormViews (myRationalView)
 import Domain.Math.Numeric.Rules
@@ -44,13 +45,17 @@ import Prelude hiding (repeat, not)
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = cleanUpStrategy cleanup strat
   where 
-    strat   = label "" $ (use logarithm) <*> quadraticStrategy
+    strat   =  label "Logarithmic equation"
+            $  (use logarithm)       -- logarithmic rules
+           <*> try (use flipEquation)
+           <*> try (use nthRoot)
+           <*> quadraticStrategy
     cleanup = applyTop (fmap (mapRight (simplify myRationalView)))
 
 powerEquationStrategy :: LabeledStrategy (Context (Relation Expr))
 powerEquationStrategy = cleanUpStrategy cleanup strat
   where 
-    strat = label "" $
+    strat = label "Power equation" $
       repeat (  try (use scaleConFactor)
             <*> option (somewhere (use greatestPower) <*> use commonPower)
             <*> (use nthRoot <|> use nthPower <|> use varLeftConRight)
@@ -63,7 +68,7 @@ powerEquationStrategy = cleanUpStrategy cleanup strat
 expEqStrategy :: LabeledStrategy (Context (Equation Expr))
 expEqStrategy = cleanUpStrategy cleanup strat
   where 
-    strat =  label "" 
+    strat =  label "Exponential equation" 
           $  coverup
          <*> try (somewhere (use factorAsPower))
          <*> powerS 
@@ -129,7 +134,7 @@ nonNegExpStrategy = cleanUpStrategy cleanup $ strategise "non neg exponent" rule
     cleanup = applyD $ repeat $ alternatives $
                 simp : (map (somewhere . liftToContext) $ calcPower : naturalRules)
     simp = (liftToContext simplifyFraction) <*> not (somewhere $ liftToContext myFractionTimes)
-
+  
 calcPowerStrategy :: LabeledStrategy (Context Expr)
 calcPowerStrategy = makeStrategy "calcPower" rules cleanupRules
   where
@@ -176,12 +181,12 @@ naturalRules =
    , negateZero
    , plusNegateLeft
    , plusNegateRight
-   , minusNegateLeft
+--   , minusNegateLeft
    , minusNegateRight
    , timesNegateLeft
    , timesNegateRight   
    , divisionNegateLeft
-   , divisionNegateRight  
+   , divisionNegateRight
    ]
 
 myNatView = makeView f fromInteger

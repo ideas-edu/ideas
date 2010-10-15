@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.logarithmic.equation" encoding="string">
+  <state>
+    <expr>
+      log 2 (x^2-1) == 3
+    </expr>
+  </state>
+</request>

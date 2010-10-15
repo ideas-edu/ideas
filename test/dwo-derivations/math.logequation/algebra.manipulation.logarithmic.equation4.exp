@@ -1,0 +1,28 @@
+<reply result="ok" version="0.6.6 (3597)">
+  <list>
+    <elem ruleid="algebra.manipulation.logarithmic.logarithm">
+      <expr>
+        1/10*x-3 == 5^(-1)
+      </expr>
+    </elem>
+    <elem ruleid="arithmetic.operation.rational.power">
+      <expr>
+        1/10*x-3 == 1/5
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
+      <expr>
+        1/10*x == 16/5
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 32
+      </expr>
+    </elem>
+  </list>
+</reply>
+

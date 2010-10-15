@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.logarithmic.equation" encoding="string">
+  <state>
+    <expr>
+      log x 4 == -1
+    </expr>
+  </state>
+</request>

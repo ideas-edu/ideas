@@ -1,0 +1,28 @@
+<reply result="ok" version="0.6.6 (3597)">
+  <list>
+    <elem ruleid="algebra.manipulation.logarithmic.logarithm">
+      <expr>
+        x^2-1 == 2^3
+      </expr>
+    </elem>
+    <elem ruleid="arithmetic.operation.rational.power">
+      <expr>
+        x^2-1 == 8
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
+      <expr>
+        x^2 == 9
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.power">
+      <expr>
+        x == 3 or x == -3
+      </expr>
+    </elem>
+  </list>
+</reply>
+

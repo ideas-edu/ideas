@@ -1,0 +1,23 @@
+<reply result="ok" version="0.6.6 (3597)">
+  <list>
+    <elem ruleid="algebra.manipulation.logarithmic.logarithm">
+      <expr>
+        x-2 == 3^2
+      </expr>
+    </elem>
+    <elem ruleid="arithmetic.operation.rational.power">
+      <expr>
+        x-2 == 9
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
+      <expr>
+        x == 11
+      </expr>
+    </elem>
+  </list>
+</reply>
+

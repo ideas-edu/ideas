@@ -1,0 +1,15 @@
+<reply result="ok" version="0.6.6 (3597)">
+  <list>
+    <elem ruleid="algebra.manipulation.logarithmic.logarithm">
+      <expr>
+        7 == x
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.linear.flip">
+      <expr>
+        x == 7
+      </expr>
+    </elem>
+  </list>
+</reply>
+

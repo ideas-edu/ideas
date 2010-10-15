@@ -19,7 +19,7 @@ module Domain.Math.Data.PrimeFactors
 import qualified Data.IntMap as IM
 import Common.Utils
 import Control.Monad
-import Data.List (unfoldr)
+import Data.Maybe
 import Debug.Trace
 
 -------------------------------------------------------------
@@ -135,16 +135,18 @@ greatestPower n = do
   return (fromIntegral (product as), fromIntegral x)
 
 -- n == a^x with (a,x) == greatestPower n
-prop_greatestPower n = traceShow n $ 
-  maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
+-- prop_greatestPower n = traceShow n $ 
+--   maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
 
 allPowers :: Integer -> [(Integer, Integer)]
-allPowers = maybe [] (unfoldr f . (,) 1) . greatestPower
-  where
-    f (i, (base, exp)) = do
-      let e = exp `div` i 
-      guard $ e > 1 
-      return ((base^i, e), (i+1, (base, exp)))
+allPowers n = do
+  (b, exp) <- maybeToList $ greatestPower n 
+  let f i = let (e, r) = exp `divMod` i
+            in if e > 1 && r == 0 then Just (b^i, e) else Nothing
+  mapMaybe f [1..exp]
+
+-- prop_allPowers n = traceShow n $ 
+--   and (map (\(a,x) -> fromIntegral a ^ fromIntegral x == n) (allPowers n))
 
 -- splitPower i a = (b,c)  
 --  => b^i * c = a

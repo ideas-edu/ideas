@@ -87,6 +87,8 @@ logEquationExercise = makeExercise
   , isReady        = solvedRelations
   , isSuitable     = (`belongsTo` (switchView equationView >>> normLogEqView))
   , equivalence    = viewEquivalent (switchView equationView >>> normLogEqView)
+  , ruleOrdering   = ruleOrderingWithId [ getId calcPower
+                                        , getId calcRoot ]
   }
 
 powerExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
@@ -183,4 +185,5 @@ showAllDerivations ex =
                         
 a = Var "a"
 b = Var "b"
+x = Var "x"
 

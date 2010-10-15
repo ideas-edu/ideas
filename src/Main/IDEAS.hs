@@ -105,6 +105,7 @@ packages =
    , someTermPackage Math.calcPowerExercise
    , someTermPackage Math.powerEquationExercise
    , someTermPackage Math.expEquationExercise
+   , someTermPackage Math.logEquationExercise
      -- linear algebra
    , someTermPackage LA.gramSchmidtExercise
    , someTermPackage LA.linearSystemExercise

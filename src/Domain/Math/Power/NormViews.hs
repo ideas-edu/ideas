@@ -36,7 +36,6 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views (linearEquationView, quadraticEquationsView)
 import Domain.Math.Polynomial.CleanUp (normalizeProduct, normalizeSum)
 import Domain.Math.Power.Views
-import qualified Domain.Math.Data.SquareRoot as SQ
 
 normPowerNonNegRatio :: View Expr (M.Map String Rational, Rational) -- (Rational, M.Map String Rational)
 normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
@@ -221,7 +220,9 @@ normLogEqView = makeView (liftM g . switch . fmap f) id  -- AG: needs to be repl
       case match logView lhs of
         Just (b, x) -> x :==: simplify myRationalView (b .^. rhs)
         Nothing     -> expr
-    g = fmap (simplify normPowerEqView) . simplify quadraticEquationsView 
+    g = fmap (fmap (simplify myRationalView)) 
+      . fmap (simplify normPowerEqView) 
+      . simplify quadraticEquationsView 
 
 normLogView :: View Expr Expr
 normLogView = makeView g id

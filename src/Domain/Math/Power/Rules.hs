@@ -13,7 +13,7 @@ module Domain.Math.Power.Rules
   ( -- * Power rules
     calcPower, calcPowerPlus, calcPowerMinus, addExponents, mulExponents
   , subExponents, distributePower, distributePowerDiv, zeroPower, reciprocal
-  , reciprocalInv, reciprocalFrac
+  , reciprocalInv, reciprocalFrac, greedyCalcPower, calcPowerRatio, calcRoot
     -- * General power rules
   , addExponentsG, reciprocalG, root2powerG
     -- * Power equation rules
@@ -40,6 +40,7 @@ import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Ratio
 import Domain.Math.Approximation (precision)
 import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
@@ -174,6 +175,34 @@ calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do
   if x > 0 
     then return $ fromRational $ a Prelude.^ x
     else return $ 1 ./. (e1 .^. neg e2)
+
+-- | a^(x/y) => (a^x)^(1/y)
+calcPowerRatio :: Rule Expr
+calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
+  (a, rx) <- match simplePowerView expr
+  x       <- match rationalView rx
+  guard $ numerator x /= 1 && denominator x /= 1
+  return $ (a .^. fromInteger (numerator x)) .^. (1 ./. fromInteger (denominator x))  
+
+calcRoot :: Rule Expr -- x>0 !!!
+calcRoot = makeSimpleRule (power, "root") $ \ expr -> do
+  (a, rx) <- match simplePowerView expr
+  n       <- match integerView a
+  x       <- match rationalView rx  
+  guard $ numerator x == 1 
+  liftM fromInteger $ lookup (denominator x) $ map (\(a,b)->(b,a)) (PF.allPowers n)
+
+greedyCalcPower :: Rule Expr 
+greedyCalcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 
+  (e1, e2) <- match simplePowerView expr
+  b        <- match rationalView e1
+  x        <- match rationalView e2
+  let n = b Prelude.^ abs (numerator x)
+  n' <- if denominator x == 1 
+      then return n
+      else  match integerView (fromRational n) 
+        >>= liftM fromInteger . lookup (denominator x) . map (\(a,b)->(b,a)) . PF.allPowers
+  return $ fromRational $ if numerator x < 0 then 1/n' else n'
 
 calcPowerPlus :: Rule Expr 
 calcPowerPlus = 

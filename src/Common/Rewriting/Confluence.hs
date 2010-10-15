@@ -9,7 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Confluence (isConfluent, checkConfluence) where
+module Common.Rewriting.Confluence 
+   ( isConfluent, checkConfluence, checkConfluenceWith
+   ) where
 
 import Common.Id
 import Common.Rewriting.RewriteRule
@@ -21,12 +23,15 @@ import Control.Monad
 
 unifyM :: Term -> Term -> [Substitution] -- temporary (partial) implementation
 unifyM (Con s) (Con t) = [ emptySubst | s == t ]
+unifyM (Num s) (Num t) = [ emptySubst | s == t ]
 unifyM (Meta i) (Meta j) = [if i==j then emptySubst else singletonSubst i (Meta j)]
 unifyM (Meta i) t = [ singletonSubst i t | not (i `hasMetaVar` t) ]
 unifyM t (Meta i) = unifyM (Meta i) t
 unifyM (Apply f a) (Apply g b) = unifyListM [f, a] [g, b]
 unifyM (Apply _ _) (Con _) = []
 unifyM (Con _) (Apply _ _) = []
+unifyM (Apply _ _) (Num _) = []
+unifyM (Num _) (Apply _ _) = []
 unifyM x y = error ("unifyM: " ++ show (x, y))
 
 unifyListM :: [Term] -> [Term] -> [Substitution]
@@ -74,6 +79,9 @@ applyAtM is f = foldr applyToM f is
 
 ----------------------------------------------------
 
+type Pair   a = (RewriteRule a, Term)
+type Triple a = (RewriteRule a, Term, Term)
+
 superImpose :: RewriteRule a -> RewriteRule a -> [([Int], Term)]
 superImpose r1 r2 =
    [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
@@ -88,7 +96,7 @@ superImpose r1 r2 =
                   [] -> id
                   xs -> renumberRewriteRule (maximum xs + 1)
 
-criticalPairs :: [RewriteRule a] -> [(Term, (RewriteRule a, Term), (RewriteRule a, Term))]
+criticalPairs :: [RewriteRule a] -> [(Term, Pair a, Pair a)]
 criticalPairs rs = 
    [ (a, (r1, b1), (r2, b2)) 
    | r1       <- rs
@@ -99,7 +107,7 @@ criticalPairs rs =
    , b1 /= b2 
    ]
 
-noDiamondPairs :: [RewriteRule a] -> [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))]
+noDiamondPairs :: [RewriteRule a] -> [(Term, Triple a, Triple a)]
 noDiamondPairs rs = noDiamondPairsWith (normalForm rs) rs
 
 noDiamondPairsWith :: (Term -> Term) -> [RewriteRule a] -> [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))]
@@ -110,15 +118,15 @@ noDiamondPairsWith f rs =
    , nf1 /= nf2
    ]
 
-reportPairs :: [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))] -> IO ()
-reportPairs = putStrLn . unlines . zipWith f [1::Int ..]
+reportPairs :: (Term -> String) -> [(Term, Triple a, Triple a)] -> IO ()
+reportPairs f = putStrLn . unlines . zipWith report [1::Int ..]
  where
-   f i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
-      [ show i ++ ") " ++ show a
+   report i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
+      [ show i ++ ") " ++ f a
       , "  "   ++ showId r1
-      , "    " ++ show e1 ++ if e1==nf1 then "" else "   -->   " ++ show nf1
+      , "    " ++ f e1 ++ if e1==nf1 then "" else "   -->   " ++ f nf1
       , "  "   ++ showId r2
-      , "    " ++ show e2 ++ if e2==nf2 then "" else "   -->   " ++ show nf2
+      , "    " ++ f e2 ++ if e2==nf2 then "" else "   -->   " ++ f nf2
       ]
 
 ----------------------------------------------------
@@ -127,7 +135,10 @@ isConfluent :: [RewriteRule a] -> Bool
 isConfluent = null . noDiamondPairs
 
 checkConfluence :: [RewriteRule a] -> IO ()
-checkConfluence = reportPairs . noDiamondPairs 
+checkConfluence = checkConfluenceWith show
+
+checkConfluenceWith :: (Term -> String) -> [RewriteRule a] -> IO ()
+checkConfluenceWith f = reportPairs f . noDiamondPairs 
 
 ----------------------------------------------------
 -- Example

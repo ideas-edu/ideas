@@ -28,10 +28,14 @@ import Control.Monad
 import Domain.Logic.Formula
 import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
+import Domain.Logic.Rules
 import Domain.Logic.Examples 
 import Domain.Logic.Strategies
 import Domain.Math.Expr ()
 import Common.Uniplate
+
+see :: Int -> IO ()
+see n = printDerivation proofExercise (examples proofExercise !! n)
 
 -- Currently, we use the DWA strategy
 proofExercise :: Exercise [(SLogic, SLogic)]
@@ -48,17 +52,11 @@ proofExercise = makeExercise
    , isReady        = all (uncurry equalLogicA)
    , strategy       = proofStrategy
    , navigation     = termNavigator
-   , examples       = map return exampleProofs
+   , examples       = map return $ exampleProofs ++
+                      let p = Var (ShowString "p") 
+                          q = Var (ShowString "q")
+                      in [(q :&&: p, p :&&: (q :||: q))]
    }
-   
-{-
-instance IsTerm a => IsTerm [a] where
-   toTerm = makeConTerm listSymbol . map toTerm
-   fromTerm term = 
-      case getConSpine term of
-         Just (s, xs) | s == listSymbol ->
-            mapM fromTerm xs
-         _ -> fail "not a list" -}
 
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
    toTerm (a, b) = binary tupleSymbol (toTerm a) (toTerm b)
@@ -68,26 +66,33 @@ instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
             liftM2 (,) (fromTerm a) (fromTerm b)
          _ -> fail "not a tuple"
    
---listSymbol :: Symbol
---listSymbol = newSymbol "basic.list"
-   
 tupleSymbol :: Symbol
 tupleSymbol = newSymbol "basic.tuple"
 
 proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
 proofStrategy = label "proof equivalent" $ 
-   try (once (useC commonExprAtom)) <*>
-   once (onceLeft  (mapRules useC dnfStrategyDWA)) <*>
-   once (onceRight (mapRules useC dnfStrategyDWA)) <*> 
-   repeat (once (onceLeft simpler <|> onceRight simpler)) <*>
-   try (once (use normLogicRule))
+   repeat (somewhere (useC commonExprAtom)) <*>
+   repeat (somewhere (use topIsNot <|> use topIsAnd <|> use topIsOr
+             <|> use topIsImpl <|> use topIsEquiv)) <*>
+   repeat (somewhere (use notDNF <*> mapRules useC dnfStrategyDWA)) <*>
+   simpler <*>
+   repeat (somewhere (use topIsNot <|> use topIsAnd <|> use topIsOr -- again..
+             <|> use topIsImpl <|> use topIsEquiv)) <*> 
+   repeat (somewhere (use normLogicRule))
  where
    simpler :: Strategy (Context [(SLogic, SLogic)])
-   simpler =  use tautologyOr <|> onceOrs (use idempotencyAnd <|> use contradictionAnd)
-          <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
+   simpler = repeat $ somewhere $
+      use tautologyOr <|> use idempotencyAnd <|> use contradictionAnd
+      <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
+      <|> alternatives (map use list)
+            
+   list = [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
+          , ruleAbsorpOr, ruleComplOr
+          ]
 
-onceOrs :: Strategy (Context a) -> Strategy (Context a)
-onceOrs s = somewhere s -- to do: improve for efficiency
+   notDNF :: Rule SLogic
+   notDNF = minorRule $ makeSimpleRule "not-dnf" $ \p ->
+      if isDNF p then Nothing else Just p
 
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
@@ -139,12 +144,6 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
    
 substVar :: Var [(String, String)]
 substVar = newVar "subst" []
-   
-{-
-go2 = apply commonExprAtom $ inContext proofExercise [(p :<->: q, p :<->: q)]
- where
-   p = Var (ShowString "p")
-   q = Var (ShowString "q") -}
    
 vars :: [ShowString]
 vars = [ ShowString [c] | c <- ['a'..] ]
@@ -218,6 +217,47 @@ fakeAbsorptionNot = makeSimpleRuleList "fakeAbsorptionNot" $ \p -> do
    guard (p /= new)
    return new
 
+topIsNot :: Rule (SLogic, SLogic)
+topIsNot = makeSimpleRule "top-is-not" f
+ where
+   f (Not p, Not q) = Just (p, q)
+   f _ = Nothing
+
+acTopRuleFor :: IsId a => a -> Operator SLogic -> Rule [(SLogic, SLogic)]
+acTopRuleFor s op = makeSimpleRuleList s f
+ where
+   f [(lhs, rhs)] = do
+      let xs   = collectWithOperator op lhs
+          ys   = collectWithOperator op rhs
+          make = buildWithOperator op
+      guard (length xs > 1 && length ys > 1)
+      list <- liftM (map $ \(x, y) -> (make x, make y)) (recAC xs ys)
+      guard (all (uncurry eqLogic) list)
+      return list
+   f _ = []
+
+topIsAnd :: Rule [(SLogic, SLogic)]
+topIsAnd = acTopRuleFor "top-is-and" andOperator
+
+topIsOr :: Rule [(SLogic, SLogic)]
+topIsOr = acTopRuleFor "top-is-or" orOperator
+
+topIsEquiv :: Rule [(SLogic, SLogic)]
+topIsEquiv = acTopRuleFor "top-is-equiv" equivOperator
+ where
+   equivOperator = associativeOperator (:<->:) isEquiv
+  
+   isEquiv (p :<->: q) = Just (p, q)
+   isEquiv _           = Nothing
+
+topIsImpl :: Rule [(SLogic, SLogic)]
+topIsImpl = makeSimpleRule "top-is-impl" f
+ where
+   f [(p :->: q, r :->: s)] = do
+      guard (eqLogic p r && eqLogic q s)
+      return [(p, r), (q, s)]
+   f _ = Nothing
+   
 {- Strategie voor sterke(?) normalisatie
 
 (prioritering)
@@ -241,3 +281,27 @@ Twijfelachtige regel bij stap 3: samennemen in plaats van aanvullen:
    (p /\ q /\ r) \/ ... \/ (~p /\ q /\ r)   ~> q /\ r
           (p is hier een losse variable)
 -}
+
+-- Code adapted from Common.Rewriting.AC: refactor
+recAC :: [a] -> [b] -> [[([a], [b])]]
+recAC [] [] = [[]]
+recAC [] _  = []
+recAC (a:as) bs = 
+   [ (as1, bs1):ps
+   | (asr, as2) <- if matchMode then [([], as)] else splits as
+   , let as1 = a:asr
+   , (bs1, bs2) <- splits bs
+   , not (null bs1)
+   , length as1==1 || length bs1==1
+   , ps <- recAC as2 bs2
+   ]
+ where
+   matchMode = False
+   
+splits :: [a] -> [([a], [a])]
+splits = foldr insert [([], [])]
+ where
+   insert a ps = 
+      let toLeft  (xs, ys) = (a:xs,   ys)
+          toRight (xs, ys) = (  xs, a:ys)
+      in map toLeft ps ++ map toRight ps

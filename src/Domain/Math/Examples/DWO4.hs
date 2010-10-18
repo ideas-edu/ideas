@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Examples.DWO4 
    ( brokenEquations, normBroken, normBroken2, normBrokenCon, deelUit
-   , powerEquations, expEquations, logEquations
+   , powerEquations, expEquations, logEquations, higherPowerEquations
    ) where
 
 import Prelude hiding ((^))

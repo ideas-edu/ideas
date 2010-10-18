@@ -31,7 +31,8 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO3
-import Domain.Math.Examples.DWO4 (powerEquations, expEquations, logEquations)
+import Domain.Math.Examples.DWO4 ( powerEquations, expEquations, logEquations
+                                 , higherPowerEquations)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
@@ -47,7 +48,7 @@ powerEquationExercise :: Exercise (Relation Expr)
 powerEquationExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pRelation pExpr)
-  , strategy       = powerEquationStrategy
+  , strategy       = powerEqApproxStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
                        newId "algebra.manipulation.exponents.equation"
@@ -84,6 +85,22 @@ logEquationExercise = makeExercise
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
                        newId "algebra.manipulation.logarithmic.equation"
   , examples       = map (orList . return . build equationView) (concat logEquations)
+  , isReady        = solvedRelations
+  , isSuitable     = (`belongsTo` (switchView equationView >>> normLogEqView))
+  , equivalence    = viewEquivalent (switchView equationView >>> normLogEqView)
+  , ruleOrdering   = ruleOrderingWithId [ getId calcPower
+                                        , getId calcRoot ]
+  }
+
+higherPowerEquationExercise :: Exercise (OrList (Relation Expr))
+higherPowerEquationExercise = makeExercise
+  { status         = Provisional
+  , parser         = parseExprWith (pOrList (pRelation pExpr))
+  , strategy       = powerEqStrategy
+  , navigation     = termNavigator
+  , exerciseId     = describe "solve higher power equation algebraically" $ 
+                       newId "algebra.manipulation.exponents.equation"
+  , examples       = map (orList . return . build equationView) (higherPowerEquations !! 0)
   , isReady        = solvedRelations
   , isSuitable     = (`belongsTo` (switchView equationView >>> normLogEqView))
   , equivalence    = viewEquivalent (switchView equationView >>> normLogEqView)

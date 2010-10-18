@@ -17,8 +17,8 @@ module Domain.Math.Power.Rules
     -- * General power rules
   , addExponentsG, reciprocalG, root2powerG
     -- * Power equation rules
-  , factorAsPower, commonPower, nthRoot, sameBase, greatestPower, equalsOne
-  , nthPower, approxPower, scaleConFactor, varLeftConRight, reciprocalFor
+  , factorAsPower, commonPower, nthRoot, sameBase, equalsOne, greatestPower
+  , nthPower, approxPower, varLeftConRight, reciprocalFor
     -- * Root rules
   , power2root, root2power, distributeRoot, mulRoot, mulRootCom, divRoot
   , simplifyRoot
@@ -83,6 +83,13 @@ commonPower = makeSimpleRule (power, "common-power") $ \(lhs :==: rhs) -> do
     return $ a .^. build integerView (x' `div` c) :==: 
              b .^. build integerView (y' `div` c)
 
+greatestPower :: Rule (Equation Expr)
+greatestPower = makeSimpleRule (power, "greatest-power") $ \(lhs :==: rhs) -> do
+  n      <- match natView rhs
+  _ <- match simplePowerView lhs >>= match integerView. snd
+  (a, x) <- PF.greatestPower $ toInteger n
+  return $ lhs :==: fromInteger a .^. fromInteger x
+    
 -- a^x = b^y  =>  a = b^(y/x) = root x b^y  where y may be one
 nthRoot :: Rule (Equation Expr)
 nthRoot = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
@@ -93,7 +100,7 @@ nthRoot = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
 
 -- root a x = b  =>  a = b^x
 nthPower :: Rule (Equation Expr)
-nthPower = makeSimpleRule (power, "nth-root") $ \(lhs :==: rhs) -> do
+nthPower = makeSimpleRule (power, "nth-power") $ \(lhs :==: rhs) -> do
   guard $ hasVars lhs
   (a, x) <- match simpleRootView lhs
   return $ a :==: rhs .^. x
@@ -106,15 +113,6 @@ approxPower = makeSimpleRule (power, "approx-power") $ \ expr ->
     f (Var x :==: d) = match doubleView d >>= Just . (Var x .~=.) . Number . precision 2 
     f (d :==: Var x) = match doubleView d >>= Just . (.~=. Var x) . Number . precision 2
     f _              = Nothing
-
--- c*x = y  =>  x = y/c
-scaleConFactor :: Rule (Equation Expr)
-scaleConFactor = makeSimpleRule (power, "scale-factor") $ \(lhs :==: rhs) -> do
-  guard $ hasVars lhs
-  (sign, xs) <- match productView lhs
-  guard $ length xs > 1
-  return $ let (cs, ys) = partition ((flip belongsTo) doubleView) xs
-           in build productView (sign, ys) :==: rhs ./. build productView (False, cs)
 
 -- a*x + c = b*y + d  =>  a*x - b*y = d - c   (move vars to the left, cons to the right)
 varLeftConRight :: Rule (Equation Expr)
@@ -159,12 +157,6 @@ factorAsPower :: Rule Expr
 factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
     n      <- maybeToList $ match natView expr
     (a, x) <- PF.allPowers $ toInteger n
-    return $ fromInteger a .^. fromInteger x
-
-greatestPower :: Rule Expr
-greatestPower = makeSimpleRule (power, "greatest-power") $ \ expr -> do
-    n      <- match natView expr
-    (a, x) <- PF.greatestPower $ toInteger n
     return $ fromInteger a .^. fromInteger x
 
 calcPower :: Rule Expr 

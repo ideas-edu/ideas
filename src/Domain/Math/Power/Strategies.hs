@@ -11,17 +11,20 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Strategies
-{-   ( powerStrategy
+   ( powerStrategy
    , powerOfStrategy
    , calcPowerStrategy
    , nonNegExpStrategy
-   , powerEquationStrategy
+   , powerEqStrategy
+   , powerEqApproxStrategy
    , expEqStrategy
    , logEqStrategy
-   ) -} where
+--   , higherPowerEqStrategy
+   ) where
 
 import Common.Classes
 import Common.Context
+import Common.Rewriting.Term
 import Common.Strategy
 import Common.Transformation
 import Common.View
@@ -36,6 +39,7 @@ import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Prelude hiding (repeat, not)
+
 
 ------------------------------------------------------------
 -- Strategies
@@ -52,18 +56,24 @@ logEqStrategy = label "Logarithmic equation"
                                   <|> use calcPowerRatio)
              <*> quadraticStrategy
 
-powerEquationStrategy :: LabeledStrategy (Context (Relation Expr))
-powerEquationStrategy = cleanUpStrategy cleanup strat
+powerEqStrategy :: IsTerm a => LabeledStrategy (Context a)
+powerEqStrategy = cleanUpStrategy cleanup strat
   where 
-    strat = label "Power equation" $
-      repeat (  try (use scaleConFactor)
-            <*> option (somewhere (use greatestPower) <*> use commonPower)
-            <*> (use nthRoot <|> use nthPower <|> use varLeftConRight)
-             )
-            <*> try (liftToContext approxPower)
+    strat = label "Power equation" $ repeat $
+          try (repeat $ alternatives $ map use coverUpRules)
+      <*> option (use greatestPower <*> use commonPower)
+      <*> (use nthRoot <|> use nthPower) 
     
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 fractionPlus : naturalRules ++ rationalRules
+
+
+powerEqApproxStrategy :: LabeledStrategy (Context (Relation Expr))
+powerEqApproxStrategy = label "Power equation with approximation" $
+  powerEqStrategy <*> try (use approxPower)
+
+-- higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
+-- higherPowerEqStrategy = label "Higher power equation" $ powerEqStrategy
 
 expEqStrategy :: LabeledStrategy (Context (Equation Expr))
 expEqStrategy = cleanUpStrategy cleanup strat

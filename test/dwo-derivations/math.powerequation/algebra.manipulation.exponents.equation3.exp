@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.scale-factor">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x^(7/2) == 35
       </expr>

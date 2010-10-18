@@ -1,12 +1,19 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.greatest-power">
+    <elem ruleid="algebra.manipulation.exponents.nth-power">
       <expr>
-        root (x^3) (2^2) == 720
+        x^3 == 720^4
       </expr>
-      <context>
-        <item name="location" value="[1,2]"/>
-      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == 720^(4/3)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 6453.22
+      </expr>
     </elem>
   </list>
 </reply>

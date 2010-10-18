@@ -1,12 +1,24 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.greatest-power">
+    <elem ruleid="algebra.equations.coverup.plus">
       <expr>
-        2^2/5*x^(7/10)+7 == 25/2
+        4/5*x^(7/10) == 11/2
       </expr>
-      <context>
-        <item name="location" value="[1,1,1,1]"/>
-      </context>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x^(7/10) == 55/8
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == (55/8)^(10/7)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 15.71
+      </expr>
     </elem>
   </list>
 </reply>

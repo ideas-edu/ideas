@@ -1,12 +1,24 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.greatest-power">
+    <elem ruleid="algebra.equations.coverup.minus-left">
       <expr>
-        6*x^(-31/10)-3^2 == 12
+        6*x^(-31/10) == 21
       </expr>
-      <context>
-        <item name="location" value="[1,2]"/>
-      </context>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x^(-31/10) == 7/2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == (7/2)^(-10/31)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 0.67
+      </expr>
     </elem>
   </list>
 </reply>

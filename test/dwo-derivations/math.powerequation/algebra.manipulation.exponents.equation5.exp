@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.nth-root">
+    <elem ruleid="algebra.manipulation.exponents.nth-power">
       <expr>
         x == (29/10)^5
       </expr>

@@ -1,12 +1,9 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.greatest-power">
       <expr>
         x^14 == 5^2
       </expr>
-      <context>
-        <item name="location" value="[2]"/>
-      </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.common-power">
       <expr>

@@ -1,11 +1,11 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+    <elem ruleid="algebra.equations.coverup.plus">
       <expr>
         7/10*x^(-11/10) == 23
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.scale-factor">
+    <elem ruleid="algebra.equations.coverup.times">
       <expr>
         x^(-11/10) == 230/7
       </expr>

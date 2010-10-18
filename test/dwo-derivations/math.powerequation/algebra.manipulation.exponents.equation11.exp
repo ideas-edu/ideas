@@ -1,12 +1,24 @@
-<reply result="ok" version="0.6.5 (3554)">
+<reply result="ok" version="0.6.6 (3601)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.greatest-power">
+    <elem ruleid="algebra.equations.coverup.minus-left">
       <expr>
-        2^3*x^(-19/10)-5 == 2
+        8*x^(-19/10) == 7
       </expr>
-      <context>
-        <item name="location" value="[1,1,1]"/>
-      </context>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x^(-19/10) == 7/8
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.nth-root">
+      <expr>
+        x == (7/8)^(-10/19)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.approx-power">
+      <expr>
+        x ~= 1.07
+      </expr>
     </elem>
   </list>
 </reply>

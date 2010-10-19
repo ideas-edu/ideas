@@ -17,11 +17,12 @@ module Common.Strategy.Core
    ( Core(..)
    , mapRule, mapLabel, noLabels
    , coreMany, coreRepeat, coreOrElse, coreFix
-   , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv
+   , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv, substCoreEnv
    ) where
 
 import Common.Transformation
 import Common.Uniplate
+import Data.Maybe
 import qualified Data.IntMap as IM
 
 -----------------------------------------------------------------
@@ -66,19 +67,26 @@ instance Uniplate (Core l a) where
 -----------------------------------------------------------------
 -- Core environment
 
-newtype CoreEnv l a = CE (IM.IntMap (CoreEnv l a, Core l a)) 
+newtype CoreEnv l a = CE (IM.IntMap (Core l a)) 
 
 emptyCoreEnv :: CoreEnv l a
 emptyCoreEnv = CE IM.empty
   
 insertCoreEnv :: Int -> Core l a -> CoreEnv l a -> CoreEnv l a
-insertCoreEnv n a env@(CE m) = CE (IM.insert n (env, a) m)
-  
-lookupCoreEnv :: Int -> CoreEnv l a -> Maybe (CoreEnv l a, Core l a)
-lookupCoreEnv n (CE m) = do
-   (e, a) <- IM.lookup n m
-   return (e, Rec n a)
+insertCoreEnv n a env@(CE m) = CE (IM.insert n a m)
 
+deleteCoreEnv :: Int -> CoreEnv l a -> CoreEnv l a
+deleteCoreEnv n (CE m) = CE (IM.delete n m)
+
+lookupCoreEnv :: Int -> CoreEnv l a -> Maybe (Core l a)
+lookupCoreEnv n (CE m) = IM.lookup n m
+
+substCoreEnv :: CoreEnv l a -> Core l a -> Core l a
+substCoreEnv env core = 
+   case core of
+      Var i   -> fromMaybe core (lookupCoreEnv i env)
+      Rec i a -> Rec i (substCoreEnv (deleteCoreEnv i env) a)
+      _       -> descend (substCoreEnv env) core
 
 -----------------------------------------------------------------
 -- Definitions

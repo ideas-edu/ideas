@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Parsing
    ( Step(..)
-   , State, makeState, stack, environment, choices, trace, value
+   , State, makeState, stack, choices, trace, value
    , parseDerivationTree, replay, runCore, runCoreWith
    ) where
 
@@ -21,7 +21,6 @@ import Common.Classes
 import Common.Derivation
 import Common.Strategy.Core
 import Common.Transformation
-import Common.Uniplate -- remove me
 import Control.Monad
 
 ----------------------------------------------------------------------
@@ -41,15 +40,14 @@ instance Apply (Core l) where
 -- State data type
 
 data State l a = S
-   { stack       :: [Either l (CoreEnv l a, Core l a)]
-   , environment :: CoreEnv l a
+   { stack       :: [Either l (Core l a)]
    , choices     :: [Bool]
    , trace       :: [Step l a]
    , value       :: a
    }
 
 makeState :: Core l a -> a -> State l a
-makeState core a = push core (S [] emptyCoreEnv [] [] a)
+makeState core a = push core (S [] [] [] a)
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -73,9 +71,8 @@ firsts state =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
-         Rec i a   -> -- firstsStep a (addEnv i a state)
-                      firstsStep (substCoreVar i core a) state
-         Var i     -> withEnv firstsStep i state
+         Rec i a   -> firstsStep (substCoreVar i core a) state
+         Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep (RuleStep r) (useRule r state)
          Label l a -> hasStep (Enter l) [push a (pushExit l state)]
          Not a     -> guard (checkNot a state) >> firsts state
@@ -98,8 +95,7 @@ runCore :: Core l a -> a -> [a]
 runCore core = runState . makeState core
 
 runCoreWith :: CoreEnv l a -> Core l a -> a -> [a]
-runCoreWith env core = runState . setEnv . makeState core
- where setEnv s = s {environment = env}
+runCoreWith env = runCore . substCoreEnv env
 
 runState :: State l a -> [a]
 runState state =
@@ -112,9 +108,8 @@ runState state =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
-         Rec i a   -> -- runStep a (addEnv i a state)
-                      runStep (substCoreVar i core a) state
-         Var i     -> withEnv runStep i state
+         Rec i a   -> runStep (substCoreVar i core a) state
+         Var _     -> freeCoreVar "runState"
          Rule  r   -> concatMap runState (useRule r state)
          Label _ a -> runStep a state
          Not a     -> guard (checkNot a state) >> runState state
@@ -124,13 +119,6 @@ runState state =
          Repeat a  -> runStep (coreRepeat a) state
          Fail      -> []
          Succeed   -> runState state
-
-substCoreVar :: Int -> Core l a -> Core l a -> Core l a
-substCoreVar i a = rec
- where
-   rec (Var j)   | i==j = a
-   rec core@(Rec j _) | i==j = core
-   rec core = descend rec core
 
 ----------------------------------------------------------------------
 -- Replay a parse run
@@ -155,9 +143,8 @@ replay n bs core = replayState n bs (makeState core noValue)
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b
                                 in replayStep n xs new (makeChoice x state)
-         Rec i a   -> -- replayStep n bs a (addEnv i a state)
-                      replayStep n bs (substCoreVar i core a) state
-         Var i     -> withEnv (replayStep n bs) i state
+         Rec i a   -> replayStep n bs (substCoreVar i core a) state
+         Var _     -> freeCoreVar "replay"
          Rule r    -> replayState (n-1) bs (traceRule r state)
          Label l a -> replayStep (n-1) bs a (pushExit l (traceEnter l state))
          Not _     -> replayState n bs state
@@ -171,32 +158,21 @@ replay n bs core = replayState n bs (makeState core noValue)
 -- Local helper functions and instances
    
 push :: Core l a -> State l a -> State l a
-push core s = s {stack = Right (environment s, core) : stack s}
+push core s = s {stack = Right core : stack s}
 
 pushExit :: l -> State l a -> State l a
 pushExit l s = s {stack = Left l : stack s}
 
 pop :: State l a -> Maybe (Either l (Core l a), State l a)
 pop s = case stack s of
-           []                 -> Nothing
-           x:xs -> Just (either f g x s {stack = xs})
- where
-   f l         s = (Left l, s)
-   g (e, core) s = (Right core, s {environment = e})
+           []   -> Nothing
+           x:xs -> Just (x, s {stack = xs})
    
 makeChoice :: Bool -> State l a -> State l a
 makeChoice b s = s {choices = b : choices s}
 
-addEnv :: Int -> Core l a -> State l a -> State l a
-addEnv i c s = s {environment = insertCoreEnv i c (environment s)}
-
-withEnv :: (Core l a -> State l a -> b) -> Int -> State l a -> b
-withEnv f i s = case lookupCoreEnv i (environment s) of
-                         Just (e, a)  -> f a s {environment = e}
-                         Nothing -> error "free var in core expression"
-
 checkNot :: Core l a -> State l a -> Bool
-checkNot core state = null (runCoreWith (environment state) core (value state))
+checkNot core = null . runCore core . value
 
 useRule :: Rule a -> State l a -> [State l a]
 useRule r state = [ state {value = b} | b <- applyAll r (value state) ]
@@ -210,3 +186,9 @@ traceRule = traceStep . RuleStep
 
 traceStep :: Step l a -> State l a -> State l a
 traceStep step s = s {trace = step : trace s}
+
+substCoreVar :: Int -> Core l a -> Core l a -> Core l a
+substCoreVar i a = substCoreEnv (insertCoreEnv i a emptyCoreEnv)
+
+freeCoreVar :: String -> a
+freeCoreVar caller = error $ "Free var in core expression: " ++ caller

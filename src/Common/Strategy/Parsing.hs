@@ -21,6 +21,7 @@ import Common.Classes
 import Common.Derivation
 import Common.Strategy.Core
 import Common.Transformation
+import Common.Uniplate -- remove me
 import Control.Monad
 
 ----------------------------------------------------------------------
@@ -72,7 +73,8 @@ firsts state =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
-         Rec i a   -> firstsStep a (addEnv i a state)
+         Rec i a   -> -- firstsStep a (addEnv i a state)
+                      firstsStep (substCoreVar i core a) state
          Var i     -> withEnv firstsStep i state
          Rule r    -> hasStep (RuleStep r) (useRule r state)
          Label l a -> hasStep (Enter l) [push a (pushExit l state)]
@@ -110,7 +112,8 @@ runState state =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
-         Rec i a   -> runStep a (addEnv i a state)
+         Rec i a   -> -- runStep a (addEnv i a state)
+                      runStep (substCoreVar i core a) state
          Var i     -> withEnv runStep i state
          Rule  r   -> concatMap runState (useRule r state)
          Label _ a -> runStep a state
@@ -121,6 +124,13 @@ runState state =
          Repeat a  -> runStep (coreRepeat a) state
          Fail      -> []
          Succeed   -> runState state
+
+substCoreVar :: Int -> Core l a -> Core l a -> Core l a
+substCoreVar i a = rec
+ where
+   rec (Var j)   | i==j = a
+   rec core@(Rec j _) | i==j = core
+   rec core = descend rec core
 
 ----------------------------------------------------------------------
 -- Replay a parse run
@@ -145,7 +155,8 @@ replay n bs core = replayState n bs (makeState core noValue)
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b
                                 in replayStep n xs new (makeChoice x state)
-         Rec i a   -> replayStep n bs a (addEnv i a state)
+         Rec i a   -> -- replayStep n bs a (addEnv i a state)
+                      replayStep n bs (substCoreVar i core a) state
          Var i     -> withEnv (replayStep n bs) i state
          Rule r    -> replayState (n-1) bs (traceRule r state)
          Label l a -> replayStep (n-1) bs a (pushExit l (traceEnter l state))

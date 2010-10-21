@@ -11,14 +11,14 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting 
    ( RewriteRule, smartGenerator, rewriteRule
-   , RuleBuilder, rewriteM, RuleSpec((:~>)), rulePair, showRewriteRule
-   , Rewrite(..), ShallowEq(..), Operator
+   , RuleBuilder, rewriteM, RuleSpec((:~>)), ruleSpecTerm, showRewriteRule
+   , Rewrite(..), ShallowEq(..), Operator, useOperators
    , associativeOperator, Operators, collectWithOperator, buildWithOperator
    , equalWith, isOperator, constructor, difference, differenceMode
    , acOperator, normalizeWith, IsTerm(..), Different(..)
    ) where
 
-import Common.Rewriting.AC
 import Common.Rewriting.Difference
+import Common.Rewriting.Operator
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term

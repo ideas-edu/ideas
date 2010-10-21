@@ -25,7 +25,7 @@ ruleToHTML ex r =
 
 rewriteRuleToHTML :: Bool -> Some Exercise -> RewriteRule a -> HTMLBuilder
 rewriteRuleToHTML sound ex r = do
-   let lhs :~> rhs = rulePair r
+   let lhs :~> rhs = ruleSpecTerm r
    -- showRuleName (unqualified r)
    -- spaces 3
    showTerm ex lhs

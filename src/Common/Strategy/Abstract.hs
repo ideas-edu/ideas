@@ -92,7 +92,7 @@ instance IsStrategy Rule where
 
 instance IsStrategy RewriteRule where
    toStrategy r = 
-      toStrategy (makeRule (showId r) (makeRewriteTrans r))
+      toStrategy (makeRule (getId r) (makeRewriteTrans r))
 
 -----------------------------------------------------------
 --- Labeled Strategy data-type

@@ -188,8 +188,8 @@ instance IsTerm a => IsTerm (Logic a) where
          | s == orSymbol         = return (buildWithOperator orOperator xs)
       f _ _ = fail "fromTerm"
 
-logicOperators :: [(Operator (Logic a), Symbol)]
-logicOperators = [(andOperator, toSymbol andSymbol), (orOperator, toSymbol orSymbol)]
+logicOperators :: Operators (Logic a)
+logicOperators = [andOperator, orOperator]
    
 -- The "and" operator is also commutative, but not (yet) in the equational theory
 andOperator :: Operator (Logic a)

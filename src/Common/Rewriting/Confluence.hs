@@ -33,7 +33,7 @@ normalForm rs = run []
 
 rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
-   let lhs :~> rhs = rulePair r
+   let lhs :~> rhs = ruleSpecTerm r
    sub <- match [] lhs t
    return (sub |-> rhs)
 
@@ -51,8 +51,8 @@ type Triple a = (RewriteRule a, Term, Term)
 superImpose :: RewriteRule a -> RewriteRule a -> [Navigator Term]
 superImpose r1 r2 = rec (navigator lhs1)
  where
-    lhs1 :~> _ = rulePair r1
-    lhs2 :~> _ = rulePair (renumber r1 r2)
+    lhs1 :~> _ = ruleSpecTerm r1
+    lhs2 :~> _ = ruleSpecTerm (renumber r1 r2)
     
     rec ca = case current ca of
                 Just (Meta _) -> []

@@ -16,7 +16,7 @@ module Common.Rewriting.Difference
    ( ShallowEq(..), difference, differenceEqual, differenceMode
    ) where
 
-import Common.Rewriting.AC
+import Common.Rewriting.Operator
 import Common.Rewriting.RewriteRule
 import Control.Monad
 import Common.Uniplate
@@ -48,7 +48,7 @@ diff :: (Rewrite a, Uniplate a, ShallowEq a)
      => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
 diff eq p q 
    | shallowEq p q =
-        case findOperator (map fst operators) p of
+        case findOperator operators p of
            Just op | isAssociative op && not (isCommutative op) -> 
               let ps = collectWithOperator op p
                   qs = collectWithOperator op q

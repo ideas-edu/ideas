@@ -20,7 +20,7 @@ import Control.Monad
 import Common.Uniplate
 import Common.Utils (commaList)
 import Common.View
-import Common.Rewriting hiding (operators)
+import Common.Rewriting
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 

@@ -31,7 +31,7 @@ instance Rewrite SLogic where
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool
-equalLogicA = equalWith (map fst operators)
+equalLogicA = equalWith logicOperators
 
 -----------------------------------------------------------
 -- Logic generator

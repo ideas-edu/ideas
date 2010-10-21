@@ -125,8 +125,8 @@ associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2)
    extRight = (++[Meta specialRight])
    extBoth  = extLeft . extRight
    
-   result   = concatMap (\zs -> pairingsA2 True zs bs) list
-   make     = onBoth construct
+   result   = concatMap (\zs -> pairingsA True zs bs) list
+   make (a, b) = (construct a, construct b)
    
    collect term =
       case isBinary s term of

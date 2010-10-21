@@ -15,28 +15,30 @@ module Common.Rewriting.RewriteRule
    ( -- * Supporting type classes
      Rewrite(..), Different(..)
      -- * Rewrite rules and specs
-   , RewriteRule, rulePair, RuleSpec(..)
+   , RewriteRule, ruleSpecTerm, RuleSpec(..)
      -- * Axioms and specs
-   , Axiom, axiomPair, AxiomSpec(..)
+   , Axiom, AxiomSpec(..)
      -- * Compiling rewrite rules and axioms
    , rewriteRule, RuleBuilder, axiom, AxiomBuilder
    , axiomRules, axiomRuleToLeft, axiomRuleToRight
      -- * Using rewrite rules
    , rewrite, rewriteM, showRewriteRule, smartGenerator
-   , metaInRewriteRule, renumberRewriteRule
+   , metaInRewriteRule, renumberRewriteRule, inverseRule
+   , useOperators
    ) where
 
 import Common.Classes
 import Common.Id
-import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
+import Common.Rewriting.Operator
 import Common.Rewriting.Unification
 import Common.Uniplate (descend, leafs)
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Test.QuickCheck
-
+   
 ------------------------------------------------------
 -- Supporting type classes
 
@@ -45,7 +47,7 @@ import Test.QuickCheck
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
 class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
-   operators :: [(Operator a, Symbol)]
+   operators :: Operators a
    -- default definition: no special operators
    operators = []
 
@@ -59,12 +61,16 @@ data RuleSpec a = a :~> a deriving Show
 instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b
 
+instance Crush RuleSpec where
+   crush (a :~> b) = [a, b]
+
 instance Zip RuleSpec where 
    fzipWith f (a :~> b) (c :~> d) = f a c :~> f b d
 
-data RewriteRule a = Rewrite a => R 
-   { ruleId   :: Id
-   , rulePair :: RuleSpec Term
+data RewriteRule a = (Arbitrary a, IsTerm a, Show a) => R 
+   { ruleId        :: Id
+   , ruleSpecTerm  :: RuleSpec Term
+   , ruleOperators :: Operators a
    }
    
 instance Show (RewriteRule a) where
@@ -72,7 +78,7 @@ instance Show (RewriteRule a) where
 
 instance HasId (RewriteRule a) where
    getId = ruleId
-   changeId f (R n p) = R (f n) p
+   changeId f (R n p ops) = R (f n) p ops
 
 ------------------------------------------------------
 -- Axioms and specs
@@ -87,17 +93,14 @@ instance Functor AxiomSpec where
 instance Zip AxiomSpec where 
    fzipWith f (a :== b) (c :== d) = f a c :== f b d
 
-data Axiom a = Rewrite a => A
-   { axiomId   :: Id
-   , axiomPair :: AxiomSpec Term
-   }
+newtype Axiom a = A (RewriteRule a)
 
 instance Show (Axiom a) where
    show = showId
 
 instance HasId (Axiom a) where
-   getId = axiomId
-   changeId f (A n p) = A (f n) p
+   getId (A r) = getId r
+   changeId f (A r) = A (changeId f r)
 
 ------------------------------------------------------
 -- Compiling a rewrite rule
@@ -147,14 +150,14 @@ build ops (lhs :~> rhs) a = do
    fromTermM (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
-rewriteRule s f = R (newId s) (buildRuleSpec f 0)
+rewriteRule s f = R (newId s) (buildRuleSpec f 0) operators
 
 axiom :: (IsId n, AxiomBuilder f a, Rewrite a) => n -> f -> Axiom a
-axiom s f = A (newId s) (buildAxiomSpec f 0)
+axiom s f = A (R (newId s) (a :~> b) operators)
+ where a :== b = buildAxiomSpec f 0
 
 axiomRules :: Axiom a -> (RewriteRule a, RewriteRule a)
-axiomRules a@(A _ _) = (R (getId a) (x :~> y), R (getId a) (y :~> x)) 
- where (x :== y) = axiomPair a
+axiomRules (A r) = (r, inverseRule r)
 
 axiomRuleToLeft, axiomRuleToRight :: Axiom a -> RewriteRule a
 axiomRuleToLeft  = snd . axiomRules
@@ -167,10 +170,14 @@ instance Apply RewriteRule where
    applyAll = rewrite
 
 rewrite :: RewriteRule a -> a -> [a]
-rewrite r@(R _ _) a = build (getOps a operators) (rulePair r) a
- where
-   getOps :: a -> [(Operator a, Symbol)] -> [Symbol]
-   getOps = const (map snd)
+rewrite r@(R _ _ _) a = 
+   build (mapMaybe (operatorSymbol a) (ruleOperators r)) (ruleSpecTerm r) a
+
+operatorSymbol :: IsTerm a => a -> Operator a -> Maybe Symbol
+operatorSymbol a op = 
+   case getConSpine (toTerm (constructor op a a)) of
+      Just (s, [_, _]) -> Just s
+      _                -> Nothing
  
 rewriteM :: MonadPlus m => RewriteRule a -> a -> m a
 rewriteM r = msum . map return . rewrite r
@@ -179,13 +186,13 @@ rewriteM r = msum . map return . rewrite r
 -- Pretty-print a rewriteRule
 
 showRewriteRule :: Bool -> RewriteRule a -> Maybe String
-showRewriteRule sound r@(R _ _) = do
+showRewriteRule sound r@(R _ _ _) = do
    x <- fromTermTp r (sub |-> a)
    y <- fromTermTp r (sub |-> b)
    let op = if sound then "~>" else "/~>" 
    return (show x ++ " " ++ op ++ " " ++ show y)
  where
-   a :~> b = rulePair r
+   a :~> b = ruleSpecTerm r
    vs  = (getMetaVars a `union` getMetaVars b)
    sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
    
@@ -196,8 +203,8 @@ showRewriteRule sound r@(R _ _) = do
 -- Smart generator that creates instantiations of the left-hand side
 
 smartGenerator :: RewriteRule a -> Gen a
-smartGenerator r@(R _ _) = do 
-   let a :~> _ = rulePair r
+smartGenerator r@(R _ _ _) = do 
+   let a :~> _ = ruleSpecTerm r
    let vs      = getMetaVars a
    list <- vector (length vs)
    let sub = listToSubst (zip vs (map (tpToTerm r) list))
@@ -210,15 +217,19 @@ smartGenerator r@(R _ _) = do
 
 ------------------------------------------------------
 
+inverseRule :: RewriteRule a -> RewriteRule a
+inverseRule (R n (a :~> b) ops) = R n (b :~> a) ops
+
+useOperators :: Operators a -> RewriteRule a -> RewriteRule a
+useOperators ops r = r { ruleOperators = ops ++ ruleOperators r }
+
 -- some helpers
 metaInRewriteRule :: RewriteRule a -> [Int]
 metaInRewriteRule r =
-   let lhs :~> rhs = rulePair r
-   in [ n | Meta n <- leafs lhs ++ leafs rhs ]
+   [ n | a <- crush (ruleSpecTerm r), Meta n <- leafs a ]
 
 renumberRewriteRule :: Int -> RewriteRule a -> RewriteRule a
-renumberRewriteRule n r@(R _ _) = R {ruleId = ruleId r, rulePair = f lhs :~> f rhs}
+renumberRewriteRule n r@(R _ _ _) = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}
  where
-   lhs :~> rhs = rulePair r
    f (Meta i) = Meta (i+n)
    f term     = descend f term

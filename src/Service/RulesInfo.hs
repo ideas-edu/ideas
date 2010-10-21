@@ -66,7 +66,7 @@ rewriteRuleToFMP sound r
    | sound     = eqFMP    a b
    | otherwise = buggyFMP a b 
  where
-   a :~> b = fmap termToOMOBJ (rulePair r)
+   a :~> b = fmap termToOMOBJ (ruleSpecTerm r)
 
 type ExampleMap a = M.Map Id [(a, a)]
 

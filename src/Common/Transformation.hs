@@ -310,11 +310,11 @@ addRuleToGroup :: HasId b => b -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = getId group : ruleGroups r }
 
 ruleList :: (IsId n, RuleBuilder f a, Rewrite a) => n -> [f] -> Rule a
-ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule (show a))
+ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule a)
  where a = newId n
  
 rule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> Rule a
-rule n = makeRule a . makeRewriteTrans . rewriteRule (showId a)
+rule n = makeRule a . makeRewriteTrans . rewriteRule a
  where a = newId n
 
 -- | Turn a transformation into a rule: the first argument is the rule's name

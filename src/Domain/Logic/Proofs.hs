@@ -13,10 +13,10 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Proofs (proofExercise) where
 
-import Common.Classes
 import Prelude hiding (repeat)
 import Common.Context
 import Common.Rewriting
+import Common.Rewriting.AC
 import Common.Rewriting.Term hiding (Var)
 import Common.Strategy hiding (fail, not)
 import Common.Exercise
@@ -231,7 +231,7 @@ acTopRuleFor s op = makeSimpleRuleList s f
           ys   = collectWithOperator op rhs
           make = buildWithOperator op
       guard (length xs > 1 && length ys > 1)
-      list <- liftM (map $ \(x, y) -> (make x, make y)) (recAC xs ys)
+      list <- liftM (map $ \(x, y) -> (make x, make y)) (pairingsAC False xs ys)
       guard (all (uncurry eqLogic) list)
       return list
    f _ = []
@@ -281,27 +281,3 @@ Twijfelachtige regel bij stap 3: samennemen in plaats van aanvullen:
    (p /\ q /\ r) \/ ... \/ (~p /\ q /\ r)   ~> q /\ r
           (p is hier een losse variable)
 -}
-
--- Code adapted from Common.Rewriting.AC: refactor
-recAC :: [a] -> [b] -> [[([a], [b])]]
-recAC [] [] = [[]]
-recAC [] _  = []
-recAC (a:as) bs = 
-   [ (as1, bs1):ps
-   | (asr, as2) <- if matchMode then [([], as)] else splits as
-   , let as1 = a:asr
-   , (bs1, bs2) <- splits bs
-   , not (null bs1)
-   , length as1==1 || length bs1==1
-   , ps <- recAC as2 bs2
-   ]
- where
-   matchMode = False
-   
-splits :: [a] -> [([a], [a])]
-splits = foldr insert [([], [])]
- where
-   insert a ps = 
-      let toLeft  (xs, ys) = (a:xs,   ys)
-          toRight (xs, ys) = (  xs, a:ys)
-      in map toLeft ps ++ map toRight ps

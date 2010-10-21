@@ -58,6 +58,9 @@ data RewriteRule a = Rewrite a => R
    { ruleId   :: Id
    , rulePair :: RuleSpec Term
    }
+   
+instance Show (RewriteRule a) where
+   show = showId
 
 instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b

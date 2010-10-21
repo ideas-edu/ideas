@@ -76,8 +76,8 @@ derivativePowerStrategy = label "derivative-power" $
    configure mycfg powerOfStrategy <*> 
    repeatS (distr <*> configure mycfg powerOfStrategy) <*>
    cleanUpStrategy (applyTop cleanUpExpr) (label "use-derivative-rules" 
-      (repeatS (somewhere (alternatives list)))) {- <*>
-   (configure mycfg nonNegExpStrategy) -}
+      (repeatS (somewhere (alternatives list)))) <*>
+   (configure mycfg nonNegExpStrategy)
  where
    list = map liftToContext
       [ ruleDerivPlus, ruleDerivMin, ruleDerivNegate, ruleDerivPowerFactor

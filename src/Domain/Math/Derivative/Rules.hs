@@ -153,6 +153,10 @@ ruleDerivSqrtChain = makeSimpleRule (diffId, "chain-sqrt") f
 ruleDefRoot :: Rule Expr
 ruleDefRoot = rule (diffId, "def-root") $
    \a b -> root a b :~> a ^ (1/b)
+
+ruleDerivRoot :: Rule Expr
+ruleDerivRoot = rule (diffId, "def-root") $
+   \a b x -> diff (lambda x (root a b)) :~> diff (lambda x (a ^ (1/b)))
    
 ruleDerivPowerFactor :: Rule Expr
 ruleDerivPowerFactor = makeSimpleRule (diffId, "power-factor") $ \de -> do

@@ -9,7 +9,9 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Common.Rewriting.Unification (match, specialLeft, specialRight) where
+module Common.Rewriting.Unification 
+   ( match, unifyM, specialLeft, specialRight
+   ) where
 
 import Common.Rewriting.Term
 import Common.Rewriting.AC
@@ -19,6 +21,24 @@ import Control.Monad
 
 -----------------------------------------------------------
 -- Unification (in both ways)
+
+unifyM :: Monad m => Term -> Term -> m Substitution
+unifyM term1 term2 = 
+   case (term1, term2) of
+      (Meta i, Meta j) | i == j -> 
+         return emptySubst
+      (Meta i, _) | not (i `hasMetaVar` term2) -> 
+         return (singletonSubst i term2)
+      (_, Meta j) | not (j `hasMetaVar` term1) -> 
+         return (singletonSubst j term1)
+      (Apply f a, Apply g b) -> do
+         s1 <- unifyM f g
+         s2 <- unifyM (s1 |-> a) (s1 |-> b)
+         return (s1 @@ s2)
+      _ | term1 == term2 -> 
+         return emptySubst
+      _ -> fail "unifyM: no unifier"
+
 {-
 class ShallowEq a where 
    shallowEq :: a -> a -> Bool

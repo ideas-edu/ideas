@@ -29,13 +29,16 @@ Nat 0 .+. b         = b
 a     .+. Nat 0     = a
 a     .+. Negate b  = a .-. b
 a     .+. (b :+: c) = (a .+. b) .+. c
+a     .+. (b :-: c) = (a .+. b) .-. c
 a     .+. b         = a :+: b
 
 (.-.) :: Expr -> Expr -> Expr
-Nat 0 .-. b        = neg b
-a     .-. Nat 0    = a
-a     .-. Negate b = a .+. b
-a     .-. b        = a :-: b
+Nat 0 .-. b         = neg b
+a     .-. Nat 0     = a
+a     .-. Negate b  = a .+. b
+a     .-. (b :+: c) = (a .-. b) .-. c
+a     .-. (b :-: c) = (a .-. b) .+. c
+a     .-. b         = a :-: b
 
 neg :: Expr -> Expr
 neg (Nat 0)    = 0
@@ -147,7 +150,8 @@ productView :: View Expr (Bool, [Expr])
 productView = makeView (Just . second ($ []) . f False) g
  where
    f r (a :*: b)  = f r a &&& f r b
-   f r (a :/: b)  = case a of -- two special cases (for efficiency)
+   f r (a :/: b)  -- | False --  not r 
+                  = case a of -- two special cases (for efficiency)
                        Nat 1          -> f (not r) b
                        Negate (Nat 1) -> first not (f (not r) b)
                        _              -> f r a &&& f (not r) b

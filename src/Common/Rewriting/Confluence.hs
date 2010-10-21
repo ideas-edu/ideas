@@ -14,35 +14,14 @@ module Common.Rewriting.Confluence
    ) where
 
 import Common.Id
+import Common.Navigator
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
 import Common.Rewriting.Term
 import Common.Uniplate hiding (rewriteM)
-import Control.Monad
-
-unifyM :: Term -> Term -> [Substitution] -- temporary (partial) implementation
-unifyM (Con s) (Con t) = [ emptySubst | s == t ]
-unifyM (Num s) (Num t) = [ emptySubst | s == t ]
-unifyM (Meta i) (Meta j) = [if i==j then emptySubst else singletonSubst i (Meta j)]
-unifyM (Meta i) t = [ singletonSubst i t | not (i `hasMetaVar` t) ]
-unifyM t (Meta i) = unifyM (Meta i) t
-unifyM (Apply f a) (Apply g b) = unifyListM [f, a] [g, b]
-unifyM (Apply _ _) (Con _) = []
-unifyM (Con _) (Apply _ _) = []
-unifyM (Apply _ _) (Num _) = []
-unifyM (Num _) (Apply _ _) = []
-unifyM x y = error ("unifyM: " ++ show (x, y))
-
-unifyListM :: [Term] -> [Term] -> [Substitution]
-unifyListM (x:xs) (y:ys) = do 
-   s1 <- unifyM x y
-   let f = map (s1 |->)
-   s2 <- unifyListM (f xs) (f ys)
-   return (s1 @@ s2)
-unifyListM xs ys = do
-   guard (null xs && null ys)
-   return emptySubst
+import Data.Char
+import Data.Maybe
 
 normalForm :: [RewriteRule a] -> Term -> Term
 normalForm rs = run []
@@ -59,58 +38,50 @@ rewriteTerm r t = do
    return (sub |-> rhs)
 
 -- uniplate-like helper-functions
-somewhereM :: (MonadPlus m, Uniplate a) => (a -> m a) -> a -> m a
-somewhereM f a = msum $ f a : map g [0..n-1]
- where 
-   n   = length (children a)
-   g i = applyToM i (somewhereM f) a
-
-applyToM :: (Monad m, Uniplate a) => Int -> (a -> m a) -> a -> m a
-applyToM n f a = 
-   let (as, build) = uniplate a 
-       g (i, b) = if i==n then f b else return b
-   in liftM build $ mapM g (zip [0..] as)
-
-subtermsAt :: Uniplate a => a -> [([Int], a)]
-subtermsAt a = ([], a) : [ (i:is, b) | (i, c) <- zip [0..] (children a), (is, b) <- subtermsAt c ]
-
-applyAtM :: (Monad m, Uniplate a) => [Int] -> (a -> m a) -> a -> m a
-applyAtM is f = foldr applyToM f is
+somewhereM :: (Uniplate a) => (a -> [a]) -> a -> [a]
+somewhereM f = concatMap leave . rec . navigator
+ where
+   rec ca = changeM f ca ++ concatMap rec (allDowns ca)
 
 ----------------------------------------------------
 
 type Pair   a = (RewriteRule a, Term)
 type Triple a = (RewriteRule a, Term, Term)
 
-superImpose :: RewriteRule a -> RewriteRule a -> [([Int], Term)]
-superImpose r1 r2 =
-   [ (loc, s |-> lhs2) | (loc, a) <- subtermsAt lhs2, s <- make a ]
+superImpose :: RewriteRule a -> RewriteRule a -> [Navigator Term]
+superImpose r1 r2 = rec (navigator lhs1)
  where
     lhs1 :~> _ = rulePair r1
-    lhs2 :~> _ = rulePair (change r1 r2)
+    lhs2 :~> _ = rulePair (renumber r1 r2)
     
-    make (Meta _) = []
-    make a        = unifyM lhs1 a
+    rec ca = case current ca of
+                Just (Meta _) -> []
+                Just a -> [ subTop s ca | s <- unifyM a lhs2 ] ++ concatMap rec (allDowns ca)
+                Nothing -> []
     
-    change r = case metaInRewriteRule r of
-                  [] -> id
-                  xs -> renumberRewriteRule (maximum xs + 1)
+    subTop s ca = fromMaybe ca $ do 
+       top ca >>= return . change (s |->) >>= navigateTo (location ca)
+    
+    renumber r = case metaInRewriteRule r of
+                    [] -> id
+                    xs -> renumberRewriteRule (maximum xs + 1)
 
 criticalPairs :: [RewriteRule a] -> [(Term, Pair a, Pair a)]
 criticalPairs rs = 
-   [ (a, (r1, b1), (r2, b2)) 
+   [ (freeze a, (r1, freeze b1), (r2, freeze b2)) 
    | r1       <- rs
    , r2       <- rs
-   , (loc, a) <- superImpose r1 r2
-   , b1       <- rewriteTerm r1 a
-   , b2       <- applyAtM loc (rewriteTerm r2) a
-   , b1 /= b2 
+   , na <- superImpose r1 r2
+   , (compareId r1 r2 == LT || not (null (location na)))
+   , a  <- leave na
+   , b1 <- rewriteTerm r1 a
+   , b2 <- changeM (rewriteTerm r2) na >>= leave
    ]
 
 noDiamondPairs :: [RewriteRule a] -> [(Term, Triple a, Triple a)]
 noDiamondPairs rs = noDiamondPairsWith (normalForm rs) rs
 
-noDiamondPairsWith :: (Term -> Term) -> [RewriteRule a] -> [(Term, (RewriteRule a, Term, Term), (RewriteRule a, Term, Term))]
+noDiamondPairsWith :: (Term -> Term) -> [RewriteRule a] -> [(Term, Triple a, Triple a)]
 noDiamondPairsWith f rs =
    [ (a, (r1, e1, nf1), (r2, e2, nf2)) 
    | (a, (r1, e1), (r2, e2)) <- criticalPairs rs
@@ -119,8 +90,9 @@ noDiamondPairsWith f rs =
    ]
 
 reportPairs :: (Term -> String) -> [(Term, Triple a, Triple a)] -> IO ()
-reportPairs f = putStrLn . unlines . zipWith report [1::Int ..]
+reportPairs pp = putStrLn . unlines . zipWith report [1::Int ..]
  where
+   f = pp . unfreeze
    report i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
       [ show i ++ ") " ++ f a
       , "  "   ++ showId r1
@@ -128,6 +100,18 @@ reportPairs f = putStrLn . unlines . zipWith report [1::Int ..]
       , "  "   ++ showId r2
       , "    " ++ f e2 ++ if e2==nf2 then "" else "   -->   " ++ f nf2
       ]
+
+freeze :: Term -> Term
+freeze (Meta n) = Con (newSymbol ('m' : show n))
+freeze term = descend freeze term
+
+unfreeze :: Term -> Term
+unfreeze (Con s) = case showId s of 
+                      'm':is | all isDigit is -> -- && not (null is) -> 
+                         Meta (read is)
+                      _ -> Con s
+unfreeze term = descend unfreeze term
+
 
 ----------------------------------------------------
 
@@ -154,4 +138,13 @@ this = [r1, r2, r3, r4, r5, r6]
 go = reportPairs $ noDiamondPairs this
 
 r6 :: RewriteRule SLogic
-r6 = rewriteRule "R6" $ \p -> p :||: T :~> F -}
+r6 = rewriteRule "R6" $ \p -> p :||: T :~> F 
+
+r1, r2, r3 :: RewriteRule Expr
+r1 = rewriteRule "a1" $ \a -> 0+a :~> a
+r2 = rewriteRule "a3" $ \a b c -> a+(b+c) :~> (a+b)+c
+r3 = rewriteRule "a2" $ \a -> a+0 :~> a
+
+go = do -- putStrLn $ unlines $ map show $ criticalPairs [r1,r2]
+        checkConfluence [r1,r2,r3]
+-}

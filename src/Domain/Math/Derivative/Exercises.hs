@@ -17,6 +17,7 @@ module Domain.Math.Derivative.Exercises
 
 import Common.Uniplate (universe)
 import Control.Monad
+import Data.List
 import Data.Maybe
 import Prelude hiding (repeat, (^))
 import Domain.Math.Derivative.Rules 
@@ -86,7 +87,7 @@ derivativePowerExercise = describe
    , status        = Experimental
    , isReady       = \a -> noDiff a && onlyNatPower a
    , isSuitable    = const True
-   , equivalence   = \_ _ -> True -- to do
+   , equivalence   = \_ _ -> True -- \x y -> eqApprox (evalDiff x) (evalDiff y)
    , strategy      = derivativePowerStrategy
    , examples      = concat (diffSet5 ++ diffSet6)
    , testGenerator = Nothing
@@ -163,6 +164,20 @@ onlyNatPower e = and [ isNat a | Sym s [_, a] <- universe e, s == powerSymbol ]
    isNat (Nat _) = True
    isNat _       = False
 
+evalDiff :: Expr -> Expr
+evalDiff expr
+   | isDiff expr = 
+        case concatMap (`applyAll` expr) list of
+           hd:_ -> evalDiff hd 
+           _    -> expr
+   | otherwise = descend evalDiff expr
+ where
+   list = [ ruleDerivPolynomial, ruleDerivPowerFactor
+          , ruleDerivPlus, ruleDerivMin, ruleDerivNegate
+          , ruleDerivProduct, ruleDerivQuotient
+          , ruleDerivPowerChain, ruleDerivSqrtChain, ruleDerivRoot
+          ]
+
 {-
 go = checkExercise derivativePowerExercise
 
@@ -170,4 +185,36 @@ raar = printDerivation derivativeProductExercise expr
  where 
    x = Var "x"
    expr = diff $ lambda (Var "x")  $ (-27/2*((-13/2-x)*(85/6-x)+54/7*(x^2/(-58/7))))
--}
+
+eqApprox :: Expr -> Expr -> Bool
+eqApprox a b = rec 5 doubleList
+ where
+   vs = nub (collectVars a ++ collectVars b)
+ 
+   rec 0 = const True
+   rec n = rec2 n 10
+    
+   rec2 _ 0 ds = undefined -- a==b
+   rec2 n m ds = case eqApproxWith f a b of  
+                    Just b  -> b && rec (n-1) ys 
+                    Nothing -> rec2 n (m-1) ys
+    where
+      (xs, ys) = splitAt (length vs) ds
+      f = (xs !!) . fromMaybe 0 . (`elemIndex` vs)
+
+eqApproxWith :: (String -> Double) -> Expr -> Expr -> Maybe Bool
+eqApproxWith f a b = do
+   d1 <- match doubleView (subst a)
+   d2 <- match doubleView (subst b)
+   return $ abs (d1 - d2) < 1e-9 -- 11 is still ok for example set
+ where 
+    subst (Var s) = Number (f s)
+    subst expr    = descend subst expr
+    
+doubleList :: [Double] -- between -20 and 20
+doubleList = iterate next (pi*exp 1)
+  where   
+    next :: Double -> Double
+    next a = if b > 20 then b-20 else b 
+     where
+       b = a + exp 3 * log 2 -}

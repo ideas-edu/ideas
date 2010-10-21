@@ -40,10 +40,10 @@ instance Apply (Core l) where
 -- State data type
 
 data State l a = S
-   { stack       :: [Either l (Core l a)]
-   , choices     :: [Bool]
-   , trace       :: [Step l a]
-   , value       :: a
+   { stack   :: [Either l (Core l a)]
+   , choices :: [Bool]
+   , trace   :: [Step l a]
+   , value   :: a
    }
 
 makeState :: Core l a -> a -> State l a

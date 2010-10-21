@@ -192,7 +192,10 @@ instance Show a => Show (Equation a) where
 
 instance Functor Equation where
    fmap f (x :==: y) = f x :==: f y
-   
+
+instance Zip Equation where
+   fzipWith f (a :==: b) (c :==: d) = f a c :==: f b d
+
 instance Relational Equation where
    leftHandSide  = leftHandSide  . build equationView
    rightHandSide = rightHandSide . build equationView

@@ -26,7 +26,7 @@ import Common.Id
 import Common.Utils (commaList)
 import Common.Strategy.Core
 import Common.Classes
-import Common.Rewriting (RewriteRule(..))
+import Common.Rewriting (RewriteRule)
 import Common.Transformation
 import Common.Derivation
 import Common.Uniplate hiding (rewriteM)

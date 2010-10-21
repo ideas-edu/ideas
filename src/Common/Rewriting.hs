@@ -10,8 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting 
-   ( RewriteRule, smartGenerator, rewriteRule, rewriteRules
-   , Builder, rewriteM, RuleSpec((:~>)), rulePair, BuilderList, showRewriteRule
+   ( RewriteRule, smartGenerator, rewriteRule
+   , RuleBuilder, rewriteM, RuleSpec((:~>)), rulePair, showRewriteRule
    , Rewrite(..), ShallowEq(..), Operator
    , associativeOperator, Operators, collectWithOperator, buildWithOperator
    , equalWith, isOperator, constructor, difference, differenceMode

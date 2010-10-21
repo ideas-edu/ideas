@@ -309,11 +309,11 @@ siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 addRuleToGroup :: HasId b => b -> Rule a -> Rule a
 addRuleToGroup group r = r { ruleGroups = getId group : ruleGroups r }
 
-ruleList :: (IsId n, Builder f a, Rewrite a) => n -> [f] -> Rule a
+ruleList :: (IsId n, RuleBuilder f a, Rewrite a) => n -> [f] -> Rule a
 ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule (show a))
  where a = newId n
  
-rule :: (IsId n, Builder f a, Rewrite a) => n -> f -> Rule a
+rule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> Rule a
 rule n = makeRule a . makeRewriteTrans . rewriteRule (showId a)
  where a = newId n
 

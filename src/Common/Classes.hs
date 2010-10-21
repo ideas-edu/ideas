@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Classes 
    ( Apply(..), applicable, applyD, applyM
-   , Switch(..), Crush(..)
+   , Switch(..), Crush(..), Zip(..)
    ) where
 
 import Common.Utils (safeHead)
@@ -94,3 +94,19 @@ instance Crush (M.Map a) where
 
 instance Crush IM.IntMap where
    crush = IM.elems
+
+-----------------------------------------------------------
+-- * Type class |Zip|
+   
+class Functor f => Zip f where
+   fzip     :: f a -> f b -> f (a, b)
+   fzipWith :: (a -> b -> c) -> f a -> f b -> f c
+   -- default implementation
+   fzip = fzipWith (,)
+   fzipWith f a b = fmap (uncurry f) (fzip a b)
+
+instance Zip [] where
+   fzipWith = zipWith
+
+instance Zip Maybe where
+   fzipWith = liftM2

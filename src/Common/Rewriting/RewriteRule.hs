@@ -1,6 +1,5 @@
 {-# LANGUAGE ExistentialQuantification, MultiParamTypeClasses, 
-      FunctionalDependencies, FlexibleInstances, UndecidableInstances,
-      TypeSynonymInstances #-}
+       FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -17,8 +16,11 @@ module Common.Rewriting.RewriteRule
      Rewrite(..), Different(..)
      -- * Rewrite rules and specs
    , RewriteRule, rulePair, RuleSpec(..)
-     -- * Compiling a rewrite rule
-   , rewriteRule, rewriteRules, Builder, BuilderList
+     -- * Axioms and specs
+   , Axiom, axiomPair, AxiomSpec(..)
+     -- * Compiling rewrite rules and axioms
+   , rewriteRule, RuleBuilder, axiom, AxiomBuilder
+   , axiomRules, axiomRuleToLeft, axiomRuleToRight
      -- * Using rewrite rules
    , rewrite, rewriteM, showRewriteRule, smartGenerator
    , metaInRewriteRule, renumberRewriteRule
@@ -54,6 +56,12 @@ infixl 1 :~>
    
 data RuleSpec a = a :~> a deriving Show
 
+instance Functor RuleSpec where
+   fmap f (a :~> b) = f a :~> f b
+
+instance Zip RuleSpec where 
+   fzipWith f (a :~> b) (c :~> d) = f a c :~> f b d
+
 data RewriteRule a = Rewrite a => R 
    { ruleId   :: Id
    , rulePair :: RuleSpec Term
@@ -62,16 +70,34 @@ data RewriteRule a = Rewrite a => R
 instance Show (RewriteRule a) where
    show = showId
 
-instance Functor RuleSpec where
-   fmap f (a :~> b) = f a :~> f b
-
 instance HasId (RewriteRule a) where
-   getId        = ruleId
-   changeId f r@(R _ _) = R {ruleId = f (ruleId r), rulePair = rulePair r}
+   getId = ruleId
+   changeId f (R n p) = R (f n) p
 
--- constructor
-newRule :: Rewrite a => String -> (Int -> RuleSpec Term) -> RewriteRule a
-newRule s f = R (newId s) (f 0)
+------------------------------------------------------
+-- Axioms and specs
+
+infixl 1 :==
+
+data AxiomSpec a = a :== a deriving Show
+
+instance Functor AxiomSpec where
+   fmap f (a :== b) = f a :== f b
+
+instance Zip AxiomSpec where 
+   fzipWith f (a :== b) (c :== d) = f a c :== f b d
+
+data Axiom a = Rewrite a => A
+   { axiomId   :: Id
+   , axiomPair :: AxiomSpec Term
+   }
+
+instance Show (Axiom a) where
+   show = showId
+
+instance HasId (Axiom a) where
+   getId = axiomId
+   changeId f (A n p) = A (f n) p
 
 ------------------------------------------------------
 -- Compiling a rewrite rule
@@ -79,33 +105,30 @@ newRule s f = R (newId s) (f 0)
 class Different a where
    different :: (a, a)
 
-class Builder t a | t -> a where
-   buildSpec :: t -> Int -> RuleSpec Term
+-- rewrite rules
+class RuleBuilder t a | t -> a where
+   buildRuleSpec :: t -> Int -> RuleSpec Term
 
-instance IsTerm a => Builder (RuleSpec a) a where
-   buildSpec (a :~> b) _ = toTerm a :~> toTerm b
+instance IsTerm a => RuleBuilder (RuleSpec a) a where
+   buildRuleSpec = const . fmap toTerm
 
-instance (Different a, Builder t b) => Builder (a -> t) b where
-   buildSpec f i = buildFunction i (\a -> buildSpec (f a) (i+1))
+instance (Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
+   buildRuleSpec f i = buildFunction i (\a -> buildRuleSpec (f a) (i+1))
 
-class BuilderList t a | t -> a where
-   getSpecNr  :: t -> Int -> Int -> RuleSpec Term
-   countSpecs :: t -> Int
+-- axioms
+class AxiomBuilder t a | t -> a where
+   buildAxiomSpec :: t -> Int -> AxiomSpec Term
+
+instance IsTerm a => AxiomBuilder (AxiomSpec a) a where
+   buildAxiomSpec = const . fmap toTerm
+
+instance (Different a, AxiomBuilder t b) => AxiomBuilder (a -> t) b where
+   buildAxiomSpec f i = buildFunction i (\a -> buildAxiomSpec (f a) (i+1))
+
+buildFunction :: (Zip f, Different a) => Int -> (a -> f Term) -> f Term
+buildFunction n f = fzipWith (fill n) (f a) (f b)
+ where (a, b) = different
  
-instance Builder t a => BuilderList [t] a where
-   getSpecNr rs = buildSpec . (rs !!)
-   countSpecs   = length
-
-instance (Different a, BuilderList t b) => BuilderList (a -> t) b where 
-   getSpecNr f n i = buildFunction i (\a -> getSpecNr (f a) n (i+1))
-   countSpecs  f   = countSpecs (f $ error "countSpecsL")
-
-buildFunction :: Different a => Int -> (a -> RuleSpec Term) -> RuleSpec Term
-buildFunction n f = fill n a1 a2 :~> fill n b1 b2
- where
-   a1 :~> b1 = f (fst different)
-   a2 :~> b2 = f (snd different)
-
 fill :: Int -> Term -> Term -> Term
 fill i = rec
  where
@@ -123,12 +146,19 @@ build ops (lhs :~> rhs) a = do
        extRight a = if b2 then binary sym a (Meta specialRight) else a
    fromTermM (s |-> extLeft (extRight rhs))
 
-rewriteRule :: (Builder f a, Rewrite a) => String -> f -> RewriteRule a
-rewriteRule s = newRule s . buildSpec
+rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
+rewriteRule s f = R (newId s) (buildRuleSpec f 0)
 
-rewriteRules :: (BuilderList f a, Rewrite a) => String -> f -> [RewriteRule a]
-rewriteRules s f = 
-   [ newRule s (getSpecNr f n) | n <- [0 .. countSpecs f-1] ]
+axiom :: (IsId n, AxiomBuilder f a, Rewrite a) => n -> f -> Axiom a
+axiom s f = A (newId s) (buildAxiomSpec f 0)
+
+axiomRules :: Axiom a -> (RewriteRule a, RewriteRule a)
+axiomRules a@(A _ _) = (R (getId a) (x :~> y), R (getId a) (y :~> x)) 
+ where (x :== y) = axiomPair a
+
+axiomRuleToLeft, axiomRuleToRight :: Axiom a -> RewriteRule a
+axiomRuleToLeft  = snd . axiomRules
+axiomRuleToRight = fst . axiomRules
 
 ------------------------------------------------------
 -- Using a rewrite rule

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.equations.coverup.plus">
       <expr>
@@ -13,13 +13,31 @@
         <item name="location" value="[1,1]"/>
       </context>
     </elem>
+    <elem ruleid="algebra.manipulation.exponents.factor-as-power">
+      <expr>
+        (2^2)^(3*x) == 2^6
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
     <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
-        2^(6*x) == 64
+        2^(6*x) == 2^6
       </expr>
       <context>
         <item name="location" value="[1]"/>
       </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        6*x == 6
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 1
+      </expr>
     </elem>
   </list>
 </reply>

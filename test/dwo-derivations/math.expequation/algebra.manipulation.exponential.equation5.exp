@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.factor-as-power">
       <expr>
@@ -21,12 +21,7 @@
         2-x == -2
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
-      <expr>
-        -x == -4
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.coverup.negate">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         x == 4
       </expr>

@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.equations.coverup.minus-left">
       <expr>

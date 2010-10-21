@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.factor-as-power">
       <expr>
@@ -37,14 +37,14 @@
         2*(2*x-3) == 3/2
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.times">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
-        2*x-3 == 3/4
+        4*x-6 == 3/2
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.minus-left">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
-        2*x == 15/4
+        4*x == 15/2
       </expr>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">

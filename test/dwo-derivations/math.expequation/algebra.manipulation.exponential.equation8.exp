@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.write-as-power-generic">
       <expr>
@@ -21,7 +21,7 @@
         3*x-2 == 3/2
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
       <expr>
         3*x == 7/2
       </expr>

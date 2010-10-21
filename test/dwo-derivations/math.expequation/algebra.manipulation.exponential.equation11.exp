@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.equations.coverup.times">
       <expr>
@@ -7,11 +7,26 @@
     </elem>
     <elem ruleid="algebra.manipulation.exponents.factor-as-power">
       <expr>
-        7^(2^2*x-1) == 49
+        7^(4*x-1) == 7^2
       </expr>
       <context>
-        <item name="location" value="[1,2,1,1]"/>
+        <item name="location" value="[2]"/>
       </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.same-base">
+      <expr>
+        4*x-1 == 2
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.onevar.minus-left">
+      <expr>
+        4*x == 3
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x == 3/4
+      </expr>
     </elem>
   </list>
 </reply>

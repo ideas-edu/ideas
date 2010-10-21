@@ -1,16 +1,11 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.equals-one">
       <expr>
         1-2*x == 0
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
-      <expr>
-        -2*x == -1
-      </expr>
-    </elem>
-    <elem ruleid="algebra.equations.coverup.negate">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
         2*x == 1
       </expr>

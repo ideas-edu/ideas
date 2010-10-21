@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.equations.coverup.times">
       <expr>
@@ -42,14 +42,14 @@
         2*(1-2*x) == 3/2
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.times">
+    <elem ruleid="algebra.equations.linear.distr-times">
       <expr>
-        1-2*x == 3/4
+        2-4*x == 3/2
       </expr>
     </elem>
-    <elem ruleid="algebra.equations.coverup.minus-right">
+    <elem ruleid="algebra.equations.coverup.onevar.minus-right">
       <expr>
-        2*x == 1/4
+        4*x == 1/2
       </expr>
     </elem>
     <elem ruleid="algebra.equations.coverup.times">

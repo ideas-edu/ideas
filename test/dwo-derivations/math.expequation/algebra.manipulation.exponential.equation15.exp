@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3574)">
+<reply result="ok" version="0.6.6 (3605)">
   <list>
     <elem ruleid="algebra.equations.coverup.times">
       <expr>
@@ -18,7 +18,7 @@
         2*x+1 == 3
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.var-left-con-right">
+    <elem ruleid="algebra.equations.coverup.onevar.plus">
       <expr>
         2*x == 2
       </expr>

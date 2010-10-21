@@ -337,13 +337,13 @@ mulRoot = describe "Multiply base of root" $
 -- | commutative version of the mulRoot rule
 mulRootCom :: Rule Expr
 mulRootCom = makeCommutative (myProductView (powerFactorisationView rootView)) (.*.) mulRoot
- where
-   myProductView :: View Expr (Bool, [Expr]) -> View Expr [Expr]
-   myProductView v = v >>> makeView f g
-     where
-       f (s, (x:xs)) = return $ if s then neg x : xs else x:xs
-       f _           = fail ""
-       g = (,) False 
+  where
+    myProductView :: View Expr (Bool, [Expr]) -> View Expr [Expr]
+    myProductView v = v >>> makeView f g
+      where
+        f (s, (x:xs)) = return $ if s then neg x : xs else x:xs
+        f _           = fail ""
+        g = (,) False 
 
 -- | c1 * root a x / c2 * root b x = c1*c2 * root (a/b) x
 divRoot :: Rule Expr

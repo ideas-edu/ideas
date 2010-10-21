@@ -24,6 +24,7 @@ module Domain.Math.Power.Strategies
 
 import Common.Classes
 import Common.Context
+import Common.Navigator
 import Common.Rewriting.Term
 import Common.Strategy
 import Common.Transformation
@@ -33,7 +34,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpRules
-import Domain.Math.Polynomial.Strategies (quadraticStrategy)
+import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
 import Domain.Math.Polynomial.Rules (flipEquation)
 import Domain.Math.Power.Rules
 import Domain.Math.Numeric.Rules
@@ -79,12 +80,16 @@ expEqStrategy :: LabeledStrategy (Context (Equation Expr))
 expEqStrategy = cleanUpStrategy cleanup strat
   where 
     strat =  label "Exponential equation" 
-          $  coverup
-         <*> try (somewhere (use factorAsPower))
+          $  try coverup
+         <*> repeat (somewhereNotInExp (use factorAsPower))
          <*> powerS 
          <*> (use sameBase <|> use equalsOne)
-         <*> try (use varLeftConRight)
-         <*> coverup
+         <*> linearStrategy
+         
+    somewhereNotInExp = somewhereWith "somewhere but not in exponent" $ \ a ->
+      if (isPowC a) then [1] else [0 .. arity a-1]
+    
+    isPowC = maybe False (isJust . isPower :: Term -> Bool) . currentT
     
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 simplifyProduct : natRules ++ rationalRules

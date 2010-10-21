@@ -33,7 +33,7 @@ import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO3
 import Domain.Math.Examples.DWO4 ( powerEquations, expEquations, logEquations
                                  , higherPowerEquations)
-import Domain.Math.Expr
+import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Strategies

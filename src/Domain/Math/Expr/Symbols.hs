@@ -91,7 +91,7 @@ fcompSymbol  = toSymbol "compose"
 -------------------------------------------------------------
 -- Some match functions
 
-isPlus, isTimes, isMinus, isDivide :: 
+isPlus, isTimes, isMinus, isDivide, isPower :: 
    (Symbolic a, MonadPlus m) => a -> m (a, a)
 isNegate :: (Symbolic a, MonadPlus m) => a -> m a
    
@@ -100,6 +100,7 @@ isTimes  = isAssoBinary timesSymbol
 isMinus  = isBinary     minusSymbol  
 isDivide = isBinary     divideSymbol 
 isNegate = isUnary      negateSymbol 
+isPower  = isBinary     powerSymbol
 
 infixr 8 ^
 

@@ -189,7 +189,7 @@ exerciselistS :: [Some ExercisePackage] -> Service
 exerciselistS list = makeService "exerciselist" 
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises list ::: List (tuple4 (Tag "domain" String) (Tag "identifier" String) (Tag "description" String) (Tag "status" String))
+   allExercises list ::: List (tuple3 (Tag "exerciseid" String) (Tag "description" String) (Tag "status" String))
 
 rulelistS :: Service
 rulelistS = makeService "rulelist" 
@@ -210,13 +210,13 @@ strategyinfoS = makeService "strategyinfo"
    "Returns the representation of the strategy of a particular exercise." $ 
    (toStrategy . strategy . exercise) ::: ExercisePkg :-> Strategy
    
-allExercises :: [Some ExercisePackage] -> [(String, String, String, String)]
+allExercises :: [Some ExercisePackage] -> [(String, String, String)]
 allExercises = map make . sortBy cmp
  where
    cmp e1 e2  = f e1 `compare` f e2
    f (Some pkg) = showId (exercise pkg)
    make (Some pkg) = 
-      (qualification pkg, unqualified pkg, description pkg, show (status (exercise pkg)))
+      (showId pkg, description pkg, show (status (exercise pkg)))
 
 allRules :: ExercisePackage a -> [(String, Bool, Bool)]
 allRules = map make . ruleset . exercise

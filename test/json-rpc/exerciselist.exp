@@ -1,199 +1,172 @@
 {
    "result": [
       {
-         "domain": "algebra.equations",
-         "identifier": "coverup",
+         "exerciseid": "algebra.equations.coverup",
          "description": "solve an equation by covering up",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.equations",
-         "identifier": "linear",
+         "exerciseid": "algebra.equations.linear",
          "description": "solve a linear equation",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.equations.linear",
-         "identifier": "mixed",
+         "exerciseid": "algebra.equations.linear.mixed",
          "description": "solve a linear equation with mixed fractions",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.equations",
-         "identifier": "polynomial",
+         "exerciseid": "algebra.equations.polynomial",
          "description": "solve an equation (higher degree)",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.equations",
-         "identifier": "quadratic",
+         "exerciseid": "algebra.equations.quadratic",
          "description": "solve a quadratic equation",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.equations.quadratic",
-         "identifier": "approximate",
+         "exerciseid": "algebra.equations.quadratic.approximate",
          "description": "solve a quadratic equation with approximation",
          "status": "Alpha"
       },
       {
-         "domain": "algebra.equations.quadratic",
-         "identifier": "no-abc",
+         "exerciseid": "algebra.equations.quadratic.no-abc",
          "description": "solve a quadratic equation without abc-formula",
          "status": "Alpha"
       },
       {
-         "domain": "algebra.equations",
-         "identifier": "rational",
+         "exerciseid": "algebra.equations.rational",
          "description": "solve a rational equation (with a variable in a divisor)",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.inequalities",
-         "identifier": "linear",
+         "exerciseid": "algebra.inequalities.linear",
          "description": "solve a linear inequation",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.inequalities",
-         "identifier": "polynomial",
+         "exerciseid": "algebra.inequalities.polynomial",
          "description": "solve an inequation of higher degree",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.inequalities",
-         "identifier": "quadratic",
+         "exerciseid": "algebra.inequalities.quadratic",
          "description": "solve a quadratic inequation",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.exponential",
-         "identifier": "equation",
+         "exerciseid": "algebra.manipulation.exponential.equation",
          "description": "solve exponential equation algebraically",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.exponents",
-         "identifier": "equation",
+         "exerciseid": "algebra.manipulation.exponents.equation",
          "description": "solve power equation algebraically with x > 0",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.exponents",
-         "identifier": "nonnegative",
+         "exerciseid": "algebra.manipulation.exponents.nonnegative",
          "description": "write with a non-negative exponent",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.exponents",
-         "identifier": "powerof",
+         "exerciseid": "algebra.manipulation.exponents.powerof",
          "description": "write as a power of a",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.exponents",
-         "identifier": "simplify",
+         "exerciseid": "algebra.manipulation.exponents.simplify",
          "description": "simplify expression (powers)",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.polynomial",
-         "identifier": "factor",
+         "exerciseid": "algebra.manipulation.logarithmic.equation",
+         "description": "solve logarithmic equation algebraically",
+         "status": "Provisional"
+      },
+      {
+         "exerciseid": "algebra.manipulation.polynomial.factor",
          "description": "factorize the expression",
          "status": "Provisional"
       },
       {
-         "domain": "algebra.manipulation.rational",
-         "identifier": "simplify",
+         "exerciseid": "algebra.manipulation.rational.simplify",
          "description": "simplify a rational expression (with a variable in a divisor)",
          "status": "Alpha"
       },
       {
-         "domain": "arithmetic",
-         "identifier": "exponents",
+         "exerciseid": "arithmetic.exponents",
          "description": "simplify expression (powers)",
          "status": "Provisional"
       },
       {
-         "domain": "arithmetic",
-         "identifier": "fractions",
+         "exerciseid": "arithmetic.fractions",
          "description": "simplify expression (fractions)",
          "status": "Alpha"
       },
       {
-         "domain": "calculus",
-         "identifier": "differentiation",
+         "exerciseid": "calculus.differentiation",
          "description": "Derivative",
          "status": "Experimental"
       },
       {
-         "domain": "calculus.differentiation",
-         "identifier": "polynomial",
+         "exerciseid": "calculus.differentiation.polynomial",
          "description": "Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules.",
          "status": "Provisional"
       },
       {
-         "domain": "calculus.differentiation",
-         "identifier": "power",
+         "exerciseid": "calculus.differentiation.power",
          "description": "First write as a power, then find the derivative. Rewrite negative or rational exponents.",
          "status": "Experimental"
       },
       {
-         "domain": "calculus.differentiation",
-         "identifier": "product",
+         "exerciseid": "calculus.differentiation.product",
          "description": "Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer.",
          "status": "Provisional"
       },
       {
-         "domain": "calculus.differentiation",
-         "identifier": "quotient",
+         "exerciseid": "calculus.differentiation.quotient",
          "description": "Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator.",
          "status": "Provisional"
       },
       {
-         "domain": "linearalgebra",
-         "identifier": "gaussianelim",
+         "exerciseid": "linearalgebra.gaussianelim",
          "description": "Gaussian Elimination",
          "status": "Stable"
       },
       {
-         "domain": "linearalgebra",
-         "identifier": "gramschmidt",
+         "exerciseid": "linearalgebra.gramschmidt",
          "description": "Gram-Schmidt",
          "status": "Alpha"
       },
       {
-         "domain": "linearalgebra",
-         "identifier": "linsystem",
+         "exerciseid": "linearalgebra.linsystem",
          "description": "Solve Linear System",
          "status": "Stable"
       },
       {
-         "domain": "linearalgebra",
-         "identifier": "systemwithmatrix",
+         "exerciseid": "linearalgebra.systemwithmatrix",
          "description": "Solve Linear System with Matrix",
          "status": "Provisional"
       },
       {
-         "domain": "logic.propositional",
-         "identifier": "dnf",
+         "exerciseid": "logic.propositional.dnf",
          "description": "Proposition to DNF",
          "status": "Stable"
       },
       {
-         "domain": "logic.propositional.dnf",
-         "identifier": "unicode",
+         "exerciseid": "logic.propositional.dnf.unicode",
          "description": "Proposition to DNF (unicode support)",
          "status": "Stable"
       },
       {
-         "domain": "relationalgebra",
-         "identifier": "cnf",
+         "exerciseid": "relationalgebra.cnf",
          "description": "To conjunctive normal form",
          "status": "Alpha"
       }
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.5 (0)"
+   "version": "0.6.6 (0)"
 }

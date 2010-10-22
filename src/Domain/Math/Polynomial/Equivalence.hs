@@ -286,6 +286,10 @@ simLogic f a b = rec (fmap f a) (fmap f b)
    
    falseAnd xs = if F `elem` xs then [] else xs
    
+   shallowEq a b = 
+      let f = descend (const T) 
+      in f a == f b 
+   
 eqAfterSubstitution :: (Functor f, Functor g) 
    => (f (g Expr) -> f (g Expr) -> Bool) -> Context (f (g Expr)) -> Context (f (g Expr)) -> Bool
 eqAfterSubstitution eq ca cb = fromMaybe False $ do 

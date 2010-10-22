@@ -222,16 +222,6 @@ showExpr table = rec 0
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"
 
-instance ShallowEq Expr where
-   shallowEq (Nat a) (Nat b) = a == b
-   shallowEq (Var a) (Var b) = a == b
-   shallowEq (Number a) (Number b) = a == b
-   shallowEq expr1 expr2 =
-      case (getFunction expr1, getFunction expr2) of
-         (Just (s1, as), Just (s2, bs)) -> 
-              s1 == s2 && length as == length bs
-         _ -> False 
-
 instance Rewrite Expr
 
 instance Different Expr where

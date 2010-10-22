@@ -12,7 +12,7 @@
 module Common.Rewriting 
    ( RewriteRule, smartGenerator, rewriteRule
    , RuleBuilder, rewriteM, RuleSpec((:~>)), ruleSpecTerm, showRewriteRule
-   , Rewrite(..), ShallowEq(..), Operator, useOperators
+   , Rewrite(..), Operator, useOperators
    , associativeOperator, Operators, collectWithOperator, buildWithOperator
    , equalWith, isOperator, constructor, difference, differenceMode
    , acOperator, normalizeWith, IsTerm(..), Different(..)

@@ -13,19 +13,17 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Difference 
-   ( ShallowEq(..), difference, differenceEqual, differenceMode
+   ( difference, differenceEqual, differenceMode
    ) where
 
+import Common.Rewriting.Term
 import Common.Rewriting.Operator
 import Common.Rewriting.RewriteRule
 import Control.Monad
 import Common.Uniplate
 import Data.Maybe
 
-class ShallowEq a where 
-   shallowEq :: a -> a -> Bool
-
-differenceMode :: (Rewrite a, Uniplate a, ShallowEq a) 
+differenceMode :: (Rewrite a, Uniplate a) 
                => (a -> a -> Bool) -> Bool -> a -> a -> Maybe (a, a)
 differenceMode eq b =
    if b then differenceEqual eq else difference
@@ -33,51 +31,55 @@ differenceMode eq b =
 -- | This function returns the difference, except that the 
 -- returned terms should be logically equivalent. Nothing can signal that
 -- there is no difference, or that the terms to start with are not equivalent.
-differenceEqual :: (Rewrite a, Uniplate a, ShallowEq a) 
+differenceEqual :: (Rewrite a, Uniplate a) 
                 => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
 differenceEqual eq p q = do
    guard (eq p q)
    diff eq p q
 
-difference :: (Rewrite a, Uniplate a, ShallowEq a) 
-           => a -> a -> Maybe (a, a)
+difference :: (Rewrite a, Uniplate a) => a -> a -> Maybe (a, a)
 difference = diff (\_ _ -> True)
 
--- local implementation function
-diff :: (Rewrite a, Uniplate a, ShallowEq a) 
-     => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
-diff eq p q 
-   | shallowEq p q =
-        case findOperator operators p of
-           Just op | isAssociative op && not (isCommutative op) -> 
-              let ps = collectWithOperator op p
-                  qs = collectWithOperator op q
-              in diffA eq op ps qs
-           _ -> diffList eq (children p) (children q)
-   | otherwise = Just (p, q)
+shallowEq :: IsTerm a => a -> a -> Bool
+shallowEq a b = 
+   let f  = liftM fst . getConSpine
+       ta = toTerm a
+       tb = toTerm b 
+   in fromMaybe (ta == tb) $ liftM2 (==) (f ta) (f tb)
 
-diffList :: (Rewrite a, Uniplate a, ShallowEq a) 
-         => (a -> a -> Bool) -> [a] -> [a] -> Maybe (a, a)
-diffList eq xs ys
-   | length xs /= length ys = Nothing
-   | otherwise = 
-        case catMaybes (zipWith (diff eq) xs ys) of
-           [p] -> Just p
-           _   -> Nothing
-           
-diffA :: (Rewrite a, Uniplate a, ShallowEq a) 
-      => (a -> a -> Bool) -> Operator a -> [a] -> [a] -> Maybe (a, a)
-diffA eq op = curry (make . uncurry rev . f . uncurry rev . f)
+-- local implementation function
+diff :: (Rewrite a, Uniplate a) => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
+diff eq = rec
  where
-   f (p:ps, q:qs) | not (null ps || null qs) && 
-                    isNothing (diff eq p q) && 
-                    (equal ps qs) = 
-      f (ps, qs)
-   f pair = pair
-   
-   equal ps qs = buildWithOperator op ps `eq` buildWithOperator op qs
-   rev   ps qs = (reverse ps, reverse qs)
-   make pair   = 
-      case pair of 
-         ([p], [q]) -> diff eq p q
-         (ps, qs)   -> Just (buildWithOperator op ps, buildWithOperator op qs)
+   rec p q
+      | shallowEq p q =
+           case findOperator operators p of
+              Just op | isAssociative op && not (isCommutative op) -> 
+                 let ps = collectWithOperator op p
+                     qs = collectWithOperator op q
+                 in diffA op ps qs
+              _ -> diffList (children p) (children q)
+      | otherwise = Just (p, q)
+
+   diffList xs ys
+      | length xs /= length ys = Nothing
+      | otherwise = 
+           case catMaybes (zipWith rec xs ys) of
+              [p] -> Just p
+              _   -> Nothing
+           
+   diffA op = curry (make . uncurry rev . f . uncurry rev . f)
+    where
+      f (p:ps, q:qs) | not (null ps || null qs) && 
+                       isNothing (rec p q) && 
+                       (equal ps qs) = 
+         f (ps, qs)
+      f pair = pair
+      
+      equal ps qs = build ps `eq` build qs
+      rev   ps qs = (reverse ps, reverse qs)
+      build       = buildWithOperator op
+      make pair   = 
+         case pair of 
+            ([p], [q]) -> rec p q
+            (ps, qs)   -> Just (build ps, build qs)

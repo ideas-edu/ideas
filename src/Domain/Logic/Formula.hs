@@ -149,19 +149,6 @@ instance Uniplate (Logic a) where
          Not p     -> ([p], \[a] -> Not a)
          _         -> ([], \[] -> p)
 
-instance Eq a => ShallowEq (Logic a) where
-   shallowEq expr1 expr2 =
-      case (expr1, expr2) of
-         (Var a, Var b)         -> a==b
-         (_ :->: _ , _ :->: _ ) -> True
-         (_ :<->: _, _ :<->: _) -> True
-         (_ :&&: _ , _ :&&: _ ) -> True
-         (_ :||: _ , _ :||: _ ) -> True
-         (Not _    , Not _    ) -> True
-         (T        , T        ) -> True
-         (F        , F        ) -> True
-         _                      -> False
-
 instance Different (Logic a) where
    different = (T, F)
 

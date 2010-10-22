@@ -168,20 +168,6 @@ instance Uniplate RelAlg where
          Not s     -> ([s], \[a] -> Not a)
          Inv s     -> ([s], \[a] -> Inv a)
          _         -> ([], \[] -> term)
-
-instance ShallowEq RelAlg where
-   shallowEq expr1 expr2 = 
-      case (expr1, expr2) of
-         (Var a   , Var b   ) -> a==b
-         (_ :.: _ , _ :.: _ ) -> True
-         (_ :+: _ , _ :+: _ ) -> True
-         (_ :&&: _, _ :&&: _) -> True
-         (_ :||: _, _ :||: _) -> True
-         (Not _   , Not _   ) -> True
-         (Inv _   , Inv _   ) -> True
-         (V       , V       ) -> True
-         (I       , I       ) -> True
-         _                    -> False
          
 instance Different RelAlg where
    different = (V, I)

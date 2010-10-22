@@ -221,7 +221,7 @@ inverseRule :: RewriteRule a -> RewriteRule a
 inverseRule (R n (a :~> b) ops) = R n (b :~> a) ops
 
 useOperators :: Operators a -> RewriteRule a -> RewriteRule a
-useOperators ops r = r { ruleOperators = ops ++ ruleOperators r }
+useOperators xs (R n p ops) = R n p (xs ++ ops)
 
 -- some helpers
 metaInRewriteRule :: RewriteRule a -> [Int]
@@ -229,7 +229,7 @@ metaInRewriteRule r =
    [ n | a <- crush (ruleSpecTerm r), Meta n <- leafs a ]
 
 renumberRewriteRule :: Int -> RewriteRule a -> RewriteRule a
-renumberRewriteRule n r@(R _ _ _) = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}
+renumberRewriteRule n (R s p ops) = R s (fmap f p) ops
  where
    f (Meta i) = Meta (i+n)
    f term     = descend f term

@@ -72,7 +72,7 @@ instance Monad m => ArrowChoice (ViewM m) where
 -- Operations on a view
 
 -- The preferred way of constructing a view
-newView :: Monad m => String -> (a -> m b) -> (b -> a) -> ViewM m a b
+newView :: (IsId n, Monad m) => n -> (a -> m b) -> (b -> a) -> ViewM m a b
 newView = Prim . newId
 
 makeView :: Monad m => (a -> m b) -> (b -> a) -> ViewM m a b

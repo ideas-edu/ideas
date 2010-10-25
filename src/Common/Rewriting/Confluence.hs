@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Confluence 
    ( isConfluent, checkConfluence, checkConfluenceWith
+   , somewhereM
    ) where
 
 import Common.Id
@@ -27,9 +28,11 @@ normalForm :: [RewriteRule a] -> Term -> Term
 normalForm rs = run []
  where
    run hist a = 
-      case [ b | r <- rs, b <- somewhereM (rewriteTerm r) a, b `notElem` hist ] of
+      case [ b | r <- rs, b <- somewhereM (rewriteTerm r) a ] of
          []   -> a
-         hd:_ -> run (a:hist) hd 
+         hd:_ -> if hd `elem` hist
+                 then error "cyclic"
+                 else run (a:hist) hd 
 
 rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
@@ -38,7 +41,7 @@ rewriteTerm r t = do
    return (sub |-> rhs)
 
 -- uniplate-like helper-functions
-somewhereM :: (Uniplate a) => (a -> [a]) -> a -> [a]
+somewhereM :: Uniplate a => (a -> [a]) -> a -> [a]
 somewhereM f = concatMap leave . rec . navigator
  where
    rec ca = changeM f ca ++ concatMap rec (allDowns ca)
@@ -60,7 +63,7 @@ superImpose r1 r2 = rec (navigator lhs1)
                 Nothing -> []
     
     subTop s ca = fromMaybe ca $ do 
-       top ca >>= return . change (s |->) >>= navigateTo (location ca)
+       top ca >>= return . change (freeze . (s |->)) >>= navigateTo (location ca)
     
     renumber r = case metaInRewriteRule r of
                     [] -> id

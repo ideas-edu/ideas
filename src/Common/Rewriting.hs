@@ -12,13 +12,13 @@
 module Common.Rewriting 
    ( RewriteRule, smartGenerator, rewriteRule
    , RuleBuilder, rewriteM, RuleSpec((:~>)), ruleSpecTerm, showRewriteRule
-   , Rewrite(..), Operator, useOperators
-   , associativeOperator, Operators, collectWithOperator, buildWithOperator
-   , equalWith, isOperator, constructor, difference, differenceMode
-   , acOperator, normalizeWith, IsTerm(..), Different(..)
+   , Rewrite(..), useOperators
+   , difference, differenceMode
+   , IsTerm(..), Different(..)
+   , module Common.Rewriting.Group
    ) where
 
 import Common.Rewriting.Difference
-import Common.Rewriting.Operator
+import Common.Rewriting.Group hiding (identity)
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term

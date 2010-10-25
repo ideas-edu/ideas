@@ -16,9 +16,11 @@ module Common.Rewriting.Difference
    ( difference, differenceEqual, differenceMode
    ) where
 
+import Common.Rewriting.Group
 import Common.Rewriting.Term
-import Common.Rewriting.Operator
 import Common.Rewriting.RewriteRule
+import Common.View
+import Common.Utils (safeHead)
 import Control.Monad
 import Common.Uniplate
 import Data.Maybe
@@ -47,6 +49,10 @@ shallowEq a b =
        tb = toTerm b 
    in fromMaybe (ta == tb) $ liftM2 (==) (f ta) (f tb)
 
+findOperator :: [Magma a] -> a -> Maybe (Magma a)
+findOperator ops a = safeHead $ filter (`isOperator` a) ops
+ where isOperator op = isJust . match (magmaView op)
+
 -- local implementation function
 diff :: (Rewrite a, Uniplate a) => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
 diff eq = rec
@@ -54,10 +60,10 @@ diff eq = rec
    rec p q
       | shallowEq p q =
            case findOperator operators p of
-              Just op | isAssociative op && not (isCommutative op) -> 
-                 let ps = collectWithOperator op p
-                     qs = collectWithOperator op q
-                 in diffA op ps qs
+              Just op | isAssociative op && not (isCommutative op) -> do
+                 ps <- match (magmaListView op) p
+                 qs <- match (magmaListView op) q
+                 diffA op ps qs
               _ -> diffList (children p) (children q)
       | otherwise = Just (p, q)
 
@@ -76,10 +82,10 @@ diff eq = rec
          f (ps, qs)
       f pair = pair
       
-      equal ps qs = build ps `eq` build qs
+      equal ps qs = builder ps `eq` builder qs
       rev   ps qs = (reverse ps, reverse qs)
-      build       = buildWithOperator op
+      builder     = build (magmaListView op)
       make pair   = 
          case pair of 
             ([p], [q]) -> rec p q
-            (ps, qs)   -> Just (build ps, build qs)
+            (ps, qs)   -> Just (builder ps, builder qs)

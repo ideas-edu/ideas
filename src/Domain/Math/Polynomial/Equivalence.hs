@@ -17,7 +17,6 @@ module Domain.Math.Polynomial.Equivalence
 
 import Common.Classes
 import Common.Context
-import Common.Rewriting hiding (constructor)
 import Common.Uniplate
 import Common.View
 import Control.Monad
@@ -262,10 +261,10 @@ simLogic :: Ord a => (a -> a) -> Logic a -> Logic a -> Bool
 simLogic f a b = rec (fmap f a) (fmap f b)
  where
    rec a b   
-      | isOperator orOperator a =
+      | isOr a =
            let collect = nub . sort . trueOr . collectOr
            in recList (collect a) (collect b)
-      | isOperator andOperator a =
+      | isAnd a =
            let collect = nub . sort . falseAnd . collectAnd
            in recList (collect a) (collect b)
       | otherwise = 
@@ -289,6 +288,13 @@ simLogic f a b = rec (fmap f a) (fmap f b)
    shallowEq a b = 
       let f = descend (const T) 
       in f a == f b 
+      
+   isOr (_ :||: _) = True
+   isOr _          = False
+   
+   isAnd (_ :||: _) = True
+   isAnd _          = False
+   
    
 eqAfterSubstitution :: (Functor f, Functor g) 
    => (f (g Expr) -> f (g Expr) -> Bool) -> Context (f (g Expr)) -> Context (f (g Expr)) -> Bool

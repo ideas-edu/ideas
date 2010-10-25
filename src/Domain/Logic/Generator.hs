@@ -21,6 +21,7 @@ import Data.Char
 import Test.QuickCheck
 import Common.Rewriting
 import Common.Uniplate
+import Common.View
 
 -------------------------------------------------------------
 -- Code that doesn't belong here, but the arbitrary instance
@@ -31,7 +32,13 @@ instance Rewrite SLogic where
 
 -- | Equality modulo associativity of operators
 equalLogicA:: SLogic -> SLogic -> Bool
-equalLogicA = equalWith logicOperators
+equalLogicA p q = rec p == rec q
+ where
+   make  = simplifyWith (map rec) . magmaListView
+   rec p = case p of
+              _ :&&: _ -> make andOperator p
+              _ :||: _ -> make orOperator  p
+              _        -> descend rec p
 
 -----------------------------------------------------------
 -- Logic generator

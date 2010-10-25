@@ -16,11 +16,8 @@ module Common.Rewriting.RewriteRule
      Rewrite(..), Different(..)
      -- * Rewrite rules and specs
    , RewriteRule, ruleSpecTerm, RuleSpec(..)
-     -- * Axioms and specs
-   , Axiom, AxiomSpec(..)
-     -- * Compiling rewrite rules and axioms
-   , rewriteRule, RuleBuilder, axiom, AxiomBuilder
-   , axiomRules, axiomRuleToLeft, axiomRuleToRight
+     -- * Compiling rewrite rules
+   , rewriteRule, RuleBuilder
      -- * Using rewrite rules
    , rewrite, rewriteM, showRewriteRule, smartGenerator
    , metaInRewriteRule, renumberRewriteRule, inverseRule
@@ -31,7 +28,7 @@ import Common.Classes
 import Common.Id
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
-import Common.Rewriting.Operator
+import Common.Rewriting.Group
 import Common.Rewriting.Unification
 import Common.Uniplate (descend, leafs)
 import Control.Monad
@@ -47,7 +44,7 @@ import Test.QuickCheck
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
 class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
-   operators :: Operators a
+   operators :: [Magma a]
    -- default definition: no special operators
    operators = []
 
@@ -70,7 +67,7 @@ instance Zip RuleSpec where
 data RewriteRule a = (Arbitrary a, IsTerm a, Show a) => R 
    { ruleId        :: Id
    , ruleSpecTerm  :: RuleSpec Term
-   , ruleOperators :: Operators a
+   , ruleOperators :: [Magma a]
    }
    
 instance Show (RewriteRule a) where
@@ -81,34 +78,11 @@ instance HasId (RewriteRule a) where
    changeId f (R n p ops) = R (f n) p ops
 
 ------------------------------------------------------
--- Axioms and specs
-
-infixl 1 :==
-
-data AxiomSpec a = a :== a deriving Show
-
-instance Functor AxiomSpec where
-   fmap f (a :== b) = f a :== f b
-
-instance Zip AxiomSpec where 
-   fzipWith f (a :== b) (c :== d) = f a c :== f b d
-
-newtype Axiom a = A (RewriteRule a)
-
-instance Show (Axiom a) where
-   show = showId
-
-instance HasId (Axiom a) where
-   getId (A r) = getId r
-   changeId f (A r) = A (changeId f r)
-
-------------------------------------------------------
 -- Compiling a rewrite rule
 
 class Different a where
    different :: (a, a)
 
--- rewrite rules
 class RuleBuilder t a | t -> a where
    buildRuleSpec :: t -> Int -> RuleSpec Term
 
@@ -117,16 +91,6 @@ instance IsTerm a => RuleBuilder (RuleSpec a) a where
 
 instance (Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
    buildRuleSpec f i = buildFunction i (\a -> buildRuleSpec (f a) (i+1))
-
--- axioms
-class AxiomBuilder t a | t -> a where
-   buildAxiomSpec :: t -> Int -> AxiomSpec Term
-
-instance IsTerm a => AxiomBuilder (AxiomSpec a) a where
-   buildAxiomSpec = const . fmap toTerm
-
-instance (Different a, AxiomBuilder t b) => AxiomBuilder (a -> t) b where
-   buildAxiomSpec f i = buildFunction i (\a -> buildAxiomSpec (f a) (i+1))
 
 buildFunction :: (Zip f, Different a) => Int -> (a -> f Term) -> f Term
 buildFunction n f = fzipWith (fill n) (f a) (f b)
@@ -152,17 +116,6 @@ build ops (lhs :~> rhs) a = do
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
 rewriteRule s f = R (newId s) (buildRuleSpec f 0) operators
 
-axiom :: (IsId n, AxiomBuilder f a, Rewrite a) => n -> f -> Axiom a
-axiom s f = A (R (newId s) (a :~> b) operators)
- where a :== b = buildAxiomSpec f 0
-
-axiomRules :: Axiom a -> (RewriteRule a, RewriteRule a)
-axiomRules (A r) = (r, inverseRule r)
-
-axiomRuleToLeft, axiomRuleToRight :: Axiom a -> RewriteRule a
-axiomRuleToLeft  = snd . axiomRules
-axiomRuleToRight = fst . axiomRules
-
 ------------------------------------------------------
 -- Using a rewrite rule
 
@@ -173,9 +126,9 @@ rewrite :: RewriteRule a -> a -> [a]
 rewrite r@(R _ _ _) a = 
    build (mapMaybe (operatorSymbol a) (ruleOperators r)) (ruleSpecTerm r) a
 
-operatorSymbol :: IsTerm a => a -> Operator a -> Maybe Symbol
+operatorSymbol :: (IsMagma m, IsTerm a) => a -> m a -> Maybe Symbol
 operatorSymbol a op = 
-   case getConSpine (toTerm (constructor op a a)) of
+   case getConSpine (toTerm (operation op a a)) of
       Just (s, [_, _]) -> Just s
       _                -> Nothing
  
@@ -220,7 +173,7 @@ smartGenerator r@(R _ _ _) = do
 inverseRule :: RewriteRule a -> RewriteRule a
 inverseRule (R n (a :~> b) ops) = R n (b :~> a) ops
 
-useOperators :: Operators a -> RewriteRule a -> RewriteRule a
+useOperators :: [Magma a] -> RewriteRule a -> RewriteRule a
 useOperators xs (R n p ops) = R n p (xs ++ ops)
 
 -- some helpers

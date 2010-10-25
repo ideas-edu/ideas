@@ -21,6 +21,7 @@ import Common.Rewriting.Term hiding (Var)
 import Common.Strategy hiding (fail, not)
 import Common.Exercise
 import Common.Utils
+import Common.View
 import Common.Transformation
 import Common.Navigator
 import Data.List hiding (repeat)
@@ -223,13 +224,13 @@ topIsNot = makeSimpleRule "top-is-not" f
    f (Not p, Not q) = Just (p, q)
    f _ = Nothing
 
-acTopRuleFor :: IsId a => a -> Operator SLogic -> Rule [(SLogic, SLogic)]
+acTopRuleFor :: (IsMagma m, IsId a) => a -> m SLogic -> Rule [(SLogic, SLogic)]
 acTopRuleFor s op = makeSimpleRuleList s f
  where
    f [(lhs, rhs)] = do
-      let xs   = collectWithOperator op lhs
-          ys   = collectWithOperator op rhs
-          make = buildWithOperator op
+      xs <- matchM (magmaListView op) lhs
+      ys <- matchM (magmaListView op) rhs
+      let make = build (magmaListView op)
       guard (length xs > 1 && length ys > 1)
       list <- liftM (map $ \(x, y) -> (make x, make y)) (pairingsAC False xs ys)
       guard (all (uncurry eqLogic) list)
@@ -244,11 +245,6 @@ topIsOr = acTopRuleFor "top-is-or" orOperator
 
 topIsEquiv :: Rule [(SLogic, SLogic)]
 topIsEquiv = acTopRuleFor "top-is-equiv" equivOperator
- where
-   equivOperator = associativeOperator (:<->:) isEquiv
-  
-   isEquiv (p :<->: q) = Just (p, q)
-   isEquiv _           = Nothing
 
 topIsImpl :: Rule [(SLogic, SLogic)]
 topIsImpl = makeSimpleRule "top-is-impl" f

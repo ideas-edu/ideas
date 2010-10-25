@@ -17,6 +17,7 @@ import Common.Exercise
 import Common.Rewriting
 import Common.Strategy
 import Common.Classes
+import Common.Uniplate
 import Common.View
 import Data.Maybe
 import Domain.Math.Data.OrList
@@ -218,7 +219,14 @@ normOrList :: (Relational f, Ord (f Expr)) =>
 normOrList f = normalize . fmap (fmap (normExpr f))
 
 normExpr :: (Expr -> Expr) -> Expr -> Expr
-normExpr f = normalizeWith [plusOperator, timesOperator] . f
+normExpr f = rec . f
  where
-   plusOperator  = acOperator (+) isPlus
-   timesOperator = acOperator (*) isTimes
+   plusOperator  = withMatch isPlus  $ makeCommutative $ monoid "" (+) 0 
+   timesOperator = withMatch isTimes $ makeCommutative $ monoid "" (*) 1
+   make          = simplifyWith (map rec) . magmaListView
+   
+   rec expr = 
+      case expr of
+         _ :+: _ -> make plusOperator  expr
+         _ :*: _ -> make timesOperator expr
+         _       -> descend rec expr

@@ -15,9 +15,12 @@ import Domain.Math.Expr.Symbolic
 import Text.OpenMath.Dictionary.Logic1
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
+import Common.Id
 import Common.Classes
 import Common.Utils (ShowString, subsets)
+import Common.View
 import Data.List
+import Data.Maybe
 import Control.Monad
 
 infixr 2 :<->:
@@ -124,12 +127,12 @@ isCNF = all isAtomic . concatMap disjunctions . conjunctions
 -- | Function disjunctions returns all Logic expressions separated by an or
 -- | operator at the top level.
 disjunctions :: Logic a -> [Logic a]
-disjunctions = collectWithOperator orOperator
+disjunctions p = fromMaybe [p] $ match (magmaListView orOperator) p
 
 -- | Function conjunctions returns all Logic expressions separated by an and
 -- | operator at the top level.
 conjunctions :: Logic a -> [Logic a]
-conjunctions = collectWithOperator andOperator
+conjunctions p = fromMaybe [p] $ match (magmaListView andOperator) p
  
 -- | Count the number of equivalences
 countEquivalences :: Logic a -> Int
@@ -171,23 +174,29 @@ instance IsTerm a => IsTerm (Logic a) where
          | s == impliesSymbol    = return (x :->: y)
          | s == equivalentSymbol = return (x :<->: y)
       f s xs@(_:_)
-         | s == andSymbol        = return (buildWithOperator andOperator xs)
-         | s == orSymbol         = return (buildWithOperator orOperator xs)
+         | s == andSymbol        = return (foldr1 (:&&:) xs)
+         | s == orSymbol         = return (foldr1 (:||:) xs)
       f _ _ = fail "fromTerm"
 
-logicOperators :: Operators (Logic a)
-logicOperators = [andOperator, orOperator]
+logicOperators :: [Magma (Logic a)]
+logicOperators = map toMagma [andOperator, orOperator]
    
 -- The "and" operator is also commutative, but not (yet) in the equational theory
-andOperator :: Operator (Logic a)
-andOperator = associativeOperator (:&&:) isAnd
+andOperator :: Monoid (Logic a)
+andOperator = withMatch isAnd $ monoid (getId andSymbol) (:&&:) T
  where
    isAnd (p :&&: q) = Just (p, q)
    isAnd _          = Nothing
 
 -- The "or" operator is also commutative, but not (yet) in the equational theory
-orOperator :: Operator (Logic a)
-orOperator = associativeOperator (:||:) isOr
+orOperator :: Monoid (Logic a)
+orOperator = withMatch isOr $ monoid (getId orSymbol) (:||:) F
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing
+
+equivOperator :: SemiGroup (Logic a)   
+equivOperator = withMatch isEquiv $ semiGroup (getId equivalentSymbol) (:<->:)
+ where
+   isEquiv (p :<->: q) = Just (p, q)
+   isEquiv _           = Nothing

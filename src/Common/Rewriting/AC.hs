@@ -19,7 +19,8 @@ module Common.Rewriting.AC
    , pairingsC, pairingsAC
    ) where
 
-import Common.Rewriting.Operator
+import Common.View
+import Common.Rewriting.Group
 import Control.Monad
 import Data.Maybe
 
@@ -31,11 +32,11 @@ type PairingsPair a b = (a, a) -> (b, b) -> [[(a, b)]]
 -- Pairing terms with an AC theory
 -- matchMode: the left-hand sides cannot have the operator at top-level 
 
-pairings, pairingsMatch :: Operator a -> Pairings a
+pairings, pairingsMatch :: IsMagma m => m a -> Pairings a
 pairings      = pairingsMode False
 pairingsMatch = pairingsMode True
 
-pairingsMode :: Bool -> Operator a -> Pairings a
+pairingsMode :: IsMagma m => Bool -> m a -> Pairings a
 pairingsMode matchMode op =
    case (isAssociative op, isCommutative op) of
       (True , True ) -> operatorPairings op (pairingsAC matchMode)
@@ -89,15 +90,15 @@ pairingsAC matchMode = rec
 ----------------------------------------------------------
 -- Helper functions
 
-opPairings :: Operator a -> PairingsPair a a -> Pairings a
+opPairings :: IsMagma m => m a -> PairingsPair a a -> Pairings a
 opPairings op f a b = fromMaybe [] $
-   liftM2 f (destructor op a) (destructor op b)
+   liftM2 f (match (magmaView op) a) (match (magmaView op) b)
 
-operatorPairings :: Operator a -> PairingsList a a -> Pairings a 
+operatorPairings :: IsMagma m => m a -> PairingsList a a -> Pairings a 
 operatorPairings op g = curry $ 
-   let f = onBoth (collectWithOperator op)
-       h = onBoth (buildWithOperator op)
-   in map (map h) . uncurry g . f
+   let f a = fromMaybe [a] $ match (magmaListView op) a
+       h = build (magmaListView op)
+   in map (map (onBoth h)) . uncurry g . onBoth f
 
 splits :: [a] -> [([a], [a])]
 splits = foldr insert [([], [])]

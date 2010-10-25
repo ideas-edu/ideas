@@ -17,7 +17,6 @@ import Domain.Logic.Rules
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Formula
 import Common.Context (Context, liftToContext)
-import Common.Rewriting (isOperator)
 import Common.Transformation
 import Common.Strategy
 import Common.Navigator
@@ -58,7 +57,9 @@ dnfStrategyDWA =  label "Bring to dnf (DWA)" $
 -- the strategy only at (top-level) disjuncts 
 somewhereOr :: IsStrategy g => g (Context SLogic) -> Strategy (Context SLogic)
 somewhereOr s =
-   let isOr = maybe False (isOperator orOperator) . current
+   let isOr a = case current a of
+                   Just (_ :||: _) -> True
+                   _               -> False
    in fix $ \this -> check (Prelude.not . isOr) <*> s 
                  <|> check isOr <*> once this
 

@@ -15,7 +15,7 @@ module Domain.Logic.Parser
    ) where
 
 import Common.Utils (ShowString(..))
-import Control.Monad
+import Control.Monad.Error (liftM2)
 import Text.Parsing
 import Control.Arrow
 import Domain.Logic.Formula

@@ -19,7 +19,7 @@ module Common.Rewriting.Group
    , isAssociative, isCommutative, isIdempotent
    , makeAssociative, makeCommutative, makeIdempotent
      -- Semigroup
-   , IsSemiGroup, SemiGroup, semiGroup
+   , IsSemiGroup(..), SemiGroup, semiGroup
    , leftIsPreferred, rightIsPreferred
    , preferLeft, preferRight
      -- Monoid
@@ -27,7 +27,7 @@ module Common.Rewriting.Group
      -- Group
    , IsGroup(..), Group, group
      -- Abelian group
-   , IsAbelianGroup, AbelianGroup, abelianGroup
+   , IsAbelianGroup(..), AbelianGroup, abelianGroup
    ) where
 
 import Control.Arrow
@@ -130,7 +130,10 @@ removeProperty p = changeMagma $ \m ->
 -------------------------------------------------------------------
 -- * SemiGroup
 
-class IsMagma a => IsSemiGroup a
+class IsMagma f => IsSemiGroup f where
+   toSemiGroup :: f a -> SemiGroup a
+   -- default definition
+   toSemiGroup = SemiGroup . toMagma
 
 newtype SemiGroup a = SemiGroup (Magma a)
    deriving (HasId, IsMagma)
@@ -138,7 +141,8 @@ newtype SemiGroup a = SemiGroup (Magma a)
 instance Show (SemiGroup a) where
    show m = "Semigroup " ++ showId m
 
-instance IsSemiGroup SemiGroup
+instance IsSemiGroup SemiGroup where
+   toSemiGroup = id
 
 semiGroup :: IsId n => n -> (a -> a -> a) -> SemiGroup a
 semiGroup n op = makeAssociative $ SemiGroup (magma n op)
@@ -156,6 +160,9 @@ preferRight = removeProperty PreferLeft
 
 class IsSemiGroup f => IsMonoid f where
    identity :: f a -> a
+   toMonoid :: f a -> Monoid a
+   -- default definition
+   toMonoid m = Monoid (identity m) (toSemiGroup m)
 
 data Monoid a = Monoid a (SemiGroup a)
 
@@ -173,6 +180,7 @@ instance IsSemiGroup Monoid
 
 instance IsMonoid Monoid where
    identity (Monoid e _) = e
+   toMonoid = id
 
 monoid :: IsId n => n -> (a -> a -> a) -> a -> Monoid a
 monoid n op e = Monoid e (semiGroup n op)
@@ -182,6 +190,9 @@ monoid n op e = Monoid e (semiGroup n op)
 
 class IsMonoid f => IsGroup f where
    inverse :: f a -> a -> a
+   toGroup :: f a -> Group a
+   -- default definition
+   toGroup g = Group (inverse g) (toMonoid g)
 
 data Group a = Group (a -> a) (Monoid a)
 
@@ -202,6 +213,7 @@ instance IsMonoid Group where
 
 instance IsGroup Group where
    inverse (Group inv _) = inv
+   toGroup = id
 
 group :: IsId n => n -> (a -> a -> a) -> a -> (a -> a) -> Group a
 group n op e inv = Group inv (monoid n op e)
@@ -209,7 +221,10 @@ group n op e inv = Group inv (monoid n op e)
 -------------------------------------------------------------------
 -- * Abelian Group
 
-class IsGroup a => IsAbelianGroup a
+class IsGroup f => IsAbelianGroup f where
+   toAbelianGroup :: f a -> AbelianGroup a
+   -- default definition
+   toAbelianGroup = AbelianGroup . toGroup
 
 newtype AbelianGroup a = AbelianGroup (Group a)
    deriving (HasId, IsMagma, IsSemiGroup, IsMonoid, IsGroup)

@@ -20,6 +20,7 @@ module Common.Rewriting.Axioms
    , leftInverse, rightInverse
    , inverseIdentity, inverseTwice
    , flippedInverseDistribution
+   , groupAxioms
      -- Abelian group
    , commutative, inverseDistribution
    ) where
@@ -107,6 +108,25 @@ flippedInverseDistribution m = rule m "inverse.distribution.flipped" $
  where 
    (.) = operation m
    f   = inverse m
+
+groupAxioms :: (IsGroup m, Different a, Rewrite a) => m a -> [RewriteRule a]
+groupAxioms g = map ($ g)
+   [ associative, leftIdentity, rightIdentity
+   , leftInverse, rightInverse
+   , inverseIdentity, inverseTwice, flippedInverseDistribution
+   ] ++ extra
+ where
+   extra 
+      | leftIsPreferred g =
+           [ rule g "group1" $ \x y -> (y.x).f x :~> y
+           , rule g "group2" $ \x y -> (y.f x).x :~> y
+           ]
+      | otherwise = 
+           [ rule g "group3" $ \x y -> f x.(x.y) :~> y
+           , rule g "group4" $ \x y -> x.(f x.y) :~> y
+           ]
+   (.) = operation g
+   f   = inverse g
 
 -------------------------------------------------------------------
 -- * Abelian Group

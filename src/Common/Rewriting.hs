@@ -10,12 +10,10 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting 
-   ( RewriteRule, smartGenerator, rewriteRule
-   , RuleBuilder, rewriteM, RuleSpec((:~>)), ruleSpecTerm, showRewriteRule
-   , Rewrite(..), useOperators
-   , difference, differenceMode
-   , IsTerm(..), Different(..)
+   ( IsTerm(..)
    , module Common.Rewriting.Group
+   , module Common.Rewriting.Difference
+   , module Common.Rewriting.RewriteRule
    ) where
 
 import Common.Rewriting.Difference

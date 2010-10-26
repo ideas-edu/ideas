@@ -197,9 +197,6 @@ contextView = newView "views.contextView" f g
    f ctx = current ctx >>= \a -> Just (a, ctx)
    g = uncurry replace
 
-termView :: IsTerm a => View Term a
-termView = makeView fromTerm toTerm
-
 ----------------------------------------------------------
 -- Context monad
 

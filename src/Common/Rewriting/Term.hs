@@ -24,6 +24,7 @@ module Common.Rewriting.Term
 import Common.Id
 import Common.Utils (ShowString(..))
 import Common.Uniplate
+import Common.View
 import Control.Monad
 import Data.List
 import Data.Typeable
@@ -62,6 +63,11 @@ instance Uniplate Term where
 class IsTerm a where
    toTerm   :: a -> Term
    fromTerm :: MonadPlus m => Term -> m a
+   termView :: View Term a
+   -- default definitions
+   toTerm   = build termView
+   fromTerm = matchM termView
+   termView = makeView fromTerm toTerm
 
 instance IsTerm Term where
    toTerm   = id

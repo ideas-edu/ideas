@@ -73,7 +73,7 @@ emptyCoreEnv :: CoreEnv l a
 emptyCoreEnv = CE IM.empty
   
 insertCoreEnv :: Int -> Core l a -> CoreEnv l a -> CoreEnv l a
-insertCoreEnv n a env@(CE m) = CE (IM.insert n a m)
+insertCoreEnv n a (CE m) = CE (IM.insert n a m)
 
 deleteCoreEnv :: Int -> CoreEnv l a -> CoreEnv l a
 deleteCoreEnv n (CE m) = CE (IM.delete n m)

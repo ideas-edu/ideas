@@ -60,7 +60,7 @@ proofExercise = makeExercise
    }
 
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
-   toTerm (a, b) = binary tupleSymbol (toTerm a) (toTerm b)
+   toTerm (a, b) = binary (binarySymbol tupleSymbol) (toTerm a) (toTerm b)
    fromTerm term =
       case getConSpine term of
          Just (s, [a, b]) | s == tupleSymbol ->
@@ -224,13 +224,14 @@ topIsNot = makeSimpleRule "top-is-not" f
    f (Not p, Not q) = Just (p, q)
    f _ = Nothing
 
-acTopRuleFor :: (IsMagma m, IsId a) => a -> m SLogic -> Rule [(SLogic, SLogic)]
+acTopRuleFor :: IsId a => a -> BinaryOp SLogic -> Rule [(SLogic, SLogic)]
 acTopRuleFor s op = makeSimpleRuleList s f
  where
    f [(lhs, rhs)] = do
-      xs <- matchM (magmaListView op) lhs
-      ys <- matchM (magmaListView op) rhs
-      let make = build (magmaListView op)
+      let myView = magmaListView (semiGroup op)
+          make   = build myView
+      xs <- matchM myView lhs
+      ys <- matchM myView rhs
       guard (length xs > 1 && length ys > 1)
       list <- liftM (map $ \(x, y) -> (make x, make y)) (pairingsAC False xs ys)
       guard (all (uncurry eqLogic) list)

@@ -33,6 +33,7 @@ module Common.Rewriting.Group
 import Control.Arrow
 import Common.Id
 import Common.View hiding (identity)
+import Common.Rewriting.Operator
 
 -------------------------------------------------------------------
 -- * Magma
@@ -43,14 +44,12 @@ class IsMagma f where
    toMagma     :: f a -> Magma a
    changeMagma :: (Magma a -> Magma a) -> f a -> f a
    -- default definitions
-   operation     = magmaOperation . toMagma
+   operation     = binary . magmaBinaryOp . toMagma
    toMagma       = fst . hasMagma
-   changeMagma f = uncurry (flip ($)) .  first f . hasMagma
+   changeMagma f = uncurry (flip ($)) . first f . hasMagma
 
 data Magma a = Magma
-   { magmaId         :: Id
-   , magmaOperation  :: a -> a -> a
-   , magmaMatch      :: a -> Maybe (a, a)
+   { magmaBinaryOp   :: BinaryOp a
    , magmaProperties :: [MagmaProperty]
    }
 
@@ -61,19 +60,17 @@ instance Show (Magma a) where
    show m = "Magma " ++ showId m
 
 instance HasId (Magma a) where
-   getId = magmaId
-   changeId f m = m {magmaId = f (magmaId m)}
+   getId = getId . magmaBinaryOp
+   changeId f m = m {magmaBinaryOp = changeId f (magmaBinaryOp m)}
 
-instance IsMagma Magma where 
+instance IsMagma Magma where
    hasMagma a = (a, id)
 
-magma :: IsId n => n -> (a -> a -> a) -> Magma a
-magma n op = Magma (newId n) op (const Nothing) []
+magma :: BinaryOp a -> Magma a
+magma op = Magma op []
 
 magmaView :: IsMagma m => m a -> View a (a, a)
-magmaView = f . toMagma
- where
-   f m = makeView (magmaMatch m) (uncurry $ operation m)
+magmaView = binaryView . magmaBinaryOp . toMagma
 
 -- The list can (and should) only contain more than two elements if the magma 
 -- is associative
@@ -100,7 +97,9 @@ magmaListView m = makeView (Just . toList) fromList
       fold = if hasProperty PreferLeft m then foldl1 else foldr1
 
 withMatch :: IsMagma m => (a -> Maybe (a, a)) -> m a -> m a
-withMatch f = changeMagma $ \m -> m {magmaMatch = f}
+withMatch f = changeMagma $ \m -> m {magmaBinaryOp = g (magmaBinaryOp m)}
+ where
+   g op = makeBinary (getId op) (binary op) f
 
 isAssociative, isCommutative, isIdempotent :: IsMagma m => m a -> Bool
 isAssociative = hasProperty Associative
@@ -133,19 +132,25 @@ removeProperty p = changeMagma $ \m ->
 class IsMagma f => IsSemiGroup f where
    toSemiGroup :: f a -> SemiGroup a
    -- default definition
-   toSemiGroup = SemiGroup . toMagma
+   toSemiGroup m = SemiGroup (rightIsPreferred m) (toMagma m)
 
-newtype SemiGroup a = SemiGroup (Magma a)
-   deriving (HasId, IsMagma)
+data SemiGroup a = SemiGroup Bool (Magma a)
 
 instance Show (SemiGroup a) where
    show m = "Semigroup " ++ showId m
 
+instance HasId (SemiGroup a) where
+   getId    = getId . toMagma
+   changeId = changeMagma . changeId
+
+instance IsMagma SemiGroup where
+   hasMagma (SemiGroup b m) = findMagma (SemiGroup b) m
+
 instance IsSemiGroup SemiGroup where
    toSemiGroup = id
 
-semiGroup :: IsId n => n -> (a -> a -> a) -> SemiGroup a
-semiGroup n op = makeAssociative $ SemiGroup (magma n op)
+semiGroup :: BinaryOp a -> SemiGroup a
+semiGroup op = makeAssociative $ SemiGroup True (magma op)
 
 leftIsPreferred, rightIsPreferred :: IsSemiGroup m => m a -> Bool
 leftIsPreferred  = hasProperty PreferLeft
@@ -159,12 +164,14 @@ preferRight = removeProperty PreferLeft
 -- * Monoid
 
 class IsSemiGroup f => IsMonoid f where
-   identity :: f a -> a
-   toMonoid :: f a -> Monoid a
+   identity    :: f a -> a
+   identityCon :: f a -> Constant a
+   toMonoid    :: f a -> Monoid a
    -- default definition
-   toMonoid m = Monoid (identity m) (toSemiGroup m)
+   identity   = constant . identityCon
+   toMonoid m = Monoid (identityCon m) (toSemiGroup m)
 
-data Monoid a = Monoid a (SemiGroup a)
+data Monoid a = Monoid (Constant a) (SemiGroup a)
 
 instance Show (Monoid a) where
    show m = "Monoid " ++ showId m
@@ -179,22 +186,24 @@ instance IsMagma Monoid where
 instance IsSemiGroup Monoid
 
 instance IsMonoid Monoid where
-   identity (Monoid e _) = e
+   identityCon (Monoid e _) = e
    toMonoid = id
 
-monoid :: IsId n => n -> (a -> a -> a) -> a -> Monoid a
-monoid n op e = Monoid e (semiGroup n op)
+monoid :: BinaryOp a -> Constant a -> Monoid a
+monoid op e = Monoid e (semiGroup op)
 
 -------------------------------------------------------------------
 -- * Group
 
 class IsMonoid f => IsGroup f where
-   inverse :: f a -> a -> a
-   toGroup :: f a -> Group a
+   inverse   :: f a -> a -> a
+   inverseOp :: f a -> UnaryOp a
+   toGroup   :: f a -> Group a
    -- default definition
-   toGroup g = Group (inverse g) (toMonoid g)
+   inverse   = unary . inverseOp
+   toGroup g = Group (inverseOp g) (toMonoid g)
 
-data Group a = Group (a -> a) (Monoid a)
+data Group a = Group (UnaryOp a) (Monoid a)
 
 instance Show (Group a) where
    show m = "Group " ++ showId m
@@ -209,14 +218,14 @@ instance IsMagma Group where
 instance IsSemiGroup Group
 
 instance IsMonoid Group where
-   identity (Group _ m) = identity m
+   identityCon (Group _ m) = identityCon m
 
 instance IsGroup Group where
-   inverse (Group inv _) = inv
+   inverseOp (Group inv _) = inv
    toGroup = id
 
-group :: IsId n => n -> (a -> a -> a) -> a -> (a -> a) -> Group a
-group n op e inv = Group inv (monoid n op e)
+group :: BinaryOp a -> Constant a -> UnaryOp a -> Group a
+group op e inv = Group inv (monoid op e)
 
 -------------------------------------------------------------------
 -- * Abelian Group
@@ -229,8 +238,8 @@ class IsGroup f => IsAbelianGroup f where
 newtype AbelianGroup a = AbelianGroup (Group a)
    deriving (HasId, IsMagma, IsSemiGroup, IsMonoid, IsGroup)
 
-abelianGroup :: IsId n => n -> (a -> a -> a) -> a -> (a -> a) -> AbelianGroup a
-abelianGroup n op e inv = makeCommutative $ AbelianGroup (group n op e inv)
+abelianGroup :: BinaryOp a -> Constant a -> UnaryOp a -> AbelianGroup a
+abelianGroup op e inv = makeCommutative $ AbelianGroup (group op e inv)
 
 instance Show (AbelianGroup a) where
    show m = "Abelian group " ++ showId m

@@ -17,11 +17,12 @@ module Common.Rewriting.Term
    , Term(..), IsTerm(..)
    , fromTermM, fromTermWith
    , getSpine, getConSpine, makeTerm, makeConTerm
-   , unary, binary, isUnary, isBinary, isVar, isCon
+   , unary, unarySymbol, binarySymbol, binary, unaryMatch, binaryMatch
    , hasMetaVar, getMetaVars
    ) where
 
 import Common.Id
+import Common.Rewriting.Operator
 import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Common.View
@@ -43,7 +44,10 @@ instance Show Symbol where
 
 instance HasId Symbol where
    getId      = symbolId
-   changeId f = S . f . symbolId 
+   changeId f = S . f . symbolId
+   
+instance IsId Symbol where
+   newId = symbolId
 
 data Term = Var   String 
           | Con   Symbol 
@@ -103,8 +107,10 @@ getSpine = rec []
    rec xs a           = (a, xs)
 
 getConSpine :: Monad m => Term -> m (Symbol, [Term])
-getConSpine a = liftM (\s -> (s, xs)) (isCon b)
- where (b, xs) = getSpine a
+getConSpine a = 
+   case getSpine a of
+      (Con s, xs) -> return (s, xs)
+      _           -> fail "getConSpine" 
 
 makeTerm :: Term -> [Term] -> Term
 makeTerm = foldl Apply
@@ -112,36 +118,17 @@ makeTerm = foldl Apply
 makeConTerm :: Symbol -> [Term] -> Term
 makeConTerm = makeTerm . Con
 
-unary :: Symbol -> Term -> Term
-unary = Apply . Con
-
-binary :: Symbol -> Term -> Term -> Term
-binary s = Apply . Apply (Con s)
-
-{-
-binaryA :: Symbol -> Term -> Term -> Term
-binaryA s a b = makeConTerm s (collect  a++ collect b)
+unarySymbol :: Symbol -> UnaryOp Term
+unarySymbol s = makeUnary (getId s) (Apply (Con s)) f
  where
-   collect term = 
-      case getConSpine term of
-         Just (t, xs) | s==t -> xs
-         _ -> [term] -}
+   f (Apply (Con t) a) | s==t = Just a
+   f _ = Nothing
 
-isUnary :: Symbol -> Term -> Maybe Term
-isUnary s (Apply (Con t) a) | s==t = Just a
-isUnary _ _ = Nothing
-
-isBinary :: Symbol -> Term -> Maybe (Term, Term)
-isBinary s (Apply (Apply (Con t) a) b) | s==t = Just (a, b)
-isBinary _ _ = Nothing
-
-isVar :: Monad m => Term -> m String
-isVar (Var s) = return s
-isVar _       = fail "isVar"
-
-isCon :: Monad m => Term -> m Symbol
-isCon (Con s) = return s
-isCon _       = fail "isCon"
+binarySymbol :: Symbol -> BinaryOp Term
+binarySymbol s = makeBinary (getId s) (Apply . Apply (Con s)) f
+ where
+   f (Apply (Apply (Con t) a) b) | s==t = Just (a, b)
+   f _ = Nothing
 
 getMetaVars :: Term -> [Int]
 getMetaVars a = sort $ nub [ i | Meta i <- leafs a ]

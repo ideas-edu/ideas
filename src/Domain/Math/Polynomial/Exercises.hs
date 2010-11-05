@@ -221,8 +221,12 @@ normOrList f = normalize . fmap (fmap (normExpr f))
 normExpr :: (Expr -> Expr) -> Expr -> Expr
 normExpr f = rec . f
  where
-   plusOperator  = withMatch isPlus  $ makeCommutative $ monoid "" (+) 0 
-   timesOperator = withMatch isTimes $ makeCommutative $ monoid "" (*) 1
+   plusOperator  = makeCommutative $ monoid 
+                      (makeBinary plusSymbol (+) isPlus)
+                      (simpleConstant "zero" 0)
+   timesOperator = makeCommutative $ monoid 
+                      (makeBinary timesSymbol (*) isTimes)
+                      (simpleConstant "one" 1)
    make          = simplifyWith (map rec) . magmaListView
    
    rec expr = 

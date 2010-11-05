@@ -15,7 +15,6 @@ import Domain.Math.Expr.Symbolic
 import Text.OpenMath.Dictionary.Logic1
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
-import Common.Id
 import Common.Classes
 import Common.Utils (ShowString, subsets)
 import Common.View
@@ -127,12 +126,12 @@ isCNF = all isAtomic . concatMap disjunctions . conjunctions
 -- | Function disjunctions returns all Logic expressions separated by an or
 -- | operator at the top level.
 disjunctions :: Logic a -> [Logic a]
-disjunctions p = fromMaybe [p] $ match (magmaListView orOperator) p
+disjunctions p = fromMaybe [p] $ match (magmaListView orMonoid) p
 
 -- | Function conjunctions returns all Logic expressions separated by an and
 -- | operator at the top level.
 conjunctions :: Logic a -> [Logic a]
-conjunctions p = fromMaybe [p] $ match (magmaListView andOperator) p
+conjunctions p = fromMaybe [p] $ match (magmaListView andMonoid) p
  
 -- | Count the number of equivalences
 countEquivalences :: Logic a -> Int
@@ -179,24 +178,40 @@ instance IsTerm a => IsTerm (Logic a) where
       f _ _ = fail "fromTerm"
 
 logicOperators :: [Magma (Logic a)]
-logicOperators = map toMagma [andOperator, orOperator]
-   
--- The "and" operator is also commutative, but not (yet) in the equational theory
-andOperator :: Monoid (Logic a)
-andOperator = withMatch isAnd $ monoid (getId andSymbol) (:&&:) T
+logicOperators = map toMagma [andMonoid, orMonoid]
+
+andMonoid :: Monoid (Logic a)
+andMonoid = monoid andOperator (makeConstant trueSymbol T isT)
  where
+   isT T = True
+   isT _ = False 
+   
+orMonoid :: Monoid (Logic a)
+orMonoid = monoid orOperator (makeConstant falseSymbol F isF)
+ where
+   isF F = True
+   isF _ = False
+
+andOperator:: BinaryOp (Logic a)
+andOperator = makeBinary andSymbol (:&&:) isAnd
+ where 
    isAnd (p :&&: q) = Just (p, q)
    isAnd _          = Nothing
 
--- The "or" operator is also commutative, but not (yet) in the equational theory
-orOperator :: Monoid (Logic a)
-orOperator = withMatch isOr $ monoid (getId orSymbol) (:||:) F
+orOperator :: BinaryOp (Logic a)
+orOperator = makeBinary orSymbol (:||:) isOr
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing
 
-equivOperator :: SemiGroup (Logic a)   
-equivOperator = withMatch isEquiv $ semiGroup (getId equivalentSymbol) (:<->:)
+implOperator :: BinaryOp (Logic a)   
+implOperator = makeBinary impliesSymbol (:->:) isImpl
+ where
+   isImpl (p :->: q) = Just (p, q)
+   isImpl _           = Nothing
+   
+equivOperator :: BinaryOp (Logic a)   
+equivOperator = makeBinary equivalentSymbol (:<->:) isEquiv
  where
    isEquiv (p :<->: q) = Just (p, q)
    isEquiv _           = Nothing

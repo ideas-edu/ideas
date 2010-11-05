@@ -12,6 +12,7 @@
 module Common.Rewriting.Confluence 
    ( isConfluent, checkConfluence, checkConfluenceWith
    , somewhereM
+   , Config, defaultConfig, showTerm, complexity, termEquality
    ) where
 
 import Common.Id
@@ -81,21 +82,21 @@ criticalPairs rs =
    , b2 <- changeM (rewriteTerm r2) na >>= leave
    ]
 
-noDiamondPairs :: [RewriteRule a] -> [(Term, Triple a, Triple a)]
-noDiamondPairs rs = noDiamondPairsWith (normalForm rs) rs
+noDiamondPairs :: Config -> [RewriteRule a] -> [(Term, Triple a, Triple a)]
+noDiamondPairs cfg rs = noDiamondPairsWith (normalForm rs) cfg rs
 
-noDiamondPairsWith :: (Term -> Term) -> [RewriteRule a] -> [(Term, Triple a, Triple a)]
-noDiamondPairsWith f rs =
+noDiamondPairsWith :: (Term -> Term) -> Config -> [RewriteRule a] -> [(Term, Triple a, Triple a)]
+noDiamondPairsWith f cfg rs =
    [ (a, (r1, e1, nf1), (r2, e2, nf2)) 
    | (a, (r1, e1), (r2, e2)) <- criticalPairs rs
    , let (nf1, nf2) = (f e1, f e2)
-   , nf1 /= nf2
+   , not (termEquality cfg nf1 nf2)
    ]
 
-reportPairs :: (Term -> String) -> [(Term, Triple a, Triple a)] -> IO ()
-reportPairs pp = putStrLn . unlines . zipWith report [1::Int ..]
+reportPairs :: Config -> [(Term, Triple a, Triple a)] -> IO ()
+reportPairs cfg = putStrLn . unlines . zipWith report [1::Int ..]
  where
-   f = pp . unfreeze
+   f = showTerm cfg . unfreeze
    report i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
       [ show i ++ ") " ++ f a
       , "  "   ++ showId r1
@@ -119,13 +120,22 @@ unfreeze term = descend unfreeze term
 ----------------------------------------------------
 
 isConfluent :: [RewriteRule a] -> Bool
-isConfluent = null . noDiamondPairs
+isConfluent = null . noDiamondPairs defaultConfig
 
 checkConfluence :: [RewriteRule a] -> IO ()
-checkConfluence = checkConfluenceWith show
+checkConfluence = checkConfluenceWith defaultConfig
 
-checkConfluenceWith :: (Term -> String) -> [RewriteRule a] -> IO ()
-checkConfluenceWith f = reportPairs f . noDiamondPairs 
+checkConfluenceWith :: Config -> [RewriteRule a] -> IO ()
+checkConfluenceWith cfg = reportPairs cfg . noDiamondPairs cfg
+
+data Config = Config
+   { showTerm     :: Term -> String
+   , complexity   :: Term -> Int
+   , termEquality :: Term -> Term -> Bool
+   }
+   
+defaultConfig :: Config
+defaultConfig = Config show (const 0) (==)
 
 ----------------------------------------------------
 -- Example

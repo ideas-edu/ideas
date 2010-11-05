@@ -263,22 +263,8 @@ exprView :: IsTerm a => View Expr a
 exprView = makeView fromExpr toExpr
 
 -----------------------------------------------------------------------
--- AC Theory for expression
-{-
-exprACs :: Operators Expr
-exprACs = [plusOperator, timesOperator]
+-- Utility functions
 
-plusOperator, timesOperator :: Operator Expr
-plusOperator  = acOperator (+) isPlus
-timesOperator = acOperator (*) isTimes
-
-collectPlus, collectTimes :: Expr -> [Expr]
-collectPlus  = collectWithOperator plusOperator
-collectTimes = collectWithOperator timesOperator
-
-size :: Expr -> Int
-size e = 1 + compos 0 (+) size e
--}
 collectVars :: Expr -> [String]
 collectVars e = [ s | Var s <- universe e ]
 

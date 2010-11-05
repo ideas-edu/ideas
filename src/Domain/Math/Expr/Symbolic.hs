@@ -39,8 +39,11 @@ instance IsSymbol OM.Symbol where
               | otherwise = OM.makeSymbol (qualification s)
 
 instance HasId OM.Symbol where
-   getId    = newId . show
+   getId    = newId
    changeId = const id -- cannot be changed
+
+instance IsId OM.Symbol where
+   newId = newId . show
 
 -------------------------------------------------------------------
 -- Type class for symbolic representations
@@ -70,9 +73,13 @@ instance Symbolic Term where
    variable    = Var
    symbol      = Con
    function    = makeConTerm
-   getVariable = isVar
-   getSymbol   = isCon
    getFunction = getConSpine
+   getVariable (Var s) = return s
+   getVariable _       = fail "isVar"
+   getSymbol   (Con s) = return s
+   getSymbol   _       = fail "isCon"
+
+   
    
 nullary :: (IsSymbol s, Symbolic a) => s -> a
 nullary = symbol . toSymbol

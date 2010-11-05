@@ -36,8 +36,8 @@ equalLogicA p q = rec p == rec q
  where
    make  = simplifyWith (map rec) . magmaListView
    rec p = case p of
-              _ :&&: _ -> make andOperator p
-              _ :||: _ -> make orOperator  p
+              _ :&&: _ -> make andMonoid p
+              _ :||: _ -> make orMonoid  p
               _        -> descend rec p
 
 -----------------------------------------------------------

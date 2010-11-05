@@ -12,11 +12,13 @@
 module Common.Rewriting 
    ( IsTerm(..)
    , module Common.Rewriting.Group
+   , module Common.Rewriting.Operator
    , module Common.Rewriting.Difference
    , module Common.Rewriting.RewriteRule
    ) where
 
 import Common.Rewriting.Difference
 import Common.Rewriting.Group hiding (identity)
+import Common.Rewriting.Operator hiding (unary, binary)
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term

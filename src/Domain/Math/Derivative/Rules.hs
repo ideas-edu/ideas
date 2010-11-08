@@ -23,6 +23,8 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
 import Domain.Math.Power.Views
+import Domain.Math.Power.Utils ( (<&>) )
+
 
 derivativeRules :: [Rule Expr]
 derivativeRules =
@@ -188,9 +190,9 @@ myPowerView = makeView f g
                   return (1, x, r)
    g (a, x, r) = a .*. (Var x .^. fromRational r) 
   
-   powView = (simplePowerView <&> noPowerView) >>> varView *** rationalView
+   powView = (powerView <&> noPowerView) >>> varView *** rationalView
    varView = makeView isVar Var
-   noPowerView = makeView (\expr -> Just (expr, 1)) (build simplePowerView)
+   noPowerView = makeView (\expr -> Just (expr, 1)) (build powerView)
    
    isVar (Var x) = Just x
    isVar _       = Nothing

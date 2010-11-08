@@ -35,7 +35,7 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
-import Domain.Math.Power.Views
+import Domain.Math.Power.OldViews
 import Domain.Math.Simplification
 import Prelude hiding (repeat, (^), replicate)
 import qualified Domain.Math.Data.Polynomial as P

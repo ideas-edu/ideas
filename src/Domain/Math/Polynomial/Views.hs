@@ -36,7 +36,7 @@ import Domain.Math.Equation.CoverUpRules
 import Data.Maybe
 import qualified Domain.Math.Data.SquareRoot as SQ
 import Domain.Math.SquareRoot.Views
-import Domain.Math.Power.Views (powerFactorViewForWith)
+import Domain.Math.Power.OldViews (powerFactorViewForWith)
 
 -------------------------------------------------------------------
 -- Polynomial view

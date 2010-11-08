@@ -26,7 +26,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.SquareRoot (fromSquareRoot)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Power.Views
+import Domain.Math.Power.OldViews
 import Domain.Math.Simplification (smartConstructors)
 import Domain.Math.SquareRoot.Views
 import Prelude hiding ((^), recip)

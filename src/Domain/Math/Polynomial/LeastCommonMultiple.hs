@@ -74,7 +74,7 @@ powerProductView = makeView f g
       build productView (False, fromRational r : map (build pvn) xs)
    
    pvn :: View Expr (Expr, Integer)
-   pvn = simplePowerView >>> second integerView
+   pvn = powerView >>> second integerView
 
    collect :: [Expr] -> (Rational, [(Expr, Integer)])
    collect = foldr op (1, [])

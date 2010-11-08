@@ -10,137 +10,106 @@
 --
 -----------------------------------------------------------------------------
 
-module Domain.Math.Power.Views 
+module Domain.Math.Power.Views
    ( -- * Power views
-     strictPowerView, strictPowerViewFor, powerConsViewFor, powerConsView
-   , unitPowerView, unitPowerForView, simplePowerView, powerFactorisationView
-   , powerFactorViewWith, powerViewFor', powerFactorViewForWith
-   , powerViewFor, powerFactorView
-     -- * Root views
-   , rootView, rootConsView, simpleRootView
-     -- * Log vies
+     powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
+   , consPowerView, consPowerViewForWith, consPowerViewFor,consPowerViewForVar
+   , unitPowerViewForVar, unitPowerViewVar, unitPowerView, rootView
+     -- * Log view
    , logView
-     -- * View combinator
-   , (<&>)
      -- * Other views
-   , ratioView, natView
+   , plainNatView, plainRationalView, varView
    ) where
 
-import Prelude hiding ((^), recip)
 import Control.Arrow ( (>>^) )
 import Control.Monad
 import Common.View
-import Data.List
-import Data.Maybe
 import Data.Ratio
 import Domain.Math.Expr
-import Domain.Math.Numeric.Views
+import Domain.Math.Power.Utils
 
--- | Combinator function
-(<&>) :: (MonadPlus m) => ViewM m a b -> ViewM m a b -> ViewM m a b
-v <&> w = makeView f g
+
+-- | Power views with constant factor -----------------------------------------
+
+consPowerView :: View Expr (Expr, (Expr, Expr))
+consPowerView = addNegativeView $ addUnitTimesView $ powerView
+
+consPowerViewForWith :: Num a => View Expr a -> View Expr b -> a -> View Expr (Expr, b)
+consPowerViewForWith va vb a = 
+  addNegativeView $ addUnitTimesView (powerViewForWith va vb a)
+
+consPowerViewFor :: Expr -> View Expr (Expr, Expr)
+consPowerViewFor = consPowerViewForWith identity identity
+
+consPowerViewForVar :: String -> View Expr (Expr, Expr)
+consPowerViewForVar = consPowerViewFor . Var
+
+unitPowerViewForVar :: String -> View Expr (Expr, Expr)
+unitPowerViewForVar s = makeView f g
   where
-    f x = match v x `mplus` match w x
-    g   = build v
-infixl <&>
+    f expr = do
+      (c, (s', x)) <- match unitPowerViewVar expr
+      guard $ s == s'
+      return (c, x)
+    g (c, x) = build unitPowerViewVar (c , (s, x))
+
+unitPowerViewWith :: View Expr a -> View Expr (Expr, (a, Expr))
+unitPowerViewWith v = addNegativeView $ addUnitTimesView $ 
+  powerViewWith v identity <&> (unitTimes v >>^ swap)
+
+unitPowerViewVar :: View Expr (Expr, (String, Expr))
+unitPowerViewVar = unitPowerViewWith varView
+
+-- | Careful! This view will match anything, so use it wise and with care.
+unitPowerView :: View Expr (Expr, (Expr, Expr))
+unitPowerView = unitPowerViewWith identity
+
+-- | For convenience reasons a root view
+rootView :: View Expr (Expr, Expr)
+rootView = makeView f (uncurry root) 
+  where 
+    f expr = do
+      (a, (x, y)) <- match (powerView >>> second divView) expr
+      guard $ x == 1 || x == -1
+      return $ if x == 1 then (a, y) else (a, negate y)
 
 
 -- | Power views --------------------------------------------------------------
-strictPowerView :: View Expr (Expr, (Expr, Expr))
-strictPowerView  =  strictPowerConsView 
-                <&> (simplePowerView >>^ (,) 1) 
-                <&> negPowerView
-  where
-    strictPowerConsView = timesView >>> second simplePowerView
-    negPowerView = makeView f g
-      where
-        f (Negate expr) = do 
-          (c, ax) <- match (strictPowerConsView <&> (simplePowerView >>^ (,) 1)) expr
-          return (negate c, ax)
-        f _ = Nothing
-        g = build strictPowerView        
 
-strictPowerViewFor :: String -> View Expr (Expr, Expr)
-strictPowerViewFor pv = makeView f g
-  where
-    f expr = do
-      (c, (a, x)) <- match strictPowerView expr
-      guard (Var pv == a)
-      return (c, x)
-    g (c, x) = build strictPowerView (c, (Var pv, x))
-
-powerConsViewFor :: String -> View Expr (Expr, Rational)
-powerConsViewFor pv = timesView >>> second (powerViewFor' pv)
-
-powerConsView :: View Expr (String, (Expr, Rational))
-powerConsView = makeView f g
-  where
-    f expr = do
-      pv <- selectVar expr
-      cn <- match (powerConsViewFor pv) expr
-      return (pv, cn)
-    g (pv, cn) = build (powerConsViewFor pv) cn
-    
-unitPowerForView :: String -> ViewM Maybe Expr (Expr, Rational)
-unitPowerForView pv = powerConsViewFor pv <&> (powerViewFor' pv >>^ (,) 1)
-
-unitPowerView :: ViewM Maybe Expr (String, (Expr, Rational))
-unitPowerView = unitView <&> negUnitView 
-  where 
-    unitView = powerConsView <&> (powerView >>^ \(pv, n) -> (pv, (1, n))) 
-    negUnitView = makeView f g
-      where
-        f (Negate expr) = do 
-          (a, (c, x)) <- match unitView expr
-          return (a, (negate c, x))
-        f _ = Nothing
-        g = build unitView      
-
-simplePowerView :: View Expr (Expr, Expr)
-simplePowerView = makeView f g
+powerView :: View Expr (Expr, Expr)
+powerView = makeView f g
   where
     f expr = 
       case expr of
         Sym s [a, b] | s == powerSymbol -> return (a, b)
+                     | s == rootSymbol  -> return (a, (1 ./. b))
+        Sqrt e                          -> return (e, 1 ./. 2)
         _ -> Nothing
-    g (a, b) = a .^. b   
+    
+    g (a, b) =
+      case b of 
+        (Nat 1 :/: Nat 2) -> Sqrt a 
+        (Nat 1 :/: b')    -> root a b'
+        _                 -> a .^. b
 
-powerFactorisationView :: View Expr a -> View Expr (Bool, [Expr])
-powerFactorisationView v = productView >>> second (makeView f id)
-  where
-    f es = return $ map (\x -> build productView (False, x)) $ factorise es
-    factorise :: [Expr] -> [[Expr]]
-    factorise es =  maybe [es] split $ findIndex isPower es
-      where
-        split i = let (xs, ys) = splitAt (i+1) es in xs : factorise ys
-        isPower = isJust . match v
+powerViewWith :: View Expr a -> View Expr b -> View Expr (a, b)
+powerViewWith va vb = powerView >>> first va >>> second vb
 
--- | Root views ---------------------------------------------------------------
-
-simpleRootView :: View Expr (Expr, Expr)
-simpleRootView = makeView f g
+powerViewForWith :: Eq a => View Expr a -> View Expr b -> a -> View Expr b
+powerViewForWith va vb a = makeView f ((build va a .^.) .  build vb)
   where 
-    f expr = case expr of
-        Sqrt e -> return (e, 2)
-        Sym s [a, b] | s == rootSymbol -> return (a, b)
-        _ -> Nothing
-    g (a, b) = if b == Nat 2 then Sqrt a else root a b
+    f expr = do
+      (a', b) <- match (powerViewWith va vb) expr
+      guard $ a == a'
+      return b
 
-rootView = simpleRootView >>> second rationalView
+powerViewFor :: Expr -> View Expr Expr
+powerViewFor = powerViewForWith identity identity
 
--- rootView :: View Expr (Expr, Rational)
--- rootView = makeView f g
---   where 
---     f expr = case expr of
---         Sqrt e -> return (e, 2)
---         Sym s [a, Nat b] | s == rootSymbol -> return (a, toRational b)
---         _ -> Nothing
---     g (a, b) = if b==2 then Sqrt a else root a (fromRational b)
-
-rootConsView :: View Expr (Expr, (Expr, Rational))
-rootConsView =  (timesView >>> second rootView)
-            <&> (rootView >>^ (,) 1)
-
+powerFactorView :: (Expr -> Expr -> Bool) -> View Expr (Bool, [Expr])
+powerFactorView p = simpleProductView >>> second (makeView f id)
+  where
+    f = Just . map (build productView . (,) False) . joinBy p
 
 -- | Log views ----------------------------------------------------------------
 
@@ -152,95 +121,34 @@ logView = makeView f (uncurry logBase)
         _ -> Nothing
 
 
--- | Bastiaan's power views ---------------------------------------------------
+-- | Help (non-power) views ---------------------------------------------------
 
--- | AG: todo: integrate these views with the views above
-
-natView :: View Expr Int
-natView = makeView f fromIntegral
+plainNatView :: View Expr Integer
+plainNatView = makeView f Nat
   where
-    f (Nat n) = Just $ fromInteger n
+    f (Nat n) = Just n
     f _       = Nothing
 
-ratioView :: View Rational (Int, Int)
-ratioView = makeView f g
+plainRationalView :: View Rational (Integer, Integer)
+plainRationalView = 
+  makeView (\x -> return (numerator x, denominator x)) (uncurry (%))
+
+unitTimes :: Num t => View a b -> View a (t, b)
+unitTimes = (>>^ (,) 1)
+
+addTimesView :: View Expr a -> View Expr (Expr, a)
+addTimesView v = timesView >>> second v
+
+addUnitTimesView :: View Expr a -> View Expr (Expr, a)
+addUnitTimesView v = addTimesView v <&> unitTimes v
+
+negateView :: (Num a, Symbolic a) => View a a
+negateView = makeView isNegate negate
+
+addNegativeView v = v <&> (negateView >>> v)
+
+varView :: View Expr String
+varView = makeView f Var
   where
-    f x = return (fromIntegral (numerator x), fromIntegral (denominator x))
-    g (n,d) = fromIntegral n % fromIntegral d
-
-powerView :: View Expr (String, Rational)
-powerView = powerViewWith rationalView
-
-powerViewWith :: View Expr b -> View Expr (String, b)
-powerViewWith v = makeView f g
- where  
-   f expr = do
-      pv <- selectVar expr
-      n  <- match (powerViewForWith' v pv) expr
-      return (pv, n)
-   g (pv, n) = build (powerViewForWith' v pv) n
-   
-powerViewFor :: String -> View Expr Int
-powerViewFor = powerViewForWith natView
-powerViewFor' = powerViewForWith' rationalView
-
-powerViewForWith :: Num a =>  View Expr a -> String -> View Expr a
-powerViewForWith v pv = makeView f g
- where
-   f expr = 
-      case expr of
-         Var s | pv == s -> match v 1
-         e1 :*: e2 -> liftM2 (+) (f e1) (f e2) 
-         Sym s [e, n] | s == powerSymbol -> do
-           n'<- match v n
-           liftM (* n') (f e)
-         _ -> Nothing
-   
-   g a = Var pv .^. build v a
-   
-powerViewForWith' v pv = makeView f g
- where
-   f expr = 
-      case expr of
-        Var s | pv == s -> match v 1
-        Sym s [Var s', n] | s' == pv && s == powerSymbol -> match v n
-        _ -> Nothing
-   
-   g a = Var pv .^. build v a
-
-powerFactorView :: View Expr (String, Expr, Int)
-powerFactorView = powerFactorViewWith identity
-
-powerFactorViewWith :: Num a => View Expr a -> View Expr (String, a, Int)
-powerFactorViewWith v = makeView f g
- where
-   f expr = do
-      pv <- selectVar expr
-      (e, n) <- match (powerFactorViewForWith pv v) expr
-      return (pv, e, n)
-   g (pv, e, n) = build (powerFactorViewForWith pv v) (e, n)
-
-powerFactorViewForWith :: Num a => String -> View Expr a -> View Expr (a, Int)
-powerFactorViewForWith pv v = makeView f g
- where
-   f expr = 
-      case expr of
-         Var s | pv == s -> Just (1, 1)
-         Negate e -> do
-            (a, b) <- f e
-            return (negate a, b)
-         e1 :*: e2 -> do 
-            (a1, b1) <- f e1
-            (a2, b2) <- f e2
-            return (a1*a2, b1+b2)
-         Sym s [e1, Nat n]
-            | s == powerSymbol -> do 
-                 (a1, b1) <- f e1
-                 a <- match v (build v a1 ^ fromInteger n)
-                 return (a, b1 * fromInteger n)
-         _ -> do
-            guard (pv `notElem` collectVars expr)
-            a <- match v expr 
-            return (a, 0)
-   
-   g (a, b) = build v a .*. (Var pv .^. fromIntegral b)
+    f (Var s) = Just s
+    f _       = Nothing

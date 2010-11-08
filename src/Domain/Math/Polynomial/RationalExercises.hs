@@ -46,7 +46,7 @@ import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import Domain.Math.SquareRoot.Views
-import Domain.Math.Power.Views
+import Domain.Math.Power.OldViews
 import Prelude hiding (repeat, replicate, until, (^))
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))

@@ -116,7 +116,7 @@ cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ withCM $ \expr -> do
    return $ build myView ((b, map g ps), (c, map g qs))
  where
    myView = divView >>> (productView *** productView)
-   powInt = simplePowerView >>> second integerView
+   powInt = powerView >>> second integerView
    f a = fromMaybe (a, 1) (match powInt a)
    g a = build powInt a
    rec ((_, 0):xs) ys = rec xs ys

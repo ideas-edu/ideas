@@ -60,15 +60,15 @@ proofExercise = makeExercise
    }
 
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
-   toTerm (a, b) = binary (binarySymbol tupleSymbol) (toTerm a) (toTerm b)
+   toTerm (a, b) = binaryTerm tupleSymbol (toTerm a) (toTerm b)
    fromTerm term =
       case getConSpine term of
          Just (s, [a, b]) | s == tupleSymbol ->
             liftM2 (,) (fromTerm a) (fromTerm b)
          _ -> fail "not a tuple"
    
-tupleSymbol :: Symbol
-tupleSymbol = newSymbol "basic.tuple"
+tupleSymbol :: Id
+tupleSymbol = newId "basic.tuple"
 
 proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
 proofStrategy = label "proof equivalent" $ 

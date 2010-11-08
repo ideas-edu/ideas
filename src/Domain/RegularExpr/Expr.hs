@@ -172,4 +172,4 @@ instance IsTerm RegExp where
 
 instance Rewrite RegExp where
    operators = [concatOp, choiceOp]
-   associativeOps = const $ map toSymbol [":*:", ":|:"]
+   associativeOps = const $ map newId [":*:", ":|:"]

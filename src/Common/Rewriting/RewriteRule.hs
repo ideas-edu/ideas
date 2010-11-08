@@ -109,13 +109,13 @@ fill i = rec
       | a == b    = a
       | otherwise = Meta i
 
-buildSpec :: [Symbol] -> RuleSpec Term -> Term -> [Term]
+buildSpec :: [Id] -> RuleSpec Term -> Term -> [Term]
 buildSpec ops (lhs :~> rhs) a = do
    s <- Unification.match ops lhs a
    let (b1, b2) = (specialLeft `elem` dom s, specialRight `elem` dom s)
        sym      = maybe (error "build") fst (getConSpine lhs)
-       extLeft  a = if b1 then binary (binarySymbol sym) (Meta specialLeft) a else a
-       extRight a = if b2 then binary (binarySymbol sym) a (Meta specialRight) else a
+       extLeft  a = if b1 then binaryTerm sym (Meta specialLeft) a else a
+       extRight a = if b2 then binaryTerm sym a (Meta specialRight) else a
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
@@ -133,7 +133,7 @@ rewrite r a =
        syms = mapMaybe (operatorSymbol r a) (ruleOperators r)
    in concatMap (fromTermRR r) (buildSpec syms (ruleSpecTerm r) term)
 
-operatorSymbol :: IsMagma m => RewriteRule a -> a -> m a -> Maybe Symbol
+operatorSymbol :: IsMagma m => RewriteRule a -> a -> m a -> Maybe Id
 operatorSymbol r a op = 
    case getConSpine (toTermRR r (operation op a a)) of
       Just (s, [_, _]) -> Just s

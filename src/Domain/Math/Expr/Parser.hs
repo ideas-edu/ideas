@@ -19,6 +19,7 @@ import Prelude hiding ((^))
 import Text.Parsing
 import Control.Monad
 import Control.Monad.Error ()
+import Common.Id
 import Common.Transformation
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic)
@@ -66,9 +67,9 @@ atom   =  fromInteger <$> pInteger
 symb :: TokenParser ([Expr] -> Expr)
 symb = qualifiedSymb
     -- To fix: sqrt expects exactly one argument
-    <|> (\xs -> function rootSymbol (xs ++ [2])) <$ pKey "sqrt" 
-    <|> function rootSymbol <$ pKey "root"
-    <|> function logSymbol <$ pKey "log"
+    <|> (\xs -> function (newId rootSymbol) (xs ++ [2])) <$ pKey "sqrt" 
+    <|> function (newId rootSymbol) <$ pKey "root"
+    <|> function (newId logSymbol) <$ pKey "log"
     <|> makeDiff <$ pKey "D"
  where
    makeDiff [x,a] = unary diffSymbol (binary lambdaSymbol x a)
@@ -76,7 +77,7 @@ symb = qualifiedSymb
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
 qualifiedSymb = f <$> (pQVarid <|> pQConid)
- where f (a, b) = function $ toSymbol $ a ++ "." ++ b
+ where f (a, b) = function $ newId (a, b)
 
 pEquations :: TokenParser a -> TokenParser (Equations a)
 pEquations = pLines True . pEquation

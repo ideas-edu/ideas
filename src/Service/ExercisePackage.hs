@@ -24,7 +24,7 @@ module Service.ExercisePackage
 
 import Common.Library
 import Common.Utils (Some(..))
-import Common.Rewriting.Term hiding (Symbol)
+import Common.Rewriting.Term
 import Control.Monad
 import Data.Char
 import Data.List
@@ -93,7 +93,7 @@ omobjToTerm omobj =
       OMV x -> case isMeta x of
                   Just n  -> return (Meta n)
                   Nothing -> return (Var x)
-      OMS s -> return (Con (newSymbol (show s)))
+      OMS s -> return (Con (newId (show s)))
       OMI n -> return (Num n)
       OMF a -> return (Float a)
       OMA (x:xs) -> liftM2 makeTerm (omobjToTerm x) (mapM omobjToTerm xs)

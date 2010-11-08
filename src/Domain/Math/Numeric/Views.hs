@@ -17,6 +17,7 @@ module Domain.Math.Numeric.Views
    , intDiv, fracDiv, exprToNum
    ) where
 
+import Common.Id
 import Common.View
 import Control.Monad
 import Data.Ratio
@@ -29,9 +30,9 @@ integralView :: Integral a => View Expr a
 integralView = newView "num.integer" (exprToNum f) fromIntegral
  where
    f s [x, y] 
-      | s == divideSymbol = 
+      | sameId s divideSymbol = 
            intDiv x y
-      | s == powerSymbol = do
+      | isPowerSymbol s = do
            guard (y >= 0)
            return (x Prelude.^ y)
    f _ _ = Nothing
@@ -43,9 +44,9 @@ rationalView :: View Expr Rational
 rationalView = newView "num.rational" (exprToNum f) fromRational
  where
    f s [x, y] 
-      | s == divideSymbol = 
+      | sameId s divideSymbol = 
            fracDiv x y
-      | s == powerSymbol = do
+      | isPowerSymbol s = do
            let ry = toRational y
            guard (denominator ry == 1)
            let a = x Prelude.^ abs (numerator ry)
@@ -140,16 +141,16 @@ optionNegate f a          = f a
 -------------------------------------------------------------------
 -- Helper functions
 
-doubleSym :: Symbol -> [Double] -> Maybe Double
+doubleSym :: Id -> [Double] -> Maybe Double
 doubleSym s [x, y] 
-   | s == divideSymbol = fracDiv x y
-   | s == powerSymbol  = floatingPower x y   
-   | s == rootSymbol && x >= 0 && y >= 1 = Just (x ** (1/y))
+   | sameId s divideSymbol = fracDiv x y
+   | isPowerSymbol s = floatingPower x y   
+   | isRootSymbol s && x >= 0 && y >= 1 = Just (x ** (1/y))
 doubleSym _ _ = Nothing
 
 -- General numeric interpretation function: constructors Sqrt and
 -- (:/:) are interpreted with function
-exprToNum :: (Monad m, Num a) => (Symbol -> [a] -> m a) -> Expr -> m a
+exprToNum :: (Monad m, Num a) => (Id -> [a] -> m a) -> Expr -> m a
 exprToNum f = rec 
  where
    rec expr =
@@ -165,8 +166,8 @@ exprToNumStep rec expr =
       a :-: b  -> liftM2 (-)    (rec a) (rec b)
       Negate a -> liftM  negate (rec a)
       Nat n    -> return (fromInteger n)
-      a :/: b  -> rec (Sym divideSymbol [a, b])
-      Sqrt a   -> rec (Sym rootSymbol [a, 2])
+      a :/: b  -> rec (Sym (newId divideSymbol) [a, b])
+      Sqrt a   -> rec (Sym (newId rootSymbol) [a, 2])
       _        -> fail "exprToNumStep"
 
 intDiv :: Integral a => a -> a -> Maybe a

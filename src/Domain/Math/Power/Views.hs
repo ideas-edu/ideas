@@ -80,9 +80,9 @@ powerView = makeView f g
   where
     f expr = 
       case expr of
-        Sym s [a, b] | s == powerSymbol -> return (a, b)
-                     | s == rootSymbol  -> return (a, (1 ./. b))
-        Sqrt e                          -> return (e, 1 ./. 2)
+        Sym s [a, b] | isPowerSymbol s -> return (a, b)
+                     | isRootSymbol  s -> return (a, (1 ./. b))
+        Sqrt e                         -> return (e, 1 ./. 2)
         _ -> Nothing
     
     g (a, b) =
@@ -116,7 +116,7 @@ logView :: View Expr (Expr, Expr)
 logView = makeView f (uncurry logBase)
   where 
     f expr = case expr of
-        Sym s [a, b] | s == logSymbol -> return (a, b)
+        Sym s [a, b] | isLogSymbol s -> return (a, b)
         _ -> Nothing
 
 

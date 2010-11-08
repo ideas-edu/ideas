@@ -11,37 +11,35 @@
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Symbols () where
 
-import Domain.Math.Expr.Symbolic
 import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Control.Monad
-import qualified Text.OpenMath.Dictionary.Linalg2 as Linalg2
+import Text.OpenMath.Dictionary.Linalg2
+import Common.Id
 import Common.Rewriting.Term
-
-vectorSymbol, matrixSymbol, matrixrowSymbol :: Symbol
-vectorSymbol    = toSymbol Linalg2.vectorSymbol
-matrixSymbol    = toSymbol Linalg2.matrixSymbol
-matrixrowSymbol = toSymbol Linalg2.matrixrowSymbol
 
 -------------------------------------------------------
 -- Conversion to the Expr data type
 
 instance IsTerm a => IsTerm (Matrix a) where
    toTerm = 
-      let f = function matrixrowSymbol . map toTerm
-      in function matrixSymbol . map f . rows
+      let f = makeConTerm matrixrowSymbol . map toTerm
+      in makeConTerm matrixSymbol . map f . rows
    fromTerm a = do
-      rs  <- isSymbol matrixSymbol a
-      xss <- mapM (isSymbol matrixrowSymbol) rs
+      (s, rs)  <- getConSpine a
+      guard (sameId s matrixSymbol)
+      (ss, xss) <- liftM unzip (mapM getConSpine rs)
+      guard (all (sameId matrixrowSymbol) ss)
       yss <- mapM (mapM fromTerm) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
 
 instance IsTerm a => IsTerm (Vector a) where
-   toTerm = function vectorSymbol . map toTerm . toList
+   toTerm = makeConTerm vectorSymbol . map toTerm . toList
    fromTerm a = do
-      xs <- isSymbol vectorSymbol a
+      (s, xs) <- getConSpine a
+      guard (sameId s vectorSymbol)
       ys <- mapM fromTerm xs
       return (fromList ys)
       

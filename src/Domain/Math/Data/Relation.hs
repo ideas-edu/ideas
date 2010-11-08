@@ -25,11 +25,14 @@ module Domain.Math.Data.Relation
    , Inequality(..), inequalityView
    ) where
 
+import Common.Id
 import Common.View
 import Common.Rewriting (IsTerm(..), Rewrite)
+import Common.Rewriting.Term (binaryTerm)
 import Common.Classes
 import Domain.Math.Expr.Symbolic
-import qualified Text.OpenMath.Dictionary.Relation1 as Relation1
+import Text.OpenMath.Dictionary.Relation1
+import Text.OpenMath.Symbol
 import Data.Maybe
 import Test.QuickCheck
 import Control.Monad
@@ -81,8 +84,8 @@ instance Relational Relation where
 instance IsTerm a => IsTerm (Relation a) where
    toTerm p = 
       let op  = relationType p
-          sym = maybe (toSymbol (show op)) snd (lookup op relationSymbols)
-      in binary sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
+          sym = maybe (newId (show op)) (newId . snd) (lookup op relationSymbols)
+      in binaryTerm sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
    fromTerm a = 
       let f (relType, (_, s)) = do
              (e1, e2) <- isBinary s a
@@ -282,16 +285,3 @@ inequalityTable =
    [ (LessThan, ((:<:), (.<.))), (LessThanOrEqualTo, ((:<=:), (.<=.)))
    , (GreaterThan, ((:>:), (.>.))), (GreaterThanOrEqualTo, ((:>=:), (.>=.)))
    ]
-
------------------------------------------------------------------------------
--- OpenMath symbols
-
-eqSymbol, ltSymbol, gtSymbol, neqSymbol, leqSymbol, 
-   geqSymbol, approxSymbol :: Symbol
-eqSymbol         = toSymbol Relation1.eqSymbol
-ltSymbol         = toSymbol Relation1.ltSymbol
-gtSymbol         = toSymbol Relation1.gtSymbol
-neqSymbol        = toSymbol Relation1.neqSymbol
-leqSymbol        = toSymbol Relation1.leqSymbol
-geqSymbol        = toSymbol Relation1.geqSymbol
-approxSymbol     = toSymbol Relation1.approxSymbol

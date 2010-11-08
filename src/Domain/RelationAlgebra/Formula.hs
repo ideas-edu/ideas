@@ -13,8 +13,10 @@ module Domain.RelationAlgebra.Formula where
 
 import Domain.Math.Expr.Symbolic
 import Common.Uniplate (Uniplate(..))
+import Common.Id
 import Common.Rewriting
-import Common.Rewriting.Term (newSymbol)
+import Common.Rewriting.Term (binaryTerm, unaryTerm, constantTerm)
+import qualified Common.Rewriting.Term as Term
 import Common.Utils
 import Control.Monad
 import Data.List
@@ -22,6 +24,7 @@ import qualified Data.Set as S
 import System.Random (StdGen, mkStdGen, split, randomR)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
+import Text.OpenMath.Symbol
 
 infixr 2 :.:
 infixr 3 :+: 
@@ -174,34 +177,38 @@ instance Different RelAlg where
    --(var, comp, add, conj, disj, not, inverse, universe, ident)
 instance IsTerm RelAlg where
    toTerm = foldRelAlg 
-      ( variable, binary compSymbol, binary addSymbol, binary conjSymbol
-      , binary disjSymbol, unary notSymbol, unary invSymbol
-      , nullary universeSymbol, nullary identSymbol
+      ( Term.Var, binaryTerm compSymbol, binaryTerm addSymbol
+      , binaryTerm conjSymbol
+      , binaryTerm disjSymbol, unaryTerm notSymbol, unaryTerm invSymbol
+      , constantTerm universeSymbol, constantTerm identSymbol
       )
 
    fromTerm a = 
       fromTermWith f a `mplus` liftM Var (getVariable a)
     where
       f s []
-         | s == universeSymbol  = return V
-         | s == identSymbol     = return I
+         | sameId s universeSymbol  = return V
+         | sameId s identSymbol     = return I
       f s [x]
-         | s == notSymbol       = return (Not x)
-         | s == invSymbol       = return (Inv x)
+         | sameId s notSymbol       = return (Not x)
+         | sameId s invSymbol       = return (Inv x)
       f s [x, y]
-         | s == compSymbol      = return (x :.:  y)
-         | s == addSymbol       = return (x :+:  y)
-         | s == conjSymbol      = return (x :&&: y)
-         | s == disjSymbol      = return (x :||: y)
+         | sameId s compSymbol      = return (x :.:  y)
+         | sameId s addSymbol       = return (x :+:  y)
+         | sameId s conjSymbol      = return (x :&&: y)
+         | sameId s disjSymbol      = return (x :||: y)
       f _ _ = fail "fromTerm"
       
 compSymbol, addSymbol, conjSymbol, disjSymbol,
    notSymbol, invSymbol, universeSymbol, identSymbol :: Symbol
-compSymbol     = newSymbol "relalg.comp"
-addSymbol      = newSymbol "relalg.add"
-conjSymbol     = newSymbol "relalg.conj"
-disjSymbol     = newSymbol "relalg.disj"
-notSymbol      = newSymbol "relalg.not"
-invSymbol      = newSymbol "relalg.inv"
-universeSymbol = newSymbol "relalg.universe"
-identSymbol    = newSymbol "relalg.ident"
+compSymbol     = relalgSymbol "comp"
+addSymbol      = relalgSymbol "add"
+conjSymbol     = relalgSymbol "conj"
+disjSymbol     = relalgSymbol "disj"
+notSymbol      = relalgSymbol "not"
+invSymbol      = relalgSymbol "inv"
+universeSymbol = relalgSymbol "universe"
+identSymbol    = relalgSymbol "ident"
+
+relalgSymbol :: String -> Symbol
+relalgSymbol = makeSymbol "relalg"

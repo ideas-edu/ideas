@@ -365,7 +365,7 @@ simplifyProduct = makeSimpleRule (power, "simplify-product") $ \ expr -> do
       myRationalView :: View Expr Rational
       myRationalView = makeView (exprToNum f) fromRational
         where
-          f s [x, y] | s == divideSymbol = fracDiv x y
+          f s [x, y] | isDivideSymbol s = fracDiv x y
           f _ _ = Nothing
 
 -- generalise this function!

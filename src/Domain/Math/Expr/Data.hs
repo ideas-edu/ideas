@@ -17,12 +17,15 @@ import Data.Ratio
 import Data.Typeable
 import Test.QuickCheck
 import Control.Monad
+import Common.Id
 import Common.Uniplate
 import Common.Utils (commaList)
 import Common.View
 import Common.Rewriting
+import Common.Rewriting.Term hiding (Var)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
+import Text.OpenMath.Symbol
 
 import qualified Common.Rewriting.Term as Term
 
@@ -42,7 +45,7 @@ data Expr = -- Num
           | Number Double -- positive only
             -- Symbolic
           | Var String
-          | Sym Symbol [Expr]
+          | Sym Id [Expr]
    deriving (Eq, Ord, Typeable)
 
 -----------------------------------------------------------------------
@@ -70,7 +73,7 @@ instance Fractional Expr where
            fromIntegral (numerator r) :/: fromIntegral (denominator r)
 
 instance Floating Expr where
-   pi      = symbol piSymbol
+   pi      = symbol (newId piSymbol)
    sqrt    = Sqrt
    (**)    = binary powerSymbol
    logBase = binary logSymbol
@@ -96,24 +99,24 @@ instance Symbolic Expr where
    getVariable _       = mzero
    
    function s [a, b] 
-      | s == plusSymbol   = a :+: b
-      | s == timesSymbol  = a :*: b
-      | s == minusSymbol  = a :-: b
-      | s == divideSymbol = a :/: b
-      | s == rootSymbol && b == Nat 2 = Sqrt a
+      | sameId s plusSymbol   = a :+: b
+      | sameId s timesSymbol  = a :*: b
+      | sameId s minusSymbol  = a :-: b
+      | sameId s divideSymbol = a :/: b
+      | isRootSymbol s && b == Nat 2 = Sqrt a
    function s [a]
-      | s == negateSymbol = Negate a
+      | sameId s negateSymbol = Negate a
    function s as = 
       Sym s as
    
    getFunction expr =
       case expr of
-         a :+: b  -> return (plusSymbol,   [a, b])
-         a :*: b  -> return (timesSymbol,  [a, b])
-         a :-: b  -> return (minusSymbol,  [a, b])
-         Negate a -> return (negateSymbol, [a])
-         a :/: b  -> return (divideSymbol, [a, b])
-         Sqrt a   -> return (rootSymbol,   [a, Nat 2])
+         a :+: b  -> return (newId plusSymbol,   [a, b])
+         a :*: b  -> return (newId timesSymbol,  [a, b])
+         a :-: b  -> return (newId minusSymbol,  [a, b])
+         Negate a -> return (newId negateSymbol, [a])
+         a :/: b  -> return (newId divideSymbol, [a, b])
+         Sqrt a   -> return (newId rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> mzero
 
@@ -165,7 +168,7 @@ symbolGenerator extras syms = f
                Just i  -> return i
                Nothing -> choose (0, 5)
       as <- replicateM i (f (n `div` i))
-      return (function s as)
+      return (function (newId s) as)
   
 natGenerator :: Gen Expr
 natGenerator = liftM (Nat . abs) arbitrary
@@ -191,12 +194,12 @@ showExpr table = rec 0
       | otherwise        = "\"" ++ s ++ "\""
    rec i expr = 
       case getFunction expr of
-         Just (s1, [Sym s2 [Var x, a]]) | s1 == diffSymbol && s2 == lambdaSymbol ->
+         Just (s1, [Sym s2 [Var x, a]]) | sameId s1 diffSymbol && sameId s2 lambdaSymbol ->
             parIf (i>10000) $ "D(" ++ x ++ ") " ++ rec 10001 a
          -- To do: remove special case for sqrt
-         Just (s, [a, b]) | s == rootSymbol && b == Nat 2 -> 
+         Just (s, [a, b]) | isRootSymbol s && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
-         Just (s, xs) | s == listSymbol -> 
+         Just (s, xs) | sameId s listSymbol -> 
             "[" ++ commaList (map (rec 0) xs) ++ "]"
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
@@ -214,10 +217,10 @@ showExpr table = rec 0
             error "showExpr"
 
    showSymbol s
-      | s == rootSymbol = "root"
+      | isRootSymbol s = "root"
       | otherwise = show s
 
-   symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
+   symbolTable = [ (newId s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"
@@ -247,8 +250,11 @@ instance IsTerm Expr where
          _ -> fail "fromTerm"
 
 instance IsTerm a => IsTerm [a] where
-   toTerm = function listSymbol . map toTerm
-   fromTerm a = isSymbol listSymbol a >>= mapM fromTerm
+   toTerm = makeConTerm listSymbol . map toTerm
+   fromTerm a = do
+      (s, xs) <- getConSpine a
+      guard (sameId s listSymbol)
+      mapM fromTerm xs
 
 toExpr :: IsTerm a => a -> Expr
 toExpr a =

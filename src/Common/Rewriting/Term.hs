@@ -13,16 +13,14 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Term 
-   ( Symbol, newSymbol
-   , Term(..), IsTerm(..)
+   ( Term(..), IsTerm(..)
    , fromTermM, fromTermWith
    , getSpine, getConSpine, makeTerm, makeConTerm
-   , unary, unarySymbol, binarySymbol, binary, unaryMatch, binaryMatch
+   , constantTerm, unaryTerm, binaryTerm
    , hasMetaVar, getMetaVars
    ) where
 
 import Common.Id
-import Common.Rewriting.Operator
 import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Common.View
@@ -33,24 +31,8 @@ import Data.Typeable
 -----------------------------------------------------------
 -- * Data type for terms
 
-newtype Symbol = S { symbolId :: Id }
-   deriving (Eq, Ord)
-
-newSymbol :: String -> Symbol
-newSymbol = S . newId
-
-instance Show Symbol where
-   show = showId
-
-instance HasId Symbol where
-   getId      = symbolId
-   changeId f = S . f . symbolId
-   
-instance IsId Symbol where
-   newId = symbolId
-
 data Term = Var   String 
-          | Con   Symbol 
+          | Con   Id 
           | Apply Term Term
           | Num   Integer 
           | Float Double
@@ -91,7 +73,7 @@ instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
 
-fromTermWith :: (Monad m, IsTerm a) => (Symbol -> [a] -> m a) -> Term -> m a
+fromTermWith :: (Monad m, IsTerm a) => (Id -> [a] -> m a) -> Term -> m a
 fromTermWith f a = do
    (s, xs) <- getConSpine a
    ys <-  mapM fromTermM xs
@@ -106,7 +88,7 @@ getSpine = rec []
    rec xs (Apply f a) = rec (a:xs) f
    rec xs a           = (a, xs)
 
-getConSpine :: Monad m => Term -> m (Symbol, [Term])
+getConSpine :: Monad m => Term -> m (Id, [Term])
 getConSpine a = 
    case getSpine a of
       (Con s, xs) -> return (s, xs)
@@ -115,20 +97,17 @@ getConSpine a =
 makeTerm :: Term -> [Term] -> Term
 makeTerm = foldl Apply
 
-makeConTerm :: Symbol -> [Term] -> Term
-makeConTerm = makeTerm . Con
+makeConTerm :: IsId a => a -> [Term] -> Term
+makeConTerm = makeTerm . constantTerm
 
-unarySymbol :: Symbol -> UnaryOp Term
-unarySymbol s = makeUnary (getId s) (Apply (Con s)) f
- where
-   f (Apply (Con t) a) | s==t = Just a
-   f _ = Nothing
+constantTerm :: IsId a => a -> Term
+constantTerm = Con . newId
 
-binarySymbol :: Symbol -> BinaryOp Term
-binarySymbol s = makeBinary (getId s) (Apply . Apply (Con s)) f
- where
-   f (Apply (Apply (Con t) a) b) | s==t = Just (a, b)
-   f _ = Nothing
+unaryTerm :: IsId a => a -> Term -> Term
+unaryTerm = Apply . constantTerm
+
+binaryTerm :: IsId a => a -> Term -> Term -> Term
+binaryTerm = (Apply .) . unaryTerm
 
 getMetaVars :: Term -> [Int]
 getMetaVars a = sort $ nub [ i | Meta i <- leafs a ]

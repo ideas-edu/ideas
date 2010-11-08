@@ -258,7 +258,7 @@ rationalExpr expr =
       Negate a -> fNeg (rationalExpr a)
       a :*: b  -> rationalExpr a `fTimes` rationalExpr b
       a :/: b  -> rationalExpr a `fTimes` fRecip (rationalExpr b)
-      Sym s [a, b] | s == powerSymbol -> 
+      Sym s [a, b] | isPowerSymbol s -> 
          fPower (rationalExpr a) b
       _ -> (expr, 1, T)
  where

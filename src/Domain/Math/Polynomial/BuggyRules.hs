@@ -364,7 +364,7 @@ buggyCoverUpSquareMinus = describe "A squared term is equal to a negative term \
    \on the right-hand side, resulting in an error in the signs" $
    buggyRule $ makeSimpleRule "coverup.square-minus" $ oneDisjunct $ \eq -> 
       case eq of
-         Sym s [a, 2] :==: b | s == powerSymbol -> 
+         Sym s [a, 2] :==: b | isPowerSymbol s -> 
             Just $ orList [a :==: sqrt b, a :==: sqrt (-b)]
          _ -> Nothing
 

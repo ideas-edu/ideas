@@ -584,6 +584,6 @@ defPowerNat :: Rule Expr
 defPowerNat = makeSimpleRule (polyeq, "def-power-nat") f
  where
    f (Sym _ [Var _, _]) = Nothing -- should not work on x^5
-   f (Sym s [a, Nat n]) | s == powerSymbol = 
+   f (Sym s [a, Nat n]) | isPowerSymbol s = 
       return (build productView (False, replicate (fromInteger n) a))
    f _ = Nothing

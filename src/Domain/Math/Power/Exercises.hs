@@ -105,7 +105,7 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
 
 isSimplePower :: Expr -> Bool
 isSimplePower (Sym s [Var _, y]) 
-                 | s == powerSymbol = y `belongsTo` rationalView
+                 | isPowerSymbol s = y `belongsTo` rationalView
 isSimplePower _ = False
 
 isPower :: View Expr a -> Expr -> Bool
@@ -113,8 +113,8 @@ isPower v expr =
   let Just (_, xs) = match productView expr 
       f (Nat 1 :/: a) = g a
       f a = g a
-      g (Sym s [Var _, a]) | s==powerSymbol = isJust (match v a)
-      g (Sym s [x, Nat _]) | s==rootSymbol = isPower v x 
+      g (Sym s [Var _, a]) | isPowerSymbol s = isJust (match v a)
+      g (Sym s [x, Nat _]) | isRootSymbol s = isPower v x 
       g (Sqrt x) = g x
       g (Var _) = True
       g a = a `belongsTo` rationalView

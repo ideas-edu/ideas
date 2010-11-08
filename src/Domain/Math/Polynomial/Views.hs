@@ -66,7 +66,7 @@ polyViewWith v = makeView matchPoly (uncurry buildPoly)
             guard (pv `notElem` collectVars b)
             p <- f a
             return (fmap (/c) p)
-         Sym s [a, n] | s == powerSymbol ->
+         Sym s [a, n] | isPowerSymbol s ->
            liftM2 power (f a) (matchNat n)
          _ -> do 
             guard (pv `notElem` collectVars expr)
@@ -250,7 +250,7 @@ hasNegSqrt (Sqrt a) =
    case match rationalView a of
       Just r | r < 0 -> True
       _ -> hasNegSqrt a
-hasNegSqrt (Sym s [a, b]) | s == rootSymbol = 
+hasNegSqrt (Sym s [a, b]) | isRootSymbol s = 
    case (match rationalView a, match integerView b) of
       (Just r, Just n) | r < 0 && even n -> True
       _ -> hasNegSqrt a || hasNegSqrt b

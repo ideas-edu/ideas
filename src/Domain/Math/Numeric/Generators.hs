@@ -20,6 +20,7 @@ import Common.Utils (ratioGen)
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
 import Domain.Math.Expr
+import Text.OpenMath.Symbol
 
 -------------------------------------------------------------------
 -- Generators

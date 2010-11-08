@@ -68,44 +68,44 @@ showTerm (Some ex) = text . rec
       
    parIf b s = if b then "(" ++ s ++ ")" else s           
          
-specialSymbol :: Symbol -> [Term] -> Maybe [Either String Term]
+specialSymbol :: Id -> [Term] -> Maybe [Either String Term]
 -- constants
 specialSymbol s [] 
-   | s == newSymbol "logic1.true"  = con "T"
-   | s == newSymbol "logic1.false" = con "F"
-   | s == newSymbol "relalg.universe" = con "V" -- universe
-   | s == newSymbol "relalg.ident"    = con "I" -- identity
+   | sameId s "logic1.true"     = con "T"
+   | sameId s "logic1.false"    = con "F"
+   | sameId s "relalg.universe" = con "V" -- universe
+   | sameId s "relalg.ident"    = con "I" -- identity
  where
    con s = return [Left s]
 -- unary symbols
 specialSymbol s [a]
-   | s == newSymbol "logic1.not"         = pre "\172" -- "~"
-   | s == newSymbol "arith1.unary_minus" = pre "-"
-   | s == newSymbol "relalg.not"         = post "\x203E"
-   | s == newSymbol "relalg.inv"         = post "~"
+   | sameId s "logic1.not"         = pre "\172" -- "~"
+   | sameId s "arith1.unary_minus" = pre "-"
+   | sameId s "relalg.not"         = post "\x203E"
+   | sameId s "relalg.inv"         = post "~"
  where
    pre s  = return [Left s, Right a]
    post s = return [Right a, Left s]
 -- binary symbols
 specialSymbol s [a, b]
-   | s == newSymbol "logic1.or"         = bin " \8744 " -- "||"
-   | s == newSymbol "logic1.and"        = bin " \8743 " -- "&&"
-   | s == newSymbol "logic1.implies"    = bin " \8594 " -- "->"
-   | s == newSymbol "logic1.equivalent" = bin " \8596 " -- "<->"
-   | s == newSymbol "relation1.eq"      = bin " = "
-   | s == newSymbol "arith1.plus"       = bin "+"
-   | s == newSymbol "arith1.minus"      = bin "-"
-   | s == newSymbol "arith1.power"      = bin "^"
-   | s == newSymbol "arith1.times"      = bin "\x00B7" -- "*"
-   | s == newSymbol "arith1.divide"     = bin "/"
-   | s == newSymbol "relalg.conj"       = bin " \x2229 " -- intersect
-   | s == newSymbol "relalg.disj"       = bin " \x222A " -- union
-   | s == newSymbol "relalg.comp"       = bin " ; " -- composition
-   | s == newSymbol "relalg.add"        = bin " \x2020 " -- relative addition/dagger
+   | sameId s "logic1.or"         = bin " \8744 " -- "||"
+   | sameId s "logic1.and"        = bin " \8743 " -- "&&"
+   | sameId s "logic1.implies"    = bin " \8594 " -- "->"
+   | sameId s "logic1.equivalent" = bin " \8596 " -- "<->"
+   | sameId s "relation1.eq"      = bin " = "
+   | sameId s "arith1.plus"       = bin "+"
+   | sameId s "arith1.minus"      = bin "-"
+   | sameId s "arith1.power"      = bin "^"
+   | sameId s "arith1.times"      = bin "\x00B7" -- "*"
+   | sameId s "arith1.divide"     = bin "/"
+   | sameId s "relalg.conj"       = bin " \x2229 " -- intersect
+   | sameId s "relalg.disj"       = bin " \x222A " -- union
+   | sameId s "relalg.comp"       = bin " ; " -- composition
+   | sameId s "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
    bin s = return [Right a, Left s, Right b]
 specialSymbol s1 [Apply (Apply (Con s2) x) a] 
-   | s1 == newSymbol "calculus1.diff" && s2 == newSymbol "fns1.lambda" = 
+   | sameId s1 "calculus1.diff" && sameId s2 "fns1.lambda" = 
         return [Left "D(", Right x, Left ") ", Right a] 
 specialSymbol _ _ = Nothing
 

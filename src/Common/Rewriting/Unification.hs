@@ -13,11 +13,11 @@ module Common.Rewriting.Unification
    ( match, unifyM, specialLeft, specialRight
    ) where
 
+import Common.Id
 import Common.Rewriting.Term
 import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Control.Monad
--- import qualified Data.Map as M
 
 -----------------------------------------------------------
 -- Unification (in both ways)
@@ -86,7 +86,7 @@ unifyWith ops = rec
 
 -- second term should not have meta variables
 
-match :: [Symbol] -> Term -> Term -> [Substitution]
+match :: [Id] -> Term -> Term -> [Substitution]
 match assocSymbols x y = do
    s <- rec True x y
   -- guard $ all (`notElem` getMetaVars y) (dom s)
@@ -112,7 +112,7 @@ match assocSymbols x y = do
       return (s2 @@@ s1)
    recList _ _ = []
       
-associativeMatch :: Bool -> Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
+associativeMatch :: Bool -> Id -> Term -> Term -> Term -> [[(Term, Term)]]
 associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2) 
    | s==t = map (map make) result
  where
@@ -129,13 +129,13 @@ associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2)
    make (a, b) = (construct a, construct b)
    
    collect term =
-      case binaryMatch (binarySymbol s) term of
-         Just (a, b) -> collect a . collect b
-         Nothing     -> (term:)
+      case getConSpine term of
+         Just (t, [a, b]) | s==t -> collect a . collect b
+         _ -> (term:)
    
    construct xs 
       | null xs   = error "associativeMatcher: empty list"
-      | otherwise = foldr1 (binary (binarySymbol s)) xs
+      | otherwise = foldr1 (binaryTerm s) xs
 associativeMatch _ _ _ _ _ = []
 
 specialLeft, specialRight :: Int -- special meta variables for context extension

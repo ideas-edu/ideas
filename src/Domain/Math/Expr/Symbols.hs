@@ -8,47 +8,37 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Exports relevant OpenMath symbols, converted to the 
--- Symbol data type from @Common.Rewriting@.
+-- Exports relevant OpenMath symbols
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Symbols where
+module Domain.Math.Expr.Symbols
+   ( -- Operators
+     OperatorTable, Associativity(..), operatorTable
+     -- OpenMath symbols
+   , plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
+   , powerSymbol, negateSymbol, sinSymbol, cosSymbol, lnSymbol
+   , diffSymbol, piSymbol, lambdaSymbol, listSymbol
+   , absSymbol, signumSymbol, logSymbol, expSymbol, tanSymbol, asinSymbol
+   , atanSymbol, acosSymbol, sinhSymbol, tanhSymbol, coshSymbol, asinhSymbol
+   , atanhSymbol, acoshSymbol, bottomSymbol, fcompSymbol
+     -- Matching
+   , isPlus, isTimes, isMinus, isDivide, isPower, isNegate
+   , isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol
+   , (^), root
+   ) where
 
+import Common.Id
 import Control.Monad
-import Domain.Math.Expr.Symbolic
 import Domain.Math.Data.Relation (relationSymbols)
-
--- OpenMath dictionaries
-import qualified Text.OpenMath.Dictionary.Arith1    as Arith1
-import qualified Text.OpenMath.Dictionary.Calculus1 as Calculus1
-import qualified Text.OpenMath.Dictionary.Fns1      as Fns1
-import qualified Text.OpenMath.Dictionary.List1     as List1
-import qualified Text.OpenMath.Dictionary.Nums1     as Nums1
-import qualified Text.OpenMath.Dictionary.Transc1   as Transc1
-
--------------------------------------------------------------
--- Converted OpenMath symbols
-
-plusSymbol, timesSymbol, minusSymbol, divideSymbol,
-   rootSymbol, powerSymbol, negateSymbol :: Symbol
-plusSymbol       = toSymbol Arith1.plusSymbol
-timesSymbol      = toSymbol Arith1.timesSymbol
-minusSymbol      = toSymbol Arith1.minusSymbol 
-divideSymbol     = toSymbol Arith1.divideSymbol
-rootSymbol       = toSymbol Arith1.rootSymbol
-powerSymbol      = toSymbol Arith1.powerSymbol
-negateSymbol     = toSymbol Arith1.unaryMinusSymbol
-
-sinSymbol, cosSymbol, lnSymbol :: Symbol
-sinSymbol        = toSymbol Transc1.sinSymbol
-cosSymbol        = toSymbol Transc1.cosSymbol
-lnSymbol         = toSymbol Transc1.lnSymbol
-
-diffSymbol, piSymbol, lambdaSymbol, listSymbol :: Symbol
-diffSymbol       = toSymbol Calculus1.diffSymbol
-piSymbol         = toSymbol Nums1.piSymbol
-lambdaSymbol     = toSymbol Fns1.lambdaSymbol
-listSymbol       = toSymbol List1.listSymbol
+import Domain.Math.Expr.Symbolic
+import Prelude hiding ((^))
+import Text.OpenMath.Dictionary.Arith1
+import Text.OpenMath.Dictionary.Calculus1
+import Text.OpenMath.Dictionary.Fns1
+import Text.OpenMath.Dictionary.List1
+import Text.OpenMath.Dictionary.Nums1
+import Text.OpenMath.Dictionary.Transc1
+import Text.OpenMath.Symbol
 
 -------------------------------------------------------------
 -- Operator fixities
@@ -69,24 +59,26 @@ operatorTable =
    ]
 
 -------------------------------------------------------------
+-- OpenMath symbols
+
+negateSymbol :: Symbol
+negateSymbol = unaryMinusSymbol
+
+-------------------------------------------------------------
 -- Extra math symbols
 
-absSymbol    = toSymbol "abs"   
-signumSymbol = toSymbol "signum" 
-logSymbol    = toSymbol "log"            -- in Haskell, logbase e = log
-expSymbol    = toSymbol "exp"            -- exp 1 ~= 2.718
-tanSymbol    = toSymbol "tan"       
-asinSymbol   = toSymbol "asin"   
-atanSymbol   = toSymbol "atan"   
-acosSymbol   = toSymbol "acos"   
-sinhSymbol   = toSymbol "sinh"   
-tanhSymbol   = toSymbol "tanh"   
-coshSymbol   = toSymbol "cosh"   
-asinhSymbol  = toSymbol "asinh"  
-atanhSymbol  = toSymbol "atanh" 
-acoshSymbol  = toSymbol "acosh"  
-bottomSymbol = toSymbol "error"
-fcompSymbol  = toSymbol "compose"
+signumSymbol, asinSymbol, atanSymbol, acosSymbol, asinhSymbol, atanhSymbol,
+   acoshSymbol, bottomSymbol, fcompSymbol :: Symbol
+
+signumSymbol = extraSymbol "signum"    
+asinSymbol   = extraSymbol "asin"   
+atanSymbol   = extraSymbol "atan"   
+acosSymbol   = extraSymbol "acos"     
+asinhSymbol  = extraSymbol "asinh"  
+atanhSymbol  = extraSymbol "atanh" 
+acoshSymbol  = extraSymbol "acosh"  
+bottomSymbol = extraSymbol "error"
+fcompSymbol  = extraSymbol "compose"
 
 -------------------------------------------------------------
 -- Some match functions
@@ -101,6 +93,12 @@ isMinus  = isBinary     minusSymbol
 isDivide = isBinary     divideSymbol 
 isNegate = isUnary      negateSymbol 
 isPower  = isBinary     powerSymbol
+
+isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: IsId a => a -> Bool
+isPowerSymbol  = sameId powerSymbol
+isRootSymbol   = sameId rootSymbol
+isLogSymbol    = sameId logSymbol
+isDivideSymbol = sameId divideSymbol
 
 infixr 8 ^
 

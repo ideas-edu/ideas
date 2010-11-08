@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Id 
-   ( Id, IsId(..), HasId(..), (#)
+   ( Id, IsId(..), HasId(..), (#), sameId
    , unqualified, qualifiers, qualification
    , describe, description, showId, compareId
    ) where
@@ -123,6 +123,9 @@ infixr 8 #
 
 (#) :: (IsId a, IsId b) => a -> b -> Id
 a # b = appendId (newId a) (newId b)
+   
+sameId :: (IsId a, IsId b) => a -> b -> Bool
+sameId a b = newId a == newId b
    
 unqualified :: HasId a => a -> String
 unqualified a

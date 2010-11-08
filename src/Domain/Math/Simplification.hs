@@ -19,6 +19,7 @@ module Domain.Math.Simplification
 
 import Common.Context
 import Common.Navigator
+import Common.Id
 import Common.Transformation
 import Common.Uniplate
 import Common.View hiding (simplify, simplifyWith)
@@ -144,7 +145,7 @@ smartConstructors = transform $ \expr ->
       Negate a -> neg a
       a :*: b  -> a .*. b
       a :/: b  -> a ./. b
-      Sym s [a, b] | s == powerSymbol -> 
+      Sym s [a, b] | sameId s powerSymbol -> 
          a .^. b
       _        -> expr
 

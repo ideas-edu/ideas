@@ -19,6 +19,7 @@ module Domain.Math.Power.NormViews
 import Prelude hiding ((^), recip)
 import qualified Prelude
 import Control.Monad
+import Common.Id
 import Common.View
 import Data.List
 import qualified Data.Map as M
@@ -36,7 +37,7 @@ normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
     f expr = 
         case expr of
            Sym s [a,b] 
-              | s==powerSymbol -> do
+              | isPowerSymbol s -> do
                    (r, m) <- f a
                    if r==1 
                      then do
@@ -47,10 +48,10 @@ normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
                        if n >=0 
                          then return (r Prelude.^ n, M.map (*fromIntegral n) m)
                          else return (1/(r Prelude.^ abs n), M.map (*fromIntegral n) m)
-              | s==rootSymbol ->
-                  f (Sym powerSymbol [a, 1/b])
+              | isRootSymbol s ->
+                  f (Sym (newId powerSymbol) [a, 1/b])
            Sqrt a -> 
-              f (Sym rootSymbol [a,2])
+              f (Sym (newId rootSymbol) [a,2])
            a :*: b -> do
              (r1, m1) <- f a
              (r2, m2) <- f b
@@ -81,12 +82,12 @@ normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
     f expr = 
       case expr of
         Sym s [a,b] 
-          | s==powerSymbol -> do
+          | isPowerSymbol s -> do
             (x, m) <- f a
             y      <- match rationalView b
             return (x ** fromRational y, M.map (*y) m)
-          | s==rootSymbol -> f (Sym powerSymbol [a, 1/b])
-        Sqrt a -> f (Sym rootSymbol [a,2])
+          | isRootSymbol s -> f (Sym (newId powerSymbol) [a, 1/b])
+        Sqrt a -> f (Sym (newId rootSymbol) [a,2])
         a :*: b -> do
           (r1, m1) <- f a
           (r2, m2) <- f b
@@ -122,14 +123,14 @@ normPowerView = makeView f g
    f expr = 
         case expr of
            Sym s [x,y] 
-              | s==powerSymbol -> do
+              | isPowerSymbol s -> do
                    (s, r) <- f x
                    r2 <- match rationalView y
                    return (s, r*r2)
-              | s==rootSymbol -> 
+              | isRootSymbol s -> 
                    f (x^(1/y))
            Sqrt x ->
-              f (Sym rootSymbol [x, 2])
+              f (Sym (newId rootSymbol) [x, 2])
            Var s -> return (s, 1) 
            x :*: y -> do
              (s1, r1) <- f x

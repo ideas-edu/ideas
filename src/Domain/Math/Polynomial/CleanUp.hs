@@ -207,8 +207,8 @@ smart :: Expr -> Expr
 smart (a :*: b) = a .*. b
 smart (a :/: b) = a ./. b
 smart expr@(Sym s [x, y]) 
-   | s == powerSymbol = x .^. y
-   | s == rootSymbol  = fromMaybe expr $ 
+   | isPowerSymbol s = x .^. y
+   | isRootSymbol  s = fromMaybe expr $ 
         liftM2 simplerRoot (match rationalView x) (match integerView y)
 smart (Negate a) = neg a
 smart (a :+: b) = a .+. b

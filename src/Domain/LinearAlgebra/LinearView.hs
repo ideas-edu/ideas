@@ -17,6 +17,7 @@ module Domain.LinearAlgebra.LinearView
 
 import Control.Monad
 import Data.List
+import Common.Id
 import Common.Uniplate
 import Common.View hiding (simplify)
 import Domain.Math.Expr hiding (isVariable)
@@ -73,7 +74,7 @@ sqrtLM (LM m c) = do
    guard (M.null m)
    return $ LM M.empty (sqrt c)
 
-symLM :: Symbolic a => Symbol -> [LinearMap a] -> Maybe (LinearMap a)
+symLM :: Symbolic a => Id -> [LinearMap a] -> Maybe (LinearMap a)
 symLM f ps = do
    guard (all (M.null . lmMap) ps)
    return $ LM M.empty (function f (map lmConstant ps))

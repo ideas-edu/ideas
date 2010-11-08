@@ -19,6 +19,7 @@ module Domain.Math.Power.Equation.NormViews
    ) where
 
 import Common.Classes
+import Common.Id
 import Common.View
 import Control.Arrow ( (>>^) )
 import Control.Monad
@@ -113,7 +114,7 @@ normLogView = makeView g id
     g expr = 
       case expr of 
         Sym s [x, y] 
-          | s == logSymbol -> do
+          | isLogSymbol s -> do
               b <- match integerView x
               let divExp (b, exp) = return $ f b y ./. Nat exp
               maybe (Just $ f b y) divExp $ greatestPower b
@@ -131,26 +132,26 @@ normLogView = makeView g id
         Sqrt e    -> f b (e .^. (1 ./. 2))
         Negate e  -> Negate $ f b e
         Sym s [x,y]
-          | s == powerSymbol -> y .*. f b x
-          | s == rootSymbol  -> f b (x .^. (1 ./. y))
+          | isPowerSymbol s -> y .*. f b x
+          | isRootSymbol  s -> f b (x .^. (1 ./. y))
         e         -> e
 
 myRationalView :: View Expr Rational
 myRationalView = makeView (exprToNum f) id >>> rationalView
   where
     f s [x, y] 
-      | s == divideSymbol = 
+      | isDivideSymbol s = 
           fracDiv x y
-      | s == powerSymbol = do
+      | isPowerSymbol s = do
           ry <- match rationalView y
           if denominator ry == 1 
             then do 
               let a = x Prelude.^ abs (numerator ry)
               return (if numerator ry < 0 then 1/a else a)
             else
-              f rootSymbol [ fromInteger (denominator ry)
+              f (newId rootSymbol) [ fromInteger (denominator ry)
                            , x Prelude.^ (numerator ry) ]
-      | s == rootSymbol = do
+      | isRootSymbol s = do
           n <- match integerView y
           b <- match integerView x
           liftM fromInteger $ lookup b $ map (\(a,b)->(b,a)) (allPowers n)

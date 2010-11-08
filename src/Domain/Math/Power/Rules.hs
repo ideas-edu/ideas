@@ -26,8 +26,8 @@ module Domain.Math.Power.Rules
   ) where
 
 import Prelude hiding ( (^) )
-
 import qualified Prelude
+
 import Common.Classes
 import Control.Arrow ( (>>^) )
 import Common.Id

@@ -26,9 +26,6 @@ import Common.Strategy
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
-import Domain.Math.Power.Views
-import Domain.Math.Numeric.Rules
-import Domain.Math.Numeric.Views
 import Domain.Math.Simplification
 
 
@@ -77,31 +74,3 @@ powerRules =
   , reciprocalVar, root2power, calcPower, calcPowerPlus, calcPowerMinus
   , pushNegOut
   ]
-
-naturalRules =
-   [ calcPlusWith "nat" plainNatView, calcMinusWith "nat" plainNatView
-   , calcTimesWith "nat" plainNatView, calcDivisionWith "nat" plainNatView
-   , doubleNegate, negateZero , plusNegateLeft, plusNegateRight
---   , minusNegateLeft
-   , minusNegateRight, timesNegateLeft, timesNegateRight, divisionNegateLeft
-   , divisionNegateRight
-   ]
-
-rationalRules = 
-   [ calcPlusWith "rational" rationalRelaxedForm
-   , calcMinusWith "rational" rationalRelaxedForm
-   , calcTimesWith "rational" rationalRelaxedForm
-   , calcDivisionWith "integer" integerNormalForm
-   , doubleNegate, negateZero, divisionDenominator, divisionNumerator
-   , simplerFraction
-   ]
-   
-fractionRules =
-   [ fractionPlus, fractionPlusScale, fractionTimes
-   , calcPlusWith "integer" integerNormalForm
-   , calcMinusWith "integer" integerNormalForm
-   , calcTimesWith "integer" integerNormalForm -- not needed?
-   , calcDivisionWith "integer" integerNormalForm
-   , doubleNegate, negateZero, smartRule divisionDenominator
-   , smartRule divisionNumerator, simplerFraction
-   ]

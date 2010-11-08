@@ -24,7 +24,6 @@ module Domain.Math.Power.Views
 import Control.Arrow ( (>>^) )
 import Control.Monad
 import Common.View
-import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Power.Utils
 
@@ -122,16 +121,6 @@ logView = makeView f (uncurry logBase)
 
 
 -- | Help (non-power) views ---------------------------------------------------
-
-plainNatView :: View Expr Integer
-plainNatView = makeView f Nat
-  where
-    f (Nat n) = Just n
-    f _       = Nothing
-
-plainRationalView :: View Rational (Integer, Integer)
-plainRationalView = 
-  makeView (\x -> return (numerator x, denominator x)) (uncurry (%))
 
 unitTimes :: Num t => View a b -> View a (t, b)
 unitTimes = (>>^ (,) 1)

@@ -17,14 +17,13 @@ module Domain.Math.Power.Equation.Strategies
    , higherPowerEqStrategy
    ) where
 
+import Prelude hiding (repeat, not)
+
 import Common.Classes
 import Common.Context
 import Common.Navigator
 import Common.Rewriting.Term
 import Common.Strategy
-import Common.Transformation
-import Common.View
-import Control.Monad
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
@@ -33,11 +32,9 @@ import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
 import Domain.Math.Polynomial.Rules (flipEquation)
 import Domain.Math.Power.Rules
-import Domain.Math.Power.Views
+import Domain.Math.Power.Utils
+import Domain.Math.Power.Equation.Rules
 import Domain.Math.Numeric.Rules
-import Domain.Math.Numeric.Views
-import Domain.Math.Equation.CoverUpExercise
-import Prelude hiding (repeat, not)
 
 
 ------------------------------------------------------------
@@ -94,21 +91,21 @@ expEqStrategy = cleanUpStrategy cleanup strat
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 simplifyProduct : natRules ++ rationalRules
     natRules =
-      [ calcPlusWith     "nat" myNatView
-      , calcMinusWith    "nat" myNatView
-      , calcTimesWith    "nat" myNatView
-      , calcDivisionWith "nat" myNatView
+      [ calcPlusWith     "nat" plainNatView
+      , calcMinusWith    "nat" plainNatView
+      , calcTimesWith    "nat" plainNatView
+      , calcDivisionWith "nat" plainNatView
       , doubleNegate
       , negateZero
       ]
 
     coverup = repeat $ alternatives $ map use coverUpRules
 
-    powerS = repeat $ somewhere $  use root2powerG
-                               <|> use addExponentsG
+    powerS = repeat $ somewhere $  use root2power
+                               <|> use addExponents
                                <|> use subExponents
                                <|> use mulExponents
-                               <|> use reciprocalG
+                               <|> use reciprocal
                                <|> use reciprocalFor
 
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f

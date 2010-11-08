@@ -27,7 +27,9 @@ import Common.View hiding (simplify)
 import qualified Common.View as View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
+import Data.Ratio
 import Domain.Math.Expr
+import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 import Domain.Math.Simplification
 import Domain.Math.SquareRoot.Views
@@ -76,6 +78,47 @@ mySimplify = smartConstructors
 v <&> w = makeView (\x -> match v x `mplus` match w x) (build v)
 
 infixl 1 <&>
+
+plainNatView :: View Expr Integer
+plainNatView = makeView f Nat
+  where
+    f (Nat n) = Just n
+    f _       = Nothing
+
+plainRationalView :: View Rational (Integer, Integer)
+plainRationalView = 
+  makeView (\x -> return (numerator x, denominator x)) (uncurry (%))
+
+
+-- | Rule collections ---------------------------------------------------------
+
+naturalRules =
+   [ calcPlusWith "nat" plainNatView, calcMinusWith "nat" plainNatView
+   , calcTimesWith "nat" plainNatView, calcDivisionWith "nat" plainNatView
+   , doubleNegate, negateZero , plusNegateLeft, plusNegateRight
+--   , minusNegateLeft
+   , minusNegateRight, timesNegateLeft, timesNegateRight, divisionNegateLeft
+   , divisionNegateRight
+   ]
+
+rationalRules = 
+   [ calcPlusWith "rational" rationalRelaxedForm
+   , calcMinusWith "rational" rationalRelaxedForm
+   , calcTimesWith "rational" rationalRelaxedForm
+   , calcDivisionWith "integer" integerNormalForm
+   , doubleNegate, negateZero, divisionDenominator, divisionNumerator
+   , simplerFraction
+   ]
+   
+fractionRules =
+   [ fractionPlus, fractionPlusScale, fractionTimes
+   , calcPlusWith "integer" integerNormalForm
+   , calcMinusWith "integer" integerNormalForm
+   , calcTimesWith "integer" integerNormalForm -- not needed?
+   , calcDivisionWith "integer" integerNormalForm
+   , doubleNegate, negateZero, smartRule divisionDenominator
+   , smartRule divisionNumerator, simplerFraction
+   ]
 
 
 -- | Common functions ---------------------------------------------------------

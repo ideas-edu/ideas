@@ -15,36 +15,31 @@ module Domain.Math.Power.Equation.Exercises
    , logEqExercise
    ) where
 
-import Common.Classes 
+import Prelude hiding ( (^) )
+
 import Common.Context
 import Common.Exercise
-import Common.Navigator
 import Common.Strategy hiding (not, replicate)
-import Common.Utils (distinct)
 import Common.View
-import Data.Maybe
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4 ( powerEquations, expEquations, logEquations
                                  , higherPowerEquations)
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Power.Rules
-import Domain.Math.Power.Strategies
-import Domain.Math.Power.NormViews
-import Domain.Math.Power.Views
+import Domain.Math.Power.Equation.Strategies
+import Domain.Math.Power.Equation.NormViews
 
-import Domain.Math.Equation.CoverUpRules
-import Domain.Math.Equation.CoverUpExercise
-
-import Prelude hiding ( (^) )
 
 ------------------------------------------------------------
 -- Exercises
 
-powerEquationExercise :: Exercise (Relation Expr)
-powerEquationExercise = makeExercise
+powerEqExercise :: Exercise (Relation Expr)
+powerEqExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pRelation pExpr)
   , strategy       = powerEqApproxStrategy
@@ -60,8 +55,8 @@ powerEquationExercise = makeExercise
   , equivalence    = viewEquivalent (normPowerEqApproxView 2)
   }
   
-expEquationExercise :: Exercise (Equation Expr)
-expEquationExercise = makeExercise
+expEqExercise :: Exercise (Equation Expr)
+expEqExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pEquation pExpr)
   , strategy       = expEqStrategy
@@ -75,8 +70,8 @@ expEquationExercise = makeExercise
   , equivalence    = viewEquivalent normExpEqView
   }
 
-logEquationExercise :: Exercise (OrList (Relation Expr))
-logEquationExercise = makeExercise
+logEqExercise :: Exercise (OrList (Relation Expr))
+logEqExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pOrList (pRelation pExpr))
   , strategy       = logEqStrategy
@@ -108,8 +103,8 @@ logEquationExercise = makeExercise
 --                                         , getId calcRoot ]
 --   }
 
-higherPowerEquationExercise :: Exercise (OrList (Equation Expr))
-higherPowerEquationExercise = makeExercise
+higherPowerEqExercise :: Exercise (OrList (Equation Expr))
+higherPowerEqExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pOrList (pEquation pExpr))
   , strategy       = cleanUpStrategy (applyTop $ fmap (fmap cleanUpExpr)) coverUpStrategy

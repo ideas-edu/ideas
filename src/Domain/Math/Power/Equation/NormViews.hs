@@ -11,16 +11,31 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Equation.NormViews
-   (
+   ( normPowerEqApproxView
+   , normPowerEqView
+   , normExpEqView
+   , normLogEqView
+--   , normLogView
    ) where
 
+import Common.Classes
+import Common.View
 import Control.Arrow ( (>>^) )
 import Control.Monad
-import Common.View
 import Data.List
 import Data.Maybe
 import Data.Ratio
+import Domain.Math.Approximation
+import Domain.Math.Data.OrList
+import Domain.Math.Data.PrimeFactors
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Views
+import Domain.Math.Power.NormViews
+import Domain.Math.Power.Utils
+import Domain.Math.Power.Views
 
 
 -- Change to configurable strategy!
@@ -46,8 +61,8 @@ normPowerEqView = makeView f (uncurry (:==:))
       -- simplify, scale and take root
       return (a, simplify rationalView ((rhs ./. c) .^. (1 ./. x)))
 
-    myPowerView =  simplePowerView 
-               <&> (simpleRootView >>> second (makeView (\a->Just (1 ./. a)) (\b->1 ./. b)))
+    myPowerView =  powerView 
+               <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (\b->1 ./. b)))
                <&> (identity >>^ \a->(a,1))
 
 constRight (lhs :==: rhs) = do
@@ -74,7 +89,7 @@ normExpEqView = makeView f id >>> linearEquationView
     try f a = fromMaybe a $ f a
     f e = do
       let (l :==: r) = try scaleLeft $ try constRight e
-      return $ case match simplePowerView l of
+      return $ case match powerView l of
         Just (b, x) -> x :==: simplify normLogView (logBase b r)
         Nothing     -> l :==: r
 

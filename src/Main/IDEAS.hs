@@ -32,6 +32,7 @@ import qualified Domain.Math.Polynomial.IneqExercises as Math
 import qualified Domain.Math.Polynomial.RationalExercises as Math
 import qualified Domain.Math.Polynomial.Tests as MathPoly
 import qualified Domain.Math.Power.Exercises as Math
+import qualified Domain.Math.Power.Equation.Exercises as Math
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
 import qualified Domain.Math.Polynomial.LeastCommonMultiple as MathLCM
 -- import qualified Domain.RegularExpr.Exercises as RE
@@ -103,9 +104,9 @@ packages =
    , someTermPackage Math.powerOfExercise     
    , someTermPackage Math.nonNegExpExercise
    , someTermPackage Math.calcPowerExercise
-   , someTermPackage Math.powerEquationExercise
-   , someTermPackage Math.expEquationExercise
-   , someTermPackage Math.logEquationExercise
+   , someTermPackage Math.powerEqExercise
+   , someTermPackage Math.expEqExercise
+   , someTermPackage Math.logEqExercise
      -- linear algebra
    , someTermPackage LA.gramSchmidtExercise
    , someTermPackage LA.linearSystemExercise

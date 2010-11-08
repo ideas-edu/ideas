@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Simplification 
    ( Simplify(..), smartConstructors
-   , SimplifyOptions(..), Default(..)
+   , SimplifyConfig(..), simplifyConfig
    , Simplified, simplified, liftS, liftS2
    , simplifyRule
    , mergeAlike, distribution, constantFolding
@@ -21,9 +21,8 @@ import Common.Context
 import Common.Navigator
 import Common.Transformation
 import Common.Uniplate
-import Common.View hiding (simplify)
+import Common.View hiding (simplify, simplifyWith)
 import Control.Monad
-import Data.Default
 import Data.List
 import Data.Maybe
 import Domain.Math.Data.Relation
@@ -35,7 +34,7 @@ import qualified Common.View as View
 import Common.Rewriting
 
 
-data SimplifyOptions = SimplifyOptions 
+data SimplifyConfig = SimplifyConfig 
   { withSmartConstructors :: Bool
   , withMergeAlike :: Bool
   , withDistribution :: Bool
@@ -44,35 +43,32 @@ data SimplifyOptions = SimplifyOptions
   }
 
 class Simplify a where
-   simplifyOpt :: SimplifyOptions -> a -> a
+   simplifyWith :: SimplifyConfig -> a -> a
    simplify :: a -> a
-   simplify = simplifyOpt def
+   simplify = simplifyWith simplifyConfig
 
--- | With a type class for the default options you don't have to
--- remember which options belong to what function
-instance Default SimplifyOptions where
-  def = SimplifyOptions True True True True True
+simplifyConfig = SimplifyConfig True True True True True
 
 instance Simplify a => Simplify (Context a) where
-   simplifyOpt opt = change $ simplifyOpt opt
+   simplifyWith cfg = change $ simplifyWith cfg
 
 instance Simplify a => Simplify (Equation a) where
-   simplifyOpt opt = fmap $ simplifyOpt opt
+   simplifyWith cfg = fmap $ simplifyWith cfg
 
 instance Simplify a => Simplify [a] where
-   simplifyOpt opt = fmap $ simplifyOpt opt
+   simplifyWith cfg = fmap $ simplifyWith cfg
 
 instance Simplify Expr where
-   simplifyOpt opt = let optional p f = if p then f else id in
-       optional (withSmartConstructors opt)  smartConstructors
-     . optional (withMergeAlike opt)         mergeAlike
-     . optional (withDistribution opt)       distribution
-     . optional (withSimplifySquareRoot opt) (View.simplify 
+   simplifyWith cfg = let optional p f = if p then f else id in
+       optional (withSmartConstructors cfg)  smartConstructors
+     . optional (withMergeAlike cfg)         mergeAlike
+     . optional (withDistribution cfg)       distribution
+     . optional (withSimplifySquareRoot cfg) (View.simplify 
                                                (squareRootViewWith rationalView))
-     . optional (withConstantFolding opt)    constantFolding
+     . optional (withConstantFolding cfg)    constantFolding
 
 instance Simplify a => Simplify (Rule a) where
-   simplifyOpt opt = doAfter (simplifyOpt opt) -- by default, simplify afterwards
+   simplifyWith cfg = doAfter (simplifyWith cfg) -- by default, simplify afterwards
 
 data Simplified a = S a deriving (Eq, Ord)
 
@@ -114,7 +110,7 @@ instance (Floating a, Simplify a) => Floating (Simplified a) where
    acosh   = liftS acosh
 
 instance Simplify (Simplified a) where
-   simplifyOpt _ = id
+   simplifyWith _ = id
 
 instance (Simplify a, IsTerm a) => IsTerm (Simplified a) where
    toTerm (S x) = toTerm x

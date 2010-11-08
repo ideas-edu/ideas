@@ -39,7 +39,7 @@ simplifyPowerStrategy = cleanUpStrategy cleanup strategy
   where
     strategy = label "Simplify" $ exhaustiveStrategy powerRules 
     cleanup = change ( applyD simplifyFraction
-                     . simplifyOpt def {withMergeAlike = False} )
+                     . simplifyWith simplifyConfig {withMergeAlike = False} )
 
 powerOfStrategy :: LabeledStrategy (Context Expr)
 powerOfStrategy = cleanUpStrategyRules cleanupRules strategy

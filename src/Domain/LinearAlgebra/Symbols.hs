@@ -56,10 +56,10 @@ instance IsTerm a => IsTerm (VectorSpace a) where
 -- Simplification
 
 instance Simplify a => Simplify (Matrix a) where
-   simplifyOpt opt = fmap (simplifyOpt opt)
+   simplifyWith opt = fmap (simplifyWith opt)
 
 instance Simplify a => Simplify (Vector a) where
-   simplifyOpt opt = fmap (simplifyOpt opt)
+   simplifyWith opt = fmap (simplifyWith opt)
    
 instance Simplify a => Simplify (VectorSpace a) where
-   simplifyOpt opt = fmap (simplifyOpt opt)
+   simplifyWith opt = fmap (simplifyWith opt)

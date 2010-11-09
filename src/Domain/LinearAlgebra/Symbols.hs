@@ -16,30 +16,26 @@ import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.Vector
 import Control.Monad
 import Text.OpenMath.Dictionary.Linalg2
-import Common.Id
-import Common.Rewriting.Term
+import Common.Rewriting
 
 -------------------------------------------------------
 -- Conversion to the Expr data type
 
 instance IsTerm a => IsTerm (Matrix a) where
    toTerm = 
-      let f = makeConTerm matrixrowSymbol . map toTerm
-      in makeConTerm matrixSymbol . map f . rows
+      let f = function matrixrowSymbol . map toTerm
+      in function matrixSymbol . map f . rows
    fromTerm a = do
-      (s, rs)  <- getConSpine a
-      guard (sameId s matrixSymbol)
-      (ss, xss) <- liftM unzip (mapM getConSpine rs)
-      guard (all (sameId matrixrowSymbol) ss)
+      rs  <- isFunction matrixSymbol a
+      xss <- mapM (isFunction matrixrowSymbol) rs
       yss <- mapM (mapM fromTerm) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
 
 instance IsTerm a => IsTerm (Vector a) where
-   toTerm = makeConTerm vectorSymbol . map toTerm . toList
+   toTerm = function vectorSymbol . map toTerm . toList
    fromTerm a = do
-      (s, xs) <- getConSpine a
-      guard (sameId s vectorSymbol)
+      xs <- isFunction vectorSymbol a
       ys <- mapM fromTerm xs
       return (fromList ys)
       

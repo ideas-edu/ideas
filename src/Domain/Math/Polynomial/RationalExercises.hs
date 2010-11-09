@@ -19,7 +19,7 @@ import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.Navigator
-import Common.Rewriting.Term (Term)
+import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Uniplate
 import Common.View

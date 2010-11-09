@@ -129,13 +129,13 @@ associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2)
    make (a, b) = (construct a, construct b)
    
    collect term =
-      case getConSpine term of
+      case getFunction term of
          Just (t, [a, b]) | s==t -> collect a . collect b
          _ -> (term:)
    
    construct xs 
       | null xs   = error "associativeMatcher: empty list"
-      | otherwise = foldr1 (binaryTerm s) xs
+      | otherwise = foldr1 (binary s) xs
 associativeMatch _ _ _ _ _ = []
 
 specialLeft, specialRight :: Int -- special meta variables for context extension

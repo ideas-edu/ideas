@@ -15,8 +15,6 @@ import Domain.Math.Expr.Symbolic
 import Common.Uniplate (Uniplate(..))
 import Common.Id
 import Common.Rewriting
-import Common.Rewriting.Term (binaryTerm, unaryTerm, constantTerm)
-import qualified Common.Rewriting.Term as Term
 import Common.Utils
 import Control.Monad
 import Data.List
@@ -177,10 +175,10 @@ instance Different RelAlg where
    --(var, comp, add, conj, disj, not, inverse, universe, ident)
 instance IsTerm RelAlg where
    toTerm = foldRelAlg 
-      ( Term.Var, binaryTerm compSymbol, binaryTerm addSymbol
-      , binaryTerm conjSymbol
-      , binaryTerm disjSymbol, unaryTerm notSymbol, unaryTerm invSymbol
-      , constantTerm universeSymbol, constantTerm identSymbol
+      ( variable, binary compSymbol, binary addSymbol
+      , binary conjSymbol
+      , binary disjSymbol, unary notSymbol, unary invSymbol
+      , symbol universeSymbol, symbol identSymbol
       )
 
    fromTerm a = 

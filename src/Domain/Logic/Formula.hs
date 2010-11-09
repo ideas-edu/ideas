@@ -159,7 +159,7 @@ instance IsTerm a => IsTerm (Logic a) where
    toTerm = foldLogic
       ( toTerm, binary impliesSymbol, binary equivalentSymbol
       , binary andSymbol, binary orSymbol, unary notSymbol
-      , nullary trueSymbol, nullary falseSymbol
+      , symbol trueSymbol, symbol falseSymbol
       )
 
    fromTerm a = 

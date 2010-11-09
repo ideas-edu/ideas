@@ -73,7 +73,7 @@ symb = qualifiedSymb
     <|> makeDiff <$ pKey "D"
  where
    makeDiff [x,a] = unary diffSymbol (binary lambdaSymbol x a)
-   makeDiff _     = nullary bottomSymbol
+   makeDiff _     = symbol bottomSymbol
 
 qualifiedSymb :: TokenParser ([Expr] -> Expr)
 qualifiedSymb = f <$> (pQVarid <|> pQConid)

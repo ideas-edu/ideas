@@ -113,9 +113,9 @@ buildSpec :: [Id] -> RuleSpec Term -> Term -> [Term]
 buildSpec ops (lhs :~> rhs) a = do
    s <- Unification.match ops lhs a
    let (b1, b2) = (specialLeft `elem` dom s, specialRight `elem` dom s)
-       sym      = maybe (error "build") fst (getConSpine lhs)
-       extLeft  a = if b1 then binaryTerm sym (Meta specialLeft) a else a
-       extRight a = if b2 then binaryTerm sym a (Meta specialRight) else a
+       sym      = maybe (error "buildSpec") fst (getFunction lhs)
+       extLeft  a = if b1 then binary sym (Meta specialLeft) a else a
+       extRight a = if b2 then binary sym a (Meta specialRight) else a
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
@@ -135,7 +135,7 @@ rewrite r a =
 
 operatorSymbol :: IsMagma m => RewriteRule a -> a -> m a -> Maybe Id
 operatorSymbol r a op = 
-   case getConSpine (toTermRR r (operation op a a)) of
+   case getFunction (toTermRR r (operation op a a)) of
       Just (s, [_, _]) -> Just s
       _                -> Nothing
  

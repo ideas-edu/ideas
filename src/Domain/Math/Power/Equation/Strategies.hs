@@ -22,7 +22,7 @@ import Prelude hiding (repeat, not)
 import Common.Classes
 import Common.Context
 import Common.Navigator
-import Common.Rewriting.Term
+import Common.Rewriting
 import Common.Strategy
 import Data.Maybe
 import Domain.Math.Data.Relation

@@ -44,7 +44,7 @@ difference = diff (\_ _ -> True)
 
 shallowEq :: IsTerm a => a -> a -> Bool
 shallowEq a b = 
-   let f  = liftM fst . getConSpine
+   let f  = liftM fst . getFunction
        ta = toTerm a
        tb = toTerm b 
    in fromMaybe (ta == tb) $ liftM2 (==) (f ta) (f tb)

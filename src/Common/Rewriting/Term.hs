@@ -15,9 +15,13 @@
 module Common.Rewriting.Term 
    ( Term(..), IsTerm(..)
    , fromTermM, fromTermWith
-   , getSpine, getConSpine, makeTerm, makeConTerm
-   , constantTerm, unaryTerm, binaryTerm
+   , getSpine, makeTerm
    , hasMetaVar, getMetaVars
+     -- * Functions and symbols
+   , WithFunctions(..), isSymbol, isFunction
+   , unary, binary, isUnary, isBinary
+     -- * Variables
+   , WithVars(..), isVariable
    ) where
 
 import Common.Id
@@ -26,6 +30,7 @@ import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Data.Typeable
 
 -----------------------------------------------------------
@@ -75,9 +80,75 @@ fromTermM = maybe (fail "fromTermM") return . fromTerm
 
 fromTermWith :: (Monad m, IsTerm a) => (Id -> [a] -> m a) -> Term -> m a
 fromTermWith f a = do
-   (s, xs) <- getConSpine a
-   ys <-  mapM fromTermM xs
+   (s, xs) <- getFunction a
+   ys      <- mapM fromTermM xs
    f s ys
+
+-----------------------------------------------------------
+-- * Functions and symbols
+
+class WithFunctions a where
+   -- constructing
+   symbol   :: IsId s => s -> a
+   function :: IsId s => s -> [a] -> a
+   -- matching
+   getSymbol   :: Monad m => a -> m Id
+   getFunction :: Monad m => a -> m (Id, [a])
+   -- default definition
+   symbol s = function s []
+   getSymbol a = 
+      case getFunction a of
+         Just (t, []) -> return t
+         _            -> fail "Common.Term.getSymbol"
+         
+instance WithFunctions Term where
+   symbol      = Con . newId
+   function    = makeTerm . symbol
+   getFunction = getConSpine
+   getSymbol (Con s) = return s
+   getSymbol _       = fail "Common.Term.getSymbol"
+   
+isSymbol :: (IsId s, WithFunctions a) => s -> a -> Bool
+isSymbol s = maybe False (sameId s) . getSymbol
+
+isFunction :: (IsId s, WithFunctions a, Monad m) => s -> a -> m [a]
+isFunction s a =
+   case getFunction a of
+      Just (t, as) | sameId s t -> return as
+      _                         -> fail "Common.Term.isFunction"
+
+unary :: (IsId s, WithFunctions a) => s -> a -> a
+unary s a = function s [a]
+
+binary :: (IsId s, WithFunctions a) => s -> a -> a -> a
+binary s a b = function s [a, b]
+
+isUnary :: (IsId s, WithFunctions a, Monad m) => s -> a -> m a
+isUnary s a = 
+   case isFunction s a of
+      Just [x] -> return x
+      _        -> fail "Common.Term.isUnary"
+
+isBinary :: (IsId s, WithFunctions a, Monad m) => s -> a -> m (a, a)
+isBinary s a = 
+   case isFunction s a of
+      Just [x, y] -> return (x, y)
+      _           -> fail "Common.Term.isBinary"
+
+-----------------------------------------------------------
+-- * Variables
+
+class WithVars a where
+   variable    :: String -> a
+   getVariable :: Monad m => a -> m String 
+
+instance WithVars Term where 
+   variable    = Var
+   getVariable (Var s) = return s
+   getVariable _       = fail "getVariable"
+
+isVariable :: WithVars a => a -> Bool
+isVariable = isJust . getVariable
 
 -----------------------------------------------------------
 -- * Utility functions
@@ -96,18 +167,6 @@ getConSpine a =
 
 makeTerm :: Term -> [Term] -> Term
 makeTerm = foldl Apply
-
-makeConTerm :: IsId a => a -> [Term] -> Term
-makeConTerm = makeTerm . constantTerm
-
-constantTerm :: IsId a => a -> Term
-constantTerm = Con . newId
-
-unaryTerm :: IsId a => a -> Term -> Term
-unaryTerm = Apply . constantTerm
-
-binaryTerm :: IsId a => a -> Term -> Term -> Term
-binaryTerm = (Apply .) . unaryTerm
 
 getMetaVars :: Term -> [Int]
 getMetaVars a = sort $ nub [ i | Meta i <- leafs a ]

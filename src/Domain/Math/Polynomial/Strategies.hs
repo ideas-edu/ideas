@@ -32,7 +32,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Polynomial.CleanUp
 import Data.Maybe
-import Common.Rewriting.Term
+import Common.Rewriting
 
 ------------------------------------------------------------
 -- Linear equations

@@ -22,7 +22,6 @@ import Common.Uniplate
 import Common.Utils (commaList)
 import Common.View
 import Common.Rewriting
-import Common.Rewriting.Term hiding (Var)
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Text.OpenMath.Symbol
@@ -91,13 +90,8 @@ instance Floating Expr where
    asinh   = unary asinhSymbol
    atanh   = unary atanhSymbol
    acosh   = unary acoshSymbol 
-   
-instance Symbolic Expr where
-   variable = Var
-   
-   getVariable (Var s) = return s
-   getVariable _       = mzero
-   
+
+instance WithFunctions Expr where
    function s [a, b] 
       | sameId s plusSymbol   = a :+: b
       | sameId s timesSymbol  = a :*: b
@@ -107,7 +101,7 @@ instance Symbolic Expr where
    function s [a]
       | sameId s negateSymbol = Negate a
    function s as = 
-      Sym s as
+      Sym (newId s) as
    
    getFunction expr =
       case expr of
@@ -118,7 +112,14 @@ instance Symbolic Expr where
          a :/: b  -> return (newId divideSymbol, [a, b])
          Sqrt a   -> return (newId rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
-         _ -> mzero
+         _ -> fail "Expr.getFunction"
+
+instance WithVars Expr where
+   variable = Var
+   getVariable (Var s) = return s
+   getVariable _       = fail "Expr.getVariable"
+
+instance Symbolic Expr
 
 fromDouble :: Double -> Expr
 fromDouble d
@@ -236,24 +237,23 @@ instance IsTerm Expr where
    toTerm (Var v)    = Term.Var v
    toTerm expr = 
       case getFunction expr of
-         Just (s, xs) -> Term.makeConTerm s (map toTerm xs)
+         Just (s, xs) -> function s (map toTerm xs)
          Nothing      -> error "IsTerm Expr"
 
    fromTerm (Term.Num n)   = return (fromInteger n)
    fromTerm (Term.Float d) = return (Number d)
    fromTerm (Term.Var v)   = return (Var v)
    fromTerm t =
-      case Term.getConSpine t of
+      case getFunction t of
          Just (s, xs) -> do
             ys <- mapM fromTerm xs
             return (function s ys)
          _ -> fail "fromTerm"
 
 instance IsTerm a => IsTerm [a] where
-   toTerm = makeConTerm listSymbol . map toTerm
+   toTerm = function listSymbol . map toTerm
    fromTerm a = do
-      (s, xs) <- getConSpine a
-      guard (sameId s listSymbol)
+      xs <- isFunction listSymbol a
       mapM fromTerm xs
 
 toExpr :: IsTerm a => a -> Expr

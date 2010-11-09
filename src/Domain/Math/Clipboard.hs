@@ -24,7 +24,6 @@ module Domain.Math.Clipboard
 import Common.Context
 import Control.Monad
 import Common.Rewriting
-import Common.Rewriting.Term (Term)
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Expr

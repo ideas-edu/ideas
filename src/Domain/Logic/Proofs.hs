@@ -17,7 +17,6 @@ import Prelude hiding (repeat)
 import Common.Context
 import Common.Rewriting
 import Common.Rewriting.AC
-import Common.Rewriting.Term hiding (Var)
 import Common.Strategy hiding (fail, not)
 import Common.Exercise
 import Common.Utils
@@ -60,12 +59,10 @@ proofExercise = makeExercise
    }
 
 instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
-   toTerm (a, b) = binaryTerm tupleSymbol (toTerm a) (toTerm b)
-   fromTerm term =
-      case getConSpine term of
-         Just (s, [a, b]) | s == tupleSymbol ->
-            liftM2 (,) (fromTerm a) (fromTerm b)
-         _ -> fail "not a tuple"
+   toTerm (a, b) = binary tupleSymbol (toTerm a) (toTerm b)
+   fromTerm term = do
+      (a, b) <- isBinary tupleSymbol term
+      liftM2 (,) (fromTerm a) (fromTerm b)
    
 tupleSymbol :: Id
 tupleSymbol = newId "basic.tuple"

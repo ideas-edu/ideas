@@ -19,6 +19,7 @@ import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Common.View
+import Common.Rewriting
 import Common.Classes
 
 -- generalized to relation
@@ -31,9 +32,9 @@ solvedRelation :: Relational f => f Expr -> Bool
 solvedRelation r =
    case (getVariable (leftHandSide r), getVariable (rightHandSide r)) of
       (Just _, Just _)  -> False
-      (Just x, Nothing) -> x `notElem` collectVars (rightHandSide r)
-      (Nothing, Just x) -> x `notElem` collectVars (leftHandSide r)
-      _ -> noVars (leftHandSide r) && noVars (rightHandSide r)
+      (Just x, Nothing) -> withoutVar x (rightHandSide r)
+      (Nothing, Just x) -> withoutVar x (leftHandSide r)
+      _ -> hasNoVar (leftHandSide r) && hasNoVar (rightHandSide r)
 
 -- The variable must appear on the left
 solvedRelationWith :: Relational f => (Expr -> Bool) -> f Expr -> Bool
@@ -48,12 +49,12 @@ solvedEquations = all solvedEquation . crush
 
 solvedEquation :: Equation Expr -> Bool
 solvedEquation eq@(lhs :==: rhs) = 
-   (eq `belongsTo` equationSolvedForm) || (noVars lhs && noVars rhs)
+   (eq `belongsTo` equationSolvedForm) || (hasNoVar lhs && hasNoVar rhs)
 
 equationSolvedForm :: View (Equation Expr) (String, Expr)
 equationSolvedForm = makeView f g
  where
-   f (Var x :==: e) | x `notElem` collectVars e =
+   f (Var x :==: e) | withoutVar x e =
       return (x, e)
    f _ = Nothing
    g (s, e) = Var s :==: e

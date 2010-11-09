@@ -17,6 +17,7 @@ module Domain.Math.Power.Equation.Rules
 
 import Control.Arrow ( (>>^) )
 import Common.Transformation
+import Common.Rewriting
 import Common.View
 import Control.Monad
 import Data.List
@@ -56,7 +57,7 @@ greatestPower = makeSimpleRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> 
 -- a^x = b^y  =>  a = b^(y/x) = root x b^y  where y may be one
 nthRoot :: Rule (Equation Expr)
 nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
-  guard $ hasVars lhs
+  guard $ hasSomeVar lhs
   (a, x) <- match powerView lhs
   (b, y) <- match (powerView <&> (identity >>^ \x -> (x,1))) rhs
   return $ a :==: b .^. (y ./. x)
@@ -64,7 +65,7 @@ nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
 -- root a x = b  =>  a = b^x
 nthPower :: Rule (Equation Expr)
 nthPower = makeSimpleRule (powereq, "nth-power") $ \(lhs :==: rhs) -> do
-  guard $ hasVars lhs
+  guard $ hasSomeVar lhs
   (a, x) <- match rootView lhs
   return $ a :==: rhs .^. x
 
@@ -81,8 +82,8 @@ approxPower = makeSimpleRule (powereq, "approx-power") $ \ expr ->
 varLeftConRight :: Rule (Equation Expr)
 varLeftConRight = makeSimpleRule (powereq, "var-left-con-right") $ 
   \(lhs :==: rhs) -> do
-    (xs, cs) <- match sumView lhs >>= return . partition hasVars
-    (ys, ds) <- match sumView rhs >>= return . partition hasVars
+    (xs, cs) <- match sumView lhs >>= return . partition hasSomeVar
+    (ys, ds) <- match sumView rhs >>= return . partition hasSomeVar
     guard $ length cs > 0 || length ys > 0
     return $ fmap collectLikeTerms $ 
       build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)

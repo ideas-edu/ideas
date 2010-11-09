@@ -16,12 +16,15 @@ module Common.Rewriting.Term
    ( Term(..), IsTerm(..)
    , fromTermM, fromTermWith
    , getSpine, makeTerm
-   , hasMetaVar, getMetaVars
      -- * Functions and symbols
    , WithFunctions(..), isSymbol, isFunction
    , unary, binary, isUnary, isBinary
      -- * Variables
    , WithVars(..), isVariable
+   , vars, varSet, hasVar, withoutVar, hasSomeVar, hasNoVar
+     -- * Meta variables
+   , WithMetaVars(..), isMetaVar
+   , metaVars, metaVarSet, hasMetaVar
    ) where
 
 import Common.Id
@@ -29,9 +32,10 @@ import Common.Utils (ShowString(..))
 import Common.Uniplate
 import Common.View
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Data.Typeable
+import qualified Data.IntSet as IS
+import qualified Data.Set as S
 
 -----------------------------------------------------------
 -- * Data type for terms
@@ -102,11 +106,11 @@ class WithFunctions a where
          _            -> fail "Common.Term.getSymbol"
          
 instance WithFunctions Term where
-   symbol      = Con . newId
-   function    = makeTerm . symbol
-   getFunction = getConSpine
-   getSymbol (Con s) = return s
-   getSymbol _       = fail "Common.Term.getSymbol"
+   function    = makeTerm . Con . newId
+   getFunction a = 
+      case getSpine a of
+         (Con s, xs) -> return (s, xs)
+         _           -> fail "Common.Rewriting.getFunction" 
    
 isSymbol :: (IsId s, WithFunctions a) => s -> a -> Bool
 isSymbol s = maybe False (sameId s) . getSymbol
@@ -145,10 +149,52 @@ class WithVars a where
 instance WithVars Term where 
    variable    = Var
    getVariable (Var s) = return s
-   getVariable _       = fail "getVariable"
+   getVariable _       = fail "Common.Rewriting.getVariable"
 
 isVariable :: WithVars a => a -> Bool
 isVariable = isJust . getVariable
+
+vars :: (Uniplate a, WithVars a) => a -> [String]
+vars = concatMap getVariable . leafs
+
+varSet :: (Uniplate a, WithVars a) => a -> S.Set String
+varSet = S.fromList . vars
+
+hasVar :: (Uniplate a, WithVars a) => String -> a -> Bool
+hasVar i = (i `elem`) . vars
+
+withoutVar :: (Uniplate a, WithVars a) => String -> a -> Bool
+withoutVar i = not . hasVar i
+
+hasSomeVar :: (Uniplate a, WithVars a) => a -> Bool
+hasSomeVar = not . hasNoVar
+
+hasNoVar :: (Uniplate a, WithVars a) => a -> Bool
+hasNoVar = null . vars
+
+-----------------------------------------------------------
+-- * Meta variables
+
+class WithMetaVars a where
+   metaVar    :: Int -> a
+   getMetaVar :: Monad m => a -> m Int 
+
+instance WithMetaVars Term where
+   metaVar = Meta
+   getMetaVar (Meta i) = return i
+   getMetaVar _        = fail "Common.Rewriting.getMetaVar"
+
+isMetaVar :: WithMetaVars a => a -> Bool
+isMetaVar = isJust . getMetaVar
+
+metaVars :: (Uniplate a, WithMetaVars a) => a -> [Int]
+metaVars = concatMap getMetaVar . leafs
+
+metaVarSet :: (Uniplate a, WithMetaVars a) => a -> IS.IntSet
+metaVarSet = IS.fromList . metaVars
+
+hasMetaVar :: (Uniplate a, WithMetaVars a) => Int -> a -> Bool
+hasMetaVar i = (i `elem`) . metaVars
 
 -----------------------------------------------------------
 -- * Utility functions
@@ -159,17 +205,5 @@ getSpine = rec []
    rec xs (Apply f a) = rec (a:xs) f
    rec xs a           = (a, xs)
 
-getConSpine :: Monad m => Term -> m (Id, [Term])
-getConSpine a = 
-   case getSpine a of
-      (Con s, xs) -> return (s, xs)
-      _           -> fail "getConSpine" 
-
 makeTerm :: Term -> [Term] -> Term
 makeTerm = foldl Apply
-
-getMetaVars :: Term -> [Int]
-getMetaVars a = sort $ nub [ i | Meta i <- leafs a ]
-
-hasMetaVar :: Int -> Term -> Bool
-hasMetaVar i = (i `elem`) . getMetaVars

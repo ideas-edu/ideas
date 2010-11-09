@@ -267,15 +267,3 @@ fromExpr = fromTerm . toTerm
 
 exprView :: IsTerm a => View Expr a
 exprView = makeView fromExpr toExpr
-
------------------------------------------------------------------------
--- Utility functions
-
-collectVars :: Expr -> [String]
-collectVars e = [ s | Var s <- universe e ]
-
-hasVars :: Expr -> Bool
-hasVars = not . noVars
-
-noVars :: Expr -> Bool
-noVars = null . collectVars

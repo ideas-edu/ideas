@@ -48,6 +48,7 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.SquareRoot.Views
 import Domain.Math.Power.OldViews
 import Prelude hiding (repeat, replicate, until, (^))
+import qualified Data.Set as S
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
@@ -169,7 +170,7 @@ simplifiedRational expr =
    inPolyForm :: Expr -> Bool
    inPolyForm expr =
       expr `belongsTo` (polyNormalForm identity) ||
-      length (nub (collectVars expr)) > 1
+      S.size (varSet expr) > 1
           
    inFactorForm :: Expr -> Bool
    inFactorForm = flip belongsTo $
@@ -236,7 +237,7 @@ eqSimplifyRational ca cb = fromMaybe False $ do
        t2@(b1, b2, pb) = rationalExpr b
        a1c = cleanUpExpr a1
        b1c = cleanUpExpr b1
-       manyVars = length (nub (collectVars a ++ collectVars b)) > 1
+       manyVars = S.size (varSet a `S.union` varSet b) > 1
    if manyVars then return True else do
    p1 <- match (polyViewWith rationalView) a1c
    p2 <- match (polyViewWith rationalView) b1c

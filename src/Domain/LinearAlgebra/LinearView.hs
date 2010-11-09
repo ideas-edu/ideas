@@ -18,6 +18,7 @@ module Domain.LinearAlgebra.LinearView
 import Control.Monad
 import Data.List
 import Common.Id
+import Common.Rewriting hiding (isVariable, isConstant)
 import Common.Uniplate
 import Common.View hiding (simplify)
 import Domain.Math.Expr hiding (isVariable)
@@ -95,7 +96,7 @@ instance IsLinear Expr where
          Var s -> Just s
          _     -> Nothing
    
-   getVars = collectVars
+   getVars = vars
    
    getConstant expr = 
       case match linearView expr of

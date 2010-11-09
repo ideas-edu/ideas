@@ -131,7 +131,7 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
        ok (Not a) = ok a
        ok _       = True
        same cse = eqLogic (sub cse p) (sub cse q)
-       new = head (vars \\ (varsLogic p `union` varsLogic q))
+       new = head (logicVars \\ (varsLogic p `union` varsLogic q))
        sub a this
           | a == this = Var new
           | otherwise = descend (sub a) this
@@ -143,8 +143,8 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
 substVar :: Var [(String, String)]
 substVar = newVar "subst" []
    
-vars :: [ShowString]
-vars = [ ShowString [c] | c <- ['a'..] ]
+logicVars :: [ShowString]
+logicVars = [ ShowString [c] | c <- ['a'..] ]
 
 normLogic :: Ord a => Logic a -> Logic a
 normLogic p = normLogicWith (sort (varsLogic p)) p 

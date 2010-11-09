@@ -21,6 +21,7 @@ module Domain.Math.Power.Equation.NormViews
 import Common.Classes
 import Common.Id
 import Common.View
+import Common.Rewriting
 import Control.Arrow ( (>>^) )
 import Control.Monad
 import Data.List
@@ -67,7 +68,7 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (identity >>^ \a->(a,1))
 
 constRight (lhs :==: rhs) = do
-  (vs, cs) <- match sumView lhs >>= return . partition (not . null . collectVars)
+  (vs, cs) <- match sumView lhs >>= return . partition hasSomeVar
   let rhs' = rhs .+. build sumView (map neg cs)
   return $ negateEq $ build sumView vs :==: simplifyWith normalizeSum sumView rhs'
 
@@ -77,7 +78,7 @@ negateEq (lhs :==: rhs) =
     _           -> lhs  :==: rhs
 
 varLeft (lhs :==: rhs) = do
-  (vs, cs) <- match sumView rhs >>= return . partition (not . null . collectVars)
+  (vs, cs) <- match sumView rhs >>= return . partition hasSomeVar
   return $ lhs .+. build sumView (map neg vs) :==: build sumView cs
 
 scaleLeft (lhs :==: rhs) = 

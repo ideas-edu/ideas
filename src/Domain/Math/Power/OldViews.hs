@@ -12,10 +12,10 @@
 
 module Domain.Math.Power.OldViews where
 
+import Common.Rewriting
 import Common.View
 import Control.Monad
 import Domain.Math.Expr hiding ( (^) )
-
 
 powerFactorView :: View Expr (String, Expr, Int)
 powerFactorView = powerFactorViewWith identity
@@ -48,7 +48,7 @@ powerFactorViewForWith pv v = makeView f g
                  a <- match v (build v a1 ^ fromInteger n)
                  return (a, b1 * fromInteger n)
          _ -> do
-            guard (pv `notElem` collectVars expr)
+            guard (withoutVar pv expr)
             a <- match v expr 
             return (a, 0)
    

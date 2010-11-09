@@ -17,6 +17,7 @@ module Domain.Math.Polynomial.Equivalence
 
 import Common.Classes
 import Common.Context
+import Common.Rewriting
 import Common.Uniplate
 import Common.View
 import Control.Monad
@@ -150,11 +151,11 @@ polyEq f p q = fromMaybe False $ do
 cuPlus :: Relation Expr -> Maybe (Relation Expr)
 cuPlus rel = do
    (a, b) <- match plusView (leftHandSide rel)
-   guard (noVars b && noVars (rightHandSide rel))
+   guard (hasNoVar b && hasNoVar (rightHandSide rel))
    return $ constructor rel a (rightHandSide rel - b)
  `mplus` do
    (a, b) <- match plusView (leftHandSide rel)
-   guard (noVars a && noVars (rightHandSide rel))
+   guard (hasNoVar a && hasNoVar (rightHandSide rel))
    return $ constructor rel b (rightHandSide rel - a)
  `mplus` do
    a <- isNegate (leftHandSide rel)
@@ -174,7 +175,7 @@ cuPower :: Relation Expr -> Maybe (Logic (Relation Expr))
 cuPower rel = do
    (a, b) <- isBinary powerSymbol (leftHandSide rel)
    n <- match integerView b
-   guard (n > 0 && noVars (rightHandSide rel))
+   guard (n > 0 && hasNoVar (rightHandSide rel))
    let expr = cleanUpExpr (root (rightHandSide rel) (fromIntegral n))
        new = constructor rel a expr
        opp = constructor (flipSides rel) a (-expr)

@@ -106,17 +106,17 @@ ruleDerivCon :: Rule Expr
 ruleDerivCon = makeSimpleRule (diffId, "constant") f
  where 
    f (Sym d [Sym l [Var v, e]]) 
-      | sameId d diffSymbol && sameId l lambdaSymbol && v `notElem` collectVars e = return 0
+      | sameId d diffSymbol && sameId l lambdaSymbol && withoutVar v e = return 0
    f _ = Nothing
  
 ruleDerivMultiple :: Rule Expr
 ruleDerivMultiple = makeSimpleRule (diffId, "constant-multiple") f
  where 
     f (Sym d [Sym l [x@(Var v), n :*: e]]) 
-       | sameId d diffSymbol && sameId l lambdaSymbol && v `notElem` collectVars n = 
+       | sameId d diffSymbol && sameId l lambdaSymbol && withoutVar v n = 
        return $ n * diff (lambda x e)
     f (Sym d [Sym l [x@(Var v), e :*: n]]) 
-       | sameId d diffSymbol && sameId l lambdaSymbol && v `notElem` collectVars n = 
+       | sameId d diffSymbol && sameId l lambdaSymbol && withoutVar v n = 
        return $ n * diff (lambda x e)
     f _ = Nothing 
 
@@ -124,7 +124,7 @@ ruleDerivPower :: Rule Expr
 ruleDerivPower = makeSimpleRule (diffId, "power") f
  where 
    f (Sym d [Sym l [x@(Var v), Sym p [x1, n]]]) 
-      | sameId d diffSymbol && sameId l lambdaSymbol && isPowerSymbol p && x==x1 && v `notElem` collectVars n =
+      | sameId d diffSymbol && sameId l lambdaSymbol && isPowerSymbol p && x==x1 && withoutVar v n =
       return $ n * (x ^ (n-1)) 
    f _ = Nothing
 
@@ -132,7 +132,7 @@ ruleDerivPowerChain :: Rule Expr
 ruleDerivPowerChain = makeSimpleRule (diffId, "chain-power") f 
  where 
    f (Sym d [Sym l [x@(Var v), Sym p [a, n]]]) 
-      | sameId d diffSymbol && sameId l lambdaSymbol && isPowerSymbol p && v `notElem` collectVars n =
+      | sameId d diffSymbol && sameId l lambdaSymbol && isPowerSymbol p && withoutVar v n =
       return $ n * (a ^ (n-1)) * diff (lambda x a)
    f _ = Nothing
    
@@ -178,11 +178,11 @@ myPowerView = makeView f g
  where
    f expr = case match timesView expr of
                Just (a, b) -> do
-                  guard (noVars a)
+                  guard (hasNoVar a)
                   (x, r) <- match powView b
                   return (a, x, r)
                 `mplus` do
-                  guard (noVars b)
+                  guard (hasNoVar b)
                   (x, r) <- match powView a
                   return (b, x, r)
                Nothing -> do

@@ -106,7 +106,7 @@ reportPairs cfg = putStrLn . unlines . zipWith report [1::Int ..]
       ]
 
 freeze :: Term -> Term
-freeze (Meta n) = Con (newSymbol ('m' : show n))
+freeze (Meta n) = Con (newId ('m' : show n))
 freeze term = descend freeze term
 
 unfreeze :: Term -> Term

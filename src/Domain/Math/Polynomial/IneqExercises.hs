@@ -15,6 +15,7 @@ module Domain.Math.Polynomial.IneqExercises
 
 import Common.Context
 import Common.Exercise
+import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Transformation
 import Common.Uniplate (descend)
@@ -41,7 +42,6 @@ import Domain.Math.SquareRoot.Views
 import Prelude hiding (repeat)
 import qualified Domain.Logic.Formula as Logic
 import qualified Domain.Logic.Views as Logic
-import Common.Rewriting (IsTerm)
 
 ineqLinearExercise :: Exercise (Relation Expr)
 ineqLinearExercise = makeExercise 
@@ -243,7 +243,7 @@ solutionInequation = describe "Determine solution for inequality" $
          then return Logic.T
          else return Logic.F
       Just [] -> do -- no solutions found for equations
-         let vs = collectVars (toExpr ineq)
+         let vs = vars (toExpr ineq)
          guard (not (null vs))
          if evalIneq ineq (head vs) 0
             then return Logic.T 

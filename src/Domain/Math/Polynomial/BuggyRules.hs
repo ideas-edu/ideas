@@ -15,7 +15,6 @@ module Domain.Math.Polynomial.BuggyRules where
 
 import Prelude hiding ((^))
 import Common.Id
-import Common.Rewriting hiding (isBinary)
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
@@ -27,6 +26,7 @@ import Domain.Math.Data.Polynomial
 import Domain.Math.Equation.CoverUpRules
 import Common.Classes
 import Common.Context
+import Common.Rewriting
 import Common.View
 import Common.Transformation (Rule, buggyRule, siblingOf, Transformation, useRecognizer, supply1, makeTransList)
 import Control.Monad
@@ -94,20 +94,20 @@ buggyDivNegate :: Rule (Equation Expr)
 buggyDivNegate = describe "Dividing, but wrong sign." $
    buggyRule $ makeSimpleRuleList "divide-negate" $ \(lhs :==: rhs) -> do
       (a, b) <- matchM timesView lhs
-      [ b :==: rhs/(-a) | noVars a ] ++ [ a :==: rhs/(-b) | noVars b ]
+      [ b :==: rhs/(-a) | hasNoVar a ] ++ [ a :==: rhs/(-b) | hasNoVar b ]
     `mplus` do
       (a, b) <- matchM timesView rhs
-      [ lhs/(-a) :==: b | noVars a ] ++ [ lhs/(-b) :==: a | noVars b ]
+      [ lhs/(-a) :==: b | hasNoVar a ] ++ [ lhs/(-b) :==: a | hasNoVar b ]
 
 buggyDivNumDenom :: Rule (Equation Expr)
 buggyDivNumDenom = describe "Dividing both sides, but swapping \
    \numerator/denominator." $
    buggyRule $ makeSimpleRuleList "divide-numdenom" $ \(lhs :==: rhs) -> do
       (a, b) <- matchM timesView lhs
-      [ b :==: a/rhs | noVars rhs ] ++ [ a :==: b/rhs | noVars rhs ]
+      [ b :==: a/rhs | hasNoVar rhs ] ++ [ a :==: b/rhs | hasNoVar rhs ]
     `mplus` do
       (a, b) <- matchM timesView rhs
-      [ a/lhs :==: b | noVars lhs ] ++ [ b/lhs :==: a | noVars lhs ]
+      [ a/lhs :==: b | hasNoVar lhs ] ++ [ b/lhs :==: a | hasNoVar lhs ]
 
 buggyDistrTimes :: Rule Expr
 buggyDistrTimes = describe "Incorrect distribution of times over plus: one \

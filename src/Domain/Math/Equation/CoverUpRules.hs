@@ -28,7 +28,7 @@ module Domain.Math.Equation.CoverUpRules
 import Common.Classes
 import Common.Context
 import Common.Id
-import Common.Rewriting (IsTerm)
+import Common.Rewriting
 import Common.Transformation
 import Common.View
 import Control.Monad.Identity
@@ -97,8 +97,8 @@ data ConfigCoverUp = Config
 configCoverUp :: ConfigCoverUp
 configCoverUp = Config
    { configName        = ""
-   , predicateCovered  = hasVars
-   , predicateCombined = noVars
+   , predicateCovered  = hasSomeVar
+   , predicateCombined = hasNoVar
    , coverLHS          = True
    , coverRHS          = True
    }

@@ -24,6 +24,7 @@ import Prelude hiding ((^))
 import Control.Monad
 import Common.View
 import Common.Classes
+import Common.Rewriting
 import Common.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
 import Domain.Math.Data.Polynomial
@@ -63,13 +64,13 @@ polyViewWith v = makeView matchPoly (uncurry buildPoly)
          a :/: b  -> do
             c <- match v b
             guard (c /= 0)
-            guard (pv `notElem` collectVars b)
+            guard (withoutVar pv b)
             p <- f a
             return (fmap (/c) p)
          Sym s [a, n] | isPowerSymbol s ->
            liftM2 power (f a) (matchNat n)
          _ -> do 
-            guard (pv `notElem` collectVars expr)
+            guard (withoutVar pv expr)
             liftM con (match v expr)
     where
       f = matchPolyFor pv

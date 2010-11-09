@@ -179,16 +179,16 @@ oneVar :: ConfigCoverUp
 oneVar = configCoverUp
    { configName        = "onevar"
    , predicateCovered  = \a -> p1 a || p2 a
-   , predicateCombined = noVars
+   , predicateCombined = hasNoVar
    , coverLHS          = True
    , coverRHS          = True
    }
  where 
-   p1 = (==1) . length . collectVars
+   p1 = (==1) . length . vars
    -- predicate p2 tests for cases such as 12*(x^2-3*x)+8 == 56
    p2 a = fromMaybe False $ do
       (x, y) <- match timesView a
-      return (hasVars x /= hasVars y)
+      return (hasSomeVar x /= hasSomeVar y)
 
 ------------------------------------------------------------
 -- Top form rules: expr1 = expr2
@@ -248,7 +248,7 @@ prepareSplitSquare = describe "prepare split square" $
 factorLeftAsSquare :: Rule (Equation Expr)
 factorLeftAsSquare = describe "factor left as square" $
    makeSimpleRule (quadreq, "left-square") $ \(lhs :==: rhs) -> do
-      guard (noVars rhs)
+      guard (hasNoVar rhs)
       (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
       let h = b/2
       guard (a==1 && b/=0 && h*h == c)
@@ -262,17 +262,17 @@ flipEquation = doBeforeTrans condition $
       (a :==: b) :~> (b :==: a)
  where
    condition = makeTrans $ \eq@(lhs :==: rhs) -> do
-      guard (hasVars rhs && noVars lhs)
+      guard (hasSomeVar rhs && hasNoVar lhs)
       return eq
 
 -- Afterwards, merge and sort
 moveToLeft :: Rule (Equation Expr)
 moveToLeft = describe "Move to left" $
    makeSimpleRule (quadreq, "move-left") $ \(lhs :==: rhs) -> do
-      guard (rhs /= 0 && hasVars lhs && (hasVars rhs || isComplex lhs))
+      guard (rhs /= 0 && hasSomeVar lhs && (hasSomeVar rhs || isComplex lhs))
       return (collectLikeTerms (sorted (lhs - rhs)) :==: 0)
  where
-   isComplex = maybe False ((>= 2) . length . filter hasVars) 
+   isComplex = maybe False ((>= 2) . length . filter hasSomeVar) 
              . match sumView . applyD merge
  
    -- high exponents first, non power-factor terms at the end
@@ -337,7 +337,7 @@ sameFactor = describe "same factor" $
    makeSimpleRule (quadreq, "same-factor") $ oneDisjunct $ \(lhs :==: rhs) -> do
       (b1, xs) <- match productView lhs
       (b2, ys) <- match productView rhs
-      (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasVars x ] -- equality is too strong?
+      (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasSomeVar x ] -- equality is too strong?
       return $ orList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -- N*(A+B) = N*C + N*D   recognize a constant factor on both sides
@@ -402,7 +402,7 @@ substBackVar = describe "Substitute back a variable" $
    expr <- lookupClipboard "subst"
    case fromExpr expr of
       Just (Var p :==: rhs) -> do
-         guard (p `elem` collectVars a)
+         guard (hasVar p a)
          return (subst p rhs a)
       _ -> fail "no subst in clipboard"
  where
@@ -495,7 +495,7 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
       -- (but at least one participant should have a variable)
       zs <- forM (xs ++ ys) $ \a -> do
                (_, list) <- match productView a
-               return [ (hasVars a, e) | e <- list ]
+               return [ (hasSomeVar a, e) | e <- list ]
       let f (b, e) = do 
              (_, this) <- match (divView >>> second integerView) e
              return (b, this)
@@ -576,7 +576,7 @@ parentNotNegCheck = minorRule $ makeSimpleRule "parent not negate check" $ \c ->
 noDivisionConstant :: Rule Expr
 noDivisionConstant = makeSimpleRule (lineq, "no-div-con") f
  where
-   f (a :/: b) | noVars b && hasVars a = 
+   f (a :/: b) | hasNoVar b && hasSomeVar a = 
       return ((1/b) * a)
    f _ = Nothing
    

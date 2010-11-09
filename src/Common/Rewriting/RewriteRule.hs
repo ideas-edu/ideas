@@ -33,10 +33,10 @@ import Common.Rewriting.Group
 import Common.Rewriting.Unification hiding (match)
 import Common.Uniplate (descend, leafs)
 import Control.Monad
-import Data.List
 import Data.Maybe
 import Test.QuickCheck
 import qualified Common.Rewriting.Unification as Unification
+import qualified Data.IntSet as IS
    
 ------------------------------------------------------
 -- Supporting type classes
@@ -153,7 +153,7 @@ showRewriteRule sound r = do
    return (ruleShow r x ++ " " ++ op ++ " " ++ ruleShow r y)
  where
    a :~> b = ruleSpecTerm r
-   vs  = (getMetaVars a `union` getMetaVars b)
+   vs  = IS.toList (metaVarSet a `IS.union` metaVarSet b)
    sub = listToSubst $ zip vs [ Var [c] | c <- ['a' ..] ]
 
 -----------------------------------------------------------
@@ -162,7 +162,7 @@ showRewriteRule sound r = do
 smartGenerator :: RewriteRule a -> Gen a
 smartGenerator r = do 
    let a :~> _ = ruleSpecTerm r
-   let vs = getMetaVars a
+   let vs = IS.toList (metaVarSet a)
    list <- replicateM (length vs) (ruleGenerator r)
    let sub = listToSubst (zip vs (map (toTermRR r) list))
    case fromTermRR r (sub |-> a) of

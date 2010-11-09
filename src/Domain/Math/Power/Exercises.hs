@@ -23,6 +23,7 @@ import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.Navigator
+import Common.Rewriting
 import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
@@ -118,7 +119,7 @@ isPower v expr =
       g (Sqrt x) = g x
       g (Var _) = True
       g a = a `belongsTo` rationalView
-  in distinct (concatMap collectVars xs) && all f xs
+  in distinct (concatMap vars xs) && all f xs
      
 isPowerAdd :: Expr -> Bool
 isPowerAdd expr =

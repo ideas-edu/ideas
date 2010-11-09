@@ -12,10 +12,11 @@
 module Domain.Math.Expr.Views where
 
 import Prelude hiding (recip, (^))
+import Common.Rewriting
 import Common.View
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Symbols
-import Data.List (nub)
+import qualified Data.Set as S
 
 ------------------------------------------------------------
 -- Smart constructors
@@ -163,7 +164,7 @@ productView = makeView (Just . second ($ []) . f False) g
    
 -- helper to determine the name of the variable (move to a different module?)
 selectVar :: Expr -> Maybe String
-selectVar = f . nub . collectVars
+selectVar = f  . S.toList . varSet
  where
    f []  = Just "x" -- exceptional case (e.g., for constants)
    f [a] = Just a

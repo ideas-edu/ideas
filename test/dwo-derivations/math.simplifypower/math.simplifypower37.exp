@@ -1,9 +1,17 @@
-<reply result="ok" version="0.5.11">
+<reply result="ok" version="0.6.7 (3629)">
   <list>
+    <elem ruleid="algebra.manipulation.exponents.push-negation-out">
+      <expr>
+        -(a^6)^5
+      </expr>
+    </elem>
     <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         -a^30
       </expr>
+      <context>
+        <item name="location" value="[0]"/>
+      </context>
     </elem>
   </list>
 </reply>

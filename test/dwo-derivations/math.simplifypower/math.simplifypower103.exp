@@ -1,19 +1,16 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3629)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-var">
       <expr>
-        a^(-6)*(1/a^4)
+        (a^(-2))^3*a^(-4)
       </expr>
-      <context>
-        <item name="location" value="[0]"/>
-      </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         a^(-6)*a^(-4)
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">

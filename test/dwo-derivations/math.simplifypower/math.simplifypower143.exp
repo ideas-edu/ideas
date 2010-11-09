@@ -1,19 +1,19 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3629)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        16*(a^3)^2*2*a^4
+        2*(16*(a^3)^2)*a^4
       </expr>
       <context>
-        <item name="location" value="[0,0]"/>
+        <item name="location" value="[0,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
-        16*a^6*2*a^4
+        2*(16*a^6)*a^4
       </expr>
       <context>
-        <item name="location" value="[0,0,1]"/>
+        <item name="location" value="[0,1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">

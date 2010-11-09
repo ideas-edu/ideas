@@ -54,10 +54,10 @@ simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerMapView)
    , equivalence  = viewEquivalent normPowerMapView
-   , examples     = concat $ {-}  simplerPowers 
+   , examples     = concat $  simplerPowers 
                            ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
-                           ++ -} normPower1 ++ normPower2 ++ normPower3
+                           ++ normPower1 ++ normPower2 ++ normPower3
    , ruleOrdering = ruleOrderingWithId powerRuleOrder                  
    }
 
@@ -129,4 +129,4 @@ isPowerAdd expr =
 -- | Rule ordering ------------------------------------------------------------
 
 powerRuleOrder = map getId
-  [reciprocalVar, addExponents, mulExponents, subExponents, distributePower]
+  [subExponents, reciprocalVar, addExponents, mulExponents, distributePower]

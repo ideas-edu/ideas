@@ -106,7 +106,7 @@ powerViewFor :: Expr -> View Expr Expr
 powerViewFor = powerViewForWith identity identity
 
 powerFactorView :: (Expr -> Expr -> Bool) -> View Expr (Bool, [Expr])
-powerFactorView p = simpleProductView >>> second (makeView f id)
+powerFactorView p = productView >>> second (makeView f id)
   where
     f = Just . map (build productView . (,) False) . joinBy p
 

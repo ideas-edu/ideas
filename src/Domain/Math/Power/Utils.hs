@@ -23,16 +23,13 @@ import Common.Exercise
 import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Transformation
-import Common.View hiding (simplify)
-import qualified Common.View as View
+import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
-import Domain.Math.Simplification
-import Domain.Math.SquareRoot.Views
 
 
 -- | Test functions -----------------------------------------------------------
@@ -65,12 +62,14 @@ smartRule = doAfter f
     f (a :+: b) = a .+. b
     f (a :-: b) = a .-. b
     f e = e
-
-mySimplify :: Expr -> Expr
-mySimplify = smartConstructors 
-           . distribution 
-           . View.simplify (squareRootViewWith rationalView)
-           . constantFolding
+         
+mergeConstants :: Expr -> Expr
+mergeConstants = simplifyWith f productView
+  where
+    f (sign, xs) = 
+      let (cs, ys) = partition (`belongsTo` rationalView) xs
+          c = simplify rationalView $ build productView (False, cs)
+      in (sign, c:ys)
 
 -- | View functions -----------------------------------------------------------
 

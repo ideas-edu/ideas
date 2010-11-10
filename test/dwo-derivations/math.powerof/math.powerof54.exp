@@ -1,4 +1,4 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3629)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
@@ -8,12 +8,20 @@
         <item name="location" value="[0,1]"/>
       </context>
     </elem>
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
+      <expr>
+        a^3*a^(1/2)/(a^2*(a^2)^(1/3))
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
+    </elem>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
-        a^(7/2)/(a^2*root (a^2) 3)
+        a^(7/2)/(a^2*(a^2)^(1/3))
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.write-as-power">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         a^(7/2)/(a^2*a^(2/3))
       </expr>

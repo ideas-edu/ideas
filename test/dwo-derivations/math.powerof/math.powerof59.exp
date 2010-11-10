@@ -1,14 +1,19 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3629)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+    <elem ruleid="algebra.manipulation.exponents.write-as-power">
       <expr>
-        sqrt (x^(-1))
+        (1/x)^(1/2)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-var">
+      <expr>
+        (x^(-1))^(1/2)
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.write-as-power">
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         x^(-1/2)
       </expr>

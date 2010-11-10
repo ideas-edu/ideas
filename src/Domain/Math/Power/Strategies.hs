@@ -32,18 +32,10 @@ import Domain.Math.Simplification
 -- | Strategies ---------------------------------------------------------------
 
 simplifyPowerStrategy :: LabeledStrategy (Context Expr)
-simplifyPowerStrategy = cleanUpStrategy cleanup strategy
-  where
-    strategy = label "Simplify" $ exhaustiveStrategy powerRules 
-    cleanup = change ( mergeConstants --applyD simplifyFraction
-                     . simplifyWith simplifyConfig {withMergeAlike = False} )
+simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules 
 
 powerOfStrategy :: LabeledStrategy (Context Expr)
-powerOfStrategy = cleanUpStrategyRules cleanupRules strategy
-  where
-   strategy = label "Write as power of" $ exhaustiveStrategy powerRules 
-   cleanupRules = calcPower : simplifyPower : simplifyFraction : naturalRules 
-               ++ rationalRules
+powerOfStrategy = cleanUpStrategyRules "Write as power of" powerRules 
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
 nonNegExpStrategy = cleanUpStrategy cleanup strategy
@@ -60,7 +52,8 @@ nonNegExpStrategy = cleanUpStrategy cleanup strategy
                 <*> not (somewhere $ liftToContext myFractionTimes)
   
 calcPowerStrategy :: LabeledStrategy (Context Expr)
-calcPowerStrategy = cleanUpStrategyRules cleanupRules strategy
+calcPowerStrategy = cleanUpStrategyRules "Calculate power" rules
+  --cleanUpStrategyRules cleanupRules strategy
   where
     strategy = label "Calculate power" $ exhaustiveStrategy rules
     rules = calcPower : divBase : rationalRules
@@ -74,3 +67,11 @@ powerRules =
   , reciprocalVar, root2power, calcPower, calcPowerPlus, calcPowerMinus
   , pushNegOut
   ]
+
+
+-- | Help functions -----------------------------------------------------------
+
+cleanUpStrategyRules l = cleanUpStrategy cleanUp . label l . exhaustiveStrategy
+
+cleanUp = change ( mergeConstants
+                 . simplifyWith simplifyConfig {withMergeAlike = False} )

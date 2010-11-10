@@ -88,21 +88,23 @@ strictRootView = makeView f g
 
 -- | Power views --------------------------------------------------------------
 
-powerView :: View Expr (Expr, Expr)
-powerView = makeView f g
+strictPowerView :: View Expr (Expr, Expr)
+strictPowerView = makeView f (uncurry (.^.))
   where
     f expr = 
       case expr of
         Sym s [a, b] | isPowerSymbol s -> return (a, b)
-                     | isRootSymbol  s -> return (a, (1 ./. b))
-        Sqrt e                         -> return (e, 1 ./. 2)
         _ -> Nothing
-    
-    g (a, b) =
-      case b of 
-        (Nat 1 :/: Nat 2) -> Sqrt a 
-        (Nat 1 :/: b')    -> root a b'
-        _                 -> a .^. b
+
+powerView :: View Expr (Expr, Expr)
+powerView = makeView f g 
+  where
+    f = match ((strictRootView >>^ h) <&> strictPowerView)
+    h (a, b) = (a, 1 ./. b)
+    g (a, b) = 
+       case b of 
+         (Nat 1 :/: b') -> build strictRootView (a, b')
+         _              -> build strictPowerView (a, b)
 
 powerViewWith :: View Expr a -> View Expr b -> View Expr (a, b)
 powerViewWith va vb = powerView >>> first va >>> second vb

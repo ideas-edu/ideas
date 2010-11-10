@@ -87,7 +87,7 @@ nonNegExpExercise = (powerExercise nonNegExpStrategy)
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
    , equivalence  = viewEquivalent normPowerNonNegDouble
    , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
-                           ++ brokenExp1 ++ normPower4' ++ normPower5
+--                           ++ brokenExp1 ++ normPower4' ++ normPower5
    , ruleOrdering = ruleOrderingWithId [ getId mulExponents
                                        , getId reciprocalFrac
                                        , getId reciprocalInv

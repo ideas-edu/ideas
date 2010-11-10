@@ -41,13 +41,7 @@ a = Var "a" ; b = Var "b" ; x = Var "x"
 
 -- | Strategy functions -------------------------------------------------------
 
-cleanUpStrategyRules :: IsTerm a => 
-                        [Rule a] -> LabeledStrategy (Context a) -> 
-                        LabeledStrategy (Context a)
-cleanUpStrategyRules rs = cleanUpStrategy (applyD $ exhaustiveStrategy rs)
-
 exhaustiveStrategy :: IsTerm a => [Rule a] -> Strategy (Context a)
---exhaustiveStrategy = replicate 50 . somewhere . alternatives . map liftToContext
 exhaustiveStrategy = repeat . somewhere . alternatives . map liftToContext
 
 

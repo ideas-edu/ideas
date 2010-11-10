@@ -15,6 +15,7 @@ module Domain.Math.Power.Strategies
    , powerOfStrategy
    , calcPowerStrategy
    , nonNegExpStrategy
+   , cleanUp
    ) where
 
 import Prelude hiding (repeat, not)
@@ -38,26 +39,19 @@ powerOfStrategy :: LabeledStrategy (Context Expr)
 powerOfStrategy = cleanUpStrategyRules "Write as power of" powerRules 
 
 nonNegExpStrategy :: LabeledStrategy (Context Expr)
-nonNegExpStrategy = cleanUpStrategy cleanup strategy
+nonNegExpStrategy = cleanUpStrategyRules "Write with non-negative exponent" rs
   where
-    strategy = label "Write with non-negative exponent" $ exhaustiveStrategy $
-      [ addExponents, subExponents, mulExponents, reciprocalInv
-      , distributePower, distributePowerDiv, power2root, zeroPower
-      , calcPowerPlus, calcPowerMinus, myFractionTimes, reciprocalFrac
-      ] ++ fractionRules
-    cleanup = applyD (exhaustiveStrategy cleanupRules) 
-            . applyD (repeat $ somewhere $ simpilfyFrac)
-    cleanupRules = calcPower : naturalRules
-    simpilfyFrac = (liftToContext simplifyFraction) 
-                <*> not (somewhere $ liftToContext myFractionTimes)
-  
+    -- rs = [ addExponents, subExponents, mulExponents, reciprocalInv
+    --      , distributePower, distributePowerDiv, power2root, zeroPower
+    --      , calcPowerPlus, calcPowerMinus {-, myFractionTimes, reciprocalFrac -}
+    --      ] 
+    rs = [ reciprocalInv
+         ]
+
 calcPowerStrategy :: LabeledStrategy (Context Expr)
 calcPowerStrategy = cleanUpStrategyRules "Calculate power" rules
-  --cleanUpStrategyRules cleanupRules strategy
   where
-    strategy = label "Calculate power" $ exhaustiveStrategy rules
     rules = calcPower : divBase : rationalRules
-    cleanupRules = rationalRules ++ naturalRules
 
 
 -- | Rule collections ---------------------------------------------------------
@@ -71,7 +65,8 @@ powerRules =
 
 -- | Help functions -----------------------------------------------------------
 
-cleanUpStrategyRules l = cleanUpStrategy cleanUp . label l . exhaustiveStrategy
+cleanUpStrategyRules l = 
+  cleanUpStrategy (change cleanUp) . label l . exhaustiveStrategy
 
-cleanUp = change ( mergeConstants
-                 . simplifyWith simplifyConfig {withMergeAlike = False} )
+cleanUp = mergeConstants . simplifyWith simplifyConfig {withMergeAlike = False}
+                 

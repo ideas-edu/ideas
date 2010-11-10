@@ -71,9 +71,9 @@ powerOfExercise = (powerExercise powerOfStrategy)
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerNonNegRatio
-   , examples     = concat $  powersOfA ++ powersOfX ++ brokenExp1' 
-                           ++ brokenExp2 ++ brokenExp3 ++ normPower5'
-                           ++ normPower6
+   , examples     = concat $  powersOfA ++ powersOfX 
+                           -- ++ brokenExp1' ++ brokenExp2 ++ brokenExp3 
+                           -- ++ normPower5' ++ normPower6
    , ruleOrdering = ruleOrderingWithId $ map getId
                       [ root2power, addExponents, subExponents, mulExponents
                       ,  distributePower, reciprocalVar ]

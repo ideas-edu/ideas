@@ -17,7 +17,6 @@ module Domain.Math.Power.Utils where
 
 import Prelude hiding (repeat, replicate)
 
-import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.Rewriting

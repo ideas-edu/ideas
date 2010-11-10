@@ -14,7 +14,7 @@ module Domain.Math.Power.Views
    ( -- * Power views
      powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
    , consPowerView, consPowerViewForWith, consPowerViewFor,consPowerViewForVar
-   , unitPowerViewForVar, unitPowerViewVar, unitPowerView
+   , unitPowerViewForVar, unitPowerViewVar, unitPowerView, strictPowerView
    , rootView, strictRootView
      -- * Log view
    , logView
@@ -79,8 +79,8 @@ strictRootView = makeView f g
   where
     f expr = 
       case expr of
-        Sym s [a, b] | isRootSymbol  s -> return (a, b)
-        Sqrt e                         -> return (e, 2)
+        Sym s [a, b] | isRootSymbol s -> return (a, b)
+        Sqrt e                       -> return (e, 2)
         _ -> Nothing
     
     g (a, b) = if b == 2 then Sqrt a else root a b

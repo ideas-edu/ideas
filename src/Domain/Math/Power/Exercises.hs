@@ -59,7 +59,9 @@ simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
                            ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
-   , ruleOrdering = ruleOrderingWithId powerRuleOrder                  
+   , ruleOrdering = ruleOrderingWithId $ map getId
+                      [ root2power, subExponents, reciprocalVar, addExponents
+                      , mulExponents, distributePower ]
    }
 
 powerOfExercise :: Exercise Expr
@@ -72,7 +74,9 @@ powerOfExercise = (powerExercise powerOfStrategy)
    , examples     = concat $  powersOfA ++ powersOfX ++ brokenExp1' 
                            ++ brokenExp2 ++ brokenExp3 ++ normPower5'
                            ++ normPower6
-   , ruleOrdering = ruleOrderingWithId powerRuleOrder             
+   , ruleOrdering = ruleOrderingWithId $ map getId
+                      [ root2power, addExponents, subExponents, mulExponents
+                      ,  distributePower, reciprocalVar ]
    }
 
 nonNegExpExercise :: Exercise Expr
@@ -125,9 +129,3 @@ isPowerAdd :: Expr -> Bool
 isPowerAdd expr =
   let Just xs = match sumView expr
   in all (isPower rationalView) xs && not (applicable calcPowerPlus expr)
-
-
--- | Rule ordering ------------------------------------------------------------
-
-powerRuleOrder = map getId
-  [subExponents, reciprocalVar, addExponents, mulExponents, distributePower]

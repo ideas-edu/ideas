@@ -14,7 +14,8 @@ module Domain.Math.Power.Views
    ( -- * Power views
      powerView, powerViewWith, powerViewForWith, powerViewFor, powerFactorView
    , consPowerView, consPowerViewForWith, consPowerViewFor,consPowerViewForVar
-   , unitPowerViewForVar, unitPowerViewVar, unitPowerView, rootView
+   , unitPowerViewForVar, unitPowerViewVar, unitPowerView
+   , rootView, strictRootView
      -- * Log view
    , logView
      -- * Other views
@@ -63,7 +64,7 @@ unitPowerViewVar = unitPowerViewWith varView
 unitPowerView :: View Expr (Expr, (Expr, Expr))
 unitPowerView = unitPowerViewWith identity
 
--- | For convenience reasons a root view
+-- | A root view
 rootView :: View Expr (Expr, Expr)
 rootView = makeView f (uncurry root) 
   where 
@@ -71,6 +72,18 @@ rootView = makeView f (uncurry root)
       (a, (x, y)) <- match (powerView >>> second divView) expr
       guard $ x == 1 || x == -1
       return $ if x == 1 then (a, y) else (a, negate y)
+
+-- | only matches sqrt and root
+strictRootView :: View Expr (Expr, Expr)
+strictRootView = makeView f g
+  where
+    f expr = 
+      case expr of
+        Sym s [a, b] | isRootSymbol  s -> return (a, b)
+        Sqrt e                         -> return (e, 2)
+        _ -> Nothing
+    
+    g (a, b) = if b == 2 then Sqrt a else root a b
 
 
 -- | Power views --------------------------------------------------------------

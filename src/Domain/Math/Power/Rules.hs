@@ -263,13 +263,13 @@ divBase = describe "divide base of root" $
 power2root :: Rule Expr
 power2root = makeSimpleRule (power, "write-as-root") $ \ expr -> do
   (a, (p, q)) <- match (powerViewWith identity divView) expr
-  guard (q /= 1)
+  guard $ q /= 1
   return $ root (a .^. p) q
   
 -- | root a q = a^(1/q)
 root2power :: Rule Expr 
 root2power = makeSimpleRule (power, "write-as-power") $ \ expr -> do
-  (a, q) <- match rootView expr
+  (a, q) <- match strictRootView expr
   return $ a .^. (1 ./. q)
 
 -- -- | root (a/b) x = root a x / root b x

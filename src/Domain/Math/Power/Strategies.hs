@@ -23,12 +23,10 @@ import Common.Classes
 import Common.Context
 import Common.Navigator
 import Common.Strategy
-import qualified Common.View as View
 import Domain.Math.Expr
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Simplification
-import Domain.Math.Numeric.Views
 
 
 -- | Strategies ---------------------------------------------------------------

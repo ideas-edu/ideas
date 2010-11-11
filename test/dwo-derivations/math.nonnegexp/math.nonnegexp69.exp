@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (3536)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
@@ -19,6 +19,14 @@
       </expr>
       <context>
         <item name="location" value="[1,0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
+      <expr>
+        1/(root 4 3*root (a^2) 3)
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
   </list>

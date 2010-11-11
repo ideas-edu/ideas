@@ -1,17 +1,20 @@
-<reply result="ok" version="0.6.5 (3536)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal-frac">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         (a*b)^2*a*b^(-1)
       </expr>
       <context>
-        <item name="location" value="[0,0]"/>
+        <item name="location" value="[0,0,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         (a*b)^2*a/b
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>

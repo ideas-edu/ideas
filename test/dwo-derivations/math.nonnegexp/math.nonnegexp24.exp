@@ -1,38 +1,28 @@
-<reply result="ok" version="0.6.5 (3536)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
-        (5*a)^(-2)*10/b
+        10*b^(-1)/(5*a)^2
       </expr>
+      <context>
+        <item name="location" value="[0,1]"/>
+      </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
-        1/(5*a)^2*10/b
-      </expr>
-      <context>
-        <item name="location" value="[0,0]"/>
-      </context>
-    </elem>
-    <elem ruleid="algebra.manipulation.exponents.distr-power">
-      <expr>
-        1/(25*a^2)*10/b
-      </expr>
-      <context>
-        <item name="location" value="[0,0,1]"/>
-      </context>
-    </elem>
-    <elem ruleid="algebra.manipulation.exponents.fraction-times">
-      <expr>
-        2/(5*a^2)/b
+        10/(b*(5*a)^2)
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
     </elem>
-    <elem ruleid="algebra.manipulation.division-numerator">
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        2/(5*a^2*b)
+        10/(b*25*a^2)
       </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
+      </context>
     </elem>
   </list>
 </reply>

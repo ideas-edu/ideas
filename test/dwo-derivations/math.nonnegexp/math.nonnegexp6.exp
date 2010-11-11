@@ -1,35 +1,28 @@
-<reply result="ok" version="0.6.5 (3536)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal-frac">
-      <expr>
-        (2*a)^(-1)*(4*b)^2
-      </expr>
-    </elem>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
-        1/(2*a)*(4*b)^2
+        1/(2*a*(4*b)^(-2))
       </expr>
       <context>
         <item name="location" value="[0]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
+      <expr>
+        (4*b)^2/(2*a)
+      </expr>
+      <context>
+        <item name="location" value="[1,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        1/(2*a)*16*b^2
-      </expr>
-    </elem>
-    <elem ruleid="algebra.manipulation.exponents.fraction-times">
-      <expr>
-        8/a*b^2
+        8*b^2/a
       </expr>
       <context>
         <item name="location" value="[0]"/>
       </context>
-    </elem>
-    <elem ruleid="algebra.manipulation.exponents.fraction-times">
-      <expr>
-        8*b^2/a
-      </expr>
     </elem>
   </list>
 </reply>

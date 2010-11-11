@@ -1,9 +1,12 @@
-<reply result="ok" version="0.6.5 (3536)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         1/2*a^(1/3)/b^(1/2)
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
@@ -20,19 +23,6 @@
       <context>
         <item name="location" value="[1]"/>
       </context>
-    </elem>
-    <elem ruleid="algebra.manipulation.exponents.fraction-times">
-      <expr>
-        root a 3/2/sqrt b
-      </expr>
-      <context>
-        <item name="location" value="[0]"/>
-      </context>
-    </elem>
-    <elem ruleid="algebra.manipulation.division-numerator">
-      <expr>
-        root a 3/(2*sqrt b)
-      </expr>
     </elem>
   </list>
 </reply>

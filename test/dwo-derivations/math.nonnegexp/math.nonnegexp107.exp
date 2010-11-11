@@ -1,13 +1,24 @@
-<reply result="ok" version="0.6.5 (3536)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         2/(3*a)^(1/4)
       </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.write-as-root">
       <expr>
         2/root (3*a) 4
+      </expr>
+      <context>
+        <item name="location" value="[1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.distr-power">
+      <expr>
+        2/(root 3 4*root a 4)
       </expr>
       <context>
         <item name="location" value="[1]"/>

@@ -13,7 +13,7 @@
 module Domain.Math.Power.Exercises    
    ( simplifyPowerExercise
    , powerOfExercise 
-   , nonNegExpExercise
+   , nonNegBrokenExpExercise
    , calcPowerExercise
    ) where
 
@@ -72,22 +72,23 @@ powerOfExercise = (powerExercise powerOfStrategy)
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerNonNegRatio
    , examples     = concat $  powersOfA ++ powersOfX 
-                           -- ++ brokenExp1' ++ brokenExp2 ++ brokenExp3 
-                           -- ++ normPower5' ++ normPower6
+                           ++ brokenExp1' ++ brokenExp2 ++ brokenExp3 
+                           ++ normPower5' ++ normPower6
    , ruleOrdering = ruleOrderingWithId $ map getId
                       [ root2power, addExponents, subExponents, mulExponents
                       ,  distributePower, reciprocalVar ]
    }
 
-nonNegExpExercise :: Exercise Expr
-nonNegExpExercise = (powerExercise nonNegExpStrategy)
+nonNegBrokenExpExercise :: Exercise Expr
+nonNegBrokenExpExercise = (powerExercise nonNegBrokenExpStrategy)
    { exerciseId   = describe "write with a non-negative exponent" $ 
                        newId "algebra.manipulation.exponents.nonnegative"
    , isReady      = isPower plainNatView
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
    , equivalence  = viewEquivalent normPowerNonNegDouble
    , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
---                           ++ brokenExp1 ++ normPower4' ++ normPower5
+                           ++ brokenExp1 
+                           ++ normPower4' ++ normPower5
    , ruleOrdering = ruleOrderingWithId [ getId mulExponents
                                        , getId reciprocalFrac
                                        , getId reciprocalInv

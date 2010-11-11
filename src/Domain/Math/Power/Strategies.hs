@@ -14,7 +14,7 @@ module Domain.Math.Power.Strategies
    ( simplifyPowerStrategy
    , powerOfStrategy
    , calcPowerStrategy
-   , nonNegExpStrategy
+   , nonNegBrokenExpStrategy
    , cleanUp
    ) where
 
@@ -25,6 +25,7 @@ import Common.Context
 import Common.Navigator
 import Common.Strategy
 import Domain.Math.Expr
+import Domain.Math.Numeric.Rules (divisionNumerator)
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Simplification
@@ -38,15 +39,18 @@ simplifyPowerStrategy = cleanUpStrategyRules "Simplify" powerRules
 powerOfStrategy :: LabeledStrategy (Context Expr)
 powerOfStrategy = cleanUpStrategyRules "Write as power of" powerRules 
 
-nonNegExpStrategy :: LabeledStrategy (Context Expr)
-nonNegExpStrategy = cleanUpStrategyRules "Write with non-negative exponent" rs
+nonNegBrokenExpStrategy :: LabeledStrategy (Context Expr)
+nonNegBrokenExpStrategy = cleanUpStrategy (applyTop cleanup) strategy
   where
-    -- rs = [ addExponents, subExponents, mulExponents, reciprocalInv
-    --      , distributePower, distributePowerDiv, power2root, zeroPower
-    --      , calcPowerPlus, calcPowerMinus {-, myFractionTimes, reciprocalFrac -}
-    --      ] 
-    rs = [ reciprocalInv
+    rs = [ addExponents, subExponents, mulExponents, reciprocalInv
+         , distributePower, distributePowerDiv, power2root, zeroPower
+         , calcPowerPlus, calcPowerMinus {-, myFractionTimes, reciprocalFrac -}
          ]
+    strategy = label "Write with non-negative exponent" $ exhaustiveStrategy rs
+    cleanup = applyD divisionNumerator
+            . applyD myFractionTimes
+            . mergeConstants 
+            . simplifyWith simplifyConfig {withMergeAlike = False}
 
 calcPowerStrategy :: LabeledStrategy (Context Expr)
 calcPowerStrategy = cleanUpStrategyRules "Calculate power" rules
@@ -66,7 +70,8 @@ powerRules =
 -- | Help functions -----------------------------------------------------------
 
 cleanUpStrategyRules l = 
-  cleanUpStrategy (change cleanUp) . label l . exhaustiveStrategy
+  cleanUpStrategy (change cleanUp. applyTop cleanUp) . label l . exhaustiveStrategy
 
-cleanUp = mergeConstants . simplifyWith simplifyConfig {withMergeAlike = False}
+cleanUp = mergeConstants 
+        . simplifyWith simplifyConfig {withMergeAlike = False}
                  

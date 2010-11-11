@@ -62,7 +62,9 @@ mergeConstants = simplifyWith f productView
     f (sign, xs) = 
       let (cs, ys) = partition (`belongsTo` rationalView) xs
           c = simplify rationalView $ build productView (False, cs)
-      in (sign, c:ys)
+      in if maybe False (> 1) (match rationalView c) 
+           then (sign, c:ys) 
+           else (sign, xs)
 
 -- | View functions -----------------------------------------------------------
 

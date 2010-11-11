@@ -151,7 +151,7 @@ subExponents = makeSimpleRule (power, "sub-exponents") $ \ expr -> do
 -- | (a^x)^y = a^(x*y)
 mulExponents :: Rule Expr 
 mulExponents = makeSimpleRule (power, "mul-exponents") $ \ expr -> do
-  ((a, x), y) <- match (powerViewWith powerView identity) expr
+  ((a, x), y) <- match (strictPowerView >>> first powerView) expr
   return $ build powerView (a, x .*. y)
 
 -- | (a0 * a1 ... * an)^x = a0^x * a1^x ... * an^x
@@ -226,12 +226,12 @@ reciprocalForT v = makeTrans $ \ expr -> do
   guard $ b `belongsTo` v
   return $ a .*. build powerView (b, -1)
 
--- | c*a^x = c/a^(-x)
+-- | a^x = 1/a^(-x)
 reciprocalInv ::  Rule Expr
 reciprocalInv = makeSimpleRule (power, "reciprocal-inverse") $ \ expr -> do
   guard $ hasNegExp expr
-  (c, (a, x)) <- match consPowerView expr
-  return $ c ./. build consPowerView (1, (a, neg x))
+  (a, x) <- match strictPowerView expr
+  return $ 1 ./. build strictPowerView (a, neg x)
 
 -- | c / d*a^(-x)*b^(-y)...p^r... = c*a^x*b^y.../d*p^r...
 reciprocalFrac :: Rule Expr

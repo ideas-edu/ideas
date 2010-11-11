@@ -102,7 +102,7 @@ packages =
    , someTermPackage Math.derivativePowerExercise
    , someTermPackage Math.simplifyPowerExercise
    , someTermPackage Math.powerOfExercise     
-   , someTermPackage Math.nonNegExpExercise
+   , someTermPackage Math.nonNegBrokenExpExercise
    , someTermPackage Math.calcPowerExercise
    , someTermPackage Math.powerEqExercise
    , someTermPackage Math.expEqExercise

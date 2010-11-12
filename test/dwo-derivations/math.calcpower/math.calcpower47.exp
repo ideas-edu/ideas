@@ -1,8 +1,8 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3639)">
   <list>
-    <elem ruleid="arithmetic.operation.rational.power">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
-        8*(1/10^4)
+        8/10^4
       </expr>
       <context>
         <item name="location" value="[1]"/>
@@ -10,13 +10,13 @@
     </elem>
     <elem ruleid="arithmetic.operation.rational.power">
       <expr>
-        8*(1/10000)
+        8/10000
       </expr>
       <context>
-        <item name="location" value="[1,1]"/>
+        <item name="location" value="[1]"/>
       </context>
     </elem>
-    <elem ruleid="arithmetic.operation.rational.times">
+    <elem ruleid="algebra.manipulation.simpler-fraction">
       <expr>
         1/1250
       </expr>

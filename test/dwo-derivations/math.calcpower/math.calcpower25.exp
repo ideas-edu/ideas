@@ -1,6 +1,6 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3639)">
   <list>
-    <elem ruleid="arithmetic.operation.rational.power">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
       <expr>
         1/4^2
       </expr>

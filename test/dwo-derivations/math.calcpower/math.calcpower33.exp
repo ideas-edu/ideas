@@ -1,6 +1,11 @@
-<reply result="ok" version="0.5.13">
+<reply result="ok" version="0.6.7 (3639)">
   <list>
-    <elem ruleid="arithmetic.operation.rational.power">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal-inverse">
+      <expr>
+        1/(3/5)
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.division-denominator">
       <expr>
         5/3
       </expr>

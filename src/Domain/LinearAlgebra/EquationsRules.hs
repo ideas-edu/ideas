@@ -106,7 +106,7 @@ ruleBackSubstitution = describe "Back substitution" $
       cov <- readVar covered
       eq  <- maybeCM $ safeHead $ drop cov ls
       let expr = leftHandSide eq
-      mv <- maybeCM $ safeHead (getVars expr)
+      mv <- maybeCM $ safeHead (vars expr)
       i  <- findIndexM ((/= 0) . coefficientOf mv . leftHandSide) (take cov ls)
       let coef = negate $ coefficientOf mv (leftHandSide (ls !! i))
       return (i, cov, coef)
@@ -114,9 +114,9 @@ ruleBackSubstitution = describe "Back substitution" $
 ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = describe "Identify free variables" $ 
    minorRule $ makeSimpleRule "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
-   let vars = [ head ys | ys <- map (getVars . leftHandSide) ls, not (null ys) ]
+   let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
        change eq =
-          let (e1, e2) = splitLinearExpr (`notElem` vars) (leftHandSide eq) -- constant ends up in e1
+          let (e1, e2) = splitLinearExpr (`notElem` vs) (leftHandSide eq) -- constant ends up in e1
           in e2 :==: rightHandSide eq - e1
    in return (map change ls)
 
@@ -141,7 +141,7 @@ deleteIndex i xs = ys ++ drop 1 zs
 
 testConstants :: IsLinear a => (a -> a -> Bool) -> Equation a -> Maybe Bool
 testConstants f (lhs :==: rhs)
-   | isConstant lhs && isConstant rhs = Just (f lhs rhs)
+   | hasNoVar lhs && hasNoVar rhs = Just (f lhs rhs)
    | otherwise = Nothing
 
 -- simplify a linear system

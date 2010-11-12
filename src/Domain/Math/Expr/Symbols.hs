@@ -12,10 +12,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Symbols
-   ( -- Operators
-     OperatorTable, Associativity(..), operatorTable
-     -- OpenMath symbols
-   , plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
+   ( -- OpenMath symbols
+     plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
    , powerSymbol, negateSymbol, sinSymbol, cosSymbol, lnSymbol
    , diffSymbol, piSymbol, lambdaSymbol, listSymbol
    , absSymbol, signumSymbol, logSymbol, expSymbol, tanSymbol, asinSymbol
@@ -27,9 +25,9 @@ module Domain.Math.Expr.Symbols
    , (^), root
    ) where
 
+import Common.Id
 import Common.Rewriting
 import Control.Monad
-import Domain.Math.Data.Relation (relationSymbols)
 import Prelude hiding ((^))
 import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Calculus1
@@ -39,23 +37,11 @@ import Text.OpenMath.Dictionary.Nums1
 import Text.OpenMath.Dictionary.Transc1
 import qualified Text.OpenMath.Symbol as OM
 
--------------------------------------------------------------
--- Operator fixities
+instance IsId OM.Symbol where
+   newId s = OM.dictionary s # OM.symbolName s
 
-type OperatorTable = [(Associativity, [(OM.Symbol, String)])]
-
-data Associativity = InfixLeft | InfixRight | PrefixNon
-                   | InfixNon
-   deriving (Show, Eq)
-
-operatorTable :: OperatorTable
-operatorTable =
-     (InfixNon, [ (s, op) | (_, (op, s)) <- relationSymbols]) :
-   [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
-   , (PrefixNon,  [(negateSymbol, "-")])                      -- 6+
-   , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7
-   , (InfixRight, [(powerSymbol, "^")])                       -- 8
-   ]
+instance IsSymbol OM.Symbol where
+   toSymbol = toSymbol . newId
 
 -------------------------------------------------------------
 -- OpenMath symbols

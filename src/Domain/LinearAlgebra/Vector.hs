@@ -19,7 +19,10 @@ module Domain.LinearAlgebra.Vector
 
 import Control.Monad
 import Common.Classes
+import Common.Rewriting
 import Data.List
+import Domain.Math.Simplification
+import Text.OpenMath.Dictionary.Linalg2
 
 -------------------------------------------------------------------------------
 -- Data types
@@ -51,11 +54,32 @@ instance Num a => Num (Vector a) where
    signum = liftV signum
    fromInteger = fromList . return . fromInteger
 
+instance IsTerm a => IsTerm (Vector a) where
+   toTerm = function vectorSymbol . map toTerm . toList
+   fromTerm a = do
+      xs <- isFunction vectorSymbol a
+      ys <- mapM fromTerm xs
+      return (fromList ys)
+
+instance Simplify a => Simplify (Vector a) where
+   simplifyWith opt = fmap (simplifyWith opt)
+
 instance Functor VectorSpace where
    fmap f (VS xs) = VS (map (fmap f) xs)
 
 instance Show a => Show (VectorSpace a) where
    show = show . vectors
+
+instance IsTerm a => IsTerm (VectorSpace a) where
+   toTerm = toTerm . vectors
+   fromTerm a = do
+      xs <- fromTerm a
+      guard (sameDimension xs)
+      return (makeVectorSpace xs)
+      
+instance Simplify a => Simplify (VectorSpace a) where
+   simplifyWith opt = fmap (simplifyWith opt)
+
 
 -------------------------------------------------------------------------------
 -- Vector Space operations

@@ -19,7 +19,6 @@ module Domain.Math.Expr
 
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Parser
-import Domain.Math.Expr.Symbolic ()
 import Domain.Math.Expr.Symbols
 import Domain.Math.Expr.Views
 import Common.Rewriting.Term hiding (Term(..))

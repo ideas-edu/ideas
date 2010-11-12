@@ -28,7 +28,7 @@ module Domain.Math.Data.Relation
 import Common.View
 import Common.Rewriting
 import Common.Classes
-import Domain.Math.Expr.Symbolic()
+import Domain.Math.Expr.Symbols ()
 import Text.OpenMath.Dictionary.Relation1
 import qualified Text.OpenMath.Symbol as OM
 import Data.Maybe

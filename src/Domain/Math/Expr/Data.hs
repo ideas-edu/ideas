@@ -12,18 +12,20 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Data where
 
-import Data.Char (isAlphaNum)
-import Data.Ratio
-import Data.Typeable
-import Test.QuickCheck
-import Control.Monad
 import Common.Id
+import Common.Rewriting
 import Common.Uniplate
 import Common.Utils (commaList)
 import Common.View
-import Common.Rewriting
+import Control.Monad
+import Data.Char (isAlphaNum)
+import Data.Ratio
+import Data.Typeable
+import Domain.Math.Data.Relation (relationSymbols)
 import Domain.Math.Expr.Symbols
+import Test.QuickCheck
 import qualified Common.Rewriting.Term as Term
+import qualified Text.OpenMath.Symbol as OM
 
 -----------------------------------------------------------------------
 -- Expression data type
@@ -220,6 +222,22 @@ showExpr table = rec 0
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"
+
+type OperatorTable = [(Associativity, [(OM.Symbol, String)])]
+
+data Associativity = InfixLeft | InfixRight | PrefixNon
+                   | InfixNon
+   deriving (Show, Eq)
+
+operatorTable :: OperatorTable
+operatorTable =
+     (InfixNon, [ (s, op) | (_, (op, s)) <- relationSymbols]) :
+   [ (InfixLeft,  [(plusSymbol, "+"), (minusSymbol, "-")])    -- 6
+   , (PrefixNon,  [(negateSymbol, "-")])                      -- 6+
+   , (InfixLeft,  [(timesSymbol, "*"), (divideSymbol, "/")])  -- 7
+   , (InfixRight, [(powerSymbol, "^")])                       -- 8
+   ]
+
 
 instance Rewrite Expr
 

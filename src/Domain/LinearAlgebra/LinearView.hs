@@ -10,17 +10,16 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.LinearView
-   ( IsLinear(..), var, isVar, isConstant, renameVariables
+   ( IsLinear(..), LinearMap, renameVariables
    , splitLinearExpr, evalLinearExpr, linearView
-   , LinearMap
    ) where
 
 import Control.Monad
 import Data.List
-import Common.Rewriting hiding (isVariable, isConstant)
+import Common.Rewriting
 import Common.Uniplate
-import Common.View hiding (simplify)
-import Domain.Math.Expr hiding (isVariable)
+import Common.View
+import Domain.Math.Expr
 import qualified Data.Map as M
 
 data LinearMap a = LM { lmMap :: M.Map String a, lmConstant :: a }
@@ -79,64 +78,30 @@ symLM f ps = do
    guard (all (M.null . lmMap) ps)
    return $ LM M.empty (function f (map lmConstant ps))
 
-class (Fractional a, WithVars a) => IsLinear a where
+class (Fractional a, Uniplate a, WithVars a) => IsLinear a where
    isLinear      :: a -> Bool
-   isVariable    :: a -> Maybe String
-   getVars       :: a -> [String]
    getConstant   :: a -> a
    coefficientOf :: String -> a -> a
 
 instance IsLinear Expr where
-
-   isLinear expr = belongsTo expr linearView
-         
-   isVariable expr =
-      case expr of 
-         Var s -> Just s
-         _     -> Nothing
-   
-   getVars = vars
-   
-   getConstant expr = 
-      case match linearView expr of
-         Just (LM _ c) -> c
-         _             -> 0
-
-   coefficientOf s expr = 
-      case match linearView expr of
-         Just (LM m _) -> M.findWithDefault 0 s m
-         _             -> 0
-
-{- instance IsLinear SExpr where
-   isLinear = isLinear . toExpr
-   isVariable = isVariable . toExpr
-   getVars    = getVars . toExpr
-   getConstant = simplifyExpr . getConstant . toExpr
-   coefficientOf s = simplifyExpr . coefficientOf s . toExpr  -}
+   isLinear        = (`belongsTo` linearView)
+   getConstant     = maybe 0 lmConstant . match linearView
+   coefficientOf s = maybe 0 (M.findWithDefault 0 s . lmMap) . match linearView
 
 splitLinearExpr :: IsLinear a => (String -> Bool) -> a -> (a, a)
 splitLinearExpr f a = (make (getConstant a) xs, make 0 ys)
  where
-   (xs, ys) = partition f (getVars a)
-   make = foldr (\v r -> coefficientOf v a * var v + r)
+   (xs, ys) = partition f (vars a)
+   make = foldr (\v r -> coefficientOf v a * variable v + r)
 
-evalLinearExpr :: (IsLinear a, Uniplate a) => (String -> a) -> a -> a
+evalLinearExpr :: IsLinear a => (String -> a) -> a -> a
 evalLinearExpr f a =
-   case isVariable a of
+   case getVariable a of
       Just s  -> f s
       Nothing -> descend (evalLinearExpr f) a
 
-renameVariables :: (IsLinear a, Uniplate a) => (String -> String) -> a -> a
+renameVariables :: IsLinear a => (String -> String) -> a -> a
 renameVariables f a = 
-   case isVariable a of
+   case getVariable a of
       Just s  -> variable (f s)
       Nothing -> descend (renameVariables f) a
-
-isConstant :: IsLinear a => a -> Bool
-isConstant = null . getVars
-
-var :: IsLinear a => String -> a
-var = variable
-
-isVar :: IsLinear a => a -> Maybe String
-isVar = isVariable

@@ -31,7 +31,6 @@ import Domain.Math.Numeric.Views
 import Domain.Math.SquareRoot.Views
 import Test.QuickCheck
 import qualified Common.View as View
-import Common.Rewriting
 
 
 data SimplifyConfig = SimplifyConfig 

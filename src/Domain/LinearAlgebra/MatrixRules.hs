@@ -13,7 +13,6 @@ module Domain.LinearAlgebra.MatrixRules where
 
 import Domain.Math.Simplification
 import Domain.LinearAlgebra.Matrix
-import Domain.LinearAlgebra.Symbols ()
 import Common.Context
 import Common.Navigator
 import Common.Transformation

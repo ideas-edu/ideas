@@ -21,10 +21,13 @@ module Domain.LinearAlgebra.Matrix
    , isSquare, identityMatrix, isLowerTriangular, isUpperTriangular
    ) where
 
-import Control.Monad
-import Data.Maybe
-import Data.List hiding (transpose)
 import Common.Classes
+import Common.Rewriting hiding (inverse)
+import Control.Monad
+import Data.List hiding (transpose)
+import Data.Maybe
+import Domain.Math.Simplification
+import Text.OpenMath.Dictionary.Linalg2
 import qualified Data.List as L
 import qualified Data.Map as M
 
@@ -40,6 +43,20 @@ instance Functor Matrix where
 
 instance Switch Matrix where
    switch (M xss) = liftM M (mapM sequence xss)
+
+instance IsTerm a => IsTerm (Matrix a) where
+   toTerm = 
+      let f = function matrixrowSymbol . map toTerm
+      in function matrixSymbol . map f . rows
+   fromTerm a = do
+      rs  <- isFunction matrixSymbol a
+      xss <- mapM (isFunction matrixrowSymbol) rs
+      yss <- mapM (mapM fromTerm) xss
+      guard (isRectangular yss)
+      return (makeMatrix yss)
+
+instance Simplify a => Simplify (Matrix a) where
+   simplifyWith opt = fmap (simplifyWith opt)
 
 -- Check whether the table is rectangular
 isRectangular :: [[a]] -> Bool

@@ -16,14 +16,17 @@ import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
 import Domain.LinearAlgebra.LinearView
 import Data.List
 import Data.Maybe
+import Common.Classes
 import Control.Monad
 import Common.Utils
 import Common.Uniplate
+import Common.Rewriting
+import qualified Data.Set as S
 
 type LinearSystem a = Equations a
 
 getVarsSystem :: IsLinear a => LinearSystem a -> [String]
-getVarsSystem = foldr (\(lhs :==: rhs) xs -> getVars lhs `union` getVars rhs `union` xs) []
+getVarsSystem = S.toList . S.unions . map varSet . concatMap crush
 
 evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
 evalSystem f = 
@@ -34,23 +37,23 @@ invalidSystem :: IsLinear a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
 
 invalidEquation :: IsLinear a => Equation a -> Bool
-invalidEquation (lhs :==: rhs) = null (getVars lhs ++ getVars rhs) && getConstant lhs /= getConstant rhs
+invalidEquation (lhs :==: rhs) = hasNoVar lhs && hasNoVar rhs && getConstant lhs /= getConstant rhs
 
 getSolution :: IsLinear a => LinearSystem a -> Maybe [(String, a)]
 getSolution xs = do
-   guard (distinct vars)
-   guard (null (vars `intersect` frees))
+   guard (distinct vs)
+   guard (null (vs `intersect` frees))
    mapM make xs
  where
-   vars  = concatMap (getVars . leftHandSide) xs
-   frees = concatMap (getVars . rightHandSide) xs
+   vs    = concatMap (vars . leftHandSide) xs
+   frees = concatMap (vars . rightHandSide) xs
    make (lhs :==: rhs) = do
-      v <- isVar lhs
+      v <- getVariable lhs
       return (v, rhs)
       
 -- No constant on the left, no variables on the right
 inStandardForm :: IsLinear a => Equation a -> Bool
-inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && null (getVars rhs)
+inStandardForm (lhs :==: rhs) = getConstant lhs == 0 && hasNoVar rhs
 
 toStandardForm :: IsLinear a => Equation a -> Equation a
 toStandardForm (lhs :==: rhs) =
@@ -81,7 +84,7 @@ matrixToSystemWith vs = map makeEquation . rows
    varList = vs ++ (variables \\ vs)
    makeEquation [] = 0 :==: 0
    makeEquation xs = 
-      let lhs = sum (zipWith (\v a -> a * var v) varList (init xs))  
+      let lhs = sum (zipWith (\v a -> a * variable v) varList (init xs))  
           rhs = last xs
       in lhs :==: rhs
             

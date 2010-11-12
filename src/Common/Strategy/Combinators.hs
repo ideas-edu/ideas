@@ -23,6 +23,7 @@ import Common.Transformation
 import Common.Strategy.Core
 import Common.Strategy.Abstract
 import Common.Strategy.Configuration
+import Data.Maybe
 
 -----------------------------------------------------------
 --- Strategy combinators
@@ -145,7 +146,7 @@ onceWith n f s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule $ makeSimpleRuleList ("navigation.down." ++ n) $ \a -> 
       concatMap (`down` a) (f a)
    ruleMoveUp = minorRule $ makeSimpleRule "navigation.up" $ \a ->
-      maybe (Just a) Just (up a)
+      Just (fromMaybe a (up a))
 
 -- | Apply a strategy somewhere in the term. The function selects which 
 -- children are visited

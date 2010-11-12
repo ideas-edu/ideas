@@ -1,4 +1,4 @@
-{-# OPTIONS -XGADTs #-}
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -79,7 +79,7 @@ makeView :: Monad m => (a -> m b) -> (b -> a) -> ViewM m a b
 makeView = newView "views.makeView"
 
 biArr :: Monad m => (a -> b) -> (b -> a) -> ViewM m a b
-biArr f g = makeView (return . f) g
+biArr f = makeView (return . f)
 
 match :: Monad m => ViewM m a b -> a -> m b
 match view =

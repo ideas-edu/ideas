@@ -241,7 +241,7 @@ makeTestLogWith fm (TSR (tree, diff)) = formatRoot fm diff (make [] tree)
             Warning msg -> next (formatWarning fm s msg)
             Error msg   -> next (formatFailure fm s msg)
             Ok _        ->
-               let (ys, zs) = break (not . isOk . snd) list
+               let (ys, zs) = span (isOk . snd) list
                    sucs     = [ (s, n) | (s, Ok n) <- ys ]
                in formatSuccesses fm sucs `mappend` forTests zs
        where

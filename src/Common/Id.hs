@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Id 
-   ( Id, IsId(..), HasId(..), (#), sameId
+   ( Id, IsId(..), HasId(..), ( # ), sameId
    , unqualified, qualifiers, qualification
    , describe, description, showId, compareId
    ) where
@@ -20,9 +20,9 @@ module Common.Id
 import Data.Char
 import Data.List
 import Data.Monoid
+import Data.Ord
 import Common.StringRef
 import Common.Utils (splitsWithElem)
-
 
 ---------------------------------------------------------------------
 -- Abstract data type and its instances
@@ -30,7 +30,7 @@ import Common.Utils (splitsWithElem)
 data Id = Id 
    { idList        :: [String]
    , idDescription :: String
-   , idRef         :: StringRef
+   , idRef         :: !StringRef
    }
    
 instance Show Id where
@@ -40,11 +40,11 @@ instance Eq Id where
    a == b = idRef a == idRef b
 
 instance Ord Id where 
-   a `compare` b = idRef a `compare` idRef b
+   compare = comparing idRef
 
 instance Monoid Id where
    mempty  = stringId ""
-   mappend = (#)
+   mappend = ( # )
 
 ---------------------------------------------------------------------
 -- Type class for constructing identifiers
@@ -121,7 +121,7 @@ stringId txt = Id (make s) "" (stringRef s)
    
 infixr 8 #
 
-(#) :: (IsId a, IsId b) => a -> b -> Id
+( # ) :: (IsId a, IsId b) => a -> b -> Id
 a # b = appendId (newId a) (newId b)
    
 sameId :: (IsId a, IsId b) => a -> b -> Bool
@@ -151,7 +151,7 @@ showId :: HasId a => a -> String
 showId = show . getId
 
 compareId :: HasId a => a -> a -> Ordering
-compareId a b = showId a `compare` showId b
+compareId = comparing showId
 
 describe :: HasId a => String -> a -> a
 describe = changeId . describeId

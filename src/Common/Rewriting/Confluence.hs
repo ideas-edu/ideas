@@ -63,8 +63,8 @@ superImpose r1 r2 = rec (navigator lhs1)
                 Just a -> [ subTop s ca | s <- unifyM a lhs2 ] ++ concatMap rec (allDowns ca)
                 Nothing -> []
     
-    subTop s ca = fromMaybe ca $ do 
-       top ca >>= return . change (freeze . (s |->)) >>= navigateTo (location ca)
+    subTop s ca = fromMaybe ca $ 
+       fmap (change (freeze . (s |->))) (top ca) >>= navigateTo (location ca)
     
     renumber r = case metaInRewriteRule r of
                     [] -> id
@@ -76,7 +76,7 @@ criticalPairs rs =
    | r1       <- rs
    , r2       <- rs
    , na <- superImpose r1 r2
-   , (compareId r1 r2 == LT || not (null (location na)))
+   , compareId r1 r2 == LT || not (null (location na))
    , a  <- leave na
    , b1 <- rewriteTerm r1 a
    , b2 <- changeM (rewriteTerm r2) na >>= leave

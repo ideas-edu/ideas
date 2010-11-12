@@ -83,11 +83,13 @@ instance IsTerm a => IsTerm (Relation a) where
       let op  = relationType p
           sym = maybe (newSymbol (show op)) snd (lookup op relationSymbols)
       in binary sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
-   fromTerm a = 
-      let f (relType, (_, s)) = do
-             (e1, e2) <- isBinary s a
-             liftM2 (makeType relType) (fromTerm e1) (fromTerm e2)
-      in msum (map f relationSymbols) 
+   fromTerm term = 
+      case getFunction term of
+         Just (s, [a, b]) ->
+            case [ rt | (rt, (_, t)) <- relationSymbols, s==t ] of
+               [rt] -> liftM2 (makeType rt) (fromTerm a) (fromTerm b)
+               _    -> fail "fromTerm: relation"
+         _ -> fail "fromTerm: relation"
 
 instance Rewrite a => Rewrite (Relation a)
 

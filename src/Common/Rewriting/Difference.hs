@@ -78,7 +78,7 @@ diff eq = rec
     where
       f (p:ps, q:qs) | not (null ps || null qs) && 
                        isNothing (rec p q) && 
-                       (equal ps qs) = 
+                       equal ps qs = 
          f (ps, qs)
       f pair = pair
       

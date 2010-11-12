@@ -48,6 +48,7 @@ import Common.View (makeView)
 import Control.Monad.Error
 import Data.List
 import Data.Maybe
+import Data.Ord
 import System.Random
 import Test.QuickCheck hiding (label)
 import Test.QuickCheck.Gen
@@ -83,7 +84,7 @@ instance Eq (Exercise a) where
    e1 == e2 = getId e1 == getId e2
 
 instance Ord (Exercise a) where
-   e1 `compare` e2 = getId e1 `compare` getId e2
+   compare = comparing getId
 
 instance Apply Exercise where
    applyAll ex = concatMap fromContext . applyAll (strategy ex) . inContext ex
@@ -125,7 +126,7 @@ emptyExercise = Exercise
    , navigation     = noNavigator
    , canBeRestarted = True
    , extraRules     = []
-   , ruleOrdering   = \r1 r2 -> showId r1 `compare` showId r2
+   , ruleOrdering   = compareId
      -- testing and exercise generation
    , testGenerator  = Nothing
    , randomExercise = Nothing
@@ -144,10 +145,9 @@ inContext = flip makeContext emptyEnv
 
 -- returns a sorted list of rules (no duplicates)
 ruleset :: Exercise a -> [Rule (Context a)]
-ruleset ex = nub (sortBy cmp list)
+ruleset ex = nub (sortBy compareId list)
  where 
    list = rulesInStrategy (strategy ex) ++ extraRules ex
-   cmp a b = showId a `compare` showId b
  
 simpleGenerator :: Gen a -> Maybe (StdGen -> Int -> a) 
 simpleGenerator = useGenerator (const True) . const
@@ -204,7 +204,7 @@ ruleOrderingWithId bs r1 r2 =
       (Just i,  Just j ) -> i `compare` j
       (Just _,  Nothing) -> LT
       (Nothing, Just _ ) -> GT
-      (Nothing, Nothing) -> showId r1 `compare` showId r2
+      (Nothing, Nothing) -> compareId r1 r2
 
 ---------------------------------------------------------------
 -- Exercise status
@@ -340,7 +340,7 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
          addProperty "parser/pretty printer" $ forAll showAsGen $
             checkParserPrettyEx ex . from
 
-         suite "Soundness non-buggy rules" $ do
+         suite "Soundness non-buggy rules" $
             forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> 
                let eq a b = equivalenceContext ex (from a) (from b)
                    myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
@@ -381,10 +381,10 @@ checksForTerm :: Bool -> Exercise a -> a -> TestSuite
 checksForTerm leftMost ex a = do
    let tree = derivationTree (strategy ex) (inContext ex a)
    -- Left-most derivation
-   if not leftMost then return () else
+   when leftMost $
       case derivation tree of
          Just d  -> checksForDerivation ex d
-         Nothing -> do 
+         Nothing -> 
             fail $ "no derivation for " ++ prettyPrinter ex a
    -- Random derivation
    g <- liftIO getStdGen

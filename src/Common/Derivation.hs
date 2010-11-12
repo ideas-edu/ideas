@@ -146,7 +146,7 @@ mapSteps f t = t {branches = map g (branches t)}
 changeLabel :: (l -> m) -> DerivationTree l a -> DerivationTree m a
 changeLabel f = rec
  where
-   rec t = t {branches = map (\(l, st) -> (f l, rec st)) (branches t)}
+   rec t = t {branches = map (f *** rec) (branches t)}
 
 sortTree :: (l -> l -> Ordering) -> DerivationTree l a -> DerivationTree l a
 sortTree f t = t {branches = change (branches t) }
@@ -210,7 +210,7 @@ derivationM f g (D a xs) = g a >> mapM_ (\(s, b) -> f s >> g b) xs
 derivations :: DerivationTree s a -> Derivations s a
 derivations t = map (D (root t)) $
    [ [] | endpoint t ] ++
-   [ ((r,a2):ys) | (r, st) <- branches t, D a2 ys <- derivations st ]
+   [ (r,a2):ys | (r, st) <- branches t, D a2 ys <- derivations st ]
 
 -- | The first derivation (if any)
 derivation :: DerivationTree s a -> Maybe (Derivation s a)

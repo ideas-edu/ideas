@@ -43,7 +43,7 @@ readM s = case reads s of
 stringToHex :: String -> Maybe Int
 stringToHex = foldl op (Just 0)
  where
-   op (Just i) c = fmap (\j -> i*16 + j) (charToHex c)
+   op (Just i) c = fmap (i*16+) (charToHex c)
    op Nothing  _ = Nothing
 
 charToHex :: Char -> Maybe Int
@@ -68,7 +68,7 @@ distinct (x:xs) = all (/=x) xs && distinct xs
 
 allsame :: Eq a => [a] -> Bool
 allsame []     = True
-allsame (x:xs) = and $ map (==x) xs
+allsame (x:xs) = all (==x) xs
 
 safeHead :: [a] -> Maybe a
 safeHead (x:_) = return x

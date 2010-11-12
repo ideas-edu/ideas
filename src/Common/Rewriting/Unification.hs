@@ -86,16 +86,12 @@ unifyWith ops = rec
 -- second term should not have meta variables
 
 match :: [Symbol] -> Term -> Term -> [Substitution]
-match assocSymbols x y = do
-   s <- rec True x y
-  -- guard $ all (`notElem` getMetaVars y) (dom s)
-   return s
+match assocSymbols = rec True
  where
-   rec _ (Meta i) y = do 
-  -- guard (not (hasMetaVar i y))
+   rec _ (Meta i) y = 
       return (singletonSubst i y)
 
-   rec isTop x y = do
+   rec isTop x y =
       case getSpine x of
          (Con s, [a1, a2]) | s `elem` assocSymbols ->
             concatMap (uncurry recList . unzip) (associativeMatch isTop s a1 a2 y)

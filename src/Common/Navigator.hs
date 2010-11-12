@@ -1,4 +1,4 @@
-{-# OPTIONS -XExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -58,9 +58,7 @@ class IsNavigator f where
    allDowns a = 
       [ fa | i <- [0 .. arity a-1], fa <- down i a ]
    change f a =
-      case changeM (Just . f) a of
-         Just new -> new
-         Nothing  -> a
+      fromMaybe a (changeM (Just . f) a)
 
 class IsNavigator f => TypedNavigator f where
    changeT  :: (Monad m, Typeable b) => (b -> m b) -> f a -> m (f a) 

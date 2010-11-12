@@ -1,4 +1,4 @@
-{-# OPTIONS -XRankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -15,6 +15,7 @@ module Service.ServiceList (serviceList, exerciselistS) where
 import Common.Library hiding (apply, applicable, derivation)
 import Common.Utils (Some(..))
 import Data.List (sortBy)
+import Data.Ord
 import Service.FeedbackText
 import Service.ProblemDecomposition (problemDecomposition, replyType)
 import Service.ExercisePackage
@@ -211,9 +212,8 @@ strategyinfoS = makeService "strategyinfo"
    (toStrategy . strategy . exercise) ::: ExercisePkg :-> Strategy
    
 allExercises :: [Some ExercisePackage] -> [(String, String, String)]
-allExercises = map make . sortBy cmp
+allExercises = map make . sortBy (comparing f)
  where
-   cmp e1 e2  = f e1 `compare` f e2
    f (Some pkg) = showId (exercise pkg)
    make (Some pkg) = 
       (showId pkg, description pkg, show (status (exercise pkg)))

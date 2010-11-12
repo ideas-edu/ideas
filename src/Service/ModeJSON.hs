@@ -1,4 +1,4 @@
-{-# OPTIONS -XGADTs #-}
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -87,7 +87,7 @@ myHandler fun arg = do
            else extractExerciseId arg >>= findPackage
    srv  <- findService fun
    case jsonConverter pkg of
-      Some conv -> do
+      Some conv ->
          evalService conv srv arg
 
 jsonConverter :: Some ExercisePackage -> Some (Evaluator JSON JSON)

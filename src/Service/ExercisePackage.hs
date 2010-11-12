@@ -77,7 +77,7 @@ termToOMOBJ term =
    case term of
       Var s     -> OMV s
       Con s     -> OMS (idToSymbol (getId s))
-      Meta i    -> OMV ("$" ++ show i)
+      Meta i    -> OMV ('$' : show i)
       Num n     -> OMI n
       Float d   -> OMF d
       Apply _ _ -> let (f, xs) = getSpine term

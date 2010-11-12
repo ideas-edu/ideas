@@ -126,8 +126,7 @@ allapplications state = xs ++ ys
 
 -- local helper
 setLocation :: Location -> Context a -> Context a 
-setLocation loc c0 = fromMaybe c0 $ do
-   navigateTo loc c0
+setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
 
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied

@@ -1,4 +1,4 @@
-{-# OPTIONS -XMultiParamTypeClasses -XTypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -101,7 +101,7 @@ addPkgService f = modify $ \c ->
    c { services = \xs -> f xs : services c xs }
 
 addServices :: [Service] -> DomainReasoner ()
-addServices = mapM_ addPkgService . map const
+addServices = mapM_ (addPkgService . const)
 
 addService :: Service -> DomainReasoner ()
 addService s = addServices [s]
@@ -157,7 +157,7 @@ findService txt = do
 resolveId :: Id -> Id
 resolveId i = fromMaybe i (lookup i table)
  where
-   table = map (\(a, b) -> (newId a, newId b)) $ 
+   table = map (newId *** newId)
       [ ("math.coverup",             "algebra.equations.coverup")
       , ("math.lineq",               "algebra.equations.linear")
       , ("math.lineq-mixed",         "algebra.equations.linear.mixed")

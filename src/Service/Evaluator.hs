@@ -14,6 +14,7 @@ module Service.Evaluator where
 
 import Common.Library
 import Control.Monad
+import Data.List
 import Service.ExercisePackage
 import Service.Types
 import Service.DomainReasoner
@@ -65,7 +66,7 @@ decodeDefault dec tp s =
          return ((), s)
       Tag _ t1 ->
          decodeType dec t1 s
-      ExercisePkg -> do
+      ExercisePkg ->
          return (decoderPackage dec, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
@@ -84,7 +85,7 @@ encodeDefault enc tp tv =
                           Right b -> encodeType enc t2 b
       Unit          -> return (encodeTuple enc [])
       Tag _ t1      -> encodeType enc t1 tv
-      IO t1         -> do let pp s | take 12 s == "user error (" = init (drop 12 s)
+      IO t1         -> do let pp s | "user error (" `isPrefixOf` s = init (drop 12 s)
                                    | otherwise = s
                           result <- liftIO $ 
                              liftM Right tv `catch` (return . Left . pp . show)

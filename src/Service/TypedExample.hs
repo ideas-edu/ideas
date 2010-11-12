@@ -1,4 +1,4 @@
-{-# OPTIONS -XGADTs #-}
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -39,7 +39,7 @@ typedExample pkg service args = do
             xml <- encodeType (encoder evaluator) replyTp reply
             return (resultOk xml) 
     `catchError` 
-      \msg -> return (resultError msg)
+      (return . resultError)
    -- Check request/reply pair
    vers <- getVersion
    xmlTest <- do

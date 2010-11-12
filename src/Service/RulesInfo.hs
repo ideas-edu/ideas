@@ -38,7 +38,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
       -- More information
       let descr = description r
           -- to do: rules should carry descriptions 
-          txt   = if null descr then (showId r) else descr 
+          txt   = if null descr then showId r else descr 
       unless (null txt) $
          element "description" $ text txt
       forM_ (ruleGroups r) $ \s -> 

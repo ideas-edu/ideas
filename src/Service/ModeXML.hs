@@ -1,4 +1,4 @@
-{-# OPTIONS -XGADTs #-}
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -42,7 +42,7 @@ processXML input = do
    xml  <- liftEither (parseXML input)
    req  <- liftEither (xmlRequest xml)
    resp <- xmlReply req xml
-              `catchError` \msg -> return (resultError msg)
+              `catchError` (return . resultError)
    vers <- getVersion
    let out = showXML (if null vers then resp else addVersion vers resp)
    return (req, out, "application/xml")
@@ -259,7 +259,7 @@ decodeEnvironment b xml =
       name  <- findAttribute "name"  item
       case findChild "OMOBJ" item of
          -- OpenMath object found inside item tag
-         Just this | b -> do
+         Just this | b ->
             case xml2omobj this >>= omobjToTerm of
                Left err -> fail err
                Right term -> 
@@ -282,7 +282,7 @@ decodeConfiguration xml =
             Just a  -> return a
             Nothing -> fail $ "unknown action " ++ show (name item)
       cfgloc <- findAttribute "name" item
-      return $ (byName (newId cfgloc), action)
+      return (byName (newId cfgloc), action)
 
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = do
@@ -299,8 +299,8 @@ encodePrefix = element "prefix"  . text . maybe "no prefix" show
 encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
 encodeEnvironment b loc env0
    | nullEnv env = return ()
-   | otherwise   = element "context" $ do
-        forM_ (keysEnv env) $ \k -> do
+   | otherwise   = element "context" $
+        forM_ (keysEnv env) $ \k ->
            element "item" $ do 
               "name"  .=. k
               case lookupEnv k env of 

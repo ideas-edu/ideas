@@ -15,6 +15,7 @@
 module Domain.Math.Examples.DWO3 where
 
 import Prelude hiding ((^))
+import Common.Rewriting
 import Domain.Math.Expr
 
 ----------------------------------------------------------

@@ -20,7 +20,7 @@ import Common.Utils (ratioGen)
 import Domain.Math.Numeric.Views
 import Test.QuickCheck
 import Domain.Math.Expr
-import Text.OpenMath.Symbol
+import qualified Text.OpenMath.Symbol as OM
 
 -------------------------------------------------------------------
 -- Generators
@@ -78,6 +78,6 @@ ratioExprGenNonZero n = liftM fromRational $ nonZero $ ratioGen n (n `div` 4)
 nonZero :: Num a => Gen a -> Gen a
 nonZero = liftM (\a -> if a==0 then 1 else a)
 
-numSymbols :: [(Symbol, Maybe Int)]
+numSymbols :: [(OM.Symbol, Maybe Int)]
 numSymbols = (negateSymbol, Just 1)
            : zip [plusSymbol, timesSymbol, minusSymbol] (repeat (Just 2))

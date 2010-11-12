@@ -19,7 +19,6 @@ import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Common.View
-import Common.Rewriting
 import Common.Classes
 
 -- generalized to relation

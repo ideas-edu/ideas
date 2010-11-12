@@ -101,8 +101,8 @@ gramSchmidtStrategy =
    <*> label "Make vector orthogonal" (repeat (ruleNextOrthogonal <*> try ruleOrthogonal)) 
    <*> label "Normalize"              (try ruleNormalize)
 
-vars :: Var [String]
-vars = newVar "variables" []
+varVars :: Var [String]
+varVars = newVar "variables" []
 
 simplifyFirst :: Rule (Context (LinearSystem Expr))
 simplifyFirst = simplifySystem idRule
@@ -112,13 +112,13 @@ conv1 = describe "Convert linear system to matrix" $
    makeSimpleRule "linearalgebra.linsystem.tomatrix" $ withCM $ \expr -> do
       ls <- fromExpr expr
       let (m, vs) = systemToMatrix ls
-      writeVar vars vs
+      writeVar varVars vs
       return (toExpr (simplify (m :: Matrix Expr)))
  
 conv2 :: Rule (Context Expr)
 conv2 = describe "Convert matrix to linear system" $ 
    makeSimpleRule "linearalgebra.linsystem.frommatrix" $ withCM $ \expr -> do
-      vs <- readVar vars
+      vs <- readVar varVars
       m  <- fromExpr expr
       let linsys = matrixToSystemWith vs (m :: Matrix Expr)
       return $ simplify $ toExpr linsys

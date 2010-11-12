@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
-import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbolic ()
 import Text.OpenMath.Dictionary.Logic1
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting

@@ -24,6 +24,7 @@ module Domain.Math.Power.Views
 
 import Control.Arrow ( (>>^) )
 import Control.Monad
+import Common.Rewriting
 import Common.View
 import Domain.Math.Expr
 import Domain.Math.Power.Utils
@@ -146,7 +147,7 @@ addTimesView v = timesView >>> second v
 addUnitTimesView :: View Expr a -> View Expr (Expr, a)
 addUnitTimesView v = addTimesView v <&> unitTimes v
 
-negateView :: (Num a, Symbolic a) => View a a
+negateView :: (Num a, WithFunctions a) => View a a
 negateView = makeView isNegate negate
 
 addNegativeView v = v <&> (negateView >>> v)

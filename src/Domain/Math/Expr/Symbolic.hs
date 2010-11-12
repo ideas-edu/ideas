@@ -10,14 +10,10 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Symbolic 
-   ( isBinary, WithFunctions, WithVars, Symbolic, binary, isUnary
-   , isAssoBinary, fromTermWith, unary, isSymbol
-   , function, getFunction, getVariable, variable, symbol
-   , isVariable) where
+module Domain.Math.Expr.Symbolic where
 
 import Common.Id
-import Common.Rewriting.Term
+import Common.Rewriting
 import qualified Text.OpenMath.Symbol as OM
 
 instance IsId OM.Symbol where
@@ -25,18 +21,3 @@ instance IsId OM.Symbol where
 
 instance IsSymbol OM.Symbol where
    toSymbol = toSymbol . newId
-
--------------------------------------------------------------------
--- Type class for symbolic representations
-
-class (WithFunctions a, WithVars a) => Symbolic a
-
-instance Symbolic Term
-
--- left-associative by default
-isAssoBinary :: (IsSymbol s, Symbolic a, Monad m) => s -> a -> m (a, a)
-isAssoBinary s a =
-   case isFunction s a of
-      Just [x, y] -> return (x, y)
-      Just (x:xs) | length xs > 1 -> return (x, function s xs)
-      _ -> fail "isAssoBinary"

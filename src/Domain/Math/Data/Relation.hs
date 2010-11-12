@@ -26,11 +26,11 @@ module Domain.Math.Data.Relation
    ) where
 
 import Common.View
-import Common.Rewriting hiding (isBinary, Symbol)
+import Common.Rewriting
 import Common.Classes
-import Domain.Math.Expr.Symbolic
+import Domain.Math.Expr.Symbolic()
 import Text.OpenMath.Dictionary.Relation1
-import Text.OpenMath.Symbol
+import qualified Text.OpenMath.Symbol as OM
 import Data.Maybe
 import Test.QuickCheck
 import Control.Monad
@@ -92,7 +92,7 @@ instance IsTerm a => IsTerm (Relation a) where
 
 instance Rewrite a => Rewrite (Relation a)
 
-relationSymbols :: [(RelationType, (String, Symbol))]
+relationSymbols :: [(RelationType, (String, OM.Symbol))]
 relationSymbols =
    [ (EqualTo, ("==", eqSymbol)), (NotEqualTo, ("/=", neqSymbol))
    , (LessThan, ("<", ltSymbol)), (GreaterThan, (">", gtSymbol))

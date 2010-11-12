@@ -19,6 +19,7 @@ module Domain.Math.Examples.DWO4
 
 import Prelude hiding ((^))
 import Common.Id
+import Common.Rewriting
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 

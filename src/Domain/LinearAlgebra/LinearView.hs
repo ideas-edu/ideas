@@ -74,17 +74,17 @@ sqrtLM (LM m c) = do
    guard (M.null m)
    return $ LM M.empty (sqrt c)
 
-symLM :: Symbolic a => Symbol -> [LinearMap a] -> Maybe (LinearMap a)
+symLM :: WithFunctions a => Symbol -> [LinearMap a] -> Maybe (LinearMap a)
 symLM f ps = do
    guard (all (M.null . lmMap) ps)
    return $ LM M.empty (function f (map lmConstant ps))
 
-class (Fractional a, Symbolic a) => IsLinear a where
-   isLinear :: a -> Bool
-   isVariable :: a -> Maybe String
-   getVars  :: a -> [String]
-   getConstant     :: a -> a
-   coefficientOf   :: String -> a -> a
+class (Fractional a, WithVars a) => IsLinear a where
+   isLinear      :: a -> Bool
+   isVariable    :: a -> Maybe String
+   getVars       :: a -> [String]
+   getConstant   :: a -> a
+   coefficientOf :: String -> a -> a
 
 instance IsLinear Expr where
 

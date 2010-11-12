@@ -30,7 +30,7 @@ module Common.Context
    ) where 
 
 import Common.Navigator
-import Common.Rewriting.Term
+import Common.Rewriting
 import Common.Transformation
 import Common.Utils (commaList, readM)
 import Common.View

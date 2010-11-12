@@ -21,5 +21,5 @@ import Common.Rewriting.Difference
 import Common.Rewriting.Group hiding (identity)
 import Common.Rewriting.Operator hiding (unary, binary, isUnary, isBinary)
 import Common.Rewriting.RewriteRule
-import Common.Rewriting.Term hiding (Term(..), fromTermWith)
+import Common.Rewriting.Term hiding (Term(..))
 import Common.Rewriting.Term (Term)

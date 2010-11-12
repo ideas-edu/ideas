@@ -27,10 +27,9 @@ module Domain.Math.Expr.Symbols
    , (^), root
    ) where
 
-import Common.Rewriting hiding (Symbol)
+import Common.Rewriting
 import Control.Monad
 import Domain.Math.Data.Relation (relationSymbols)
-import Domain.Math.Expr.Symbolic
 import Prelude hiding ((^))
 import Text.OpenMath.Dictionary.Arith1
 import Text.OpenMath.Dictionary.Calculus1
@@ -38,12 +37,12 @@ import Text.OpenMath.Dictionary.Fns1
 import Text.OpenMath.Dictionary.List1
 import Text.OpenMath.Dictionary.Nums1
 import Text.OpenMath.Dictionary.Transc1
-import Text.OpenMath.Symbol (extraSymbol, Symbol)
+import qualified Text.OpenMath.Symbol as OM
 
 -------------------------------------------------------------
 -- Operator fixities
 
-type OperatorTable = [(Associativity, [(Symbol, String)])]
+type OperatorTable = [(Associativity, [(OM.Symbol, String)])]
 
 data Associativity = InfixLeft | InfixRight | PrefixNon
                    | InfixNon
@@ -61,31 +60,31 @@ operatorTable =
 -------------------------------------------------------------
 -- OpenMath symbols
 
-negateSymbol :: Symbol
+negateSymbol :: OM.Symbol
 negateSymbol = unaryMinusSymbol
 
 -------------------------------------------------------------
 -- Extra math symbols
 
 signumSymbol, asinSymbol, atanSymbol, acosSymbol, asinhSymbol, atanhSymbol,
-   acoshSymbol, bottomSymbol, fcompSymbol :: Symbol
+   acoshSymbol, bottomSymbol, fcompSymbol :: OM.Symbol
 
-signumSymbol = extraSymbol "signum"    
-asinSymbol   = extraSymbol "asin"   
-atanSymbol   = extraSymbol "atan"   
-acosSymbol   = extraSymbol "acos"     
-asinhSymbol  = extraSymbol "asinh"  
-atanhSymbol  = extraSymbol "atanh" 
-acoshSymbol  = extraSymbol "acosh"  
-bottomSymbol = extraSymbol "error"
-fcompSymbol  = extraSymbol "compose"
+signumSymbol = OM.extraSymbol "signum"    
+asinSymbol   = OM.extraSymbol "asin"   
+atanSymbol   = OM.extraSymbol "atan"   
+acosSymbol   = OM.extraSymbol "acos"     
+asinhSymbol  = OM.extraSymbol "asinh"  
+atanhSymbol  = OM.extraSymbol "atanh" 
+acoshSymbol  = OM.extraSymbol "acosh"  
+bottomSymbol = OM.extraSymbol "error"
+fcompSymbol  = OM.extraSymbol "compose"
 
 -------------------------------------------------------------
 -- Some match functions
 
 isPlus, isTimes, isMinus, isDivide, isPower :: 
-   (Symbolic a, MonadPlus m) => a -> m (a, a)
-isNegate :: (Symbolic a, MonadPlus m) => a -> m a
+   (WithFunctions a, MonadPlus m) => a -> m (a, a)
+isNegate :: (WithFunctions a, MonadPlus m) => a -> m a
    
 isPlus   = isAssoBinary plusSymbol
 isTimes  = isAssoBinary timesSymbol  
@@ -102,8 +101,16 @@ isDivideSymbol = sameSymbol divideSymbol
 
 infixr 8 ^
 
-(^) :: Symbolic a => a -> a -> a
+(^) :: WithFunctions a => a -> a -> a
 (^) = binary powerSymbol
 
-root :: Symbolic a => a -> a -> a
+root :: WithFunctions a => a -> a -> a
 root = binary rootSymbol
+
+-- left-associative
+isAssoBinary :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m (a, a)
+isAssoBinary s a =
+   case isFunction s a of
+      Just [x, y] -> return (x, y)
+      Just (x:xs) | length xs > 1 -> return (x, function s xs)
+      _ -> fail "isAssoBinary"

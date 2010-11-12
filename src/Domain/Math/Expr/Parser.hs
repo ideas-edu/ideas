@@ -17,15 +17,14 @@ module Domain.Math.Expr.Parser
 
 import Prelude hiding ((^))
 import Text.Parsing
-import Control.Monad
-import Control.Monad.Error ()
+import Control.Monad.Error
 import Common.Id
+import Common.Rewriting
 import Common.Transformation
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic)
 import Domain.Math.Data.Relation
 import Domain.Math.Expr.Data
-import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
 import Domain.Math.Data.OrList
 import Test.QuickCheck (arbitrary)

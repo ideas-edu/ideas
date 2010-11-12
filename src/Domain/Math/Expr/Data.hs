@@ -22,10 +22,7 @@ import Common.Uniplate
 import Common.Utils (commaList)
 import Common.View
 import Common.Rewriting
-import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
--- import Text.OpenMath.Symbol
-
 import qualified Common.Rewriting.Term as Term
 
 -----------------------------------------------------------------------
@@ -118,8 +115,6 @@ instance WithVars Expr where
    variable = Var
    getVariable (Var s) = return s
    getVariable _       = fail "Expr.getVariable"
-
-instance Symbolic Expr
 
 fromDouble :: Double -> Expr
 fromDouble d

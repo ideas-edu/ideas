@@ -13,7 +13,6 @@ module Common.Rewriting.Unification
    ( match, unifyM, specialLeft, specialRight
    ) where
 
-import Common.Id
 import Common.Rewriting.Term
 import Common.Rewriting.AC
 import Common.Rewriting.Substitution
@@ -86,7 +85,7 @@ unifyWith ops = rec
 
 -- second term should not have meta variables
 
-match :: [Id] -> Term -> Term -> [Substitution]
+match :: [Symbol] -> Term -> Term -> [Substitution]
 match assocSymbols x y = do
    s <- rec True x y
   -- guard $ all (`notElem` getMetaVars y) (dom s)
@@ -112,7 +111,7 @@ match assocSymbols x y = do
       return (s2 @@@ s1)
    recList _ _ = []
       
-associativeMatch :: Bool -> Id -> Term -> Term -> Term -> [[(Term, Term)]]
+associativeMatch :: Bool -> Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
 associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2) 
    | s==t = map (map make) result
  where

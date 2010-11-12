@@ -13,7 +13,6 @@ module Domain.RelationAlgebra.Formula where
 
 import Domain.Math.Expr.Symbolic
 import Common.Uniplate (Uniplate(..))
-import Common.Id
 import Common.Rewriting
 import Common.Utils
 import Control.Monad
@@ -22,7 +21,6 @@ import qualified Data.Set as S
 import System.Random (StdGen, mkStdGen, split, randomR)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
-import Text.OpenMath.Symbol
 
 infixr 2 :.:
 infixr 3 :+: 
@@ -185,16 +183,16 @@ instance IsTerm RelAlg where
       fromTermWith f a `mplus` liftM Var (getVariable a)
     where
       f s []
-         | sameId s universeSymbol  = return V
-         | sameId s identSymbol     = return I
+         | sameSymbol s universeSymbol  = return V
+         | sameSymbol s identSymbol     = return I
       f s [x]
-         | sameId s notSymbol       = return (Not x)
-         | sameId s invSymbol       = return (Inv x)
+         | sameSymbol s notSymbol       = return (Not x)
+         | sameSymbol s invSymbol       = return (Inv x)
       f s [x, y]
-         | sameId s compSymbol      = return (x :.:  y)
-         | sameId s addSymbol       = return (x :+:  y)
-         | sameId s conjSymbol      = return (x :&&: y)
-         | sameId s disjSymbol      = return (x :||: y)
+         | sameSymbol s compSymbol      = return (x :.:  y)
+         | sameSymbol s addSymbol       = return (x :+:  y)
+         | sameSymbol s conjSymbol      = return (x :&&: y)
+         | sameSymbol s disjSymbol      = return (x :||: y)
       f _ _ = fail "fromTerm"
       
 compSymbol, addSymbol, conjSymbol, disjSymbol,
@@ -209,4 +207,4 @@ universeSymbol = relalgSymbol "universe"
 identSymbol    = relalgSymbol "ident"
 
 relalgSymbol :: String -> Symbol
-relalgSymbol = makeSymbol "relalg"
+relalgSymbol a = toSymbol ["relalg", a]

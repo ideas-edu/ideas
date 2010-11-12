@@ -156,7 +156,7 @@ simPolyDiff x y =
    in f x == f y
 
 noDiff :: Expr -> Bool
-noDiff e = null [ () | Sym s _ <- universe e, sameId s diffSymbol ]   
+noDiff e = null [ () | Sym s _ <- universe e, isDiffSymbol s ]   
 
 onlyNatPower :: Expr -> Bool
 onlyNatPower e = and [ isNat a | Sym s [_, a] <- universe e, isPowerSymbol s ]

@@ -29,7 +29,7 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Text.OpenMath.Object
-import Text.OpenMath.Symbol
+import qualified Text.OpenMath.Symbol as OM
 import Text.OpenMath.Dictionary.Fns1
 
 -----------------------------------------------------------------------------
@@ -93,7 +93,7 @@ omobjToTerm omobj =
       OMV x -> case isMeta x of
                   Just n  -> return (Meta n)
                   Nothing -> return (Var x)
-      OMS s -> return (Con (newId (show s)))
+      OMS s -> return (symbol (show s))
       OMI n -> return (Num n)
       OMF a -> return (Float a)
       OMA (x:xs) -> liftM2 makeTerm (omobjToTerm x) (mapM omobjToTerm xs)
@@ -104,12 +104,12 @@ omobjToTerm omobj =
    isMeta ('$':xs) = Just (foldl' (\a b -> a*10+ord b-48) 0 xs) -- '
    isMeta _        = Nothing
 
-idToSymbol :: Id -> Symbol
+idToSymbol :: Id -> OM.Symbol
 idToSymbol a
    | null (qualifiers a) = 
-        extraSymbol (unqualified a)
+        OM.extraSymbol (unqualified a)
    | otherwise = 
-        makeSymbol (qualification a) (unqualified a)
+        OM.makeSymbol (qualification a) (unqualified a)
 
 ------------------------------------------------------------
 -- Exercise Text data type

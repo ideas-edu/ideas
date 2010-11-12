@@ -23,6 +23,9 @@ import qualified Text.OpenMath.Symbol as OM
 instance IsId OM.Symbol where
    newId s = OM.dictionary s # OM.symbolName s
 
+instance IsSymbol OM.Symbol where
+   toSymbol = toSymbol . newId
+
 -------------------------------------------------------------------
 -- Type class for symbolic representations
 
@@ -31,7 +34,7 @@ class (WithFunctions a, WithVars a) => Symbolic a
 instance Symbolic Term
 
 -- left-associative by default
-isAssoBinary :: (IsId s, Symbolic a, Monad m) => s -> a -> m (a, a)
+isAssoBinary :: (IsSymbol s, Symbolic a, Monad m) => s -> a -> m (a, a)
 isAssoBinary s a =
    case isFunction s a of
       Just [x, y] -> return (x, y)

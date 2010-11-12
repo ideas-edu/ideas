@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -14,6 +14,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Term 
    ( Term(..), IsTerm(..)
+   , Symbol, IsSymbol(..), sameSymbol
    , fromTermM, fromTermWith
    , getSpine, makeTerm
      -- * Functions and symbols
@@ -33,6 +34,7 @@ import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.Maybe
+import Data.Monoid
 import Data.Typeable
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
@@ -41,7 +43,7 @@ import qualified Data.Set as S
 -- * Data type for terms
 
 data Term = Var   String 
-          | Con   Id 
+          | Con   Symbol 
           | Apply Term Term
           | Num   Integer 
           | Float Double
@@ -51,6 +53,45 @@ data Term = Var   String
 instance Uniplate Term where
    uniplate (Apply f a) = ([f, a], \[g, b] -> Apply g b)
    uniplate term        = ([], \_ -> term)
+
+newtype Symbol = S Id
+   deriving (Eq, Ord)
+
+instance Show Symbol where
+   show = showId
+
+instance HasId Symbol where
+   getId (S a) = a
+   changeId f (S a) = S (f a)
+
+instance Monoid Symbol where
+   mempty = S mempty
+   mappend (S a) (S b) = S (mappend a b)
+
+class IsSymbol a where
+   toSymbol     :: a -> Symbol
+   toSymbolList :: [a] -> Symbol
+   -- default definition
+   toSymbolList = mconcat . map toSymbol
+
+instance IsSymbol Symbol where
+   toSymbol = id
+
+instance IsSymbol Id where
+   toSymbol = S
+   
+instance IsSymbol Char where
+   toSymbol     = toSymbolList . return
+   toSymbolList = S . newId
+
+instance IsSymbol a => IsSymbol [a] where
+   toSymbol = toSymbolList
+
+instance (IsSymbol a, IsSymbol b) => IsSymbol (Either a b) where
+   toSymbol = either toSymbol toSymbol
+   
+sameSymbol :: (IsSymbol a, IsSymbol b) => a -> b -> Bool
+sameSymbol a b = toSymbol a == toSymbol b
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
@@ -82,7 +123,7 @@ instance (IsTerm a, IsTerm b) => IsTerm (Either a b) where
 fromTermM :: (Monad m, IsTerm a) => Term -> m a
 fromTermM = maybe (fail "fromTermM") return . fromTerm
 
-fromTermWith :: (Monad m, IsTerm a) => (Id -> [a] -> m a) -> Term -> m a
+fromTermWith :: (Monad m, IsTerm a) => (Symbol -> [a] -> m a) -> Term -> m a
 fromTermWith f a = do
    (s, xs) <- getFunction a
    ys      <- mapM fromTermM xs
@@ -93,11 +134,11 @@ fromTermWith f a = do
 
 class WithFunctions a where
    -- constructing
-   symbol   :: IsId s => s -> a
-   function :: IsId s => s -> [a] -> a
+   symbol   :: IsSymbol s => s -> a
+   function :: IsSymbol s => s -> [a] -> a
    -- matching
-   getSymbol   :: Monad m => a -> m Id
-   getFunction :: Monad m => a -> m (Id, [a])
+   getSymbol   :: Monad m => a -> m Symbol
+   getFunction :: Monad m => a -> m (Symbol, [a])
    -- default definition
    symbol s = function s []
    getSymbol a = 
@@ -106,34 +147,34 @@ class WithFunctions a where
          _            -> fail "Common.Term.getSymbol"
          
 instance WithFunctions Term where
-   function    = makeTerm . Con . newId
+   function    = makeTerm . Con . toSymbol
    getFunction a = 
       case getSpine a of
          (Con s, xs) -> return (s, xs)
          _           -> fail "Common.Rewriting.getFunction" 
    
-isSymbol :: (IsId s, WithFunctions a) => s -> a -> Bool
-isSymbol s = maybe False (sameId s) . getSymbol
+isSymbol :: (IsSymbol s, WithFunctions a) => s -> a -> Bool
+isSymbol s = maybe False (sameSymbol s) . getSymbol
 
-isFunction :: (IsId s, WithFunctions a, Monad m) => s -> a -> m [a]
+isFunction :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m [a]
 isFunction s a =
    case getFunction a of
-      Just (t, as) | sameId s t -> return as
-      _                         -> fail "Common.Term.isFunction"
+      Just (t, as) | sameSymbol s t -> return as
+      _                             -> fail "Common.Term.isFunction"
 
-unary :: (IsId s, WithFunctions a) => s -> a -> a
+unary :: (IsSymbol s, WithFunctions a) => s -> a -> a
 unary s a = function s [a]
 
-binary :: (IsId s, WithFunctions a) => s -> a -> a -> a
+binary :: (IsSymbol s, WithFunctions a) => s -> a -> a -> a
 binary s a b = function s [a, b]
 
-isUnary :: (IsId s, WithFunctions a, Monad m) => s -> a -> m a
+isUnary :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m a
 isUnary s a = 
    case isFunction s a of
       Just [x] -> return x
       _        -> fail "Common.Term.isUnary"
 
-isBinary :: (IsId s, WithFunctions a, Monad m) => s -> a -> m (a, a)
+isBinary :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m (a, a)
 isBinary s a = 
    case isFunction s a of
       Just [x, y] -> return (x, y)

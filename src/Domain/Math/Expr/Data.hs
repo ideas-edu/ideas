@@ -24,7 +24,7 @@ import Common.View
 import Common.Rewriting
 import Domain.Math.Expr.Symbolic
 import Domain.Math.Expr.Symbols
-import Text.OpenMath.Symbol
+-- import Text.OpenMath.Symbol
 
 import qualified Common.Rewriting.Term as Term
 
@@ -44,7 +44,7 @@ data Expr = -- Num
           | Number Double -- positive only
             -- Symbolic
           | Var String
-          | Sym Id [Expr]
+          | Sym Symbol [Expr]
    deriving (Eq, Ord, Typeable)
 
 -----------------------------------------------------------------------
@@ -93,24 +93,24 @@ instance Floating Expr where
 
 instance WithFunctions Expr where
    function s [a, b] 
-      | sameId s plusSymbol   = a :+: b
-      | sameId s timesSymbol  = a :*: b
-      | sameId s minusSymbol  = a :-: b
-      | sameId s divideSymbol = a :/: b
+      | sameSymbol s plusSymbol   = a :+: b
+      | sameSymbol s timesSymbol  = a :*: b
+      | sameSymbol s minusSymbol  = a :-: b
+      | sameSymbol s divideSymbol = a :/: b
       | isRootSymbol s && b == Nat 2 = Sqrt a
    function s [a]
-      | sameId s negateSymbol = Negate a
+      | sameSymbol s negateSymbol = Negate a
    function s as = 
-      Sym (newId s) as
+      Sym (toSymbol s) as
    
    getFunction expr =
       case expr of
-         a :+: b  -> return (newId plusSymbol,   [a, b])
-         a :*: b  -> return (newId timesSymbol,  [a, b])
-         a :-: b  -> return (newId minusSymbol,  [a, b])
-         Negate a -> return (newId negateSymbol, [a])
-         a :/: b  -> return (newId divideSymbol, [a, b])
-         Sqrt a   -> return (newId rootSymbol,   [a, Nat 2])
+         a :+: b  -> return (toSymbol plusSymbol,   [a, b])
+         a :*: b  -> return (toSymbol timesSymbol,  [a, b])
+         a :-: b  -> return (toSymbol minusSymbol,  [a, b])
+         Negate a -> return (toSymbol negateSymbol, [a])
+         a :/: b  -> return (toSymbol divideSymbol, [a, b])
+         Sqrt a   -> return (toSymbol rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> fail "Expr.getFunction"
 
@@ -159,7 +159,7 @@ instance CoArbitrary Expr where
          Var s    -> variant 8 . coarbitrary s
          Sym f xs -> variant 9 . coarbitrary (show f) . coarbitrary xs
   
-symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
+symbolGenerator :: IsSymbol s => (Int -> [Gen Expr]) -> [(s, Maybe Int)] -> Int -> Gen Expr
 symbolGenerator extras syms = f 
  where
    f n = oneof $  map (g n) (filter (\(_, a) -> n > 0 || a == Just 0) syms)
@@ -169,7 +169,7 @@ symbolGenerator extras syms = f
                Just i  -> return i
                Nothing -> choose (0, 5)
       as <- replicateM i (f (n `div` i))
-      return (function (newId s) as)
+      return (function s as)
   
 natGenerator :: Gen Expr
 natGenerator = liftM (Nat . abs) arbitrary
@@ -195,12 +195,12 @@ showExpr table = rec 0
       | otherwise        = "\"" ++ s ++ "\""
    rec i expr = 
       case getFunction expr of
-         Just (s1, [Sym s2 [Var x, a]]) | sameId s1 diffSymbol && sameId s2 lambdaSymbol ->
+         Just (s1, [Sym s2 [Var x, a]]) | sameSymbol s1 diffSymbol && sameSymbol s2 lambdaSymbol ->
             parIf (i>10000) $ "D(" ++ x ++ ") " ++ rec 10001 a
          -- To do: remove special case for sqrt
          Just (s, [a, b]) | isRootSymbol s && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
-         Just (s, xs) | sameId s listSymbol -> 
+         Just (s, xs) | sameSymbol s listSymbol -> 
             "[" ++ commaList (map (rec 0) xs) ++ "]"
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
@@ -221,7 +221,7 @@ showExpr table = rec 0
       | isRootSymbol s = "root"
       | otherwise = show s
 
-   symbolTable = [ (newId s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
+   symbolTable = [ (toSymbol s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"

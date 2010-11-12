@@ -16,7 +16,6 @@ import Text.OpenMath.Dictionary.Logic1
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Rewriting
 import Common.Classes
-import Common.Id
 import Common.Utils (ShowString, subsets)
 import Common.View
 import Data.List
@@ -166,16 +165,16 @@ instance IsTerm a => IsTerm (Logic a) where
       fromTermWith f a `mplus` liftM Var (fromTerm a)
     where
       f s [] 
-         | sameId s trueSymbol       = return T
-         | sameId s falseSymbol      = return F
+         | sameSymbol s trueSymbol       = return T
+         | sameSymbol s falseSymbol      = return F
       f s [x]
-         | sameId s notSymbol        = return (Not x)
+         | sameSymbol s notSymbol        = return (Not x)
       f s [x, y]
-         | sameId s impliesSymbol    = return (x :->: y)
-         | sameId s equivalentSymbol = return (x :<->: y)
+         | sameSymbol s impliesSymbol    = return (x :->: y)
+         | sameSymbol s equivalentSymbol = return (x :<->: y)
       f s xs@(_:_)
-         | sameId s andSymbol        = return (foldr1 (:&&:) xs)
-         | sameId s orSymbol         = return (foldr1 (:||:) xs)
+         | sameSymbol s andSymbol        = return (foldr1 (:&&:) xs)
+         | sameSymbol s orSymbol         = return (foldr1 (:||:) xs)
       f _ _ = fail "fromTerm"
 
 logicOperators :: [Magma (Logic a)]

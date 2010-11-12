@@ -109,7 +109,7 @@ fill i = rec
       | a == b    = a
       | otherwise = Meta i
 
-buildSpec :: [Id] -> RuleSpec Term -> Term -> [Term]
+buildSpec :: [Symbol] -> RuleSpec Term -> Term -> [Term]
 buildSpec ops (lhs :~> rhs) a = do
    s <- Unification.match ops lhs a
    let (b1, b2) = (specialLeft `elem` dom s, specialRight `elem` dom s)
@@ -133,7 +133,7 @@ rewrite r a =
        syms = mapMaybe (operatorSymbol r a) (ruleOperators r)
    in concatMap (fromTermRR r) (buildSpec syms (ruleSpecTerm r) term)
 
-operatorSymbol :: IsMagma m => RewriteRule a -> a -> m a -> Maybe Id
+operatorSymbol :: IsMagma m => RewriteRule a -> a -> m a -> Maybe Symbol
 operatorSymbol r a op = 
    case getFunction (toTermRR r (operation op a a)) of
       Just (s, [_, _]) -> Just s

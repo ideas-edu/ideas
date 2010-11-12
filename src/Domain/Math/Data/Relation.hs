@@ -26,7 +26,7 @@ module Domain.Math.Data.Relation
    ) where
 
 import Common.View
-import Common.Rewriting hiding (isBinary)
+import Common.Rewriting hiding (isBinary, Symbol)
 import Common.Classes
 import Domain.Math.Expr.Symbolic
 import Text.OpenMath.Dictionary.Relation1

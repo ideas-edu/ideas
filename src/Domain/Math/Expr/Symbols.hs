@@ -27,7 +27,7 @@ module Domain.Math.Expr.Symbols
    , (^), root
    ) where
 
-import Common.Id
+import Common.Rewriting hiding (Symbol)
 import Control.Monad
 import Domain.Math.Data.Relation (relationSymbols)
 import Domain.Math.Expr.Symbolic
@@ -38,7 +38,7 @@ import Text.OpenMath.Dictionary.Fns1
 import Text.OpenMath.Dictionary.List1
 import Text.OpenMath.Dictionary.Nums1
 import Text.OpenMath.Dictionary.Transc1
-import Text.OpenMath.Symbol
+import Text.OpenMath.Symbol (extraSymbol, Symbol)
 
 -------------------------------------------------------------
 -- Operator fixities
@@ -94,11 +94,11 @@ isDivide = isBinary     divideSymbol
 isNegate = isUnary      negateSymbol 
 isPower  = isBinary     powerSymbol
 
-isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: IsId a => a -> Bool
-isPowerSymbol  = sameId powerSymbol
-isRootSymbol   = sameId rootSymbol
-isLogSymbol    = sameId logSymbol
-isDivideSymbol = sameId divideSymbol
+isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: IsSymbol a => a -> Bool
+isPowerSymbol  = sameSymbol powerSymbol
+isRootSymbol   = sameSymbol rootSymbol
+isLogSymbol    = sameSymbol logSymbol
+isDivideSymbol = sameSymbol divideSymbol
 
 infixr 8 ^
 

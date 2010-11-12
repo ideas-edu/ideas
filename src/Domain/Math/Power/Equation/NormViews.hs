@@ -149,7 +149,7 @@ myRationalView = makeView (exprToNum f) id >>> rationalView
               let a = x Prelude.^ abs (numerator ry)
               return (if numerator ry < 0 then 1/a else a)
             else
-              f (toSymbol rootSymbol) [ fromInteger (denominator ry)
+              f rootSymbol [ fromInteger (denominator ry)
                            , x Prelude.^ (numerator ry) ]
       | isRootSymbol s = do
           n <- match integerView y

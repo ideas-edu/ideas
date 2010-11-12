@@ -28,9 +28,8 @@ module Domain.Math.Data.Relation
 import Common.View
 import Common.Rewriting
 import Common.Classes
-import Domain.Math.Expr.Symbols ()
+import Domain.Math.Expr.Symbols (openMathSymbol)
 import Text.OpenMath.Dictionary.Relation1
-import qualified Text.OpenMath.Symbol as OM
 import Data.Maybe
 import Test.QuickCheck
 import Control.Monad
@@ -82,7 +81,7 @@ instance Relational Relation where
 instance IsTerm a => IsTerm (Relation a) where
    toTerm p = 
       let op  = relationType p
-          sym = maybe (Left (show op)) (Right . snd) (lookup op relationSymbols)
+          sym = maybe (newSymbol (show op)) snd (lookup op relationSymbols)
       in binary sym (toTerm (leftHandSide p)) (toTerm (rightHandSide p))
    fromTerm a = 
       let f (relType, (_, s)) = do
@@ -92,13 +91,15 @@ instance IsTerm a => IsTerm (Relation a) where
 
 instance Rewrite a => Rewrite (Relation a)
 
-relationSymbols :: [(RelationType, (String, OM.Symbol))]
+relationSymbols :: [(RelationType, (String, Symbol))]
 relationSymbols =
-   [ (EqualTo, ("==", eqSymbol)), (NotEqualTo, ("/=", neqSymbol))
-   , (LessThan, ("<", ltSymbol)), (GreaterThan, (">", gtSymbol))
-   , (LessThanOrEqualTo, ("<=", leqSymbol))
-   , (GreaterThanOrEqualTo, (">=", geqSymbol))
-   , (Approximately, ("~=", approxSymbol))
+   [ (EqualTo,              ("==", openMathSymbol eqSymbol))
+   , (NotEqualTo,           ("/=", openMathSymbol neqSymbol))
+   , (LessThan,             ("<",  openMathSymbol ltSymbol))
+   , (GreaterThan,          (">",  openMathSymbol gtSymbol))
+   , (LessThanOrEqualTo,    ("<=", openMathSymbol leqSymbol))
+   , (GreaterThanOrEqualTo, (">=", openMathSymbol geqSymbol))
+   , (Approximately,        ("~=", openMathSymbol approxSymbol))
    ]
 
 notRelation :: Relation a -> Relation a

@@ -12,8 +12,9 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Symbols
-   ( -- OpenMath symbols
-     plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
+   ( openMathSymbol
+     -- OpenMath dictionary symbols
+   , plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
    , powerSymbol, negateSymbol, sinSymbol, cosSymbol, lnSymbol
    , diffSymbol, piSymbol, lambdaSymbol, listSymbol
    , absSymbol, signumSymbol, logSymbol, expSymbol, tanSymbol, asinSymbol
@@ -29,41 +30,74 @@ import Common.Id
 import Common.Rewriting
 import Control.Monad
 import Prelude hiding ((^))
-import Text.OpenMath.Dictionary.Arith1
-import Text.OpenMath.Dictionary.Calculus1
-import Text.OpenMath.Dictionary.Fns1
-import Text.OpenMath.Dictionary.List1
-import Text.OpenMath.Dictionary.Nums1
-import Text.OpenMath.Dictionary.Transc1
-import qualified Text.OpenMath.Symbol as OM
+import qualified Text.OpenMath.Dictionary.Arith1    as OM
+import qualified Text.OpenMath.Dictionary.Calculus1 as OM
+import qualified Text.OpenMath.Dictionary.Fns1      as OM
+import qualified Text.OpenMath.Dictionary.List1     as OM
+import qualified Text.OpenMath.Dictionary.Nums1     as OM
+import qualified Text.OpenMath.Dictionary.Transc1   as OM
+import qualified Text.OpenMath.Symbol               as OM
 
-instance IsId OM.Symbol where
-   newId s = OM.dictionary s # OM.symbolName s
-
-instance IsSymbol OM.Symbol where
-   toSymbol = toSymbol . newId
+-- | Conversion function
+openMathSymbol :: OM.Symbol -> Symbol
+openMathSymbol s = newSymbol (OM.dictionary s # OM.symbolName s)
 
 -------------------------------------------------------------
--- OpenMath symbols
+-- Arith1 dictionary
 
-negateSymbol :: OM.Symbol
-negateSymbol = unaryMinusSymbol
+plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol,
+   powerSymbol, negateSymbol, absSymbol :: Symbol
+   
+plusSymbol   = openMathSymbol OM.plusSymbol
+timesSymbol  = openMathSymbol OM.timesSymbol
+minusSymbol  = openMathSymbol OM.minusSymbol
+divideSymbol = openMathSymbol OM.divideSymbol
+rootSymbol   = openMathSymbol OM.rootSymbol
+powerSymbol  = openMathSymbol OM.powerSymbol
+negateSymbol = openMathSymbol OM.unaryMinusSymbol
+absSymbol    = openMathSymbol OM.absSymbol
+
+-------------------------------------------------------------
+-- Transc1 dictionary
+
+logSymbol, sinSymbol, cosSymbol, lnSymbol, expSymbol, tanSymbol,
+   sinhSymbol, tanhSymbol, coshSymbol :: Symbol
+
+logSymbol  = openMathSymbol OM.logSymbol
+sinSymbol  = openMathSymbol OM.sinSymbol
+cosSymbol  = openMathSymbol OM.cosSymbol
+lnSymbol   = openMathSymbol OM.lnSymbol
+expSymbol  = openMathSymbol OM.expSymbol 
+tanSymbol  = openMathSymbol OM.tanSymbol
+sinhSymbol = openMathSymbol OM.sinhSymbol
+tanhSymbol = openMathSymbol OM.tanhSymbol
+coshSymbol = openMathSymbol OM.coshSymbol
+
+-------------------------------------------------------------
+-- Other dictionaries
+
+diffSymbol, lambdaSymbol, listSymbol, piSymbol :: Symbol
+
+diffSymbol   = openMathSymbol OM.diffSymbol
+lambdaSymbol = openMathSymbol OM.lambdaSymbol
+listSymbol   = openMathSymbol OM.listSymbol
+piSymbol     = openMathSymbol OM.piSymbol
 
 -------------------------------------------------------------
 -- Extra math symbols
 
 signumSymbol, asinSymbol, atanSymbol, acosSymbol, asinhSymbol, atanhSymbol,
-   acoshSymbol, bottomSymbol, fcompSymbol :: OM.Symbol
+   acoshSymbol, bottomSymbol, fcompSymbol :: Symbol
 
-signumSymbol = OM.extraSymbol "signum"    
-asinSymbol   = OM.extraSymbol "asin"   
-atanSymbol   = OM.extraSymbol "atan"   
-acosSymbol   = OM.extraSymbol "acos"     
-asinhSymbol  = OM.extraSymbol "asinh"  
-atanhSymbol  = OM.extraSymbol "atanh" 
-acoshSymbol  = OM.extraSymbol "acosh"  
-bottomSymbol = OM.extraSymbol "error"
-fcompSymbol  = OM.extraSymbol "compose"
+signumSymbol = newSymbol "signum"    
+asinSymbol   = newSymbol "asin"   
+atanSymbol   = newSymbol "atan"   
+acosSymbol   = newSymbol "acos"     
+asinhSymbol  = newSymbol "asinh"  
+atanhSymbol  = newSymbol "atanh" 
+acoshSymbol  = newSymbol "acosh"  
+bottomSymbol = newSymbol "error"
+fcompSymbol  = newSymbol "compose"
 
 -------------------------------------------------------------
 -- Some match functions
@@ -79,11 +113,12 @@ isDivide = isBinary     divideSymbol
 isNegate = isUnary      negateSymbol 
 isPower  = isBinary     powerSymbol
 
-isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: IsSymbol a => a -> Bool
-isPowerSymbol  = sameSymbol powerSymbol
-isRootSymbol   = sameSymbol rootSymbol
-isLogSymbol    = sameSymbol logSymbol
-isDivideSymbol = sameSymbol divideSymbol
+isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: Symbol -> Bool
+
+isPowerSymbol  = (== powerSymbol)
+isRootSymbol   = (== rootSymbol)
+isLogSymbol    = (== logSymbol)
+isDivideSymbol = (== divideSymbol)
 
 infixr 8 ^
 
@@ -94,7 +129,7 @@ root :: WithFunctions a => a -> a -> a
 root = binary rootSymbol
 
 -- left-associative
-isAssoBinary :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m (a, a)
+isAssoBinary :: (WithFunctions a, Monad m) => Symbol -> a -> m (a, a)
 isAssoBinary s a =
    case isFunction s a of
       Just [x, y] -> return (x, y)

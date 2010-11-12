@@ -22,7 +22,8 @@ import Common.Classes
 import Common.Rewriting
 import Data.List
 import Domain.Math.Simplification
-import Text.OpenMath.Dictionary.Linalg2
+import Domain.Math.Expr.Symbols (openMathSymbol) 
+import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 
 -------------------------------------------------------------------------------
 -- Data types
@@ -60,6 +61,9 @@ instance IsTerm a => IsTerm (Vector a) where
       xs <- isFunction vectorSymbol a
       ys <- mapM fromTerm xs
       return (fromList ys)
+
+vectorSymbol :: Symbol
+vectorSymbol = openMathSymbol OM.vectorSymbol
 
 instance Simplify a => Simplify (Vector a) where
    simplifyWith opt = fmap (simplifyWith opt)

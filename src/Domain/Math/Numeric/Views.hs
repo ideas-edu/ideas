@@ -143,9 +143,9 @@ optionNegate f a          = f a
 
 doubleSym :: Symbol -> [Double] -> Maybe Double
 doubleSym s [x, y] 
-   | sameSymbol s divideSymbol = fracDiv x y
-   | isPowerSymbol s = floatingPower x y   
-   | isRootSymbol s && x >= 0 && y >= 1 = Just (x ** (1/y))
+   | isDivideSymbol s = fracDiv x y
+   | isPowerSymbol  s = floatingPower x y   
+   | isRootSymbol   s && x >= 0 && y >= 1 = Just (x ** (1/y))
 doubleSym _ _ = Nothing
 
 -- General numeric interpretation function: constructors Sqrt and
@@ -166,8 +166,8 @@ exprToNumStep rec expr =
       a :-: b  -> liftM2 (-)    (rec a) (rec b)
       Negate a -> liftM  negate (rec a)
       Nat n    -> return (fromInteger n)
-      a :/: b  -> rec (Sym (toSymbol divideSymbol) [a, b])
-      Sqrt a   -> rec (Sym (toSymbol rootSymbol) [a, 2])
+      a :/: b  -> rec (Sym divideSymbol [a, b])
+      Sqrt a   -> rec (Sym rootSymbol [a, 2])
       _        -> fail "exprToNumStep"
 
 intDiv :: Integral a => a -> a -> Maybe a

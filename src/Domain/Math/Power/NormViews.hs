@@ -19,7 +19,6 @@ module Domain.Math.Power.NormViews
 import Prelude hiding ((^), recip)
 import qualified Prelude
 import Control.Monad
-import Common.Rewriting
 import Common.View
 import Data.List
 import qualified Data.Map as M
@@ -48,9 +47,9 @@ normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
                          then return (r Prelude.^ n, M.map (*fromIntegral n) m)
                          else return (1/(r Prelude.^ abs n), M.map (*fromIntegral n) m)
               | isRootSymbol s ->
-                  f (Sym (toSymbol powerSymbol) [a, 1/b])
+                  f (Sym powerSymbol [a, 1/b])
            Sqrt a -> 
-              f (Sym (toSymbol rootSymbol) [a,2])
+              f (Sym rootSymbol [a,2])
            a :*: b -> do
              (r1, m1) <- f a
              (r2, m2) <- f b
@@ -85,8 +84,8 @@ normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
             (x, m) <- f a
             y      <- match rationalView b
             return (x ** fromRational y, M.map (*y) m)
-          | isRootSymbol s -> f (Sym (toSymbol powerSymbol) [a, 1/b])
-        Sqrt a -> f (Sym (toSymbol rootSymbol) [a,2])
+          | isRootSymbol s -> f (Sym powerSymbol [a, 1/b])
+        Sqrt a -> f (Sym rootSymbol [a,2])
         a :*: b -> do
           (r1, m1) <- f a
           (r2, m2) <- f b
@@ -129,7 +128,7 @@ normPowerView = makeView f g
               | isRootSymbol s -> 
                    f (x^(1/y))
            Sqrt x ->
-              f (Sym (toSymbol rootSymbol) [x, 2])
+              f (Sym rootSymbol [x, 2])
            Var s -> return (s, 1) 
            x :*: y -> do
              (s1, r1) <- f x

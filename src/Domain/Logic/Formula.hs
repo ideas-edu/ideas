@@ -11,16 +11,17 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
-import Domain.Math.Expr.Symbols ()
-import Text.OpenMath.Dictionary.Logic1
-import Common.Uniplate (Uniplate(..), universe)
-import Common.Rewriting
 import Common.Classes
+import Common.Id
+import Common.Rewriting
+import Common.Uniplate (Uniplate(..), universe)
 import Common.Utils (ShowString, subsets)
 import Common.View
+import Control.Monad
 import Data.List
 import Data.Maybe
-import Control.Monad
+import Domain.Math.Expr.Symbols (openMathSymbol)
+import qualified Text.OpenMath.Dictionary.Logic1 as OM
 
 infixr 2 :<->:
 infixr 3 :->: 
@@ -165,53 +166,64 @@ instance IsTerm a => IsTerm (Logic a) where
       fromTermWith f a `mplus` liftM Var (fromTerm a)
     where
       f s [] 
-         | sameSymbol s trueSymbol       = return T
-         | sameSymbol s falseSymbol      = return F
+         | s == trueSymbol       = return T
+         | s == falseSymbol      = return F
       f s [x]
-         | sameSymbol s notSymbol        = return (Not x)
+         | s == notSymbol        = return (Not x)
       f s [x, y]
-         | sameSymbol s impliesSymbol    = return (x :->: y)
-         | sameSymbol s equivalentSymbol = return (x :<->: y)
+         | s == impliesSymbol    = return (x :->: y)
+         | s == equivalentSymbol = return (x :<->: y)
       f s xs@(_:_)
-         | sameSymbol s andSymbol        = return (foldr1 (:&&:) xs)
-         | sameSymbol s orSymbol         = return (foldr1 (:||:) xs)
+         | s == andSymbol        = return (foldr1 (:&&:) xs)
+         | s == orSymbol         = return (foldr1 (:||:) xs)
       f _ _ = fail "fromTerm"
+
+trueSymbol, falseSymbol, notSymbol, impliesSymbol, equivalentSymbol,
+   andSymbol, orSymbol :: Symbol
+
+trueSymbol       = openMathSymbol OM.trueSymbol
+falseSymbol      = openMathSymbol OM.falseSymbol
+notSymbol        = openMathSymbol OM.notSymbol
+impliesSymbol    = openMathSymbol OM.impliesSymbol
+equivalentSymbol = openMathSymbol OM.equivalentSymbol
+andSymbol        = openMathSymbol OM.andSymbol
+orSymbol         = openMathSymbol OM.orSymbol
 
 logicOperators :: [Magma (Logic a)]
 logicOperators = map toMagma [andMonoid, orMonoid]
 
 andMonoid :: Monoid (Logic a)
-andMonoid = monoid andOperator (makeConstant trueSymbol T isT)
+andMonoid = monoid andOperator (makeConstant (getId trueSymbol) T isT)
  where
    isT T = True
    isT _ = False 
    
 orMonoid :: Monoid (Logic a)
-orMonoid = monoid orOperator (makeConstant falseSymbol F isF)
+orMonoid = monoid orOperator (makeConstant (getId falseSymbol) F isF)
  where
    isF F = True
    isF _ = False
 
 andOperator:: BinaryOp (Logic a)
-andOperator = makeBinary andSymbol (:&&:) isAnd
+andOperator = makeBinary (getId andSymbol) (:&&:) isAnd
  where 
    isAnd (p :&&: q) = Just (p, q)
    isAnd _          = Nothing
 
 orOperator :: BinaryOp (Logic a)
-orOperator = makeBinary orSymbol (:||:) isOr
+orOperator = makeBinary (getId orSymbol) (:||:) isOr
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing
 
 implOperator :: BinaryOp (Logic a)   
-implOperator = makeBinary impliesSymbol (:->:) isImpl
+implOperator = makeBinary (getId impliesSymbol) (:->:) isImpl
  where
    isImpl (p :->: q) = Just (p, q)
    isImpl _           = Nothing
    
 equivOperator :: BinaryOp (Logic a)   
-equivOperator = makeBinary equivalentSymbol (:<->:) isEquiv
+equivOperator = makeBinary (getId equivalentSymbol) (:<->:) isEquiv
  where
    isEquiv (p :<->: q) = Just (p, q)
    isEquiv _           = Nothing

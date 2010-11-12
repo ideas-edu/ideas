@@ -46,9 +46,9 @@ lambda = binary lambdaSymbol
 diffId :: Id
 diffId = newId "calculus.differentiation"
 
-isDiffSymbol, isLambdaSymbol :: IsSymbol a => a -> Bool
-isDiffSymbol   = sameSymbol diffSymbol
-isLambdaSymbol = sameSymbol lambdaSymbol
+isDiffSymbol, isLambdaSymbol :: Symbol -> Bool
+isDiffSymbol   = (== diffSymbol)
+isLambdaSymbol = (== lambdaSymbol)
 
 -----------------------------------------------------------------
 -- Rules for Diffs

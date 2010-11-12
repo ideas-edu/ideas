@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Term 
    ( Term(..), IsTerm(..)
-   , Symbol, IsSymbol(..), sameSymbol
+   , Symbol, newSymbol
    , fromTermM, fromTermWith
    , getSpine, makeTerm
      -- * Functions and symbols
@@ -34,7 +34,6 @@ import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.Maybe
-import Data.Monoid
 import Data.Typeable
 import qualified Data.IntSet as IS
 import qualified Data.Set as S
@@ -64,34 +63,8 @@ instance HasId Symbol where
    getId (S a) = a
    changeId f (S a) = S (f a)
 
-instance Monoid Symbol where
-   mempty = S mempty
-   mappend (S a) (S b) = S (mappend a b)
-
-class IsSymbol a where
-   toSymbol     :: a -> Symbol
-   toSymbolList :: [a] -> Symbol
-   -- default definition
-   toSymbolList = mconcat . map toSymbol
-
-instance IsSymbol Symbol where
-   toSymbol = id
-
-instance IsSymbol Id where
-   toSymbol = S
-   
-instance IsSymbol Char where
-   toSymbol     = toSymbolList . return
-   toSymbolList = S . newId
-
-instance IsSymbol a => IsSymbol [a] where
-   toSymbol = toSymbolList
-
-instance (IsSymbol a, IsSymbol b) => IsSymbol (Either a b) where
-   toSymbol = either toSymbol toSymbol
-   
-sameSymbol :: (IsSymbol a, IsSymbol b) => a -> b -> Bool
-sameSymbol a b = toSymbol a == toSymbol b
+newSymbol :: IsId a => a -> Symbol
+newSymbol = S . newId
 
 -----------------------------------------------------------
 -- * Type class for conversion to/from terms
@@ -134,8 +107,8 @@ fromTermWith f a = do
 
 class WithFunctions a where
    -- constructing
-   symbol   :: IsSymbol s => s -> a
-   function :: IsSymbol s => s -> [a] -> a
+   symbol   :: Symbol -> a
+   function :: Symbol -> [a] -> a
    -- matching
    getSymbol   :: Monad m => a -> m Symbol
    getFunction :: Monad m => a -> m (Symbol, [a])
@@ -147,34 +120,34 @@ class WithFunctions a where
          _            -> fail "Common.Term.getSymbol"
          
 instance WithFunctions Term where
-   function    = makeTerm . Con . toSymbol
+   function = makeTerm . Con
    getFunction a = 
       case getSpine a of
          (Con s, xs) -> return (s, xs)
          _           -> fail "Common.Rewriting.getFunction" 
    
-isSymbol :: (IsSymbol s, WithFunctions a) => s -> a -> Bool
-isSymbol s = maybe False (sameSymbol s) . getSymbol
+isSymbol :: WithFunctions a => Symbol -> a -> Bool
+isSymbol s = maybe False (==s) . getSymbol
 
-isFunction :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m [a]
+isFunction :: (WithFunctions a, Monad m) => Symbol -> a -> m [a]
 isFunction s a =
    case getFunction a of
-      Just (t, as) | sameSymbol s t -> return as
-      _                             -> fail "Common.Term.isFunction"
+      Just (t, as) | s == t -> return as
+      _                     -> fail "Common.Term.isFunction"
 
-unary :: (IsSymbol s, WithFunctions a) => s -> a -> a
+unary :: WithFunctions a => Symbol -> a -> a
 unary s a = function s [a]
 
-binary :: (IsSymbol s, WithFunctions a) => s -> a -> a -> a
+binary :: WithFunctions a => Symbol -> a -> a -> a
 binary s a b = function s [a, b]
 
-isUnary :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m a
+isUnary :: (WithFunctions a, Monad m) => Symbol -> a -> m a
 isUnary s a = 
    case isFunction s a of
       Just [x] -> return x
       _        -> fail "Common.Term.isUnary"
 
-isBinary :: (IsSymbol s, WithFunctions a, Monad m) => s -> a -> m (a, a)
+isBinary :: (WithFunctions a, Monad m) => Symbol -> a -> m (a, a)
 isBinary s a = 
    case isFunction s a of
       Just [x, y] -> return (x, y)

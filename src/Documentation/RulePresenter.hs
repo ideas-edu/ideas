@@ -109,6 +109,9 @@ specialSymbol s1 [Apply (Apply (Con s2) x) a]
         return [Left "D(", Right x, Left ") ", Right a] 
 specialSymbol _ _ = Nothing
 
+sameSymbol :: Symbol -> String -> Bool
+sameSymbol = (==) . show 
+
 showMeta :: Exercise a -> Int -> String
 showMeta ex n
    | safeHead (qualifiers ex) == Just "logic" = [ [c] | c <- ['p'..] ] !! n

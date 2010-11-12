@@ -37,6 +37,7 @@ status:
 
 BINDIR  = bin
 OUTDIR  = out
+PROFDIR = out/prof
 DOCDIR  = docs
 TESTDIR = test
 
@@ -65,6 +66,7 @@ ifeq ($(IDEASSERVER), yes)
 GHCFLAGS   = --make -DDB -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
 else
 GHCFLAGS   = --make -O -i$(SRCDIR) -odir $(OUTDIR) -hidir $(OUTDIR) -fwarn-unused-imports $(GHCWARN)
+PROFFLAGS  = --make -prof -auto-all -iprof-src -O -i$(SRCDIR) -odir $(PROFDIR) -hidir $(PROFDIR)
 endif
 
 LHS2TEX    = lhs2TeX

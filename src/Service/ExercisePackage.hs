@@ -93,7 +93,7 @@ omobjToTerm omobj =
       OMV x -> case isMeta x of
                   Just n  -> return (Meta n)
                   Nothing -> return (Var x)
-      OMS s -> return (symbol (show s))
+      OMS s -> return (symbol (newSymbol (OM.dictionary s # OM.symbolName s)))
       OMI n -> return (Num n)
       OMF a -> return (Float a)
       OMA (x:xs) -> liftM2 makeTerm (omobjToTerm x) (mapM omobjToTerm xs)

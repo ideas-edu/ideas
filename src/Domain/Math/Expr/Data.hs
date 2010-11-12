@@ -12,7 +12,6 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Data where
 
-import Common.Id
 import Common.Rewriting
 import Common.Uniplate
 import Common.Utils (commaList)
@@ -25,7 +24,6 @@ import Domain.Math.Data.Relation (relationSymbols)
 import Domain.Math.Expr.Symbols
 import Test.QuickCheck
 import qualified Common.Rewriting.Term as Term
-import qualified Text.OpenMath.Symbol as OM
 
 -----------------------------------------------------------------------
 -- Expression data type
@@ -71,7 +69,7 @@ instance Fractional Expr where
            fromIntegral (numerator r) :/: fromIntegral (denominator r)
 
 instance Floating Expr where
-   pi      = symbol (newId piSymbol)
+   pi      = symbol piSymbol
    sqrt    = Sqrt
    (**)    = binary powerSymbol
    logBase = binary logSymbol
@@ -92,24 +90,23 @@ instance Floating Expr where
 
 instance WithFunctions Expr where
    function s [a, b] 
-      | sameSymbol s plusSymbol   = a :+: b
-      | sameSymbol s timesSymbol  = a :*: b
-      | sameSymbol s minusSymbol  = a :-: b
-      | sameSymbol s divideSymbol = a :/: b
+      | s == plusSymbol   = a :+: b
+      | s == timesSymbol  = a :*: b
+      | s == minusSymbol  = a :-: b
+      | s == divideSymbol = a :/: b
       | isRootSymbol s && b == Nat 2 = Sqrt a
    function s [a]
-      | sameSymbol s negateSymbol = Negate a
-   function s as = 
-      Sym (toSymbol s) as
+      | s == negateSymbol = Negate a
+   function s as = Sym s as
    
    getFunction expr =
       case expr of
-         a :+: b  -> return (toSymbol plusSymbol,   [a, b])
-         a :*: b  -> return (toSymbol timesSymbol,  [a, b])
-         a :-: b  -> return (toSymbol minusSymbol,  [a, b])
-         Negate a -> return (toSymbol negateSymbol, [a])
-         a :/: b  -> return (toSymbol divideSymbol, [a, b])
-         Sqrt a   -> return (toSymbol rootSymbol,   [a, Nat 2])
+         a :+: b  -> return (plusSymbol,   [a, b])
+         a :*: b  -> return (timesSymbol,  [a, b])
+         a :-: b  -> return (minusSymbol,  [a, b])
+         Negate a -> return (negateSymbol, [a])
+         a :/: b  -> return (divideSymbol, [a, b])
+         Sqrt a   -> return (rootSymbol,   [a, Nat 2])
          Sym s as -> return (s, as)
          _ -> fail "Expr.getFunction"
 
@@ -156,7 +153,7 @@ instance CoArbitrary Expr where
          Var s    -> variant 8 . coarbitrary s
          Sym f xs -> variant 9 . coarbitrary (show f) . coarbitrary xs
   
-symbolGenerator :: IsSymbol s => (Int -> [Gen Expr]) -> [(s, Maybe Int)] -> Int -> Gen Expr
+symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
 symbolGenerator extras syms = f 
  where
    f n = oneof $  map (g n) (filter (\(_, a) -> n > 0 || a == Just 0) syms)
@@ -192,12 +189,12 @@ showExpr table = rec 0
       | otherwise        = "\"" ++ s ++ "\""
    rec i expr = 
       case getFunction expr of
-         Just (s1, [Sym s2 [Var x, a]]) | sameSymbol s1 diffSymbol && sameSymbol s2 lambdaSymbol ->
+         Just (s1, [Sym s2 [Var x, a]]) | s1 == diffSymbol && s2 == lambdaSymbol ->
             parIf (i>10000) $ "D(" ++ x ++ ") " ++ rec 10001 a
          -- To do: remove special case for sqrt
          Just (s, [a, b]) | isRootSymbol s && b == Nat 2 -> 
             parIf (i>10000) $ unwords ["sqrt", rec 10001 a]
-         Just (s, xs) | sameSymbol s listSymbol -> 
+         Just (s, xs) | s == listSymbol -> 
             "[" ++ commaList (map (rec 0) xs) ++ "]"
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
@@ -218,12 +215,12 @@ showExpr table = rec 0
       | isRootSymbol s = "root"
       | otherwise = show s
 
-   symbolTable = [ (toSymbol s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
+   symbolTable = [ (s, (a, n, op)) | (n, (a, xs)) <- zip [1..] table, (s, op) <- xs ]
 
    parIf b = if b then par else id
    par s   = "(" ++ s ++ ")"
 
-type OperatorTable = [(Associativity, [(OM.Symbol, String)])]
+type OperatorTable = [(Associativity, [(Symbol, String)])]
 
 data Associativity = InfixLeft | InfixRight | PrefixNon
                    | InfixNon

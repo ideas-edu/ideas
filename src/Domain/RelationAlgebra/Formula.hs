@@ -182,16 +182,16 @@ instance IsTerm RelAlg where
       fromTermWith f a `mplus` liftM Var (getVariable a)
     where
       f s []
-         | sameSymbol s universeSymbol  = return V
-         | sameSymbol s identSymbol     = return I
+         | s == universeSymbol  = return V
+         | s == identSymbol     = return I
       f s [x]
-         | sameSymbol s notSymbol       = return (Not x)
-         | sameSymbol s invSymbol       = return (Inv x)
+         | s == notSymbol       = return (Not x)
+         | s == invSymbol       = return (Inv x)
       f s [x, y]
-         | sameSymbol s compSymbol      = return (x :.:  y)
-         | sameSymbol s addSymbol       = return (x :+:  y)
-         | sameSymbol s conjSymbol      = return (x :&&: y)
-         | sameSymbol s disjSymbol      = return (x :||: y)
+         | s == compSymbol      = return (x :.:  y)
+         | s == addSymbol       = return (x :+:  y)
+         | s == conjSymbol      = return (x :&&: y)
+         | s == disjSymbol      = return (x :||: y)
       f _ _ = fail "fromTerm"
       
 compSymbol, addSymbol, conjSymbol, disjSymbol,
@@ -206,4 +206,4 @@ universeSymbol = relalgSymbol "universe"
 identSymbol    = relalgSymbol "ident"
 
 relalgSymbol :: String -> Symbol
-relalgSymbol a = toSymbol ["relalg", a]
+relalgSymbol a = newSymbol ["relalg", a]

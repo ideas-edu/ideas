@@ -383,9 +383,9 @@ normBrokenCon =
    let a = Var "a" in
    let p = Var "p" in
    let t = Var "t" in
-   let ca = symbol (newId "A") in
-   let ct = symbol (newId "T") in
-   let cn = symbol (newId "N") in
+   let ca = symbol (newSymbol "A") in
+   let ct = symbol (newSymbol "T") in
+   let cn = symbol (newSymbol "N") in
    [ [ ca :==: (p^2+2*p)/(p^2-4), ca :==: (6*p^2-18*p)/(p^2-9)
      , ca :==: (p^2-1)/(-2*p^2+2*p), ca :==: (p^2-16)/(4*p^2+16*p)
      , ct :==: (t^3-2*t^2)/(t^2-4), ct :==: (t^3+4*t^2)/(t^2-16)

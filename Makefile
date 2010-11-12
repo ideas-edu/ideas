@@ -12,7 +12,8 @@ binaries: ideas ideasWX
 ideas: $(BINDIR)/ideas.cgi
 omconverter: $(BINDIR)/omconverter$(EXE)
 ideasWX: $(BINDIR)/ideasWX$(EXE)
-prof: $(BINDIR)/prof$(EXE)
+prof-ideas: $(BINDIR)/prof-ideas$(EXE)
+prof: prof-ideas.prof
 assess: $(BINDIR)/assess$(EXE)
 
 $(BINDIR)/ideas.cgi: $(HS-SOURCES) revision
@@ -41,10 +42,13 @@ endif
 endif
 
 # For profiling purposes
-$(BINDIR)/prof$(EXE): $(HS-SOURCES) revision
-	$(MKDIR) -p $(BINDIR) $(OUTDIR)
-	$(GHC) -prof -auto-all -iscripts $(GHCFLAGS) -o $@ src/Main.hs # Inf.hs
+$(BINDIR)/prof-ideas$(EXE): $(HS-SOURCES) revision
+	$(MKDIR) -p $(BINDIR) $(PROFDIR)
+	$(GHC) $(PROFFLAGS) -o $@ src/Main.hs
 	$(STRIP) $@
+
+prof-ideas.prof: $(BINDIR)/prof-ideas$(EXE)
+	$(BINDIR)/prof-ideas$(EXE) --test +RTS -p
 
 $(BINDIR)/ounl.jpg: tools/IdeasWX/ounl.jpg
 	$(MKDIR) -p $(BINDIR)

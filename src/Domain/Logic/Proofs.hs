@@ -64,8 +64,8 @@ instance (IsTerm a, IsTerm b) => IsTerm (a, b) where
       (a, b) <- isBinary tupleSymbol term
       liftM2 (,) (fromTerm a) (fromTerm b)
    
-tupleSymbol :: Id
-tupleSymbol = newId "basic.tuple"
+tupleSymbol :: Symbol
+tupleSymbol = newSymbol "basic.tuple"
 
 proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
 proofStrategy = label "proof equivalent" $ 

@@ -27,7 +27,8 @@ import Control.Monad
 import Data.List hiding (transpose)
 import Data.Maybe
 import Domain.Math.Simplification
-import Text.OpenMath.Dictionary.Linalg2
+import Domain.Math.Expr.Symbols (openMathSymbol)
+import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 import qualified Data.List as L
 import qualified Data.Map as M
 
@@ -54,6 +55,10 @@ instance IsTerm a => IsTerm (Matrix a) where
       yss <- mapM (mapM fromTerm) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
+
+matrixSymbol, matrixrowSymbol :: Symbol
+matrixSymbol    = openMathSymbol OM.matrixSymbol
+matrixrowSymbol = openMathSymbol OM.matrixrowSymbol
 
 instance Simplify a => Simplify (Matrix a) where
    simplifyWith opt = fmap (simplifyWith opt)

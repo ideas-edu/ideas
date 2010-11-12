@@ -22,7 +22,7 @@ module Domain.Math.Power.Rules
     -- * Log rules
   , logarithm
     -- * Common rules
-  , myFractionTimes, simplifyFraction, pushNegOut, simplifyProduct
+  , myFractionTimes, pushNegOut
   ) where
 
 import Prelude hiding ( (^) )
@@ -42,7 +42,6 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 
@@ -256,6 +255,13 @@ divBase = describe "divide base of root" $
   guard $ x == x' && b /= 0
   return $ build consPowerView (c1 .*. c2, (a ./. b, x))
 
+-- | (-a)^x = -(a^x)
+pushNegOut :: Rule Expr
+pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do
+  (a, x) <- match (powerViewWith identity integerView) expr
+  a'     <- isNegate a
+  return $ (if odd x then neg else id) $ build powerView (a', fromInteger x)
+
 
 -- | Root rules ----------------------------------------------------------------
 
@@ -271,59 +277,6 @@ root2power :: Rule Expr
 root2power = makeSimpleRule (power, "write-as-power") $ \ expr -> do
   (a, q) <- match strictRootView expr
   return $ a .^. (1 ./. q)
-
--- -- | root (a/b) x = root a x / root b x
--- distributeRoot :: Rule Expr
--- distributeRoot = makeSimpleRule (power, "distr-root") $ \ expr -> do
---   (ab, x) <- match rootView expr
---   (a, b)  <- match divView ab
---   return $ build divView (build rootView (a, x), build rootView (b, x))  
--- 
--- -- | c1 root a x * c2 root b x = c1*c2 * root (a*b) x
--- mulRoot :: Rule Expr
--- mulRoot = describe "Multiply base of root" $ 
---    makeSimpleRule (power, "multipy-base") $ \ expr -> do
---   (r1, r2)      <- match timesView expr
---   (c1, (a, x))  <- match rootConsView r1
---   (c2, (b, x')) <- match rootConsView r2
---   guard (x == x')
---   return $ build rootConsView (c1 .*. c2, (a .*. b, x))
--- 
--- -- | commutative version of the mulRoot rule
--- mulRootCom :: Rule Expr
--- mulRootCom = makeCommutative (myProductView (powerFactorisationView rootView)) (.*.) mulRoot
---   where
---     myProductView :: View Expr (Bool, [Expr]) -> View Expr [Expr]
---     myProductView v = v >>> makeView f g
---       where
---         f (s, (x:xs)) = return $ if s then neg x : xs else x:xs
---         f _           = fail ""
---         g = (,) False 
--- 
--- -- | c1 * root a x / c2 * root b x = c1*c2 * root (a/b) x
--- divRoot :: Rule Expr
--- divRoot = describe "divide base of root" $
---    makeSimpleRule (power, "divide-base") $ \ expr -> do
---   (r1, r2) <- match divView expr
---   (c1, (a, x))  <- match rootConsView r1
---   (c2, (b, x')) <- match rootConsView r2
---   guard (x == x' && b /= 0)
---   return $ build rootConsView (c1 .*. c2, (a ./. b, x))
--- 
--- -- | root 0 x = 0  ;  root 1 x = 1  ;  root a 1 = a
--- simplifyRoot :: Rule Expr
--- simplifyRoot = makeSimpleRule (power, "simplify-root") $ \e -> f e `mplus` g e
---  where
---   f expr = do
---     (e1, _) <- match rootView expr
---     x       <- match integerView e1
---     case x of
---       0 -> Just 0
---       1 -> Just 1
---       _ -> Nothing
---   g expr = do
---     (e1, e2) <- match rootView expr
---     if e2 == 1 then Just e1 else Nothing
 
 
 -- | Logarithmic relation rules -----------------------------------------------
@@ -344,37 +297,6 @@ myFractionTimes = smartRule $ makeSimpleRule (power, "fraction-times") $ \ expr 
   (a, b)   <- match (divView <&> (identity >>^ \e -> (e,1))) e1
   (c, d)   <- match (divView <&> (identity >>^ \e -> (e,1))) e2
   return $ build divView (a .*. c, b .*. d)
-
--- | simplify expression
-simplifyFraction :: Rule Expr
-simplifyFraction = makeSimpleRule (power, "simplify-fraction") $ \ expr -> do
-  let expr' = simplifyWith (second normalizeProduct) productView $ expr
-  guard $ expr /= expr'
-  guard $ not $ applicable myFractionTimes expr'
-  return expr'
-
--- | simplify product
-simplifyProduct = makeSimpleRule (power, "simplify-product") $ \ expr -> do
-  (sign, ps) <- match productView expr
-  let (cs, xs) = partition (isJust . match myRationalView) ps
-  let expr' = simplify rationalView (build productView (sign, cs)) .*. 
-                                     build productView (False, xs)
-  guard $ expr /= expr'
-  return expr'
-    where
-      myRationalView :: View Expr Rational
-      myRationalView = makeView (exprToNum f) fromRational
-        where
-          f s [x, y] | isDivideSymbol s = fracDiv x y
-          f _ _ = Nothing
-
--- generalise this function!
--- | (-a)^x = -(a^x)
-pushNegOut :: Rule Expr
-pushNegOut = makeSimpleRule (power, "push-negation-out") $ \ expr -> do
-  (a, x) <- match (powerViewWith identity integerView) expr
-  a'     <- isNegate a
-  return $ (if odd x then neg else id) $ build powerView (a', fromInteger x)
 
 
 -- | Help functions -----------------------------------------------------------

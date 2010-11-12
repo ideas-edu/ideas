@@ -35,7 +35,6 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Strategies
 import Domain.Math.Power.NormViews
 import Domain.Math.Power.Views
-import Domain.Math.Power.Utils
 
 
 -- | Exercises ----------------------------------------------------------------

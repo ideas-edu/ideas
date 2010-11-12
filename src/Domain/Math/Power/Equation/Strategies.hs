@@ -64,6 +64,7 @@ powerEqStrategy = cleanUpStrategy cleanup strat
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 onePower : fractionPlus : naturalRules ++ rationalRules
 
+-- AG: use configurable strategeies!
 powerEqApproxStrategy :: LabeledStrategy (Context (Relation Expr))
 powerEqApproxStrategy = label "Power equation with approximation" $
   powerEqStrategy <*> try (use approxPower)
@@ -89,7 +90,7 @@ expEqStrategy = cleanUpStrategy cleanup strat
          <*> linearStrategy
            
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-                simplifyProduct : natRules ++ rationalRules
+              {-  simplifyProduct : -} natRules ++ rationalRules
     natRules =
       [ calcPlusWith     "nat" plainNatView
       , calcMinusWith    "nat" plainNatView

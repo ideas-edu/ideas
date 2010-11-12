@@ -25,7 +25,7 @@ import Common.Context
 import Common.Navigator
 import Common.Strategy
 import Domain.Math.Expr
-import Domain.Math.Numeric.Rules (divisionNumerator)
+import Domain.Math.Numeric.Rules (divisionNumerator, divisionDenominator)
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Simplification
@@ -40,11 +40,11 @@ powerOfStrategy :: LabeledStrategy (Context Expr)
 powerOfStrategy = cleanUpStrategyRules "Write as power of" powerRules 
 
 nonNegBrokenExpStrategy :: LabeledStrategy (Context Expr)
-nonNegBrokenExpStrategy = cleanUpStrategy (applyTop cleanup) strategy
+nonNegBrokenExpStrategy = cleanUpStrategy (change cleanup . applyTop cleanup) strategy
   where
     rs = [ addExponents, subExponents, mulExponents, reciprocalInv
          , distributePower, distributePowerDiv, power2root, zeroPower
-         , calcPowerPlus, calcPowerMinus {-, myFractionTimes, reciprocalFrac -}
+         , calcPowerPlus, calcPowerMinus
          ]
     strategy = label "Write with non-negative exponent" $ exhaustiveStrategy rs
     cleanup = applyD divisionNumerator
@@ -53,9 +53,12 @@ nonNegBrokenExpStrategy = cleanUpStrategy (applyTop cleanup) strategy
             . simplifyWith simplifyConfig {withMergeAlike = False}
 
 calcPowerStrategy :: LabeledStrategy (Context Expr)
-calcPowerStrategy = cleanUpStrategyRules "Calculate power" rules
+calcPowerStrategy = cleanUpStrategy cleanup strategy
   where
-    rules = calcPower : divBase : rationalRules
+    strategy = label "Calculate power" $ exhaustiveStrategy rules
+    rules = calcPower : divisionDenominator : reciprocalInv : divBase : rationalRules
+    cleanup = applyTop (applyD myFractionTimes)
+            . applyD (exhaustiveStrategy $ myFractionTimes: naturalRules)
 
 
 -- | Rule collections ---------------------------------------------------------

@@ -33,7 +33,7 @@ import Domain.Math.Power.Utils
 -- | Power views with constant factor -----------------------------------------
 
 consPowerView :: View Expr (Expr, (Expr, Expr))
-consPowerView = addNegativeView $ addUnitTimesView $ powerView
+consPowerView = addNegativeView $ addUnitTimesView powerView
 
 consPowerViewForWith :: Num a => View Expr a -> View Expr b -> a -> View Expr (Expr, b)
 consPowerViewForWith va vb a = 

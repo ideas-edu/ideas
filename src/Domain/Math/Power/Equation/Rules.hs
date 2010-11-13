@@ -9,6 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+
 module Domain.Math.Power.Equation.Rules 
   ( -- * Power equation rules
     commonPower, nthRoot, sameBase, equalsOne, greatestPower
@@ -30,12 +31,15 @@ import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
 
+
+-- | Identifier prefix --------------------------------------------------------
+
 powereq = "algebra.manipulation.exponents.equation"
 
 
 -- | Power relation rules -----------------------------------------------------
 
--- a^x = b^y  =>  a^(x/c) = b^(y/c)  where c = gcd x y
+-- | a^x = b^y  =>  a^(x/c) = b^(y/c)  where c = gcd x y
 commonPower :: Rule (Equation Expr)
 commonPower = makeSimpleRule (powereq, "common-power") $ \(lhs :==: rhs) -> do
     (a, x) <- match powerView lhs

@@ -199,7 +199,7 @@ powerZero = makeSimpleRule (power, "one-power") $ \ expr -> do
 -- | all of the above simplification rules
 simplifyPower :: Rule Expr
 simplifyPower = makeSimpleRuleList (power, "simplify") $ \ expr ->
-  mapMaybe ((flip apply) expr) [zeroPower, onePower, powerOne, powerZero]
+  mapMaybe (flip apply expr) [zeroPower, onePower, powerOne, powerZero]
 
 -- | e/a = e*a^(-1)  where a is an variable
 reciprocalVar :: Rule Expr
@@ -313,7 +313,7 @@ calcBinPowerRule opName op m =
 -- use twoNonAdHoles instead of split ???
 makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
 makeCommutative view op rule = 
-  makeSimpleRuleList (getId rule) $ \ expr -> do
+  makeSimpleRuleList (getId rule) $ \ expr ->
     case match view expr of
       Just factors -> do
         (e, es) <- split op factors
@@ -324,4 +324,4 @@ makeCommutative view op rule =
 
 hasNegExp :: Expr -> Bool
 hasNegExp expr = fromMaybe False $ 
-  match consPowerView expr >>= return . (< 0) . snd . snd
+  fmap ((< 0) . snd . snd) (match consPowerView expr)

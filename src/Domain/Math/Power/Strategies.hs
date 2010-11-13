@@ -11,11 +11,11 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Strategies
-   ( simplifyPowerStrategy
+   ( -- * Power strategies
+     simplifyPowerStrategy
    , powerOfStrategy
    , calcPowerStrategy
    , nonNegBrokenExpStrategy
-   , cleanUp
    ) where
 
 import Prelude hiding (repeat, not)

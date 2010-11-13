@@ -11,7 +11,8 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Exercises    
-   ( simplifyPowerExercise
+   ( -- * Power exercises
+     simplifyPowerExercise
    , powerOfExercise 
    , nonNegBrokenExpExercise
    , calcPowerExercise

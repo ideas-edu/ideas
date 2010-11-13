@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.7 (3623)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">
       <expr>
@@ -7,7 +7,7 @@
     </elem>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        -a^5*(32*b^5)
+        -32*a^5*b^5
       </expr>
       <context>
         <item name="location" value="[0,1]"/>

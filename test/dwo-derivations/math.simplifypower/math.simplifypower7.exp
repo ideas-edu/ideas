@@ -1,8 +1,8 @@
-<reply result="ok" version="0.6.7 (3629)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        -3*(16*a^4)*a^2
+        -48*a^4*a^2
       </expr>
       <context>
         <item name="location" value="[0,0,1]"/>

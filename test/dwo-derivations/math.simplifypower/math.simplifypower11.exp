@@ -1,8 +1,8 @@
-<reply result="ok" version="0.6.7 (3629)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        3*a*(-8*b^3)*(-a*b)^2
+        -24*a*b^3*(-a*b)^2
       </expr>
       <context>
         <item name="location" value="[0,1]"/>
@@ -10,10 +10,10 @@
     </elem>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        3*a*(-8*b^3)*(a^2*b^2)
+        -24*a*b^3*a^2*b^2
       </expr>
       <context>
-        <item name="location" value="[1]"/>
+        <item name="location" value="[0,1]"/>
       </context>
     </elem>
     <elem ruleid="algebra.manipulation.exponents.add-exponents">

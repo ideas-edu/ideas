@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.7 (3629)">
+<reply result="ok" version="0.6.7 (3637)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
@@ -18,7 +18,7 @@
     </elem>
     <elem ruleid="algebra.manipulation.exponents.distr-power">
       <expr>
-        4*a^6+6*(9*a^2)*4*a^4
+        4*a^6+6*9*a^2*4*a^4
       </expr>
       <context>
         <item name="location" value="[1,0,0,1]"/>

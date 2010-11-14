@@ -22,6 +22,7 @@ import Control.Monad.Error ()
 import qualified Text.XML.Document as D
 import System.FilePath (takeDirectory, pathSeparator)
 import Data.Char (chr, ord)
+import Data.Maybe
 
 data Element = Element
    { name       :: Name
@@ -64,9 +65,7 @@ normalize doc = toElement (D.root doc)
    refToContent :: D.Reference -> Content
    refToContent (D.CharRef i)   = [Left [chr i]]
    refToContent (D.EntityRef s) = 
-      case lookup s entities of
-         Just c  -> c
-         Nothing -> undefined -- [] -- error
+      fromJust (lookup s entities)
 
    entities :: [(String, Content)]
    entities = 

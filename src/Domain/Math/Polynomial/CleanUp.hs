@@ -21,6 +21,7 @@ import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Ord
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Data.SquareRoot (fromSquareRoot)
@@ -172,7 +173,7 @@ assocOp op v = rec . map (simplify v)
 cleanUpBU :: Expr -> Expr
 cleanUpBU = {- fixpoint $ -} transform $ \e -> 
    simplify myView $ 
-   fromMaybe (smart e) $ do
+   fromMaybe (smart e) $
       canonical rationalView e
     `mplus` do
       a <- canonical specialSqrtOrder e
@@ -183,7 +184,7 @@ cleanUpBU = {- fixpoint $ -} transform $ \e ->
       guard (length xs > 1)
       return $ build sumView $
          assocPlus myView xs
-    `mplus` do
+    `mplus`
       canonical myView e
     `mplus` do
       (b, xs) <- match productView e
@@ -197,11 +198,10 @@ specialSqrtOrder :: View Expr [Expr]
 specialSqrtOrder = sumView >>> makeView f id
  where
    make = match (squareRootViewWith rationalView)
-   cmp (_, x) (_, y) = g x `compare` g y
-   g = isNothing . fromSquareRoot
+   g    = isNothing . fromSquareRoot . snd
    f xs = do
       ys <- mapM make xs
-      return $ map fst $ sortBy cmp $ zip xs ys
+      return $ map fst $ sortBy (comparing g) $ zip xs ys
 
 smart :: Expr -> Expr
 smart (a :*: b) = a .*. b

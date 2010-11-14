@@ -228,7 +228,7 @@ lookupM x (Object xs) = maybe (fail $ "field " ++ x ++ " not found") return (loo
 lookupM _ _ = fail "expecting a JSON object"
 
 indent :: Int -> String -> String
-indent n = unlines . map (\s -> replicate n ' ' ++ s) . lines
+indent n = unlines . map (replicate n ' ' ++) . lines
 
 --------------------------------------------------------
 -- JSON-RPC over HTTP

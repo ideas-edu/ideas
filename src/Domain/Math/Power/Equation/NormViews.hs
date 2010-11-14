@@ -44,10 +44,10 @@ normPowerEqApproxView :: Int -> View (Relation Expr) (Expr, Expr)
 normPowerEqApproxView d = makeView f (uncurry (.~=.))
    where
      f rel = case relationType rel of 
-      EqualTo       ->  match (equationView >>> normPowerEqView) rel 
-                    >>= return . \(l, r) -> (l, simplifyWith (precision d) doubleView r)
-      Approximately ->  return (leftHandSide rel, rightHandSide rel)
-      _             ->  Nothing
+      EqualTo       -> fmap (second (simplifyWith (precision d) doubleView)) 
+                     $ match (equationView >>> normPowerEqView) rel 
+      Approximately -> return (leftHandSide rel, rightHandSide rel)
+      _             -> Nothing
 
 normPowerEqView :: View (Equation Expr) (Expr, Expr) -- with x>0!
 normPowerEqView = makeView f (uncurry (:==:))
@@ -63,11 +63,11 @@ normPowerEqView = makeView f (uncurry (:==:))
       return (a, simplify rationalView ((rhs ./. c) .^. (1 ./. x)))
 
     myPowerView =  powerView 
-               <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (\b->1 ./. b)))
+               <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (1 ./.)))
                <&> (identity >>^ \a->(a,1))
 
 constRight (lhs :==: rhs) = do
-  (vs, cs) <- match sumView lhs >>= return . partition hasSomeVar
+  (vs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
   let rhs' = rhs .+. build sumView (map neg cs)
   return $ negateEq $ build sumView vs :==: simplifyWith normalizeSum sumView rhs'
 
@@ -77,7 +77,7 @@ negateEq (lhs :==: rhs) =
     _           -> lhs  :==: rhs
 
 varLeft (lhs :==: rhs) = do
-  (vs, cs) <- match sumView rhs >>= return . partition hasSomeVar
+  (vs, cs) <- fmap (partition hasSomeVar) (match sumView rhs)
   return $ lhs .+. build sumView (map neg vs) :==: build sumView cs
 
 scaleLeft (lhs :==: rhs) = 
@@ -101,8 +101,7 @@ normLogEqView = makeView (liftM g . switch . fmap f) id  -- AG: needs to be repl
       case match logView lhs of
         Just (b, x) -> x :==: simplify myRationalView (b .^. rhs)
         Nothing     -> expr
-    g = fmap (fmap (simplify myRationalView)) 
-      . fmap (simplify normPowerEqView) 
+    g = fmap (fmap (simplify myRationalView) . simplify normPowerEqView) 
       . simplify quadraticEquationsView 
 
 -- liftToOrListView :: View a b -> View (OrList a) (OrList b)
@@ -150,7 +149,7 @@ myRationalView = makeView (exprToNum f) id >>> rationalView
               return (if numerator ry < 0 then 1/a else a)
             else
               f rootSymbol [ fromInteger (denominator ry)
-                           , x Prelude.^ (numerator ry) ]
+                           , x Prelude.^ numerator ry ]
       | isRootSymbol s = do
           n <- match integerView y
           b <- match integerView x

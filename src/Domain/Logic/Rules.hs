@@ -32,7 +32,7 @@ logicRules = concatMap snd
    ]
 
 logic :: IsId a => a -> Id
-logic = (#) "logic.propositional" 
+logic = ( # ) "logic.propositional" 
 
 rule :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
 rule = Rule.rule . logic

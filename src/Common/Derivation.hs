@@ -230,8 +230,8 @@ randomDerivation g t = msum xs
 shuffle :: RandomGen g => g -> [a] -> ([a], g)
 shuffle g0 xs = rec g0 [] (length xs) xs
  where
-   rec g acc n xs = 
-      case splitAt i xs of
+   rec g acc n ys = 
+      case splitAt i ys of
          (as, b:bs) -> rec g1 (b:acc) (n-1) (as++bs)
          _ -> (acc, g)
     where

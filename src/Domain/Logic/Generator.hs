@@ -65,8 +65,7 @@ easyGenerator = do
 -- Use the propositions with 4-12 steps
 normalGenerator :: Gen SLogic
 normalGenerator = do
-   n  <- return 4 -- oneof [return 4, return 8]
-   p0 <- sizedGen False varGen n
+   p0 <- sizedGen False varGen 4
    p1 <- preventSameVar varList p0
    return (removePartsInDNF p1)
 
@@ -74,8 +73,7 @@ normalGenerator = do
 difficultGenerator :: Gen SLogic
 difficultGenerator = do
    let vars = ShowString "s" : varList
-   n  <- return 4 -- oneof [return 4, return 8]
-   p0 <- sizedGen False (oneof $ map return vars) n
+   p0 <- sizedGen False (oneof $ map return vars) 4
    p1 <- preventSameVar vars p0
    return (removePartsInDNF p1)
 

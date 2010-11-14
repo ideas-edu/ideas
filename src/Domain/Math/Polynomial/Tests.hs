@@ -85,13 +85,13 @@ g s n e = map p (h (derivations (derivationTree (strategy s) (inContext e)))) wh
 goQE = eqTest ineqQuadraticExercise
 
 --eqTest :: Exercise a -> IO ()
-eqTest ex = do
+eqTest ex =
    forM_ (examples ex) $ \eq -> do
       let tree  = derivationTree (strategy ex) (inContext ex eq)
       forM_ (derivations tree) $ \d -> do
          let xs = terms d
              pp = maybe "??" (prettyPrinter ex) . fromContext
-         forM ([ (a, b) | a <- xs, b <- xs ]) $ \(a, b) -> do
+         forM [ (a, b) | a <- xs, b <- xs ] $ \(a, b) ->
             if equalityIneq a b -- equivalence ex (fromContext a) (fromContext b)
              then putChar '.' 
              else error $ unlines ["", pp a, pp b]

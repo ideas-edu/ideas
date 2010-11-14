@@ -23,6 +23,7 @@ import Common.View hiding (simplify)
 import Control.Monad
 import Data.List (nub, (\\), sort, sortBy, replicate)
 import Data.Maybe
+import Data.Ord
 import Data.Ratio
 import Domain.Math.Approximation (precision)
 import Domain.Math.Clipboard
@@ -276,8 +277,7 @@ moveToLeft = describe "Move to left" $
              . match sumView . applyD merge
  
    -- high exponents first, non power-factor terms at the end
-   sorted = simplifyWith (sortBy f) sumView
-   f a b  = toPF a `compare` toPF b
+   sorted = simplifyWith (sortBy (comparing toPF)) sumView
    toPF   = fmap (negate . thd3) . match powerFactorView
 
 ruleApproximate :: Rule (Relation Expr)
@@ -329,7 +329,7 @@ factorVariablePower = describe "factor variable power" $
    (s, p) <- match (polyNormalForm rationalView) expr
    let n = lowestDegree p
    guard (n > 0 && length (terms p) > 1)
-   return $ Var s .^. (fromIntegral n) * build myView (s, raise (-n) p)
+   return $ Var s .^. fromIntegral n * build myView (s, raise (-n) p)
 
 -- A*B = A*C  implies  A=0 or B=C
 sameFactor :: Rule (OrList (Equation Expr))

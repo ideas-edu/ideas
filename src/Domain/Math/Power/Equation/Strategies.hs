@@ -42,7 +42,7 @@ import Domain.Math.Numeric.Rules
 
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
-              $  (use logarithm)
+              $  use logarithm
              <*> try (use flipEquation)
              <*> repeat (somewhere $  use nthRoot 
                                   <|> use calcPower 
@@ -74,7 +74,7 @@ higherPowerEqStrategy =  cleanUpStrategy cleanup strat
   where 
     strat = label "Higher power equation" 
           $  powerEqStrategy
-         <*> try ((somewhereNotInExp (use factorAsPower)) <*> try (somewhere (use mulExponents)))
+         <*> try (somewhereNotInExp (use factorAsPower) <*> try (somewhere (use mulExponents)))
          
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 onePower : rationalRules
@@ -111,5 +111,5 @@ expEqStrategy = cleanUpStrategy cleanup strat
 
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
-    f a = if (isPowC a) then [1] else [0 .. arity a-1]
+    f a = if isPowC a then [1] else [0 .. arity a-1]
     isPowC = maybe False (isJust . isPower :: Term -> Bool) . currentT

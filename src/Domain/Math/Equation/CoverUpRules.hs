@@ -79,7 +79,7 @@ coverUpUnaryRule opName fm fb =
 
 coverUpRuleName :: String -> String -> Id
 coverUpRuleName opName cfg =
-   let f = if null cfg then newId else (cfg #)
+   let f = if null cfg then newId else ( cfg # )
    in "algebra.equations.coverup" # f opName
 
 ---------------------------------------------------------------------

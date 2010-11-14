@@ -65,7 +65,7 @@ expEqExercise = makeExercise
                        newId "algebra.manipulation.exponential.equation"
   , examples       = concat expEquations
   , isReady        = \ rel -> isVariable (leftHandSide rel) 
-                           && (rightHandSide rel) `belongsTo` rationalView
+                           && rightHandSide rel `belongsTo` rationalView
   , isSuitable     = (`belongsTo` normExpEqView)
   , equivalence    = viewEquivalent normExpEqView
   }

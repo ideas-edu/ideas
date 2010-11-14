@@ -86,8 +86,8 @@ approxPower = makeSimpleRule (powereq, "approx-power") $ \ expr ->
 varLeftConRight :: Rule (Equation Expr)
 varLeftConRight = makeSimpleRule (powereq, "var-left-con-right") $ 
   \(lhs :==: rhs) -> do
-    (xs, cs) <- match sumView lhs >>= return . partition hasSomeVar
-    (ys, ds) <- match sumView rhs >>= return . partition hasSomeVar
+    (xs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
+    (ys, ds) <- fmap (partition hasSomeVar) (match sumView rhs)
     guard $ length cs > 0 || length ys > 0
     return $ fmap collectLikeTerms $ 
       build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
@@ -109,7 +109,7 @@ reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ \ (lhs :==: rh
   (d, (a', y)) <- match consPowerView rhs
   (one, a'')   <- match divView a'
   guard $ one == 1 && a'' == a
-  return $ lhs :==: d .*. a'' .^. (negate y)
+  return $ lhs :==: d .*. a'' .^. negate y
 
 -- | a^x = 1  =>  x = 0
 equalsOne :: Rule (Equation Expr)

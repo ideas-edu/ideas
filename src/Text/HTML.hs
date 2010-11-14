@@ -147,10 +147,10 @@ highlightXML nice
    f [] = []
    f list@(x:xs)
       | "&lt;/" `isPrefixOf` list = -- close tag
-           let (as, bs) = break (not . isAlphaNum) (drop 5 list) 
+           let (as, bs) = span isAlphaNum (drop 5 list) 
            in "<font color='blue'>&lt;/" ++ as ++ "<font color='green'>" ++ g bs
       | "&lt;" `isPrefixOf` list = -- open tag
-           let (as, bs) = break (not . isAlphaNum) (drop 4 list) 
+           let (as, bs) = span isAlphaNum (drop 4 list) 
            in "<font color='blue'>&lt;" ++ as ++ "<font color='green'>" ++ g bs
       | otherwise = x : f xs
    -- find >

@@ -23,7 +23,7 @@ import Domain.Logic.BuggyRules
 
 feedbackSyntaxError :: String -> String 
 feedbackSyntaxError msg
-   | take 1 msg == "("               = "Syntax error at " ++ msg
+   | "(" `isPrefixOf` msg            = "Syntax error at " ++ msg
    | "Syntax error" `isPrefixOf` msg = msg
    | otherwise                       = "Syntax error: " ++ msg
 

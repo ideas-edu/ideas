@@ -77,7 +77,7 @@ derivativePowerStrategy = label "derivative-power" $
    repeatS (distr <*> configure mycfg powerOfStrategy) <*>
    cleanUpStrategy (applyTop cleanUpExpr) (label "use-derivative-rules" 
       (repeatS (somewhere (alternatives list)))) <*>
-   (configure mycfg nonNegBrokenExpStrategy)
+   configure mycfg nonNegBrokenExpStrategy
  where
    list = map liftToContext
       [ ruleDerivPlus, ruleDerivMin, ruleDerivNegate, ruleDerivPowerFactor
@@ -95,7 +95,7 @@ derivativePolyStepStrategy = label "derivative-poly-step" $
 
 exceptLowerDiv :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
 exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 
-   if (isDivC a) then [0] else [0 .. arity a-1]
+   if isDivC a then [0] else [0 .. arity a-1]
  where 
    isDivC = maybe False isDiv . current
    isDiv (_ :/: _) = True

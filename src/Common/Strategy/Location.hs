@@ -62,7 +62,7 @@ strategyLocations s = ([], s) : rec [] (toCore (unlabel s))
    
    collect core =
       case core of
-         Label l s -> [(l, s)]
+         Label l t -> [(l, t)]
          Not _     -> []
          _         -> concatMap collect (children core)
 

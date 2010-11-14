@@ -178,10 +178,10 @@ infixl 4 <$>, <$, <*>, <*, *>
 (*>) = (UU.*>)
 
 (<*) :: (Ord s, UU.Symbol s) => Parser s a -> Parser s b -> Parser s a
-(<*)   a = (UU.<*) a
+(<*) = (UU.<*)
 
 (<|>) :: (Ord s, UU.Symbol s) => Parser s a -> Parser s a -> Parser s a
-(<|>)   a = (UU.<|>) a
+(<|>) = (UU.<|>)
 
 optional :: (Ord s, UU.Symbol s) => Parser s a -> a -> Parser s a
 optional = UU.opt

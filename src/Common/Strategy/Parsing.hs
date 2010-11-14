@@ -33,9 +33,6 @@ instance Apply (Step l) where
    applyAll (RuleStep r) = applyAll r
    applyAll _            = return
 
-instance Apply (Core l) where
-   applyAll = runCore
-
 ----------------------------------------------------------------------
 -- State data type
 
@@ -55,15 +52,15 @@ makeState core a = push core (S [] [] [] a)
 parseDerivationTree :: State l a -> DerivationTree (Step l a) (State l a)
 parseDerivationTree state = addBranches list node
  where
-   results = firsts state
-   empty   = not (null [ () | (Ready, _) <- results ])
-   node    = singleNode state empty
-   list    = [ (step, parseDerivationTree s) | (Result step, s) <- results ] 
+   xs    = firsts state
+   empty = not (null [ () | (Ready, _) <- xs ])
+   node  = singleNode state empty
+   list  = [ (step, parseDerivationTree s) | (Result step, s) <- xs ] 
 
 firsts :: State l a -> [(Result (Step l a), State l a)]
-firsts state =
-   case pop state of 
-      Nothing              -> [(Ready, state)]
+firsts st =
+   case pop st of 
+      Nothing              -> [(Ready, st)]
       Just (Left l, s)     -> [(Result (Exit l), traceExit l s)]
       Just (Right core, s) -> firstsStep core s
  where
@@ -82,8 +79,8 @@ firsts state =
          Fail      -> []
          Succeed   -> firsts state
     where
-      chooseFor b core = firstsStep core (makeChoice b state)
-      hasStep step xs  = [ (Result step, traceStep step s) | s <- xs ]
+      chooseFor b     = flip firstsStep (makeChoice b state)
+      hasStep step xs = [ (Result step, traceStep step s) | s <- xs ]
 
 -- helper datatype
 data Result a = Result a | Ready
@@ -98,9 +95,9 @@ runCoreWith :: CoreEnv l a -> Core l a -> a -> [a]
 runCoreWith env = runCore . substCoreEnv env
 
 runState :: State l a -> [a]
-runState state =
-   case pop state of
-      Nothing              -> [value state]
+runState st =
+   case pop st of
+      Nothing              -> [value st]
       Just (Left _, s)     -> runState s
       Just (Right core, s) -> runStep core s
  where
@@ -124,7 +121,7 @@ runState state =
 -- Replay a parse run
 
 replay :: Monad m => Int -> [Bool] -> Core l a -> m (State l a)
-replay n bs core = replayState n bs (makeState core noValue)
+replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
  where
    noValue = error "no value in replay"
  

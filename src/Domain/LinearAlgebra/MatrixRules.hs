@@ -75,10 +75,10 @@ ruleZerosBP = simplify $ ruleAddMultiple $ evalCM $ \m -> do
    return (k, cov, v)
 
 ruleCoverRow :: Rule (Context (Matrix a))
-ruleCoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.CoverRow" $ changeCover (+1)
+ruleCoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.CoverRow" $ changeCover succ
 
 ruleUncoverRow :: Rule (Context (Matrix a))
-ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ changeCover (\x -> x-1)
+ruleUncoverRow = minorRule $ makeRule "linearalgebra.gaussianelim.UncoverRow" $ changeCover pred
 
 ---------------------------------------------------------------------------------
 -- Parameterized rules
@@ -140,7 +140,7 @@ columnJ = newVar "columnJ" 0
 subMatrix :: Matrix a -> ContextMonad (Matrix a)
 subMatrix m = do 
    cov <- readVar covered
-   return $ makeMatrix $ drop cov $ rows $ m
+   return $ makeMatrix $ drop cov $ rows m
    
 findIndexM :: MonadPlus m => (a -> Bool) -> [a] -> m Int
 findIndexM p = maybe mzero return . findIndex p

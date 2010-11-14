@@ -82,15 +82,15 @@ pushNot = pushNotWith (nott . Var)
 orView :: View (Logic a) [a]
 orView = newView "logic.orView" (($ []) . f) (foldr ((.||.). Var) F)
  where
-   f (p :||: q) = (>>= f p) .  (f q)
-   f (Var a)    = (return . (a:))
+   f (p :||: q) = (>>= f p) .  f q
+   f (Var a)    = return . (a:)
    f F          = return
    f _          = const Nothing
 
 andView :: View (Logic a) [a]
 andView = newView "logic.andView" (($ []) . f) (foldr ((.&&.). Var) T)
  where
-   f (p :&&: q) = (>>= f p) .  (f q)
-   f (Var a)    = (return . (a:))
+   f (p :&&: q) = (>>= f p) .  f q
+   f (Var a)    = return . (a:)
    f T          = return
    f _          = const Nothing

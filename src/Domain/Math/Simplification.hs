@@ -154,7 +154,7 @@ distribution :: Expr -> Expr
 distribution = descend distribution . f
  where
   f expr =
-   fromMaybe expr $ do
+   fromMaybe expr $
    case expr of
       a :*: b -> do
          (x, y) <- match plusView a

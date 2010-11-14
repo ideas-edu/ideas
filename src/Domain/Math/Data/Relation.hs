@@ -41,7 +41,7 @@ class Functor f => Relational f where
    leftHandSide  :: f a -> a
    rightHandSide :: f a -> a
    flipSides     :: f a -> f a -- possibly also flips operator 
-   constructor   :: f a -> (b -> b -> f b)
+   constructor   :: f a -> b -> b -> f b
    isSymmetric   :: f a -> Bool
    -- default definitions
    isSymmetric _ = False
@@ -75,7 +75,7 @@ instance Relational Relation where
    leftHandSide  = lhs
    rightHandSide = rhs
    flipSides (R x rt y) = R y (flipRelType rt) x
-   constructor (R _ rt _) x y = R x rt y
+   constructor (R _ rt _) = flip R rt
    isSymmetric = (`elem` [EqualTo, NotEqualTo, Approximately]) . relationType
 
 instance IsTerm a => IsTerm (Relation a) where

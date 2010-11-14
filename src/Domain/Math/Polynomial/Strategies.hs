@@ -168,7 +168,7 @@ higherDegreeStrategyG = label "higher degree" $
 
 findFactorsStrategy :: LabeledStrategy (Context Expr)
 findFactorsStrategy = cleanUpStrategy (applyTop cleanUpSimple) $
-   label "find factors" $ replicate 10 $ try $ findFactorsStrategyG
+   label "find factors" $ replicate 10 $ try findFactorsStrategyG
    
 findFactorsStrategyG :: IsTerm a => LabeledStrategy (Context a)
 findFactorsStrategyG = label "find factor step" $
@@ -181,9 +181,9 @@ somewhereTimes s = fix $ \this -> s <|> once this
  where
    once s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDownTimes" $ \c ->
-      if (isTimesC c) then allDowns c else []
+      if isTimesC c then allDowns c else []
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   safeUp a     = maybe (Just a) Just (up a)
+   safeUp a     = Just (fromMaybe a (up a))
    
 isTimesC :: Context a -> Bool
 isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT

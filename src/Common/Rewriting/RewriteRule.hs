@@ -114,8 +114,8 @@ buildSpec ops (lhs :~> rhs) a = do
    s <- Unification.match ops lhs a
    let (b1, b2) = (specialLeft `elem` dom s, specialRight `elem` dom s)
        sym      = maybe (error "buildSpec") fst (getFunction lhs)
-       extLeft  a = if b1 then binary sym (Meta specialLeft) a else a
-       extRight a = if b2 then binary sym a (Meta specialRight) else a
+       extLeft  x = if b1 then binary sym (Meta specialLeft) x else x
+       extRight x = if b2 then binary sym x (Meta specialRight) else x
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
@@ -166,7 +166,7 @@ smartGenerator r = do
    list <- replicateM (length vs) (ruleGenerator r)
    let sub = listToSubst (zip vs (map (toTermRR r) list))
    case fromTermRR r (sub |-> a) of
-      Just a  -> return a
+      Just x  -> return x
       Nothing -> ruleGenerator r
 
 ------------------------------------------------------

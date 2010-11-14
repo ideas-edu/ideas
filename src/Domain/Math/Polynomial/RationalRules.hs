@@ -118,7 +118,7 @@ cancelTermsDiv = makeSimpleRule (ratId, "cancel-div") $ withCM $ \expr -> do
    myView = divView >>> (productView *** productView)
    powInt = powerView >>> second integerView
    f a = fromMaybe (a, 1) (match powInt a)
-   g a = build powInt a
+   g   = build powInt
    rec ((_, 0):xs) ys = rec xs ys
    rec (pair@(a, n):xs) ys =
       case break ((==a) . fst) ys of
@@ -142,7 +142,7 @@ fractionScale = liftRule myView $
       ma <- divisionExpr e3 e1
       mb <- divisionExpr e3 e2
       guard (ma /= 1 || mb /= 1)
-      return $ ((ma*a, e3), (mb*b, e3))
+      return ((ma*a, e3), (mb*b, e3))
  where
    myView = plusView >>> (divView *** divView)
    

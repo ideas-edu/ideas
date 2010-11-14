@@ -112,15 +112,17 @@ splitAtSequence cs = f []
 useFixedStdGen :: IO ()
 useFixedStdGen = setStdGen (mkStdGen 280578) {- magic number -}
 
+fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x
+
+snd3 :: (a, b, c) -> b
 snd3 (_, x, _) = x
+
+thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
 
 commaList :: [String] -> String
 commaList = concat . intersperse ", "
-
-instance Show (a -> b) where
-   show _ = "<function>"
 
 -- | Prevents a bias towards small numbers
 ratioGen :: Integral a => Int -> Int -> Gen (Ratio a)

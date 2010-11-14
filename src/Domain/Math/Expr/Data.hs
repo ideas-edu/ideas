@@ -1,4 +1,4 @@
-{-# OPTIONS -XDeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -18,6 +18,7 @@ import Common.Utils (commaList)
 import Common.View
 import Control.Monad
 import Data.Char (isAlphaNum)
+import Data.Maybe
 import Data.Ratio
 import Data.Typeable
 import Domain.Math.Data.Relation (relationSymbols)
@@ -199,13 +200,13 @@ showExpr table = rec 0
          Just (s, as) -> 
             case (lookup s symbolTable, as) of 
                (Just (InfixLeft, n, op), [x, y]) -> 
-                  parIf (i>n) $ concat [rec n x, op, rec (n+1) y]
+                  parIf (i>n) $ rec n x ++ op ++ rec (n+1) y
                (Just (InfixRight, n, op), [x, y]) -> 
-                  parIf (i>n) $ concat [rec (n+1) x, op, rec n y]
+                  parIf (i>n) $ rec (n+1) x ++ op ++ rec n y
                (Just (InfixNon, n, op), [x, y]) -> 
-                  parIf (i>n) $ concat [rec (n+1) x, op, rec (n+1) y]
+                  parIf (i>n) $ rec (n+1) x ++ op ++ rec (n+1) y
                (Just (PrefixNon, n, op), [x]) ->
-                  parIf (i>=n) $ concat [op, rec (n+1) x]
+                  parIf (i>=n) $ op ++ rec (n+1) x
                _ -> 
                   parIf (not (null as) && i>10000) $ unwords (showSymbol s : map (rec 10001) as)
          Nothing -> 
@@ -267,10 +268,7 @@ instance IsTerm a => IsTerm [a] where
       mapM fromTerm xs
 
 toExpr :: IsTerm a => a -> Expr
-toExpr a =
-   case fromTerm (toTerm a) of
-      Just expr -> expr
-      Nothing   -> error "Invalid term"
+toExpr = fromJust . fromTerm . toTerm
 
 fromExpr :: (MonadPlus m, IsTerm a) => Expr -> m a
 fromExpr = fromTerm . toTerm

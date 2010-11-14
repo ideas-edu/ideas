@@ -70,8 +70,8 @@ instance Functor Intervals where
    fmap f (IS xs) = IS (map (fmap f) xs)
 
 showLeft, showRight :: Show a => Endpoint a -> String
-showLeft  (Excluding a) = "(" ++ show a
-showLeft  (Including a) = "[" ++ show a
+showLeft  (Excluding a) = '(' : show a
+showLeft  (Including a) = '[' : show a
 showLeft  Unbounded     = "(-inf"
 showRight (Excluding a) = show a ++ ")"
 showRight (Including a) = show a ++ "]"

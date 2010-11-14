@@ -110,8 +110,8 @@ navigateTowards is a =
    js = location a
    n  = length (takeWhile id (zipWith (==) is js))
    
-   safeDowns []     a = a
-   safeDowns (i:is) a = maybe a (safeDowns is) (down i a)
+   safeDowns []     b = b
+   safeDowns (m:ms) b = maybe b (safeDowns ms) (down m b)
 
 top :: (IsNavigator f, Monad m) => f a -> m (f a)
 top = navigateTo []

@@ -199,7 +199,7 @@ powerZero = makeSimpleRule (power, "one-power") $ \ expr -> do
 -- | all of the above simplification rules
 simplifyPower :: Rule Expr
 simplifyPower = makeSimpleRuleList (power, "simplify") $ \ expr ->
-  mapMaybe (flip apply expr) [zeroPower, onePower, powerOne, powerZero]
+  mapMaybe (`apply` expr) [zeroPower, onePower, powerOne, powerZero]
 
 -- | e/a = e*a^(-1)  where a is an variable
 reciprocalVar :: Rule Expr

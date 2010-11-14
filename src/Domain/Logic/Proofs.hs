@@ -25,6 +25,7 @@ import Common.Transformation
 import Common.Navigator
 import Data.List hiding (repeat)
 import Control.Monad
+import Data.Maybe
 import Domain.Logic.Formula
 import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
@@ -98,7 +99,7 @@ onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 1)   
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    
-   safeUp a = maybe (Just a) Just (up a)
+   safeUp a = Just (fromMaybe a (up a))
    
 onceRight :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
@@ -106,7 +107,7 @@ onceRight s = ruleMoveDown <*> s <*> ruleMoveUp
    ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDown" (down 2)   
    ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
    
-   safeUp a = maybe (Just a) Just (up a)
+   safeUp a = Just (fromMaybe a (up a))
 
 testje :: Rule (Context SLogic)
 testje = makeSimpleRule "testje" $ \a -> error $ show a
@@ -230,7 +231,7 @@ acTopRuleFor s op = makeSimpleRuleList s f
       xs <- matchM myView lhs
       ys <- matchM myView rhs
       guard (length xs > 1 && length ys > 1)
-      list <- liftM (map $ \(x, y) -> (make x, make y)) (pairingsAC False xs ys)
+      list <- liftM (map (make *** make)) (pairingsAC False xs ys)
       guard (all (uncurry eqLogic) list)
       return list
    f _ = []

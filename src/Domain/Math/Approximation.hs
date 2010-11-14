@@ -24,7 +24,7 @@ type Approximation = [Double]
 
 precision :: Int -> Double -> Double
 precision n = (/a) . fromIntegral . round . (*a)
- where a = 10 Prelude.^ (max 0 n)
+ where a = 10 Prelude.^ max 0 n
 
 ------------------------------------------------------------
 -- Stop criteria

@@ -224,9 +224,9 @@ scanWith scanner = rec (Pos 1 1)
 
 scanIdentifier :: Scanner -> String -> Maybe (Maybe String, String, String)
 scanIdentifier scanner (x:rest) | isAlpha x = 
-   case break (not . isIdentifierCharacter scanner) rest of
+   case span (isIdentifierCharacter scanner) rest of
       (xs, '.':y:rest2) | qualifiedIdentifiers scanner && isAlpha y -> 
-         let (ys, zs) = break (not . isIdentifierCharacter scanner) rest2
+         let (ys, zs) = span (isIdentifierCharacter scanner) rest2
          in Just (Just (x:xs), y:ys, zs)
       (xs, ys) -> 
          Just (Nothing, x:xs, ys)
@@ -259,7 +259,7 @@ fractionPart pos ('.':rest) = do
 fractionPart _ _ = Nothing
 
 powerPart :: Pos -> String -> Maybe (Pos, String)
-powerPart pos (s:rest) | s == 'e' || s == 'E' = do
+powerPart pos (s:rest) | s `elem` "eE" = do
    (_, p, ys) <- scanInt pos rest
    return (incr 1 p, ys)
 powerPart _ _ = Nothing
@@ -273,7 +273,7 @@ scanInt pos xs =
 
 scanNatural :: Pos -> String -> Maybe (Int, Pos, String)
 scanNatural pos input = do
-   let (xs, ys) = break (not . isDigit) input
+   let (xs, ys) = span isDigit input
    guard (not (null xs))
    let nat = foldl' (\a b -> a*10+ord b-48) 0 xs
    return (nat, incr (length xs) pos, ys)

@@ -179,8 +179,8 @@ termNavigator a = fromMaybe (noNavigator a) (make a)
       | otherwise = (x, flip makeTerm xs) : zipWith f [0..] xs
     where
       (x, xs)    = getSpine term
-      f i y      = (y, makeTerm x . change i)
-      change i b = 
+      f i y      = (y, makeTerm x . changeAt i)
+      changeAt i b = 
          case splitAt i xs of
             (ys, _:zs) -> ys ++ b:zs
             _          -> xs

@@ -71,7 +71,7 @@ rootView = makeView f (uncurry root)
   where 
     f expr = do
       (a, (x, y)) <- match (powerView >>> second divView) expr
-      guard $ x == 1 || x == -1
+      guard (abs x == 1)
       return $ if x == 1 then (a, y) else (a, negate y)
 
 -- | only matches sqrt and root

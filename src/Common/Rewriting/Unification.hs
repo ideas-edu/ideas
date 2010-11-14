@@ -108,8 +108,8 @@ match assocSymbols = rec True
    recList _ _ = []
       
 associativeMatch :: Bool -> Symbol -> Term -> Term -> Term -> [[(Term, Term)]]
-associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2) 
-   | s==t = map (map make) result
+associativeMatch isTop s1 a1 a2 (Apply (Apply (Con s2) b1) b2) 
+   | s1==s2 = map (map make) result
  where
    as = collect a1 . collect a2 $ []
    bs = collect b1 . collect b2 $ []
@@ -125,12 +125,12 @@ associativeMatch isTop s a1 a2 (Apply (Apply (Con t) b1) b2)
    
    collect term =
       case getFunction term of
-         Just (t, [a, b]) | s==t -> collect a . collect b
+         Just (t, [a, b]) | s1==t -> collect a . collect b
          _ -> (term:)
    
    construct xs 
       | null xs   = error "associativeMatcher: empty list"
-      | otherwise = foldr1 (binary s) xs
+      | otherwise = foldr1 (binary s1) xs
 associativeMatch _ _ _ _ _ = []
 
 specialLeft, specialRight :: Int -- special meta variables for context extension

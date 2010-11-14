@@ -15,22 +15,22 @@ module Domain.Math.Derivative.Exercises
    , derivativePowerExercise
    ) where
 
-import Common.Uniplate (universe)
+import Common.Library
+import Common.Uniplate
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Prelude hiding (repeat, (^))
+import Data.Ord
 import Domain.Math.Derivative.Rules 
 import Domain.Math.Derivative.Strategies
-import Common.Library
-import Common.Uniplate (descend)
-import Domain.Math.Polynomial.Generators
-import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Polynomial.RationalExercises
-import Domain.Math.Numeric.Views
 import Domain.Math.Examples.DWO5
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Generators
+import Domain.Math.Polynomial.RationalExercises
+import Domain.Math.Polynomial.Views
+import Prelude hiding (repeat, (^))
 import Test.QuickCheck
 
 derivativePolyExercise :: Exercise Expr
@@ -106,8 +106,8 @@ derivativeExercise = makeExercise
                             diffSet5++diffSet6++diffSet7++diffSet8)
    }
 
-derivativeOrdering :: Rule a -> Rule b -> Ordering
-derivativeOrdering x y = f x `compare` f y
+derivativeOrdering :: Rule a -> Rule a -> Ordering
+derivativeOrdering = comparing f
  where
    f a = (getId a /= j, getId a == i, showId a)
    i = getId ruleDefRoot

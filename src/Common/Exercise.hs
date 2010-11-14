@@ -254,7 +254,7 @@ showDerivation ex a = show (present der) ++ extra
    extra =
       case fromContext (last (terms der)) of
          Nothing               -> "<<invalid term>>"
-         Just a | isReady ex a -> ""
+         Just b | isReady ex b -> ""
                 | otherwise    -> "<<not ready>>"
    present = mapStepsDerivation (ShowString . uncurry f) 
            . fmap (ShowString . prettyPrinterContext ex)
@@ -364,8 +364,8 @@ showAs f = liftM (S f)
 
 -- check combination of parser and pretty-printer
 checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
-checkParserPretty eq parser pretty a = 
-   either (const False) (eq a) (parser (pretty a))
+checkParserPretty eq p pretty a = 
+   either (const False) (eq a) (p (pretty a))
 
 checkParserPrettyEx :: Exercise a -> a -> Bool
 checkParserPrettyEx ex = 
@@ -420,8 +420,8 @@ checksForDerivation ex d = do
 
    -- Parser/pretty printer on terms
    let ts  = terms d
-       p   = maybe False (not . checkParserPrettyEx ex) . fromContext
-   assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p ts) $ \hd -> 
+       p1  = maybe False (not . checkParserPrettyEx ex) . fromContext
+   assertNull "parser/pretty-printer" $ take 1 $ flip map (filter p1 ts) $ \hd -> 
       let s = prettyPrinterContext ex hd 
       in "parse error for " ++ s ++ ": parsed as " 
          ++ either show (prettyPrinter ex) (parser ex s)
@@ -429,15 +429,15 @@ checksForDerivation ex d = do
 
    -- Equivalences between terms
    let pairs    = [ (x, y) | x <- ts, y <- ts ]
-       p (x, y) = not (equivalenceContext ex x y)
-   assertNull "equivalences" $ take 1 $ flip map (filter p pairs) $ \(x, y) ->
+       p2 (x, y) = not (equivalenceContext ex x y)
+   assertNull "equivalences" $ take 1 $ flip map (filter p2 pairs) $ \(x, y) ->
       "not equivalent: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
 
    -- Similarity of terms
-   let p (x, _, y) = fromMaybe False $ 
+   let p3 (x, _, y) = fromMaybe False $ 
                         liftM2 (similarity ex) (fromContext x) (fromContext y)
-   assertNull  "similars" $ take 1 $ flip map (filter p (triples d)) $ \(x, r, y) -> 
+   assertNull  "similars" $ take 1 $ flip map (filter p3 (triples d)) $ \(x, r, y) -> 
       "similar subsequent terms: " ++ prettyPrinterContext ex x
       ++ "  with  " ++ prettyPrinterContext ex y
       ++ "  using  " ++ show r

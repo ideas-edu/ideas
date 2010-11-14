@@ -163,8 +163,8 @@ hasArguments = not . null . getDescriptors
 
 -- | Returns a list of argument descriptors
 getDescriptors :: Rule a -> [Some ArgDescr]
-getDescriptors rule =
-   case transformations rule of
+getDescriptors r =
+   case transformations r of
       [t] -> rec t
       _   -> []
  where 
@@ -179,10 +179,10 @@ getDescriptors rule =
 
 -- | Returns a list of pretty-printed expected arguments. Nothing indicates that there are no such arguments
 expectedArguments :: Rule a -> a -> Maybe [String]
-expectedArguments rule a =
-   case transformations rule of
-      [t] -> rec t a
-      _   -> Nothing
+expectedArguments r =
+   case transformations r of
+      [t] -> rec t
+      _   -> const Nothing
  where
     rec :: Transformation a -> a -> Maybe [String]
     rec trans a =  
@@ -201,10 +201,10 @@ expectedArguments rule a =
 -- | Transform a rule and use a list of pretty-printed arguments. Nothing indicates that the arguments are 
 -- invalid (not parsable), or that the wrong number of arguments was supplied
 useArguments :: [String] -> Rule a -> Maybe (Rule a)
-useArguments list rule =
-   case transformations rule of
+useArguments list r =
+   case transformations r of
       [t] -> do new <- make t
-                return rule {transformations = [new]}
+                return r {transformations = [new]}
       _   -> Nothing
  where   
    make :: Transformation a -> Maybe (Transformation a)
@@ -255,8 +255,8 @@ ratioArgDescr descr = ArgDescr descr Nothing parseRatio showRatio arbitrary
  where
    showRatio  r = show (numerator r) ++ if denominator r == 1 then "" else '/' : show (denominator r)
    parseRatio s = 
-      let readDivOp s = 
-             case dropWhile isSpace s of
+      let readDivOp t = 
+             case dropWhile isSpace t of
                 ('/':rest) -> return rest
                 [] -> return "1"
                 _  -> fail "no (/) operator" 
@@ -307,7 +307,7 @@ siblingOf :: HasId b => b -> Rule a -> Rule a
 siblingOf sib r = r { ruleSiblings = getId sib : ruleSiblings r }
 
 addRuleToGroup :: HasId b => b -> Rule a -> Rule a
-addRuleToGroup group r = r { ruleGroups = getId group : ruleGroups r }
+addRuleToGroup g r = r { ruleGroups = getId g : ruleGroups r }
 
 ruleList :: (IsId n, RuleBuilder f a, Rewrite a) => n -> [f] -> Rule a
 ruleList n = makeRuleList a . map (makeRewriteTrans . rewriteRule a)
@@ -420,19 +420,19 @@ liftRuleIn v r = r
 
 -- | Check the soundness of a rule: the equality function is passed explicitly
 testRule :: (Arbitrary a, Show a) => (a -> a -> Bool) -> Rule a -> IO ()
-testRule eq rule = 
-   quickCheck (propRule eq rule arbitrary)
+testRule eq r = 
+   quickCheck (propRule eq r arbitrary)
 
 -- | Check the soundness of a rule and use a "smart generator" for this. The smart generator 
 -- behaves differently on transformations constructed with a (|-), and for these transformations,
 -- the left-hand side patterns are used (meta variables are instantiated with random terms)
 propRuleSmart :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRuleSmart eq rule = propRule eq rule . smartGen rule
+propRuleSmart eq r = propRule eq r . smartGen r
   
 propRule :: Show a => (a -> a -> Bool) -> Rule a -> Gen a -> Property
-propRule eq rule gen = 
+propRule eq r gen = 
    forAll gen $ \a -> 
-   forAll (smartApplyRule rule a) $ \ma -> 
+   forAll (smartApplyRule r a) $ \ma -> 
       isJust ma ==> (a `eq` fromJust ma)
 
 smartGen :: Rule a -> Gen a -> Gen a

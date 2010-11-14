@@ -81,8 +81,6 @@ simplifyRationalExercise = makeExercise
    , navigation    = termNavigator
    , examples      = concat (normBroken ++ normBroken2)
    }
-  
-bug = printDerivation simplifyRationalExercise  (examples simplifyRationalExercise !! 0)
    
 divisionRationalExercise :: Exercise Expr
 divisionRationalExercise = simplifyRationalExercise
@@ -150,7 +148,7 @@ commit s = let cs  = cleanUpStrategy (applyTop cleanUpExpr) (label "" s)
 
 exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 
-   if (isDivC a) then [1] else [0 .. arity a-1]
+   if isDivC a then [1] else [0 .. arity a-1]
 
 onlyUpperDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onlyUpperDiv = onceWith "only-upper-div" $ \a -> [ 1 | isDivC a ]
@@ -169,7 +167,7 @@ simplifiedRational expr =
 
    inPolyForm :: Expr -> Bool
    inPolyForm expr =
-      expr `belongsTo` (polyNormalForm identity) ||
+      expr `belongsTo` polyNormalForm identity ||
       S.size (varSet expr) > 1
           
    inFactorForm :: Expr -> Bool
@@ -190,7 +188,7 @@ rationalEquation eq = do
        (a, b, c) = rationalExpr (lhs .-. rhs)
    (_, as) <- match productView a
    (_, bs) <- match productView b
-   let condition = foldr (.&&.) c (map notZero bs)
+   let condition = foldr ((.&&.) . notZero) c bs
    new1    <- match higherDegreeEquationsView $ orList $ map (:==: 0) as
    return (restrictOrList condition new1)
 
@@ -241,7 +239,7 @@ eqSimplifyRational ca cb = fromMaybe False $ do
    if manyVars then return True else do
    p1 <- match (polyViewWith rationalView) a1c
    p2 <- match (polyViewWith rationalView) b1c
-   return (if manyVars || p1==p2 then True else False)
+   return (manyVars || p1==p2)
 
 q = lcmExpr  (x^2+4*x-5) (x^2+5*x-6)
  where x = Var "x"

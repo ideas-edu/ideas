@@ -122,11 +122,11 @@ ruleIdentifyFreeVariables = describe "Identify free variables" $
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
 ruleCoverUpEquation = describe "Cover up first equation" $ 
-   minorRule $ makeRule "linearalgebra.linsystem.coverup" $ changeCover (+1)
+   minorRule $ makeRule "linearalgebra.linsystem.coverup" $ changeCover succ
 
 ruleUncoverEquation :: Rule (Context (LinearSystem a))
 ruleUncoverEquation = describe "Uncover one equation" $ 
-   minorRule $ makeRule "linearalgebra.linsystem.uncover" $ changeCover (\x -> x-1)
+   minorRule $ makeRule "linearalgebra.linsystem.uncover" $ changeCover pred
 
 ruleCoverAllEquations :: Rule (Context (LinearSystem a))
 ruleCoverAllEquations = describe "Cove all equations" $ 

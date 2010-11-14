@@ -69,12 +69,12 @@ buggyPlus = describe "Moving a term from the left-hand side to the \
 
 buggyNegateOneSide :: Rule (Equation Expr)
 buggyNegateOneSide = describe "Negate terms on one side only." $
-   buggyRule $ makeSimpleRuleList "negate-one-side" $ \(lhs :==: rhs) -> do
+   buggyRule $ makeSimpleRuleList "negate-one-side" $ \(lhs :==: rhs) ->
       [ -lhs :==: rhs, lhs :==: -rhs  ] 
 
 buggyFlipNegateOneSide :: Rule (Equation Expr)
 buggyFlipNegateOneSide = describe "Negate terms on one side only." $
-   buggyRule $ makeSimpleRuleList "flip-negate-one-side" $ \(lhs :==: rhs) -> do
+   buggyRule $ makeSimpleRuleList "flip-negate-one-side" $ \(lhs :==: rhs) ->
       [ -rhs :==: lhs, rhs :==: -lhs  ]
 
 buggyNegateAll :: Rule (Equation Expr)
@@ -332,7 +332,7 @@ buggyDistributionSquare :: Rule Expr
 buggyDistributionSquare = describe "Incorrect removal of parentheses in a squared \
    \addition: forgetting the 2ab term" $ 
    buggyRule $ siblingOf distributionSquare $
-   ruleList "distr-square" $ 
+   ruleList "distr-square"
       [ \a b -> (a+b)^2 :~> a^2+b^2
       , \a b -> (a-b)^2 :~> a^2-b^2
       , \a b -> (a-b)^2 :~> a^2+b^2
@@ -342,7 +342,7 @@ buggyDistributionSquareForget :: Rule Expr
 buggyDistributionSquareForget = describe "Incorrect removal of parentheses in a squared \
    \addition: squaring only one term" $ 
    buggyRule $ siblingOf distributionSquare $
-   ruleList "distr-square-forget" $ 
+   ruleList "distr-square-forget"
       [ \a b -> (a+b)^2 :~> a^2+b
       , \a b -> (a+b)^2 :~> a+b^2
       , \a b -> (a-b)^2 :~> a^2-b
@@ -352,7 +352,7 @@ buggyDistributionSquareForget = describe "Incorrect removal of parentheses in a 
 buggySquareMultiplication :: Rule Expr
 buggySquareMultiplication = describe "Incorrect square of a term that involves \
    \a multiplication." $ buggyRule $
-   ruleList "square-multiplication" $
+   ruleList "square-multiplication"
       [ \a b -> (a*b)^2 :~> a*b^2
       , \a b -> (a*b)^2 :~> a^2*b
       , \a b -> a*b^2   :~> (a*b)^2

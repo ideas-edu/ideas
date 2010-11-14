@@ -1,4 +1,4 @@
-{-# OPTIONS -XGeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -23,6 +23,7 @@ import Common.View
 import Control.Monad
 import Data.List (sort, nub)
 import Data.Maybe
+import Data.Ord
 import Domain.Logic.Formula hiding (Var, disjunctions)
 import Domain.Math.Clipboard
 import Domain.Math.Data.Interval
@@ -106,7 +107,7 @@ newtype Q = Q (SquareRoot Rational) deriving (Show, Eq, Num, Fractional)
 
 -- Use normal (numeric) ordering on square roots
 instance Ord Q where
-   Q a `compare` Q b = f a `compare` f b 
+   Q a `compare` Q b = comparing f a b
     where
       f :: SquareRoot Rational -> Double
       f = eval . fmap fromRational

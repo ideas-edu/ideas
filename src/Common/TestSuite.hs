@@ -164,11 +164,11 @@ reset = modify (first (const 0))
 -- Running a test suite
 
 runTestSuite :: TestSuite -> IO ()
-runTestSuite suite = runTestSuiteResult suite >> return ()
+runTestSuite s = runTestSuiteResult s >> return ()
 
 runTestSuiteResult :: TestSuite -> IO TestSuiteResult
-runTestSuiteResult suite = liftM TSR $ getDiff $ liftM snd $
-   execStateT (unTSM suite >> newline) (0, mempty)
+runTestSuiteResult s = liftM TSR $ getDiff $ liftM snd $
+   execStateT (unTSM s >> newline) (0, mempty)
 
 ----------------------------------------------------------------
 -- Test Suite Result
@@ -242,7 +242,7 @@ makeTestLogWith fm (TSR (tree, diff)) = formatRoot fm diff (make [] tree)
             Error msg   -> next (formatFailure fm s msg)
             Ok _        ->
                let (ys, zs) = span (isOk . snd) list
-                   sucs     = [ (s, n) | (s, Ok n) <- ys ]
+                   sucs     = [ (x, n) | (x, Ok n) <- ys ]
                in formatSuccesses fm sucs `mappend` forTests zs
        where
          next a = a `mappend` forTests rest
@@ -281,12 +281,12 @@ formatTimeDiff d@(TimeDiff z1 z2 z3 h m s p)
    | otherwise    = show (60*h+m) ++ ":" ++ digSec ++ " mins" 
  where
    milSec = 1000*toInteger s + p `div` 1000000000
-   inSec  = fromIntegral milSec / 1000
+   inSec  = fromIntegral milSec / 1000 :: Double
    digSec = (if s < 10 then ('0' :) else id) (show s)
-   timeDiff n p = 
-      let (rest, s) = n `divMod` 60
-          (h, m)    = rest `divMod` 60
-      in TimeDiff 0 0 0 h m s p
+   timeDiff n pc = 
+      let (rest, sn) = n `divMod` 60
+          (hr, mr)   = rest `divMod` 60
+      in TimeDiff 0 0 0 hr mr sn pc
 
 -----------------------------------------------------
 -- Utility functions
@@ -310,7 +310,7 @@ toTestResult n result =
       Success _           -> Ok n
       Failure _ _ msg _   -> Error msg
       NoExpectedFailure _ -> Error "no expected failure"
-      GaveUp n _          -> Warning ("passed only " ++ show n ++ " tests")
+      GaveUp i _          -> Warning ("passed only " ++ show i ++ " tests")
             
 showLoc :: [Int] -> String
 showLoc = concat . intersperse "." . map show
@@ -335,11 +335,11 @@ flatten t = [ b | x <- collectLevel t, b <- either id (flatten . snd) x ]
 collectLevel :: Tree a b -> [Either [b] (a, Tree a b)]
 collectLevel = combine [] . toList . unT
  where
-   combine acc []             = left acc
+   combine acc []             = f acc
    combine acc (Left a:rest)  = combine (a:acc) rest
-   combine acc (Right b:rest) = left acc ++ (Right b : combine [] rest)
+   combine acc (Right b:rest) = f acc ++ (Right b : combine [] rest)
    
-   left acc = [ Left (reverse acc) | not (null acc) ] 
+   f acc = [ Left (reverse acc) | not (null acc) ] 
 
 getDiff :: MonadIO m => m a -> m (a, TimeDiff)
 getDiff action = do

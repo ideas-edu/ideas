@@ -42,7 +42,7 @@ instance Show (Strategy a) where
    show = show . toCore
 
 instance Apply Strategy where
-   applyAll = applyAll . toCore
+   applyAll = runCore . toCore
 
 -----------------------------------------------------------
 --- The information used as label in a strategy
@@ -73,7 +73,7 @@ makeInfo s = Info (newId s) False False False
 --- Type class
 
 -- | Type class to turn values into strategies
-class Apply f => IsStrategy f where
+class IsStrategy f where
    toStrategy :: f a -> Strategy a
 
 instance IsStrategy (Core LabelInfo) where

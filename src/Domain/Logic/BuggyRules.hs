@@ -34,10 +34,10 @@ buggyRules = snd $ makeGroup "Common misconceptions"
    ]
 
 rule :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
-rule = Rule.rule . logic . ("buggy" #)
+rule = Rule.rule . logic . ( "buggy" # )
 
 ruleList :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
-ruleList = Rule.ruleList . logic . ("buggy" #)
+ruleList = Rule.ruleList . logic . ( "buggy" # )
 
 -----------------------------------------------------------------------------
 -- Buggy rules

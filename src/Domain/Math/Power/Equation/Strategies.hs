@@ -59,7 +59,7 @@ powerEqStrategy = cleanUpStrategy cleanup strat
           try (repeat $ alternatives $ map use coverUpRules)
 --          try coverUpStrategy
       <*> option (use greatestPower <*> use commonPower)
-      <*> (use nthRoot <|> use nthPower) 
+      <*> (use nthRoot) -- <|> use nthPower) 
     
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 onePower : fractionPlus : naturalRules ++ rationalRules

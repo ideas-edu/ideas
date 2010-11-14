@@ -13,13 +13,13 @@
 module Domain.Math.Power.Equation.Rules 
   ( -- * Power equation rules
     commonPower, nthRoot, sameBase, equalsOne, greatestPower
-  , nthPower, approxPower, varLeftConRight, reciprocalFor
+  , approxPower, reciprocalFor
   ) where
 
 import Control.Arrow ( (>>^) )
 import Common.Transformation
 import Common.Rewriting
-import Common.View
+import Common.View hiding (simplify)
 import Control.Monad
 import Data.List
 import Domain.Math.Approximation (precision)
@@ -30,6 +30,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Simplification (simplify)
 
 
 -- | Identifier prefix --------------------------------------------------------
@@ -48,65 +49,71 @@ commonPower = makeSimpleRule (powereq, "common-power") $ \expr -> do
   guard $ c > 1
   return $ build v ((a, x `div` c), (b, y `div` c))
 
+-- | a^x = n  =>  a^x = b^e
 greatestPower :: Rule (Equation Expr)
 greatestPower = makeSimpleRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> do
-  n <- match plainNatView rhs
-  _ <- match powerView lhs >>= match integerView. snd
-  (a, x) <- PF.greatestPower $ toInteger n
-  return $ lhs :==: fromInteger a .^. fromInteger x
+  n <- match integerView rhs
+  guard $ lhs `belongsTo` (powerView >>> second integerView) && n > 0
+  (b, e) <- PF.greatestPower n
+  return $ lhs :==: fromInteger b .^. fromInteger e
     
--- a^x = b^y  =>  a = b^(y/x) = root x b^y  where y may be one
+-- a^x = c*b^y  =>  a = c*b^(y/x)
 nthRoot :: Rule (Equation Expr)
 nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
-  guard $ hasSomeVar lhs
-  (a, x) <- match powerView lhs
-  (b, y) <- match (powerView <&> (identity >>^ \x -> (x,1))) rhs
-  return $ a :==: b .^. (y ./. x)
+  (a, x)      <- match (powerViewWith varView identity) lhs
+  (c, (b, y)) <- match unitPowerView rhs
+  return $ build varView a :==: build unitPowerView (c, (b, simplify (y ./. x)))
 
--- root a x = b  =>  a = b^x
-nthPower :: Rule (Equation Expr)
-nthPower = makeSimpleRule (powereq, "nth-power") $ \(lhs :==: rhs) -> do
-  guard $ hasSomeVar lhs
-  (a, x) <- match rootView lhs
-  return $ a :==: rhs .^. x
+-- -- root a x = b  =>  a = b^x
+-- nthPower :: Rule (Equation Expr)
+-- nthPower = makeSimpleRule (powereq, "nth-power") $ \(lhs :==: rhs) -> do
+--   guard $ hasSomeVar lhs
+--   (a, x) <- match rootView lhs
+--   return $ a :==: rhs .^. x
 
 -- x = a^x  =>  x ~= d
 approxPower :: Rule (Relation Expr)
-approxPower = makeSimpleRule (powereq, "approx-power") $ \ expr ->
+approxPower = makeRule (powereq, "approx-power") $ approxPowerT 2
+
+-- x = a^x  =>  x ~= d
+approxPowerT :: Int -> Transformation (Relation Expr)
+approxPowerT n = makeTrans $ \ expr ->
   match equationView expr >>= f
   where
-    f (Var x :==: d) = match doubleView d >>= Just . (Var x .~=.) . Number . precision 2 
-    f (d :==: Var x) = match doubleView d >>= Just . (.~=. Var x) . Number . precision 2
+    f (Var x :==: d) = 
+      match doubleView d >>= Just . (Var x .~=.) . Number . precision n
+    f (d :==: Var x) = 
+      match doubleView d >>= Just . (.~=. Var x) . Number . precision n
     f _              = Nothing
 
--- a*x + c = b*y + d  =>  a*x - b*y = d - c   (move vars to the left, cons to the right)
-varLeftConRight :: Rule (Equation Expr)
-varLeftConRight = makeSimpleRule (powereq, "var-left-con-right") $ 
-  \(lhs :==: rhs) -> do
-    (xs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
-    (ys, ds) <- fmap (partition hasSomeVar) (match sumView rhs)
-    guard $ length cs > 0 || length ys > 0
-    return $ fmap collectLikeTerms $ 
-      build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
+-- -- a*x + c = b*y + d  =>  a*x - b*y = d - c   (move vars to the left, cons to the right)
+-- varLeftConRight :: Rule (Equation Expr)
+-- varLeftConRight = makeSimpleRule (powereq, "var-left-con-right") $ 
+--   \(lhs :==: rhs) -> do
+--     (xs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
+--     (ys, ds) <- fmap (partition hasSomeVar) (match sumView rhs)
+--     guard $ length cs > 0 || length ys > 0
+--     return $ fmap collectLikeTerms $ 
+--       build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
 
 -- a^x = a^y  =>  x = y
 sameBase :: Rule (Equation Expr)
-sameBase = makeSimpleRule (powereq, "same-base") $ \(lhs :==: rhs) -> do
-    (a, x) <- match powerView lhs
-    (b, y) <- match powerView rhs
-    guard (a == b)
-    return $ x :==: y
+sameBase = makeSimpleRule (powereq, "same-base") $ \ expr -> do
+  ((a, x), (b, y)) <- match (eqView powerView) expr
+  guard $ a == b
+  return $ x :==: y
 
 -- | c*a^x = d*(1/a)^y  => c*a^x = d*a^-y
 -- this reciprocal rule is more strict, it demands a same base on the lhs
 -- of the equation. Perhaps do this via the enviroment?
 reciprocalFor :: Rule (Equation Expr)
-reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ \ (lhs :==: rhs) -> do
-  (_, (a,  _)) <- match consPowerView lhs
-  (d, (a', y)) <- match consPowerView rhs
-  (one, a'')   <- match divView a'
-  guard $ one == 1 && a'' == a
-  return $ lhs :==: d .*. a'' .^. negate y
+reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ 
+  \ (lhs :==: rhs) -> do
+    (_, (a,  _)) <- match consPowerView lhs
+    (d, (a', y)) <- match consPowerView rhs
+    (one, a'')   <- match divView a'
+    guard $ one == 1 && a'' == a
+    return $ lhs :==: d .*. a'' .^. negate y
 
 -- | a^x = 1  =>  x = 0
 equalsOne :: Rule (Equation Expr)

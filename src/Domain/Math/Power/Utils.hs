@@ -26,6 +26,7 @@ import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
+import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
@@ -82,6 +83,11 @@ plainNatView = makeView f Nat
 plainRationalView :: View Rational (Integer, Integer)
 plainRationalView = 
   makeView (\x -> return (numerator x, denominator x)) (uncurry (%))
+
+eqView :: View a b -> View (Equation a) (b, b)
+eqView v = eqv >>> v *** v
+  where
+    eqv = makeView (\(lhs :==: rhs) -> Just (lhs, rhs)) (uncurry (:==:))
 
 
 -- | Rule collections ---------------------------------------------------------

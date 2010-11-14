@@ -41,15 +41,12 @@ powereq = "algebra.manipulation.exponents.equation"
 
 -- | a^x = b^y  =>  a^(x/c) = b^(y/c)  where c = gcd x y
 commonPower :: Rule (Equation Expr)
-commonPower = makeSimpleRule (powereq, "common-power") $ \(lhs :==: rhs) -> do
-    (a, x) <- match powerView lhs
-    x'     <- match integerView x
-    (b, y) <- match powerView rhs
-    y'     <- match integerView y
-    let c = gcd x' y'
-    guard (c > 1)
-    return $ a .^. build integerView (x' `div` c) :==: 
-             b .^. build integerView (y' `div` c)
+commonPower = makeSimpleRule (powereq, "common-power") $ \expr -> do
+  let v = eqView (powerView >>> second integerView)
+  ((a, x), (b, y)) <- match v expr
+  let c = gcd x y
+  guard $ c > 1
+  return $ build v ((a, x `div` c), (b, y `div` c))
 
 greatestPower :: Rule (Equation Expr)
 greatestPower = makeSimpleRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> do

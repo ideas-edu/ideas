@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (3601)">
+<reply result="ok" version="0.6.7 (3651)">
   <list>
     <elem ruleid="algebra.equations.coverup.plus">
       <expr>
@@ -10,12 +10,12 @@
         x^(16/5) == 20/9
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.nth-root">
+    <elem ruleid="algebra.manipulation.exponents.equation.nth-root">
       <expr>
         x == (20/9)^(5/16)
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.approx-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.approx-power">
       <expr>
         x ~= 1.28
       </expr>

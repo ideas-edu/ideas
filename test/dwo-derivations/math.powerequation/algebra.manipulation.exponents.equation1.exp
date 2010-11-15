@@ -1,21 +1,21 @@
-<reply result="ok" version="0.6.6 (3601)">
+<reply result="ok" version="0.6.7 (3651)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.greatest-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.greatest-power">
       <expr>
         x^14 == 5^2
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.common-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.common-power">
       <expr>
         x^7 == 5
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.nth-root">
+    <elem ruleid="algebra.manipulation.exponents.equation.nth-root">
       <expr>
-        x == 5^(1/7)
+        x == root 5 7
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.approx-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.approx-power">
       <expr>
         x ~= 1.26
       </expr>

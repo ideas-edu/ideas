@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (3601)">
+<reply result="ok" version="0.6.7 (3651)">
   <list>
     <elem ruleid="algebra.equations.coverup.plus">
       <expr>
@@ -10,12 +10,12 @@
         x^(-11/10) == 230/7
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.nth-root">
+    <elem ruleid="algebra.manipulation.exponents.equation.nth-root">
       <expr>
         x == (230/7)^(-10/11)
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.approx-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.approx-power">
       <expr>
         x ~= 4.0e-2
       </expr>

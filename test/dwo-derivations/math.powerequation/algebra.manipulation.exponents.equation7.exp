@@ -1,16 +1,16 @@
-<reply result="ok" version="0.6.6 (3601)">
+<reply result="ok" version="0.6.7 (3651)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.nth-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.nth-root">
       <expr>
         x^3 == 720^4
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.nth-root">
+    <elem ruleid="algebra.manipulation.exponents.equation.nth-root">
       <expr>
         x == 720^(4/3)
       </expr>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.approx-power">
+    <elem ruleid="algebra.manipulation.exponents.equation.approx-power">
       <expr>
         x ~= 6453.22
       </expr>

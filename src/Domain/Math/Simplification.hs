@@ -54,6 +54,9 @@ instance Simplify a => Simplify (Context a) where
 instance Simplify a => Simplify (Equation a) where
    simplifyWith cfg = fmap $ simplifyWith cfg
 
+instance Simplify a => Simplify (Relation a) where
+   simplifyWith cfg = fmap $ simplifyWith cfg
+
 instance Simplify a => Simplify [a] where
    simplifyWith cfg = fmap $ simplifyWith cfg
 

@@ -31,9 +31,13 @@ import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Power.Rules
+import Domain.Math.Power.Utils
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 
+-- for convenience
+import Common.Classes
+import Domain.Math.Power.Equation.Rules
 
 ------------------------------------------------------------
 -- Exercises
@@ -46,11 +50,12 @@ powerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = concatMap (map (build equationView)) powerEquations
-  , isReady        = \ rel -> isVariable (leftHandSide rel) 
-                           && case rightHandSide rel of
-                                Number _ -> True
-                                _        -> False
+  , examples       = concatMap (map $ build equationView) powerEquations
+  , isReady        = solvedRelation
+    -- \ rel -> isVariable (leftHandSide rel) 
+    --                        && case rightHandSide rel of
+    --                             Number _ -> True
+    --                             _        -> False
   , isSuitable   = (`belongsTo` (normPowerEqApproxView 2))
   , equivalence    = viewEquivalent (normPowerEqApproxView 2)
   }

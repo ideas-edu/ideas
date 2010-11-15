@@ -58,7 +58,7 @@ calcPowerStrategy = cleanUpStrategy cleanup strategy
     strategy = label "Calculate power" $ exhaustiveStrategy rules
     rules = calcPower : divisionDenominator : reciprocalInv : divBase : rationalRules
     cleanup = applyTop (applyD myFractionTimes)
-            . applyD (exhaustiveStrategy $ myFractionTimes: naturalRules)
+            . applyD (exhaustiveStrategy $ myFractionTimes : naturalRules)
 
 
 -- | Rule collections ---------------------------------------------------------

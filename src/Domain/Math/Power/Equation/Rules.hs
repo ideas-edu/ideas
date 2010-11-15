@@ -52,17 +52,19 @@ commonPower = makeSimpleRule (powereq, "common-power") $ \expr -> do
 -- | a^x = n  =>  a^x = b^e
 greatestPower :: Rule (Equation Expr)
 greatestPower = makeSimpleRule (powereq, "greatest-power") $ \(lhs :==: rhs) -> do
-  n <- match integerView rhs
-  guard $ lhs `belongsTo` (powerView >>> second integerView) && n > 0
+  n      <- match integerView rhs
+  (_, x) <- match (powerView >>> second integerView) lhs
   (b, e) <- PF.greatestPower n
+  guard $ gcd x e > 1
   return $ lhs :==: fromInteger b .^. fromInteger e
-    
+
 -- a^x = c*b^y  =>  a = c*b^(y/x)
 nthRoot :: Rule (Equation Expr)
 nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
-  (a, x)      <- match (powerViewWith varView identity) lhs
+  guard $ hasSomeVar lhs
+  (a, x)      <- match powerView lhs
   (c, (b, y)) <- match unitPowerView rhs
-  return $ build varView a :==: build unitPowerView (c, (b, simplify (y ./. x)))
+  return $ a :==: build unitPowerView (c, (b, simplify (y ./. x)))
 
 -- -- root a x = b  =>  a = b^x
 -- nthPower :: Rule (Equation Expr)

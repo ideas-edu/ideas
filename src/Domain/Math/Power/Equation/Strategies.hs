@@ -9,18 +9,21 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
+
 module Domain.Math.Power.Equation.Strategies
    ( powerEqStrategy
    , powerEqApproxStrategy
    , expEqStrategy
    , logEqStrategy
    , higherPowerEqStrategy
+   , myCoverUpStrategy
    ) where
 
 import Prelude hiding (repeat, not)
 
 import Common.Classes
 import Common.Context
+import Common.Id
 import Common.Navigator
 import Common.Rewriting
 import Common.Strategy
@@ -35,10 +38,26 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Equation.Rules
 import Domain.Math.Numeric.Rules
+import Domain.Math.Simplification
 
 
-------------------------------------------------------------
--- Strategies
+-- | Strategies ---------------------------------------------------------------
+
+--powerEqStrategy :: (IsTerm a, Simplify a) => LabeledStrategy (Context a)
+powerEqStrategy = cleanUpStrategy clean $ label "Power equation" $ repeat
+   $  try myCoverUpStrategy
+  <*> option (use greatestPower <*> use commonPower)
+  <*> use nthRoot
+  <*> remove (label "useApprox" $ try $ use approxPower)
+  where    
+    clean = applyD $ repeat $ somewhere $ alternatives $ map use rules
+    rules = onePower : fractionPlus : naturalRules ++ rationalRules
+
+powerEqApproxStrategy :: LabeledStrategy (Context (Relation Expr))
+powerEqApproxStrategy = label "Power equation with approximation" $
+  configureNow (configure cfg powerEqStrategy)
+    where
+      cfg = [ (byName (newId "useApprox"), Reinsert) ]
 
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
@@ -52,28 +71,12 @@ logEqStrategy = label "Logarithmic equation"
                                   <|> use calcPowerRatio)
              <*> quadraticStrategy
 
-powerEqStrategy :: IsTerm a => LabeledStrategy (Context a)
-powerEqStrategy = cleanUpStrategy cleanup strat
-  where 
-    strat = label "Power equation" $ repeat $
-          try (repeat $ alternatives $ map use coverUpRules)
---          try coverUpStrategy
-      <*> option (use greatestPower <*> use commonPower)
-      <*> (use nthRoot) -- <|> use nthPower) 
-    
-    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-                onePower : fractionPlus : naturalRules ++ rationalRules
-
--- AG: use configurable strategeies!
-powerEqApproxStrategy :: LabeledStrategy (Context (Relation Expr))
-powerEqApproxStrategy = label "Power equation with approximation" $
-  powerEqStrategy <*> try (use approxPower)
 
 higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 higherPowerEqStrategy =  cleanUpStrategy cleanup strat
   where 
     strat = label "Higher power equation" 
-          $  powerEqStrategy
+          $  succeed -- powerEqStrategy
          <*> try (somewhereNotInExp (use factorAsPower) <*> try (somewhere (use mulExponents)))
          
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
@@ -113,3 +116,10 @@ somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
     f a = if isPowC a then [1] else [0 .. arity a-1]
     isPowC = maybe False (isJust . isPower :: Term -> Bool) . currentT
+
+
+-- | Help functions -----------------------------------------------------------
+
+myCoverUpStrategy :: IsTerm a => Strategy (Context a)
+myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules
+

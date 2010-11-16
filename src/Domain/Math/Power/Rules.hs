@@ -57,19 +57,13 @@ logarithmic = "algebra.manipulation.logarithmic"
 -- n  =>  a^e  (with e /= 1)
 factorAsPower :: Rule Expr
 factorAsPower = makeSimpleRuleList (power, "factor-as-power") $ \ expr -> do
-  n      <- maybeToList $ match myIntegerView expr
+  n      <- matchM myIntegerView expr
   (a, x) <- PF.allPowers $ toInteger n
   if n > 0
     then return $ fromInteger a .^. fromInteger x
     else if odd x
       then return $ fromInteger (negate a) .^. fromInteger x
       else fail "Could not factorise number."
-  where
-    myIntegerView = makeView f fromInteger
-      where
-        f (Nat n)          = Just n
-        f (Negate (Nat n)) = Just $ negate n
-        f _                = Nothing
 
 calcPower :: Rule Expr 
 calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do 
@@ -126,7 +120,7 @@ addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
   prod           <- applyM addExponentsT $ x * y
   return $ build productView (sign, fill prod)
 --    where
-isPow x y = x `belongsTo` integerView && 
+isPow x y = x `belongsTo` myIntegerView && 
              (y `belongsTo` varView || y `belongsTo` powerView) 
 
 -- | a*x^y * b*x^q = a*b * x^(y+q)

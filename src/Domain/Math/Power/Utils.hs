@@ -42,8 +42,12 @@ a = Var "a" ; b = Var "b" ; x = Var "x"
 -- | Strategy functions -------------------------------------------------------
 
 exhaustiveStrategy :: IsTerm a => [Rule a] -> Strategy (Context a)
-exhaustiveStrategy = repeat . somewhere . alternatives . map liftToContext
+exhaustiveStrategy = exhaustiveSomewhere . map liftToContext
 
+exhaustiveUse :: (IsTerm a, IsTerm b) => [Rule a] -> Strategy (Context b)
+exhaustiveUse = exhaustiveSomewhere . map use
+
+exhaustiveSomewhere = repeat . somewhere .alternatives
 
 -- | Rule functions -----------------------------------------------------------
 
@@ -79,6 +83,12 @@ plainNatView = makeView f Nat
   where
     f (Nat n) = Just n
     f _       = Nothing
+
+myIntegerView = makeView f fromInteger
+  where
+    f (Nat n)          = Just n
+    f (Negate (Nat n)) = Just $ negate n
+    f _                = Nothing
 
 plainRationalView :: View Rational (Integer, Integer)
 plainRationalView = 

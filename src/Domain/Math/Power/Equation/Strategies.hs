@@ -11,18 +11,19 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Equation.Strategies
-   ( powerEqStrategy
-   , powerEqApproxStrategy
-   , expEqStrategy
-   , logEqStrategy
-   , higherPowerEqStrategy
-   , myCoverUpStrategy
-   ) where
+   -- ( powerEqStrategy
+   -- , powerEqApproxStrategy
+   -- , expEqStrategy
+   -- , logEqStrategy
+   -- , higherPowerEqStrategy
+   -- ) 
+   where
 
 import Prelude hiding (repeat, not)
 
 import Common.Classes
 import Common.Context
+import Common.Exercise
 import Common.Id
 import Common.Navigator
 import Common.Rewriting
@@ -50,7 +51,7 @@ powerEqStrategy = cleanUpStrategy clean $ label "Power equation" $ repeat
   <*> use nthRoot
   <*> remove (label "useApprox" $ try $ use approxPower)
   where    
-    clean = applyD $ repeat $ somewhere $ alternatives $ map use rules
+    clean = applyD $ exhaustiveUse rules
     rules = onePower : fractionPlus : naturalRules ++ rationalRules
 
 powerEqApproxStrategy :: LabeledStrategy (Context (Relation Expr))
@@ -58,6 +59,31 @@ powerEqApproxStrategy = label "Power equation with approximation" $
   configureNow (configure cfg powerEqStrategy)
     where
       cfg = [ (byName (newId "useApprox"), Reinsert) ]
+
+expEqStrategy :: LabeledStrategy (Context (Equation Expr))
+expEqStrategy = cleanUpStrategy cleanup strat
+  where 
+    strat =  label "Exponential equation" 
+          $  try myCoverUpStrategy
+         <*> repeat (somewhereNotInExp (use factorAsPower))
+         <*> powerS 
+         <*> (use sameBase <|> use equalsOne)
+         <*> linearStrategy
+           
+    cleanup = applyD $ exhaustiveUse $ {-  simplifyProduct : -} natRules ++ rationalRules
+
+    natRules =
+      [ calcPlusWith     "nat" plainNatView
+      , calcMinusWith    "nat" plainNatView
+      , calcTimesWith    "nat" plainNatView
+      , calcDivisionWith "nat" plainNatView
+      , doubleNegate
+      , negateZero
+      ]
+
+    powerS = repeat $ somewhere $ alternatives 
+      [ use root2power, use addExponents, use subExponents, use mulExponents
+      ] -- , use reciprocal, use reciprocalFor ]
 
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
@@ -82,35 +108,6 @@ higherPowerEqStrategy =  cleanUpStrategy cleanup strat
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 onePower : rationalRules
 
-expEqStrategy :: LabeledStrategy (Context (Equation Expr))
-expEqStrategy = cleanUpStrategy cleanup strat
-  where 
-    strat =  label "Exponential equation" 
-          $  try coverup
-         <*> repeat (somewhereNotInExp (use factorAsPower))
-         <*> powerS 
-         <*> (use sameBase <|> use equalsOne)
-         <*> linearStrategy
-           
-    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-              {-  simplifyProduct : -} natRules ++ rationalRules
-    natRules =
-      [ calcPlusWith     "nat" plainNatView
-      , calcMinusWith    "nat" plainNatView
-      , calcTimesWith    "nat" plainNatView
-      , calcDivisionWith "nat" plainNatView
-      , doubleNegate
-      , negateZero
-      ]
-
-    coverup = repeat $ alternatives $ map use coverUpRules
-
-    powerS = repeat $ somewhere $  use root2power
-                               <|> use addExponents
-                               <|> use subExponents
-                               <|> use mulExponents
-                               <|> use reciprocal
-                               <|> use reciprocalFor
 
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
@@ -122,4 +119,3 @@ somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
 
 myCoverUpStrategy :: IsTerm a => Strategy (Context a)
 myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules
-

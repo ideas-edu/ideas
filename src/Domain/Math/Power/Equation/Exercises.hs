@@ -43,7 +43,7 @@ import Domain.Math.Power.Equation.Rules
 -- Exercises
 
 powerEqExercise :: Exercise (Relation Expr)
-powerEqExercise = makeExercise
+powerEqExercise = let precision = 2 in makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pRelation pExpr)
   , strategy       = powerEqApproxStrategy
@@ -52,12 +52,8 @@ powerEqExercise = makeExercise
                        newId "algebra.manipulation.exponents.equation"
   , examples       = concatMap (map $ build equationView) powerEquations
   , isReady        = solvedRelation
-    -- \ rel -> isVariable (leftHandSide rel) 
-    --                        && case rightHandSide rel of
-    --                             Number _ -> True
-    --                             _        -> False
-  , isSuitable   = (`belongsTo` (normPowerEqApproxView 2))
-  , equivalence    = viewEquivalent (normPowerEqApproxView 2)
+  , isSuitable   = (`belongsTo` (normPowerEqApproxView precision))
+  , equivalence    = viewEquivalent (normPowerEqApproxView precision)
   }
   
 expEqExercise :: Exercise (Equation Expr)

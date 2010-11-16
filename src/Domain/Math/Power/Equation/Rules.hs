@@ -111,9 +111,9 @@ sameBase = makeSimpleRule (powereq, "same-base") $ \ expr -> do
 reciprocalFor :: Rule (Equation Expr)
 reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ 
   \ (lhs :==: rhs) -> do
-    (_, (a,  _)) <- match consPowerView lhs
-    (d, (a', y)) <- match consPowerView rhs
-    (one, a'')   <- match divView a'
+    (_, (a,  _)) <- match unitPowerView lhs
+    (one, a')    <- match divView rhs
+    (d, (a'', y)) <- match consPowerView rhs
     guard $ one == 1 && a'' == a
     return $ lhs :==: d .*. a'' .^. negate y
 

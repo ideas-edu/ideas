@@ -61,15 +61,17 @@ smartRule = doAfter f
     f (a :-: b) = a .-. b
     f e = e
          
-mergeConstants :: Expr -> Expr
-mergeConstants = simplifyWith f productView
+mergeConstantsWith :: (Expr -> Bool) -> Expr -> Expr
+mergeConstantsWith p = simplifyWith f productView
   where
     f (sign, xs) = 
-      let (cs, ys) = partition (`belongsTo` rationalView) xs
+      let (cs, ys) = partition p xs
           c = simplify rationalView $ build productView (False, cs)
       in if maybe False (> 1) (match rationalView c) 
            then (sign, c:ys) 
            else (sign, xs)
+
+mergeConstants = mergeConstantsWith (`belongsTo` rationalView)
 
 -- | View functions -----------------------------------------------------------
 

@@ -16,7 +16,7 @@ module Domain.Math.Power.Rules
   , subExponents, distributePower, distributePowerDiv, reciprocal
   , reciprocalInv, reciprocalFrac, calcPowerRatio, calcRoot, simplifyPower
   , onePower, powerOne, zeroPower, powerZero, divBase, reciprocalVar
-  , reciprocalPower, factorAsPower, calcRootHead
+  , reciprocalPower, factorAsPower, calcRootHead, simpleAddExponents
     -- * Root rules
   , power2root, root2power
     -- * Log rules
@@ -131,6 +131,8 @@ addExponentsT = makeTrans $ \ expr -> do
   (b, (x', q)) <- match unitPowerView e2
   guard $ x == x'
   return $ build unitPowerView (a .*. b, (x, y .+. q))
+
+simpleAddExponents = makeRule (power, "simple-add-exponents") addExponentsT
 
 -- | a*x^y / b*x^q = a/b * x^(y-q)
 subExponents :: Rule Expr

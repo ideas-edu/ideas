@@ -28,6 +28,8 @@ import Common.Id
 import Common.Navigator
 import Common.Rewriting
 import Common.Strategy
+import Common.View (belongsTo)
+import Control.Arrow
 import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
@@ -66,12 +68,14 @@ expEqStrategy = cleanUpStrategy cleanup strat
     strat =  label "Exponential equation" 
           $  try myCoverUpStrategy
          <*> repeat (somewhereNotInExp (use factorAsPower))
+         <*> repeat (somewhereNotInExp (use reciprocal))
          <*> powerS 
          <*> (use sameBase <|> use equalsOne)
-         <*> linearStrategy
+         <*> myCoverUpStrategy -- linearStrategy
            
-    cleanup = applyD $ exhaustiveUse $ {-  simplifyProduct : -} natRules ++ rationalRules
-
+    cleanup = applyD (exhaustiveUse $ {-  simplifyProduct : -} naturalRules ++ rationalRules)
+        . applyTop (fmap (mergeConstantsWith (\x-> x `belongsTo` myIntegerView || x `belongsTo` (divView >>> first myIntegerView >>> second myIntegerView))))
+        
     natRules =
       [ calcPlusWith     "nat" plainNatView
       , calcMinusWith    "nat" plainNatView
@@ -80,10 +84,10 @@ expEqStrategy = cleanUpStrategy cleanup strat
       , doubleNegate
       , negateZero
       ]
-
+    
     powerS = repeat $ somewhere $ alternatives 
       [ use root2power, use addExponents, use subExponents, use mulExponents
-      ] -- , use reciprocal, use reciprocalFor ]
+      , use simpleAddExponents ]--, use reciprocal ] -- , use reciprocalFor ]
 
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"

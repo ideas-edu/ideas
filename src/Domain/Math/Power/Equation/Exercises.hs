@@ -69,6 +69,7 @@ expEqExercise = makeExercise
                            && rightHandSide rel `belongsTo` rationalView
   , isSuitable     = (`belongsTo` normExpEqView)
   , equivalence    = viewEquivalent normExpEqView
+  , ruleOrdering   = ruleOrderingWithId [ getId root2power ]  
   }
 
 logEqExercise :: Exercise (OrList (Relation Expr))

@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Strategies 
-   ( linearStrategy, linearMixedStrategy
+   ( linearStrategy, linearMixedStrategy, linearStrategyG
    , quadraticStrategy, quadraticStrategyG
    , higherDegreeStrategy, higherDegreeStrategyG
    , findFactorsStrategy, findFactorsStrategyG

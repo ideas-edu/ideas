@@ -78,7 +78,7 @@ type RelAlgAlgebra a = (String -> a, a -> a -> a, a -> a -> a, a -> a -> a, a ->
 
 -- | foldRelAlg is the standard folfd for RelAlg.
 foldRelAlg :: RelAlgAlgebra a -> RelAlg -> a
-foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, ident) = rec
+foldRelAlg (var, comp, add, conj, disj, neg, inv, univ, ident) = rec
  where
    rec term =
       case term of
@@ -87,26 +87,27 @@ foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, ident) = rec
          p :+: q   -> rec p `add`  rec q
          p :&&: q  -> rec p `conj` rec q
          p :||: q  -> rec p `disj` rec q
-         Not p     -> not (rec p)
-         Inv p           -> inverse (rec p)
-         V         -> universe 
+         Not p     -> neg (rec p)
+         Inv p     -> inv (rec p)
+         V         -> univ 
          I         -> ident
 
 type Relation a = S.Set (a, a)
 
 evalRelAlg :: Ord a => (String -> Relation a) -> [a] -> RelAlg -> Relation a
-evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, not, inverse, universe, ident) 
+evalRelAlg var as = foldRelAlg (var, comp, add, conj, disj, neg, inv, univ, ident) 
  where
    pairs = cartesian as as
+   
    comp p q = let f (a1, a2) c = (a1, c) `S.member` p && (c, a2) `S.member` q
               in S.fromAscList [ x | x <- pairs, any (f x) as ] 
    add p q  = let f (a1, a2) c = (a1, c) `S.member` p || (c, a2) `S.member` q
               in S.fromAscList [ x | x <- pairs, all (f x) as ] 
    conj     = S.intersection
    disj     = S.union
-   not p    = S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
-   inverse  = S.map (\(x, y) -> (y, x))
-   universe = S.fromAscList pairs
+   neg p    = S.fromAscList [ x | x <- pairs, x `S.notMember` p ]
+   inv      = S.map (\(x, y) -> (y, x))
+   univ     = S.fromAscList pairs
    ident    = S.fromAscList [ (x, x) | x <- as ]
 
 -- | Try to find a counter-example showing that the two formulas are not equivalent.
@@ -117,8 +118,10 @@ probablyEqualWith :: StdGen -> RelAlg -> RelAlg -> Bool
 probablyEqualWith rng p q = all (\i -> eval i p == eval i q) (makeRngs 50 rng)
  where
    -- size of (co-)domain
-   as     = [0..1]
+   as :: [Int]
+   as = [0..1]
    -- number of attemps (with different randomly generated relations)
+   makeRngs :: Int -> StdGen -> [StdGen]
    makeRngs n g
       | n == 0    = []
       | otherwise = let (g1, g2) = split g in g1 : makeRngs (n-1) g2

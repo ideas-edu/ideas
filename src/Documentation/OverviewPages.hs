@@ -48,7 +48,7 @@ exerciseOverviewPage showAll list = do
          text "all exercises"
       text ", including the ones under development"
       
-   forM_ (zip [1..] (grouping list)) $ \(i, (dom, xs)) -> do
+   forM_ (zip [1::Int ..] (grouping list)) $ \(i, (dom, xs)) -> do
       h2 (show i ++ ". " ++ dom)
       table (map makeRow xs) 
  where

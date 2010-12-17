@@ -28,6 +28,7 @@ operatorTable =
    , (NoMix,            [(compSym, (:.:)), (addSym, (:+:))])
    ]
 
+andSym, orSym, addSym, compSym, notSym, invSym :: String
 andSym  = "/\\"
 orSym   = "\\/" 
 addSym  = "!"
@@ -77,8 +78,11 @@ ppRelAlg :: RelAlg -> String
 ppRelAlg = ppRelAlgPrio (0, "")
 
 ppRelAlgPrio :: (Int, String) -> RelAlg -> String 
-ppRelAlgPrio n p = foldRelAlg (var, binop 4 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/", nott, inv, var "V", var "I") p n ""
+ppRelAlgPrio = (\f n -> f n "") . flip (foldRelAlg alg)
  where
+   alg = (var, binop 4 ";", binop 4 "!", binop 3 "/\\", binop 2 "\\/"
+         , nott, inv, var "V", var "I"
+         ) 
    binop prio op p q (n, parent) = 
       parIf (n > prio || (prio==4 && n==4 && op/=parent)) (p (prio+1, op) . ((" "++op++" ")++) . q (prio, op))
    var       = const . (++)

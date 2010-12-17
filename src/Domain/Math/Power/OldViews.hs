@@ -45,7 +45,7 @@ powerFactorViewForWith pv v = makeView f g
          Sym s [e1, Nat n]
             | isPowerSymbol s -> do 
                  (a1, b1) <- f e1
-                 a <- match v (build v a1 ^ fromInteger n)
+                 a <- match v (build v a1 ^ toInteger n)
                  return (a, b1 * fromInteger n)
          _ -> do
             guard (withoutVar pv expr)

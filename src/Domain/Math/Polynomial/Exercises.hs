@@ -193,11 +193,12 @@ equivalentApprox a b
    toEq rel | relationType rel `elem` [EqualTo, Approximately] = 
       Just (leftHandSide rel :==: rightHandSide rel)
             | otherwise = Nothing
-   toApprox (a :==: b) =
-      let f x = case match doubleView x of
-                   Just d  -> Number (precision 4 d)
-                   Nothing -> x
-      in f a .~=. f b
+
+toApprox :: Equation Expr -> Relation Expr
+toApprox (a :==: b) = f a .~=. f b
+ where
+   f x = maybe x (Number . precision 4) (match doubleView x)
+
       
 equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
 equivalentRelation f ra rb = fromMaybe False $ do

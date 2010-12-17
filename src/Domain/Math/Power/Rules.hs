@@ -48,6 +48,7 @@ import Domain.Math.Power.Views
 
 -- | Identifier prefixes ------------------------------------------------------
 
+power, logarithmic :: String
 power       = "algebra.manipulation.exponents"
 logarithmic = "algebra.manipulation.logarithmic"
 
@@ -119,7 +120,8 @@ addExponents = makeSimpleRuleList (power, "add-exponents") $ \ expr -> do
   ((x, y), fill) <- twoNonAdjacentHoles fs
   prod           <- applyM addExponentsT $ x * y
   return $ build productView (sign, fill prod)
---    where
+
+isPow :: Expr -> Expr -> Bool
 isPow x y = x `belongsTo` myIntegerView && 
              (y `belongsTo` varView || y `belongsTo` powerView) 
 
@@ -132,6 +134,7 @@ addExponentsT = makeTrans $ \ expr -> do
   guard $ x == x'
   return $ build unitPowerView (a .*. b, (x, y .+. q))
 
+simpleAddExponents :: Rule Expr
 simpleAddExponents = makeRule (power, "simple-add-exponents") addExponentsT
 
 -- | a*x^y / b*x^q = a/b * x^(y-q)
@@ -308,12 +311,12 @@ calcBinPowerRule opName op m =
 
 -- use twoNonAdHoles instead of split ???
 makeCommutative :: View Expr [Expr] -> (Expr -> Expr -> Expr) -> Rule Expr -> Rule Expr
-makeCommutative view op rule = 
-  makeSimpleRuleList (getId rule) $ \ expr ->
+makeCommutative view op r = 
+  makeSimpleRuleList (getId r) $ \ expr ->
     case match view expr of
       Just factors -> do
         (e, es) <- split op factors
-        case apply rule e of
+        case apply r e of
           Just e' -> return $ build view (e' : es)
           Nothing -> []
       Nothing -> []

@@ -18,7 +18,6 @@ module Domain.Math.Power.Utils where
 import Prelude hiding (repeat, replicate)
 
 import Common.Context
-import Common.Exercise
 import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Transformation
@@ -34,9 +33,8 @@ import Domain.Math.Numeric.Views
 
 -- | Test functions -----------------------------------------------------------
 
-showDerivations ex = mapM_ (putStrLn . showDerivation ex) $ examples ex
-
-a = Var "a" ; b = Var "b" ; x = Var "x"
+-- showDerivations ex = mapM_ (putStrLn . showDerivation ex) $ examples ex
+-- a = Var "a" ; b = Var "b" ; x = Var "x"
 
 
 -- | Strategy functions -------------------------------------------------------
@@ -47,7 +45,8 @@ exhaustiveStrategy = exhaustiveSomewhere . map liftToContext
 exhaustiveUse :: (IsTerm a, IsTerm b) => [Rule a] -> Strategy (Context b)
 exhaustiveUse = exhaustiveSomewhere . map use
 
-exhaustiveSomewhere = repeat . somewhere .alternatives
+exhaustiveSomewhere :: IsStrategy f => [f (Context a)] -> Strategy (Context a)
+exhaustiveSomewhere = repeat . somewhere . alternatives
 
 -- | Rule functions -----------------------------------------------------------
 
@@ -71,6 +70,7 @@ mergeConstantsWith p = simplifyWith f productView
            then (sign, c:ys) 
            else (sign, xs)
 
+mergeConstants :: Expr -> Expr
 mergeConstants = mergeConstantsWith (`belongsTo` rationalView)
 
 -- | View functions -----------------------------------------------------------
@@ -86,6 +86,7 @@ plainNatView = makeView f Nat
     f (Nat n) = Just n
     f _       = Nothing
 
+myIntegerView :: View Expr Integer
 myIntegerView = makeView f fromInteger
   where
     f (Nat n)          = Just n
@@ -104,6 +105,7 @@ eqView v = eqv >>> v *** v
 
 -- | Rule collections ---------------------------------------------------------
 
+naturalRules :: [Rule Expr]
 naturalRules =
    [ calcPlusWith "nat" plainNatView, calcMinusWith "nat" plainNatView
    , calcTimesWith "nat" plainNatView, calcDivisionWith "nat" plainNatView
@@ -113,6 +115,7 @@ naturalRules =
    , divisionNegateRight
    ]
 
+rationalRules :: [Rule Expr]
 rationalRules = 
    [ calcPlusWith "rational" rationalRelaxedForm
    , calcMinusWith "rational" rationalRelaxedForm
@@ -122,6 +125,7 @@ rationalRules =
    , simplerFraction
    ]
    
+fractionRules :: [Rule Expr]
 fractionRules =
    [ fractionPlus, fractionPlusScale, fractionTimes
    , calcPlusWith "integer" integerNormalForm
@@ -150,9 +154,9 @@ toMaybe p x = if p x then Just x else Nothing
 
 joinBy :: Eq a => (a -> a -> Bool) -> [a] -> [[a]]
 joinBy _  [] = []
-joinBy eq xs = let (ys, zs) = f xs in ys : joinBy eq zs
+joinBy eq xs = ys : joinBy eq (xs \\ ys)
   where
-    f xs = let ys = dropUntil eq xs in (ys, xs \\ ys)
+    ys = dropUntil eq xs 
 
 dropUntil :: (a -> a -> Bool) -> [a] -> [a]
 dropUntil _ []       = []
@@ -161,9 +165,10 @@ dropUntil p (x:y:ys) | p x y     = x : dropUntil p (y:ys)
                      | otherwise = [x]
 
 holes :: [a] -> [(a, [a], a -> [a])]
-holes xs = map (f xs) [0 .. length xs - 1] 
+holes xs = map f [0 .. length xs - 1] 
   where 
-    f xs i = let (ys, z:zs) = splitAt i xs in (z, ys ++ zs, \x -> ys ++ x:zs)
+    f i = let (ys, z:zs) = splitAt i xs 
+          in (z, ys ++ zs, \x -> ys ++ x:zs)
 
 twoNonAdjacentHoles :: [a] -> [((a, a), a -> [a])]
 twoNonAdjacentHoles xs = concatMap g pairs
@@ -172,6 +177,6 @@ twoNonAdjacentHoles xs = concatMap g pairs
     g (x, y) = let (ys, z:zs) = splitAt x xs 
                    (ps, q:qs) = splitAt (y - x - 1) zs 
                in if null ps
-                 then [ ((z, q), \z -> ys ++ z:ps ++ qs) ]
-                 else [ ((z, q), \z -> ys ++ z:ps ++ qs)
-                      , ((z, q), \q -> ys ++ ps ++ q:qs) ]
+                 then [ ((z, q), \a -> ys ++ a:ps ++ qs) ]
+                 else [ ((z, q), \a -> ys ++ a:ps ++ qs)
+                      , ((z, q), \a -> ys ++ ps ++ a:qs) ]

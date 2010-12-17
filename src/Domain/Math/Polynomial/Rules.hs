@@ -53,6 +53,7 @@ quadraticRuleOrder =
    , getId allPowerFactors
    ]
 
+lineq, quadreq, polyeq :: String
 lineq   = "algebra.equations.linear"
 quadreq = "algebra.equations.quadratic"
 polyeq  = "algebra.equations.polynomial"
@@ -117,7 +118,7 @@ niceFactorsNew = describe "Find a nice decomposition" $
  where
    factors :: Integer -> [(Integer, Integer)]
    factors n = [ pair
-               | let h = floor (sqrt (abs (fromIntegral n)))
+               | let h = (floor :: Double -> Integer) (sqrt (abs (fromIntegral n)))
                , a <- [1..h], let b = n `div` a, a*b == n 
                , pair <- [(a, b), (negate a, negate b)] 
                ]
@@ -207,7 +208,7 @@ simplerSquareRoot = describe "simpler square root" $
  where
    -- return numbers under sqrt symbol
    f :: Expr -> Maybe [Rational]
-   f e = liftM sort $ sequence [ match rationalView e | Sqrt e <- universe e ]
+   f e = liftM sort $ sequence [ match rationalView a | Sqrt a <- universe e ]
 
 cancelTerms :: Rule (Equation Expr)
 cancelTerms = describe "Cancel terms" $ 
@@ -353,9 +354,9 @@ sameConFactor =
           f r acc (x:xs) = case match rationalView x of
                               Just r2 -> f (r*r2) acc xs
                               Nothing -> f r (x:acc) xs
-      con <- whichCon rs
-      guard (con /= 1)
-      let make b r e          = (b, fromRational (r/con):e)
+      c <- whichCon rs
+      guard (c /= 1)
+      let make b r e          = (b, fromRational (r/c):e)
           (newLeft, newRight) = splitAt (length ps1) (zipWith3 make bs rs es)
       return (newLeft :==: newRight)
  where
@@ -440,9 +441,9 @@ exposeSameFactor = describe "expose same factor" $
 distributeAll :: Expr -> Expr
 distributeAll expr = 
    case expr of 
-      a :*: b -> let as = fromMaybe [a] (match sumView a)
-                     bs = fromMaybe [b] (match sumView b)
-                 in build sumView [ a .*. b | a <- as, b <- bs ]
+      e1 :*: e2 -> let as = fromMaybe [e1] (match sumView e1)
+                       bs = fromMaybe [e2] (match sumView e2)
+                   in build sumView [ a .*. b | a <- as, b <- bs ]
       _ -> expr
 
 -- This rule should consider the associativity of multiplication
@@ -467,9 +468,9 @@ distributionT = makeTransList f
    rec _        = []
    
    g :: Expr -> Expr -> [Expr]
-   g a b = do 
-      as <- matchM sumView a
-      bs <- matchM sumView b
+   g e1 e2 = do 
+      as <- matchM sumView e1 
+      bs <- matchM sumView e2
       guard (length as > 1 || length bs > 1)
       return $ build sumView [ a .*. b | a <- as, b <- bs ]
 

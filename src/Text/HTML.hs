@@ -107,7 +107,7 @@ ul = element "ul" . mapM_ (element "li")
 table :: [[HTMLBuilder]] -> HTMLBuilder
 table rows = element "table" $ do
    "border" .=. "1"
-   forM_ (zip [0..] rows) $ \(i, r) ->
+   forM_ (zip [0::Int ..] rows) $ \(i, r) ->
       element "tr" $ do
          "class" .=. getClass i
          mapM_ (element "td") r

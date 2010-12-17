@@ -22,6 +22,7 @@ import Common.Navigator
 import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Uniplate
+import Common.Utils (fst3)
 import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
@@ -166,8 +167,8 @@ simplifiedRational expr =
    f _ = False
 
    inPolyForm :: Expr -> Bool
-   inPolyForm expr =
-      expr `belongsTo` polyNormalForm identity ||
+   inPolyForm a =
+      a `belongsTo` polyNormalForm identity ||
       S.size (varSet expr) > 1
           
    inFactorForm :: Expr -> Bool
@@ -193,9 +194,9 @@ rationalEquation eq = do
    return (restrictOrList condition new1)
 
 restrictOrList :: Logic (Relation Expr) -> OrList Expr -> OrList Expr
-restrictOrList p0 = maybe true (orList . filter check) . disjunctions
+restrictOrList p0 = maybe true (orList . filter p) . disjunctions
  where
-   check zeroExpr = 
+   p zeroExpr = 
       case coverUp (zeroExpr :==: 0) of 
          Var x :==: a -> -- returns true if a contradiction was not found
             substVar x (cleanUpExpr a) p0 /= F 
@@ -231,18 +232,13 @@ eqSimplifyRational :: Context Expr -> Context Expr -> Bool
 eqSimplifyRational ca cb = fromMaybe False $ do
    a <- fromContext ca
    b <- fromContext cb
-   let t1@(a1, a2, pa) = rationalExpr a
-       t2@(b1, b2, pb) = rationalExpr b
-       a1c = cleanUpExpr a1
-       b1c = cleanUpExpr b1
+   let a1c = cleanUpExpr (fst3 (rationalExpr a))
+       b1c = cleanUpExpr (fst3 (rationalExpr b))
        manyVars = S.size (varSet a `S.union` varSet b) > 1
    if manyVars then return True else do
    p1 <- match (polyViewWith rationalView) a1c
    p2 <- match (polyViewWith rationalView) b1c
    return (manyVars || p1==p2)
-
-q = lcmExpr  (x^2+4*x-5) (x^2+5*x-6)
- where x = Var "x"
    
 conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
 conditionOnClipboard = evalCM $ const $

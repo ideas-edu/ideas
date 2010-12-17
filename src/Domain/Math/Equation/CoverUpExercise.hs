@@ -16,17 +16,12 @@ module Domain.Math.Equation.CoverUpExercise
 import Common.Context
 import Common.Exercise
 import Common.Strategy hiding (replicate)
-import Common.Transformation
-import Common.Uniplate (transform)
-import Common.View
 import Control.Monad
-import Data.Ratio
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO1
-import Domain.Math.Numeric.Views
 import Domain.Math.Expr
 import Prelude hiding (repeat)
 
@@ -54,6 +49,7 @@ coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 coverUpStrategy = label "Cover-up" $ 
    repeat $ somewhere $ alternatives coverUpRulesOr
 
+{-
 cleanUp :: Rule (OrList (Equation Expr)) -> Rule (OrList (Equation Expr))
 cleanUp = doAfter $ fmap $ fmap cleanUpExpr
 
@@ -79,7 +75,7 @@ rootedRational a r = do
    x <- rootedInt a (numerator r)
    y <- rootedInt a (denominator r)
    return (fromInteger x / fromInteger y)
-
+-}
 ------------------------------------------------------------
 -- Testing
 

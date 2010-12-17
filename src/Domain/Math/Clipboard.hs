@@ -47,7 +47,7 @@ readExprVar (ExprVar var) = do
 
 modifyExprVar :: IsTerm a => ExprVar a -> (a -> a) -> ContextMonad ()
 modifyExprVar (ExprVar var) f =
-   let safe f a = fromMaybe a (f a)
+   let safe h a = fromMaybe a (h a)
        g = fmap (toTerm . f) . fromTerm
    in modifyVar var (safe g)
 

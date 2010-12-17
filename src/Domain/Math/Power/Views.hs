@@ -150,6 +150,7 @@ addUnitTimesView v = addTimesView v <&> unitTimes v
 negateView :: (Num a, WithFunctions a) => View a a
 negateView = makeView isNegate negate
 
+addNegativeView :: View Expr a -> View Expr a
 addNegativeView v = v <&> (negateView >>> v)
 
 varView :: View Expr String

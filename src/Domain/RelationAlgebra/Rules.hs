@@ -52,6 +52,7 @@ ruleList = Rule.ruleList . relalg
                    
 -- | 1. Alle ~ operatoren naar binnen verplaatsen
 
+conversionGroup :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
 conversionGroup s = 
    addRuleToGroup (relalg "Conversion") . rule s
 
@@ -83,7 +84,7 @@ ruleDoubleInv = conversionGroup "DoubleInv" $
 
 
 -- | 2. Alle ; en + operatoren zoveel mogelijk naar binnen verplaatsen 
-
+distributionGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
 distributionGroup s = 
    addRuleToGroup (relalg "Distribution") . ruleList s
 
@@ -119,6 +120,7 @@ ruleUnionOverIntersec = distributionGroup "UnionOverIntersec"
 
 -- | 4. De Morgan rules
 
+deMorganGroup :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
 deMorganGroup s = 
    addRuleToGroup (relalg "DeMorgan") . rule s
 
@@ -132,6 +134,7 @@ ruleDeMorganAnd = deMorganGroup "DeMorganAnd" $
 
 -- | 5. Idempotency
 
+idempotencyGroup :: (RuleBuilder f a, Rewrite a) => String -> f -> Rule a
 idempotencyGroup s = 
    addRuleToGroup (relalg "Idempotency") . rule s
 
@@ -145,6 +148,7 @@ ruleIdempAnd = idempotencyGroup "IdempotencyAnd" $
 
 -- | 6. Complement
 
+complementGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
 complementGroup s = 
    addRuleToGroup (relalg "Complement") . ruleList s
 
@@ -175,6 +179,7 @@ ruleNotOverAdd = complementGroup "NotOverAdd"
   
 -- | 7. Absorption complement
 
+absorptionGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
 absorptionGroup s = 
    addRuleToGroup (relalg "Absorption") . ruleList s
 
@@ -204,6 +209,7 @@ ruleAbsorp = absorptionGroup "Absorp"
 
 -- | 8. Remove redundant expressions
 
+simplificationGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
 simplificationGroup s = 
    addRuleToGroup (relalg "Simplification") . ruleList s
 
@@ -238,6 +244,7 @@ ruleRemRedunExprs = simplificationGroup "RemRedunExprs"
       
 -- Buggy rules:
 
+buggyGroup :: (RuleBuilder f a, Rewrite a) => String -> [f] -> Rule a
 buggyGroup s = addRuleToGroup (relalg "Buggy") . buggyRule 
              . Rule.ruleList ("relationalgebra.buggy." ++ s)
     

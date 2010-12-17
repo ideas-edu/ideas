@@ -44,16 +44,16 @@ coverUpFunction :: (Switch f, Relational r)
                    => (Expr -> [(Expr, Expr)]) 
                    -> (Expr -> Expr -> [f Expr])
                    -> ConfigCoverUp -> r Expr -> [f (r Expr)]
-coverUpFunction fm fb cfg eq = 
-   (guard (coverLHS cfg) >> coverLeft eq) ++ 
-   (guard (coverRHS cfg) >> coverRight eq)
+coverUpFunction fm fb cfg eq0 = 
+   (guard (coverLHS cfg) >> coverLeft eq0) ++ 
+   (guard (coverRHS cfg) >> coverRight eq0)
  where
    coverRight   = map (fmap flipSides) . coverLeft . flipSides
    coverLeft eq = do
       (e1, e2) <- fm (leftHandSide eq)
       guard (predicateCovered  cfg e1)
       new <- fb (rightHandSide eq) e2
-      switch $ fmap (guard . predicateCombined cfg) new
+      _   <- switch $ fmap (guard . predicateCombined cfg) new
       return (fmap (constructor eq e1) new)
 
 coverUpBinaryOrRule :: Relational r

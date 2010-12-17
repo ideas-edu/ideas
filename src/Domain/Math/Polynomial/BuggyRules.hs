@@ -32,11 +32,17 @@ import Common.Transformation (Rule, buggyRule, siblingOf, Transformation, useRec
 import Control.Monad
 import qualified Common.Transformation as Rule
 
+makeRule :: IsId n => n -> Transformation a -> Rule a
+makeSimpleRule :: IsId n => n -> (a -> Maybe a) -> Rule a
+makeSimpleRuleList :: IsId n => n -> (a -> [a]) -> Rule a
+ruleList :: (RuleBuilder f a, Rewrite a, IsId n) => n -> [f] -> Rule a
+
 makeRule           = buggyName Rule.makeRule
 makeSimpleRule     = buggyName Rule.makeSimpleRule
 makeSimpleRuleList = buggyName Rule.makeSimpleRuleList
 ruleList           = buggyName Rule.ruleList
 
+buggyName :: IsId n => (Id -> a) -> n -> a
 buggyName f s = f ("algebra.equations.buggy" # s)
 
 buggyRulesExpr :: [Rule Expr]

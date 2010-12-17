@@ -76,16 +76,16 @@ specialSymbol s []
    | sameSymbol s "relalg.universe" = con "V" -- universe
    | sameSymbol s "relalg.ident"    = con "I" -- identity
  where
-   con s = return [Left s]
+   con x = return [Left x]
 -- unary symbols
 specialSymbol s [a]
-   | sameSymbol s "logic1.not"         = pre "\172" -- "~"
-   | sameSymbol s "arith1.unary_minus" = pre "-"
+   | sameSymbol s "logic1.not"         = pref "\172" -- "~"
+   | sameSymbol s "arith1.unary_minus" = pref "-"
    | sameSymbol s "relalg.not"         = post "\x203E"
    | sameSymbol s "relalg.inv"         = post "~"
  where
-   pre s  = return [Left s, Right a]
-   post s = return [Right a, Left s]
+   pref x  = return [Left x, Right a]
+   post x = return [Right a, Left x]
 -- binary symbols
 specialSymbol s [a, b]
    | sameSymbol s "logic1.or"         = bin " \8744 " -- "||"
@@ -103,7 +103,7 @@ specialSymbol s [a, b]
    | sameSymbol s "relalg.comp"       = bin " ; " -- composition
    | sameSymbol s "relalg.add"        = bin " \x2020 " -- relative addition/dagger
  where
-   bin s = return [Right a, Left s, Right b]
+   bin x = return [Right a, Left x, Right b]
 specialSymbol s1 [Apply (Apply (Con s2) x) a] 
    | sameSymbol s1 "calculus1.diff" && sameSymbol s2 "fns1.lambda" = 
         return [Left "D(", Right x, Left ") ", Right a] 

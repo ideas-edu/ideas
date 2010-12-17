@@ -19,7 +19,6 @@ module Domain.Math.Polynomial.Strategies
 import Prelude hiding (repeat, replicate, fail)
 import Common.Strategy
 import Common.Navigator
-import Common.Transformation
 import Common.Id
 import Common.Uniplate (transform)
 import Common.View
@@ -177,13 +176,8 @@ findFactorsStrategyG = label "find factor step" $
       <|> use factorVariablePower <|> use simplerLinearFactor
 
 somewhereTimes :: IsStrategy f => f (Context a) -> Strategy (Context a)
-somewhereTimes s = fix $ \this -> s <|> once this
- where
-   once s = ruleMoveDown <*> s <*> ruleMoveUp
-   ruleMoveDown = minorRule $ makeSimpleRuleList "MoveDownTimes" $ \c ->
-      if isTimesC c then allDowns c else []
-   ruleMoveUp   = minorRule $ makeSimpleRule "MoveUp" safeUp
-   safeUp a     = Just (fromMaybe a (up a))
+somewhereTimes = somewhereWith "SomewhereTimes" $ \c -> 
+   if isTimesC c then [0 .. arity c-1] else []
    
 isTimesC :: Context a -> Bool
 isTimesC = maybe False (isJust . isTimes :: Term -> Bool) . currentT

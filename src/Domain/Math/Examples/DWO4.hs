@@ -15,10 +15,10 @@
 module Domain.Math.Examples.DWO4 
    ( brokenEquations, normBroken, normBroken2, normBrokenCon, deelUit
    , powerEquations, expEquations, logEquations, higherPowerEquations
+   , rootEquations, rootEquations2, rootSubstEquations, expEquations2
    ) where
 
 import Prelude hiding ((^))
-import Common.Id
 import Common.Rewriting
 import Domain.Math.Data.Relation
 import Domain.Math.Expr

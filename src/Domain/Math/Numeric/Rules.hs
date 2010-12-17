@@ -20,6 +20,7 @@ import Common.View
 ------------------------------------------------------------
 -- Rules
 
+alg :: String
 alg = "algebra.manipulation"
 
 calcRuleName :: String -> String -> String

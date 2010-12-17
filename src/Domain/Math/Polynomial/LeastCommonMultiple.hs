@@ -67,7 +67,7 @@ powerProductView = makeView f g
  where
    f expr = do
       (b, xs) <- match productView expr
-      let (r, ys) = collect xs
+      let (r, ys) = collectPairs xs
       return (if b then -r else r, merge ys)
          
    g (r, xs) =
@@ -76,14 +76,14 @@ powerProductView = makeView f g
    pvn :: View Expr (Expr, Integer)
    pvn = powerView >>> second integerView
 
-   collect :: [Expr] -> (Rational, [(Expr, Integer)])
-   collect = foldr op (1, [])
+   collectPairs :: [Expr] -> (Rational, [(Expr, Integer)])
+   collectPairs = foldr op (1, [])
     where
       op e (r, xs) = 
          let mr   = match rationalView e 
-             f r2 = (r*r2, xs)
+             h r2 = (r*r2, xs)
              pair = fromMaybe (e,1) (match pvn e)
-         in maybe (r, pair:xs) f mr
+         in maybe (r, pair:xs) h mr
 
    merge :: [(Expr, Integer)] -> [(Expr, Integer)]
    merge [] = []

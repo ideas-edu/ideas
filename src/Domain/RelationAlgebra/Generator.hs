@@ -23,15 +23,15 @@ instance Arbitrary RelAlg where
 instance CoArbitrary RelAlg where
    coarbitrary term =
       case term of
-         Var x    -> variant 0 . coarbitrary x
-         p :.:  q -> variant 1 . coarbitrary p . coarbitrary q
-         p :+:  q -> variant 2 . coarbitrary p . coarbitrary q       
-         p :&&: q -> variant 3 . coarbitrary p . coarbitrary q       
-         p :||: q -> variant 4 . coarbitrary p . coarbitrary q       
-         Not p    -> variant 5 . coarbitrary p
-         Inv p    -> variant 6 . coarbitrary p  
-         V        -> variant 7        
-         I        -> variant 8
+         Var x    -> variant (0 :: Int) . coarbitrary x
+         p :.:  q -> variant (1 :: Int) . coarbitrary p . coarbitrary q
+         p :+:  q -> variant (2 :: Int) . coarbitrary p . coarbitrary q       
+         p :&&: q -> variant (3 :: Int) . coarbitrary p . coarbitrary q       
+         p :||: q -> variant (4 :: Int) . coarbitrary p . coarbitrary q       
+         Not p    -> variant (5 :: Int) . coarbitrary p
+         Inv p    -> variant (6 :: Int) . coarbitrary p  
+         V        -> variant (7 :: Int)        
+         I        -> variant (8 :: Int)
    
 arbRelAlg :: Int -> Gen RelAlg
 arbRelAlg 0 = frequency [(8, liftM Var (oneof $ map return relAlgVars)), (1, return V), (1, return empty), (1, return I)]
@@ -48,6 +48,12 @@ relAlgVars = ["q", "r", "s"]
   
 -------------------------------------------------------------------
 -- Templates
+
+template1, template2, template3, template4, template7, template8 :: 
+   RelAlg -> RelAlg -> RelAlg -> RelAlg
+
+template5 :: RelAlg -> RelAlg -> RelAlg -> RelAlg -> RelAlg
+template6 :: Maybe RelAlg -> RelAlg -> RelAlg -> Maybe RelAlg -> RelAlg
 
 template1 x y z = x :||: (y :&&: z)
 template2 x y z = Not(x :&&: (y :||: z))
@@ -77,7 +83,10 @@ gen7 = use3 template1 arbInvNotMol hulpgen1 arbInvNotMol
 gen8 = use3 template2 arbInvNotMol hulpgen1 arbInvNotMol
 gen9 = use3 template8 hulpgen2 arbInvNotMol arbInvNotMol
 
+use3 :: (a -> b -> c -> d) -> (t -> Gen a) -> (t -> Gen b) -> (t -> Gen c) -> t -> Gen d
 use3 temp f g h   n = liftM3 temp (f n) (g n) (h n)
+     
+use4 :: (a -> b -> c -> d -> e) -> (t -> Gen a) -> (t -> Gen b) -> (t -> Gen c) -> (t -> Gen d) -> t -> Gen e
 use4 temp f g h k n = liftM4 temp (f n) (g n) (h n) (k n)
 
 hulpgen1 :: Int -> Gen RelAlg

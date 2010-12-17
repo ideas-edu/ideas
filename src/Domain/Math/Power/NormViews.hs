@@ -68,15 +68,14 @@ normPowerNonNegRatio = makeView (liftM swap . f) (g . swap)
              r <- match rationalView expr
              return (fromRational r, M.empty)
     g (r, m) = 
-       let xs = map f (M.toList m)
-           f (s, r) = Var s .^. fromRational r
+       let xs = [ Var s .^. fromRational a | (s, a) <- M.toList m ]
        in build productView (False, fromRational r : xs)
 
 -- | AG: todo: change double to norm view for rationals
 normPowerNonNegDouble :: View Expr (Double, M.Map String Rational)
 normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
   where
-    roundof n (x, m) = (fromIntegral (round (x * 10.0 ** n)) / 10.0 ** n, m)
+    roundof n (x, m) = (fromInteger (round (x * 10.0 ** n)) / 10.0 ** n, m)
     f expr = 
       case expr of
         Sym s [a,b] 
@@ -103,8 +102,7 @@ normPowerNonNegDouble = makeView (liftM (roundof 6) . f) g
           d <- match doubleView expr
           return (d, M.empty)
     g (r, m) = 
-      let xs = map f (M.toList m)
-          f (s, r) = Var s .^. fromRational r
+      let xs = [ Var s .^. fromRational a | (s, a) <- M.toList m ]
       in build productView (False, fromDouble r : xs)
 
 normPowerMapView :: View Expr [PowerMap]
@@ -122,9 +120,9 @@ normPowerView = makeView f g
         case expr of
            Sym s [x,y] 
               | isPowerSymbol s -> do
-                   (s, r) <- f x
+                   (s2, r) <- f x
                    r2 <- match rationalView y
-                   return (s, r*r2)
+                   return (s2, r*r2)
               | isRootSymbol s -> 
                    f (x^(1/y))
            Sqrt x ->

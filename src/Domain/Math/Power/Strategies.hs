@@ -22,8 +22,10 @@ import Prelude hiding (repeat, not)
 
 import Common.Classes
 import Common.Context
+import Common.Id
 import Common.Navigator
 import Common.Strategy
+import Common.Transformation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules (divisionNumerator, divisionDenominator)
 import Domain.Math.Power.Rules
@@ -63,6 +65,7 @@ calcPowerStrategy = cleanUpStrategy cleanup strategy
 
 -- | Rule collections ---------------------------------------------------------
 
+powerRules :: [Rule Expr]
 powerRules =
   [ addExponents, subExponents, mulExponents, distributePower, zeroPower
   , reciprocalVar, root2power, calcPower, calcPowerPlus, calcPowerMinus
@@ -72,9 +75,11 @@ powerRules =
 
 -- | Help functions -----------------------------------------------------------
 
+cleanUpStrategyRules :: IsId n => n -> [Rule Expr] -> LabeledStrategy (Context Expr)
 cleanUpStrategyRules l = 
   cleanUpStrategy (change cleanUp. applyTop cleanUp) . label l . exhaustiveStrategy
 
+cleanUp :: Expr -> Expr
 cleanUp = mergeConstants 
         . simplifyWith simplifyConfig {withMergeAlike = False}
                  

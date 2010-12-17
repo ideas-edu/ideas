@@ -21,7 +21,7 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Ord
-import Domain.Math.Derivative.Rules 
+import Domain.Math.Derivative.Rules
 import Domain.Math.Derivative.Strategies
 import Domain.Math.Examples.DWO5
 import Domain.Math.Expr
@@ -137,9 +137,9 @@ eqQuotientDiff a b = eqSimplifyRational (make a) (make b)
    rs   = [ ruleDerivPolynomial, ruleDerivQuotient, ruleDerivProduct
           , ruleDerivNegate, ruleDerivPlus, ruleDerivMin
           ]
-   f a  = case mapMaybe (`apply` a) rs of
-             x:_ -> f x
-             []  -> descend f a
+   f x  = case mapMaybe (`apply` x) rs of
+             hd:_ -> f hd
+             []   -> descend f x
 
 readyQuotientDiff :: Expr -> Bool
 readyQuotientDiff expr = fromMaybe False $ do
@@ -164,6 +164,7 @@ onlyNatPower e = and [ isNat a | Sym s [_, a] <- universe e, isPowerSymbol s ]
    isNat (Nat _) = True
    isNat _       = False
 
+{-
 evalDiff :: Expr -> Expr
 evalDiff expr
    | isDiff expr = 
@@ -178,7 +179,6 @@ evalDiff expr
           , ruleDerivPowerChain, ruleDerivSqrtChain, ruleDerivRoot
           ]
 
-{-
 go = checkExercise derivativePowerExercise
 
 raar i = printDerivation derivativePowerExercise expr

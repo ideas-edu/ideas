@@ -92,6 +92,7 @@ ineqHigherDegreeExercise = makeExercise
    , examples      = map (Logic.Var . build inequalityView) ineqHigh
    }
 
+ineq :: String
 ineq = "algebra.inequalities"
 
 showLogicRelation :: (Eq a, Show a) => Logic (Relation a) -> String
@@ -116,7 +117,7 @@ betweenView = makeView f h
       ineq2 <- match inequalityView r2
       let g (a :>=: b) = b :<=: a
           g (a :>:  b) = b :<:  a
-          g ineq       = ineq
+          g e          = e
       make (g ineq1) (g ineq2)
    f _ = Nothing
    
@@ -132,8 +133,8 @@ betweenView = makeView f h
       op _          = False
    
    h (x, o1, y, o2, z) = 
-      let f b = if b then (.<=.) else (.<.)
-      in Logic.Var (f o1 x y) :&&: Logic.Var (f o2 y z)
+      let g b = if b then (.<=.) else (.<.)
+      in Logic.Var (g o1 x y) :&&: Logic.Var (g o2 y z)
 
 ineqLinear :: LabeledStrategy (Context (Relation Expr))
 ineqLinear = cleanUpStrategy (applyTop (fmap cleanUpSimple)) ineqLinearG
@@ -234,18 +235,18 @@ turnIntoEquation = describe "Turn into equation" $
 solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $ 
    makeSimpleRule (ineq, "give-solution") $ withCM $ \r -> do
-   ineq <- lookupClipboard "ineq" >>= fromExpr
+   inEquation <- lookupClipboard "ineq" >>= fromExpr
    removeClipboard "ineq"
    orv  <- maybeCM (matchM orListView r)
    case disjunctions orv of 
       Nothing -> -- both sides are the same
-         if relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
+         if relationType inEquation `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
          then return Logic.T
          else return Logic.F
       Just [] -> do -- no solutions found for equations
-         let vs = vars (toExpr ineq)
+         let vs = vars (toExpr inEquation)
          guard (not (null vs))
-         if evalIneq ineq (head vs) 0
+         if evalIneq inEquation (head vs) 0
             then return Logic.T 
             else return Logic.F
       Just xs -> do
@@ -255,9 +256,9 @@ solutionInequation = describe "Determine solution for inequality" $
          ds <- matchM (listView doubleView) zs
          guard (all (==v) vs)
          let rs = makeRanges including (sort (zipWith A ds zs))
-             including = relationType ineq `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
+             including = relationType inEquation `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
          return $ fromIntervals v fromDExpr $ 
-            fromList [ this | (d, isP, this) <- rs, isP || evalIneq ineq v d ]
+            fromList [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
  where
    makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
    makeRanges b xs =
@@ -283,9 +284,9 @@ solutionInequation = describe "Determine solution for inequality" $
       
    evalIneq :: Relation Expr -> String -> Double -> Bool
    evalIneq r v d = fromMaybe False $
-      liftM2 (evalType (relationType r)) (use leftHandSide) (use rightHandSide)
+      liftM2 (evalType (relationType r)) (useSide leftHandSide) (useSide rightHandSide)
     where
-      use f = match doubleView (sub (f r))
+      useSide f = match doubleView (sub (f r))
       
       evalType tp =
          case tp of 

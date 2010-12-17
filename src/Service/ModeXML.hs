@@ -223,7 +223,7 @@ decodeState b pkg f xmlTop = do
    unless (name xml == "state") (fail "expected a state tag")
    mpr  <- decodePrefix pkg xml
    term <- decodeContext b pkg f xml
-   return (State pkg mpr term)
+   return (makeState pkg mpr term)
 
 decodePrefix :: Monad m => ExercisePackage a -> XML -> m (Maybe (Prefix (Context a)))
 decodePrefix pkg xml
@@ -286,11 +286,11 @@ decodeConfiguration xml =
 
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = do
-   body <- f (term state)
+   body <- f (stateTerm state)
    return $ element "state" $ do
-      encodePrefix (prefix state)
-      let env = getEnvironment (context state)
-      encodeEnvironment b (location (context state)) env
+      encodePrefix (statePrefix state)
+      let env = getEnvironment (stateContext state)
+      encodeEnvironment b (location (stateContext state)) env
       body
 
 encodePrefix :: Maybe (Prefix a) -> XMLBuilder

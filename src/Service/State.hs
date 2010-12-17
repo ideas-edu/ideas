@@ -14,7 +14,8 @@
 -----------------------------------------------------------------------------
 module Service.State 
    ( -- * Exercise state
-     State(..), emptyState, term
+     State, makeState, empyStateContext, emptyState 
+   , exercisePkg, statePrefix, stateContext, stateTerm
      -- * Types
    , stateTp, stateTypeSynonym
    ) where
@@ -23,28 +24,31 @@ import Common.Library
 import Common.Utils (readM)
 import Service.Types
 import Data.Maybe
-import qualified Service.ExercisePackage as Pkg
+import Service.ExercisePackage
 
 data State a = State 
-   { exercisePkg :: Pkg.ExercisePackage a
-   , prefix      :: Maybe (Prefix (Context a))
-   , context     :: Context a
+   { exercisePkg  :: ExercisePackage a
+   , statePrefix  :: Maybe (Prefix (Context a))
+   , stateContext :: Context a
    }
 
-term :: State a -> a
-term = fromMaybe (error "invalid term") . fromContext . context
+stateTerm :: State a -> a
+stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 
 -----------------------------------------------------------
 
-emptyState :: Pkg.ExercisePackage a -> a -> State a
-emptyState pkg a = State
-   { exercisePkg = pkg
-   , prefix      = Just (emptyPrefix (strategy ex))
-   , context     = inContext ex a
-   }
+makeState :: ExercisePackage a -> Maybe (Prefix (Context a)) -> Context a -> State a
+makeState = State
+
+empyStateContext :: ExercisePackage a -> Context a -> State a
+empyStateContext pkg = makeState pkg (Just pr)
  where
-   ex = Pkg.exercise pkg
-   
+   ex = exercise pkg
+   pr = emptyPrefix (strategy ex)
+
+emptyState :: ExercisePackage a -> a -> State a
+emptyState pkg = empyStateContext pkg . inContext (exercise pkg)
+
 --------------------------------------------------------------
 
 stateTp :: Type a (State a)
@@ -54,13 +58,13 @@ stateTypeSynonym :: TypeSynonym a (State a)
 stateTypeSynonym = typeSynonym "State" to from tp
  where
    to (pkg, mp, ctx) =
-      let str = strategy (Pkg.exercise pkg)
+      let str = strategy (exercise pkg)
           f   = fromMaybe [] . readM
-      in State pkg (mp >>= flip makePrefix str . f) ctx
+      in makeState pkg (mp >>= flip makePrefix str . f) ctx
    from st = 
       ( exercisePkg st
-      , fmap show (prefix st)
-      , context st
+      , fmap show (statePrefix st)
+      , stateContext st
       )
    tp = tuple3 ExercisePkg prefixTp Context
 

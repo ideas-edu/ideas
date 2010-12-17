@@ -20,8 +20,8 @@ import qualified Text.XML as XML
 
 makeTestsPage :: String -> String -> DomainReasoner ()
 makeTestsPage docDir testDir = do
-   suite  <- selfCheck testDir
-   result <- liftIO (runTestSuiteResult suite)
+   checks <- selfCheck testDir
+   result <- liftIO (runTestSuiteResult checks)
    generatePage docDir testsPageFile (testsPage result)
 
 testsPage :: TestSuiteResult -> HTMLBuilder

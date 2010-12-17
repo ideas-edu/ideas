@@ -52,7 +52,7 @@ instance Show (Diagnosis a) where
 diagnose :: State a -> a -> Diagnosis a
 diagnose state new
    -- Is the submitted term equivalent?
-   | not (equivalenceContext ex (context state) newc) =
+   | not (equivalenceContext ex (stateContext state) newc) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
            Just r -> -- report the buggy rule
@@ -61,7 +61,7 @@ diagnose state new
               NotEquivalent
               
    -- Is the submitted term (very) similar to the previous one? 
-   | similarity ex (term state) new =
+   | similarity ex (stateTerm state) new =
         -- If yes, report this
         Similar (ready state) state
         
@@ -73,19 +73,20 @@ diagnose state new
 
    -- Is the rule used discoverable by trying all known rules?
    | otherwise =
-        let ns = restartIfNeeded (state { prefix=Nothing, context=newc })
+        let ns = restartIfNeeded (makeState pkg Nothing newc)
         in case discovered False of
               Just r ->  -- If yes, report the found rule as a detour
                  Detour (ready ns) ns r
               Nothing -> -- If not, we give up
                  Correct (ready ns) ns
  where
-   ex   = exercise (exercisePkg state)
+   pkg  = exercisePkg state
+   ex   = exercise pkg
    newc = inContext ex new
    
    expected = do
       xs <- allfirsts (restartIfNeeded state)
-      let p (_, _, ns) = similarity ex new (term ns)
+      let p (_, _, ns) = similarity ex new (stateTerm ns)
       safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead
@@ -96,9 +97,9 @@ diagnose state new
       ]
     where 
       (sub1, sub2) = 
-         case difference ex (not searchForBuggy) (term state) new of 
+         case difference ex (not searchForBuggy) (stateTerm state) new of 
             Just (a, b) -> (inContext ex a, inContext ex b) 
-            Nothing     -> (context state, newc)
+            Nothing     -> (stateContext state, newc)
  
 ----------------------------------------------------------------
 -- Helpers
@@ -108,16 +109,11 @@ diagnose state new
 -- When resetting the prefix, also make sure that the context is refreshed
 restartIfNeeded :: State a -> State a
 restartIfNeeded state 
-   | isNothing (prefix state) && canBeRestarted ex = 
-        case fromContext (context state) of 
-           Just a -> state
-              { prefix  = Just (emptyPrefix (strategy ex))
-              , context = inContext ex a
-              } 
-           Nothing -> state
+   | isNothing (statePrefix state) && canBeRestarted (exercise pkg) = 
+        emptyState pkg (stateTerm state)
    | otherwise = state
  where
-   ex = exercise (exercisePkg state)
+   pkg = exercisePkg state
    
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = useSynonym diagnosisTypeSynonym

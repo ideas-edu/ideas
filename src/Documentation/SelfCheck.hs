@@ -78,14 +78,14 @@ doBlackBoxTest run format path = do
       else assertIO (stripDirectoryPart path) $ run $ do 
          -- Comparing output with expected output
          liftIO useFixedStdGen -- fix the random number generator
-         txt <- liftIO $ readFile path
-         exp <- liftIO $ readFile expPath
-         out <- case format of 
-                   JSON -> liftM snd3 (processJSON txt)
-                   XML  -> liftM snd3 (processXML txt)
+         txt  <- liftIO $ readFile path
+         expt <- liftIO $ readFile expPath
+         out  <- case format of 
+                    JSON -> liftM snd3 (processJSON txt)
+                    XML  -> liftM snd3 (processXML txt)
          -- Conditional forces evaluation of the result, to make sure that
          -- all file handles are closed afterwards.
-         if out ~= exp then return True else return False
+         if out ~= expt then return True else return False
        `catchError` 
          \_ -> return False
  where

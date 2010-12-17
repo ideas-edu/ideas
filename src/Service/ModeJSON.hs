@@ -179,12 +179,12 @@ decodeLocation _          = fail "expecting a string for a location"
 
 encodeState :: Monad m => (a -> m JSON) -> State a -> m JSON
 encodeState f st = do 
-   theTerm <- f (term st)
+   theTerm <- f (stateTerm st)
    return $ Array
       [ String (showId (exercisePkg st))
-      , String (maybe "NoPrefix" show (prefix st))
+      , String (maybe "NoPrefix" show (statePrefix st))
       , theTerm
-      , encodeContext (getEnvironment (context st))
+      , encodeContext (getEnvironment (stateContext st))
       ]
 
 encodeContext :: Environment -> JSON
@@ -195,14 +195,11 @@ encodeContext env = Object (map f (keysEnv env))
 decodeState :: Monad m => ExercisePackage a -> (JSON -> m a) -> JSON -> m (State a)
 decodeState pkg f (Array [a]) = decodeState pkg f a
 decodeState pkg f (Array [String _code, String p, ce, jsonContext]) = do
-   let ex = exercise pkg
+   let ex  = exercise pkg
+       mpr = readM p >>= (`makePrefix` strategy ex)
    a    <- f ce 
    env  <- decodeContext jsonContext
-   return State 
-      { exercisePkg = pkg
-      , prefix      = readM p >>= (`makePrefix` strategy ex)
-      , context     = makeContext ex env a
-      }
+   return $ makeState pkg mpr (makeContext ex env a)
 decodeState _ _ s = fail $ "invalid state" ++ show s
 
 decodeContext :: Monad m => JSON -> m Environment

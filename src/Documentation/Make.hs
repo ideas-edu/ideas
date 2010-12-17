@@ -44,13 +44,13 @@ makeDocumentation docDir testDir item =
          report "Running tests"
          makeTestsPage docDir testDir
       SelfCheck -> do
-         suite <- selfCheck testDir
-         result <- liftIO (runTestSuiteResult suite)
+         checks <- selfCheck testDir
+         result <- liftIO (runTestSuiteResult checks)
          liftIO (printSummary result)
       BlackBox mdir -> do
          run    <- runWithCurrent
-         suite  <- liftIO $ blackBoxTests run (fromMaybe testDir mdir)
-         result <- liftIO $ runTestSuiteResult suite
+         checks <- liftIO $ blackBoxTests run (fromMaybe testDir mdir)
+         result <- liftIO $ runTestSuiteResult checks
          liftIO (printSummary result)
          
 report :: String -> DomainReasoner ()

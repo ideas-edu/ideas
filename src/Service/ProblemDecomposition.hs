@@ -24,11 +24,11 @@ import Service.Types
 import Text.XML hiding (name)
 
 problemDecomposition :: Monad m => Maybe Id -> State a -> Maybe a -> m (Reply a)
-problemDecomposition msloc (State pkg mpr requestedTerm) answer 
+problemDecomposition msloc state answer 
    | isNothing $ subStrategy sloc (strategy ex) =
         fail "request error: invalid location for strategy"
    | otherwise =
-   let pr = fromMaybe (emptyPrefix $ strategy ex) mpr in
+   let pr = fromMaybe (emptyPrefix $ strategy ex) (statePrefix state) in
          case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
             ([], _) -> fail "strategy error: not able to compute an expected answer"
             (answers, Just answeredTerm)
@@ -39,19 +39,21 @@ problemDecomposition msloc (State pkg mpr requestedTerm) answer
                     (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $ 
                                      fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
-                    newState    = State pkg (Just newPrefix) newCtx
+                    newState    = makeState pkg (Just newPrefix) newCtx
             ((expected, pref):_, maybeAnswer) -> return $
                     Incorrect isEquiv newLocation expState arguments
              where
                newLocation = subTaskLocation (strategy ex) sloc loc
-               expState = State pkg (Just pref) expected
+               expState = makeState pkg (Just pref) expected
                isEquiv  = maybe False (equivalenceContext ex expected) maybeAnswer
                (loc, arguments) = fromMaybe (topId, []) $ 
                                      firstMajorInPrefix pr pref requestedTerm
  where
+   pkg   = exercisePkg state
    ex    = exercise pkg
    topId = getId (strategy ex)
    sloc  = fromMaybe topId msloc
+   requestedTerm = stateContext state
    
 similarityCtx :: Exercise a -> Context a -> Context a -> Bool
 similarityCtx ex a b = fromMaybe False $

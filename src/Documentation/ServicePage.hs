@@ -31,7 +31,7 @@ makeServicePage dir s = do
    generatePageAt 1 dir (servicePageFile s)  (servicePage xs s)
 
 servicePage :: [Example] -> Service -> HTMLBuilder
-servicePage examples s = do
+servicePage xs s = do
    h1 (showId s)
 
    para $ do
@@ -47,9 +47,9 @@ servicePage examples s = do
    when (serviceDeprecated s) $ 
       para $ bold $ text "Warning: this service is deprecated!"
    
-   unless (null examples) $ do
-      h2 $ "XML examples (" ++ show (length examples) ++ ")"
-      forM_ (zip [1..] examples) $ 
+   unless (null xs) $ do
+      h2 $ "XML examples (" ++ show (length xs) ++ ")"
+      forM_ (zip [1::Int ..] xs) $ 
          \(i, (msg, (xmlRequest, xmlReply, xmlTest))) -> do
             h2 $ show i ++ ". " ++ msg
             bold $ text "Request:"

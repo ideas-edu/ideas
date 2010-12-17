@@ -24,7 +24,7 @@ import Text.XML
 typedExample :: ExercisePackage a -> Service -> [TypedValue a] -> DomainReasoner (XML, XML, Bool)
 typedExample pkg service args = do
    -- Construct a request in xml
-   xmlRequest <- 
+   request <- 
       case makeArgType args of
          Nothing -> return $  
             stdReply (showId service) enc (exercise pkg) (return ())
@@ -33,7 +33,7 @@ typedExample pkg service args = do
             return $ 
                stdReply (showId service) enc (exercise pkg) xml
    -- Construct a reply in xml
-   xmlReply <-
+   reply <-
       case foldl dynamicApply (serviceFunction service) args of
          reply ::: replyTp -> do
             xml <- encodeType (encoder evaluator) replyTp reply
@@ -43,13 +43,13 @@ typedExample pkg service args = do
    -- Check request/reply pair
    vers <- getVersion
    xmlTest <- do
-      (_, txt, _) <- processXML (show xmlRequest)
+      (_, txt, _) <- processXML (show request)
       let p   = filter (not . isSpace)
-          out = showXML (if null vers then xmlReply else addVersion vers xmlReply)
+          out = showXML (if null vers then reply else addVersion vers reply)
       return (p txt == p out)
      `catchError` 
       const (return False)
-   return (xmlRequest, xmlReply, xmlTest)
+   return (request, reply, xmlTest)
  where
    (evaluator, enc)
       | withOpenMath pkg = (openMathConverterTp pkg, "openmath")

@@ -232,7 +232,7 @@ encodeResult enc result =
 jsonTuple :: [JSON] -> JSON
 jsonTuple xs = 
    case mapM f xs of 
-      Just xs | distinct (map fst xs) -> Object xs
+      Just ys | distinct (map fst ys) -> Object ys
       _ -> Array xs
  where
    f (Object [p]) = Just p

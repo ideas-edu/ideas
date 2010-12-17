@@ -181,10 +181,9 @@ evalDiff expr
 {-
 go = checkExercise derivativePowerExercise
 
-raar = printDerivation derivativeProductExercise expr
+raar i = printDerivation derivativePowerExercise expr
  where 
-   x = Var "x"
-   expr = diff $ lambda (Var "x")  $ (-27/2*((-13/2-x)*(85/6-x)+54/7*(x^2/(-58/7))))
+   expr = examples derivativePowerExercise !! i
 
 eqApprox :: Expr -> Expr -> Bool
 eqApprox a b = rec 5 doubleList

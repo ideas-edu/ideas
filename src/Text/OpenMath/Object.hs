@@ -47,10 +47,10 @@ getOMVs = nub . rec
 -- conversion functions: XML <-> OMOBJ
    
 xml2omobj :: XML -> Either String OMOBJ
-xml2omobj xml =
-   case xml of  
+xml2omobj xmlTop =
+   case xmlTop of  
       Element "OMOBJ" _ [Right e] -> rec e
-      _ -> fail $ "expected an OMOBJ tag" ++ show xml
+      _ -> fail $ "expected an OMOBJ tag" ++ show xmlTop
  where
    rec xml =
       case content xml of
@@ -61,8 +61,8 @@ xml2omobj xml =
             
          [] | name xml == "OMS" -> do
             let mcd = findAttribute "cd" xml
-            name <- findAttribute "name" xml
-            return (OMS (Symbol mcd name))
+            n <- findAttribute "name" xml
+            return (OMS (Symbol mcd n))
 
          [Left s] | name xml == "OMI" ->
             case scanInt (Pos 0 0) s of

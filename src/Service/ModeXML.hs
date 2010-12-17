@@ -112,8 +112,8 @@ stringFormatConverterTp pkg =
  where
    ex = exercise pkg
    f  = return . element "expr" . text . prettyPrinter ex
-   g xml = do
-      xml <- findChild "expr" xml -- quick fix
+   g xml0 = do
+      xml <- findChild "expr" xml0 -- quick fix
       -- guard (name xml == "expr")
       let input = getData xml
       either (fail . show) return (parser ex input)
@@ -135,77 +135,77 @@ openMathConverterTp pkg =
 
 xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> ExercisePackage a -> Encoder XMLBuilder a
 xmlEncoder b f pkg = Encoder
-   { encodeType  = encode (xmlEncoder b f pkg) pkg
+   { encodeType  = xmlEncodeType b (xmlEncoder b f pkg) pkg
    , encodeTerm  = f
    , encodeTuple = sequence_
    }
- where
-   encode :: Encoder XMLBuilder a -> ExercisePackage a -> Type a t -> t -> DomainReasoner XMLBuilder
-   encode enc pkg serviceType =
-      case serviceType of
-         Tp.Tag s _ 
-            | s == "Diagnosis" -> \a -> do
-                 d <- isSynonym diagnosisTypeSynonym (a ::: serviceType)
-                 encodeDiagnosis b (encodeTerm enc) d
-            | s == "DecompositionReply" -> \a -> do
-                 reply <- isSynonym replyTypeSynonym (a ::: serviceType)
-                 encodeReply (encodeState b (encodeTerm enc)) reply
-            | s == "RulesInfo" -> \_ ->
-                 rulesInfoXML (exercise pkg) (encodeTerm enc)
-            | s == "State" -> \a -> do
-                 st <- isSynonym stateTypeSynonym (a ::: serviceType)
-                 encodeState b (encodeTerm enc) st
-         Tp.List t1  -> \xs -> 
-            case allAreTagged t1 of
-               Just f -> do
-                  let make = element "elem" . mapM_ (uncurry (.=.)) . f
-                  let elems = mapM_ make xs
-                  return (element "list" elems)
-               _ -> do
-                  bs <- mapM (encode enc pkg t1) xs
-                  let elems = mapM_ (element "elem") bs
-                  return (element "list" elems)
-         Tp.Tag s t1  -> liftM (element s) . encode enc pkg t1  -- quick fix
-         Tp.Strategy  -> return . builder . strategyToXML
-         Tp.Rule      -> return . ("ruleid" .=.) . showId
-         Tp.Term      -> encodeTerm enc
-         Tp.Context   -> encodeContext b (encodeTerm enc)
-         Tp.Location  -> return . {-element "location" .-} text . show
-         Tp.Id        -> return . text . show
-         Tp.Bool      -> return . text . map toLower . show
-         Tp.String    -> return . text
-         Tp.Int       -> return . text . show
-         _            -> encodeDefault enc serviceType
+
+xmlEncodeType :: Bool -> Encoder XMLBuilder a -> ExercisePackage a -> Type a t -> t -> DomainReasoner XMLBuilder
+xmlEncodeType b enc pkg serviceType =
+   case serviceType of
+      Tp.Tag s _ 
+         | s == "Diagnosis" -> \a -> do
+              d <- isSynonym diagnosisTypeSynonym (a ::: serviceType)
+              encodeDiagnosis b (encodeTerm enc) d
+         | s == "DecompositionReply" -> \a -> do
+              reply <- isSynonym replyTypeSynonym (a ::: serviceType)
+              encodeReply (encodeState b (encodeTerm enc)) reply
+         | s == "RulesInfo" -> \_ ->
+              rulesInfoXML (exercise pkg) (encodeTerm enc)
+         | s == "State" -> \a -> do
+              st <- isSynonym stateTypeSynonym (a ::: serviceType)
+              encodeState b (encodeTerm enc) st
+      Tp.List t1  -> \xs -> 
+         case allAreTagged t1 of
+            Just f -> do
+               let make = element "elem" . mapM_ (uncurry (.=.)) . f
+               let elems = mapM_ make xs
+               return (element "list" elems)
+            _ -> do
+               bs <- mapM (xmlEncodeType b enc pkg t1) xs
+               let elems = mapM_ (element "elem") bs
+               return (element "list" elems)
+      Tp.Tag s t1  -> liftM (element s) . xmlEncodeType b enc pkg t1  -- quick fix
+      Tp.Strategy  -> return . builder . strategyToXML
+      Tp.Rule      -> return . ("ruleid" .=.) . showId
+      Tp.Term      -> encodeTerm enc
+      Tp.Context   -> encodeContext b (encodeTerm enc)
+      Tp.Location  -> return . {-element "location" .-} text . show
+      Tp.Id        -> return . text . show
+      Tp.Bool      -> return . text . map toLower . show
+      Tp.String    -> return . text
+      Tp.Int       -> return . text . show
+      _            -> encodeDefault enc serviceType
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
 xmlDecoder b f pkg = Decoder
-   { decodeType     = decode (xmlDecoder b f pkg)
+   { decodeType     = xmlDecodeType b (xmlDecoder b f pkg)
    , decodeTerm     = f
    , decoderPackage = pkg
    }
- where
-   decode :: Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
-   decode dec serviceType = 
-      case serviceType of
-         Tp.Context     -> leave $ decodeContext b (decoderPackage dec) (decodeTerm dec)
-         Tp.Location    -> leave $ liftM (read . getData) . findChild "location"
-         Tp.Id          -> leave $ \xml -> do
-                              a <- findChild "location" xml
-                              return (newId (getData a))
-         Tp.Rule        -> leave $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
-         Tp.Term        -> leave $ decodeTerm dec
-         Tp.StrategyCfg -> decodeConfiguration
-         Tp.Tag s t
-            | s == "State" -> \xml -> do 
-                 f  <- equalM stateTp serviceType
-                 st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
-                 return (f st, xml)
-            | s == "answer" -> \xml ->
-                 findChild "answer" xml >>= decode dec t
-         _ -> decodeDefault dec serviceType
-         
-   leave :: Monad m => (XML -> m a) -> XML -> m (a, XML)
-   leave f xml = liftM (\a -> (a, xml)) (f xml)
+
+xmlDecodeType :: Bool -> Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
+xmlDecodeType b dec serviceType = 
+   case serviceType of
+      Tp.Context     -> keep $ decodeContext b (decoderPackage dec) (decodeTerm dec)
+      Tp.Location    -> keep $ liftM (read . getData) . findChild "location"
+      Tp.Id          -> keep $ \xml -> do
+                           a <- findChild "location" xml
+                           return (newId (getData a))
+      Tp.Rule        -> keep $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
+      Tp.Term        -> keep $ decodeTerm dec
+      Tp.StrategyCfg -> decodeConfiguration
+      Tp.Tag s t
+         | s == "State" -> \xml -> do 
+              g  <- equalM stateTp serviceType
+              st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
+              return (g st, xml)
+         | s == "answer" -> \xml ->
+              findChild "answer" xml >>= xmlDecodeType b dec t
+      _ -> decodeDefault dec serviceType
+ where         
+   keep :: Monad m => (XML -> m a) -> XML -> m (a, XML)
+   keep f xml = liftM (\a -> (a, xml)) (f xml)
          
 allAreTagged :: Type a t -> Maybe (t -> [(String, String)])
 allAreTagged (Iso _ f t) = fmap (. f) (allAreTagged t)
@@ -213,13 +213,13 @@ allAreTagged (Pair t1 t2) = do
    f1 <- allAreTagged t1
    f2 <- allAreTagged t2
    return $ \(a,b) -> f1 a ++ f2 b
-allAreTagged (Tag tag Bool)   = Just $ \b -> [(tag, map toLower (show b))]
-allAreTagged (Tag tag String) = Just $ \s -> [(tag, s)]
+allAreTagged (Tag s Bool)   = Just $ \b -> [(s, map toLower (show b))]
+allAreTagged (Tag s String) = Just $ \a -> [(s, a)]
 allAreTagged _ = Nothing
          
 decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a)
-decodeState b pkg f top = do
-   xml <- findChild "state" top
+decodeState b pkg f xmlTop = do
+   xml <- findChild "state" xmlTop
    unless (name xml == "state") (fail "expected a state tag")
    mpr  <- decodePrefix pkg xml
    term <- decodeContext b pkg f xml
@@ -256,18 +256,18 @@ decodeEnvironment b xml =
    add env item = do 
       unless (name item == "item") $ 
          fail $ "expecting item tag, found " ++ name item
-      name  <- findAttribute "name"  item
+      n  <- findAttribute "name"  item
       case findChild "OMOBJ" item of
          -- OpenMath object found inside item tag
          Just this | b ->
             case xml2omobj this >>= omobjToTerm of
                Left err -> fail err
                Right term -> 
-                  return (storeEnv name term env)
+                  return (storeEnv n term env)
          -- Simple value in attribute
          _ -> do
             value <- findAttribute "value" item
-            return (storeEnv name value env)
+            return (storeEnv n value env)
 
 decodeConfiguration :: MonadPlus m => XML -> m (StrategyConfiguration, XML)
 decodeConfiguration xml =

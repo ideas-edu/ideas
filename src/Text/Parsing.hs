@@ -48,8 +48,6 @@ type CharParser  = Parser Char
 -- | A parser with tokens as symbol type
 type TokenParser = Parser Token
 
-instance UU.Symbol Token
-
 instance (UU.Symbol s, Ord s) => UU.IsParser (Parser s) s where
    ~(P p) <*>  ~(P q)  = P (p UU.<*> q)
    ~(P p) <*   ~(P q)  = P (p UU.<*  q)
@@ -107,18 +105,30 @@ pQVarid = makeTokT isTokenQVarId TokenQVarId
 pQConid = makeTokT isTokenQConId TokenQConId
 pString = makeTokS isTokenString TokenString
 pInt    = makeTokN isTokenInt    TokenInt
-pReal   = makeTokN isTokenReal   TokenReal
+pReal   = makeTokR isTokenReal   TokenReal
 pKey    = makeTokA TokenKeyword 
 pSpec   = makeTokA TokenSpecial
 
 -- helpers
-makeTokS f con = makeTok f "" (con minString) (con maxString)
-makeTokT f con = makeTok f ("","") (con minString minString) (con maxString maxString)
-makeTokN f con = makeTok f 0 (con minBound) (con maxBound)
-makeTokA con a = makeTok (const Nothing) a (con a) (con a)
+makeTokS :: (Token -> Maybe a) -> (String -> Pos -> Token) -> TokenParser a
+makeTokS f con = makeTok (fromJust . f) (con minString) (con maxString)
 
-makeTok f a con1 con2 = 
-   (fromMaybe a . f) UU.<$> con1 minPos UU.<..> con2 maxPos
+makeTokT :: (Token -> Maybe a) -> (String -> String -> Pos -> Token) -> TokenParser a
+makeTokT f con = makeTok (fromJust . f) (con minString minString) (con maxString maxString)
+
+makeTokN :: (Token -> Maybe Int) -> (Int -> Pos -> Token) -> TokenParser Int
+makeTokN f con = makeTok (fromJust . f) (con minBound) (con maxBound)
+
+makeTokR :: (Token -> Maybe Double) -> (Double -> Pos -> Token) -> TokenParser Double
+makeTokR f con = makeTok (fromJust . f) (con (-d)) (con d)
+ where d = (10 :: Double) ^ (500 :: Int)
+
+makeTokA :: (a -> Pos -> Token) -> a -> TokenParser a
+makeTokA con a = makeTok (const a) (con a) (con a)
+
+makeTok :: (Token -> a) -> (Pos -> Token) -> (Pos -> Token) -> TokenParser a
+makeTok f con1 con2 = 
+   f UU.<$> con1 minPos UU.<..> con2 maxPos
 
 minPos, maxPos :: Pos
 minPos = Pos minBound minBound
@@ -127,14 +137,6 @@ maxPos = Pos maxBound maxBound
 minString, maxString :: String
 minString = []
 maxString = replicate 100 maxBound
-
-minDouble, maxDouble :: Double
-minDouble = -(10^500) -- -Infinity
-maxDouble = 10^500    -- Infinity
-
-instance Bounded Double where
-   minBound = minDouble
-   maxBound = maxDouble
 
 ----------------------------------------------------------
 -- Derived token parsers
@@ -212,8 +214,8 @@ data Associativity = LeftAssociative | RightAssociative | NonAssociative | NoMix
 
 -- | Construct a parser using an operator table
 pOperators :: OperatorTable a -> TokenParser a -> TokenParser a
-pOperators table p = foldr op p table 
- where op (a, ops) q = 
+pOperators table p = foldr combine p table 
+ where combine (a, ops) q = 
           case a of
              -- The NoMix variant is actually hard to define efficiently. Since we should not mix operators
              -- that have the same priority, we have to inspect which operator we are dealing with before

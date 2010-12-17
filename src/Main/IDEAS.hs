@@ -99,7 +99,7 @@ packages =
    , someTermPackage Math.derivativePolyExercise
    , someTermPackage Math.derivativeProductExercise
    , someTermPackage Math.derivativeQuotientExercise
-   , someTermPackage Math.derivativePowerExercise
+   -- , someTermPackage Math.derivativePowerExercise
    , someTermPackage Math.simplifyPowerExercise
    , someTermPackage Math.powerOfExercise     
    , someTermPackage Math.nonNegBrokenExpExercise

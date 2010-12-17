@@ -29,6 +29,7 @@ module Text.Scanning
 import Control.Monad
 import Data.List
 import Data.Char
+import qualified UU.Parsing as UU
 
 ----------------------------------------------------------
 -- * Data types
@@ -49,6 +50,8 @@ data Token
    | TokenInt     Int    Pos
    | TokenReal    Double Pos
  deriving (Eq, Ord)
+
+instance UU.Symbol Token
 
 instance Show Pos where
    show (Pos l c) = "(" ++ show l ++ "," ++ show c ++ ")"
@@ -189,7 +192,7 @@ scanWith scanner = rec (Pos 1 1)
                  make f = f s pos : rec newp xs
                  newp   = incr (length s) pos
               _ -> error "unexpected case in scanner"
-      | isNumber input =
+      | isNum input =
            case scanNumber pos input of
               Just (Left i,  newp, xs) -> TokenInt  i pos : rec newp xs
               Just (Right d, newp, xs) -> TokenReal d pos : rec newp xs
@@ -217,10 +220,10 @@ scanWith scanner = rec (Pos 1 1)
            let newp = incr 1 pos
            in TokenSpecial x pos : rec newp rest
 
-   isNumber :: String -> Bool
-   isNumber ('-':x:_) = isDigit x && unaryMinus scanner
-   isNumber (x:_)     = isDigit x
-   isNumber _         = False
+   isNum :: String -> Bool
+   isNum ('-':x:_) = isDigit x && unaryMinus scanner
+   isNum (x:_)     = isDigit x
+   isNum _         = False
 
 scanIdentifier :: Scanner -> String -> Maybe (Maybe String, String, String)
 scanIdentifier scanner (x:rest) | isAlpha x = 

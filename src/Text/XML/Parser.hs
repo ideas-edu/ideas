@@ -13,8 +13,7 @@
 --    http://www.w3.org/TR/2006/REC-xml-20060816
 
 -----------------------------------------------------------------------------
-
-module Text.XML.Parser where
+module Text.XML.Parser (document, extParsedEnt, extSubset) where
 
 import Prelude hiding (seq)
 import Control.Monad
@@ -41,7 +40,7 @@ extender      = ranges extenderMap
 -- [1]   	document	   ::=   	 prolog element Misc*
 document :: Parser XMLDoc
 document = do 
-   (mxml, dtd) <- prolog
+   (mxml, mdtd) <- prolog
    rt <- element
    miscs
    let (ver, enc, sa) = 
@@ -52,7 +51,7 @@ document = do
       { D.versionInfo = ver
       , D.encoding    = enc
       , D.standalone  = sa
-      , D.dtd         = dtd
+      , D.dtd         = mdtd
       , D.externals   = []
       , root        = rt
       }
@@ -61,19 +60,21 @@ document = do
 -- ** 2.2 Characters
 
 -- [2]   	Char	   ::=   	#x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+{-
 char :: Parser Char
 char = ranges xs <|> oneOf "\x9\xA\xD"
  where xs = [('\x20', '\xD7FF'), ('\xE000', '\xFFFD'), ('\x10000', '\x10FFFF')]
+-}
 
 --------------------------------------------------
 -- ** 2.3 Common Syntactic Constructs
 
 -- [3]   	S	   ::=   	(#x20 | #x9 | #xD | #xA)+
-space :: Parser String
-space = many1 (oneOf "\x20\x9\xA\xD")
+space :: Parser ()
+space = many1 (oneOf "\x20\x9\xA\xD") >> return ()
 
-mspace :: Parser String -- for S?
-mspace = many (oneOf "\x20\x9\xA\xD")
+mspace :: Parser () -- for S?
+mspace = many (oneOf "\x20\x9\xA\xD") >> return ()
 
 -- [4]   	NameChar	   ::=   	 Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
 nameChar :: Parser Char
@@ -86,17 +87,21 @@ name = do
    cs <- many nameChar
    return (c:cs)
 
+{-
 -- [6]   	Names	   ::=   	 Name (#x20 Name)*
 names :: Parser [String]
 names = sepBy1 name (symbol '\x20')
+-}
 
 -- [7]   	Nmtoken	   ::=   	(NameChar)+
 nmtoken :: Parser String
 nmtoken = many1 nameChar
 
+{-
 -- [8]   	Nmtokens	   ::=   	 Nmtoken (#x20 Nmtoken)*
 nmtokens :: Parser [String]
 nmtokens = sepBy1 nmtoken (symbol '\x20')
+-}
 
 -- [9]   	EntityValue	   ::=   	'"' ([^%&"] | PEReference | Reference)* '"' 
 --                           |  "'" ([^%&'] | PEReference | Reference)* "'"
@@ -128,7 +133,7 @@ pubidChar withSingleQuote =
  where
    xs = [('a', 'z'), ('A', 'Z'), ('0', '9')]
    singleQuote
-      | withSingleQuote = symbol '\''
+      | withSingleQuote = symbol '\'' >> return '\''
       | otherwise       = fail "pubidChar"
 
 --------------------------------------------------
@@ -153,9 +158,7 @@ comment = packed (string "<!--") (stopOn ["--"]) (string "-->")
 pInstr :: Parser String
 pInstr = packed (string "<?") p (string "?>")
  where 
-   p = do 
-      piTarget
-      option "" (space >> stopOn ["?>"])
+   p = piTarget >> option "" (space >> stopOn ["?>"])
 
 -- [17]   	PITarget	   ::=   	 Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
 piTarget :: Parser String
@@ -216,7 +219,9 @@ eq = recognize (mspace >> symbol '=' >> mspace)
 
 -- [26]   	VersionNum	   ::=   	'1.0'
 versionNum :: Parser String
-versionNum = string "1.0"
+versionNum = do
+   string "1.0"
+   return "1.0"
 
 -- [27]   	Misc	   ::=   	 Comment | PI | S
 misc :: Parser ()

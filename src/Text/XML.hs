@@ -63,7 +63,7 @@ indentXML = rec 0
  where 
    rec i (Element n as xs) =
       let ipl  = i+2 
-          cd n = Left ('\n' : replicate n ' ')
+          cd j = Left ('\n' : replicate j ' ')
           f    = either (\x -> [cd ipl, Left x]) (\x -> [cd ipl, Right (rec ipl x)])
           body | null xs   = xs
                | otherwise = concatMap f xs ++ [cd i]

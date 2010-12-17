@@ -62,11 +62,11 @@ stopOn list = many (try (noneOf hds <|> foldr1 (<|>) ps))
             P.notFollowedBy (P.try (string xs >> return ' '))
             return x
       
-symbol :: Char -> Parser Char
-symbol = P.char
+symbol :: Char -> Parser ()
+symbol c = P.char c >> return ()
 
-string :: String -> Parser String
-string = P.string
+string :: String -> Parser ()
+string s = P.string s >> return ()
 
 ranges :: [(Char, Char)] -> Parser Char
 ranges xs = P.choice [ a <..> b | (a, b) <- xs ]

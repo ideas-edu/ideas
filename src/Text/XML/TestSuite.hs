@@ -17,7 +17,6 @@ module Main (main) where
 import Text.XML.Interface
 import Text.XML.Document (trim)
 import Control.Monad.Error
-import Data.List
 import Data.Maybe
 
 {-testje = do

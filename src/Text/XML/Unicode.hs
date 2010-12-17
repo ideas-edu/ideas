@@ -22,6 +22,7 @@ import qualified Text.UTF8 as UTF8
 
 data Tree a = Node (Tree a) a (Tree a) | Leaf
 
+isLetter, isExtender, isDigit, isCombiningChar :: Char -> Bool
 isLetter        = checkTree $ makeTree letterMap
 isExtender      = checkTree $ makeTree extenderMap
 isDigit         = checkTree $ makeTree digitMap
@@ -47,6 +48,7 @@ makeTree xs = Node (makeTree ys) z (makeTree zs)
 f :: Char -> (Char, Char)
 f c = (c, c)
 
+letterMap :: [(Char, Char)]
 letterMap = baseCharMap `merge` ideographicMap `merge` controlMap `merge` extraMap
 
 merge :: [(Char, Char)] -> [(Char, Char)] -> [(Char, Char)]
@@ -55,8 +57,10 @@ merge (x:xs) (y:ys)
    | otherwise = y:merge (x:xs) ys
 merge xs ys = xs++ys
 
+extraMap :: [(Char, Char)]
 extraMap = map f "\161\170\184\185"
 
+controlMap :: [(Char, Char)]
 controlMap = [ ('\x7F', '\x84'), ('\x86', '\x9F'), ('\xFDD0', '\xFDDF'),
    ('\x1FFFE', '\x1FFFF'), ('\x2FFFE', '\x2FFFF'), ('\x3FFFE', '\x3FFFF'),
    ('\x4FFFE', '\x4FFFF'), ('\x5FFFE', '\x5FFFF'), ('\x6FFFE', '\x6FFFF'),
@@ -65,6 +69,7 @@ controlMap = [ ('\x7F', '\x84'), ('\x86', '\x9F'), ('\xFDD0', '\xFDDF'),
    ('\xDFFFE', '\xDFFFF'), ('\xEFFFE', '\xEFFFF'), ('\xFFFFE', '\xFFFFF'),
    ('\x10FFFE', '\x10FFFF')]
 
+baseCharMap :: [(Char, Char)]
 baseCharMap = [ ('\x0041','\x005A'), ('\x0061','\x007A'), ('\x00C0','\x00D6'), 
    ('\x00D8','\x00F6'), ('\x00F8','\x00FF'), ('\x0100','\x0131'), 
    ('\x0134','\x013E'), ('\x0141','\x0148'), ('\x014A','\x017E'), 
@@ -121,9 +126,11 @@ baseCharMap = [ ('\x0041','\x005A'), ('\x0061','\x007A'), ('\x00C0','\x00D6'),
    f '\x212E' , ('\x2180','\x2182'), ('\x3041','\x3094'), ('\x30A1','\x30FA'),
    ('\x3105','\x312C'), ('\xAC00','\xD7A3') ]
 
+ideographicMap :: [(Char, Char)]
 ideographicMap = [ ('\x4E00','\x9FA5'), 
    f '\x3007' , ('\x3021','\x3029') ] 
-   
+
+combiningCharMap :: [(Char, Char)]
 combiningCharMap = [('\x0300','\x0345'), 
    ('\x0360','\x0361'), ('\x0483','\x0486'), ('\x0591','\x05A1'), 
    ('\x05A3','\x05B9'), ('\x05BB','\x05BD'),  f '\x05BF' , ('\x05C1','\x05C2'), 
@@ -151,6 +158,7 @@ combiningCharMap = [('\x0300','\x0345'),
    ('\x0FB1','\x0FB7'), f '\x0FB9' , ('\x20D0','\x20DC'), f '\x20E1' , 
    ('\x302A','\x302F'), f '\x3099' , f '\x309A' ] 
 
+digitMap :: [(Char, Char)]
 digitMap = [ ('\x0030','\x0039'), 
    ('\x0660','\x0669'), ('\x06F0','\x06F9'), ('\x0966','\x096F'), 
    ('\x09E6','\x09EF'), ('\x0A66','\x0A6F'), ('\x0AE6','\x0AEF'), 
@@ -158,6 +166,7 @@ digitMap = [ ('\x0030','\x0039'),
    ('\x0CE6','\x0CEF'), ('\x0D66','\x0D6F'), ('\x0E50','\x0E59'), 
    ('\x0ED0','\x0ED9'), ('\x0F20','\x0F29')]
 
+extenderMap :: [(Char, Char)]
 extenderMap = [f '\x00B7' , f '\x02D0' , 
    f '\x02D1' , f '\x0387' , f '\x0640' , f '\x0E46' , f '\x0EC6' , f '\x3005' , ('\x3031','\x3035') 
    , ('\x309D','\x309E'), ('\x30FC','\x30FE') ]

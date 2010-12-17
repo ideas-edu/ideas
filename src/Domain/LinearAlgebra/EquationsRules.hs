@@ -115,10 +115,10 @@ ruleIdentifyFreeVariables :: IsLinear a => Rule (Context (LinearSystem a))
 ruleIdentifyFreeVariables = describe "Identify free variables" $ 
    minorRule $ makeSimpleRule "linearalgebra.linsystem.freevars" $ withCM $ \ls ->
    let vs = [ head ys | ys <- map (vars . leftHandSide) ls, not (null ys) ]
-       change eq =
+       f eq =
           let (e1, e2) = splitLinearExpr (`notElem` vs) (leftHandSide eq) -- constant ends up in e1
           in e2 :==: rightHandSide eq - e1
-   in return (map change ls)
+   in return (map f ls)
 
 ruleCoverUpEquation :: Rule (Context (LinearSystem a))
 ruleCoverUpEquation = describe "Cover up first equation" $ 

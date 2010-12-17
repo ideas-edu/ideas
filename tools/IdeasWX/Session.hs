@@ -70,11 +70,10 @@ thisExercise :: String -> Session -> IO ()
 thisExercise txt ref = do
    Some ss <- getValue ref
    let pkg = getPackage ss
-       ex  = Pkg.exercise pkg
-   case parser ex txt of
+   case parser (Pkg.exercise pkg) txt of
       Left _  -> return ()
       Right a -> do
-         let new = makeDerivation $ State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = makeDerivation $ emptyState pkg a
          setValue ref $ Some $ ss {getDerivation = new}
 
 thisExerciseFor :: String -> Some ExercisePackage -> Session -> IO (Maybe String)
@@ -83,7 +82,7 @@ thisExerciseFor txt (Some pkg) ref =
    case parser ex txt of
       Left err  -> return (Just $ show err)
       Right a -> do
-         let new = makeDerivation $ State pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
+         let new = makeDerivation $ makeState pkg (Just $ emptyPrefix $ strategy ex) (inContext ex a)
          setValue ref $ Some $ SessionState pkg new
          return Nothing         
     
@@ -98,13 +97,13 @@ suggestTerm dif ref = do
    let pkg = getPackage ss  
        ex  = Pkg.exercise pkg
    ca <- generate pkg dif
-   a  <- fromContext $ context ca
+   a  <- fromContext $ stateContext ca
    return $ prettyPrinter ex a
 
 suggestTermFor :: Int -> Some ExercisePackage -> IO String
 suggestTermFor dif (Some pkg) = do
    ca <- generate pkg dif
-   a  <- fromContext $ context ca
+   a  <- fromContext $ stateContext ca
    return $ prettyPrinter (Pkg.exercise pkg) a
        
 undo :: Session -> IO ()
@@ -181,16 +180,15 @@ hintOrStep verbose ref = do
          return ("Error: " ++ msg)
       Right [] -> 
          return "Sorry, no hint available"
-      Right ((rule, _, s):_) ->
+      Right ((r, _, s):_) ->
          return $ unlines $
-            [ "Use " ++ showRule rule
+            [ "Use " ++ showRule r
             ] ++
-            [ "   with arguments " ++ showList (fromJust args)
-            | let args = expectedArguments rule (current d), isJust args
-            , let showList xs = "(" ++ concat (intersperse "," xs) ++ ")"
+            [ "   with arguments " ++ commaList (fromJust args)
+            | let args = expectedArguments r (current d), isJust args
             ] ++ if verbose then
             [ "   to rewrite the term into:"
-            , prettyPrinter (exercise d) (term s)
+            , prettyPrinter (exercise d) (stateTerm s)
             ] else []
 
 hintText, stepText :: Session -> IO String
@@ -206,13 +204,13 @@ nextStep ref = do
          return ("Error: " ++ msg)
       Right [] -> 
          return "No more steps left to do"
-      Right ((rule, _, new):_) -> do
+      Right ((r, _, new):_) -> do
          setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
          case getExerciseText (getPackage ss) of
             Just exText ->
-               return (appliedRule exText rule)
+               return (appliedRule exText r)
             Nothing -> 
-               return ("You have applied rule " ++ showId rule ++ " correctly.")
+               return ("You have applied rule " ++ showId r ++ " correctly.")
 
 {-
 getRuleAtIndex :: Int -> Session -> IO (Some Rule)
@@ -271,14 +269,15 @@ extendDerivation :: State a -> Derivation a -> Derivation a
 extendDerivation x (D xs) = D (x:xs)
 
 current :: Derivation a -> Context a
-current (D (s:_)) = context s
+current (D (s:_)) = stateContext s
 current _ = error "Session.current: empty list"
 
 currentState :: Derivation a -> State a
 currentState (D xs) = head xs
 
 showDerivation :: (a -> String) -> Derivation a -> String
-showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ [ f (term s) | s <- xs ] 
+showDerivation f (D xs) = unlines $ intersperse "   =>" $ reverse $ 
+   [ f (stateTerm s) | s <- xs ] 
 
 derivationLength :: Derivation a -> Int
 derivationLength (D xs) = length xs - 1

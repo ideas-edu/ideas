@@ -79,12 +79,11 @@ numGenerators = map sized
 semEqDouble :: Expr -> Expr -> Bool
 semEqDouble a b = 
    case (match doubleView a, match doubleView b) of
-      (Just a, Just b)   -> a ~= b
+      (Just x, Just y)   -> x ~= y
       (Nothing, Nothing) -> True
       _                  -> False
  where
    delta = 0.0001
  
    (~=) :: Double -> Double -> Bool
-   a ~= b | abs a < delta || abs b < delta = True
-          | otherwise = abs (1 - (a/b)) < delta
+   x ~= y = abs x < delta || abs y < delta || abs (1 - (x/y)) < delta

@@ -32,7 +32,6 @@ import Domain.Math.Data.PrimeFactors
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.NormViews
 import Domain.Math.Power.Utils
@@ -66,20 +65,24 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (1 ./.)))
                <&> (identity >>^ \a->(a,1))
 
+constRight :: Equation Expr -> Maybe (Equation Expr)
 constRight (lhs :==: rhs) = do
   (vs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
   let rhs' = rhs .+. build sumView (map neg cs)
   return $ negateEq $ build sumView vs :==: simplifyWith mergeAlikeSum sumView rhs'
 
+negateEq :: Equation Expr -> Equation Expr
 negateEq (lhs :==: rhs) = 
   case lhs of
     Negate lhs' -> lhs' :==: neg rhs
     _           -> lhs  :==: rhs
 
+varLeft :: Equation Expr -> Maybe (Equation Expr)
 varLeft (lhs :==: rhs) = do
   (vs, cs) <- fmap (partition hasSomeVar) (match sumView rhs)
   return $ lhs .+. build sumView (map neg vs) :==: build sumView cs
 
+scaleLeft :: Equation Expr -> Maybe (Equation Expr)
 scaleLeft (lhs :==: rhs) = 
   match timesView lhs >>= \(c, x) -> return $ 
     x :==: simplifyWith (second mergeAlikeProduct) productView (rhs ./. c)
@@ -87,7 +90,7 @@ scaleLeft (lhs :==: rhs) =
 normExpEqView :: View (Equation Expr) (String, Rational)
 normExpEqView = makeView f id >>> linearEquationView
   where
-    try f a = fromMaybe a $ f a
+    try g a = fromMaybe a $ g a
     f e = do
       let (l :==: r) = try scaleLeft $ try constRight e
       return $ case match powerView l of
@@ -115,12 +118,12 @@ normLogView = makeView g id
         Sym s [x, y] 
           | isLogSymbol s -> do
               b <- match integerView x
-              let divExp (b, exp) = return $ f b y ./. Nat exp
+              let divExp (be, n) = return $ f be y ./. fromInteger n
               maybe (Just $ f b y) divExp $ greatestPower b
           | otherwise -> Nothing
         _ -> Nothing
-    f b e = 
-      case e of
+    f b expr= 
+      case expr of
         Nat 1     -> Nat 0
         Nat n     
           | n == b    -> Nat 1
@@ -133,7 +136,7 @@ normLogView = makeView g id
         Sym s [x,y]
           | isPowerSymbol s -> y .*. f b x
           | isRootSymbol  s -> f b (x .^. (1 ./. y))
-        e         -> e
+        _         -> expr
 
 myRationalView :: View Expr Rational
 myRationalView = makeView (exprToNum f) id >>> rationalView
@@ -153,6 +156,6 @@ myRationalView = makeView (exprToNum f) id >>> rationalView
       | isRootSymbol s = do
           n <- match integerView y
           b <- match integerView x
-          liftM fromInteger $ lookup b $ map (\(a,b)->(b,a)) (allPowers n)
+          liftM fromInteger $ lookup b $ map swap (allPowers n)
     f _ _ = Nothing
 

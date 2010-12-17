@@ -116,36 +116,10 @@ systemWithMatrixExercise = makeExercise
  
 --------------------------------------------------------------
 -- Other stuff (to be cleaned up)
-                  
-instance Arbitrary a => Arbitrary (Vector a) where
-   arbitrary   = liftM fromList $ oneof $ map vector [0..2]
-instance CoArbitrary a => CoArbitrary (Vector a) where
-   coarbitrary = coarbitrary . toList
-
-instance Arbitrary a => Arbitrary (VectorSpace a) where
-   arbitrary = do
-      i <- choose (0, 3) -- too many vectors "disables" prime factorization
-      j <- choose (0, 10 `div` i)
-      xs <- replicateM i (liftM fromList $ replicateM j arbitrary)
-      return $ makeVectorSpace xs
-instance CoArbitrary a => CoArbitrary (VectorSpace a) where
-   coarbitrary = coarbitrary . vectors
 
 arbMatrix :: Num a => Gen (Matrix a)
 arbMatrix = fmap (fmap fromInteger) arbNiceMatrix
-
-instance Arbitrary a => Arbitrary (Matrix a) where
-   arbitrary = do
-      (i, j) <- arbitrary
-      arbSizedMatrix (i `mod` 5, j `mod` 5)
-instance CoArbitrary a => CoArbitrary (Matrix a) where
-   coarbitrary = coarbitrary . rows
    
-arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
-arbSizedMatrix (i, j) = 
-   do rows <- replicateM i (vector j)
-      return (makeMatrix rows)
-
 arbUpperMatrix :: (Enum a, Num a) => Gen (Matrix a)
 arbUpperMatrix = do
    a <- oneof $ map return [-5 .. 5]

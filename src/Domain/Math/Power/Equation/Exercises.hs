@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Equation.Exercises    
    ( powerEqExercise
+   , higherPowerEqExercise
    , expEqExercise
    , logEqExercise
    ) where
@@ -25,19 +26,13 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Equation.Views
-import Domain.Math.Examples.DWO4 ( powerEquations, expEquations, logEquations
-                                 , higherPowerEquations)
+import Domain.Math.Examples.DWO4
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Power.Rules
-import Domain.Math.Power.Utils
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
-
--- for convenience
-import Common.Classes
-import Domain.Math.Power.Equation.Rules
 
 ------------------------------------------------------------
 -- Exercises

@@ -23,6 +23,7 @@ import Common.Rewriting
 import Data.List
 import Domain.Math.Simplification
 import Domain.Math.Expr.Symbols (openMathSymbol) 
+import Test.QuickCheck
 import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 
 -------------------------------------------------------------------------------
@@ -62,6 +63,12 @@ instance IsTerm a => IsTerm (Vector a) where
       ys <- mapM fromTerm xs
       return (fromList ys)
 
+instance Arbitrary a => Arbitrary (Vector a) where
+   arbitrary   = liftM fromList $ oneof $ map vector [0..2]
+
+instance CoArbitrary a => CoArbitrary (Vector a) where
+   coarbitrary = coarbitrary . toList
+
 vectorSymbol :: Symbol
 vectorSymbol = openMathSymbol OM.vectorSymbol
 
@@ -84,6 +91,14 @@ instance IsTerm a => IsTerm (VectorSpace a) where
 instance Simplify a => Simplify (VectorSpace a) where
    simplifyWith opt = fmap (simplifyWith opt)
 
+instance Arbitrary a => Arbitrary (VectorSpace a) where
+   arbitrary = do
+      i <- choose (0, 3) -- too many vectors "disables" prime factorization
+      j <- choose (0, 10 `div` i)
+      xs <- replicateM i (liftM fromList $ replicateM j arbitrary)
+      return $ makeVectorSpace xs
+instance CoArbitrary a => CoArbitrary (VectorSpace a) where
+   coarbitrary = coarbitrary . vectors
 
 -------------------------------------------------------------------------------
 -- Vector Space operations
@@ -150,7 +165,7 @@ scale a = liftV (*a)
 orthonormalList :: Floating a => [Vector a] -> Bool
 orthonormalList xs = all isUnit xs && all (uncurry orthogonal) pairs
  where
-   pairs = [ (a, b) | (i, a) <- zip [0..] xs, (j, b) <- zip [0..] xs, i < j ] 
+   pairs = [ (a, b) | (i, a) <- zip [0::Int ..] xs, (j, b) <- zip [0..] xs, i < j ] 
 
 -- length of the vector (also called norm)
 norm :: Floating a => Vector a -> a

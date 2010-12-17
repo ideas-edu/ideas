@@ -28,6 +28,7 @@ import Data.List hiding (transpose)
 import Data.Maybe
 import Domain.Math.Simplification
 import Domain.Math.Expr.Symbols (openMathSymbol)
+import Test.QuickCheck
 import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 import qualified Data.List as L
 import qualified Data.Map as M
@@ -40,7 +41,7 @@ type Row    a = [a]
 type Column a = [a]
 
 instance Functor Matrix where 
-   fmap f (M rows) = M (map (map f) rows)
+   fmap f (M rs) = M (map (map f) rs)
 
 instance Switch Matrix where
    switch (M xss) = liftM M (mapM sequence xss)
@@ -55,6 +56,19 @@ instance IsTerm a => IsTerm (Matrix a) where
       yss <- mapM (mapM fromTerm) xss
       guard (isRectangular yss)
       return (makeMatrix yss)
+
+instance Arbitrary a => Arbitrary (Matrix a) where
+   arbitrary = do
+      (i, j) <- arbitrary
+      arbSizedMatrix (i `mod` 5, j `mod` 5)
+
+instance CoArbitrary a => CoArbitrary (Matrix a) where
+   coarbitrary = coarbitrary . rows
+
+arbSizedMatrix :: Arbitrary a => (Int, Int) -> Gen (Matrix a)
+arbSizedMatrix (i, j) = 
+   do rs <- replicateM i (vector j)
+      return (makeMatrix rs)
 
 matrixSymbol, matrixrowSymbol :: Symbol
 matrixSymbol    = openMathSymbol OM.matrixSymbol
@@ -72,10 +86,10 @@ isRectangular xss =
 
 -- Constructor function that checks whether the table is rectangular
 makeMatrix :: [Row a] -> Matrix a
-makeMatrix rows
-   | null (concat rows) = M []
-   | isRectangular rows = M rows
-   | otherwise          = error "makeMatrix: not rectangular"
+makeMatrix rs
+   | null (concat rs) = M []
+   | isRectangular rs = M rs
+   | otherwise        = error "makeMatrix: not rectangular"
 
 identity :: Num a => Int -> Matrix a
 identity n = M $ map f [0..n-1]
@@ -85,7 +99,7 @@ isEmpty :: Matrix a -> Bool
 isEmpty (M xs) = null xs
 
 rows :: Matrix a -> [Row a]
-rows (M rows) = rows
+rows (M rs) = rs
 
 row :: Int -> Matrix a -> Row a
 row n = (!!n) . rows
@@ -103,7 +117,7 @@ entry :: (Int, Int) -> Matrix a -> a
 entry (i, j) m = row i m !! j
 
 mapWithPos :: ((Int, Int) -> a -> b) -> Matrix a -> Matrix b
-mapWithPos f (M rows) = M $ zipWith g [0..] rows
+mapWithPos f (M rs) = M $ zipWith g [0..] rs
  where g y = zipWith (\x -> f (y, x)) [0..]
 
 changeEntries :: M.Map (Int, Int) (a -> a) -> Matrix a -> Matrix a
@@ -193,7 +207,7 @@ m1 === m2 = reduce m1 == reduce m2
 -------------------------------------------------------
 
 transpose :: Matrix a -> Matrix a
-transpose (M rows) = M (L.transpose rows)
+transpose (M rs) = M (L.transpose rs)
 
 -------------------------------------------------------
 
@@ -212,30 +226,30 @@ checkRow :: Int -> Matrix a -> Bool
 checkRow i m = i >= 0 && i < fst (dimensions m)
 
 switchRows :: Int -> Int -> Matrix a -> Matrix a
-switchRows i j m@(M rows)
+switchRows i j m@(M rs)
    | i == j = m
    | i >  j = switchRows j i m
    | checkRow i m && checkRow j m = 
-        let (before, r1:rest)  = splitAt i       rows
+        let (before, r1:rest)  = splitAt i       rs
             (middle, r2:after) = splitAt (j-i-1) rest
         in M $ before ++ [r2] ++ middle ++ [r1] ++ after
    | otherwise = 
         error "switchRows: invalid rows"
 
 scaleRow :: Num a => Int -> a -> Matrix a -> Matrix a
-scaleRow i a m@(M rows)
+scaleRow i a m@(M rs)
    | checkRow i m = 
         let f y = if y==i then map (*a) else id
-        in M $ zipWith f [0..] rows
+        in M $ zipWith f [0..] rs
    | otherwise = 
         error "scaleRow: invalid row"
 
 addRow :: Num a => Int -> Int -> a -> Matrix a -> Matrix a
-addRow i j a m@(M rows) 
+addRow i j a m@(M rs) 
    | checkRow i m && checkRow j m = 
         let rj  = map (*a) (row j m)
             f y = if y==i then zipWith (+) rj else id
-        in M $ zipWith f [0..] rows
+        in M $ zipWith f [0..] rs
    | otherwise = 
         error "addRow: invalid row"
 
@@ -250,9 +264,9 @@ isUpperTriangular = and . zipWith check [0..] . rows
  where check n = all (==0) . take n
 
 inRowEchelonForm :: Num a => Matrix a -> Bool
-inRowEchelonForm (M rows) =
-   null (filter nonZero (dropWhile nonZero rows)) &&
-   increasing (map (length . takeWhile (==0)) (filter nonZero rows))
+inRowEchelonForm (M rs) =
+   null (filter nonZero (dropWhile nonZero rs)) &&
+   increasing (map (length . takeWhile (==0)) (filter nonZero rs))
  where
    increasing (x:ys@(y:_)) = x < y && increasing ys
    increasing _ = True
@@ -262,10 +276,10 @@ nonZero = any (/=0)
 
 -- or row canonical form
 inRowReducedEchelonForm :: Num a => Matrix a -> Bool
-inRowReducedEchelonForm m@(M rows) =
+inRowReducedEchelonForm m@(M rs) =
    inRowEchelonForm m && 
-   all (==1) (mapMaybe pivot rows) &&
-   all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZero rows)
+   all (==1) (mapMaybe pivot rs) &&
+   all (isPivotColumn . flip column m . length . takeWhile (==0)) (filter nonZero rs)
 
 pivot :: Num a => Row a -> Maybe a
 pivot r = case dropWhile (==0) r of

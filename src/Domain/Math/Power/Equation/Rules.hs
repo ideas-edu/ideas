@@ -16,12 +16,10 @@ module Domain.Math.Power.Equation.Rules
   , approxPower, reciprocalFor
   ) where
 
-import Control.Arrow ( (>>^) )
 import Common.Transformation
 import Common.Rewriting
 import Common.View hiding (simplify)
 import Control.Monad
-import Data.List
 import Domain.Math.Approximation (precision)
 import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
@@ -29,14 +27,13 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
-import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Simplification (simplify)
 
 
 -- | Identifier prefix --------------------------------------------------------
 
+powereq :: String
 powereq = "algebra.manipulation.exponents.equation"
-
 
 -- | Power relation rules -----------------------------------------------------
 
@@ -112,7 +109,7 @@ reciprocalFor :: Rule (Equation Expr)
 reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ 
   \ (lhs :==: rhs) -> do
     (_, (a,  _)) <- match unitPowerView lhs
-    (one, a')    <- match divView rhs
+    (one, _)     <- match divView rhs
     (d, (a'', y)) <- match consPowerView rhs
     guard $ one == 1 && a'' == a
     return $ lhs :==: d .*. a'' .^. negate y

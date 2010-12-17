@@ -9,31 +9,15 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Tests where
+module Domain.Math.Polynomial.Tests (tests) where
 
-import Control.Monad
-import Common.Classes
-import Common.Exercise
-import Common.Context
-import Common.Strategy
 import Common.TestSuite
-import Common.Derivation
 import Common.View
-import Domain.Math.Data.Relation
-import Domain.Math.Data.OrList
-import Domain.Math.Clipboard
-import Domain.Math.Expr
-import Domain.Math.Examples.DWO1
-import Domain.Math.Examples.DWO2
-import Domain.Math.Polynomial.Exercises
-import Domain.Math.Polynomial.IneqExercises
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.Views
-import Domain.Math.Numeric.Laws
 import Domain.Math.Numeric.Views
-import Domain.Logic.Formula
+import Domain.Math.Numeric.Laws
 import Test.QuickCheck
-import Data.Maybe
 
 ------------------------------------------------------------
 -- Testing instances
@@ -44,15 +28,18 @@ tests = do
    testNumLawsWith v "polynomial" (sized polynomialGen)
 
 -- see the derivations for the DWO exercise set
+{-
 seeLE  n = printDerivation linearExercise $ concat linearEquations !! (n-1)
 seeQE  n = printDerivation quadraticExercise $ orList $ return $ build equationView $ concat quadraticEquations !! (n-1)
 seeHDE n = printDerivation higherDegreeExercise $ orList $ return $ build equationView $ higherDegreeEquations !! (n-1)
 
 -- test strategies with DWO exercise set
+{-
 testLE  = concat $ zipWith (f linearExercise)       [1..] $ concat linearEquations
 testQE  = concat $ zipWith (f quadraticExercise)    [1..] $ map (orList . return . build equationView) $ concat quadraticEquations
 testHDE = concat $ zipWith (f higherDegreeExercise) [1..] $ map (orList . return . build equationView) higherDegreeEquations
-
+-}
+f :: (Show b, Show a) => Exercise a -> b -> a -> [b]
 f s n e = map p (g (applyAll (strategy s) (inContext s e))) where
   g xs | null xs   = error $ show n ++ ": " ++ show e
        | otherwise = xs
@@ -114,4 +101,4 @@ turnIntoEqualTo = g . fmap (\rel ->
    -- temporary fix
    g (p :&&: q) = g p :&&: g q
    g (p :||: q) = g p :||: g q
-   g p          = p
+   g p          = p -}

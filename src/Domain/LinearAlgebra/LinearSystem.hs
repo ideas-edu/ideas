@@ -30,8 +30,8 @@ getVarsSystem = S.toList . S.unions . map varSet . concatMap crush
 
 evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
 evalSystem f = 
-   let eval (x :==: y) = x==y
-   in all (eval . fmap (evalLinearExpr f))
+   let evalEq (x :==: y) = x==y
+   in all (evalEq . fmap (evalLinearExpr f))
 
 invalidSystem :: IsLinear a => LinearSystem a -> Bool
 invalidSystem = any invalidEquation
@@ -69,11 +69,11 @@ homogeneous = all ((== 0) . rightHandSide)
 
 -- Conversions
 systemToMatrix :: IsLinear a => LinearSystem a -> (Matrix a, [String])
-systemToMatrix system = (makeMatrix $ map (makeRow . toStandardForm) system, vars)
+systemToMatrix system = (makeMatrix $ map (makeRow . toStandardForm) system, vs)
  where
-   vars = getVarsSystem system
+   vs = getVarsSystem system
    makeRow (lhs :==: rhs) =
-      map (`coefficientOf` lhs) vars ++ [getConstant rhs]
+      map (`coefficientOf` lhs) vs ++ [getConstant rhs]
 
 matrixToSystem :: IsLinear a => Matrix a -> LinearSystem a
 matrixToSystem = matrixToSystemWith variables

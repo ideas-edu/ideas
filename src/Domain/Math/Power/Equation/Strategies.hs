@@ -23,7 +23,6 @@ import Prelude hiding (repeat, not)
 
 import Common.Classes
 import Common.Context
-import Common.Exercise
 import Common.Id
 import Common.Navigator
 import Common.Rewriting
@@ -35,18 +34,16 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpRules
-import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy, linearStrategyG)
+import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
 import Domain.Math.Polynomial.Rules (flipEquation)
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Equation.Rules
 import Domain.Math.Numeric.Rules
-import Domain.Math.Simplification
-
 
 -- | Strategies ---------------------------------------------------------------
 
---powerEqStrategy :: (IsTerm a, Simplify a) => LabeledStrategy (Context a)
+powerEqStrategy :: IsTerm a => LabeledStrategy (Context a)
 powerEqStrategy = cleanUpStrategy clean strat
   where
     strat =  label "Power equation" $ repeat
@@ -78,6 +75,7 @@ expEqStrategy = cleanUpStrategy cleanup strat
     cleanup = applyD (exhaustiveUse $ {-  simplifyProduct : -} naturalRules ++ rationalRules)
         . applyTop (fmap (mergeConstantsWith (\x-> x `belongsTo` myIntegerView || x `belongsTo` (divView >>> first myIntegerView >>> second myIntegerView))))
         
+    {-
     natRules =
       [ calcPlusWith     "nat" plainNatView
       , calcMinusWith    "nat" plainNatView
@@ -85,7 +83,7 @@ expEqStrategy = cleanUpStrategy cleanup strat
       , calcDivisionWith "nat" plainNatView
       , doubleNegate
       , negateZero
-      ]
+      ] -}
     
     powerS = repeat $ somewhere $ alternatives 
       [ use root2power, use addExponents, use subExponents, use mulExponents
@@ -114,7 +112,7 @@ higherPowerEqStrategy =  cleanUpStrategy cleanup strat
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 onePower : rationalRules
 
-
+somewhereNotInExp :: IsStrategy f => f (Context a) -> Strategy (Context a)
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
     f a = if isPowC a then [1] else [0 .. arity a-1]

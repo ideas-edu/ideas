@@ -35,10 +35,10 @@ equalLogicA:: SLogic -> SLogic -> Bool
 equalLogicA p q = rec p == rec q
  where
    make  = simplifyWith (map rec) . magmaListView
-   rec p = case p of
-              _ :&&: _ -> make andMonoid p
-              _ :||: _ -> make orMonoid  p
-              _        -> descend rec p
+   rec a = case a of
+              _ :&&: _ -> make andMonoid a
+              _ :||: _ -> make orMonoid  a
+              _        -> descend rec a
 
 -----------------------------------------------------------
 -- Logic generator
@@ -72,9 +72,9 @@ normalGenerator = do
 -- Use the propositions with 7-18 steps
 difficultGenerator :: Gen SLogic
 difficultGenerator = do
-   let vars = ShowString "s" : varList
-   p0 <- sizedGen False (oneof $ map return vars) 4
-   p1 <- preventSameVar vars p0
+   let vs = ShowString "s" : varList
+   p0 <- sizedGen False (oneof $ map return vs) 4
+   p1 <- preventSameVar vs p0
    return (removePartsInDNF p1)
 
 varList :: [ShowString]
@@ -130,14 +130,15 @@ removePartsInDNF = buildOr . filter (not . simple) . disjunctions
 
 instance Arbitrary SLogic where
    arbitrary = sized (\i -> sizedGen True varGen (i `min` 4))
+
 instance CoArbitrary SLogic where
    coarbitrary logic = 
       case logic of
-         Var x     -> variant 0 . coarbitrary (map ord (fromShowString x))
-         p :->: q  -> variant 1 . coarbitrary p . coarbitrary q
-         p :<->: q -> variant 2 . coarbitrary p . coarbitrary q
-         p :&&: q  -> variant 3 . coarbitrary p . coarbitrary q
-         p :||: q  -> variant 4 . coarbitrary p . coarbitrary q
-         Not p     -> variant 5 . coarbitrary p
-         T         -> variant 6  
-         F         -> variant 7
+         Var x     -> variant (0 :: Int) . coarbitrary (map ord (fromShowString x))
+         p :->: q  -> variant (1 :: Int) . coarbitrary p . coarbitrary q
+         p :<->: q -> variant (2 :: Int) . coarbitrary p . coarbitrary q
+         p :&&: q  -> variant (3 :: Int) . coarbitrary p . coarbitrary q
+         p :||: q  -> variant (4 :: Int) . coarbitrary p . coarbitrary q
+         Not p     -> variant (5 :: Int) . coarbitrary p
+         T         -> variant (6 :: Int)  
+         F         -> variant (7 :: Int)

@@ -24,7 +24,7 @@ module Text.Parsing
      -- * Derived token parsers
    , pParens, pBracks, pCurly, pCommas, pLines, pInteger
      -- * UU parser combinators
-   , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1
+   , (<$>), (<$), (<*>), (*>), (<*), (<|>), optional, pList, pList1, pSepList
    , pChainl, pChainr, pChoice, pFail
     -- * Operator table (parser)
    , OperatorTable, Associativity(..), pOperators
@@ -191,6 +191,9 @@ optional = UU.opt
 pList, pList1 :: (Ord s, UU.Symbol s) => Parser s a -> Parser s [a]
 pList = UU.pList
 pList1 = UU.pList1
+
+pSepList :: (Ord s, UU.Symbol s) => Parser s a -> Parser s b -> Parser s [a]
+pSepList p q = (:) <$> p <*> pList (q *> p)
 
 pChainl, pChainr :: (Ord s, UU.Symbol s) => Parser s (a -> a -> a) -> Parser s a -> Parser s a
 pChainl = UU.pChainl

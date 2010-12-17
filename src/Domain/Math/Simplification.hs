@@ -10,11 +10,12 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Simplification 
-   ( Simplify(..), smartConstructors
-   , SimplifyConfig(..), simplifyConfig
+   ( Simplify(..), SimplifyConfig(..), smartConstructors
+   , simplifyConfig
    , Simplified, simplified, liftS, liftS2
    , simplifyRule
    , mergeAlike, distribution, constantFolding
+   , mergeAlikeSum, mergeAlikeProduct
    ) where
 
 import Common.Context
@@ -34,11 +35,11 @@ import qualified Common.View as View
 
 
 data SimplifyConfig = SimplifyConfig 
-  { withSmartConstructors :: Bool
-  , withMergeAlike :: Bool
-  , withDistribution :: Bool
+  { withSmartConstructors  :: Bool
+  , withMergeAlike         :: Bool
+  , withDistribution       :: Bool
   , withSimplifySquareRoot :: Bool
-  , withConstantFolding :: Bool
+  , withConstantFolding    :: Bool
   }
 
 class Simplify a where
@@ -46,6 +47,7 @@ class Simplify a where
    simplify :: a -> a
    simplify = simplifyWith simplifyConfig
 
+simplifyConfig :: SimplifyConfig
 simplifyConfig = SimplifyConfig True True True True True
 
 instance Simplify a => Simplify (Context a) where
@@ -197,12 +199,13 @@ mergeAlike a =
 
 mergeAlikeProduct :: [Expr] -> [Expr]
 mergeAlikeProduct ys = f [ (match rationalView y, y) | y <- ys ]
-  where  f []                    = []
-         f ((Nothing  , e):xs)   = e:f xs
-         f ((Just r   , _):xs)   = 
-           let  cs    = r :  [ c  | (Just c   , _)  <- xs ]
-                rest  =      [ x  | (Nothing  , x)  <- xs ]
-           in   build rationalView (product cs):rest
+ where  
+   f []                    = []
+   f ((Nothing  , e):xs)   = e:f xs
+   f ((Just r   , _):xs)   = 
+      let cs   = r : [ c | (Just c, _) <- xs ]
+          rest = [ x | (Nothing, x) <- xs ]
+      in build rationalView (product cs):rest
 
 mergeAlikeSum :: [Expr] -> [Expr]
 mergeAlikeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
@@ -218,10 +221,10 @@ mergeAlikeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
                Nothing -> (r, e)
    
    rec [] = []
-   rec ((Nothing, e):xs) = e:rec xs
-   rec ((Just (r, a), e):xs) = new:rec rest
+   rec ((Nothing, e):ys) = e:rec ys
+   rec ((Just (r, a), e):ys) = new:rec rest
     where
-      (js, rest) = partition (maybe False ((==a) . snd) . fst) xs
+      (js, rest) = partition (maybe False ((==a) . snd) . fst) ys
       rs  = r:map fst (mapMaybe fst js)
       new | null js   = e
           | otherwise = build rationalView (sum rs) .*. a

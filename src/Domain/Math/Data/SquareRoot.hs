@@ -80,14 +80,14 @@ recipSqMap :: Fractional a => SqMap a -> SqMap a
 recipSqMap m = 
    case M.toList m of
       []       -> error "division by zero"
-      [(n, x)] -> M.singleton n (recip (x Prelude.* fromIntegral n))
-      _        -> (a-b) * recipSqMap (makeMap ((a*a) - (b*b)))
+      [(n, x)] -> M.singleton n (recip (x * fromIntegral n))
+      _        -> (a .-. b) .*. recipSqMap (makeMap ((a .*. a) .-. (b .*. b)))
  where
    (ys, zs) = splitAt (length xs `div` 2) xs
    (a, b)   = (M.fromList ys, M.fromList zs)
    xs  = M.toList m
-   (*) = timesSqMap
-   (-) = minusSqMap
+   (.*.) = timesSqMap
+   (.-.) = minusSqMap
 
 sqrtPF :: Num a => P.PrimeFactors -> SqMap a
 sqrtPF n
@@ -100,13 +100,13 @@ sqrtPF n
 -- Type class instances
 
 instance Num a => Show (SquareRoot a) where
-   show (S b m) = g (map f (M.toList m)) ++ imPart
+   show (S isNeg m) = g (map f (M.toList m)) ++ imPart
     where 
       f (n, a) = ( signum a == -1
                  , times (guard (abs a /= 1) >> Just (show (abs a)))
                          (guard (n /= 1)     >> Just ("sqrt(" ++ show (toInteger n) ++ ")"))
                  )
-      imPart = if b then " (imaginary number)" else "" 
+      imPart = if isNeg then " (imaginary number)" else "" 
       g []         = "0"
       g ((b,x):xs) = (if b then "-" else "") ++ x ++ concatMap h xs
       h (b, x)     = (if b then " - " else " + ") ++ x
@@ -147,7 +147,7 @@ toList = map (\(k, r) -> (r, toInteger k)) . M.toList . squareRootMap
 fromSquareRoot :: Num a => SquareRoot a -> Maybe a
 fromSquareRoot a =
    case toList a of
-      [(a, n)] | n==1 -> Just a 
+      [(b, n)] | n==1 -> Just b 
       []              -> Just 0
       _ -> Nothing
 
@@ -165,7 +165,7 @@ scale :: Num a => a -> SquareRoot a -> SquareRoot a
 scale a sr = if a==0 then 0 else fmap (*a) sr
                
 isqrt :: Integer -> Integer
-isqrt = floor . Prelude.sqrt . fromInteger
+isqrt = (floor :: Double -> Integer) . Prelude.sqrt . fromInteger
 
 sqrtRational :: Fractional a => Rational -> SquareRoot a
 sqrtRational r = scale (1/fromIntegral b) (sqrt (a*b))

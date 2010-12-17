@@ -23,7 +23,7 @@ type Approximation = [Double]
 -- Precision of a floating-point number
 
 precision :: Int -> Double -> Double
-precision n = (/a) . fromIntegral . round . (*a)
+precision n = (/a) . fromInteger . round . (*a)
  where a = 10 Prelude.^ max 0 n
 
 ------------------------------------------------------------

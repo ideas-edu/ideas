@@ -162,7 +162,7 @@ longDivision p1 p2 = monicLongDivision (scale (recip a) p1) (scale (recip a) p2)
 -- polynomial long division, where p2 is monic
 monicLongDivision :: Num a => Polynomial a -> Polynomial a -> (Polynomial a, Polynomial a)
 monicLongDivision p1 p2
-   | d1 >= d2 && isMonic p2 = (toP quot, toP rem)
+   | d1 >= d2 && isMonic p2 = (toP quotient, toP remainder)
    | otherwise = error $ "invalid monic division" ++ show (p1, p2)
  where
    d1 = degree p1
@@ -170,7 +170,7 @@ monicLongDivision p1 p2
    xs = map (`coefficient` p1) [d1, d1-1 .. 0]
    ys = drop 1 $ map (negate . (`coefficient` p2)) [d2, d2-1 .. 0]
    
-   (quot, rem) = rec [] xs
+   (quotient, remainder) = rec [] xs
    toP = P . IM.filter (/= 0) . IM.fromAscList . zip [0..]
    
    rec acc (a:as) | length as >= length ys = 
@@ -207,10 +207,10 @@ factorize p
            , Just p2 <- [division p p1]
            ] 
            
-   candidateRoots :: Polynomial Rational -> [Rational]
-   candidateRoots p = nub (map (`approxRational` 0.0001) xs)
-    where
-       f  = eval (fmap fromRational p)
-       df = eval (fmap fromRational (derivative p))
-       xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
-       startList = [0, 3, -3, 10, -10, 100, -100]
+candidateRoots :: Polynomial Rational -> [Rational]
+candidateRoots p = nub (map (`approxRational` 0.0001) xs)
+ where
+    f  = eval (fmap fromRational p)
+    df = eval (fmap fromRational (derivative p))
+    xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
+    startList = [0, 3, -3, 10, -10, 100, -100]

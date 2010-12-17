@@ -51,8 +51,8 @@ makeGroup s rs =
 groupCommutativity, groupAssociativity, groupDistributionOrOverAnd, 
    groupDistributionAndOverOr,groupIdempotency, groupAbsorption, 
    groupTrueProperties, groupFalseProperties, groupDoubleNegation,
-   groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination 
-   :: (Id, [Rule SLogic])
+   groupDeMorgan, groupImplicationEliminatinon, groupEquivalenceElimination,
+   groupInverseDeMorgan, groupInverseDistr :: (Id, [Rule SLogic])
 
 groupCommutativity = makeGroup "Commutativity" 
    [ruleCommOr, ruleCommAnd]

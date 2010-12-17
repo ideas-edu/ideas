@@ -12,7 +12,7 @@
 module Domain.Math.Polynomial.CleanUp 
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
    , cleanUpSimple, collectLikeTerms
-   , normalizeSum, normalizeProduct, acExpr, smart
+   , acExpr, smart
    ) where
 
 import Common.Utils (fixpoint)
@@ -28,7 +28,7 @@ import Domain.Math.Data.SquareRoot (fromSquareRoot)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.OldViews
-import Domain.Math.Simplification (smartConstructors)
+import Domain.Math.Simplification hiding (simplify, simplifyWith)
 import Domain.Math.SquareRoot.Views
 import Prelude hiding ((^), recip)
 import qualified Prelude
@@ -46,10 +46,10 @@ simplerRoot a b
    f x y
       | x == 0              = 0
       | y == 0 || x <= 0    = root (fromIntegral x) (fromIntegral y)
-      | a Prelude.^ y == x  = fromIntegral a
+      | e Prelude.^ y == x  = fromIntegral e
       | otherwise           = root (fromIntegral x) (fromIntegral y)
     where
-      a = round (fromIntegral x ** (1 / fromIntegral y))
+      e = round ((fromIntegral x :: Double) ** (1 / fromIntegral y))
 
 ----------------------------------------------------------------------
 -- Expr normalization
@@ -57,39 +57,7 @@ simplerRoot a b
 collectLikeTerms :: Expr -> Expr
 collectLikeTerms = simplifyWith f sumView
  where
-   f = normalizeSum . map (simplifyWith (second normalizeProduct) productView)
-
-normalizeProduct :: [Expr] -> [Expr]
-normalizeProduct ys = f [ (match rationalView y, y) | y <- ys ]
- where  
-   f []                    = []
-   f ((Nothing  , e):xs)   = e:f xs
-   f ((Just r   , _):xs)   = 
-      let cs   = r : [ c | (Just c, _) <- xs ]
-          rest = [ x | (Nothing, x) <- xs ]
-      in build rationalView (product cs):rest
-
-normalizeSum :: [Expr] -> [Expr]
-normalizeSum xs = rec [ (Just $ pm 1 x, x) | x <- xs ]
- where
-   pm :: Rational -> Expr -> (Rational, Expr)
-   pm r (e1 :*: e2) = case (match rationalView e1, match rationalView e2) of
-                         (Just r1, _) -> pm (r*r1) e2
-                         (_, Just r1) -> pm (r*r1) e1
-                         _           -> (r, e1 .*. e2)
-   pm r (Negate e) = pm (negate r) e
-   pm r e = case match rationalView e of
-               Just r1 -> (r*r1, Nat 1)
-               Nothing -> (r, e)
-   
-   rec [] = []
-   rec ((Nothing, e):xs) = e:rec xs
-   rec ((Just (r, a), e):xs) = new:rec rest
-    where
-      (js, rest) = partition (maybe False ((==a) . snd) . fst) xs
-      rs  = r:map fst (mapMaybe fst js)
-      new | null js   = e
-          | otherwise = build rationalView (sum rs) .*. a 
+   f = mergeAlikeSum . map (simplifyWith (second mergeAlikeProduct) productView)
 
 ------------------------------------------------------------
 -- Cleaning up

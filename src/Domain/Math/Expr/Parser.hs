@@ -107,7 +107,6 @@ pOrList p = (join . orList) <$> pSepList pTerm (pKey "or")
    pTerm =  return <$> p 
         <|> true   <$  pKey "true" 
         <|> false  <$  pKey "false"
-   pSepList p q = (:) <$> p <*> pList (q *> p)
 
 pLogic :: TokenParser a -> TokenParser (Logic a)
 pLogic p = levelOr

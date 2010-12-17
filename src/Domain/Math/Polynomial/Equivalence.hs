@@ -121,14 +121,18 @@ quadrEqContext = eqContextWith (polyEq quadrRel)
 highEqContext :: Context (Logic (Relation Expr)) -> Context (Logic (Relation Expr)) -> Bool
 highEqContext = eqContextWith (polyEq highRel)
 
+eqContextWith :: (Logic (Relation Expr) -> Logic (Relation Expr) -> Bool)
+              -> Context (Logic (Relation Expr)) 
+              -> Context (Logic (Relation Expr))
+              -> Bool
 eqContextWith eq a b = isJust $ do
    termA <- fromContext a
    termB <- fromContext b
    guard $ 
       case (ineqOnClipboard a, ineqOnClipboard b) of 
-         (Just a,  Just b)  -> eq a b && eq termA termB
-         (Just a,  Nothing) -> eq (fmap toEq a) termA && eq a termB
-         (Nothing, Just b)  -> eq (fmap toEq b) termB && eq termA b
+         (Just x,  Just y)  -> eq x y && eq termA termB
+         (Just x,  Nothing) -> eq (fmap toEq x) termA && eq x termB
+         (Nothing, Just y)  -> eq (fmap toEq y) termB && eq termA y
          (Nothing, Nothing) -> eq termA termB
  where
    toEq :: Relation Expr -> Relation Expr
@@ -260,7 +264,7 @@ flipGT r
 
 -- for similarity 
 simLogic :: Ord a => (a -> a) -> Logic a -> Logic a -> Bool
-simLogic f a b = rec (fmap f a) (fmap f b)
+simLogic f p0 q0 = rec (fmap f p0) (fmap f q0)
  where
    rec a b   
       | isOr a =
@@ -288,8 +292,8 @@ simLogic f a b = rec (fmap f a) (fmap f b)
    falseAnd xs = if F `elem` xs then [] else xs
    
    shallowEq a b = 
-      let f = descend (const T) 
-      in f a == f b 
+      let g = descend (const T) 
+      in g a == g b 
       
    isOr (_ :||: _) = True
    isOr _          = False

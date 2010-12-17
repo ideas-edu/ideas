@@ -76,18 +76,20 @@ parseLogicUnicodePars s
        | [c] == equivUSym = equivASym
        | otherwise        = [c]
 
-pLogicGen (impl, equiv, and, or, nt, tr, fl) = pLogic
+pLogicGen :: SymbolTuple -> TokenParser SLogic
+pLogicGen (impl, equiv, conj, disj, neg, tr, fl) = pLogic
  where
    pLogic = flip ($) <$> basic <*> optional composed id
-   basic     =  basicWithPosGen (nt, tr, fl) pLogic
+   basic     =  basicWithPosGen (neg, tr, fl) pLogic
    composed  =  flip (:<->:) <$ pKey equiv <*> basic
             <|> flip (:->:)  <$ pKey impl  <*> basic
-            <|> (\xs p -> foldr1 (:&&:) (p:xs)) <$> pList1 (pKey and *> basic)
-            <|> (\xs p -> foldr1 (:||:) (p:xs)) <$> pList1 (pKey or  *> basic)
+            <|> (\xs p -> foldr1 (:&&:) (p:xs)) <$> pList1 (pKey conj *> basic)
+            <|> (\xs p -> foldr1 (:||:) (p:xs)) <$> pList1 (pKey disj  *> basic)
  
-basicWithPos :: Parser Token SLogic -> Parser Token SLogic
+basicWithPos :: TokenParser SLogic -> TokenParser SLogic
 basicWithPos = basicWithPosGen ("~", "T", "F")
 
+basicWithPosGen :: (String, String, String) -> TokenParser SLogic -> TokenParser SLogic 
 basicWithPosGen t@(nt, tr, fl) p = 
        (Var . ShowString) <$> pVarid
    <|> pParens p
@@ -111,7 +113,7 @@ parseLogicProof s
 --- Helper-functions for syntax warnings
 
 -- analyze parentheses
-analyseAndParse :: Parser Token a -> [Token] -> Either String a
+analyseAndParse :: TokenParser a -> [Token] -> Either String a
 analyseAndParse p ts =
    case checkParentheses ts of
       Just err -> Left (show err)
@@ -146,21 +148,27 @@ ppLogicPars = ppLogicParsGen asciiTuple
 ppLogicUnicodePars :: SLogic -> String
 ppLogicUnicodePars = ppLogicParsGen unicodeTuple
 
-ppLogicParsGen (impl, equiv, and, or, nt, tr, fl) p = foldLogic alg p 0 ""
+ppLogicParsGen :: SymbolTuple -> SLogic -> String
+ppLogicParsGen (impl, equiv, conj, disj, neg, tr, fl) = 
+   (\f -> f 0 "") . foldLogic alg
  where
-   alg = (pp . fromShowString, binop 3 impl, binop 3 equiv, binop 1 and, binop 2 or, nott, pp tr, pp fl)
-   binop prio op p q n = parIf (n/=0 && (n==3 || prio/=n)) 
-                               (p prio . ((" "++op++" ")++) . q prio)
+   alg = ( pp . fromShowString, binop 3 impl, binop 3 equiv, binop 1 conj
+         , binop 2 disj, nott, pp tr, pp fl
+         )
+   binop :: Int -> String -> (Int -> String -> String) -> (Int -> String -> String) -> Int -> String -> String
+   binop prio op p q n = 
+      parIf (n/=0 && (n==3 || prio/=n)) 
+            (p prio . ((" "++op++" ")++) . q prio)
    pp s = const (s++)
-   nott  p _ = (nt++) . p 3
+   nott  p _ = (neg++) . p 3
    parIf b f = if b then ("("++) . f . (")"++) else f
 
 -----------------------------------------------------------
 --- Ascii symbols
 
---asciiSyms :: [String]
---asciiSyms = [implASym, equivASym, andASym, orASym, notASym]
+type SymbolTuple = (String, String, String, String, String, String, String)
 
+asciiTuple :: SymbolTuple
 asciiTuple = (implASym, equivASym, andASym, orASym, notASym, "T", "F")
 
 implASym, equivASym, andASym, orASym, notASym :: String
@@ -176,6 +184,7 @@ notASym   = "~"
 unicodeSyms :: [String]
 unicodeSyms = [implUSym, equivUSym, andUSym, orUSym, notUSym]
 
+unicodeTuple :: SymbolTuple
 unicodeTuple = (implUSym, equivUSym, andUSym, orUSym, notUSym, "T", "F")
 
 implUSym, equivUSym, andUSym, orUSym, notUSym :: String

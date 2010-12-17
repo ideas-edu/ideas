@@ -66,8 +66,8 @@ logicExercise n =
           | n == 1    = generateLevel Easy
           | n == 3    = generateLevel Difficult 
           | otherwise = generateLevel Normal 
-       ok p = let n = fromMaybe maxBound (stepsRemaining maxStep p)
-              in countEquivalences p <= 2 && n >= minStep && n <= maxStep
+       ok p = let i = fromMaybe maxBound (stepsRemaining maxStep p)
+              in countEquivalences p <= 2 && i >= minStep && i <= maxStep
    in restrictGenerator ok gen
 
 suitable :: SLogic -> Bool

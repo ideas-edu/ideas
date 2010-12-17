@@ -37,7 +37,7 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Power.NormViews
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
-
+import Domain.Math.Simplification hiding (simplify, simplifyWith)
 
 -- Change to configurable strategy!
 normPowerEqApproxView :: Int -> View (Relation Expr) (Expr, Expr)
@@ -69,7 +69,7 @@ normPowerEqView = makeView f (uncurry (:==:))
 constRight (lhs :==: rhs) = do
   (vs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
   let rhs' = rhs .+. build sumView (map neg cs)
-  return $ negateEq $ build sumView vs :==: simplifyWith normalizeSum sumView rhs'
+  return $ negateEq $ build sumView vs :==: simplifyWith mergeAlikeSum sumView rhs'
 
 negateEq (lhs :==: rhs) = 
   case lhs of
@@ -82,7 +82,7 @@ varLeft (lhs :==: rhs) = do
 
 scaleLeft (lhs :==: rhs) = 
   match timesView lhs >>= \(c, x) -> return $ 
-    x :==: simplifyWith (second normalizeProduct) productView (rhs ./. c)
+    x :==: simplifyWith (second mergeAlikeProduct) productView (rhs ./. c)
 
 normExpEqView :: View (Equation Expr) (String, Rational)
 normExpEqView = makeView f id >>> linearEquationView

@@ -111,8 +111,8 @@ instance Arbitrary a => Arbitrary (OrList a) where
       xs <- vector n
       return (OrList xs)
 instance CoArbitrary a => CoArbitrary (OrList a) where
-   coarbitrary T           = variant 0
-   coarbitrary (OrList xs) = variant 1 . coarbitrary xs
+   coarbitrary T           = variant (0 :: Int)
+   coarbitrary (OrList xs) = variant (1 :: Int) . coarbitrary xs
 
 instance Show a => Show (OrList a) where
    show T = "true"

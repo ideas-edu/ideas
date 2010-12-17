@@ -20,7 +20,6 @@ import qualified Data.IntMap as IM
 import Common.Utils
 import Control.Monad
 import Data.Maybe
-import Debug.Trace
 
 -------------------------------------------------------------
 -- Representation
@@ -39,9 +38,9 @@ type Factors = IM.IntMap Int
 -- Conversion to and from factors
 
 toFactors :: Integer -> Factors
-toFactors n
-   | n > 0     = rec primes n
-   | n < 0     = rec primes (-n)
+toFactors a
+   | a > 0     = rec primes a
+   | a < 0     = rec primes (-a)
    | otherwise = IM.singleton 0 1
  where
    rec [] n       = IM.singleton (fromIntegral n) 1
@@ -60,7 +59,7 @@ toFactors n
 
 fromFactors :: Factors -> Integer
 fromFactors = product . map f . IM.toList
- where f (a, i) = fromIntegral a ^ fromIntegral i
+ where f (a, i) = toInteger a ^ toInteger i
 
 -- For practical reasons, the list of prime numbers is cut-off after 
 -- 1000 elements (last primes gives 7919).
@@ -140,10 +139,10 @@ greatestPower n = do
 
 allPowers :: Integer -> [(Integer, Integer)]
 allPowers n = do
-  (b, exp) <- maybeToList $ greatestPower n 
-  let f i = let (e, r) = exp `divMod` i
-            in if e > 1 && r == 0 then Just (b^i, e) else Nothing
-  mapMaybe f [1..exp]
+  (b, e) <- maybeToList $ greatestPower n 
+  let f i = let (a, r) = e `divMod` i
+            in if a > 1 && r == 0 then Just (b^i, a) else Nothing
+  mapMaybe f [1..e]
 
 -- prop_allPowers n = traceShow n $ 
 --   and (map (\(a,x) -> fromIntegral a ^ fromIntegral x == n) (allPowers n))

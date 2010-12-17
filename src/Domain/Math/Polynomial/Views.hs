@@ -151,17 +151,31 @@ polynomialList :: Num a => Polynomial a -> [a]
 polynomialList p = map (`coefficient` p) [d, d-1 .. 0]
  where d = degree p
 
-list1 (a)          = [a]
-list2 (a, b)       = [a, b]
-list3 (a, b, c)    = [a, b, c]
+list1 :: a -> [a]
+list1 a = [a]
+
+list2 :: (a, a) -> [a]
+list2 (a, b)     = [a, b]
+
+list3 :: (a, a, a) -> [a]
+list3 (a, b, c) = [a, b, c]
+
+list4 :: (a, a, a, a) -> [a]
 list4 (a, b, c, d) = [a, b, c, d]
 
-isList1 [a]          = Just a
-isList1 _            = Nothing
-isList2 [a, b]       = Just (a, b)
-isList2 _            = Nothing
-isList3 [a, b, c]    = Just (a, b, c)
-isList3 _            = Nothing
+isList1 :: [a] -> Maybe a
+isList1 [a] = Just a
+isList1 _   = Nothing
+
+isList2 :: [a] -> Maybe (a, a)
+isList2 [a, b] = Just (a, b)
+isList2 _      = Nothing
+
+isList3 :: [a] -> Maybe (a, a, a)
+isList3 [a, b, c] = Just (a, b, c)
+isList3 _         = Nothing
+
+isList4 :: [a] -> Maybe (a, a, a, a)
 isList4 [a, b, c, d] = Just (a, b, c, d)
 isList4 _            = Nothing
 
@@ -261,47 +275,49 @@ hasNegSqrt a =
 normHDE :: Expr -> [Expr]
 normHDE e =
    case match (polyViewWith rationalView) e of
-      Just (x, p)  -> g x p
+      Just (x, p)  -> normPolynomial x p
       Nothing -> fromMaybe [e] $ do
          (x, a) <- match (linearEquationViewWith (squareRootViewWith rationalView)) (e :==: 0)
          return [ Var x .+. build (squareRootViewWith rationalView) (-a) ] 
- where
-   g :: String -> Polynomial Rational -> [Expr]
-   g x p 
-       | d==0 = []
-       | length (terms p) <= 1 = [Var x]
-       | d==1 = [Var x .+. fromRational (coefficient 0 p / coefficient 1 p)]
-       | d==2 = let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
-                    discr   = b*b - 4*a*c
-                    sdiscr  = SQ.sqrtRational discr
-                in if discr < 0 then [] else 
-                   map ((Var x .+.) . build (squareRootViewWith rationalView))
-                   [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
-                   , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
-                   ]
-       | otherwise = 
-            case terms p of 
-               [(c, 0), (b, e1), (a, e2)] | e1 > 1 && e2 `mod` e1 == 0 -> 
-                  let list = [(c, 0), (b, 1), (a, e2 `div` e1)]
-                      newp = sum (map (\(x, y) -> scale x (power var y)) list)
-                      sub  = map (substitute (x, Var x^fromIntegral e1))
-                  in concatMap normHDE (sub (g x newp))
-               [(c, 0), (a, n)]
-                  | odd n  -> if c/a >= 0 
-                              then [Var x + root (fromRational (c/a)) (fromIntegral n)]
-                              else [Var x - root (fromRational (abs (c/a))) (fromIntegral n)]
-                  | even n -> if c/a > 0
-                              then []
-                              else [ Var x + root (fromRational (abs (c/a))) (fromIntegral n) 
-                                   , Var x - root (fromRational (abs (c/a))) (fromIntegral n)
-                                   ]
-               _ -> 
-                  case factorize p of
-                     ps | length ps > 1 -> concatMap (g x) ps
-                     _ -> [build (polyViewWith rationalView) (x, p)]
-    where 
-      d = degree p
-      
+
+normPolynomial :: String -> Polynomial Rational -> [Expr]
+normPolynomial x p 
+   | degree p == 0 = 
+        []
+   | length (terms p) <= 1 = 
+        [Var x]
+   | degree p == 1 = 
+        [Var x .+. fromRational (coefficient 0 p / coefficient 1 p)]
+   | degree p == 2 = 
+        let [a,b,c] = [ coefficient n p | n <- [2,1,0] ]
+            discr   = b*b - 4*a*c
+            sdiscr  = SQ.sqrtRational discr
+        in if discr < 0 then [] else 
+           map ((Var x .+.) . build (squareRootViewWith rationalView))
+           [ SQ.scale (1/(2*a)) (SQ.con b + sdiscr)
+           , SQ.scale (1/(2*a)) (SQ.con b - sdiscr)
+           ]
+   | otherwise = 
+        case terms p of 
+           [(c, 0), (b, e1), (a, e2)] | e1 > 1 && e2 `mod` e1 == 0 -> 
+              let list = [(c, 0), (b, 1), (a, e2 `div` e1)]
+                  newp = sum (map (\(y, z) -> scale y (power var z)) list)
+                  sub  = map (substitute (x, Var x^fromIntegral e1))
+              in concatMap normHDE (sub (normPolynomial x newp))
+           [(c, 0), (a, n)]
+              | odd n  -> if c/a >= 0 
+                          then [Var x + root (fromRational (c/a)) (fromIntegral n)]
+                          else [Var x - root (fromRational (abs (c/a))) (fromIntegral n)]
+              | even n -> if c/a > 0
+                          then []
+                          else [ Var x + root (fromRational (abs (c/a))) (fromIntegral n) 
+                               , Var x - root (fromRational (abs (c/a))) (fromIntegral n)
+                               ]
+           _ -> 
+              case factorize p of
+                 ps | length ps > 1 -> concatMap (normPolynomial x) ps
+                 _ -> [build (polyViewWith rationalView) (x, p)]
+
 substitute :: (String, Expr) -> Expr -> Expr
 substitute (s, a) (Var b) | s==b = a
 substitute pair expr = descend (substitute pair) expr

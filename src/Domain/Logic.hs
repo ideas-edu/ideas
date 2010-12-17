@@ -16,7 +16,6 @@ module Domain.Logic
    , module Domain.Logic.GeneralizedRules
    , module Domain.Logic.Generator
    , module Domain.Logic.Parser
-   , module Domain.Logic.Proofs
    , module Domain.Logic.Rules
    , module Domain.Logic.Strategies
    ) where
@@ -27,6 +26,5 @@ import Domain.Logic.Formula
 import Domain.Logic.GeneralizedRules
 import Domain.Logic.Generator
 import Domain.Logic.Parser
-import Domain.Logic.Proofs
 import Domain.Logic.Rules      hiding (rule, ruleList)
 import Domain.Logic.Strategies

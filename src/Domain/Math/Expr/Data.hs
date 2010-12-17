@@ -143,16 +143,16 @@ instance Arbitrary Expr where
 instance CoArbitrary Expr where      
    coarbitrary expr =
       case expr of 
-         a :+: b  -> variant 0 . coarbitrary a . coarbitrary b
-         a :*: b  -> variant 1 . coarbitrary a . coarbitrary b
-         a :-: b  -> variant 2 . coarbitrary a . coarbitrary b
-         Negate a -> variant 3 . coarbitrary a
-         Nat n    -> variant 4 . coarbitrary n
-         a :/: b  -> variant 5 . coarbitrary a . coarbitrary b
-         Number d -> variant 6 . coarbitrary d
-         Sqrt a   -> variant 7 . coarbitrary a
-         Var s    -> variant 8 . coarbitrary s
-         Sym f xs -> variant 9 . coarbitrary (show f) . coarbitrary xs
+         a :+: b  -> variant (0 :: Int) . coarbitrary a . coarbitrary b
+         a :*: b  -> variant (1 :: Int) . coarbitrary a . coarbitrary b
+         a :-: b  -> variant (2 :: Int) . coarbitrary a . coarbitrary b
+         Negate a -> variant (3 :: Int) . coarbitrary a
+         Nat n    -> variant (4 :: Int) . coarbitrary n
+         a :/: b  -> variant (5 :: Int) . coarbitrary a . coarbitrary b
+         Number d -> variant (6 :: Int) . coarbitrary d
+         Sqrt a   -> variant (7 :: Int) . coarbitrary a
+         Var s    -> variant (8 :: Int) . coarbitrary s
+         Sym f xs -> variant (9 :: Int) . coarbitrary (show f) . coarbitrary xs
   
 symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
 symbolGenerator extras syms = f 
@@ -170,9 +170,9 @@ natGenerator :: Gen Expr
 natGenerator = liftM (Nat . abs) arbitrary
 
 varGenerator :: [String] -> Gen Expr
-varGenerator vars
-   | null vars = error "varGenerator: empty list"
-   | otherwise = oneof [ return (Var x) | x <- vars ]
+varGenerator xs
+   | null xs   = error "varGenerator: empty list"
+   | otherwise = oneof [ return (Var x) | x <- xs ]
 
 -----------------------------------------------------------------------
 -- Pretty printer 
@@ -183,6 +183,7 @@ instance Show Expr where
 showExpr :: OperatorTable -> Expr -> String
 showExpr table = rec 0 
  where
+   rec :: Int -> Expr -> String
    rec _ (Nat n)    = if n>=0 then show n else "(ERROR)" ++ show n
    rec _ (Number d) = if d>=0 then show d else "(ERROR)" ++ show d
    rec _ (Var s) 

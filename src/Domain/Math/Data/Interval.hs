@@ -204,11 +204,11 @@ isIn a (IS xs) = any (isInInterval a) xs
 
 isInInterval :: Ord a => a -> Interval a -> Bool
 isInInterval _ Empty   = False
-isInInterval a (I b c) = f GT b && f LT c
+isInInterval a (I x y) = f GT x && f LT y
  where
-   f value x = 
-      let g c = (c==EQ && isIncluding x) || c==value 
-      in maybe True (g . compare a) (getPoint x)
+   f value b = 
+      let g c = (c==EQ && isIncluding b) || c==value 
+      in maybe True (g . compare a) (getPoint b)
 
 ---------------------------------------------------------------------
 -- Local helper functions
@@ -270,9 +270,9 @@ instance (Arbitrary a, Ord a) => Arbitrary (Endpoint a) where
       , (1, return Unbounded)
       ]
 instance (CoArbitrary a, Ord a) => CoArbitrary (Endpoint a) where
-   coarbitrary (Excluding a) = variant 0 . coarbitrary a
-   coarbitrary (Including a) = variant 1 . coarbitrary a
-   coarbitrary Unbounded     = variant 2
+   coarbitrary (Excluding a) = variant (0 :: Int) . coarbitrary a
+   coarbitrary (Including a) = variant (1 :: Int) . coarbitrary a
+   coarbitrary Unbounded     = variant (2 :: Int)
 
 instance (Arbitrary a, Ord a) => Arbitrary (Interval a) where
    arbitrary = frequency 
@@ -280,8 +280,8 @@ instance (Arbitrary a, Ord a) => Arbitrary (Interval a) where
       , (5, liftM2 makeInterval arbitrary arbitrary)
       ]
 instance (CoArbitrary a, Ord a) => CoArbitrary (Interval a) where
-   coarbitrary Empty   = variant 0
-   coarbitrary (I a b) = variant 1 . coarbitrary a . coarbitrary b
+   coarbitrary Empty   = variant (0 :: Int)
+   coarbitrary (I a b) = variant (1 :: Int) . coarbitrary a . coarbitrary b
    
 instance (Arbitrary a, Ord a) => Arbitrary (Intervals a) where
    arbitrary = do

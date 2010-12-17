@@ -64,16 +64,16 @@ type LogicAlg b a = (b -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a,
 
 -- | foldLogic is the standard fold for Logic.
 foldLogic :: LogicAlg b a -> Logic b -> a
-foldLogic (var, impl, equiv, and, or, not, true, false) = rec
+foldLogic (var, impl, equiv, conj, disj, neg, true, false) = rec
  where
    rec logic = 
       case logic of
          Var x     -> var x
          p :->: q  -> rec p `impl`  rec q
          p :<->: q -> rec p `equiv` rec q
-         p :&&: q  -> rec p `and`   rec q
-         p :||: q  -> rec p `or`    rec q
-         Not p     -> not (rec p)
+         p :&&: q  -> rec p `conj`  rec q
+         p :||: q  -> rec p `disj`  rec q
+         Not p     -> neg (rec p)
          T         -> true 
          F         -> false
 
@@ -82,8 +82,10 @@ ppLogic :: Show a => Logic a -> String
 ppLogic = ppLogicPrio 0
         
 ppLogicPrio :: Show a => Int -> Logic a -> String
-ppLogicPrio n p = foldLogic (pp . show, binop 3 "->", binop 0 "<->", binop 2 "/\\", binop 1 "||", nott, pp "T", pp "F") p n ""
+ppLogicPrio = (\f s -> f s "") . flip (foldLogic alg)
  where
+   alg = ( pp . show, binop 3 "->", binop 0 "<->", binop 2 "/\\"
+         , binop 1 "||", nott, pp "T", pp "F")
    binop prio op p q n = parIf (n > prio) (p (prio+1) . ((" "++op++" ")++) . q prio)
    pp s      = const (s++)
    nott p _  = ("~"++) . p 4
@@ -143,14 +145,14 @@ varsLogic :: Eq a => Logic a -> [a]
 varsLogic p = nub [ s | Var s <- universe p ]   
 
 instance Uniplate (Logic a) where
-   uniplate p =
-      case p of 
+   uniplate this =
+      case this of 
          p :->: q  -> ([p, q], \[a, b] -> a :->:  b)
          p :<->: q -> ([p, q], \[a, b] -> a :<->: b)
          p :&&: q  -> ([p, q], \[a, b] -> a :&&:  b)
          p :||: q  -> ([p, q], \[a, b] -> a :||:  b)
          Not p     -> ([p], \[a] -> Not a)
-         _         -> ([], \[] -> p)
+         _         -> ([], \[] -> this)
 
 instance Different (Logic a) where
    different = (T, F)

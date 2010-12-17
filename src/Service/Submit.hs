@@ -30,8 +30,8 @@ data Result a = Buggy  [Rule (Context a)]
               | Unknown                   (State a)  -- equivalent
  
 fromDiagnose :: Diagnosis a -> Result a
-fromDiagnose diagnose =
-   case diagnose of
+fromDiagnose diagnosis =
+   case diagnosis of
       Diagnose.Buggy r        -> Buggy [r]
       Diagnose.NotEquivalent  -> NotEquivalent
       Diagnose.Similar _ s    -> Ok [] s
@@ -40,7 +40,7 @@ fromDiagnose diagnose =
       Diagnose.Correct _ s    -> Unknown s
           
 submit :: State a -> a -> Result a 
-submit state new = fromDiagnose (diagnose state new)
+submit state = fromDiagnose . diagnose state
    
 getResultState :: Result a -> Maybe (State a)
 getResultState result =

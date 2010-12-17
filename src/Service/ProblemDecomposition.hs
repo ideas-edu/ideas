@@ -36,22 +36,22 @@ problemDecomposition msloc (State pkg mpr requestedTerm) answer
                     Ok newLocation newState
                   where 
                     witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
-                    (newContext, newPrefix) = head witnesses
+                    (newCtx, newPrefix) = head witnesses
                     newLocation = nextTaskLocation (strategy ex) sloc $ 
-                                     fromMaybe top $ nextMajorForPrefix newPrefix newContext
-                    newState    = State pkg (Just newPrefix) newContext
-            ((expected, prefix):_, maybeAnswer) -> return $
+                                     fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
+                    newState    = State pkg (Just newPrefix) newCtx
+            ((expected, pref):_, maybeAnswer) -> return $
                     Incorrect isEquiv newLocation expState arguments
              where
                newLocation = subTaskLocation (strategy ex) sloc loc
-               expState = State pkg (Just prefix) expected
+               expState = State pkg (Just pref) expected
                isEquiv  = maybe False (equivalenceContext ex expected) maybeAnswer
-               (loc, arguments) = fromMaybe (top, []) $ 
-                                     firstMajorInPrefix pr prefix requestedTerm
+               (loc, arguments) = fromMaybe (topId, []) $ 
+                                     firstMajorInPrefix pr pref requestedTerm
  where
-   ex   = exercise pkg
-   top  = getId (strategy ex)
-   sloc = fromMaybe top msloc
+   ex    = exercise pkg
+   topId = getId (strategy ex)
+   sloc  = fromMaybe topId msloc
    
 similarityCtx :: Exercise a -> Context a -> Context a -> Bool
 similarityCtx ex a b = fromMaybe False $
@@ -61,14 +61,14 @@ similarityCtx ex a b = fromMaybe False $
 -- major rule should have been executed
 runPrefixLocation :: Id -> Prefix a -> a -> [(a, Prefix a)]
 runPrefixLocation loc p0 =
-   concatMap (check . f) . derivations . 
+   concatMap (checkPair . f) . derivations . 
    cutOnStep (stop . lastStepInPrefix) . prefixTree p0
  where
    f d = (last (terms d), if isEmpty d then p0 else last (steps d))
    stop (Just (Exit info)) = getId info == loc
    stop _ = False
  
-   check result@(a, p)
+   checkPair result@(a, p)
       | null rules            = [result]
       | all isMinorRule rules = runPrefixLocation loc p a
       | otherwise             = [result]
@@ -76,9 +76,8 @@ runPrefixLocation loc p0 =
       rules = stepsToRules $ drop (length $ prefixToSteps p0) $ prefixToSteps p
 
 firstMajorInPrefix :: Prefix a -> Prefix a -> a -> Maybe (Id, Args)
-firstMajorInPrefix p0 prefix a = do
-   let steps = prefixToSteps prefix
-       newSteps = drop (length $ prefixToSteps p0) steps
+firstMajorInPrefix p0 p a = do
+   let newSteps = drop (length $ prefixToSteps p0) (prefixToSteps p)
    is <- firstLocation newSteps
    return (is, argumentsForSteps a newSteps)
  where
@@ -88,7 +87,7 @@ firstMajorInPrefix p0 prefix a = do
    firstLocation (_:rest) = firstLocation rest
  
 argumentsForSteps :: a -> [Step l a] -> Args
-argumentsForSteps a = flip rec a . stepsToRules
+argumentsForSteps a0 = flip rec a0 . stepsToRules
  where
    rec [] _ = []
    rec (r:rs) a
@@ -100,8 +99,7 @@ argumentsForSteps a = flip rec a . stepsToRules
 nextMajorForPrefix :: Prefix a -> a -> Maybe Id
 nextMajorForPrefix p0 a = do
    (_, p1)  <- safeHead $ runPrefixMajor p0 a
-   let steps = prefixToSteps p1
-   rec (reverse steps)
+   rec (reverse (prefixToSteps p1))
  where
    rec [] = Nothing
    rec (Enter info:_) = Just (getId info)

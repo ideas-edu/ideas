@@ -22,14 +22,6 @@ import Common.Strategy.Abstract
 import Text.XML
 import Common.Utils (readInt)
 
-instance InXML (LabeledStrategy a) where
-   toXML       = toXML . toStrategy
-   fromXML xml = fromXML xml >>= toLabeledStrategy
-
-instance InXML (Strategy a) where
-   toXML   = strategyToXML
-   fromXML = xmlToStrategy unknownRule
-
 -----------------------------------------------------------------------
 -- Strategy to XML
 
@@ -115,14 +107,9 @@ findBool attr xml = do
       "false" -> return False
       _       -> fail "not a boolean"
 
-unknownRule :: Monad m => String -> m (Rule a)
-unknownRule s = 
-   let n = "#Unknown rule:" ++ s
-   in return (makeSimpleRule n (const Nothing))
-
 readStrategy :: Monad m => (XML -> m l) -> (l -> m (Rule a)) -> XML -> m (Core l a)
-readStrategy f g xml = do
-   xs <- mapM (readStrategy f g) (children xml)
+readStrategy toLabel findRule xml = do
+   xs <- mapM (readStrategy toLabel findRule) (children xml)
    let s = name xml
    case lookup s table of
       Just f  -> f s xs
@@ -139,12 +126,12 @@ readStrategy f g xml = do
       | null xs   = return Fail
       | otherwise = return (foldr1 (:|>:) xs)
    buildLabel x = do
-      info <- f xml
+      info <- toLabel xml
       return (Label info x)
    buildRule = do
-      info <- f xml
-      rule <- g info
-      return (Label info (Rule rule))
+      info <- toLabel xml
+      r    <- findRule info
+      return (Label info (Rule r))
    buildRec x = do
       s <- findAttribute "var" xml
       i <- maybe (fail "var: not an int") return (readInt s)
@@ -154,11 +141,11 @@ readStrategy f g xml = do
       i <- maybe (fail "var: not an int") return (readInt s)
       return (Var i)
 
-   nullary a _ [] = return a
-   nullary _ s _  = fail $ "Strategy combinator " ++ s ++ "expects 0 args"
+   comb0 a _ [] = return a
+   comb0 _ s _  = fail $ "Strategy combinator " ++ s ++ "expects 0 args"
  
-   unary f _ [x] = return (f x)
-   unary _ s _   = fail $ "Strategy combinator " ++ s ++ "expects 1 arg"
+   comb1 f _ [x] = return (f x)
+   comb1 _ s _   = fail $ "Strategy combinator " ++ s ++ "expects 1 arg"
  
    join2 f g a b = join (f g a b)
  
@@ -166,13 +153,13 @@ readStrategy f g xml = do
       [ ("sequence", buildSequence)
       , ("choice",   buildChoice)
       , ("orelse",   buildOrElse)
-      , ("many",     unary Many)
-      , ("repeat",   unary Repeat)
-      , ("label",    join2 unary buildLabel)
-      , ("rec",      join2 unary buildRec)
-      , ("not",      unary (Not . noLabels))
-      , ("rule",     join2 nullary buildRule)
-      , ("var",      join2 nullary buildVar)
-      , ("succeed",  nullary Succeed)
-      , ("fail",     nullary Fail) 
+      , ("many",     comb1 Many)
+      , ("repeat",   comb1 Repeat)
+      , ("label",    join2 comb1 buildLabel)
+      , ("rec",      join2 comb1 buildRec)
+      , ("not",      comb1 (Not . noLabels))
+      , ("rule",     join2 comb0 buildRule)
+      , ("var",      join2 comb0 buildVar)
+      , ("succeed",  comb0 Succeed)
+      , ("fail",     comb0 Fail) 
       ]

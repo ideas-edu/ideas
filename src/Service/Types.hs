@@ -141,13 +141,13 @@ instance Show (Type a t) where
    show (t1 :-> t2)    = show t1 ++ " -> " ++ show t2 
    show t@(Pair _ _)   = showTuple t
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
-   show (Tag s t)      = s -- ++ "@(" ++ show t ++ ")"
+   show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
    show (IO t)         = show t
    show t              = fromMaybe "unknown" (groundType t)
    
 showTuple :: Type a t -> String
-showTuple t = "(" ++ commaList (collect t) ++ ")"
+showTuple tp = "(" ++ commaList (collect tp) ++ ")"
  where
    collect :: Type a t -> [String]
    collect (Pair t1 t2) = collect t1 ++ collect t2
@@ -184,10 +184,10 @@ typeSynonym :: String -> (t2 -> t) -> (t -> t2) -> Type a t2 -> TypeSynonym a t
 typeSynonym name to from tp = TS
    { synonymName = name
    , useSynonym  = Tag name (Iso to from tp)
-   , isSynonym   = maybe (fail name) return . match
+   , isSynonym   = maybe (fail name) return . matchSynonym
    }
  where
-   match (a ::: t0) = do
+   matchSynonym (a ::: t0) = do
       (s, t) <- isTag t0
       guard (s == name)
       f <- equal t tp

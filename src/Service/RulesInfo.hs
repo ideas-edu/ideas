@@ -28,8 +28,8 @@ rulesInfoXML :: Monad m => Exercise a -> (a -> m XMLBuilder) -> m XMLBuilder
 rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
    
    let pairs = M.findWithDefault [] (getId r) exampleMap
-   examples <- forM (take 3 pairs) $ \(a, b) ->
-                  liftM2 (,) (enc a) (enc b)
+   xs <- forM (take 3 pairs) $ \(a, b) ->
+            liftM2 (,) (enc a) (enc b)
                      
    return $ element "rule" $ do
       "name"        .=. showId r
@@ -54,7 +54,7 @@ rulesInfoXML ex enc = combine $ forM (ruleset ex) $ \r -> do
          element "FMP" $ 
             builder (omobj2xml (toObject fmp))
       -- Examples
-      forM_ examples $ \(a, b) ->
+      forM_ xs $ \(a, b) ->
          element "example" (a >> b)
  where
    f          = map toLower . show
@@ -76,7 +76,7 @@ collectExamples ex = foldr add M.empty (examples ex)
    add a m = let tree = derivationTree (strategy ex) (inContext ex a)
                  f Nothing = m
                  f (Just d) = foldr g m (zip3 (terms d) (steps d) (drop 1 (terms d)))
-                 g (a, r, b) = M.insertWith (++) (getId r) (liftM2 (,) (fromContext a) (fromContext b))
+                 g (x, r, y) = M.insertWith (++) (getId r) (liftM2 (,) (fromContext x) (fromContext y))
              in f (derivation tree) 
 
 rulesInfoType :: Type a ()

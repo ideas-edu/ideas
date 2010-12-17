@@ -19,7 +19,7 @@ import Common.Library hiding (derivation, applicable, apply)
 import Common.Utils (safeHead)
 import Data.List
 import Data.Maybe
-import System.Random
+import System.Random (StdGen, newStdGen)
 import Control.Monad
 import Service.ExercisePackage
 import Service.State
@@ -46,7 +46,7 @@ derivation mcfg state =
          let oldStrategy   = strategy ex
              newStrategy   = configure cfg oldStrategy
              updatePkg pkg = pkg {exercise = updateEx (exercise pkg)}
-             updateEx  ex  = ex  {strategy = newStrategy} 
+             updateEx  ex1 = ex1 {strategy = newStrategy} 
          in rec timeout [] state 
                { prefix      = Just (emptyPrefix newStrategy)
                , exercisePkg = updatePkg (exercisePkg state)
@@ -54,10 +54,10 @@ derivation mcfg state =
       _ -> rec timeout [] state
  where
    ex = exercise (exercisePkg state)
-   timeout = 50
+   timeout = 50 :: Int
  
-   rec i acc state = 
-      case onefirst state of
+   rec i acc st = 
+      case onefirst st of
          Nothing           -> return (reverse acc)
          Just (r, _, next)
             |  i <= 0      -> fail msg
@@ -106,8 +106,8 @@ onefirst state = do
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
-   let check r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (context state))
-   in filter check (ruleset (exercise (exercisePkg state)))
+   let p r = not (isBuggyRule r) && Apply.applicable r (setLocation loc (context state))
+   in filter p (ruleset (exercise (exercisePkg state)))
 
 allapplications :: State a -> [(Rule (Context a), Location, State a)]
 allapplications state = xs ++ ys
@@ -153,5 +153,5 @@ findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =
    let ex      = exercise (exercisePkg state)
        buggies = filter isBuggyRule (ruleset ex)
-       check r = ruleIsRecognized ex r (context state) (inContext ex a)
-   in filter check buggies
+       p r     = ruleIsRecognized ex r (context state) (inContext ex a)
+   in filter p buggies

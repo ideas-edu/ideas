@@ -30,8 +30,9 @@ import Domain.Logic.Formula
 import Domain.Logic.Generator (equalLogicA)
 import Domain.Logic.Parser
 import Domain.Logic.Rules
+import Domain.Logic.GeneralizedRules
+import Domain.Logic.Strategies (somewhereOr)
 import Domain.Logic.Examples 
-import Domain.Logic.Strategies
 import Domain.Math.Expr ()
 import Common.Uniplate
 
@@ -69,18 +70,21 @@ tupleSymbol :: Symbol
 tupleSymbol = newSymbol "basic.tuple"
 
 proofStrategy :: LabeledStrategy (Context [(SLogic, SLogic)])
-proofStrategy = label "proof equivalent" $ 
-   repeat (somewhere (useC commonExprAtom)) <*>
-   repeat (somewhere (use topIsNot <|> use topIsAnd <|> use topIsOr
-             <|> use topIsImpl <|> use topIsEquiv)) <*>
-   repeat (somewhere (use notDNF <*> mapRules useC dnfStrategyDWA)) <*>
-   simpler <*>
-   repeat (somewhere (use topIsNot <|> use topIsAnd <|> use topIsOr -- again..
-             <|> use topIsImpl <|> use topIsEquiv)) <*> 
+proofStrategy = label "proof equivalent" $
+   repeat (
+         somewhere (useC commonExprAtom)
+      |> somewhere splitTop
+      |> somewhere rest
+      ) <*>
    repeat (somewhere (use normLogicRule))
  where
+   splitTop =  use topIsNot  <|> use topIsAnd <|> use topIsOr
+           <|> use topIsImpl <|> use topIsEquiv
+   rest =  use notDNF <*> mapRulesS useC (repeat dnfStrategyDWA)
+       <|> simpler
+
    simpler :: Strategy (Context [(SLogic, SLogic)])
-   simpler = repeat $ somewhere $
+   simpler =
       use tautologyOr <|> use idempotencyAnd <|> use contradictionAnd
       <|> use absorptionSubset <|> use fakeAbsorption <|> use fakeAbsorptionNot
       <|> alternatives (map use list)
@@ -92,6 +96,41 @@ proofStrategy = label "proof equivalent" $
    notDNF :: Rule SLogic
    notDNF = minorRule $ makeSimpleRule "not-dnf" $ \p ->
       if isDNF p then Nothing else Just p
+
+-----------------------------------------------------------------------------
+-- To DNF, with priorities (the "DWA" approach)
+
+dnfStrategyDWA :: Strategy (Context SLogic)
+dnfStrategyDWA =
+   toplevel <|> somewhereOr
+      (  label "Simplify"                            simplify
+      |> label "Eliminate implications/equivalences" eliminateImplEquiv
+      |> label "Eliminate nots"                      eliminateNots
+      |> label "Move ors to top"                     orToTop
+      )
+ where
+    toplevel = useRules 
+       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleIdempOr
+       , ruleAbsorpOr, ruleComplOr
+       ]
+    simplify = somewhere $ useRules
+       [ ruleFalseZeroOr, ruleTrueZeroOr, ruleTrueZeroAnd
+       , ruleFalseZeroAnd, ruleNotTrue, ruleNotFalse
+       , ruleNotNot, ruleIdempOr, ruleIdempAnd, ruleAbsorpOr, ruleAbsorpAnd
+       , ruleComplOr, ruleComplAnd
+       ]
+    eliminateImplEquiv = somewhere $ useRules
+       [ ruleDefImpl, ruleDefEquiv
+       ]
+    eliminateNots = somewhere $ useRules
+       [ generalRuleDeMorganAnd, generalRuleDeMorganOr
+       , ruleDeMorganAnd, ruleDeMorganOr
+       ]
+    orToTop = somewhere $ useRules 
+       [ generalRuleAndOverOr, ruleAndOverOr ]
+
+useRules :: [Rule SLogic] -> Strategy (Context SLogic)
+useRules = alternatives . map liftToContext
 
 onceLeft :: IsStrategy f => f (Context a) -> Strategy (Context a)
 onceLeft s = ruleMoveDown <*> s <*> ruleMoveUp
@@ -113,7 +152,7 @@ testje :: Rule (Context SLogic)
 testje = makeSimpleRule "testje" $ \a -> error $ show a
 
 go n = printDerivation proofExercise [exampleProofs !! n] --(p :||: Not p, Not F)
- --where p = Var (ShowString "p")
+ --where p = Var (ShowString "p") 
  
 normLogicRule :: Rule (SLogic, SLogic)
 normLogicRule = makeSimpleRule "Normalize" $ \tuple@(p, q) -> do
@@ -129,6 +168,8 @@ commonExprAtom = makeSimpleRule "commonExprAtom" $ withCM $ \(p, q) -> do
    let f  = filter same . filter ok . nub . sort . universe 
        xs = f p `intersect` f q -- todo: only largest common sub expr
        ok (Var _) = False
+       ok T       = False
+       ok F       = False
        ok (Not a) = ok a
        ok _       = True
        same cse = eqLogic (sub cse p) (sub cse q)

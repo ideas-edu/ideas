@@ -45,10 +45,10 @@ onefirsttext state event =
       _ -> return (False, "Sorry, no hint available", state)
       
 submittext :: Monad m => State a -> String -> Maybe String -> m (Bool, String, State a)
-submittext state txt _event = do
+submittext state input _event = do
    exText <- exerciseText state
    return $
-      case parser (exercise (exercisePkg state)) txt of
+      case parser (exercise (exercisePkg state)) input of
          Left err -> 
             (False, feedbackSyntaxError exText err, state)
          Right a  -> 
@@ -90,10 +90,9 @@ showRule exText r =
    fromMaybe ("rule " ++ showId r) (ruleText exText r)
 
 useToRewrite :: ExerciseText a -> Rule (Context a) -> State a -> a -> Maybe String
-useToRewrite exText rule old = rewriteIntoText True txt old
+useToRewrite exText r old = rewriteIntoText True txt old
  where
-   txt = "Use " ++ showRule exText rule
-         ++ " to rewrite "
+   txt = "Use " ++ showRule exText r ++ " to rewrite "
 
 youRewroteInto :: State a -> a -> Maybe String
 youRewroteInto = rewriteIntoText False "You rewrote "

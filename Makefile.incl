@@ -54,7 +54,7 @@ show:
 # Programs, tools, and flags
 
 GHC        = ghc
-GHCWARN    = -W -fwarn-tabs -fwarn-duplicate-exports # -fwarn-orphans -fwarn-missing-signatures
+GHCWARN    = -Wall # -fwarn-tabs -fwarn-duplicate-exports # -fwarn-orphans -fwarn-missing-signatures
 HADDOCK    = haddock
 HPC        = hpc
 RUNHASKELL = runhaskell

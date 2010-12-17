@@ -10,7 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Strategies 
-   ( dnfStrategy, dnfStrategyDWA) where
+   ( dnfStrategy, dnfStrategyDWA, somewhereOr
+   ) where
 
 import Prelude hiding (repeat)
 import Domain.Logic.Rules

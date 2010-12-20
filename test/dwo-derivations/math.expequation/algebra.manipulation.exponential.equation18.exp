@@ -1,6 +1,6 @@
-<reply result="ok" version="0.6.6 (3605)">
+<reply result="ok" version="0.6.7 (3710)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.equals-one">
+    <elem ruleid="algebra.manipulation.exponents.equation.equals-one">
       <expr>
         1-2*x == 0
       </expr>

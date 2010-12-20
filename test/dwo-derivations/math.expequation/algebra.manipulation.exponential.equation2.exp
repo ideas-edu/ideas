@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (3605)">
+<reply result="ok" version="0.6.7 (3710)">
   <list>
     <elem ruleid="algebra.manipulation.exponents.factor-as-power">
       <expr>
@@ -8,7 +8,15 @@
         <item name="location" value="[2,2]"/>
       </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal-generic">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+      <expr>
+        2^(x+2) == (2^2)^(-1)
+      </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         2^(x+2) == 2^(-2)
       </expr>
@@ -16,7 +24,7 @@
         <item name="location" value="[2]"/>
       </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.same-base">
+    <elem ruleid="algebra.manipulation.exponents.equation.same-base">
       <expr>
         x+2 == -2
       </expr>

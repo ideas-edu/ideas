@@ -1,11 +1,22 @@
-<reply result="ok" version="0.6.6 (3605)">
+<reply result="ok" version="0.6.7 (3710)">
   <list>
-    <elem ruleid="algebra.manipulation.exponents.reciprocal-for-base">
+    <elem ruleid="algebra.manipulation.exponents.reciprocal">
+      <expr>
+        5^(x-4) == (5^(-1))^(2*x+1)
+      </expr>
+      <context>
+        <item name="location" value="[2,1]"/>
+      </context>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.mul-exponents">
       <expr>
         5^(x-4) == 5^(-2*x-1)
       </expr>
+      <context>
+        <item name="location" value="[2]"/>
+      </context>
     </elem>
-    <elem ruleid="algebra.manipulation.exponents.same-base">
+    <elem ruleid="algebra.manipulation.exponents.equation.same-base">
       <expr>
         x-4 == -2*x-1
       </expr>

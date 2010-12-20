@@ -72,22 +72,14 @@ expEqStrategy = cleanUpStrategy cleanup strat
          <*> (use sameBase <|> use equalsOne)
          <*> linearStrategy
            
-    cleanup = applyD (exhaustiveUse $ {-  simplifyProduct : -} naturalRules ++ rationalRules)
-        . applyTop (fmap (mergeConstantsWith (\x-> x `belongsTo` myIntegerView || x `belongsTo` (divView >>> first myIntegerView >>> second myIntegerView))))
-        
-    {-
-    natRules =
-      [ calcPlusWith     "nat" plainNatView
-      , calcMinusWith    "nat" plainNatView
-      , calcTimesWith    "nat" plainNatView
-      , calcDivisionWith "nat" plainNatView
-      , doubleNegate
-      , negateZero
-      ] -}
+    cleanup = applyD (exhaustiveUse $ naturalRules ++ rationalRules)
+            . applyTop (fmap (mergeConstantsWith isIntRatio))
     
-    powerS = repeat $ somewhere $ alternatives 
-      [ use root2power, use addExponents, use subExponents, use mulExponents
-      , use simpleAddExponents ]--, use reciprocal ] -- , use reciprocalFor ]
+    isIntRatio x = x `belongsTo` myIntegerView || x `belongsTo` v
+      where v = divView >>> first myIntegerView >>> second myIntegerView
+    
+    powerS = exhaustiveUse [ root2power, addExponents, subExponents
+                           , mulExponents,  simpleAddExponents ]
 
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
@@ -97,7 +89,7 @@ logEqStrategy = label "Logarithmic equation"
                                   <|> use calcPower 
                                   <|> use calcPowerPlus 
                                   <|> use calcPowerMinus
-                                  <|> use calcRoot
+                                  <|> use calcPlainRoot
                                   <|> use calcPowerRatio)
              <*> quadraticStrategy
 
@@ -111,15 +103,15 @@ higherPowerEqStrategy =  cleanUpStrategy cleanup strat
          
     cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
                 onePower : rationalRules
+                
+
+-- | Help functions -----------------------------------------------------------
+
+myCoverUpStrategy :: IsTerm a => Strategy (Context a)
+myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules
 
 somewhereNotInExp :: IsStrategy f => f (Context a) -> Strategy (Context a)
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
     f a = if isPowC a then [1] else [0 .. arity a-1]
     isPowC = maybe False (isJust . isPower :: Term -> Bool) . currentT
-
-
--- | Help functions -----------------------------------------------------------
-
-myCoverUpStrategy :: IsTerm a => Strategy (Context a)
-myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules

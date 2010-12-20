@@ -16,7 +16,7 @@ module Domain.Math.Power.Rules
   , subExponents, distributePower, distributePowerDiv, reciprocal
   , reciprocalInv, reciprocalFrac, calcPowerRatio, calcRoot, simplifyPower
   , onePower, powerOne, zeroPower, powerZero, divBase, reciprocalVar
-  , reciprocalPower, factorAsPower, calcRootHead, simpleAddExponents
+  , reciprocalPower, factorAsPower, calcPlainRoot, simpleAddExponents
     -- * Root rules
   , power2root, root2power
     -- * Log rules
@@ -74,22 +74,18 @@ calcPower = makeSimpleRule "arithmetic.operation.rational.power" $ \ expr -> do
 -- | a^(x/y) => (a^x)^(1/y)
 calcPowerRatio :: Rule Expr
 calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
-  (a, (x, y)) <- match (powerView >>> second divView) expr
+  let v = powerView >>> second (rationalView >>> plainRationalView)
+  (a, (x, y)) <- match v expr
   guard $ x /= 1 && y /= 1
-  return $ (a .^. x) .^. (1 ./. y)
+  return $ (a .^. fromInteger x) .^. (1 ./. fromInteger y)
 
--- | root n x
-calcRootHead :: Rule (OrList Expr)
-calcRootHead = makeSimpleRule (power, "root") $ \ ors -> do
-  expr   <- disjunctions ors >>= safeHead
+-- -- | root n x
+calcPlainRoot :: Rule Expr
+calcPlainRoot = makeSimpleRule (power, "root") $ \ expr -> do
   (n, x) <- match (rootView >>> (integerView *** integerView)) expr
-  y      <- liftM fromInteger $ lookup n $ map swap $ PF.allPowers (abs x)
-  let ys | x > 0 && even n = [y, negate y]
-         | x > 0 && odd  n = [y]
-         | x < 0 && odd  n = [negate y]
-         | otherwise       = []
-  roots  <- toMaybe (not. null) ys
-  return $ orList roots
+  y      <- lookup x $ map swap $ PF.allPowers (abs n)
+  guard $ n > 0 || (n < 0 && odd x)
+  return $ fromInteger y
 
 -- | [root n x, ... ]
 calcRoot :: Rule (OrList Expr)

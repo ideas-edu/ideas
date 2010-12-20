@@ -47,7 +47,7 @@ powerEqStrategy :: IsTerm a => LabeledStrategy (Context a)
 powerEqStrategy = cleanUpStrategy clean strat
   where
     strat =  label "Power equation" $ repeat
-          $  try myCoverUpStrategy
+          $  myCoverUpStrategy
          <*> option (use greatestPower <*> use commonPower)
          <*> use nthRoot
          <*> remove (label "useApprox" $ try $ use approxPower)
@@ -65,7 +65,7 @@ expEqStrategy :: LabeledStrategy (Context (Equation Expr))
 expEqStrategy = cleanUpStrategy cleanup strat
   where 
     strat =  label "Exponential equation" 
-          $  try myCoverUpStrategy
+          $  myCoverUpStrategy
          <*> repeat (somewhereNotInExp (use factorAsPower))
          <*> repeat (somewhereNotInExp (use reciprocal))
          <*> powerS 

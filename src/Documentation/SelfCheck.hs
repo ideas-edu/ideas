@@ -21,6 +21,7 @@ import Service.Request
 import Service.DomainReasoner
 import Service.ModeJSON
 import Service.ModeXML
+import qualified Text.OpenMath.Tests as OpenMath
 import qualified Text.UTF8 as UTF8
 import qualified Text.JSON as JSON
 import Data.List
@@ -36,7 +37,8 @@ selfCheck dir = do
          suite "Text encodings" $ do
             addProperty "UTF8 encoding" UTF8.propEncoding
             addProperty "JSON encoding" JSON.propEncoding
-      
+            addProperty "OpenMath encoding" OpenMath.propEncoding
+         
       suite "Domain checks" domainSuite
       
       suite "Exercise checks" $

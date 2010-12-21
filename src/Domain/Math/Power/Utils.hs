@@ -18,7 +18,6 @@ module Domain.Math.Power.Utils where
 import Prelude hiding (repeat, replicate)
 
 import Common.Context
-import Common.Exercise
 import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Transformation
@@ -33,10 +32,10 @@ import Domain.Math.Numeric.Views
 
 
 -- | Test functions -----------------------------------------------------------
-
+{-
 showDerivations ex = mapM_ (putStrLn . showDerivation ex) $ examples ex
 a = Var "a" ; b = Var "b" ; x = Var "x"
-
+-}
 
 -- | Strategy functions -------------------------------------------------------
 

@@ -36,7 +36,8 @@ showHTML = compactXML
 htmlPage :: String -> Maybe String -> HTMLBuilder -> HTML
 htmlPage title css body = makeXML "html" $ do
    element "head" $ do
-      element "title" (text title)
+      unless (null title) $
+         element "title" (text title)
       case css of
          Nothing -> return ()
          Just n  -> element "link" $ do

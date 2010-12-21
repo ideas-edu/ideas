@@ -32,7 +32,6 @@ import Common.Classes
 import Control.Arrow ( (>>^) )
 import Common.Id
 import Common.Transformation
-import Common.Utils (safeHead)
 import Common.View
 import Control.Monad
 import Data.List

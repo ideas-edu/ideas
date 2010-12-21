@@ -15,6 +15,7 @@ module Text.OpenMath.Object
    ) where
 
 import Data.Char (isSpace)
+import Data.Generics.Uniplate hiding (children)
 import Data.List (nub)
 import Data.Maybe
 import Data.Typeable
@@ -35,13 +36,15 @@ instance InXML OMOBJ where
    toXML   = omobj2xml
    fromXML = either fail return . xml2omobj
 
+instance Uniplate OMOBJ where
+   uniplate omobj =
+      case omobj of
+         OMA xs        -> (xs, OMA)
+         OMBIND a ss b -> ([a, b], \[x, y] -> OMBIND x ss y)
+         _             -> ([], \_ -> omobj)
+
 getOMVs :: OMOBJ -> [String]
-getOMVs = nub . rec
- where
-   rec (OMA xs)       = concatMap rec xs
-   rec (OMBIND q _ b) = rec q ++ rec b
-   rec (OMV s)        = [s]
-   rec _              = []
+getOMVs omobj = nub [ x | OMV x <- universe omobj ]
 
 ----------------------------------------------------------
 -- conversion functions: XML <-> OMOBJ

@@ -33,7 +33,9 @@ import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
+import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Equation.CoverUpRules
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
 import Domain.Math.Polynomial.Rules (flipEquation)
 import Domain.Math.Power.Rules
@@ -94,17 +96,15 @@ logEqStrategy = label "Logarithmic equation"
              <*> quadraticStrategy
 
 
-higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
-higherPowerEqStrategy =  cleanUpStrategy cleanup strat
+higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
+higherPowerEqStrategy =  cleanUpStrategy (applyTop $ fmap (fmap cleanUpExpr)) coverUpStrategy
   where 
-    strat = label "Higher power equation" 
-          $  succeed -- powerEqStrategy
-         <*> try (somewhereNotInExp (use factorAsPower) <*> try (somewhere (use mulExponents)))
-         
-    cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-                onePower : rationalRules
-                
+    -- strat = label "Higher power equation" 
+    -- 
+    -- cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
+    --             onePower : rationalRules
 
+-- 
 -- | Help functions -----------------------------------------------------------
 
 myCoverUpStrategy :: IsTerm a => Strategy (Context a)

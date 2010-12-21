@@ -104,7 +104,7 @@ higherPowerEqExercise :: Exercise (OrList (Equation Expr))
 higherPowerEqExercise = makeExercise
   { status         = Provisional
   , parser         = parseExprWith (pOrList (pEquation pExpr))
-  , strategy       = cleanUpStrategy (applyTop $ fmap (fmap cleanUpExpr)) coverUpStrategy
+  , strategy       = higherPowerEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"

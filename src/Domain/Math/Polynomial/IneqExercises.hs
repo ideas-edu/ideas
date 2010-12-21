@@ -215,7 +215,7 @@ cleanUpLogicRelation =
     . catLogic . fmap (f . fmap cleanUpExpr)
    
 trivialRelation :: Rule (OrList (Relation Expr))
-trivialRelation = describe "" $ 
+trivialRelation =
    makeSimpleRule (ineq, "trivial") $ oneDisjunct $ \a -> do
       let new = cleanUpRelation a
       guard (isTrue new || isFalse new)

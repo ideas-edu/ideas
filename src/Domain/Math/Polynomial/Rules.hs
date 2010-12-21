@@ -9,38 +9,41 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Rules where
+module Domain.Math.Polynomial.Rules 
+   ( sameConFactor, abcFormula, allPowerFactors, bringAToOne, cancelTerms
+   , commonFactorVar, commonFactorVarNew, defPowerNat, distributeDivision
+   , distributeTimes, distributionSquare, exposeSameFactor, factorLeftAsSquare
+   , factorVariablePower, flipEquation, higherSubst, merge, moveToLeft, mulZero
+   , niceFactors, niceFactorsNew, noDivisionConstant, noLinFormula, oneVar
+   , parentNotNegCheck, prepareSplitSquare, quadraticRuleOrder, removeDivision
+   , ruleApproximate, ruleNormalizeMixedFraction, ruleNormalizeRational
+   , sameFactor, simplerLinearFactor, simplerPolynomial, simplerSquareRoot
+   , squareBothSides, substBackVar, varToLeft
+   ) where
 
-import Common.Classes
-import Common.Id
-import Common.Context
-import Common.Rewriting
-import Common.Transformation
-import Common.Navigator
+import Common.Library hiding (terms, simplify)
 import Common.Uniplate (universe, descend)
 import Common.Utils
-import Common.View hiding (simplify)
 import Control.Monad
-import Data.List (nub, (\\), sort, sortBy, replicate)
+import Data.List
 import Data.Maybe
 import Data.Ord
 import Data.Ratio
 import Domain.Math.Approximation (precision)
 import Domain.Math.Clipboard
-import Domain.Math.Data.Polynomial
 import Domain.Math.Data.OrList
+import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
-import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Equation.BalanceRules
+import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews
 import Domain.Math.Simplification hiding (simplifyWith)
-import Prelude hiding (repeat, (^), replicate)
-import qualified Domain.Math.Data.Polynomial as P
-import qualified Domain.Math.SquareRoot.Views as SQ
+import Domain.Math.SquareRoot.Views 
+import Prelude hiding ( (^) )
 
 quadraticRuleOrder :: [Id]
 quadraticRuleOrder = 
@@ -58,8 +61,12 @@ lineq   = "algebra.equations.linear"
 quadreq = "algebra.equations.quadratic"
 polyeq  = "algebra.equations.polynomial"
 
+
 ------------------------------------------------------------
 -- General form rules: ax^2 + bx + c = 0
+
+quadraticNF :: View Expr (String, (Rational, Rational, Rational))
+quadraticNF = polyNormalForm rationalView >>> second quadraticPolyView
 
 -- ax^2 + bx = 0 
 commonFactorVar :: Rule (Equation Expr) 
@@ -69,23 +76,18 @@ commonFactorVar = rhsIsZero commonFactorVarNew
 commonFactorVarNew :: Rule Expr
 commonFactorVarNew = describe "Common factor variable" $ 
    makeSimpleRule (quadreq, "common-factor") $ \expr -> do
-      (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) expr
+      (x, (a, b, c)) <- match quadraticNF expr
       guard (b /= 0 && c == 0)
       -- also search for constant factor
       let d | a<0 && b<0 = -gcdFrac a b
             | otherwise  = gcdFrac a b
       return (fromRational d .*. Var x .*. (fromRational (a/d) .*. Var x .+. fromRational (b/d)))
 
-isInt :: MonadPlus m => Rational -> m Integer
-isInt r = do
-   guard (denominator r == 1)
-   return (numerator r)
-
 gcdFrac :: Rational -> Rational -> Rational
-gcdFrac r1 r2 = fromMaybe 1 $ do 
-   a <- isInt r1
-   b <- isInt r2
-   return (fromInteger (gcd a b))
+gcdFrac r1 r2 = 
+   if denominator r1 == 1 && denominator r2 == 1
+   then fromInteger (numerator r1 `gcd` numerator r2)
+   else 1
 
 -- ax^2 + c = 0
 noLinFormula :: Rule (Equation Expr)
@@ -95,7 +97,7 @@ noLinFormula = describe "No linear term ('b=0')" $ liftRule myView $
       return $ if a>0 then ((x, (a, 0, 0)), -c)
                       else ((x, (-a, 0, 0)), c)
  where
-   myView = constantRight (polyNormalForm rationalView >>> second quadraticPolyView)
+   myView = constantRight quadraticNF
 
 -- search for (X+A)*(X+B) decomposition 
 niceFactors :: Rule (Equation Expr)
@@ -201,7 +203,7 @@ simplerSquareRoot = describe "simpler square root" $
    makeSimpleRule (quadreq, "simpler-sqrt") $ \e -> do
       xs <- f e
       guard (not (null xs))
-      new <- canonical (SQ.squareRootViewWith rationalView) e
+      new <- canonical (squareRootViewWith rationalView) e
       ys <- f new
       guard (xs /= ys)
       return new
@@ -244,14 +246,14 @@ prepareSplitSquare = describe "prepare split square" $
       guard (a==1 && b/=0 && c /= newC)
       return ((x, (a, b, newC)), newRHS)
  where
-   myView = constantRight (polyNormalForm rationalView >>> second quadraticPolyView)
+   myView = constantRight quadraticNF
 
 -- factor left-hand side into (ax + c)^2
 factorLeftAsSquare :: Rule (Equation Expr)
 factorLeftAsSquare = describe "factor left as square" $
    makeSimpleRule (quadreq, "left-square") $ \(lhs :==: rhs) -> do
       guard (hasNoVar rhs)
-      (x, (a, b, c)) <- match (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+      (x, (a, b, c)) <- match quadraticNF lhs
       let h = b/2
       guard (a==1 && b/=0 && h*h == c)
       return ((Var x + build rationalView h)^2 :==: rhs) 
@@ -372,7 +374,7 @@ abcFormula :: Rule (Context (OrList (Equation Expr)))
 abcFormula = describe "quadratic formula (abc formule)" $ 
    makeSimpleRule (quadreq, "abc") $ withCM $ oneDisjunct $ \(lhs :==: rhs) -> do
    guard (rhs == 0)
-   (x, (a, b, c)) <- matchM (polyNormalForm rationalView >>> second quadraticPolyView) lhs
+   (x, (a, b, c)) <- matchM quadraticNF lhs
    addListToClipboard ["a", "b", "c"] (map fromRational [a, b, c])
    let discr = b*b - 4 * a * c
        sqD   = sqrt (fromRational discr)
@@ -430,7 +432,7 @@ exposeSameFactor = describe "expose same factor" $
       (s1, p1) <- matchM (polyViewWith rationalView) a
       (s2, p2) <- matchM (polyViewWith rationalView) b
       guard (s1==s2 && p1/=p2)
-      case P.division p2 p1 of
+      case division p2 p1 of
          Just p3 -> return $ map (\p -> build (polyViewWith rationalView) (s1,p)) [p1, p3]
          Nothing -> []
 

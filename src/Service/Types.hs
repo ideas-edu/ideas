@@ -50,24 +50,32 @@ equalM t1 t2 = maybe (fail msg) return (equal t1 t2)
  where msg = "Types not equal: " ++ show t1 ++ " and " ++ show t2
 
 equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
-equal (a :|: b) (c :|: d) = liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
-equal (List a) (List b) = liftM map (equal a b)
-equal Rule Rule = Just id
-equal Unit Unit = Just id
-equal (Pair a b) (Pair c d) = liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
-equal StrategyCfg StrategyCfg = Just id
-equal Location Location = Just id
-equal Id Id = Just id
-equal Term Term = Just id
-equal ExercisePkg ExercisePkg = Just id
-equal Context Context = Just id
-equal Bool Bool = Just id
-equal String String = Just id
-equal Int Int = Just id
-equal (Iso _ f a) b = fmap (. f) (equal a b)
-equal a (Iso f _ b) = fmap (f .) (equal a b)
-equal (Tag s1 a) (Tag s2 b) = guard (s1==s2) >> equal a b
-equal _ _ = Nothing
+equal type1 type2 =
+   case (type1, type2) of
+      (Pair a b,    Pair c d   ) -> equalPairs a b c d
+      (a :|: b,     c :|: d    ) -> equalChoice a b c d
+      (List a,      List b     ) -> liftM map (equal a b)
+      (Rule,        Rule       ) -> Just id
+      (Unit,        Unit       ) -> Just id
+      (StrategyCfg, StrategyCfg) -> Just id
+      (Location,    Location   ) -> Just id
+      (Id,          Id         ) -> Just id
+      (Term,        Term       ) -> Just id
+      (ExercisePkg, ExercisePkg) -> Just id
+      (Context,     Context    ) -> Just id
+      (Bool,        Bool       ) -> Just id
+      (String,      String     ) -> Just id
+      (Int,         Int        ) -> Just id
+      (Iso _ f a,   _          ) -> fmap (. f) (equal a type2)
+      (_,           Iso f _ b  ) -> fmap (f .) (equal type1 b)
+      (Tag s1 a,    Tag s2 b   ) -> guard (s1==s2) >> equal a b
+      _                          -> Nothing
+ where
+   equalPairs a b c d = 
+      liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
+   
+   equalChoice a b c d =
+      liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
 
 infixr 5 :|:
 

@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      5*x^6-37 == 68
+    </expr>
+  </state>
+</request>

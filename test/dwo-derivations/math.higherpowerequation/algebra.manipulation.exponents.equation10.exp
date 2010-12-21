@@ -1,0 +1,25 @@
+<reply result="ok" version="0.6.7 (3710)">
+  <list>
+    <elem ruleid="algebra.equations.coverup.minus-left">
+      <expr>
+        5*x^6 == 105
+      </expr>
+    </elem>
+    <elem ruleid="algebra.equations.coverup.times">
+      <expr>
+        x^6 == 21
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.equation.nth-root">
+      <expr>
+        x == root 21 6
+      </expr>
+    </elem>
+    <elem ruleid="algebra.manipulation.exponents.equation.approx-power">
+      <expr>
+        x ~= 1.66
+      </expr>
+    </elem>
+  </list>
+</reply>
+

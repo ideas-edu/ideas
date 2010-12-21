@@ -1,0 +1,7 @@
+<request service="derivation" exerciseid="algebra.manipulation.exponents.equation" encoding="string">
+  <state>
+    <expr>
+      7/10*x^4-13/10 == 2
+    </expr>
+  </state>
+</request>

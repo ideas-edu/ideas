@@ -1,7 +1,7 @@
 name:                   ideas
-version:                0.6
+version:                0.7
 synopsis:               Feedback services for intelligent tutoring systems
-homepage:               http://ideas.cs.uu.nl/
+homepage:               http://ideas.cs.uu.nl/www/
 description:
 
   ideas provides feedback services to intelligent tutoring systems such as 
@@ -24,41 +24,48 @@ tested-with:            GHC == 6.12.1
 
 Executable              ideas
   Main-is: Main.hs
-  ghc-options: -W -fwarn-tabs -fwarn-duplicate-exports
+  ghc-options: -Wall
   hs-source-dirs: src
-  other-modules:        
-    Common.Apply
+  other-modules:
+    Common.Classes
     Common.Context
     Common.Derivation
     Common.Exercise
+    Common.Id
+    Common.Library
     Common.Navigator
     Common.Rewriting.AC
+    Common.Rewriting.Axioms
+    Common.Rewriting.Confluence
     Common.Rewriting.Difference
-    Common.Rewriting.MetaVar
+    Common.Rewriting.Group
+    Common.Rewriting.Operator
     Common.Rewriting.RewriteRule
     Common.Rewriting.Substitution
     Common.Rewriting.Term
     Common.Rewriting.Unification
     Common.Rewriting
     Common.Strategy.Abstract
-    Common.Strategy.BiasedChoice
     Common.Strategy.Combinators
     Common.Strategy.Configuration
     Common.Strategy.Core
-    Common.Strategy.Grammar
     Common.Strategy.Location
+    Common.Strategy.Parsing
     Common.Strategy.Prefix
     Common.Strategy
+    Common.StringRef
+    Common.TestSuite
     Common.Transformation
-    Common.Traversable
     Common.Uniplate
     Common.Utils
     Common.View
     Documentation.DefaultPage
+    Documentation.DerivationUnitTests
     Documentation.ExercisePage
-    Documentation.LatexRules
     Documentation.Make
     Documentation.OverviewPages
+    Documentation.RulePage
+    Documentation.RulePresenter
     Documentation.SelfCheck
     Documentation.ServicePage
     Documentation.TestsPage
@@ -72,18 +79,20 @@ Executable              ideas
     Domain.LinearAlgebra.MatrixRules
     Domain.LinearAlgebra.Parser
     Domain.LinearAlgebra.Strategies
-    Domain.LinearAlgebra.Symbols
     Domain.LinearAlgebra.Vector
     Domain.LinearAlgebra
     Domain.Logic.BuggyRules
+    Domain.Logic.Examples
     Domain.Logic.Exercises
     Domain.Logic.FeedbackText
     Domain.Logic.Formula
     Domain.Logic.GeneralizedRules
     Domain.Logic.Generator
     Domain.Logic.Parser
+    Domain.Logic.Proofs
     Domain.Logic.Rules
     Domain.Logic.Strategies
+    Domain.Logic.Views
     Domain.Logic
     Domain.Math.Approximation
     Domain.Math.Clipboard
@@ -93,17 +102,20 @@ Executable              ideas
     Domain.Math.Data.PrimeFactors
     Domain.Math.Data.Relation
     Domain.Math.Data.SquareRoot
-    Domain.Math.DerivativeExercise
-    Domain.Math.DerivativeRules
+    Domain.Math.Derivative.Exercises
+    Domain.Math.Derivative.Rules
+    Domain.Math.Derivative.Strategies
+    Domain.Math.Equation.BalanceRules
     Domain.Math.Equation.CoverUpExercise
     Domain.Math.Equation.CoverUpRules
     Domain.Math.Equation.Views
     Domain.Math.Examples.DWO1
     Domain.Math.Examples.DWO2
     Domain.Math.Examples.DWO3
+    Domain.Math.Examples.DWO4
+    Domain.Math.Examples.DWO5
     Domain.Math.Expr.Data
     Domain.Math.Expr.Parser
-    Domain.Math.Expr.Symbolic
     Domain.Math.Expr.Symbols
     Domain.Math.Expr.Views
     Domain.Math.Expr
@@ -120,23 +132,27 @@ Executable              ideas
     Domain.Math.Polynomial.Exercises
     Domain.Math.Polynomial.Generators
     Domain.Math.Polynomial.IneqExercises
+    Domain.Math.Polynomial.LeastCommonMultiple
+    Domain.Math.Polynomial.RationalExercises
+    Domain.Math.Polynomial.RationalRules
     Domain.Math.Polynomial.Rules
     Domain.Math.Polynomial.Strategies
     Domain.Math.Polynomial.Tests
     Domain.Math.Polynomial.Views
+    Domain.Math.Power.Equation.Exercises
+    Domain.Math.Power.Equation.NormViews
+    Domain.Math.Power.Equation.Rules
+    Domain.Math.Power.Equation.Strategies
     Domain.Math.Power.Exercises
+    Domain.Math.Power.NormViews
+    Domain.Math.Power.OldViews
     Domain.Math.Power.Rules
     Domain.Math.Power.Strategies
+    Domain.Math.Power.Utils
     Domain.Math.Power.Views
     Domain.Math.Simplification
     Domain.Math.SquareRoot.Tests
     Domain.Math.SquareRoot.Views
-    Domain.RegularExpr.Definitions
-    Domain.RegularExpr.Exercises
-    Domain.RegularExpr.Expr
-    Domain.RegularExpr.Parser
-    Domain.RegularExpr.Strategy
-    Domain.RelationAlgebra.Equivalence
     Domain.RelationAlgebra.Exercises
     Domain.RelationAlgebra.Formula
     Domain.RelationAlgebra.Generator
@@ -144,13 +160,15 @@ Executable              ideas
     Domain.RelationAlgebra.Rules
     Domain.RelationAlgebra.Strategies
     Domain.RelationAlgebra
-    Main.ExerciseList
+    Main.IDEAS
     Main.LoggingDatabase
     Main.Options
     Main.Revision
     Main
+    Service.BasicServices
     Service.Diagnose
     Service.DomainReasoner
+    Service.Evaluator
     Service.ExercisePackage
     Service.FeedbackText
     Service.ModeJSON
@@ -159,9 +177,9 @@ Executable              ideas
     Service.Request
     Service.RulesInfo
     Service.ServiceList
+    Service.State
     Service.StrategyInfo
     Service.Submit
-    Service.TypedAbstractService
     Service.TypedExample
     Service.Types
     Text.HTML
@@ -181,6 +199,7 @@ Executable              ideas
     Text.OpenMath.MakeSymbols
     Text.OpenMath.Object
     Text.OpenMath.Symbol
+    Text.OpenMath.Tests
     Text.Parsing
     Text.Scanning
     Text.UTF8

@@ -97,14 +97,12 @@ logEqStrategy = label "Logarithmic equation"
 
 
 higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-higherPowerEqStrategy =  cleanUpStrategy (applyTop $ fmap (fmap cleanUpExpr)) coverUpStrategy
+higherPowerEqStrategy =  cleanUpStrategy cleanup coverUpStrategy
   where 
-    -- strat = label "Higher power equation" 
-    -- 
-    -- cleanup = applyD $ repeat $ alternatives $ map (somewhere . use) $ 
-    --             onePower : rationalRules
+    cleanup = applyTop $ fmap $ fmap cleanUpExpr
 
--- 
+
+
 -- | Help functions -----------------------------------------------------------
 
 myCoverUpStrategy :: IsTerm a => Strategy (Context a)

@@ -11,9 +11,9 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Power.Equation.Exercises    
    ( powerEqExercise
-   , higherPowerEqExercise
    , expEqExercise
    , logEqExercise
+   , higherPowerEqExercise
    ) where
 
 import Prelude hiding ( (^) )
@@ -31,6 +31,11 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 
+
+import Common.Classes
+import Domain.Math.Power.Utils
+
+
 ------------------------------------------------------------
 -- Exercises
 
@@ -42,7 +47,8 @@ powerEqExercise = let precision = 2 in makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = concatMap (map $ build equationView) powerEquations
+  , examples       = concatMap (map $ build equationView) $ 
+                       powerEquations ++ [last higherPowerEquations]
   , isReady        = solvedRelation
   , isSuitable   = (`belongsTo` (normPowerEqApproxView precision))
   , equivalence    = viewEquivalent (normPowerEqApproxView precision)
@@ -79,23 +85,6 @@ logEqExercise = makeExercise
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }
-
--- higherPowerEquationExercise :: Exercise (OrList (Relation Expr))
--- higherPowerEquationExercise = makeExercise
---   { status         = Provisional
---   , parser         = parseExprWith (pOrList (pRelation pExpr))
---   , strategy       = coverUpStrategy--higherPowerEqStrategy
---   , navigation     = termNavigator
---   , exerciseId     = describe "solve higher power equation algebraically" $ 
---                        newId "algebra.manipulation.exponents.equation"
---   , examples       = map (orList . return . build equationView) $
---                       concat $ init higherPowerEquations
---   , isReady        = solvedRelations
---   -- , isSuitable     = (`belongsTo` (switchView equationView >>> normPowerEqView))
---   -- , equivalence    = viewEquivalent (switchView equationView >>> normPowerEqView)
---   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
---                                         , getId calcRoot ]
---   }
 
 higherPowerEqExercise :: Exercise (OrList (Equation Expr))
 higherPowerEqExercise = makeExercise

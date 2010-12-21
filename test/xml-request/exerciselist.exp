@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.6 (0)">
+<reply result="ok" version="0.7 (0)">
   <list>
     <elem exerciseid="algebra.equations.coverup" description="solve an equation by covering up" status="Provisional"/>
     <elem exerciseid="algebra.equations.linear" description="solve a linear equation" status="Provisional"/>
@@ -23,7 +23,6 @@
     <elem exerciseid="arithmetic.fractions" description="simplify expression (fractions)" status="Alpha"/>
     <elem exerciseid="calculus.differentiation" description="Derivative" status="Experimental"/>
     <elem exerciseid="calculus.differentiation.polynomial" description="Find the derivative of a polynomial. First normalize the polynomial (e.g., with distribution). Don't make use of the product-rule, or other chain rules." status="Provisional"/>
-    <elem exerciseid="calculus.differentiation.power" description="First write as a power, then find the derivative. Rewrite negative or rational exponents." status="Experimental"/>
     <elem exerciseid="calculus.differentiation.product" description="Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer." status="Provisional"/>
     <elem exerciseid="calculus.differentiation.quotient" description="Use the quotient-rule to find the derivative of a polynomial. Only remove parentheses in the numerator." status="Provisional"/>
     <elem exerciseid="linearalgebra.gaussianelim" description="Gaussian Elimination" status="Stable"/>

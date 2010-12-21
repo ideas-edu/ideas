@@ -116,11 +116,6 @@
          "status": "Provisional"
       },
       {
-         "exerciseid": "calculus.differentiation.power",
-         "description": "First write as a power, then find the derivative. Rewrite negative or rational exponents.",
-         "status": "Experimental"
-      },
-      {
          "exerciseid": "calculus.differentiation.product",
          "description": "Use the product-rule to find the derivative of a polynomial. Keep the parentheses in your answer.",
          "status": "Provisional"
@@ -168,5 +163,5 @@
    ],
    "error": null,
    "id": 421,
-   "version": "0.6.6 (0)"
+   "version": "0.7 (0)"
 }

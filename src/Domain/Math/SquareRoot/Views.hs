@@ -35,8 +35,12 @@ squareRootViewWith v = makeView f g
          a :/: b  -> join $ liftM2 fracDiv (f a) (f b)
          Sqrt a   -> fmap sqrtRational (match rationalView a)
          Sym s [a, b] | isPowerSymbol s ->
-            liftM2 (^) (f a) (match integerView b)
+            liftM2 power (f a) (match integerView b)
          _ -> fmap con (match v expr)
+   
+   power a n 
+      | n >= 0    = a ^ n
+      | otherwise = 1 / (a ^ abs n)
    
    g = build sumView . map h . toList
    h (a, n)  

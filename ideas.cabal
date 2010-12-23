@@ -18,7 +18,7 @@ stability:              provisional
 extra-source-files:     CREDITS.txt
 build-type:             Simple
 cabal-version:          >= 1.8.0.2
-tested-with:            GHC == 6.12.1
+tested-with:            GHC == 6.10.1, GHC == 6.12.1
 
 --------------------------------------------------------------------------------
 
@@ -221,7 +221,8 @@ Executable              ideas
                         uulib,
                         filepath,
                         parsec,
-                        old-time
+                        old-time,
+                        uniplate
 
 --------------------------------------------------------------------------------
 

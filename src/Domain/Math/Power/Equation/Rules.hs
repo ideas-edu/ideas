@@ -80,9 +80,9 @@ approxPowerT n = makeTrans $ \ expr ->
   match equationView expr >>= f
   where
     f (Var x :==: d) = 
-      match doubleView d >>= Just . (Var x .~=.) . Number . precision n
+      match doubleView d >>= Just . (Var x .~=.) . fromDouble . precision n
     f (d :==: Var x) = 
-      match doubleView d >>= Just . (.~=. Var x) . Number . precision n
+      match doubleView d >>= Just . (.~=. Var x) . fromDouble . precision n
     f _              = Nothing
 
 -- -- a*x + c = b*y + d  =>  a*x - b*y = d - c   (move vars to the left, cons to the right)

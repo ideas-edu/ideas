@@ -62,6 +62,7 @@ normPowerEqView = makeView f (uncurry (:==:))
                           simplify normPowerView lhs
       (a, x)         <- match myPowerView ax
       -- simplify, scale and take root
+      guard $ c /= 0 && x /= 0
       let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
       return (a, simplify rationalView y)
 
@@ -140,10 +141,10 @@ normLogView = makeView g id
         _ -> Nothing
     f b expr= 
       case expr of
-        Nat 1     -> Nat 0
+        Nat 1         -> 0
         Nat n     
-          | n == b    -> Nat 1
-          | otherwise -> maybe (logBase (fromInteger b) (fromInteger n)) Nat 
+          | n == b    -> 1
+          | otherwise -> maybe (logBase (fromInteger b) (fromInteger n)) fromInteger 
                        $ lookup b (allPowers n)
         e1 :*: e2 -> f b e1 .+. f b e2
         e1 :/: e2 -> f b e1 .-. f b e2
@@ -184,32 +185,4 @@ simplerPower expr =
                     (a, b) <- match divView x
                     return $ build divView (a .^. y, b .^. y)
     _ -> Nothing
-
--- myRationalView = makeView (exprToNum f) id >>> rationalView
---   where
---     f s [x, y] 
---       | isDivideSymbol s = 
---           fracDiv x y
---       | isPowerSymbol s = do
---           ry <- match rationalView y
---           rx <- match rationalView x
---           if      ry == 0 then return 1                      -- 0
---           else if ry == 1 then return rx                     -- 1
---           else if denominator ry == 1 then            -- geheel getal
---             let a = x Prelude.^ abs (numerator ry)
---             in return $ if numerator ry < 0 then 1 / a else a
---           else if numerator ry == 1 then              -- breuk / root
---             if denominator ry > 1 then 
---               if denominator rx == 1 then
---                 takeRoot (numerator rx) (denominator ry)   -- breuk/root
---               else
---                 f powerSymbol [numerator rx, ] / f powerSymbol []
---             else
---               take
---           else                                       -- no calculation
---       | isRootSymbol s = do
---           n <- match integerView y
---           b <- match integerView x
---           liftM fromInteger $ lookup b $ map swap (allPowers n)
---     f _ _ = Nothing
 

@@ -31,9 +31,8 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 
-
-import Common.Classes
-import Domain.Math.Power.Utils
+-- import Common.Classes
+-- import Domain.Math.Power.Utils
 
 
 ------------------------------------------------------------

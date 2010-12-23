@@ -25,17 +25,12 @@ import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
+import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
 
-
--- | Test functions -----------------------------------------------------------
-{-
-showDerivations ex = mapM_ (putStrLn . showDerivation ex) $ examples ex
-a = Var "a" ; b = Var "b" ; x = Var "x"
--}
 
 -- | Strategy functions -------------------------------------------------------
 
@@ -138,6 +133,14 @@ fractionRules =
 
 
 -- | Common functions ---------------------------------------------------------
+
+takeRoot :: Integer -> Integer -> Maybe Integer
+takeRoot n x = do
+  y <- if (abs n == 1) 
+         then Just 1
+         else lookup x $ map swap $ PF.allPowers (abs n)
+  guard $ n > 0 || (n < 0 && odd x)
+  return $ if n > 0 then y else negate y
 
 swap :: (a, b) -> (b, a)
 swap (a, b) = (b, a)

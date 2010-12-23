@@ -21,7 +21,7 @@ module Domain.Math.Expr.Symbols
    , atanSymbol, acosSymbol, sinhSymbol, tanhSymbol, coshSymbol, asinhSymbol
    , atanhSymbol, acoshSymbol, bottomSymbol, fcompSymbol
      -- Matching
-   , isPlus, isTimes, isMinus, isDivide, isPower, isNegate
+   , isPlus, isTimes, isMinus, isDivide, isPower, isNegate, isRoot
    , isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol
    , (^), root
    ) where
@@ -102,7 +102,7 @@ fcompSymbol  = newSymbol "compose"
 -------------------------------------------------------------
 -- Some match functions
 
-isPlus, isTimes, isMinus, isDivide, isPower :: 
+isPlus, isTimes, isMinus, isDivide, isPower, isRoot :: 
    (WithFunctions a, MonadPlus m) => a -> m (a, a)
 isNegate :: (WithFunctions a, MonadPlus m) => a -> m a
    
@@ -112,6 +112,7 @@ isMinus  = isBinary     minusSymbol
 isDivide = isBinary     divideSymbol 
 isNegate = isUnary      negateSymbol 
 isPower  = isBinary     powerSymbol
+isRoot   = isBinary     rootSymbol
 
 isPowerSymbol, isRootSymbol, isLogSymbol, isDivideSymbol :: Symbol -> Bool
 

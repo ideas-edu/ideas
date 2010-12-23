@@ -11,16 +11,16 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Equation.NormViews
-   ( normPowerEqApproxView
+{-   ( normPowerEqApproxView
    , normPowerEqView
    , normExpEqView
    , normLogEqView
 --   , normLogView
-   ) where
+   ) -} where
 
 import Common.Classes
 import Common.View
-import Common.Rewriting
+import Common.Rewriting hiding (rewrite)
 import Control.Arrow ( (>>^) )
 import Control.Monad
 import Data.List
@@ -32,11 +32,14 @@ import Domain.Math.Data.PrimeFactors
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.NormViews
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Simplification hiding (simplify, simplifyWith)
+
+import Common.Uniplate
 
 -- Change to configurable strategy!
 normPowerEqApproxView :: Int -> View (Relation Expr) (Expr, Expr)
@@ -59,11 +62,24 @@ normPowerEqView = makeView f (uncurry (:==:))
                           simplify normPowerView lhs
       (a, x)         <- match myPowerView ax
       -- simplify, scale and take root
-      return (a, simplify rationalView ((rhs ./. c) .^. (1 ./. x)))
+      let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
+      return (a, simplify rationalView y)
 
     myPowerView =  powerView 
                <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (1 ./.)))
                <&> (identity >>^ \a->(a,1))
+
+normPowerEqView' :: View (Equation Expr) (Expr, Expr) -- with x>0!
+normPowerEqView' = makeView f (uncurry (:==:))
+  where
+    f expr = do
+      -- selected var to the left, the rest to the right
+      (lhs :==: rhs) <- varLeft expr >>= constRight
+      -- match power
+      (c, (a, x))    <- match unitPowerView lhs
+      -- simplify, scale and take root
+      let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
+      return (a, simplify myRationalView y)
 
 constRight :: Equation Expr -> Maybe (Equation Expr)
 constRight (lhs :==: rhs) = do
@@ -139,23 +155,61 @@ normLogView = makeView g id
         _         -> expr
 
 myRationalView :: View Expr Rational
-myRationalView = makeView (exprToNum f) id >>> rationalView
-  where
-    f s [x, y] 
-      | isDivideSymbol s = 
-          fracDiv x y
-      | isPowerSymbol s = do
-          ry <- match rationalView y
-          if denominator ry == 1 
-            then do 
-              let a = x Prelude.^ abs (numerator ry)
-              return (if numerator ry < 0 then 1/a else a)
-            else
-              f rootSymbol [ fromInteger (denominator ry)
-                           , x Prelude.^ numerator ry ]
-      | isRootSymbol s = do
-          n <- match integerView y
-          b <- match integerView x
-          liftM fromInteger $ lookup b $ map swap (allPowers n)
-    f _ _ = Nothing
+myRationalView = makeView (return . rewrite simplerPower) id >>> rationalView
+
+simplerPower :: Expr -> Maybe Expr
+simplerPower expr = 
+  case expr of      
+    Sqrt x -> simplerPower $ x .^. (1/2)
+    Sym s [x, y]
+      | isRootSymbol s  -> simplerPower $ x .^. (1/y)
+      | isPowerSymbol s -> f
+      | otherwise -> Nothing
+        where f | y == 0 || x == 1 = Just 1
+                | y == 1 = Just x
+                | x == 0 = Just 0
+                | otherwise =
+                  -- geheel getal
+                  liftM fromRational (match rationalView expr) 
+                  `mplus`
+                  -- wortel
+                  do 
+                    ry <- match rationalView y
+                    rx <- match rationalView x
+                    guard $ numerator ry == 1 && denominator rx == 1
+                    liftM fromInteger $ takeRoot (numerator rx) (denominator ry)
+                  `mplus`
+                  -- (a/b)^y -> a^x/b^y
+                  do
+                    (a, b) <- match divView x
+                    return $ build divView (a .^. y, b .^. y)
+    _ -> Nothing
+
+-- myRationalView = makeView (exprToNum f) id >>> rationalView
+--   where
+--     f s [x, y] 
+--       | isDivideSymbol s = 
+--           fracDiv x y
+--       | isPowerSymbol s = do
+--           ry <- match rationalView y
+--           rx <- match rationalView x
+--           if      ry == 0 then return 1                      -- 0
+--           else if ry == 1 then return rx                     -- 1
+--           else if denominator ry == 1 then            -- geheel getal
+--             let a = x Prelude.^ abs (numerator ry)
+--             in return $ if numerator ry < 0 then 1 / a else a
+--           else if numerator ry == 1 then              -- breuk / root
+--             if denominator ry > 1 then 
+--               if denominator rx == 1 then
+--                 takeRoot (numerator rx) (denominator ry)   -- breuk/root
+--               else
+--                 f powerSymbol [numerator rx, ] / f powerSymbol []
+--             else
+--               take
+--           else                                       -- no calculation
+--       | isRootSymbol s = do
+--           n <- match integerView y
+--           b <- match integerView x
+--           liftM fromInteger $ lookup b $ map swap (allPowers n)
+--     f _ _ = Nothing
 

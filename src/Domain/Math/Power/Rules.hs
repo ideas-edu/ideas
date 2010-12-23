@@ -82,8 +82,7 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
 calcPlainRoot :: Rule Expr
 calcPlainRoot = makeSimpleRule (power, "root") $ \ expr -> do
   (n, x) <- match (rootView >>> (integerView *** integerView)) expr
-  y      <- lookup x $ map swap $ PF.allPowers (abs n)
-  guard $ n > 0 || (n < 0 && odd x)
+  y      <- takeRoot n x
   return $ fromInteger y
 
 -- | [root n x, ... ]

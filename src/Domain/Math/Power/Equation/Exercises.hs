@@ -31,9 +31,6 @@ import Domain.Math.Power.Rules
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 
--- import Common.Classes
--- import Domain.Math.Power.Utils
-
 
 ------------------------------------------------------------
 -- Exercises
@@ -95,8 +92,9 @@ higherPowerEqExercise = makeExercise
                        newId "algebra.manipulation.exponents.equation"
   , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
-  -- , isSuitable     = (`belongsTo` (switchView equationView >>> normPowerEqView))
-  -- , equivalence    = viewEquivalent (switchView equationView >>> normPowerEqView)
+  , isSuitable     = maybe False and . disjunctions . fmap (`belongsTo` normPowerEqView)
+  , equivalence    = let f = normalize . fmap (simplify normPowerEqView')
+                     in \ x y -> f x == f y
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

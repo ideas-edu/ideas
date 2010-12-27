@@ -112,7 +112,7 @@ fill i = rec
 buildSpec :: [Symbol] -> RuleSpec Term -> Term -> [Term]
 buildSpec ops (lhs :~> rhs) a = do
    s <- Unification.match ops lhs a
-   let (b1, b2) = (specialLeft `elem` dom s, specialRight `elem` dom s)
+   let (b1, b2) = (specialLeft `IS.member` dom s, specialRight `IS.member` dom s)
        sym      = maybe (error "buildSpec") fst (getFunction lhs)
        extLeft  x = if b1 then binary sym (Meta specialLeft) x else x
        extRight x = if b2 then binary sym x (Meta specialRight) else x

@@ -12,6 +12,7 @@
 module Documentation.SelfCheck (selfCheck, blackBoxTests) where
 
 import System.Directory
+import qualified Common.Rewriting.Substitution as Substitution
 import Common.TestSuite
 import Common.Utils (useFixedStdGen, Some(..), snd3)
 import Common.Exercise
@@ -38,6 +39,7 @@ selfCheck dir = do
             addProperty "UTF8 encoding" UTF8.propEncoding
             addProperty "JSON encoding" JSON.propEncoding
             addProperty "OpenMath encoding" OpenMath.propEncoding
+         Substitution.tests
          
       suite "Domain checks" domainSuite
       

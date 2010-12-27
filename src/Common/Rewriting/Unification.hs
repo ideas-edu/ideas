@@ -104,7 +104,7 @@ match assocSymbols = rec True
    recList (x:xs) (y:ys) = do
       s1 <- rec False x y
       s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
-      return (s2 @@@ s1)
+      return (s2 @@ s1)
    recList _ _ = []
       
 associativeMatch :: Bool -> Symbol -> Term -> Term -> Term -> [[(Term, Term)]]

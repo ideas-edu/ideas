@@ -24,6 +24,7 @@ import Common.Transformation
 import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
+import Data.Maybe
 import Data.Ratio
 import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
@@ -134,13 +135,25 @@ fractionRules =
 
 -- | Common functions ---------------------------------------------------------
 
-takeRoot :: Integer -> Integer -> Maybe Integer
-takeRoot n x = do
-  y <- if (abs n == 1) 
-         then Just 1
-         else lookup x $ map swap $ PF.allPowers (abs n)
-  guard $ n > 0 || (n < 0 && odd x)
-  return $ if n > 0 then y else negate y
+-- y = root n x
+takeRoot :: Integer -> Integer -> [Integer]
+takeRoot n x | n == 0    = [0]
+             | n == 1    = if x > 0 && odd x then [1] else [1, -1]
+             | n == (-1) = if x > 0 && odd x then [-1] else []
+             | x == 1    = [n]
+             | x > 0     = maybe [] roots $ lookup x $ map swap $ PF.allPowers (abs n) 
+             | otherwise = []
+  where
+    roots r | n > 0 && even x = [r, negate r]
+            | n > 0 && odd  x = [r]
+            | n < 0 && odd  x = [negate r]
+            | otherwise       = []
+
+-- -- n == a^x with (a,x) == greatestPower n
+-- prop_takeRoot n = traceShow n f
+--   where
+--     f n x | x > 0 = n `elem` (takeRoot (n Prelude.^ x) x)
+--           | otherwise = True
 
 swap :: (a, b) -> (b, a)
 swap (a, b) = (b, a)

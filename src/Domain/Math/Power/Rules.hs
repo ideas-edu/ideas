@@ -79,11 +79,11 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
   return $ (a .^. fromInteger x) .^. (1 ./. fromInteger y)
 
 -- -- | root n x
-calcPlainRoot :: Rule Expr
-calcPlainRoot = makeSimpleRule (power, "root") $ \ expr -> do
-  (n, x) <- match (rootView >>> (integerView *** integerView)) expr
-  y      <- takeRoot n x
-  return $ fromInteger y
+calcPlainRoot :: Rule (OrList Expr)
+calcPlainRoot = makeSimpleRuleList (power, "root") $ \ ors -> do
+  expr   <- fromMaybe [] $ disjunctions ors
+  (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
+  return $ orList $ map fromInteger $ takeRoot n x
 
 -- | [root n x, ... ]
 calcRoot :: Rule (OrList Expr)

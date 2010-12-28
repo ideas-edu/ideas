@@ -10,13 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Domain.Math.Power.Equation.NormViews
-{-   ( normPowerEqApproxView
-   , normPowerEqView
-   , normExpEqView
-   , normLogEqView
---   , normLogView
-   ) -} where
+module Domain.Math.Power.Equation.NormViews where
 
 import Common.Classes
 import Common.View
@@ -30,7 +24,7 @@ import Domain.Math.Approximation
 import Domain.Math.Data.OrList
 import Domain.Math.Data.PrimeFactors
 import Domain.Math.Data.Relation
-import Domain.Math.Expr
+import Domain.Math.Expr hiding ( (^) )
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Views
@@ -70,17 +64,17 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (1 ./.)))
                <&> (identity >>^ \a->(a,1))
 
-normPowerEqView' :: View (Equation Expr) (Expr, Expr) -- with x>0!
-normPowerEqView' = makeView f (uncurry (:==:))
-  where
-    f expr = do
-      -- selected var to the left, the rest to the right
-      (lhs :==: rhs) <- varLeft expr >>= constRight
-      -- match power
-      (c, (a, x))    <- match unitPowerView lhs
-      -- simplify, scale and take root
-      let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
-      return (a, simplify myRationalView y)
+-- normPowerEqView' :: View (Equation Expr) (Expr, Expr)
+-- normPowerEqView' = makeView f (uncurry (:==:))
+--   where
+--     f expr = do
+--       -- selected var to the left, the rest to the right
+--       (lhs :==: rhs) <- varLeft expr >>= constRight
+--       -- match power
+--       (c, (a, x))    <- match unitPowerView lhs
+--       -- simplify, scale and take root
+--       let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
+--       return (a, simplify myRationalView y)
 
 constRight :: Equation Expr -> Maybe (Equation Expr)
 constRight (lhs :==: rhs) = do
@@ -115,17 +109,14 @@ normExpEqView = makeView f id >>> linearEquationView
         Nothing     -> l :==: r
 
 normLogEqView :: View (OrList (Equation Expr)) (OrList (Equation Expr))
-normLogEqView = makeView (liftM g . switch . fmap f) id  -- AG: needs to be replaced by higherOrderEqView
+normLogEqView = makeView (liftM g . switch . fmap f) id
   where
     f expr@(lhs :==: rhs) = return $
       case match logView lhs of
-        Just (b, x) -> x :==: simplify myRationalView (b .^. rhs)
+        Just (b, x) -> x :==: b .^. rhs
         Nothing     -> expr
-    g = fmap (fmap (simplify myRationalView) . simplify normPowerEqView) 
-      . simplify quadraticEquationsView 
-
--- liftToOrListView :: View a b -> View (OrList a) (OrList b)
--- liftToOrListView v = makeView (switch . fmap (match v)) ()
+    g = fmap (fmap cleanUpExpr . simplify normPowerEqView) 
+      . simplify higherDegreeEquationsView 
 
 normLogView :: View Expr Expr
 normLogView = makeView g id
@@ -155,34 +146,94 @@ normLogView = makeView g id
           | isRootSymbol  s -> f b (x .^. (1 ./. y))
         _         -> expr
 
-myRationalView :: View Expr Rational
-myRationalView = makeView (return . rewrite simplerPower) id >>> rationalView
+-- myRationalView :: View Expr Rational
+-- myRationalView = makeView (return . rewrite simplerPower) id >>> rationalView
 
-simplerPower :: Expr -> Maybe Expr
-simplerPower expr = 
-  case expr of      
-    Sqrt x -> simplerPower $ x .^. (1/2)
-    Sym s [x, y]
-      | isRootSymbol s  -> simplerPower $ x .^. (1/y)
-      | isPowerSymbol s -> f
-      | otherwise -> Nothing
-        where f | y == 0 || x == 1 = Just 1
-                | y == 1 = Just x
-                | x == 0 = Just 0
-                | otherwise =
-                  -- geheel getal
-                  liftM fromRational (match rationalView expr) 
-                  `mplus`
-                  -- wortel
-                  do 
-                    ry <- match rationalView y
-                    rx <- match rationalView x
-                    guard $ numerator ry == 1 && denominator rx == 1
-                    liftM fromInteger $ takeRoot (numerator rx) (denominator ry)
-                  `mplus`
-                  -- (a/b)^y -> a^x/b^y
-                  do
-                    (a, b) <- match divView x
-                    return $ build divView (a .^. y, b .^. y)
-    _ -> Nothing
+-- simplerPower :: Expr -> Maybe Expr
+-- simplerPower expr = 
+--   case expr of      
+--     Sqrt x -> simplerPower $ x .^. (1/2)
+--     Sym s [x, y]
+--       | isRootSymbol s  -> simplerPower $ x .^. (1/y)
+--       | isPowerSymbol s -> f
+--       | otherwise -> Nothing
+--         where f | y == 0 || x == 1 = Just 1
+--                 | y == 1 = Just x
+--                 | x == 0 = Just 0
+--                 | otherwise =
+--                   -- geheel getal
+--                   liftM fromRational (match rationalView expr) 
+--                   `mplus`
+--                   -- -- wortel
+--                   -- do 
+--                   --   ry <- match rationalView y
+--                   --   rx <- match rationalView x
+--                   --   guard $ numerator ry == 1 && denominator rx == 1
+--                   --   return $ listToMaybe $ map fromInteger $ takeRoot (numerator rx) (denominator ry)
+--                   -- `mplus`
+--                   -- -- breuk
+--                   -- do 
+--                   --   ry <- match rationalView y
+--                   --   rx <- match rationalView x
+--                   --   guard $ denominator rx == 1
+--                   --   return $ listToMaybe $ map fromInteger $
+--                   --    takeRoot (numerator rx ^ numerator ry) (denominator ry)
+--                   --`mplus`
+--                   -- (a/b)^y -> a^x/b^y
+--                   do
+--                     (a, b) <- match divView x
+--                     return $ build divView (a .^. y, b .^. y)
+--     _ -> Nothing
 
+-- v :: View (OrList (Equation Expr)) [Equation Expr]
+-- v = makeView f orList
+--  where
+--    f ors = do 
+--      eqs <- disjunctions ors
+--      return $ map (simplify rationalView) $ concat Map simplerPower' $ exprs
+
+-- myListToMaybe xs = if null xs then Nothing else Just xs
+-- 
+simplerPower :: Expr -> [Expr]
+simplerPower = rec
+  where
+    rec expr = 
+      case expr of      
+        Sqrt x -> rec $ Sym powerSymbol [x, 1 / 2]
+        Sym s [x, y]
+          | isRootSymbol s  -> rec $ Sym powerSymbol [x, 1 / y]
+          | isPowerSymbol s -> f
+          | otherwise -> []
+            where f | y == 0 = [1]
+                    | y == 1 = [x]
+                    | x == 0 = [0]
+                    | otherwise =
+                      -- geheel getal
+                      liftM fromRational (matchM rationalView expr)
+                      `mplus`
+                      -- breuk
+                      do 
+                        ry <- matchM rationalView y
+                        rx <- matchM rationalView x
+                        guard $ denominator rx == 1 && denominator ry /= 1
+                        map fromInteger $ 
+                          takeRoot (numerator rx ^ numerator ry) (denominator ry)
+                      `mplus`
+                      -- (a/b)^y -> a^x/b^y
+                      do
+                        (a, b) <- matchM divView x
+                        return $ build divView (a .^. y, b .^. y)
+        _ -> []
+
+
+-- transformList :: Uniplate a => (a -> [a]) -> a -> [a]
+-- transformList f x = map f $ map ctx $ map (transformList f) cs
+--   where (cs, ctx) = uniplate x
+
+{-
+g :: [[a]] -> [[a]]
+g (xs:xss) = map f xs
+ where 
+   f x = map ([x] ++) $ g xss
+g [] = [[]]
+-}

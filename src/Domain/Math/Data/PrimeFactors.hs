@@ -21,6 +21,7 @@ import Common.Utils
 import Control.Monad
 import Data.Maybe
 
+
 -------------------------------------------------------------
 -- Representation
 
@@ -125,17 +126,18 @@ square = (`power` 2)
 power :: PrimeFactors -> Int -> PrimeFactors
 power (PF a m) i = PF (a^i) (IM.map (*i) m)
 
+-- brute force, ugly
 greatestPower :: Integer -> Maybe (Integer, Integer)
-greatestPower n = do
-  guard $ n > 1
-  let (as, xs) = unzip $ factors $ fromInteger n
-  x <- safeHead xs
-  guard $ allsame xs && x > 1
-  return (fromIntegral (product as), fromIntegral x)
+greatestPower n = f 2 1
+  where 
+    f b e | n == b ^ e = Just (b, e)
+          | b > n      = Nothing
+          | b ^ e > n  = f (b + 1) 1
+          | otherwise  = f b (e + 1)
 
--- n == a^x with (a,x) == greatestPower n
+-- -- n == a^x with (a,x) == greatestPower n
 -- prop_greatestPower n = traceShow n $ 
---   maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
+--    maybe True (\(a,x) -> fromIntegral a ^ fromIntegral x == n) $ greatestPower n 
 
 allPowers :: Integer -> [(Integer, Integer)]
 allPowers n = do

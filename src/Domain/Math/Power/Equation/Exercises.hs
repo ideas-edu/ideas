@@ -27,6 +27,9 @@ import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
+import Domain.Math.Polynomial.Equivalence
+import Domain.Math.Polynomial.Exercises
+import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
@@ -93,8 +96,7 @@ higherPowerEqExercise = makeExercise
   , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
   , isSuitable     = maybe False and . disjunctions . fmap (`belongsTo` normPowerEqView)
-  , equivalence    = let f = normalize . fmap (simplify normPowerEqView')
-                     in \ x y -> f x == f y
+  , equivalence    = viewEquivalent higherDegreeEquationsView
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

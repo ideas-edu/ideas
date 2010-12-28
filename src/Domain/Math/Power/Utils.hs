@@ -21,6 +21,7 @@ import Common.Context
 import Common.Rewriting
 import Common.Strategy hiding (not)
 import Common.Transformation
+import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
@@ -135,6 +136,13 @@ fractionRules =
 
 -- | Common functions ---------------------------------------------------------
 
+transformList :: Uniplate a => (a -> [a]) -> a -> [a]
+transformList f x = concatMap (f . ctx) $ g $ map (transformList f) cs
+  where 
+    (cs, ctx) = uniplate x
+    g (xs:xss) = concatMap (\x -> map (x:) (g xss)) xs
+    g [] = [[]]
+
 -- y = root n x
 takeRoot :: Integer -> Integer -> [Integer]
 takeRoot n x | n == 0    = [0]
@@ -149,7 +157,6 @@ takeRoot n x | n == 0    = [0]
             | n < 0 && odd  x = [negate r]
             | otherwise       = []
 
--- -- n == a^x with (a,x) == greatestPower n
 -- prop_takeRoot n = traceShow n f
 --   where
 --     f n x | x > 0 = n `elem` (takeRoot (n Prelude.^ x) x)

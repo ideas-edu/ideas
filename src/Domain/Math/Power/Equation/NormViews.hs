@@ -33,9 +33,7 @@ import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Simplification hiding (simplify, simplifyWith)
 
-import Common.Uniplate
 
--- Change to configurable strategy!
 normPowerEqApproxView :: Int -> View (Relation Expr) (Expr, Expr)
 normPowerEqApproxView d = makeView f (uncurry (.~=.))
    where
@@ -225,15 +223,4 @@ simplerPower = rec
                         return $ build divView (a .^. y, b .^. y)
         _ -> []
 
-
--- transformList :: Uniplate a => (a -> [a]) -> a -> [a]
--- transformList f x = map f $ map ctx $ map (transformList f) cs
---   where (cs, ctx) = uniplate x
-
-{-
-g :: [[a]] -> [[a]]
-g (xs:xss) = map f xs
- where 
-   f x = map ([x] ++) $ g xss
-g [] = [[]]
--}
+rewritePower expr = let es = simplerPower expr in if null es then [expr] else es

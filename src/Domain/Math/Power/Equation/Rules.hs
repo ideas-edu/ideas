@@ -20,11 +20,13 @@ import Common.Transformation
 import Common.Rewriting
 import Common.View hiding (simplify)
 import Control.Monad
+--import Data.List (partition)
 import Domain.Math.Approximation (precision)
 import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
+--import Domain.Math.Polynomial.CleanUp (collectLikeTerms)
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Simplification (simplify)
@@ -63,13 +65,6 @@ nthRoot = makeSimpleRule (powereq, "nth-root") $ \(lhs :==: rhs) -> do
   (c, (b, y)) <- match unitPowerView rhs
   return $ a :==: build unitPowerView (c, (b, simplify (y ./. x)))
 
--- -- root a x = b  =>  a = b^x
--- nthPower :: Rule (Equation Expr)
--- nthPower = makeSimpleRule (powereq, "nth-power") $ \(lhs :==: rhs) -> do
---   guard $ hasSomeVar lhs
---   (a, x) <- match rootView lhs
---   return $ a :==: rhs .^. x
-
 -- x = a^x  =>  x ~= d
 approxPower :: Rule (Relation Expr)
 approxPower = makeRule (powereq, "approx-power") $ approxPowerT 2
@@ -85,16 +80,6 @@ approxPowerT n = makeTrans $ \ expr ->
       match doubleView d >>= Just . (.~=. Var x) . fromDouble . precision n
     f _              = Nothing
 
--- -- a*x + c = b*y + d  =>  a*x - b*y = d - c   (move vars to the left, cons to the right)
--- varLeftConRight :: Rule (Equation Expr)
--- varLeftConRight = makeSimpleRule (powereq, "var-left-con-right") $ 
---   \(lhs :==: rhs) -> do
---     (xs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
---     (ys, ds) <- fmap (partition hasSomeVar) (match sumView rhs)
---     guard $ length cs > 0 || length ys > 0
---     return $ fmap collectLikeTerms $ 
---       build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
-
 -- a^x = a^y  =>  x = y
 sameBase :: Rule (Equation Expr)
 sameBase = makeSimpleRule (powereq, "same-base") $ \ expr -> do
@@ -103,8 +88,6 @@ sameBase = makeSimpleRule (powereq, "same-base") $ \ expr -> do
   return $ x :==: y
 
 -- | c*a^x = d*(1/a)^y  => c*a^x = d*a^-y
--- this reciprocal rule is more strict, it demands a same base on the lhs
--- of the equation. Perhaps do this via the enviroment?
 reciprocalFor :: Rule (Equation Expr)
 reciprocalFor = makeSimpleRule (powereq, "reciprocal-for-base") $ 
   \ (lhs :==: rhs) -> do
@@ -120,4 +103,16 @@ equalsOne = makeSimpleRule (powereq, "equals-one") $ \ (lhs :==: rhs) -> do
   guard $ rhs == 1
   (_, x) <- match powerView lhs
   return $ x :==: 0
+
+ -- (powereq, "var-left-con-right") $ 
+--xToLeft = makeRule (powereq, "x -to-left") $  toLeftRightT $ elem "x" . vars
+
+-- toLeftRightT :: (Expr -> Bool) -> Transformation (Equation Expr)
+-- toLeftRightT p = makeTrans $
+--   \ (lhs :==: rhs) -> do
+--     (xs, cs) <- fmap (partition p) (match sumView lhs)
+--     (ys, ds) <- fmap (partition p) (match sumView rhs)
+--     guard $ length cs > 0 || length ys > 0
+--     return $ fmap collectLikeTerms $ 
+--       build sumView (xs ++ map neg ys) :==: build sumView (ds ++ map neg cs)
 

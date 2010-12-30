@@ -62,17 +62,19 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (1 ./.)))
                <&> (identity >>^ \a->(a,1))
 
--- normPowerEqView' :: View (Equation Expr) (Expr, Expr)
--- normPowerEqView' = makeView f (uncurry (:==:))
---   where
---     f expr = do
---       -- selected var to the left, the rest to the right
---       (lhs :==: rhs) <- varLeft expr >>= constRight
---       -- match power
---       (c, (a, x))    <- match unitPowerView lhs
---       -- simplify, scale and take root
---       let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
---       return (a, simplify myRationalView y)
+normPowerEqView' :: View (OrList (Equation Expr)) (OrList (Equation Expr))
+normPowerEqView' = makeView (h. g . switch . (fmap f)) id
+  where
+    h = liftM $ fmap $ fmap cleanUpExpr
+    g = liftM (transformOrList $ tryRewriteAll simplerPower)
+    f expr = do
+      -- selected var to the left, the rest to the right
+      (lhs :==: rhs) <- varLeft expr >>= constRight
+      -- match power
+      (c, (a, x))    <- match unitPowerView lhs
+      -- simplify, scale and take root
+      let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
+      return $ a :==: simplify rationalView y
 
 constRight :: Equation Expr -> Maybe (Equation Expr)
 constRight (lhs :==: rhs) = do
@@ -113,7 +115,7 @@ normLogEqView = makeView (liftM g . switch . fmap f) id
       case match logView lhs of
         Just (b, x) -> x :==: b .^. rhs
         Nothing     -> expr
-    g = fmap (fmap cleanUpExpr . simplify normPowerEqView) 
+    g = normalize . fmap (fmap cleanUpExpr) . simplify normPowerEqView'
       . simplify higherDegreeEquationsView 
 
 normLogView :: View Expr Expr
@@ -144,54 +146,6 @@ normLogView = makeView g id
           | isRootSymbol  s -> f b (x .^. (1 ./. y))
         _         -> expr
 
--- myRationalView :: View Expr Rational
--- myRationalView = makeView (return . rewrite simplerPower) id >>> rationalView
-
--- simplerPower :: Expr -> Maybe Expr
--- simplerPower expr = 
---   case expr of      
---     Sqrt x -> simplerPower $ x .^. (1/2)
---     Sym s [x, y]
---       | isRootSymbol s  -> simplerPower $ x .^. (1/y)
---       | isPowerSymbol s -> f
---       | otherwise -> Nothing
---         where f | y == 0 || x == 1 = Just 1
---                 | y == 1 = Just x
---                 | x == 0 = Just 0
---                 | otherwise =
---                   -- geheel getal
---                   liftM fromRational (match rationalView expr) 
---                   `mplus`
---                   -- -- wortel
---                   -- do 
---                   --   ry <- match rationalView y
---                   --   rx <- match rationalView x
---                   --   guard $ numerator ry == 1 && denominator rx == 1
---                   --   return $ listToMaybe $ map fromInteger $ takeRoot (numerator rx) (denominator ry)
---                   -- `mplus`
---                   -- -- breuk
---                   -- do 
---                   --   ry <- match rationalView y
---                   --   rx <- match rationalView x
---                   --   guard $ denominator rx == 1
---                   --   return $ listToMaybe $ map fromInteger $
---                   --    takeRoot (numerator rx ^ numerator ry) (denominator ry)
---                   --`mplus`
---                   -- (a/b)^y -> a^x/b^y
---                   do
---                     (a, b) <- match divView x
---                     return $ build divView (a .^. y, b .^. y)
---     _ -> Nothing
-
--- v :: View (OrList (Equation Expr)) [Equation Expr]
--- v = makeView f orList
---  where
---    f ors = do 
---      eqs <- disjunctions ors
---      return $ map (simplify rationalView) $ concat Map simplerPower' $ exprs
-
--- myListToMaybe xs = if null xs then Nothing else Just xs
--- 
 simplerPower :: Expr -> [Expr]
 simplerPower = rec
   where
@@ -223,4 +177,3 @@ simplerPower = rec
                         return $ build divView (a .^. y, b .^. y)
         _ -> []
 
-rewritePower expr = let es = simplerPower expr in if null es then [expr] else es

@@ -11,12 +11,12 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Equation.Strategies
-   -- ( powerEqStrategy
-   -- , powerEqApproxStrategy
-   -- , expEqStrategy
-   -- , logEqStrategy
-   -- , higherPowerEqStrategy
-   -- ) 
+   ( powerEqStrategy
+   , powerEqApproxStrategy
+   , expEqStrategy
+   , logEqStrategy
+   , higherPowerEqStrategy
+   ) 
    where
 
 import Prelude hiding (repeat, not)
@@ -33,7 +33,6 @@ import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
-import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
@@ -97,10 +96,11 @@ logEqStrategy = label "Logarithmic equation"
 
 
 higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-higherPowerEqStrategy =  cleanUpStrategy cleanup coverUpStrategy
+higherPowerEqStrategy =  cleanUpStrategy cleanup strat
   where 
+    strat = label "Cover up" $ try (use flipEquation) <*> exhaustiveSomewhere rules -- coverUpRulesOr <*> try (use nthRoot)
+    rules = use coverUpPower : map use (nthRoot : coverUpRules)
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
-
 
 
 -- | Help functions -----------------------------------------------------------

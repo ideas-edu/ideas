@@ -17,6 +17,7 @@ module Domain.Math.Power.Utils where
 
 import Prelude hiding (repeat, replicate)
 
+import Common.Classes
 import Common.Context
 import Common.Rewriting
 import Common.Strategy hiding (not)
@@ -25,10 +26,11 @@ import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
-import Data.Maybe
 import Data.Ratio
 import qualified Domain.Math.Data.PrimeFactors as PF
+import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Rules
 import Domain.Math.Numeric.Views
@@ -133,15 +135,33 @@ fractionRules =
    , smartRule divisionNumerator, simplerFraction
    ]
 
+coverUpRulesX :: [Rule (Equation Expr)]
+coverUpRulesX = map (\r -> r cfg)
+   [ coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith, coverUpNegateWith
+   , coverUpTimesWith, coverUpNumeratorWith, coverUpDenominatorWith, coverUpSqrtWith
+   ]
+   where 
+     cfg = configCoverUp { predicateCovered = elem "x" . vars
+                         , predicateCombined = notElem "x" . vars 
+                         , coverLHS = False} 
 
 -- | Common functions ---------------------------------------------------------
 
+tryRewriteAll :: (a -> [a]) -> a -> [a]
+tryRewriteAll f x = 
+  case f x of
+    [] -> [x]
+    xs -> xs
+
 transformList :: Uniplate a => (a -> [a]) -> a -> [a]
-transformList f x = concatMap (f . ctx) $ g $ map (transformList f) cs
+transformList f a = concatMap (f . ctx) $ g $ map (transformList f) cs
   where 
-    (cs, ctx) = uniplate x
+    (cs, ctx) = uniplate a
     g (xs:xss) = concatMap (\x -> map (x:) (g xss)) xs
-    g [] = [[]]
+    g []       = [[]]
+
+transformOrList :: (Switch f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
+transformOrList f = join . fmap (orList . switch . fmap (transformList f))
 
 -- y = root n x
 takeRoot :: Integer -> Integer -> [Integer]

@@ -17,8 +17,6 @@ module Domain.Math.Data.PrimeFactors
    ) where
 
 import qualified Data.IntMap as IM
-import Common.Utils
-import Control.Monad
 import Data.Maybe
 
 

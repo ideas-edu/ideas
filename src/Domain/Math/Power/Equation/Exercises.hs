@@ -27,8 +27,6 @@ import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO4
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.Equivalence
-import Domain.Math.Polynomial.Exercises
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Equation.Strategies
@@ -93,7 +91,8 @@ higherPowerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = map (orList . return) $ concat $ init higherPowerEquations
+  , examples       = map (orList . return) $ rootEquations !! 3
+--  , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
   , isSuitable     = maybe False and . disjunctions . fmap (`belongsTo` normPowerEqView)
   , equivalence    = viewEquivalent higherDegreeEquationsView

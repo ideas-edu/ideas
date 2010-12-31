@@ -19,7 +19,6 @@ module Text.XML
    , children, Attribute(..), builder, findChild, getData
    ) where
 
-import Control.Monad.Error ()
 import Control.Monad.State
 import Data.Monoid
 import Text.XML.Document (trim)

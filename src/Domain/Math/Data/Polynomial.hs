@@ -30,21 +30,21 @@ import Domain.Math.Approximation (newton, within)
 newtype Polynomial a = P (IM.IntMap a) deriving Eq
 
 instance Num a => Show (Polynomial a) where
-   show (P m) = 
-      let f (n, a) = sign (one (show a ++ g n))
-          g n = concat $ [ "x" | n > 0 ] ++ [ '^' : show n | n > 1 ]
-          one ('1':xs@('x':_))     = xs
-          one ('-':'1':xs@('x':_)) = xs
-          one xs                   = xs
-          sign ('-':xs) = " - " ++ xs
-          sign xs       = " + " ++ xs
-          fix xs = case dropWhile isSpace xs of
-                      '+':ys -> dropWhile isSpace ys
-                      '-':ys -> '-':dropWhile isSpace ys
-                      ys     -> ys
-      in "f(x) = " ++ 
-         if IM.null m then "0" else 
-             fix (concatMap f (reverse (IM.toList m)))
+   show (P m) 
+      | IM.null m = "f(x) = 0"
+      | otherwise = "f(x) = " ++ fix (concatMap f (reverse (IM.toList m)))
+    where
+      f (n, a) = sign (one (show a ++ g n))
+      g n = concat $ [ "x" | n > 0 ] ++ [ '^' : show n | n > 1 ]
+      one ('1':xs@('x':_))     = xs
+      one ('-':'1':xs@('x':_)) = xs
+      one xs                   = xs
+      sign ('-':xs) = " - " ++ xs
+      sign xs       = " + " ++ xs
+      fix xs = case dropWhile isSpace xs of
+                  '+':ys -> dropWhile isSpace ys
+                  '-':ys -> '-':dropWhile isSpace ys
+                  ys     -> ys       
 
 -- the Functor instance does not maintain the invariant
 instance Functor Polynomial where
@@ -99,7 +99,6 @@ lowestDegree (P m)
    | IS.null is = 0
    | otherwise  = IS.findMin is
  where is = IM.keysSet m
-
 
 coefficient :: Num a => Int -> Polynomial a -> a
 coefficient n (P m) = IM.findWithDefault 0 n m

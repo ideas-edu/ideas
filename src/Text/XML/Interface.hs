@@ -18,7 +18,6 @@ import Text.XML.Document (Name)
 import Text.XML.Unicode (decoding)
 import Text.XML.Parser (document, extParsedEnt)
 import Text.XML.ParseLib (parse)
-import Control.Monad.Error ()
 import qualified Text.XML.Document as D
 import System.FilePath (takeDirectory, pathSeparator)
 import Data.Char (chr, ord)

@@ -178,7 +178,7 @@ condition c = do
 conditionNotZero :: Expr -> ContextMonad ()
 conditionNotZero expr = condition (f xs)
  where
-   f  = pushNotWith (Logic.Var . notRelation) . nott
+   f  = pushNotWith (Logic.Var . notRelation) . Not
    eq = expr :==: 0
    xs = fmap (build equationView . fmap cleanUpExpr) $ 
         case match higherDegreeEquationsView (return eq) of

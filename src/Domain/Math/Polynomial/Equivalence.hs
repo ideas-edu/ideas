@@ -294,13 +294,12 @@ simLogic f p0 q0 = rec (fmap f p0) (fmap f q0)
    shallowEq a b = 
       let g = descend (const T) 
       in g a == g b 
-      
+
    isOr (_ :||: _) = True
    isOr _          = False
    
-   isAnd (_ :||: _) = True
+   isAnd (_ :&&: _) = True
    isAnd _          = False
-   
    
 eqAfterSubstitution :: (Functor f, Functor g) 
    => (f (g Expr) -> f (g Expr) -> Bool) -> Context (f (g Expr)) -> Context (f (g Expr)) -> Bool

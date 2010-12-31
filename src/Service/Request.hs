@@ -21,13 +21,10 @@ data Request = Request
    , dataformat :: DataFormat
    , encoding   :: Maybe Encoding
    }
-   deriving Show
    
 data DataFormat = XML | JSON 
-   deriving Show
 
 data Encoding = OpenMath | StringEncoding
-   deriving Show
    
 discoverDataFormat :: Monad m => String -> m DataFormat
 discoverDataFormat xs =

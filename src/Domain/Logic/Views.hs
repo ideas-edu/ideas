@@ -9,9 +9,13 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Views where
+module Domain.Logic.Views 
+   ( (.<->.), (.->.), (.&&.), (.||.)
+   , simplify, pushNot, pushNotWith
+   , orView, andView
+   ) where
 
-import Common.View
+import Common.View hiding (simplify)
 import Domain.Logic.Formula
 
 ------------------------------------------------------------

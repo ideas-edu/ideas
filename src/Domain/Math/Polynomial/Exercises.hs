@@ -81,10 +81,10 @@ quadraticExercise = makeExercise
    , status       = Provisional
    , parser       = \input -> case parseExprWith (pOrList (pEquation pExpr)) input of
                                  Left err -> Left err
-                                 Right xs -> Right (build (switchView equationView) xs)
+                                 Right xs -> Right (build (traverseView equationView) xs)
    , similarity   = eqOrList cleanUpExpr
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
-   , isSuitable   = (`belongsTo` (switchView equationView >>> quadraticEquationsView))
+   , isSuitable   = (`belongsTo` (traverseView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
    , extraRules   = map use abcBuggyRules ++ buggyQuadratic ++
                     map use buggyRulesEquation ++ map use buggyRulesExpr 
@@ -104,7 +104,7 @@ higherDegreeExercise = makeExercise
    , similarity    = eqOrList cleanUpExpr
    , eqWithContext = Just $ eqAfterSubstitution $ 
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
-   , isSuitable    = (`belongsTo` (switchView equationView >>> higherDegreeEquationsView))
+   , isSuitable    = (`belongsTo` (traverseView equationView >>> higherDegreeEquationsView))
    , isReady       = solvedRelations
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 

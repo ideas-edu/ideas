@@ -23,7 +23,7 @@ import Data.Char
 import Data.List  (nub)
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, sequenceA)
-import Control.Applicative ((<$>))
+import Control.Applicative (Applicative, (<$>))
 import Data.Ratio (approxRational)
 import Domain.Math.Approximation (newton, within)
 
@@ -55,7 +55,7 @@ instance Foldable Polynomial where
    foldMap f (P m) = foldMap f m
    
 instance Traversable Polynomial where
-   sequenceA (P m) = P <$> sequenceA m
+   sequenceA (P m) = P <$> sequenceIntMap m
 
 instance Num a => Num (Polynomial a) where
    P m1 + P m2   = P (IM.filter (/= 0) (IM.unionWith (+) m1 m2))
@@ -217,3 +217,11 @@ candidateRoots p = nub (map (`approxRational` 0.0001) xs)
     df = eval (fmap fromRational (derivative p))
     xs = nub (map (within 0.0001 . take 10 . newton f df) startList)
     startList = [0, 3, -3, 10, -10, 100, -100]
+    
+-- TODO: replace me by sequenceA
+-- This definition is for backwards compatibility. In older versions of IntMap, 
+-- the instance for Traversable is lacking. 
+sequenceIntMap :: Applicative m => IM.IntMap (m a) -> m (IM.IntMap a)
+sequenceIntMap m = IM.fromDistinctAscList <$> zip ks <$> sequenceA as
+ where
+   (ks, as) = unzip (IM.toList m)

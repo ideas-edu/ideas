@@ -94,7 +94,7 @@ instance Traversable OrList where
    sequenceA (OrList xs) = OrList <$> sequenceA xs
 
 instance Monoid (OrList a) where
-   mempty  = false
+   mempty      = false
    mappend p q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
 
 instance Monad OrList where

@@ -77,8 +77,8 @@ logEqExercise = makeExercise
                        newId "algebra.manipulation.logarithmic.equation"
   , examples       = map (orList . return . build equationView) (concat logEquations)
   , isReady        = solvedRelations
-  , isSuitable     = (`belongsTo` (switchView equationView >>> normLogEqView))
-  , equivalence    = viewEquivalent (switchView equationView >>> normLogEqView)
+  , isSuitable     = (`belongsTo` (traverseView equationView >>> normLogEqView))
+  , equivalence    = viewEquivalent (traverseView equationView >>> normLogEqView)
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

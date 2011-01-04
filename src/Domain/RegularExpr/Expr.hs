@@ -12,11 +12,10 @@
 -----------------------------------------------------------------------------
 module Domain.RegularExpr.Expr where
 
+import Common.Id
 import Common.Rewriting
-import Common.Classes
 import Common.Uniplate
 import Control.Monad
-import Domain.Math.Expr.Symbolic
 import Test.QuickCheck
 
 --------------------------------------------------------------------
@@ -34,6 +33,7 @@ data RE a = EmptySet | Epsilon | Atom a | Option (RE a) | Star (RE a)
 --------------------------------------------------------------------
 -- Fold
 
+foldRE :: (b, b, a -> b, b -> b, b -> b, b -> b, b -> b -> b, b -> b -> b) -> RE a -> b
 foldRE (es, eps, at, opt, st, pl, sq, ch) = rec 
  where
    rec regexp = 
@@ -53,22 +53,19 @@ foldRE (es, eps, at, opt, st, pl, sq, ch) = rec
 instance Functor RE where
    fmap f = foldRE (EmptySet, Epsilon, Atom . f, Option, Star, Plus, (:*:), (:|:))
 
-instance Crush RE where
-   crush (Atom a) = [a]
-   crush regexp   = concatMap crush (children regexp)
-
 instance Arbitrary RegExp where
    arbitrary = sized (arbRE $ oneof $ map return ["a", "b", "c", "d"])
+
 instance CoArbitrary RegExp where
    coarbitrary = foldRE 
-      (         variant 0
-      ,         variant 1
-      , \a ->   variant 2 . coarbitrary a
-      , \a ->   variant 3 . a
-      , \a ->   variant 4 . a
-      , \a ->   variant 5 . a
-      , \a b -> variant 6 . a . b
-      , \a b -> variant 7 . a . b
+      (         variant (0 :: Int)
+      ,         variant (1 :: Int)
+      , \a ->   variant (2 :: Int). coarbitrary a
+      , \a ->   variant (3 :: Int) . a
+      , \a ->   variant (4 :: Int) . a
+      , \a ->   variant (5 :: Int) . a
+      , \a b -> variant (6 :: Int) . a . b
+      , \a b -> variant (7 :: Int) . a . b
       )
 
 arbRE :: Gen a -> Int -> Gen (RE a)
@@ -107,16 +104,28 @@ ppWith f = ($ 0) . foldRE
 --------------------------------------------------------------------
 -- Function for associative operators
 
-concatOp :: Operator (RE a)
-concatOp = associativeOperator (:*:) isConcat
- where
-   isConcat (r :*: s) = Just (r, s)
-   isConcat _         = Nothing
+sequenceMonoid :: Monoid (RE a)
+sequenceMonoid = monoid sequenceOp epsilonCon
+ where 
+   sequenceOp = makeBinaryOp (getId sequenceSymbol) (:*:) isSequence
+   epsilonCon = makeConstant (getId epsilonSymbol) Epsilon isEpsilon
+   
+   isEpsilon Epsilon = True
+   isEpsilon _       = False
+   
+   isSequence (a :*: b) = Just (a, b)
+   isSequence _         = Nothing
 
-choiceOp :: Operator (RE a)
-choiceOp = associativeOperator (:|:) isChoice
- where
-   isChoice (r :|: s) = Just (r, s)
+choiceMonoid :: Monoid (RE a)
+choiceMonoid = monoid choiceOp emptySetCon
+ where 
+   choiceOp    = makeBinaryOp (getId choiceSymbol) (:|:) isChoice
+   emptySetCon = makeConstant (getId emptySetSymbol) EmptySet isEmptySet
+   
+   isEmptySet EmptySet = True
+   isEmptySet _        = False
+   
+   isChoice (a :|: b) = Just (a, b)
    isChoice _         = Nothing
 
 --------------------------------------------------------------------
@@ -134,42 +143,42 @@ instance Uniplate (RE a) where
          r :*: s  -> ([r, s], \[a, b] -> a :*: b)
          r :|: s  -> ([r, s], \[a, b] -> a :|: b)
 
-instance Eq a => ShallowEq (RE a) where
-   shallowEq re1 re2 = 
-      case (re1, re2) of
-         (EmptySet, EmptySet) -> True
-         (Epsilon,  Epsilon ) -> True
-         (Atom a,   Atom b  ) -> a==b
-         (Option _, Option _) -> True
-         (Star _,   Star _  ) -> True
-         (Plus _,   Plus _  ) -> True
-         (_ :*: _,  _ :*: _ ) -> True
-         (_ :|: _,  _ :|: _ ) -> True
-         _                    -> False
-
 instance Different (RE a) where
    different = (EmptySet, Epsilon)
 
 instance IsTerm RegExp where 
    toTerm = foldRE 
-      ( nullary "EmptySet", nullary "Epsilon", variable, unary "Option"
-      , unary "Star", unary "Plus", binary "Seq", binary "Choice"
+      ( symbol emptySetSymbol, symbol epsilonSymbol, variable
+      , unary optionSymbol, unary starSymbol, unary plusSymbol
+      , binary sequenceSymbol, binary choiceSymbol
       ) 
 
    fromTerm a = fromTermWith f a `mplus` liftM Atom (getVariable a)
     where
       f s []     
-         | s == "EmptySet" = return EmptySet
-         | s == "Epsilon"  = return Epsilon
+         | s == emptySetSymbol = return EmptySet
+         | s == epsilonSymbol  = return Epsilon
       f s [x]    
-         | s == "Option"   = return (Option x)
-         | s == "Star"     = return (Star x)
-         | s == "Plus"     = return (Plus x)
+         | s == optionSymbol   = return (Option x)
+         | s == starSymbol     = return (Star x)
+         | s == plusSymbol     = return (Plus x)
       f s [x, y] 
-         | s == "Seq"      = return (x :*: y)
-         | s == "Choice"   = return (x :|: y)
+         | s == sequenceSymbol = return (x :*: y)
+         | s == choiceSymbol   = return (x :|: y)
       f _ _ = fail "fromExpr"
 
 instance Rewrite RegExp where
-   operators = [concatOp, choiceOp]
-   associativeOps = const $ map newId [":*:", ":|:"]
+   operators = map toMagma [sequenceMonoid, choiceMonoid]
+   
+emptySetSymbol, epsilonSymbol, optionSymbol, starSymbol,
+   plusSymbol, sequenceSymbol, choiceSymbol :: Symbol
+emptySetSymbol = regexpSymbol "EmptySet"
+epsilonSymbol  = regexpSymbol "Epsilon"
+optionSymbol   = regexpSymbol "Option"
+starSymbol     = regexpSymbol "Star"
+plusSymbol     = regexpSymbol "Plus"
+sequenceSymbol = regexpSymbol "Sequence"
+choiceSymbol   = regexpSymbol "Choice"
+
+regexpSymbol :: String -> Symbol
+regexpSymbol a = newSymbol ["regexp", a]

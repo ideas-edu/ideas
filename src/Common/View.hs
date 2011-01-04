@@ -23,7 +23,7 @@ module Common.View
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
    , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
      -- * Some combinators
-   , swapView, listView, switchView, associativeView
+   , swapView, listView, traverseView, associativeView
      -- * Properties on views
    , propIdempotence, propSoundness, propNormalForm
    ) where
@@ -35,7 +35,7 @@ import Data.Foldable
 import Data.Maybe
 import Test.QuickCheck
 import qualified Control.Category as C
-import Data.Traversable (Traversable, sequence)
+import qualified Data.Traversable as T
 
 ----------------------------------------------------------------------------------
 -- Generalized monadic view
@@ -169,11 +169,12 @@ swapView =
    let swap (a, b) = (b, a)
    in newView "views.swap" (return . swap) swap
 
+-- | Specialized version of traverseView
 listView :: Monad m => ViewM m a b -> ViewM m [a] [b]
-listView v = makeView (mapM (match v)) (map (build v))
+listView = traverseView
 
-switchView :: (Monad m, Traversable f) => ViewM m a b -> ViewM m (f a) (f b)
-switchView v = makeView (Data.Traversable.sequence . fmap (match v)) (fmap (build v))
+traverseView :: (Monad m, T.Traversable f) => ViewM m a b -> ViewM m (f a) (f b)
+traverseView v = makeView (T.mapM (match v)) (fmap (build v))
  
 associativeView :: View a (a, a) -> ViewList a (a, a)
 associativeView v = makeView (reverse . f) (build v)

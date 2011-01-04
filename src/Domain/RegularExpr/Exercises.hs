@@ -13,7 +13,8 @@ module Domain.RegularExpr.Exercises (regexpExercise) where
 
 import Common.Exercise
 import Common.Navigator
-import Common.Classes
+import Common.View
+import Common.Uniplate
 import Common.Rewriting hiding (difference)
 import Domain.RegularExpr.Expr
 import Domain.RegularExpr.Parser
@@ -22,6 +23,7 @@ import Domain.RegularExpr.Definitions
 import Control.Monad
 import System.Random
 import Test.QuickCheck
+import Test.QuickCheck.Gen
 
 regexpExercise :: Exercise RegExp
 regexpExercise = makeExercise
@@ -31,17 +33,27 @@ regexpExercise = makeExercise
    , parser         = parseRegExp
    , prettyPrinter  = ppRegExp
 --   , equivalence    = eqRE
-   , similarity     = equalWith operators -- modulo associativity
+   , similarity     = equalRegExpA  -- modulo associativity
    , isReady        = deterministic
-   , isSuitable     = (>1) . length . crush
+   , isSuitable     = \a -> length [ () | Atom _ <- universe a ] > 1
    , difference     = differenceMode eqRE
    , strategy       = deterministicStrategy
    , navigation     = navigator
 --   , extraRules     :: [Rule (Context a)]  -- Extra rules (possibly buggy) not appearing in strategy
    , testGenerator  = Just startFormGen -- arbitrary
    , randomExercise = simpleGenerator startFormGen -- myGen
-   , examples       = generate 5 (mkStdGen 2805) (replicateM 15 startFormGen)
+   , examples       = unGen (replicateM 15 startFormGen) (mkStdGen 2805) 5  
    }
+
+-- | Equality modulo associativity of operators
+equalRegExpA:: RegExp -> RegExp -> Bool
+equalRegExpA p q = rec p == rec q
+ where
+   make  = simplifyWith (map rec) . magmaListView
+   rec a = case a of
+              _ :*: _ -> make sequenceMonoid a
+              _ :|: _ -> make choiceMonoid  a
+              _       -> descend rec a
 
 -- myGen :: Gen RegExp
 -- myGen = restrictGenerator (isSuitable regexpExercise) arbitrary

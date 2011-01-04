@@ -27,6 +27,7 @@ import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
 import Data.Maybe
+import qualified Data.Foldable as F
 import Domain.Logic.Formula hiding (disjunctions, Var)
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
@@ -114,7 +115,7 @@ rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleaner))) $
 allArePoly :: Context (OrList (Equation Expr)) -> Bool
 allArePoly = 
    let f a = a `belongsTo` polyView
-   in maybe False (all f . concatMap crush . crush) .  fromContext
+   in maybe False (all f . concatMap F.toList . F.toList) .  fromContext
 
 simplifyRationalStrategy :: LabeledStrategy (Context Expr)
 simplifyRationalStrategy = cleanUpStrategy (applyTop cleaner) $

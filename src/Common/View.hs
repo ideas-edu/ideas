@@ -32,6 +32,7 @@ import Common.Id
 import Common.Classes
 import Control.Arrow
 import Control.Monad
+import Data.Foldable
 import Data.Maybe
 import Test.QuickCheck
 import qualified Control.Category as C
@@ -154,8 +155,8 @@ matchM v = maybe (Prelude.fail "no match") return . match v
 canonicalM :: Monad m => View a b -> a -> m a
 canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
 
-viewList :: (Crush m, Monad m) => ViewM m a b -> ViewList a b
-viewList v = makeView (crush . match v) (build v)
+viewList :: (Foldable m, Monad m) => ViewM m a b -> ViewList a b
+viewList v = makeView (toList . match v) (build v)
 
 ---------------------------------------------------------------
 -- Some combinators

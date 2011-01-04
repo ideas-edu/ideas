@@ -18,6 +18,8 @@ import Common.Uniplate (Uniplate(..), universe)
 import Common.Utils (ShowString, subsets)
 import Common.View
 import Control.Monad
+import qualified Data.Foldable as F
+import Data.Monoid (mconcat)
 import Data.List
 import Data.Maybe
 import Domain.Math.Expr.Symbols (openMathSymbol)
@@ -49,8 +51,8 @@ instance Show a => Show (Logic a) where
 instance Functor Logic where
    fmap f = foldLogic (Var . f, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
 
-instance Crush Logic where
-   crush p = [ x | Var x <- universe p ]
+instance F.Foldable Logic where
+   foldMap f p = mconcat [ f x | Var x <- universe p ]
 
 instance Switch Logic where
    switch = foldLogic 
@@ -142,7 +144,7 @@ countEquivalences p = length [ () | _ :<->: _ <- universe p ]
 
 -- | Function varsLogic returns the variables that appear in a Logic expression.
 varsLogic :: Eq a => Logic a -> [a]
-varsLogic p = nub [ s | Var s <- universe p ]   
+varsLogic = nub . F.toList
 
 instance Uniplate (Logic a) where
    uniplate this =
@@ -207,25 +209,25 @@ orMonoid = monoid orOperator (makeConstant (getId falseSymbol) F isF)
    isF _ = False
 
 andOperator:: BinaryOp (Logic a)
-andOperator = makeBinary (getId andSymbol) (:&&:) isAnd
+andOperator = makeBinaryOp (getId andSymbol) (:&&:) isAnd
  where 
    isAnd (p :&&: q) = Just (p, q)
    isAnd _          = Nothing
 
 orOperator :: BinaryOp (Logic a)
-orOperator = makeBinary (getId orSymbol) (:||:) isOr
+orOperator = makeBinaryOp (getId orSymbol) (:||:) isOr
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing
 
 implOperator :: BinaryOp (Logic a)   
-implOperator = makeBinary (getId impliesSymbol) (:->:) isImpl
+implOperator = makeBinaryOp (getId impliesSymbol) (:->:) isImpl
  where
    isImpl (p :->: q) = Just (p, q)
    isImpl _           = Nothing
    
 equivOperator :: BinaryOp (Logic a)   
-equivOperator = makeBinary (getId equivalentSymbol) (:<->:) isEquiv
+equivOperator = makeBinaryOp (getId equivalentSymbol) (:<->:) isEquiv
  where
    isEquiv (p :<->: q) = Just (p, q)
    isEquiv _           = Nothing

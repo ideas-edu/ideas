@@ -26,11 +26,13 @@ module Domain.Math.Data.Relation
    ) where
 
 import Common.View
-import Common.Rewriting
+import Common.Rewriting hiding (Monoid)
 import Common.Classes
+import Data.Foldable (Foldable, foldMap, toList)
 import Domain.Math.Expr.Symbols (openMathSymbol)
 import Text.OpenMath.Dictionary.Relation1
 import Data.Maybe
+import Data.Monoid
 import Test.QuickCheck
 import Control.Monad
 
@@ -70,6 +72,9 @@ instance Show a => Show (Relation a) where
 
 instance Functor Relation where
    fmap f (R x rt y) = R (f x) rt (f y)
+
+instance Foldable Relation where
+   foldMap = foldMapRelation
 
 instance Relational Relation where
    leftHandSide  = lhs
@@ -142,25 +147,26 @@ a ? xs = fromMaybe (error "Relation: Error in lookup") (lookup a xs)
 -- Traversable instance declarations
 
 instance Switch Relation where switch = switchRelation
-instance Crush  Relation where crush  = crushRelation
 
 switchRelation :: (Relational f, Monad m) => f (m a) -> m (f a)
 switchRelation p =
    liftM2 (constructor p) (leftHandSide p) (rightHandSide p)
-            
-crushRelation :: Relational f => f a -> [a]
-crushRelation p = [leftHandSide p, rightHandSide p]
+
+foldMapRelation :: (Relational f, Monoid m) => (a -> m) -> f a -> m
+foldMapRelation f p = f (leftHandSide p) `mappend` f (rightHandSide p)
 
 -----------------------------------------------------------------------------
 -- QuickCheck generators
 
 instance Arbitrary a => Arbitrary (Relation a) where
    arbitrary = liftM3 R arbitrary arbitrary arbitrary
+   
 instance CoArbitrary a => CoArbitrary (Relation a) where
-   coarbitrary p = coarbitrary (relationType p) . coarbitrary (crush p)
+   coarbitrary p = coarbitrary (relationType p) . coarbitrary (toList p)
    
 instance Arbitrary RelationType where
    arbitrary = oneof $ map return [EqualTo .. Approximately]
+   
 instance CoArbitrary RelationType where
    coarbitrary op = variant (fromEnum op)
 
@@ -197,6 +203,9 @@ instance Show a => Show (Equation a) where
 instance Functor Equation where
    fmap f (x :==: y) = f x :==: f y
 
+instance Foldable Equation where
+   foldMap = foldMapRelation
+
 instance Zip Equation where
    fzipWith f (a :==: b) (c :==: d) = f a c :==: f b d
 
@@ -208,10 +217,10 @@ instance Relational Equation where
    isSymmetric   = const True
 
 instance Switch Equation where switch = switchRelation
-instance Crush  Equation where crush  = crushRelation
 
 instance Arbitrary a => Arbitrary (Equation a) where
    arbitrary   = liftM2 (:==:) arbitrary arbitrary
+   
 instance CoArbitrary a => CoArbitrary (Equation a) where
    coarbitrary = coarbitrary . build equationView
 
@@ -244,7 +253,10 @@ instance Functor Inequality where
       let a = leftHandSide ineq
           b = rightHandSide ineq
       in constructor ineq (f a) (f b)
-   
+
+instance Foldable Inequality where
+   foldMap = foldMapRelation
+
 instance Relational Inequality where
    leftHandSide  = leftHandSide  . build inequalityView
    rightHandSide = rightHandSide . build inequalityView
@@ -255,12 +267,12 @@ instance Relational Inequality where
       in fst (relType ? inequalityTable)
 
 instance Switch Inequality where switch = switchRelation
-instance Crush  Inequality where crush  = crushRelation
 
 instance Arbitrary a => Arbitrary (Inequality a) where
    arbitrary = do 
       op <- oneof $ map (return . fst . snd) inequalityTable
       liftM2 op arbitrary arbitrary
+
 instance CoArbitrary a => CoArbitrary (Inequality a) where
    coarbitrary = coarbitrary . build inequalityView
 

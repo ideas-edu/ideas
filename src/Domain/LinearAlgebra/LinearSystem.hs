@@ -14,9 +14,9 @@ module Domain.LinearAlgebra.LinearSystem where
 import Domain.Math.Data.Relation
 import Domain.LinearAlgebra.Matrix (Matrix, makeMatrix, rows)
 import Domain.LinearAlgebra.LinearView
+import Data.Foldable (toList)
 import Data.List
 import Data.Maybe
-import Common.Classes
 import Control.Monad
 import Common.Utils
 import Common.Uniplate
@@ -26,7 +26,7 @@ import qualified Data.Set as S
 type LinearSystem a = Equations a
 
 getVarsSystem :: IsLinear a => LinearSystem a -> [String]
-getVarsSystem = S.toList . S.unions . map varSet . concatMap crush
+getVarsSystem = S.toList . S.unions . map varSet . concatMap toList
 
 evalSystem :: (Uniplate a, IsLinear a) => (String -> a) -> LinearSystem a -> Bool
 evalSystem f = 

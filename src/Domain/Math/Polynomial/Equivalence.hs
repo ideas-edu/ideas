@@ -147,7 +147,7 @@ polyEq :: (Relation Expr -> Maybe (String, Intervals Q)) -> Logic (Relation Expr
 polyEq f p q = fromMaybe False $ do
    xs <- switch (fmap f p)
    ys <- switch (fmap f q)
-   let vs = map fst (crush xs ++ crush ys)
+   let vs = map fst (varsLogic xs ++ varsLogic ys)
    guard (null vs || all (==head vs) vs)
    let ix = logicIntervals (fmap snd xs)
        iy = logicIntervals (fmap snd ys)
@@ -194,7 +194,7 @@ cuPower rel = do
 highRel2 :: Logic (Relation Expr) -> Maybe (String, Intervals Q)
 highRel2 p = do
    xs <- switch (fmap highRel p)
-   let vs = map fst (crush xs)
+   let vs = map fst (varsLogic xs)
    guard (null vs || all (==head vs) vs)
    return (head vs, logicIntervals (fmap snd xs))
 

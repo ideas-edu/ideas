@@ -44,7 +44,7 @@ class IsMagma f where
    toMagma     :: f a -> Magma a
    changeMagma :: (Magma a -> Magma a) -> f a -> f a
    -- default definitions
-   operation     = binary . magmaBinaryOp . toMagma
+   operation     = binaryOp . magmaBinaryOp . toMagma
    toMagma       = fst . hasMagma
    changeMagma f = uncurry (flip ($)) . first f . hasMagma
 
@@ -70,7 +70,7 @@ magma :: BinaryOp a -> Magma a
 magma op = Magma op []
 
 magmaView :: IsMagma m => m a -> View a (a, a)
-magmaView = binaryView . magmaBinaryOp . toMagma
+magmaView = binaryOpView . magmaBinaryOp . toMagma
 
 -- The list can (and should) only contain more than two elements if the magma 
 -- is associative
@@ -99,7 +99,7 @@ magmaListView m = makeView (Just . toList) fromList
 withMatch :: IsMagma m => (a -> Maybe (a, a)) -> m a -> m a
 withMatch f = changeMagma $ \m -> m {magmaBinaryOp = g (magmaBinaryOp m)}
  where
-   g op = makeBinary (getId op) (binary op) f
+   g op = makeBinaryOp (getId op) (binaryOp op) f
 
 isAssociative, isCommutative, isIdempotent :: IsMagma m => m a -> Bool
 isAssociative = hasProperty Associative
@@ -200,7 +200,7 @@ class IsMonoid f => IsGroup f where
    inverseOp :: f a -> UnaryOp a
    toGroup   :: f a -> Group a
    -- default definition
-   inverse   = unary . inverseOp
+   inverse   = unaryOp . inverseOp
    toGroup g = Group (inverseOp g) (toMonoid g)
 
 data Group a = Group (UnaryOp a) (Monoid a)

@@ -28,7 +28,7 @@ import Common.Navigator hiding (left, right)
 import Common.Rewriting hiding (difference)
 import Common.Strategy  hiding (fail, not, repeat, replicate, sequence)
 import Common.Transformation
-import Common.View 
+import Common.View hiding (identity)
 
 import qualified Common.Strategy as S
 import Prelude (Int)

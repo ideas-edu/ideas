@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.OrList 
    ( OrList
-   , orList, (\/), true, false
+   , orList, true, false
    , isTrue, isFalse
    , disjunctions, normalize, idempotent, fromBool
    , oneDisjunct, orListView
@@ -20,8 +20,10 @@ module Domain.Math.Data.OrList
 import Common.View
 import Control.Monad
 import Common.Classes
-import Common.Rewriting
+import Common.Rewriting hiding (Monoid)
 import qualified Domain.Logic.Formula as Logic
+import Data.Foldable (Foldable, foldMap)
+import Data.Monoid
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
 import Data.List (intersperse, nub, sort)
@@ -54,9 +56,6 @@ disjunctions :: OrList a -> Maybe [a]
 disjunctions T           = Nothing
 disjunctions (OrList xs) = Just xs
 
-(\/) :: OrList a -> OrList a -> OrList a
-p \/ q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
-
 -- | Sort the propositions and remove duplicates
 normalize :: Ord a => OrList a -> OrList a
 normalize T           = T
@@ -79,27 +78,27 @@ fromBool b = if b then true else false
 ------------------------------------------------------------
 -- Instances
 
--- local helper
-joinOr :: OrList (OrList a) -> OrList a
-joinOr = maybe T (foldr (\/) false) . disjunctions
-
 instance Rewrite a => Rewrite (OrList a)
 
 instance Functor OrList where
    fmap _ T           = T
    fmap f (OrList xs) = OrList (map f xs)
 
+instance Foldable OrList where
+   foldMap _ T           = mempty
+   foldMap f (OrList xs) = mconcat (map f xs)
+   
+instance Monoid (OrList a) where
+   mempty  = false
+   mappend p q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
+
 instance Monad OrList where
    return  = OrList . return
-   m >>= f = joinOr (fmap f m)
+   m >>= f = foldMap id (fmap f m)
 
 instance Switch OrList where
    switch T           = return T
    switch (OrList xs) = liftM orList (sequence xs)
-
-instance Crush OrList where
-   crush T           = []
-   crush (OrList xs) = xs
 
 instance IsTerm a => IsTerm (OrList a) where
    toTerm = toTerm . build orListView
@@ -130,7 +129,7 @@ orListView = makeView f g
              Logic.Var a -> return (return a)
              Logic.T     -> return true
              Logic.F     -> return false
-             a :||: b    -> liftM2 (\/) (f a) (f b)
+             a :||: b    -> liftM2 mappend (f a) (f b)
              _           -> Nothing
    g xs = case disjunctions xs of
              Nothing -> Logic.T

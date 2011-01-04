@@ -31,7 +31,7 @@ import Common.Rewriting.Substitution
 import Common.Rewriting.Term
 import Common.Rewriting.Group
 import Common.Rewriting.Unification hiding (match)
-import Common.Uniplate (descend, leafs)
+import Common.Uniplate (descend)
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
@@ -59,9 +59,6 @@ data RuleSpec a = a :~> a deriving Show
 
 instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b
-
-instance Crush RuleSpec where
-   crush (a :~> b) = [a, b]
 
 instance Zip RuleSpec where 
    fzipWith f (a :~> b) (c :~> d) = f a c :~> f b d
@@ -180,8 +177,8 @@ useOperators xs r = r {ruleOperators = xs ++ ruleOperators r}
 
 -- some helpers
 metaInRewriteRule :: RewriteRule a -> [Int]
-metaInRewriteRule r =
-   [ n | a <- crush (ruleSpecTerm r), Meta n <- leafs a ]
+metaInRewriteRule r = metaVars a ++ metaVars b
+ where a :~> b = ruleSpecTerm r
 
 renumberRewriteRule :: Int -> RewriteRule a -> RewriteRule a
 renumberRewriteRule n r = r {ruleSpecTerm = fmap f (ruleSpecTerm r)}

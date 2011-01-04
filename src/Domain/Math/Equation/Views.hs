@@ -19,11 +19,11 @@ import Domain.Math.Expr
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Common.View
-import Common.Classes
+import qualified Data.Foldable as F
 
 -- generalized to relation
-solvedRelations :: (Crush f, Relational g) => f (g Expr) -> Bool
-solvedRelations = all solvedRelation . crush
+solvedRelations :: (F.Foldable f, Relational g) => f (g Expr) -> Bool
+solvedRelations = F.all solvedRelation
 
 -- The variable may appear on one of the sides of the relation (right-hand side
 -- is thus allowed), but must be isolated
@@ -44,7 +44,7 @@ solvedRelationWith p r =
 -- Views on equations
 
 solvedEquations :: OrList (Equation Expr) -> Bool
-solvedEquations = all solvedEquation . crush
+solvedEquations = F.all solvedEquation
 
 solvedEquation :: Equation Expr -> Bool
 solvedEquation eq@(lhs :==: rhs) = 

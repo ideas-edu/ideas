@@ -42,6 +42,7 @@ import Common.Utils
 import Common.View
 import Control.Monad
 import Data.Char
+import Data.Foldable (Foldable)
 import Data.Maybe
 import Data.Ratio
 import Test.QuickCheck
@@ -405,13 +406,13 @@ useRecognizer = Recognizer
 liftTrans :: View a b -> Transformation b -> Transformation a
 liftTrans v = liftTransIn (v &&& identity) 
 
-liftTransIn :: (Crush m, Monad m) => ViewM m a (b, c) -> Transformation b -> Transformation a
+liftTransIn :: (Foldable m, Monad m) => ViewM m a (b, c) -> Transformation b -> Transformation a
 liftTransIn = LiftView . viewList
 
 liftRule :: View a b -> Rule b -> Rule a
 liftRule v = liftRuleIn (v &&& identity) 
 
-liftRuleIn :: (Crush m, Monad m) => ViewM m a (b, c) -> Rule b -> Rule a
+liftRuleIn :: (Foldable m, Monad m) => ViewM m a (b, c) -> Rule b -> Rule a
 liftRuleIn v r = r
    { transformations = map (liftTransIn v) (transformations r) }
 

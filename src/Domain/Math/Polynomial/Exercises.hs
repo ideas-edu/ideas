@@ -223,10 +223,10 @@ normExpr :: (Expr -> Expr) -> Expr -> Expr
 normExpr f = rec . f
  where
    plusOperator  = makeCommutative $ monoid 
-                      (makeBinary (getId plusSymbol) (+) isPlus)
+                      (makeBinaryOp (getId plusSymbol) (+) isPlus)
                       (simpleConstant "zero" 0)
    timesOperator = makeCommutative $ monoid 
-                      (makeBinary (getId timesSymbol) (*) isTimes)
+                      (makeBinaryOp (getId timesSymbol) (*) isTimes)
                       (simpleConstant "one" 1)
    make          = simplifyWith (map rec) . magmaListView
    

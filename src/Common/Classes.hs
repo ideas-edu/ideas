@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Classes 
    ( Apply(..), applicable, applyD, applyM
-   , Switch(..), Crush(..), Zip(..)
+   , Switch(..), Zip(..)
    ) where
 
 import Common.Utils (safeHead)
@@ -73,27 +73,6 @@ instance Switch IM.IntMap where
       let (ns, ms) = unzip (IM.toList m)
       as <- sequence ms 
       return $ IM.fromAscList $ zip ns as
-
------------------------------------------------------------
--- * Type class |Crush|
-
-class Functor f => Crush f where
-   crush :: f a -> [a]
-
-instance Crush [] where
-   crush = id
-
-instance Crush Maybe where
-   crush = maybe [] return
-
-instance Crush Identity where
-   crush = return . runIdentity
-
-instance Crush (M.Map a) where
-   crush = M.elems
-
-instance Crush IM.IntMap where
-   crush = IM.elems
 
 -----------------------------------------------------------
 -- * Type class |Zip|

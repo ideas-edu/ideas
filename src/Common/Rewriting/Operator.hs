@@ -14,11 +14,11 @@ module Common.Rewriting.Operator
      Constant, makeConstant, simpleConstant
    , constant, isConstant, constantView
      -- * Unary operators
-   , UnaryOp, makeUnary, simpleUnary
-   , unary, isUnary, unaryMatch, unaryView
+   , UnaryOp, makeUnaryOp, simpleUnaryOp
+   , unaryOp, isUnaryOp, unaryOpMatch, unaryOpView
      -- * Binary operators
-   , BinaryOp, makeBinary, simpleBinary
-   , binary, isBinary, binaryMatch, binaryView
+   , BinaryOp, makeBinaryOp, simpleBinaryOp
+   , binaryOp, isBinaryOp, binaryOpMatch, binaryOpView
    ) where
 
 import Common.Id
@@ -35,9 +35,6 @@ data Constant a = C
    , constant   :: a
    , isConstant :: a -> Bool
    }
-
-instance Show (Constant a) where
-   show = showId
 
 instance HasId (Constant a) where
    getId = constantId
@@ -56,62 +53,56 @@ constantView (C i a p) = newView i (guard . p) (const a)
 -- Unary operators
 
 data UnaryOp a = U
-   { unaryId    :: Id
-   , unary      :: a -> a
-   , unaryMatch :: a -> Maybe a
+   { unaryOpId    :: Id
+   , unaryOp      :: a -> a
+   , unaryOpMatch :: a -> Maybe a
    }
 
-instance Show (UnaryOp a) where
-   show = showId
-
 instance HasId (UnaryOp a) where
-   getId = unaryId
-   changeId f op = op {unaryId = f (unaryId op)}
+   getId = unaryOpId
+   changeId f op = op {unaryOpId = f (unaryOpId op)}
 
-makeUnary :: IsId n => n -> (a -> a) -> (a -> Maybe a) -> UnaryOp a
-makeUnary = U . newId
+makeUnaryOp :: IsId n => n -> (a -> a) -> (a -> Maybe a) -> UnaryOp a
+makeUnaryOp = U . newId
 
-simpleUnary :: (IsId n, Uniplate a, Eq a) => n -> (a -> a) -> UnaryOp a
-simpleUnary n op = makeUnary n op f
+simpleUnaryOp :: (IsId n, Uniplate a, Eq a) => n -> (a -> a) -> UnaryOp a
+simpleUnaryOp n op = makeUnaryOp n op f
  where
    f a = case children a of
             [x] | op x == a -> Just x
             _ -> Nothing
 
-isUnary :: UnaryOp a -> a -> Bool
-isUnary op = isJust . unaryMatch op
+isUnaryOp :: UnaryOp a -> a -> Bool
+isUnaryOp op = isJust . unaryOpMatch op
 
-unaryView :: UnaryOp a -> View a a
-unaryView (U i op m) = newView i m op
+unaryOpView :: UnaryOp a -> View a a
+unaryOpView (U i op m) = newView i m op
 
 ----------------------------------------------------------------------
 -- Binary operators
 
 data BinaryOp a = B 
-   { binaryId    :: Id
-   , binary      :: a -> a -> a
-   , binaryMatch :: a -> Maybe (a, a)
+   { binaryOpId    :: Id
+   , binaryOp      :: a -> a -> a
+   , binaryOpMatch :: a -> Maybe (a, a)
    }
 
-instance Show (BinaryOp a) where
-   show = showId
-
 instance HasId (BinaryOp a) where
-   getId = binaryId
-   changeId f op = op {binaryId = f (binaryId op)}
+   getId = binaryOpId
+   changeId f op = op {binaryOpId = f (binaryOpId op)}
 
-makeBinary :: IsId n => n -> (a -> a -> a) -> (a -> Maybe (a, a)) -> BinaryOp a
-makeBinary = B . newId
+makeBinaryOp :: IsId n => n -> (a -> a -> a) -> (a -> Maybe (a, a)) -> BinaryOp a
+makeBinaryOp = B . newId
 
-simpleBinary :: (IsId n, Uniplate a, Eq a) => n -> (a -> a -> a) -> BinaryOp a
-simpleBinary n op = makeBinary n op f
+simpleBinaryOp :: (IsId n, Uniplate a, Eq a) => n -> (a -> a -> a) -> BinaryOp a
+simpleBinaryOp n op = makeBinaryOp n op f
  where
    f a = case children a of
             [x, y] | op x y == a -> Just (x, y)
             _ -> Nothing
 
-isBinary :: BinaryOp a -> a -> Bool
-isBinary op = isJust . binaryMatch op
+isBinaryOp :: BinaryOp a -> a -> Bool
+isBinaryOp op = isJust . binaryOpMatch op
 
-binaryView :: BinaryOp a -> View a (a, a)
-binaryView (B n op m) = newView n m (uncurry op)
+binaryOpView :: BinaryOp a -> View a (a, a)
+binaryOpView (B n op m) = newView n m (uncurry op)

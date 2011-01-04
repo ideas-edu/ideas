@@ -12,13 +12,13 @@
 
 module Domain.Math.Power.Equation.NormViews where
 
-import Common.Classes
 import Common.View
 import Common.Rewriting hiding (rewrite)
 import Control.Arrow ( (>>^) )
 import Control.Monad
 import Data.List
 import Data.Maybe
+import qualified Data.Traversable as T
 import Data.Ratio
 import Domain.Math.Approximation
 import Domain.Math.Data.OrList
@@ -63,10 +63,10 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (identity >>^ \a->(a,1))
 
 normPowerEqView' :: View (OrList (Equation Expr)) (OrList (Equation Expr))
-normPowerEqView' = makeView (h. g . switch . (fmap f)) id
+normPowerEqView' = makeView (liftM h . liftM g . T.mapM f) id
   where
-    h = liftM $ fmap $ fmap cleanUpExpr
-    g = liftM (transformOrList $ tryRewriteAll simplerPower)
+    h = fmap $ fmap cleanUpExpr
+    g = transformOrList $ tryRewriteAll simplerPower
     f expr = do
       -- selected var to the left, the rest to the right
       (lhs :==: rhs) <- varLeft expr >>= constRight
@@ -109,7 +109,7 @@ normExpEqView = makeView f id >>> linearEquationView
         Nothing     -> l :==: r
 
 normLogEqView :: View (OrList (Equation Expr)) (OrList (Equation Expr))
-normLogEqView = makeView (liftM g . switch . fmap f) id
+normLogEqView = makeView (liftM g . T.mapM f) id
   where
     f expr@(lhs :==: rhs) = return $
       case match logView lhs of

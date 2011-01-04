@@ -31,8 +31,9 @@ import Common.Id
 import Common.Rewriting
 import Common.Transformation
 import Common.View
-import Control.Monad.Identity
+import Control.Monad
 import Data.Maybe
+import Data.Traversable (Traversable, mapM)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
@@ -40,7 +41,7 @@ import Domain.Math.Expr
 ---------------------------------------------------------------------
 -- Constructors for cover-up rules
 
-coverUpFunction :: (Switch f, Relational r) 
+coverUpFunction :: (Traversable f, Relational r) 
                    => (Expr -> [(Expr, Expr)]) 
                    -> (Expr -> Expr -> [f Expr])
                    -> ConfigCoverUp -> r Expr -> [f (r Expr)]
@@ -53,7 +54,7 @@ coverUpFunction fm fb cfg eq0 =
       (e1, e2) <- fm (leftHandSide eq)
       guard (predicateCovered  cfg e1)
       new <- fb (rightHandSide eq) e2
-      _   <- switch $ fmap (guard . predicateCombined cfg) new
+      _   <- Data.Traversable.mapM (guard . predicateCombined cfg) new
       return (fmap (constructor eq e1) new)
 
 coverUpBinaryOrRule :: Relational r
@@ -69,8 +70,8 @@ coverUpBinaryRule :: Relational r => String
                   -> ConfigCoverUp -> Rule (r Expr)
 coverUpBinaryRule opName fm fb cfg = 
    let name = coverUpRuleName opName (configName cfg)
-       fb2 a b = [Identity (fb a b)]
-   in makeSimpleRuleList name $ map runIdentity . coverUpFunction fm fb2 cfg 
+       fb2 a b = [[fb a b]]
+   in makeSimpleRuleList name $ map head . coverUpFunction fm fb2 cfg 
       
 coverUpUnaryRule :: Relational r => String -> (Expr -> [Expr]) -> (Expr -> Expr) 
                -> ConfigCoverUp -> Rule (r Expr)

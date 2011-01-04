@@ -21,11 +21,14 @@ module Domain.LinearAlgebra.Matrix
    , isSquare, identityMatrix, isLowerTriangular, isUpperTriangular
    ) where
 
-import Common.Classes
 import Common.Rewriting hiding (inverse)
 import Control.Monad
 import Data.List hiding (transpose)
 import Data.Maybe
+import Data.Monoid
+import Data.Foldable (Foldable, foldMap)
+import Data.Traversable (Traversable, sequenceA)
+import Control.Applicative
 import Domain.Math.Simplification
 import Domain.Math.Expr.Symbols (openMathSymbol)
 import Test.QuickCheck
@@ -43,8 +46,11 @@ type Column a = [a]
 instance Functor Matrix where 
    fmap f (M rs) = M (map (map f) rs)
 
-instance Switch Matrix where
-   switch (M xss) = liftM M (mapM sequence xss)
+instance Foldable Matrix where
+   foldMap f (M xss) = foldMap (mconcat . map f) xss
+
+instance Traversable Matrix where
+   sequenceA (M xss) = M <$> sequenceA (map sequenceA xss)
 
 instance IsTerm a => IsTerm (Matrix a) where
    toTerm = 

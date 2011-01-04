@@ -20,9 +20,10 @@ module Domain.Math.Data.Polynomial
 import qualified Data.IntMap as IM
 import qualified Data.IntSet as IS
 import Data.Char
-import Control.Monad
-import Common.Classes
 import Data.List  (nub)
+import Data.Foldable (Foldable, foldMap)
+import Data.Traversable (Traversable, sequenceA)
+import Control.Applicative ((<$>))
 import Data.Ratio (approxRational)
 import Domain.Math.Approximation (newton, within)
 
@@ -50,8 +51,11 @@ instance Num a => Show (Polynomial a) where
 instance Functor Polynomial where
    fmap f (P m) = P (IM.map f m)
 
-instance Switch Polynomial where
-   switch (P m) = liftM P (switch m)
+instance Foldable Polynomial where
+   foldMap f (P m) = foldMap f m
+   
+instance Traversable Polynomial where
+   sequenceA (P m) = P <$> sequenceA m
 
 instance Num a => Num (Polynomial a) where
    P m1 + P m2   = P (IM.filter (/= 0) (IM.unionWith (+) m1 m2))

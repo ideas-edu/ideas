@@ -27,12 +27,13 @@ module Domain.Math.Data.Relation
 
 import Common.View
 import Common.Rewriting hiding (Monoid)
-import Common.Classes
 import Data.Foldable (Foldable, foldMap, toList)
+import Data.Traversable (Traversable, sequenceA)
 import Domain.Math.Expr.Symbols (openMathSymbol)
 import Text.OpenMath.Dictionary.Relation1
 import Data.Maybe
 import Data.Monoid
+import Control.Applicative
 import Test.QuickCheck
 import Control.Monad
 
@@ -76,6 +77,9 @@ instance Functor Relation where
 instance Foldable Relation where
    foldMap = foldMapRelation
 
+instance Traversable Relation where
+   sequenceA = sequenceRelation
+   
 instance Relational Relation where
    leftHandSide  = lhs
    rightHandSide = rhs
@@ -143,17 +147,11 @@ flipRelType relType = fromMaybe relType (lookup relType table)
 (?) :: Eq a => a -> [(a, b)] -> b
 a ? xs = fromMaybe (error "Relation: Error in lookup") (lookup a xs)
 
------------------------------------------------------------------------------
--- Traversable instance declarations
-
-instance Switch Relation where switch = switchRelation
-
-switchRelation :: (Relational f, Monad m) => f (m a) -> m (f a)
-switchRelation p =
-   liftM2 (constructor p) (leftHandSide p) (rightHandSide p)
-
 foldMapRelation :: (Relational f, Monoid m) => (a -> m) -> f a -> m
 foldMapRelation f p = f (leftHandSide p) `mappend` f (rightHandSide p)
+
+sequenceRelation :: (Relational g, Applicative f) => g (f a) -> f (g a)
+sequenceRelation p = constructor p <$> leftHandSide p <*> rightHandSide p
 
 -----------------------------------------------------------------------------
 -- QuickCheck generators
@@ -206,8 +204,8 @@ instance Functor Equation where
 instance Foldable Equation where
    foldMap = foldMapRelation
 
-instance Zip Equation where
-   fzipWith f (a :==: b) (c :==: d) = f a c :==: f b d
+instance Traversable Equation where
+   sequenceA = sequenceRelation
 
 instance Relational Equation where
    leftHandSide  = leftHandSide  . build equationView
@@ -215,8 +213,6 @@ instance Relational Equation where
    flipSides     = \(x :==: y) -> y :==: x
    constructor   = const (:==:)
    isSymmetric   = const True
-
-instance Switch Equation where switch = switchRelation
 
 instance Arbitrary a => Arbitrary (Equation a) where
    arbitrary   = liftM2 (:==:) arbitrary arbitrary
@@ -257,6 +253,9 @@ instance Functor Inequality where
 instance Foldable Inequality where
    foldMap = foldMapRelation
 
+instance Traversable Inequality where
+   sequenceA = sequenceRelation
+
 instance Relational Inequality where
    leftHandSide  = leftHandSide  . build inequalityView
    rightHandSide = rightHandSide . build inequalityView
@@ -265,8 +264,6 @@ instance Relational Inequality where
    constructor ineq = 
       let relType = relationType (build inequalityView ineq)
       in fst (relType ? inequalityTable)
-
-instance Switch Inequality where switch = switchRelation
 
 instance Arbitrary a => Arbitrary (Inequality a) where
    arbitrary = do 

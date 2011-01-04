@@ -19,10 +19,11 @@ module Domain.Math.Data.OrList
 
 import Common.View
 import Control.Monad
-import Common.Classes
 import Common.Rewriting hiding (Monoid)
 import qualified Domain.Logic.Formula as Logic
 import Data.Foldable (Foldable, foldMap)
+import Data.Traversable (Traversable, sequenceA)
+import Control.Applicative
 import Data.Monoid
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
@@ -87,7 +88,11 @@ instance Functor OrList where
 instance Foldable OrList where
    foldMap _ T           = mempty
    foldMap f (OrList xs) = mconcat (map f xs)
-   
+
+instance Traversable OrList where
+   sequenceA T           = pure T
+   sequenceA (OrList xs) = OrList <$> sequenceA xs
+
 instance Monoid (OrList a) where
    mempty  = false
    mappend p q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
@@ -95,10 +100,6 @@ instance Monoid (OrList a) where
 instance Monad OrList where
    return  = OrList . return
    m >>= f = foldMap id (fmap f m)
-
-instance Switch OrList where
-   switch T           = return T
-   switch (OrList xs) = liftM orList (sequence xs)
 
 instance IsTerm a => IsTerm (OrList a) where
    toTerm = toTerm . build orListView
@@ -109,6 +110,7 @@ instance Arbitrary a => Arbitrary (OrList a) where
       n  <- choose (1, 3)
       xs <- vector n
       return (OrList xs)
+
 instance CoArbitrary a => CoArbitrary (OrList a) where
    coarbitrary T           = variant (0 :: Int)
    coarbitrary (OrList xs) = variant (1 :: Int) . coarbitrary xs

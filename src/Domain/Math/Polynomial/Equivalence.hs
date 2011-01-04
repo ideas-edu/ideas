@@ -15,13 +15,13 @@ module Domain.Math.Polynomial.Equivalence
    , eqAfterSubstitution
    ) where
 
-import Common.Classes
 import Common.Context
 import Common.Rewriting
 import Common.Uniplate
 import Common.View
 import Control.Monad
 import Data.List (sort, nub)
+import qualified Data.Traversable as T
 import Data.Maybe
 import Data.Ord
 import Domain.Logic.Formula hiding (Var, disjunctions)
@@ -145,8 +145,8 @@ ineqOnClipboard = evalCM $ const $ do
 
 polyEq :: (Relation Expr -> Maybe (String, Intervals Q)) -> Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
 polyEq f p q = fromMaybe False $ do
-   xs <- switch (fmap f p)
-   ys <- switch (fmap f q)
+   xs <- T.mapM f p
+   ys <- T.mapM f q
    let vs = map fst (varsLogic xs ++ varsLogic ys)
    guard (null vs || all (==head vs) vs)
    let ix = logicIntervals (fmap snd xs)
@@ -193,7 +193,7 @@ cuPower rel = do
 
 highRel2 :: Logic (Relation Expr) -> Maybe (String, Intervals Q)
 highRel2 p = do
-   xs <- switch (fmap highRel p)
+   xs <- T.mapM highRel p
    let vs = map fst (varsLogic xs)
    guard (null vs || all (==head vs) vs)
    return (head vs, logicIntervals (fmap snd xs))

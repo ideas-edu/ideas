@@ -60,9 +60,6 @@ data RuleSpec a = a :~> a deriving Show
 instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b
 
-instance Zip RuleSpec where 
-   fzipWith f (a :~> b) (c :~> d) = f a c :~> f b d
-
 data RewriteRule a = R
    { ruleId        :: Id
    , ruleSpecTerm  :: RuleSpec Term
@@ -94,9 +91,10 @@ instance IsTerm a => RuleBuilder (RuleSpec a) a where
 instance (Different a, RuleBuilder t b) => RuleBuilder (a -> t) b where
    buildRuleSpec f i = buildFunction i (\a -> buildRuleSpec (f a) (i+1))
 
-buildFunction :: (Zip f, Different a) => Int -> (a -> f Term) -> f Term
-buildFunction n f = fzipWith (fill n) (f a) (f b)
- where (a, b) = different
+buildFunction :: Different a => Int -> (a -> RuleSpec Term) -> RuleSpec Term
+buildFunction n f = fzip (fill n) ((f *** f) different)
+ where 
+   fzip g (a :~> b, c :~> d) = g a c :~> g b d
  
 fill :: Int -> Term -> Term -> Term
 fill i = rec

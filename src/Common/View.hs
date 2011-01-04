@@ -29,13 +29,13 @@ module Common.View
    ) where
 
 import Common.Id
-import Common.Classes
 import Control.Arrow
 import Control.Monad
 import Data.Foldable
 import Data.Maybe
 import Test.QuickCheck
 import qualified Control.Category as C
+import Data.Traversable (Traversable, sequence)
 
 ----------------------------------------------------------------------------------
 -- Generalized monadic view
@@ -172,8 +172,8 @@ swapView =
 listView :: Monad m => ViewM m a b -> ViewM m [a] [b]
 listView v = makeView (mapM (match v)) (map (build v))
 
-switchView :: (Monad m, Switch f) => ViewM m a b -> ViewM m (f a) (f b)
-switchView v = makeView (switch . fmap (match v)) (fmap (build v))
+switchView :: (Monad m, Traversable f) => ViewM m a b -> ViewM m (f a) (f b)
+switchView v = makeView (Data.Traversable.sequence . fmap (match v)) (fmap (build v))
  
 associativeView :: View a (a, a) -> ViewList a (a, a)
 associativeView v = makeView (reverse . f) (build v)

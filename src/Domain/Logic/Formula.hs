@@ -11,14 +11,15 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
-import Common.Classes
 import Common.Id
 import Common.Rewriting
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Utils (ShowString, subsets)
 import Common.View
 import Control.Monad
-import qualified Data.Foldable as F
+import Data.Foldable (Foldable, foldMap, toList)
+import Data.Traversable (Traversable, sequenceA)
+import Control.Applicative
 import Data.Monoid (mconcat)
 import Data.List
 import Data.Maybe
@@ -51,13 +52,13 @@ instance Show a => Show (Logic a) where
 instance Functor Logic where
    fmap f = foldLogic (Var . f, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
 
-instance F.Foldable Logic where
+instance Foldable Logic where
    foldMap f p = mconcat [ f x | Var x <- universe p ]
 
-instance Switch Logic where
-   switch = foldLogic 
-      ( liftM Var, liftM2 (:->:), liftM2 (:<->:), liftM2 (:&&:)
-      , liftM2 (:||:), liftM Not, return T, return F
+instance Traversable Logic where
+   sequenceA = foldLogic 
+      ( liftA Var, liftA2 (:->:), liftA2 (:<->:), liftA2 (:&&:)
+      , liftA2 (:||:), liftA Not, pure T, pure F
       )
 
 -- | The type LogicAlg is the algebra for the data type Logic
@@ -144,7 +145,7 @@ countEquivalences p = length [ () | _ :<->: _ <- universe p ]
 
 -- | Function varsLogic returns the variables that appear in a Logic expression.
 varsLogic :: Eq a => Logic a -> [a]
-varsLogic = nub . F.toList
+varsLogic = nub . toList
 
 instance Uniplate (Logic a) where
    uniplate this =

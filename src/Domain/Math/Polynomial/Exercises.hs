@@ -16,10 +16,10 @@ import Common.Context
 import Common.Exercise
 import Common.Rewriting
 import Common.Strategy
-import Common.Classes
 import Common.Uniplate
 import Common.View
 import Data.Maybe
+import qualified Data.Traversable as T
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
@@ -183,7 +183,7 @@ equivalentApprox a b
         let norm = liftM ( normOrList cleanUpExpr 
                          . fmap toApprox 
                          . simplify quadraticEquationsView
-                         ) . switch . fmap toEq
+                         ) . T.mapM toEq
         in fromMaybe False $ liftM2 (==) (norm a) (norm b)
    | otherwise =
         equivalentRelation (viewEquivalent quadraticEquationsView) a b 
@@ -202,8 +202,8 @@ toApprox (a :==: b) = f a .~=. f b
       
 equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
 equivalentRelation f ra rb = fromMaybe False $ do
-   a <- switch (fmap (match equationView) ra)
-   b <- switch (fmap (match equationView) rb)
+   a <- T.mapM (match equationView) ra
+   b <- T.mapM (match equationView) rb
    return (f a b)
 
 eqOrList :: (Relational f, Ord (f Expr)) => 

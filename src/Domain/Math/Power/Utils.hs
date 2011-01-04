@@ -17,7 +17,6 @@ module Domain.Math.Power.Utils where
 
 import Prelude hiding (repeat, replicate)
 
-import Common.Classes
 import Common.Context
 import Common.Rewriting
 import Common.Strategy hiding (not)
@@ -27,6 +26,7 @@ import Common.View
 import Control.Monad
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
+import Data.Traversable (Traversable, mapM)
 import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -160,8 +160,8 @@ transformList f a = concatMap (f . ctx) $ g $ map (transformList f) cs
     g (xs:xss) = concatMap (\x -> map (x:) (g xss)) xs
     g []       = [[]]
 
-transformOrList :: (Switch f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
-transformOrList f = join . fmap (orList . switch . fmap (transformList f))
+transformOrList :: (Traversable f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
+transformOrList f = join . fmap (orList . Data.Traversable.mapM (transformList f))
 
 -- y = root n x
 takeRoot :: Integer -> Integer -> [Integer]

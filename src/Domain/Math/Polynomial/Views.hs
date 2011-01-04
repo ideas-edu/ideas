@@ -23,10 +23,10 @@ module Domain.Math.Polynomial.Views
 import Prelude hiding ((^))
 import Control.Monad
 import Common.View
-import Common.Classes
 import Common.Rewriting
 import Common.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
+import Data.Traversable (mapM)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
@@ -214,7 +214,7 @@ quadraticEquationsView:: View (OrList (Equation Expr)) (OrList (String, SQ.Squar
 quadraticEquationsView = makeView f (fmap g)
  where
    f eq = do 
-      ors <- switch (fmap (match quadraticEquationView) eq)
+      ors <- Data.Traversable.mapM (match quadraticEquationView) eq
       return (normalize (join ors))
 
    g (x, a) = Var x :==: build (squareRootViewWith rationalView) a

@@ -18,9 +18,11 @@ module Domain.LinearAlgebra.Vector
    ) where
 
 import Control.Monad
-import Common.Classes
 import Common.Rewriting
 import Data.List
+import Data.Foldable (Foldable, foldMap)
+import Data.Traversable (Traversable, sequenceA)
+import Control.Applicative
 import Domain.Math.Simplification
 import Domain.Math.Expr.Symbols (openMathSymbol) 
 import Test.QuickCheck
@@ -41,8 +43,11 @@ newtype VectorSpace a = VS [Vector a]
 instance Functor Vector where
    fmap f (V xs) = V (map f xs)
 
-instance Switch Vector where
-   switch (V xs) = liftM V (switch xs)
+instance Foldable Vector where
+   foldMap f (V xs) = foldMap f xs
+
+instance Traversable Vector where
+   sequenceA (V xs) = V <$> sequenceA xs
 
 instance Show a => Show (Vector a) where
    show = showVectorWith show
@@ -97,6 +102,7 @@ instance Arbitrary a => Arbitrary (VectorSpace a) where
       j <- choose (0, 10 `div` i)
       xs <- replicateM i (liftM fromList $ replicateM j arbitrary)
       return $ makeVectorSpace xs
+
 instance CoArbitrary a => CoArbitrary (VectorSpace a) where
    coarbitrary = coarbitrary . vectors
 

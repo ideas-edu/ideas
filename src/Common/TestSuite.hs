@@ -28,17 +28,17 @@ module Common.TestSuite
    , makeSummary, printSummary
    , makeTestLog, makeTestLogWith, printTestLog
      -- * Formatting
-   , FormatLog(..), formatLog, formatTimeDiff
+   , FormatLog(..), formatLog
    ) where
 
 import Control.Arrow
+import Control.Monad.State
+import Data.Foldable (toList)
 import Data.List
 import Data.Monoid
-import qualified Data.Sequence as S
-import Data.Foldable (toList)
+import Data.Time
 import Test.QuickCheck
-import Control.Monad.State
-import System.Time hiding (formatTimeDiff)
+import qualified Data.Sequence as S
 
 ----------------------------------------------------------------
 -- Test Suite Monad
@@ -173,9 +173,9 @@ runTestSuiteResult s = liftM TSR $ getDiff $ liftM snd $
 ----------------------------------------------------------------
 -- Test Suite Result
 
-newtype TestSuiteResult = TSR (ResultTree, TimeDiff)
+newtype TestSuiteResult = TSR (ResultTree, NominalDiffTime)
 
-type ResultTree = Tree (String, TimeDiff) (String, TestResult)
+type ResultTree = Tree (String, NominalDiffTime) (String, TestResult)
 
 data TestResult = Ok !Int | Error String | Warning String
 
@@ -189,7 +189,7 @@ instance Show TestSuiteResult where
    show (TSR (tree, diff)) = 
       let (n, nf, nw) = collectInfo tree
       in "(tests: " ++ show n ++ ", failures: " ++ show nf ++
-         ", warnings: " ++ show nw ++ ", " ++ formatTimeDiff diff ++ ")"
+         ", warnings: " ++ show nw ++ ", " ++ show diff ++ ")"
 
 subResults :: TestSuiteResult -> [(String, TestSuiteResult)]
 subResults (TSR (tree, _)) = 
@@ -205,7 +205,7 @@ makeSummary result@(TSR (tree, diff)) = unlines $
    , "Tests    : " ++ show n
    , "Failures : " ++ show nf
    , "Warnings : " ++ show nw
-   , "\nTime     : " ++ formatTimeDiff diff
+   , "\nTime     : " ++ show diff
    , "\nSuites: "
    ] ++ map f (subResults result) 
      ++ [line]
@@ -248,8 +248,8 @@ makeTestLogWith fm (TSR (tree, diff)) = formatRoot fm diff (make [] tree)
          next a = a `mappend` forTests rest
 
 data FormatLog a = FormatLog
-   { formatRoot      :: TimeDiff -> a -> a
-   , formatSuite     :: [Int] -> String -> (Int, Int, Int) -> TimeDiff -> a -> a
+   { formatRoot      :: NominalDiffTime -> a -> a
+   , formatSuite     :: [Int] -> String -> (Int, Int, Int) -> NominalDiffTime -> a -> a
    , formatSuccesses :: [(String, Int)] -> a
    , formatFailure   :: String -> String -> a
    , formatWarning   :: String -> String -> a
@@ -258,10 +258,10 @@ data FormatLog a = FormatLog
 formatLog :: FormatLog [String]
 formatLog = FormatLog
    { formatRoot = \td a -> 
-        a ++ ["\n(Total time: " ++ formatTimeDiff td ++ ")"]
+        a ++ ["\n(Total time: " ++ show td ++ ")"]
    , formatSuite = \loc s _ td a -> 
         [showLoc loc ++ ". " ++ s] ++ a ++ 
-        ["  (" ++ formatTimeDiff td ++ " for " ++ s ++ ")"]
+        ["  (" ++ show td ++ " for " ++ s ++ ")"]
    , formatSuccesses = \xs -> 
         let f (_, n) = if n==1 then "." else "(" ++ show n ++ " tests)"
         in ["   " ++ concatMap f xs]
@@ -272,21 +272,6 @@ formatLog = FormatLog
    }
  where 
    putLabel s = if null s then "" else s ++ ": "
-
-formatTimeDiff :: TimeDiff -> String
-formatTimeDiff d@(TimeDiff z1 z2 z3 h m s p)
-   | any (/=0) [z1,z2,z3] = timeDiffToString d
-   | s >= 60      = formatTimeDiff (timeDiff ((h*60+m)*60+s) p)
-   | h==0 && m==0 = show inSec ++ " secs"
-   | otherwise    = show (60*h+m) ++ ":" ++ digSec ++ " mins" 
- where
-   milSec = 1000*toInteger s + p `div` 1000000000
-   inSec  = fromIntegral milSec / 1000 :: Double
-   digSec = (if s < 10 then ('0' :) else id) (show s)
-   timeDiff n pc = 
-      let (rest, sn) = n `divMod` 60
-          (hr, mr)   = rest `divMod` 60
-      in TimeDiff 0 0 0 hr mr sn pc
 
 -----------------------------------------------------
 -- Utility functions
@@ -341,12 +326,12 @@ collectLevel = combine [] . toList . unT
    
    f acc = [ Left (reverse acc) | not (null acc) ] 
 
-getDiff :: MonadIO m => m a -> m (a, TimeDiff)
+getDiff :: MonadIO m => m a -> m (a, NominalDiffTime)
 getDiff action = do
-   t0 <- liftIO getClockTime
+   t0 <- liftIO getCurrentTime
    a  <- action
-   t1 <- liftIO getClockTime
-   return (a, diffClockTimes t1 t0)
+   t1 <- liftIO getCurrentTime
+   return (a, diffUTCTime t1 t0)
 
 -- Example
 {-
@@ -379,7 +364,4 @@ main = do
    p2 xs = reverse (reverse xs) == (xs::[Int])
    p3 xs = head (sort xs) == minimum (xs::[Int])
    p4 xs = sort (nub xs) == nub (sort (xs::[Int]))
-   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int]))
-
-main = runTestSuite $ suite "A" $ assertIO "B" (return True) >> 
-   assertIO "D" (fail "boe") >> assertIO "C" (return True) -}
+   p5 xs = reverse (sort xs) == sort (reverse (xs :: [Int])) -}

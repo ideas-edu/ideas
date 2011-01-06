@@ -225,7 +225,7 @@ implOperator :: BinaryOp (Logic a)
 implOperator = makeBinaryOp (getId impliesSymbol) (:->:) isImpl
  where
    isImpl (p :->: q) = Just (p, q)
-   isImpl _           = Nothing
+   isImpl _          = Nothing
    
 equivOperator :: BinaryOp (Logic a)   
 equivOperator = makeBinaryOp (getId equivalentSymbol) (:<->:) isEquiv

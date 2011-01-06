@@ -54,13 +54,13 @@ byGroup = ByGroup . getId
 configureNow :: LabeledStrategy a -> LabeledStrategy a
 configureNow = 
    let lsToCore = toCore . toStrategy
-       coreToLS = fromMaybe err . toLabeledStrategy . toStrategy
+       coreToLS = fromMaybe err . toLabeledStrategy . fromCore
        err      = error "configureNow: label disappeared"
    in coreToLS . processLabelInfo id . lsToCore
 
 configure :: StrategyConfiguration -> LabeledStrategy a -> LabeledStrategy a
 configure cfg ls = 
-   label (showId ls) (configureCore cfg (toCore (unlabel ls)))
+   label (showId ls) (fromCore (configureCore cfg (toCore (unlabel ls))))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
 configureCore cfg = mapLabel (change [])

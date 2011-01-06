@@ -17,7 +17,7 @@ import Data.Char
 import Data.Maybe
 import Control.Monad
 import Common.Library
-import Common.Strategy.Core (Core(..), noLabels)
+import Common.Strategy.Core
 import Common.Strategy.Abstract
 import Text.XML
 import Common.Utils (readInt)

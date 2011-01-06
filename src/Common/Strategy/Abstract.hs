@@ -76,9 +76,6 @@ makeInfo s = Info (newId s) False False False
 class IsStrategy f where
    toStrategy :: f a -> Strategy a
 
-instance IsStrategy (Core LabelInfo) where
-   toStrategy = S
-
 instance IsStrategy Strategy where
    toStrategy = id
 
@@ -205,7 +202,7 @@ cleanUpStrategy f (LS n s) = mapRules g (LS n (S core))
 --- Functions to lift the core combinators
 
 fromCore :: Core LabelInfo a -> Strategy a
-fromCore = toStrategy
+fromCore = S
 
 liftCore :: IsStrategy f => (Core LabelInfo a -> Core LabelInfo a) -> f a -> Strategy a
 liftCore f = fromCore . f . toCore . toStrategy

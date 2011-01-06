@@ -14,7 +14,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
-   ( Core(..)
+   ( GCore(..), Core
    , mapRule, mapLabel, noLabels
    , coreMany, coreRepeat, coreOrElse, coreFix
    , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv, substCoreEnv
@@ -22,7 +22,10 @@ module Common.Strategy.Core
 
 import Common.Transformation
 import Common.Uniplate
+import Control.Applicative 
 import Data.Maybe
+import Data.Foldable (Foldable, foldMap)
+import qualified Data.Traversable as T
 import qualified Data.IntMap as IM
 
 -----------------------------------------------------------------
@@ -32,26 +35,54 @@ import qualified Data.IntMap as IM
 infixr 3 :|:, :|>:
 infixr 5 :*:
 
--- Some rules receive label (but not all)
-data Core l a
-   = Core l a :*:  Core l a
-   | Core l a :|:  Core l a
-   | Core l a :|>: Core l a
-   | Many   (Core l a)
-   | Repeat (Core l a)
-   | Not (Core l a)
-   | Label l (Core l a)
+-- | Core expression, with rules 
+type Core l a = GCore l (Rule a)
+
+-- | A generalized Core expression, not restricted to rules. This makes GCore
+-- a (traversable and foldable) functor.
+data GCore l a
+   = GCore l a :*:  GCore l a
+   | GCore l a :|:  GCore l a
+   | GCore l a :|>: GCore l a
+   | Many   (GCore l a)
+   | Repeat (GCore l a)
+   | Not (GCore l a)
+   | Label l (GCore l a)
    | Succeed
    | Fail
-   | Rule (Rule a)
+   | Rule a -- ^ Generalized constructor (not restricted to rules)
    | Var Int
-   | Rec Int (Core l a)
+   | Rec Int (GCore l a)
  deriving Show
 
 -----------------------------------------------------------------
 -- Useful instances
 
-instance Uniplate (Core l a) where
+instance Functor (GCore l) where
+   fmap = T.fmapDefault
+
+instance Foldable (GCore l) where
+   foldMap = T.foldMapDefault 
+   
+instance T.Traversable (GCore l) where
+   traverse f = run
+    where
+      run core =
+         case core of
+            a :*: b   -> (:*:)   <$> run a <*> run b
+            a :|: b   -> (:|:)   <$> run a <*> run b
+            a :|>: b  -> (:|>:)  <$> run a <*> run b
+            Many a    -> Many    <$> run a
+            Repeat a  -> Repeat  <$> run a
+            Not a     -> Not     <$> run a
+            Label l a -> Label l <$> run a
+            Rec n a   -> Rec n   <$> run a
+            Rule a    -> Rule    <$> f a
+            Var n     -> pure (Var n)
+            Succeed   -> pure Succeed
+            Fail      -> pure Fail
+
+instance Uniplate (GCore l a) where
    uniplate core =
       case core of
          a :*: b   -> ([a,b], \[x,y] -> x :*: y)
@@ -106,6 +137,9 @@ coreFix f = -- disadvantage: function f is applied twice
    let i = nextVar (f (Var (-1)))
    in Rec i (f (Var i))
 
+-----------------------------------------------------------------
+-- Utility functions
+
 nextVar :: Core l a -> Int
 nextVar p
    | null xs   = 0
@@ -119,33 +153,15 @@ coreVars core =
       Rec n a -> n : coreVars a
       _       -> concatMap coreVars (children core)
 
------------------------------------------------------------------
--- Utility functions
-
-mapLabel :: (l -> m) -> Core l a -> Core m a
-mapLabel f = mapCore (Label . f) Rule
+mapLabel :: (l -> l) -> Core l a -> Core l a
+mapLabel f = run
+ where
+   run (Label l a) = Label (f l) (run a)
+   run core        = descend run core
 
 mapRule :: (Rule a -> Rule b) -> Core l a -> Core l b
-mapRule f = mapCore Label (Rule . f)
+mapRule f = fmap f
 
-noLabels :: Core l a -> Core m a
-noLabels = mapCore (const id) Rule
-   
-mapCore :: (l -> Core m b -> Core m b) -> (Rule a -> Core m b) 
-        -> Core l a -> Core m b
-mapCore f g = rec
- where
-   rec core =
-      case core of
-         a :*: b   -> rec a :*:  rec b
-         a :|: b   -> rec a :|:  rec b
-         a :|>: b  -> rec a :|>: rec b
-         Many a    -> Many   (rec a)
-         Repeat a  -> Repeat (rec a)
-         Succeed   -> Succeed
-         Fail      -> Fail
-         Label l a -> f l (rec a)
-         Rule r    -> g r
-         Var n     -> Var n
-         Rec n a   -> Rec n (rec a)
-         Not a     -> Not (rec a)
+noLabels :: Core l a -> Core l a
+noLabels (Label _ a) = noLabels a
+noLabels core        = descend noLabels core

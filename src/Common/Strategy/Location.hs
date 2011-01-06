@@ -57,7 +57,7 @@ strategyLocations s = ([], s) : rec [] (toCore (unlabel s))
    rec is = concat . zipWith make (map (:is) [0..]) . collect
    
    make is (l, core) = 
-      let ls  = makeLabeledStrategy l (toStrategy core)
+      let ls  = makeLabeledStrategy l (fromCore core)
       in (is, ls) : rec is core
    
    collect core =

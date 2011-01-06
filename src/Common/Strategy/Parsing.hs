@@ -40,11 +40,12 @@ data State l a = S
    { stack   :: [Either l (Core l a)]
    , choices :: [Bool]
    , trace   :: [Step l a]
+   , timeout :: !Int
    , value   :: a
    }
 
 makeState :: Core l a -> a -> State l a
-makeState core a = push core (S [] [] [] a)
+makeState core a = push core (S [] [] [] 0 a)
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -68,7 +69,7 @@ firsts st =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
-         Rec i a   -> firstsStep (substCoreVar i core a) state
+         Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep (RuleStep r) (useRule r state)
          Label l a -> hasStep (Enter l) [push a (pushExit l state)]
@@ -105,7 +106,7 @@ runState st =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
-         Rec i a   -> runStep (substCoreVar i core a) state
+         Rec i a   -> incrTimer state >>= runStep (substCoreVar i core a)
          Var _     -> freeCoreVar "runState"
          Rule  r   -> concatMap runState (useRule r state)
          Label _ a -> runStep a state
@@ -172,7 +173,7 @@ checkNot :: Core l a -> State l a -> Bool
 checkNot core = null . runCore core . value
 
 useRule :: Rule a -> State l a -> [State l a]
-useRule r state = [ state {value = b} | b <- applyAll r (value state) ]
+useRule r state = [ resetTimer state {value = b} | b <- applyAll r (value state) ]
 
 traceEnter, traceExit :: l -> State l a -> State l a
 traceEnter = traceStep . Enter
@@ -189,3 +190,11 @@ substCoreVar i a = substCoreEnv (insertCoreEnv i a emptyCoreEnv)
 
 freeCoreVar :: String -> a
 freeCoreVar caller = error $ "Free var in core expression: " ++ caller
+
+incrTimer :: Monad m => State l a -> m (State l a)
+incrTimer s
+   | timeout s >= 20 = fail "timeout after 20 fixpoints" 
+   | otherwise       = return (s {timeout = timeout s + 1})
+
+resetTimer :: State l a -> State l a
+resetTimer s = s {timeout = 0}

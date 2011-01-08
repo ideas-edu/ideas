@@ -156,7 +156,7 @@ processLabelInfo getInfo = rec emptyCoreEnv
       | collapsed info = Label l (Rule asRule) -- !!
       | otherwise      = new
     where 
-      new | hidden info = mapRule minorRule (Label l c)
+      new | hidden info = fmap minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
       asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) 
@@ -188,7 +188,7 @@ mapRules :: (Rule a -> Rule b) -> LabeledStrategy a -> LabeledStrategy b
 mapRules f (LS n s) = LS n (mapRulesS f s)
 
 mapRulesS :: (Rule a -> Rule b) -> Strategy a -> Strategy b
-mapRulesS f = S . mapRule f . toCore
+mapRulesS f = S . fmap f . toCore
 
 -- | Use a function as do-after hook for all rules in a labeled strategy
 cleanUpStrategy :: (a -> a) -> LabeledStrategy a -> LabeledStrategy a

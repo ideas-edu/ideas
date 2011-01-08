@@ -284,54 +284,24 @@ printDerivation ex = putStrLn . showDerivation ex
          
 ---------------------------------------------------------------
 -- Checks for an exercise
-{-
-checkExercise :: Exercise a -> IO ()
-checkExercise ex = do 
-   putStrLn ("** " ++ show (exerciseCode ex))
-   -- Derivations for examples
-   checkExamples ex
-   -- Derivations for test generator
-   case testGenerator ex of
-      Nothing  -> return ()
-      Just gen -> do 
-         putStrLn "Checking with test generator"
-         forM_ [0 .. 100] $ \i -> do 
-            -- putChar '.'
-            g <- newStdGen
-            checksForTerm False ex (generate i g gen)
-            return ()
-   -- Derivations for random exercise generator
-   case randomExercise ex of
-      Nothing  -> return ()
-      Just f -> do 
-         putStrLn "Checking with random exercise generator"
-         forM_ [0 .. 109] $ \i -> do 
-            -- putChar '.'
-            g <- newStdGen
-            checksForTerm False ex (f g (i `div` 10))
-            return ()
-   -- Soundness of rules
-   case testGenerator ex of
-      Nothing  -> return ()
-      Just gen -> do
-         putStrLn "Soundness of rules with test generator"
-         forM_ (filter (not . isBuggyRule) (ruleset ex)) $ \r -> do
-            putStr ("[" ++ show r ++ "]   ")
-            xs <- generateIO 300 (smartGen r (liftM (inContext ex) gen))
-            let list = [ (x, y) | x <- xs, y <- applyAll r x ]
-                p (x, y) = not (equivalenceContext ex x y)               
-            case filter p list of
-               [] | null list -> putStrLn "Warning: no applications found" 
-                  | otherwise -> putStrLn "Ok"
-               (x, y):_ -> report $ 
-                  "counter example: " ++ prettyPrinterContext ex x
-                  ++ "  =>  " ++ prettyPrinterContext ex y -}
 
 checkExercise :: Exercise a -> IO ()
 checkExercise = runTestSuite . exerciseTestSuite
 
 exerciseTestSuite :: Exercise a -> TestSuite
 exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
+   -- get some exercises
+   xs <- if isJust (randomExercise ex)
+         then liftIO $ replicateM 10 (randomTerm 0 ex)
+         else return (examples ex)
+   -- do tests
+   assertTrue "Exercise terms defined" (not (null xs))
+   assertTrue "Equivalence implemented" $
+      let eq a b = equivalenceContext ex (inContext ex a) (inContext ex b)
+      in length (nubBy eq xs) > 1
+   assertTrue "Similarity implemented" $
+      let sim a b = similarity ex a b
+      in length (nubBy sim xs) > 1
    checkExamples ex
    case testGenerator ex of 
       Nothing  -> return ()

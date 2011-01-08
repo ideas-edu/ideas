@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( GCore(..), Core
-   , mapRule, mapLabel, noLabels
+   , mapLabel, noLabels
    , coreMany, coreRepeat, coreOrElse, coreFix
    , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv, substCoreEnv
    ) where
@@ -158,9 +158,6 @@ mapLabel f = run
  where
    run (Label l a) = Label (f l) (run a)
    run core        = descend run core
-
-mapRule :: (Rule a -> Rule b) -> Core l a -> Core l b
-mapRule f = fmap f
 
 noLabels :: Core l a -> Core l a
 noLabels (Label _ a) = noLabels a

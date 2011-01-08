@@ -13,17 +13,16 @@ module Domain.Math.Equation.CoverUpExercise
    ( coverUpExercise, coverUpStrategy 
    ) where
 
-import Common.Context
-import Common.Exercise
-import Common.Strategy hiding (replicate)
-import Control.Monad
+import Common.Library
+import Data.Maybe
+import Domain.Math.Polynomial.Exercises (eqOrList)
+import Domain.Math.Polynomial.CleanUp
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO1
 import Domain.Math.Expr
-import Prelude hiding (repeat)
 
 ------------------------------------------------------------
 -- Exercise
@@ -34,7 +33,8 @@ coverUpExercise = makeExercise
                        newId "algebra.equations.coverup"
    , status       = Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
-   -- , equivalence  = \_ _ -> True
+   , equivalence  = eqCoverUp
+   , similarity   = eqOrList cleanUpExpr
    , isReady      = solvedEquations
    , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy
@@ -46,43 +46,12 @@ coverUpExercise = makeExercise
 -- Strategy and rules
    
 coverUpStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-coverUpStrategy = label "Cover-up" $ 
-   repeat $ somewhere $ alternatives coverUpRulesOr
+coverUpStrategy = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $
+   label "Cover-up" $
+   repeatS $ somewhere $ alternatives coverUpRulesOr
 
-{-
-cleanUp :: Rule (OrList (Equation Expr)) -> Rule (OrList (Equation Expr))
-cleanUp = doAfter $ fmap $ fmap cleanUpExpr
-
-cleanUpExpr :: Expr -> Expr
-cleanUpExpr = transform (simplify (makeView f fromRational))
- where
-   f (Negate a) = liftM negate (f a)
-   f (Sqrt a)   = match rationalView a >>= rootedRational 2
-   f (Sym s [Nat n, a]) | isRootSymbol s =
-      match rationalView a >>= rootedRational n
-   f e = match rationalView e
-
-rootedInt :: Integer -> Integer -> Maybe Integer 
-rootedInt a b = do
-   guard (a > 0)
-   let d = fromInteger b ** Prelude.recip (fromInteger a) :: Double
-       n = round d :: Integer
-   guard (n Prelude.^ a == b)
-   return n
-   
-rootedRational :: Integer -> Rational -> Maybe Rational 
-rootedRational a r = do
-   x <- rootedInt a (numerator r)
-   y <- rootedInt a (denominator r)
-   return (fromInteger x / fromInteger y)
--}
-------------------------------------------------------------
--- Testing
-
-{-   
-main = map test (concat (fillInResult ++ coverUpEquations))
-
-test e = case apply coverUpStrategy (inContext (OrList [e])) of
-            Just a | solvedList (fromContext a)  -> True
-                   | otherwise -> error (show (e, a))
-            _ -> error (show e) -}
+eqCoverUp :: OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
+eqCoverUp a b = eqOrList cleanUpExpr (f a) (f b)
+ where 
+   inc = inContext coverUpExercise
+   f x = fromMaybe x $ fromContext $ applyD coverUpStrategy $ inc x

@@ -11,23 +11,25 @@
 -----------------------------------------------------------------------------
 module Text.OpenMath.Symbol where
 
-data Symbol = Symbol
-   { dictionary :: Maybe String
-   , symbolName :: String
-   }
- deriving (Eq, Ord)
+type Symbol = (Maybe String, String)
 
-instance Show Symbol where
-   show s = maybe "" (++".") (dictionary s) ++ symbolName s
+-- * Constructor functions
 
-instance Read Symbol where
-   readsPrec _ s = 
-      case break (=='.') s of
-         (xs,_:ys) -> [(makeSymbol xs ys, "")]
-         _         -> [(extraSymbol s, "")]
-               
 makeSymbol :: String -> String -> Symbol
-makeSymbol = Symbol . Just
+makeSymbol = (,) . Just
 
 extraSymbol :: String -> Symbol
-extraSymbol = Symbol Nothing
+extraSymbol = (,) Nothing
+
+-- * Selector functions
+
+dictionary :: Symbol -> Maybe String
+dictionary = fst
+
+symbolName :: Symbol -> String
+symbolName = snd
+
+-- * Utility function
+
+showSymbol :: Symbol -> String
+showSymbol s = maybe "" (++".") (dictionary s) ++ symbolName s

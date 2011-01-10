@@ -8,140 +8,80 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Group axioms specified as rewrite rules (directed).
---
 -----------------------------------------------------------------------------
-module Common.Rewriting.Axioms 
-   ( -- Semigroup
-     leftAssociative, rightAssociative, associative
-     -- Monoid
-   , leftIdentity, rightIdentity
-     -- Group
-   , leftInverse, rightInverse
-   , inverseIdentity, inverseTwice
-   , flippedInverseDistribution
-   , groupAxioms
-     -- Abelian group
-   , commutative, inverseDistribution
-   ) where
+module Common.Rewriting.Axioms where
 
-import Common.Id
-import Common.Rewriting.Group
-import Common.Rewriting.RewriteRule
+type Unary  a = a -> a
+type Binary a = a -> a -> a
 
--- helper
-rule :: (IsMagma m, IsId n, RuleBuilder f a, Rewrite a) => m a -> n -> f -> RewriteRule a
-rule m s = rewriteRule (getId (toMagma m), s)
+-- * Binary operator axioms
 
--------------------------------------------------------------------
--- * SemiGroup
+-- | @associative (=) (+)@ gives @a+(b+c) = (a+b)+c@
+associative :: (a -> a -> b) -> Binary a -> a -> a -> a -> b
+associative (~=) f = \a b c -> f a (f b c) ~= f (f a b) c 
 
-leftAssociative :: (IsSemiGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-leftAssociative m = rule m "associative.left" $ 
-   \x y z -> x.(y.z) :~> (x.y).z
- where 
-   (.) = operation m
+-- | @commutative (=) (+)@ gives @a+b = b+a@
+commutative :: (a -> a -> b) -> Binary a -> a -> a -> b
+commutative (~=) f = \a b -> f a b ~= f b a
 
-rightAssociative :: (IsSemiGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-rightAssociative m = rule m "associative.right" $ 
-   \x y z -> (x.y).z :~> x.(y.z)
- where 
-   (.) = operation m
+-- | @idempotent (=) (+)@ gives @a+a = a@
+idempotent :: (a -> a -> b) -> Binary a -> a -> b
+idempotent (~=) f = \a -> f a a ~= a
 
-associative :: (IsSemiGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-associative m
-   | leftIsPreferred m = leftAssociative m
-   | otherwise         = rightAssociative m
+-- * Abelian Group axioms
 
--------------------------------------------------------------------
--- * Monoid
+-- | @leftIdentity (=) (+) 0@ gives @0+a = a@
+leftIdentity :: (a -> a -> b) -> Binary a -> a -> a -> b
+leftIdentity (~=) f e = \a -> f e a ~= a
 
-leftIdentity :: (IsMonoid m, Different a, Rewrite a) => m a -> RewriteRule a
-leftIdentity m = rule m "identity.left" $ 
-   \x -> e.x :~> x
- where 
-   (.) = operation m
-   e   = identity m
+-- | @rightIdentity (=) (+) 0@ gives @a+0 = a@
+rightIdentity :: (a -> a -> b) -> Binary a -> a -> a -> b
+rightIdentity (~=) f e = \a -> f a e ~= a
 
-rightIdentity :: (IsMonoid m, Different a, Rewrite a) => m a -> RewriteRule a
-rightIdentity m = rule m "identity.right" $ 
-   \x -> x.e :~> x
- where 
-   (.) = operation m
-   e   = identity m
+-- | @leftInverse (=) (+) (-) 0@ gives @(-a)+a = 0@
+leftInverse :: (a -> a -> b) -> Binary a -> Unary a -> a -> a -> b
+leftInverse (~=) f g e = \a -> f (g a) a ~= e
 
--------------------------------------------------------------------
--- * Group
+-- | @rightInverse (=) (+) (-) 0@ gives @a+(-a) = 0@
+rightInverse :: (a -> a -> b) -> Binary a -> Unary a -> a -> a -> b
+rightInverse (~=) f g e = \a -> f a (g a) ~= e
 
-leftInverse :: (IsGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-leftInverse m = rule m "inverse.left" $ 
-   \x -> f x.x :~> e
- where 
-   (.) = operation m
-   e   = identity m
-   f   = inverse m
+-- | @unaryCancel (=) (-)@ gives @-(-a) = a@
+unaryCancel :: (a -> a -> b) -> Unary a -> a -> b
+unaryCancel (~=) f = \a -> f (f a) ~= a
 
-rightInverse :: (IsGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-rightInverse m = rule m "inverse.right" $ 
-   \x -> x.f x :~> e
- where 
-   (.) = operation m
-   e   = identity m
-   f   = inverse m
+-- | @unaryIdentity (=) (-) 0@ gives @-0 = 0@
+unaryIdentity :: (a -> a -> b) -> Unary a -> a -> b
+unaryIdentity (~=) f e = f e ~= e
 
-inverseIdentity :: (IsGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-inverseIdentity m = rule m "inverse.identity" $ 
-   f e :~> e
- where
-   e = identity m
-   f = inverse m
+-- | @unaryDistributive (=) (+) (-)@ gives @-(a+b) = (-a)+(-b)@
+unaryDistributive :: (a -> a -> b) -> Binary a -> Unary a -> a -> a -> b
+unaryDistributive (~=) f g = \a b -> g (f a b) ~= f (g a) (g b)
 
-inverseTwice :: (IsGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-inverseTwice m = rule m "inverse.twice" $ 
-   \x -> f (f x) :~> x
- where 
-   f = inverse m
+-- | @flippedUnaryDistributive (=) (+) (-)@ gives @-(a+b) = (-b)+(-a)@
+flippedUnaryDistributive :: (a -> a -> b) -> Binary a -> Unary a -> a -> a -> b
+flippedUnaryDistributive (~=) f g = \a b -> g (f a b) ~= f (g b) (g a)
 
-flippedInverseDistribution :: (IsGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-flippedInverseDistribution m = rule m "inverse.distribution.flipped" $ 
-   \x y -> f (x.y) :~> f y.f x
- where 
-   (.) = operation m
-   f   = inverse m
+-- * Ring axioms
 
-groupAxioms :: (IsGroup m, Different a, Rewrite a) => m a -> [RewriteRule a]
-groupAxioms g = map ($ g)
-   [ associative, leftIdentity, rightIdentity
-   , leftInverse, rightInverse
-   , inverseIdentity, inverseTwice, flippedInverseDistribution
-   ] ++ extra
- where
-   extra 
-      | leftIsPreferred g =
-           [ rule g "group1" $ \x y -> (y.x).f x :~> y
-           , rule g "group2" $ \x y -> (y.f x).x :~> y
-           ]
-      | otherwise = 
-           [ rule g "group3" $ \x y -> f x.(x.y) :~> y
-           , rule g "group4" $ \x y -> x.(f x.y) :~> y
-           ]
-   (.) = operation g
-   f   = inverse g
+-- | @leftDistributive (=) (+) (*)@ gives @a*(b+c) = a*b + a*c@
+leftDistributive :: (a -> a -> b) -> Binary a -> Binary a -> a -> a -> a -> b
+leftDistributive (~=) f g = \a b c -> g a (f b c) ~= f (g a b) (g a c)
 
--------------------------------------------------------------------
--- * Abelian Group
+-- | @rightDistributive (=) (+) (*)@ gives @(a+b)*c = a*c + b*c@
+rightDistributive :: (a -> a -> b) -> Binary a -> Binary a -> a -> a -> a -> b
+rightDistributive (~=) f g = \a b c -> g (f a b) c ~= f (g a c) (g b c)
 
--- The type class constraint IsAbelianGroup could be relaxed to 
--- IsCommutative (or something similar)
-commutative :: (IsAbelianGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-commutative m = rule m "commutative" $ 
-   \x y -> x.y :~> y.x
- where 
-   (.) = operation m
-   
-inverseDistribution :: (IsAbelianGroup m, Different a, Rewrite a) => m a -> RewriteRule a
-inverseDistribution m = rule m "inverse.distribution" $ 
-   \x y -> f (x.y) :~> f x.f y
- where 
-   (.) = operation m
-   f   = inverse m
+-- | @leftAbsorbing (=) (*) 0@ gives @0*a = 0@
+leftAbsorbing :: (a -> a -> b) -> Binary a -> a -> a -> b
+leftAbsorbing (~=) f z = \a -> f a z ~= z
+
+-- | @rightAbsorbing (=) (*) 0@ gives @a*0 = 0@
+rightAbsorbing :: (a -> a -> b) -> Binary a -> a -> a -> b
+rightAbsorbing (~=) f z = \a -> f z a ~= z
+
+-- * Other axioms
+
+-- | @unaryIdempotent (=) (-)@ gives @-(-a) = a@
+unaryIdempotent :: (a -> a -> b) -> Unary a -> a -> b
+unaryIdempotent (~=) f = \a -> f (f a) ~= f a

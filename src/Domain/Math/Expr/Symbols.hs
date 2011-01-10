@@ -12,9 +12,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Symbols
-   ( openMathSymbol
-     -- OpenMath dictionary symbols
-   , plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
+   ( -- OpenMath dictionary symbols
+     plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol
    , powerSymbol, negateSymbol, sinSymbol, cosSymbol, lnSymbol
    , diffSymbol, piSymbol, lambdaSymbol, listSymbol
    , absSymbol, signumSymbol, logSymbol, expSymbol, tanSymbol, asinSymbol
@@ -26,7 +25,6 @@ module Domain.Math.Expr.Symbols
    , (^), root
    ) where
 
-import Common.Id
 import Common.Rewriting
 import Control.Monad
 import Prelude hiding ((^))
@@ -38,24 +36,20 @@ import qualified Text.OpenMath.Dictionary.Nums1     as OM
 import qualified Text.OpenMath.Dictionary.Transc1   as OM
 import qualified Text.OpenMath.Symbol               as OM
 
--- | Conversion function
-openMathSymbol :: OM.Symbol -> Symbol
-openMathSymbol s = newSymbol (OM.dictionary s # OM.symbolName s)
-
 -------------------------------------------------------------
 -- Arith1 dictionary
 
 plusSymbol, timesSymbol, minusSymbol, divideSymbol, rootSymbol,
    powerSymbol, negateSymbol, absSymbol :: Symbol
    
-plusSymbol   = openMathSymbol OM.plusSymbol
-timesSymbol  = openMathSymbol OM.timesSymbol
-minusSymbol  = openMathSymbol OM.minusSymbol
-divideSymbol = openMathSymbol OM.divideSymbol
-rootSymbol   = openMathSymbol OM.rootSymbol
-powerSymbol  = openMathSymbol OM.powerSymbol
-negateSymbol = openMathSymbol OM.unaryMinusSymbol
-absSymbol    = openMathSymbol OM.absSymbol
+plusSymbol   = newSymbol OM.plusSymbol
+timesSymbol  = newSymbol OM.timesSymbol
+minusSymbol  = newSymbol OM.minusSymbol
+divideSymbol = newSymbol OM.divideSymbol
+rootSymbol   = newSymbol OM.rootSymbol
+powerSymbol  = newSymbol OM.powerSymbol
+negateSymbol = newSymbol OM.unaryMinusSymbol
+absSymbol    = newSymbol OM.absSymbol
 
 -------------------------------------------------------------
 -- Transc1 dictionary
@@ -63,25 +57,25 @@ absSymbol    = openMathSymbol OM.absSymbol
 logSymbol, sinSymbol, cosSymbol, lnSymbol, expSymbol, tanSymbol,
    sinhSymbol, tanhSymbol, coshSymbol :: Symbol
 
-logSymbol  = openMathSymbol OM.logSymbol
-sinSymbol  = openMathSymbol OM.sinSymbol
-cosSymbol  = openMathSymbol OM.cosSymbol
-lnSymbol   = openMathSymbol OM.lnSymbol
-expSymbol  = openMathSymbol OM.expSymbol 
-tanSymbol  = openMathSymbol OM.tanSymbol
-sinhSymbol = openMathSymbol OM.sinhSymbol
-tanhSymbol = openMathSymbol OM.tanhSymbol
-coshSymbol = openMathSymbol OM.coshSymbol
+logSymbol  = newSymbol OM.logSymbol
+sinSymbol  = newSymbol OM.sinSymbol
+cosSymbol  = newSymbol OM.cosSymbol
+lnSymbol   = newSymbol OM.lnSymbol
+expSymbol  = newSymbol OM.expSymbol 
+tanSymbol  = newSymbol OM.tanSymbol
+sinhSymbol = newSymbol OM.sinhSymbol
+tanhSymbol = newSymbol OM.tanhSymbol
+coshSymbol = newSymbol OM.coshSymbol
 
 -------------------------------------------------------------
 -- Other dictionaries
 
 diffSymbol, lambdaSymbol, listSymbol, piSymbol :: Symbol
 
-diffSymbol   = openMathSymbol OM.diffSymbol
-lambdaSymbol = openMathSymbol OM.lambdaSymbol
-listSymbol   = openMathSymbol OM.listSymbol
-piSymbol     = openMathSymbol OM.piSymbol
+diffSymbol   = newSymbol OM.diffSymbol
+lambdaSymbol = newSymbol OM.lambdaSymbol
+listSymbol   = newSymbol OM.listSymbol
+piSymbol     = newSymbol OM.piSymbol
 
 -------------------------------------------------------------
 -- Extra math symbols

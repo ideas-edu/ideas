@@ -24,7 +24,6 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, sequenceA)
 import Control.Applicative
 import Domain.Math.Simplification
-import Domain.Math.Expr.Symbols (openMathSymbol) 
 import Test.QuickCheck
 import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 
@@ -75,7 +74,7 @@ instance CoArbitrary a => CoArbitrary (Vector a) where
    coarbitrary = coarbitrary . toList
 
 vectorSymbol :: Symbol
-vectorSymbol = openMathSymbol OM.vectorSymbol
+vectorSymbol = newSymbol OM.vectorSymbol
 
 instance Simplify a => Simplify (Vector a) where
    simplifyWith opt = fmap (simplifyWith opt)

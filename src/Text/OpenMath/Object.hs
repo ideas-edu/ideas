@@ -65,7 +65,7 @@ xml2omobj xmlTop =
          [] | name xml == "OMS" -> do
             let mcd = findAttribute "cd" xml
             n <- findAttribute "name" xml
-            return (OMS (Symbol mcd n))
+            return (OMS (mcd, n))
 
          [Left s] | name xml == "OMI" ->
             case scanInt (Pos 0 0) s of

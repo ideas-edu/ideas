@@ -29,7 +29,6 @@ import Common.View
 import Common.Rewriting hiding (Monoid)
 import Data.Foldable (Foldable, foldMap, toList)
 import Data.Traversable (Traversable, sequenceA)
-import Domain.Math.Expr.Symbols (openMathSymbol)
 import Text.OpenMath.Dictionary.Relation1
 import Data.Maybe
 import Data.Monoid
@@ -104,13 +103,13 @@ instance Rewrite a => Rewrite (Relation a)
 
 relationSymbols :: [(RelationType, (String, Symbol))]
 relationSymbols =
-   [ (EqualTo,              ("==", openMathSymbol eqSymbol))
-   , (NotEqualTo,           ("/=", openMathSymbol neqSymbol))
-   , (LessThan,             ("<",  openMathSymbol ltSymbol))
-   , (GreaterThan,          (">",  openMathSymbol gtSymbol))
-   , (LessThanOrEqualTo,    ("<=", openMathSymbol leqSymbol))
-   , (GreaterThanOrEqualTo, (">=", openMathSymbol geqSymbol))
-   , (Approximately,        ("~=", openMathSymbol approxSymbol))
+   [ (EqualTo,              ("==", newSymbol eqSymbol))
+   , (NotEqualTo,           ("/=", newSymbol neqSymbol))
+   , (LessThan,             ("<",  newSymbol ltSymbol))
+   , (GreaterThan,          (">",  newSymbol gtSymbol))
+   , (LessThanOrEqualTo,    ("<=", newSymbol leqSymbol))
+   , (GreaterThanOrEqualTo, (">=", newSymbol geqSymbol))
+   , (Approximately,        ("~=", newSymbol approxSymbol))
    ]
 
 notRelation :: Relation a -> Relation a

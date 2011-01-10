@@ -30,7 +30,6 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, sequenceA)
 import Control.Applicative
 import Domain.Math.Simplification
-import Domain.Math.Expr.Symbols (openMathSymbol)
 import Test.QuickCheck
 import qualified Text.OpenMath.Dictionary.Linalg2 as OM
 import qualified Data.List as L
@@ -77,8 +76,8 @@ arbSizedMatrix (i, j) =
       return (makeMatrix rs)
 
 matrixSymbol, matrixrowSymbol :: Symbol
-matrixSymbol    = openMathSymbol OM.matrixSymbol
-matrixrowSymbol = openMathSymbol OM.matrixrowSymbol
+matrixSymbol    = newSymbol OM.matrixSymbol
+matrixrowSymbol = newSymbol OM.matrixrowSymbol
 
 instance Simplify a => Simplify (Matrix a) where
    simplifyWith opt = fmap (simplifyWith opt)

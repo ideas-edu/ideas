@@ -23,7 +23,6 @@ import Control.Applicative
 import Data.Monoid (mconcat)
 import Data.List
 import Data.Maybe
-import Domain.Math.Expr.Symbols (openMathSymbol)
 import qualified Text.OpenMath.Dictionary.Logic1 as OM
 
 infixr 2 :<->:
@@ -186,13 +185,13 @@ instance IsTerm a => IsTerm (Logic a) where
 trueSymbol, falseSymbol, notSymbol, impliesSymbol, equivalentSymbol,
    andSymbol, orSymbol :: Symbol
 
-trueSymbol       = openMathSymbol OM.trueSymbol
-falseSymbol      = openMathSymbol OM.falseSymbol
-notSymbol        = openMathSymbol OM.notSymbol
-impliesSymbol    = openMathSymbol OM.impliesSymbol
-equivalentSymbol = openMathSymbol OM.equivalentSymbol
-andSymbol        = openMathSymbol OM.andSymbol
-orSymbol         = openMathSymbol OM.orSymbol
+trueSymbol       = newSymbol OM.trueSymbol
+falseSymbol      = newSymbol OM.falseSymbol
+notSymbol        = newSymbol OM.notSymbol
+impliesSymbol    = newSymbol OM.impliesSymbol
+equivalentSymbol = newSymbol OM.equivalentSymbol
+andSymbol        = newSymbol OM.andSymbol
+orSymbol         = newSymbol OM.orSymbol
 
 logicOperators :: [Magma (Logic a)]
 logicOperators = map toMagma [andMonoid, orMonoid]

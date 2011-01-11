@@ -11,12 +11,14 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr 
    ( module Common.Rewriting.Term
+   , module Domain.Math.Expr.Clipboard
    , module Domain.Math.Expr.Data
    , module Domain.Math.Expr.Parser
    , module Domain.Math.Expr.Symbols
    , module Domain.Math.Expr.Views
    ) where
 
+import Domain.Math.Expr.Clipboard
 import Domain.Math.Expr.Data
 import Domain.Math.Expr.Parser
 import Domain.Math.Expr.Symbols

@@ -12,7 +12,7 @@
 -- is part of the environment (terms that are placed in a context)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Clipboard 
+module Domain.Math.Expr.Clipboard 
    ( addToClipboard, addListToClipboard
    , lookupClipboard, lookupListClipboard, removeClipboard
      -- generalized interface
@@ -26,7 +26,8 @@ import Control.Monad
 import Common.Rewriting
 import Data.Maybe
 import Domain.Math.Data.Relation
-import Domain.Math.Expr
+import Domain.Math.Expr.Data
+import Domain.Math.Expr.Parser
 import qualified Data.Map as M
 
 ---------------------------------------------------------------------

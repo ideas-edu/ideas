@@ -30,7 +30,6 @@ import Data.Maybe
 import Data.Ord
 import Data.Ratio
 import Domain.Math.Approximation (precision)
-import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation

@@ -32,7 +32,6 @@ import Domain.Logic.Formula hiding (disjunctions, Var)
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
 import Domain.Logic.Views hiding (simplify)
-import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules

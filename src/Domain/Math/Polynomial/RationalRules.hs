@@ -23,7 +23,6 @@ import Control.Monad
 import Data.Maybe
 import Domain.Logic.Formula hiding (disjunctions, Var)
 import Domain.Logic.Views
-import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules

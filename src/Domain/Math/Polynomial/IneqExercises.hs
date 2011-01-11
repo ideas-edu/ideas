@@ -25,7 +25,6 @@ import Data.List (nub, sort)
 import Data.Maybe (fromMaybe)
 import Domain.Math.Data.Interval
 import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
-import Domain.Math.Clipboard
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)

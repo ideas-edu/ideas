@@ -81,9 +81,11 @@ doBlackBoxTest run format path = do
       then warn $ expPath ++ " does not exist"
       else assertIO (stripDirectoryPart path) $ run $ do 
          -- Comparing output with expected output
-         liftIO useFixedStdGen -- fix the random number generator
-         txt  <- liftIO $ readFile path
-         expt <- liftIO $ readFile expPath
+         (txt, expt) <- liftIO $ do
+            useFixedStdGen -- fix the random number generator
+            txt  <- readFile path
+            expt <- liftIO $ readFile expPath
+            return (txt, expt)
          out  <- case format of 
                     JSON -> liftM snd3 (processJSON txt)
                     XML  -> liftM snd3 (processXML txt)

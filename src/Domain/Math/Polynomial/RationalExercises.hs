@@ -15,23 +15,14 @@ module Domain.Math.Polynomial.RationalExercises
    , eqSimplifyRational
    ) where
 
-import Common.Classes
-import Common.Context
-import Common.Exercise
-import Common.Navigator
-import Common.Rewriting
-import Common.Strategy hiding (not)
+import Common.Library
 import Common.Uniplate
 import Common.Utils (fst3)
-import Common.View
 import Control.Monad
-import Data.List hiding (repeat, replicate)
+import Data.List
 import Data.Maybe
-import qualified Data.Foldable as F
 import Domain.Logic.Formula hiding (disjunctions, Var)
-import qualified Domain.Logic as Logic
-import qualified Domain.Logic.Views as Logic
-import Domain.Logic.Views hiding (simplify)
+import Domain.Logic.Views ((.&&.))
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
@@ -40,16 +31,17 @@ import Domain.Math.Examples.DWO4
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
-import Domain.Math.Polynomial.Exercises (eqOrList)
 import Domain.Math.Polynomial.LeastCommonMultiple
 import Domain.Math.Polynomial.RationalRules
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
-import Domain.Math.SquareRoot.Views
 import Domain.Math.Power.OldViews
-import Prelude hiding (repeat, replicate, until, (^))
+import Domain.Math.SquareRoot.Views
+import qualified Data.Foldable as F
 import qualified Data.Set as S
+import qualified Domain.Logic as Logic
+import qualified Domain.Logic.Views as Logic
 
 rationalEquationExercise :: Exercise (OrList (Equation Expr))
 rationalEquationExercise = makeExercise 
@@ -60,7 +52,7 @@ rationalEquationExercise = makeExercise
    , isSuitable    = isJust . rationalEquations
    , isReady       = solvedRelations
    , eqWithContext = Just eqRationalEquation
-   , similarity    = eqOrList cleanUpExpr
+   , similarity    = viewEquivalent (traverseView (traverseView cleanUpView))
    , strategy      = rationalEquationStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
@@ -76,7 +68,7 @@ simplifyRationalExercise = makeExercise
 -- isSuitable
    , isReady       = simplifiedRational
    -- , eqWithContext = Just eqSimplifyRational
-   , similarity    = \x y -> cleanUpExpr x == cleanUpExpr y
+   , similarity    = viewEquivalent cleanUpView
    , strategy      = simplifyRationalStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
@@ -101,7 +93,7 @@ rationalEquationStrategy = cleanUpStrategy (applyTop (fmap (fmap cleaner))) $
    cleaner = transform (simplify (powerFactorViewWith rationalView)) 
            . cleanUpSimple . transform smart
    
-   brokenFormToPoly = label "rational form to polynomial" $ until allArePoly $
+   brokenFormToPoly = label "rational form to polynomial" $ untilS allArePoly $
       (  useC divisionIsZero <|> useC divisionIsOne 
      <|> useC sameDivisor <|> useC sameDividend
      <|> use coverUpPlus <|> use coverUpMinusLeft <|> use coverUpMinusRight
@@ -126,12 +118,12 @@ simplifyRationalStrategy = cleanUpStrategy (applyTop cleaner) $
    cleaner = transform (simplify (powerFactorViewWith rationalView)) . cleanUpSimple
  
    phaseOneDiv = label "Write as division" $
-      until isDivC $ 
+      untilS isDivC $ 
          use fractionPlus <|> use fractionScale <|> use turnIntoFraction
    phaseSimplerDiv = label "Simplify division" $
-      repeat $
+      repeatS $
          (onlyLowerDiv findFactorsStrategyG <|> somewhere (useC cancelTermsDiv)
-            <|> commit (onlyUpperDiv (repeat findFactorsStrategyG) <*> useC cancelTermsDiv))
+            <|> commitS (onlyUpperDiv (repeatS findFactorsStrategyG) <*> useC cancelTermsDiv))
          |> ( somewhere (use merge) 
          <|> multi (showId distributeTimes) (exceptLowerDiv (use distributeTimes))
           )
@@ -142,10 +134,11 @@ isDivC = maybe False (isJust . isDivide :: Term -> Bool) . currentT
 -- First check that the whole strategy can be executed. Cleaning up is not 
 -- propagated correctly to predicate in check combinator, hence the use of
 -- cleanUpStrategy (which is not desirable here).
-commit :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
-commit s = let cs  = cleanUpStrategy (applyTop cleanUpExpr) (label "" s)
-               f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
-           in check (applicable cs . f) <*> s
+commitS :: IsStrategy f => f (Context Expr) -> Strategy (Context Expr)
+commitS s = 
+   let cs  = cleanUpStrategy (applyTop cleanUpExpr) (label "" s)
+       f a = fromMaybe a (do b <- top a; c <- current a; return (change (const c) b))
+   in check (applicable cs . f) <*> s
 
 exceptLowerDiv :: IsStrategy f => f (Context a) -> Strategy (Context a)
 exceptLowerDiv = somewhereWith "except-lower-div" $ \a -> 

@@ -13,21 +13,22 @@ module Domain.Math.Data.OrList
    ( OrList
    , orList, true, false
    , isTrue, isFalse
-   , disjunctions, normalize, idempotent, fromBool
-   , oneDisjunct, orListView
+   , disjunctions, idempotent, fromBool
+   , oneDisjunct, orListView, orSetView
    ) where
 
-import Common.View
-import Control.Monad
 import Common.Rewriting hiding (Monoid)
-import qualified Domain.Logic.Formula as Logic
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable (Traversable, sequenceA)
+import Common.View
 import Control.Applicative
+import Control.Monad
+import Data.Foldable (Foldable, foldMap)
+import Data.List
 import Data.Monoid
+import Data.Traversable (Traversable, sequenceA)
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
-import Data.List (intersperse, nub, sort)
+import qualified Data.Set as S
+import qualified Domain.Logic.Formula as Logic
 
 ------------------------------------------------------------
 -- Data type
@@ -56,11 +57,6 @@ isFalse _           = False
 disjunctions :: OrList a -> Maybe [a]
 disjunctions T           = Nothing
 disjunctions (OrList xs) = Just xs
-
--- | Sort the propositions and remove duplicates
-normalize :: Ord a => OrList a -> OrList a
-normalize T           = T
-normalize (OrList xs) = OrList (nub $ sort xs)
 
 -- | Remove duplicates
 idempotent :: Eq a => OrList a -> OrList a
@@ -137,3 +133,10 @@ orListView = makeView f g
              Nothing -> Logic.T
              Just [] -> Logic.F
              Just ys -> foldr1 (:||:) (map Logic.Var ys)
+             
+-- Nothing in the codomain represents True
+orSetView :: Ord a => View (OrList a) (Maybe (S.Set a))
+orSetView = makeView f g 
+ where
+   f = return . fmap S.fromList . disjunctions
+   g = maybe true (orList . S.toList)

@@ -215,7 +215,7 @@ quadraticEquationsView = makeView f (fmap g)
  where
    f eq = do 
       ors <- Data.Traversable.mapM (match quadraticEquationView) eq
-      return (normalize (join ors))
+      return (simplify orSetView (join ors))
 
    g (x, a) = Var x :==: build (squareRootViewWith rationalView) a
 
@@ -249,7 +249,7 @@ quadraticEquationView = makeView f g
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap (:==: 0))
  where
-   f    = Just . normalize . join . fmap make . coverUpOrs
+   f    = Just . simplify orSetView . join . fmap make . coverUpOrs
    make = orList . filter (not . hasNegSqrt) 
         . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b

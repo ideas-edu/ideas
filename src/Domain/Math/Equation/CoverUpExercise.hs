@@ -15,8 +15,7 @@ module Domain.Math.Equation.CoverUpExercise
 
 import Common.Library
 import Data.Maybe
-import Domain.Math.Polynomial.Exercises (eqOrList)
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.CleanUp (cleanUpExpr, cleanUpView)
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
@@ -34,7 +33,7 @@ coverUpExercise = makeExercise
    , status       = Provisional
    , parser       = parseExprWith (pOrList (pEquation pExpr))
    , equivalence  = eqCoverUp
-   , similarity   = eqOrList cleanUpExpr
+   , similarity   = myEq
    , isReady      = solvedEquations
    , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy
@@ -51,7 +50,10 @@ coverUpStrategy = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $
    repeatS $ somewhere $ alternatives coverUpRulesOr
 
 eqCoverUp :: OrList (Equation Expr) -> OrList (Equation Expr) -> Bool
-eqCoverUp a b = eqOrList cleanUpExpr (f a) (f b)
+eqCoverUp a b = myEq (f a) (f b)
  where 
    inc = inContext coverUpExercise
    f x = fromMaybe x $ fromContext $ applyD coverUpStrategy $ inc x
+
+myEq :: OrList (Equation Expr) -> OrList (Equation Expr) -> Bool 
+myEq = viewEquivalent (traverseView (traverseView cleanUpView))

@@ -173,6 +173,7 @@ swapView =
 listView :: Monad m => ViewM m a b -> ViewM m [a] [b]
 listView = traverseView
 
+-- or is liftView a better name?
 traverseView :: (Monad m, T.Traversable f) => ViewM m a b -> ViewM m (f a) (f b)
 traverseView v = makeView (T.mapM (match v)) (fmap (build v))
  

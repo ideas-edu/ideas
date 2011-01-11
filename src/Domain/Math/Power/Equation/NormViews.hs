@@ -115,7 +115,7 @@ normLogEqView = makeView (liftM g . T.mapM f) id
       case match logView lhs of
         Just (b, x) -> x :==: b .^. rhs
         Nothing     -> expr
-    g = normalize . fmap (fmap cleanUpExpr) . simplify normPowerEqView'
+    g = simplify orSetView . fmap (fmap cleanUpExpr) . simplify normPowerEqView'
       . simplify higherDegreeEquationsView 
 
 normLogView :: View Expr Expr

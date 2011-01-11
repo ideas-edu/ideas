@@ -11,28 +11,28 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.CleanUp 
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
-   , cleanUpSimple, collectLikeTerms
-   , acExpr, smart
+   , cleanUpSimple, collectLikeTerms, cleanUpView, cleanUpACView
+   , assocExpr, acExpr, smart
    ) where
 
-import Common.Utils (fixpoint)
 import Common.Uniplate
+import Common.Utils (fixpoint)
 import Common.View
 import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Ord
+import Data.Ratio
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Data.SquareRoot (fromSquareRoot)
 import Domain.Math.Expr
-import Domain.Math.Numeric.Views
-import Domain.Math.Power.OldViews
+import Domain.Math.Numeric.Views (rationalView, integerView)
+import Domain.Math.Power.OldViews (powerFactorViewWith)
 import Domain.Math.Simplification hiding (simplify, simplifyWith)
-import Domain.Math.SquareRoot.Views
+import Domain.Math.SquareRoot.Views (squareRootViewWith)
 import Prelude hiding ((^), recip)
 import qualified Prelude
-import Data.Ratio
 
 ----------------------------------------------------------------------
 -- Root simplification
@@ -98,17 +98,27 @@ cleanUpExpr :: Expr -> Expr
 cleanUpExpr = fixpoint $ 
    cleanUpBU . transform (simplify (squareRootViewWith rationalView))
 
+cleanUpView, cleanUpACView :: View Expr Expr
+cleanUpView   = biArr cleanUpExpr id
+cleanUpACView = biArr (acExpr . cleanUpExpr) id
+
 -- normalize expr with associativity and commutative rules for + and *
-acExpr :: Expr -> Expr
-acExpr expr = 
-   case (match sumView expr, match productView expr) of
-      (Just xs, _) | length xs > 1 -> 
-         build sumView $ sort $ map acExpr xs
-      (_, Just (b, xs)) | length xs > 1 -> 
-         build productView (b, sort $ map acExpr xs)
-      _ -> 
-         descend acExpr expr
+assocExpr, acExpr :: Expr -> Expr
+assocExpr = normExpr id
+acExpr    = normExpr sort
    
+normExpr :: ([Expr] -> [Expr]) -> Expr -> Expr
+normExpr f = rec 
+ where
+   rec expr = 
+      case (match sumView expr, match productView expr) of
+         (Just xs, _) | length xs > 1 -> 
+            build sumView $ f $ map rec xs
+         (_, Just (b, xs)) | length xs > 1 -> 
+            build productView (b, f $ map rec xs)
+         _ -> 
+            descend rec expr 
+  
 ------------------------------------------------------------
 -- Technique 1: fixed points of views
 {-

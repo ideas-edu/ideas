@@ -9,32 +9,32 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.Exercises where
+module Domain.Math.Polynomial.Exercises 
+   ( linearExercise, linearMixedExercise
+   , quadraticExercise, quadraticNoABCExercise
+   , quadraticWithApproximation
+   , higherDegreeExercise, findFactorsExercise
+   ) where
 
-import Domain.Math.Approximation
-import Common.Context
-import Common.Exercise
-import Common.Rewriting
-import Common.Strategy
-import Common.Uniplate
-import Common.View
+import Common.Library
+import Control.Monad
 import Data.Maybe
-import qualified Data.Traversable as T
+import Domain.Math.Approximation
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO1
 import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
+import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.BuggyRules
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Equivalence
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
-import Domain.Math.Polynomial.Equivalence
-import Domain.Math.Numeric.Views
-import Domain.Math.Equation.CoverUpRules
-import Control.Monad
+import qualified Data.Traversable as T
 
 ------------------------------------------------------------
 -- Exercises
@@ -45,7 +45,7 @@ linearExercise = makeExercise
                        newId "algebra.equations.linear"
    , status       = Provisional
    , parser       = parseExprWith (pEquation pExpr)
-   , similarity   = eqRelation (acExpr . cleanUpExpr)
+   , similarity   = viewEquivalent (traverseView cleanUpACView)
    , equivalence  = viewEquivalent linearEquationView
    , isSuitable   = (`belongsTo` linearEquationView)
    , isReady      = solvedRelationWith $ \a -> 
@@ -79,10 +79,9 @@ quadraticExercise = makeExercise
    { exerciseId   = describe "solve a quadratic equation" $ 
                        newId "algebra.equations.quadratic"
    , status       = Provisional
-   , parser       = \input -> case parseExprWith (pOrList (pEquation pExpr)) input of
-                                 Left err -> Left err
-                                 Right xs -> Right (build (traverseView equationView) xs)
-   , similarity   = eqOrList cleanUpExpr
+   , parser       = parseExprWith (pOrList (pEquation pExpr)) 
+                       >>> right (build (traverseView equationView)) 
+   , similarity   = viewEquivalent (traverseView (traverseView cleanUpView))
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
    , isSuitable   = (`belongsTo` (traverseView equationView >>> quadraticEquationsView))
    , isReady      = solvedRelations
@@ -94,14 +93,14 @@ quadraticExercise = makeExercise
    , navigation   = termNavigator
    , examples     = map (orList . return . build equationView) (concat quadraticEquations)
    }
-   
+
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
 higherDegreeExercise = makeExercise 
    { exerciseId    = describe "solve an equation (higher degree)" $
                         newId "algebra.equations.polynomial"
    , status        = Provisional
    , parser        = parser quadraticExercise
-   , similarity    = eqOrList cleanUpExpr
+   , similarity    = viewEquivalent (traverseView (traverseView cleanUpView))
    , eqWithContext = Just $ eqAfterSubstitution $ 
                         equivalentRelation (viewEquivalent higherDegreeEquationsView)
    , isSuitable    = (`belongsTo` (traverseView equationView >>> higherDegreeEquationsView))
@@ -180,7 +179,7 @@ linearFactorsView = productView >>> second (listView myLinearView)
 equivalentApprox :: OrList (Relation Expr) -> OrList (Relation Expr) -> Bool
 equivalentApprox a b
    | hasApprox a || hasApprox b = 
-        let norm = liftM ( normOrList cleanUpExpr 
+        let norm = liftM ( simplify orSetView . fmap (fmap (acExpr . cleanUpExpr))  
                          . fmap toApprox 
                          . simplify quadraticEquationsView
                          ) . T.mapM toEq
@@ -198,40 +197,9 @@ toApprox :: Equation Expr -> Relation Expr
 toApprox (a :==: b) = f a .~=. f b
  where
    f x = maybe x (Number . precision 4) (match doubleView x)
-
       
 equivalentRelation :: (OrList (Equation a) -> OrList (Equation a) -> Bool) -> OrList (Relation a) -> OrList (Relation a) -> Bool
 equivalentRelation f ra rb = fromMaybe False $ do
    a <- T.mapM (match equationView) ra
    b <- T.mapM (match equationView) rb
    return (f a b)
-
-eqOrList :: (Relational f, Ord (f Expr)) => 
-               (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr) -> Bool
-eqOrList f x y = normOrList f x == normOrList f y
-
-eqRelation :: (Relational f, Eq (f Expr)) => (Expr -> Expr) -> f Expr -> f Expr -> Bool
-eqRelation f x y = fmap f x == fmap f y
-
--- Normalize the order of disjunctions. Simplify the expression with the function
--- passed as argument, but do not change (flip) the sides of the relation.
-normOrList :: (Relational f, Ord (f Expr)) => 
-                 (Expr -> Expr) -> OrList (f Expr) -> OrList (f Expr)
-normOrList f = normalize . fmap (fmap (normExpr f))
-
-normExpr :: (Expr -> Expr) -> Expr -> Expr
-normExpr f = rec . f
- where
-   plusOperator  = makeCommutative $ monoid 
-                      (makeBinaryOp (getId plusSymbol) (+) isPlus)
-                      (simpleConstant "zero" 0)
-   timesOperator = makeCommutative $ monoid 
-                      (makeBinaryOp (getId timesSymbol) (*) isTimes)
-                      (simpleConstant "one" 1)
-   make          = simplifyWith (map rec) . magmaListView
-   
-   rec expr = 
-      case expr of
-         _ :+: _ -> make plusOperator  expr
-         _ :*: _ -> make timesOperator expr
-         _       -> descend rec expr

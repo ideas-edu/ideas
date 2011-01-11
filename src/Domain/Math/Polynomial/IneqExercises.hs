@@ -13,32 +13,25 @@ module Domain.Math.Polynomial.IneqExercises
    ( ineqLinearExercise, ineqQuadraticExercise, ineqHigherDegreeExercise
    ) where
 
-import Common.Context
-import Common.Exercise
-import Common.Rewriting
-import Common.Strategy hiding (not)
-import Common.Transformation
+import Common.Library hiding (isEmpty)
 import Common.Uniplate (descend)
-import Common.View
 import Control.Monad
-import Data.List (nub, sort)
+import Data.List
 import Data.Maybe (fromMaybe)
-import Domain.Math.Data.Interval
 import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
+import Domain.Math.Data.Interval
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
-import Domain.Math.Polynomial.Exercises (eqRelation, normExpr)
 import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.CleanUp
+import Domain.Math.Polynomial.Equivalence
 import Domain.Math.Polynomial.Rules 
 import Domain.Math.Polynomial.Strategies
-import Domain.Math.Polynomial.Equivalence
 import Domain.Math.SquareRoot.Views
-import Prelude hiding (repeat)
 import qualified Domain.Logic.Formula as Logic
 import qualified Domain.Logic.Views as Logic
 
@@ -50,7 +43,7 @@ ineqLinearExercise = makeExercise
    , parser       = parseExprWith (pRelation pExpr)
    , isReady      = solvedRelation
    , equivalence  = linEq
-   , similarity   = eqRelation cleanUpExpr
+   , similarity   = viewEquivalent (traverseView cleanUpView)
    , strategy     = ineqLinear
    , navigation   = termNavigator
    , examples     = let x = Var "x"
@@ -67,7 +60,7 @@ ineqQuadraticExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just quadrEqContext
-   , similarity    = simLogic (fmap (normExpr cleanUpExpr) . flipGT)
+   , similarity    = simLogic (fmap cleanUpExpr . flipGT)
    , strategy      = ineqQuadratic
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -84,7 +77,7 @@ ineqHigherDegreeExercise = makeExercise
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just highEqContext
-   , similarity    = simLogic (fmap (normExpr cleanUpExpr) . flipGT)
+   , similarity    = simLogic (fmap cleanUpExpr . flipGT)
    , strategy      = ineqHigherDegree
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
@@ -140,7 +133,7 @@ ineqLinear = cleanUpStrategy (applyTop (fmap cleanUpSimple)) ineqLinearG
 
 ineqLinearG :: IsTerm a => LabeledStrategy (Context a)
 ineqLinearG = label "Linear inequation" $
-   label "Phase 1" (repeat 
+   label "Phase 1" (repeatS
        (  use removeDivision
       <|> multi (showId distributeTimes) 
              (somewhere (useC parentNotNegCheck <*> use distributeTimes))

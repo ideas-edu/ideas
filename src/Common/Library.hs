@@ -17,7 +17,7 @@ module Common.Library
    , module Common.Derivation
    , module Common.Rewriting, module Common.Exercise
    , module Common.Strategy, module Common.View
-   , failS, notS, repeatS, replicateS, sequenceS
+   , failS, notS, repeatS, replicateS, sequenceS, untilS
    ) where
 
 import Common.Classes
@@ -26,12 +26,12 @@ import Common.Derivation
 import Common.Exercise
 import Common.Navigator hiding (left, right)
 import Common.Rewriting hiding (difference)
-import Common.Strategy  hiding (fail, not, repeat, replicate, sequence)
+import Common.Strategy  hiding (fail, not, repeat, replicate, sequence, until)
 import Common.Transformation
-import Common.View hiding (identity)
+import Common.View
 
 import qualified Common.Strategy as S
-import Prelude (Int)
+-- import Prelude (Bool, Int)
 
 -- | Alias for strategy combinator @fail@
 failS :: Strategy a
@@ -52,3 +52,7 @@ replicateS = S.replicate
 -- | Alias for strategy combinator @sequence@
 sequenceS :: IsStrategy f => [f a] -> Strategy a
 sequenceS = S.sequence
+
+-- | Alias for strategy combinator @until@
+untilS :: IsStrategy f => (a -> Bool) -> f a -> Strategy a
+untilS = S.until

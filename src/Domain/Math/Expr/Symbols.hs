@@ -34,7 +34,6 @@ import qualified Text.OpenMath.Dictionary.Fns1      as OM
 import qualified Text.OpenMath.Dictionary.List1     as OM
 import qualified Text.OpenMath.Dictionary.Nums1     as OM
 import qualified Text.OpenMath.Dictionary.Transc1   as OM
-import qualified Text.OpenMath.Symbol               as OM
 
 -------------------------------------------------------------
 -- Arith1 dictionary

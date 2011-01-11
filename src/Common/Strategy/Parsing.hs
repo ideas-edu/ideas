@@ -69,10 +69,12 @@ firsts st =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
+         a :||: b  -> firstsStep (coreParallel a b) state
          Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep (RuleStep r) (useRule r state)
          Label l a -> hasStep (Enter l) [push a (pushExit l state)]
+         Atomic a  -> firstsStep a state
          Not a     -> guard (checkNot a state) >> firsts state
          a :|>: b  -> firstsStep (coreOrElse a b) state
          Many a    -> firstsStep (coreMany a) state
@@ -106,10 +108,12 @@ runState st =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
+         a :||: b  -> runStep (coreParallel a b) state
          Rec i a   -> incrTimer state >>= runStep (substCoreVar i core a)
          Var _     -> freeCoreVar "runState"
          Rule  r   -> concatMap runState (useRule r state)
          Label _ a -> runStep a state
+         Atomic a  -> runStep a state
          Not a     -> guard (checkNot a state) >> runState state
          a :|>: b  -> let xs = runStep a state
                       in if null xs then runStep b state else xs
@@ -141,10 +145,12 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b
                                 in replayStep n xs new (makeChoice x state)
+         a :||: b  -> replayStep n bs (coreParallel a b) state
          Rec i a   -> replayStep n bs (substCoreVar i core a) state
          Var _     -> freeCoreVar "replay"
          Rule r    -> replayState (n-1) bs (traceRule r state)
          Label l a -> replayStep (n-1) bs a (pushExit l (traceEnter l state))
+         Atomic a  -> replayStep n bs a state
          Not _     -> replayState n bs state
          a :|>: b  -> replayStep n bs (coreOrElse a b) state
          Many a    -> replayStep n bs (coreMany a) state
@@ -185,9 +191,6 @@ traceRule = traceStep . RuleStep
 traceStep :: Step l a -> State l a -> State l a
 traceStep step s = s {trace = step : trace s}
 
-substCoreVar :: Int -> Core l a -> Core l a -> Core l a
-substCoreVar i a = substCoreEnv (insertCoreEnv i a emptyCoreEnv)
-
 freeCoreVar :: String -> a
 freeCoreVar caller = error $ "Free var in core expression: " ++ caller
 
@@ -198,3 +201,13 @@ incrTimer s
 
 resetTimer :: State l a -> State l a
 resetTimer s = s {timeout = 0}
+
+{-
+testje = map (steps) $ derivations $ parseDerivationTree (makeState expr 0) 
+expr = (ra :*: rb) :||: Label "A" (rc :*: rd)
+
+ra, rb, rc, rd :: Core l a
+ra = Rule $ makeSimpleRule "A" Just
+rb = Rule $ makeSimpleRule "B" Just
+rc = Rule $ makeSimpleRule "C" Just
+rd = Rule $ makeSimpleRule "D" Just -}

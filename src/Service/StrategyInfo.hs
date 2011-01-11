@@ -49,10 +49,12 @@ coreBuilder f = rec
          _ :*:  _  -> asList  "sequence" isSequence
          _ :|:  _  -> asList  "choice"   isChoice
          _ :|>: _  -> asList  "orelse"   isOrElse
+         _ :||: _  -> asList  "parallel" isParallel
          Many a    -> element "many"     (rec a)
          Repeat a  -> element "repeat"   (rec a)
          Label l (Rule r) | getId l == getId r -> element "rule"     (f l)
          Label l a -> element "label"    (f l >> rec a)
+         Atomic a  -> element "atomic"   (rec a)
          Rec n a   -> element "rec"      (("var" .=. show n) >> rec a)
          Not a     -> element "not"      (recNot a)
          Rule r    -> element "rule"     ("name" .=. show r)
@@ -78,6 +80,10 @@ isChoice _ = Nothing
 isOrElse :: Core l a -> Maybe (Core l a, Core l a)
 isOrElse (a :|>: b) = Just (a, b)
 isOrElse _ = Nothing
+
+isParallel :: Core l a -> Maybe (Core l a, Core l a)
+isParallel (a :||: b) = Just (a, b)
+isParallel _ = Nothing
 
 -----------------------------------------------------------------------
 -- XML to strategy
@@ -125,6 +131,9 @@ readStrategy toLabel findRule xml = do
    buildOrElse _ xs
       | null xs   = return Fail
       | otherwise = return (foldr1 (:|>:) xs)
+   buildParallel _ xs
+      | null xs   = return Succeed
+      | otherwise = return (foldr1 (:||:) xs)
    buildLabel x = do
       info <- toLabel xml
       return (Label info x)
@@ -153,9 +162,11 @@ readStrategy toLabel findRule xml = do
       [ ("sequence", buildSequence)
       , ("choice",   buildChoice)
       , ("orelse",   buildOrElse)
+      , ("parallel", buildParallel)
       , ("many",     comb1 Many)
       , ("repeat",   comb1 Repeat)
       , ("label",    join2 comb1 buildLabel)
+      , ("atomic",   comb1 Atomic)
       , ("rec",      join2 comb1 buildRec)
       , ("not",      comb1 (Not . noLabels))
       , ("rule",     join2 comb0 buildRule)

@@ -16,8 +16,9 @@
 module Common.Strategy.Core 
    ( GCore(..), Core
    , mapLabel, noLabels
-   , coreMany, coreRepeat, coreOrElse, coreFix
+   , coreMany, coreRepeat, coreOrElse, coreFix, coreParallel
    , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv, substCoreEnv
+   , substCoreVar
    ) where
 
 import Common.Transformation
@@ -44,10 +45,12 @@ data GCore l a
    = GCore l a :*:  GCore l a
    | GCore l a :|:  GCore l a
    | GCore l a :|>: GCore l a
+   | GCore l a :||: GCore l a
    | Many   (GCore l a)
    | Repeat (GCore l a)
    | Not (GCore l a)
    | Label l (GCore l a)
+   | Atomic (GCore l a)
    | Succeed
    | Fail
    | Rule a -- ^ Generalized constructor (not restricted to rules)
@@ -72,10 +75,12 @@ instance T.Traversable (GCore l) where
             a :*: b   -> (:*:)   <$> run a <*> run b
             a :|: b   -> (:|:)   <$> run a <*> run b
             a :|>: b  -> (:|>:)  <$> run a <*> run b
+            a :||: b  -> (:||:)  <$> run a <*> run b
             Many a    -> Many    <$> run a
             Repeat a  -> Repeat  <$> run a
             Not a     -> Not     <$> run a
             Label l a -> Label l <$> run a
+            Atomic a  -> Atomic  <$> run a
             Rec n a   -> Rec n   <$> run a
             Rule a    -> Rule    <$> f a
             Var n     -> pure (Var n)
@@ -88,9 +93,11 @@ instance Uniplate (GCore l a) where
          a :*: b   -> ([a,b], \[x,y] -> x :*: y)
          a :|: b   -> ([a,b], \[x,y] -> x :|: y)
          a :|>: b  -> ([a,b], \[x,y] -> x :|>: y)
+         a :||: b  -> ([a,b], \[x,y] -> x :||: y)
          Many a    -> ([a],   \[x]   -> Many x)
          Repeat a  -> ([a],   \[x]   -> Repeat x)
          Label l a -> ([a],   \[x]   -> Label l x)
+         Atomic a  -> ([a],   \[x]   -> Atomic x)
          Rec n a   -> ([a],   \[x]   -> Rec n x)
          Not a     -> ([a],   \[x]   -> Not x)
          _         -> ([],    \_     -> core)
@@ -119,6 +126,9 @@ substCoreEnv env core =
       Rec i a -> Rec i (substCoreEnv (deleteCoreEnv i env) a)
       _       -> descend (substCoreEnv env) core
 
+substCoreVar :: Int -> Core l a -> Core l a -> Core l a
+substCoreVar i a = substCoreEnv (insertCoreEnv i a emptyCoreEnv)
+
 -----------------------------------------------------------------
 -- Definitions
 
@@ -136,6 +146,45 @@ coreFix :: (Core l a -> Core l a) -> Core l a
 coreFix f = -- disadvantage: function f is applied twice
    let i = nextVar (f (Var (-1)))
    in Rec i (f (Var i))
+
+-----------------------------------------------------------------
+-- Parallel parsing: a first approach
+
+coreParallel :: Core l a -> Core l a -> Core l a
+coreParallel Succeed b = b
+coreParallel a Succeed = a
+coreParallel a b = alts $
+   [ x .*. (y :||: b) | (x, y) <- splitAtom a ] ++
+   [ x .*. (a :||: y) | (x, y) <- splitAtom b ]
+ where
+   alts [] = Fail
+   alts xs = foldr1 (:|:) xs
+
+(.*.) :: Core l a -> Core l a -> Core l a
+Fail    .*. _       = Fail
+_       .*. Fail    = Fail
+Succeed .*. a       = a
+a       .*. Succeed = a
+a       .*. b       = a :*: b
+
+splitAtom :: Core l a -> [(Core l a, Core l a)]
+splitAtom core =
+   case core of
+      a :*: b   -> [ (x, y .*. b) | (x, y) <- splitAtom a ]
+      a :|: b   -> splitAtom a ++ splitAtom b
+      a :||: b  -> [ (x, y :||: b) | (x, y) <- splitAtom a ] ++
+                   [ (x, a :||: y) | (x, y) <- splitAtom b ]
+      Rec i a   -> splitAtom (substCoreVar i core a)
+      Var _     -> error "Free core var in splitAtom"
+      a :|>: b  -> splitAtom (coreOrElse a b)
+      Many a    -> splitAtom (coreMany a)
+      Repeat a  -> splitAtom (coreRepeat a)
+      Fail      -> []
+      Atomic a  -> [(a, Succeed)]
+      Succeed   -> [(core, Succeed)]
+      Rule _    -> [(core, Succeed)]
+      Not _     -> [(core, Succeed)]
+      Label _ _ -> [(core, Succeed)]
 
 -----------------------------------------------------------------
 -- Utility functions

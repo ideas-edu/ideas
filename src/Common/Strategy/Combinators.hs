@@ -30,7 +30,7 @@ import Data.Maybe
 
 -- Basic combinators --------------------------------------
 
-infixr 3 <|>
+infixr 3 <|>, <||>
 infixr 4  |>
 infixr 5 <*>
 
@@ -52,6 +52,16 @@ infixr 5 <*>
       (_, Fail) -> x
       _         -> x :|: y
 
+-- | Merge two strategies in parallel
+(<||>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+(<||>) = liftCore2 $ \x y -> 
+   case (x, y) of
+      (Succeed, _) -> y
+      (_, Succeed) -> x
+      (Fail, _)    -> Fail
+      (_, Fail)    -> Fail
+      _            -> x :||: y
+
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
 succeed = fromCore Succeed
@@ -60,6 +70,10 @@ succeed = fromCore Succeed
 fail :: Strategy a
 fail = fromCore Fail
 
+-- | Makes a strategy atomic (w.r.t. parallel composition)
+atomic :: IsStrategy f => f a -> Strategy a
+atomic = liftCore Atomic
+
 -- | Puts a list of strategies into a sequence
 sequence :: IsStrategy f => [f a] -> Strategy a
 sequence = foldr ((<*>) . toStrategy) succeed
@@ -67,6 +81,14 @@ sequence = foldr ((<*>) . toStrategy) succeed
 -- | Combines a list of alternative strategies
 alternatives :: IsStrategy f => [f a] -> Strategy a
 alternatives = foldr ((<|>) . toStrategy) fail
+
+-- | Merges a list of strategies (in parallel)
+parallel :: IsStrategy f => [f a] -> Strategy a
+parallel = foldr ((<||>) . toStrategy) succeed 
+
+-- | Allows all permutations of the list
+permute :: IsStrategy f => [f a] -> Strategy a
+permute = foldr ((<||>) . atomic) succeed 
 
 -- EBNF combinators --------------------------------------
 

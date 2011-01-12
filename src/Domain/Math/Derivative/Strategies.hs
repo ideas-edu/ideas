@@ -19,7 +19,7 @@ import Common.Library
 import Data.Maybe
 import Domain.Math.Derivative.Rules 
 import Domain.Math.Expr
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Numeric.Views

@@ -26,7 +26,7 @@ import Domain.Math.Data.PrimeFactors
 import Domain.Math.Data.Relation
 import Domain.Math.Expr hiding ( (^) )
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.NormViews
 import Domain.Math.Power.Utils

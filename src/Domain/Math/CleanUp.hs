@@ -9,7 +9,7 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Polynomial.CleanUp 
+module Domain.Math.CleanUp 
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
    , cleanUpSimple, collectLikeTerms, cleanUpView, cleanUpACView
    , assocExpr, acExpr, smart
@@ -153,22 +153,19 @@ cleanUpBU = {- fixpoint $ -} transform $ \e ->
    simplify myView $ 
    fromMaybe (smart e) $
       canonical rationalView e
-    `mplus` do
-      a <- canonical specialSqrtOrder e
+    `mplus`
+      liftM (transform smart) (canonical specialSqrtOrder e)
       -- Just simplify order of terms with square roots for now
-      return (transform smart a)
     `mplus` do
-      xs <- match sumView e
-      guard (length xs > 1)
-      return $ build sumView $
-         assocPlus myView xs
+      let f xs | length xs > 1 = return (assocPlus myView xs)
+          f _ = Nothing 
+      canonicalWithM f sumView e
     `mplus`
       canonical myView e
     `mplus` do
-      (b, xs) <- match productView e
-      guard (length xs > 1)
-      return $ build productView 
-         (b, assocTimes myView xs)
+      let f (b, xs) | length xs > 1 = return (b, assocTimes myView xs)
+          f _ = Nothing
+      canonicalWithM f productView e
  where
    myView = powerFactorViewWith rationalView
 

@@ -26,7 +26,7 @@ import qualified Domain.Math.Data.PrimeFactors as PF
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
---import Domain.Math.Polynomial.CleanUp (collectLikeTerms)
+--import Domain.Math.CleanUp (collectLikeTerms)
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
 import Domain.Math.Simplification (simplify)

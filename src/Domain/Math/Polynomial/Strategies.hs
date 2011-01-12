@@ -29,7 +29,7 @@ import Domain.Math.Numeric.Views
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Expr
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Data.Maybe
 import Common.Rewriting
 

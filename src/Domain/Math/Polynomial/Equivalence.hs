@@ -31,7 +31,7 @@ import Domain.Math.Data.Relation hiding (eval)
 import Domain.Math.Data.SquareRoot
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.SquareRoot.Views
 import Prelude hiding ((^), sqrt)

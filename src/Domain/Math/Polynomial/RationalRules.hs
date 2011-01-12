@@ -28,7 +28,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.LeastCommonMultiple
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Views

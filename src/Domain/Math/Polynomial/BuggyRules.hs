@@ -20,7 +20,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Polynomial.Views
 import Domain.Math.Polynomial.Rules
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Numeric.Views
 import Domain.Math.Data.Polynomial
 import Domain.Math.Equation.CoverUpRules

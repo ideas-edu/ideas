@@ -27,7 +27,7 @@ import Domain.Math.Equation.Views
 import Domain.Math.Examples.DWO2
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Equivalence
 import Domain.Math.Polynomial.Rules 
 import Domain.Math.Polynomial.Strategies

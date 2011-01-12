@@ -15,7 +15,7 @@ module Domain.Math.Equation.CoverUpExercise
 
 import Common.Library
 import Data.Maybe
-import Domain.Math.Polynomial.CleanUp (cleanUpExpr, cleanUpView)
+import Domain.Math.CleanUp (cleanUpExpr, cleanUpView)
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules

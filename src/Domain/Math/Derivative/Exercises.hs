@@ -26,7 +26,7 @@ import Domain.Math.Derivative.Strategies
 import Domain.Math.Examples.DWO5
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Generators
 import Domain.Math.Polynomial.RationalExercises
 import Domain.Math.Polynomial.Views
@@ -44,7 +44,7 @@ derivativePolyExercise = describe
    , isReady       = (`belongsTo` polyNormalForm rationalView)
    , isSuitable    = isPolyDiff
    , equivalence   = eqPolyDiff
-   , similarity    = simPolyDiff
+   , similarity    = viewEquivalent cleanUpACView
    , strategy      = derivativePolyStrategy
    , navigation    = navigator
    , examples      = concat (diffSet1 ++ diffSet2 ++ diffSet3)
@@ -150,16 +150,11 @@ readyQuotientDiff expr = fromMaybe False $ do
        nfp = (`belongsTo` polyNormalForm rationalView)
    return (all nfp ys && all isp zs)
 
-simPolyDiff :: Expr -> Expr -> Bool
-simPolyDiff x y =
-   let f = acExpr . cleanUpExpr
-   in f x == f y
-
 noDiff :: Expr -> Bool
-noDiff e = null [ () | Sym s _ <- universe e, isDiffSymbol s ]   
+noDiff e = all (not . isDiffSymbol) [ s | Sym s _ <- universe e]   
 
 onlyNatPower :: Expr -> Bool
-onlyNatPower e = and [ isNat a | Sym s [_, a] <- universe e, isPowerSymbol s ]
+onlyNatPower e = all isNat [ a | Sym s [_, a] <- universe e, isPowerSymbol s ]
  where
    isNat (Nat _) = True
    isNat _       = False

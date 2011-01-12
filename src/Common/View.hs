@@ -16,12 +16,12 @@
 module Common.View 
    ( -- * Generalized monadic views
      ViewM, match, build, newView, makeView, biArr, identity, (>>>)
-   , canonical, canonicalWith
+   , canonical, canonicalWith, canonicalWithM
    , Control.Arrow.Arrow(..), Control.Arrow.ArrowChoice(..)
      -- * Simple views
    , View, ViewList, Match, belongsTo
    , simplify, simplifyWith, viewEquivalent, viewEquivalentWith
-   , isCanonical, isCanonicalWith, matchM, canonicalM, viewList
+   , isCanonical, isCanonicalWith, matchM, viewList
      -- * Some combinators
    , swapView, listView, traverseView, associativeView
      -- * Properties on views
@@ -114,7 +114,12 @@ canonical :: Monad m => ViewM m a b -> a -> m a
 canonical = canonicalWith id
 
 canonicalWith :: Monad m => (b -> b) -> ViewM m a b -> a -> m a
-canonicalWith f view = liftM (build view . f) . match view
+canonicalWith f = canonicalWithM (return . f)
+
+canonicalWithM :: Monad m => (b -> m b) -> ViewM m a b -> a -> m a
+canonicalWithM f view a = 
+   match view a >>= liftM (build view) . f
+   
 
 ---------------------------------------------------------------
 -- Simple views (based on a particular monad)
@@ -150,10 +155,6 @@ isCanonicalWith eq v a = maybe False (eq a) (canonical v a)
 -- generalized match on a ViewM Maybe
 matchM :: Monad m => View a b -> a -> m b
 matchM v = maybe (Prelude.fail "no match") return . match v
-
--- generalized canonical element on a ViewM Maybe
-canonicalM :: Monad m => View a b -> a -> m a
-canonicalM v = maybe (Prelude.fail "no match") return . canonicalWith id v
 
 viewList :: (Foldable m, Monad m) => ViewM m a b -> ViewList a b
 viewList v = makeView (toList . match v) (build v)

@@ -34,7 +34,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
 import Domain.Math.Equation.CoverUpRules
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
 import Domain.Math.Polynomial.Rules (flipEquation)
 import Domain.Math.Power.Rules

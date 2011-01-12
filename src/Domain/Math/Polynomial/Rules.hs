@@ -37,7 +37,7 @@ import Domain.Math.Equation.BalanceRules
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.Polynomial.CleanUp
+import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews
 import Domain.Math.Simplification hiding (simplifyWith)
@@ -534,8 +534,8 @@ simplerLinearFactor = describe "simpler linear factor" $
    return $ fromRational d * build myView (x, (a/d, b/d))
    
 ruleFromView :: (IsId n, Eq a) => n -> View a b -> Rule a
-ruleFromView s v = makeSimpleRuleList s $ \a -> do
-   b <- canonicalM v a
+ruleFromView s v = makeSimpleRule s $ \a -> do
+   b <- canonical v a
    guard (a /= b)
    return b
    

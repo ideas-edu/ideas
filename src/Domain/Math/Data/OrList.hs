@@ -47,7 +47,7 @@ true  = T
 false = OrList []
 
 isTrue :: OrList a -> Bool
-isTrue T = Prelude.True
+isTrue T = True
 isTrue _ = False
 
 isFalse :: OrList a -> Bool

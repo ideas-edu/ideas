@@ -37,7 +37,6 @@ import Domain.Math.Equation.BalanceRules
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews
 import Domain.Math.Simplification hiding (simplifyWith)

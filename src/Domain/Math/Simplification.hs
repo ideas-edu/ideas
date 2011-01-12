@@ -10,11 +10,11 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Simplification 
-   ( Simplify(..), SimplifyConfig(..), smartConstructors
+   ( Simplify(..), SimplifyConfig(..)
    , simplifyConfig
    , Simplified, simplified, liftS, liftS2
    , simplifyRule
-   , mergeAlike, distribution, constantFolding
+   , collectLikeTerms, mergeAlike, distribution, constantFolding
    , mergeAlikeSum, mergeAlikeProduct
    ) where
 
@@ -26,6 +26,7 @@ import Common.View hiding (simplify, simplifyWith)
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Domain.Math.CleanUp (smart)
 import Domain.Math.Data.Relation
 import Domain.Math.Expr hiding (recip)
 import Domain.Math.Numeric.Views
@@ -64,7 +65,7 @@ instance Simplify a => Simplify [a] where
 
 instance Simplify Expr where
    simplifyWith cfg = let optional p f = if p then f else id in
-       optional (withSmartConstructors cfg)  smartConstructors
+       optional (withSmartConstructors cfg)  (transform smart)
      . optional (withMergeAlike cfg)         mergeAlike
      . optional (withDistribution cfg)       distribution
      . optional (withSimplifySquareRoot cfg) (View.simplify 
@@ -137,21 +138,6 @@ liftS2 f (S x) (S y) = simplified (f x y)
 simplifyRule :: Simplify a => Rule a
 simplifyRule = simplify idRule
 
-------------------------------------------------------------
--- Simplification with the smart constructors
-
-smartConstructors :: Expr -> Expr
-smartConstructors = transform $ \expr ->
-   case expr of
-      a :+: b  -> a .+. b
-      a :-: b  -> a .-. b
-      Negate a -> neg a
-      a :*: b  -> a .*. b
-      a :/: b  -> a ./. b
-      Sym s [a, b] | isPowerSymbol s -> 
-         a .^. b
-      _        -> expr
-
 -------------------------------------------------------------
 -- Distribution of constants
 
@@ -187,7 +173,13 @@ constantFolding expr =
                  
 ----------------------------------------------------------------------
 -- merge alike for sums and products
-   
+
+-- Todo: combine with mergeAlike (subtle differences)
+collectLikeTerms :: Expr -> Expr
+collectLikeTerms = View.simplifyWith f sumView
+ where
+   f = mergeAlikeSum . map (View.simplifyWith (second mergeAlikeProduct) productView)
+
 mergeAlike :: Expr -> Expr
 mergeAlike a =
    case (match sumView a, match productView a) of

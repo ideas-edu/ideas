@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.CleanUp 
    ( cleanUpRelations, cleanUpRelation, cleanUpExpr
-   , cleanUpSimple, collectLikeTerms, cleanUpView, cleanUpACView
+   , cleanUpSimple, cleanUpView, cleanUpACView
    , assocExpr, acExpr, smart
    ) where
 
@@ -29,7 +29,6 @@ import Domain.Math.Data.SquareRoot (fromSquareRoot)
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views (rationalView, integerView)
 import Domain.Math.Power.OldViews (powerFactorViewWith)
-import Domain.Math.Simplification hiding (simplify, simplifyWith)
 import Domain.Math.SquareRoot.Views (squareRootViewWith)
 import Prelude hiding ((^), recip)
 import qualified Prelude
@@ -51,23 +50,14 @@ simplerRoot a b
     where
       e = round ((fromIntegral x :: Double) ** (1 / fromIntegral y))
 
-----------------------------------------------------------------------
--- Expr normalization
-
-collectLikeTerms :: Expr -> Expr
-collectLikeTerms = simplifyWith f sumView
- where
-   f = mergeAlikeSum . map (simplifyWith (second mergeAlikeProduct) productView)
-
 ------------------------------------------------------------
 -- Cleaning up
 
 cleanUpSimple :: Expr -> Expr
-cleanUpSimple = fixpoint (transform (f2 . f1))
+cleanUpSimple = fixpoint (transform (smart . f1))
  where
    use v = simplifyWith (assocPlus v) sumView
    f1 = use rationalView
-   f2 = smartConstructors
 
 cleanUpRelations :: OrList (Relation Expr) -> OrList (Relation Expr)
 cleanUpRelations = idempotent . join . fmap cleanUpRelation
@@ -120,18 +110,8 @@ normExpr f = rec
             descend rec expr 
   
 ------------------------------------------------------------
--- Technique 1: fixed points of views
-{-
-cleanUpFix :: Expr -> Expr
-cleanUpFix = fixpoint (f4 . f3 . f2 . f1)
- where
-   use v = transform (simplifyWith (assoPlus v) sumView)
- 
-   f1 = use rationalView
-   f2 = use (squareRootViewWith rationalView)
-   f3 = use (powerFactorViewWith rationalView)
-   f4 = smartConstructors
--}
+-- Associativity
+
 assocPlus, assocTimes :: View Expr a -> [Expr] -> [Expr]
 assocPlus  = assocOp (+)
 assocTimes = assocOp (*)
@@ -189,7 +169,6 @@ smart (Negate a) = neg a
 smart (a :+: b) = a .+. b
 smart (a :-: b) = a .-. b
 smart (Sqrt (Nat n)) = simplerRoot (fromIntegral n) 2
--- smart (Sqrt a)  = maybe (Sqrt a) (`simplerRoot` 2) (match rationalView a)
 smart e = e
 
 

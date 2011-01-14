@@ -26,6 +26,7 @@ import Common.View
 import Common.Rewriting
 import Common.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
+import Data.Foldable (foldMap)
 import Data.Traversable (mapM)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -213,9 +214,8 @@ linearEquationView = linearEquationViewWith rationalView
 quadraticEquationsView:: View (OrList (Equation Expr)) (OrList (String, SQ.SquareRoot Rational))
 quadraticEquationsView = makeView f (fmap g)
  where
-   f eq = do 
-      ors <- Data.Traversable.mapM (match quadraticEquationView) eq
-      return (simplify orSetView (join ors))
+   f = liftM (simplify orSetView . foldMap id)
+          . Data.Traversable.mapM (match quadraticEquationView) 
 
    g (x, a) = Var x :==: build (squareRootViewWith rationalView) a
 
@@ -249,7 +249,7 @@ quadraticEquationView = makeView f g
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap (:==: 0))
  where
-   f    = Just . simplify orSetView . join . fmap make . coverUpOrs
+   f    = Just . simplify orSetView . foldMap make . coverUpOrs
    make = orList . filter (not . hasNegSqrt) 
         . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b

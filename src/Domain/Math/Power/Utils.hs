@@ -24,6 +24,7 @@ import Common.Transformation
 import Common.Uniplate
 import Common.View
 import Control.Monad
+import Data.Foldable (foldMap)
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
 import Data.Traversable (Traversable, mapM)
@@ -161,7 +162,7 @@ transformList f a = concatMap (f . ctx) $ g $ map (transformList f) cs
     g []       = [[]]
 
 transformOrList :: (Traversable f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
-transformOrList f = join . fmap (orList . Data.Traversable.mapM (transformList f))
+transformOrList f = foldMap (orList . Data.Traversable.mapM (transformList f))
 
 -- y = root n x
 takeRoot :: Integer -> Integer -> [Integer]

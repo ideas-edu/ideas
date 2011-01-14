@@ -250,7 +250,7 @@ solutionInequation = describe "Determine solution for inequality" $
          let rs = makeRanges including (sort (zipWith A ds zs))
              including = relationType inEquation `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
          return $ fromIntervals v fromDExpr $ 
-            fromList [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
+            fromIntervalList [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
  where
    makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
    makeRanges b xs =
@@ -265,7 +265,7 @@ solutionInequation = describe "Determine solution for inequality" $
       makeRight a@(A d _)
          | b         = (d+1, False, greaterThanOrEqualTo a)
          | otherwise = (d+1, False, greaterThan a)
-      makePoint a@(A d _) = (d, True, singleton a)
+      makePoint a@(A d _) = (d, True, point a)
       makeMiddle a1@(A d1 _) a2@(A d2 _) =
          [ makePoint a1 | b ] ++
          [ ( (d1+d2)/2
@@ -305,7 +305,7 @@ fromDExpr :: DExpr -> Expr
 fromDExpr (A _ e) = e
   
 fromIntervals :: Eq a => String -> (a -> Expr) -> Intervals a -> Logic (Relation Expr)
-fromIntervals v f = ors . map (fromInterval v f) . toList
+fromIntervals v f = ors . map (fromInterval v f) . toIntervalList
  where
    ors [] = Logic.F
    ors xs = foldr1 (:||:) xs

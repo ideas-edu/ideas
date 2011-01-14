@@ -462,7 +462,7 @@ minus4AC = buggyRule $ makeRule "abc.minus-4ac" $
          
 oneSolution :: Rule (OrList (Equation Expr))
 oneSolution = buggyRule $ makeRule "abc.one-solution" $ 
-   abcMisconception $ \x a b c -> do
+   abcMisconception $ \x a b c ->
       let discr = sqrt (fromRational (b*b - 4 * a * c))
           f (?) = Var x :==: (-fromRational b ? discr) / (2 * fromRational a)
-      [ return $ f (+), return $ f (-) ]
+      in [ singleton $ f (+), singleton $ f (-) ]

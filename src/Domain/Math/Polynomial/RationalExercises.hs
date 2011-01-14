@@ -21,6 +21,7 @@ import Common.Utils (fst3)
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Monoid
 import Domain.Logic.Formula hiding (disjunctions, Var)
 import Domain.Logic.Views ((.&&.))
 import Domain.Math.Data.OrList
@@ -56,7 +57,7 @@ rationalEquationExercise = makeExercise
    , strategy      = rationalEquationStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
-   , examples      = map return (concat brokenEquations)
+   , examples      = map singleton (concat brokenEquations)
    }
    
 simplifyRationalExercise :: Exercise Expr
@@ -172,9 +173,7 @@ simplifiedRational expr =
 rationalEquations :: OrList (Equation Expr) -> Maybe (OrList Expr)
 rationalEquations = maybe (return true) f . disjunctions
  where 
-   f xs = do 
-      yss <- mapM rationalEquation xs
-      return (join (orList yss))
+   f = liftM mconcat . mapM rationalEquation
  
 rationalEquation :: Equation Expr -> Maybe (OrList Expr)
 rationalEquation eq = do

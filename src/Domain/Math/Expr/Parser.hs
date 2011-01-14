@@ -17,7 +17,8 @@ module Domain.Math.Expr.Parser
 
 import Prelude hiding ((^))
 import Text.Parsing
-import Control.Monad.Error
+import Data.Monoid
+import Common.Classes
 import Common.Rewriting
 import Common.Transformation
 import qualified Domain.Logic.Formula as Logic
@@ -102,11 +103,11 @@ pRelationType = pChoice (map make table)
       ]
    
 pOrList :: TokenParser a -> TokenParser (OrList a)
-pOrList p = (join . orList) <$> pSepList pTerm (pKey "or")
+pOrList p = mconcat <$> pSepList pTerm (pKey "or")
  where 
-   pTerm =  return <$> p 
-        <|> true   <$  pKey "true" 
-        <|> false  <$  pKey "false"
+   pTerm =  singleton <$> p 
+        <|> true      <$  pKey "true" 
+        <|> false     <$  pKey "false"
 
 pLogic :: TokenParser a -> TokenParser (Logic a)
 pLogic p = levelOr

@@ -15,6 +15,7 @@ module Domain.Math.CleanUp
    , assocExpr, acExpr, smart
    ) where
 
+import Common.Classes
 import Common.Uniplate
 import Common.Utils (fixpoint)
 import Common.View
@@ -23,6 +24,7 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Data.Ratio
+import Data.Foldable (foldMap)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Data.SquareRoot (fromSquareRoot)
@@ -60,7 +62,7 @@ cleanUpSimple = fixpoint (transform (smart . f1))
    f1 = use rationalView
 
 cleanUpRelations :: OrList (Relation Expr) -> OrList (Relation Expr)
-cleanUpRelations = idempotent . join . fmap cleanUpRelation
+cleanUpRelations = idempotent . foldMap cleanUpRelation
 
 cleanUpRelation :: Relation Expr -> OrList (Relation Expr)
 cleanUpRelation = f . fmap cleanUpBU
@@ -71,7 +73,7 @@ cleanUpRelation = f . fmap cleanUpBU
       | otherwise = 
            case (match rationalView a, match rationalView b) of
               (Just r, Just s) -> fromBool (eval (relationType rel) r s)
-              _                -> return rel
+              _                -> singleton rel
     where
       (a, b) = (leftHandSide rel, rightHandSide rel)
 

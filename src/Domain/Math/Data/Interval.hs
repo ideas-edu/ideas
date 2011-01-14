@@ -17,13 +17,13 @@ module Domain.Math.Data.Interval
    ( -- Data types
      Intervals, Interval
      -- Interval constructors
-   , empty, singleton, unbounded, open, closed
+   , empty, point, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
    , lessThan, lessThanOrEqualTo
      -- Inspecing an interval
    , isEmpty, leftPoint, rightPoint, Endpoint(..)
      -- Making intervals
-   , except, toList, fromList
+   , except, toIntervalList, fromIntervalList, singleInterval
    , union, intersect, complement
    , isIn, isInInterval
      -- QuickChecks
@@ -33,7 +33,9 @@ module Domain.Math.Data.Interval
 import Common.TestSuite
 import Common.Utils (commaList)
 import Control.Monad
+import Data.Foldable (Foldable, foldMap)
 import Data.Maybe
+import Data.Monoid
 import Test.QuickCheck
 
 --------------------------------------------------------------------
@@ -49,7 +51,7 @@ data Endpoint a = Excluding a | Including a | Unbounded
    deriving Eq
 
 instance Show a => Show (Intervals a) where
-   show xs = "{ " ++ commaList (map show (toList xs)) ++ " }"
+   show xs = "{ " ++ commaList (map show (toIntervalList xs)) ++ " }"
 
 instance Show a => Show (Interval a) where
    show interval =
@@ -62,12 +64,28 @@ instance Functor Endpoint where
    fmap f (Including a) = Including (f a)
    fmap _ Unbounded     = Unbounded
 
+instance Foldable Endpoint where
+   foldMap f (Excluding a) = f a
+   foldMap f (Including a) = f a
+   foldMap _ Unbounded     = mempty
+
 instance Functor Interval where
    fmap _ Empty   = Empty
    fmap f (I a b) = I (fmap f a) (fmap f b) -- function should not change order
 
+instance Foldable Interval where
+   foldMap _ Empty   = mempty
+   foldMap f (I a b) = foldMap f a `mappend` foldMap f b
+
 instance Functor Intervals where
    fmap f (IS xs) = IS (map (fmap f) xs)
+   
+instance Foldable Intervals where
+   foldMap f (IS xs) = mconcat (map (foldMap f) xs)
+
+instance Ord a => Monoid (Intervals a) where
+   mempty = IS []
+   mappend (IS xs) a = foldr insert a xs
 
 showLeft, showRight :: Show a => Endpoint a -> String
 showLeft  (Excluding a) = '(' : show a
@@ -83,8 +101,8 @@ showRight Unbounded     = "inf)"
 empty :: Interval a
 empty = Empty
 
-singleton :: Ord a => a -> Interval a
-singleton a = closed a a
+point :: a -> Interval a
+point a = I (Including a) (Including a)
 
 unbounded :: Ord a => Interval a
 unbounded = makeInterval Unbounded Unbounded
@@ -149,13 +167,16 @@ rightPoint Empty   = error "rightPoint Empty"
 -- Combining multiple intervals
 
 except :: Ord a => a -> Intervals a
-except a = fromList [lessThan a, greaterThan a]
+except a = fromIntervalList [lessThan a, greaterThan a]
 
-toList :: Intervals a -> [Interval a]
-toList (IS xs) = xs
+singleInterval :: Interval a -> Intervals a
+singleInterval = IS . return
 
-fromList :: Ord a => [Interval a] -> Intervals a
-fromList = foldr insert (IS [])
+fromIntervalList :: Ord a => [Interval a] -> Intervals a
+fromIntervalList = mconcat . map singleInterval
+
+toIntervalList :: Intervals a -> [Interval a]
+toIntervalList (IS xs) = xs
 
 insert :: Ord a => Interval a -> Intervals a -> Intervals a
 insert Empty xs  = xs
@@ -171,10 +192,10 @@ insert iv@(I l _) (IS xs) = rec xs
             | otherwise             -> IS (iv:hd:rest)
 
 union :: Ord a => Intervals a -> Intervals a -> Intervals a
-union xs = foldr insert xs . toList
+union xs = foldr insert xs . toIntervalList
 
 intersect :: Ord a => Intervals a -> Intervals a -> Intervals a
-intersect (IS xs) (IS ys) = fromList (f xs ys)
+intersect (IS xs) (IS ys) = fromIntervalList (f xs ys)
  where
    f (a@(I _ ar):as) (b@(I _ br):bs) = inBoth a b : rest
     where
@@ -183,7 +204,7 @@ intersect (IS xs) (IS ys) = fromList (f xs ys)
    f _ _ = []
 
 complement :: Ord a => Intervals a -> Intervals a
-complement (IS xs) = fromList (left ++ zipWith f xs (drop 1 xs) ++ right)
+complement (IS xs) = fromIntervalList (left ++ zipWith f xs (drop 1 xs) ++ right)
  where
    f (I _ a) (I b _) = fromMaybe Empty (liftM2 I (g a) (g b))
    f _ _             = Empty
@@ -287,7 +308,8 @@ instance (Arbitrary a, Ord a) => Arbitrary (Intervals a) where
    arbitrary = do
       n  <- choose (0, 100)
       xs <- replicateM n arbitrary
-      return (fromList xs)
+      return (fromIntervalList xs)
+
 instance (CoArbitrary a, Ord a) => CoArbitrary (Intervals a) where
    coarbitrary (IS xs) = coarbitrary xs
 
@@ -302,7 +324,7 @@ testMe = suite "Intervals" $ do
      addProperty "greater than or equal to" $ op1 greaterThanOrEqualTo (>=)
      addProperty "less than"                $ op1 lessThan (<)
      addProperty "less than or equal to"    $ op1 lessThanOrEqualTo (<=)
-     addProperty "singleton"                $ op1 singleton (==)
+     addProperty "point    "                $ op1 point (==)
    
      addProperty "open"       $ op2 open      (<)  (<)
      addProperty "closed"     $ op2 closed    (<=) (<=)
@@ -329,8 +351,8 @@ testMe = suite "Intervals" $ do
       addProperty "absorption intersect"  $ absorption  intersect
 
 fromTo1, fromTo2 :: Intervals Int -> Bool
-fromTo1 a = fromList (toList a) == a
-fromTo2 a = fromList (reverse (toList a)) == a
+fromTo1 a = fromIntervalList (toIntervalList a) == a
+fromTo2 a = fromIntervalList (reverse (toIntervalList a)) == a
 
 defExcept :: Int -> Int -> Bool
 defExcept a b = isIn a (except b) == (a/=b)

@@ -40,15 +40,15 @@ import qualified Domain.Logic.Formula as Logic
 relationIntervals :: Ord a => RelationType -> a -> Intervals a
 relationIntervals relType a = 
    case relType of
-      EqualTo              -> only singleton a
+      EqualTo              -> only point a
       NotEqualTo           -> except a
       LessThan             -> only lessThan a
       GreaterThan          -> only greaterThan a
       LessThanOrEqualTo    -> only lessThanOrEqualTo a
       GreaterThanOrEqualTo -> only greaterThanOrEqualTo a
-      Approximately        -> only singleton a -- i.e., equalTo
+      Approximately        -> only point a -- i.e., equalTo
  where    
-   only f = fromList . return . f
+   only f = singleInterval . f
 
 logicIntervals :: Ord a => Logic (Intervals a) -> Intervals a
 logicIntervals = foldLogic 
@@ -58,8 +58,8 @@ logicIntervals = foldLogic
    , intersect
    , union
    , complement
-   , fromList [unbounded]
-   , fromList [empty]
+   , singleInterval unbounded
+   , singleInterval empty
    )
 
 -----------------------------------------------------------
@@ -79,21 +79,21 @@ linRelWith v rel =
             Just (s, p) | degree p == 0 -> 
                case compare (coefficient 0 p) 0 of
                   LT | relationType rel `elem` [LessThan, LessThanOrEqualTo] -> 
-                          return (s, fromList [unbounded])
+                          return (s, singleInterval unbounded)
                      | otherwise ->
-                          return (s, fromList [empty])
+                          return (s, singleInterval empty)
                   EQ | relationType rel `elem` [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo] -> 
-                          return (s, fromList [unbounded])
+                          return (s, singleInterval unbounded)
                      | otherwise -> 
-                          return (s, fromList [empty])
+                          return (s, singleInterval empty)
                   GT | relationType rel `elem` [GreaterThan, GreaterThanOrEqualTo] -> 
-                          return (s, fromList [unbounded])
+                          return (s, singleInterval unbounded)
                      | otherwise ->
-                          return (s, fromList [empty])
+                          return (s, singleInterval empty)
             _ -> Nothing
       Just (s, a, b) 
          | a==0 -> 
-              return (s, fromList [ unbounded | b==0 ])
+              return (s, fromIntervalList [ unbounded | b==0 ])
          | otherwise -> do
               let zero = -b/a
                   tp = relationType $ (if a<0 then flipSides else id) rel
@@ -223,31 +223,31 @@ quadrRel rel =
          (\is -> Just (s, is)) $
           case compare discr 0 of
             LT | tp `elem` [NotEqualTo, GreaterThan, GreaterThanOrEqualTo] ->
-                    fromList [unbounded]
+                    singleInterval unbounded
                | tp `elem` [EqualTo, Approximately, LessThan, LessThanOrEqualTo] ->
-                    fromList [empty]
+                    singleInterval empty
             EQ | tp `elem` [EqualTo, Approximately, LessThanOrEqualTo] -> 
-                    fromList [singleton pa]
+                    singleInterval (point pa)
                | tp == NotEqualTo ->
                     except pa
                | tp == LessThan ->
-                    fromList [empty]
+                    singleInterval empty
                | tp == GreaterThan ->
                     except pa
                | tp == GreaterThanOrEqualTo ->
-                    fromList [unbounded]
+                    singleInterval unbounded
             GT | tp `elem` [EqualTo, Approximately] -> 
-                    fromList [singleton pa, singleton pb]
+                    fromIntervalList [point pa, point pb]
                | tp == NotEqualTo -> 
                     except pa `intersect` except pb
                | tp == LessThan -> 
-                    fromList [open pa pb]
+                    singleInterval (open pa pb)
                | tp == LessThanOrEqualTo ->
-                    fromList [closed pa pb]
+                    singleInterval (closed pa pb)
                | tp == GreaterThan -> 
-                    fromList [lessThan pa, greaterThan pb]
+                    fromIntervalList [lessThan pa, greaterThan pb]
                | tp == GreaterThanOrEqualTo ->
-                    fromList [lessThanOrEqualTo pa, greaterThanOrEqualTo pb]
+                    fromIntervalList [lessThanOrEqualTo pa, greaterThanOrEqualTo pb]
             _ -> error "unknown case in quadrRel"
  where
    lhs = leftHandSide rel

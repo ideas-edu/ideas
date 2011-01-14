@@ -13,10 +13,14 @@
 -----------------------------------------------------------------------------
 module Common.Classes 
    ( Apply, apply, applyAll, applicable, applyD, applyM
+   , Collection, singleton, fromList, toList
    ) where
 
 import Common.Utils (safeHead)
+import Data.Foldable
 import Data.Maybe
+import Data.Monoid
+import qualified Data.Set as S
 
 -----------------------------------------------------------
 -- * Type class |Apply|
@@ -41,3 +45,19 @@ applyD ta a = fromMaybe a (apply ta a)
 -- | Same as apply, except that the result (at most one) is returned in some monad
 applyM :: (Apply t, Monad m) => t a -> a -> m a
 applyM ta = maybe (fail "applyM") return . apply ta
+
+-----------------------------------------------------------
+-- * Type class |Collection|
+
+class Foldable f => Collection f where
+   singleton :: a -> f a
+   fromList  :: Monoid (f a) => [a] -> f a
+   -- default definition
+   fromList = mconcat . map singleton
+
+instance Collection [] where
+   singleton = return
+   fromList  = id
+   
+instance Collection S.Set where
+   singleton = S.singleton

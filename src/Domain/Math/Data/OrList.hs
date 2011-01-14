@@ -18,10 +18,11 @@ module Domain.Math.Data.OrList
    , oneDisjunct, orListView, orSetView
    ) where
 
+import Common.Classes
 import Common.Rewriting hiding (Monoid)
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable, foldMap, toList)
+import Data.Foldable (Foldable)
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -80,10 +81,6 @@ fromBool b = if b then true else false
 
 instance Rewrite a => Rewrite (OrList a)
 
-instance Monad OrList where
-   return  = singleton
-   m >>= f = foldMap id (fmap f m)
-
 instance IsTerm a => IsTerm (OrList a) where
    toTerm = toTerm . build orListView
    fromTerm expr = fromTerm expr >>= matchM orListView
@@ -128,16 +125,6 @@ orSetView = makeView f g
 ------------------------------------------------------------
 -- ListMonoid
 
-class Foldable f => Collection f where
-   singleton :: a -> f a
-   fromList  :: Monoid (f a) => [a] -> f a
-   -- default definition
-   fromList = mconcat . map singleton
-
-instance Collection [] where
-   singleton = return
-   fromList  = id
-
 class Monoid a => AbsMonoid a where
    absorbing   :: a          -- the absorbing element of a monoid operation
    isAbsorbing :: a -> Bool  -- is it the absorbing element?
@@ -164,9 +151,8 @@ instance Monoid a => AbsMonoid (Absorbing a) where
 ------------------------------------------------------------
 -- SetMonoid
 
-{-
 newtype SetMonoid a = SM (Absorbing (S.Set a))
    deriving (Eq, Ord, Monoid, Foldable, AbsMonoid)
 
 instance Collection SetMonoid where
-   singleton = SM . A . Just . S.singleton -}
+   singleton = SM . A . Just . singleton

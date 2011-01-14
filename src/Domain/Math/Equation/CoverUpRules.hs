@@ -33,6 +33,8 @@ import Common.Transformation
 import Common.View
 import Control.Monad
 import Data.Maybe
+import Data.Monoid
+import Data.Foldable
 import Data.Traversable (Traversable, mapM)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -154,12 +156,12 @@ coverUpSqrtWith = coverUpUnaryRule "sqrt" isSqrt (\x -> x*x)
 -- Cover-up rules for variables
 
 coverUpOrs :: OrList (Equation Expr) -> OrList (Equation Expr)
-coverUpOrs = join . fmap (f . coverUp)
+coverUpOrs = foldMap  (f . coverUp)
  where
    f :: Equation Expr -> OrList (Equation Expr)
-   f eq = case apply coverUpPower (return eq) of
+   f eq = case apply coverUpPower (singleton eq) of
              Just xs -> coverUpOrs xs
-             Nothing -> return eq
+             Nothing -> singleton eq
                  
 coverUp :: Equation Expr -> Equation Expr
 coverUp eq = 

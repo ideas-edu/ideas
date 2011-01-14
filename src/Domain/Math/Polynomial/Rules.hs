@@ -375,7 +375,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
    addToClipboard "D" (fromRational discr)
    case compare discr 0 of
       LT -> return false
-      EQ -> return $ return $ 
+      EQ -> return $ singleton $ 
          Var x :==: (-fromRational b) / (2 * fromRational a)
       GT -> return $ orList
          [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)

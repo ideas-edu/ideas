@@ -15,6 +15,7 @@ module Domain.Math.Polynomial.RationalRules
    , fractionScale, turnIntoFraction, checkSolution
    ) where
 
+import Common.Classes
 import Common.Context
 import Common.Id
 import Common.Transformation
@@ -180,6 +181,6 @@ conditionNotZero expr = condition (f xs)
    f  = pushNotWith (Logic.Var . notRelation) . Not
    eq = expr :==: 0
    xs = fmap (build equationView . fmap cleanUpExpr) $ 
-        case match higherDegreeEquationsView (return eq) of
+        case match higherDegreeEquationsView (singleton eq) of
            Just ys -> build orListView (coverUpOrs (build higherDegreeEquationsView ys))
            Nothing -> Logic.Var (coverUp eq)

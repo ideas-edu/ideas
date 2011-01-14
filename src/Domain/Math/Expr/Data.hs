@@ -140,20 +140,7 @@ instance Arbitrary Expr where
       {-
       let syms = [plusSymbol, timesSymbol, minusSymbol, negateSymbol, divSymbol]
       in sized (symbolGenerator (const [natGenerator]) syms) -}
-instance CoArbitrary Expr where      
-   coarbitrary expr =
-      case expr of 
-         a :+: b  -> variant (0 :: Int) . coarbitrary a . coarbitrary b
-         a :*: b  -> variant (1 :: Int) . coarbitrary a . coarbitrary b
-         a :-: b  -> variant (2 :: Int) . coarbitrary a . coarbitrary b
-         Negate a -> variant (3 :: Int) . coarbitrary a
-         Nat n    -> variant (4 :: Int) . coarbitrary n
-         a :/: b  -> variant (5 :: Int) . coarbitrary a . coarbitrary b
-         Number d -> variant (6 :: Int) . coarbitrary d
-         Sqrt a   -> variant (7 :: Int) . coarbitrary a
-         Var s    -> variant (8 :: Int) . coarbitrary s
-         Sym f xs -> variant (9 :: Int) . coarbitrary (show f) . coarbitrary xs
-  
+
 symbolGenerator :: (Int -> [Gen Expr]) -> [(Symbol, Maybe Int)] -> Int -> Gen Expr
 symbolGenerator extras syms = f 
  where

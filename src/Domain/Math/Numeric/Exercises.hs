@@ -29,10 +29,10 @@ import Common.Context
 
 numericExercise :: LabeledStrategy (Context Expr) -> Exercise Expr
 numericExercise s = makeExercise 
-   { status        = Alpha
-   , parser        = parseExpr
-   , equivalence   = viewEquivalent rationalView
-   , strategy      = s
+   { status       = Alpha
+   , parser       = parseExpr
+   , equivalence  = viewEquivalent rationalView
+   , strategy     = s
    , navigation   = termNavigator
    }
 

@@ -36,7 +36,7 @@ import Domain.Math.Polynomial.RationalRules
 import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
-import Domain.Math.Power.OldViews
+import Domain.Math.Power.OldViews (powerFactorViewWith)
 import Domain.Math.SquareRoot.Views
 import qualified Data.Foldable as F
 import qualified Data.Set as S

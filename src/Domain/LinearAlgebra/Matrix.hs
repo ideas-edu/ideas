@@ -14,7 +14,7 @@ module Domain.LinearAlgebra.Matrix
    , changeEntries, changeEntry, setEntries, setEntry
    , rows, row, columns, column, dimensions, entry, isEmpty
    , add, scale, multiply
-   , reduce, forward, backward, inverse, invertible, rank, nullity, (===)
+   , reduce, forward, backward, inverse, invertible, rank, nullity, eqMatrix
    , switchRows, scaleRow, addRow
    , inRowEchelonForm, inRowReducedEchelonForm
    , nonZero, pivot, isPivotColumn
@@ -202,8 +202,8 @@ inverse m
 invertible :: Fractional a => Matrix a -> Bool
 invertible = isJust . inverse
 
-(===) :: Fractional a => Matrix a -> Matrix a -> Bool
-m1 === m2 = reduce m1 == reduce m2
+eqMatrix :: Fractional a => Matrix a -> Matrix a -> Bool
+eqMatrix m1 m2 = reduce m1 == reduce m2
 
 -- test = rank $ makeMatrix $ [[0 :: Rational ,1,1,1], [1,2,3,2], [3,1,1,3]]
 

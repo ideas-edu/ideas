@@ -80,7 +80,8 @@ gaussianElimExercise = makeExercise
                                Right a  -> Right (simplify a)
                                Left msg -> Left msg
    , prettyPrinter  = ppMatrixWith show
-   , equivalence    = \x y -> fmap simplified x === fmap simplified y
+   , equivalence    = let f = fmap simplified
+                      in \x y -> eqMatrix (f x) (f y)
    , extraRules     = matrixRules
    , isReady        = inRowReducedEchelonForm
    , strategy       = gaussianElimStrategy

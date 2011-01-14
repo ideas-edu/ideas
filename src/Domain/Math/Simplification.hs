@@ -31,7 +31,6 @@ import Domain.Math.Data.Relation
 import Domain.Math.Expr hiding (recip)
 import Domain.Math.Numeric.Views
 import Domain.Math.SquareRoot.Views
-import Test.QuickCheck
 import qualified Common.View as View
 
 
@@ -114,17 +113,9 @@ instance (Floating a, Simplify a) => Floating (Simplified a) where
    atanh   = liftS atanh
    acosh   = liftS acosh
 
-instance Simplify (Simplified a) where
-   simplifyWith _ = id
-
 instance (Simplify a, IsTerm a) => IsTerm (Simplified a) where
    toTerm (S x) = toTerm x
    fromTerm     = liftM simplified . fromTerm
-
-instance (Arbitrary a, Simplify a) => Arbitrary (Simplified a) where
-   arbitrary = liftM simplified arbitrary
-instance (CoArbitrary a, Simplify a) => CoArbitrary (Simplified a) where
-   coarbitrary (S x) = coarbitrary x
 
 simplified :: Simplify a => a -> Simplified a
 simplified = S . simplify

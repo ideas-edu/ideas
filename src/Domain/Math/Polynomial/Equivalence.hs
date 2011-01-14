@@ -24,7 +24,7 @@ import Data.List (sort, nub)
 import qualified Data.Traversable as T
 import Data.Maybe
 import Data.Ord
-import Domain.Logic.Formula hiding (Var, disjunctions)
+import Domain.Logic.Formula hiding (Var)
 import Domain.Math.Data.Interval
 import Domain.Math.Data.Polynomial hiding (eval)
 import Domain.Math.Data.Relation hiding (eval)

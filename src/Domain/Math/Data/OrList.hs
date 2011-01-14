@@ -11,8 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.OrList 
-   ( OrList
-   , orList, true, false
+   ( OrList, true, false
    , isTrue, isFalse
    , disjunctions, idempotent, fromBool
    , oneDisjunct, orListView, orSetView
@@ -44,9 +43,6 @@ instance Collection OrList where
 
 ------------------------------------------------------------
 -- Functions
-
-orList :: [a] -> OrList a
-orList = fromList
 
 true, false :: OrList a
 true  = OrList absorbing

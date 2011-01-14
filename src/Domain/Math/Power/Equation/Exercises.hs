@@ -18,6 +18,7 @@ module Domain.Math.Power.Equation.Exercises
 
 import Prelude hiding ( (^) )
 
+import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.View
@@ -75,7 +76,7 @@ logEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
                        newId "algebra.manipulation.logarithmic.equation"
-  , examples       = map (orList . return . build equationView) (concat logEquations)
+  , examples       = map (singleton . build equationView) (concat logEquations)
   , isReady        = solvedRelations
   , isSuitable     = (`belongsTo` (traverseView equationView >>> normLogEqView))
   , equivalence    = viewEquivalent (traverseView equationView >>> normLogEqView)
@@ -91,7 +92,7 @@ higherPowerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = map (orList . return) $ rootEquations !! 3
+  , examples       = map singleton $ rootEquations !! 3
 --  , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
   , isSuitable     = maybe False and . disjunctions . fmap (`belongsTo` normPowerEqView)

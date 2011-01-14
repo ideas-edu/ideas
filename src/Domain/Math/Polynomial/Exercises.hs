@@ -35,6 +35,7 @@ import Domain.Math.Polynomial.Rules
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.Polynomial.Views
 import qualified Data.Traversable as T
+import qualified Data.Foldable as F
 
 ------------------------------------------------------------
 -- Exercises
@@ -91,7 +92,7 @@ quadraticExercise = makeExercise
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
-   , examples     = map (orList . return . build equationView) (concat quadraticEquations)
+   , examples     = map (singleton . build equationView) (concat quadraticEquations)
    }
 
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
@@ -110,7 +111,7 @@ higherDegreeExercise = makeExercise
    , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation   = termNavigator
-   , examples      = map (orList . return . build equationView) 
+   , examples      = map (singleton . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
@@ -179,15 +180,15 @@ linearFactorsView = productView >>> second (listView myLinearView)
 equivalentApprox :: OrList (Relation Expr) -> OrList (Relation Expr) -> Bool
 equivalentApprox a b
    | hasApprox a || hasApprox b = 
-        let norm = liftM ( simplify orSetView . fmap (fmap (acExpr . cleanUpExpr))  
-                         . fmap toApprox 
+        let norm = liftM ( simplify orSetView 
+                         . fmap (fmap (acExpr . cleanUpExpr) . toApprox)  
                          . simplify quadraticEquationsView
                          ) . T.mapM toEq
         in fromMaybe False $ liftM2 (==) (norm a) (norm b)
    | otherwise =
         equivalentRelation (viewEquivalent quadraticEquationsView) a b 
  where
-   hasApprox = maybe False (any isApproximately) . disjunctions
+   hasApprox = F.any isApproximately
    isApproximately = (==Approximately) . relationType
    toEq rel | relationType rel `elem` [EqualTo, Approximately] = 
       Just (leftHandSide rel :==: rightHandSide rel)

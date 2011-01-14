@@ -158,7 +158,7 @@ mulZero = describe "multiplication is zero" $
       guard (rhs == 0)
       (_, xs) <- matchM productView lhs
       guard (length xs > 1)
-      return $ orList $ flip map xs $ \e ->
+      return $ fromList $ flip map xs $ \e ->
          case match (polyNormalForm rationalView >>> second linearPolyView) e of
             -- special cases (simplify immediately, as in G&R)
             Just (x, (a, b)) 
@@ -228,7 +228,7 @@ distributionSquare = describe "distribution square" $
 squareBothSides :: Rule (OrList (Equation Expr))
 squareBothSides = describe "square both sides" $ 
    rule (quadreq, "square-both") $ \a b -> 
-   orList [a^2 :==: b^2] :~> orList [a :==: b, a :==: -b]
+   singleton (a^2 :==: b^2) :~> fromList [a :==: b, a :==: -b]
 
 -- prepare splitting a square; turn lhs into x^2+bx+c such that (b/2)^2 is c
 prepareSplitSquare :: Rule (Equation Expr)
@@ -317,7 +317,7 @@ allPowerFactors = describe "all power factors" $
           ts  = terms p1 ++ terms p2
           f p = build myView (s1, raise (-n) p)
       guard ((s1==s2 || p1==0 || p2==0) && n > 0 && length ts > 1)
-      return $ orList [Var s1 :==: 0, f p1 :==: f p2] 
+      return $ fromList [Var s1 :==: 0, f p1 :==: f p2] 
 
 factorVariablePower :: Rule Expr
 factorVariablePower = describe "factor variable power" $ 
@@ -335,7 +335,7 @@ sameFactor = describe "same factor" $
       (b1, xs) <- match productView lhs
       (b2, ys) <- match productView rhs
       (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasSomeVar x ] -- equality is too strong?
-      return $ orList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
+      return $ fromList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -- N*(A+B) = N*C + N*D   recognize a constant factor on both sides
 -- Example: 3(x^2+1/2) = 6+6x
@@ -377,7 +377,7 @@ abcFormula = describe "quadratic formula (abc formule)" $
       LT -> return false
       EQ -> return $ singleton $ 
          Var x :==: (-fromRational b) / (2 * fromRational a)
-      GT -> return $ orList
+      GT -> return $ fromList
          [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
          , Var x :==: (-fromRational b - sqD) / (2 * fromRational a)
          ]

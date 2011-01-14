@@ -182,11 +182,11 @@ rationalEquation eq = do
    (_, as) <- match productView a
    (_, bs) <- match productView b
    let condition = foldr ((.&&.) . notZero) c bs
-   new1    <- match higherDegreeEquationsView $ orList $ map (:==: 0) as
+   new1    <- match higherDegreeEquationsView $ fromList $ map (:==: 0) as
    return (restrictOrList condition new1)
 
 restrictOrList :: Logic (Relation Expr) -> OrList Expr -> OrList Expr
-restrictOrList p0 = maybe true (orList . filter p) . disjunctions
+restrictOrList p0 = maybe true (fromList . filter p) . disjunctions
  where
    p zeroExpr = 
       case coverUp (zeroExpr :==: 0) of 

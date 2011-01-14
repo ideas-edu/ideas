@@ -22,7 +22,7 @@ import Common.Transformation
 import Common.View
 import Control.Monad
 import Data.Maybe
-import Domain.Logic.Formula hiding (disjunctions, Var)
+import Domain.Logic.Formula hiding (Var)
 import Domain.Logic.Views
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -74,7 +74,7 @@ sameDividend = makeSimpleRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ 
    guard (a1==a2)
    conditionNotZero b
    conditionNotZero c
-   return $ orList [a1 :==: 0, b :==: c]
+   return $ fromList [a1 :==: 0, b :==: c]
    
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))

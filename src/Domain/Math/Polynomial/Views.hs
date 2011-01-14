@@ -21,6 +21,7 @@ module Domain.Math.Polynomial.Views
    ) where
 
 import Prelude hiding ((^))
+import Common.Classes
 import Control.Monad
 import Common.View
 import Common.Rewriting
@@ -233,9 +234,9 @@ quadraticEquationView = makeView f g
                    twoA   = SQ.scale 2 a
                case compare discr 0 of
                   LT   -> return false
-                  EQ   -> return $ orList [-b/twoA]
-                  GT   -> return $ orList [(-b+sdiscr)/twoA, (-b-sdiscr)/twoA]
-            [a, b]     -> return $ orList [-b/a]
+                  EQ   -> return $ singleton (-b/twoA)
+                  GT   -> return $ fromList [(-b+sdiscr)/twoA, (-b-sdiscr)/twoA]
+            [a, b]     -> return $ singleton (-b/a)
             [a] | a==0 -> return true
             _          -> return false
    
@@ -250,7 +251,7 @@ higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap (:==: 0))
  where
    f    = Just . simplify orSetView . foldMap make . coverUpOrs
-   make = orList . filter (not . hasNegSqrt) 
+   make = fromList . filter (not . hasNegSqrt) 
         . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b
 

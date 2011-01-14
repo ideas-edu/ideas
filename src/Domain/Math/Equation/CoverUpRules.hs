@@ -33,7 +33,6 @@ import Common.Transformation
 import Common.View
 import Control.Monad
 import Data.Maybe
-import Data.Monoid
 import Data.Foldable
 import Data.Traversable (Traversable, mapM)
 import Domain.Math.Data.OrList
@@ -117,7 +116,7 @@ coverUpPowerWith = coverUpBinaryOrRule "power" (isBinary powerSymbol) fb
       guard (n > 0)
       let new1 = root rhs (fromIntegral n)
           new2 = (neg new1)
-      return $ orList $ new1 : [ new2 | new1 /= new2, even n ]
+      return $ fromList $ new1 : [ new2 | new1 /= new2, even n ]
       
 coverUpPlusWith :: ConfigCoverUp -> Rule (Equation Expr)
 coverUpPlusWith = coverUpBinaryRule "plus" (commOp . isPlus) (-)

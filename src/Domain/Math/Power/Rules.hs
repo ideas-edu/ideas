@@ -83,7 +83,7 @@ calcPlainRoot :: Rule (OrList Expr)
 calcPlainRoot = makeSimpleRuleList (power, "root") $ \ ors -> do
   expr   <- fromMaybe [] $ disjunctions ors
   (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
-  return $ orList $ map fromInteger $ takeRoot n x
+  return $ fromList $ map fromInteger $ takeRoot n x
 
 -- | [root n x, ... ]
 calcRoot :: Rule (OrList Expr)
@@ -98,7 +98,7 @@ calcRoot = makeSimpleRuleList (power, "root") $ \ ors ->
                | x < 0 && odd  n = [negate y]
                | otherwise       = []
         roots  <- toMaybe (not. null) ys
-        return $ orList roots
+        return $ fromList roots
 
 calcPowerPlus :: Rule Expr 
 calcPowerPlus = 

@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -19,12 +20,12 @@ module Domain.Math.Data.OrList
 
 import Common.Rewriting hiding (Monoid)
 import Common.View
-import Control.Applicative
 import Control.Monad
-import Data.Foldable (Foldable, foldMap)
+import Data.Foldable (Foldable, foldMap, toList)
 import Data.List
+import Data.Maybe
 import Data.Monoid
-import Data.Traversable (Traversable, sequenceA)
+import Data.Traversable
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
 import qualified Data.Set as S
@@ -33,35 +34,37 @@ import qualified Domain.Logic.Formula as Logic
 ------------------------------------------------------------
 -- Data type
 
-data OrList a = T | OrList [a] 
-   deriving (Ord, Eq)
+newtype OrList a = OrList (ListMonoid a)
+   deriving (Eq, Ord, Monoid, Functor, Foldable, Traversable)
+
+instance Collection OrList where
+   singleton = OrList . singleton
+   fromList  = OrList . fromList
 
 ------------------------------------------------------------
 -- Functions
 
 orList :: [a] -> OrList a
-orList = OrList
+orList = fromList
 
 true, false :: OrList a
-true  = T
-false = OrList []
+true  = OrList absorbing
+false = mempty
 
 isTrue :: OrList a -> Bool
-isTrue T = True
-isTrue _ = False
+isTrue (OrList a) = isAbsorbing a
 
 isFalse :: OrList a -> Bool
-isFalse (OrList []) = True
-isFalse _           = False
+isFalse = maybe False null . disjunctions
 
 disjunctions :: OrList a -> Maybe [a]
-disjunctions T           = Nothing
-disjunctions (OrList xs) = Just xs
+disjunctions xs
+   | isTrue xs = Nothing
+   | otherwise = Just (toList xs)
 
 -- | Remove duplicates
 idempotent :: Eq a => OrList a -> OrList a
-idempotent T           = T
-idempotent (OrList xs) = OrList (nub xs)
+idempotent = maybe true (fromList . nub) . disjunctions
 
 oneDisjunct :: Monad m => (a -> m (OrList a)) -> OrList a -> m (OrList a)
 oneDisjunct f xs = 
@@ -77,24 +80,8 @@ fromBool b = if b then true else false
 
 instance Rewrite a => Rewrite (OrList a)
 
-instance Functor OrList where
-   fmap _ T           = T
-   fmap f (OrList xs) = OrList (map f xs)
-
-instance Foldable OrList where
-   foldMap _ T           = mempty
-   foldMap f (OrList xs) = mconcat (map f xs)
-
-instance Traversable OrList where
-   sequenceA T           = pure T
-   sequenceA (OrList xs) = OrList <$> sequenceA xs
-
-instance Monoid (OrList a) where
-   mempty      = false
-   mappend p q = maybe T orList (liftM2 (++) (disjunctions p) (disjunctions q))
-
 instance Monad OrList where
-   return  = OrList . return
+   return  = singleton
    m >>= f = foldMap id (fmap f m)
 
 instance IsTerm a => IsTerm (OrList a) where
@@ -105,17 +92,14 @@ instance Arbitrary a => Arbitrary (OrList a) where
    arbitrary = do 
       n  <- choose (1, 3)
       xs <- vector n
-      return (OrList xs)
-
-instance CoArbitrary a => CoArbitrary (OrList a) where
-   coarbitrary T           = variant (0 :: Int)
-   coarbitrary (OrList xs) = variant (1 :: Int) . coarbitrary xs
+      return (fromList xs)
 
 instance Show a => Show (OrList a) where
-   show T = "true"
-   show (OrList xs) 
-      | null xs   = "false"
-      | otherwise = unwords (intersperse "or" (map show xs))
+   show xs | isTrue  xs = "true"
+           | isFalse xs = "false"
+           | otherwise  = f xs
+    where
+      f = unwords . intersperse "or" . map show . toList
 
 ------------------------------------------------------------
 -- View to the logic data type
@@ -124,7 +108,7 @@ orListView :: View (Logic a) (OrList a)
 orListView = makeView f g 
  where
    f p  = case p of
-             Logic.Var a -> return (return a)
+             Logic.Var a -> return (singleton a)
              Logic.T     -> return true
              Logic.F     -> return false
              a :||: b    -> liftM2 mappend (f a) (f b)
@@ -134,9 +118,55 @@ orListView = makeView f g
              Just [] -> Logic.F
              Just ys -> foldr1 (:||:) (map Logic.Var ys)
              
--- Nothing in the codomain represents True
-orSetView :: Ord a => View (OrList a) (Maybe (S.Set a))
+-- True results in a failed match
+orSetView :: Ord a => View (OrList a) (S.Set a)
 orSetView = makeView f g 
  where
-   f = return . fmap S.fromList . disjunctions
-   g = maybe true (orList . S.toList)
+   f = fmap S.fromList . disjunctions
+   g = fromList . S.toList
+   
+------------------------------------------------------------
+-- ListMonoid
+
+class Foldable f => Collection f where
+   singleton :: a -> f a
+   fromList  :: Monoid (f a) => [a] -> f a
+   -- default definition
+   fromList = mconcat . map singleton
+
+instance Collection [] where
+   singleton = return
+   fromList  = id
+
+class Monoid a => AbsMonoid a where
+   absorbing   :: a          -- the absorbing element of a monoid operation
+   isAbsorbing :: a -> Bool  -- is it the absorbing element?
+
+newtype ListMonoid a = LM (Absorbing [a])
+   deriving (Eq, Ord, Monoid, Functor, Foldable, Traversable, AbsMonoid)
+   -- Functor and Traversable are not available for set
+
+instance Collection ListMonoid where
+   singleton = fromList . return
+   fromList  = LM . A . Just
+
+newtype Absorbing a = A { unA :: Maybe a }
+   deriving (Eq, Ord, Functor, Foldable, Traversable)
+
+instance Monoid a => Monoid (Absorbing a) where
+   mempty = A (Just mempty)
+   mappend x y = A (liftM2 mappend (unA x) (unA y))
+
+instance Monoid a => AbsMonoid (Absorbing a) where
+   absorbing   = A Nothing
+   isAbsorbing = isNothing . unA
+   
+------------------------------------------------------------
+-- SetMonoid
+
+{-
+newtype SetMonoid a = SM (Absorbing (S.Set a))
+   deriving (Eq, Ord, Monoid, Foldable, AbsMonoid)
+
+instance Collection SetMonoid where
+   singleton = SM . A . Just . S.singleton -}

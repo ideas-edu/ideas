@@ -26,7 +26,7 @@ module Domain.Math.Data.Relation
    ) where
 
 import Common.View
-import Common.Rewriting hiding (Monoid)
+import Common.Rewriting
 import Data.Foldable (Foldable, foldMap, toList)
 import Data.Traversable (Traversable, sequenceA)
 import Text.OpenMath.Dictionary.Relation1

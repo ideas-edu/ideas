@@ -13,7 +13,6 @@ module Domain.RegularExpr.Exercises (regexpExercise) where
 
 import Common.Exercise
 import Common.Navigator
-import Common.View
 import Common.Uniplate
 import Common.Rewriting hiding (difference)
 import Domain.RegularExpr.Expr
@@ -49,11 +48,10 @@ regexpExercise = makeExercise
 equalRegExpA:: RegExp -> RegExp -> Bool
 equalRegExpA p q = rec p == rec q
  where
-   make  = simplifyWith (map rec) . magmaListView
-   rec a = case a of
-              _ :*: _ -> make sequenceMonoid a
-              _ :|: _ -> make choiceMonoid  a
-              _       -> descend rec a
+   rec expr = case expr of
+                 (a :*: b) :*: c -> rec (a :*: (b :*: c))
+                 (a :|: b) :|: c -> rec (a :|: (b :|: c))
+                 _ -> descend rec expr
 
 -- myGen :: Gen RegExp
 -- myGen = restrictGenerator (isSuitable regexpExercise) arbitrary

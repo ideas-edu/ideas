@@ -267,10 +267,10 @@ acTopRuleFor :: IsId a => a -> BinaryOp SLogic -> Rule [(SLogic, SLogic)]
 acTopRuleFor s op = makeSimpleRuleList s f
  where
    f [(lhs, rhs)] = do
-      let myView = magmaListView (semiGroup op)
-          make   = build myView
-      xs <- matchM myView lhs
-      ys <- matchM myView rhs
+      let collect a = maybe [a] (\(x, y) -> collect x ++ collect y) (binaryOpMatch op a)
+          make    = foldr1 (binaryOp op)
+          xs = collect lhs
+          ys = collect rhs
       guard (length xs > 1 && length ys > 1)
       list <- liftM (map (make *** make)) (pairingsAC False xs ys)
       guard (all (uncurry eqLogic) list)
@@ -285,6 +285,12 @@ topIsOr = acTopRuleFor "top-is-or" orOperator
 
 topIsEquiv :: Rule [(SLogic, SLogic)]
 topIsEquiv = acTopRuleFor "top-is-equiv" equivOperator
+
+equivOperator :: BinaryOp (Logic a)   
+equivOperator = makeBinaryOp (getId equivalentSymbol) (:<->:) isEquiv
+ where
+   isEquiv (p :<->: q) = Just (p, q)
+   isEquiv _           = Nothing
 
 topIsImpl :: Rule [(SLogic, SLogic)]
 topIsImpl = makeSimpleRule "top-is-impl" f

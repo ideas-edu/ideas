@@ -21,23 +21,21 @@ import Data.Char
 import Test.QuickCheck
 import Common.Rewriting
 import Common.Uniplate
-import Common.View
 
 -------------------------------------------------------------
 -- Code that doesn't belong here, but the arbitrary instance
 -- is needed for the Rewrite instance.
 
 instance Rewrite SLogic where
-   operators = logicOperators
+   associativeOps = [andOperator, orOperator]
 
 -- | Equality modulo associativity of operators
-equalLogicA:: SLogic -> SLogic -> Bool
+equalLogicA :: Eq a => Logic a -> Logic a -> Bool
 equalLogicA p q = rec p == rec q
  where
-   make  = simplifyWith (map rec) . magmaListView
    rec a = case a of
-              _ :&&: _ -> make andMonoid a
-              _ :||: _ -> make orMonoid  a
+              _ :&&: _ -> foldr1 (:&&:) (map rec (conjunctions a))
+              _ :||: _ -> foldr1 (:||:) (map rec (disjunctions a))
               _        -> descend rec a
 
 -----------------------------------------------------------
@@ -132,13 +130,10 @@ instance Arbitrary SLogic where
    arbitrary = sized (\i -> sizedGen True varGen (i `min` 4))
 
 instance CoArbitrary SLogic where
-   coarbitrary logic = 
-      case logic of
-         Var x     -> variant (0 :: Int) . coarbitrary (map ord (fromShowString x))
-         p :->: q  -> variant (1 :: Int) . coarbitrary p . coarbitrary q
-         p :<->: q -> variant (2 :: Int) . coarbitrary p . coarbitrary q
-         p :&&: q  -> variant (3 :: Int) . coarbitrary p . coarbitrary q
-         p :||: q  -> variant (4 :: Int) . coarbitrary p . coarbitrary q
-         Not p     -> variant (5 :: Int) . coarbitrary p
-         T         -> variant (6 :: Int)  
-         F         -> variant (7 :: Int)
+   coarbitrary = foldLogic 
+      (var, bin 1, bin 2, bin 3, bin 4, un 5, con 6, con 7)
+    where
+      con       = variant :: Int -> Gen a -> Gen a
+      var       = un 0 . coarbitrary . map ord . fromShowString
+      un  n a   = con n . a
+      bin n a b = con n . a . b

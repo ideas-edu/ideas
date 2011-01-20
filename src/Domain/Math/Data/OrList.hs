@@ -18,10 +18,10 @@ module Domain.Math.Data.OrList
    ) where
 
 import Common.Classes
-import Common.Rewriting hiding (Monoid)
+import Common.Rewriting
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable)
+import Data.Foldable (Foldable, foldMap)
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -29,6 +29,7 @@ import Data.Traversable
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
 import qualified Data.Set as S
+import qualified Data.Map as M
 import qualified Domain.Logic.Formula as Logic
 
 ------------------------------------------------------------
@@ -143,7 +144,33 @@ instance Monoid a => Monoid (Absorbing a) where
 instance Monoid a => AbsMonoid (Absorbing a) where
    absorbing   = A Nothing
    isAbsorbing = isNothing . unA
+
+--fromListMonoid :: AbsMonoid a => ListMonoid a -> a
+--fromListMonoid (LM (A m)) = maybe absorbing mconcat m 
+
+------------------------------------------------------------
+-- MultiSetMonoid
    
+newtype MultiSetMonoid a = MM (Absorbing (MultiSet a))
+   deriving (Eq, Ord, Monoid, Foldable, AbsMonoid)
+
+instance Collection MultiSetMonoid where
+   singleton = MM . A . Just . singleton
+
+newtype MultiSet a = MS (M.Map a Int)
+   deriving (Eq, Ord)
+
+instance Collection MultiSet where
+   singleton = MS . flip M.singleton 1
+
+instance Ord a => Monoid (MultiSet a) where
+   mempty = MS mempty
+   mappend (MS a) (MS b) = MS (M.unionWith (+) a b)
+   
+instance Foldable MultiSet where
+   foldMap f (MS m) = 
+      foldMap f (concatMap (uncurry (flip replicate)) (M.toList m))
+
 ------------------------------------------------------------
 -- SetMonoid
 

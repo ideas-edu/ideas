@@ -104,27 +104,15 @@ ppWith f = ($ 0) . foldRE
 --------------------------------------------------------------------
 -- Function for associative operators
 
-sequenceMonoid :: Monoid (RE a)
-sequenceMonoid = monoid sequenceOp epsilonCon
- where 
-   sequenceOp = makeBinaryOp (getId sequenceSymbol) (:*:) isSequence
-   epsilonCon = makeConstant (getId epsilonSymbol) Epsilon isEpsilon
-   
-   isEpsilon Epsilon = True
-   isEpsilon _       = False
-   
+sequenceOp :: BinaryOp (RE a)
+sequenceOp = makeBinaryOp (getId sequenceSymbol) (:*:) isSequence
+ where
    isSequence (a :*: b) = Just (a, b)
    isSequence _         = Nothing
 
-choiceMonoid :: Monoid (RE a)
-choiceMonoid = monoid choiceOp emptySetCon
- where 
-   choiceOp    = makeBinaryOp (getId choiceSymbol) (:|:) isChoice
-   emptySetCon = makeConstant (getId emptySetSymbol) EmptySet isEmptySet
-   
-   isEmptySet EmptySet = True
-   isEmptySet _        = False
-   
+choiceOp :: BinaryOp (RE a)
+choiceOp = makeBinaryOp (getId choiceSymbol) (:|:) isChoice
+ where
    isChoice (a :|: b) = Just (a, b)
    isChoice _         = Nothing
 
@@ -168,7 +156,7 @@ instance IsTerm RegExp where
       f _ _ = fail "fromExpr"
 
 instance Rewrite RegExp where
-   operators = map toMagma [sequenceMonoid, choiceMonoid]
+   associativeOps = [sequenceOp, choiceOp]
    
 emptySetSymbol, epsilonSymbol, optionSymbol, starSymbol,
    plusSymbol, sequenceSymbol, choiceSymbol :: Symbol

@@ -16,7 +16,6 @@ module Domain.Math.Numeric.Laws
    , fracLaws, testFracLaws, testFracLawsWith
    ) where
 
-import Common.Rewriting.Axioms
 import Common.TestSuite
 import Test.QuickCheck
 
@@ -34,34 +33,29 @@ testFracLawsWith :: Fractional a => (a -> a -> Bool) -> String -> Gen a -> TestS
 testFracLawsWith eq s g = suite ("Fractional instance for " ++ s) $ 
    mapM_ ($ g) (fracLaws eq)
 
---main :: IO ()
---main = runTestSuite $ flip mapM_ (numLaws ((==) :: Int -> Int -> Bool)) $ \f -> 
---   f arbitrary
-
 numLaws :: Num a => (a -> a -> Bool) -> [Gen a -> TestSuite]
 numLaws eq =
-   [ law1 "plus zero left"     $ leftIdentity      (===) (+) 0
-   , law1 "plus zero right"    $ rightIdentity     (===) (+) 0
-   , law2 "plus comm"          $ commutative       (===) (+)
-   , law3 "plus trans"         $ associative       (===) (+)
-   , law1 "negate double"      $ unaryCancel       (===) negate
-   , law1 "times zero left"    $ leftAbsorbing     (===) (*) 0
-   , law1 "times zero right"   $ rightAbsorbing    (===) (*) 0
-   , law1 "times one left"     $ leftIdentity      (===) (*) 1
-   , law1 "times one right"    $ rightIdentity     (===) (*) 1
-   , law2 "times comm"         $ commutative       (===) (*)
-   , law3 "times trans"        $ associative       (===) (*)
-   , law3 "times plus left"    $ rightDistributive (===) (+) (*)
-   , law3 "times plus right"   $ leftDistributive  (===) (+) (*)
-
+   [ law1 "plus zero left"     $ \a      ->      0+a === a
+   , law1 "plus zero right"    $ \a      ->      a+0 === a
+   , law2 "plus comm"          $ \a b    ->      a+b === b+a
+   , law3 "plus trans"         $ \a b c  ->  a+(b+c) === (a+b)+c
    , law1 "negate zero"        $ \a      ->       -0 === 0        `asTypeOf` a
+   , law1 "negate double"      $ \a      ->    -(-a) === a
    , law1 "minus zero left"    $ \a      ->      0-a === -a
    , law1 "minus zero right"   $ \a      ->      a-0 === a
    , law2 "negate plus"        $ \a b    ->   -(a+b) === -a-b
    , law2 "negate minus"       $ \a b    ->   -(a-b) === -a+b
    , law2 "plus negate"        $ \a b    ->   a+(-b) === a-b
+   , law1 "times zero left"    $ \a      ->      0*a === 0
+   , law1 "times zero right"   $ \a      ->      a*0 === 0
+   , law1 "times one left"     $ \a      ->      1*a === a
+   , law1 "times one right"    $ \a      ->      a*1 === a
+   , law2 "times comm"         $ \a b    ->      a*b === b*a
+   , law3 "times trans"        $ \a b c  ->  a*(b*c) === (a*b)*c
    , law2 "times negate left"  $ \a b    ->   (-a)*b === -(a*b)
    , law2 "times negate right" $ \a b    ->   a*(-b) === -(a*b)
+   , law3 "times plus left"    $ \a b c  ->  (a+b)*c === a*c + b*c
+   , law3 "times plus right"   $ \a b c  ->  a*(b+c) === a*b + a*c
    , law3 "times minus left"   $ \a b c  ->  (a-b)*c === a*c - b*c
    , law3 "times minus right"  $ \a b c  ->  a*(b-c) === a*b - a*c
    ]

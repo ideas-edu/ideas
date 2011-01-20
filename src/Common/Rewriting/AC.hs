@@ -12,17 +12,11 @@
 module Common.Rewriting.AC 
    ( -- * Types
      Pairings, PairingsList, PairingsPair
-     -- * Pairings with operator
-   , pairings, pairingsMatch
+--   , pairings, pairingsMatch
      -- * Primitive pairings functions
    , pairingsNone, pairingsA
    , pairingsC, pairingsAC
    ) where
-
-import Common.View
-import Common.Rewriting.Group
-import Control.Monad
-import Data.Maybe
 
 type Pairings     a   = a -> a -> [[(a, a)]]
 type PairingsList a b = [a] -> [b] -> [[([a], [b])]]
@@ -32,6 +26,7 @@ type PairingsPair a b = (a, a) -> (b, b) -> [[(a, b)]]
 -- Pairing terms with an AC theory
 -- matchMode: the left-hand sides cannot have the operator at top-level 
 
+{-
 pairings, pairingsMatch :: IsMagma m => m a -> Pairings a
 pairings      = pairingsMode False
 pairingsMatch = pairingsMode True
@@ -43,6 +38,7 @@ pairingsMode matchMode op =
       (True , False) -> operatorPairings op (pairingsA matchMode)
       (False, True ) -> opPairings op pairingsC
       (False, False) -> opPairings op pairingsNone
+-}
 
 -- non-associative, non-commutative pairings
 pairingsNone :: PairingsPair a b
@@ -89,7 +85,7 @@ pairingsAC matchMode = rec
 
 ----------------------------------------------------------
 -- Helper functions
-
+{-
 opPairings :: IsMagma m => m a -> PairingsPair a a -> Pairings a
 opPairings op f a b = fromMaybe [] $
    liftM2 f (match (magmaView op) a) (match (magmaView op) b)
@@ -99,7 +95,7 @@ operatorPairings op g = curry $
    let f a = fromMaybe [a] $ match (magmaListView op) a
        h = build (magmaListView op)
    in map (map (onBoth h)) . uncurry g . onBoth f
-
+-}
 splits :: [a] -> [([a], [a])]
 splits = foldr insert [([], [])]
  where
@@ -108,10 +104,10 @@ splits = foldr insert [([], [])]
           toRight (xs, ys) = (  xs, a:ys)
       in map toLeft ps ++ map toRight ps
 
+{-
 onBoth :: (a -> b) -> (a, a) -> (b, b)
 onBoth f (x, y) = (f x, f y)
 
-{-
 permutations :: [a] -> [[a]]
 permutations = foldr (concatMap . insert) [[]]
  where

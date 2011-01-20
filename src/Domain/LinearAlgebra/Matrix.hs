@@ -21,7 +21,7 @@ module Domain.LinearAlgebra.Matrix
    , isSquare, identityMatrix, isLowerTriangular, isUpperTriangular
    ) where
 
-import Common.Rewriting hiding (inverse)
+import Common.Rewriting
 import Control.Monad
 import Data.List hiding (transpose)
 import Data.Maybe

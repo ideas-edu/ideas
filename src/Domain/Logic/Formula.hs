@@ -15,14 +15,12 @@ import Common.Id
 import Common.Rewriting
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Utils (ShowString, subsets)
-import Common.View
 import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
 import Data.Traversable (Traversable, sequenceA)
 import Control.Applicative
 import Data.Monoid (mconcat)
 import Data.List
-import Data.Maybe
 import qualified Text.OpenMath.Dictionary.Logic1 as OM
 
 infixr 2 :<->:
@@ -131,12 +129,14 @@ isCNF = all isAtomic . concatMap disjunctions . conjunctions
 -- | Function disjunctions returns all Logic expressions separated by an or
 -- | operator at the top level.
 disjunctions :: Logic a -> [Logic a]
-disjunctions p = fromMaybe [p] $ match (magmaListView orMonoid) p
-
+disjunctions (p :||: q) = disjunctions p ++ disjunctions q
+disjunctions p          = [p]
+ 
 -- | Function conjunctions returns all Logic expressions separated by an and
 -- | operator at the top level.
 conjunctions :: Logic a -> [Logic a]
-conjunctions p = fromMaybe [p] $ match (magmaListView andMonoid) p
+conjunctions (p :&&: q) = conjunctions p ++ conjunctions q
+conjunctions p          = [p]
  
 -- | Count the number of equivalences
 countEquivalences :: Logic a -> Int
@@ -193,9 +193,7 @@ equivalentSymbol = newSymbol OM.equivalentSymbol
 andSymbol        = newSymbol OM.andSymbol
 orSymbol         = newSymbol OM.orSymbol
 
-logicOperators :: [Magma (Logic a)]
-logicOperators = map toMagma [andMonoid, orMonoid]
-
+{-
 andMonoid :: Monoid (Logic a)
 andMonoid = monoid andOperator (makeConstant (getId trueSymbol) T isT)
  where
@@ -207,7 +205,7 @@ orMonoid = monoid orOperator (makeConstant (getId falseSymbol) F isF)
  where
    isF F = True
    isF _ = False
-
+-}
 andOperator:: BinaryOp (Logic a)
 andOperator = makeBinaryOp (getId andSymbol) (:&&:) isAnd
  where 
@@ -219,7 +217,7 @@ orOperator = makeBinaryOp (getId orSymbol) (:||:) isOr
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing
-
+{-
 implOperator :: BinaryOp (Logic a)   
 implOperator = makeBinaryOp (getId impliesSymbol) (:->:) isImpl
  where
@@ -230,4 +228,4 @@ equivOperator :: BinaryOp (Logic a)
 equivOperator = makeBinaryOp (getId equivalentSymbol) (:<->:) isEquiv
  where
    isEquiv (p :<->: q) = Just (p, q)
-   isEquiv _           = Nothing
+   isEquiv _           = Nothing -}

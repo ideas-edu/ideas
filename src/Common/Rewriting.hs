@@ -11,14 +11,12 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting 
    ( module Common.Rewriting.Term
-   , module Common.Rewriting.Group
    , module Common.Rewriting.Operator
    , module Common.Rewriting.Difference
    , module Common.Rewriting.RewriteRule
    ) where
 
 import Common.Rewriting.Difference
-import Common.Rewriting.Group hiding (identity)
 import Common.Rewriting.Operator
 import Common.Rewriting.RewriteRule
 import Common.Rewriting.Term hiding (Term(..))

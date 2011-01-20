@@ -17,19 +17,18 @@ module Common.Rewriting.RewriteRule
      -- * Rewrite rules and specs
    , RewriteRule, ruleSpecTerm, RuleSpec(..)
      -- * Compiling rewrite rules
-   , rewriteRule, RuleBuilder
+   , rewriteRule, RuleBuilder(..)
      -- * Using rewrite rules
    , rewrite, rewriteM, showRewriteRule, smartGenerator
    , metaInRewriteRule, renumberRewriteRule, inverseRule
-   , useOperators
    ) where
 
 import Common.Classes
 import Common.Id
 import Common.View hiding (match)
+import Common.Rewriting.Operator
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
-import Common.Rewriting.Group
 import Common.Rewriting.Unification hiding (match)
 import Common.Uniplate (descend)
 import Control.Monad
@@ -46,9 +45,9 @@ import qualified Data.IntSet as IS
 -- cannot have a type class for this reason
 -- The show type class is added for pretty-printing rules
 class (IsTerm a, Arbitrary a, Show a) => Rewrite a where
-   operators :: [Magma a]
+   associativeOps :: [BinaryOp a]
    -- default definition: no special operators
-   operators = []
+   associativeOps = []
 
 ------------------------------------------------------
 -- Rewrite rules and specs
@@ -61,12 +60,12 @@ instance Functor RuleSpec where
    fmap f (a :~> b) = f a :~> f b
 
 data RewriteRule a = R
-   { ruleId        :: Id
-   , ruleSpecTerm  :: RuleSpec Term
-   , ruleOperators :: [Magma a]
-   , ruleShow      :: a -> String
-   , ruleTermView  :: View Term a
-   , ruleGenerator :: Gen a
+   { ruleId          :: Id
+   , ruleSpecTerm    :: RuleSpec Term
+   , ruleAssociative :: [BinaryOp a]
+   , ruleShow        :: a -> String
+   , ruleTermView    :: View Term a
+   , ruleGenerator   :: Gen a
    }
    
 instance Show (RewriteRule a) where
@@ -114,7 +113,7 @@ buildSpec ops (lhs :~> rhs) a = do
    return (s |-> extLeft (extRight rhs))
 
 rewriteRule :: (IsId n, RuleBuilder f a, Rewrite a) => n -> f -> RewriteRule a
-rewriteRule s f = R (newId s) (buildRuleSpec f 0) operators show termView arbitrary
+rewriteRule s f = R (newId s) (buildRuleSpec f 0) associativeOps show termView arbitrary
 
 ------------------------------------------------------
 -- Using a rewrite rule
@@ -125,12 +124,12 @@ instance Apply RewriteRule where
 rewrite :: RewriteRule a -> a -> [a]
 rewrite r a = 
    let term = toTermRR r a
-       syms = mapMaybe (operatorSymbol r a) (ruleOperators r)
+       syms = mapMaybe (operatorSymbol r a) (ruleAssociative r)
    in concatMap (fromTermRR r) (buildSpec syms (ruleSpecTerm r) term)
 
-operatorSymbol :: IsMagma m => RewriteRule a -> a -> m a -> Maybe Symbol
+operatorSymbol :: RewriteRule a -> a -> BinaryOp a -> Maybe Symbol
 operatorSymbol r a op = 
-   case getFunction (toTermRR r (operation op a a)) of
+   case getFunction (toTermRR r (binaryOp op a a)) of
       Just (s, [_, _]) -> Just s
       _                -> Nothing
  
@@ -169,9 +168,6 @@ smartGenerator r = do
 inverseRule :: RewriteRule a -> RewriteRule a
 inverseRule r = r {ruleSpecTerm = b :~> a}
  where a :~> b = ruleSpecTerm r
-
-useOperators :: [Magma a] -> RewriteRule a -> RewriteRule a
-useOperators xs r = r {ruleOperators = xs ++ ruleOperators r}
 
 -- some helpers
 metaInRewriteRule :: RewriteRule a -> [Int]

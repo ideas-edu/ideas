@@ -16,10 +16,9 @@ module Common.Rewriting.Difference
    ( difference, differenceEqual, differenceMode
    ) where
 
-import Common.Rewriting.Group
+import Common.Rewriting.Operator
 import Common.Rewriting.Term
 import Common.Rewriting.RewriteRule
-import Common.View
 import Common.Utils (safeHead)
 import Control.Monad
 import Common.Uniplate
@@ -49,9 +48,14 @@ shallowEq a b =
        tb = toTerm b 
    in fromMaybe (ta == tb) $ liftM2 (==) (f ta) (f tb)
 
-findOperator :: [Magma a] -> a -> Maybe (Magma a)
-findOperator ops a = safeHead $ filter (`isOperator` a) ops
- where isOperator op = isJust . match (magmaView op)
+findOperator :: (IsTerm a, Uniplate a) => a -> [BinaryOp a] -> Maybe (BinaryOp a)
+findOperator a = safeHead . filter (`isBinaryOp` a)
+
+collectOperator :: (IsTerm a, Uniplate a) => BinaryOp a -> a -> [a]
+collectOperator f a =
+   case binaryOpMatch f a of
+      Just (x, y) -> collectOperator f x ++ collectOperator f y
+      Nothing     -> [a]
 
 -- local implementation function
 diff :: (Rewrite a, Uniplate a) => (a -> a -> Bool) -> a -> a -> Maybe (a, a)
@@ -59,11 +63,11 @@ diff eq = rec
  where
    rec p q
       | shallowEq p q =
-           case findOperator operators p of
-              Just op | isAssociative op && not (isCommutative op) -> do
-                 ps <- match (magmaListView op) p
-                 qs <- match (magmaListView op) q
-                 diffA op ps qs
+           case findOperator p associativeOps of
+              Just op -> -- | isAssociative op && not (isCommutative op) ->
+                 let ps = collectOperator op p
+                     qs = collectOperator op q
+                 in diffA op ps qs
               _ -> diffList (children p) (children q)
       | otherwise = Just (p, q)
 
@@ -84,7 +88,7 @@ diff eq = rec
       
       equal ps qs = builder ps `eq` builder qs
       rev   ps qs = (reverse ps, reverse qs)
-      builder     = build (magmaListView op)
+      builder     = foldr1 (binaryOp op)
       make pair   = 
          case pair of 
             ([p], [q]) -> rec p q

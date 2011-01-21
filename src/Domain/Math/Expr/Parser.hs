@@ -21,6 +21,7 @@ import Data.Monoid
 import Common.Classes
 import Common.Rewriting
 import Common.Transformation
+import Control.Monad.Error ()
 import qualified Domain.Logic.Formula as Logic
 import Domain.Logic.Formula (Logic)
 import Domain.Math.Data.Relation

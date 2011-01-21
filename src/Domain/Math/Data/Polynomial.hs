@@ -26,6 +26,8 @@ import Data.Traversable (Traversable, sequenceA)
 import Control.Applicative (Applicative, (<$>))
 import Data.Ratio (approxRational)
 import Domain.Math.Approximation (newton, within)
+import Test.QuickCheck hiding (within)
+import Control.Monad
 
 -- Invariants: all keys are non-negative, all values are non-zero
 newtype Polynomial a = P (IM.IntMap a) deriving Eq
@@ -45,7 +47,7 @@ instance Num a => Show (Polynomial a) where
       fix xs = case dropWhile isSpace xs of
                   '+':ys -> dropWhile isSpace ys
                   '-':ys -> '-':dropWhile isSpace ys
-                  ys     -> ys       
+                  ys     -> ys
 
 -- the Functor instance does not maintain the invariant
 instance Functor Polynomial where
@@ -69,12 +71,19 @@ instance Num a => Num (Polynomial a) where
    abs    = error "abs not defined for polynomials"
    signum = error "signum not defined for polynomials"
 
+instance (Arbitrary a, Num a) => Arbitrary (Polynomial a) where
+   arbitrary = do
+      d <- choose (0, 5)
+      let f n x = con x * power var n
+      liftM (sum . zipWith f [0..]) (vector (d+1))
+
 -- a single variable (such as "x") 
 var :: Num a => Polynomial a
 var = P (IM.singleton 1 1)
 
-con :: a -> Polynomial a
-con = P . IM.singleton 0
+con :: Num a => a -> Polynomial a
+con a | a == 0    = P IM.empty
+      | otherwise = P (IM.singleton 0 a)
 
 -- | Raise all powers by a constant (discarding negative exponents)
 raise :: Int -> Polynomial a -> Polynomial a

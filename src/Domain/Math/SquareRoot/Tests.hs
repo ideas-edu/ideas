@@ -11,23 +11,32 @@
 -----------------------------------------------------------------------------
 module Domain.Math.SquareRoot.Tests (tests) where
 
-import Control.Monad
-import Test.QuickCheck
-import Domain.Math.Data.SquareRoot
-import Domain.Math.Numeric.Laws
+import Common.Algebra.Field
+import Common.Algebra.Law
 import Common.TestSuite
+import Domain.Math.Data.SquareRoot
 
 -------------------------------------------------------------------
 -- Testing
  
 tests :: TestSuite
-tests = 
-   testNumLaws  "square roots" squareRootGen
-   -- 	testFracLaws "square roots" squareRootGen
-
-squareRootGen :: Gen (SquareRoot Rational)
-squareRootGen = do
-   n <- choose (0, 10)
-   let f r1 r2 = fromRational r1 * sqrtRational (abs r2)
-   ps <- replicateM n $ liftM2 f arbitrary arbitrary
-   return (sum ps)
+tests = mapM_ f (commutativeRingLaws ++ subtractionLaws)
+ where
+   f :: Law (SafeNum (SquareRoot Rational)) -> TestSuite
+   f p = addProperty (show p) p
+      
+-- Todo: move these to Common.Algebra
+subtractionLaws :: Num a => [Law a]
+subtractionLaws = 
+   [ law  "1" $ \a b   -> a - b :==: a + (-b)
+   , law  "2" $ \a     -> a - a :==: 0
+   , law  "3" $ \a     -> a - 0 :==: a
+   , law  "4" $ \a     -> 0 - a :==: -a
+   , law  "5" $ \a b c -> a - (b + c) :==: (a - b) - c
+   , law  "6" $ \a b c -> a - (b - c) :==: (a - b) + c
+   , law  "7" $ \a b c -> a + (b - c) :==: (a + b) - c
+   , law  "8" $ \a b   -> a - (-b) :==: a + b
+   , law  "9" $ \a b   -> -(a - b) :==: -a + b
+   , law "10" $ \a b c -> a * (b - c) :==: (a * b) - (a * c)
+   , law "11" $ \a b c -> (a - b) * c :==: (a * c) - (b * c)
+   ]

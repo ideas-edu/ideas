@@ -16,6 +16,7 @@ module Common.Rewriting.Unification
 import Common.Rewriting.Term
 import Common.Rewriting.AC
 import Common.Rewriting.Substitution
+import Control.Arrow
 import Control.Monad
 
 -----------------------------------------------------------
@@ -120,8 +121,8 @@ associativeMatch isTop s1 a1 a2 (Apply (Apply (Con s2) b1) b2)
    extRight = (++[Meta specialRight])
    extBoth  = extLeft . extRight
    
-   result   = concatMap (\zs -> pairingsA True zs bs) list
-   make (a, b) = (construct a, construct b)
+   result = concatMap (\zs -> pairingsA True zs bs) list
+   make   = construct *** construct
    
    collect term =
       case getFunction term of

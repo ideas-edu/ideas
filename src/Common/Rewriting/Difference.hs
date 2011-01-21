@@ -51,7 +51,7 @@ shallowEq a b =
 findOperator :: (IsTerm a, Uniplate a) => a -> [BinaryOp a] -> Maybe (BinaryOp a)
 findOperator a = safeHead . filter (`isBinaryOp` a)
 
-collectOperator :: (IsTerm a, Uniplate a) => BinaryOp a -> a -> [a]
+collectOperator :: BinaryOp a -> a -> [a]
 collectOperator f a =
    case binaryOpMatch f a of
       Just (x, y) -> collectOperator f x ++ collectOperator f y

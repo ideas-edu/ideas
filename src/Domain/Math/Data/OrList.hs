@@ -1,4 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveFunctor, DeriveFoldable, 
+       DeriveTraversable #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -17,40 +18,39 @@ module Domain.Math.Data.OrList
    , oneDisjunct, orListView, orSetView
    ) where
 
+import Common.Algebra.Group hiding (idempotent)
 import Common.Classes
 import Common.Rewriting
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable, foldMap)
+import Data.Foldable (Foldable)
+import Control.Applicative
 import Data.List
-import Data.Maybe
-import Data.Monoid
-import Data.Traversable
+import Data.Traversable (Traversable)
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
 import qualified Data.Set as S
-import qualified Data.Map as M
 import qualified Domain.Logic.Formula as Logic
 
 ------------------------------------------------------------
 -- Data type
 
-newtype OrList a = OrList (ListMonoid a)
+newtype OrList a = OrList (WithZero [a])
    deriving (Eq, Ord, Monoid, Functor, Foldable, Traversable)
 
 instance Collection OrList where
-   singleton = OrList . singleton
-   fromList  = OrList . fromList
+   singleton = OrList . pure . singleton
+   fromList  = OrList . pure . fromList
 
 ------------------------------------------------------------
 -- Functions
 
 true, false :: OrList a
-true  = OrList absorbing
+true  = OrList zero
 false = mempty
 
 isTrue :: OrList a -> Bool
-isTrue (OrList a) = isAbsorbing a
+isTrue (OrList a) = isZero a
 
 isFalse :: OrList a -> Bool
 isFalse = maybe False null . disjunctions
@@ -118,64 +118,3 @@ orSetView = makeView f g
  where
    f = fmap S.fromList . disjunctions
    g = fromList . S.toList
-   
-------------------------------------------------------------
--- ListMonoid
-
-class Monoid a => AbsMonoid a where
-   absorbing   :: a          -- the absorbing element of a monoid operation
-   isAbsorbing :: a -> Bool  -- is it the absorbing element?
-
-newtype ListMonoid a = LM (Absorbing [a])
-   deriving (Eq, Ord, Monoid, Functor, Foldable, Traversable, AbsMonoid)
-   -- Functor and Traversable are not available for set
-
-instance Collection ListMonoid where
-   singleton = fromList . return
-   fromList  = LM . A . Just
-
-newtype Absorbing a = A { unA :: Maybe a }
-   deriving (Eq, Ord, Functor, Foldable, Traversable)
-
-instance Monoid a => Monoid (Absorbing a) where
-   mempty = A (Just mempty)
-   mappend x y = A (liftM2 mappend (unA x) (unA y))
-
-instance Monoid a => AbsMonoid (Absorbing a) where
-   absorbing   = A Nothing
-   isAbsorbing = isNothing . unA
-
---fromListMonoid :: AbsMonoid a => ListMonoid a -> a
---fromListMonoid (LM (A m)) = maybe absorbing mconcat m 
-
-------------------------------------------------------------
--- MultiSetMonoid
-   
-newtype MultiSetMonoid a = MM (Absorbing (MultiSet a))
-   deriving (Eq, Ord, Monoid, Foldable, AbsMonoid)
-
-instance Collection MultiSetMonoid where
-   singleton = MM . A . Just . singleton
-
-newtype MultiSet a = MS (M.Map a Int)
-   deriving (Eq, Ord)
-
-instance Collection MultiSet where
-   singleton = MS . flip M.singleton 1
-
-instance Ord a => Monoid (MultiSet a) where
-   mempty = MS mempty
-   mappend (MS a) (MS b) = MS (M.unionWith (+) a b)
-   
-instance Foldable MultiSet where
-   foldMap f (MS m) = 
-      foldMap f (concatMap (uncurry (flip replicate)) (M.toList m))
-
-------------------------------------------------------------
--- SetMonoid
-
-newtype SetMonoid a = SM (Absorbing (S.Set a))
-   deriving (Eq, Ord, Monoid, Foldable, AbsMonoid)
-
-instance Collection SetMonoid where
-   singleton = SM . A . Just . singleton

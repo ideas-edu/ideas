@@ -17,8 +17,9 @@ module Common.Algebra.Group
    , rightIdentity, identityLaws, monoidLaws, commutativeMonoidLaws
    , idempotent
      -- * Groups
-   , Group(..), leftInverse, rightInverse, doubleInverse
+   , Group(..), (<>-), leftInverse, rightInverse, doubleInverse
    , inverseIdentity, inverseDistrFlipped, inverseLaws, groupLaws
+   , appendInverseLaws
      -- * Abelian groups
    , commutative, inverseDistr, abelianGroupLaws
      -- * Monoids with a zero element
@@ -40,7 +41,7 @@ import Data.Traversable     (Traversable)
 --------------------------------------------------------
 -- Monoids
 
-infixr 6 <>
+infixl 6 <>
 
 (<>) :: Monoid a => a -> a -> a
 (<>) = mappend
@@ -70,8 +71,18 @@ idempotent = idempotentFor (<>)
 --------------------------------------------------------
 -- Groups
 
+-- | Minimal complete definition: inverse or appendInverse
 class Monoid a => Group a where
-   inverse :: a -> a
+   inverse       :: a -> a
+   appendInverse :: a -> a -> a
+   -- default definitions
+   inverse  = (mempty <>-)
+   appendInverse a b = a <> inverse b
+
+infixl 6 <>-
+
+(<>-) :: Group a => a -> a -> a
+(<>-) = appendInverse
 
 leftInverse :: Group a => Law a
 leftInverse = law "left-inverse" $ \a -> inverse a <> a :==: mempty
@@ -95,6 +106,21 @@ inverseLaws = [leftInverse, rightInverse]
 groupLaws :: Group a => [Law a]
 groupLaws = monoidLaws ++ inverseLaws ++
    [doubleInverse, inverseIdentity, inverseDistrFlipped]
+
+appendInverseLaws :: Group a => [Law a]
+appendInverseLaws = 
+   [ make 1 $ \a b   ->           a <>- b :==: a <> (inverse b)
+   , make 2 $ \a     ->           a <>- a :==: mempty
+   , make 3 $ \a     ->      a <>- mempty :==: a
+   , make 4 $ \a     ->      mempty <>- a :==: inverse a
+   , make 5 $ \a b c ->    a <>- (b <> c) :==: (a <>- b) <>- c
+   , make 6 $ \a b c ->   a <>- (b <>- c) :==: (a <>- b) <> c
+   , make 7 $ \a b c ->    a <> (b <>- c) :==: (a <> b) <>- c
+   , make 8 $ \a b   -> a <>- (inverse b) :==: a <> b
+   , make 9 $ \a b   -> inverse (a <>- b) :==: inverse a <> b
+   ]
+ where
+    make n = law ("append-inverse-law" ++ show (n :: Int))
 
 --------------------------------------------------------
 -- Abelian groups

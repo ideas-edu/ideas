@@ -25,6 +25,8 @@ module Common.Algebra.Boolean
    , And(..), fromAndLaw
      -- * Or monoid
    , Or(..), fromOrLaw
+     -- * Properties
+   , propsBoolean
    ) where
 
 import Common.Algebra.Law
@@ -163,4 +165,8 @@ instance Boolean a => DualMonoid (Or a) where
 fromOrLaw :: Law (Or a) -> Law a
 fromOrLaw = mapLaw Or fromOr
 
-main = mapM_ quickCheck (booleanLaws :: [Law Bool])
+--------------------------------------------------------
+-- Tests for Bool instance
+
+propsBoolean :: [Property]
+propsBoolean = map property (booleanLaws :: [Law Bool])

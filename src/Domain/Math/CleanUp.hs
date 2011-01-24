@@ -56,10 +56,9 @@ simplerRoot a b
 -- Cleaning up
 
 cleanUpSimple :: Expr -> Expr
-cleanUpSimple = fixpoint (transform (smart . f1))
+cleanUpSimple = fixpoint (transform (smart . f))
  where
-   use v = simplifyWith (assocPlus v) sumView
-   f1 = use rationalView
+   f = simplifyWith (assocPlus rationalView) sumView
 
 cleanUpRelations :: OrList (Relation Expr) -> OrList (Relation Expr)
 cleanUpRelations = idempotent . foldMap cleanUpRelation

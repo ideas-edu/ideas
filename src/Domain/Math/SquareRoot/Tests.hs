@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Domain.Math.SquareRoot.Tests (tests) where
 
+import Common.Algebra.Group
 import Common.Algebra.Field
 import Common.Algebra.Law
 import Common.TestSuite
@@ -20,23 +21,9 @@ import Domain.Math.Data.SquareRoot
 -- Testing
  
 tests :: TestSuite
-tests = mapM_ f (commutativeRingLaws ++ subtractionLaws)
+tests = mapM_ f $ commutativeRingLaws ++ 
+                  distributiveSubtractionLaws ++
+                  map fromAdditiveLaw appendInverseLaws
  where
    f :: Law (SafeNum (SquareRoot Rational)) -> TestSuite
    f p = addProperty (show p) p
-      
--- Todo: move these to Common.Algebra
-subtractionLaws :: Num a => [Law a]
-subtractionLaws = 
-   [ law  "1" $ \a b   -> a - b :==: a + (-b)
-   , law  "2" $ \a     -> a - a :==: 0
-   , law  "3" $ \a     -> a - 0 :==: a
-   , law  "4" $ \a     -> 0 - a :==: -a
-   , law  "5" $ \a b c -> a - (b + c) :==: (a - b) - c
-   , law  "6" $ \a b c -> a - (b - c) :==: (a - b) + c
-   , law  "7" $ \a b c -> a + (b - c) :==: (a + b) - c
-   , law  "8" $ \a b   -> a - (-b) :==: a + b
-   , law  "9" $ \a b   -> -(a - b) :==: -a + b
-   , law "10" $ \a b c -> a * (b - c) :==: (a * b) - (a * c)
-   , law "11" $ \a b c -> (a - b) * c :==: (a * c) - (b * c)
-   ]

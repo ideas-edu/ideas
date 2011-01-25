@@ -14,6 +14,7 @@
 module Domain.Logic.Proofs (proofExercise) where
 
 import Prelude hiding (repeat)
+import Common.Algebra.Boolean
 import Common.Context
 import Common.Rewriting
 import Common.Rewriting.AC
@@ -195,13 +196,9 @@ normLogicWith :: Eq a => [a] -> Logic a -> Logic a
 normLogicWith xs p = make (filter keep (subsets xs))
  where
    keep ys = evalLogic (`elem` ys) p
-   make = makeOrs . map atoms
-   atoms ys = makeAnds [ f (x `elem` ys) (Var x) | x <- xs ]
+   make = ors . map atoms
+   atoms ys = ands [ f (x `elem` ys) (Var x) | x <- xs ]
    f b = if b then id else Not
-   
-makeOrs  xs = if null xs then F else foldr1 (:||:) xs
-makeAnds xs = if null xs then T else foldr1 (:&&:) xs
-
 
 -- p \/ q \/ ~p     ~> T           (propageren)
 tautologyOr :: Rule SLogic 
@@ -216,7 +213,7 @@ idempotencyAnd = makeSimpleRule "idempotencyAnd" $ \p -> do
    let xs = conjunctions p
        ys = nub xs
    guard (length ys < length xs)
-   return (makeAnds ys)
+   return (ands ys)
 
 -- p /\ q /\ ~p     ~> F           (propageren)
 contradictionAnd :: Rule SLogic
@@ -233,7 +230,7 @@ absorptionSubset = makeSimpleRule "absorptionSubset" $ \p -> do
        yss = nub $ filter (\xs -> all (ok xs) xss) xss
        ok xs ys = not (ys `isSubsetOf` xs) || xs == ys
    guard (length yss < length xss)
-   return $ makeOrs (map makeAnds yss)
+   return $ ors (map ands yss)
    
 -- p \/ ... \/ (~p /\ q /\ r)  ~> p \/ ... \/ (q /\ r)
 --    (p is hier een losse variabele)
@@ -241,8 +238,8 @@ fakeAbsorption :: Rule SLogic
 fakeAbsorption = makeSimpleRuleList "fakeAbsorption" $ \p -> do
    let xs = disjunctions p
    v <- [ a | a@(Var _) <- xs ]
-   let ys  = map (makeAnds . filter (/= Not v) . conjunctions) xs
-       new = makeOrs ys
+   let ys  = map (ands . filter (/= Not v) . conjunctions) xs
+       new = ors ys
    guard (p /= new)
    return new
 
@@ -252,8 +249,8 @@ fakeAbsorptionNot :: Rule SLogic
 fakeAbsorptionNot = makeSimpleRuleList "fakeAbsorptionNot" $ \p -> do
    let xs = disjunctions p
    v <- [ a | Not a@(Var _) <- xs ]
-   let ys  = map (makeAnds . filter (/= v) . conjunctions) xs
-       new = makeOrs ys
+   let ys  = map (ands . filter (/= v) . conjunctions) xs
+       new = ors ys
    guard (p /= new)
    return new
 

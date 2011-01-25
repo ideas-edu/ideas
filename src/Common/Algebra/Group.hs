@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Algebra.Group 
    ( -- * Monoids
-      module Data.Monoid, (<>), associative, leftIdentity
+     module Data.Monoid, (<>), associative, leftIdentity
    , rightIdentity, identityLaws, monoidLaws, commutativeMonoidLaws
    , idempotent
      -- * Groups

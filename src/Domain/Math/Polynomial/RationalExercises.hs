@@ -21,7 +21,6 @@ import Common.Utils (fst3)
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Domain.Logic.Formula hiding (disjunctions, Var)
 import Domain.Logic.Views ((.&&.))
 import Domain.Math.Data.OrList
@@ -40,6 +39,7 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Power.OldViews (powerFactorViewWith)
 import Domain.Math.SquareRoot.Views
 import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 import qualified Data.Set as S
 import qualified Domain.Logic as Logic
 import qualified Domain.Logic.Views as Logic
@@ -171,9 +171,7 @@ simplifiedRational expr =
       in powerProductView >>> second (listView v)
 
 rationalEquations :: OrList (Equation Expr) -> Maybe (OrList Expr)
-rationalEquations = maybe (return true) f . disjunctions
- where 
-   f = liftM mconcat . mapM rationalEquation
+rationalEquations = fmap (F.foldMap id) . T.mapM rationalEquation
  
 rationalEquation :: Equation Expr -> Maybe (OrList Expr)
 rationalEquation eq = do
@@ -230,7 +228,7 @@ eqSimplifyRational ca cb = fromMaybe False $ do
    if manyVars then return True else do
    p1 <- match (polyViewWith rationalView) a1c
    p2 <- match (polyViewWith rationalView) b1c
-   return (manyVars || p1==p2)
+   return (p1==p2)
    
 conditionOnClipboard :: Context a -> Maybe (Logic (Relation Expr))
 conditionOnClipboard = evalCM $ const $

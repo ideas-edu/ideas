@@ -21,6 +21,7 @@ module Domain.Logic.GeneralizedRules
 
 -- Note: the generalized rules do not take AC-unification into account,
 -- and perhaps they should.
+import Common.Algebra.Boolean
 import Domain.Logic.Formula
 import Common.Transformation (Rule)
 import qualified Common.Transformation as Rule
@@ -50,7 +51,7 @@ inverseDeMorganOr = makeSimpleRule "InvDeMorganOr" $ \p -> do
    let xs = conjunctions p
    guard (length xs > 1)
    ys <- mapM isNot xs
-   return (Not $ foldr1 (:||:) ys)
+   return (Not $ ors ys)
 
 -- generalized (works for multiple terms)
 inverseDeMorganAnd :: Rule SLogic 
@@ -58,7 +59,7 @@ inverseDeMorganAnd = makeSimpleRule "InvDeMorganAnd" $ \p -> do
    let xs = disjunctions p
    guard (length xs > 1)
    ys <- mapM isNot xs
-   return (Not $ foldr1 (:&&:) ys)
+   return (Not $ ands ys)
 
 inverseAndOverOr :: Rule SLogic
 inverseAndOverOr = makeSimpleRule "InvAndOverOr" $ \p -> do
@@ -67,12 +68,12 @@ inverseAndOverOr = makeSimpleRule "InvAndOverOr" $ \p -> do
    do pairs <- mapM isAndHead xs
       let (as, ys) = unzip pairs
       guard (allSame as)
-      return (head as :&&: foldr1 (:||:) ys)
+      return (head as :&&: ors ys)
     `mplus` do
       pairs <- mapM isAndLast xs
       let (ys, as) = unzip pairs
       guard (allSame as)
-      return (foldr1 (:||:) ys :&&: head as)
+      return (ors ys :&&: head as)
 
 inverseOrOverAnd :: Rule SLogic
 inverseOrOverAnd = makeSimpleRule "InvOrOverAnd" $ \p -> do
@@ -81,12 +82,12 @@ inverseOrOverAnd = makeSimpleRule "InvOrOverAnd" $ \p -> do
    do pairs <- mapM isOrHead xs
       let (as, ys) = unzip pairs
       guard (allSame as)
-      return (head as :||: foldr1 (:&&:) ys)
+      return (head as :||: ands ys)
     `mplus` do
       pairs <- mapM isOrLast xs
       let (ys, as) = unzip pairs
       guard (allSame as)
-      return (foldr1 (:&&:) ys :||: head as)      
+      return (ands ys :||: head as)      
 
 isNot :: SLogic -> Maybe SLogic
 isNot (Not p) = Just p
@@ -119,7 +120,7 @@ generalRuleDeMorganOr = makeSimpleRule "GenDeMorganOr" f
    f (Not e) = do
       let xs = disjunctions e
       guard (length xs > 2)
-      return (foldr1 (:&&:) (map Not xs))
+      return (ands (map Not xs))
    f _ = Nothing
 
 generalRuleDeMorganAnd :: Rule SLogic 
@@ -128,7 +129,7 @@ generalRuleDeMorganAnd = makeSimpleRule "GenDeMorganAnd" f
    f (Not e) = do
       let xs = conjunctions e
       guard (length xs > 2)
-      return (foldr1 (:||:) (map Not xs))
+      return (ors (map Not xs))
    f _ = Nothing
   
 generalRuleAndOverOr :: Rule SLogic
@@ -137,9 +138,9 @@ generalRuleAndOverOr = makeSimpleRule "GenAndOverOr" f
    f (x :&&: y) =
       case (disjunctions x, disjunctions y) of
          (xs, _) | length xs > 2 ->
-            return (foldr1 (:||:) (map (:&&: y) xs))
+            return (ors (map (:&&: y) xs))
          (_, ys) | length ys > 2 ->
-            return (foldr1 (:||:) (map (x :&&:) ys))
+            return (ors (map (x :&&:) ys))
          _ -> Nothing
    f _ = Nothing
 
@@ -149,8 +150,8 @@ generalRuleOrOverAnd = makeSimpleRule "GenOrOverAnd" f
    f (x :||: y) =
       case (conjunctions x, conjunctions y) of
          (xs, _) | length xs > 2 ->
-            return (foldr1 (:&&:) (map (:||: y) xs))
+            return (ands (map (:||: y) xs))
          (_, ys) | length ys > 2 ->
-            return (foldr1 (:&&:) (map (x :||:) ys))
+            return (ands (map (x :||:) ys))
          _ -> Nothing
    f _ = Nothing

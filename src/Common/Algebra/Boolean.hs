@@ -11,8 +11,11 @@
 --
 -----------------------------------------------------------------------------
 module Common.Algebra.Boolean 
-   ( -- * Boolean algebra
-     Boolean(..)
+   ( -- * Boolean subalgebras
+     BoolValue(..), Conjunction(..), Disjunction(..)
+   , ands, ors
+     -- * Boolean algebra
+   , Boolean(..)
    , andOverOrLaws, orOverAndLaws
    , complementAndLaws, complementOrLaws
    , absorptionAndLaws, absorptionOrLaws
@@ -35,23 +38,49 @@ import Test.QuickCheck hiding ((><))
 import Control.Applicative
 
 --------------------------------------------------------
--- Boolean algebra
+-- Boolean subalgebras
 
-class Boolean a where
-   -- and
+-- Minimal complete definitions: true/false, or fromBool
+class BoolValue a where
+   true     :: a
+   false    :: a
+   fromBool :: Bool -> a
+   -- default definitions
+   true  = fromBool True
+   false = fromBool False
+   fromBool b = if b then true else false
+
+class BoolValue a => Conjunction a where
    (<&&>) :: a -> a -> a
-   true   :: a
-   -- or
+
+class BoolValue a => Disjunction a where
    (<||>) :: a -> a -> a
-   false  :: a
-   -- complement
+
+ands :: Conjunction a => [a] -> a -- or use mconcat with And monoid
+ands xs | null xs   = true
+        | otherwise = foldr1 (<&&>) xs
+
+ors :: Disjunction a => [a] -> a
+ors xs | null xs   = false
+       | otherwise = foldr1 (<||>) xs
+
+-- Bool instances
+instance BoolValue Bool where
+   fromBool = id
+
+instance Conjunction Bool where
+   (<&&>) = (&&)
+ 
+instance Disjunction Bool where
+   (<||>) = (||)
+
+--------------------------------------------------------
+-- Boolean algebra
+   
+class (Conjunction a, Disjunction a) => Boolean a where
    complement :: a -> a
 
 instance Boolean Bool where
-   (<&&>)     = (&&)
-   (<||>)     = (||)
-   true       = True
-   false      = False
    complement = not
 
 andOverOrLaws, orOverAndLaws :: Boolean a => [Law a]
@@ -127,11 +156,11 @@ instance Applicative And where
    pure            = And
    And f <*> And a = And (f a)
 
-instance Boolean a => Monoid (And a) where
+instance Conjunction a => Monoid (And a) where
    mempty  = pure true
    mappend = liftA2 (<&&>)
 
-instance Boolean a => MonoidZero (And a) where
+instance Conjunction a => MonoidZero (And a) where
    zero = pure false
 
 instance Boolean a => DualMonoid (And a) where
@@ -151,11 +180,11 @@ instance Applicative Or where
    pure          = Or
    Or f <*> Or a = Or (f a)
 
-instance Boolean a => Monoid (Or a) where
+instance Disjunction a => Monoid (Or a) where
    mempty  = pure false
    mappend = liftA2 (<||>)
    
-instance Boolean a => MonoidZero (Or a) where
+instance Disjunction a => MonoidZero (Or a) where
    zero = pure true
 
 instance Boolean a => DualMonoid (Or a) where

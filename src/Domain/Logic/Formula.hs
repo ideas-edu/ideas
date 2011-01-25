@@ -11,15 +11,15 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.Formula where
 
+import Common.Algebra.Boolean
 import Common.Id
 import Common.Rewriting
 import Common.Uniplate (Uniplate(..), universe)
 import Common.Utils (ShowString, subsets)
 import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
-import Data.Traversable (Traversable, sequenceA)
+import qualified Data.Traversable as T
 import Control.Applicative
-import Data.Monoid (mconcat)
 import Data.List
 import qualified Text.OpenMath.Dictionary.Logic1 as OM
 
@@ -47,16 +47,28 @@ instance Show a => Show (Logic a) where
    show = ppLogic
 
 instance Functor Logic where
-   fmap f = foldLogic (Var . f, (:->:), (:<->:), (:&&:), (:||:), Not, T, F)
+   fmap = T.fmapDefault
 
 instance Foldable Logic where
-   foldMap f p = mconcat [ f x | Var x <- universe p ]
+   foldMap = T.foldMapDefault
 
-instance Traversable Logic where
-   sequenceA = foldLogic 
-      ( liftA Var, liftA2 (:->:), liftA2 (:<->:), liftA2 (:&&:)
+instance T.Traversable Logic where
+   traverse f = foldLogic 
+      ( fmap Var . f, liftA2 (:->:), liftA2 (:<->:), liftA2 (:&&:)
       , liftA2 (:||:), liftA Not, pure T, pure F
       )
+
+instance BoolValue (Logic a) where
+   fromBool b = if b then T else F
+
+instance Conjunction (Logic a) where 
+   (<&&>) = (:&&:)
+
+instance Disjunction (Logic a) where
+   (<||>) = (:||:)
+   
+instance Boolean (Logic a) where
+   complement = Not
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.
@@ -64,7 +76,7 @@ type LogicAlg b a = (b -> a, a -> a -> a, a -> a -> a, a -> a -> a, a -> a -> a,
 
 -- | foldLogic is the standard fold for Logic.
 foldLogic :: LogicAlg b a -> Logic b -> a
-foldLogic (var, impl, equiv, conj, disj, neg, true, false) = rec
+foldLogic (var, impl, equiv, conj, disj, neg, tr, fl) = rec
  where
    rec logic = 
       case logic of
@@ -74,8 +86,8 @@ foldLogic (var, impl, equiv, conj, disj, neg, true, false) = rec
          p :&&: q  -> rec p `conj`  rec q
          p :||: q  -> rec p `disj`  rec q
          Not p     -> neg (rec p)
-         T         -> true 
-         F         -> false
+         T         -> tr 
+         F         -> fl
 
 -- | Pretty-printer for propositions
 ppLogic :: Show a => Logic a -> String
@@ -177,9 +189,9 @@ instance IsTerm a => IsTerm (Logic a) where
       f s [x, y]
          | s == impliesSymbol    = return (x :->: y)
          | s == equivalentSymbol = return (x :<->: y)
-      f s xs@(_:_)
-         | s == andSymbol        = return (foldr1 (:&&:) xs)
-         | s == orSymbol         = return (foldr1 (:||:) xs)
+      f s xs
+         | s == andSymbol        = return (ands xs)
+         | s == orSymbol         = return (ors xs)
       f _ _ = fail "fromTerm"
 
 trueSymbol, falseSymbol, notSymbol, impliesSymbol, equivalentSymbol,
@@ -193,19 +205,6 @@ equivalentSymbol = newSymbol OM.equivalentSymbol
 andSymbol        = newSymbol OM.andSymbol
 orSymbol         = newSymbol OM.orSymbol
 
-{-
-andMonoid :: Monoid (Logic a)
-andMonoid = monoid andOperator (makeConstant (getId trueSymbol) T isT)
- where
-   isT T = True
-   isT _ = False 
-   
-orMonoid :: Monoid (Logic a)
-orMonoid = monoid orOperator (makeConstant (getId falseSymbol) F isF)
- where
-   isF F = True
-   isF _ = False
--}
 andOperator:: BinaryOp (Logic a)
 andOperator = makeBinaryOp (getId andSymbol) (:&&:) isAnd
  where 
@@ -217,15 +216,3 @@ orOperator = makeBinaryOp (getId orSymbol) (:||:) isOr
  where
    isOr (p :||: q) = Just (p, q)
    isOr _          = Nothing
-{-
-implOperator :: BinaryOp (Logic a)   
-implOperator = makeBinaryOp (getId impliesSymbol) (:->:) isImpl
- where
-   isImpl (p :->: q) = Just (p, q)
-   isImpl _          = Nothing
-   
-equivOperator :: BinaryOp (Logic a)   
-equivOperator = makeBinaryOp (getId equivalentSymbol) (:<->:) isEquiv
- where
-   isEquiv (p :<->: q) = Just (p, q)
-   isEquiv _           = Nothing -}

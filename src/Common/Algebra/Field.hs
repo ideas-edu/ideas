@@ -38,8 +38,8 @@ import Test.QuickCheck
 --------------------------------------------------------
 -- Semi-ring
 
-infixr 6 <+>
-infixr 7 <*>
+infixl 6 <+>
+infixl 7 <*>
 
 class SemiRing a where
    -- additive
@@ -66,6 +66,8 @@ semiRingLaws =
 
 --------------------------------------------------------
 -- Ring
+
+infixl 6 <->
 
 -- Minimal complete definition: plusInverse or <->
 class SemiRing a => Ring a where
@@ -102,6 +104,8 @@ distributiveSubtractionLaws =
 
 --------------------------------------------------------
 -- Field
+   
+infixl 7 </>
    
 -- Minimal complete definition: mulInverse or </>
 class Ring a => Field a where

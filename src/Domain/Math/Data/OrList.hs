@@ -13,17 +13,18 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.OrList 
    ( OrList, true, false
-   , isTrue, isFalse
-   , disjunctions, idempotent, fromBool
+   , isTrue, isFalse, fromBool
+   , disjunctions, idempotent
    , oneDisjunct, orListView, orSetView
    ) where
 
 import Common.Algebra.Group hiding (idempotent)
+import Common.Algebra.Boolean
 import Common.Classes
 import Common.Rewriting
 import Common.View
 import Control.Monad
-import Data.Foldable (Foldable)
+import Data.Foldable (Foldable, toList)
 import Control.Applicative
 import Data.List
 import Data.Traversable (Traversable)
@@ -36,7 +37,13 @@ import qualified Domain.Logic.Formula as Logic
 -- Data type
 
 newtype OrList a = OrList (WithZero [a])
-   deriving (Eq, Ord, Monoid, Functor, Foldable, Traversable)
+   deriving (Eq, Ord, Monoid, MonoidZero, Functor, Foldable, Traversable)
+
+instance BoolValue (OrList a) where
+   fromBool b = if b then zero else mempty
+
+instance Disjunction (OrList a) where
+   (<||>) = (<>)
 
 instance Collection OrList where
    singleton = OrList . pure . singleton
@@ -44,10 +51,6 @@ instance Collection OrList where
 
 ------------------------------------------------------------
 -- Functions
-
-true, false :: OrList a
-true  = OrList zero
-false = mempty
 
 isTrue :: OrList a -> Bool
 isTrue (OrList a) = isZero a
@@ -69,9 +72,6 @@ oneDisjunct f xs =
    case disjunctions xs of 
       Just [a] -> f a
       _ -> fail "oneDisjunct"
-
-fromBool :: Bool -> OrList a
-fromBool b = if b then true else false
 
 ------------------------------------------------------------
 -- Instances
@@ -108,9 +108,8 @@ orListView = makeView f g
              a :||: b    -> liftM2 mappend (f a) (f b)
              _           -> Nothing
    g xs = case disjunctions xs of
-             Nothing -> Logic.T
-             Just [] -> Logic.F
-             Just ys -> foldr1 (:||:) (map Logic.Var ys)
+             Nothing -> true
+             Just ys -> ors (map Logic.Var ys)
              
 -- True results in a failed match
 orSetView :: Ord a => View (OrList a) (S.Set a)

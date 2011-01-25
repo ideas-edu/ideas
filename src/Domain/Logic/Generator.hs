@@ -14,6 +14,7 @@ module Domain.Logic.Generator
    ( generateLogic, generateLevel, equalLogicA, Level(..)
    ) where
 
+import Common.Algebra.Boolean
 import Common.Utils (ShowString(..))
 import Domain.Logic.Formula
 import Control.Monad
@@ -34,8 +35,8 @@ equalLogicA :: Eq a => Logic a -> Logic a -> Bool
 equalLogicA p q = rec p == rec q
  where
    rec a = case a of
-              _ :&&: _ -> foldr1 (:&&:) (map rec (conjunctions a))
-              _ :||: _ -> foldr1 (:||:) (map rec (disjunctions a))
+              _ :&&: _ -> ands (map rec (conjunctions a))
+              _ :||: _ -> ors  (map rec (disjunctions a))
               _        -> descend rec a
 
 -----------------------------------------------------------

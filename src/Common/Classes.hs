@@ -13,11 +13,10 @@
 -----------------------------------------------------------------------------
 module Common.Classes 
    ( Apply, apply, applyAll, applicable, applyD, applyM
-   , Collection, singleton, fromList, toList
+   , Collection, singleton, fromList
    ) where
 
 import Common.Utils (safeHead)
-import Data.Foldable
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Set as S
@@ -49,7 +48,7 @@ applyM ta = maybe (fail "applyM") return . apply ta
 -----------------------------------------------------------
 -- * Type class |Collection|
 
-class Foldable f => Collection f where
+class Collection f where
    singleton :: a -> f a
    fromList  :: Monoid (f a) => [a] -> f a
    -- default definition

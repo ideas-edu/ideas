@@ -14,6 +14,7 @@ module Domain.Logic.Parser
    , ppLogicPars, ppLogicUnicodePars
    ) where
 
+import Common.Algebra.Boolean
 import Common.Utils (ShowString(..))
 import Control.Monad.Error (liftM2)
 import Text.Parsing
@@ -83,8 +84,8 @@ pLogicGen (impl, equiv, conj, disj, neg, tr, fl) = pLogic
    basic     =  basicWithPosGen (neg, tr, fl) pLogic
    composed  =  flip (:<->:) <$ pKey equiv <*> basic
             <|> flip (:->:)  <$ pKey impl  <*> basic
-            <|> (\xs p -> foldr1 (:&&:) (p:xs)) <$> pList1 (pKey conj *> basic)
-            <|> (\xs p -> foldr1 (:||:) (p:xs)) <$> pList1 (pKey disj  *> basic)
+            <|> (\xs p -> ands (p:xs)) <$> pList1 (pKey conj *> basic)
+            <|> (\xs p -> ors  (p:xs)) <$> pList1 (pKey disj  *> basic)
  
 basicWithPos :: TokenParser SLogic -> TokenParser SLogic
 basicWithPos = basicWithPosGen ("~", "T", "F")

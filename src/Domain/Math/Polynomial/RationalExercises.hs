@@ -19,9 +19,8 @@ import Common.Library
 import Common.Uniplate
 import Common.Utils (fst3)
 import Control.Monad
-import Data.List
 import Data.Maybe
-import Domain.Logic.Formula hiding (disjunctions, Var)
+import Domain.Logic.Formula hiding (Var)
 import Domain.Logic.Views ((.&&.))
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -184,8 +183,10 @@ rationalEquation eq = do
    return (restrictOrList condition new1)
 
 restrictOrList :: Logic (Relation Expr) -> OrList Expr -> OrList Expr
-restrictOrList p0 = maybe true (fromList . filter p) . disjunctions
+restrictOrList p0 = catOrList . fmap f
  where
+   f a | p a       = singleton a
+       | otherwise = false
    p zeroExpr = 
       case coverUp (zeroExpr :==: 0) of 
          Var x :==: a -> -- returns true if a contradiction was not found
@@ -201,10 +202,10 @@ restrictOrList p0 = maybe true (fromList . filter p) . disjunctions
       a <- match (squareRootViewWith rationalView) (leftHandSide r)
       b <- match (squareRootViewWith rationalView) (rightHandSide r)
       case (a==b, relationType r) of
-         (True,  EqualTo)    -> return T
-         (False, EqualTo)    -> return F 
-         (True,  NotEqualTo) -> return F
-         (False, NotEqualTo) -> return T
+         (True,  EqualTo)    -> return true
+         (False, EqualTo)    -> return false
+         (True,  NotEqualTo) -> return false
+         (False, NotEqualTo) -> return true
          _ -> Nothing
 
 eqRationalEquation :: Context (OrList (Equation Expr)) -> Context (OrList (Equation Expr)) -> Bool
@@ -215,8 +216,7 @@ eqRationalEquation ca cb = fromMaybe False $
       let f = fromMaybe T . conditionOnClipboard
       a  <- fromContext ctx 
       xs <- rationalEquations a
-      ys <- disjunctions (restrictOrList (f ctx) xs)
-      return (sort (nub ys))
+      return $ simplify orSetView $ restrictOrList (f ctx) xs
    
 eqSimplifyRational :: Context Expr -> Context Expr -> Bool
 eqSimplifyRational ca cb = fromMaybe False $ do

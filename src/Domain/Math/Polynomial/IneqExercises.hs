@@ -16,6 +16,7 @@ module Domain.Math.Polynomial.IneqExercises
 import Common.Library hiding (isEmpty)
 import Common.Uniplate (descend)
 import Control.Monad
+import Data.Foldable (toList)
 import Data.List
 import Data.Maybe (fromMaybe)
 import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
@@ -203,7 +204,7 @@ cleanUpLogicRelation :: Logic (Relation Expr) -> Logic (Relation Expr)
 cleanUpLogicRelation = 
    let f a | relationType a == EqualTo = build orListView (cleanUpRelation a)
            | otherwise                 = Logic.Var a
-   in simplifyWith idempotent orListView . Logic.simplify 
+   in simplifyWith noDuplicates orListView . Logic.simplify 
     . catLogic . fmap (f . fmap cleanUpExpr)
    
 trivialRelation :: Rule (OrList (Relation Expr))
@@ -228,27 +229,26 @@ solutionInequation :: Rule (Context (Logic (Relation Expr)))
 solutionInequation = describe "Determine solution for inequality" $ 
    makeSimpleRule (ineq, "give-solution") $ withCM $ \r -> do
    inEquation <- lookupClipboard "ineq" >>= fromExpr
+   let rt = relationType inEquation
    removeClipboard "ineq"
    orv  <- maybeCM (matchM orListView r)
-   case disjunctions orv of 
-      Nothing -> -- both sides are the same
-         if relationType inEquation `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
-         then return Logic.T
-         else return Logic.F
-      Just [] -> do -- no solutions found for equations
+   case toList orv of 
+      _ | isTrue orv && rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo] -> 
+         return true -- both sides are the same
+      _ | isTrue orv ->
+         return false
+      _ | isFalse orv -> do -- no solutions found for equations
          let vs = vars (toExpr inEquation)
          guard (not (null vs))
-         if evalIneq inEquation (head vs) 0
-            then return Logic.T 
-            else return Logic.F
-      Just xs -> do
+         return $ fromBool $ evalIneq inEquation (head vs) 0
+      xs -> do
          (vs, ys) <- liftM unzip $ matchM (listView (equationView >>> equationSolvedForm)) xs
          let v  = head vs
              zs = nub $ map (simplify (squareRootViewWith rationalView)) ys
          ds <- matchM (listView doubleView) zs
          guard (all (==v) vs)
          let rs = makeRanges including (sort (zipWith A ds zs))
-             including = relationType inEquation `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
+             including = rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
          return $ fromIntervals v fromDExpr $ 
             fromIntervalList [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
  where

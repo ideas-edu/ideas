@@ -61,13 +61,9 @@ instance T.Traversable Logic where
 instance BoolValue (Logic a) where
    fromBool b = if b then T else F
 
-instance Conjunction (Logic a) where 
-   (<&&>) = (:&&:)
-
-instance Disjunction (Logic a) where
-   (<||>) = (:||:)
-   
 instance Boolean (Logic a) where
+   (<&&>)     = (:&&:)
+   (<||>)     = (:||:)
    complement = Not
 
 -- | The type LogicAlg is the algebra for the data type Logic

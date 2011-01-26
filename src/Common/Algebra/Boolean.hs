@@ -11,11 +11,9 @@
 --
 -----------------------------------------------------------------------------
 module Common.Algebra.Boolean 
-   ( -- * Boolean subalgebras
-     BoolValue(..), Conjunction(..), Disjunction(..)
+   ( -- * Boolean algebra
+     BoolValue(..), Boolean(..)
    , ands, ors
-     -- * Boolean algebra
-   , Boolean(..)
    , andOverOrLaws, orOverAndLaws
    , complementAndLaws, complementOrLaws
    , absorptionAndLaws, absorptionOrLaws
@@ -38,7 +36,7 @@ import Test.QuickCheck hiding ((><))
 import Control.Applicative
 
 --------------------------------------------------------
--- Boolean subalgebras
+-- Boolean algebra
 
 -- Minimal complete definitions: true/false, or fromBool
 class BoolValue a where
@@ -50,38 +48,26 @@ class BoolValue a where
    false = fromBool False
    fromBool b = if b then true else false
 
-class BoolValue a => Conjunction a where
-   (<&&>) :: a -> a -> a
+class BoolValue a => Boolean a where
+   (<&&>)     :: a -> a -> a
+   (<||>)     :: a -> a -> a
+   complement :: a -> a
 
-class BoolValue a => Disjunction a where
-   (<||>) :: a -> a -> a
-
-ands :: Conjunction a => [a] -> a -- or use mconcat with And monoid
-ands xs | null xs   = true
-        | otherwise = foldr1 (<&&>) xs
-
-ors :: Disjunction a => [a] -> a
-ors xs | null xs   = false
-       | otherwise = foldr1 (<||>) xs
-
--- Bool instances
 instance BoolValue Bool where
    fromBool = id
 
-instance Conjunction Bool where
-   (<&&>) = (&&)
- 
-instance Disjunction Bool where
-   (<||>) = (||)
-
---------------------------------------------------------
--- Boolean algebra
-   
-class (Conjunction a, Disjunction a) => Boolean a where
-   complement :: a -> a
-
 instance Boolean Bool where
+   (<&&>)     = (&&)
+   (<||>)     = (||)
    complement = not
+
+ands :: Boolean a => [a] -> a -- or use mconcat with And monoid
+ands xs | null xs   = true
+        | otherwise = foldr1 (<&&>) xs
+
+ors :: Boolean a => [a] -> a
+ors xs | null xs   = false
+       | otherwise = foldr1 (<||>) xs
 
 andOverOrLaws, orOverAndLaws :: Boolean a => [Law a]
 andOverOrLaws = map fromAndLaw dualDistributive
@@ -156,11 +142,11 @@ instance Applicative And where
    pure            = And
    And f <*> And a = And (f a)
 
-instance Conjunction a => Monoid (And a) where
+instance Boolean a => Monoid (And a) where
    mempty  = pure true
    mappend = liftA2 (<&&>)
 
-instance Conjunction a => MonoidZero (And a) where
+instance Boolean a => MonoidZero (And a) where
    zero = pure false
 
 instance Boolean a => DualMonoid (And a) where
@@ -180,11 +166,11 @@ instance Applicative Or where
    pure          = Or
    Or f <*> Or a = Or (f a)
 
-instance Disjunction a => Monoid (Or a) where
+instance Boolean a => Monoid (Or a) where
    mempty  = pure false
    mappend = liftA2 (<||>)
    
-instance Disjunction a => MonoidZero (Or a) where
+instance Boolean a => MonoidZero (Or a) where
    zero = pure true
 
 instance Boolean a => DualMonoid (Or a) where

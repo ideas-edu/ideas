@@ -14,7 +14,7 @@
 module Domain.Math.Data.OrList 
    ( OrList, true, false
    , isTrue, isFalse, fromBool
-   , disjunctions, idempotent
+   , noDuplicates, catOrList
    , oneDisjunct, orListView, orSetView
    ) where
 
@@ -42,9 +42,6 @@ newtype OrList a = OrList (WithZero [a])
 instance BoolValue (OrList a) where
    fromBool b = if b then zero else mempty
 
-instance Disjunction (OrList a) where
-   (<||>) = (<>)
-
 instance Collection OrList where
    singleton = OrList . pure . singleton
    fromList  = OrList . pure . fromList
@@ -56,21 +53,16 @@ isTrue :: OrList a -> Bool
 isTrue (OrList a) = isZero a
 
 isFalse :: OrList a -> Bool
-isFalse = maybe False null . disjunctions
-
-disjunctions :: OrList a -> Maybe [a]
-disjunctions xs
-   | isTrue xs = Nothing
-   | otherwise = Just (toList xs)
+isFalse (OrList a) = maybe False null (fromWithZero a)
 
 -- | Remove duplicates
-idempotent :: Eq a => OrList a -> OrList a
-idempotent = maybe true (fromList . nub) . disjunctions
+noDuplicates :: Eq a => OrList a -> OrList a
+noDuplicates (OrList a) = OrList (fmap nub a)
 
 oneDisjunct :: Monad m => (a -> m (OrList a)) -> OrList a -> m (OrList a)
-oneDisjunct f xs = 
-   case disjunctions xs of 
-      Just [a] -> f a
+oneDisjunct f (OrList a) = 
+   case fromWithZero a of 
+      Just [x] -> f x
       _ -> fail "oneDisjunct"
 
 ------------------------------------------------------------
@@ -107,13 +99,27 @@ orListView = makeView f g
              Logic.F     -> return false
              a :||: b    -> liftM2 mappend (f a) (f b)
              _           -> Nothing
-   g xs = case disjunctions xs of
-             Nothing -> true
-             Just ys -> ors (map Logic.Var ys)
+   g = fromOr . foldOrListWith (Or . Logic.Var)
              
 -- True results in a failed match
 orSetView :: Ord a => View (OrList a) (S.Set a)
 orSetView = makeView f g 
  where
-   f = fmap S.fromList . disjunctions
+   f = fromWithZero . foldOrListWith (pure . singleton)
    g = fromList . S.toList
+   
+foldOrList :: MonoidZero a => OrList a -> a
+foldOrList xs
+   | isTrue xs  = zero
+   | isFalse xs = mempty
+   | otherwise  = foldr1 (<>) (toList xs)
+   
+foldOrListWith :: MonoidZero b => (a -> b) -> OrList a -> b
+foldOrListWith f = foldOrList . fmap f
+
+{-
+foldOrListF :: (MonoidZero (f a), Collection f) => OrList a -> f a
+foldOrListF = foldOrListWith singleton -}
+
+catOrList :: OrList (OrList a) -> OrList a
+catOrList = foldOrList

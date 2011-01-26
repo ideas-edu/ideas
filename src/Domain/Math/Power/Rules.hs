@@ -80,25 +80,23 @@ calcPowerRatio = makeSimpleRule (power, "power-ratio") $ \ expr -> do
 
 -- -- | root n x
 calcPlainRoot :: Rule (OrList Expr)
-calcPlainRoot = makeSimpleRuleList (power, "root") $ \ ors -> do
-  expr   <- fromMaybe [] $ disjunctions ors
-  (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
-  return $ fromList $ map fromInteger $ takeRoot n x
+calcPlainRoot = makeSimpleRuleList (power, "root") $ 
+   oneDisjunct $ \expr -> do
+     (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
+     return $ fromList $ map fromInteger $ takeRoot n x
 
 -- | [root n x, ... ]
 calcRoot :: Rule (OrList Expr)
-calcRoot = makeSimpleRuleList (power, "root") $ \ ors ->
-  fromMaybe [] (disjunctions ors) >>= maybeToList . f
-    where 
-      f expr = do
-        (n, x) <- match (rootView >>> (integerView *** integerView)) expr
-        y      <- liftM fromInteger $ lookup n $ map swap $ PF.allPowers (abs x)
-        let ys | x > 0 && even n = [y, negate y]
-               | x > 0 && odd  n = [y]
-               | x < 0 && odd  n = [negate y]
-               | otherwise       = []
-        roots  <- toMaybe (not. null) ys
-        return $ fromList roots
+calcRoot = makeSimpleRule (power, "root") $
+   oneDisjunct $ \expr -> do
+      (n, x) <- match (rootView >>> (integerView *** integerView)) expr
+      y      <- liftM fromInteger $ lookup n $ map swap $ PF.allPowers (abs x)
+      let ys | x > 0 && even n = [y, negate y]
+             | x > 0 && odd  n = [y]
+             | x < 0 && odd  n = [negate y]
+             | otherwise       = []
+      roots  <- toMaybe (not. null) ys
+      return $ fromList roots
 
 calcPowerPlus :: Rule Expr 
 calcPowerPlus = 

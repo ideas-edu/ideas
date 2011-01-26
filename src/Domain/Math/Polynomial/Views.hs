@@ -27,7 +27,7 @@ import Common.View
 import Common.Rewriting
 import Common.Uniplate (transform, descend, children)
 import Common.Utils (distinct)
-import Data.Foldable (foldMap)
+import Data.Foldable (foldMap, toList)
 import Data.Traversable (mapM)
 import Domain.Math.Data.Polynomial
 import Domain.Math.Data.Relation
@@ -240,12 +240,10 @@ quadraticEquationView = makeView f g
             [a] | a==0 -> return true
             _          -> return false
    
-   g ors = 
-      case disjunctions ors of
-         Nothing -> 0 :==: 0
-         Just xs -> 
-            let make (x, a) = Var x .-. build (squareRootViewWith rationalView) a
-            in build productView (False, map make xs) :==: 0
+   g xs | isTrue xs = 0 :==: 0
+        | otherwise = build productView (False, map make (toList xs)) :==: 0
+    where
+      make (x, a) = Var x .-. build (squareRootViewWith rationalView) a
 
 higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap (:==: 0))

@@ -105,7 +105,7 @@ applicable loc state =
    in filter p (ruleset (exercise (exercisePkg state)))
 
 allapplications :: State a -> [(Rule (Context a), Location, State a)]
-allapplications state = xs ++ ys
+allapplications state = sortBy cmp (xs ++ ys)
  where
    pkg = exercisePkg state
    ex  = exercise pkg
@@ -119,6 +119,11 @@ allapplications state = xs ++ ys
          , (r, location c) `notElem` ps
          , new <- applyAll r c
          ]
+         
+   cmp (r1, loc1, _) (r2, loc2, _) = 
+      case ruleOrdering ex r1 r2 of
+         EQ   -> loc1 `compare` loc2
+         this -> this
 
 -- local helper
 setLocation :: Location -> Context a -> Context a 

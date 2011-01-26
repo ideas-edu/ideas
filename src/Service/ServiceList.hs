@@ -92,7 +92,7 @@ allapplicationsS :: Service
 allapplicationsS = makeService "allapplications" 
    "Given a current expression, this service yields all rules that can be \
    \applied at a certain location, regardless wether the rule used is buggy \
-   \or not. Some results are within the strategys, others are not." $  
+   \or not. Some results are within the strategy, others are not." $  
    allapplications ::: stateTp :-> List (tuple3 Rule Location stateTp)
 
 applyS :: Service

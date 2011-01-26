@@ -61,7 +61,7 @@ cleanUpSimple = fixpoint (transform (smart . f))
    f = simplifyWith (assocPlus rationalView) sumView
 
 cleanUpRelations :: OrList (Relation Expr) -> OrList (Relation Expr)
-cleanUpRelations = idempotent . foldMap cleanUpRelation
+cleanUpRelations = noDuplicates . foldMap cleanUpRelation
 
 cleanUpRelation :: Relation Expr -> OrList (Relation Expr)
 cleanUpRelation = f . fmap cleanUpBU

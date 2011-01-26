@@ -1,16 +1,5 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.1 (0)">
   <list>
-    <elem ruleid="logic.propositional.demorganand">
-      []
-      <state>
-        <prefix>
-          [5,1,1,0,1,1,0,0,1,1,0]
-        </prefix>
-        <expr>
-          ~p || ~~q
-        </expr>
-      </state>
-    </elem>
     <elem ruleid="logic.propositional.buggy.demorgan1">
       []
       <state>
@@ -88,6 +77,17 @@
         </context>
         <expr>
           ~(~q /\ p)
+        </expr>
+      </state>
+    </elem>
+    <elem ruleid="logic.propositional.demorganand">
+      []
+      <state>
+        <prefix>
+          [5,1,1,0,1,1,0,0,1,1,0]
+        </prefix>
+        <expr>
+          ~p || ~~q
         </expr>
       </state>
     </elem>

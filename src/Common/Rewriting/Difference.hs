@@ -64,7 +64,7 @@ diff eq = rec
    rec p q
       | shallowEq p q =
            case findOperator p associativeOps of
-              Just op -> -- | isAssociative op && not (isCommutative op) ->
+              Just op ->
                  let ps = collectOperator op p
                      qs = collectOperator op q
                  in diffA op ps qs

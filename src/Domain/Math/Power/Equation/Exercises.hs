@@ -32,7 +32,7 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
-
+import qualified Data.Foldable as F
 
 ------------------------------------------------------------
 -- Exercises
@@ -95,7 +95,7 @@ higherPowerEqExercise = makeExercise
   , examples       = map singleton $ rootEquations !! 3
 --  , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
-  , isSuitable     = maybe False and . disjunctions . fmap (`belongsTo` normPowerEqView)
+  , isSuitable     = F.all (`belongsTo` normPowerEqView)
   , equivalence    = viewEquivalent higherDegreeEquationsView
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]

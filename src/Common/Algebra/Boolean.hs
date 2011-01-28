@@ -38,11 +38,13 @@ import Control.Applicative
 --------------------------------------------------------
 -- Boolean algebra
 
--- Minimal complete definitions: true/false, or fromBool
+-- Minimal complete definitions: (true/false, or fromBool) and isTrue/isFalse
 class BoolValue a where
    true     :: a
    false    :: a
    fromBool :: Bool -> a
+   isTrue   :: a -> Bool
+   isFalse  :: a -> Bool
    -- default definitions
    true  = fromBool True
    false = fromBool False
@@ -55,6 +57,8 @@ class BoolValue a => Boolean a where
 
 instance BoolValue Bool where
    fromBool = id
+   isTrue   = id
+   isFalse  = not
 
 instance Boolean Bool where
    (<&&>)     = (&&)
@@ -147,7 +151,7 @@ instance Boolean a => Monoid (And a) where
    mappend = liftA2 (<&&>)
 
 instance Boolean a => MonoidZero (And a) where
-   zero = pure false
+   zero   = pure false
 
 instance Boolean a => DualMonoid (And a) where
    (><)      = liftA2 (<||>)
@@ -171,7 +175,7 @@ instance Boolean a => Monoid (Or a) where
    mappend = liftA2 (<||>)
    
 instance Boolean a => MonoidZero (Or a) where
-   zero = pure true
+   zero   = pure true
 
 instance Boolean a => DualMonoid (Or a) where
    (><)      = liftA2 (<&&>)

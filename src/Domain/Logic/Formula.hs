@@ -9,12 +9,16 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.Formula where
+module Domain.Logic.Formula 
+   ( module Domain.Logic.Formula
+   , conjunctions, disjunctions, ors, ands
+   ) where
 
 import Common.Algebra.Boolean
+import Common.Algebra.CoBoolean
 import Common.Id
 import Common.Rewriting
-import Common.Uniplate (Uniplate(..), universe)
+import Common.Uniplate
 import Common.Utils (ShowString, subsets)
 import Control.Monad
 import Data.Foldable (Foldable, foldMap, toList)
@@ -60,11 +64,23 @@ instance T.Traversable Logic where
 
 instance BoolValue (Logic a) where
    fromBool b = if b then T else F
+   isTrue T  = True
+   isTrue _  = False
+   isFalse F = True
+   isFalse _ = False
 
 instance Boolean (Logic a) where
    (<&&>)     = (:&&:)
    (<||>)     = (:||:)
    complement = Not
+
+instance CoBoolean (Logic a) where
+   isAnd (p :&&: q)     = Just (p, q)
+   isAnd _              = Nothing
+   isOr  (p :||: q)     = Just (p, q)
+   isOr  _              = Nothing
+   isComplement (Not p) = Just p
+   isComplement _       = Nothing
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.
@@ -122,29 +138,14 @@ eqLogic p q = all (\f -> evalLogic f p == evalLogic f q) fs
 isAtomic :: Logic a -> Bool
 isAtomic logic = 
    case logic of
-      Var _       -> True
       Not (Var _) -> True
-      T           -> True
-      F           -> True
-      _           -> False
+      _           -> null (children logic)
 
 -- | Functions isDNF, and isCNF determine whether or not a Logix expression
 -- | is in disjunctive normal form, or conjunctive normal form, respectively. 
 isDNF, isCNF :: Logic a -> Bool
 isDNF = all isAtomic . concatMap conjunctions . disjunctions
 isCNF = all isAtomic . concatMap disjunctions . conjunctions
-
--- | Function disjunctions returns all Logic expressions separated by an or
--- | operator at the top level.
-disjunctions :: Logic a -> [Logic a]
-disjunctions (p :||: q) = disjunctions p ++ disjunctions q
-disjunctions p          = [p]
- 
--- | Function conjunctions returns all Logic expressions separated by an and
--- | operator at the top level.
-conjunctions :: Logic a -> [Logic a]
-conjunctions (p :&&: q) = conjunctions p ++ conjunctions q
-conjunctions p          = [p]
  
 -- | Count the number of equivalences
 countEquivalences :: Logic a -> Int
@@ -203,12 +204,6 @@ orSymbol         = newSymbol OM.orSymbol
 
 andOperator:: BinaryOp (Logic a)
 andOperator = makeBinaryOp (getId andSymbol) (:&&:) isAnd
- where 
-   isAnd (p :&&: q) = Just (p, q)
-   isAnd _          = Nothing
 
 orOperator :: BinaryOp (Logic a)
 orOperator = makeBinaryOp (getId orSymbol) (:||:) isOr
- where
-   isOr (p :||: q) = Just (p, q)
-   isOr _          = Nothing

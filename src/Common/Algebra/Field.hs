@@ -165,7 +165,7 @@ instance Field a => Group (Multiplicative a) where
    appendInverse = A.liftA2 (</>)
    
 instance SemiRing a => MonoidZero (Multiplicative a) where 
-   zero = Multiplicative plusIdentity
+   zero   = Multiplicative plusIdentity
 
 fromMultiplicativeLaw :: Law (Multiplicative a) -> Law a
 fromMultiplicativeLaw = mapLaw Multiplicative fromMultiplicative

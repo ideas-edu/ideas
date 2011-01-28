@@ -15,6 +15,7 @@ module Domain.Logic.Views
    , orView, andView
    ) where
 
+import Common.Algebra.CoBoolean 
 import Common.View hiding (simplify)
 import Domain.Logic.Formula
 
@@ -23,8 +24,6 @@ import Domain.Logic.Formula
 
 infixr 2 .<->.
 infixr 3 .->. 
-infixr 4 .||. 
-infixr 5 .&&.
 
 (.<->.) :: Logic a -> Logic a -> Logic a
 T .<->. q = q
@@ -40,7 +39,7 @@ _ .->. T = T
 p .->. F = nott p
 p .->. q = p :->: q
 
-(.||.) :: Logic a -> Logic a -> Logic a 
+{- (.||.) :: Logic a -> Logic a -> Logic a 
 T .||. _ = T
 F .||. q = q
 _ .||. T = T
@@ -52,7 +51,7 @@ T .&&. q = q
 F .&&. _ = F
 p .&&. T = p
 _ .&&. F = F
-p .&&. q = p :&&: q
+p .&&. q = p :&&: q -}
 
 nott :: Logic a -> Logic a
 nott (Not p) = p

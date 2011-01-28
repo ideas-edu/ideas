@@ -122,7 +122,7 @@ notRelation r = r { relationType = relationType r ? table }
         , (LessThanOrEqualTo, GreaterThan) 
         ]
 
-eval :: Ord a => RelationType -> a -> a -> Bool
+eval :: (Ord a, Num a) => RelationType -> a -> a -> Bool
 eval relType =
    case relType of
       EqualTo              -> (==)
@@ -131,7 +131,7 @@ eval relType =
       GreaterThan          -> (>)
       LessThanOrEqualTo    -> (<=)
       GreaterThanOrEqualTo -> (>=)
-      Approximately        -> (==)
+      Approximately        -> \a b -> 1000 * abs (a-b) < 1
 
 -- helpers   
 showRelType :: RelationType -> String

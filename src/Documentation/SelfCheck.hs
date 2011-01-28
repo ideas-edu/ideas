@@ -25,6 +25,8 @@ import Service.ModeXML
 import qualified Text.OpenMath.Tests as OpenMath
 import qualified Text.UTF8 as UTF8
 import qualified Text.JSON as JSON
+import qualified Common.Algebra.Boolean as Algebra
+import qualified Common.Algebra.Field as Algebra
 import Data.List
 
 selfCheck :: String -> DomainReasoner TestSuite
@@ -40,6 +42,10 @@ selfCheck dir = do
             addProperty "JSON encoding" JSON.propEncoding
             addProperty "OpenMath encoding" OpenMath.propEncoding
          Substitution.tests
+         suite "Field properties" $ 
+            mapM_ (addProperty "field") Algebra.propsField
+         suite "Boolean properties" $ 
+            mapM_ (addProperty "boolean") Algebra.propsBoolean
          
       suite "Domain checks" domainSuite
       

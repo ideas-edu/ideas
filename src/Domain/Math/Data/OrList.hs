@@ -18,7 +18,8 @@ module Domain.Math.Data.OrList
    , oneDisjunct, orListView, orSetView
    ) where
 
-import Common.Algebra.Group hiding (idempotent)
+import Common.Algebra.Group
+import Common.Algebra.CoGroup
 import Common.Algebra.Boolean
 import Common.Classes
 import Common.Rewriting
@@ -36,11 +37,15 @@ import qualified Domain.Logic.Formula as Logic
 ------------------------------------------------------------
 -- Data type
 
-newtype OrList a = OrList (WithZero [a])
-   deriving (Eq, Ord, Monoid, MonoidZero, Functor, Foldable, Traversable)
+newtype OrList a = OrList (WithZero [a]) deriving 
+   ( Eq, Ord, Functor, Foldable, Traversable
+   , Monoid, MonoidZero, CoMonoid, CoMonoidZero
+   )
 
 instance BoolValue (OrList a) where
    fromBool b = if b then zero else mempty
+   isTrue  = isZero
+   isFalse = isEmpty
 
 instance Collection OrList where
    singleton = OrList . pure . singleton
@@ -48,12 +53,6 @@ instance Collection OrList where
 
 ------------------------------------------------------------
 -- Functions
-
-isTrue :: OrList a -> Bool
-isTrue (OrList a) = isZero a
-
-isFalse :: OrList a -> Bool
-isFalse (OrList a) = maybe False null (fromWithZero a)
 
 -- | Remove duplicates
 noDuplicates :: Eq a => OrList a -> OrList a

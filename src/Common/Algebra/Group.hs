@@ -24,7 +24,7 @@ module Common.Algebra.Group
    , commutative, inverseDistr, abelianGroupLaws
      -- * Monoids with a zero element
    , MonoidZero(..), leftZero, rightZero, zeroLaws, monoidZeroLaws
-   , WithZero, fromWithZero, isZero
+   , WithZero, fromWithZero
      -- * Generalized laws
    , associativeFor, commutativeFor, idempotentFor
    , leftDistributiveFor, rightDistributiveFor
@@ -34,7 +34,6 @@ import Common.Algebra.Law
 import Control.Applicative  (Applicative)
 import Control.Monad
 import Data.Foldable        (Foldable)
-import Data.Maybe
 import Data.Monoid
 import Data.Traversable     (Traversable)
 
@@ -141,7 +140,7 @@ abelianGroupLaws = groupLaws ++ [commutative, inverseDistr]
 -- the multiplicative monoid
 
 class Monoid a => MonoidZero a where
-   zero :: a
+   zero   :: a
 
 leftZero :: MonoidZero a => Law a
 leftZero = law "left-zero" $ \a -> zero <> a :==: zero
@@ -164,10 +163,7 @@ instance Monoid a => Monoid (WithZero a) where
    mappend x y = WZ (liftM2 mappend (fromWithZero x) (fromWithZero y))
 
 instance Monoid a => MonoidZero (WithZero a) where
-   zero = WZ Nothing
-   
-isZero :: WithZero a -> Bool
-isZero = isNothing . fromWithZero
+   zero   = WZ Nothing
 
 --------------------------------------------------------
 -- Generalized laws

@@ -19,7 +19,7 @@ import Control.Monad
 import Data.Foldable (toList)
 import Data.List
 import Data.Maybe (fromMaybe)
-import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic)
+import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic, ors)
 import Domain.Math.Data.Interval
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
@@ -276,19 +276,9 @@ solutionInequation = describe "Determine solution for inequality" $
       
    evalIneq :: Relation Expr -> String -> Double -> Bool
    evalIneq r v d = fromMaybe False $
-      liftM2 (evalType (relationType r)) (useSide leftHandSide) (useSide rightHandSide)
+      liftM2 (eval (relationType r)) (useSide leftHandSide) (useSide rightHandSide)
     where
       useSide f = match doubleView (sub (f r))
-      
-      evalType tp =
-         case tp of 
-            EqualTo              -> (==)
-            NotEqualTo           -> (/=)
-            LessThan             -> (<)
-            GreaterThan          -> (>)
-            LessThanOrEqualTo    -> (<=)
-            GreaterThanOrEqualTo -> (>=)
-            Approximately        -> \a b -> abs (a-b) < 0.001
       
       sub (Var x) | x==v = Number d
       sub expr = descend sub expr
@@ -306,9 +296,6 @@ fromDExpr (A _ e) = e
   
 fromIntervals :: Eq a => String -> (a -> Expr) -> Intervals a -> Logic (Relation Expr)
 fromIntervals v f = ors . map (fromInterval v f) . toIntervalList
- where
-   ors [] = Logic.F
-   ors xs = foldr1 (:||:) xs
    
 fromInterval :: Eq a => String -> (a -> Expr) -> Interval a -> Logic (Relation Expr)
 fromInterval v f i 

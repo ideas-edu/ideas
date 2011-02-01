@@ -214,27 +214,22 @@ omdocexercisefile ex =
   in writeFile (omdocpath ++ context info ++ ".omdoc") filestring
 
 omdocexercises :: (IsTerm a) => Exercise a -> [Element]
-omdocexercises ex = 
-  let info = mBExerciseInfo ! (exerciseId $ ex)
-      exerciseexamples = zip [(0::Int)..] 
-                             (map (omobj2xml
-                                  .toOpenMath (termPackage ex)
-                                  )
-                                  (examples ex)
-                                   )
-      exercises        = map (\(i,exex) -> omdocexercise  
-                                             (context info ++ show i)
-                                             "easy" -- should be in the example somewhere
-                                             "en"
-                                             (cmpText info ++ show exex)
-                                             "IDEASGenerator"
-                                             "strategy"
-                                             (problemStatement info)
-                                             (context info)
-                                             exex
-                             )
-                             exerciseexamples              
-  in exercises
+omdocexercises ex = zipWith make [(0::Int)..] (examples ex)
+ where
+   info = mBExerciseInfo ! (exerciseId $ ex)
+   pkg  = termPackage ex
+   make nr (dif, example) = 
+      let omobj = omobj2xml (toOpenMath pkg example)
+      in omdocexercise  
+            (context info ++ show nr)
+            (show dif)
+            "en"
+            (cmpText info ++ show omobj)
+            "IDEASGenerator"
+            "strategy"
+            (problemStatement info)
+            (context info)
+            omobj
 
 omdocexercise :: String
               -> String

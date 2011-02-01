@@ -47,7 +47,7 @@ derivativePolyExercise = describe
    , similarity    = viewEquivalent cleanUpACView
    , strategy      = derivativePolyStrategy
    , navigation    = navigator
-   , examples      = concat (diffSet1 ++ diffSet2 ++ diffSet3)
+   , examples      = level Medium $ concat (diffSet1 ++ diffSet2 ++ diffSet3)
    , testGenerator = Just $ liftM (diff . lambda (Var "x")) $ 
                         sized quadraticGen
    }
@@ -60,7 +60,7 @@ derivativeProductExercise = describe
    { exerciseId    = diffId # "product"
    , isReady       = noDiff
    , strategy      = derivativeProductStrategy
-   , examples      = concat diffSet3
+   , examples      = level Medium $ concat diffSet3
    }
 
 derivativeQuotientExercise :: Exercise Expr
@@ -74,7 +74,7 @@ derivativeQuotientExercise = describe
    , equivalence   = eqQuotientDiff
    , strategy      = derivativeQuotientStrategy
    , ruleOrdering  = ruleOrderingWithId [ruleDerivQuotient]
-   , examples      = concat diffSet4
+   , examples      = level Medium $ concat diffSet4
    , testGenerator = Nothing
    }
 
@@ -89,7 +89,7 @@ derivativePowerExercise = describe
    , isSuitable    = const True
    , equivalence   = \_ _ -> True -- \x y -> eqApprox (evalDiff x) (evalDiff y)
    , strategy      = derivativePowerStrategy
-   , examples      = concat (diffSet5 ++ diffSet6)
+   , examples      = level Medium $ concat (diffSet5 ++ diffSet6)
    , testGenerator = Nothing
    }
 
@@ -102,7 +102,7 @@ derivativeExercise = makeExercise
    , strategy     = derivativeStrategy
    , ruleOrdering = derivativeOrdering
    , navigation   = navigator
-   , examples     = concat (diffSet3++diffSet4++
+   , examples     = level Medium $ concat (diffSet3++diffSet4++
                             diffSet5++diffSet6++diffSet7++diffSet8)
    }
 

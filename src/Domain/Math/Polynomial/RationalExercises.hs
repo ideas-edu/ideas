@@ -56,7 +56,7 @@ rationalEquationExercise = makeExercise
    , strategy      = rationalEquationStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
-   , examples      = map singleton (concat brokenEquations)
+   , examples      = level Medium $ map singleton (concat brokenEquations)
    }
    
 simplifyRationalExercise :: Exercise Expr
@@ -72,7 +72,7 @@ simplifyRationalExercise = makeExercise
    , strategy      = simplifyRationalStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
-   , examples      = concat (normBroken ++ normBroken2)
+   , examples      = level Medium $ concat (normBroken ++ normBroken2)
    }
    
 divisionRationalExercise :: Exercise Expr
@@ -80,7 +80,7 @@ divisionRationalExercise = simplifyRationalExercise
    { exerciseId   = describe "divide a rational expression ('uitdelen')" $ 
                        newId "math.divrational"
    , strategy     = label "divide broken fraction" succeed
-   , examples     = concat deelUit
+   , examples     = level Medium $ concat deelUit
    }
 
 rationalEquationStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))

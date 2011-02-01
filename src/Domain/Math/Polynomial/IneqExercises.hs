@@ -49,7 +49,8 @@ ineqLinearExercise = makeExercise
    , navigation   = termNavigator
    , examples     = let x = Var "x"
                         extra = (x-12) / (-2) :>: (x+3)/3
-                    in map (build inequalityView) (concat ineqLin1 ++ [extra])
+                    in level Medium $ 
+                       map (build inequalityView) (concat ineqLin1 ++ [extra])
    } 
    
 ineqQuadraticExercise :: Exercise (Logic (Relation Expr))
@@ -65,7 +66,8 @@ ineqQuadraticExercise = makeExercise
    , strategy      = ineqQuadratic
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
-   , examples      = map (Logic.Var . build inequalityView) 
+   , examples      = level Medium $ 
+                     map (Logic.Var . build inequalityView) 
                          (concat $ ineqQuad1 ++ [ineqQuad2, extraIneqQuad])
    }
 
@@ -82,7 +84,7 @@ ineqHigherDegreeExercise = makeExercise
    , strategy      = ineqHigherDegree
    , navigation    = termNavigator
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
-   , examples      = map (Logic.Var . build inequalityView) ineqHigh
+   , examples      = level Medium $ map (Logic.Var . build inequalityView) ineqHigh
    }
 
 ineq :: String

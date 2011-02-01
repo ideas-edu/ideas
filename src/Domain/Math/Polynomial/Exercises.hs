@@ -60,7 +60,7 @@ linearExercise = makeExercise
                        ]
    , strategy     = linearStrategy
    , navigation   = termNavigator
-   , examples     = concat (linearEquations ++ [specialCases])
+   , examples     = level Medium $ concat (linearEquations ++ [specialCases])
    }
  where
    specialCases = 
@@ -92,7 +92,8 @@ quadraticExercise = makeExercise
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
-   , examples     = map (singleton . build equationView) (concat quadraticEquations)
+   , examples     = level Medium $ map (singleton . build equationView) 
+                       (concat quadraticEquations)
    }
 
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
@@ -111,7 +112,7 @@ higherDegreeExercise = makeExercise
    , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation   = termNavigator
-   , examples      = map (singleton . build equationView) 
+   , examples      = level Medium $ map (singleton . build equationView) 
                         (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
    }
    
@@ -155,7 +156,7 @@ findFactorsExercise = makeExercise
    , strategy     = findFactorsStrategy
    , navigation   = termNavigator
    , extraRules   = map liftToContext buggyRulesExpr
-   , examples     = concat findFactors
+   , examples     = level Medium $ concat findFactors
    }
 
 linearFactorsView :: View Expr (Bool, [(String, Expr, Expr)])

@@ -125,12 +125,12 @@ dualAbsorption =
 
 dualComplement :: DualMonoid a => [Law a]
 dualComplement = 
-   [ law "complement" $ \a -> dualCompl a <> a :==: zero
-   , law "complement" $ \a -> a <> dualCompl a :==: zero
+   [ law "complement" $ \a -> dualCompl a <> a :==: mzero
+   , law "complement" $ \a -> a <> dualCompl a :==: mzero
    ]
 
 dualTrueFalse :: DualMonoid a => Law a
-dualTrueFalse = law "true-false" $ dualCompl mempty :==: zero
+dualTrueFalse = law "true-false" $ dualCompl mempty :==: mzero
 
 deMorgan :: DualMonoid a => Law a
 deMorgan = law "demorgan" $ \a b -> 
@@ -151,7 +151,7 @@ instance Boolean a => Monoid (And a) where
    mappend = liftA2 (<&&>)
 
 instance Boolean a => MonoidZero (And a) where
-   zero   = pure false
+   mzero = pure false
 
 instance Boolean a => DualMonoid (And a) where
    (><)      = liftA2 (<||>)
@@ -175,7 +175,7 @@ instance Boolean a => Monoid (Or a) where
    mappend = liftA2 (<||>)
    
 instance Boolean a => MonoidZero (Or a) where
-   zero   = pure true
+   mzero = pure true
 
 instance Boolean a => DualMonoid (Or a) where
    (><)      = liftA2 (<&&>)

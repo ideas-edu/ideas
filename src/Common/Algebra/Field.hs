@@ -43,11 +43,11 @@ infixl 7 <*>
 
 class SemiRing a where
    -- additive
-   (<+>)        :: a -> a -> a
-   plusIdentity :: a
+   (<+>) :: a -> a -> a
+   zero  :: a
    -- multiplicative
-   (<*>)        :: a -> a -> a
-   mulIdentity  :: a
+   (<*>) :: a -> a -> a
+   one   :: a
 
 leftDistributive :: SemiRing a => Law a
 leftDistributive = leftDistributiveFor (<*>) (<+>)
@@ -74,7 +74,7 @@ class SemiRing a => Ring a where
    plusInverse :: a -> a
    (<->)       :: a -> a -> a
    -- default definitions
-   plusInverse = (plusIdentity <->)
+   plusInverse = (zero <->)
    a <-> b     = a <+> plusInverse b
 
 leftNegateTimes :: Ring a => Law a
@@ -109,15 +109,15 @@ infixl 7 </>
    
 -- Minimal complete definition: mulInverse or </>
 class Ring a => Field a where
-   mulInverse :: a -> a
-   (</>)      :: a -> a -> a
+   timesInverse :: a -> a
+   (</>)        :: a -> a -> a
    -- default definitions
-   mulInverse = (mulIdentity </>)
-   a </> b    = a <*> mulInverse b
+   timesInverse = (one </>)
+   a </> b      = a <*> timesInverse b
 
 exchangeInverses :: Field a => Law a 
 exchangeInverses = law "exchange-inverses" $ \a -> 
-   mulInverse (plusInverse a) :==: plusInverse (mulInverse a)
+   timesInverse (plusInverse a) :==: plusInverse (timesInverse a)
 
 fieldLaws :: Field a => [Law a]
 fieldLaws =
@@ -136,12 +136,12 @@ instance A.Applicative Additive where
    Additive f <*> Additive a = Additive (f a)
 
 instance SemiRing a => Monoid (Additive a) where
-   mempty  = A.pure plusIdentity
+   mempty  = A.pure zero
    mappend = A.liftA2 (<+>)
  
 instance Ring a => Group (Additive a) where
-   inverse       = A.liftA plusInverse
-   appendInverse = A.liftA2 (<->)
+   inverse   = A.liftA plusInverse
+   appendInv = A.liftA2 (<->)
 
 fromAdditiveLaw :: Law (Additive a) -> Law a
 fromAdditiveLaw = mapLaw Additive fromAdditive
@@ -157,15 +157,15 @@ instance A.Applicative Multiplicative where
    Multiplicative f <*> Multiplicative a = Multiplicative (f a)
 
 instance SemiRing a => Monoid (Multiplicative a) where
-   mempty  = A.pure mulIdentity
+   mempty  = A.pure one
    mappend = A.liftA2 (<*>)
    
 instance Field a => Group (Multiplicative a) where
-   inverse       = A.liftA mulInverse
-   appendInverse = A.liftA2 (</>)
+   inverse   = A.liftA timesInverse
+   appendInv = A.liftA2 (</>)
    
 instance SemiRing a => MonoidZero (Multiplicative a) where 
-   zero   = Multiplicative plusIdentity
+   mzero = Multiplicative zero
 
 fromMultiplicativeLaw :: Law (Multiplicative a) -> Law a
 fromMultiplicativeLaw = mapLaw Multiplicative fromMultiplicative
@@ -212,18 +212,18 @@ instance Fractional a => Fractional (SafeNum a) where
    fromRational = return . fromRational
 
 instance Num a => SemiRing (SafeNum a) where
-   (<+>)        = (+)
-   (<*>)        = (*)
-   plusIdentity = 0
-   mulIdentity  = 1
+   (<+>) = (+)
+   (<*>) = (*)
+   zero  = 0
+   one   = 1
    
 instance Num a => Ring (SafeNum a) where
    plusInverse = negate
    (<->)       = (-)
    
 instance Fractional a => Field (SafeNum a) where
-   mulInverse = recip
-   (</>)      = (/)
+   timesInverse = recip
+   (</>)        = (/)
    
 safeDivisor :: Num a => SafeNum a -> SafeNum a
 safeDivisor m = m >>= \a -> 

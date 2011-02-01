@@ -11,6 +11,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Views where
 
+import Common.Algebra.Field
+import Common.Algebra.CoField
 import Prelude hiding (recip, (^))
 import Common.Rewriting
 import Common.View
@@ -26,27 +28,13 @@ infixl 7 .*., ./.
 infixl 6 .-., .+.
 
 (.+.) :: Expr -> Expr -> Expr
-Nat 0 .+. b         = b
-a     .+. Nat 0     = a
-a     .+. Negate b  = a .-. b
-a     .+. (b :+: c) = (a .+. b) .+. c
-a     .+. (b :-: c) = (a .+. b) .-. c
-a     .+. b         = a :+: b
+a .+. b = fromSmartField $ SmartField a <+> SmartField b
 
 (.-.) :: Expr -> Expr -> Expr
-Nat 0 .-. b         = neg b
-a     .-. Nat 0     = a
-a     .-. Negate b  = a .+. b
-a     .-. (b :+: c) = (a .-. b) .-. c
-a     .-. (b :-: c) = (a .-. b) .+. c
-a     .-. b         = a :-: b
+a .-. b = fromSmartField $ SmartField a <-> SmartField b
 
 neg :: Expr -> Expr
-neg (Nat 0)    = 0
-neg (Negate a) = a
-neg (a :+: b)  = neg a .-. b
-neg (a :-: b)  = neg a .+. b
-neg a          = Negate a
+neg = fromSmartField . plusInverse . SmartField
 
 (.*.) :: Expr -> Expr -> Expr
 Nat 0    .*. _             = Nat 0

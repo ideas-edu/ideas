@@ -55,7 +55,7 @@ simplifyPowerExercise = (powerExercise simplifyPowerStrategy)
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerMapView)
    , equivalence  = viewEquivalent normPowerMapView
-   , examples     = concat $  simplerPowers 
+   , examples     = level Medium $ concat $ simplerPowers 
                            ++ powers1 ++ powers2 
                            ++ negExp1 ++ negExp2
                            ++ normPower1 ++ normPower2 ++ normPower3
@@ -71,7 +71,7 @@ powerOfExercise = (powerExercise powerOfStrategy)
    , isReady      = isSimplePower
    , isSuitable   = (`belongsTo` normPowerView)
    , equivalence  = viewEquivalent normPowerNonNegRatio
-   , examples     = concat $  powersOfA ++ powersOfX 
+   , examples     = level Medium $ concat $  powersOfA ++ powersOfX 
                            ++ brokenExp1' ++ brokenExp2 ++ brokenExp3 
                            ++ normPower5' ++ normPower6
    , ruleOrdering = ruleOrderingWithId $ map getId
@@ -86,7 +86,7 @@ nonNegBrokenExpExercise = (powerExercise nonNegBrokenExpStrategy)
    , isReady      = isPower plainNatView
    , isSuitable   = (`belongsTo` normPowerNonNegDouble)
    , equivalence  = viewEquivalent normPowerNonNegDouble
-   , examples     = concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
+   , examples     = level Medium $ concat $  nonNegExp ++ nonNegExp2 ++ negExp4 ++ negExp5 
                            ++ brokenExp1 
                            ++ normPower4' ++ normPower5
    , ruleOrdering = ruleOrderingWithId [ getId mulExponents
@@ -103,7 +103,7 @@ calcPowerExercise = (powerExercise calcPowerStrategy)
    , isReady      = isPowerAdd
    , isSuitable   = (`belongsTo` normPowerMapView)
    , equivalence  = viewEquivalent normPowerMapView
-   , examples     = concat $ negExp3 ++ normPower3' ++ normPower4
+   , examples     = level Medium $ concat $ negExp3 ++ normPower3' ++ normPower4
    }
 
 

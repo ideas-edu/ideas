@@ -45,7 +45,7 @@ powerEqExercise = let precision = 2 in makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = concatMap (map $ build equationView) $ 
+  , examples       = level Medium $ concatMap (map $ build equationView) $ 
                        powerEquations ++ [last higherPowerEquations]
   , isReady        = solvedRelation
   , isSuitable   = (`belongsTo` (normPowerEqApproxView precision))
@@ -60,7 +60,7 @@ expEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve exponential equation algebraically" $ 
                        newId "algebra.manipulation.exponential.equation"
-  , examples       = concat expEquations
+  , examples       = level Medium $ concat expEquations
   , isReady        = \ rel -> isVariable (leftHandSide rel) 
                            && rightHandSide rel `belongsTo` rationalView
   , isSuitable     = (`belongsTo` normExpEqView)
@@ -76,7 +76,7 @@ logEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
                        newId "algebra.manipulation.logarithmic.equation"
-  , examples       = map (singleton . build equationView) (concat logEquations)
+  , examples       = level Medium $ map (singleton . build equationView) (concat logEquations)
   , isReady        = solvedRelations
   , isSuitable     = (`belongsTo` (traverseView equationView >>> normLogEqView))
   , equivalence    = viewEquivalent (traverseView equationView >>> normLogEqView)
@@ -92,7 +92,7 @@ higherPowerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = map singleton $ rootEquations !! 3
+  , examples       = level Medium $ map singleton $ rootEquations !! 3
 --  , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)

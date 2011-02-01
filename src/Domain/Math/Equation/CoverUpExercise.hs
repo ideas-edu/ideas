@@ -38,7 +38,7 @@ coverUpExercise = makeExercise
    , extraRules   = coverUpRulesOr
    , strategy     = coverUpStrategy
    , navigation   = termNavigator
-   , examples     = map singleton (concat (fillInResult ++ coverUpEquations))
+   , examples     = level Medium $ map singleton (concat (fillInResult ++ coverUpEquations))
    }
 
 ------------------------------------------------------------

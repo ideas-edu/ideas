@@ -41,7 +41,7 @@ naturalExercise = (numericExercise naturalStrategy)
    { exerciseId   = describe "simplify expression (natural numbers)" $ 
                        newId "numbers.natural"
    , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat calculateResults
+   , examples     = level Medium $ concat calculateResults
    }
 
 integerExercise :: Exercise Expr
@@ -49,7 +49,7 @@ integerExercise = (numericExercise integerStrategy)
    { exerciseId   = describe "simplify expression (integers)" $ 
                        newId "numbers.integers"
    , isReady      = (`belongsTo` integerNormalForm)
-   , examples     = concat calculateResults
+   , examples     = level Medium $ concat calculateResults
    }
    
 rationalExercise :: Exercise Expr

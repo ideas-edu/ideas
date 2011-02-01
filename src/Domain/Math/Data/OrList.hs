@@ -24,7 +24,7 @@ import Common.Algebra.Boolean
 import Common.Classes
 import Common.Rewriting
 import Common.View
-import Control.Monad
+import Control.Monad (liftM2)
 import Data.Foldable (Foldable, toList)
 import Control.Applicative
 import Data.List
@@ -43,8 +43,8 @@ newtype OrList a = OrList (WithZero [a]) deriving
    )
 
 instance BoolValue (OrList a) where
-   fromBool b = if b then zero else mempty
-   isTrue  = isZero
+   fromBool b = if b then mzero else mempty
+   isTrue  = isMonoidZero
    isFalse = isEmpty
 
 instance Collection OrList where
@@ -109,7 +109,7 @@ orSetView = makeView f g
    
 foldOrList :: MonoidZero a => OrList a -> a
 foldOrList xs
-   | isTrue xs  = zero
+   | isTrue xs  = mzero
    | isFalse xs = mempty
    | otherwise  = foldr1 (<>) (toList xs)
    

@@ -71,7 +71,7 @@ rewriteRuleToFMP sound r
 type ExampleMap a = M.Map Id [(a, a)]
 
 collectExamples :: Exercise a -> ExampleMap a
-collectExamples ex = foldr add M.empty (examples ex)
+collectExamples ex = foldr add M.empty (map snd (examples ex))
  where
    add a m = let tree = derivationTree (strategy ex) (inContext ex a)
                  f Nothing = m

@@ -12,6 +12,8 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Expr.Data where
 
+import Common.Algebra.Field
+import qualified Common.Algebra.CoField as F
 import Common.Rewriting
 import Common.Uniplate
 import Common.Utils (commaList)
@@ -224,6 +226,37 @@ operatorTable =
    , (InfixRight, [(powerSymbol, "^")])                       -- 8
    ]
 
+
+instance SemiRing Expr where
+   (<+>) = (+)
+   zero  = 0
+   (<*>) = (*)
+   one   = 1
+   
+instance Ring Expr where
+   plusInverse = negate
+   (<->)       = (-)
+   
+instance Field Expr where
+   timesInverse = recip
+   (</>)        = (/)
+
+instance F.CoSemiRing Expr where
+   isPlus  = isPlus
+   isZero  = (==0)
+   isTimes = isTimes 
+   isOne   = (==1)
+
+instance F.CoRing Expr where
+   isNegate = isNegate
+   isMinus  = isMinus
+
+instance F.CoField Expr where
+   isRecip a = {-
+      case isDivide a of 
+         -- Just (x, y) | x==1 -> Just y
+         _ -> -}Nothing
+   isDivision = isDivide
 
 instance Rewrite Expr
 

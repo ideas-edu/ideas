@@ -28,13 +28,13 @@ class CoMonoid a where
    isAppend :: a -> Maybe (a, a)
    
 class CoMonoid a => CoGroup a where
-   isInverse       :: a -> Maybe a
-   isAppendInverse :: a -> Maybe (a, a)
+   isInverse   :: a -> Maybe a
+   isAppendInv :: a -> Maybe (a, a)
    -- default definition
-   isAppendInverse = const Nothing
+   isAppendInv = const Nothing
    
 class CoMonoid a => CoMonoidZero a where
-   isZero :: a -> Bool
+   isMonoidZero :: a -> Bool
 
 fromSemiGroup :: (CoMonoid a, Monoid b) => (a -> b) -> a -> b
 fromSemiGroup f = rec
@@ -139,4 +139,4 @@ instance CoMonoid a => CoMonoid (WithZero a) where
    isAppend a = fromWithZero a >>= fmap (pure *** pure) . isAppend
    
 instance CoMonoid a => CoMonoidZero (WithZero a) where
-   isZero = isNothing . fromWithZero
+   isMonoidZero = isNothing . fromWithZero

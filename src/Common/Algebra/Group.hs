@@ -32,7 +32,7 @@ module Common.Algebra.Group
 
 import Common.Algebra.Law
 import Control.Applicative  (Applicative)
-import Control.Monad
+import Control.Monad        (liftM2)
 import Data.Foldable        (Foldable)
 import Data.Monoid
 import Data.Traversable     (Traversable)
@@ -72,16 +72,16 @@ idempotent = idempotentFor (<>)
 
 -- | Minimal complete definition: inverse or appendInverse
 class Monoid a => Group a where
-   inverse       :: a -> a
-   appendInverse :: a -> a -> a
+   inverse   :: a -> a
+   appendInv :: a -> a -> a
    -- default definitions
-   inverse  = (mempty <>-)
-   appendInverse a b = a <> inverse b
+   inverse = (mempty <>-)
+   appendInv a b = a <> inverse b
 
 infixl 6 <>-
 
 (<>-) :: Group a => a -> a -> a
-(<>-) = appendInverse
+(<>-) = appendInv
 
 leftInverse :: Group a => Law a
 leftInverse = law "left-inverse" $ \a -> inverse a <> a :==: mempty
@@ -140,13 +140,13 @@ abelianGroupLaws = groupLaws ++ [commutative, inverseDistr]
 -- the multiplicative monoid
 
 class Monoid a => MonoidZero a where
-   zero   :: a
+   mzero :: a
 
 leftZero :: MonoidZero a => Law a
-leftZero = law "left-zero" $ \a -> zero <> a :==: zero
+leftZero = law "left-zero" $ \a -> mzero <> a :==: mzero
 
 rightZero:: MonoidZero a => Law a
-rightZero = law "right-zero" $ \a -> a <> zero :==: zero
+rightZero = law "right-zero" $ \a -> a <> mzero :==: mzero
 
 zeroLaws :: MonoidZero a => [Law a]
 zeroLaws = [leftZero, rightZero]
@@ -163,7 +163,7 @@ instance Monoid a => Monoid (WithZero a) where
    mappend x y = WZ (liftM2 mappend (fromWithZero x) (fromWithZero y))
 
 instance Monoid a => MonoidZero (WithZero a) where
-   zero   = WZ Nothing
+   mzero = WZ Nothing
 
 --------------------------------------------------------
 -- Generalized laws

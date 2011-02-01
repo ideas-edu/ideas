@@ -22,6 +22,7 @@ module Common.Exercise
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
    , ruleOrderingWith, ruleOrderingWithId
+   , Difficulty(..), level
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
@@ -36,7 +37,7 @@ module Common.Exercise
 
 import Common.Classes
 import Common.Context
-import Common.Strategy hiding (not, fail, replicate)
+import Common.Strategy hiding (not, fail, repeat, replicate)
 import qualified Common.Strategy as S
 import Common.Derivation
 import Common.Id
@@ -76,8 +77,8 @@ data Exercise a = Exercise
    , ruleOrdering   :: Rule (Context a) -> Rule (Context a) -> Ordering -- Ordering on rules (for onefirst)
      -- testing and exercise generation
    , testGenerator  :: Maybe (Gen a)
-   , randomExercise :: Maybe (StdGen -> Int -> a)
-   , examples       :: [a]
+   , randomExercise :: Maybe (StdGen -> Difficulty -> a)
+   , examples       :: [(Difficulty, a)]
    }
 
 instance Eq (Exercise a) where
@@ -141,6 +142,20 @@ inContext :: Exercise a -> a -> Context a
 inContext = flip makeContext emptyEnv
 
 ---------------------------------------------------------------
+-- Difficulty levels
+
+data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
+   deriving (Eq, Ord, Enum)
+   
+instance Show Difficulty where
+   show = (xs !!) . fromEnum 
+    where 
+      xs = ["very_easy", "easy", "medium", "difficult", "very_difficult"]
+
+level :: Difficulty -> [a] -> [(Difficulty, a)]
+level = zip . repeat
+
+---------------------------------------------------------------
 -- Exercise generators
 
 -- returns a sorted list of rules (no duplicates)
@@ -149,10 +164,10 @@ ruleset ex = nub (sortBy compareId list)
  where 
    list = rulesInStrategy (strategy ex) ++ extraRules ex
  
-simpleGenerator :: Gen a -> Maybe (StdGen -> Int -> a) 
+simpleGenerator :: Gen a -> Maybe (StdGen -> Difficulty -> a) 
 simpleGenerator = useGenerator (const True) . const
 
-useGenerator :: (a -> Bool) -> (Int -> Gen a) -> Maybe (StdGen -> Int -> a) 
+useGenerator :: (a -> Bool) -> (Difficulty -> Gen a) -> Maybe (StdGen -> Difficulty -> a) 
 useGenerator p makeGen = Just (\rng -> rec rng . makeGen)
  where
    rec rng gen@(MkGen f)
@@ -168,19 +183,19 @@ restrictGenerator p g = do
    if p a then return a 
           else restrictGenerator p g
 
-randomTerm :: Int -> Exercise a -> IO a
-randomTerm level ex = do
+randomTerm :: Difficulty -> Exercise a -> IO a
+randomTerm dif ex = do
    rng <- newStdGen
-   return (randomTermWith rng level ex)
+   return (randomTermWith rng dif ex)
 
-randomTermWith :: StdGen -> Int -> Exercise a -> a
-randomTermWith rng level ex = 
+randomTermWith :: StdGen -> Difficulty -> Exercise a -> a
+randomTermWith rng dif ex = 
    case randomExercise ex of
-      Just f  -> f rng level
+      Just f  -> f rng dif
       Nothing
          | null xs   -> error "randomTermWith: no generator" 
          | otherwise -> 
-              xs !! fst (randomR (0, length xs - 1) rng)
+              snd (xs !! fst (randomR (0, length xs - 1) rng))
        where xs = examples ex
 
 ruleIsRecognized :: Exercise a -> Rule (Context a) -> Context a -> Context a -> Bool
@@ -292,8 +307,8 @@ exerciseTestSuite :: Exercise a -> TestSuite
 exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
    -- get some exercises
    xs <- if isJust (randomExercise ex)
-         then liftIO $ replicateM 10 (randomTerm 0 ex)
-         else return (examples ex)
+         then liftIO $ replicateM 10 (randomTerm Medium ex)
+         else return (map snd (examples ex))
    -- do tests
    assertTrue "Exercise terms defined" (not (null xs))
    assertTrue "Equivalence implemented" $
@@ -343,7 +358,7 @@ checkParserPrettyEx ex =
 
 checkExamples :: Exercise a -> TestSuite
 checkExamples ex = do
-   let xs = examples ex
+   let xs = map snd (examples ex)
    unless (null xs) $ suite "Examples" $
       mapM_ (checksForTerm True ex) xs
 

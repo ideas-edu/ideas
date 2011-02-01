@@ -107,7 +107,7 @@ generateS = makeService "generate"
    "Given an exercise code and a difficulty level (optional), this service \
    \returns an initial state with a freshly generated expression. The meaning \
    \of the difficulty level (an integer) depends on the exercise at hand." $ 
-   generate ::: ExercisePkg :-> optionTp 5 Int :-> IO stateTp
+   (\pkg -> generate pkg . toEnum . min 4) ::: ExercisePkg :-> optionTp 5 Int :-> IO stateTp
 
 examplesS :: Service
 examplesS = makeService "examples"
@@ -115,7 +115,7 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (examples . exercise) ::: ExercisePkg :-> List Term
+   (map snd . examples . exercise) ::: ExercisePkg :-> List Term
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules" 

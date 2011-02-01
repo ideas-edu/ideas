@@ -108,7 +108,7 @@ exercisePage exampleFileExists pkg = do
          text "See diagnosis examples"
 
    h2 "3. Example"
-   let state = generateWith (mkStdGen 0) pkg 5
+   let state = generateWith (mkStdGen 0) pkg Medium
    derivationHTML ex (stateTerm state)
    para $ unless (null (examples ex)) $ 
       link (up level ++ exerciseDerivationsFile exid) (text "More examples")
@@ -135,7 +135,7 @@ strategyPage ex = do
 derivationsPage :: Exercise a -> HTMLBuilder
 derivationsPage ex = do
    h1 "Examples"
-   forM_ (zip [1::Int ..] (examples ex)) $ \(i, a) -> do
+   forM_ (zip [1::Int ..] (examples ex)) $ \(i, (_, a)) -> do
       h2 (show i ++ ".")
       derivationHTML ex a
 

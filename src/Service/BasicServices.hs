@@ -26,14 +26,14 @@ import Service.State
 import qualified Common.Classes as Apply
       
 -- result must be in the IO monad to access a standard random number generator
-generate :: ExercisePackage a -> Int -> IO (State a)
-generate pkg level = do 
+generate :: ExercisePackage a -> Difficulty -> IO (State a)
+generate pkg dif = do 
    stdgen <- newStdGen
-   return (generateWith stdgen pkg level)
+   return (generateWith stdgen pkg dif)
 
-generateWith :: StdGen -> ExercisePackage a -> Int -> State a
-generateWith rng pkg level = 
-   emptyState pkg (randomTermWith rng level (exercise pkg))
+generateWith :: StdGen -> ExercisePackage a -> Difficulty -> State a
+generateWith rng pkg dif = 
+   emptyState pkg (randomTermWith rng dif (exercise pkg))
 
 derivation :: Monad m => Maybe StrategyConfiguration -> State a -> m [(Rule (Context a), Context a)]
 derivation mcfg state =

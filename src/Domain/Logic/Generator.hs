@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Generator
-   ( generateLogic, generateLevel, equalLogicA, Level(..)
+   ( generateLogic, generateLevel, equalLogicA
    ) where
 
 import Common.Algebra.Boolean
@@ -21,6 +21,7 @@ import Control.Monad
 import Data.Char
 import Test.QuickCheck
 import Common.Rewriting
+import Common.Exercise
 import Common.Uniplate
 
 -------------------------------------------------------------
@@ -42,18 +43,14 @@ equalLogicA p q = rec p == rec q
 -----------------------------------------------------------
 -- Logic generator
 
-data Level = Easy | Normal | Difficult 
-   deriving Show
-
 generateLogic :: Gen SLogic
 generateLogic = normalGenerator
 
-generateLevel :: Level -> (Gen SLogic, (Int, Int))
-generateLevel level =
-   case level of
-      Easy      -> (easyGenerator,      (3, 6))
-      Normal    -> (normalGenerator,    (4, 12))
-      Difficult -> (difficultGenerator, (7, 18))
+generateLevel :: Difficulty -> (Gen SLogic, (Int, Int))
+generateLevel dif
+   | dif <= Easy      = (easyGenerator,      (3, 6))
+   | dif >= Difficult = (difficultGenerator, (7, 18))
+   | otherwise        = (normalGenerator,    (4, 12))
 
 -- Use the propositions with 3-6 steps
 easyGenerator :: Gen SLogic 

@@ -11,11 +11,197 @@
 -- Example exercises from the Digital Mathematics Environment (DWO)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Examples.DWO2 where
+module Domain.Math.Polynomial.Examples 
+   ( linearEquations, quadraticEquations, higherEq1, higherEq2
+   , higherDegreeEquations, findFactors
+   , ineqLin1, ineqQuad1, ineqQuad2, extraIneqQuad, ineqHigh
+   ) where
 
 import Prelude hiding ((^))
 import Domain.Math.Expr
 import Domain.Math.Data.Relation
+
+linearEquations :: [[Equation Expr]]
+linearEquations = [level1, level2, level3, level4, level5]
+ where
+   level1 :: [Equation Expr]
+   level1 = 
+      let x = variable "x" in
+      [ 5*x + 3   :==: 18
+      , 11*x - 12 :==: 21
+      , 19 - 3*x  :==: -5
+      , -12 + 5*x :==: 33
+      , 15 - 9*x  :==: 6
+      , 4*x + 18  :==: 0
+      , 11*x - 12 :==: -34
+      , -2*x - 3  :==: -4
+      , 6*x - 12  :==: 2
+      , -4*x - 13 :==: -11
+      ]
+
+   level2 :: [Equation Expr]
+   level2 = 
+      let x = variable "x" in
+      [ 6*x-2    :==: 2*x+14
+      , 3+6*x    :==: 3*x+24
+      , 5*x+7    :==: 2*x - 10
+      , 2*x-8    :==: 18 - x
+      , 4*x - 6  :==: 7*x - 14
+      , -1 -5*x  :==: 3*x - 20
+      , 4*x - 7  :==: -5*x - 24
+      , 4*x - 18 :==: 14 + 11*x
+      , 17       :==: 4 - 10*x
+      , -5*x + 6 :==: 2 - 3*x
+      ]
+
+   level3 :: [Equation Expr]
+   level3 = 
+      let x = variable "x" in
+      [ 4*(x-1)          :==: 11*x - 12
+      , 4*(x-4)          :==: 5*(2*x+1)
+      , 2*(5-3*x)        :==: 6-x
+      , 4*x - (x-2)      :==: 12 + 5*(x-1)
+      , -3*(x-2)         :==: 3*(x+4) - 7
+      , 3*(4*x-1) + 3    :==: 7*x - 14
+      , 4*(4*x - 1) - 2  :==: -3*x + 3*(2*x -5)
+      , 2*x - (3*x + 5)  :==: 10 + 5*(x-1)
+      , -5*(x+1)         :==: 9*(x+4)-5
+      , 18 - 2*(4*x + 2) :==: 7*x - 4*(4*x -2)
+      ]
+
+   level4 :: [Equation Expr]
+   level4 = 
+      let x = variable "x" in
+      [ (1/2)*x - 4            :==: 2*x + 2+(1/2)
+      , (1/4)*x + (1/2)        :==: (5/2)*x + 2
+      , (1/4)*x - (3/4)        :==: 2*x + (1/2)
+      , -(1/2)*x + (3/4)       :==: (5/2)*x + 3
+      , -(1/2)*x + 1+(1/2)     :==: 2*x - 5
+      , -(1/3)*x + (3/4)       :==: (1/4)*x + (1/6)
+      , (3/4)*x - (1/3)        :==: (2/3)*x - (3/4)
+      , (2/5)*x - (1/4)        :==: (1/2)*x + (3/4)
+      , (2/3)*x - 2            :==: (1/5)*x - (3/5)
+      , (-1+(2/5))*x + 3+(1/2) :==: (3/5)*x + (9/10)
+      ]
+
+   level5 :: [Equation Expr]
+   level5 = 
+      let x = variable "x" in
+      [ (1/4)*(x-3)         :==: (1/2)*x - 4
+      , (x+3)/2             :==: 5*((1/2)*x + 1 + (1/2))
+      , (1/2)*(7-(2/3)*x)   :==: 2 + (1/9)*x
+      , (3/4)*x - (x-1)     :==: 3 + (2+(1/2))*(x-1)
+      , -(5/4)*(x-7)        :==: (3/4)*(x+2) - (4+(1/2))
+      , 3*((1/5)*x - 1) + 5 :==: 7*x - 14
+      , ((5*x - 1) / 6) - 2 :==: -4*x + (3*x - 6)/2
+      , 2*x - ((2*x+2)/5)   :==: 12 + (x-1)/6
+      , (-3*(x+2))/6        :==: 9*((2/3)*x + (1/3)) - (5/3)
+      , 1 - ((4*x + 2)/3)   :==: 3*x - ((5*x - 1) / 4)
+      ]
+
+quadraticEquations :: [[Equation Expr]]
+quadraticEquations = [level1, level2, level3, level4, level5, level6]
+ where
+   level1 = 
+      let x = variable "x" in
+      [ x^2            :==: 2
+      , x^2+3          :==: 52
+      , x^2-7          :==: 0
+      , 9*x^2 - 6      :==: 75
+      , 32 - 2*x^2     :==: 14
+      , 2*(x^2 - 3)    :==: 12
+      , (1/4)*x^2 + 12 :==: 16
+      , (x-1)^2        :==: 100
+      , 14 - 2*x^2     :==: 6
+      , (1/4)*(17-x^2) :==: 2
+      ] 
+   
+   level2 = 
+      let x = variable "x" in
+      [ (x-7)^2 + 3      :==: 11
+      , (6-2*x)^2        :==: 81 
+      , (1/2)*(x+9)^2    :==: 4
+      , (3-x^2)/10       :==: 2
+      , 5*x^2 + 3*x      :==: 3*x + 2
+      , 11 - (2*x + 1)^2 :==: 5
+      , (6*x - 3)^2 + 6  :==: 12
+      , (7+2*x)^2        :==: 7
+      , 4 - (x^2 / 10)   :==: 6
+      , 12 - (2*x + 3)^2 :==: 6
+      ]
+   
+   level3 = 
+      let x = variable "x" in
+      [ x^2 :==: 5*x
+      , x^2 - 6*x     :==: 0
+      , 6*x + x^2     :==: 0
+      , x*(x+4)       :==: 0
+      , x*(2*x-4)     :==: 0
+      , 3*x^2         :==: 6*x
+      , 3*x           :==: 2*x^2
+      , x*(1-6*x)     :==: 0
+      , (x+5)*(x-8)   :==: 0
+      , (3*x-1)*(x+3) :==: 0
+      ]
+      
+   level4 = 
+      let x = variable "x" in
+      [ x^2-2*x     :==: 3
+      , x^2+12*x+20 :==: 0
+      , x^2-x       :==: 30
+      , x*(x+2)     :==: 8
+      , x*(x-3)     :==: 4
+      , 2*x+15      :==: x^2
+      , 4*x         :==: 12 - x^2
+      , x^2         :==: 15 - 8*x
+      , x^2-9*x+18  :==: 0
+      , x^2+14*x+24 :==: 0
+      ]
+      
+   level5 = 
+      let x = variable "x" in
+      [ (3*x+5)^2+(x-5)^2 :==: 40 
+      , 4*(10-x^2)        :==: -2*x*(2*x + 10)
+      , x*(x+12)          :==: 2*x^2
+      , 3*(x-2)*(x+6)     :==: 12*x
+      , 8*x^2+4*x-24      :==: (x+3)*(x-8)
+      , 3*x^2 - 11        :==: (3+2*x)^2
+      , 2*x*(x-3)-3       :==: (x+2)*(x+6)
+      , 12*(x^2-3*x)+8    :==: 56
+      , 4*x^2-6*x         :==: x^2+9
+      , (x+1)*(x-5)       :==: (x-2)*(x-3)
+      ]
+   
+   level6 = 
+      let x = variable "x" in
+      [ x^2+4*x-4   :==: 0
+      , x^2-6*x     :==: 4
+      , x^2-12*x+34 :==: 0
+      , 2*x^2+4*x-8 :==: 0
+      , (x-4)*(x-1) :==: 11
+      , (x-(7/2))^2 :==: 2*(x+4)
+      , x^2-3*x     :==: 3*(x-2)
+      , (4-x)*(1-x) :==: 3*x
+      , 2*x^2       :==: x*(x+2)+7
+      , (1-x)^2     :==: x+2
+      ]
+
+-- Ontbinden in factoren (VWO B, hoofdstuk 1)
+findFactors :: [[Expr]]
+findFactors =
+   let x = variable "x" in
+   [ -- (buiten haakjes brengen)
+     [ 4*x^2 -4*x
+     , 36*x^2+30*x
+     , -6*x^2-18*x
+     , 14*x^2-10*x
+     ] --(product-som methode)
+   , [ x^2+11*x+24
+     , x^2-8*x+15
+     , x^2-x-2
+     , x^2-11*x+28
+     ]
+   ]
 
 --------------------------------------------------------------------
 -- Algemene applet

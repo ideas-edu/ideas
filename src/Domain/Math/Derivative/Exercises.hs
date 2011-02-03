@@ -23,7 +23,7 @@ import Data.Maybe
 import Data.Ord
 import Domain.Math.Derivative.Rules
 import Domain.Math.Derivative.Strategies
-import Domain.Math.Examples.DWO5
+import Domain.Math.Derivative.Examples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.CleanUp

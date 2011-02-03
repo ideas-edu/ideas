@@ -10,7 +10,8 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Unification 
-   ( unify, matchA, specialLeft, specialRight
+   ( unify, match, matchA, specialLeft, specialRight
+   , unificationTests
    ) where
 
 import Common.Rewriting.Term
@@ -18,6 +19,7 @@ import Common.Rewriting.AC
 import Common.Rewriting.Substitution
 import Control.Arrow
 import Control.Monad
+import Common.TestSuite
 
 -----------------------------------------------------------
 -- Unification (in both ways)
@@ -34,10 +36,28 @@ unify term1 term2 =
       (Apply f a, Apply g b) -> do
          s1 <- unify f g
          s2 <- unify (s1 |-> a) (s1 |-> b)
-         return (s2 @@ s1)
+         return (s1 @@ s2)
       _ | term1 == term2 -> 
          return emptySubst
       _ -> Nothing
+
+match :: MonadPlus m => Term -> Term -> m Substitution
+match term1 term2 = 
+   case (term1, term2) of
+      (Meta i, Meta j) | i == j -> 
+         return emptySubst
+      (Meta i, _) | not (i `hasMetaVar` term2) -> 
+         return (singletonSubst i term2)
+      (_, Meta _) -> 
+         fail "unifyM: no unifier"
+      (Apply f a, Apply g b) -> do
+         s1 <- match f g
+         s2 <- match (s1 |-> a) (b)
+         guard (composable s1 s2)
+         return (s1 @@ s2)
+      _ | term1 == term2 -> 
+         return emptySubst
+      _ -> fail "unifyM: no unifier"
 
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
@@ -95,3 +115,27 @@ associativeMatch _ _ _ _ _ = []
 specialLeft, specialRight :: Int -- special meta variables for context extension
 specialLeft  = maxBound
 specialRight = pred specialLeft
+
+-----------------------------------------------------------
+--- * Test unification properties
+
+unificationTests :: TestSuite
+unificationTests = suite "Unification" $ do
+   addProperty "unify" $ \a b ->
+      case unify a b of
+         Just s  -> (s |-> a) == (s |-> b)
+         Nothing -> True
+   addProperty "unify-succeed" $ \a s -> 
+      let b = s |-> a in
+      case unify a b of
+         Just s2 -> (s2 |-> a) == (s2 |-> b)
+         Nothing -> False
+   addProperty "match" $ \a b -> 
+      case match a b of
+         Just s  -> (s |-> a) == b
+         Nothing -> True
+   addProperty "match-succeed" $ \a s -> 
+      let b = s |-> a in
+      case match a (s |-> a) of
+         Just s2 -> (s2 |-> a) == b
+         Nothing -> True

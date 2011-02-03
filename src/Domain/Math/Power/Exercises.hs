@@ -29,7 +29,7 @@ import Common.Strategy hiding (not, replicate)
 import Common.Utils (distinct)
 import Common.View
 import Data.Maybe
-import Domain.Math.Examples.DWO3
+import Domain.Math.Power.Examples
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Power.Rules

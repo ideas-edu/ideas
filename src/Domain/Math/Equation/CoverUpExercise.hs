@@ -20,7 +20,7 @@ import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
-import Domain.Math.Examples.DWO1
+import Domain.Math.Equation.Examples
 import Domain.Math.Expr
 
 ------------------------------------------------------------

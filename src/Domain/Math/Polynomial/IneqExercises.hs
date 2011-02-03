@@ -25,7 +25,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Equation.Views
-import Domain.Math.Examples.DWO2
+import Domain.Math.Polynomial.Examples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.CleanUp

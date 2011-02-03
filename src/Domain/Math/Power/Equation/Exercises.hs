@@ -25,7 +25,7 @@ import Common.View
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
-import Domain.Math.Examples.DWO4
+import Domain.Math.Power.Equation.Examples
 import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views

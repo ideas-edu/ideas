@@ -12,7 +12,7 @@
 -- see: http://www.fi.uu.nl/dwo/gr/frameset.html.
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Examples.DWO3 where
+module Domain.Math.Power.Examples where
 
 import Prelude hiding ((^))
 import Common.Rewriting

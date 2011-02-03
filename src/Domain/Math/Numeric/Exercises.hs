@@ -21,7 +21,6 @@ import Domain.Math.Expr
 import Domain.Math.Numeric.Strategies
 import Domain.Math.Numeric.Views
 import Domain.Math.Numeric.Generators
-import Domain.Math.Examples.DWO1 (calculateResults)
 import Common.Context
    
 ------------------------------------------------------------
@@ -67,3 +66,17 @@ fractionExercise = (numericExercise fractionStrategy)
    , isReady        = (`belongsTo` rationalNormalForm)
    , randomExercise = simpleGenerator (rationalGenerator 5)
    }
+   
+calculateResults :: [[Expr]]
+calculateResults = [level1, level2, level3]
+ where
+   level1 = 
+      [ -8*(-3), -3-9, 55/(-5), -6*9, -11- (-3), 6-(-9), -10+3, 6+(-5) ]
+   level2 = 
+      [ -3-(6*(-3)), -12/3 - 3, -4*(2+3), 2-6*6
+      , -27/(4-(-5)), (-24/(-6)) - 3, 8-(-77/(-11)), 4/(-4+5)
+      ]
+   level3 = 
+      [ 4*(3-(6-2)), (-16-9)/5 - 3, 4- (4-13)/(-3), (3*(-3))-5-4
+      , -55/(3*(-5)+4), -4*(-2+ (-4)+7), -8 - (140/4*5), (13-(2-1)) / 3
+      ]

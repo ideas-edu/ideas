@@ -26,7 +26,7 @@ import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Equation.Views
-import Domain.Math.Examples.DWO4
+import Domain.Math.Polynomial.RationalExamples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.CleanUp

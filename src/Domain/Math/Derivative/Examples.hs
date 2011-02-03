@@ -12,7 +12,7 @@
 -- see: http://www.fi.uu.nl/dwo/gr/frameset.html.
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Examples.DWO5 
+module Domain.Math.Derivative.Examples
    ( diffSet1, diffSet2, diffSet3, diffSet4
    , diffSet5, diffSet6, diffSet7, diffSet8
    ) where

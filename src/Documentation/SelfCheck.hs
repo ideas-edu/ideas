@@ -13,6 +13,7 @@ module Documentation.SelfCheck (selfCheck, blackBoxTests) where
 
 import System.Directory
 import qualified Common.Rewriting.Substitution as Substitution
+import qualified Common.Rewriting.Unification  as Unification
 import Common.TestSuite
 import Common.Utils (useFixedStdGen, Some(..), snd3)
 import Common.Exercise
@@ -42,6 +43,7 @@ selfCheck dir = do
             addProperty "JSON encoding" JSON.propEncoding
             addProperty "OpenMath encoding" OpenMath.propEncoding
          Substitution.tests
+         Unification.unificationTests
          suite "Field properties" $ 
             mapM_ (addProperty "field") Algebra.propsField
          suite "Boolean properties" $ 

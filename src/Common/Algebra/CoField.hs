@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor, GeneralizedNewtypeDeriving, PatternGuards #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -12,13 +13,17 @@
 module Common.Algebra.CoField 
    ( CoSemiRing(..), CoRing(..), CoField(..)
    , SmartField(..)
+   , (.+.), (.-.), neg, (.*.), (./.), recip
    ) where
 
 import Common.Algebra.Group
 import Common.Algebra.Field
 import Common.Algebra.CoGroup
 import Common.Algebra.SmartGroup
-import Control.Arrow
+import Control.Arrow ((***))
+import Control.Monad
+import Data.Maybe
+import qualified Control.Applicative as A
 
 class CoSemiRing a where
    -- additive
@@ -63,16 +68,26 @@ instance CoSemiRing a => CoMonoidZero (Multiplicative a) where
 ------------------------------------------------------------------
 
 newtype SmartField a = SmartField {fromSmartField :: a}
+   deriving (Functor, CoSemiRing, CoRing, CoField)
+
+instance A.Applicative SmartField where
+   pure = SmartField
+   SmartField f <*> SmartField a = SmartField (f a)
 
 instance (CoField a, Field a) => SemiRing (SmartField a) where
+   zero = SmartField zero
+   one  = SmartField one
    SmartField a <+> SmartField b = SmartField $ fromAdditive $ fromSmartGroup $ 
       SmartGroup (Additive a) <> SmartGroup (Additive b)
-   zero  = SmartField zero
-   SmartField a <*> SmartField b = SmartField $ fromMultiplicative $ 
-      fromSmartGroup $ fromSmartZero $
-         SmartZero (SmartGroup (Multiplicative a)) <> 
-         SmartZero (SmartGroup (Multiplicative b))
-   one   = SmartField one
+   a <*> b 
+      | Just x <- isNegate a = plusInverse (x <*> b)
+      | Just x <- isNegate b = plusInverse (a <*> x)
+      | isZero a || isZero b = zero
+      | isOne a = b
+      | isOne b = a
+      | Just (x, y) <- isTimes b = (a <*> x) <*> y
+      | Just (x, y) <- isDivision b = (a <*> x) </> y
+      | otherwise = A.liftA2 (<*>) a b
 
 instance (CoField a, Field a) => Ring (SmartField a) where
    plusInverse = SmartField . fromAdditive . fromSmartGroup . inverse 
@@ -81,8 +96,36 @@ instance (CoField a, Field a) => Ring (SmartField a) where
       SmartGroup (Additive a) <>- SmartGroup (Additive b)
 
 instance (CoField a, Field a) => Field (SmartField a) where
-   timesInverse = SmartField . fromMultiplicative . fromSmartGroup . inverse 
-                . SmartGroup . Multiplicative . fromSmartField
-   SmartField a </> SmartField b = SmartField $ fromMultiplicative $ 
-      fromSmartGroup $ 
-         SmartGroup (Multiplicative a) <>- SmartGroup (Multiplicative b)
+   timesInverse a 
+      | Just x <- isNegate a = plusInverse (timesInverse x)
+      | Just (x, y) <- isDivision a, isOne y = x
+      | otherwise = A.liftA timesInverse a
+   a </> b 
+      | Just x <- isNegate a = plusInverse (x </> b)
+      | Just x <- isNegate b = plusInverse (a </> x)
+      | isOne b = a
+      | Just (x, y) <- isDivision a = x </> (y <*> b)
+      | otherwise = A.liftA2 (</>) a b
+         
+------------------------------------------------------------------
+
+infixl 7 .*., ./.
+infixl 6 .-., .+.
+
+(.+.) :: (CoField a, Field a) => a -> a -> a
+a .+. b = fromSmartField $ SmartField a <+> SmartField b
+
+(.-.) :: (CoField a, Field a) => a -> a -> a
+a .-. b = fromSmartField $ SmartField a <-> SmartField b
+
+neg :: (CoField a, Field a) => a -> a
+neg = fromSmartField . plusInverse . SmartField
+
+(.*.) :: (CoField a, Field a) => a -> a -> a
+a .*. b = fromSmartField $ SmartField a <*> SmartField b
+
+(./.) :: (CoField a, Field a) => a -> a -> a
+a ./. b = fromSmartField $ SmartField a </> SmartField b
+
+myrecip :: (CoField a, Field a) => a -> a
+myrecip = fromSmartField . timesInverse . SmartField

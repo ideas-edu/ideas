@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Common.Rewriting.Substitution 
    ( Substitution, emptySubst, singletonSubst, dom
-   , (@@), (|->), listToSubst
+   , (@@), (|->), listToSubst, composable
    , tests
    ) where
 

@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Common.Rewriting.Unification 
-   ( match, unifyM, specialLeft, specialRight
+   ( unify, matchA, specialLeft, specialRight
    ) where
 
 import Common.Rewriting.Term
@@ -22,8 +22,8 @@ import Control.Monad
 -----------------------------------------------------------
 -- Unification (in both ways)
 
-unifyM :: Monad m => Term -> Term -> m Substitution
-unifyM term1 term2 = 
+unify :: Term -> Term -> Maybe Substitution
+unify term1 term2 = 
    case (term1, term2) of
       (Meta i, Meta j) | i == j -> 
          return emptySubst
@@ -32,62 +32,20 @@ unifyM term1 term2 =
       (_, Meta j) | not (j `hasMetaVar` term1) -> 
          return (singletonSubst j term1)
       (Apply f a, Apply g b) -> do
-         s1 <- unifyM f g
-         s2 <- unifyM (s1 |-> a) (s1 |-> b)
-         return (s1 @@ s2)
+         s1 <- unify f g
+         s2 <- unify (s1 |-> a) (s1 |-> b)
+         return (s2 @@ s1)
       _ | term1 == term2 -> 
          return emptySubst
-      _ -> fail "unifyM: no unifier"
+      _ -> Nothing
 
-{-
-class ShallowEq a where 
-   shallowEq :: a -> a -> Bool
-
--- The arbitrary type class is a quick solution to have smart generators
--- (in combination with lifting rules). The function in the RewriteRule module
--- cannot have a type class for this reason
--- The show type class is added for pretty-printing rules
-class (MetaVar a, Uniplate a, ShallowEq a, Arbitrary a, Show a) => Rewrite a where
-   operators :: [Operator a]
-   -- default definition: no associative/commutative operators
-   operators = []
-
-unify :: Rewrite a => a -> a -> [Substitution a]
-unify = unifyWith operators
-
-unifyM :: (MonadPlus m, Rewrite a) => a -> a -> m (Substitution a)
-unifyM x y = msum $ map return $ unify x y
-
-unifyWith :: Rewrite a => [Operator a] -> a -> a -> [Substitution a]
-unifyWith ops = rec
- where
-   rec x y =
-      case (isMetaVar x, isMetaVar y) of
-         (Just i, Just j) | i==j -> return emptySubst
-         (Just i, _) | not (hasMetaVar i y) -> return $ singletonSubst i y
-         (_, Just j) | not (hasMetaVar j x) -> return $ singletonSubst j x
-         _ -> do
-            guard (shallowEq x y) 
-            case findOperator ops x of
-               Just op -> 
-                  concatMap (uncurry recList . unzip) (pairings op x y)
-               Nothing -> 
-                  recList (children x) (children y)    
-
-   recList [] []    = return emptySubst
-   recList (x:xs) (y:ys) = do
-      s1 <- rec x y
-      s2 <- recList (map (s1 |->) xs) (map (s1 |->) ys)
-      return (s2 @@ s1)
-   recList _ _ = []
--}
 -----------------------------------------------------------
 -- Matching (or: one-way unification)
 
 -- second term should not have meta variables
 
-match :: [Symbol] -> Term -> Term -> [Substitution]
-match assocSymbols = rec True
+matchA :: [Symbol] -> Term -> Term -> [Substitution]
+matchA assocSymbols = rec True
  where
    rec _ (Meta i) y = 
       return (singletonSubst i y)

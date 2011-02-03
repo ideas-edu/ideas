@@ -186,6 +186,10 @@ instance Eq a => Eq (SafeNum a) where
    Ok a == Ok b = a == b
    _    == _    = True
 
+instance Ord a => Ord (SafeNum a) where
+   Ok a `compare` Ok b = a `compare` b
+   _    `compare` _    = EQ
+
 instance Show a => Show (SafeNum a) where
    show = either ("Exception: " ++) show . safeNum
 

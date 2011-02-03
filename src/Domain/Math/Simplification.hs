@@ -28,7 +28,7 @@ import Data.List
 import Data.Maybe
 import Domain.Math.CleanUp (smart)
 import Domain.Math.Data.Relation
-import Domain.Math.Expr hiding (recip)
+import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 import Domain.Math.SquareRoot.Views
 import qualified Common.View as View

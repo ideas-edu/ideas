@@ -252,10 +252,7 @@ instance F.CoRing Expr where
    isMinus  = isMinus
 
 instance F.CoField Expr where
-   isRecip a = {-
-      case isDivide a of 
-         -- Just (x, y) | x==1 -> Just y
-         _ -> -}Nothing
+   isRecip _  = Nothing
    isDivision = isDivide
 
 instance Rewrite Expr

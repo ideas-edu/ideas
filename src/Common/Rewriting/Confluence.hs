@@ -22,8 +22,8 @@ import Common.Rewriting.Substitution
 import Common.Rewriting.Unification
 import Common.Rewriting.Term
 import Common.Uniplate hiding (rewriteM)
-import Data.Char
 import Data.Maybe
+import Control.Monad
 
 normalForm :: [RewriteRule a] -> Term -> Term
 normalForm rs = run []
@@ -37,8 +37,9 @@ normalForm rs = run []
 
 rewriteTerm :: RewriteRule a -> Term -> [Term]
 rewriteTerm r t = do
-   let lhs :~> rhs = ruleSpecTerm r
-   sub <- match [] lhs t
+   let lhs :~> rhs = ruleSpecTerm (renumberRewriteRule 1000 r)
+   sub <- newMatch lhs t
+   if (sub |-> lhs) == t then return () else error $ "check failed: " ++ show (lhs, t)
    return (sub |-> rhs)
 
 -- uniplate-like helper-functions
@@ -46,6 +47,24 @@ somewhereM :: Uniplate a => (a -> [a]) -> a -> [a]
 somewhereM f = concatMap leave . rec . navigator
  where
    rec ca = changeM f ca ++ concatMap rec (allDowns ca)
+
+newMatch :: MonadPlus m => Term -> Term -> m Substitution
+newMatch term1 term2 = 
+   case (term1, term2) of
+      (Meta i, Meta j) | i == j -> 
+         return emptySubst
+      (Meta i, _) | not (i `hasMetaVar` term2) -> 
+         return (singletonSubst i term2)
+      (_, Meta _) -> 
+         fail "unifyM: no unifier"
+      (Apply f a, Apply g b) -> do
+         s1 <- newMatch f g
+         s2 <- newMatch (s1 |-> a) (b)
+         guard (composable s1 s2)
+         return (s1 @@ s2)
+      _ | term1 == term2 -> 
+         return emptySubst
+      _ -> fail "unifyM: no unifier"
 
 ----------------------------------------------------
 
@@ -60,11 +79,11 @@ superImpose r1 r2 = rec (navigator lhs1)
     
     rec ca = case current ca of
                 Just (Meta _) -> []
-                Just a -> [ subTop s ca | s <- unifyM a lhs2 ] ++ concatMap rec (allDowns ca)
+                Just a -> maybe [] (return . (`subTop` ca)) (unify a lhs2) ++ concatMap rec (allDowns ca)
                 Nothing -> []
     
     subTop s ca = fromMaybe ca $ 
-       fmap (change (freeze . (s |->))) (top ca) >>= navigateTo (location ca)
+       fmap (change (s |->)) (top ca) >>= navigateTo (location ca)
     
     renumber r = case metaInRewriteRule r of
                     [] -> id
@@ -72,7 +91,7 @@ superImpose r1 r2 = rec (navigator lhs1)
 
 criticalPairs :: [RewriteRule a] -> [(Term, Pair a, Pair a)]
 criticalPairs rs = 
-   [ (freeze a, (r1, freeze b1), (r2, freeze b2)) 
+   [ (a, (r1, b1), (r2, b2)) 
    | r1       <- rs
    , r2       <- rs
    , na <- superImpose r1 r2
@@ -96,7 +115,7 @@ noDiamondPairsWith f cfg rs =
 reportPairs :: Config -> [(Term, Triple a, Triple a)] -> IO ()
 reportPairs cfg = putStrLn . unlines . zipWith report [1::Int ..]
  where
-   f = showTerm cfg . unfreeze
+   f = showTerm cfg
    report i (a, (r1, e1, nf1), (r2, e2, nf2)) = unlines
       [ show i ++ ") " ++ f a
       , "  "   ++ showId r1
@@ -104,18 +123,6 @@ reportPairs cfg = putStrLn . unlines . zipWith report [1::Int ..]
       , "  "   ++ showId r2
       , "    " ++ f e2 ++ if e2==nf2 then "" else "   -->   " ++ f nf2
       ]
-
-freeze :: Term -> Term
-freeze (Meta n) = Con (newId ('m' : show n))
-freeze term = descend freeze term
-
-unfreeze :: Term -> Term
-unfreeze (Con s) = case showId s of 
-                      'm':is | all isDigit is -> -- && not (null is) -> 
-                         Meta (read is)
-                      _ -> Con s
-unfreeze term = descend unfreeze term
-
 
 ----------------------------------------------------
 

@@ -135,7 +135,7 @@ instance CoMonoid (Q.Seq a) where
       n = Q.length xs
 -}
 instance CoMonoid a => CoMonoid (WithZero a) where
-   isEmpty    = maybe False   isEmpty  . fromWithZero
+   isEmpty    = maybe False isEmpty . fromWithZero
    isAppend a = fromWithZero a >>= fmap (pure *** pure) . isAppend
    
 instance CoMonoid a => CoMonoidZero (WithZero a) where

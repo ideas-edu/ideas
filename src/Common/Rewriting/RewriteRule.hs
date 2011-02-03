@@ -29,12 +29,11 @@ import Common.View hiding (match)
 import Common.Rewriting.Operator
 import Common.Rewriting.Substitution
 import Common.Rewriting.Term
-import Common.Rewriting.Unification hiding (match)
+import Common.Rewriting.Unification
 import Common.Uniplate (descend)
 import Control.Monad
 import Data.Maybe
 import Test.QuickCheck
-import qualified Common.Rewriting.Unification as Unification
 import qualified Data.IntSet as IS
    
 ------------------------------------------------------
@@ -105,7 +104,7 @@ fill i = rec
 
 buildSpec :: [Symbol] -> RuleSpec Term -> Term -> [Term]
 buildSpec ops (lhs :~> rhs) a = do
-   s <- Unification.match ops lhs a
+   s <- matchA ops lhs a
    let (b1, b2) = (specialLeft `IS.member` dom s, specialRight `IS.member` dom s)
        sym      = maybe (error "buildSpec") fst (getFunction lhs)
        extLeft  x = if b1 then binary sym (Meta specialLeft) x else x

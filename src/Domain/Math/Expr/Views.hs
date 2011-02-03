@@ -9,9 +9,11 @@
 -- Portability :  portable (depends on ghc)
 --
 -----------------------------------------------------------------------------
-module Domain.Math.Expr.Views where
+module Domain.Math.Expr.Views 
+   ( module Domain.Math.Expr.Views
+   , (.+.), (.-.), neg, (.*.), (./.)
+   ) where
 
-import Common.Algebra.Field
 import Common.Algebra.CoField
 import Prelude hiding (recip, (^))
 import Common.Rewriting
@@ -24,39 +26,6 @@ import qualified Data.Set as S
 -- Smart constructors
 
 infixr 8 .^.
-infixl 7 .*., ./.
-infixl 6 .-., .+.
-
-(.+.) :: Expr -> Expr -> Expr
-a .+. b = fromSmartField $ SmartField a <+> SmartField b
-
-(.-.) :: Expr -> Expr -> Expr
-a .-. b = fromSmartField $ SmartField a <-> SmartField b
-
-neg :: Expr -> Expr
-neg = fromSmartField . plusInverse . SmartField
-
-(.*.) :: Expr -> Expr -> Expr
-Nat 0    .*. _             = Nat 0
-_        .*. Nat 0         = Nat 0
-Nat 1    .*. b             = b
-a        .*. Nat 1         = a
-Negate a .*. b             = neg (a .*. b)
-a        .*. Negate b      = neg (a .*. b)
-a        .*. (Nat 1 :/: b) = a ./. b
-a        .*. (b :*: c)     = (a .*. b) .*. c
-a        .*. b             = a :*: b
-
-(./.) :: Expr -> Expr -> Expr
-a ./. Nat 1           = a
-Negate a ./. b        = neg (a ./. b)
-a        ./. Negate b = neg (a ./. b)
-(a :/: b) ./. c       = a ./. (b .*. c)
-a ./. b               = a :/: b
-
-recip :: Expr -> Expr
-recip (Nat 1 :/: a) = a
-recip a             = Nat 1 :/: a
 
 (.^.) :: Expr -> Expr -> Expr
 Nat 0 .^. _ = Nat 0

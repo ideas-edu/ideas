@@ -11,7 +11,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Generator
-   ( generateLogic, generateLevel, equalLogicA
+   ( generateLogic, generateLevel, equalLogicA, equalLogicACI
    ) where
 
 import Common.Algebra.Boolean
@@ -19,6 +19,7 @@ import Common.Utils (ShowString(..))
 import Domain.Logic.Formula
 import Control.Monad
 import Data.Char
+import Data.List
 import Test.QuickCheck
 import Common.Rewriting
 import Common.Exercise
@@ -39,6 +40,19 @@ equalLogicA p q = rec p == rec q
               _ :&&: _ -> ands (map rec (conjunctions a))
               _ :||: _ -> ors  (map rec (disjunctions a))
               _        -> descend rec a
+
+-- | Equality modulo associativity/commutativity/idempotency of operators, 
+--   and there units/absorbing elements
+equalLogicACI :: Ord a => Logic a -> Logic a -> Bool
+equalLogicACI p q = rec p == rec q
+ where
+   rec a@(_ :&&: _) = 
+      let xs = filter (/=T) $ nub $ sort $ conjunctions a
+      in if F `elem` xs then F else ands (map rec xs)           
+   rec a@(_ :||: _) = 
+      let xs = filter (/=F) $ nub $ sort $ disjunctions a
+      in if T `elem` xs then T else ors (map rec xs)  
+   rec a = descend rec a
 
 -----------------------------------------------------------
 -- Logic generator

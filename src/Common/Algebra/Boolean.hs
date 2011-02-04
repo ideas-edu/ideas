@@ -13,7 +13,7 @@
 module Common.Algebra.Boolean 
    ( -- * Boolean algebra
      BoolValue(..), Boolean(..)
-   , ands, ors
+   , ands, ors, implies, equivalent
    , andOverOrLaws, orOverAndLaws
    , complementAndLaws, complementOrLaws
    , absorptionAndLaws, absorptionOrLaws
@@ -72,6 +72,12 @@ ands xs | null xs   = true
 ors :: Boolean a => [a] -> a
 ors xs | null xs   = false
        | otherwise = foldr1 (<||>) xs
+
+implies :: Boolean a => a -> a -> a
+implies a b = complement a <||> b
+
+equivalent :: Boolean a => a -> a -> a
+equivalent a b = (a <&&> b) <||> (complement a <&&> complement b)
 
 andOverOrLaws, orOverAndLaws :: Boolean a => [Law a]
 andOverOrLaws = map fromAndLaw dualDistributive

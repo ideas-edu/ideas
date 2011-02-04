@@ -15,18 +15,17 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Interval
    ( -- Data types
-     Intervals, Interval
+     Interval
      -- Interval constructors
    , empty, point, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
    , lessThan, lessThanOrEqualTo
      -- Inspecing an interval
-   , isEmpty, leftPoint, rightPoint, Endpoint(..)
+   , Endpoint(..), segments
      -- Making intervals
-   , except, toIntervalList, fromIntervalList, singleInterval, singleton
+   , except
    , union, intersect, complement
-   , isIn, isInInterval
-   , true, false
+   , isIn, true, false
      -- QuickChecks
    , testMe
    ) where
@@ -34,21 +33,18 @@ module Domain.Math.Data.Interval
 import Common.Algebra.Boolean
 import Common.Algebra.Law
 import Common.TestSuite
-import Common.Classes
 import Common.Utils (commaList)
 import Control.Monad
-import Data.Foldable (Foldable, foldMap)
 import Data.Maybe
-import Data.Monoid
 import Test.QuickCheck
 
 --------------------------------------------------------------------
 -- Data declarations
 
-newtype Intervals a = IS [Interval a]
+newtype Interval a = I [Segment a]
    deriving Eq
 
-data Interval a = Empty | I (Endpoint a) (Endpoint a)
+data Segment a = S (Endpoint a) (Endpoint a)
    deriving Eq
 
 data Endpoint a = Excluding a | Including a | Unbounded
@@ -56,61 +52,24 @@ data Endpoint a = Excluding a | Including a | Unbounded
 
 instance Ord a => BoolValue (Interval a) where
    fromBool b = if b then unbounded else empty
-   isTrue     = (==true)
-   isFalse    = (==false)   
-
-instance Ord a => BoolValue (Intervals a) where
-   fromBool = singleInterval . fromBool
    isTrue   = (==true)
    isFalse  = (==false)
 
-instance Ord a => Boolean (Intervals a) where
+instance Ord a => Boolean (Interval a) where
    (<&&>)     = intersect
    (<||>)     = union
    complement = complementIntervals
 
-instance Collection Interval where
-   singleton = point
-
-instance Collection Intervals where
-   singleton = singleInterval . singleton
-
-instance Show a => Show (Intervals a) where
-   show xs = "{ " ++ commaList (map show (toIntervalList xs)) ++ " }"
-
 instance Show a => Show (Interval a) where
-   show interval =
-      case interval of
-         Empty -> "{}"
-         I a b -> showLeft a ++ "," ++ showRight b
+   show (I xs) = "{ " ++ commaList (map show xs) ++ " }"
+
+instance Show a => Show (Segment a) where
+   show (S a b) = showLeft a ++ "," ++ showRight b
 
 instance Functor Endpoint where
    fmap f (Excluding a) = Excluding (f a)
    fmap f (Including a) = Including (f a)
    fmap _ Unbounded     = Unbounded
-
-instance Foldable Endpoint where
-   foldMap f (Excluding a) = f a
-   foldMap f (Including a) = f a
-   foldMap _ Unbounded     = mempty
-
-instance Functor Interval where
-   fmap _ Empty   = Empty
-   fmap f (I a b) = I (fmap f a) (fmap f b) -- function should not change order
-
-instance Foldable Interval where
-   foldMap _ Empty   = mempty
-   foldMap f (I a b) = foldMap f a `mappend` foldMap f b
-
-instance Functor Intervals where
-   fmap f (IS xs) = IS (map (fmap f) xs)
-   
-instance Foldable Intervals where
-   foldMap f (IS xs) = mconcat (map (foldMap f) xs)
-
-instance Ord a => Monoid (Intervals a) where
-   mempty = IS []
-   mappend (IS xs) a = foldr insert a xs
 
 showLeft, showRight :: Show a => Endpoint a -> String
 showLeft  (Excluding a) = '(' : show a
@@ -124,10 +83,10 @@ showRight Unbounded     = "inf)"
 -- Interval constructors
 
 empty :: Interval a
-empty = Empty
+empty = I []
 
 point :: a -> Interval a
-point a = I (Including a) (Including a)
+point a = I [S (Including a) (Including a)]
 
 unbounded :: Ord a => Interval a
 unbounded = makeInterval Unbounded Unbounded
@@ -158,14 +117,16 @@ lessThanOrEqualTo a = makeInterval Unbounded (Including a)
 
 -- local constructor
 makeInterval :: Ord a => Endpoint a -> Endpoint a -> Interval a
-makeInterval pl pr =
+makeInterval pl pr = maybe empty (I . return) (makeSegment pl pr)
+
+makeSegment :: Ord a => Endpoint a -> Endpoint a -> Maybe (Segment a)
+makeSegment pl pr =
    case liftM2 compare (getPoint pl) (getPoint pr) of
-      Just LT -> I pl pr
-      Just EQ
-         | isIncluding pl && isIncluding pr -> I pl pr
-         | otherwise                        -> Empty
-      Just GT -> Empty
-      Nothing -> I pl pr
+      Just EQ 
+         | isExcluding pl -> Nothing
+         | isExcluding pr -> Nothing
+      Just GT             -> Nothing
+      _ -> Just (S pl pr)
 
 isIncluding :: Endpoint a -> Bool
 isIncluding (Including _) = True
@@ -178,82 +139,58 @@ isExcluding _             = False
 --------------------------------------------------------------------
 -- Inspecting an interval
 
-isEmpty :: Interval a -> Bool
-isEmpty Empty = True
-isEmpty _     = False
-
-leftPoint, rightPoint :: Interval a -> Endpoint a
-leftPoint  (I a _) = a
-leftPoint Empty    = error "leftPoint Empty"
-rightPoint (I _ a) = a
-rightPoint Empty   = error "rightPoint Empty"
+segments :: Interval a -> [(Endpoint a, Endpoint a)]
+segments (I xs) = [ (a, b) | S a b <- xs ]
 
 --------------------------------------------------------------------
 -- Combining multiple intervals
 
-except :: Ord a => a -> Intervals a
-except a = fromIntervalList [lessThan a, greaterThan a]
+except :: Ord a => a -> Interval a
+except a = lessThan a <||> greaterThan a
 
-singleInterval :: Interval a -> Intervals a
-singleInterval a     
-   | isEmpty a = IS []
-   | otherwise = IS [a]
-
-fromIntervalList :: Ord a => [Interval a] -> Intervals a
-fromIntervalList = mconcat . map singleInterval
-
-toIntervalList :: Intervals a -> [Interval a]
-toIntervalList (IS xs) = xs
-
-insert :: Ord a => Interval a -> Intervals a -> Intervals a
-insert Empty xs  = xs
-insert iv@(I l _) (IS xs) = rec xs
+insert :: Ord a => Segment a -> Interval a -> Interval a
+insert ia (I xs) = I (rec ia xs)
  where
-   rec []        = IS [iv]
-   rec (hd:rest) =
-      case (hd, merge iv hd) of
-         (Empty, _)       -> rec rest
-         (_, Just new)    -> insert new (IS rest)
-         (I a _, Nothing)
-            | minPointLeft a l == a -> let IS tl = rec rest in IS (hd:tl)
-            | otherwise             -> IS (iv:hd:rest)
+   rec iv [] = [iv]
+   rec iv@(S a _) (hd@(S b _):rest) =
+      case merge iv hd of
+         Just new -> rec new rest
+         Nothing
+            | minPointLeft b a == b -> hd:rec iv rest
+            | otherwise             -> iv:hd:rest
 
-union :: Ord a => Intervals a -> Intervals a -> Intervals a
-union xs = foldr insert xs . toIntervalList
+union :: Ord a => Interval a -> Interval a -> Interval a
+union xs (I ys) = foldr insert xs ys
 
-intersect :: Ord a => Intervals a -> Intervals a -> Intervals a
-intersect (IS xs) (IS ys) = fromIntervalList (f xs ys)
+intersect :: Ord a => Interval a -> Interval a -> Interval a
+intersect (I xs) (I ys) = I (f xs ys)
  where
-   f (a@(I _ ar):as) (b@(I _ br):bs) = inBoth a b : rest
-    where
-      rest | maxPointRight ar br == ar = f (a:as) bs
-           | otherwise                 = f as (b:bs)
+   f (a@(S _ ar):as) (b@(S _ br):bs) = 
+      let cond = maxPointRight ar br == ar
+          rest | cond      = f (a:as) bs
+               | otherwise = f as (b:bs)
+      in maybe id (:) (inBoth a b) rest
    f _ _ = []
 
-complementIntervals :: Ord a => Intervals a -> Intervals a
-complementIntervals (IS xs) = fromIntervalList (left ++ zipWith f xs (drop 1 xs) ++ right)
+complementIntervals :: Ord a => Interval a -> Interval a
+complementIntervals (I xs) 
+   | null xs   = unbounded
+   | otherwise = I $ catMaybes $ 
+        left (head xs) : zipWith f xs (drop 1 xs) ++ [right (last xs)]
  where
-   f (I _ a) (I b _) = fromMaybe Empty (liftM2 I (g a) (g b))
-   f _ _             = Empty
+   f (S _ a) (S b _) = liftM2 S (g a) (g b)
    
    g (Including a) = Just (Excluding a)
    g (Excluding a) = Just (Including a)
    g Unbounded     = Nothing
    
-   left = case xs of 
-             I al _:_ -> maybe [] (return . I Unbounded) (g al)
-             _        -> [unbounded]
-   right = case reverse xs of 
-              I _ ar:_ -> maybe [] (return . flip I Unbounded) (g ar)
-              _        -> [unbounded]
+   left  (S al _) = fmap (S Unbounded) (g al)
+   right (S _ ar) = fmap (flip S Unbounded) (g ar)
 
-isIn :: Ord a => a -> Intervals a -> Bool
-isIn a (IS xs) = any (isInInterval a) xs
-
-isInInterval :: Ord a => a -> Interval a -> Bool
-isInInterval _ Empty   = False
-isInInterval a (I x y) = f GT x && f LT y
+isIn :: Ord a => a -> Interval a -> Bool
+isIn a (I xs) = any p xs
  where
+   p (S x y) = f GT x && f LT y
    f value b = 
       let g c = (c==EQ && isIncluding b) || c==value 
       in maybe True (g . compare a) (getPoint b)
@@ -266,26 +203,18 @@ getPoint (Including a) = Just a
 getPoint (Excluding a) = Just a
 getPoint Unbounded     = Nothing
 
-merge :: Ord a => Interval a -> Interval a -> Maybe (Interval a)
-merge a Empty = Just a
-merge Empty b = Just b
-merge ia@(I al ar) ib@(I bl br)
+merge :: Ord a => Segment a -> Segment a -> Maybe (Segment a)
+merge ia@(S al ar) ib@(S bl br)
    | minPointLeft al bl /= al = merge ib ia
    | otherwise = 
         case liftM2 compare (getPoint ar) (getPoint bl) of
            Just LT -> Nothing
-           Just EQ
-              | isIncluding ar || isIncluding bl -> ok
-              | otherwise     -> Nothing
-           Just GT -> ok
-           Nothing -> ok
- where
-   ok = Just (I al (maxPointRight ar br))
+           Just EQ | isExcluding ar && isExcluding bl -> Nothing
+           _ -> Just (S al (maxPointRight ar br))
 
-inBoth :: Ord a => Interval a -> Interval a -> Interval a
-inBoth _ Empty = Empty
-inBoth Empty _ = Empty
-inBoth (I al ar) (I bl br) = makeInterval (maxPointLeft al bl) (minPointRight ar br)
+inBoth :: Ord a => Segment a -> Segment a -> Maybe (Segment a)
+inBoth (S al ar) (S bl br) = 
+   makeSegment (maxPointLeft al bl) (minPointRight ar br)
 
 minPointLeft, minPointRight, maxPointLeft, maxPointRight 
    :: Ord a => Endpoint a -> Endpoint a -> Endpoint a
@@ -323,22 +252,16 @@ instance (CoArbitrary a, Ord a) => CoArbitrary (Endpoint a) where
    coarbitrary Unbounded     = variant (2 :: Int)
 
 instance (Arbitrary a, Ord a) => Arbitrary (Interval a) where
-   arbitrary = frequency 
-      [ (1, return Empty)
-      , (5, liftM2 makeInterval arbitrary arbitrary)
-      ]
-instance (CoArbitrary a, Ord a) => CoArbitrary (Interval a) where
-   coarbitrary Empty   = variant (0 :: Int)
-   coarbitrary (I a b) = variant (1 :: Int) . coarbitrary a . coarbitrary b
-   
-instance (Arbitrary a, Ord a) => Arbitrary (Intervals a) where
    arbitrary = do
       n  <- choose (0, 100)
-      xs <- replicateM n arbitrary
-      return (fromIntervalList xs)
+      xs <- replicateM n (liftM2 makeInterval arbitrary arbitrary)
+      return (ors xs)
 
-instance (CoArbitrary a, Ord a) => CoArbitrary (Intervals a) where
-   coarbitrary (IS xs) = coarbitrary xs
+instance (CoArbitrary a, Ord a) => CoArbitrary (Segment a) where
+   coarbitrary (S a b) = coarbitrary a . coarbitrary b
+
+instance (CoArbitrary a, Ord a) => CoArbitrary (Interval a) where
+   coarbitrary (I xs) = coarbitrary xs
 
 testMe :: TestSuite
 testMe = suite "Intervals" $ do
@@ -358,10 +281,6 @@ testMe = suite "Intervals" $ do
      addProperty "left open"  $ op2 leftOpen  (<)  (<=)
      addProperty "right open" $ op2 rightOpen (<=) (<)
    
-   suite "From/to lists" $ do
-      addProperty "" fromTo1
-      addProperty "" fromTo2
-   
    suite "Combinators" $ do
       addProperty "except"     defExcept
       addProperty "union"      defUnion
@@ -369,28 +288,24 @@ testMe = suite "Intervals" $ do
       addProperty "complement" defComplement
    
    suite "Boolean algebra" $
-      forM_ (booleanLaws :: [Law (Intervals Int)]) $ \p ->
+      forM_ (booleanLaws :: [Law (Interval Int)]) $ \p ->
          addProperty (show p) p
-
-fromTo1, fromTo2 :: Intervals Int -> Bool
-fromTo1 a = fromIntervalList (toIntervalList a) == a
-fromTo2 a = fromIntervalList (reverse (toIntervalList a)) == a
 
 defExcept :: Int -> Int -> Bool
 defExcept a b = isIn a (except b) == (a/=b)
 
-defUnion, defIntersect :: Int -> Intervals Int -> Intervals Int -> Bool
+defUnion, defIntersect :: Int -> Interval Int -> Interval Int -> Bool
 defUnion     a b c = isIn a (b `union` c) == (isIn a b || isIn a c)
 defIntersect a b c = isIn a (b `intersect` c) == (isIn a b && isIn a c)
 
-defComplement :: Int -> Intervals Int -> Bool
+defComplement :: Int -> Interval Int -> Bool
 defComplement a b = isIn a (complement b) == not (isIn a b)
 
 op0 :: Interval Int -> (Int -> Bool) -> Int -> Bool
-op0 g p a = isInInterval a g == p a
+op0 g p a = isIn a g == p a
 
 op1 :: (Int -> Interval Int) -> (Int -> Int -> Bool) -> Int -> Int -> Bool
-op1 g op a b = isInInterval a (g b) == (a `op` b)
+op1 g op a b = isIn a (g b) == (a `op` b)
 
 op2 :: (Int -> Int -> Interval Int) -> (Int -> Int -> Bool) -> (Int -> Int -> Bool) -> Int -> Int -> Int -> Bool
-op2 g opl opr a b c = isInInterval a (g b c) == (b `opl` a && a `opr` c)
+op2 g opl opr a b c = isIn a (g b c) == (b `opl` a && a `opr` c)

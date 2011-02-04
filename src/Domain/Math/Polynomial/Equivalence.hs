@@ -12,17 +12,15 @@
 -----------------------------------------------------------------------------
 module Domain.Math.Polynomial.Equivalence 
    ( linEq, quadrEqContext, highEqContext, simLogic, flipGT
-   , eqAfterSubstitution
+   , eqAfterSubstitution, intervalRelations
    ) where
 
 import Common.Context
 import Common.Algebra.Boolean
-import Common.Algebra.CoBoolean
 import Common.Rewriting
 import Common.Uniplate
 import Common.View
 import Control.Monad
-import Data.List (sort, nub)
 import qualified Data.Traversable as T
 import Data.Maybe
 import Data.Ord
@@ -38,68 +36,67 @@ import Domain.Math.Polynomial.Views
 import Domain.Math.SquareRoot.Views
 import Prelude hiding ((^), sqrt)
 import qualified Domain.Logic.Formula as Logic
+import qualified Domain.Logic.Generator as Logic
 
-relationIntervals :: Ord a => RelationType -> a -> Intervals a
-relationIntervals relType a = 
+relationInterval :: Ord a => RelationType -> a -> Interval a
+relationInterval relType = 
    case relType of
-      EqualTo              -> only point a
-      NotEqualTo           -> except a
-      LessThan             -> only lessThan a
-      GreaterThan          -> only greaterThan a
-      LessThanOrEqualTo    -> only lessThanOrEqualTo a
-      GreaterThanOrEqualTo -> only greaterThanOrEqualTo a
-      Approximately        -> only point a -- i.e., equalTo
- where    
-   only f = singleInterval . f
+      EqualTo              -> point
+      NotEqualTo           -> except
+      LessThan             -> lessThan
+      GreaterThan          -> greaterThan
+      LessThanOrEqualTo    -> lessThanOrEqualTo
+      GreaterThanOrEqualTo -> greaterThanOrEqualTo
+      Approximately        -> point -- i.e., equalTo
 
-logicIntervals :: Ord a => Logic (Intervals a) -> Intervals a
-logicIntervals = foldLogic 
-   ( id
-   , \p q -> complement p `union` q -- p->q  =  ~p||q
-   , \p q -> (p `intersect` q) `union` (complement p `intersect` complement q)  -- p<->q  =  (p&&q)||(~p&&~q)
-   , intersect
-   , union
-   , complement
-   , true
-   , false
-   )
+intervalRelations :: Eq a => a -> Interval a -> Logic (Relation a)
+intervalRelations v = ors . map (ands . map Logic.Var . make) . segments
+ where
+   make pair = 
+      case pair of
+         (Unbounded, Unbounded)   -> []
+         (Unbounded, Including b) -> [v .<=. b]
+         (Unbounded, Excluding b) -> [v .<. b]
+         (Including a, Unbounded) -> [v .>=. a]
+         (Excluding a, Unbounded) -> [v .>. a]
+         (Including a, Including b) 
+            | a == b    -> [v .==. a]
+            | otherwise -> [v .>=. a, v .<=. b]
+         (Including a, Excluding b) -> [v .>=. a, v .<. b]
+         (Excluding a, Including b) -> [v .>. a, v .<=. b]
+         (Excluding a, Excluding b) -> [v .>. a, v .<. b]
+
+logicInterval :: Ord a => Logic (Interval a) -> Interval a
+logicInterval = 
+   foldLogic (id, implies, equivalent, intersect, union, complement, true, false)
 
 -----------------------------------------------------------
              
 linEq :: Relation Expr -> Relation Expr -> Bool
 linEq a b = fromMaybe False $ liftM2 (==) (linRel a) (linRel b)
 
-linRel :: Relation Expr -> Maybe (String, Intervals Rational)
+linRel :: Relation Expr -> Maybe (String, Interval Rational)
 linRel = linRelWith rationalView
 
 linRelWith :: (Ord a, Fractional a)
-           => View Expr a -> Relation Expr -> Maybe (String, Intervals a)
+           => View Expr a -> Relation Expr -> Maybe (String, Interval a)
 linRelWith v rel =
    case match (linearViewWith v) (lhs - rhs) of
-      Nothing -> 
-         case match (polyViewWith v) (lhs - rhs) of
-            Just (s, p) | degree p == 0 -> 
-               case compare (coefficient 0 p) 0 of
-                  LT | relationType rel `elem` [LessThan, LessThanOrEqualTo] -> 
-                          return (s, true)
-                     | otherwise ->
-                          return (s, false)
-                  EQ | relationType rel `elem` [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo] -> 
-                          return (s, true)
-                     | otherwise -> 
-                          return (s, false)
-                  GT | relationType rel `elem` [GreaterThan, GreaterThanOrEqualTo] -> 
-                          return (s, true)
-                     | otherwise ->
-                          return (s, false)
-            _ -> Nothing
+      Nothing -> do
+         (s, p) <- match (polyViewWith v) (lhs - rhs)
+         guard (degree p == 0)
+         let list = case compare (coefficient 0 p) 0 of
+                       LT -> [LessThan, LessThanOrEqualTo]
+                       EQ -> [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo]
+                       GT -> [GreaterThan, GreaterThanOrEqualTo]
+         return (s, fromBool $ relationType rel `elem` list)
       Just (s, a, b) 
          | a==0 -> 
-              return (s, fromIntervalList [ unbounded | b==0 ])
+              return (s, fromBool (b==0))
          | otherwise -> do
               let zero = -b/a
                   tp = relationType $ (if a<0 then flipSides else id) rel
-              return (s, relationIntervals tp zero) 
+              return (s, relationInterval tp zero) 
  where
    lhs = leftHandSide rel
    rhs = rightHandSide rel
@@ -144,14 +141,14 @@ ineqOnClipboard = evalCM $ const $ do
    expr <- lookupClipboard "ineq"
    fromExpr expr
 
-polyEq :: (Relation Expr -> Maybe (String, Intervals Q)) -> Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
+polyEq :: (Relation Expr -> Maybe (String, Interval Q)) -> Logic (Relation Expr) -> Logic (Relation Expr) -> Bool
 polyEq f p q = fromMaybe False $ do
    xs <- T.mapM f p
    ys <- T.mapM f q
    let vs = map fst (varsLogic xs ++ varsLogic ys)
    guard (null vs || all (==head vs) vs)
-   let ix = logicIntervals (fmap snd xs)
-       iy = logicIntervals (fmap snd ys)
+   let ix = logicInterval (fmap snd xs)
+       iy = logicInterval (fmap snd ys)
    if ix == iy then return True else return False
 
 cuPlus :: Relation Expr -> Maybe (Relation Expr)
@@ -192,14 +189,14 @@ cuPower rel = do
                  then Logic.Var new :&&: Logic.Var opp
                  else Logic.Var new :||: Logic.Var opp
 
-highRel2 :: Logic (Relation Expr) -> Maybe (String, Intervals Q)
+highRel2 :: Logic (Relation Expr) -> Maybe (String, Interval Q)
 highRel2 p = do
    xs <- T.mapM highRel p
    let vs = map fst (varsLogic xs)
    guard (null vs || all (==head vs) vs)
-   return (head vs, logicIntervals (fmap snd xs))
+   return (head vs, logicInterval (fmap snd xs))
 
-highRel :: Relation Expr -> Maybe (String, Intervals Q)
+highRel :: Relation Expr -> Maybe (String, Interval Q)
 highRel rel = msum 
    [ cuTimes rel >>= highRel
    , cuPower rel >>= highRel2
@@ -207,7 +204,7 @@ highRel rel = msum
    , quadrRel rel 
    ]
 
-quadrRel :: Relation Expr -> Maybe (String, Intervals Q)
+quadrRel :: Relation Expr -> Maybe (String, Interval Q)
 quadrRel rel = 
    case match (quadraticViewWith rationalView) (lhs - rhs) of
       Nothing ->
@@ -224,32 +221,25 @@ quadrRel rel =
          guard (a/=0)
          (\is -> Just (s, is)) $
           case compare discr 0 of
-            LT | tp `elem` [NotEqualTo, GreaterThan, GreaterThanOrEqualTo] ->
-                    true
-               | tp `elem` [EqualTo, Approximately, LessThan, LessThanOrEqualTo] ->
-                    false
+            LT -> fromBool $ tp `elem` [NotEqualTo, GreaterThan, GreaterThanOrEqualTo]
             EQ | tp `elem` [EqualTo, Approximately, LessThanOrEqualTo] -> 
-                    singleton pa
-               | tp == NotEqualTo ->
-                    except pa
-               | tp == LessThan ->
-                    false
-               | tp == GreaterThan ->
-                    except pa
-               | tp == GreaterThanOrEqualTo ->
-                    true
+                    point pa
+               | tp == NotEqualTo           -> except pa
+               | tp == LessThan             -> false
+               | tp == GreaterThan          -> except pa
+               | tp == GreaterThanOrEqualTo -> true
             GT | tp `elem` [EqualTo, Approximately] -> 
-                    fromIntervalList [point pa, point pb]
+                    point pa <||> point pb
                | tp == NotEqualTo -> 
                     except pa `intersect` except pb
                | tp == LessThan -> 
-                    singleInterval (open pa pb)
+                    open pa pb
                | tp == LessThanOrEqualTo ->
-                    singleInterval (closed pa pb)
+                    closed pa pb
                | tp == GreaterThan -> 
-                    fromIntervalList [lessThan pa, greaterThan pb]
+                    lessThan pa <||> greaterThan pb
                | tp == GreaterThanOrEqualTo ->
-                    fromIntervalList [lessThanOrEqualTo pa, greaterThanOrEqualTo pb]
+                    lessThanOrEqualTo pa <||> greaterThanOrEqualTo pb
             _ -> error "unknown case in quadrRel"
  where
    lhs = leftHandSide rel
@@ -265,36 +255,7 @@ flipGT r
 
 -- for similarity 
 simLogic :: Ord a => (a -> a) -> Logic a -> Logic a -> Bool
-simLogic f p0 q0 = rec (fmap f p0) (fmap f q0)
- where
-   rec a b   
-      | isJust (isOr a) =
-           let collect = nub . sort . trueOr . collectOr
-           in recList (collect a) (collect b)
-      | isJust (isAnd a) =
-           let collect = nub . sort . falseAnd . collectAnd
-           in recList (collect a) (collect b)
-      | otherwise = 
-           shallowEq a b && recList (children a) (children b)
- 
-   recList xs ys = 
-      length xs == length ys && and (zipWith rec xs ys) 
- 
-   collectOr (p :||: q) = collectOr p ++ collectOr q
-   collectOr F = []
-   collectOr a = [a]
-   
-   trueOr xs = if T `elem` xs then [] else xs
-   
-   collectAnd (p :&&: q) = collectAnd p ++ collectAnd q
-   collectAnd T = []
-   collectAnd a = [a]
-   
-   falseAnd xs = if F `elem` xs then [] else xs
-   
-   shallowEq a b = 
-      let g = descend (const T) 
-      in g a == g b
+simLogic f p0 q0 = Logic.equalLogicACI (fmap f p0) (fmap f q0)
    
 eqAfterSubstitution :: (Functor f, Functor g) 
    => (f (g Expr) -> f (g Expr) -> Bool) -> Context (f (g Expr)) -> Context (f (g Expr)) -> Bool

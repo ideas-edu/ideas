@@ -20,16 +20,16 @@ import Data.Foldable (toList)
 import Data.List
 import Data.Maybe (fromMaybe)
 import Domain.Logic.Formula (Logic((:||:), (:&&:)), catLogic, ors)
+import Domain.Math.CleanUp
 import Domain.Math.Data.Interval
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules hiding (coverUpPlus)
 import Domain.Math.Equation.Views
-import Domain.Math.Polynomial.Examples
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
-import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Equivalence
+import Domain.Math.Polynomial.Examples
 import Domain.Math.Polynomial.Rules 
 import Domain.Math.Polynomial.Strategies
 import Domain.Math.SquareRoot.Views
@@ -251,8 +251,8 @@ solutionInequation = describe "Determine solution for inequality" $
          guard (all (==v) vs)
          let rs = makeRanges including (sort (zipWith A ds zs))
              including = rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
-         return $ fromIntervals v fromDExpr $ 
-            fromIntervalList [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
+         return $ fmap (fmap fromDExpr) $ intervalRelations (A 0 (Var v)) $ 
+            ors [ this | (d, isP, this) <- rs, isP || evalIneq inEquation v d ]
  where
    makeRanges :: Bool -> [DExpr] -> [(Double, Bool, Interval DExpr)]
    makeRanges b xs =
@@ -295,23 +295,3 @@ instance Ord DExpr where
 
 fromDExpr :: DExpr -> Expr
 fromDExpr (A _ e) = e
-  
-fromIntervals :: Eq a => String -> (a -> Expr) -> Intervals a -> Logic (Relation Expr)
-fromIntervals v f = ors . map (fromInterval v f) . toIntervalList
-   
-fromInterval :: Eq a => String -> (a -> Expr) -> Interval a -> Logic (Relation Expr)
-fromInterval v f i 
-   | isEmpty i = false
-   | otherwise = 
-        case (leftPoint i, rightPoint i) of
-           (Unbounded, Unbounded)   -> true
-           (Unbounded, Including b) -> Logic.Var (Var v .<=. f b)
-           (Unbounded, Excluding b) -> Logic.Var (Var v .<. f b)
-           (Including a, Unbounded) -> Logic.Var (Var v .>=. f a)
-           (Excluding a, Unbounded) -> Logic.Var (Var v .>. f a)
-           (Including a, Including b) 
-              | a == b    -> Logic.Var (Var v .==. f a)
-              | otherwise -> Logic.Var (Var v .>=. f a) :&&: Logic.Var (Var v .<=. f b) 
-           (Including a, Excluding b) -> Logic.Var (Var v .>=. f a) :&&: Logic.Var (Var v .<. f b) 
-           (Excluding a, Including b) -> Logic.Var (Var v .>. f a) :&&: Logic.Var (Var v .<=. f b) 
-           (Excluding a, Excluding b) -> Logic.Var (Var v .>. f a) :&&: Logic.Var (Var v .<. f b) 

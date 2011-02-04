@@ -19,7 +19,7 @@ import Common.Classes
 import Control.Applicative
 import Control.Arrow
 import Data.Maybe
---import qualified Data.Set as S
+import qualified Data.Set as S
 --import qualified Data.Map as M
 --import qualified Data.Sequence as Q
 
@@ -124,7 +124,13 @@ instance CoMonoid [a] where
    isEmpty = null
    isAppend (x:xs@(_:_)) = Just ([x], xs)
    isAppend _            = Nothing
-   
+
+instance CoMonoid (S.Set a) where
+   isEmpty = S.null
+   isAppend s
+      | S.size s > 1 = Just (first S.singleton (S.deleteFindMin s))
+      | otherwise    = Nothing
+
 {-
 instance CoMonoid (Q.Seq a) where
    isEmpty = Q.null

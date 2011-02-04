@@ -23,14 +23,18 @@ module Domain.Math.Data.Interval
      -- Inspecing an interval
    , isEmpty, leftPoint, rightPoint, Endpoint(..)
      -- Making intervals
-   , except, toIntervalList, fromIntervalList, singleInterval
+   , except, toIntervalList, fromIntervalList, singleInterval, singleton
    , union, intersect, complement
    , isIn, isInInterval
+   , true, false
      -- QuickChecks
    , testMe
    ) where
 
+import Common.Algebra.Boolean
+import Common.Algebra.Law
 import Common.TestSuite
+import Common.Classes
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Foldable (Foldable, foldMap)
@@ -49,6 +53,27 @@ data Interval a = Empty | I (Endpoint a) (Endpoint a)
 
 data Endpoint a = Excluding a | Including a | Unbounded
    deriving Eq
+
+instance Ord a => BoolValue (Interval a) where
+   fromBool b = if b then unbounded else empty
+   isTrue     = (==true)
+   isFalse    = (==false)   
+
+instance Ord a => BoolValue (Intervals a) where
+   fromBool = singleInterval . fromBool
+   isTrue   = (==true)
+   isFalse  = (==false)
+
+instance Ord a => Boolean (Intervals a) where
+   (<&&>)     = intersect
+   (<||>)     = union
+   complement = complementIntervals
+
+instance Collection Interval where
+   singleton = point
+
+instance Collection Intervals where
+   singleton = singleInterval . singleton
 
 instance Show a => Show (Intervals a) where
    show xs = "{ " ++ commaList (map show (toIntervalList xs)) ++ " }"
@@ -170,7 +195,9 @@ except :: Ord a => a -> Intervals a
 except a = fromIntervalList [lessThan a, greaterThan a]
 
 singleInterval :: Interval a -> Intervals a
-singleInterval = IS . return
+singleInterval a     
+   | isEmpty a = IS []
+   | otherwise = IS [a]
 
 fromIntervalList :: Ord a => [Interval a] -> Intervals a
 fromIntervalList = mconcat . map singleInterval
@@ -203,8 +230,8 @@ intersect (IS xs) (IS ys) = fromIntervalList (f xs ys)
            | otherwise                 = f as (b:bs)
    f _ _ = []
 
-complement :: Ord a => Intervals a -> Intervals a
-complement (IS xs) = fromIntervalList (left ++ zipWith f xs (drop 1 xs) ++ right)
+complementIntervals :: Ord a => Intervals a -> Intervals a
+complementIntervals (IS xs) = fromIntervalList (left ++ zipWith f xs (drop 1 xs) ++ right)
  where
    f (I _ a) (I b _) = fromMaybe Empty (liftM2 I (g a) (g b))
    f _ _             = Empty
@@ -341,14 +368,9 @@ testMe = suite "Intervals" $ do
       addProperty "intersect"  defIntersect
       addProperty "complement" defComplement
    
-   suite "Combinator properties" $ do
-      addProperty "inverse complement"    $ selfInverse complement
-      addProperty "transitive union"      $ transitive  union
-      addProperty "commutative union"     $ commutative union
-      addProperty "absorption union"      $ absorption  union
-      addProperty "transitive intersect"  $ transitive  intersect
-      addProperty "commutative intersect" $ commutative intersect
-      addProperty "absorption intersect"  $ absorption  intersect
+   suite "Boolean algebra" $
+      forM_ (booleanLaws :: [Law (Intervals Int)]) $ \p ->
+         addProperty (show p) p
 
 fromTo1, fromTo2 :: Intervals Int -> Bool
 fromTo1 a = fromIntervalList (toIntervalList a) == a
@@ -372,15 +394,3 @@ op1 g op a b = isInInterval a (g b) == (a `op` b)
 
 op2 :: (Int -> Int -> Interval Int) -> (Int -> Int -> Bool) -> (Int -> Int -> Bool) -> Int -> Int -> Int -> Bool
 op2 g opl opr a b c = isInInterval a (g b c) == (b `opl` a && a `opr` c)
-
-transitive :: (Intervals Int -> Intervals Int -> Intervals Int) -> Intervals Int -> Intervals Int -> Intervals Int -> Bool
-transitive op a b c = op a (op b c) == op (op a b) c
-
-commutative :: (Intervals Int -> Intervals Int -> Intervals Int) -> Intervals Int -> Intervals Int -> Bool
-commutative op a b = op a b == op b a
-
-absorption :: (Intervals Int -> Intervals Int -> Intervals Int) -> Intervals Int -> Bool
-absorption op a = op a a == a
-
-selfInverse :: (Intervals Int -> Intervals Int) -> Intervals Int -> Bool
-selfInverse op a = op (op a) == a

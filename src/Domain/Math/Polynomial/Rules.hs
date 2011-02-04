@@ -59,7 +59,6 @@ lineq   = "algebra.equations.linear"
 quadreq = "algebra.equations.quadratic"
 polyeq  = "algebra.equations.polynomial"
 
-
 ------------------------------------------------------------
 -- General form rules: ax^2 + bx + c = 0
 

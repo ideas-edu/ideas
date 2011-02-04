@@ -16,6 +16,8 @@ module Domain.Math.Polynomial.Equivalence
    ) where
 
 import Common.Context
+import Common.Algebra.Boolean
+import Common.Algebra.CoBoolean
 import Common.Rewriting
 import Common.Uniplate
 import Common.View
@@ -58,8 +60,8 @@ logicIntervals = foldLogic
    , intersect
    , union
    , complement
-   , singleInterval unbounded
-   , singleInterval empty
+   , true
+   , false
    )
 
 -----------------------------------------------------------
@@ -79,17 +81,17 @@ linRelWith v rel =
             Just (s, p) | degree p == 0 -> 
                case compare (coefficient 0 p) 0 of
                   LT | relationType rel `elem` [LessThan, LessThanOrEqualTo] -> 
-                          return (s, singleInterval unbounded)
+                          return (s, true)
                      | otherwise ->
-                          return (s, singleInterval empty)
+                          return (s, false)
                   EQ | relationType rel `elem` [EqualTo, LessThanOrEqualTo, GreaterThanOrEqualTo] -> 
-                          return (s, singleInterval unbounded)
+                          return (s, true)
                      | otherwise -> 
-                          return (s, singleInterval empty)
+                          return (s, false)
                   GT | relationType rel `elem` [GreaterThan, GreaterThanOrEqualTo] -> 
-                          return (s, singleInterval unbounded)
+                          return (s, true)
                      | otherwise ->
-                          return (s, singleInterval empty)
+                          return (s, false)
             _ -> Nothing
       Just (s, a, b) 
          | a==0 -> 
@@ -223,19 +225,19 @@ quadrRel rel =
          (\is -> Just (s, is)) $
           case compare discr 0 of
             LT | tp `elem` [NotEqualTo, GreaterThan, GreaterThanOrEqualTo] ->
-                    singleInterval unbounded
+                    true
                | tp `elem` [EqualTo, Approximately, LessThan, LessThanOrEqualTo] ->
-                    singleInterval empty
+                    false
             EQ | tp `elem` [EqualTo, Approximately, LessThanOrEqualTo] -> 
-                    singleInterval (point pa)
+                    singleton pa
                | tp == NotEqualTo ->
                     except pa
                | tp == LessThan ->
-                    singleInterval empty
+                    false
                | tp == GreaterThan ->
                     except pa
                | tp == GreaterThanOrEqualTo ->
-                    singleInterval unbounded
+                    true
             GT | tp `elem` [EqualTo, Approximately] -> 
                     fromIntervalList [point pa, point pb]
                | tp == NotEqualTo -> 
@@ -266,10 +268,10 @@ simLogic :: Ord a => (a -> a) -> Logic a -> Logic a -> Bool
 simLogic f p0 q0 = rec (fmap f p0) (fmap f q0)
  where
    rec a b   
-      | isOr a =
+      | isJust (isOr a) =
            let collect = nub . sort . trueOr . collectOr
            in recList (collect a) (collect b)
-      | isAnd a =
+      | isJust (isAnd a) =
            let collect = nub . sort . falseAnd . collectAnd
            in recList (collect a) (collect b)
       | otherwise = 
@@ -292,13 +294,7 @@ simLogic f p0 q0 = rec (fmap f p0) (fmap f q0)
    
    shallowEq a b = 
       let g = descend (const T) 
-      in g a == g b 
-
-   isOr (_ :||: _) = True
-   isOr _          = False
-   
-   isAnd (_ :&&: _) = True
-   isAnd _          = False
+      in g a == g b
    
 eqAfterSubstitution :: (Functor f, Functor g) 
    => (f (g Expr) -> f (g Expr) -> Bool) -> Context (f (g Expr)) -> Context (f (g Expr)) -> Bool

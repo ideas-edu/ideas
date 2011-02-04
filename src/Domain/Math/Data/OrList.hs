@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.OrList 
-   ( OrList, true, false
+   ( OrList, OrSet, true, false
    , isTrue, isFalse, fromBool
    , noDuplicates, catOrList
    , oneDisjunct, orListView, orSetView
@@ -35,7 +35,7 @@ import qualified Data.Set as S
 import qualified Domain.Logic.Formula as Logic
 
 ------------------------------------------------------------
--- Data type
+-- OrList data type
 
 newtype OrList a = OrList (WithZero [a]) deriving 
    ( Eq, Ord, Functor, Foldable, Traversable
@@ -50,22 +50,6 @@ instance BoolValue (OrList a) where
 instance Collection OrList where
    singleton = OrList . pure . singleton
    fromList  = OrList . pure . fromList
-
-------------------------------------------------------------
--- Functions
-
--- | Remove duplicates
-noDuplicates :: Eq a => OrList a -> OrList a
-noDuplicates (OrList a) = OrList (fmap nub a)
-
-oneDisjunct :: Monad m => (a -> m (OrList a)) -> OrList a -> m (OrList a)
-oneDisjunct f (OrList a) = 
-   case fromWithZero a of 
-      Just [x] -> f x
-      _ -> fail "oneDisjunct"
-
-------------------------------------------------------------
--- Instances
 
 instance Rewrite a => Rewrite (OrList a)
 
@@ -87,6 +71,36 @@ instance Show a => Show (OrList a) where
       f = unwords . intersperse "or" . map show . toList
 
 ------------------------------------------------------------
+-- Functions
+
+-- | Remove duplicates
+noDuplicates :: Eq a => OrList a -> OrList a
+noDuplicates (OrList a) = OrList (fmap nub a)
+
+oneDisjunct :: Monad m => (a -> m (OrList a)) -> OrList a -> m (OrList a)
+oneDisjunct f (OrList a) = 
+   case fromWithZero a of 
+      Just [x] -> f x
+      _ -> fail "oneDisjunct"
+
+------------------------------------------------------------
+-- OrSet data type
+
+newtype OrSet a = OrSet (WithZero (S.Set a)) deriving 
+   (Eq, Ord, Foldable, Monoid, MonoidZero, CoMonoid, CoMonoidZero)
+
+instance (Show a, Ord a) => Show (OrSet a) where
+   show = show . build orSetView 
+
+instance Ord a => BoolValue (OrSet a) where
+   fromBool b = if b then mzero else mempty
+   isTrue  = isMonoidZero
+   isFalse = isEmpty
+
+instance Collection OrSet where
+   singleton = OrSet . pure . singleton
+
+------------------------------------------------------------
 -- View to the logic data type
  
 orListView :: View (Logic a) (OrList a)
@@ -99,13 +113,12 @@ orListView = makeView f g
              a :||: b    -> liftM2 mappend (f a) (f b)
              _           -> Nothing
    g = fromOr . foldOrListWith (Or . Logic.Var)
-             
--- True results in a failed match
-orSetView :: Ord a => View (OrList a) (S.Set a)
-orSetView = makeView f g 
+
+orSetView :: Ord a => View (OrList a) (OrSet a)
+orSetView = makeView (Just . f) g 
  where
-   f = fromWithZero . foldOrListWith (pure . singleton)
-   g = fromList . S.toList
+   f (OrList xs) = OrSet  (fmap S.fromList xs)
+   g (OrSet  xs) = OrList (fmap S.toList xs)
    
 foldOrList :: MonoidZero a => OrList a -> a
 foldOrList xs

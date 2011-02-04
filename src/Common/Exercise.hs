@@ -22,7 +22,7 @@ module Common.Exercise
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
    , ruleOrderingWith, ruleOrderingWithId
-   , Difficulty(..), level
+   , Examples, mapExamples, Difficulty(..), level
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
@@ -47,6 +47,7 @@ import Common.Transformation
 import Common.Utils (ShowString(..))
 import Common.View (makeView)
 import Control.Monad.Error
+import Control.Arrow
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -144,6 +145,11 @@ inContext = flip makeContext emptyEnv
 ---------------------------------------------------------------
 -- Difficulty levels
 
+type Examples a = [(Difficulty, a)]
+
+mapExamples :: (a -> b) -> Examples a -> Examples b
+mapExamples f = map (second f)
+
 data Difficulty = VeryEasy | Easy | Medium | Difficult | VeryDifficult
    deriving (Eq, Ord, Enum)
    
@@ -152,7 +158,7 @@ instance Show Difficulty where
     where 
       xs = ["very_easy", "easy", "medium", "difficult", "very_difficult"]
 
-level :: Difficulty -> [a] -> [(Difficulty, a)]
+level :: Difficulty -> [a] -> Examples a
 level = zip . repeat
 
 ---------------------------------------------------------------

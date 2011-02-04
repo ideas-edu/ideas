@@ -301,10 +301,10 @@ fromIntervals v f = ors . map (fromInterval v f) . toIntervalList
    
 fromInterval :: Eq a => String -> (a -> Expr) -> Interval a -> Logic (Relation Expr)
 fromInterval v f i 
-   | isEmpty i = Logic.F
+   | isEmpty i = false
    | otherwise = 
         case (leftPoint i, rightPoint i) of
-           (Unbounded, Unbounded) -> Logic.T
+           (Unbounded, Unbounded)   -> true
            (Unbounded, Including b) -> Logic.Var (Var v .<=. f b)
            (Unbounded, Excluding b) -> Logic.Var (Var v .<. f b)
            (Including a, Unbounded) -> Logic.Var (Var v .>=. f a)

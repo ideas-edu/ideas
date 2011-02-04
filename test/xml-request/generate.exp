@@ -1,4 +1,4 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.1 (0)">
   <state>
     <prefix>
       []
@@ -7,25 +7,38 @@
       <OMA>
         <OMS cd="relation1" name="eq"/>
         <OMA>
+          <OMS cd="arith1" name="unary_minus"/>
+          <OMA>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              5
+            </OMI>
+            <OMA>
+              <OMS cd="arith1" name="plus"/>
+              <OMV name="x"/>
+              <OMI>
+                1
+              </OMI>
+            </OMA>
+          </OMA>
+        </OMA>
+        <OMA>
           <OMS cd="arith1" name="minus"/>
           <OMA>
-            <OMS cd="arith1" name="unary_minus"/>
+            <OMS cd="arith1" name="times"/>
+            <OMI>
+              9
+            </OMI>
             <OMA>
-              <OMS cd="arith1" name="times"/>
+              <OMS cd="arith1" name="plus"/>
+              <OMV name="x"/>
               <OMI>
                 4
               </OMI>
-              <OMV name="x"/>
             </OMA>
           </OMA>
           <OMI>
-            13
-          </OMI>
-        </OMA>
-        <OMA>
-          <OMS cd="arith1" name="unary_minus"/>
-          <OMI>
-            11
+            5
           </OMI>
         </OMA>
       </OMA>

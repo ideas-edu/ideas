@@ -59,12 +59,8 @@ linearExercise = makeExercise
                        ]
    , strategy     = linearStrategy
    , navigation   = termNavigator
-   , examples     = level Medium $ concat (linearEquations ++ [specialCases])
+   , examples     = linearExamples
    }
- where
-   specialCases = 
-      let x = Var "x" 
-      in [5 :==: x, 5 :==: x + 1, x - 1/5 :==: 2]
       
 linearMixedExercise :: Exercise (Equation Expr)
 linearMixedExercise = linearExercise 
@@ -91,8 +87,7 @@ quadraticExercise = makeExercise
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
-   , examples     = level Medium $ map (singleton . build equationView) 
-                       (concat quadraticEquations)
+   , examples     = mapExamples (singleton . build equationView) quadraticExamples
    }
 
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
@@ -108,11 +103,10 @@ higherDegreeExercise = makeExercise
    , isReady       = solvedRelations
    , extraRules    = map use abcBuggyRules ++ buggyQuadratic ++
                      map use buggyRulesEquation ++ map use buggyRulesExpr 
-   , ruleOrdering = ruleOrderingWithId quadraticRuleOrder
+   , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
-   , navigation   = termNavigator
-   , examples      = level Medium $ map (singleton . build equationView) 
-                        (concat $ higherEq1 ++ higherEq2 ++ [higherDegreeEquations])
+   , navigation    = termNavigator
+   , examples      = mapExamples (singleton . build equationView) higherDegreeExamples
    }
    
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))
@@ -155,7 +149,7 @@ findFactorsExercise = makeExercise
    , strategy     = findFactorsStrategy
    , navigation   = termNavigator
    , extraRules   = map liftToContext buggyRulesExpr
-   , examples     = level Medium $ concat findFactors
+   , examples     = factorizeExamples
    }
 
 linearFactorsView :: View Expr (Bool, [(String, Expr, Expr)])

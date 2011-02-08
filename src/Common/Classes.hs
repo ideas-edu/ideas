@@ -13,12 +13,12 @@
 -----------------------------------------------------------------------------
 module Common.Classes 
    ( Apply, apply, applyAll, applicable, applyD, applyM
-   , Collection, singleton, fromList
+   , Container, to, from
    ) where
 
 import Common.Utils (safeHead)
 import Data.Maybe
-import Data.Monoid
+
 import qualified Data.Set as S
 
 -----------------------------------------------------------
@@ -46,17 +46,18 @@ applyM :: (Apply t, Monad m) => t a -> a -> m a
 applyM ta = maybe (fail "applyM") return . apply ta
 
 -----------------------------------------------------------
--- * Type class |Collection|
+-- * Type class |Container|
 
-class Collection f where
-   singleton :: a -> f a
-   fromList  :: Monoid (f a) => [a] -> f a
-   -- default definition
-   fromList = mconcat . map singleton
+-- | Instances should satisfy the following law: @from . to == Just@
+class Container f where
+   to   :: a   -> f a
+   from :: f a -> Maybe a
 
-instance Collection [] where
-   singleton = return
-   fromList  = id
+instance Container [] where
+   to       = return
+   from [a] = Just a
+   from _   = Nothing
    
-instance Collection S.Set where
-   singleton = S.singleton
+instance Container S.Set where
+   to   = S.singleton
+   from = from . S.toList

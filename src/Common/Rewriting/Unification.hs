@@ -36,7 +36,7 @@ unify term1 term2 =
       (Apply f a, Apply g b) -> do
          s1 <- unify f g
          s2 <- unify (s1 |-> a) (s1 |-> b)
-         return (s1 @@ s2)
+         return (s2 @@ s1)
       _ | term1 == term2 -> 
          return emptySubst
       _ -> Nothing

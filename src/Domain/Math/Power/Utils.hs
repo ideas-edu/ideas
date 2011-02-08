@@ -17,7 +17,6 @@ module Domain.Math.Power.Utils where
 
 import Prelude hiding (repeat, replicate)
 
-import Common.Classes
 import Common.Context
 import Common.Rewriting
 import Common.Strategy hiding (not)
@@ -163,7 +162,7 @@ transformList f a = concatMap (f . ctx) $ g $ map (transformList f) cs
     g []       = [[]]
 
 transformOrList :: (Traversable f, Uniplate a) => (a -> [a]) -> OrList (f a) -> OrList (f a)
-transformOrList f = foldMap (fromList . Data.Traversable.mapM (transformList f))
+transformOrList f = foldMap (toOrList . Data.Traversable.mapM (transformList f))
 
 -- y = root n x
 takeRoot :: Integer -> Integer -> [Integer]

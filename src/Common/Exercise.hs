@@ -329,13 +329,13 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
       Just gen -> do
          let showAsGen = showAs (prettyPrinter ex) gen
          addProperty "parser/pretty printer" $ forAll showAsGen $
-            checkParserPrettyEx ex . from
+            checkParserPrettyEx ex . fromS
 
          suite "Soundness non-buggy rules" $
             forM_ (filter (not . isBuggyRule) $ ruleset ex) $ \r -> 
-               let eq a b = equivalenceContext ex (from a) (from b)
+               let eq a b = equivalenceContext ex (fromS a) (fromS b)
                    myGen  = showAs (prettyPrinterContext ex) (liftM (inContext ex) gen)
-                   myView = makeView (return . from) (S (prettyPrinterContext ex))
+                   myView = makeView (return . fromS) (S (prettyPrinterContext ex))
                    args   = stdArgs {maxSize = 10, maxSuccess = 10, maxDiscard = 100}
                in addPropertyWith (showId r) args $ 
                      propRuleSmart eq (liftRule myView r) myGen 
@@ -343,12 +343,12 @@ exerciseTestSuite ex = suite ("Exercise " ++ show (exerciseId ex)) $ do
          addProperty "soundness strategy/generator" $ 
             forAll showAsGen $
                maybe False (isReady ex) . fromContext
-               . applyD (strategy ex) . inContext ex . from
+               . applyD (strategy ex) . inContext ex . fromS
 
-data ShowAs a = S {showS :: a -> String, from :: a}
+data ShowAs a = S {showS :: a -> String, fromS :: a}
 
 instance Show (ShowAs a) where
-   show a = showS a (from a)
+   show a = showS a (fromS a)
 
 showAs :: (a -> String) -> Gen a -> Gen (ShowAs a)
 showAs f = liftM (S f)

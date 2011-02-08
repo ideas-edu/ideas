@@ -12,8 +12,8 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.OrList 
-   ( OrList, OrSet, true, false
-   , isTrue, isFalse, fromBool
+   ( OrList, OrSet, true, false, (<>)
+   , isTrue, isFalse, fromBool, toOrList
    , noDuplicates, catOrList
    , oneDisjunct, orListView, orSetView
    ) where
@@ -47,9 +47,9 @@ instance BoolValue (OrList a) where
    isTrue  = isMonoidZero
    isFalse = isEmpty
 
-instance Collection OrList where
-   singleton = OrList . pure . singleton
-   fromList  = OrList . pure . fromList
+instance Container OrList where
+   to = OrList . pure . to
+   from (OrList a) = fromWithZero a >>= from
 
 instance Rewrite a => Rewrite (OrList a)
 
@@ -61,7 +61,7 @@ instance Arbitrary a => Arbitrary (OrList a) where
    arbitrary = do 
       n  <- choose (1, 3)
       xs <- vector n
-      return (fromList xs)
+      return (toOrList xs)
 
 instance Show a => Show (OrList a) where
    show xs | isTrue  xs = "true"
@@ -97,17 +97,21 @@ instance Ord a => BoolValue (OrSet a) where
    isTrue  = isMonoidZero
    isFalse = isEmpty
 
-instance Collection OrSet where
-   singleton = OrSet . pure . singleton
+instance Container OrSet where
+   to = OrSet . pure . to
+   from (OrSet a) = fromWithZero a >>= from
 
 ------------------------------------------------------------
 -- View to the logic data type
+ 
+toOrList :: [a] -> OrList a
+toOrList = mconcat . map to
  
 orListView :: View (Logic a) (OrList a)
 orListView = makeView f g 
  where
    f p  = case p of
-             Logic.Var a -> return (singleton a)
+             Logic.Var a -> return (to a)
              Logic.T     -> return true
              Logic.F     -> return false
              a :||: b    -> liftM2 mappend (f a) (f b)
@@ -130,8 +134,8 @@ foldOrListWith :: MonoidZero b => (a -> b) -> OrList a -> b
 foldOrListWith f = foldOrList . fmap f
 
 {-
-foldOrListF :: (MonoidZero (f a), Collection f) => OrList a -> f a
-foldOrListF = foldOrListWith singleton -}
+foldOrListF :: (MonoidZero (f a), Container f) => OrList a -> f a
+foldOrListF = foldOrListWith to -}
 
 catOrList :: OrList (OrList a) -> OrList a
 catOrList = foldOrList

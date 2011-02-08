@@ -8,25 +8,23 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Support for mathematical intervals (open, closed, unbounded). @Intervals@
+-- Support for mathematical intervals (open, closed, unbounded). @Interval@
 -- is a normalized (and sorted) list of intervals that supports testing for
--- equality.
+-- equality (provided that there is a valid ordering on the elements).
 --
 -----------------------------------------------------------------------------
 module Domain.Math.Data.Interval
-   ( -- Data types
-     Interval
-     -- Interval constructors
+   ( -- * Data types
+     Interval, Endpoint(..)
+     -- * Interval constructors
    , empty, point, unbounded, open, closed
    , leftOpen, rightOpen, greaterThan, greaterThanOrEqualTo
-   , lessThan, lessThanOrEqualTo
-     -- Inspecing an interval
-   , Endpoint(..), segments
-     -- Making intervals
-   , except
-   , union, intersect, complement
-   , isIn, true, false
-     -- QuickChecks
+   , lessThan, lessThanOrEqualTo, true, false
+     -- * Interval combinators
+   , except, union, intersect, complement
+     -- * Inspecing an interval
+   , segments, isIn
+     -- * QuickChecks
    , testMe
    ) where
 

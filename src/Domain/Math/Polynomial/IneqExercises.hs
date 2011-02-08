@@ -235,10 +235,9 @@ solutionInequation = describe "Determine solution for inequality" $
    removeClipboard "ineq"
    orv  <- maybeCM (matchM orListView r)
    case toList orv of 
-      _ | isTrue orv && rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo] -> 
-         return true -- both sides are the same
       _ | isTrue orv ->
-         return false
+         return $ fromBool $ 
+            rt `elem` [GreaterThanOrEqualTo, LessThanOrEqualTo]
       _ | isFalse orv -> do -- no solutions found for equations
          let vs = vars (toExpr inEquation)
          guard (not (null vs))

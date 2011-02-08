@@ -319,7 +319,7 @@ helperBuggyCUPower mode (lhs :==: rhs) =
       let opa | mode      = function sym (take i xs ++ [a] ++ drop (i+1) xs)
               | otherwise = a
           rb  = root c (fromInteger n)
-      return $ fromList [opa `equals` rb, opa `equals` (-rb)]
+      return $ toOrList [opa `equals` rb, opa `equals` (-rb)]
 
 buggyCoverUpTimesMul :: Rule (Equation Expr)
 buggyCoverUpTimesMul = describe "Covering-up a multiplication, but instead of \
@@ -371,7 +371,7 @@ buggyCoverUpSquareMinus = describe "A squared term is equal to a negative term \
    buggyRule $ makeSimpleRule "coverup.square-minus" $ oneDisjunct $ \eq -> 
       case eq of
          Sym s [a, 2] :==: b | isPowerSymbol s -> 
-            Just $ fromList [a :==: sqrt b, a :==: sqrt (-b)]
+            Just $ toOrList [a :==: sqrt b, a :==: sqrt (-b)]
          _ -> Nothing
 
 buggyCoverUpTimesWithPlus :: Rule (Equation Expr)
@@ -433,9 +433,9 @@ minusB = buggyRule $ makeRule "abc.minus-b" $
           f (?) buggy = 
              let minus = if buggy then id else negate
              in Var x :==: (minus (fromRational b) ? discr) / (2 * fromRational a) 
-      [ fromList [ f (+) True,  f (-) True  ],
-        fromList [ f (+) False, f (-) True  ],
-        fromList [ f (+) True,  f (-) False ]]
+      [ toOrList [ f (+) True,  f (-) True  ],
+        toOrList [ f (+) False, f (-) True  ],
+        toOrList [ f (+) True,  f (-) False ]]
         
          
 twoA :: Rule (OrList (Equation Expr))
@@ -445,9 +445,9 @@ twoA = buggyRule $ makeRule "abc.two-a" $
           f (?) buggy = 
              let twice = if buggy then id else (2*)
              in Var x :==: (-fromRational b ? discr) / twice (fromRational a) 
-      [ fromList [ f (+) True,  f (-) True  ],
-        fromList [ f (+) False, f (-) True  ],
-        fromList [ f (+) True,  f (-) False ]]
+      [ toOrList [ f (+) True,  f (-) True  ],
+        toOrList [ f (+) False, f (-) True  ],
+        toOrList [ f (+) True,  f (-) False ]]
          
 minus4AC :: Rule (OrList (Equation Expr))
 minus4AC = buggyRule $ makeRule "abc.minus-4ac" $ 
@@ -456,13 +456,13 @@ minus4AC = buggyRule $ makeRule "abc.minus-4ac" $
           f (?) buggy = 
              let op = if buggy then (+) else (-)
              in Var x :==: (-fromRational b ? discr op) / (2 * fromRational a)
-      [ fromList [ f (+) True,  f (-) True  ],
-        fromList [ f (+) False, f (-) True  ],
-        fromList [ f (+) True,  f (-) False ]]
+      [ toOrList [ f (+) True,  f (-) True  ],
+        toOrList [ f (+) False, f (-) True  ],
+        toOrList [ f (+) True,  f (-) False ]]
          
 oneSolution :: Rule (OrList (Equation Expr))
 oneSolution = buggyRule $ makeRule "abc.one-solution" $ 
    abcMisconception $ \x a b c ->
       let discr = sqrt (fromRational (b*b - 4 * a * c))
           f (?) = Var x :==: (-fromRational b ? discr) / (2 * fromRational a)
-      in [ singleton $ f (+), singleton $ f (-) ]
+      in [ to $ f (+), to $ f (-) ]

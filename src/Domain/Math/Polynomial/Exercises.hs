@@ -87,7 +87,7 @@ quadraticExercise = makeExercise
                        quadraticRuleOrder ++ [getId buggySquareMultiplication]
    , strategy     = quadraticStrategy
    , navigation   = termNavigator
-   , examples     = mapExamples (singleton . build equationView) quadraticExamples
+   , examples     = mapExamples (to . build equationView) quadraticExamples
    }
 
 higherDegreeExercise :: Exercise (OrList (Relation Expr))
@@ -106,7 +106,7 @@ higherDegreeExercise = makeExercise
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , strategy      = higherDegreeStrategy
    , navigation    = termNavigator
-   , examples      = mapExamples (singleton . build equationView) higherDegreeExamples
+   , examples      = mapExamples (to . build equationView) higherDegreeExamples
    }
    
 quadraticNoABCExercise :: Exercise (OrList (Relation Expr))

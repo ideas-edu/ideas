@@ -83,7 +83,7 @@ calcPlainRoot :: Rule (OrList Expr)
 calcPlainRoot = makeSimpleRuleList (power, "root") $ 
    oneDisjunct $ \expr -> do
      (n, x) <- matchM (rootView >>> (integerView *** integerView)) expr
-     return $ fromList $ map fromInteger $ takeRoot n x
+     return $ toOrList $ map fromInteger $ takeRoot n x
 
 -- | [root n x, ... ]
 calcRoot :: Rule (OrList Expr)
@@ -96,7 +96,7 @@ calcRoot = makeSimpleRule (power, "root") $
              | x < 0 && odd  n = [negate y]
              | otherwise       = []
       roots  <- toMaybe (not. null) ys
-      return $ fromList roots
+      return $ toOrList roots
 
 calcPowerPlus :: Rule Expr 
 calcPowerPlus = 

@@ -74,7 +74,7 @@ sameDividend = makeSimpleRule (ratId, "same-dividend") $ withCM $ oneDisjunct $ 
    guard (a1==a2)
    conditionNotZero b
    conditionNotZero c
-   return $ fromList [a1 :==: 0, b :==: c]
+   return $ to (a1 :==: 0) <> to (b :==: c)
    
 -- a/b = c/d  iff  a*d = b*c   (and b/=0 and d/=0)
 crossMultiply :: Rule (Context (Equation Expr))
@@ -181,6 +181,6 @@ conditionNotZero expr = condition (f xs)
    f  = pushNotWith (Logic.Var . notRelation) . Not
    eq = expr :==: 0
    xs = fmap (build equationView . fmap cleanUpExpr) $ 
-        case match higherDegreeEquationsView (singleton eq) of
+        case match higherDegreeEquationsView (to eq) of
            Just ys -> build orListView (coverUpOrs (build higherDegreeEquationsView ys))
            Nothing -> Logic.Var (coverUp eq)

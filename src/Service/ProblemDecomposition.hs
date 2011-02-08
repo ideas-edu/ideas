@@ -154,13 +154,13 @@ replyType :: Type a (Reply a)
 replyType = useSynonym replyTypeSynonym
 
 replyTypeSynonym :: TypeSynonym a (Reply a)
-replyTypeSynonym = typeSynonym "DecompositionReply" to from tp
+replyTypeSynonym = typeSynonym "DecompositionReply" f g tp
  where
-   to (Left (a, b))        = Ok a b
-   to (Right (a, b, c, d)) = Incorrect a b c d
+   f (Left (a, b))        = Ok a b
+   f (Right (a, b, c, d)) = Incorrect a b c d
    
-   from (Ok a b)            = Left (a, b)
-   from (Incorrect a b c d) = Right (a, b, c, d)
+   g (Ok a b)            = Left (a, b)
+   g (Incorrect a b c d) = Right (a, b, c, d)
    
    tp  =  tuple2 Id stateTp
       :|: tuple4 Bool Id stateTp argsTp

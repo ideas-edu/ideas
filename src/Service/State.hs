@@ -55,13 +55,13 @@ stateTp :: Type a (State a)
 stateTp = useSynonym stateTypeSynonym
 
 stateTypeSynonym :: TypeSynonym a (State a)
-stateTypeSynonym = typeSynonym "State" to from tp
+stateTypeSynonym = typeSynonym "State" f g tp
  where
-   to (pkg, mp, ctx) =
+   f (pkg, mp, ctx) =
       let str = strategy (exercise pkg)
-          f   = fromMaybe [] . readM
-      in makeState pkg (mp >>= flip makePrefix str . f) ctx
-   from st = 
+          h   = fromMaybe [] . readM
+      in makeState pkg (mp >>= flip makePrefix str . h) ctx
+   g st = 
       ( exercisePkg st
       , fmap show (statePrefix st)
       , stateContext st

@@ -234,9 +234,9 @@ quadraticEquationView = makeView f g
                    twoA   = SQ.scale 2 a
                case compare discr 0 of
                   LT   -> return false
-                  EQ   -> return $ singleton (-b/twoA)
-                  GT   -> return $ fromList [(-b+sdiscr)/twoA, (-b-sdiscr)/twoA]
-            [a, b]     -> return $ singleton (-b/a)
+                  EQ   -> return $ to (-b/twoA)
+                  GT   -> return $ toOrList [(-b+sdiscr)/twoA, (-b-sdiscr)/twoA]
+            [a, b]     -> return $ to (-b/a)
             [a] | a==0 -> return true
             _          -> return false
    
@@ -249,7 +249,7 @@ higherDegreeEquationsView :: View (OrList (Equation Expr)) (OrList Expr)
 higherDegreeEquationsView = makeView f (fmap (:==: 0))
  where
    f    = Just . simplify orSetView . foldMap make . coverUpOrs
-   make = fromList . filter (not . hasNegSqrt) 
+   make = toOrList . filter (not . hasNegSqrt) 
         . map (cleanUpExpr . distr) . normHDE . sub
    sub (a :==: b) = a-b
 

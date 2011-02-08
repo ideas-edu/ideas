@@ -64,7 +64,7 @@ exercisePage exampleFileExists pkg = do
       [ [ text "Code",   ttText (showId ex)]
       , [ text "Status", text (show $ status ex)]
       , [ text "Strategy"
-        , link (up level ++ exerciseStrategyFile exid) $
+        , link (up len ++ exerciseStrategyFile exid) $
              text (showId $ strategy ex)
         ]
       , [ text "OpenMath support"
@@ -103,7 +103,7 @@ exercisePage exampleFileExists pkg = do
          : map f (ruleset ex)
          )
    when exampleFileExists $ do
-      para $ link (up level ++ exerciseDiagnosisFile exid) $ do
+      para $ link (up len ++ exerciseDiagnosisFile exid) $ do
          br
          text "See diagnosis examples"
 
@@ -111,11 +111,11 @@ exercisePage exampleFileExists pkg = do
    let state = generateWith (mkStdGen 0) pkg Medium
    derivationHTML ex (stateTerm state)
    para $ unless (null (examples ex)) $ 
-      link (up level ++ exerciseDerivationsFile exid) (text "More examples")
+      link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where
-   ex    = exercise pkg
-   exid  = getId ex
-   level = length (qualifiers pkg)
+   ex   = exercise pkg
+   exid = getId ex
+   len  = length (qualifiers pkg)
 
 strategyPage :: Exercise a -> HTMLBuilder
 strategyPage ex = do

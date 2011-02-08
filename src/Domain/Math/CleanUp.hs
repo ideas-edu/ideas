@@ -72,7 +72,7 @@ cleanUpRelation = f . fmap cleanUpBU
       | otherwise = 
            case (match rationalView a, match rationalView b) of
               (Just r, Just s) -> fromBool (eval (relationType rel) r s)
-              _                -> singleton rel
+              _                -> to rel
     where
       (a, b) = (leftHandSide rel, rightHandSide rel)
 

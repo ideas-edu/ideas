@@ -157,7 +157,7 @@ mulZero = describe "multiplication is zero" $
       guard (rhs == 0)
       (_, xs) <- matchM productView lhs
       guard (length xs > 1)
-      return $ fromList $ flip map xs $ \e ->
+      return $ toOrList $ flip map xs $ \e ->
          case match (polyNormalForm rationalView >>> second linearPolyView) e of
             -- special cases (simplify immediately, as in G&R)
             Just (x, (a, b)) 
@@ -227,7 +227,7 @@ distributionSquare = describe "distribution square" $
 squareBothSides :: Rule (OrList (Equation Expr))
 squareBothSides = describe "square both sides" $ 
    rule (quadreq, "square-both") $ \a b -> 
-   singleton (a^2 :==: b^2) :~> fromList [a :==: b, a :==: -b]
+   to (a^2 :==: b^2) :~> toOrList [a :==: b, a :==: -b]
 
 -- prepare splitting a square; turn lhs into x^2+bx+c such that (b/2)^2 is c
 prepareSplitSquare :: Rule (Equation Expr)
@@ -316,7 +316,7 @@ allPowerFactors = describe "all power factors" $
           ts  = terms p1 ++ terms p2
           f p = build myView (s1, raise (-n) p)
       guard ((s1==s2 || p1==0 || p2==0) && n > 0 && length ts > 1)
-      return $ fromList [Var s1 :==: 0, f p1 :==: f p2] 
+      return $ toOrList [Var s1 :==: 0, f p1 :==: f p2] 
 
 factorVariablePower :: Rule Expr
 factorVariablePower = describe "factor variable power" $ 
@@ -334,7 +334,7 @@ sameFactor = describe "same factor" $
       (b1, xs) <- match productView lhs
       (b2, ys) <- match productView rhs
       (x, y) <- safeHead [ (x, y) | x <- xs, y <- ys, x==y, hasSomeVar x ] -- equality is too strong?
-      return $ fromList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
+      return $ toOrList [ x :==: 0, build productView (b1, xs\\[x]) :==: build productView (b2, ys\\[y]) ]
 
 -- N*(A+B) = N*C + N*D   recognize a constant factor on both sides
 -- Example: 3(x^2+1/2) = 6+6x
@@ -374,9 +374,9 @@ abcFormula = describe "quadratic formula (abc formule)" $
    addToClipboard "D" (fromRational discr)
    case compare discr 0 of
       LT -> return false
-      EQ -> return $ singleton $ 
+      EQ -> return $ to $ 
          Var x :==: (-fromRational b) / (2 * fromRational a)
-      GT -> return $ fromList
+      GT -> return $ toOrList
          [ Var x :==: (-fromRational b + sqD) / (2 * fromRational a)
          , Var x :==: (-fromRational b - sqD) / (2 * fromRational a)
          ]
@@ -495,11 +495,9 @@ removeDivision = doAfter (fmap (collectLikeTerms . distributeAll)) $
       let f (b, e) = do 
              (_, this) <- match (divView >>> second integerView) e
              return (b, this)
-      case mapMaybe f (concat zs) of
-         [] -> Nothing
-         ps -> let (bs, ns) = unzip ps
-               in if or bs then return (fromInteger (foldr1 lcm ns))
-                           else Nothing
+          (bs, ns) = unzip (mapMaybe f (concat zs))
+      guard (or bs)
+      return (fromInteger (foldr1 lcm ns))
 
 distributeTimes :: Rule Expr
 distributeTimes = describe "distribution multiplication" $ 

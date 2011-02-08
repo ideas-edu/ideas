@@ -56,7 +56,7 @@ rationalEquationExercise = makeExercise
    , strategy      = rationalEquationStrategy
    , ruleOrdering  = ruleOrderingWithId quadraticRuleOrder
    , navigation    = termNavigator
-   , examples      = level Medium $ map singleton (concat brokenEquations)
+   , examples      = level Medium $ map to (concat brokenEquations)
    }
    
 simplifyRationalExercise :: Exercise Expr
@@ -179,13 +179,13 @@ rationalEquation eq = do
    (_, as) <- match productView a
    (_, bs) <- match productView b
    let condition = foldr ((.&&.) . notZero) c bs
-   new1    <- match higherDegreeEquationsView $ fromList $ map (:==: 0) as
+   new1    <- match higherDegreeEquationsView $ toOrList $ map (:==: 0) as
    return (restrictOrList condition new1)
 
 restrictOrList :: Logic (Relation Expr) -> OrList Expr -> OrList Expr
 restrictOrList p0 = catOrList . fmap f
  where
-   f a | p a       = singleton a
+   f a | p a       = to a
        | otherwise = false
    p zeroExpr = 
       case coverUp (zeroExpr :==: 0) of 

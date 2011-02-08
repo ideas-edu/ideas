@@ -119,21 +119,21 @@ diagnosisType :: Type a (Diagnosis a)
 diagnosisType = useSynonym diagnosisTypeSynonym
 
 diagnosisTypeSynonym :: TypeSynonym a (Diagnosis a)
-diagnosisTypeSynonym = typeSynonym "Diagnosis" to from tp
+diagnosisTypeSynonym = typeSynonym "Diagnosis" f g tp
  where
-   to (Left r) = Buggy r
-   to (Right (Left ())) = NotEquivalent
-   to (Right (Right (Left (b, s)))) = Similar b s
-   to (Right (Right (Right (Left (b, s, r))))) = Expected b s r
-   to (Right (Right (Right (Right (Left (b, s, r)))))) = Detour b s r
-   to (Right (Right (Right (Right (Right (b, s)))))) = Correct b s
+   f (Left r) = Buggy r
+   f (Right (Left ())) = NotEquivalent
+   f (Right (Right (Left (b, s)))) = Similar b s
+   f (Right (Right (Right (Left (b, s, r))))) = Expected b s r
+   f (Right (Right (Right (Right (Left (b, s, r)))))) = Detour b s r
+   f (Right (Right (Right (Right (Right (b, s)))))) = Correct b s
    
-   from (Buggy r)        = Left r
-   from (NotEquivalent)  = Right (Left ())
-   from (Similar b s)    = Right (Right (Left (b, s)))
-   from (Expected b s r) = Right (Right (Right (Left (b, s, r))))
-   from (Detour b s r)   = Right (Right (Right (Right (Left (b, s, r)))))
-   from (Correct b s)    = Right (Right (Right (Right (Right (b, s)))))
+   g (Buggy r)        = Left r
+   g (NotEquivalent)  = Right (Left ())
+   g (Similar b s)    = Right (Right (Left (b, s)))
+   g (Expected b s r) = Right (Right (Right (Left (b, s, r))))
+   g (Detour b s r)   = Right (Right (Right (Right (Left (b, s, r)))))
+   g (Correct b s)    = Right (Right (Right (Right (Right (b, s)))))
    
    tp  =  Rule
       :|: Unit

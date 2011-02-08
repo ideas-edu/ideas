@@ -76,7 +76,7 @@ logEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
                        newId "algebra.manipulation.logarithmic.equation"
-  , examples       = level Medium $ map (singleton . build equationView) (concat logEquations)
+  , examples       = level Medium $ map (to . build equationView) (concat logEquations)
   , isReady        = solvedRelations
   , isSuitable     = (`belongsTo` (traverseView equationView >>> normLogEqView))
   , equivalence    = viewEquivalent (traverseView equationView >>> normLogEqView)
@@ -92,7 +92,7 @@ higherPowerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ map singleton $ rootEquations !! 3
+  , examples       = level Medium $ map to $ rootEquations !! 3
 --  , examples       = map (orList . return) $ concat $ init higherPowerEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)

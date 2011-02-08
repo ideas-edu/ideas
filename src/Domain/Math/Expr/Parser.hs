@@ -106,9 +106,9 @@ pRelationType = pChoice (map make table)
 pOrList :: TokenParser a -> TokenParser (OrList a)
 pOrList p = mconcat <$> pSepList pTerm (pKey "or")
  where 
-   pTerm =  singleton <$> p 
-        <|> true      <$  pKey "true" 
-        <|> false     <$  pKey "false"
+   pTerm =  to    <$> p 
+        <|> true  <$  pKey "true" 
+        <|> false <$  pKey "false"
 
 pLogic :: TokenParser a -> TokenParser (Logic a)
 pLogic p = levelOr

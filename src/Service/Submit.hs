@@ -54,19 +54,19 @@ submitType :: Type a (Result a)
 submitType = useSynonym submitTypeSynonym
 
 submitTypeSynonym :: TypeSynonym a (Result a)
-submitTypeSynonym = typeSynonym "Result" to from tp
+submitTypeSynonym = typeSynonym "Result" f g tp
  where
-   to (Left rs) = Buggy rs
-   to (Right (Left ())) = NotEquivalent
-   to (Right (Right (Left (rs, s)))) = Ok rs s
-   to (Right (Right (Right (Left (rs, s))))) = Detour rs s
-   to (Right (Right (Right (Right s)))) = Unknown s
+   f (Left rs) = Buggy rs
+   f (Right (Left ())) = NotEquivalent
+   f (Right (Right (Left (rs, s)))) = Ok rs s
+   f (Right (Right (Right (Left (rs, s))))) = Detour rs s
+   f (Right (Right (Right (Right s)))) = Unknown s
 
-   from (Buggy rs)      = Left rs
-   from (NotEquivalent) = Right (Left ())
-   from (Ok rs s)       = Right (Right (Left (rs, s)))
-   from (Detour rs s)   = Right (Right (Right (Left (rs, s))))
-   from (Unknown s)     = Right (Right (Right (Right s))) 
+   g (Buggy rs)      = Left rs
+   g (NotEquivalent) = Right (Left ())
+   g (Ok rs s)       = Right (Right (Left (rs, s)))
+   g (Detour rs s)   = Right (Right (Right (Left (rs, s))))
+   g (Unknown s)     = Right (Right (Right (Right s))) 
 
    tp  =  List Rule 
       :|: Unit

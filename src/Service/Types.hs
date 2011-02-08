@@ -189,17 +189,17 @@ data TypeSynonym a t = TS
    }
    
 typeSynonym :: String -> (t2 -> t) -> (t -> t2) -> Type a t2 -> TypeSynonym a t
-typeSynonym name to from tp = TS
+typeSynonym name f g tp = TS
    { synonymName = name
-   , useSynonym  = Tag name (Iso to from tp)
+   , useSynonym  = Tag name (Iso f g tp)
    , isSynonym   = maybe (fail name) return . matchSynonym
    }
  where
    matchSynonym (a ::: t0) = do
       (s, t) <- isTag t0
       guard (s == name)
-      f <- equal t tp
-      return (to (f a))
+      h <- equal t tp
+      return (f (h a))
 
 isTag :: Type a t -> Maybe (String, Type a t)
 isTag (Tag s t) = Just (s, t)

@@ -1,5 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveFunctor, DeriveFoldable, 
-       DeriveTraversable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -25,22 +24,30 @@ import Common.Classes
 import Common.Rewriting
 import Common.View
 import Control.Monad (liftM2)
-import Data.Foldable (Foldable, toList)
+import Data.Foldable (Foldable, foldMap,  toList)
 import Control.Applicative
 import Data.List
-import Data.Traversable (Traversable)
+import Data.Traversable (Traversable, traverse)
 import Domain.Logic.Formula (Logic((:||:)))
 import Test.QuickCheck
 import qualified Data.Set as S
 import qualified Domain.Logic.Formula as Logic
 
+instance Functor OrList where
+   fmap f (OrList a) = OrList (fmap (map f) a)
+   
+instance Foldable OrList where
+   foldMap f (OrList a) = maybe mempty (foldMap f) (fromWithZero a)
+   
+instance Traversable OrList where
+   traverse f (OrList a) = 
+      maybe (pure mzero) (liftA toOrList . traverse f) (fromWithZero a)
+
 ------------------------------------------------------------
 -- OrList data type
 
 newtype OrList a = OrList (WithZero [a]) deriving 
-   ( Eq, Ord, Functor, Foldable, Traversable
-   , Monoid, MonoidZero, CoMonoid, CoMonoidZero
-   )
+   (Eq, Ord, Monoid, MonoidZero, CoMonoid, CoMonoidZero)
 
 instance BoolValue (OrList a) where
    fromBool b = if b then mzero else mempty
@@ -87,7 +94,7 @@ oneDisjunct f (OrList a) =
 -- OrSet data type
 
 newtype OrSet a = OrSet (WithZero (S.Set a)) deriving 
-   (Eq, Ord, Foldable, Monoid, MonoidZero, CoMonoid, CoMonoidZero)
+   (Eq, Ord, Monoid, MonoidZero, CoMonoid, CoMonoidZero)
 
 instance (Show a, Ord a) => Show (OrSet a) where
    show = show . build orSetView 

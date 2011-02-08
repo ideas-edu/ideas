@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveFunctor #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -146,7 +146,10 @@ deMorgan = law "demorgan" $ \a b ->
 -- And monoid
 
 newtype And a = And {fromAnd :: a}
-   deriving (Show, Eq, Ord, Functor, Arbitrary, CoArbitrary)
+   deriving (Show, Eq, Ord, Arbitrary, CoArbitrary)
+
+instance Functor And where -- could be derived
+   fmap f = And . f . fromAnd
 
 instance Applicative And where
    pure            = And
@@ -170,7 +173,10 @@ fromAndLaw = mapLaw And fromAnd
 -- Or monoid
 
 newtype Or a  = Or {fromOr :: a} 
-   deriving (Show, Eq, Ord, Functor, Arbitrary, CoArbitrary)
+   deriving (Show, Eq, Ord, Arbitrary, CoArbitrary)
+
+instance Functor Or where -- could be derived
+   fmap f = Or . f . fromOr
 
 instance Applicative Or where
    pure          = Or

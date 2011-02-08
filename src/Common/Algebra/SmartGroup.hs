@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -19,7 +19,10 @@ import Control.Monad (mplus)
 import Data.Maybe
 
 newtype Smart a = Smart {fromSmart :: a}
-   deriving (Show, Eq, Ord, Functor, CoMonoid, MonoidZero, CoMonoidZero)
+   deriving (Show, Eq, Ord, CoMonoid, MonoidZero, CoMonoidZero)
+
+instance Functor Smart where -- could be derived
+   fmap f = Smart . f . fromSmart
 
 instance Applicative Smart where
    pure = Smart
@@ -35,7 +38,10 @@ instance (CoMonoid a, Monoid a) => Monoid (Smart a) where
 --------------------------------------------------------------
 
 newtype SmartZero a = SmartZero {fromSmartZero :: a}
-   deriving (Show, Eq, Ord, Functor, MonoidZero, CoMonoid, CoMonoidZero)
+   deriving (Show, Eq, Ord, MonoidZero, CoMonoid, CoMonoidZero)
+
+instance Functor SmartZero where -- could be derived
+   fmap f = SmartZero . f . fromSmartZero
 
 instance Applicative SmartZero where
    pure = SmartZero
@@ -50,7 +56,10 @@ instance (CoMonoidZero a, MonoidZero a) => Monoid (SmartZero a) where
 --------------------------------------------------------------
 
 newtype SmartGroup a = SmartGroup {fromSmartGroup :: a}
-   deriving (Show, Eq, Ord, Functor, CoMonoid, CoGroup, CoMonoidZero, MonoidZero)
+   deriving (Show, Eq, Ord, CoMonoid, CoGroup, CoMonoidZero, MonoidZero)
+
+instance Functor SmartGroup where -- could be derived
+   fmap f = SmartGroup . f . fromSmartGroup
 
 instance Applicative SmartGroup where
    pure = SmartGroup

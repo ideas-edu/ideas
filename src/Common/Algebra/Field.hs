@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveFunctor #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -129,7 +129,10 @@ fieldLaws =
 -- Additive monoid
 
 newtype Additive a = Additive {fromAdditive :: a}
-   deriving (Show, Eq, Ord, Functor, Arbitrary, CoArbitrary)
+   deriving (Show, Eq, Ord, Arbitrary, CoArbitrary)
+
+instance Functor Additive where -- could be derived
+   fmap f = Additive . f . fromAdditive
 
 instance A.Applicative Additive where
    pure = Additive
@@ -150,7 +153,10 @@ fromAdditiveLaw = mapLaw Additive fromAdditive
 -- Multiplicative monoid
 
 newtype Multiplicative a = Multiplicative {fromMultiplicative :: a}
-   deriving (Show, Eq, Ord, Functor, Arbitrary, CoArbitrary)
+   deriving (Show, Eq, Ord, Arbitrary, CoArbitrary)
+
+instance Functor Multiplicative where -- could be derived
+   fmap f = Multiplicative . f . fromMultiplicative
 
 instance A.Applicative Multiplicative where
    pure = Multiplicative

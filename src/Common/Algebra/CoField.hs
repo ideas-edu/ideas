@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, GeneralizedNewtypeDeriving, PatternGuards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, PatternGuards #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -68,7 +68,10 @@ instance CoSemiRing a => CoMonoidZero (Multiplicative a) where
 ------------------------------------------------------------------
 
 newtype SmartField a = SmartField {fromSmartField :: a}
-   deriving (Functor, CoSemiRing, CoRing, CoField)
+   deriving (CoSemiRing, CoRing, CoField)
+
+instance Functor SmartField where -- could be derived
+   fmap f = SmartField . f . fromSmartField
 
 instance A.Applicative SmartField where
    pure = SmartField

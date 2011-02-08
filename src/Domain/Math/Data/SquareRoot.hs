@@ -50,7 +50,7 @@ type SqMap a = M.Map P.PrimeFactors a
 
 -- re-establish invariants
 makeMap :: Num a => SqMap a -> SqMap a
-makeMap = M.filter (/=0) . M.foldrWithKey f M.empty 
+makeMap = M.filter (/=0) . M.foldWithKey f M.empty 
  where
    f k a m
       | a == 0    = m
@@ -75,7 +75,7 @@ timesSqMap m1 m2 =
       _ ->
          let op n a = M.unionWith (+) (f n (fmap (a *) m1))
              f i    = M.mapKeys (*i)
-         in makeMap (M.foldrWithKey op M.empty m2)
+         in makeMap (M.foldWithKey op M.empty m2)
 
 recipSqMap :: Fractional a => SqMap a -> SqMap a
 recipSqMap m = 
@@ -180,5 +180,5 @@ sqrtRational r = scale (1/fromIntegral b) (sqrt (a*b))
    (a, b) = (numerator r, denominator r)
 
 eval :: Floating a => SquareRoot a -> a
-eval (S _ m) = M.foldrWithKey f 0 m
+eval (S _ m) = M.foldWithKey f 0 m
  where f n a b = a * Prelude.sqrt (fromIntegral n) + b

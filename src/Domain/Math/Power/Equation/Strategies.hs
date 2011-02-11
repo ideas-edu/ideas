@@ -11,12 +11,12 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Equation.Strategies
-   ( powerEqStrategy
-   , powerEqApproxStrategy
-   , expEqStrategy
-   , logEqStrategy
-   , higherPowerEqStrategy
-   ) 
+   -- ( powerEqStrategy
+   -- , powerEqApproxStrategy
+   -- , expEqStrategy
+   -- , logEqStrategy
+   -- , higherPowerEqStrategy
+   -- ) 
    where
 
 import Prelude hiding (repeat, not)
@@ -24,6 +24,7 @@ import Prelude hiding (repeat, not)
 import Common.Classes
 import Common.Context
 import Common.Id
+import Common.Library
 import Common.Navigator
 import Common.Rewriting
 import Common.Strategy
@@ -33,10 +34,11 @@ import Data.Maybe
 import Domain.Math.Data.Relation
 import Domain.Math.Data.OrList
 import Domain.Math.Expr
+import Domain.Math.Equation.CoverUpExercise
 import Domain.Math.Equation.CoverUpRules
 import Domain.Math.CleanUp
 import Domain.Math.Polynomial.Strategies (quadraticStrategy, linearStrategy)
-import Domain.Math.Polynomial.Rules (flipEquation)
+import qualified Domain.Math.Polynomial.Rules as PR
 import Domain.Math.Power.Rules
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Equation.Rules
@@ -85,7 +87,7 @@ expEqStrategy = cleanUpStrategy cleanup strat
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
               $  use logarithm
-             <*> try (use flipEquation)
+             <*> try (use PR.flipEquation)
              <*> repeat (somewhere $  use nthRoot 
                                   <|> use calcPower 
                                   <|> use calcPowerPlus 
@@ -94,13 +96,18 @@ logEqStrategy = label "Logarithmic equation"
                                   <|> use calcPowerRatio)
              <*> quadraticStrategy
 
-
 higherPowerEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
-higherPowerEqStrategy =  cleanUpStrategy cleanup strat
+higherPowerEqStrategy =  cleanUpStrategy cleanup coverUpStrategy'
   where 
-    strat = label "Cover up" $ try (use flipEquation) <*> exhaustiveSomewhere rules -- coverUpRulesOr <*> try (use nthRoot)
-    rules = use coverUpPower : map use (nthRoot : coverUpRules)
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
+
+rootEqStrategy :: LabeledStrategy (Context (Equation Expr))
+rootEqStrategy =  cleanUpStrategy cleanup strat
+  where 
+    strat =  label "Cover up" 
+          $  use condXisRight <*> use flipEquation
+         <*> exhaustiveSomewhere myCoverUpRulesOr
+    cleanup = id -- applyTop $ fmap $ fmap cleanUpExpr
 
 
 -- | Help functions -----------------------------------------------------------
@@ -108,8 +115,34 @@ higherPowerEqStrategy =  cleanUpStrategy cleanup strat
 myCoverUpStrategy :: IsTerm a => Strategy (Context a)
 myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules
 
+-- add coverUpRoot to coverUpExercise?
+coverUpStrategy' :: LabeledStrategy (Context (OrList (Equation Expr)))
+coverUpStrategy' = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $
+   label "Cover-up" $
+   repeatS $ somewhere $ alternatives $ use coverUpRoot : coverUpRulesOr
+
 somewhereNotInExp :: IsStrategy f => f (Context a) -> Strategy (Context a)
 somewhereNotInExp = somewhereWith "somewhere but not in exponent" f
   where
     f a = if isPowC a then [1] else [0 .. arity a-1]
     isPowC = maybe False (isJust . isPower :: Term -> Bool) . currentT
+
+myConfigCoverUp :: ConfigCoverUp
+myConfigCoverUp = configCoverUp
+   { configName        = ""
+   , predicateCovered  = elem "x" . vars
+   , predicateCombined = notElem "x" . vars
+   , coverLHS          = True
+   , coverRHS          = True
+   }
+
+myCoverUpRulesOr :: IsTerm a => [Rule (Context a)]
+myCoverUpRulesOr = use (coverUpPowerWith myConfigCoverUp) 
+                 : map (\f -> use $ f myConfigCoverUp) coverUpRulesWith
+
+coverUpRulesWith :: [ConfigCoverUp -> Rule (Equation Expr)]
+coverUpRulesWith = 
+   [ coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
+   , coverUpNegateWith, coverUpTimesWith, coverUpNumeratorWith
+   , coverUpDenominatorWith, coverUpSqrtWith, coverUpRootWith
+   ]

@@ -11,19 +11,24 @@
 -----------------------------------------------------------------------------
 
 module Domain.Math.Power.Equation.Rules 
-  ( -- * Power equation rules
-    commonPower, nthRoot, sameBase, equalsOne, greatestPower
-  , approxPower, reciprocalFor
-  ) where
+  -- ( -- * Power equation rules
+  --   commonPower, nthRoot, sameBase, equalsOne, greatestPower
+  -- , approxPower, reciprocalFor, coverUpRootWith, coverUpRoot
+  -- ) 
+  where
 
-import Common.Transformation
+import Common.Classes
+import Common.Id
 import Common.Rewriting
+import Common.Transformation
 import Common.View hiding (simplify)
 import Control.Monad
 --import Data.List (partition)
 import Domain.Math.Approximation (precision)
 import qualified Domain.Math.Data.PrimeFactors as PF
+import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
+import Domain.Math.Equation.CoverUpRules
 import Domain.Math.Expr
 import Domain.Math.Numeric.Views
 --import Domain.Math.CleanUp (collectLikeTerms)
@@ -104,7 +109,30 @@ equalsOne = makeSimpleRule (powereq, "equals-one") $ \ (lhs :==: rhs) -> do
   (_, x) <- match powerView lhs
   return $ x :==: 0
 
- -- (powereq, "var-left-con-right") $ 
+
+
+----------------------- Move these funcs to right place ----------------------
+
+-- add these two functions to coverUpRules?
+coverUpRootWith :: ConfigCoverUp -> Rule (Equation Expr)
+coverUpRootWith = coverUpBinaryRule "root" (isBinary rootSymbol) (.^.)
+
+coverUpRoot :: Rule (Equation Expr)
+coverUpRoot = coverUpRootWith configCoverUp
+
+-- flip the two sides of an equation
+flipEquation :: Rule (Equation Expr)
+flipEquation = describe "flip equation" $
+   rule ("algebra.equations.linear", "flip") $ \a b ->
+      (a :==: b) :~> (b :==: a)
+
+condXisRight :: Rule (Equation Expr)
+condXisRight = minorRule $ describe "flip condition" $
+  makeSimpleRule (powereq, "flipCond") $ \eq@(lhs :==: rhs) -> do
+    let p = elem "x" . vars
+    guard (p rhs && not (p lhs))
+    return eq
+
 --xToLeft = makeRule (powereq, "x -to-left") $  toLeftRightT $ elem "x" . vars
 
 -- toLeftRightT :: (Expr -> Bool) -> Transformation (Equation Expr)

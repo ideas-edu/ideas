@@ -14,6 +14,7 @@ module Domain.Math.Power.Equation.Exercises
    , expEqExercise
    , logEqExercise
    , higherPowerEqExercise
+   , rootEqExercise
    ) where
 
 import Prelude hiding ( (^) )
@@ -22,6 +23,7 @@ import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.View
+import Data.Foldable (toList)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
@@ -101,3 +103,19 @@ higherPowerEqExercise = makeExercise
                                         , getId calcRoot ]
   }
 
+rootEqExercise :: Exercise (Equation Expr)
+rootEqExercise = makeExercise
+  { status         = Provisional
+  , parser         = parseExprWith (pEquation pExpr)
+  , strategy       = rootEqStrategy
+  , navigation     = termNavigator
+  , exerciseId     = describe "solve higher power equation algebraically" $ 
+                       newId "algebra.manipulation.exponents.equation"
+  , examples       = level Medium $ rootEquations !! 3
+--  , examples       = map singleton $ concat $ init higherPowerEquations
+  , isReady        = solvedRelation
+--  , isSuitable     = maybe False and . toList . fmap (`belongsTo` normPowerEqView)
+--  , equivalence    = viewEquivalent higherDegreeEquationsView
+  , ruleOrdering   = ruleOrderingWithId [ getId calcPower
+                                        , getId calcRoot ]
+  }

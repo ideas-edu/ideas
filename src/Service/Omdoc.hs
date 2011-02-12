@@ -1,14 +1,13 @@
 module Service.Omdoc where
 
--- revision toevoegen aan gegenereerde files
 -- spul integreren met ideas
 
 import Data.Map(Map,empty,insert,(!))
 
 import Common.Exercise
--- import Common.Id
 import Common.Rewriting.Term
 import Service.ExercisePackage
+import qualified Main.Revision as MR
 import Text.OpenMath.Object
 import Text.XML.Interface
 
@@ -25,113 +24,122 @@ import Domain.Math.Power.Equation.Exercises
 import Text.XML
 
 --------------------------------------------------------------------------------
+{- Globale info
+-}
+--------------------------------------------------------------------------------
+
+today  :: String
+today  =  "Today's date"
+
+--------------------------------------------------------------------------------
 {- Generate all files
 -}
 --------------------------------------------------------------------------------
 
+
 generateallfiles :: IO ()
 generateallfiles = 
-  do omdocexercisefile linearExercise
-     omdocexercisefile linearMixedExercise
-     omdocexercisefile quadraticExercise
-     omdocexercisefile higherDegreeExercise
-     omdocexercisefile rationalEquationExercise
-     omdocexercisefile ineqLinearExercise
-     omdocexercisefile coverUpExercise
-     omdocexercisefile fractionExercise
-     omdocexercisefile findFactorsExercise
-     omdocexercisefile ineqQuadraticExercise
-     omdocexercisefile ineqHigherDegreeExercise
-     omdocexercisefile simplifyRationalExercise
-     omdocexercisefile quadraticNoABCExercise
-     omdocexercisefile quadraticWithApproximation
-     omdocexercisefile derivativeExercise
-     omdocexercisefile derivativePolyExercise
-     omdocexercisefile derivativeProductExercise
-     omdocexercisefile derivativeQuotientExercise
-     omdocexercisefile simplifyPowerExercise
-     omdocexercisefile powerOfExercise
-     omdocexercisefile nonNegBrokenExpExercise
-     omdocexercisefile calcPowerExercise
-     omdocexercisefile powerEqExercise
-     omdocexercisefile expEqExercise
-     omdocexercisefile logEqExercise
-     omdocexercisefile gramSchmidtExercise
-     omdocexercisefile linearSystemExercise
-     omdocexercisefile gaussianElimExercise
-     omdocexercisefile systemWithMatrixExercise
-     recbookfile
-       [sourcefile linearExercise
-       ,sourcefile linearMixedExercise
-       ,sourcefile quadraticExercise
-       ,sourcefile higherDegreeExercise
-       ,sourcefile rationalEquationExercise
-       ,sourcefile ineqLinearExercise
-       ,sourcefile coverUpExercise
-       ,sourcefile fractionExercise
-       ,sourcefile findFactorsExercise
-       ,sourcefile ineqQuadraticExercise
-       ,sourcefile ineqHigherDegreeExercise
-       ,sourcefile simplifyRationalExercise
-       ,sourcefile quadraticNoABCExercise
-       ,sourcefile quadraticWithApproximation
-       ,sourcefile derivativeExercise
-       ,sourcefile derivativePolyExercise
-       ,sourcefile derivativeProductExercise
-       ,sourcefile derivativeQuotientExercise
-       ,sourcefile simplifyPowerExercise
-       ,sourcefile powerOfExercise
-       ,sourcefile nonNegBrokenExpExercise
-       ,sourcefile calcPowerExercise
-       ,sourcefile powerEqExercise
-       ,sourcefile expEqExercise
-       ,sourcefile logEqExercise
-       ,sourcefile gramSchmidtExercise
-       ,sourcefile linearSystemExercise
-       ,sourcefile gaussianElimExercise
-       ,sourcefile systemWithMatrixExercise
-       ]
-       [omdocexerciserefs linearExercise
-       ,omdocexerciserefs linearMixedExercise
-       ,omdocexerciserefs quadraticExercise
-       ,omdocexerciserefs higherDegreeExercise
-       ,omdocexerciserefs rationalEquationExercise
-       ,omdocexerciserefs ineqLinearExercise
-       ,omdocexerciserefs coverUpExercise
-       ,omdocexerciserefs fractionExercise
-       ,omdocexerciserefs findFactorsExercise
-       ,omdocexerciserefs ineqQuadraticExercise
-       ,omdocexerciserefs ineqHigherDegreeExercise
-       ,omdocexerciserefs simplifyRationalExercise
-       ,omdocexerciserefs quadraticNoABCExercise
-       ,omdocexerciserefs quadraticWithApproximation
-       ,omdocexerciserefs derivativeExercise
-       ,omdocexerciserefs derivativePolyExercise
-       ,omdocexerciserefs derivativeProductExercise
-       ,omdocexerciserefs derivativeQuotientExercise
-       ,omdocexerciserefs simplifyPowerExercise
-       ,omdocexerciserefs powerOfExercise
-       ,omdocexerciserefs nonNegBrokenExpExercise
-       ,omdocexerciserefs calcPowerExercise
-       ,omdocexerciserefs powerEqExercise
-       ,omdocexerciserefs expEqExercise
-       ,omdocexerciserefs logEqExercise
-       ,omdocexerciserefs gramSchmidtExercise
-       ,omdocexerciserefs linearSystemExercise
-       ,omdocexerciserefs gaussianElimExercise
-       ,omdocexerciserefs systemWithMatrixExercise
-       ]
-
+      do let version = MR.version
+         let revision = MR.revision
+         omdocexercisefile version revision linearExercise
+         omdocexercisefile version revision linearMixedExercise
+         omdocexercisefile version revision quadraticExercise
+         omdocexercisefile version revision higherDegreeExercise
+         omdocexercisefile version revision rationalEquationExercise
+         omdocexercisefile version revision ineqLinearExercise
+         omdocexercisefile version revision coverUpExercise
+         omdocexercisefile version revision fractionExercise
+         omdocexercisefile version revision findFactorsExercise
+         omdocexercisefile version revision ineqQuadraticExercise
+         omdocexercisefile version revision ineqHigherDegreeExercise
+         omdocexercisefile version revision simplifyRationalExercise
+         omdocexercisefile version revision quadraticNoABCExercise
+         omdocexercisefile version revision quadraticWithApproximation
+         omdocexercisefile version revision derivativeExercise
+         omdocexercisefile version revision derivativePolyExercise
+         omdocexercisefile version revision derivativeProductExercise
+         omdocexercisefile version revision derivativeQuotientExercise
+         omdocexercisefile version revision simplifyPowerExercise
+         omdocexercisefile version revision powerOfExercise
+         omdocexercisefile version revision nonNegBrokenExpExercise
+         omdocexercisefile version revision calcPowerExercise
+         omdocexercisefile version revision powerEqExercise
+         omdocexercisefile version revision expEqExercise
+         omdocexercisefile version revision logEqExercise
+         omdocexercisefile version revision gramSchmidtExercise
+         omdocexercisefile version revision linearSystemExercise
+         omdocexercisefile version revision gaussianElimExercise
+         omdocexercisefile version revision systemWithMatrixExercise
+         recbookfile version revision
+           [sourcefile linearExercise
+           ,sourcefile linearMixedExercise
+           ,sourcefile quadraticExercise
+           ,sourcefile higherDegreeExercise
+           ,sourcefile rationalEquationExercise
+           ,sourcefile ineqLinearExercise
+           ,sourcefile coverUpExercise
+           ,sourcefile fractionExercise
+           ,sourcefile findFactorsExercise
+           ,sourcefile ineqQuadraticExercise
+           ,sourcefile ineqHigherDegreeExercise
+           ,sourcefile simplifyRationalExercise
+           ,sourcefile quadraticNoABCExercise
+           ,sourcefile quadraticWithApproximation
+           ,sourcefile derivativeExercise
+           ,sourcefile derivativePolyExercise
+           ,sourcefile derivativeProductExercise
+           ,sourcefile derivativeQuotientExercise
+           ,sourcefile simplifyPowerExercise
+           ,sourcefile powerOfExercise
+           ,sourcefile nonNegBrokenExpExercise
+           ,sourcefile calcPowerExercise
+           ,sourcefile powerEqExercise
+           ,sourcefile expEqExercise
+           ,sourcefile logEqExercise
+           ,sourcefile gramSchmidtExercise
+           ,sourcefile linearSystemExercise
+           ,sourcefile gaussianElimExercise
+           ,sourcefile systemWithMatrixExercise
+           ]
+           [omdocexerciserefs linearExercise
+           ,omdocexerciserefs linearMixedExercise
+           ,omdocexerciserefs quadraticExercise
+           ,omdocexerciserefs higherDegreeExercise
+           ,omdocexerciserefs rationalEquationExercise
+           ,omdocexerciserefs ineqLinearExercise
+           ,omdocexerciserefs coverUpExercise
+           ,omdocexerciserefs fractionExercise
+           ,omdocexerciserefs findFactorsExercise
+           ,omdocexerciserefs ineqQuadraticExercise
+           ,omdocexerciserefs ineqHigherDegreeExercise
+           ,omdocexerciserefs simplifyRationalExercise
+           ,omdocexerciserefs quadraticNoABCExercise
+           ,omdocexerciserefs quadraticWithApproximation
+           ,omdocexerciserefs derivativeExercise
+           ,omdocexerciserefs derivativePolyExercise
+           ,omdocexerciserefs derivativeProductExercise
+           ,omdocexerciserefs derivativeQuotientExercise
+           ,omdocexerciserefs simplifyPowerExercise
+           ,omdocexerciserefs powerOfExercise
+           ,omdocexerciserefs nonNegBrokenExpExercise
+           ,omdocexerciserefs calcPowerExercise
+           ,omdocexerciserefs powerEqExercise
+           ,omdocexerciserefs expEqExercise
+           ,omdocexerciserefs logEqExercise
+           ,omdocexerciserefs gramSchmidtExercise
+           ,omdocexerciserefs linearSystemExercise
+           ,omdocexerciserefs gaussianElimExercise
+           ,omdocexerciserefs systemWithMatrixExercise
+           ]
+       
 --------------------------------------------------------------------------------
 {- Generating the recbook for the exercise collections
 -}
 --------------------------------------------------------------------------------
 
-recbookfile :: [Element] -> [Element] -> IO ()
-recbookfile sourcefiles exercisesrefs =
-  let -- sourcefiles    =  map sourcefile        exercises
-      -- exercisesrefs  =  map omdocexerciserefs exercises
-      filestring = 
+recbookfile :: String -> Int -> [Element] -> [Element] -> IO ()
+recbookfile version revision sourcefiles exercisesrefs =
+  let filestring = 
              xmldecl 
           ++ activemathdtd 
           ++ showXML
@@ -141,11 +149,14 @@ recbookfile sourcefiles exercisesrefs =
                   [omgroupelt "" "http://www.mathweb.org/omdoc"
                     [omgroupelt "IdeasExercises" ""
                       [metadataelt "IdeasExercises-metadata"
-                        [titleelt "Ideas Exercises collection"]
+                        [titleelt "Ideas Exercises collection"
+                        ,versionelt version (show revision)
+                        ]
                       ,omgroupelt "recbook_for_IdeasExercises" ""
                         (metadataelt ""
                           [titleelt "Complete Ideas Exercises Recbook"
                           ,dateelt "created" "2011-01-22"
+                          ,dateelt "changed" today
                           ,creatorelt "aut" "Johan Jeuring"
                           ,sourceelt ""
                           ,formatelt "application/omdoc+xml"
@@ -191,8 +202,8 @@ omdocexerciserefs ex =
 omdocpath :: String
 omdocpath = "/Users/johanj/Documents/Research/ExerciseAssistants/Feedback/math-bridge/activemath/all/activemath-ideas/content/IdeasExercises/omdoc/"
 
-omdocexercisefile :: (IsTerm a) => Exercise a -> IO ()
-omdocexercisefile ex = 
+omdocexercisefile :: (IsTerm a) => String -> Int -> Exercise a -> IO ()
+omdocexercisefile version revision ex = 
   let info = mBExerciseInfo ! (exerciseId $ ex)
       filestring = 
              xmldecl 
@@ -204,8 +215,10 @@ omdocexercisefile ex =
                   [metadataelt 
                     ""
                     [dateelt "created" "2011-01-22"
+                    ,dateelt "changed" today
                     ,titleelt (title info)
                     ,creatorelt "aut" "Johan Jeuring"
+                    ,versionelt version (show revision)
                     ]
                   ,theoryelt (context info) 
                              (omdocexercises ex)
@@ -700,6 +713,13 @@ titleelt titletext =
   Element { name        =  "Title"
           , attributes  =  []
           , content     =  [Left titletext]
+          }
+
+versionelt :: String -> String -> Element
+versionelt version revision = 
+  Element { name        =  "Version"
+          , attributes  =  ["number" := revision]
+          , content     =  [Left version]
           }
 
 xmldecl  :: String

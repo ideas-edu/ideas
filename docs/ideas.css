@@ -41,9 +41,9 @@ div.idbox {
     padding-bottom:   2px;
     padding-left:     3ex;
     padding-right:    3ex;
-    border-color:     rgb(200,200,255);
-    border-width:     3px;
-    border-style:     double;
+    border-color:     rgb(200,200,200);
+    border-width:     1px;
+    border-style:     solid;
 }
 
 font.id {
@@ -63,19 +63,19 @@ div.derivation:after {
 } */
 
 div.derivation, div.step {
-    background-color: rgb(225,225,225);
+    background-color: rgb(235,235,235);
     padding-top:      0.5ex;
     padding-bottom:   0.5ex;
     padding-left:     3ex;
     padding-right:    3ex;
-    border-color:     black;
+    border-color:     rgb(200,200,200);
     border-width:     1px;
     border-style:     solid;
 }
 
 table {
    border-style: solid;
-   border-color: black;
+   border-color: rgb(200,200,200);;
    border-width: 1px;
 }
 
@@ -88,12 +88,12 @@ td {
 }
 
 tr.topRow {
-   background-color: rgb(225,225,225);
+   background-color: rgb(235,235,235);
    /* color: rgb(255,255,255); */
 }
 
 tr.evenRow {
-   background-color: rgb(225,225,225);
+   background-color: rgb(235,235,235);
 }
 
 tr.oddRow {

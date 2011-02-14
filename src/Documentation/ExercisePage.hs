@@ -106,16 +106,20 @@ exercisePage exampleFileExists pkg = do
       para $ link (up len ++ exerciseDiagnosisFile exid) $ do
          br
          text "See diagnosis examples"
+   -- preText $ show $ treesToInfo ex trees
 
    h2 "3. Example"
-   let state = generateWith (mkStdGen 0) pkg Medium
+   let state = generate (mkStdGen 0) pkg Medium
    derivationHTML ex (stateTerm state)
    para $ unless (null (examples ex)) $ 
       link (up len ++ exerciseDerivationsFile exid) (text "More examples")
  where
-   ex   = exercise pkg
-   exid = getId ex
-   len  = length (qualifiers pkg)
+   ex    = exercise pkg
+   exid  = getId ex
+   len   = length (qualifiers pkg)
+   trees = [ mapSteps getId (derivationTree (strategy ex) (inContext ex a)) 
+           | (_, a) <- examples ex 
+           ]
 
 strategyPage :: Exercise a -> HTMLBuilder
 strategyPage ex = do

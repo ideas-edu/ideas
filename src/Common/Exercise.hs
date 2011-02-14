@@ -22,7 +22,7 @@ module Common.Exercise
    , randomTerm, randomTermWith, ruleset
    , makeContext, inContext, recognizeRule, ruleIsRecognized
    , ruleOrderingWith, ruleOrderingWithId
-   , Examples, mapExamples, Difficulty(..), level
+   , Examples, mapExamples, Difficulty(..), readDifficulty, level
      -- * Exercise status
    , Status(..), isPublic, isPrivate
      -- * Miscellaneous
@@ -48,6 +48,7 @@ import Common.Utils (ShowString(..))
 import Common.View (makeView)
 import Control.Monad.Error
 import Control.Arrow
+import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Ord
@@ -158,6 +159,15 @@ instance Show Difficulty where
     where 
       xs = ["very_easy", "easy", "medium", "difficult", "very_difficult"]
 
+readDifficulty :: String -> Maybe Difficulty
+readDifficulty s =
+   case filter p [VeryEasy .. VeryDifficult] of
+            [a] -> Just a
+            _   -> Nothing
+ where
+   normal = filter isAlpha . map toLower
+   p = ((== normal s) . normal . show)
+
 level :: Difficulty -> [a] -> Examples a
 level = zip . repeat
 
@@ -195,7 +205,7 @@ randomTerm dif ex = do
    return (randomTermWith rng dif ex)
 
 randomTermWith :: StdGen -> Difficulty -> Exercise a -> a
-randomTermWith rng dif ex = 
+randomTermWith rng dif ex =
    case randomExercise ex of
       Just f  -> f rng dif
       Nothing

@@ -105,9 +105,8 @@ applyS = makeService "apply"
 generateS :: Service
 generateS = makeService "generate" 
    "Given an exercise code and a difficulty level (optional), this service \
-   \returns an initial state with a freshly generated expression. The meaning \
-   \of the difficulty level (an integer) depends on the exercise at hand." $ 
-   (\pkg -> generate pkg . toEnum . min 4) ::: ExercisePkg :-> optionTp 5 Int :-> IO stateTp
+   \returns an initial state with a freshly generated expression." $ 
+   generate ::: StdGen :-> ExercisePkg :-> optionTp Medium difficultyType :-> stateTp
 
 examplesS :: Service
 examplesS = makeService "examples"

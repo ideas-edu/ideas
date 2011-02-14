@@ -14,10 +14,10 @@ module Service.Evaluator where
 
 import Common.Library
 import Control.Monad
-import Data.List
 import Service.ExercisePackage
 import Service.Types
 import Service.DomainReasoner
+import System.Random
 
 evalService :: Evaluator inp out a -> Service -> inp -> DomainReasoner out
 evalService f = eval f . serviceFunction
@@ -68,6 +68,9 @@ decodeDefault dec tp s =
          decodeType dec t1 s
       ExercisePkg ->
          return (decoderPackage dec, s)
+      StdGen -> do
+         stdgen <- liftIO newStdGen
+         return (stdgen, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
 
@@ -85,16 +88,10 @@ encodeDefault enc tp tv =
                           Right b -> encodeType enc t2 b
       Unit          -> return (encodeTuple enc [])
       Tag _ t1      -> encodeType enc t1 tv
-      IO t1         -> do let pp s | "user error (" `isPrefixOf` s = init (drop 12 s)
-                                   | otherwise = s
-                          result <- liftIO $ 
-                             liftM Right tv `catch` (return . Left . pp . show)
-                          case result of 
-                             Left msg -> fail msg
-                             Right a  -> encodeType enc t1 a
       Rule          -> encodeType enc String (showId tv)
       Term          -> encodeTerm enc tv
       Context       -> fromContext tv >>= encodeType enc Term
       Location      -> encodeType enc String (show tv)
       ExercisePkg   -> return (encodeTuple enc [])
+      Exception     -> fail tv
       _             -> fail ("No support for result type: " ++ show tp)

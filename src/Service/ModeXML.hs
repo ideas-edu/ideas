@@ -131,7 +131,7 @@ openMathConverterTp pkg =
       omobj <- liftEither (xml2omobj xob)
       case fromOpenMath pkg omobj of
          Just a  -> return a
-         Nothing -> fail "Unknown OpenMath object"
+         Nothing -> fail "Invalid OpenMath object for this exercise"
 
 xmlEncoder :: Bool -> (a -> DomainReasoner XMLBuilder) -> ExercisePackage a -> Encoder XMLBuilder a
 xmlEncoder b f pkg = Encoder
@@ -202,6 +202,10 @@ xmlDecodeType b dec serviceType =
               return (g st, xml)
          | s == "answer" -> \xml ->
               findChild "answer" xml >>= xmlDecodeType b dec t
+         | s == "difficulty" -> keep $ \xml -> do
+              g <- equalM difficultyType serviceType
+              a <- findAttribute "difficulty" xml
+              maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
       _ -> decodeDefault dec serviceType
  where         
    keep :: Monad m => (XML -> m a) -> XML -> m (a, XML)

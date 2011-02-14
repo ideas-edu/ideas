@@ -12,27 +12,21 @@
 module Service.BasicServices 
    ( -- * Basic Services
      stepsremaining, findbuggyrules, ready, allfirsts, derivation
-   , onefirst, applicable, allapplications, apply, generate, generateWith
+   , onefirst, applicable, allapplications, apply, generate
    ) where
 
 import Common.Library hiding (derivation, applicable, apply)
 import Common.Utils (safeHead)
 import Data.List
 import Data.Maybe
-import System.Random (StdGen, newStdGen)
+import System.Random (StdGen)
 import Control.Monad
 import Service.ExercisePackage
 import Service.State
 import qualified Common.Classes as Apply
-      
--- result must be in the IO monad to access a standard random number generator
-generate :: ExercisePackage a -> Difficulty -> IO (State a)
-generate pkg dif = do 
-   stdgen <- newStdGen
-   return (generateWith stdgen pkg dif)
 
-generateWith :: StdGen -> ExercisePackage a -> Difficulty -> State a
-generateWith rng pkg dif = 
+generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
+generate rng pkg dif = 
    emptyState pkg (randomTermWith rng dif (exercise pkg))
 
 derivation :: Monad m => Maybe StrategyConfiguration -> State a -> m [(Rule (Context a), Context a)]

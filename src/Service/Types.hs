@@ -16,7 +16,8 @@ module Service.Types
    , serviceDeprecated, serviceFunction
      -- * Types
    , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
-   , errorTp, equal, isSynonym, useSynonym, TypeSynonym, typeSynonym
+   , errorTp, difficultyType
+   , equal, isSynonym, useSynonym, TypeSynonym, typeSynonym
    , equalM
    ) where
 
@@ -24,6 +25,7 @@ import Common.Library
 import Common.Utils (commaList)
 import Control.Monad
 import Data.Maybe
+import System.Random
 import Service.ExercisePackage
 
 -----------------------------------------------------------------------------
@@ -63,6 +65,8 @@ equal type1 type2 =
       (Term,        Term       ) -> Just id
       (ExercisePkg, ExercisePkg) -> Just id
       (Context,     Context    ) -> Just id
+      (StdGen,      StdGen     ) -> Just id
+      (Exception,   Exception  ) -> Just id
       (Bool,        Bool       ) -> Just id
       (String,      String     ) -> Just id
       (Int,         Int        ) -> Just id
@@ -112,10 +116,12 @@ optionTp :: t1 -> Type a t1 -> Type a t1
 optionTp a t = Iso (fromMaybe a) Just (maybeTp t)
 
 errorTp :: Type a t -> Type a (Either String t)
-errorTp t = Iso f g (t :|: IO Unit)
+errorTp t = Exception :|: t
+
+difficultyType :: Type a Difficulty
+difficultyType = Tag "difficulty" (Iso f show String)
  where
-   f = either Right (const (Left "errorTp"))
-   g = either (Right . fail) Left
+   f = fromMaybe Medium . readDifficulty
 
 data Type a t where
    -- Type isomorphisms (for defining type synonyms)
@@ -129,7 +135,8 @@ data Type a t where
    Pair         :: Type a t1 -> Type a t2 -> Type a (t1, t2)
    (:|:)        :: Type a t1 -> Type a t2 -> Type a (Either t1 t2)
    Unit         :: Type a ()
-   IO           :: Type a t -> Type a (IO t)
+   StdGen       :: Type a StdGen
+   Exception    :: Type a String
    -- Exercise-specific types
    ExercisePkg  :: Type a (ExercisePackage a)
    Strategy     :: Type a (Strategy (Context a))
@@ -151,7 +158,6 @@ instance Show (Type a t) where
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
-   show (IO t)         = show t
    show t              = fromMaybe "unknown" (groundType t)
    
 showTuple :: Type a t -> String
@@ -177,6 +183,8 @@ groundType tp =
       Location     -> Just "Location"
       Id           -> Just "Id"
       StrategyCfg  -> Just "StrategyConfiguration"
+      StdGen       -> Just "StdGen"
+      Exception    -> Just "Exception"
       _            -> Nothing
       
 -----------------------------------------------------------------------------

@@ -3,9 +3,6 @@
     <elem ruleid="logic.propositional.buggy.demorgan1">
       []
       <state>
-        <prefix>
-          no prefix
-        </prefix>
         <expr>
           ~p || ~q
         </expr>
@@ -14,9 +11,6 @@
     <elem ruleid="logic.propositional.buggy.demorgan1">
       []
       <state>
-        <prefix>
-          no prefix
-        </prefix>
         <expr>
           p || ~~q
         </expr>
@@ -25,9 +19,6 @@
     <elem ruleid="logic.propositional.buggy.demorgan1">
       []
       <state>
-        <prefix>
-          no prefix
-        </prefix>
         <expr>
           p || ~q
         </expr>
@@ -36,9 +27,6 @@
     <elem ruleid="logic.propositional.buggy.demorgan2">
       []
       <state>
-        <prefix>
-          no prefix
-        </prefix>
         <expr>
           ~(~p || ~~q)
         </expr>
@@ -47,9 +35,6 @@
     <elem ruleid="logic.propositional.buggy.demorgan3">
       []
       <state>
-        <prefix>
-          no prefix
-        </prefix>
         <expr>
           ~p /\ ~~q
         </expr>
@@ -58,9 +43,6 @@
     <elem ruleid="logic.propositional.buggy.parenth1">
       []
       <state>
-        <prefix>
-          no prefix
-        </prefix>
         <expr>
           ~p /\ ~q
         </expr>
@@ -69,15 +51,12 @@
     <elem ruleid="logic.propositional.command">
       [0]
       <state>
-        <prefix>
-          no prefix
-        </prefix>
-        <context>
-          <item name="location" value="[0]"/>
-        </context>
         <expr>
           ~(~q /\ p)
         </expr>
+        <context>
+          <item name="location" value="[0]"/>
+        </context>
       </state>
     </elem>
     <elem ruleid="logic.propositional.demorganand">

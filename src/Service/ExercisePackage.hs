@@ -68,7 +68,7 @@ somePackage = Some . package
 
 someTermPackage :: IsTerm a => Exercise a -> Some ExercisePackage
 someTermPackage = Some . termPackage
-   
+
 -----------------------------------------------------------------------------
 -- Utility functions for conversion to/from OpenMath
 

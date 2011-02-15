@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, TypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -166,16 +166,46 @@ xmlEncodeType b enc pkg serviceType =
                let elems = mapM_ (element "elem") bs
                return (element "list" elems)
       Tp.Tag s t1  -> liftM (element s) . xmlEncodeType b enc pkg t1  -- quick fix
-      Tp.Strategy  -> return . builder . strategyToXML
-      Tp.Rule      -> return . ("ruleid" .=.) . showId
+      Tp.Strategy  -> return . encodeXML
+      Tp.Rule      -> return . encodeXML
       Tp.Term      -> encodeTerm enc
       Tp.Context   -> encodeContext b (encodeTerm enc)
-      Tp.Location  -> return . {-element "location" .-} text . show
-      Tp.Id        -> return . text . show
-      Tp.Bool      -> return . text . map toLower . show
-      Tp.String    -> return . text
-      Tp.Int       -> return . text . show
+      Tp.Location  -> return . encodeXML
+      Tp.Id        -> return . encodeXML
+      Tp.Bool      -> return . encodeXML
+      Tp.String    -> return . encodeXML
+      Tp.Int       -> return . encodeXML
       _            -> encodeDefault enc serviceType
+
+class EncodeXML a where
+   encodeXML :: a -> XMLBuilder
+
+instance EncodeXML a => EncodeXML (Maybe a) where
+   encodeXML = maybe (return ()) encodeXML
+   
+instance EncodeXML Int where
+   encodeXML = text . show
+
+instance EncodeXML Bool where
+   encodeXML = text . map toLower . show
+
+instance EncodeXML String where
+   encodeXML = text
+
+instance EncodeXML Id where
+   encodeXML = text . show
+
+instance EncodeXML Location where
+   encodeXML = text . show
+
+instance EncodeXML (Prefix a) where 
+   encodeXML = element "prefix"  . text . show
+
+instance EncodeXML (Rule a) where
+   encodeXML = ("ruleid" .=.) . showId
+
+instance EncodeXML (Strategy a) where
+   encodeXML = builder . strategyToXML
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
 xmlDecoder b f pkg = Decoder
@@ -290,15 +320,10 @@ decodeConfiguration xml =
 
 encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
 encodeState b f state = do
-   body <- f (stateTerm state)
+   body <- encodeContext b f (stateContext state)
    return $ element "state" $ do
-      encodePrefix (statePrefix state)
-      let env = getEnvironment (stateContext state)
-      encodeEnvironment b (location (stateContext state)) env
+      encodeXML (statePrefix state)
       body
-
-encodePrefix :: Maybe (Prefix a) -> XMLBuilder
-encodePrefix = element "prefix"  . text . maybe "no prefix" show
    
 encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
 encodeEnvironment b loc env0

@@ -1,15 +1,15 @@
-<reply result="ok" version="0.6.5 (0)">
+<reply result="ok" version="0.7.1 (0)">
   <expected ready="true" ruleid="algebra.equations.quadratic.abc">
     <state>
       <prefix>
         [5,1,0,0,1]
       </prefix>
-      <context>
-        <item name="clipboard" value="[D==0, a==1, b==3, c==9/4]"/>
-      </context>
       <expr>
         x == -3/2
       </expr>
+      <context>
+        <item name="clipboard" value="[D==0, a==1, b==3, c==9/4]"/>
+      </context>
     </state>
   </expected>
 </reply>

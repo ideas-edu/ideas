@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, TypeSynonymInstances #-}
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -24,12 +24,10 @@ import Data.Char
 import Data.List
 import Data.Maybe
 import Service.ExercisePackage
-import Service.ProblemDecomposition
 import Service.Request
 import Service.RulesInfo (rulesInfoXML)
 import Service.StrategyInfo
 import Service.State
-import Service.Diagnose
 import Service.Types
 import qualified Service.Types as Tp
 import Service.Evaluator
@@ -143,69 +141,25 @@ xmlEncoder b f pkg = Encoder
 xmlEncodeType :: Bool -> Encoder XMLBuilder a -> ExercisePackage a -> Type a t -> t -> DomainReasoner XMLBuilder
 xmlEncodeType b enc pkg serviceType =
    case serviceType of
-      Tp.Tag s _ 
-         | s == "Diagnosis" -> \a -> do
-              d <- isSynonym diagnosisTypeSynonym (a ::: serviceType)
-              encodeDiagnosis b (encodeTerm enc) d
-         | s == "DecompositionReply" -> \a -> do
-              reply <- isSynonym replyTypeSynonym (a ::: serviceType)
-              encodeReply (encodeState b (encodeTerm enc)) reply
+      Tp.Tag s _
          | s == "RulesInfo" -> \_ ->
               rulesInfoXML (exercise pkg) (encodeTerm enc)
-         | s == "State" -> \a -> do
-              st <- isSynonym stateTypeSynonym (a ::: serviceType)
-              encodeState b (encodeTerm enc) st
-      Tp.List t1  -> \xs -> 
-         case allAreTagged t1 of
-            Just f -> do
-               let make = element "elem" . mapM_ (uncurry (.=.)) . f
-               let elems = mapM_ make xs
-               return (element "list" elems)
-            _ -> do
-               bs <- mapM (xmlEncodeType b enc pkg t1) xs
-               let elems = mapM_ (element "elem") bs
-               return (element "list" elems)
-      Tp.Tag s t1  -> liftM (element s) . xmlEncodeType b enc pkg t1  -- quick fix
-      Tp.Strategy  -> return . encodeXML
-      Tp.Rule      -> return . encodeXML
+      Tp.List t1  -> \xs -> do
+         bs <- mapM (xmlEncodeType b enc pkg t1) xs
+         return (mapM_ (element "elem") bs)
+      Tp.Tag s t1  -> case useAttribute t1 of
+                         Just f  -> return . (s .=.) . f
+                         Nothing -> liftM (element s) . xmlEncodeType b enc pkg t1
+      Tp.Strategy  -> return . builder . strategyToXML
+      Tp.Rule      -> return . ("ruleid" .=.) . showId
       Tp.Term      -> encodeTerm enc
       Tp.Context   -> encodeContext b (encodeTerm enc)
-      Tp.Location  -> return . encodeXML
-      Tp.Id        -> return . encodeXML
-      Tp.Bool      -> return . encodeXML
-      Tp.String    -> return . encodeXML
-      Tp.Int       -> return . encodeXML
+      Tp.Location  -> return . text . show
+      Tp.Id        -> return . text . show
+      Tp.Bool      -> return . text . map toLower . show
+      Tp.String    -> return . text
+      Tp.Int       -> return . text . show
       _            -> encodeDefault enc serviceType
-
-class EncodeXML a where
-   encodeXML :: a -> XMLBuilder
-
-instance EncodeXML a => EncodeXML (Maybe a) where
-   encodeXML = maybe (return ()) encodeXML
-   
-instance EncodeXML Int where
-   encodeXML = text . show
-
-instance EncodeXML Bool where
-   encodeXML = text . map toLower . show
-
-instance EncodeXML String where
-   encodeXML = text
-
-instance EncodeXML Id where
-   encodeXML = text . show
-
-instance EncodeXML Location where
-   encodeXML = text . show
-
-instance EncodeXML (Prefix a) where 
-   encodeXML = element "prefix"  . text . show
-
-instance EncodeXML (Rule a) where
-   encodeXML = ("ruleid" .=.) . showId
-
-instance EncodeXML (Strategy a) where
-   encodeXML = builder . strategyToXML
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
 xmlDecoder b f pkg = Decoder
@@ -226,7 +180,7 @@ xmlDecodeType b dec serviceType =
       Tp.Term        -> keep $ decodeTerm dec
       Tp.StrategyCfg -> decodeConfiguration
       Tp.Tag s t
-         | s == "State" -> \xml -> do 
+         | s == "state" -> \xml -> do 
               g  <- equalM stateTp serviceType
               st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
               return (g st, xml)
@@ -240,16 +194,11 @@ xmlDecodeType b dec serviceType =
  where         
    keep :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    keep f xml = liftM (\a -> (a, xml)) (f xml)
-         
-allAreTagged :: Type a t -> Maybe (t -> [(String, String)])
-allAreTagged (Iso _ f t) = fmap (. f) (allAreTagged t)
-allAreTagged (Pair t1 t2) = do 
-   f1 <- allAreTagged t1
-   f2 <- allAreTagged t2
-   return $ \(a,b) -> f1 a ++ f2 b
-allAreTagged (Tag s Bool)   = Just $ \b -> [(s, map toLower (show b))]
-allAreTagged (Tag s String) = Just $ \a -> [(s, a)]
-allAreTagged _ = Nothing
+
+useAttribute :: Type a t -> Maybe (t -> String)
+useAttribute String = Just id
+useAttribute Bool   = Just (map toLower . show)
+useAttribute _      = Nothing
          
 decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a)
 decodeState b pkg f xmlTop = do
@@ -317,13 +266,6 @@ decodeConfiguration xml =
             Nothing -> fail $ "unknown action " ++ show (name item)
       cfgloc <- findAttribute "name" item
       return (byName (newId cfgloc), action)
-
-encodeState :: Monad m => Bool -> (a -> m XMLBuilder) -> State a -> m XMLBuilder
-encodeState b f state = do
-   body <- encodeContext b f (stateContext state)
-   return $ element "state" $ do
-      encodeXML (statePrefix state)
-      body
    
 encodeEnvironment :: Bool -> Location -> Environment -> XMLBuilder
 encodeEnvironment b loc env0
@@ -339,23 +281,6 @@ encodeEnvironment b loc env0
    env | null loc  = env0
        | otherwise = storeEnv "location" loc env0
 
-encodeDiagnosis :: Monad m => Bool -> (a -> m XMLBuilder) -> Diagnosis a -> m XMLBuilder
-encodeDiagnosis mode f diagnosis =
-   case diagnosis of
-      Buggy r        -> return $ element "buggy" $ "ruleid" .=. showId r
-      NotEquivalent  -> return $ tag "notequiv"
-      Similar  b s   -> ok "similar"  b s Nothing
-      Expected b s r -> ok "expected" b s (Just (showId r))
-      Detour   b s r -> ok "detour"   b s (Just (showId r))
-      Correct  b s   -> ok "correct"  b s Nothing
- where
-   ok t b s mr = do
-      body <- encodeState mode f s
-      return $ element t $ do
-         "ready" .=. map toLower (show b)
-         maybe (return ()) ("ruleid" .=.) mr
-         body
-  
 encodeContext :: Monad m => Bool -> (a -> m XMLBuilder) -> Context a -> m XMLBuilder
 encodeContext b f ctx = do
    a   <- fromContext ctx

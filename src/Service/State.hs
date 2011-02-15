@@ -17,7 +17,7 @@ module Service.State
      State, makeState, empyStateContext, emptyState 
    , exercisePkg, statePrefix, stateContext, stateTerm
      -- * Types
-   , stateTp, stateTypeSynonym
+   , stateTp
    ) where
 
 import Common.Library
@@ -52,10 +52,7 @@ emptyState pkg = empyStateContext pkg . inContext (exercise pkg)
 --------------------------------------------------------------
 
 stateTp :: Type a (State a)
-stateTp = useSynonym stateTypeSynonym
-
-stateTypeSynonym :: TypeSynonym a (State a)
-stateTypeSynonym = typeSynonym "State" f g tp
+stateTp = Tag "state" (Iso f g tp)
  where
    f (pkg, mp, ctx) =
       let str = strategy (exercise pkg)
@@ -68,5 +65,6 @@ stateTypeSynonym = typeSynonym "State" f g tp
       )
    tp = tuple3 ExercisePkg prefixTp Context
 
+-- iso prevents that prefix is turned into an (XML) attribute
 prefixTp :: Type a (Maybe String)
-prefixTp = Tag "Prefix" (maybeTp String)
+prefixTp = maybeTp (Tag "prefix" (Iso id id String))

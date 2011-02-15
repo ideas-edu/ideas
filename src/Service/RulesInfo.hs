@@ -80,4 +80,4 @@ collectExamples ex = foldr add M.empty (map snd (examples ex))
              in f (derivation tree) 
 
 rulesInfoType :: Type a ()
-rulesInfoType = useSynonym (typeSynonym "RulesInfo" id id Unit)
+rulesInfoType = Tag "RulesInfo" Unit

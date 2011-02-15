@@ -107,14 +107,15 @@ jsonEncoder ex = Encoder
            liftM jsonTuple (mapM (\(b ::: t) -> encode enc t b) xs)
       | otherwise = 
            case serviceType of
-              Tp.Tag s t | s == "Result" -> do
-                 result <- isSynonym submitTypeSynonym (a ::: serviceType) 
-                 encodeResult enc result
-                         | s == "elem" -> 
-                 encode enc t a
-                         | s == "State" -> do
-                 st <- isSynonym stateTypeSynonym (a ::: serviceType)
-                 encodeState (encodeTerm enc) st
+              Tp.Tag s t 
+                 | s == "elem" || s == "list" -> 
+                      encode enc t a
+                 | s == "Result" -> do
+                      conv <- equalM serviceType submitType
+                      encodeResult enc (conv a)
+                 | s == "state" -> do
+                      conv <- equalM serviceType stateTp
+                      encodeState (encodeTerm enc) (conv a)
                  
               Tp.List t    -> liftM Array (mapM (encode enc t) a)
               Tp.Tag s t   -> liftM (\b -> Object [(s, b)]) (encode enc t a)
@@ -157,7 +158,7 @@ jsonDecoder pkg = Decoder
          Tp.String   -> useFirst $ \json -> case json of 
                                                String s -> return s
                                                _        -> fail "not a string"
-         Tp.Tag s _ | s == "State" -> do 
+         Tp.Tag s _ | s == "state" -> do 
             f <- equalM stateTp serviceType
             useFirst (liftM f . decodeState (decoderPackage dec) (decodeTerm dec))
          _ -> decodeDefault dec serviceType

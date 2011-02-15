@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Service.Submit 
    ( submit, Result(..), getResultState
-   , submitType, submitTypeSynonym
+   , submitType
    ) where
 
 import Common.Library
@@ -51,10 +51,7 @@ getResultState result =
       _           -> Nothing
       
 submitType :: Type a (Result a)
-submitType = useSynonym submitTypeSynonym
-
-submitTypeSynonym :: TypeSynonym a (Result a)
-submitTypeSynonym = typeSynonym "Result" f g tp
+submitType = Tag "Result" (Iso f g tp)
  where
    f (Left rs) = Buggy rs
    f (Right (Left ())) = NotEquivalent

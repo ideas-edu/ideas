@@ -1,5 +1,5 @@
 <reply result="ok" version="0.7.1 (0)">
-  <incorrect equivalent="False">
+  <incorrect equivalent="false">
     <location>
       linearalgebra.gaussianelim.scale
     </location>

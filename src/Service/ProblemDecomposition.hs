@@ -10,8 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.ProblemDecomposition 
-   ( problemDecomposition
-   , replyType, replyTypeSynonym, encodeReply
+   ( problemDecomposition, replyType
    ) where
 
 import Common.Library
@@ -21,7 +20,6 @@ import Data.Maybe
 import Service.ExercisePackage
 import Service.State
 import Service.Types
-import Text.XML hiding (name)
 
 problemDecomposition :: Monad m => Maybe Id -> State a -> Maybe a -> m (Reply a)
 problemDecomposition msloc state answer 
@@ -126,35 +124,10 @@ data Reply a = Ok Id (State a)
 type Args = [(String, String)]
 
 ------------------------------------------------------------------------
--- Conversion functions to XML
-
-encodeReply :: Monad m => (State a -> m XMLBuilder) -> Reply a -> m XMLBuilder
-encodeReply showState reply = 
-   case reply of
-      Ok loc state -> do
-         stateXML <- showState state
-         return $
-            element "correct" $ do
-               element "location" (text $ show loc)
-               stateXML
-      Incorrect b loc state args -> do 
-         stateXML <- showState state 
-         return $ 
-            element "incorrect" $ do
-               "equivalent" .=. show b
-               element "location" (text $ show loc)
-               stateXML
-               let f (x, y) = element "elem" $ do 
-                     "descr" .=. x 
-                     text y
-               unless (null args) $
-                  element "arguments" $ mapM_ f args
+-- Type definition
 
 replyType :: Type a (Reply a)
-replyType = useSynonym replyTypeSynonym
-
-replyTypeSynonym :: TypeSynonym a (Reply a)
-replyTypeSynonym = typeSynonym "DecompositionReply" f g tp
+replyType = Iso f g tp
  where
    f (Left (a, b))        = Ok a b
    f (Right (a, b, c, d)) = Incorrect a b c d
@@ -162,7 +135,8 @@ replyTypeSynonym = typeSynonym "DecompositionReply" f g tp
    g (Ok a b)            = Left (a, b)
    g (Incorrect a b c d) = Right (a, b, c, d)
    
-   tp  =  tuple2 Id stateTp
-      :|: tuple4 Bool Id stateTp argsTp
-
-   argsTp = List (Pair String String)
+   tp  =  Tag "correct"   (tuple2 locTp stateTp)
+      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locTp stateTp argsTp)
+    
+   locTp  = Tag "location" Id
+   argsTp = Tag "arguments" (List (Pair (Tag "descr" String) String))

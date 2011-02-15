@@ -50,7 +50,7 @@ derivationS = makeService "derivation"
    \current expression. The first optional argument lets you configure the \
    \strategy, i.e., make some minor modifications to it. Rules used and \
    \intermediate expressions are returned in a list." $ 
-   derivation ::: maybeTp StrategyCfg :-> stateTp :-> errorTp (List (tuple2 Rule Context))
+   derivation ::: maybeTp StrategyCfg :-> stateTp :-> errorTp (listTp (tuple2 Rule Context))
 
 allfirstsS :: Service
 allfirstsS = makeService "allfirsts" 
@@ -58,7 +58,7 @@ allfirstsS = makeService "allfirsts"
    \onefirst service to get only one suggestion. For each suggestion, a new \
    \state, the rule used, and the location where the rule was applied are \
    \returned." $ 
-   allfirsts ::: stateTp :-> errorTp (List (tuple3 Rule Location stateTp))
+   allfirsts ::: stateTp :-> errorTp (listTp (tuple3 Rule Location stateTp))
         
 onefirstS :: Service
 onefirstS = makeService "onefirst" 
@@ -86,14 +86,14 @@ applicableS = makeService "applicable"
    "Given a current expression and a location in this expression, this service \
    \yields all rules that can be applied at this location, regardless of the \
    \strategy." $ 
-   applicable ::: Location :-> stateTp :-> List Rule
+   applicable ::: Location :-> stateTp :-> listTp Rule
 
 allapplicationsS :: Service
 allapplicationsS = makeService "allapplications" 
    "Given a current expression, this service yields all rules that can be \
    \applied at a certain location, regardless wether the rule used is buggy \
    \or not. Some results are within the strategy, others are not." $  
-   allapplications ::: stateTp :-> List (tuple3 Rule Location stateTp)
+   allapplications ::: stateTp :-> listTp (tuple3 Rule Location stateTp)
 
 applyS :: Service
 applyS = makeService "apply" 
@@ -114,14 +114,14 @@ examplesS = makeService "examples"
    \with an exercise. These are the examples that appear at the page generated \
    \for each exercise. Also see the generate service, which returns a random \
    \start term." $
-   (map snd . examples . exercise) ::: ExercisePkg :-> List Term
+   (map snd . examples . exercise) ::: ExercisePkg :-> listTp Term
 
 findbuggyrulesS :: Service
 findbuggyrulesS = makeService "findbuggyrules" 
    "Search for common misconceptions (buggy rules) in an expression (compared \
    \to the current state). It is assumed that the expression is indeed not \
    \correct. This service has been superseded by the diagnose service." $ 
-   findbuggyrules ::: stateTp :-> Term :-> List Rule
+   findbuggyrules ::: stateTp :-> Term :-> listTp Rule
 
 submitS :: Service
 submitS = deprecate $ makeService "submit" 
@@ -169,7 +169,7 @@ derivationtextS = makeService "derivationtext"
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
-   derivationtext ::: stateTp :-> maybeTp String :-> errorTp (List (tuple2 String Context))
+   derivationtext ::: stateTp :-> maybeTp String :-> errorTp (listTp (tuple2 String Context))
 
 ------------------------------------------------------
 -- Problem decomposition service
@@ -189,7 +189,7 @@ exerciselistS :: [Some ExercisePackage] -> Service
 exerciselistS list = makeService "exerciselist" 
    "Returns all exercises known to the system. For each exercise, its domain, \
    \identifier, a short description, and its current status are returned." $
-   allExercises list ::: List (tuple3 (Tag "exerciseid" String) (Tag "description" String) (Tag "status" String))
+   allExercises list ::: listTp (tuple3 (Tag "exerciseid" String) (Tag "description" String) (Tag "status" String))
 
 rulelistS :: Service
 rulelistS = makeService "rulelist" 
@@ -197,7 +197,7 @@ rulelistS = makeService "rulelist"
    \name (or identifier), whether the rule is buggy, and whether the rule was \
    \expressed as an observable rewrite rule. See rulesinfo for more details \
    \about the rules." $ 
-   allRules ::: ExercisePkg :-> List (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
+   allRules ::: ExercisePkg :-> listTp (tuple3 (Tag "name" String) (Tag "buggy" Bool) (Tag "rewriterule" Bool))
       
 rulesinfoS :: Service
 rulesinfoS = makeService "rulesinfo" 

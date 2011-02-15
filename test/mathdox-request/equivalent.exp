@@ -1,5 +1,5 @@
 <reply result="ok" version="0.7.1 (0)">
-  <incorrect equivalent="True">
+  <incorrect equivalent="true">
     <location>
       forwardpass
     </location>

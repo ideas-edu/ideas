@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 module Service.Diagnose 
    ( Diagnosis(..), diagnose, restartIfNeeded
-   , diagnosisType, diagnosisTypeSynonym
+   , diagnosisType
    ) where 
 
 import Common.Library
@@ -116,10 +116,7 @@ restartIfNeeded state
    pkg = exercisePkg state
    
 diagnosisType :: Type a (Diagnosis a)
-diagnosisType = useSynonym diagnosisTypeSynonym
-
-diagnosisTypeSynonym :: TypeSynonym a (Diagnosis a)
-diagnosisTypeSynonym = typeSynonym "Diagnosis" f g tp
+diagnosisType = Iso f g tp
  where
    f (Left r) = Buggy r
    f (Right (Left ())) = NotEquivalent
@@ -135,9 +132,11 @@ diagnosisTypeSynonym = typeSynonym "Diagnosis" f g tp
    g (Detour b s r)   = Right (Right (Right (Right (Left (b, s, r)))))
    g (Correct b s)    = Right (Right (Right (Right (Right (b, s)))))
    
-   tp  =  Rule
-      :|: Unit
-      :|: Pair   Bool stateTp
-      :|: tuple3 Bool stateTp Rule
-      :|: tuple3 Bool stateTp Rule
-      :|: Pair   Bool stateTp
+   tp  =  Tag "buggy"    Rule
+      :|: Tag "notequiv" Unit
+      :|: Tag "similar"  (Pair   readyBool stateTp)
+      :|: Tag "expected" (tuple3 readyBool stateTp Rule)
+      :|: Tag "detour"   (tuple3 readyBool stateTp Rule)
+      :|: Tag "correct"  (Pair   readyBool stateTp)
+      
+   readyBool = Tag "ready" Bool

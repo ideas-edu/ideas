@@ -94,11 +94,10 @@ higherPowerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ map to $ rootEquations !! 3
---  , examples       = map (orList . return) $ concat $ init higherPowerEquations
+  , examples       = level Medium $ map to $ concat $ take 3 rootEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)
-  , equivalence    = viewEquivalent higherDegreeEquationsView
+  , equivalence    = viewEquivalent (normPowerEqView' >>> higherDegreeEquationsView)
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }
@@ -111,10 +110,9 @@ rootEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ rootEquations !! 3
---  , examples       = map singleton $ concat $ init higherPowerEquations
+  , examples       = level Medium $ concat $ drop 3 rootEquations
   , isReady        = solvedRelation
---  , isSuitable     = maybe False and . toList . fmap (`belongsTo` normPowerEqView)
+  , isSuitable     = (`belongsTo` normPowerEqView)
 --  , equivalence    = viewEquivalent higherDegreeEquationsView
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]

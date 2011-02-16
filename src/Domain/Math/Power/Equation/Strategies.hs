@@ -107,8 +107,7 @@ rootEqStrategy =  cleanUpStrategy cleanup strat
     strat =  label "Cover up" 
           $  use condXisRight <*> use flipEquation
          <*> exhaustiveSomewhere myCoverUpRulesOr
-    cleanup = id -- applyTop $ fmap $ fmap cleanUpExpr
-
+    cleanup = applyTop $ fmap cleanUpExpr
 
 -- | Help functions -----------------------------------------------------------
 
@@ -143,6 +142,7 @@ myCoverUpRulesOr = use (coverUpPowerWith myConfigCoverUp)
 coverUpRulesWith :: [ConfigCoverUp -> Rule (Equation Expr)]
 coverUpRulesWith = 
    [ coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
-   , coverUpNegateWith, coverUpTimesWith, coverUpNumeratorWith
+   , coverUpNegateWith, myCoverUpTimesWith, coverUpNumeratorWith
    , coverUpDenominatorWith, coverUpSqrtWith, coverUpRootWith
    ]
+

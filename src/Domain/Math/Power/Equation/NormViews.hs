@@ -63,18 +63,30 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (identity >>^ \a->(a,1))
 
 normPowerEqView' :: View (OrList (Equation Expr)) (OrList (Equation Expr))
-normPowerEqView' = makeView (liftM h . liftM g . T.mapM f) id
+normPowerEqView' = makeView f id
   where
-    h = fmap $ fmap cleanUpExpr
-    g = transformOrList $ tryRewriteAll simplerPower
-    f expr = do
+    f = liftM clean                        -- general clean up
+      . liftM root2power                   -- write root as power
+      . liftM simplifyPowers               -- try to simplify powers
+      . fmap catOrList . T.mapM takeRoot   -- power to left and take root
+    
+    clean = fmap $ fmap cleanUpExpr
+    
+    root2power = let r (Sym s [x, y]) | isRootSymbol s = [x .^. (1 ./. y)]
+                     r _                               = []
+                 in transformOrList $ tryRewriteAll r
+    
+    simplifyPowers = transformOrList $ tryRewriteAll simplerPower
+    
+    takeRoot expr = do
       -- selected var to the left, the rest to the right
       (lhs :==: rhs) <- varLeft expr >>= constRight
       -- match power
       (c, (a, x))    <- match unitPowerView lhs
       -- simplify, scale and take root
-      let y = cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
-      return $ a :==: simplify rationalView y
+      let y = simplify rationalView $ cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
+      let f n = if even n then [a :==: y, a :==: neg y] else [a :==: y]
+      return $ toOrList $ maybe [a :==: y] f (match integerView x)
 
 constRight :: Equation Expr -> Maybe (Equation Expr)
 constRight (lhs :==: rhs) = do
@@ -151,9 +163,9 @@ simplerPower = rec
   where
     rec expr = 
       case expr of      
-        Sqrt x -> rec $ Sym powerSymbol [x, 1 / 2]
+        Sqrt x -> {-rec $-} [Sym powerSymbol [x, 1 / 2]]
         Sym s [x, y]
-          | isRootSymbol s  -> rec $ Sym powerSymbol [x, 1 / y]
+          | isRootSymbol s  -> {-rec $-} [Sym powerSymbol [x, 1 / y]]
           | isPowerSymbol s -> f
           | otherwise -> []
             where f | y == 0 = [1]

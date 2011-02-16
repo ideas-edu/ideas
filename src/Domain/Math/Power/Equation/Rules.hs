@@ -34,6 +34,7 @@ import Domain.Math.Numeric.Views
 --import Domain.Math.CleanUp (collectLikeTerms)
 import Domain.Math.Power.Utils
 import Domain.Math.Power.Views
+import Domain.Math.Polynomial.Rules (distributeTimes, distributeDivision)
 import Domain.Math.Simplification (simplify)
 
 
@@ -119,6 +120,11 @@ coverUpRootWith = coverUpBinaryRule "root" (isBinary rootSymbol) (.^.)
 
 coverUpRoot :: Rule (Equation Expr)
 coverUpRoot = coverUpRootWith configCoverUp
+
+-- | Negations are pushed inside
+myCoverUpTimesWith :: ConfigCoverUp -> Rule (Equation Expr)
+myCoverUpTimesWith = doAfter f . coverUpTimesWith
+  where f = mapRight (applyD distributeDivision . applyD distributeTimes)
 
 -- flip the two sides of an equation
 flipEquation :: Rule (Equation Expr)

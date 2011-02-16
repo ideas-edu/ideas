@@ -141,24 +141,19 @@ xmlEncoder b f pkg = Encoder
 xmlEncodeType :: Bool -> Encoder XMLBuilder a -> ExercisePackage a -> Type a t -> t -> DomainReasoner XMLBuilder
 xmlEncodeType b enc pkg serviceType =
    case serviceType of
-      Tp.Tag s _
+      Tp.Tag s t1
          | s == "RulesInfo" -> \_ ->
               rulesInfoXML (exercise pkg) (encodeTerm enc)
-      Tp.List t1  -> \xs -> do
-         bs <- mapM (xmlEncodeType b enc pkg t1) xs
-         return (mapM_ (element "elem") bs)
-      Tp.Tag s t1  -> case useAttribute t1 of
-                         Just f  -> return . (s .=.) . f
-                         Nothing -> liftM (element s) . xmlEncodeType b enc pkg t1
+         | otherwise ->  
+              case useAttribute t1 of
+                 Just f  -> return . (s .=.) . f
+                 Nothing -> liftM (element s) . xmlEncodeType b enc pkg t1
       Tp.Strategy  -> return . builder . strategyToXML
       Tp.Rule      -> return . ("ruleid" .=.) . showId
       Tp.Term      -> encodeTerm enc
       Tp.Context   -> encodeContext b (encodeTerm enc)
-      Tp.Location  -> return . text . show
-      Tp.Id        -> return . text . show
       Tp.Bool      -> return . text . map toLower . show
       Tp.String    -> return . text
-      Tp.Int       -> return . text . show
       _            -> encodeDefault enc serviceType
 
 xmlDecoder :: Bool -> (XML -> DomainReasoner a) -> ExercisePackage a -> Decoder XML a
@@ -181,7 +176,7 @@ xmlDecodeType b dec serviceType =
       Tp.StrategyCfg -> decodeConfiguration
       Tp.Tag s t
          | s == "state" -> \xml -> do 
-              g  <- equalM stateTp serviceType
+              g  <- equalM stateType serviceType
               st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
               return (g st, xml)
          | s == "answer" -> \xml ->

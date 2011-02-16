@@ -134,9 +134,9 @@ diagnosisType = Iso f g tp
    
    tp  =  Tag "buggy"    Rule
       :|: Tag "notequiv" Unit
-      :|: Tag "similar"  (Pair   readyBool stateTp)
-      :|: Tag "expected" (tuple3 readyBool stateTp Rule)
-      :|: Tag "detour"   (tuple3 readyBool stateTp Rule)
-      :|: Tag "correct"  (Pair   readyBool stateTp)
+      :|: Tag "similar"  (Pair   readyBool stateType)
+      :|: Tag "expected" (tuple3 readyBool stateType Rule)
+      :|: Tag "detour"   (tuple3 readyBool stateType Rule)
+      :|: Tag "correct"  (Pair   readyBool stateType)
       
    readyBool = Tag "ready" Bool

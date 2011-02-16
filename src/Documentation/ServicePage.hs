@@ -92,7 +92,7 @@ examplesFor s = tryAll [ f t | (t, f) <- list, s == t ]
    
    (f +++ g) pkg = f pkg ++ g pkg
    
-   noCfg _    = [Nothing ::: maybeTp StrategyCfg]
+   noCfg _    = [Nothing ::: maybeType StrategyCfg]
    noArgs _   = []
    exArgs pkg = [pkg ::: ExercisePkg]
 
@@ -106,7 +106,7 @@ newState pkg s = do
    let ex = exercise pkg
    case parser ex s of
       Left msg -> fail ("newState: " ++ msg)
-      Right a  -> return (emptyState pkg a ::: stateTp)
+      Right a  -> return (emptyState pkg a ::: stateType)
       
 type Args = forall a . ExercisePackage a -> [TypedValue a]
 

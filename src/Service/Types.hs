@@ -15,8 +15,9 @@ module Service.Types
      Service, makeService, deprecate 
    , serviceDeprecated, serviceFunction
      -- * Types
-   , Type(..), TypedValue(..), tuple2, tuple3, tuple4, maybeTp, optionTp
-   , errorTp, difficultyType, listTp
+   , Type(..), TypedValue(..), tuple2, tuple3, tuple4
+   , maybeType, optionType
+   , errorType, difficultyType, listType, elemType
    , equal, equalM
    ) where
 
@@ -105,20 +106,23 @@ tuple4 t1 t2 t3 t4 = Iso f g (Pair t1 (Pair t2 (Pair t3 t4)))
    f (a, (b, (c, d))) = (a, b, c, d)
    g (a, b, c, d)     = (a, (b, (c, d)))
 
-maybeTp :: Type a t1 -> Type a (Maybe t1)
-maybeTp t = Iso f g (t :|: Unit)
+maybeType :: Type a t1 -> Type a (Maybe t1)
+maybeType t = Iso f g (t :|: Unit)
  where
    f = either Just (const Nothing)
    g = maybe (Right ()) Left
 
-optionTp :: t1 -> Type a t1 -> Type a t1
-optionTp a t = Iso (fromMaybe a) Just (maybeTp t)
+optionType :: t1 -> Type a t1 -> Type a t1
+optionType a t = Iso (fromMaybe a) Just (maybeType t)
 
-errorTp :: Type a t -> Type a (Either String t)
-errorTp t = Exception :|: t
+errorType :: Type a t -> Type a (Either String t)
+errorType t = Exception :|: t
 
-listTp :: Type a t -> Type a [t] -- with list "tag"
-listTp = Tag "list" . List
+listType :: Type a t -> Type a [t] -- with list "tag"
+listType = Tag "list" . List . elemType
+
+elemType :: Type a t -> Type a t
+elemType = Tag "elem"
 
 difficultyType :: Type a Difficulty
 difficultyType = Tag "difficulty" (Iso f show String)
@@ -160,7 +164,7 @@ instance Show (Type a t) where
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
-   show t              = fromMaybe "unknown" (groundType t)
+   show t              = fromMaybe "unknown" (showGroundType t)
    
 showTuple :: Type a t -> String
 showTuple tp = "(" ++ commaList (collect tp) ++ ")"
@@ -170,8 +174,8 @@ showTuple tp = "(" ++ commaList (collect tp) ++ ")"
    collect (Iso _ _ t)  = collect t
    collect t            = [show t]
    
-groundType :: Type a t -> Maybe String
-groundType tp =
+showGroundType :: Type a t -> Maybe String
+showGroundType tp =
    case tp of 
       ExercisePkg  -> Just "ExercisePkg"
       Strategy     -> Just "Strategy"

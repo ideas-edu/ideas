@@ -77,21 +77,27 @@ decodeDefault dec tp s =
 encodeDefault :: Encoder s a -> Type a t -> t -> DomainReasoner s
 encodeDefault enc tp tv =
    case tp of
-      Iso _ f t  -> encodeType enc t (f tv)
+      Iso _ f t  -> rec t (f tv)
       Pair t1 t2 -> do
          let (a, b) = tv
-         x <- encodeType enc t1 a
-         y <- encodeType enc t2 b
+         x <- rec t1 a
+         y <- rec t2 b
          return (encodeTuple enc [x, y])
+      List t        -> liftM (encodeTuple enc) (mapM (rec t) tv)
       t1 :|: t2     -> case tv of
-                          Left  a -> encodeType enc t1 a
-                          Right b -> encodeType enc t2 b
+                          Left  a -> rec t1 a
+                          Right b -> rec t2 b
       Unit          -> return (encodeTuple enc [])
-      Tag _ t1      -> encodeType enc t1 tv
-      Rule          -> encodeType enc String (showId tv)
+      Tag _ t1      -> rec t1 tv
+      Rule          -> rec String (showId tv)
       Term          -> encodeTerm enc tv
-      Context       -> fromContext tv >>= encodeType enc Term
-      Location      -> encodeType enc String (show tv)
+      Context       -> fromContext tv >>= rec Term
+      Location      -> recShow tv
+      Id            -> recShow tv
+      Int           -> recShow tv
       ExercisePkg   -> return (encodeTuple enc [])
       Exception     -> fail tv
       _             -> fail ("No support for result type: " ++ show tp)
+ where
+   rec = encodeType enc
+   recShow a = rec String (show a)

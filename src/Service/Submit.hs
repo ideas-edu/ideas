@@ -67,6 +67,6 @@ submitType = Tag "Result" (Iso f g tp)
 
    tp  =  List Rule 
       :|: Unit
-      :|: Pair (List Rule) stateTp
-      :|: Pair (List Rule) stateTp
-      :|: stateTp
+      :|: Pair (List Rule) stateType
+      :|: Pair (List Rule) stateType
+      :|: stateType

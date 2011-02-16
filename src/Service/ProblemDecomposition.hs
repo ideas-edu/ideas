@@ -135,8 +135,8 @@ replyType = Iso f g tp
    g (Ok a b)            = Left (a, b)
    g (Incorrect a b c d) = Right (a, b, c, d)
    
-   tp  =  Tag "correct"   (tuple2 locTp stateTp)
-      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locTp stateTp argsTp)
+   tp  =  Tag "correct"   (tuple2 locType stateType)
+      :|: Tag "incorrect" (tuple4 (Tag "equivalent" Bool) locType stateType argsType)
     
-   locTp  = Tag "location" Id
-   argsTp = Tag "arguments" (List (Pair (Tag "descr" String) String))
+   locType  = Tag "location" Id
+   argsType = Tag "arguments" (List (elemType (Pair (Tag "descr" String) String)))

@@ -114,7 +114,7 @@ jsonEncoder ex = Encoder
                       conv <- equalM serviceType submitType
                       encodeResult enc (conv a)
                  | s == "state" -> do
-                      conv <- equalM serviceType stateTp
+                      conv <- equalM serviceType stateType
                       encodeState (encodeTerm enc) (conv a)
                  
               Tp.List t    -> liftM Array (mapM (encode enc t) a)
@@ -159,7 +159,7 @@ jsonDecoder pkg = Decoder
                                                String s -> return s
                                                _        -> fail "not a string"
          Tp.Tag s _ | s == "state" -> do 
-            f <- equalM stateTp serviceType
+            f <- equalM stateType serviceType
             useFirst (liftM f . decodeState (decoderPackage dec) (decodeTerm dec))
          _ -> decodeDefault dec serviceType
    
@@ -218,13 +218,13 @@ encodeResult enc result =
       Buggy rs      -> return $ Object [("result", String "Buggy"), ("rules", Array $ map (String . showId) rs)]
       NotEquivalent -> return $ Object [("result", String "NotEquivalent")]   
       Ok rs st      -> do
-         json <- encodeType enc stateTp st
+         json <- encodeType enc stateType st
          return $ Object [("result", String "Ok"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Detour rs st  -> do
-         json <- encodeType enc stateTp st
+         json <- encodeType enc stateType st
          return $ Object [("result", String "Detour"), ("rules", Array $ map (String . showId) rs), ("state", json)]
       Unknown st    -> do
-         json <- encodeType enc stateTp st
+         json <- encodeType enc stateType st
          return $ Object [("result", String "Unknown"), ("state", json)]
 
 jsonTuple :: [JSON] -> JSON

@@ -16,6 +16,7 @@ module Common.Exercise
      Exercise, testableExercise, makeExercise, emptyExercise
    , exerciseId, status, parser, prettyPrinter
    , equivalence, similarity, isReady, isSuitable, eqWithContext
+   , splitParts
    , strategy, navigation, canBeRestarted, extraRules, ruleOrdering
    , difference, ordering, testGenerator, randomExercise, examples, getRule
    , simpleGenerator, useGenerator
@@ -70,6 +71,7 @@ data Exercise a = Exercise
    , isReady        :: a -> Bool
    , isSuitable     :: a -> Bool
    , difference     :: Bool -> a -> a -> Maybe (a, a)
+   , splitParts     :: a -> [a]
    , eqWithContext  :: Maybe (Context a -> Context a -> Bool) -- special equivalence with context info
      -- strategies and rules
    , strategy       :: LabeledStrategy (Context a)
@@ -123,6 +125,7 @@ emptyExercise = Exercise
    , isReady        = const True
    , isSuitable     = const True
    , difference     = \_ _ _ -> Nothing
+   , splitParts     = return
    , eqWithContext  = Nothing
      -- strategies and rules
    , strategy       = label "Fail" S.fail

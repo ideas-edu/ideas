@@ -16,13 +16,14 @@ module Service.Diagnose
    , diagnosisType
    ) where 
 
-import Common.Library
+import Common.Library hiding (derivation)
 import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
 import Service.BasicServices
+import qualified Service.AnswerSet as A
 import Service.Types
 
 ----------------------------------------------------------------
@@ -30,6 +31,8 @@ import Service.Types
 
 data Diagnosis a
    = Buggy          (Rule (Context a))
+   | Missing        [a]
+   | IncorrectPart  [a]
    | NotEquivalent  
    | Similar        Bool (State a)
    | Expected       Bool (State a) (Rule (Context a))
@@ -39,12 +42,14 @@ data Diagnosis a
 instance Show (Diagnosis a) where
    show diagnosis = 
       case diagnosis of
-         Buggy r        -> "Buggy rule " ++ show (show r)
-         NotEquivalent  -> "Unknown mistake" 
-         Similar _ _    -> "Very similar"
-         Expected _ _ r -> "Rule " ++ show (show r) ++ ", expected by strategy"
-         Detour _ _ r   -> "Rule " ++ show (show r) ++ ", not following strategy"
-         Correct _ _    -> "Unknown step"
+         Buggy r          -> "Buggy rule " ++ show (show r)
+         Missing xs       -> "Missing (" ++ show (length xs) ++ " items)"
+         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
+         NotEquivalent    -> "Unknown mistake" 
+         Similar _ _      -> "Very similar"
+         Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
+         Detour _ _ r     -> "Rule " ++ show (show r) ++ ", not following strategy"
+         Correct _ _      -> "Unknown step"
 
 ----------------------------------------------------------------
 -- The diagnose service
@@ -57,8 +62,11 @@ diagnose state new
         case discovered True of
            Just r -> -- report the buggy rule
               Buggy r
-           Nothing -> -- unknown mistake
-              NotEquivalent
+           Nothing -> 
+              case A.compareParts (equivalence ex) (splitParts ex) (stateSolution state) new of
+                 A.Missing       xs -> Missing xs
+                 A.IncorrectPart xs -> IncorrectPart xs
+                 _                  -> NotEquivalent -- unknown mistake
               
    -- Is the submitted term (very) similar to the previous one? 
    | similarity ex (stateTerm state) new =
@@ -118,25 +126,42 @@ restartIfNeeded state
 diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso f g tp
  where
-   f (Left r) = Buggy r
-   f (Right (Left ())) = NotEquivalent
-   f (Right (Right (Left (b, s)))) = Similar b s
-   f (Right (Right (Right (Left (b, s, r))))) = Expected b s r
-   f (Right (Right (Right (Right (Left (b, s, r)))))) = Detour b s r
-   f (Right (Right (Right (Right (Right (b, s)))))) = Correct b s
+   f (Left (Left r)) = Buggy r
+   f (Left (Right (Left xs))) = Missing xs
+   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
+   f (Left (Right (Right (Right ())))) = NotEquivalent
+   f (Right (Left (b, s))) = Similar b s
+   f (Right (Right (Left (b, s, r)))) = Expected b s r
+   f (Right (Right (Right (Left (b, s, r))))) = Detour b s r
+   f (Right (Right (Right (Right (b, s))))) = Correct b s
+
+   g (Buggy r)          = Left (Left r)
+   g (Missing xs)       = Left (Right (Left xs))
+   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
+   g (NotEquivalent)    = Left (Right (Right (Right ())))
+   g (Similar b s)      = Right (Left (b, s))
+   g (Expected b s r)   = Right (Right (Left (b, s, r)))
+   g (Detour b s r)     = Right (Right (Right (Left (b, s, r))))
+   g (Correct b s)      = Right (Right (Right (Right (b, s))))
    
-   g (Buggy r)        = Left r
-   g (NotEquivalent)  = Right (Left ())
-   g (Similar b s)    = Right (Right (Left (b, s)))
-   g (Expected b s r) = Right (Right (Right (Left (b, s, r))))
-   g (Detour b s r)   = Right (Right (Right (Right (Left (b, s, r)))))
-   g (Correct b s)    = Right (Right (Right (Right (Right (b, s)))))
-   
-   tp  =  Tag "buggy"    Rule
-      :|: Tag "notequiv" Unit
-      :|: Tag "similar"  (Pair   readyBool stateType)
+   tp  =  
+       (  Tag "buggy"         Rule
+      :|: Tag "missing"       (List Term)
+      :|: Tag "incorrectpart" (List Term)
+      :|: Tag "notequiv"      Unit
+       )
+      :|: 
+       (  Tag "similar"  (Pair   readyBool stateType)
       :|: Tag "expected" (tuple3 readyBool stateType Rule)
       :|: Tag "detour"   (tuple3 readyBool stateType Rule)
       :|: Tag "correct"  (Pair   readyBool stateType)
+       )
       
    readyBool = Tag "ready" Bool
+   
+stateSolution :: State a -> a
+stateSolution s = 
+   fromMaybe (stateTerm s) $ do
+      xs <- derivation Nothing s
+      p  <- safeHead (reverse xs)
+      fromContext (snd p)

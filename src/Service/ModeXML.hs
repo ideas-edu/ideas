@@ -185,6 +185,16 @@ xmlDecodeType b dec serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
+         {-
+         | s == "prefix" -> \xml -> do
+              f  <- equalM String t
+              mp <- decodePrefix (decoderPackage dec) xml
+              s  <- maybe (fail "no prefix") (return . show) mp
+              return (f s, xml) -}
+         | otherwise -> \xml -> do
+              c <- findChild s xml
+              xmlDecodeType b dec t c
+              
       _ -> decodeDefault dec serviceType
  where         
    keep :: Monad m => (XML -> m a) -> XML -> m (a, XML)
@@ -197,8 +207,7 @@ useAttribute _      = Nothing
          
 decodeState :: Monad m => Bool -> ExercisePackage a -> (XML -> m a) -> XML -> m (State a)
 decodeState b pkg f xmlTop = do
-   xml <- findChild "state" xmlTop
-   unless (name xml == "state") (fail "expected a state tag")
+   xml  <- findChild "state" xmlTop
    mpr  <- decodePrefix pkg xml
    term <- decodeContext b pkg f xml
    return (makeState pkg mpr term)

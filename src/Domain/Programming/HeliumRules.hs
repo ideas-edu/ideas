@@ -16,7 +16,8 @@
 
 module Domain.Programming.HeliumRules where
 
-import Common.Apply
+import Common.Classes
+import Common.Id
 import Common.Transformation hiding (liftRule)
 import Common.Utils (safeHead)
 import Common.View
@@ -86,7 +87,7 @@ liftRule = liftRuleIn $ makeView topUndefs (\(a, f) -> f a)
 --   couple a hole with its refinement strategy (tbd).
 greedyRule :: Rule a -> Rule a
 greedyRule rule = if isMinorRule rule then minorRule gr else gr
-  where gr = makeSimpleRule (name rule) (apply rule)
+  where gr = makeSimpleRule (getId rule) (apply rule)
 
 -- | Create a rule that refines the first occurence of a hole of type a
 toRule :: Undefined a => String -> a -> Rule a

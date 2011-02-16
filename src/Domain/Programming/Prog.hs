@@ -14,6 +14,7 @@
 module Domain.Programming.Prog where
 
 import Common.Derivation
+import Common.Id
 import Common.Strategy hiding (not, repeat, replicate)
 import Control.Monad.State
 import Data.Generics.Biplate ()
@@ -71,7 +72,7 @@ checkExercise :: [String] -> Solution -> StateT Integer IO ()
 checkExercise fixedNames s = do
   correctCount <- get  
   let isCorrect = isSolution fixedNames (strat s) (unsafeCompile (solution s))
-  liftIO $ printRow (sid s) (show isCorrect) (strategyName (strat s)) (remark s)
+  liftIO $ printRow (sid s) (show isCorrect) (showId (strat s)) (remark s)
   liftIO line
   put $ if isCorrect then correctCount + 1 else correctCount
 

@@ -1,8 +1,4 @@
 <reply result="ok" version="0.7.1 (0)">
-  <missing>
-    <expr>
-      x == 6
-    </expr>
-  </missing>
+  <missing/>
 </reply>
 

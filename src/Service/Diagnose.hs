@@ -16,14 +16,13 @@ module Service.Diagnose
    , diagnosisType
    ) where 
 
-import Common.Library hiding (derivation)
+import Common.Library
 import Common.Utils (safeHead)
 import Data.List (sortBy)
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
-import Service.BasicServices
-import qualified Service.AnswerSet as A
+import Service.BasicServices hiding (apply)
 import Service.Types
 
 ----------------------------------------------------------------
@@ -31,7 +30,7 @@ import Service.Types
 
 data Diagnosis a
    = Buggy          (Rule (Context a))
-   | Missing        [a]
+   | Missing
    | IncorrectPart  [a]
    | NotEquivalent  
    | Similar        Bool (State a)
@@ -43,7 +42,7 @@ instance Show (Diagnosis a) where
    show diagnosis = 
       case diagnosis of
          Buggy r          -> "Buggy rule " ++ show (show r)
-         Missing xs       -> "Missing (" ++ show (length xs) ++ " items)"
+         Missing          -> "Missing solutions"
          IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
          NotEquivalent    -> "Unknown mistake" 
          Similar _ _      -> "Very similar"
@@ -60,13 +59,8 @@ diagnose state new
    | not (equivalenceContext ex (stateContext state) newc) =
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
-           Just r -> -- report the buggy rule
-              Buggy r
-           Nothing -> 
-              case A.compareParts (equivalence ex) (splitParts ex) (stateSolution state) new of
-                 A.Missing       xs -> Missing xs
-                 A.IncorrectPart xs -> IncorrectPart xs
-                 _                  -> NotEquivalent -- unknown mistake
+           Just r  -> Buggy r -- report the buggy rule
+           Nothing -> compareParts state new
               
    -- Is the submitted term (very) similar to the previous one? 
    | similarity ex (stateTerm state) new =
@@ -127,7 +121,7 @@ diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso f g tp
  where
    f (Left (Left r)) = Buggy r
-   f (Left (Right (Left xs))) = Missing xs
+   f (Left (Right (Left ()))) = Missing
    f (Left (Right (Right (Left xs)))) = IncorrectPart xs
    f (Left (Right (Right (Right ())))) = NotEquivalent
    f (Right (Left (b, s))) = Similar b s
@@ -136,9 +130,9 @@ diagnosisType = Iso f g tp
    f (Right (Right (Right (Right (b, s))))) = Correct b s
 
    g (Buggy r)          = Left (Left r)
-   g (Missing xs)       = Left (Right (Left xs))
+   g Missing            = Left (Right (Left ()))
    g (IncorrectPart xs) = Left (Right (Right (Left xs)))
-   g (NotEquivalent)    = Left (Right (Right (Right ())))
+   g NotEquivalent      = Left (Right (Right (Right ())))
    g (Similar b s)      = Right (Left (b, s))
    g (Expected b s r)   = Right (Right (Left (b, s, r)))
    g (Detour b s r)     = Right (Right (Right (Left (b, s, r))))
@@ -146,7 +140,7 @@ diagnosisType = Iso f g tp
    
    tp  =  
        (  Tag "buggy"         Rule
-      :|: Tag "missing"       (List Term)
+      :|: Tag "missing"       Unit
       :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
        )
@@ -158,10 +152,32 @@ diagnosisType = Iso f g tp
        )
       
    readyBool = Tag "ready" Bool
+
+----------------------------------------------------------------
+-- Compare answer sets (and search for missing parts/incorrect parts)
+
+compareParts :: State a -> a -> Diagnosis a
+compareParts state = answerList eq split solve (stateTerm state)
+ where
+   ex    = exercise (exercisePkg state)
+   eq    = equivalence ex
+   split = splitParts ex
+   solve = \a -> fromMaybe a $ 
+                    apply (strategy ex) (inContext ex a) >>= fromContext
    
-stateSolution :: State a -> a
-stateSolution s = 
-   fromMaybe (stateTerm s) $ do
-      xs <- derivation Nothing s
-      p  <- safeHead (reverse xs)
-      fromContext (snd p)
+answerList :: (a -> a -> Bool) -> (a -> [a]) -> (a -> a) -> a -> a -> Diagnosis a
+answerList eq split solve a b
+   | noSplit               = NotEquivalent
+   | present && null wrong = NotEquivalent -- error situation
+   | null wrong            = Missing
+   | partly                = IncorrectPart wrong
+   | otherwise             = NotEquivalent
+ where
+   as = split (solve a) -- expected
+   ps = [ (x, split (solve x)) | x <- split b ] -- student (keep original parts)
+   bs = concatMap snd ps -- student answer, but then fully solved
+   wrong   = [ x | (x, xs) <- ps, any notInAs xs ] -- is a (student) part incorrect?
+   present = all (flip any bs . eq) as -- are all expected answers present
+   notInAs = not . flip any as . eq
+   partly  = length wrong < length ps
+   noSplit = length as < 2 && length bs < 2

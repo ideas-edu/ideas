@@ -14,6 +14,7 @@ module Domain.Math.Power.Equation.NormViews where
 
 import Common.View
 import Common.Rewriting hiding (rewrite)
+import Common.Utils (fixpoint)
 import Control.Arrow ( (>>^) )
 import Control.Monad
 import Data.List
@@ -68,7 +69,7 @@ normPowerEqView' = makeView f id
     f = liftM clean                        -- general clean up
       . liftM root2power                   -- write root as power
       . liftM simplifyPowers               -- try to simplify powers
-      . fmap catOrList . T.mapM takeRoot   -- power to left and take root
+      . fmap catOrList . T.mapM takeRoot'   -- power to left and take root
     
     clean = fmap $ fmap cleanUpExpr
     
@@ -76,17 +77,30 @@ normPowerEqView' = makeView f id
                      r _                               = []
                  in transformOrList $ tryRewriteAll r
     
-    simplifyPowers = transformOrList $ tryRewriteAll simplerPower
+    simplifyPowers = fixpoint $ transformOrList $ tryRewriteAll simplerPower
     
-    takeRoot expr = do
+    takeRoot' expr = do
       -- selected var to the left, the rest to the right
       (lhs :==: rhs) <- varLeft expr >>= constRight
+      
       -- match power
       (c, (a, x))    <- match unitPowerView lhs
+      
       -- simplify, scale and take root
-      let y = simplify rationalView $ cleanUpExpr $ (rhs ./. c) .^. (1 ./. x)
-      let f n = if even n then [a :==: y, a :==: neg y] else [a :==: y]
-      return $ toOrList $ maybe [a :==: y] f (match integerView x)
+      let rhs' = simplify rationalView $ cleanUpExpr $ rhs ./. c
+      
+      y <- maybe (Just [rhs' .^. (1 ./. x)]) (tr rhs') $ match integerView x
+      
+      return $ toOrList $ map (a :==:) y
+
+tr :: Expr -> Integer -> Maybe [Expr]
+tr n x | odd x     = case n of 
+                       Negate n' -> Just [neg (n' .^. (1 ./. x'))]
+                       _         -> Just [n .^. (1 ./. x')]
+       | otherwise = case n of 
+                       Negate n' -> Nothing
+                       _         -> Just $ let e = n .^. (1 ./. x') in [e, neg e]
+  where x' = fromInteger x
 
 constRight :: Equation Expr -> Maybe (Equation Expr)
 constRight (lhs :==: rhs) = do
@@ -162,10 +176,10 @@ simplerPower :: Expr -> [Expr]
 simplerPower = rec
   where
     rec expr = 
-      case expr of      
-        Sqrt x -> {-rec $-} [Sym powerSymbol [x, 1 / 2]]
+      case expr of
+        Sqrt x -> [Sym powerSymbol [x, 1 / 2]]
         Sym s [x, y]
-          | isRootSymbol s  -> {-rec $-} [Sym powerSymbol [x, 1 / y]]
+          | isRootSymbol s  -> [Sym powerSymbol [x, 1 / y]]
           | isPowerSymbol s -> f
           | otherwise -> []
             where f | y == 0 = [1]
@@ -183,7 +197,7 @@ simplerPower = rec
                         map fromInteger $ 
                           takeRoot (numerator rx ^ numerator ry) (denominator ry)
                       `mplus`
-                      -- (a/b)^y -> a^x/b^y
+                      -- (a/b)^y -> a^y/b^y
                       do
                         (a, b) <- matchM divView x
                         return $ build divView (a .^. y, b .^. y)

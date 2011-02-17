@@ -101,13 +101,13 @@ higherPowerEqStrategy =  cleanUpStrategy cleanup coverUpStrategy'
   where 
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
 
-rootEqStrategy :: LabeledStrategy (Context (Equation Expr))
+rootEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 rootEqStrategy =  cleanUpStrategy cleanup strat
   where 
     strat =  label "Cover up" 
           $  use condXisRight <*> use flipEquation
          <*> exhaustiveSomewhere myCoverUpRulesOr
-    cleanup = applyTop $ fmap cleanUpExpr
+    cleanup = applyTop $ fmap $ fmap cleanUpExpr
 
 -- | Help functions -----------------------------------------------------------
 

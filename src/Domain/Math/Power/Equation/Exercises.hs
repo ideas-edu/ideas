@@ -23,7 +23,7 @@ import Common.Classes
 import Common.Context
 import Common.Exercise
 import Common.View
-import Data.Foldable (toList)
+import Data.Function (on)
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.Views
@@ -32,6 +32,7 @@ import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
+import Domain.Math.Power.Utils ( (===) )
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 import qualified Data.Foldable as F
@@ -94,7 +95,8 @@ higherPowerEqExercise = makeExercise
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ map to $ concat $ take 3 rootEquations
+  , examples       = level Medium $ map to $ concat $ 
+                       higherPowerEquations ++ take 3 rootEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)
   , equivalence    = viewEquivalent (normPowerEqView' >>> higherDegreeEquationsView)
@@ -102,18 +104,18 @@ higherPowerEqExercise = makeExercise
                                         , getId calcRoot ]
   }
 
-rootEqExercise :: Exercise (Equation Expr)
+rootEqExercise :: Exercise (OrList (Equation Expr))
 rootEqExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pEquation pExpr)
+  , parser         = parseExprWith (pOrList (pEquation pExpr))
   , strategy       = rootEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
                        newId "algebra.manipulation.exponents.equation"
-  , examples       = level Medium $ concat $ drop 3 rootEquations
-  , isReady        = solvedRelation
-  , isSuitable     = (`belongsTo` normPowerEqView)
---  , equivalence    = viewEquivalent higherDegreeEquationsView
+  , examples       = level Medium $ map to $ concat $ drop 3 rootEquations
+  , isReady        = solvedRelations
+  , isSuitable     = F.all (`belongsTo` normPowerEqView)
+  , equivalence    = on (===) (simplify (normPowerEqView' >>> higherDegreeEquationsView))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

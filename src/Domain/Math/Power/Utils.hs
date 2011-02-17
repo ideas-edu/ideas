@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- Copyright 2010, Open Universiteit Nederland. This file is distributed 
 -- under the terms of the GNU General Public License. For more information, 
@@ -24,11 +25,13 @@ import Common.Transformation
 import Common.Uniplate
 import Common.View
 import Control.Monad
-import Data.Foldable (foldMap)
+import Data.Foldable (Foldable, foldMap, toList)
+import Data.Function (on)
 import Data.List hiding (repeat, replicate)
 import Data.Ratio
 import Data.Traversable (Traversable, mapM)
 import qualified Domain.Math.Data.PrimeFactors as PF
+import Domain.Math.CleanUp
 import Domain.Math.Data.OrList
 import Domain.Math.Data.Relation
 import Domain.Math.Equation.CoverUpRules
@@ -102,6 +105,12 @@ eqView v = eqv >>> v *** v
   where
     eqv = makeView (\(lhs :==: rhs) -> Just (lhs, rhs)) (uncurry (:==:))
 
+relationView :: View (Equation a) (Relation a)
+relationView = makeView f g
+ where
+   f (x :==: y) = return $ x .==. y
+   g r | relationType r == EqualTo = leftHandSide r :==: rightHandSide r
+       | otherwise                 = error "Not an equality"
 
 -- | Rule collections ---------------------------------------------------------
 
@@ -147,6 +156,24 @@ coverUpRulesX = map (\r -> r cfg)
                          , coverLHS = False} 
 
 -- | Common functions ---------------------------------------------------------
+
+-- Semantic equivalence
+class SemEq a where
+    (===), (=/=) :: a -> a -> Bool
+    x =/= y = not (x === y)
+--    x === y = not (x =/= y)
+
+infix 4 ===, =/=
+
+instance SemEq a => SemEq (Equation a) where
+  (a :==: b) === (c :==: d) = a === c && b === d || a === d && b === c
+
+instance SemEq Expr where
+  (===) = on (==) cleanUpExpr
+
+instance SemEq a => SemEq (OrList a) where
+  a === b = let as = toList a ; bs = toList b
+            in length (intersectBy (===) as bs) == length as
 
 tryRewriteAll :: (a -> [a]) -> a -> [a]
 tryRewriteAll f x = 

@@ -41,7 +41,8 @@ newAssignmentDialog w session = do
    randomButton     <- button leftPanel [text := "Random"]
    cancelButton     <- button leftPanel [text := "Cancel"]
    goButton         <- button leftPanel [text := "Go"]
-   difficultySlider <- hslider leftPanel True 1 10 [selection := 5]
+   difficultySlider <- hslider leftPanel False (fromEnum VeryEasy) (fromEnum VeryDifficult) 
+      [selection := fromEnum Medium]
    ownTextView      <- textCtrl leftPanel [bgcolor := myGrey]
       
    -- Right Panel
@@ -81,7 +82,7 @@ newAssignmentDialog w session = do
              Nothing  -> return ()
              Just (Some pkg) -> do
                 dif <- get difficultySlider selection
-                txt <- suggestTermFor dif (Some pkg)
+                txt <- suggestTermFor (toEnum dif) (Some pkg)
                 set ownTextView [text := txt]
    fillPackageList True
    
@@ -91,7 +92,7 @@ newAssignmentDialog w session = do
    
    set leftPanel [layout := column 10 
       [ fill (widget pi)
-      , hstretch $ label "Difficulty", row 10 [hfill $ widget difficultySlider, widget randomButton]
+      , hstretch $ label "Difficulty (very easy - very difficult)", row 10 [hfill $ widget difficultySlider, widget randomButton]
       , hstretch $ label "Enter your own assignment (or press Random button)", fill $ widget ownTextView
       , row 10  [widget cancelButton, hglue, widget goButton]]]
    

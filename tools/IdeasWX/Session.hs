@@ -58,10 +58,10 @@ withDerivation f ref = do
 makeSession :: Some ExercisePackage -> IO Session
 makeSession pkg = do
    ref <- createControl (error "reference not initialized")
-   newExercise 5 pkg ref
+   newExercise Medium pkg ref
    return ref
 
-newExercise :: Int -> Some ExercisePackage -> Session -> IO ()
+newExercise :: Difficulty -> Some ExercisePackage -> Session -> IO ()
 newExercise dif (Some pkg) ref = do
    d <- startNewDerivation dif pkg
    setValue ref $ Some $ SessionState pkg d
@@ -86,25 +86,21 @@ thisExerciseFor txt (Some pkg) ref =
          setValue ref $ Some $ SessionState pkg new
          return Nothing         
     
-newTerm :: Int -> Session -> IO ()
+newTerm :: Difficulty -> Session -> IO ()
 newTerm dif ref = do
    Some ss <- getValue ref
    newExercise dif (Some (getPackage ss)) ref
    
-suggestTerm :: Int -> Session -> IO String
-suggestTerm dif ref = do
+suggestTerm :: Session -> IO String
+suggestTerm ref = do
    Some ss <- getValue ref
-   let pkg = getPackage ss  
-       ex  = Pkg.exercise pkg
-   ca <- generate pkg dif
-   a  <- fromContext $ stateContext ca
-   return $ prettyPrinter ex a
+   suggestTermFor Medium (Some (getPackage ss))
 
-suggestTermFor :: Int -> Some ExercisePackage -> IO String
+suggestTermFor :: Difficulty -> Some ExercisePackage -> IO String
 suggestTermFor dif (Some pkg) = do
-   ca <- generate pkg dif
-   a  <- fromContext $ stateContext ca
-   return $ prettyPrinter (Pkg.exercise pkg) a
+   let ex = Pkg.exercise pkg
+   a  <- randomTerm dif ex
+   return $ prettyPrinter ex a
        
 undo :: Session -> IO ()
 undo ref =
@@ -253,10 +249,10 @@ exercise _ = error "Session.exercise: empty list"
 
 newtype Derivation a = D [State a]
 
-startNewDerivation :: Int -> ExercisePackage a -> IO (Derivation a)
-startNewDerivation dif pkg = do 
-   state <- generate pkg dif
-   return $ makeDerivation state
+startNewDerivation :: Difficulty -> ExercisePackage a -> IO (Derivation a)
+startNewDerivation dif pkg = do
+   a <- randomTerm dif (Pkg.exercise pkg)
+   return $ makeDerivation (emptyState pkg a)
 
 makeDerivation :: State a -> Derivation a
 makeDerivation state = D [state]

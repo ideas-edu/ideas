@@ -131,7 +131,7 @@ exerciseFrame = do
       
    -- bind events 
    set newButton [on command := do
-      txt <- suggestTerm 5 session -- TODO: fix difficulty!!
+      txt <- suggestTerm session
       thisExercise txt session ]
  
    set changeButton [on command := newAssignmentDialog f session]

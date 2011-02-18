@@ -60,7 +60,7 @@ diagnose state new
         -- Is the rule used discoverable by trying all known buggy rules?
         case discovered True of
            Just r  -> Buggy r -- report the buggy rule
-           Nothing -> compareParts state new
+           Nothing -> NotEquivalent -- compareParts state new
               
    -- Is the submitted term (very) similar to the previous one? 
    | similarity ex (stateTerm state) new =

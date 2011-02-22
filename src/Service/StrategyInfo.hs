@@ -46,10 +46,11 @@ coreBuilder f = rec
  where
    rec core = 
       case core of
-         _ :*:  _  -> asList  "sequence" isSequence
-         _ :|:  _  -> asList  "choice"   isChoice
-         _ :|>: _  -> asList  "orelse"   isOrElse
-         _ :||: _  -> asList  "parallel" isParallel
+         _ :*:  _  -> asList  "sequence"   isSequence
+         _ :|:  _  -> asList  "choice"     isChoice
+         _ :|>: _  -> asList  "orelse"     isOrElse
+         _ :|||: _ -> asList  "interleave" isInterleave
+         a :||-: b -> element "interleft"  (rec a >> rec b)
          Many a    -> element "many"     (rec a)
          Repeat a  -> element "repeat"   (rec a)
          Label l (Rule r) | getId l == getId r -> element "rule"     (f l)
@@ -81,9 +82,9 @@ isOrElse :: Core l a -> Maybe (Core l a, Core l a)
 isOrElse (a :|>: b) = Just (a, b)
 isOrElse _ = Nothing
 
-isParallel :: Core l a -> Maybe (Core l a, Core l a)
-isParallel (a :||: b) = Just (a, b)
-isParallel _ = Nothing
+isInterleave :: Core l a -> Maybe (Core l a, Core l a)
+isInterleave (a :|||: b) = Just (a, b)
+isInterleave _ = Nothing
 
 -----------------------------------------------------------------------
 -- XML to strategy
@@ -131,9 +132,9 @@ readStrategy toLabel findRule xml = do
    buildOrElse _ xs
       | null xs   = return Fail
       | otherwise = return (foldr1 (:|>:) xs)
-   buildParallel _ xs
+   buildInterleave _ xs
       | null xs   = return Succeed
-      | otherwise = return (foldr1 (:||:) xs)
+      | otherwise = return (foldr1 (:|||:) xs)
    buildLabel x = do
       info <- toLabel xml
       return (Label info x)
@@ -159,18 +160,18 @@ readStrategy toLabel findRule xml = do
    join2 f g a b = join (f g a b)
  
    table =
-      [ ("sequence", buildSequence)
-      , ("choice",   buildChoice)
-      , ("orelse",   buildOrElse)
-      , ("parallel", buildParallel)
-      , ("many",     comb1 Many)
-      , ("repeat",   comb1 Repeat)
-      , ("label",    join2 comb1 buildLabel)
-      , ("atomic",   comb1 Atomic)
-      , ("rec",      join2 comb1 buildRec)
-      , ("not",      comb1 (Not . noLabels))
-      , ("rule",     join2 comb0 buildRule)
-      , ("var",      join2 comb0 buildVar)
-      , ("succeed",  comb0 Succeed)
-      , ("fail",     comb0 Fail) 
+      [ ("sequence",   buildSequence)
+      , ("choice",     buildChoice)
+      , ("orelse",     buildOrElse)
+      , ("interleave", buildInterleave)
+      , ("many",       comb1 Many)
+      , ("repeat",     comb1 Repeat)
+      , ("label",      join2 comb1 buildLabel)
+      , ("atomic",     comb1 Atomic)
+      , ("rec",        join2 comb1 buildRec)
+      , ("not",        comb1 (Not . noLabels))
+      , ("rule",       join2 comb0 buildRule)
+      , ("var",        join2 comb0 buildVar)
+      , ("succeed",    comb0 Succeed)
+      , ("fail",       comb0 Fail) 
       ]

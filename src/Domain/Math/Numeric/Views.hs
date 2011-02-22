@@ -14,7 +14,7 @@ module Domain.Math.Numeric.Views
    , rationalView, doubleView, mixedFractionView
    , integerNormalForm, rationalNormalForm, mixedFractionNormalForm
    , rationalRelaxedForm, fractionForm
-   , intDiv, fracDiv, exprToNum
+   , intDiv, fracDiv
    ) where
 
 import Common.Rewriting
@@ -27,7 +27,7 @@ import Domain.Math.Expr
 -- Numeric views
 
 integralView :: Integral a => View Expr a
-integralView = newView "num.integer" (exprToNum f) fromIntegral
+integralView = newView "num.integer" (exprToNum f (const Nothing)) fromIntegral
  where
    f s [x, y] 
       | isDivideSymbol s = 
@@ -41,7 +41,7 @@ integerView :: View Expr Integer
 integerView = integralView
 
 rationalView :: View Expr Rational
-rationalView = newView "num.rational" (exprToNum f) fromRational
+rationalView = newView "num.rational" (exprToNum f (const Nothing)) fromRational
  where
    f s [x, y] 
       | isDivideSymbol s = 
@@ -63,13 +63,7 @@ mixedFractionView = newView "num.mixed-fraction" (match rationalView) mix
       in sign (fromInteger d .+. rest)
 
 doubleView :: View Expr Double
-doubleView = newView "num.double" rec Number
- where
-   rec expr =
-      case expr of
-         Sym s xs -> mapM rec xs >>= doubleSym s
-         Number d -> return d
-         _        -> exprToNumStep rec expr
+doubleView = newView "num.double" (exprToNum doubleSym return) Number
  
 -------------------------------------------------------------------
 -- Numeric views in normal form 
@@ -150,12 +144,13 @@ doubleSym _ _ = Nothing
 
 -- General numeric interpretation function: constructors Sqrt and
 -- (:/:) are interpreted with function
-exprToNum :: (Monad m, Num a) => (Symbol -> [a] -> m a) -> Expr -> m a
-exprToNum f = rec 
+exprToNum :: (Monad m, Num a) => (Symbol -> [a] -> m a) -> (Double -> m a) -> Expr -> m a
+exprToNum f g = rec 
  where
    rec expr =
       case expr of
          Sym s xs -> mapM rec xs >>= f s
+         Number d -> g d
          _        -> exprToNumStep rec expr
 
 exprToNumStep :: (Monad m, Num a) => (Expr -> m a) -> Expr -> m a

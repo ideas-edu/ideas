@@ -30,7 +30,8 @@ import Data.Maybe
 
 -- Basic combinators --------------------------------------
 
-infixr 3 <|>, <||>
+infixr 2 <|||>
+infixr 3 <|>
 infixr 4  |>
 infixr 5 <*>
 
@@ -52,15 +53,15 @@ infixr 5 <*>
       (_, Fail) -> x
       _         -> x :|: y
 
--- | Merge two strategies in parallel
-(<||>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<||>) = liftCore2 $ \x y -> 
+-- | Interleave two strategies 
+(<|||>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
+(<|||>) = liftCore2 $ \x y -> 
    case (x, y) of
       (Succeed, _) -> y
       (_, Succeed) -> x
       (Fail, _)    -> Fail
       (_, Fail)    -> Fail
-      _            -> x :||: y
+      _            -> x :|||: y
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a
@@ -83,12 +84,12 @@ alternatives :: IsStrategy f => [f a] -> Strategy a
 alternatives = foldr ((<|>) . toStrategy) fail
 
 -- | Merges a list of strategies (in parallel)
-parallel :: IsStrategy f => [f a] -> Strategy a
-parallel = foldr ((<||>) . toStrategy) succeed 
+interleave :: IsStrategy f => [f a] -> Strategy a
+interleave = foldr ((<|||>) . toStrategy) succeed 
 
 -- | Allows all permutations of the list
 permute :: IsStrategy f => [f a] -> Strategy a
-permute = foldr ((<||>) . atomic) succeed 
+permute = foldr ((<|||>) . atomic) succeed 
 
 -- EBNF combinators --------------------------------------
 

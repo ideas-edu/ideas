@@ -33,6 +33,7 @@ import qualified Data.IntMap as IM
 -- Strategy (internal) data structure, containing a selection
 -- of combinators
 
+infixr 2 :|||:
 infixr 3 :|:, :|>:
 infixr 5 :*:
 
@@ -42,15 +43,16 @@ type Core l a = GCore l (Rule a)
 -- | A generalized Core expression, not restricted to rules. This makes GCore
 -- a (traversable and foldable) functor.
 data GCore l a
-   = GCore l a :*:  GCore l a
-   | GCore l a :|:  GCore l a
-   | GCore l a :|>: GCore l a
-   | GCore l a :||: GCore l a
-   | Many   (GCore l a)
-   | Repeat (GCore l a)
-   | Not (GCore l a)
+   = GCore l a :*:   GCore l a
+   | GCore l a :|:   GCore l a
+   | GCore l a :|>:  GCore l a
+   | GCore l a :|||: GCore l a -- interleave 
+   | GCore l a :||-: GCore l a -- interleave-first-from-left
+   | Many    (GCore l a)
+   | Repeat  (GCore l a)
+   | Not     (GCore l a)
    | Label l (GCore l a)
-   | Atomic (GCore l a)
+   | Atomic  (GCore l a)
    | Succeed
    | Fail
    | Rule a -- ^ Generalized constructor (not restricted to rules)
@@ -68,20 +70,21 @@ instance Foldable (GCore l) where
    foldMap = T.foldMapDefault 
    
 instance T.Traversable (GCore l) where
-   traverse f = run
+   traverse f = rec
     where
-      run core =
+      rec core =
          case core of
-            a :*: b   -> (:*:)   <$> run a <*> run b
-            a :|: b   -> (:|:)   <$> run a <*> run b
-            a :|>: b  -> (:|>:)  <$> run a <*> run b
-            a :||: b  -> (:||:)  <$> run a <*> run b
-            Many a    -> Many    <$> run a
-            Repeat a  -> Repeat  <$> run a
-            Not a     -> Not     <$> run a
-            Label l a -> Label l <$> run a
-            Atomic a  -> Atomic  <$> run a
-            Rec n a   -> Rec n   <$> run a
+            a :*: b   -> (:*:)   <$> rec a <*> rec b
+            a :|: b   -> (:|:)   <$> rec a <*> rec b
+            a :|>: b  -> (:|>:)  <$> rec a <*> rec b
+            a :|||: b -> (:|||:) <$> rec a <*> rec b
+            a :||-: b -> (:||-:) <$> rec a <*> rec b
+            Many a    -> Many    <$> rec a
+            Repeat a  -> Repeat  <$> rec a
+            Not a     -> Not     <$> rec a
+            Label l a -> Label l <$> rec a
+            Atomic a  -> Atomic  <$> rec a
+            Rec n a   -> Rec n   <$> rec a
             Rule a    -> Rule    <$> f a
             Var n     -> pure (Var n)
             Succeed   -> pure Succeed
@@ -93,7 +96,8 @@ instance Uniplate (GCore l a) where
          a :*: b   -> ([a,b], \[x,y] -> x :*: y)
          a :|: b   -> ([a,b], \[x,y] -> x :|: y)
          a :|>: b  -> ([a,b], \[x,y] -> x :|>: y)
-         a :||: b  -> ([a,b], \[x,y] -> x :||: y)
+         a :|||: b -> ([a,b], \[x,y] -> x :|||: y)
+         a :||-: b -> ([a,b], \[x,y] -> x :||-: y)
          Many a    -> ([a],   \[x]   -> Many x)
          Repeat a  -> ([a],   \[x]   -> Repeat x)
          Label l a -> ([a],   \[x]   -> Label l x)
@@ -154,8 +158,8 @@ coreParallel :: Core l a -> Core l a -> Core l a
 coreParallel Succeed b = b
 coreParallel a Succeed = a
 coreParallel a b = alts $
-   [ x .*. (y :||: b) | (x, y) <- splitAtom a ] ++
-   [ x .*. (a :||: y) | (x, y) <- splitAtom b ]
+   [ x .*. (y :|||: b) | (x, y) <- splitAtom a ] ++
+   [ x .*. (a :|||: y) | (x, y) <- splitAtom b ]
  where
    alts [] = Fail
    alts xs = foldr1 (:|:) xs
@@ -172,8 +176,9 @@ splitAtom core =
    case core of
       a :*: b   -> [ (x, y .*. b) | (x, y) <- splitAtom a ]
       a :|: b   -> splitAtom a ++ splitAtom b
-      a :||: b  -> [ (x, y :||: b) | (x, y) <- splitAtom a ] ++
-                   [ (x, a :||: y) | (x, y) <- splitAtom b ]
+      a :|||: b -> [ (x, y :|||: b) | (x, y) <- splitAtom a ] ++
+                   [ (x, a :|||: y) | (x, y) <- splitAtom b ]
+      _ :||-: _  -> undefined
       Rec i a   -> splitAtom (substCoreVar i core a)
       Var _     -> error "Free core var in splitAtom"
       a :|>: b  -> splitAtom (coreOrElse a b)

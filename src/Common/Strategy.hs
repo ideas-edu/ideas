@@ -22,8 +22,8 @@ module Common.Strategy
    , fullDerivationTree, derivationTree
      -- * Strategy combinators
      -- ** Basic combinators
-   , (<*>), (<|>), (<||>), succeed, fail, atomic, label
-   , sequence, alternatives, parallel, permute
+   , (<*>), (<|>), (<|||>), succeed, fail, atomic, label
+   , sequence, alternatives, interleave, permute
      -- ** EBNF combinators
    , many, many1, replicate, option
      -- ** Negation and greedy combinators

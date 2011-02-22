@@ -15,7 +15,6 @@ module Main (main) where
 
 import Common.Utils (useFixedStdGen)
 import Control.Monad
-import Control.Monad.Trans
 import Data.IORef
 import Data.Time
 import Documentation.Make
@@ -58,8 +57,8 @@ main = do
          input <- case raw of
                      Nothing -> fail "Invalid request: environment variable \"input\" is empty"
                      Just s  -> return s
-         (req, txt, ctp) <- lift $ process input
-         lift $ writeIORef logRef $ -- save logging action for later
+         (req, txt, ctp) <- liftIO $ process input
+         liftIO $ writeIORef logRef $ -- save logging action for later
             logMessage req input txt addr startTime
          setHeader "Content-type" ctp
          output txt

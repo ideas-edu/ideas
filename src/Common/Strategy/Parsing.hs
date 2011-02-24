@@ -83,7 +83,7 @@ firsts st =
          a :!%: b  -> firstsStep a (suspend b state)
          Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
-         Rule r    -> hasStep r (useRule r state)
+         Rule r    -> hasStep r
          Label l a -> firstsStep (coreLabel l a) state
          Atomic a  -> firstsStep a (pushAtom state)
          Not a     -> guard (checkNot a state) >> firsts state
@@ -93,8 +93,8 @@ firsts st =
          Fail      -> []
          Succeed   -> firsts state
     where
-      chooseFor b     = flip firstsStep (makeChoice b state)
-      hasStep step xs = [ (Result step, traceStep step s) | s <- xs ]
+      chooseFor b  = flip firstsStep (makeChoice b state)
+      hasStep step = [ (Result step, s) | s <- useRule step (traceStep step state) ]
 
 -- helper datatype
 data Result a = Result a | Ready
@@ -119,7 +119,7 @@ runState st =
          a :!%: b  -> runStep a (suspend b state)
          Rec i a   -> incrTimer state >>= runStep (substCoreVar i core a)
          Var _     -> freeCoreVar "runState"
-         Rule  r   -> concatMap runState (useRule r state)
+         Rule  r   -> concatMap runState (useRule r (interleave r state))
          Label _ a -> runStep a state
          Atomic a  -> runStep a (pushAtom state)
          Not a     -> guard (checkNot a state) >> runState state
@@ -192,15 +192,11 @@ checkNot :: StepCore l a -> State l a -> Bool
 checkNot core = null . runState . newState core . value
 
 useRule :: Step l a -> State l a -> [State l a]
-useRule step@(RuleStep _) s = useRule2 step (interleave s)
-useRule step s = useRule2 step s
-
-useRule2 :: Step l a -> State l a -> [State l a]
-useRule2 step state = 
+useRule step state =
    [ resetTimer state {value = b} | b <- applyAll step (value state) ]
 
 traceStep :: Step l a -> State l a -> State l a
-traceStep step s = s {trace = step : trace s}
+traceStep step s = interleave step s {trace = step : trace s}
 
 freeCoreVar :: String -> a
 freeCoreVar caller = error $ "Free var in core expression: " ++ caller
@@ -222,33 +218,27 @@ coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
 emptyOnly :: StepCore l a -> StepCore l a
 emptyOnly core =
    case core of
-      Rule (RuleStep _) -> Fail
+      Rule step | interleaveAfter step -> Fail
       _ -> descend emptyOnly core
 
-interleave :: State l a -> State l a
-interleave s = s {stack = interleaveItems (stack s)}
+interleaveAfter :: Step l a -> Bool
+interleaveAfter (RuleStep _) = True
+interleaveAfter _            = False
+
+interleave :: Step l a -> State l a -> State l a
+interleave step s 
+   | interleaveAfter step = s {stack = interleaveItems (stack s)}
+   | otherwise            = s
 
 interleaveItems :: [StackItem l a] -> [StackItem l a]
-interleaveItems []  = []
-interleaveItems xs = 
-   let (seqs, ys) = f xs
-       (ints, zs) = g ys
-       new = makeInterleave (makeSequence seqs : ints)
-   in SSeq new:zs
+interleaveItems items = 
+   let (seqs, rest1) = f items
+       (ints, rest2) = g rest1
+       new = foldr (.%.) Succeed (foldr (.*.) Succeed seqs : ints)
+   in SSeq new : rest2
  where
    f (SSeq x:xs) = first (x:) (f xs)
    f xs          = ([], xs)
    
    g (SInt x:xs) = first (x:) (g xs)
    g xs          = ([], xs)
-   
-   makeSequence = foldr op Succeed
-    where
-      op Succeed b = b
-      op a Succeed = a
-      op a b = a :*: b
-   makeInterleave = foldr op Succeed
-    where
-      op Succeed b = b
-      op a Succeed = a
-      op a b = a :%: b

@@ -15,9 +15,9 @@
 -----------------------------------------------------------------------------
 module Common.Strategy.Core 
    ( GCore(..), Core
-   , mapLabel, noLabels
+   , (.|.), (.*.), (.%.)
    , coreMany, coreRepeat, coreOrElse, coreFix
-   , substCoreVar
+   , mapLabel, noLabels, substCoreVar
    ) where
 
 import Common.Transformation
@@ -30,9 +30,9 @@ import qualified Data.Traversable as T
 -- Strategy (internal) data structure, containing a selection
 -- of combinators
 
-infixr 2 :%:, :!%:
-infixr 3 :|:, :|>:
-infixr 5 :*:
+infixr 2 :%:, :!%:, .%.
+infixr 3 :|:, :|>:, .|.
+infixr 5 :*:, .*.
 
 -- | Core expression, with rules 
 type Core l a = GCore l (Rule a)
@@ -102,6 +102,28 @@ instance Uniplate (GCore l a) where
          Rec n a   -> ([a],   \[x]   -> Rec n x)
          Not a     -> ([a],   \[x]   -> Not x)
          _         -> ([],    \_     -> core)
+
+-----------------------------------------------------------------
+-- Smart constructors
+
+(.|.) :: GCore l a -> GCore l a -> GCore l a
+Fail .|. b    = b
+a    .|. Fail = a
+a    .|. b    = a :|: b
+
+(.*.) :: GCore l a -> GCore l a -> GCore l a
+Fail    .*. _       = Fail
+Succeed .*. b       = b
+_       .*. Fail    = Fail
+a       .*. Succeed = a
+a       .*. b       = a :*: b
+
+(.%.) :: GCore l a -> GCore l a -> GCore l a
+Fail    .%. _       = Fail
+Succeed .%. b       = b
+_       .%. Fail    = Fail
+a       .%. Succeed = a
+a       .%. b       = a :%: b
 
 -----------------------------------------------------------------
 -- Definitions

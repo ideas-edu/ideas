@@ -37,31 +37,15 @@ infixr 5 <*>
 
 -- | Put two strategies in sequence (first do this, then do that)
 (<*>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<*>) = liftCore2 $ \x y -> 
-   case (x, y) of
-      (Succeed, _) -> y
-      (_, Succeed) -> x
-      (Fail, _)    -> Fail
-      (_, Fail)    -> Fail
-      _            -> x :*: y
+(<*>) = liftCore2 (.*.)
 
 -- | Choose between the two strategies (either do this or do that)
 (<|>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<|>) = liftCore2 $ \x y ->
-   case (x, y) of
-      (Fail, _) -> y
-      (_, Fail) -> x
-      _         -> x :|: y
+(<|>) = liftCore2 (.|.)
 
 -- | Interleave two strategies 
 (<%>) :: (IsStrategy f, IsStrategy g) => f a -> g a -> Strategy a
-(<%>) = liftCore2 $ \x y -> 
-   case (x, y) of
-      (Succeed, _) -> y
-      (_, Succeed) -> x
-      (Fail, _)    -> Fail
-      (_, Fail)    -> Fail
-      _            -> x :%: y
+(<%>) = liftCore2 (.%.)
 
 -- | The strategy that always succeeds (without doing anything)
 succeed :: Strategy a

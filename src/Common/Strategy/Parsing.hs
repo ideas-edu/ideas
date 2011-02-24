@@ -21,6 +21,8 @@ import Common.Classes
 import Common.Derivation
 import Common.Strategy.Core
 import Common.Transformation
+import Common.Uniplate
+import Control.Arrow
 import Control.Monad
 
 ----------------------------------------------------------------------
@@ -40,12 +42,15 @@ instance Apply (Step l) where
 -- State data type
 
 data State l a = S
-   { stack   :: [StepCore l a]
+   { stack   :: [StackItem l a]
    , choices :: [Bool]
    , trace   :: [Step l a]
    , timeout :: !Int
    , value   :: a
    }
+
+-- sequential, interleaved, and atomic items
+data StackItem l a = SSeq (StepCore l a) | SInt (StepCore l a) | SAtom
 
 makeState :: Core l a -> a -> State l a
 makeState = newState . fmap RuleStep
@@ -74,13 +79,13 @@ firsts st =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
-         _ :|||: _ -> error "NYI"
-         _ :||-: _ -> error "NYI"
+         a :|||: b -> firstsStep (coreInterleave a b) state
+         a :||-: b -> firstsStep a (suspend b state)
          Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep r (useRule r state)
          Label l a -> firstsStep (coreLabel l a) state
-         Atomic a  -> firstsStep a state
+         Atomic a  -> firstsStep a (pushAtom state)
          Not a     -> guard (checkNot a state) >> firsts state
          a :|>: b  -> firstsStep (coreOrElse a b) state
          Many a    -> firstsStep (coreMany a) state
@@ -110,13 +115,13 @@ runState st =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
-         _ :|||: _ -> error "NYI"
-         _ :||-: _ -> error "NYI"
+         a :|||: b -> runStep (coreInterleave a b) state
+         a :||-: b -> runStep a (suspend b state)
          Rec i a   -> incrTimer state >>= runStep (substCoreVar i core a)
          Var _     -> freeCoreVar "runState"
          Rule  r   -> concatMap runState (useRule r state)
          Label _ a -> runStep a state
-         Atomic a  -> runStep a state
+         Atomic a  -> runStep a (pushAtom state)
          Not a     -> guard (checkNot a state) >> runState state
          a :|>: b  -> let xs = runStep a state
                       in if null xs then runStep b state else xs
@@ -147,13 +152,13 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b
                                 in replayStep n xs new (makeChoice x state)
-         _ :|||: _ -> error "NYI"
-         _ :||-: _ -> error "NYI"
+         a :|||: b -> replayStep n bs (coreInterleave a b) state
+         a :||-: b -> replayStep n bs a (suspend b state)
          Rec i a   -> replayStep n bs (substCoreVar i core a) state
          Var _     -> freeCoreVar "replay"
          Rule r    -> replayState (n-1) bs (traceStep r state)
          Label l a -> replayStep n bs (coreLabel l a) state
-         Atomic a  -> replayStep n bs a state
+         Atomic a  -> replayStep n bs a (pushAtom state)
          Not _     -> replayState n bs state
          a :|>: b  -> replayStep n bs (coreOrElse a b) state
          Many a    -> replayStep n bs (coreMany a) state
@@ -165,12 +170,20 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
 -- Local helper functions and instances
    
 push :: StepCore l a -> State l a -> State l a
-push core s = s {stack = core : stack s}
+push core s = s {stack = SSeq core : stack s}
+
+pushAtom :: State l a -> State l a
+pushAtom s = s {stack = SAtom : stack s}
+
+suspend :: StepCore l a -> State l a -> State l a
+suspend core s = s {stack = SInt core : stack s}
 
 pop :: State l a -> Maybe (StepCore l a, State l a)
 pop s = case stack s of
-           []   -> Nothing
-           x:xs -> Just (x, s {stack = xs})
+           []        -> Nothing
+           SSeq x:xs -> Just (x, s {stack = xs})
+           SAtom:xs  -> pop s {stack = interleaveItems xs}
+           SInt _:_  -> Just (Fail, s {stack = []})
    
 makeChoice :: Bool -> State l a -> State l a
 makeChoice b s = s {choices = b : choices s}
@@ -179,7 +192,11 @@ checkNot :: StepCore l a -> State l a -> Bool
 checkNot core = null . runState . newState core . value
 
 useRule :: Step l a -> State l a -> [State l a]
-useRule step state = 
+useRule step@(RuleStep _) s = useRule2 step (interleave s)
+useRule step s = useRule2 step s
+
+useRule2 :: Step l a -> State l a -> [State l a]
+useRule2 step state = 
    [ resetTimer state {value = b} | b <- applyAll step (value state) ]
 
 traceStep :: Step l a -> State l a -> State l a
@@ -198,3 +215,40 @@ resetTimer s = s {timeout = 0}
 
 coreLabel :: l -> StepCore l a -> StepCore l a
 coreLabel l a = Rule (Enter l) :*: a :*: Rule (Exit l)
+
+coreInterleave :: StepCore l a -> StepCore l a -> StepCore l a
+coreInterleave a b = (a :||-: b) :|: (b :||-: a) :|: emptyOnly (a :*: b)
+
+emptyOnly :: StepCore l a -> StepCore l a
+emptyOnly core =
+   case core of
+      Rule (RuleStep _) -> Fail
+      _ -> descend emptyOnly core
+
+interleave :: State l a -> State l a
+interleave s = s {stack = interleaveItems (stack s)}
+
+interleaveItems :: [StackItem l a] -> [StackItem l a]
+interleaveItems []  = []
+interleaveItems xs = 
+   let (seqs, ys) = f xs
+       (ints, zs) = g ys
+       new = makeInterleave (makeSequence seqs : ints)
+   in SSeq new:zs
+ where
+   f (SSeq x:xs) = first (x:) (f xs)
+   f xs          = ([], xs)
+   
+   g (SInt x:xs) = first (x:) (g xs)
+   g xs          = ([], xs)
+   
+   makeSequence = foldr op Succeed
+    where
+      op Succeed b = b
+      op a Succeed = a
+      op a b = a :*: b
+   makeInterleave = foldr op Succeed
+    where
+      op Succeed b = b
+      op a Succeed = a
+      op a b = a :|||: b

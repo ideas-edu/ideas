@@ -49,8 +49,8 @@ coreBuilder f = rec
          _ :*:  _  -> asList  "sequence"   isSequence
          _ :|:  _  -> asList  "choice"     isChoice
          _ :|>: _  -> asList  "orelse"     isOrElse
-         _ :|||: _ -> asList  "interleave" isInterleave
-         a :||-: b -> element "interleft"  (rec a >> rec b)
+         _ :%: _   -> asList  "interleave" isInterleave
+         a :!%: b  -> element "interleft"  (rec a >> rec b)
          Many a    -> element "many"     (rec a)
          Repeat a  -> element "repeat"   (rec a)
          Label l (Rule r) | getId l == getId r -> element "rule"     (f l)
@@ -83,7 +83,7 @@ isOrElse (a :|>: b) = Just (a, b)
 isOrElse _ = Nothing
 
 isInterleave :: Core l a -> Maybe (Core l a, Core l a)
-isInterleave (a :|||: b) = Just (a, b)
+isInterleave (a :%: b) = Just (a, b)
 isInterleave _ = Nothing
 
 -----------------------------------------------------------------------
@@ -134,7 +134,7 @@ readStrategy toLabel findRule xml = do
       | otherwise = return (foldr1 (:|>:) xs)
    buildInterleave _ xs
       | null xs   = return Succeed
-      | otherwise = return (foldr1 (:|||:) xs)
+      | otherwise = return (foldr1 (:%:) xs)
    buildLabel x = do
       info <- toLabel xml
       return (Label info x)

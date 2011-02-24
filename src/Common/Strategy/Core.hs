@@ -30,7 +30,7 @@ import qualified Data.Traversable as T
 -- Strategy (internal) data structure, containing a selection
 -- of combinators
 
-infixr 2 :|||:
+infixr 2 :%:, :!%:
 infixr 3 :|:, :|>:
 infixr 5 :*:
 
@@ -40,11 +40,11 @@ type Core l a = GCore l (Rule a)
 -- | A generalized Core expression, not restricted to rules. This makes GCore
 -- a (traversable and foldable) functor.
 data GCore l a
-   = GCore l a :*:   GCore l a
-   | GCore l a :|:   GCore l a
-   | GCore l a :|>:  GCore l a
-   | GCore l a :|||: GCore l a -- interleave 
-   | GCore l a :||-: GCore l a -- interleave-first-from-left
+   = GCore l a :*:  GCore l a
+   | GCore l a :|:  GCore l a
+   | GCore l a :|>: GCore l a
+   | GCore l a :%:  GCore l a -- interleave 
+   | GCore l a :!%: GCore l a -- interleave-first-from-left
    | Many    (GCore l a)
    | Repeat  (GCore l a)
    | Not     (GCore l a)
@@ -74,8 +74,8 @@ instance T.Traversable (GCore l) where
             a :*: b   -> (:*:)   <$> rec a <*> rec b
             a :|: b   -> (:|:)   <$> rec a <*> rec b
             a :|>: b  -> (:|>:)  <$> rec a <*> rec b
-            a :|||: b -> (:|||:) <$> rec a <*> rec b
-            a :||-: b -> (:||-:) <$> rec a <*> rec b
+            a :%: b   -> (:%:)   <$> rec a <*> rec b
+            a :!%: b  -> (:!%:)  <$> rec a <*> rec b
             Many a    -> Many    <$> rec a
             Repeat a  -> Repeat  <$> rec a
             Not a     -> Not     <$> rec a
@@ -93,8 +93,8 @@ instance Uniplate (GCore l a) where
          a :*: b   -> ([a,b], \[x,y] -> x :*: y)
          a :|: b   -> ([a,b], \[x,y] -> x :|: y)
          a :|>: b  -> ([a,b], \[x,y] -> x :|>: y)
-         a :|||: b -> ([a,b], \[x,y] -> x :|||: y)
-         a :||-: b -> ([a,b], \[x,y] -> x :||-: y)
+         a :%: b   -> ([a,b], \[x,y] -> x :%: y)
+         a :!%: b  -> ([a,b], \[x,y] -> x :!%: y)
          Many a    -> ([a],   \[x]   -> Many x)
          Repeat a  -> ([a],   \[x]   -> Repeat x)
          Label l a -> ([a],   \[x]   -> Label l x)

@@ -143,11 +143,11 @@ changeInfo f a = LS (f info) s
 --- Process Label Information
 
 processLabelInfo :: (l -> LabelInfo) -> Core l a -> Core l a
-processLabelInfo getInfo = rec emptyCoreEnv
+processLabelInfo getInfo = rec []
  where
    rec env core = 
       case core of 
-         Rec n a   -> Rec n (rec (insertCoreEnv n core env) a)
+         Rec n a   -> Rec n (rec ((n, core):env) a)
          Label l a -> forLabel env l (rec env a)
          _ -> descend (rec env) core
  
@@ -159,8 +159,8 @@ processLabelInfo getInfo = rec emptyCoreEnv
       new | hidden info = fmap minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (showId info{- ++ " (collapsed)"-}) 
-                  (runCoreWith env new)
+      asRule = makeSimpleRuleList (showId info) (runCore (subst new))
+      subst  = flip (foldr (uncurry substCoreVar)) env
 
 -----------------------------------------------------------
 --- Remaining functions

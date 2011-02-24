@@ -14,7 +14,7 @@
 module Common.Strategy.Parsing
    ( Step(..)
    , State, makeState, stack, choices, trace, value
-   , parseDerivationTree, replay, runCore, runCoreWith
+   , parseDerivationTree, replay, runCore
    ) where
 
 import Common.Classes
@@ -69,7 +69,8 @@ firsts st =
       case core of
          a :*: b   -> firstsStep a (push b state)
          a :|: b   -> chooseFor True a ++ chooseFor False b
-         a :|||: b -> firstsStep (coreParallel a b) state
+         _ :|||: _ -> error "NYI"
+         _ :||-: _ -> error "NYI"
          Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep (RuleStep r) (useRule r state)
@@ -94,9 +95,6 @@ data Result a = Result a | Ready
 runCore :: Core l a -> a -> [a]
 runCore core = runState . makeState core
 
-runCoreWith :: CoreEnv l a -> Core l a -> a -> [a]
-runCoreWith env = runCore . substCoreEnv env
-
 runState :: State l a -> [a]
 runState st =
    case pop st of
@@ -108,7 +106,8 @@ runState st =
       case core of
          a :*: b   -> runStep a (push b state)
          a :|: b   -> runStep a state ++ runStep b state
-         a :|||: b -> runStep (coreParallel a b) state
+         _ :|||: _ -> error "NYI"
+         _ :||-: _ -> error "NYI"
          Rec i a   -> incrTimer state >>= runStep (substCoreVar i core a)
          Var _     -> freeCoreVar "runState"
          Rule  r   -> concatMap runState (useRule r state)
@@ -145,7 +144,8 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
                         []   -> fail "replay failed"
                         x:xs -> let new = if x then a else b
                                 in replayStep n xs new (makeChoice x state)
-         a :|||: b -> replayStep n bs (coreParallel a b) state
+         _ :|||: _ -> error "NYI"
+         _ :||-: _ -> error "NYI"
          Rec i a   -> replayStep n bs (substCoreVar i core a) state
          Var _     -> freeCoreVar "replay"
          Rule r    -> replayState (n-1) bs (traceRule r state)

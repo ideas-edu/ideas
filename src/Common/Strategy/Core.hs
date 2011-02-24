@@ -16,18 +16,15 @@
 module Common.Strategy.Core 
    ( GCore(..), Core
    , mapLabel, noLabels
-   , coreMany, coreRepeat, coreOrElse, coreFix, coreParallel
-   , CoreEnv, emptyCoreEnv, insertCoreEnv, lookupCoreEnv, substCoreEnv
+   , coreMany, coreRepeat, coreOrElse, coreFix
    , substCoreVar
    ) where
 
 import Common.Transformation
 import Common.Uniplate
 import Control.Applicative 
-import Data.Maybe
 import Data.Foldable (Foldable, foldMap)
 import qualified Data.Traversable as T
-import qualified Data.IntMap as IM
 
 -----------------------------------------------------------------
 -- Strategy (internal) data structure, containing a selection
@@ -107,112 +104,52 @@ instance Uniplate (GCore l a) where
          _         -> ([],    \_     -> core)
 
 -----------------------------------------------------------------
--- Core environment
-
-newtype CoreEnv l a = CE (IM.IntMap (Core l a)) 
-
-emptyCoreEnv :: CoreEnv l a
-emptyCoreEnv = CE IM.empty
-  
-insertCoreEnv :: Int -> Core l a -> CoreEnv l a -> CoreEnv l a
-insertCoreEnv n a (CE m) = CE (IM.insert n a m)
-
-deleteCoreEnv :: Int -> CoreEnv l a -> CoreEnv l a
-deleteCoreEnv n (CE m) = CE (IM.delete n m)
-
-lookupCoreEnv :: Int -> CoreEnv l a -> Maybe (Core l a)
-lookupCoreEnv n (CE m) = IM.lookup n m
-
-substCoreEnv :: CoreEnv l a -> Core l a -> Core l a
-substCoreEnv env core = 
-   case core of
-      Var i   -> fromMaybe core (lookupCoreEnv i env)
-      Rec i a -> Rec i (substCoreEnv (deleteCoreEnv i env) a)
-      _       -> descend (substCoreEnv env) core
-
-substCoreVar :: Int -> Core l a -> Core l a -> Core l a
-substCoreVar i a = substCoreEnv (insertCoreEnv i a emptyCoreEnv)
-
------------------------------------------------------------------
 -- Definitions
 
-coreMany :: Core l a -> Core l a
+coreMany :: GCore l a -> GCore l a
 coreMany a = Rec n (Succeed :|: (a :*: Var n))
  where n = nextVar a
 
-coreRepeat :: Core l a -> Core l a
+coreRepeat :: GCore l a -> GCore l a
 coreRepeat a = Many a :*: Not a
 
-coreOrElse :: Core l a -> Core l a -> Core l a
+coreOrElse :: GCore l a -> GCore l a -> GCore l a
 coreOrElse a b = a :|: (Not a :*: b)
 
-coreFix :: (Core l a -> Core l a) -> Core l a
+coreFix :: (GCore l a -> GCore l a) -> GCore l a
 coreFix f = -- disadvantage: function f is applied twice
    let i = nextVar (f (Var (-1)))
    in Rec i (f (Var i))
 
 -----------------------------------------------------------------
--- Parallel parsing: a first approach
-
-coreParallel :: Core l a -> Core l a -> Core l a
-coreParallel Succeed b = b
-coreParallel a Succeed = a
-coreParallel a b = alts $
-   [ x .*. (y :|||: b) | (x, y) <- splitAtom a ] ++
-   [ x .*. (a :|||: y) | (x, y) <- splitAtom b ]
- where
-   alts [] = Fail
-   alts xs = foldr1 (:|:) xs
-
-(.*.) :: Core l a -> Core l a -> Core l a
-Fail    .*. _       = Fail
-_       .*. Fail    = Fail
-Succeed .*. a       = a
-a       .*. Succeed = a
-a       .*. b       = a :*: b
-
-splitAtom :: Core l a -> [(Core l a, Core l a)]
-splitAtom core =
-   case core of
-      a :*: b   -> [ (x, y .*. b) | (x, y) <- splitAtom a ]
-      a :|: b   -> splitAtom a ++ splitAtom b
-      a :|||: b -> [ (x, y :|||: b) | (x, y) <- splitAtom a ] ++
-                   [ (x, a :|||: y) | (x, y) <- splitAtom b ]
-      _ :||-: _  -> undefined
-      Rec i a   -> splitAtom (substCoreVar i core a)
-      Var _     -> error "Free core var in splitAtom"
-      a :|>: b  -> splitAtom (coreOrElse a b)
-      Many a    -> splitAtom (coreMany a)
-      Repeat a  -> splitAtom (coreRepeat a)
-      Fail      -> []
-      Atomic a  -> [(a, Succeed)]
-      Succeed   -> [(core, Succeed)]
-      Rule _    -> [(core, Succeed)]
-      Not _     -> [(core, Succeed)]
-      Label _ _ -> [(core, Succeed)]
-
------------------------------------------------------------------
 -- Utility functions
 
-nextVar :: Core l a -> Int
+substCoreVar :: Int -> GCore l a -> GCore l a -> GCore l a
+substCoreVar i a core = 
+   case core of
+      Var j   | i==j -> a
+      Rec j _ | i==j -> core
+      _              -> descend (substCoreVar i a) core
+
+nextVar :: GCore l a -> Int
 nextVar p
    | null xs   = 0
    | otherwise = maximum xs + 1
  where xs = coreVars p
 
-coreVars :: Core l a -> [Int]
+coreVars :: GCore l a -> [Int]
 coreVars core = 
    case core of
       Var n   -> [n]
       Rec n a -> n : coreVars a
       _       -> concatMap coreVars (children core)
 
-mapLabel :: (l -> l) -> Core l a -> Core l a
+mapLabel :: (l -> l) -> GCore l a -> GCore l a
 mapLabel f = run
  where
    run (Label l a) = Label (f l) (run a)
    run core        = descend run core
 
-noLabels :: Core l a -> Core l a
+noLabels :: GCore l a -> GCore l a
 noLabels (Label _ a) = noLabels a
 noLabels core        = descend noLabels core

@@ -29,6 +29,9 @@ import Control.Monad
 data Step l a = Enter l | Exit l | RuleStep (Rule a)
    deriving Show
 
+-- A core expression where the symbols are steps instead of "only" rules
+type StepCore l a = GCore l (Step l a)
+
 instance Apply (Step l) where
    applyAll (RuleStep r) = applyAll r
    applyAll _            = return
@@ -37,7 +40,7 @@ instance Apply (Step l) where
 -- State data type
 
 data State l a = S
-   { stack   :: [Either l (Core l a)]
+   { stack   :: [StepCore l a]
    , choices :: [Bool]
    , trace   :: [Step l a]
    , timeout :: !Int
@@ -45,7 +48,10 @@ data State l a = S
    }
 
 makeState :: Core l a -> a -> State l a
-makeState core a = push core (S [] [] [] 0 a)
+makeState = newState . fmap RuleStep
+
+newState :: StepCore l a -> a -> State l a
+newState core a = push core (S [] [] [] 0 a)
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -61,9 +67,8 @@ parseDerivationTree state = addBranches list node
 firsts :: State l a -> [(Result (Step l a), State l a)]
 firsts st =
    case pop st of 
-      Nothing              -> [(Ready, st)]
-      Just (Left l, s)     -> [(Result (Exit l), traceExit l s)]
-      Just (Right core, s) -> firstsStep core s
+      Nothing        -> [(Ready, st)]
+      Just (core, s) -> firstsStep core s
  where
    firstsStep core state =
       case core of
@@ -73,8 +78,8 @@ firsts st =
          _ :||-: _ -> error "NYI"
          Rec i a   -> incrTimer state >>= firstsStep (substCoreVar i core a)
          Var _     -> freeCoreVar "firsts"
-         Rule r    -> hasStep (RuleStep r) (useRule r state)
-         Label l a -> hasStep (Enter l) [push a (pushExit l state)]
+         Rule r    -> hasStep r (useRule r state)
+         Label l a -> firstsStep (coreLabel l a) state
          Atomic a  -> firstsStep a state
          Not a     -> guard (checkNot a state) >> firsts state
          a :|>: b  -> firstsStep (coreOrElse a b) state
@@ -98,9 +103,8 @@ runCore core = runState . makeState core
 runState :: State l a -> [a]
 runState st =
    case pop st of
-      Nothing              -> [value st]
-      Just (Left _, s)     -> runState s
-      Just (Right core, s) -> runStep core s
+      Nothing        -> [value st]
+      Just (core, s) -> runStep core s
  where
    runStep core state = 
       case core of
@@ -131,10 +135,9 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
  
    replayState n bs state = 
       case pop state of
-         _ | n==0             -> return state
-         Nothing              -> return state
-         Just (Left l, s)     -> replayState (n-1) bs (traceExit l s)
-         Just (Right core, s) -> replayStep n bs core s
+         _ | n==0       -> return state
+         Nothing        -> return state
+         Just (core, s) -> replayStep n bs core s
              
    replayStep n bs core state =
       case core of
@@ -148,8 +151,8 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
          _ :||-: _ -> error "NYI"
          Rec i a   -> replayStep n bs (substCoreVar i core a) state
          Var _     -> freeCoreVar "replay"
-         Rule r    -> replayState (n-1) bs (traceRule r state)
-         Label l a -> replayStep (n-1) bs a (pushExit l (traceEnter l state))
+         Rule r    -> replayState (n-1) bs (traceStep r state)
+         Label l a -> replayStep n bs (coreLabel l a) state
          Atomic a  -> replayStep n bs a state
          Not _     -> replayState n bs state
          a :|>: b  -> replayStep n bs (coreOrElse a b) state
@@ -161,13 +164,10 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
 ----------------------------------------------------------------------
 -- Local helper functions and instances
    
-push :: Core l a -> State l a -> State l a
-push core s = s {stack = Right core : stack s}
+push :: StepCore l a -> State l a -> State l a
+push core s = s {stack = core : stack s}
 
-pushExit :: l -> State l a -> State l a
-pushExit l s = s {stack = Left l : stack s}
-
-pop :: State l a -> Maybe (Either l (Core l a), State l a)
+pop :: State l a -> Maybe (StepCore l a, State l a)
 pop s = case stack s of
            []   -> Nothing
            x:xs -> Just (x, s {stack = xs})
@@ -175,18 +175,12 @@ pop s = case stack s of
 makeChoice :: Bool -> State l a -> State l a
 makeChoice b s = s {choices = b : choices s}
 
-checkNot :: Core l a -> State l a -> Bool
-checkNot core = null . runCore core . value
+checkNot :: StepCore l a -> State l a -> Bool
+checkNot core = null . runState . newState core . value
 
-useRule :: Rule a -> State l a -> [State l a]
-useRule r state = [ resetTimer state {value = b} | b <- applyAll r (value state) ]
-
-traceEnter, traceExit :: l -> State l a -> State l a
-traceEnter = traceStep . Enter
-traceExit  = traceStep . Exit
-
-traceRule :: Rule a -> State l a -> State l a
-traceRule = traceStep . RuleStep
+useRule :: Step l a -> State l a -> [State l a]
+useRule step state = 
+   [ resetTimer state {value = b} | b <- applyAll step (value state) ]
 
 traceStep :: Step l a -> State l a -> State l a
 traceStep step s = s {trace = step : trace s}
@@ -202,12 +196,5 @@ incrTimer s
 resetTimer :: State l a -> State l a
 resetTimer s = s {timeout = 0}
 
-{-
-testje = map (steps) $ derivations $ parseDerivationTree (makeState expr 0) 
-expr = (ra :*: rb) :||: Label "A" (rc :*: rd)
-
-ra, rb, rc, rd :: Core l a
-ra = Rule $ makeSimpleRule "A" Just
-rb = Rule $ makeSimpleRule "B" Just
-rc = Rule $ makeSimpleRule "C" Just
-rd = Rule $ makeSimpleRule "D" Just -}
+coreLabel :: l -> StepCore l a -> StepCore l a
+coreLabel l a = Rule (Enter l) :*: a :*: Rule (Exit l)

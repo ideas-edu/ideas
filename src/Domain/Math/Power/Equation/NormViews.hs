@@ -49,7 +49,7 @@ normPowerEqView = makeView f (uncurry (:==:))
   where
     f expr = do
       -- selected var to the left, the rest to the right
-      (lhs :==: rhs) <- varLeft expr >>= constRight
+      (lhs :==: rhs) <- varLeft hasSomeVar expr >>= constRight hasSomeVar
       -- match power
       (c, ax)        <- match (timesView <&> (identity >>^ (,) 1)) $
                           simplify normPowerView lhs
@@ -63,8 +63,8 @@ normPowerEqView = makeView f (uncurry (:==:))
                <&> (rootView >>> second (makeView (\a->Just (1 ./. a)) (1 ./.)))
                <&> (identity >>^ \a->(a,1))
 
-normPowerEqView' :: View (OrList (Equation Expr)) (OrList (Equation Expr))
-normPowerEqView' = makeView f id
+normPowerEqView' :: (Expr -> Bool) -> View (OrList (Equation Expr)) (OrList (Equation Expr))
+normPowerEqView' isVar = makeView f id
   where
     f = liftM clean                        -- general clean up
       . liftM root2power                   -- write root as power
@@ -81,7 +81,7 @@ normPowerEqView' = makeView f id
     
     takeRoot' expr = do
       -- selected var to the left, the rest to the right
-      (lhs :==: rhs) <- varLeft expr >>= constRight
+      (lhs :==: rhs) <- varLeft isVar expr >>= constRight isVar
       
       -- match power
       (c, (a, x))    <- match unitPowerView lhs
@@ -102,9 +102,9 @@ tr n x | odd x     = case n of
                        _         -> Just $ let e = n .^. (1 ./. x') in [e, neg e]
   where x' = fromInteger x
 
-constRight :: Equation Expr -> Maybe (Equation Expr)
-constRight (lhs :==: rhs) = do
-  (vs, cs) <- fmap (partition hasSomeVar) (match sumView lhs)
+constRight :: (Expr -> Bool) -> Equation Expr -> Maybe (Equation Expr)
+constRight isVar (lhs :==: rhs) = do
+  (vs, cs) <- fmap (partition isVar) (match sumView lhs)
   let rhs' = rhs .+. build sumView (map neg cs)
   return $ negateEq $ build sumView vs :==: simplifyWith mergeAlikeSum sumView rhs'
 
@@ -114,9 +114,9 @@ negateEq (lhs :==: rhs) =
     Negate lhs' -> lhs' :==: neg rhs
     _           -> lhs  :==: rhs
 
-varLeft :: Equation Expr -> Maybe (Equation Expr)
-varLeft (lhs :==: rhs) = do
-  (vs, cs) <- fmap (partition hasSomeVar) (match sumView rhs)
+varLeft :: (Expr -> Bool) -> Equation Expr -> Maybe (Equation Expr)
+varLeft isVar (lhs :==: rhs) = do
+  (vs, cs) <- fmap (partition isVar) (match sumView rhs)
   return $ lhs .+. build sumView (map neg vs) :==: build sumView cs
 
 scaleLeft :: Equation Expr -> Maybe (Equation Expr)
@@ -129,7 +129,7 @@ normExpEqView = makeView f id >>> linearEquationView
   where
     try g a = fromMaybe a $ g a
     f e = do
-      let (l :==: r) = try scaleLeft $ try constRight e
+      let (l :==: r) = try scaleLeft $ try (constRight hasSomeVar) e
       return $ case match powerView l of
         Just (b, x) -> x :==: simplify normLogView (logBase b r)
         Nothing     -> l :==: r
@@ -141,7 +141,7 @@ normLogEqView = makeView (liftM g . T.mapM f) id
       case match logView lhs of
         Just (b, x) -> x :==: b .^. rhs
         Nothing     -> expr
-    g = simplify orSetView . fmap (fmap cleanUpExpr) . simplify normPowerEqView'
+    g = simplify orSetView . fmap (fmap cleanUpExpr) . simplify (normPowerEqView' hasSomeVar)
       . simplify higherDegreeEquationsView 
 
 normLogView :: View Expr Expr

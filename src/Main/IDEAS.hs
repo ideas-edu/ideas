@@ -107,7 +107,7 @@ packages =
    , someTermPackage Math.powerEqExercise
    , someTermPackage Math.expEqExercise
    , someTermPackage Math.logEqExercise
-   , someTermPackage Math.higherPowerEqExercise
+--   , someTermPackage Math.higherPowerEqExercise
      -- linear algebra
    , someTermPackage LA.gramSchmidtExercise
    , someTermPackage LA.linearSystemExercise

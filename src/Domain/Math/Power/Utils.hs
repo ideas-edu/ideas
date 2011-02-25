@@ -157,6 +157,17 @@ coverUpRulesX = map (\r -> r cfg)
 
 -- | Common functions ---------------------------------------------------------
 
+sortExpr :: Expr -> Expr
+sortExpr = transform $ simplifyWith (sort . map sortProd) sumView
+  where sortProd = simplifyWith (fmap sort) productView
+
+sortEquation :: Equation Expr -> Equation Expr
+sortEquation (x :==: y) = if x < y then eq else flipSides eq
+  where eq = sortExpr x :==: sortExpr y
+
+sortOrList :: OrList (Equation Expr) -> OrList (Equation Expr)
+sortOrList = toOrList . sort . map sortEquation . toList
+
 -- Semantic equivalence
 class SemEq a where
     (===), (=/=) :: a -> a -> Bool

@@ -32,7 +32,7 @@ import Domain.Math.Expr hiding (isPower)
 import Domain.Math.Numeric.Views
 import Domain.Math.Polynomial.Views
 import Domain.Math.Power.Rules
-import Domain.Math.Power.Utils ( (===) )
+import Domain.Math.Power.Utils ( (===), sortOrList)
 import Domain.Math.Power.Equation.Strategies
 import Domain.Math.Power.Equation.NormViews
 import qualified Data.Foldable as F
@@ -99,7 +99,7 @@ higherPowerEqExercise = makeExercise
                        higherPowerEquations ++ take 3 rootEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)
-  , equivalence    = viewEquivalent (normPowerEqView' >>> higherDegreeEquationsView)
+  , equivalence    = viewEquivalent ((normPowerEqView' hasSomeVar) >>> higherDegreeEquationsView)
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }
@@ -115,7 +115,7 @@ rootEqExercise = makeExercise
   , examples       = level Medium $ map to $ concat $ drop 3 rootEquations
   , isReady        = solvedRelations
   , isSuitable     = F.all (`belongsTo` normPowerEqView)
-  , equivalence    = on (===) (simplify (normPowerEqView' >>> higherDegreeEquationsView))
+  , equivalence    = on (==) (sortOrList . simplify (normPowerEqView' $ elem "x" . vars))
   , ruleOrdering   = ruleOrderingWithId [ getId calcPower
                                         , getId calcRoot ]
   }

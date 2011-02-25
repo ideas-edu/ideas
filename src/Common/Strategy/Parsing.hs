@@ -179,6 +179,9 @@ coreInterleave :: StepCore l a -> StepCore l a -> StepCore l a
 coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
  where
    emptyOnly (Rule step) | interleaveAfter step = Fail
+   emptyOnly core@(Not _) = core
+   emptyOnly (a :|>: b)   = emptyOnly a :|: (Not a :*: emptyOnly b)
+   emptyOnly (Repeat a)   = emptyOnly (coreRepeat a)
    emptyOnly core = descend emptyOnly core
 
 ----------------------------------------------------------------------

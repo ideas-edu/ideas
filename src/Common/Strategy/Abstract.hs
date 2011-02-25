@@ -160,7 +160,7 @@ processLabelInfo getInfo = rec []
           | otherwise   = Label l c
       info   = getInfo l
       asRule = makeSimpleRuleList (showId info) (runCore (subst new))
-      subst  = flip (foldr (uncurry substCoreVar)) env
+      subst  = flip (foldl (flip (uncurry substCoreVar))) env
 
 -----------------------------------------------------------
 --- Remaining functions

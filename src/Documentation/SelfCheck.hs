@@ -11,24 +11,25 @@
 -----------------------------------------------------------------------------
 module Documentation.SelfCheck (selfCheck, blackBoxTests) where
 
-import System.Directory
-import qualified Common.Rewriting.Substitution as Substitution
-import qualified Common.Rewriting.Unification  as Unification
+import Common.Exercise
 import Common.TestSuite
 import Common.Utils (useFixedStdGen, Some(..), snd3)
-import Common.Exercise
-import Service.ExercisePackage
 import Control.Monad
-import Service.Request
+import Data.List
 import Service.DomainReasoner
+import Service.ExercisePackage
 import Service.ModeJSON
 import Service.ModeXML
-import qualified Text.OpenMath.Tests as OpenMath
-import qualified Text.UTF8 as UTF8
-import qualified Text.JSON as JSON
+import Service.Request
+import System.Directory
 import qualified Common.Algebra.Boolean as Algebra
 import qualified Common.Algebra.Field as Algebra
-import Data.List
+import qualified Common.Rewriting.Substitution as Substitution
+import qualified Common.Rewriting.Unification  as Unification
+import qualified Common.Strategy.Tests as Strategy
+import qualified Text.JSON as JSON
+import qualified Text.OpenMath.Tests as OpenMath
+import qualified Text.UTF8 as UTF8
 
 selfCheck :: String -> DomainReasoner TestSuite
 selfCheck dir = do
@@ -44,6 +45,7 @@ selfCheck dir = do
             addProperty "OpenMath encoding" OpenMath.propEncoding
          Substitution.tests
          Unification.unificationTests
+         Strategy.tests
          suite "Field properties" $ 
             mapM_ (addProperty "field") Algebra.propsField
          suite "Boolean properties" $ 

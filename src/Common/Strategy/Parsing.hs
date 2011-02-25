@@ -42,21 +42,24 @@ instance Apply (Step l) where
 -- State data type
 
 data State l a = S
-   { stack   :: [StackItem l a]
+   { stack   :: Stack l a
    , choices :: [Bool]
    , trace   :: [Step l a]
    , timeout :: !Int
    , value   :: a
    }
 
--- sequential, interleaved, and atomic items
-data StackItem l a = SSeq (StepCore l a) | SInt (StepCore l a) | SAtom
+data Stack l a = Stack
+   { active    :: [StepCore l a] -- the active items, performed in sequence
+   , suspended :: [StepCore l a] -- suspended items, performed after a step from active
+   , remainder :: [StepCore l a] -- remaining items: must be empty if there are no suspended items
+   }
 
 makeState :: Core l a -> a -> State l a
 makeState = newState . fmap RuleStep
 
 newState :: StepCore l a -> a -> State l a
-newState core a = push core (S [] [] [] 0 a)
+newState core a = push core (S emptyStack [] [] 0 a)
 
 ----------------------------------------------------------------------
 -- Parse derivation tree
@@ -85,7 +88,7 @@ firsts st =
          Var _     -> freeCoreVar "firsts"
          Rule r    -> hasStep r
          Label l a -> firstsStep (coreLabel l a) state
-         Atomic a  -> firstsStep a (pushAtom state)
+         Atomic a  -> firstsStep a (useAtomic state)
          Not a     -> guard (checkNot a state) >> firsts state
          a :|>: b  -> firstsStep (coreOrElse a b) state
          Many a    -> firstsStep (coreMany a) state
@@ -121,7 +124,7 @@ runState st =
          Var _     -> freeCoreVar "runState"
          Rule  r   -> concatMap runState (useRule r (interleave r state))
          Label _ a -> runStep a state
-         Atomic a  -> runStep a (pushAtom state)
+         Atomic a  -> runStep a (useAtomic state)
          Not a     -> guard (checkNot a state) >> runState state
          a :|>: b  -> let xs = runStep a state
                       in if null xs then runStep b state else xs
@@ -158,7 +161,7 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
          Var _     -> freeCoreVar "replay"
          Rule r    -> replayState (n-1) bs (traceStep r state)
          Label l a -> replayStep n bs (coreLabel l a) state
-         Atomic a  -> replayStep n bs a (pushAtom state)
+         Atomic a  -> replayStep n bs a (useAtomic state)
          Not _     -> replayState n bs state
          a :|>: b  -> replayStep n bs (coreOrElse a b) state
          Many a    -> replayStep n bs (coreMany a) state
@@ -167,23 +170,32 @@ replay n0 bs0 = replayState n0 bs0 . flip makeState noValue
          Succeed   -> replayState n bs state
 
 ----------------------------------------------------------------------
--- Local helper functions and instances
+-- Core translations
+
+coreLabel :: l -> StepCore l a -> StepCore l a
+coreLabel l a = Rule (Enter l) :*: a :*: Rule (Exit l)
+
+coreInterleave :: StepCore l a -> StepCore l a -> StepCore l a
+coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
+ where
+   emptyOnly (Rule step) | interleaveAfter step = Fail
+   emptyOnly core = descend emptyOnly core
+
+----------------------------------------------------------------------
+-- State functions
    
 push :: StepCore l a -> State l a -> State l a
-push core s = s {stack = SSeq core : stack s}
-
-pushAtom :: State l a -> State l a
-pushAtom s = s {stack = SAtom : stack s}
+push = changeStack . pushStack
 
 suspend :: StepCore l a -> State l a -> State l a
-suspend core s = s {stack = SInt core : stack s}
+suspend = changeStack . suspendStack
+
+useAtomic :: State l a -> State l a
+useAtomic = changeStack interleaveStack
 
 pop :: State l a -> Maybe (StepCore l a, State l a)
-pop s = case stack s of
-           []        -> Nothing
-           SSeq x:xs -> Just (x, s {stack = xs})
-           SAtom:xs  -> pop s {stack = interleaveItems xs}
-           SInt _:_  -> Just (Fail, s {stack = []})
+pop s = fmap (second f) (popStack (stack s))
+ where f new = s {stack = new}
    
 makeChoice :: Bool -> State l a -> State l a
 makeChoice b s = s {choices = b : choices s}
@@ -209,36 +221,44 @@ incrTimer s
 resetTimer :: State l a -> State l a
 resetTimer s = s {timeout = 0}
 
-coreLabel :: l -> StepCore l a -> StepCore l a
-coreLabel l a = Rule (Enter l) :*: a :*: Rule (Exit l)
-
-coreInterleave :: StepCore l a -> StepCore l a -> StepCore l a
-coreInterleave a b = (a :!%: b) :|: (b :!%: a) :|: emptyOnly (a :*: b)
-
-emptyOnly :: StepCore l a -> StepCore l a
-emptyOnly core =
-   case core of
-      Rule step | interleaveAfter step -> Fail
-      _ -> descend emptyOnly core
-
 interleaveAfter :: Step l a -> Bool
 interleaveAfter (RuleStep _) = True
 interleaveAfter _            = False
 
 interleave :: Step l a -> State l a -> State l a
-interleave step s 
-   | interleaveAfter step = s {stack = interleaveItems (stack s)}
-   | otherwise            = s
-
-interleaveItems :: [StackItem l a] -> [StackItem l a]
-interleaveItems items = 
-   let (seqs, rest1) = f items
-       (ints, rest2) = g rest1
-       new = foldr (.%.) Succeed (foldr (.*.) Succeed seqs : ints)
-   in SSeq new : rest2
- where
-   f (SSeq x:xs) = first (x:) (f xs)
-   f xs          = ([], xs)
+interleave step = if interleaveAfter step then useAtomic else id
    
-   g (SInt x:xs) = first (x:) (g xs)
-   g xs          = ([], xs)
+changeStack :: (Stack l a -> Stack l a) -> State l a -> State l a
+changeStack f s = s {stack = f (stack s)}
+   
+----------------------------------------------------------------------
+-- Stack functions
+
+emptyStack :: Stack l a
+emptyStack = Stack [] [] []
+
+pushStack :: StepCore l a -> Stack l a -> Stack l a
+pushStack core s = s {active = core : active s}
+
+suspendStack :: StepCore l a -> Stack l a -> Stack l a
+suspendStack core s 
+   | null (active s) = s {suspended = core : suspended s}
+   | otherwise = emptyStack {suspended = [core], remainder = combineStack s}
+
+popStack :: Stack l a -> Maybe (StepCore l a, Stack l a)
+popStack s = 
+   case active s of
+      x:xs -> Just (x, s {active = xs})
+      [] | null (suspended s) -> Nothing
+         | otherwise          -> Just (Fail, s)
+
+interleaveStack :: Stack l a -> Stack l a
+interleaveStack s = emptyStack {active = combineStack s}
+   
+combineStack :: Stack l a -> [StepCore l a]
+combineStack s
+   | null (suspended s) = active s 
+   | otherwise = front : remainder s
+ where 
+   actives = foldr (.*.) Succeed (active s)
+   front   = foldr (.%.) Succeed (actives:suspended s)

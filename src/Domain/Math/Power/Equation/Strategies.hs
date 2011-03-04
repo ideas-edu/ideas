@@ -105,7 +105,7 @@ rootEqStrategy :: LabeledStrategy (Context (OrList (Equation Expr)))
 rootEqStrategy =  cleanUpStrategy cleanup strat
   where 
     strat =  label "Cover up" 
-          $  use condXisRight <*> use flipEquation
+          $ try ( use condXisRight <*> use flipEquation )
          <*> exhaustiveSomewhere myCoverUpRulesOr
     cleanup = applyTop $ fmap $ fmap cleanUpExpr
 
@@ -114,7 +114,6 @@ rootEqStrategy =  cleanUpStrategy cleanup strat
 myCoverUpStrategy :: IsTerm a => Strategy (Context a)
 myCoverUpStrategy = repeat $ alternatives $ map use coverUpRules
 
--- add coverUpRoot to coverUpExercise?
 coverUpStrategy' :: LabeledStrategy (Context (OrList (Equation Expr)))
 coverUpStrategy' = cleanUpStrategy (applyTop $ fmap $ fmap cleanUpExpr) $
    label "Cover-up" $
@@ -142,7 +141,6 @@ myCoverUpRulesOr = use (coverUpPowerWith myConfigCoverUp)
 coverUpRulesWith :: [ConfigCoverUp -> Rule (Equation Expr)]
 coverUpRulesWith = 
    [ coverUpPlusWith, coverUpMinusLeftWith, coverUpMinusRightWith
-   , coverUpNegateWith, myCoverUpTimesWith, coverUpNumeratorWith
+   , coverUpNegateWith, {-myCoverUpTimesWith-} coverUpTimesWith, coverUpNumeratorWith
    , coverUpDenominatorWith, coverUpSqrtWith, coverUpRootWith
    ]
-

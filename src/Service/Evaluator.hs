@@ -83,7 +83,7 @@ encodeDefault enc tp tv =
             (a, b) -> do
                x <- encodeType enc t1 a
                y <- encodeType enc t2 b
-               return (encodeTuple enc [])
+               return (encodeTuple enc [x, y])
       List t        -> liftM (encodeTuple enc) (mapM (encodeType enc t) tv)
       t1 :|: t2     -> case tv of
                           Left  a -> encodeType enc t1 a

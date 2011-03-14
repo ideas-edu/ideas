@@ -54,8 +54,8 @@ equalM t1 t2 = maybe (fail msg) return (equal t1 t2)
 equal :: Type a t1 -> Type a t2 -> Maybe (t1 -> t2)
 equal type1 type2 =
    case (type1, type2) of
-      (Pair a b,    Pair c d   ) -> equalPairs a b c d
-      (a :|: b,     c :|: d    ) -> equalChoice a b c d
+      (Pair a b,    Pair c d   ) -> liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
+      (a :|: b,     c :|: d    ) -> liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
       (List a,      List b     ) -> liftM map (equal a b)
       (Rule,        Rule       ) -> Just id
       (Unit,        Unit       ) -> Just id
@@ -74,12 +74,6 @@ equal type1 type2 =
       (_,           Iso f _ b  ) -> fmap (f .) (equal type1 b)
       (Tag s1 a,    Tag s2 b   ) -> guard (s1==s2) >> equal a b
       _                          -> Nothing
- where
-   equalPairs a b c d = 
-      liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
-   
-   equalChoice a b c d =
-      liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
 
 infixr 5 :|:
 

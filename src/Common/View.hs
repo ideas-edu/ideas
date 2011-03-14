@@ -29,6 +29,7 @@ module Common.View
    ) where
 
 import Common.Id
+import Common.Utils (swap)
 import Control.Arrow
 import Control.Monad
 import Data.Foldable
@@ -166,9 +167,7 @@ identity :: Monad m => ViewM m a a
 identity = newView "views.identity" return id
 
 swapView :: View (a, b) (b, a)
-swapView = 
-   let swap (a, b) = (b, a)
-   in newView "views.swap" (return . swap) swap
+swapView = newView "views.swap" (return . swap) swap
 
 -- | Specialized version of traverseView
 listView :: Monad m => ViewM m a b -> ViewM m [a] [b]

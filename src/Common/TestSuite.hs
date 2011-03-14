@@ -292,10 +292,10 @@ labeled a t = T (S.singleton (Right (a, t)))
 toTestResult :: Int -> Result -> TestResult
 toTestResult n result = 
    case result of
-      Success _           -> Ok n
-      Failure _ _ msg _   -> Error msg
-      NoExpectedFailure _ -> Error "no expected failure"
-      GaveUp i _          -> Warning ("passed only " ++ show i ++ " tests")
+      Success _ _ _           -> Ok n
+      Failure _ _ _ _ msg _ _ -> Error msg
+      NoExpectedFailure _ _ _ -> Error "no expected failure"
+      GaveUp i _  _           -> Warning ("passed only " ++ show i ++ " tests")
             
 showLoc :: [Int] -> String
 showLoc = concat . intersperse "." . map show

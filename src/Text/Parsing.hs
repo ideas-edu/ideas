@@ -17,7 +17,7 @@ module Text.Parsing
      module Text.Scanning
      -- * Parsing
    , Parser, CharParser, TokenParser
-   , parse, parseWith, parseWithM
+   , parse, parseWith
      -- * Primitive token parsers
    , pVarid, pConid, pOpid, pQVarid, pQConid
    , pKey, pSpec, pInt, pReal, pString
@@ -82,9 +82,6 @@ parseWith scanner p = either f Right . parse p . scanWith scanner
  where 
     f (Just s) = Left (Unexpected s)
     f Nothing  = Left (ErrorMessage "Syntax error")
-
-parseWithM :: Monad m => Scanner -> TokenParser a -> String -> m a
-parseWithM scanner p = either (fail . show) return . parseWith scanner p
 
 ----------------------------------------------------------
 -- Primitive token parsers

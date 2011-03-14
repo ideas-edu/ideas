@@ -39,7 +39,7 @@ exprVar :: (Show a, IsTerm a) => String -> a -> ExprVar a
 exprVar s a = ExprVar (makeVar showF readF s (toTerm a))
  where
    showF = show . toExpr -- pretty-print as an Expr
-   readF = either (fail . show) (return . toTerm) . parseExpr
+   readF = either (const Nothing) (return . toTerm) . parseExpr
 
 readExprVar :: IsTerm a => ExprVar a -> ContextMonad a
 readExprVar (ExprVar var) = do  

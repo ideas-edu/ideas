@@ -27,7 +27,7 @@ testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 
             this -> this -}
 
 parseSystem :: String -> Either String (LinearSystem Expr)
-parseSystem = either Left f . parseWithM s pSystem
+parseSystem = either (Left . show) f . parseWith s pSystem
  where
    s0 = specialSymbols "\n" scannerExpr
    s  = s0 {keywordOperators = "==" : keywordOperators s0 }
@@ -48,7 +48,7 @@ pSystem = convertSystem <$> pEquations pExpr
 --- Parser
 
 parseMatrix :: String -> Either String (Matrix Expr)
-parseMatrix = either Left f . parseWithM s p
+parseMatrix = either (Left . show) f . parseWith s p
  where
    s = specialSymbols "\n" scannerExpr
    p = pMatrix pFractional
@@ -61,7 +61,7 @@ pMatrix p = make <$> pLines True (pList1 p)
    make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
 
 parseVectorSpace :: String -> Either String (VectorSpace Expr)
-parseVectorSpace = parseWithM s p
+parseVectorSpace = either (Left . show) Right . parseWith s p
  where
    s = specialSymbols "\n" scannerExpr
    p = makeVectorSpace <$> pVectors pExpr

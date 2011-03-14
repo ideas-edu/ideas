@@ -39,7 +39,7 @@ scannerExpr = defaultScanner
    }
 
 parseExprWith :: TokenParser a -> String -> Either String a
-parseExprWith = parseWithM scannerExpr
+parseExprWith p = either (Left . show) Right . parseWith scannerExpr p
 
 parseExpr :: String -> Either String Expr
 parseExpr = parseExprWith pExpr

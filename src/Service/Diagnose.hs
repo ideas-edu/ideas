@@ -87,8 +87,8 @@ diagnose state new
    newc = inContext ex new
    
    expected = do
-      xs <- allfirsts (restartIfNeeded state)
-      let p (_, _, ns) = similarity ex new (stateTerm ns)
+      let xs = either (const []) id $ allfirsts (restartIfNeeded state)
+          p (_, _, ns) = similarity ex new (stateTerm ns)
       safeHead (filter p xs)
 
    discovered searchForBuggy = safeHead

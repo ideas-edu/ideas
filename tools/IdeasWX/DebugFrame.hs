@@ -36,7 +36,7 @@ debugFrame session = do
    
    r1 <- execObserver $ \(Some st) -> do
       let result = allfirsts (currentState (getDerivation st))
-          rs     = [ show r ++ " @ " ++ show p | (r, p, _) <- concat result ]
+          rs     = [ show r ++ " @ " ++ show p | (r, p, _) <- either (const []) id result ]
           msg    = case length rs of
                       0 -> "(no rules)"
                       1 -> "(1 rule)"

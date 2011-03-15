@@ -21,16 +21,16 @@ import Service.ExercisePackage
 import Service.State
 import Service.Types
 
-problemDecomposition :: Monad m => Maybe Id -> State a -> Maybe a -> m (Reply a)
+problemDecomposition :: Maybe Id -> State a -> Maybe a -> Either String (Reply a)
 problemDecomposition msloc state answer 
    | isNothing $ subStrategy sloc (strategy ex) =
-        fail "request error: invalid location for strategy"
+        Left "request error: invalid location for strategy"
    | otherwise =
    let pr = fromMaybe (emptyPrefix $ strategy ex) (statePrefix state) in
          case (runPrefixLocation sloc pr requestedTerm, maybe Nothing (Just . inContext ex) answer) of            
-            ([], _) -> fail "strategy error: not able to compute an expected answer"
+            ([], _) -> Left "strategy error: not able to compute an expected answer"
             (answers, Just answeredTerm)
-               | not (null witnesses) -> return $
+               | not (null witnesses) -> Right $
                     Ok newLocation newState
                   where 
                     witnesses   = filter (similarityCtx ex answeredTerm . fst) $ take 1 answers
@@ -38,7 +38,7 @@ problemDecomposition msloc state answer
                     newLocation = nextTaskLocation (strategy ex) sloc $ 
                                      fromMaybe topId $ nextMajorForPrefix newPrefix newCtx
                     newState    = makeState pkg (Just newPrefix) newCtx
-            ((expected, pref):_, maybeAnswer) -> return $
+            ((expected, pref):_, maybeAnswer) -> Right $
                     Incorrect isEquiv newLocation expState arguments
              where
                newLocation = subTaskLocation (strategy ex) sloc loc

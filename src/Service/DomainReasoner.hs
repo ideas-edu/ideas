@@ -62,7 +62,7 @@ runWithCurrent =
    get >>= \st -> return (runDomainReasoner . (put st >>))
 
 liftEither :: Either String a -> DomainReasoner a
-liftEither = either fail return
+liftEither = either throwError return
 
 -----------------------------------------------------------------------
 -- Instance declarations
@@ -70,10 +70,10 @@ liftEither = either fail return
 instance Monad DomainReasoner where
    return a   = DR (return a)
    DR m >>= f = DR (m >>= unDR . f)
-   fail s     = DR (fail s)
+   fail s     = DR (throwError s)
 
 instance MonadError String DomainReasoner where
-   throwError     = fail
+   throwError s   = DR (throwError s)
    catchError m f = DR (unDR m `catchError` (unDR . f))
 
 instance MonadPlus DomainReasoner where
@@ -141,15 +141,15 @@ findPackage i = do
    pkgs <- getPackages 
    case [ a | a@(Some pkg) <- pkgs, getId pkg == resolveId i ] of
       [this] -> return this
-      _      -> fail $ "Package " ++ show i ++ " not found"
+      _      -> throwError $ "Package " ++ show i ++ " not found"
       
 findService :: String -> DomainReasoner Service
 findService txt = do
    srvs <- getServices
    case filter ((==txt) . showId) srvs of
       [hd] -> return hd
-      []   -> fail $ "No service " ++ txt
-      _    -> fail $ "Ambiguous service " ++ txt
+      []   -> throwError $ "No service " ++ txt
+      _    -> throwError $ "Ambiguous service " ++ txt
 
 -----------------------------------------------------------------------
 -- Identifier aliases (temporary)

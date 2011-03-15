@@ -112,11 +112,14 @@ submitText txt ref = do
    let d = getDerivation ss
    case getExerciseText (getPackage ss) of
       -- Use exercise text module
-      Just _ -> do
-         (b, msg, st) <- submittext (currentState d) txt Nothing
-         let new = restartIfNeeded st
-         when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
-         return msg
+      Just _ -> 
+         case submittext (currentState d) txt Nothing of
+            Right (b, msg, st) -> do
+               let new = restartIfNeeded st
+               when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
+               return msg
+            Left msg -> 
+               return msg
       -- Use default text
       Nothing ->
          case parser (exercise d) txt of
@@ -138,7 +141,7 @@ submitText txt ref = do
                      return ("You applied rule " ++ show rs ++ ". Although it is equivalent, please follow the strategy")
                   Unknown _ -> 
                      return ("Equivalent, but not a known rule. Please retry.")
-      
+
 currentText :: Session -> IO String
 currentText = withDerivation $ \d -> do
    a <- fromContext $ current d
@@ -155,7 +158,7 @@ derivationText = withDerivation $ \d ->
 progressPair :: Session -> IO (Int, Int)
 progressPair = withDerivation $ \d -> 
    let x = derivationLength d
-       y = fromMaybe 0 (stepsremaining (currentState d))
+       y = either (const 0) id (stepsremaining (currentState d))
    in return (x, x+y)
 
 readyText :: Session -> IO String

@@ -20,7 +20,6 @@ import Common.Utils (safeHead)
 import Data.List
 import Data.Maybe
 import System.Random (StdGen)
-import Control.Monad
 import Service.ExercisePackage
 import Service.State
 import qualified Common.Classes as Apply
@@ -29,10 +28,10 @@ generate :: StdGen -> ExercisePackage a -> Difficulty -> State a
 generate rng pkg dif = 
    emptyState pkg (randomTermWith rng dif (exercise pkg))
 
-derivation :: Monad m => Maybe StrategyConfiguration -> State a -> m [(Rule (Context a), Context a)]
+derivation :: Maybe StrategyConfiguration -> State a -> Either String [(Rule (Context a), Context a)]
 derivation mcfg state =
    case (statePrefix state, mcfg) of 
-      (Nothing, _) -> fail "Prefix is required"
+      (Nothing, _) -> Left "Prefix is required"
       -- configuration is only allowed beforehand: hence, the prefix 
       -- should be empty (or else, the configuration is ignored). This
       -- restriction should probably be relaxed later on.
@@ -49,10 +48,10 @@ derivation mcfg state =
  
    rec i acc st = 
       case onefirst st of
-         Nothing           -> return (reverse acc)
-         Just (r, _, next)
-            |  i <= 0      -> fail msg
-            | otherwise    -> rec (i-1) ((r, stateContext next) : acc) next
+         Left _         -> return (reverse acc)
+         Right (r, _, next)
+            | i <= 0    -> Left msg
+            | otherwise -> rec (i-1) ((r, stateContext next) : acc) next
     where
       msg = "Time out after " ++ show timeout ++ " steps. " ++ 
             concatMap f (reverse acc)
@@ -61,16 +60,16 @@ derivation mcfg state =
 
 -- Note that we have to inspect the last step of the prefix afterwards, because
 -- the remaining part of the derivation could consist of minor rules only.
-allfirsts :: Monad m => State a -> m [(Rule (Context a), Location, State a)]
+allfirsts :: State a -> Either String [(Rule (Context a), Location, State a)]
 allfirsts state = 
    case statePrefix state of
       Nothing -> 
-         fail "Prefix is required"
+         Left "Prefix is required"
       Just p0 ->
          let tree = cutOnStep (stop . lastStepInPrefix) (prefixTree p0 (stateContext state))
              f (r1, _, _) (r2, _, _) = 
                 ruleOrdering (exercise (exercisePkg state)) r1 r2
-         in return (sortBy f (mapMaybe make (derivations tree)))
+         in Right (sortBy f (mapMaybe make (derivations tree)))
  where
    stop (Just (RuleStep r)) = isMajorRule r
    stop _ = False
@@ -86,12 +85,13 @@ allfirsts state =
             )
          _ -> Nothing
 
-onefirst :: Monad m => State a -> m (Rule (Context a), Location, State a)
-onefirst state = do
-   xs <- allfirsts state
-   case xs of
-      hd:_ -> return hd
-      []   -> fail "No step possible"
+onefirst :: State a -> Either String (Rule (Context a), Location, State a)
+onefirst state =
+   case allfirsts state of
+      Right []     -> Left "No step possible"
+      Right (hd:_) -> Right hd
+      Left msg     -> Left msg
+      
 
 applicable :: Location -> State a -> [Rule (Context a)]
 applicable loc state =
@@ -103,7 +103,7 @@ allapplications state = sortBy cmp (xs ++ ys)
  where
    pkg = exercisePkg state
    ex  = exercise pkg
-   xs  = concat (allfirsts state)
+   xs  = either (const []) id (allfirsts state)
    ps  = [ (r, loc) | (r, loc, _) <- xs ]
    ys  = maybe [] f (top (stateContext state))
            
@@ -126,23 +126,23 @@ setLocation loc c0 = fromMaybe c0 (navigateTo loc c0)
 -- Two possible scenarios: either I have a prefix and I can return a new one (i.e., still following the 
 -- strategy), or I return a new term without a prefix. A final scenario is that the rule cannot be applied
 -- to the current term at the given location, in which case the request is invalid.
-apply :: Monad m => Rule (Context a) -> Location -> State a -> m (State a)
+apply :: Rule (Context a) -> Location -> State a -> Either String (State a)
 apply r loc state = maybe applyOff applyOn (statePrefix state)
  where
    applyOn _ = -- scenario 1: on-strategy
-      maybe applyOff return $ safeHead
-      [ s1 | (r1, loc1, s1) <- fromMaybe [] $ allfirsts state, showId r == showId r1, loc==loc1 ]
+      maybe applyOff Right $ safeHead
+      [ s1 | Right xs <- [allfirsts state], (r1, loc1, s1) <- xs, showId r == showId r1, loc==loc1 ]
       
    applyOff  = -- scenario 2: off-strategy
       case Apply.apply r (setLocation loc (stateContext state)) of
-         Just new -> return (makeState (exercisePkg state) Nothing new)
-         Nothing  -> fail ("Cannot apply " ++ show r)
+         Just new -> Right (makeState (exercisePkg state) Nothing new)
+         Nothing  -> Left ("Cannot apply " ++ show r)
        
 ready :: State a -> Bool
 ready state = isReady (exercise (exercisePkg state)) (stateTerm state)
 
-stepsremaining :: Monad m => State a -> m Int
-stepsremaining = liftM length . derivation Nothing
+stepsremaining :: State a -> Either String Int
+stepsremaining = right length . derivation Nothing
 
 findbuggyrules :: State a -> a -> [Rule (Context a)]
 findbuggyrules state a =

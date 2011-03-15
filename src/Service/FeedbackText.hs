@@ -16,7 +16,6 @@ module Service.FeedbackText
 
 import Common.Library hiding (derivation)
 import Data.Maybe
-import Common.Utils
 import Service.Diagnose (restartIfNeeded)
 import Service.ExercisePackage
 import Service.State
@@ -26,25 +25,25 @@ import Service.BasicServices
 ------------------------------------------------------------
 -- Services
 
-derivationtext :: Monad m => State a -> Maybe String -> m [(String, Context a)]
+derivationtext :: State a -> Maybe String -> Either String [(String, Context a)]
 derivationtext state _event = do
    exText <- exerciseText state
    xs     <- derivation Nothing state
    return (map (first (showRule exText)) xs)
 
-onefirsttext :: Monad m => State a -> Maybe String -> m (Bool, String, State a)
+onefirsttext :: State a -> Maybe String -> Either String (Bool, String, State a)
 onefirsttext state event =
    case onefirst state of
-      Just (r, _, s) -> do
+      Right (r, _, s) -> do
          exText <- exerciseText state
          let mtxt = fromContext (stateContext s) >>= useToRewrite exText r state
              msg  = case mtxt of
                        Just txt | event /= Just "hint button" -> txt
                        _ -> "Use " ++ showRule exText r
          return (True, msg, s)
-      _ -> return (False, "Sorry, no hint available", state)
+      Left _ -> return (False, "Sorry, no hint available", state)
       
-submittext :: Monad m => State a -> String -> Maybe String -> m (Bool, String, State a)
+submittext :: State a -> String -> Maybe String -> Either String (Bool, String, State a)
 submittext state input _event = do
    exText <- exerciseText state
    return $
@@ -78,9 +77,10 @@ submitHelper exText old a result =
                            feedbackUnknown exText (ready old)
                          , False)
  where
-   expected s = do
-      xs <- allfirsts s
-      fmap fst3 (safeHead xs)
+   expected s = 
+      case onefirst s of
+         Right (r, _, _) -> Just r
+         _               -> Nothing
 
 ------------------------------------------------------------
 -- Helper functions
@@ -105,7 +105,7 @@ rewriteIntoText mode txt old a = do
    return $ txt ++ prettyPrinter ex p1 
          ++ " into " ++ prettyPrinter ex a1 ++ ". "
 
-exerciseText :: Monad m => State a -> m (ExerciseText a)
+exerciseText :: State a -> Either String (ExerciseText a)
 exerciseText = 
    let msg = "No support for textual feedback"
    in maybe (fail msg) return . getExerciseText . exercisePkg

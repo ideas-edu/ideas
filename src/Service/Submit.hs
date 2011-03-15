@@ -32,12 +32,14 @@ data Result a = Buggy  [Rule (Context a)]
 fromDiagnose :: Diagnosis a -> Result a
 fromDiagnose diagnosis =
    case diagnosis of
-      Diagnose.Buggy r        -> Buggy [r]
-      Diagnose.NotEquivalent  -> NotEquivalent
-      Diagnose.Similar _ s    -> Ok [] s
-      Diagnose.Expected _ s r -> Ok [r] s
-      Diagnose.Detour _ s r   -> Detour [r] s
-      Diagnose.Correct _ s    -> Unknown s
+      Diagnose.Buggy r         -> Buggy [r]
+      Diagnose.NotEquivalent   -> NotEquivalent
+      Diagnose.Similar _ s     -> Ok [] s
+      Diagnose.Expected _ s r  -> Ok [r] s
+      Diagnose.Detour _ s r    -> Detour [r] s
+      Diagnose.Correct _ s     -> Unknown s
+      Diagnose.Missing         -> NotEquivalent
+      Diagnose.IncorrectPart _ -> NotEquivalent
           
 submit :: State a -> a -> Result a 
 submit state = fromDiagnose . diagnose state

@@ -23,6 +23,7 @@ import Service.Types
 import Service.RulesInfo
 import Service.State
 import Service.BasicServices
+import Service.RunScript
 import qualified Service.Diagnose as Diagnose
 import qualified Service.Submit as Submit
 
@@ -37,6 +38,7 @@ serviceList =
    , examplesS, submitS, diagnoseS
    , onefirsttextS, findbuggyrulesS
    , submittextS, derivationtextS
+   , feedbacktextS
    , problemdecompositionS
    , rulelistS, rulesinfoS, strategyinfoS
    ]
@@ -170,6 +172,11 @@ derivationtextS = makeService "derivationtext"
    \have been replaced by a short description of the rule. The optional string is \
    \for announcing the event leading to this service call." $ 
    derivationtext ::: stateType :-> maybeType String :-> errorType (listType (tuple2 String Context))
+
+feedbacktextS :: Service
+feedbacktextS = makeService "feedbacktext"
+   "Textual feedback for diagnose service. Experimental." $
+   feedbacktext ::: Tag "script" String :-> stateType :-> Term :-> IO String
 
 ------------------------------------------------------
 -- Problem decomposition service

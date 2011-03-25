@@ -97,6 +97,8 @@ encodeDefault enc tp tv =
       Id            -> encodeAsString enc tv
       Int           -> encodeAsString enc tv
       ExercisePkg   -> return (encodeTuple enc [])
+      IO t          -> do a <- liftIO tv
+                          encodeType enc t a
       Exception     -> fail tv
       _             -> fail ("No support for result type: " ++ show tp)
 

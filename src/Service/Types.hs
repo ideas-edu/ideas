@@ -56,7 +56,7 @@ equal type1 type2 =
    case (type1, type2) of
       (Pair a b,    Pair c d   ) -> liftM2 (\f g (x, y) -> (f x, g y)) (equal a c) (equal b d)
       (a :|: b,     c :|: d    ) -> liftM2 (\f g -> either (Left . f) (Right . g)) (equal a c) (equal b d)
-      (List a,      List b     ) -> liftM map (equal a b)
+      (List a,      List b     ) -> fmap map (equal a b)
       (Rule,        Rule       ) -> Just id
       (Unit,        Unit       ) -> Just id
       (StrategyCfg, StrategyCfg) -> Just id
@@ -66,6 +66,7 @@ equal type1 type2 =
       (ExercisePkg, ExercisePkg) -> Just id
       (Context,     Context    ) -> Just id
       (StdGen,      StdGen     ) -> Just id
+      (IO a,        IO b       ) -> fmap liftM (equal a b)
       (Exception,   Exception  ) -> Just id
       (Bool,        Bool       ) -> Just id
       (String,      String     ) -> Just id
@@ -136,6 +137,7 @@ data Type a t where
    (:|:)        :: Type a t1 -> Type a t2 -> Type a (Either t1 t2)
    Unit         :: Type a ()
    StdGen       :: Type a StdGen
+   IO           :: Type a t -> Type a (IO t)
    Exception    :: Type a String
    -- Exercise-specific types
    ExercisePkg  :: Type a (ExercisePackage a)
@@ -158,6 +160,7 @@ instance Show (Type a t) where
    show (t1 :|: t2)    = show t1 ++ " | " ++ show t2
    show (Tag s _)      = s -- ++ "@(" ++ show t ++ ")"
    show (List t)       = "[" ++ show t ++ "]"
+   show (IO t)         = show t
    show t              = fromMaybe "unknown" (showGroundType t)
    
 showTuple :: Type a t -> String

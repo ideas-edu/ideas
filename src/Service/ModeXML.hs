@@ -164,27 +164,33 @@ xmlDecoder b f pkg = Decoder
    }
 
 xmlDecodeType :: Bool -> Decoder XML a -> Type a t -> XML -> DomainReasoner (t, XML)
-xmlDecodeType b dec serviceType = 
+xmlDecodeType b dec serviceType = keep $
    case serviceType of
-      Tp.Context     -> keep $ decodeContext b (decoderPackage dec) (decodeTerm dec)
-      Tp.Location    -> keep $ liftM (read . getData) . findChild "location"
-      Tp.Id          -> keep $ \xml -> do
+      Tp.Context     -> decodeContext b (decoderPackage dec) (decodeTerm dec)
+      Tp.Location    -> liftM (read . getData) . findChild "location"
+      Tp.Id          -> \xml -> do
                            a <- findChild "location" xml
                            return (newId (getData a))
-      Tp.Rule        -> keep $ fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
-      Tp.Term        -> keep $ decodeTerm dec
+      Tp.Rule        -> fromMaybe (fail "unknown rule") . liftM (getRule (decoderExercise dec) . newId . getData) . findChild "ruleid"
+      Tp.Term        -> decodeTerm dec
       Tp.StrategyCfg -> decodeConfiguration
       Tp.Tag s t
          | s == "state" -> \xml -> do 
               g  <- equalM stateType serviceType
               st <- decodeState b (decoderPackage dec) (decodeTerm dec) xml
-              return (g st, xml)
-         | s == "answer" -> \xml ->
-              findChild "answer" xml >>= xmlDecodeType b dec t
-         | s == "difficulty" -> keep $ \xml -> do
+              return (g st)
+         | s == "answer" -> \xml -> do
+              c <- findChild "answer" xml 
+              (a, _) <- xmlDecodeType b dec t c
+              return a
+         | s == "difficulty" -> \xml -> do
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
+         | s == "script" -> \xml -> do
+              g <- equalM String t
+              a <- findAttribute "script" xml
+              return (g a)
          {-
          | s == "prefix" -> \xml -> do
               f  <- equalM String t
@@ -193,9 +199,10 @@ xmlDecodeType b dec serviceType =
               return (f s, xml) -}
          | otherwise -> \xml -> do
               c <- findChild s xml
-              xmlDecodeType b dec t c
+              (a, _) <- xmlDecodeType b dec t c
+              return a
               
-      _ -> decodeDefault dec serviceType
+      _ -> liftM fst . decodeDefault dec serviceType
  where         
    keep :: Monad m => (XML -> m a) -> XML -> m (a, XML)
    keep f xml = liftM (\a -> (a, xml)) (f xml)
@@ -256,10 +263,10 @@ decodeEnvironment b xml =
             value <- findAttribute "value" item
             return (storeEnv n value env)
 
-decodeConfiguration :: MonadPlus m => XML -> m (StrategyConfiguration, XML)
+decodeConfiguration :: MonadPlus m => XML -> m StrategyConfiguration
 decodeConfiguration xml =
    case findChild "configuration" xml of
-      Just this -> mapM decodeAction (children this) >>= \xs -> return (xs, xml)
+      Just this -> mapM decodeAction (children this)
       Nothing   -> fail "no strategy configuration" 
  where
    decodeAction item = do 

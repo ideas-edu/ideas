@@ -146,8 +146,8 @@ xmlEncodeType b enc pkg serviceType =
               rulesInfoXML (exercise pkg) (encodeTerm enc)
          | otherwise ->  
               case useAttribute t1 of
-                 Just f  -> return . (s .=.) . f
-                 Nothing -> liftM (element s) . xmlEncodeType b enc pkg t1
+                 Just f | s /= "message" -> return . (s .=.) . f
+                 _ -> liftM (element s) . xmlEncodeType b enc pkg t1
       Tp.Strategy  -> return . builder . strategyToXML
       Tp.Rule      -> return . ("ruleid" .=.) . showId
       Tp.Term      -> encodeTerm enc

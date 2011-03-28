@@ -18,22 +18,18 @@ import Service.Diagnose
 import Service.State
 import Service.ScriptParser
 
-feedbacktext :: FilePath -> State a -> a -> IO String
-feedbacktext file st a = do
+feedbacktext :: FilePath -> State a -> a -> IO (Bool, String, State a)
+feedbacktext file oldState a = do
    script <- parseScript file
-   return (runScript (diagnose st a) script)
-
-runScript :: Diagnosis a -> Script -> String
-runScript diagnosis script = 
-   case diagnosis of
-      Buggy r         -> r ? script
-      NotEquivalent   -> newId "noteq" ? script
-      Missing         -> newId "noteq" ? script
-      IncorrectPart _ -> newId "noteq" ? script
-      Similar _ _     -> newId "similar" ? script
-      Expected _ _ r  -> r ? script
-      Detour _ _ r    -> r ? script
-      Correct _ _     -> newId "correct" ? script
+   let find x = x ? script
+   return $ 
+      case diagnose oldState a of
+         Buggy r         -> (False, find r, oldState)
+         NotEquivalent   -> (False, find $ newId "noteq", oldState)
+         Similar _ st    -> (True, find $ newId "similar", st)
+         Expected _ st r -> (True, find r, st)
+         Detour _ st r   -> (True, find r, st)
+         Correct _ st    -> (True, find $ newId "correct", st)
    
 (?) :: HasId a => a -> Script -> String
 a ? xs = case lookup (getId a) xs of

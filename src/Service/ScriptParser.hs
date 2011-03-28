@@ -31,7 +31,6 @@ parseScript file = do
    case result of
       Left e   -> fail (show e)
       Right xs -> return xs
- `catch` \e -> do print e ; return []
 
 script :: CharParser st Script
 script = do

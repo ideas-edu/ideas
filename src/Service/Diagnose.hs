@@ -30,8 +30,8 @@ import Service.Types
 
 data Diagnosis a
    = Buggy          (Rule (Context a))
-   | Missing
-   | IncorrectPart  [a]
+--   | Missing
+--   | IncorrectPart  [a]
    | NotEquivalent  
    | Similar        Bool (State a)
    | Expected       Bool (State a) (Rule (Context a))
@@ -42,8 +42,8 @@ instance Show (Diagnosis a) where
    show diagnosis = 
       case diagnosis of
          Buggy r          -> "Buggy rule " ++ show (show r)
-         Missing          -> "Missing solutions"
-         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
+--         Missing          -> "Missing solutions"
+--         IncorrectPart xs -> "Incorrect parts (" ++ show (length xs) ++ " items)"
          NotEquivalent    -> "Unknown mistake" 
          Similar _ _      -> "Very similar"
          Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
@@ -121,18 +121,18 @@ diagnosisType :: Type a (Diagnosis a)
 diagnosisType = Iso f g tp
  where
    f (Left (Left r)) = Buggy r
-   f (Left (Right (Left ()))) = Missing
-   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
-   f (Left (Right (Right (Right ())))) = NotEquivalent
+--   f (Left (Right (Left ()))) = Missing
+--   f (Left (Right (Right (Left xs)))) = IncorrectPart xs
+   f (Left (Right ())) = NotEquivalent
    f (Right (Left (b, s))) = Similar b s
    f (Right (Right (Left (b, s, r)))) = Expected b s r
    f (Right (Right (Right (Left (b, s, r))))) = Detour b s r
    f (Right (Right (Right (Right (b, s))))) = Correct b s
 
    g (Buggy r)          = Left (Left r)
-   g Missing            = Left (Right (Left ()))
-   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
-   g NotEquivalent      = Left (Right (Right (Right ())))
+--   g Missing            = Left (Right (Left ()))
+--   g (IncorrectPart xs) = Left (Right (Right (Left xs)))
+   g NotEquivalent      = Left (Right ())
    g (Similar b s)      = Right (Left (b, s))
    g (Expected b s r)   = Right (Right (Left (b, s, r)))
    g (Detour b s r)     = Right (Right (Right (Left (b, s, r))))
@@ -140,8 +140,8 @@ diagnosisType = Iso f g tp
    
    tp  =  
        (  Tag "buggy"         Rule
-      :|: Tag "missing"       Unit
-      :|: Tag "incorrectpart" (List Term)
+--      :|: Tag "missing"       Unit
+--      :|: Tag "incorrectpart" (List Term)
       :|: Tag "notequiv"      Unit
        )
       :|: 
@@ -155,7 +155,7 @@ diagnosisType = Iso f g tp
 
 ----------------------------------------------------------------
 -- Compare answer sets (and search for missing parts/incorrect parts)
-
+{-
 compareParts :: State a -> a -> Diagnosis a
 compareParts state = answerList eq split solve (stateTerm state)
  where
@@ -180,4 +180,4 @@ answerList eq split solve a b
    present = all (flip any bs . eq) as -- are all expected answers present
    notInAs = not . flip any as . eq
    partly  = length wrong < length ps
-   noSplit = length as < 2 && length bs < 2
+   noSplit = length as < 2 && length bs < 2 -}

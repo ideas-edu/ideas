@@ -176,11 +176,10 @@ derivationtextS = makeService "derivationtext"
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"
    "Textual feedback for diagnose service. Experimental." $
-   feedbacktext ::: Tag "script" String :-> stateType :-> Term :-> IO String
+   feedbacktext ::: Tag "script" String :-> stateType :-> Term :-> IO (tuple3 (Tag "accept" Bool) (Tag "message" String) stateType)
 
 ------------------------------------------------------
 -- Problem decomposition service
-
 
 problemdecompositionS :: Service
 problemdecompositionS = makeService "problemdecomposition" 

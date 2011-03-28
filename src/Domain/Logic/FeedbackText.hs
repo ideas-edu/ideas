@@ -86,7 +86,7 @@ feedbackBuggy ready [br]
    | br ~= buggyRuleDistr = 
         f "Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. "
    | br ~= buggyRuleDistrNot = 
-        f "Did you try to apply distribution? Don't forget the negations!. "
+        f "Did you try to apply distribution? Don't forget the negations! "
  where f = incorrect ready
 feedbackBuggy ready _ = incorrect ready ""
 

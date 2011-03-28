@@ -160,18 +160,17 @@ submittextS :: Service
 submittextS = makeService "submittext" 
    "Similar to the submit service, except that the result is now returned as \
    \a formatted text message. The expression 'submitted' by the student is sent \
-   \in plain text (and parsed by the exercise's parser). The optional string is \
-   \for announcing the event leading to this service call. The boolean in the \
+   \in plain text (and parsed by the exercise's parser). \
+   \The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: stateType :-> String :-> maybeType String :-> errorType (elemType (tuple3 Bool String stateType))
+   submittext ::: stateType :-> String :-> errorType (elemType (tuple3 Bool String stateType))
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
-   \have been replaced by a short description of the rule. The optional string is \
-   \for announcing the event leading to this service call." $ 
-   derivationtext ::: stateType :-> maybeType String :-> errorType (listType (tuple2 String Context))
+   \have been replaced by a short description of the rule." $ 
+   derivationtext ::: stateType :-> errorType (listType (tuple2 String Context))
 
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"

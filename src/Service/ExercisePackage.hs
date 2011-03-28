@@ -121,9 +121,9 @@ data ExerciseText a = ExerciseText
    , appliedRule           :: Rule (Context a) -> String
    , feedbackSyntaxError   :: String -> String
    , feedbackSame          :: String
-   , feedbackBuggy         :: Bool -> [Rule (Context a)] -> String
+   , feedbackBuggy         :: Bool -> Rule (Context a) -> String
    , feedbackNotEquivalent :: Bool -> String
-   , feedbackOk            :: [Rule (Context a)] -> (String, Bool)
-   , feedbackDetour        :: Bool -> Maybe (Rule (Context a)) -> [Rule (Context a)] -> (String, Bool)
+   , feedbackOk            :: Rule (Context a) -> String
+   , feedbackDetour        :: Bool -> Maybe (Rule (Context a)) -> Rule (Context a) -> String
    , feedbackUnknown       :: Bool -> String
    }

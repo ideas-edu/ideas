@@ -27,8 +27,8 @@ feedbackSyntaxError msg
    | "Syntax error" `isPrefixOf` msg = msg
    | otherwise                       = "Syntax error: " ++ msg
 
-feedbackBuggy :: Bool -> [Rule a] -> String
-feedbackBuggy ready [br] 
+feedbackBuggy :: Bool -> Rule a -> String
+feedbackBuggy ready br
    | br ~= buggyRuleCommImp = 
         f "Did you think that implication is commutative? This is not the case. "
    | br ~= buggyRuleAssImp = 
@@ -87,8 +87,10 @@ feedbackBuggy ready [br]
         f "Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. "
    | br ~= buggyRuleDistrNot = 
         f "Did you try to apply distribution? Don't forget the negations! "
- where f = incorrect ready
-feedbackBuggy ready _ = incorrect ready ""
+   | otherwise =
+        incorrect ready ""
+ where 
+   f = incorrect ready
 
 feedbackNotEquivalent :: Bool -> String
 feedbackNotEquivalent ready = incorrect ready ""
@@ -97,22 +99,19 @@ feedbackSame :: String
 feedbackSame = "You have submitted a similar term. " ++ 
    "Maybe you inserted or removed parentheses (the tool supports associativity)?"
 
-feedbackOk :: [Rule a] -> (String, Bool)
-feedbackOk [one] = (okay (appliedRule one), True)
-feedbackOk _     = ("You have combined multiple steps. Press the Back button and perform one step at the time.", False)
+feedbackOk :: Rule a -> String
+feedbackOk r = okay (appliedRule r)
 
 -- TODO Bastiaan: welke regel wordt er dan verwacht door de strategie?
-feedbackDetour :: Bool -> Maybe (Rule a) -> [Rule a] -> (String, Bool)
-feedbackDetour True _ [one] = (appliedRule one ++ " " ++ feedbackFinished, True)
-feedbackDetour True _ _     = (feedbackMultipleSteps ++ " " ++ feedbackFinished, True)
-feedbackDetour _ _ [one] | one `inGroup` groupCommutativity =
-   ("You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula.", True)
-feedbackDetour _ mexp [one] = 
+feedbackDetour :: Bool -> Maybe (Rule a) -> Rule a -> String
+feedbackDetour True _ r = appliedRule r ++ " " ++ feedbackFinished
+feedbackDetour _ _ r | r `inGroup` groupCommutativity =
+   "You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula."
+feedbackDetour _ mexp r = 
    let however = case mexp >>= ruleText of
                     Just s  -> "However, the standard strategy suggests to use " ++ s ++ "." 
                     Nothing -> "However, the standard strategy suggests a different step."   
-   in (appliedRule one ++ " This is correct. " ++ however, True)
-feedbackDetour ready _ _ = (feedbackUnknown ready, False)
+   in appliedRule r ++ " This is correct. " ++ however
 
 feedbackUnknown :: Bool -> String
 feedbackUnknown ready = feedbackMultipleSteps ++ " " ++ backAndHint ready

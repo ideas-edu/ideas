@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.Submit 
-   ( submit, Result(..), getResultState
+   ( submit, Result(..)
    , submitType
    ) where
 
@@ -43,15 +43,7 @@ fromDiagnose diagnosis =
           
 submit :: State a -> a -> Result a 
 submit state = fromDiagnose . diagnose state
-   
-getResultState :: Result a -> Maybe (State a)
-getResultState result =
-   case result of
-      Ok _ st     -> return st
-      Detour _ st -> return st
-      Unknown st  -> return st
-      _           -> Nothing
-      
+
 submitType :: Type a (Result a)
 submitType = Tag "Result" (Iso f g tp)
  where

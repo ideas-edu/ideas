@@ -15,12 +15,14 @@ module Service.ScriptParser (Script, parseScript) where
 
 import Common.Id
 import Control.Monad.Error
+import Data.Char
 import Data.Monoid
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec
 
 type Script = [(Id, String)]
+type Annotation = String
 
 -- The parser
 parseScript :: FilePath -> IO Script
@@ -29,6 +31,7 @@ parseScript file = do
    case result of
       Left e   -> fail (show e)
       Right xs -> return xs
+ `catch` \e -> do print e ; return []
 
 script :: CharParser st Script
 script = do
@@ -42,22 +45,31 @@ decls = many decl
 
 decl :: CharParser st (Id, String)
 decl = do
-   beginDecl
-   a <- identifier
-   lexChar ':'
-   txt <- freeText
+   a   <- identifier
+   txt <- (singleLineText <|> multiLineText)
    return (a, txt)
 
-freeText :: CharParser st String
-freeText = manyTill (liftM (const ' ') comment <|> anyChar) (beginDecl <|> eof)
+singleLineText :: CharParser st String
+singleLineText = do 
+   lexChar '='
+   xs <- manyTill textItem (lexeme (skip newline <|> comment))
+   return (concat xs)
+
+multiLineText :: CharParser st String
+multiLineText = do 
+   lexChar '{'
+   xs <- manyTill textItem (lexChar '}')
+   return (concat xs)
+
+textItem :: CharParser st String
+textItem =  single (noneOf "@#{}")
+        <|> try (single escaped)
+        <|> annotation
+        <|> (comment >> return [])
+ where
+   single = liftM (\c -> [c])
 
 -- Lexical units
-beginDecl :: CharParser st ()
-beginDecl = do
-   pos <- getPosition
-   guard (sourceColumn pos == 1)
-   notFollowedBy space
-
 identifier :: CharParser st Id
 identifier = lexeme $ do
    xs <- idPart `sepBy1` char '.'
@@ -66,6 +78,17 @@ identifier = lexeme $ do
  where
    idPart   = many1 idLetter
    idLetter = alphaNum <|> oneOf "-_"
+
+annotation :: CharParser st Annotation
+annotation = do
+   skip (char '@')
+   a <- identifier
+   return ('@':show a)
+
+escaped :: CharParser st Char
+escaped = do
+   skip (char '@')
+   satisfy (not . isAlphaNum)
 
 lexChar :: Char -> CharParser s ()
 lexChar c = skip (lexeme (char c))

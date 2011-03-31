@@ -28,6 +28,7 @@ import Common.Rewriting.Term
 import Control.Monad
 import Data.Char
 import Data.List
+import Service.FeedbackScript
 import Text.OpenMath.Object
 import qualified Text.OpenMath.Symbol as OM
 import Text.OpenMath.Dictionary.Fns1
@@ -117,13 +118,13 @@ idToSymbol a
 
 -- Exercise extension for textual feedback
 data ExerciseText a = ExerciseText
-   { ruleText              :: Rule (Context a) -> Maybe String
-   , appliedRule           :: Rule (Context a) -> String
-   , feedbackSyntaxError   :: String -> String
-   , feedbackSame          :: String
-   , feedbackBuggy         :: Bool -> Rule (Context a) -> String
-   , feedbackNotEquivalent :: Bool -> String
-   , feedbackOk            :: Rule (Context a) -> String
-   , feedbackDetour        :: Bool -> Maybe (Rule (Context a)) -> Rule (Context a) -> String
-   , feedbackUnknown       :: Bool -> String
+   { ruleText              :: Rule (Context a) -> Text
+   , feedbackSyntaxError   :: String -> Text
+   , feedbackSame          :: Text
+   , feedbackBuggy         :: Rule (Context a) -> Text
+   , feedbackNotEquivalent :: Text
+   , feedbackOk            :: Rule (Context a) -> Text
+   , feedbackDetour        :: Maybe (Rule (Context a)) -> Rule (Context a) -> Text
+   , feedbackUnknown       :: Text
+   , script                :: Script
    }

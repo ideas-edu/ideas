@@ -11,18 +11,16 @@
 -- Simple parser for feedback scripts
 --
 -----------------------------------------------------------------------------
-module Service.ScriptParser (Script, parseScript) where
+module Service.ScriptParser (parseScript) where
 
 import Common.Id
 import Control.Monad.Error
 import Data.Char
 import Data.Monoid
+import Service.FeedbackScript
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec
-
-type Script = [(Id, String)]
-type Annotation = String
 
 -- The parser
 parseScript :: FilePath -> IO Script
@@ -42,11 +40,11 @@ script = do
 decls :: CharParser st Script
 decls = many decl
 
-decl :: CharParser st (Id, String)
+decl :: CharParser st Decl
 decl = do
-   a   <- identifier
-   txt <- (singleLineText <|> multiLineText)
-   return (a, txt)
+   a <- identifier
+   s <- (singleLineText <|> multiLineText)
+   return (RuleText a (Text s))
 
 singleLineText :: CharParser st String
 singleLineText = do 

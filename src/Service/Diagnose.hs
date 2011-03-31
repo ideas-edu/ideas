@@ -12,7 +12,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.Diagnose 
-   ( Diagnosis(..), diagnosisState, diagnose, restartIfNeeded
+   ( Diagnosis(..), diagnose, restartIfNeeded
    , diagnosisType
    ) where 
 
@@ -49,15 +49,6 @@ instance Show (Diagnosis a) where
          Expected _ _ r   -> "Rule " ++ show (show r) ++ ", expected by strategy"
          Detour _ _ r     -> "Rule " ++ show (show r) ++ ", not following strategy"
          Correct _ _      -> "Unknown step"
-
-diagnosisState :: Diagnosis a -> Maybe (State a)
-diagnosisState diagnosis = 
-   case diagnosis of
-      Similar _ s    -> Just s
-      Expected _ s _ -> Just s
-      Detour _ s _   -> Just s
-      Correct _ s    -> Just s
-      _              -> Nothing
 
 ----------------------------------------------------------------
 -- The diagnose service

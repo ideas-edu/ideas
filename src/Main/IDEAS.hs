@@ -120,7 +120,6 @@ packages =
 logicText :: ExerciseText Logic.SLogic
 logicText = ExerciseText
    { ruleText              = Logic.ruleText
-   , appliedRule           = Logic.appliedRule
    , feedbackSyntaxError   = Logic.feedbackSyntaxError
    , feedbackSame          = Logic.feedbackSame
    , feedbackBuggy         = Logic.feedbackBuggy
@@ -128,4 +127,5 @@ logicText = ExerciseText
    , feedbackOk            = Logic.feedbackOk
    , feedbackDetour        = Logic.feedbackDetour
    , feedbackUnknown       = Logic.feedbackUnknown
+   , script                = Logic.script
    }

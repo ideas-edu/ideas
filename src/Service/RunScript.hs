@@ -16,12 +16,15 @@ module Service.RunScript (feedbacktext) where
 import Common.Id
 import Service.Diagnose
 import Service.State
+import Service.FeedbackScript
 import Service.ScriptParser
+import Service.BasicServices (ready)
 
 feedbacktext :: FilePath -> State a -> a -> IO (Bool, String, State a)
 feedbacktext file oldState a = do
    script <- parseScript file
-   let find x = x ? script
+   let find x   = toString oldReady script (x ? script)
+       oldReady = ready oldState
    return $ 
       case diagnose oldState a of
          Buggy r         -> (False, find r, oldState)
@@ -31,7 +34,7 @@ feedbacktext file oldState a = do
          Detour _ st r   -> (True, find r, st)
          Correct _ st    -> (True, find $ newId "correct", st)
    
-(?) :: HasId a => a -> Script -> String
-a ? xs = case lookup (getId a) xs of
-            Just s  -> s
-            Nothing -> "No feedback for " ++ showId a
+(?) :: HasId a => a -> Script -> Text
+a ? xs = case [ t | RuleText b t <- xs, getId a==b ] of
+            s:_ -> s
+            []  -> Text ("No feedback for " ++ showId a)

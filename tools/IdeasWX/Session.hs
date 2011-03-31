@@ -24,6 +24,7 @@ import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
 import Service.ExercisePackage (getExerciseText, ExercisePackage)
+import Service.FeedbackScript
 import qualified Service.ExercisePackage as Pkg
 import Common.Context
 import Common.Exercise hiding (showDerivation)
@@ -113,7 +114,7 @@ submitText txt ref = do
    case getExerciseText (getPackage ss) of
       -- Use exercise text module
       Just _ -> 
-         case submittext (currentState d) txt Nothing of
+         case submittext (currentState d) txt of
             Right (b, msg, st) -> do
                let new = restartIfNeeded st
                when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
@@ -173,7 +174,7 @@ hintOrStep verbose ref = do
    let d = getDerivation ss
        showRule r = fromMaybe ("rule " ++ showId r) $ do 
           exText <- getExerciseText (getPackage ss)
-          ruleText exText r
+          return (toString False (script exText) $ ruleText exText r) -- False ?!
    case allfirsts (currentState d) of
       Left msg ->
          return ("Error: " ++ msg)
@@ -207,7 +208,7 @@ nextStep ref = do
          setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
          case getExerciseText (getPackage ss) of
             Just exText ->
-               return (appliedRule exText r)
+               return ("You have applied " ++ toString False (script exText) (ruleText exText r) ++ " correctly.")
             Nothing -> 
                return ("You have applied rule " ++ showId r ++ " correctly.")
 

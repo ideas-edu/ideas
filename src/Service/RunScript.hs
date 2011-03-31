@@ -23,8 +23,10 @@ import Service.BasicServices (ready)
 feedbacktext :: FilePath -> State a -> a -> IO (Bool, String, State a)
 feedbacktext file oldState a = do
    script <- parseScript file
-   let find x   = toString oldReady script (x ? script)
-       oldReady = ready oldState
+   let find x   = toString env script (x ? script)
+       env = emptyEnvironment 
+          { oldReady = Just $ ready oldState
+          }
    return $ 
       case diagnose oldState a of
          Buggy r         -> (False, find r, oldState)

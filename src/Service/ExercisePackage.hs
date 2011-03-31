@@ -13,13 +13,11 @@
 module Service.ExercisePackage
    ( -- Type, and selectors 
      ExercisePackage, exercise, withOpenMath
-   , toOpenMath, fromOpenMath, getExerciseText
+   , toOpenMath, fromOpenMath, getScript
      -- Constructors
    , package, termPackage, somePackage, someTermPackage
      -- Conversion functions to/from OpenMath
    , termToOMOBJ, omobjToTerm
-     -- ExerciseText datatype
-   , ExerciseText(..)
    ) where
 
 import Common.Library
@@ -37,11 +35,11 @@ import Text.OpenMath.Dictionary.Fns1
 -- Package data type (and constructor functions)
 
 data ExercisePackage a = P
-   { exercise        :: Exercise a
-   , withOpenMath    :: Bool
-   , toOpenMath      :: a -> OMOBJ 
-   , fromOpenMath    :: MonadPlus m => OMOBJ -> m a
-   , getExerciseText :: Maybe (ExerciseText a)
+   { exercise     :: Exercise a
+   , withOpenMath :: Bool
+   , toOpenMath   :: a -> OMOBJ 
+   , fromOpenMath :: MonadPlus m => OMOBJ -> m a
+   , getScript    :: Maybe Script
    }
 
 instance HasId (ExercisePackage a) where
@@ -50,11 +48,11 @@ instance HasId (ExercisePackage a) where
 
 package :: Exercise a -> ExercisePackage a
 package ex = P 
-   { exercise        = ex
-   , withOpenMath    = False
-   , toOpenMath      = error "no OpenMath support"
-   , fromOpenMath    = fail "no OpenMath support"
-   , getExerciseText = Nothing
+   { exercise     = ex
+   , withOpenMath = False
+   , toOpenMath   = error "no OpenMath support"
+   , fromOpenMath = fail "no OpenMath support"
+   , getScript    = Nothing
    }
 
 termPackage :: IsTerm a => Exercise a -> ExercisePackage a
@@ -111,20 +109,3 @@ idToSymbol a
         OM.extraSymbol (unqualified a)
    | otherwise = 
         OM.makeSymbol (qualification a) (unqualified a)
-
-------------------------------------------------------------
--- Exercise Text data type
---    Note: ideally, this should be defined elsewhere
-
--- Exercise extension for textual feedback
-data ExerciseText a = ExerciseText
-   { ruleText              :: Rule (Context a) -> Text
-   , feedbackSyntaxError   :: String -> Text
-   , feedbackSame          :: Text
-   , feedbackBuggy         :: Rule (Context a) -> Text
-   , feedbackNotEquivalent :: Text
-   , feedbackOk            :: Rule (Context a) -> Text
-   , feedbackDetour        :: Maybe (Rule (Context a)) -> Rule (Context a) -> Text
-   , feedbackUnknown       :: Text
-   , script                :: Script
-   }

@@ -63,16 +63,16 @@ packages :: [Some ExercisePackage]
 packages =
    [ -- logic and relation-algebra
      Some (package Logic.dnfExercise)
-        { withOpenMath    = True
-        , toOpenMath      = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
-        , fromOpenMath    = (>>= fromTerm) . omobjToTerm
-        , getExerciseText = Just logicText
+        { withOpenMath = True
+        , toOpenMath   = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
+        , fromOpenMath = (>>= fromTerm) . omobjToTerm
+        , getScript    = Just Logic.script
         }
    , Some (package Logic.dnfUnicodeExercise)
-        { withOpenMath    = True
-        , toOpenMath      = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
-        , fromOpenMath    = (>>= fromTerm) . omobjToTerm
-        , getExerciseText = Just logicText
+        { withOpenMath = True
+        , toOpenMath   = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
+        , fromOpenMath = (>>= fromTerm) . omobjToTerm
+        , getScript    = Just Logic.script
         }
    -- , somePackage Logic.proofExercise
    , somePackage RA.cnfExercise
@@ -116,16 +116,3 @@ packages =
      -- regular expressions
    -- , somePackage RE.regexpExercise
    ]
-   
-logicText :: ExerciseText Logic.SLogic
-logicText = ExerciseText
-   { ruleText              = Logic.ruleText
-   , feedbackSyntaxError   = Logic.feedbackSyntaxError
-   , feedbackSame          = Logic.feedbackSame
-   , feedbackBuggy         = Logic.feedbackBuggy
-   , feedbackNotEquivalent = Logic.feedbackNotEquivalent
-   , feedbackOk            = Logic.feedbackOk
-   , feedbackDetour        = Logic.feedbackDetour
-   , feedbackUnknown       = Logic.feedbackUnknown
-   , script                = Logic.script
-   }

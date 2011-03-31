@@ -71,7 +71,7 @@ exercisePage exampleFileExists pkg = do
         , text $ showBool $ withOpenMath pkg
         ]
       , [ text "Textual feedback"
-        , text $ showBool $ isJust $ getExerciseText pkg
+        , text $ showBool $ isJust $ getScript pkg
         ]
       , [ text "Restartable strategy"
         , text $ showBool $ canBeRestarted ex

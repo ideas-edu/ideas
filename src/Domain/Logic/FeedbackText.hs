@@ -12,29 +12,23 @@
 -- by Josje Lodder.
 --
 -----------------------------------------------------------------------------
-module Domain.Logic.FeedbackText where
+module Domain.Logic.FeedbackText (script) where
 
-import Data.List
 import Common.Id
-import Common.Transformation
 import Domain.Logic.Rules
 import Domain.Logic.BuggyRules
 import Service.FeedbackScript
 
 script :: Script
-script = buggyTable ++ ruleTable
-
-feedbackSyntaxError :: String -> Text 
-feedbackSyntaxError msg
-   | "(" `isPrefixOf` msg            = Text $ "Syntax error at " ++ msg
-   | "Syntax error" `isPrefixOf` msg = Text msg
-   | otherwise                       = Text $ "Syntax error: " ++ msg
-
-feedbackBuggy :: Rule a -> Text
-feedbackBuggy br = 
-   case [ t | RuleText a t <- script, br ~= a ] of
-      t:_ -> incorrect <> t <> backAndHint
-      []  -> incorrect <> backAndHint
+script = buggyTable ++ ruleTable ++
+   [ FeedbackSame (Text "You have submitted a similar term. \ 
+        \Maybe you inserted or removed parentheses (the tool supports associativity)?")
+   , FeedbackNotEq (incorrect <> backAndHint)
+   , FeedbackUnknown (feedbackMultipleSteps <> backAndHint)
+   , FeedbackOk (okay <> appliedRule)
+   , FeedbackBuggy (incorrect <> AttrRecognized <> backAndHint)
+   , FeedbackDetour detourText
+   ]
 
 buggyTable :: [Decl]
 buggyTable = 
@@ -71,32 +65,18 @@ buggyTable =
  where 
    f a b = RuleText (getId a) (Text b)
 
-feedbackNotEquivalent :: Text
-feedbackNotEquivalent = incorrect <> backAndHint
-    
-feedbackSame :: Text 
-feedbackSame = Text "You have submitted a similar term. \ 
-   \Maybe you inserted or removed parentheses (the tool supports associativity)?"
-
-feedbackOk :: Rule a -> Text
-feedbackOk r = okay <> appliedRule r
-
--- TODO Bastiaan: welke regel wordt er dan verwacht door de strategie?
-feedbackDetour :: Maybe (Rule a) -> Rule a -> Text
-feedbackDetour mexp r = CondReady yes no
+detourText :: Text
+detourText = CondOldReady yes no
  where
-   yes = appliedRule r <> Text " " <> feedbackFinished
-   no | r `inGroup` fst groupCommutativity = Text 
-           "You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula."
-      | otherwise = 
-           appliedRule r <> Text " This is correct. " <> however
-
-   however = case mexp of
-                Just a  -> Text "However, the standard strategy suggests to use " <> ruleText a <> Text "." 
-                Nothing -> Text "However, the standard strategy suggests a different step."
-
-feedbackUnknown :: Text
-feedbackUnknown = feedbackMultipleSteps <> backAndHint
+   yes = appliedRule <> Text " " <> feedbackFinished
+   no  = CondRecognizedIs (getId ruleCommOr) commText $
+         CondRecognizedIs (getId ruleCommAnd) commText $
+         appliedRule <> Text " This is correct. " <> however
+         
+   commText = Text "You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula."
+   however = CondHasExpected
+                (Text "However, the standard strategy suggests to use " <> AttrExpected <> Text ".")
+                (Text "However, the standard strategy suggests a different step.")
 
 feedbackMultipleSteps :: Text
 feedbackMultipleSteps = Text "You have combined multiple steps (or made a mistake). "
@@ -104,14 +84,8 @@ feedbackMultipleSteps = Text "You have combined multiple steps (or made a mistak
 feedbackFinished :: Text
 feedbackFinished = Text "Are you aware that you already reached disjunctive normal form?"
 
-appliedRule :: Rule a -> Text
-appliedRule r = Text "You have applied " <> ruleText r <> Text " correctly."
-
-ruleText :: Rule a -> Text
-ruleText r = 
-   case [ t | RuleText a t <- script, r ~= a || r `inGroup` a ] of
-      t:_ -> t 
-      []  -> Text "some rule"
+appliedRule :: Text
+appliedRule = Text "You have applied " <> AttrRecognized <> Text " correctly."
 
 ruleTable :: [Decl]
 ruleTable = 
@@ -126,7 +100,8 @@ ruleTable =
    , f ruleNotNot       "double negation" 
    , f ruleDefImpl      "implication elimination" 
    , f ruleDefEquiv     "equivalence elimination" 
-   , g groupCommutativity         "commutativity"
+   ] ++ concat
+   [ g groupCommutativity         "commutativity"
    , g groupAssociativity         "associativity"
    , g groupDistributionOrOverAnd "distribution of or over and"
    , g groupDistributionAndOverOr "distribution of and over or"
@@ -138,7 +113,7 @@ ruleTable =
    ]
  where
    f a b = RuleText (getId a) (Text b)
-   g = f . fst
+   g a b = [ f x b | x <- snd a ]
 
 -------------------------------------------------------------------------
 -- General text
@@ -151,16 +126,4 @@ okay = Text "Well done! "
 
 backAndHint :: Text
 backAndHint = Text "Press the Back button and try again." <>
-   ifNotReady (Text " You may ask for a hint.")
-
--------------------------------------------------------------------------
--- Helper functions
-
-(~=) :: (HasId a, HasId b) => a -> b -> Bool
-r1 ~= r2 = getId r1 == getId r2
-
--- Quick and dirty fix!
-inGroup :: Rule a -> Id -> Bool
-inGroup r groupId = 
-   let rs = filter (~= r) (logicRules ++ buggyRules)
-   in groupId `elem` concatMap ruleGroups rs
+   ifNotOldReady (Text " You may ask for a hint.")

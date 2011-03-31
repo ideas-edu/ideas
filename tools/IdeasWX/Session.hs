@@ -23,7 +23,7 @@ import Service.State
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
-import Service.ExercisePackage (getExerciseText, ExercisePackage)
+import Service.ExercisePackage (getScript, ExercisePackage)
 import Service.FeedbackScript
 import qualified Service.ExercisePackage as Pkg
 import Common.Context
@@ -111,7 +111,7 @@ submitText :: String -> Session -> IO String
 submitText txt ref = do
    Some ss <- getValue ref
    let d = getDerivation ss
-   case getExerciseText (getPackage ss) of
+   case getScript (getPackage ss) of
       -- Use exercise text module
       Just _ -> 
          case submittext (currentState d) txt of
@@ -173,8 +173,8 @@ hintOrStep verbose ref = do
    Some ss <- getValue ref
    let d = getDerivation ss
        showRule r = fromMaybe ("rule " ++ showId r) $ do 
-          exText <- getExerciseText (getPackage ss)
-          return (toString False (script exText) $ ruleText exText r) -- False ?!
+          script <- getScript (getPackage ss)
+          return (newRuleText script r)
    case allfirsts (currentState d) of
       Left msg ->
          return ("Error: " ++ msg)
@@ -206,9 +206,9 @@ nextStep ref = do
          return "No more steps left to do"
       Right ((r, _, new):_) -> do
          setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
-         case getExerciseText (getPackage ss) of
-            Just exText ->
-               return ("You have applied " ++ toString False (script exText) (ruleText exText r) ++ " correctly.")
+         case getScript (getPackage ss) of
+            Just script ->
+               return ("You have applied " ++ newRuleText script r ++ " correctly.")
             Nothing -> 
                return ("You have applied rule " ++ showId r ++ " correctly.")
 

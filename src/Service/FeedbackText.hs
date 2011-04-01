@@ -15,8 +15,6 @@ module Service.FeedbackText
 
 import Common.Library hiding (derivation)
 import Common.Utils (fst3)
-import Data.List
-import Data.Maybe
 import Service.ExercisePackage
 import Service.State
 import Service.Diagnose
@@ -48,14 +46,8 @@ submittext :: State a -> String -> Either String (Bool, String, State a)
 submittext old input = do
    script <- exerciseScript old
    case parser (exercise (exercisePkg old)) input of
-      Left msg -> 
-         return (False, result, old)
-       where
-         result | "(" `isPrefixOf` msg            = "Syntax error at " ++ msg
-                | "Syntax error" `isPrefixOf` msg = msg
-                | otherwise                       = "Syntax error: " ++ msg
-      Right a  -> 
-         return (submitHelper script old a)
+      Left msg -> return (False, msg, old)
+      Right a  -> return (submitHelper script old a)
 
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
@@ -63,47 +55,33 @@ submittext old input = do
 submitHelper :: Script -> State a -> a -> (Bool, String, State a)
 submitHelper script old a =
    case diagnose old a of
-      Buggy r        -> ( False
-                        , fromMaybe ""  (youRewroteInto old a) ++ 
-                          feedbackBuggy env {recognized = Just r} script
-                        , old
-                        )
-      NotEquivalent  -> ( False
-                        , fromMaybe ""  (youRewroteInto old a) ++
-                          feedbackNotEq env script
-                        , old
-                        )
+      Buggy r        -> (False, feedbackBuggy env {recognized = Just r} script, old)
+      NotEquivalent  -> (False, feedbackNotEq env script, old)
       Expected _ s r -> (True, feedbackOk env {recognized = Just r} script, s)
       Similar _ s    -> (True, feedbackSame env script, s)
       Detour _ s r   -> (True, feedbackDetour env {recognized = Just r} script, s)
-      Correct _ s    -> ( False
-                        , fromMaybe ""  (youRewroteInto old a) ++ 
-                          feedbackUnknown env script
-                        , s
-                        )
+      Correct _ s    -> (False, feedbackUnknown env script, s)
  where
+   ex  = exercise (exercisePkg old)
    env = emptyEnvironment 
       { oldReady = Just (ready old)
       , expected = either (const Nothing) (Just . fst3) (onefirst old)
+      , diffPair = do
+           oldC     <- fromContext (stateContext old)
+           (d1, d2) <- difference ex False oldC a 
+           return (prettyPrinter ex d1, prettyPrinter ex d2)
       }
 
 ------------------------------------------------------------
 -- Helper functions
 
 useToRewrite :: Script -> Rule (Context a) -> State a -> a -> Maybe String
-useToRewrite script r old = rewriteIntoText True txt old
- where
-   txt = "Use " ++ newRuleText script r ++ " to rewrite "
-
-youRewroteInto :: State a -> a -> Maybe String
-youRewroteInto = rewriteIntoText False "You rewrote "
-
-rewriteIntoText :: Bool -> String -> State a -> a -> Maybe String
-rewriteIntoText mode txt old a = do
+useToRewrite script r old a = do
    let ex = exercise (exercisePkg old)
    p <- fromContext (stateContext old)
-   (p1, a1) <- difference ex mode p a 
-   return $ txt ++ prettyPrinter ex p1 
+   (p1, a1) <- difference ex True p a 
+   return $ "Use " ++ newRuleText script r ++ " to rewrite " 
+         ++ prettyPrinter ex p1 
          ++ " into " ++ prettyPrinter ex a1 ++ ". "
 
 exerciseScript :: State a -> Either String Script

@@ -23,10 +23,10 @@ script :: Script
 script = buggyTable ++ ruleTable ++
    [ FeedbackSame (Text "You have submitted a similar term. \ 
         \Maybe you inserted or removed parentheses (the tool supports associativity)?")
-   , FeedbackNotEq (incorrect <> backAndHint)
-   , FeedbackUnknown (feedbackMultipleSteps <> backAndHint)
+   , FeedbackNotEq (youRewroteInto <> incorrect <> backAndHint)
+   , FeedbackUnknown (youRewroteInto <> feedbackMultipleSteps <> backAndHint)
    , FeedbackOk (okay <> appliedRule)
-   , FeedbackBuggy (incorrect <> AttrRecognized <> backAndHint)
+   , FeedbackBuggy (youRewroteInto <> incorrect <> AttrRecognized <> backAndHint)
    , FeedbackDetour detourText
    ]
 
@@ -117,6 +117,11 @@ ruleTable =
 
 -------------------------------------------------------------------------
 -- General text
+  
+youRewroteInto :: Text
+youRewroteInto =
+   Text "You rewrote " <> AttrDiffBefore
+   <> Text " into " <> AttrDiffAfter <> Text ". "
   
 incorrect :: Text
 incorrect = Text "This is incorrect. " 

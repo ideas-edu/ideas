@@ -19,6 +19,7 @@ import Common.Utils (ShowString(..))
 import Control.Monad.Error (liftM2)
 import Text.Parsing
 import Control.Arrow
+import Data.List
 import Domain.Logic.Formula
    
 logicScanner :: Scanner
@@ -47,7 +48,7 @@ operatorTable =
 -- | Parser for logic formulas that respects all associativity and priority laws 
 -- | of the constructors
 parseLogic :: String -> Either String SLogic
-parseLogic = analyseAndParse pLogic . scanWith logicScanner
+parseLogic = left niceMessage . analyseAndParse pLogic . scanWith logicScanner
  where
    pLogic = pOperators operatorTable (basicWithPos pLogic)
    
@@ -57,14 +58,14 @@ parseLogic = analyseAndParse pLogic . scanWith logicScanner
 -- | parentheses are permitted
 parseLogicPars :: String -> Either String SLogic
 parseLogicPars s
-   = either Left suspiciousVariable 
+   = either (Left . niceMessage) suspiciousVariable 
    $ left (ambiguousOperators parseLogic s)
    $ analyseAndParse (pLogicGen asciiTuple)
    $ scanWith logicScanner s
 
 parseLogicUnicodePars :: String -> Either String SLogic
 parseLogicUnicodePars s 
-   = either Left suspiciousVariable 
+   = either (Left . niceMessage) suspiciousVariable 
    $ left (ambiguousOperators (parseLogic . concatMap f) s)
    $ analyseAndParse (pLogicGen unicodeTuple)
    $ scanWith logicUnicodeScanner s
@@ -112,6 +113,12 @@ parseLogicProof s
 
 -----------------------------------------------------------
 --- Helper-functions for syntax warnings
+
+niceMessage :: String -> String
+niceMessage msg
+   | "(" `isPrefixOf` msg            = "Syntax error at " ++ msg
+   | "Syntax error" `isPrefixOf` msg = msg
+   | otherwise                       = "Syntax error: " ++ msg
 
 -- analyze parentheses
 analyseAndParse :: TokenParser a -> [Token] -> Either String a

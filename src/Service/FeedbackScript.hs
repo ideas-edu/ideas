@@ -28,6 +28,7 @@ data Environment a = Env
    { oldReady   :: Maybe Bool
    , recognized :: Maybe (Rule a)
    , expected   :: Maybe (Rule a)
+   , diffPair   :: Maybe (String, String)
    }
    
 emptyEnvironment :: Environment a
@@ -35,6 +36,7 @@ emptyEnvironment = Env
    { oldReady   = Nothing
    , recognized = Nothing
    , expected   = Nothing
+   , diffPair   = Nothing
    }
 
 data Decl = RuleText Id Text -- text for a rule (buggy, or non-buggy)
@@ -53,6 +55,8 @@ data Text = Empty
           | CondRecognizedIs Id Text Text 
           | AttrRecognized
           | AttrExpected
+          | AttrDiffBefore
+          | AttrDiffAfter
           
 instance Monoid Text where
    mempty  = Empty
@@ -76,6 +80,8 @@ toStringM env script = rec
    rec (CondRecognizedIs x a b) = rec (if maybe False ((==x) . getId) (recognized env) then a else b) 
    rec AttrRecognized           = fmap (newRuleText script) (recognized env)
    rec AttrExpected             = fmap (newRuleText script) (expected env)
+   rec AttrDiffBefore           = fmap fst (diffPair env)
+   rec AttrDiffAfter            = fmap snd (diffPair env)
    
 newRuleText :: HasId r => Script -> r -> String
 newRuleText script r =

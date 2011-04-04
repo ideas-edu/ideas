@@ -16,13 +16,13 @@ module Service.FeedbackScript
    ) where
 
 import Common.Id
+import Common.Utils (safeHead)
 import Control.Monad
 import Common.Algebra.Group
 import Common.Transformation
 import Data.Maybe
 
 type Script = [Decl]
-type Annotation = String
 
 data Environment a = Env
    { oldReady   :: Maybe Bool
@@ -39,31 +39,26 @@ emptyEnvironment = Env
    , diffPair   = Nothing
    }
 
-data Decl = RuleText Id Text -- text for a rule (buggy, or non-buggy)
-          | FeedbackSame Text
-          | FeedbackNotEq Text
-          | FeedbackUnknown Text
-          | FeedbackOk Text
-          | FeedbackBuggy Text
-          | FeedbackDetour Text
-
+data Decl = RuleText   Id Text -- text for a rule (buggy, or non-buggy)
+          | StringDecl Id Text
+          | Feedback   Id Text
+   deriving Show
+   
 data Text = Empty
           | Text :+: Text
           | Text String  
-          | CondOldReady Text Text
-          | CondHasExpected Text Text
-          | CondRecognizedIs Id Text Text 
-          | AttrRecognized
-          | AttrExpected
-          | AttrDiffBefore
-          | AttrDiffAfter
+          | Conditional Condition Text Text
+          | AttrRef Id
+   deriving Show
           
+data Condition = OldReady
+               | HasExpected
+               | RecognizedIs Id
+   deriving Show
+
 instance Monoid Text where
    mempty  = Empty
    mappend = (:+:)
-
-ifNotOldReady :: Text -> Text
-ifNotOldReady a = CondOldReady Empty a
 
 toString :: Environment a -> Script -> Text -> String
 toString env script = fromMaybe "<<undefined>>" . toStringM env script
@@ -74,14 +69,21 @@ toStringM env script = rec
    rec Empty                    = return []
    rec (a :+: b)                = liftM2 (++) (rec a) (rec b)
    rec (Text s)                 = return s
-   rec (CondOldReady a b)       = oldReady env >>= \x -> 
-                                  if x then rec a else rec b
-   rec (CondHasExpected a b)    = rec (if isJust (expected env) then a else b)
-   rec (CondRecognizedIs x a b) = rec (if maybe False ((==x) . getId) (recognized env) then a else b) 
-   rec AttrRecognized           = fmap (newRuleText script) (recognized env)
-   rec AttrExpected             = fmap (newRuleText script) (expected env)
-   rec AttrDiffBefore           = fmap fst (diffPair env)
-   rec AttrDiffAfter            = fmap snd (diffPair env)
+   rec (Conditional c t e)      = rec (if evalBool c then t else e)
+   rec (AttrRef a)              
+      | a == newId "expected"   = fmap (newRuleText script) (expected env)
+      | a == newId "recognized" = fmap (newRuleText script) (recognized env)
+      | a == newId "diffbefore" = fmap fst (diffPair env)
+      | a == newId "diffafter"  = fmap snd (diffPair env)
+      | otherwise               = safeHead [ s
+                                           | StringDecl b t <- script
+                                           , a==b 
+                                           , Just s <- [rec t]
+                                           ]
+                                           
+   evalBool OldReady         = fromMaybe False (oldReady env)
+   evalBool HasExpected      = isJust (expected env)
+   evalBool (RecognizedIs a) = maybe False ((==a) . getId) (recognized env)
    
 newRuleText :: HasId r => Script -> r -> String
 newRuleText script r =
@@ -89,38 +91,17 @@ newRuleText script r =
                 , Just s <- [toStringM emptyEnvironment script t] ]
    in head $ xs ++ [showId r]
 
-feedbackSame :: Environment a -> Script -> String
-feedbackSame env script = 
-   case [ t | FeedbackSame t  <- script ] of
+feedbackFor :: Id -> Environment a -> Script -> String
+feedbackFor a env script = 
+   case [ t | Feedback b t  <- script, a==b ] of
       t:_ -> toString env script t
       []  -> ""
 
-feedbackNotEq :: Environment a -> Script -> String
-feedbackNotEq env script = 
-   case [ t | FeedbackNotEq t  <- script ] of
-      t:_ -> toString env script t
-      []  -> ""
-
-feedbackUnknown :: Environment a -> Script -> String
-feedbackUnknown env script = 
-   case [ t | FeedbackUnknown t  <- script ] of
-      t:_ -> toString env script t
-      []  -> ""
-      
-feedbackOk :: Environment a -> Script -> String
-feedbackOk env script = 
-   case [ t | FeedbackOk t  <- script ] of
-      t:_ -> toString env script t
-      []  -> ""
-      
-feedbackBuggy :: Environment a -> Script -> String
-feedbackBuggy env script = 
-   case [ t | FeedbackBuggy t  <- script ] of
-      t:_ -> toString env script t
-      []  -> ""
-      
-feedbackDetour :: Environment a -> Script -> String
-feedbackDetour env script = 
-   case [ t | FeedbackDetour t  <- script ] of
-      t:_ -> toString env script t
-      []  -> ""
+feedbackSame, feedbackNotEq, feedbackUnknown, feedbackOk,
+   feedbackBuggy, feedbackDetour :: Environment a -> Script -> String
+feedbackSame    = feedbackFor $ newId "same"
+feedbackNotEq   = feedbackFor $ newId "noteq"
+feedbackUnknown = feedbackFor $ newId "unknown"
+feedbackOk      = feedbackFor $ newId "ok"
+feedbackBuggy   = feedbackFor $ newId "buggy"
+feedbackDetour  = feedbackFor $ newId "detour"

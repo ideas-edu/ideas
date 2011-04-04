@@ -42,29 +42,40 @@ decls = many decl
 
 decl :: CharParser st Decl
 decl = do
+   lexString "text"
    a <- identifier
-   s <- (singleLineText <|> multiLineText)
-   return (RuleText a (Text s))
+   t <- (singleLineText <|> multiLineText)
+   return (RuleText a t)
+ <|> do
+   lexString "string"
+   a <- identifier
+   t <- (singleLineText <|> multiLineText)
+   return (StringDecl a t)
+ <|> do
+   lexString "feedback"
+   a <- identifier
+   t <- (singleLineText <|> multiLineText)
+   return (Feedback a t)
 
-singleLineText :: CharParser st String
+singleLineText :: CharParser st Text
 singleLineText = do 
    lexChar '='
    xs <- manyTill textItem (lexeme (skip newline <|> comment))
-   return (concat xs)
+   return (mconcat xs)
 
-multiLineText :: CharParser st String
+multiLineText :: CharParser st Text
 multiLineText = do 
    lexChar '{'
    xs <- manyTill textItem (lexChar '}')
-   return (concat xs)
+   return (mconcat xs)
 
-textItem :: CharParser st String
-textItem =  single (noneOf "@#{}")
-        <|> try (single escaped)
-        <|> annotation
-        <|> (comment >> return [])
+textItem :: CharParser st Text
+textItem = single (noneOf "@#{}")
+       <|> try (single escaped)
+       <|> attribute
+       <|> (comment >> return mempty)
  where
-   single = liftM (\c -> [c])
+   single = liftM (\c -> Text [c])
 
 -- Lexical units
 identifier :: CharParser st Id
@@ -76,11 +87,11 @@ identifier = lexeme $ do
    idPart   = many1 idLetter
    idLetter = alphaNum <|> oneOf "-_"
 
-annotation :: CharParser st Annotation
-annotation = do
+attribute :: CharParser st Text
+attribute = do
    skip (char '@')
-   a <- identifier
-   return ('@':show a)
+   s <- many1 (alphaNum <|> oneOf "-_") -- identifier?
+   return (AttrRef (newId s))
 
 escaped :: CharParser st Char
 escaped = do
@@ -89,6 +100,9 @@ escaped = do
 
 lexChar :: Char -> CharParser s ()
 lexChar c = skip (lexeme (char c))
+
+lexString :: String -> CharParser s ()
+lexString s = skip (lexeme (string s))
 
 comment :: CharParser st ()
 comment = skip (char '#' >> manyTill (noneOf "\n") (skip newline <|> eof))

@@ -86,7 +86,7 @@ expEqStrategy = cleanUpStrategy cleanup strat
 
 logEqStrategy :: LabeledStrategy (Context (OrList (Relation Expr)))
 logEqStrategy = label "Logarithmic equation"
-              $  use logarithm
+              $  try (use logarithm)
              <*> try (use PR.flipEquation)
              <*> repeat (somewhere $  use nthRoot 
                                   <|> use calcPower 

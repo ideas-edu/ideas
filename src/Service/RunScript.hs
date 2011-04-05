@@ -21,7 +21,7 @@ import Service.ScriptParser
 import Service.BasicServices (ready)
 
 feedbacktext :: FilePath -> State a -> a -> IO (Bool, String, State a)
-feedbacktext file oldState a = do
+feedbacktext file oldState a = undefined {- do
    script <- parseScript file
    let find x   = toString env script (x ? script)
        env = emptyEnvironment 
@@ -39,4 +39,4 @@ feedbacktext file oldState a = do
 (?) :: HasId a => a -> Script -> Text
 a ? xs = case [ t | RuleText b t <- xs, getId a==b ] of
             s:_ -> s
-            []  -> Text ("No feedback for " ++ showId a)
+            []  -> Text ("No feedback for " ++ showId a) -}

@@ -14,13 +14,12 @@
 -----------------------------------------------------------------------------
 module Domain.Logic.FeedbackText (script) where
 
-
 import Service.FeedbackScript
 import Service.ScriptParser
 import System.IO.Unsafe
 
 scriptIO :: IO Script
-scriptIO = parseScript "scripts/logic.txt" `catch` const (return [])
+scriptIO = parseScript "scripts/logic.txt" -- `catch` const (return [])
 
 script :: Script
 script =

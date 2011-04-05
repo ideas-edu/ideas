@@ -10,7 +10,7 @@
 --
 -----------------------------------------------------------------------------
 module Service.FeedbackText 
-   ( onefirsttext, submittext, derivationtext, submitHelper
+   ( onefirsttext, submittext, derivationtext, submitHelper, newRuleText
    ) where
 
 import Common.Library hiding (derivation)
@@ -20,6 +20,10 @@ import Service.State
 import Service.Diagnose
 import Service.BasicServices
 import Service.FeedbackScript
+
+newRuleText :: Script -> Rule a -> String -- TODO: remove me
+newRuleText script r = 
+   toString emptyEnvironment script [TextRef (getId r)]
 
 ------------------------------------------------------------
 -- Services

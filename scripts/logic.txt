@@ -1,9 +1,14 @@
-string okay      = Well done! 
+namespace logic.propositional
+
+string okay      = Well done!
 string incorrect = This is incorrect. 
 string multiple  = You have combined multiple steps (or made a mistake). 
 string finished  = Are you aware that you already reached disjunctive normal form?
 
-string commText = You have applied one of the commutativity rules correctly. This step is not mandatory, but sometimes helps to simplify the formula.
+string commText = { 
+   You have applied one of the commutativity rules correctly. 
+   This step is not mandatory, but sometimes helps to simplify the formula.}
+
 string youRewroteInto = You rewrote @diffbefore into @diffafter. 
 string appliedRule = You have applied @recognized correctly.
 string pressBack = Press the Back button and try again.
@@ -11,86 +16,87 @@ string pressBack = Press the Back button and try again.
 string suggested | @hasexpected = However, the standard strategy suggests to use @expected.
 string suggested = However, the standard strategy suggests a different step.
 
-string askForHint | @oldready {}
-string askForHint { You may ask for a hint.}
+string askForHint | @oldready = {} # empty text
+string askForHint = You may ask for a hint.
 
-string detourText | @oldready = @appliedRule @finished
-string detourText | recognize logic.propositional.commor  = @commText
-string detourText | recognize logic.propositional.command = @commText
-string detourText = @appliedRule This is correct. @suggested
+feedback same    = {You have submitted a similar term. Maybe you inserted 
+   or removed parentheses (the tool supports associativity)?}
+feedback ok      = @okay @appliedRule
+feedback noteq   = @youRewroteInto @incorrect @pressBack @askForHint
+feedback unknown = @youRewroteInto @multiple @pressBack @askForHint
+feedback buggy   = @youRewroteInto @incorrect @recognized @pressBack @askForHint
 
-feedback same    = You have submitted a similar term. Maybe you inserted or removed parentheses (the tool supports associativity)?
-feedback ok      = @okay@appliedRule
-feedback noteq   = @youRewroteInto@incorrect@pressBack@askForHint
-feedback unknown = @youRewroteInto@multiple@pressBack@askForHint
-feedback buggy   = @youRewroteInto@incorrect@recognized@pressBack@askForHint
-feedback detour  = @detourText
+feedback detour | @oldready = @appliedRule @finished
+feedback detour | recognize logic.propositional.commor  = @commText
+feedback detour | recognize logic.propositional.command = @commText
+feedback detour = @appliedRule This is correct. @suggested
+
 
 #-------------------------------------------------
 # Rewrite rules rules
 # text declarations define the textual appearance of identifiers 
 
-text logic.propositional.falsezeroor = one of the False/True rules
-text logic.propositional.truezeroor = one of the False/True rules
-text logic.propositional.falsezeroand = one of the False/True rules
-text logic.propositional.truezeroand = one of the False/True rules
-text logic.propositional.nottrue = one of the False/True rules
-text logic.propositional.notfalse = one of the False/True rules
-text logic.propositional.complor = a complement rule
-text logic.propositional.compland = a complement rule
-text logic.propositional.notnot = double negation
-text logic.propositional.defimpl = implication elimination
-text logic.propositional.defequiv = equivalence elimination
-text logic.propositional.commor = commutativity
-text logic.propositional.command = commutativity
-text logic.propositional.assocor = associativity
-text logic.propositional.assocand = associativity
-text logic.propositional.genoroverand = distribution of or over and
-text logic.propositional.oroverand = distribution of or over and
-text logic.propositional.genandoveror = distribution of and over or
-text logic.propositional.andoveror = distribution of and over or
-text logic.propositional.idempor = idempotency
-text logic.propositional.idempand = idempotency
-text logic.propositional.absorpor = absorption
-text logic.propositional.absorpand = absorption
-text logic.propositional.demorganor = De Morgan
-text logic.propositional.demorganand = De Morgan
-text logic.propositional.gendemorganor = De Morgan
-text logic.propositional.gendemorganand = De Morgan
-text logic.propositional.invdemorganor = De Morgan
-text logic.propositional.invdemorganand = De Morgan
-text logic.propositional.invandoveror = distributivity
-text logic.propositional.invoroverand = distributivity
+text falsezeroor = one of the False/True rules
+text truezeroor = one of the False/True rules
+text falsezeroand = one of the False/True rules
+text truezeroand = one of the False/True rules
+text nottrue = one of the False/True rules
+text notfalse = one of the False/True rules
+text complor = a complement rule
+text compland = a complement rule
+text notnot = double negation
+text defimpl = implication elimination
+text defequiv = equivalence elimination
+text commor = commutativity
+text command = commutativity
+text assocor = associativity
+text assocand = associativity
+text genoroverand = distribution of or over and
+text oroverand = distribution of or over and
+text genandoveror = distribution of and over or
+text andoveror = distribution of and over or
+text idempor = idempotency
+text idempand = idempotency
+text absorpor = absorption
+text absorpand = absorption
+text demorganor = De Morgan
+text demorganand = De Morgan
+text gendemorganor = De Morgan
+text gendemorganand = De Morgan
+text invdemorganor = De Morgan
+text invdemorganand = De Morgan
+text invandoveror = distributivity
+text invoroverand = distributivity
 
 #-------------------------------------------------
 # Buggy rules
 
-text logic.propositional.buggy.commimp = Did you think that implication is commutative? This is not the case. 
-text logic.propositional.buggy.assimp = Did you think that implication is associative? This is not the case. 
-text logic.propositional.buggy.implelim2 = Make sure that you use the rule for implication elimanation, you seemed to use equivalence elimination 
-text logic.propositional.buggy.equivelim3 = Make sure that you use the rule for equivalence elimanation, you seemed to use implication elimination 
-text logic.propositional.buggy.idemimp = Did you think that implication is idempotent? This is not the case. 
-text logic.propositional.buggy.idemequi = Did you think that equivalence is idempotent? This is not the case. 
-text logic.propositional.buggy.andsame = Did you think that phi AND phi is equivalent to True? This is not the case. Idempotency of AND means that phi AND phi is equivalent to phi. 
-text logic.propositional.buggy.orsame = Did you think that phi OR phi is equivalent to True? This is not the case. Idempotency of OR means that phi OR phi is equivalent to phi. 
-text logic.propositional.buggy.andcompl = Be careful in the application of the the complement-rules 
-text logic.propositional.buggy.orcompl = Be careful in the application of the the complement-rules 
-text logic.propositional.buggy.trueprop = Be careful in the application of the the True-False rules 
-text logic.propositional.buggy.falseprop = Be careful in the application of the the True-False rules 
-text logic.propositional.buggy.equivelim1 = Be careful with the elimination of an equivalence; take care of the negations. 
-text logic.propositional.buggy.equivelim2 = Be careful with the elimination of an equivalence; make sure that the disjunctions and the conjunctions are at the right place. 
-text logic.propositional.buggy.implelim = Be careful with the elimination of an implication; make sure the negation is at the right place. 
-text logic.propositional.buggy.implelim1 = Did you try to eliminate an implication? In that case you used an AND instead of an OR 
-text logic.propositional.buggy.demorgan1 = Did you try to apply DeMorgan? Be careful with the negations. 
-text logic.propositional.buggy.demorgan2 = Did you try to apply DeMorgan? Make sure that you remove the outer negation when applying this rule 
-text logic.propositional.buggy.demorgan3 = Did you try to apply DeMorgan? Make sure that you replace AND by OR. 
-text logic.propositional.buggy.demorgan4 = Did you try to apply DeMorgan? Make sure that you replace OR by AND. 
-text logic.propositional.buggy.demorgan5 = Did you try to apply DeMorgan? Take care of the  scope of the negations. 
-text logic.propositional.buggy.notoverimpl = Did you think that you can distribute a negation over an implication? This is not the case. 
-text logic.propositional.buggy.parenth1 = Take care of the negations and the parentheses. 
-text logic.propositional.buggy.parenth2 = Take care of the outer negation when you eliminate an equivalence. 
-text logic.propositional.buggy.parenth3 = Did you try to apply double negation? At this place this is not allowed, because of the parenthesis between the negations. 
-text logic.propositional.buggy.assoc = Did you change the parentheses? This is not allowed in a subformula consisting of a disjunction and a conjunction. 
-text logic.propositional.buggy.absor = Did you try to apply absorption? You cant't apply this rule at this place since the resulting sub formula is not a subformula of the bigger term. 
-text logic.propositional.buggy.distr = Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. 
-text logic.propositional.buggy.distrnot = Did you try to apply distribution? Don't forget the negations! 
+text buggy.commimp = Did you think that implication is commutative? This is not the case. 
+text buggy.assimp = Did you think that implication is associative? This is not the case. 
+text buggy.implelim2 = Make sure that you use the rule for implication elimanation, you seemed to use equivalence elimination 
+text buggy.equivelim3 = Make sure that you use the rule for equivalence elimanation, you seemed to use implication elimination 
+text buggy.idemimp = Did you think that implication is idempotent? This is not the case. 
+text buggy.idemequi = Did you think that equivalence is idempotent? This is not the case. 
+text buggy.andsame = Did you think that phi AND phi is equivalent to True? This is not the case. Idempotency of AND means that phi AND phi is equivalent to phi. 
+text buggy.orsame = Did you think that phi OR phi is equivalent to True? This is not the case. Idempotency of OR means that phi OR phi is equivalent to phi. 
+text buggy.andcompl = Be careful in the application of the the complement-rules 
+text buggy.orcompl = Be careful in the application of the the complement-rules 
+text buggy.trueprop = Be careful in the application of the the True-False rules 
+text buggy.falseprop = Be careful in the application of the the True-False rules 
+text buggy.equivelim1 = Be careful with the elimination of an equivalence; take care of the negations. 
+text buggy.equivelim2 = Be careful with the elimination of an equivalence; make sure that the disjunctions and the conjunctions are at the right place. 
+text buggy.implelim = Be careful with the elimination of an implication; make sure the negation is at the right place. 
+text buggy.implelim1 = Did you try to eliminate an implication? In that case you used an AND instead of an OR 
+text buggy.demorgan1 = Did you try to apply DeMorgan? Be careful with the negations. 
+text buggy.demorgan2 = Did you try to apply DeMorgan? Make sure that you remove the outer negation when applying this rule 
+text buggy.demorgan3 = Did you try to apply DeMorgan? Make sure that you replace AND by OR. 
+text buggy.demorgan4 = Did you try to apply DeMorgan? Make sure that you replace OR by AND. 
+text buggy.demorgan5 = Did you try to apply DeMorgan? Take care of the  scope of the negations. 
+text buggy.notoverimpl = Did you think that you can distribute a negation over an implication? This is not the case. 
+text buggy.parenth1 = Take care of the negations and the parentheses. 
+text buggy.parenth2 = Take care of the outer negation when you eliminate an equivalence. 
+text buggy.parenth3 = Did you try to apply double negation? At this place this is not allowed, because of the parenthesis between the negations. 
+text buggy.assoc = Did you change the parentheses? This is not allowed in a subformula consisting of a disjunction and a conjunction. 
+text buggy.absor = Did you try to apply absorption? You cant't apply this rule at this place since the resulting sub formula is not a subformula of the bigger term. 
+text buggy.distr = Did you try to apply distribution? Take care of the place of the disjunctions and the conjunctions. 
+text buggy.distrnot = Did you try to apply distribution? Don't forget the negations! 

@@ -11,16 +11,15 @@
 -- Abstract syntax for feedback scripts
 --
 -----------------------------------------------------------------------------
-module Service.FeedbackScript 
-   ( module Service.FeedbackScript, (<>)
-   ) where
+module Service.FeedbackScript where
 
 import Common.Id
 import Common.Utils (safeHead)
 import Control.Monad
-import Common.Algebra.Group
 import Common.Transformation
+import Data.Char
 import Data.Maybe
+import Data.Monoid
 
 type Script = [Decl]
 
@@ -39,69 +38,104 @@ emptyEnvironment = Env
    , diffPair   = Nothing
    }
 
-data Decl = RuleText   Id Text -- text for a rule (buggy, or non-buggy)
-          | StringDecl (Maybe Condition) Id Text
-          | Feedback   Id Text
-   deriving Show
-   
-data Text = Empty
-          | Text :+: Text
-          | Text String  
-          | AttrRef Id
-   deriving Show
+data Decl = NameSpace Id
+          | Decl DeclType Id (Maybe Condition) Text
+
+data DeclType = RuleText | StringDecl | Feedback
+   deriving Eq
+
+type Text = [TextItem]
+        
+data TextItem = TextString String  
+              | TextRef Id
           
 data Condition = RecognizedIs Id
                | CondRef Id
-   deriving Show
 
-instance Monoid Text where
-   mempty  = Empty
-   mappend = (:+:)
+showScript :: Script -> String
+showScript = unlines . map show
+
+showText :: Text -> String
+showText = concatMap show
+
+instance Show Decl where 
+   show (NameSpace a)   = "namespace " ++ show a
+   show (Decl dt a c t) = show dt ++ " " ++ show a ++ maybe "" (\x -> " | "  ++ show x) c ++ " = " ++ showText t
+
+instance Show DeclType where
+   show RuleText   = "text"
+   show StringDecl = "string"
+   show Feedback   = "feedback"
+
+instance Show Condition where
+   show (RecognizedIs a) = "recognize " ++ show a
+   show (CondRef a) = "@" ++ show a 
+
+instance Show TextItem where
+   show (TextString s) = s
+   show (TextRef a)    = "@" ++ show a
 
 toString :: Environment a -> Script -> Text -> String
 toString env script = fromMaybe "<<undefined>>" . toStringM env script
 
 toStringM :: Environment a -> Script -> Text -> Maybe String
-toStringM env script = rec
+toStringM env script = fmap normalize . recs
  where
-   rec Empty                    = return []
-   rec (a :+: b)                = liftM2 (++) (rec a) (rec b)
-   rec (Text s)                 = return s
-   rec (AttrRef a)              
-      | a == newId "expected"   = fmap (newRuleText script) (expected env)
-      | a == newId "recognized" = fmap (newRuleText script) (recognized env)
+   recs = liftM concat . mapM rec
+   
+   rec (TextString s)           = return s
+   rec (TextRef a)              
+      | a == newId "expected"   = fmap findIdRef (expected env)
+      | a == newId "recognized" = fmap findIdRef (recognized env)
       | a == newId "diffbefore" = fmap fst (diffPair env)
       | a == newId "diffafter"  = fmap snd (diffPair env)
-      | otherwise               = safeHead [ s
-                                           | StringDecl c b t <- script
-                                           , a == b 
-                                           , maybe True evalBool c
-                                           , Just s <- [rec t]
-                                           ]
+      | a `elem` feedbackIds    = findRef (==a)
+      | length (qualifiers a)>1 = return (findIdRef a) -- !!! QUICK FIX (for onefirsttext service)
+      | otherwise               = findRef (==a)
 
    evalBool (RecognizedIs a) = maybe False ((==a) . getId) (recognized env)
    evalBool (CondRef a)
       | a == newId "oldready"    = fromMaybe False (oldReady env)
       | a == newId "hasexpected" = isJust (expected env)
       | otherwise                = False
-   
-newRuleText :: HasId r => Script -> r -> String
-newRuleText script r =
-   let xs = [ s | RuleText a t <- script, a == getId r
-                , Just s <- [toStringM emptyEnvironment script t] ]
-   in head $ xs ++ [showId r]
 
-feedbackFor :: Id -> Environment a -> Script -> String
-feedbackFor a env script = 
-   case [ t | Feedback b t  <- script, a==b ] of
-      t:_ -> toString env script t
-      []  -> ""
+   namespaces = mempty : [ a | NameSpace a <- script ]
+
+   findIdRef :: HasId b => b -> String
+   findIdRef x = 
+      let a = getId x
+          p z = any (\n -> n#z == a) namespaces
+      in fromMaybe (show a) (findRef p)
+        
+   findRef p = safeHead $ catMaybes
+      [ recs t
+      | Decl _ a cond t <- script
+      , p a 
+      , maybe True evalBool cond
+      ]
+
+normalize :: String -> String
+normalize = interpunction . unwords . words
+ where
+   special = (`elem` ".,:;?!")
+   interpunction xs =
+      case xs of
+         a:b:ys | special a && isAlpha b -> a : ' ' : b : interpunction ys
+         y:ys -> y:interpunction ys
+         []   -> []
+   
 
 feedbackSame, feedbackNotEq, feedbackUnknown, feedbackOk,
    feedbackBuggy, feedbackDetour :: Environment a -> Script -> String
-feedbackSame    = feedbackFor $ newId "same"
-feedbackNotEq   = feedbackFor $ newId "noteq"
-feedbackUnknown = feedbackFor $ newId "unknown"
-feedbackOk      = feedbackFor $ newId "ok"
-feedbackBuggy   = feedbackFor $ newId "buggy"
-feedbackDetour  = feedbackFor $ newId "detour"
+feedbackSame    = make "same"
+feedbackNotEq   = make "noteq"
+feedbackUnknown = make "unknown"
+feedbackOk      = make "ok"
+feedbackBuggy   = make "buggy"
+feedbackDetour  = make "detour"
+
+make :: String -> Environment a -> Script -> String
+make s env script = toString env script [TextRef (newId s)]
+
+feedbackIds :: [Id]
+feedbackIds = map newId ["same", "noteq", "unknown", "ok", "buggy", "detour"]

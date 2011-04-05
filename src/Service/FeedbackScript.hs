@@ -40,20 +40,18 @@ emptyEnvironment = Env
    }
 
 data Decl = RuleText   Id Text -- text for a rule (buggy, or non-buggy)
-          | StringDecl Id Text
+          | StringDecl (Maybe Condition) Id Text
           | Feedback   Id Text
    deriving Show
    
 data Text = Empty
           | Text :+: Text
           | Text String  
-          | Conditional Condition Text Text
           | AttrRef Id
    deriving Show
           
-data Condition = OldReady
-               | HasExpected
-               | RecognizedIs Id
+data Condition = RecognizedIs Id
+               | CondRef Id
    deriving Show
 
 instance Monoid Text where
@@ -69,21 +67,23 @@ toStringM env script = rec
    rec Empty                    = return []
    rec (a :+: b)                = liftM2 (++) (rec a) (rec b)
    rec (Text s)                 = return s
-   rec (Conditional c t e)      = rec (if evalBool c then t else e)
    rec (AttrRef a)              
       | a == newId "expected"   = fmap (newRuleText script) (expected env)
       | a == newId "recognized" = fmap (newRuleText script) (recognized env)
       | a == newId "diffbefore" = fmap fst (diffPair env)
       | a == newId "diffafter"  = fmap snd (diffPair env)
       | otherwise               = safeHead [ s
-                                           | StringDecl b t <- script
-                                           , a==b 
+                                           | StringDecl c b t <- script
+                                           , a == b 
+                                           , maybe True evalBool c
                                            , Just s <- [rec t]
                                            ]
-                                           
-   evalBool OldReady         = fromMaybe False (oldReady env)
-   evalBool HasExpected      = isJust (expected env)
+
    evalBool (RecognizedIs a) = maybe False ((==a) . getId) (recognized env)
+   evalBool (CondRef a)
+      | a == newId "oldready"    = fromMaybe False (oldReady env)
+      | a == newId "hasexpected" = isJust (expected env)
+      | otherwise                = False
    
 newRuleText :: HasId r => Script -> r -> String
 newRuleText script r =

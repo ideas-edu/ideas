@@ -49,13 +49,23 @@ decl = do
  <|> do
    lexString "string"
    a <- identifier
+   c <- optionMaybe $ do
+      lexChar '|'
+      condition
    t <- (singleLineText <|> multiLineText)
-   return (StringDecl a t)
+   return (StringDecl c a t)
  <|> do
    lexString "feedback"
    a <- identifier
    t <- (singleLineText <|> multiLineText)
    return (Feedback a t)
+
+condition :: CharParser st Condition
+condition =
+   lexeme (liftM CondRef attribute)
+ <|> do
+   lexString "recognize"
+   lexeme (liftM RecognizedIs identifier)
 
 singleLineText :: CharParser st Text
 singleLineText = do 
@@ -65,14 +75,14 @@ singleLineText = do
 
 multiLineText :: CharParser st Text
 multiLineText = do 
-   lexChar '{'
+   skip (char '{')-- lexChar '{'
    xs <- manyTill textItem (lexChar '}')
    return (mconcat xs)
 
 textItem :: CharParser st Text
 textItem = single (noneOf "@#{}")
        <|> try (single escaped)
-       <|> attribute
+       <|> liftM AttrRef attribute
        <|> (comment >> return mempty)
  where
    single = liftM (\c -> Text [c])
@@ -87,11 +97,11 @@ identifier = lexeme $ do
    idPart   = many1 idLetter
    idLetter = alphaNum <|> oneOf "-_"
 
-attribute :: CharParser st Text
+attribute :: CharParser st Id
 attribute = do
    skip (char '@')
    s <- many1 (alphaNum <|> oneOf "-_") -- identifier?
-   return (AttrRef (newId s))
+   return (newId s)
 
 escaped :: CharParser st Char
 escaped = do

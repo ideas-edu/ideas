@@ -11,13 +11,13 @@
 -- Simple parser for feedback scripts
 --
 -----------------------------------------------------------------------------
-module Service.ScriptParser (parseScript) where
+module Service.FeedbackScript.Parser (parseScript, Script) where
 
 import Common.Id
 import Control.Monad.Error
 import Data.Char
 import Data.Monoid
-import Service.FeedbackScript
+import Service.FeedbackScript.Syntax
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec
@@ -27,7 +27,7 @@ parseScript :: FilePath -> IO Script
 parseScript file = do
    result <- parseFromFile script file
    case result of
-      Left e   -> print e >> return []
+      Left e   -> print e >> return mempty
       Right xs -> return xs
 
 script :: CharParser st Script
@@ -35,9 +35,9 @@ script = do
    lexeme (return ())
    xs <- decls
    eof
-   return xs
+   return (makeScript xs)
 
-decls :: CharParser st Script
+decls :: CharParser st [Decl]
 decls = many $ do 
    pos <- getPosition
    guard (sourceColumn pos == 1)

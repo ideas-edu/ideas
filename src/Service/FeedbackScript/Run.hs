@@ -8,10 +8,12 @@
 -- Stability   :  provisional
 -- Portability :  portable (depends on ghc)
 --
--- Abstract syntax for feedback scripts
+-- Run a feedbackscript
 --
 -----------------------------------------------------------------------------
-module Service.FeedbackScript where
+module Service.FeedbackScript.Run 
+   ( module Service.FeedbackScript.Run, Script
+   ) where
 
 import Common.Id
 import Common.Utils (safeHead)
@@ -20,8 +22,7 @@ import Common.Transformation
 import Data.Char
 import Data.Maybe
 import Data.Monoid
-
-type Script = [Decl]
+import Service.FeedbackScript.Syntax
 
 data Environment a = Env
    { oldReady   :: Maybe Bool
@@ -37,43 +38,6 @@ emptyEnvironment = Env
    , expected   = Nothing
    , diffPair   = Nothing
    }
-
-data Decl = NameSpace Id
-          | Decl DeclType Id (Maybe Condition) Text
-
-data DeclType = RuleText | StringDecl | Feedback
-   deriving Eq
-
-type Text = [TextItem]
-        
-data TextItem = TextString String  
-              | TextRef Id
-          
-data Condition = RecognizedIs Id
-               | CondRef Id
-
-showScript :: Script -> String
-showScript = unlines . map show
-
-showText :: Text -> String
-showText = concatMap show
-
-instance Show Decl where 
-   show (NameSpace a)   = "namespace " ++ show a
-   show (Decl dt a c t) = show dt ++ " " ++ show a ++ maybe "" (\x -> " | "  ++ show x) c ++ " = " ++ showText t
-
-instance Show DeclType where
-   show RuleText   = "text"
-   show StringDecl = "string"
-   show Feedback   = "feedback"
-
-instance Show Condition where
-   show (RecognizedIs a) = "recognize " ++ show a
-   show (CondRef a)      = "@" ++ show a 
-
-instance Show TextItem where
-   show (TextString s) = s
-   show (TextRef a)    = "@" ++ show a
 
 toString :: Environment a -> Script -> Text -> String
 toString env script = fromMaybe "" . eval env script . Right
@@ -101,7 +65,7 @@ eval env script = fmap normalize . either (return . findIdRef) recs
       | a == newId "hasexpected" = isJust (expected env)
       | otherwise                = False
 
-   namespaces = mempty : [ a | NameSpace a <- script ]
+   namespaces = mempty : [ a | NameSpace a <- scriptDecls script ]
 
    findIdRef :: HasId b => b -> String
    findIdRef x = 
@@ -111,7 +75,7 @@ eval env script = fmap normalize . either (return . findIdRef) recs
         
    findRef p = safeHead $ catMaybes
       [ recs t
-      | Decl _ a cond t <- script
+      | Decl _ a cond t <- scriptDecls script
       , p a 
       , maybe True evalBool cond
       ]

@@ -34,8 +34,7 @@ import Data.List
 import Data.Maybe
 import Service.Types
 import Service.ExercisePackage
-import Service.FeedbackScript
-import Service.ScriptParser
+import Service.FeedbackScript.Parser
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type

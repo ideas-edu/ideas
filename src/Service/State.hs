@@ -22,9 +22,9 @@ module Service.State
 
 import Common.Library
 import Common.Utils (readM)
-import Service.Types
 import Data.Maybe
 import Service.ExercisePackage
+import Service.Types
 
 data State a = State 
    { exercisePkg  :: ExercisePackage a
@@ -69,6 +69,5 @@ stateType = Tag "state" (Iso f g tp)
       )
    tp = tuple3 ExercisePkg prefixType Context
 
--- iso prevents that prefix is turned into an (XML) attribute
-prefixType :: Type a (Maybe String)
-prefixType = maybeType (Tag "prefix" (Iso id id String))
+   -- iso prevents that prefix is turned into an (XML) attribute
+   prefixType = maybeType (Tag "prefix" (Iso id id String))

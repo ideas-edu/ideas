@@ -20,7 +20,7 @@ import Service.ExercisePackage
 import Service.State
 import Service.Diagnose
 import Service.BasicServices
-import Service.FeedbackScript
+import Service.FeedbackScript.Run
 
 ------------------------------------------------------------
 -- Services

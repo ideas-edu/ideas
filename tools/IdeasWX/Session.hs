@@ -23,7 +23,8 @@ import Service.State
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
-import Service.FeedbackScript
+import Service.FeedbackScript.Parser
+import Service.FeedbackScript.Run
 import Service.ExercisePackage (ExercisePackage)
 import qualified Service.ExercisePackage as Pkg
 import Common.Context
@@ -36,22 +37,15 @@ import Data.List
 import Data.Maybe
 import Observable hiding (Id)
 
-{-
 ------------------------------------------------------------
 -- Helper function
 
-exerciseScript :: HasId a => a -> Either String Script
-exerciseScript _ = unsafePerformIO $ 
-   liftM Right (parseScript "scripts/logic.txt") 
- `catch` \_ -> 
-   return (Left "No feedback script available")
-
-newRuleText :: Script -> Rule a -> String -- TODO: remove me
-newRuleText script r = 
-   toString emptyEnvironment script [TextRef (getId r)] -}
-
 exerciseScript :: HasId a => a -> IO (Maybe Script)
-exerciseScript _ = undefined
+exerciseScript a
+   | take 1 (qualifiers a) == ["logic"] =
+        liftM Just (parseScript "scripts/logic.txt")
+   | otherwise =
+        return Nothing
 
 --------------------------------------------------
 -- Sessions with logging

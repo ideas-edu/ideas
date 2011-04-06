@@ -125,8 +125,8 @@ normalize = interpunction . unwords . words
          []   -> []
    
 
-feedbackSame, feedbackNotEq, feedbackUnknown, feedbackOk,
-   feedbackBuggy, feedbackDetour :: Environment a -> Script -> String
+feedbackSame, feedbackNotEq, feedbackUnknown, feedbackOk, feedbackBuggy, 
+   feedbackDetour :: Environment a -> Script -> String
 feedbackSame    = make "same"
 feedbackNotEq   = make "noteq"
 feedbackUnknown = make "unknown"
@@ -134,8 +134,11 @@ feedbackOk      = make "ok"
 feedbackBuggy   = make "buggy"
 feedbackDetour  = make "detour"
 
+feedbackHint :: Bool -> Environment a -> Script -> String
+feedbackHint b = make (if b then "hint" else "step")
+
 make :: String -> Environment a -> Script -> String
 make s env script = toString env script [TextRef (newId s)]
 
 feedbackIds :: [Id]
-feedbackIds = map newId ["same", "noteq", "unknown", "ok", "buggy", "detour"]
+feedbackIds = map newId ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint"]

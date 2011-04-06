@@ -23,7 +23,6 @@ import Service.Types
 import Service.RulesInfo
 import Service.State
 import Service.BasicServices
-import Service.RunScript
 import qualified Service.Diagnose as Diagnose
 import qualified Service.Submit as Submit
 

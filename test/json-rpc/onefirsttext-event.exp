@@ -1,7 +1,7 @@
 {
    "result": [
       true,
-      "Use De Morgan",
+      "Use De Morgan.",
       [
          "logic.propositional.dnf",
          "[5,1,1,0,1,1,0,0,1,1,1]",

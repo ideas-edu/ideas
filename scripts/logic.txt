@@ -31,6 +31,11 @@ feedback detour | recognize logic.propositional.commor  = @commText
 feedback detour | recognize logic.propositional.command = @commText
 feedback detour = @appliedRule This is correct. @suggested
 
+feedback hint | @hasexpected = Use @expected.
+feedback hint = Sorry, no hint available.
+
+feedback step | @hasexpected = Use @expected to rewrite @diffbefore into @diffafter.
+feedback step = Sorry, no hint available.
 
 #-------------------------------------------------
 # Rewrite rules rules

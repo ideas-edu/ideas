@@ -61,14 +61,16 @@ submittext script old input =
 
 feedbacktext :: Script -> State a -> a -> (Bool, String, State a)
 feedbacktext script old a =
-   case diagnose old a of
-      Buggy r        -> (False, feedbackBuggy env {recognized = Just r} script, old)
-      NotEquivalent  -> (False, feedbackNotEq env script, old)
-      Expected _ s r -> (True, feedbackOk env {recognized = Just r} script, s)
-      Similar _ s    -> (True, feedbackSame env script, s)
-      Detour _ s r   -> (True, feedbackDetour env {recognized = Just r} script, s)
-      Correct _ s    -> (False, feedbackUnknown env script, s)
+   case diagnosis of
+      Buggy _        -> (False, output, old)
+      NotEquivalent  -> (False, output, old)
+      Expected _ s _ -> (True,  output, s)
+      Similar _ s    -> (True,  output, s)
+      Detour _ s _   -> (True,  output, s)
+      Correct _ s    -> (False, output, s)
  where
+   diagnosis = diagnose old a
+   output    = feedbackDiagnosis diagnosis env script
    ex  = exercise (exercisePkg old)
    env = emptyEnvironment 
             { oldReady = Just (ready old)

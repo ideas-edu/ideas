@@ -12,9 +12,13 @@
 --
 -----------------------------------------------------------------------------
 module Service.FeedbackScript.Run 
-   ( module Service.FeedbackScript.Run, Script
+   ( Script
+   , Environment(..), emptyEnvironment
+   , feedbackDiagnosis, feedbackHint
+   , ruleToString
    ) where
 
+import Common.Context (Context)
 import Common.Id
 import Common.Utils (safeHead)
 import Control.Monad
@@ -23,11 +27,12 @@ import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Service.FeedbackScript.Syntax
+import Service.Diagnose
 
 data Environment a = Env
    { oldReady   :: Maybe Bool
-   , recognized :: Maybe (Rule a)
-   , expected   :: Maybe (Rule a)
+   , recognized :: Maybe (Rule (Context a))
+   , expected   :: Maybe (Rule (Context a))
    , diffPair   :: Maybe (String, String)
    }
    
@@ -89,17 +94,17 @@ normalize = interpunction . unwords . words
          a:b:ys | special a && isAlpha b -> a : ' ' : b : interpunction ys
          y:ys -> y:interpunction ys
          []   -> []
+
+feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> String
+feedbackDiagnosis diagnosis env = 
+   case diagnosis of
+      Buggy r        -> make "buggy" env {recognized = Just r}
+      NotEquivalent  -> make "noteq" env
+      Expected _ _ r -> make "ok" env {recognized = Just r}
+      Similar _ _    -> make "same" env
+      Detour _ _ r   -> make "detour" env {recognized = Just r}
+      Correct _ _    -> make "unknown" env
    
-
-feedbackSame, feedbackNotEq, feedbackUnknown, feedbackOk, feedbackBuggy, 
-   feedbackDetour :: Environment a -> Script -> String
-feedbackSame    = make "same"
-feedbackNotEq   = make "noteq"
-feedbackUnknown = make "unknown"
-feedbackOk      = make "ok"
-feedbackBuggy   = make "buggy"
-feedbackDetour  = make "detour"
-
 feedbackHint :: Bool -> Environment a -> Script -> String
 feedbackHint b = make (if b then "hint" else "step")
 
@@ -107,4 +112,5 @@ make :: String -> Environment a -> Script -> String
 make s env script = toString env script [TextRef (newId s)]
 
 feedbackIds :: [Id]
-feedbackIds = map newId ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint"]
+feedbackIds = map newId 
+   ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step"]

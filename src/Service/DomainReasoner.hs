@@ -22,6 +22,7 @@ module Service.DomainReasoner
    , getPackages, getExercises, getServices
    , getVersion, getFullVersion, getTestSuite
    , findPackage, findService
+   , defaultScript
    ) where
 
 import Common.Library
@@ -29,9 +30,12 @@ import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
+import Data.List
 import Data.Maybe
 import Service.Types
 import Service.ExercisePackage
+import Service.FeedbackScript
+import Service.ScriptParser
 
 -----------------------------------------------------------------------
 -- Domain Reasoner data type
@@ -150,6 +154,12 @@ findService txt = do
       [hd] -> return hd
       []   -> throwError $ "No service " ++ txt
       _    -> throwError $ "Ambiguous service " ++ txt
+      
+defaultScript :: Id -> DomainReasoner Script
+defaultScript a
+   | ["logic", "propositional"] `isPrefixOf` qualifiers a = do
+        liftIO $ parseScript "scripts/logic.txt" 
+   | otherwise = throwError $ "No feedback script available for " ++ show a
 
 -----------------------------------------------------------------------
 -- Identifier aliases (temporary)

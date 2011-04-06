@@ -11,8 +11,7 @@
 -----------------------------------------------------------------------------
 module Main.IDEAS (useIDEAS) where
 
-import Common.Rewriting
-import Common.Utils (Some(..), fromShowString)
+import Common.Utils (Some(..))
 import Main.Options
 import Service.DomainReasoner
 import Service.ExercisePackage
@@ -20,8 +19,6 @@ import Service.ServiceList
 import qualified Domain.LinearAlgebra as LA
 import qualified Domain.LinearAlgebra.Checks as LA
 import qualified Domain.Logic as Logic
-import qualified Domain.Logic.FeedbackText as Logic
-import qualified Domain.Math.Expr as Math
 import qualified Domain.Math.Data.Interval as MathInterval
 import qualified Domain.Math.Derivative.Exercises as Math
 import qualified Domain.Math.Equation.CoverUpExercise as Math
@@ -35,7 +32,6 @@ import qualified Domain.Math.Power.Exercises as Math
 import qualified Domain.Math.Power.Equation.Exercises as Math
 import qualified Domain.Math.SquareRoot.Tests as MathSqrt
 import qualified Domain.Math.Polynomial.LeastCommonMultiple as MathLCM
--- import qualified Domain.RegularExpr.Exercises as RE
 import qualified Domain.RelationAlgebra as RA
 
 useIDEAS :: DomainReasoner a -> IO a
@@ -62,18 +58,8 @@ useIDEAS action = runDomainReasoner $ do
 packages :: [Some ExercisePackage]
 packages =
    [ -- logic and relation-algebra
-     Some (package Logic.dnfExercise)
-        { withOpenMath = True
-        , toOpenMath   = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
-        , fromOpenMath = (>>= fromTerm) . omobjToTerm
-        , getScript    = Just Logic.script
-        }
-   , Some (package Logic.dnfUnicodeExercise)
-        { withOpenMath = True
-        , toOpenMath   = termToOMOBJ . toTerm . fmap (Math.Var . fromShowString)
-        , fromOpenMath = (>>= fromTerm) . omobjToTerm
-        , getScript    = Just Logic.script
-        }
+     someTermPackage Logic.dnfExercise
+   , someTermPackage Logic.dnfUnicodeExercise
    -- , somePackage Logic.proofExercise
    , somePackage RA.cnfExercise
      -- basic math

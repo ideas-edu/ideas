@@ -27,6 +27,7 @@ import Control.Monad
 import Data.Maybe
 import System.Random
 import Service.ExercisePackage
+import Service.FeedbackScript
 
 -----------------------------------------------------------------------------
 -- Services
@@ -64,6 +65,7 @@ equal type1 type2 =
       (Id,          Id         ) -> Just id
       (Term,        Term       ) -> Just id
       (ExercisePkg, ExercisePkg) -> Just id
+      (Script,      Script     ) -> Just id
       (Context,     Context    ) -> Just id
       (StdGen,      StdGen     ) -> Just id
       (IO a,        IO b       ) -> fmap liftM (equal a b)
@@ -141,6 +143,7 @@ data Type a t where
    Exception    :: Type a String
    -- Exercise-specific types
    ExercisePkg  :: Type a (ExercisePackage a)
+   Script       :: Type a Script
    Strategy     :: Type a (Strategy (Context a))
    Rule         :: Type a (Rule (Context a))
    Term         :: Type a a
@@ -175,6 +178,7 @@ showGroundType :: Type a t -> Maybe String
 showGroundType tp =
    case tp of 
       ExercisePkg  -> Just "ExercisePkg"
+      Script       -> Just "Script"
       Strategy     -> Just "Strategy"
       Rule         -> Just "Rule"
       Term         -> Just "Term"

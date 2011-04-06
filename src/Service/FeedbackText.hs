@@ -10,40 +10,32 @@
 --
 -----------------------------------------------------------------------------
 module Service.FeedbackText 
-   ( onefirsttext, submittext, derivationtext, feedbacktext, newRuleText
+   ( onefirsttext, submittext, derivationtext, feedbacktext
    ) where
 
 import Common.Library hiding (derivation)
 import Common.Utils (fst3, thd3)
-import Control.Monad
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
 import Service.Diagnose
 import Service.BasicServices
 import Service.FeedbackScript
-import Service.ScriptParser
-
-newRuleText :: Script -> Rule a -> String -- TODO: remove me
-newRuleText script r = 
-   toString emptyEnvironment script [TextRef (getId r)]
 
 ------------------------------------------------------------
 -- Services
 
-derivationtext :: State a -> Either String [(String, Context a)]
-derivationtext state = do
-   script <- exerciseScript state
-   xs     <- derivation Nothing state
-   return (map (first (newRuleText script)) xs)
+derivationtext :: Script -> State a -> Either String [(String, Context a)]
+derivationtext script state = do
+   xs <- derivation Nothing state
+   return (map (first (ruleToString emptyEnvironment script)) xs)
 
-onefirsttext :: State a -> Maybe String -> Either String (Bool, String, State a)
-onefirsttext old event = do
-   script <- exerciseScript old
-   return ( isJust next
-          , feedbackHint (event == Just "hint button") env script
-          , maybe old thd3 next
-          )
+onefirsttext :: Script -> State a -> Maybe String -> (Bool, String, State a)
+onefirsttext script old event = 
+   ( isJust next
+   , feedbackHint (event == Just "hint button") env script
+   , maybe old thd3 next
+   )
  where
    ex   = exercise (exercisePkg old) 
    next = either (const Nothing) Just (onefirst old)
@@ -61,20 +53,14 @@ onefirsttext old event = do
 -- Feedback messages for submit service (free student input). The boolean
 -- indicates whether the student is allowed to continue (True), or forced 
 -- to go back to the previous state (False)      
-submittext :: State a -> String -> Either String (Bool, String, State a)
-submittext old input = do
-   script <- exerciseScript old
-   return $
-      case parser (exercise (exercisePkg old)) input of
-         Left msg -> (False, msg, old)
-         Right a  -> (feedbackWith old a script)
+submittext :: Script -> State a -> String -> (Bool, String, State a)
+submittext script old input =
+   case parser (exercise (exercisePkg old)) input of
+      Left msg -> (False, msg, old)
+      Right a  -> (feedbacktext script old a)
 
-feedbacktext :: FilePath -> State a -> a -> IO (Bool, String, State a)
-feedbacktext file old a =
-   liftM (feedbackWith old a) (parseScript file)
-
-feedbackWith :: State a -> a -> Script -> (Bool, String, State a)
-feedbackWith old a script =
+feedbacktext :: Script -> State a -> a -> (Bool, String, State a)
+feedbacktext script old a =
    case diagnose old a of
       Buggy r        -> (False, feedbackBuggy env {recognized = Just r} script, old)
       NotEquivalent  -> (False, feedbackNotEq env script, old)
@@ -92,11 +78,3 @@ feedbackWith old a script =
                  (d1, d2) <- difference ex False oldC a 
                  return (prettyPrinter ex d1, prettyPrinter ex d2)
             }
-
-------------------------------------------------------------
--- Helper function
-
-exerciseScript :: State a -> Either String Script
-exerciseScript = 
-   let msg = "No support for textual feedback"
-   in maybe (fail msg) return . getScript . exercisePkg

@@ -23,8 +23,8 @@ import Service.State
 import Service.Diagnose (restartIfNeeded)
 import Service.Submit
 import Service.FeedbackText
-import Service.ExercisePackage (getScript, ExercisePackage)
 import Service.FeedbackScript
+import Service.ExercisePackage (ExercisePackage)
 import qualified Service.ExercisePackage as Pkg
 import Common.Context
 import Common.Exercise hiding (showDerivation)
@@ -35,6 +35,23 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import Observable hiding (Id)
+
+{-
+------------------------------------------------------------
+-- Helper function
+
+exerciseScript :: HasId a => a -> Either String Script
+exerciseScript _ = unsafePerformIO $ 
+   liftM Right (parseScript "scripts/logic.txt") 
+ `catch` \_ -> 
+   return (Left "No feedback script available")
+
+newRuleText :: Script -> Rule a -> String -- TODO: remove me
+newRuleText script r = 
+   toString emptyEnvironment script [TextRef (getId r)] -}
+
+exerciseScript :: HasId a => a -> IO (Maybe Script)
+exerciseScript _ = undefined
 
 --------------------------------------------------
 -- Sessions with logging
@@ -110,19 +127,17 @@ undo ref =
 submitText :: String -> Session -> IO String
 submitText txt ref = do
    Some ss <- getValue ref
+   ms <- exerciseScript (getPackage ss)
    let d = getDerivation ss
-   case getScript (getPackage ss) of
+   case ms of
       -- Use exercise text module
-      Just _ -> 
-         case submittext (currentState d) txt of
-            Right (b, msg, st) -> do
-               let new = restartIfNeeded st
-               when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
-               return msg
-            Left msg -> 
-               return msg
+      Just script -> do
+         let (b, msg, st) = submittext script (currentState d) txt
+             new = restartIfNeeded st
+         when b $ setValue ref $ Some $ ss {getDerivation = extendDerivation new d}
+         return msg
       -- Use default text
-      Nothing ->
+      _ ->
          case parser (exercise d) txt of
             Left err -> 
                return (show err)
@@ -171,10 +186,11 @@ readyText = withDerivation $ \d ->
 hintOrStep :: Bool -> Session -> IO String
 hintOrStep verbose ref = do
    Some ss <- getValue ref
+   ms <- exerciseScript (getPackage ss)
    let d = getDerivation ss
        showRule r = fromMaybe ("rule " ++ showId r) $ do 
-          script <- getScript (getPackage ss)
-          return (newRuleText script r)
+          script <- ms
+          return (ruleToString emptyEnvironment script r)
    case allfirsts (currentState d) of
       Left msg ->
          return ("Error: " ++ msg)
@@ -205,11 +221,12 @@ nextStep ref = do
       Right [] -> 
          return "No more steps left to do"
       Right ((r, _, new):_) -> do
+         ms <- exerciseScript new
          setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
-         case getScript (getPackage ss) of
+         case ms of
             Just script ->
-               return ("You have applied " ++ newRuleText script r ++ " correctly.")
-            Nothing -> 
+               return ("You have applied " ++ ruleToString emptyEnvironment script r ++ " correctly.")
+            _ -> 
                return ("You have applied rule " ++ showId r ++ " correctly.")
 
 {-

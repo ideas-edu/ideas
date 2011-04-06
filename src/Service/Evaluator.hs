@@ -71,6 +71,9 @@ decodeDefault dec tp s =
       StdGen -> do
          stdgen <- liftIO newStdGen
          return (stdgen, s)
+      Script -> do
+         script <- defaultScript (getId (decoderPackage dec))
+         return (script, s)
       _ ->
          fail $ "No support for argument type: " ++ show tp
 

@@ -187,11 +187,12 @@ xmlDecodeType b dec serviceType =
               g <- equalM difficultyType serviceType
               a <- findAttribute "difficulty" xml
               maybe (fail "unknown difficulty level") (return . g) (readDifficulty a)
+         
+         {-
          | s == "script" -> keep $ \xml -> do
               g <- equalM (Tag "script" String) serviceType
               a <- findAttribute "script" xml
               return (g a)
-         {-
          | s == "prefix" -> \xml -> do
               f  <- equalM String t
               mp <- decodePrefix (decoderPackage dec) xml

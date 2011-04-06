@@ -153,7 +153,7 @@ onefirsttextS = makeService "onefirsttext"
    \leading to this service call (which can influence the returned result). \
    \The boolean in the result specifies whether a suggestion was available or \
    \not." $ 
-   onefirsttext ::: stateType :-> maybeType String :-> errorType (elemType (tuple3 Bool String stateType))
+   onefirsttext ::: Script :-> stateType :-> maybeType String :-> elemType (tuple3 Bool String stateType)
 
 submittextS :: Service
 submittextS = makeService "submittext" 
@@ -163,18 +163,18 @@ submittextS = makeService "submittext"
    \The boolean in the \
    \result specifies whether the submitted term is accepted and incorporated \
    \in the new state." $ 
-   submittext ::: stateType :-> String :-> errorType (elemType (tuple3 Bool String stateType))
+   submittext ::: Script :-> stateType :-> String :-> elemType (tuple3 Bool String stateType)
 
 derivationtextS :: Service
 derivationtextS = makeService "derivationtext" 
    "Similar to the derivation service, but the rules appearing in the derivation \
    \have been replaced by a short description of the rule." $ 
-   derivationtext ::: stateType :-> errorType (listType (tuple2 String Context))
+   derivationtext ::: Script :-> stateType :-> errorType (listType (tuple2 String Context))
 
 feedbacktextS :: Service
 feedbacktextS = makeService "feedbacktext"
    "Textual feedback for diagnose service. Experimental." $
-   feedbacktext ::: Tag "script" String :-> stateType :-> Term :-> IO (tuple3 (Tag "accept" Bool) (Tag "message" String) stateType)
+   feedbacktext ::: Script :-> stateType :-> Term :-> tuple3 (Tag "accept" Bool) (Tag "message" String) stateType
 
 ------------------------------------------------------
 -- Problem decomposition service

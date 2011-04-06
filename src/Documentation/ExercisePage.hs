@@ -70,9 +70,9 @@ exercisePage exampleFileExists pkg = do
       , [ text "OpenMath support"
         , text $ showBool $ withOpenMath pkg
         ]
-      , [ text "Textual feedback"
+      {- , [ text "Textual feedback"
         , text $ showBool $ isJust $ getScript pkg
-        ]
+        ] -}
       , [ text "Restartable strategy"
         , text $ showBool $ canBeRestarted ex
         ] 

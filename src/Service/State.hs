@@ -32,6 +32,10 @@ data State a = State
    , stateContext :: Context a
    }
 
+instance HasId (State a) where 
+   getId = getId . exercisePkg
+   changeId f s = s { exercisePkg = changeId f (exercisePkg s) }
+
 stateTerm :: State a -> a
 stateTerm = fromMaybe (error "invalid term") . fromContext . stateContext
 

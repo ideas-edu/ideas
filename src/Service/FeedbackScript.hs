@@ -69,17 +69,20 @@ instance Show DeclType where
 
 instance Show Condition where
    show (RecognizedIs a) = "recognize " ++ show a
-   show (CondRef a) = "@" ++ show a 
+   show (CondRef a)      = "@" ++ show a 
 
 instance Show TextItem where
    show (TextString s) = s
    show (TextRef a)    = "@" ++ show a
 
 toString :: Environment a -> Script -> Text -> String
-toString env script = fromMaybe "<<undefined>>" . toStringM env script
+toString env script = fromMaybe "" . eval env script . Right
 
-toStringM :: Environment a -> Script -> Text -> Maybe String
-toStringM env script = fmap normalize . recs
+ruleToString :: Environment a -> Script -> Rule a -> String
+ruleToString env script = fromMaybe "" . eval env script . Left . getId
+
+eval :: Environment a -> Script -> Either Id Text -> Maybe String
+eval env script = fmap normalize . either (return . findIdRef) recs
  where
    recs = liftM concat . mapM rec
    
@@ -90,7 +93,6 @@ toStringM env script = fmap normalize . recs
       | a == newId "diffbefore" = fmap fst (diffPair env)
       | a == newId "diffafter"  = fmap snd (diffPair env)
       | a `elem` feedbackIds    = findRef (==a)
-      | length (qualifiers a)>1 = return (findIdRef a) -- !!! QUICK FIX (for onefirsttext service)
       | otherwise               = findRef (==a)
 
    evalBool (RecognizedIs a) = maybe False ((==a) . getId) (recognized env)

@@ -13,7 +13,7 @@
 module Service.ExercisePackage
    ( -- Type, and selectors 
      ExercisePackage, exercise, withOpenMath
-   , toOpenMath, fromOpenMath, getScript
+   , toOpenMath, fromOpenMath
      -- Constructors
    , package, termPackage, somePackage, someTermPackage
      -- Conversion functions to/from OpenMath
@@ -26,7 +26,6 @@ import Common.Rewriting.Term
 import Control.Monad
 import Data.Char
 import Data.List
-import Service.FeedbackScript
 import Text.OpenMath.Object
 import qualified Text.OpenMath.Symbol as OM
 import Text.OpenMath.Dictionary.Fns1
@@ -39,7 +38,6 @@ data ExercisePackage a = P
    , withOpenMath :: Bool
    , toOpenMath   :: a -> OMOBJ 
    , fromOpenMath :: MonadPlus m => OMOBJ -> m a
-   , getScript    :: Maybe Script
    }
 
 instance HasId (ExercisePackage a) where
@@ -52,7 +50,6 @@ package ex = P
    , withOpenMath = False
    , toOpenMath   = error "no OpenMath support"
    , fromOpenMath = fail "no OpenMath support"
-   , getScript    = Nothing
    }
 
 termPackage :: IsTerm a => Exercise a -> ExercisePackage a

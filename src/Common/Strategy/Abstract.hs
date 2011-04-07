@@ -126,10 +126,10 @@ instance IsLabeled LabeledStrategy where
    toLabeled = id
 
 instance IsLabeled Rule where
-   toLabeled r = LS (makeInfo (showId r)) (S (Rule r))
+   toLabeled r = LS (makeInfo (getId r)) (S (Rule r))
 
 instance IsLabeled RewriteRule where
-   toLabeled r = toLabeled (makeRule (showId r) (makeRewriteTrans r))
+   toLabeled r = toLabeled (makeRule (getId r) (makeRewriteTrans r))
 
 -- | Labels a strategy with a string
 label :: (IsId l, IsStrategy f) => l -> f a -> LabeledStrategy a
@@ -159,7 +159,7 @@ processLabelInfo getInfo = rec []
       new | hidden info = fmap minorRule (Label l c)
           | otherwise   = Label l c
       info   = getInfo l
-      asRule = makeSimpleRuleList (showId info) (runCore (subst new))
+      asRule = makeSimpleRuleList (getId info) (runCore (subst new))
       subst  = flip (foldl (flip (uncurry substCoreVar))) env
 
 -----------------------------------------------------------

@@ -60,7 +60,7 @@ configureNow =
 
 configure :: StrategyConfiguration -> LabeledStrategy a -> LabeledStrategy a
 configure cfg ls = 
-   label (showId ls) (fromCore (configureCore cfg (toCore (unlabel ls))))
+   label (getId ls) (fromCore (configureCore cfg (toCore (unlabel ls))))
 
 configureCore :: StrategyConfiguration -> Core LabelInfo a -> Core LabelInfo a
 configureCore cfg = mapLabel (change [])

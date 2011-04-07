@@ -64,7 +64,7 @@ eval env script = fmap normalize . either (return . findIdRef) recs
       | a `elem` feedbackIds    = findRef (==a)
       | otherwise               = findRef (==a)
 
-   evalBool (RecognizedIs a) = maybe False ((==a) . getId) (recognized env)
+   evalBool (RecognizedIs a) = maybe False (eqId a) (recognized env)
    evalBool (CondRef a)
       | a == newId "oldready"    = fromMaybe False (oldReady env)
       | a == newId "hasexpected" = isJust (expected env)
@@ -72,11 +72,12 @@ eval env script = fmap normalize . either (return . findIdRef) recs
 
    namespaces = mempty : [ a | NameSpace a <- scriptDecls script ]
 
+   -- equality with namespaces
+   eqId :: HasId a => Id -> a -> Bool
+   eqId a b = any (\n -> n#a == getId b) namespaces
+
    findIdRef :: HasId b => b -> String
-   findIdRef x = 
-      let a = getId x
-          p z = any (\n -> n#z == a) namespaces
-      in fromMaybe (show a) (findRef p)
+   findIdRef x = fromMaybe (showId x) (findRef (`eqId` x))
         
    findRef p = safeHead $ catMaybes
       [ recs t

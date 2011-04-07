@@ -53,18 +53,21 @@ ruleToString env script = fromMaybe "" . eval env script . Left . getId
 eval :: Environment a -> Script -> Either Id Text -> Maybe String
 eval env script = fmap normalize . either (return . findIdRef) recs
  where
+   recs :: [TextItem] -> Maybe String
    recs = liftM concat . mapM rec
    
-   rec (TextString s)           = return s
+   rec :: TextItem -> Maybe String
+   rec (TextString s)           = Just s
    rec (TextRef a)              
-      | a == newId "expected"   = fmap findIdRef (expected env)
-      | a == newId "recognized" = fmap findIdRef (recognized env)
+      | a == newId "expected"   = fmap (findIdRef . getId) (expected env)
+      | a == newId "recognized" = fmap (findIdRef . getId) (recognized env)
       | a == newId "diffbefore" = fmap fst (diffPair env)
       | a == newId "diffafter"  = fmap snd (diffPair env)
       | a `elem` feedbackIds    = findRef (==a)
       | otherwise               = findRef (==a)
 
-   evalBool (RecognizedIs a) = maybe False (eqId a) (recognized env)
+   evalBool :: Condition -> Bool
+   evalBool (RecognizedIs a) = maybe False (eqId a . getId) (recognized env)
    evalBool (CondRef a)
       | a == newId "oldready"    = fromMaybe False (oldReady env)
       | a == newId "hasexpected" = isJust (expected env)
@@ -73,12 +76,13 @@ eval env script = fmap normalize . either (return . findIdRef) recs
    namespaces = mempty : [ a | NameSpace a <- scriptDecls script ]
 
    -- equality with namespaces
-   eqId :: HasId a => Id -> a -> Bool
-   eqId a b = any (\n -> n#a == getId b) namespaces
+   eqId :: Id -> Id -> Bool
+   eqId a b = any (\n -> n#a == b) namespaces
 
-   findIdRef :: HasId b => b -> String
+   findIdRef :: Id -> String
    findIdRef x = fromMaybe (showId x) (findRef (`eqId` x))
         
+   findRef :: (Id -> Bool) -> Maybe String
    findRef p = safeHead $ catMaybes
       [ recs t
       | Decl _ a cond t <- scriptDecls script

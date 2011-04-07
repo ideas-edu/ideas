@@ -11,7 +11,9 @@
 -----------------------------------------------------------------------------
 module Main.IDEAS (useIDEAS) where
 
+import Common.Id
 import Common.Utils (Some(..))
+import Control.Arrow
 import Main.Options
 import Service.DomainReasoner
 import Service.ExercisePackage
@@ -41,9 +43,11 @@ useIDEAS action = runDomainReasoner $ do
    setFullVersion fullVersion
    -- exercise packages
    addPackages    packages
+   addAliases     aliases
    -- services
    addServices    serviceList
    addPkgService  exerciselistS
+   addScripts     scripts
    -- domain checks
    addTestSuite $ do
       MathNum.main
@@ -102,3 +106,44 @@ packages =
      -- regular expressions
    -- , somePackage RE.regexpExercise
    ]
+   
+aliases :: [(Id, Id)]
+aliases = map (newId *** newId)
+   [ ("math.coverup",             "algebra.equations.coverup")
+   , ("math.lineq",               "algebra.equations.linear")
+   , ("math.lineq-mixed",         "algebra.equations.linear.mixed")
+   , ("math.quadreq",             "algebra.equations.quadratic")         
+   , ("math.quadreq-no-abc",      "algebra.equations.quadratic.no-abc")    
+   , ("math.quadreq-with-approx", "algebra.equations.quadratic.approximate")
+   , ("math.higherdegree",        "algebra.equations.polynomial")
+   , ("math.rationaleq",          "algebra.equations.rational")
+   , ("math.linineq",             "algebra.inequalities.linear")
+   , ("math.quadrineq",           "algebra.inequalities.quadratic")
+   , ("math.ineqhigherdegree",    "algebra.inequalities.polynomial")
+   , ("math.factor",              "algebra.manipulation.polynomial.factor")
+   , ("math.simplifyrational",    "algebra.manipulation.rational.simplify")
+   , ("math.simplifypower",       "algebra.manipulation.exponents.simplify")
+   , ("math.nonnegexp",           "algebra.manipulation.exponents.nonnegative")
+   , ("math.powerof",             "algebra.manipulation.exponents.powerof")
+   , ("math.derivative",          "calculus.differentiation")
+   , ("math.fraction",            "arithmetic.fractions")
+   , ("math.calcpower",           "arithmetic.exponents")
+   , ("linalg.gaussianelim",      "linearalgebra.gaussianelim")
+   , ("linalg.gramschmidt",       "linearalgebra.gramschmidt")
+   , ("linalg.linsystem",         "linearalgebra.linsystem")
+   , ("linalg.systemwithmatrix",  "linearalgebra.systemwithmatrix")
+   , ("logic.dnf",                "logic.propositional.dnf")
+   , ("logic.dnf-unicode",        "logic.propositional.dnf.unicode")
+   , ("relationalg.cnf",          "relationalgebra.cnf")
+   -- MathDox compatibility
+   , ("gaussianelimination"        , "linearalgebra.gaussianelim")
+   , ("gramschmidt"                , "linearalgebra.gramschmidt")
+   , ("solvelinearsystem"          , "linearalgebra.linsystem")
+   , ("solvelinearsystemwithmatrix", "linearalgebra.systemwithmatrix")
+   ]
+   
+scripts :: [(Id, FilePath)]
+scripts = 
+   [ (getId Logic.dnfExercise,        "logic.txt")
+   , (getId Logic.dnfUnicodeExercise, "logic.txt")
+   ]      

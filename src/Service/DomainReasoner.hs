@@ -17,6 +17,7 @@ module Service.DomainReasoner
      -- * Update functions
    , addPackages, addPackage, addPkgService
    , addServices, addService, addTestSuite
+   , addAliases, addScripts
    , setVersion, setFullVersion
      -- * Accessor functions
    , getPackages, getExercises, getServices
@@ -30,7 +31,6 @@ import Common.TestSuite
 import Common.Utils (Some(..))
 import Control.Monad.Error
 import Control.Monad.State
-import Data.List
 import Data.Maybe
 import Service.Types
 import Service.ExercisePackage
@@ -44,13 +44,15 @@ newtype DomainReasoner a = DR { unDR :: ErrorT String (StateT Content IO) a }
 data Content = Content
    { packages    :: [Some ExercisePackage]
    , services    :: [Some ExercisePackage] -> [Service]
+   , aliases     :: [(Id, Id)]
+   , scripts     :: [(Id, FilePath)]
    , testSuite   :: TestSuite
    , version     :: String
    , fullVersion :: Maybe String
    }
    
 noContent :: Content
-noContent = Content [] (const []) (return ()) [] Nothing
+noContent = Content [] (const []) [] [] (return ()) [] Nothing
 
 runDomainReasoner :: DomainReasoner a -> IO a
 runDomainReasoner m = do
@@ -112,6 +114,12 @@ addService s = addServices [s]
 addTestSuite :: TestSuite -> DomainReasoner ()
 addTestSuite m = modify $ \c -> c { testSuite = testSuite c >> m }
 
+addAliases :: [(Id, Id)] -> DomainReasoner ()
+addAliases xs = modify $ \c -> c { aliases = xs ++ aliases c }
+
+addScripts :: [(Id, FilePath)] -> DomainReasoner ()
+addScripts xs = modify $ \c -> c { scripts = xs ++ scripts c }
+
 setVersion :: String -> DomainReasoner ()
 setVersion s = modify $ \c -> c { version = s }
 
@@ -141,8 +149,10 @@ getTestSuite = gets testSuite
 
 findPackage :: Id -> DomainReasoner (Some ExercisePackage)
 findPackage i = do
-   pkgs <- getPackages 
-   case [ a | a@(Some pkg) <- pkgs, getId pkg == resolveId i ] of
+   pkgs  <- getPackages
+   table <- gets aliases
+   let res = fromMaybe i (lookup i table)
+   case [ a | a@(Some pkg) <- pkgs, getId pkg == res ] of
       [this] -> return this
       _      -> throwError $ "Package " ++ show i ++ " not found"
       
@@ -155,47 +165,10 @@ findService txt = do
       _    -> throwError $ "Ambiguous service " ++ txt
       
 defaultScript :: Id -> DomainReasoner Script
-defaultScript a
-   | ["logic", "propositional"] `isPrefixOf` qualifiers a = do
-        liftIO $ parseScript "scripts/logic.txt" 
-   | otherwise = throwError $ "No feedback script available for " ++ show a
-
------------------------------------------------------------------------
--- Identifier aliases (temporary)
-
-resolveId :: Id -> Id
-resolveId i = fromMaybe i (lookup i table)
- where
-   table = map (newId *** newId)
-      [ ("math.coverup",             "algebra.equations.coverup")
-      , ("math.lineq",               "algebra.equations.linear")
-      , ("math.lineq-mixed",         "algebra.equations.linear.mixed")
-      , ("math.quadreq",             "algebra.equations.quadratic")         
-      , ("math.quadreq-no-abc",      "algebra.equations.quadratic.no-abc")    
-      , ("math.quadreq-with-approx", "algebra.equations.quadratic.approximate")
-      , ("math.higherdegree",        "algebra.equations.polynomial")
-      , ("math.rationaleq",          "algebra.equations.rational")
-      , ("math.linineq",             "algebra.inequalities.linear")
-      , ("math.quadrineq",           "algebra.inequalities.quadratic")
-      , ("math.ineqhigherdegree",    "algebra.inequalities.polynomial")
-      , ("math.factor",              "algebra.manipulation.polynomial.factor")
-      , ("math.simplifyrational",    "algebra.manipulation.rational.simplify")
-      , ("math.simplifypower",       "algebra.manipulation.exponents.simplify")
-      , ("math.nonnegexp",           "algebra.manipulation.exponents.nonnegative")
-      , ("math.powerof",             "algebra.manipulation.exponents.powerof")
-      , ("math.derivative",          "calculus.differentiation")
-      , ("math.fraction",            "arithmetic.fractions")
-      , ("math.calcpower",           "arithmetic.exponents")
-      , ("linalg.gaussianelim",      "linearalgebra.gaussianelim")
-      , ("linalg.gramschmidt",       "linearalgebra.gramschmidt")
-      , ("linalg.linsystem",         "linearalgebra.linsystem")
-      , ("linalg.systemwithmatrix",  "linearalgebra.systemwithmatrix")
-      , ("logic.dnf",                "logic.propositional.dnf")
-      , ("logic.dnf-unicode",        "logic.propositional.dnf.unicode")
-      , ("relationalg.cnf",          "relationalgebra.cnf")
-      -- MathDox compatibility
-      , ("gaussianelimination"        , "linearalgebra.gaussianelim")
-      , ("gramschmidt"                , "linearalgebra.gramschmidt")
-      , ("solvelinearsystem"          , "linearalgebra.linsystem")
-      , ("solvelinearsystemwithmatrix", "linearalgebra.systemwithmatrix")
-      ]
+defaultScript a = do
+   list <- gets scripts 
+   case lookup a list of
+      Just file -> 
+         liftIO $ parseScript ("scripts/" ++ file)
+      Nothing -> 
+         throwError $ "No feedback script available for " ++ show a

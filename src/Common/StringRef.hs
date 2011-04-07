@@ -13,8 +13,9 @@
 -- Virutal Machine (LVM) identifiers.
 --
 -----------------------------------------------------------------------------
-module Common.StringRef (StringRef, stringRef, toString) where
+module Common.StringRef (StringRef, stringRef, toString, tableStatus) where
 
+import Common.Utils (commaList)
 import Data.Bits
 import Data.IORef
 import Data.List 
@@ -117,12 +118,17 @@ intErr s = error ("Internal error in Common.StringRef: " ++ s)
 ----------------------------------------------------------------
 -- Testing and debugging 
 
-{-
-printTable :: IO ()
-printTable = readIORef tableRef >>= print
+tableStatus :: IO String
+tableStatus = readIORef tableRef >>= \m -> 
+   let xs = map f (IM.assocs m)
+       f (i, ys) = '#' : show i ++ ": " ++ commaList (map g (frequency ys)) ++
+                   "  [total = " ++ show (length ys) ++ "]"
+       g (a, n)  | n == 1    = show a
+                 | otherwise = show a ++ " (" ++ show n ++ ")"
+   in return $ unlines xs
 
-test1 _ = toString (stringRef "bas") == "bas"
-test2 _ = stringRef "bas" == stringRef "bas"
-test3 _ = stringRef "bas" /= stringRef "je"
-test4 _ = stringRef "arith1.unary_minus" /= stringRef "distribute power"
--}
+frequency :: Eq a => [a] -> [(a, Int)]
+frequency [] = []
+frequency (x:xs) = 
+   let (ys, zs) = partition (==x) xs
+   in (x, 1+length ys) : frequency zs

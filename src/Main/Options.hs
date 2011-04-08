@@ -22,7 +22,7 @@ import System.Exit
 
 data Flag = Version | Help | Logging Bool | InputFile String 
           | FixRNG | DocItem DocItem | DocDir String | TestDir String
-          | MakeScriptFor String
+          | MakeScriptFor String | AnalyzeScript String
    deriving Eq
 
 header :: String
@@ -59,6 +59,7 @@ options =
      , Option ""  ["docs-dir"]    (ReqArg DocDir "DIR")        "directory for documentation (default: 'docs')" 
      , Option ""  ["test-dir"]    (ReqArg TestDir "DIR")       "directory with tests (default: 'test')"
      , Option ""  ["make-script"] (ReqArg MakeScriptFor "ID")  "generate feedback script for exercise" 
+     , Option ""  ["analyze-script"] (ReqArg AnalyzeScript "FILE") "analyze feedback script and report errors"
      ]
 
 testArg :: Maybe String -> Flag
@@ -95,8 +96,9 @@ documentationMode :: [Flag] -> Bool
 documentationMode = not . null . docItems
 
 scriptMode :: [Flag] -> Bool
-scriptMode flags = not $ null 
-   [ () | MakeScriptFor _ <- flags ]
+scriptMode flags = not $ null $
+   [ () | MakeScriptFor _ <- flags ] ++
+   [ () | AnalyzeScript _ <- flags ]
 
 withLogging :: [Flag] -> Bool
 withLogging flags = and [ b | Logging b <- flags ]

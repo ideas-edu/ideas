@@ -15,7 +15,7 @@ module Service.FeedbackScript.Run
    ( Script
    , Environment(..), newEnvironment
    , feedbackDiagnosis, feedbackHint
-   , ruleToString, feedbackIds
+   , ruleToString, feedbackIds, attributeIds, conditionIds
    ) where
 
 import Common.Context (Context)
@@ -118,3 +118,11 @@ make s env script = toString env script (TextRef (newId s))
 feedbackIds :: [Id]
 feedbackIds = map newId 
    ["same", "noteq", "unknown", "ok", "buggy", "detour", "hint", "step"]
+   
+attributeIds :: [Id]
+attributeIds = map newId 
+   ["expected", "recognized", "diffbefore", "diffafter"]
+   
+conditionIds :: [Id]
+conditionIds = map newId
+    ["oldready", "hasexpected"]

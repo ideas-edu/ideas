@@ -20,6 +20,7 @@ module Service.FeedbackScript.Syntax
 
 import Common.Algebra.Group ((<>))
 import Common.Id
+import Common.Uniplate
 import Common.Utils (commaList, safeHead)
 import Data.Char
 import Data.Monoid
@@ -99,6 +100,14 @@ instance Monoid Text where
    mempty  = TextEmpty
    mappend = (:<>:)
    
+instance Uniplate Condition where
+   uniplate (CondNot a) = ([a], \[b] -> CondNot b)
+   uniplate c           = ([], \_ -> c)
+
+instance Uniplate Text where
+   uniplate (a :<>: b) = ([a, b], \[x, y] -> x :<>: y)
+   uniplate t          = ([], \_ -> t)
+
 textItems :: Text -> [Text]
 textItems t = rec t []
  where

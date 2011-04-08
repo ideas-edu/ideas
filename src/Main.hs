@@ -54,6 +54,7 @@ main = do
       -- feedback script options
         | scriptMode flags -> useIDEAS $
              withScripts [ a | MakeScriptFor a <- flags ]
+                         [ a | AnalyzeScript a <- flags ]
 
       -- cgi binary
       Nothing -> runCGI $ do

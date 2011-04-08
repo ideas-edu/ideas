@@ -15,17 +15,36 @@ module Service.FeedbackScript.Analysis (withScripts) where
 
 import Common.Exercise
 import Common.Transformation
+import Common.Uniplate
 import Common.Utils (Some(..))
+import Control.Monad
+import Data.Either
 import Data.List
 import Service.DomainReasoner
 import Service.ExercisePackage
 import Service.FeedbackScript.Syntax
+import Service.FeedbackScript.Parser
 import Service.FeedbackScript.Run 
 
-withScripts :: [String] -> DomainReasoner ()
-withScripts = mapM_ $ \s -> do
-   Some pkg <- findPackage (newId s)
-   liftIO $ print (generateScript (exercise pkg))
+withScripts :: [String] -> [FilePath] -> DomainReasoner ()
+withScripts xs ys = do 
+   -- generate scripts
+   forM_ xs $ \s -> do
+      Some pkg <- findPackage (newId s)
+      liftIO $ print (generateScript (exercise pkg))
+   -- analyze scripts
+   forM_ ys $ \file -> do
+      liftIO $ putStrLn $ "Parsing " ++ show file
+      script <- liftIO $ parseScript file
+      let sups = [ a | Supports as <- scriptDecls script, a <- as ]
+      exs <- forM sups $ \a -> do
+                liftM Right (findPackage a)
+              `catchError` \_ -> return $ Left $ UnknownExercise a
+           
+      let ms = lefts exs ++ analyzeScript (rights exs) script
+      liftIO $ do 
+         putStrLn $ unlines $ map show ms
+         putStrLn $ "(errors: " ++ show (length ms) ++ ")"
 
 generateScript :: Exercise a -> Script
 generateScript ex = makeScript $
@@ -35,3 +54,48 @@ generateScript ex = makeScript $
    [ textForIdDecl r (makeText (description r)) | r <- brs ]
  where
    (brs, nrs) = partition isBuggyRule (ruleset ex)
+   
+data Message = UnknownExercise   Id
+             | UnknownFeedback   Id
+             | FeedbackUndefined Id
+             | NoTextForRule Id Id
+             | UnknownAttribute Id
+             | UnknownCondAttr  Id
+
+instance Show Message where
+   show message = 
+      case message of
+         UnknownExercise a   -> "Unknown exercise id " ++ show a
+         UnknownFeedback a   -> "Unknown feedback category " ++ show a
+         FeedbackUndefined a -> "Feedback category " ++ show a ++ " is not defined"
+         NoTextForRule a b   -> "No text for rule " ++ show a ++ " of exercise " ++ show b
+         UnknownAttribute a  -> "Unknown attribute @" ++ show a ++ " in text"
+         UnknownCondAttr a   -> "Unknown attribute @" ++ show a ++ " in condition"
+   
+analyzeScript :: [Some ExercisePackage] -> Script -> [Message]
+analyzeScript exs script =
+   map FeedbackUndefined (filter (`notElem` fbids) feedbackIds) ++ 
+   map UnknownFeedback   (filter (`notElem`feedbackIds ) fbids) ++ 
+   [ NoTextForRule (getId r) (getId pkg) 
+   | Some pkg <- exs, r <- ruleset (exercise pkg), noTextFor (getId r)
+   ] ++
+   [ UnknownAttribute a | a <- textRefs
+   , a `notElem` feedbackIds ++ attributeIds ++ strids ] ++
+   [ UnknownCondAttr a | a <- condRefs, a `notElem` conditionIds ] 
+ where
+   decls = scriptDecls script
+   fbids = [ a | Simple  Feedback as _ <- decls, a <- as ] ++
+           [ a | Guarded Feedback as _ <- decls, a <- as ]
+   txids = [ a | Simple  TextForId as _ <- decls, a <- as ] ++
+           [ a | Guarded TextForId as _ <- decls, a <- as ]
+   strids = [ a | Simple  StringDecl as _ <- decls, a <- as ] ++
+            [ a | Guarded StringDecl as _ <- decls, a <- as ]
+   namespaces = mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
+   noTextFor a = null [ () | n <- namespaces, b <- txids, (n#b) == a ]
+        
+   texts = [ t | Simple  _ _ t <- decls ] ++
+           [ t | Guarded _ _ xs <- decls, (_, t) <- xs ]
+   textRefs = [ a | t <- texts, TextRef a <- universe t ]
+   
+   conditions  = [ c | Guarded _ _ xs <- decls , (c, _) <- xs ]
+   condRefs = [ a | c <- conditions, CondRef a <- universe c ]

@@ -15,6 +15,7 @@ module Service.FeedbackText
 
 import Common.Library hiding (derivation)
 import Common.Utils (thd3)
+import Control.Arrow
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
@@ -26,9 +27,9 @@ import Service.FeedbackScript.Run
 -- Services
 
 derivationtext :: Script -> State a -> Either String [(String, Context a)]
-derivationtext script state = do
-   xs <- derivation Nothing state
-   return (map (first (ruleToString (newEnvironment state) script)) xs)
+derivationtext script state =
+   let f = map (first (ruleToString (newEnvironment state) script))
+   in right f (derivation Nothing state)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Bool, String, State a)
 onefirsttext script old event = 

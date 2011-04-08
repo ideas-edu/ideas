@@ -184,7 +184,7 @@ hintOrStep verbose ref = do
    let d = getDerivation ss
        showRule r = fromMaybe ("rule " ++ showId r) $ do 
           script <- ms
-          return (ruleToString emptyEnvironment script r)
+          return (ruleToString (newEnvironment (currentState d)) script r)
    case allfirsts (currentState d) of
       Left msg ->
          return ("Error: " ++ msg)
@@ -219,7 +219,7 @@ nextStep ref = do
          setValue ref $ Some $ ss { getDerivation = extendDerivation new d  }
          case ms of
             Just script ->
-               return ("You have applied " ++ ruleToString emptyEnvironment script r ++ " correctly.")
+               return ("You have applied " ++ ruleToString (newEnvironment (currentState d)) script r ++ " correctly.")
             _ -> 
                return ("You have applied rule " ++ showId r ++ " correctly.")
 

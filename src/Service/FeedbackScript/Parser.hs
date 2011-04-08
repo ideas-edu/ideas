@@ -22,7 +22,6 @@ import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec
 
--- The parser
 parseScript :: FilePath -> IO Script
 parseScript file = do
    result <- parseFromFile script file
@@ -46,14 +45,25 @@ decls = many $ do
 decl :: CharParser st Decl
 decl = do
    dt <- declType
-   a  <- identifier
-   c  <- optionMaybe (lexChar '|' >> condition)
-   t  <- text
-   return (Decl dt a c t)
+   a  <- identifiers
+   f  <- (simpleDecl <|> guardedDecl)
+   return (f dt a)
  <|> do
    lexString "namespace"
-   liftM NameSpace identifier
+   liftM NameSpace identifiers
+ <|> do
+   lexString "supports"
+   liftM Supports identifiers
  <?> "declaration"
+
+simpleDecl, guardedDecl :: CharParser st (DeclType -> [Id] -> Decl)
+simpleDecl  = liftM (\t dt a -> Simple dt a t) text
+guardedDecl = do
+   xs <- many1 $ do
+            c <- lexChar '|' >> condition
+            t <- text
+            return (c, t)
+   return (\dt a -> Guarded dt a xs)
 
 declType :: CharParser st DeclType
 declType =  (lexString "text"     >> return RuleText)
@@ -61,11 +71,13 @@ declType =  (lexString "text"     >> return RuleText)
         <|> (lexString "feedback" >> return Feedback)
 
 condition :: CharParser st Condition
-condition =
-   lexeme (liftM CondRef attribute)
- <|> do
-   lexString "recognize"
-   lexeme (liftM RecognizedIs identifier)
+condition = choice
+   [ lexeme (liftM CondRef attribute)
+   , lexString "recognize" >> lexeme (liftM RecognizedIs identifier)
+   , lexString "true"  >> return (CondConst True)
+   , lexString "false" >> return (CondConst False)
+   , lexString "not" >> liftM CondNot condition
+   ]
 
 text :: CharParser st Text
 text = do 
@@ -87,6 +99,9 @@ textItem = liftM TextString (many1 (noneOf "@#{}\n" <|> try escaped))
        <|> liftM TextRef attribute
  where
    escaped = skip (char '@') >> satisfy (not . isAlphaNum)
+
+identifiers :: CharParser st [Id]
+identifiers = sepBy1 identifier (lexChar ',')
 
 -- Lexical units
 identifier :: CharParser st Id

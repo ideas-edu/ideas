@@ -14,7 +14,7 @@ module Service.FeedbackText
    ) where
 
 import Common.Library hiding (derivation)
-import Common.Utils (fst3, thd3)
+import Common.Utils (thd3)
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State
@@ -28,7 +28,7 @@ import Service.FeedbackScript.Run
 derivationtext :: Script -> State a -> Either String [(String, Context a)]
 derivationtext script state = do
    xs <- derivation Nothing state
-   return (map (first (ruleToString emptyEnvironment script)) xs)
+   return (map (first (ruleToString (newEnvironment state) script)) xs)
 
 onefirsttext :: Script -> State a -> Maybe String -> (Bool, String, State a)
 onefirsttext script old event = 
@@ -39,14 +39,12 @@ onefirsttext script old event =
  where
    ex   = exercise (exercisePkg old) 
    next = either (const Nothing) Just (onefirst old)
-   env  = emptyEnvironment
-      { oldReady = Just (ready old)
-      , expected = fmap fst3 next
-      , diffPair = do
+   env  = (newEnvironment old)
+      { diffPair = do
           new      <- fmap thd3 next
           oldC     <- fromContext (stateContext old)
           a        <- fromContext (stateContext new)
-          (d1, d2) <- difference ex True oldC a 
+          (d1, d2) <- difference ex False oldC a 
           return (prettyPrinter ex d1, prettyPrinter ex d2)
       }
 
@@ -72,10 +70,8 @@ feedbacktext script old a =
    diagnosis = diagnose old a
    output    = feedbackDiagnosis diagnosis env script
    ex  = exercise (exercisePkg old)
-   env = emptyEnvironment 
-            { oldReady = Just (ready old)
-            , expected = either (const Nothing) (Just . fst3) (onefirst old)
-            , diffPair = do
+   env = (newEnvironment old)
+            { diffPair = do
                  oldC     <- fromContext (stateContext old)
                  (d1, d2) <- difference ex False oldC a 
                  return (prettyPrinter ex d1, prettyPrinter ex d2)

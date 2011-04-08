@@ -17,6 +17,8 @@ module Service.FeedbackScript.Syntax
    ) where
 
 import Common.Id
+import Common.Utils (commaList)
+import Data.Char
 import Data.Monoid
 
 newtype Script = S { scriptDecls :: [Decl] }
@@ -25,8 +27,10 @@ makeScript :: [Decl] -> Script
 makeScript = S
 
 data Decl 
-   = NameSpace Id
-   | Decl DeclType Id (Maybe Condition) Text
+   = NameSpace [Id]
+   | Supports  [Id]
+   | Simple  DeclType [Id] Text
+   | Guarded DeclType [Id] [(Condition, Text)]
 
 data DeclType = RuleText | StringDecl | Feedback
 
@@ -38,17 +42,24 @@ data TextItem
           
 data Condition 
    = RecognizedIs Id
+   | CondNot   Condition
+   | CondConst Bool
    | CondRef Id
 
 instance Show Script where
    show = unlines . map show . scriptDecls
 
 instance Show Decl where 
-   show (NameSpace a)   = "namespace " ++ show a
-   show (Decl dt a c t) = unwords $
-      [ show dt, show a] ++ 
-      maybe [] (\x -> ["|" , show x]) c ++ 
-      ("=" : map show t)
+   show decl = 
+      let idList   = commaList . map show
+          f dt as  = unwords [show dt, idList as]
+          g (c, t) = "   | " ++ show c ++ " = " ++ texts t
+          texts    = unwords . map show
+      in case decl of
+            NameSpace as     -> "namespace " ++ idList as
+            Supports as      -> "supports "  ++ idList as
+            Simple dt as t   -> f dt as ++ " = " ++ texts t
+            Guarded dt as xs -> unlines (f dt as : map g xs)
 
 instance Show DeclType where
    show RuleText   = "text"
@@ -57,6 +68,8 @@ instance Show DeclType where
 
 instance Show Condition where
    show (RecognizedIs a) = "recognize " ++ show a
+   show (CondNot c)      = "not " ++ show c
+   show (CondConst b)    = map toLower (show b)
    show (CondRef a)      = "@" ++ show a 
 
 instance Show TextItem where

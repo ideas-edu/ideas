@@ -13,41 +13,45 @@
 -----------------------------------------------------------------------------
 module Service.FeedbackScript.Run 
    ( Script
-   , Environment(..), emptyEnvironment
+   , Environment(..), newEnvironment
    , feedbackDiagnosis, feedbackHint
    , ruleToString
    ) where
 
 import Common.Context (Context)
 import Common.Id
-import Common.Utils (safeHead)
+import Common.Utils (safeHead, fst3)
 import Control.Monad
 import Common.Transformation
 import Data.Char
 import Data.Maybe
 import Data.Monoid
+import Service.BasicServices
 import Service.FeedbackScript.Syntax
 import Service.Diagnose
+import Service.State
 
 data Environment a = Env
-   { oldReady   :: Maybe Bool
-   , recognized :: Maybe (Rule (Context a))
+   { oldReady   :: Bool
    , expected   :: Maybe (Rule (Context a))
+   , recognized :: Maybe (Rule (Context a))
    , diffPair   :: Maybe (String, String)
    }
    
-emptyEnvironment :: Environment a
-emptyEnvironment = Env 
-   { oldReady   = Nothing
+newEnvironment :: State a -> Environment a
+newEnvironment st = Env 
+   { oldReady   = ready st
+   , expected   = fmap fst3 next
    , recognized = Nothing
-   , expected   = Nothing
    , diffPair   = Nothing
    }
+ where
+   next = either (const Nothing) Just (onefirst st)
 
 toString :: Environment a -> Script -> Text -> String
 toString env script = fromMaybe "" . eval env script . Right
 
-ruleToString :: Environment a -> Script -> Rule a -> String
+ruleToString :: Environment a -> Script -> Rule b -> String
 ruleToString env script = fromMaybe "" . eval env script . Left . getId
 
 eval :: Environment a -> Script -> Either Id Text -> Maybe String
@@ -68,12 +72,14 @@ eval env script = fmap normalize . either (return . findIdRef) recs
 
    evalBool :: Condition -> Bool
    evalBool (RecognizedIs a) = maybe False (eqId a . getId) (recognized env)
+   evalBool (CondNot c)      = not (evalBool c)
+   evalBool (CondConst b)    = b
    evalBool (CondRef a)
-      | a == newId "oldready"    = fromMaybe False (oldReady env)
+      | a == newId "oldready"    = oldReady env
       | a == newId "hasexpected" = isJust (expected env)
       | otherwise                = False
 
-   namespaces = mempty : [ a | NameSpace a <- scriptDecls script ]
+   namespaces = mempty : [ a | NameSpace as <- scriptDecls script, a <- as ]
 
    -- equality with namespaces
    eqId :: Id -> Id -> Bool
@@ -85,10 +91,15 @@ eval env script = fmap normalize . either (return . findIdRef) recs
    findRef :: (Id -> Bool) -> Maybe String
    findRef p = safeHead $ catMaybes
       [ recs t
-      | Decl _ a cond t <- scriptDecls script
-      , p a 
-      , maybe True evalBool cond
+      | (as, c, t) <- allDecls
+      , any p as && evalBool c
       ]
+      
+   allDecls = 
+      let f (Simple _ as t)   = [ (as, CondConst True, t) ]
+          f (Guarded _ as xs) = [ (as, c, t) | (c, t) <- xs ] 
+          f _ = []
+      in concatMap f (scriptDecls script)
 
 normalize :: String -> String
 normalize = interpunction . unwords . words

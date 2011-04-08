@@ -66,7 +66,7 @@ guardedDecl = do
    return (\dt a -> Guarded dt a xs)
 
 declType :: CharParser st DeclType
-declType =  (lexString "text"     >> return RuleText)
+declType =  (lexString "text"     >> return TextForId)
         <|> (lexString "string"   >> return StringDecl)
         <|> (lexString "feedback" >> return Feedback)
 
@@ -86,16 +86,17 @@ text = do
 
 singleLineText :: CharParser st Text
 singleLineText = do 
-   manyTill textItem (lexeme (skip newline <|> comment))
+   xs <- manyTill textItem (lexeme (skip newline <|> comment))
+   return (mconcat xs)
 
 multiLineText :: CharParser st Text
 multiLineText = do 
    skip (char '{')
-   xs <- manyTill (textItem <|> (newline >> return (TextString []))) (lexChar '}')
-   return (xs) 
+   xs <- manyTill (textItem <|> (newline >> return mempty)) (lexChar '}')
+   return (mconcat xs)
 
-textItem :: CharParser st TextItem
-textItem = liftM TextString (many1 (noneOf "@#{}\n" <|> try escaped))
+textItem :: CharParser st Text
+textItem = liftM makeText (many1 (noneOf "@#{}\n" <|> try escaped))
        <|> liftM TextRef attribute
  where
    escaped = skip (char '@') >> satisfy (not . isAlphaNum)

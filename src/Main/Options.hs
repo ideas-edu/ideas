@@ -22,6 +22,7 @@ import System.Exit
 
 data Flag = Version | Help | Logging Bool | InputFile String 
           | FixRNG | DocItem DocItem | DocDir String | TestDir String
+          | MakeScriptFor String
    deriving Eq
 
 header :: String
@@ -46,17 +47,18 @@ shortVersion = version ++ " (" ++ show revision ++ ")"
 
 options :: [OptDescr Flag]
 options =
-     [ Option []  ["version"]    (NoArg Version)              "show version number"
-     , Option "?" ["help"]       (NoArg Help)                 "show options"
-     , Option "l" ["logging"]    (NoArg $ Logging True)       "enable logging"
-     , Option []  ["no-logging"] (NoArg $ Logging False)      "disable logging (default on local machine)"
-     , Option "f" ["file"]       (ReqArg InputFile "FILE")    "use input FILE as request"
-     , Option ""  ["fixed-rng"]  (NoArg FixRNG)               "use a fixed random-number generator"
-     , Option ""  ["make-pages"] (NoArg $ DocItem Pages)      "generate pages for exercises and services"
-     , Option ""  ["self-check"] (NoArg $ DocItem SelfCheck)  "perform a self-check"
-     , Option ""  ["test"]       (OptArg testArg "DIR")       "run tests on directory (default: 'test')"
-     , Option ""  ["docs-dir"]   (ReqArg DocDir "DIR")        "directory for documentation (default: 'docs')" 
-     , Option ""  ["test-dir"]   (ReqArg TestDir "DIR")       "directory with tests (default: 'test')"
+     [ Option []  ["version"]     (NoArg Version)              "show version number"
+     , Option "?" ["help"]        (NoArg Help)                 "show options"
+     , Option "l" ["logging"]     (NoArg $ Logging True)       "enable logging"
+     , Option []  ["no-logging"]  (NoArg $ Logging False)      "disable logging (default on local machine)"
+     , Option "f" ["file"]        (ReqArg InputFile "FILE")    "use input FILE as request"
+     , Option ""  ["fixed-rng"]   (NoArg FixRNG)               "use a fixed random-number generator"
+     , Option ""  ["make-pages"]  (NoArg $ DocItem Pages)      "generate pages for exercises and services"
+     , Option ""  ["self-check"]  (NoArg $ DocItem SelfCheck)  "perform a self-check"
+     , Option ""  ["test"]        (OptArg testArg "DIR")       "run tests on directory (default: 'test')"
+     , Option ""  ["docs-dir"]    (ReqArg DocDir "DIR")        "directory for documentation (default: 'docs')" 
+     , Option ""  ["test-dir"]    (ReqArg TestDir "DIR")       "directory with tests (default: 'test')"
+     , Option ""  ["make-script"] (ReqArg MakeScriptFor "ID")  "generate feedback script for exercise" 
      ]
 
 testArg :: Maybe String -> Flag
@@ -91,6 +93,10 @@ testDir flags = case [ d | TestDir d <- flags ] of
 
 documentationMode :: [Flag] -> Bool
 documentationMode = not . null . docItems
+
+scriptMode :: [Flag] -> Bool
+scriptMode flags = not $ null 
+   [ () | MakeScriptFor _ <- flags ]
 
 withLogging :: [Flag] -> Bool
 withLogging flags = and [ b | Logging b <- flags ]

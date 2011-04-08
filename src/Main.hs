@@ -25,6 +25,7 @@ import Network.CGI
 import Service.ModeJSON (processJSON)
 import Service.ModeXML  (processXML)
 import Service.Request
+import Service.FeedbackScript.Analysis
 
 main :: IO ()
 main = do
@@ -49,6 +50,10 @@ main = do
              useIDEAS $ 
                 let f = makeDocumentation (docDir flags) (testDir flags)
                 in mapM_ f (docItems flags)
+      
+      -- feedback script options
+        | scriptMode flags -> useIDEAS $
+             withScripts [ a | MakeScriptFor a <- flags ]
 
       -- cgi binary
       Nothing -> runCGI $ do

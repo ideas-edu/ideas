@@ -15,7 +15,7 @@ module Service.FeedbackScript.Run
    ( Script
    , Environment(..), newEnvironment
    , feedbackDiagnosis, feedbackHint
-   , ruleToString
+   , ruleToString, feedbackIds
    ) where
 
 import Common.Context (Context)
@@ -23,7 +23,6 @@ import Common.Id
 import Common.Utils (safeHead, fst3)
 import Control.Monad
 import Common.Transformation
-import Data.Char
 import Data.Maybe
 import Data.Monoid
 import Service.BasicServices
@@ -55,20 +54,19 @@ ruleToString :: Environment a -> Script -> Rule b -> String
 ruleToString env script = fromMaybe "" . eval env script . Left . getId
 
 eval :: Environment a -> Script -> Either Id Text -> Maybe String
-eval env script = fmap normalize . either (return . findIdRef) recs
- where
-   recs :: [TextItem] -> Maybe String
-   recs = liftM concat . mapM rec
-   
-   rec :: TextItem -> Maybe String
-   rec (TextString s)           = Just s
-   rec (TextRef a)              
-      | a == newId "expected"   = fmap (findIdRef . getId) (expected env)
-      | a == newId "recognized" = fmap (findIdRef . getId) (recognized env)
-      | a == newId "diffbefore" = fmap fst (diffPair env)
-      | a == newId "diffafter"  = fmap snd (diffPair env)
-      | a `elem` feedbackIds    = findRef (==a)
-      | otherwise               = findRef (==a)
+eval env script = fmap show . either (return . findIdRef) evalText
+ where   
+   evalText :: Text -> Maybe Text
+   evalText = liftM mconcat . mapM unref . textItems
+    where
+      unref (TextRef a) 
+         | a == newId "expected"   = fmap (findIdRef . getId) (expected env)
+         | a == newId "recognized" = fmap (findIdRef . getId) (recognized env)
+         | a == newId "diffbefore" = fmap (TextString . fst) (diffPair env)
+         | a == newId "diffafter"  = fmap (TextString . snd) (diffPair env)
+         | a `elem` feedbackIds    = findRef (==a)
+         | otherwise               = findRef (==a) 
+      unref t = Just t
 
    evalBool :: Condition -> Bool
    evalBool (RecognizedIs a) = maybe False (eqId a . getId) (recognized env)
@@ -85,12 +83,12 @@ eval env script = fmap normalize . either (return . findIdRef) recs
    eqId :: Id -> Id -> Bool
    eqId a b = any (\n -> n#a == b) namespaces
 
-   findIdRef :: Id -> String
-   findIdRef x = fromMaybe (showId x) (findRef (`eqId` x))
+   findIdRef :: Id -> Text
+   findIdRef x = fromMaybe (TextString (showId x)) (findRef (`eqId` x))
         
-   findRef :: (Id -> Bool) -> Maybe String
+   findRef :: (Id -> Bool) -> Maybe Text
    findRef p = safeHead $ catMaybes
-      [ recs t
+      [ evalText t
       | (as, c, t) <- allDecls
       , any p as && evalBool c
       ]
@@ -100,16 +98,6 @@ eval env script = fmap normalize . either (return . findIdRef) recs
           f (Guarded _ as xs) = [ (as, c, t) | (c, t) <- xs ] 
           f _ = []
       in concatMap f (scriptDecls script)
-
-normalize :: String -> String
-normalize = interpunction . unwords . words
- where
-   special = (`elem` ".,:;?!")
-   interpunction xs =
-      case xs of
-         a:b:ys | special a && isAlpha b -> a : ' ' : b : interpunction ys
-         y:ys -> y:interpunction ys
-         []   -> []
 
 feedbackDiagnosis :: Diagnosis a -> Environment a -> Script -> String
 feedbackDiagnosis diagnosis env = 
@@ -125,7 +113,7 @@ feedbackHint :: Bool -> Environment a -> Script -> String
 feedbackHint b = make (if b then "hint" else "step")
 
 make :: String -> Environment a -> Script -> String
-make s env script = toString env script [TextRef (newId s)]
+make s env script = toString env script (TextRef (newId s))
 
 feedbackIds :: [Id]
 feedbackIds = map newId 

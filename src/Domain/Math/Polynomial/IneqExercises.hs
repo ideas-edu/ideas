@@ -41,7 +41,7 @@ ineqLinearExercise = makeExercise
    { exerciseId   = describe "solve a linear inequation" $ 
                        newId "algebra.inequalities.linear"
    , status       = Provisional
-   , parser       = parseExprWith (pRelation pExpr)
+   , parser       = parseRelExpr
    , isReady      = solvedRelation
    , equivalence  = linEq
    , similarity   = viewEquivalent (traverseView cleanUpView)
@@ -58,7 +58,7 @@ ineqQuadraticExercise = makeExercise
    { exerciseId    = describe "solve a quadratic inequation" $ 
                         newId "algebra.inequalities.quadratic"
    , status        = Provisional
-   , parser        = parseExprWith (pLogicRelation pExpr)
+   , parser        = parseLogicRelExpr
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just quadrEqContext
@@ -76,7 +76,7 @@ ineqHigherDegreeExercise = makeExercise
    { exerciseId    = describe "solve an inequation of higher degree" $ 
                         newId "algebra.inequalities.polynomial"
    , status        = Provisional
-   , parser        = parseExprWith (pLogicRelation pExpr)
+   , parser        = parseLogicRelExpr
    , prettyPrinter = showLogicRelation
    , isReady       = solvedRelations
    , eqWithContext = Just highEqContext

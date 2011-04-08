@@ -48,7 +48,7 @@ rationalEquationExercise = makeExercise
    { exerciseId    = describe "solve a rational equation (with a variable in a divisor)" $ 
                         newId "algebra.equations.rational"
    , status        = Provisional
-   , parser        = parseExprWith (pOrList (pEquation pExpr))
+   , parser        = parseOrsEqExpr
    , isSuitable    = isJust . rationalEquations
    , isReady       = solvedRelations
    , eqWithContext = Just eqRationalEquation

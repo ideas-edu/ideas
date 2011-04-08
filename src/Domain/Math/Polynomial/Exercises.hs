@@ -44,7 +44,7 @@ linearExercise = makeExercise
    { exerciseId   = describe "solve a linear equation" $ 
                        newId "algebra.equations.linear"
    , status       = Provisional
-   , parser       = parseExprWith (pEquation pExpr)
+   , parser       = parseEqExpr
    , similarity   = viewEquivalent (traverseView cleanUpACView)
    , equivalence  = viewEquivalent linearEquationView
    , isSuitable   = (`belongsTo` linearEquationView)
@@ -75,7 +75,7 @@ quadraticExercise = makeExercise
    { exerciseId   = describe "solve a quadratic equation" $ 
                        newId "algebra.equations.quadratic"
    , status       = Provisional
-   , parser       = parseExprWith (pOrList (pEquation pExpr)) 
+   , parser       = parseOrsEqExpr
                        >>> right (build (traverseView equationView)) 
    , similarity   = viewEquivalent (traverseView (traverseView cleanUpView))
    , equivalence  = equivalentRelation (viewEquivalent quadraticEquationsView)
@@ -130,7 +130,7 @@ quadraticWithApproximation = quadraticExercise
    { exerciseId   = describe "solve a quadratic equation with approximation" $ 
                        newId "algebra.equations.quadratic.approximate"
    , status       = Alpha
-   , parser       = parseExprWith (pOrList (pRelation pExpr))
+   , parser       = parseOrsRelExpr
    , strategy     = configure cfg quadraticStrategy
    , equivalence  = equivalentApprox
    }
@@ -144,7 +144,7 @@ findFactorsExercise = makeExercise
    { exerciseId   = describe "factorize the expression" $ 
                        newId "algebra.manipulation.polynomial.factor"
    , status       = Provisional
-   , parser       = parseExprWith pExpr
+   , parser       = parseExpr
    , similarity   = \a b -> cleanUpExpr a == cleanUpExpr b
    , equivalence  = viewEquivalent (polyViewWith rationalView)
    , isReady      = (`belongsTo` linearFactorsView)

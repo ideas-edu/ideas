@@ -10,74 +10,59 @@
 --
 -----------------------------------------------------------------------------
 module Domain.LinearAlgebra.Parser 
-   ( parseMatrix, parseVectorSpace, ppMatrix, ppMatrixWith
-   , parseSystem
+   ( parseMatrix, parseVectorSpace, parseSystem
+   , ppMatrix, ppMatrixWith
    ) where
 
+import Data.Char
+import Data.Either
 import Domain.Math.Data.Relation
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
 import Domain.LinearAlgebra.LinearView (isLinear)
 import Domain.LinearAlgebra.Vector
 import Domain.Math.Expr
-import Text.Parsing
-
-{-
-testje = case parseSystem " \n\n x == 43 \n 3*y == sqrt 4 \n" of -- "\n\n 1*x + 3*y + 2 + 87 == 2  \n   " of
-            this -> this -}
 
 parseSystem :: String -> Either String (LinearSystem Expr)
-parseSystem = either (Left . show) f . parseWith s pSystem
- where
-   s0 = specialSymbols "\n" scannerExpr
-   s  = s0 {keywordOperators = "==" : keywordOperators s0 }
-   f Nothing  = Left "System is not linear"
-   f (Just m) = Right m
-
-pSystem :: TokenParser (Maybe (LinearSystem Expr))
-pSystem = convertSystem <$> pEquations pExpr
- where
-   convertSystem :: Equations Expr -> Maybe (LinearSystem Expr)
-   convertSystem eqs 
-      | all f eqs = return eqs
-      | otherwise = Nothing
-    where 
-       f (a :==: b) = isLinear a && isLinear b
+parseSystem input = 
+   case foreachLine parseEqExpr input of
+      Left msg -> Left msg
+      Right eqs
+         | all f eqs -> Right eqs
+         | otherwise -> Left "System is not linear"
+        where
+          f (a :==: b) = isLinear a && isLinear b
  
 -----------------------------------------------------------
 --- Parser
 
 parseMatrix :: String -> Either String (Matrix Expr)
-parseMatrix = either (Left . show) f . parseWith s p
- where
-   s = specialSymbols "\n" scannerExpr
-   p = pMatrix pFractional
-   f Nothing  = Left "Matrix is not rectangular"
-   f (Just m) = Right m
-
-pMatrix :: TokenParser a -> TokenParser (Maybe (Matrix a))
-pMatrix p = make <$> pLines True (pList1 p)
- where 
-   make xs = if isRectangular xs then Just (makeMatrix xs) else Nothing 
+parseMatrix input = 
+   case foreachLine parseExprTuple input of
+      Left msg -> Left msg
+      Right xss 
+         | isRectangular xss -> Right (makeMatrix xss)
+         | otherwise         -> Left "Matrix is not rectangular"
 
 parseVectorSpace :: String -> Either String (VectorSpace Expr)
-parseVectorSpace = either (Left . show) Right . parseWith s p
- where
-   s = specialSymbols "\n" scannerExpr
-   p = makeVectorSpace <$> pVectors pExpr
+parseVectorSpace input =
+   case foreachLine parseExprTuple input of
+      Left msg -> Left msg
+      Right xss 
+         | sameDimension vs -> Right (makeVectorSpace vs)
+         | otherwise        -> Left "Vectors have different dimensions" 
+       where
+         vs = map fromList xss
 
-pVectors :: TokenParser a -> TokenParser [Vector a]
-pVectors p = pLines True (pVector p)
+nonEmptyLines :: String -> [String]
+nonEmptyLines = filter (not . all isSpace) . lines
 
-pVector :: TokenParser a -> TokenParser (Vector a)
-pVector p = fromList <$> myParens (myListSep (pSpec ',') p)
-
-myListSep :: TokenParser a -> TokenParser b -> TokenParser [b]
-myListSep sep p = optional ((:) <$> p <*> pList (sep *> p)) []
-
-myParens :: TokenParser a -> TokenParser a
-myParens p = pSpec '(' *> p <* pSpec ')'
-
+foreachLine :: (String -> Either String a) -> String -> Either String [a]
+foreachLine p input = 
+   case (partitionEithers . map p . nonEmptyLines) input of
+      (msg:_, _) -> Left msg
+      ([],   as) -> Right as
+   
 -----------------------------------------------------------
 --- Pretty-Printer
 

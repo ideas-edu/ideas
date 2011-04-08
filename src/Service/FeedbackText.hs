@@ -15,7 +15,6 @@ module Service.FeedbackText
 
 import Common.Library hiding (derivation)
 import Common.Utils (thd3)
-import Control.Arrow
 import Data.Maybe
 import Service.ExercisePackage
 import Service.State

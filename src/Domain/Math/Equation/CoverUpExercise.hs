@@ -31,7 +31,7 @@ coverUpExercise = makeExercise
    { exerciseId   = describe "solve an equation by covering up" $
                        newId "algebra.equations.coverup"
    , status       = Provisional
-   , parser       = parseExprWith (pOrList (pEquation pExpr))
+   , parser       = parseOrsEqExpr
    , equivalence  = eqCoverUp
    , similarity   = myEq
    , isReady      = solvedEquations

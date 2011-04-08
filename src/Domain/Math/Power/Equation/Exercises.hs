@@ -43,7 +43,7 @@ import qualified Data.Foldable as F
 powerEqExercise :: Exercise (Relation Expr)
 powerEqExercise = let precision = 2 in makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pRelation pExpr)
+  , parser         = parseRelExpr
   , strategy       = powerEqApproxStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve power equation algebraically with x > 0" $ 
@@ -58,7 +58,7 @@ powerEqExercise = let precision = 2 in makeExercise
 expEqExercise :: Exercise (Equation Expr)
 expEqExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pEquation pExpr)
+  , parser         = parseEqExpr
   , strategy       = expEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve exponential equation algebraically" $ 
@@ -74,7 +74,7 @@ expEqExercise = makeExercise
 logEqExercise :: Exercise (OrList (Relation Expr))
 logEqExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pOrList (pRelation pExpr))
+  , parser         = parseOrsRelExpr
   , strategy       = logEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve logarithmic equation algebraically" $ 
@@ -90,7 +90,7 @@ logEqExercise = makeExercise
 higherPowerEqExercise :: Exercise (OrList (Equation Expr))
 higherPowerEqExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pOrList (pEquation pExpr))
+  , parser         = parseOrsEqExpr
   , strategy       = higherPowerEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 
@@ -107,7 +107,7 @@ higherPowerEqExercise = makeExercise
 rootEqExercise :: Exercise (OrList (Equation Expr))
 rootEqExercise = makeExercise
   { status         = Provisional
-  , parser         = parseExprWith (pOrList (pEquation pExpr))
+  , parser         = parseOrsEqExpr
   , strategy       = rootEqStrategy
   , navigation     = termNavigator
   , exerciseId     = describe "solve higher power equation algebraically" $ 

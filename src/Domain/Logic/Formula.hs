@@ -16,6 +16,7 @@ module Domain.Logic.Formula
 
 import Common.Algebra.Boolean
 import Common.Algebra.CoBoolean
+import Common.Classes
 import Common.Id
 import Common.Rewriting
 import Common.Uniplate
@@ -81,6 +82,11 @@ instance CoBoolean (Logic a) where
    isOr  _              = Nothing
    isComplement (Not p) = Just p
    isComplement _       = Nothing
+
+instance Container Logic where
+   to = Var
+   from (Var a) = Just a
+   from _       = Nothing
 
 -- | The type LogicAlg is the algebra for the data type Logic
 -- | Used in the fold for Logic.

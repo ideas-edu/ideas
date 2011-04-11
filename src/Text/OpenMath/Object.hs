@@ -14,14 +14,18 @@ module Text.OpenMath.Object
    ( OMOBJ(..), getOMVs, xml2omobj, omobj2xml
    ) where
 
-import Data.Char (isSpace)
+import Control.Monad
 import Data.Generics.Uniplate hiding (children)
 import Data.List (nub)
 import Data.Maybe
 import Data.Typeable
 import Text.OpenMath.Symbol
-import Text.Scanning (scanInt, scanNumber, Pos(..))
 import Text.XML
+import Text.ParserCombinators.Parsec.Token
+import Text.ParserCombinators.Parsec
+import qualified Text.ParserCombinators.Parsec.Token as P
+import Text.ParserCombinators.Parsec.Language
+import Control.Arrow
 
 -- internal representation for OpenMath objects
 data OMOBJ = OMI Integer 
@@ -68,17 +72,15 @@ xml2omobj xmlTop =
             return (OMS (mcd, n))
 
          [Left s] | name xml == "OMI" ->
-            case scanInt (Pos 0 0) s of
-               Just (i, _, rest) | all isSpace rest
-                  -> return (OMI (toInteger i))
-               _  -> fail "invalid integer in OMI"
+            case scanInt s of
+               Just i -> return (OMI (toInteger i))
+               _      -> fail "invalid integer in OMI"
          
          [] | name xml == "OMF" -> do
             s <- findAttribute "dec" xml 
-            case scanNumber (Pos 0 0) s of
-               Just (nr, _, rest) | all isSpace rest 
-                  -> return (OMF (either fromIntegral id nr))
-               _  -> fail "invalid floating-point in OMF"
+            case scanNumber s of
+               Just nr -> return (OMF nr)
+               _       -> fail "invalid floating-point in OMF"
                     
          [] | name xml == "OMV" -> do
             s <- findAttribute "name" xml
@@ -120,3 +122,22 @@ omobj2xml object = makeXML "OMOBJ" $ do
             rec x 
             element "OMBVAR" (mapM_ (rec . OMV) ys) 
             rec z
+
+scanInt :: String -> Maybe Integer     
+scanInt = either (const Nothing) Just . parseWith (integer lexer)
+
+scanNumber :: String -> Maybe Double   
+scanNumber = either (error . show) Just . parseWith p
+ where
+   p = do 
+      f <- option id (P.reservedOp lexer "-" >> return negate) 
+      a <- P.float lexer
+      return (f a)
+
+parseWith :: Parser a -> String -> Either String a
+parseWith p = left show . runParser start () ""
+ where
+   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
+
+lexer :: P.TokenParser a
+lexer = P.makeTokenParser $ emptyDef {reservedOpNames = ["-"]}

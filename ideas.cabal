@@ -218,7 +218,6 @@ Executable              ideas
                         containers,
                         QuickCheck >= 2.1.0.3,
                         random,
-                        uulib,
                         filepath,
                         parsec,
                         uniplate

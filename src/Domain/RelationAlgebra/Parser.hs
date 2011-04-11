@@ -11,66 +11,66 @@
 -----------------------------------------------------------------------------
 module Domain.RelationAlgebra.Parser (parseRelAlg, ppRelAlg) where
 
+import Control.Arrow
+import Control.Monad
 import Domain.RelationAlgebra.Formula
-import Text.Parsing
-
-myScanner :: Scanner
-myScanner = defaultScanner
-   { keywords         = ["V", "E", "I"]
-   , keywordOperators = invSym : notSym : concatMap (map fst . snd) operatorTable
-   , specialCharacters = "-~" ++ specialCharacters defaultScanner
-   }
-
-operatorTable :: OperatorTable RelAlg
-operatorTable = 
-   [ (RightAssociative, [(orSym, (:||:))])
-   , (RightAssociative, [(andSym, (:&&:))])
-   , (NoMix,            [(compSym, (:.:)), (addSym, (:+:))])
-   ]
-
-andSym, orSym, addSym, compSym, notSym, invSym :: String
-andSym  = "/\\"
-orSym   = "\\/" 
-addSym  = "!"
-compSym = ";"
-notSym  = "-"
-invSym  = "~"
+import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Language
+import Text.ParserCombinators.Parsec.Expr
+import qualified Text.ParserCombinators.Parsec.Token as P
    
 -----------------------------------------------------------
 --- Parser
 
 parseRelAlg  :: String -> Either String RelAlg
-parseRelAlg = analyseAndParse pRelAlg . scanWith myScanner
-
-pRelAlg :: Parser Token RelAlg
-pRelAlg = pOperators operatorTable pTerm
-
--- Two postfix operators
-pTerm :: Parser Token RelAlg
-pTerm = foldl (flip ($)) <$> pAtom <*> pList pUnOp
+parseRelAlg = parseWith relalg
  where
-   pUnOp  =  Inv <$ pKey invSym 
-         <|> Not <$ pKey notSym
-
-pAtom :: Parser Token RelAlg
-pAtom  =  Var <$> pVarid
-      <|> pParens pRelAlg
-      <|> const V     <$> pKey "V"
-      <|> const empty <$> pKey "E"
-      <|> const I     <$> pKey "I"
+   relalg = buildExpressionParser table term
+   
+   term = liftM2 (foldl (flip ($))) atom (many pUn)
+   
+   pUn = choice 
+      [ reservedOp "~" >> return Inv
+      , reservedOp "-" >> return Not
+      ]
+   
+   atom = choice
+      [ P.reserved lexer "V" >> return V
+      , P.reserved lexer "E" >> return empty
+      , P.reserved lexer "I" >> return I
+      , liftM Var (P.identifier lexer)
+      , P.parens lexer relalg
+      ]
+   
+   table = 
+      [ [ Infix (reservedOp ";" >> return (:.:)) AssocNone
+        , Infix (reservedOp "!" >> return (:+:)) AssocNone
+        ]
+      , [ Infix (reservedOp "/\\" >> return (:&&:)) AssocRight ]
+      , [ Infix (reservedOp "\\/" >> return (:||:)) AssocRight ]
+      ]
 
 -----------------------------------------------------------
---- Helper-function for parentheses analyses
+--- Lexer
 
-analyseAndParse :: Parser Token a -> [Token] -> Either String a
-analyseAndParse p ts =
-   case checkParentheses ts of
-      Just err -> Left (show err)
-      Nothing  -> either (Left . f) Right (parse p ts)
+lexer :: P.TokenParser a
+lexer = P.makeTokenParser $ emptyDef 
+   { reservedNames   = ["V", "E", "I"]
+   , reservedOpNames = ["~", "-", ";", "!", "\\/", "/\\"]
+   , identStart      = letter
+   , identLetter     = letter
+   , opStart         = fail "" 
+   , opLetter        = fail ""
+   }
+
+reservedOp :: String -> Parser ()
+reservedOp = P.reservedOp lexer
+
+parseWith :: Parser a -> String -> Either String a
+parseWith p = left show . runParser start () ""
  where
-   f (Just t) = show (tokenPosition t) ++ ": Unexpected " ++ show t
-   f Nothing  = "Syntax error"
-                               
+   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
+                  
 -----------------------------------------------------------
 --- Pretty-Printer
 

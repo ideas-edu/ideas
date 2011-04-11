@@ -1,7 +1,7 @@
 {
    "result": [
       false,
-      "Syntax error: Ambiguous use of operators (write parentheses)",
+      "Syntax error: ambiguous use of operators (write parentheses)",
       [
          "logic.propositional.dnf",
          "[]",

@@ -10,129 +10,99 @@
 --
 -----------------------------------------------------------------------------
 module Domain.Logic.Parser
-   ( parseLogic, parseLogicPars, parseLogicUnicodePars, parseLogicProof
+   ( parseLogic, parseLogicPars, parseLogicUnicodePars -- , parseLogicProof
    , ppLogicPars, ppLogicUnicodePars
    ) where
 
 import Common.Algebra.Boolean
 import Common.Utils (ShowString(..))
-import Control.Monad.Error (liftM2)
-import Text.Parsing
 import Control.Arrow
-import Data.List
+import Control.Monad
 import Domain.Logic.Formula
-   
-logicScanner :: Scanner
-logicScanner = (specialSymbols "~" defaultScanner)
-   { keywords         = ["T", "F"]
-   , keywordOperators = "~" : concatMap (map fst . snd) operatorTable
-   }
-
-logicUnicodeScanner :: Scanner
-logicUnicodeScanner = (specialSymbols (concat unicodeSyms) defaultScanner)
-   { keywords         = ["T", "F"]
-   , keywordOperators = unicodeSyms
-   }
-   
-operatorTable :: OperatorTable SLogic
-operatorTable = 
-   [ (RightAssociative, [("<->", (:<->:))])
-   , (RightAssociative, [("||",  (:||:))])
-   , (RightAssociative, [("/\\", (:&&:))])
-   , (RightAssociative, [("->",  (:->:))])
-   ]
+import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Expr
+import Text.ParserCombinators.Parsec.Language
+import qualified Text.ParserCombinators.Parsec.Token as P
 
 -----------------------------------------------------------
 --- Parser
 
--- | Parser for logic formulas that respects all associativity and priority laws 
--- | of the constructors
-parseLogic :: String -> Either String SLogic
-parseLogic = left niceMessage . analyseAndParse pLogic . scanWith logicScanner
+parseWith :: Parser a -> String -> Either String a
+parseWith p = left show . runParser start () ""
  where
-   pLogic = pOperators operatorTable (basicWithPos pLogic)
-   
--- | Parser for logic formulas that insists on more parentheses: "and" and "or" are associative, 
--- | but implication and equivalence are not. Priorities of the operators are unknown, and thus 
--- | parentheses have to be written explicitly. No parentheses are needed for Not (Not p). Superfluous
--- | parentheses are permitted
+   start = (P.whiteSpace lexer) >> p >>= \a -> eof >> return a
+
+parseLogic :: String -> Either String SLogic
+parseLogic = parseWith (parserSLogic False False)
+
+parseLogicUnicode :: String -> Either String SLogic
+parseLogicUnicode = parseWith (parserSLogic True False)
+
 parseLogicPars :: String -> Either String SLogic
-parseLogicPars s
-   = either (Left . niceMessage) suspiciousVariable 
-   $ left (ambiguousOperators parseLogic s)
-   $ analyseAndParse (pLogicGen asciiTuple)
-   $ scanWith logicScanner s
+parseLogicPars input = 
+     either (Left . ambiguousOperators parseLogic input) suspiciousVariable
+   $ parseWith (parserSLogic False True) input
 
 parseLogicUnicodePars :: String -> Either String SLogic
-parseLogicUnicodePars s 
-   = either (Left . niceMessage) suspiciousVariable 
-   $ left (ambiguousOperators (parseLogic . concatMap f) s)
-   $ analyseAndParse (pLogicGen unicodeTuple)
-   $ scanWith logicUnicodeScanner s
- where
-   -- quick fix (since we only need to know whether the parser succeeds)
-   f c | [c] == andUSym   = andASym
-       | [c] == orUSym    = orASym
-       | [c] == notUSym   = notASym
-       | [c] == implUSym  = implASym
-       | [c] == equivUSym = equivASym
-       | otherwise        = [c]
+parseLogicUnicodePars input = 
+   either (Left . ambiguousOperators parseLogicUnicode input) suspiciousVariable
+   $ parseWith (parserSLogic True True) input
 
-pLogicGen :: SymbolTuple -> TokenParser SLogic
-pLogicGen (impl, equiv, conj, disj, neg, tr, fl) = pLogic
+-- generalized parser
+parserSLogic :: Bool -> Bool -> Parser SLogic
+parserSLogic unicode extraPars = pLogic
  where
-   pLogic = flip ($) <$> basic <*> optional composed id
-   basic     =  basicWithPosGen (neg, tr, fl) pLogic
-   composed  =  flip (:<->:) <$ pKey equiv <*> basic
-            <|> flip (:->:)  <$ pKey impl  <*> basic
-            <|> (\xs p -> ands (p:xs)) <$> pList1 (pKey conj *> basic)
-            <|> (\xs p -> ors  (p:xs)) <$> pList1 (pKey disj  *> basic)
- 
-basicWithPos :: TokenParser SLogic -> TokenParser SLogic
-basicWithPos = basicWithPosGen ("~", "T", "F")
+   pLogic 
+      | extraPars = liftM2 (flip ($)) atom (option id composed)
+      | otherwise = buildExpressionParser table atom
+   
+   composed = choice
+      [ reservedOp implSym  >> liftM (flip (:->:))  atom 
+      , reservedOp equivSym >> liftM (flip (:<->:)) atom 
+      , do xs <- many1 (reservedOp disjSym >> atom)
+           return (\x -> ors (x:xs))
+      , do xs <- many1 (reservedOp conjSym >> atom)
+           return (\x -> ands (x:xs))
+      ]
+   
+   atom = choice 
+      [ P.reserved lexer trSym >> return T
+      , P.reserved lexer flSym >> return F
+      , liftM (Var . ShowString) (P.identifier lexer)
+      , P.parens lexer pLogic
+      , reservedOp negSym >> liftM Not atom
+      ]
+      
+   table = 
+      [ [Infix (reservedOp implSym  >> return (:->:))  AssocRight ]
+      , [Infix (reservedOp conjSym  >> return (:&&:))  AssocRight ]
+      , [Infix (reservedOp disjSym  >> return (:||:))  AssocRight ]
+      , [Infix (reservedOp equivSym >> return (:<->:)) AssocRight ]
+      ]
+      
+   (implSym, equivSym, conjSym, disjSym, negSym, trSym, flSym)
+      | unicode   = unicodeTuple
+      | otherwise = asciiTuple
 
-basicWithPosGen :: (String, String, String) -> TokenParser SLogic -> TokenParser SLogic 
-basicWithPosGen t@(nt, tr, fl) p = 
-       (Var . ShowString) <$> pVarid
-   <|> pParens p
-   <|> T  <$ pKey tr
-   <|> F  <$ pKey fl
-   <|> Not <$ pKey nt <*> basicWithPosGen t p
+lexer :: P.TokenParser a
+lexer = P.makeTokenParser $ emptyDef 
+   { reservedNames   = ["T", "F"]
+   , reservedOpNames = ["~", "<->", "->", "||", "/\\"]
+   , identStart      = lower
+   , identLetter     = lower
+   , opStart         = fail "" 
+   , opLetter        = fail ""
+   }
 
-parseLogicProof :: String -> Either String (SLogic, SLogic)
-parseLogicProof s
-   = either Left susp
-   $ left (ambiguousOperators parseLogic s)
-   $ analyseAndParse pProof
-   $ scanWith extScanner s
- where
-   pProof = (,) <$> pLogicGen asciiTuple <* pKey "==" <*> pLogicGen asciiTuple
-   susp (p, q) = liftM2 (,) (suspiciousVariable p) (suspiciousVariable q)
-   extScanner = logicScanner 
-      {keywordOperators = "==" : keywordOperators logicScanner}
+reservedOp :: String -> Parser ()
+reservedOp = P.reservedOp lexer
 
 -----------------------------------------------------------
 --- Helper-functions for syntax warnings
 
-niceMessage :: String -> String
-niceMessage msg
-   | "(" `isPrefixOf` msg            = "Syntax error at " ++ msg
-   | "Syntax error" `isPrefixOf` msg = msg
-   | otherwise                       = "Syntax error: " ++ msg
-
--- analyze parentheses
-analyseAndParse :: TokenParser a -> [Token] -> Either String a
-analyseAndParse p ts =
-   case checkParentheses ts of
-      Just err -> Left (show err)
-      Nothing  -> either (Left . f) Right (parse p ts)
- where
-   f (Just t) = show (tokenPosition t) ++ ": Unexpected " ++ show t
-   f Nothing  = "Syntax error"
-
 ambiguousOperators :: (String -> Either a b) -> String -> String -> String
 ambiguousOperators p s err =
-   let msg = "Ambiguous use of operators (write parentheses)"
+   let msg = "Syntax error: ambiguous use of operators (write parentheses)"
    in either (const err) (const msg) (p s)
 
 -- Report variables 
@@ -188,9 +158,6 @@ notASym   = "~"
    
 -----------------------------------------------------------
 --- Unicode symbols
-
-unicodeSyms :: [String]
-unicodeSyms = [implUSym, equivUSym, andUSym, orUSym, notUSym]
 
 unicodeTuple :: SymbolTuple
 unicodeTuple = (implUSym, equivUSym, andUSym, orUSym, notUSym, "T", "F")

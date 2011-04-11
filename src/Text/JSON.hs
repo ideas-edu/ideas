@@ -20,7 +20,10 @@ module Text.JSON
    , jsonRPC, JSON_RPC_Handler, propEncoding
    ) where
 
-import Text.Parsing
+import Control.Arrow
+import Text.ParserCombinators.Parsec
+import qualified Text.ParserCombinators.Parsec.Token as P
+import Text.ParserCombinators.Parsec.Language
 import qualified Text.UTF8 as UTF8
 import Data.List (intersperse)
 import Data.Maybe
@@ -73,6 +76,10 @@ showPretty json =
    commas []     = []
    commas [x]    = x
    commas (x:xs) = x ++ ",\n" ++ commas xs
+         
+squareBrackets, curlyBrackets :: String -> String
+squareBrackets s = "[" ++ s ++ "]"
+curlyBrackets  s = "{" ++ s ++ "}"
          
 instance Show Number where
    show (I n) = show n
@@ -133,34 +140,38 @@ instance (InJSON a, InJSON b, InJSON c, InJSON d) => InJSON (a, b, c, d) where
    toJSON (a, b, c, d)           = Array [toJSON a, toJSON b, toJSON c, toJSON d]
    fromJSON (Array [a, b, c, d]) = liftM4 (,,,) (fromJSON a) (fromJSON b) (fromJSON c) (fromJSON d)
    fromJSON _                    = fail "expecting an array with 4 elements"
-    
-parseJSON :: Monad m => String -> m JSON
-parseJSON input = 
-   case parseWith jsonScanner json input of
-      Left err -> fail (show err)
-      Right a  -> return a
+
+--------------------------------------------------------
+-- Parser
+
+parseJSON :: String -> Either String JSON
+parseJSON = left show . runParser start () ""
  where
-   jsonScanner = specialSymbols ":" defaultScanner
-      { keywords   = ["true", "false", "null"]
-      , unaryMinus = True
-      }
+   start = (P.whiteSpace lexer) >> json >>= \a -> eof >> return a
+
+   json :: Parser JSON
+   json = choice 
+      [ P.reserved lexer "null"  >> return Null
+      , P.reserved lexer "true"  >> return (Boolean True)
+      , P.reserved lexer "false" >> return (Boolean False)
+      , try (liftM (Number . D) (P.float lexer))
+      , liftM (Number . I) (P.integer lexer)
+      , liftM (String . fromMaybe [] . UTF8.decodeM) (P.stringLiteral lexer)
+      , liftM Array  (P.brackets lexer (sepBy json (P.comma lexer)))
+      , liftM Object (P.braces lexer (sepBy keyValue (P.comma lexer)))
+      ]
  
-   json :: TokenParser JSON
-   json =  (Number . I) <$> pInteger
-       <|> (Number . D) <$> pReal
-       <|> (String . fromMaybe [] . UTF8.decodeM) <$> pString
-       <|> Boolean True <$ pKey "true"
-       <|> Boolean False <$ pKey "false"
-       <|> Array <$> pBracks (pCommas json)
-       <|> Object <$> pCurly (pCommas keyValue)
-       <|> Null <$ pKey "null"
+   keyValue :: Parser (String, JSON)
+   keyValue = do 
+      s <- P.stringLiteral lexer
+      _ <- P.colon lexer
+      a <- json
+      return (s, a)
 
-   keyValue :: TokenParser (String, JSON)
-   keyValue = (,) <$> pString <* pSpec ':' <*> json
-
-squareBrackets, curlyBrackets :: String -> String
-squareBrackets s = "[" ++ s ++ "]"
-curlyBrackets  s = "{" ++ s ++ "}"
+   lexer :: P.TokenParser a
+   lexer = P.makeTokenParser $ emptyDef 
+      { reservedNames   = ["true", "false", "null"]
+      }
 
 --------------------------------------------------------
 -- JSON-RPC
@@ -295,4 +306,4 @@ myStringGen = do
    
 propEncoding :: Property
 propEncoding = property $ \a ->  
-   parseJSON (show a) == Just a
+   parseJSON (show a) == Right a

@@ -16,6 +16,7 @@ module Service.ModeJSON (processJSON, jsonTuple) where
 
 import Common.Library hiding (exerciseId)
 import Common.Utils (Some(..), distinct, readM)
+import Control.Monad.Error
 import Text.JSON
 import Service.Request
 import Service.State
@@ -25,7 +26,6 @@ import Service.Submit
 import Service.Evaluator
 import Service.ExercisePackage 
 import Service.DomainReasoner
-import Control.Monad
 import Data.Maybe
 import Data.Char
 
@@ -43,7 +43,7 @@ extractExerciseId json =
 
 processJSON :: String -> DomainReasoner (Request, String, String)
 processJSON input = do
-   json <- parseJSON input
+   json <- either throwError return (parseJSON input)
    req  <- jsonRequest json
    vers <- getVersion
    resp <- jsonRPC json myHandler

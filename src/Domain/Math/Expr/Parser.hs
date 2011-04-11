@@ -40,6 +40,7 @@ import Domain.Logic.Formula (Logic)
 import qualified Domain.Logic.Formula as Logic
 import Common.Transformation
 import Test.QuickCheck (arbitrary)
+
 parseWith :: Parser a -> String -> Either String a
 parseWith p = left show . runParser start () ""
  where
@@ -107,7 +108,7 @@ relation p = do
       ]
 
 tuple :: Parser a -> Parser [a]
-tuple p = parens (sepBy p (char ','))
+tuple p = parens (sepBy p comma)
 
 expr :: Parser Expr
 expr = buildExpressionParser exprTable term 
@@ -186,6 +187,9 @@ reserved = P.reserved lexer
 
 reservedOp :: String -> Parser ()
 reservedOp = P.reservedOp lexer
+
+comma :: Parser String
+comma = P.comma lexer
 
 parens :: Parser a -> Parser a
 parens = P.parens lexer

@@ -86,6 +86,7 @@ gaussianElimExercise = makeExercise
    , isReady        = inRowReducedEchelonForm
    , strategy       = gaussianElimStrategy
    , randomExercise = simpleGenerator arbMatrix
+   , testGenerator  = Just arbMatrix
    }
  
 systemWithMatrixExercise :: Exercise Expr

@@ -367,7 +367,7 @@ showAs :: (a -> String) -> Gen a -> Gen (ShowAs a)
 showAs f = liftM (S f)
 
 -- check combination of parser and pretty-printer
-checkParserPretty :: (a -> a -> Bool) -> (String -> Either b a) -> (a -> String) -> a -> Bool
+checkParserPretty :: (a -> a -> Bool) -> (String -> Either String a) -> (a -> String) -> a -> Bool
 checkParserPretty eq p pretty a = 
    either (const False) (eq a) (p (pretty a))
 

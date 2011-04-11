@@ -16,6 +16,7 @@ module Domain.LinearAlgebra.Parser
 
 import Data.Char
 import Data.Either
+import Data.List
 import Domain.Math.Data.Relation
 import Domain.LinearAlgebra.Matrix
 import Domain.LinearAlgebra.LinearSystem
@@ -77,4 +78,5 @@ ppStringMatrix = format . rows
  where
    format m = let ws = foldr (zipWith max . map length) (repeat 0) m 
                   align i s = take i (s ++ repeat ' ')
-              in unlines $ map (unwords . zipWith align ws) m
+                  par s = "(" ++ s ++ ")"
+              in unlines $ map (par . concat . intersperse ", " . zipWith align ws) m
